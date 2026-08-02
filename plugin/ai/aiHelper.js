@@ -1,0 +1,147 @@
+const redisManager = require('../../src/managers/redisManager');
+const { logger } = require('../../src/managers/logger');
+const google = require('googlethis');
+
+const BAD_WORDS = ['anjing', 'bangsat', 'kontol', 'babi', 'ngentot', 'memek', 'jembut', 'tolol', 'goblok'];
+const PROMPT_INJECTIONS = ['abaikan instruksi', 'ignore previous instructions', 'abaikan semua', 'abaikan prompt', 'system prompt'];
+
+async function checkModeration(text) {
+    const lowerText = text.toLowerCase();
+
+    // Check bad words
+    for (const word of BAD_WORDS) {
+        if (lowerText.includes(word)) {
+            return { flagged: true, reason: 'Kata kasar terdeteksi' };
+        }
+    }
+
+    // Check prompt injection
+    for (const phrase of PROMPT_INJECTIONS) {
+        if (lowerText.includes(phrase)) {
+            return { flagged: true, reason: 'Percobaan manipulasi AI (Prompt Injection) terdeteksi' };
+        }
+    }
+
+    return { flagged: false };
+}
+
+async function checkRateLimit(userId, isOwner, isPremium) {
+    if (isOwner) return { allowed: true }; // Owner unlimited
+
+    const maxRequests = isPremium ? 15 : 5;
+    const windowSeconds = 60; // 1 minute
+    const key = `rate_limit_ai_${userId}`;
+
+    try {
+        if (!redisManager.client || !redisManager.client.isReady) return { allowed: true };
+
+        const currentRequests = await redisManager.client.incr(key);
+
+        if (currentRequests === 1) {
+            await redisManager.client.expire(key, windowSeconds);
+        }
+
+        if (currentRequests > maxRequests) {
+            const ttl = await redisManager.client.ttl(key);
+            return { allowed: false, retryAfter: ttl };
+        }
+
+        return { allowed: true };
+    } catch (e) {
+        logger.error('[RATE LIMIT ERROR]', e);
+        return { allowed: true }; // Fail open
+    }
+}
+
+async function simulateTypingDelay(replyText) {
+    const charCount = replyText.length;
+    let delayMs = Math.floor(charCount * 25);
+
+    if (delayMs > 5000) delayMs = 5000;
+    if (delayMs < 1000) delayMs = 1000;
+
+    return new Promise(resolve => setTimeout(resolve, delayMs));
+}
+
+async function performWebSearchIfNeeded(text) {
+    const searchKeywords = ['siapa', 'apa', 'kapan', 'dimana', 'bagaimana', 'kenapa', 'cari', 'info', 'harga'];
+    const lowerText = text.toLowerCase();
+
+    let needsSearch = false;
+    for (const kw of searchKeywords) {
+        if (lowerText.includes(kw)) {
+            needsSearch = true;
+            break;
+        }
+    }
+
+    if (!needsSearch) return null;
+
+    try {
+        const options = {
+            page: 0,
+            safe: false,
+            additional_params: { hl: 'id' }
+        };
+        const response = await google.search(text, options);
+
+        let searchContext = "\n\n[HASIL PENCARIAN GOOGLE TERKINI]:\n";
+
+        if (response.knowledge_panel.title) {
+            searchContext += `- ${response.knowledge_panel.title}: ${response.knowledge_panel.description}\n`;
+        }
+
+        const topResults = response.results.slice(0, 3);
+        topResults.forEach(res => {
+            searchContext += `- ${res.title}: ${res.description}\n`;
+        });
+
+        return searchContext;
+    } catch (e) {
+        logger.error('[WEB SEARCH ERROR]', e);
+        return null;
+    }
+}
+
+module.exports = { checkModeration, checkRateLimit, simulateTypingDelay, performWebSearchIfNeeded };
+
+async function updateGeminiHistory(userId, role, content) {
+    if (!redisManager.client || !redisManager.client.isReady) return;
+
+    const key = `gemini_history_${userId}`;
+    try {
+        let history = await redisManager.getCache(key) || [];
+        history.push({ role, parts: [{ text: content }] });
+
+        // Keep only last 10 messages (5 interactions)
+        if (history.length > 10) history = history.slice(history.length - 10);
+
+        await redisManager.setCache(key, history, 86400); // 24 hours
+    } catch (e) {
+        logger.error('[GEMINI HISTORY ERROR]', e);
+    }
+}
+
+async function getGeminiHistory(userId) {
+    if (!redisManager.client || !redisManager.client.isReady) return [];
+
+    const key = `gemini_history_${userId}`;
+    try {
+        const data = await redisManager.getCache(key);
+        if (Array.isArray(data)) return data;
+        if (typeof data === 'string') {
+             try {
+                 const parsed = JSON.parse(data);
+                 return Array.isArray(parsed) ? parsed : [];
+             } catch (err) {
+                 return [];
+             }
+        }
+        return [];
+    } catch (e) {
+        return [];
+    }
+}
+
+module.exports.updateGeminiHistory = updateGeminiHistory;
+module.exports.getGeminiHistory = getGeminiHistory;
