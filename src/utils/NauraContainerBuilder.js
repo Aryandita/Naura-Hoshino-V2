@@ -36,12 +36,19 @@ function resolveMediaUrl(ref) {
  * @param {string} [opts.authorName] - Teks kecil di atas judul
  * @param {string} opts.title - Judul utama
  * @param {string} [opts.iconURL] - URL ikon kecil (accessory Thumbnail di header)
- * @param {string} [opts.expression] - Ekspresi Naura yang dipakai sebagai ikon header.
- *        Boleh nama berkas ('Cheers') atau mood ('success', 'error', 'loading', 'afk').
- *        Mood 'afk' memilih satu dari Eat / Sleepy / Chirping secara acak.
+ * @param {string} [opts.expression] - Ekspresi Naura yang dipakai. Boleh nama berkas
+ *        ('Cheers') atau mood ('success', 'error', 'loading', 'afk'). Mood 'afk'
+ *        memilih satu dari Eat / Sleepy / Chirping secara acak.
  *        Diabaikan bila iconURL sudah diisi manual. Set false untuk mematikan.
- * @param {'icon'|'gallery'|'none'} [opts.expressionAs] - Penempatan ekspresi. Default 'icon'
- *        (thumbnail kecil di header). 'gallery' menampilkannya besar di dalam container.
+ * @param {'auto'|boolean} [opts.expressionImage] - Apakah GAMBAR ekspresi ikut dikirim.
+ *        'auto' (bawaan) menyerahkan keputusan pada nauraExpression.shouldAttachImage(),
+ *        sehingga hanya momen penting yang membawa lampiran. true memaksa mengirim,
+ *        false memastikan tidak pernah mengirim.
+ * @param {boolean} [opts.expressionEmoji] - Bila gambar dilewati, emoji ekspresi
+ *        dipasang di depan judul. Default true. Emoji tidak digandakan bila judul
+ *        sudah memuatnya.
+ * @param {'icon'|'gallery'|'none'} [opts.expressionAs] - Penempatan gambar ekspresi.
+ *        Default 'icon' (thumbnail kecil di header). 'gallery' menampilkannya besar.
  * @param {string} [opts.description] - Teks deskripsi/body utama
  * @param {Array<{name:string, value:string}>} [opts.fields] - Daftar field
  * @param {string} [opts.bannerAttachmentName] - Nama file attachment banner, mis. 'banner.png'
@@ -64,6 +71,8 @@ function buildContainerV2({
     title,
     iconURL,
     expression,
+    expressionImage = 'auto',
+    expressionEmoji = true,
     expressionAs = 'icon',
     description,
     fields = [],
@@ -82,14 +91,22 @@ function buildContainerV2({
     const cleanAuthor = authorName ? ui.stripCustomEmojis(authorName) : '';
     const cleanFooter = footerText ? ui.stripCustomEmojis(footerText) : ui.getFooter('core');
 
-    // ·· Ekspresi Naura ·············································
+    // ·· Ekspresi Naura ····················································
+    // Gambar hanya menempel pada momen yang layak, karena satu berkas ekspresi
+    // berukuran sekitar setengah megabita. Selebihnya emoji sudah cukup.
     // iconURL manual selalu menang, supaya pemanggil lama tidak berubah perilakunya.
     const attachedFiles = Array.isArray(files) ? [...files] : [];
     let headerIconURL = iconURL;
     let expressionGalleryRef = null;
+    let headerTitle = title;
 
     if (expression && expressionAs !== 'none') {
-        const face = nauraExpression.getAttachment(expression);
+        const useImage = expressionImage === 'auto'
+            ? nauraExpression.shouldAttachImage(expression)
+            : Boolean(expressionImage);
+
+        const face = useImage ? nauraExpression.getAttachment(expression) : null;
+
         if (face) {
             attachedFiles.push(face.attachment);
             if (expressionAs === 'gallery') {
@@ -97,11 +114,17 @@ function buildContainerV2({
             } else if (!headerIconURL) {
                 headerIconURL = face.url;
             }
+        } else if (expressionEmoji) {
+            // Tanpa gambar, perasaan Naura tetap tersampaikan lewat emoji wajahnya.
+            const emoji = nauraExpression.getEmoji(expression);
+            if (emoji && headerTitle && !headerTitle.includes(emoji)) {
+                headerTitle = `${emoji} ${headerTitle}`;
+            }
         }
     }
 
     // Header: judul + ikon kecil di kanan (mirip author + thumbnail pada embed)
-    const headerText = `${cleanAuthor ? `-# ${cleanAuthor}\n` : ''}## ${title}`;
+    const headerText = `${cleanAuthor ? `-# ${cleanAuthor}\n` : ''}## ${headerTitle}`;
     if (headerIconURL) {
         containerComponents.push({
             type: 9, // SECTION
@@ -188,7 +211,7 @@ function buildContainerV2({
 
 /**
  * Membangun Container V2 khusus pesan Error.
- * Ekspresi bawaan: Cry.
+ * Ekspresi bawaan: Cry, lengkap dengan gambarnya karena error termasuk momen penting.
  * @param {string|object} opts - Pesan error atau opsi objek
  * @param {string} [opts.errorMessage] - Pesan detail error
  * @param {string} [opts.title] - Judul error
@@ -199,7 +222,7 @@ function buildErrorContainerV2(opts) {
     const rawError = typeof opts === 'string' ? opts : opts?.errorMessage || opts?.description || 'Naura belum berhasil menyelesaikan permintaanmu';
     const title = (typeof opts === 'object' && opts?.title) ? opts.title : 'Maaf ya, Naura Gagal Melakukannya 💧';
     const footerText = (typeof opts === 'object' && opts?.footerText) ? opts.footerText : ui.getFooter('core');
-    const errEmoji = ui.getEmoji('error') || '❌';
+    const errEmoji = nauraExpression.getEmoji('error') || ui.getEmoji('error') || '❌';
 
     // Sentuhan personal bila yang dikirim hanya string error mentah
     const errorMessage = typeof opts === 'string' && !opts.includes('💕')
@@ -217,7 +240,8 @@ function buildErrorContainerV2(opts) {
 
 /**
  * Membangun Container V2 khusus pesan Loading.
- * Ekspresi bawaan: Think.
+ * Ekspresi bawaan: Thinking, emoji saja tanpa gambar — pesan ini terlalu sering
+ * muncul untuk dibebani lampiran.
  * @param {string|object} opts - Pesan loading atau opsi objek
  * @param {string} [opts.loadingMessage] - Pesan detail loading
  * @param {string} [opts.title] - Judul loading
@@ -228,7 +252,7 @@ function buildLoadingContainerV2(opts) {
     const rawLoading = typeof opts === 'string' ? opts : opts?.loadingMessage || opts?.description || 'Tunggu sebentar yaa, Naura lagi siapin semuanya buat kamu~ ✨';
     const title = (typeof opts === 'object' && opts?.title) ? opts.title : 'Sebentar Yaa, Naura Lagi Mikir~ 💭';
     const footerText = (typeof opts === 'object' && opts?.footerText) ? opts.footerText : ui.getFooter('core');
-    const loadEmoji = ui.getEmoji('loading') || '⏳';
+    const loadEmoji = nauraExpression.getEmoji('loading') || ui.getEmoji('loading') || '⏳';
 
     return buildContainerV2({
         accentColorHex: opts?.accentColorHex || ui.getColor('primary') || '#FFC0CB',
@@ -241,14 +265,14 @@ function buildLoadingContainerV2(opts) {
 
 /**
  * Membangun Container V2 khusus pesan Sukses.
- * Ekspresi bawaan: Cheers.
+ * Ekspresi bawaan: Cheers, lengkap dengan gambarnya.
  * @param {string|object} opts - Pesan sukses atau opsi objek
  */
 function buildSuccessContainerV2(opts) {
     const rawSuccess = typeof opts === 'string' ? opts : opts?.successMessage || opts?.description || 'Berhasil! Semuanya sudah beres yaa~ ✨';
     const title = (typeof opts === 'object' && opts?.title) ? opts.title : 'Yeaay, Berhasil! 🎀';
     const footerText = (typeof opts === 'object' && opts?.footerText) ? opts.footerText : ui.getFooter('core');
-    const okEmoji = ui.getEmoji('success') || '✅';
+    const okEmoji = nauraExpression.getEmoji('success') || ui.getEmoji('success') || '✅';
 
     return buildContainerV2({
         accentColorHex: opts?.accentColorHex || ui.getColor('primary') || '#FFC0CB',

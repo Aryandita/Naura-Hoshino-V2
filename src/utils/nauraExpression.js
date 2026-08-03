@@ -4,19 +4,22 @@
  * Menghadirkan ekspresi Naura secara visual di dalam embed dan Container V2,
  * lewat dua jalur yang saling melengkapi:
  *
- *   1. Gambar  — diambil dari assets/Naura_Expression, dikirim sebagai lampiran
- *                dan dirujuk memakai skema attachment://
- *   2. Emoji   — emoji kustom Discord untuk dipakai di judul, field, dan tombol
+ *   1. Emoji   — emoji kustom Discord, ringan dan dipakai di mana saja
+ *   2. Gambar  — PNG transparan dari assets/Naura_Expression, dikirim sebagai
+ *                lampiran dan dirujuk memakai skema attachment://
  *
- * Gambar dikirim apa adanya tanpa kompresi ulang, jadi kualitas aslinya utuh.
+ * Berkas gambarnya besar (sekitar setengah megabita per ekspresi), jadi gambar
+ * TIDAK dikirim di setiap embed. Hanya momen yang layak yang mendapatkannya —
+ * lihat IMAGE_MOMENTS di bawah. Embed rutin cukup memakai emoji, yang sama
+ * ekspresifnya tanpa biaya bandwidth sama sekali.
  *
  * Contoh pemakaian:
  *
  *   const naura = require('../../src/utils/nauraExpression');
+ *   embed.setTitle(`${naura.getEmoji('success')} Berhasil!`);
+ *
  *   const { embed, files } = naura.decorate(myEmbed, 'success');
  *   await interaction.reply({ embeds: [embed], files });
- *
- *   embed.setTitle(`${naura.getEmoji('success')} Berhasil!`);
  */
 
 const fs = require('fs');
@@ -72,6 +75,33 @@ const EMOJIS = {
     'Sleepy': '<:Sleepy:1533824857090035764>',
     'Thinking': '<:Thinking:1533824864367149096>'
 };
+
+/**
+ * Momen yang layak mendapat GAMBAR, bukan sekadar emoji.
+ *
+ * Daftar ini sengaja pendek. Menambah satu entri berarti setiap pemanggilan
+ * mood tersebut mengirim lampiran sekitar setengah megabita, jadi pertimbangkan
+ * seberapa sering mood itu muncul sebelum memasukkannya.
+ *
+ * Perhatikan bahwa penilaian dilakukan pada MOOD, bukan pada ekspresi hasilnya.
+ * 'success' dan 'economy' sama-sama berujung ke Cheers, tapi hanya 'success'
+ * yang layak tampil bergambar.
+ */
+const IMAGE_MOMENTS = new Set([
+    'success',
+    'error',
+    'fail',
+    'levelup',
+    'reward',
+    'achievement',
+    'welcome',
+    'celebrate',
+    'afk',
+    'idle',
+    'idling',
+    'away',
+    'resting'
+]);
 
 /**
  * Mood yang memiliki BEBERAPA ekspresi. Setiap pemanggilan mengambil satu secara
@@ -150,14 +180,17 @@ function pickRandom(list) {
     return list[Math.floor(Math.random() * list.length)];
 }
 
+function normalizeKey(nameOrMood) {
+    return typeof nameOrMood === 'string' ? nameOrMood.trim().toLowerCase() : '';
+}
+
 /**
  * Ubah nama ekspresi atau mood menjadi nama berkas yang valid.
  * Selalu mengembalikan ekspresi yang ada, tidak pernah null.
  */
 function resolveExpression(nameOrMood) {
-    if (typeof nameOrMood !== 'string' || !nameOrMood.trim()) return MOOD_MAP.default;
-
-    const key = nameOrMood.trim().toLowerCase();
+    const key = normalizeKey(nameOrMood);
+    if (!key) return MOOD_MAP.default;
 
     if (key === 'random') return pickRandom(EXPRESSIONS);
     if (LOOKUP.has(key)) return LOOKUP.get(key);
@@ -165,6 +198,20 @@ function resolveExpression(nameOrMood) {
     if (MOOD_MAP[key]) return MOOD_MAP[key];
 
     return MOOD_MAP.default;
+}
+
+/**
+ * Apakah mood ini layak dikirim bersama gambar, atau cukup emoji saja.
+ *
+ * @param {string} nameOrMood
+ * @returns {boolean}
+ *
+ * @example
+ * shouldAttachImage('success'); // true  — momen penting
+ * shouldAttachImage('loading'); // false — terlalu sering muncul
+ */
+function shouldAttachImage(nameOrMood) {
+    return IMAGE_MOMENTS.has(normalizeKey(nameOrMood));
 }
 
 /**
@@ -220,7 +267,8 @@ function exists(nameOrMood) {
 
 /**
  * Emoji kustom Discord untuk sebuah ekspresi atau mood.
- * Dipakai untuk menggantikan emoji hardcoded di judul dan field embed.
+ * Inilah jalur utama untuk menampilkan perasaan Naura, karena ringan dan bisa
+ * dipakai di judul, field, tombol, maupun teks biasa.
  *
  * @param {string} nameOrMood - 'Cheers', 'success', 'afk', dan sebagainya
  * @returns {string|null} string emoji, atau null bila tidak terdaftar
@@ -236,6 +284,9 @@ function getEmoji(nameOrMood) {
  * Bangun lampiran gambar untuk sebuah ekspresi.
  * AttachmentBuilder dibuat baru setiap pemanggilan karena satu instance tidak
  * boleh dikirim ulang pada pesan yang berbeda.
+ *
+ * Fungsi ini TIDAK memeriksa kelayakan momen. Pemanggil yang menentukan, lewat
+ * shouldAttachImage() atau keputusannya sendiri.
  *
  * @returns {{ name: string, fileName: string, url: string, emoji: string|null, attachment: AttachmentBuilder } | null}
  */
@@ -260,13 +311,22 @@ function getAttachment(nameOrMood) {
 /**
  * Tempelkan ekspresi ke sebuah EmbedBuilder.
  *
+ * Secara bawaan gambar hanya dipasang bila momennya layak; selebihnya embed
+ * dikembalikan tanpa lampiran dan pemanggil cukup memakai getEmoji().
+ *
  * @param {import('discord.js').EmbedBuilder} embed
  * @param {string} nameOrMood nama ekspresi ('Cheers') atau mood ('success', 'afk')
- * @param {{ as?: 'thumbnail'|'image'|'author', authorName?: string, authorUrl?: string }} [options]
+ * @param {{ as?: 'thumbnail'|'image'|'author', authorName?: string, authorUrl?: string, force?: boolean }} [options]
+ *        force: true memaksa gambar terpasang meski momennya tidak masuk daftar
  * @returns {{ embed: object, files: AttachmentBuilder[], expression: string|null }}
  */
 function decorate(embed, nameOrMood, options = {}) {
-    const { as = 'thumbnail', authorName, authorUrl } = options;
+    const { as = 'thumbnail', authorName, authorUrl, force = false } = options;
+
+    if (!force && !shouldAttachImage(nameOrMood)) {
+        return { embed, files: [], expression: null };
+    }
+
     const face = getAttachment(nameOrMood);
 
     // Bila gambar tidak ditemukan, embed dikembalikan apa adanya agar perintah
@@ -303,6 +363,11 @@ function moodGroups() {
     return { ...MOOD_GROUPS };
 }
 
+/** Daftar mood yang layak tampil bergambar. */
+function imageMoments() {
+    return [...IMAGE_MOMENTS];
+}
+
 /** Ekspresi acak dari seluruh koleksi. */
 function random() {
     return pickRandom(EXPRESSIONS);
@@ -320,7 +385,9 @@ module.exports = {
     EMOJIS,
     MOOD_MAP,
     MOOD_GROUPS,
+    IMAGE_MOMENTS,
     resolveExpression,
+    shouldAttachImage,
     getPath,
     exists,
     getEmoji,
@@ -330,6 +397,7 @@ module.exports = {
     list,
     moods,
     moodGroups,
+    imageMoments,
     random,
     randomAfk
 };
