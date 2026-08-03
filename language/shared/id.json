@@ -1,0 +1,17 @@
+{
+    "common": {
+        "loading": {
+            "title": "Sebentar Yaa, Naura Lagi Mikir~ \ud83d\udcad",
+            "body": "Tunggu sebentar yaa, Naura lagi siapin semuanya buat kamu~ \u2728"
+        },
+        "success": {
+            "title": "Yeaay, Berhasil! \ud83c\udf80",
+            "body": "Berhasil! Semuanya sudah beres yaa~ \u2728"
+        },
+        "error": {
+            "title": "Maaf ya, Naura Gagal Melakukannya \ud83d\udca7",
+            "body": "Maaf banget yaa, Naura nggak berhasil melakukannya. Katanya begini: **{reason}**\nCoba sekali lagi ya, Naura temenin sampai berhasil kok \ud83d\udc95",
+            "reason_fallback": "Naura belum berhasil menyelesaikan permintaanmu"
+        }
+    }
+}

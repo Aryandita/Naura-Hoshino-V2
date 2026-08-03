@@ -1,0 +1,17 @@
+{
+    "common": {
+        "loading": {
+            "title": "Just a Moment, Naura's Thinking~ \ud83d\udcad",
+            "body": "Hang on a little, Naura's getting everything ready for you~ \u2728"
+        },
+        "success": {
+            "title": "Yaay, All Done! \ud83c\udf80",
+            "body": "It worked! Everything is all set for you~ \u2728"
+        },
+        "error": {
+            "title": "Sorry, Naura Couldn't Do It \ud83d\udca7",
+            "body": "I'm really sorry, Naura couldn't pull that off. Here's what went wrong: **{reason}**\nLet's try once more, okay? Naura will stay with you until it works \ud83d\udc95",
+            "reason_fallback": "Naura couldn't finish your request"
+        }
+    }
+}

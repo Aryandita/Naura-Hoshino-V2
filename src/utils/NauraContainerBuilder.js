@@ -1,6 +1,7 @@
 const { MessageFlags } = require('discord.js');
 const ui = require('../config/ui');
 const nauraExpression = require('./nauraExpression');
+const languageManager = require('../managers/languageManager');
 
 /**
  * Text display component (type 10)
@@ -14,6 +15,19 @@ function textDisplay(content) {
  */
 function separatorComp(divider = true, spacing = 1) {
     return { type: 14, divider, spacing };
+}
+
+/**
+ * Terjemahkan satu kunci kamus bersama.
+ * lang boleh undefined — languageManager akan jatuh ke bahasa bawaan.
+ */
+function t(lang, key, placeholders) {
+    return languageManager.translateSync(lang, key, placeholders);
+}
+
+/** Ambil opsi dari argumen yang boleh berupa string maupun objek. */
+function pick(opts, key) {
+    return (typeof opts === 'object' && opts !== null) ? opts[key] : undefined;
 }
 
 /**
@@ -212,28 +226,38 @@ function buildContainerV2({
 /**
  * Membangun Container V2 khusus pesan Error.
  * Ekspresi bawaan: Cry, lengkap dengan gambarnya karena error termasuk momen penting.
- * @param {string|object} opts - Pesan error atau opsi objek
+ *
+ * Seluruh teks bawaannya diambil dari kamus bersama, jadi pesan ini otomatis
+ * mengikuti bahasa pilihan user begitu opts.lang diisi.
+ *
+ * @param {string|object} opts - Pesan error, atau opsi objek
  * @param {string} [opts.errorMessage] - Pesan detail error
- * @param {string} [opts.title] - Judul error
+ * @param {string} [opts.title] - Timpa judul bawaan
+ * @param {string} [opts.lang] - Bahasa user ('id' | 'en'). Kosong = bahasa bawaan.
  * @param {string} [opts.expression] - Timpa ekspresi bawaan
  * @param {string} [opts.footerText] - Teks footer
  */
 function buildErrorContainerV2(opts) {
-    const rawError = typeof opts === 'string' ? opts : opts?.errorMessage || opts?.description || 'Naura belum berhasil menyelesaikan permintaanmu';
-    const title = (typeof opts === 'object' && opts?.title) ? opts.title : 'Maaf ya, Naura Gagal Melakukannya 💧';
-    const footerText = (typeof opts === 'object' && opts?.footerText) ? opts.footerText : ui.getFooter('core');
+    const lang = pick(opts, 'lang');
+    const rawError = typeof opts === 'string'
+        ? opts
+        : pick(opts, 'errorMessage') || pick(opts, 'description') || t(lang, 'common.error.reason_fallback');
+    const title = pick(opts, 'title') || t(lang, 'common.error.title');
+    const footerText = pick(opts, 'footerText') || ui.getFooter('core');
     const errEmoji = nauraExpression.getEmoji('error') || ui.getEmoji('error') || '❌';
+    const expression = pick(opts, 'expression') !== undefined ? pick(opts, 'expression') : 'error';
 
-    // Sentuhan personal bila yang dikirim hanya string error mentah
+    // Sentuhan personal bila yang dikirim hanya string error mentah. Pesan yang
+    // sudah dirangkai pemanggil dibiarkan apa adanya agar tidak dibungkus dua kali.
     const errorMessage = typeof opts === 'string' && !opts.includes('💕')
-        ? `Maaf banget yaa, Naura nggak berhasil melakukannya. Katanya begini: **${rawError}**\nCoba sekali lagi ya, Naura temenin sampai berhasil kok 💕`
+        ? t(lang, 'common.error.body', { reason: rawError })
         : rawError;
 
     return buildContainerV2({
-        accentColorHex: opts?.accentColorHex || ui.getColor('primary') || '#FFC0CB',
+        accentColorHex: pick(opts, 'accentColorHex') || ui.getColor('primary') || '#FFC0CB',
         title: `${errEmoji} ${title}`,
         description: errorMessage,
-        expression: (typeof opts === 'object' && opts?.expression !== undefined) ? opts.expression : 'error',
+        expression,
         footerText,
     });
 }
@@ -242,23 +266,29 @@ function buildErrorContainerV2(opts) {
  * Membangun Container V2 khusus pesan Loading.
  * Ekspresi bawaan: Thinking, emoji saja tanpa gambar — pesan ini terlalu sering
  * muncul untuk dibebani lampiran.
- * @param {string|object} opts - Pesan loading atau opsi objek
+ *
+ * @param {string|object} opts - Pesan loading, atau opsi objek
  * @param {string} [opts.loadingMessage] - Pesan detail loading
- * @param {string} [opts.title] - Judul loading
+ * @param {string} [opts.title] - Timpa judul bawaan
+ * @param {string} [opts.lang] - Bahasa user ('id' | 'en'). Kosong = bahasa bawaan.
  * @param {string} [opts.expression] - Timpa ekspresi bawaan
  * @param {string} [opts.footerText] - Teks footer
  */
 function buildLoadingContainerV2(opts) {
-    const rawLoading = typeof opts === 'string' ? opts : opts?.loadingMessage || opts?.description || 'Tunggu sebentar yaa, Naura lagi siapin semuanya buat kamu~ ✨';
-    const title = (typeof opts === 'object' && opts?.title) ? opts.title : 'Sebentar Yaa, Naura Lagi Mikir~ 💭';
-    const footerText = (typeof opts === 'object' && opts?.footerText) ? opts.footerText : ui.getFooter('core');
+    const lang = pick(opts, 'lang');
+    const rawLoading = typeof opts === 'string'
+        ? opts
+        : pick(opts, 'loadingMessage') || pick(opts, 'description') || t(lang, 'common.loading.body');
+    const title = pick(opts, 'title') || t(lang, 'common.loading.title');
+    const footerText = pick(opts, 'footerText') || ui.getFooter('core');
     const loadEmoji = nauraExpression.getEmoji('loading') || ui.getEmoji('loading') || '⏳';
+    const expression = pick(opts, 'expression') !== undefined ? pick(opts, 'expression') : 'loading';
 
     return buildContainerV2({
-        accentColorHex: opts?.accentColorHex || ui.getColor('primary') || '#FFC0CB',
+        accentColorHex: pick(opts, 'accentColorHex') || ui.getColor('primary') || '#FFC0CB',
         title: `${loadEmoji} ${title}`,
         description: rawLoading,
-        expression: (typeof opts === 'object' && opts?.expression !== undefined) ? opts.expression : 'loading',
+        expression,
         footerText,
     });
 }
@@ -266,19 +296,29 @@ function buildLoadingContainerV2(opts) {
 /**
  * Membangun Container V2 khusus pesan Sukses.
  * Ekspresi bawaan: Cheers, lengkap dengan gambarnya.
- * @param {string|object} opts - Pesan sukses atau opsi objek
+ *
+ * @param {string|object} opts - Pesan sukses, atau opsi objek
+ * @param {string} [opts.successMessage] - Pesan detail sukses
+ * @param {string} [opts.title] - Timpa judul bawaan
+ * @param {string} [opts.lang] - Bahasa user ('id' | 'en'). Kosong = bahasa bawaan.
+ * @param {string} [opts.expression] - Timpa ekspresi bawaan
+ * @param {string} [opts.footerText] - Teks footer
  */
 function buildSuccessContainerV2(opts) {
-    const rawSuccess = typeof opts === 'string' ? opts : opts?.successMessage || opts?.description || 'Berhasil! Semuanya sudah beres yaa~ ✨';
-    const title = (typeof opts === 'object' && opts?.title) ? opts.title : 'Yeaay, Berhasil! 🎀';
-    const footerText = (typeof opts === 'object' && opts?.footerText) ? opts.footerText : ui.getFooter('core');
+    const lang = pick(opts, 'lang');
+    const rawSuccess = typeof opts === 'string'
+        ? opts
+        : pick(opts, 'successMessage') || pick(opts, 'description') || t(lang, 'common.success.body');
+    const title = pick(opts, 'title') || t(lang, 'common.success.title');
+    const footerText = pick(opts, 'footerText') || ui.getFooter('core');
     const okEmoji = nauraExpression.getEmoji('success') || ui.getEmoji('success') || '✅';
+    const expression = pick(opts, 'expression') !== undefined ? pick(opts, 'expression') : 'success';
 
     return buildContainerV2({
-        accentColorHex: opts?.accentColorHex || ui.getColor('primary') || '#FFC0CB',
+        accentColorHex: pick(opts, 'accentColorHex') || ui.getColor('primary') || '#FFC0CB',
         title: `${okEmoji} ${title}`,
         description: rawSuccess,
-        expression: (typeof opts === 'object' && opts?.expression !== undefined) ? opts.expression : 'success',
+        expression,
         footerText,
     });
 }
