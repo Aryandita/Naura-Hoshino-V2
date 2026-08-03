@@ -1,16 +1,14 @@
 /**
  * @namespace: src/commands/Core/core.js
  * @type: Command
- * @copyright © 2026 Aryandita Praftian
+ * @copyright (c) 2026 Aryandita Praftian
  * @assistant Naura Hoshino
  * @version 1.1.0
  * @description Core system, statistics, and interactive help menu for Naura with Localization.
  */
 
-const LanguageManager = require('../../src/managers/languageManager');
 const {
     SlashCommandBuilder,
-    EmbedBuilder,
     ActionRowBuilder,
     ButtonBuilder,
     ButtonStyle,
@@ -21,13 +19,12 @@ const {
     version: djsVersion
 } = require('discord.js');
 const os = require('node:os');
-const path = require('path');
-const fs = require('fs');
 const { sequelize } = require('../../src/managers/dbManager');
 const GuildSettings = require('../../src/models/GuildSettings');
 const ui = require('../../src/config/ui');
 const env = require('../../src/config/env');
-const { buildContainerV2, buildErrorContainerV2, buildLoadingContainerV2 } = require('../../src/utils/NauraContainerBuilder');
+const nauraExpression = require('../../src/utils/nauraExpression');
+const { buildContainerV2, buildLoadingContainerV2 } = require('../../src/utils/NauraContainerBuilder');
 
 const locales = {
     id: require('./locales/id.json'),
@@ -35,45 +32,64 @@ const locales = {
 };
 
 // ==========================================
-// 🔧 KONSTANTA & LINK BRANDING NAURA
+// KONSTANTA & LINK BRANDING NAURA
 // ==========================================
 const rawDashboard = ui.dashboards || 'http://92.118.206.166:30398';
 const LINKS = {
     SUPPORT: ui.support_server || 'https://dsc.gg/naura-hoshino',
+    // Nilai tanpa skema cukup diberi awalan http://. Versi lama membungkusnya
+    // dengan kurung kurawal ganda sehingga tautannya tidak sah dan ditolak
+    // ButtonBuilder.setURL saat tombol navigasi dirakit.
     DASHBOARD: rawDashboard.startsWith('http') ? rawDashboard : `http://${rawDashboard}`,
     INVITE: ui.invite || 'https://discord.com/api/oauth2/authorize?client_id=1483665745727721543&permissions=8&scope=bot%20applications.commands'
 };
 
+/**
+ * Urutan kategori help. Dulu daftar ini ditulis dua kali dengan isi berbeda:
+ * satu tanpa economy di perakit tampilan, satu lagi dengan economy di
+ * collector. Akibatnya indeksnya bergeser dan kategori yang tampil selalu
+ * meleset. Sekarang keduanya membaca satu sumber yang sama.
+ */
+const HELP_CATEGORY_KEYS = ['core', 'music', 'minigame', 'survival', 'admin'];
+
 // ==========================================
-// 🛠️ FUNGSI UTILITAS LOKAL
+// FUNGSI UTILITAS LOKAL
 // ==========================================
-// PERBAIKAN: Menangani ms < 1000 agar memunculkan teks "Baru saja mulai"
+
+/** Emoji dari ui.js dengan cadangan sederhana bila kuncinya belum terisi. */
+function e(name, fallback) {
+    return ui.getEmoji(name) || fallback;
+}
+
+/** Emoji wajah Naura, dengan emoji status ui.js sebagai cadangan. */
+function face(mood, fallback) {
+    return nauraExpression.getEmoji(mood) || ui.getEmoji(mood) || fallback;
+}
+
+// Menangani ms < 1000 agar memunculkan teks "Baru saja mulai"
 function formatUptime(ms) {
-    if (ms < 1000) return 'Baru saja mulai ✨';
+    const sparkle = e('sparkle', '\u2728');
+    if (ms < 1000) return `Baru saja mulai ${sparkle}`;
 
     const days = Math.floor(ms / (1000 * 60 * 60 * 24));
     const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((ms % (1000 * 60)) / 1000);
 
-    let result = [];
+    const result = [];
     if (days > 0) result.push(`${days}d`);
     if (hours > 0) result.push(`${hours}h`);
     if (minutes > 0) result.push(`${minutes}m`);
     if (seconds > 0) result.push(`${seconds}s`);
 
-    return result.length > 0 ? result.join(' ') : 'Baru saja mulai ✨';
+    return result.length > 0 ? result.join(' ') : `Baru saja mulai ${sparkle}`;
 }
 
 function createNavButtons() {
-    const supportEmoji = ui.getEmoji('support') || '💬';
-    const dashboardEmoji = ui.getEmoji('dashboard') || '🌐';
-    const inviteEmoji = ui.getEmoji('invite') || '📩';
-
     return new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setLabel('Support Server').setURL(LINKS.SUPPORT).setStyle(ButtonStyle.Link).setEmoji(supportEmoji),
-        new ButtonBuilder().setLabel('Web Dashboard').setURL(LINKS.DASHBOARD).setStyle(ButtonStyle.Link).setEmoji(dashboardEmoji),
-        new ButtonBuilder().setLabel('Invite Naura').setURL(LINKS.INVITE).setStyle(ButtonStyle.Link).setEmoji(inviteEmoji)
+        new ButtonBuilder().setLabel('Support Server').setURL(LINKS.SUPPORT).setStyle(ButtonStyle.Link).setEmoji(e('support', '\uD83D\uDCAC')),
+        new ButtonBuilder().setLabel('Web Dashboard').setURL(LINKS.DASHBOARD).setStyle(ButtonStyle.Link).setEmoji(e('dashboard', '\uD83C\uDF10')),
+        new ButtonBuilder().setLabel('Invite Naura').setURL(LINKS.INVITE).setStyle(ButtonStyle.Link).setEmoji(e('invite', '\uD83D\uDCE9'))
     );
 }
 
@@ -84,20 +100,19 @@ function formatHelpContent(text) {
     });
 }
 
-
 // ==========================================
-// 🚀 ROUTER COMMAND UTAMA
+// ROUTER COMMAND UTAMA
 // ==========================================
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('core')
-        .setDescription('⚙️ Pusat Informasi & Sistem Inti Naura Hoshino / Core System')
-        .addSubcommand(sub => sub.setName('ping').setDescription('🏓 Cek respons latensi Discord, Database MySQL, & Lavalink.'))
-        .addSubcommand(sub => sub.setName('stats').setDescription('📊 Lihat diagnostik spesifikasi server, RAM, dan OS Naura.'))
-        .addSubcommand(sub => sub.setName('info').setDescription('ℹ️ Tampilkan info spesifik server saat ini atau info bot secara umum.'))
-        .addSubcommand(sub => sub.setName('about').setDescription('👧🏻 Kenalan lebih dekat dengan Naura dan Aryandita!'))
-        .addSubcommand(sub => sub.setName('help').setDescription('📚 Buka panduan perintah interaktif Naura.'))
-        .addSubcommand(sub => sub.setName('language').setDescription('🌐 Ubah bahasa bot di server ini / Change bot language')
+        .setDescription('Pusat Informasi & Sistem Inti Naura Hoshino / Core System')
+        .addSubcommand(sub => sub.setName('ping').setDescription('Cek respons latensi Discord, Database MySQL, & Lavalink.'))
+        .addSubcommand(sub => sub.setName('stats').setDescription('Lihat diagnostik spesifikasi server, RAM, dan OS Naura.'))
+        .addSubcommand(sub => sub.setName('info').setDescription('Tampilkan info spesifik server saat ini atau info bot secara umum.'))
+        .addSubcommand(sub => sub.setName('about').setDescription('Kenalan lebih dekat dengan Naura dan Aryandita!'))
+        .addSubcommand(sub => sub.setName('help').setDescription('Buka panduan perintah interaktif Naura.'))
+        .addSubcommand(sub => sub.setName('language').setDescription('Ubah bahasa bot di server ini / Change bot language')
             .addStringOption(opt => opt.setName('lang').setDescription('Pilih bahasa / Select language').setRequired(true).addChoices(
                 { name: 'Indonesian', value: 'id' },
                 { name: 'English', value: 'en' }
@@ -116,11 +131,13 @@ module.exports = {
         const mockInteraction = {
             client,
             user: message.author,
+            guild: message.guild,
+            member: message.member,
             createdTimestamp: message.createdTimestamp,
             deferReply: async () => {
                 const loadingPayload = buildLoadingContainerV2({
                     authorName: 'Naura Loading System...',
-                    description: `${ui.getEmoji('loading') || '⏳'} Naura sedang memproses permintaanmu... Tunggu sebentar ya! ✨`,
+                    description: `${face('loading', '\u23F3')} Tunggu sebentar yaa, Naura lagi siapin semuanya buat kamu~ ${e('sparkle', '\u2728')}`,
                     footerText: `Sedang menyiapkan untuk ${message.author.username}`
                 });
                 replyMsg = await message.reply(loadingPayload);
@@ -132,10 +149,9 @@ module.exports = {
             editReply: async (payload) => {
                 if (replyMsg) {
                     return await replyMsg.edit(payload);
-                } else {
-                    replyMsg = await message.reply(payload);
-                    return replyMsg;
                 }
+                replyMsg = await message.reply(payload);
+                return replyMsg;
             }
         };
 
@@ -152,15 +168,17 @@ module.exports = {
         switch (subcommand) {
             case 'ping': return await handlePing(mockInteraction, client, lang);
             case 'stats': return await handleStats(mockInteraction, client, lang);
+            case 'info': return await handleInfo(mockInteraction, client, lang);
             case 'about': return await handleAbout(mockInteraction, client, lang);
             case 'help': return await handleHelp(mockInteraction, client, lang);
-            case 'language':
+            case 'language': {
                 let newLang = null;
                 if (cmdName === 'core' && args[1]) newLang = args[1].toLowerCase();
                 else if (cmdName !== 'core' && args[0]) newLang = args[0].toLowerCase();
                 return await handleLanguage(mockInteraction, guildId, newLang, lang);
+            }
             default:
-                return message.reply(lang.ERROR_INVALID_SUBCOMMAND || `${ui.getEmoji('error') || '❌'} Subcommand tidak valid.`);
+                return message.reply(lang.ERROR_INVALID_SUBCOMMAND || `${face('error', '\u274C')} Aduh, Naura belum kenal perintah itu. Coba cek lewat menu help yaa~`);
         }
     },
 
@@ -181,29 +199,33 @@ module.exports = {
         switch (subcommand) {
             case 'ping': return await handlePing(interaction, client, lang);
             case 'stats': return await handleStats(interaction, client, lang);
+            case 'info': return await handleInfo(interaction, client, lang);
             case 'about': return await handleAbout(interaction, client, lang);
             case 'help': return await handleHelp(interaction, client, lang);
-            case 'language':
+            case 'language': {
                 const newLang = interaction.options.getString('lang');
                 return await handleLanguage(interaction, guildId, newLang, lang);
+            }
             default:
-                return interaction.reply({ content: lang.ERROR_INVALID_SUBCOMMAND || `${ui.getEmoji('error') || '❌'} Subcommand tidak valid.`, ephemeral: true });
+                return interaction.reply({
+                    content: lang.ERROR_INVALID_SUBCOMMAND || `${face('error', '\u274C')} Aduh, Naura belum kenal perintah itu. Coba cek lewat menu help yaa~`,
+                    ephemeral: true
+                });
         }
     }
 };
 
 // ==========================================
-// 🟢 1. PING SYSTEM (ADVANCED LATENCY)
+// 1. PING SYSTEM (ADVANCED LATENCY)
 // ==========================================
 async function handlePing(interaction, client, lang) {
-    const dot = ui.getEmoji('dot') || '▶️';
-    const online = ui.getEmoji('online') || '🟢';
-    const offline = ui.getEmoji('offline') || '🔴';
-    const loadingEmoji = ui.getEmoji('loading') || '⏳';
+    const dot = e('dot', '\u25B6\uFE0F');
+    const online = e('online', '\uD83D\uDFE2');
+    const offline = e('offline', '\uD83D\uDD34');
 
     const loadingPayload = buildLoadingContainerV2({
         authorName: 'Naura Loading System...',
-        description: `${loadingEmoji} ${lang.PING_LOADING}`,
+        description: `${face('loading', '\u23F3')} ${lang.PING_LOADING}`,
         footerText: `Sedang menyiapkan untuk ${interaction.user.username}`
     });
 
@@ -228,7 +250,7 @@ async function handlePing(interaction, client, lang) {
         const dbStart = Date.now();
         await sequelize.query('SELECT 1');
         dbPing = `${online} \`${Date.now() - dbStart}ms\``;
-    } catch (e) { dbPing = `${offline} Error`; }
+    } catch (err) { dbPing = `${offline} Error`; }
 
     let redisPing = `${offline} Offline`;
     try {
@@ -238,7 +260,7 @@ async function handlePing(interaction, client, lang) {
             await redisManager.client.ping();
             redisPing = `${online} \`${Date.now() - redisStart}ms\``;
         }
-    } catch (e) { redisPing = `${offline} Error`; }
+    } catch (err) { redisPing = `${offline} Error`; }
 
     // --- Naura Music & Audio Systems ---
     let lavalinkStr = `${offline} Offline`;
@@ -255,10 +277,10 @@ async function handlePing(interaction, client, lang) {
                 });
                 lavalinkStr = '\n' + nodeArr.join('\n');
             } else {
-                lavalinkStr = `\n${dot} ${ui.getEmoji('warning') || '⚠️'} Standby (Tidak ada Node aktif)`;
+                lavalinkStr = `\n${dot} ${face('warning', '\u26A0\uFE0F')} Standby (Tidak ada Node aktif)`;
             }
         }
-    } catch (e) { }
+    } catch (err) { /* Lavalink belum siap; status Offline sudah memadai */ }
 
     // --- Naura Intelligent Systems ---
     let verbaPing = `${offline} Offline`;
@@ -267,7 +289,7 @@ async function handlePing(interaction, client, lang) {
         const fetchRes = await fetch('https://api.verba.ink/', { method: 'HEAD', signal: AbortSignal.timeout(3000) }).catch(() => null);
         if (fetchRes) verbaPing = `${online} \`${Date.now() - verbaStart}ms\``;
         else verbaPing = `${offline} Timeout`;
-    } catch (e) { verbaPing = `${offline} Error`; }
+    } catch (err) { verbaPing = `${offline} Error`; }
 
     let geminiPing = `${offline} Offline`;
     try {
@@ -275,7 +297,7 @@ async function handlePing(interaction, client, lang) {
         const fetchRes2 = await fetch('https://generativelanguage.googleapis.com/', { method: 'HEAD', signal: AbortSignal.timeout(3000) }).catch(() => null);
         if (fetchRes2) geminiPing = `${online} \`${Date.now() - geminiStart}ms\``;
         else geminiPing = `${offline} Timeout`;
-    } catch (e) { geminiPing = `${offline} Error`; }
+    } catch (err) { geminiPing = `${offline} Error`; }
 
     // --- Third-Party Integrations Systems ---
     let saweriaPing = `${offline} Offline`;
@@ -284,7 +306,7 @@ async function handlePing(interaction, client, lang) {
         const saweriaRes = await fetch('https://saweria.co', { method: 'HEAD', signal: AbortSignal.timeout(3000) }).catch(() => null);
         if (saweriaRes) saweriaPing = `${online} \`${Date.now() - saweriaStart}ms\``;
         else saweriaPing = `${offline} Timeout`;
-    } catch (e) { saweriaPing = `${offline} Error`; }
+    } catch (err) { saweriaPing = `${offline} Error`; }
 
     let trakteerPing = `${offline} Offline`;
     try {
@@ -292,7 +314,7 @@ async function handlePing(interaction, client, lang) {
         const trakteerRes = await fetch('https://trakteer.id', { method: 'HEAD', signal: AbortSignal.timeout(3000) }).catch(() => null);
         if (trakteerRes) trakteerPing = `${online} \`${Date.now() - trakteerStart}ms\``;
         else trakteerPing = `${offline} Timeout`;
-    } catch (e) { trakteerPing = `${offline} Error`; }
+    } catch (err) { trakteerPing = `${offline} Error`; }
 
     let topggPing = `${offline} Offline`;
     try {
@@ -300,20 +322,20 @@ async function handlePing(interaction, client, lang) {
         const topggRes = await fetch('https://top.gg', { method: 'HEAD', signal: AbortSignal.timeout(3000) }).catch(() => null);
         if (topggRes) topggPing = `${online} \`${Date.now() - topggStart}ms\``;
         else topggPing = `${offline} Timeout`;
-    } catch (e) { topggPing = `${offline} Error`; }
+    } catch (err) { topggPing = `${offline} Error`; }
 
     // Setup visual components
-    const ePingTitle = ui.getEmoji('ping') || '🏓';
-    const eCoreSystem = ui.getEmoji('network_ping') || '🌐';
-    const eEventLoop = ui.getEmoji('eventloop') || '⚡';
-    const eMemorySystem = ui.getEmoji('database_ping') || '🗄️';
-    const eIntellSystem = ui.getEmoji('intelligence') || '🧠';
-    const eThirdPartySystem = ui.getEmoji('saweria') || '🔌';
-    const eAudioSystem = ui.getEmoji('help_music') || '🎵';
+    const ePingTitle = e('ping', '\uD83C\uDFD3');
+    const eCoreSystem = e('network_ping', '\uD83C\uDF10');
+    const eEventLoop = e('eventloop', '\u26A1');
+    const eMemorySystem = e('database_ping', '\uD83D\uDDC4\uFE0F');
+    const eIntellSystem = e('intelligence', '\uD83E\uDDE0');
+    const eThirdPartySystem = e('saweria', '\uD83D\uDD0C');
+    const eAudioSystem = e('help_music', '\uD83C\uDFB5');
 
     const pingBanner = ui.getBanner('ping');
 
-    // Components V2: Container tunggal — tombol navigasi ikut menyatu di dalamnya
+    // Components V2: Container tunggal, tombol navigasi ikut menyatu di dalamnya
     const payload = buildContainerV2({
         accentColorHex: ui.getColor('primary'),
         authorName: 'Naura Telemetry System',
@@ -341,11 +363,11 @@ async function handlePing(interaction, client, lang) {
 }
 
 // ==========================================
-// 📊 2. STATS SYSTEM (HARDWARE DIAGNOSTIC)
+// 2. STATS SYSTEM (HARDWARE DIAGNOSTIC)
 // ==========================================
 async function handleStats(interaction, client, lang) {
     if (interaction.deferReply && !interaction.deferred) await interaction.deferReply();
-    const dot = ui.getEmoji('dot') || '▶️';
+    const dot = e('dot', '\u25B6\uFE0F');
 
     const totalMem = (os.totalmem() / 1024 / 1024 / 1024).toFixed(2);
     const freeMem = (os.freemem() / 1024 / 1024 / 1024).toFixed(2);
@@ -355,25 +377,24 @@ async function handleStats(interaction, client, lang) {
     const cpuModel = os.cpus()[0].model.replace(/CPU|GHz|@|\(R\)|\(TM\)/g, '').trim();
     const cores = os.cpus().length;
 
-    // Resolve emojis from ui.js
-    const eStats = ui.getEmoji('stats') || '📊';
-    const eServer = ui.getEmoji('os') || '🖥️';
-    const eRam = ui.getEmoji('ram') || '🧠';
-    const eSoftware = ui.getEmoji('software') || '⚙️';
-    const eReach = ui.getEmoji('reach') || '📈';
+    const eStats = e('stats', '\uD83D\uDCCA');
+    const eServer = e('os', '\uD83D\uDDA5\uFE0F');
+    const eRam = e('ram', '\uD83E\uDDE0');
+    const eSoftware = e('software', '\u2699\uFE0F');
+    const eReach = e('reach', '\uD83D\uDCC8');
 
-    const eCpu = ui.getEmoji('cpu') || '💻';
-    const eUptime = ui.getEmoji('uptime') || '⏱️';
-    const eGuilds = ui.getEmoji('guilds') || '👥';
-    const eUsers = ui.getEmoji('users') || '👤';
-    const eBotUptime = ui.getEmoji('bot_uptime') || '⏱️';
+    const eCpu = e('cpu', '\uD83D\uDCBB');
+    const eUptime = e('uptime', '\u23F1\uFE0F');
+    const eGuilds = e('guilds', '\uD83D\uDC65');
+    const eUsers = e('users', '\uD83D\uDC64');
+    const eBotUptime = e('bot_uptime', '\u23F1\uFE0F');
 
-    // Strip default emojis from localizations if present
-    const cleanTitle = lang.STATS_TITLE.replace(/^📊\s*/, '');
-    const cleanServer = lang.STATS_SERVER.replace(/^🖥️\s*/, '');
-    const cleanRam = lang.STATS_RAM.replace(/^🧠\s*/, '');
-    const cleanSoftware = lang.STATS_SOFTWARE.replace(/^⚙️\s*/, '');
-    const cleanReach = lang.STATS_REACH.replace(/^📈\s*/, '');
+    // Bersihkan emoji bawaan dari berkas lokalisasi agar tidak dobel
+    const cleanTitle = lang.STATS_TITLE.replace(/^\uD83D\uDCCA\s*/, '');
+    const cleanServer = lang.STATS_SERVER.replace(/^\uD83D\uDDA5\uFE0F?\s*/, '');
+    const cleanRam = lang.STATS_RAM.replace(/^\uD83E\uDDE0\s*/, '');
+    const cleanSoftware = lang.STATS_SOFTWARE.replace(/^\u2699\uFE0F?\s*/, '');
+    const cleanReach = lang.STATS_REACH.replace(/^\uD83D\uDCC8\s*/, '');
 
     const statsBanner = ui.getBanner('stats');
 
@@ -401,19 +422,18 @@ async function handleStats(interaction, client, lang) {
     return interaction.reply(payload);
 }
 
-
 // ==========================================
-// ℹ️ 3. INFO SYSTEM
+// 3. INFO SYSTEM
 // ==========================================
 async function handleInfo(interaction, client, lang) {
-    const eInfo = ui.getEmoji('info') || 'ℹ️';
+    const eInfo = e('info', '\u2139\uFE0F');
 
-    const eId = ui.getEmoji('id') || '🆔';
-    const eAdmin = ui.getEmoji('admin') || '👑';
-    const eClock = ui.getEmoji('clock') || '📅';
-    const eUsers = ui.getEmoji('users') || '👥';
-    const eBooster = ui.getEmoji('booster') || '🌟';
-    const eReach = ui.getEmoji('reach') || '📈';
+    const eId = e('id', '\uD83C\uDD94');
+    const eAdmin = e('admin', '\uD83D\uDC51');
+    const eClock = e('clock', '\uD83D\uDCC5');
+    const eUsers = e('users', '\uD83D\uDC65');
+    const eBooster = e('booster', '\uD83C\uDF1F');
+    const eReach = e('reach', '\uD83D\uDCC8');
 
     let title, thumbnailURL, fields;
 
@@ -423,7 +443,7 @@ async function handleInfo(interaction, client, lang) {
         const roleCount = guild.roles.cache.size;
         const channelCount = guild.channels.cache.size;
 
-        const cleanTitle = lang.INFO_SERVER_TITLE.replace(/^ℹ️\s*/, '') || 'Server Info';
+        const cleanTitle = lang.INFO_SERVER_TITLE.replace(/^\u2139\uFE0F?\s*/, '') || 'Server Info';
 
         title = `${eInfo} ${cleanTitle} - ${guild.name}`;
         thumbnailURL = guild.iconURL({ size: 512, dynamic: true });
@@ -435,13 +455,13 @@ async function handleInfo(interaction, client, lang) {
             { name: `${eBooster} Boosts`, value: `Level ${guild.premiumTier} (${guild.premiumSubscriptionCount} Boosts)` },
         ];
     } else {
-        const cleanTitle = lang.INFO_BOT_TITLE.replace(/^ℹ️\s*/, '') || 'Bot Info';
+        const cleanTitle = lang.INFO_BOT_TITLE.replace(/^\u2139\uFE0F?\s*/, '') || 'Bot Info';
 
         title = `${eInfo} ${cleanTitle} - Naura Hoshino`;
         thumbnailURL = client.user.displayAvatarURL({ size: 512 });
         fields = [
             { name: `${eId} Bot ID`, value: `\`${client.user.id}\`` },
-            { name: `${eAdmin} Developer`, value: `Aryandita` },
+            { name: `${eAdmin} Developer`, value: 'Aryandita' },
             { name: `${eClock} Created At`, value: `<t:${Math.floor(client.user.createdTimestamp / 1000)}:R>` },
             { name: `${eReach} Reach`, value: `${client.guilds.cache.size} Servers | ${client.users.cache.size} Users` },
         ];
@@ -462,7 +482,7 @@ async function handleInfo(interaction, client, lang) {
 }
 
 // ==========================================
-// 🎀 4. ABOUT SYSTEM
+// 4. ABOUT SYSTEM
 // ==========================================
 async function handleAbout(interaction, client, lang) {
     if (!interaction.deferred) {
@@ -470,9 +490,9 @@ async function handleAbout(interaction, client, lang) {
         interaction.deferred = true;
     }
 
-    let shardId = client.shard ? client.shard.ids[0] : 0;
-    let totalShards = client.shard ? client.shard.count : 1;
-    let memUsage = (process.memoryUsage().rss / 1024 / 1024).toFixed(1);
+    const shardId = client.shard ? client.shard.ids[0] : 0;
+    const totalShards = client.shard ? client.shard.count : 1;
+    const memUsage = (process.memoryUsage().rss / 1024 / 1024).toFixed(1);
 
     let totalGuilds = client.guilds.cache.size;
     let totalUsers = client.users.cache.reduce((acc, g) => acc + (g.memberCount || 0), 0);
@@ -485,7 +505,7 @@ async function handleAbout(interaction, client, lang) {
             const userResults = await client.shard.broadcastEval(c => c.guilds.cache.reduce((acc, g) => acc + (g.memberCount || 0), 0));
             totalUsers = userResults.reduce((acc, count) => acc + count, 0);
         } catch (err) {
-            // Fallback
+            // Fallback ke hitungan cache lokal
         }
     }
 
@@ -493,21 +513,23 @@ async function handleAbout(interaction, client, lang) {
         totalUsers = client.guilds.cache.reduce((acc, g) => acc + (g.memberCount || 0), 0) || client.users.cache.size;
     }
 
-    const ePower = ui.getEmoji('power') || '🤖';
-    const eStats = ui.getEmoji('stats') || '📊';
-    const eDeveloper = ui.getEmoji('admin') || '👑';
+    const ePower = e('power', '\uD83E\uDD16');
+    const eStats = e('stats', '\uD83D\uDCCA');
+    const eDeveloper = e('admin', '\uD83D\uDC51');
 
-    const eShard = ui.getEmoji('shard') || '📟';
-    const eMemory = ui.getEmoji('memory') || '💾';
-    const ePing = ui.getEmoji('ping') || '⚡';
-    const eGuilds = ui.getEmoji('guilds') || '🌍';
-    const eUsers = ui.getEmoji('users') || '👥';
-    const eAbout = ui.getEmoji('about') || '👧🏻';
-    const eHeart = ui.getEmoji('favorite') || '💖';
-    const ePartner = ui.getEmoji('handshake') || '🤝';
-    const eSparkle = ui.getEmoji('sparkle') || '✨';
-    const eStar = ui.getEmoji('star') || '⭐';
-    const eCheck = ui.getEmoji('check') || '✅';
+    const eShard = e('shard', '\uD83D\uDCDF');
+    const eMemory = e('memory', '\uD83D\uDCBE');
+    const ePing = e('ping', '\u26A1');
+    const eGuilds = e('guilds', '\uD83C\uDF0D');
+    const eUsers = e('users', '\uD83D\uDC65');
+    const eHeart = e('favorite', '\uD83D\uDC96');
+    const ePartner = e('handshake', '\uD83E\uDD1D');
+    const eSparkle = e('sparkle', '\u2728');
+    const eStar = e('star', '\u2B50');
+    const eCheck = e('check', '\u2705');
+
+    // Wajah Naura untuk judul: senyum senang saat memperkenalkan diri
+    const eAbout = face('happy', '\uD83D\uDC67');
 
     const sysStatus = `${ePower} **Status Sistem:** Online\n` +
         `${eShard} **Shard ID:** \`#${shardId} / ${totalShards}\`\n` +
@@ -528,7 +550,7 @@ async function handleAbout(interaction, client, lang) {
         `> ${eCheck} Mematuhi Discord Terms of Service & Community Guidelines.\n` +
         `> ${eCheck} Memasang bot Naura Hoshino di server dan bersedia saling mempromosikan.`;
 
-    const cleanTitle = lang.ABOUT_TITLE.replace(/^🎀\s*/, '') || 'Meet Naura Hoshino!';
+    const cleanTitle = lang.ABOUT_TITLE.replace(/^\uD83C\uDF80\s*/, '') || 'Meet Naura Hoshino!';
 
     const aboutBanner = ui.getBanner('about');
 
@@ -538,12 +560,12 @@ async function handleAbout(interaction, client, lang) {
         title: `${eAbout} ${cleanTitle}`,
         iconURL: client.user.displayAvatarURL(),
         description:
-            `Konnichiwa! Namaku **Naura Hoshino** ${eHeart}. Aku adalah asisten virtual generasi terbaru buatan **Aryandita** yang dirancang buat nemenin hari-harimu di Discord.\n\n` +
-            `Aku dibuat dengan penuh perhatian agar terasa hangat, ramah, dan gak kaku selayaknya teman sungguhan! Dari mutar musik jernih 24/7, ngobrol seru bareng AI, petualangan RPG survival, sampai moderasi server, aku siap bantu kamu kapan pun! ${eSparkle}\n\n` +
+            `Konnichiwa! Namaku **Naura Hoshino** ${eHeart}. Aku asisten virtual generasi terbaru buatan **Aryandita** yang dirancang buat nemenin hari-harimu di Discord.\n\n` +
+            `Aku dibuat dengan penuh perhatian supaya terasa hangat, ramah, dan gak kaku selayaknya teman sungguhan! Dari mutar musik jernih 24/7, ngobrol seru bareng AI, petualangan RPG survival, sampai moderasi server, aku siap bantu kamu kapan pun! ${eSparkle}\n\n` +
             `${partnershipText}`,
         fields: [
             { name: `${eStats} TELEMETRI SHARD & SISTEM`, value: sysStatus },
-            { name: `${eDeveloper} DEVELOPER / CREATOR`, value: `\`Aryandita\` (Developer Utama & Pencipta Ekosistem Naura Hoshino)` },
+            { name: `${eDeveloper} DEVELOPER / CREATOR`, value: '`Aryandita` (Developer Utama & Pencipta Ekosistem Naura Hoshino)' },
         ],
         bannerAttachmentName: aboutBanner ? 'banner.png' : null,
         buttonsRow: createNavButtons(),
@@ -558,7 +580,7 @@ async function handleAbout(interaction, client, lang) {
 }
 
 // ==========================================
-// 📚 5. HELP SYSTEM — COMPONENTS V2
+// 5. HELP SYSTEM -- COMPONENTS V2
 // ==========================================
 
 /**
@@ -569,48 +591,44 @@ async function handleAbout(interaction, client, lang) {
  * @param {boolean} disabled - Apakah select menu dinonaktifkan (saat timeout).
  */
 function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false) {
-    // Daftar kategori dengan urutan tetap (kategori economy dihapus agar tidak bentrok dengan survival)
-    const categoryKeys = ['core', 'music', 'minigame', 'survival', 'admin'];
+    const categoryKeys = HELP_CATEGORY_KEYS;
     const categories = {
-        core: { emoji: ui.getEmoji('help_core') || '⚙️', label: lang.HELP_CAT_CORE_LABEL, desc: lang.HELP_CAT_CORE_DESC, content: formatHelpContent(lang.HELP_CONTENT_CORE) },
-        music: { emoji: ui.getEmoji('help_music') || '🎵', label: lang.HELP_CAT_MUSIC_LABEL, desc: lang.HELP_CAT_MUSIC_DESC, content: formatHelpContent(lang.HELP_CONTENT_MUSIC) },
-        minigame: { emoji: ui.getEmoji('help_game') || '🎮', label: lang.HELP_CAT_GAME_LABEL, desc: lang.HELP_CAT_GAME_DESC, content: formatHelpContent(lang.HELP_CONTENT_GAME) },
-        survival: { emoji: ui.getEmoji('help_survival') || '🏕️', label: lang.HELP_CAT_SURVIVAL_LABEL, desc: lang.HELP_CAT_SURVIVAL_DESC, content: formatHelpContent(lang.HELP_CONTENT_SURVIVAL) },
-        admin: { emoji: ui.getEmoji('help_admin') || '🛠️', label: lang.HELP_CAT_ADMIN_LABEL, desc: lang.HELP_CAT_ADMIN_DESC, content: formatHelpContent(lang.HELP_CONTENT_ADMIN) },
+        core: { emoji: e('help_core', '\u2699\uFE0F'), label: lang.HELP_CAT_CORE_LABEL, desc: lang.HELP_CAT_CORE_DESC, content: formatHelpContent(lang.HELP_CONTENT_CORE) },
+        music: { emoji: e('help_music', '\uD83C\uDFB5'), label: lang.HELP_CAT_MUSIC_LABEL, desc: lang.HELP_CAT_MUSIC_DESC, content: formatHelpContent(lang.HELP_CONTENT_MUSIC) },
+        minigame: { emoji: e('help_game', '\uD83C\uDFAE'), label: lang.HELP_CAT_GAME_LABEL, desc: lang.HELP_CAT_GAME_DESC, content: formatHelpContent(lang.HELP_CONTENT_GAME) },
+        survival: { emoji: e('help_survival', '\uD83C\uDFD5\uFE0F'), label: lang.HELP_CAT_SURVIVAL_LABEL, desc: lang.HELP_CAT_SURVIVAL_DESC, content: formatHelpContent(lang.HELP_CONTENT_SURVIVAL) },
+        admin: { emoji: e('help_admin', '\uD83D\uDEE0\uFE0F'), label: lang.HELP_CAT_ADMIN_LABEL, desc: lang.HELP_CAT_ADMIN_DESC, content: formatHelpContent(lang.HELP_CONTENT_ADMIN) },
     };
 
     // Tentukan konten yang ditampilkan di dalam Container
-    let bodyContent;
-    if (categoryIndex >= 0) {
-        // Menampilkan isi kategori yang dipilih
-        const cat = categories[categoryKeys[categoryIndex]];
-        bodyContent = `${cat.emoji} **${cat.label}**\n\n${cat.content}`;
-    } else {
-        // Halaman default: deskripsi umum
-        bodyContent = formatHelpContent(lang.HELP_DESC);
-    }
+    const activeKey = categoryIndex >= 0 ? categoryKeys[categoryIndex] : null;
+    const activeCat = activeKey ? categories[activeKey] : null;
+    const bodyContent = activeCat
+        ? `${activeCat.emoji} **${activeCat.label}**\n\n${activeCat.content}`
+        : formatHelpContent(lang.HELP_DESC);
 
-    // Hitung warna accent (primary pink Naura → integer RGB)
+    // Hitung warna accent (primary pink Naura menjadi integer RGB)
     const primaryHex = (ui.getColor('primary') || '#FFB6C1').replace('#', '');
     const accentColor = parseInt(primaryHex, 16);
 
-    // Build select menu options (Gunakan ui.parseEmoji agar tidak crash pada custom emoji)
+    // Build select menu options (pakai ui.parseEmoji agar custom emoji tidak crash)
     const selectOptions = categoryKeys.map(key => {
         const option = {
             label: categories[key].label,
             description: categories[key].desc,
             value: key,
-            default: categoryKeys.indexOf(key) === categoryIndex,
+            default: key === activeKey,
         };
         const parsedEmoji = ui.parseEmoji(categories[key].emoji);
         if (parsedEmoji) option.emoji = parsedEmoji;
         return option;
     });
 
-    // Select menu row
+    // Placeholder select menu tidak merender custom emoji, jadi sengaja pakai
+    // emoji unicode di sini saja.
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId('help_category_select')
-        .setPlaceholder(`📚 ${lang.HELP_PLACEHOLDER || 'Naura Help Menu'}`)
+        .setPlaceholder(`\uD83D\uDCDA ${lang.HELP_PLACEHOLDER || 'Naura Help Menu'}`)
         .setDisabled(disabled)
         .addOptions(selectOptions);
     const selectRow = new ActionRowBuilder().addComponents(selectMenu);
@@ -618,58 +636,41 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false) {
     // Tombol navigasi pagination
     const prevBtn = new ButtonBuilder()
         .setCustomId('help_prev')
-        .setLabel('« Categories')
+        .setLabel(lang.HELP_BTN_PREV || '\u00AB Categories')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(disabled || categoryIndex <= 0);
     const nextBtn = new ButtonBuilder()
         .setCustomId('help_next')
-        .setLabel('Categories »')
+        .setLabel(lang.HELP_BTN_NEXT || 'Categories \u00BB')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(disabled || categoryIndex >= categoryKeys.length - 1);
     const navRow = new ActionRowBuilder().addComponents(prevBtn, nextBtn);
 
     // Footer text terpusat
     const footerText = ui.stripCustomEmojis(ui.getFooter('core'));
+    const eHelp = e('help', '\uD83D\uDCDA');
 
-    // Komponen-komponen di dalam Container
     const containerComponents = [
-        // Judul di atas (Title boleh pakai custom emoji, Header/Author & Footer yang tidak)
-        {
-            type: 10, // TEXT_DISPLAY
-            content: `## 📚 ${lang.HELP_TITLE || 'Naura Help System'}`,
-        },
-        // Separator tipis
+        { type: 10, content: `## ${eHelp} ${lang.HELP_TITLE || 'Naura Help System'}` },
         { type: 14, divider: true, spacing: 1 },
-        // Konten utama (desc atau isi kategori)
-        {
-            type: 10, // TEXT_DISPLAY
-            content: bodyContent,
-        },
-        // Separator sebelum komponen interaktif
+        { type: 10, content: bodyContent },
         { type: 14, divider: true, spacing: 1 },
-        // Select menu dalam Action Row
         selectRow.toJSON(),
-        // Tombol navigasi dalam Action Row
         navRow.toJSON(),
-        // Separator sebelum footer
         { type: 14, divider: false, spacing: 1 },
-        // Footer
-        {
-            type: 10, // TEXT_DISPLAY
-            content: `-# ${footerText}`,
-        },
+        { type: 10, content: `-# ${footerText}` },
     ];
 
     return {
         flags: MessageFlags.IsComponentsV2,
         components: [
             {
-                type: 17, // CONTAINER
+                type: 17,
                 accent_color: accentColor,
                 components: containerComponents,
             }
         ],
-        _categoryKeys: categoryKeys, // referensi internal (tidak dikirim ke Discord)
+        _categoryKeys: categoryKeys,
         _categories: categories,
     };
 }
@@ -685,19 +686,20 @@ async function handleHelp(interaction, client, langParam) {
             .setCustomId('help_lang_select')
             .setPlaceholder(placeholderText)
             .addOptions(
-                { label: 'English', description: 'Show help menu in English', value: 'en', emoji: '🇬🇧' },
-                { label: 'Indonesia', description: 'Tampilkan menu bantuan dalam Bahasa Indonesia', value: 'id', emoji: '🇮🇩' }
+                { label: 'English', description: 'Show help menu in English', value: 'en', emoji: '\uD83C\uDDEC\uD83C\uDDE7' },
+                { label: 'Indonesia', description: 'Tampilkan menu bantuan dalam Bahasa Indonesia', value: 'id', emoji: '\uD83C\uDDEE\uD83C\uDDE9' }
             )
     );
 
-    // Author Name Embed TIDAK BOLEH pakai custom emoji string <a:...>
     const langPayload = buildContainerV2({
         accentColorHex: ui.getColor('primary') || '#FFB6C1',
-        authorName: '📚 Naura Help System',
+        authorName: 'Naura Help System',
+        title: `${e('help', '\uD83D\uDCDA')} Naura Help System`,
         iconURL: client.user.displayAvatarURL(),
+        expression: 'help',
         description: isIndo
-            ? 'Silakan pilih bahasa yang kamu inginkan di bawah ini untuk melihat menu bantuan.'
-            : 'Please select your preferred language below to view the help menu.',
+            ? 'Halo! Sebelum mulai, pilih dulu bahasa yang paling nyaman buat kamu di bawah ini yaa~ Nanti Naura pandu semuanya pakai bahasa itu.'
+            : 'Hi there! Before we start, pick the language you are most comfortable with below. Naura will guide you in that language from now on.',
         buttonsRow: langSelectRow,
         footerText: ui.getFooter('core')
     });
@@ -721,11 +723,12 @@ async function handleHelp(interaction, client, langParam) {
         const selectedLang = langInteraction.values[0];
         lang = locales[selectedLang] || locales['en'];
 
+        const okEmoji = face('success', '\u2705');
         const confirmMsg = selectedLang === 'id'
-            ? '✅ Bahasa Indonesia dipilih!'
-            : '✅ English language selected!';
+            ? `${okEmoji} Siap! Mulai sekarang Naura ngobrol pakai Bahasa Indonesia yaa~`
+            : `${okEmoji} Got it! Naura will speak English with you from now on~`;
         await langInteraction.reply({ content: confirmMsg, flags: MessageFlags.Ephemeral }).catch(() => { });
-    } catch (e) {
+    } catch (err) {
         // Timeout, fallback ke bahasa Inggris
         lang = locales['en'];
     }
@@ -737,7 +740,6 @@ async function handleHelp(interaction, client, langParam) {
 async function renderHelpMenuV2(interaction, client, lang, existingResponse = null) {
     let currentIndex = -1; // -1 = halaman default (deskripsi umum)
 
-    // Buat payload awal
     const initialData = buildHelpPayload(lang, client, currentIndex, false);
     const payload = {
         content: null,
@@ -746,7 +748,6 @@ async function renderHelpMenuV2(interaction, client, lang, existingResponse = nu
         components: initialData.components,
     };
 
-    // Kirim / edit pesan dengan Components V2
     let response;
     try {
         if (existingResponse) {
@@ -757,25 +758,26 @@ async function renderHelpMenuV2(interaction, client, lang, existingResponse = nu
             response = await interaction.reply({ ...payload, fetchReply: true });
         }
     } catch (err) {
-        // Fallback: coba editReply jika edit gagal
-        try { response = await interaction.editReply(payload); } catch (_) { }
+        try { response = await interaction.editReply(payload); } catch (innerErr) { /* pesan sudah tidak bisa disunting */ }
     }
 
     if (!response || !response.createMessageComponentCollector) return;
 
-    // Collector untuk Select Menu DAN Buttons sekaligus
     const collector = response.createMessageComponentCollector({
         time: 120000,
         filter: i => i.user.id === interaction.user.id
     });
 
-    const categoryKeys = ['core', 'economy', 'music', 'minigame', 'survival', 'admin'];
+    // Daftar kategori yang sama persis dengan yang dipakai perakit tampilan,
+    // supaya indeks pilihan tidak lagi bergeser.
+    const categoryKeys = HELP_CATEGORY_KEYS;
 
     collector.on('collect', async i => {
         try {
             if (i.componentType === ComponentType.StringSelect && i.customId === 'help_category_select') {
-                // Navigasi via dropdown
-                currentIndex = categoryKeys.indexOf(i.values[0]);
+                const picked = categoryKeys.indexOf(i.values[0]);
+                if (picked === -1) return;
+                currentIndex = picked;
             } else if (i.componentType === ComponentType.Button) {
                 if (i.customId === 'help_prev') {
                     currentIndex = Math.max(0, currentIndex === -1 ? 0 : currentIndex - 1);
@@ -788,7 +790,6 @@ async function renderHelpMenuV2(interaction, client, lang, existingResponse = nu
                 return;
             }
 
-            // Rebuild payload dengan index baru
             const updatedData = buildHelpPayload(lang, client, currentIndex, false);
             await i.update({
                 embeds: [],
@@ -801,7 +802,6 @@ async function renderHelpMenuV2(interaction, client, lang, existingResponse = nu
     });
 
     collector.on('end', async () => {
-        // Nonaktifkan select menu dan tombol saat collector berakhir
         try {
             const disabledData = buildHelpPayload(lang, client, currentIndex, true);
             const target = existingResponse || response;
@@ -812,29 +812,32 @@ async function renderHelpMenuV2(interaction, client, lang, existingResponse = nu
                     components: disabledData.components,
                 }).catch(() => { });
             }
-        } catch (_) { }
+        } catch (err) { /* pesan mungkin sudah dihapus */ }
     });
 }
 
 // ==========================================
-// 🌐 6. LANGUAGE SYSTEM
+// 6. LANGUAGE SYSTEM
 // ==========================================
 async function handleLanguage(interaction, guildId, newLang, currentLang) {
     if (!interaction.member || !interaction.member.permissions.has('Administrator')) {
-        return interaction.reply({ content: currentLang.ERROR_PERMISSION_DENIED || '❌ Anda harus menjadi Administrator untuk mengubah bahasa server.', ephemeral: true });
+        const msg = currentLang.ERROR_PERMISSION_DENIED || `${face('denied', '\u274C')} Maaf yaa, cuma Administrator yang boleh ganti bahasa server. Naura gak bisa bantu yang ini~`;
+        if (interaction.reply && !interaction.deferred) return interaction.reply({ content: msg, ephemeral: true });
+        return interaction.editReply({ content: msg });
     }
     if (!guildId) {
-        const msg = "Only available in servers.";
+        const msg = `${face('error', '\u274C')} Perintah ini cuma bisa dipakai di dalam server yaa / Only available in servers.`;
         if (interaction.reply && !interaction.deferred) return interaction.reply({ content: msg, ephemeral: true });
         return interaction.editReply({ content: msg });
     }
 
     if (!newLang || !['id', 'en'].includes(newLang)) {
-        if (interaction.reply && !interaction.deferred) return interaction.reply({ content: currentLang.LANG_NOT_FOUND, ephemeral: true });
-        return interaction.editReply({ content: currentLang.LANG_NOT_FOUND });
+        const msg = currentLang.LANG_NOT_FOUND || `${face('confused', '\u2753')} Hmm, Naura belum kenal bahasa itu. Pilih \`id\` atau \`en\` yaa~`;
+        if (interaction.reply && !interaction.deferred) return interaction.reply({ content: msg, ephemeral: true });
+        return interaction.editReply({ content: msg });
     }
 
-    let [settings] = await GuildSettings.findOrCreate({ where: { guildId } });
+    const [settings] = await GuildSettings.findOrCreate({ where: { guildId } });
 
     if (!settings.system) settings.system = { prefix: 'n!', language: 'id' };
     settings.system = { ...settings.system, language: newLang };
@@ -842,7 +845,7 @@ async function handleLanguage(interaction, guildId, newLang, currentLang) {
     settings.changed('system', true);
     await settings.save();
 
-    const successMsg = locales[newLang].LANG_SUCCESS;
+    const successMsg = `${face('success', '\u2705')} ${locales[newLang].LANG_SUCCESS}`;
 
     if (interaction.reply && !interaction.deferred) return interaction.reply({ content: successMsg });
     return interaction.editReply({ content: successMsg });

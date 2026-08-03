@@ -29,18 +29,31 @@ class LanguageManager {
 
     loadLanguages() {
         const root = path.join(__dirname, '..', '..');
+        const langPath = path.join(root, 'language');
 
         // 1. Kamus utama: language/id.json & language/en.json
-        const langPath = path.join(root, 'language');
         for (const lang of this.supported) {
             const file = path.join(langPath, `${lang}.json`);
             const data = this._readJson(file);
             if (data) this.strings[lang] = data;
         }
 
-        // 2. Kamus milik plugin: plugin/<kategori>/locales/<lang>.json
-        //    Digabung tanpa menimpa kunci yang sudah ada di kamus utama, sehingga
-        //    kamus utama tetap menjadi sumber kebenaran bila terjadi bentrok nama.
+        // 2. Kamus bersama: language/shared/<lang>.json
+        //    Rumah bagi teks yang dipakai lintas plugin, terutama oleh builder
+        //    embed dan Container V2 (pesan loading, sukses, error). Dipisah dari
+        //    kamus utama supaya mudah dirawat, dan digabung tanpa menimpa agar
+        //    kamus utama tetap menjadi sumber kebenaran bila ada nama bentrok.
+        let sharedCount = 0;
+        for (const lang of this.supported) {
+            const file = path.join(langPath, 'shared', `${lang}.json`);
+            const data = this._readJson(file);
+            if (!data) continue;
+            this.strings[lang] = this._mergeWithoutOverwrite(this.strings[lang], data);
+            sharedCount++;
+        }
+
+        // 3. Kamus milik plugin: plugin/<kategori>/locales/<lang>.json
+        //    Digabung tanpa menimpa kunci yang sudah ada, dengan alasan yang sama.
         const pluginPath = path.join(root, 'plugin');
         let categories = [];
         try {
@@ -65,7 +78,7 @@ class LanguageManager {
         const summary = this.supported
             .map(lang => `${lang}=${Object.keys(this.strings[lang] || {}).length}`)
             .join(', ');
-        logger.info(`[LanguageManager] Kamus dimuat (${summary}), ${mergedCount} berkas locale plugin digabung.`);
+        logger.info(`[LanguageManager] Kamus dimuat (${summary}), ${sharedCount} berkas bersama dan ${mergedCount} berkas locale plugin digabung.`);
     }
 
     /** Muat ulang seluruh kamus tanpa merestart bot. */

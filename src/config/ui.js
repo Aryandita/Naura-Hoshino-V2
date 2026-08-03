@@ -31,6 +31,8 @@ module.exports = {
         // --- Status Colors ---
         success: '#00FF00',
         error: '#FF0000',
+        warning: '#FFB347',
+        info: '#57C7FF',
         dark: '#2b2d31',
         light: '#f0f0f0',
 
@@ -200,19 +202,50 @@ module.exports = {
         memory: '<:database:1492712292524232824>',
         developer: '<a:Crown2:1492696869053141143>',
 
-        // --- Naura Face Recognition ---
-        sad: '',
-        happy: '',
-        sleepy: '',
-        shy: '',
-        angry: '',
-        love: '',
-        kiss: '',
-        wink: '',
-        smile: '',
-        crying: '',
-        confused: '',
-        surprised: '',
+        // ==========================================
+        // --- Naura Expression (Face Recognition) ---
+        // Emoji kustom yang mencerminkan wajah Naura.
+        // Gambar besar untuk ekspresi yang sama ada di assets/Naura_Expression
+        // dan diakses lewat src/utils/nauraExpression.js
+        // ==========================================
+
+        // Nama kanonik — cocok dengan nama berkas ekspresi
+        naura_akward: '<:Akward:1533824815725805668>',
+        naura_annoy: '<:Annoy:1533824819123064953>',
+        naura_blowkiss: '<:Blowkiss:1533824822768046170>',
+        naura_cheers: '<:Cheers:1533824826077085759>',
+        naura_chirping: '<:Chirping:1533824829176807464>',
+        naura_cry: '<:Cry:1533824832938967130>',
+        naura_eat: '<:Eat:1533824836676358154>',
+        naura_happy: '<:Happy:1533824839704641546>',
+        naura_hmph: '<:Hmph:1533824842816688248>',
+        naura_impressed: '<:Impressed:1533825168974151730>',
+        naura_read: '<:Read:1533824846604009482>',
+        naura_shocked: '<:Shocked:1533824850051993601>',
+        naura_shy: '<:Shy:1533824853482934444>',
+        naura_sleepy: '<:Sleepy:1533824857090035764>',
+        naura_thinking: '<:Thinking:1533824864367149096>',
+
+        // Alias berbasis perasaan — dipakai langsung di dalam embed
+        sad: '<:Cry:1533824832938967130>',
+        happy: '<:Happy:1533824839704641546>',
+        sleepy: '<:Sleepy:1533824857090035764>',
+        shy: '<:Shy:1533824853482934444>',
+        angry: '<:Hmph:1533824842816688248>',
+        love: '<:Blowkiss:1533824822768046170>',
+        kiss: '<:Blowkiss:1533824822768046170>',
+        wink: '<:Cheers:1533824826077085759>',
+        smile: '<:Happy:1533824839704641546>',
+        crying: '<:Cry:1533824832938967130>',
+        confused: '<:Akward:1533824815725805668>',
+        surprised: '<:Shocked:1533824850051993601>',
+        cheers: '<:Cheers:1533824826077085759>',
+        chirping: '<:Chirping:1533824829176807464>',
+        eating: '<:Eat:1533824836676358154>',
+        reading: '<:Read:1533824846604009482>',
+        impressed: '<:Impressed:1533825168974151730>',
+        annoyed: '<:Annoy:1533824819123064953>',
+        thinking: '<:Thinking:1533824864367149096>',
 
         // --- Announcements ---
         announce_update: '<a:Announcement1:1492696885817770164>',
@@ -234,9 +267,6 @@ module.exports = {
         coin: '<:NauraCoins:1484705998349402173>',
         nsf: '<:76792starcoin:1523226268257091755>',
         star_fragment: '<:76792starcoin:1523226268257091755>',
-        support: '<:Naura:1488427505466474597>',
-        dashboard: '<:stats:1492712312975392859>',
-        invite: '<a:Arrow:1492696901051744298>',
         wallet: '<:Wallet:1489894081436975184>',
         bank: '<:NauraBank:1484706000488497273>',
         lootbox: '<a:Gift:1492696855778295859>',
@@ -268,8 +298,6 @@ module.exports = {
         luck: '<a:luck:1499612612080570488>',
         health: '<:health:1499612610012643459>',
         stamina: '<a:Flash:1492696906764390460>',
-        quest: '<a:SpinningBook:1492696903069208627>',
-        vehicle: '<a:vehicle:1530482724085956608>',
         experience: '<a:xp:1523217869079576627>',
         pet: '<a:pet:1499612620859117719>',
         npc: '<:Limit:1493981697749024870>',
@@ -280,10 +308,7 @@ module.exports = {
         npc_mbak_siti: '<a:luck:1499612612080570488>',
         backpack: '<:backpack:1499612625107943525>',
         tools: '<:Tools:1499621327743615006>',
-        clear_sky: '<a:sunmove:1500705371134889995>',
-        rain: '<a:255591blueumbrella:1523226263844556882>',
         badai: '<a:thunder:1525032363225125046>',
-        sick: '<a:sick:1530482726090571846>',
         soup: '<a:soup:1530482720403226654>',
         bar_filled: '<:AfterDot:1488166236004159509>',
         bar_empty: '<:BeforeDot:1488166108081950882>',
@@ -378,7 +403,6 @@ module.exports = {
         prison: '⛓️',
 
         // Downloader
-        youtube: '<a:Youtube:1500310258709434448>',
         tiktok: '<:tiktok:1547565608970203176>',
         instagram: '<:Instagram:1532358955165024256>',
         twitter: '<:X_:1532358957048401950>',
@@ -491,7 +515,6 @@ module.exports = {
         spotify: '<:Spotify:1500311186736939008>',
         youtube: '<a:Youtube:1500310258709434448>',
         soundcloud: '<:SoundCloud:1500310263247671347>',
-        apple: '<:apple:1500705352335757362>',
 
         // --- Miscellaneous Utilities ---
         download: '<a:download:1525035127611064431>',
@@ -609,6 +632,19 @@ module.exports = {
         return this.emojis[name] || null;
     },
 
+    // Emoji ekspresi Naura berdasarkan nama ekspresi atau mood.
+    // Menerima 'Cheers', 'success', 'error', 'loading', 'afk', dan seterusnya.
+    // Mengembalikan null bila tidak ditemukan, supaya pola fallback tetap jalan.
+    getExpressionEmoji(nameOrMood) {
+        try {
+            const nauraExpression = require('../utils/nauraExpression');
+            return nauraExpression.getEmoji(nameOrMood);
+        } catch (e) {
+            logger.warn('[UI getExpressionEmoji]', e.message);
+            return null;
+        }
+    },
+
     // Check color. Returns primary color if not exists.
     getColor(name) {
         return this.colors[name] || this.colors.primary;
@@ -692,7 +728,9 @@ module.exports = {
         try {
             let msg;
             if (interaction.deferred || interaction.replied) {
-                msg = await interaction.editReply({ ...containerPayload, files: [] });
+                // Payload sudah membawa `files` sendiri (termasuk wajah Naura).
+                // Jangan dikosongkan paksa, kalau tidak gambarnya tidak pernah terkirim.
+                msg = await interaction.editReply(containerPayload);
             } else {
                 msg = await interaction.reply({ ...containerPayload, ephemeral: ephemeral, fetchReply: !ephemeral });
             }
@@ -724,10 +762,13 @@ module.exports = {
     getLangText(interaction, idText, enText) {
         if (!interaction) return this.hybrid(idText, enText);
 
-        let preferredLang = 'id';
-        const locale = interaction.locale || interaction.guildLocale || '';
-        if (locale.startsWith('en')) {
-            preferredLang = 'en';
+        // Prioritas utama: bahasa yang dipilih pengguna sendiri, dipasang oleh
+        // event handler lewat interaction.lang. Locale Discord hanya cadangan.
+        let preferredLang = interaction.lang || null;
+
+        if (!preferredLang) {
+            const locale = interaction.locale || interaction.guildLocale || '';
+            preferredLang = locale.startsWith('en') ? 'en' : 'id';
         }
 
         return preferredLang === 'en' ? (enText || idText) : (idText || enText);

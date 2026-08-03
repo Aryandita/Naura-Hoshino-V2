@@ -5,7 +5,6 @@ const env = require('../../src/config/env');
 const ui = require('../../src/config/ui');
 const { checkModeration, checkRateLimit, simulateTypingDelay, performWebSearchIfNeeded, updateGeminiHistory, getGeminiHistory } = require('./aiHelper');
 
-// Safety check so it doesn't crash if GEMINI_API_KEY is not defined
 const genAI = env.GEMINI_API
     ? new GoogleGenerativeAI(env.GEMINI_API)
     : env.GEMINI_API_KEY
@@ -26,7 +25,6 @@ class AIRouterManager {
         let replyText = '';
         let usedEngine = 'Verba AI';
 
-        // Inject Dashboard Settings Context
         if (settings && settings.settings && settings.settings.ai) {
             const aiSettings = settings.settings.ai;
             if (aiSettings.customPersona) {
@@ -37,16 +35,14 @@ class AIRouterManager {
             }
         }
 
-        // 1. Auto-Moderation Check
         const modResult = await checkModeration(userMessage);
         if (modResult.flagged) {
-            return ui.sendError(message, `Maaf, Naura tidak bisa merespons pesanmu karena: ${modResult.reason}.`);
+            return ui.sendError(message, `Maaf ya, Naura tidak bisa menjawab pesan itu karena ${modResult.reason.toLowerCase()}. Yuk ngobrol yang lain, Naura tetap senang menemanimu.`);
         }
 
-        // 2. Rate Limit Check
         const rateLimit = await checkRateLimit(message.author.id, isOwner, isPremiumUser);
         if (!rateLimit.allowed) {
-            return ui.sendError(message, `Sabar yaa! Naura pusing ditanya terus. Kasih jeda ${rateLimit.retryAfter} detik lagi dong~ 😵‍💫`);
+            return ui.sendError(message, `Pelan-pelan ya, Naura masih mengejar napas. Beri Naura ${rateLimit.retryAfter} detik lagi, nanti Naura balas lagi dengan senang hati.`);
         }
 
         const attachment = message.attachments.first();
@@ -67,15 +63,15 @@ class AIRouterManager {
                 ];
 
                 if (!genAI) throw new Error('GEMINI_API_KEY is not defined in .env');
-                
+
                 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
                 const response = await model.generateContent(parts);
                 replyText = response.response.text();
             } catch (error) {
                 logger.error('[GEMINI VISION ERROR]', error);
                 const errPayload = buildErrorContainerV2({
-                    title: 'Gagal Memproses Gambar',
-                    description: `${ui.getEmoji('error') || '❌'} Gagal memproses gambar. Layanan Gemini sedang gangguan.`,
+                    title: 'Naura belum bisa melihatnya',
+                    description: 'Maaf ya, mata Naura sedang buram. Layanan pembaca gambar lagi bermasalah. Coba kirim lagi sebentar lagi, Naura tunggu.',
                     footerText: ui.getFooter('core')
                 });
                 return message.reply(errPayload).catch(() => {});
@@ -133,75 +129,68 @@ class AIRouterManager {
                 }
 
                 if (data.session_id) {
-                    const sessionKey = `verba_session_${message.author.id}`;
                     await redisManager.setCache(sessionKey, data.session_id, 86400);
                 }
 
-                replyText = data.choices[0].message.content;
+                replyText = data?.choices?.[0]?.message?.content
+                    || data?.message?.content
+                    || data?.content
+                    || '';
 
-                // Save history for Gemini Fallback Sync
-                await updateGeminiHistory(message.author.id, "user", userMessage || '(Menyapa)');
-                await updateGeminiHistory(message.author.id, "model", replyText);
+                if (!replyText) throw new Error('Balasan Verba API kosong atau formatnya tidak dikenali.');
+
+                await updateGeminiHistory(message.author.id, 'user', userMessage || '(Menyapa)');
+                await updateGeminiHistory(message.author.id, 'model', replyText);
 
             } catch (verbaError) {
-                logger.error(`\x1b[33m[VERBA API ERROR] ${verbaError.message}\x1b[0m`);
-                
+                logger.error(`[VERBA API ERROR] ${verbaError.message}`);
+
                 const userRole = isOwner ? 'Owner' : (isPremiumUser ? 'Premium User' : 'User');
-                console.error(
-                    `\x1b[33mBeralih ke Gemini (Fallback) untuk ${userRole} (${message.author.username})\x1b[0m`
-                );
+                logger.info(`[AI Router] Beralih ke Gemini (Fallback) untuk ${userRole} (${message.author.username})`);
                 usedEngine = 'Gemini AI (Fallback)';
 
                 try {
                     if (!genAI) throw new Error('GEMINI_API_KEY is not defined in .env');
-                    
+
                     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
                     const promptText = `${persona}${previousBotMessage}\n\nPesan dari ${userRole} (${message.author.username}): ${userMessage || '(Menyapa)'}`;
                     const history = await getGeminiHistory(message.author.id);
-                    const chatSession = model.startChat({
-                        history: history,
-                    });
+                    const chatSession = model.startChat({ history: history });
                     const response = await chatSession.sendMessage(promptText);
                     replyText = response.response.text();
 
-                    // Save history
-                    await updateGeminiHistory(message.author.id, "user", promptText);
-                    await updateGeminiHistory(message.author.id, "model", replyText);
+                    await updateGeminiHistory(message.author.id, 'user', promptText);
+                    await updateGeminiHistory(message.author.id, 'model', replyText);
                 } catch (geminiError) {
                     logger.error('[GEMINI FALLBACK ERROR]', geminiError);
-                    
-                    // ==========================================
-                    // 🧠 FALLBACK KE-3: OLLAMA (Local AI)
-                    // ==========================================
+
                     try {
                         usedEngine = 'Ollama Local AI (Fallback)';
                         logger.info(`[AI Router] Beralih ke Ollama untuk ${userRole} (${message.author.username})`);
-                        
+
                         const { Ollama } = require('ollama');
                         const ollamaClient = new Ollama({ host: env.OLLAMA_BASE_URL });
                         const promptText = `${persona}${previousBotMessage}\n\nPesan dari ${userRole} (${message.author.username}): ${userMessage || '(Menyapa)'}`;
-                        
+
                         const ollamaResponse = await ollamaClient.chat({
                             model: env.OLLAMA_MODEL,
                             messages: [{ role: 'user', content: promptText }],
                         });
                         replyText = ollamaResponse.message.content;
 
-                        // Save history
-                        await updateGeminiHistory(message.author.id, "user", promptText);
-                        await updateGeminiHistory(message.author.id, "model", replyText);
+                        await updateGeminiHistory(message.author.id, 'user', promptText);
+                        await updateGeminiHistory(message.author.id, 'model', replyText);
                     } catch (ollamaError) {
                         logger.error('[OLLAMA FALLBACK ERROR]', ollamaError);
                         return ui.sendError(
                             message,
-                            'Waduh, jaringan AI Naura (Verba, Gemini, maupun Ollama) sedang down. Coba lagi nanti ya! 😵‍💫'
+                            'Aduh, semua jalur berpikir Naura sedang tersendat. Naura benar-benar ingin menjawabmu, coba sapa Naura lagi sebentar lagi ya.'
                         );
                     }
                 }
             }
         }
 
-        // 3. Dynamic Typing Delay
         await simulateTypingDelay(replyText);
 
         const lines = replyText.split('\n');
@@ -228,17 +217,24 @@ class AIRouterManager {
             }
         }
         if (currentChunk.trim().length > 0) chunks.push(currentChunk.trim());
+        if (chunks.length === 0) chunks.push('...');
+
+        const headTitle = `${ui.getEmoji('naura') || '\ud83d\udcac'} Naura menjawab`;
 
         for (let i = 0; i < chunks.length; i++) {
+            const isFirst = i === 0;
+            const isLast = i === chunks.length - 1;
+
             const payload = buildContainerV2({
                 accentColorHex: ui.getColor('primary') || '#FFB6C1',
-                authorName: i === 0 ? 'Naura AI' : undefined,
-                iconURL: i === 0 ? client.user.displayAvatarURL() : undefined,
+                authorName: isFirst ? 'Naura AI' : undefined,
+                title: isFirst ? headTitle : undefined,
+                iconURL: isFirst ? client.user.displayAvatarURL() : undefined,
                 description: chunks[i] || '...',
-                footerText: i === chunks.length - 1 ? `Powered by Naura Inteligent System • Dipesan oleh ${message.author.username}` : undefined
+                footerText: isLast ? `Powered by Naura Intelligent System \u2022 ${usedEngine} \u2022 Untuk ${message.author.username}` : undefined
             });
 
-            if (i === 0) {
+            if (isFirst) {
                 await message.reply(payload).catch(() => {});
             } else {
                 await message.channel.send(payload).catch(() => {});

@@ -7,231 +7,268 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
+    <!-- tokens.css harus setelah style.css agar warna ikut ui.colors bot -->
+    <link rel="stylesheet" href="/css/tokens.css">
+    <script src="/js/naura-ui.js"></script>
 </head>
 <body class="min-h-screen p-4 md:p-8 flex flex-col items-center bg-animated theme-none" id="mainBody">
     <div class="w-full max-w-5xl animate-fade-in">
-        
-        <!-- Header Leaderboard -->
+
+        <!-- Header -->
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-4 border-b border-[var(--color-hairline)] gap-4">
             <div>
                 <h1 class="text-3xl font-black font-cyber text-glow tracking-wider text-white flex items-center gap-3">
                     <i class="fa-solid fa-trophy text-yellow-400 animate-pulse"></i> HALL OF FAME
                 </h1>
-                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-cyber mt-1">Global Leaderboard & Ranking System</p>
+                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-cyber mt-1" data-i18n="lb.title">Papan Peringkat</p>
             </div>
-            <a href="/" class="btn-discord px-5 py-2.5 text-xs font-cyber tracking-widest uppercase bg-transparent border border-[var(--color-hairline)] text-gray-300 hover:text-white hover:border-[var(--color-primary-glow)] hover:bg-[var(--color-surface-glass)]">
-                <i class="fa-solid fa-arrow-left mr-2"></i>Back to Panel
-            </a>
+            <div class="flex items-center gap-2">
+                <button id="langToggle" title="Bahasa / Language" class="btn-discord px-4 py-2.5 text-xs font-cyber tracking-widest uppercase bg-transparent border border-[var(--color-hairline)] text-gray-300 hover:text-white hover:border-[var(--color-primary-glow)] hover:bg-[var(--color-surface-glass)]">
+                    <i class="fa-solid fa-language mr-2"></i><span id="langLabel">ID</span>
+                </button>
+                <a href="/" class="btn-discord px-5 py-2.5 text-xs font-cyber tracking-widest uppercase bg-transparent border border-[var(--color-hairline)] text-gray-300 hover:text-white hover:border-[var(--color-primary-glow)] hover:bg-[var(--color-surface-glass)]">
+                    <i class="fa-solid fa-arrow-left mr-2"></i><span data-i18n="nav.home">Beranda</span>
+                </a>
+            </div>
         </div>
 
-        <!-- Filter Category Tabs -->
+        <!-- Tab kategori -->
         <div class="flex flex-wrap items-center gap-2.5 mb-6 p-2 rounded-2xl glass-panel bg-black/40 border-white/5">
-            <button onclick="setCategory('wealth')" id="btnTabWealth" class="px-4 py-2.5 rounded-xl font-cyber text-xs font-bold transition flex items-center gap-2 bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 shadow-sm">
-                <i class="fa-solid fa-vault text-yellow-400"></i> Net Worth 🪙
+            <button data-cat="wealth" id="btnTabWealth" class="tab-btn">
+                <i class="fa-solid fa-vault text-yellow-400"></i> <span data-i18n="lb.wealth">Terkaya</span> 🪙
             </button>
-            <button onclick="setCategory('chat_level')" id="btnTabChatLevel" class="px-4 py-2.5 rounded-xl font-cyber text-xs font-bold transition flex items-center gap-2 bg-black/40 text-gray-400 hover:text-white border border-white/5">
-                <i class="fa-solid fa-comments text-cyan-400"></i> Chat Level 💬
+            <button data-cat="chat_level" id="btnTabChatLevel" class="tab-btn">
+                <i class="fa-solid fa-comments text-cyan-400"></i> <span data-i18n="lb.chat_level">Level Obrolan</span> 💬
             </button>
-            <button onclick="setCategory('rpg_level')" id="btnTabRpgLevel" class="px-4 py-2.5 rounded-xl font-cyber text-xs font-bold transition flex items-center gap-2 bg-black/40 text-gray-400 hover:text-white border border-white/5">
-                <i class="fa-solid fa-shield-halved text-purple-400"></i> RPG Level ⚔️
+            <button data-cat="rpg_level" id="btnTabRpgLevel" class="tab-btn">
+                <i class="fa-solid fa-shield-halved text-purple-400"></i> <span data-i18n="lb.rpg_level">Level Survival</span> ⚔️
             </button>
-            <button onclick="setCategory('trivia')" id="btnTabTrivia" class="px-4 py-2.5 rounded-xl font-cyber text-xs font-bold transition flex items-center gap-2 bg-black/40 text-gray-400 hover:text-white border border-white/5">
-                <i class="fa-solid fa-gamepad text-emerald-400"></i> Trivia Master 🎮
+            <button data-cat="trivia" id="btnTabTrivia" class="tab-btn">
+                <i class="fa-solid fa-gamepad text-emerald-400"></i> <span data-i18n="lb.trivia">Trivia</span> 🎮
             </button>
-            <button onclick="setCategory('music')" id="btnTabMusic" class="px-4 py-2.5 rounded-xl font-cyber text-xs font-bold transition flex items-center gap-2 bg-black/40 text-gray-400 hover:text-white border border-white/5">
-                <i class="fa-solid fa-music text-pink-400"></i> Music Listener 🎵
+            <button data-cat="music" id="btnTabMusic" class="tab-btn">
+                <i class="fa-solid fa-music text-pink-400"></i> <span data-i18n="lb.music">Musik</span> 🎵
             </button>
         </div>
 
-        <!-- Table Leaderboard -->
+        <!-- Tabel -->
         <div class="glass-panel rounded-3xl overflow-hidden shadow-2xl border border-[var(--color-hairline)] bg-black/45">
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-black/60 border-b border-[var(--color-hairline-strong)] text-xs tracking-wider text-[var(--color-muted)] font-cyber">
                         <tr>
-                            <th class="px-3 md:px-6 py-5 text-center w-16 md:w-20">Rank</th>
-                            <th class="px-3 md:px-6 py-5">User</th>
-                            <th class="px-3 md:px-6 py-5 text-center">Levels</th>
-                            <th class="px-3 md:px-6 py-5 text-right">Mata Uang / Value</th>
+                            <th class="px-3 md:px-6 py-5 text-center w-16 md:w-20" data-i18n="lb.rank">Peringkat</th>
+                            <th class="px-3 md:px-6 py-5" data-i18n="lb.player">Pemain</th>
+                            <th class="px-3 md:px-6 py-5 text-center">Level</th>
+                            <th class="px-3 md:px-6 py-5 text-right" data-i18n="lb.score">Nilai</th>
                             <th class="px-3 md:px-6 py-5 text-center w-28 md:w-36">Tier</th>
                         </tr>
                     </thead>
-                    <tbody id="leaderboard-body" class="text-sm bg-black/20">
-                        <tr>
-                            <td colspan="5" class="text-center py-20 text-[var(--color-muted)] font-assist">
-                                <i class="fa-solid fa-circle-notch fa-spin text-3xl text-[var(--color-primary)] mb-3 block"></i>
-                                Memuat data dari database...
-                            </td>
-                        </tr>
-                    </tbody>
+                    <tbody id="leaderboard-body" class="text-sm bg-black/20"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- Script Pengambil Data API -->
+    <style>
+        .tab-btn {
+            padding: 0.625rem 1rem;
+            border-radius: 0.75rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            background: rgba(0, 0, 0, 0.4);
+            color: #9ca3af;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .tab-btn:hover { color: #fff; }
+        .tab-btn[aria-selected="true"] {
+            background: var(--color-primary-glow);
+            color: #fff;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 16px var(--color-primary-glow);
+        }
+    </style>
+
     <script>
-        let currentType = 'wealth';
+        (function () {
+            'use strict';
 
-        // Apply background theme on load
-        const savedBg = localStorage.getItem('bgTheme') || 'none';
-        const body = document.getElementById('mainBody');
-        function resolveBgUrl(url) {
-            if (url && url.startsWith('adaptive-')) {
-                const suffix = url.substring('adaptive-'.length);
-                return window.innerWidth < 768 ? `/assets/dashboard/bg_mobile_${suffix}.png` : `/assets/dashboard/bg_pc_${suffix}.png`;
-            }
-            return url;
-        }
-        if (savedBg !== 'none' && savedBg !== 'white') {
-            body.style.backgroundImage = `url('${resolveBgUrl(savedBg)}')`;
-            if (savedBg && savedBg.startsWith('adaptive-')) {
-                window.addEventListener('resize', () => {
-                    body.style.backgroundImage = `url('${resolveBgUrl(savedBg)}')`;
-                });
-            }
-        } else if (savedBg === 'white') {
-            body.style.backgroundColor = '#f3f4f6';
-            body.classList.remove('theme-none');
-            body.classList.add('theme-white');
-        }
+            var currentType = 'wealth';
+            var body = document.getElementById('mainBody');
+            var tbody = document.getElementById('leaderboard-body');
 
-        // Sound effect integration
-        let sfxPlayer = null;
-        function playClickSfx() {
-            const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
-            if (sfxEnabled) {
-                if (!sfxPlayer) {
-                    sfxPlayer = new Audio('/assets/dashboard/click.mp3');
+            /* --- Latar belakang ---
+             * resolveBgUrl dulu ditulis ulang di sini, padahal app.js sudah
+             * punya versinya sendiri. Sekarang keduanya memakai NauraUI. */
+            var savedBg = localStorage.getItem('bgTheme') || 'none';
+            function paintBackground() {
+                body.style.backgroundImage = "url('" + NauraUI.resolveBgUrl(savedBg) + "')";
+            }
+            if (savedBg !== 'none' && savedBg !== 'white') {
+                paintBackground();
+                if (savedBg.indexOf('adaptive-') === 0) {
+                    window.addEventListener('resize', paintBackground);
                 }
-                sfxPlayer.currentTime = 0;
-                sfxPlayer.play().catch(() => {});
+            } else if (savedBg === 'white') {
+                body.style.backgroundColor = '#f3f4f6';
+                body.classList.remove('theme-none');
+                body.classList.add('theme-white');
             }
-        }
-        document.querySelectorAll('button, a').forEach(el => {
-            el.addEventListener('click', playClickSfx);
-        });
 
-        function setCategory(type) {
-            currentType = type;
-            const tabs = {
-                'wealth': { id: 'btnTabWealth', color: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40' },
-                'chat_level': { id: 'btnTabChatLevel', color: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' },
-                'rpg_level': { id: 'btnTabRpgLevel', color: 'bg-purple-500/20 text-purple-300 border-purple-500/40' },
-                'trivia': { id: 'btnTabTrivia', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
-                'music': { id: 'btnTabMusic', color: 'bg-pink-500/20 text-pink-300 border-pink-500/40' }
-            };
-
-            Object.keys(tabs).forEach(t => {
-                const btn = document.getElementById(tabs[t].id);
-                if (t === type) {
-                    btn.className = `px-4 py-2.5 rounded-xl font-cyber text-xs font-bold transition flex items-center gap-2 border shadow-sm ${tabs[t].color}`;
-                } else {
-                    btn.className = "px-4 py-2.5 rounded-xl font-cyber text-xs font-bold transition flex items-center gap-2 bg-black/40 text-gray-400 hover:text-white border border-white/5";
-                }
+            /* --- Bunyi klik --- */
+            document.addEventListener('click', function (event) {
+                if (event.target.closest('button, a, tbody tr')) NauraUI.playClickSfx();
             });
 
-            loadLeaderboard(type);
-        }
+            /* --- Pengalih bahasa --- */
+            var langToggle = document.getElementById('langToggle');
+            var langLabel = document.getElementById('langLabel');
 
-        async function loadLeaderboard(type = 'wealth') {
-            try {
-                const tbody = document.getElementById('leaderboard-body');
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center py-20 text-[var(--color-muted)] font-assist">
-                            <i class="fa-solid fa-circle-notch fa-spin text-3xl text-[var(--color-primary)] mb-3 block"></i>
-                            Memuat data ${type}...
-                        </td>
-                    </tr>
-                `;
+            function syncLangLabel() {
+                langLabel.textContent = NauraUI.lang.toUpperCase();
+            }
 
-                const res = await fetch(`/api/leaderboard?type=${type}&limit=20`);
-                const users = await res.json();
-                
-                tbody.innerHTML = ''; // Clear loading spinner
+            langToggle.addEventListener('click', async function () {
+                await NauraUI.setLanguage(NauraUI.lang === 'id' ? 'en' : 'id');
+                syncLangLabel();
+                render(currentType);
+            });
 
-                if (!Array.isArray(users) || users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-12 text-gray-400 font-cyber">Belum ada data leaderboard.</td></tr>';
-                    return;
+            /* --- State satu baris penuh, dihiasi ekspresi Naura --- */
+            function fullRowState(kind, options) {
+                tbody.innerHTML =
+                    '<tr><td colspan="5">' + NauraUI.stateHtml(kind, options) + '</td></tr>';
+            }
+
+            /* --- Tab --- */
+            var TABS = {
+                wealth: 'btnTabWealth',
+                chat_level: 'btnTabChatLevel',
+                rpg_level: 'btnTabRpgLevel',
+                trivia: 'btnTabTrivia',
+                music: 'btnTabMusic'
+            };
+
+            Object.keys(TABS).forEach(function (type) {
+                document.getElementById(TABS[type]).addEventListener('click', function () {
+                    setCategory(type);
+                });
+            });
+
+            function setCategory(type) {
+                currentType = type;
+                Object.keys(TABS).forEach(function (key) {
+                    document
+                        .getElementById(TABS[key])
+                        .setAttribute('aria-selected', key === type ? 'true' : 'false');
+                });
+                render(type);
+            }
+
+            /* --- Angka mengikuti bahasa aktif --- */
+            function num(value) {
+                return Number(value || 0).toLocaleString(NauraUI.lang === 'en' ? 'en-US' : 'id-ID');
+            }
+
+            function medal(index) {
+                var colors = ['text-yellow-400', 'text-gray-300', 'text-orange-500'];
+                if (index > 2) {
+                    return '<span class="text-gray-500 font-bold font-cyber text-base">#' + (index + 1) + '</span>';
+                }
+                return '<i class="fa-solid fa-medal ' + colors[index] + ' text-3xl"></i>';
+            }
+
+            function badge(user) {
+                if (user.isOwner) {
+                    return '<span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs px-3 py-1 rounded-full font-bold font-cyber"><i class="fa-solid fa-crown mr-1"></i>OWNER</span>';
+                }
+                if (user.isPremium) {
+                    return '<span class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 text-xs px-3 py-1 rounded-full font-bold font-cyber"><i class="fa-solid fa-star mr-1"></i>VIP</span>';
+                }
+                return '<span class="text-gray-500 bg-black/40 border border-white/5 px-3 py-1 rounded-full text-xs font-semibold">Member</span>';
+            }
+
+            function value(type, u) {
+                if (type === 'chat_level') {
+                    return '<div class="text-cyan-400 font-bold font-cyber">Lv. ' + u.chatLevel + '</div><div class="text-[9px] text-gray-500">' + num(u.chatXp) + ' XP</div>';
+                }
+                if (type === 'rpg_level') {
+                    return '<div class="text-purple-400 font-bold font-cyber">Lv. ' + u.rpgLevel + '</div><div class="text-[9px] text-gray-500">' + num(u.rpgXp) + ' XP</div>';
+                }
+                if (type === 'trivia') {
+                    return '<div class="text-emerald-400 font-bold font-cyber">🎮 ' + num(u.points) + '</div>';
+                }
+                if (type === 'music') {
+                    return '<div class="text-pink-400 font-bold font-cyber">🎵 ' + num(u.tracks) + '</div>';
+                }
+                return (
+                    '<div class="text-yellow-400 font-bold font-cyber">🪙 ' + num(u.netWorth) + '</div>' +
+                    '<div class="text-[9px] text-gray-400">⭐ ' + num(u.starFragments) +
+                    ' · W ' + num(u.wallet) + ' | B ' + num(u.bank) + '</div>'
+                );
+            }
+
+            async function render(type) {
+                fullRowState('loading');
+
+                var users;
+                try {
+                    var res = await fetch('/api/leaderboard?type=' + type + '&limit=20');
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    users = await res.json();
+                } catch (err) {
+                    console.error('[Leaderboard]', err);
+                    return fullRowState('error');
                 }
 
-                users.forEach((u, index) => {
-                    let rankDisplay = index === 0 ? '<i class="fa-solid fa-medal text-yellow-400 text-3xl drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]"></i>' : 
-                                      index === 1 ? '<i class="fa-solid fa-medal text-gray-300 text-3xl drop-shadow-[0_0_8px_rgba(209,213,219,0.6)]"></i>' : 
-                                      index === 2 ? '<i class="fa-solid fa-medal text-orange-500 text-3xl drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]"></i>' : 
-                                      `<span class="text-gray-500 font-bold font-cyber text-base">#${index + 1}</span>`;
-                    
-                    let rowStyle = index === 0 ? 'bg-yellow-500/5 border-l-4 border-yellow-400' :
-                                   index === 1 ? 'bg-gray-400/5 border-l-4 border-gray-300' :
-                                   index === 2 ? 'bg-orange-500/5 border-l-4 border-orange-500' : 
-                                   'border-b border-[var(--color-hairline)] hover:bg-[var(--color-surface-glass-hover)] border-l-4 border-transparent';
+                if (!Array.isArray(users) || users.length === 0) return fullRowState('empty');
 
-                    let statusBadge = '<span class="text-gray-500 bg-black/40 border border-white/5 px-3 py-1 rounded-full text-xs font-semibold">Member</span>';
-                    if (u.isOwner) {
-                        statusBadge = '<span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs px-3 py-1 rounded-full font-bold font-cyber tracking-wider"><i class="fa-solid fa-crown mr-1"></i> OWNER</span>';
-                    } else if (u.isPremium) {
-                        statusBadge = '<span class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 text-xs px-3 py-1 rounded-full font-bold font-cyber tracking-wider"><i class="fa-solid fa-star mr-1"></i> VIP</span>';
-                    }
+                /* Avatar cadangan dulu menunjuk /assets/dashboard/naura.png yang
+                 * ternyata tidak ada di repo, jadi barisnya menampilkan ikon
+                 * gambar rusak. Sekarang jatuh ke ekspresi Naura. */
+                var fallbackAvatar = NauraUI.expressionUrl('shy');
 
-                    // Value display per tab type
-                    let valDisplay = '';
-                    if (type === 'chat_level') {
-                        valDisplay = `<div class="text-cyan-400 font-bold font-cyber">Lv. ${u.chatLevel}</div><div class="text-[9px] text-gray-500">${u.chatXp.toLocaleString('id-ID')} XP</div>`;
-                    } else if (type === 'rpg_level') {
-                        valDisplay = `<div class="text-purple-400 font-bold font-cyber">RPG Lv. ${u.rpgLevel}</div><div class="text-[9px] text-gray-500">${u.rpgXp.toLocaleString('id-ID')} XP</div>`;
-                    } else if (type === 'trivia') {
-                        valDisplay = `<div class="text-emerald-400 font-bold font-cyber">🎮 ${u.points.toLocaleString('id-ID')} Poin</div>`;
-                    } else if (type === 'music') {
-                        valDisplay = `<div class="text-pink-400 font-bold font-cyber">🎵 ${u.tracks.toLocaleString('id-ID')} Tracks</div>`;
-                    } else {
-                        // Net worth
-                        valDisplay = `
-                            <div class="text-yellow-400 font-bold font-cyber">🪙 ${u.netWorth.toLocaleString('id-ID')}</div>
-                            <div class="text-[9px] text-gray-400 flex items-center justify-end gap-2">
-                                <span>⭐ ${u.starFragments.toLocaleString('id-ID')} Star</span>
-                                <span>(W: ${u.wallet.toLocaleString('id-ID')} | B: ${u.bank.toLocaleString('id-ID')})</span>
-                            </div>
-                        `;
-                    }
+                tbody.innerHTML = users
+                    .map(function (u, index) {
+                        var rowStyle =
+                            index < 3
+                                ? ['bg-yellow-500/5 border-l-4 border-yellow-400', 'bg-gray-400/5 border-l-4 border-gray-300', 'bg-orange-500/5 border-l-4 border-orange-500'][index]
+                                : 'border-b border-[var(--color-hairline)] hover:bg-[var(--color-surface-glass-hover)] border-l-4 border-transparent';
 
-                    const avatarUrl = u.avatar || '/assets/dashboard/naura.png';
-
-                    const tr = document.createElement('tr');
-                    tr.className = `${rowStyle} transition duration-300`;
-                    tr.innerHTML = `
-                        <td class="px-3 md:px-6 py-4 text-center">${rankDisplay}</td>
-                        <td class="px-3 md:px-6 py-4 font-assist text-white">
-                            <div class="flex items-center gap-3">
-                                <img src="${avatarUrl}" class="w-10 h-10 rounded-full border border-pink-400/40 object-cover shadow-sm" onerror="this.src='/assets/dashboard/naura.png'">
-                                <div class="flex flex-col min-w-0">
-                                    <span class="font-bold text-sm leading-tight text-white truncate">${u.name}</span>
-                                    <span class="text-[9px] text-gray-400 font-cyber font-light tracking-wider">${u.userId}</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-3 md:px-6 py-4 text-center font-cyber">
-                            <div class="flex items-center justify-center gap-2">
-                                <span class="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-bold border border-cyan-500/20">Chat Lv.${u.chatLevel}</span>
-                                <span class="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 text-[10px] font-bold border border-purple-500/20">RPG Lv.${u.rpgLevel}</span>
-                            </div>
-                        </td>
-                        <td class="px-3 md:px-6 py-4 text-right font-cyber">${valDisplay}</td>
-                        <td class="px-3 md:px-6 py-4 text-center">${statusBadge}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-                
-                document.querySelectorAll('tbody tr').forEach(el => {
-                    el.addEventListener('click', playClickSfx);
-                });
-            } catch (err) {
-                console.error('Error fetching leaderboard:', err);
-                document.getElementById('leaderboard-body').innerHTML = '<tr><td colspan="5" class="text-center py-12 text-red-400 font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Gagal memuat data leaderboard.</td></tr>';
+                        return (
+                            '<tr class="' + rowStyle + ' transition duration-300">' +
+                            '<td class="px-3 md:px-6 py-4 text-center">' + medal(index) + '</td>' +
+                            '<td class="px-3 md:px-6 py-4 font-assist text-white">' +
+                            '<div class="flex items-center gap-3">' +
+                            '<img src="' + (u.avatar || fallbackAvatar) + '" loading="lazy" class="w-10 h-10 rounded-full border border-pink-400/40 object-cover" onerror="this.onerror=null;this.src=\'' + fallbackAvatar + '\'">' +
+                            '<div class="flex flex-col min-w-0">' +
+                            '<span class="font-bold text-sm leading-tight text-white truncate">' + u.name + '</span>' +
+                            '<span class="text-[9px] text-gray-400 font-cyber tracking-wider">' + u.userId + '</span>' +
+                            '</div></div></td>' +
+                            '<td class="px-3 md:px-6 py-4 text-center font-cyber">' +
+                            '<div class="flex items-center justify-center gap-2">' +
+                            '<span class="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-bold border border-cyan-500/20">Lv.' + u.chatLevel + '</span>' +
+                            '<span class="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 text-[10px] font-bold border border-purple-500/20">Lv.' + u.rpgLevel + '</span>' +
+                            '</div></td>' +
+                            '<td class="px-3 md:px-6 py-4 text-right font-cyber">' + value(type, u) + '</td>' +
+                            '<td class="px-3 md:px-6 py-4 text-center">' + badge(u) + '</td>' +
+                            '</tr>'
+                        );
+                    })
+                    .join('');
             }
-        }
 
-        loadLeaderboard();
+            /* Tunggu bahasa siap dulu supaya teksnya tidak sempat berkedip. */
+            NauraUI.loadLanguage().then(function () {
+                syncLangLabel();
+                setCategory('wealth');
+            });
+        })();
     </script>
 </body>
 </html>

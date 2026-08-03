@@ -1,0 +1,172 @@
+/* =====================================================================
+ * tokens.css - Sumber kebenaran warna dashboard.
+ *
+ * Muat SETELAH style.css:
+ *   <link rel="stylesheet" href="/css/style.css">
+ *   <link rel="stylesheet" href="/css/tokens.css">
+ *
+ * Alasannya: style.css sudah punya :root sendiri dengan --color-primary
+ * #FFB6C1, sedangkan bot memakai #FFC0CB di src/config/ui.js. Dua nilai itu
+ * beda tipis tapi cukup terasa kalau embed Discord dan dashboard dibuka
+ * berdampingan. Berkas ini menyelaraskannya tanpa perlu membongkar 20 KB
+ * style.css yang sudah rapi.
+ *
+ * Setiap kali kamu mengubah `colors` di src/config/ui.js, ubah juga blok
+ * pertama di bawah ini. Hanya sembilan baris.
+ * ===================================================================== */
+
+:root {
+    /* --- Cerminan langsung dari src/config/ui.js `colors` --- */
+    --naura-primary: #ffc0cb;
+    --naura-accent: #00ffff;
+    --naura-economy: #ffd700;
+    --naura-success: #00ff00;
+    --naura-error: #ff0000;
+    --naura-warning: #ffb347;
+    --naura-info: #57c7ff;
+    --naura-dark: #2b2d31;
+    --naura-light: #f0f0f0;
+
+    /* --- Selaraskan token lama style.css --- */
+    --color-primary: var(--naura-primary);
+    --color-primary-glow: rgba(255, 192, 203, 0.45);
+
+    /* Warna ini dipakai .btn-discord:hover tapi tidak pernah didefinisikan,
+     * jadi tombolnya kehilangan warna saat disentuh kursor. */
+    --color-discord-blurple-hover: #4752c4;
+
+    /* --- Warna semantik untuk status --- */
+    --color-state-success: #86efac;
+    --color-state-error: #fca5a5;
+    --color-state-warning: var(--naura-warning);
+    --color-state-info: var(--naura-info);
+
+    /* --- Ekspresi Naura --- */
+    --naura-expression-size: 160px;
+    --naura-expression-size-sm: 96px;
+}
+
+/* =====================================================================
+ * Ekspresi Naura sebagai state visual
+ *
+ * PNG transparan di /assets/Naura_Expression dipakai ulang di web supaya
+ * halaman kosong, gagal muat, dan sedang memuat tidak terasa seperti error
+ * teknis, melainkan seperti Naura yang sedang bereaksi.
+ *
+ * Pemetaannya sengaja disamakan persis dengan src/utils/nauraExpression.js:
+ *   sukses -> Cheers | memuat -> Thinking | galat -> Cry | kosong -> Akward
+ * ===================================================================== */
+
+.naura-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm, 0.75rem);
+    padding: var(--spacing-xl, 2rem) var(--spacing-md, 1rem);
+    text-align: center;
+}
+
+.naura-state__figure {
+    width: var(--naura-expression-size);
+    height: var(--naura-expression-size);
+    object-fit: contain;
+    /* PNG-nya transparan, jadi drop-shadow mengikuti siluet karakter,
+     * bukan kotak gambarnya. Inilah untungnya aset transparan. */
+    filter: drop-shadow(0 8px 24px var(--color-primary-glow));
+    animation: naura-float 3.5s ease-in-out infinite;
+}
+
+.naura-state__figure--sm {
+    width: var(--naura-expression-size-sm);
+    height: var(--naura-expression-size-sm);
+}
+
+.naura-state__title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 1.125rem;
+    color: var(--color-ink, #fff);
+    margin: 0;
+}
+
+.naura-state__body {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--color-body, #9ca3af);
+    max-width: 34ch;
+    margin: 0;
+}
+
+.naura-state--error .naura-state__title {
+    color: var(--color-state-error);
+}
+
+.naura-state--success .naura-state__title {
+    color: var(--color-state-success);
+}
+
+/* Naura "berpikir" saat data sedang diambil. */
+.naura-state--loading .naura-state__figure {
+    animation:
+        naura-float 3.5s ease-in-out infinite,
+        naura-think 2s ease-in-out infinite;
+}
+
+@keyframes naura-float {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes naura-think {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.72;
+    }
+}
+
+/* Hormati pengguna yang mematikan animasi di setelan sistemnya. */
+@media (prefers-reduced-motion: reduce) {
+    .naura-state__figure {
+        animation: none !important;
+    }
+}
+
+/* --- Kerangka pemuatan untuk tabel & kartu --- */
+.naura-skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-surface-glass, rgba(255, 255, 255, 0.03));
+    border-radius: var(--rounded-md, 0.5rem);
+    min-height: 1rem;
+}
+
+.naura-skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, var(--color-primary-glow), transparent);
+    animation: naura-shimmer 1.4s infinite;
+}
+
+@keyframes naura-shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .naura-skeleton::after {
+        animation: none;
+    }
+}

@@ -1,0 +1,63 @@
+{
+    "common": {
+        "loading": {
+            "title": "Just a Moment, Naura's Thinking~ \ud83d\udcad",
+            "body": "Hang on a little, Naura's getting everything ready for you~ \u2728"
+        },
+        "success": {
+            "title": "Yaay, All Done! \ud83c\udf80",
+            "body": "It worked! Everything is all set for you~ \u2728"
+        },
+        "error": {
+            "title": "Sorry, Naura Couldn't Do It \ud83d\udca7",
+            "body": "I'm really sorry, Naura couldn't pull that off. Here's what went wrong: **{reason}**\nLet's try once more, okay? Naura will stay with you until it works \ud83d\udc95",
+            "reason_fallback": "Naura couldn't finish your request"
+        }
+    },
+    "npc": {
+        "list_title": "Residents of {location}",
+        "list_desc": "You look around **{location}** in the {timeOfDay}. There are {count} locals who seem happy to chat~",
+        "empty": "You look around **{location}**... it's so quiet. Nobody is here to talk to yet.",
+        "placeholder": "Pick someone to talk to...",
+        "time_morning": "morning",
+        "time_noon": "afternoon",
+        "time_evening": "evening",
+        "time_night": "night",
+        "rel_0": "Acquaintance",
+        "rel_1": "Friend",
+        "rel_2": "Close Friend",
+        "rel_3": "Partner",
+        "rel_4": "Married",
+        "status": "Relationship",
+        "affection": "Affection",
+        "gift_left": "Gifts left today",
+        "btn_greet": "Chat",
+        "btn_gift": "Give Gift",
+        "btn_marry": "Propose",
+        "btn_repair": "Repair Tools",
+        "btn_tax": "Handle Taxes",
+        "ai_fallback": "Hello! Is there anything I can help you with?",
+        "ai_thinking": "*lost in thought...*",
+        "greet_title": "A Nice Chat",
+        "greet_body": "You have a relaxed chat with **{name}**. The mood is lovely and warm~\n> Affection **+{bonus}**",
+        "greet_cooldown": "You two just had a long talk. Give **{name}** a little breathing room and come back soon~",
+        "gift_title": "Giving a Gift",
+        "gift_body": "You buy a lovely gift for **{name}**. Their face lights up!\n> Balance reduced by **{cost}**\n> Affection **+{bonus}**",
+        "gift_limit": "**{name}** has already received {max} gifts from you today. Save the rest for tomorrow~",
+        "gift_poor": "You don't have enough for a proper gift yet (need **{cost}**).",
+        "marry_title": "A Sacred Wedding",
+        "marry_body": "Under a beautiful sky, you offer the ring to **{name}**.\n\n\"Of course... I'd love to spend my life with you.\"\n\nCongratulations! You are now married to **{name}**.",
+        "marry_no_ring": "You don't have a **Wedding Ring** yet! Look for one at the Gold Shop or from the Merchant.",
+        "marry_not_ready": "Their heart isn't fully yours yet. Get a little closer to **{name}** before proposing~",
+        "marry_wrong_type": "**{name}** treasures you as a dear friend, but not in that way~",
+        "cutscene_unlocked": "\n\n**Cutscene Unlocked!** You can relive this moment anytime with `/survival gallery`.",
+        "repair_title": "Tool Repair",
+        "repair_body": "**{name}:** \"All done! Your axe, pickaxe, and fishing rod are back to 100%!\"\n> Balance reduced by **{cost}**",
+        "repair_poor": "You can't afford the service yet (need **{cost}**).",
+        "tax_title": "Tax Records",
+        "tax_clean": "**{name}:** \"Your record is clean. No outstanding property tax.\"",
+        "tax_paid": "**{name}:** \"Good. Your tax is settled and your property is legal again.\"\n> Balance reduced by **{cost}**",
+        "tax_poor": "You can't cover the tax yet (need **{cost}**).",
+        "session_expired": "The conversation has ended. Call `/survival npc` again whenever you'd like to say hello~"
+    }
+}

@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const ui = require('../config/ui');
+const nauraExpression = require('./nauraExpression');
 
 /**
  * Custom Embed Builder for Naura Hoshino
@@ -12,6 +13,49 @@ class NauraEmbedBuilder extends EmbedBuilder {
         this.setColor(ui.getColor('primary'));
         this.setFooter({ text: 'Naura Hoshino created by Aryandita ✨' });
         this.setTimestamp();
+
+        // Lampiran gambar ekspresi. EmbedBuilder tidak bisa membawa file sendiri,
+        // jadi disimpan di sini dan diambil lewat getFiles() saat mengirim pesan.
+        this._files = [];
+        this._expression = null;
+    }
+
+    /**
+     * Pasang wajah Naura pada embed ini.
+     *
+     * @param {string} nameOrMood - Nama ekspresi ('Cheers') atau mood ('success', 'afk')
+     * @param {{ as?: 'thumbnail'|'image'|'author', authorName?: string }} [options]
+     * @returns {this}
+     *
+     * @example
+     * const embed = new SuccessEmbed().withExpression('success').setDescription('Beres!');
+     * await interaction.reply({ embeds: [embed], files: embed.getFiles() });
+     */
+    withExpression(nameOrMood, options = {}) {
+        const { files, expression } = nauraExpression.decorate(this, nameOrMood, options);
+        if (files.length > 0) {
+            this._files.push(...files);
+            this._expression = expression;
+        }
+        return this;
+    }
+
+    /** Lampiran yang perlu ikut dikirim bersama embed ini. */
+    getFiles() {
+        return this._files;
+    }
+
+    /** Nama ekspresi yang sedang terpasang, atau null. */
+    getExpression() {
+        return this._expression;
+    }
+
+    /**
+     * Payload siap kirim: embed beserta lampirannya.
+     * @example await interaction.reply(embed.toPayload());
+     */
+    toPayload(extra = {}) {
+        return { embeds: [this], files: this._files, ...extra };
     }
 
     /**
@@ -46,31 +90,35 @@ class NauraEmbedBuilder extends EmbedBuilder {
     }
 }
 
+// Warna dibedakan supaya kontrasnya terasa dan pengguna langsung paham nadanya.
+// Nilai diambil dari ui.colors bila tersedia, dengan cadangan yang tetap serasi
+// dengan palet pastel Naura.
+
 class SuccessEmbed extends NauraEmbedBuilder {
     constructor(data) {
         super(data);
-        this.setColor(ui.getColor('primary') || '#FFC0CB');
+        this.setColor(ui.colors.success || '#00FF00');
     }
 }
 
 class ErrorEmbed extends NauraEmbedBuilder {
     constructor(data) {
         super(data);
-        this.setColor(ui.getColor('primary') || '#FFC0CB');
+        this.setColor(ui.colors.error || '#FF0000');
     }
 }
 
 class WarnEmbed extends NauraEmbedBuilder {
     constructor(data) {
         super(data);
-        this.setColor(ui.getColor('primary') || '#FFC0CB');
+        this.setColor(ui.colors.warning || '#FFB347');
     }
 }
 
 class InfoEmbed extends NauraEmbedBuilder {
     constructor(data) {
         super(data);
-        this.setColor(ui.getColor('primary') || '#FFC0CB');
+        this.setColor(ui.colors.info || '#57C7FF');
     }
 }
 
