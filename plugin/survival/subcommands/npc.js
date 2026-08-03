@@ -18,7 +18,7 @@ const npcConfig = require('../npcs');
 const aiManager = require('../../ai/aiManager');
 const { safeParseInventory } = require('../inventoryHelper');
 
-// ·· Aturan main ·························································
+// ·· Aturan main ··················································
 const GREET_COOLDOWN_MS = 30 * 60 * 1000; // jeda sebelum ngobrol menambah afeksi lagi
 const MAX_DAILY_GIFTS = 3;
 const GIFT_COST = 200;
@@ -213,7 +213,7 @@ module.exports = {
         collector.on('collect', async i => {
             await i.deferUpdate();
 
-            // ·· Memilih warga ··············································
+            // ·· Memilih warga ·································
             if (i.isStringSelectMenu() && i.customId === 'npc_select') {
                 currentNpcId = i.values[0];
                 const npc = npcConfig[currentNpcId];
@@ -239,13 +239,20 @@ module.exports = {
                     // Sapaan cadangan sudah disiapkan, jadi NPC tidak pernah bisu.
                 }
 
+                // Potret NPC. Bila berkasnya tidak ada — seperti Naura, yang memang tidak
+                // punya berkas di folder karakter — wajahnya diambil dari foto profil bot
+                // itu sendiri, sehingga ia tampil sebagai dirinya yang asli.
                 const portrait = findPortrait(npc);
                 const files = [];
                 let bannerAttachmentName;
+                let iconURL;
+
                 if (portrait) {
                     const fileName = `npc_${npc.id}${path.extname(portrait)}`;
                     files.push(new AttachmentBuilder(portrait, { name: fileName }));
                     bannerAttachmentName = fileName;
+                } else {
+                    iconURL = interaction.client.user.displayAvatarURL({ size: 512 });
                 }
 
                 const description = [
@@ -262,6 +269,7 @@ module.exports = {
                 const infoPayload = buildContainerV2({
                     accentColorHex: ui.getColor('primary') || '#FFB6C1',
                     title: `${npc.name} (${npc.title})`,
+                    iconURL,
                     description,
                     bannerAttachmentName,
                     files,
@@ -280,7 +288,7 @@ module.exports = {
             const [npcData] = await UserNPC.findOrCreate({ where: { userId: user.id, npcId: currentNpcId } });
             const now = new Date();
 
-            // ·· Ngobrol ·······················································
+            // ·· Ngobrol ············································
             if (i.customId === 'npc_greet') {
                 const last = npcData.lastInteraction ? new Date(npcData.lastInteraction) : null;
                 if (last && (now - last) < GREET_COOLDOWN_MS) {
@@ -300,7 +308,7 @@ module.exports = {
                 );
             }
 
-            // ·· Memberi hadiah ················································
+            // ·· Memberi hadiah ····································
             if (i.customId === 'npc_gift') {
                 const giftsToday = isSameDay(npcData.lastInteraction, now) ? (npcData.dailyGifts || 0) : 0;
                 if (giftsToday >= MAX_DAILY_GIFTS) {
@@ -328,7 +336,7 @@ module.exports = {
                 );
             }
 
-            // ·· Melamar ·······················································
+            // ·· Melamar ············································
             if (i.customId === 'npc_marry') {
                 // Penjaga yang sebelumnya tidak ada: NPC berjenis teman tidak boleh dilamar.
                 if (npc.type !== 'romansa') {
@@ -385,7 +393,7 @@ module.exports = {
                 return i.followUp(wedPayload);
             }
 
-            // ·· Perbaikan alat (Bagas) ···········································
+            // ·· Perbaikan alat (Bagas) ··································
             if (i.customId === 'npc_repair') {
                 if (survival.starFragments < REPAIR_COST) {
                     return fail(i, t('npc.repair_poor', { cost: `${REPAIR_COST} ${coin}` }));
@@ -405,7 +413,7 @@ module.exports = {
                 );
             }
 
-            // ·· Pajak (Pak Anif) ···············································
+            // ·· Pajak (Pak Anif) ······································
             if (i.customId === 'npc_tax_pay') {
                 const rpgState = survival.rpg_state || { tax_due: 0, house_seized: false };
                 const taxDue = rpgState.tax_due || 0;
