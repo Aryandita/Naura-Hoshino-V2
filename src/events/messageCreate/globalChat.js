@@ -18,7 +18,7 @@ function friendButtonRow(userId) {
         new ButtonBuilder()
             .setCustomId(`${BUTTON_PREFIX}${userId}`)
             .setLabel('Add Friend')
-            .setEmoji('\u{1F91D}')
+            .setEmoji('\uD83E\uDD1D')
             .setStyle(ButtonStyle.Success)
     );
 }
@@ -28,21 +28,25 @@ async function resolveReply(message, client) {
     const empty = { targetName: null, targetId: null };
     if (!message.reference?.messageId) return empty;
 
-    const repliedMsg = await message.channel.messages.fetch(message.reference.messageId).catch(() => null);
-    if (!repliedMsg) return empty;
+    const replied = await message.channel.messages.fetch(message.reference.messageId).catch(() => null);
+    if (!replied) return empty;
 
-    let targetName = repliedMsg.author.username;
-    if (repliedMsg.author.id === client.user.id && repliedMsg.embeds.length > 0) {
-        const embedAuthor = repliedMsg.embeds[0].author;
+    let targetName = replied.author.username;
+    if (replied.author.id === client.user.id && replied.embeds.length > 0) {
+        const embedAuthor = replied.embeds[0].author;
         if (embedAuthor?.name) {
-            targetName = embedAuthor.name.replace('Pesan oleh ', '').replace('Dibalas oleh ', '');
+            targetName = embedAuthor.name
+                .replace('Pesan oleh ', '')
+                .replace('Dibalas oleh ', '');
         }
     }
 
-    // Id sebenarnya hanya tersimpan di customId tombol Add Friend.
+    // Id asli lawan bicara diselipkan di customId tombol Add Friend.
     let targetId = null;
-    for (const row of repliedMsg.components || []) {
-        const button = (row.components || []).find(c => c.customId && c.customId.startsWith(BUTTON_PREFIX));
+    for (const row of replied.components || []) {
+        const button = (row.components || []).find(
+            c => c.customId && c.customId.startsWith(BUTTON_PREFIX)
+        );
         if (button) {
             targetId = button.customId.slice(BUTTON_PREFIX.length);
             break;
@@ -53,8 +57,8 @@ async function resolveReply(message, client) {
 }
 
 function buildEmbed(message, client, targetName) {
-    const contentText = message.content ? message.content : EMPTY_TEXT;
-    const replyText = targetName ? `\n\n> *Membalas pesan dari **${targetName}***` : '';
+    const body = message.content ? message.content : EMPTY_TEXT;
+    const replyNote = targetName ? `\n\n> *Membalas pesan dari **${targetName}***` : '';
     const authorTitle = targetName
         ? `Dibalas oleh ${message.author.username}`
         : `Pesan oleh ${message.author.username}`;
@@ -62,7 +66,7 @@ function buildEmbed(message, client, targetName) {
     const embed = new EmbedBuilder()
         .setColor(ACCENT)
         .setAuthor({ name: authorTitle, iconURL: message.author.displayAvatarURL() })
-        .setDescription(contentText + replyText)
+        .setDescription(body + replyNote)
         .setFooter({
             text: `Naura Global Chat System | ${message.guild.name}`,
             iconURL: client.user.displayAvatarURL()
@@ -75,8 +79,9 @@ function buildEmbed(message, client, targetName) {
     return embed;
 }
 
+// Streak hanya naik sekali setiap dua belas jam.
 async function bumpFriendshipStreak(message, targetId, targetName) {
-    if (!targetId || targetId === message.author.id) return;
+    if (!targetId) return;
 
     try {
         const friendship = await UserFriend.findOne({
@@ -98,13 +103,14 @@ async function bumpFriendshipStreak(message, targetId, targetName) {
         await friendship.save();
 
         await message.channel.send({
-            content: `\u{1F525} **${message.author.username}** & **${targetName}** baru saja mengobrol! Streak pertemanan kalian naik jadi **${friendship.streak}** hari. Naura ikut senang lihatnya!`
+            content: `\uD83D\uDD25 **${message.author.username}** & **${targetName}** baru saja ngobrol lagi! Streak pertemanan kalian naik jadi **${friendship.streak}**. Manis banget, hihi!`
         }).catch(() => {});
     } catch (err) {
         logger.error('[Global Chat] Gagal memperbarui streak pertemanan', err);
     }
 }
 
+// Menyebarkan pesan ke seluruh shard: Redis dulu, lalu IPC shard, lalu lokal.
 async function broadcast(message, client, embed, row) {
     const payload = {
         sourceChannelId: message.channel.id,
@@ -112,13 +118,11 @@ async function broadcast(message, client, embed, row) {
         componentsData: row.toJSON()
     };
 
-    // Jalur utama: Redis pub/sub, menjangkau seluruh shard.
     if (redisManager.client && redisManager.client.isReady) {
         await redisManager.publish(BROADCAST_TOPIC, payload);
         return;
     }
 
-    // Cadangan pertama: IPC bawaan discord.js.
     if (client.shard) {
         await client.shard.broadcastEval(async (c, { data }) => {
             if (!c.globalChatChannels) return;
@@ -136,7 +140,6 @@ async function broadcast(message, client, embed, row) {
         return;
     }
 
-    // Cadangan terakhir: proses tunggal tanpa shard.
     if (!client.globalChatChannels) return;
     for (const [chanId, guildId] of client.globalChatChannels.entries()) {
         if (chanId === message.channel.id) continue;
@@ -148,8 +151,8 @@ async function broadcast(message, client, embed, row) {
 
 /**
  * Menyiarkan pesan dari channel global chat ke seluruh server yang terhubung.
- * Mengembalikan true bila channel ini memang channel global chat, sehingga
- * pesan tidak diproses lagi oleh XP, command, maupun AI.
+ *
+ * @returns {Promise<boolean>} true bila pesan berasal dari channel global chat.
  */
 module.exports = async function handleGlobalChat(message, client) {
     if (!message.guild) return false;
