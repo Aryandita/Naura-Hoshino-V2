@@ -56,6 +56,15 @@ const RssManager = require('./src/managers/rssManager');
 const { connectToDatabase, seedInitialData } = require('./src/managers/dbManager');
 const env = require('./src/config/env');
 
+// Identitas shard. SHARD_ID hanya terisi bila proses ini dijalankan oleh ShardingManager.
+const isShardChild = typeof process.env.SHARD_ID !== 'undefined';
+const isPrimaryShard = !isShardChild || process.env.SHARD_ID === '0';
+
+// Saat berjalan mandiri (node index.js), validasi wajib bersifat fatal.
+// Saat menjadi anak shard, shard.js sudah memvalidasi lebih dulu sehingga di sini
+// cukup peringatan agar tidak memicu siklus respawn tanpa henti.
+env.validateEnv({ fatal: !isShardChild });
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -120,8 +129,18 @@ async function startBot() {
         const commandPath = path.join(__dirname, 'plugin');
         const commandHandler = new CommandHandler(client, commandPath);
 
-        // Selalu mendeploy Slash Command secara otomatis saat booting
-        const shouldDeploy = true;
+        // Slash Command bersifat global, jadi cukup dideploy SEKALI per boot.
+        // Sebelumnya setiap shard mengirim PUT /applications/{id}/commands sendiri-sendiri,
+        // yang memboroskan rate limit dan berisiko menimpa satu sama lain.
+        // --deploy  : paksa deploy (dipakai `npm run deploy`)
+        // --no-deploy: lewati deploy sepenuhnya
+        const shouldDeploy = !process.argv.includes('--no-deploy')
+            && (process.argv.includes('--deploy') || isPrimaryShard);
+
+        if (!shouldDeploy) {
+            logger.info(`[DEPLOY] Shard #${process.env.SHARD_ID} melewati deploy slash command (ditangani shard utama).`);
+        }
+
         await commandHandler.load(shouldDeploy);
         sysStatus.cmds = '\x1b[32m🟢 LOADED    \x1b[0m';
 
@@ -146,6 +165,14 @@ async function startBot() {
         client.once('clientReady', () => {
             if (client.musicManager.initialize) client.musicManager.initialize();
             if (client.rssManager.init) client.rssManager.init();
+
+            // Web Dashboard hanya boleh dijalankan oleh satu proses. Bila setiap shard
+            // mencoba listen di port yang sama, shard berikutnya crash dengan EADDRINUSE.
+            if (!isPrimaryShard) {
+                logger.info(`[DASHBOARD] Shard #${process.env.SHARD_ID} melewati Web Dashboard (dijalankan shard utama).`);
+                return;
+            }
+
             try {
                 require('./src/dashboard/server.js')(client);
             } catch (err) {
