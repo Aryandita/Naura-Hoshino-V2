@@ -18,6 +18,20 @@ function separatorComp(divider = true, spacing = 1) {
 }
 
 /**
+ * Logger dimuat malas (lazy) supaya berkas ini tetap ringan dan tidak pernah
+ * ikut menyeret dependensi manager saat hanya dipakai merakit payload.
+ */
+let loggerRef;
+function warnMissingTitle(author) {
+    try {
+        if (!loggerRef) loggerRef = require('../managers/logger').logger;
+        loggerRef.warn(`[ContainerV2] Judul kosong pada container "${author}". Header sudah dirapikan otomatis, tapi pemanggil ini sebaiknya diberi title.`);
+    } catch (error) {
+        // Logger tidak wajib ada. Perakitan payload tidak boleh gagal karenanya.
+    }
+}
+
+/**
  * Terjemahkan satu kunci kamus bersama.
  * lang boleh undefined — languageManager akan jatuh ke bahasa bawaan.
  */
@@ -48,7 +62,9 @@ function resolveMediaUrl(ref) {
  * @param {object} opts
  * @param {string} [opts.accentColorHex] - Warna aksen container, mis. '#FFB6C1'
  * @param {string} [opts.authorName] - Teks kecil di atas judul
- * @param {string} opts.title - Judul utama
+ * @param {string} [opts.title] - Judul utama. Boleh dikosongkan; bila kosong,
+ *        baris judul tidak dirangkai sama sekali sehingga tidak ada lagi tulisan
+ *        "undefined" yang bocor ke pengguna.
  * @param {string} [opts.iconURL] - URL ikon kecil (accessory Thumbnail di header)
  * @param {string} [opts.expression] - Ekspresi Naura yang dipakai. Boleh nama berkas
  *        ('Cheers') atau mood ('success', 'error', 'loading', 'afk'). Mood 'afk'
@@ -112,7 +128,10 @@ function buildContainerV2({
     const attachedFiles = Array.isArray(files) ? [...files] : [];
     let headerIconURL = iconURL;
     let expressionGalleryRef = null;
-    let headerTitle = title;
+
+    // Judul dinormalkan lebih dulu. Nilai kosong, null, atau undefined semuanya
+    // diperlakukan sama: tidak ada judul.
+    let headerTitle = (typeof title === 'string' && title.trim().length > 0) ? title : null;
 
     if (expression && expressionAs !== 'none') {
         const useImage = expressionImage === 'auto'
@@ -137,22 +156,44 @@ function buildContainerV2({
         }
     }
 
-    // Header: judul + ikon kecil di kanan (mirip author + thumbnail pada embed)
-    const headerText = `${cleanAuthor ? `-# ${cleanAuthor}\n` : ''}## ${headerTitle}`;
-    if (headerIconURL) {
+    // ·· Header ····························································
+    // Author dan judul dirangkai terpisah. Dulu baris judul selalu ikut ditulis,
+    // jadi pemanggil yang tidak mengirim title menghasilkan tulisan "undefined"
+    // sebagai judul besar. Sekarang tiap baris hanya muncul bila memang berisi.
+    if (!headerTitle && cleanAuthor) warnMissingTitle(cleanAuthor);
+
+    const headerLines = [];
+    if (cleanAuthor) headerLines.push(`-# ${cleanAuthor}`);
+    if (headerTitle) headerLines.push(`## ${headerTitle}`);
+    const headerText = headerLines.join('\n');
+
+    if (headerText) {
+        if (headerIconURL) {
+            containerComponents.push({
+                type: 9, // SECTION
+                components: [textDisplay(headerText)],
+                accessory: { type: 11, media: { url: headerIconURL } }, // THUMBNAIL
+            });
+        } else {
+            containerComponents.push(textDisplay(headerText));
+        }
+
+        containerComponents.push(separatorComp(true, 1));
+    } else if (headerIconURL && description) {
+        // Tanpa header teks, ikon tetap ditampilkan bersama deskripsi supaya wajah
+        // Naura tidak hilang begitu saja dari pesan.
         containerComponents.push({
             type: 9, // SECTION
-            components: [textDisplay(headerText)],
-            accessory: { type: 11, media: { url: headerIconURL } }, // THUMBNAIL
+            components: [textDisplay(description)],
+            accessory: { type: 11, media: { url: headerIconURL } },
         });
-    } else {
-        containerComponents.push(textDisplay(headerText));
+        containerComponents.push(separatorComp(true, 1));
     }
 
-    containerComponents.push(separatorComp(true, 1));
-
     // Content
-    if (description) {
+    // Deskripsi dilewati bila sudah terpakai sebagai isi section di atas.
+    const descriptionAlreadyShown = !headerText && Boolean(headerIconURL) && Boolean(description);
+    if (description && !descriptionAlreadyShown) {
         containerComponents.push(textDisplay(description));
     }
 
