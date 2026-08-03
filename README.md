@@ -1,114 +1,179 @@
-<div align="center">
-  <h1>🌸 Naura Hoshino Intelligence</h1>
-  <p><strong>Naura OS Discord Bot Ecosystem with AI, High-Fidelity Audio, and Web Dashboard</strong></p>
+# Naura Hoshino V.2
 
-  ![Version](https://img.shields.io/badge/Version-1.2.0-blue.svg?style=for-the-badge&logo=github)
-  ![Node.js](https://img.shields.io/badge/Node.js-v18+-green.svg?style=for-the-badge&logo=nodedotjs)
-  ![Discord.js](https://img.shields.io/badge/Discord.js-v14.15.3-blue.svg?style=for-the-badge&logo=discord)
-  ![MySQL](https://img.shields.io/badge/Database-MySQL-orange.svg?style=for-the-badge&logo=mysql)
-  ![Lavalink](https://img.shields.io/badge/Audio-Lavalink_v4-red.svg?style=for-the-badge)
-</div>
+Bot Discord multifungsi berbasis `discord.js` v14 dengan UI Canvas modern, sistem ekonomi & survival, pemutar musik Lavalink, integrasi AI, dan Web Dashboard.
+
+> **Status:** pengembangan aktif. Beberapa modul masih dirapikan; lihat `TODO.md`.
 
 ---
 
-**Naura Hoshino** adalah ekosistem bot Discord berbasis *Naura OS* yang memadukan Kecerdasan Buatan (AI) tingkat lanjut, Sistem Audio Premium, Sistem Ekonomi Terintegrasi, dan *Web Dashboard*. Dibangun dengan arsitektur modular yang kokoh dan estetika *Canvas* generasi baru, Naura dirancang untuk memberikan pengalaman server yang paling profesional, interaktif, dan modern.
+## Kebutuhan Sistem
 
-## ✨ Fitur Utama (Core Features)
+| Komponen | Versi | Keterangan |
+| --- | --- | --- |
+| Node.js | **>= 20.6.0** | Wajib, karena kode memakai `process.loadEnvFile()` |
+| MySQL | 8.x | Basis data utama (ada fallback SQLite) |
+| Redis | opsional | Caching; dilewati bila `REDIS_URL` kosong |
+| Lavalink | v4 | Hanya untuk fitur musik |
+| FFmpeg | terbaru | Sudah tersedia lewat `ffmpeg-static` |
 
-### 🎵 High-Fidelity Music System
-Ditenagai oleh **Poru** dan node **Lavalink v4** terbaru, memberikan pengalaman mendengarkan musik sekelas platform komersial:
-- **Smart Autocomplete:** Pencarian cerdas dan instan ke **YouTube Music** (`ytmsearch`) & **Spotify** (`spsearch`) berkat integrasi *LavaSrc*.
-- **SponsorBlock AI:** Secara cerdas melompati intro dialog panjang atau iklan bawaan (*in-video ads*) di dalam YouTube.
-- **Canvas Visualizer:** Merender *Dynamic Image Canvas* setiap lagu dimainkan, bekerja *real-time* tanpa membuat *lag* server!
-- **DSP Audio Filters:** *Dropdown Menu* untuk langsung mengubah efek suara ke *Bassboost*, *Nightcore*, atau *Vaporwave*.
-- **Naura Cloud Playlist:** Sinkronisasi MySQL untuk menyimpan daftar putar favorit Anda agar bisa dipanggil kembali kapan saja.
-
-### 💎 Sistem V.I.P Premium & Webhooks Otomatis
-Ekosistem finansial otonom yang bekerja 24/7 tanpa perlu campur tangan manual:
-- **Automated Billing (Saweria):** Melalui jalur *API Webhook* tersembunyi (`/api/webhook/saweria`), bot dapat membaca donasi masuk, memindai ID Discord pembeli, dan langsung memberikan status V.I.P.
-- **Top.gg Auto-Reward:** *Webhook* khusus (`/api/webhook/vote`) yang langsung menyuntikkan *Trial V.I.P* 12 jam kepada siapa saja yang melakukan *Vote* untuk Naura.
-- **Premium Perks:** Pengguna V.I.P menikmati **2x Global XP Boost**, akses eksklusif ke AI Generator (`/ai imagine`), gaji mingguan spesial, Mode 24/7 Radio, serta Kartu Level & Profil Emas (*Gold Glow*).
-
-### 🤖 Kecerdasan Buatan Terintegrasi & Tools
-Ekosistem Naura didukung oleh berbagai AI dan tools canggih:
-- **Google Gemini AI & Verba**: Memberikan respons chat yang adaptif, cerdas, dan memiliki persona karakter khas.
-- **Whisper AI**: Memungkinkan transkripsi audio/video ke teks secara akurat.
-- **Ollama**: Berfungsi sebagai *local fallback AI* untuk menjamin ketersediaan sistem jika layanan utama terkendala.
-- **Fooocus**: Mesin pembuat gambar lokal berkualitas tinggi sebagai alternatif *Image Studio* (`/ai imagine`).
-- **yt-dlp**: Alat ekstraksi dan pengunduhan media performa tinggi.
-
-### 🎨 Visual & Leveling Generasi Baru
-- Kartu Level-Up dan `/rank` menggunakan arsitektur *Glassmorphism* dan *Neon Glow* tingkat tinggi yang dirender oleh `@napi-rs/canvas`.
-
-### 🌐 Live Web Dashboard
-- Endpoint HTTP Express bawaan yang berjalan otomatis dan menyajikan halaman *Dashboard UI* cantik untuk memantau performa *Resource*, latensi (Ping), dan status jaringan komunitas server.
+Beberapa dependensi bersifat native (`@napi-rs/canvas`, `sqlite3`, `libsodium-wrappers`) sehingga pada Linux mungkin perlu `build-essential` dan `python3`.
 
 ---
 
-## ⚙️ Persyaratan Infrastruktur (Prerequisites)
+## Instalasi
 
-Untuk menjalankan ekosistem Naura Hoshino dengan sempurna, Anda memerlukan:
-1. **[Node.js](https://nodejs.org/)** (v18.x atau lebih baru)
-2. **[MySQL Server](https://www.mysql.com/)** untuk penyimpanan data relasional berkecepatan tinggi.
-3. **[Lavalink Server v4](https://github.com/lavalink-devs/Lavalink)** (Disarankan memakai plugin *LavaSrc* & *SponsorBlock*).
-4. Kunci API: **Discord Bot Token**, **Google Gemini API Key**, **Spotify API**.
-
----
-
-## 🚀 Panduan Instalasi & Eksekusi
-
-### 1. Persiapan Repositori
-Lakukan kloning repositori dan masuk ke dalam direktorinya:
 ```bash
-git clone https://github.com/aryandita/Naura-Hoshino.git
-cd Naura-Hoshino
-```
-
-### 2. Instalasi Dependensi
-Instal seluruh paket perpustakaan (*library*) yang dibutuhkan:
-```bash
+git clone https://github.com/Aryandita/Naura-Hoshino-V.2.git
+cd Naura-Hoshino-V.2
 npm install
+cp .env.example .env   # lalu isi nilainya
+npm start
 ```
 
-### 3. Konfigurasi Lingkungan (.env)
-Salin (atau ubah nama) file `.env.example` menjadi `.env`. Masukkan kredensial Anda ke dalam file tersebut:
-```env
-TOKEN=discord_bot_token_anda
-GEMINI_API_KEY=gemini_api_key_anda
-OWNER_IDS=id_discord_anda
+### Script yang tersedia
 
-# Konfigurasi MySQL
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_USER=root
-DB_PASS=password_database
-DB_NAME=naura_db
+| Perintah | Fungsi |
+| --- | --- |
+| `npm start` | Menjalankan bot lewat ShardingManager (`shard.js`) — **cara produksi** |
+| `npm run dev` | Sama seperti di atas, dengan auto-restart `--watch` |
+| `npm run deploy` | Memaksa registrasi ulang slash command |
+| `npm run lint` | Menjalankan ESLint |
+| `npm run lint:fix` | ESLint dengan perbaikan otomatis |
+| `npm run format` | Merapikan format dengan Prettier |
+| `npm run locales:check` | Audit paritas kunci bahasa ID vs EN |
 
-# Kunci Rahasia Webhook (Untuk Integrasi V.I.P)
-WEBHOOK_AUTH_SAWERIA=stream_key_saweria_anda
-WEBHOOK_AUTH_VOTE=sandi_topgg_anda
-
-# Konfigurasi Lavalink Node
-LAVALINK_HOST=127.0.0.1
-LAVALINK_PORT=2333
-LAVALINK_PASSWORD=youshallnotpass
-LAVALINK_SECURE=false
-```
-
-### 4. Nyalakan Mesin
-Naura menggunakan *Sequelize ORM*. Saat Anda menjalankan mesin pertama kalinya, bot akan secara otomatis membuat, mengatur struktur, dan menyinkronkan seluruh tabel MySQL Anda (Sinkronisasi *Auto-Migrate*).
-
-Jalankan perintah ini:
-```bash
-npm run start
-```
-*(Atau `node index.js` untuk environment produksi).*
+Slash command dideploy otomatis saat boot oleh **shard utama saja**. Gunakan `--no-deploy` untuk melewatinya.
 
 ---
 
-## 🛡️ Keamanan & Stabilitas
-Sistem Naura Hoshino dirancang tangguh. Memiliki modul *anti-crash* komprehensif untuk mencegah terhentinya program karena *Uncaught Exceptions* (seperti API Discord Timeout atau Lavalink Disconnect), serta *memory-leak prevention* pada rendering Canvas.
+## Konfigurasi Environment
 
-<p align="center">
-  Dibuat dengan 🤍 oleh <b>Aryandita Praftian (Ryaa)</b>.
-</p>
+Nama variabel di bawah ini adalah yang benar-benar dibaca oleh `src/config/env.js`.
+
+### Wajib
+
+| Variabel | Keterangan |
+| --- | --- |
+| `DISCORD_TOKEN` | Token bot dari Discord Developer Portal |
+| `CLIENT_ID` | Application ID bot |
+| `MYSQL_USER` | Username database |
+| `MYSQL_DATABASE` | Nama database |
+
+Bot berhenti sebelum shard di-spawn bila salah satu di atas kosong.
+
+### Discord
+
+| Variabel | Default | Keterangan |
+| --- | --- | --- |
+| `PREFIX` | `n!` | Prefix perintah teks |
+| `GUILD_ID` | — | Server untuk deploy command instan saat pengembangan |
+| `OWNER_IDS` | — | Daftar ID owner, dipisah koma |
+| `STAFF_GUILD_ID` | — | Server staf untuk ModMail |
+| `MODMAIL_CATEGORY_ID` | — | Kategori channel ModMail |
+
+### Database & Cache
+
+| Variabel | Default |
+| --- | --- |
+| `MYSQL_HOST` | `127.0.0.1` |
+| `MYSQL_PORT` | `3306` |
+| `MYSQL_PASSWORD` | — |
+| `REDIS_URL` | — (Redis dilewati bila kosong) |
+
+### Musik (Lavalink)
+
+| Variabel | Default |
+| --- | --- |
+| `LAVALINK_HOST` | `localhost` |
+| `LAVALINK_PORT` | `2333` |
+| `LAVALINK_PASSWORD` | `youshallnotpass` |
+| `LAVALINK_SECURE` | `false` |
+
+### AI
+
+| Variabel | Default | Keterangan |
+| --- | --- | --- |
+| `GEMINI_API_KEY` | — | Penyedia AI utama |
+| `VERBA_API_KEY` | — | Persona AI |
+| `VERBA_SLUG_OWNER` / `VERBA_SLUG_PREMIUM` / `VERBA_SLUG_GENERAL` | — | Slug persona per tingkatan |
+| `OLLAMA_BASE_URL` | `http://localhost:11434` | Fallback AI lokal |
+| `OLLAMA_MODEL` | `llama3.1` | Model Ollama |
+| `FOOOCUS_BASE_URL` | `http://localhost:7865` | Generasi gambar lokal |
+
+### Dashboard & Webhook
+
+| Variabel | Default | Keterangan |
+| --- | --- | --- |
+| `PORT` / `SERVER_PORT` / `DASHBOARD_PORT` | `3070` | Port dashboard (urutan prioritas) |
+| `WEBHOOK_PORT` | `3071` | Port penerima webhook |
+| `SESSION_SECRET` | — | **Wajib diisi di produksi** |
+| `DISCORD_CALLBACK_URL` | — | Callback OAuth2 |
+| `ERROR_WEBHOOK_URL` | — | Webhook laporan error |
+| `WEBHOOK_AUTH_SAWERIA` | — | Token webhook Saweria |
+| `WEBHOOK_AUTH_VOTE` | — | Token webhook Top.gg |
+
+### Metadata
+
+| Variabel | Default |
+| --- | --- |
+| `BOT_VERSION` | `1.2.0` |
+| `ENGINE_VERSION` | `1.1.0` |
+| `PARTNERSHIP` | `Belum ada kolaborasi` |
+
+---
+
+## Struktur Proyek
+
+```
+.
+├─ index.js               # Proses bot (satu per shard)
+├─ shard.js               # ShardingManager, titik masuk produksi
+├─ assets/                # Gambar, font, aset Canvas
+│  └─ Naura_Expression/   # 15 ekspresi Naura untuk embed
+├─ language/              # Kamus bahasa utama (id.json, en.json)
+├─ plugin/                # Perintah, dikelompokkan per kategori
+│  └─ <kategori>/locales/ # Kamus bahasa khusus plugin
+├─ scripts/               # Perkakas pemeliharaan
+└─ src/
+   ├─ config/             # env.js, ui.js, konfigurasi statis
+   ├─ dashboard/          # Web Dashboard (Express)
+   ├─ events/             # Event listener Discord
+   ├─ managers/           # Database, cache, cron, bahasa, logger, dll
+   ├─ models/             # Model Sequelize
+   └─ utils/              # Builder embed/container dan helper
+```
+
+---
+
+## Sistem Bilingual
+
+Naura mendukung Bahasa Indonesia dan Inggris. Pilihan bahasa disimpan pada kolom `language` di tabel `user_profiles` dan berlaku di seluruh ekosistem.
+
+```js
+const lang = require('./src/managers/languageManager');
+
+await lang.setUserLanguage(userId, 'en');       // simpan pilihan
+const text = await lang.translate(userId, 'help.title');
+const sync = lang.translateSync('en', 'greeting', { name: 'Ryaa' });
+```
+
+Kamus utama berada di `language/`, sedangkan kamus khusus plugin di `plugin/<kategori>/locales/`. Kamus utama menang bila ada kunci yang bentrok. Jalankan `npm run locales:check` untuk melihat kunci yang belum diterjemahkan.
+
+---
+
+## Ekspresi Naura
+
+```js
+const naura = require('./src/utils/nauraExpression');
+
+const { embed, files } = naura.decorate(myEmbed, 'success');
+await interaction.reply({ embeds: [embed], files });
+```
+
+Mood yang tersedia antara lain `success`, `error`, `warning`, `info`, `loading`, `levelup`, `music`, dan `help`. Daftar lengkapnya ada di `src/utils/nauraExpression.js`.
+
+---
+
+## Lisensi
+
+ISC © 2026 Aryandita Praftian. Lihat berkas `LICENSE`.

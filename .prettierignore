@@ -1,0 +1,8 @@
+node_modules/
+package-lock.json
+assets/
+src/dashboard/public/
+src/dashboard/views/
+language/
+plugin/core/locales/
+extracted_strings.json

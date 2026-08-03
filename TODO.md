@@ -1,70 +1,65 @@
-## Apa itu Components V2?
+# TODO — Naura Hoshino V.2
 
-Components V2 adalah sistem UI baru yang menggantikan kombinasi lama `content` + `embeds` dengan susunan komponen yang bisa disusun bebas. Sistem ini mendefinisikan 16 jenis komponen yang dibagi ke tiga kategori fungsional, dan seluruh komponen berbagi struktur dasar yang sama (Component Object).
+Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
 
-Untuk mengaktifkannya, kamu perlu mengirim message flag `1 << 15` (`IS_COMPONENTS_V2`) — flag ini bisa dikirim per pesan, tapi begitu sebuah pesan sudah menggunakannya, flag itu tidak bisa dihapus lagi dari pesan tersebut.
+---
 
-## Tiga kategori komponen
+## 🔥 Prioritas Tinggi
 
-1. **Layout Components** — mengatur struktur: Action Row, Section, Label, Container, Separator
-2. **Content Components** — menampilkan konten statis: Text Display, Thumbnail, Media Gallery, File
-3. **Interactive Components** — untuk interaksi user: Button, Select Menu, Text Input, File Upload
+- [x] Selaraskan nama variabel environment di README dengan `src/config/env.js`
+- [x] Hentikan `process.exit(1)` saat `env.js` di-import (mencegah respawn loop)
+- [x] Deploy slash command hanya oleh shard utama
+- [x] Perbaiki `npm run deploy` agar flag `--deploy` benar-benar dihormati
+- [x] Perbaiki versi `sqlite3` yang tidak ada di registry
+- [x] Guard `translateSync()` terhadap kode bahasa `undefined`
+- [ ] Jalankan dashboard hanya di satu proses dan verifikasi tidak ada `EADDRINUSE`
+- [ ] Isi `SESSION_SECRET` di produksi dan verifikasi tanda tangan webhook Saweria/Top.gg
 
-Ketika mode V2 aktif, field content dan embeds tidak lagi berfungsi, dan sebagai gantinya kamu memakai Text Display serta Container. Selain itu, jumlah komponen maksimum per pesan naik dari 25 menjadi 40, dan kamu bisa memakai Container serta Separator untuk kontrol layout yang lebih baik.
+## 🧹 Kebersihan Kode
 
-Sekarang, mari lihat gambarannya:## Contoh struktur JSON
+- [ ] Pilih satu SDK Gemini: `@google/genai` **atau** `@google/generative-ai`
+- [ ] Pilih satu penjadwal: `cron` **atau** `node-cron`
+- [ ] Hapus atau aktifkan `src/managers/EventHandler.js` yang tidak terpakai
+- [ ] Ganti monkey-patch `ephemeral` di `index.js` dengan `flags` di tiap pemanggilan
+- [ ] Pecah `src/dashboard/server.js` (64 KB) menjadi beberapa router
+- [ ] Pecah `plugin/core/core.js` (39 KB) dan `src/config/ui.js` (30 KB)
+- [ ] Bereskan seluruh peringatan `npm run lint`
 
-Berikut contoh payload pesan lengkap yang menggabungkan beberapa komponen di atas (Container berisi Section dengan Thumbnail, Separator, Media Gallery, dan Action Row dengan Button):
+## 🌐 Bilingual (ID / EN)
 
-```json
-{
-  "flags": 32768,
-  "components": [
-    {
-      "type": 17,
-      "accent_color": 5793266,
-      "components": [
-        {
-          "type": 9,
-          "components": [
-            { "type": 10, "content": "## Judul pesan" },
-            { "type": 10, "content": "Deskripsi singkat di sini." }
-          ],
-          "accessory": {
-            "type": 11,
-            "media": { "url": "https://contoh.com/icon.png" }
-          }
-        },
-        { "type": 14, "spacing": 1, "divider": true },
-        {
-          "type": 12,
-          "items": [
-            { "media": { "url": "https://contoh.com/gambar.png" } }
-          ]
-        },
-        {
-          "type": 1,
-          "components": [
-            { "type": 2, "style": 1, "label": "Tombol 1", "custom_id": "btn_1" }
-          ]
-        }
-      ]
-    }
-  ]
-}
-```
+- [x] Cache bahasa per user agar tidak query database di setiap balasan
+- [x] Dukungan kunci bersarang (`help.title`) pada kamus
+- [x] Gabungkan kamus milik plugin ke kamus utama
+- [x] Script audit paritas kunci (`npm run locales:check`)
+- [ ] Pemilih bahasa saat pertama kali membuka `/help`
+- [ ] Ganti seluruh teks yang masih ditulis langsung (hardcode) dengan kunci kamus
+- [ ] Lengkapi `language/en.json` sampai sepadan dengan `id.json`
+- [ ] Aktifkan `npm run locales:check:strict` di CI setelah semua kunci sepadan
 
-## Poin penting kalau mau dipakai di proyekmu
+## 🎨 Ekspresi Naura
 
-- **Flag tidak bisa dibatalkan**: sekali pesan dikirim dengan `IS_COMPONENTS_V2` (flag `32768`), pesan itu tidak bisa lagi "diturunkan" ke sistem lama.
-- **`content` dan `embeds` jadi tidak berfungsi** begitu flag ini aktif — semua teks harus lewat Text Display.
-- Kalau kamu pakai library seperti **discord.js**, ada builder khusus (`TextDisplayBuilder`, `SectionBuilder`, `ContainerBuilder`, `SeparatorBuilder`, `MediaGalleryBuilder`) yang memudahkan penyusunan komponen ini secara fluent, tanpa harus menulis raw JSON.
-- Setiap komponen punya field `id` unik dalam satu pesan (biasanya digenerate otomatis kalau tidak diisi).
+- [x] Helper `src/utils/nauraExpression.js`
+- [ ] Integrasikan ke `NauraEmbedBuilder.js` dan `NauraContainerBuilder.js`
+- [ ] Terapkan ekspresi pada pesan sukses, error, dan cooldown
+- [ ] Pertimbangkan konversi aset ke WebP untuk menghemat bandwidth
 
-Errornya masuk akal — ini soal perilaku PATCH Discord API. Saat pesan **loading** dikirim, ia punya `embeds`. Ketika kita `edit()` pesan itu ke Components V2 tapi **tidak eksplisit mengosongkan `embeds`**, Discord tidak otomatis menghapusnya (PATCH cuma mengubah field yang benar-benar dikirim) — jadi pesan tetap "punya" embeds lama sekaligus flag `IS_COMPONENTS_V2`, dan itu ditolak.
+## 🧩 Plugin
 
-Perbaikannya: payload Components V2 harus selalu menyertakan `embeds: []` secara eksplisit untuk membersihkan sisa embed lama.Ini kemungkinan juga akan muncul di `help` command dengan pola yang sama (pesan pemilihan bahasa yang pakai embed lalu di-edit ke Components V2). Aku cek dan perbaiki sekalian:Ada tiga tempat di alur `help` dengan masalah yang sama. Aku tambahkan `embeds: []` di ketiganya:Dua bagian ini aman karena pesan sudah dalam mode Components V2 sejak edit pertama (jadi tidak ada embed lama lagi), tapi aku tambahkan juga untuk konsistensi dan jaga-jaga:Sekarang validasi ulang dan simpan hasilnya:**Penyebabnya:** pesan loading (`handleStats` dkk) dikirim dengan `embeds: [loadingEmbed]`. Saat kamu edit pesan itu ke Components V2 tanpa menyebut `embeds` sama sekali, Discord (via PATCH) tidak menghapusnya otomatis — jadi pesan itu jadi "punya embeds" *dan* flag `IS_COMPONENTS_V2` sekaligus, yang tidak diizinkan.
+- [ ] `survival` — rapikan 33 subcommand, satukan helper yang berulang
+- [ ] `core` — rombak menu `/help` beserta pemilih bahasa
+- [ ] `music` — tinjau penanganan error Lavalink
+- [ ] `ai` — rapikan rantai fallback penyedia AI
+- [ ] `canvas` & `leveling` — optimalkan rendering dan cache
+- [ ] `admin` & `utility` — audit izin dan konsistensi respons
 
-**Perbaikan:** setiap payload Components V2 sekarang eksplisit menyertakan `embeds: []` (dan `content: null`) supaya sisa embed lama selalu dibersihkan saat pesan di-edit. Ini aku terapkan di:
-- `buildContainerV2()` — dipakai oleh `ping`, `stats`, `info`, `about`
-- Ketiga titik edit di alur `help` (payload awal, saat navigasi, saat komponen dinonaktifkan)
+---
+
+## 📘 Referensi: Components V2
+
+Catatan penting yang perlu diingat saat menyentuh UI.
+
+**Flag:** `IS_COMPONENTS_V2` = `1 << 15` = `32768`. Maksimum 40 komponen per pesan.
+
+**Tipe komponen:** `1` ActionRow, `2` Button, `9` Section, `10` TextDisplay, `11` Thumbnail, `12` MediaGallery, `14` Separator, `17` Container.
+
+**Jebakan yang pernah terjadi:** saat mengedit pesan loading yang sebelumnya memakai embed, `PATCH` milik Discord tidak menghapus embed lama sehingga bentrok dengan flag Components V2. Payload wajib menyertakan `embeds: []` dan `content: null` secara eksplisit. Sudah diterapkan di `buildContainerV2()` (dipakai `ping`, `stats`, `info`, `about`) dan tiga titik edit pada alur `help`.

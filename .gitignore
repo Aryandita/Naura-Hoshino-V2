@@ -1,4 +1,37 @@
-.env
+# Dependencies
 node_modules/
-*.zip
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs & error dumps
 *.log
+logs/
+errorlog.md
+extracted_strings.json
+
+# Database lokal / fallback
+*.sqlite
+*.sqlite3
+*.db
+
+# Cache & temporary
+tmp/
+temp/
+.cache/
+assets/cache/
+
+# Build artefak
+*.zip
+*.tar.gz
+
+# Editor & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Konfigurasi git lokal (jangan pernah di-commit)
+.gitconfig

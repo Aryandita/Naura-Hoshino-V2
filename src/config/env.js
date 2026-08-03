@@ -61,28 +61,67 @@ const env = {
     // 🚨 ERROR REPORTING
     ERROR_WEBHOOK_URL: cleanEnv(process.env.ERROR_WEBHOOK_URL),
 
+    // 💎 WEBHOOK PREMIUM (Saweria & Top.gg)
+    WEBHOOK_AUTH_SAWERIA: cleanEnv(process.env.WEBHOOK_AUTH_SAWERIA),
+    WEBHOOK_AUTH_VOTE: cleanEnv(process.env.WEBHOOK_AUTH_VOTE),
+
     // 🌐 WEB DASHBOARD & PORTS (Dynamic Pterodactyl Resolution)
     DASHBOARD_PORT: parseInt(process.env.PORT || process.env.SERVER_PORT || process.env.DASHBOARD_PORT) || 3070,
     WEBHOOK_PORT: parseInt(process.env.WEBHOOK_PORT) || 3071,
+    SESSION_SECRET: cleanEnv(process.env.SESSION_SECRET),
     CALLBACK_URL: cleanEnv(process.env.DISCORD_CALLBACK_URL)
 };
 
-// Pengecekan Wajib (Mencegah Bot Menyala Jika Config Kosong)
-const requiredKeys = ['TOKEN', 'CLIENT_ID', 'DB_USER', 'DB_NAME'];
-for (const key of requiredKeys) {
-    if (!env[key]) {
-        logger.error(`\x1b[41m\x1b[37m 💥 FATAL ERROR \x1b[0m \x1b[31mVariabel ${key} belum diisi di dalam file .env! Bot dihentikan.\x1b[0m`);
-        process.exit(1); 
+// Variabel yang wajib ada sebelum bot boleh menyala
+const REQUIRED_KEYS = ['TOKEN', 'CLIENT_ID', 'DB_USER', 'DB_NAME'];
+
+/** Daftar variabel wajib yang masih kosong. */
+function getMissingEnvKeys() {
+    return REQUIRED_KEYS.filter(key => !env[key]);
+}
+
+/**
+ * Validasi konfigurasi environment.
+ *
+ * Sebelumnya validasi ini berjalan otomatis saat modul di-import dan langsung
+ * memanggil process.exit(1). Karena ShardingManager memakai respawn: true, itu
+ * membuat setiap shard mati lalu dilahirkan ulang tanpa henti ketika config kurang.
+ * Sekarang validasi dipanggil eksplisit: fatal di shard.js (sebelum spawn), dan
+ * non-fatal di dalam proses anak shard.
+ *
+ * @param {{ fatal?: boolean }} [options]
+ * @returns {boolean} true jika seluruh variabel wajib terisi
+ */
+function validateEnv({ fatal = false } = {}) {
+    const missing = getMissingEnvKeys();
+
+    if (missing.length > 0) {
+        for (const key of missing) {
+            logger.error(`\x1b[41m\x1b[37m 💥 FATAL ERROR \x1b[0m \x1b[31mVariabel ${key} belum diisi di dalam file .env!\x1b[0m`);
+        }
+        if (fatal) {
+            logger.error('\x1b[31mBot dihentikan karena konfigurasi wajib belum lengkap.\x1b[0m');
+            process.exit(1);
+        }
+        return false;
     }
+
+    // Peringatan opsional (tidak menghentikan bot)
+    if (!env.GEMINI_API) {
+        logger.warn('GEMINI_API_KEY tidak ditemukan di .env. Fitur AI utama mungkin tidak berfungsi.');
+    }
+    if (!env.VERBA_API_KEY) {
+        logger.warn('VERBA_API_KEY tidak ditemukan di .env. Fallback ke Gemini akan digunakan.');
+    }
+    if (!env.SESSION_SECRET) {
+        logger.warn('SESSION_SECRET tidak ditemukan di .env. Sesi Web Dashboard sebaiknya tidak memakai secret bawaan.');
+    }
+
+    return true;
 }
 
-
-// Peringatan opsional
-if (!env.GEMINI_API) {
-    logger.warn('GEMINI_API_KEY tidak ditemukan di .env. Fitur AI utama mungkin tidak berfungsi.');
-}
-if (!env.VERBA_API_KEY) {
-    logger.warn('VERBA_API_KEY tidak ditemukan di .env. Fallback ke Gemini akan digunakan.');
-}
+// Dipasang non-enumerable agar tidak ikut terbaca saat env di-iterasi/di-serialize.
+Object.defineProperty(env, 'validateEnv', { value: validateEnv, enumerable: false });
+Object.defineProperty(env, 'getMissingEnvKeys', { value: getMissingEnvKeys, enumerable: false });
 
 module.exports = env;
