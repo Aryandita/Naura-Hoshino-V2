@@ -5,6 +5,8 @@
  * Gambar diambil dari assets/Naura_Expression dan dikirim sebagai lampiran,
  * lalu dirujuk memakai skema attachment:// sehingga tidak perlu hosting eksternal.
  *
+ * Gambar dikirim apa adanya tanpa kompresi ulang, jadi kualitas aslinya utuh.
+ *
  * Contoh pemakaian:
  *
  *   const naura = require('../../src/utils/nauraExpression');
@@ -45,38 +47,66 @@ const EXPRESSIONS = [
 ];
 
 /**
- * Pemetaan makna -> ekspresi. Perintah cukup menyebut suasana yang diinginkan
- * ('success', 'error', 'loading') tanpa perlu tahu nama berkasnya.
+ * Mood yang memiliki BEBERAPA ekspresi. Setiap pemanggilan mengambil satu secara
+ * acak, supaya Naura tidak terasa mengulang wajah yang sama terus-menerus.
+ */
+const MOOD_GROUPS = {
+    afk: ['Eat', 'Sleepy', 'Chirping'],
+    idle: ['Eat', 'Sleepy', 'Chirping'],
+    idling: ['Eat', 'Sleepy', 'Chirping'],
+    away: ['Eat', 'Sleepy', 'Chirping'],
+    resting: ['Eat', 'Sleepy', 'Chirping']
+};
+
+/**
+ * Pemetaan makna -> satu ekspresi tetap. Perintah cukup menyebut suasana yang
+ * diinginkan ('success', 'error', 'loading') tanpa perlu tahu nama berkasnya.
  */
 const MOOD_MAP = {
+    // --- Status inti ---
     success: 'Cheers',
-    error: 'Shocked',
+    loading: 'Think',
+    error: 'Cry',
+
+    // --- Turunan status ---
     warning: 'Annoy',
-    info: 'Think',
-    loading: 'Sleepy',
+    info: 'Read',
     thinking: 'Think',
+    processing: 'Think',
+    fail: 'Cry',
+    denied: 'Hmph',
+    forbidden: 'Hmph',
+    cooldown: 'Sleepy',
+
+    // --- Momen menyenangkan ---
     welcome: 'Happy',
     levelup: 'Impressed',
     reward: 'Impressed',
+    achievement: 'Impressed',
     economy: 'Cheers',
+    celebrate: 'Cheers',
+
+    // --- Nuansa lain ---
     food: 'Eat',
     music: 'Chirping',
     love: 'Kiss',
     romance: 'Kiss',
     shy: 'Shy',
     sad: 'Cry',
-    fail: 'Cry',
-    cooldown: 'Sleepy',
-    denied: 'Hmph',
-    forbidden: 'Hmph',
     confused: 'Akward',
+    surprised: 'Shocked',
     help: 'Read',
     docs: 'Read',
+
     default: 'Happy'
 };
 
 /** Pencocokan nama tanpa peduli huruf besar/kecil. */
 const LOOKUP = new Map(EXPRESSIONS.map(name => [name.toLowerCase(), name]));
+
+function pickRandom(list) {
+    return list[Math.floor(Math.random() * list.length)];
+}
 
 /**
  * Ubah nama ekspresi atau mood menjadi nama berkas yang valid.
@@ -86,8 +116,12 @@ function resolveExpression(nameOrMood) {
     if (typeof nameOrMood !== 'string' || !nameOrMood.trim()) return MOOD_MAP.default;
 
     const key = nameOrMood.trim().toLowerCase();
+
+    if (key === 'random') return pickRandom(EXPRESSIONS);
     if (LOOKUP.has(key)) return LOOKUP.get(key);
+    if (MOOD_GROUPS[key]) return pickRandom(MOOD_GROUPS[key]);
     if (MOOD_MAP[key]) return MOOD_MAP[key];
+
     return MOOD_MAP.default;
 }
 
@@ -131,7 +165,7 @@ function getAttachment(nameOrMood) {
  * Tempelkan ekspresi ke sebuah EmbedBuilder.
  *
  * @param {import('discord.js').EmbedBuilder} embed
- * @param {string} nameOrMood nama ekspresi ('Cheers') atau mood ('success')
+ * @param {string} nameOrMood nama ekspresi ('Cheers') atau mood ('success', 'afk')
  * @param {{ as?: 'thumbnail'|'image'|'author', authorName?: string, authorUrl?: string }} [options]
  * @returns {{ embed: object, files: AttachmentBuilder[], expression: string|null }}
  */
@@ -163,20 +197,31 @@ function list() {
     return [...EXPRESSIONS];
 }
 
-/** Daftar mood yang bisa dipakai beserta ekspresi tujuannya. */
+/** Daftar mood tunggal beserta ekspresi tujuannya. */
 function moods() {
     return { ...MOOD_MAP };
 }
 
-/** Ekspresi acak, berguna untuk perintah santai seperti /naura. */
+/** Daftar mood yang berisi beberapa ekspresi acak. */
+function moodGroups() {
+    return { ...MOOD_GROUPS };
+}
+
+/** Ekspresi acak dari seluruh koleksi. */
 function random() {
-    return EXPRESSIONS[Math.floor(Math.random() * EXPRESSIONS.length)];
+    return pickRandom(EXPRESSIONS);
+}
+
+/** Ekspresi acak khusus suasana AFK / idle. */
+function randomAfk() {
+    return pickRandom(MOOD_GROUPS.afk);
 }
 
 module.exports = {
     EXPRESSION_DIR,
     EXPRESSIONS,
     MOOD_MAP,
+    MOOD_GROUPS,
     resolveExpression,
     getPath,
     exists,
@@ -184,5 +229,7 @@ module.exports = {
     decorate,
     list,
     moods,
-    random
+    moodGroups,
+    random,
+    randomAfk
 };

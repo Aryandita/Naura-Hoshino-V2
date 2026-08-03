@@ -1,5 +1,6 @@
 const { MessageFlags } = require('discord.js');
 const ui = require('../config/ui');
+const nauraExpression = require('./nauraExpression');
 
 /**
  * Text display component (type 10)
@@ -35,6 +36,12 @@ function resolveMediaUrl(ref) {
  * @param {string} [opts.authorName] - Teks kecil di atas judul
  * @param {string} opts.title - Judul utama
  * @param {string} [opts.iconURL] - URL ikon kecil (accessory Thumbnail di header)
+ * @param {string} [opts.expression] - Ekspresi Naura yang dipakai sebagai ikon header.
+ *        Boleh nama berkas ('Cheers') atau mood ('success', 'error', 'loading', 'afk').
+ *        Mood 'afk' memilih satu dari Eat / Sleepy / Chirping secara acak.
+ *        Diabaikan bila iconURL sudah diisi manual. Set false untuk mematikan.
+ * @param {'icon'|'gallery'|'none'} [opts.expressionAs] - Penempatan ekspresi. Default 'icon'
+ *        (thumbnail kecil di header). 'gallery' menampilkannya besar di dalam container.
  * @param {string} [opts.description] - Teks deskripsi/body utama
  * @param {Array<{name:string, value:string}>} [opts.fields] - Daftar field
  * @param {string} [opts.bannerAttachmentName] - Nama file attachment banner, mis. 'banner.png'
@@ -43,19 +50,27 @@ function resolveMediaUrl(ref) {
  *        attachment (mis. 'naura_media.mp4') atau URL eksternal penuh.
  * @param {Array<string>} [opts.fileAttachmentNames] - File non-visual (mis. audio) yang
  *        ditampilkan sebagai File component agar tetap muncul di pesan Components V2.
+ * @param {Array<object>} [opts.files] - Lampiran tambahan yang ikut dikirim bersama payload.
  * @param {import('discord.js').ActionRowBuilder|object} [opts.buttonsRow] - Action Row tombol
  * @param {string} [opts.footerText] - Teks footer kecil
+ *
+ * @returns Payload siap kirim, sudah termasuk `files`. Karena lampirannya menempel pada
+ *          payload yang sama, pemanggil cukup menulis `interaction.editReply(payload)`
+ *          dan gambar ekspresi ikut terkirim tanpa perubahan kode lain.
  */
 function buildContainerV2({
     accentColorHex,
     authorName,
     title,
     iconURL,
+    expression,
+    expressionAs = 'icon',
     description,
     fields = [],
     bannerAttachmentName,
     mediaAttachmentNames = [],
     fileAttachmentNames = [],
+    files = [],
     buttonsRow,
     footerText,
 }) {
@@ -67,13 +82,31 @@ function buildContainerV2({
     const cleanAuthor = authorName ? ui.stripCustomEmojis(authorName) : '';
     const cleanFooter = footerText ? ui.stripCustomEmojis(footerText) : ui.getFooter('core');
 
+    // ·· Ekspresi Naura ·············································
+    // iconURL manual selalu menang, supaya pemanggil lama tidak berubah perilakunya.
+    const attachedFiles = Array.isArray(files) ? [...files] : [];
+    let headerIconURL = iconURL;
+    let expressionGalleryRef = null;
+
+    if (expression && expressionAs !== 'none') {
+        const face = nauraExpression.getAttachment(expression);
+        if (face) {
+            attachedFiles.push(face.attachment);
+            if (expressionAs === 'gallery') {
+                expressionGalleryRef = face.url;
+            } else if (!headerIconURL) {
+                headerIconURL = face.url;
+            }
+        }
+    }
+
     // Header: judul + ikon kecil di kanan (mirip author + thumbnail pada embed)
     const headerText = `${cleanAuthor ? `-# ${cleanAuthor}\n` : ''}## ${title}`;
-    if (iconURL) {
+    if (headerIconURL) {
         containerComponents.push({
             type: 9, // SECTION
             components: [textDisplay(headerText)],
-            accessory: { type: 11, media: { url: iconURL } }, // THUMBNAIL
+            accessory: { type: 11, media: { url: headerIconURL } }, // THUMBNAIL
         });
     } else {
         containerComponents.push(textDisplay(headerText));
@@ -95,6 +128,7 @@ function buildContainerV2({
     const galleryRefs = [
         bannerAttachmentName,
         ...(Array.isArray(mediaAttachmentNames) ? mediaAttachmentNames : []),
+        expressionGalleryRef,
     ].filter(Boolean);
 
     if (galleryRefs.length > 0) {
@@ -140,6 +174,7 @@ function buildContainerV2({
     return {
         content: null,
         embeds: [],
+        files: attachedFiles,
         flags: MessageFlags.IsComponentsV2,
         components: [
             {
@@ -153,40 +188,45 @@ function buildContainerV2({
 
 /**
  * Membangun Container V2 khusus pesan Error.
+ * Ekspresi bawaan: Cry.
  * @param {string|object} opts - Pesan error atau opsi objek
  * @param {string} [opts.errorMessage] - Pesan detail error
  * @param {string} [opts.title] - Judul error
+ * @param {string} [opts.expression] - Timpa ekspresi bawaan
  * @param {string} [opts.footerText] - Teks footer
  */
 function buildErrorContainerV2(opts) {
-    const rawError = typeof opts === 'string' ? opts : opts?.errorMessage || opts?.description || 'Terjadi kendala saat memproses permintaanmu...';
-    const title = (typeof opts === 'object' && opts?.title) ? opts.title : 'Aww, Waduh! Ada Masalah Nih ✨';
+    const rawError = typeof opts === 'string' ? opts : opts?.errorMessage || opts?.description || 'Naura belum berhasil menyelesaikan permintaanmu';
+    const title = (typeof opts === 'object' && opts?.title) ? opts.title : 'Maaf ya, Naura Gagal Melakukannya 💧';
     const footerText = (typeof opts === 'object' && opts?.footerText) ? opts.footerText : ui.getFooter('core');
     const errEmoji = ui.getEmoji('error') || '❌';
 
-    // Cheerful girl touch if generic error string
+    // Sentuhan personal bila yang dikirim hanya string error mentah
     const errorMessage = typeof opts === 'string' && !opts.includes('💕')
-        ? `Aww, maaf yaa! Naura nemuin kendala: **${rawError}** 💕`
+        ? `Maaf banget yaa, Naura nggak berhasil melakukannya. Katanya begini: **${rawError}**\nCoba sekali lagi ya, Naura temenin sampai berhasil kok 💕`
         : rawError;
 
     return buildContainerV2({
         accentColorHex: opts?.accentColorHex || ui.getColor('primary') || '#FFC0CB',
         title: `${errEmoji} ${title}`,
         description: errorMessage,
+        expression: (typeof opts === 'object' && opts?.expression !== undefined) ? opts.expression : 'error',
         footerText,
     });
 }
 
 /**
  * Membangun Container V2 khusus pesan Loading.
+ * Ekspresi bawaan: Think.
  * @param {string|object} opts - Pesan loading atau opsi objek
  * @param {string} [opts.loadingMessage] - Pesan detail loading
  * @param {string} [opts.title] - Judul loading
+ * @param {string} [opts.expression] - Timpa ekspresi bawaan
  * @param {string} [opts.footerText] - Teks footer
  */
 function buildLoadingContainerV2(opts) {
-    const rawLoading = typeof opts === 'string' ? opts : opts?.loadingMessage || opts?.description || 'Tunggu sebentar yaa, Naura sedang memprosesnya dengan penuh semangat! ✨';
-    const title = (typeof opts === 'object' && opts?.title) ? opts.title : 'Tunggu Sebentar Yaa~! 💖';
+    const rawLoading = typeof opts === 'string' ? opts : opts?.loadingMessage || opts?.description || 'Tunggu sebentar yaa, Naura lagi siapin semuanya buat kamu~ ✨';
+    const title = (typeof opts === 'object' && opts?.title) ? opts.title : 'Sebentar Yaa, Naura Lagi Mikir~ 💭';
     const footerText = (typeof opts === 'object' && opts?.footerText) ? opts.footerText : ui.getFooter('core');
     const loadEmoji = ui.getEmoji('loading') || '⏳';
 
@@ -194,6 +234,27 @@ function buildLoadingContainerV2(opts) {
         accentColorHex: opts?.accentColorHex || ui.getColor('primary') || '#FFC0CB',
         title: `${loadEmoji} ${title}`,
         description: rawLoading,
+        expression: (typeof opts === 'object' && opts?.expression !== undefined) ? opts.expression : 'loading',
+        footerText,
+    });
+}
+
+/**
+ * Membangun Container V2 khusus pesan Sukses.
+ * Ekspresi bawaan: Cheers.
+ * @param {string|object} opts - Pesan sukses atau opsi objek
+ */
+function buildSuccessContainerV2(opts) {
+    const rawSuccess = typeof opts === 'string' ? opts : opts?.successMessage || opts?.description || 'Berhasil! Semuanya sudah beres yaa~ ✨';
+    const title = (typeof opts === 'object' && opts?.title) ? opts.title : 'Yeaay, Berhasil! 🎀';
+    const footerText = (typeof opts === 'object' && opts?.footerText) ? opts.footerText : ui.getFooter('core');
+    const okEmoji = ui.getEmoji('success') || '✅';
+
+    return buildContainerV2({
+        accentColorHex: opts?.accentColorHex || ui.getColor('primary') || '#FFC0CB',
+        title: `${okEmoji} ${title}`,
+        description: rawSuccess,
+        expression: (typeof opts === 'object' && opts?.expression !== undefined) ? opts.expression : 'success',
         footerText,
     });
 }
@@ -202,7 +263,7 @@ module.exports = {
     buildContainerV2,
     buildErrorContainerV2,
     buildLoadingContainerV2,
+    buildSuccessContainerV2,
     textDisplay,
     separatorComp
 };
-
