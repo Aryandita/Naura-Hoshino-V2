@@ -180,7 +180,10 @@ module.exports = (client) => {
         cors: { origin: process.env.DASHBOARD_ORIGIN || '*', credentials: true }
     });
 
+    // Dipakai berkas lain (mis. plugin/core/naura.js) untuk menyiarkan kejadian.
     client.dashboardIo = io;
+    global.client = client;
+
     require('./sockets')(client, io, { sessionMiddleware });
 
     webServer.listen(webPort, () => {
