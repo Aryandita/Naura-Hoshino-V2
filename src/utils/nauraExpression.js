@@ -1,9 +1,12 @@
 /**
  * Naura Expression Helper
  * ------------------------------------------------------------
- * Menghadirkan ekspresi Naura secara visual di dalam embed dan Container V2.
- * Gambar diambil dari assets/Naura_Expression dan dikirim sebagai lampiran,
- * lalu dirujuk memakai skema attachment:// sehingga tidak perlu hosting eksternal.
+ * Menghadirkan ekspresi Naura secara visual di dalam embed dan Container V2,
+ * lewat dua jalur yang saling melengkapi:
+ *
+ *   1. Gambar  — diambil dari assets/Naura_Expression, dikirim sebagai lampiran
+ *                dan dirujuk memakai skema attachment://
+ *   2. Emoji   — emoji kustom Discord untuk dipakai di judul, field, dan tombol
  *
  * Gambar dikirim apa adanya tanpa kompresi ulang, jadi kualitas aslinya utuh.
  *
@@ -13,11 +16,7 @@
  *   const { embed, files } = naura.decorate(myEmbed, 'success');
  *   await interaction.reply({ embeds: [embed], files });
  *
- * Atau secara manual:
- *
- *   const face = naura.getAttachment('Cheers');
- *   embed.setThumbnail(face.url);
- *   await interaction.reply({ embeds: [embed], files: [face.attachment] });
+ *   embed.setTitle(`${naura.getEmoji('success')} Berhasil!`);
  */
 
 const fs = require('fs');
@@ -25,7 +24,13 @@ const path = require('path');
 const { AttachmentBuilder } = require('discord.js');
 
 const EXPRESSION_DIR = path.join(__dirname, '..', '..', 'assets', 'Naura_Expression');
-const EXTENSION = '.jpeg';
+
+/**
+ * Urutan format yang dicoba. PNG dan WebP didahulukan karena mendukung latar
+ * transparan, sehingga karakter Naura terlihat lebih tegas di dalam embed.
+ * JPEG tetap didukung sebagai cadangan untuk aset lama.
+ */
+const EXTENSIONS = ['.png', '.webp', '.jpeg', '.jpg'];
 
 /** Seluruh ekspresi yang tersedia di assets/Naura_Expression. */
 const EXPRESSIONS = [
@@ -45,6 +50,30 @@ const EXPRESSIONS = [
     'Sleepy',
     'Think'
 ];
+
+/**
+ * Emoji kustom Discord untuk tiap ekspresi.
+ * Dua nama emoji sengaja berbeda dari nama berkasnya:
+ *   Kiss  -> Blowkiss
+ *   Think -> Thinking
+ */
+const EMOJIS = {
+    Akward: '<:Akward:1533824815725805668>',
+    Annoy: '<:Annoy:1533824819123064953>',
+    Cheers: '<:Cheers:1533824826077085759>',
+    Chirping: '<:Chirping:1533824829176807464>',
+    Cry: '<:Cry:1533824832938967130>',
+    Eat: '<:Eat:1533824836676358154>',
+    Happy: '<:Happy:1533824839704641546>',
+    Hmph: '<:Hmph:1533824842816688248>',
+    Impressed: '<:Impressed:1533825168974151730>',
+    Kiss: '<:Blowkiss:1533824822768046170>',
+    Read: '<:Read:1533824846604009482>',
+    Shocked: '<:Shocked:1533824850051993601>',
+    Shy: '<:Shy:1533824853482934444>',
+    Sleepy: '<:Sleepy:1533824857090035764>',
+    Think: '<:Thinking:1533824864367149096>'
+};
 
 /**
  * Mood yang memiliki BEBERAPA ekspresi. Setiap pemanggilan mengambil satu secara
@@ -91,18 +120,32 @@ const MOOD_MAP = {
     music: 'Chirping',
     love: 'Kiss',
     romance: 'Kiss',
+    kiss: 'Kiss',
     shy: 'Shy',
     sad: 'Cry',
+    crying: 'Cry',
     confused: 'Akward',
     surprised: 'Shocked',
+    angry: 'Hmph',
+    happy: 'Happy',
+    smile: 'Happy',
+    sleepy: 'Sleepy',
     help: 'Read',
     docs: 'Read',
+    read: 'Read',
 
     default: 'Happy'
 };
 
 /** Pencocokan nama tanpa peduli huruf besar/kecil. */
 const LOOKUP = new Map(EXPRESSIONS.map(name => [name.toLowerCase(), name]));
+
+// Nama emoji juga boleh dipakai sebagai nama ekspresi, mis. 'Blowkiss', 'Thinking'.
+LOOKUP.set('blowkiss', 'Kiss');
+LOOKUP.set('thinking', 'Think');
+
+/** Cache hasil pencarian berkas agar tidak menyentuh disk berulang kali. */
+const PATH_CACHE = new Map();
 
 function pickRandom(list) {
     return list[Math.floor(Math.random() * list.length)];
@@ -125,18 +168,58 @@ function resolveExpression(nameOrMood) {
     return MOOD_MAP.default;
 }
 
-/** Path absolut sebuah ekspresi. */
+/**
+ * Cari berkas gambar sebuah ekspresi dengan menelusuri EXTENSIONS berurutan.
+ * @returns {string|null} path absolut, atau null bila tidak ada satu pun format
+ */
+function findFile(name) {
+    if (PATH_CACHE.has(name)) return PATH_CACHE.get(name);
+
+    let found = null;
+    for (const ext of EXTENSIONS) {
+        const candidate = path.join(EXPRESSION_DIR, `${name}${ext}`);
+        try {
+            if (fs.existsSync(candidate)) {
+                found = candidate;
+                break;
+            }
+        } catch (error) {
+            // Kegagalan akses disk diperlakukan sama seperti berkas tidak ada,
+            // supaya perintah tetap berjalan tanpa gambar.
+        }
+    }
+
+    PATH_CACHE.set(name, found);
+    return found;
+}
+
+/** Kosongkan cache path. Berguna setelah aset diganti saat bot sedang hidup. */
+function clearCache() {
+    PATH_CACHE.clear();
+}
+
+/** Path absolut sebuah ekspresi, atau null bila berkasnya belum ada. */
 function getPath(nameOrMood) {
-    return path.join(EXPRESSION_DIR, `${resolveExpression(nameOrMood)}${EXTENSION}`);
+    return findFile(resolveExpression(nameOrMood));
 }
 
 /** Apakah berkas gambarnya benar-benar ada di disk. */
 function exists(nameOrMood) {
-    try {
-        return fs.existsSync(getPath(nameOrMood));
-    } catch (error) {
-        return false;
-    }
+    return getPath(nameOrMood) !== null;
+}
+
+/**
+ * Emoji kustom Discord untuk sebuah ekspresi atau mood.
+ * Dipakai untuk menggantikan emoji hardcoded di judul dan field embed.
+ *
+ * @param {string} nameOrMood - 'Cheers', 'success', 'afk', dan sebagainya
+ * @returns {string|null} string emoji, atau null bila tidak terdaftar
+ *
+ * @example
+ * embed.setTitle(`${naura.getEmoji('success')} Berhasil!`);
+ */
+function getEmoji(nameOrMood) {
+    return EMOJIS[resolveExpression(nameOrMood)] || null;
 }
 
 /**
@@ -144,19 +227,22 @@ function exists(nameOrMood) {
  * AttachmentBuilder dibuat baru setiap pemanggilan karena satu instance tidak
  * boleh dikirim ulang pada pesan yang berbeda.
  *
- * @returns {{ name: string, fileName: string, url: string, attachment: AttachmentBuilder } | null}
+ * @returns {{ name: string, fileName: string, url: string, emoji: string|null, attachment: AttachmentBuilder } | null}
  */
 function getAttachment(nameOrMood) {
     const name = resolveExpression(nameOrMood);
-    const filePath = getPath(name);
+    const filePath = findFile(name);
 
-    if (!fs.existsSync(filePath)) return null;
+    if (!filePath) return null;
 
-    const fileName = `naura_${name.toLowerCase()}${EXTENSION}`;
+    // Ekstensi mengikuti berkas yang benar-benar ditemukan, sehingga pergantian
+    // aset dari JPEG ke PNG transparan tidak memerlukan perubahan kode.
+    const fileName = `naura_${name.toLowerCase()}${path.extname(filePath)}`;
     return {
         name,
         fileName,
         url: `attachment://${fileName}`,
+        emoji: EMOJIS[name] || null,
         attachment: new AttachmentBuilder(filePath, { name: fileName })
     };
 }
@@ -219,14 +305,18 @@ function randomAfk() {
 
 module.exports = {
     EXPRESSION_DIR,
+    EXTENSIONS,
     EXPRESSIONS,
+    EMOJIS,
     MOOD_MAP,
     MOOD_GROUPS,
     resolveExpression,
     getPath,
     exists,
+    getEmoji,
     getAttachment,
     decorate,
+    clearCache,
     list,
     moods,
     moodGroups,
