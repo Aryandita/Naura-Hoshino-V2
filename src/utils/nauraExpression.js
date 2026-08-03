@@ -32,10 +32,14 @@ const EXPRESSION_DIR = path.join(__dirname, '..', '..', 'assets', 'Naura_Express
  */
 const EXTENSIONS = ['.png', '.webp', '.jpeg', '.jpg'];
 
-/** Seluruh ekspresi yang tersedia di assets/Naura_Expression. */
+/**
+ * Seluruh ekspresi yang tersedia, ditulis PERSIS seperti nama berkasnya di
+ * assets/Naura_Expression. Perhatikan 'Blow kiss' memakai spasi.
+ */
 const EXPRESSIONS = [
     'Akward',
     'Annoy',
+    'Blow kiss',
     'Cheers',
     'Chirping',
     'Cry',
@@ -43,36 +47,30 @@ const EXPRESSIONS = [
     'Happy',
     'Hmph',
     'Impressed',
-    'Kiss',
     'Read',
     'Shocked',
     'Shy',
     'Sleepy',
-    'Think'
+    'Thinking'
 ];
 
-/**
- * Emoji kustom Discord untuk tiap ekspresi.
- * Dua nama emoji sengaja berbeda dari nama berkasnya:
- *   Kiss  -> Blowkiss
- *   Think -> Thinking
- */
+/** Emoji kustom Discord untuk tiap ekspresi. */
 const EMOJIS = {
-    Akward: '<:Akward:1533824815725805668>',
-    Annoy: '<:Annoy:1533824819123064953>',
-    Cheers: '<:Cheers:1533824826077085759>',
-    Chirping: '<:Chirping:1533824829176807464>',
-    Cry: '<:Cry:1533824832938967130>',
-    Eat: '<:Eat:1533824836676358154>',
-    Happy: '<:Happy:1533824839704641546>',
-    Hmph: '<:Hmph:1533824842816688248>',
-    Impressed: '<:Impressed:1533825168974151730>',
-    Kiss: '<:Blowkiss:1533824822768046170>',
-    Read: '<:Read:1533824846604009482>',
-    Shocked: '<:Shocked:1533824850051993601>',
-    Shy: '<:Shy:1533824853482934444>',
-    Sleepy: '<:Sleepy:1533824857090035764>',
-    Think: '<:Thinking:1533824864367149096>'
+    'Akward': '<:Akward:1533824815725805668>',
+    'Annoy': '<:Annoy:1533824819123064953>',
+    'Blow kiss': '<:Blowkiss:1533824822768046170>',
+    'Cheers': '<:Cheers:1533824826077085759>',
+    'Chirping': '<:Chirping:1533824829176807464>',
+    'Cry': '<:Cry:1533824832938967130>',
+    'Eat': '<:Eat:1533824836676358154>',
+    'Happy': '<:Happy:1533824839704641546>',
+    'Hmph': '<:Hmph:1533824842816688248>',
+    'Impressed': '<:Impressed:1533825168974151730>',
+    'Read': '<:Read:1533824846604009482>',
+    'Shocked': '<:Shocked:1533824850051993601>',
+    'Shy': '<:Shy:1533824853482934444>',
+    'Sleepy': '<:Sleepy:1533824857090035764>',
+    'Thinking': '<:Thinking:1533824864367149096>'
 };
 
 /**
@@ -94,14 +92,14 @@ const MOOD_GROUPS = {
 const MOOD_MAP = {
     // --- Status inti ---
     success: 'Cheers',
-    loading: 'Think',
+    loading: 'Thinking',
     error: 'Cry',
 
     // --- Turunan status ---
     warning: 'Annoy',
     info: 'Read',
-    thinking: 'Think',
-    processing: 'Think',
+    thinking: 'Thinking',
+    processing: 'Thinking',
     fail: 'Cry',
     denied: 'Hmph',
     forbidden: 'Hmph',
@@ -118,9 +116,8 @@ const MOOD_MAP = {
     // --- Nuansa lain ---
     food: 'Eat',
     music: 'Chirping',
-    love: 'Kiss',
-    romance: 'Kiss',
-    kiss: 'Kiss',
+    love: 'Blow kiss',
+    romance: 'Blow kiss',
     shy: 'Shy',
     sad: 'Cry',
     crying: 'Cry',
@@ -132,17 +129,19 @@ const MOOD_MAP = {
     sleepy: 'Sleepy',
     help: 'Read',
     docs: 'Read',
-    read: 'Read',
 
     default: 'Happy'
 };
 
-/** Pencocokan nama tanpa peduli huruf besar/kecil. */
+/** Pencocokan nama tanpa peduli huruf besar/kecil maupun spasi. */
 const LOOKUP = new Map(EXPRESSIONS.map(name => [name.toLowerCase(), name]));
 
-// Nama emoji juga boleh dipakai sebagai nama ekspresi, mis. 'Blowkiss', 'Thinking'.
-LOOKUP.set('blowkiss', 'Kiss');
-LOOKUP.set('thinking', 'Think');
+// Alias supaya penamaan lama dan variasi penulisan tetap dikenali.
+LOOKUP.set('blowkiss', 'Blow kiss');
+LOOKUP.set('blow_kiss', 'Blow kiss');
+LOOKUP.set('kiss', 'Blow kiss');
+LOOKUP.set('think', 'Thinking');
+LOOKUP.set('awkward', 'Akward');
 
 /** Cache hasil pencarian berkas agar tidak menyentuh disk berulang kali. */
 const PATH_CACHE = new Map();
@@ -193,6 +192,17 @@ function findFile(name) {
     return found;
 }
 
+/**
+ * Nama lampiran yang aman untuk skema attachment://.
+ * Spasi dan karakter non-alfanumerik diganti garis bawah, karena rujukan
+ * attachment:// tidak menangani spasi dengan andal.
+ * 'Blow kiss' -> 'naura_blow_kiss.png'
+ */
+function buildFileName(name, ext) {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    return `naura_${slug}${ext}`;
+}
+
 /** Kosongkan cache path. Berguna setelah aset diganti saat bot sedang hidup. */
 function clearCache() {
     PATH_CACHE.clear();
@@ -237,7 +247,7 @@ function getAttachment(nameOrMood) {
 
     // Ekstensi mengikuti berkas yang benar-benar ditemukan, sehingga pergantian
     // aset dari JPEG ke PNG transparan tidak memerlukan perubahan kode.
-    const fileName = `naura_${name.toLowerCase()}${path.extname(filePath)}`;
+    const fileName = buildFileName(name, path.extname(filePath));
     return {
         name,
         fileName,
