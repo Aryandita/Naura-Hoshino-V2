@@ -4,6 +4,10 @@ const { logger } = require('./src/managers/logger');
 const path = require('path');
 const env = require('./src/config/env');
 
+// Validasi konfigurasi SEBELUM shard di-spawn. Kalau ada yang kurang, proses berhenti
+// di sini sehingga anak shard tidak pernah lahir lalu mati berulang (respawn loop).
+env.validateEnv({ fatal: true });
+
 console.log('\n\x1b[46m\x1b[30m ⚙️ SHARD MANAGER \x1b[0m \x1b[36mStarting Sharding Manager...\x1b[0m\n');
 
 const manager = new ShardingManager(path.join(__dirname, 'index.js'), {

@@ -1,16 +1,22 @@
 {
   "name": "naura-hoshino",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Naura Hoshino, Bot Discord multifungsi dengan UI Canvas Modern",
   "main": "index.js",
   "scripts": {
     "start": "node shard.js",
     "dev": "node --watch shard.js",
     "deploy": "node index.js --deploy",
-    "install-start": "npm install && node shard.js"
+    "install-start": "npm install && node shard.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "locales:check": "node scripts/validate-locales.js",
+    "locales:check:strict": "node scripts/validate-locales.js --strict"
   },
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=20.6.0"
   },
   "keywords": [
     "naura",
@@ -65,7 +71,7 @@
     "sequelize": "^6.37.8",
     "socket.io": "^4.8.3",
     "spotify-url-info": "^3.3.0",
-    "sqlite3": "^6.0.1",
+    "sqlite3": "^5.1.7",
     "tesseract.js": "^7.0.0",
     "yt-dlp-wrap": "^2.3.12",
     "fluent-ffmpeg": "^2.1.3",
