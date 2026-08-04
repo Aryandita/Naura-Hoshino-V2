@@ -112,7 +112,7 @@ module.exports = {
 
     // --- Help & Navigation ---
     help_core: '<:stats:1492712312975392859>',
-    help_eco: '<:NauraCoins:1484705998349402173>',
+    help_eco: '<a:NauraCoin:1534169156520513677>',
     help_music: '<:Lyrics:1484705972919337070>',
     help_game: '<:activity:1492712284550729879>',
     help_admin: '<:Privacy:1484706044943929354>',
