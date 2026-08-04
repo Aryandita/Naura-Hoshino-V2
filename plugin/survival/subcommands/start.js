@@ -1,55 +1,78 @@
+'use strict';
+
 const { MessageFlags } = require('discord.js');
-const { buildContainerV2, buildErrorContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
+
 const UserProfile = require('../../../src/models/UserProfile');
 const UserSurvival = require('../../../src/models/UserSurvival');
 const cacheManager = require('../../../src/managers/cacheManager');
-const { safeParseInventory } = require('../inventoryHelper');
 const ui = require('../../../src/config/ui');
+const { safeParseInventory, addOrStackItem } = require('../inventoryHelper');
+const { buildContainerV2, buildErrorContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
+
+const STARTER_FLAG = 'survival_started';
+
+// Semua ID di bawah ini sudah dicocokkan dengan katalog item:
+// wooden_axe ada di items_static.js, sedangkan wooden_pickaxe dan wooden_sword
+// didefinisikan di items_wooden.js. Kartu sambutan dibangun dari daftar yang
+// sama, jadi teks dan isi tas tidak akan pernah lagi berbeda.
+const STARTER_KIT = [
+    { id: STARTER_FLAG, name: 'Surat Pendaftaran', amount: 1, icon: '\uD83D\uDCDC', note: 'Bukti kamu resmi jadi warga' },
+    { id: 'wooden_axe', name: 'Kapak Kayu (Lv. 1)', amount: 1, icon: '\uD83E\uDE93', note: 'Buat menebang pohon di hutan' },
+    { id: 'wooden_pickaxe', name: 'Beliung Kayu (Lv. 1)', amount: 1, icon: '\u26CF\uFE0F', note: 'Buat menambang batu di gua' },
+    { id: 'wooden_sword', name: 'Pedang Kayu (Lv. 1)', amount: 1, icon: '\uD83D\uDDE1\uFE0F', note: 'Senjata latihan pertamamu' },
+    { id: 'apple', name: 'Apel Segar', amount: 2, icon: '\uD83C\uDF4E', note: 'Camilan kecil dari Naura' },
+    { id: 'mineral_water', name: 'Air Mineral', amount: 3, icon: '\uD83D\uDCA7', note: 'Biar nggak kehausan di jalan' }
+];
+
+function e(name, fallback) {
+    return ui.getEmoji(name) || fallback;
+}
+
+function grantStarterKit(inventory) {
+    return STARTER_KIT.reduce(
+        (inv, item) => addOrStackItem(inv, { id: item.id, name: item.name, amount: item.amount }),
+        inventory
+    );
+}
 
 module.exports = {
-    async execute(interaction, client) {
+    async execute(interaction) {
         const user = interaction.user;
-        
-        // Panggil atau buat data pemain di database via cacheManager
+
         const profile = await cacheManager.getUserProfile(user.id);
-        const [survival] = await UserSurvival.findOrCreate({ where: { userId: user.id } });
+        await UserSurvival.findOrCreate({ where: { userId: user.id } });
 
-        const currentInv = safeParseInventory(profile.inventory);
-        
-        // ✨ PERBAIKAN LOGIKA: Cek apakah pemain sudah punya item Starter Kit spesifik
-        const hasClaimedStarter = currentInv.some(item => item?.id === 'survival_started');
+        const inventory = safeParseInventory(profile.inventory);
 
-        if (hasClaimedStarter) {
-            const errPayload = buildErrorContainerV2({
-                title: 'Starter Kit Sudah Diambil',
-                description: 'Kamu sudah mengambil Starter Kit ini sebelumnya!',
+        if (inventory.some(item => item?.id === STARTER_FLAG)) {
+            const payload = buildErrorContainerV2({
+                title: `${e('akward', '\uD83C\uDF92')} Kamu sudah pernah ambil, lho`,
+                description: 'Starter Kit ini cuma bisa diambil sekali yaa. Tapi tenang, Naura tetap nemenin petualanganmu kok!',
                 footerText: ui.getFooter('survival')
             });
-            return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
+            return interaction.reply({ ...payload, flags: MessageFlags.Ephemeral });
         }
 
-        // Berikan Item Pemula (Starter Kit)
-        const starterKit = [
-            { id: 'survival_started', name: 'Surat Pendaftaran' },
-            { id: 'mineral_water', name: 'Air Mineral' },
-            { id: 'apple', name: 'Apel Segar' }
-        ];
+        await UserProfile.update(
+            { inventory: grantStarterKit(inventory) },
+            { where: { userId: user.id } }
+        );
 
-        // ✨ PERBAIKAN LOGIKA: Gabungkan item starter dengan item yang mungkin sudah mereka miliki
-        const newInv = currentInv.concat(starterKit);
+        const daftarBarang = STARTER_KIT
+            .map(item => `${item.icon} **${item.name}**${item.amount > 1 ? ` \u00D7${item.amount}` : ''} \u2014 ${item.note}`)
+            .join('\n');
 
-        // Simpan inventory baru ke database
-        await UserProfile.update({ inventory: newInv }, { where: { userId: user.id } });
-
-        const welcomePayload = buildContainerV2({
-            accentColorHex: ui.getColor('success'),
+        const payload = buildContainerV2({
+            accentColorHex: ui.getColor('success') || '#00FF00',
             authorName: 'Naura Survival Onboarding',
-            title: '🎒 Starter Kit Survival Naura',
+            title: `${e('cheers', '\uD83C\uDF92')} Selamat datang, petualang baru!`,
             iconURL: user.displayAvatarURL(),
-            description: `Selamat datang di petualangan Survival, **${user.displayName}**!\n\nSebagai bantuan awal, kamu mendapatkan paket perlengkapan berikut:\n\n${ui.getEmoji('axe') || '🪓'} **Kapak Kayu Tua** (Untuk menebang di Hutan)\n${ui.getEmoji('pickaxe') || '⛏️'} **Beliung Kayu Tua** (Untuk menambang)\n${ui.getEmoji('dagger') || '🗡️'} **Pedang Tua** (Senjata dasar di Dungeon)\n${ui.getEmoji('food') || '🍲'} **Ransum Dasar** (Air & Apel)\n\n*Barang-barang ini telah ditambahkan ke dalam tasmu. Gunakan perintah \`/survival collect\` untuk mulai mencari sumber daya!*`,
+            description: `Halo **${user.displayName}**! Naura senang banget kamu ikut bertualang di sini.\n\n`
+                + `Naura sudah siapkan bekal lengkap buat kamu. Semuanya masih dari kayu, tapi cukup kok buat hari pertama:\n\n${daftarBarang}\n\n`
+                + 'Semuanya sudah Naura masukkan ke tasmu. Coba mulai dengan `/survival collect` buat mengumpulkan bahan pertamamu, yaa!',
             footerText: ui.getFooter('survival')
         });
 
-        await interaction.reply(welcomePayload);
+        return interaction.reply(payload);
     }
 };

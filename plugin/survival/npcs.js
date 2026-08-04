@@ -42,7 +42,7 @@ module.exports = {
         title: 'Penyelam / Anak Nelayan',
         location: 'desa',
         type: 'romansa',
-        personality: 'Tomboy, energik, ceplas-ceplos, sangat menyukai laut and kebebasan.',
+        personality: 'Tomboy, energik, ceplas-ceplos, sangat menyukai laut dan kebebasan.',
         image: 'tari.jpeg'
     },
     'bagas': {
@@ -87,7 +87,7 @@ module.exports = {
         title: 'Penjaga Gua (Dungeon)',
         location: 'desa',
         type: 'teman',
-        personality: 'Gahar, pendiam, penuh bekas luka, sangat serius and menghormati kekuatan sejati.',
+        personality: 'Gahar, pendiam, penuh bekas luka, sangat serius dan menghormati kekuatan sejati.',
         image: 'gatot.jpeg'
     },
     'budi': {

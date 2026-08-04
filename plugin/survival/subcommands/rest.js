@@ -1,11 +1,39 @@
-// Lokasi: src/commands/survival/subcommands/rest.js
+'use strict';
+
 const UserSurvival = require('../../../src/models/UserSurvival');
 const ui = require('../../../src/config/ui');
-const { advanceTime, getTimeState } = require('../../../plugin/survival/survivalTime');
+const { advanceTime, getTimeState } = require('../survivalTime');
 const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
 
+const SLEEP_HOURS = 8;
+const MAX_STAT = 100;
+const HUNGER_DRAIN = 20;
+const THIRST_DRAIN = 20;
+
+// Semakin nyaman tempat tinggalnya, semakin pulas tidurnya.
+const REGEN_BY_PROPERTY = {
+    jalanan: 50,
+    gudang: 60,
+    kos: 70,
+    rumah: 90,
+    mansion: 100
+};
+
+const DECO_BONUS = {
+    deco_small_bed: 10,
+    deco_premium_bed: 20
+};
+
+function e(name, fallback) {
+    return ui.getEmoji(name) || fallback;
+}
+
+function bonusFromDecorations(decorations) {
+    return decorations.reduce((total, deco) => total + (DECO_BONUS[deco?.id] || 0), 0);
+}
+
 module.exports = {
-    async execute(interaction, client) {
+    async execute(interaction) {
         const user = interaction.user;
         const [survival] = await UserSurvival.findOrCreate({ where: { userId: user.id } });
 
@@ -13,47 +41,58 @@ module.exports = {
             return ui.sendError(interaction, 'err_sys_56', true);
         }
 
-        const rpgState = survival.rpg_state || { house_seized: false };
-        if (rpgState.house_seized && survival.propertyId !== 'jalanan') {
+        const rpgState = survival.rpg_state || {};
+        const property = survival.propertyId || 'jalanan';
+
+        if (rpgState.house_seized && property !== 'jalanan') {
             return ui.sendError(interaction, 'err_sys_57', true);
         }
 
-        const prop = survival.propertyId || 'jalanan';
-        let regenStamina = 50; // Jalanan
-        if (prop === 'gudang') regenStamina = 60;
-        if (prop === 'kos') regenStamina = 70;
-        if (prop === 'rumah') regenStamina = 90;
-        if (prop === 'mansion') regenStamina = 100;
+        const regenStamina = (REGEN_BY_PROPERTY[property] || REGEN_BY_PROPERTY.jalanan)
+            + bonusFromDecorations(rpgState.active_decorations || []);
 
-        // Deco buff
-        const rpgStateBuff = survival.rpg_state || {};
-        const decos = rpgStateBuff.active_decorations || [];
-        if (decos.some(d => d.id === 'deco_small_bed')) regenStamina += 10;
-        if (decos.some(d => d.id === 'deco_premium_bed')) regenStamina += 20;
+        const maxHp = MAX_STAT + (survival.survival_level * 2);
+        const regenHp = Math.round(regenStamina / 2);
 
-        const sleepTime = 8;
-        const newStamina = Math.min(100, (survival.stamina || 0) + regenStamina);
-        const newHP = Math.min(100 + (survival.survival_level * 2), (survival.hp || 100) + (regenStamina / 2));
+        const newStamina = Math.min(MAX_STAT, (survival.stamina || 0) + regenStamina);
+        const newHp = Math.min(maxHp, (survival.hp || MAX_STAT) + regenHp);
+        const newHunger = Math.max(0, (survival.hunger || 0) - HUNGER_DRAIN);
+        const newThirst = Math.max(0, (survival.thirst || 0) - THIRST_DRAIN);
 
-        // Tidur menguras sedikit rasa lapar & haus (bangun-bangun lapar)
-        const newHunger = Math.max(0, survival.hunger - 20);
-        const newThirst = Math.max(0, survival.thirst - 20);
-
-        const timeUpdate = await advanceTime(user.id, sleepTime);
+        const timeUpdate = await advanceTime(user.id, SLEEP_HOURS);
         const timeState = getTimeState(timeUpdate.hour);
 
         await UserSurvival.update({
             stamina: newStamina,
-            hp: newHP,
+            hp: newHp,
             hunger: newHunger,
             thirst: newThirst
         }, { where: { userId: user.id } });
 
+        const jam = timeUpdate.hour.toString().padStart(2, '0');
+
+        const description = [
+            `Kamu merebahkan badan di **${property.toUpperCase()}** dan tertidur pulas selama ${SLEEP_HOURS} jam. Naura jagain mimpimu, kok.`,
+            '',
+            '**Yang pulih waktu kamu tidur:**',
+            `> Stamina **+${regenStamina}** (sekarang ${newStamina}%)`,
+            `> HP **+${regenHp}** (sekarang ${newHp})`,
+            '',
+            '**Tapi bangun-bangun jadi lapar:**',
+            `> Lapar **-${HUNGER_DRAIN}%** (sisa ${newHunger}%)`,
+            `> Haus **-${THIRST_DRAIN}%** (sisa ${newThirst}%)`,
+            '',
+            '**Sekarang sudah:**',
+            `> ${timeState.emoji} **Hari ke-${timeUpdate.day}**, jam ${jam}:00 (${timeState.label})`
+        ].join('\n');
+
         const payload = buildContainerV2({
             accentColorHex: ui.getColor('primary') || '#FFB6C1',
-            title: `${ui.getEmoji('bed') || '🛏️'} Tidur Lelap`,
-            description: `Kamu merebahkan tubuhmu di **${prop.toUpperCase()}** dan tertidur lelap selama ${sleepTime} jam.\n\n**Pemulihan Energi:**\n> Stamina: **+${regenStamina}** (Total: ${newStamina}%)\n> HP: **+${regenStamina / 2}**\n\n**Kondisi Fisik Saat Bangun:**\n> Lapar: -20% | Haus: -20%\n\n**Waktu Saat Ini:**\n> ${timeState.emoji} **Hari ke-${timeUpdate.day}**, jam ${timeUpdate.hour.toString().padStart(2, '0')}:00 (${timeState.label})`,
-            footerText: 'Pastikan makan sarapan sebelum memulai hari! • ' + ui.getFooter('survival')
+            authorName: 'Naura Survival',
+            title: `${e('sleepy', '\uD83D\uDECF\uFE0F')} Tidurmu nyenyak sekali`,
+            iconURL: interaction.client.user.displayAvatarURL(),
+            description,
+            footerText: `Jangan lupa sarapan dulu yaa \u2022 ${ui.getFooter('survival')}`
         });
 
         return interaction.reply(payload);
