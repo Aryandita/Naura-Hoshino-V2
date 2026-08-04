@@ -1,35 +1,66 @@
-// Lokasi: src/commands/survival/subcommands/farm.js
-const { ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+'use strict';
+
+const { ActionRowBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
+
 const UserFarm = require('../../../src/models/UserFarm');
 const UserSurvival = require('../../../src/models/UserSurvival');
-const UserProfile = require('../../../src/models/UserProfile');
 const cacheManager = require('../../../src/managers/cacheManager');
 const { safeParseInventory } = require('../inventoryHelper');
 const ui = require('../../../src/config/ui');
-const itemsConfig = require('../../../plugin/survival/items');
+const itemsConfig = require('../items');
 const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
 
+const COLLECTOR_MS = 120000;
+const MAX_OPTIONS = 25;
+
+// Kapasitas lahan per properti.
+const PLOT_CAPACITY = {
+    kos: 2,
+    prop_kos: 2,
+    rumah: 6,
+    prop_rumah: 6,
+    mansion: 12,
+    prop_mansion: 12
+};
+
+const GROW_DAYS = { wheat: 1, potato: 2, apple: 3 };
+
+function e(name, fallback) {
+    return ui.getEmoji(name) || fallback;
+}
+
+function ephemeral(content) {
+    return { content, flags: MessageFlags.Ephemeral };
+}
+
+function addItem(inventory, id, name, amount) {
+    const exist = inventory.find(it => it && it.id === id);
+    if (exist) exist.amount = (exist.amount || 1) + amount;
+    else inventory.push({ id, name, amount, type: 'material' });
+}
+
 module.exports = {
-    async execute(interaction, client) {
+    async execute(interaction) {
         const user = interaction.user;
         const [survival] = await UserSurvival.findOrCreate({ where: { userId: user.id } });
 
         if (survival.currentLocation === 'prison') return ui.sendError(interaction, 'err_sys_43', true);
 
-        const prop = survival.property || 'jalanan';
-        const rpgState = survival.rpg_state || { house_seized: false };
+        // Model menyimpan properti di `propertyId`, bukan `property`, dan hari
+        // in-game ada di `inGameDay`. Nama lama membuat panen tidak pernah siap.
+        const prop = survival.propertyId || 'jalanan';
+        const rpgState = survival.rpg_state || {};
+
         if (rpgState.house_seized) return ui.sendError(interaction, 'err_sys_44', true);
         if (prop === 'jalanan') return ui.sendError(interaction, 'err_sys_45', true);
 
-        let maxLahan = 0;
-        if (prop === 'kos') maxLahan = 2;
-        if (prop === 'rumah') maxLahan = 6;
-        if (prop === 'mansion') maxLahan = 12;
+        const maxLahan = PLOT_CAPACITY[prop] || 0;
+        if (maxLahan === 0) return ui.sendError(interaction, 'err_sys_45', true);
 
-        let [farmData] = await UserFarm.findOrCreate({ where: { userId: user.id } });
-        let plots = farmData.plots || [];
+        const currentDay = survival.inGameDay || 1;
+        const [farmData] = await UserFarm.findOrCreate({ where: { userId: user.id } });
+        const plots = Array.isArray(farmData.plots) ? [...farmData.plots] : [];
 
-        // Inisialisasi slot lahan jika baru pertama
         if (plots.length < maxLahan) {
             for (let i = plots.length; i < maxLahan; i++) {
                 plots.push({ id: i, seed: null, plantedAtDay: null, harvestDay: null });
@@ -37,95 +68,142 @@ module.exports = {
             await UserFarm.update({ plots }, { where: { userId: user.id } });
         }
 
-        let farmDesc = '';
-        let farmOptions = [];
+        const lines = [];
+        const options = [];
 
         plots.slice(0, maxLahan).forEach((plot, index) => {
-            if (!plot.seed) {
-                farmDesc += `${ui.getEmoji('farm_soil') || '🟫'} **Lahan ${index + 1}:** Kosong (Tanah Subur)\n`;
-                farmOptions.push({ label: `Tanam di Lahan ${index + 1}`, value: `plant_${index}`, emoji: ui.getEmoji('farm_seed') || '🌱' });
-            } else {
-                const currentDay = survival.survival_day || 1;
-                if (currentDay >= plot.harvestDay) {
-                    farmDesc += `${ui.getEmoji('farm_harvest') || '🌻'} **Lahan ${index + 1}:** ${plot.seed.toUpperCase()} Siap Panen!\n`;
-                    farmOptions.push({ label: `Panen Lahan ${index + 1}`, value: `harvest_${index}`, emoji: ui.getEmoji('farm_harvest') || '🌾' });
-                } else {
-                    const wait = plot.harvestDay - currentDay;
-                    farmDesc += `${ui.getEmoji('farm_seed') || '🌱'} **Lahan ${index + 1}:** Menunggu Panen (${wait} hari lagi)\n`;
-                }
+            if (!plot || !plot.seed) {
+                lines.push(`${e('read', '\uD83D\uDFEB')} **Lahan ${index + 1}:** kosong dan tanahnya subur`);
+                options.push({
+                    label: `Tanam di Lahan ${index + 1}`,
+                    value: `plant_${index}`,
+                    description: 'Bibit pertama di tasmu yang dipakai'
+                });
+                return;
             }
+
+            if (currentDay >= (plot.harvestDay || 0)) {
+                lines.push(`${e('cheers', '\uD83C\uDF3B')} **Lahan ${index + 1}:** ${plot.seed} sudah siap dipanen!`);
+                options.push({
+                    label: `Panen Lahan ${index + 1}`,
+                    value: `harvest_${index}`,
+                    description: String(plot.seed).substring(0, 100)
+                });
+                return;
+            }
+
+            const wait = (plot.harvestDay || 0) - currentDay;
+            lines.push(`${e('sleepy', '\uD83C\uDF31')} **Lahan ${index + 1}:** ${plot.seed}, tunggu **${wait} hari** lagi`);
         });
 
-        const farmPayload = buildContainerV2({
-            accentColorHex: ui.getColor('success') || '#22c55e',
-            title: `${ui.getEmoji('farm_house') || '🏡'} Sistem Perkebunan Naura`,
-            description: `**Properti:** ${prop.toUpperCase()} | **Kapasitas Lahan:** ${maxLahan} Slot\n\n${farmDesc}`,
-            footerText: 'Naura Farming System'
-        });
+        const header = `**Properti:** ${prop} \u2022 **Kapasitas:** ${maxLahan} lahan \u2022 **Hari ke-${currentDay}**`;
 
-        if (farmOptions.length === 0) {
+        if (options.length === 0) {
             const waitPayload = buildContainerV2({
                 accentColorHex: ui.getColor('primary') || '#FFB6C1',
-                title: `${ui.getEmoji('farm_house') || '🏡'} Sistem Perkebunan Naura`,
-                description: `**Properti:** ${prop.toUpperCase()} | **Kapasitas Lahan:** ${maxLahan} Slot\n\n${farmDesc}\n\nSemua lahanmu sedang ditanami dan belum ada yang siap panen. Sabar ya! Tunggu hari berganti.`,
-                footerText: 'Naura Farming System'
+                authorName: 'Naura Farming',
+                title: `${e('happy', '\uD83C\uDFE1')} Kebun kamu`,
+                iconURL: user.displayAvatarURL(),
+                expression: 'info',
+                description: [
+                    header,
+                    '',
+                    lines.join('\n'),
+                    '',
+                    'Semua lahanmu sedang ditanami dan belum ada yang siap. Sabar ya, Naura ikut menunggu hari berganti sambil menyiram tanamannya!'
+                ].join('\n'),
+                footerText: ui.getFooter('survival')
             });
-            return interaction.reply(waitPayload);
+
+            return interaction.editReply({ ...waitPayload, embeds: [] });
         }
 
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId('farm_select')
-            .setPlaceholder('Kelola Lahan...')
-            .addOptions(farmOptions);
+            .setPlaceholder('Mau mengelola lahan yang mana?')
+            .addOptions(options.slice(0, MAX_OPTIONS));
 
-        const response = await interaction.reply({ ...farmPayload, components: [new ActionRowBuilder().addComponents(selectMenu)] });
+        const row = new ActionRowBuilder().addComponents(selectMenu);
 
-        const collector = response.createMessageComponentCollector({ filter: i => i.user.id === user.id, time: 45000 });
+        const farmPayload = buildContainerV2({
+            accentColorHex: ui.getColor('success') || '#22c55e',
+            authorName: 'Naura Farming',
+            title: `${e('happy', '\uD83C\uDFE1')} Kebun kamu`,
+            iconURL: user.displayAvatarURL(),
+            expression: 'info',
+            description: [header, '', lines.join('\n'), '', 'Pilih lahannya di bawah ya, Naura bantu catat semuanya.'].join('\n'),
+            footerText: ui.getFooter('survival')
+        });
+
+        const response = await interaction.editReply({
+            ...farmPayload,
+            embeds: [],
+            components: [...farmPayload.components, row]
+        });
+
+        const collector = response.createMessageComponentCollector({
+            filter: i => i.user.id === user.id,
+            time: COLLECTOR_MS
+        });
 
         collector.on('collect', async i => {
-            await i.deferUpdate();
-            const action = i.values[0].split('_')[0];
-            const plotIdx = parseInt(i.values[0].split('_')[1]);
+            await i.deferUpdate().catch(() => {});
+
+            const [action, rawIdx] = i.values[0].split('_');
+            const plotIdx = Number.parseInt(rawIdx, 10);
+            if (Number.isNaN(plotIdx) || !plots[plotIdx]) return;
+
+            const profile = await cacheManager.getUserProfile(user.id);
+            const inventory = safeParseInventory(profile.inventory);
 
             if (action === 'plant') {
-                const profile = await cacheManager.getUserProfile(user.id);
-                const currentInv = safeParseInventory(profile.inventory);
-                const seedsList = currentInv.filter(item => item.id.includes('seed_'));
+                const seed = inventory.find(item => item && typeof item.id === 'string' && item.id.startsWith('seed_'));
 
-                if (seedsList.length === 0) {
-                    return i.followUp({ content: `${ui.getEmoji('error') || '❌'} Kamu tidak memiliki bibit tanaman di dalam Tas!`, ephemeral: true });
+                if (!seed) {
+                    return i.followUp(ephemeral(
+                        `${e('shy', '\uD83C\uDF31')} Kamu belum punya bibit di tas. Beli dulu di warung Pak Damar ya, Naura temani!`
+                    )).catch(() => {});
                 }
 
-                const seedToPlant = seedsList[0];
-                const growTime = seedToPlant.id === 'seed_wheat' ? 1 : 2;
+                const cropId = seed.id.replace('seed_', '');
+                const growTime = GROW_DAYS[cropId] || 2;
 
-                plots[plotIdx].seed = seedToPlant.id.replace('seed_', '');
-                plots[plotIdx].plantedAtDay = survival.survival_day || 1;
-                plots[plotIdx].harvestDay = (survival.survival_day || 1) + growTime;
+                plots[plotIdx] = {
+                    id: plotIdx,
+                    seed: cropId,
+                    plantedAtDay: currentDay,
+                    harvestDay: currentDay + growTime
+                };
 
-                const seedIdx = currentInv.findIndex(item => item.id === seedToPlant.id);
-                currentInv.splice(seedIdx, 1);
+                if ((seed.amount || 1) > 1) seed.amount -= 1;
+                else inventory.splice(inventory.indexOf(seed), 1);
 
-                await cacheManager.updateUserProfile(user.id, { inventory: currentInv });
+                await cacheManager.updateUserProfile(user.id, { inventory });
                 await UserFarm.update({ plots }, { where: { userId: user.id } });
 
-                return i.followUp({ content: `${ui.getEmoji('farm_seed') || '🌱'} Berhasil menanam bibit **${seedToPlant.name}** di Lahan ${plotIdx + 1}! Tunggu ${growTime} hari in-game untuk memanennya.`, ephemeral: true });
+                return i.followUp(ephemeral(
+                    `${e('cheers', '\uD83C\uDF31')} Bibit **${seed.name || cropId}** sudah Naura tanam di Lahan ${plotIdx + 1}. Panennya **${growTime} hari** lagi, ya!`
+                )).catch(() => {});
             }
 
             if (action === 'harvest') {
-                const profile = await cacheManager.getUserProfile(user.id);
-                const currentInv = safeParseInventory(profile.inventory);
+                const cropId = plots[plotIdx].seed;
+                if (!cropId) return;
 
-                const harvestedCropId = plots[plotIdx].seed;
-                const cropObj = itemsConfig.find(i => i.id === harvestedCropId);
+                const cropObj = itemsConfig.find(it => it.id === cropId);
+                const cropName = cropObj ? cropObj.name : cropId;
+                const amount = Math.floor(Math.random() * 2) + 2;
 
-                currentInv.push({ id: harvestedCropId, name: cropObj ? cropObj.name : harvestedCropId });
+                addItem(inventory, cropId, cropName, amount);
                 plots[plotIdx] = { id: plotIdx, seed: null, plantedAtDay: null, harvestDay: null };
 
-                await UserProfile.update({ inventory: currentInv }, { where: { userId: user.id } });
+                // Lewat cacheManager supaya salinan cache tidak jadi basi.
+                await cacheManager.updateUserProfile(user.id, { inventory });
                 await UserFarm.update({ plots }, { where: { userId: user.id } });
 
-                return i.followUp({ content: `${ui.getEmoji('farm_harvest') || '🌾'} **PANEN BERHASIL!** Kamu mendapatkan **${cropObj ? cropObj.name : harvestedCropId}** dari Lahan ${plotIdx + 1}! Masuk ke dalam tas.`, ephemeral: true });
+                return i.followUp(ephemeral(
+                    `${e('impressed', '\uD83C\uDF3E')} Panennya berhasil! Kamu dapat **${amount}x ${cropName}** dari Lahan ${plotIdx + 1}. Naura sudah masukkan ke tasmu.`
+                )).catch(() => {});
             }
         });
     }
