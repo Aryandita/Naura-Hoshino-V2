@@ -5,6 +5,8 @@ const cacheManager = require('../../../src/managers/cacheManager');
 const ui = require('../../../src/config/ui');
 const { generateQuestsForUser } = require('../questGenerator');
 const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
+const currency = require('../currency');
+const { rollCouponDrop, dropLine } = require('../couponRewards');
 
 function e(name, fallback) {
     return ui.getEmoji(name) || fallback;
@@ -67,8 +69,9 @@ module.exports = async function questBoard(interaction, user, survivalData) {
     // Klaim otomatis semua misi yang sudah tuntas.
     const claimed = [];
     let rewardTotal = 0;
+    let monthlyCleared = 0;
 
-    for (const q of [...state.daily, ...state.monthly]) {
+    for (const q of state.daily) {
         if (q.current >= q.target && !q.claimed) {
             q.claimed = true;
             rewardTotal += q.reward;
@@ -77,9 +80,26 @@ module.exports = async function questBoard(interaction, user, survivalData) {
         }
     }
 
+    for (const q of state.monthly) {
+        if (q.current >= q.target && !q.claimed) {
+            q.claimed = true;
+            rewardTotal += q.reward;
+            claimed.push(q.title);
+            monthlyCleared += 1;
+            needsSave = true;
+        }
+    }
+
+    // Hadiah NSF lewat modul mata uang supaya saldo tidak lagi disentuh langsung.
     if (rewardTotal > 0) {
-        survivalData.starFragments = (survivalData.starFragments || 0) + rewardTotal;
-        await survivalData.save();
+        await currency.reward(currency.FRAGMENT, { survival: survivalData, profile }, rewardTotal);
+    }
+
+    // Naura Coupon hanya jatuh dari misi jangka panjang, bukan misi harian,
+    // supaya papan misi tidak berubah jadi mesin kupon setiap hari.
+    let coupon = { gained: 0 };
+    if (monthlyCleared > 0) {
+        coupon = await rollCouponDrop('quest_weekly', { survival: survivalData });
     }
 
     if (needsSave) {
@@ -89,7 +109,7 @@ module.exports = async function questBoard(interaction, user, survivalData) {
         await quest.save();
     }
 
-    const nsfEmoji = e('nsf', '\uD83E\uDE99');
+    const nsfEmoji = currency.emojiOf(currency.FRAGMENT);
     const dailyText = renderQuests(state.daily, nsfEmoji) || '*Belum ada misi harian buat hari ini.*';
     const monthlyText = renderQuests(state.monthly, nsfEmoji) || '*Belum ada misi bulanan.*';
 
@@ -110,8 +130,18 @@ module.exports = async function questBoard(interaction, user, survivalData) {
             'Kamu baru saja menyelesaikan:',
             claimed.map(title => `- **${title}**`).join('\n'),
             '',
-            `Hadiahnya sudah masuk: ${nsfEmoji} **${rewardTotal} Naura Star Fragment**!`
+            `Hadiahnya sudah masuk: ${currency.format(currency.FRAGMENT, rewardTotal)}!`
         );
+
+        const line = dropLine(coupon);
+        if (line) {
+            parts.push('', `**${e('impressed', '\u2728')} Bonus Misi Bulanan**`, line);
+        } else if (monthlyCleared > 0) {
+            parts.push(
+                '',
+                `${e('shy', '\uD83D\uDE3F')} Naura sudah coba cari kupon buat kamu, tapi belum ketemu kali ini. Bulan depan kita coba lagi, ya!`
+            );
+        }
     }
 
     const payload = buildContainerV2({
@@ -119,6 +149,7 @@ module.exports = async function questBoard(interaction, user, survivalData) {
         authorName: 'Naura Quest Board',
         title: `${e('read', '\uD83D\uDCDC')} Papan Misi ${user.username}`,
         iconURL: user.displayAvatarURL(),
+        expression: rewardTotal > 0 ? 'success' : 'info',
         description: parts.join('\n'),
         footerText: ui.getFooter('survival')
     });
