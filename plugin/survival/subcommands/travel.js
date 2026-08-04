@@ -1,154 +1,217 @@
-// Lokasi: src/commands/survival/subcommands/travel.js
+'use strict';
+
 const { AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const UserSurvival = require('../../../src/models/UserSurvival');
 const path = require('path');
 const fs = require('fs');
+
+const UserSurvival = require('../../../src/models/UserSurvival');
+const cacheManager = require('../../../src/managers/cacheManager');
 const ui = require('../../../src/config/ui');
-const { advanceTime, getTimeState } = require('../../../plugin/survival/survivalTime');
+const { advanceTime, getTimeState } = require('../survivalTime');
 const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
+const currency = require('../currency');
+const npcConfig = require('../npcs');
+
+const BANDIT_CHANCE = 0.15;
+const BANDIT_LOSS = 50;
+const COLLECTOR_MS = 120000;
+const BACKGROUND_DIR = path.join(process.cwd(), 'assets', 'survival', 'background');
+
+// Data NPC memakai `desa`, sedangkan pilihan perintah memakai `village`.
+const LOCATION_ALIAS = { village: 'desa', city: 'kota' };
+
+const LOCATION_NAMES = {
+    village: 'Desa Pemula',
+    desa: 'Desa Pemula',
+    kota: 'Naura City',
+    academy: 'Naura Academy',
+    hutan: 'Hutan Terlarang',
+    tambang: 'Gua Penambang',
+    laut: 'Pantai & Dermaga'
+};
+
+function e(name, fallback) {
+    return ui.getEmoji(name) || fallback;
+}
+
+function timePeriodOf(label) {
+    const lower = String(label || '').toLowerCase();
+    if (lower.includes('siang')) return 'siang';
+    if (lower.includes('sore')) return 'sore';
+    if (lower.includes('malam')) return 'malam';
+    return 'pagi';
+}
+
+function findBackground(locKey, period) {
+    const candidates = [`${locKey}_${period}.png`, `${locKey}.png`, 'placeholder.png'];
+
+    for (const name of candidates) {
+        const full = path.join(BACKGROUND_DIR, name);
+        if (fs.existsSync(full)) return { full, name };
+    }
+
+    return null;
+}
 
 module.exports = {
     async execute(interaction, client) {
         const user = interaction.user;
         const tujuan = interaction.options.getString('lokasi');
-
         const [survival] = await UserSurvival.findOrCreate({ where: { userId: user.id } });
 
         if (survival.currentLocation === 'prison') {
-            return ui.sendError(interaction, `${ui.getEmoji('prison') || '⛓️'} **Kamu sedang di penjara!** Kamu tidak bisa bepergian kemana-mana sampai bebas.`, true);
+            return ui.sendError(
+                interaction,
+                `${e('hmph', '\u26D3\uFE0F')} Kamu masih di penjara, jadi belum bisa ke mana-mana. Naura tunggu sampai kamu bebas, ya.`,
+                true
+            );
         }
 
-        if (survival.currentLocation === tujuan) {
-            return ui.sendError(interaction, 'err_sys_66', true);
-        }
+        const normalizedNow = LOCATION_ALIAS[survival.currentLocation] || survival.currentLocation;
+        const normalizedTarget = LOCATION_ALIAS[tujuan] || tujuan;
+
+        if (normalizedNow === normalizedTarget) return ui.sendError(interaction, 'err_sys_66', true);
 
         const hasNoVehicle = !survival.vehicle || survival.vehicle === 'none';
         const hasNoHouse = !survival.propertyId || survival.propertyId === 'jalanan';
 
-        // Pengecekan keluar desa: Wajib punya rumah dan kendaraan
-        if (tujuan !== 'village' && (hasNoVehicle || hasNoHouse)) {
+        if (normalizedTarget !== 'desa' && (hasNoVehicle || hasNoHouse)) {
             return ui.sendError(interaction, 'err_sys_67', true);
         }
 
-        let travelTime = 2; // Default jalan kaki ke desa
-        let vehName = 'Jalan Kaki';
-        if (survival.vehicle === 'bicycle') { travelTime = 1; vehName = 'Sepeda Kayuh'; }
-        if (survival.vehicle === 'motorcycle') { travelTime = 0.5; vehName = 'Sepeda Motor'; }
+        let travelTime = 2;
+        let vehName = 'jalan kaki';
+        if (survival.vehicle === 'bicycle') { travelTime = 1; vehName = 'sepeda kayuh'; }
+        if (survival.vehicle === 'motorcycle') { travelTime = 0.5; vehName = 'sepeda motor'; }
 
-        // Menerapkan perjalanan
         survival.currentLocation = tujuan;
         await survival.save();
 
         const timeUpdate = await advanceTime(user.id, Math.ceil(travelTime));
         const timeState = getTimeState(timeUpdate.hour);
+
         let encounterText = '';
-        if (!timeUpdate.passedOut && Math.random() < 0.15) {
-            const seed = Math.random();
-            if (seed < 0.5) {
-                encounterText = `\n\n${ui.getEmoji('thief') || '🥷'} **RANDOM ENCOUNTER!**\nDi tengah jalan, kamu dicegat oleh **Bandit**! Untungnya kamu berhasil lolos, tapi beberapa Naura Star Fragmentmu terjatuh di jalan.`;
-                const cacheManager = require('../../../src/managers/cacheManager');
+
+        if (!timeUpdate.passedOut && Math.random() < BANDIT_CHANCE) {
+            if (Math.random() < 0.5) {
+                // Dulu saldonya hanya diubah di memori setelah save, jadi
+                // penaltinya tidak pernah benar-benar tercatat.
+                await survival.reload().catch(() => {});
                 const profile = await cacheManager.getUserProfile(user.id);
-                if (profile) {
-                    survival.starFragments = Math.max(0, (survival.starFragments || 0) - 50);
-                }
+                const lost = Math.min(BANDIT_LOSS, currency.balanceOf(currency.FRAGMENT, { survival, profile }));
+
+                if (lost > 0) await currency.charge(currency.FRAGMENT, { survival, profile }, lost);
+
+                encounterText = [
+                    '',
+                    `${e('shocked', '\uD83E\uDD77')} **Ada kejadian di jalan!**`,
+                    `Kamu dicegat bandit di tengah perjalanan. Untung kamu lolos, tapi ${currency.format(currency.FRAGMENT, lost)} jatuh berserakan. Naura khawatir banget, hati-hati ya!`
+                ].join('\n');
             } else {
-                encounterText = `\n\n🎒 **RANDOM ENCOUNTER!**\nKamu berpapasan dengan **Pak Damar** (Pedagang Keliling). "Psst, kalau butuh barang langka temui aku di pojok kota malam ini," bisiknya sebelum menghilang.`;
+                encounterText = [
+                    '',
+                    `${e('happy', '\uD83C\uDF92')} **Ada kejadian di jalan!**`,
+                    'Kamu berpapasan dengan **Pak Damar**. "Psst, kalau butuh barang langka, temui aku di pojok kota malam ini," bisiknya sambil tersenyum.'
+                ].join('\n');
             }
         }
 
-        const locNames = {
-            'village': 'Desa Pemula (Awal)',
-            'kota': 'Naura City (Pusat Kota)',
-            'academy': 'Naura Academy (Kampus)',
-            'hutan': 'Hutan Terlarang',
-            'tambang': 'Gua Penambang',
-            'laut': 'Pantai & Dermaga'
-        };
+        const lines = [
+            `Kamu berangkat ke **${LOCATION_NAMES[normalizedTarget] || tujuan}** dengan **${vehName}**. Hati-hati di jalan ya!`,
+            '',
+            `> ${e('sleepy', '\u23F1\uFE0F')} Waktu tempuh: **${travelTime} jam**`,
+            `> ${timeState.emoji} Sekarang **hari ke-${timeUpdate.day}, jam ${String(timeUpdate.hour).padStart(2, '0')}:00** (${timeState.label})`
+        ];
 
-        let desc = `Kamu melakukan perjalanan menuju **${locNames[tujuan] || tujuan}** menggunakan **${vehName}**.\n\nWaktu tempuh: **${travelTime} Jam**.\n> Saat ini: ${timeState.emoji} **Hari ke-${timeUpdate.day}, Jam ${timeUpdate.hour.toString().padStart(2, '0')}:00** (${timeState.label})`;
-        desc += encounterText;
+        if (encounterText) lines.push(encounterText);
 
         if (timeUpdate.passedOut) {
-            const eNsf = ui.getEmoji('nsf') || '🪙';
-            desc += `\n\n${ui.getEmoji('sick') || '🚑'} **Kamu pingsan di jalan karena kelelahan / melanggar jam malam!**\nKamu dilarikan ke **${timeUpdate.clinic}** dan dikembalikan ke Desa.\nBiaya medis yang dipotong: **-${timeUpdate.penalty}** ${eNsf} **Naura Star Fragment**.`;
-        }
-
-        // Cari background gambar lokasi sesuai waktu
-        let timePeriod = 'pagi';
-        if (timeState.label.toLowerCase().includes('siang')) timePeriod = 'siang';
-        if (timeState.label.toLowerCase().includes('sore')) timePeriod = 'sore';
-        if (timeState.label.toLowerCase().includes('malam')) timePeriod = 'malam';
-
-        let locKey = tujuan === 'village' ? 'desa' : tujuan;
-        if (locKey === 'academy') locKey = 'kota';
-
-        const bgFilename = `${locKey}_${timePeriod}.png`;
-        const bgPath = path.join(__dirname, '..', 'assets', 'background', bgFilename);
-
-        let files = [];
-        let bannerAttachmentName;
-
-        if (fs.existsSync(bgPath)) {
-            files.push(new AttachmentBuilder(bgPath, { name: bgFilename }));
-            bannerAttachmentName = bgFilename;
-        } else {
-            const fallbackPath = path.join(__dirname, '..', 'assets', 'background', 'placeholder.png');
-            if (fs.existsSync(fallbackPath)) {
-                files.push(new AttachmentBuilder(fallbackPath, { name: 'placeholder.png' }));
-                bannerAttachmentName = 'placeholder.png';
-            }
-        }
-
-        const npcConfig = require('../../../plugin/survival/npcs');
-        const presentNPCs = Object.values(npcConfig).filter(n => {
-            const loc = (typeof n.getLocation === 'function') ? n.getLocation(survival.inGameHour || 6) : n.location;
-            return loc === tujuan;
-        });
-
-        let talkRow;
-        if (presentNPCs.length > 0) {
-            talkRow = new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`travel_talk_npc_${tujuan}`)
-                    .setLabel('Bicara dengan Warga')
-                    .setStyle(ButtonStyle.Success)
-                    .setEmoji(ui.getEmoji('talk') || '🗣️')
+            lines.push(
+                '',
+                `${e('cry', '\uD83D\uDE91')} **Kamu pingsan di jalan!**`,
+                `Kamu kelelahan atau melanggar jam malam, lalu dilarikan ke **${timeUpdate.clinic}** dan dipulangkan ke desa. Biaya medisnya ${currency.format(currency.FRAGMENT, timeUpdate.penalty)}. Naura sedih lihat kamu begini, tolong jaga kesehatanmu.`
             );
         }
 
+        const background = findBackground(
+            normalizedTarget === 'academy' ? 'kota' : normalizedTarget,
+            timePeriodOf(timeState.label)
+        );
+
+        const files = [];
+        let bannerAttachmentName;
+
+        if (background) {
+            bannerAttachmentName = background.name;
+            files.push(new AttachmentBuilder(background.full, { name: background.name }));
+        }
+
+        const currentHour = timeUpdate.hour || survival.inGameHour || 6;
+        const presentNPCs = Object.values(npcConfig).filter(n => {
+            if (!n) return false;
+            const loc = typeof n.getLocation === 'function' ? n.getLocation(currentHour) : n.location;
+            return (LOCATION_ALIAS[loc] || loc) === normalizedTarget;
+        });
+
         const payload = buildContainerV2({
             accentColorHex: ui.getColor('primary') || '#FFB6C1',
-            title: `${ui.getEmoji('lokasi') || '🗺️'} Perjalanan Tiba di Tujuan`,
-            description: desc,
+            authorName: 'Naura Travel',
+            title: `${e('cheers', '\uD83D\uDDFA\uFE0F')} Kamu sudah sampai!`,
+            iconURL: user.displayAvatarURL(),
+            expression: timeUpdate.passedOut ? 'error' : 'success',
+            description: lines.join('\n'),
             bannerAttachmentName,
-            buttonsRow: talkRow,
+            files,
             footerText: ui.getFooter('survival')
         });
 
-        const response = await interaction.reply({ ...payload, files, components: payload.components, fetchReply: true });
+        const components = [...payload.components];
 
-        if (presentNPCs.length > 0 && response && response.createMessageComponentCollector) {
-            const collector = response.createMessageComponentCollector({
-                filter: i => i.user.id === user.id && i.customId.startsWith('travel_talk_npc_'),
-                time: 60000
-            });
+        if (presentNPCs.length > 0) {
+            components.push(new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`travel_talk_npc_${normalizedTarget}`)
+                    .setLabel(`Sapa warga (${presentNPCs.length} orang)`)
+                    .setStyle(ButtonStyle.Success)
+            ));
+        }
 
-            collector.on('collect', async i => {
-                await i.deferUpdate();
-                const disabledRow = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(`travel_talk_npc_disabled`)
-                        .setLabel('Bicara dengan Warga')
-                        .setStyle(ButtonStyle.Success)
-                        .setEmoji(ui.getEmoji('talk') || '🗣️')
-                        .setDisabled(true)
-                );
-                await i.editReply({ components: [disabledRow] }).catch(() => { });
+        const response = await interaction.editReply({ ...payload, embeds: [], components });
 
+        if (presentNPCs.length === 0 || !response || !response.createMessageComponentCollector) return response;
+
+        const collector = response.createMessageComponentCollector({
+            filter: i => i.user.id === user.id && i.customId.startsWith('travel_talk_npc_'),
+            time: COLLECTOR_MS,
+            max: 1
+        });
+
+        collector.on('collect', async i => {
+            await i.deferUpdate().catch(() => {});
+
+            // Tombolnya dimatikan tanpa membuang isi kartu Components V2.
+            const disabledRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId('travel_talk_npc_disabled')
+                    .setLabel('Sedang menyapa warga...')
+                    .setStyle(ButtonStyle.Success)
+                    .setDisabled(true)
+            );
+
+            await interaction.editReply({
+                ...payload,
+                embeds: [],
+                components: [...payload.components, disabledRow]
+            }).catch(() => {});
+
+            try {
                 const npcHandler = require('./npc.js');
                 await npcHandler.execute(i, client);
-            });
-        }
+            } catch (err) {
+                // Kalau papan NPC gagal dibuka, perjalanannya tetap sah.
+            }
+        });
+
         return response;
     }
 };
