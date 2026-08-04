@@ -1,118 +1,175 @@
-const UserProfile = require('../../../src/models/UserProfile');
+'use strict';
+
+const { MessageFlags } = require('discord.js');
 const UserSurvival = require('../../../src/models/UserSurvival');
-const cacheManager = require('../../../src/managers/cacheManager');
 const UserNPC = require('../../../src/models/UserNPC');
+const cacheManager = require('../../../src/managers/cacheManager');
 const { safeParseInventory } = require('../inventoryHelper');
 const ui = require('../../../src/config/ui');
-const { advanceTime, getTimeState } = require('../../../plugin/survival/survivalTime');
+const { advanceTime, getTimeState } = require('../survivalTime');
 const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
+const currency = require('../currency');
+const { rollCouponDrop, dropLine } = require('../couponRewards');
+
+// Perampokan terjadi di kota, jadi rampasan dan dendanya memakai Naura Coin.
+const LOOT_MIN = 50;
+const LOOT_MAX = 150;
+const BANK_PENALTY = 50;
+const AFFECTION_PENALTY = 30;
+
+function e(name, fallback) {
+    return ui.getEmoji(name) || fallback;
+}
+
+function ephemeral(payload) {
+    return { ...payload, flags: (payload.flags || 0) | MessageFlags.Ephemeral };
+}
+
+function fail(interaction, title, description) {
+    const payload = buildContainerV2({
+        accentColorHex: ui.getColor('error') || '#ef4444',
+        authorName: 'Naura Central Bank',
+        title,
+        expression: 'error',
+        description,
+        footerText: ui.getFooter('survival')
+    });
+    return interaction.reply(ephemeral(payload));
+}
 
 module.exports = {
-    async execute(interaction, client) {
+    async execute(interaction) {
         const user = interaction.user;
         const [survival] = await UserSurvival.findOrCreate({ where: { userId: user.id } });
         const profile = await cacheManager.getUserProfile(user.id);
-        const eNsf = ui.getEmoji('nsf') || '🪙';
+        const holders = { survival, profile };
 
-        // 1. Lokasi & Waktu Check
         if (survival.currentLocation !== 'kota') {
-            const errPayload = buildContainerV2({
-                accentColorHex: ui.getColor('error') || '#ef4444',
-                title: '❌ Lokasi Tidak Valid',
-                description: 'Naura Central Bank hanya ada di **Kota**. Gunakan `/survival travel` untuk pindah!',
-                footerText: ui.getFooter('survival')
-            });
-            return interaction.reply({ ...errPayload, flags: 64 });
+            return fail(
+                interaction,
+                `${e('shy', '\uD83D\uDE45')} Kamu belum sampai di kota`,
+                'Naura Central Bank cuma ada di **Kota**, lho. Pakai `/survival travel` dulu ya, Naura tunggu di sana!'
+            );
         }
 
         const timeState = getTimeState(survival.inGameHour || 6);
-        if (!timeState.label.toLowerCase().includes('malam') && survival.inGameHour > 5 && survival.inGameHour < 22) {
-            const errPayload = buildContainerV2({
-                accentColorHex: ui.getColor('error') || '#ef4444',
-                title: '❌ Bank Beroperasi',
-                description: 'Bank sedang beroperasi dan dijaga ketat oleh Satpam Yanto. Datanglah di tengah malam saat sepi!',
-                footerText: ui.getFooter('survival')
-            });
-            return interaction.reply({ ...errPayload, flags: 64 });
+        const isNight = timeState.label.toLowerCase().includes('malam')
+            || survival.inGameHour <= 5
+            || survival.inGameHour >= 22;
+
+        if (!isNight) {
+            return fail(
+                interaction,
+                `${e('thinking', '\uD83D\uDD52')} Banknya masih ramai`,
+                'Sekarang bank masih buka dan dijaga ketat Satpam Yanto. Naura sih nyaranin datang lagi tengah malam waktu sepi. Sabar sedikit ya!'
+            );
         }
 
-        // 2. Requirement Item Check
-        const currentInv = safeParseInventory(profile.inventory);
-        const hasMask = currentInv.some(i => i && i.id === 'heist_mask');
-        const hasBomb = currentInv.some(i => i && i.id === 'c4_bomb');
+        const inventory = safeParseInventory(profile.inventory);
+        const hasMask = inventory.some(i => i && i.id === 'heist_mask');
+        const bombIndex = inventory.findIndex(i => i && i.id === 'c4_bomb');
 
-        if (!hasMask || !hasBomb) {
-            const errPayload = buildContainerV2({
-                accentColorHex: ui.getColor('error') || '#ef4444',
-                title: '❌ Perlengkapan Kurang',
-                description: `Kamu belum siap! Untuk merampok bank, kamu **wajib** memakai ${ui.getEmoji('mask') || '🎭'} **Topeng Perampok** dan membawa ${ui.getEmoji('bomb') || '💣'} **Bom Rakitan (C4)** untuk meledakkan brankas. (Crafting di meja perakitan)`,
-                footerText: ui.getFooter('survival')
-            });
-            return interaction.reply({ ...errPayload, flags: 64 });
+        if (!hasMask || bombIndex === -1) {
+            return fail(
+                interaction,
+                `${e('akward', '\uD83D\uDE05')} Perlengkapanmu belum lengkap`,
+                `Duh, kamu belum siap-siap! Kamu wajib pakai ${e('mask', '\uD83C\uDFAD')} **Topeng Perampok** dan bawa ${e('bomb', '\uD83D\uDCA5')} **Bom Rakitan (C4)** buat membuka brankasnya. Rakit dulu di meja perakitan, Naura temani.`
+            );
         }
+
+        // Bomnya dipakai apa pun hasilnya. Sebelumnya inventory hanya tersimpan
+        // saat gagal, jadi perampokan yang sukses tidak pernah menghabiskan bom.
+        inventory.splice(bombIndex, 1);
+        profile.inventory = inventory;
+        if (typeof profile.changed === 'function') profile.changed('inventory', true);
+        await profile.save();
 
         const agility = survival.agility || 1;
         const luck = survival.luck || 1;
         const successChance = 10 + (Math.min(80, agility) * 0.5) + (Math.min(100, luck) * 0.2);
-        const roll = Math.random() * 100;
 
-        // Hapus bom dari inventory
-        const bombIndex = currentInv.findIndex(i => i && i.id === 'c4_bomb');
-        if (bombIndex !== -1) currentInv.splice(bombIndex, 1);
-        profile.inventory = currentInv;
-
-        if (roll <= successChance) {
-            // SUCCESS
-            const reward = Math.floor(50000 + (Math.random() * 100000));
-            survival.starFragments = (survival.starFragments || 0) + reward;
-            await survival.save();
+        if (Math.random() * 100 <= successChance) {
+            const loot = LOOT_MIN + Math.floor(Math.random() * (LOOT_MAX - LOOT_MIN + 1));
+            await currency.reward(currency.COIN, holders, loot);
             await advanceTime(user.id, 4);
 
-            const successPayload = buildContainerV2({
+            const coupon = await rollCouponDrop('heist_success', { survival });
+            const couponText = dropLine(coupon);
+
+            const lines = [
+                'Brankasnya kebuka! Kamu kabur lewat gang belakang tepat sebelum Bripka Agus datang. Naura sempat nahan napas lihat kamu, tahu!',
+                '',
+                `${e('impressed', '\uD83D\uDCB0')} **Rampasan:** ${currency.format(currency.COIN, loot)}`,
+                '',
+                'Kamu ngumpet dulu **4 jam** buat menghilangkan jejak. Hati-hati ya, Naura khawatir.'
+            ];
+
+            if (couponText) lines.push('', couponText);
+
+            const payload = buildContainerV2({
                 accentColorHex: ui.getColor('success') || '#22c55e',
-                title: `${ui.getEmoji('bomb') || '💣'} PERAMPOKAN SUKSES!`,
-                description: `Kamu meledakkan brankas Naura Central Bank dan berhasil kabur membawa karung berisi Naura Star Fragment sebelum Bripka Agus tiba!\n\n${ui.getEmoji('dungeon_money') || '💰'} **Rampasan:** +${reward.toLocaleString('id-ID')} ${eNsf} **Naura Star Fragment**\n\nKamu bersembunyi selama 4 jam untuk menghilangkan jejak.`,
+                authorName: 'Naura Central Bank',
+                title: `${e('cheers', '\uD83D\uDCA5')} Perampokan sukses!`,
+                iconURL: user.displayAvatarURL(),
+                expression: 'success',
+                description: lines.join('\n'),
                 footerText: ui.getFooter('survival')
             });
-            return interaction.reply(successPayload);
-        } else {
-            // FAIL
-            let walletAmount = survival.starFragments || 0;
-            survival.starFragments = 0;
 
-            let bankPenalty = 50000;
-            let bankBal = profile.economy_bank || 0;
-            let paidPenalty = Math.min(bankBal, bankPenalty);
-            profile.economy_bank -= paidPenalty;
-
-            await profile.save();
-
-            survival.currentLocation = 'prison';
-            survival.stamina = 10;
-            survival.hp = 10;
-            await survival.save();
-
-            const allNPCs = await UserNPC.findAll({ where: { userId: user.id } });
-            let relationshipLog = '';
-            for (const npc of allNPCs) {
-                npc.affection = Math.max(0, npc.affection - 30);
-                npc.relationshipLevel = Math.max(0, npc.relationshipLevel - 1);
-                await npc.save();
-            }
-
-            if (allNPCs.length > 0) {
-                relationshipLog = `\n💔 Berita penangkapanmu tersebar. **Semua NPC** merasa kecewa! Afeksi mereka turun drastis dan level hubungan berkurang 1.`;
-            }
-
-            await advanceTime(user.id, 24);
-
-            const failPayload = buildContainerV2({
-                accentColorHex: ui.getColor('error') || '#ef4444',
-                title: `${ui.getEmoji('prison') || '⛓️'} TERTANGKAP!`,
-                description: `Alarm berbunyi sangat keras! Bripka Agus dan tim SWAT langsung menyergapmu sebelum kamu bisa keluar dari brankas.\n\nKamu dijebloskan ke **Penjara** selama 24 Jam.\n\n${ui.getEmoji('npc_tax') || '💸'} Uang Dompet: **Disita Semua (-${walletAmount.toLocaleString('id-ID')}** ${eNsf} **Naura Star Fragment)**\n${ui.getEmoji('npc_tax') || '💸'} Denda Bank: **-${paidPenalty.toLocaleString('id-ID')} NC**${relationshipLog}`,
-                footerText: ui.getFooter('survival')
-            });
-            return interaction.reply(failPayload);
+            return interaction.reply(payload);
         }
+
+        // GAGAL: seluruh NSF di kantong disita dan bank memotong denda Naura Coin.
+        const seized = currency.balanceOf(currency.FRAGMENT, holders);
+        await currency.setBalance(currency.FRAGMENT, holders, 0);
+
+        const bankBalance = profile.economy_bank || 0;
+        const paidPenalty = Math.min(bankBalance, BANK_PENALTY);
+        profile.economy_bank = bankBalance - paidPenalty;
+        await profile.save();
+
+        const allNPCs = await UserNPC.findAll({ where: { userId: user.id } });
+        for (const npc of allNPCs) {
+            npc.affection = Math.max(0, npc.affection - AFFECTION_PENALTY);
+            npc.relationshipLevel = Math.max(0, npc.relationshipLevel - 1);
+            await npc.save();
+        }
+
+        // advanceTime memulangkan pemain ke desa, jadi status penjara harus
+        // ditulis sesudahnya supaya tidak ikut tertimpa.
+        await advanceTime(user.id, 24);
+        await survival.reload().catch(() => {});
+        survival.currentLocation = 'prison';
+        survival.stamina = 10;
+        survival.hp = 10;
+        await survival.save();
+
+        const lines = [
+            'Alarmnya bunyi kencang banget! Bripka Agus dan timnya nyergap kamu sebelum sempat keluar dari brankas. Naura sedih lihat kamu digelandang...',
+            '',
+            'Kamu ditahan di **Penjara** selama **24 jam**.',
+            '',
+            `${e('cry', '\uD83D\uDCB8')} Isi kantong disita: ${currency.format(currency.FRAGMENT, seized)}`,
+            `${e('cry', '\uD83D\uDCB8')} Denda bank: ${currency.format(currency.COIN, paidPenalty)}`
+        ];
+
+        if (allNPCs.length > 0) {
+            lines.push(
+                '',
+                `${e('hmph', '\uD83D\uDC94')} Berita penangkapanmu kesebar ke mana-mana. **Semua NPC** kecewa, afeksi mereka turun dan level hubungannya berkurang satu tingkat.`
+            );
+        }
+
+        const payload = buildContainerV2({
+            accentColorHex: ui.getColor('error') || '#ef4444',
+            authorName: 'Naura Central Bank',
+            title: `${e('shocked', '\u26D3\uFE0F')} Kamu tertangkap!`,
+            iconURL: user.displayAvatarURL(),
+            expression: 'error',
+            description: lines.join('\n'),
+            footerText: ui.getFooter('survival')
+        });
+
+        return interaction.reply(payload);
     }
 };
