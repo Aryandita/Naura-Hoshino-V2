@@ -56,16 +56,19 @@ module.exports = {
         const vars = { nama: user.displayName || user.username };
         const categories = { ...shop.categories, ...stock.extraCategories(shop.key) };
 
-        // Potret NPC dipakai sebagai ikon toko, jadi tokonya terasa benar-benar milik mereka.
         const shopArt = portraitOf(npc);
         const gastonArt = portraitOf(gaston);
 
-        const season = getSeason(survival.inGameDay || 1);
-        const weather = getWeather(survival.inGameDay || 1, survival.inGameHour || 6);
+        const currentDay = survival.inGameDay || 1;
+        const currentHour = survival.inGameHour || 6;
+        const season = getSeason(currentDay);
+        const weather = getWeather(currentDay, currentHour);
         const diffConfig = getDifficultyConfig(survival.rpg_state?.difficulty || 'Normal');
 
+        // Gaston berpindah setiap hari dan hanya buka pada jendela jam tertentu.
+        const gastonOpen = coupons.isOpen(survival.currentLocation, currentDay, currentHour);
+
         let shopPurchases = survival.shop_purchases || {};
-        const currentDay = survival.inGameDay || 1;
         if (currentDay >= (survival.shop_last_reset_day || 1) + 30) {
             shopPurchases = {};
             await cacheManager.updateUserSurvival(user.id, { shop_purchases: {}, shop_last_reset_day: currentDay });
@@ -92,13 +95,15 @@ module.exports = {
 
         const categoryRow = () => {
             const options = Object.entries(categories).map(([value, label]) => ({ label, value }));
-            Object.entries(coupons.availableCategories()).forEach(([key, label]) => {
-                options.push({
-                    label: `Kios Gaston \u2014 ${label}`.substring(0, 100),
-                    description: 'Dibayar dengan Naura Coupon',
-                    value: purchase.COUPON_PREFIX + key
+            if (gastonOpen) {
+                Object.entries(coupons.availableCategories()).forEach(([key, label]) => {
+                    options.push({
+                        label: `Kios Gaston \u2014 ${label}`.substring(0, 100),
+                        description: 'Dibayar dengan Naura Coupon',
+                        value: purchase.COUPON_PREFIX + key
+                    });
                 });
-            });
+            }
             return new ActionRowBuilder().addComponents(
                 new StringSelectMenuBuilder()
                     .setCustomId('shop_category')
@@ -127,10 +132,14 @@ module.exports = {
             });
         }
 
+        const gastonNote = gastonOpen
+            ? `\n${e('coupon', '\uD83C\uDF9F\uFE0F')} *Psst, Gaston sedang menggelar tikar di sini! Kios kuponnya ada di daftar paling bawah.*`
+            : `\n${e('npc_talk', '\uD83D\uDCAC')} *${coupons.rumor(currentDay)}*`;
+
         const openPayload = shopPayload(
             `${e('shop_cart', '\uD83D\uDED2')} ${shop.shopName}`,
             say(shop.dialog.greet, vars),
-            '\n*Harga bergerak mengikuti cuaca, musim, dan seberapa sering kamu membeli barang yang sama bulan ini. Kios kupon Gaston juga sedang buka di daftar bawah!*'
+            `\n*Harga bergerak mengikuti cuaca, musim, dan seberapa sering kamu membeli barang yang sama bulan ini.*${gastonNote}`
         );
 
         const response = await interaction.editReply({
@@ -151,8 +160,16 @@ module.exports = {
             if (i.customId === 'shop_category') {
                 const raw = i.values[0];
                 activeIsCoupon = purchase.isCouponCategory(raw);
-                const ctx = contextOf(activeIsCoupon);
 
+                if (activeIsCoupon && !gastonOpen) {
+                    return i.followUp(ephemeral(buildErrorContainerV2({
+                        title: `${e('npc_talk', '\uD83D\uDCAC')} Gaston sudah pergi`,
+                        description: coupons.rumor(currentDay),
+                        footerText: ui.getFooter('survival')
+                    })));
+                }
+
+                const ctx = contextOf(activeIsCoupon);
                 const category = activeIsCoupon ? purchase.couponCategoryOf(raw) : raw;
                 const label = activeIsCoupon ? coupons.CATEGORIES[category] : categories[category];
 
