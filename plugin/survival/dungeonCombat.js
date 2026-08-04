@@ -3,6 +3,9 @@
 // Mesin tempur Infinite Dungeon: bonus kelas, penskalaan musuh, skill, dan
 // tabel jarahan. Dipisahkan dari subcommand supaya rumusnya bisa dibaca dan
 // diuji tanpa menyentuh urusan tampilan.
+//
+// Parameter `multiplier` dipakai oleh Dungeon Special Pass dari kota: musuhnya
+// dua kali lebih tebal, tetapi jarahan dan hadiahnya juga dua kali lipat.
 
 const helpers = require('./craftHelpers');
 
@@ -92,7 +95,7 @@ function statsFor(survival, profile) {
     };
 }
 
-function enemyFor(floor, diffConfig) {
+function enemyFor(floor, diffConfig, multiplier = 1) {
     const isBoss = floor % BOSS_EVERY === 0;
 
     let type = 'slime';
@@ -103,32 +106,38 @@ function enemyFor(floor, diffConfig) {
     let maxHp = Math.floor(50 * Math.pow(1.2, Math.floor(floor / 2)));
     if (isBoss) maxHp *= 3;
     if (diffConfig && diffConfig.extreme) maxHp = Math.floor(maxHp * 1.5);
+    maxHp = Math.floor(maxHp * (multiplier || 1));
 
-    const name = isBoss ? 'Raja Iblis Lantai ' + floor : type.toUpperCase() + ' Lantai ' + floor;
-    return { isBoss, type, name, maxHp };
+    const special = (multiplier || 1) > 1;
+    let name = isBoss ? 'Raja Iblis Lantai ' + floor : type.toUpperCase() + ' Lantai ' + floor;
+    if (special) name = name + ' (Segel Spesial)';
+
+    return { isBoss, type, name, maxHp, special };
 }
 
-function rollLoot(floor, luck) {
+function rollLoot(floor, luck, multiplier = 1) {
     const isBoss = floor % BOSS_EVERY === 0;
     const table = isBoss ? BOSS_LOOT : FLOOR_LOOT;
     const luckMod = Math.min(25, (luck || 1) * 0.5);
+    const stack = Math.max(1, Math.floor(multiplier || 1));
 
     const loot = [];
     for (const row of table) {
         if (Math.random() * 100 < row.chance + luckMod) {
-            loot.push({ id: row.id, name: lootName(row.id), amount: 1 });
+            loot.push({ id: row.id, name: lootName(row.id), amount: stack });
         }
     }
     return loot;
 }
 
-function rewardsFor(floor, diffConfig) {
+function rewardsFor(floor, diffConfig, multiplier = 1) {
     const isBoss = floor % BOSS_EVERY === 0;
     const coinMultiplier = diffConfig ? diffConfig.coinMultiplier : 1;
     const expMultiplier = diffConfig ? diffConfig.expMultiplier : 1;
+    const bonus = multiplier || 1;
     return {
-        money: Math.floor((isBoss ? floor * 100 : floor * 20) * coinMultiplier),
-        xp: Math.floor((isBoss ? floor * 50 : floor * 10) * expMultiplier)
+        money: Math.floor((isBoss ? floor * 100 : floor * 20) * coinMultiplier * bonus),
+        xp: Math.floor((isBoss ? floor * 50 : floor * 10) * expMultiplier * bonus)
     };
 }
 
@@ -178,9 +187,12 @@ function resolveAttack({ useSkill, stats, profile }) {
     return { damage, cost, log: '[Piercing Arrow] Panahmu menembus pertahanan musuh, **' + damage + '** damage!' };
 }
 
-function enemyDamage(floor, isBoss, diffConfig) {
+function enemyDamage(floor, isBoss, diffConfig, multiplier = 1) {
     let damage = Math.floor((isBoss ? floor * 5 : floor * 2) * (0.8 + Math.random() * 0.4));
     if (diffConfig && diffConfig.extreme) damage = Math.floor(damage * 1.5);
+    // Musuh segel spesial memukul lebih keras, tapi tidak sampai dua kali penuh
+    // supaya pemain masih punya kesempatan bertahan.
+    if ((multiplier || 1) > 1) damage = Math.floor(damage * 1.5);
     return damage;
 }
 
