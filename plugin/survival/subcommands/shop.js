@@ -11,14 +11,16 @@ const npcs = require('../npcs');
 const { findPortrait } = require('../npcHelpers');
 const { resolveShop, say } = require('../shopkeepers');
 const stock = require('../shopStock');
+const coupons = require('../shopCoupon');
+const purchase = require('../shopPurchase');
 const currencyHelper = require('../currency');
 const { getSeason, getWeather, getShopMultiplier } = require('../survivalTime');
 const { getDifficultyConfig } = require('../difficultyHelper');
-const { safeParseInventory, addOrStackItem } = require('../inventoryHelper');
 const { buildContainerV2, buildErrorContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
 
 const COLLECTOR_MS = 120000;
 const PORTRAIT_NAME = 'shopkeeper.png';
+const MAX_OPTIONS = 25;
 
 function e(name, fallback) {
     return ui.getEmoji(name) || fallback;
@@ -26,6 +28,13 @@ function e(name, fallback) {
 
 function ephemeral(payload) {
     return { ...payload, flags: (payload.flags || MessageFlags.IsComponentsV2) | MessageFlags.Ephemeral };
+}
+
+function portraitOf(npc) {
+    const file = findPortrait(npc);
+    if (!file) return { files: [], iconURL: null };
+    const name = `shopkeeper${path.extname(file) || path.extname(PORTRAIT_NAME)}`;
+    return { files: [new AttachmentBuilder(file, { name })], iconURL: `attachment://${name}` };
 }
 
 module.exports = {
@@ -39,20 +48,17 @@ module.exports = {
         const shop = resolveShop(survival.currentLocation);
         if (!shop) return ui.sendError(interaction, 'Di sini nggak ada penjual, lho. Coba ke desa atau kota dulu yaa!', true);
 
+        const gastonShop = coupons.COUPON_SHOP;
         const npc = npcs[shop.npcId] || { id: shop.npcId, name: shop.shopName };
-        const currency = currencyHelper.byKind(shop.currency);
+        const gaston = npcs[gastonShop.npcId] || { id: gastonShop.npcId, name: gastonShop.shopName };
+
         const holders = { survival, profile };
         const vars = { nama: user.displayName || user.username };
-
-        // Kategori bawaan toko digabung dengan kategori khusus per wilayah,
-        // misalnya lapak tiket dungeon.
         const categories = { ...shop.categories, ...stock.extraCategories(shop.key) };
 
-        // Potret NPC dipakai sebagai ikon toko, jadi terasa benar-benar miliknya.
-        const portrait = findPortrait(npc);
-        const attachmentName = portrait ? `shopkeeper${path.extname(portrait)}` : PORTRAIT_NAME;
-        const portraitFiles = portrait ? [new AttachmentBuilder(portrait, { name: attachmentName })] : [];
-        const iconURL = portrait ? `attachment://${attachmentName}` : user.displayAvatarURL();
+        // Potret NPC dipakai sebagai ikon toko, jadi tokonya terasa benar-benar milik mereka.
+        const shopArt = portraitOf(npc);
+        const gastonArt = portraitOf(gaston);
 
         const season = getSeason(survival.inGameDay || 1);
         const weather = getWeather(survival.inGameDay || 1, survival.inGameHour || 6);
@@ -65,37 +71,58 @@ module.exports = {
             await cacheManager.updateUserSurvival(user.id, { shop_purchases: {}, shop_last_reset_day: currentDay });
         }
 
-        function priceOf(item, purchases) {
+        function priceOf(item) {
             const flat = item.id.startsWith('prop_') || item.id.startsWith('veh_') || item.category === 'pass';
             const weatherMultiplier = flat ? 1 : getShopMultiplier(item, weather, season);
-            const bought = purchases[item.id] || 0;
+            const bought = shopPurchases[item.id] || 0;
             let final = Math.floor(item.price * weatherMultiplier * (1 + bought * 0.1));
             if (diffConfig.extreme) final = Math.floor(final * 1.5);
             return final;
         }
 
-        const categoryRow = () => new ActionRowBuilder().addComponents(
-            new StringSelectMenuBuilder()
-                .setCustomId('shop_category')
-                .setPlaceholder('Mau lihat dagangan yang mana?')
-                .addOptions(Object.entries(categories).map(([value, label]) => ({ label, value })))
-        );
+        function contextOf(isCoupon) {
+            const active = isCoupon ? gastonShop : shop;
+            return {
+                active,
+                person: isCoupon ? gaston : npc,
+                art: isCoupon ? gastonArt : shopArt,
+                currency: currencyHelper.byKind(active.currency)
+            };
+        }
 
-        function shopPayload(title, dialogue, extra = '') {
-            const balance = currencyHelper.balanceOf(currency, holders);
+        const categoryRow = () => {
+            const options = Object.entries(categories).map(([value, label]) => ({ label, value }));
+            Object.entries(coupons.availableCategories()).forEach(([key, label]) => {
+                options.push({
+                    label: `Kios Gaston \u2014 ${label}`.substring(0, 100),
+                    description: 'Dibayar dengan Naura Coupon',
+                    value: purchase.COUPON_PREFIX + key
+                });
+            });
+            return new ActionRowBuilder().addComponents(
+                new StringSelectMenuBuilder()
+                    .setCustomId('shop_category')
+                    .setPlaceholder('Mau lihat dagangan yang mana?')
+                    .addOptions(options.slice(0, MAX_OPTIONS))
+            );
+        };
+
+        function shopPayload(title, dialogue, extra = '', isCoupon = false) {
+            const ctx = contextOf(isCoupon);
+            const balance = currencyHelper.balanceOf(ctx.currency, holders);
             return buildContainerV2({
-                accentColorHex: shop.accentColorHex,
-                authorName: `${npc.name} \u2014 ${npc.title || 'Penjual'}`,
+                accentColorHex: ctx.active.accentColorHex,
+                authorName: `${ctx.person.name} \u2014 ${ctx.person.title || 'Penjual'}`,
                 title,
-                iconURL,
+                iconURL: ctx.art.iconURL || user.displayAvatarURL(),
                 description: [
                     `> *"${dialogue}"*`,
                     '',
-                    `${e('lokasi', '\uD83D\uDCCD')} **${shop.shopName}** \u2014 Musim **${season.name}** ${season.emoji}, cuaca **${weather.name}** ${weather.emoji}.`,
-                    `${currencyHelper.emojiOf(currency)} Saldomu: **${balance.toLocaleString('id-ID')} ${currency.name}**`,
+                    `${e('lokasi', '\uD83D\uDCCD')} **${ctx.active.shopName}** \u2014 Musim **${season.name}** ${season.emoji}, cuaca **${weather.name}** ${weather.emoji}.`,
+                    `${currencyHelper.emojiOf(ctx.currency)} Saldomu: **${balance.toLocaleString('id-ID')} ${ctx.currency.name}**`,
                     extra
                 ].filter(Boolean).join('\n'),
-                files: portraitFiles,
+                files: ctx.art.files,
                 footerText: ui.getFooter('survival')
             });
         }
@@ -103,7 +130,7 @@ module.exports = {
         const openPayload = shopPayload(
             `${e('shop_cart', '\uD83D\uDED2')} ${shop.shopName}`,
             say(shop.dialog.greet, vars),
-            '\n*Harga bergerak mengikuti cuaca, musim, dan seberapa sering kamu membeli barang yang sama bulan ini.*'
+            '\n*Harga bergerak mengikuti cuaca, musim, dan seberapa sering kamu membeli barang yang sama bulan ini. Kios kupon Gaston juga sedang buka di daftar bawah!*'
         );
 
         const response = await interaction.editReply({
@@ -116,23 +143,30 @@ module.exports = {
             time: COLLECTOR_MS
         });
 
+        let activeIsCoupon = false;
+
         collector.on('collect', async i => {
             await i.deferUpdate();
 
             if (i.customId === 'shop_category') {
-                const category = i.values[0];
-                const pool = items.filter(it =>
-                    it && it.category === category && it.price && !stock.isExcluded(it.id)
-                );
+                const raw = i.values[0];
+                activeIsCoupon = purchase.isCouponCategory(raw);
+                const ctx = contextOf(activeIsCoupon);
 
-                // Dagangan khusus wilayah: properti dan kendaraan di kota,
-                // tiket dungeon sesuai penjualnya masing-masing.
-                pool.push(...stock.exclusiveStock(shop.key, category));
+                const category = activeIsCoupon ? purchase.couponCategoryOf(raw) : raw;
+                const label = activeIsCoupon ? coupons.CATEGORIES[category] : categories[category];
+
+                const pool = activeIsCoupon
+                    ? coupons.stockByCategory(category)
+                    : items.filter(it => it && it.category === category && it.price && !stock.isExcluded(it.id))
+                        .concat(stock.exclusiveStock(shop.key, category));
 
                 if (pool.length === 0) {
                     const emptyPayload = shopPayload(
-                        `${e('shop_cart', '\uD83D\uDED2')} ${categories[category]}`,
-                        'Aduh, yang itu sedang kosong. Stoknya belum datang dari pemasok.'
+                        `${e('shop_cart', '\uD83D\uDED2')} ${label}`,
+                        'Aduh, yang itu sedang kosong. Stoknya belum datang dari pemasok.',
+                        '',
+                        activeIsCoupon
                     );
                     return i.editReply({ ...emptyPayload, components: [...emptyPayload.components, categoryRow()] });
                 }
@@ -140,23 +174,29 @@ module.exports = {
                 const buyRow = new ActionRowBuilder().addComponents(
                     new StringSelectMenuBuilder()
                         .setCustomId('shop_buy')
-                        .setPlaceholder(`Beli dari ${categories[category]}...`)
-                        .addOptions(pool.slice(0, 25).map(it => {
-                            const finalPrice = priceOf(it, shopPurchases);
-                            const bought = shopPurchases[it.id] || 0;
+                        .setPlaceholder(`Beli dari ${label}...`)
+                        .addOptions(pool.slice(0, MAX_OPTIONS).map(it => {
+                            const finalPrice = activeIsCoupon ? Number(it.couponPrice) : priceOf(it);
+                            const note = activeIsCoupon
+                                ? `${finalPrice} ${ctx.currency.short} \u2022 ${it.rarity || 'Langka'}`
+                                : `${finalPrice.toLocaleString('id-ID')} ${ctx.currency.short} \u2022 inflasi ${(shopPurchases[it.id] || 0) * 10}%`;
                             return {
                                 label: it.name.substring(0, 100),
-                                description: `${finalPrice.toLocaleString('id-ID')} ${currency.short} \u2022 inflasi ${bought * 10}%`.substring(0, 100),
-                                // Pemisah pipa dipakai karena banyak id memuat garis bawah,
-                                // sehingga split('_') dulu memotong id jadi salah.
-                                value: `${it.id}|${finalPrice}`
+                                description: note.substring(0, 100),
+                                value: purchase.encodeChoice(it.id, finalPrice, activeIsCoupon)
                             };
                         }))
                 );
 
+                const dialogue = activeIsCoupon
+                    ? coupons.say('browse', vars)
+                    : say(shop.dialog.browse, vars);
+
                 const listPayload = shopPayload(
-                    `${e('shop_cart', '\uD83D\uDED2')} ${categories[category]}`,
-                    say(shop.dialog.browse, vars)
+                    `${e(activeIsCoupon ? 'coupon' : 'shop_cart', '\uD83D\uDED2')} ${label}`,
+                    dialogue,
+                    '',
+                    activeIsCoupon
                 );
                 return i.editReply({
                     ...listPayload,
@@ -165,57 +205,46 @@ module.exports = {
             }
 
             if (i.customId === 'shop_buy') {
-                const [itemId, priceStr] = i.values[0].split('|');
-                const finalPrice = parseInt(priceStr, 10);
+                const ctx = contextOf(activeIsCoupon);
+                const result = await purchase.buy({
+                    userId: user.id,
+                    value: i.values[0],
+                    currency: ctx.currency
+                });
 
-                const freshProfile = await cacheManager.getUserProfile(user.id);
-                const freshSurvival = await UserSurvival.findOne({ where: { userId: user.id } });
-                const freshHolders = { survival: freshSurvival, profile: freshProfile };
-
-                const balance = currencyHelper.balanceOf(currency, freshHolders);
-                if (balance < finalPrice) {
-                    const kurang = (finalPrice - balance).toLocaleString('id-ID');
+                if (!result.ok) {
+                    const kurang = `${(result.shortage || 0).toLocaleString('id-ID')} ${ctx.currency.name}`;
+                    const line = activeIsCoupon
+                        ? coupons.say('broke', { ...vars, kurang })
+                        : say(shop.dialog.broke, { ...vars, kurang });
                     return i.followUp(ephemeral(buildErrorContainerV2({
-                        title: `${e('cry', '\uD83D\uDE22')} ${npc.name} menggeleng`,
-                        description: `> *"${say(shop.dialog.broke, { ...vars, kurang: `${kurang} ${currency.name}` })}"*`,
+                        title: `${e('sad', '\uD83D\uDE22')} ${ctx.person.name} menggeleng`,
+                        description: `> *"${line}"*`,
                         footerText: ui.getFooter('survival')
                     })));
                 }
 
-                await currencyHelper.charge(currency, freshHolders, finalPrice);
-
-                const catalogItem = stock.findItem(itemId) || stock.propertyById(itemId);
-                const itemName = catalogItem ? catalogItem.name : itemId;
-
-                if (itemId.startsWith('prop_')) {
-                    const propMap = { prop_kos: 'kos', prop_rumah: 'rumah', prop_mansion: 'mansion' };
-                    freshSurvival.propertyId = propMap[itemId] || freshSurvival.propertyId;
-                    await freshSurvival.save();
-                } else if (itemId.startsWith('veh_')) {
-                    freshSurvival.vehicle = itemId === 'veh_motor' ? 'motorcycle' : 'bicycle';
-                    await freshSurvival.save();
-                } else {
-                    const inv = addOrStackItem(
-                        safeParseInventory(freshProfile.inventory),
-                        { id: itemId, name: itemName, amount: 1 }
-                    );
-                    await cacheManager.updateUserProfile(user.id, { inventory: inv });
+                if (!result.isCoupon) {
+                    shopPurchases[result.itemId] = (shopPurchases[result.itemId] || 0) + 1;
+                    await cacheManager.updateUserSurvival(user.id, { shop_purchases: shopPurchases });
                 }
 
-                shopPurchases[itemId] = (shopPurchases[itemId] || 0) + 1;
-                await cacheManager.updateUserSurvival(user.id, { shop_purchases: shopPurchases });
+                const boughtLine = activeIsCoupon
+                    ? coupons.say('bought', { ...vars, barang: result.itemName })
+                    : say(shop.dialog.bought, { ...vars, barang: result.itemName });
 
                 const successPayload = buildContainerV2({
                     accentColorHex: ui.getColor('success') || '#22c55e',
-                    authorName: `${npc.name} \u2014 ${npc.title || 'Penjual'}`,
+                    authorName: `${ctx.person.name} \u2014 ${ctx.person.title || 'Penjual'}`,
                     title: `${e('cheers', '\uD83E\uDD42')} Transaksi berhasil!`,
-                    iconURL,
+                    iconURL: ctx.art.iconURL || user.displayAvatarURL(),
                     description: [
-                        `> *"${say(shop.dialog.bought, { ...vars, barang: itemName })}"*`,
+                        `> *"${boughtLine}"*`,
                         '',
-                        `Kamu membayar ${currencyHelper.format(currency, finalPrice)} untuk **${itemName}**.`
-                    ].join('\n'),
-                    files: portraitFiles,
+                        `Kamu membayar ${currencyHelper.format(ctx.currency, result.price)} untuk **${result.itemName}**.`,
+                        result.effectNote ? `\n${e('sparkle', '\u2728')} ${result.effectNote}` : ''
+                    ].filter(Boolean).join('\n'),
+                    files: ctx.art.files,
                     footerText: ui.getFooter('survival')
                 });
 
