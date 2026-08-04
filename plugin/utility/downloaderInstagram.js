@@ -133,7 +133,8 @@ const tryGraphQL = async (shortcode) => {
 const tryEmbed = async (shortcode) => {
     try {
         logger.info('[Downloader][IG] Mencoba halaman embed resmi...');
-        const res = await axios.get(`https://www.instagram.com/p/${shortcode}/embed/captioned/`, {
+        const embedUrl = 'https://www.instagram.com/p/' + shortcode + '/embed/captioned/';
+        const res = await axios.get(embedUrl, {
             timeout: 12000,
             httpsAgent,
             headers: { 'User-Agent': UA, 'Accept-Language': 'en-US,en;q=0.9' }
@@ -181,7 +182,8 @@ const tryEmbed = async (shortcode) => {
 const tryRedirectService = async (shortcode) => {
     try {
         logger.info('[Downloader][IG] Mencoba layanan pengalih ddinstagram...');
-        const res = await axios.get(`https://ddinstagram.com/videos/${shortcode}/1`, {
+        const redirectUrl = 'https://ddinstagram.com/videos/' + shortcode + '/1';
+        const res = await axios.get(redirectUrl, {
             timeout: 12000,
             httpsAgent,
             maxRedirects: 5,
