@@ -1,65 +1,84 @@
+'use strict';
+
 const UserQuest = require('../../../src/models/UserQuest');
-const UserSurvival = require('../../../src/models/UserSurvival');
-const UserProfile = require('../../../src/models/UserProfile');
 const cacheManager = require('../../../src/managers/cacheManager');
 const ui = require('../../../src/config/ui');
 const { generateQuestsForUser } = require('../questGenerator');
 const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
 
-module.exports = async function(interaction, user, survivalData) {
+function e(name, fallback) {
+    return ui.getEmoji(name) || fallback;
+}
+
+function parseState(raw) {
+    if (typeof raw !== 'string') return raw || null;
+    try {
+        return JSON.parse(raw);
+    } catch (err) {
+        return null;
+    }
+}
+
+// Ikon status memakai wajah Naura: bangga kalau sudah beres, semangat kalau
+// tinggal sedikit lagi, dan santai kalau masih panjang jalannya.
+function statusIcon(quest) {
+    if (quest.claimed) return e('cheers', '\u2705');
+    if (quest.current >= quest.target) return e('impressed', '\u2B50');
+    return e('thinking', '\u23F3');
+}
+
+function renderQuests(list, nsfEmoji) {
+    return list
+        .map((q, idx) => `**${idx + 1}.** ${statusIcon(q)} ${q.title}\n`
+            + `> Progres: \`${q.current} / ${q.target}\` \u2022 Hadiah: ${nsfEmoji} **${q.reward} NSF**`)
+        .join('\n\n');
+}
+
+module.exports = async function questBoard(interaction, user, survivalData) {
     const today = new Date().toISOString().split('T')[0];
-    const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
+    const currentMonth = new Date().toISOString().substring(0, 7);
 
     const profile = await cacheManager.getUserProfile(user.id);
 
-    let [quest] = await UserQuest.findOrCreate({
+    const [quest] = await UserQuest.findOrCreate({
         where: { userId: user.id },
         defaults: { lastReset: today }
     });
 
-    let state = quest.questsState;
-    if (typeof state === 'string') {
-        try { state = JSON.parse(state); } catch (e) { state = null; }
-    }
-
+    let state = parseState(quest.questsState);
     let needsSave = false;
 
-    // Reset atau buat baru jika data kosong
     if (!state || !state.daily || !state.monthly) {
         state = generateQuestsForUser(profile, survivalData);
         needsSave = true;
     } else {
         if (state.lastDailyReset !== today) {
-            const newQuests = generateQuestsForUser(profile, survivalData);
-            state.daily = newQuests.daily;
+            state.daily = generateQuestsForUser(profile, survivalData).daily;
             state.lastDailyReset = today;
             needsSave = true;
         }
         if (state.lastMonthlyReset !== currentMonth) {
-            const newQuests = generateQuestsForUser(profile, survivalData);
-            state.monthly = newQuests.monthly;
+            state.monthly = generateQuestsForUser(profile, survivalData).monthly;
             state.lastMonthlyReset = currentMonth;
             needsSave = true;
         }
     }
 
-    // Auto-klaim misi yang sudah selesai
-    let rewardMoney = 0;
-    let claimedQuests = [];
+    // Klaim otomatis semua misi yang sudah tuntas.
+    const claimed = [];
+    let rewardTotal = 0;
 
-    state.daily.forEach(q => {
+    for (const q of [...state.daily, ...state.monthly]) {
         if (q.current >= q.target && !q.claimed) {
-            q.claimed = true; rewardMoney += q.reward; claimedQuests.push(q.title); needsSave = true;
+            q.claimed = true;
+            rewardTotal += q.reward;
+            claimed.push(q.title);
+            needsSave = true;
         }
-    });
-    state.monthly.forEach(q => {
-        if (q.current >= q.target && !q.claimed) {
-            q.claimed = true; rewardMoney += q.reward; claimedQuests.push(q.title); needsSave = true;
-        }
-    });
+    }
 
-    if (rewardMoney > 0) {
-        survivalData.starFragments = (survivalData.starFragments || 0) + rewardMoney;
+    if (rewardTotal > 0) {
+        survivalData.starFragments = (survivalData.starFragments || 0) + rewardTotal;
         await survivalData.save();
     }
 
@@ -70,34 +89,37 @@ module.exports = async function(interaction, user, survivalData) {
         await quest.save();
     }
 
-    // Bangun teks tampilan quest
-    const nsfEmoji = ui.getEmoji('nsf') || '🪙';
-    const dayEmoji = ui.getEmoji('day') || '📅';
-    const crownEmoji = ui.getEmoji('admin') || '👑';
+    const nsfEmoji = e('nsf', '\uD83E\uDE99');
+    const dailyText = renderQuests(state.daily, nsfEmoji) || '*Belum ada misi harian buat hari ini.*';
+    const monthlyText = renderQuests(state.monthly, nsfEmoji) || '*Belum ada misi bulanan.*';
 
-    let dailyText = '';
-    state.daily.forEach((q, idx) => {
-        const statusIcon = q.claimed ? (ui.getEmoji('success') || '✅') : (q.current >= q.target ? (ui.getEmoji('quest_star') || '⭐') : (ui.getEmoji('quest_clock') || '⏳'));
-        dailyText += `**${idx + 1}.** ${statusIcon} ${q.title}\n> Progress: \`${q.current} / ${q.target}\` | Hadiah: ${nsfEmoji} **${q.reward} NSF**\n\n`;
-    });
+    const parts = [
+        'Ini papan misimu hari ini! Selesaikan saja pelan-pelan, hadiahnya Naura kasih otomatis begitu tuntas.',
+        '',
+        `**${e('read', '\uD83D\uDCC5')} Misi Harian \u2014 ${today}**`,
+        dailyText,
+        '',
+        `**${e('impressed', '\uD83D\uDC51')} Misi Bulanan \u2014 ${currentMonth}**`,
+        monthlyText
+    ];
 
-    let monthlyText = '';
-    state.monthly.forEach((q, idx) => {
-        const statusIcon = q.claimed ? (ui.getEmoji('success') || '✅') : (q.current >= q.target ? (ui.getEmoji('quest_star') || '⭐') : (ui.getEmoji('quest_clock') || '⏳'));
-        monthlyText += `**${idx + 1}.** ${statusIcon} ${q.title}\n> Progress: \`${q.current} / ${q.target}\` | Hadiah: ${nsfEmoji} **${q.reward} NSF**\n\n`;
-    });
-
-    let claimText = '';
-    if (rewardMoney > 0) {
-        claimText = `\n\n**🎁 Hadiah Diklaim Otomatis!**\nKamu menyelesaikan:\n${claimedQuests.map(t => `- **${t}**`).join('\n')}\n\nMendapatkan total: ${ui.getEmoji('coin') || '🪙'} **${rewardMoney} Naura Star Fragment**!`;
+    if (rewardTotal > 0) {
+        parts.push(
+            '',
+            `**${e('cheers', '\uD83C\uDF81')} Hebat, Naura ikut senang!**`,
+            'Kamu baru saja menyelesaikan:',
+            claimed.map(title => `- **${title}**`).join('\n'),
+            '',
+            `Hadiahnya sudah masuk: ${nsfEmoji} **${rewardTotal} Naura Star Fragment**!`
+        );
     }
 
-    const fullDesc = `Selesaikan misi di bawah ini untuk mendapatkan Naura Star Fragment secara otomatis!\n\n**${dayEmoji} Misi Harian (${today})**\n${dailyText || '*Tidak ada misi harian*'}\n**${crownEmoji} Misi Bulanan (${currentMonth})**\n${monthlyText || '*Tidak ada misi bulanan*'}${claimText}`;
-
     const payload = buildContainerV2({
-        accentColorHex: ui.getColor('primary') || '#ffb6c1',
-        title: `${ui.getEmoji('quest') || '📜'} Quest Board: ${user.username}`,
-        description: fullDesc,
+        accentColorHex: ui.getColor('primary') || '#FFB6C1',
+        authorName: 'Naura Quest Board',
+        title: `${e('read', '\uD83D\uDCDC')} Papan Misi ${user.username}`,
+        iconURL: user.displayAvatarURL(),
+        description: parts.join('\n'),
         footerText: ui.getFooter('survival')
     });
 
