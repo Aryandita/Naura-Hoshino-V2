@@ -1,6 +1,6 @@
 const {
     SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle,
-    AttachmentBuilder, StringSelectMenuBuilder, ComponentType, MessageFlags
+    AttachmentBuilder, StringSelectMenuBuilder, ComponentType
 } = require('discord.js');
 const { logger } = require('../../src/managers/logger');
 const axios = require('axios');
@@ -11,6 +11,7 @@ const os = require('os');
 const ui = require('../../src/config/ui');
 const RateLimiter = require('../../src/utils/rateLimiter');
 const { buildContainerV2, buildErrorContainerV2, buildLoadingContainerV2 } = require('../../src/utils/NauraContainerBuilder');
+const { resolveInstagram, isInstagramCdn } = require('./downloaderInstagram');
 
 // ==========================================
 // 🎬 YT-DLP & FFMPEG IMPORTS
@@ -95,6 +96,176 @@ const RESOLUTION_OPTIONS = [
 ];
 
 // ==========================================
+// 🛡️ SANITASI HASIL PROVIDER
+// ==========================================
+// Bug lama: untuk tautan reel Instagram, scraper SnapSave memungut SEMUA
+// tautan gambar pada halaman hasilnya — termasuk logo & tombol milik situs
+// itu sendiri. Akibatnya bot mengirim dua gambar branding ("SnapSave.App")
+// alih-alih video yang diminta.
+//
+// Lapisan sanitasi di bawah ini berlaku untuk SEMUA provider:
+//   1. Host media wajib lolos allowlist CDN platform (jika platform dikenal).
+//   2. Host situs downloader pihak ketiga selalu ditolak.
+//   3. Nama berkas yang berbau aset situs (logo/banner/icon/dll) ditolak.
+//   4. Jika tautan jelas berupa video (reel, tv, shorts, dsb) maka hasil
+//      yang hanya berisi foto dianggap GAGAL, sehingga rantai provider
+//      lanjut ke kandidat berikutnya.
+
+const PLATFORM_MEDIA_HOST_PATTERNS = {
+    instagram: /(^|\.)(cdninstagram\.com|fbcdn\.net|instagram\.com)$/i,
+    tiktok: /(^|\.)(tiktokcdn\.com|tiktokcdn-us\.com|tiktokcdn-eu\.com|tiktokv\.com|tiktokvcdn\.com|muscdn\.com|byteicdn\.com|ibyteimg\.com|tikwm\.com|tikcdn\.io|akamaized\.net)$/i,
+    twitter: /(^|\.)(twimg\.com|twitter\.com|x\.com)$/i,
+    facebook: /(^|\.)(fbcdn\.net|facebook\.com|fbsbx\.com)$/i,
+    douyin: /(^|\.)(douyinpic\.com|douyinvod\.com|byteicdn\.com|iesdouyin\.com|tiktokcdn\.com|tikwm\.com|akamaized\.net)$/i,
+};
+
+// Host situs downloader pihak ketiga: hanya berisi aset halaman, bukan media.
+const BRANDING_ASSET_HOST_PATTERN = /(^|\.)(snapsave\.app|snapsave\.io|snapinsta\.app|snapinsta\.io|savefrom\.net|sf-tools\.com|ssstik\.io|igram\.io|y2mate\.com|9convert\.com|twitsave\.com|downloadgram\.org|fbdownloader\.app)$/i;
+
+// Nama berkas yang jelas merupakan aset situs, bukan media unduhan.
+const BRANDING_ASSET_NAME_PATTERN = /(logo|favicon|sprite|banner|placeholder|watermark|brand|btn[-_]|button|download[-_]?icon|icon[-_])/i;
+
+const IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'heic', 'svg'];
+const VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov', 'avi', 'mkv', 'm3u8'];
+
+/**
+ * Ambil ekstensi dari path sebuah URL (tanpa query string).
+ * @param {string} link
+ * @returns {string}
+ */
+const getUrlExtension = (link) => {
+    try {
+        return path.extname(new URL(link).pathname).replace('.', '').toLowerCase();
+    } catch {
+        return '';
+    }
+};
+
+/**
+ * Deteksi apakah tautan yang dikirim user memang mengarah ke VIDEO.
+ * Dipakai untuk menolak hasil provider yang cuma memberi foto/thumbnail.
+ * @param {string} url
+ * @returns {boolean}
+ */
+const isVideoExpected = (url) => {
+    const lower = String(url).toLowerCase();
+    if (/instagram\.com\/(?:[^/]+\/)?(?:reel|reels|tv)\//.test(lower)) return true;
+    if (lower.includes('tiktok.com') && !lower.includes('/photo/')) return true;
+    if (lower.includes('youtube.com') || lower.includes('youtu.be')) return true;
+    if (lower.includes('fb.watch') || lower.includes('/videos/') || lower.includes('/reel/')) return true;
+    if (lower.includes('douyin.com') || lower.includes('bilibili.com') || lower.includes('b23.tv')) return true;
+    if (lower.includes('vkvideo.ru') || lower.includes('/video-') || lower.includes('/video/')) return true;
+    if (lower.includes('/shorts/')) return true;
+    return false;
+};
+
+/**
+ * Validasi satu tautan media hasil provider.
+ * @param {string} link
+ * @param {string} platform
+ * @returns {boolean}
+ */
+const isAcceptableMediaUrl = (link, platform) => {
+    if (typeof link !== 'string' || !link.startsWith('http')) return false;
+
+    let hostname = '';
+    try {
+        hostname = new URL(link).hostname;
+    } catch {
+        return false;
+    }
+
+    // Tolak aset milik situs downloader pihak ketiga
+    if (BRANDING_ASSET_HOST_PATTERN.test(hostname)) return false;
+
+    // Tolak nama berkas yang jelas aset halaman (logo, ikon, banner, dll)
+    const ext = getUrlExtension(link);
+    if (ext === 'svg') return false;
+    if (BRANDING_ASSET_NAME_PATTERN.test(link.split('?')[0])) return false;
+
+    // Allowlist host CDN untuk platform yang sudah dikenal
+    if (platform === 'instagram') return isInstagramCdn(link);
+
+    const allowPattern = PLATFORM_MEDIA_HOST_PATTERNS[platform];
+    if (allowPattern) return allowPattern.test(hostname);
+
+    return true;
+};
+
+/**
+ * Lengkapi tipe media (video/photo) berdasarkan ekstensi URL bila provider
+ * tidak menyertakannya.
+ * @param {{url: string, type?: string}} item
+ * @returns {string}
+ */
+const inferMediaType = (item) => {
+    if (item.type === 'video' || item.type === 'gif') return 'video';
+    if (item.type === 'photo' || item.type === 'image') return 'photo';
+    const ext = getUrlExtension(item.url);
+    if (VIDEO_EXTENSIONS.includes(ext)) return 'video';
+    if (IMAGE_EXTENSIONS.includes(ext)) return 'photo';
+    return 'unknown';
+};
+
+/**
+ * Saring hasil provider sebelum dipakai/di-cache.
+ * Mengembalikan null bila hasilnya tidak layak, agar rantai provider lanjut.
+ *
+ * @param {object|null} result - Hasil mentah provider
+ * @param {string} platform - Platform hasil deteksi
+ * @param {boolean} expectVideo - Apakah tautan user berupa video
+ * @param {string} providerName - Nama provider (untuk log)
+ * @returns {object|null}
+ */
+const sanitizeProviderResult = (result, platform, expectVideo, providerName = 'provider') => {
+    if (!result) return null;
+
+    // Berkas lokal hasil yt-dlp sudah pasti media asli
+    if (result.isLocalFile) return result;
+
+    if (result.status === 'picker' && Array.isArray(result.picker)) {
+        let items = result.picker
+            .filter(item => item && isAcceptableMediaUrl(item.url, platform))
+            .map(item => ({ url: item.url, type: inferMediaType(item) }));
+
+        if (items.length === 0) {
+            logger.info(`[Downloader] 🛡️ Hasil ${providerName} ditolak: tidak ada media sah (kemungkinan aset situs downloader).`);
+            return null;
+        }
+
+        if (expectVideo) {
+            const videoItems = items.filter(item => item.type === 'video');
+            if (videoItems.length > 0) {
+                items = videoItems;
+            } else if (items.every(item => item.type === 'photo')) {
+                logger.info(`[Downloader] 🛡️ Hasil ${providerName} ditolak: tautan berupa video tapi provider hanya memberi foto.`);
+                return null;
+            }
+        }
+
+        return items.length === 1
+            ? { status: 'stream', url: items[0].url }
+            : { status: 'picker', picker: items.slice(0, MAX_ATTACHMENTS) };
+    }
+
+    if (result.url) {
+        if (!isAcceptableMediaUrl(result.url, platform)) {
+            logger.info(`[Downloader] 🛡️ Hasil ${providerName} ditolak: host media tidak sah (${result.url.substring(0, 80)}).`);
+            return null;
+        }
+
+        if (expectVideo && IMAGE_EXTENSIONS.includes(getUrlExtension(result.url))) {
+            logger.info(`[Downloader] 🛡️ Hasil ${providerName} ditolak: tautan video tapi yang didapat berkas gambar.`);
+            return null;
+        }
+
+        return result;
+    }
+
+    return null;
+};
+
+// ==========================================
 // 🧹 CLEANUP MANAGER
 // ==========================================
 // Mengelola seluruh file sementara yang dibuat selama proses download/kompresi.
@@ -155,6 +326,7 @@ class CleanupManager {
 // ==========================================
 // Cache hasil download URL selama 5 menit agar URL yang sama
 // tidak perlu dipanggil ulang — mengurangi rate limit secara drastis.
+// CATATAN: hanya hasil yang sudah lolos sanitasi yang boleh masuk cache.
 
 const urlCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5 menit
@@ -285,6 +457,14 @@ const resolveShortUrl = async (url) => {
 };
 
 // ==========================================
+// 📸 PROVIDER: Instagram Resmi (downloaderInstagram.js)
+// ==========================================
+// Provider utama untuk Instagram: GraphQL publik → embed resmi → pengalih.
+// Semua tautan hasilnya wajib berasal dari CDN Instagram/Facebook.
+
+const tryInstagramNative = async (url) => resolveInstagram(url);
+
+// ==========================================
 // 🎵 PROVIDER: TikTok — Tikwm API
 // ==========================================
 // Tikwm adalah API gratis khusus TikTok yang sangat stabil.
@@ -299,13 +479,14 @@ const tryTikwm = async (url) => {
         });
         if (response.data && response.data.code === 0 && response.data.data) {
             const d = response.data.data;
+            if (d.play) {
+                return { status: 'stream', url: d.play.startsWith('http') ? d.play : `https://www.tikwm.com${d.play}` };
+            }
             if (d.images && d.images.length > 0) {
                 return {
                     status: 'picker',
                     picker: d.images.map(img => ({ url: img, type: 'photo' }))
                 };
-            } else if (d.play) {
-                return { status: 'stream', url: d.play };
             }
         }
     } catch (e) {
@@ -315,18 +496,19 @@ const tryTikwm = async (url) => {
 };
 
 // ==========================================
-// 📱 PROVIDER: SnapSave (TikTok & Instagram)
+// 📱 PROVIDER: SnapSave (KHUSUS TikTok)
 // ==========================================
-// SnapSave adalah salah satu downloader paling stabil untuk TikTok
-// (no-watermark) dan Instagram. Menggunakan form POST ke endpoint-nya.
+// PENTING: SnapSave TIDAK LAGI dipakai untuk Instagram.
+// Scraper-nya memungut semua tautan gambar di halaman hasil — termasuk logo
+// dan tombol milik situsnya sendiri — sehingga reel video dikirim sebagai
+// dua gambar branding. Instagram sekarang ditangani downloaderInstagram.js.
+// Untuk TikTok pun setiap tautan wajib lolos filter host & nama aset.
 
 const trySnapSave = async (url) => {
-    const isTikTok = url.includes('tiktok.com');
-    const isInstagram = url.includes('instagram.com');
-    if (!isTikTok && !isInstagram) return null;
+    if (!url.includes('tiktok.com')) return null;
 
     try {
-        logger.info(`[Downloader] Mencoba SnapSave untuk ${isTikTok ? 'TikTok' : 'Instagram'}...`);
+        logger.info('[Downloader] Mencoba SnapSave untuk TikTok...');
 
         // Ambil token CSRF dari halaman utama
         const mainPage = await axios.get('https://snapsave.app/', {
@@ -353,14 +535,19 @@ const trySnapSave = async (url) => {
 
         const html = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
 
-        // Cari link download video (no-watermark di TikTok)
-        const videoMatches = [...html.matchAll(/href="(https:\/\/[^"]+\.mp4[^"]*)"/g)].map(m => m[1]);
-        const imageMatches = [...html.matchAll(/href="(https:\/\/[^"]+\.(jpg|jpeg|png|webp)[^"]*)"/g)].map(m => m[1]);
+        // Hanya terima tautan media TikTok yang sah (bukan aset situs SnapSave)
+        const videoMatches = [...html.matchAll(/href="(https:\/\/[^"]+\.mp4[^"]*)"/g)]
+            .map(m => m[1])
+            .filter(link => isAcceptableMediaUrl(link, 'tiktok'));
 
         if (videoMatches.length > 0) {
             if (videoMatches.length === 1) return { status: 'stream', url: videoMatches[0] };
             return { status: 'picker', picker: videoMatches.map(u => ({ url: u, type: 'video' })) };
         }
+
+        const imageMatches = [...html.matchAll(/href="(https:\/\/[^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/g)]
+            .map(m => m[1])
+            .filter(link => isAcceptableMediaUrl(link, 'tiktok'));
 
         if (imageMatches.length > 0) {
             if (imageMatches.length === 1) return { status: 'stream', url: imageMatches[0] };
@@ -375,8 +562,6 @@ const trySnapSave = async (url) => {
 // ==========================================
 // 🎵 PROVIDER: SSSTik (TikTok Fallback)
 // ==========================================
-// SSSTik adalah downloader TikTok populer dengan endpoint yang bisa
-// di-scrape. Dipakai sebagai fallback jika Tikwm dan SnapSave gagal.
 
 const trySSSAPI = async (url) => {
     if (!url.includes('tiktok.com')) return null;
@@ -426,8 +611,6 @@ const trySSSAPI = async (url) => {
 // ==========================================
 // 💾 PROVIDER: SaveFrom (Multi-Platform)
 // ==========================================
-// SaveFrom.net mendukung banyak platform (IG, FB, YT, TikTok, X).
-// Menggunakan endpoint undocumented yang dipakai komunitas developer.
 
 const trySaveFrom = async (url) => {
     const supportedDomains = ['instagram.com', 'facebook.com', 'fb.watch', 'youtube.com', 'youtu.be', 'tiktok.com', 'twitter.com', 'x.com'];
@@ -436,12 +619,13 @@ const trySaveFrom = async (url) => {
     try {
         logger.info('[Downloader] Mencoba SaveFrom API...');
 
-        const apiUrl = `https://worker.sf-tools.com/savefrom?${new URLSearchParams({
+        const query = new URLSearchParams({
             app: 'sf',
             lang: 'id',
             opertype: 'user_collection',
             url: url
-        })}`;
+        });
+        const apiUrl = `https://worker.sf-tools.com/savefrom?${query.toString()}`;
 
         const response = await axios.get(apiUrl, {
             timeout: 15000,
@@ -556,45 +740,6 @@ const tryVxTwitter = async (url) => {
 };
 
 // ==========================================
-// 📸 PROVIDER: Instagram Embed (fallback)
-// ==========================================
-
-const tryInstagramEmbed = async (url) => {
-    if (!url.includes('instagram.com')) return null;
-    try {
-        logger.info('[Downloader] Mencoba Instagram embed scrape...');
-        const urlObj = new URL(url);
-        const cleanPath = urlObj.pathname.replace(/\/$/, '');
-        const embedUrl = `https://www.instagram.com${cleanPath}/embed/captioned/`;
-
-        const response = await axios.get(embedUrl, {
-            timeout: 10000,
-            httpsAgent,
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-        });
-
-        const html = response.data;
-        const isVideoPost = /<video[\s>]/i.test(html) || html.includes('"is_video":true');
-        const videoTagMatch = html.match(/<video[^>]*\bsrc="([^"]+)"/i);
-        const videoJsonMatch = html.match(/"video_url":"([^"]+)"/);
-        const videoUrl = (videoTagMatch && videoTagMatch[1]) || (videoJsonMatch && videoJsonMatch[1]);
-
-        if (videoUrl) {
-            return { status: 'stream', url: videoUrl.replace(/\\u0026/g, '&').replace(/\\\//g, '/') };
-        }
-        if (isVideoPost) return null;
-
-        const imageMatch = html.match(/<img[^>]*class="[^"]*EmbeddedMediaImage[^"]*"[^>]*src="([^"]+)"/);
-        if (imageMatch && imageMatch[1]) {
-            return { status: 'stream', url: imageMatch[1].replace(/&amp;/g, '&') };
-        }
-    } catch (e) {
-        logger.error(`[Downloader] Instagram embed scrape gagal: ${e.message}`);
-    }
-    return null;
-};
-
-// ==========================================
 // 📌 PROVIDER: Pinterest Scrape
 // ==========================================
 
@@ -683,7 +828,8 @@ const tryThreadsEmbed = async (url) => {
     try {
         logger.info('[Downloader] Mencoba Threads embed scrape...');
         const urlObj = new URL(url);
-        const embedUrl = `https://www.threads.net${urlObj.pathname.replace(/\/$/, '')}/embed`;
+        const cleanPath = urlObj.pathname.replace(/\/$/, '');
+        const embedUrl = `https://www.threads.net${cleanPath}/embed`;
 
         const response = await axios.get(embedUrl, {
             timeout: 10000,
@@ -713,8 +859,6 @@ const tryThreadsEmbed = async (url) => {
 // ==========================================
 // 💼 PROVIDER: LinkedIn Embed Scrape
 // ==========================================
-// LinkedIn tidak punya API publik. Kita scrape metadata dari
-// endpoint embed yang tidak butuh autentikasi.
 
 const tryLinkedInEmbed = async (url) => {
     if (!url.includes('linkedin.com')) return null;
@@ -761,15 +905,15 @@ const tryLinkedInEmbed = async (url) => {
 };
 
 // ==========================================
-// 🇮🇩 PROVIDER: Agatz API (IG, FB, Twitter)
+// 🇮🇩 PROVIDER: Agatz API (FB & Twitter)
 // ==========================================
+// Instagram sengaja tidak lagi melewati Agatz karena responsnya kadang hanya
+// berisi thumbnail; Instagram kini ditangani downloaderInstagram.js.
 
 const tryAgatz = async (url) => {
     try {
         let endpoint = '';
-        if (url.includes('instagram.com')) {
-            endpoint = `https://api.agatz.xyz/api/instagram?url=${encodeURIComponent(url)}`;
-        } else if (url.includes('facebook.com') || url.includes('fb.watch')) {
+        if (url.includes('facebook.com') || url.includes('fb.watch')) {
             endpoint = `https://api.agatz.xyz/api/facebook?url=${encodeURIComponent(url)}`;
         } else if (url.includes('twitter.com') || url.includes('x.com')) {
             endpoint = `https://api.agatz.xyz/api/twitter?url=${encodeURIComponent(url)}`;
@@ -784,7 +928,7 @@ const tryAgatz = async (url) => {
             if (Array.isArray(r)) {
                 return r.length === 1
                     ? { status: 'stream', url: r[0] }
-                    : { status: 'picker', picker: r.map(link => ({ url: link, type: 'photo' })) };
+                    : { status: 'picker', picker: r.map(link => ({ url: link })) };
             }
             if (typeof r === 'string') return { status: 'stream', url: r };
             if (typeof r === 'object') {
@@ -831,9 +975,6 @@ const tryPubler = async (url) => {
 // ==========================================
 // 🌐 PROVIDER: Cobalt (Paralel Race)
 // ==========================================
-// Cobalt dioptimalkan dengan menjalankan SEMUA instances secara paralel
-// menggunakan Promise.any() — ambil yang pertama berhasil. Ini memotong
-// waktu tunggu dari N×timeout menjadi 1×timeout.
 
 const fetchCobaltInstances = async () => {
     const now = Date.now();
@@ -883,7 +1024,13 @@ const fetchCobaltInstances = async () => {
  * @returns {Promise<object>}
  */
 const tryOneCobaltInstance = async (instance, url) => {
-    const response = await axios.post(instance, { url }, {
+    const response = await axios.post(instance, {
+        url,
+        // Minta media utuh dengan kualitas terbaik, bukan hasil auto-picker
+        downloadMode: 'auto',
+        videoQuality: 'max',
+        filenameStyle: 'basic'
+    }, {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
@@ -918,15 +1065,12 @@ const tryCobalt = async (url) => {
     logger.info(`[Downloader] 🚀 Menjalankan ${instances.length} Cobalt instances secara paralel...`);
 
     try {
-        // Promise.any() — resolve dengan nilai pertama yang fulfill
-        // Jika semua reject, throw AggregateError
         const result = await Promise.any(
             instances.map(instance => tryOneCobaltInstance(instance, url))
         );
         return result;
     } catch (e) {
-        // AggregateError = semua instance gagal
-        logger.error(`[Downloader] ❌ Semua Cobalt instances gagal.`);
+        logger.error('[Downloader] ❌ Semua Cobalt instances gagal.');
         return null;
     }
 };
@@ -1025,10 +1169,6 @@ const getUploadLimitMB = (interaction) => getUploadLimitBytes(interaction) / (10
 // ==========================================
 // 🗜️ UTILITAS: Kompresi FFmpeg Two-Pass
 // ==========================================
-// Two-pass encoding menghasilkan file yang jauh lebih akurat ke target
-// ukuran dibanding single-pass. Pass 1 menganalisis video untuk
-// mendapatkan statistik optimal, pass 2 menggunakan statistik tersebut
-// untuk encode dengan bitrate yang presisi.
 
 /**
  * Kompresi video menggunakan FFmpeg TWO-PASS encoding
@@ -1180,8 +1320,6 @@ const compressUntilFits = async (inputPath, limitBytes, limitMB, maxAttempts = 3
 // ==========================================
 // 🔗 PROVIDER CHAIN PER-PLATFORM
 // ==========================================
-// Urutan provider dioptimalkan berdasarkan reliability 2025/2026.
-// Provider paling stabil untuk platform tersebut selalu dicoba pertama.
 
 /**
  * @param {string} url
@@ -1196,7 +1334,6 @@ const getProviderChain = (url, cleanup) => {
 
     switch (platform) {
         case 'tiktok':
-            // Tikwm (no-watermark, terbaik) → SnapSave → SSSTik → Cobalt → yt-dlp
             return [
                 { name: 'Tikwm', fn: tryTikwm },
                 { name: 'SnapSave', fn: trySnapSave },
@@ -1206,18 +1343,18 @@ const getProviderChain = (url, cleanup) => {
             ];
 
         case 'instagram':
-            // SnapSave sangat stabil untuk IG → Cobalt → SaveFrom → Embed → Agatz
+            // Resolver resmi Instagram (GraphQL/embed/pengalih) selalu pertama.
+            // SnapSave DIHAPUS dari rantai ini: scraper-nya mengembalikan logo
+            // situsnya sendiri, bukan video reel yang diminta.
             return [
-                { name: 'SnapSave', fn: trySnapSave },
+                { name: 'Instagram Native', fn: tryInstagramNative },
                 { name: 'Cobalt', fn: tryCobalt },
+                { name: 'yt-dlp', fn: ytdlpFn },
                 { name: 'SaveFrom', fn: trySaveFrom },
-                { name: 'Instagram Embed', fn: tryInstagramEmbed },
-                { name: 'Agatz', fn: tryAgatz },
                 { name: 'Publer', fn: tryPubler }
             ];
 
         case 'twitter':
-            // FxTwitter paling stabil → VxTwitter → Cobalt → SaveFrom → Agatz
             return [
                 { name: 'FxTwitter', fn: tryFxTwitter },
                 { name: 'VxTwitter', fn: tryVxTwitter },
@@ -1228,7 +1365,6 @@ const getProviderChain = (url, cleanup) => {
             ];
 
         case 'facebook':
-            // Cobalt → SaveFrom → Agatz → yt-dlp
             return [
                 { name: 'Cobalt', fn: tryCobalt },
                 { name: 'SaveFrom', fn: trySaveFrom },
@@ -1237,7 +1373,6 @@ const getProviderChain = (url, cleanup) => {
             ];
 
         case 'youtube':
-            // yt-dlp kualitas tertinggi, Cobalt fallback
             return [
                 { name: 'yt-dlp', fn: ytdlpFn },
                 { name: 'Cobalt', fn: tryCobalt }
@@ -1251,7 +1386,6 @@ const getProviderChain = (url, cleanup) => {
             ];
 
         case 'reddit':
-            // JSON API resmi untuk gambar/galeri; video v.redd.it via yt-dlp
             return [
                 { name: 'Reddit JSON', fn: tryRedditJSON },
                 { name: 'yt-dlp', fn: ytdlpFn },
@@ -1266,7 +1400,6 @@ const getProviderChain = (url, cleanup) => {
             ];
 
         case 'linkedin':
-            // LinkedIn OEmbed/scrape → Cobalt → yt-dlp
             return [
                 { name: 'LinkedIn Embed', fn: tryLinkedInEmbed },
                 { name: 'Cobalt', fn: tryCobalt },
@@ -1274,14 +1407,12 @@ const getProviderChain = (url, cleanup) => {
             ];
 
         case 'vk':
-            // yt-dlp support VK (dengan atau tanpa cookies) → Cobalt fallback
             return [
                 { name: 'yt-dlp', fn: ytdlpFn },
                 { name: 'Cobalt', fn: tryCobalt }
             ];
 
         case 'douyin':
-            // Douyin = TikTok China, Tikwm kadang support → Cobalt → yt-dlp
             return [
                 { name: 'Tikwm', fn: tryTikwm },
                 { name: 'Cobalt', fn: tryCobalt },
@@ -1289,14 +1420,12 @@ const getProviderChain = (url, cleanup) => {
             ];
 
         case 'bilibili':
-            // yt-dlp support Bilibili dengan baik → Cobalt fallback
             return [
                 { name: 'yt-dlp', fn: ytdlpFn },
                 { name: 'Cobalt', fn: tryCobalt }
             ];
 
         default:
-            // yt-dlp mendukung 1800+ situs
             return [
                 { name: 'Cobalt', fn: tryCobalt },
                 { name: 'yt-dlp', fn: ytdlpFn },
@@ -1347,7 +1476,8 @@ module.exports = {
         }
 
         const platform = detectPlatform(url);
-        logger.info(`[Downloader] Platform: ${platform} | Kualitas: ${qualityChoice} | URL: ${url.substring(0, 80)}`);
+        const expectVideo = isVideoExpected(url);
+        logger.info(`[Downloader] Platform: ${platform} | Video diharapkan: ${expectVideo} | Kualitas: ${qualityChoice} | URL: ${url.substring(0, 80)}`);
 
         const cleanup = new CleanupManager();
         const limitBytes = getUploadLimitBytes(interaction);
@@ -1370,11 +1500,20 @@ module.exports = {
 
                 for (const provider of chain) {
                     try {
-                        data = await provider.fn(url);
-                        if (data) {
+                        const rawResult = await provider.fn(url);
+
+                        // 🛡️ Sanitasi: buang aset situs downloader & foto palsu
+                        const cleanResult = sanitizeProviderResult(rawResult, platform, expectVideo, provider.name);
+
+                        if (cleanResult) {
+                            data = cleanResult;
                             logger.info(`[Downloader] ✅ ${provider.name} berhasil!`);
                             if (!data.isLocalFile) setCachedResult(url, data);
                             break;
+                        }
+
+                        if (rawResult) {
+                            logger.info(`[Downloader] ⚠️ ${provider.name} memberi hasil tapi tidak lolos filter, lanjut provider berikutnya.`);
                         } else {
                             logger.info(`[Downloader] ⚠️ ${provider.name} tidak ada hasil.`);
                         }
@@ -1559,7 +1698,6 @@ module.exports = {
                             }));
 
                             const tempDir = os.tmpdir();
-                            const tempFilePath = path.join(tempDir, `naura_media_${Date.now()}.${detectedExt}`);
 
                             const fileResponse = await axios.get(data.url, {
                                 responseType: 'stream',
@@ -1571,6 +1709,18 @@ module.exports = {
                             const streamContentType = fileResponse.headers['content-type'] || '';
                             const streamMimeExt = mimeToExt(streamContentType);
                             const finalExt = streamMimeExt || detectedExt;
+
+                            // 🛡️ Pengaman terakhir: tautan video tapi yang datang justru gambar
+                            if (expectVideo && IMAGE_EXTENSIONS.includes(finalExt)) {
+                                logger.info('[Downloader] 🛡️ Batal: server mengirim berkas gambar untuk tautan video.');
+                                fileResponse.data.destroy();
+                                return interaction.editReply(buildErrorContainerV2({
+                                    title: 'Video Tidak Ditemukan',
+                                    description: `${ui.getEmoji('error') || '❌'} Naura hanya menerima berkas gambar untuk tautan video ini, jadi hasilnya tidak dikirim. Pastikan postingan bersifat **Public**, lalu coba lagi beberapa saat.`,
+                                    footerText: ui.getFooter('utility')
+                                }));
+                            }
+
                             const finalPath = path.join(tempDir, `naura_media_${Date.now()}.${finalExt}`);
                             const writer = fs.createWriteStream(finalPath);
 
