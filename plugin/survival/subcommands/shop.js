@@ -10,6 +10,7 @@ const items = require('../items');
 const npcs = require('../npcs');
 const { findPortrait } = require('../npcHelpers');
 const { resolveShop, say } = require('../shopkeepers');
+const stock = require('../shopStock');
 const currencyHelper = require('../currency');
 const { getSeason, getWeather, getShopMultiplier } = require('../survivalTime');
 const { getDifficultyConfig } = require('../difficultyHelper');
@@ -18,19 +19,6 @@ const { buildContainerV2, buildErrorContainerV2 } = require('../../../src/utils/
 
 const COLLECTOR_MS = 120000;
 const PORTRAIT_NAME = 'shopkeeper.png';
-
-// Barang dasar yang memang seharusnya dicari sendiri di alam, bukan dibeli.
-const EXCLUDED_IDS = [
-    'wood', 'stone', 'fiber', 'worm_bait', 'trash',
-    'survival_started', 'prop_gudang', 'veh_bicycle'
-];
-
-const PROPERTIES = [
-    { id: 'prop_kos', name: 'Kamar Kos (Properti)', price: 50000, category: 'special' },
-    { id: 'prop_rumah', name: 'Rumah (Properti)', price: 200000, category: 'special' },
-    { id: 'prop_mansion', name: 'Mansion (Properti)', price: 750000, category: 'special' },
-    { id: 'veh_motor', name: 'Sepeda Motor (Kendaraan)', price: 80000, category: 'special' }
-];
 
 function e(name, fallback) {
     return ui.getEmoji(name) || fallback;
@@ -46,19 +34,19 @@ module.exports = {
         const profile = await cacheManager.getUserProfile(user.id);
         const [survival] = await UserSurvival.findOrCreate({ where: { userId: user.id } });
 
-        if (survival.currentLocation === 'prison') {
-            return ui.sendError(interaction, 'err_sys_58', true);
-        }
+        if (survival.currentLocation === 'prison') return ui.sendError(interaction, 'err_sys_58', true);
 
         const shop = resolveShop(survival.currentLocation);
-        if (!shop) {
-            return ui.sendError(interaction, 'Di sini nggak ada penjual, lho. Coba ke desa atau kota dulu yaa!', true);
-        }
+        if (!shop) return ui.sendError(interaction, 'Di sini nggak ada penjual, lho. Coba ke desa atau kota dulu yaa!', true);
 
         const npc = npcs[shop.npcId] || { id: shop.npcId, name: shop.shopName };
         const currency = currencyHelper.byKind(shop.currency);
         const holders = { survival, profile };
         const vars = { nama: user.displayName || user.username };
+
+        // Kategori bawaan toko digabung dengan kategori khusus per wilayah,
+        // misalnya lapak tiket dungeon.
+        const categories = { ...shop.categories, ...stock.extraCategories(shop.key) };
 
         // Potret NPC dipakai sebagai ikon toko, jadi terasa benar-benar miliknya.
         const portrait = findPortrait(npc);
@@ -74,16 +62,12 @@ module.exports = {
         const currentDay = survival.inGameDay || 1;
         if (currentDay >= (survival.shop_last_reset_day || 1) + 30) {
             shopPurchases = {};
-            await UserSurvival.update(
-                { shop_purchases: {}, shop_last_reset_day: currentDay },
-                { where: { userId: user.id } }
-            );
+            await cacheManager.updateUserSurvival(user.id, { shop_purchases: {}, shop_last_reset_day: currentDay });
         }
 
         function priceOf(item, purchases) {
-            const weatherMultiplier = item.id.startsWith('prop_') || item.id.startsWith('veh_')
-                ? 1
-                : getShopMultiplier(item, weather, season);
+            const flat = item.id.startsWith('prop_') || item.id.startsWith('veh_') || item.category === 'pass';
+            const weatherMultiplier = flat ? 1 : getShopMultiplier(item, weather, season);
             const bought = purchases[item.id] || 0;
             let final = Math.floor(item.price * weatherMultiplier * (1 + bought * 0.1));
             if (diffConfig.extreme) final = Math.floor(final * 1.5);
@@ -94,7 +78,7 @@ module.exports = {
             new StringSelectMenuBuilder()
                 .setCustomId('shop_category')
                 .setPlaceholder('Mau lihat dagangan yang mana?')
-                .addOptions(Object.entries(shop.categories).map(([value, label]) => ({ label, value })))
+                .addOptions(Object.entries(categories).map(([value, label]) => ({ label, value })))
         );
 
         function shopPayload(title, dialogue, extra = '') {
@@ -122,7 +106,7 @@ module.exports = {
             '\n*Harga bergerak mengikuti cuaca, musim, dan seberapa sering kamu membeli barang yang sama bulan ini.*'
         );
 
-        const response = await interaction.reply({
+        const response = await interaction.editReply({
             ...openPayload,
             components: [...openPayload.components, categoryRow()]
         });
@@ -138,15 +122,16 @@ module.exports = {
             if (i.customId === 'shop_category') {
                 const category = i.values[0];
                 const pool = items.filter(it =>
-                    it && it.category === category && it.price && !EXCLUDED_IDS.includes(it.id)
+                    it && it.category === category && it.price && !stock.isExcluded(it.id)
                 );
 
-                // Properti dan kendaraan hanya dijual di kota.
-                if (category === 'special' && shop.key === 'kota') pool.push(...PROPERTIES);
+                // Dagangan khusus wilayah: properti dan kendaraan di kota,
+                // tiket dungeon sesuai penjualnya masing-masing.
+                pool.push(...stock.exclusiveStock(shop.key, category));
 
                 if (pool.length === 0) {
                     const emptyPayload = shopPayload(
-                        `${e('shop_cart', '\uD83D\uDED2')} ${shop.categories[category]}`,
+                        `${e('shop_cart', '\uD83D\uDED2')} ${categories[category]}`,
                         'Aduh, yang itu sedang kosong. Stoknya belum datang dari pemasok.'
                     );
                     return i.editReply({ ...emptyPayload, components: [...emptyPayload.components, categoryRow()] });
@@ -155,7 +140,7 @@ module.exports = {
                 const buyRow = new ActionRowBuilder().addComponents(
                     new StringSelectMenuBuilder()
                         .setCustomId('shop_buy')
-                        .setPlaceholder(`Beli dari ${shop.categories[category]}...`)
+                        .setPlaceholder(`Beli dari ${categories[category]}...`)
                         .addOptions(pool.slice(0, 25).map(it => {
                             const finalPrice = priceOf(it, shopPurchases);
                             const bought = shopPurchases[it.id] || 0;
@@ -170,7 +155,7 @@ module.exports = {
                 );
 
                 const listPayload = shopPayload(
-                    `${e('shop_cart', '\uD83D\uDED2')} ${shop.categories[category]}`,
+                    `${e('shop_cart', '\uD83D\uDED2')} ${categories[category]}`,
                     say(shop.dialog.browse, vars)
                 );
                 return i.editReply({
@@ -199,9 +184,8 @@ module.exports = {
 
                 await currencyHelper.charge(currency, freshHolders, finalPrice);
 
-                const catalogItem = items.find(x => x && x.id === itemId)
-                    || PROPERTIES.find(x => x.id === itemId);
-                let itemName = catalogItem ? catalogItem.name : itemId;
+                const catalogItem = stock.findItem(itemId) || stock.propertyById(itemId);
+                const itemName = catalogItem ? catalogItem.name : itemId;
 
                 if (itemId.startsWith('prop_')) {
                     const propMap = { prop_kos: 'kos', prop_rumah: 'rumah', prop_mansion: 'mansion' };
@@ -244,8 +228,6 @@ module.exports = {
                 `${e('sleepy', '\uD83D\uDCA4')} ${shop.shopName} sudah tutup`,
                 say(shop.dialog.farewell, vars)
             );
-            // Pesan Components V2 tidak boleh dikosongkan komponennya, jadi
-            // kartunya dikirim ulang tanpa menu pilihan.
             await interaction.editReply(closingPayload).catch(() => {});
         });
     }
