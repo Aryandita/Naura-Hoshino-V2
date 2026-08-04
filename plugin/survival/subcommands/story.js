@@ -1,15 +1,37 @@
-const UserProfile = require('../../../src/models/UserProfile');
+'use strict';
+
+const {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    AttachmentBuilder,
+    MessageFlags
+} = require('discord.js');
+
+const fs = require('fs');
+
 const UserSurvival = require('../../../src/models/UserSurvival');
-const cacheManager = require('../../../src/managers/cacheManager');
 const StoryProgress = require('../../../src/models/StoryProgress');
+const cacheManager = require('../../../src/managers/cacheManager');
 const storyData = require('../storyData');
 const ui = require('../../../src/config/ui');
-const fs = require('fs');
+const leveling = require('../survivalLeveling');
+const currency = require('../currency');
 const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
 const { safeParseInventory } = require('../inventoryHelper');
 
+const COLLECTOR_MS = 300000;
+
+function e(name, fallback) {
+    return ui.getEmoji(name) || fallback;
+}
+
+function fill(text, username) {
+    return String(text || '').replace(/{player}/g, username);
+}
+
 module.exports = {
-    async execute(interaction, client) {
+    async execute(interaction) {
         const user = interaction.user;
 
         const [survival] = await UserSurvival.findOrCreate({ where: { userId: user.id } });
@@ -22,140 +44,175 @@ module.exports = {
         const arc = storyData.find(a => a.arc === currentArcId);
         if (!arc) return ui.sendError(interaction, 'err_sys_61', true);
 
-        if (survival.survival_level < arc.reqLevel) {
-            return ui.sendError(interaction, `Kamu harus mencapai **Level ${arc.reqLevel}** untuk memulai arc cerita **${arc.arcName}** (Levelmu saat ini: ${survival.survival_level || 1}).`, true);
+        if ((survival.survival_level || 1) < arc.reqLevel) {
+            return ui.sendError(interaction, [
+                `Ceritanya belum bisa dibuka, sayang. Arc **${arc.arcName}** butuh **Level ${arc.reqLevel}**.`,
+                `Levelmu sekarang **${survival.survival_level || 1}**. Ayo naik level dulu, Naura temani!`
+            ].join('\n'), true);
         }
 
-        const currentChapterId = storyProgress.currentChapter;
-        const chapter = arc.chapters.find(c => c.chapter === currentChapterId);
+        const chapter = arc.chapters.find(c => c.chapter === storyProgress.currentChapter);
         if (!chapter) return ui.sendError(interaction, 'err_sys_62', true);
 
         let dialogueIndex = 0;
 
-        const renderFrame = async (i) => {
+        const buildFrame = () => {
             const isLast = dialogueIndex >= chapter.dialogue.length - 1;
-            const currentLine = chapter.dialogue[dialogueIndex];
+            const line = chapter.dialogue[dialogueIndex];
 
-            // Load background image jika ada
-            const bgPath = ui.getSurvivalBackground ? ui.getSurvivalBackground(chapter.background, 12) : null;
-            let files = [];
+            const bgPath = typeof ui.getSurvivalBackground === 'function'
+                ? ui.getSurvivalBackground(chapter.background, 12)
+                : null;
+
+            const files = [];
             let bannerAttachmentName;
+
             if (bgPath && fs.existsSync(bgPath)) {
-                files.push(new AttachmentBuilder(bgPath, { name: 'bg.jpg' }));
-                bannerAttachmentName = 'bg.jpg';
+                bannerAttachmentName = 'story.png';
+                files.push(new AttachmentBuilder(bgPath, { name: bannerAttachmentName }));
             }
 
-            const storyPayload = buildContainerV2({
+            const payload = buildContainerV2({
                 accentColorHex: ui.getColor('primary') || '#FFB6C1',
-                title: `📖 Arc ${arc.arc}: ${arc.arcName} - Ch. ${chapter.chapter}`,
-                description: `*${chapter.narrative.replace(/{player}/g, user.username)}*\n\n**[${currentLine.speaker.replace(/{player}/g, user.username)}]**\n"${currentLine.text.replace(/{player}/g, user.username)}"`,
+                authorName: 'Naura Story',
+                title: `${e('read', '\uD83D\uDCD6')} Arc ${arc.arc}: ${arc.arcName} \u2014 Bab ${chapter.chapter}`,
+                iconURL: user.displayAvatarURL(),
+                expression: 'info',
+                description: [
+                    `*${fill(chapter.narrative, user.username)}*`,
+                    '',
+                    `**${fill(line.speaker, user.username)}**`,
+                    `"${fill(line.text, user.username)}"`
+                ].join('\n'),
                 bannerAttachmentName,
+                files,
                 footerText: ui.getFooter('survival')
             });
 
             const row = new ActionRowBuilder();
+
             if (!isLast) {
                 row.addComponents(
-                    new ButtonBuilder().setCustomId('story_next').setLabel('Selanjutnya').setStyle(ButtonStyle.Primary).setEmoji(ui.getEmoji('next') || '▶️')
+                    new ButtonBuilder().setCustomId('story_next').setLabel('Selanjutnya').setStyle(ButtonStyle.Primary)
+                );
+            } else if (chapter.challenge) {
+                row.addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('story_challenge')
+                        .setLabel(chapter.challenge.btnLabel || 'Hadapi tantangan')
+                        .setStyle(ButtonStyle.Danger)
                 );
             } else {
-                if (chapter.challenge) {
-                    row.addComponents(
-                        new ButtonBuilder().setCustomId('story_challenge').setLabel(chapter.challenge.btnLabel).setStyle(ButtonStyle.Danger).setEmoji(chapter.challenge.btnEmoji || ui.getEmoji('warning') || '⚠️')
-                    );
-                } else {
-                    row.addComponents(
-                        new ButtonBuilder().setCustomId('story_finish').setLabel('Selesaikan Chapter').setStyle(ButtonStyle.Success).setEmoji(ui.getEmoji('success') || '✅')
-                    );
-                }
+                row.addComponents(
+                    new ButtonBuilder().setCustomId('story_finish').setLabel('Selesaikan bab ini').setStyle(ButtonStyle.Success)
+                );
             }
 
-            if (i.replied || i.deferred) {
-                await i.editReply({ ...storyPayload, components: [row], files });
-            } else {
-                await i.reply({ ...storyPayload, components: [row], files });
-            }
+            return { ...payload, embeds: [], components: [...payload.components, row] };
         };
 
-        await renderFrame(interaction);
+        const message = await interaction.editReply(buildFrame());
 
-        const message = await interaction.fetchReply();
-        const collector = message.createMessageComponentCollector({ filter: i => i.user.id === user.id, time: 180000 });
-
-        collector.on('collect', async i => {
-            await i.deferUpdate();
-            if (i.customId === 'story_next') {
-                dialogueIndex++;
-                await renderFrame(i);
-            } else if (i.customId === 'story_finish' || i.customId === 'story_challenge') {
-                if (i.customId === 'story_challenge') {
-                    const challenge = chapter.challenge;
-                    let passed = false;
-
-                    if (challenge.type === 'item') {
-                        // Normalisasi inventory untuk mencegah crash 'xxx.find is not a function'
-                        const storyInv = safeParseInventory(profile.inventory);
-                        profile.inventory = storyInv;
-                        const item = storyInv.find(inv => inv && inv.id === challenge.reqId);
-                        if (item && item.amount >= challenge.reqAmount) {
-                            passed = true;
-                            item.amount -= challenge.reqAmount;
-                            await cacheManager.updateUserProfile(user.id, { inventory: profile.inventory });
-                        }
-                    } else if (challenge.type === 'coin') {
-                        if (profile.wallet >= challenge.reqAmount) {
-                            passed = true;
-                            profile.wallet -= challenge.reqAmount;
-                            await cacheManager.updateUserProfile(user.id, { wallet: profile.wallet });
-                        }
-                    }
-
-                    if (!passed) {
-                        const failPayload = buildContainerV2({
-                            accentColorHex: ui.getColor('error') || '#ef4444',
-                            title: '❌ Persyaratan Belum Terpenuhi',
-                            description: challenge.failMsg.replace(/{player}/g, user.username),
-                            footerText: ui.getFooter('survival')
-                        });
-                        return await i.followUp({ ...failPayload, ephemeral: true });
-                    }
-                }
-
-                collector.stop('finished');
-
-                let rewardText = '';
-                if (chapter.reward.exp) {
-                    const leveling = require('../survivalLeveling');
-                    await leveling.addPlayerXP(user.id, chapter.reward.exp);
-                    rewardText += `🌟 **+${chapter.reward.exp} XP**\n`;
-                }
-                if (chapter.reward.item) {
-                    const itemName = chapter.reward.item;
-                    const exist = profile.inventory.find(inv => inv && inv.id === itemName);
-                    if (exist) { exist.amount += chapter.reward.amount; }
-                    else { profile.inventory.push({ id: itemName, name: itemName, amount: chapter.reward.amount, type: 'loot' }); }
-                    await cacheManager.updateUserProfile(user.id, { inventory: profile.inventory });
-                    rewardText += `📦 **${chapter.reward.amount}x ${itemName}**\n`;
-                }
-
-                storyProgress.currentArc = chapter.nextArc;
-                storyProgress.currentChapter = chapter.nextChapter;
-                await storyProgress.save();
-
-                const successPayload = buildContainerV2({
-                    accentColorHex: ui.getColor('success') || '#22c55e',
-                    title: '🎉 Chapter Selesai!',
-                    description: `Kamu telah menyelesaikan **${chapter.title}**!\n\n**Hadiah:**\n${rewardText}`,
-                    footerText: ui.getFooter('survival')
-                });
-                await i.editReply({ ...successPayload, components: [], files: [] });
-            }
+        const collector = message.createMessageComponentCollector({
+            filter: i => i.user.id === user.id,
+            time: COLLECTOR_MS
         });
 
-        collector.on('end', async (collected, reason) => {
-            if (reason === 'time') {
-                await interaction.editReply({ components: [] }).catch(() => { });
+        collector.on('collect', async i => {
+            await i.deferUpdate().catch(() => {});
+
+            if (i.customId === 'story_next') {
+                dialogueIndex += 1;
+                return i.editReply(buildFrame()).catch(() => {});
             }
+
+            if (i.customId !== 'story_finish' && i.customId !== 'story_challenge') return;
+
+            const inventory = safeParseInventory(profile.inventory);
+
+            if (i.customId === 'story_challenge') {
+                const challenge = chapter.challenge || {};
+                let passed = false;
+
+                if (challenge.type === 'item') {
+                    const item = inventory.find(inv => inv && inv.id === challenge.reqId);
+                    if (item && (item.amount || 1) >= challenge.reqAmount) {
+                        item.amount = (item.amount || 1) - challenge.reqAmount;
+                        if (item.amount <= 0) inventory.splice(inventory.indexOf(item), 1);
+                        await cacheManager.updateUserProfile(user.id, { inventory });
+                        passed = true;
+                    }
+                } else if (challenge.type === 'coin') {
+                    // Kode lama membaca `profile.wallet` yang tidak ada di model,
+                    // sehingga tantangan berbayar selalu dianggap gagal.
+                    const paid = await currency.charge(currency.COIN, { survival, profile }, challenge.reqAmount);
+                    passed = paid !== null;
+                }
+
+                if (!passed) {
+                    const failPayload = buildContainerV2({
+                        accentColorHex: ui.getColor('error') || '#ef4444',
+                        authorName: 'Naura Story',
+                        title: `${e('shy', '\uD83D\uDE45')} Syaratnya belum terpenuhi`,
+                        iconURL: user.displayAvatarURL(),
+                        expression: 'fail',
+                        description: fill(challenge.failMsg || 'Persiapanmu belum cukup untuk bagian ini. Kumpulkan dulu ya, Naura tunggu di sini.', user.username),
+                        footerText: ui.getFooter('survival')
+                    });
+
+                    return i.followUp({
+                        ...failPayload,
+                        flags: (failPayload.flags || 0) | MessageFlags.Ephemeral
+                    }).catch(() => {});
+                }
+            }
+
+            collector.stop('finished');
+
+            const reward = chapter.reward || {};
+            const rewardLines = [];
+
+            if (reward.exp) {
+                await leveling.addPlayerXP(user.id, reward.exp);
+                rewardLines.push(`> ${e('impressed', '\uD83C\uDF1F')} **+${reward.exp} XP**`);
+            }
+
+            if (reward.item) {
+                const bag = safeParseInventory((await cacheManager.getUserProfile(user.id)).inventory);
+                const amount = reward.amount || 1;
+                const exist = bag.find(inv => inv && inv.id === reward.item);
+
+                if (exist) exist.amount = (exist.amount || 1) + amount;
+                else bag.push({ id: reward.item, name: reward.item, amount, type: 'loot' });
+
+                await cacheManager.updateUserProfile(user.id, { inventory: bag });
+                rewardLines.push(`> ${e('cheers', '\uD83D\uDCE6')} **${amount}x ${reward.item}**`);
+            }
+
+            storyProgress.currentArc = chapter.nextArc;
+            storyProgress.currentChapter = chapter.nextChapter;
+            await storyProgress.save();
+
+            const successPayload = buildContainerV2({
+                accentColorHex: ui.getColor('success') || '#22c55e',
+                authorName: 'Naura Story',
+                title: `${e('cheers', '\uD83C\uDF89')} Babnya selesai!`,
+                iconURL: user.displayAvatarURL(),
+                expression: 'achievement',
+                description: [
+                    `Kamu menuntaskan **${chapter.title}**. Naura ikut terharu membacanya bareng kamu.`,
+                    '',
+                    rewardLines.length > 0 ? '**Hadiahmu**' : 'Bab ini belum berhadiah, tapi ceritanya makin seru!',
+                    ...rewardLines,
+                    '',
+                    'Lanjut lagi kapan pun kamu siap ya, Naura simpan progresnya.'
+                ].join('\n'),
+                footerText: ui.getFooter('survival')
+            });
+
+            // Pesan Components V2 tidak boleh dikosongkan komponennya, jadi
+            // kartunya diganti utuh tanpa baris tombol.
+            await i.editReply({ ...successPayload, embeds: [] }).catch(() => {});
         });
     }
 };
