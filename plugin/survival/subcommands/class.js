@@ -79,6 +79,17 @@ function applyBonus(survival, bonus, sign) {
     }
 }
 
+/**
+ * Bonus kelas lama diambil dari catatan di rpg_state. Pemain lama yang sudah
+ * punya kelas sebelum fitur ini ada belum punya catatan itu, jadi nilainya
+ * ditebak dari tabel kelas.
+ */
+function previousBonusOf(rpgState, currentClass) {
+    if (rpgState.class_bonus) return rpgState.class_bonus;
+    if (currentClass && CLASSES[currentClass]) return CLASSES[currentClass].bonus;
+    return null;
+}
+
 module.exports = {
     async execute(interaction) {
         const user = interaction.user;
@@ -125,9 +136,7 @@ module.exports = {
             await profile.decrement('economy_wallet', { by: SWITCH_FEE });
         }
 
-        // Cabut bonus kelas lama, lalu pasang bonus kelas baru.
-        const previousBonus = rpgState.class_bonus || (currentClass && CLASSES[currentClass］ && CLASSES[currentClass].bonus) || null;
-        applyBonus(survival, previousBonus, -1);
+        applyBonus(survival, previousBonusOf(rpgState, currentClass), -1);
         applyBonus(survival, chosen.bonus, 1);
 
         rpgState.class = requested;
@@ -155,7 +164,7 @@ module.exports = {
                 `> Bonus stat: ${describeBonus(chosen.bonus)}`,
                 `> Skill tempur: ${chosen.skill}`,
                 '',
-                `Stat-mu sekarang: STR **${survival.strength}** \u2022 AGI **${survival.agility}** \u2022 INT **${survival.intelligence}** \u2022 LUCK **${survival.luck}**`,
+                `Stat-mu sekarang: HP **${survival.hp}** \u2022 STR **${survival.strength}** \u2022 AGI **${survival.agility}** \u2022 INT **${survival.intelligence}** \u2022 LUCK **${survival.luck}**`,
                 '',
                 biaya
             ].join('\n'),
