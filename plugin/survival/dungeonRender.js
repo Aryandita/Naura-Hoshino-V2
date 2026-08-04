@@ -8,6 +8,7 @@ const { buildContainerV2 } = require('../../src/utils/NauraContainerBuilder');
 const { drawBattle } = require('../canvas/battleCanvas');
 const ui = require('../../src/config/ui');
 const helpers = require('./craftHelpers');
+const currency = require('./currency');
 
 const IMAGE_NAME = 'battle.png';
 const e = helpers.e;
@@ -44,6 +45,34 @@ function actionRow({ stats, stamina, canFlee = true }) {
     return row;
 }
 
+// Muncul hanya kalau pemain memegang kedua jenis tiket, supaya tiket spesial
+// yang mahal tidak terpakai tanpa disengaja.
+function buildPassChoiceView(passes) {
+    const payload = buildContainerV2({
+        accentColorHex: ui.getColor('info'),
+        authorName: 'Naura Dungeon Guide',
+        expression: 'thinking',
+        title: e('lokasi', '\ud83d\udccd') + ' Pintu Batu Infinite Dungeon',
+        description: [
+            'Kamu memegang dua jenis tiket, jadi Naura tanya dulu, ya!',
+            '',
+            currency.emojiOf(currency.FRAGMENT) + ' **Dungeon Pass** (' + passes.normal + ' tersisa) \u2014 penjelajahan biasa, aman untuk mengumpulkan bahan.',
+            currency.emojiOf(currency.COIN) + ' **Dungeon Special Pass** (' + passes.special + ' tersisa) \u2014 musuhnya dua kali lebih tangguh, tapi jarahan dan hadiahnya juga dua kali lipat.',
+            '',
+            '*Tiket yang kamu pilih langsung terpakai, jadi pikirkan matang-matang.*'
+        ].join('\n'),
+        footerText: ui.getFooter('survival')
+    });
+
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('dungeon_use_normal').setLabel('Pakai Tiket Biasa').setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId('dungeon_use_special').setLabel('Pakai Tiket Spesial').setStyle(ButtonStyle.Danger),
+        new ButtonBuilder().setCustomId('dungeon_cancel').setLabel('Nanti Saja').setStyle(ButtonStyle.Secondary)
+    );
+
+    return { ...payload, components: [...payload.components, row] };
+}
+
 async function buildBattleView({ user, stats, survival, enemy, enemyHp, playerHp, floor, logText }) {
     const playerInfo = {
         username: user.username,
@@ -69,11 +98,14 @@ async function buildBattleView({ user, stats, survival, enemy, enemyHp, playerHp
         footer += ' \u2022 Naura sarankan pilih kelas lewat /survival class biar skill tempurmu terbuka!';
     }
 
+    const title = e('battle', '\u2694\ufe0f') + ' Infinite Dungeon - Lantai ' + floor
+        + (enemy.special ? ' (Segel Spesial)' : '');
+
     const payload = buildContainerV2({
-        accentColorHex: enemy.isBoss ? ui.getColor('error') : ui.getColor('warning'),
+        accentColorHex: enemy.isBoss || enemy.special ? ui.getColor('error') : ui.getColor('warning'),
         authorName: 'Naura Battle Log',
-        expression: enemy.isBoss ? 'shocked' : 'thinking',
-        title: e('battle', '\u2694\ufe0f') + ' Infinite Dungeon - Lantai ' + floor,
+        expression: enemy.isBoss || enemy.special ? 'shocked' : 'thinking',
+        title,
         description: logText,
         bannerAttachmentName: IMAGE_NAME,
         footerText: footer
@@ -105,6 +137,7 @@ function buildClosingView({ expression, colorKey, title, description }) {
 module.exports = {
     IMAGE_NAME,
     actionRow,
+    buildPassChoiceView,
     buildBattleView,
     buildClosingView
 };
