@@ -5,6 +5,8 @@ const { MessageFlags } = require('discord.js');
 const GuildClan = require('../../../src/models/GuildClan');
 const UserSurvival = require('../../../src/models/UserSurvival');
 const ui = require('../../../src/config/ui');
+const currency = require('../currency');
+const { rollCouponDrop, dropLine } = require('../couponRewards');
 const { buildContainerV2, buildErrorContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
 
 const STAMINA_COST = 15;
@@ -79,12 +81,20 @@ module.exports = {
         await userClan.save();
 
         survival.stamina -= STAMINA_COST;
-        const rewardNsf = Math.floor(finalDamage / 2) + 20;
-        survival.starFragments = (survival.starFragments || 0) + rewardNsf;
         await survival.save();
 
+        // Hadiah serangan lewat helper mata uang supaya aturan NSF seragam.
+        const rewardNsf = Math.floor(finalDamage / 2) + 20;
+        await currency.reward(currency.FRAGMENT, { survival }, rewardNsf);
+
         const isDefeated = userClan.bossHp <= 0;
-        const nsfEmoji = e('nsf', '\uD83E\uDE99');
+
+        // Naura Coupon hanya jatuh saat bosnya benar-benar tumbang, bukan tiap
+        // serangan, supaya tidak bisa dipanen dengan menyerang berulang kali.
+        const coupon = isDefeated ? await rollCouponDrop('clan_boss_kill', { survival }) : { gained: 0 };
+        const couponText = dropLine(coupon);
+
+        const nsfEmoji = currency.emojiOf(currency.FRAGMENT);
 
         const heading = isCritical
             ? `${e('shocked', '\uD83D\uDCA5')} Serangan telak!`
@@ -107,7 +117,8 @@ module.exports = {
                 `> Hadiah serangan: ${nsfEmoji} **+${rewardNsf} NSF**`,
                 `> Sisa staminamu: **${survival.stamina} / 100**`,
                 '',
-                penutup
+                penutup,
+                couponText
             ].filter(Boolean).join('\n'),
             footerText: ui.getFooter('survival')
         });
