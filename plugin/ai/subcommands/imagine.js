@@ -10,6 +10,7 @@ const { buildContainerV2, buildErrorContainerV2 } = require('../../../src/utils/
 
 const FILE_NAME = 'naura_art.png';
 const VERBA_URL = 'https://api.verba.ink/v1/image';
+const POLLINATIONS_URL = 'https://image.pollinations.ai/prompt';
 const FETCH_TIMEOUT_MS = 120000;
 
 function e(name, fallback) {
@@ -75,7 +76,7 @@ async function generateWithFooocus(prompt) {
 /** Cadangan terakhir yang selalu tersedia tanpa kunci API. */
 function pollinationsUrl(prompt) {
     const encoded = encodeURIComponent(prompt);
-    return `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&nologo=true&enhance=true`;
+    return `${POLLINATIONS_URL}/${encoded}?width=512&height=512&nologo=true&enhance=true`;
 }
 
 /**
