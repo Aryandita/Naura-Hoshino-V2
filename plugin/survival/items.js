@@ -4,6 +4,7 @@ const GameItem = require('../../src/models/GameItem');
 const staticItems = require('./items_static.js');
 const woodenTools = require('./items_wooden.js');
 const extraItems = require('./items_extra.js');
+const refinedItems = require('./items_refined.js');
 
 // Fallback minimum kalau pengambilan dari database gagal total.
 const staticFallback = [
@@ -14,7 +15,7 @@ const staticFallback = [
 
 // Item yang hidup di kode dan harus selalu tersedia, bahkan kalau katalog
 // database belum pernah di-seed.
-const CODE_ONLY_ITEMS = [...woodenTools, ...extraItems];
+const CODE_ONLY_ITEMS = [...woodenTools, ...extraItems, ...refinedItems];
 
 function flatten(row) {
     const data = row.toJSON();
