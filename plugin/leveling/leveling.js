@@ -1,170 +1,187 @@
-// Lokasi: src/utils/leveling.js
 // ==========================================
-// 🌟 SISTEM LEVELING NAURA - CHAT XP ENGINE
+// SISTEM LEVELING NAURA - MESIN XP CHAT
 // ==========================================
-// Memberikan XP setiap kali user aktif chat di server.
-// Premium user mendapat 2x XP boost otomatis.
-// Notifikasi level up dikirim ke channel yang ditentukan oleh admin.
+// Memberi XP setiap kali pengguna aktif mengobrol di server.
+// Pengguna premium mendapat penggandaan XP otomatis.
 
-const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const { AttachmentBuilder } = require('discord.js');
 const { logger } = require('../../src/managers/logger');
 const redisManager = require('../../src/managers/redisManager');
 const UserLeveling = require('../../src/models/UserLeveling');
-const UserProfile = require('../../src/models/UserProfile');
-const GuildSettings = require('../../src/models/GuildSettings');
 const cacheManager = require('../../src/managers/cacheManager');
 const CanvasUtils = require('../canvas/CanvasUtils');
 const ui = require('../../src/config/ui');
+const { buildContainerV2 } = require('../../src/utils/NauraContainerBuilder');
 
-// ==========================================
-// ⚙️ KONFIGURASI SISTEM XP
-// ==========================================
 const CONFIG = {
-    BASE_XP: 100, // XP dasar untuk level 1 → 2
-    MULTIPLIER: 1.5, // Pengali kesulitan per level
-    MSG_COOLDOWN: 60000, // Jeda minimum antar XP (1 menit, anti-spam)
-    MSG_XP: { min: 15, max: 25 } // Range XP per pesan
+    BASE_XP: 100,
+    MULTIPLIER: 1.5,
+    MSG_COOLDOWN: 60000, // Jeda minimum antar XP, satu menit
+    MSG_XP: { min: 15, max: 25 },
+    MIN_LENGTH: 5,
+    NOTICE_TTL: 15000
 };
 
-/**
- * Hitung total XP yang dibutuhkan untuk naik ke level berikutnya.
- * Semakin tinggi level, semakin besar tantangannya!
- */
+// Formula kuadratik: 5 * lvl^2 + 50 * lvl + 100
 function getNextLevelXp(level) {
-    // Formula Kuadratik: 5 * lvl^2 + 50 * lvl + 100
-    // Jauh lebih adil dan tidak eksponensial ekstrem
-    return Math.floor((5 * Math.pow(level, 2)) + (50 * level) + 100);
+    return Math.floor(5 * Math.pow(level, 2) + 50 * level + 100);
 }
 
-/**
- * Tentukan gelar / badge berdasarkan level user.
- * Gelar ini muncul di kartu rank mereka.
- */
 function getRoleBadge(level, isPremium) {
-    if (isPremium) return '👑 V.I.P Premium';
-    if (level >= 100) return '✦ Legenda Abadi ✦';
-    if (level >= 50) return '✧ Pahlawan Senior';
-    if (level >= 25) return '✧ Petualang Tangguh';
-    if (level >= 10) return '✧ Pengembara Berbakat';
-    return '✧ Pendatang Baru';
+    if (isPremium) return '\ud83d\udc51 V.I.P Premium';
+    if (level >= 100) return '\u2726 Legenda Abadi \u2726';
+    if (level >= 50) return '\u2727 Pahlawan Senior';
+    if (level >= 25) return '\u2727 Petualang Tangguh';
+    if (level >= 10) return '\u2727 Pengembara Berbakat';
+    return '\u2727 Pendatang Baru';
 }
 
-/**
- * Berikan XP ke user setelah mengirim pesan.
- * Dipanggil dari event messageCreate setiap kali ada pesan masuk.
- */
-async function awardXp(user, guild, currentChannel, messageContent = '') {
-    if (user.bot || !guild) return;
-
-    // Cegah spam karakter pendek (harus bermakna)
-    if (messageContent.length < 5) return;
-
-    // Gunakan Redis Cache untuk mengecek cooldown sebelum memanggil MySQL
-    const redisKey = `xp_cooldown_${guild.id}_${user.id}`;
-    if (redisManager.client && redisManager.client.isReady) {
-        const isCooldown = await redisManager.getCache(redisKey);
-        if (isCooldown) return; // Belum 1 menit
-        await redisManager.setCache(redisKey, true, Math.floor(CONFIG.MSG_COOLDOWN / 1000));
-    }
-
-
-    let [profile] = await UserLeveling.findOrCreate({
-        where: { userId: user.id, guildId: guild.id },
-        defaults: {
-            xp: 0,
-            level: 1,
-            messageCount: 0,
-            lastActivity: new Date(0)
-        }
-    });
-
-    // Cooldown MySQL dihapus, pindah ke Redis
-
-    // Hitung XP yang didapat secara acak dalam range
-    let gained = Math.floor(Math.random() * (CONFIG.MSG_XP.max - CONFIG.MSG_XP.min + 1)) + CONFIG.MSG_XP.min;
-
-    // Cek status Premium → dapat 2x XP Boost! 🚀
-    const globalProfile = await cacheManager.getUserProfile(user.id);
-    if (globalProfile?.isPremium && globalProfile?.premiumUntil && new Date(globalProfile.premiumUntil) > new Date()) {
-        gained *= 2;
-    }
-
-    const now = new Date();
-    profile.xp = (profile.xp || 0) + gained;
-    profile.messageCount = (profile.messageCount || 0) + 1;
-    profile.lastActivity = now;
-
-    await checkLevelUp(profile, user, guild, currentChannel);
-    await profile.save();
+async function isPremiumUser(userId) {
+    const profile = await cacheManager.getUserProfile(userId);
+    if (!profile || !profile.isPremium || !profile.premiumUntil) return false;
+    return new Date(profile.premiumUntil) > new Date();
 }
 
-/**
- * Cek apakah user layak naik level setelah mendapat XP baru.
- * Jika iya, kirim notifikasi keren ke channel level-up server!
- */
-async function checkLevelUp(profile, user, guild, currentChannel) {
+// Perhitungan murni tanpa await, supaya hasilnya bisa langsung disimpan
+// sebelum notifikasi yang lambat dijalankan.
+function applyLevelUp(profile) {
     profile.level = profile.level || 1;
+    let gainedLevels = 0;
     let nextXp = getNextLevelXp(profile.level);
-    let hasLeveledUp = false;
 
-    // Loop untuk menghandle multi-level up sekaligus (misal skip level)
     while (profile.xp >= nextXp) {
-        profile.level++;
+        profile.level += 1;
         profile.xp -= nextXp;
         nextXp = getNextLevelXp(profile.level);
-        hasLeveledUp = true;
+        gainedLevels += 1;
     }
 
-    if (!hasLeveledUp) return;
+    return gainedLevels;
+}
+
+async function resolveTargetChannel(guild, fallbackChannel) {
+    try {
+        const data = await cacheManager.getGuildSettings(guild.id);
+        const channelId =
+            (data && data.channels && data.channels.levelUp) ||
+            (data && data.settings && data.settings.channels && data.settings.channels.levelUp);
+        if (!channelId) return fallbackChannel;
+        return guild.channels.cache.get(channelId) || fallbackChannel;
+    } catch (e) {
+        return fallbackChannel;
+    }
+}
+
+async function announceLevelUp(profile, user, guild, currentChannel) {
+    let targetChannel = currentChannel;
 
     try {
-        // Cari channel khusus level-up (jika admin sudah mengaturnya)
-        let targetChannel = currentChannel;
-        const settingsData = await cacheManager.getGuildSettings(guild.id);
-        const levelUpChannelId = settingsData?.channels?.levelUp || settingsData?.settings?.channels?.levelUp;
+        targetChannel = await resolveTargetChannel(guild, currentChannel);
+        if (!targetChannel) return;
 
-        if (levelUpChannelId) {
-            const specificChannel = guild.channels.cache.get(levelUpChannelId);
-            if (specificChannel) targetChannel = specificChannel;
-        }
-
-        // Generate kartu level-up menggunakan Canvas
         const canvas = await CanvasUtils.generateLevel(user, profile.level);
         const buffer = canvas.encodeSync ? canvas.encodeSync('webp') : canvas.toBuffer();
         const attachment = new AttachmentBuilder(buffer, { name: 'naura-levelup.webp' });
 
-        // Tentukan gelar baru setelah level up
-        const globalProfile = await cacheManager.getUserProfile(user.id);
-        const isPremium = globalProfile?.isPremium && globalProfile?.premiumUntil && new Date(globalProfile.premiumUntil) > new Date();
-        const newBadge = getRoleBadge(profile.level, isPremium);
+        const badge = getRoleBadge(profile.level, await isPremiumUser(user.id));
+        const nextXp = getNextLevelXp(profile.level).toLocaleString('id-ID');
 
-        const { buildContainerV2 } = require('../../src/utils/NauraContainerBuilder');
         const payload = buildContainerV2({
             accentColorHex: ui.getColor('primary') || '#FFB6C1',
-            authorName: '✦ LEVEL UP! ✦',
+            authorName: '\u2726 LEVEL UP! \u2726',
             iconURL: user.displayAvatarURL(),
-            description: `Selamat **${user.username}**! 🎉\n` +
-                `Kamu baru aja naik ke **Level ${profile.level}** - terus semangat ya!\n\n` +
-                `> 🏅 Gelar baru kamu sekarang: **${newBadge}**\n` +
-                `> ✨ XP berikutnya: **${getNextLevelXp(profile.level).toLocaleString('id-ID')} XP**`,
+            expression: 'levelup',
+            description:
+                `Yeay, selamat ya **${user.username}**!\n` +
+                `Kamu baru naik ke **Level ${profile.level}**. Naura ikut senang banget~\n\n` +
+                `> Gelar baru kamu: **${badge}**\n` +
+                `> XP berikutnya: **${nextXp} XP**`,
             bannerAttachmentName: 'naura-levelup.webp',
-            footerText: 'Makin aktif, makin kuat! Teruslah chat dan raih puncaknya~ 🌟'
+            footerText: 'Makin sering ngobrol, makin kuat. Naura temani terus ya!'
         });
 
-        if (targetChannel) {
-            await targetChannel.send({ content: `<@${user.id}>`, ...payload, files: [attachment] })
-                .then(msg => setTimeout(() => msg.delete().catch(() => {}), 15000));
-        }
+        const sent = await targetChannel.send({
+            content: `<@${user.id}>`,
+            ...payload,
+            files: [attachment]
+        });
+        setTimeout(() => sent.delete().catch(() => {}), CONFIG.NOTICE_TTL);
     } catch (e) {
-        logger.error('[LEVELING ERROR]', e);
-        // Fallback sederhana jika canvas gagal render
-        if (currentChannel) {
-            await currentChannel
-                .send(`🎉 Hore! **${user.username}** baru aja naik ke **Level ${profile.level}**!`)
-                .then(msg => setTimeout(() => msg.delete().catch(() => {}), 15000))
-                .catch(() => {});
-        }
+        logger.error('[LEVELING] Gagal mengirim notifikasi naik level:', e);
+
+        if (!targetChannel) return;
+        await targetChannel
+            .send(`Hore! **${user.username}** baru naik ke **Level ${profile.level}**!`)
+            .then(msg => setTimeout(() => msg.delete().catch(() => {}), CONFIG.NOTICE_TTL))
+            .catch(() => {});
     }
 }
 
-module.exports = { awardXp, getNextLevelXp, getRoleBadge, checkLevelUp, CONFIG };
+// Dipertahankan untuk pemanggil lama: menghitung, menyimpan, lalu mengumumkan.
+async function checkLevelUp(profile, user, guild, currentChannel) {
+    const gained = applyLevelUp(profile);
+    if (gained === 0) return 0;
+
+    if (typeof profile.save === 'function') {
+        await profile.save().catch(err =>
+            logger.error('[LEVELING] Gagal menyimpan level baru:', err.message)
+        );
+    }
+
+    await announceLevelUp(profile, user, guild, currentChannel);
+    return gained;
+}
+
+async function awardXp(user, guild, currentChannel, messageContent = '') {
+    if (user.bot || !guild) return;
+    if (!messageContent || messageContent.length < CONFIG.MIN_LENGTH) return;
+
+    const redisReady = Boolean(redisManager.client && redisManager.client.isReady);
+    const cooldownKey = `xp_cooldown_${guild.id}_${user.id}`;
+
+    if (redisReady) {
+        const onCooldown = await redisManager.getCache(cooldownKey);
+        if (onCooldown) return;
+    }
+
+    const [profile] = await UserLeveling.findOrCreate({
+        where: { userId: user.id, guildId: guild.id },
+        defaults: { xp: 0, level: 1, messageCount: 0, lastActivity: new Date(0) }
+    });
+
+    // Cadangan bila Redis mati. Tanpa ini setiap pesan memberi XP penuh.
+    const lastActivity = profile.lastActivity ? new Date(profile.lastActivity).getTime() : 0;
+    if (Date.now() - lastActivity < CONFIG.MSG_COOLDOWN) return;
+
+    if (redisReady) {
+        await redisManager.setCache(cooldownKey, true, Math.floor(CONFIG.MSG_COOLDOWN / 1000));
+    }
+
+    const span = CONFIG.MSG_XP.max - CONFIG.MSG_XP.min + 1;
+    let gained = Math.floor(Math.random() * span) + CONFIG.MSG_XP.min;
+    if (await isPremiumUser(user.id)) gained *= 2;
+
+    profile.xp = (profile.xp || 0) + gained;
+    profile.messageCount = (profile.messageCount || 0) + 1;
+    profile.lastActivity = new Date();
+
+    const gainedLevels = applyLevelUp(profile);
+
+    // Simpan lebih dahulu. Notifikasi berisi render kanvas yang lambat dan
+    // pernah menyebabkan XP hilang karena tertimpa pesan berikutnya.
+    await profile.save();
+
+    if (gainedLevels > 0) {
+        await announceLevelUp(profile, user, guild, currentChannel);
+    }
+}
+
+module.exports = {
+    awardXp,
+    getNextLevelXp,
+    getRoleBadge,
+    applyLevelUp,
+    checkLevelUp,
+    announceLevelUp,
+    CONFIG
+};
