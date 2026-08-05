@@ -6,6 +6,12 @@ const path = require('path');
 const { applyEphemeralPatch } = require('./src/utils/ephemeralPatch');
 applyEphemeralPatch();
 
+// Penambal bahasa memasang interaction.localeLang, interaction.t(), dan padanannya
+// pada message. Harus dipasang sebelum command dimuat agar command apa pun dapat
+// membaca bahasa pilihan user sejak interaksi pertama.
+const { applyLocalePatch } = require('./src/utils/localePatch');
+applyLocalePatch();
+
 const { CommandHandler } = require('./src/managers/CommandHandler');
 const { loadEvents } = require('./src/managers/eventLoader');
 const clientOptions = require('./src/config/clientOptions');
