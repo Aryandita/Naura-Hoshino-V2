@@ -10,7 +10,8 @@ const ui = require('../../../src/config/ui');
 const { advanceTime, getTimeState } = require('../survivalTime');
 const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
 const currency = require('../currency');
-const npcConfig = require('../npcs');
+const encounter = require('../npcEncounter');
+const roam = require('../npcEncounterView');
 
 const BANDIT_CHANCE = 0.15;
 const BANDIT_LOSS = 50;
@@ -54,7 +55,7 @@ function findBackground(locKey, period) {
 }
 
 module.exports = {
-    async execute(interaction, client) {
+    async execute(interaction) {
         const user = interaction.user;
         const tujuan = interaction.options.getString('lokasi');
         const [survival] = await UserSurvival.findOrCreate({ where: { userId: user.id } });
@@ -116,11 +117,15 @@ module.exports = {
             }
         }
 
+        const currentHour = timeUpdate.hour || survival.inGameHour || 6;
+        const crowd = encounter.npcsAt(normalizedTarget, currentHour);
+
         const lines = [
             `Kamu berangkat ke **${LOCATION_NAMES[normalizedTarget] || tujuan}** dengan **${vehName}**. Hati-hati di jalan ya!`,
             '',
             `> ${e('sleepy', '\u23F1\uFE0F')} Waktu tempuh: **${travelTime} jam**`,
-            `> ${timeState.emoji} Sekarang **hari ke-${timeUpdate.day}, jam ${String(timeUpdate.hour).padStart(2, '0')}:00** (${timeState.label})`
+            `> ${timeState.emoji} Sekarang **hari ke-${timeUpdate.day}, jam ${String(timeUpdate.hour).padStart(2, '0')}:00** (${timeState.label})`,
+            `> ${e('npc_group', '\uD83D\uDC65')} Ada **${crowd.length} penduduk** yang sedang berkegiatan di sekitar sini.`
         ];
 
         if (encounterText) lines.push(encounterText);
@@ -146,13 +151,6 @@ module.exports = {
             files.push(new AttachmentBuilder(background.full, { name: background.name }));
         }
 
-        const currentHour = timeUpdate.hour || survival.inGameHour || 6;
-        const presentNPCs = Object.values(npcConfig).filter(n => {
-            if (!n) return false;
-            const loc = typeof n.getLocation === 'function' ? n.getLocation(currentHour) : n.location;
-            return (LOCATION_ALIAS[loc] || loc) === normalizedTarget;
-        });
-
         const payload = buildContainerV2({
             accentColorHex: ui.getColor('primary') || '#FFB6C1',
             authorName: 'Naura Travel',
@@ -167,21 +165,23 @@ module.exports = {
 
         const components = [...payload.components];
 
-        if (presentNPCs.length > 0) {
+        if (crowd.length > 0 && !timeUpdate.passedOut) {
             components.push(new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
-                    .setCustomId(`travel_talk_npc_${normalizedTarget}`)
-                    .setLabel(`Sapa warga (${presentNPCs.length} orang)`)
+                    .setCustomId('travel_roam')
+                    .setLabel('Jalan-jalan keliling')
+                    .setEmoji(e('run', '\uD83C\uDFC3'))
                     .setStyle(ButtonStyle.Success)
             ));
         }
 
-        const response = await interaction.editReply({ ...payload, embeds: [], components });
+        const response = await interaction.editReply({ ...payload, components });
 
-        if (presentNPCs.length === 0 || !response || !response.createMessageComponentCollector) return response;
+        if (components.length === payload.components.length) return response;
+        if (!response || typeof response.createMessageComponentCollector !== 'function') return response;
 
         const collector = response.createMessageComponentCollector({
-            filter: i => i.user.id === user.id && i.customId.startsWith('travel_talk_npc_'),
+            filter: i => i.user.id === user.id && i.customId === 'travel_roam',
             time: COLLECTOR_MS,
             max: 1
         });
@@ -192,23 +192,27 @@ module.exports = {
             // Tombolnya dimatikan tanpa membuang isi kartu Components V2.
             const disabledRow = new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
-                    .setCustomId('travel_talk_npc_disabled')
-                    .setLabel('Sedang menyapa warga...')
+                    .setCustomId('travel_roam_done')
+                    .setLabel('Sedang berkeliling...')
+                    .setEmoji(e('run', '\uD83C\uDFC3'))
                     .setStyle(ButtonStyle.Success)
                     .setDisabled(true)
             );
 
             await interaction.editReply({
                 ...payload,
-                embeds: [],
                 components: [...payload.components, disabledRow]
             }).catch(() => {});
 
             try {
-                const npcHandler = require('./npc.js');
-                await npcHandler.execute(i, client);
-            } catch (err) {
-                // Kalau papan NPC gagal dibuka, perjalanannya tetap sah.
+                await roam.runRoam({
+                    interaction,
+                    location: normalizedTarget,
+                    hour: currentHour,
+                    luck: survival.luck || 1
+                });
+            } catch (error) {
+                // Perjalanannya tetap sah walau sesi jalan-jalan gagal dibuka.
             }
         });
 

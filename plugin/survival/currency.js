@@ -13,13 +13,22 @@ const COUPON = 'coupon';
 // Kurs resmi: 1000 NSF = 1 Naura Coin.
 const FRAGMENT_PER_COIN = 1000;
 
+// Emoji resmi dari server. Berkas ini jadi satu-satunya sumber kebenaran untuk
+// lambang mata uang, jadi seluruh ekosistem cukup memanggil emojiOf().
+// Kalau nanti ID emojinya diubah di ui.js, nilai di sana yang dipakai lebih dulu.
+const EMOJI = {
+    [FRAGMENT]: { raw: '<:NauraStarFragment:1534169151336222760>', id: '1534169151336222760', name: 'NauraStarFragment', animated: false },
+    [COIN]: { raw: '<a:NauraCoin:1534169156520513677>', id: '1534169156520513677', name: 'NauraCoin', animated: true },
+    [COUPON]: { raw: '<:NauraCoupon:1534169148807053472>', id: '1534169148807053472', name: 'NauraCoupon', animated: false }
+};
+
 const CURRENCIES = {
     [FRAGMENT]: {
         kind: FRAGMENT,
         name: 'Naura Star Fragment',
         short: 'NSF',
         emojiKey: 'nsf',
-        emojiFallback: '\u2728',
+        emojiFallback: EMOJI[FRAGMENT].raw,
         field: 'starFragments',
         owner: 'survival'
     },
@@ -28,7 +37,7 @@ const CURRENCIES = {
         name: 'Naura Coin',
         short: 'Coin',
         emojiKey: 'coin',
-        emojiFallback: '\uD83E\uDE99',
+        emojiFallback: EMOJI[COIN].raw,
         field: 'economy_wallet',
         owner: 'profile'
     },
@@ -37,7 +46,7 @@ const CURRENCIES = {
         name: 'Naura Coupon',
         short: 'Coupon',
         emojiKey: 'coupon',
-        emojiFallback: '\uD83C\uDF9F\uFE0F',
+        emojiFallback: EMOJI[COUPON].raw,
         // Disimpan di dalam rpg_state supaya tidak perlu migrasi kolom baru.
         field: 'coupons',
         owner: 'survivalState'
@@ -75,6 +84,15 @@ function currencyFor(location) {
 function emojiOf(currency) {
     const c = typeof currency === 'string' ? byKind(currency) : currency;
     return ui.getEmoji(c.emojiKey) || c.emojiFallback;
+}
+
+// Menu pilihan Discord menolak emoji berbentuk teks, jadi komponen select harus
+// memakai bentuk objek ini.
+function emojiObjectOf(currency) {
+    const c = typeof currency === 'string' ? byKind(currency) : currency;
+    const entry = EMOJI[c.kind];
+    if (!entry) return undefined;
+    return { id: entry.id, name: entry.name, animated: entry.animated };
 }
 
 function format(currency, amount) {
@@ -189,12 +207,14 @@ module.exports = {
     COIN,
     COUPON,
     FRAGMENT_PER_COIN,
+    EMOJI,
     CURRENCIES,
     LOCATION_CURRENCY,
     currencyKindFor,
     currencyFor,
     byKind,
     emojiOf,
+    emojiObjectOf,
     format,
     balanceOf,
     setBalance,

@@ -1,41 +1,92 @@
-// Lokasi: src/helpers/MusicAnalytics.js
+// Perekam analitik musik per pengguna.
 
-const UserProfile = require('../../src/models/UserProfile');
 const { logger } = require('../../src/managers/logger');
+const cacheManager = require('../../src/managers/cacheManager');
+
+// Batas jumlah kunci per kantong. Tanpa ini kolom JSON tumbuh tanpa henti
+// dan ditulis ulang penuh setiap lagu berakhir.
+const LIMITS = { tracks: 50, servers: 25, friends: 50 };
+
+const MIN_DURATION_MS = 5000;
+const MAX_DURATION_MS = 360000000; // 100 jam, penyaring radio dan siaran langsung
+
+// Data lama menyimpan angka mentah, data baru menyimpan objek bernama.
+// Kedua bentuk harus tetap terbaca.
+function msOf(value) {
+    if (value && typeof value === 'object') return Number(value.durationMs) || 0;
+    return Number(value) || 0;
+}
+
+function labelOf(key, value) {
+    if (value && typeof value === 'object' && value.name) return value.name;
+    return key;
+}
+
+function bump(bucket, key, label, durationMs) {
+    const previous = bucket[key];
+    bucket[key] = {
+        name: labelOf(label, previous),
+        durationMs: msOf(previous) + durationMs
+    };
+}
+
+function prune(bucket, limit) {
+    const keys = Object.keys(bucket);
+    if (keys.length <= limit) return bucket;
+
+    const kept = keys.sort((a, b) => msOf(bucket[b]) - msOf(bucket[a])).slice(0, limit);
+    const trimmed = {};
+    for (const key of kept) trimmed[key] = bucket[key];
+    return trimmed;
+}
+
+function topOf(bucket, fallback) {
+    let best = { name: fallback, durationMs: 0 };
+    for (const [key, value] of Object.entries(bucket)) {
+        const ms = msOf(value);
+        if (ms > best.durationMs) best = { name: labelOf(key, value), durationMs: ms };
+    }
+    return best;
+}
+
+function normalizeBuckets(raw) {
+    let data = raw;
+    if (typeof data === 'string') {
+        try {
+            data = JSON.parse(data);
+        } catch (e) {
+            data = {};
+        }
+    }
+    if (!data || typeof data !== 'object') data = {};
+
+    return {
+        tracks: data.tracks && typeof data.tracks === 'object' ? data.tracks : {},
+        servers: data.servers && typeof data.servers === 'object' ? data.servers : {},
+        friends: data.friends && typeof data.friends === 'object' ? data.friends : {}
+    };
+}
 
 class MusicAnalytics {
-    /**
-     * Panggil ini saat lagu baru saja dimulai (trackStart)
-     */
     static markStart(player) {
         if (!player) return;
         player.analyticsStartTime = Date.now();
     }
 
-    /**
-     * Panggil ini saat lagu selesai, di-skip, atau dihentikan (trackEnd)
-     * Helper ini akan kebal dari segala jenis error JSON MySQL.
-     */
     static async recordEnd(client, player, track) {
-        // 1. Validasi Dasar (Mencegah Error)
         if (!client || !player || !track || !track.info) return;
         if (!track.info.requester || track.info.requester.bot) return;
 
-        // 2. Kalkulasi Durasi Asli (Seperti Jockie Music)
-        // Menggunakan posisi Lavalink asli, atau fallback ke Stopwatch
         const startTime = player.analyticsStartTime || Date.now();
-        let durationMs = player.position || (Date.now() - startTime);
+        const position = Number(player.position) || 0;
+        let durationMs = position > 0 ? position : Date.now() - startTime;
 
-        // Reset waktu agar tidak bocor ke lagu selanjutnya
         player.analyticsStartTime = null;
 
-        // Filter Keamanan:
-        // - Abaikan jika kurang dari 5 detik (User cuma numpang skip)
-        // - Abaikan jika lebih dari 100 jam (Lagu Live Stream/Radio)
-        if (durationMs < 5000 || durationMs > 360000000) return;
-        
-        // Batasi durasi agar tidak melebihi panjang asli lagunya
-        if (durationMs > track.info.length && !track.info.isStream) {
+        if (durationMs < MIN_DURATION_MS || durationMs > MAX_DURATION_MS) return;
+
+        // Jangan melebihi panjang asli lagunya.
+        if (!track.info.isStream && track.info.length && durationMs > track.info.length) {
             durationMs = track.info.length;
         }
 
@@ -44,63 +95,44 @@ class MusicAnalytics {
 
         try {
             const userId = track.info.requester.id;
-            const cacheManager = require('../../src/managers/cacheManager');
             const profile = await cacheManager.getUserProfile(userId);
             if (!profile) return;
 
-            // 3. Update Statistik Dasar
-            const tracksListened = (profile.music_tracksListened || 0) + 1;
-            const totalDurationMs = (BigInt(profile.music_totalDurationMs || 0) + BigInt(durationMs)).toString();
-            const lastListened = track.info.title.substring(0, 100);
+            const buckets = normalizeBuckets(profile.music_trackingData);
 
-            // 4. Penanganan Super Aman untuk JSON MySQL (Anti-Bug)
-            let trackingData = profile.music_trackingData;
-            if (typeof trackingData === 'string') {
-                try { trackingData = JSON.parse(trackingData); } catch (e) { trackingData = {}; }
-            }
-            if (!trackingData || typeof trackingData !== 'object') trackingData = {};
+            const title = String(track.info.title || 'Tanpa Judul');
+            bump(buckets.tracks, title.substring(0, 80), title.substring(0, 80), durationMs);
 
-            if (!trackingData.tracks) trackingData.tracks = {};
-            if (!trackingData.servers) trackingData.servers = {};
-            if (!trackingData.friends) trackingData.friends = {};
-
-            const trackKey = track.info.title.substring(0, 80);
-            trackingData.tracks[trackKey] = (trackingData.tracks[trackKey] || 0) + durationMs;
-
-            const guildName = guild ? guild.name.substring(0, 80) : 'Private DM';
-            trackingData.servers[guildName] = (trackingData.servers[guildName] || 0) + durationMs;
+            const guildKey = guild ? guild.id : 'dm';
+            const guildName = guild ? guild.name.substring(0, 80) : 'Pesan Pribadi';
+            bump(buckets.servers, guildKey, guildName, durationMs);
 
             if (voiceChannel && voiceChannel.members) {
                 voiceChannel.members.forEach(m => {
-                    if (!m.user.bot && m.id !== userId) {
-                        trackingData.friends[m.user.username] = (trackingData.friends[m.user.username] || 0) + durationMs;
-                    }
+                    if (m.user.bot || m.id === userId) return;
+                    bump(buckets.friends, m.id, m.user.username, durationMs);
                 });
             }
 
-            const getTop = (obj) => {
-                let maxVal = 0;
-                let topName = 'Belum Ada';
-                for (const [key, val] of Object.entries(obj)) {
-                    if (val > maxVal) {
-                        maxVal = val;
-                        topName = key;
-                    }
-                }
-                return { name: topName, durationMs: maxVal };
-            };
+            buckets.tracks = prune(buckets.tracks, LIMITS.tracks);
+            buckets.servers = prune(buckets.servers, LIMITS.servers);
+            buckets.friends = prune(buckets.friends, LIMITS.friends);
+
+            const total = (
+                BigInt(profile.music_totalDurationMs || 0) + BigInt(Math.round(durationMs))
+            ).toString();
 
             await cacheManager.updateUserProfile(userId, {
-                music_tracksListened: tracksListened,
-                music_totalDurationMs: totalDurationMs,
-                music_lastListened: lastListened,
-                music_trackingData: trackingData,
-                music_topTrack: getTop(trackingData.tracks),
-                music_topServer: getTop(trackingData.servers),
-                music_topFriend: getTop(trackingData.friends)
+                music_tracksListened: (profile.music_tracksListened || 0) + 1,
+                music_totalDurationMs: total,
+                music_lastListened: title.substring(0, 100),
+                music_trackingData: buckets,
+                music_topTrack: topOf(buckets.tracks, 'Belum ada data'),
+                music_topServer: topOf(buckets.servers, 'Belum ada server'),
+                music_topFriend: topOf(buckets.friends, 'Belum mabar')
             });
         } catch (error) {
-            logger.error('[Helper] Gagal merekam analitik musik:', error.message);
+            logger.error('[MusicAnalytics] Gagal merekam analitik:', error.message);
         }
     }
 }
