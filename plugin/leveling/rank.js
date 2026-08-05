@@ -1,165 +1,154 @@
 /**
- * @namespace: src/commands/utility/rank.js
+ * @namespace: plugin/leveling/rank.js
  * @type: Command
- * @copyright © 2026 Aryandita Praftian
+ * @copyright 2026 Aryandita Praftian
  * @assistant Naura Hoshino
- * @version 1.0.1
- * @description Menampilkan kartu profil level lokal (per-server) yang mewah & terstruktur.
+ * @version 1.1.0
+ * @description Kartu profil level per server.
  */
 
-const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 const { logger } = require('../../src/managers/logger');
-const { Op } = require('sequelize'); // Diperlukan untuk kalkulasi ranking
+const { Op } = require('sequelize');
 const { CanvasUtils } = require('../../plugin/canvas/Canvas');
 const UserLeveling = require('../../src/models/UserLeveling');
-const UserProfile = require('../../src/models/UserProfile');
-const UserCosmetic = require('../../src/models/UserCosmetic');
-const CanvasAsset = require('../../src/models/CanvasAsset');
-const { getNextLevelXp } = require('../../plugin/leveling/leveling');
+const cacheManager = require('../../src/managers/cacheManager');
 const ui = require('../../src/config/ui');
+const { getNextLevelXp, getRoleBadge } = require('./leveling');
+const rankCard = require('./rankCard');
+const { buildContainerV2, buildErrorContainerV2 } = require('../../src/utils/NauraContainerBuilder');
+
+const DEFAULT_MANNERS = 100;
+
+function sendErrorReply(interaction, description, isSlash) {
+    const payload = buildErrorContainerV2({
+        title: 'Aduh, gagal',
+        description,
+        footerText: ui.getFooter('core')
+    });
+    if (isSlash) return interaction.editReply(payload).catch(() => {});
+    return interaction.reply(payload).catch(() => {});
+}
+
+function isPremiumActive(profile) {
+    if (!profile || !profile.isPremium) return false;
+    if (!profile.premiumUntil) return Boolean(profile.isPremium);
+    return new Date(profile.premiumUntil) > new Date();
+}
+
+// Poin tata krama tinggal di profil global. Tabel leveling hanya dipakai
+// sebagai cadangan untuk data lama.
+function mannersOf(profile, levelRow) {
+    if (profile && profile.mannersPoint !== undefined && profile.mannersPoint !== null) {
+        return profile.mannersPoint;
+    }
+    if (levelRow && levelRow.mannersPoint !== undefined && levelRow.mannersPoint !== null) {
+        return levelRow.mannersPoint;
+    }
+    return DEFAULT_MANNERS;
+}
 
 module.exports = {
-    // 1. DEFINISI COMMAND (SLASH & PREFIX)
     data: new SlashCommandBuilder()
         .setName('rank')
-        .setDescription('🌟 Lihat Kartu Profil Eksklusif dinamis kamu di server ini!')
+        .setDescription('Lihat kartu profil level kamu di server ini')
         .addUserOption(option =>
             option.setName('target').setDescription('Lihat profil milik orang lain').setRequired(false)
         ),
-    aliases: ['profile', 'level', 'xp'], // n!rank, n!profile
+    aliases: ['profile', 'level', 'xp'],
 
     async execute(interaction) {
-        // --- PRE-EXECUTION SETTINGS ---
         const isSlash = typeof interaction.deferReply === 'function';
         if (isSlash) await interaction.deferReply();
 
-        // Menentukan Target Pengguna
-        const targetUser = (interaction.options && typeof interaction.options.getUser === 'function')
-            ? interaction.options.getUser('target') || interaction.user
-            : interaction.user;
+        const targetUser =
+            interaction.options && typeof interaction.options.getUser === 'function'
+                ? interaction.options.getUser('target') || interaction.user
+                : interaction.user;
 
         const guildId = interaction.guild.id;
-        const cacheManager = require('../../src/managers/cacheManager');
-        const redisManager = require('../../src/managers/redisManager');
 
-        // ==========================================
-        // 💾 1. LOGIKA DATABASE (PENGAMBILAN DATA VIA CACHE)
-        // ==========================================
-        let userData;
-        let userProfile;
+        let levelRow;
+        let profile;
         try {
-            userData = await UserLeveling.findOne({
-                where: { userId: targetUser.id, guildId: guildId }
-            });
-            userProfile = await cacheManager.getUserProfile(targetUser.id);
+            levelRow = await UserLeveling.findOne({ where: { userId: targetUser.id, guildId } });
+            profile = await cacheManager.getUserProfile(targetUser.id);
         } catch (error) {
-            logger.error('\x1b[31m[RANK ERROR]\x1b[0m Gagal mengakses MySQL:', error);
-            return sendErrorReply(interaction, '❌ Gagal menghubungkan ke database MySQL.', isSlash);
+            logger.error('[RANK] Gagal mengakses basis data:', error);
+            return sendErrorReply(
+                interaction,
+                'Naura belum bisa menjangkau basis data. Coba sebentar lagi ya?',
+                isSlash
+            );
         }
 
-        // ==========================================
-        // 📊 2. LOGIKA KALKULASI (NULL GUARD & RANK)
-        // ==========================================
+        const level = levelRow ? levelRow.level : 1;
+        const xp = levelRow ? levelRow.xp : 0;
+        const targetXp = getNextLevelXp(level);
 
-        // A. Statistik Level & XP (Default jika data kosong)
-        const currentLevel = userData ? userData.level : 1;
-        const currentXp = userData ? userData.xp : 0;
-        const targetXp = getNextLevelXp(currentLevel);
-
-        // B. Kalkulasi Ranking Lokal (Server Rank)
         let localRank = 'N/A';
-        if (userData) {
-            // Menghitung berapa banyak user yang XP-nya lebih tinggi
-            const higherUsers = await UserLeveling.count({
-                where: { guildId: guildId, xp: { [Op.gt]: currentXp } }
-            });
-            localRank = `#${higherUsers + 1}`;
+        if (levelRow) {
+            try {
+                const higher = await UserLeveling.count({
+                    where: { guildId, xp: { [Op.gt]: xp } }
+                });
+                localRank = `#${higher + 1}`;
+            } catch (error) {
+                logger.error('[RANK] Gagal menghitung peringkat:', error.message);
+            }
         }
 
-        // C. Kalkulasi Gelar (Badge) berdasarkan Level
-        let roleBadge = '✧ Pendatang Baru';
-        if (currentLevel >= 100) roleBadge = '✦ Legenda Abadi ✦';
-        else if (currentLevel >= 50) roleBadge = '✧ Pahlawan Senior';
-        else if (currentLevel >= 25) roleBadge = '✧ Petualang Tangguh';
-        else if (currentLevel >= 10) roleBadge = '✧ Pengembara Berbakat';
+        const isPremium = isPremiumActive(profile);
+        const roleBadge = getRoleBadge(level, isPremium);
 
-        // Premium Override
-        const isPremium = userProfile ? userProfile.isPremium : false;
-        if (isPremium) roleBadge = '👑 V.I.P Premium';
-
-        // D. Cek Kosmetik Aktif (Background & Border)
-        let activeBgUrl = null;
-        let activeBorderUrl = null;
-
+        let card;
         try {
-            const activeCosmetics = await UserCosmetic.findAll({
-                where: { userId: targetUser.id, isActive: true },
-                include: [{ model: CanvasAsset, as: 'asset' }]
+            card = await rankCard.buildCard({
+                userId: targetUser.id,
+                guildId,
+                level,
+                xp,
+                targetXp,
+                render: cosmetics =>
+                    CanvasUtils.generateRankCard(
+                        targetUser,
+                        level,
+                        xp,
+                        targetXp,
+                        localRank,
+                        roleBadge,
+                        isPremium,
+                        cosmetics.bg,
+                        cosmetics.border
+                    )
             });
-
-            for (const cosmetic of activeCosmetics) {
-                if (cosmetic.asset) {
-                    if (cosmetic.asset.type === 'background') activeBgUrl = cosmetic.asset.url;
-                    if (cosmetic.asset.type === 'border') activeBorderUrl = cosmetic.asset.url;
-                }
-            }
-        } catch (err) {
-            logger.error('[RANK] Gagal mengambil data kosmetik:', err);
-        }
-
-        // ==========================================
-        // 🖼️ 3. LOGIKA GRAFIS (GENERATOR CANVAS / CACHE)
-        // ==========================================
-        let imageBuffer;
-        const rankCardCacheKey = `rank:card:${targetUser.id}:${guildId}:${currentXp}`;
-        try {
-            const cachedBufferBase64 = await redisManager.getCache(rankCardCacheKey);
-            if (cachedBufferBase64) {
-                imageBuffer = Buffer.from(cachedBufferBase64, 'base64');
-            } else {
-                // Memanggil fungsi generateRankCard (ANTI TABRAKAN)
-                const canvas = await CanvasUtils.generateRankCard(
-                    targetUser, currentLevel, currentXp, targetXp, localRank, roleBadge, isPremium, activeBgUrl, activeBorderUrl
-                );
-
-                // Konversi Canvas ke Buffer (Mendukung @napi-rs/canvas)
-                if (canvas && typeof canvas.encodeSync === 'function') {
-                    imageBuffer = canvas.encodeSync('webp');
-                } else if (canvas && typeof canvas.toBuffer === 'function') {
-                    imageBuffer = canvas.toBuffer('image/png');
-                } else {
-                    imageBuffer = canvas; // Asumsi sudah berupa buffer
-                }
-
-                // Cache rank card buffer selama 5 menit (300 detik)
-                if (imageBuffer && Buffer.isBuffer(imageBuffer)) {
-                    await redisManager.setCache(rankCardCacheKey, imageBuffer.toString('base64'), 300);
-                }
-            }
-
         } catch (error) {
-            logger.error('\x1b[31m[RANK CANVAS ERROR]\x1b[0m Gagal merender:', error);
-            return sendErrorReply(interaction, '❌ Gagal merender grafis kartu profil.', isSlash);
+            logger.error('[RANK] Gagal merender kartu:', error);
+            return sendErrorReply(
+                interaction,
+                'Naura gagal menggambar kartu kamu. Nanti Naura coba lagi ya!',
+                isSlash
+            );
         }
 
-        const attachment = new AttachmentBuilder(imageBuffer, { name: 'naura-prestige.webp' });
-
-        // ==========================================
-        // 🖥️ 4. LOGIKA UI (EMBED ASSEMBLY & SEND)
-        // ==========================================
-        // ==========================================
-        // 🖥️ 4. LOGIKA UI (COMPONENTS V2 ASSEMBLY & SEND)
-        // ==========================================
-        const { buildContainerV2 } = require('../../src/utils/NauraContainerBuilder');
-        const embedColor = isPremium ? '#FFD700' : (currentLevel >= 50 ? '#FFD700' : (ui.getColor ? ui.getColor('primary') : '#00FFFF'));
+        const attachment = new AttachmentBuilder(card.buffer, { name: 'naura-prestige.webp' });
+        const accent = isPremium || level >= 50 ? '#FFD700' : ui.getColor('primary');
+        const manners = mannersOf(profile, levelRow);
 
         const payload = buildContainerV2({
-            accentColorHex: embedColor,
-            authorName: '✦   𝐏 𝐑 𝐄 𝐒 𝐓 𝐈 𝐆 𝐄   𝐏 𝐑 𝐎 𝐅 𝐈 𝐋 𝐄   ✦',
-            title: `🌟 Kartu Rank ${targetUser.username}`,
+            accentColorHex: accent,
+            authorName: 'Kartu Prestise',
+            title: `Kartu Rank ${targetUser.username}`,
             iconURL: targetUser.displayAvatarURL(),
+            expression: 'achievement',
             fields: [
-                { name: '📜 Sertifikat Registrasi', value: `\`Status Wilayah: Tersinkronisasi dengan ${interaction.guild.name}\`\n🛡️ \`Poin Tata Krama: ${userData ? (userData.mannersPoint !== undefined ? userData.mannersPoint : 100) : 100}/100\`` }
+                {
+                    name: 'Sertifikat Registrasi',
+                    value:
+                        `Wilayah tersinkron dengan **${interaction.guild.name}**\n` +
+                        `Poin tata krama: **${manners}/${DEFAULT_MANNERS}**\n` +
+                        `Peringkat server: **${localRank}** dengan gelar **${roleBadge}**`
+                }
             ],
             bannerAttachmentName: 'naura-prestige.webp',
             footerText: ui.getFooter('core')
@@ -167,19 +156,7 @@ module.exports = {
 
         payload.files = [attachment];
 
-        // Pengiriman Akhir
-        if (isSlash) {
-            await interaction.editReply(payload);
-        } else {
-            await interaction.reply(payload);
-        }
+        if (isSlash) return interaction.editReply(payload);
+        return interaction.reply(payload);
     }
 };
-
-// --- FUNGSI UTILITAS LOKAL (HELPER) ---
-function sendErrorReply(interaction, message, isSlash) {
-    const { buildErrorContainerV2 } = require('../../src/utils/NauraContainerBuilder');
-    const errPayload = buildErrorContainerV2({ title: 'Gagal', description: message, footerText: ui.getFooter('core') });
-    if (isSlash) return interaction.editReply(errPayload).catch(() => { });
-    return interaction.reply(errPayload).catch(() => { });
-}
