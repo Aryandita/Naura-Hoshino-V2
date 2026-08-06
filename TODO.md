@@ -1,4 +1,4 @@
-# TODO — Naura Hoshino V.2
+# TODO Naura Hoshino V2
 
 Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
 
@@ -13,17 +13,26 @@ Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
 - [x] Perbaiki versi `sqlite3` yang tidak ada di registry
 - [x] Guard `translateSync()` terhadap kode bahasa `undefined`
 - [ ] Jalankan dashboard hanya di satu proses dan verifikasi tidak ada `EADDRINUSE`
-- [ ] Isi `SESSION_SECRET` di produksi dan verifikasi tanda tangan webhook Saweria/Top.gg
+- [x] Isi `SESSION_SECRET` di produksi dan verifikasi tanda tangan webhook Saweria/Top.gg
 
 ## 🧹 Kebersihan Kode
 
-- [ ] Pilih satu SDK Gemini: `@google/genai` **atau** `@google/generative-ai`
+- [x] Pilih satu SDK Gemini: `@google/genai` **atau** `@google/generative-ai`
 - [ ] Pilih satu penjadwal: `cron` **atau** `node-cron`
 - [ ] Hapus atau aktifkan `src/managers/EventHandler.js` yang tidak terpakai
 - [ ] Ganti monkey-patch `ephemeral` di `index.js` dengan `flags` di tiap pemanggilan
-- [ ] Pecah `src/dashboard/server.js` (64 KB) menjadi beberapa router
+- [x] Pecah `src/dashboard/server.js` (64 KB) menjadi beberapa router
 - [ ] Pecah `plugin/core/core.js` (39 KB) dan `src/config/ui.js` (30 KB)
+- [x] Pecah `src/events/interactionCreate.js` (43 KB) menjadi router tipis + registry
 - [ ] Bereskan seluruh peringatan `npm run lint`
+- [ ] Hapus `@google/generative-ai` dari `package.json` (sudah tidak dipakai berkas mana pun)
+- [ ] Pastikan `@xenova/transformers` dan `tesseract.js` benar-benar tidak terpakai, lalu hapus
+
+## ✍️ Gaya Tulisan
+
+- [x] Tambah `scripts/check-em-dash.js` sebagai pemindai otomatis
+- [ ] Bersihkan sisa em dash pada kamus bahasa dan string dalam kode
+- [ ] Aktifkan pemindai di CI setelah repo bersih
 
 ## 🌐 Bilingual (ID / EN)
 
@@ -45,12 +54,12 @@ Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
 
 ## 🧩 Plugin
 
-- [ ] `survival` — rapikan 33 subcommand, satukan helper yang berulang
-- [ ] `core` — rombak menu `/help` beserta pemilih bahasa
-- [ ] `music` — tinjau penanganan error Lavalink
-- [ ] `ai` — rapikan rantai fallback penyedia AI
-- [ ] `canvas` & `leveling` — optimalkan rendering dan cache
-- [ ] `admin` & `utility` — audit izin dan konsistensi respons
+- [ ] `survival`: rapikan 33 subcommand, satukan helper yang berulang
+- [ ] `core`: rombak menu `/help` beserta pemilih bahasa
+- [ ] `music`: tinjau penanganan error Lavalink
+- [x] `ai`: rapikan rantai fallback penyedia AI
+- [ ] `canvas` dan `leveling`: optimalkan rendering dan cache
+- [ ] `admin` dan `utility`: audit izin dan konsistensi respons
 
 ---
 

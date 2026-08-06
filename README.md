@@ -2,7 +2,7 @@
 
 # 🌸 Naura Hoshino V2
 
-**Bot Discord serbaguna berbasis `discord.js` v14** — UI Canvas modern, ekonomi & survival, musik Lavalink, AI berlapis, dan Web Dashboard realtime.
+**Bot Discord serbaguna berbasis `discord.js` v14** dengan UI Canvas modern, ekonomi & survival, musik Lavalink, AI berlapis, dan Web Dashboard realtime.
 
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D%2020.6.0-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.js.org)
@@ -19,7 +19,7 @@
 </div>
 
 > [!NOTE]
-> Proyek ini masih dalam pengembangan aktif. Beberapa modul sedang dirapikan — lihat [`TODO.md`](TODO.md) dan tab **Issues** untuk daftar pekerjaan yang sedang berjalan.
+> Proyek ini masih dalam pengembangan aktif. Beberapa modul sedang dirapikan, lihat [`TODO.md`](TODO.md) dan tab **Issues** untuk daftar pekerjaan yang sedang berjalan.
 
 ---
 
@@ -104,7 +104,7 @@ Leveling, giveaway, minigame, global chat, starboard, QOTD, dan pemberitahuan ul
 
 | | Komponen | Versi | Keterangan |
 |:-:|---|:-:|---|
-| 🟢 | **Node.js** | `>= 20.6.0` | Wajib — kode memakai `process.loadEnvFile()` |
+| 🟢 | **Node.js** | `>= 20.6.0` | Wajib, karena kode memakai `process.loadEnvFile()` |
 | 🐬 | **MySQL** | `8.x` | Basis data utama (ada fallback SQLite) |
 | 🔴 | **Redis** | opsional | Cache & Pub/Sub. Dilewati bila `REDIS_URL` kosong |
 | 🎧 | **Lavalink** | `v4` | Hanya untuk fitur musik |
@@ -131,7 +131,7 @@ npm start
 
 | Perintah | Fungsi |
 |---|---|
-| 🚀 `npm start` | Menjalankan bot lewat ShardingManager (`shard.js`) — **cara produksi** |
+| 🚀 `npm start` | Menjalankan bot lewat ShardingManager (`shard.js`). **Cara produksi** |
 | 🔄 `npm run dev` | Sama seperti di atas, dengan auto-restart `--watch` |
 | 📤 `npm run deploy` | Memaksa registrasi ulang slash command |
 | 📦 `npm run install-start` | Pasang dependensi lalu langsung jalankan |
@@ -143,6 +143,15 @@ npm start
 | 🚨 `npm run locales:check:strict` | Sama, tetapi gagal bila ada kunci yang hilang |
 
 Slash command dideploy otomatis saat boot oleh **shard utama saja**. Gunakan `--no-deploy` untuk melewatinya.
+
+### Pemeriksaan gaya tulisan
+
+```bash
+node scripts/check-em-dash.js          # laporkan setiap em dash yang tersisa
+node scripts/check-em-dash.js --fix    # perbaiki otomatis, lalu periksa diff
+```
+
+Em dash membuat teks terasa seperti keluaran mesin. Skrip ini menjaga seluruh dokumentasi, kamus bahasa, dan string dalam kode tetap bebas dari karakter itu.
 
 ---
 
@@ -167,10 +176,10 @@ Bot berhenti sebelum shard di-spawn bila salah satu di bawah ini kosong.
 | Variabel | Default | Keterangan |
 |---|---|---|
 | `PREFIX` | `n!` | Prefix perintah teks |
-| `GUILD_ID` | — | Server untuk deploy command instan saat pengembangan |
-| `OWNER_IDS` | — | Daftar ID owner, dipisah koma |
-| `STAFF_GUILD_ID` | — | Server staf untuk ModMail |
-| `MODMAIL_CATEGORY_ID` | — | Kategori channel ModMail |
+| `GUILD_ID` | kosong | Server untuk deploy command instan saat pengembangan |
+| `OWNER_IDS` | kosong | Daftar ID owner, dipisah koma |
+| `STAFF_GUILD_ID` | kosong | Server staf untuk ModMail |
+| `MODMAIL_CATEGORY_ID` | kosong | Kategori channel ModMail |
 
 </details>
 
@@ -181,8 +190,8 @@ Bot berhenti sebelum shard di-spawn bila salah satu di bawah ini kosong.
 |---|---|---|
 | `MYSQL_HOST` | `127.0.0.1` | Host database |
 | `MYSQL_PORT` | `3306` | Port database |
-| `MYSQL_PASSWORD` | — | Password database |
-| `REDIS_URL` | — | Cache & Pub/Sub. Redis dilewati bila kosong |
+| `MYSQL_PASSWORD` | kosong | Password database |
+| `REDIS_URL` | kosong | Cache & Pub/Sub. Redis dilewati bila kosong |
 
 </details>
 
@@ -203,11 +212,11 @@ Bot berhenti sebelum shard di-spawn bila salah satu di bawah ini kosong.
 
 | Variabel | Default | Keterangan |
 |---|---|---|
-| `GEMINI_API_KEY` | — | Penyedia AI utama |
-| `VERBA_API_KEY` | — | Persona AI |
-| `VERBA_SLUG_OWNER` | — | Slug persona untuk owner |
-| `VERBA_SLUG_PREMIUM` | — | Slug persona untuk pengguna premium |
-| `VERBA_SLUG_GENERAL` | — | Slug persona umum |
+| `GEMINI_API_KEY` | kosong | Penyedia AI utama, dipakai lewat `@google/genai` |
+| `VERBA_API_KEY` | kosong | Persona AI |
+| `VERBA_SLUG_OWNER` | kosong | Slug persona untuk owner |
+| `VERBA_SLUG_PREMIUM` | kosong | Slug persona untuk pengguna premium |
+| `VERBA_SLUG_GENERAL` | kosong | Slug persona umum |
 | `OLLAMA_BASE_URL` | `http://localhost:11434` | Fallback AI lokal |
 | `OLLAMA_MODEL` | `llama3.1` | Model Ollama |
 | `FOOOCUS_BASE_URL` | `http://localhost:7865` | Generasi gambar lokal |
@@ -221,14 +230,14 @@ Bot berhenti sebelum shard di-spawn bila salah satu di bawah ini kosong.
 |---|---|---|
 | `PORT` / `SERVER_PORT` / `DASHBOARD_PORT` | `3070` | Port dashboard (urutan prioritas) |
 | `WEBHOOK_PORT` | `3071` | Port penerima webhook |
-| `SESSION_SECRET` | — | 🔴 **Wajib di produksi.** Dashboard menolak menyala tanpa ini |
-| `DISCORD_CALLBACK_URL` | — | Callback OAuth2 |
-| `DASHBOARD_ORIGIN` | — | Daftar origin yang boleh mengakses lintas domain |
+| `SESSION_SECRET` | kosong | 🔴 **Wajib di produksi.** Dashboard menolak menyala tanpa ini |
+| `DISCORD_CALLBACK_URL` | kosong | Callback OAuth2 |
+| `DASHBOARD_ORIGIN` | kosong | Daftar origin yang boleh mengakses lintas domain |
 | `OWNER_EVAL_ENABLED` | `false` | Endpoint `eval` owner. Biarkan mati kecuali sedang debugging |
-| `ERROR_WEBHOOK_URL` | — | Webhook laporan error |
-| `WEBHOOK_AUTH_SAWERIA` | — | Token webhook Saweria |
-| `WEBHOOK_AUTH_TRAKTEER` | — | Token webhook Trakteer |
-| `WEBHOOK_AUTH_VOTE` | — | Token webhook Top.gg |
+| `ERROR_WEBHOOK_URL` | kosong | Webhook laporan error |
+| `WEBHOOK_AUTH_SAWERIA` | kosong | Token webhook Saweria |
+| `WEBHOOK_AUTH_TRAKTEER` | kosong | Token webhook Trakteer |
+| `WEBHOOK_AUTH_VOTE` | kosong | Token webhook Top.gg |
 
 > [!CAUTION]
 > Endpoint webhook **menolak seluruh permintaan (503)** selama token yang bersangkutan belum diisi. Ini disengaja: endpoint donasi memberi premium berdasarkan ID Discord di dalam pesan donasi, jadi membiarkannya terbuka sama dengan membagikan premium gratis.
@@ -240,7 +249,7 @@ Bot berhenti sebelum shard di-spawn bila salah satu di bawah ini kosong.
 
 | Variabel | Default | Keterangan |
 |---|---|---|
-| `FFMPEG_PATH` | — | Isi hanya bila host menyediakan binary FFmpeg sendiri |
+| `FFMPEG_PATH` | kosong | Isi hanya bila host menyediakan binary FFmpeg sendiri |
 | `BOT_VERSION` | `1.2.0` | Ditampilkan di perintah info |
 | `ENGINE_VERSION` | `1.1.0` | Ditampilkan di perintah info |
 | `PARTNERSHIP` | `Belum ada kolaborasi` | Teks kolaborasi di embed info |
@@ -269,6 +278,7 @@ Bot berhenti sebelum shard di-spawn bila salah satu di bawah ini kosong.
    │  ├─ sockets/            # Statistik & kendali musik realtime
    │  └─ utils/              # Format, hadiah vote, penjaga HTTP
    ├─ 📡 events/             # Event listener Discord
+   ├─ 🎛️  interactions/      # Router interaksi: registry, tombol, select, modal
    ├─ 🧠 managers/           # Database, cache, cron, bahasa, logger, dll
    ├─ 🗃️  models/            # Model Sequelize
    └─ 🛠️  utils/             # Builder embed/container dan helper
@@ -314,7 +324,7 @@ Daftar lengkapnya ada di [`src/utils/nauraExpression.js`](src/utils/nauraExpress
 
 <div align="center">
 
-**ISC** © 2026 Aryandita Praftian — lihat berkas [`LICENSE`](LICENSE)
+**ISC** © 2026 Aryandita Praftian. Lihat berkas [`LICENSE`](LICENSE)
 
 Dibuat dengan 💜 untuk komunitas Discord Indonesia
 
