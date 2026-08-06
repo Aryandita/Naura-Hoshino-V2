@@ -17,13 +17,18 @@ class RedisManager {
         this.client.on('reconnecting', () => logger.warn('[Redis] Mencoba reconnect ke Redis...'));
     }
 
+    /** Satu-satunya sumber kebenaran untuk mengecek kesiapan Redis. */
+    get isReady() {
+        return Boolean(this.client && this.client.isReady);
+    }
+
     async connect() {
         if (!this.client) return;
         await this.client.connect();
     }
 
     async setCache(key, data, expirationInSeconds = 3600) {
-        if (!this.client || !this.client.isReady) return;
+        if (!this.isReady) return;
         try {
             await this.client.setEx(key, expirationInSeconds, JSON.stringify(data));
         } catch (error) {
@@ -32,7 +37,7 @@ class RedisManager {
     }
 
     async getCache(key) {
-        if (!this.client || !this.client.isReady) return null;
+        if (!this.isReady) return null;
         try {
             const data = await this.client.get(key);
             if (data) return JSON.parse(data);
@@ -44,8 +49,48 @@ class RedisManager {
     }
 
     async deleteCache(key) {
-        if (!this.client || !this.client.isReady) return;
-        await this.client.del(key);
+        if (!this.isReady) return;
+        try {
+            await this.client.del(key);
+        } catch (error) {
+            // Tanpa penjaga ini, Redis yang putus di tengah invalidasi cache akan
+            // menjadi unhandled rejection dan bisa menjatuhkan seluruh shard.
+            logger.error('[Redis] Gagal menghapus cache:', error.message);
+        }
+    }
+
+    /**
+     * Menaikkan counter secara atomik. TTL hanya dipasang saat counter pertama kali
+     * dibuat, sehingga window tetap tetap (fixed window) dan tidak ikut mundur
+     * setiap kali ada request baru.
+     *
+     * @param {string} key
+     * @param {number} [expirationInSeconds]
+     * @returns {Promise<number|null>} Nilai counter setelah dinaikkan, atau null bila Redis tidak siap.
+     */
+    async increment(key, expirationInSeconds) {
+        if (!this.isReady) return null;
+        try {
+            const value = await this.client.incr(key);
+            if (value === 1 && expirationInSeconds) {
+                await this.client.expire(key, expirationInSeconds);
+            }
+            return value;
+        } catch (error) {
+            logger.error('[Redis] Gagal menaikkan counter:', error.message);
+            return null;
+        }
+    }
+
+    /** Sisa umur sebuah key dalam detik. -1 bila tanpa TTL, -2 bila tidak ada. */
+    async getTtl(key) {
+        if (!this.isReady) return -2;
+        try {
+            return await this.client.ttl(key);
+        } catch (error) {
+            logger.error('[Redis] Gagal membaca TTL:', error.message);
+            return -2;
+        }
     }
 
     // Mempermudah integrasi cache ke sistem lain tanpa kode redundan
@@ -70,7 +115,7 @@ class RedisManager {
     // ==========================================
 
     async initPubSub(channelName, onMessageCallback) {
-        if (!this.client || !this.client.isReady) return;
+        if (!this.isReady) return;
         try {
             if (!this.subscriber) {
                 this.subscriber = this.client.duplicate();
@@ -91,7 +136,7 @@ class RedisManager {
     }
 
     async publish(channelName, data) {
-        if (!this.client || !this.client.isReady) return;
+        if (!this.isReady) return;
         try {
             const payload = typeof data === 'string' ? data : JSON.stringify(data);
             await this.client.publish(channelName, payload);
@@ -102,4 +147,3 @@ class RedisManager {
 }
 
 module.exports = new RedisManager();
-
