@@ -9,7 +9,7 @@ const fs = require('fs');
 /**
  * Daftar migrasi yang dijalankan secara berurutan.
  * Setiap migrasi punya ID unik dan query SQL-nya.
- * Tambahkan migrasi baru di BAWAH daftar yang sudah ada — jangan ubah urutan/ID yang sudah ada.
+ * Tambahkan migrasi baru di BAWAH daftar yang sudah ada, jangan ubah urutan/ID yang sudah ada.
  */
 const MIGRATIONS = [
     {
@@ -36,12 +36,12 @@ const MIGRATIONS = [
 
 /**
  * Jalankan semua migrasi yang belum dieksekusi di environment ini.
- * Gunakan try/catch per-migrasi dengan log yang jelas — tidak boleh silent catch kosong.
+ * Gunakan try/catch per-migrasi dengan log yang jelas, tidak boleh silent catch kosong.
  * @param {import('sequelize').Sequelize} sequelize - Instance Sequelize yang sudah terkoneksi
  */
 async function runMigrations(sequelize) {
     if (sequelize.options.dialect !== 'mysql') {
-        logger.info('[DB MIGRATOR] Melewati migrasi — bukan MySQL (mode SQLite fallback).');
+        logger.info('[DB MIGRATOR] Melewati migrasi, bukan MySQL (mode SQLite fallback).');
         return;
     }
 
@@ -50,14 +50,14 @@ async function runMigrations(sequelize) {
     for (const migration of MIGRATIONS) {
         try {
             await sequelize.query(migration.sql);
-            logger.db(`[DB MIGRATOR] ✅ Migrasi '${migration.id}' berhasil: ${migration.description}`);
+            logger.db(`[DB MIGRATOR] Migrasi '${migration.id}' berhasil: ${migration.description}`);
         } catch (err) {
-            // Error 1060 = kolom sudah ada (ER_DUP_FIELDNAME) — ini aman untuk di-skip
+            // Error 1060 = kolom sudah ada (ER_DUP_FIELDNAME), ini aman untuk di-skip.
             if (err.original && err.original.errno === 1060) {
-                logger.info(`[DB MIGRATOR] ⏭️  Migrasi '${migration.id}' di-skip (kolom sudah ada).`);
+                logger.info(`[DB MIGRATOR] Migrasi '${migration.id}' di-skip (kolom sudah ada).`);
             } else {
-                // Error lain harus dilaporkan dengan jelas
-                logger.error(`[DB MIGRATOR] ❌ Migrasi '${migration.id}' GAGAL: ${err.message}`);
+                // Error lain harus dilaporkan dengan jelas.
+                logger.error(`[DB MIGRATOR] Migrasi '${migration.id}' gagal: ${err.message}`);
             }
         }
     }
@@ -66,7 +66,7 @@ async function runMigrations(sequelize) {
 }
 
 // ==========================================
-// MIGRASI DATA: SQLite → MySQL (Fallback Recovery)
+// MIGRASI DATA: SQLite -> MySQL (Fallback Recovery)
 // ==========================================
 
 async function syncFallbackToMySQL(mysqlSequelize) {
@@ -76,20 +76,20 @@ async function syncFallbackToMySQL(mysqlSequelize) {
 
     let database;
     try {
-        // Gunakan native sqlite dari Node.js (v22+) agar ringan, fallback ke sqlite3 jika gagal
+        // Gunakan native sqlite dari Node.js (v22+) agar ringan, fallback ke sqlite3 jika gagal.
         let DatabaseSync;
         try {
             DatabaseSync = require('node:sqlite').DatabaseSync;
             database = new DatabaseSync('./naura_fallback.sqlite');
         } catch (err) {
-            logger.warn('[DB MIGRATOR] node:sqlite tidak ditemukan atau versi Node < 22.5.0. Menggunakan fallback sqlite3 eksternal.');
+            logger.warn(`[DB MIGRATOR] node:sqlite tidak tersedia (${err.message}). Menggunakan fallback sqlite3 eksternal.`);
             const sqlite3 = require('sqlite3').verbose();
             database = new sqlite3.Database('./naura_fallback.sqlite');
 
-            database.prepare = function(sql) {
+            database.prepare = function() {
                 return {
                     all: function() {
-                        throw new Error('Fallback sqlite3 tidak mendukung full sinkronous. Harap gunakan Node 22.5.0+');
+                        throw new Error('Fallback sqlite3 tidak mendukung mode sinkron. Harap gunakan Node 22.5.0+');
                     }
                 };
             };
@@ -123,7 +123,7 @@ async function syncFallbackToMySQL(mysqlSequelize) {
                     }
                 }
             } catch (tableErr) {
-                // Tabel tidak ada di SQLite, lewati saja
+                logger.warn(`[DB MIGRATOR] Tabel ${MysqlModel.tableName} dilewati saat sync fallback: ${tableErr.message}`);
             }
         }
 
@@ -132,7 +132,11 @@ async function syncFallbackToMySQL(mysqlSequelize) {
         logger.error('[DB MIGRATOR ERROR] Gagal memindahkan data:', e.message);
     } finally {
         if (database) database.close();
-        try { fs.unlinkSync('./naura_fallback.sqlite'); } catch(e) {}
+        try {
+            fs.unlinkSync('./naura_fallback.sqlite');
+        } catch (unlinkError) {
+            logger.warn(`[DB MIGRATOR] Gagal menghapus database SQLite fallback: ${unlinkError.message}`);
+        }
     }
 }
 

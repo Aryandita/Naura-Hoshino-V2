@@ -18,8 +18,9 @@ Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
 ## 🧭 Audit & Stabilitas Awal
 
 - [x] Pusatkan `NODE_ENV` lewat `src/config/env.js`
+- [x] Pastikan semua migration schema hanya berada di `src/managers/dbMigrator.js`
+- [x] Perjelas log error fallback migrator agar tidak ada silent catch kosong
 - [ ] Audit manual akses `process.env` langsung di luar `src/config/env.js`
-- [ ] Pastikan semua migration schema hanya berada di `src/managers/dbMigrator.js`
 - [ ] Ganti query panas `GuildSettings.findOne()` dengan cache terpusat
 - [ ] Ganti query panas `UserProfile.findByPk()` dengan cache terpusat
 - [ ] Tambahkan cleanup TTL pada seluruh `Map` dan `Set` sementara
