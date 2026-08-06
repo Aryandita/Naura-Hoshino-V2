@@ -9,33 +9,62 @@
 
 const { PermissionFlagsBits } = require('discord.js');
 const UserProfile = require('../../models/UserProfile');
+const tempVoiceRegistry = require('../../managers/tempVoiceRegistry');
+const { logger } = require('../../managers/logger');
 const env = require('../../config/env');
 
 /**
- * MASALAH YANG BELUM DISELESAIKAN (lihat issue #22).
+ * Pemeriksaan kepemilikan berbasis nama channel.
  *
- * Kepemilikan ruangan ditentukan dari nama channel yang mengandung username
- * pembuatnya. Ini rapuh dan bisa dieksploitasi:
+ * Ini cara lama dan cara ini salah. Dibiarkan hidup hanya sebagai jembatan
+ * transisi: ruangan yang sudah aktif saat versi ini di-deploy belum punya entri
+ * di registry, dan pemiliknya tidak boleh mendadak terkunci dari panelnya
+ * sendiri di tengah sesi.
  *
- *   - Pengguna bernama "a" cocok dengan hampir semua nama ruangan.
- *   - Mengganti nama ruangan lewat tombol Rename bisa membuat pemilik aslinya
- *     kehilangan akses ke panelnya sendiri.
- *   - Siapa pun yang mengganti nama tampilannya agar mengandung nama pemilik
- *     bisa mengambil alih panel.
+ * Hapus fungsi ini setelah beberapa hari berjalan, saat sudah tidak ada lagi
+ * ruangan warisan yang hidup.
+ */
+function isRoomOwnerByName(channel, user) {
+    return channel.name.includes(user.username);
+}
+
+/**
+ * Versi sinkron, hanya membaca memori.
  *
- * Perbaikan sebenarnya adalah peta `channelId -> ownerId` yang ditulis oleh
- * voiceStateUpdate saat ruangan dibuat. Itu menyentuh berkas lain dan sengaja
- * tidak dicampur ke dalam refactor ini. Dengan dipusatkan di sini, perbaikannya
- * nanti cukup mengganti isi satu fungsi.
+ * Dipertahankan karena tanda tangannya sudah dipakai di tempat lain. Mengubah
+ * fungsi sinkron menjadi async itu berbahaya di sini: pemanggil yang lupa
+ * `await` akan menerima Promise, dan Promise selalu truthy. Artinya setiap
+ * pemeriksaan izin yang terlewat akan otomatis lolos, bukan gagal.
  */
 function isRoomOwner(channel, user) {
-    return channel.name.includes(user.username);
+    const known = tempVoiceRegistry.isOwnerSync(channel.id, user.id);
+    if (known !== null) return known;
+    return isRoomOwnerByName(channel, user);
+}
+
+/**
+ * Versi asli yang juga memeriksa Redis.
+ *
+ * Ini jalur yang benar setelah bot restart, karena entri registry sudah tidak
+ * ada di memori tapi masih tersimpan di Redis.
+ */
+async function resolveRoomOwner(channel, user) {
+    const known = await tempVoiceRegistry.isOwner(channel.id, user.id);
+    if (known !== null) return known;
+
+    const legacy = isRoomOwnerByName(channel, user);
+    if (legacy) {
+        logger.warn(
+            `[TempVoice] Ruangan ${channel.id} tidak ada di registry, jatuh ke pencocokan nama untuk ${user.id}. Ruangan warisan sebelum registry aktif.`
+        );
+    }
+    return legacy;
 }
 
 /**
  * Kumpulkan seluruh informasi yang dibutuhkan panel Temp Voice.
  *
- * @returns {Promise<{channel, isAdmin, isBotOwner, isPremium, isPrivileged}|null>}
+ * @returns {Promise<{channel, isAdmin, isBotOwner, isPremium, isOwner, isPrivileged}|null>}
  *          null bila pengguna tidak sedang berada di voice channel.
  */
 async function resolveVoiceContext(interaction) {
@@ -60,7 +89,7 @@ async function resolveVoiceContext(interaction) {
         isAdmin,
         isBotOwner,
         isPremium,
-        isOwner: isRoomOwner(channel, interaction.user),
+        isOwner: await resolveRoomOwner(channel, interaction.user),
         // Boleh memakai fitur premium panel.
         isPrivileged: isPremium || isBotOwner || isAdmin
     };
@@ -69,4 +98,4 @@ async function resolveVoiceContext(interaction) {
 const PREMIUM_ONLY = (feature) =>
     `\ud83d\udc51 **Fitur Eksklusif!** ${feature} hanya untuk pengguna Premium.`;
 
-module.exports = { resolveVoiceContext, isRoomOwner, PREMIUM_ONLY };
+module.exports = { resolveVoiceContext, isRoomOwner, resolveRoomOwner, PREMIUM_ONLY };

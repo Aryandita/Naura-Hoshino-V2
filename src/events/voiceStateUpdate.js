@@ -1,15 +1,39 @@
-const { ChannelType, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Collection, AuditLogEvent } = require('discord.js');
-const { logger } = require('../../src/managers/logger');
+const { ChannelType, PermissionFlagsBits, EmbedBuilder, Collection, AuditLogEvent } = require('discord.js');
+const { logger } = require('../managers/logger');
 const UserLeveling = require('../models/UserLeveling');
-const GuildSettings = require('../models/GuildSettings');
 const cacheManager = require('../managers/cacheManager');
+const tempVoiceRegistry = require('../managers/tempVoiceRegistry');
 const UserProfile = require('../models/UserProfile');
 const env = require('../config/env');
 const ui = require('../config/ui');
 const { checkLevelUp } = require('../../plugin/leveling/leveling');
 
-const voiceSessions = new Collection(); 
-const trackedTempChannels = new Set(); // Melacak ID Voice yang DIBUAT oleh bot
+const voiceSessions = new Collection();
+
+// Dipertahankan hanya karena berkas lain membaca client.trackedTempChannels.
+// Sumber kebenaran kepemilikan sekarang ada di tempVoiceRegistry.
+const trackedTempChannels = new Set();
+
+// Audit log di-cache sebentar. Tanpa ini, satu ruangan yang bubar berisi 20
+// orang memicu 20 panggilan fetchAuditLogs beruntun, dan semuanya menanyakan
+// entri yang sama persis.
+const auditLogCache = new Map();
+const AUDIT_CACHE_MS = 5000;
+
+async function fetchRecentAuditEntry(guild, type) {
+    // Tanpa izin ini, panggilannya pasti ditolak Discord. Memeriksa lebih dulu
+    // menghemat satu request gagal per event.
+    if (!guild.members.me?.permissions.has(PermissionFlagsBits.ViewAuditLog)) return null;
+
+    const cacheKey = `${guild.id}:${type}`;
+    const cached = auditLogCache.get(cacheKey);
+    if (cached && Date.now() - cached.fetchedAt < AUDIT_CACHE_MS) return cached.entry;
+
+    const fetchedLogs = await guild.fetchAuditLogs({ limit: 1, type }).catch(() => null);
+    const entry = fetchedLogs ? fetchedLogs.entries.first() : null;
+    auditLogCache.set(cacheKey, { entry, fetchedAt: Date.now() });
+    return entry;
+}
 
 module.exports = {
     name: 'voiceStateUpdate',
@@ -25,14 +49,20 @@ module.exports = {
         // ==========================================
         try {
             const settings = await cacheManager.getGuildSettings(guild.id);
-            const logChannelId = settings?.settings?.automod?.logChannelId;
-            
+            const automod = settings?.settings?.automod;
+
+            // Alur /setup menulis `logChannel`, sedangkan berkas ini dulu membaca
+            // `logChannelId`. Kunci yang tidak pernah cocok itu membuat seluruh
+            // log audit voice tidak pernah terkirim ke mana pun. Keduanya dibaca
+            // supaya server yang terlanjur menyimpan bentuk lama tetap jalan.
+            const logChannelId = automod?.logChannel || automod?.logChannelId;
+
             if (logChannelId) {
                 const logChannel = guild.channels.cache.get(logChannelId);
                 if (logChannel) {
-                    
+
                     if (!oldState.channelId && newState.channelId) {
-                        // 🟢 JOIN VOICE 
+                        // 🟢 JOIN VOICE
                         const embed = new EmbedBuilder()
                             .setColor(ui.getColor('success'))
                             .setAuthor({ name: member.user.tag, iconURL: member.user.displayAvatarURL() })
@@ -44,12 +74,11 @@ module.exports = {
                             .setFooter({ text: `User ID: ${member.id}` })
                             .setTimestamp();
                         await logChannel.send({ embeds: [embed] }).catch(()=>{});
-                        
+
                     } else if (oldState.channelId && !newState.channelId) {
                         // 🔴 LEAVE / DISCONNECT VOICE
-                        const fetchedLogs = await guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.MemberDisconnect }).catch(() => null);
-                        const disconnectLog = fetchedLogs ? fetchedLogs.entries.first() : null;
-                        
+                        const disconnectLog = await fetchRecentAuditEntry(guild, AuditLogEvent.MemberDisconnect);
+
                         let executorTag = `Keluar Sendiri`;
                         if (disconnectLog && (Date.now() - disconnectLog.createdTimestamp < 5000)) {
                             executorTag = `Diputus oleh: ${disconnectLog.executor.globalName || disconnectLog.executor.username}`;
@@ -70,9 +99,8 @@ module.exports = {
 
                     } else if (oldState.channelId && newState.channelId && oldState.channelId !== newState.channelId) {
                         // 🔄 MOVE VOICE (Pindah Channel)
-                        const fetchedLogs = await guild.fetchAuditLogs({ limit: 1, type: AuditLogEvent.MemberMove }).catch(() => null);
-                        const moveLog = fetchedLogs ? fetchedLogs.entries.first() : null;
-                        
+                        const moveLog = await fetchRecentAuditEntry(guild, AuditLogEvent.MemberMove);
+
                         let executorTag = `Pindah Sendiri`;
                         if (moveLog && (Date.now() - moveLog.createdTimestamp < 5000)) {
                             executorTag = `Dipindah oleh: ${moveLog.executor.globalName || moveLog.executor.username}`;
@@ -112,8 +140,17 @@ module.exports = {
                 if (durationMinutes >= 1) {
                     try {
                         const [profile] = await UserLeveling.findOrCreate({ where: { userId, guildId } });
-                        profile.xp += (durationMinutes * 10);
-                        profile.voiceMinutes += durationMinutes;
+
+                        // Dulu di sini `profile.xp += n` lalu `profile.save()`.
+                        // Pola itu menimpa perubahan yang terjadi di antara baca
+                        // dan tulis, misalnya XP dari mengetik di chat pada saat
+                        // yang sama, atau dari shard lain. increment() menyerahkan
+                        // penjumlahannya ke SQL sehingga tidak ada yang hilang.
+                        await UserLeveling.increment(
+                            { xp: durationMinutes * 10, voiceMinutes: durationMinutes },
+                            { where: { userId, guildId } }
+                        );
+                        await profile.reload();
 
                         const guildObj = oldState.guild || newState.guild;
                         const memberObj = oldState.member || newState.member;
@@ -121,9 +158,11 @@ module.exports = {
                         if (guildObj && memberObj && channelObj) {
                             await checkLevelUp(profile, memberObj.user, guildObj, channelObj);
                         }
-
-                        await profile.save();
-                    } catch (err) {}
+                    } catch (err) {
+                        // Dulu blok ini kosong, jadi setiap kegagalan XP voice
+                        // hilang tanpa jejak sama sekali.
+                        logger.error('[VOICE XP ERROR]', err);
+                    }
                 }
                 voiceSessions.delete(`${guildId}-${userId}`);
             }
@@ -138,7 +177,9 @@ module.exports = {
             if (settings && settings.settings) {
                 tempConfig = settings.settings.tempVoice || settings.settings.tempvoice;
             }
-        } catch (error) {}
+        } catch (error) {
+            logger.error('[TEMPVOICE CONFIG ERROR]', error);
+        }
 
         if (!tempConfig || !tempConfig.enabled || !tempConfig.triggerChannelId) return;
 
@@ -153,10 +194,18 @@ module.exports = {
                 const ownerChannel = guild.channels.cache.find(c => c.parentId === tempConfig.categoryId && (c.name.includes(`🔊 ${ownerName} voice`) || c.name.includes(`「🌟」・${ownerName} VIP Voice`) || c.name.includes(`「👑」・${ownerName} Owner Voice`)));
 
                 if (ownerChannel) {
-                    // Cari user pemilik dari channel tersebut
-                    const ownerMember = ownerChannel.members.find(m => m.user.username === ownerName);
-                    if (ownerMember) {
-                        try {
+                    try {
+                        // Pemiliknya diambil dari registry. Sebelumnya baris ini
+                        // mencocokkan username terhadap daftar member di dalam
+                        // channel, yang berarti notifikasi gagal total begitu
+                        // pemiliknya sedang tidak berada di ruangannya sendiri.
+                        const entry = await tempVoiceRegistry.get(ownerChannel.id);
+                        const ownerId = entry?.ownerId;
+                        const ownerMember = ownerId
+                            ? await guild.members.fetch(ownerId).catch(() => null)
+                            : ownerChannel.members.find(m => m.user.username === ownerName);
+
+                        if (ownerMember) {
                             // Cek apakah owner adalah user premium atau owner bot
                             const ownerProfile = await UserProfile.findOne({ where: { userId: ownerMember.id } });
                             const isBotOwner = env.OWNER_IDS && env.OWNER_IDS.includes(ownerMember.id);
@@ -166,12 +215,12 @@ module.exports = {
                                 const dmEmbed = new EmbedBuilder()
                                     .setColor(ui.getColor('premium-gold') || '#FFD700')
                                     .setTitle('🔔 Tamu TempVoice Lounge')
-                                    .setDescription(`Halo **${ownerName}**! Seseorang bernama **${member.user.username}** sedang menunggu di **Waiting Room** milikmu.\n\nSilakan cek panel kontrol TempVoice untuk mengizinkan mereka masuk.`);
+                                    .setDescription(`Halo **${ownerMember.user.username}**! Seseorang bernama **${member.user.username}** sedang menunggu di **Waiting Room** milikmu.\n\nSilakan cek panel kontrol TempVoice untuk mengizinkan mereka masuk.`);
                                 await ownerMember.send({ embeds: [dmEmbed] }).catch(() => {});
                             }
-                        } catch (e) {
-                            logger.error("[VIP Waiting Room Notif Error]:", e);
                         }
+                    } catch (e) {
+                        logger.error("[VIP Waiting Room Notif Error]:", e);
                     }
                 }
             }
@@ -191,13 +240,16 @@ module.exports = {
                 const maxBitrate = guild.maximumBitrate || 96000;
                 let roomBitrate = 64000; // Default 64kbps
                 let roomName = `🔊 ${member.user.username} voice`;
+                let tier = 'standard';
 
                 if (isBotOwner) {
                     roomBitrate = Math.min(384000, maxBitrate);
                     roomName = `「👑」・${member.user.username} Owner Voice`;
+                    tier = 'owner';
                 } else if (isPremium) {
                     roomBitrate = Math.min(384000, maxBitrate); // Set ke maksimum yang didukung guild untuk kualitas Ultra
                     roomName = `「🌟」・${member.user.username} VIP Voice`;
+                    tier = 'premium';
                 }
 
                 // Setup Permissions Dasar
@@ -229,8 +281,17 @@ module.exports = {
                     permissionOverwrites: permissionOverwrites,
                 });
 
-                trackedTempChannels.add(tempChannel.id); // Lacak channel
-                client.trackedTempChannels = trackedTempChannels; // Simpan di client untuk diakses dari file lain
+                // Inilah satu-satunya tempat kepemilikan ditetapkan. Semua
+                // pemeriksaan izin panel nanti membaca dari sini.
+                await tempVoiceRegistry.register(tempChannel.id, {
+                    ownerId: userId,
+                    guildId,
+                    tier,
+                    createdAt: Date.now(),
+                });
+
+                trackedTempChannels.add(tempChannel.id);
+                client.trackedTempChannels = trackedTempChannels;
 
                 await member.voice.setChannel(tempChannel);
 
@@ -247,11 +308,19 @@ module.exports = {
             }
         }
 
-        // LOGIKA B: PENGHAPUSAN RUANGAN KOSONG (Hanya hapus yang dilacak bot)
+        // LOGIKA B: PENGHAPUSAN RUANGAN KOSONG
         if (oldState.channelId) {
             const oldChannel = oldState.channel;
-            
-            if (oldChannel && trackedTempChannels.has(oldChannel.id) && oldChannel.members.size === 0) {
+
+            // Pemeriksaannya sekarang lewat registry, bukan Set di memori.
+            // Perbedaannya terasa setelah restart: dengan Set, setiap ruangan
+            // yang dibuat sebelum restart tidak pernah dikenali lagi dan
+            // tertinggal kosong selamanya di daftar channel.
+            const isTracked = oldChannel
+                ? (trackedTempChannels.has(oldChannel.id) || await tempVoiceRegistry.isTracked(oldChannel.id))
+                : false;
+
+            if (oldChannel && isTracked && oldChannel.members.size === 0) {
                 // Menangani penghapusan Waiting Room dengan nama VIP/Owner maupun reguler
                 let waitingRoomNameBase = oldChannel.name.replace('🔊 ', '').replace(" voice", "");
                 if (oldChannel.name.includes('「🌟」・')) {
@@ -265,10 +334,12 @@ module.exports = {
 
                 await oldChannel.delete().catch(() => {});
                 trackedTempChannels.delete(oldChannel.id);
+                await tempVoiceRegistry.unregister(oldChannel.id);
 
                 if (waitingRoom && waitingRoom.members.size === 0) {
                     await waitingRoom.delete().catch(() => {});
                     trackedTempChannels.delete(waitingRoom.id);
+                    await tempVoiceRegistry.unregister(waitingRoom.id);
                 }
             }
         }
@@ -320,7 +391,7 @@ module.exports = {
                             }
                         }
                     }, 3 * 60 * 1000);
-                    
+
                     if (timer.unref) timer.unref();
                     client.aloneDisconnectTimers.set(timerKey, timer);
                 }
