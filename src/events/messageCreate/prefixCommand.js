@@ -10,6 +10,26 @@ const { awardXp } = require('../../../plugin/leveling/leveling');
 // Subcommand yang perlu dibuang dari argumen sebelum dibaca sebagai teks bebas.
 const SUBCOMMAND_WORDS = ['balance', 'buy', 'ping', 'set', 'add', 'remove'];
 
+/**
+ * Cari command dari nama atau aliasnya.
+ *
+ * Alias sekarang tinggal di client.aliases, terpisah dari client.commands.
+ * Pencarian linear ke cmd.aliases dipertahankan sebagai lapis terakhir supaya
+ * command yang mendeklarasikan alias dengan cara tidak biasa tetap terjangkau.
+ */
+function resolveCommand(client, name) {
+    const direct = client.commands.get(name);
+    if (direct) return direct;
+
+    const canonical = client.aliases?.get(name);
+    if (canonical) {
+        const viaAlias = client.commands.get(canonical);
+        if (viaAlias) return viaAlias;
+    }
+
+    return client.commands.find(cmd => Array.isArray(cmd.aliases) && cmd.aliases.includes(name)) || null;
+}
+
 function buildLoadingEmbed(message, client, commandName) {
     return new EmbedBuilder()
         .setColor(ui.getColor ? ui.getColor('primary') : '#FFB6C1')
@@ -130,8 +150,7 @@ module.exports = async function handlePrefixCommand(message, client) {
     const commandName = args.shift()?.toLowerCase();
     if (!commandName) return true;
 
-    const command = client.commands.get(commandName)
-        || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+    const command = resolveCommand(client, commandName);
     if (!command) return true;
 
     const loadingMsg = await message
