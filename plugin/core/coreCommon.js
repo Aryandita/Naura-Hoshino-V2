@@ -19,13 +19,13 @@ const locales = {
 
 const SUPPORTED = ['id', 'en'];
 
-// Nilai tanpa skema cukup diberi awalan http://. Versi lama membungkusnya
-// dengan kurung kurawal ganda sehingga tautannya tidak sah dan ditolak
-// ButtonBuilder.setURL saat tombol navigasi dirakit.
+// Nilai tanpa skema cukup diberi awalan http:// lewat penggabungan string biasa.
+// Versi lama membungkusnya dengan kurung kurawal ganda sehingga tautannya
+// tidak sah dan ditolak ButtonBuilder.setURL saat tombol navigasi dirakit.
 const rawDashboard = ui.dashboards || 'http://92.118.206.166:30398';
 const LINKS = {
     SUPPORT: ui.support_server || 'https://dsc.gg/naura-hoshino',
-    DASHBOARD: rawDashboard.startsWith('http') ? rawDashboard : `http://${rawDashboard}`,
+    DASHBOARD: rawDashboard.startsWith('http') ? rawDashboard : 'http://' + rawDashboard,
     INVITE: ui.invite || 'https://discord.com/api/oauth2/authorize?client_id=1483665745727721543&permissions=8&scope=bot%20applications.commands'
 };
 
