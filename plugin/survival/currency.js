@@ -1,6 +1,7 @@
 'use strict';
 
 const ui = require('../../src/config/ui');
+const cacheManager = require('../../src/managers/cacheManager');
 
 // Tiga mata uang Naura.
 // - Naura Star Fragment (NSF) : mata uang desa & seluruh wilayah alam.
@@ -81,22 +82,26 @@ function currencyFor(location) {
     return byKind(currencyKindFor(location));
 }
 
+function resolve(currency) {
+    return typeof currency === 'string' ? byKind(currency) : (currency || CURRENCIES[FRAGMENT]);
+}
+
 function emojiOf(currency) {
-    const c = typeof currency === 'string' ? byKind(currency) : currency;
+    const c = resolve(currency);
     return ui.getEmoji(c.emojiKey) || c.emojiFallback;
 }
 
 // Menu pilihan Discord menolak emoji berbentuk teks, jadi komponen select harus
 // memakai bentuk objek ini.
 function emojiObjectOf(currency) {
-    const c = typeof currency === 'string' ? byKind(currency) : currency;
+    const c = resolve(currency);
     const entry = EMOJI[c.kind];
     if (!entry) return undefined;
     return { id: entry.id, name: entry.name, animated: entry.animated };
 }
 
 function format(currency, amount) {
-    const c = typeof currency === 'string' ? byKind(currency) : currency;
+    const c = resolve(currency);
     const value = Number(amount) || 0;
     return `${emojiOf(c)} **${value.toLocaleString('id-ID')} ${c.name}**`;
 }
@@ -106,7 +111,7 @@ function stateOf(survival) {
 }
 
 function balanceOf(currency, holders = {}) {
-    const c = typeof currency === 'string' ? byKind(currency) : currency;
+    const c = resolve(currency);
     const { survival, profile } = holders;
 
     if (c.owner === 'profile') return Number((profile || {})[c.field]) || 0;
@@ -114,28 +119,64 @@ function balanceOf(currency, holders = {}) {
     return Number((survival || {})[c.field]) || 0;
 }
 
-async function setBalance(currency, holders = {}, value) {
-    const c = typeof currency === 'string' ? byKind(currency) : currency;
+function userIdOf(holders = {}) {
     const { survival, profile } = holders;
-    const safeValue = Math.max(0, Math.floor(Number(value) || 0));
+    return (survival && survival.userId) || (profile && profile.userId) || null;
+}
+
+/**
+ * Menyelaraskan objek di memori dengan nilai yang baru ditulis ke database.
+ *
+ * Pemanggil sering menampilkan saldo dari objek yang sama sesaat setelah
+ * transaksi, jadi objeknya perlu ikut maju. Fungsi ini sengaja TIDAK menulis ke
+ * database supaya tidak terjadi penulisan ganda.
+ */
+function syncLocal(currency, holders, nextValue) {
+    const c = resolve(currency);
+    const { survival, profile } = holders || {};
 
     if (c.owner === 'profile') {
-        if (!profile) return safeValue;
-        profile[c.field] = safeValue;
-        if (typeof profile.save === 'function') await profile.save();
-        return safeValue;
+        if (profile) profile[c.field] = nextValue;
+        return;
     }
-
-    if (!survival) return safeValue;
+    if (!survival) return;
 
     if (c.owner === 'survivalState') {
-        survival.rpg_state = { ...stateOf(survival), [c.field]: safeValue };
+        survival.rpg_state = { ...stateOf(survival), [c.field]: nextValue };
         if (typeof survival.changed === 'function') survival.changed('rpg_state', true);
     } else {
-        survival[c.field] = safeValue;
+        survival[c.field] = nextValue;
+    }
+}
+
+/**
+ * Menetapkan saldo ke nilai tertentu.
+ *
+ * Versi sebelumnya memanggil `profile.save()` di balik penjaga
+ * `typeof profile.save === 'function'`. Objek profil berasal dari
+ * cacheManager.getUserProfile(), yang mengembalikan JSON biasa tanpa .save().
+ * Penjaga itu selalu gagal tanpa suara, jadi setiap pembayaran Naura Coin hanya
+ * berubah di memori lalu hilang. Sekarang penulisan selalu lewat cacheManager.
+ *
+ * Untuk pengurangan saldo, pakai charge(). Fungsi ini menimpa nilai apa adanya
+ * dan tidak tahan terhadap balapan.
+ */
+async function setBalance(currency, holders = {}, value) {
+    const c = resolve(currency);
+    const safeValue = Math.max(0, Math.floor(Number(value) || 0));
+    const userId = userIdOf(holders);
+
+    syncLocal(c, holders, safeValue);
+    if (!userId) return safeValue;
+
+    if (c.owner === 'profile') {
+        await cacheManager.updateUserProfile(userId, { [c.field]: safeValue });
+    } else if (c.owner === 'survivalState') {
+        await cacheManager.updateUserSurvival(userId, { rpg_state: stateOf(holders.survival) });
+    } else {
+        await cacheManager.updateUserSurvival(userId, { [c.field]: safeValue });
     }
 
-    if (typeof survival.save === 'function') await survival.save();
     return safeValue;
 }
 
@@ -143,17 +184,62 @@ function canAfford(currency, holders, amount) {
     return balanceOf(currency, holders) >= (Number(amount) || 0);
 }
 
-// Memotong saldo. Mengembalikan saldo akhir, atau null bila uangnya kurang.
-async function charge(currency, holders, amount) {
+/**
+ * Memotong saldo. Mengembalikan saldo akhir, atau null bila uangnya kurang.
+ *
+ * Pemeriksaan kecukupan dan pemotongan terjadi dalam satu pernyataan SQL, jadi
+ * dua klik yang tiba bersamaan tidak bisa membelanjakan uang yang sama dua kali.
+ */
+async function charge(currency, holders = {}, amount) {
+    const c = resolve(currency);
     const cost = Math.max(0, Math.floor(Number(amount) || 0));
-    const balance = balanceOf(currency, holders);
-    if (balance < cost) return null;
-    return setBalance(currency, holders, balance - cost);
+    const balance = balanceOf(c, holders);
+    if (cost === 0) return balance;
+
+    const userId = userIdOf(holders);
+    if (!userId) return null;
+
+    // Naura Coupon tinggal di dalam kolom JSON rpg_state, yang tidak bisa
+    // dipotong secara atomik. Kelangkaannya membuat risikonya kecil, tetapi ini
+    // tetap satu-satunya jalur yang belum aman terhadap balapan.
+    if (c.owner === 'survivalState') {
+        if (balance < cost) return null;
+        return setBalance(c, holders, balance - cost);
+    }
+
+    const result = c.owner === 'profile'
+        ? await cacheManager.debitUserProfile(userId, c.field, cost)
+        : await cacheManager.debitUserSurvival(userId, c.field, cost);
+
+    if (!result.ok) return null;
+
+    const next = Math.max(0, balance - cost);
+    syncLocal(c, holders, next);
+    return next;
 }
 
-async function reward(currency, holders, amount) {
+async function reward(currency, holders = {}, amount) {
+    const c = resolve(currency);
     const gain = Math.max(0, Math.floor(Number(amount) || 0));
-    return setBalance(currency, holders, balanceOf(currency, holders) + gain);
+    const balance = balanceOf(c, holders);
+    if (gain === 0) return balance;
+
+    const userId = userIdOf(holders);
+    if (!userId) return balance;
+
+    if (c.owner === 'survivalState') {
+        return setBalance(c, holders, balance + gain);
+    }
+
+    if (c.owner === 'profile') {
+        await cacheManager.incrementUserProfile(userId, { [c.field]: gain });
+    } else {
+        await cacheManager.incrementUserSurvival(userId, { [c.field]: gain });
+    }
+
+    const next = balance + gain;
+    syncLocal(c, holders, next);
+    return next;
 }
 
 // Konversi nominal antar mata uang biasa. Naura Coupon sengaja tidak bisa
@@ -182,7 +268,8 @@ async function exchange(holders, fromKind, toKind, amount) {
     if (received === null) return { ok: false, reason: 'unsupported_pair' };
     if (received <= 0) return { ok: false, reason: 'below_minimum', minimum: FRAGMENT_PER_COIN };
 
-    // Hanya nominal yang benar-benar terpakai yang dipotong.
+    // Hanya nominal yang benar-benar terpakai yang dipotong. Pemotongan selalu
+    // lebih dulu; bila gagal, tidak ada uang baru yang terlanjur diterbitkan.
     const spent = to.kind === COIN ? received * FRAGMENT_PER_COIN : value;
     const remaining = await charge(from, holders, spent);
     if (remaining === null) {

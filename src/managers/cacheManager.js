@@ -1,6 +1,8 @@
 // src/managers/cacheManager.js
+const { Op } = require('sequelize');
 const redisManager = require('./redisManager');
 const { logger } = require('../../src/managers/logger');
+const { sequelize } = require('./dbManager');
 const UserProfile = require('../models/UserProfile');
 const UserSurvival = require('../models/UserSurvival');
 const GuildSettings = require('../models/GuildSettings');
@@ -14,14 +16,29 @@ const PROFILE_TTL = 3600; // 1 jam
 const SURVIVAL_TTL = 1800; // 30 menit
 const GUILD_TTL = 300; // 5 menit
 
+// Nama kolom hanya boleh berasal dari skema model. Pola ini menutup kemungkinan
+// nama kolom dinamis menyusup ke dalam ekspresi SQL.
+const SAFE_COLUMN = /^[A-Za-z_][A-Za-z0-9_]*$/;
+
+function quoteColumn(field) {
+    try {
+        return sequelize.getQueryInterface().quoteIdentifier(field);
+    } catch (error) {
+        return `"${field}"`;
+    }
+}
+
 /**
  * CacheManager: Read-Through and Write-Behind Caching Layer
  *
- * Dua aturan penting:
+ * Tiga aturan penting:
  * 1. Nilai absolut (nama, status, timestamp) memakai update*(). Nilai yang bersifat
  *    akumulatif (koin, XP, HP) WAJIB memakai increment*() supaya perubahan dari dua
  *    shard tidak saling menimpa.
- * 2. Semua tulisan tertunda harus bisa di-flush lewat flushAll() saat shutdown.
+ * 2. Pengurangan saldo yang tidak boleh minus WAJIB memakai debit*(), bukan
+ *    increment*() dengan angka negatif. Hanya debit*() yang memeriksa kecukupan
+ *    saldo di dalam query yang sama dengan pemotongannya.
+ * 3. Semua tulisan tertunda harus bisa di-flush lewat flushAll() saat shutdown.
  */
 class CacheManager {
 
@@ -105,6 +122,36 @@ class CacheManager {
         }
     }
 
+    /**
+     * Menulis antrean milik satu user saja.
+     *
+     * Wajib dipanggil sebelum pemotongan bersyarat. Tanpa ini, syarat
+     * `saldo >= nominal` dievaluasi terhadap nilai lama di database, sementara
+     * penambahan yang baru saja terjadi masih menunggu di antrean.
+     */
+    async flushUser(userId) {
+        if (!userId) return;
+        await this._flushOne(this.writeQueue, UserProfile, 'UserProfile', userId);
+        await this._flushOne(this.survivalQueue, UserSurvival, 'UserSurvival', userId);
+    }
+
+    async _flushOne(queue, Model, label, userId) {
+        const entry = queue.get(userId);
+        if (!entry) return;
+        queue.delete(userId);
+
+        try {
+            if (Object.keys(entry.set).length > 0) {
+                await Model.update(entry.set, { where: { userId } });
+            }
+            if (Object.keys(entry.inc).length > 0) {
+                await Model.increment(entry.inc, { where: { userId } });
+            }
+        } catch (error) {
+            logger.error(`[CacheManager] Gagal menulis ${label} untuk ${userId}:`, error.message);
+        }
+    }
+
     async _flushQueue(queue, Model, label) {
         if (queue.size === 0) return;
 
@@ -153,12 +200,76 @@ class CacheManager {
         return true;
     }
 
+    /**
+     * Memotong saldo lewat satu UPDATE bersyarat.
+     *
+     * Pola lama membaca saldo, membandingkannya di memori, lalu menulis hasilnya.
+     * Dua klik yang tiba bersamaan sama-sama lolos pemeriksaan, sehingga uang yang
+     * sama bisa dibelanjakan dua kali. Di sini pemeriksaan dan pemotongan terjadi
+     * dalam satu pernyataan SQL, jadi klik kedua tidak menemukan baris yang cocok.
+     *
+     * Berbeda dari increment dengan angka negatif, fungsi ini tidak pernah
+     * menghasilkan saldo minus.
+     *
+     * @returns {Promise<{ ok: boolean, amount?: number, reason?: string }>}
+     */
+    async _debit(userId, field, amount, { Model, cacheKey, label }) {
+        const value = Math.floor(Number(amount) || 0);
+        if (!userId || !field) return { ok: false, reason: 'invalid' };
+        if (value < 0) return { ok: false, reason: 'invalid' };
+        if (value === 0) return { ok: true, amount: 0 };
+        if (!SAFE_COLUMN.test(field)) return { ok: false, reason: 'invalid_field' };
+
+        await this.flushUser(userId);
+
+        try {
+            const column = quoteColumn(field);
+            const [affected] = await Model.update(
+                { [field]: sequelize.literal(`${column} - ${value}`) },
+                { where: { userId, [field]: { [Op.gte]: value } } }
+            );
+
+            if (!affected) return { ok: false, reason: 'insufficient' };
+
+            // Cache dihapus, bukan dihitung ulang di memori. Nilai yang benar hanya
+            // diketahui oleh database setelah pemotongan.
+            await redisManager.deleteCache(cacheKey);
+            return { ok: true, amount: value };
+        } catch (error) {
+            logger.error(`[CacheManager] Gagal memotong ${label}.${field} untuk ${userId}:`, error.message);
+            return { ok: false, reason: 'error' };
+        }
+    }
+
+    /** Memotong kolom numerik UserProfile. Gagal bila saldo tidak cukup. */
+    async debitUserProfile(userId, field, amount) {
+        return this._debit(userId, field, amount, {
+            Model: UserProfile,
+            cacheKey: `user:profile:${userId}`,
+            label: 'UserProfile'
+        });
+    }
+
+    /** Memotong kolom numerik UserSurvival. Gagal bila saldo tidak cukup. */
+    async debitUserSurvival(userId, field, amount) {
+        return this._debit(userId, field, amount, {
+            Model: UserSurvival,
+            cacheKey: `user:survival:${userId}`,
+            label: 'UserSurvival'
+        });
+    }
+
     // ==========================================
     // 👤 USER PROFILE CACHE
     // ==========================================
 
     /**
      * Mengambil UserProfile dari Cache. Jika tidak ada, fetch dari DB dan set ke Cache.
+     *
+     * PENTING: hasilnya adalah objek JSON biasa, BUKAN instance Sequelize.
+     * Objek ini tidak punya .save() maupun .changed(). Semua penulisan harus lewat
+     * updateUserProfile(), incrementUserProfile(), atau debitUserProfile().
+     *
      * @param {string} userId - ID Discord User
      * @returns {Promise<Object>} Data profil pengguna (JSON)
      */
@@ -195,6 +306,7 @@ class CacheManager {
     /**
      * Menyimpan nilai ABSOLUT pada UserProfile.
      * Untuk nilai akumulatif (koin, XP), pakai incrementUserProfile().
+     * Untuk pengurangan saldo, pakai debitUserProfile().
      *
      * @param {string} userId - ID Discord User
      * @param {Object} updateData - Key/Value pasang untuk diupdate
@@ -233,7 +345,7 @@ class CacheManager {
      * Gunakan ini untuk economy_wallet, economy_bank, leveling_xp, dan sejenisnya.
      *
      * @param {string} userId
-     * @param {Object<string, number>} deltas - Contoh: { economy_wallet: -250, leveling_xp: 15 }
+     * @param {Object<string, number>} deltas - Contoh: { economy_wallet: 250, leveling_xp: 15 }
      */
     async incrementUserProfile(userId, deltas) {
         return this._increment(userId, deltas, {
@@ -283,7 +395,11 @@ class CacheManager {
 
     /**
      * Menghapus cache GuildSettings untuk guild tertentu.
-     * WAJIB dipanggil setelah setiap perubahan setting via /setup atau command admin.
+     *
+     * Sejak hook invalidasi dipasang di model GuildSettings, fungsi ini tidak perlu
+     * lagi dipanggil manual setelah setiap penulisan. Dipertahankan untuk pemanggil
+     * lama dan untuk kasus khusus.
+     *
      * @param {string} guildId - ID Discord Guild
      */
     async invalidateGuildSettings(guildId) {
@@ -302,6 +418,9 @@ class CacheManager {
 
     /**
      * Mengambil UserSurvival dari Cache / DB.
+     *
+     * Sama seperti getUserProfile, hasilnya objek JSON biasa tanpa .save().
+     *
      * @param {string} userId - ID Discord User
      * @returns {Promise<Object>} Data survival pengguna (JSON)
      */
@@ -331,10 +450,6 @@ class CacheManager {
 
     /**
      * Menyimpan nilai ABSOLUT pada UserSurvival.
-     *
-     * Sebelumnya update di sini ditembakkan langsung ke database dengan .catch()
-     * tanpa antrean, sehingga tidak ikut ter-flush saat shutdown dan progres RPG
-     * bisa hilang di setiap restart. Sekarang memakai antrean yang sama.
      *
      * @param {string} userId - ID Discord User
      * @param {Object} updateData - Data yang diupdate
