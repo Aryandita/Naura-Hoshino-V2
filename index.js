@@ -111,6 +111,12 @@ async function startBot() {
             const { displayBootScreen } = require('./src/utils/bootScreen');
             displayBootScreen(client, sysStatus);
 
+            // Pendengar invalidasi cache lintas shard. Dipasang di SEMUA shard, bukan
+            // hanya shard utama, karena setiap shard memegang peta state di memorinya
+            // sendiri (misalnya client.globalChatChannels).
+            const cacheInvalidator = require('./src/managers/cacheInvalidator');
+            cacheInvalidator.initSubscriber(client);
+
             // Web Dashboard hanya boleh dijalankan oleh satu proses. Bila setiap shard
             // mencoba listen di port yang sama, shard berikutnya crash dengan EADDRINUSE.
             if (!isPrimaryShard) {
