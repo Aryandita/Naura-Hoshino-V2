@@ -1,8 +1,17 @@
 'use strict';
 
-// Seluruh transaksi Naura Central Bank. Semua fungsi selalu membaca data
-// terbaru lebih dulu, supaya saldo tidak bisa dipakai dua kali lewat dua
-// kolektor yang terbuka bersamaan.
+// Seluruh transaksi Naura Central Bank.
+//
+// Dua aturan yang dipegang di seluruh berkas ini:
+//
+// 1. Objek profil berasal dari cacheManager.getUserProfile(), yang mengembalikan
+//    JSON biasa. Objek itu TIDAK punya .save() maupun .changed(). Versi
+//    sebelumnya memanggil keduanya, sehingga setiap transaksi bank berakhir
+//    dengan TypeError. Semua penulisan sekarang lewat cacheManager.
+//
+// 2. Uang selalu dipotong lebih dulu, baru dikreditkan. Urutan ini membuat klik
+//    ganda kehilangan balapan pada langkah pertama, bukan menerbitkan uang baru
+//    pada langkah kedua.
 
 const UserSurvival = require('../../src/models/UserSurvival');
 const cacheManager = require('../../src/managers/cacheManager');
@@ -68,23 +77,22 @@ async function moveSavings(userId, rawAmount, toBank) {
     const bank = Number(profile.economy_bank) || 0;
     const wallet = currencyHelper.balanceOf(COIN, holders);
 
-    if (toBank) {
-        if (wallet < amount) return { ok: false, reason: 'insufficient', shortage: amount - wallet };
-        await currencyHelper.charge(COIN, holders, amount);
-        profile.economy_bank = bank + amount;
-    } else {
-        if (bank < amount) return { ok: false, reason: 'insufficient', shortage: amount - bank };
-        profile.economy_bank = bank - amount;
-        await currencyHelper.reward(COIN, holders, amount);
-    }
+    const source = toBank ? 'economy_wallet' : 'economy_bank';
+    const target = toBank ? 'economy_bank' : 'economy_wallet';
+    const available = toBank ? wallet : bank;
 
-    await profile.save();
+    const debit = await cacheManager.debitUserProfile(userId, source, amount);
+    if (!debit.ok) return { ok: false, reason: 'insufficient', shortage: Math.max(1, amount - available) };
+
+    await cacheManager.incrementUserProfile(userId, { [target]: amount });
+
+    const fresh = await cacheManager.getUserProfile(userId);
     return {
         ok: true,
         amount,
         toBank,
-        bank: Number(profile.economy_bank) || 0,
-        wallet: currencyHelper.balanceOf(COIN, { profile })
+        bank: Number((fresh || {}).economy_bank) || 0,
+        wallet: Number((fresh || {}).economy_wallet) || 0
     };
 }
 
@@ -107,18 +115,25 @@ async function createDeposit(userId, termKey, rawAmount) {
     if (Number(existing.amount) > 0) return { ok: false, reason: 'already_active' };
 
     const bank = Number(profile.economy_bank) || 0;
-    if (bank < amount) return { ok: false, reason: 'insufficient', shortage: amount - bank };
+    const debit = await cacheManager.debitUserProfile(userId, 'economy_bank', amount);
+    if (!debit.ok) return { ok: false, reason: 'insufficient', shortage: Math.max(1, amount - bank) };
 
     const currentDay = survival.inGameDay || 1;
-    profile.economy_bank = bank - amount;
-    profile.economy_deposit = {
-        amount,
-        unlockDay: currentDay + term.days,
-        interestRate: term.rate,
-        termName: term.name
-    };
-    profile.changed('economy_deposit', true);
-    await profile.save();
+    const written = await cacheManager.updateUserProfile(userId, {
+        economy_deposit: {
+            amount,
+            unlockDay: currentDay + term.days,
+            interestRate: term.rate,
+            termName: term.name
+        }
+    });
+
+    // Uang sudah keluar dari rekening; bila pencatatan depositonya gagal, uang itu
+    // harus dikembalikan alih-alih menghilang.
+    if (!written) {
+        await cacheManager.incrementUserProfile(userId, { economy_bank: amount });
+        return { ok: false, reason: 'write_failed' };
+    }
 
     return { ok: true, amount, term, unlockDay: currentDay + term.days };
 }
@@ -136,13 +151,17 @@ async function claimDeposit(userId) {
         return { ok: false, reason: 'locked', daysLeft: Number(dep.unlockDay) - currentDay };
     }
 
+    // Depositonya dikosongkan LEBIH DULU. Klik kedua yang datang bersamaan akan
+    // membaca deposito kosong dan berhenti di 'no_deposit', bukan mencairkan
+    // bunga untuk kedua kalinya.
+    const cleared = await cacheManager.updateUserProfile(userId, {
+        economy_deposit: { ...EMPTY_DEPOSIT }
+    });
+    if (!cleared) return { ok: false, reason: 'write_failed' };
+
     const interest = Math.floor(amount * (Number(dep.interestRate) || 0));
     const payout = amount + interest;
-
-    profile.economy_bank = (Number(profile.economy_bank) || 0) + payout;
-    profile.economy_deposit = { ...EMPTY_DEPOSIT };
-    profile.changed('economy_deposit', true);
-    await profile.save();
+    await cacheManager.incrementUserProfile(userId, { economy_bank: payout });
 
     return { ok: true, amount, interest, payout, termName: dep.termName || 'Deposito' };
 }
@@ -170,13 +189,16 @@ async function buyInvestment(userId, assetKey, rawAmount) {
     }
 
     const bank = Number(profile.economy_bank) || 0;
-    if (bank < amount) return { ok: false, reason: 'insufficient', shortage: amount - bank };
+    const debit = await cacheManager.debitUserProfile(userId, 'economy_bank', amount);
+    if (!debit.ok) return { ok: false, reason: 'insufficient', shortage: Math.max(1, amount - bank) };
 
     investments[assetKey] = { principal: amount, buyDay: survival.inGameDay || 1 };
-    profile.economy_bank = bank - amount;
-    profile.economy_investments = investments;
-    profile.changed('economy_investments', true);
-    await profile.save();
+    const written = await cacheManager.updateUserProfile(userId, { economy_investments: investments });
+
+    if (!written) {
+        await cacheManager.incrementUserProfile(userId, { economy_bank: amount });
+        return { ok: false, reason: 'write_failed' };
+    }
 
     return { ok: true, asset, amount };
 }
@@ -197,11 +219,12 @@ async function sellInvestment(userId, assetKey) {
     const value = Math.max(0, asset.calcValue(principal, elapsed));
     const profit = value - principal;
 
+    // Asetnya dilepas lebih dulu, dengan alasan yang sama seperti claimDeposit().
     delete investments[assetKey];
-    profile.economy_bank = (Number(profile.economy_bank) || 0) + value;
-    profile.economy_investments = investments;
-    profile.changed('economy_investments', true);
-    await profile.save();
+    const cleared = await cacheManager.updateUserProfile(userId, { economy_investments: investments });
+    if (!cleared) return { ok: false, reason: 'write_failed' };
+
+    await cacheManager.incrementUserProfile(userId, { economy_bank: value });
 
     return {
         ok: true,
