@@ -1,6 +1,32 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../managers/dbManager');
 
+/**
+ * Menginvalidasi cache setelah setiap penulisan.
+ *
+ * Dipasang di level model, bukan di setiap pemanggil, karena penulis
+ * GuildSettings tersebar di interactionCreate, dashboard, cron, dan berbagai
+ * plugin. Menaruhnya di satu tempat berarti tidak ada penulis baru yang bisa
+ * lupa melakukannya.
+ *
+ * Hook mengembalikan promise, sehingga Sequelize menunggunya selesai sebelum
+ * save() dianggap tuntas. Tanpa itu, pembacaan yang terjadi tepat setelah save()
+ * masih berpeluang mengisi ulang cache dengan data lama.
+ */
+function invalidateGuildCache(guildId) {
+    if (!guildId) return Promise.resolve();
+    // Lazy require memutus siklus: modul ini <- cacheManager <- cacheInvalidator.
+    const cacheInvalidator = require('../managers/cacheInvalidator');
+    return cacheInvalidator.invalidateGuild(guildId).catch(() => {});
+}
+
+/** Mengambil guildId dari klausa where pada operasi bulk, bila ada. */
+function guildIdFromOptions(options) {
+    const where = options && options.where;
+    if (!where) return null;
+    return typeof where.guildId === 'string' ? where.guildId : null;
+}
+
 const GuildSettings = sequelize.define('GuildSettings', {
     guildId: { 
         type: DataTypes.STRING, 
@@ -79,7 +105,20 @@ const GuildSettings = sequelize.define('GuildSettings', {
     
 }, {
     tableName: 'guild_settings',
-    timestamps: false
+    timestamps: false,
+    hooks: {
+        afterCreate: (row) => invalidateGuildCache(row && row.guildId),
+        afterUpdate: (row) => invalidateGuildCache(row && row.guildId),
+        afterDestroy: (row) => invalidateGuildCache(row && row.guildId),
+        afterUpsert: (result) => {
+            const row = Array.isArray(result) ? result[0] : result;
+            return invalidateGuildCache(row && row.guildId);
+        },
+        // Operasi bulk tidak memanggil hook instance kecuali individualHooks: true,
+        // jadi jalur ini ditangani terpisah.
+        afterBulkUpdate: (options) => invalidateGuildCache(guildIdFromOptions(options)),
+        afterBulkDestroy: (options) => invalidateGuildCache(guildIdFromOptions(options))
+    }
 });
 
 module.exports = GuildSettings;
