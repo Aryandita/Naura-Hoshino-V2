@@ -108,6 +108,31 @@ async function resolveUserLanguage(userId) {
 }
 
 /**
+ * Apakah user PERNAH memilih bahasa secara sadar?
+ *
+ * languageManager.getUserLanguage selalu menormalkan nilai kosong menjadi 'id',
+ * jadi ia tidak bisa dipakai untuk pertanyaan ini. Kolom language kini nullable
+ * (migrasi v5_language_nullable), sehingga NULL berarti belum pernah memilih.
+ * Dibaca langsung dari model supaya bebas dari normalisasi dan cache TTL.
+ */
+async function hasChosenLanguage(userId) {
+    if (!userId) return false;
+    try {
+        const UserProfile = require('../../src/models/UserProfile');
+        const profile = await UserProfile.findOne({
+            where: { userId },
+            attributes: ['userId', 'language']
+        });
+        return Boolean(profile && SUPPORTED.includes(profile.language));
+    } catch (err) {
+        logger.warn(`[Core] Gagal memeriksa status bahasa user: ${err.message}`);
+        // Bila database bermasalah, anggap sudah memilih supaya menu help tetap
+        // bisa dibuka tanpa terhalang pemilih bahasa yang berulang.
+        return true;
+    }
+}
+
+/**
  * Bahasa pribadi menang atas bahasa server, lalu jatuh ke Bahasa Indonesia.
  * @returns {Promise<{ code: string, lang: object }>}
  */
@@ -150,6 +175,7 @@ module.exports = {
     formatHelpContent,
     resolveGuildLanguage,
     resolveUserLanguage,
+    hasChosenLanguage,
     resolveLocale,
     persistUserLanguage
 };
