@@ -107,7 +107,7 @@ const connectToDatabase = async () => {
         await sequelize.authenticate();
         isDbOnline = true;
         // Mencegah penghapusan kolom tak disengaja di production
-        if (process.env.NODE_ENV === 'production') {
+        if (env.NODE_ENV === 'production') {
             await sequelize.sync({ alter: false }); // Biarkan migrator khusus yang merubah tabel
             logger.info('Database terhubung (Production Safe-Sync mode).');
         } else {
