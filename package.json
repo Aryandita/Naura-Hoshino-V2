@@ -13,7 +13,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "locales:check": "node scripts/validate-locales.js",
-    "locales:check:strict": "node scripts/validate-locales.js --strict"
+    "locales:check:strict": "node scripts/validate-locales.js --strict",
+    "audit": "node scripts/audit-repo.js",
+    "audit:strict": "node scripts/audit-repo.js --strict",
+    "text:check": "node scripts/check-em-dash.js",
+    "text:fix": "node scripts/check-em-dash.js --fix"
   },
   "engines": {
     "node": ">=20.6.0"

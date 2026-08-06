@@ -15,6 +15,20 @@ Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
 - [ ] Jalankan dashboard hanya di satu proses dan verifikasi tidak ada `EADDRINUSE`
 - [x] Isi `SESSION_SECRET` di produksi dan verifikasi tanda tangan webhook Saweria/Top.gg
 
+## 🧭 Audit & Stabilitas Awal
+
+- [x] Tambah `scripts/audit-repo.js` untuk audit aturan repository secara read-only
+- [x] Tambah `npm run audit` dan `npm run audit:strict`
+- [x] Dokumentasikan alur audit di `docs/repo-audit.md`
+- [ ] Jalankan audit dan klasifikasikan temuan critical, high, medium, low
+- [ ] Bereskan semua akses `process.env` langsung di luar `src/config/env.js`
+- [ ] Pastikan semua migration schema hanya berada di `src/managers/dbMigrator.js`
+- [ ] Ganti query panas `GuildSettings.findOne()` dengan cache terpusat
+- [ ] Ganti query panas `UserProfile.findByPk()` dengan cache terpusat
+- [ ] Tambahkan cleanup TTL pada seluruh `Map` dan `Set` sementara
+- [ ] Audit hardcoded Discord ID dan pindahkan ke `config.json` atau `GuildSettings`
+- [ ] Audit response utama yang masih memakai embed legacy agar diarahkan ke Components V2
+
 ## 🧹 Kebersihan Kode
 
 - [x] Pilih satu SDK Gemini: `@google/genai` **atau** `@google/generative-ai`
@@ -31,6 +45,7 @@ Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
 ## ✍️ Gaya Tulisan
 
 - [x] Tambah `scripts/check-em-dash.js` sebagai pemindai otomatis
+- [x] Tambah alias `npm run text:check` dan `npm run text:fix`
 - [ ] Bersihkan sisa em dash pada kamus bahasa dan string dalam kode
 - [ ] Aktifkan pemindai di CI setelah repo bersih
 
