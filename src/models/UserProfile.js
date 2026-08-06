@@ -70,7 +70,10 @@ const UserProfile = sequelize.define('UserProfile', {
     minigame_wordleWin: { type: DataTypes.INTEGER, defaultValue: 0 },
     minigame_duelScore: { type: DataTypes.INTEGER, defaultValue: 0 },
 
-    language: { type: DataTypes.STRING, defaultValue: 'id' },
+    // Sengaja nullable: NULL berarti user BELUM pernah memilih bahasa, sedangkan
+    // 'id' berarti user memang sengaja memilih Bahasa Indonesia. Perbedaan ini
+    // dipakai menu /help untuk memutuskan apakah pemilih bahasa perlu tampil.
+    language: { type: DataTypes.STRING, allowNull: true, defaultValue: null },
     isPremium: { type: DataTypes.BOOLEAN, defaultValue: false },
     premiumUntil: { type: DataTypes.DATE, allowNull: true },
 
@@ -85,7 +88,7 @@ const UserProfile = sequelize.define('UserProfile', {
     music_playlist: { type: DataTypes.JSON, defaultValue: [] },
     
     // ==========================================
-    // 📊 DATA ANALITIK CANVAS (YANG SEBELUMNYA HILANG)
+    // DATA ANALITIK CANVAS (YANG SEBELUMNYA HILANG)
     // ==========================================
     music_topTrack: { type: DataTypes.JSON, defaultValue: { name: 'Belum ada data', durationMs: 0 } },
     music_topFriend: { type: DataTypes.JSON, defaultValue: { name: 'Belum mabar', durationMs: 0 } },
