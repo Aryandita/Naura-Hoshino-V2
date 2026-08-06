@@ -1,10 +1,9 @@
 // src/utils/aiAutomodHelper.js
 // Helper untuk AI Auto-mod berbasis Gemini.
-// TRIGGER: Context menu "⚑ Report Pesan" — bukan per-pesan.
+// TRIGGER: Context menu "⚑ Report Pesan", bukan per-pesan.
 // AI hanya aktif saat ada laporan dari user Discord.
 
-const { GoogleGenAI } = require('@google/genai');
-const env = require('../config/env');
+const gemini = require('../../plugin/ai/geminiClient');
 const redisManager = require('../managers/redisManager');
 const { logger } = require('../managers/logger');
 
@@ -14,7 +13,10 @@ const reportCooldowns = new Map();
 const REPORT_COOLDOWN_MS = 60 * 1000; // 60 detik per reporter per guild
 
 // Cleanup rate limiter setiap 5 menit (Rule 1.8)
-setInterval(() => {
+// unref() penting: tanpa itu timer ini menahan event loop tetap hidup dan
+// membuat proses menggantung saat shutdown, persis masalah yang diperbaiki
+// di PR #13 untuk timer lain.
+const cooldownSweeper = setInterval(() => {
     const now = Date.now();
     for (const [guildId, reporters] of reportCooldowns.entries()) {
         for (const [reporterId, ts] of reporters.entries()) {
@@ -23,6 +25,7 @@ setInterval(() => {
         if (reporters.size === 0) reportCooldowns.delete(guildId);
     }
 }, 5 * 60 * 1000);
+if (cooldownSweeper.unref) cooldownSweeper.unref();
 
 /**
  * Cek apakah reporter sedang dalam cooldown.
@@ -50,7 +53,7 @@ function setReportCooldown(guildId, reporterId) {
 }
 
 /**
- * Prompt dasar untuk Gemini — instruksi analisis pesan.
+ * Prompt dasar untuk Gemini, berisi instruksi analisis pesan.
  * Menginstruksikan output JSON dengan skor dan kategori.
  */
 function buildAnalysisPrompt(messageContent, authorUsername, guildName) {
@@ -64,10 +67,10 @@ ${messageContent}
 ---
 
 Analisis pesan ini dan tentukan apakah melanggar aturan berikut:
-1. Toxicity / Hate Speech — termasuk bahasa kasar, hinaan, ujaran kebencian, dalam bahasa Indonesia, Inggris, gaul, slang Jawa/Sunda.
-2. Phishing / Spam Link Berbahaya — link yang mencurigakan, tautan unduhan, link palsu.
-3. Doxxing — membocorkan informasi pribadi seseorang (nama asli, alamat, nomor HP, dll).
-4. Konten NSFW — teks yang mengandung konten seksual eksplisit dalam konteks tidak pantas.
+1. Toxicity / Hate Speech, termasuk bahasa kasar, hinaan, ujaran kebencian, dalam bahasa Indonesia, Inggris, gaul, slang Jawa/Sunda.
+2. Phishing / Spam Link Berbahaya, yaitu link yang mencurigakan, tautan unduhan, link palsu.
+3. Doxxing, yaitu membocorkan informasi pribadi seseorang (nama asli, alamat, nomor HP, dll).
+4. Konten NSFW, yaitu teks yang mengandung konten seksual eksplisit dalam konteks tidak pantas.
 
 Berikan output HANYA dalam format JSON berikut (tanpa penjelasan tambahan di luar JSON):
 {
@@ -84,7 +87,7 @@ Catatan penting:
 - Skor 0-29 = pesan aman
 - Skor 30-69 = pelanggaran ringan/ambigu (perlu review admin)
 - Skor 70-100 = pelanggaran jelas (aksi otomatis)
-- Gunakan konteks penuh — bukan hanya kata kunci
+- Gunakan konteks penuh, bukan hanya kata kunci
 - Jangan hukum humor atau sarkasme yang jelas tidak berbahaya`;
 }
 
@@ -97,12 +100,12 @@ Catatan penting:
  * @returns {Promise<{score, category, subcategory, language_detected, reason, recommended_action, confidence}|null>}
  */
 async function analyzeMessageWithAI(reportedMessage, aiAutomodSettings) {
-    if (!env.GEMINI_API) {
+    if (!gemini.isAvailable()) {
         logger.warn('[AI Automod] GEMINI_API tidak dikonfigurasi. AI Automod tidak aktif.');
         return null;
     }
 
-    // Cek cache Redis — hindari analisis berulang untuk pesan yang sama
+    // Cek cache Redis, hindari analisis berulang untuk pesan yang sama
     const cacheKey = `ai:automod:${reportedMessage.id}`;
     try {
         const cached = await redisManager.getCache(cacheKey);
@@ -111,28 +114,28 @@ async function analyzeMessageWithAI(reportedMessage, aiAutomodSettings) {
             return cached;
         }
     } catch (e) {
-        // Redis error — lanjut tanpa cache
+        // Redis error, lanjut tanpa cache
     }
 
     try {
-        const genAI = new GoogleGenAI({ apiKey: env.GEMINI_API });
-
-        const messageContent = reportedMessage.content || '[Tidak ada teks — mungkin attachment/embed]';
+        const messageContent = reportedMessage.content || '[Tidak ada teks, mungkin attachment/embed]';
         const authorUsername = reportedMessage.author?.username || 'Unknown';
         const guildName = reportedMessage.guild?.name || 'Unknown Server';
 
         const prompt = buildAnalysisPrompt(messageContent, authorUsername, guildName);
 
-        const response = await genAI.models.generateContent({
+        // Sebelumnya berkas ini memanggil `response.text?.()`. Di @google/genai,
+        // `text` adalah getter bernilai string, bukan fungsi, sehingga panggilan
+        // itu selalu gagal dan AI Automod tidak pernah menghasilkan apa pun.
+        // Pengambilan teks sekarang ditangani geminiClient.extractText().
+        const rawText = await gemini.generate({
             model: 'gemini-2.0-flash',
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            parts: [{ text: prompt }],
             config: {
                 maxOutputTokens: 512,
                 temperature: 0.1 // Rendah untuk hasil yang konsisten dan deterministik
             }
         });
-
-        const rawText = response.text?.().trim() || '';
 
         // Parse JSON dari respons Gemini
         const jsonMatch = rawText.match(/\{[\s\S]*\}/);
@@ -147,7 +150,7 @@ async function analyzeMessageWithAI(reportedMessage, aiAutomodSettings) {
         try {
             await redisManager.setCache(cacheKey, result, 300);
         } catch (e) {
-            // Redis error — tidak masalah, lanjut
+            // Redis error, tidak masalah, lanjut
         }
 
         return result;
@@ -165,12 +168,11 @@ async function analyzeMessageWithAI(reportedMessage, aiAutomodSettings) {
  * @param {Object} guildSettings - Data GuildSettings dari DB/cache
  */
 async function handleAIReport(interaction, guildSettings) {
-    const { buildContainerV2, buildErrorContainerV2 } = require('../utils/NauraContainerBuilder');
+    const { buildContainerV2, buildErrorContainerV2 } = require('./NauraContainerBuilder');
     const ui = require('../config/ui');
     const { MessageFlags, PermissionFlagsBits } = require('discord.js');
 
     const reportedMessage = interaction.targetMessage;
-    const reporter = interaction.member;
     const guildId = interaction.guildId;
 
     // Jangan bisa report bot atau diri sendiri
@@ -243,7 +245,7 @@ async function handleAIReport(interaction, guildSettings) {
                     `**Alasan AI:**`,
                     `> ${analysis.reason}`,
                     '',
-                    isLearningMode ? '⚠️ **Mode Belajar aktif** — tidak ada aksi otomatis.' :
+                    isLearningMode ? '⚠️ **Mode Belajar aktif.** Tidak ada aksi otomatis.' :
                     isViolation ? '✅ **Aksi otomatis dijalankan.**' : '✅ **Tidak ada aksi otomatis (skor di bawah threshold).**'
                 ].join('\n'),
                 footerText: ui.getFooter('core')
@@ -266,7 +268,7 @@ async function handleAIReport(interaction, guildSettings) {
 
         return interaction.editReply(buildContainerV2({
             accentColorHex: '#FF0000',
-            authorName: 'Naura AI Automod — Aksi Diambil',
+            authorName: 'Naura AI Automod, Aksi Diambil',
             title: '🚨 Pesan Dilaporkan & Ditindak',
             description: `Pesan dari <@${reportedMessage.author.id}> telah **dihapus** dan user di-**timeout** selama 10 menit.\n\n**Alasan:** ${analysis.reason}\n**Skor Pelanggaran:** ${score}/100`,
             footerText: ui.getFooter('core')
@@ -277,7 +279,7 @@ async function handleAIReport(interaction, guildSettings) {
     if (isMarginal || isLearningMode) {
         return interaction.editReply(buildContainerV2({
             accentColorHex: '#FFD700',
-            authorName: 'Naura AI Automod — Perlu Review',
+            authorName: 'Naura AI Automod, Perlu Review',
             title: '⚠️ Laporan Diteruskan ke Admin',
             description: `Pesan yang kamu laporkan memiliki skor **${score}/100** (batas: ${threshold}).\n\nLaporan telah diteruskan ke admin untuk ditinjau. Terima kasih sudah membantu menjaga server!`,
             footerText: ui.getFooter('core')
@@ -287,7 +289,7 @@ async function handleAIReport(interaction, guildSettings) {
     // Skor aman (<30)
     return interaction.editReply(buildContainerV2({
         accentColorHex: '#00FF00',
-        authorName: 'Naura AI Automod — Hasil Analisis',
+        authorName: 'Naura AI Automod, Hasil Analisis',
         title: '✅ Pesan Tidak Melanggar',
         description: `AI tidak mendeteksi pelanggaran pada pesan tersebut (skor: **${score}/100**).\n\nJika kamu tetap merasa ada yang salah, hubungi admin server secara langsung.`,
         footerText: ui.getFooter('core')
