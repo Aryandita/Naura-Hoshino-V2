@@ -1,335 +1,308 @@
-// Lokasi: src/commands/survival/subcommands/collect.js
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, AttachmentBuilder } = require('discord.js');
-const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
-const UserProfile = require('../../../src/models/UserProfile');
-const UserSurvival = require('../../../src/models/UserSurvival');
-const cacheManager = require('../../../src/managers/cacheManager');
-const UserPet = require('../../../src/models/UserPet');
-const { safeParseInventory } = require('../inventoryHelper');
-const itemsConfig = require('../../../plugin/survival/items');
-const ui = require('../../../src/config/ui');
-const { advanceTime, getTimeState } = require('../../../plugin/survival/survivalTime');
-const leveling = require('../../../plugin/survival/survivalLeveling');
-const path = require('path');
+'use strict';
+
+// Eksplorasi lokasi. Tabel jarahan dan pemrosesan hadiah ada di
+// plugin/survival/collectActions.js, berkas ini hanya mengatur adegannya.
+//
+// Perbaikan penting dari versi lama:
+// - kartu keberhasilan dulu memanggil `successEmbed` yang tidak pernah dibuat,
+//   sehingga eksplorasi yang berhasil selalu berakhir dengan error,
+// - `client` dipakai tanpa pernah didefinisikan saat memanggil NPC,
+// - pakai editReply karena survival.js sudah menunda balasan,
+// - pemain diantar pulang ke 'desa', bukan 'village' yang tidak dikenal NPC.
+
 const fs = require('fs');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require('discord.js');
+const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
+const UserSurvival = require('../../../src/models/UserSurvival');
+const UserPet = require('../../../src/models/UserPet');
+const cacheManager = require('../../../src/managers/cacheManager');
+const ui = require('../../../src/config/ui');
+const npcs = require('../npcs');
+const actions = require('../collectActions');
+const { safeParseInventory } = require('../inventoryHelper');
+const { getTimeState } = require('../survivalTime');
+
+const CHOICE_MS = 15000;
+const QTE_MS = 5000;
+const TALK_MS = 30000;
+const BG_NAME = 'location.jpeg';
+
+function e(name, fallback) {
+    return ui.getEmoji(name) || fallback || '';
+}
 
 module.exports = {
     async execute(interaction) {
         const user = interaction.user;
         const lokasi = interaction.options.getString('lokasi');
-        
+
         const [survival] = await UserSurvival.findOrCreate({ where: { userId: user.id } });
         const profile = await cacheManager.getUserProfile(user.id);
 
-        const errReply = async (interaction, msg) => {
-            const ep = buildContainerV2({ accentColorHex: ui.getColor('error') || '#ef4444', title: 'Gagal', description: `${ui.getEmoji('error') || '❌'} ${msg}`, footerText: ui.getFooter('survival') });
-            return interaction.reply({ ...ep, flags: MessageFlags.Ephemeral });
-        };
-
         if (survival.currentLocation === 'prison') {
-            return errReply(interaction, 'Kamu tidak bisa melakukan ini karena sedang berada di dalam **Penjara**!');
+            return ui.sendError(interaction, 'Kamu masih di dalam penjara, jadi belum bisa ke mana-mana. Sabar ya!', true);
         }
 
         if (survival.hunger <= 10 || survival.thirst <= 10 || survival.stamina <= 10) {
-            return errReply(interaction, `Kamu terlalu lemas untuk pergi ke **${lokasi}**. Makan, minum, atau tidurlah dulu!`);
+            return ui.sendError(
+                interaction,
+                `Naura nggak izinkan kamu ke **${lokasi}** dalam keadaan lemas begini. Makan, minum, atau tidur dulu ya!`,
+                true
+            );
         }
 
-        const currentInv = safeParseInventory(profile.inventory);
-        
-        // Pengecekan Alat Pancing di Laut
-        const hasFishingRod = currentInv.some(item => item && item.id === 'fishing_rod');
-        const hasAxe = currentInv.some(item => item?.id?.includes('axe'));
-        const hasPickaxe = currentInv.some(item => item?.id?.includes('pickaxe'));
+        const inventory = safeParseInventory(profile.inventory);
+        const gear = actions.gearCheck(lokasi, inventory);
 
-        let usingBareHands = false;
-        if (lokasi === 'laut' && !hasFishingRod) {
-            return errReply(interaction, `Kamu butuh ${ui.getEmoji('fishing_rod') || '🎣'} **Fishing Rod** untuk memancing di laut! Menangkap ikan dengan tangan kosong itu mustahil.`);
+        if (!gear.allowed) {
+            return ui.sendError(
+                interaction,
+                `Kamu butuh ${e('fishing_rod')} **pancingan** dulu untuk melaut. Menangkap ikan pakai tangan itu mustahil, lho~`,
+                true
+            );
         }
 
-        if (lokasi === 'hutan' && !hasAxe) {
-            usingBareHands = true;
-        }
+        const bareHands = Boolean(gear.bareHands);
 
-        if (lokasi === 'tambang' && !hasPickaxe) {
-            usingBareHands = true;
-        }
-
-        const bareHandsFlag = usingBareHands;
-
-        // Set lokasi user sementara
         survival.currentLocation = lokasi;
         await survival.save();
 
         const timeState = getTimeState(survival.inGameHour || 6);
-        let encounterText = '';
+        const activePets = await UserPet.findAll({ where: { userId: user.id, isActive: true } });
+
+        // Kejadian kecil di jalan supaya tiap perjalanan terasa berbeda.
+        let encounter = '';
         if (Math.random() < 0.1) {
-            const seed = Math.random();
-            if (seed < 0.5) {
-                encounterText = `\n\n${ui.getEmoji('thief') || '🥷'} **Waspada!** Ada pergerakan mencurigakan di semak-semak. Mungkin itu bandit yang sedang mengintai!`;
-            } else {
-                encounterText = `\n\n🎒 **Loh?** Kamu melihat jejak kereta kuda di tanah. Mungkinkah Pak Damar si pedagang baru saja lewat sini?`;
-            }
+            encounter = Math.random() < 0.5
+                ? `\n\n${e('thief')} **Hati-hati!** Ada yang bergerak di semak-semak. Naura harap itu cuma kelinci...`
+                : `\n\n${e('shop_box')} **Eh?** Ada jejak gerobak di tanah. Sepertinya Pak Damar baru lewat sini.`;
         }
 
-        // Cari background lokasi
-        const bgPath = ui.getSurvivalBackground(lokasi, survival.inGameHour || 6);
-
-        const npcConfig = require('../../../plugin/survival/npcs');
-        const presentNPCs = Object.values(npcConfig).filter(n => {
-            const loc = (typeof n.getLocation === 'function') ? n.getLocation(survival.inGameHour || 6) : n.location;
+        const presentNPCs = Object.values(npcs).filter(npc => {
+            const loc = typeof npc.getLocation === 'function' ? npc.getLocation(survival.inGameHour || 6) : npc.location;
             return loc === lokasi;
         });
 
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('collect_1').setLabel('Cari di Sini').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('collect_2').setLabel('Cari di Sana').setStyle(ButtonStyle.Secondary)
+        const bgPath = ui.getSurvivalBackground(lokasi, survival.inGameHour || 6);
+        const files = bgPath && fs.existsSync(bgPath) ? [new AttachmentBuilder(bgPath, { name: BG_NAME })] : [];
+
+        const choiceRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('collect_here').setLabel('Cari di sini').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('collect_there').setLabel('Cari di sana').setStyle(ButtonStyle.Secondary)
         );
 
         if (presentNPCs.length > 0) {
-            row.addComponents(
-                new ButtonBuilder().setCustomId('collect_talk_npc_prep').setLabel('Bicara dengan Warga').setStyle(ButtonStyle.Success).setEmoji(ui.getEmoji('talk') || '🗣️')
+            choiceRow.addComponents(
+                new ButtonBuilder().setCustomId('collect_talk_prep').setLabel('Sapa warga').setStyle(ButtonStyle.Success)
             );
         }
 
-        let files = [];
-        let bannerAttachmentName;
-        if (fs.existsSync(bgPath)) {
-            files.push(new AttachmentBuilder(bgPath, { name: 'location.jpeg' }));
-            bannerAttachmentName = 'location.jpeg';
-        }
-
-        const locPayload = buildContainerV2({
-            accentColorHex: timeState.color || ui.getColor('primary') || '#FFB6C1',
-            title: `${ui.getEmoji('lokasi') || '📍'} Lokasi: ${lokasi.toUpperCase()}`,
-            description: `Kamu tiba di area ${lokasi}. Pilih area mana yang ingin kamu jelajahi!${encounterText}`,
-            bannerAttachmentName,
+        const arrivalPayload = buildContainerV2({
+            accentColorHex: timeState.color || ui.getColor('primary'),
+            authorName: `Perjalanan ${user.displayName || user.username}`,
+            title: `${e('lokasi')} Kamu sampai di ${String(lokasi).toUpperCase()}`,
+            expression: 'Happy',
+            description: [
+                bareHands
+                    ? 'Alatnya belum ada, jadi kamu harus mengais pakai tangan kosong. Naura ikut prihatin, tapi tetap semangat ya!'
+                    : 'Pilih dulu mau menjelajah bagian mana. Naura temani dari sini~',
+                encounter
+            ].filter(Boolean).join(''),
+            bannerAttachmentName: files.length > 0 ? BG_NAME : undefined,
+            files,
             footerText: ui.getFooter('survival')
         });
 
-        const response = await interaction.reply({ ...locPayload, components: [row], files });
-        const collector = response.createMessageComponentCollector({ filter: i => i.user.id === user.id, time: 15000, max: 1 });
+        const response = await interaction.editReply({
+            ...arrivalPayload,
+            components: [...arrivalPayload.components, choiceRow]
+        });
+
+        const collector = response.createMessageComponentCollector({
+            filter: i => i.user.id === user.id,
+            time: CHOICE_MS,
+            max: 1
+        });
+
+        /** Kartu penutup setelah semua urusan di lokasi selesai. */
+        const closingCard = ({ title, description, expression, colorKey }) => buildContainerV2({
+            accentColorHex: ui.getColor(colorKey || 'primary'),
+            authorName: `Perjalanan ${user.displayName || user.username}`,
+            title,
+            expression: expression || 'Happy',
+            description,
+            footerText: ui.getFooter('survival')
+        });
+
+        const finishSuccess = async (source) => {
+            const result = await actions.grantLoot({ userId: user.id, lokasi, bareHands, activePets });
+
+            if (!result.ok) {
+                return source.editReply(closingCard({
+                    title: `${e('naura_cry')} Naura gagal mencatat hasilnya`,
+                    description: 'Datamu belum bisa dibaca. Coba ulangi sebentar lagi ya, maaf banget!',
+                    expression: 'Cry',
+                    colorKey: 'error'
+                }));
+            }
+
+            const lootText = result.gained
+                .map(g => `> ${e('shop_box')} **${g.amount}x ${g.name}**`)
+                .join('\n');
+
+            const payload = closingCard({
+                title: `${e('naura_cheers')} Eksplorasi berhasil!`,
+                description: [
+                    result.bareStory || `Kamu menjelajah **${lokasi}** dan pulang membawa sesuatu!`,
+                    '',
+                    `**Yang kamu dapat:**`,
+                    lootText,
+                    '',
+                    `**Tenaga yang terpakai:**`,
+                    `> ${e('hunger')} Lapar -${result.cost.hunger} \u2022 ${e('thirst')} Haus -${result.cost.thirst}`,
+                    `> ${e('stamina')} Stamina -${result.cost.stamina} \u2022 ${e('clock')} Waktu +${result.hours} jam`,
+                    `> ${e('experience')} XP +${result.xp}`,
+                    '',
+                    `${result.timeState.emoji} Sekarang hari ke-**${result.day}**, pukul ${String(result.hour).padStart(2, '0')}:00 (${result.timeState.label}).`,
+                    result.passedOut
+                        ? `\n${e('sick')} Kamu sempat tumbang di jalan dan ditolong warga. Istirahat dulu ya!`
+                        : '',
+                    '',
+                    '*Naura sudah antar kamu pulang ke desa.*'
+                ].filter(Boolean).join('\n'),
+                expression: 'Cheers',
+                colorKey: 'success'
+            });
+
+            const talkRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('collect_talk').setLabel('Sapa warga desa').setStyle(ButtonStyle.Success)
+            );
+
+            const finalMsg = await source.editReply({
+                ...payload,
+                components: [...payload.components, talkRow]
+            });
+
+            if (!finalMsg || typeof finalMsg.createMessageComponentCollector !== 'function') return;
+
+            const talkCollector = finalMsg.createMessageComponentCollector({
+                filter: btn => btn.user.id === user.id && btn.customId === 'collect_talk',
+                time: TALK_MS,
+                max: 1
+            });
+
+            talkCollector.on('collect', async btn => {
+                await btn.deferUpdate();
+                try {
+                    const npcHandler = require('./npc.js');
+                    await npcHandler.execute(btn, interaction.client);
+                } catch (err) {
+                    await btn.followUp({
+                        ...closingCard({
+                            title: `${e('naura_akward')} Warganya sedang sibuk`,
+                            description: 'Belum ada yang bisa diajak bicara sekarang. Coba lagi nanti ya!',
+                            expression: 'Akward',
+                            colorKey: 'warning'
+                        }),
+                        ephemeral: true
+                    }).catch(() => {});
+                }
+            });
+        };
+
+        const finishFail = async (source, reason) => {
+            await actions.goHome(user.id);
+            return source.editReply(closingCard({
+                title: `${e('naura_akward')} Sayang sekali...`,
+                description: `${reason}\n\n*Naura antar kamu pulang ke desa dulu, ya.*`,
+                expression: 'Akward',
+                colorKey: 'error'
+            }));
+        };
 
         collector.on('collect', async i => {
             await i.deferUpdate();
 
-            if (i.customId === 'collect_talk_npc_prep') {
-                const disabledRow = ActionRowBuilder.from(row);
-                disabledRow.components.forEach(c => c.setDisabled(true));
-                await interaction.editReply({ components: [disabledRow] }).catch(() => {});
-
-                const npcHandler = require('./npc.js');
-                await npcHandler.execute(i, client);
+            if (i.customId === 'collect_talk_prep') {
+                try {
+                    const npcHandler = require('./npc.js');
+                    await npcHandler.execute(i, interaction.client);
+                } catch (err) {
+                    await finishFail(i, 'Warganya sedang tidak ada di tempat.');
+                }
                 return;
             }
 
-            let dropLapar = 5, dropHaus = 8, dropStamina = 10, rewardId = '';
-            const activePets = await UserPet.findAll({ where: { userId: user.id, isActive: true } });
-            const isWolf = activePets.some(p => p.petType === 'wolf');
-            const isCat = activePets.some(p => p.petType === 'cat');
+            // --- Quick Time Event ---
+            if (!bareHands && actions.shouldQte(lokasi)) {
+                const buttons = [
+                    new ButtonBuilder().setCustomId('qte_correct').setLabel(
+                        lokasi === 'laut' ? 'TARIK!' : lokasi === 'tambang' ? 'HANTAM!' : 'TEBANG!'
+                    ).setStyle(ButtonStyle.Success),
+                    new ButtonBuilder().setCustomId('qte_miss_a').setLabel('TUNGGU').setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder().setCustomId('qte_miss_b').setLabel('LEPAS').setStyle(ButtonStyle.Secondary)
+                ].sort(() => Math.random() - 0.5);
 
-            let list = [];
-            let bareHandsLoot = false;
+                let prompt = `${e('fishing_rod')} **Kena!** Pancinganmu ditarik kencang sekali!`;
+                if (lokasi === 'tambang') prompt = `${e('diamond')} **Urat mineral!** Bebatuannya keras, pukul di titik yang tepat!`;
+                if (lokasi === 'hutan') prompt = `${e('wood_mahogany')} **Pohon besar!** Ayunkan kapakmu dengan mantap!`;
 
-            if (lokasi === 'hutan') { 
-                if (bareHandsFlag) {
-                    bareHandsLoot = true;
-                    dropLapar = 10; dropHaus = 15; dropStamina = 25;
-                } else {
-                    list = ['wood', 'wood', 'fiber', 'apple', 'stone']; 
-                    if (isCat) list.push('apple', 'seed_apple'); 
-                }
-            } else if (lokasi === 'sampah') { 
-                list = ['trash', 'fiber', 'mineral_water']; 
-            } else if (lokasi === 'tambang') {
-                if (bareHandsFlag) {
-                    bareHandsLoot = true;
-                    dropLapar = 15; dropHaus = 20; dropStamina = 35;
-                } else {
-                    dropLapar = 10; dropHaus = 15; dropStamina = 20;
-                    if (isWolf) { dropLapar -= 4; dropHaus -= 5; dropStamina -= 5; }
-                    list = ['stone', 'stone', 'iron_ore', 'iron_ore', 'diamond', 'naura_shard'];
-                    if (isCat) list.push('diamond', 'naura_shard'); 
-                }
-            } else if (lokasi === 'laut') {
-                dropLapar = 3; dropHaus = 5; dropStamina = 5;
-                list = ['small_fish', 'salmon', 'trash'];
-                if (isCat) list.push('salmon', 'mystic_herb'); 
-            }
-
-            let isQTE = false;
-            let qteButtons = [];
-
-            if (!bareHandsLoot) {
-                if (lokasi === 'laut') {
-                    isQTE = true;
-                    qteButtons = [
-                        new ButtonBuilder().setCustomId('qte_wrong1').setLabel('LEPAS').setStyle(ButtonStyle.Secondary),
-                        new ButtonBuilder().setCustomId('qte_correct').setLabel('TARIK!').setStyle(ButtonStyle.Success),
-                        new ButtonBuilder().setCustomId('qte_wrong2').setLabel('DIAM').setStyle(ButtonStyle.Secondary)
-                    ];
-                } else if (lokasi === 'tambang' && Math.random() < 0.4) {
-                    isQTE = true;
-                    qteButtons = [
-                        new ButtonBuilder().setCustomId('qte_correct').setLabel('HANTAM!').setStyle(ButtonStyle.Danger),
-                        new ButtonBuilder().setCustomId('qte_wrong1').setLabel('USAP').setStyle(ButtonStyle.Secondary),
-                        new ButtonBuilder().setCustomId('qte_wrong2').setLabel('LARI').setStyle(ButtonStyle.Secondary)
-                    ];
-                } else if (lokasi === 'hutan' && Math.random() < 0.3) {
-                    isQTE = true;
-                    qteButtons = [
-                        new ButtonBuilder().setCustomId('qte_wrong1').setLabel('CABUT').setStyle(ButtonStyle.Secondary),
-                        new ButtonBuilder().setCustomId('qte_wrong2').setLabel('TENDANG').setStyle(ButtonStyle.Secondary),
-                        new ButtonBuilder().setCustomId('qte_correct').setLabel('TEBANG!').setStyle(ButtonStyle.Primary)
-                    ];
-                }
-            }
-
-            const processLoot = async (isSuccess, interactionSource) => {
-                // Selalu kembalikan lokasi ke desa/village saat selesai
-                survival.currentLocation = 'village';
-                await survival.save();
-
-                if (!isSuccess) {
-                    const failPayload = buildContainerV2({ accentColorHex: ui.getColor('error') || '#ef4444', title: 'Gagal!', description: `${ui.getEmoji('error') || '❌'} Gagal! Kamu salah langkah dan kehilangan target.\n\n*Kamu berjalan kembali ke Desa Pemula.*`, footerText: ui.getFooter('survival') });
-                    return interactionSource.editReply({ ...failPayload, components: [], files: [] });
-                }
-
-                const updatedInv = safeParseInventory(profile.inventory);
-                let successDesc = '';
-
-                if (bareHandsLoot) {
-                    if (lokasi === 'hutan') {
-                        updatedInv.push({ id: 'wood', name: 'Kayu' });
-                        updatedInv.push({ id: 'trash', name: 'Sampah Ranting' });
-                        successDesc = `Kamu mengais hutan dengan tangan kosong.\nKamu menemukan **1x Kayu** dan **1x Ranting (Sampah)**.\n*Tanganmu terasa perih, staminamu terkuras drastis.*`;
-                    } else if (lokasi === 'tambang') {
-                        updatedInv.push({ id: 'stone', name: 'Batu' });
-                        updatedInv.push({ id: 'trash', name: 'Kerikil' });
-                        successDesc = `Kamu menggali bebatuan tambang dengan tangan kosong.\nKamu menemukan **1x Batu** dan **1x Kerikil (Sampah)**.\n*Jarimu lecet, staminamu terkuras drastis.*`;
-                    }
-                } else {
-                    rewardId = list[Math.floor(Math.random() * list.length)];
-                    const itemReward = itemsConfig.find(it => it.id === rewardId) || { id: rewardId, name: rewardId };
-                    updatedInv.push({ id: rewardId, name: itemReward.name });
-                    successDesc = `Kamu berhasil melakukan eksplorasi di ${lokasi}!\nKamu menemukan **${itemReward.name}**!`;
-                }
-
-                const newHunger = Math.max(0, survival.hunger - dropLapar);
-                const newThirst = Math.max(0, survival.thirst - dropHaus);
-                const newStamina = Math.max(0, survival.stamina - dropStamina);
-                
-                const hoursTaken = lokasi === 'tambang' ? 2 : 1;
-                const timeUpdate = await advanceTime(user.id, hoursTaken);
-                const newTimeState = getTimeState(timeUpdate.hour);
-
-                // Simpan perubahan ke UserSurvival
-                await UserSurvival.update({ 
-                    hunger: newHunger, 
-                    thirst: newThirst, 
-                    stamina: newStamina,
-                    currentLocation: 'village'
-                }, { where: { userId: user.id } });
-                
-                await UserProfile.update({ inventory: updatedInv }, { where: { userId: user.id } });
-
-                let gainedXP = lokasi === 'tambang' ? 10 : 5;
-                await leveling.addPlayerXP(user.id, gainedXP);
-
-                // Update Quest Progress
-                try {
-                    const { incrementQuestProgress } = require('../../../plugin/survival/questGenerator');
-                    await incrementQuestProgress(user.id, 'collect');
-
-                    const UserQuest = require('../../../src/models/UserQuest');
-                    const today = new Date().toISOString().split('T')[0];
-                    let [quest] = await UserQuest.findOrCreate({ where: { userId: user.id }, defaults: { lastReset: today } });
-                    if (quest.lastReset !== today) {
-                        quest.workCount = 0; quest.dungeonKills = 0; quest.collectCount = 0; quest.isClaimed = false; quest.lastReset = today;
-                    }
-                    quest.collectCount++;
-                    await quest.save();
-                } catch (e) {}
-
-                const successPayload = buildContainerV2({
-                    accentColorHex: ui.getColor('success') || '#22c55e',
-                    title: `${ui.getEmoji('success') || '✅'} Eksplorasi Berhasil!`,
-                    description: `${successDesc}\n\n**Pengorbanan:**\n> ${ui.getEmoji('hunger') || '🍖'} Lapar: -${dropLapar} | ${ui.getEmoji('thirst') || '💧'} Haus: -${dropHaus}\n> ${ui.getEmoji('stamina') || '⚡'} Stamina: -${dropStamina} | ${ui.getEmoji('clock') || '⏰'} Waktu: +${hoursTaken} Jam\n\n${ui.getEmoji('exp') || '🌟'} **Mendapatkan +${gainedXP} XP**\n\n**Waktu Saat Ini:**\n> Hari ke-${timeUpdate.day}, Jam ${timeUpdate.hour.toString().padStart(2, '0')}:00 (${newTimeState.label})\n\n*Kamu telah kembali ke Desa Pemula.*`,
-                    footerText: ui.getFooter('survival')
+                const qtePayload = closingCard({
+                    title: `${e('naura_shocked')} Cepat, ambil keputusan!`,
+                    description: `${prompt}\n\nTekan tombol yang benar dalam **5 detik**! Naura ikut deg-degan~`,
+                    expression: 'Shocked',
+                    colorKey: 'warning'
                 });
 
-                const talkRow = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder()
-                        .setCustomId('collect_talk_npc')
-                        .setLabel('Bicara dengan Warga')
-                        .setStyle(ButtonStyle.Success)
-                        .setEmoji(ui.getEmoji('talk') || '🗣️')
-                );
+                const qteMsg = await i.editReply({
+                    ...qtePayload,
+                    components: [...qtePayload.components, new ActionRowBuilder().addComponents(buttons)]
+                });
 
-                const finalMsg = await interactionSource.editReply({ embeds: [successEmbed], components: [talkRow], files: [] });
+                const qteCollector = qteMsg.createMessageComponentCollector({
+                    filter: btn => btn.user.id === user.id,
+                    time: QTE_MS,
+                    max: 1
+                });
 
-                if (finalMsg && finalMsg.createMessageComponentCollector) {
-                    const finalCollector = finalMsg.createMessageComponentCollector({
-                        filter: btnI => btnI.user.id === user.id && btnI.customId === 'collect_talk_npc',
-                        time: 30000
-                    });
-
-                    finalCollector.on('collect', async btnI => {
-                        await btnI.deferUpdate();
-                        const disabledRow = new ActionRowBuilder().addComponents(
-                            new ButtonBuilder()
-                                .setCustomId('collect_talk_npc_disabled')
-                                .setLabel('Bicara dengan Warga')
-                                .setStyle(ButtonStyle.Success)
-                                .setEmoji(ui.getEmoji('talk') || '🗣️')
-                                .setDisabled(true)
-                        );
-                        await btnI.editReply({ components: [disabledRow] }).catch(() => {});
-
-                        const npcHandler = require('./npc.js');
-                        await npcHandler.execute(btnI, client);
-                    });
-                }
-            };
-
-            if (isQTE) {
-                qteButtons.sort(() => Math.random() - 0.5);
-                const qteRow = new ActionRowBuilder().addComponents(qteButtons);
-                
-                let qteMsg = `${ui.getEmoji('fishing_rod') || '🎣'} **STRIKE!** Umpanmu ditarik kencang!`;
-                if (lokasi === 'tambang') qteMsg = `${ui.getEmoji('diamond') || '💎'} **BATU KERAS!** Kamu menemukan urat mineral murni!`;
-                if (lokasi === 'hutan') qteMsg = `${ui.getEmoji('tree') || '🌳'} **POHON RAKSASA!** Ayunkan kapakmu dengan benar!`;
-
-                const qtePayload = buildContainerV2({ accentColorHex: ui.getColor('warning') || '#f59e0b', title: '⚡ Quick Time Event!', description: `${qteMsg}\n\nTekan tombol yang tepat dalam **5 Detik**!`, footerText: ui.getFooter('survival') });
-                const qteResponse = await i.editReply({ ...qtePayload, components: [qteRow] });
-                const qteCollector = qteResponse.createMessageComponentCollector({ filter: btnI => btnI.user.id === user.id, time: 5000, max: 1 });
-
-                qteCollector.on('collect', async btnI => {
-                    await btnI.deferUpdate();
-                    if (btnI.customId === 'qte_correct') await processLoot(true, btnI);
-                    else await processLoot(false, btnI);
+                qteCollector.on('collect', async btn => {
+                    await btn.deferUpdate();
+                    if (btn.customId === 'qte_correct') await finishSuccess(btn);
+                    else await finishFail(btn, 'Langkahmu kurang tepat, targetnya lepas begitu saja.');
                 });
 
                 qteCollector.on('end', async collected => {
                     if (collected.size === 0) {
-                        survival.currentLocation = 'village';
-                        await survival.save();
-                        const toPayload = buildContainerV2({ accentColorHex: ui.getColor('error') || '#ef4444', title: 'Waktu Habis!', description: `${ui.getEmoji('clock') || '⏱️'} Waktu Habis! Kamu terlalu lambat bereaksi.`, footerText: ui.getFooter('survival') });
-                        i.editReply({ ...toPayload, components: [], files: [] }).catch(() => {});
+                        await finishFail(i, 'Waktunya habis, kamu terlambat bereaksi.').catch(() => {});
                     }
                 });
-            } else {
-                const waitPayload = buildContainerV2({ accentColorHex: ui.getColor('primary') || '#FFB6C1', title: '🔍 Sedang Mengais...', description: 'Sedang mengais area ini...', footerText: ui.getFooter('survival') });
-                await i.editReply({ ...waitPayload, components: [] });
-                setTimeout(async () => { await processLoot(true, i); }, 1500);
+
+                return;
             }
+
+            // --- Tanpa QTE: langsung mengais ---
+            const waitPayload = closingCard({
+                title: `${e('naura_thinking')} Sedang mencari...`,
+                description: 'Naura ikut mengintip sekeliling. Sebentar ya~',
+                expression: 'Thinking',
+                colorKey: 'info'
+            });
+            await i.editReply(waitPayload);
+
+            setTimeout(() => {
+                finishSuccess(i).catch(() => {});
+            }, 1500);
         });
 
-        collector.on('end', async c => { 
-            if (c.size === 0) {
-                survival.currentLocation = 'village';
-                await survival.save();
-                const toPayload = buildContainerV2({ accentColorHex: ui.getColor('error') || '#ef4444', title: 'Waktu Habis!', description: 'Waktu habis, kamu melamun terlalu lama!', footerText: ui.getFooter('survival') });
-                interaction.editReply({ ...toPayload, components: [], files: [] }).catch(() => {});
+        collector.on('end', async collected => {
+            if (collected.size === 0) {
+                await actions.goHome(user.id);
+                await interaction.editReply(closingCard({
+                    title: `${e('naura_sleepy')} Kamu melamun kelamaan`,
+                    description: 'Waktunya habis, jadi Naura antar kamu pulang ke desa dulu. Tidak ada tenaga yang terbuang, kok!',
+                    expression: 'Sleepy',
+                    colorKey: 'warning'
+                })).catch(() => {});
             }
         });
     }

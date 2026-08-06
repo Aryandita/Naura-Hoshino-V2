@@ -1,207 +1,305 @@
-// Lokasi: plugin/canvas/duelCanvas.js
+'use strict';
+
+// Arena PvP. Dipanggil lewat plugin/survival/subcommands/duel.js secara lazy,
+// jadi kegagalan menggambar tidak boleh sampai menghentikan duelnya.
+
 const { createCanvas, loadImage } = require('@napi-rs/canvas');
 const fs = require('fs');
-const path = require('path');
 
-/**
- * Menggambar canvas untuk tampilan PvP Duel Battle Arena.
- * @param {Object} p1 - Data pemain 1 (challenger)
- * @param {Object} p2 - Data pemain 2 (opponent)
- * @param {string} roundLog - Teks log aksi yang terjadi di ronde ini
- * @returns {Buffer} Buffer gambar PNG
- */
-async function drawDuel(p1, p2, roundLog) {
-    const canvas = createCanvas(900, 500);
-    const ctx = canvas.getContext('2d');
+const W = 900;
+const H = 520;
 
-    const ui = require('../../src/config/ui');
+// Warna aura per kelas supaya panel kedua pemain terasa berbeda karakter.
+const CLASS_THEME = {
+    warrior: { glow: '#f97316', label: '#fdba74' },
+    mage: { glow: '#60a5fa', label: '#bfdbfe' },
+    assassin: { glow: '#a855f7', label: '#e9d5ff' },
+    ranger: { glow: '#22c55e', label: '#bbf7d0' },
+    default: { glow: '#f472b6', label: '#fbcfe8' }
+};
 
-    // 1. Background
-    const bgPath = ui.getDungeonBackground ? ui.getDungeonBackground() : null;
-    let bgLoaded = false;
-    try {
-        if (bgPath && fs.existsSync(bgPath)) {
-            const bgImage = await loadImage(bgPath);
-            ctx.drawImage(bgImage, 0, 0, 900, 500);
-            bgLoaded = true;
-        }
-    } catch (err) {
-        console.error('\x1b[41m\x1b[37m \u{1F4A5} DuelCanvas \x1b[0m \x1b[31mGagal memuat background:', err.message, '\x1b[0m');
-    }
-
-    if (!bgLoaded) {
-        // Fallback Gradient (dark arena)
-        const grad = ctx.createLinearGradient(0, 0, 0, 500);
-        grad.addColorStop(0, '#0a0a1a');
-        grad.addColorStop(0.5, '#1a0a2e');
-        grad.addColorStop(1, '#0d0d1f');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 900, 500);
-    }
-
-    // Dark overlay
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-    ctx.fillRect(0, 0, 900, 500);
-
-    // ==========================================
-    // 2. PLAYER 1 (Kiri)
-    // ==========================================
-    await drawPlayerPanel(ctx, p1, 30, 30, 370, 260, 'rgba(255, 182, 193, 0.6)', 'rgba(255, 182, 193, 0.3)');
-
-    // ==========================================
-    // 3. PLAYER 2 (Kanan)
-    // ==========================================
-    await drawPlayerPanel(ctx, p2, 500, 30, 370, 260, 'rgba(147, 130, 255, 0.6)', 'rgba(147, 130, 255, 0.3)');
-
-    // ==========================================
-    // 4. VS Badge (Tengah)
-    // ==========================================
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
-    ctx.fillStyle = '#ffd700';
-    ctx.font = 'bold 36px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('VS', 450, 170);
-    ctx.shadowBlur = 0;
-
-    // ==========================================
-    // 5. Action Log Box (Bawah)
-    // ==========================================
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.roundRect(30, 320, 840, 150, 15);
-    ctx.fill();
-    ctx.stroke();
-
-    // Header log
-    ctx.fillStyle = '#ffb6c1';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('\u2694\uFE0F Battle Log', 50, 345);
-
-    // Log text
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '15px sans-serif';
-    const lines = (roundLog || '').split('\n');
-    let yPos = 370;
-    for (const line of lines.slice(0, 4)) {
-        ctx.fillText(line.substring(0, 90), 50, yPos);
-        yPos += 24;
-    }
-
-    return canvas.toBuffer('image/png');
+function themeOf(className) {
+    return CLASS_THEME[String(className || '').toLowerCase()] || CLASS_THEME.default;
 }
 
-/**
- * Menggambar panel info pemain (avatar, nama, kelas, HP bar, stamina bar)
- */
-async function drawPlayerPanel(ctx, player, x, y, w, h, glowColor, strokeColor) {
-    // Container frame (glassmorphism)
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = glowColor;
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = 3;
+function hexToRgba(hex, alpha) {
+    const value = String(hex).replace('#', '');
+    const r = parseInt(value.substring(0, 2), 16);
+    const g = parseInt(value.substring(2, 4), 16);
+    const b = parseInt(value.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
+function roundedPath(ctx, x, y, w, h, r) {
     ctx.beginPath();
-    ctx.roundRect(x, y, w, h, 20);
-    ctx.fill();
-    ctx.stroke();
-    ctx.shadowBlur = 0;
+    ctx.roundRect(x, y, w, h, r);
+}
 
-    // Avatar
-    let avatar = null;
+/** Latar arena. Bila berkas gambar tidak ada, dipakai gradien gelap. */
+async function drawBackdrop(ctx) {
+    let drawn = false;
     try {
-        if (player.avatarUrl) {
-            avatar = await loadImage(player.avatarUrl);
+        const ui = require('../../src/config/ui');
+        const bgPath = ui.getDungeonBackground ? ui.getDungeonBackground() : null;
+        if (bgPath && fs.existsSync(bgPath)) {
+            const image = await loadImage(bgPath);
+            ctx.drawImage(image, 0, 0, W, H);
+            drawn = true;
         }
-    } catch (e) {
-        // Fallback jika avatar gagal dimuat
+    } catch (error) {
+        drawn = false;
     }
 
-    const avatarX = x + 50;
-    const avatarY = y + 45;
-    const avatarR = 40;
+    if (!drawn) {
+        const grad = ctx.createLinearGradient(0, 0, W, H);
+        grad.addColorStop(0, '#0b1026');
+        grad.addColorStop(0.55, '#231038');
+        grad.addColorStop(1, '#0a0a18');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+    }
+
+    // Peredup dan vignette agar teks selalu terbaca di atas latar apa pun.
+    ctx.fillStyle = 'rgba(6, 6, 18, 0.55)';
+    ctx.fillRect(0, 0, W, H);
+
+    const vignette = ctx.createRadialGradient(W / 2, H / 2, 140, W / 2, H / 2, 620);
+    vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.75)');
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, W, H);
+
+    // Lantai arena berupa elips tipis, memberi kesan panggung.
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(W / 2, 300, 330, 58, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawBar(ctx, x, y, w, h, ratio, color, text) {
+    const clamped = Math.max(0, Math.min(1, Number.isFinite(ratio) ? ratio : 0));
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    roundedPath(ctx, x, y, w, h, h / 2);
+    ctx.fill();
+
+    if (clamped > 0) {
+        ctx.fillStyle = color;
+        roundedPath(ctx, x, y, Math.max(h, w * clamped), h, h / 2);
+        ctx.fill();
+    }
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+    ctx.lineWidth = 1;
+    roundedPath(ctx, x, y, w, h, h / 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${Math.round(h * 0.58)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(text, x + w / 2, y + h * 0.72);
+    ctx.textAlign = 'left';
+}
+
+async function drawFighter(ctx, player, x, mirrored) {
+    const theme = themeOf(player.class);
+    const w = 360;
+    const h = 250;
+    const y = 34;
+
+    ctx.save();
+    ctx.shadowBlur = 26;
+    ctx.shadowColor = hexToRgba(theme.glow, 0.85);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+    roundedPath(ctx, x, y, w, h, 22);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.strokeStyle = hexToRgba(theme.glow, 0.55);
+    ctx.lineWidth = 3;
+    roundedPath(ctx, x, y, w, h, 22);
+    ctx.stroke();
+
+    // Pita sisi sebagai penanda pemain kiri atau kanan.
+    ctx.fillStyle = hexToRgba(theme.glow, 0.9);
+    roundedPath(ctx, mirrored ? x + w - 10 : x + 4, y + 18, 6, h - 36, 3);
+    ctx.fill();
+
+    const avatarX = mirrored ? x + w - 74 : x + 74;
+    const avatarY = y + 72;
+    const radius = 44;
+
+    let avatar = null;
+    try {
+        if (player.avatarUrl) avatar = await loadImage(player.avatarUrl);
+    } catch (error) {
+        avatar = null;
+    }
+
+    ctx.save();
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = hexToRgba(theme.glow, 0.9);
+    ctx.beginPath();
+    ctx.arc(avatarX, avatarY, radius + 4, 0, Math.PI * 2);
+    ctx.fillStyle = hexToRgba(theme.glow, 0.35);
+    ctx.fill();
+    ctx.restore();
 
     if (avatar) {
         ctx.save();
         ctx.beginPath();
-        ctx.arc(avatarX, avatarY, avatarR, 0, Math.PI * 2);
+        ctx.arc(avatarX, avatarY, radius, 0, Math.PI * 2);
         ctx.clip();
-        ctx.drawImage(avatar, avatarX - avatarR, avatarY - avatarR, avatarR * 2, avatarR * 2);
+        ctx.drawImage(avatar, avatarX - radius, avatarY - radius, radius * 2, radius * 2);
         ctx.restore();
-
-        // Avatar border ring
-        ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.arc(avatarX, avatarY, avatarR + 2, 0, Math.PI * 2);
-        ctx.stroke();
     } else {
-        ctx.fillStyle = glowColor;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
         ctx.beginPath();
-        ctx.arc(avatarX, avatarY, avatarR, 0, Math.PI * 2);
+        ctx.arc(avatarX, avatarY, radius, 0, Math.PI * 2);
         ctx.fill();
     }
 
-    // Username
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 20px sans-serif';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(avatarX, avatarY, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    const textX = mirrored ? x + 24 : x + 132;
     ctx.textAlign = 'left';
-    ctx.fillText((player.username || 'Unknown').substring(0, 15), x + 100, avatarY - 8);
-
-    // Class label
-    ctx.fillStyle = '#ffb6c1';
-    ctx.font = '13px sans-serif';
-    ctx.fillText(`Class: ${(player.class || 'No Class').toUpperCase()}`, x + 100, avatarY + 14);
-
-    // HP Bar
-    const barX = x + 20;
-    const barW = w - 40;
-    const hpBarY = y + 120;
-
-    ctx.fillStyle = '#444444';
-    ctx.beginPath();
-    ctx.roundRect(barX, hpBarY, barW, 22, 11);
-    ctx.fill();
-
-    const hpPercent = Math.max(0, Math.min(1, player.hp / player.maxHp));
-    ctx.fillStyle = hpPercent > 0.5 ? '#2ecc71' : hpPercent > 0.2 ? '#f1c40f' : '#e74c3c';
-    ctx.beginPath();
-    ctx.roundRect(barX, hpBarY, barW * hpPercent, 22, 11);
-    ctx.fill();
-
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 12px sans-serif';
+    ctx.font = 'bold 21px sans-serif';
+    ctx.fillText(String(player.username || 'Petarung').substring(0, 16), textX, avatarY - 10);
+
+    ctx.fillStyle = theme.label;
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillText(String(player.class || 'Tanpa Kelas').toUpperCase(), textX, avatarY + 12);
+
+    if (player.level) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx.font = '12px sans-serif';
+        ctx.fillText(`Level ${player.level}`, textX, avatarY + 32);
+    }
+
+    const maxHp = Number(player.maxHp) || 100;
+    const hp = Math.max(0, Number(player.hp) || 0);
+    const hpRatio = hp / maxHp;
+    const hpColor = hpRatio > 0.5 ? '#22c55e' : hpRatio > 0.2 ? '#facc15' : '#ef4444';
+
+    drawBar(ctx, x + 22, y + 140, w - 44, 24, hpRatio, hpColor, `HP ${hp} / ${maxHp}`);
+    drawBar(ctx, x + 22, y + 174, w - 44, 18, (Number(player.stamina) || 0) / 100, '#38bdf8', `STAMINA ${Number(player.stamina) || 0}`);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.font = '12px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`HP: ${player.hp}/${player.maxHp}`, barX + barW / 2, hpBarY + 16);
-
-    // Stamina Bar
-    const staminaBarY = hpBarY + 35;
-
-    ctx.fillStyle = '#444444';
-    ctx.beginPath();
-    ctx.roundRect(barX, staminaBarY, barW, 18, 9);
-    ctx.fill();
-
-    const staminaPercent = Math.max(0, Math.min(1, (player.stamina || 0) / 100));
-    ctx.fillStyle = '#3498db';
-    ctx.beginPath();
-    ctx.roundRect(barX, staminaBarY, barW * staminaPercent, 18, 9);
-    ctx.fill();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 10px sans-serif';
-    ctx.fillText(`STAMINA: ${player.stamina || 0}/100`, barX + barW / 2, staminaBarY + 13);
-
-    // Stats summary (bottom of panel)
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.font = '11px sans-serif';
+    ctx.fillText(
+        `STR ${player.strength || 0}   AGI ${player.agility || 0}   INT ${player.intelligence || 0}   LCK ${player.luck || 0}`,
+        x + w / 2,
+        y + 222
+    );
     ctx.textAlign = 'left';
-    const statsY = staminaBarY + 40;
-    ctx.fillText(`STR: ${player.strength || 0}  |  AGI: ${player.agility || 0}  |  INT: ${player.intelligence || 0}  |  LCK: ${player.luck || 0}`, barX, statsY);
 }
 
-module.exports = { drawDuel };
+function drawVersus(ctx, round) {
+    ctx.save();
+    ctx.translate(W / 2, 150);
+
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = 'rgba(251, 191, 36, 0.9)';
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, 38, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = 'rgba(12, 10, 24, 0.85)';
+    ctx.beginPath();
+    ctx.arc(0, 0, 35, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#fde68a';
+    ctx.font = 'bold 30px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('VS', 0, 11);
+
+    if (round) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillText(`RONDE ${round}`, 0, 62);
+    }
+
+    ctx.restore();
+    ctx.textAlign = 'left';
+}
+
+function drawLog(ctx, roundLog) {
+    const x = 34;
+    const y = 330;
+    const w = W - 68;
+    const h = 158;
+
+    ctx.fillStyle = 'rgba(8, 8, 20, 0.72)';
+    roundedPath(ctx, x, y, w, h, 16);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 1.5;
+    roundedPath(ctx, x, y, w, h, 16);
+    ctx.stroke();
+
+    ctx.fillStyle = '#fbcfe8';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.fillText('CATATAN PERTARUNGAN', x + 20, y + 26);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+    ctx.beginPath();
+    ctx.moveTo(x + 20, y + 36);
+    ctx.lineTo(x + w - 20, y + 36);
+    ctx.stroke();
+
+    const lines = String(roundLog || 'Pertarungan baru saja dimulai...')
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .slice(0, 4);
+
+    ctx.font = '15px sans-serif';
+    let cursor = y + 64;
+    for (const line of lines) {
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText('\u25B8', x + 22, cursor);
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillText(line.substring(0, 86), x + 40, cursor);
+        cursor += 26;
+    }
+}
+
+/**
+ * @param {Object} p1 pemain penantang: username, avatarUrl, class, level, hp, maxHp, stamina, stat dasar
+ * @param {Object} p2 pemain lawan dengan bentuk data yang sama
+ * @param {string} roundLog narasi ronde, boleh berisi beberapa baris
+ * @returns {Promise<Buffer>} gambar PNG arena
+ */
+async function drawDuel(p1, p2, roundLog, round) {
+    const canvas = createCanvas(W, H);
+    const ctx = canvas.getContext('2d');
+
+    await drawBackdrop(ctx);
+    await drawFighter(ctx, p1 || {}, 30, false);
+    await drawFighter(ctx, p2 || {}, W - 390, true);
+    drawVersus(ctx, round);
+    drawLog(ctx, roundLog);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('Naura Duel Arena', W - 34, H - 12);
+
+    return canvas.toBuffer('image/png');
+}
+
+module.exports = { drawDuel, CLASS_THEME };

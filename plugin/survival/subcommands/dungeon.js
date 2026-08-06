@@ -1,382 +1,232 @@
 // Lokasi: plugin/survival/subcommands/dungeon.js
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require('discord.js');
-const { buildContainerV2, buildErrorContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
-const UserProfile = require('../../../src/models/UserProfile');
+'use strict';
+
+const { MessageFlags } = require('discord.js');
+const { buildErrorContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
 const UserSurvival = require('../../../src/models/UserSurvival');
 const cacheManager = require('../../../src/managers/cacheManager');
 const ui = require('../../../src/config/ui');
-const leveling = require('../../../plugin/survival/survivalLeveling');
-const { advanceTime } = require('../../../plugin/survival/survivalTime');
-const { drawBattle } = require('../../../plugin/canvas/battleCanvas');
-const { safeParseInventory, hasItem, addOrStackItem } = require('../inventoryHelper');
+const diffHelper = require('../difficultyHelper');
+const currency = require('../currency');
+const combat = require('../dungeonCombat');
+const render = require('../dungeonRender');
+const rewards = require('../dungeonRewards');
+const helpers = require('../craftHelpers');
+const { safeParseInventory } = require('../inventoryHelper');
+const { DUNGEON_PASS_ID, DUNGEON_SPECIAL_PASS_ID } = require('../items_dungeon');
 
-// Fungsi random item drop
-function getDungeonLoot(floor, luck) {
-    const loot = [];
-    const rand = Math.random() * 100;
+const COLLECTOR_MS = 90000;
+const CHOICE_MS = 60000;
+const CAVE_LOCATIONS = ['tambang', 'desa', 'village'];
+const e = helpers.e;
 
-    // Base chance modifier dari LUCK stat
-    const luckMod = luck * 0.5;
+function errorView(message) {
+    return buildErrorContainerV2({ errorMessage: message, footerText: ui.getFooter('survival') });
+}
 
-    // Boss floor loot
-    if (floor % 10 === 0) {
-        if (rand < (20 + luckMod)) loot.push({ id: 'demon_horn', name: 'Tanduk Iblis' });
-        if (rand < (10 + luckMod)) loot.push({ id: 'dragon_scale', name: 'Sisik Naga' });
-        if (rand < (5 + luckMod)) loot.push({ id: 'cursed_eye', name: 'Mata Terkutuk' });
-        loot.push({ id: 'mega_potion', name: 'Ramuan Mega (Emas)' });
-    } else {
-        // Normal floor loot
-        if (rand < (40 + luckMod)) loot.push({ id: 'slime_gel', name: 'Gel Slime' });
-        if (rand > 30 && rand < (60 + luckMod)) loot.push({ id: 'goblin_ear', name: 'Telinga Goblin' });
-        if (rand < (10 + luckMod)) loot.push({ id: 'iron_ore', name: 'Bijih Besi' });
-    }
-
-    return loot;
+function ephemeral(payload) {
+    return { ...payload, flags: (payload.flags || MessageFlags.IsComponentsV2) | MessageFlags.Ephemeral };
 }
 
 module.exports = {
-    async execute(interaction, client) {
+    async execute(interaction) {
         const user = interaction.user;
         const [survival] = await UserSurvival.findOrCreate({ where: { userId: user.id } });
         const profile = await cacheManager.getUserProfile(user.id);
 
-        // Normalisasi inventory untuk mencegah crash 'xxx.some is not a function'
-        const inv = safeParseInventory(profile.inventory);
-        profile.inventory = inv;
+        const inventory = safeParseInventory(profile.inventory);
+        const passes = rewards.availablePasses(inventory);
 
-        const hasPass = hasItem(inv, 'dungeon_pass');
-        if (!hasPass) {
-            return ui.sendError(interaction, 'err_sys_42', true);
+        if (passes.normal < 1 && passes.special < 1) {
+            return interaction.editReply(errorView(
+                'Pintu batunya terkunci, sayang. Kamu butuh **Dungeon Pass** dulu \u2014 Pak Damar menjualnya di warung desa. '
+                + 'Kalau mau tantangan dua kali lebih berat dengan jarahan dua kali lipat, cari **Dungeon Special Pass** di butik Mbak Rini di kota, ya!'
+            ));
         }
 
-        const errEmbed = (msg) => buildErrorContainerV2({ title: 'Gagal', description: `${ui.getEmoji('error')} ${msg}`, footerText: ui.getFooter('survival') });
-
-        if (survival.currentLocation !== 'tambang' && survival.currentLocation !== 'desa') {
-            return interaction.reply({ ...errEmbed('Kamu harus berada di **Gua/Tambang** (Desa) untuk mengakses Infinite Dungeon!'), ephemeral: true });
+        if (!CAVE_LOCATIONS.includes(survival.currentLocation)) {
+            return interaction.editReply(errorView('Pintu dungeonnya ada di gua tambang dekat desa, lho. Naura tunggu kamu di sana, ya!'));
         }
 
-        if (survival.hp <= 20 || survival.stamina <= 20) {
-            return interaction.reply({ ...errEmbed('Kondisi fisikmu terlalu lemah untuk bertarung! Pulihkan HP dan Stamina dulu.'), ephemeral: true });
+        if ((survival.hp || 0) <= 20 || (survival.stamina || 0) <= 20) {
+            return interaction.editReply(errorView('Badanmu masih lemas begini, Naura tidak izinkan turun ke dungeon. Istirahat dulu, ya?'));
         }
 
-        const isPremium = profile.isPremium && profile.premiumUntil > new Date();
-        const floor = (profile.dungeon_floor || 1);
+        const isPremium = Boolean(profile.isPremium && profile.premiumUntil && profile.premiumUntil > new Date());
+        const floor = profile.dungeon_floor || 1;
 
-        if (!isPremium && floor > 50) {
-            const vipPayload = buildErrorContainerV2({
-                title: '💎 Batas Dungeon Terbuka',
-                description: `${ui.getEmoji('error') || '❌'} Pengguna standar hanya dapat menjelajah Dungeon sampai **Lantai 50**.\nGunakan \`/premium\` untuk mendapatkan akses tak terbatas ke lantai-lantai terdalam!`,
-                footerText: ui.getFooter('survival')
-            });
-            return interaction.reply({ ...vipPayload, ephemeral: true });
+        if (!isPremium && floor > combat.FREE_FLOOR_LIMIT) {
+            return interaction.editReply(errorView(
+                'Lantai ' + combat.FREE_FLOOR_LIMIT + ' adalah batas untuk penjelajah biasa. Kalau mau turun lebih dalam bersama Naura, coba lihat /premium, ya!'
+            ));
         }
 
-        const isBoss = floor % 10 === 0;
+        const diffConfig = diffHelper.getDifficultyConfig((survival.rpg_state || {}).difficulty || 'Normal');
+        const stats = combat.statsFor(survival, profile);
 
-        // Tipe monster & nama
-        let enemyType = 'slime';
-        if (isBoss) {
-            enemyType = 'demon';
-        } else if (floor > 20) {
-            enemyType = 'dragon';
-        } else if (floor > 10) {
-            enemyType = 'goblin';
-        }
+        // ===== PERTEMPURAN =====
+        const startBattle = async (passId, respond) => {
+            const used = await rewards.consumePass(user.id, passId);
+            if (!used.ok) return respond(ephemeral(errorView('Tiketnya sudah tidak ada di tasmu. Coba beli lagi dulu, ya?')));
 
-        let enemyName = isBoss 
-            ? (ui.getEmoji('dungeon_boss') || '🔥') + ' Raja Iblis Lantai ' + floor 
-            : (ui.getEmoji('dungeon_monster') || '👺') + ' ' + enemyType.toUpperCase() + ' Lantai ' + floor;
+            const multiplier = used.multiplier;
+            const enemy = combat.enemyFor(floor, diffConfig, multiplier);
 
-        const diffHelper = require('../../../plugin/survival/difficultyHelper');
-        const diffConfig = diffHelper.getDifficultyConfig(survival.rpg_state?.difficulty || 'Normal');
+            let enemyHp = enemy.maxHp;
+            let playerHp = Math.min(survival.hp || 100, stats.playerMaxHp);
+            let finished = false;
 
-        let enemyMaxHp = Math.floor(50 * Math.pow(1.2, Math.floor(floor / 2)));
-        if (isBoss) enemyMaxHp *= 3;
-        if (diffConfig.extreme) enemyMaxHp = Math.floor(enemyMaxHp * 1.5);
+            const opening = 'Kamu berhadapan dengan **' + enemy.name + '**!\n'
+                + (enemy.special
+                    ? 'Segel merahnya menyala\u2026 musuhnya jauh lebih tebal, tapi jarahannya dua kali lipat. Hati-hati, ya!'
+                    : 'Naura pegang obat-obatannya, kamu fokus bertarung saja!');
 
-        let enemyHp = enemyMaxHp;
-        let playerHp = survival.hp || 100;
-        
-        // Pengecekan Kelas/Class
-        const rpgState = survival.rpg_state || {};
-        const userClass = rpgState.class; // warrior, mage, assassin
+            const message = await respond(await render.buildBattleView({
+                user, stats, survival, enemy, enemyHp, playerHp, floor, logText: opening
+            }));
 
-        // Terapkan Bonus Kelas
-        let classMaxHpBoost = 0;
-        let classStrBoost = 0;
-        let classAgiBoost = 0;
-        let classIntBoost = 0;
-        let classLuckBoost = 0;
-
-        if (userClass === 'warrior') {
-            classMaxHpBoost = 50;
-            classStrBoost = 5;
-        } else if (userClass === 'mage') {
-            classAgiBoost = 3;
-            classIntBoost = 8;
-        } else if (userClass === 'assassin') {
-            classAgiBoost = 8;
-            classLuckBoost = 5;
-        } else if (userClass === 'ranger') {
-            classAgiBoost = 5;
-            classLuckBoost = 8;
-        }
-
-        const playerMaxHp = (survival.survival_level || 1) * 20 + 100 + classMaxHpBoost;
-        const strength = (survival.strength || 1) + classStrBoost;
-        const agility = (survival.agility || 1) + classAgiBoost;
-        const intelligence = (survival.intelligence || 1) + classIntBoost;
-        const luck = (survival.luck || 1) + classLuckBoost;
-
-        // Hitung damage base normal
-        const weaponDmg = (profile.weapon_level || 1) * 10 + (strength * 3);
-        const dodgeChance = Math.min(50, agility * 2);
-
-        // Helper untuk merender adegan pertempuran
-        const buildBattleMessage = async (roundLogText) => {
-            const playerInfo = {
-                username: user.username,
-                avatarUrl: user.displayAvatarURL({ extension: 'png', size: 256 }),
-                hp: playerHp,
-                maxHp: playerMaxHp,
-                stamina: survival.stamina,
-                class: userClass || 'No Class'
-            };
-
-            const enemyInfo = {
-                name: isBoss ? `Boss: ${enemyType.toUpperCase()}` : enemyType.toUpperCase(),
-                type: enemyType,
-                hp: enemyHp,
-                maxHp: enemyMaxHp
-            };
-
-            const imageBuffer = await drawBattle(playerInfo, enemyInfo, roundLogText);
-            const attachment = new AttachmentBuilder(imageBuffer, { name: 'battle.png' });
-
-            let tipsFooter = ui.getFooter('survival');
-            if (!userClass) {
-                tipsFooter += ' • 💡 Tips: Pilih kelas dengan /survival class untuk membuka skill tempur!';
-            }
-
-            const battlePayload = buildContainerV2({
-                accentColorHex: isBoss ? ui.getColor('danger') : ui.getColor('warning'),
-                title: `${ui.getEmoji('battle') || '⚔️'} Infinite Dungeon - Lantai ${floor}`,
-                bannerAttachmentName: 'battle.png',
-                footerText: tipsFooter
+            const collector = message.createMessageComponentCollector({
+                filter: i => i.user.id === user.id,
+                time: COLLECTOR_MS
             });
 
-            // Atur tombol aksi
-            const row = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('dungeon_attack').setLabel('Serang').setStyle(ButtonStyle.Danger).setEmoji(ui.getEmoji('dagger') || '🗡️')
-            );
+            collector.on('collect', async i => {
+                if (finished) return;
 
-            if (userClass) {
-                let skillName = '';
-                let skillCost = 0;
-                if (userClass === 'warrior') { skillName = 'Iron Slash'; skillCost = 15; }
-                else if (userClass === 'mage') { skillName = 'Fireball'; skillCost = 25; }
-                else if (userClass === 'assassin') { skillName = 'Shadow Strike'; skillCost = 20; }
-                else if (userClass === 'ranger') { skillName = 'Piercing Arrow'; skillCost = 15; }
+                try {
+                    await i.deferUpdate();
 
-                const skillButton = new ButtonBuilder()
-                    .setCustomId('dungeon_skill')
-                    .setLabel(`${skillName} (${skillCost} SP)`)
-                    .setStyle(ButtonStyle.Primary)
-                    .setEmoji(ui.getEmoji('sparkle') || '✨');
+                    if (i.customId === 'dungeon_flee') {
+                        finished = true;
+                        collector.stop('flee');
 
-                if (survival.stamina < skillCost) {
-                    skillButton.setDisabled(true);
+                        if (Math.random() * 100 < 50 + stats.agility) {
+                            return i.editReply(render.buildClosingView({
+                                expression: 'sleepy',
+                                colorKey: 'info',
+                                title: e('run', '\ud83c\udfc3') + ' Berhasil Kabur',
+                                description: 'Kelincahanmu menyelamatkanmu. Naura ikut lari di sebelahmu sambil bawa tas, kok!'
+                            }));
+                        }
+
+                        const hit = await rewards.applyFleePenalty(user.id, playerHp, floor);
+                        return i.editReply(render.buildClosingView({
+                            expression: 'cry',
+                            colorKey: 'error',
+                            title: e('run', '\ud83c\udfc3') + ' Gagal Kabur',
+                            description: 'Kamu tersandung dan diserang dari belakang, kehilangan **' + hit.penalty + ' HP**. Sini, Naura obati dulu.'
+                        }));
+                    }
+
+                    if (i.customId !== 'dungeon_attack' && i.customId !== 'dungeon_skill') return;
+
+                    const useSkill = i.customId === 'dungeon_skill';
+                    if (useSkill && (!stats.skill || (survival.stamina || 0) < stats.skill.cost)) {
+                        return i.followUp(ephemeral(errorView('Staminamu belum cukup untuk skill itu. Serangan biasa dulu, ya!')));
+                    }
+
+                    const attack = combat.resolveAttack({ useSkill, stats, profile });
+                    let logText = attack.log;
+
+                    if (attack.cost > 0) {
+                        const staminaLeft = Math.max(0, (survival.stamina || 0) - attack.cost);
+                        survival.stamina = staminaLeft;
+                        await cacheManager.updateUserSurvival(user.id, { stamina: staminaLeft });
+                    }
+
+                    enemyHp -= attack.damage;
+
+                    if (enemyHp <= 0) {
+                        finished = true;
+                        collector.stop('win');
+
+                        const win = await rewards.grantVictory({
+                            userId: user.id, survival, floor, diffConfig, stats, multiplier, playerHp
+                        });
+
+                        const lines = [
+                            'Kamu mengalahkan **' + enemy.name + '**! Naura sudah tepuk tangan dari tadi, lho.',
+                            '',
+                            currency.format(currency.FRAGMENT, win.reward.money) + ' masuk kantongmu, sisa saldo ' + win.balance.toLocaleString('id-ID') + '.',
+                            'XP bertambah **' + win.reward.xp + '**.',
+                            '',
+                            '**Jarahan:**',
+                            win.lootText
+                        ];
+                        if (win.couponText) lines.push('', win.couponText);
+                        lines.push('', 'Lantai berikutnya: **' + win.nextFloor + '**. Naura tunggu di depan pintunya, ya!');
+
+                        return i.editReply(render.buildClosingView({
+                            expression: 'success',
+                            colorKey: 'success',
+                            title: e('cheers', '\ud83c\udf89') + ' Pertarungan Menang!',
+                            description: lines.join('\n')
+                        }));
+                    }
+
+                    let enemyHit = combat.enemyDamage(floor, enemy.isBoss, diffConfig, multiplier);
+                    if (Math.random() * 100 < stats.dodgeChance) {
+                        enemyHit = 0;
+                        logText += '\nKamu berkelit mulus, serangannya tidak kena sama sekali!';
+                    }
+
+                    playerHp -= enemyHit;
+
+                    if (playerHp <= 0) {
+                        finished = true;
+                        collector.stop('lose');
+                        await rewards.applyDefeat(user.id);
+
+                        return i.editReply(render.buildClosingView({
+                            expression: 'cry',
+                            colorKey: 'error',
+                            title: e('cry', '\ud83d\udc80') + ' Kamu Tumbang di Dungeon',
+                            description: '**' + enemy.name + '** terlalu kuat kali ini. Gatot menyeretmu keluar gua dan Naura menunggu di desa '
+                                + 'dengan air hangat. Jangan sedih, ya \u2014 kita coba lagi setelah kamu pulih!'
+                        }));
+                    }
+
+                    if (enemyHit > 0) logText += '\nMusuh membalas dan memberikan **' + enemyHit + '** damage!';
+
+                    survival.hp = playerHp;
+                    await cacheManager.updateUserSurvival(user.id, { hp: playerHp });
+
+                    return i.editReply(await render.buildBattleView({
+                        user, stats, survival, enemy, enemyHp, playerHp, floor, logText
+                    }));
+                } catch (err) {
+                    finished = true;
+                    collector.stop('error');
                 }
-                row.addComponents(skillButton);
-            }
-
-            row.addComponents(
-                new ButtonBuilder().setCustomId('dungeon_flee').setLabel('Kabur').setStyle(ButtonStyle.Secondary).setEmoji(ui.getEmoji('run') || '🏃')
-            );
-
-            return { ...battlePayload, files: [attachment], components: [row] };
+            });
         };
 
-        const initialLog = `Kamu berhadapan dengan ${enemyName}!\nPersiapkan senjatamu!`;
-        const initialPayload = await buildBattleMessage(initialLog);
-        
-        const response = await interaction.reply(initialPayload);
-        const collector = response.createMessageComponentCollector({ filter: i => i.user.id === user.id, time: 90000 });
+        // Kalau pemain hanya punya satu jenis tiket, langsung masuk. Kalau punya
+        // keduanya, biarkan dia memilih supaya tiket mahal tidak terpakai iseng.
+        if (passes.normal > 0 && passes.special > 0) {
+            const choice = await interaction.editReply(render.buildPassChoiceView(passes));
+            const picker = choice.createMessageComponentCollector({ filter: i => i.user.id === user.id, time: CHOICE_MS });
 
-        collector.on('collect', async i => {
-            if (i.customId === 'dungeon_flee') {
+            picker.on('collect', async i => {
                 await i.deferUpdate();
-                collector.stop();
+                picker.stop('picked');
 
-                const fleeSuccess = (Math.random() * 100) < (50 + agility);
-                if (fleeSuccess) {
-                    const fleePayload = buildContainerV2({ accentColorHex: ui.getColor('secondary') || '#6b7280', title: 'Berhasil Lari', description: '🏃 Dengan kelincahanmu, kamu berhasil lari keluar dari gua tanpa terluka.', footerText: ui.getFooter('survival') });
-                    return i.editReply({ ...fleePayload, components: [], files: [] });
-                } else {
-                    const penDmg = Math.floor(10 + (floor * 2));
-                    survival.hp = Math.max(1, survival.hp - penDmg);
-                    await survival.save();
-                    const failFlee = buildErrorContainerV2({ title: 'Gagal Lari', description: `🏃 Kamu tersandung saat kabur dan diserang dari belakang! (-${penDmg} HP)`, footerText: ui.getFooter('survival') });
-                    return i.editReply({ ...failFlee, components: [], files: [] });
-                }
-            }
-
-            if (i.customId === 'dungeon_attack' || i.customId === 'dungeon_skill') {
-                await i.deferUpdate();
-
-                let pDamage = 0;
-                let logText = '';
-                let skillCost = 0;
-
-                if (i.customId === 'dungeon_attack') {
-                    // Normal Attack
-                    pDamage = Math.floor(weaponDmg * (0.8 + Math.random() * 0.4));
-                    logText = `${ui.getEmoji('battle') || '⚔️'} Kamu menebas musuh memberikan **${pDamage}** damage!`;
-                } else if (i.customId === 'dungeon_skill') {
-                    // Skill Attack
-                    if (userClass === 'warrior') {
-                        skillCost = 15;
-                        pDamage = Math.floor(weaponDmg * 1.8 * (0.8 + Math.random() * 0.4));
-                        logText = `🛡️ [Iron Slash] Kamu menebas perisai musuh memberikan **${pDamage}** damage!`;
-                    } else if (userClass === 'mage') {
-                        skillCost = 25;
-                        const magicDmg = (profile.weapon_level || 1) * 8 + (intelligence * 4);
-                        pDamage = Math.floor(magicDmg * 2.2 * (0.8 + Math.random() * 0.4));
-                        logText = `🔮 [Fireball] Kamu menembakkan bola api raksasa memberikan **${pDamage}** damage!`;
-                    } else if (userClass === 'assassin') {
-                        skillCost = 20;
-                        const hitChance = 70 + agility * 1;
-                        if (Math.random() * 100 < hitChance) {
-                            const critChance = 30 + luck * 2;
-                            const isCrit = Math.random() * 100 < critChance;
-                            const multiplier = isCrit ? 2.5 : 1.2;
-                            pDamage = Math.floor(weaponDmg * multiplier * (0.8 + Math.random() * 0.4));
-                            logText = isCrit 
-                                ? `💥 [Shadow Strike - CRITICAL!] Tebasan bayangan mematikan memberikan **${pDamage}** damage!`
-                                : `🗡️ [Shadow Strike] Tebasan cepat di balik bayangan memberikan **${pDamage}** damage!`;
-                        } else {
-                            pDamage = 0;
-                            logText = `💨 [Shadow Strike - MISSED] Serangan bayanganmu meleset dari musuh!`;
-                        }
-                    } else if (userClass === 'ranger') {
-                        skillCost = 15;
-                        const hitChance = 85 + agility * 2;
-                        if (Math.random() * 100 < hitChance) {
-                            pDamage = Math.floor(weaponDmg * 1.5 * (0.9 + Math.random() * 0.2));
-                            logText = `🏹 [Piercing Arrow] Anak panah menembus pertahanan musuh dengan akurasi tinggi memberikan **${pDamage}** damage!`;
-                        } else {
-                            pDamage = 0;
-                            logText = `💨 [Piercing Arrow - MISSED] Musuh terlalu gesit, anak panahmu meleset!`;
-                        }
-                    }
-
-                    // Potong stamina
-                    survival.stamina = Math.max(0, survival.stamina - skillCost);
+                if (i.customId === 'dungeon_cancel') {
+                    return i.editReply(render.buildClosingView({
+                        expression: 'shy',
+                        colorKey: 'info',
+                        title: 'Baik, nanti saja!',
+                        description: 'Tiketmu Naura simpan utuh. Panggil Naura lagi kalau sudah siap, ya!'
+                    }));
                 }
 
-                enemyHp -= pDamage;
+                const passId = i.customId === 'dungeon_use_special' ? DUNGEON_SPECIAL_PASS_ID : DUNGEON_PASS_ID;
+                return startBattle(passId, payload => i.editReply(payload));
+            });
+            return;
+        }
 
-                if (enemyHp <= 0) {
-                    collector.stop();
-
-                    // Update Quest Progress
-                    try {
-                        const { incrementQuestProgress } = require('../../../plugin/survival/questGenerator');
-                        await incrementQuestProgress(user.id, 'dungeon');
-                        
-                        const UserQuest = require('../../../src/models/UserQuest');
-                        const today = new Date().toISOString().split('T')[0];
-                        let [quest] = await UserQuest.findOrCreate({ where: { userId: user.id }, defaults: { lastReset: today } });
-                        if (quest.lastReset !== today) {
-                            quest.workCount = 0; quest.dungeonKills = 0; quest.collectCount = 0; quest.isClaimed = false; quest.lastReset = today;
-                        }
-                        quest.dungeonKills++;
-                        await quest.save();
-                    } catch(e) {}
-
-                    const rewardMoney = Math.floor((isBoss ? floor * 100 : floor * 20) * diffConfig.coinMultiplier);
-                    const rewardXp = Math.floor((isBoss ? floor * 50 : floor * 10) * diffConfig.expMultiplier);
-
-                    const loots = getDungeonLoot(floor, luck);
-                    let lootText = loots.length > 0 ? loots.map(l => `- **${l.name}**`).join('\n') : '*Tidak ada drop item*';
-
-                    survival.starFragments = (survival.starFragments || 0) + rewardMoney;
-                    profile.dungeon_floor = floor + 1;
-
-                    let inv = safeParseInventory(profile.inventory);
-                    for(const loot of loots) {
-                        const existing = inv.find(x => x.id === loot.id);
-                        if(existing) existing.amount = (existing.amount || 1) + 1;
-                        else inv.push({ id: loot.id, name: loot.name, amount: 1 });
-                    }
-                    profile.inventory = inv;
-
-                    // Pulihkan HP player ke data survival yang aman
-                    survival.hp = Math.max(1, playerHp);
-
-                    await profile.save();
-                    await survival.save();
-                    await advanceTime(user.id, 1);
-                    await leveling.addPlayerXP(user.id, rewardXp);
-
-                    const eNsf = ui.getEmoji('nsf') || '🪙';
-                    const winPayload = buildContainerV2({
-                        accentColorHex: ui.getColor('success') || '#22c55e',
-                        title: '🎉 Pertarungan Menang!',
-                        description: `Kamu mengalahkan **${enemyName}**!\n\nNaura Star Fragment: **+${rewardMoney}** ${eNsf} **Naura Star Fragment**\nXP: **+${rewardXp}**\n\n**Loot Drop:**\n${lootText}\n\nMenuju lantai ${floor + 1}...`,
-                        footerText: ui.getFooter('survival')
-                    });
-
-                    return i.editReply({ ...winPayload, components: [], files: [] });
-                }
-
-                // Enemy attacks back
-                let eDamage = Math.floor((isBoss ? floor * 5 : floor * 2) * (0.8 + Math.random() * 0.4));
-                if (diffConfig.extreme) eDamage = Math.floor(eDamage * 1.5);
-
-                // Cek Dodge
-                let dodgeMsg = '';
-                if ((Math.random() * 100) < dodgeChance) {
-                    eDamage = 0;
-                    dodgeMsg = `\n💨 **DODGE!** Kelincahanmu berhasil menghindari serangan musuh!`;
-                }
-
-                playerHp -= eDamage;
-
-                if (playerHp <= 0) {
-                    collector.stop();
-                    survival.hp = 1;
-                    survival.currentLocation = 'village';
-                    await survival.save();
-                    await advanceTime(user.id, 4); // Pingsan lama
-
-                    const losePayload = buildContainerV2({
-                        accentColorHex: ui.getColor('error') || '#ef4444',
-                        title: '💀 Terbunuh di Dungeon',
-                        description: `Kamu dikalahkan oleh **${enemyName}**!\nGatot menyelamatkanmu dan menyeretmu ke luar gua. Kamu kehilangan banyak energi.`,
-                        footerText: ui.getFooter('survival')
-                    });
-
-                    return i.editReply({ ...losePayload, components: [], files: [] });
-                }
-
-                // Simpan HP & Stamina terbaru sementara dalam ronde
-                logText += `\n💥 Musuh membalas memberikan **${eDamage}** damage!${dodgeMsg}`;
-                
-                // Update survival model agar data tetap presisi jika terputus
-                survival.hp = playerHp;
-                await survival.save();
-
-                // Render Canvas baru
-                const nextPayload = await buildBattleMessage(logText);
-                await i.editReply(nextPayload);
-            }
-        });
-
-        collector.on('end', collected => {
-            if(collected.size === 0) {
-                interaction.editReply({ components: [] }).catch(()=>{});
-            }
-        });
+        const passId = passes.special > 0 ? DUNGEON_SPECIAL_PASS_ID : DUNGEON_PASS_ID;
+        return startBattle(passId, payload => interaction.editReply(payload));
     }
 };

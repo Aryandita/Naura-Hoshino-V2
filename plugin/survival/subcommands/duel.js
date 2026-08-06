@@ -1,397 +1,317 @@
-// Lokasi: plugin/survival/subcommands/duel.js
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require('discord.js');
-const { buildContainerV2, buildErrorContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
-const UserProfile = require('../../../src/models/UserProfile');
+'use strict';
+
+// Battle Arena antar pemain. Perhitungan tempur ada di plugin/survival/duelEngine.js.
+//
+// Versi lama command ini mati total: `inviteRow` dan `row` dipakai tanpa pernah
+// dibuat, jadi setiap tantangan langsung gagal. Semua tombol sekarang dibuat
+// eksplisit, taruhan lewat helper mata uang, dan gambarnya opsional.
+
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder, MessageFlags } = require('discord.js');
+const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
+const { logger } = require('../../../src/managers/logger');
 const UserSurvival = require('../../../src/models/UserSurvival');
 const cacheManager = require('../../../src/managers/cacheManager');
 const ui = require('../../../src/config/ui');
-const { drawDuel } = require('../../../plugin/canvas/duelCanvas');
+const currencyHelper = require('../currency');
+const engine = require('../duelEngine');
+const { safeParseInventory } = require('../inventoryHelper');
+
+const INVITE_MS = 30000;
+const BATTLE_MS = 240000;
+const COIN = currencyHelper.byKind(currencyHelper.COIN);
+
+function e(name, fallback) {
+    return ui.getEmoji(name) || fallback || '';
+}
+
+function isRegistered(profile) {
+    return safeParseInventory(profile.inventory).some(it => it && it.id === 'survival_started');
+}
+
+/** Gambar arena bersifat pemanis, jadi kegagalannya tidak boleh mematikan duel. */
+async function arenaImage(p1, p2, log) {
+    try {
+        const { drawDuel } = require('../../canvas/duelCanvas');
+        const buffer = await drawDuel(p1, p2, log);
+        if (!buffer) return null;
+        return new AttachmentBuilder(buffer, { name: 'duel.png' });
+    } catch (err) {
+        logger.warn('[DUEL CANVAS]', err.message);
+        return null;
+    }
+}
 
 module.exports = {
-    async execute(interaction, client) {
+    async execute(interaction) {
         const challenger = interaction.user;
         const opponent = interaction.options.getUser('lawan');
         const wager = interaction.options.getInteger('taruhan') || 0;
 
-        const errEmbed = (msg) => buildErrorContainerV2({ title: 'Gagal Duel', description: `${ui.getEmoji('error') || '❌'} ${msg}`, footerText: ui.getFooter('survival') });
+        if (opponent.bot) return ui.sendError(interaction, 'Bot tidak bisa diajak duel, nanti Naura yang repot~', true);
+        if (opponent.id === challenger.id) return ui.sendError(interaction, 'Kamu tidak bisa menantang dirimu sendiri, lho!', true);
 
-        // 1. Validasi Awal
-        if (opponent.bot) {
-            return interaction.reply({ ...errEmbed('Kamu tidak bisa menantang bot!'), ephemeral: true });
-        }
-        if (opponent.id === challenger.id) {
-            return interaction.reply({ ...errEmbed('Kamu tidak bisa menantang dirimu sendiri!'), ephemeral: true });
-        }
-
-        // Cek pendaftaran dan stats kedua pemain
         const p1Profile = await cacheManager.getUserProfile(challenger.id);
         const p2Profile = await cacheManager.getUserProfile(opponent.id);
         const [p1Survival] = await UserSurvival.findOrCreate({ where: { userId: challenger.id } });
         const [p2Survival] = await UserSurvival.findOrCreate({ where: { userId: opponent.id } });
 
-        const p1HasStarted = (p1Profile.inventory || []).some(item => item && item.id === 'survival_started');
-        const p2HasStarted = (p2Profile.inventory || []).some(item => item && item.id === 'survival_started');
+        if (!isRegistered(p1Profile)) return ui.sendError(interaction, 'Kamu belum memulai petualangan. Pakai `/survival start` dulu ya!', true);
+        if (!isRegistered(p2Profile)) return ui.sendError(interaction, `**${opponent.username}** belum terdaftar di dunia Naura. Minta dia pakai \`/survival start\` dulu, ya.`, true);
 
-        if (!p1HasStarted) {
-            return interaction.reply({ ...errEmbed('Kamu belum memulai petualangan! Gunakan `/survival start` terlebih dahulu.'), ephemeral: true });
-        }
-        if (!p2HasStarted) {
-            return interaction.reply({ ...errEmbed(`**${opponent.username}** belum terdaftar di dunia RPG. Minta lawanmu menggunakan '/survival start' terlebih dahulu.`), ephemeral: true });
-        }
+        if (p1Survival.hp <= 20 || p1Survival.stamina <= 20) return ui.sendError(interaction, 'Badanmu masih lemas. Pulihkan HP dan stamina dulu, Naura khawatir!', true);
+        if (p2Survival.hp <= 20 || p2Survival.stamina <= 20) return ui.sendError(interaction, `**${opponent.username}** sedang lemas, kasih waktu istirahat dulu ya.`, true);
 
-        // Cek HP dan Stamina
-        if (p1Survival.hp <= 20 || p1Survival.stamina <= 20) {
-            return interaction.reply({ ...errEmbed('Kondisi fisikmu terlalu lemah untuk bertarung! Pulihkan HP dan Stamina dulu.'), ephemeral: true });
-        }
-        if (p2Survival.hp <= 20 || p2Survival.stamina <= 20) {
-            return interaction.reply({ ...errEmbed(`Kondisi fisik **${opponent.username}** terlalu lemah untuk diajak duel.`), ephemeral: true });
-        }
+        const p1Holders = { survival: p1Survival, profile: p1Profile };
+        const p2Holders = { survival: p2Survival, profile: p2Profile };
 
-        // Cek Koin Taruhan
         if (wager > 0) {
-            if (p1Profile.economy_wallet < wager) {
-                return interaction.reply({ ...errEmbed(`Naura Coin kamu tidak cukup untuk bertaruh sebesar 🪙 **${wager.toLocaleString()}**!`), ephemeral: true });
+            if (!currencyHelper.canAfford(COIN, p1Holders, wager)) {
+                return ui.sendError(interaction, `Naura Coin kamu belum cukup untuk bertaruh **${wager.toLocaleString('id-ID')}**.`, true);
             }
-            if (p2Profile.economy_wallet < wager) {
-                return interaction.reply({ ...errEmbed(`Naura Coin **${opponent.username}** tidak cukup untuk mengimbangi taruhanmu!`), ephemeral: true });
+            if (!currencyHelper.canAfford(COIN, p2Holders, wager)) {
+                return ui.sendError(interaction, `Naura Coin **${opponent.username}** belum cukup untuk mengimbangi taruhanmu.`, true);
             }
         }
 
-        // ==========================================
-        // 📨 FASE UNDANGAN DUEL
-        // ==========================================
-        const invitePayload = buildContainerV2({
-            accentColorHex: ui.getColor('warning') || '#f59e0b',
-            title: '⚔️ TANTANGAN DUEL BATTLE ARENA ⚔️',
-            description: `Hai <@${opponent.id}>! Kamu ditantang oleh <@${challenger.id}> untuk berduel di Battle Arena!\n\n**Taruhan:** ${wager > 0 ? `🪙 **${wager.toLocaleString()} Naura Coin**` : 'Persahabatan / Tanpa Taruhan'}\n\nApakah kamu berani menerima tantangan duel maut ini?`,
+        const wagerText = wager > 0
+            ? currencyHelper.format(COIN, wager)
+            : 'tanpa taruhan, murni gengsi';
+
+        const inviteRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('duel_accept').setLabel('Terima tantangan').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('duel_decline').setLabel('Tolak').setStyle(ButtonStyle.Secondary)
+        );
+
+        const card = ({ title, description, expression, colorKey, banner }) => buildContainerV2({
+            accentColorHex: ui.getColor(colorKey || 'primary'),
+            authorName: 'Naura Battle Arena',
+            title,
+            expression: expression || 'Happy',
+            description,
+            bannerAttachmentName: banner ? 'duel.png' : undefined,
             footerText: ui.getFooter('survival')
         });
 
-        const inviteMessage = await interaction.reply({ content: `<@${opponent.id}>`, ...invitePayload, components: [inviteRow] });
+        const invitePayload = card({
+            title: `${e('sword')} Ada tantangan duel!`,
+            description: [
+                `<@${opponent.id}>, kamu ditantang <@${challenger.id}> ke Battle Arena!`,
+                '',
+                `**Taruhan:** ${wagerText}`,
+                '',
+                'Naura jadi juri hari ini. Mau terima tantangannya?'
+            ].join('\n'),
+            expression: 'Shocked',
+            colorKey: 'warning'
+        });
+
+        const inviteMessage = await interaction.editReply({
+            content: `<@${opponent.id}>`,
+            ...invitePayload,
+            components: [...invitePayload.components, inviteRow]
+        });
 
         const inviteCollector = inviteMessage.createMessageComponentCollector({
             filter: i => i.user.id === opponent.id,
-            time: 30000
+            time: INVITE_MS,
+            max: 1
         });
 
         inviteCollector.on('collect', async i => {
+            await i.deferUpdate();
+
             if (i.customId === 'duel_decline') {
-                inviteCollector.stop('declined');
-                return;
+                return interaction.editReply({
+                    content: null,
+                    ...card({
+                        title: `${e('naura_akward')} Tantangan ditolak`,
+                        description: `<@${opponent.id}> memilih tidak bertarung kali ini. Tidak apa-apa, damai juga bagus~`,
+                        expression: 'Akward',
+                        colorKey: 'warning'
+                    })
+                });
             }
 
-            if (i.customId === 'duel_accept') {
-                inviteCollector.stop('accepted');
-            }
-        });
+            // --- Taruhan ditahan dulu oleh Naura ---
+            if (wager > 0) {
+                const p1Charged = await currencyHelper.charge(COIN, p1Holders, wager);
+                const p2Charged = p1Charged === null ? null : await currencyHelper.charge(COIN, p2Holders, wager);
 
-        inviteCollector.on('end', async (collected, reason) => {
-            if (reason === 'declined') {
-                return interaction.editReply({ content: `❌ <@${opponent.id}> menolak tantangan duel dari <@${challenger.id}>.`, embeds: [], components: [] });
-            }
-            if (reason === 'time') {
-                return interaction.editReply({ content: `⌛ Tantangan duel kedaluwarsa karena tidak ada respons dari <@${opponent.id}>.`, embeds: [], components: [] });
-            }
-
-            if (reason === 'accepted') {
-                // Tarik taruhan koin (Hold)
-                if (wager > 0) {
-                    // Refresh data wallet terbaru sebelum memotong
-                    await p1Profile.reload();
-                    await p2Profile.reload();
-                    if (p1Profile.economy_wallet < wager || p2Profile.economy_wallet < wager) {
-                        return interaction.editReply({ content: '❌ Sesi dibatalkan karena salah satu pemain tidak lagi memiliki koin taruhan yang cukup.', embeds: [], components: [] });
-                    }
-                    await p1Profile.decrement('economy_wallet', { by: wager });
-                    await p2Profile.decrement('economy_wallet', { by: wager });
+                if (p1Charged === null || p2Charged === null) {
+                    if (p1Charged !== null) await currencyHelper.reward(COIN, p1Holders, wager);
+                    return interaction.editReply({
+                        content: null,
+                        ...card({
+                            title: `${e('naura_akward')} Duel dibatalkan`
+                                ,
+                            description: 'Salah satu koin taruhan sudah tidak cukup. Naura kembalikan semuanya, tidak ada yang dirugikan.',
+                            expression: 'Akward',
+                            colorKey: 'error'
+                        })
+                    });
                 }
+            }
 
-                // ==========================================
-                // 🎮 PERSIAPAN DATA PERTEMPURAN
-                // ==========================================
-                const p1Class = p1Survival.rpg_state?.class || null;
-                const p2Class = p2Survival.rpg_state?.class || null;
+            const p1 = engine.buildFighter(challenger, p1Profile, p1Survival);
+            const p2 = engine.buildFighter(opponent, p2Profile, p2Survival);
 
-                // Terapkan Bonus Kelas P1
-                let p1HpBoost = 0, p1StrBoost = 0, p1AgiBoost = 0, p1IntBoost = 0, p1LuckBoost = 0;
-                if (p1Class === 'warrior') { p1HpBoost = 50; p1StrBoost = 5; }
-                else if (p1Class === 'mage') {
-                    p1AgiBoost = 3;
-                    p1IntBoost = 8;
-                } else if (p1Class === 'assassin') {
-                    p1AgiBoost = 8;
-                    p1LuckBoost = 5;
-                } else if (p1Class === 'ranger') {
-                    p1AgiBoost = 5;
-                    p1LuckBoost = 8;
-                }
+            const state = { turn: 1, round: 1, log: `Pertarungan dimulai! Giliran ${p1.username} lebih dulu.` };
+            let winner = null;
+            let loser = null;
 
-                // Terapkan Bonus Kelas P2
-                let p2HpBoost = 0, p2StrBoost = 0, p2AgiBoost = 0, p2IntBoost = 0, p2LuckBoost = 0;
-                if (p2Class === 'warrior') { p2HpBoost = 50; p2StrBoost = 5; }
-                else if (p2Class === 'mage') {
-                    p2AgiBoost = 3;
-                    p2IntBoost = 8;
-                } else if (p2Class === 'assassin') {
-                    p2AgiBoost = 8;
-                    p2LuckBoost = 5;
-                } else if (p2Class === 'ranger') {
-                    p2AgiBoost = 5;
-                    p2LuckBoost = 8;
-                }
+            const actionRow = () => new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('duel_attack').setLabel('Serang').setStyle(ButtonStyle.Primary),
+                new ButtonBuilder().setCustomId('duel_skill').setLabel('Jurus kelas').setStyle(ButtonStyle.Danger),
+                new ButtonBuilder().setCustomId('duel_flee').setLabel('Menyerah').setStyle(ButtonStyle.Secondary)
+            );
 
-                const p1MaxHp = (p1Survival.survival_level || 1) * 20 + 100 + p1HpBoost;
-                const p2MaxHp = (p2Survival.survival_level || 1) * 20 + 100 + p2HpBoost;
+            const renderBattle = async () => {
+                const active = state.turn === 1 ? p1 : p2;
+                const image = await arenaImage(p1, p2, state.log);
+                const payload = card({
+                    title: `${e('sword')} Battle Arena \u2014 Ronde ${state.round}`,
+                    description: [
+                        `${state.log}`,
+                        '',
+                        `Sekarang giliran <@${active.id}> (**${active.username}**).`,
+                        `> ${e('health')} ${p1.username}: **${p1.hp}**/${p1.maxHp} \u2022 ${e('stamina')} ${p1.stamina}`,
+                        `> ${e('health')} ${p2.username}: **${p2.hp}**/${p2.maxHp} \u2022 ${e('stamina')} ${p2.stamina}`
+                    ].join('\n'),
+                    banner: Boolean(image)
+                });
 
-                const battleData = {
-                    p1: {
-                        id: challenger.id,
-                        username: challenger.username,
-                        avatarUrl: challenger.displayAvatarURL({ extension: 'png', size: 128 }),
-                        maxHp: p1MaxHp,
-                        hp: Math.min(p1MaxHp, p1Survival.hp),
-                        stamina: p1Survival.stamina,
-                        class: p1Class,
-                        strength: (p1Survival.strength || 1) + p1StrBoost,
-                        agility: (p1Survival.agility || 1) + p1AgiBoost,
-                        intelligence: (p1Survival.intelligence || 1) + p1IntBoost,
-                        luck: (p1Survival.luck || 1) + p1LuckBoost,
-                        weaponDmg: (p1Profile.weapon_level || 1) * 10 + ((p1Survival.strength || 1) + p1StrBoost) * 3
-                    },
-                    p2: {
-                        id: opponent.id,
-                        username: opponent.username,
-                        avatarUrl: opponent.displayAvatarURL({ extension: 'png', size: 128 }),
-                        maxHp: p2MaxHp,
-                        hp: Math.min(p2MaxHp, p2Survival.hp),
-                        stamina: p2Survival.stamina,
-                        class: p2Class,
-                        strength: (p2Survival.strength || 1) + p2StrBoost,
-                        agility: (p2Survival.agility || 1) + p2AgiBoost,
-                        intelligence: (p2Survival.intelligence || 1) + p2IntBoost,
-                        luck: (p2Survival.luck || 1) + p2LuckBoost,
-                        weaponDmg: (p2Profile.weapon_level || 1) * 10 + ((p2Survival.strength || 1) + p2StrBoost) * 3
-                    },
-                    round: 1,
-                    currentTurn: 1, // 1 = P1, 2 = P2
-                    log: `Pertarungan dimulai!\nGiliran ${challenger.username} untuk menyerang.`
+                return {
+                    content: `<@${p1.id}> vs <@${p2.id}>`,
+                    ...payload,
+                    files: image ? [image] : [],
+                    components: [...payload.components, actionRow()]
                 };
+            };
 
-                // Helper untuk merender interface game
-                const renderGameMessage = async (pLog) => {
-                    const canvasBuffer = await drawDuel(battleData.p1, battleData.p2, pLog);
-                    const attachment = new AttachmentBuilder(canvasBuffer, { name: 'duel.png' });
+            const battleMessage = await interaction.editReply(await renderBattle());
+            const battleCollector = battleMessage.createMessageComponentCollector({
+                filter: i => i.user.id === p1.id || i.user.id === p2.id,
+                time: BATTLE_MS
+            });
 
-                    const activePlayer = battleData.currentTurn === 1 ? battleData.p1 : battleData.p2;
+            battleCollector.on('collect', async btn => {
+                const active = state.turn === 1 ? p1 : p2;
+                const target = state.turn === 1 ? p2 : p1;
 
-                    const duelPayload = buildContainerV2({
-                        accentColorHex: ui.getColor('primary') || '#FFB6C1',
-                        title: `⚔️ Battle Arena - Round ${battleData.round}`,
-                        description: `Giliran: <@${activePlayer.id}> (**${activePlayer.username}**)`,
-                        bannerAttachmentName: 'duel.png',
-                        footerText: ui.getFooter('survival')
+                if (btn.customId === 'duel_flee') {
+                    await btn.deferUpdate();
+                    const quitter = btn.user.id === p1.id ? p1 : p2;
+                    winner = quitter.id === p1.id ? p2 : p1;
+                    loser = quitter;
+                    state.log = `${quitter.username} mengangkat bendera putih dan menyerah.`;
+                    return battleCollector.stop('flee');
+                }
+
+                if (btn.user.id !== active.id) {
+                    return btn.reply({
+                        content: `${e('naura_hmph')} Sabar ya, sekarang giliran **${active.username}**!`,
+                        flags: MessageFlags.Ephemeral
+                    });
+                }
+
+                await btn.deferUpdate();
+
+                let result;
+                if (btn.customId === 'duel_skill') {
+                    result = engine.useSkill(active, target);
+                    if (!result.ok) {
+                        const reason = result.reason === 'no_class'
+                            ? 'Kamu belum punya kelas. Pilih dulu lewat `/survival class`, ya!'
+                            : `Staminamu kurang, jurus ini butuh **${result.needed}** stamina.`;
+                        return btn.followUp({ content: `${e('naura_akward')} ${reason}`, flags: MessageFlags.Ephemeral });
+                    }
+                } else if (btn.customId === 'duel_attack') {
+                    result = engine.basicAttack(active, target);
+                } else {
+                    return;
+                }
+
+                const line = engine.narrate(active, target, result);
+
+                if (target.hp <= 0) {
+                    winner = active;
+                    loser = target;
+                    state.log = `${line}\n${target.username} tumbang!`;
+                    return battleCollector.stop('ko');
+                }
+
+                state.turn = state.turn === 1 ? 2 : 1;
+                state.round += 1;
+                state.log = `${line}\nSekarang giliran ${target.username}.`;
+                await interaction.editReply(await renderBattle()).catch(() => {});
+            });
+
+            battleCollector.on('end', async () => {
+                try {
+                    await engine.settle(p1Survival, p1, p2Survival, p2);
+
+                    if (!winner) {
+                        if (wager > 0) {
+                            await currencyHelper.reward(COIN, p1Holders, wager);
+                            await currencyHelper.reward(COIN, p2Holders, wager);
+                        }
+                        return interaction.editReply({
+                            content: null,
+                            ...card({
+                                title: `${e('naura_sleepy')} Duelnya berhenti di tengah jalan`,
+                                description: 'Tidak ada yang bergerak sampai waktunya habis. Taruhan sudah Naura kembalikan penuh, kok!',
+                                expression: 'Sleepy',
+                                colorKey: 'warning'
+                            }),
+                            files: []
+                        });
+                    }
+
+                    let prizeText = 'Penghormatan seluruh arena';
+                    if (wager > 0) {
+                        const winnerHolders = winner.id === p1.id ? p1Holders : p2Holders;
+                        await currencyHelper.reward(COIN, winnerHolders, wager * 2);
+                        prizeText = currencyHelper.format(COIN, wager * 2);
+                    }
+
+                    const image = await arenaImage(p1, p2, `${state.log}\nPemenang: ${winner.username}`);
+                    const payload = card({
+                        title: `${e('trophy')} ${winner.username} menang!`,
+                        description: [
+                            `${state.log}`,
+                            '',
+                            `Selamat ya <@${winner.id}>! Naura ikut bangga lihat kamu bertahan sampai akhir.`,
+                            `<@${loser.id}> juga hebat, jangan sedih ya~`,
+                            '',
+                            `**Hadiah:** ${prizeText}`
+                        ].join('\n'),
+                        expression: 'Impressed',
+                        colorKey: 'success',
+                        banner: Boolean(image)
                     });
 
-                    return { content: `<@${battleData.p1.id}> vs <@${battleData.p2.id}>`, ...duelPayload, files: [attachment], components: [row] };
-                };
+                    await interaction.editReply({
+                        content: `<@${winner.id}>`,
+                        ...payload,
+                        files: image ? [image] : []
+                    });
+                } catch (err) {
+                    logger.error('[DUEL END]', err);
+                }
+            });
+        });
 
-                // Mulai Game
-                const gamePayload = await renderGameMessage(battleData.log);
-                const gameMessage = await interaction.editReply(gamePayload);
-
-                const gameCollector = gameMessage.createMessageComponentCollector({
-                    filter: i => i.user.id === battleData.p1.id || i.user.id === battleData.p2.id,
-                    time: 240000 // Total waktu 4 menit
-                });
-
-                let winnerId = null;
-
-                const runTurn = async (interactionBtn, action) => {
-                    const activeIndex = battleData.currentTurn === 1 ? 'p1' : 'p2';
-                    const targetIndex = battleData.currentTurn === 1 ? 'p2' : 'p1';
-
-                    const active = battleData[activeIndex];
-                    const target = battleData[targetIndex];
-
-                    if (interactionBtn.user.id !== active.id) {
-                        return interactionBtn.reply({ content: `${ui.getEmoji('error') || '❌'} Ini bukan giliranmu! Sabar ya.`, ephemeral: true });
-                    }
-
-                    await interactionBtn.deferUpdate();
-
-                    let damage = 0;
-                    let actionLog = '';
-                    let staminaCost = 0;
-
-                    if (action === 'attack') {
-                        // Serangan Biasa
-                        const baseDmg = active.weaponDmg;
-                        damage = Math.floor(baseDmg * (0.85 + Math.random() * 0.3));
-
-                        // Cek Dodge
-                        const dodgeChance = Math.min(45, target.agility * 1.5);
-                        const isDodged = (Math.random() * 100) < dodgeChance;
-
-                        if (isDodged) {
-                            actionLog = `🛡️ ${target.username} berhasil menghindari tebasan dari ${active.username}!`;
-                        } else {
-                            // Cek Crit
-                            const critChance = Math.min(50, active.luck * 1.5);
-                            const isCrit = (Math.random() * 100) < critChance;
-                            if (isCrit) {
-                                damage = Math.floor(damage * 1.6);
-                                actionLog = `💥 CRITICAL! ${active.username} menebas ${target.username} sebesar ${damage} HP!`;
-                            } else {
-                                actionLog = `🗡️ ${active.username} menyerang ${target.username} sebesar ${damage} HP!`;
-                            }
-                            target.hp = Math.max(0, target.hp - damage);
-                        }
-
-                        // Pulihkan stamina dikit
-                        active.stamina = Math.min(100, active.stamina + 8);
-                    }
-
-                    else if (action === 'skill') {
-                        // Serangan Skill
-                        if (active.class === 'warrior') {
-                            staminaCost = 15;
-                            const baseDmg = active.weaponDmg * 1.8;
-                            damage = Math.floor(baseDmg * (0.9 + Math.random() * 0.2));
-                            active.stamina -= staminaCost;
-                            target.hp = Math.max(0, target.hp - damage);
-                            actionLog = `🛡️ [Iron Slash] ${active.username} menghantam tameng baja ke ${target.username} sebesar ${damage} HP!`;
-                        } 
-                        else if (active.class === 'mage') {
-                            staminaCost = 25;
-                            // Magic damage scaling INT
-                            const magicDmg = (active.intelligence * 4.5) + (active.weaponDmg * 1.1);
-                            damage = Math.floor(magicDmg * (0.9 + Math.random() * 0.25));
-                            active.stamina -= staminaCost;
-                            target.hp = Math.max(0, target.hp - damage);
-                            actionLog = `🔥 [Fireball] ${active.username} merapal sihir api dan meledakkan ${target.username} sebesar ${damage} HP!`;
-                        } 
-                        else if (active.class === 'assassin') {
-                            staminaCost = 20;
-                            const baseDmg = active.weaponDmg * 2.2;
-                            damage = Math.floor(baseDmg * (0.8 + Math.random() * 0.4));
-                            active.stamina -= staminaCost;
-
-                            const dodgeChance = Math.min(45, target.agility * 1.5);
-                            const isDodged = (Math.random() * 100) < dodgeChance;
-
-                            if (isDodged) {
-                                actionLog = `💨 [Shadow Strike] ${active.username} menyerang dari bayangan namun ${target.username} sangat lincah dan meloloskan diri!`;
-                            } else {
-                                target.hp = Math.max(0, target.hp - damage);
-                                actionLog = `🗡️ [Shadow Strike] ${active.username} menikam titik vital ${target.username} secara mematikan sebesar ${damage} HP!`;
-                            }
-                        }
-                        else if (active.class === 'ranger') {
-                            staminaCost = 15;
-                            const baseDmg = active.weaponDmg * 1.5;
-                            damage = Math.floor(baseDmg * (0.9 + Math.random() * 0.2));
-                            active.stamina -= staminaCost;
-
-                            const hitChance = 85 + active.agility * 2;
-                            if (Math.random() * 100 < hitChance) {
-                                target.hp = Math.max(0, target.hp - damage);
-                                actionLog = `🏹 [Piercing Arrow] ${active.username} melesatkan panah menembus pertahanan ${target.username} sebesar ${damage} HP!`;
-                            } else {
-                                actionLog = `💨 [Piercing Arrow] Anak panah ${active.username} meleset karena ${target.username} terlalu gesit!`;
-                            }
-                        }
-                    }
-
-                    // Cek jika K.O.
-                    if (target.hp <= 0) {
-                        winnerId = active.id;
-                        gameCollector.stop('ko');
-                        return;
-                    }
-
-                    // Lanjut turn berikutnya
-                    battleData.currentTurn = battleData.currentTurn === 1 ? 2 : 1;
-                    battleData.round += 1;
-                    battleData.log = actionLog + `\nSekarang giliran ${target.username}.`;
-
-                    const nextPayload = await renderGameMessage(battleData.log);
-                    await interaction.editReply(nextPayload);
-                };
-
-                gameCollector.on('collect', async interactionBtn => {
-                    if (interactionBtn.customId === 'duel_flee') {
-                        if (interactionBtn.user.id === battleData.p1.id) {
-                            winnerId = battleData.p2.id;
-                            battleData.log = `🏳️ ${battleData.p1.username} menyerah dan melambaikan bendera putih.`;
-                        } else {
-                            winnerId = battleData.p1.id;
-                            battleData.log = `🏳️ ${battleData.p2.username} menyerah dan melambaikan bendera putih.`;
-                        }
-                        gameCollector.stop('flee');
-                        return;
-                    }
-
-                    if (interactionBtn.customId === 'duel_attack') {
-                        await runTurn(interactionBtn, 'attack');
-                    } else if (interactionBtn.customId === 'duel_skill') {
-                        await runTurn(interactionBtn, 'skill');
-                    }
-                });
-
-                gameCollector.on('end', async (collected, reason) => {
-                    // 1. Jika ada pemenang (K.O. atau Flee)
-                    if (winnerId) {
-                        const isP1Winner = winnerId === battleData.p1.id;
-                        const winner = isP1Winner ? battleData.p1 : battleData.p2;
-                        const loser = isP1Winner ? battleData.p2 : battleData.p1;
-
-                        // Berikan Koin Taruhan ke pemenang
-                        if (wager > 0) {
-                            const totalWin = wager * 2;
-                            const wProf = isP1Winner ? p1Profile : p2Profile;
-                            await wProf.increment('economy_wallet', { by: totalWin });
-                            wProf.minigame_duelScore = (wProf.minigame_duelScore || 0) + 10;
-                            await wProf.save();
-                        }
-
-                        // Kurangi stats HP & Stamina di Database berdasarkan hasil akhir pertarungan
-                        p1Survival.hp = Math.max(20, battleData.p1.hp);
-                        p1Survival.stamina = Math.max(20, battleData.p1.stamina);
-                        await p1Survival.save();
-
-                        p2Survival.hp = Math.max(20, battleData.p2.hp);
-                        p2Survival.stamina = Math.max(20, battleData.p2.stamina);
-                        await p2Survival.save();
-
-                        // Canvas Hasil Akhir
-                        battleData.log = `${battleData.log}\n🏆 PERTARUNGAN SELESAI!\nPemenang: ${winner.username}`;
-                        const finalBuffer = await drawDuel(battleData.p1, battleData.p2, battleData.log);
-                        const finalAttachment = new AttachmentBuilder(finalBuffer, { name: 'duel_final.png' });
-
-                        const rewardEmoji = ui.getEmoji('trophy') || '🏆';
-                        const coinEmoji = ui.getEmoji('coin') || '🪙';
-
-                        const winPayload = buildContainerV2({
-                            accentColorHex: ui.getColor('success') || '#22c55e',
-                            title: '🏆 PEMENANG ARENA BATTLE DUEL 🏆',
-                            description: `Selamat kepada <@${winner.id}> (**${winner.username}**) atas kemenangan mutlak di Battle Arena!\n\n💀 **Kondisi Loser:** K.O. / Kalah Telak\n💰 **Total Hadiah:** ${wager > 0 ? `${coinEmoji} **${(wager * 2).toLocaleString()} Naura Coin**` : 'Penghormatan & Gengsi Arena'}\n🔥 **Bonus Jawara:** +10 Poin Master Duel`,
-                            bannerAttachmentName: 'duel_final.png',
-                            footerText: ui.getFooter('survival')
-                        });
-
-                        await interaction.editReply({ content: `🏆 Duel berakhir! Pemenang: <@${winner.id}>`, ...winPayload, files: [finalAttachment], components: [] });
-                    } 
-                    
-                    // 2. Jika Timeout (Salah satu afk / waktu habis)
-                    else {
-                        // Kembalikan dana taruhan
-                        if (wager > 0) {
-                            await p1Profile.increment('economy_wallet', { by: wager });
-                            await p2Profile.increment('economy_wallet', { by: wager });
-                        }
-                        await interaction.editReply({ content: `⏳ **Duel dibatalkan** karena salah satu pemain tidak merespons giliran dalam waktu batas (atau durasi maksimal 4 menit terlampaui). Taruhan telah dikembalikan.`, embeds: [], files: [], components: [] });
-                    }
-                });
+        inviteCollector.on('end', async collected => {
+            if (collected.size === 0) {
+                await interaction.editReply({
+                    content: null,
+                    ...card({
+                        title: `${e('naura_sleepy')} Tidak ada jawaban`,
+                        description: `<@${opponent.id}> belum membalas tantangannya. Coba tantang lagi nanti ya!`,
+                        expression: 'Sleepy',
+                        colorKey: 'warning'
+                    })
+                }).catch(() => {});
             }
         });
     }

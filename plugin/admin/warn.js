@@ -1,36 +1,75 @@
-const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
+const { SlashCommandBuilder, PermissionsBitField, MessageFlags } = require('discord.js');
 const { buildContainerV2, buildErrorContainerV2 } = require('../../src/utils/NauraContainerBuilder');
 const UserWarn = require('../../src/models/UserWarn');
 const ui = require('../../src/config/ui');
 const GuildSettings = require('../../src/models/GuildSettings');
 const { logger } = require('../../src/managers/logger');
 
+const MUTE_MS = 60 * 60 * 1000;
+const DESC_LIMIT = 3800;
+
+function ephemeral(payload) {
+    return { ...payload, flags: (payload.flags || 0) | MessageFlags.Ephemeral };
+}
+
+function deny(interaction, description) {
+    return interaction.reply(ephemeral(buildErrorContainerV2({
+        title: 'Belum bisa Naura lakukan',
+        description,
+        footerText: ui.getFooter('core')
+    })));
+}
+
+function notice(interaction, description, expression) {
+    return interaction.reply(buildContainerV2({
+        accentColorHex: ui.getColor('success'),
+        title: 'Beres!',
+        expression: expression || 'success',
+        description,
+        footerText: ui.getFooter('core')
+    }));
+}
+
+// Tindakan hanya diumumkan kalau benar-benar berhasil dijalankan.
+async function applyPunishment(action, member, totalWarns) {
+    if (action === 'mute') {
+        if (!member.moderatable) return null;
+        await member.timeout(MUTE_MS, 'Tangga hukuman peringatan');
+        return `<@${member.id}> Naura bisukan otomatis selama satu jam karena sudah mencapai ${totalWarns} peringatan.`;
+    }
+    if (action === 'kick') {
+        if (!member.kickable) return null;
+        await member.kick('Tangga hukuman peringatan');
+        return `<@${member.id}> Naura keluarkan otomatis karena sudah mencapai ${totalWarns} peringatan.`;
+    }
+    if (action === 'ban') {
+        if (!member.bannable) return null;
+        await member.ban({ reason: 'Tangga hukuman peringatan' });
+        return `<@${member.id}> Naura larang masuk otomatis karena sudah mencapai ${totalWarns} peringatan.`;
+    }
+    return null;
+}
+
+async function ladderAction(guildId, totalWarns) {
+    const settings = await GuildSettings.findOne({ where: { guildId } });
+    if (!settings || !settings.settings || !settings.settings.warn_punishments) return null;
+    return settings.settings.warn_punishments[totalWarns] || null;
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('warn')
-        .setDescription('⚠️ Sistem peringatan untuk member.')
+        .setDescription('Sistem peringatan untuk anggota server')
         .setDefaultMemberPermissions(PermissionsBitField.Flags.ModerateMembers)
-        .addSubcommand(sub =>
-            sub.setName('add')
-            .setDescription('Berikan peringatan kepada member.')
-            .addUserOption(opt => opt.setName('user').setDescription('User yang akan diberi peringatan').setRequired(true))
-            .addStringOption(opt => opt.setName('alasan').setDescription('Alasan peringatan').setRequired(true))
-        )
-        .addSubcommand(sub =>
-            sub.setName('check')
-            .setDescription('Lihat daftar peringatan milik member.')
-            .addUserOption(opt => opt.setName('user').setDescription('User yang akan diperiksa').setRequired(true))
-        )
-        .addSubcommand(sub =>
-            sub.setName('remove')
-            .setDescription('Hapus satu peringatan berdasarkan ID.')
-            .addIntegerOption(opt => opt.setName('id').setDescription('ID Peringatan yang akan dihapus').setRequired(true))
-        )
-        .addSubcommand(sub =>
-            sub.setName('clear')
-            .setDescription('Hapus SEMUA peringatan milik member.')
-            .addUserOption(opt => opt.setName('user').setDescription('User yang akan dihapus semua peringatannya').setRequired(true))
-        ),
+        .addSubcommand(sub => sub.setName('add').setDescription('Beri peringatan kepada anggota')
+            .addUserOption(opt => opt.setName('user').setDescription('Anggota yang diberi peringatan').setRequired(true))
+            .addStringOption(opt => opt.setName('alasan').setDescription('Alasan peringatan').setRequired(true)))
+        .addSubcommand(sub => sub.setName('check').setDescription('Lihat daftar peringatan anggota')
+            .addUserOption(opt => opt.setName('user').setDescription('Anggota yang diperiksa').setRequired(true)))
+        .addSubcommand(sub => sub.setName('remove').setDescription('Hapus satu peringatan berdasarkan ID')
+            .addIntegerOption(opt => opt.setName('id').setDescription('ID peringatan').setRequired(true)))
+        .addSubcommand(sub => sub.setName('clear').setDescription('Hapus semua peringatan milik anggota')
+            .addUserOption(opt => opt.setName('user').setDescription('Anggota yang dibersihkan').setRequired(true))),
 
     async execute(interaction) {
         const subcommand = interaction.options.getSubcommand();
@@ -40,113 +79,111 @@ module.exports = {
             const user = interaction.options.getUser('user');
             const reason = interaction.options.getString('alasan');
 
-            if (user.bot) return interaction.reply({ content: '❌ Kamu tidak bisa memberikan peringatan kepada bot.', ephemeral: true });
+            if (user.bot) return deny(interaction, 'Bot tidak bisa diberi peringatan ya.');
+            if (user.id === interaction.user.id) return deny(interaction, 'Kamu tidak bisa memperingatkan dirimu sendiri, hehe.');
 
             const targetMember = await interaction.guild.members.fetch(user.id).catch(() => null);
-            if(targetMember) {
-                 if (targetMember.roles.highest.position >= interaction.member.roles.highest.position) {
-                     return interaction.reply({ content: '❌ Kamu tidak bisa memberi peringatan kepada member dengan role yang sama atau lebih tinggi darimu.', ephemeral: true });
-                 }
-                 if (targetMember.roles.highest.position >= interaction.guild.members.me.roles.highest.position) {
-                     return interaction.reply({ content: '❌ Aku tidak bisa memberikan tindakan pada member yang rolenya lebih tinggi dariku.', ephemeral: true });
-                 }
+
+            if (targetMember) {
+                if (targetMember.roles.highest.position >= interaction.member.roles.highest.position) {
+                    return deny(interaction, 'Anggota itu punya role yang setara atau lebih tinggi darimu.');
+                }
+                if (targetMember.roles.highest.position >= interaction.guild.members.me.roles.highest.position) {
+                    return deny(interaction, 'Rolenya lebih tinggi dari role Naura, jadi Naura tidak bisa bertindak.');
+                }
             }
-            if (user.id === interaction.user.id) return interaction.reply({ content: '❌ Kamu tidak bisa memberikan peringatan kepada diri sendiri.', ephemeral: true });
 
             await UserWarn.create({
                 userId: user.id,
-                guildId: guildId,
+                guildId,
                 moderatorId: interaction.user.id,
-                reason: reason
+                reason
             });
 
-            const payload = buildContainerV2({
-                accentColorHex: ui.getColor('error') || '#ff0000',
-                authorName: '⚠️ Peringatan Diberikan',
-                title: `Peringatan: ${user.username}`,
+            await interaction.reply(buildContainerV2({
+                accentColorHex: ui.getColor('warning') || ui.getColor('error'),
+                authorName: 'Peringatan Diberikan',
+                title: `Peringatan untuk ${user.username}`,
                 iconURL: user.displayAvatarURL(),
-                description: `**User:** ${user} (${user.tag})\n**Moderator:** ${interaction.user}\n**Alasan:** ${reason}`,
+                expression: 'warning',
+                description:
+                    `**Anggota:** ${user} (${user.tag})\n` +
+                    `**Moderator:** ${interaction.user}\n` +
+                    `**Alasan:** ${reason}`,
                 footerText: ui.getFooter('core')
-            });
+            }));
 
-            await interaction.reply(payload);
-
-            // Punishment Ladder System
+            let totalWarns = null;
+            let action = null;
             try {
-                const totalWarns = await UserWarn.count({ where: { guildId, userId: user.id } });
-                const settings = await GuildSettings.findOne({ where: { guildId } });
-
-                if (settings && settings.settings && settings.settings.warn_punishments) {
-                    const action = settings.settings.warn_punishments[totalWarns];
-
-                    if (action === 'dm') {
-                         await user.send(`⚠️ Kamu mendapat peringatan ke-${totalWarns} di server **${interaction.guild.name}**.\nAlasan: ${reason}`).catch(() => null);
-                    }
-                    else if (action === 'mute' && targetMember) {
-                         // Timeout 1 Jam
-                         await targetMember.timeout(60 * 60 * 1000, 'Warn Punishment Ladder').catch(e => logger.error(e));
-                         await interaction.channel.send(`🤫 <@${user.id}> telah di-timeout otomatis selama 1 jam karena mencapai ${totalWarns} Peringatan.`);
-                    }
-                    else if (action === 'kick' && targetMember) {
-                         await targetMember.kick('Warn Punishment Ladder').catch(e => logger.error(e));
-                         await interaction.channel.send(`👢 <@${user.id}> telah di-kick otomatis karena mencapai ${totalWarns} Peringatan.`);
-                    }
-                    else if (action === 'ban' && targetMember) {
-                         await targetMember.ban({ reason: 'Warn Punishment Ladder' }).catch(e => logger.error(e));
-                         await interaction.channel.send(`🔨 <@${user.id}> telah di-ban otomatis karena mencapai ${totalWarns} Peringatan.`);
-                    }
-                }
+                totalWarns = await UserWarn.count({ where: { guildId, userId: user.id } });
+                action = await ladderAction(guildId, totalWarns);
             } catch (err) {
-                logger.error('[Warn] Failed to execute punishment ladder: ' + err.message);
+                logger.error('[Warn] Gagal membaca tangga hukuman: ' + err.message);
             }
 
-            try {
-                await user.send(`⚠️ Kamu mendapat peringatan di server **${interaction.guild.name}**!\n**Alasan:** ${reason}`);
-            } catch (e) {
-                // User may have DMs disabled
+            // Pemberitahuan dikirim satu kali saja, tidak lagi dua kali.
+            const urutan = totalWarns ? ` ke-${totalWarns}` : '';
+            await user.send(
+                `Kamu mendapat peringatan${urutan} di server **${interaction.guild.name}**.\n` +
+                `**Alasan:** ${reason}\n\n` +
+                'Naura yakin kamu bisa lebih baik lagi setelah ini!'
+            ).catch(() => null);
+
+            if (action && action !== 'dm' && targetMember) {
+                try {
+                    const announcement = await applyPunishment(action, targetMember, totalWarns);
+                    if (announcement) await interaction.channel.send(announcement);
+                    else logger.error(`[Warn] Tindakan ${action} dilewati, izin Naura tidak cukup.`);
+                } catch (err) {
+                    logger.error('[Warn] Gagal menjalankan tangga hukuman: ' + err.message);
+                }
             }
+            return;
         }
-        else if (subcommand === 'check') {
+
+        if (subcommand === 'check') {
             const user = interaction.options.getUser('user');
-            const warns = await UserWarn.findAll({ where: { userId: user.id, guildId: guildId } });
+            const warns = await UserWarn.findAll({ where: { userId: user.id, guildId } });
 
-            const desc = warns.length === 0
-                ? '✅ User ini bersih, tidak memiliki peringatan.'
-                : `User ini memiliki **${warns.length}** peringatan:\n\n` +
-                  warns.map(w => `**ID:** \`${w.id}\` | **Mod:** <@${w.moderatorId}>\n**Alasan:** ${w.reason}\n**Tanggal:** <t:${Math.floor(new Date(w.createdAt).getTime() / 1000)}:R>`).join('\n\n');
+            let desc = warns.length === 0
+                ? 'Anggota ini bersih, belum ada peringatan sama sekali. Bagus sekali!'
+                : `Anggota ini punya **${warns.length}** peringatan:\n\n` + warns.map(w =>
+                    `**ID:** \`${w.id}\` | **Mod:** <@${w.moderatorId}>\n` +
+                    `**Alasan:** ${w.reason}\n` +
+                    `**Tanggal:** <t:${Math.floor(new Date(w.createdAt).getTime() / 1000)}:R>`
+                ).join('\n\n');
 
-            const payload = buildContainerV2({
-                accentColorHex: ui.getColor('primary') || '#2b2d31',
+            if (desc.length > DESC_LIMIT) {
+                desc = desc.slice(0, DESC_LIMIT) + '\n\n... sisanya Naura potong ya, daftarnya panjang sekali.';
+            }
+
+            return interaction.reply(buildContainerV2({
+                accentColorHex: ui.getColor('primary'),
                 authorName: `Daftar Peringatan: ${user.tag}`,
-                title: `📊 Log Warn ${user.username}`,
+                title: `Catatan ${user.username}`,
                 iconURL: user.displayAvatarURL(),
+                expression: 'info',
                 description: desc,
                 footerText: ui.getFooter('core')
-            });
-
-            await interaction.reply(payload);
+            }));
         }
-        else if (subcommand === 'remove') {
-            const id = interaction.options.getInteger('id');
-            const warn = await UserWarn.findOne({ where: { id: id, guildId: guildId } });
 
-            if (!warn) {
-                return interaction.reply({ content: `❌ Peringatan dengan ID \`${id}\` tidak ditemukan di server ini.`, ephemeral: true });
-            }
+        if (subcommand === 'remove') {
+            const id = interaction.options.getInteger('id');
+            const warn = await UserWarn.findOne({ where: { id, guildId } });
+
+            if (!warn) return deny(interaction, `Peringatan dengan ID \`${id}\` tidak Naura temukan di server ini.`);
 
             await warn.destroy();
-            await interaction.reply(`✅ Berhasil menghapus peringatan dengan ID \`${id}\`.`);
+            return notice(interaction, `Peringatan dengan ID \`${id}\` sudah Naura hapus.`);
         }
-        else if (subcommand === 'clear') {
-            const user = interaction.options.getUser('user');
 
-            const deletedCount = await UserWarn.destroy({ where: { userId: user.id, guildId: guildId } });
+        const user = interaction.options.getUser('user');
+        const deletedCount = await UserWarn.destroy({ where: { userId: user.id, guildId } });
 
-            if (deletedCount === 0) {
-                return interaction.reply({ content: `❌ User ${user} tidak memiliki peringatan untuk dihapus.`, ephemeral: true });
-            }
+        if (deletedCount === 0) return deny(interaction, `${user} belum punya peringatan yang bisa dihapus.`);
 
-            await interaction.reply(`✅ Berhasil menghapus semua (${deletedCount}) peringatan milik ${user}.`);
-        }
+        return notice(interaction, `Semua peringatan milik ${user} sudah Naura bersihkan, totalnya ${deletedCount}.`);
     }
 };

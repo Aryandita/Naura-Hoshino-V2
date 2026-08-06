@@ -6,6 +6,7 @@ const woodenTools = require('./items_wooden.js');
 const extraItems = require('./items_extra.js');
 const refinedItems = require('./items_refined.js');
 const { COUPON_ITEMS } = require('./items_coupon.js');
+const { DUNGEON_ITEMS } = require('./items_dungeon.js');
 
 // Fallback minimum kalau pengambilan dari database gagal total.
 const staticFallback = [
@@ -17,7 +18,13 @@ const staticFallback = [
 // Item yang hidup di kode dan harus selalu tersedia, bahkan kalau katalog
 // database belum pernah di-seed. Barang kupon ikut di sini supaya bisa dicari
 // lewat `items.find()`, tetapi harganya 0 sehingga tidak muncul di toko biasa.
-const CODE_ONLY_ITEMS = [...woodenTools, ...extraItems, ...refinedItems, ...COUPON_ITEMS];
+const CODE_ONLY_ITEMS = [
+    ...woodenTools,
+    ...extraItems,
+    ...refinedItems,
+    ...COUPON_ITEMS,
+    ...DUNGEON_ITEMS
+];
 
 function flatten(row) {
     const data = row.toJSON();

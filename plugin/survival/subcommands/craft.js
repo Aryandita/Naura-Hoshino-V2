@@ -1,314 +1,283 @@
 // Lokasi: plugin/survival/subcommands/craft.js
-const { ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require('discord.js');
+'use strict';
+
+const { ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder, MessageFlags } = require('discord.js');
 const { buildContainerV2, buildErrorContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
 const UserSurvival = require('../../../src/models/UserSurvival');
-const UserProfile = require('../../../src/models/UserProfile');
 const cacheManager = require('../../../src/managers/cacheManager');
 const { safeParseInventory } = require('../inventoryHelper');
 const ui = require('../../../src/config/ui');
-const { advanceTime } = require('../../../plugin/survival/survivalTime');
-const { createCanvas, GlobalFonts } = require('@napi-rs/canvas');
+const currency = require('../currency');
+const helpers = require('../craftHelpers');
+const { listAvailable, getBlueprint } = require('../craftBlueprints');
+const { SMELT_RECIPES, getSmeltRecipe, getUpgradePlan, isUpgradable } = require('../craftingRecipes');
+const actions = require('../craftActions');
 
-// Coba memuat font dari Canvas Asset
-try {
-    const fs = require('fs');
-    if (fs.existsSync('./assets/fonts/Inter-Bold.ttf')) GlobalFonts.registerFromPath('./assets/fonts/Inter-Bold.ttf', 'Inter');
-} catch (e) {}
+const COLLECTOR_MS = 180000;
+const IMAGE_NAME = 'crafting.png';
+const MAX_OPTIONS = 25;
+const e = helpers.e;
 
-// Fungsi menggambar UI Crafting
-async function createCraftingCanvas(recipe, currentInv) {
-    const canvas = createCanvas(600, 300);
-    const ctx = canvas.getContext('2d');
+const MODES = {
+    assemble: { label: 'Rakit Sendiri', heading: 'Meja Perakitan Naura' },
+    smelt: { label: 'Lebur di Tungku', heading: 'Tungku Pandai Besi Bagas' },
+    upgrade: { label: 'Tingkatkan Alat', heading: 'Tempa Naik Level' }
+};
 
-    // Background kayu
-    ctx.fillStyle = '#3E2723';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+function modeRow(active) {
+    const row = new ActionRowBuilder();
+    for (const [key, meta] of Object.entries(MODES)) {
+        row.addComponents(new ButtonBuilder()
+            .setCustomId('craft_mode_' + key)
+            .setLabel(meta.label)
+            .setStyle(key === active ? ButtonStyle.Primary : ButtonStyle.Secondary));
+    }
+    return row;
+}
 
-    // Pattern garis-garis tipis untuk efek kayu
-    ctx.strokeStyle = '#4E342E';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < canvas.height; i += 20) {
-        ctx.beginPath();
-        ctx.moveTo(0, i);
-        ctx.lineTo(canvas.width, i);
-        ctx.stroke();
+function cut(text) {
+    return String(text).slice(0, 100);
+}
+
+function costLabel(kind, amount) {
+    const meta = currency.CURRENCIES[kind];
+    return amount + ' ' + (meta ? meta.short : '');
+}
+
+function optionsFor(mode, inventory, unlocked) {
+    if (mode === 'assemble') {
+        return listAvailable(unlocked).map(bp => ({
+            label: cut(bp.name),
+            value: bp.id,
+            description: cut('Butuh ' + bp.req.map(r => r.amount + 'x ' + helpers.nameOf(r.id)).join(', '))
+        }));
     }
 
-    // Border bingkai
-    ctx.strokeStyle = '#271911';
-    ctx.lineWidth = 10;
-    ctx.strokeRect(5, 5, canvas.width - 10, canvas.height - 10);
-
-    // Judul
-    ctx.font = '24px "Inter", sans-serif';
-    ctx.fillStyle = '#D7CCC8';
-    ctx.fillText(`${ui.getEmoji('craft_table') || '🔨'} Naura Survival Game - Meja Perajin`, 20, 40);
-
-    // Garis pemisah judul
-    ctx.beginPath();
-    ctx.moveTo(20, 50);
-    ctx.lineTo(canvas.width - 20, 50);
-    ctx.strokeStyle = '#8D6E63';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Nama Item yang akan dibuat
-    ctx.font = 'bold 28px "Inter", sans-serif';
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(`Target: ${recipe.name}`, 20, 90);
-
-    // Kebutuhan Material
-    ctx.font = '20px "Inter", sans-serif';
-    ctx.fillStyle = '#FFCC80';
-    ctx.fillText('Material yang Dibutuhkan:', 20, 130);
-
-    let yOffset = 160;
-    let allMaterialsReady = true;
-
-    for (const [reqId, reqAmt] of Object.entries(recipe.req)) {
-        // Cek Inventory untuk material ini. Format normalisasi: cari obyek atau string id
-        let playerHas = 0;
-        const itemObj = currentInv.find(i => (i.id === reqId || i === reqId));
-        if (itemObj) {
-            playerHas = itemObj.amount || 1;
-        } else {
-             // Coba hitung cara lama (array of string/object tanpa amount)
-             playerHas = currentInv.filter(i => (i.id === reqId || i === reqId)).length;
-        }
-
-        const isEnough = playerHas >= reqAmt;
-        if (!isEnough) allMaterialsReady = false;
-
-        ctx.fillStyle = isEnough ? '#A5D6A7' : '#EF9A9A'; // Hijau jika cukup, merah jika kurang
-        ctx.fillText(`- ${reqId.toUpperCase()}: ${playerHas} / ${reqAmt}`, 30, yOffset);
-        yOffset += 30;
+    if (mode === 'smelt') {
+        return SMELT_RECIPES.slice(0, MAX_OPTIONS).map(recipe => ({
+            label: cut(helpers.nameOf(recipe.output.id)),
+            value: recipe.id,
+            description: cut('Upah ' + costLabel(recipe.currency, recipe.fee) + ' - ' + recipe.input.map(i => i.amount + 'x ' + helpers.nameOf(i.id)).join(', '))
+        }));
     }
 
-    // Status / Kesimpulan di bawah
-    ctx.font = 'bold 22px "Inter", sans-serif';
-    if (allMaterialsReady) {
-        ctx.fillStyle = '#81C784';
-        ctx.fillText('✅ Bahan Cukup! Siap dirakit.', 20, 270);
+    const seen = [];
+    for (const entry of inventory) {
+        const id = typeof entry === 'string' ? entry : (entry && entry.id);
+        if (!id || !isUpgradable(id) || seen.some(opt => opt.value === id)) continue;
+        const plan = getUpgradePlan(id);
+        seen.push({
+            label: cut(helpers.nameOf(id) + ' jadi ' + helpers.nameOf(plan.to)),
+            value: id,
+            description: cut('Biaya tempa ' + costLabel(plan.currency, plan.cost))
+        });
+    }
+    return seen.slice(0, MAX_OPTIONS);
+}
+
+function pickRow(mode, options) {
+    const menu = new StringSelectMenuBuilder()
+        .setCustomId('craft_pick')
+        .setPlaceholder(mode === 'assemble' ? 'Mau merakit apa hari ini?' : mode === 'smelt' ? 'Bahan apa yang mau dilebur?' : 'Alat mana yang mau ditempa naik?');
+
+    if (options.length === 0) {
+        menu.addOptions({ label: 'Belum ada pilihan', value: 'none', description: 'Naura belum menemukan resep yang cocok.' });
+        menu.setDisabled(true);
     } else {
-        ctx.fillStyle = '#E57373';
-        ctx.fillText('❌ Bahan Kurang! Tidak bisa dirakit.', 20, 270);
+        menu.addOptions(options);
+    }
+    return new ActionRowBuilder().addComponents(menu);
+}
+
+// Kebutuhan tiap mode diseragamkan supaya kanvas dan aksinya memakai bentuk sama.
+function planFor(mode, id) {
+    if (mode === 'assemble') {
+        const bp = getBlueprint(id);
+        if (!bp) return null;
+        return { title: bp.name, desc: bp.desc, req: bp.req, cost: 0, kind: null };
     }
 
-    return canvas.toBuffer('image/png');
+    if (mode === 'smelt') {
+        const recipe = getSmeltRecipe(id);
+        if (!recipe) return null;
+        return {
+            title: helpers.nameOf(recipe.output.id) + ' x' + recipe.output.amount,
+            desc: 'Bagas mengipasi tungkunya sampai membara. Bahan olahan selalu jauh lebih bernilai daripada bahan mentahnya, lho!',
+            req: recipe.input,
+            cost: recipe.fee,
+            kind: recipe.currency
+        };
+    }
+
+    const plan = getUpgradePlan(id);
+    if (!plan) return null;
+    return {
+        title: helpers.nameOf(plan.from) + ' menjadi ' + helpers.nameOf(plan.to),
+        desc: 'Alat lamanya ikut dilebur, jadi Naura minta kamu yakin dulu. Bahan intinya ' + helpers.nameOf(plan.coreId) + ', sesuai jenis bahan alatmu.',
+        req: plan.materials,
+        cost: plan.cost,
+        kind: plan.currency
+    };
+}
+
+async function detailPayload(mode, id, inventory, holders) {
+    const plan = planFor(mode, id);
+    if (!plan) return null;
+
+    const check = helpers.checkMaterials(inventory, plan.req);
+    const affordable = plan.cost === 0 || currency.canAfford(plan.kind, holders, plan.cost);
+    const ready = check.ok && affordable;
+
+    const buffer = await helpers.createCraftingCanvas({
+        heading: MODES[mode].heading,
+        target: plan.title,
+        lines: check.lines,
+        ready,
+        note: !check.ok ? 'Bahannya masih kurang, ya. Naura tunggu, kok.' : (!affordable ? 'Bahannya lengkap, tapi uangnya belum cukup.' : null)
+    });
+
+    const costText = plan.cost > 0 ? '\n' + e('coin', '\ud83e\ude99') + ' Upah tempa: ' + currency.format(plan.kind, plan.cost) : '';
+    const payload = buildContainerV2({
+        accentColorHex: ready ? ui.getColor('success') : ui.getColor('warning'),
+        authorName: 'Naura Crafting Guide',
+        expression: ready ? 'cheers' : 'thinking',
+        title: e('craft_table', '\ud83d\udd28') + ' ' + plan.title,
+        description: plan.desc + costText + '\n' + e('sleepy', '\ud83d\ude34') + ' Stamina terpakai: ' + (mode === 'assemble' ? actions.STAMINA_ASSEMBLE : mode === 'smelt' ? actions.STAMINA_SMELT : actions.STAMINA_UPGRADE),
+        bannerAttachmentName: IMAGE_NAME,
+        footerText: ui.getFooter('survival')
+    });
+
+    const confirmRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId('craft_do')
+            .setLabel(ready ? 'Kerjakan Sekarang' : 'Belum Bisa')
+            .setStyle(ready ? ButtonStyle.Success : ButtonStyle.Danger)
+            .setDisabled(!ready),
+        new ButtonBuilder().setCustomId('craft_cancel').setLabel('Selesai Dulu').setStyle(ButtonStyle.Secondary)
+    );
+
+    return { payload, attachment: new AttachmentBuilder(buffer, { name: IMAGE_NAME }), confirmRow };
+}
+
+function failText(result) {
+    if (result.reason === 'materials') return 'Bahannya kurang: ' + helpers.missingText(result.check.lines) + '. Naura bantu cari lagi, yuk!';
+    if (result.reason === 'money') return 'Upah tempanya belum cukup. Butuh ' + currency.format(result.kind, result.need) + ', punyamu ' + currency.format(result.kind, result.balance) + '.';
+    if (result.reason === 'no_tool') return 'Alat yang mau ditempa sudah tidak ada di tasmu, ya?';
+    return 'Naura bingung dengan resep itu. Coba pilih yang lain, ya.';
 }
 
 module.exports = {
-    async execute(interaction, client) {
+    async execute(interaction) {
         const user = interaction.user;
         const [survival] = await UserSurvival.findOrCreate({ where: { userId: user.id } });
 
-        if (survival.currentLocation === 'prison') {
-            return ui.sendError(interaction, 'err_sys_37', true);
-        }
+        if (survival.currentLocation === 'prison') return ui.sendError(interaction, 'err_sys_37', true);
+        if ((survival.stamina || 0) <= 10) return ui.sendError(interaction, 'err_sys_38', true);
 
-        const errEmbed = (msg) => buildErrorContainerV2({ title: 'Gagal', description: `${ui.getEmoji('error') || '❌'} ${msg}`, footerText: ui.getFooter('survival') });
+        let profile = await cacheManager.getUserProfile(user.id);
+        let inventory = safeParseInventory(profile.inventory);
+        const rpgState = survival.rpg_state || {};
+        const unlocked = rpgState.unlocked_recipes || [];
 
-        if (survival.stamina <= 10) {
-            return ui.sendError(interaction, 'err_sys_38', true);
-        }
+        let mode = 'assemble';
+        let selected = null;
 
-        const profile = await cacheManager.getUserProfile(user.id);
-        let currentInv = safeParseInventory(profile.inventory);
-
-        // Definisi Resep Crafting (Blueprints)
-
-        const recipes = {
-            'iron_sword': { id: 'iron_sword', name: 'Pedang Besi', desc: 'Senjata yang lebih kuat dari pedang tua. (+20 DMG)', req: { 'iron_ore': 3, 'wood': 1 }, emoji: ui.getEmoji('sword') || '🗡️' },
-            'diamond_sword': { id: 'diamond_sword', name: 'Pedang Berlian', desc: 'Senjata pamungkas penakluk naga. (+50 DMG)', req: { 'diamond': 2, 'iron_ore': 1, 'wood': 1 }, emoji: ui.getEmoji('diamond_sword') || '💎' },
-            'fishing_rod': { id: 'fishing_rod', name: 'Alat Pancing Dasar', desc: 'Alat wajib untuk memancing.', req: { 'wood': 3, 'slime_gel': 1 }, emoji: ui.getEmoji('fishing_rod') || '🎣' },
-            'wooden_pickaxe': { id: 'wooden_pickaxe', name: 'Beliung Kayu', desc: 'Alat dasar untuk menambang.', req: { 'wood': 3, 'stone': 2 }, emoji: ui.getEmoji('pickaxe') || '⛏️' },
-            'wooden_axe': { id: 'wooden_axe', name: 'Kapak Kayu', desc: 'Alat dasar untuk menebang pohon.', req: { 'wood': 3, 'stone': 1 }, emoji: ui.getEmoji('axe') || '🪓' },
-            'luxury_meal': { id: 'luxury_meal', name: 'Makanan Mewah', desc: 'Memulihkan 100% Hunger & Stamina.', req: { 'salmon': 1, 'mystic_herb': 1, 'mineral_water': 1 }, emoji: ui.getEmoji('soup') || '🍲' },
-
-            'health_potion': { id: 'health_potion', name: 'Ramuan Penyembuh', desc: 'Memulihkan HP secara instan.', req: { 'mystic_herb': 2, 'mineral_water': 1 }, emoji: ui.getEmoji('potion') || '🧪' },
-            'heist_mask': { id: 'heist_mask', name: 'Topeng Perampok', desc: 'Item wajib untuk menyembunyikan identitas saat Heist.', req: { 'trash': 5, 'wood': 1 }, emoji: ui.getEmoji('mask') || '🎭' },
-            'c4_bomb': { id: 'c4_bomb', name: 'Bom Rakitan (C4)', desc: 'Peledak kuat untuk membobol brankas bank.', req: { 'iron_ore': 5, 'slime_gel': 3 }, emoji: ui.getEmoji('bomb') || '💣' }
-        };
-
-        const rpgState = survival.rpg_state || { unlocked_recipes: [] };
-        const unlockedRecipes = rpgState.unlocked_recipes || [];
-
-        const defaultRecipes = ['wooden_pickaxe', 'wooden_axe', 'fishing_rod', 'heist_mask', 'c4_bomb'];
-        const availableRecipes = {};
-
-        for (const [id, data] of Object.entries(recipes)) {
-            if (defaultRecipes.includes(id) || unlockedRecipes.includes(id)) {
-                availableRecipes[id] = data;
-            }
-        }
-
-        const selectMenu = new StringSelectMenuBuilder()
-            .setCustomId('craft_select')
-            .setPlaceholder('Pilih Barang Untuk Dirakit...');
-
-        let hasOptions = false;
-        for (const [id, data] of Object.entries(availableRecipes)) {
-            hasOptions = true;
-            let reqText = [];
-            for (const [reqId, reqAmt] of Object.entries(data.req)) {
-                reqText.push(`${reqAmt}x ${reqId}`);
-            }
-            selectMenu.addOptions({
-                label: data.name,
-                description: `Butuh: ${reqText.join(', ')}`,
-                value: id,
-                emoji: data.emoji
-            });
-        }
-
-
-        if (!hasOptions) {
-            selectMenu.addOptions({ label: 'Tidak ada resep', value: 'none' });
-            selectMenu.setDisabled(true);
-        }
-
-        const craftPayload = buildContainerV2({
-            accentColorHex: ui.getColor('primary') || '#FFB6C1',
-            title: `${ui.getEmoji('craft_table') || '🔨'} Meja Perakitan (Crafting)`,
-            description: '"Satukan material mentah menjadi barang yang berguna!"\n\nPilih cetak biru yang ingin kamu rakit dari daftar di bawah.',
+        const intro = buildContainerV2({
+            accentColorHex: ui.getColor('primary'),
+            authorName: 'Naura Crafting Guide',
+            expression: 'happy',
+            title: e('craft_table', '\ud83d\udd28') + ' Meja Perakitan Naura',
+            description: 'Selamat datang di sudut kerja Naura! Di sini kamu bisa merakit barang dasar, menitipkan bahan mentah ke tungku Bagas biar jadi lebih bernilai, atau menempa alat lamamu supaya naik level.\n\nPilih dulu mau yang mana, ya.',
             footerText: ui.getFooter('survival')
         });
 
-        const response = await interaction.reply({ ...craftPayload, components: [new ActionRowBuilder().addComponents(selectMenu)] });
-        const collector = response.createMessageComponentCollector({ filter: i => i.user.id === user.id, time: 120000 });
-
-        let currentSelectedRecipeId = null;
-
-        collector.on('collect', async i => {
-            if (i.customId === 'craft_select') {
-                await i.deferUpdate();
-                currentSelectedRecipeId = i.values[0];
-                const recipe = recipes[currentSelectedRecipeId];
-
-                // Refresh Inventory
-                const updatedProfile = await cacheManager.getUserProfile(user.id);
-                currentInv = updatedProfile.inventory || [];
-
-                const buffer = await createCraftingCanvas(recipe, currentInv);
-                const attachment = new AttachmentBuilder(buffer, { name: 'crafting.png' });
-
-                // Cek kesiapan material
-                let canCraft = true;
-                for (const [reqId, reqAmt] of Object.entries(recipe.req)) {
-                    let playerHas = 0;
-                    const itemObj = currentInv.find(item => (item.id === reqId || item === reqId));
-                    if(itemObj) playerHas = itemObj.amount || 1;
-                    else playerHas = currentInv.filter(item => (item.id === reqId || item === reqId)).length;
-
-                    if (playerHas < reqAmt) canCraft = false;
-                }
-
-                const actionRow = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder()
-                        .setCustomId('craft_confirm')
-                        .setLabel(canCraft ? 'Rakit Sekarang' : 'Bahan Kurang')
-                        .setStyle(canCraft ? ButtonStyle.Success : ButtonStyle.Danger)
-                        .setDisabled(!canCraft),
-                    new ButtonBuilder()
-                        .setCustomId('craft_cancel')
-                        .setLabel('Batal')
-                        .setStyle(ButtonStyle.Secondary)
-                );
-
-                const infoPayload = buildContainerV2({
-                    accentColorHex: canCraft ? ui.getColor('success') : ui.getColor('error'),
-                    title: `Blueprint: ${recipe.name}`,
-                    description: `**Deskripsi:** ${recipe.desc}\n\n*Waktu Perakitan: 1 Jam In-Game*\n*Konsumsi Stamina: 10*`,
-                    bannerAttachmentName: 'crafting.png',
-                    footerText: ui.getFooter('survival')
-                });
-
-                await i.editReply({ ...infoPayload, files: [attachment], components: [new ActionRowBuilder().addComponents(selectMenu), actionRow] });
-            }
-            else if (i.customId === 'craft_confirm') {
-                await i.deferUpdate();
-                if (!currentSelectedRecipeId) return;
-                const recipe = recipes[currentSelectedRecipeId];
-
-                const updatedProfile = await cacheManager.getUserProfile(user.id);
-                currentInv = updatedProfile.inventory || [];
-
-                // Pastikan kembali bahan cukup sebelum memproses (mencegah eksploitasi multi-click)
-                let canCraft = true;
-                for (const [reqId, reqAmt] of Object.entries(recipe.req)) {
-                    let playerHas = 0;
-                    const itemObj = currentInv.find(item => (item.id === reqId || item === reqId));
-                    if(itemObj) playerHas = itemObj.amount || 1;
-                    else playerHas = currentInv.filter(item => (item.id === reqId || item === reqId)).length;
-
-                    if (playerHas < reqAmt) canCraft = false;
-                }
-
-                if (!canCraft) return i.followUp({ ...errEmbed('Bahan tiba-tiba kurang. Pastikan kamu tidak menekan dua kali atau membuang material.'), ephemeral: true });
-
-                // Potong bahan
-                for (const [reqId, reqAmt] of Object.entries(recipe.req)) {
-                     const itemIdx = currentInv.findIndex(item => (item.id === reqId || item === reqId));
-                     if(itemIdx > -1) {
-                         let item = currentInv[itemIdx];
-                         if(item.amount) {
-                             item.amount -= reqAmt;
-                             if(item.amount <= 0) currentInv.splice(itemIdx, 1);
-                         } else {
-                             // Fallback hapus sejumlah reqAmt kalau format lama
-                             for(let k=0; k<reqAmt; k++) {
-                                const idx = currentInv.findIndex(itm => (itm.id === reqId || itm === reqId));
-                                if(idx > -1) currentInv.splice(idx, 1);
-                             }
-                         }
-                     }
-                }
-
-                // Tambahkan hasil
-                const existingResult = currentInv.find(itm => itm.id === recipe.id);
-                if(existingResult) {
-                    existingResult.amount = (existingResult.amount || 1) + 1;
-                } else {
-                    currentInv.push({ id: recipe.id, name: recipe.name, amount: 1 });
-                }
-
-                await UserProfile.update({ inventory: currentInv }, { where: { userId: user.id } });
-
-                const s = await UserSurvival.findOne({ where: {userId: user.id} });
-                await UserSurvival.update({ stamina: Math.max(0, s.stamina - 10) }, { where: { userId: user.id } });
-                await advanceTime(user.id, 1);
-
-                try {
-                    const { incrementQuestProgress } = require('../../../plugin/survival/questGenerator');
-                    await incrementQuestProgress(user.id, 'craft');
-                } catch(e) {}
-
-                const successPayload = buildContainerV2({
-                    accentColorHex: ui.getColor('success') || '#22c55e',
-                    title: `${ui.getEmoji('craft_table') || '🛠️'} Perakitan Selesai!`,
-                    description: `${ui.getEmoji('success') || '✅'} Kamu berhasil merakit **${recipe.emoji} ${recipe.name}**!\nBarang telah dimasukkan ke dalam tasmu.`,
-                    footerText: ui.getFooter('survival')
-                });
-
-                await i.editReply({ ...successPayload, files: [], components: [] });
-                collector.stop();
-            }
-            else if (i.customId === 'craft_cancel') {
-                await i.deferUpdate();
-                const cancelPayload = buildContainerV2({
-                    accentColorHex: ui.getColor('secondary') || '#6b7280',
-                    title: 'Batal Crafting',
-                    description: 'Kamu meninggalkan Meja Perakitan.',
-                    footerText: ui.getFooter('survival')
-                });
-                await i.editReply({ ...cancelPayload, files: [], components: [] });
-                collector.stop();
-            }
+        const options = optionsFor(mode, inventory, unlocked);
+        const message = await interaction.editReply({
+            ...intro,
+            components: [...intro.components, modeRow(mode), pickRow(mode, options)]
         });
 
-        collector.on('end', collected => {
-            if (collected.size === 0) {
-                interaction.editReply({ components: [] }).catch(()=>{});
+        const collector = message.createMessageComponentCollector({ filter: i => i.user.id === user.id, time: COLLECTOR_MS });
+
+        collector.on('collect', async i => {
+            try {
+                await i.deferUpdate();
+
+                if (i.customId.startsWith('craft_mode_')) {
+                    mode = i.customId.replace('craft_mode_', '');
+                    selected = null;
+                    profile = await cacheManager.getUserProfile(user.id);
+                    inventory = safeParseInventory(profile.inventory);
+                    const list = optionsFor(mode, inventory, unlocked);
+                    return i.editReply({ ...intro, files: [], components: [...intro.components, modeRow(mode), pickRow(mode, list)] });
+                }
+
+                if (i.customId === 'craft_pick') {
+                    if (i.values[0] === 'none') return;
+                    selected = i.values[0];
+                    profile = await cacheManager.getUserProfile(user.id);
+                    inventory = safeParseInventory(profile.inventory);
+                    const detail = await detailPayload(mode, selected, inventory, { survival, profile });
+                    if (!detail) return;
+                    const list = optionsFor(mode, inventory, unlocked);
+                    return i.editReply({
+                        ...detail.payload,
+                        files: [detail.attachment],
+                        components: [...detail.payload.components, modeRow(mode), pickRow(mode, list), detail.confirmRow]
+                    });
+                }
+
+                if (i.customId === 'craft_do') {
+                    if (!selected) return;
+                    profile = await cacheManager.getUserProfile(user.id);
+                    await survival.reload();
+
+                    const args = { userId: user.id, survival, profile, blueprintId: selected, outputId: selected, fromId: selected };
+                    const result = mode === 'assemble' ? await actions.assemble(args) : mode === 'smelt' ? await actions.smelt(args) : await actions.upgrade(args);
+
+                    if (!result.ok) {
+                        return i.followUp({
+                            ...buildErrorContainerV2({ errorMessage: failText(result), footerText: ui.getFooter('survival') }),
+                            flags: MessageFlags.Ephemeral | MessageFlags.IsComponentsV2
+                        });
+                    }
+
+                    const extra = result.cost ? '\nBiaya tempa ' + currency.format(result.kind, result.cost) + ', sisa ' + currency.format(result.kind, result.balance) + '.'
+                        : result.fee ? '\nUpah untuk Bagas ' + currency.format(result.kind, result.fee) + ', sisa ' + currency.format(result.kind, result.balance) + '.' : '';
+                    const opening = mode === 'upgrade'
+                        ? result.fromName + ' kamu naik jadi **' + result.name + '**! Naura ikut senang banget!'
+                        : 'Berhasil! Kamu dapat **' + result.name + ' x' + result.amount + '**. Naura simpan rapi di tasmu, ya.';
+
+                    const done = buildContainerV2({
+                        accentColorHex: ui.getColor('success'),
+                        authorName: 'Naura Crafting Guide',
+                        expression: 'success',
+                        title: e('success', '\u2705') + ' Tempaan Selesai!',
+                        description: opening + extra,
+                        footerText: ui.getFooter('survival')
+                    });
+
+                    selected = null;
+                    profile = await cacheManager.getUserProfile(user.id);
+                    inventory = safeParseInventory(profile.inventory);
+                    const list = optionsFor(mode, inventory, unlocked);
+                    return i.editReply({ ...done, files: [], components: [...done.components, modeRow(mode), pickRow(mode, list)] });
+                }
+
+                if (i.customId === 'craft_cancel') {
+                    const bye = buildContainerV2({
+                        accentColorHex: ui.getColor('info'),
+                        authorName: 'Naura Crafting Guide',
+                        expression: 'shy',
+                        title: 'Sampai nanti, ya!',
+                        description: 'Naura bereskan dulu mejanya. Kalau butuh menempa lagi, panggil Naura kapan pun.',
+                        footerText: ui.getFooter('survival')
+                    });
+                    await i.editReply({ ...bye, files: [] });
+                    return collector.stop('done');
+                }
+            } catch (err) {
+                collector.stop('error');
             }
         });
     }
