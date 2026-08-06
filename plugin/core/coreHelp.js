@@ -8,7 +8,7 @@
 
 const { ComponentType, MessageFlags } = require('discord.js');
 const logger = require('../../src/managers/logger');
-const { locales, face, persistUserLanguage } = require('./coreCommon');
+const { locales, face, persistUserLanguage, hasChosenLanguage } = require('./coreCommon');
 const { buildHelpPayload, buildLanguagePayload } = require('./coreHelpView');
 
 const LANG_PICK_TIME = 60000;
@@ -23,11 +23,21 @@ function confirmText(code) {
 }
 
 /**
- * Langkah pertama: pemilih bahasa. Berbeda dengan versi lama, kegagalan
- * memilih tidak lagi memaksa Bahasa Inggris, melainkan mempertahankan bahasa
- * yang sedang berlaku untuk user tersebut.
+ * Pemilih bahasa kini hanya muncul untuk user yang BELUM pernah memilih.
+ * Kolom language bersifat nullable sejak migrasi v5_language_nullable, jadi
+ * NULL berarti benar-benar belum memilih. User lama langsung masuk ke menu
+ * dan tetap bisa berganti lewat tombol Bahasa di baris navigasi.
+ *
+ * Kegagalan memilih juga tidak lagi memaksa Bahasa Inggris seperti versi lama,
+ * melainkan mempertahankan bahasa yang sedang berlaku.
  */
 async function handleHelp(interaction, client, lang, code = 'id') {
+    const alreadyChosen = await hasChosenLanguage(interaction.user.id);
+
+    if (alreadyChosen) {
+        return renderHelpMenuV2(interaction, client, lang, null);
+    }
+
     const langPayload = buildLanguagePayload(client, code);
 
     let response;
@@ -53,7 +63,8 @@ async function handleHelp(interaction, client, lang, code = 'id') {
         await persistUserLanguage(interaction.user.id, selected);
         await picked.reply({ content: confirmText(selected), flags: MessageFlags.Ephemeral }).catch(() => { });
     } catch (err) {
-        // Timeout: pertahankan bahasa yang sedang berlaku
+        // Timeout: pertahankan bahasa yang sedang berlaku, dan JANGAN simpan apa pun
+        // supaya pemilih tetap muncul di kesempatan berikutnya.
     }
 
     await renderHelpMenuV2(interaction, client, activeLang, response);
