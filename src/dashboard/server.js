@@ -9,6 +9,7 @@
  *
  *   middleware/auth.js   - penjaga login, owner, dan izin Kelola Server
  *   utils/format.js      - pembantu format uptime & memori
+ *   utils/httpGuard.js   - token konstan-waktu, pembatas laju, penanda sekali-pakai
  *   routes/webhooks.js   - server webhook vote / Saweria / Trakteer
  *   routes/public.js     - statistik, ekonomi, item, leaderboard
  *   routes/user.js       - sesi, bahasa, profil, inventory
@@ -25,6 +26,7 @@
 const express = require('express');
 const http = require('http');
 const path = require('path');
+const crypto = require('crypto');
 const cors = require('cors');
 const session = require('express-session');
 const passport = require('passport');
@@ -33,6 +35,14 @@ const { Server } = require('socket.io');
 
 const { logger } = require('../managers/logger');
 const { requireLogin, requireApiLogin } = require('./middleware/auth');
+const { createRateLimiter } = require('./utils/httpGuard');
+
+/** Daftar origin yang boleh memanggil dashboard dari domain lain. */
+function parseOrigins() {
+    return String(process.env.DASHBOARD_ORIGIN || '')
+        .split(/[\s,]+/)
+        .filter(Boolean);
+}
 
 module.exports = (client) => {
     // ==================================================================
@@ -40,28 +50,90 @@ module.exports = (client) => {
     // ==================================================================
     require('./routes/webhooks')(client);
 
+    const isProduction = process.env.NODE_ENV === 'production';
+
     // ==================================================================
-    // 2. Server web utama
+    // 2. Prasyarat keamanan
+    // ==================================================================
+    //
+    // Kunci sesi menentukan siapa yang dipercaya sebagai Owner. Bila nilainya
+    // adalah string tetap yang tertulis di dalam repo, siapa pun yang membaca
+    // kode ini bisa menandatangani cookie sesinya sendiri, mengaku sebagai
+    // Owner, dan membuka seluruh God Mode di /api/owner. Di produksi, itu bukan
+    // peringatan; itu alasan untuk tidak menyalakan dashboard sama sekali.
+    if (!process.env.SESSION_SECRET) {
+        if (isProduction) {
+            logger.error(
+                '[DASHBOARD] SESSION_SECRET belum diatur. Dashboard TIDAK dinyalakan ' +
+                'karena sesi Owner bisa dipalsukan. Isi SESSION_SECRET di .env lalu jalankan ulang.'
+            );
+            return { webApp: null, webServer: null, io: null };
+        }
+        logger.warn(
+            '[DASHBOARD] SESSION_SECRET belum diatur. Memakai kunci acak sementara ' +
+            '(sesi akan hilang setiap restart). Wajib diisi sebelum produksi.'
+        );
+    }
+
+    // Kunci acak per proses jauh lebih baik daripada nilai tetap yang bisa ditebak.
+    const sessionSecret = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+
+    // ==================================================================
+    // 3. Server web utama
     // ==================================================================
     const webApp = express();
     const webPort =
         parseInt(process.env.PORT || process.env.SERVER_PORT || process.env.DASHBOARD_PORT, 10) || 3070;
 
+    if (isProduction) webApp.set('trust proxy', 1);
+
+    // --- Header keamanan dasar ---
+    // Ditulis manual, bukan lewat helmet, supaya tidak ada dependensi baru yang
+    // harus dipasang di server sebelum perbaikan ini bisa dipakai.
+    // Content-Security-Policy sengaja belum dipasang karena halaman di views/
+    // masih memakai skrip inline; menyalakannya sekarang akan mematikan UI.
+    webApp.use((req, res, next) => {
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('X-Frame-Options', 'DENY');
+        res.setHeader('Referrer-Policy', 'no-referrer');
+        res.setHeader('X-DNS-Prefetch-Control', 'off');
+        res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+        if (isProduction) {
+            res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
+        }
+        next();
+    });
+
+    // --- CORS ---
+    // `cors()` tanpa argumen memantulkan origin mana pun. Sekarang hanya domain
+    // yang kamu daftarkan di DASHBOARD_ORIGIN yang diizinkan. Permintaan tanpa
+    // header Origin (akses langsung dari browser, curl, health check) tetap
+    // jalan, jadi dashboard yang dilayani dari domainnya sendiri tidak terganggu.
+    const allowedOrigins = parseOrigins();
+    if (isProduction && allowedOrigins.length === 0) {
+        logger.warn('[DASHBOARD] DASHBOARD_ORIGIN kosong. Semua akses lintas domain ditolak.');
+    }
+
+    const originChecker = (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        if (!isProduction && allowedOrigins.length === 0) return callback(null, true);
+        return callback(null, false);
+    };
+
+    webApp.use(cors({ origin: originChecker, credentials: true }));
+
     // --- Parser & aset statis ---
-    webApp.use(cors());
-    webApp.use(express.json());
-    webApp.use(express.urlencoded({ extended: true }));
+    // Batas ukuran badan permintaan menutup upaya menghabiskan memori proses.
+    webApp.use(express.json({ limit: '256kb' }));
+    webApp.use(express.urlencoded({ extended: true, limit: '256kb' }));
     webApp.use(express.static(path.join(__dirname, 'public')));
     webApp.use('/assets', express.static(path.join(__dirname, '../../assets')));
 
     // --- Sesi (harus lebih dulu dari seluruh rute) ---
-    const isProduction = process.env.NODE_ENV === 'production';
-    if (!process.env.SESSION_SECRET) {
-        logger.warn('[DASHBOARD] SESSION_SECRET belum diatur di .env. Sesi memakai kunci sementara.');
-    }
-
     const sessionMiddleware = session({
-        secret: process.env.SESSION_SECRET || 'naura_secret',
+        name: 'naura.sid',
+        secret: sessionSecret,
         resave: false,
         saveUninitialized: false,
         cookie: {
@@ -72,12 +144,17 @@ module.exports = (client) => {
         }
     });
 
-    if (isProduction) webApp.set('trust proxy', 1);
     webApp.use(sessionMiddleware);
     webApp.use(passport.initialize());
     webApp.use(passport.session());
     passport.serializeUser((user, done) => done(null, user));
     passport.deserializeUser((obj, done) => done(null, obj));
+
+    // --- Pembatas laju ---
+    // Longgar untuk API biasa, ketat untuk pintu masuk dan God Mode.
+    webApp.use('/api', createRateLimiter({ windowMs: 60_000, max: 300, name: 'API' }));
+    webApp.use('/auth', createRateLimiter({ windowMs: 60_000, max: 20, name: 'AUTH' }));
+    webApp.use('/api/owner', createRateLimiter({ windowMs: 60_000, max: 30, name: 'OWNER' }));
 
     // --- Login Discord ---
     if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
@@ -104,7 +181,14 @@ module.exports = (client) => {
     }
 
     webApp.get('/auth/logout', (req, res) => {
-        req.logout(() => res.redirect('/'));
+        // Sesi ikut dihancurkan, bukan hanya dilepas dari passport. Tanpa ini,
+        // cookie lama masih menunjuk ke sesi yang hidup di penyimpanan.
+        req.logout(() => {
+            req.session?.destroy(() => {
+                res.clearCookie('naura.sid');
+                res.redirect('/');
+            });
+        });
     });
 
     // --- Rute API ---
@@ -173,11 +257,13 @@ module.exports = (client) => {
     webApp.get('/welcomer', requireLogin, view('welcomer.html'));
 
     // ==================================================================
-    // 3. Realtime
+    // 4. Realtime
     // ==================================================================
     const webServer = http.createServer(webApp);
     const io = new Server(webServer, {
-        cors: { origin: process.env.DASHBOARD_ORIGIN || '*', credentials: true }
+        // `origin: '*'` bersama `credentials: true` adalah kombinasi yang ditolak
+        // browser dan, kalau pun lolos, membuka sesi ke domain mana pun.
+        cors: { origin: originChecker, credentials: true }
     });
 
     // Dipakai berkas lain (mis. plugin/core/naura.js) untuk menyiarkan kejadian.
