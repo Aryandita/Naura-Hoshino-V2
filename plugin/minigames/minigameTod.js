@@ -12,7 +12,7 @@
 const { ComponentType } = require('discord.js');
 const ui = require('../../src/config/ui');
 const { buildContainerV2 } = require('../../src/utils/NauraContainerBuilder');
-const { todTruths, todDares } = require('./minigameData');
+const { todFallback } = require('./minigameData');
 const { buttonRow, pick } = require('./minigameCommon');
 
 const SESSION_TIME = 180000;
@@ -97,12 +97,12 @@ async function runTod(interaction) {
             return ui.sendError(i, 'err_sys_3', true);
         }
 
-        let mode = i.customId === 'tod_spin'
+        const mode = i.customId === 'tod_spin'
             ? (Math.random() > 0.5 ? 'truth' : 'dare')
             : i.customId.split('_')[1];
 
         const isTruth = mode === 'truth';
-        const question = isTruth ? pick(todTruths) : pick(todDares);
+        const question = isTruth ? pick(todFallback.truth) : pick(todFallback.dare);
 
         collector.resetTimer();
 
