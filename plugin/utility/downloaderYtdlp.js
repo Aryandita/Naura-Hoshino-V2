@@ -9,7 +9,6 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const YTDlpWrap = require('yt-dlp-wrap').default;
 const { logger } = require('../../src/managers/logger');
 
 const EXEC_TIMEOUT_MS = 60000;
@@ -19,12 +18,19 @@ let ytDlpReady = false;
 
 /**
  * Siapkan binary yt-dlp, unduh dari GitHub bila belum ada.
+ *
+ * Modul yt-dlp-wrap sengaja di-require di dalam fungsi ini. Rantai downloader
+ * ikut dimuat saat CommandHandler memindai plugin/, padahal sebagian besar
+ * proses bot tidak pernah menjalankan satu pun unduhan.
+ *
  * @returns {Promise<object|null>}
  */
 const ensureYtDlp = async () => {
     if (ytDlpReady && ytDlpInstance) return ytDlpInstance;
 
     try {
+        const YTDlpWrap = require('yt-dlp-wrap').default;
+
         const binaryDir = path.join(__dirname, '..', '..', 'bin');
         if (!fs.existsSync(binaryDir)) fs.mkdirSync(binaryDir, { recursive: true });
 
@@ -59,6 +65,8 @@ const ensureYtDlp = async () => {
  * @returns {Promise<{status: string, url: string, isLocalFile: boolean}|null>}
  */
 const tryYtdlp = async (url, cleanup) => {
+    let timeoutHandle = null;
+
     try {
         const ytdlp = await ensureYtDlp();
         if (!ytdlp) return null;
@@ -81,7 +89,8 @@ const tryYtdlp = async (url, cleanup) => {
         ]);
 
         const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('yt-dlp melewati batas waktu 60 detik')), EXEC_TIMEOUT_MS);
+            timeoutHandle = setTimeout(() => reject(new Error('yt-dlp melewati batas waktu 60 detik')), EXEC_TIMEOUT_MS);
+            if (timeoutHandle.unref) timeoutHandle.unref();
         });
 
         await Promise.race([execPromise, timeoutPromise]);
@@ -97,7 +106,11 @@ const tryYtdlp = async (url, cleanup) => {
         }
     } catch (e) {
         logger.error(`[Downloader] yt-dlp gagal: ${e.message}`);
+    } finally {
+        // Tanpa ini, timer 60 detik tetap hidup meski unduhan selesai lebih cepat.
+        if (timeoutHandle) clearTimeout(timeoutHandle);
     }
+
     return null;
 };
 

@@ -1,6 +1,5 @@
 const redisManager = require('../../src/managers/redisManager');
 const { logger } = require('../../src/managers/logger');
-const google = require('googlethis');
 
 const BAD_WORDS = ['anjing', 'bangsat', 'kontol', 'babi', 'ngentot', 'memek', 'jembut', 'tolol', 'goblok'];
 const PROMPT_INJECTIONS = ['abaikan instruksi', 'ignore previous instructions', 'abaikan semua', 'abaikan prompt', 'system prompt'];
@@ -78,6 +77,11 @@ async function performWebSearchIfNeeded(text) {
     if (!needsSearch) return null;
 
     try {
+        // googlethis di-require di sini, bukan di puncak berkas. Sebagian besar
+        // pesan tidak memicu pencarian, jadi modulnya tidak perlu ikut dimuat
+        // saat boot hanya karena aiHelper.js ikut ter-require.
+        const google = require('googlethis');
+
         const options = {
             page: 0,
             safe: false,
@@ -102,8 +106,6 @@ async function performWebSearchIfNeeded(text) {
         return null;
     }
 }
-
-module.exports = { checkModeration, checkRateLimit, simulateTypingDelay, performWebSearchIfNeeded };
 
 async function updateGeminiHistory(userId, role, content) {
     if (!redisManager.client || !redisManager.client.isReady) return;
@@ -130,12 +132,12 @@ async function getGeminiHistory(userId) {
         const data = await redisManager.getCache(key);
         if (Array.isArray(data)) return data;
         if (typeof data === 'string') {
-             try {
-                 const parsed = JSON.parse(data);
-                 return Array.isArray(parsed) ? parsed : [];
-             } catch (err) {
-                 return [];
-             }
+            try {
+                const parsed = JSON.parse(data);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (err) {
+                return [];
+            }
         }
         return [];
     } catch (e) {
@@ -143,5 +145,14 @@ async function getGeminiHistory(userId) {
     }
 }
 
-module.exports.updateGeminiHistory = updateGeminiHistory;
-module.exports.getGeminiHistory = getGeminiHistory;
+// Satu titik ekspor. Sebelumnya berkas ini memanggil module.exports di tengah
+// berkas lalu menambal dua fungsi lagi di bawahnya, yang membuat urutan
+// deklarasi jadi penting tanpa alasan.
+module.exports = {
+    checkModeration,
+    checkRateLimit,
+    simulateTypingDelay,
+    performWebSearchIfNeeded,
+    updateGeminiHistory,
+    getGeminiHistory
+};

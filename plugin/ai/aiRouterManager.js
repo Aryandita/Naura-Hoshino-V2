@@ -1,15 +1,9 @@
 const { buildContainerV2, buildErrorContainerV2 } = require('../../src/utils/NauraContainerBuilder');
 const { logger } = require('../../src/managers/logger');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const env = require('../../src/config/env');
 const ui = require('../../src/config/ui');
+const gemini = require('./geminiClient');
 const { checkModeration, checkRateLimit, simulateTypingDelay, performWebSearchIfNeeded, updateGeminiHistory, getGeminiHistory } = require('./aiHelper');
-
-const genAI = env.GEMINI_API
-    ? new GoogleGenerativeAI(env.GEMINI_API)
-    : env.GEMINI_API_KEY
-      ? new GoogleGenerativeAI(env.GEMINI_API_KEY)
-      : null;
 
 class AIRouterManager {
     static async processMessage(
@@ -50,23 +44,21 @@ class AIRouterManager {
         if (attachment) {
             usedEngine = 'Gemini Vision';
             try {
+                if (!gemini.isAvailable()) throw new Error('GEMINI_API tidak dikonfigurasi.');
+
                 const res = await fetch(attachment.url);
                 const arrayBuffer = await res.arrayBuffer();
                 const buffer = Buffer.from(arrayBuffer);
 
                 const searchResult = await performWebSearchIfNeeded(userMessage || '');
-                let parts = [
+                const parts = [
                     {
                         text: `${persona}${previousBotMessage}\n\nPesan: ${userMessage || 'Tolong jelaskan gambar ini.'}${searchResult ? searchResult : ''}`
                     },
                     { inlineData: { data: buffer.toString('base64'), mimeType: attachment.contentType } }
                 ];
 
-                if (!genAI) throw new Error('GEMINI_API_KEY is not defined in .env');
-
-                const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-                const response = await model.generateContent(parts);
-                replyText = response.response.text();
+                replyText = await gemini.generate({ parts });
             } catch (error) {
                 logger.error('[GEMINI VISION ERROR]', error);
                 const errPayload = buildErrorContainerV2({
@@ -149,15 +141,16 @@ class AIRouterManager {
                 logger.info(`[AI Router] Beralih ke Gemini (Fallback) untuk ${userRole} (${message.author.username})`);
                 usedEngine = 'Gemini AI (Fallback)';
 
-                try {
-                    if (!genAI) throw new Error('GEMINI_API_KEY is not defined in .env');
+                const promptText = `${persona}${previousBotMessage}\n\nPesan dari ${userRole} (${message.author.username}): ${userMessage || '(Menyapa)'}`;
 
-                    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-                    const promptText = `${persona}${previousBotMessage}\n\nPesan dari ${userRole} (${message.author.username}): ${userMessage || '(Menyapa)'}`;
+                try {
+                    if (!gemini.isAvailable()) throw new Error('GEMINI_API tidak dikonfigurasi.');
+
                     const history = await getGeminiHistory(message.author.id);
-                    const chatSession = model.startChat({ history: history });
-                    const response = await chatSession.sendMessage(promptText);
-                    replyText = response.response.text();
+                    replyText = await gemini.generate({
+                        parts: [{ text: promptText }],
+                        history
+                    });
 
                     await updateGeminiHistory(message.author.id, 'user', promptText);
                     await updateGeminiHistory(message.author.id, 'model', replyText);
@@ -170,7 +163,6 @@ class AIRouterManager {
 
                         const { Ollama } = require('ollama');
                         const ollamaClient = new Ollama({ host: env.OLLAMA_BASE_URL });
-                        const promptText = `${persona}${previousBotMessage}\n\nPesan dari ${userRole} (${message.author.username}): ${userMessage || '(Menyapa)'}`;
 
                         const ollamaResponse = await ollamaClient.chat({
                             model: env.OLLAMA_MODEL,
