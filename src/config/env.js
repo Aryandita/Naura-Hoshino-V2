@@ -9,6 +9,9 @@ const cleanEnv = (val) => {
 };
 
 const env = {
+    // RUNTIME
+    NODE_ENV: cleanEnv(process.env.NODE_ENV) || 'development',
+
     // DISCORD CORE
     TOKEN: cleanEnv(process.env.DISCORD_TOKEN),
     CLIENT_ID: cleanEnv(process.env.CLIENT_ID),

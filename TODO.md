@@ -15,6 +15,17 @@ Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
 - [ ] Jalankan dashboard hanya di satu proses dan verifikasi tidak ada `EADDRINUSE`
 - [x] Isi `SESSION_SECRET` di produksi dan verifikasi tanda tangan webhook Saweria/Top.gg
 
+## 🧭 Audit & Stabilitas Awal
+
+- [x] Pusatkan `NODE_ENV` lewat `src/config/env.js`
+- [ ] Audit manual akses `process.env` langsung di luar `src/config/env.js`
+- [ ] Pastikan semua migration schema hanya berada di `src/managers/dbMigrator.js`
+- [ ] Ganti query panas `GuildSettings.findOne()` dengan cache terpusat
+- [ ] Ganti query panas `UserProfile.findByPk()` dengan cache terpusat
+- [ ] Tambahkan cleanup TTL pada seluruh `Map` dan `Set` sementara
+- [ ] Audit hardcoded Discord ID dan pindahkan ke `config.json` atau `GuildSettings`
+- [ ] Audit response utama yang masih memakai embed legacy agar diarahkan ke Components V2
+
 ## 🧹 Kebersihan Kode
 
 - [x] Pilih satu SDK Gemini: `@google/genai` **atau** `@google/generative-ai`
