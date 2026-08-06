@@ -9,7 +9,7 @@ const fs = require('fs');
 /**
  * Daftar migrasi yang dijalankan secara berurutan.
  * Setiap migrasi punya ID unik dan query SQL-nya.
- * Tambahkan migrasi baru di BAWAH daftar yang sudah ada — jangan ubah urutan/ID yang sudah ada.
+ * Tambahkan migrasi baru di BAWAH daftar yang sudah ada \u2014 jangan ubah urutan/ID yang sudah ada.
  */
 const MIGRATIONS = [
     {
@@ -31,33 +31,55 @@ const MIGRATIONS = [
         id: 'v4_add_economy_investments',
         description: 'Tambah kolom economy_investments ke user_profiles',
         sql: 'ALTER TABLE user_profiles ADD COLUMN economy_investments JSON DEFAULT NULL;'
+    },
+    {
+        id: 'v5_language_nullable',
+        description: 'Ubah kolom language menjadi NULL agar bisa membedakan belum memilih dan sengaja memilih id',
+        sql: "ALTER TABLE user_profiles MODIFY COLUMN language VARCHAR(255) NULL DEFAULT NULL;"
+    },
+    {
+        id: 'v6_language_reset_default',
+        description: 'Kosongkan nilai id bawaan lama supaya pemilih bahasa /help muncul sekali untuk user lama',
+        sql: "UPDATE user_profiles SET language = NULL WHERE language = 'id';",
+        runOnce: true
     }
 ];
 
 /**
  * Jalankan semua migrasi yang belum dieksekusi di environment ini.
- * Gunakan try/catch per-migrasi dengan log yang jelas — tidak boleh silent catch kosong.
+ * Gunakan try/catch per-migrasi dengan log yang jelas \u2014 tidak boleh silent catch kosong.
  * @param {import('sequelize').Sequelize} sequelize - Instance Sequelize yang sudah terkoneksi
  */
 async function runMigrations(sequelize) {
     if (sequelize.options.dialect !== 'mysql') {
-        logger.info('[DB MIGRATOR] Melewati migrasi — bukan MySQL (mode SQLite fallback).');
+        logger.info('[DB MIGRATOR] Melewati migrasi \u2014 bukan MySQL (mode SQLite fallback).');
         return;
     }
+
+    await ensureHistoryTable(sequelize);
+    const executed = await loadExecutedIds(sequelize);
 
     logger.info(`[DB MIGRATOR] Menjalankan ${MIGRATIONS.length} migrasi schema...`);
 
     for (const migration of MIGRATIONS) {
+        // Migrasi bertanda runOnce menyentuh DATA, bukan struktur, sehingga tidak
+        // idempoten. Jalankan sekali saja lalu catat di tabel riwayat.
+        if (migration.runOnce && executed.has(migration.id)) {
+            logger.info(`[DB MIGRATOR] \u23ed\ufe0f  Migrasi '${migration.id}' di-skip (sudah pernah dijalankan).`);
+            continue;
+        }
+
         try {
             await sequelize.query(migration.sql);
-            logger.db(`[DB MIGRATOR] ✅ Migrasi '${migration.id}' berhasil: ${migration.description}`);
+            logger.db(`[DB MIGRATOR] \u2705 Migrasi '${migration.id}' berhasil: ${migration.description}`);
+            if (migration.runOnce) await recordMigration(sequelize, migration.id);
         } catch (err) {
-            // Error 1060 = kolom sudah ada (ER_DUP_FIELDNAME) — ini aman untuk di-skip
+            // Error 1060 = kolom sudah ada (ER_DUP_FIELDNAME) \u2014 ini aman untuk di-skip
             if (err.original && err.original.errno === 1060) {
-                logger.info(`[DB MIGRATOR] ⏭️  Migrasi '${migration.id}' di-skip (kolom sudah ada).`);
+                logger.info(`[DB MIGRATOR] \u23ed\ufe0f  Migrasi '${migration.id}' di-skip (kolom sudah ada).`);
             } else {
                 // Error lain harus dilaporkan dengan jelas
-                logger.error(`[DB MIGRATOR] ❌ Migrasi '${migration.id}' GAGAL: ${err.message}`);
+                logger.error(`[DB MIGRATOR] \u274c Migrasi '${migration.id}' GAGAL: ${err.message}`);
             }
         }
     }
@@ -65,8 +87,40 @@ async function runMigrations(sequelize) {
     logger.success('[DB MIGRATOR] Semua migrasi schema selesai diproses.');
 }
 
+/** Tabel riwayat khusus migrasi data sekali jalan. */
+async function ensureHistoryTable(sequelize) {
+    try {
+        await sequelize.query(
+            'CREATE TABLE IF NOT EXISTS naura_migrations (id VARCHAR(191) NOT NULL PRIMARY KEY, executedAt DATETIME NOT NULL);'
+        );
+    } catch (err) {
+        logger.error(`[DB MIGRATOR] Gagal menyiapkan tabel riwayat migrasi: ${err.message}`);
+    }
+}
+
+async function loadExecutedIds(sequelize) {
+    try {
+        const [rows] = await sequelize.query('SELECT id FROM naura_migrations;');
+        return new Set((rows || []).map(row => row.id));
+    } catch (err) {
+        logger.error(`[DB MIGRATOR] Gagal membaca riwayat migrasi: ${err.message}`);
+        return new Set();
+    }
+}
+
+async function recordMigration(sequelize, id) {
+    try {
+        await sequelize.query(
+            'INSERT IGNORE INTO naura_migrations (id, executedAt) VALUES (?, NOW());',
+            { replacements: [id] }
+        );
+    } catch (err) {
+        logger.error(`[DB MIGRATOR] Gagal mencatat migrasi '${id}': ${err.message}`);
+    }
+}
+
 // ==========================================
-// MIGRASI DATA: SQLite → MySQL (Fallback Recovery)
+// MIGRASI DATA: SQLite \u2192 MySQL (Fallback Recovery)
 // ==========================================
 
 async function syncFallbackToMySQL(mysqlSequelize) {
