@@ -4,6 +4,9 @@ const { logger } = require('./src/managers/logger');
 const path = require('path');
 const env = require('./src/config/env');
 
+// Kode keluar yang dipakai index.js saat konfigurasi wajib belum lengkap.
+const EXIT_CODE_BAD_CONFIG = 78;
+
 // Validasi konfigurasi SEBELUM shard di-spawn. Kalau ada yang kurang, proses berhenti
 // di sini sehingga anak shard tidak pernah lahir lalu mati berulang (respawn loop).
 env.validateEnv({ fatal: true });
@@ -35,8 +38,17 @@ manager.on('shardCreate', shard => {
         logger.error(`[SHARDING] Shard #${shard.id} encountered an error:`, error);
     });
 
-    shard.on('death', (process) => {
-        logger.error(`[SHARDING] Shard #${shard.id} died with exit code ${process.exitCode}`);
+    shard.on('death', (childProcess) => {
+        const exitCode = childProcess ? childProcess.exitCode : null;
+        logger.error(`[SHARDING] Shard #${shard.id} died with exit code ${exitCode}`);
+
+        // Respawn tidak akan pernah memperbaiki konfigurasi yang kosong. Menghidupkan
+        // ulang shard dalam kondisi ini hanya menghasilkan siklus lahir-mati tanpa henti.
+        if (exitCode === EXIT_CODE_BAD_CONFIG) {
+            manager.respawn = false;
+            logger.error('[SHARDING] Konfigurasi environment tidak lengkap. Respawn dimatikan. Perbaiki .env lalu jalankan ulang.');
+            process.exitCode = EXIT_CODE_BAD_CONFIG;
+        }
     });
 });
 
