@@ -5,7 +5,9 @@
 //   sehingga pemain yang menjawab BENAR justru memicu ReferenceError. Stempel
 //   waktu kini dibuat lewat startTimer().
 // - Tebak gambar menyebut "gambar di atas" padahal `gameData.url` tidak pernah
-//   dipakai sama sekali. Sekarang gambarnya benar-benar ditampilkan.
+//   dipakai sama sekali. Sekarang gambarnya benar-benar ditautkan.
+// - Pola jawaban TTS dihitung dari jawabannya sendiri, bukan dari field yang
+//   tidak ada di dalam data.
 // - Seluruh balasan memakai Container V2.
 
 const ui = require('../../src/config/ui');
@@ -25,6 +27,11 @@ function resultPayload(options) {
     });
 }
 
+/** Pola jumlah huruf tiap kata, misalnya "5 huruf + 4 huruf". */
+function lengthPattern(answer) {
+    return answer.trim().split(/\s+/).map(word => `${word.length} huruf`).join(' + ');
+}
+
 /**
  * Kerangka bersama ketiga permainan: satu soal, satu jawaban lewat chat.
  */
@@ -40,7 +47,6 @@ async function playTextRound(interaction, profile, config) {
         iconURL: user.displayAvatarURL(),
         title: config.title,
         description: config.description,
-        mediaAttachmentNames: [],
         footerText: `Waktu menjawab ${config.time / 1000} detik`
     }));
 
@@ -51,7 +57,7 @@ async function playTextRound(interaction, profile, config) {
     });
 
     collector.on('collect', async m => {
-        const answered = m.content.trim().toUpperCase();
+        const answered = m.content.trim().replace(/\s+/g, ' ').toUpperCase();
 
         if (answered !== config.answer.toUpperCase()) {
             return m.reply(resultPayload({
@@ -67,7 +73,7 @@ async function playTextRound(interaction, profile, config) {
                 color: '#f59e0b',
                 expression: 'denied',
                 title: 'Hmm, terlalu cepat...',
-                description: 'Jawabannya benar, tapi datangnya kurang dari 1,5 detik. Naura tahan dulu hadiahnya yaa, main jujur lebih seru kok!'
+                description: 'Jawabannya benar, tapi datangnya kurang dari 1,5 detik. Hadiahnya Naura tahan dulu yaa, main jujur lebih seru kok!'
             })).catch(() => { });
         }
 
@@ -102,9 +108,9 @@ async function runTebakKata(interaction, profile) {
     const reward = diff === 'sulit' ? 300 : 100;
 
     return playTextRound(interaction, profile, {
-        authorName: `Susun Kata [${diff.toUpperCase()}]`,
+        authorName: `Susun Kata [${String(diff || 'mudah').toUpperCase()}]`,
         title: 'Huruf-huruf ini acak, susun jadi kata yang benar!',
-        description: `**${scrambled}**\n\nKetik jawabanmu langsung di chat yaa~\n\n> Hadiah: **${reward}** ${coinOf()}`,
+        description: `**${scrambled}**\n\nKetik jawabanmu langsung di chat yaa~\n\n> Jumlah huruf: **${word.length}**\n> Hadiah: **${reward}** ${coinOf()}`,
         answer: word,
         reward,
         time: 30000,
@@ -117,12 +123,12 @@ async function runTebakGambar(interaction, profile) {
     const data = pick(tebakGambarDB);
     const reward = 250;
 
-    // Gambar dikirim sebagai tautan di dalam deskripsi karena sumbernya berupa
-    // URL eksternal, bukan lampiran lokal yang dibutuhkan mediaAttachmentNames.
+    // Gambarnya berupa URL eksternal, bukan lampiran lokal, jadi ditautkan di
+    // dalam deskripsi Container V2 alih-alih lewat mediaAttachmentNames.
     return playTextRound(interaction, profile, {
         authorName: 'Tebak Gambar',
         title: 'Objek apa yang ada di gambar ini?',
-        description: `[\ud83d\uddbc\ufe0f Buka gambarnya di sini](${data.url})\n\nKetik jawabanmu di chat yaa~\n\n> Petunjuk: **${data.hint}**\n> Hadiah: **${reward}** ${coinOf()}`,
+        description: `[Buka gambarnya di sini](${data.url})\n\nKetik jawabanmu di chat yaa~\n\n> Petunjuk: **${data.clue}**\n> Hadiah: **${reward}** ${coinOf()}`,
         answer: data.answer,
         reward,
         time: 20000,
@@ -137,8 +143,8 @@ async function runTts(interaction, profile) {
 
     return playTextRound(interaction, profile, {
         authorName: 'Teka Teki Silang Mini',
-        title: data.clue,
-        description: `Pola jawabannya: **${data.pattern}**\n\nKetik jawabanmu di chat yaa~\n\n> Hadiah: **${reward}** ${coinOf()}`,
+        title: 'Isi kedua jawabannya yaa~',
+        description: `${data.clue}\n\nKetik kedua jawaban dalam satu pesan, dipisah spasi.\n\n> Pola jawaban: **${lengthPattern(data.answer)}**\n> Hadiah: **${reward}** ${coinOf()}`,
         answer: data.answer,
         reward,
         time: 25000,
