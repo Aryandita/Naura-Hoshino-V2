@@ -3,16 +3,21 @@ const { logger } = require('../../src/managers/logger');
 const env = require('../config/env');
 const crypto = require('crypto');
 
+const ERROR_DM_TTL_MS = 10 * 60 * 1000;
+const ERROR_DM_DEDUP_MS = 60 * 1000;
+
+// Error dedup map bersifat sementara dan dibersihkan berkala agar tidak tumbuh tanpa batas.
 const lastErrorDMTimes = new Map();
 
-// Cleanup Map secara berkala untuk mencegah memory leak (Rule 1.8)
-// Hapus entry yang sudah lebih dari 10 menit (600.000ms)
-setInterval(() => {
+// Cleanup Map secara berkala untuk mencegah memory leak (Rule 1.8).
+// Hapus entry yang sudah lebih dari ERROR_DM_TTL_MS.
+const cleanupTimer = setInterval(() => {
     const now = Date.now();
     for (const [key, ts] of lastErrorDMTimes.entries()) {
-        if (now - ts > 600000) lastErrorDMTimes.delete(key);
+        if (now - ts > ERROR_DM_TTL_MS) lastErrorDMTimes.delete(key);
     }
-}, 600000);
+}, ERROR_DM_TTL_MS);
+if (cleanupTimer.unref) cleanupTimer.unref();
 
 /**
  * Handle and log critical application errors, sending logs to the owner's DM
@@ -30,7 +35,7 @@ const sendErrorLog = async (err, type, client) => {
     const cacheKey = `${type}_${hash}`;
     const lastTime = lastErrorDMTimes.get(cacheKey) || 0;
 
-    if (now - lastTime < 60000) return;
+    if (now - lastTime < ERROR_DM_DEDUP_MS) return;
     lastErrorDMTimes.set(cacheKey, now);
 
     // Integrasi Webhook (Lebih disarankan daripada spam DM)
