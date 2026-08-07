@@ -30,12 +30,21 @@ Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
 - [x] Jadikan `nauraText` bilingual lewat kamus `common.tone.*`
 - [x] Tambahkan key bilingual untuk komponen kedaluwarsa
 - [x] Gunakan key i18n pada respons komponen kedaluwarsa
+- [x] Tambahkan fondasi `src/config/features.js` untuk feature registry
 - [ ] Audit manual akses `process.env` langsung di luar `src/config/env.js`
 - [ ] Ganti query panas `GuildSettings.findOne()` dengan cache terpusat
 - [ ] Ganti query panas `UserProfile.findByPk()` dengan cache terpusat
 - [ ] Tambahkan cleanup TTL pada seluruh `Map` dan `Set` sementara
 - [ ] Audit hardcoded Discord ID dan pindahkan ke `config.json` atau `GuildSettings`
 - [ ] Audit response utama yang masih memakai embed legacy agar diarahkan ke Components V2
+
+## 🧩 Feature Registry & Control Center
+
+- [x] Buat registry awal untuk modul utama Naura
+- [ ] Integrasikan registry ke `/help`
+- [ ] Integrasikan registry ke `/setup`
+- [ ] Buat health check awal berbasis registry
+- [ ] Tampilkan dependency env dan permission per fitur di dashboard/setup
 
 ## 🧹 Kebersihan Kode
 
