@@ -32,6 +32,7 @@ Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
 - [x] Gunakan key i18n pada respons komponen kedaluwarsa
 - [x] Tambahkan fondasi `src/config/features.js` untuk feature registry
 - [x] Tambahkan renderer awal `featureRegistryView`
+- [x] Siapkan `helpView` terpisah untuk integrasi registry ke help
 - [ ] Audit manual akses `process.env` langsung di luar `src/config/env.js`
 - [ ] Ganti query panas `GuildSettings.findOne()` dengan cache terpusat
 - [ ] Ganti query panas `UserProfile.findByPk()` dengan cache terpusat
@@ -43,6 +44,7 @@ Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
 
 - [x] Buat registry awal untuk modul utama Naura
 - [x] Buat utility renderer awal untuk registry
+- [x] Siapkan view helper untuk `/help`
 - [ ] Integrasikan registry ke `/help`
 - [ ] Integrasikan registry ke `/setup`
 - [ ] Buat health check awal berbasis registry
