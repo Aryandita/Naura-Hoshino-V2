@@ -29,6 +29,7 @@ Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
 - [x] Tambahkan `nauraText` helper untuk copywriting persona Naura
 - [x] Jadikan `nauraText` bilingual lewat kamus `common.tone.*`
 - [x] Tambahkan key bilingual untuk komponen kedaluwarsa
+- [x] Gunakan key i18n pada respons komponen kedaluwarsa
 - [ ] Audit manual akses `process.env` langsung di luar `src/config/env.js`
 - [ ] Ganti query panas `GuildSettings.findOne()` dengan cache terpusat
 - [ ] Ganti query panas `UserProfile.findByPk()` dengan cache terpusat
