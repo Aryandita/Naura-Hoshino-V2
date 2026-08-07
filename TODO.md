@@ -20,6 +20,7 @@ Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
 - [x] Pusatkan `NODE_ENV` lewat `src/config/env.js`
 - [x] Pastikan semua migration schema hanya berada di `src/managers/dbMigrator.js`
 - [x] Perjelas log error fallback migrator agar tidak ada silent catch kosong
+- [x] Arahkan update settings dari `messageCreate` lewat `guildSettingsService`
 - [ ] Audit manual akses `process.env` langsung di luar `src/config/env.js`
 - [ ] Ganti query panas `GuildSettings.findOne()` dengan cache terpusat
 - [ ] Ganti query panas `UserProfile.findByPk()` dengan cache terpusat
