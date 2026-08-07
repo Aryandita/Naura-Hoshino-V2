@@ -6,7 +6,7 @@ const env = require('../config/env');
 const { logger } = require('../managers/logger');
 const cacheManager = require('../managers/cacheManager');
 const languageManager = require('../managers/languageManager');
-const GuildSettings = require('../models/GuildSettings');
+const { updateGuildSetting } = require('../managers/guildSettingsService');
 const { handleAutomod } = require('../utils/automodHelper');
 
 const { softbanTrap, minecraftBridge } = require('./messageCreate/guildGuards');
@@ -35,9 +35,9 @@ function parseSettings(row) {
 }
 
 /**
- * Wadah bersama antar modul. saveSettings menulis satu kolom ke database,
- * membuang cache, lalu menyegarkan isi ctx supaya modul berikutnya membaca
- * data yang sudah diperbarui.
+ * Wadah bersama antar modul. saveSettings menulis satu kolom lewat service
+ * terpusat agar pola update GuildSettings tetap konsisten dan invalidasi cache
+ * tidak tersebar di event handler.
  */
 function createContext(message, settings) {
     const ctx = {
@@ -46,13 +46,12 @@ function createContext(message, settings) {
         saveSettings: async (fieldName) => {
             if (!ctx.settings || !message.guild) return;
 
-            const [row] = await GuildSettings.findOrCreate({ where: { guildId: message.guild.id } });
-            row[fieldName] = ctx.settings[fieldName];
-            row.changed(fieldName, true);
-            await row.save().catch(() => {});
-            await cacheManager.invalidateGuildSettings(message.guild.id);
+            const nextValue = ctx.settings[fieldName];
+            await updateGuildSetting(message.guild.id, (guildSettings) => {
+                guildSettings[fieldName] = nextValue;
+            });
 
-            ctx.settings = row.toJSON();
+            ctx.settings[fieldName] = nextValue;
             ctx.guildChannels = ctx.settings?.settings?.channels || {};
         }
     };
