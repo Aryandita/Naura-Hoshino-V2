@@ -23,6 +23,9 @@ Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
 - [x] Arahkan update settings dari `messageCreate` lewat `guildSettingsService`
 - [x] Tambahkan unref pada cleanup timer error dedup map
 - [x] Rapikan cleanup TTL snipe cache di `messageDelete`
+- [x] Hapus Discord ID statis dari `src/config.json`
+- [x] Tambahkan `src/config.example.json` sebagai template konfigurasi deployment
+- [x] Migrasikan respons komponen kedaluwarsa ke Container V2
 - [ ] Audit manual akses `process.env` langsung di luar `src/config/env.js`
 - [ ] Ganti query panas `GuildSettings.findOne()` dengan cache terpusat
 - [ ] Ganti query panas `UserProfile.findByPk()` dengan cache terpusat
