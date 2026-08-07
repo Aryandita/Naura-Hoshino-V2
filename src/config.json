@@ -1,15 +1,15 @@
 {
   "tempvoice": {
-    "enabled": true,
-    "triggerChannelId": "1487101292345032734",
-    "categoryId": "1487101290810052658",
+    "enabled": false,
+    "triggerChannelId": null,
+    "categoryId": null,
     "panelEmbedColor": "#D8A8FB"
   },
   "ticket": {
-    "enabled": true,
-    "categoryId": "1487092112632578048",
-    "logChannelId": "1487092113584951339",
-    "roleAdminId": "1487092111542325318",
+    "enabled": false,
+    "categoryId": null,
+    "logChannelId": null,
+    "roleAdminId": null,
     "panelEmbedColor": "#FDBB44"
   },
   "minecraft": {
