@@ -1,6 +1,7 @@
 'use strict';
 
 const ui = require('../config/ui');
+const languageManager = require('../managers/languageManager');
 
 function emoji(name, fallback = '') {
     return ui.getEmoji(name) || fallback;
@@ -10,58 +11,110 @@ function normalizeText(text) {
     return String(text || '').trim();
 }
 
-function joinEmoji(icon, text) {
-    const body = normalizeText(text);
-    return icon ? `${icon} ${body}` : body;
+function t(lang, key, placeholders) {
+    return languageManager.translateSync(lang, key, placeholders);
+}
+
+function tone(lang, key, placeholders) {
+    return t(lang, `common.tone.${key}`, placeholders);
 }
 
 /**
- * Helper copywriting terpusat untuk menjaga suara Naura tetap konsisten.
+ * Helper copywriting terpusat untuk menjaga suara Naura tetap konsisten dan bilingual.
  *
  * Prinsip:
  * - gunakan emoji dari ui.js lebih dulu, fallback unicode hanya untuk keamanan;
+ * - wrapper persona dibaca dari language/*.json agar user ID/EN mendapat nada yang sesuai;
  * - kalimat dibuat hangat, ceria, dan langsung memberi arahan;
  * - helper ini hanya merangkai teks, bukan payload Discord.
  */
 const nauraText = {
-    success(text) {
-        return joinEmoji(emoji('success', '✅'), `Berhasil! ${normalizeText(text)}`);
+    success(text, lang) {
+        return tone(lang, 'success', {
+            emoji: emoji('success', '✅'),
+            text: normalizeText(text)
+        });
     },
 
-    error(text) {
-        return joinEmoji(emoji('error', '❌'), `Aduh, Naura belum bisa melanjutkan. ${normalizeText(text)}`);
+    error(text, lang) {
+        return tone(lang, 'error', {
+            emoji: emoji('error', '❌'),
+            text: normalizeText(text)
+        });
     },
 
-    warning(text) {
-        return joinEmoji(emoji('warning', '⚠️'), `Hmm, Naura perlu perhatianmu sebentar. ${normalizeText(text)}`);
+    warning(text, lang) {
+        return tone(lang, 'warning', {
+            emoji: emoji('warning', '⚠️'),
+            text: normalizeText(text)
+        });
     },
 
-    info(text) {
-        return joinEmoji(emoji('info', 'ℹ️'), normalizeText(text));
+    info(text, lang) {
+        return tone(lang, 'info', {
+            emoji: emoji('info', 'ℹ️'),
+            text: normalizeText(text)
+        });
     },
 
-    loading(text) {
-        return joinEmoji(emoji('loading', '⏳'), normalizeText(text) || 'Naura sedang memproses permintaanmu. Tunggu sebentar ya.');
+    loading(text, lang) {
+        const body = normalizeText(text);
+        if (!body) {
+            return tone(lang, 'loading', {
+                emoji: emoji('loading', '⏳')
+            });
+        }
+        return tone(lang, 'loading_with_text', {
+            emoji: emoji('loading', '⏳'),
+            text: body
+        });
     },
 
-    empty(text) {
-        return joinEmoji(emoji('info', 'ℹ️'), `Belum ada data di sini. ${normalizeText(text)}`);
+    empty(text, lang) {
+        return tone(lang, 'empty', {
+            emoji: emoji('info', 'ℹ️'),
+            text: normalizeText(text)
+        });
     },
 
-    cooldown(time) {
-        return joinEmoji(emoji('warning', '⚠️'), `Pelan-pelan ya! Coba lagi dalam ${time}.`);
+    cooldown(time, lang) {
+        return tone(lang, 'cooldown', {
+            emoji: emoji('warning', '⚠️'),
+            time
+        });
     },
 
-    permissionDenied(text) {
-        return joinEmoji(emoji('lock', '🔒'), normalizeText(text) || 'Kamu belum punya izin yang cukup untuk melakukan ini.');
+    permissionDenied(text, lang) {
+        const body = normalizeText(text);
+        if (!body) {
+            return tone(lang, 'permission_denied', {
+                emoji: emoji('lock', '🔒')
+            });
+        }
+        return tone(lang, 'permission_denied_with_text', {
+            emoji: emoji('lock', '🔒'),
+            text: body
+        });
     },
 
-    premiumRequired(text) {
-        return joinEmoji(emoji('premium_badge', '💎'), normalizeText(text) || 'Fitur ini tersedia untuk pengguna premium Naura.');
+    premiumRequired(text, lang) {
+        const body = normalizeText(text);
+        if (!body) {
+            return tone(lang, 'premium_required', {
+                emoji: emoji('premium_badge', '💎')
+            });
+        }
+        return tone(lang, 'premium_required_with_text', {
+            emoji: emoji('premium_badge', '💎'),
+            text: body
+        });
     },
 
-    confirm(text) {
-        return joinEmoji(emoji('question', '❔'), normalizeText(text));
+    confirm(text, lang) {
+        return tone(lang, 'confirm', {
+            emoji: emoji('question', '❔'),
+            text: normalizeText(text)
+        });
     }
 };
 

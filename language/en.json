@@ -1,4 +1,39 @@
 {
+    "common": {
+        "tone": {
+            "success": "{emoji} Done! {text}",
+            "error": "{emoji} Oops, Naura cannot continue yet. {text}",
+            "warning": "{emoji} Hmm, Naura needs your attention for a moment. {text}",
+            "info": "{emoji} {text}",
+            "loading": "{emoji} Naura is working on your request. Please wait a moment.",
+            "loading_with_text": "{emoji} {text}",
+            "empty": "{emoji} There is no data here yet. {text}",
+            "cooldown": "{emoji} Slow down a little! Try again in {time}.",
+            "permission_denied": "{emoji} You do not have enough permission to do this yet.",
+            "permission_denied_with_text": "{emoji} {text}",
+            "premium_required": "{emoji} This feature is available for Naura premium users.",
+            "premium_required_with_text": "{emoji} {text}",
+            "confirm": "{emoji} {text}"
+        },
+        "error": {
+            "title": "Something went wrong",
+            "reason_fallback": "Please try again in a moment."
+        },
+        "loading": {
+            "title": "Naura is working",
+            "body": "Naura is working on your request. Please wait a moment."
+        },
+        "success": {
+            "title": "Done",
+            "body": "All set! Naura has taken care of it for you."
+        }
+    },
+    "interaction": {
+        "stale_component": {
+            "title": "Expired component",
+            "body": "This panel is no longer active. Run the command again to get a fresh panel."
+        }
+    },
     "lang_success": "✅ Language successfully changed to English.",
     "hello": "Hello {user}! Naura is ready to help~",
     "ping": "🏓 Pong! Naura's current latency is {ms}ms. Pretty fast, right?",

@@ -4,24 +4,14 @@ const nauraExpression = require('./nauraExpression');
 const nauraText = require('./nauraText');
 const languageManager = require('../managers/languageManager');
 
-/**
- * Text display component (type 10)
- */
 function textDisplay(content) {
     return { type: 10, content };
 }
 
-/**
- * Separator component (type 14)
- */
 function separatorComp(divider = true, spacing = 1) {
     return { type: 14, divider, spacing };
 }
 
-/**
- * Logger dimuat malas (lazy) supaya berkas ini tetap ringan dan tidak pernah
- * ikut menyeret dependensi manager saat hanya dipakai merakit payload.
- */
 let loggerRef;
 function warnMissingTitle(author) {
     try {
@@ -32,24 +22,14 @@ function warnMissingTitle(author) {
     }
 }
 
-/**
- * Terjemahkan satu kunci kamus bersama.
- * lang boleh undefined — languageManager akan jatuh ke bahasa bawaan.
- */
 function t(lang, key, placeholders) {
     return languageManager.translateSync(lang, key, placeholders);
 }
 
-/** Ambil opsi dari argumen yang boleh berupa string maupun objek. */
 function pick(opts, key) {
     return (typeof opts === 'object' && opts !== null) ? opts[key] : undefined;
 }
 
-/**
- * Mengubah referensi media jadi URL yang valid untuk Components V2.
- * Menerima nama file attachment (mis. 'video.mp4') maupun URL eksternal
- * penuh (mis. 'https://...') — keduanya didukung oleh Unfurled Media Item.
- */
 function resolveMediaUrl(ref) {
     if (!ref) return null;
     if (ref.startsWith('http://') || ref.startsWith('https://') || ref.startsWith('attachment://')) {
@@ -217,7 +197,7 @@ function buildErrorContainerV2(opts) {
     const errEmoji = nauraExpression.getEmoji('error') || ui.getEmoji('error') || '❌';
     const expression = pick(opts, 'expression') !== undefined ? pick(opts, 'expression') : 'error';
     const errorMessage = typeof opts === 'string'
-        ? nauraText.error(rawError)
+        ? nauraText.error(rawError, lang)
         : rawError;
 
     return buildContainerV2({
@@ -242,7 +222,7 @@ function buildLoadingContainerV2(opts) {
     return buildContainerV2({
         accentColorHex: pick(opts, 'accentColorHex') || ui.getColor('primary') || '#FFC0CB',
         title: `${loadEmoji} ${title}`,
-        description: typeof opts === 'string' ? nauraText.loading(rawLoading) : rawLoading,
+        description: typeof opts === 'string' ? nauraText.loading(rawLoading, lang) : rawLoading,
         expression,
         footerText,
     });
@@ -261,7 +241,7 @@ function buildSuccessContainerV2(opts) {
     return buildContainerV2({
         accentColorHex: pick(opts, 'accentColorHex') || ui.getColor('primary') || '#FFC0CB',
         title: `${okEmoji} ${title}`,
-        description: typeof opts === 'string' ? nauraText.success(rawSuccess) : rawSuccess,
+        description: typeof opts === 'string' ? nauraText.success(rawSuccess, lang) : rawSuccess,
         expression,
         footerText,
     });
