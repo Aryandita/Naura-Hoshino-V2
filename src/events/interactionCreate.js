@@ -10,13 +10,14 @@
  * Logika masing-masing tombol, select menu, dan modal ada di src/interactions/.
  */
 
-const { Events, EmbedBuilder } = require('discord.js');
+const { Events } = require('discord.js');
 const { logger } = require('../managers/logger');
 const languageManager = require('../managers/languageManager');
 const rateLimiter = require('../utils/rateLimiter');
 const registry = require('../interactions/registry');
 const handleAutocomplete = require('../interactions/autocomplete');
 const { safeExecute, respondError } = require('../interactions/safeExecute');
+const { buildErrorContainerV2 } = require('../utils/NauraContainerBuilder');
 
 // Batas laju perintah slash (tidak berubah dari versi sebelumnya).
 const SLASH_LIMIT = { max: 5, seconds: 5 };
@@ -96,15 +97,15 @@ module.exports = {
         const entry = registry.resolve(kind, interaction.customId);
 
         // Komponen dari pesan lama yang penanganya sudah dihapus. Versi sebelumnya
-        // diam saja di sini, dan pengguna hanya melihat "This interaction failed".
+        // memakai embed legacy; sekarang memakai Container V2 agar UX tetap konsisten.
         if (!entry) {
             logger.warn(`[INTERAKSI] Tidak ada penangan untuk ${kind}:${interaction.customId}`);
-            const embed = new EmbedBuilder()
-                .setColor('#FFA500')
-                .setDescription(
-                    '\u23f3 **Komponen ini sudah kedaluwarsa.** Jalankan ulang perintahnya untuk mendapatkan panel yang baru.'
-                );
-            return interaction.reply({ embeds: [embed], ephemeral: true }).catch(() => {});
+            return interaction.reply(buildErrorContainerV2({
+                lang: interaction.localeLang,
+                title: 'Komponen kedaluwarsa',
+                errorMessage: 'Panel ini sudah tidak aktif. Jalankan ulang perintahnya untuk mendapatkan panel baru yang masih segar.',
+                expressionImage: false
+            })).catch(() => {});
         }
 
         const cooldown = entry.cooldown || COMPONENT_LIMIT;
