@@ -31,6 +31,8 @@
     "HELP_DESC": "Welcome to Naura's guidebook! Please select a module category you want to explore through the *dropdown* menu below.",
     "HELP_FOOTER": "Type commands to see further options.",
     "HELP_PLACEHOLDER": "Open command category menu...",
+    "HELP_CAT_OVERVIEW_LABEL": "Feature Overview",
+    "HELP_CAT_OVERVIEW_DESC": "See Naura's main modules.",
     "HELP_CAT_CORE_LABEL": "Core & Utility",
     "HELP_CAT_CORE_DESC": "Basic commands and system info.",
     "HELP_CAT_ECO_LABEL": "Global Economy",

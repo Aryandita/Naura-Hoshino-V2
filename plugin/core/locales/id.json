@@ -31,6 +31,8 @@
     "HELP_DESC": "Selamat datang di buku panduan Naura! Silakan pilih kategori modul yang ingin kamu pelajari melalui menu *dropdown* di bawah ini.",
     "HELP_FOOTER": "Ketik perintah untuk melihat opsi lebih lanjut.",
     "HELP_PLACEHOLDER": "Buka menu kategori perintah...",
+    "HELP_CAT_OVERVIEW_LABEL": "Ringkasan Fitur",
+    "HELP_CAT_OVERVIEW_DESC": "Lihat modul utama Naura.",
     "HELP_CAT_CORE_LABEL": "Core & Utilitas",
     "HELP_CAT_CORE_DESC": "Perintah dasar dan info sistem.",
     "HELP_CAT_ECO_LABEL": "Ekonomi Global",
