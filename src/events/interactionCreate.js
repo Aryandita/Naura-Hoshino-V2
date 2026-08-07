@@ -33,6 +33,10 @@ function kindOf(interaction) {
     return null;
 }
 
+function tr(lang, key, placeholders) {
+    return languageManager.translateSync(lang, key, placeholders);
+}
+
 async function handleSlashCommand(interaction, client) {
     const command = client.commands.get(interaction.commandName);
     if (!command) return undefined;
@@ -96,14 +100,14 @@ module.exports = {
 
         const entry = registry.resolve(kind, interaction.customId);
 
-        // Komponen dari pesan lama yang penanganya sudah dihapus. Versi sebelumnya
-        // memakai embed legacy; sekarang memakai Container V2 agar UX tetap konsisten.
+        // Komponen dari pesan lama yang penanganya sudah dihapus.
+        // Teksnya memakai i18n agar user ID/EN mendapat pesan yang sesuai.
         if (!entry) {
             logger.warn(`[INTERAKSI] Tidak ada penangan untuk ${kind}:${interaction.customId}`);
             return interaction.reply(buildErrorContainerV2({
                 lang: interaction.localeLang,
-                title: 'Komponen kedaluwarsa',
-                errorMessage: 'Panel ini sudah tidak aktif. Jalankan ulang perintahnya untuk mendapatkan panel baru yang masih segar.',
+                title: tr(interaction.localeLang, 'interaction.stale_component.title'),
+                errorMessage: tr(interaction.localeLang, 'interaction.stale_component.body'),
                 expressionImage: false
             })).catch(() => {});
         }
