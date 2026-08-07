@@ -1,4 +1,39 @@
 {
+    "common": {
+        "tone": {
+            "success": "{emoji} Berhasil! {text}",
+            "error": "{emoji} Aduh, Naura belum bisa melanjutkan. {text}",
+            "warning": "{emoji} Hmm, Naura perlu perhatianmu sebentar. {text}",
+            "info": "{emoji} {text}",
+            "loading": "{emoji} Naura sedang memproses permintaanmu. Tunggu sebentar ya.",
+            "loading_with_text": "{emoji} {text}",
+            "empty": "{emoji} Belum ada data di sini. {text}",
+            "cooldown": "{emoji} Pelan-pelan ya! Coba lagi dalam {time}.",
+            "permission_denied": "{emoji} Kamu belum punya izin yang cukup untuk melakukan ini.",
+            "permission_denied_with_text": "{emoji} {text}",
+            "premium_required": "{emoji} Fitur ini tersedia untuk pengguna premium Naura.",
+            "premium_required_with_text": "{emoji} {text}",
+            "confirm": "{emoji} {text}"
+        },
+        "error": {
+            "title": "Terjadi kendala",
+            "reason_fallback": "Coba lagi sebentar lagi ya."
+        },
+        "loading": {
+            "title": "Naura sedang bekerja",
+            "body": "Naura sedang memproses permintaanmu. Tunggu sebentar ya."
+        },
+        "success": {
+            "title": "Berhasil",
+            "body": "Selesai! Naura sudah membereskannya untukmu."
+        }
+    },
+    "interaction": {
+        "stale_component": {
+            "title": "Komponen kedaluwarsa",
+            "body": "Panel ini sudah tidak aktif. Jalankan ulang perintahnya untuk mendapatkan panel baru yang masih segar."
+        }
+    },
     "lang_success": "✅ Bahasa berhasil diubah ke Bahasa Indonesia.",
     "hello": "Halo {user}! Naura siap membantu~",
     "ping": "🏓 Pong! Latensi Naura saat ini {ms}ms. Cukup cepat kan?",

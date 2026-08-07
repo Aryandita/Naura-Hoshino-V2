@@ -26,6 +26,9 @@ Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
 - [x] Hapus Discord ID statis dari `src/config.json`
 - [x] Tambahkan `src/config.example.json` sebagai template konfigurasi deployment
 - [x] Migrasikan respons komponen kedaluwarsa ke Container V2
+- [x] Tambahkan `nauraText` helper untuk copywriting persona Naura
+- [x] Jadikan `nauraText` bilingual lewat kamus `common.tone.*`
+- [x] Tambahkan key bilingual untuk komponen kedaluwarsa
 - [ ] Audit manual akses `process.env` langsung di luar `src/config/env.js`
 - [ ] Ganti query panas `GuildSettings.findOne()` dengan cache terpusat
 - [ ] Ganti query panas `UserProfile.findByPk()` dengan cache terpusat
