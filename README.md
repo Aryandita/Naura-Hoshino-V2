@@ -7,7 +7,8 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 
 <br />
 
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D%2020.6.0-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
+[![Versi](https://img.shields.io/badge/Versi-2.0.0-FFB6C1?style=for-the-badge)](package.json)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D%2024.0.0-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.js.org)
 [![MySQL](https://img.shields.io/badge/MySQL-8.x-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com)
 [![Redis](https://img.shields.io/badge/Redis-opsional-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io)
@@ -26,7 +27,20 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 <br />
 
 > [!NOTE]
-> Proyek ini masih dalam pengembangan aktif. Beberapa modul sedang dirapikan, lihat [`TODO.md`](TODO.md) dan tab **Issues** untuk daftar pekerjaan yang sedang berjalan.
+> Proyek ini masih dalam pengembangan aktif. Beberapa modul sedang dirapikan, lihat [`TODO.md`](TODO.md) dan tab **Issues** untuk daftar pekerjaan yang sedang berjalan. Prioritas saat ini adalah **Sprint 0 Hardening**, dan fitur baru ditahan sampai sprint itu tuntas.
+
+### 📌 Versi & Sumber Kebenaran
+
+| Item | Nilai | Sumber kebenaran |
+|---|:---:|---|
+| Versi Bot | `2.0.0` | [`package.json`](package.json) |
+| Versi Engine | `2.0.0` | [`package.json`](package.json) |
+| Runtime minimum | Node.js `>= 24.0.0` | `engines` di [`package.json`](package.json) |
+| Aturan & arsitektur | - | [`AGENTS.md`](AGENTS.md) |
+| Prioritas pekerjaan | - | [`TODO.md`](TODO.md) + Issues |
+| Design token & UI | - | [`DESIGN.md`](DESIGN.md) |
+
+> Bila angka pada README ini berbeda dengan `package.json`, maka `package.json` yang benar dan README wajib diperbarui. Aturan pengembangan lengkap ada di [`AGENTS.md`](AGENTS.md), jadi README hanya memuat ringkasannya.
 
 ---
 
@@ -43,6 +57,7 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 - [🗂️ Struktur Proyek](#-struktur-proyek)
 - [🌍 Sistem Bilingual](#-sistem-bilingual)
 - [🎭 Ekspresi Naura](#-ekspresi-naura)
+- [🤝 Kontribusi](#-kontribusi)
 - [📄 Lisensi](#-lisensi)
 </details>
 
@@ -103,14 +118,20 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 
 | Status | Komponen | Versi Minimal | Keterangan |
 |:---:|---|:---:|---|
-| 🟢 | **Node.js** | `>= 20.6.0` | Sangat wajib. Naura menggunakan fitur `process.loadEnvFile()`. |
-| 🐬 | **MySQL** | `8.x` | Basis data utama untuk performa maksimal (SQLite tersedia sebagai fallback). |
+| 🟢 | **Node.js** | `>= 24.0.0` | Sangat wajib. Naura memakai `process.loadEnvFile()`, `fetch` global, dan test runner bawaan `node:test`. |
+| 🐬 | **MySQL** | `8.x` | Basis data utama untuk performa maksimal (SQLite dipakai sebagai penyimpanan darurat). |
 | 🔴 | **Redis** | *Opsional* | Untuk sistem Cache & Pub/Sub. (Akan dilewati otomatis jika `REDIS_URL` kosong). |
 | 🎧 | **Lavalink** | `v4` | Wajib di-setup jika ingin menggunakan seluruh modul Musik. |
 | 🎬 | **FFmpeg** | *Terbaru* | Modul ini sudah tersedia otomatis lewat paket `ffmpeg-static`. |
 
 > [!WARNING]
 > Beberapa dependensi bersifat *native* seperti (`@napi-rs/canvas`, `sqlite3`, `libsodium-wrappers`). Jika kamu menjalankan bot ini di **Linux**, kemungkinan besar kamu perlu memasang `build-essential` dan `python3` terlebih dahulu.
+
+> [!NOTE]
+> **Kenapa Node 24 dan bukan versi lebih rendah?** Selain `process.loadEnvFile()`, Naura mengandalkan `fetch` global (sehingga `node-fetch` bisa dilepas) dan `node --test` sebagai test runner tanpa dependensi tambahan. Menyeragamkan satu versi juga menghilangkan celah bug yang hanya muncul di salah satu environment.
+
+> [!TIP]
+> **SQLite bukan sekadar pilihan pengembangan.** Saat MySQL dan Redis mati bersamaan, data ditulis sementara ke `naura_fallback.sqlite`, lalu disinkronkan kembali ke MySQL saat pulih. Jangan hapus dependensi `sqlite3`.
 
 ---
 
@@ -125,14 +146,17 @@ git clone https://github.com/Aryandita/Naura-Hoshino-V2.git
 # 2. Masuk ke direktori
 cd Naura-Hoshino-V2
 
-# 3. Install seluruh modul dan dependensi
+# 3. Pastikan versi Node sudah sesuai (harus >= 24)
+node -v
+
+# 4. Install seluruh modul dan dependensi
 npm install
 
-# 4. Salin file konfigurasi environment
+# 5. Salin file konfigurasi environment
 cp .env.example .env
 
-# 5. Buka file .env dan isi variabel yang dibutuhkan (lihat panduan di bawah)
-# 6. Jalankan bot!
+# 6. Buka file .env dan isi variabel yang dibutuhkan (lihat panduan di bawah)
+# 7. Jalankan bot!
 npm start
 ```
 
@@ -148,20 +172,35 @@ Untuk mempermudah manajemen, kami telah menyediakan beberapa perintah praktis. J
 | 🔄 `npm run dev` | Menjalankan bot dengan auto-restart via `--watch`. Sangat pas untuk *development*. |
 | 📤 `npm run deploy` | Memaksa bot untuk melakukan registrasi ulang seluruh *Slash Command*. |
 | 📦 `npm run install-start`| Kombinasi instan: Pasang dependensi dan langsung nyalakan bot. |
+| 🧪 `npm test` | Menjalankan seluruh test memakai runner bawaan Node (`node --test`). |
 | 🔍 `npm run lint` | Melakukan pengecekan kode dengan ESLint. |
 | 🔧 `npm run lint:fix` | Mengecek sekaligus mencoba memperbaiki isu kode secara otomatis (ESLint fix). |
 | 💅 `npm run format` | Merapikan estetika struktur kode dengan Prettier. |
 | 👀 `npm run format:check` | Memeriksa format kode (hanya laporan, tanpa modifikasi). |
+| 🎨 `npm run build:css` | Membangun berkas CSS dashboard. |
 | 🌐 `npm run locales:check` | Audit sinkronisasi / paritas kunci bahasa ID vs EN. |
 | 🚨 `npm run locales:check:strict` | Sama seperti audit locales biasa, namun proses digagalkan jika ada kunci yang hilang. |
 
 *(Catatan: Slash command akan ter-deploy otomatis saat bot pertama hidup. Hanya shard utama yang melakukan ini. Gunakan `--no-deploy` untuk skip.)*
 
+### Pemeriksaan Otomatis di CI
+
+Setiap push dan pull request diperiksa oleh GitHub Actions memakai **Node 24**:
+
+| Pemeriksaan | Perintah | Status |
+|---|---|:---:|
+| Linting | `npm run lint` | Wajib lulus |
+| Gaya tulisan | `node scripts/check-em-dash.js` | Wajib lulus |
+| Paritas bahasa | `npm run locales:check:strict` | Wajib lulus |
+| Test | `npm test` | Wajib lulus |
+| Format | `npm run format:check` | Sementara belum memblokir |
+| Audit dependensi | `npm audit --audit-level=high` | Sementara belum memblokir |
+
 ### Pengecekan Gaya Tulisan
-Kami sangat menjaga standar kualitas tulisan. Teks tidak boleh terkesan kaku seperti robot!
+Kami sangat menjaga standar kualitas tulisan. Teks tidak boleh terkesan kaku seperti robot, dan em dash dilarang di seluruh repo termasuk kamus bahasa.
 
 ```bash
-node scripts/check-em-dash.js          # Mencari dan melaporkan simbol em-dash (-) yang tersisa
+node scripts/check-em-dash.js          # Mencari dan melaporkan simbol em-dash yang tersisa
 node scripts/check-em-dash.js --fix    # Memperbaiki secara otomatis dan memberikan report
 ```
 
@@ -171,6 +210,9 @@ node scripts/check-em-dash.js --fix    # Memperbaiki secara otomatis dan memberi
 
 Semua kredensial dan pengaturan penting disimpan di `.env` (berdasarkan [`src/config/env.js`](src/config/env.js)).
 **Pastikan kamu mengisi semua variabel WAJIB sebelum menjalankan bot, atau bot akan menolak untuk menyala!**
+
+> [!NOTE]
+> `src/config/env.js` adalah satu-satunya sumber kebenaran untuk nama variabel dan nilai default. Seluruh akses `process.env` wajib melewati file itu, jangan pernah dibaca langsung dari modul lain.
 
 ### 🔴 Wajib Diisi (Core)
 | Variabel | Deskripsi |
@@ -201,6 +243,9 @@ Semua kredensial dan pengaturan penting disimpan di `.env` (berdasarkan [`src/co
 | `MYSQL_PORT` | `3306` | Port tujuan Database |
 | `MYSQL_PASSWORD` | - | Password untuk user MySQL kamu |
 | `REDIS_URL` | - | *Opsional*. URL koneksi Redis. Biarkan kosong untuk mematikan Cache/PubSub eksternal. |
+
+> [!NOTE]
+> Bila `MYSQL_DATABASE`, `MYSQL_USER`, atau `MYSQL_HOST` kosong, bot otomatis beralih ke penyimpanan darurat SQLite. Di dalam kode nilai-nilai ini dibaca sebagai `env.DB_NAME`, `env.DB_USER`, `env.DB_HOST`, `env.DB_PORT`, dan `env.DB_PASS`.
 </details>
 
 <details>
@@ -237,6 +282,7 @@ Semua kredensial dan pengaturan penting disimpan di `.env` (berdasarkan [`src/co
 | `PORT` / `DASHBOARD_PORT`| `3070` | Port aktif untuk Dashboard Web |
 | `WEBHOOK_PORT` | `3071` | Port terpisah khusus webhook donasi/vote |
 | `SESSION_SECRET` | - | 🔴 **WAJIB DI PRODUKSI!** Dashboard akan menolak akses tanpa secret ini! |
+| `DISCORD_CLIENT_SECRET` | - | OAuth2 client secret dari Developer Portal |
 | `DISCORD_CALLBACK_URL` | - | URL untuk callback autentikasi OAuth2 |
 | `DASHBOARD_ORIGIN` | - | Origin yang di-whitelist untuk perlindungan CORS lintas domain |
 | `OWNER_EVAL_ENABLED` | `false` | Membuka rute eksekusi `eval` Owner. Nyalakan hanya saat sangat perlu (Debugging). |
@@ -255,8 +301,8 @@ Semua kredensial dan pengaturan penting disimpan di `.env` (berdasarkan [`src/co
 | Variabel | Default | Deskripsi |
 |---|---|---|
 | `FFMPEG_PATH` | - | Kosongkan saja jika kamu ingin menggunakan modul `ffmpeg-static`. Isi jika server punya *binary* khusus. |
-| `BOT_VERSION` | `1.2.0` | Versi yang terpampang pada command /info |
-| `ENGINE_VERSION`| `1.1.0` | Versi engine yang ditandai pada footer Naura |
+| `BOT_VERSION` | `2.0.0` | Versi yang terpampang pada command /info |
+| `ENGINE_VERSION`| `2.0.0` | Versi engine yang ditandai pada footer Naura |
 | `PARTNERSHIP` | `Belum ada kolaborasi` | Label nama server/komunitas yang sedang bekerja sama (ditampilkan di profil) |
 </details>
 
@@ -270,6 +316,9 @@ Bagi kamu yang ingin ikut mengembangkan atau memodifikasi, berikut peta singkat 
 Naura-Hoshino-V2/
 ├─ 📄 index.js               # Inti utama proses bot (berjalan satu per shard)
 ├─ 📄 shard.js               # Pengelola titik masuk produksi (ShardingManager)
+├─ 📘 AGENTS.md              # Aturan pengembangan, arsitektur, & konvensi wajib
+├─ 🗂️ TODO.md                # Prioritas sprint yang sedang berjalan
+├─ 🎨 DESIGN.md              # Design token & panduan visual
 ├─ 🖼️ assets/                # Kumpulan font, gambar, serta aset UI Canvas
 │  └─ Naura_Expression/      # Folder rahasia 15+ Ekspresi Wajah Naura
 ├─ 🌍 language/              # Sistem lokalisasi & kamus utama (id.json, en.json)
@@ -295,6 +344,9 @@ Naura-Hoshino-V2/
 ## 🌍 Sistem Bilingual
 
 Kami merancang Naura agar mudah dimengerti dari Sabang sampai Merauke, hingga tingkat Internasional. Bahasa (**Indonesia (ID)** & **English (EN)**) dipilih lalu disimpan pada tabel personal `user_profiles`.
+
+> [!IMPORTANT]
+> **Bahasa bersifat personal, bukan per server.** Dua orang di server yang sama bisa memakai bahasa berbeda. `GuildSettings.language` hanya menjadi **default** bagi user yang belum pernah memilih bahasa. Urutan resolusinya: preferensi user → default guild → `id`.
 
 ```javascript
 const lang = require('./src/managers/languageManager');
@@ -330,6 +382,20 @@ await interaction.reply({ embeds: [embed], files });
 | ⏳ | **`loading`** | 🎉 | **`levelup`** | 🎵 | **`music`** | 📖 | **`help`** |
 
 > Cek referensi lengkap seluruh ekspresi emosi di berkas [`src/utils/nauraExpression.js`](src/utils/nauraExpression.js)
+
+---
+
+## 🤝 Kontribusi
+
+Sebelum menulis kode, **baca [`AGENTS.md`](AGENTS.md) lebih dulu.** File itu memuat seluruh aturan yang mengikat, dan ringkasannya:
+
+- **Branch**: `main` untuk produksi, `dev` untuk pengembangan, `feature/<nama>` untuk pekerjaan baru.
+- **Commit**: format `<emoji> <tipe>: <deskripsi singkat>`, contoh `✨ feat: tambah command /weather`. Tipe yang dipakai: `feat`, `fix`, `refactor`, `docs`, `style`, `perf`, `chore`, `test`, `ci`.
+- **Satu PR per sprint**, dan setiap PR menyebut nomor issue yang dikerjakan.
+- **Gaya kode**: CommonJS, indentasi 4 spasi, semicolon wajib, komentar Bahasa Indonesia, tanpa em dash.
+- **UI**: semua respons memakai Components V2 lewat `buildContainerV2()` dengan struktur 5 lapisan dan footer wajib.
+- **Nilai ekonomi wajib atomik.** Jangan pernah membaca saldo lalu menuliskannya kembali.
+- **CI harus hijau** (lint, em dash, paritas bahasa, test) sebelum merge.
 
 ---
 
