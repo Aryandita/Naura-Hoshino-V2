@@ -7,6 +7,7 @@
     "start": "node shard.js",
     "dev": "node --watch shard.js",
     "deploy": "node index.js --deploy",
+    "db:migrate": "node scripts/migrate.js",
     "install-start": "npm install && node shard.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

@@ -9,6 +9,15 @@ const { logger } = require('../../src/managers/logger');
 // ==========================================
 const hasMySQLConfig = env.DB_NAME && env.DB_USER && env.DB_HOST;
 
+// Pool bersifat per PROSES, bukan per bot. Nilai lama (max: 100) berarti dua shard
+// saja sudah meminta 200 koneksi, sementara max_connections MySQL biasanya 151.
+// Gejalanya muncul sebagai 'Too many connections' yang seolah tidak berhubungan
+// dengan sharding. Karena itu anggaran total dibagi jumlah shard.
+const SHARD_COUNT = env.TOTAL_SHARDS > 0 ? env.TOTAL_SHARDS : 1;
+const POOL_MAX = env.DB_POOL_MAX > 0
+    ? env.DB_POOL_MAX
+    : Math.max(5, Math.floor(env.DB_POOL_BUDGET / SHARD_COUNT));
+
 const sequelize = hasMySQLConfig
     ? new Sequelize(env.DB_NAME, env.DB_USER, env.DB_PASS, {
           host: env.DB_HOST,
@@ -16,7 +25,7 @@ const sequelize = hasMySQLConfig
           dialect: 'mysql',
           logging: false,
           dialectOptions: { connectTimeout: 120000 },
-          pool: { max: 100, min: 5, acquire: 120000, idle: 15000, evict: 5000 }
+          pool: { max: POOL_MAX, min: 2, acquire: 120000, idle: 15000, evict: 5000 }
       })
     : new Sequelize({
           dialect: 'sqlite',
@@ -98,9 +107,15 @@ let isDbOnline = true;
 function getDbStatus() {
     return {
         dialect: sequelize.options.dialect,
-        online: isDbOnline
+        online: isDbOnline,
+        poolMax: POOL_MAX,
+        shardCount: SHARD_COUNT
     };
 }
+
+// Hanya satu proses yang boleh menjalankan ALTER TABLE. Beberapa shard yang
+// bermigrasi bersamaan berisiko saling menunggu lock metadata.
+const isPrimaryProcess = typeof env.SHARD_ID === 'undefined' || env.SHARD_ID === '0';
 
 const connectToDatabase = async () => {
     try {
@@ -111,21 +126,52 @@ const connectToDatabase = async () => {
             await sequelize.sync({ alter: false }); // Biarkan migrator khusus yang merubah tabel
             logger.info('Database terhubung (Production Safe-Sync mode).');
         } else {
-            // Gunakan alter: true dengan hati-hati hanya untuk server Development
             await sequelize.sync({ alter: { drop: false } });
             logger.info('Database disinkronkan (Development mode, Drop prevented).');
         }
 
-        // ✅ ALTER TABLE dipindahkan ke dbMigrator.js (Rule 1.7)
-        // Jalankan migrasi schema bernomor
-        const { runMigrations, syncFallbackToMySQL } = require('./dbMigrator');
-        await runMigrations(sequelize);
+        // ==========================================
+        // MIGRASI SKEMA (Rule 1.7)
+        //
+        // Di produksi, migrasi TIDAK dijalankan di sini. Migrasi yang gagal di
+        // tengah boot menghasilkan bot yang menyala di atas skema separuh jalan,
+        // dan setiap shard akan menjalankan ALTER TABLE yang sama bersamaan.
+        // Jalankan `npm run db:migrate` sebagai langkah terpisah sebelum start.
+        //
+        // Di development, migrasi tetap dijalankan otomatis oleh proses utama
+        // supaya alur kerja sehari-hari tidak bertambah panjang.
+        // ==========================================
+        const { runMigrations, getPendingMigrations, syncFallbackToMySQL } = require('./dbMigrator');
+
+        if (env.NODE_ENV === 'production') {
+            try {
+                const pending = await getPendingMigrations(sequelize);
+                if (pending.length > 0) {
+                    logger.warn(
+                        `[DB] ${pending.length} migrasi belum dijalankan (${pending.join(', ')}). ` +
+                        'Jalankan `npm run db:migrate` sebelum menyalakan bot.'
+                    );
+                }
+            } catch (pendingError) {
+                logger.warn('[DB] Gagal memeriksa status migrasi:', pendingError.message);
+            }
+        } else if (isPrimaryProcess) {
+            try {
+                await runMigrations(sequelize);
+            } catch (migrationError) {
+                // Di development, migrasi gagal cukup dilaporkan dengan jelas.
+                logger.error('[DB] Migrasi development gagal:', migrationError.message);
+            }
+        } else {
+            logger.info(`[DB] Shard #${env.SHARD_ID} melewati migrasi (ditangani proses utama).`);
+        }
 
         if (!hasMySQLConfig) {
             logger.warn(
                 '\n\x1b[43m\x1b[30m ⚠️ FALLBACK DB \x1b[0m \x1b[33mMenggunakan SQLite lokal sebagai Fallback sementara karena kredensial MySQL tidak ditemukan.\x1b[0m'
             );
-        } else {
+        } else if (isPrimaryProcess) {
+            // Pemindahan data fallback juga cukup dilakukan satu proses.
             await syncFallbackToMySQL(sequelize);
         }
 
@@ -199,10 +245,10 @@ module.exports.seedInitialData = seedInitialData;
 module.exports.getDbStatus = getDbStatus;
 
 // ==========================================
-// 6. ANTI-SLEEP & AUTO-RECONNECT MECHANISM
+// 7. ANTI-SLEEP & AUTO-RECONNECT MECHANISM
 // ==========================================
 let isReconnecting = false;
-setInterval(async () => {
+const healthCheckTimer = setInterval(async () => {
     try {
         await sequelize.query('SELECT 1');
         isDbOnline = true;
@@ -222,7 +268,7 @@ setInterval(async () => {
                 '\x1b[42m\x1b[30m ✨ RECONNECTED \x1b[0m \x1b[32mBerhasil terhubung kembali ke database MySQL.\x1b[0m'
             );
 
-            if (hasMySQLConfig) {
+            if (hasMySQLConfig && isPrimaryProcess) {
                 const { syncFallbackToMySQL } = require('./dbMigrator');
                 await syncFallbackToMySQL(sequelize);
             }
@@ -236,3 +282,9 @@ setInterval(async () => {
         }
     }
 }, 60000 * 15);
+
+// Tanpa unref(), interval ini menahan event loop tetap hidup. Akibatnya script
+// singkat seperti `npm run db:migrate` dan test tidak pernah berakhir sendiri.
+if (healthCheckTimer.unref) healthCheckTimer.unref();
+
+module.exports.healthCheckTimer = healthCheckTimer;

@@ -14,6 +14,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 | Strategi sharding | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering (lihat Sprint 2). |
 | Fallback SQLite | **Dipertahankan.** Berfungsi sebagai penyimpanan darurat saat MySQL dan Redis mati bersamaan. |
 | Sumber kebenaran | `package.json` untuk dependensi dan versi. GitHub Issues untuk pekerjaan. `AGENTS.md` hanya untuk aturan yang tidak berubah tiap rilis. |
+| Alur PR | Satu PR per sprint. Sprint berikutnya baru dimulai setelah PR sebelumnya di-review dan di-merge. |
 
 ## Legenda
 
@@ -26,32 +27,29 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 ## 🔴 Sprint 0: Hardening (kerjakan sebelum apa pun)
 
-Empat pekerjaan ini menutup lubang yang bisa merusak data pengguna, ekonomi, atau pendapatan. Tidak ada fitur baru sampai sprint ini tuntas.
+Status per 8 Agustus 2026: **sprint ini praktis selesai.** Verifikasi kode menunjukkan tiga dari empat pekerjaan sudah terpasang di `main` sebelum sprint ini dimulai. Yang tersisa hanya audit pemanggil ekonomi.
 
-- [ ] **Pisahkan migrasi database dari boot sequence**
-  - **Catatan verifikasi:** `dbManager.js` sudah aman di produksi. `NODE_ENV === 'production'` memakai `sync({ alter: false })` dan development memakai `sync({ alter: { drop: false } })`, jadi kekhawatiran awal soal `alter: true` di produksi **tidak terbukti**. Yang tersisa adalah tiga masalah struktural di bawah.
-  - **Cara Implementasi:**
-    1. Keluarkan `runMigrations()` dan `syncFallbackToMySQL()` dari `connectToDatabase()`. Buat script `npm run db:migrate` yang dijalankan sebagai langkah terpisah sebelum bot menyala, supaya migrasi gagal tidak berarti bot menyala dengan skema separuh jalan.
-    2. Pastikan hanya satu shard yang menjalankan migrasi, sama seperti pola deploy slash command yang sudah dipakai. Empat shard yang bermigrasi bersamaan adalah resep deadlock.
-    3. Di development, pertimbangkan mengganti `alter: { drop: false }` dengan migrasi yang sama seperti produksi, agar skema dev dan produksi tidak pernah menyimpang tanpa terdeteksi.
-- [ ] **Invalidasi cache `GuildSettings` di semua jalur tulis** (issue #20)
-  - **Cara Implementasi:**
-    1. Arahkan 13 handler setup berbasis tombol dan select menu ke `guildSettingsService.updateGuildSetting()`, jangan tulis model langsung.
-    2. Pastikan `updateGuildSetting()` selalu memanggil `cacheManager.invalidateGuildSettings(guildId)`.
-    3. Tambahkan channel Redis Pub/Sub `cache:invalidate` agar shard lain ikut membuang cache basi.
-    4. Alasan: admin mengubah setting dan tidak terjadi apa-apa sampai 5 menit. Ini calon laporan bug nomor satu.
-- [ ] **Jadikan penulisan ekonomi atomik** (issue #17)
-  - **Cara Implementasi:**
-    1. Migrasikan seluruh pemanggil ekonomi dan RPG ke `incrementUserProfile()` / `incrementUserSurvival()`.
-    2. Untuk pengurangan saldo, gunakan penulisan bersyarat: `sequelize.literal` dengan syarat `Op.gte` pada jumlah yang dikurangi, lalu cek jumlah baris terpengaruh. Nol baris berarti saldo tidak cukup.
-    3. Alasan: duplikasi uang lewat double-click adalah eksploit paling umum pada bot ekonomi, dan sekali ekonomi rusak tidak bisa dipulihkan tanpa reset.
-- [ ] **Amankan webhook donasi dan vote** (issue #18, bagian webhook saja)
-  - **Cara Implementasi:**
-    1. Bandingkan token dengan `crypto.timingSafeEqual`, bukan `===`.
-    2. Tolak request bila token belum dikonfigurasi di environment. Jangan pernah memberi akses saat konfigurasi kosong.
-    3. Tambahkan idempotency key per transaksi agar retry dari Saweria, Trakteer, atau Top.gg tidak memberi premium dua kali.
-    4. Batasi ukuran body dan catat setiap pemberian premium ke audit log.
-    5. Alasan: endpoint ini memberi premium, jadi ini permukaan serangan yang bernilai uang.
+- [x] **Pisahkan migrasi database dari boot sequence**
+  - **Catatan verifikasi:** `dbManager.js` sudah aman di produksi. `NODE_ENV === 'production'` memakai `sync({ alter: false })` dan development memakai `sync({ alter: { drop: false } })`, jadi kekhawatiran awal soal `alter: true` di produksi **tidak terbukti**.
+  - **Yang dikerjakan:**
+    1. `runMigrations()` dan `syncFallbackToMySQL()` dikeluarkan dari jalur boot produksi. Migrasi kini dijalankan lewat `npm run db:migrate` (`scripts/migrate.js`) yang keluar dengan kode 1 bila gagal, sehingga deploy berhenti sebelum bot menyala. Di development, migrasi tetap otomatis agar alur harian tidak bertambah panjang.
+    2. Migrasi dan pemindahan data fallback dijaga hanya untuk proses utama, jadi beberapa shard tidak ber-ALTER bersamaan.
+    3. `dbMigrator.js` sekarang punya ledger `schema_migrations`. Sebelumnya setiap migrasi dijalankan ulang tiap boot dan hanya "berhasil" karena MySQL menolaknya dengan error kolom duplikat. Error tak terduga sekarang dilempar, bukan ditelan.
+    4. Interval health-check database diberi `unref()`, supaya script pendek seperti `db:migrate` dan `npm test` bisa berakhir sendiri.
+- [x] **Invalidasi cache `GuildSettings` di semua jalur tulis** (issue #20)
+  - **Catatan verifikasi:** sudah terpasang di `main`. `guildSettingsService.updateGuildSetting()` menjadi jalur tulis, hook `afterCreate` / `afterUpdate` / `afterDestroy` / `afterUpsert` / `afterBulkUpdate` / `afterBulkDestroy` pada model memanggil `cacheInvalidator.invalidateGuild()`, dan kanal Redis Pub/Sub `cache:invalidate` menyegarkan state di memori tiap shard lewat `initSubscriber()` yang dipasang di `index.js`.
+  - **Sisa:** tutup issue #20 setelah satu kali uji manual ubah setting di dashboard, lalu cek shard lain langsung ikut berubah.
+- [ ] **Jadikan penulisan ekonomi atomik** (issue #17) - **fondasi selesai, audit pemanggil belum**
+  - [x] `cacheManager` sudah menyediakan `incrementUserProfile()`, `incrementUserSurvival()`, `debitUserProfile()`, dan `debitUserSurvival()`. Pemotongan saldo memakai satu `UPDATE` bersyarat dengan `Op.gte` dan memeriksa jumlah baris terpengaruh, plus `flushUser()` untuk mengosongkan antrean write-behind sebelum memeriksa kecukupan saldo.
+  - [ ] Audit seluruh pemanggil di `plugin/` yang masih membaca lalu menulis nilai absolut (pola `profile.economy_wallet - harga` diikuti `updateUserProfile`). Ganti ke `debit*()` atau `increment*()`.
+  - [ ] Tambahkan aturan lint atau test yang menolak pola read-modify-write pada kolom saldo.
+- [x] **Amankan webhook donasi dan vote** (issue #18, bagian webhook saja)
+  - **Catatan verifikasi:** sudah terpasang di `src/dashboard/routes/webhooks.js`. Token dibandingkan lewat `verifyToken` di `utils/httpGuard`, endpoint yang tokennya belum dikonfigurasi dibalas `503`, ada idempotency (`claimOnce` dengan ID transaksi atau sidik jari berumur pendek), batas body `64kb`, rate limiter 30 permintaan per menit, dan `trust proxy` di produksi.
+  - **Sisa:** bagian dashboard dari issue #18 (helmet, CORS allowlist, cookie flag, izin `ManageGuild`) tetap di Sprint 2.
+- [x] **Perbaiki `env.SHARD_ID` yang tidak pernah terisi** (temuan baru saat verifikasi)
+  - `index.js` menentukan shard utama lewat `env.SHARD_ID`, tetapi kunci itu tidak pernah didefinisikan di `src/config/env.js`. Akibatnya setiap shard menganggap dirinya shard utama, lalu sama-sama deploy slash command dan membuka port dashboard sampai shard kedua mati dengan `EADDRINUSE`. `env.js` sekarang membaca `SHARDS` dari ShardingManager dan menyediakan `TOTAL_SHARDS`.
+- [x] **Buat pool database sadar jumlah shard** (temuan riset)
+  - `pool.max: 100` bersifat per proses, jadi dua shard saja sudah meminta 200 koneksi sementara `max_connections` MySQL biasanya 151. Sekarang ada `DB_POOL_BUDGET` (anggaran total, default 80) yang dibagi `TOTAL_SHARDS`, dengan `DB_POOL_MAX` sebagai penimpa manual.
 
 ---
 
@@ -59,13 +57,9 @@ Empat pekerjaan ini menutup lubang yang bisa merusak data pengguna, ekonomi, ata
 
 Setelah aman, kita buat repository ini nyaman dan aman untuk di-refactor.
 
-- [ ] **Selaraskan seluruh dokumen dengan keputusan arsitektur di atas**
-  - **Cara Implementasi:**
-    1. Setel `engines.node` ke `>=24.0.0`, README, `AGENTS.md`, dan `node-version` di CI ke `24`. (`package.json` dan CI sudah selesai.)
-    2. Samakan versi bot di `AGENTS.md` dengan `package.json` (`2.0.0`).
-    3. Tulis eksplisit di `AGENTS.md` bahwa bahasa disimpan per user, dan `GuildSettings.language` hanya default guild.
-    4. Hapus tabel daftar dependensi dan tabel versi dari `AGENTS.md` agar tidak pernah basi lagi. Arahkan pembaca ke `package.json`.
-    5. Tulis eksplisit bahwa `await import()` diizinkan untuk lazy-load meski proyek memakai CommonJS.
+- [x] **Selaraskan seluruh dokumen dengan keputusan arsitektur di atas**
+  - `engines.node`, README, `AGENTS.md`, dan CI sudah seragam di Node 24 dan versi 2.0.0. Bahasa per user sudah ditulis eksplisit. Tabel versi dan dependensi **dipertahankan** sesuai keputusan, hanya isinya yang diperbarui.
+  - [ ] Tambahkan `npm run db:migrate` ke tabel script di README dan `AGENTS.md`, beserta urutan deploy yang benar (migrate dulu, baru start).
 - [ ] **Lengkapi CI** (issue #15, bagian CI) - **sebagian selesai**
   - [x] Step `node scripts/check-em-dash.js`.
   - [x] `locales:check` diubah menjadi `locales:check:strict`.
@@ -73,8 +67,9 @@ Setelah aman, kita buat repository ini nyaman dan aman untuk di-refactor.
   - [ ] Hapus `continue-on-error` pada `format:check` setelah satu kali `npm run format` menyeluruh.
   - [ ] Hapus `continue-on-error` pada `npm audit` setelah kerentanan yang ada dibersihkan.
   - [ ] Aktifkan Dependabot dan secret scanning.
-- [ ] **Tambahkan test otomatis pertama** (issue #15)
-  - **Cara Implementasi:** Pakai `node:test` bawaan. Mulai dari logika murni yang paling mahal bila salah: rumus XP dan level, kalkulasi ekonomi, `RateLimiter`, dan parser durasi.
+- [ ] **Tambahkan test otomatis** (issue #15) - **dimulai**
+  - [x] Test pertama: `src/managers/dbMigrator.test.js` menjaga keunikan ID migrasi dan nama tabel ledger.
+  - [ ] Lanjutkan ke logika murni yang paling mahal bila salah: rumus XP dan level, kalkulasi ekonomi, `RateLimiter`, dan parser durasi.
 - [ ] **Pecah `interactionCreate.js` (43 KB)** (issue #19)
   - **Cara Implementasi:** Buat `src/interactions/` sebagai registry per tipe interaksi, tambahkan `safeExecute.js` untuk penanganan error terpusat, lalu tambahkan aturan lint `max-lines: 400`.
 - [ ] **Tambahkan handler `isAutocomplete()` dan tutup celah error handling** (issue #21)
@@ -102,14 +97,14 @@ Setelah aman, kita buat repository ini nyaman dan aman untuk di-refactor.
 - [ ] **Optimasi Canvas** (issue #16): cache hasil `loadImage`, cache font, dan batasi konkurensi render ke 2 sampai 3.
 - [ ] **Caching hasil render Canvas via Redis:** key `canvas:profile:{userId}`, simpan buffer sebagai base64, TTL 300 detik.
 - [ ] **Tambahkan indeks database** pada kolom yang sering difilter (`guildId`, `userId`, kolom tanggal cooldown).
-- [ ] **Optimasi connection pool:** `pool.max: 100` di `dbManager.js` dikalikan jumlah shard bisa melampaui `max_connections` MySQL. Turunkan ke kisaran 10 sampai 20 per shard.
+- [x] **Optimasi connection pool:** selesai di Sprint 0 lewat `DB_POOL_BUDGET` yang dibagi `TOTAL_SHARDS`. Tinjau ulang angkanya setelah tahu `max_connections` MySQL produksi yang sebenarnya.
 - [ ] **Siapkan jalur migrasi ke clustering** (keputusan: siapkan sekarang, migrasi nanti)
   - **Cara Implementasi:**
     1. Bungkus semua pemanggilan `broadcastEval` dan statistik lintas shard ke dalam satu modul, misalnya `src/managers/clusterManager.js`. Jangan ada `client.shard.*` yang berserakan di plugin.
     2. Agregasi statistik dashboard lewat Redis Pub/Sub, bukan lewat API shard langsung.
     3. Setelah dua langkah di atas selesai, migrasi ke `discord-hybrid-sharding` hanya menyentuh `shard.js` dan satu manager. Riset menunjukkan penghematan overhead proses idle 40 sampai 60 persen dibanding `ShardingManager`, dan ini penting karena RAM panel terbatas.
-- [ ] **Adopsi Umzug untuk migrasi database** (temuan riset)
-  - **Cara Implementasi:** Gantikan `dbMigrator.js` custom dengan Umzug: migrasi bernomor, tercatat di tabel meta, bisa rollback, dan berjalan sebagai langkah terpisah sebelum bot menyala.
+- [ ] **Pertimbangkan Umzug untuk migrasi database** (temuan riset)
+  - `dbMigrator.js` sekarang sudah punya ledger dan gagal dengan keras, jadi urgensinya turun. Umzug tetap menarik untuk rollback dan migrasi berbasis file, bukan array di dalam kode.
 - [ ] **Amankan dashboard** (issue #18, bagian dashboard): `helmet`, `express-rate-limit`, CORS allowlist, cookie `secure` dan `httpOnly`, `SESSION_SECRET` wajib, pengecekan izin `ManageGuild` per guild, dan upgrade ke Express 5.
 - [ ] **Pecah `src/dashboard/server.js` (64 KB)** (issue #14) menjadi `middleware/`, `routes/`, dan `sockets/`.
 - [ ] **Refactor `imageManager.js` (32 KB)** menjadi `src/utils/canvas/profileRenderer.js`, `levelCardRenderer.js`, dan seterusnya.
@@ -126,8 +121,8 @@ Setelah aman, kita buat repository ini nyaman dan aman untuk di-refactor.
 ## 🟡 Sprint 3: Observability dan Operasional
 
 - [ ] **Endpoint `GET /api/health`**
-  - **Cara Implementasi:** Buat `src/dashboard/routes/api.js`, panggil `featureRegistry.getHealthStats()`, kembalikan `200 OK` dengan payload JSON, lalu daftarkan route di `server.js`. Sertakan status MySQL (`getDbStatus()` sudah tersedia), Redis, dan Lavalink.
-- [ ] **Docker multi-stage dan compose** (issue #15): satu stack berisi bot, Lavalink, Redis, dan MySQL.
+  - **Cara Implementasi:** Buat `src/dashboard/routes/api.js`, panggil `featureRegistry.getHealthStats()`, kembalikan `200 OK` dengan payload JSON, lalu daftarkan route di `server.js`. Sertakan status MySQL (`getDbStatus()` sudah tersedia dan kini juga melaporkan `poolMax` serta `shardCount`), Redis, dan Lavalink.
+- [ ] **Docker multi-stage dan compose** (issue #15): satu stack berisi bot, Lavalink, Redis, dan MySQL. Sertakan langkah `npm run db:migrate` sebagai job terpisah sebelum service bot menyala.
 - [ ] **Metrik per command** dan agregasi statistik lintas shard lewat Redis Pub/Sub.
 - [ ] **Integrasi Sentry** untuk pelacakan error produksi.
 - [ ] **Status page publik** supaya pengguna tahu saat Lavalink atau MySQL bermasalah.
@@ -176,13 +171,14 @@ Setelah aman, kita buat repository ini nyaman dan aman untuk di-refactor.
 
 | Risiko | Dampak | Mitigasi |
 | --- | --- | --- |
-| Migrasi berjalan di dalam boot sequence dan di semua shard | Skema separuh jalan atau deadlock saat startup | Sprint 0 |
-| Ekonomi tanpa penulisan atomik | Inflasi tak terkendali, ekonomi harus direset | Sprint 0, issue #17 |
-| Webhook premium tanpa `timingSafeEqual` dan idempotency | Premium gratis, kebocoran pendapatan | Sprint 0, issue #18 |
-| Cache setting basi hingga 5 menit dan lintas shard | Admin kehilangan kepercayaan pada panel setup | Sprint 0, issue #20 |
+| Migrasi berjalan di dalam boot sequence dan di semua shard | Skema separuh jalan atau deadlock saat startup | **Selesai** di Sprint 0 lewat `npm run db:migrate` dan penjagaan proses utama |
+| Ekonomi tanpa penulisan atomik | Inflasi tak terkendali, ekonomi harus direset | Fondasi selesai. Sisa: audit pemanggil di `plugin/` (issue #17) |
+| Webhook premium tanpa `timingSafeEqual` dan idempotency | Premium gratis, kebocoran pendapatan | **Selesai** di `webhooks.js` (issue #18, bagian webhook) |
+| Cache setting basi hingga 5 menit dan lintas shard | Admin kehilangan kepercayaan pada panel setup | **Selesai** lewat hook model dan kanal `cache:invalidate` (issue #20) |
+| Total koneksi database melampaui `max_connections` | Error `Too many connections` yang tampak tidak berhubungan dengan sharding | **Selesai** lewat `DB_POOL_BUDGET` dibagi `TOTAL_SHARDS` |
 | Lingkup all-in-one terus melebar | Beban maintenance menumpuk ke satu orang | Feature flag default mati, tolak fitur tanpa pemilik |
 | Sumber musik YouTube | Risiko ToS dan API yang berubah sepihak | Plugin resmi Lavalink, siapkan fallback |
-| Nol test otomatis pada basis kode sebesar ini | Setiap refactor adalah taruhan | Sprint 1, mulai dari logika murni |
+| Cakupan test masih sangat tipis | Setiap refactor masih taruhan | Sprint 1, lanjutkan dari test migrasi yang sudah ada |
 
 ---
 

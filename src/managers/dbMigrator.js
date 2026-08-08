@@ -6,6 +6,18 @@ const fs = require('fs');
 // Semua ALTER TABLE WAJIB di sini, bukan di dbManager.js
 // ==========================================
 
+// Tabel catatan migrasi. Sebelum ini, setiap migrasi dijalankan ulang pada tiap
+// boot dan hanya "berhasil" karena MySQL menolaknya dengan error kolom duplikat.
+// Pola itu menyembunyikan kegagalan nyata dan membuat migrasi yang bukan ALTER
+// (misalnya UPDATE data) mustahil ditulis dengan aman.
+const LEDGER_TABLE = 'schema_migrations';
+
+// Error MySQL yang berarti "perubahan ini sudah ada". Aman dicatat sebagai
+// selesai, karena database sudah berada pada bentuk yang diinginkan.
+// 1050 = tabel sudah ada, 1060 = kolom sudah ada, 1061 = index sudah ada,
+// 1091 = kolom/index yang mau dihapus tidak ada.
+const ALREADY_APPLIED_ERRNOS = new Set([1050, 1060, 1061, 1091]);
+
 /**
  * Daftar migrasi yang dijalankan secara berurutan.
  * Setiap migrasi punya ID unik dan query SQL-nya.
@@ -34,35 +46,101 @@ const MIGRATIONS = [
     }
 ];
 
+function isAlreadyApplied(err) {
+    const errno = err && err.original && err.original.errno;
+    return ALREADY_APPLIED_ERRNOS.has(errno);
+}
+
+/** Membuat tabel catatan bila belum ada. Aman dipanggil berkali-kali. */
+async function ensureLedger(sequelize) {
+    await sequelize.query(
+        `CREATE TABLE IF NOT EXISTS ${LEDGER_TABLE} (
+            id VARCHAR(191) NOT NULL PRIMARY KEY,
+            applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`
+    );
+}
+
+async function loadAppliedIds(sequelize) {
+    const [rows] = await sequelize.query(`SELECT id FROM ${LEDGER_TABLE};`);
+    return new Set((rows || []).map(row => row.id));
+}
+
+async function recordMigration(sequelize, id) {
+    await sequelize.query(`INSERT IGNORE INTO ${LEDGER_TABLE} (id) VALUES (?);`, {
+        replacements: [id]
+    });
+}
+
+/**
+ * Daftar ID migrasi yang belum tercatat selesai.
+ *
+ * Dipakai dbManager saat boot produksi untuk memperingatkan bahwa
+ * `npm run db:migrate` belum dijalankan, tanpa ikut menjalankan migrasinya.
+ *
+ * @param {import('sequelize').Sequelize} sequelize
+ * @returns {Promise<Array<string>>}
+ */
+async function getPendingMigrations(sequelize) {
+    if (sequelize.options.dialect !== 'mysql') return [];
+    await ensureLedger(sequelize);
+    const done = await loadAppliedIds(sequelize);
+    return MIGRATIONS.filter(migration => !done.has(migration.id)).map(migration => migration.id);
+}
+
 /**
  * Jalankan semua migrasi yang belum dieksekusi di environment ini.
- * Gunakan try/catch per-migrasi dengan log yang jelas, tidak boleh silent catch kosong.
+ *
+ * Berbeda dari versi sebelumnya, fungsi ini MELEMPAR error bila ada migrasi yang
+ * gagal karena alasan tak terduga. Alasannya: migrasi dijalankan sebagai langkah
+ * terpisah (`npm run db:migrate`), jadi kegagalan harus menghentikan deploy,
+ * bukan menghasilkan bot yang menyala di atas skema separuh jalan.
+ *
  * @param {import('sequelize').Sequelize} sequelize - Instance Sequelize yang sudah terkoneksi
+ * @returns {Promise<{ applied: Array<string>, alreadyPresent: Array<string> }>}
  */
 async function runMigrations(sequelize) {
     if (sequelize.options.dialect !== 'mysql') {
         logger.info('[DB MIGRATOR] Melewati migrasi, bukan MySQL (mode SQLite fallback).');
-        return;
+        return { applied: [], alreadyPresent: [] };
     }
 
-    logger.info(`[DB MIGRATOR] Menjalankan ${MIGRATIONS.length} migrasi schema...`);
+    await ensureLedger(sequelize);
+    const done = await loadAppliedIds(sequelize);
+    const pending = MIGRATIONS.filter(migration => !done.has(migration.id));
 
-    for (const migration of MIGRATIONS) {
+    if (pending.length === 0) {
+        logger.success(`[DB MIGRATOR] Tidak ada migrasi tertunda (${MIGRATIONS.length} sudah tercatat).`);
+        return { applied: [], alreadyPresent: [] };
+    }
+
+    logger.info(`[DB MIGRATOR] ${pending.length} migrasi tertunda dari total ${MIGRATIONS.length}.`);
+
+    const applied = [];
+    const alreadyPresent = [];
+
+    for (const migration of pending) {
         try {
             await sequelize.query(migration.sql);
+            await recordMigration(sequelize, migration.id);
+            applied.push(migration.id);
             logger.db(`[DB MIGRATOR] Migrasi '${migration.id}' berhasil: ${migration.description}`);
         } catch (err) {
-            // Error 1060 = kolom sudah ada (ER_DUP_FIELDNAME), ini aman untuk di-skip.
-            if (err.original && err.original.errno === 1060) {
-                logger.info(`[DB MIGRATOR] Migrasi '${migration.id}' di-skip (kolom sudah ada).`);
-            } else {
-                // Error lain harus dilaporkan dengan jelas.
-                logger.error(`[DB MIGRATOR] Migrasi '${migration.id}' gagal: ${err.message}`);
+            if (isAlreadyApplied(err)) {
+                // Perubahannya sudah ada di database, hanya catatannya yang belum.
+                await recordMigration(sequelize, migration.id);
+                alreadyPresent.push(migration.id);
+                logger.info(`[DB MIGRATOR] Migrasi '${migration.id}' dicatat selesai (perubahan sudah ada di database).`);
+                continue;
             }
+
+            logger.error(`[DB MIGRATOR] Migrasi '${migration.id}' gagal: ${err.message}`);
+            throw new Error(`Migrasi '${migration.id}' gagal: ${err.message}`);
         }
     }
 
-    logger.success('[DB MIGRATOR] Semua migrasi schema selesai diproses.');
+    logger.success(`[DB MIGRATOR] Selesai. ${applied.length} dijalankan, ${alreadyPresent.length} dicatat menyusul.`);
+    return { applied, alreadyPresent };
 }
 
 // ==========================================
@@ -140,4 +218,10 @@ async function syncFallbackToMySQL(mysqlSequelize) {
     }
 }
 
-module.exports = { runMigrations, syncFallbackToMySQL };
+module.exports = {
+    runMigrations,
+    syncFallbackToMySQL,
+    getPendingMigrations,
+    MIGRATIONS,
+    LEDGER_TABLE
+};
