@@ -12,12 +12,13 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "test": "node --test",
     "build:css": "tailwindcss -i ./src/dashboard/public/css/input.css -o ./src/dashboard/public/css/tailwind-compiled.css",
     "locales:check": "node scripts/validate-locales.js",
     "locales:check:strict": "node scripts/validate-locales.js --strict"
   },
   "engines": {
-    "node": ">=20.6.0"
+    "node": ">=24.0.0"
   },
   "keywords": [
     "naura",
