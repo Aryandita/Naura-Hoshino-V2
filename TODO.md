@@ -15,6 +15,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 | Fallback SQLite | **Dipertahankan.** Berfungsi sebagai penyimpanan darurat saat MySQL dan Redis mati bersamaan. |
 | Sumber kebenaran | `package.json` untuk dependensi dan versi. GitHub Issues untuk pekerjaan. `AGENTS.md` hanya untuk aturan yang tidak berubah tiap rilis. |
 | Alur PR | Satu PR per sprint. Sprint berikutnya baru dimulai setelah PR sebelumnya di-review dan di-merge. |
+| Verifikasi sebelum klaim | Status di roadmap ini wajib dicek ke kode, bukan ke issue tracker. Sprint 0 dan Sprint 1 membuktikan tracker bisa tertinggal jauh dari kenyataan. |
 
 ## Legenda
 
@@ -25,9 +26,9 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 ---
 
-## 🔴 Sprint 0: Hardening (kerjakan sebelum apa pun)
+## 🔴 Sprint 0: Hardening - SELESAI (PR #45, #46)
 
-Status per 8 Agustus 2026: **sprint ini praktis selesai.** Verifikasi kode menunjukkan tiga dari empat pekerjaan sudah terpasang di `main` sebelum sprint ini dimulai. Yang tersisa hanya audit pemanggil ekonomi.
+Verifikasi kode menunjukkan tiga dari empat pekerjaan sudah terpasang di `main` sebelum sprint ini dimulai. Yang tersisa hanya audit pemanggil ekonomi, yang dipindahkan ke Sprint 1.
 
 - [x] **Pisahkan migrasi database dari boot sequence**
   - **Catatan verifikasi:** `dbManager.js` sudah aman di produksi. `NODE_ENV === 'production'` memakai `sync({ alter: false })` dan development memakai `sync({ alter: { drop: false } })`, jadi kekhawatiran awal soal `alter: true` di produksi **tidak terbukti**.
@@ -39,10 +40,6 @@ Status per 8 Agustus 2026: **sprint ini praktis selesai.** Verifikasi kode menun
 - [x] **Invalidasi cache `GuildSettings` di semua jalur tulis** (issue #20)
   - **Catatan verifikasi:** sudah terpasang di `main`. `guildSettingsService.updateGuildSetting()` menjadi jalur tulis, hook `afterCreate` / `afterUpdate` / `afterDestroy` / `afterUpsert` / `afterBulkUpdate` / `afterBulkDestroy` pada model memanggil `cacheInvalidator.invalidateGuild()`, dan kanal Redis Pub/Sub `cache:invalidate` menyegarkan state di memori tiap shard lewat `initSubscriber()` yang dipasang di `index.js`.
   - **Sisa:** tutup issue #20 setelah satu kali uji manual ubah setting di dashboard, lalu cek shard lain langsung ikut berubah.
-- [ ] **Jadikan penulisan ekonomi atomik** (issue #17) - **fondasi selesai, audit pemanggil belum**
-  - [x] `cacheManager` sudah menyediakan `incrementUserProfile()`, `incrementUserSurvival()`, `debitUserProfile()`, dan `debitUserSurvival()`. Pemotongan saldo memakai satu `UPDATE` bersyarat dengan `Op.gte` dan memeriksa jumlah baris terpengaruh, plus `flushUser()` untuk mengosongkan antrean write-behind sebelum memeriksa kecukupan saldo.
-  - [ ] Audit seluruh pemanggil di `plugin/` yang masih membaca lalu menulis nilai absolut (pola `profile.economy_wallet - harga` diikuti `updateUserProfile`). Ganti ke `debit*()` atau `increment*()`.
-  - [ ] Tambahkan aturan lint atau test yang menolak pola read-modify-write pada kolom saldo.
 - [x] **Amankan webhook donasi dan vote** (issue #18, bagian webhook saja)
   - **Catatan verifikasi:** sudah terpasang di `src/dashboard/routes/webhooks.js`. Token dibandingkan lewat `verifyToken` di `utils/httpGuard`, endpoint yang tokennya belum dikonfigurasi dibalas `503`, ada idempotency (`claimOnce` dengan ID transaksi atau sidik jari berumur pendek), batas body `64kb`, rate limiter 30 permintaan per menit, dan `trust proxy` di produksi.
   - **Sisa:** bagian dashboard dari issue #18 (helmet, CORS allowlist, cookie flag, izin `ManageGuild`) tetap di Sprint 2.
@@ -55,11 +52,34 @@ Status per 8 Agustus 2026: **sprint ini praktis selesai.** Verifikasi kode menun
 
 ## 🟠 Sprint 1: Fondasi Developer Experience
 
-Setelah aman, kita buat repository ini nyaman dan aman untuk di-refactor.
+Sama seperti Sprint 0, verifikasi kode menunjukkan sebagian besar sprint ini **sudah terpasang di `main`**. Yang tersisa dikerjakan di sprint ini.
 
 - [x] **Selaraskan seluruh dokumen dengan keputusan arsitektur di atas**
   - `engines.node`, README, `AGENTS.md`, dan CI sudah seragam di Node 24 dan versi 2.0.0. Bahasa per user sudah ditulis eksplisit. Tabel versi dan dependensi **dipertahankan** sesuai keputusan, hanya isinya yang diperbarui.
   - [ ] Tambahkan `npm run db:migrate` ke tabel script di README dan `AGENTS.md`, beserta urutan deploy yang benar (migrate dulu, baru start).
+- [x] **Pecah `interactionCreate.js`** (issue #19)
+  - **Catatan verifikasi:** sudah terpasang di `main`. Berkasnya kini 4,7 KB (dari 43 KB), dengan `src/interactions/` berisi `registry.js`, `safeExecute.js`, `autocomplete.js`, serta folder `buttons/`, `modals/`, `selects/`, dan `shared/`.
+  - [x] Aturan lint `max-lines: 400` dipasang untuk `interactionCreate.js` dan seluruh `src/interactions/`, supaya berkas router tidak menggembung lagi.
+- [x] **Handler `isAutocomplete()` dan penanganan error interaksi** (issue #21)
+  - **Catatan verifikasi:** sudah terpasang lewat `src/interactions/autocomplete.js` dan `safeExecute.js`.
+- [x] **Deploy slash command berbasis hash** (issue #11)
+  - **Catatan verifikasi:** sudah terpasang di `CommandHandler.deploy()`. Tanda tangan SHA-256 mencakup `clientId`, `guildId`, dan daftar command, disimpan di `.cache/commands-deploy.json`. Berkas dipilih, bukan Redis, karena `load()` berjalan sebelum `redisManager.connect()`. Penanda sengaja tidak ditulis saat deploy gagal.
+- [x] **Pisahkan `client.aliases` dari `client.commands`** (issue #12)
+  - **Catatan verifikasi:** sudah terpasang, termasuk deteksi bentrok alias terhadap nama command asli dan terhadap alias lain, serta pendaftaran alias yang ditunda sampai semua command dimuat.
+- [x] **Perbaiki `return console.log(...)` di `CommandHandler`** (issue #9)
+  - **Catatan verifikasi:** sudah terpasang. `load()` dan `deploy()` sudah terpisah dan `deploy()` mengembalikan boolean.
+- [x] **Pasang pengaman batas Components V2 di `NauraContainerBuilder.js`** (temuan riset)
+  - `src/utils/componentBudget.js` menghitung komponen secara rekursif (termasuk isi section, gallery, action row, dan accessory) serta total panjang teks, lalu memangkas field berlebih dan menyisipkan catatan pemotongan. Header, gambar, tombol, dan footer tidak pernah dikorbankan, karena membuang tombol berarti membuang satu-satunya jalan pengguna melanjutkan alur.
+  - Deskripsi dipangkas di 3000 karakter dan nilai field di 1000 karakter sebelum perakitan.
+  - Bila payload masih terlalu berat setelah pemangkasan, builder mencatat error dengan angka komponen dan karakter yang sebenarnya, jadi pemanggil yang salah ukuran bisa dilacak tanpa menebak.
+- [ ] **Ganti monkey-patch `ephemeralPatch.js` dengan `MessageFlags.Ephemeral`** (issue #10) - **sebagian**
+  - [x] Aturan lint `no-restricted-syntax` menolak pemakaian baru `ephemeral: true`.
+  - [x] Penambal sekarang mencatat lokasi pemanggil yang masih memakai opsi usang, satu peringatan per lokasi. Ini membangun daftar audit yang nyata, bukan hasil menebak.
+  - [ ] Migrasikan pemanggil yang muncul di log, lalu hapus `src/utils/ephemeralPatch.js` beserta pemanggilannya di `index.js`.
+- [ ] **Jadikan penulisan ekonomi atomik** (issue #17, dipindahkan dari Sprint 0) - **fondasi selesai**
+  - [x] `cacheManager` sudah menyediakan `incrementUserProfile()`, `incrementUserSurvival()`, `debitUserProfile()`, dan `debitUserSurvival()`. Pemotongan saldo memakai satu `UPDATE` bersyarat dengan `Op.gte` dan memeriksa jumlah baris terpengaruh, plus `flushUser()` untuk mengosongkan antrean write-behind sebelum memeriksa kecukupan saldo.
+  - [ ] Audit seluruh pemanggil di `plugin/` yang masih membaca lalu menulis nilai absolut (pola `profile.economy_wallet - harga` diikuti `updateUserProfile`). Ganti ke `debit*()` atau `increment*()`.
+  - [ ] Tambahkan aturan lint atau test yang menolak pola read-modify-write pada kolom saldo.
 - [ ] **Lengkapi CI** (issue #15, bagian CI) - **sebagian selesai**
   - [x] Step `node scripts/check-em-dash.js`.
   - [x] `locales:check` diubah menjadi `locales:check:strict`.
@@ -67,24 +87,10 @@ Setelah aman, kita buat repository ini nyaman dan aman untuk di-refactor.
   - [ ] Hapus `continue-on-error` pada `format:check` setelah satu kali `npm run format` menyeluruh.
   - [ ] Hapus `continue-on-error` pada `npm audit` setelah kerentanan yang ada dibersihkan.
   - [ ] Aktifkan Dependabot dan secret scanning.
-- [ ] **Tambahkan test otomatis** (issue #15) - **dimulai**
-  - [x] Test pertama: `src/managers/dbMigrator.test.js` menjaga keunikan ID migrasi dan nama tabel ledger.
+- [ ] **Tambahkan test otomatis** (issue #15) - **berjalan**
+  - [x] `src/managers/dbMigrator.test.js` menjaga keunikan ID migrasi dan nama tabel ledger.
+  - [x] `src/utils/componentBudget.test.js` menjaga perhitungan komponen bersarang, pemangkasan teks, dan jaminan bahwa tombol tidak pernah dibuang.
   - [ ] Lanjutkan ke logika murni yang paling mahal bila salah: rumus XP dan level, kalkulasi ekonomi, `RateLimiter`, dan parser durasi.
-- [ ] **Pecah `interactionCreate.js` (43 KB)** (issue #19)
-  - **Cara Implementasi:** Buat `src/interactions/` sebagai registry per tipe interaksi, tambahkan `safeExecute.js` untuk penanganan error terpusat, lalu tambahkan aturan lint `max-lines: 400`.
-- [ ] **Tambahkan handler `isAutocomplete()` dan tutup celah error handling** (issue #21)
-  - **Cara Implementasi:**
-    1. Tambahkan cabang `isAutocomplete()` yang sebelumnya tidak ada sama sekali.
-    2. Bungkus handler tombol, select menu, dan modal dengan try/catch.
-    3. Sertakan `retryAfter` pada balasan rate limit.
-    4. Ganti if-chain tanpa `return` menjadi early return, dan jangan panggil `getUserLanguage` di setiap interaksi (ambil dari cache).
-- [ ] **Deploy slash command berbasis hash** (issue #11)
-  - **Cara Implementasi:** Hitung SHA-1 dari definisi command, simpan ke `deploy:commands:hash` di Redis atau `.cache/commands.hash`, dan hanya deploy bila hash berubah.
-- [ ] **Pisahkan `client.aliases` dari `client.commands`** (issue #12) dengan deteksi tabrakan nama saat load.
-- [ ] **Ganti monkey-patch `ephemeralPatch.js` dengan `MessageFlags.Ephemeral`** (issue #10) dan tambahkan aturan lint `no-restricted-syntax` agar `ephemeral: true` tidak kembali.
-- [ ] **Perbaiki `return console.log(...)` di `CommandHandler.load()`** (issue #9) yang membatalkan proses load secara diam-diam. Pisahkan `load()` dan `deploy()`.
-- [ ] **Pasang pengaman batas Components V2 di `NauraContainerBuilder.js`** (temuan riset)
-  - **Cara Implementasi:** Hitung jumlah komponen (maksimum 40, termasuk yang bersarang) dan total panjang teks sebelum payload dikirim, lalu potong atau pecah otomatis ke halaman. Lebih baik gagal di builder dengan pesan jelas daripada `Invalid Form Body` di produksi. Ini penting karena `AGENTS.md` mewajibkan struktur 5 lapisan di setiap respons.
 
 ---
 
@@ -105,9 +111,13 @@ Setelah aman, kita buat repository ini nyaman dan aman untuk di-refactor.
     3. Setelah dua langkah di atas selesai, migrasi ke `discord-hybrid-sharding` hanya menyentuh `shard.js` dan satu manager. Riset menunjukkan penghematan overhead proses idle 40 sampai 60 persen dibanding `ShardingManager`, dan ini penting karena RAM panel terbatas.
 - [ ] **Pertimbangkan Umzug untuk migrasi database** (temuan riset)
   - `dbMigrator.js` sekarang sudah punya ledger dan gagal dengan keras, jadi urgensinya turun. Umzug tetap menarik untuk rollback dan migrasi berbasis file, bukan array di dalam kode.
+- [ ] **Bersihkan cabang mati pada `syncFallbackToMySQL()`**
+  - Stub `sqlite3` di sana punya `all()` yang selalu melempar error, jadi jalur itu tidak pernah bisa memulihkan data. Karena Node sudah dipatok `>= 24`, `node:sqlite` selalu tersedia dan cabang itu bisa dihapus.
 - [ ] **Amankan dashboard** (issue #18, bagian dashboard): `helmet`, `express-rate-limit`, CORS allowlist, cookie `secure` dan `httpOnly`, `SESSION_SECRET` wajib, pengecekan izin `ManageGuild` per guild, dan upgrade ke Express 5.
 - [ ] **Pecah `src/dashboard/server.js` (64 KB)** (issue #14) menjadi `middleware/`, `routes/`, dan `sockets/`.
 - [ ] **Refactor `imageManager.js` (32 KB)** menjadi `src/utils/canvas/profileRenderer.js`, `levelCardRenderer.js`, dan seterusnya.
+- [ ] **Tinjau `voiceStateUpdate.js` (23 KB) dan `ready.js` (18,6 KB)**
+  - Dua berkas ini sekarang menjadi yang terbesar di `src/events/` setelah `interactionCreate.js` dipecah. Pola yang sama (registry plus handler kecil) layak diterapkan di sini.
 - [ ] **Bersihkan dependensi ganda dan usang**
   - `node-fetch` dan `isomorphic-unfetch`: hapus, Node 24 sudah punya `fetch` global.
   - `dotenv`: hapus, gunakan `process.loadEnvFile()` bawaan Node.
@@ -142,7 +152,7 @@ Setelah aman, kita buat repository ini nyaman dan aman untuk di-refactor.
   - Siapkan Deezer atau SoundCloud sebagai fallback sumber audio.
 - [ ] **Rancang `entitlementService` yang agnostik sumber** (temuan riset)
   - **Cara Implementasi:** Buat satu lapisan yang menjawab pertanyaan "apakah user atau guild ini premium", dengan adapter untuk Saweria dan Trakteer sekarang. Discord kini mendukung SKU dan Entitlements native (langganan per user atau per guild, tombol bergaya `premium` dengan `sku_id`, halaman store di App Directory), tetapi syarat developer berbasis US, EU, atau UK membuat Naura kemungkinan belum eligible dari Indonesia. Dengan lapisan ini, saat nanti eligible kita cukup menambah satu adapter tanpa menyentuh 20 command premium.
-- [ ] **Autocomplete di mana-mana:** item shop, nama command untuk `/help`, judul lagu, nama pet, dan 33 subcommand `/survival`. Ini upgrade UX termurah dengan dampak terluas.
+- [ ] **Autocomplete di mana-mana:** item shop, nama command untuk `/help`, judul lagu, nama pet, dan 33 subcommand `/survival`. Fondasinya sudah ada di `src/interactions/autocomplete.js`, jadi ini soal mengisi, bukan membangun.
 - [ ] **Onboarding wizard setelah bot join:** satu pesan Container V2 dengan tombol setup cepat yang mengaktifkan preset (Community, Gaming, Minimal), bukan menyuruh admin menjelajah `/setup`.
 - [ ] **Feature flags per guild** di atas `src/config/features.js`, dengan default **mati** untuk modul berat. Bot all-in-one yang bagus itu lengkap tapi tidak berisik.
 - [ ] **Audio filters dan DJ role:** subcommand `/music filter [tipe]` memakai `player.setFilters()` dari Poru, plus field `djRoleId` di `GuildSettings` yang mencegah interaksi tombol musik oleh non-DJ di `musicButtons.js`.
@@ -176,9 +186,12 @@ Setelah aman, kita buat repository ini nyaman dan aman untuk di-refactor.
 | Webhook premium tanpa `timingSafeEqual` dan idempotency | Premium gratis, kebocoran pendapatan | **Selesai** di `webhooks.js` (issue #18, bagian webhook) |
 | Cache setting basi hingga 5 menit dan lintas shard | Admin kehilangan kepercayaan pada panel setup | **Selesai** lewat hook model dan kanal `cache:invalidate` (issue #20) |
 | Total koneksi database melampaui `max_connections` | Error `Too many connections` yang tampak tidak berhubungan dengan sharding | **Selesai** lewat `DB_POOL_BUDGET` dibagi `TOTAL_SHARDS` |
+| Payload Container V2 melewati 40 komponen atau 4000 karakter | Seluruh balasan hilang dengan `Invalid Form Body` | **Selesai** lewat `componentBudget.js` di Sprint 1 |
+| Penambal prototype `ephemeralPatch.js` | Upgrade discord.js bisa mematahkannya secara senyap | Lint menahan pemakaian baru, log mencatat pemanggil lama, lalu penambal dihapus |
 | Lingkup all-in-one terus melebar | Beban maintenance menumpuk ke satu orang | Feature flag default mati, tolak fitur tanpa pemilik |
 | Sumber musik YouTube | Risiko ToS dan API yang berubah sepihak | Plugin resmi Lavalink, siapkan fallback |
-| Cakupan test masih sangat tipis | Setiap refactor masih taruhan | Sprint 1, lanjutkan dari test migrasi yang sudah ada |
+| Cakupan test masih sangat tipis | Setiap refactor masih taruhan | Dua berkas test sudah ada, lanjutkan ke logika ekonomi dan XP |
+| Roadmap tertinggal dari kode | Waktu terbuang merencanakan yang sudah jadi | Verifikasi ke kode sebelum menulis status, bukan ke issue tracker |
 
 ---
 
