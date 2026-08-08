@@ -10,6 +10,12 @@ const {
     enforceComponentBudget
 } = require('./componentBudget');
 
+// Catatan pemotongan sengaja memakai teks tetap, bukan kunci bahasa.
+// Pesan ini hanya muncul saat pemanggil salah ukuran, dan menambah kunci baru
+// berarti menambah kewajiban penerjemahan untuk kondisi yang seharusnya tidak
+// pernah dilihat pengguna.
+const TRUNCATION_NOTICE = '-# Sebagian isi dipotong karena melewati batas tampilan Discord.';
+
 function textDisplay(content) {
     return { type: 10, content };
 }
@@ -20,7 +26,7 @@ function separatorComp(divider = true, spacing = 1) {
 
 let loggerRef;
 function getLogger() {
-    if (!loggerRef) {
+    if (loggerRef === undefined) {
         try {
             loggerRef = require('../managers/logger').logger;
         } catch (error) {
@@ -201,16 +207,17 @@ function buildContainerV2({
     // errornya tidak menunjuk komponen mana yang bersalah.
     const budget = enforceComponentBudget(containerComponents, {
         droppableIndices,
-        notice: `-# ${t(undefined, 'common.container.truncated') || 'Sebagian isi dipotong karena melewati batas tampilan Discord.'}`
+        notice: TRUNCATION_NOTICE
     });
 
     const log = getLogger();
     if (log) {
+        const label = headerTitle || cleanAuthor || 'tanpa judul';
         if (budget.dropped > 0) {
-            log.warn(`[ContainerV2] ${budget.dropped} field dipotong pada container "${headerTitle || cleanAuthor || 'tanpa judul'}" agar tetap di dalam batas Discord.`);
+            log.warn(`[ContainerV2] ${budget.dropped} field dipotong pada container "${label}" agar tetap di dalam batas Discord.`);
         }
         if (!budget.withinBudget) {
-            log.error(`[ContainerV2] Container "${headerTitle || cleanAuthor || 'tanpa judul'}" masih melewati batas (${budget.componentCount} komponen, ${budget.textLength} karakter). Pemanggil ini perlu dipecah ke beberapa halaman.`);
+            log.error(`[ContainerV2] Container "${label}" masih melewati batas (${budget.componentCount} komponen, ${budget.textLength} karakter). Pemanggil ini perlu dipecah ke beberapa halaman.`);
         }
     }
 
