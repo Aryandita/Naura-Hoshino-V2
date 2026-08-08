@@ -8,9 +8,38 @@ const cleanEnv = (val) => {
     return val.replace(/^["']|["']$/g, '').trim();
 };
 
+// ShardingManager discord.js mengisi SHARDS pada setiap proses anak berisi array
+// id shard yang ditangani proses itu (contoh: "[0]"). Nilainya diterjemahkan ke
+// satu id supaya sisa kode cukup membaca env.SHARD_ID.
+//
+// Sebelum ini env.SHARD_ID tidak pernah didefinisikan, sehingga pemeriksaan
+// isPrimaryShard di index.js selalu bernilai true. Efeknya setiap shard mencoba
+// deploy slash command dan membuka port dashboard, dan shard kedua mati dengan
+// EADDRINUSE.
+const readShardId = () => {
+    const raw = process.env.SHARDS;
+    if (raw) {
+        try {
+            const list = JSON.parse(raw);
+            if (Array.isArray(list) && list.length > 0) return String(list[0]);
+        } catch (e) {
+            // Format tak terduga. Jatuh ke SHARD_ID manual di bawah.
+        }
+    }
+    const manual = cleanEnv(process.env.SHARD_ID);
+    return manual ? manual : undefined;
+};
+
 const env = {
     // RUNTIME
     NODE_ENV: cleanEnv(process.env.NODE_ENV) || 'development',
+
+    // SHARDING
+    // SHARD_ID sengaja dibiarkan undefined saat proses dijalankan mandiri
+    // (node index.js), karena pemanggil membedakan "mandiri" dan "anak shard"
+    // lewat typeof.
+    SHARD_ID: readShardId(),
+    TOTAL_SHARDS: parseInt(process.env.TOTAL_SHARDS) || 1,
 
     // DISCORD CORE
     TOKEN: cleanEnv(process.env.DISCORD_TOKEN),
@@ -20,8 +49,8 @@ const env = {
     OWNER_IDS: process.env.OWNER_IDS ? process.env.OWNER_IDS.split(',').map(id => cleanEnv(id)) : [],
 
     // VERSION & PARTNERSHIP CONFIG
-    BOT_VERSION: cleanEnv(process.env.BOT_VERSION) || '1.2.0',
-    ENGINE_VERSION: cleanEnv(process.env.ENGINE_VERSION) || '1.1.0',
+    BOT_VERSION: cleanEnv(process.env.BOT_VERSION) || '2.0.0',
+    ENGINE_VERSION: cleanEnv(process.env.ENGINE_VERSION) || '2.0.0',
     PARTNERSHIP: cleanEnv(process.env.PARTNERSHIP) || 'Belum ada kolaborasi',
 
     // MYSQL DATABASE
@@ -30,6 +59,13 @@ const env = {
     DB_USER: cleanEnv(process.env.MYSQL_USER),
     DB_PASS: cleanEnv(process.env.MYSQL_PASSWORD),
     DB_NAME: cleanEnv(process.env.MYSQL_DATABASE),
+
+    // POOL KONEKSI DATABASE
+    // Pool bersifat per proses. DB_POOL_BUDGET adalah anggaran TOTAL untuk seluruh
+    // shard, lalu dbManager membaginya dengan TOTAL_SHARDS. Isi DB_POOL_MAX hanya
+    // bila ingin memaksa angka per proses secara manual.
+    DB_POOL_BUDGET: parseInt(process.env.DB_POOL_BUDGET) || 80,
+    DB_POOL_MAX: parseInt(process.env.DB_POOL_MAX) || 0,
 
     // MODMAIL
     STAFF_GUILD: cleanEnv(process.env.STAFF_GUILD_ID),
