@@ -27,7 +27,7 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 <br />
 
 > [!NOTE]
-> Proyek ini masih dalam pengembangan aktif. Beberapa modul sedang dirapikan, lihat [`TODO.md`](TODO.md) dan tab **Issues** untuk daftar pekerjaan yang sedang berjalan. Prioritas saat ini adalah **Sprint 0 Hardening**, dan fitur baru ditahan sampai sprint itu tuntas.
+> Proyek ini masih dalam pengembangan aktif. Beberapa modul sedang dirapikan, lihat [`TODO.md`](TODO.md) dan tab **Issues** untuk daftar pekerjaan yang sedang berjalan. **Sprint 0 Hardening sudah selesai.** Prioritas saat ini adalah **Sprint 1 Fondasi Developer Experience**, dan fitur baru ditahan sampai sprint itu tuntas.
 
 ### 📌 Versi & Sumber Kebenaran
 
@@ -156,9 +156,18 @@ npm install
 cp .env.example .env
 
 # 6. Buka file .env dan isi variabel yang dibutuhkan (lihat panduan di bawah)
-# 7. Jalankan bot!
+
+# 7. Jalankan migrasi skema database lebih dulu
+npm run db:migrate
+
+# 8. Baru nyalakan bot
 npm start
 ```
+
+> [!IMPORTANT]
+> **Urutan deploy produksi: migrate dulu, baru start.** `npm run db:migrate` berjalan sebagai proses terpisah dan keluar dengan kode 1 bila gagal, sehingga deploy berhenti sebelum bot menyala dengan skema separuh jalan. Bot di produksi **tidak** lagi menjalankan migrasi sendiri, ia hanya memperingatkan bila ada migrasi yang belum dijalankan.
+>
+> Di development, migrasi tetap berjalan otomatis saat boot (hanya pada proses utama) supaya alur harian tidak bertambah panjang.
 
 ---
 
@@ -169,6 +178,7 @@ Untuk mempermudah manajemen, kami telah menyediakan beberapa perintah praktis. J
 | Perintah | Deskripsi Fungsi |
 |---|---|
 | 🚀 `npm start` | Menjalankan bot via `shard.js` (ShardingManager). **Gunakan perintah ini untuk Produksi.** |
+| 🗃️ `npm run db:migrate` | Menjalankan migrasi skema database lewat `scripts/migrate.js`. **Wajib dijalankan sebelum `npm start` di produksi.** Keluar dengan kode 1 bila gagal, dan migrasi yang sudah pernah jalan dicatat di tabel `schema_migrations`. |
 | 🔄 `npm run dev` | Menjalankan bot dengan auto-restart via `--watch`. Sangat pas untuk *development*. |
 | 📤 `npm run deploy` | Memaksa bot untuk melakukan registrasi ulang seluruh *Slash Command*. |
 | 📦 `npm run install-start`| Kombinasi instan: Pasang dependensi dan langsung nyalakan bot. |
@@ -181,7 +191,7 @@ Untuk mempermudah manajemen, kami telah menyediakan beberapa perintah praktis. J
 | 🌐 `npm run locales:check` | Audit sinkronisasi / paritas kunci bahasa ID vs EN. |
 | 🚨 `npm run locales:check:strict` | Sama seperti audit locales biasa, namun proses digagalkan jika ada kunci yang hilang. |
 
-*(Catatan: Slash command akan ter-deploy otomatis saat bot pertama hidup. Hanya shard utama yang melakukan ini. Gunakan `--no-deploy` untuk skip.)*
+*(Catatan: Slash command akan ter-deploy otomatis saat bot pertama hidup. Hanya shard utama yang melakukan ini, dan deploy dilewati bila tanda tangan command tidak berubah. Gunakan `--no-deploy` untuk skip, atau `npm run deploy` untuk memaksa.)*
 
 ### Pemeriksaan Otomatis di CI
 
@@ -243,9 +253,14 @@ Semua kredensial dan pengaturan penting disimpan di `.env` (berdasarkan [`src/co
 | `MYSQL_PORT` | `3306` | Port tujuan Database |
 | `MYSQL_PASSWORD` | - | Password untuk user MySQL kamu |
 | `REDIS_URL` | - | *Opsional*. URL koneksi Redis. Biarkan kosong untuk mematikan Cache/PubSub eksternal. |
+| `DB_POOL_BUDGET` | `80` | Total koneksi database untuk **seluruh** shard, lalu dibagi jumlah shard. Angkanya harus di bawah `max_connections` MySQL. |
+| `DB_POOL_MAX` | - | Penimpa manual `pool.max` per proses. Isi hanya bila kamu tahu pasti kapasitas database. |
 
 > [!NOTE]
 > Bila `MYSQL_DATABASE`, `MYSQL_USER`, atau `MYSQL_HOST` kosong, bot otomatis beralih ke penyimpanan darurat SQLite. Di dalam kode nilai-nilai ini dibaca sebagai `env.DB_NAME`, `env.DB_USER`, `env.DB_HOST`, `env.DB_PORT`, dan `env.DB_PASS`.
+
+> [!WARNING]
+> `pool.max` bersifat **per proses**, bukan per bot. Dua shard dengan `pool.max: 100` akan meminta 200 koneksi, sementara `max_connections` MySQL bawaan biasanya hanya 151. Karena itu Naura memakai anggaran total (`DB_POOL_BUDGET`) yang dibagi jumlah shard.
 </details>
 
 <details>
@@ -325,6 +340,7 @@ Naura-Hoshino-V2/
 ├─ 🧩 plugin/                # Semua fungsi command, rapi terbagi dalam sub-kategori
 │  └─ <kategori>/locales/    # Terjemahan khusus untuk setiap sub-plugin
 ├─ 🔧 scripts/               # Alat-alat kecil utilitas pemeliharaan sistem
+│  └─ migrate.js             # Runner migrasi database (npm run db:migrate)
 └─ 📂 src/
    ├─ ⚙️ config/             # Pengaturan statis, konstanta UI & validasi ENV
    ├─ 🌐 dashboard/          # Markas Express + Socket.io Web Dashboard
@@ -333,7 +349,7 @@ Naura-Hoshino-V2/
    │  ├─ sockets/            # Kendali real-time & sinkronisasi data live
    │  └─ utils/              # Pengelola batas akses (rate limiter) & pemformatan
    ├─ 📡 events/             # Pendengar event (Listener) inti dari Discord
-   ├─ 🎛️ interactions/      # Penanganan Button, Select Menu, hingga Modal UI
+   ├─ 🎛️ interactions/      # Registry Button, Select Menu, Modal, & Autocomplete
    ├─ 🧠 managers/           # Otak pusat (Database, Cache, Cronjob, Logger, dsb)
    ├─ 🗃️ models/             # Kerangka Tabel Sequelize
    └─ 🛠️ utils/              # Builder Component V2 canggih dan asisten bantuan lainnya
@@ -383,6 +399,9 @@ await interaction.reply({ embeds: [embed], files });
 
 > Cek referensi lengkap seluruh ekspresi emosi di berkas [`src/utils/nauraExpression.js`](src/utils/nauraExpression.js)
 
+> [!NOTE]
+> **Batas Components V2 dijaga otomatis.** `buildContainerV2()` melewati `src/utils/componentBudget.js` sebelum payload dikirim, jadi respons yang kelewat panjang dipangkas beserta catatan, bukan ditolak Discord dengan `Invalid Form Body`. Tombol dan footer tidak pernah dikorbankan.
+
 ---
 
 ## 🤝 Kontribusi
@@ -395,6 +414,8 @@ Sebelum menulis kode, **baca [`AGENTS.md`](AGENTS.md) lebih dulu.** File itu mem
 - **Gaya kode**: CommonJS, indentasi 4 spasi, semicolon wajib, komentar Bahasa Indonesia, tanpa em dash.
 - **UI**: semua respons memakai Components V2 lewat `buildContainerV2()` dengan struktur 5 lapisan dan footer wajib.
 - **Nilai ekonomi wajib atomik.** Jangan pernah membaca saldo lalu menuliskannya kembali.
+- **Migrasi database**: jalankan `npm run db:migrate` sebelum `npm start` di produksi, dan tambahkan migrasi baru hanya di `src/managers/dbMigrator.js`.
+- **`ephemeral: true` sudah dilarang.** Pakai `flags: MessageFlags.Ephemeral`, lint akan memperingatkan pemakaian baru.
 - **CI harus hijau** (lint, em dash, paritas bahasa, test) sebelum merge.
 
 ---
