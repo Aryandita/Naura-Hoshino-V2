@@ -28,12 +28,12 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 Empat pekerjaan ini menutup lubang yang bisa merusak data pengguna, ekonomi, atau pendapatan. Tidak ada fitur baru sampai sprint ini tuntas.
 
-- [ ] **Hentikan `sequelize.sync({ alter: true })` di produksi** (temuan baru, belum ada issue)
+- [ ] **Pisahkan migrasi database dari boot sequence**
+  - **Catatan verifikasi:** `dbManager.js` sudah aman di produksi. `NODE_ENV === 'production'` memakai `sync({ alter: false })` dan development memakai `sync({ alter: { drop: false } })`, jadi kekhawatiran awal soal `alter: true` di produksi **tidak terbukti**. Yang tersisa adalah tiga masalah struktural di bawah.
   - **Cara Implementasi:**
-    1. Di `src/managers/dbManager.js`, batasi `sync({ alter: true })` hanya untuk `NODE_ENV !== 'production'`.
-    2. Di produksi, jalankan `sync()` tanpa opsi (aman, hanya membuat tabel yang belum ada), lalu serahkan seluruh perubahan kolom ke `dbMigrator.js`.
-    3. Pisahkan migrasi dari boot sequence: buat script `npm run db:migrate` yang dijalankan sebelum bot menyala, bukan di dalam `connectToDatabase()`.
-    4. Alasan: `alter: true` pada MySQL bisa menghapus atau mengubah kolom secara tak terduga. Ini satu-satunya jalur di proyek ini yang bisa menghilangkan data pengguna secara permanen, dan aturan 1.7 `AGENTS.md` sudah melarangnya.
+    1. Keluarkan `runMigrations()` dan `syncFallbackToMySQL()` dari `connectToDatabase()`. Buat script `npm run db:migrate` yang dijalankan sebagai langkah terpisah sebelum bot menyala, supaya migrasi gagal tidak berarti bot menyala dengan skema separuh jalan.
+    2. Pastikan hanya satu shard yang menjalankan migrasi, sama seperti pola deploy slash command yang sudah dipakai. Empat shard yang bermigrasi bersamaan adalah resep deadlock.
+    3. Di development, pertimbangkan mengganti `alter: { drop: false }` dengan migrasi yang sama seperti produksi, agar skema dev dan produksi tidak pernah menyimpang tanpa terdeteksi.
 - [ ] **Invalidasi cache `GuildSettings` di semua jalur tulis** (issue #20)
   - **Cara Implementasi:**
     1. Arahkan 13 handler setup berbasis tombol dan select menu ke `guildSettingsService.updateGuildSetting()`, jangan tulis model langsung.
@@ -61,18 +61,18 @@ Setelah aman, kita buat repository ini nyaman dan aman untuk di-refactor.
 
 - [ ] **Selaraskan seluruh dokumen dengan keputusan arsitektur di atas**
   - **Cara Implementasi:**
-    1. Setel `engines.node` ke `>=24.0.0`, README, `AGENTS.md`, dan `node-version` di CI ke `24`.
+    1. Setel `engines.node` ke `>=24.0.0`, README, `AGENTS.md`, dan `node-version` di CI ke `24`. (`package.json` dan CI sudah selesai.)
     2. Samakan versi bot di `AGENTS.md` dengan `package.json` (`2.0.0`).
     3. Tulis eksplisit di `AGENTS.md` bahwa bahasa disimpan per user, dan `GuildSettings.language` hanya default guild.
     4. Hapus tabel daftar dependensi dan tabel versi dari `AGENTS.md` agar tidak pernah basi lagi. Arahkan pembaca ke `package.json`.
     5. Tulis eksplisit bahwa `await import()` diizinkan untuk lazy-load meski proyek memakai CommonJS.
-- [ ] **Lengkapi CI** (issue #15, bagian CI)
-  - **Cara Implementasi:**
-    1. Tambahkan step `node scripts/check-em-dash.js`.
-    2. Ubah `locales:check` menjadi `locales:check:strict` agar pipeline gagal saat ada kunci bahasa tertinggal.
-    3. Tambahkan `npm test` dan `npm audit --audit-level=high`.
-    4. Hapus `continue-on-error` pada `format:check` setelah satu kali `npm run format` menyeluruh.
-    5. Aktifkan Dependabot dan secret scanning.
+- [ ] **Lengkapi CI** (issue #15, bagian CI) - **sebagian selesai**
+  - [x] Step `node scripts/check-em-dash.js`.
+  - [x] `locales:check` diubah menjadi `locales:check:strict`.
+  - [x] `npm test` dan job `npm audit --audit-level=high`.
+  - [ ] Hapus `continue-on-error` pada `format:check` setelah satu kali `npm run format` menyeluruh.
+  - [ ] Hapus `continue-on-error` pada `npm audit` setelah kerentanan yang ada dibersihkan.
+  - [ ] Aktifkan Dependabot dan secret scanning.
 - [ ] **Tambahkan test otomatis pertama** (issue #15)
   - **Cara Implementasi:** Pakai `node:test` bawaan. Mulai dari logika murni yang paling mahal bila salah: rumus XP dan level, kalkulasi ekonomi, `RateLimiter`, dan parser durasi.
 - [ ] **Pecah `interactionCreate.js` (43 KB)** (issue #19)
@@ -102,13 +102,14 @@ Setelah aman, kita buat repository ini nyaman dan aman untuk di-refactor.
 - [ ] **Optimasi Canvas** (issue #16): cache hasil `loadImage`, cache font, dan batasi konkurensi render ke 2 sampai 3.
 - [ ] **Caching hasil render Canvas via Redis:** key `canvas:profile:{userId}`, simpan buffer sebagai base64, TTL 300 detik.
 - [ ] **Tambahkan indeks database** pada kolom yang sering difilter (`guildId`, `userId`, kolom tanggal cooldown).
+- [ ] **Optimasi connection pool:** `pool.max: 100` di `dbManager.js` dikalikan jumlah shard bisa melampaui `max_connections` MySQL. Turunkan ke kisaran 10 sampai 20 per shard.
 - [ ] **Siapkan jalur migrasi ke clustering** (keputusan: siapkan sekarang, migrasi nanti)
   - **Cara Implementasi:**
     1. Bungkus semua pemanggilan `broadcastEval` dan statistik lintas shard ke dalam satu modul, misalnya `src/managers/clusterManager.js`. Jangan ada `client.shard.*` yang berserakan di plugin.
     2. Agregasi statistik dashboard lewat Redis Pub/Sub, bukan lewat API shard langsung.
     3. Setelah dua langkah di atas selesai, migrasi ke `discord-hybrid-sharding` hanya menyentuh `shard.js` dan satu manager. Riset menunjukkan penghematan overhead proses idle 40 sampai 60 persen dibanding `ShardingManager`, dan ini penting karena RAM panel terbatas.
 - [ ] **Adopsi Umzug untuk migrasi database** (temuan riset)
-  - **Cara Implementasi:** Gantikan `dbMigrator.js` custom dengan Umzug: migrasi bernomor, tercatat di tabel meta, bisa rollback, dan berjalan sebagai langkah terpisah sebelum bot menyala. Ini memenuhi aturan 1.7 `AGENTS.md` secara struktural, bukan hanya secara konvensi.
+  - **Cara Implementasi:** Gantikan `dbMigrator.js` custom dengan Umzug: migrasi bernomor, tercatat di tabel meta, bisa rollback, dan berjalan sebagai langkah terpisah sebelum bot menyala.
 - [ ] **Amankan dashboard** (issue #18, bagian dashboard): `helmet`, `express-rate-limit`, CORS allowlist, cookie `secure` dan `httpOnly`, `SESSION_SECRET` wajib, pengecekan izin `ManageGuild` per guild, dan upgrade ke Express 5.
 - [ ] **Pecah `src/dashboard/server.js` (64 KB)** (issue #14) menjadi `middleware/`, `routes/`, dan `sockets/`.
 - [ ] **Refactor `imageManager.js` (32 KB)** menjadi `src/utils/canvas/profileRenderer.js`, `levelCardRenderer.js`, dan seterusnya.
@@ -125,7 +126,7 @@ Setelah aman, kita buat repository ini nyaman dan aman untuk di-refactor.
 ## 🟡 Sprint 3: Observability dan Operasional
 
 - [ ] **Endpoint `GET /api/health`**
-  - **Cara Implementasi:** Buat `src/dashboard/routes/api.js`, panggil `featureRegistry.getHealthStats()`, kembalikan `200 OK` dengan payload JSON, lalu daftarkan route di `server.js`. Sertakan status MySQL, Redis, dan Lavalink.
+  - **Cara Implementasi:** Buat `src/dashboard/routes/api.js`, panggil `featureRegistry.getHealthStats()`, kembalikan `200 OK` dengan payload JSON, lalu daftarkan route di `server.js`. Sertakan status MySQL (`getDbStatus()` sudah tersedia), Redis, dan Lavalink.
 - [ ] **Docker multi-stage dan compose** (issue #15): satu stack berisi bot, Lavalink, Redis, dan MySQL.
 - [ ] **Metrik per command** dan agregasi statistik lintas shard lewat Redis Pub/Sub.
 - [ ] **Integrasi Sentry** untuk pelacakan error produksi.
@@ -157,6 +158,7 @@ Setelah aman, kita buat repository ini nyaman dan aman untuk di-refactor.
 
 ## 🟢 Sprint 5: Ekspansi Fitur
 
+- [ ] **Bahasa per user secara menyeluruh:** pastikan `/language` menulis ke profil user, `getUserLanguage` membaca cache user lebih dulu, dan `GuildSettings.language` hanya dipakai sebagai default saat user belum memilih.
 - [ ] **AI conversation memory per user:** cek `ai_memory:{userId}` di Redis sebelum memanggil LLM, gabungkan ke context, simpan kembali dengan TTL 3600.
 - [ ] **AI function calling:** daftarkan tool seperti `check_balance`, `get_user_info`, dan `play_music` ke SDK `@google/genai`. Wajib disertai kuota token per user, guard prompt injection dari konten server, dan pemfilteran output.
 - [ ] **Moderasi: tempban dan strike escalation.** Model `UserStrike`, logika eskalasi di `plugin/admin/warn.js`, dan penjadwalan unban lewat `cronManager.js`.
@@ -174,9 +176,10 @@ Setelah aman, kita buat repository ini nyaman dan aman untuk di-refactor.
 
 | Risiko | Dampak | Mitigasi |
 | --- | --- | --- |
-| `sync({ alter: true })` di produksi | Kehilangan data permanen | Sprint 0 |
+| Migrasi berjalan di dalam boot sequence dan di semua shard | Skema separuh jalan atau deadlock saat startup | Sprint 0 |
 | Ekonomi tanpa penulisan atomik | Inflasi tak terkendali, ekonomi harus direset | Sprint 0, issue #17 |
 | Webhook premium tanpa `timingSafeEqual` dan idempotency | Premium gratis, kebocoran pendapatan | Sprint 0, issue #18 |
+| Cache setting basi hingga 5 menit dan lintas shard | Admin kehilangan kepercayaan pada panel setup | Sprint 0, issue #20 |
 | Lingkup all-in-one terus melebar | Beban maintenance menumpuk ke satu orang | Feature flag default mati, tolak fitur tanpa pemilik |
 | Sumber musik YouTube | Risiko ToS dan API yang berubah sepihak | Plugin resmi Lavalink, siapkan fallback |
 | Nol test otomatis pada basis kode sebesar ini | Setiap refactor adalah taruhan | Sprint 1, mulai dari logika murni |
