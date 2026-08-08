@@ -3,6 +3,12 @@ const ui = require('../config/ui');
 const nauraExpression = require('./nauraExpression');
 const nauraText = require('./nauraText');
 const languageManager = require('../managers/languageManager');
+const {
+    MAX_DESCRIPTION_LENGTH,
+    MAX_FIELD_LENGTH,
+    truncateText,
+    enforceComponentBudget
+} = require('./componentBudget');
 
 function textDisplay(content) {
     return { type: 10, content };
@@ -13,13 +19,21 @@ function separatorComp(divider = true, spacing = 1) {
 }
 
 let loggerRef;
-function warnMissingTitle(author) {
-    try {
-        if (!loggerRef) loggerRef = require('../managers/logger').logger;
-        loggerRef.warn(`[ContainerV2] Judul kosong pada container "${author}". Header sudah dirapikan otomatis, tapi pemanggil ini sebaiknya diberi title.`);
-    } catch (error) {
-        // Logger tidak wajib ada. Perakitan payload tidak boleh gagal karenanya.
+function getLogger() {
+    if (!loggerRef) {
+        try {
+            loggerRef = require('../managers/logger').logger;
+        } catch (error) {
+            loggerRef = null;
+        }
     }
+    return loggerRef;
+}
+
+function warnMissingTitle(author) {
+    const log = getLogger();
+    if (!log) return;
+    log.warn(`[ContainerV2] Judul kosong pada container "${author}". Header sudah dirapikan otomatis, tapi pemanggil ini sebaiknya diberi title.`);
 }
 
 function t(lang, key, placeholders) {
@@ -60,6 +74,10 @@ function buildContainerV2({
     const accentColor = parseInt((accentColorHex || defaultColor).replace('#', ''), 16);
     const containerComponents = [];
 
+    // Indeks komponen yang boleh dikorbankan bila payload melewati batas Discord.
+    // Header, gambar, tombol, dan footer tidak pernah masuk daftar ini.
+    const droppableIndices = [];
+
     const cleanAuthor = authorName ? ui.stripCustomEmojis(authorName) : '';
     const cleanFooter = footerText ? ui.stripCustomEmojis(footerText) : ui.getFooter('core');
 
@@ -67,6 +85,10 @@ function buildContainerV2({
     let headerIconURL = iconURL;
     let expressionGalleryRef = null;
     let headerTitle = (typeof title === 'string' && title.trim().length > 0) ? title : null;
+
+    // Deskripsi dipangkas lebih dulu. Teks sepanjang ini sudah tidak nyaman dibaca,
+    // dan menyisakan ruang untuk header, field, serta footer.
+    const bodyDescription = truncateText(description, MAX_DESCRIPTION_LENGTH);
 
     if (expression && expressionAs !== 'none') {
         const useImage = expressionImage === 'auto'
@@ -109,23 +131,25 @@ function buildContainerV2({
         }
 
         containerComponents.push(separatorComp(true, 1));
-    } else if (headerIconURL && description) {
+    } else if (headerIconURL && bodyDescription) {
         containerComponents.push({
             type: 9,
-            components: [textDisplay(description)],
+            components: [textDisplay(bodyDescription)],
             accessory: { type: 11, media: { url: headerIconURL } },
         });
         containerComponents.push(separatorComp(true, 1));
     }
 
-    const descriptionAlreadyShown = !headerText && Boolean(headerIconURL) && Boolean(description);
-    if (description && !descriptionAlreadyShown) {
-        containerComponents.push(textDisplay(description));
+    const descriptionAlreadyShown = !headerText && Boolean(headerIconURL) && Boolean(bodyDescription);
+    if (bodyDescription && !descriptionAlreadyShown) {
+        containerComponents.push(textDisplay(bodyDescription));
     }
 
     if (Array.isArray(fields) && fields.length > 0) {
         fields.forEach(field => {
-            containerComponents.push(textDisplay(`**${field.name}**\n${field.value}`));
+            const value = truncateText(field.value, MAX_FIELD_LENGTH);
+            droppableIndices.push(containerComponents.length);
+            containerComponents.push(textDisplay(`**${field.name}**\n${value}`));
         });
     }
 
@@ -172,6 +196,24 @@ function buildContainerV2({
     containerComponents.push(separatorComp(true, 1));
     containerComponents.push(textDisplay(`-# ${cleanFooter}`));
 
+    // Penjagaan terakhir sebelum payload berangkat. Discord menolak seluruh pesan
+    // bila komponen melebihi 40 atau teks melebihi 4000 karakter, dan pesan
+    // errornya tidak menunjuk komponen mana yang bersalah.
+    const budget = enforceComponentBudget(containerComponents, {
+        droppableIndices,
+        notice: `-# ${t(undefined, 'common.container.truncated') || 'Sebagian isi dipotong karena melewati batas tampilan Discord.'}`
+    });
+
+    const log = getLogger();
+    if (log) {
+        if (budget.dropped > 0) {
+            log.warn(`[ContainerV2] ${budget.dropped} field dipotong pada container "${headerTitle || cleanAuthor || 'tanpa judul'}" agar tetap di dalam batas Discord.`);
+        }
+        if (!budget.withinBudget) {
+            log.error(`[ContainerV2] Container "${headerTitle || cleanAuthor || 'tanpa judul'}" masih melewati batas (${budget.componentCount} komponen, ${budget.textLength} karakter). Pemanggil ini perlu dipecah ke beberapa halaman.`);
+        }
+    }
+
     return {
         content: null,
         embeds: [],
@@ -181,7 +223,7 @@ function buildContainerV2({
             {
                 type: 17,
                 accent_color: accentColor,
-                components: containerComponents,
+                components: budget.components,
             },
         ],
     };
