@@ -8,10 +8,12 @@
 //   sehingga eksplorasi yang berhasil selalu berakhir dengan error,
 // - `client` dipakai tanpa pernah didefinisikan saat memanggil NPC,
 // - pakai editReply karena survival.js sudah menunda balasan,
-// - pemain diantar pulang ke 'desa', bukan 'village' yang tidak dikenal NPC.
+// - pemain diantar pulang ke 'desa', bukan 'village' yang tidak dikenal NPC,
+// - perpindahan lokasi ditulis lewat cacheManager, bukan `survival.save()`,
+//   supaya cache `user:survival` tidak menyimpan lokasi lama sampai TTL habis.
 
 const fs = require('fs');
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder, MessageFlags } = require('discord.js');
 const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
 const UserSurvival = require('../../../src/models/UserSurvival');
 const UserPet = require('../../../src/models/UserPet');
@@ -64,8 +66,10 @@ module.exports = {
 
         const bareHands = Boolean(gear.bareHands);
 
+        // Lewat cacheManager supaya cache dan database sepakat. `survival.save()`
+        // menulis langsung ke MySQL dan meninggalkan cache berisi lokasi lama.
         survival.currentLocation = lokasi;
-        await survival.save();
+        await cacheManager.updateUserSurvival(user.id, { currentLocation: lokasi });
 
         const timeState = getTimeState(survival.inGameHour || 6);
         const activePets = await UserPet.findAll({ where: { userId: user.id, isActive: true } });
@@ -204,7 +208,7 @@ module.exports = {
                             expression: 'Akward',
                             colorKey: 'warning'
                         }),
-                        ephemeral: true
+                        flags: MessageFlags.Ephemeral
                     }).catch(() => {});
                 }
             });

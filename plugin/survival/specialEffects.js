@@ -31,12 +31,18 @@ function hasPerk(survival, key) {
     return Boolean(perksOf(survival)[key]);
 }
 
+// Penyimpanan selalu dibatasi ke kolom yang memang diubah.
+//
+// Objek survival yang sama biasanya baru saja dipakai untuk membayar barang, jadi
+// kolom saldonya (starFragments, coupons) sudah dimajukan di memori oleh
+// currency.charge(). Menyimpan seluruh objek akan menulis ulang angka itu sebagai
+// nilai absolut dan membatalkan keuntungan pemotongan atomik.
 async function writeState(survival, patch, perkPatch) {
     const state = { ...stateOf(survival), ...patch };
     if (perkPatch) state.perks = { ...perksOf(survival), ...perkPatch };
     survival.rpg_state = state;
     if (typeof survival.changed === 'function') survival.changed('rpg_state', true);
-    if (typeof survival.save === 'function') await survival.save();
+    if (typeof survival.save === 'function') await survival.save({ fields: ['rpg_state'] });
     return state;
 }
 
@@ -85,7 +91,7 @@ async function applyLuckCrown(survival) {
     // Minimal naik 1 supaya pemain berstat rendah tetap merasakan efeknya.
     const gained = Math.max(1, Math.floor(before * LUCK_CROWN_BONUS));
     survival.luck = before + gained;
-    if (typeof survival.save === 'function') await survival.save();
+    if (typeof survival.save === 'function') await survival.save({ fields: ['luck'] });
 
     await writeState(survival, {}, { luck_crown: { gained, at: new Date().toISOString() } });
     return { ok: true, before, after: survival.luck, gained };

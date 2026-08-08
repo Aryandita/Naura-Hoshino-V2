@@ -15,7 +15,9 @@
 | Strategi sharding | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering. Lihat aturan 1.11. |
 | Fallback SQLite | **Dipertahankan** sebagai penyimpanan darurat saat MySQL dan Redis mati bersamaan. |
 | Alur PR | **Satu PR per sprint.** Seluruh pekerjaan satu sprint menumpuk di satu branch, direview dan di-merge sekali saat sprint tuntas. |
-| Prioritas kerja | Sprint 0 Hardening di `TODO.md` harus tuntas sebelum fitur baru mana pun. |
+| Deploy di panel | **Pterodactyl.** Perintah luar terkunci, jadi `CMD_RUN` tetap `npm start` dan urutan migrasi dijamin dari dalam `package.json` lewat `prestart`. Lihat 3.8. |
+| Mata uang kupon | **Naura Coupon adalah mata uang paling langka.** Disimpan di kolom `UserSurvival.coupons`, bukan di dalam JSON `rpg_state`, agar bisa dipotong secara atomik. |
+| Prioritas kerja | Sprint 0 Hardening dan Sprint 1 Fondasi DX sudah tuntas. Sprint aktif saat ini adalah Sprint 2 Konsistensi Data & Performa di `TODO.md`, dan fitur baru ditahan sampai selesai. |
 
 ---
 
@@ -55,7 +57,7 @@
 | Kelas & model | `PascalCase` | `CommandHandler`, `MusicManager` |
 | Konstanta global | `UPPER_SNAKE_CASE` | `OWNER_IDS`, `LAVA_HOST` |
 | Event handler files | `camelCase.js` (nama event Discord) | `messageCreate.js`, `voiceStateUpdate.js` |
-| File test | `<nama>.test.js`, bersebelahan dengan file yang diuji | `rateLimiter.test.js` |
+| File test | `<nama>.test.js`, bersebelahan dengan file yang diuji | `rateLimiter.test.js`, `inventoryHelper.test.js` |
 
 ## 1.3 Aturan Arsitektur
 
@@ -178,7 +180,7 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 - **Wajib sertakan `flags: MessageFlags.IsComponentsV2`** (nilai `32768`) di setiap payload Container V2.
 - **Jangan pernah mengisi `content`, `embeds`, `stickers`, atau `poll`** pada payload Components V2. Discord menolak kombinasi tersebut.
 - **Wajib sertakan `embeds: []`** saat meng-edit pesan lama (embed) ke Container V2, agar sisa embed lama dibersihkan oleh Discord PATCH API.
-- **Pesan ephemeral wajib memakai `MessageFlags.Ephemeral`**, bukan `ephemeral: true` yang sudah deprecated. Monkey-patch tidak boleh dipakai sebagai solusi jangka panjang.
+- **Pesan ephemeral wajib memakai `MessageFlags.Ephemeral`**, bukan `ephemeral: true` yang sudah deprecated. ESLint menolak pemakaian baru, dan monkey-patch tidak boleh dipakai sebagai solusi jangka panjang.
 - **Custom emoji di `authorName` dan `footerText`** TIDAK didukung oleh Discord di bagian tersebut. Gunakan `ui.stripCustomEmojis()` sebelum mengisinya. Judul, deskripsi, dan field boleh menggunakan emoji kustom.
 - **Footer Terpusat**, Gunakan `ui.getFooter('core' | 'utility' | 'survival' | 'music')` untuk footer semua embed/container. Jangan tulis teks footer secara manual.
 - **Tombol dengan custom emoji**, Gunakan `ui.parseEmoji(ui.getEmoji('namaEmoji'))` yang mengembalikan `{ id, name, animated }` sebelum diberikan ke `ButtonBuilder.setEmoji()` agar tidak terjadi `RESTJSONError: Invalid Form Body`.
@@ -200,11 +202,14 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 
 - **ALTER TABLE DILARANG di `dbManager.js`**, Semua migration kolom (`ADD COLUMN`, `MODIFY COLUMN`, `DROP COLUMN`, dll.) harus berada **eksklusif** di `dbMigrator.js` dengan sistem versi bernomor. Tidak boleh ada raw `sequelize.query('ALTER TABLE ...')` di dalam `connectToDatabase()`.
 - **`sync({ alter: true })` DILARANG di production.** Produksi memakai `sync({ alter: false })`, development memakai `sync({ alter: { drop: false } })`. Perubahan kolom selalu lewat migrator.
-- **Migrasi harus menjadi langkah terpisah, bukan bagian dari boot.** `runMigrations()` dijalankan sebelum bot menyala, agar migrasi yang gagal tidak menghasilkan bot yang berjalan di atas skema separuh jalan.
-- **Hanya satu shard yang boleh menjalankan migrasi.** Gunakan pola yang sama seperti deploy slash command (`shardId === 0` atau flag eksplisit). Beberapa shard yang ber-ALTER bersamaan berisiko deadlock.
+- **Migrasi adalah langkah terpisah yang dijamin npm, bukan bagian dari boot.** Script `prestart` di `package.json` menjalankan `node scripts/migrate.js` sebelum `start`. Bila migrasi gagal, prosesnya keluar dengan kode 1 dan bot tidak pernah menyala, sehingga tidak mungkin berjalan di atas skema separuh jalan.
+  - Jangan memindahkan `runMigrations()` kembali ke dalam `index.js`. Panel hosting hanya memberi satu perintah start, jadi `prestart` adalah satu-satunya tempat yang menjamin urutannya.
+  - `SKIP_DB_MIGRATE` (`1`, `true`, atau `yes`) dan `npm run start:no-migrate` adalah pintu darurat. Keduanya tidak boleh menjadi konfigurasi permanen, karena migrasi baru akan terus dilewati secara diam-diam.
+- **Hanya satu shard yang boleh menjalankan migrasi.** Karena migrasi kini berjalan sebagai proses terpisah sebelum `shard.js`, syarat ini terpenuhi otomatis. Jangan menambahkan jalur migrasi lain di dalam kode per shard.
+- **Migrasi data yang menambah nilai wajib dijaga ledger.** `schema_migrations` adalah satu-satunya pengaman agar migrasi seperti `v6_move_coupons_to_column` tidak berjalan dua kali dan menggandakan saldo. Setiap migrasi data yang bersifat menambah wajib punya test yang membuktikan ia hanya berjalan sekali.
 - **Seeding data awal** (CanvasAsset, GameItem, dll.) boleh tetap di `connectToDatabase()`, namun HARUS dipisah ke fungsi `seedInitialData()` yang dipanggil terpisah agar mudah di-test dan tidak bercampur dengan logic koneksi.
 - **Gunakan `try/catch` per-migration** di `dbMigrator.js` dengan log yang jelas, bukan silent catch kosong (`catch (e) {}`).
-- **Fallback SQLite wajib dipertahankan** sebagai penyimpanan darurat saat MySQL dan Redis mati bersamaan. Jangan menghapus jalur ini demi kerapian.
+- **Fallback SQLite wajib dipertahankan** sebagai penyimpanan darurat saat MySQL dan Redis mati bersamaan. Jangan menghapus jalur ini demi kerapian. Karena Node dipatok `>= 24`, jalur ini memakai `node:sqlite` bawaan.
 - **Ukuran connection pool harus sadar shard.** Nilai `pool.max` berlaku per proses, jadi dikalikan jumlah shard. Jaga totalnya tetap di bawah `max_connections` MySQL.
 
 ## 1.8 Aturan Konsistensi Data (Ekonomi & Counter)
@@ -212,10 +217,25 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 > [!CAUTION]
 > Bug konsistensi data pada ekonomi tidak bisa dipulihkan tanpa reset. Ini kelas bug paling mahal di bot ini.
 
-- **DILARANG melakukan pola read-modify-write** untuk nilai numerik seperti `wallet`, `bank`, `xp`, atau jumlah item. Dua interaksi yang datang hampir bersamaan (double-click tombol) akan saling menimpa dan menduplikasi nilai.
-- **Gunakan operasi atomik**: `incrementUserProfile()` / `incrementUserSurvival()`, atau `Model.increment()`.
-- **Untuk pengurangan saldo, gunakan penulisan bersyarat.** Sertakan syarat `Op.gte` pada jumlah yang dikurangi, lalu periksa jumlah baris terpengaruh. Nol baris berarti saldo tidak cukup, dan itu bukan error yang boleh diabaikan.
+### Kolom numerik
+
+- **DILARANG melakukan pola read-modify-write** untuk nilai numerik seperti `economy_wallet`, `economy_bank`, `starFragments`, `coupons`, `xp`, atau jumlah item. Dua interaksi yang datang hampir bersamaan (double-click tombol) akan saling menimpa dan menduplikasi nilai.
+- **Gunakan operasi atomik**: `incrementUserProfile()` / `incrementUserSurvival()` untuk menambah, atau `Model.increment()`.
+- **Untuk pengurangan saldo, gunakan `debitUserProfile()` / `debitUserSurvival()`.** Keduanya memakai penulisan bersyarat dengan `Op.gte` lalu memeriksa jumlah baris terpengaruh. Nol baris berarti saldo tidak cukup, dan itu bukan error yang boleh diabaikan.
 - **Jangan pernah memercayai nilai saldo yang dibaca di awal handler** sebagai dasar penulisan di akhir handler.
+- **Mata uang wajib berupa kolom, bukan isi JSON.** `Naura Coupon` sudah dipindahkan ke kolom `UserSurvival.coupons` demi alasan ini. Jangan menambah mata uang baru di dalam `rpg_state`.
+
+### Kolom JSON
+
+> Kolom JSON tidak punya padanan `kolom = kolom + delta`, jadi ia tidak bisa memakai `increment()`. Satu-satunya cara aman adalah mengunci barisnya.
+
+- **Kolom JSON seperti `inventory`, `rpg_state`, `cooldowns`, `shop_purchases`, `economy_deposit`, dan `economy_investments` WAJIB diubah lewat `cacheManager.mutateUserProfileJson()` atau `mutateUserSurvivalJson()`.** Keduanya membuka transaksi, mengambil baris dengan `SELECT ... FOR UPDATE`, memberi mutator sebuah **salinan** nilainya, lalu menyimpan satu kolom saja dan menghapus cache.
+- **Mutator boleh mengembalikan `null` atau `undefined` untuk membatalkan seluruh transaksi.** Inilah cara benar menolak pengambilan barang saat jumlahnya kurang, bukan dengan memeriksa lebih dulu lalu menulis kemudian.
+- **Untuk inventory, pakai helper siap pakai** `addItemsAtomic(userId, items)` dan `takeItemsAtomic(userId, requests)` dari `plugin/survival/inventoryHelper.js`. Jangan menulis `profile.inventory` secara langsung dari plugin.
+- **Jangan memanggil `Model.update()` atau `row.save()` langsung dari plugin** untuk kolom yang dikelola cache. Penulisan itu tidak menghapus cache, sehingga nilai lama masih tersaji sampai TTL habis.
+- **`row.save()` wajib menyebut `fields` secara eksplisit.** Menyimpan seluruh baris akan menulis nilai in-memory ke kolom saldo yang sedang menunggu increment atomik di antrean flush, dan itu pernah menyebabkan bug kupon dobel. Contoh benar: `await survival.save({ fields: ['rpg_state'] });`.
+- **Jangan pernah memanggil `save()` telanjang pada objek yang saldonya baru dinaikkan `currency.charge()` atau `currency.reward()`.** Kedua fungsi itu menaruh delta di antrean, jadi menyimpan nilai absolut akan membuat delta itu diterapkan dua kali.
+- **Urutan yang benar saat memberi hadiah:** simpan barang lebih dulu, baru kurangi stamina atau biaya. Bila penulisan barang gagal, pemain tidak boleh kehilangan apa pun.
 
 ## 1.9 Aturan Memory Safety (Non-Canvas)
 
@@ -244,6 +264,7 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 - **Invalidasi wajib menjangkau semua shard.** Cache di proses lain tidak ikut terhapus secara otomatis, jadi siarkan lewat channel Redis Pub/Sub `cache:invalidate`.
 - **Jangan query DB di dalam loop**, Jika perlu data user/guild untuk banyak item sekaligus, gunakan `findAll` dengan `where: { id: { [Op.in]: listOfIds } }` lalu map hasilnya, bukan query satu per satu di dalam loop.
 - **`UserProfile` sudah di-cache** via `cacheManager.getUserProfile()`, Selalu gunakan method ini, jangan `UserProfile.findByPk()` langsung di command kecuali ada alasan kuat.
+- **Penulisan wajib lewat cacheManager juga.** `updateUserProfile()` / `updateUserSurvival()` untuk nilai absolut non-saldo, `increment*()` dan `debit*()` untuk angka, dan `mutate*Json()` untuk kolom JSON. Menulis model langsung akan meninggalkan cache basi.
 - **Bahasa user wajib diambil dari cache**, jangan memanggil `getUserLanguage()` yang menyentuh DB di setiap interaksi.
 
 ## 1.11 Aturan Kesiapan Skala (Sharding)
@@ -261,7 +282,7 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 - **Maksimum 40 komponen** per pesan Components V2, termasuk komponen bersarang.
 - **Total teks aman di bawah sekitar 3.500 karakter.** Batas keras sedikit di atas itu, jadi sisakan margin.
 - Karena struktur 5-lapisan wajib, container panjang seperti `/help`, `/survival inventory`, dan leaderboard paling rentan menembus batas.
-- **`NauraContainerBuilder.js` wajib memvalidasi batas ini sebelum payload dikirim**, lalu memotong atau memecah ke halaman. Gagal di builder dengan pesan jelas jauh lebih baik daripada `Invalid Form Body` di produksi.
+- **`NauraContainerBuilder.js` wajib memvalidasi batas ini sebelum payload dikirim.** Ini sudah berjalan lewat `src/utils/componentBudget.js`, yang memotong isi berlebih beserta catatan dan tidak pernah mengorbankan tombol atau footer. Gagal di builder dengan pesan jelas jauh lebih baik daripada `Invalid Form Body` di produksi.
 
 ---
 
@@ -270,9 +291,11 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 ## 2.1 Diagram Arsitektur Tingkat Tinggi
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
+┌────────────────────────────────────────────────────────────┐
 │                         ENTRY POINTS                                │
 │                                                                     │
+│  npm start ─── prestart: scripts/migrate.js (proses terpisah)        │
+│       │                                                             │
 │  shard.js ─── ShardingManager ──► index.js (per shard)              │
 │                                    │                                │
 │                                    ├─► Discord Client (discord.js)  │
@@ -281,7 +304,7 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 │                                    ├─► CronManager                  │
 │                                    ├─► Dashboard (Express:3070)     │
 │                                    └─► Webhook server (:3071)       │
-└─────────────────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────────┘
 ```
 
 > [!NOTE]
@@ -295,7 +318,7 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 > - `src/models/`: Menyimpan skema database tunggal (Sequelize) untuk konsistensi struktur data yang dipakai lintas modul.
 > - `src/utils/`: Menyimpan alat bantu (*helpers*) yang dapat dipanggil berkali-kali tanpa state (mis. `survivalHelper`, `NauraContainerBuilder`, utilitas kanvas).
 > - `src/events/`: Pendengar event Discord. Hanya berisi routing dan pengecekan awal, tanpa logika fitur.
-> - `src/interactions/`: Penanganan Button, Select Menu, dan Modal. Folder ini **sudah ada**, dan Sprint 1 akan memindahkan sisa logika dari `interactionCreate.js` ke sini sebagai registry per tipe interaksi.
+> - `src/interactions/`: Penanganan Button, Select Menu, dan Modal lewat registry per tipe interaksi. Folder ini sudah menjadi rumah resmi logika interaksi, dan `interactionCreate.js` hanya bertugas merutekan.
 > - `plugin/`: **HANYA** berisi *command router* dan pendefinisian Slash Command. Tidak boleh ada logika berat, akses database langsung tanpa manager, atau kelas helper di dalamnya.
 > - `src/dashboard/`: Menyimpan aplikasi web lokal untuk UI pemantauan dan pengelolaan berbasis Express/EJS.
 
@@ -310,7 +333,10 @@ Naura-Hoshino-V2/
 ├── DESIGN.md                   # 🎨 Style guide & design tokens
 ├── assets/                     # 🖼️ Font, gambar, aset Canvas, ekspresi Naura
 ├── language/                   # 🌍 Kamus inti (id.json, en.json)
-├── scripts/                    # 🔧 Utilitas pemeliharaan (validate-locales, check-em-dash)
+├── scripts/                    # 🔧 Utilitas pemeliharaan
+│   ├── migrate.js              #    Runner migrasi (dipanggil prestart)
+│   ├── validate-locales.js     #    Audit paritas bahasa
+│   └── check-em-dash.js        #    Penjaga gaya tulisan
 │
 ├── src/                        # 🧠 CORE ENGINE (Pilar Utama)
 │   ├── config/                 #    Stateless Configuration
@@ -318,31 +344,31 @@ Naura-Hoshino-V2/
 │   │   ├── ui.js               #       UI constants (emoji, warna)
 │   │   ├── features.js         #       Feature registry & flags
 │   │   ├── survival/           #       Konfigurasi RPG (items, npcs, currency)
-│   │   └── ...                 
+│   │   └── ...
 │   │
 │   ├── managers/               #    Stateful Managers & Controllers
 │   │   ├── CommandHandler.js   #       Slash command loader & deployer
 │   │   ├── dbManager.js        #       Database connection
-│   │   ├── dbMigrator.js       #       Migrasi schema bernomor
+│   │   ├── dbMigrator.js       #       Migrasi schema bernomor + ledger
 │   │   ├── guildSettingsService.js #   Satu-satunya jalur tulis GuildSettings
-│   │   ├── cacheManager.js     #       Cache terpusat + invalidasi
+│   │   ├── cacheManager.js     #       Cache terpusat, increment, debit, mutate JSON
 │   │   ├── redisManager.js     #       Redis client & Pub/Sub
 │   │   ├── survival/           #       RPG engines (duel, craft, shop)
 │   │   ├── musicManager.js     #       Poru Lavalink wrapper
 │   │   ├── aiManager.js        #       LLM router
-│   │   └── ...                 
+│   │   └── ...
 │   │
 │   ├── models/                 #    Database Schemas (Sequelize)
 │   │   ├── UserProfile.js      #       Master user data + preferensi bahasa
-│   │   ├── UserSurvival.js     #       RPG stats
-│   │   └── ...                 
+│   │   ├── UserSurvival.js     #       RPG stats + kolom coupons
+│   │   └── ...
 │   │
-│   ├── events/                 #    Discord event listeners
-│   ├── interactions/           #    Handler Button, Select Menu, Modal
+│   ├── events/                 #    Discord event listeners (routing saja)
+│   ├── interactions/           #    Registry Button, Select Menu, Modal, Autocomplete
 │   │
 │   ├── utils/                  #    Stateless Helpers & Utilities
-│   │   ├── NauraContainerBuilder.js #  Components V2 builder
-│   │   ├── survival/           #       Helper survival (e, addItem, inventory)
+│   │   ├── NauraContainerBuilder.js # Components V2 builder
+│   │   ├── componentBudget.js  #       Penjaga batas payload Discord
 │   │   └── ...
 │   │
 │   └── dashboard/              #    Web Dashboard
@@ -365,21 +391,23 @@ Naura-Hoshino-V2/
 
 ```mermaid
 graph TD
-    A["npm run start"] --> B["shard.js"]
+    A["npm start"] --> A2["prestart: node scripts/migrate.js"]
+    A2 --> A3{"Migrasi sukses?"}
+    A3 -->|Tidak| A4["exit 1, bot TIDAK menyala"]
+    A3 -->|Ya| B["shard.js"]
     B --> C["ShardingManager"]
     C --> D["Spawn index.js per-shard"]
     D --> E["Create Discord Client"]
     E --> F["Setup Error Handlers"]
     F --> G["Load Event Handlers (fast-glob recursive)"]
     G --> H["startBot()"]
-    H --> I["CommandHandler.load() lalu deploy bila hash berubah"]
+    H --> I["CommandHandler.load() lalu deploy bila tanda tangan berubah"]
     I --> J["connectToDatabase(): authenticate + sync aman"]
-    J --> K["runMigrations() oleh satu shard saja"]
-    K --> L{"Redis URL exists?"}
-    L -->|Yes| M["redisManager.connect()"]
-    L -->|No| N["Skip Redis, fallback aktif"]
-    M --> O["client.login()"]
-    N --> O
+    J --> K{"Redis URL exists?"}
+    K -->|Yes| L["redisManager.connect()"]
+    K -->|No| M["Skip Redis, fallback aktif"]
+    L --> O["client.login()"]
+    M --> O
     O --> P["on clientReady"]
     P --> Q["musicManager.initialize(), Poru/Lavalink"]
     P --> R["rssManager.init()"]
@@ -389,7 +417,7 @@ graph TD
 ```
 
 > [!NOTE]
-> Dua langkah pada diagram ini adalah **target Sprint 0 dan Sprint 1**, belum tentu kondisi kode saat ini: migrasi sebagai langkah terpisah yang dijaga satu shard, dan deploy command berbasis hash. Monkey-patch deprecation `ephemeral` sudah dijadwalkan dihapus di Sprint 1.
+> Migrasi **tidak lagi** berada di dalam boot sequence per shard. Ia berjalan sebagai proses terpisah lewat `prestart`, sehingga tidak ada dua shard yang mungkin ber-ALTER bersamaan.
 
 ## 2.4 Alur Request Command (Slash Command)
 
@@ -468,10 +496,13 @@ sequenceDiagram
 1. **Scan rekursif** folder `/plugin/` menggunakan `fast-glob`
 2. Setiap file yang mengekspor `data` (SlashCommandBuilder) + `execute` function dianggap command valid
 3. Command di-register ke `client.commands` Collection. **Alias disimpan di `client.aliases` yang terpisah**, agar tidak mengotori daftar command asli, dan tabrakan nama harus dideteksi saat load.
-4. Jika `shouldDeploy = true`, semua command di-push ke Discord API via REST. Deploy hanya boleh terjadi bila hash definisi command berubah, dan hanya oleh satu shard.
+4. Jika `shouldDeploy = true`, semua command di-push ke Discord API via REST. Deploy hanya terjadi bila tanda tangan SHA-256 definisi command berubah (disimpan di `.cache/commands-deploy.json`), dan hanya oleh shard utama.
 
 > [!CAUTION]
 > Jangan gunakan `return console.log(...)` di dalam proses load. Pola itu menghentikan loading command berikutnya secara diam-diam. `load()` dan `deploy()` harus terpisah.
+
+> [!NOTE]
+> Folder `.cache/` wajib ikut dipertahankan di server produksi. Bila terhapus, seluruh slash command akan di-deploy ulang pada boot berikutnya. Tidak berbahaya, tetapi memakan rate limit Discord tanpa perlu.
 
 ### Format File Command
 
@@ -504,19 +535,22 @@ module.exports = {
 
 Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai penyimpanan darurat). Saat boot, produksi memakai `sequelize.sync({ alter: false })` dan development memakai `sync({ alter: { drop: false } })`; seluruh perubahan kolom dilakukan oleh `dbMigrator.js`. Total: **28 model**.
 
+> [!CAUTION]
+> Nama tabel tidak seragam. `UserSurvival` memakai `UserSurvivals` dengan `timestamps: true`, sementara `UserProfile` memakai `user_profiles` dengan `timestamps: false`. Selalu periksa `tableName` di file model sebelum menulis SQL mentah untuk migrasi.
+
 ### Model Utama & Relasinya
 
 | Model | Tabel | Fungsi | Key Fields |
 |---|---|---|---|
-| `UserProfile` | `user_profiles` | Master data user, termasuk preferensi bahasa | `userId`, `wallet`, `bank`, `bio`, `reputation`, `vipExpiry`, `language` |
-| `UserLeveling` | `user_levelings` | XP & level per-guild | `userId`, `guildId`, `xp`, `level`, `totalXp` |
-| `UserSurvival` | `user_survivals` | RPG stats | `userId`, `hp`, `attack`, `defense`, `inventory` |
+| `UserProfile` | `user_profiles` | Master data user, termasuk preferensi bahasa | `userId`, `economy_wallet`, `economy_bank`, `inventory` (JSON), `cooldowns` (JSON), `language` |
+| `UserLeveling` | `user_leveling` | XP & level per-guild | `userId`, `guildId`, `xp`, `level`, `totalXp` |
+| `UserSurvival` | `UserSurvivals` | RPG stats & mata uang langka | `userId`, `starFragments`, `coupons`, `hp`, `stamina`, `rpg_state` (JSON) |
 | `GuildSettings` | `guild_settings` | Config per-server | `guildId`, `language` (default guild saja), `settings` (JSON: softbanChannelId, automod, greetings, dll.) |
 | `UserPlaylist` | `user_playlists` | Cloud playlist | `userId`, `name`, `tracks` (JSON) |
 | `PremiumVoucher` | `premium_vouchers` | Voucher VIP | `code`, `duration`, `usedBy` |
 | `UserPet` | `user_pets` | Virtual pet | `userId`, `name`, `type`, `level`, `hunger`, `happiness` |
 | `UserFriend` | `user_friends` | Sistem pertemanan | `userId`, `friendId`, `status` |
-| `UserQuest` | `user_quests` | Quest tracking | `userId`, `questId`, `progress`, `completed` |
+| `UserQuest` | `user_quests` | Quest tracking | `userId`, `workCount`, `dungeonKills`, `collectCount`, `isClaimed` |
 | `ModMail` | `modmails` | Tiket modmail | `userId`, `guildId`, `channelId`, `status` |
 | `Giveaway` | `giveaways` | Data giveaway | `messageId`, `channelId`, `prize`, `endTime` |
 | `SocialAlert` | `social_alerts` | RSS/social notif | `guildId`, `platform`, `channelId`, `url` |
@@ -536,6 +570,20 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 | `UserNPC` | `user_npcs` | Relasi NPC per-user | `userId`, `npcId`, `affection`, `lastInteract` |
 | `UserReminder` | `user_reminders` | Pengingat terjadwal | `userId`, `channelId`, `message`, `remindAt` |
 | `UserWarn` | `user_warns` | Riwayat peringatan moderasi | `userId`, `guildId`, `reason`, `moderatorId` |
+
+### Daftar Migrasi Bernomor
+
+| ID | Fungsi |
+|---|---|
+| `v1_add_mannersPoint` | Kolom poin sopan santun |
+| `v2_add_dailyNotify` | Kolom pengingat daily |
+| `v3_add_economy_deposit` | Kolom JSON deposito bank |
+| `v4_add_economy_investments` | Kolom JSON portofolio investasi |
+| `v5_add_coupons` | Kolom `coupons` di `UserSurvivals` |
+| `v6_move_coupons_to_column` | Memindahkan kupon lama dari JSON `rpg_state` ke kolom baru |
+
+> [!CAUTION]
+> `v6_move_coupons_to_column` adalah migrasi **data** yang menambah nilai, bukan sekadar perubahan skema. Menjalankannya dua kali akan menggandakan kupon setiap pemain. Ia aman hanya karena tercatat di `schema_migrations`, dan ada test yang menjaga sifat itu. Perlakukan setiap migrasi data serupa dengan kehati-hatian yang sama.
 
 ---
 
@@ -562,15 +610,19 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 | **AI** | Google Gemini (`@google/genai`) + Verba + Ollama (opsional) |
 | **Canvas** | `@napi-rs/canvas` v0.1.53 |
 | **Web Server** | Express v4 + Socket.IO v4 |
+| **Panel hosting** | Pterodactyl (`CMD_RUN = npm start`) |
 
 ## 3.2 NPM Scripts
 
 | Script | Command | Fungsi |
 |---|---|---|
-| `npm run start` | `node shard.js` | Menjalankan bot via ShardingManager (produksi) |
+| `prestart` | `node scripts/migrate.js` | Dipanggil npm otomatis sebelum `start`. Menggagalkan `start` bila migrasi error. |
+| `npm run start` | `node shard.js` | Menjalankan bot via ShardingManager (produksi), setelah `prestart` |
+| `npm run start:no-migrate` | `node shard.js` | Pintu darurat, menyalakan bot tanpa memeriksa skema |
+| `npm run db:migrate` | `node scripts/migrate.js` | Menjalankan migrasi secara manual dan terpisah |
 | `npm run dev` | `node --watch shard.js` | Development dengan auto-restart |
 | `npm run deploy` | `node index.js --deploy` | Deploy slash commands ke Discord API |
-| `npm run install-start` | `npm install && node shard.js` | Fresh install + start |
+| `npm run install-start` | `npm install && npm start` | Fresh install + start (termasuk migrasi) |
 | `npm run lint` | `eslint .` | Linting seluruh repo |
 | `npm run lint:fix` | `eslint . --fix` | Linting + perbaikan otomatis |
 | `npm run format` | `prettier --write .` | Format seluruh repo |
@@ -617,6 +669,9 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 | `MYSQL_USER` | ⚠️ | - | Username database |
 | `MYSQL_PASSWORD` | ❌ | - | Password database |
 | `MYSQL_DATABASE` | ⚠️ | - | Nama database |
+| `DB_POOL_BUDGET` | ❌ | `80` | Total koneksi untuk seluruh shard, dibagi jumlah shard |
+| `DB_POOL_MAX` | ❌ | - | Penimpa manual `pool.max` per proses |
+| `SKIP_DB_MIGRATE` | ❌ | - | Pintu darurat. `1`, `true`, atau `yes` melewati migrasi saat boot. Jangan permanen. |
 
 > [!NOTE]
 > Di dalam kode, nilai-nilai ini diakses sebagai `env.DB_HOST`, `env.DB_PORT`, `env.DB_USER`, `env.DB_PASS`, dan `env.DB_NAME`. Bila salah satu dari `DB_NAME`, `DB_USER`, atau `DB_HOST` kosong, bot otomatis memakai fallback SQLite (`naura_fallback.sqlite`).
@@ -693,21 +748,21 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 ### Services yang Dibutuhkan
 
 ```
-┌──────────────────────────────────────────────────────────────┐
+┌────────────────────────────────────────────────────┐
 │                    Naura Hoshino Runtime                      │
 │                                                              │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐    │
+│  ┌────────────┐  ┌──────────────┐  ┌──────────────────┐    │
 │  │  Discord API │  │  MySQL/Maria │  │  Lavalink v4     │    │
 │  │  (WAJIB)     │  │  DB (WAJIB)  │  │  + youtube-src   │    │
 │  │              │  │              │  │  + LavaSrc       │    │
 │  └─────────────┘  └──────────────┘  └──────────────────┘    │
 │                                                              │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐    │
+│  ┌────────────┐  ┌──────────────┐  ┌──────────────────┐    │
 │  │  Redis       │  │  Google      │  │  Spotify API     │    │
 │  │  (Opsional)  │  │  Gemini API  │  │  (Opsional)      │    │
 │  │              │  │  (Opsional)  │  │                  │    │
 │  └─────────────┘  └──────────────┘  └──────────────────┘    │
-└──────────────────────────────────────────────────────────────┘
+└─────────────────────────────────────────────────────┘
 ```
 
 > [!NOTE]
@@ -805,6 +860,7 @@ Dashboard berjalan di **port 3070** (default) menggunakan Express.js, sementara 
 | `/auth/discord/callback` | GET | OAuth2 callback handler |
 | `/api/stats` | GET | Bot statistics (JSON) |
 | `/api/health` | GET | Health check (direncanakan, Sprint 3): status MySQL, Redis, Lavalink |
+| `/api/webhook/health` | GET | Health check server webhook |
 | `/api/webhook/saweria` | POST | Saweria donation webhook |
 | `/api/webhook/trakteer` | POST | Trakteer donation webhook |
 | `/api/webhook/vote` | POST | Top.gg vote webhook |
@@ -819,14 +875,39 @@ Dashboard menggunakan **Socket.IO** untuk real-time updates pada metrik telemetr
 > [!NOTE]
 > Informasi penting untuk deployment di production.
 
-1. **Pterodactyl Compatibility**, `env.js` memiliki `cleanEnv()` untuk membersihkan tanda kutip dari panel Pterodactyl. Karena RAM panel terbatas, efisiensi memori adalah pertimbangan desain, bukan sekadar optimasi.
-2. **Schema Migration**, Produksi TIDAK memakai `alter`. Tabel baru dibuat oleh `sync({ alter: false })`, dan seluruh perubahan kolom dilakukan `dbMigrator.js` dengan versi bernomor, dijalankan oleh satu shard saja.
+### Panel Pterodactyl
+
+Panel mengunci perintah luar dan hanya menyisakan variabel `CMD_RUN`, yang selalu diawali `/usr/local/bin/`. Artinya token pertama `CMD_RUN` **wajib** berupa binary di folder itu (`npm`, `node`, `npx`), dan rangkaian perintah dengan `&&` tidak bisa diandalkan.
+
+**Konfigurasi resmi:**
+
+| Kolom panel | Nilai |
+|---|---|
+| `CMD_RUN` | `npm start` |
+| Docker image | Node 24 atau lebih baru |
+| `AUTO_UPDATE` | `1` bila panel diizinkan menarik commit terbaru |
+
+Urutan setiap restart: `git pull` → `npm install` → `prestart` (migrasi) → `start` (`node shard.js`).
+
+> [!IMPORTANT]
+> **Jangan pernah memindahkan urutan migrasi ke kolom panel.** Panel hanya memberi satu perintah, jadi urutannya wajib hidup di dalam `package.json`. Bila suatu saat ada yang mengubah `CMD_RUN` menjadi `node shard.js`, migrasi akan dilewati diam-diam.
+
+> [!WARNING]
+> Tiga penyebab kegagalan restart yang paling sering:
+> 1. Docker image masih Node di bawah 24.
+> 2. `git pull` gagal karena ada perubahan lokal dari File Manager panel, sehingga bot tetap jalan memakai kode lama. Selalu baca log restart.
+> 3. Folder `.cache/` terhapus, sehingga seluruh slash command di-deploy ulang tanpa perlu.
+
+### Catatan umum
+
+1. **Pterodactyl Compatibility**, `env.js` memiliki `cleanEnv()` untuk membersihkan tanda kutip dari panel. Karena RAM panel terbatas, efisiensi memori adalah pertimbangan desain, bukan sekadar optimasi.
+2. **Schema Migration**, Produksi TIDAK memakai `alter`. Tabel baru dibuat oleh `sync({ alter: false })`, dan seluruh perubahan kolom dilakukan `dbMigrator.js` dengan versi bernomor, dijalankan sebagai proses terpisah lewat `prestart`.
 3. **Fallback Darurat**, Bila MySQL dan Redis mati bersamaan, data ditulis sementara ke SQLite lokal, lalu disinkronkan kembali lewat `syncFallbackToMySQL()` saat MySQL pulih.
-4. **Graceful Shutdown**, Bot menangani `SIGINT` dan `SIGTERM` untuk menutup semua koneksi (Lavalink, MySQL, Redis, Discord) dengan aman.
-5. **Auto-Respawn**, `ShardingManager` dikonfigurasi dengan `respawn: true` untuk otomatis restart shard yang crash.
+4. **Graceful Shutdown**, Bot menangani `SIGINT` dan `SIGTERM` untuk menutup semua koneksi (Lavalink, MySQL, Redis, Discord) dengan aman, termasuk `cacheManager.flushAll()` agar antrean penulisan tidak hilang.
+5. **Auto-Respawn**, `ShardingManager` dikonfigurasi dengan `respawn: true` untuk otomatis restart shard yang crash, kecuali saat keluar dengan kode `78` (konfigurasi salah).
 6. **Connection Pool Sadar Shard**, `pool.max` berlaku per proses. Pastikan `pool.max × jumlah shard` tetap di bawah `max_connections` MySQL.
 7. **Keamanan Produksi**, `SESSION_SECRET` wajib diisi, `OWNER_EVAL_ENABLED` wajib `false`, dan ketiga token webhook wajib diisi bila fitur monetisasi dipakai.
-8. **Deprecation `ephemeral`**, Monkey-patch di `index.js` adalah solusi sementara. Target Sprint 1 adalah memakai `MessageFlags.Ephemeral` secara langsung dan menghapus patch tersebut.
+8. **Deprecation `ephemeral`**, ESLint sudah menolak pemakaian baru `ephemeral: true`. Sisa pekerjaan adalah memigrasikan call site lama dan menghapus monkey-patch di `index.js` sepenuhnya.
 
 ---
 

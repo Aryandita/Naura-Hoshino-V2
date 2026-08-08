@@ -2,7 +2,7 @@
 
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const cacheManager = require('../../../src/managers/cacheManager');
-const { safeParseInventory } = require('../inventoryHelper');
+const { safeParseInventory, countStack, addItemsAtomic, takeItemsAtomic } = require('../inventoryHelper');
 const ui = require('../../../src/config/ui');
 const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
 const questGen = require('../questGenerator');
@@ -12,15 +12,10 @@ const STAMINA_COST = 10;
 const REACTION_MS = 2500;
 const WAIT_MIN_MS = 3000;
 const WAIT_SPAN_MS = 4000;
+const BAIT_ID = 'worm_bait';
 
 function e(name, fallback) {
     return ui.getEmoji(name) || fallback;
-}
-
-function addItem(inventory, id, name, amount, type) {
-    const exist = inventory.find(it => it && it.id === id);
-    if (exist) exist.amount = (exist.amount || 1) + amount;
-    else inventory.push({ id, name, amount, type });
 }
 
 function rollCatch() {
@@ -39,25 +34,29 @@ module.exports = {
     async execute(interaction) {
         const user = interaction.user;
         const profile = await cacheManager.getUserProfile(user.id);
-        const survival = await cacheManager.getUserSurvival(user.id);
 
         const inventory = safeParseInventory(profile.inventory);
         const hasRod = inventory.some(i => i && i.id === 'fishing_rod');
-        const bait = inventory.find(i => i && i.id === 'worm_bait');
 
         if (!hasRod) return ui.sendError(interaction, 'err_sys_46', true);
-        if (!bait || (bait.amount || 0) <= 0) return ui.sendError(interaction, 'err_sys_47', true);
-        if ((survival.stamina || 0) < STAMINA_COST) return ui.sendError(interaction, 'err_sys_48', true);
+        // Pemeriksaan ramah supaya pesannya jelas. Kebenarannya tetap ditentukan
+        // oleh takeItemsAtomic() di bawah, bukan oleh pembacaan ini.
+        if (countStack(inventory, BAIT_ID) <= 0) return ui.sendError(interaction, 'err_sys_47', true);
 
-        survival.stamina -= STAMINA_COST;
-        await survival.save();
+        const paid = await cacheManager.debitUserSurvival(user.id, 'stamina', STAMINA_COST);
+        if (!paid.ok) return ui.sendError(interaction, 'err_sys_48', true);
 
-        // Umpan terpakai satu, dan entrinya dibuang kalau sudah habis.
-        bait.amount = (bait.amount || 1) - 1;
-        const afterBait = bait.amount <= 0
-            ? inventory.filter(i => i && i.id !== 'worm_bait')
-            : inventory;
-        await cacheManager.updateUserProfile(user.id, { inventory: afterBait });
+        // Umpan diambil lewat transaksi terkunci. Pola lama mengurangi amount di
+        // memori lalu menulis ulang seluruh tas, sehingga dua pancingan yang tiba
+        // bersamaan hanya memakan satu umpan.
+        const usedBait = await takeItemsAtomic(user.id, [{ id: BAIT_ID, amount: 1 }]);
+
+        if (!usedBait.ok) {
+            // Umpannya ternyata sudah habis dipakai proses lain. Tenaganya
+            // dikembalikan supaya pemain tidak dirugikan tanpa memancing.
+            await cacheManager.incrementUserSurvival(user.id, { stamina: STAMINA_COST });
+            return ui.sendError(interaction, 'err_sys_47', true);
+        }
 
         const waitingPayload = buildContainerV2({
             accentColorHex: '#3b82f6',
@@ -111,12 +110,26 @@ module.exports = {
                     collector.stop('pulled');
                     await i.deferUpdate().catch(() => {});
 
-                    const fresh = await cacheManager.getUserProfile(user.id);
-                    const bag = safeParseInventory(fresh.inventory);
                     const catchResult = rollCatch();
 
-                    addItem(bag, catchResult.id, catchResult.name, 1, 'loot');
-                    await cacheManager.updateUserProfile(user.id, { inventory: bag });
+                    const stored = await addItemsAtomic(user.id, [
+                        { id: catchResult.id, name: catchResult.name, amount: 1, type: 'loot' }
+                    ]);
+
+                    if (!stored.ok) {
+                        const writeFailPayload = buildContainerV2({
+                            accentColorHex: ui.getColor('warning') || '#FFB347',
+                            authorName: 'Naura Fishing Spot',
+                            title: `${e('cry', '\uD83D\uDCA6')} Tangkapannya gagal dicatat`,
+                            iconURL: user.displayAvatarURL(),
+                            expression: 'fail',
+                            description: 'Kailnya kena, tapi Naura gagal mencatat tangkapannya ke dalam tas kamu. Maaf ya, coba sebentar lagi.',
+                            footerText: ui.getFooter('survival')
+                        });
+
+                        await interaction.editReply({ ...writeFailPayload, embeds: [] }).catch(() => {});
+                        return;
+                    }
 
                     const lines = catchResult.id === 'trash'
                         ? [

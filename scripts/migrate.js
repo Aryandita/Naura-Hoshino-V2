@@ -7,9 +7,13 @@
  * yang gagal tetap menghasilkan bot yang menyala di atas skema separuh jalan, dan
  * setiap shard menjalankan ALTER TABLE yang sama secara bersamaan.
  *
- * Sekarang urutan deploy yang benar adalah:
+ * Urutan deploy yang benar adalah:
  *   1. npm run db:migrate     (sekali, satu proses)
  *   2. npm start              (shard sebanyak yang dibutuhkan)
+ *
+ * Panel seperti Pterodactyl hanya menyediakan SATU kolom perintah start, jadi
+ * urutan di atas dijamin oleh npm lifecycle script "prestart": `npm start` akan
+ * selalu menjalankan file ini lebih dulu dan berhenti bila migrasi gagal.
  *
  * Keluar dengan kode 1 bila ada migrasi yang gagal, sehingga pipeline deploy
  * berhenti sebelum bot dinyalakan.
@@ -18,6 +22,16 @@
 const { sequelize } = require('../src/managers/dbManager');
 const { runMigrations, getPendingMigrations } = require('../src/managers/dbMigrator');
 const { logger } = require('../src/managers/logger');
+
+// Pintu darurat. Bila MySQL sedang mati dan bot harus tetap dinyalakan di atas skema
+// lama, set SKIP_DB_MIGRATE=1 di panel. Jangan dibiarkan menyala permanen: kolom baru
+// tidak akan pernah dibuat, dan fitur yang bergantung padanya akan gagal.
+const SKIP_VALUES = new Set(['1', 'true', 'yes']);
+
+if (SKIP_VALUES.has(String(process.env.SKIP_DB_MIGRATE || '').toLowerCase())) {
+    logger.warn('[MIGRATE] SKIP_DB_MIGRATE aktif. Migrasi DILEWATI dan skema database tidak diperiksa.');
+    process.exit(0);
+}
 
 async function main() {
     await sequelize.authenticate();
@@ -39,6 +53,7 @@ async function main() {
 main()
     .catch(error => {
         logger.error('[MIGRATE] Migrasi gagal:', error.message);
+        logger.error('[MIGRATE] Bot TIDAK dinyalakan supaya tidak berjalan di atas skema separuh jalan.');
         process.exitCode = 1;
     })
     .finally(async () => {

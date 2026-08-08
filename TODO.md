@@ -16,6 +16,8 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 | Sumber kebenaran | `package.json` untuk dependensi dan versi. GitHub Issues untuk pekerjaan. `AGENTS.md` hanya untuk aturan yang tidak berubah tiap rilis. |
 | Alur PR | Satu PR per sprint. Sprint berikutnya baru dimulai setelah PR sebelumnya di-review dan di-merge. |
 | Verifikasi sebelum klaim | Status di roadmap ini wajib dicek ke kode, bukan ke issue tracker. Sprint 0 dan Sprint 1 membuktikan tracker bisa tertinggal jauh dari kenyataan. |
+| Target deploy | Panel Pterodactyl dengan satu perintah start yang bisa diubah (`CMD_RUN`). Nilainya tetap `npm start`; urutan migrate-lalu-start dijamin oleh npm lifecycle `prestart`, bukan oleh perintah manual. |
+| Mata uang paling langka | Naura Coupon. Disimpan di kolom `coupons` (bukan JSON) supaya bisa dipotong atomik dan tidak pernah hilang. |
 
 ## Legenda
 
@@ -56,7 +58,7 @@ Sama seperti Sprint 0, verifikasi kode menunjukkan sebagian besar sprint ini **s
 
 - [x] **Selaraskan seluruh dokumen dengan keputusan arsitektur di atas**
   - `engines.node`, README, `AGENTS.md`, dan CI sudah seragam di Node 24 dan versi 2.0.0. Bahasa per user sudah ditulis eksplisit. Tabel versi dan dependensi **dipertahankan** sesuai keputusan, hanya isinya yang diperbarui.
-  - [ ] Tambahkan `npm run db:migrate` ke tabel script di README dan `AGENTS.md`, beserta urutan deploy yang benar (migrate dulu, baru start).
+  - [x] Tabel script terbaru sudah masuk README dan `AGENTS.md`, termasuk `prestart`, `start:no-migrate`, dan `db:migrate`, beserta bagian khusus prosedur deploy di panel Pterodactyl.
 - [x] **Pecah `interactionCreate.js`** (issue #19)
   - **Catatan verifikasi:** sudah terpasang di `main`. Berkasnya kini 4,7 KB (dari 43 KB), dengan `src/interactions/` berisi `registry.js`, `safeExecute.js`, `autocomplete.js`, serta folder `buttons/`, `modals/`, `selects/`, dan `shared/`.
   - [x] Aturan lint `max-lines: 400` dipasang untuk `interactionCreate.js` dan seluruh `src/interactions/`, supaya berkas router tidak menggembung lagi.
@@ -64,6 +66,7 @@ Sama seperti Sprint 0, verifikasi kode menunjukkan sebagian besar sprint ini **s
   - **Catatan verifikasi:** sudah terpasang lewat `src/interactions/autocomplete.js` dan `safeExecute.js`.
 - [x] **Deploy slash command berbasis hash** (issue #11)
   - **Catatan verifikasi:** sudah terpasang di `CommandHandler.deploy()`. Tanda tangan SHA-256 mencakup `clientId`, `guildId`, dan daftar command, disimpan di `.cache/commands-deploy.json`. Berkas dipilih, bukan Redis, karena `load()` berjalan sebelum `redisManager.connect()`. Penanda sengaja tidak ditulis saat deploy gagal.
+  - **Catatan operasional:** folder `.cache/` wajib ikut bertahan antar restart di panel. Bila terhapus tiap boot, slash command akan dideploy ulang terus dan kena rate limit Discord tanpa alasan yang jelas.
 - [x] **Pisahkan `client.aliases` dari `client.commands`** (issue #12)
   - **Catatan verifikasi:** sudah terpasang, termasuk deteksi bentrok alias terhadap nama command asli dan terhadap alias lain, serta pendaftaran alias yang ditunda sampai semua command dimuat.
 - [x] **Perbaiki `return console.log(...)` di `CommandHandler`** (issue #9)
@@ -75,11 +78,20 @@ Sama seperti Sprint 0, verifikasi kode menunjukkan sebagian besar sprint ini **s
 - [ ] **Ganti monkey-patch `ephemeralPatch.js` dengan `MessageFlags.Ephemeral`** (issue #10) - **sebagian**
   - [x] Aturan lint `no-restricted-syntax` menolak pemakaian baru `ephemeral: true`.
   - [x] Penambal sekarang mencatat lokasi pemanggil yang masih memakai opsi usang, satu peringatan per lokasi. Ini membangun daftar audit yang nyata, bukan hasil menebak.
-  - [ ] Migrasikan pemanggil yang muncul di log, lalu hapus `src/utils/ephemeralPatch.js` beserta pemanggilannya di `index.js`.
-- [ ] **Jadikan penulisan ekonomi atomik** (issue #17, dipindahkan dari Sprint 0) - **fondasi selesai**
-  - [x] `cacheManager` sudah menyediakan `incrementUserProfile()`, `incrementUserSurvival()`, `debitUserProfile()`, dan `debitUserSurvival()`. Pemotongan saldo memakai satu `UPDATE` bersyarat dengan `Op.gte` dan memeriksa jumlah baris terpengaruh, plus `flushUser()` untuk mengosongkan antrean write-behind sebelum memeriksa kecukupan saldo.
-  - [ ] Audit seluruh pemanggil di `plugin/` yang masih membaca lalu menulis nilai absolut (pola `profile.economy_wallet - harga` diikuti `updateUserProfile`). Ganti ke `debit*()` atau `increment*()`.
-  - [ ] Tambahkan aturan lint atau test yang menolak pola read-modify-write pada kolom saldo.
+  - [x] `plugin/survival/subcommands/collect.js` dimigrasikan ke `flags: MessageFlags.Ephemeral` saat audit Sprint 2.
+  - [ ] Migrasikan pemanggil lain yang muncul di log, lalu hapus `src/utils/ephemeralPatch.js` beserta pemanggilannya di `index.js`.
+- [ ] **Jadikan penulisan ekonomi atomik** (issue #17, dipindahkan dari Sprint 0) - **inti selesai di Sprint 2**
+  - [x] `cacheManager` menyediakan `incrementUserProfile()`, `incrementUserSurvival()`, `debitUserProfile()`, dan `debitUserSurvival()`. Pemotongan saldo memakai satu `UPDATE` bersyarat dengan `Op.gte` dan memeriksa jumlah baris terpengaruh, plus `flushUser()` untuk mengosongkan antrean write-behind sebelum memeriksa kecukupan saldo.
+  - [x] Audit pemanggil ekonomi di `plugin/survival/`. Hasilnya mengoreksi asumsi awal: kolom saldo (`economy_wallet`, `economy_bank`, `starFragments`) **sudah aman sebelum sprint ini**, karena `currency.charge()` memakai `debit*()` dan `bankActions.js` selalu memotong sebelum menambah. Lubang yang sebenarnya ada di kolom JSON dan pada pemanggilan `UserSurvival.update()` langsung.
+  - [x] Naura Coupon dipindahkan dari JSON `rpg_state` ke kolom `coupons` lewat migrasi `v5_add_coupons` dan `v6_move_coupons_to_column`, sehingga kupon bisa dipotong atomik seperti mata uang lain.
+  - [x] Semua `survival.save()` dibatasi ke `fields` eksplisit. Tanpa ini, `save()` menulis nilai absolut dari memori sementara increment yang sama masih menunggu di antrean, sehingga satu vote bisa terhitung dua kali.
+  - [x] `cacheManager.mutateUserProfileJson()` dan `mutateUserSurvivalJson()`: perubahan kolom JSON kini terjadi di dalam transaksi dengan baris pemain dikunci (`SELECT ... FOR UPDATE`), karena kolom JSON tidak punya padanan `kolom = kolom + delta`.
+  - [x] `inventoryHelper.addItemsAtomic()` dan `takeItemsAtomic()` menggantikan pola baca-ubah-tulis di `shopPurchase.storeItem`, `dungeonRewards.consumePass`, `dungeonRewards.grantVictory`, dan `collectActions.grantLoot`. Dampak nyata: barang tidak lagi hilang saat dua hadiah tiba bersamaan, dan satu tiket dungeon tidak bisa dipakai dua kali.
+  - [x] `collectActions.goHome`, pengurasan stamina, dan perpindahan lokasi di `collect.js` tidak lagi memakai `UserSurvival.update()` atau `survival.save()` langsung, jadi cache `user:survival` tidak lagi basi sampai 30 menit.
+  - [x] `chop.js`, `mine.js`, dan `fish.js` disamakan dengan jalur aman. Ketiganya ternyata punya jalur penulisan sendiri yang melewati seluruh lapisan: masing-masing menyalin fungsi `addItem()` lokal, menulis ulang seluruh array inventory lewat `updateUserProfile()`, dan memotong stamina dengan `survival.save()` telanjang. Sekarang stamina dipotong lewat `debitUserSurvival()` (pemeriksaan dan pemotongan jadi satu langkah SQL, jadi tenaga yang sama tidak bisa dipakai dua kali) dan barang masuk lewat `addItemsAtomic()`. Umpan di `fish.js` diambil lewat `takeItemsAtomic()`, dengan pengembalian stamina bila umpannya ternyata sudah habis dipakai proses lain.
+  - [x] Tambahkan aturan lint yang menolak pola read-modify-write pada kolom saldo dan kolom JSON. Terpasang di `eslint.config.js` sebagai lima entri `no-restricted-syntax`: kolom JSON yang ditulis lewat `update*()`, kolom akumulatif yang ditulis sebagai nilai absolut, `UserProfile.update()` dan `UserSurvival.update()` langsung, `save()` tanpa daftar `fields` pada variabel bernama `survival` atau `profile`, dan pemanggilan `currency.setBalance()`. Semuanya bersetelan `warn`, bukan `error`, supaya CI tetap hijau sambil mendaftar pemanggil lama yang belum diaudit. Naikkan ke `error` setelah auditnya tuntas.
+  - [ ] Lanjutkan audit ke `plugin/` di luar survival: `admin`, `ai`, `canvas`, `modmail`, `music`, `owner`, `premium`, `utility`, plus `minigames/minigame.js`, `core/core.js`, `core/naura.js`, dan `leveling/leveling.js`. Catatan: `search_code` GitHub tidak berfungsi di repo privat ini, jadi audit harus membaca berkas langsung. Jalan pintas yang lebih murah: jalankan `npm run lint` dan pakai daftar peringatan dari aturan baru di atas sebagai peta audit.
+  - [ ] Audit pemanggil `currency.setBalance()` yang sekarang bertanda `@deprecated`, lalu jadikan internal atau hapus. Aturan lint sudah menandai setiap pemanggilannya, jadi daftarnya bisa didapat tanpa menebak.
 - [ ] **Lengkapi CI** (issue #15, bagian CI) - **sebagian selesai**
   - [x] Step `node scripts/check-em-dash.js`.
   - [x] `locales:check` diubah menjadi `locales:check:strict`.
@@ -88,14 +100,20 @@ Sama seperti Sprint 0, verifikasi kode menunjukkan sebagian besar sprint ini **s
   - [ ] Hapus `continue-on-error` pada `npm audit` setelah kerentanan yang ada dibersihkan.
   - [ ] Aktifkan Dependabot dan secret scanning.
 - [ ] **Tambahkan test otomatis** (issue #15) - **berjalan**
-  - [x] `src/managers/dbMigrator.test.js` menjaga keunikan ID migrasi dan nama tabel ledger.
+  - [x] `src/managers/dbMigrator.test.js` menjaga keunikan ID migrasi, nama tabel ledger, urutan versi yang selalu naik, dan urutan `v5` sebelum `v6`. Penjagaan urutan itu penting karena `v6` menambah kupon ke nilai yang sudah ada, jadi menjalankannya dua kali akan menggandakan kupon setiap pemain.
   - [x] `src/utils/componentBudget.test.js` menjaga perhitungan komponen bersarang, pemangkasan teks, dan jaminan bahwa tombol tidak pernah dibuang.
+  - [x] `plugin/survival/inventoryHelper.test.js` menjaga perhitungan tumpukan barang, pengambilan lintas tumpukan, penolakan saat jumlah tidak cukup, dan jaminan bahwa inventory asli tidak ikut berubah.
   - [ ] Lanjutkan ke logika murni yang paling mahal bila salah: rumus XP dan level, kalkulasi ekonomi, `RateLimiter`, dan parser durasi.
 
 ---
 
 ## 🟡 Sprint 2: Performa, Biaya Hosting, dan Kesiapan Skala
 
+- [x] **Deploy di panel Pterodactyl tanpa perintah tambahan** (temuan operasional)
+  - Perintah startup luar di panel terkunci dan hanya variabel `CMD_RUN` yang bisa diubah, lalu nilainya dijalankan dengan awalan `/usr/local/bin/`. Artinya token pertamanya wajib biner di folder itu (`npm`, `node`, `npx`) dan perangkaian shell tidak bisa diandalkan.
+  - Solusinya: urutan pindah ke dalam `package.json`. `prestart` menjalankan `node scripts/migrate.js`, jadi `npm start` mustahil menyala di atas skema separuh jalan. Migrasi yang gagal keluar dengan kode 1 dan npm membatalkan `start`.
+  - `SKIP_DB_MIGRATE=1` dan `npm run start:no-migrate` tersedia sebagai pintu darurat. Keduanya tidak boleh menjadi pengaturan tetap, karena kolom baru tidak akan pernah dibuat.
+  - Syarat lain: image panel wajib Node 24 atau lebih baru, dan `.cache/` harus bertahan antar restart.
 - [ ] **Lazy-load dependensi berat** (issue #16)
   - **Cara Implementasi:** Pindahkan `@xenova/transformers`, `tesseract.js`, `yt-dlp-wrap`, dan `ffmpeg-static` ke `await import()` di dalam fungsi yang memakainya, bukan di top-level `require`.
 - [ ] **Batasi cache discord.js** dengan `Options.cacheWithLimits`, dan audit intents. Matikan `GuildPresences` bila tidak benar-benar dipakai.
@@ -181,16 +199,20 @@ Sama seperti Sprint 0, verifikasi kode menunjukkan sebagian besar sprint ini **s
 
 | Risiko | Dampak | Mitigasi |
 | --- | --- | --- |
-| Migrasi berjalan di dalam boot sequence dan di semua shard | Skema separuh jalan atau deadlock saat startup | **Selesai** di Sprint 0 lewat `npm run db:migrate` dan penjagaan proses utama |
-| Ekonomi tanpa penulisan atomik | Inflasi tak terkendali, ekonomi harus direset | Fondasi selesai. Sisa: audit pemanggil di `plugin/` (issue #17) |
+| Migrasi berjalan di dalam boot sequence dan di semua shard | Skema separuh jalan atau deadlock saat startup | **Selesai** di Sprint 0 lewat `scripts/migrate.js`, dan di Sprint 2 dijamin urutannya oleh `prestart` |
+| Ekonomi tanpa penulisan atomik | Inflasi tak terkendali, ekonomi harus direset | **Selesai untuk survival:** kolom saldo, kolom kupon, kolom JSON inventory, tiket dungeon, serta jalur `chop`, `mine`, dan `fish`. Aturan lint baru menahan pola lama supaya tidak kembali. Sisa: audit modul non-survival (issue #17) |
+| Modul menyalin fungsi penulisan sendiri, bukan memakai helper bersama | Perbaikan di lapisan aman tidak sampai ke pemakainya, dan bug yang sudah ditutup muncul lagi di tempat lain | Ditemukan di `chop`, `mine`, dan `fish`, yang masing-masing punya `addItem()` lokal. Aturan lint sekarang menandai jalur pintasnya, bukan mengandalkan ingatan |
+| Migrasi data yang menambah nilai ke dirinya sendiri | Kupon setiap pemain berganda bila migrasi terulang | Ledger `schema_migrations` mencatat ID yang sudah dijalankan, dan test menjaga urutan `v5` sebelum `v6` |
 | Webhook premium tanpa `timingSafeEqual` dan idempotency | Premium gratis, kebocoran pendapatan | **Selesai** di `webhooks.js` (issue #18, bagian webhook) |
 | Cache setting basi hingga 5 menit dan lintas shard | Admin kehilangan kepercayaan pada panel setup | **Selesai** lewat hook model dan kanal `cache:invalidate` (issue #20) |
 | Total koneksi database melampaui `max_connections` | Error `Too many connections` yang tampak tidak berhubungan dengan sharding | **Selesai** lewat `DB_POOL_BUDGET` dibagi `TOTAL_SHARDS` |
 | Payload Container V2 melewati 40 komponen atau 4000 karakter | Seluruh balasan hilang dengan `Invalid Form Body` | **Selesai** lewat `componentBudget.js` di Sprint 1 |
 | Penambal prototype `ephemeralPatch.js` | Upgrade discord.js bisa mematahkannya secara senyap | Lint menahan pemakaian baru, log mencatat pemanggil lama, lalu penambal dihapus |
+| `SKIP_DB_MIGRATE` dibiarkan menyala di panel | Kolom baru tidak pernah dibuat, transaksi kupon gagal tanpa sebab yang jelas | Hanya untuk keadaan darurat, dan log migrasi menuliskannya dengan huruf besar |
+| `.cache/` terhapus setiap restart panel | Slash command dideploy ulang terus dan kena rate limit Discord | Pastikan folder itu ikut volume yang bertahan |
 | Lingkup all-in-one terus melebar | Beban maintenance menumpuk ke satu orang | Feature flag default mati, tolak fitur tanpa pemilik |
 | Sumber musik YouTube | Risiko ToS dan API yang berubah sepihak | Plugin resmi Lavalink, siapkan fallback |
-| Cakupan test masih sangat tipis | Setiap refactor masih taruhan | Dua berkas test sudah ada, lanjutkan ke logika ekonomi dan XP |
+| Cakupan test masih sangat tipis | Setiap refactor masih taruhan | Tiga berkas test sudah ada, lanjutkan ke logika ekonomi dan XP |
 | Roadmap tertinggal dari kode | Waktu terbuang merencanakan yang sudah jadi | Verifikasi ke kode sebelum menulis status, bukan ke issue tracker |
 
 ---

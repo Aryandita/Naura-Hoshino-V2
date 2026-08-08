@@ -11,6 +11,15 @@ const UserSurvival = sequelize.define('UserSurvival', {
         type: DataTypes.INTEGER,
         defaultValue: 500 // Modal awal 500 Naura Star Fragments
     },
+    // Naura Coupon, mata uang paling langka. Dulu dititipkan di dalam rpg_state,
+    // tetapi kolom JSON tidak bisa dipotong lewat satu UPDATE bersyarat, sehingga
+    // kupon jadi satu-satunya mata uang yang rawan dibelanjakan dua kali.
+    // Migrasi v5 dan v6 memindahkannya ke kolom ini.
+    coupons: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
     hunger: {
         type: DataTypes.INTEGER,
         defaultValue: 100

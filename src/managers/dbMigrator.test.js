@@ -33,3 +33,31 @@ test('nama tabel ledger tidak berubah tanpa sengaja', () => {
     // sehingga semua migrasi dijalankan ulang pada database yang sudah benar.
     assert.equal(LEDGER_TABLE, 'schema_migrations');
 });
+
+test('nomor versi migrasi naik terus dan tidak pernah disusun ulang', () => {
+    // Ledger hanya mencatat ID, jadi menyisipkan migrasi di tengah daftar akan
+    // terlewat pada database yang sudah menjalankan migrasi sesudahnya.
+    const versions = MIGRATIONS.map(migration => {
+        const match = /^v(\d+)_/.exec(migration.id);
+        assert.ok(match, `ID migrasi '${migration.id}' harus berawalan v<nomor>_`);
+        return Number(match[1]);
+    });
+
+    for (let i = 1; i < versions.length; i += 1) {
+        assert.ok(versions[i] > versions[i - 1], `Migrasi '${MIGRATIONS[i].id}' berada di urutan yang salah`);
+    }
+});
+
+test('kolom kupon dibuat lebih dulu sebelum datanya dipindahkan', () => {
+    const addIndex = MIGRATIONS.findIndex(migration => migration.id === 'v5_add_coupons');
+    const moveIndex = MIGRATIONS.findIndex(migration => migration.id === 'v6_move_coupons_to_column');
+
+    assert.ok(addIndex >= 0, 'Migrasi v5_add_coupons hilang');
+    assert.ok(moveIndex > addIndex, 'Pemindahan data kupon harus berjalan sesudah kolomnya dibuat');
+
+    // Migrasi data ini menambah nilai pada dirinya sendiri, jadi menjalankannya
+    // dua kali akan menggandakan saldo kupon pemain. Ia hanya aman selama ledger
+    // yang menahannya, dan itulah alasan test ini ada.
+    assert.match(MIGRATIONS[moveIndex].sql, /^UPDATE UserSurvivals SET coupons = coupons \+/);
+    assert.match(MIGRATIONS[moveIndex].sql, /JSON_REMOVE\(rpg_state, '\$\.coupons'\)/);
+});

@@ -28,17 +28,36 @@ function quoteColumn(field) {
     }
 }
 
+// Salinan dalam untuk nilai kolom JSON. Mutator harus bekerja pada salinan, bukan
+// pada objek milik instance model, supaya pembatalan benar-benar tidak menyisakan
+// perubahan apa pun di memori.
+function cloneJson(value) {
+    if (value === null || typeof value !== 'object') return value;
+    try {
+        return structuredClone(value);
+    } catch (error) {
+        try {
+            return JSON.parse(JSON.stringify(value));
+        } catch (parseError) {
+            return value;
+        }
+    }
+}
+
 /**
  * CacheManager: Read-Through and Write-Behind Caching Layer
  *
- * Tiga aturan penting:
+ * Empat aturan penting:
  * 1. Nilai absolut (nama, status, timestamp) memakai update*(). Nilai yang bersifat
  *    akumulatif (koin, XP, HP) WAJIB memakai increment*() supaya perubahan dari dua
  *    shard tidak saling menimpa.
  * 2. Pengurangan saldo yang tidak boleh minus WAJIB memakai debit*(), bukan
  *    increment*() dengan angka negatif. Hanya debit*() yang memeriksa kecukupan
  *    saldo di dalam query yang sama dengan pemotongannya.
- * 3. Semua tulisan tertunda harus bisa di-flush lewat flushAll() saat shutdown.
+ * 3. Kolom JSON (inventory, rpg_state, cooldowns, economy_investments) WAJIB diubah
+ *    lewat mutate*Json(). Kolom JSON tidak bisa dimajukan dengan increment SQL,
+ *    jadi satu-satunya cara aman adalah mengunci barisnya.
+ * 4. Semua tulisan tertunda harus bisa di-flush lewat flushAll() saat shutdown.
  */
 class CacheManager {
 
@@ -260,6 +279,95 @@ class CacheManager {
     }
 
     // ==========================================
+    // 🧩 PERUBAHAN KOLOM JSON (BACA-UBAH-TULIS AMAN)
+    // ==========================================
+
+    /**
+     * Mengubah satu kolom JSON dengan barisnya dikunci lebih dulu.
+     *
+     * Kolom JSON tidak punya padanan `kolom = kolom + delta`, jadi increment atomik
+     * tidak bisa dipakai. Yang dilakukan di sini: buka transaksi, ambil baris dengan
+     * SELECT ... FOR UPDATE, ubah salinannya di memori, tulis satu kolom saja, lalu
+     * lepas kunci. Klik kedua menunggu di kunci itu dan membaca hasil klik pertama.
+     *
+     * Pola lama (baca dari cache, ubah di memori, update*()) membuat dua klik yang
+     * tiba bersamaan sama-sama menulis inventory versi lama plus satu barang, jadi
+     * salah satu barang hilang. Pada tiket dungeon akibatnya lebih parah: keduanya
+     * lolos pemeriksaan, tiket hanya berkurang satu, dan pertempuran jalan dua kali.
+     *
+     * @param {string} userId
+     * @param {string} field - Nama kolom JSON sesuai skema model.
+     * @param {Function} mutator - Menerima salinan nilai lama dan mengembalikan nilai
+     *   baru. Kembalikan null atau undefined untuk membatalkan tanpa menulis apa pun,
+     *   misalnya ketika barang yang diminta ternyata tidak cukup.
+     * @returns {Promise<{ ok: boolean, value?: any, reason?: string }>}
+     */
+    async _mutateJson(userId, field, mutator, { Model, cacheKey, label }) {
+        if (!userId || !field || typeof mutator !== 'function') return { ok: false, reason: 'invalid' };
+        if (!SAFE_COLUMN.test(field)) return { ok: false, reason: 'invalid_field' };
+
+        // Antrean tulis harus mendarat lebih dulu. Tanpa ini mutator membaca nilai
+        // lama dari database, lalu flush lima detik kemudian menimpa hasil mutasi.
+        await this.flushUser(userId);
+
+        // SQLite tidak mengenal SELECT ... FOR UPDATE. Di berkas SQLite penulisan
+        // sudah diserialkan, jadi kuncinya cukup dilewati.
+        const rowLock = sequelize.getDialect() === 'sqlite' ? {} : { lock: true };
+
+        try {
+            const outcome = await sequelize.transaction(async (t) => {
+                let row = await Model.findOne({ where: { userId }, transaction: t, ...rowLock });
+                if (!row) {
+                    await Model.findOrCreate({ where: { userId }, transaction: t });
+                    row = await Model.findOne({ where: { userId }, transaction: t, ...rowLock });
+                }
+                if (!row) return { ok: false, reason: 'no_row' };
+
+                const next = await mutator(cloneJson(row[field]));
+                if (next === null || next === undefined) return { ok: false, reason: 'aborted' };
+
+                row.set(field, next);
+                // Kolom JSON kadang tidak terdeteksi berubah bila isinya mirip.
+                // Penandaan manual memastikan UPDATE benar-benar dikirim.
+                row.changed(field, true);
+                await row.save({ fields: [field], transaction: t });
+                return { ok: true, value: next };
+            });
+
+            if (outcome.ok) {
+                // Cache dihapus, bukan ditambal. Nilai yang benar hanya diketahui
+                // database setelah transaksi ditutup.
+                await redisManager.deleteCache(cacheKey);
+            }
+            return outcome;
+        } catch (error) {
+            logger.error(`[CacheManager] Gagal mengubah ${label}.${field} untuk ${userId}:`, error.message);
+            return { ok: false, reason: 'error' };
+        }
+    }
+
+    /**
+     * Mengubah kolom JSON UserProfile: inventory, cooldowns, economy_investments,
+     * economy_deposit, music_playlist, dan sejenisnya.
+     */
+    async mutateUserProfileJson(userId, field, mutator) {
+        return this._mutateJson(userId, field, mutator, {
+            Model: UserProfile,
+            cacheKey: `user:profile:${userId}`,
+            label: 'UserProfile'
+        });
+    }
+
+    /** Mengubah kolom JSON UserSurvival: rpg_state dan shop_purchases. */
+    async mutateUserSurvivalJson(userId, field, mutator) {
+        return this._mutateJson(userId, field, mutator, {
+            Model: UserSurvival,
+            cacheKey: `user:survival:${userId}`,
+            label: 'UserSurvival'
+        });
+    }
+
+    // ==========================================
     // 👤 USER PROFILE CACHE
     // ==========================================
 
@@ -268,7 +376,8 @@ class CacheManager {
      *
      * PENTING: hasilnya adalah objek JSON biasa, BUKAN instance Sequelize.
      * Objek ini tidak punya .save() maupun .changed(). Semua penulisan harus lewat
-     * updateUserProfile(), incrementUserProfile(), atau debitUserProfile().
+     * updateUserProfile(), incrementUserProfile(), debitUserProfile(), atau
+     * mutateUserProfileJson() untuk kolom JSON.
      *
      * @param {string} userId - ID Discord User
      * @returns {Promise<Object>} Data profil pengguna (JSON)
@@ -307,6 +416,7 @@ class CacheManager {
      * Menyimpan nilai ABSOLUT pada UserProfile.
      * Untuk nilai akumulatif (koin, XP), pakai incrementUserProfile().
      * Untuk pengurangan saldo, pakai debitUserProfile().
+     * Untuk kolom JSON, pakai mutateUserProfileJson().
      *
      * @param {string} userId - ID Discord User
      * @param {Object} updateData - Key/Value pasang untuk diupdate
@@ -450,6 +560,7 @@ class CacheManager {
 
     /**
      * Menyimpan nilai ABSOLUT pada UserSurvival.
+     * Untuk kolom JSON (rpg_state, shop_purchases), pakai mutateUserSurvivalJson().
      *
      * @param {string} userId - ID Discord User
      * @param {Object} updateData - Data yang diupdate
@@ -476,7 +587,7 @@ class CacheManager {
 
     /**
      * Menambah/mengurangi kolom numerik UserSurvival secara atomik.
-     * Gunakan untuk starFragments, hp, hunger, thirst, stamina, survival_xp.
+     * Gunakan untuk starFragments, coupons, hp, hunger, thirst, stamina, survival_xp.
      *
      * @param {string} userId
      * @param {Object<string, number>} deltas - Contoh: { starFragments: 120, hunger: -5 }

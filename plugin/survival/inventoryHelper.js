@@ -1,6 +1,11 @@
 // plugin/survival/inventoryHelper.js
 // Helper terpusat untuk normalisasi dan manipulasi inventory user.
 // Memastikan tidak ada crash 'xxx.some is not a function' karena data JSON tersimpan sebagai string.
+//
+// Fungsi murni di bagian atas hanya mengolah array di memori. Untuk penulisan ke
+// database, WAJIB memakai addItemsAtomic() atau takeItemsAtomic() di bagian bawah:
+// keduanya mengunci baris pemain lebih dulu, sehingga dua klik yang tiba bersamaan
+// tidak saling menimpa dan tidak ada barang yang hilang.
 
 /**
  * Normalisasi nilai inventory dari database menjadi array yang aman.
@@ -76,4 +81,126 @@ function addOrStackItem(inv, newItem) {
     return [...inv, newItem];
 }
 
-module.exports = { safeParseInventory, findItem, hasItem, removeItem, addOrStackItem };
+/**
+ * Hitung jumlah sebenarnya sebuah item, termasuk yang tersusun dalam satu tumpukan.
+ * removeItem() menghitung per entri, sedangkan addOrStackItem() menumpuk lewat
+ * kolom amount, jadi perhitungan yang benar harus menjumlahkan amount.
+ * @param {Array} inv
+ * @param {string} itemId
+ * @returns {number}
+ */
+function countStack(inv, itemId) {
+    return safeParseInventory(inv).reduce(
+        (total, item) => (item && item.id === itemId ? total + (Number(item.amount) || 1) : total),
+        0
+    );
+}
+
+/**
+ * Ambil sejumlah item dari inventory dengan menghormati tumpukan.
+ * @param {Array} inv
+ * @param {string} itemId
+ * @param {number} [amount=1]
+ * @returns {Array|null} Inventory baru, atau null bila jumlahnya tidak cukup.
+ */
+function takeStack(inv, itemId, amount = 1) {
+    const list = safeParseInventory(inv);
+    let left = Math.max(1, Math.floor(Number(amount) || 1));
+    if (countStack(list, itemId) < left) return null;
+
+    const next = [];
+    for (const item of list) {
+        if (left > 0 && item && item.id === itemId) {
+            const have = Number(item.amount) || 1;
+            const used = Math.min(have, left);
+            left -= used;
+            const rest = have - used;
+            if (rest > 0) next.push({ ...item, amount: rest });
+            continue;
+        }
+        next.push(item);
+    }
+    return next;
+}
+
+/** Seragamkan masukan menjadi array permintaan item. */
+function toList(input) {
+    if (!input) return [];
+    return Array.isArray(input) ? input.filter(Boolean) : [input];
+}
+
+// Diambil di dalam fungsi, bukan di puncak berkas, supaya berkas ini tetap bisa
+// diuji tanpa menyalakan koneksi database.
+function manager() {
+    return require('../../src/managers/cacheManager');
+}
+
+/**
+ * Masukkan satu atau beberapa barang ke tas secara atomik.
+ *
+ * Pola lama membaca inventory dari cache, menambah barang di memori, lalu menulis
+ * seluruh array kembali. Dua hadiah yang tiba bersamaan sama-sama menulis array
+ * versi lama plus satu barang, jadi salah satu barang hilang tanpa jejak.
+ *
+ * @param {string} userId
+ * @param {Object|Array<Object>} newItems - { id, name, amount }
+ * @returns {Promise<{ ok: boolean, inventory?: Array, reason?: string }>}
+ */
+async function addItemsAtomic(userId, newItems) {
+    const list = toList(newItems).filter(item => item && item.id);
+    if (list.length === 0) return { ok: true, inventory: null };
+
+    const result = await manager().mutateUserProfileJson(userId, 'inventory', (raw) => {
+        let inv = safeParseInventory(raw);
+        for (const item of list) {
+            inv = addOrStackItem(inv, { ...item, amount: Number(item.amount) || 1 });
+        }
+        return inv;
+    });
+
+    if (!result.ok) return { ok: false, reason: result.reason };
+    return { ok: true, inventory: result.value };
+}
+
+/**
+ * Ambil satu atau beberapa barang dari tas secara atomik.
+ *
+ * Pemeriksaan jumlah dan pengambilannya terjadi di dalam satu transaksi dengan
+ * baris pemain terkunci. Klik kedua menunggu, lalu membaca sisa yang sebenarnya,
+ * sehingga satu tiket dungeon tidak bisa dipakai dua kali.
+ *
+ * @param {string} userId
+ * @param {Object|Array<Object>} requests - { id, amount }
+ * @returns {Promise<{ ok: boolean, inventory?: Array, reason?: string }>}
+ *   reason 'not_enough' berarti barangnya kurang, bukan kegagalan teknis.
+ */
+async function takeItemsAtomic(userId, requests) {
+    const list = toList(requests).filter(item => item && item.id);
+    if (list.length === 0) return { ok: true, inventory: null };
+
+    const result = await manager().mutateUserProfileJson(userId, 'inventory', (raw) => {
+        let inv = safeParseInventory(raw);
+        for (const req of list) {
+            const next = takeStack(inv, req.id, req.amount || 1);
+            if (next === null) return null; // Batalkan seluruh transaksi.
+            inv = next;
+        }
+        return inv;
+    });
+
+    if (result.ok) return { ok: true, inventory: result.value };
+    if (result.reason === 'aborted') return { ok: false, reason: 'not_enough' };
+    return { ok: false, reason: result.reason };
+}
+
+module.exports = {
+    safeParseInventory,
+    findItem,
+    hasItem,
+    removeItem,
+    addOrStackItem,
+    countStack,
+    takeStack,
+    addItemsAtomic,
+    takeItemsAtomic
+};

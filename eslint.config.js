@@ -1,6 +1,33 @@
 // Flat config ESLint untuk Naura Hoshino V.2 (CommonJS / Node)
 // Jalankan: npm run lint  |  Perbaiki otomatis: npm run lint:fix
 
+// Kolom JSON. Tidak punya padanan `kolom = kolom + delta`, jadi satu-satunya cara
+// aman adalah mengunci barisnya lewat mutate*Json().
+const JSON_COLUMNS = [
+    'inventory',
+    'rpg_state',
+    'shop_purchases',
+    'cooldowns',
+    'economy_investments',
+    'economy_deposit',
+    'afk_mentions',
+    'music_playlist'
+];
+
+// Kolom yang sifatnya akumulatif. Menulis nilai absolut hasil pembacaan membuat
+// dua perubahan yang tiba berdekatan saling menimpa.
+const COUNTER_COLUMNS = [
+    'economy_wallet',
+    'economy_bank',
+    'starFragments',
+    'coupons',
+    'leveling_xp',
+    'survival_xp',
+    'music_tracksListened'
+];
+
+const asPattern = names => `/^(${names.join('|')})$/`;
+
 module.exports = [
     {
         ignores: [
@@ -53,15 +80,16 @@ module.exports = [
             'no-var': 'warn',
             'prefer-const': 'warn',
 
-            // `ephemeral: true` sudah usang di discord.js v14 dan hanya bertahan di
-            // repo ini karena penambal prototype di src/utils/ephemeralPatch.js.
-            // Aturan ini menahan pemakaian baru supaya penambal itu bisa dihapus
-            // (issue #10), bukan tumbuh terus.
-            //
-            // Setelan 'warn' dulu, bukan 'error', karena pemanggil lama belum
-            // selesai dimigrasikan dan lint yang merah total malah diabaikan orang.
+            // Semua entri di bawah bersetelan 'warn', bukan 'error', dengan alasan
+            // yang sama: pemanggil lama di modul non-survival belum selesai
+            // diaudit, dan lint yang merah total justru berhenti dibaca orang.
+            // Naikkan ke 'error' setelah auditnya tuntas.
             'no-restricted-syntax': [
                 'warn',
+
+                // `ephemeral: true` sudah usang di discord.js v14 dan hanya bertahan
+                // karena penambal prototype di src/utils/ephemeralPatch.js. Aturan ini
+                // menahan pemakaian baru supaya penambal itu bisa dihapus (issue #10).
                 {
                     selector: 'Property[key.name="ephemeral"][value.value=true]',
                     message: 'Gunakan `flags: MessageFlags.Ephemeral`, bukan `ephemeral: true` (issue #10).'
@@ -69,6 +97,44 @@ module.exports = [
                 {
                     selector: 'Property[key.value="ephemeral"][value.value=true]',
                     message: 'Gunakan `flags: MessageFlags.Ephemeral`, bukan `ephemeral: true` (issue #10).'
+                },
+
+                // Kolom JSON yang ditulis sebagai nilai absolut. Inilah pola yang
+                // membuat barang hilang ketika dua hadiah tiba bersamaan: keduanya
+                // menulis array versi lama plus satu barang.
+                {
+                    selector: `CallExpression[callee.property.name=/^updateUser(Profile|Survival)$/] ObjectExpression > Property[key.name=${asPattern(JSON_COLUMNS)}]`,
+                    message: 'Kolom JSON wajib diubah lewat cacheManager.mutate*Json() atau helper atomik seperti addItemsAtomic(), bukan update*() dengan nilai absolut (issue #17).'
+                },
+
+                // Kolom akumulatif yang ditulis sebagai nilai absolut.
+                {
+                    selector: `CallExpression[callee.property.name=/^updateUser(Profile|Survival)$/] ObjectExpression > Property[key.name=${asPattern(COUNTER_COLUMNS)}]`,
+                    message: 'Kolom akumulatif wajib memakai increment*() untuk penambahan atau debit*() untuk pengurangan, bukan update*() dengan nilai absolut (issue #17).'
+                },
+
+                // Model.update() langsung melewati seluruh lapisan cache, sehingga
+                // cache user:profile dan user:survival menyimpan nilai basi sampai
+                // TTL-nya habis.
+                {
+                    selector: 'CallExpression[callee.object.name=/^User(Profile|Survival)$/][callee.property.name="update"]',
+                    message: 'Jangan memanggil UserProfile.update() atau UserSurvival.update() langsung. Lewatkan lewat cacheManager supaya cache-nya ikut dibereskan.'
+                },
+
+                // save() tanpa daftar fields menulis SELURUH baris dari nilai yang ada
+                // di memori. Bila charge() atau reward() baru saja memajukan kolom
+                // atomik, nilai lama ikut tertulis dan flush lima detik kemudian
+                // menerapkan penambahannya lagi. Inilah bug kupon terhitung dua kali.
+                {
+                    selector: 'CallExpression[arguments.length=0][callee.property.name="save"][callee.object.name=/^(survival|profile|userSurvival|userProfile|row)$/]',
+                    message: 'Sebutkan kolomnya secara eksplisit: save({ fields: [...] }). save() telanjang menulis seluruh baris dan bisa menggandakan saldo yang baru dimajukan charge() atau reward().'
+                },
+
+                // Menulis saldo sebagai nilai absolut. Dipertahankan hanya untuk
+                // pemanggil lama yang belum diaudit.
+                {
+                    selector: 'CallExpression[callee.property.name="setBalance"]',
+                    message: 'currency.setBalance() sudah usang. Pakai charge() untuk memotong, reward() untuk menambah, atau cacheManager.increment*() bila butuh delta langsung.'
                 }
             ]
         }
@@ -76,6 +142,15 @@ module.exports = [
     {
         // Penambal itu sendiri memang harus menyebut properti usangnya.
         files: ['src/utils/ephemeralPatch.js'],
+        rules: {
+            'no-restricted-syntax': 'off'
+        }
+    },
+    {
+        // cacheManager adalah satu-satunya tempat yang memang berhak menyentuh
+        // model secara langsung. Seluruh aturan di atas justru dirancang supaya
+        // semua penulisan bermuara ke berkas ini.
+        files: ['src/managers/cacheManager.js', 'src/managers/dbMigrator.js', 'src/managers/dbSeeder.js'],
         rules: {
             'no-restricted-syntax': 'off'
         }

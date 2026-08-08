@@ -9,7 +9,7 @@ const cacheManager = require('../../src/managers/cacheManager');
 const currencyHelper = require('./currency');
 const stock = require('./shopStock');
 const coupons = require('./shopCoupon');
-const { safeParseInventory, addOrStackItem } = require('./inventoryHelper');
+const { addItemsAtomic } = require('./inventoryHelper');
 const { applyItemEffect } = require('./specialEffects');
 
 const COUPON_PREFIX = 'kupon:';
@@ -68,12 +68,15 @@ async function buy({ userId, value, currency }) {
     const itemName = catalogNameOf(itemId, isCoupon);
     let effectNote = '';
 
+    // Penyimpanan dibatasi ke kolom yang memang berubah. Uangnya sudah dipotong
+    // secara atomik di database, jadi menyimpan seluruh objek hanya akan menulis
+    // ulang saldo dari memori dan membuka kembali peluang balapan.
     if (itemId.startsWith('prop_')) {
         survival.propertyId = PROPERTY_MAP[itemId] || survival.propertyId;
-        await survival.save();
+        await survival.save({ fields: ['propertyId'] });
     } else if (itemId.startsWith('veh_')) {
         survival.vehicle = itemId === 'veh_motor' ? 'motorcycle' : 'bicycle';
-        await survival.save();
+        await survival.save({ fields: ['vehicle'] });
     } else {
         const couponItem = isCoupon ? coupons.getCouponItem(itemId) : null;
 
@@ -95,13 +98,15 @@ async function buy({ userId, value, currency }) {
     return { ok: true, itemId, itemName, price, isCoupon, effectNote };
 }
 
+// Barang masuk tas lewat transaksi berkunci, bukan tulis-ulang seluruh array.
+// Dua pembelian yang tiba bersamaan dulu bisa membuat salah satu barang hilang.
 async function storeItem(userId, profile, itemId, itemName) {
-    const inv = addOrStackItem(safeParseInventory(profile.inventory), {
-        id: itemId,
-        name: itemName,
-        amount: 1
-    });
-    await cacheManager.updateUserProfile(userId, { inventory: inv });
+    const stored = await addItemsAtomic(userId, { id: itemId, name: itemName, amount: 1 });
+
+    // Objek profile yang dipegang pemanggil ikut disegarkan supaya tampilan tas
+    // sesudah pembelian tidak memperlihatkan isi tas yang lama.
+    if (profile && stored.ok && stored.inventory) profile.inventory = stored.inventory;
+    return stored;
 }
 
 module.exports = {
