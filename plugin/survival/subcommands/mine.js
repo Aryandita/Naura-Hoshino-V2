@@ -2,7 +2,7 @@
 
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const cacheManager = require('../../../src/managers/cacheManager');
-const { safeParseInventory } = require('../inventoryHelper');
+const { safeParseInventory, countStack, addItemsAtomic } = require('../inventoryHelper');
 const ui = require('../../../src/config/ui');
 const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
 const questGen = require('../questGenerator');
@@ -33,12 +33,6 @@ function e(name, fallback) {
     return ui.getEmoji(name) || fallback;
 }
 
-function addItem(inventory, id, name, amount, type) {
-    const exist = inventory.find(it => it && it.id === id);
-    if (exist) exist.amount = (exist.amount || 1) + amount;
-    else inventory.push({ id, name, amount, type });
-}
-
 // Tabel hasil tambang. Diamond sekarang benar-benar bisa keluar, supaya
 // pencapaian Kurcaci Penambang tidak lagi mustahil diraih.
 function rollOre(bonus) {
@@ -62,16 +56,16 @@ module.exports = {
     async execute(interaction) {
         const user = interaction.user;
         const profile = await cacheManager.getUserProfile(user.id);
-        const survival = await cacheManager.getUserSurvival(user.id);
 
         const inventory = safeParseInventory(profile.inventory);
         const pickaxe = PICKAXES.find(p => inventory.some(it => it && it.id === p.id));
 
         if (!pickaxe) return ui.sendError(interaction, 'err_sys_53', true);
-        if ((survival.stamina || 0) < STAMINA_COST) return ui.sendError(interaction, 'err_sys_54', true);
 
-        survival.stamina -= STAMINA_COST;
-        await survival.save();
+        // Sama seperti chop: pemeriksaan dan pemotongan stamina jadi satu langkah
+        // di database, supaya tidak ada dua tambang berjalan dari tenaga yang sama.
+        const paid = await cacheManager.debitUserSurvival(user.id, 'stamina', STAMINA_COST);
+        if (!paid.ok) return ui.sendError(interaction, 'err_sys_54', true);
 
         const target = STONES[Math.floor(Math.random() * STONES.length)];
 
@@ -135,12 +129,28 @@ module.exports = {
                 return;
             }
 
-            const fresh = await cacheManager.getUserProfile(user.id);
-            const bag = safeParseInventory(fresh.inventory);
             const ore = rollOre(pickaxe.bonus);
 
-            addItem(bag, ore.id, ore.name, ore.amount, 'material');
-            await cacheManager.updateUserProfile(user.id, { inventory: bag });
+            // Tidak perlu lagi membaca profil segar lalu menulis ulang seluruh tas.
+            // Transaksi terkunci di dalam helper yang mengerjakan keduanya sekaligus.
+            const stored = await addItemsAtomic(user.id, [
+                { id: ore.id, name: ore.name, amount: ore.amount, type: 'material' }
+            ]);
+
+            if (!stored.ok) {
+                const writeFailPayload = buildContainerV2({
+                    accentColorHex: ui.getColor('warning') || '#FFB347',
+                    authorName: 'Naura Ancient Cave',
+                    title: `${e('akward', '\uD83D\uDCA5')} Hasilnya gagal dicatat`,
+                    iconURL: user.displayAvatarURL(),
+                    expression: 'fail',
+                    description: 'Batunya pecah dan isinya kelihatan, tapi Naura gagal memasukkannya ke tas kamu. Maaf ya, coba sebentar lagi.',
+                    footerText: ui.getFooter('survival')
+                });
+
+                await interaction.editReply({ ...writeFailPayload, embeds: [] }).catch(() => {});
+                return;
+            }
 
             const lines = [
                 'Hebat! Instingmu tajam banget, batunya benar dan isinya berharga. Naura bangga!',
@@ -169,11 +179,8 @@ module.exports = {
 
             await questGen.incrementQuestProgress(user.id, 'collect', 1).catch(() => {});
 
-            if (ore.id === 'diamond') {
-                const stock = bag.find(it => it && it.id === 'diamond');
-                if (stock && (stock.amount || 0) >= DIAMOND_TARGET) {
-                    await achievementHelper.unlockAchievement(interaction, 'miner_dwarf');
-                }
+            if (ore.id === 'diamond' && countStack(stored.inventory, 'diamond') >= DIAMOND_TARGET) {
+                await achievementHelper.unlockAchievement(interaction, 'miner_dwarf');
             }
         });
 

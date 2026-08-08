@@ -2,7 +2,7 @@
 
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const cacheManager = require('../../../src/managers/cacheManager');
-const { safeParseInventory } = require('../inventoryHelper');
+const { safeParseInventory, countStack, addItemsAtomic } = require('../inventoryHelper');
 const ui = require('../../../src/config/ui');
 const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
 const questGen = require('../questGenerator');
@@ -10,6 +10,7 @@ const achievementHelper = require('../achievementHelper');
 
 const STAMINA_COST = 15;
 const TIME_LIMIT_MS = 5000;
+const WOOD_TARGET = 500;
 
 // Kapak dari yang paling ringan sampai paling sakti. Semakin bagus kapaknya,
 // semakin sedikit tebasan yang dibutuhkan.
@@ -25,26 +26,22 @@ function e(name, fallback) {
     return ui.getEmoji(name) || fallback;
 }
 
-function addItem(inventory, id, name, amount, type) {
-    const exist = inventory.find(it => it && it.id === id);
-    if (exist) exist.amount = (exist.amount || 1) + amount;
-    else inventory.push({ id, name, amount, type });
-}
-
 module.exports = {
     async execute(interaction) {
         const user = interaction.user;
         const profile = await cacheManager.getUserProfile(user.id);
-        const survival = await cacheManager.getUserSurvival(user.id);
 
         const inventory = safeParseInventory(profile.inventory);
         const axe = AXES.find(a => inventory.some(it => it && it.id === a.id));
 
         if (!axe) return ui.sendError(interaction, 'err_sys_35', true);
-        if ((survival.stamina || 0) < STAMINA_COST) return ui.sendError(interaction, 'err_sys_36', true);
 
-        survival.stamina -= STAMINA_COST;
-        await survival.save();
+        // Stamina dipotong lewat satu UPDATE bersyarat, bukan dibaca lalu ditulis
+        // ulang. Pemeriksaan kecukupan dan pemotongannya terjadi di pernyataan SQL
+        // yang sama, jadi dua klik yang tiba berdekatan tidak bisa menebang pohon
+        // dua kali dengan tenaga yang sama.
+        const paid = await cacheManager.debitUserSurvival(user.id, 'stamina', STAMINA_COST);
+        if (!paid.ok) return ui.sendError(interaction, 'err_sys_36', true);
 
         const clicksNeeded = axe.clicks;
 
@@ -137,8 +134,26 @@ module.exports = {
                 }
             }
 
-            addItem(inventory, rewardId, rewardName, rewardAmount, 'material');
-            await cacheManager.updateUserProfile(user.id, { inventory });
+            // Barang masuk lewat jalur terkunci. Menulis ulang seluruh array
+            // inventory membuat hadiah lain yang tiba bersamaan ikut terhapus.
+            const stored = await addItemsAtomic(user.id, [
+                { id: rewardId, name: rewardName, amount: rewardAmount, type: 'material' }
+            ]);
+
+            if (!stored.ok) {
+                const writeFailPayload = buildContainerV2({
+                    accentColorHex: ui.getColor('warning') || '#FFB347',
+                    authorName: 'Naura Forest',
+                    title: `${e('akward', '\uD83D\uDCA8')} Hasilnya gagal dicatat`,
+                    iconURL: user.displayAvatarURL(),
+                    expression: 'fail',
+                    description: 'Pohonnya tumbang, tapi Naura gagal mencatat kayunya ke dalam tas kamu. Maaf ya, coba sebentar lagi.',
+                    footerText: ui.getFooter('survival')
+                });
+
+                await interaction.editReply({ ...writeFailPayload, embeds: [] }).catch(() => {});
+                return;
+            }
 
             const lines = [
                 'Hebat banget! Pohonnya tumbang sekali jalan. Naura bangga sama kamu!',
@@ -163,11 +178,10 @@ module.exports = {
 
             await questGen.incrementQuestProgress(user.id, 'collect', 1).catch(() => {});
 
-            if (rewardId === 'wood') {
-                const stock = inventory.find(it => it && it.id === 'wood');
-                if (stock && (stock.amount || 0) >= 500) {
-                    await achievementHelper.unlockAchievement(interaction, 'forest_guardian');
-                }
+            // Dihitung dari inventory hasil transaksi, bukan dari salinan lama di
+            // memori, dan memakai countStack supaya tumpukan ikut terhitung.
+            if (rewardId === 'wood' && countStack(stored.inventory, 'wood') >= WOOD_TARGET) {
+                await achievementHelper.unlockAchievement(interaction, 'forest_guardian');
             }
         });
     }
