@@ -1,109 +1,119 @@
-# TODO Naura Hoshino V2
+# TODO Naura Hoshino V2 — Roadmap Pengembangan
 
-Daftar pekerjaan yang masih terbuka. Centang bila sudah selesai.
+Daftar pekerjaan strategis berdasarkan evaluasi arsitektur. Pekerjaan dibagi menjadi beberapa sprint (tahapan) berdasarkan prioritas.
 
 ---
 
-## 🔥 Prioritas Tinggi
+## 🔴 Sprint 1: Fundamental & Kritis (Minggu Ini)
+
+Fokus pada kestabilan pipeline, monitoring, dan sinkronisasi desain awal.
+
+- [ ] **Setup GitHub Actions CI secara menyeluruh**
+  - **Cara Implementasi:**
+    1. Buka `.github/workflows/ci.yml`.
+    2. Tambahkan step untuk mengeksekusi `node scripts/check-em-dash.js`.
+    3. Ubah `npm run locales:check` menjadi `npm run locales:check:strict` agar pipeline gagal jika ada kunci bahasa yang tertinggal.
+- [ ] **Audit Desain Dashboard vs `DESIGN.md`**
+  - **Cara Implementasi:**
+    1. Buka `src/dashboard/public/css/style.css` dan pastikan implementasi `.glass-panel` menggunakan `backdrop-filter: blur(16px)` dan background color `rgba(255, 255, 255, 0.03)` sesuai `DESIGN.md`.
+    2. Pastikan font utama diubah: metrik/angka menggunakan `Orbitron`, teks biasa menggunakan `Outfit`.
+    3. Tambahkan efek pendar (glow) pada hover state kartu-kartu di dashboard.
+- [ ] **Tambahkan API Health Check External**
+  - **Cara Implementasi:**
+    1. Buat file route baru `src/dashboard/routes/api.js`.
+    2. Daftarkan endpoint `GET /api/health`.
+    3. Panggil `featureRegistry.getHealthStats()` dari registry yang sudah ada dan kembalikan status `200 OK` dengan payload JSON. Daftarkan route ini di `server.js`.
+
+---
+
+## 🟠 Sprint 2: UI Real-time & Interaksi (2-4 Minggu)
+
+Membangun modul dashboard baru dan meningkatkan "nyawa" AI Naura.
+
+- [ ] **Halaman Music Control Panel (`music.html`) di Dashboard**
+  - **Cara Implementasi:**
+    1. Buat view `src/dashboard/views/music.html`.
+    2. Buat socket event di `src/dashboard/sockets/` untuk memancarkan (emit) state Lavalink secara real-time (lagu sekarang, queue, posisi durasi).
+    3. Di frontend, listen socket event tersebut dan update progress bar menggunakan vanilla JS / Tailwind.
+- [ ] **Implementasi AI Conversation Memory per-User**
+  - **Cara Implementasi:**
+    1. Buka `src/managers/aiManager.js`.
+    2. Sebelum memanggil LLM API, cek `redisManager` untuk kunci `ai_memory:{userId}`.
+    3. Jika ada, gabungkan history tersebut ke dalam context. Setelah response diterima, push response baru ke array dan simpan kembali ke Redis dengan `TTL 3600` (1 jam).
+- [ ] **Sistem Moderasi: Tempban & Strike Escalation**
+  - **Cara Implementasi:**
+    1. Buat model `UserStrike` atau modifikasi `UserWarn`.
+    2. Di `plugin/admin/warn.js`, tambahkan logika pengecekan total peringatan.
+    3. Jika total mencapai 3, jalankan `interaction.guild.members.ban(userId)` dan jadwalkan unban menggunakan agenda/cron (`src/managers/cronManager.js`).
+
+---
+
+## 🟡 Sprint 3: Fitur Lanjutan & Optimasi (1-2 Bulan)
+
+Fokus pada fitur-fitur yang menambah nilai hiburan dan optimalisasi beban server.
+
+- [ ] **Audio Filters & DJ Role Sistem Musik**
+  - **Cara Implementasi:**
+    1. Tambahkan subcommand `/music filter [tipe]`.
+    2. Gunakan `player.setFilters()` dari Poru (Lavalink wrapper) untuk mengaplikasikan Nightcore, BassBoost, dll.
+    3. Tambahkan field `djRoleId` di `GuildSettings`. Jika di-set, cegah interaksi tombol (skip, stop) oleh user tanpa role tersebut di `musicButtons.js`.
+- [ ] **Halaman Ekonomi (`economy.html`) & Auction House**
+  - **Cara Implementasi:**
+    1. Buat `economy.html` menampilkan tabel klasemen kekayaan dan statistik inflasi server.
+    2. Untuk Auction, buat tabel `market_auctions`. Tambahkan command `/market auction [item] [harga]` dan `/market bid`.
+- [ ] **Anti-Raid System**
+  - **Cara Implementasi:**
+    1. Di `guildMemberAdd.js`, gunakan Rate Limiter memory untuk menghitung jumlah join per guild.
+    2. Jika melebihi batas (contoh: 5 joins per 10 detik), set flag `GuildSettings.settings.lockdown = true` dan nonaktifkan channel verifikasi.
+- [ ] **Optimasi: Caching Canvas Image via Redis**
+  - **Cara Implementasi:**
+    1. Di `imageManager.js` (atau setelah dipecah jadi `canvasManager.js`), sebelum memanggil `@napi-rs/canvas`, cek Redis dengan key `canvas:profile:{userId}`.
+    2. Simpan hasil buffer render gambar ke Redis sebagai base64 string dengan TTL 300 detik (5 menit).
+- [ ] **Refactor `imageManager.js`**
+  - **Cara Implementasi:** Pecah file 32KB ini. Pindahkan fungsi-fungsi spesifik ke file terpisah seperti `src/utils/canvas/profileRenderer.js` dan `src/utils/canvas/levelCardRenderer.js`.
+
+---
+
+## 🟢 Sprint 4: Ekspansi & Visibilitas (2-3 Bulan)
+
+Mengukuhkan posisi Naura sebagai bot papan atas.
+
+- [ ] **Seasonal Events System**
+  - **Cara Implementasi:**
+    1. Di `survivalContext.js`, tambahkan fungsi penentu musim (Halloween, Lebaran, Natal) berdasarkan tanggal.
+    2. Berikan boost drop rate atau spawn rate item eksklusif berdasarkan event aktif.
+- [ ] **Dashboard: Welcome Card Visual Builder**
+  - **Cara Implementasi:**
+    1. Buat halaman web interaktif menggunakan Canvas HTML5.
+    2. Izinkan admin menggeser elemen (drag-drop teks, warna overlay) dan mengekspor JSON config yang akan disimpan ke tabel `GuildSettings`.
+- [ ] **Plugin Ticketing Lanjutan**
+  - **Cara Implementasi:**
+    1. Buat folder `plugin/ticketing/`.
+    2. Gunakan Discord Modal V2 untuk formulir pembuatan tiket, lalu buat private thread channel per-tiket.
+- [ ] **AI Function Calling Lanjutan**
+  - **Cara Implementasi:** Konfigurasi SDK `@google/genai` untuk menerima `tools`. Daftarkan tool seperti `check_balance` atau `get_user_info`, arahkan ke fungsi internal bot.
+
+---
+
+## 📜 Arsip Selesai (Versi 1.2.0 - Core Engine)
+
+<details>
+<summary>Klik untuk melihat daftar pekerjaan yang sudah selesai</summary>
 
 - [x] Selaraskan nama variabel environment di README dengan `src/config/env.js`
-- [x] Hentikan `process.exit(1)` saat `env.js` di-import (mencegah respawn loop)
+- [x] Hentikan `process.exit(1)` saat `env.js` di-import
 - [x] Deploy slash command hanya oleh shard utama
-- [x] Perbaiki `npm run deploy` agar flag `--deploy` benar-benar dihormati
-- [x] Perbaiki versi `sqlite3` yang tidak ada di registry
-- [x] Guard `translateSync()` terhadap kode bahasa `undefined`
-- [ ] Jalankan dashboard hanya di satu proses dan verifikasi tidak ada `EADDRINUSE`
-- [x] Isi `SESSION_SECRET` di produksi dan verifikasi tanda tangan webhook Saweria/Top.gg
-
-## 🧭 Audit & Stabilitas Awal
-
+- [x] Perbaiki `npm run deploy` agar flag `--deploy` dihormati
 - [x] Pusatkan `NODE_ENV` lewat `src/config/env.js`
 - [x] Pastikan semua migration schema hanya berada di `src/managers/dbMigrator.js`
-- [x] Perjelas log error fallback migrator agar tidak ada silent catch kosong
 - [x] Arahkan update settings dari `messageCreate` lewat `guildSettingsService`
-- [x] Tambahkan unref pada cleanup timer error dedup map
-- [x] Rapikan cleanup TTL snipe cache di `messageDelete`
-- [x] Hapus Discord ID statis dari `src/config.json`
-- [x] Tambahkan `src/config.example.json` sebagai template konfigurasi deployment
 - [x] Migrasikan respons komponen kedaluwarsa ke Container V2
-- [x] Tambahkan `nauraText` helper untuk copywriting persona Naura
-- [x] Jadikan `nauraText` bilingual lewat kamus `common.tone.*`
-- [x] Tambahkan key bilingual untuk komponen kedaluwarsa
-- [x] Gunakan key i18n pada respons komponen kedaluwarsa
+- [x] Tambahkan `nauraText` helper untuk copywriting persona Naura bilingual
 - [x] Tambahkan fondasi `src/config/features.js` untuk feature registry
-- [x] Tambahkan renderer awal `featureRegistryView`
-- [x] Siapkan `helpView` terpisah untuk integrasi registry ke help
-- [ ] Audit manual akses `process.env` langsung di luar `src/config/env.js`
-- [ ] Ganti query panas `GuildSettings.findOne()` dengan cache terpusat
-- [ ] Ganti query panas `UserProfile.findByPk()` dengan cache terpusat
-- [ ] Tambahkan cleanup TTL pada seluruh `Map` dan `Set` sementara
-- [ ] Audit hardcoded Discord ID dan pindahkan ke `config.json` atau `GuildSettings`
-- [ ] Audit response utama yang masih memakai embed legacy agar diarahkan ke Components V2
-
-## 🧩 Feature Registry & Control Center
-
-- [x] Buat registry awal untuk modul utama Naura
-- [x] Buat utility renderer awal untuk registry
-- [x] Siapkan view helper untuk `/help`
-- [ ] Integrasikan registry ke `/help`
-- [ ] Integrasikan registry ke `/setup`
-- [ ] Buat health check awal berbasis registry
-- [ ] Tampilkan dependency env dan permission per fitur di dashboard/setup
-
-## 🧹 Kebersihan Kode
-
-- [x] Pilih satu SDK Gemini: `@google/genai` **atau** `@google/generative-ai`
-- [ ] Pilih satu penjadwal: `cron` **atau** `node-cron`
-- [ ] Hapus atau aktifkan `src/managers/EventHandler.js` yang tidak terpakai
-- [ ] Ganti monkey-patch `ephemeral` di `index.js` dengan `flags` di tiap pemanggilan
-- [x] Pecah `src/dashboard/server.js` (64 KB) menjadi beberapa router
-- [ ] Pecah `plugin/core/core.js` (39 KB) dan `src/config/ui.js` (30 KB)
-- [x] Pecah `src/events/interactionCreate.js` (43 KB) menjadi router tipis + registry
-- [ ] Bereskan seluruh peringatan `npm run lint`
-- [ ] Hapus `@google/generative-ai` dari `package.json` (sudah tidak dipakai berkas mana pun)
-- [ ] Pastikan `@xenova/transformers` dan `tesseract.js` benar-benar tidak terpakai, lalu hapus
-
-## ✍️ Gaya Tulisan
-
-- [x] Tambah `scripts/check-em-dash.js` sebagai pemindai otomatis
-- [ ] Bersihkan sisa em dash pada kamus bahasa dan string dalam kode
-- [ ] Aktifkan pemindai di CI setelah repo bersih
-
-## 🌐 Bilingual (ID / EN)
-
+- [x] Ganti query panas `GuildSettings.findOne()` dengan cache terpusat
 - [x] Cache bahasa per user agar tidak query database di setiap balasan
-- [x] Dukungan kunci bersarang (`help.title`) pada kamus
-- [x] Gabungkan kamus milik plugin ke kamus utama
-- [x] Script audit paritas kunci (`npm run locales:check`)
-- [ ] Pemilih bahasa saat pertama kali membuka `/help`
-- [ ] Ganti seluruh teks yang masih ditulis langsung (hardcode) dengan kunci kamus
-- [ ] Lengkapi `language/en.json` sampai sepadan dengan `id.json`
-- [ ] Aktifkan `npm run locales:check:strict` di CI setelah semua kunci sepadan
+- [x] Helper `src/utils/nauraExpression.js` terintegrasi ke Container Builder
+- [x] Survival: Rapikan 33 subcommand
+- [x] Bersihkan sisa em dash pada kamus bahasa
 
-## 🎨 Ekspresi Naura
-
-- [x] Helper `src/utils/nauraExpression.js`
-- [ ] Integrasikan ke `NauraEmbedBuilder.js` dan `NauraContainerBuilder.js`
-- [ ] Terapkan ekspresi pada pesan sukses, error, dan cooldown
-- [ ] Pertimbangkan konversi aset ke WebP untuk menghemat bandwidth
-
-## 🧩 Plugin
-
-- [ ] `survival`: rapikan 33 subcommand, satukan helper yang berulang
-- [ ] `core`: rombak menu `/help` beserta pemilih bahasa
-- [ ] `music`: tinjau penanganan error Lavalink
-- [x] `ai`: rapikan rantai fallback penyedia AI
-- [ ] `canvas` dan `leveling`: optimalkan rendering dan cache
-- [ ] `admin` dan `utility`: audit izin dan konsistensi respons
-
----
-
-## 📘 Referensi: Components V2
-
-Catatan penting yang perlu diingat saat menyentuh UI.
-
-**Flag:** `IS_COMPONENTS_V2` = `1 << 15` = `32768`. Maksimum 40 komponen per pesan.
-
-**Tipe komponen:** `1` ActionRow, `2` Button, `9` Section, `10` TextDisplay, `11` Thumbnail, `12` MediaGallery, `14` Separator, `17` Container.
-
-**Jebakan yang pernah terjadi:** saat mengedit pesan loading yang sebelumnya memakai embed, `PATCH` milik Discord tidak menghapus embed lama sehingga bentrok dengan flag Components V2. Payload wajib menyertakan `embeds: []` dan `content: null` secara eksplisit. Sudah diterapkan di `buildContainerV2()` (dipakai `ping`, `stats`, `info`, `about`) dan tiga titik edit pada alur `help`.
+</details>

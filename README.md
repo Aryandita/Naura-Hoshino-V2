@@ -2,7 +2,10 @@
 
 # 🌸 Naura Hoshino V2
 
-**Bot Discord serbaguna berbasis `discord.js` v14** dengan UI Canvas modern, ekonomi & survival, musik Lavalink, AI berlapis, dan Web Dashboard realtime.
+**Bot Discord serbaguna berbasis `discord.js` v14**
+Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar musik Lavalink, kecerdasan AI berlapis, dan Web Dashboard realtime yang elegan.
+
+<br />
 
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D%2020.6.0-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.js.org)
@@ -11,12 +14,16 @@
 [![Lavalink](https://img.shields.io/badge/Lavalink-v4-FF6B6B?style=for-the-badge&logo=musicbrainz&logoColor=white)](https://lavalink.dev)
 [![License](https://img.shields.io/badge/License-ISC-8A2BE2?style=for-the-badge)](LICENSE)
 
+<br />
+
 ![Status](https://img.shields.io/badge/Status-Pengembangan%20Aktif-FF69B4?style=flat-square)
 ![Bahasa](https://img.shields.io/badge/Bahasa-ID%20%7C%20EN-00B4D8?style=flat-square)
 ![Sharding](https://img.shields.io/badge/Sharding-Aktif-2ECC71?style=flat-square)
 ![Dashboard](https://img.shields.io/badge/Dashboard-Express%20%2B%20Socket.io-F39C12?style=flat-square)
 
 </div>
+
+<br />
 
 > [!NOTE]
 > Proyek ini masih dalam pengembangan aktif. Beberapa modul sedang dirapikan, lihat [`TODO.md`](TODO.md) dan tab **Issues** untuk daftar pekerjaan yang sedang berjalan.
@@ -25,178 +32,179 @@
 
 ## 📖 Daftar Isi
 
-| | | |
-|---|---|---|
-| [✨ Fitur](#-fitur) | [🧩 Kebutuhan Sistem](#-kebutuhan-sistem) | [🚀 Instalasi](#-instalasi) |
-| [📜 Script](#-script-yang-tersedia) | [🔐 Konfigurasi Environment](#-konfigurasi-environment) | [🗂️ Struktur Proyek](#️-struktur-proyek) |
-| [🌍 Sistem Bilingual](#-sistem-bilingual) | [🎭 Ekspresi Naura](#-ekspresi-naura) | [📄 Lisensi](#-lisensi) |
+<details>
+<summary>👉 Klik untuk melihat Daftar Isi</summary>
+
+- [✨ Fitur Unggulan](#-fitur-unggulan)
+- [🧩 Kebutuhan Sistem](#-kebutuhan-sistem)
+- [🚀 Instalasi & Menjalankan Bot](#-instalasi--menjalankan-bot)
+- [📜 Script NPM yang Tersedia](#-script-npm-yang-tersedia)
+- [🔐 Konfigurasi Environment](#-konfigurasi-environment)
+- [🗂️ Struktur Proyek](#-struktur-proyek)
+- [🌍 Sistem Bilingual](#-sistem-bilingual)
+- [🎭 Ekspresi Naura](#-ekspresi-naura)
+- [📄 Lisensi](#-lisensi)
+</details>
 
 ---
 
-## ✨ Fitur
+## ✨ Fitur Unggulan
 
+<div align="center">
 <table>
-<tr>
-<td width="33%" valign="top">
-
-### 🎮 Survival & Ekonomi
-Dunia RPG dengan mata uang berlapis, bank & deposito, investasi, crafting, dungeon, NPC, quest, dan achievement.
-
-</td>
-<td width="33%" valign="top">
-
-### 🎵 Musik
-Pemutar berbasis **Lavalink v4** dengan antrean, kontrol tombol, mode 24/7, dan panel kendali dari dashboard.
-
-</td>
-<td width="33%" valign="top">
-
-### 🤖 AI Berlapis
-Rantai **Verba → Gemini → Ollama**. Persona bisa disesuaikan per server, lengkap dengan pengetahuan khusus server.
-
-</td>
-</tr>
-<tr>
-<td valign="top">
-
-### 🎨 Canvas & UI
-Kartu profil, welcomer yang bisa diatur posisinya, dan **Components V2** untuk tampilan pesan modern.
-
-</td>
-<td valign="top">
-
-### 🛡️ Moderasi
-Automod, antinuke, warn bertingkat, sticky roles, ModMail, dan tiket dukungan.
-
-</td>
-<td valign="top">
-
-### 📊 Web Dashboard
-Pengaturan server, leaderboard, dan statistik realtime lewat **Socket.io**, dengan login OAuth2 Discord.
-
-</td>
-</tr>
-<tr>
-<td valign="top">
-
-### 🌍 Bilingual
-Bahasa Indonesia & Inggris, tersimpan per pengguna dan berlaku di seluruh ekosistem.
-
-</td>
-<td valign="top">
-
-### ⛏️ Integrasi Minecraft
-Jembatan obrolan dua arah lewat RCON dan pemantauan status server.
-
-</td>
-<td valign="top">
-
-### 🎉 Sosial & Hiburan
-Leveling, giveaway, minigame, global chat, starboard, QOTD, dan pemberitahuan ulang tahun.
-
-</td>
-</tr>
+  <tr>
+    <td width="33%" align="center">
+      <h3>🎮 Survival & Ekonomi</h3>
+      <p>Dunia RPG dengan mata uang berlapis, bank & deposito, investasi, crafting, dungeon, NPC, quest, hingga pencapaian (achievement).</p>
+    </td>
+    <td width="33%" align="center">
+      <h3>🎵 Pemutar Musik</h3>
+      <p>Audio jernih berbasis <strong>Lavalink v4</strong>. Dilengkapi antrean, kontrol interaktif 24/7, dan panel musik langsung dari web dashboard.</p>
+    </td>
+    <td width="33%" align="center">
+      <h3>🤖 AI Multi-Lapis</h3>
+      <p>Integrasi canggih via <strong>Verba → Gemini → Ollama</strong>. Sesuaikan persona Naura khusus untuk servermu beserta pengetahuan khususnya!</p>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <h3>🎨 UI Canvas Modern</h3>
+      <p>Hadir dengan kartu profil artistik, banner <i>welcome</i> fleksibel, dan menggunakan <strong>Components V2</strong> untuk layout pesan interaktif.</p>
+    </td>
+    <td align="center">
+      <h3>🛡️ Sistem Moderasi</h3>
+      <p>Automod proaktif, perlindungan Anti-Nuke, teguran (warn) bertingkat, <i>Sticky Roles</i>, ModMail, hingga sistem tiket lengkap.</p>
+    </td>
+    <td align="center">
+      <h3>📊 Web Dashboard</h3>
+      <p>Pantau server, leaderboard, dan statistik realtime dengan kekuatan <strong>Socket.io</strong>, didukung login OAuth2 Discord yang aman.</p>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <h3>🌍 Mode Bilingual</h3>
+      <p>Mendukung Bahasa <strong>Indonesia & Inggris</strong>. Tersimpan secara personal per-pengguna untuk kenyamanan maksimal.</p>
+    </td>
+    <td align="center">
+      <h3>⛏️ Integrasi Minecraft</h3>
+      <p>Bangun jembatan komunikasi antara Discord dan server Minecraft kamu via RCON, lengkap dengan pemantauan status server.</p>
+    </td>
+    <td align="center">
+      <h3>🎉 Interaksi & Sosial</h3>
+      <p>Meriahkan servermu dengan Leveling, Giveaway, Minigames, Global Chat, Starboard, Quote of the Day (QOTD), hingga notif Ulang Tahun!</p>
+    </td>
+  </tr>
 </table>
+</div>
 
 ---
 
 ## 🧩 Kebutuhan Sistem
 
-| | Komponen | Versi | Keterangan |
-|:-:|---|:-:|---|
-| 🟢 | **Node.js** | `>= 20.6.0` | Wajib, karena kode memakai `process.loadEnvFile()` |
-| 🐬 | **MySQL** | `8.x` | Basis data utama (ada fallback SQLite) |
-| 🔴 | **Redis** | opsional | Cache & Pub/Sub. Dilewati bila `REDIS_URL` kosong |
-| 🎧 | **Lavalink** | `v4` | Hanya untuk fitur musik |
-| 🎬 | **FFmpeg** | terbaru | Sudah tersedia lewat `ffmpeg-static` |
+| Status | Komponen | Versi Minimal | Keterangan |
+|:---:|---|:---:|---|
+| 🟢 | **Node.js** | `>= 20.6.0` | Sangat wajib. Naura menggunakan fitur `process.loadEnvFile()`. |
+| 🐬 | **MySQL** | `8.x` | Basis data utama untuk performa maksimal (SQLite tersedia sebagai fallback). |
+| 🔴 | **Redis** | *Opsional* | Untuk sistem Cache & Pub/Sub. (Akan dilewati otomatis jika `REDIS_URL` kosong). |
+| 🎧 | **Lavalink** | `v4` | Wajib di-setup jika ingin menggunakan seluruh modul Musik. |
+| 🎬 | **FFmpeg** | *Terbaru* | Modul ini sudah tersedia otomatis lewat paket `ffmpeg-static`. |
 
 > [!WARNING]
-> Beberapa dependensi bersifat *native* (`@napi-rs/canvas`, `sqlite3`, `libsodium-wrappers`). Di Linux kamu kemungkinan perlu memasang `build-essential` dan `python3` lebih dulu.
+> Beberapa dependensi bersifat *native* seperti (`@napi-rs/canvas`, `sqlite3`, `libsodium-wrappers`). Jika kamu menjalankan bot ini di **Linux**, kemungkinan besar kamu perlu memasang `build-essential` dan `python3` terlebih dahulu.
 
 ---
 
-## 🚀 Instalasi
+## 🚀 Instalasi & Menjalankan Bot
+
+Siap untuk menjalankan Naura Hoshino? Ikuti langkah mudah di bawah ini!
 
 ```bash
+# 1. Kloning Repositori
 git clone https://github.com/Aryandita/Naura-Hoshino-V2.git
+
+# 2. Masuk ke direktori
 cd Naura-Hoshino-V2
+
+# 3. Install seluruh modul dan dependensi
 npm install
-cp .env.example .env   # lalu isi nilainya
+
+# 4. Salin file konfigurasi environment
+cp .env.example .env
+
+# 5. Buka file .env dan isi variabel yang dibutuhkan (lihat panduan di bawah)
+# 6. Jalankan bot!
 npm start
 ```
 
 ---
 
-## 📜 Script yang Tersedia
+## 📜 Script NPM yang Tersedia
 
-| Perintah | Fungsi |
+Untuk mempermudah manajemen, kami telah menyediakan beberapa perintah praktis. Jalankan menggunakan terminal pilihanmu:
+
+| Perintah | Deskripsi Fungsi |
 |---|---|
-| 🚀 `npm start` | Menjalankan bot lewat ShardingManager (`shard.js`). **Cara produksi** |
-| 🔄 `npm run dev` | Sama seperti di atas, dengan auto-restart `--watch` |
-| 📤 `npm run deploy` | Memaksa registrasi ulang slash command |
-| 📦 `npm run install-start` | Pasang dependensi lalu langsung jalankan |
-| 🔍 `npm run lint` | Menjalankan ESLint |
-| 🔧 `npm run lint:fix` | ESLint dengan perbaikan otomatis |
-| 💅 `npm run format` | Merapikan format dengan Prettier |
-| 👀 `npm run format:check` | Memeriksa format tanpa mengubah berkas |
-| 🌐 `npm run locales:check` | Audit paritas kunci bahasa ID vs EN |
-| 🚨 `npm run locales:check:strict` | Sama, tetapi gagal bila ada kunci yang hilang |
+| 🚀 `npm start` | Menjalankan bot via `shard.js` (ShardingManager). **Gunakan perintah ini untuk Produksi.** |
+| 🔄 `npm run dev` | Menjalankan bot dengan auto-restart via `--watch`. Sangat pas untuk *development*. |
+| 📤 `npm run deploy` | Memaksa bot untuk melakukan registrasi ulang seluruh *Slash Command*. |
+| 📦 `npm run install-start`| Kombinasi instan: Pasang dependensi dan langsung nyalakan bot. |
+| 🔍 `npm run lint` | Melakukan pengecekan kode dengan ESLint. |
+| 🔧 `npm run lint:fix` | Mengecek sekaligus mencoba memperbaiki isu kode secara otomatis (ESLint fix). |
+| 💅 `npm run format` | Merapikan estetika struktur kode dengan Prettier. |
+| 👀 `npm run format:check` | Memeriksa format kode (hanya laporan, tanpa modifikasi). |
+| 🌐 `npm run locales:check` | Audit sinkronisasi / paritas kunci bahasa ID vs EN. |
+| 🚨 `npm run locales:check:strict` | Sama seperti audit locales biasa, namun proses digagalkan jika ada kunci yang hilang. |
 
-Slash command dideploy otomatis saat boot oleh **shard utama saja**. Gunakan `--no-deploy` untuk melewatinya.
+*(Catatan: Slash command akan ter-deploy otomatis saat bot pertama hidup. Hanya shard utama yang melakukan ini. Gunakan `--no-deploy` untuk skip.)*
 
-### Pemeriksaan gaya tulisan
+### Pengecekan Gaya Tulisan
+Kami sangat menjaga standar kualitas tulisan. Teks tidak boleh terkesan kaku seperti robot!
 
 ```bash
-node scripts/check-em-dash.js          # laporkan setiap em dash yang tersisa
-node scripts/check-em-dash.js --fix    # perbaiki otomatis, lalu periksa diff
+node scripts/check-em-dash.js          # Mencari dan melaporkan simbol em-dash (-) yang tersisa
+node scripts/check-em-dash.js --fix    # Memperbaiki secara otomatis dan memberikan report
 ```
-
-Em dash membuat teks terasa seperti keluaran mesin. Skrip ini menjaga seluruh dokumentasi, kamus bahasa, dan string dalam kode tetap bebas dari karakter itu.
 
 ---
 
 ## 🔐 Konfigurasi Environment
 
-Nama variabel di bawah ini adalah yang benar-benar dibaca oleh [`src/config/env.js`](src/config/env.js).
+Semua kredensial dan pengaturan penting disimpan di `.env` (berdasarkan [`src/config/env.js`](src/config/env.js)).
+**Pastikan kamu mengisi semua variabel WAJIB sebelum menjalankan bot, atau bot akan menolak untuk menyala!**
 
-### 🔴 Wajib
-
-Bot berhenti sebelum shard di-spawn bila salah satu di bawah ini kosong.
-
-| Variabel | Keterangan |
+### 🔴 Wajib Diisi (Core)
+| Variabel | Deskripsi |
 |---|---|
-| `DISCORD_TOKEN` | Token bot dari Discord Developer Portal |
-| `CLIENT_ID` | Application ID bot |
-| `MYSQL_USER` | Username database |
-| `MYSQL_DATABASE` | Nama database |
+| `DISCORD_TOKEN` | Token bot rahasia milikmu dari Discord Developer Portal |
+| `CLIENT_ID` | Application ID dari bot kamu |
+| `MYSQL_USER` | Username untuk akses ke Database MySQL |
+| `MYSQL_DATABASE` | Nama skema database yang akan dipakai |
 
 <details>
-<summary><b>💬 Discord</b></summary>
+<summary><b>💬 Discord Settings</b> (Klik untuk membuka)</summary>
 
-| Variabel | Default | Keterangan |
+| Variabel | Default | Deskripsi |
 |---|---|---|
-| `PREFIX` | `n!` | Prefix perintah teks |
-| `GUILD_ID` | kosong | Server untuk deploy command instan saat pengembangan |
-| `OWNER_IDS` | kosong | Daftar ID owner, dipisah koma |
-| `STAFF_GUILD_ID` | kosong | Server staf untuk ModMail |
-| `MODMAIL_CATEGORY_ID` | kosong | Kategori channel ModMail |
-
+| `PREFIX` | `n!` | Prefix klasik untuk menjalankan command teks |
+| `GUILD_ID` | - | ID Server khusus untuk deploy slash command instan (saat masa uji coba/dev) |
+| `OWNER_IDS` | - | Daftar ID owner yang dipisahkan oleh koma (contoh: `1234,5678`) |
+| `STAFF_GUILD_ID` | - | ID Server utama bagi para staf untuk mengurus ModMail |
+| `MODMAIL_CATEGORY_ID` | - | Kategori khusus di server staf untuk menampung tiket ModMail |
 </details>
 
 <details>
-<summary><b>🗄️ Database & Cache</b></summary>
+<summary><b>🗄️ Database & Cache Settings</b> (Klik untuk membuka)</summary>
 
-| Variabel | Default | Keterangan |
+| Variabel | Default | Deskripsi |
 |---|---|---|
-| `MYSQL_HOST` | `127.0.0.1` | Host database |
-| `MYSQL_PORT` | `3306` | Port database |
-| `MYSQL_PASSWORD` | kosong | Password database |
-| `REDIS_URL` | kosong | Cache & Pub/Sub. Redis dilewati bila kosong |
-
+| `MYSQL_HOST` | `127.0.0.1` | Host tujuan Database MySQL |
+| `MYSQL_PORT` | `3306` | Port tujuan Database |
+| `MYSQL_PASSWORD` | - | Password untuk user MySQL kamu |
+| `REDIS_URL` | - | *Opsional*. URL koneksi Redis. Biarkan kosong untuk mematikan Cache/PubSub eksternal. |
 </details>
 
 <details>
-<summary><b>🎧 Musik (Lavalink)</b></summary>
+<summary><b>🎧 Lavalink / Music Settings</b> (Klik untuk membuka)</summary>
 
 | Variabel | Default |
 |---|---|
@@ -204,119 +212,124 @@ Bot berhenti sebelum shard di-spawn bila salah satu di bawah ini kosong.
 | `LAVALINK_PORT` | `2333` |
 | `LAVALINK_PASSWORD` | `youshallnotpass` |
 | `LAVALINK_SECURE` | `false` |
-
 </details>
 
 <details>
-<summary><b>🤖 AI</b></summary>
+<summary><b>🤖 AI Configuration</b> (Klik untuk membuka)</summary>
 
-| Variabel | Default | Keterangan |
+| Variabel | Default | Deskripsi |
 |---|---|---|
-| `GEMINI_API_KEY` | kosong | Penyedia AI utama, dipakai lewat `@google/genai` |
-| `VERBA_API_KEY` | kosong | Persona AI |
-| `VERBA_SLUG_OWNER` | kosong | Slug persona untuk owner |
-| `VERBA_SLUG_PREMIUM` | kosong | Slug persona untuk pengguna premium |
-| `VERBA_SLUG_GENERAL` | kosong | Slug persona umum |
-| `OLLAMA_BASE_URL` | `http://localhost:11434` | Fallback AI lokal |
-| `OLLAMA_MODEL` | `llama3.1` | Model Ollama |
-| `FOOOCUS_BASE_URL` | `http://localhost:7865` | Generasi gambar lokal |
-
+| `GEMINI_API_KEY` | - | API Key utama untuk Google Gemini |
+| `VERBA_API_KEY` | - | API Key untuk sistem Persona Naura |
+| `VERBA_SLUG_OWNER` | - | Persona khusus saat merespon Owner bot |
+| `VERBA_SLUG_PREMIUM` | - | Persona khusus saat merespon User Premium |
+| `VERBA_SLUG_GENERAL` | - | Persona umum sehari-hari |
+| `OLLAMA_BASE_URL` | `http://localhost:11434` | Fallback URL jika AI lokal dipakai |
+| `OLLAMA_MODEL` | `llama3.1` | Model yang akan digunakan oleh Ollama |
+| `FOOOCUS_BASE_URL` | `http://localhost:7865` | Server endpoint untuk generasi gambar lokal |
 </details>
 
 <details>
-<summary><b>🌐 Dashboard & Webhook</b></summary>
+<summary><b>🌐 Dashboard & Webhook Endpoint</b> (Klik untuk membuka)</summary>
 
-| Variabel | Default | Keterangan |
+| Variabel | Default | Deskripsi |
 |---|---|---|
-| `PORT` / `SERVER_PORT` / `DASHBOARD_PORT` | `3070` | Port dashboard (urutan prioritas) |
-| `WEBHOOK_PORT` | `3071` | Port penerima webhook |
-| `SESSION_SECRET` | kosong | 🔴 **Wajib di produksi.** Dashboard menolak menyala tanpa ini |
-| `DISCORD_CALLBACK_URL` | kosong | Callback OAuth2 |
-| `DASHBOARD_ORIGIN` | kosong | Daftar origin yang boleh mengakses lintas domain |
-| `OWNER_EVAL_ENABLED` | `false` | Endpoint `eval` owner. Biarkan mati kecuali sedang debugging |
-| `ERROR_WEBHOOK_URL` | kosong | Webhook laporan error |
-| `WEBHOOK_AUTH_SAWERIA` | kosong | Token webhook Saweria |
-| `WEBHOOK_AUTH_TRAKTEER` | kosong | Token webhook Trakteer |
-| `WEBHOOK_AUTH_VOTE` | kosong | Token webhook Top.gg |
+| `PORT` / `DASHBOARD_PORT`| `3070` | Port aktif untuk Dashboard Web |
+| `WEBHOOK_PORT` | `3071` | Port terpisah khusus webhook donasi/vote |
+| `SESSION_SECRET` | - | 🔴 **WAJIB DI PRODUKSI!** Dashboard akan menolak akses tanpa secret ini! |
+| `DISCORD_CALLBACK_URL` | - | URL untuk callback autentikasi OAuth2 |
+| `DASHBOARD_ORIGIN` | - | Origin yang di-whitelist untuk perlindungan CORS lintas domain |
+| `OWNER_EVAL_ENABLED` | `false` | Membuka rute eksekusi `eval` Owner. Nyalakan hanya saat sangat perlu (Debugging). |
+| `ERROR_WEBHOOK_URL` | - | Discord Webhook URL agar bot bisa melaporkan error krusial |
+| `WEBHOOK_AUTH_SAWERIA` | - | Password/Token webhook Saweria |
+| `WEBHOOK_AUTH_TRAKTEER`| - | Password/Token webhook Trakteer |
+| `WEBHOOK_AUTH_VOTE` | - | Password/Token webhook vote Top.gg |
 
 > [!CAUTION]
-> Endpoint webhook **menolak seluruh permintaan (503)** selama token yang bersangkutan belum diisi. Ini disengaja: endpoint donasi memberi premium berdasarkan ID Discord di dalam pesan donasi, jadi membiarkannya terbuka sama dengan membagikan premium gratis.
-
+> Endpoint webhook **akan memblokir semua request (503)** jika token belum diatur. Hal ini bertujuan sebagai pengaman ekstra. Jika modul donasi terekspos tanpa auth, pihak tidak bertanggung jawab berpotensi men-suntik request palsu untuk mendapatkan role Premium secara gratis!
 </details>
 
 <details>
-<summary><b>🛠️ Media & Metadata</b></summary>
+<summary><b>🛠️ Media & Metadata Information</b> (Klik untuk membuka)</summary>
 
-| Variabel | Default | Keterangan |
+| Variabel | Default | Deskripsi |
 |---|---|---|
-| `FFMPEG_PATH` | kosong | Isi hanya bila host menyediakan binary FFmpeg sendiri |
-| `BOT_VERSION` | `1.2.0` | Ditampilkan di perintah info |
-| `ENGINE_VERSION` | `1.1.0` | Ditampilkan di perintah info |
-| `PARTNERSHIP` | `Belum ada kolaborasi` | Teks kolaborasi di embed info |
-
+| `FFMPEG_PATH` | - | Kosongkan saja jika kamu ingin menggunakan modul `ffmpeg-static`. Isi jika server punya *binary* khusus. |
+| `BOT_VERSION` | `1.2.0` | Versi yang terpampang pada command /info |
+| `ENGINE_VERSION`| `1.1.0` | Versi engine yang ditandai pada footer Naura |
+| `PARTNERSHIP` | `Belum ada kolaborasi` | Label nama server/komunitas yang sedang bekerja sama (ditampilkan di profil) |
 </details>
 
 ---
 
 ## 🗂️ Struktur Proyek
 
-```
-.
-├─ 📄 index.js               # Proses bot (satu per shard)
-├─ 📄 shard.js               # ShardingManager, titik masuk produksi
-├─ 🖼️ assets/                # Gambar, font, aset Canvas
-│  └─ Naura_Expression/      # 15 ekspresi Naura untuk embed
-├─ 🌍 language/              # Kamus bahasa utama (id.json, en.json)
-├─ 🧩 plugin/                # Perintah, dikelompokkan per kategori
-│  └─ <kategori>/locales/    # Kamus bahasa khusus plugin
-├─ 🔧 scripts/               # Perkakas pemeliharaan
+Bagi kamu yang ingin ikut mengembangkan atau memodifikasi, berikut peta singkat direktori inti:
+
+```plaintext
+Naura-Hoshino-V2/
+├─ 📄 index.js               # Inti utama proses bot (berjalan satu per shard)
+├─ 📄 shard.js               # Pengelola titik masuk produksi (ShardingManager)
+├─ 🖼️ assets/                # Kumpulan font, gambar, serta aset UI Canvas
+│  └─ Naura_Expression/      # Folder rahasia 15+ Ekspresi Wajah Naura
+├─ 🌍 language/              # Sistem lokalisasi & kamus utama (id.json, en.json)
+├─ 🧩 plugin/                # Semua fungsi command, rapi terbagi dalam sub-kategori
+│  └─ <kategori>/locales/    # Terjemahan khusus untuk setiap sub-plugin
+├─ 🔧 scripts/               # Alat-alat kecil utilitas pemeliharaan sistem
 └─ 📂 src/
-   ├─ ⚙️  config/            # env.js, ui.js, konfigurasi statis
-   ├─ 🌐 dashboard/          # Web Dashboard (Express + Socket.io)
-   │  ├─ middleware/         # Penjaga login, owner, izin Kelola Server
-   │  ├─ routes/             # public, user, guild, owner, webhooks
-   │  ├─ sockets/            # Statistik & kendali musik realtime
-   │  └─ utils/              # Format, hadiah vote, penjaga HTTP
-   ├─ 📡 events/             # Event listener Discord
-   ├─ 🎛️  interactions/      # Router interaksi: registry, tombol, select, modal
-   ├─ 🧠 managers/           # Database, cache, cron, bahasa, logger, dll
-   ├─ 🗃️  models/            # Model Sequelize
-   └─ 🛠️  utils/             # Builder embed/container dan helper
+   ├─ ⚙️ config/             # Pengaturan statis, konstanta UI & validasi ENV
+   ├─ 🌐 dashboard/          # Markas Express + Socket.io Web Dashboard
+   │  ├─ middleware/         # Algoritma penjaga gawang Auth, Izin, & Owner
+   │  ├─ routes/             # Kumpulan endpoint (public, user, guild, owner)
+   │  ├─ sockets/            # Kendali real-time & sinkronisasi data live
+   │  └─ utils/              # Pengelola batas akses (rate limiter) & pemformatan
+   ├─ 📡 events/             # Pendengar event (Listener) inti dari Discord
+   ├─ 🎛️ interactions/      # Penanganan Button, Select Menu, hingga Modal UI
+   ├─ 🧠 managers/           # Otak pusat (Database, Cache, Cronjob, Logger, dsb)
+   ├─ 🗃️ models/             # Kerangka Tabel Sequelize
+   └─ 🛠️ utils/              # Builder Component V2 canggih dan asisten bantuan lainnya
 ```
 
 ---
 
 ## 🌍 Sistem Bilingual
 
-Naura mendukung **Bahasa Indonesia** dan **Inggris**. Pilihan bahasa disimpan pada kolom `language` di tabel `user_profiles` dan berlaku di seluruh ekosistem.
+Kami merancang Naura agar mudah dimengerti dari Sabang sampai Merauke, hingga tingkat Internasional. Bahasa (**Indonesia (ID)** & **English (EN)**) dipilih lalu disimpan pada tabel personal `user_profiles`.
 
-```js
+```javascript
 const lang = require('./src/managers/languageManager');
 
-await lang.setUserLanguage(userId, 'en');       // simpan pilihan
+// Simpan pilihan preferensi si pengguna
+await lang.setUserLanguage(userId, 'en');       
+
+// Dapatkan terjemahan khusus untuk UI pengguna
 const text = await lang.translate(userId, 'help.title');
 const sync = lang.translateSync('en', 'greeting', { name: 'Ryaa' });
 ```
 
-Kamus utama berada di `language/`, sedangkan kamus khusus plugin di `plugin/<kategori>/locales/`. **Kamus utama menang** bila ada kunci yang bentrok. Jalankan `npm run locales:check` untuk melihat kunci yang belum diterjemahkan.
+Tidak perlu pusing! Kamus inti berada di folder `language/`, sementara kata-kata unik diletakkan di `plugin/<nama-plugin>/locales/`. **Kamus inti selalu memiliki hak istimewa (prioritas).** Kamu bisa cek kelengkapan bahasa dengan perintah: `npm run locales:check`.
 
 ---
 
 ## 🎭 Ekspresi Naura
 
-```js
+Naura tidak kaku! Ia dapat memancarkan perasaannya lewat embed khusus.
+
+```javascript
 const naura = require('./src/utils/nauraExpression');
 
+// Naura senang karena interaksi sukses!
 const { embed, files } = naura.decorate(myEmbed, 'success');
 await interaction.reply({ embeds: [embed], files });
 ```
 
-| Mood | | Mood | | Mood | | Mood |
-|---|---|---|---|---|---|---|
-| ✅ `success` | | ❌ `error` | | ⚠️ `warning` | | ℹ️ `info` |
-| ⏳ `loading` | | 🎉 `levelup` | | 🎵 `music` | | 📖 `help` |
+**Kumpulan Mood Utama:**
+| | | | | | | | |
+|:---:|---|:---:|---|:---:|---|:---:|---|
+| ✅ | **`success`** | ❌ | **`error`** | ⚠️ | **`warning`** | ℹ️ | **`info`** |
+| ⏳ | **`loading`** | 🎉 | **`levelup`** | 🎵 | **`music`** | 📖 | **`help`** |
 
-Daftar lengkapnya ada di [`src/utils/nauraExpression.js`](src/utils/nauraExpression.js).
+> Cek referensi lengkap seluruh ekspresi emosi di berkas [`src/utils/nauraExpression.js`](src/utils/nauraExpression.js)
 
 ---
 
@@ -324,8 +337,9 @@ Daftar lengkapnya ada di [`src/utils/nauraExpression.js`](src/utils/nauraExpress
 
 <div align="center">
 
-**ISC** © 2026 Aryandita Praftian. Lihat berkas [`LICENSE`](LICENSE)
+**ISC License** © 2026 Aryandita Praftian.
+Lihat berkas lisensi penuh di **[`LICENSE`](LICENSE)**.
 
-Dibuat dengan 💜 untuk komunitas Discord Indonesia
+*Dibuat penuh dengan cinta (💜) untuk para kreator & komunitas Discord Indonesia!*
 
 </div>

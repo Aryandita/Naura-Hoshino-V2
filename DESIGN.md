@@ -1,7 +1,7 @@
 ---
 version: 1.0.0-naura-os
 name: Naura Hoshino OS
-description: Antarmuka sistem kontrol Naura OS dengan tema cyber-anime yang ditambatkan pada kanvas gelap pekat bernuansa luar angkasa. Brand ini tidak mengandalkan elemen datar tradisional — energinya berasal dari efek glassmorphism (panel kaca transparan), pendaran neon (neon glows) bernuansa pink dan ungu pastel, serta tipografi futuristik Orbitron untuk data real-time. Antarmuka terasa dinamis, sangat responsif, dan mencerminkan presisi sistem bot Discord modern tanpa kehilangan estetika ramah dari karakter Naura.
+description: Antarmuka sistem kontrol Naura OS dengan tema cyber-anime yang ditambatkan pada kanvas gelap pekat bernuansa luar angkasa. Brand ini tidak mengandalkan elemen datar tradisional, energinya berasal dari efek glassmorphism (panel kaca transparan), pendaran neon (neon glows) bernuansa pink dan ungu pastel, serta tipografi futuristik Orbitron untuk data real-time. Antarmuka terasa dinamis, sangat responsif, dan mencerminkan presisi sistem bot Discord modern tanpa kehilangan estetika ramah dari karakter Naura.
 
 colors:
   primary: "#FFB6C1"
@@ -177,7 +177,7 @@ components:
 
 ## Overview
 
-Permukaan visual Naura Hoshino adalah kanvas gelap intergalaksi (`{colors.canvas}` — #000c10) yang dipadukan dengan gradien radial halus. Berbeda dengan antarmuka solid tradisional, sistem ini sangat bergantung pada **Glassmorphism** — panel-panel semi-transparan yang membiarkan latar belakang tembus pandang dengan efek blur tebal. Identitas *brand* disampaikan melalui tipografi bercahaya (*text-glow*), indikator status neon, dan batas (*borders*) pastel yang merespons interaksi kursor pengguna.
+Permukaan visual Naura Hoshino adalah kanvas gelap intergalaksi (`{colors.canvas}`, #000c10) yang dipadukan dengan gradien radial halus. Berbeda dengan antarmuka solid tradisional, sistem ini sangat bergantung pada **Glassmorphism**, panel-panel semi-transparan yang membiarkan latar belakang tembus pandang dengan efek blur tebal. Identitas *brand* disampaikan melalui tipografi bercahaya (*text-glow*), indikator status neon, dan batas (*borders*) pastel yang merespons interaksi kursor pengguna.
 
 **Elemen Kunci:**
 - Kanvas bertekstur gelap (`{colors.canvas}`) dengan pencahayaan radial *pink* dan *purple* statis di sudut halaman.
@@ -189,9 +189,9 @@ Permukaan visual Naura Hoshino adalah kanvas gelap intergalaksi (`{colors.canvas
 ## Colors
 
 ### Brand & Accent
-- **Primary / Pink Pastel** (`{colors.primary}` — #FFB6C1): Identitas inti Naura. Digunakan pada *border* antarmuka kaca, efek cahaya teks, dan pendaran ikon utama.
-- **Premium Gold** (`{colors.premium-gold}` — #FFD700): Eksklusif digunakan untuk sistem monetisasi, tanda terima donasi Saweria, *trial VIP* Top.gg, dan sinkronisasi `economy_wallet`.
-- **Discord Blurple** (`{colors.discord-blurple}` — #5865F2): Khusus digunakan pada tombol otentikasi OAuth2 dan tautan keluar menuju platform Discord.
+- **Primary / Pink Pastel** (`{colors.primary}`, #FFB6C1): Identitas inti Naura. Digunakan pada *border* antarmuka kaca, efek cahaya teks, dan pendaran ikon utama.
+- **Premium Gold** (`{colors.premium-gold}`, #FFD700): Eksklusif digunakan untuk sistem monetisasi, tanda terima donasi Saweria, *trial VIP* Top.gg, dan sinkronisasi `economy_wallet`.
+- **Discord Blurple** (`{colors.discord-blurple}`, #5865F2): Khusus digunakan pada tombol otentikasi OAuth2 dan tautan keluar menuju platform Discord.
 
 ### Telemetry Accents
 - **Accent Pink** (`{colors.accent-pink}`): Metrik inti, ping, latensi API.
@@ -200,12 +200,12 @@ Permukaan visual Naura Hoshino adalah kanvas gelap intergalaksi (`{colors.canvas
 - **Accent Green** (`{colors.accent-green}`): *System Uptime*, modul audio Lavalink yang sedang memutar musik.
 
 ### Surface & Depth
-- **Canvas** (`{colors.canvas}` — #0b0c10): Latar belakang terdalam. Hitam dengan sedikit saturasi biru tua/ungu untuk mencegah kontras buta warna.
-- **Surface Glass** (`{colors.surface-glass}` — rgba(255,255,255,0.03)): Bahan bangunan utama untuk panel dasbor. Digabungkan dengan filter `blur(16px)` di CSS.
-- **Surface Elevated** (`{colors.surface-elevated}` — rgba(0,0,0,0.4)): Latar belakang solid gelap untuk elemen bersarang di dalam panel kaca (seperti *card* status modul aktif).
+- **Canvas** (`{colors.canvas}`, #0b0c10): Latar belakang terdalam. Hitam dengan sedikit saturasi biru tua/ungu untuk mencegah kontras buta warna.
+- **Surface Glass** (`{colors.surface-glass}`, rgba(255,255,255,0.03)): Bahan bangunan utama untuk panel dasbor. Digabungkan dengan filter `blur(16px)` di CSS.
+- **Surface Elevated** (`{colors.surface-elevated}`, rgba(0,0,0,0.4)): Latar belakang solid gelap untuk elemen bersarang di dalam panel kaca (seperti *card* status modul aktif).
 
 ### Hairlines & Borders
-- **Hairline** (`{colors.hairline}` — rgba(255,182,193,0.15)): Garis tepi default untuk semua panel kaca untuk memberikan ilusi ketebalan layar.
+- **Hairline** (`{colors.hairline}`, rgba(255,182,193,0.15)): Garis tepi default untuk semua panel kaca untuk memberikan ilusi ketebalan layar.
 
 ## Typography
 
@@ -267,19 +267,19 @@ Bentuk secara keseluruhan harus terasa ergonomis, ramah, dan sangat *fluid*. Sud
 
 ### Navigation & Layout Containers
 
-**`sidebar-nav`** — Panel kaca di sisi kiri (`w-64`) dengan garis tepi kanan tipis `{colors.hairline}`. Memuat *header* tulisan "NAURA OS" dengan teks gradien. Tautan navigasi (`<nav>`) merespons saat di-*hover* dengan mengubah latar belakang dari transparan menjadi `rgba(255,255,255,0.05)`. Di bagian bawah, tombol OAuth2 Discord selalu menetap.
+**`sidebar-nav`**, Panel kaca di sisi kiri (`w-64`) dengan garis tepi kanan tipis `{colors.hairline}`. Memuat *header* tulisan "NAURA OS" dengan teks gradien. Tautan navigasi (`<nav>`) merespons saat di-*hover* dengan mengubah latar belakang dari transparan menjadi `rgba(255,255,255,0.05)`. Di bagian bawah, tombol OAuth2 Discord selalu menetap.
 
-**`top-header`** — Bertindak sebagai atap dasbor. Memiliki tombol menu *hamburger* pada ukuran seluler. Memuat cincin *pink* bercahaya di sekitar avatar bot. Menampilkan indikator denyut animasi (*animate-pulse*) berwarna hijau untuk menandakan bahwa Websocket Node.js aktif tersambung.
+**`top-header`**, Bertindak sebagai atap dasbor. Memiliki tombol menu *hamburger* pada ukuran seluler. Memuat cincin *pink* bercahaya di sekitar avatar bot. Menampilkan indikator denyut animasi (*animate-pulse*) berwarna hijau untuk menandakan bahwa Websocket Node.js aktif tersambung.
 
 ### Telemetry & Data Representation
 
-**`telemetry-card`** — Struktur *glassmorphism* untuk menampilkan angka *real-time*. Dilengkapi pita warna tebal di sisi kiri (`border-l-4`) yang mendefinisikan jenis data (Pink untuk Ping, Purple untuk Server). Sebuah ikon FontAwesome raksasa ditempatkan di sudut kanan bawah dengan opasitas sangat rendah (5%) yang membesar perlahan ketika kursor mengarah pada kartu (*group-hover:scale-110*).
+**`telemetry-card`**, Struktur *glassmorphism* untuk menampilkan angka *real-time*. Dilengkapi pita warna tebal di sisi kiri (`border-l-4`) yang mendefinisikan jenis data (Pink untuk Ping, Purple untuk Server). Sebuah ikon FontAwesome raksasa ditempatkan di sudut kanan bawah dengan opasitas sangat rendah (5%) yang membesar perlahan ketika kursor mengarah pada kartu (*group-hover:scale-110*).
 
-**`module-status-card`** — Panel solid hitam/transparan yang bersarang di dalam panel antarmuka utama. Digunakan untuk merinci fitur-fitur seperti sistem musik Lavalink, Private Voice Rooms, dan Economy Vault yang terikat pada struktur data `economy_wallet`. Dilengkapi *badge* status dengan pinggiran hijau yang bersinar kecil.
+**`module-status-card`**, Panel solid hitam/transparan yang bersarang di dalam panel antarmuka utama. Digunakan untuk merinci fitur-fitur seperti sistem musik Lavalink, Private Voice Rooms, dan Economy Vault yang terikat pada struktur data `economy_wallet`. Dilengkapi *badge* status dengan pinggiran hijau yang bersinar kecil.
 
 ### Integrations & Webhooks
 
-**`premium-alert-embed`** — Meskipun dirender via Discord API alih-alih HTML (via *userObj.send*), struktur desain integrasi Webhook Saweria dan Top.gg menggunakan identitas Naura. Embed menggunakan *hex color* `#FFD700` (Emas Premium) dengan judul tebal dan parameter temporal yang presisi (menggunakan sinkronisasi cap waktu bawaan `<t:UNIX:R>`).
+**`premium-alert-embed`**, Meskipun dirender via Discord API alih-alih HTML (via *userObj.send*), struktur desain integrasi Webhook Saweria dan Top.gg menggunakan identitas Naura. Embed menggunakan *hex color* `#FFD700` (Emas Premium) dengan judul tebal dan parameter temporal yang presisi (menggunakan sinkronisasi cap waktu bawaan `<t:UNIX:R>`).
 
 ## Do's and Don'ts
 

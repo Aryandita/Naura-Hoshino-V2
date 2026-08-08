@@ -1,6 +1,44 @@
-ISC License
+# ISC License / Lisensi ISC
 
-Copyright (c) 2026 Aryandita Praftian (Ryaa)
+**Copyright (c) 2026 Aryandita Praftian (Ryaa) - Naura Hoshino V2**
+
+---
+
+## 🇬🇧 UNDERSTANDING THIS LICENSE (ENGLISH)
+This project is open-source, meaning you are free to use, modify, and share it. However, open-source does not mean "free of copyright." The creator still holds the intellectual property rights to this code. 
+
+**What you CAN do:**
+- ✅ **Use for free:** You can use this bot for your own server, personal projects, or communities.
+- ✅ **Modify:** You can change the code to suit your needs.
+- ✅ **Distribute:** You can share your modified version.
+
+**What you MUST do:**
+- ⚠️ **Keep the copyright notice:** You must leave the copyright header and this license in all copies or substantial portions of the software. You cannot claim you created the original code.
+
+**Why does this matter?**
+Respecting copyright and licensing ensures that developers like us continue to create and share free software. Erasing credits or claiming others' work as your own discourages open-source contributions and violates the terms of this license.
+
+---
+
+## 🇮🇩 MEMAHAMI LISENSI INI (INDONESIA)
+Proyek ini bersifat open-source, yang berarti Anda bebas menggunakan, memodifikasi, dan membagikannya. Namun, open-source bukan berarti "bebas hak cipta." Pembuat asli (kreator) tetap memegang hak kekayaan intelektual atas kode ini.
+
+**Apa yang BOLEH Anda lakukan:**
+- ✅ **Gunakan secara gratis:** Anda bisa memakai bot ini untuk server Anda sendiri, proyek pribadi, atau komunitas.
+- ✅ **Modifikasi:** Anda bebas mengubah kode agar sesuai dengan kebutuhan Anda.
+- ✅ **Distribusikan:** Anda boleh membagikan versi yang sudah Anda ubah.
+
+**Apa yang WAJIB Anda lakukan:**
+- ⚠️ **Pertahankan pemberitahuan hak cipta:** Anda wajib mencantumkan nama pembuat asli (kredit) dan teks lisensi ini di dalam kode Anda. Anda tidak boleh mengklaim bahwa Anda yang membuat kode aslinya.
+
+**Mengapa ini penting?**
+Menghargai hak cipta dan lisensi memastikan bahwa pengembang perangkat lunak tetap bersemangat untuk membuat dan membagikan karya mereka secara gratis. Menghapus kredit atau mengklaim karya orang lain sebagai milik Anda sendiri bukan hanya tindakan tidak etis, tetapi juga melanggar ketentuan hukum dari lisensi ini.
+
+---
+
+## LICENSE TEXT
+
+### === ENGLISH ===
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -13,3 +51,19 @@ INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
 OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
 TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
+
+### === INDONESIA ===
+
+Izin untuk menggunakan, menyalin, memodifikasi, dan/atau mendistribusikan
+perangkat lunak ini untuk tujuan apa pun dengan atau tanpa biaya dengan ini
+diberikan, dengan syarat bahwa pemberitahuan hak cipta di atas dan
+pemberitahuan izin ini muncul di semua salinan.
+
+PERANGKAT LUNAK INI DISEDIAKAN "APA ADANYA" DAN PENULIS MENOLAK SEMUA JAMINAN
+TERKAIT PERANGKAT LUNAK INI TERMASUK SEMUA JAMINAN TERSIRAT TENTANG KELAYAKAN
+UNTUK DIPERDAGANGKAN DAN KESESUAIAN UNTUK TUJUAN TERTENTU. DALAM KEADAAN APA PUN
+PENULIS TIDAK BERTANGGUNG JAWAB ATAS KERUSAKAN KHUSUS, LANGSUNG, TIDAK LANGSUNG,
+ATAU KONSEKUENSIAL ATAU KERUSAKAN APA PUN YANG BERAKIBAT DARI HILANGNYA PENGGUNAAN,
+DATA ATAU KEUNTUNGAN, BAIK DALAM TINDAKAN KONTRAK, KELALAIAN ATAU TINDAKAN
+MELANGGAR HUKUM LAINNYA, YANG TIMBUL DARI ATAU SEHUBUNGAN DENGAN PENGGUNAAN
+ATAU KINERJA PERANGKAT LUNAK INI.

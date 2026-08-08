@@ -1,4 +1,4 @@
-# 🌸 NAURA HOSHINO — Agent Governance & Architecture Guide
+# 🌸 NAURA HOSHINO, Agent Governance & Architecture Guide
 
 > **Versi:** 1.2.0 · **Engine:** 1.1.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14
 
@@ -12,7 +12,7 @@
 
 ---
 
-# 📜 BAGIAN 1 — Aturan & Instruksi Global (Governance)
+# 📜 BAGIAN 1, Aturan & Instruksi Global (Governance)
 
 ## 1.1 Bahasa & Konvensi Kode
 
@@ -43,16 +43,16 @@
 > [!IMPORTANT]
 > Patuhi prinsip-prinsip ini saat menambah atau mengubah kode:
 
-1. **Modularitas Plugin** — Setiap fitur command harus berada di folder `/plugin/<kategori>/`. Jangan pernah menulis logic command di dalam file event handler.
-2. **Model Terpisah** — Semua definisi Sequelize model HARUS berada di `/src/models/`. Jangan mendefinisikan schema di dalam command atau manager.
-3. **Satu File = Satu Tanggung Jawab** — Manager hanya mengelola satu domain (misal: `cronManager.js` hanya untuk cron, `redisManager.js` hanya untuk Redis).
-4. **Environment Via `env.js`** — Semua akses `process.env` HARUS melalui `/src/config/env.js`. Jangan pernah memanggil `process.env.XXX` langsung di file lain.
-5. **Anti-Crash Wajib** — Setiap operasi async yang berisiko (API call, Canvas render, DB query) harus di-wrap dalam `try/catch`. Global error handler sudah ada di `/src/managers/errorHandler.js`.
-6. **Canvas Memory Safety** — Setelah merender canvas (via `@napi-rs/canvas`), pastikan buffer di-dispose untuk mencegah memory leak.
-7. **Jangan Hardcode ID** — Channel ID, role ID, dan guild ID harus disimpan di `/src/config.json` atau `GuildSettings` model, bukan di-hardcode dalam kode.
-8. **Setup Terpusat** — Seluruh konfigurasi server (Welcome, Automod, Ticket, TempVoice, Softban, dll.) harus diakses hanya melalui `/plugin/admin/setup.js`. File `setup-*.js` terpisah sudah **dihapus** dan tidak boleh dibuat ulang.
-9. **Softban Channel via GuildSettings** — Channel Honeypot Scammer Trap disimpan di `GuildSettings.settings.softbanChannelId`. Pengecekan dilakukan paling awal di `messageCreate.js` sebelum proses lain.
-10. **Layout Components V2 Wajib** — Setiap Container V2 (baik via `buildContainerV2()` maupun manual) HARUS mengikuti struktur 5-lapisan:
+1. **Modularitas Plugin**, Setiap fitur command harus berada di folder `/plugin/<kategori>/`. Jangan pernah menulis logic command di dalam file event handler.
+2. **Model Terpisah**, Semua definisi Sequelize model HARUS berada di `/src/models/`. Jangan mendefinisikan schema di dalam command atau manager.
+3. **Satu File = Satu Tanggung Jawab**, Manager hanya mengelola satu domain (misal: `cronManager.js` hanya untuk cron, `redisManager.js` hanya untuk Redis).
+4. **Environment Via `env.js`**, Semua akses `process.env` HARUS melalui `/src/config/env.js`. Jangan pernah memanggil `process.env.XXX` langsung di file lain.
+5. **Anti-Crash Wajib**, Setiap operasi async yang berisiko (API call, Canvas render, DB query) harus di-wrap dalam `try/catch`. Global error handler sudah ada di `/src/managers/errorHandler.js`.
+6. **Canvas Memory Safety**, Setelah merender canvas (via `@napi-rs/canvas`), pastikan buffer di-dispose untuk mencegah memory leak.
+7. **Jangan Hardcode ID**, Channel ID, role ID, dan guild ID harus disimpan di `/src/config.json` atau `GuildSettings` model, bukan di-hardcode dalam kode.
+8. **Setup Terpusat**, Seluruh konfigurasi server (Welcome, Automod, Ticket, TempVoice, Softban, dll.) harus diakses hanya melalui `/plugin/admin/setup.js`. File `setup-*.js` terpisah sudah **dihapus** dan tidak boleh dibuat ulang.
+9. **Softban Channel via GuildSettings**, Channel Honeypot Scammer Trap disimpan di `GuildSettings.settings.softbanChannelId`. Pengecekan dilakukan paling awal di `messageCreate.js` sebelum proses lain.
+10. **Layout Components V2 Wajib**, Setiap Container V2 (baik via `buildContainerV2()` maupun manual) HARUS mengikuti struktur 5-lapisan:
     ```
     [ Header ]
     ───────── separator (divider:true) ─────────
@@ -80,14 +80,14 @@
 - **JANGAN PERNAH** meng-commit file `.env` ke repository.
 - **JANGAN PERNAH** log-kan token, password, atau API key ke console.
 - Semua webhook endpoint (`/api/webhook/*`) HARUS memverifikasi `Authorization` header.
-- Rate limiting aktif via `rateLimiter.js` — jangan bypass tanpa alasan kuat.
+- Rate limiting aktif via `rateLimiter.js`, jangan bypass tanpa alasan kuat.
 - Validasi semua input user sebelum diproses (terutama untuk command yang menerima URL atau text panjang).
 
 ## 1.6 Panduan Desain UI/UX (Style Guide)
 
 ### Identitas Visual
 
-Naura Hoshino menggunakan identitas **Cyber-Anime Glassmorphism** — gabungan estetika anime kawaii dengan antarmuka futuristik. Referensi lengkap ada di `DESIGN.md`.
+Naura Hoshino menggunakan identitas **Cyber-Anime Glassmorphism**, gabungan estetika anime kawaii dengan antarmuka futuristik. Referensi lengkap ada di `DESIGN.md`.
 
 ### Palet Warna Utama
 
@@ -138,7 +138,7 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 ```
 
 > [!NOTE]
-> **`buildContainerV2()` sudah menerapkan struktur ini secara otomatis.** Footer **SELALU** muncul — jika `footerText` tidak diisi, diisi otomatis dengan `ui.getFooter('core')`. Blok separator tipis + tombol hanya muncul jika ada `buttonsRow` yang valid.
+> **`buildContainerV2()` sudah menerapkan struktur ini secara otomatis.** Footer **SELALU** muncul, jika `footerText` tidak diisi, diisi otomatis dengan `ui.getFooter('core')`. Blok separator tipis + tombol hanya muncul jika ada `buttonsRow` yang valid.
 
 #### Aturan Lainnya
 
@@ -146,9 +146,9 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 - **Wajib sertakan `flags: MessageFlags.IsComponentsV2`** (nilai `32768`) di setiap payload Container V2.
 - **Wajib sertakan `embeds: []`** saat meng-edit pesan lama (embed) ke Container V2, agar sisa embed lama dibersihkan oleh Discord PATCH API.
 - **Custom emoji di `authorName` dan `footerText`** TIDAK didukung oleh Discord di bagian tersebut. Gunakan `ui.stripCustomEmojis()` sebelum mengisinya. Judul, deskripsi, dan field boleh menggunakan emoji kustom.
-- **Footer Terpusat** — Gunakan `ui.getFooter('core' | 'utility' | 'survival' | 'music')` untuk footer semua embed/container. Jangan tulis teks footer secara manual.
-- **Tombol dengan custom emoji** — Gunakan `ui.parseEmoji(ui.getEmoji('namaEmoji'))` yang mengembalikan `{ id, name, animated }` sebelum diberikan ke `ButtonBuilder.setEmoji()` agar tidak terjadi `RESTJSONError: Invalid Form Body`.
-- **Container Manual (non-`buildContainerV2`)** — Jika membangun container secara manual (seperti `MusicUIManager.js`), WAJIB mengikuti struktur 5-lapisan di atas secara eksplisit menggunakan `separatorComp(true, 1)` dan `separatorComp(false, 1)` dari `NauraContainerBuilder.js`.
+- **Footer Terpusat**, Gunakan `ui.getFooter('core' | 'utility' | 'survival' | 'music')` untuk footer semua embed/container. Jangan tulis teks footer secara manual.
+- **Tombol dengan custom emoji**, Gunakan `ui.parseEmoji(ui.getEmoji('namaEmoji'))` yang mengembalikan `{ id, name, animated }` sebelum diberikan ke `ButtonBuilder.setEmoji()` agar tidak terjadi `RESTJSONError: Invalid Form Body`.
+- **Container Manual (non-`buildContainerV2`)**, Jika membangun container secara manual (seperti `MusicUIManager.js`), WAJIB mengikuti struktur 5-lapisan di atas secara eksplisit menggunakan `separatorComp(true, 1)` dan `separatorComp(false, 1)` dari `NauraContainerBuilder.js`.
 
 ### Aturan Embed Discord (Legacy)
 
@@ -163,7 +163,7 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 > [!IMPORTANT]
 > Pelanggaran aturan ini bisa menyebabkan schema yang tidak konsisten antara environment development dan production.
 
-- **ALTER TABLE DILARANG di `dbManager.js`** — Semua migration kolom (`ADD COLUMN`, `MODIFY COLUMN`, `DROP COLUMN`, dll.) harus berada **eksklusif** di `dbMigrator.js` dengan sistem versi bernomor. Tidak boleh ada raw `sequelize.query('ALTER TABLE ...')` di dalam `connectToDatabase()`.
+- **ALTER TABLE DILARANG di `dbManager.js`**, Semua migration kolom (`ADD COLUMN`, `MODIFY COLUMN`, `DROP COLUMN`, dll.) harus berada **eksklusif** di `dbMigrator.js` dengan sistem versi bernomor. Tidak boleh ada raw `sequelize.query('ALTER TABLE ...')` di dalam `connectToDatabase()`.
 - **Seeding data awal** (CanvasAsset, GameItem, dll.) boleh tetap di `connectToDatabase()`, namun HARUS dipisah ke fungsi `seedInitialData()` yang dipanggil terpisah agar mudah di-test dan tidak bercampur dengan logic koneksi.
 - **Gunakan `try/catch` per-migration** di `dbMigrator.js` dengan log yang jelas, bukan silent catch kosong (`catch (e) {}`).
 
@@ -187,14 +187,14 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 > [!IMPORTANT]
 > Query DB tanpa cache di event handler bervolume tinggi (messageCreate, interactionCreate) sangat membebani database.
 
-- **`GuildSettings` WAJIB di-cache** — Karena `GuildSettings.findOne()` dipanggil di setiap `messageCreate` dan `interactionCreate`, query ini HARUS melewati `cacheManager.getGuildSettings()` atau `redisManager.getOrSetCache()` dengan TTL minimal 5 menit (300 detik).
-- **Invalidate cache saat setting berubah** — Setiap kali `/setup` atau command admin mengubah `GuildSettings`, WAJIB memanggil `cacheManager.invalidateGuildSettings(guildId)` untuk menghapus cache lama.
-- **Jangan query DB di dalam loop** — Jika perlu data user/guild untuk banyak item sekaligus, gunakan `findAll` dengan `where: { id: { [Op.in]: listOfIds } }` lalu map hasilnya, bukan query satu per satu di dalam loop.
-- **`UserProfile` sudah di-cache** via `cacheManager.getUserProfile()` — Selalu gunakan method ini, jangan `UserProfile.findByPk()` langsung di command kecuali ada alasan kuat.
+- **`GuildSettings` WAJIB di-cache**, Karena `GuildSettings.findOne()` dipanggil di setiap `messageCreate` dan `interactionCreate`, query ini HARUS melewati `cacheManager.getGuildSettings()` atau `redisManager.getOrSetCache()` dengan TTL minimal 5 menit (300 detik).
+- **Invalidate cache saat setting berubah**, Setiap kali `/setup` atau command admin mengubah `GuildSettings`, WAJIB memanggil `cacheManager.invalidateGuildSettings(guildId)` untuk menghapus cache lama.
+- **Jangan query DB di dalam loop**, Jika perlu data user/guild untuk banyak item sekaligus, gunakan `findAll` dengan `where: { id: { [Op.in]: listOfIds } }` lalu map hasilnya, bukan query satu per satu di dalam loop.
+- **`UserProfile` sudah di-cache** via `cacheManager.getUserProfile()`, Selalu gunakan method ini, jangan `UserProfile.findByPk()` langsung di command kecuali ada alasan kuat.
 
 ---
 
-# 🗺️ BAGIAN 2 — Arsitektur & Rencana Kerja (Map)
+# 🗺️ BAGIAN 2, Arsitektur & Rencana Kerja (Map)
 
 ## 2.1 Diagram Arsitektur Tingkat Tinggi
 
@@ -212,210 +212,58 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-## 2.2 Peta Direktori Lengkap
+## 2.2 Peta Direktori Lengkap & Pilar Utama
 
-```
+> **Penjelasan Pilar Direktori Utama:**
+> - `src/config/`: Menyimpan seluruh file pengaturan dasar (UI, konstan, environment, aset statis) yang **tidak boleh memiliki state berubah-ubah** (stateless config).
+> - `src/managers/`: Menyimpan sistem "pengendali" atau mesin utama bot (mis. `musicManager`, `aiManager`, `dbManager`). Mereka memegang *state*, *cache*, dan berinteraksi dengan API/database secara langsung.
+> - `src/models/`: Menyimpan skema database tunggal (Sequelize) untuk konsistensi struktur data yang dipakai lintas modul.
+> - `src/utils/`: Menyimpan alat bantu (*helpers*) yang dapat dipanggil berkali-kali tanpa state (mis. `survivalHelper`, `NauraContainerBuilder`, utilitas kanvas).
+> - `plugin/`: **HANYA** berisi *command router* dan pendefinisian Slash Command. Tidak boleh ada logika berat, akses database langsung tanpa manager, atau kelas helper di dalamnya.
+> - `dashboard/`: Menyimpan aplikasi web lokal untuk UI pemantauan dan pengelolaan berbasis Express/EJS.
+
+```text
 Naura-Hoshino/
 ├── shard.js                    # 🚀 Entry point utama (ShardingManager)
 ├── index.js                    # ⚙️ Bot instance per-shard (boot sequence)
 ├── package.json                # 📦 Dependencies & scripts
-├── .env.example                # 🔐 Template environment variables
-├── DESIGN.md                   # 🎨 Style guide & design tokens lengkap
+├── DESIGN.md                   # 🎨 Style guide & design tokens
 │
-├── src/                        # 🧠 CORE ENGINE
-│   ├── config/
-│   │   ├── env.js              #    Centralized env parser & validator
-│   │   ├── bot-activity.js     #    Konfigurasi rotating activity/status
-│   │   ├── lang.json           #    Mapping bahasa per-guild
-│   │   └── ui.js               #    UI constants (emoji, warna, template)
+├── src/                        # 🧠 CORE ENGINE (Pilar Utama)
+│   ├── config/                 #    Stateless Configuration
+│   │   ├── env.js              #       Centralized env parser
+│   │   ├── ui.js               #       UI constants (emoji, warna)
+│   │   ├── survival/           #       Konfigurasi RPG (items, npcs, currency)
+│   │   └── ...                 
 │   │
-│   ├── config.json             #    Static config (tempvoice, ticket, minecraft IDs)
+│   ├── managers/               #    Stateful Managers & Controllers
+│   │   ├── CommandHandler.js   #       Slash command deployer
+│   │   ├── dbManager.js        #       Database connection
+│   │   ├── survival/           #       RPG engines (duel, craft, shop)
+│   │   ├── musicManager.js     #       Poru Lavalink wrapper
+│   │   ├── aiManager.js        #       LLM router
+│   │   └── ...                 
 │   │
-│   ├── events/                 #    📡 Discord Event Handlers (16 files)
-│   │   ├── ready.js            #       Bot ready (init cron, presence)
-│   │   ├── messageCreate.js    #       Prefix cmd, AI chat, automod, softban trap
-│   │   ├── interactionCreate.js#       Slash cmd, buttons, modals, selects
-│   │   ├── voiceStateUpdate.js #       TempVoice, music auto-disconnect
-│   │   ├── guildMemberAdd.js   #       Welcome canvas, autorole
-│   │   ├── guildMemberRemove.js#       Goodbye canvas, sticky roles
-│   │   ├── guildMemberUpdate.js#       Vanity role checker
-│   │   ├── channelCreate.js    #       Audit log: channel baru
-│   │   ├── channelDelete.js    #       Audit log: channel dihapus
-│   │   ├── channelUpdate.js    #       Audit log: channel diupdate
-│   │   ├── messageDelete.js    #       Snipe cache & audit log
-│   │   ├── messageUpdate.js    #       Audit log: pesan diedit
-│   │   ├── messageReactionAdd.js#      Reaction role handler
-│   │   ├── presenceUpdate.js   #       Vanity status monitor
-│   │   ├── roleCreate.js       #       Audit log: role baru
-│   │   └── roleDelete.js       #       Audit log: role dihapus
+│   ├── models/                 #    Database Schemas (Sequelize)
+│   │   ├── UserProfile.js      #       Master user data
+│   │   ├── UserSurvival.js     #       RPG stats
+│   │   └── ...                 
 │   │
-│   ├── managers/               #    🏗️ Service Managers (16 files)
-│   │   ├── CommandHandler.js   #       Auto-load & deploy slash commands (fast-glob recursive)
-│   │   ├── EventHandler.js     #       Auto-load event handlers
-│   │   ├── dbManager.js        #       Sequelize init, sync, & connection
-│   │   ├── dbMigrator.js       #       Auto-migration system
-│   │   ├── redisManager.js     #       Redis cache layer
-│   │   ├── cacheManager.js     #       In-memory cache with TTL
-│   │   ├── cronManager.js      #       Scheduled tasks (daily reset, etc.)
-│   │   ├── errorHandler.js     #       Global anti-crash system
-│   │   ├── logger.js           #       Colored console logger
-│   │   ├── backupManager.js    #       Guild backup system
-│   │   ├── rssManager.js       #       RSS feed monitor
-│   │   ├── giveawayManager.js  #       Giveaway lifecycle
-│   │   ├── languageManager.js  #       Multi-language support
-│   │   ├── securityManager.js  #       Anti-nuke & security checks
-│   │   ├── shopManager.js      #       In-game shop logic
-│   │   └── voiceManager.js     #       TempVoice room management
+│   ├── utils/                  #    Stateless Helpers & Utilities
+│   │   ├── NauraContainerBuilder.js #  Components V2 builder
+│   │   ├── survival/           #       Helper survival (e, addItem, inventory)
+│   │   └── ...
 │   │
-│   ├── models/                 #    💾 Sequelize Models (28 files)
-│   │   ├── UserProfile.js      #       Master user data (wallet, bank, bio, reputation, vipExpiry)
-│   │   ├── UserLeveling.js     #       XP, level, rank per-guild
-│   │   ├── UserSurvival.js     #       RPG survival stats (hp, attack, defense, inventory)
-│   │   ├── GuildSettings.js    #       Per-guild configuration
-│   │   ├── UserPlaylist.js     #       Cloud music playlists
-│   │   ├── PremiumVoucher.js   #       VIP voucher system
-│   │   ├── UserPet.js          #       Virtual pet (name, type, level, hunger, happiness)
-│   │   ├── UserFriend.js       #       Sistem pertemanan
-│   │   ├── UserQuest.js        #       Quest tracking
-│   │   ├── ModMail.js          #       Tiket modmail
-│   │   ├── Giveaway.js         #       Data giveaway
-│   │   ├── SocialAlert.js      #       RSS/social notif
-│   │   ├── CanvasAsset.js      #       Aset canvas custom
-│   │   ├── CryptoMarket.js     #       Data pasar kripto virtual
-│   │   ├── GameItem.js         #       Item database game
-│   │   ├── GuildClan.js        #       Sistem klan server
-│   │   ├── StickyRole.js       #       Sticky roles saat rejoin
-│   │   ├── StoryProgress.js    #       Progress cerita RPG
-│   │   ├── UserAchievement.js  #       Sistem pencapaian user
-│   │   ├── UserBirthday.js     #       Tanggal ulang tahun user
-│   │   ├── UserCard.js         #       Kartu koleksi user
-│   │   ├── UserChild.js        #       Sistem adopsi anak virtual
-│   │   ├── UserCosmetic.js     #       Kosmetik & skin user
-│   │   ├── UserCrypto.js       #       Portofolio kripto virtual user
-│   │   ├── UserFarm.js         #       Data ladang farming
-│   │   ├── UserNPC.js          #       Data relasi NPC per-user
-│   │   ├── UserReminder.js     #       Pengingat terjadwal
-│   │   └── UserWarn.js         #       Riwayat peringatan moderasi
-│   │
-│   ├── utils/                  #    🔧 Shared Utilities (8 files)
-│   │   ├── NauraEmbedBuilder.js#       Branded embed factory (legacy, untuk error/loading)
-│   │   ├── NauraContainerBuilder.js#   ✨ Components V2 builder (STANDAR UI UTAMA)
-│   │   ├── bootScreen.js       #       ASCII art boot display
-│   │   ├── rateLimiter.js      #       Per-user rate limiting
-│   │   ├── automodHelper.js    #       Auto-moderation utilities
-│   │   ├── language.js         #       i18n helper functions
-│   │   ├── rcon.js             #       Minecraft RCON client
-│   │   └── time.js             #       Time formatting utilities
-│   │
-│   └── dashboard/              #    🌐 Web Dashboard (Express.js)
-│       ├── server.js           #       Express app, OAuth2, Socket.IO, API routes
-│       ├── public/             #       Static assets (CSS, JS, images)
-│       └── views/              #       EJS/HTML templates
+│   └── dashboard/              #    Web Dashboard
 │
-├── plugin/                     #    🔌 COMMAND MODULES (12 kategori)
-│   ├── core/                   #       /ping, /stats, /info, /about, /help, /language
-│   │   ├── core.js             #          Main command router
-│   │   ├── naura.js            #          Bot personality / owner panel
-│   │   └── locales/            #          i18n strings (id.json, en.json)
-│   ├── music/                  #       🎵 /play, /queue, /filter, /playlist
-│   │   ├── music.js            #          Main music command
-│   │   ├── musicManager.js     #          Poru wrapper & node management
-│   │   ├── MusicUIManager.js   #          ✨ Now-Playing Components V2 Panel + Canvas Image
-│   │   ├── LyricsManager.js    #          Lyrics fetcher
-│   │   ├── MusicAnalytics.js   #          Listening stats tracker
-│   │   ├── spotifyHelper.js    #          ✨ Spotify URL resolver (ytmsearch default, format: Artis - Judul)
-│   │   ├── soundboard.js       #          Sound effects system
-│   │   ├── musicButtons.js     #          Button interaction handlers
-│   │   ├── trivia-music.js     #          Music quiz game
-│   │   └── poru_events/        #          Lavalink event handlers
-│   ├── ai/                     #       🤖 /ai chat, /ai imagine (Gemini)
-│   │   ├── ai.js               #          Main AI command
-│   │   ├── aiManager.js        #          Chat session & memory manager
-│   │   ├── aiRouterManager.js  #          Multi-provider routing (Gemini/Verba)
-│   │   └── aiHelper.js         #          Prompt templates & safety filters
-│   ├── admin/                  #       🛡️ Admin tools (16 files)
-│   │   ├── setup.js            #          ✨ Master Setup Dashboard TERPUSAT (greetings, automod, softban,
-│   │   │                       #             modmail, ticket, tempvoice, autorole, vanity, minecraft)
-│   │   ├── moderation.js       #          Purge, nuke, roleall
-│   │   ├── warn.js             #          Sistem peringatan & strike
-│   │   ├── lockdown.js         #          Kunci/buka channel/server
-│   │   ├── automod.js          #          Automod quick toggle
-│   │   ├── announce.js         #          Pengumuman server
-│   │   ├── audit.js            #          Audit log manual
-│   │   ├── autorole.js         #          Manajemen auto-role
-│   │   ├── giveaway.js         #          Sistem giveaway
-│   │   ├── nickname.js         #          Manage nickname
-│   │   ├── qotd.js             #          Quote of the day
-│   │   ├── reactionrole.js     #          Reaction role setup
-│   │   ├── slowmode.js         #          Slowmode channel
-│   │   ├── steal-emoji.js      #          Steal emoji dari server lain
-│   │   ├── sticky.js           #          Sticky message
-│   │   └── voicemod.js         #          Moderasi voice channel
-│   ├── leveling/               #       📊 /rank, /leaderboard, XP system
-│   │   ├── leveling.js         #          Leveling config command
-│   │   └── rank.js             #          Rank card & leaderboard
-│   ├── survival/               #       ⚔️ RPG economy (30 subcommands)
-│   │   ├── survival.js         #          Main command router
-│   │   ├── achievementHelper.js#          Achievement unlock logic
-│   │   ├── achievementsData.js #          Achievement database
-│   │   ├── difficultyHelper.js #          Difficulty scaling helper
-│   │   ├── items.js            #          Dynamic item helper
-│   │   ├── items_static.js     #          Static item database
-│   │   ├── npcs.js             #          NPC definitions
-│   │   ├── onboardingHelper.js #          Onboarding wizard helper
-│   │   ├── questGenerator.js   #          Procedural quest generation
-│   │   ├── storyData.js        #          Story & narrative data
-│   │   ├── survivalLeveling.js #          XP & leveling untuk survival
-│   │   ├── survivalTime.js     #          Time-based mechanics
-│   │   └── subcommands/        #          30 subcommand handlers:
-│   │       │                   #          achievements, bank, chop, clan, class,
-│   │       │                   #          collect, consume, craft, date, duel,
-│   │       │                   #          dungeon, farm, fish, gallery, heist,
-│   │       │                   #          house, info, market, mine, npc,
-│   │       │                   #          pet, quest, rebirth, rest, shop,
-│   │       │                   #          start, story, study, travel, work
-│   ├── premium/                #       💎 /vip, voucher, premium perks
-│   │   ├── premium.js          #          Premium command
-│   │   └── premiumHelper.js    #          Premium check utilities
-│   ├── canvas/                 #       🎨 Canvas render engine (13 files)
-│   │   ├── Canvas.js           #          Core canvas renderer
-│   │   ├── CanvasUtils.js      #          Drawing primitives & effects
-│   │   ├── achievementCanvas.js#          Achievement card renderer
-│   │   ├── adminCosmetic.js    #          Admin cosmetic management
-│   │   ├── battleCanvas.js     #          Battle scene renderer
-│   │   ├── canvasHelper.js     #          Asset loading & caching
-│   │   ├── cardCanvas.js       #          Generic card template
-│   │   ├── cosmetic.js         #          Cosmetic shop command
-│   │   ├── duelCanvas.js       #          PvP duel scene renderer
-│   │   ├── imageManager.js     #          Image processing pipeline
-│   │   ├── nowplayingCanvas.js #          Music now-playing card
-│   │   ├── petCanvas.js        #          Pet display card
-│   │   └── profileCanvas.js    #          Profile card renderer
-│   ├── utility/                #       🔧 /profile, /weather, /translate, dll (32 files)
-│   │   └── downloader.js       #          ✨ Media downloader (yt-dlp+FFmpeg+stream timeout, auto-compress)
-│   ├── minigames/              #       🎮 /akinator, /hangman, /minesweeper, /minigame
-│   │   ├── akinator.js         #          ✨ CA bundle ENOENT patch untuk kontainer Linux
-│   │   ├── hangman.js          #          Hangman word game
-│   │   ├── minesweeper.js      #          Minesweeper game
-│   │   └── minigame.js         #          Mini-game collection hub
-│   ├── modmail/                #       📬 Modmail system
-│   │   ├── modmail.js          #          Main modmail command
-│   │   └── modmailHelper.js    #          Modmail thread management
-│   └── owner/                  #       👑 Bot owner commands
-│       └── deploy.js           #          Command deployment tool
-│
-├── language/                   #    🌍 Localization Files
-│   ├── id.json                 #       Bahasa Indonesia
-│   └── en.json                 #       English
-│
-└── assets/                     #    🖼️ Static Assets
-    ├── core/                   #       Bot branding (logo, avatar)
-    ├── dashboard/              #       Dashboard UI assets
-    ├── economy/                #       Economy system icons
-    ├── fonts/                  #       Custom fonts (Orbitron, Outfit)
-    ├── general/                #       General purpose images
-    ├── music/                  #       Music player assets
-    └── survival/               #       RPG survival game assets
+├── plugin/                     # 🔌 COMMAND MODULES (Hanya Router & Subcommands)
+│   ├── core/                   #    /ping, /stats, /info, dll
+│   ├── music/                  #    /play, /queue, dll
+│   ├── ai/                     #    /ai chat, /ai imagine
+│   ├── admin/                  #    /setup, /ban, /kick, automod
+│   ├── survival/               #    /survival (33+ subcommands murni)
+│   ├── utility/                #    /afk, /poll, /reminder
+│   └── ...
 ```
 
 ## 2.3 Alur Boot Sequence
@@ -431,18 +279,18 @@ graph TD
     G --> H["Load Event Handlers (fast-glob recursive)"]
     H --> I["startBot()"]
     I --> J["CommandHandler.load() + auto-deploy"]
-    J --> K["connectToDatabase() — Sequelize auto-sync"]
+    J --> K["connectToDatabase(), Sequelize auto-sync"]
     K --> L{"Redis URL exists?"}
     L -->|Yes| M["redisManager.connect()"]
     L -->|No| N["Skip Redis"]
     M --> O["client.login()"]
     N --> O
     O --> P["on clientReady"]
-    P --> Q["musicManager.initialize() — Poru/Lavalink"]
+    P --> Q["musicManager.initialize(), Poru/Lavalink"]
     P --> R["rssManager.init()"]
     P --> S["Dashboard Express server :3070"]
     P --> T["cronManager.init()"]
-    I --> U["displayBootScreen() — ASCII status report"]
+    I --> U["displayBootScreen(), ASCII status report"]
 ```
 
 ## 2.4 Alur Request Command (Slash Command)
@@ -483,7 +331,7 @@ graph LR
     D --> E["Audio Stream"]
     B --> F["MusicUIManager"]
     F --> G["Components V2 Container Panel (accent = warna platform)"]
-    F --> H["nowplayingCanvas.js — Media Gallery Image"]
+    F --> H["nowplayingCanvas.js, Media Gallery Image"]
     B --> J["LyricsManager"]
     J --> K["Lyrics Embed"]
     B --> L["MusicAnalytics"]
@@ -579,7 +427,7 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite jika My
 
 ---
 
-# 🔧 BAGIAN 3 — Proyek & Environment (Context)
+# 🔧 BAGIAN 3, Proyek & Environment (Context)
 
 ## 3.1 Informasi Proyek
 
@@ -617,11 +465,11 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite jika My
 
 | Variable | Wajib | Default | Deskripsi |
 |---|---|---|---|
-| `DISCORD_TOKEN` | ⚠️ | — | Token bot Discord |
-| `CLIENT_ID` | ⚠️ | — | Application/Client ID Discord |
+| `DISCORD_TOKEN` | ⚠️ | - | Token bot Discord |
+| `CLIENT_ID` | ⚠️ | - | Application/Client ID Discord |
 | `PREFIX` | ❌ | `n!` | Prefix command legacy |
-| `OWNER_IDS` | ❌ | — | ID owner, comma-separated |
-| `GUILD_ID` | ❌ | — | ID guild untuk development |
+| `OWNER_IDS` | ❌ | - | ID owner, comma-separated |
+| `GUILD_ID` | ❌ | - | ID guild untuk development |
 
 ### Version
 
@@ -636,17 +484,17 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite jika My
 |---|---|---|---|
 | `MYSQL_HOST` | ❌ | `127.0.0.1` | Host database |
 | `MYSQL_PORT` | ❌ | `3306` | Port database |
-| `MYSQL_USER` | ⚠️ | — | Username database |
-| `MYSQL_PASSWORD` | ❌ | — | Password database |
-| `MYSQL_DATABASE` | ⚠️ | — | Nama database |
+| `MYSQL_USER` | ⚠️ | - | Username database |
+| `MYSQL_PASSWORD` | ❌ | - | Password database |
+| `MYSQL_DATABASE` | ⚠️ | - | Nama database |
 
 ### Web Dashboard & OAuth2
 
 | Variable | Wajib | Default | Deskripsi |
 |---|---|---|---|
-| `DISCORD_CLIENT_SECRET` | ❌ | — | OAuth2 client secret |
+| `DISCORD_CLIENT_SECRET` | ❌ | - | OAuth2 client secret |
 | `DISCORD_CALLBACK_URL` | ❌ | `http://localhost:3070/auth/discord/callback` | OAuth2 redirect URL |
-| `SESSION_SECRET` | ❌ | — | Secret key untuk Express session |
+| `SESSION_SECRET` | ❌ | - | Secret key untuk Express session |
 
 ### Lavalink (Music)
 
@@ -661,27 +509,27 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite jika My
 
 | Variable | Wajib | Default | Deskripsi |
 |---|---|---|---|
-| `GEMINI_API_KEY` | ❌ | — | Google Gemini AI API key |
-| `OMDB_API_KEY` | ❌ | — | OMDB (movie database) API key |
-| `SPOTIFY_CLIENT_ID` | ❌ | — | Spotify API client ID |
-| `SPOTIFY_CLIENT_SECRET` | ❌ | — | Spotify API client secret |
+| `GEMINI_API_KEY` | ❌ | - | Google Gemini AI API key |
+| `OMDB_API_KEY` | ❌ | - | OMDB (movie database) API key |
+| `SPOTIFY_CLIENT_ID` | ❌ | - | Spotify API client ID |
+| `SPOTIFY_CLIENT_SECRET` | ❌ | - | Spotify API client secret |
 
 ### Verba AI (Opsional)
 
 | Variable | Wajib | Default | Deskripsi |
 |---|---|---|---|
-| `VERBA_API_KEY` | ❌ | — | Verba AI API key |
-| `VERBA_SLUG_OWNER` | ❌ | — | Slug karakter untuk owner |
-| `VERBA_SLUG_PREMIUM` | ❌ | — | Slug karakter untuk premium user |
-| `VERBA_SLUG_GENERAL` | ❌ | — | Slug karakter untuk general user |
-| `VERBA_CHARACTER_SLUG` | ❌ | — | Legacy fallback slug |
+| `VERBA_API_KEY` | ❌ | - | Verba AI API key |
+| `VERBA_SLUG_OWNER` | ❌ | - | Slug karakter untuk owner |
+| `VERBA_SLUG_PREMIUM` | ❌ | - | Slug karakter untuk premium user |
+| `VERBA_SLUG_GENERAL` | ❌ | - | Slug karakter untuk general user |
+| `VERBA_CHARACTER_SLUG` | ❌ | - | Legacy fallback slug |
 
 ### Infrastructure
 
 | Variable | Wajib | Default | Deskripsi |
 |---|---|---|---|
-| `REDIS_URL` | ❌ | — | Redis connection URL |
-| `ERROR_WEBHOOK_URL` | ❌ | — | Discord webhook untuk error reporting |
+| `REDIS_URL` | ❌ | - | Redis connection URL |
+| `ERROR_WEBHOOK_URL` | ❌ | - | Discord webhook untuk error reporting |
 
 ## 3.4 Infrastruktur & Dependensi Eksternal
 
@@ -756,8 +604,8 @@ File ini menyimpan ID yang spesifik per-deployment:
 ## 3.6 Sistem Lokalisasi (i18n)
 
 Bot mendukung multi-bahasa via file JSON di `/language/`:
-- `id.json` — Bahasa Indonesia (default)
-- `en.json` — English
+- `id.json`, Bahasa Indonesia (default)
+- `en.json`, English
 
 Bahasa per-guild disimpan di `GuildSettings.language`. Akses via `languageManager.js` dan helper `language.js`.
 
@@ -794,11 +642,11 @@ Dashboard menggunakan **Socket.IO** untuk real-time updates pada metrik telemetr
 > [!NOTE]
 > Informasi penting untuk deployment di production.
 
-1. **Pterodactyl Compatibility** — `env.js` memiliki `cleanEnv()` untuk membersihkan tanda kutip dari panel Pterodactyl.
-2. **Auto-Migration** — Sequelize akan otomatis membuat/alter tabel saat boot pertama (`sync({ alter: true })`).
-3. **Graceful Shutdown** — Bot menangani `SIGINT` dan `SIGTERM` untuk menutup semua koneksi (Lavalink, MySQL, Redis, Discord) dengan aman.
-4. **Auto-Respawn** — `ShardingManager` dikonfigurasi dengan `respawn: true` untuk otomatis restart shard yang crash.
-5. **Deprecation Patch** — `index.js` memiliki monkey-patch untuk mengkonversi `ephemeral: true` (deprecated di discord.js terbaru) ke `flags: ['Ephemeral']` secara otomatis.
+1. **Pterodactyl Compatibility**, `env.js` memiliki `cleanEnv()` untuk membersihkan tanda kutip dari panel Pterodactyl.
+2. **Auto-Migration**, Sequelize akan otomatis membuat/alter tabel saat boot pertama (`sync({ alter: true })`).
+3. **Graceful Shutdown**, Bot menangani `SIGINT` dan `SIGTERM` untuk menutup semua koneksi (Lavalink, MySQL, Redis, Discord) dengan aman.
+4. **Auto-Respawn**, `ShardingManager` dikonfigurasi dengan `respawn: true` untuk otomatis restart shard yang crash.
+5. **Deprecation Patch**, `index.js` memiliki monkey-patch untuk mengkonversi `ephemeral: true` (deprecated di discord.js terbaru) ke `flags: ['Ephemeral']` secara otomatis.
 
 ---
 

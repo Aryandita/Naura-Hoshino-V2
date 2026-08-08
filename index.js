@@ -2,10 +2,6 @@ try { process.loadEnvFile(); } catch (e) {}
 const { Client, Collection } = require('discord.js');
 const path = require('path');
 
-// Penambal kompatibilitas ephemeral -> flags harus dipasang sebelum command dimuat.
-const { applyEphemeralPatch } = require('./src/utils/ephemeralPatch');
-applyEphemeralPatch();
-
 // Penambal bahasa memasang interaction.localeLang, interaction.t(), dan padanannya
 // pada message. Harus dipasang sebelum command dimuat agar command apa pun dapat
 // membaca bahasa pilihan user sejak interaksi pertama.
@@ -15,11 +11,12 @@ applyLocalePatch();
 const { CommandHandler } = require('./src/managers/CommandHandler');
 const { loadEvents } = require('./src/managers/eventLoader');
 const clientOptions = require('./src/config/clientOptions');
-const MusicManager = require('./plugin/music/musicManager');
+const MusicManager = require('./src/managers/musicManager');
 const redisManager = require('./src/managers/redisManager');
 const { logger } = require('./src/managers/logger');
 const RssManager = require('./src/managers/rssManager');
-const { connectToDatabase, seedInitialData } = require('./src/managers/dbManager');
+const { connectToDatabase } = require('./src/managers/dbManager');
+const { seedInitialData } = require('./src/managers/dbSeeder');
 const env = require('./src/config/env');
 
 // Kode keluar khusus untuk konfigurasi yang tidak lengkap. shard.js membaca kode
@@ -31,8 +28,8 @@ const EXIT_CODE_BAD_CONFIG = 78;
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
 // Identitas shard. SHARD_ID hanya terisi bila proses ini dijalankan oleh ShardingManager.
-const isShardChild = typeof process.env.SHARD_ID !== 'undefined';
-const isPrimaryShard = !isShardChild || process.env.SHARD_ID === '0';
+const isShardChild = typeof env.SHARD_ID !== 'undefined';
+const isPrimaryShard = !isShardChild || env.SHARD_ID === '0';
 
 // Saat berjalan mandiri (node index.js), validasi wajib bersifat fatal.
 // Saat menjadi anak shard, shard.js sudah memvalidasi lebih dulu; di sini kita tetap
@@ -59,7 +56,7 @@ loadEvents(client, path.join(__dirname, 'src', 'events'));
 async function startBot() {
     console.log('\n\x1b[46m\x1b[30m \u2699\ufe0f BOOT SEQUENCE \x1b[0m \x1b[36mMemulai proses inisialisasi sistem...\x1b[0m\n');
 
-    let sysStatus = {
+    const sysStatus = {
         db: '\x1b[31m\ud83d\udd34 OFFLINE   \x1b[0m',
         redis: '\x1b[33m\ud83d\udfe1 SKIPPED   \x1b[0m',
         music: '\x1b[32m\ud83d\udfe2 INITIALIZED\x1b[0m',
@@ -78,7 +75,7 @@ async function startBot() {
             && (process.argv.includes('--deploy') || isPrimaryShard);
 
         if (!shouldDeploy) {
-            logger.info(`[DEPLOY] Shard #${process.env.SHARD_ID} melewati deploy slash command (ditangani shard utama).`);
+            logger.info(`[DEPLOY] Shard #${env.SHARD_ID} melewati deploy slash command (ditangani shard utama).`);
         }
 
         await commandHandler.load(shouldDeploy);
@@ -120,7 +117,7 @@ async function startBot() {
             // Web Dashboard hanya boleh dijalankan oleh satu proses. Bila setiap shard
             // mencoba listen di port yang sama, shard berikutnya crash dengan EADDRINUSE.
             if (!isPrimaryShard) {
-                logger.info(`[DASHBOARD] Shard #${process.env.SHARD_ID} melewati Web Dashboard (dijalankan shard utama).`);
+                logger.info(`[DASHBOARD] Shard #${env.SHARD_ID} melewati Web Dashboard (dijalankan shard utama).`);
                 return;
             }
 
