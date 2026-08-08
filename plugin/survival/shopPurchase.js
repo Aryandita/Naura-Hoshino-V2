@@ -68,12 +68,15 @@ async function buy({ userId, value, currency }) {
     const itemName = catalogNameOf(itemId, isCoupon);
     let effectNote = '';
 
+    // Penyimpanan dibatasi ke kolom yang memang berubah. Uangnya sudah dipotong
+    // secara atomik di database, jadi menyimpan seluruh objek hanya akan menulis
+    // ulang saldo dari memori dan membuka kembali peluang balapan.
     if (itemId.startsWith('prop_')) {
         survival.propertyId = PROPERTY_MAP[itemId] || survival.propertyId;
-        await survival.save();
+        await survival.save({ fields: ['propertyId'] });
     } else if (itemId.startsWith('veh_')) {
         survival.vehicle = itemId === 'veh_motor' ? 'motorcycle' : 'bicycle';
-        await survival.save();
+        await survival.save({ fields: ['vehicle'] });
     } else {
         const couponItem = isCoupon ? coupons.getCouponItem(itemId) : null;
 

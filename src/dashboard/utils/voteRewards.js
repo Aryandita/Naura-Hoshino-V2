@@ -61,10 +61,15 @@ async function grantVoteRewards(userId, { isWeekend = false, force = false } = {
 
     const expiry = await extendPremium(userId, TRIAL_HOURS * 60 * 60 * 1000);
 
-    const coupons = isWeekend ? COUPON_WEEKEND : COUPON_PER_VOTE;
-    const totalCoupons = await currency.reward(currency.COUPON, { survival }, coupons);
-
     const streak = (Number(state.vote_streak) || 0) + 1;
+
+    // Catatan vote ditulis LEBIH DULU, dan hanya kolom rpg_state yang disentuh.
+    //
+    // Sejak Naura Coupon punya kolom angka sendiri, currency.reward() memakai
+    // increment atomik lewat cacheManager, sedangkan survival.save() menulis
+    // nilai absolut dari objek di memori. Bila keduanya sama-sama menyentuh kolom
+    // coupons, satu vote bisa terhitung dua kali: sekali oleh save(), sekali lagi
+    // saat antrean increment di-flush. Membatasi `fields` menutup jalur itu.
     survival.rpg_state = {
         ...(survival.rpg_state || {}),
         last_vote_at: new Date().toISOString(),
@@ -72,7 +77,10 @@ async function grantVoteRewards(userId, { isWeekend = false, force = false } = {
         vote_total: (Number(state.vote_total) || 0) + 1
     };
     survival.changed('rpg_state', true);
-    await survival.save();
+    await survival.save({ fields: ['rpg_state'] });
+
+    const coupons = isWeekend ? COUPON_WEEKEND : COUPON_PER_VOTE;
+    const totalCoupons = await currency.reward(currency.COUPON, { survival }, coupons);
 
     logger.info(`[VOTE] ${userId} menerima ${coupons} Naura Coupon (total ${totalCoupons}), vote ke-${streak}.`);
 
