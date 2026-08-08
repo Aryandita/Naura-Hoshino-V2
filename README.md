@@ -27,7 +27,7 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 <br />
 
 > [!NOTE]
-> Proyek ini masih dalam pengembangan aktif. Beberapa modul sedang dirapikan, lihat [`TODO.md`](TODO.md) dan tab **Issues** untuk daftar pekerjaan yang sedang berjalan. **Sprint 0 Hardening sudah selesai.** Prioritas saat ini adalah **Sprint 1 Fondasi Developer Experience**, dan fitur baru ditahan sampai sprint itu tuntas.
+> Proyek ini masih dalam pengembangan aktif. Beberapa modul sedang dirapikan, lihat [`TODO.md`](TODO.md) dan tab **Issues** untuk daftar pekerjaan yang sedang berjalan. **Sprint 0 Hardening dan Sprint 1 Fondasi Developer Experience sudah selesai.** Prioritas saat ini adalah **Sprint 2 Konsistensi Data & Performa**, dan fitur baru ditahan sampai sprint itu tuntas.
 
 ### 📌 Versi & Sumber Kebenaran
 
@@ -52,6 +52,7 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 - [✨ Fitur Unggulan](#-fitur-unggulan)
 - [🧩 Kebutuhan Sistem](#-kebutuhan-sistem)
 - [🚀 Instalasi & Menjalankan Bot](#-instalasi--menjalankan-bot)
+- [🐦 Deploy di Panel Pterodactyl](#-deploy-di-panel-pterodactyl)
 - [📜 Script NPM yang Tersedia](#-script-npm-yang-tersedia)
 - [🔐 Konfigurasi Environment](#-konfigurasi-environment)
 - [🗂️ Struktur Proyek](#-struktur-proyek)
@@ -118,7 +119,7 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 
 | Status | Komponen | Versi Minimal | Keterangan |
 |:---:|---|:---:|---|
-| 🟢 | **Node.js** | `>= 24.0.0` | Sangat wajib. Naura memakai `process.loadEnvFile()`, `fetch` global, dan test runner bawaan `node:test`. |
+| 🟢 | **Node.js** | `>= 24.0.0` | Sangat wajib. Naura memakai `process.loadEnvFile()`, `fetch` global, `node:sqlite`, dan test runner bawaan `node:test`. |
 | 🐬 | **MySQL** | `8.x` | Basis data utama untuk performa maksimal (SQLite dipakai sebagai penyimpanan darurat). |
 | 🔴 | **Redis** | *Opsional* | Untuk sistem Cache & Pub/Sub. (Akan dilewati otomatis jika `REDIS_URL` kosong). |
 | 🎧 | **Lavalink** | `v4` | Wajib di-setup jika ingin menggunakan seluruh modul Musik. |
@@ -128,7 +129,7 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 > Beberapa dependensi bersifat *native* seperti (`@napi-rs/canvas`, `sqlite3`, `libsodium-wrappers`). Jika kamu menjalankan bot ini di **Linux**, kemungkinan besar kamu perlu memasang `build-essential` dan `python3` terlebih dahulu.
 
 > [!NOTE]
-> **Kenapa Node 24 dan bukan versi lebih rendah?** Selain `process.loadEnvFile()`, Naura mengandalkan `fetch` global (sehingga `node-fetch` bisa dilepas) dan `node --test` sebagai test runner tanpa dependensi tambahan. Menyeragamkan satu versi juga menghilangkan celah bug yang hanya muncul di salah satu environment.
+> **Kenapa Node 24 dan bukan versi lebih rendah?** Selain `process.loadEnvFile()`, Naura mengandalkan `fetch` global (sehingga `node-fetch` bisa dilepas), `node:sqlite` bawaan untuk penyimpanan darurat, dan `node --test` sebagai test runner tanpa dependensi tambahan. Menyeragamkan satu versi juga menghilangkan celah bug yang hanya muncul di salah satu environment.
 
 > [!TIP]
 > **SQLite bukan sekadar pilihan pengembangan.** Saat MySQL dan Redis mati bersamaan, data ditulis sementara ke `naura_fallback.sqlite`, lalu disinkronkan kembali ke MySQL saat pulih. Jangan hapus dependensi `sqlite3`.
@@ -157,17 +158,61 @@ cp .env.example .env
 
 # 6. Buka file .env dan isi variabel yang dibutuhkan (lihat panduan di bawah)
 
-# 7. Jalankan migrasi skema database lebih dulu
-npm run db:migrate
-
-# 8. Baru nyalakan bot
+# 7. Nyalakan bot. Migrasi skema database berjalan otomatis lebih dulu.
 npm start
 ```
 
 > [!IMPORTANT]
-> **Urutan deploy produksi: migrate dulu, baru start.** `npm run db:migrate` berjalan sebagai proses terpisah dan keluar dengan kode 1 bila gagal, sehingga deploy berhenti sebelum bot menyala dengan skema separuh jalan. Bot di produksi **tidak** lagi menjalankan migrasi sendiri, ia hanya memperingatkan bila ada migrasi yang belum dijalankan.
+> **Migrasi selalu jalan sebelum bot menyala, dan itu dijamin oleh npm, bukan oleh urutan perintah manual.** Script `prestart` di `package.json` menjalankan `node scripts/migrate.js` setiap kali `npm start` dipanggil. Bila migrasi gagal, prosesnya keluar dengan kode 1 dan `start` **tidak pernah dieksekusi**, sehingga bot tidak mungkin berjalan di atas skema separuh jalan.
 >
-> Di development, migrasi tetap berjalan otomatis saat boot (hanya pada proses utama) supaya alur harian tidak bertambah panjang.
+> Urutan lengkapnya: `npm start` → `prestart` (`scripts/migrate.js`) → `start` (`node shard.js`).
+
+> [!TIP]
+> **Butuh menjalankan migrasi sendiri?** Pakai `npm run db:migrate`. Perintah itu memanggil script yang sama, jadi aman dijalankan berulang kali karena migrasi yang sudah pernah sukses dicatat di tabel `schema_migrations`.
+
+> [!CAUTION]
+> **Pintu darurat, bukan pengaturan harian.** Bila kamu perlu menyalakan bot tanpa memeriksa skema (misal database sedang di-maintenance dan kamu hanya ingin bot online), pakai `SKIP_DB_MIGRATE=1` atau `npm run start:no-migrate`. Jangan pernah meninggalkan `SKIP_DB_MIGRATE` menyala secara permanen, karena migrasi baru akan terus dilewati secara diam-diam dan bot berjalan di atas skema lama.
+
+---
+
+## 🐦 Deploy di Panel Pterodactyl
+
+Panel Pterodactyl mengunci perintah luar dan hanya menyisakan satu variabel yang bisa kamu ubah, yaitu `CMD_RUN`. Perintah luar yang terkunci itu kira-kira begini:
+
+```bash
+if [[ -d .git ]] && [[ {{AUTO_UPDATE}} == "1" ]]; then git pull; fi;
+if [ -f /home/container/package.json ]; then /usr/local/bin/npm install; fi;
+/usr/local/bin/${CMD_RUN}
+```
+
+Karena `CMD_RUN` selalu diawali `/usr/local/bin/`, token pertamanya **wajib** berupa binary yang ada di folder itu (`npm`, `node`, atau `npx`). Rangkaian perintah dengan `&&` juga tidak bisa diandalkan di sana.
+
+### Konfigurasi yang dipakai
+
+| Kolom panel | Nilai |
+|---|---|
+| `CMD_RUN` | `npm start` |
+| Docker image | Node **24** atau lebih baru |
+| `AUTO_UPDATE` | `1` bila kamu ingin panel menarik commit terbaru saat restart |
+
+Itu saja. Tidak ada perintah tambahan yang perlu kamu tulis, karena urutan migrasi sudah pindah ke dalam `package.json` lewat `prestart`.
+
+### Yang terjadi setiap kali kamu menekan Restart
+
+1. `git pull` menarik commit terbaru (bila `AUTO_UPDATE=1`).
+2. `npm install` menyesuaikan dependensi.
+3. `prestart` menjalankan `scripts/migrate.js`, memeriksa dan menerapkan migrasi yang belum jalan.
+4. `start` menjalankan `node shard.js` dan bot menyala.
+
+> [!WARNING]
+> **Tiga hal yang paling sering menggagalkan restart di panel:**
+>
+> 1. **Docker image masih Node di bawah 24.** Bot akan menolak jalan. Periksa lewat tab Startup, bukan lewat `package.json`.
+> 2. **`git pull` gagal diam-diam karena ada perubahan lokal.** Bila kamu pernah mengedit file langsung dari File Manager panel (termasuk `package-lock.json` yang berubah karena `npm install`), `git pull` akan berhenti dan bot tetap jalan memakai kode lama. Selalu baca log restart.
+> 3. **Folder `.cache/` terhapus.** Folder itu menyimpan tanda tangan slash command (`.cache/commands-deploy.json`). Bila hilang, seluruh slash command akan di-deploy ulang saat boot berikutnya. Tidak berbahaya, hanya memakan rate limit Discord tanpa perlu.
+
+> [!NOTE]
+> **Slash command tidak perlu di-deploy manual.** Shard utama (`SHARD_ID` `0`) mendeploy otomatis saat definisi command berubah, dibandingkan lewat tanda tangan SHA-256 yang tersimpan di `.cache/commands-deploy.json`. `npm run deploy` hanya alat paksa bila kamu ingin mendeploy segera.
 
 ---
 
@@ -177,11 +222,13 @@ Untuk mempermudah manajemen, kami telah menyediakan beberapa perintah praktis. J
 
 | Perintah | Deskripsi Fungsi |
 |---|---|
-| 🚀 `npm start` | Menjalankan bot via `shard.js` (ShardingManager). **Gunakan perintah ini untuk Produksi.** |
-| 🗃️ `npm run db:migrate` | Menjalankan migrasi skema database lewat `scripts/migrate.js`. **Wajib dijalankan sebelum `npm start` di produksi.** Keluar dengan kode 1 bila gagal, dan migrasi yang sudah pernah jalan dicatat di tabel `schema_migrations`. |
+| 🚀 `npm start` | Menjalankan bot via `shard.js` (ShardingManager). **Gunakan perintah ini untuk Produksi.** Migrasi database berjalan otomatis lebih dulu lewat `prestart`. |
+| 🗃️ `npm run prestart` | Dipanggil otomatis oleh npm sebelum `start`. Menjalankan `scripts/migrate.js` dan menggagalkan `start` bila migrasi error. Jarang perlu dijalankan manual. |
+| 🗃️ `npm run db:migrate` | Menjalankan migrasi skema database secara terpisah lewat `scripts/migrate.js`. Keluar dengan kode 1 bila gagal, dan migrasi yang sudah pernah jalan dicatat di tabel `schema_migrations`. |
+| 🆘 `npm run start:no-migrate` | Menyalakan bot **tanpa** memeriksa skema. Pintu darurat saja, jangan dijadikan kebiasaan. |
 | 🔄 `npm run dev` | Menjalankan bot dengan auto-restart via `--watch`. Sangat pas untuk *development*. |
 | 📤 `npm run deploy` | Memaksa bot untuk melakukan registrasi ulang seluruh *Slash Command*. |
-| 📦 `npm run install-start`| Kombinasi instan: Pasang dependensi dan langsung nyalakan bot. |
+| 📦 `npm run install-start`| Kombinasi instan: Pasang dependensi dan langsung nyalakan bot (termasuk migrasi). |
 | 🧪 `npm test` | Menjalankan seluruh test memakai runner bawaan Node (`node --test`). |
 | 🔍 `npm run lint` | Melakukan pengecekan kode dengan ESLint. |
 | 🔧 `npm run lint:fix` | Mengecek sekaligus mencoba memperbaiki isu kode secara otomatis (ESLint fix). |
@@ -255,6 +302,7 @@ Semua kredensial dan pengaturan penting disimpan di `.env` (berdasarkan [`src/co
 | `REDIS_URL` | - | *Opsional*. URL koneksi Redis. Biarkan kosong untuk mematikan Cache/PubSub eksternal. |
 | `DB_POOL_BUDGET` | `80` | Total koneksi database untuk **seluruh** shard, lalu dibagi jumlah shard. Angkanya harus di bawah `max_connections` MySQL. |
 | `DB_POOL_MAX` | - | Penimpa manual `pool.max` per proses. Isi hanya bila kamu tahu pasti kapasitas database. |
+| `SKIP_DB_MIGRATE` | - | Pintu darurat. Isi `1`, `true`, atau `yes` untuk melewati migrasi saat boot. Jangan dibiarkan menyala permanen. |
 
 > [!NOTE]
 > Bila `MYSQL_DATABASE`, `MYSQL_USER`, atau `MYSQL_HOST` kosong, bot otomatis beralih ke penyimpanan darurat SQLite. Di dalam kode nilai-nilai ini dibaca sebagai `env.DB_NAME`, `env.DB_USER`, `env.DB_HOST`, `env.DB_PORT`, dan `env.DB_PASS`.
@@ -340,7 +388,7 @@ Naura-Hoshino-V2/
 ├─ 🧩 plugin/                # Semua fungsi command, rapi terbagi dalam sub-kategori
 │  └─ <kategori>/locales/    # Terjemahan khusus untuk setiap sub-plugin
 ├─ 🔧 scripts/               # Alat-alat kecil utilitas pemeliharaan sistem
-│  └─ migrate.js             # Runner migrasi database (npm run db:migrate)
+│  └─ migrate.js             # Runner migrasi database (dipanggil prestart)
 └─ 📂 src/
    ├─ ⚙️ config/             # Pengaturan statis, konstanta UI & validasi ENV
    ├─ 🌐 dashboard/          # Markas Express + Socket.io Web Dashboard
@@ -368,7 +416,7 @@ Kami merancang Naura agar mudah dimengerti dari Sabang sampai Merauke, hingga ti
 const lang = require('./src/managers/languageManager');
 
 // Simpan pilihan preferensi si pengguna
-await lang.setUserLanguage(userId, 'en');       
+await lang.setUserLanguage(userId, 'en');
 
 // Dapatkan terjemahan khusus untuk UI pengguna
 const text = await lang.translate(userId, 'help.title');
@@ -413,8 +461,10 @@ Sebelum menulis kode, **baca [`AGENTS.md`](AGENTS.md) lebih dulu.** File itu mem
 - **Satu PR per sprint**, dan setiap PR menyebut nomor issue yang dikerjakan.
 - **Gaya kode**: CommonJS, indentasi 4 spasi, semicolon wajib, komentar Bahasa Indonesia, tanpa em dash.
 - **UI**: semua respons memakai Components V2 lewat `buildContainerV2()` dengan struktur 5 lapisan dan footer wajib.
-- **Nilai ekonomi wajib atomik.** Jangan pernah membaca saldo lalu menuliskannya kembali.
-- **Migrasi database**: jalankan `npm run db:migrate` sebelum `npm start` di produksi, dan tambahkan migrasi baru hanya di `src/managers/dbMigrator.js`.
+- **Nilai ekonomi wajib atomik.** Jangan pernah membaca saldo lalu menuliskannya kembali. Pakai `incrementUserProfile()` / `incrementUserSurvival()` untuk menambah, dan `debitUserProfile()` / `debitUserSurvival()` untuk mengurangi.
+- **Kolom JSON juga wajib atomik.** Inventory, `rpg_state`, dan kawan-kawannya hanya boleh diubah lewat `cacheManager.mutateUserProfileJson()` / `mutateUserSurvivalJson()`, atau lewat helper siap pakai `addItemsAtomic()` / `takeItemsAtomic()` di `plugin/survival/inventoryHelper.js`.
+- **`row.save()` wajib menyebut `fields`.** Menyimpan seluruh baris akan menimpa kolom saldo yang sedang menunggu increment atomik, dan itu pernah menyebabkan bug kupon dobel.
+- **Migrasi database**: berjalan otomatis lewat `prestart` sebelum `npm start`, dan migrasi baru hanya ditambahkan di `src/managers/dbMigrator.js`.
 - **`ephemeral: true` sudah dilarang.** Pakai `flags: MessageFlags.Ephemeral`, lint akan memperingatkan pemakaian baru.
 - **CI harus hijau** (lint, em dash, paritas bahasa, test) sebelum merge.
 
