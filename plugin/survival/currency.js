@@ -23,6 +23,11 @@ const EMOJI = {
     [COUPON]: { raw: '<:NauraCoupon:1534169148807053472>', id: '1534169148807053472', name: 'NauraCoupon', animated: false }
 };
 
+// Kunci lama tempat Naura Coupon dulu disimpan di dalam rpg_state. Hanya dipakai
+// untuk membaca sisa data pada objek yang sudah lebih dulu masuk cache sebelum
+// migrasi v6 berjalan. Jangan pernah menulis ke kunci ini lagi.
+const LEGACY_COUPON_KEY = 'coupons';
+
 const CURRENCIES = {
     [FRAGMENT]: {
         kind: FRAGMENT,
@@ -48,9 +53,11 @@ const CURRENCIES = {
         short: 'Coupon',
         emojiKey: 'coupon',
         emojiFallback: EMOJI[COUPON].raw,
-        // Disimpan di dalam rpg_state supaya tidak perlu migrasi kolom baru.
+        // Sejak migrasi v5, kupon punya kolom angka sendiri di UserSurvivals.
+        // Sebelumnya ia menumpang di dalam rpg_state, dan itu membuatnya jadi
+        // satu-satunya mata uang yang dipotong dengan pola baca-ubah-tulis.
         field: 'coupons',
-        owner: 'survivalState'
+        owner: 'survival'
     }
 };
 
@@ -110,12 +117,26 @@ function stateOf(survival) {
     return (survival && survival.rpg_state) || {};
 }
 
+/**
+ * Saldo kupon pada objek survival.
+ *
+ * Objek survival bisa berasal dari cache Redis yang ditulis sebelum migrasi v6
+ * berjalan, dan cache itu hidup sampai 30 menit. Selama masa peralihan, saldo
+ * lama di dalam rpg_state tetap dibaca supaya tidak ada pemain yang melihat
+ * kuponnya hilang. Sesudah cache habis, cabang ini tidak pernah terpakai lagi.
+ */
+function couponBalanceOf(survival) {
+    const row = survival || {};
+    if (row.coupons !== undefined && row.coupons !== null) return Number(row.coupons) || 0;
+    return Number(stateOf(row)[LEGACY_COUPON_KEY]) || 0;
+}
+
 function balanceOf(currency, holders = {}) {
     const c = resolve(currency);
     const { survival, profile } = holders;
 
+    if (c.kind === COUPON) return couponBalanceOf(survival);
     if (c.owner === 'profile') return Number((profile || {})[c.field]) || 0;
-    if (c.owner === 'survivalState') return Number(stateOf(survival)[c.field]) || 0;
     return Number((survival || {})[c.field]) || 0;
 }
 
@@ -141,25 +162,24 @@ function syncLocal(currency, holders, nextValue) {
     }
     if (!survival) return;
 
-    if (c.owner === 'survivalState') {
-        survival.rpg_state = { ...stateOf(survival), [c.field]: nextValue };
+    survival[c.field] = nextValue;
+
+    // Sisa saldo lama dibuang dari salinan di memori supaya couponBalanceOf()
+    // tidak pernah kembali membaca angka basi dari rpg_state.
+    if (c.kind === COUPON && stateOf(survival)[LEGACY_COUPON_KEY] !== undefined) {
+        const nextState = { ...stateOf(survival) };
+        delete nextState[LEGACY_COUPON_KEY];
+        survival.rpg_state = nextState;
         if (typeof survival.changed === 'function') survival.changed('rpg_state', true);
-    } else {
-        survival[c.field] = nextValue;
     }
 }
 
 /**
  * Menetapkan saldo ke nilai tertentu.
  *
- * Versi sebelumnya memanggil `profile.save()` di balik penjaga
- * `typeof profile.save === 'function'`. Objek profil berasal dari
- * cacheManager.getUserProfile(), yang mengembalikan JSON biasa tanpa .save().
- * Penjaga itu selalu gagal tanpa suara, jadi setiap pembayaran Naura Coin hanya
- * berubah di memori lalu hilang. Sekarang penulisan selalu lewat cacheManager.
- *
- * Untuk pengurangan saldo, pakai charge(). Fungsi ini menimpa nilai apa adanya
- * dan tidak tahan terhadap balapan.
+ * @deprecated Fungsi ini menimpa nilai apa adanya dan TIDAK tahan terhadap
+ * balapan. Untuk pengurangan saldo pakai charge(), untuk penambahan pakai
+ * reward(). Dipertahankan hanya untuk kasus administratif seperti perintah owner.
  */
 async function setBalance(currency, holders = {}, value) {
     const c = resolve(currency);
@@ -171,8 +191,6 @@ async function setBalance(currency, holders = {}, value) {
 
     if (c.owner === 'profile') {
         await cacheManager.updateUserProfile(userId, { [c.field]: safeValue });
-    } else if (c.owner === 'survivalState') {
-        await cacheManager.updateUserSurvival(userId, { rpg_state: stateOf(holders.survival) });
     } else {
         await cacheManager.updateUserSurvival(userId, { [c.field]: safeValue });
     }
@@ -189,6 +207,7 @@ function canAfford(currency, holders, amount) {
  *
  * Pemeriksaan kecukupan dan pemotongan terjadi dalam satu pernyataan SQL, jadi
  * dua klik yang tiba bersamaan tidak bisa membelanjakan uang yang sama dua kali.
+ * Sejak migrasi v5, aturan ini berlaku untuk ketiga mata uang tanpa kecuali.
  */
 async function charge(currency, holders = {}, amount) {
     const c = resolve(currency);
@@ -198,14 +217,6 @@ async function charge(currency, holders = {}, amount) {
 
     const userId = userIdOf(holders);
     if (!userId) return null;
-
-    // Naura Coupon tinggal di dalam kolom JSON rpg_state, yang tidak bisa
-    // dipotong secara atomik. Kelangkaannya membuat risikonya kecil, tetapi ini
-    // tetap satu-satunya jalur yang belum aman terhadap balapan.
-    if (c.owner === 'survivalState') {
-        if (balance < cost) return null;
-        return setBalance(c, holders, balance - cost);
-    }
 
     const result = c.owner === 'profile'
         ? await cacheManager.debitUserProfile(userId, c.field, cost)
@@ -226,10 +237,6 @@ async function reward(currency, holders = {}, amount) {
 
     const userId = userIdOf(holders);
     if (!userId) return balance;
-
-    if (c.owner === 'survivalState') {
-        return setBalance(c, holders, balance + gain);
-    }
 
     if (c.owner === 'profile') {
         await cacheManager.incrementUserProfile(userId, { [c.field]: gain });
@@ -294,6 +301,7 @@ module.exports = {
     COIN,
     COUPON,
     FRAGMENT_PER_COIN,
+    LEGACY_COUPON_KEY,
     EMOJI,
     CURRENCIES,
     LOCATION_CURRENCY,

@@ -22,6 +22,11 @@ const ALREADY_APPLIED_ERRNOS = new Set([1050, 1060, 1061, 1091]);
  * Daftar migrasi yang dijalankan secara berurutan.
  * Setiap migrasi punya ID unik dan query SQL-nya.
  * Tambahkan migrasi baru di BAWAH daftar yang sudah ada, jangan ubah urutan/ID yang sudah ada.
+ *
+ * Migrasi DATA (UPDATE, bukan ALTER) hanya aman karena ledger mencatat ID yang
+ * sudah dijalankan. Jangan pernah menulis migrasi data yang menambah nilai pada
+ * dirinya sendiri tanpa memastikan ledger aktif, karena menjalankannya dua kali
+ * akan menggandakan angkanya.
  */
 const MIGRATIONS = [
     {
@@ -43,6 +48,24 @@ const MIGRATIONS = [
         id: 'v4_add_economy_investments',
         description: 'Tambah kolom economy_investments ke user_profiles',
         sql: 'ALTER TABLE user_profiles ADD COLUMN economy_investments JSON DEFAULT NULL;'
+    },
+    {
+        id: 'v5_add_coupons',
+        description: 'Tambah kolom coupons ke UserSurvivals (Naura Coupon jadi kolom sendiri)',
+        sql: 'ALTER TABLE UserSurvivals ADD COLUMN coupons INT NOT NULL DEFAULT 0;'
+    },
+    {
+        id: 'v6_move_coupons_to_column',
+        description: 'Pindahkan saldo Naura Coupon dari rpg_state ke kolom coupons',
+        // Naura Coupon dulu dititipkan di dalam kolom JSON rpg_state supaya tidak
+        // perlu migrasi. Akibatnya kupon jadi satu-satunya mata uang yang dipotong
+        // dengan pola baca-ubah-tulis, karena kolom JSON tidak bisa dipotong lewat
+        // satu UPDATE bersyarat. Sekarang saldonya dipindah ke kolom angka, lalu
+        // kuncinya dibuang dari rpg_state supaya tidak ada dua sumber kebenaran.
+        //
+        // JSON_TYPE mengembalikan NULL bila kuncinya tidak ada, jadi baris yang
+        // belum pernah punya kupon tidak ikut tersentuh.
+        sql: "UPDATE UserSurvivals SET coupons = coupons + CAST(JSON_EXTRACT(rpg_state, '$.coupons') AS UNSIGNED), rpg_state = JSON_REMOVE(rpg_state, '$.coupons') WHERE JSON_TYPE(JSON_EXTRACT(rpg_state, '$.coupons')) IN ('INTEGER', 'UNSIGNED INTEGER', 'DOUBLE', 'DECIMAL');"
     }
 ];
 
