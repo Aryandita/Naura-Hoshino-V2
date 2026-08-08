@@ -4,16 +4,18 @@
 // Semua id barang di sini sudah dicocokkan dengan katalog items.js, supaya
 // pemain tidak pernah lagi menerima barang bernama sama dengan id mentahnya.
 
-const UserSurvival = require('../../src/models/UserSurvival');
 const UserQuest = require('../../src/models/UserQuest');
 const cacheManager = require('../../src/managers/cacheManager');
 const items = require('./items');
 const leveling = require('./survivalLeveling');
 const { advanceTime, getTimeState } = require('./survivalTime');
-const { safeParseInventory, addOrStackItem } = require('./inventoryHelper');
+const { addItemsAtomic } = require('./inventoryHelper');
 
 // Sesudah pulang, pemain selalu diantar kembali ke desa.
 const HOME_LOCATION = 'desa';
+
+// Statistik yang terkuras setiap kali pemain bekerja.
+const DRAIN_FIELDS = ['hunger', 'thirst', 'stamina'];
 
 const LOOT = {
     hutan: {
@@ -103,9 +105,13 @@ function petBonus(activePets) {
     return { wolf: types.includes('wolf'), cat: types.includes('cat') };
 }
 
-/** Antar pemain kembali ke desa tanpa memberi hadiah apa pun. */
+/**
+ * Antar pemain kembali ke desa tanpa memberi hadiah apa pun.
+ * Lewat cacheManager, bukan UserSurvival.update() langsung, supaya cache
+ * user:survival tidak menyimpan lokasi lama sampai TTL-nya habis.
+ */
 async function goHome(userId) {
-    await UserSurvival.update({ currentLocation: HOME_LOCATION }, { where: { userId } });
+    await cacheManager.updateUserSurvival(userId, { currentLocation: HOME_LOCATION });
 }
 
 /**
@@ -115,25 +121,20 @@ async function goHome(userId) {
  */
 async function grantLoot({ userId, lokasi, bareHands, activePets }) {
     const profile = await cacheManager.getUserProfile(userId);
-    const survival = await UserSurvival.findOne({ where: { userId } });
+    const survival = await cacheManager.getUserSurvival(userId);
     if (!profile || !survival) return { ok: false, reason: 'no_profile' };
 
     const bonus = petBonus(activePets);
     const bare = bareHands ? bareHandsTable(lokasi) : null;
     const table = lootTable(lokasi);
 
-    let inventory = safeParseInventory(profile.inventory);
     const gained = [];
 
     if (bare) {
-        bare.loot.forEach(id => {
-            inventory = addOrStackItem(inventory, { id, name: nameOf(id), amount: 1 });
-            gained.push({ id, name: nameOf(id), amount: 1 });
-        });
+        bare.loot.forEach(id => gained.push({ id, name: nameOf(id), amount: 1 }));
     } else {
         const pool = bonus.cat ? table.base.concat(table.cat) : table.base;
         const rolled = pool[Math.floor(Math.random() * pool.length)];
-        inventory = addOrStackItem(inventory, { id: rolled, name: nameOf(rolled), amount: 1 });
         gained.push({ id: rolled, name: nameOf(rolled), amount: 1 });
     }
 
@@ -148,13 +149,29 @@ async function grantLoot({ userId, lokasi, bareHands, activePets }) {
     const hours = bare ? bare.hours : table.hours;
     const xp = bare ? bare.xp : table.xp;
 
-    await cacheManager.updateUserProfile(userId, { inventory });
-    await UserSurvival.update({
-        hunger: Math.max(0, (survival.hunger || 0) - cost.hunger),
-        thirst: Math.max(0, (survival.thirst || 0) - cost.thirst),
-        stamina: Math.max(0, (survival.stamina || 0) - cost.stamina),
-        currentLocation: HOME_LOCATION
-    }, { where: { userId } });
+    // Barang dulu, biaya tenaga kemudian. Kalau penyimpanan gagal, pemain tidak
+    // boleh kehilangan stamina untuk hasil yang tidak pernah masuk tas.
+    const stored = await addItemsAtomic(userId, gained);
+    if (!stored.ok) return { ok: false, reason: 'write_failed' };
+
+    // Statistik dikurangi sebagai delta, bukan nilai absolut hasil pembacaan.
+    // Nilai absolut membuat dua eksplorasi yang selesai berdekatan saling menimpa,
+    // sehingga salah satu pengurasan hilang. Hanya statistik yang memang akan
+    // menyentuh nol ditulis sebagai angka pasti supaya tidak pernah minus.
+    const drain = {};
+    const floored = {};
+    for (const field of DRAIN_FIELDS) {
+        const amount = Number(cost[field]) || 0;
+        if (amount <= 0) continue;
+        const now = Number(survival[field]) || 0;
+        if (now - amount <= 0) floored[field] = 0;
+        else drain[field] = -amount;
+    }
+
+    if (Object.keys(drain).length > 0) {
+        await cacheManager.incrementUserSurvival(userId, drain);
+    }
+    await cacheManager.updateUserSurvival(userId, { ...floored, currentLocation: HOME_LOCATION });
 
     const timeUpdate = await advanceTime(userId, hours);
     await leveling.addPlayerXP(userId, xp);

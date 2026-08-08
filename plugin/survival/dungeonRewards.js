@@ -5,8 +5,8 @@
 
 const UserQuest = require('../../src/models/UserQuest');
 const cacheManager = require('../../src/managers/cacheManager');
-const { safeParseInventory } = require('./inventoryHelper');
-const helpers = require('./craftHelpers');
+const { logger } = require('../../src/managers/logger');
+const { countStack, addItemsAtomic, takeItemsAtomic } = require('./inventoryHelper');
 const currency = require('./currency');
 const { rollCouponDrop, dropLine } = require('./couponRewards');
 const leveling = require('./survivalLeveling');
@@ -19,8 +19,8 @@ const CLEAR_HOURS = 1;
 
 function availablePasses(inventory) {
     return {
-        normal: helpers.countItem(inventory, DUNGEON_PASS_ID),
-        special: helpers.countItem(inventory, DUNGEON_SPECIAL_PASS_ID)
+        normal: countStack(inventory, DUNGEON_PASS_ID),
+        special: countStack(inventory, DUNGEON_SPECIAL_PASS_ID)
     };
 }
 
@@ -30,13 +30,20 @@ function multiplierOf(passId) {
 
 // Tiket dipotong tepat sebelum pertempuran dimulai. Dulu tiket hanya diperiksa
 // dan tidak pernah berkurang, jadi satu tiket bisa dipakai selamanya.
+//
+// Pemeriksaan dan pemotongan sekarang berada di satu transaksi dengan baris
+// pemain terkunci. Tanpa kunci itu, dua klik tombol yang tiba bersamaan
+// sama-sama lolos, tiket hanya berkurang satu, dan gua dimasuki dua kali.
 async function consumePass(userId, passId) {
-    const profile = await cacheManager.getUserProfile(userId);
-    const inventory = safeParseInventory(profile.inventory);
+    const taken = await takeItemsAtomic(userId, { id: passId, amount: 1 });
 
-    if (!helpers.takeItem(inventory, passId, 1)) return { ok: false, reason: 'no_pass' };
+    if (!taken.ok) {
+        if (taken.reason !== 'not_enough') {
+            logger.error(`[Dungeon] Gagal memotong tiket ${passId} untuk ${userId}: ${taken.reason}`);
+        }
+        return { ok: false, reason: 'no_pass' };
+    }
 
-    await cacheManager.updateUserProfile(userId, { inventory });
     return { ok: true, passId, multiplier: multiplierOf(passId) };
 }
 
@@ -71,13 +78,20 @@ async function grantVictory({ userId, survival, floor, diffConfig, stats, multip
     const loot = combat.rollLoot(floor, stats.luck, multiplier);
 
     const profile = await cacheManager.getUserProfile(userId);
-    const inventory = safeParseInventory(profile.inventory);
-    for (const item of loot) helpers.addItem(inventory, item.id, item.amount);
 
-    await cacheManager.updateUserProfile(userId, {
-        inventory,
-        dungeon_floor: floor + 1
-    });
+    // Jarahan ditambahkan lewat transaksi berkunci. Lantai berikutnya tetap nilai
+    // absolut karena memang berasal dari lantai yang baru saja diselesaikan.
+    if (loot.length > 0) {
+        const stored = await addItemsAtomic(
+            userId,
+            loot.map(item => ({ id: item.id, name: item.name, amount: item.amount }))
+        );
+        if (!stored.ok) {
+            logger.error(`[Dungeon] Gagal menyimpan jarahan untuk ${userId}: ${stored.reason}`);
+        }
+    }
+
+    await cacheManager.updateUserProfile(userId, { dungeon_floor: floor + 1 });
 
     const hpLeft = Math.max(1, playerHp);
     await cacheManager.updateUserSurvival(userId, { hp: hpLeft });
