@@ -3,16 +3,18 @@
 > **Versi:** 2.0.0 · **Engine:** 2.0.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14
 
 > [!IMPORTANT]
-> **Sumber kebenaran.** `package.json` adalah sumber kebenaran untuk versi dan daftar dependensi. GitHub Issues adalah sumber kebenaran untuk pekerjaan yang sedang berjalan. `TODO.md` adalah sumber kebenaran untuk prioritas sprint. Dokumen ini berisi **aturan** yang tidak berubah tiap rilis. Bila ada tabel di dokumen ini yang bertentangan dengan `package.json`, `package.json` yang menang, dan tabel di sini harus diperbarui.
+> **Sumber kebenaran.** `package.json` adalah sumber kebenaran untuk versi dan daftar dependensi. `src/config/env.js` adalah sumber kebenaran untuk variabel environment. GitHub Issues adalah sumber kebenaran untuk pekerjaan yang sedang berjalan. `TODO.md` adalah sumber kebenaran untuk prioritas sprint. Dokumen ini berisi **aturan** yang tidak berubah tiap rilis. Bila ada tabel di dokumen ini yang bertentangan dengan file-file di atas, file itulah yang menang, dan tabel di sini harus diperbarui.
 
 ### Keputusan arsitektur yang sudah dikunci
 
 | Topik | Keputusan |
 |---|---|
 | Versi Node | `>= 24` di `engines`, README, dokumen ini, dan CI. Seragam, tanpa pengecualian. |
+| Versi bot & engine | Keduanya `2.0.0`, dan harus sama di `package.json`, `README.md`, serta default `BOT_VERSION`/`ENGINE_VERSION`. |
 | Penyimpanan bahasa | **Per user.** `GuildSettings.language` hanya menjadi bahasa default saat user belum punya preferensi. |
-| Strategi sharding | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering. Lihat aturan 1.10. |
+| Strategi sharding | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering. Lihat aturan 1.11. |
 | Fallback SQLite | **Dipertahankan** sebagai penyimpanan darurat saat MySQL dan Redis mati bersamaan. |
+| Alur PR | **Satu PR per sprint.** Seluruh pekerjaan satu sprint menumpuk di satu branch, direview dan di-merge sekali saat sprint tuntas. |
 | Prioritas kerja | Sprint 0 Hardening di `TODO.md` harus tuntas sebelum fitur baru mana pun. |
 
 ---
@@ -80,7 +82,7 @@
     [ Footer ]
     ```
     Footer **SELALU** harus ada. Gunakan `ui.getFooter('core'|'utility'|'survival'|'music')` sebagai default.
-11. **Batas Payload Discord Wajib Dihormati**, Struktur 5-lapisan menambah komponen di setiap respons, jadi container panjang mudah menembus batas Discord. Lihat aturan 1.11.
+11. **Batas Payload Discord Wajib Dihormati**, Struktur 5-lapisan menambah komponen di setiap respons, jadi container panjang mudah menembus batas Discord. Lihat aturan 1.12.
 12. **Kepemilikan Tidak Boleh Diturunkan dari Data yang Bisa Dipalsukan**, Kepemilikan (misal owner Temp Voice) harus disimpan eksplisit di store, bukan diturunkan dari nama channel, topik, atau teks pesan yang bisa diubah user.
 
 ## 1.4 Aturan Commit & Branching
@@ -90,6 +92,7 @@
 | Format commit | `<emoji> <tipe>: <deskripsi singkat>` contoh: `✨ feat: tambah command /weather` |
 | Tipe commit | `feat`, `fix`, `refactor`, `docs`, `style`, `perf`, `chore`, `test`, `ci` |
 | Branching | `main` untuk produksi, `dev` untuk development, `feature/<nama>` untuk fitur baru |
+| Satu PR per sprint | Seluruh commit satu sprint dikumpulkan di satu branch `feature/<nama-sprint>`, direview dan di-merge sekali saat sprint tuntas. |
 | Referensi issue | Setiap PR yang mengerjakan item `TODO.md` wajib menyebut nomor issue terkait di deskripsi. |
 | CI wajib hijau | `lint`, `check-em-dash`, `locales:check:strict`, dan `npm test` harus lulus sebelum merge. |
 
@@ -100,11 +103,12 @@
 
 - **JANGAN PERNAH** meng-commit file `.env` ke repository.
 - **JANGAN PERNAH** log-kan token, password, atau API key ke console.
-- Semua webhook endpoint (`/api/webhook/*`) HARUS memverifikasi `Authorization` header.
+- Semua webhook endpoint (`/api/webhook/*`) HARUS memverifikasi `Authorization` header terhadap `WEBHOOK_AUTH_SAWERIA`, `WEBHOOK_AUTH_TRAKTEER`, atau `WEBHOOK_AUTH_VOTE` sesuai penyedianya.
 - **Perbandingan token wajib memakai `crypto.timingSafeEqual`**, bukan `===`. Perbandingan string biasa membocorkan informasi lewat waktu eksekusi.
-- **Tolak request bila token belum dikonfigurasi.** Konfigurasi kosong tidak boleh berarti akses terbuka.
+- **Tolak request bila token belum dikonfigurasi.** Konfigurasi kosong tidak boleh berarti akses terbuka; endpoint harus membalas `503`.
 - **Webhook yang memberi keuntungan (premium, saldo, vote) WAJIB idempoten.** Simpan idempotency key per transaksi agar retry dari penyedia tidak memberi hadiah dua kali.
 - **Setiap pemberian premium wajib tercatat di audit log.**
+- **`OWNER_EVAL_ENABLED` wajib `false` di produksi.** Rute `eval` hanya dinyalakan sementara saat debugging, lalu dimatikan kembali.
 - Rate limiting aktif via `rateLimiter.js`, jangan bypass tanpa alasan kuat. Balasan rate limit wajib menyertakan `retryAfter`.
 - Validasi semua input user sebelum diproses (terutama untuk command yang menerima URL atau text panjang), dan batasi ukuran body pada endpoint HTTP.
 - **Konten dari server pengguna adalah input tidak terpercaya.** Saat konten itu masuk ke prompt AI, perlakukan sebagai data, bukan instruksi.
@@ -227,6 +231,7 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
   - `setInterval(() => { map.clear(); }, ttl_ms)` untuk full periodic clear
   - Loop selektif: hapus hanya entries yang sudah melewati TTL-nya
 - Setiap Map yang dibuat sebagai modul-level constant (di luar class/function) WAJIB didokumentasikan kapan ia di-cleanup.
+- **Setiap `setInterval` di level modul wajib dipanggil `.unref()`** agar tidak menahan proses saat shutdown.
 - **Batasi cache discord.js** dengan `Options.cacheWithLimits`, dan jangan mengaktifkan intent yang tidak dipakai.
 
 ## 1.10 Aturan Caching & Invalidasi Wajib
@@ -274,7 +279,8 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 │                                    ├─► MusicManager (Poru/Lavalink) │
 │                                    ├─► RssManager                   │
 │                                    ├─► CronManager                  │
-│                                    └─► Dashboard (Express:3070)     │
+│                                    ├─► Dashboard (Express:3070)     │
+│                                    └─► Webhook server (:3071)       │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -288,21 +294,27 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 > - `src/managers/`: Menyimpan sistem "pengendali" atau mesin utama bot (mis. `musicManager`, `aiManager`, `dbManager`). Mereka memegang *state*, *cache*, dan berinteraksi dengan API/database secara langsung.
 > - `src/models/`: Menyimpan skema database tunggal (Sequelize) untuk konsistensi struktur data yang dipakai lintas modul.
 > - `src/utils/`: Menyimpan alat bantu (*helpers*) yang dapat dipanggil berkali-kali tanpa state (mis. `survivalHelper`, `NauraContainerBuilder`, utilitas kanvas).
-> - `src/interactions/`: **(direncanakan, Sprint 1)** Registry handler per tipe interaksi hasil pemecahan `interactionCreate.js`.
+> - `src/events/`: Pendengar event Discord. Hanya berisi routing dan pengecekan awal, tanpa logika fitur.
+> - `src/interactions/`: Penanganan Button, Select Menu, dan Modal. Folder ini **sudah ada**, dan Sprint 1 akan memindahkan sisa logika dari `interactionCreate.js` ke sini sebagai registry per tipe interaksi.
 > - `plugin/`: **HANYA** berisi *command router* dan pendefinisian Slash Command. Tidak boleh ada logika berat, akses database langsung tanpa manager, atau kelas helper di dalamnya.
-> - `dashboard/`: Menyimpan aplikasi web lokal untuk UI pemantauan dan pengelolaan berbasis Express/EJS.
+> - `src/dashboard/`: Menyimpan aplikasi web lokal untuk UI pemantauan dan pengelolaan berbasis Express/EJS.
 
 ```text
-Naura-Hoshino/
+Naura-Hoshino-V2/
 ├── shard.js                    # 🚀 Entry point utama (ShardingManager)
 ├── index.js                    # ⚙️ Bot instance per-shard (boot sequence)
 ├── package.json                # 📦 Dependencies & scripts (sumber kebenaran versi)
+├── AGENTS.md                   # 📘 Dokumen ini, aturan & arsitektur
+├── README.md                   # 📗 Panduan instalasi & pemakaian
 ├── TODO.md                     # 🗂️ Prioritas sprint aktif
 ├── DESIGN.md                   # 🎨 Style guide & design tokens
+├── assets/                     # 🖼️ Font, gambar, aset Canvas, ekspresi Naura
+├── language/                   # 🌍 Kamus inti (id.json, en.json)
+├── scripts/                    # 🔧 Utilitas pemeliharaan (validate-locales, check-em-dash)
 │
 ├── src/                        # 🧠 CORE ENGINE (Pilar Utama)
 │   ├── config/                 #    Stateless Configuration
-│   │   ├── env.js              #       Centralized env parser
+│   │   ├── env.js              #       Centralized env parser (sumber kebenaran env)
 │   │   ├── ui.js               #       UI constants (emoji, warna)
 │   │   ├── features.js         #       Feature registry & flags
 │   │   ├── survival/           #       Konfigurasi RPG (items, npcs, currency)
@@ -314,15 +326,19 @@ Naura-Hoshino/
 │   │   ├── dbMigrator.js       #       Migrasi schema bernomor
 │   │   ├── guildSettingsService.js #   Satu-satunya jalur tulis GuildSettings
 │   │   ├── cacheManager.js     #       Cache terpusat + invalidasi
+│   │   ├── redisManager.js     #       Redis client & Pub/Sub
 │   │   ├── survival/           #       RPG engines (duel, craft, shop)
 │   │   ├── musicManager.js     #       Poru Lavalink wrapper
 │   │   ├── aiManager.js        #       LLM router
 │   │   └── ...                 
 │   │
 │   ├── models/                 #    Database Schemas (Sequelize)
-│   │   ├── UserProfile.js      #       Master user data
+│   │   ├── UserProfile.js      #       Master user data + preferensi bahasa
 │   │   ├── UserSurvival.js     #       RPG stats
 │   │   └── ...                 
+│   │
+│   ├── events/                 #    Discord event listeners
+│   ├── interactions/           #    Handler Button, Select Menu, Modal
 │   │
 │   ├── utils/                  #    Stateless Helpers & Utilities
 │   │   ├── NauraContainerBuilder.js #  Components V2 builder
@@ -330,6 +346,10 @@ Naura-Hoshino/
 │   │   └── ...
 │   │
 │   └── dashboard/              #    Web Dashboard
+│       ├── middleware/         #       Auth, izin, owner guard
+│       ├── routes/             #       Endpoint public, user, guild, owner
+│       ├── sockets/            #       Socket.IO realtime
+│       └── utils/              #       Rate limiter & formatter
 │
 ├── plugin/                     # 🔌 COMMAND MODULES (Hanya Router & Subcommands)
 │   ├── core/                   #    /ping, /stats, /info, dll
@@ -338,7 +358,7 @@ Naura-Hoshino/
 │   ├── admin/                  #    /setup, /ban, /kick, automod
 │   ├── survival/               #    /survival (33+ subcommands murni)
 │   ├── utility/                #    /afk, /poll, /reminder
-│   └── ...
+│   └── <kategori>/locales/     #    Terjemahan khusus per plugin
 ```
 
 ## 2.3 Alur Boot Sequence
@@ -363,7 +383,7 @@ graph TD
     O --> P["on clientReady"]
     P --> Q["musicManager.initialize(), Poru/Lavalink"]
     P --> R["rssManager.init()"]
-    P --> S["Dashboard Express server :3070"]
+    P --> S["Dashboard Express server :3070 + webhook :3071"]
     P --> T["cronManager.init()"]
     H --> U["displayBootScreen(), ASCII status report"]
 ```
@@ -397,7 +417,7 @@ sequenceDiagram
 ```
 
 > [!IMPORTANT]
-> `interactionCreate.js` wajib menangani **semua** tipe interaksi, termasuk `isAutocomplete()`, dan setiap cabang dibungkus penanganan error terpusat (`safeExecute`). Cabang autocomplete tidak boleh menjawab lambat, jadi datanya harus berasal dari cache atau sumber cepat.
+> `interactionCreate.js` wajib menangani **semua** tipe interaksi, termasuk `isAutocomplete()`, dan setiap cabang dibungkus penanganan error terpusat (`safeExecute`). Cabang autocomplete tidak boleh menjawab lambat, jadi datanya harus berasal dari cache atau sumber cepat. Handler Button, Select Menu, dan Modal tinggal di `src/interactions/`, bukan di dalam event handler.
 
 ## 2.5 Alur Sistem Musik
 
@@ -529,6 +549,7 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 |---|---|
 | **Nama** | Naura Hoshino Intelligence |
 | **Versi** | 2.0.0 |
+| **Engine** | 2.0.0 |
 | **Deskripsi** | Bot Discord multifungsi dengan AI, High-Fidelity Audio, Canvas Modern, Sistem Ekonomi, dan Web Dashboard |
 | **Author** | Aryandita Praftian (Ryaa) |
 | **License** | ISC |
@@ -538,7 +559,7 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 | **ORM** | Sequelize v6 |
 | **Cache** | Redis v4 (opsional) |
 | **Audio** | Poru v5 + Lavalink v4 |
-| **AI** | Google Gemini (`@google/genai`) + Verba (opsional) |
+| **AI** | Google Gemini (`@google/genai`) + Verba + Ollama (opsional) |
 | **Canvas** | `@napi-rs/canvas` v0.1.53 |
 | **Web Server** | Express v4 + Socket.IO v4 |
 
@@ -565,7 +586,7 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 > Variabel bertanda ⚠️ **WAJIB** diisi. Bot akan crash jika kosong.
 
 > [!NOTE]
-> `src/config/env.js` adalah satu-satunya sumber kebenaran untuk nama dan default variabel. Bila tabel di bawah berbeda dengan `env.js`, `env.js` yang benar.
+> `src/config/env.js` adalah satu-satunya sumber kebenaran untuk nama dan default variabel. Bila tabel di bawah berbeda dengan `env.js`, `env.js` yang benar. Daftar ini harus selalu sama dengan tabel di `README.md`.
 
 ### Discord Core
 
@@ -576,13 +597,16 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 | `PREFIX` | ❌ | `n!` | Prefix command legacy |
 | `OWNER_IDS` | ❌ | - | ID owner, comma-separated |
 | `GUILD_ID` | ❌ | - | ID guild untuk development |
+| `STAFF_GUILD_ID` | ❌ | - | Guild staf tempat tiket ModMail dikelola |
+| `MODMAIL_CATEGORY_ID` | ❌ | - | Kategori penampung channel tiket ModMail |
 
 ### Version
 
 | Variable | Wajib | Default | Deskripsi |
 |---|---|---|---|
-| `BOT_VERSION` | ❌ | `2.0.0` | Versi bot yang ditampilkan |
-| `ENGINE_VERSION` | ❌ | `2.0.0` | Versi engine internal |
+| `BOT_VERSION` | ❌ | `2.0.0` | Versi bot yang ditampilkan di `/info` |
+| `ENGINE_VERSION` | ❌ | `2.0.0` | Versi engine internal, tampil di footer |
+| `PARTNERSHIP` | ❌ | `Belum ada kolaborasi` | Label komunitas mitra yang tampil di profil |
 
 ### Database (MySQL)
 
@@ -601,9 +625,24 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 
 | Variable | Wajib | Default | Deskripsi |
 |---|---|---|---|
+| `PORT` / `DASHBOARD_PORT` | ❌ | `3070` | Port dashboard web |
+| `WEBHOOK_PORT` | ❌ | `3071` | Port terpisah untuk webhook donasi & vote |
 | `DISCORD_CLIENT_SECRET` | ❌ | - | OAuth2 client secret |
 | `DISCORD_CALLBACK_URL` | ❌ | `http://localhost:3070/auth/discord/callback` | OAuth2 redirect URL |
-| `SESSION_SECRET` | ❌ | - | Secret key untuk Express session. **Direncanakan menjadi wajib** saat dashboard di-hardening (Sprint 2). |
+| `SESSION_SECRET` | ⚠️ di produksi | - | Secret Express session. Dashboard menolak akses bila kosong di produksi. |
+| `DASHBOARD_ORIGIN` | ❌ | - | Origin yang di-whitelist untuk perlindungan CORS |
+| `OWNER_EVAL_ENABLED` | ❌ | `false` | Membuka rute `eval` owner. Wajib `false` di produksi. |
+
+### Webhook Auth (Monetisasi)
+
+> [!CAUTION]
+> Ketiga token ini menjaga jalur pendapatan. Bila kosong, endpoint terkait WAJIB membalas `503` dan bukan memproses request.
+
+| Variable | Wajib | Default | Deskripsi |
+|---|---|---|---|
+| `WEBHOOK_AUTH_SAWERIA` | ❌ | - | Token verifikasi webhook Saweria |
+| `WEBHOOK_AUTH_TRAKTEER` | ❌ | - | Token verifikasi webhook Trakteer |
+| `WEBHOOK_AUTH_VOTE` | ❌ | - | Token verifikasi webhook vote Top.gg |
 
 ### Lavalink (Music)
 
@@ -623,6 +662,14 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 | `SPOTIFY_CLIENT_ID` | ❌ | - | Spotify API client ID |
 | `SPOTIFY_CLIENT_SECRET` | ❌ | - | Spotify API client secret |
 
+### AI Lokal & Generasi Gambar
+
+| Variable | Wajib | Default | Deskripsi |
+|---|---|---|---|
+| `OLLAMA_BASE_URL` | ❌ | `http://localhost:11434` | Endpoint Ollama untuk fallback LLM lokal |
+| `OLLAMA_MODEL` | ❌ | `llama3.1` | Model yang dipakai Ollama |
+| `FOOOCUS_BASE_URL` | ❌ | `http://localhost:7865` | Endpoint generasi gambar lokal |
+
 ### Verba AI (Opsional)
 
 | Variable | Wajib | Default | Deskripsi |
@@ -633,12 +680,13 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 | `VERBA_SLUG_GENERAL` | ❌ | - | Slug karakter untuk general user |
 | `VERBA_CHARACTER_SLUG` | ❌ | - | Legacy fallback slug |
 
-### Infrastructure
+### Infrastructure & Media
 
 | Variable | Wajib | Default | Deskripsi |
 |---|---|---|---|
 | `REDIS_URL` | ❌ | - | Redis connection URL. Bila kosong, cache berjalan in-memory per shard. |
 | `ERROR_WEBHOOK_URL` | ❌ | - | Discord webhook untuk error reporting |
+| `FFMPEG_PATH` | ❌ | - | Kosongkan untuk memakai `ffmpeg-static`, isi bila server punya binary sendiri |
 
 ## 3.4 Infrastruktur & Dependensi Eksternal
 
@@ -687,6 +735,7 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 | `fast-glob` | ^3.3.3 | File pattern matching |
 | `node-cron` | ^4.6.0 | Cron job scheduler |
 | `msedge-tts` | ^1.1.0 | Text-to-speech |
+| `ffmpeg-static` | ^5.2.0 | Binary FFmpeg bawaan |
 | `eslint` / `prettier` | ^10.4.1 / ^3.8.3 | Linting & formatting (devDependencies) |
 
 > [!CAUTION]
@@ -725,8 +774,10 @@ Bot mendukung multi-bahasa via file JSON di `/language/`:
 - `id.json`, Bahasa Indonesia (default)
 - `en.json`, English
 
+Kamus khusus per plugin berada di `plugin/<kategori>/locales/`, dan **kamus inti selalu berprioritas** di atas kamus plugin.
+
 > [!IMPORTANT]
-> **Bahasa disimpan per user**, karena setiap user punya preferensi sendiri meski berada di server yang sama. `GuildSettings.language` hanya dipakai sebagai **default guild** saat user belum pernah memilih bahasa. Akses selalu lewat `languageManager.js` dan helper `language.js`, dan nilainya wajib diambil dari cache agar tidak menyentuh database di setiap balasan.
+> **Bahasa disimpan per user** di tabel `user_profiles`, karena setiap user punya preferensi sendiri meski berada di server yang sama. `GuildSettings.language` hanya dipakai sebagai **default guild** saat user belum pernah memilih bahasa. Akses selalu lewat `languageManager.js` dan helper `language.js`, dan nilainya wajib diambil dari cache agar tidak menyentuh database di setiap balasan.
 
 Urutan resolusi bahasa: preferensi user → default guild → `id`.
 
@@ -743,9 +794,9 @@ Urutan resolusi bahasa: preferensi user → default guild → `id`.
 
 Placeholder menggunakan format `{variable}` yang di-replace saat runtime. Kunci di `id.json` dan `en.json` wajib memiliki paritas penuh, dan CI memeriksanya dengan mode strict.
 
-## 3.7 Dashboard Web
+## 3.7 Dashboard Web & Webhook
 
-Dashboard berjalan di **port 3070** (default) menggunakan Express.js:
+Dashboard berjalan di **port 3070** (default) menggunakan Express.js, sementara webhook monetisasi mendengarkan di **port 3071** yang terpisah:
 
 | Endpoint | Method | Fungsi |
 |---|---|---|
@@ -755,12 +806,13 @@ Dashboard berjalan di **port 3070** (default) menggunakan Express.js:
 | `/api/stats` | GET | Bot statistics (JSON) |
 | `/api/health` | GET | Health check (direncanakan, Sprint 3): status MySQL, Redis, Lavalink |
 | `/api/webhook/saweria` | POST | Saweria donation webhook |
+| `/api/webhook/trakteer` | POST | Trakteer donation webhook |
 | `/api/webhook/vote` | POST | Top.gg vote webhook |
 
 Dashboard menggunakan **Socket.IO** untuk real-time updates pada metrik telemetri.
 
 > [!CAUTION]
-> Semua endpoint `/api/webhook/*` tunduk pada aturan 1.5: `timingSafeEqual`, idempotency key, penolakan saat token belum dikonfigurasi, batas ukuran body, dan audit log. Akses pengaturan per guild wajib memverifikasi izin `ManageGuild` milik user, bukan hanya status login.
+> Semua endpoint `/api/webhook/*` tunduk pada aturan 1.5: `timingSafeEqual`, idempotency key, penolakan `503` saat token belum dikonfigurasi, batas ukuran body, dan audit log. Akses pengaturan per guild wajib memverifikasi izin `ManageGuild` milik user, bukan hanya status login.
 
 ## 3.8 Catatan Deployment
 
@@ -773,8 +825,9 @@ Dashboard menggunakan **Socket.IO** untuk real-time updates pada metrik telemetr
 4. **Graceful Shutdown**, Bot menangani `SIGINT` dan `SIGTERM` untuk menutup semua koneksi (Lavalink, MySQL, Redis, Discord) dengan aman.
 5. **Auto-Respawn**, `ShardingManager` dikonfigurasi dengan `respawn: true` untuk otomatis restart shard yang crash.
 6. **Connection Pool Sadar Shard**, `pool.max` berlaku per proses. Pastikan `pool.max × jumlah shard` tetap di bawah `max_connections` MySQL.
-7. **Deprecation `ephemeral`**, Monkey-patch di `index.js` adalah solusi sementara. Target Sprint 1 adalah memakai `MessageFlags.Ephemeral` secara langsung dan menghapus patch tersebut.
+7. **Keamanan Produksi**, `SESSION_SECRET` wajib diisi, `OWNER_EVAL_ENABLED` wajib `false`, dan ketiga token webhook wajib diisi bila fitur monetisasi dipakai.
+8. **Deprecation `ephemeral`**, Monkey-patch di `index.js` adalah solusi sementara. Target Sprint 1 adalah memakai `MessageFlags.Ephemeral` secara langsung dan menghapus patch tersebut.
 
 ---
 
-> *Dokumen ini di-generate sebagai panduan lengkap untuk agent dan developer yang bekerja pada ekosistem Naura Hoshino. Untuk prioritas pekerjaan aktif, lihat `TODO.md` dan GitHub Issues. Untuk detail visual dan design tokens, lihat [DESIGN.md]*
+> *Dokumen ini di-generate sebagai panduan lengkap untuk agent dan developer yang bekerja pada ekosistem Naura Hoshino. Untuk prioritas pekerjaan aktif, lihat `TODO.md` dan GitHub Issues. Untuk panduan instalasi & pemakaian, lihat `README.md`. Untuk detail visual dan design tokens, lihat [DESIGN.md]*
