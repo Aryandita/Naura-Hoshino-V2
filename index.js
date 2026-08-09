@@ -41,7 +41,11 @@ if (!env.validateEnv({ fatal: !isShardChild })) {
 
 const client = new Client({
     intents: clientOptions.intents,
-    partials: clientOptions.partials
+    partials: clientOptions.partials,
+    // Batas cache dan penyapu dipusatkan di src/config/clientOptions.js supaya pemakaian
+    // memori bisa diaudit di satu tempat, bukan tersebar di pemanggilan Client.
+    makeCache: clientOptions.makeCache,
+    sweepers: clientOptions.sweepers
 });
 
 client.commands = new Collection();
