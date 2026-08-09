@@ -5,6 +5,7 @@ const MusicUIManager = require('../MusicUIManager');
 const VoiceManager = require('../../../src/managers/voiceManager');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { rankAutoplayCandidates, beginPlaybackTransition, clearTransitionTimers } = require('./autoplayUtils');
+const ui = require('../../../src/config/ui');
 
 module.exports = {
     async execute(manager, player, track) {
@@ -36,6 +37,27 @@ module.exports = {
                 player.playedHistory.clear();
                 // Tambahkan kembali lagu yang sedang diputar agar tidak diputar ulang segera
                 player.playedHistory.add(activeTrack.info.identifier);
+            }
+
+            // 🎶 Update Voice Channel Status
+            try {
+                if (player.voiceChannel) {
+                    const musicEmoji = ui.getEmoji('music') || '\ud83c\udfb5';
+                    const title = activeTrack.info.title || 'Unknown Track';
+                    const newStatus = `${musicEmoji} Mendengarkan: ${title}`.substring(0, 500);
+                    const DISCORD_API = 'https://discord.com/api/v10';
+                    
+                    fetch(`${DISCORD_API}/channels/${player.voiceChannel}/voice-status`, {
+                        method: 'PUT',
+                        headers: {
+                            Authorization: `Bot ${manager.client.token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ status: newStatus })
+                    }).catch(e => logger.warn('[Voice Status Warn]', e));
+                }
+            } catch (e) {
+                logger.warn('[Voice Status Warn]', e);
             }
 
             // ==========================================

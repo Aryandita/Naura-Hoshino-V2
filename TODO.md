@@ -171,7 +171,7 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
   - `@discordjs/voice` dan `libsodium-wrappers`: hapus bila tidak ada TTS atau voice di luar Lavalink.
   - `yt-dlp-wrap`: lepaskan dari jalur musik. Lavalink sudah menangani sumber audio, dan ini menambah risiko ToS serta biaya build.
 - [x] **Perbaiki dukungan multi node Lavalink yang sudah mati diam-diam**
-  - `musicManager.buildNodes()` masih memisah `LAVA_HOST`, `LAVA_PORT`, `LAVA_PASS`, dan `LAVA_SECURE` dengan koma, tetapi `src/config/env.js` sudah menormalkan `LAVA_PORT` dengan `parseInt` dan `LAVA_SECURE` menjadi boolean. Jadi selama nilainya lewat `env.js`, isi koma hanya berdampak pada host dan password. Putuskan: dukung penuh multi node lewat satu variabel JSON, atau buang sisa pemisah koma itu supaya tidak menyesatkan.
+  - `musicManager.buildNodes()` sudah sepenuhnya dimigrasikan untuk membaca `LAVA_NODES` berbasis JSON (dan sudah didokumentasikan di `.env.example`). Mode split koma lama sudah sepenuhnya dibuang untuk menghindari penyesatan.
 
 ---
 

@@ -35,8 +35,7 @@ async function setLimit(interaction, channel) {
 }
 
 async function setVoiceStatus(interaction, channel, client) {
-    // Voice Status belum tersedia di discord.js, jadi endpointnya dipanggil langsung.
-    const fetch = require('isomorphic-unfetch');
+    // Menggunakan native fetch Node.js 24
     const newStatus = interaction.fields.getTextInputValue('input_status');
 
     try {
