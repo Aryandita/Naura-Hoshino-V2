@@ -42,7 +42,7 @@ async function submitReply(interaction, client) {
 
     await interaction.reply({
         content: `${ui.getEmoji('success') || '\u2705'} Pesan ${isAnon ? '(Anonim)' : ''} berhasil dikirim.`,
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
     });
 
     const logEmbed = new EmbedBuilder()

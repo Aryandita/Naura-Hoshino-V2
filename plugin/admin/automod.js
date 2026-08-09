@@ -13,7 +13,7 @@ module.exports = {
             .addRoleOption(opt => opt.setName('target').setDescription('Role yang diberikan ke pelanggar').setRequired(true))),
 
     async execute(interaction) {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const sub = interaction.options.getSubcommand();
         const [settings] = await GuildSettings.findOrCreate({ where: { guildId: interaction.guild.id } });
         

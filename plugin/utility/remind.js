@@ -38,7 +38,7 @@ module.exports = {
                     description: 'Format durasi tidak valid. Gunakan format seperti `1h`, `30m`, atau `1d`.',
                     footerText: ui.getFooter('utility')
                 });
-                return interaction.reply({ ...errPayload, ephemeral: true });
+                return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
             }
 
             const remindAt = new Date(Date.now() + ms);
@@ -62,7 +62,7 @@ module.exports = {
             const reminders = await UserReminder.findAll({ where: { userId: interaction.user.id } });
 
             if (reminders.length === 0) {
-                return interaction.reply({ content: 'Kamu tidak memiliki pengingat yang aktif saat ini.', ephemeral: true });
+                return interaction.reply({ content: 'Kamu tidak memiliki pengingat yang aktif saat ini.', flags: MessageFlags.Ephemeral });
             }
 
             let desc = '';
@@ -77,7 +77,7 @@ module.exports = {
                 footerText: ui.getFooter('utility')
             });
 
-            await interaction.reply({ ...payload, ephemeral: true });
+            await interaction.reply({ ...payload, flags: MessageFlags.Ephemeral });
         } else if (subcommand === 'delete') {
             const id = interaction.options.getInteger('id');
             const reminder = await UserReminder.findOne({ where: { id: id, userId: interaction.user.id } });
@@ -88,7 +88,7 @@ module.exports = {
                     description: 'Pengingat dengan ID tersebut tidak ditemukan atau bukan milikmu.',
                     footerText: ui.getFooter('utility')
                 });
-                return interaction.reply({ ...errPayload, ephemeral: true });
+                return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
             }
 
             await reminder.destroy();
@@ -100,7 +100,7 @@ module.exports = {
                 footerText: ui.getFooter('utility')
             });
 
-            await interaction.reply({ ...payload, ephemeral: true });
+            await interaction.reply({ ...payload, flags: MessageFlags.Ephemeral });
         }
     }
 };

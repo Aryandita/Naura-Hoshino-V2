@@ -11,7 +11,7 @@ module.exports = {
         const sniped = interaction.client.snipes?.get(interaction.channelId);
 
         if (!sniped) {
-            return interaction.reply({ content: 'Tidak ada pesan yang dihapus baru-baru ini.', ephemeral: true });
+            return interaction.reply({ content: 'Tidak ada pesan yang dihapus baru-baru ini.', flags: MessageFlags.Ephemeral });
         }
 
         const payload = buildContainerV2({

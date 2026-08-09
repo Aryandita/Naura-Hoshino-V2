@@ -221,7 +221,7 @@ module.exports = {
             default:
                 return interaction.reply({
                     content: lang.ERROR_INVALID_SUBCOMMAND || `${face('error', '\u274C')} Aduh, Naura belum kenal perintah itu. Coba cek lewat menu help yaa~`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
         }
     }

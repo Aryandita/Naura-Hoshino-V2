@@ -408,7 +408,7 @@ module.exports = {
 
         collector.on('collect', async i => {
             if (i.user.id !== interaction.user.id) {
-                return i.reply({ content: 'Ini bukan menumu!', ephemeral: true });
+                return i.reply({ content: 'Ini bukan menumu!', flags: MessageFlags.Ephemeral });
             }
 
             const selection = i.values[0];

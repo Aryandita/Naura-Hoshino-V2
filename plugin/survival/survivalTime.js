@@ -82,7 +82,7 @@ async function chargeTax(userId, propertyId, rpgState, days) {
 
     if (bank >= bill) {
         rpgState.tax_due -= totalDue;
-        await cacheManager.updateUserProfile(userId, { economy_bank: bank - bill });
+        await cacheManager.debitUserProfile(userId, 'economy_bank', bill);
     } else if (rpgState.tax_due > dailyTax * SEIZE_AFTER_DAYS) {
         rpgState.house_seized = true;
     }
@@ -134,19 +134,23 @@ async function advanceTime(userId, hoursAdded) {
         const wallet = survival.starFragments || 0;
         if (wallet < penaltyAmt) penaltyAmt = wallet;
 
-        await UserSurvival.update(
-            {
-                inGameHour: newHour,
-                inGameDay: newDay,
-                hunger: 30,
-                thirst: 30,
-                stamina: 30,
-                starFragments: Math.max(0, wallet - penaltyAmt),
-                currentLocation: HOME_LOCATION,
-                rpg_state: rpgState
-            },
-            { where: { userId } }
-        );
+        if (penaltyAmt > 0) {
+            await cacheManager.debitUserSurvival(userId, 'starFragments', penaltyAmt);
+        }
+
+        await cacheManager.mutateUserSurvivalJson(userId, 'rpg_state', () => rpgState);
+
+        await cacheManager.incrementUserSurvival(userId, {
+            inGameHour: newHour - (survival.inGameHour || 0),
+            inGameDay: newDay - (survival.inGameDay || 1)
+        });
+
+        await cacheManager.updateUserSurvival(userId, {
+            hunger: 30,
+            thirst: 30,
+            stamina: 30,
+            currentLocation: HOME_LOCATION
+        });
 
         return { hour: newHour, day: newDay, passedOut: true, penalty: penaltyAmt, clinic: clinicType };
     }
@@ -158,15 +162,16 @@ async function advanceTime(userId, hoursAdded) {
         ? HOME_LOCATION
         : survival.currentLocation;
 
-    await UserSurvival.update(
-        {
-            inGameHour: newHour,
-            inGameDay: newDay,
-            currentLocation: finalLocation,
-            rpg_state: rpgState
-        },
-        { where: { userId } }
-    );
+    await cacheManager.mutateUserSurvivalJson(userId, 'rpg_state', () => rpgState);
+
+    await cacheManager.incrementUserSurvival(userId, {
+        inGameHour: newHour - (survival.inGameHour || 0),
+        inGameDay: newDay - (survival.inGameDay || 1)
+    });
+
+    await cacheManager.updateUserSurvival(userId, {
+        currentLocation: finalLocation
+    });
 
     return { hour: newHour, day: newDay, passedOut: false, penalty: 0 };
 }

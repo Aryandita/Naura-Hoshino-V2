@@ -192,7 +192,7 @@ module.exports = {
                         description: 'Gunakan perintah `/weather` untuk mencari cuaca kota Anda sendiri!',
                         footerText: ui.getFooter('utility')
                     });
-                    return i.reply({ ...errPayload, ephemeral: true });
+                    return i.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
                 }
 
                 let activeDay = -1;

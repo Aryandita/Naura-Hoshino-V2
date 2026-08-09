@@ -42,12 +42,12 @@ module.exports = [
                 await memberVoice.setRTCRegion(region === 'auto' ? null : region);
                 return interaction.reply({
                     content: `\u2705 Voice Region diubah ke **${region}**.`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             } catch (error) {
                 return interaction.reply({
                     content: '\u274c Gagal mengubah region. Pastikan bot punya izin yang cukup.',
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
         }

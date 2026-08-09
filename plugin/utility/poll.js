@@ -68,15 +68,15 @@ module.exports = {
             const userVotes = votes.get(userId);
 
             if (!multiVote && userVotes.size > 0 && !userVotes.has(optIndex)) {
-                return i.reply({ content: `${ui.getEmoji('cross') || '❌'} Kamu hanya bisa memilih satu opsi pada polling ini.`, ephemeral: true });
+                return i.reply({ content: `${ui.getEmoji('cross') || '❌'} Kamu hanya bisa memilih satu opsi pada polling ini.`, flags: MessageFlags.Ephemeral });
             }
 
             if (userVotes.has(optIndex)) {
                 userVotes.delete(optIndex);
-                await i.reply({ content: `Kamu telah membatalkan pilihanmu untuk: **${options[optIndex]}**`, ephemeral: true });
+                await i.reply({ content: `Kamu telah membatalkan pilihanmu untuk: **${options[optIndex]}**`, flags: MessageFlags.Ephemeral });
             } else {
                 userVotes.add(optIndex);
-                await i.reply({ content: `Kamu memilih: **${options[optIndex]}**`, ephemeral: true });
+                await i.reply({ content: `Kamu memilih: **${options[optIndex]}**`, flags: MessageFlags.Ephemeral });
             }
         });
 

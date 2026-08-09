@@ -35,7 +35,7 @@ module.exports = {
             const amount = interaction.options.getInteger('jumlah');
             const targetUser = interaction.options.getUser('user');
 
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
             try {
                 let deletedCount = 0;
@@ -105,7 +105,7 @@ module.exports = {
         else if (subcommand === 'nuke') {
             if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageChannels)) {
                 const errPayload = buildErrorContainerV2({ title: 'Akses Ditolak', description: `${ui.getEmoji('error') || '❌'} Kamu tidak punya izin **Manage Channels**.`, footerText: ui.getFooter('core') });
-                return interaction.reply({ ...errPayload, ephemeral: true });
+                return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
             }
 
             const confirmPayload = buildContainerV2({
@@ -153,7 +153,7 @@ module.exports = {
         else if (subcommand === 'roleall') {
             if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
                 const errPayload = buildErrorContainerV2({ title: 'Akses Ditolak', description: `${ui.getEmoji('error') || '❌'} Kamu tidak punya izin **Manage Roles**.`, footerText: ui.getFooter('core') });
-                return interaction.reply({ ...errPayload, ephemeral: true });
+                return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
             }
 
             const targetRole = interaction.options.getRole('role');
@@ -161,7 +161,7 @@ module.exports = {
 
             if (targetRole.position >= interaction.guild.members.me.roles.highest.position) {
                 const errPayload = buildErrorContainerV2({ title: 'Role Lebih Tinggi', description: `${ui.getEmoji('error') || '❌'} Role tersebut lebih tinggi atau sama dengan role tertinggi saya. Saya tidak bisa memodifikasinya.`, footerText: ui.getFooter('core') });
-                return interaction.reply({ ...errPayload, ephemeral: true });
+                return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
             }
 
             await interaction.deferReply();

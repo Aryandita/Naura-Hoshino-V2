@@ -36,7 +36,7 @@ module.exports = async (interaction, client) => {
     const poru = client.musicManager.poru;
     const player = poru.players.get(interaction.guildId);
     if (interaction.customId !== 'music_lyrics') {
-        try { await interaction.deferReply({ ephemeral: true }); } catch (err) { return; }
+        try { await interaction.deferReply({ flags: MessageFlags.Ephemeral }); } catch (err) { return; }
     }
 
     // Handle Select Menus

@@ -59,7 +59,7 @@ module.exports = {
         }
 
         if (boardString.length > 4000) {
-            return interaction.reply({ content: '❌ Grid terlalu besar, melebihi batas karakter Discord.', ephemeral: true });
+            return interaction.reply({ content: '❌ Grid terlalu besar, melebihi batas karakter Discord.', flags: MessageFlags.Ephemeral });
         }
 
         const { buildContainerV2 } = require('../../src/utils/NauraContainerBuilder');

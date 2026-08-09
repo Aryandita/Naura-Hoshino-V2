@@ -252,18 +252,14 @@ async function runMinigameLogic(interaction) {
                 if (chosen === answer) {
                     gameCollector.stop('win');
 
-                    // Menangani Database MySQL untuk pemenang dan pecundang
-                    const [winProf] = await UserProfile.findOrCreate({ where: { userId: winner.id } });
-                    const [loseProf] = await UserProfile.findOrCreate({ where: { userId: loser.id } });
-
-                    winProf.minigame_duelScore += 10;
+                    await cacheManager.incrementUserProfile(winner.id, { 
+                        minigame_duelScore: 10, 
+                        economy_wallet: taruhan > 0 ? taruhan : 0 
+                    });
+                    
                     if (taruhan > 0) {
-                        winProf.economy_wallet += taruhan;
-                        loseProf.economy_wallet -= taruhan;
+                        await cacheManager.debitUserProfile(loser.id, 'economy_wallet', taruhan);
                     }
-
-                    await winProf.save();
-                    await loseProf.save();
 
                     const winPayload = buildContainerV2({
                         accentColorHex: '#22c55e',
@@ -435,7 +431,7 @@ async function runMinigameLogic(interaction) {
         if (taruhan <= 0 || profile.economy_wallet < taruhan) return sendError(`Taruhan tidak valid atau saldo kurang!`);
 
         if (opponent && !opponent.bot && opponent.id !== user.id) {
-            return interaction.editReply({ content: 'Fitur PvP RPS melawan pemain nyata sedang dalam pengembangan! Untuk sementara, silakan bermain melawan AI.', ephemeral: true });
+            return interaction.editReply({ content: 'Fitur PvP RPS melawan pemain nyata sedang dalam pengembangan! Untuk sementara, silakan bermain melawan AI.', flags: MessageFlags.Ephemeral });
         }
 
         const payload = buildContainerV2({
@@ -851,7 +847,7 @@ async function runMinigameLogic(interaction) {
             m.delete().catch(()=>{});
 
             if (guessed.includes(char)) {
-                return interaction.followUp({ content: 'Kamu sudah menebak huruf itu!', ephemeral: true });
+                return interaction.followUp({ content: 'Kamu sudah menebak huruf itu!', flags: MessageFlags.Ephemeral });
             }
 
             guessed.push(char);
@@ -870,8 +866,7 @@ async function runMinigameLogic(interaction) {
                     footerText: ui.getFooter('core')
                 });
 
-                profile.economy_wallet += profile.isPremium ? 1000 : 500;
-                await profile.save();
+                await cacheManager.incrementUserProfile(user.id, { economy_wallet: profile.isPremium ? 1000 : 500 });
 
                 await interaction.editReply(winPayload);
                 collector.stop('win');
@@ -977,8 +972,7 @@ async function runMinigameLogic(interaction) {
                     const isWin = matched.length === board.length;
 
                     if (isWin) {
-                        profile.economy_wallet += profile.isPremium ? 1000 : 500;
-                        await profile.save();
+                        await cacheManager.incrementUserProfile(user.id, { economy_wallet: profile.isPremium ? 1000 : 500 });
                         const winPayload = buildContainerV2({
                             accentColorHex: '#22c55e',
                             title: '🎉 Kamu Menang!',
@@ -1044,8 +1038,7 @@ async function runMinigameLogic(interaction) {
                      await m.reply({ content: '🚨 **ANTI-CHEAT:** Jawaban terlalu cepat (< 1 detik). Koin dibatalkan.'});
                      return collector1.stop('cheat');
                 }
-                profile.economy_wallet += profile.isPremium ? (rewardCoin * 2) : rewardCoin;
-                await profile.save();
+                await cacheManager.incrementUserProfile(user.id, { economy_wallet: profile.isPremium ? (rewardCoin * 2) : rewardCoin });
                 m.reply(`✅ **BENAR!** Kata yang tepat adalah **${targetWord}**.\nKamu mendapatkan **${rewardCoin}** ${coinEmoji}!`);
             } else {
                 m.reply(`❌ **SALAH!** Kata yang benar adalah **${targetWord}**.`);
@@ -1080,8 +1073,7 @@ async function runMinigameLogic(interaction) {
                      await m.reply({ content: '🚨 **ANTI-CHEAT:** Jawaban terlalu cepat (< 1 detik). Koin dibatalkan.'});
                      return collector2.stop('cheat');
                 }
-                profile.economy_wallet += profile.isPremium ? (rewardCoin * 2) : rewardCoin;
-                await profile.save();
+                await cacheManager.incrementUserProfile(user.id, { economy_wallet: profile.isPremium ? (rewardCoin * 2) : rewardCoin });
                 m.reply(`✅ **BENAR!** Objek itu adalah **${gameData.answer}**.\nKamu mendapatkan **${rewardCoin}** ${coinEmoji}!`);
             } else {
                 m.reply(`❌ **SALAH!** Jawaban yang benar adalah **${gameData.answer}**.`);
@@ -1116,8 +1108,7 @@ async function runMinigameLogic(interaction) {
                      await m.reply({ content: '🚨 **ANTI-CHEAT:** Jawaban terlalu cepat (< 1 detik). Koin dibatalkan.'});
                      return collector.stop('cheat');
                 }
-                profile.economy_wallet += profile.isPremium ? (rewardCoin * 2) : rewardCoin;
-                await profile.save();
+                await cacheManager.incrementUserProfile(user.id, { economy_wallet: profile.isPremium ? (rewardCoin * 2) : rewardCoin });
                 m.reply(`✅ **BENAR!** Kamu menyelesaikan TTS ini.\nKamu mendapatkan **${rewardCoin}** ${coinEmoji}!`);
             } else {
                 m.reply(`❌ **SALAH!** Jawaban yang tepat adalah: **${gameData.answer}**.`);
@@ -1152,7 +1143,7 @@ async function runMinigameLogic(interaction) {
 
         collector.on('collect', async i => {
             if (i.user.id !== currentPlayer.id) {
-                return i.reply({ content: `❌ Ini giliran <@${currentPlayer.id}> untuk memilih!`, ephemeral: true });
+                return i.reply({ content: `❌ Ini giliran <@${currentPlayer.id}> untuk memilih!`, flags: MessageFlags.Ephemeral });
             }
 
             await i.deferUpdate();
@@ -1258,7 +1249,7 @@ async function runMinigameLogic(interaction) {
         collector.on('collect', async i => {
             if (i.customId === 'tod_done' || i.customId === 'tod_next_turn') {
                 if (i.user.id !== currentPlayer.id) {
-                    return i.reply({ content: '❌ Hanya pemain aktif yang bisa menekan tombol ini!', ephemeral: true });
+                    return i.reply({ content: '❌ Hanya pemain aktif yang bisa menekan tombol ini!', flags: MessageFlags.Ephemeral });
                 }
 
                 await i.deferUpdate();

@@ -38,9 +38,9 @@ async function respondError(interaction, message) {
 
     try {
         if (interaction.deferred || interaction.replied) {
-            await interaction.followUp({ embeds: [embed], ephemeral: true });
+            await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
         } else {
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
     } catch (error) {
         if (!isIgnorable(error)) {

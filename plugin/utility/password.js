@@ -36,9 +36,9 @@ module.exports = {
 
         try {
             await interaction.user.send(payload);
-            await interaction.reply({ content: `${ui.getEmoji('success')} Aku telah mengirimkan password yang aman ke DM (Direct Message) milikmu!`, ephemeral: true });
+            await interaction.reply({ content: `${ui.getEmoji('success')} Aku telah mengirimkan password yang aman ke DM (Direct Message) milikmu!`, flags: MessageFlags.Ephemeral });
         } catch (e) {
-            await interaction.reply({ content: `${ui.getEmoji('cross')} Aku tidak bisa mengirim DM kepadamu. Silakan buka DM-mu terlebih dahulu. Jika ini tidak rahasia, berikut passwordnya:\n||${password}||`, ephemeral: true });
+            await interaction.reply({ content: `${ui.getEmoji('cross')} Aku tidak bisa mengirim DM kepadamu. Silakan buka DM-mu terlebih dahulu. Jika ini tidak rahasia, berikut passwordnya:\n||${password}||`, flags: MessageFlags.Ephemeral });
         }
     }
 };

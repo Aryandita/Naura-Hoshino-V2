@@ -21,7 +21,8 @@ async function addPlayerXP(userId, xpAmount) {
     const diffConfig = diffHelper.getDifficultyConfig(survival?.rpg_state?.difficulty || 'Normal');
 
     // ✨ FIX: Mengunci tipe data menjadi Integer agar tidak tergabung sebagai Teks
-    let currentLevel = parseInt(survival?.survival_level) || 1;
+    const oldLevel = parseInt(survival?.survival_level) || 1;
+    let currentLevel = oldLevel;
     let currentXP = parseInt(survival?.survival_xp) || 0;
 
     let totalXpAdded = parseInt(xpAmount);
@@ -40,9 +41,9 @@ async function addPlayerXP(userId, xpAmount) {
         reqXP = getExpRequirement(currentLevel);
     }
 
-    await cacheManager.updateUserSurvival(userId, {
-        survival_xp: currentXP,
-        survival_level: currentLevel
+    await cacheManager.incrementUserSurvival(userId, {
+        survival_xp: currentXP - (survival.survival_xp || 0),
+        survival_level: currentLevel - oldLevel
     });
 
     return {

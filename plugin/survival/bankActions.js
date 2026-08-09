@@ -119,14 +119,12 @@ async function createDeposit(userId, termKey, rawAmount) {
     if (!debit.ok) return { ok: false, reason: 'insufficient', shortage: Math.max(1, amount - bank) };
 
     const currentDay = survival.inGameDay || 1;
-    const written = await cacheManager.updateUserProfile(userId, {
-        economy_deposit: {
-            amount,
-            unlockDay: currentDay + term.days,
-            interestRate: term.rate,
-            termName: term.name
-        }
-    });
+    const written = await cacheManager.mutateUserProfileJson(userId, 'economy_deposit', () => ({
+        amount,
+        unlockDay: currentDay + term.days,
+        interestRate: term.rate,
+        termName: term.name
+    }));
 
     // Uang sudah keluar dari rekening; bila pencatatan depositonya gagal, uang itu
     // harus dikembalikan alih-alih menghilang.
@@ -154,10 +152,7 @@ async function claimDeposit(userId) {
     // Depositonya dikosongkan LEBIH DULU. Klik kedua yang datang bersamaan akan
     // membaca deposito kosong dan berhenti di 'no_deposit', bukan mencairkan
     // bunga untuk kedua kalinya.
-    const cleared = await cacheManager.updateUserProfile(userId, {
-        economy_deposit: { ...EMPTY_DEPOSIT }
-    });
-    if (!cleared) return { ok: false, reason: 'write_failed' };
+    const cleared = await cacheManager.mutateUserProfileJson(userId, 'economy_deposit', () => ({}));if (!cleared) return { ok: false, reason: 'write_failed' };
 
     const interest = Math.floor(amount * (Number(dep.interestRate) || 0));
     const payout = amount + interest;
@@ -192,8 +187,12 @@ async function buyInvestment(userId, assetKey, rawAmount) {
     const debit = await cacheManager.debitUserProfile(userId, 'economy_bank', amount);
     if (!debit.ok) return { ok: false, reason: 'insufficient', shortage: Math.max(1, amount - bank) };
 
-    investments[assetKey] = { principal: amount, buyDay: survival.inGameDay || 1 };
-    const written = await cacheManager.updateUserProfile(userId, { economy_investments: investments });
+    const currentDay = survival.inGameDay || 1;
+    const written = await cacheManager.mutateUserProfileJson(userId, 'economy_investments', (current) => {
+        const invs = { ...(current || {}) };
+        invs[assetKey] = { principal: amount, buyDay: currentDay };
+        return invs;
+    });
 
     if (!written) {
         await cacheManager.incrementUserProfile(userId, { economy_bank: amount });
@@ -219,9 +218,11 @@ async function sellInvestment(userId, assetKey) {
     const value = Math.max(0, asset.calcValue(principal, elapsed));
     const profit = value - principal;
 
-    // Asetnya dilepas lebih dulu, dengan alasan yang sama seperti claimDeposit().
-    delete investments[assetKey];
-    const cleared = await cacheManager.updateUserProfile(userId, { economy_investments: investments });
+    const cleared = await cacheManager.mutateUserProfileJson(userId, 'economy_investments', (current) => {
+        const investments = { ...(current || {}) };
+        delete investments[assetKey];
+        return investments;
+    });
     if (!cleared) return { ok: false, reason: 'write_failed' };
 
     await cacheManager.incrementUserProfile(userId, { economy_bank: value });

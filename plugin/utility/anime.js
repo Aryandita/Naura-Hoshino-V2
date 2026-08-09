@@ -111,7 +111,7 @@ module.exports = {
                 if (i.user.id !== interaction.user.id) {
                     return i.reply({ 
                         content: `${ui.getEmoji('cross')} Perintah ini dibuat oleh orang lain. Ketik \`/anime\` untuk mencari anime favoritmu sendiri!`, 
-                        ephemeral: true 
+                        flags: MessageFlags.Ephemeral 
                     });
                 }
 

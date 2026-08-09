@@ -19,12 +19,12 @@ module.exports = {
 
         if (!member) {
             const errPayload = buildErrorContainerV2({ title: 'User Tidak Ada', description: '❌ User tidak ditemukan di server.', footerText: ui.getFooter('core') });
-            return interaction.reply({ ...errPayload, ephemeral: true });
+            return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
         }
 
         if (member.roles.highest.position >= interaction.guild.members.me.roles.highest.position) {
             const errPayload = buildErrorContainerV2({ title: 'Role Lebih Tinggi', description: '❌ Aku tidak bisa mengubah nama user ini karena rolenya lebih tinggi atau sama dengan role-ku.', footerText: ui.getFooter('core') });
-            return interaction.reply({ ...errPayload, ephemeral: true });
+            return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
         }
 
         try {
@@ -43,7 +43,7 @@ module.exports = {
         } catch (error) {
             logger.error('[Nickname Error]', error);
             const errPayload = buildErrorContainerV2({ title: 'Gagal Ganti Nama', description: '❌ Gagal mengubah nama. Mungkin ada masalah dengan permission.', footerText: ui.getFooter('core') });
-            await interaction.reply({ ...errPayload, ephemeral: true });
+            await interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
         }
     }
 };

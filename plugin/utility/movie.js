@@ -17,7 +17,7 @@ module.exports = {
         const apiKey = process.env.OMDB_API_KEY;
 
         if (!apiKey || apiKey === 'YOUR_OMDB_API_KEY_HERE') {
-            return interaction.reply({ content: `${ui.getEmoji('cross')} Fitur ini belum dikonfigurasi oleh pemilik bot. (OMDB API Key tidak ditemukan di \`.env\`)`, ephemeral: true });
+            return interaction.reply({ content: `${ui.getEmoji('cross')} Fitur ini belum dikonfigurasi oleh pemilik bot. (OMDB API Key tidak ditemukan di \`.env\`)`, flags: MessageFlags.Ephemeral });
         }
 
         await interaction.deferReply();
@@ -113,7 +113,7 @@ module.exports = {
 
             collector.on('collect', async i => {
                 if (i.user.id !== interaction.user.id) {
-                    return i.reply({ content: `${ui.getEmoji('cross')} Gunakan perintah \`/movie\` untuk mencari film Anda sendiri!`, ephemeral: true });
+                    return i.reply({ content: `${ui.getEmoji('cross')} Gunakan perintah \`/movie\` untuk mencari film Anda sendiri!`, flags: MessageFlags.Ephemeral });
                 }
 
                 const oldIndex = currentIndex;

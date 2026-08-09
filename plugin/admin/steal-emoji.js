@@ -27,7 +27,7 @@ module.exports = {
 
         if (!parsed || !parsed.id) {
             const errPayload = buildErrorContainerV2({ title: 'Emoji Tidak Valid', description: `${ui.getEmoji('error') || '❌'} Itu bukan emoji custom yang valid!`, footerText: ui.getFooter('core') });
-            return interaction.reply({ ...errPayload, ephemeral: true });
+            return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
         }
 
         const extension = parsed.animated ? 'gif' : 'png';

@@ -54,7 +54,7 @@ module.exports = {
                 footerText: 'Naura Auto-Alert System'
             });
 
-            return { ...payload, components, ephemeral: true };
+            return { ...payload, components, flags: MessageFlags.Ephemeral };
         };
 
         const response = await interaction.reply(generateDashboard());

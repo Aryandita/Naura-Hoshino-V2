@@ -4,7 +4,7 @@ const { MessageFlags } = require('discord.js');
 const UserSurvival = require('../../../src/models/UserSurvival');
 const UserNPC = require('../../../src/models/UserNPC');
 const cacheManager = require('../../../src/managers/cacheManager');
-const { safeParseInventory } = require('../inventoryHelper');
+const { safeParseInventory, takeItemsAtomic } = require('../inventoryHelper');
 const ui = require('../../../src/config/ui');
 const { advanceTime, getTimeState } = require('../survivalTime');
 const { buildContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
@@ -77,12 +77,14 @@ module.exports = {
             );
         }
 
-        // Bomnya dipakai apa pun hasilnya. Sebelumnya inventory hanya tersimpan
-        // saat gagal, jadi perampokan yang sukses tidak pernah menghabiskan bom.
-        inventory.splice(bombIndex, 1);
-        profile.inventory = inventory;
-        if (typeof profile.changed === 'function') profile.changed('inventory', true);
-        await profile.save();
+        const taken = await takeItemsAtomic(user.id, [{ id: 'c4_bomb', amount: 1 }]);
+        if (!taken) {
+            return fail(
+                interaction,
+                `${e('error', '❌')} Bom tidak ditemukan`,
+                'Sepertinya bomnya hilang saat kamu sedang bersiap.'
+            );
+        }
 
         const agility = survival.agility || 1;
         const luck = survival.luck || 1;
@@ -120,19 +122,22 @@ module.exports = {
         }
 
         // GAGAL: seluruh NSF di kantong disita dan bank memotong denda Naura Coin.
-        const seized = currency.balanceOf(currency.FRAGMENT, holders);
-        await currency.setBalance(currency.FRAGMENT, holders, 0);
+        const seized = survival.starFragments || 0;
+        if (seized > 0) {
+            await cacheManager.debitUserSurvival(user.id, 'starFragments', seized);
+        }
 
         const bankBalance = profile.economy_bank || 0;
         const paidPenalty = Math.min(bankBalance, BANK_PENALTY);
-        profile.economy_bank = bankBalance - paidPenalty;
-        await profile.save();
+        if (paidPenalty > 0) {
+            await cacheManager.debitUserProfile(user.id, 'economy_bank', paidPenalty);
+        }
 
         const allNPCs = await UserNPC.findAll({ where: { userId: user.id } });
         for (const npc of allNPCs) {
             npc.affection = Math.max(0, npc.affection - AFFECTION_PENALTY);
             npc.relationshipLevel = Math.max(0, npc.relationshipLevel - 1);
-            await npc.save();
+            await npc.save({ fields: ['affection', 'relationshipLevel'] });
         }
 
         // advanceTime memulangkan pemain ke desa, jadi status penjara harus

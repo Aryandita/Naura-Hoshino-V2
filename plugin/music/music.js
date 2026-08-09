@@ -571,7 +571,7 @@ async function runMusicLogic(client, user, member, guild, channel, subcommand, a
         collector.on('collect', async i => {
             if (i.user.id !== user.id) {
                 const errPayload = buildErrorContainerV2({ title: 'Akses Ditolak', description: '❌ Hanya pemanggil command yang bisa mengubah halaman.', footerText: ui.getFooter('music') });
-                return i.reply({ ...errPayload, ephemeral: true });
+                return i.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
             }
 
             if (i.customId.startsWith('queue_prev_')) {

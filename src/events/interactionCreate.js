@@ -52,7 +52,7 @@ async function handleSlashCommand(interaction, client) {
         return interaction
             .reply({
                 content: '\u26a0\ufe0f **Slow down!** Kamu mengirim perintah terlalu cepat. Harap tunggu beberapa detik.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             })
             .catch(() => {});
     }
@@ -97,7 +97,7 @@ module.exports = {
             return interaction
                 .reply({
                     content: '\u26a0\ufe0f **Naura sedang dalam proses restart/shutdown.** Mohon tunggu beberapa saat.',
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 })
                 .catch(() => {});
         }
@@ -135,7 +135,7 @@ module.exports = {
             return interaction
                 .reply({
                     content: '\u26a0\ufe0f **Pelan-pelan ya!** Kamu menekan tombol terlalu cepat.',
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 })
                 .catch(() => {});
         }

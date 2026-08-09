@@ -13,7 +13,7 @@ module.exports = {
         .addSubcommand(sub => sub.setName('remove').setDescription('Matikan fitur auto role')),
 
     async execute(interaction) {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const sub = interaction.options.getSubcommand();
         const [settings] = await GuildSettings.findOrCreate({ where: { guildId: interaction.guild.id } });
         

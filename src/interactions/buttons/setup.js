@@ -27,7 +27,7 @@ module.exports = [
                 .setTitle('\ud83d\udcf4 Global Chat Dinonaktifkan')
                 .setDescription('Jaringan Global Chat untuk server ini telah dimatikan.');
 
-            return interaction.reply({ embeds: [embed], ephemeral: true });
+            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
     },
 
@@ -92,7 +92,7 @@ module.exports = [
                 .setTitle('\ud83d\udee1\ufe0f Automod Dinonaktifkan')
                 .setDescription('Sistem Automod & Keamanan Naura dinonaktifkan.');
 
-            return interaction.reply({ embeds: [embed], ephemeral: true });
+            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
     }
 ];

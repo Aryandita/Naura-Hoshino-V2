@@ -26,7 +26,7 @@ module.exports = [
                         `Server IP: **${ip}:${port}** telah disimpan.\nNaura akan melacak status server ini.`
                     )
                 ],
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     },
@@ -49,7 +49,7 @@ module.exports = [
                         `Pesan lengket dipasang di <#${channelId}>:\n>>> ${messageText}`
                     )
                 ],
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     },
@@ -76,7 +76,7 @@ module.exports = [
                         `Naura akan otomatis membalas kata kunci **"${trigger}"** dengan:\n>>> ${response}`
                     )
                 ],
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }

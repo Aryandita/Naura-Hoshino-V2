@@ -37,11 +37,11 @@ module.exports = {
         // Cek apakah user adalah owner
         const ownerIds = env.OWNER_IDS ? env.OWNER_IDS.split(',') : [];
         if (!ownerIds.includes(interaction.user.id)) {
-            return interaction.reply({ content: '❌ Anda tidak memiliki izin. Hanya Bot Owner yang dapat menggunakan command ini.', ephemeral: true });
+            return interaction.reply({ content: '❌ Anda tidak memiliki izin. Hanya Bot Owner yang dapat menggunakan command ini.', flags: MessageFlags.Ephemeral });
         }
 
         const subCmd = interaction.options.getSubcommand();
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         if (subCmd === 'add') {
             const name = interaction.options.getString('name');

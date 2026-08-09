@@ -29,7 +29,7 @@ module.exports = {
                 description: `Pengguna standar hanya dapat menerjemahkan maksimal **500 karakter** per teks (teks kamu: ${text.length} karakter).\nGunakan \`/premium\` untuk batas terjemahan tanpa batas!`,
                 footerText: ui.getFooter('utility')
             });
-            return interaction.reply({ ...errPayload, ephemeral: true });
+            return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
         }
 
         await interaction.deferReply();

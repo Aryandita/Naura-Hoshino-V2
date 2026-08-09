@@ -36,7 +36,7 @@ module.exports = {
             const daysInMonth = [31, (year && isLeapYear(year) ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
             if (day > daysInMonth[month - 1]) {
-                return interaction.reply({ content: `${ui.getEmoji('cross') || '❌'} Tanggal tidak valid! Bulan ${month} hanya memiliki ${daysInMonth[month - 1]} hari.`, ephemeral: true });
+                return interaction.reply({ content: `${ui.getEmoji('cross') || '❌'} Tanggal tidak valid! Bulan ${month} hanya memiliki ${daysInMonth[month - 1]} hari.`, flags: MessageFlags.Ephemeral });
             }
 
             let [bday, created] = await UserBirthday.findOrCreate({
@@ -60,7 +60,7 @@ module.exports = {
             const bday = await UserBirthday.findByPk(user.id);
 
             if (!bday) {
-                return interaction.reply({ content: `${ui.getEmoji('cross') || '❌'} **${user.username}** belum mengatur tanggal ulang tahunnya.`, ephemeral: true });
+                return interaction.reply({ content: `${ui.getEmoji('cross') || '❌'} **${user.username}** belum mengatur tanggal ulang tahunnya.`, flags: MessageFlags.Ephemeral });
             }
 
             const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];

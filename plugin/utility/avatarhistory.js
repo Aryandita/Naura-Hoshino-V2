@@ -72,7 +72,7 @@ module.exports = {
             const fetchedUser = await interaction.client.users.fetch(user.id, { force: true });
 
             if (!fetchedUser.banner) {
-                return interaction.reply({ content: `${ui.getEmoji('cross') || '❌'} **${user.username}** tidak memiliki banner profil.`, ephemeral: true });
+                return interaction.reply({ content: `${ui.getEmoji('cross') || '❌'} **${user.username}** tidak memiliki banner profil.`, flags: MessageFlags.Ephemeral });
             }
 
             const bannerUrl = fetchedUser.bannerURL({ size: 1024, extension: 'png', forceStatic: false });

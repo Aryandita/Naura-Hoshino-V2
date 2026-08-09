@@ -45,7 +45,7 @@ module.exports = [
             return interaction.reply({
                 embeds: [embed],
                 components: [new ActionRowBuilder().addComponents(menu)],
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     },
@@ -67,7 +67,7 @@ module.exports = [
                         `Channel pengumuman otomatis (Welcome/Logs) disetel ke <#${channelId}>.`
                     )
                 ],
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     },
@@ -95,7 +95,7 @@ module.exports = [
                         `Channel <#${channelId}> terhubung ke Naura Global Chat!`
                     )
                 ],
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     },
@@ -119,7 +119,7 @@ module.exports = [
                         `Channel Starboard disetel ke <#${channelId}> dengan batas minimal **${threshold} \u2b50**.`
                     )
                 ],
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     },
@@ -164,7 +164,7 @@ module.exports = [
                         `Channel log audit keamanan disetel ke <#${channelId}>.`
                     )
                 ],
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     },
@@ -188,7 +188,7 @@ module.exports = [
                         `Channel untuk **${labelFor(channelType)}** berhasil disetel ke <#${channelId}>.`
                     )
                 ],
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     },
@@ -210,7 +210,7 @@ module.exports = [
                         `Member baru bergabung akan otomatis diberikan role <@&${roleId}>.`
                     )
                 ],
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }

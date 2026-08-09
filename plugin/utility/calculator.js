@@ -58,7 +58,7 @@ module.exports = {
 
         collector.on('collect', async i => {
             if (i.user.id !== interaction.user.id) {
-                return i.reply({ content: 'Ini bukan kalkulatormu! Silakan gunakan perintah `/calculator` sendiri.', ephemeral: true });
+                return i.reply({ content: 'Ini bukan kalkulatormu! Silakan gunakan perintah `/calculator` sendiri.', flags: MessageFlags.Ephemeral });
             }
 
             const val = i.customId.split('_')[1];

@@ -11,14 +11,14 @@ module.exports = [
             const targetUserId = interaction.customId.split('_')[3];
 
             if (interaction.user.id !== targetUserId) {
-                return interaction.reply({ content: '\u274c Tombol ini bukan untukmu.', ephemeral: true });
+                return interaction.reply({ content: '\u274c Tombol ini bukan untukmu.', flags: MessageFlags.Ephemeral });
             }
 
             await UserProfile.update({ dailyNotify: false }, { where: { userId: targetUserId } });
 
             return interaction.reply({
                 content: '\ud83d\udd15 Notifikasi Daily Reminder telah dimatikan. Kamu tidak akan menerima pesan ini lagi.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }

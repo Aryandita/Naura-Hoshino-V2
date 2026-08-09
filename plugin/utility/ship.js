@@ -14,7 +14,7 @@ module.exports = {
         const user2 = target;
 
         if (user1.id === user2.id) {
-            return interaction.reply({ content: 'Mencintai diri sendiri itu penting, tapi coba tag orang lain! 😅', ephemeral: true });
+            return interaction.reply({ content: 'Mencintai diri sendiri itu penting, tapi coba tag orang lain! 😅', flags: MessageFlags.Ephemeral });
         }
 
         // Consistent pseudo-random percentage based on user IDs

@@ -13,7 +13,7 @@ module.exports = {
         let hex = interaction.options.getString('hex').replace('#', '');
 
         if (!/^[0-9A-Fa-f]{6}$/i.test(hex)) {
-            return interaction.reply({ content: `${ui.getEmoji('cross') || '❌'} Format kode warna tidak valid. Gunakan 6 karakter HEX (contoh: FF0000).`, ephemeral: true });
+            return interaction.reply({ content: `${ui.getEmoji('cross') || '❌'} Format kode warna tidak valid. Gunakan 6 karakter HEX (contoh: FF0000).`, flags: MessageFlags.Ephemeral });
         }
 
         try {
@@ -36,7 +36,7 @@ module.exports = {
             await interaction.reply(payload);
         } catch (error) {
             logger.error('[Color Error]', error);
-            await interaction.reply({ content: `${ui.getEmoji('cross') || '❌'} Terjadi kesalahan saat mengambil informasi warna.`, ephemeral: true });
+            await interaction.reply({ content: `${ui.getEmoji('cross') || '❌'} Terjadi kesalahan saat mengambil informasi warna.`, flags: MessageFlags.Ephemeral });
         }
     }
 };

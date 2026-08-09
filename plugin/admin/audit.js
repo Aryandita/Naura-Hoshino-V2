@@ -21,10 +21,10 @@ module.exports = {
     async execute(interaction) {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.ViewAuditLog)) {
             const errPayload = buildErrorContainerV2({ title: 'Akses Ditolak', description: `${ui.getEmoji('error') || '❌'} Kamu tidak memiliki izin View Audit Log.`, footerText: ui.getFooter('core') });
-            return interaction.reply({ ...errPayload, ephemeral: true });
+            return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const aksi = interaction.options.getString('aksi');
         const limitCount = interaction.options.getInteger('limit') || 5;
         const auditEvent = AuditLogEvent[aksi];

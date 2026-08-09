@@ -48,7 +48,7 @@ module.exports = {
         if (!botPermissions.has(PermissionFlagsBits.ViewChannel) || !botPermissions.has(PermissionFlagsBits.SendMessages)) {
             return interaction.reply({
                 content: `${ui.getEmoji('error') || '❌'} **Akses Ditolak:** Aku tidak memiliki izin melihat/mengirim pesan di <#${targetChannel.id}>.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -135,7 +135,7 @@ module.exports = {
             const embedCharCount = title.length + desc.length;
             if (embedCharCount > 5500) {
                  const errPayload = buildErrorContainerV2({ title: 'Teks Terlalu Panjang', description: `${ui.getEmoji('error') || '❌'} Gagal: Panjang judul dan deskripsi terlalu besar! (Max 5500 karakter).`, footerText: ui.getFooter('core') });
-                 return interaction.followUp({ ...errPayload, ephemeral: true });
+                 return interaction.followUp({ ...errPayload, flags: MessageFlags.Ephemeral });
             }
 
             // Jika ada gambar yang diunggah dari command awal, pasang di embed
@@ -145,12 +145,12 @@ module.exports = {
             try {
                 await targetChannel.send({ content: contentPayload, ...announcePayload });
                 const successPayload = buildContainerV2({ title: 'Pengumuman Terkirim', description: `${ui.getEmoji('success') || '✅'} Pengumuman berhasil dikirimkan ke channel <#${targetChannel.id}>!`, footerText: ui.getFooter('core') });
-                await modalSubmit.reply({ ...successPayload, ephemeral: true });
+                await modalSubmit.reply({ ...successPayload, flags: MessageFlags.Ephemeral });
             } catch (sendError) {
                 logger.error('[Announce Send Error]:', sendError.message);
                 await modalSubmit.reply({ 
                     content: `${ui.getEmoji('error') || '❌'} **Gagal mengirim!** Pastikan bot punya izin Embed Links.`,
-                    ephemeral: true 
+                    flags: MessageFlags.Ephemeral 
                 });
             }
 

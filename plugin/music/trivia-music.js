@@ -18,7 +18,7 @@ module.exports = {
         const voiceChannel = interaction.member.voice.channel;
         if (!voiceChannel) {
             const errPayload = buildErrorContainerV2({ title: 'Koneksi Gagal', description: '❌ Kamu harus berada di Voice Channel untuk bermain Trivia.', footerText: ui.getFooter('music') });
-            return interaction.reply({ ...errPayload, ephemeral: true });
+            return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
         }
 
         await interaction.deferReply();

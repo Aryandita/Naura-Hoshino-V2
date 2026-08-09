@@ -89,7 +89,7 @@ module.exports = {
 
             collector.on('collect', async i => {
                 if (i.user.id !== interaction.user.id) {
-                    return i.reply({ content: '❌ Ini bukan game-mu! Ketik `/akinator` untuk main sendiri.', ephemeral: true });
+                    return i.reply({ content: '❌ Ini bukan game-mu! Ketik `/akinator` untuk main sendiri.', flags: MessageFlags.Ephemeral });
                 }
 
                 const action = i.customId.replace('aki_', '');

@@ -172,7 +172,7 @@ module.exports = {
                 };
 
                 await cacheManager.updateUserProfile(interaction.user.id, updates);
-                await submit.reply({ content: `${ui.getEmoji('check')} Profil sosial mediamu berhasil diperbarui!`, ephemeral: true });
+                await submit.reply({ content: `${ui.getEmoji('check')} Profil sosial mediamu berhasil diperbarui!`, flags: MessageFlags.Ephemeral });
             } catch (e) {
                 // Timeout or error
             }

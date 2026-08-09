@@ -118,13 +118,11 @@ class MusicAnalytics {
             buckets.servers = prune(buckets.servers, LIMITS.servers);
             buckets.friends = prune(buckets.friends, LIMITS.friends);
 
-            const total = (
-                BigInt(profile.music_totalDurationMs || 0) + BigInt(Math.round(durationMs))
-            ).toString();
-
+            await cacheManager.incrementUserProfile(userId, {
+                music_tracksListened: 1,
+                music_totalDurationMs: Math.round(durationMs)
+            });
             await cacheManager.updateUserProfile(userId, {
-                music_tracksListened: (profile.music_tracksListened || 0) + 1,
-                music_totalDurationMs: total,
                 music_lastListened: title.substring(0, 100),
                 music_trackingData: buckets,
                 music_topTrack: topOf(buckets.tracks, 'Belum ada data'),

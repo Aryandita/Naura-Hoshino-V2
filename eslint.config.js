@@ -87,9 +87,8 @@ module.exports = [
             'no-restricted-syntax': [
                 'warn',
 
-                // `ephemeral: true` sudah usang di discord.js v14 dan hanya bertahan
-                // karena penambal prototype di src/utils/ephemeralPatch.js. Aturan ini
-                // menahan pemakaian baru supaya penambal itu bisa dihapus (issue #10).
+                // `ephemeral: true` sudah usang di discord.js v14.
+                // Aturan ini menahan pemakaian baru (issue #10).
                 {
                     selector: 'Property[key.name="ephemeral"][value.value=true]',
                     message: 'Gunakan `flags: MessageFlags.Ephemeral`, bukan `ephemeral: true` (issue #10).'
@@ -139,13 +138,7 @@ module.exports = [
             ]
         }
     },
-    {
-        // Penambal itu sendiri memang harus menyebut properti usangnya.
-        files: ['src/utils/ephemeralPatch.js'],
-        rules: {
-            'no-restricted-syntax': 'off'
-        }
-    },
+
     {
         // cacheManager adalah satu-satunya tempat yang memang berhak menyentuh
         // model secara langsung. Seluruh aturan di atas justru dirancang supaya

@@ -74,7 +74,7 @@ module.exports = [
             if (!action) {
                 return interaction.reply({
                     content: '\u2753 Formulir ini sudah tidak berlaku.',
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 

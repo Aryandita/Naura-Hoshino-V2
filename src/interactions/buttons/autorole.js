@@ -15,14 +15,14 @@ module.exports = [
                 await member.roles.remove(roleId);
                 return interaction.reply({
                     content: `\u2705 Role <@&${roleId}> telah dihapus darimu.`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
             await member.roles.add(roleId);
             return interaction.reply({
                 content: `\u2705 Role <@&${roleId}> telah ditambahkan kepadamu.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }

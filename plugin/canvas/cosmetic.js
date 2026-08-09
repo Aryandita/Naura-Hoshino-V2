@@ -96,15 +96,15 @@ async function handleShop(interaction, userId) {
         const asset = assets.find(a => a.id === selectedAssetId);
 
         if (ownedAssetIds.includes(selectedAssetId)) {
-            return i.reply({ content: '❌ Kamu sudah memiliki kosmetik ini.', ephemeral: true });
+            return i.reply({ content: '❌ Kamu sudah memiliki kosmetik ini.', flags: MessageFlags.Ephemeral });
         }
 
         if (asset.isPremiumOnly && !userProfile.isPremium) {
-            return i.reply({ content: '❌ Kosmetik ini eksklusif untuk member VIP.', ephemeral: true });
+            return i.reply({ content: '❌ Kosmetik ini eksklusif untuk member VIP.', flags: MessageFlags.Ephemeral });
         }
 
         if (userProfile.economy_wallet < asset.price) {
-            return i.reply({ content: `❌ Uangmu tidak cukup. Kosmetik ini harganya **${asset.price} NC**, tapi kamu hanya punya **${userProfile.economy_wallet} NC**.`, ephemeral: true });
+            return i.reply({ content: `❌ Uangmu tidak cukup. Kosmetik ini harganya **${asset.price} NC**, tapi kamu hanya punya **${userProfile.economy_wallet} NC**.`, flags: MessageFlags.Ephemeral });
         }
 
         userProfile.economy_wallet -= asset.price;
@@ -118,7 +118,7 @@ async function handleShop(interaction, userId) {
 
         ownedAssetIds.push(asset.id);
 
-        await i.reply({ content: `✅ Berhasil membeli **${asset.name}** seharga **${asset.price} NC**. Gunakan \`/cosmetic equip\` untuk menggunakannya.`, ephemeral: true });
+        await i.reply({ content: `✅ Berhasil membeli **${asset.name}** seharga **${asset.price} NC**. Gunakan \`/cosmetic equip\` untuk menggunakannya.`, flags: MessageFlags.Ephemeral });
     });
 }
 
@@ -177,7 +177,7 @@ async function handleEquip(interaction, userId) {
     collector.on('collect', async i => {
         if (i.customId === 'cosmetic_unequip_all') {
             await UserCosmetic.update({ isActive: false }, { where: { userId } });
-            return i.reply({ content: '\u2705 Semua kosmetik telah dilepas. Profilmu kembali ke desain default.', ephemeral: true });
+            return i.reply({ content: '\u2705 Semua kosmetik telah dilepas. Profilmu kembali ke desain default.', flags: MessageFlags.Ephemeral });
         }
 
         if (i.customId === 'cosmetic_equip_select') {
@@ -185,7 +185,7 @@ async function handleEquip(interaction, userId) {
             const selectedCosmetic = ownedCosmetics.find(uc => uc.id === selectedUcId);
 
             if (!selectedCosmetic || !selectedCosmetic.asset) {
-                 return i.reply({ content: '\u274C Terjadi kesalahan, aset tidak ditemukan.', ephemeral: true });
+                 return i.reply({ content: '\u274C Terjadi kesalahan, aset tidak ditemukan.', flags: MessageFlags.Ephemeral });
             }
 
             // Nonaktifkan semua kosmetik lain yang bertipe sama
@@ -203,7 +203,7 @@ async function handleEquip(interaction, userId) {
             selectedCosmetic.isActive = true;
             await selectedCosmetic.save();
 
-            await i.reply({ content: `\u2705 Kosmetik **${selectedCosmetic.asset.name}** berhasil dipakai! Cek profilmu dengan \`/profile\`.`, ephemeral: true });
+            await i.reply({ content: `\u2705 Kosmetik **${selectedCosmetic.asset.name}** berhasil dipakai! Cek profilmu dengan \`/profile\`.`, flags: MessageFlags.Ephemeral });
         }
     });
 

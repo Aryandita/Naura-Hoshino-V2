@@ -21,13 +21,13 @@ module.exports = {
             const ms = parseDuration(durasiStr);
             if (!ms) {
                 const errPayload = buildErrorContainerV2({ title: 'Format Salah', description: '❌ Format durasi tidak valid. Gunakan format seperti `5s`, `10s`, `1m`, `1h`, atau `off`.', footerText: ui.getFooter('core') });
-                return interaction.reply({ ...errPayload, ephemeral: true });
+                return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
             }
             seconds = Math.floor(ms / 1000);
 
             if (seconds > 21600) {
                 const errPayload = buildErrorContainerV2({ title: 'Batas Maksimum', description: '❌ Durasi maksimum untuk slowmode adalah 6 jam (21600 detik).', footerText: ui.getFooter('core') });
-                return interaction.reply({ ...errPayload, ephemeral: true });
+                return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
             }
         }
 
@@ -46,7 +46,7 @@ module.exports = {
         } catch (error) {
             logger.error('[Slowmode Error]', error);
             const errPayload = buildErrorContainerV2({ title: 'Gagal Set Slowmode', description: '❌ Gagal mengatur slowmode. Pastikan bot memiliki izin Manage Channels.', footerText: ui.getFooter('core') });
-            await interaction.reply({ ...errPayload, ephemeral: true });
+            await interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
         }
     }
 };

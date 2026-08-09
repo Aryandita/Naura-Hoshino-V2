@@ -28,7 +28,7 @@
  *       prefix: 'tvc_',           // cocok berdasarkan awalan
  *       label: 'tiket-buka',      // dipakai untuk log & kunci rate limit
  *       defer: 'reply' | 'update' | false,   // opsional, default tidak defer
- *       ephemeral: true,          // hanya berlaku bila defer === 'reply'
+ *       flags: MessageFlags.Ephemeral,          // hanya berlaku bila defer === 'reply'
  *       cooldown: { max, seconds },          // opsional, menimpa default
  *       onError: 'pesan ramah',   // opsional, ditampilkan bila handler melempar
  *       async handler(interaction, client) { ... }

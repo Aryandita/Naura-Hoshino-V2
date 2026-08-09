@@ -39,11 +39,11 @@ module.exports = {
         const member = await interaction.guild.members.fetch(user.id).catch(() => null);
 
         if (!member) {
-            return interaction.reply({ content: '❌ User tidak ditemukan di server.', ephemeral: true });
+            return interaction.reply({ content: '❌ User tidak ditemukan di server.', flags: MessageFlags.Ephemeral });
         }
 
         if (!member.voice.channel) {
-            return interaction.reply({ content: `❌ **${user.username}** sedang tidak berada di Voice Channel mana pun.`, ephemeral: true });
+            return interaction.reply({ content: `❌ **${user.username}** sedang tidak berada di Voice Channel mana pun.`, flags: MessageFlags.Ephemeral });
         }
 
         try {
@@ -66,7 +66,7 @@ module.exports = {
             }
         } catch (error) {
             logger.error('[VoiceMod Error]', error);
-            await interaction.reply({ content: '❌ Gagal melakukan aksi moderasi voice. Pastikan posisiku lebih tinggi dari user tersebut dan aku memiliki izin yang cukup.', ephemeral: true });
+            await interaction.reply({ content: '❌ Gagal melakukan aksi moderasi voice. Pastikan posisiku lebih tinggi dari user tersebut dan aku memiliki izin yang cukup.', flags: MessageFlags.Ephemeral });
         }
     }
 };

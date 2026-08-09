@@ -55,7 +55,7 @@ const ACTIONS = {
 
     async tvc_hide(interaction, ctx) {
         if (!ctx.isPrivileged) {
-            return interaction.reply({ content: PREMIUM_ONLY('Mode Invisible (Ghosting)'), ephemeral: true });
+            return interaction.reply({ content: PREMIUM_ONLY('Mode Invisible (Ghosting)'), flags: MessageFlags.Ephemeral });
         }
         await ctx.channel.permissionOverwrites.edit(interaction.guild.id, {
             [PermissionFlagsBits.ViewChannel]: false,
@@ -137,7 +137,7 @@ const ACTIONS = {
 
         return interaction.reply({
             components: [new ActionRowBuilder().addComponents(selectMenu)],
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     },
 
@@ -161,7 +161,7 @@ const ACTIONS = {
 
     tvc_region(interaction, ctx) {
         if (!ctx.isPrivileged) {
-            return interaction.reply({ content: PREMIUM_ONLY('Ubah Region'), ephemeral: true });
+            return interaction.reply({ content: PREMIUM_ONLY('Ubah Region'), flags: MessageFlags.Ephemeral });
         }
 
         const selectMenu = new StringSelectMenuBuilder()
@@ -171,13 +171,13 @@ const ACTIONS = {
 
         return interaction.reply({
             components: [new ActionRowBuilder().addComponents(selectMenu)],
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     },
 
     async tvc_save(interaction, ctx) {
         if (!ctx.isPrivileged) {
-            return interaction.reply({ content: PREMIUM_ONLY('Simpan Sesi'), ephemeral: true });
+            return interaction.reply({ content: PREMIUM_ONLY('Simpan Sesi'), flags: MessageFlags.Ephemeral });
         }
 
         await updateGuildSetting(interaction.guild.id, (settings) => {
@@ -211,7 +211,7 @@ module.exports = [
             if (!action) {
                 return interaction.reply({
                     content: '\u2753 Tombol ini sudah tidak berlaku. Panggil ulang panelnya ya.',
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
