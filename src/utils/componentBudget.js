@@ -98,9 +98,23 @@ function enforceComponentBudget(components, options = {}) {
 
     const removed = new Set();
     const visible = () => source.filter((_, index) => !removed.has(index));
+    // Jika notice akan disisipkan, ia butuh satu slot komponen
+    let noticeWillConsumeSlot = false;
+    if (notice && droppable.length > 0) {
+        // Asumsi notice akan mengganti satu elemen
+        noticeWillConsumeSlot = true;
+    }
+
     const overBudget = () => {
         const list = visible();
-        return countComponents(list) > maxComponents || measureTextLength(list) > maxTextLength;
+        let currentCount = countComponents(list);
+        let currentText = measureTextLength(list);
+        if (noticeWillConsumeSlot && removed.size > 0) {
+            // Notice akan mengambil 1 slot teks dan 1 komponen
+            currentCount += 1;
+            currentText += notice.length;
+        }
+        return currentCount > maxComponents || currentText > maxTextLength;
     };
 
     // Dibuang dari belakang: field terakhir biasanya paling tidak penting.
@@ -108,7 +122,7 @@ function enforceComponentBudget(components, options = {}) {
         removed.add(droppable[i]);
     }
 
-    let dropped = removed.size;
+    const dropped = removed.size;
     if (dropped > 0 && notice) {
         const noticeIndex = Math.min(...removed);
         removed.delete(noticeIndex);
