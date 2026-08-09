@@ -12,6 +12,7 @@ const cacheManager = require('../../src/managers/cacheManager');
 const CanvasUtils = require('../canvas/CanvasUtils');
 const ui = require('../../src/config/ui');
 const { buildContainerV2 } = require('../../src/utils/NauraContainerBuilder');
+const xpBuffer = require('./xpBuffer');
 
 const CONFIG = {
     BASE_XP: 100,
@@ -132,34 +133,33 @@ async function checkLevelUp(profile, user, guild, currentChannel) {
     return gained;
 }
 
-async function awardXp(user, guild, currentChannel, messageContent = '') {
-    if (user.bot || !guild) return;
-    if (!messageContent || messageContent.length < CONFIG.MIN_LENGTH) return;
+async function rollXp(userId) {
+    const span = CONFIG.MSG_XP.max - CONFIG.MSG_XP.min + 1;
+    let gained = Math.floor(Math.random() * span) + CONFIG.MSG_XP.min;
+    if (await isPremiumUser(userId)) gained *= 2;
+    return gained;
+}
 
-    const redisReady = Boolean(redisManager.client && redisManager.client.isReady);
-    const cooldownKey = `xp_cooldown_${guild.id}_${user.id}`;
-
-    if (redisReady) {
-        const onCooldown = await redisManager.getCache(cooldownKey);
-        if (onCooldown) return;
-    }
-
+/**
+ * Jalur lama: satu pesan sama dengan satu baca dan satu tulis ke database.
+ * Dipakai hanya bila Redis mati, atau bila penulisan ke penyangga gagal.
+ *
+ * @param {number|null} precomputedGain XP yang sudah diundi. Bila terisi, jeda
+ * berbasis lastActivity dilewati karena kunci jeda di Redis sudah lolos.
+ */
+async function awardXpDirect(user, guild, currentChannel, precomputedGain = null) {
     const [profile] = await UserLeveling.findOrCreate({
         where: { userId: user.id, guildId: guild.id },
         defaults: { xp: 0, level: 1, messageCount: 0, lastActivity: new Date(0) }
     });
 
     // Cadangan bila Redis mati. Tanpa ini setiap pesan memberi XP penuh.
-    const lastActivity = profile.lastActivity ? new Date(profile.lastActivity).getTime() : 0;
-    if (Date.now() - lastActivity < CONFIG.MSG_COOLDOWN) return;
-
-    if (redisReady) {
-        await redisManager.setCache(cooldownKey, true, Math.floor(CONFIG.MSG_COOLDOWN / 1000));
+    if (precomputedGain === null) {
+        const lastActivity = profile.lastActivity ? new Date(profile.lastActivity).getTime() : 0;
+        if (Date.now() - lastActivity < CONFIG.MSG_COOLDOWN) return;
     }
 
-    const span = CONFIG.MSG_XP.max - CONFIG.MSG_XP.min + 1;
-    let gained = Math.floor(Math.random() * span) + CONFIG.MSG_XP.min;
-    if (await isPremiumUser(user.id)) gained *= 2;
+    const gained = precomputedGain === null ? await rollXp(user.id) : precomputedGain;
 
     profile.xp = (profile.xp || 0) + gained;
     profile.messageCount = (profile.messageCount || 0) + 1;
@@ -176,12 +176,63 @@ async function awardXp(user, guild, currentChannel, messageContent = '') {
     }
 }
 
+/**
+ * Memberi XP atas satu pesan.
+ *
+ * Bila Redis siap, XP hanya ditambahkan ke penyangga dan database disentuh saat
+ * flush berkala atau saat pengguna benar-benar naik level. Nilai dasar dibaca
+ * dari cache sehingga obrolan ramai tidak lagi memicu satu findOrCreate dan satu
+ * UPDATE untuk setiap pesan.
+ */
+async function awardXp(user, guild, currentChannel, messageContent = '') {
+    if (user.bot || !guild) return;
+    if (!messageContent || messageContent.length < CONFIG.MIN_LENGTH) return;
+
+    const cooldownKey = `xp_cooldown_${guild.id}_${user.id}`;
+
+    if (!xpBuffer.isEnabled()) {
+        await awardXpDirect(user, guild, currentChannel);
+        return;
+    }
+
+    const onCooldown = await redisManager.getCache(cooldownKey);
+    if (onCooldown) return;
+    await redisManager.setCache(cooldownKey, true, Math.floor(CONFIG.MSG_COOLDOWN / 1000));
+
+    const gained = await rollXp(user.id);
+    const pending = await xpBuffer.addXp(guild.id, user.id, gained);
+
+    // Redis tumbang tepat setelah jeda tercatat. Jangan buang XP-nya.
+    if (pending === null) {
+        await awardXpDirect(user, guild, currentChannel, gained);
+        return;
+    }
+
+    const base = await xpBuffer.readBase(guild.id, user.id);
+    if (base.xp + pending < getNextLevelXp(base.level)) return;
+
+    // Ambang terlampaui. Setor sekarang supaya pengumuman naik level tidak
+    // tertunda sampai flush berikutnya.
+    const row = await xpBuffer.settleUser(guild.id, user.id);
+    if (!row) return;
+
+    const gainedLevels = applyLevelUp(row);
+    if (gainedLevels === 0) return;
+
+    await row.save();
+    await xpBuffer.invalidateBase(guild.id, user.id);
+    await announceLevelUp(row, user, guild, currentChannel);
+}
+
 module.exports = {
     awardXp,
+    awardXpDirect,
+    rollXp,
     getNextLevelXp,
     getRoleBadge,
     applyLevelUp,
     checkLevelUp,
     announceLevelUp,
+    xpBuffer,
     CONFIG
 };

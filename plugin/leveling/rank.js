@@ -3,7 +3,7 @@
  * @type: Command
  * @copyright 2026 Aryandita Praftian
  * @assistant Naura Hoshino
- * @version 1.1.0
+ * @version 1.2.0
  * @description Kartu profil level per server.
  */
 
@@ -16,6 +16,7 @@ const cacheManager = require('../../src/managers/cacheManager');
 const ui = require('../../src/config/ui');
 const { getNextLevelXp, getRoleBadge } = require('./leveling');
 const rankCard = require('./rankCard');
+const xpBuffer = require('./xpBuffer');
 const { buildContainerV2, buildErrorContainerV2 } = require('../../src/utils/NauraContainerBuilder');
 
 const DEFAULT_MANNERS = 100;
@@ -83,14 +84,31 @@ module.exports = {
         }
 
         const level = levelRow ? levelRow.level : 1;
-        const xp = levelRow ? levelRow.xp : 0;
+        const storedXp = levelRow ? levelRow.xp : 0;
         const targetXp = getNextLevelXp(level);
+
+        // XP paling baru masih menunggu di penyangga Redis. Tanpa penambahan ini,
+        // kartu rank bisa tertinggal sampai satu siklus flush.
+        let pendingXp = 0;
+        try {
+            const pending = await xpBuffer.getPending(guildId, targetUser.id);
+            pendingXp = pending.xp || 0;
+        } catch (error) {
+            pendingXp = 0;
+        }
+
+        // Batas atas dijaga karena kenaikan level baru disetel begitu ambang
+        // terlampaui, dan balapan singkat bisa membuat bar melewati 100 persen.
+        const xp = Math.min(storedXp + pendingXp, targetXp);
 
         let localRank = 'N/A';
         if (levelRow) {
             try {
+                // Peringkat memakai nilai database saja. Membandingkan XP yang
+                // sudah ditambah penyangga dengan XP orang lain yang belum
+                // disetor akan menghasilkan peringkat yang tidak adil.
                 const higher = await UserLeveling.count({
-                    where: { guildId, xp: { [Op.gt]: xp } }
+                    where: { guildId, xp: { [Op.gt]: storedXp } }
                 });
                 localRank = `#${higher + 1}`;
             } catch (error) {
