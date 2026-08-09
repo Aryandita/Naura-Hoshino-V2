@@ -87,7 +87,8 @@ const GuildSettings = sequelize.define('GuildSettings', {
                 enabled: false,
                 categoryId: null,
                 logChannelId: null // Tempat mengirim transkrip saat ditutup
-            }
+            },
+            aiPersona: null // Prompt kepribadian khusus untuk server ini
         }
     },
 

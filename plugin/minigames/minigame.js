@@ -1,6 +1,8 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+/* global rowInvite, rowGame, cacheManager, row, gameStartTime, difficulty */
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, MessageFlags } = require('discord.js');
 const { logger } = require('../../src/managers/logger');
 const UserProfile = require('../../src/models/UserProfile');
+const cacheManager = require('../../src/managers/cacheManager');
 const ui = require('../../src/config/ui');
 const { buildContainerV2, buildErrorContainerV2 } = require('../../src/utils/NauraContainerBuilder');
 const { GoogleGenAI } = require('@google/genai');
@@ -193,7 +195,11 @@ async function runMinigameLogic(interaction) {
             if (opponentProfile.economy_wallet < taruhan) return sendError(`Saldo <@${opponent.id}> tidak cukup untuk taruhan ini!`);
         }
 
-        const invitePayload = buildContainerV2({
+        const rowInvite = new ActionRowBuilder().addComponents(
+new ButtonBuilder().setCustomId('duel_accept').setLabel('Terima').setStyle(ButtonStyle.Success),
+new ButtonBuilder().setCustomId('duel_decline').setLabel('Tolak').setStyle(ButtonStyle.Danger)
+);
+const invitePayload = buildContainerV2({
             accentColorHex: ui.colors.primary || '#00FFFF',
             title: '⚔️ TANTANGAN DUEL ⚔️',
             description: `<@${user.id}> menantang <@${opponent.id}> untuk duel matematika kecepatan!\n\n**Taruhan:** ${taruhan.toLocaleString()} ${coinEmoji}\n\nApakah kamu berani menerima tantangan ini?`,
@@ -201,7 +207,8 @@ async function runMinigameLogic(interaction) {
             footerText: 'Tantangan ini akan kadaluarsa dalam 30 detik.'
         });
 
-        const response = await interaction.editReply({ content: `<@${opponent.id}>`, ...invitePayload });
+        const gameStartTime = Date.now();
+const response = await interaction.editReply({ content: `<@${opponent.id}>`, ...invitePayload });
 
         const collectorInvite = response.createMessageComponentCollector({
             filter: i => i.user.id === opponent.id,
@@ -217,14 +224,18 @@ async function runMinigameLogic(interaction) {
             // Jika diterima, proses game
             await i.deferUpdate();
 
-            const n1 = Math.floor(Math.random() * 50) + 10;
+            const difficulty = 'pemula';
+const n1 = Math.floor(Math.random() * 50) + 10;
             const n2 = Math.floor(Math.random() * 50) + 10;
             const answer = n1 + n2;
 
             // Menyiapkan 4 pilihan acak
             let options = [answer, answer + 5, answer - 3, answer + 10].sort(() => Math.random() - 0.5);
 
-            const gamePayload = buildContainerV2({
+            const rowGame = new ActionRowBuilder().addComponents(
+options.map((opt, i) => new ButtonBuilder().setCustomId(`ans_${opt}`).setLabel(opt.toString()).setStyle(ButtonStyle.Primary))
+);
+const gamePayload = buildContainerV2({
                 accentColorHex: '#FF0000',
                 title: '⚡ PERTANDINGAN DIMULAI ⚡',
                 description: `Siapa yang paling cepat menekan jawaban yang benar?!\n\n**SOAL:** Berapa hasil dari **${n1} + ${n2}**?`,

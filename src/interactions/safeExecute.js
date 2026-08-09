@@ -7,7 +7,7 @@
  * sering kali tidak ditulis sama sekali) sekarang tinggal di sini.
  */
 
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { logger } = require('../managers/logger');
 
 /**

@@ -12,6 +12,7 @@ const ModMail = require('../../src/models/ModMail');
 const GuildSettings = require('../../src/models/GuildSettings');
 const ui = require('../../src/config/ui');
 const cacheManager = require('../../src/managers/cacheManager');
+const { buildContainerV2, buildErrorContainerV2 } = require('../../src/utils/NauraContainerBuilder');
 
 async function handleModmailDM(message, client) {
     const activeMail = await ModMail.findOne({ where: { userId: message.author.id, closed: false } });

@@ -70,6 +70,7 @@ const UserProfile = sequelize.define('UserProfile', {
     minigame_wordleWin: { type: DataTypes.INTEGER, defaultValue: 0 },
     minigame_duelScore: { type: DataTypes.INTEGER, defaultValue: 0 },
 
+    reputation: { type: DataTypes.INTEGER, defaultValue: 0 },
     language: { type: DataTypes.STRING, defaultValue: 'id' },
     isPremium: { type: DataTypes.BOOLEAN, defaultValue: false },
     premiumUntil: { type: DataTypes.DATE, allowNull: true },

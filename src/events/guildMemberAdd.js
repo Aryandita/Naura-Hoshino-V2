@@ -110,7 +110,7 @@ module.exports = {
             const data = await cacheManager.getGuildSettings(member.guild.id);
             settings = data && data.settings ? data.settings : null;
         } catch (error) {
-            logger.error([GuildMemberAdd] Gagal memuat pengaturan: {error.message});
+            logger.error(`[GuildMemberAdd] Gagal memuat pengaturan: ${error.message}`);
             return;
         }
         if (!settings) return;

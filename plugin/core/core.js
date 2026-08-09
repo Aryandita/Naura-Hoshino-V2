@@ -7,6 +7,7 @@
  * @description Core system, statistics, and interactive help menu for Naura with Localization.
  */
 
+/* global AbortSignal */
 const {
     SlashCommandBuilder,
     ActionRowBuilder,

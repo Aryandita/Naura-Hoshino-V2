@@ -96,6 +96,11 @@ const MIGRATIONS = [
         id: 'v12_add_index_user_pets',
         description: 'Tambah index pada userId di UserPets',
         sql: 'CREATE INDEX idx_user_pets_userId ON UserPets(userId);'
+    },
+    {
+        id: 'v13_add_reputation',
+        description: 'Tambah kolom reputation ke user_profiles',
+        sql: 'ALTER TABLE user_profiles ADD COLUMN reputation INT DEFAULT 0;'
     }
 ];
 

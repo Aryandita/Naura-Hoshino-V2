@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
+const { SlashCommandBuilder, PermissionsBitField, MessageFlags } = require('discord.js');
 const { logger } = require('../../src/managers/logger');
 const ui = require('../../src/config/ui');
 const parseDuration = require('parse-duration');

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const { logger } = require('../../src/managers/logger');
 const UserProfile = require('../../src/models/UserProfile');
 const ui = require('../../src/config/ui');

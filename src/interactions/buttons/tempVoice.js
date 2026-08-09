@@ -1,14 +1,12 @@
 'use strict';
 
-const {
-    ActionRowBuilder,
+const { ActionRowBuilder,
     ChannelType,
     ModalBuilder,
     PermissionFlagsBits,
     StringSelectMenuBuilder,
     TextInputBuilder,
-    TextInputStyle
-} = require('discord.js');
+    TextInputStyle, MessageFlags } = require('discord.js');
 
 const ui = require('../../config/ui');
 const { updateGuildSetting } = require('../../managers/guildSettingsService');

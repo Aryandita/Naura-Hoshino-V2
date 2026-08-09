@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const ui = require('../../src/config/ui');
 const { buildContainerV2 } = require('../../src/utils/NauraContainerBuilder');
 

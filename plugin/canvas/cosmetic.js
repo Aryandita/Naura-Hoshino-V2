@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 const CanvasAsset = require('../../src/models/CanvasAsset');
 const UserCosmetic = require('../../src/models/UserCosmetic');
 const UserProfile = require('../../src/models/UserProfile');

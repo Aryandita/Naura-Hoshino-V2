@@ -1,6 +1,6 @@
 'use strict';
 
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { updateGuildSetting } = require('../../managers/guildSettingsService');
 
 function successEmbed(title, description) {

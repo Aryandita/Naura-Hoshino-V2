@@ -1,3 +1,5 @@
+/* eslint-disable no-unreachable */
+const { MessageFlags } = require('discord.js');
 // Lokasi: src/events/interactions/musicButtons.js
 const { buildContainerV2, buildErrorContainerV2 } = require('../../src/utils/NauraContainerBuilder');
 const ui = require('../../src/config/ui');
@@ -49,9 +51,9 @@ module.exports = async (interaction, client) => {
                     if (res && res.tracks && res.tracks.length > 0) {
                         player.queue.add(res.tracks[0]);
                         if (!player.isPlaying && !player.isPaused) player.play();
-                        return interaction.editReply({ embeds: [actionEmbed.setDescription(`${getEmoji('nowplaying')} | Trek **[${res.tracks[0].info.title}](${res.tracks[0].info.uri})** ditambahkan!`)] }).catch(() => { });
+                        return interaction.editReply({ embeds: [buildContainerV2.setDescription(`${getEmoji('nowplaying')} | Trek **[${res.tracks[0].info.title}](${res.tracks[0].info.uri})** ditambahkan!`)] }).catch(() => { });
                     }
-                } catch (e) { return interaction.editReply({ embeds: [errorEmbed.setDescription(`❌ | Gagal memuat trek rekomendasi.`)] }).catch(() => { }); }
+                } catch (e) { return interaction.editReply({ embeds: [buildErrorContainerV2.setDescription(`❌ | Gagal memuat trek rekomendasi.`)] }).catch(() => { }); }
                 return;
 
             case 'music_filter':
@@ -65,35 +67,22 @@ module.exports = async (interaction, client) => {
                             interaction.member.roles.cache.some(r => r.name.toLowerCase() === 'dj');
                 
                 if (!isRequester && !isDJ) {
-                    return interaction.editReply({ embeds: [errorEmbed.setDescription(`🛡️ | Hanya peminta lagu saat ini atau Staff (DJ) yang diizinkan.`)] });
+                    return interaction.editReply({ embeds: [buildErrorContainerV2.setDescription(`🛡️ | Hanya peminta lagu saat ini atau Staff (DJ) yang diizinkan.`)] });
                 }
 
+                const { applyLavalinkFilter, premiumFilters } = require('../../plugin/music/musicFilters');
                 const filterType = interaction.values[0];
 
-                // Premium VIP filter check
-                const premiumFilters = ['nightcore', 'vaporwave', '8d', 'karaoke'];
                 if (premiumFilters.includes(filterType)) {
                     let [profile] = await UserProfile.findOrCreate({ where: { userId: interaction.user.id } });
                     if (!profile.isPremium || !profile.premiumUntil || profile.premiumUntil <= new Date()) {
-                        return interaction.editReply({ embeds: [errorEmbed.setTitle('💎 Fitur V.I.P Terkunci').setDescription(`❌ | Filter **${filterType.toUpperCase()}** adalah fitur eksklusif Premium! Gunakan \`/premium\` untuk berlangganan.`)] });
+                        return interaction.editReply({ embeds: [buildErrorContainerV2({ title: '💎 Fitur V.I.P Terkunci', description: `❌ | Filter **${filterType.toUpperCase()}** adalah fitur eksklusif Premium! Gunakan \`/premium\` untuk berlangganan.` })] });
                     }
                 }
 
-                const applyFilter = (filterPayload, name) => {
-                    player.currentFilterName = name;
-                    player.node.rest.updatePlayer({ guildId: player.guildId, data: { filters: filterPayload } });
-                };
-
-                if (filterType === 'clear') applyFilter({}, 'Original Audio');
-                if (filterType === 'bassboost') applyFilter({ equalizer: [{ band: 0, gain: 0.6 }, { band: 1, gain: 0.6 }, { band: 2, gain: 0.4 }] }, 'Sub-Bassboost');
-                if (filterType === 'nightcore') applyFilter({ timescale: { speed: 1.2, pitch: 1.2, rate: 1 } }, 'Nightcore Shift');
-                if (filterType === 'vaporwave') applyFilter({ timescale: { speed: 0.8, pitch: 0.8, rate: 1 } }, 'Vaporwave Reverb');
-                if (filterType === '8d') applyFilter({ rotation: { rotationHz: 0.2 } }, '8D Surround');
-                if (filterType === 'pop') applyFilter({ tremolo: { frequency: 2.0, depth: 0.5 } }, 'Pop / Tremolo');
-                if (filterType === 'karaoke') applyFilter({ karaoke: { level: 1.0, monoLevel: 1.0, filterBand: 220.0, filterWidth: 100.0 } }, 'Karaoke Mode');
-
+                applyLavalinkFilter(player, filterType);
                 client.musicManager.updatePanelEmbed(player);
-                return interaction.editReply({ embeds: [actionEmbed.setDescription(`${getEmoji('filter')} | Filter DSP Audio diubah ke: **${player.currentFilterName}**.`)] });
+                return interaction.editReply({ embeds: [buildContainerV2.setDescription(`${getEmoji('filter')} | Filter DSP Audio diubah ke: **${player.currentFilterName}**.`)] });
         }
         return;
     }
@@ -122,7 +111,7 @@ module.exports = async (interaction, client) => {
         case 'music_save':
             try {
                 let [userProfile] = await UserProfile.findOrCreate({ where: { userId: interaction.user.id } });
-                if (!player.currentTrack || !player.currentTrack.info) return interaction.editReply({ embeds: [errorEmbed.setDescription(`❌ | Tidak ada data trek valid.`)] });
+                if (!player.currentTrack || !player.currentTrack.info) return interaction.editReply({ embeds: [buildErrorContainerV2.setDescription(`❌ | Tidak ada data trek valid.`)] });
 
                 const savedData = `${player.currentTrack.info.title} | ${player.currentTrack.info.uri}`;
                 let rawPl = userProfile.music_playlist;
@@ -177,13 +166,13 @@ module.exports = async (interaction, client) => {
             player.isAutoplayMode = !player.isAutoplayMode;
             if (player.isAutoplayMode) player.setLoop('NONE');
             client.musicManager.updatePanelEmbed(player);
-            return interaction.editReply({ embeds: [actionEmbed.setDescription(`${getEmoji('musicAutoplay')} | Autoplay AI **${player.isAutoplayMode ? 'DIAKTIFKAN' : 'DIMATIKAN'}**.`)] });
+            return interaction.editReply({ embeds: [buildContainerV2.setDescription(`${getEmoji('musicAutoplay')} | Autoplay AI **${player.isAutoplayMode ? 'DIAKTIFKAN' : 'DIMATIKAN'}**.`)] });
         }
 
         case 'music_shuffle':
             player.queue.shuffle();
             client.musicManager.updatePanelEmbed(player);
-            return interaction.editReply({ embeds: [actionEmbed.setDescription(`${getEmoji('musicShuffle')} | Antrean berhasil diacak (shuffled)!`)] });
+            return interaction.editReply({ embeds: [buildContainerV2.setDescription(`${getEmoji('musicShuffle')} | Antrean berhasil diacak (shuffled)!`)] });
 
         case 'music_loop':
             const modes = { 'NONE': 'TRACK', 'TRACK': 'QUEUE', 'QUEUE': 'NONE' };
@@ -191,7 +180,7 @@ module.exports = async (interaction, client) => {
             if (player.loop !== 'NONE') player.isAutoplayMode = false;
             client.musicManager.updatePanelEmbed(player);
             const modeNames = { 'NONE': 'Nonaktif', 'TRACK': 'Ulangi 1 Trek', 'QUEUE': 'Ulangi Seluruh Antrean' };
-            return interaction.editReply({ embeds: [actionEmbed.setDescription(`${getEmoji('musicLoop')} | Looping diatur ke: **${modeNames[player.loop]}**.`)] });
+            return interaction.editReply({ embeds: [buildContainerV2.setDescription(`${getEmoji('musicLoop')} | Looping diatur ke: **${modeNames[player.loop]}**.`)] });
 
         case 'music_247': {
             const cacheManager = require('../../src/managers/cacheManager');
@@ -234,27 +223,27 @@ module.exports = async (interaction, client) => {
                 client.musicManager.updatePanelEmbed(player);
             }
 
-            return interaction.editReply({ embeds: [actionEmbed.setDescription(`${getEmoji('music247')} | Mode Siaga 24/7 **${player.is247 ? 'DIAKTIFKAN' : 'DIMATIKAN'}**.`)] });
+            return interaction.editReply({ embeds: [buildContainerV2.setDescription(`${getEmoji('music247')} | Mode Siaga 24/7 **${player.is247 ? 'DIAKTIFKAN' : 'DIMATIKAN'}**.`)] });
         }
 
         case 'music_voldown':
             player.setVolume(Math.max(10, player.volume - 10));
             client.musicManager.updatePanelEmbed(player);
-            return interaction.editReply({ embeds: [actionEmbed.setDescription(`${getEmoji('musicVolDown')} | Volume diturunkan ke **${player.volume}%**.`)] });
+            return interaction.editReply({ embeds: [buildContainerV2.setDescription(`${getEmoji('musicVolDown')} | Volume diturunkan ke **${player.volume}%**.`)] });
 
         case 'music_volup':
             player.setVolume(Math.min(100, player.volume + 10));
             client.musicManager.updatePanelEmbed(player);
-            return interaction.editReply({ embeds: [actionEmbed.setDescription(`${getEmoji('musicVolUp')} | Volume dinaikkan ke **${player.volume}%**.`)] });
+            return interaction.editReply({ embeds: [buildContainerV2.setDescription(`${getEmoji('musicVolUp')} | Volume dinaikkan ke **${player.volume}%**.`)] });
 
         case 'music_pause':
             player.pause(!player.isPaused);
             client.musicManager.updatePanelEmbed(player);
-            return interaction.editReply({ embeds: [actionEmbed.setDescription(`${getEmoji('musicPlayPause')} | Transmisi audio **${player.isPaused ? 'DIJEDA' : 'DILANJUTKAN'}**.`)] });
+            return interaction.editReply({ embeds: [buildContainerV2.setDescription(`${getEmoji('musicPlayPause')} | Transmisi audio **${player.isPaused ? 'DIJEDA' : 'DILANJUTKAN'}**.`)] });
 
         case 'music_skip':
             safeStopTrack(player);
-            return interaction.editReply({ embeds: [actionEmbed.setDescription(`${getEmoji('musicSkip')} | Melewati trek saat ini. Bersiap memutar selanjutnya...`)] });
+            return interaction.editReply({ embeds: [buildContainerV2.setDescription(`${getEmoji('musicSkip')} | Melewati trek saat ini. Bersiap memutar selanjutnya...`)] });
 
         case 'music_stop': {
             player.queue.clear();
@@ -263,11 +252,11 @@ module.exports = async (interaction, client) => {
                 safeStopTrack(player);
                 const MusicUIManager = require('../../plugin/music/MusicUIManager');
                 await MusicUIManager.renderIdle247Panel(client.musicManager, player);
-                return interaction.editReply({ embeds: [actionEmbed.setDescription(`${getEmoji('music247')} | Musik dihentikan. Mode 24/7 aktif (Siaga Pasif 0kbps).`)] });
+                return interaction.editReply({ embeds: [buildContainerV2.setDescription(`${getEmoji('music247')} | Musik dihentikan. Mode 24/7 aktif (Siaga Pasif 0kbps).`)] });
             } else {
                 player.is247 = false;
                 player.destroy();
-                return interaction.editReply({ embeds: [errorEmbed.setDescription(`${getEmoji('musicStop')} | Transmisi dihentikan. Naura pamit dari Voice Channel.`)] });
+                return interaction.editReply({ embeds: [buildErrorContainerV2.setDescription(`${getEmoji('musicStop')} | Transmisi dihentikan. Naura pamit dari Voice Channel.`)] });
             }
         }
     }

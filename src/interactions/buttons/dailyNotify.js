@@ -1,5 +1,5 @@
 'use strict';
-
+const { MessageFlags } = require('discord.js');
 const UserProfile = require('../../models/UserProfile');
 
 module.exports = [

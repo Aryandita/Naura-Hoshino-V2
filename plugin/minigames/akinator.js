@@ -11,7 +11,7 @@ if (process.env.NODE_EXTRA_CA_CERTS) {
     }
 }
 
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, MessageFlags } = require('discord.js');
 const { logger } = require('../../src/managers/logger');
 
 let Aki;

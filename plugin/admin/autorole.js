@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 const GuildSettings = require('../../src/models/GuildSettings');
 const cacheManager = require('../../src/managers/cacheManager');
 const ui = require('../../src/config/ui');

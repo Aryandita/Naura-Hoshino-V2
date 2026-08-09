@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 const { logger } = require('../../src/managers/logger');
 const CanvasAsset = require('../../src/models/CanvasAsset');
 const env = require('../../src/config/env');

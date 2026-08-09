@@ -7,6 +7,7 @@ const UserPlaylist = require('../../src/models/UserPlaylist');
 const spotifyHelper = require('../../plugin/music/spotifyHelper');
 const { generateMusicProfileImage } = require('../../plugin/canvas/canvasHelper');
 const { buildContainerV2, buildErrorContainerV2 } = require('../../src/utils/NauraContainerBuilder');
+const { getPlatformIcon } = require('../../plugin/canvas/CanvasUtils');
 
 const formatDuration = (ms) => {
     if (!ms || isNaN(ms)) return '0:00';
@@ -35,8 +36,9 @@ async function runMusicLogic(client, user, member, guild, channel, subcommand, a
         if (isSlash && args.target) target = args.target;
         if (target.bot) {
             const errPayload = buildErrorContainerV2({ title: 'Akses Ditolak', description: `${eError} | Bot tidak memiliki kartu profil musik!`, footerText: ui.getFooter('music') });
-            return sendReply(errPayload);
+            return sendReply(errPayload, true);
         }
+        try {
             const cacheManager = require('../../src/managers/cacheManager');
             const profile = await cacheManager.getUserProfile(target.id);
             const calculateTop5 = (jsonInput) => {
@@ -552,14 +554,7 @@ async function runMusicLogic(client, user, member, guild, channel, subcommand, a
         };
 
         const initialPayload = renderQueuePage(currentPage);
-        let qMsg;
-        if (interaction && (interaction.deferred || interaction.editReply)) {
-            qMsg = await interaction.editReply(initialPayload);
-        } else if (message) {
-            qMsg = await message.reply(initialPayload);
-        } else {
-            qMsg = await interaction.reply({ ...initialPayload, fetchReply: true });
-        }
+        const qMsg = await sendReply({ ...initialPayload, fetchReply: true });
 
         if (totalPages <= 1 || !qMsg || !qMsg.createMessageComponentCollector) return;
 
@@ -571,7 +566,7 @@ async function runMusicLogic(client, user, member, guild, channel, subcommand, a
         collector.on('collect', async i => {
             if (i.user.id !== user.id) {
                 const errPayload = buildErrorContainerV2({ title: 'Akses Ditolak', description: '❌ Hanya pemanggil command yang bisa mengubah halaman.', footerText: ui.getFooter('music') });
-                return i.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
+                return i.reply({ ...errPayload, flags: require('discord.js').MessageFlags.Ephemeral });
             }
 
             if (i.customId.startsWith('queue_prev_')) {

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const UserReminder = require('../../src/models/UserReminder');
 const ui = require('../../src/config/ui');
 const parseDuration = require('parse-duration');

@@ -10,7 +10,7 @@
  * Logika masing-masing tombol, select menu, dan modal ada di src/interactions/.
  */
 
-const { Events } = require('discord.js');
+const { Events, MessageFlags } = require('discord.js');
 const { logger } = require('../managers/logger');
 const languageManager = require('../managers/languageManager');
 const rateLimiter = require('../utils/rateLimiter');

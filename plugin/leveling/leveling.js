@@ -152,7 +152,7 @@ async function awardXpDirect(user, guild, currentChannel, precomputedGain = null
     const cooldownKey = `xp_cooldown_${guild.id}_${user.id}`;
 
     // If Redis is ready, use it for cooldown tracking and possible XP buffering
-    if (redisReady) {
+    if (redisManager.isReady()) {
         await redisManager.setCache(cooldownKey, true, Math.floor(CONFIG.MSG_COOLDOWN / 1000));
         // 1. Fetch current profile from DB
         let profile = await UserLeveling.findOne({ where: { userId: user.id, guildId: guild.id } });

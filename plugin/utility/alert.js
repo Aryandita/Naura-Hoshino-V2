@@ -1,5 +1,4 @@
-const { 
-    SlashCommandBuilder, 
+const { SlashCommandBuilder, 
     PermissionFlagsBits, 
     EmbedBuilder, 
     ActionRowBuilder, 
@@ -10,8 +9,7 @@ const {
     TextInputBuilder,
     TextInputStyle,
     ChannelSelectMenuBuilder,
-    ChannelType
-} = require('discord.js');
+    ChannelType, MessageFlags } = require('discord.js');
 const SocialAlert = require('../../src/models/SocialAlert');
 const ui = require('../../src/config/ui');
 const { buildContainerV2 } = require('../../src/utils/NauraContainerBuilder');

@@ -177,16 +177,6 @@ class CanvasUtils {
         ctx.closePath();
         ctx.restore();
 
-        // CUSTOM BORDER LAYER
-        if (customBorderUrl) {
-            try {
-                const borderImage = await loadImage(customBorderUrl);
-                ctx.drawImage(borderImage, 0, 0, canvas.width, canvas.height);
-            } catch (err) {
-                logger.error("[CANVAS] Gagal meload custom border:", err);
-            }
-        }
-
         return canvas;
     }
 

@@ -1,5 +1,5 @@
 'use strict';
-
+const { MessageFlags } = require('discord.js');
 module.exports = [
     {
         prefix: 'autorole_',
