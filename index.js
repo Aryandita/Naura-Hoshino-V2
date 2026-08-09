@@ -162,6 +162,16 @@ async function shutdown() {
     if (forceExit.unref) forceExit.unref();
 
     try {
+        // Penyangga XP hidup di Redis, jadi harus disetor lebih dulu selagi koneksi
+        // database dan Redis masih terbuka. Bila dilewati, XP dari lima menit
+        // terakhir sebelum restart akan hilang.
+        const xpBuffer = require('./plugin/leveling/xpBuffer');
+        if (xpBuffer && xpBuffer.flush) {
+            console.log('[-] Menyetorkan penyangga XP ke database...');
+            xpBuffer.stop();
+            await xpBuffer.flush();
+        }
+
         // Kosongkan antrean tulis cache lebih dulu agar tidak ada data yang hilang.
         const cacheManager = require('./src/managers/cacheManager');
         if (cacheManager && cacheManager.pendingWrites > 0) {

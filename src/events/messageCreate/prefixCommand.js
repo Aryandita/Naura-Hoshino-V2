@@ -141,7 +141,9 @@ module.exports = async function handlePrefixCommand(message, client) {
 
     if (!message.content.toLowerCase().startsWith(prefix.toLowerCase())) {
         if (message.guild) {
-            await awardXp(message.author, message.guild, message.channel).catch(() => {});
+            // Isi pesan wajib diteruskan. Tanpa argumen keempat, awardXp menolak
+            // memberi XP karena penyaring panjang minimum membaca teks kosong.
+            await awardXp(message.author, message.guild, message.channel, message.content).catch(() => {});
         }
         return true;
     }
