@@ -18,6 +18,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 | Verifikasi sebelum klaim | Status di roadmap ini wajib dicek ke kode, bukan ke issue tracker. Sprint 0 dan Sprint 1 membuktikan tracker bisa tertinggal jauh dari kenyataan. |
 | Target deploy | Panel Pterodactyl dengan satu perintah start yang bisa diubah (`CMD_RUN`). Nilainya tetap `npm start`; urutan migrate-lalu-start dijamin oleh npm lifecycle `prestart`, bukan oleh perintah manual. |
 | Mata uang paling langka | Naura Coupon. Disimpan di kolom `coupons` (bukan JSON) supaya bisa dipotong atomik dan tidak pernah hilang. |
+| Intent Discord | Tujuh intent aktif, semuanya punya event pemakai nyata. `GuildPresences` **sengaja mati**, dan konsekuensinya `presenceUpdate.js` dihapus, bukan dibiarkan sebagai kode mati. |
 
 ## Legenda
 
@@ -99,11 +100,26 @@ Sama seperti Sprint 0, verifikasi kode menunjukkan sebagian besar sprint ini **s
   - [ ] Hapus `continue-on-error` pada `format:check` setelah satu kali `npm run format` menyeluruh.
   - [ ] Hapus `continue-on-error` pada `npm audit` setelah kerentanan yang ada dibersihkan.
   - [ ] Aktifkan Dependabot dan secret scanning.
+  - [ ] **Tambahkan step yang membuktikan repo bisa di-boot dari hasil clone bersih.** Cukup `node -e "require('./index.js')"` tidak bisa dipakai karena akan benar-benar login, jadi pakai pemeriksaan resolusi modul: telusuri seluruh `require` relatif di `index.js`, `shard.js`, `src/`, dan `plugin/`, lalu pastikan setiap targetnya benar-benar ada di dalam git. Ini yang akan menangkap kasus berkas hilang seperti di bawah sebelum sampai ke produksi.
 - [ ] **Tambahkan test otomatis** (issue #15) - **berjalan**
   - [x] `src/managers/dbMigrator.test.js` menjaga keunikan ID migrasi, nama tabel ledger, urutan versi yang selalu naik, dan urutan `v5` sebelum `v6`. Penjagaan urutan itu penting karena `v6` menambah kupon ke nilai yang sudah ada, jadi menjalankannya dua kali akan menggandakan kupon setiap pemain.
   - [x] `src/utils/componentBudget.test.js` menjaga perhitungan komponen bersarang, pemangkasan teks, dan jaminan bahwa tombol tidak pernah dibuang.
   - [x] `plugin/survival/inventoryHelper.test.js` menjaga perhitungan tumpukan barang, pengambilan lintas tumpukan, penolakan saat jumlah tidak cukup, dan jaminan bahwa inventory asli tidak ikut berubah.
   - [ ] Lanjutkan ke logika murni yang paling mahal bila salah: rumus XP dan level, kalkulasi ekonomi, `RateLimiter`, dan parser durasi.
+
+---
+
+## 🔴 Perbaikan darurat: tiga manager hilang dari git (Sprint 2)
+
+Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat repo tidak bisa dipakai orang lain.
+
+- [x] **`src/managers/musicManager.js`, `dbSeeder.js`, dan `aiManager.js` tidak ada di `main`, padahal `index.js` me-require dua di antaranya di baris atas.**
+  - Akibatnya `node index.js` mati dengan `MODULE_NOT_FOUND` sebelum sempat login, sehingga hasil `git clone` mustahil di-boot. Bot di panel tetap hidup karena `git pull` tidak menghapus berkas lokal yang tidak terlacak git, jadi satu-satunya salinan berkas itu ada di disk panel dan akan ikut hilang bila volumenya hilang.
+  - Ketiganya ditarik kembali dari commit awal `b7dbfd3`.
+  - **Pelajaran:** status "berjalan di panel" bukan bukti "ada di git". Karena itu pemeriksaan resolusi modul ditambahkan ke daftar CI di atas.
+- [x] **`src/events/presenceUpdate.js` dihapus.** Intent `GuildPresences` tidak aktif, jadi berkas itu tidak pernah terpanggil sama sekali.
+- [x] **Bug boot di `aiManager.js` diperbaiki sekalian.** Constructor-nya menjalankan `this.model = this.genAI.models` tanpa penjagaan. Bila `GEMINI_API_KEY` kosong, `this.genAI` bernilai `undefined` dan baris itu melempar `TypeError`. Karena berkas ini mengekspor instance (`module.exports = new AIManager()`), kegagalannya terjadi saat require dan mematikan seluruh proses, bukan sekadar mematikan fitur AI. Sekarang Gemini diakses lewat `getGenAI()` yang mengembalikan `null` dengan sopan, dan Verba serta Ollama tetap jalan.
+- [x] **Timer `setInterval` pembersih sesi AI diberi `unref()`.** Tanpa itu proses menolak mati saat shutdown sampai watchdog memaksanya keluar, dan ini melanggar aturan 1.9 di `AGENTS.md`.
 
 ---
 
@@ -114,11 +130,22 @@ Sama seperti Sprint 0, verifikasi kode menunjukkan sebagian besar sprint ini **s
   - Solusinya: urutan pindah ke dalam `package.json`. `prestart` menjalankan `node scripts/migrate.js`, jadi `npm start` mustahil menyala di atas skema separuh jalan. Migrasi yang gagal keluar dengan kode 1 dan npm membatalkan `start`.
   - `SKIP_DB_MIGRATE=1` dan `npm run start:no-migrate` tersedia sebagai pintu darurat. Keduanya tidak boleh menjadi pengaturan tetap, karena kolom baru tidak akan pernah dibuat.
   - Syarat lain: image panel wajib Node 24 atau lebih baru, dan `.cache/` harus bertahan antar restart.
-- [ ] **Lazy-load dependensi berat** (issue #16)
-  - **Cara Implementasi:** Pindahkan `@xenova/transformers`, `tesseract.js`, `yt-dlp-wrap`, dan `ffmpeg-static` ke `await import()` di dalam fungsi yang memakainya, bukan di top-level `require`.
-- [ ] **Batasi cache discord.js** dengan `Options.cacheWithLimits`, dan audit intents. Matikan `GuildPresences` bila tidak benar-benar dipakai.
+- [x] **Batasi cache discord.js dan audit intents**
+  - Batas cache dipusatkan di `src/config/clientOptions.js` lewat `Options.cacheWithLimits`, disebar di atas `Options.DefaultMakeCacheSettings`. Penyebaran itu wajib, karena `cacheWithLimits` tidak menggabungkan nilai bawaan sendiri dan manager yang tidak disebut akan kembali tanpa batas.
+  - Pesan dibatasi 100 per channel dengan penyapu umur 30 menit, member 200 per guild, user 500, dan tujuh manager yang tidak pernah dibaca dari cache diset 0. Nilai 0 tidak mematikan fitur karena `fetch()` tetap menembak REST API.
+  - `GuildMemberManager` dan `UserManager` memakai `keepOverLimit` untuk entri bot sendiri. Tanpa itu `client.user` bisa tergusur dan pemeriksaan izin bot sendiri gagal secara sporadis, yang termasuk bug paling sulit dilacak.
+  - Member dan user **tidak** disapu berdasarkan umur, hanya dibatasi ukurannya, karena menyapu member berisiko membuang member yang sedang berada di voice channel dan itu merusak pelacakan temp voice.
+  - `ReactionUserManager` sengaja dibiarkan tanpa batas sampai handler reaksi diaudit apakah membaca `reaction.users.cache`. Memutus referensi reaksi bisa memecahkan paginasi menu yang bergantung pada cache Discord.
+  - Audit intent hasilnya nol pengurangan: ketujuh intent punya event pemakai nyata, jadi alasannya didokumentasikan di kode. Temuan kebalikannya justru `GuildPresences` yang mati sementara `presenceUpdate.js` masih ada, dan berkas itu sudah dihapus.
+- [ ] **Lazy-load dependensi berat** (issue #16) - **sebagian selesai**
+  - **Koreksi rencana awal:** daftar lama menyebut `@xenova/transformers` dan `tesseract.js`, padahal keduanya **tidak ada di `package.json`**. Daftar yang benar adalah dependensi berat yang memang terpasang.
+  - [x] `poru` tidak lagi di-require di baris atas `musicManager.js`. Instance Poru dibuat lewat `ensurePoru()` saat Lavalink dinyalakan, dan getter `poru` sengaja tidak membuat instance baru supaya pemeriksaan saat shutdown di `index.js` tidak melahirkan koneksi yang tidak pernah ditutup.
+  - [x] `@google/genai` dan `ollama` di `aiManager.js` di-require saat pemakaian pertama, bukan saat boot. Sebelumnya setiap shard membayar biaya muat keduanya meski tidak ada satu pun permintaan AI sepanjang uptime.
+  - [ ] `@napi-rs/canvas`. Ini **tidak bisa dikerjakan setengah jalan**: selama masih ada satu berkas yang me-require-nya di baris atas, modul native tetap dimuat saat boot dan pekerjaan di berkas lain tidak menghasilkan penghematan apa pun. Jadi migrasinya harus mencakup seluruh 13 berkas di `plugin/canvas/` dalam satu langkah: `Canvas.js`, `CanvasUtils.js`, `achievementCanvas.js`, `adminCosmetic.js`, `battleCanvas.js`, `canvasHelper.js`, `cardCanvas.js`, `cosmetic.js`, `duelCanvas.js`, `imageManager.js`, `nowplayingCanvas.js`, `petCanvas.js`, dan `profileCanvas.js`. Rencananya satu modul `plugin/canvas/canvasRuntime.js` sebagai satu-satunya pintu ke SDK, sekaligus tempat registrasi font dijalankan sekali.
+  - [ ] `ffmpeg-static`, `fluent-ffmpeg`, `yt-dlp-wrap`, `discord-html-transcripts`, `aki-api`, dan `spotify-url-info`. Semuanya hanya dipakai satu atau dua command, jadi cocok dipindah ke `require()` di dalam fungsi.
 - [ ] **Buffer XP di Redis** dengan `HINCRBY`, flush berkala ke MySQL. Ini menghapus mayoritas write di `messageCreate`.
 - [ ] **Optimasi Canvas** (issue #16): cache hasil `loadImage`, cache font, dan batasi konkurensi render ke 2 sampai 3.
+  - Catatan: pola caching hasil render sudah ada contohnya di `plugin/leveling/rankCard.js`. Berkas itu tidak menyentuh SDK canvas sama sekali, hanya menerima fungsi `render`, dan kunci cache-nya sengaja memakai petak lima persen bukan XP mentah supaya bar yang terlihat sama boleh memakai gambar yang sama. Pola ini yang sebaiknya ditiru berkas canvas lain.
 - [ ] **Caching hasil render Canvas via Redis:** key `canvas:profile:{userId}`, simpan buffer sebagai base64, TTL 300 detik.
 - [ ] **Tambahkan indeks database** pada kolom yang sering difilter (`guildId`, `userId`, kolom tanggal cooldown).
 - [x] **Optimasi connection pool:** selesai di Sprint 0 lewat `DB_POOL_BUDGET` yang dibagi `TOTAL_SHARDS`. Tinjau ulang angkanya setelah tahu `max_connections` MySQL produksi yang sebenarnya.
@@ -133,7 +160,7 @@ Sama seperti Sprint 0, verifikasi kode menunjukkan sebagian besar sprint ini **s
   - Stub `sqlite3` di sana punya `all()` yang selalu melempar error, jadi jalur itu tidak pernah bisa memulihkan data. Karena Node sudah dipatok `>= 24`, `node:sqlite` selalu tersedia dan cabang itu bisa dihapus.
 - [ ] **Amankan dashboard** (issue #18, bagian dashboard): `helmet`, `express-rate-limit`, CORS allowlist, cookie `secure` dan `httpOnly`, `SESSION_SECRET` wajib, pengecekan izin `ManageGuild` per guild, dan upgrade ke Express 5.
 - [ ] **Pecah `src/dashboard/server.js` (64 KB)** (issue #14) menjadi `middleware/`, `routes/`, dan `sockets/`.
-- [ ] **Refactor `imageManager.js` (32 KB)** menjadi `src/utils/canvas/profileRenderer.js`, `levelCardRenderer.js`, dan seterusnya.
+- [ ] **Refactor `plugin/canvas/imageManager.js` (32 KB)** menjadi beberapa renderer terpisah. Kerjakan bersamaan dengan migrasi `canvasRuntime.js` di atas supaya berkas besar itu tidak dibongkar dua kali.
 - [ ] **Tinjau `voiceStateUpdate.js` (23 KB) dan `ready.js` (18,6 KB)**
   - Dua berkas ini sekarang menjadi yang terbesar di `src/events/` setelah `interactionCreate.js` dipecah. Pola yang sama (registry plus handler kecil) layak diterapkan di sini.
 - [ ] **Bersihkan dependensi ganda dan usang**
@@ -143,6 +170,8 @@ Sama seperti Sprint 0, verifikasi kode menunjukkan sebagian besar sprint ini **s
   - `sqlite3`: **tetap dipertahankan** sebagai fallback darurat, tetapi pertimbangkan pindah ke `better-sqlite3` agar tidak perlu native build saat instalasi.
   - `@discordjs/voice` dan `libsodium-wrappers`: hapus bila tidak ada TTS atau voice di luar Lavalink.
   - `yt-dlp-wrap`: lepaskan dari jalur musik. Lavalink sudah menangani sumber audio, dan ini menambah risiko ToS serta biaya build.
+- [ ] **Perbaiki dukungan multi node Lavalink yang sudah mati diam-diam**
+  - `musicManager.buildNodes()` masih memisah `LAVA_HOST`, `LAVA_PORT`, `LAVA_PASS`, dan `LAVA_SECURE` dengan koma, tetapi `src/config/env.js` sudah menormalkan `LAVA_PORT` dengan `parseInt` dan `LAVA_SECURE` menjadi boolean. Jadi selama nilainya lewat `env.js`, isi koma hanya berdampak pada host dan password. Putuskan: dukung penuh multi node lewat satu variabel JSON, atau buang sisa pemisah koma itu supaya tidak menyesatkan.
 
 ---
 
@@ -202,10 +231,14 @@ Sama seperti Sprint 0, verifikasi kode menunjukkan sebagian besar sprint ini **s
 | Migrasi berjalan di dalam boot sequence dan di semua shard | Skema separuh jalan atau deadlock saat startup | **Selesai** di Sprint 0 lewat `scripts/migrate.js`, dan di Sprint 2 dijamin urutannya oleh `prestart` |
 | Ekonomi tanpa penulisan atomik | Inflasi tak terkendali, ekonomi harus direset | **Selesai untuk survival:** kolom saldo, kolom kupon, kolom JSON inventory, tiket dungeon, serta jalur `chop`, `mine`, dan `fish`. Aturan lint baru menahan pola lama supaya tidak kembali. Sisa: audit modul non-survival (issue #17) |
 | Modul menyalin fungsi penulisan sendiri, bukan memakai helper bersama | Perbaikan di lapisan aman tidak sampai ke pemakainya, dan bug yang sudah ditutup muncul lagi di tempat lain | Ditemukan di `chop`, `mine`, dan `fish`, yang masing-masing punya `addItem()` lokal. Aturan lint sekarang menandai jalur pintasnya, bukan mengandalkan ingatan |
+| Berkas ada di disk panel tetapi tidak ada di git | Repo tidak bisa di-boot dari hasil clone, dan satu-satunya salinan kode hilang bila volume panel hilang | Tiga manager sudah ditarik kembali dari commit awal. Pencegahannya: step CI yang memverifikasi seluruh `require` relatif benar-benar ada di dalam git |
+| Modul singleton yang melempar error saat di-require | Satu variabel env kosong mematikan seluruh proses, bukan sekadar satu fitur | `aiManager.js` sudah diperbaiki. Aturan umumnya: constructor singleton tidak boleh mendereferensi klien yang bisa gagal dibuat |
 | Migrasi data yang menambah nilai ke dirinya sendiri | Kupon setiap pemain berganda bila migrasi terulang | Ledger `schema_migrations` mencatat ID yang sudah dijalankan, dan test menjaga urutan `v5` sebelum `v6` |
 | Webhook premium tanpa `timingSafeEqual` dan idempotency | Premium gratis, kebocoran pendapatan | **Selesai** di `webhooks.js` (issue #18, bagian webhook) |
 | Cache setting basi hingga 5 menit dan lintas shard | Admin kehilangan kepercayaan pada panel setup | **Selesai** lewat hook model dan kanal `cache:invalidate` (issue #20) |
 | Total koneksi database melampaui `max_connections` | Error `Too many connections` yang tampak tidak berhubungan dengan sharding | **Selesai** lewat `DB_POOL_BUDGET` dibagi `TOTAL_SHARDS` |
+| Cache discord.js tumbuh mengikuti uptime, bukan beban kerja | RAM panel habis setelah beberapa hari tanpa sebab yang jelas | **Selesai** lewat `Options.cacheWithLimits` dan penyapu di `clientOptions.js`. Pantau apakah batas pesan 100 masih cukup untuk log edit dan hapus |
+| Membatasi cache tanpa `keepOverLimit` untuk bot sendiri | Pemeriksaan izin bot gagal sporadis dan sangat sulit dilacak | Entri `client.user` dijaga eksplisit di `GuildMemberManager` dan `UserManager` |
 | Payload Container V2 melewati 40 komponen atau 4000 karakter | Seluruh balasan hilang dengan `Invalid Form Body` | **Selesai** lewat `componentBudget.js` di Sprint 1 |
 | Penambal prototype `ephemeralPatch.js` | Upgrade discord.js bisa mematahkannya secara senyap | Lint menahan pemakaian baru, log mencatat pemanggil lama, lalu penambal dihapus |
 | `SKIP_DB_MIGRATE` dibiarkan menyala di panel | Kolom baru tidak pernah dibuat, transaksi kupon gagal tanpa sebab yang jelas | Hanya untuk keadaan darurat, dan log migrasi menuliskannya dengan huruf besar |
