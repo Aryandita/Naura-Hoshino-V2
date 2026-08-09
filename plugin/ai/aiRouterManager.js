@@ -19,13 +19,16 @@ class AIRouterManager {
         let replyText = '';
         let usedEngine = 'Verba AI';
 
-        if (settings && settings.settings && settings.settings.ai) {
-            const aiSettings = settings.settings.ai;
-            if (aiSettings.customPersona) {
-                persona += `\n[Sifat Khusus Server]: ${aiSettings.customPersona}`;
+        if (settings && settings.settings) {
+            const set = settings.settings;
+            if (set.ai && set.ai.customPersona) {
+                persona += `\n[Sifat Khusus Server]: ${set.ai.customPersona}`;
             }
-            if (aiSettings.serverKnowledge) {
-                persona += `\n[Aturan/FAQ Server (Jadikan Pedoman Menjawab)]: ${aiSettings.serverKnowledge}`;
+            if (set.ai && set.ai.serverKnowledge) {
+                persona += `\n[Aturan/FAQ Server (Jadikan Pedoman Menjawab)]: ${set.ai.serverKnowledge}`;
+            }
+            if (set.aiPersona) {
+                persona += `\n[Persona/Sifat Khusus Tambahan]: ${set.aiPersona}`;
             }
         }
 

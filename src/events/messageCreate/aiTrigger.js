@@ -57,7 +57,8 @@ module.exports = async function handleAiTrigger(message, client, ctx) {
     const prompt = persona.build({
         username: message.author.username,
         isOwner,
-        isAdmin
+        isAdmin,
+        aiPersona: ctx?.settings?.settings?.aiPersona || null
     });
 
     await AIRouterManager.processMessage(
