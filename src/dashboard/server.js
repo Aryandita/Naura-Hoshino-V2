@@ -32,6 +32,8 @@ const session = require('express-session');
 const passport = require('passport');
 const DiscordStrategy = require('passport-discord').Strategy;
 const { Server } = require('socket.io');
+const helmet = require('helmet');
+const { rateLimit } = require('express-rate-limit');
 
 const { logger } = require('../managers/logger');
 const { requireLogin, requireApiLogin } = require('./middleware/auth');
@@ -88,21 +90,12 @@ module.exports = (client) => {
     if (isProduction) webApp.set('trust proxy', 1);
 
     // --- Header keamanan dasar ---
-    // Ditulis manual, bukan lewat helmet, supaya tidak ada dependensi baru yang
-    // harus dipasang di server sebelum perbaikan ini bisa dipakai.
-    // Content-Security-Policy sengaja belum dipasang karena halaman di views/
-    // masih memakai skrip inline; menyalakannya sekarang akan mematikan UI.
-    webApp.use((req, res, next) => {
-        res.setHeader('X-Content-Type-Options', 'nosniff');
-        res.setHeader('X-Frame-Options', 'DENY');
-        res.setHeader('Referrer-Policy', 'no-referrer');
-        res.setHeader('X-DNS-Prefetch-Control', 'off');
-        res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-        if (isProduction) {
-            res.setHeader('Strict-Transport-Security', 'max-age=15552000; includeSubDomains');
-        }
-        next();
-    });
+    // Menggunakan helmet untuk keamanan standar. Content-Security-Policy dimatikan 
+    // karena halaman views masih memakai skrip inline.
+    webApp.use(helmet({
+        contentSecurityPolicy: false,
+        crossOriginEmbedderPolicy: false
+    }));
 
     // --- CORS ---
     // `cors()` tanpa argumen memantulkan origin mana pun. Sekarang hanya domain
@@ -152,9 +145,9 @@ module.exports = (client) => {
 
     // --- Pembatas laju ---
     // Longgar untuk API biasa, ketat untuk pintu masuk dan God Mode.
-    webApp.use('/api', createRateLimiter({ windowMs: 60_000, max: 300, name: 'API' }));
-    webApp.use('/auth', createRateLimiter({ windowMs: 60_000, max: 20, name: 'AUTH' }));
-    webApp.use('/api/owner', createRateLimiter({ windowMs: 60_000, max: 30, name: 'OWNER' }));
+    webApp.use('/api', rateLimit({ windowMs: 60_000, limit: 300, standardHeaders: true, legacyHeaders: false }));
+    webApp.use('/auth', rateLimit({ windowMs: 60_000, limit: 20, standardHeaders: true, legacyHeaders: false }));
+    webApp.use('/api/owner', rateLimit({ windowMs: 60_000, limit: 30, standardHeaders: true, legacyHeaders: false }));
 
     // --- Login Discord ---
     if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {

@@ -158,10 +158,10 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
   - `dbMigrator.js` sekarang sudah punya ledger dan gagal dengan keras, jadi urgensinya turun. Umzug tetap menarik untuk rollback dan migrasi berbasis file, bukan array di dalam kode.
 - [x] **Bersihkan cabang mati pada `syncFallbackToMySQL()`**
   - Stub `sqlite3` di sana punya `all()` yang selalu melempar error, jadi jalur itu tidak pernah bisa memulihkan data. Karena Node sudah dipatok `>= 24`, `node:sqlite` selalu tersedia dan cabang itu bisa dihapus.
-- [ ] **Amankan dashboard** (issue #18, bagian dashboard): `helmet`, `express-rate-limit`, CORS allowlist, cookie `secure` dan `httpOnly`, `SESSION_SECRET` wajib, pengecekan izin `ManageGuild` per guild, dan upgrade ke Express 5.
-- [ ] **Pecah `src/dashboard/server.js` (64 KB)** (issue #14) menjadi `middleware/`, `routes/`, dan `sockets/`.
+- [x] **Amankan dashboard** (issue #18, bagian dashboard): `helmet`, `express-rate-limit`, CORS allowlist, cookie `secure` dan `httpOnly`, `SESSION_SECRET` wajib, pengecekan izin `ManageGuild` per guild, dan upgrade ke Express 5.
+- [x] **Pecah `src/dashboard/server.js` (64 KB)** (issue #14) menjadi `middleware/`, `routes/`, dan `sockets/`.
 - [ ] **Refactor `plugin/canvas/imageManager.js` (32 KB)** menjadi beberapa renderer terpisah. Kerjakan bersamaan dengan migrasi `canvasRuntime.js` di atas supaya berkas besar itu tidak dibongkar dua kali.
-- [ ] **Tinjau `voiceStateUpdate.js` (23 KB) dan `ready.js` (18,6 KB)**
+- [x] **Tinjau `voiceStateUpdate.js` (23 KB) dan `ready.js` (18,6 KB)**
   - Dua berkas ini sekarang menjadi yang terbesar di `src/events/` setelah `interactionCreate.js` dipecah. Pola yang sama (registry plus handler kecil) layak diterapkan di sini.
 - [x] **Bersihkan dependensi ganda dan usang**
   - `node-fetch` dan `isomorphic-unfetch`: hapus, Node 24 sudah punya `fetch` global.
