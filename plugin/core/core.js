@@ -490,8 +490,9 @@ async function handleAbout(interaction, client, lang) {
         interaction.deferred = true;
     }
 
-    const shardId = client.shard ? client.shard.ids[0] : 0;
-    const totalShards = client.shard ? client.shard.count : 1;
+    const clusterManager = require('../../src/managers/clusterManager');
+    const shardId = clusterManager.getShardIds(client);
+    const totalShards = clusterManager.getTotalShards(client);
     const memUsage = (process.memoryUsage().rss / 1024 / 1024).toFixed(1);
 
     let totalGuilds = client.guilds.cache.size;
@@ -499,10 +500,10 @@ async function handleAbout(interaction, client, lang) {
 
     if (client.shard) {
         try {
-            const guildResults = await client.shard.fetchClientValues('guilds.cache.size');
+            const guildResults = await clusterManager.fetchClientValues(client, 'guilds.cache.size');
             totalGuilds = guildResults.reduce((acc, count) => acc + count, 0);
 
-            const userResults = await client.shard.broadcastEval(c => c.guilds.cache.reduce((acc, g) => acc + (g.memberCount || 0), 0));
+            const userResults = await clusterManager.broadcastEval(client, c => c.guilds.cache.reduce((acc, g) => acc + (g.memberCount || 0), 0));
             totalUsers = userResults.reduce((acc, count) => acc + count, 0);
         } catch (err) {
             // Fallback ke hitungan cache lokal

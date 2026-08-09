@@ -124,7 +124,8 @@ async function broadcast(message, client, embed, row) {
     }
 
     if (client.shard) {
-        await client.shard.broadcastEval(async (c, { data }) => {
+        const clusterManager = require('../../managers/clusterManager');
+        await clusterManager.broadcastEval(client, async (c, { data }) => {
             if (!c.globalChatChannels) return;
             for (const [chanId] of c.globalChatChannels.entries()) {
                 if (chanId === data.sourceChannelId) continue;
@@ -136,7 +137,7 @@ async function broadcast(message, client, embed, row) {
                     }).catch(() => {});
                 }
             }
-        }, { context: { data: payload } }).catch(() => {});
+        }, { data: payload }).catch(() => {});
         return;
     }
 

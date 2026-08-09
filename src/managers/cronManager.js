@@ -7,15 +7,24 @@ const GuildSettings = require('../models/GuildSettings');
 const UserBirthday = require('../models/UserBirthday');
 const Giveaway = require('../models/Giveaway');
 
+const clusterManager = require('./clusterManager');
+const xpBufferManager = require('./xpBufferManager');
+
 module.exports = {
     init(client) {
-        const isMasterShard = !client.shard || (client.shard.ids && client.shard.ids.includes(0));
+        const isMasterShard = clusterManager.isMasterShard(client);
         if (!isMasterShard) {
-            logger.info(`[Cron] Secondary Shard #${client.shard?.ids?.join(',') || '?'} active. Master scheduled tasks (Backup/QOTD/Giveaways) delegated to Shard #0.`);
+            logger.info(`[Cron] Secondary Shard #${clusterManager.getShardIds(client)} active. Master scheduled tasks (Backup/QOTD/Giveaways) delegated to Shard #0.`);
             return;
         }
 
         logger.info('[Cron] Initializing scheduled tasks on Master Shard #0...');
+        
+        // --- XP BUFFER FLUSH ---
+        // Runs every 3 minutes to flush Redis XP Buffer to MySQL
+        cron.schedule('*/3 * * * *', async () => {
+            await xpBufferManager.flush();
+        });
 
         // 0. Auto Backup Database - Runs every day at 02:00 AM
         cron.schedule('0 2 * * *', async () => {
@@ -245,7 +254,7 @@ module.exports = {
                     try {
                         profile.isPremium = false;
                         profile.premiumUntil = null;
-                        await profile.save();
+                        await profile.save({ fields: ['isPremium', 'premiumUntil'] });
 
                         // Kirim DM notifikasi expired
                         const user = await client.users.fetch(profile.userId).catch(() => null);

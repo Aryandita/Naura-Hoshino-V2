@@ -66,6 +66,16 @@ const MIGRATIONS = [
         // JSON_TYPE mengembalikan NULL bila kuncinya tidak ada, jadi baris yang
         // belum pernah punya kupon tidak ikut tersentuh.
         sql: "UPDATE UserSurvivals SET coupons = coupons + CAST(JSON_EXTRACT(rpg_state, '$.coupons') AS UNSIGNED), rpg_state = JSON_REMOVE(rpg_state, '$.coupons') WHERE JSON_TYPE(JSON_EXTRACT(rpg_state, '$.coupons')) IN ('INTEGER', 'UNSIGNED INTEGER', 'DOUBLE', 'DECIMAL');"
+    },
+    {
+        id: 'v7_add_index_user_leveling',
+        description: 'Tambah composite index (guildId, userId) ke user_leveling',
+        sql: 'CREATE INDEX idx_user_leveling_guild_user ON user_leveling(guildId, userId);'
+    },
+    {
+        id: 'v8_add_index_user_warns',
+        description: 'Tambah composite index (guildId, userId) ke user_warns',
+        sql: 'CREATE INDEX idx_user_warns_guild_user ON user_warns(guildId, userId);'
     }
 ];
 

@@ -124,7 +124,7 @@ async function checkLevelUp(profile, user, guild, currentChannel) {
     if (gained === 0) return 0;
 
     if (typeof profile.save === 'function') {
-        await profile.save().catch(err =>
+        await profile.save({ fields: ['xp', 'level'] }).catch(err =>
             logger.error('[LEVELING] Gagal menyimpan level baru:', err.message)
         );
     }
@@ -148,33 +148,68 @@ async function rollXp(userId) {
  * berbasis lastActivity dilewati karena kunci jeda di Redis sudah lolos.
  */
 async function awardXpDirect(user, guild, currentChannel, precomputedGain = null) {
+    // Cooldown key for XP awarding
+    const cooldownKey = `xp_cooldown_${guild.id}_${user.id}`;
+
+    // If Redis is ready, use it for cooldown tracking and possible XP buffering
+    if (redisReady) {
+        await redisManager.setCache(cooldownKey, true, Math.floor(CONFIG.MSG_COOLDOWN / 1000));
+        // 1. Fetch current profile from DB
+        let profile = await UserLeveling.findOne({ where: { userId: user.id, guildId: guild.id } });
+        if (!profile) profile = { xp: 0, level: 1, messageCount: 0, lastActivity: new Date(0) };
+
+        // 2. Retrieve cached known level
+        const cachedLevelStr = await redisManager.getCache(`user_level_${guild.id}_${user.id}`);
+        const currentKnownLevel = cachedLevelStr ? parseInt(cachedLevelStr, 10) : profile.level;
+
+        // 3. Add XP to Redis buffer
+        const xpBufferManager = require('../../src/managers/xpBufferManager');
+        const bufferedXp = await xpBufferManager.addXp(guild.id, user.id, precomputedGain === null ? await rollXp(user.id) : precomputedGain);
+
+        if (bufferedXp !== null) {
+            const simulatedProfile = {
+                level: profile.level,
+                xp: (profile.xp || 0) + bufferedXp,
+            };
+            applyLevelUp(simulatedProfile);
+            if (simulatedProfile.level > currentKnownLevel) {
+                await redisManager.setCache(`user_level_${guild.id}_${user.id}`, simulatedProfile.level, 3600);
+                await announceLevelUp(simulatedProfile, user, guild, currentChannel);
+            }
+            return; // Defer DB write until buffer flush
+        }
+    }
+
+    // ------------------------------------
+    // Fallback path: Redis unavailable or buffering not used
+    // ------------------------------------
+    // Retrieve or create profile
     const [profile] = await UserLeveling.findOrCreate({
         where: { userId: user.id, guildId: guild.id },
         defaults: { xp: 0, level: 1, messageCount: 0, lastActivity: new Date(0) }
     });
 
-    // Cadangan bila Redis mati. Tanpa ini setiap pesan memberi XP penuh.
-    if (precomputedGain === null) {
-        const lastActivity = profile.lastActivity ? new Date(profile.lastActivity).getTime() : 0;
-        if (Date.now() - lastActivity < CONFIG.MSG_COOLDOWN) return;
-    }
+    // Enforce cooldown based on last activity
+    const lastActivity = profile.lastActivity ? new Date(profile.lastActivity).getTime() : 0;
+    if (Date.now() - lastActivity < CONFIG.MSG_COOLDOWN) return;
 
+    // Determine XP gain
     const gained = precomputedGain === null ? await rollXp(user.id) : precomputedGain;
 
+    // Apply XP to profile
     profile.xp = (profile.xp || 0) + gained;
     profile.messageCount = (profile.messageCount || 0) + 1;
     profile.lastActivity = new Date();
 
+    // Calculate level ups and persist
     const gainedLevels = applyLevelUp(profile);
-
-    // Simpan lebih dahulu. Notifikasi berisi render kanvas yang lambat dan
-    // pernah menyebabkan XP hilang karena tertimpa pesan berikutnya.
-    await profile.save();
+    await profile.save({ fields: ['xp', 'level', 'messageCount', 'lastActivity'] });
 
     if (gainedLevels > 0) {
         await announceLevelUp(profile, user, guild, currentChannel);
     }
 }
+
 
 /**
  * Memberi XP atas satu pesan.
