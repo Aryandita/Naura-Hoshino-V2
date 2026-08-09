@@ -1,13 +1,7 @@
-const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
+const { createCanvas, loadImage, GlobalFonts } = require('./canvasRuntime');
 const path = require('path');
 
-// Pendaftaran Font Lokal
-try {
-    GlobalFonts.registerFromPath(path.join(__dirname, '../../assets/fonts/Montserrat/Montserrat-Bold.ttf'), 'MontserratBold');
-    GlobalFonts.registerFromPath(path.join(__dirname, '../../assets/fonts/Inter/Inter-Regular.ttf'), 'Inter');
-    GlobalFonts.registerFromPath(path.join(__dirname, '../../assets/fonts/Inter/Inter-Bold.ttf'), 'InterBold');
-    GlobalFonts.registerFromPath(path.join(__dirname, '../../assets/fonts/emoji/NotoColorEmoji.ttf'), 'EmojiFont');
-} catch (e) {}
+
 
 /**
  * Generate a dynamic profile card using canvas

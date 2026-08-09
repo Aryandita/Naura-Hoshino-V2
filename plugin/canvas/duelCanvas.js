@@ -3,7 +3,7 @@
 // Arena PvP. Dipanggil lewat plugin/survival/subcommands/duel.js secara lazy,
 // jadi kegagalan menggambar tidak boleh sampai menghentikan duelnya.
 
-const { createCanvas, loadImage } = require('@napi-rs/canvas');
+const { createCanvas, loadImage } = require('./canvasRuntime');
 const fs = require('fs');
 
 const W = 900;

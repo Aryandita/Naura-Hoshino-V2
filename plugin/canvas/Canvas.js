@@ -6,26 +6,11 @@
  * @version 1.0.3 (Premium Font Upgrade)
  */
 
-const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
+const { createCanvas, loadImage, GlobalFonts, runWithLimit } = require('./canvasRuntime');
 const { logger } = require('../../src/managers/logger');
 const axios = require('axios');
 const ui = require('../../src/config/ui');
 const path = require('path');
-
-// ==========================================
-// 🔠 PENDAFTARAN FONT LOKAL
-// ==========================================
-try {
-    GlobalFonts.registerFromPath(
-        path.join(__dirname, '../../assets/fonts/Montserrat/Montserrat-Bold.ttf'),
-        'MontserratBold'
-    );
-    GlobalFonts.registerFromPath(path.join(__dirname, '../../assets/fonts/Inter/Inter-Regular.ttf'), 'Inter');
-    GlobalFonts.registerFromPath(path.join(__dirname, '../../assets/fonts/Inter/Inter-Bold.ttf'), 'InterBold');
-    GlobalFonts.registerFromPath(path.join(__dirname, '../../assets/fonts/emoji/NotoColorEmoji.ttf'), 'EmojiFont');
-} catch (error) {
-    console.error('Gagal memuat font lokal:', error);
-}
 
 function drawRoundedRect(ctx, x, y, w, h, r, color, glowColor) {
     ctx.beginPath();

@@ -1,4 +1,4 @@
-const { createCanvas, loadImage } = require('@napi-rs/canvas');
+const { createCanvas, loadImage } = require('./canvasRuntime');
 const { drawRoundedRect, drawCircularImage, truncateText } = require('./CanvasUtils');
 
 const UI_COLORS = {

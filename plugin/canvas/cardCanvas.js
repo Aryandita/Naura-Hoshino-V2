@@ -1,16 +1,7 @@
-const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
+const { createCanvas, loadImage, GlobalFonts } = require('./canvasRuntime');
 const path = require('path');
 
-// ==========================================
-// 🔠 PENDAFTARAN FONT LOKAL
-// ==========================================
-try {
-    GlobalFonts.registerFromPath(
-        path.join(__dirname, '../../assets/fonts/Montserrat/Montserrat-Bold.ttf'),
-        'MontserratBold'
-    );
-    GlobalFonts.registerFromPath(path.join(__dirname, '../../assets/fonts/emoji/NotoColorEmoji.ttf'), 'EmojiFont');
-} catch (error) {}
+
 
 async function generateGachaCard(cardInfo, userAvatarUrl) {
     const canvas = createCanvas(400, 600);

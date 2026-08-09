@@ -1,4 +1,4 @@
-const { createCanvas } = require('@napi-rs/canvas');
+const { createCanvas } = require('./canvasRuntime');
 
 async function generatePetCard(petInfo) {
     const canvas = createCanvas(400, 300);

@@ -1,24 +1,11 @@
 // Lokasi: src/utils/CanvasUtils.js
-const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
+const { createCanvas, loadImage, GlobalFonts } = require('./canvasRuntime');
 const { logger } = require('../../src/managers/logger');
 const path = require('path');
 const axios = require('axios');
 const leveling = require('../survival/survivalLeveling');
 
-// ==========================================
-// 🔠 PENDAFTARAN FONT LOKAL
-// ==========================================
-try {
-    GlobalFonts.registerFromPath(
-        path.join(__dirname, '../../../assets/fonts/Montserrat/Montserrat-Bold.ttf'),
-        'MontserratBold'
-    );
-    GlobalFonts.registerFromPath(path.join(__dirname, '../../../assets/fonts/Inter/Inter-Regular.ttf'), 'Inter');
-    GlobalFonts.registerFromPath(path.join(__dirname, '../../../assets/fonts/Inter/Inter-Bold.ttf'), 'InterBold');
-    GlobalFonts.registerFromPath(path.join(__dirname, '../../../assets/fonts/emoji/NotoColorEmoji.ttf'), 'EmojiFont');
-} catch (error) {
-    logger.warn('CANVAS WARNING Gagal memuat beberapa font lokal. Cek path file!');
-}
+
 
 const UI_COLORS = {
     background: '#0a0d14',
