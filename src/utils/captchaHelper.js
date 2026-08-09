@@ -1,5 +1,5 @@
 // src/utils/captchaHelper.js
-const { createCanvas } = require('@napi-rs/canvas');
+const { createCanvas } = require('../../plugin/canvas/canvasRuntime');
 
 /**
  * Membangun buffer gambar Captcha 5 karakter acak menggunakan Canvas.

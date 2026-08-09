@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, PermissionsBitField, MessageFlags } = require('discord.js');
 const { buildContainerV2, buildErrorContainerV2 } = require('../../src/utils/NauraContainerBuilder');
 const UserWarn = require('../../src/models/UserWarn');
+const UserStrike = require('../../src/models/UserStrike');
 const ui = require('../../src/config/ui');
 const GuildSettings = require('../../src/models/GuildSettings');
 const { logger } = require('../../src/managers/logger');
@@ -39,13 +40,18 @@ async function applyPunishment(action, member, totalWarns) {
     }
     if (action === 'kick') {
         if (!member.kickable) return null;
-        await member.kick('Tangga hukuman peringatan');
-        return `<@${member.id}> Naura keluarkan otomatis karena sudah mencapai ${totalWarns} peringatan.`;
+        await member.kick('Eskalasi Peringatan');
+        return `<@${member.id}> Naura keluarkan otomatis karena akumulasi peringatan/strike.`;
     }
     if (action === 'ban') {
         if (!member.bannable) return null;
-        await member.ban({ reason: 'Tangga hukuman peringatan' });
-        return `<@${member.id}> Naura larang masuk otomatis karena sudah mencapai ${totalWarns} peringatan.`;
+        await member.ban({ reason: 'Eskalasi Peringatan: Ban Permanen' });
+        return `<@${member.id}> Naura larang masuk permanen karena telah mencapai 5 strikes.`;
+    }
+    if (action === 'tempban') {
+        if (!member.bannable) return null;
+        await member.ban({ reason: 'Eskalasi Peringatan: Tempban 1 Hari' });
+        return `<@${member.id}> Naura larang masuk selama 1 hari karena telah mencapai 3 strikes.`;
     }
     return null;
 }
@@ -113,6 +119,28 @@ module.exports = {
                 footerText: ui.getFooter('core')
             }));
 
+            // Tambahkan sistem Strike
+            let strikeAction = null;
+            let currentStrikes = 1;
+            try {
+                const [strikeRecord] = await UserStrike.findOrCreate({ where: { userId: user.id, guildId } });
+                strikeRecord.strikes += 1;
+                strikeRecord.lastStrikeAt = new Date();
+                currentStrikes = strikeRecord.strikes;
+
+                if (strikeRecord.strikes >= 5) {
+                    strikeAction = 'ban';
+                } else if (strikeRecord.strikes >= 3) {
+                    strikeAction = 'tempban';
+                    strikeRecord.isTempBanned = true;
+                    strikeRecord.tempbanExpiresAt = new Date(Date.now() + 86400000); // 1 hari
+                }
+
+                await strikeRecord.save();
+            } catch (err) {
+                logger.error('[Warn] Gagal mengelola strike: ' + err.message);
+            }
+
             let totalWarns = null;
             let action = null;
             try {
@@ -122,19 +150,21 @@ module.exports = {
                 logger.error('[Warn] Gagal membaca tangga hukuman: ' + err.message);
             }
 
-            // Pemberitahuan dikirim satu kali saja, tidak lagi dua kali.
-            const urutan = totalWarns ? ` ke-${totalWarns}` : '';
+            // Utamakan action dari strike sistem (jika >=3 atau >=5)
+            const finalAction = strikeAction || action;
+
+            const urutan = totalWarns ? ` ke-${totalWarns} (${currentStrikes} Strike)` : '';
             await user.send(
                 `Kamu mendapat peringatan${urutan} di server **${interaction.guild.name}**.\n` +
                 `**Alasan:** ${reason}\n\n` +
                 'Naura yakin kamu bisa lebih baik lagi setelah ini!'
             ).catch(() => null);
 
-            if (action && action !== 'dm' && targetMember) {
+            if (finalAction && finalAction !== 'dm' && targetMember) {
                 try {
-                    const announcement = await applyPunishment(action, targetMember, totalWarns);
+                    const announcement = await applyPunishment(finalAction, targetMember, totalWarns);
                     if (announcement) await interaction.channel.send(announcement);
-                    else logger.error(`[Warn] Tindakan ${action} dilewati, izin Naura tidak cukup.`);
+                    else logger.error(`[Warn] Tindakan ${finalAction} dilewati, izin Naura tidak cukup.`);
                 } catch (err) {
                     logger.error('[Warn] Gagal menjalankan tangga hukuman: ' + err.message);
                 }

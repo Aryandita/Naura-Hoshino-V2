@@ -168,14 +168,9 @@ class LanguageManager {
 
         let lang = this.default;
         try {
-            const UserProfile = this._getUserProfile();
-            if (UserProfile) {
-                const profile = await UserProfile.findOne({
-                    where: { userId },
-                    attributes: ['userId', 'language']
-                });
-                lang = this.normalize(profile?.language);
-            }
+            const cacheManager = require('./cacheManager');
+            const profile = await cacheManager.getUserProfile(userId);
+            lang = this.normalize(profile?.language);
         } catch (error) {
             lang = this.default;
         }

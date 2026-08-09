@@ -58,6 +58,17 @@ async function handleSlashCommand(interaction, client) {
     }
 
     try {
+        // Metrik: Catat penggunaan command di Redis
+        try {
+            if (require('../managers/redisManager').client?.isReady) {
+                const redis = require('../managers/redisManager').client;
+                redis.incr(`metric:command:${interaction.commandName}`);
+                redis.incr('metric:command:total');
+            }
+        } catch (e) {
+            // Abaikan gagal log metrik
+        }
+
         await command.execute(interaction, client);
     } catch (error) {
         logger.error(`[COMMAND ERROR] Galat saat mengeksekusi /${interaction.commandName}:`, error);

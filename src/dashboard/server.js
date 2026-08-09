@@ -189,6 +189,7 @@ module.exports = (client) => {
     webApp.use(require('./routes/user')(client));
     webApp.use(require('./routes/guild')(client));
     webApp.use(require('./routes/owner')(client));
+    webApp.use('/api', require('./routes/api')(client));
 
     // --- Uji coba persona AI dari halaman pengaturan ---
     webApp.post('/api/settings/sandbox', requireApiLogin, async (req, res) => {
@@ -248,6 +249,8 @@ module.exports = (client) => {
     webApp.get('/leaderboard', view('leaderboard.html'));
     webApp.get('/settings', requireLogin, view('settings.html'));
     webApp.get('/welcomer', requireLogin, view('welcomer.html'));
+    webApp.get('/music', requireLogin, view('music.html'));
+    webApp.get('/status', view('status.html'));
 
     // ==================================================================
     // 4. Realtime

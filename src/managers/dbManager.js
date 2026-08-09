@@ -59,6 +59,7 @@ const UserCrypto = require('../models/UserCrypto');
 const PremiumVoucher = require('../models/PremiumVoucher');
 const UserReminder = require('../models/UserReminder');
 const UserQuest = require('../models/UserQuest');
+const UserStrike = require('../models/UserStrike');
 
 // ==========================================
 // 4. SETUP RELASI (ASSOCIATIONS)

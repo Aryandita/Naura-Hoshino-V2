@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder, PermissionFlagsBits } = require('discord.js');
 const { logger } = require('../../src/managers/logger');
 const { status } = require('mcstatus');
-const { createCanvas, loadImage } = require('@napi-rs/canvas');
+const { createCanvas, loadImage } = require('../canvas/canvasRuntime');
 const axios = require('axios');
 const UserProfile = require('../../src/models/UserProfile');
 const ui = require('../../src/config/ui');

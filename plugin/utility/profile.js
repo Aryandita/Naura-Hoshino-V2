@@ -5,7 +5,7 @@ const { Op } = require('sequelize');
 const ui = require('../../src/config/ui');
 const { NauraEmbedBuilder } = require('../../src/utils/NauraEmbedBuilder');
 const { buildContainerV2 } = require('../../src/utils/NauraContainerBuilder');
-const { createCanvas, loadImage } = require('@napi-rs/canvas');
+const { createCanvas, loadImage } = require('../canvas/canvasRuntime');
 
 // Utility to create the Canvas Business Card
 async function createBusinessCard(user, profile, topFriend, streak) {

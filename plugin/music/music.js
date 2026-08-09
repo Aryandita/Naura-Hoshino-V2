@@ -679,6 +679,28 @@ async function runMusicLogic(client, user, member, guild, channel, subcommand, a
         return sendReply(payload, true);
     }
 
+    if (subcommand === 'filter') {
+        if (!player) {
+            const errPayload = buildErrorContainerV2({ title: 'Tidak Ada Musik', description: `${eError} | Tidak ada musik yang diputar.`, footerText: ui.getFooter('music') });
+            return sendReply(errPayload, true);
+        }
+        
+        const type = args.tipe || 'off'; 
+        
+        if (type === 'off') {
+            player.clearFilters();
+        } else if (type === 'bassboost') {
+            player.setFilters({ equalizer: [{ band: 0, gain: 0.6 }, { band: 1, gain: 0.67 }, { band: 2, gain: 0.67 }, { band: 3, gain: 0 }, { band: 4, gain: -0.5 }, { band: 5, gain: 0.15 }] });
+        } else if (type === 'nightcore') {
+            player.setFilters({ timescale: { speed: 1.2, pitch: 1.2, rate: 1.0 } });
+        } else if (type === '8d') {
+            player.setFilters({ rotation: { rotationHz: 0.2 } });
+        }
+        
+        const payload = buildContainerV2({ accentColorHex: ui.getColor('primary') || '#FFB6C1', title: 'Filter Audio', description: `🎛️ | Filter audio disetel ke **${type.toUpperCase()}**.`, footerText: ui.getFooter('music') });
+        return sendReply(payload, true);
+    }
+
     if (subcommand === '247') {
         const cacheManager = require('../../src/managers/cacheManager');
         const profile = await cacheManager.getUserProfile(user.id);
@@ -731,7 +753,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('music')
         .setDescription('Sistem Musik Hi-Fi Naura Hoshino')
-        .addSubcommand(sub => sub.setName('play').setDescription('Putar musik dari Spotify, YouTube, SoundCloud').addStringOption(opt => opt.setName('query').setDescription('Judul lagu atau URL link').setRequired(true)))
+        .addSubcommand(sub => sub.setName('play').setDescription('Putar musik dari Spotify, YouTube, SoundCloud').addStringOption(opt => opt.setName('query').setDescription('Judul lagu atau URL link').setRequired(true).setAutocomplete(true)))
         .addSubcommand(sub => sub.setName('lofi').setDescription('Putar siaran Lofi Hip-Hop 24/7 tanpa henti'))
         .addSubcommand(sub => sub.setName('radio').setDescription('Putar siaran musik 24/7 populer'))
         .addSubcommand(sub => sub.setName('pause').setDescription('Jeda lagu yang sedang berputar'))
@@ -745,6 +767,12 @@ module.exports = {
         .addSubcommand(sub => sub.setName('shuffle').setDescription('Acak urutan antrean lagu'))
         .addSubcommand(sub => sub.setName('clear').setDescription('Kosongkan antrean lagu'))
         .addSubcommand(sub => sub.setName('247').setDescription('Aktifkan mode siaga 24/7 di voice channel (VIP Only)'))
+        .addSubcommand(sub => sub.setName('filter').setDescription('Terapkan filter audio (Bassboost, Nightcore, 8D)').addStringOption(opt => opt.setName('tipe').setDescription('Jenis filter').setRequired(true).addChoices(
+            { name: 'Off (Clear Filters)', value: 'off' },
+            { name: 'Bassboost', value: 'bassboost' },
+            { name: 'Nightcore', value: 'nightcore' },
+            { name: '8D Audio', value: '8d' }
+        )))
         .addSubcommand(sub => sub.setName('profile').setDescription('Lihat statistik & kartu profil Audiophile').addUserOption(opt => opt.setName('target').setDescription('User yang ingin dilihat').setRequired(false)))
         .addSubcommand(sub => sub.setName('import').setDescription('Impor playlist dari Spotify/YouTube ke database').addStringOption(opt => opt.setName('url').setDescription('URL Playlist Spotify/YouTube').setRequired(true)))
         .addSubcommand(sub => sub.setName('myplaylist').setDescription('Lihat daftar playlist kustom milikmu'))
@@ -791,7 +819,7 @@ module.exports = {
     async execute(interaction) {
         await interaction.deferReply();
         const subcommand = interaction.options.getSubcommand();
-        const args = { query: interaction.options.getString('query'), url: interaction.options.getString('url'), mode: interaction.options.getString('mode'), persen: interaction.options.getInteger('persen'), target: interaction.options.getUser('target'), id: interaction.options.getInteger('id') };
+        const args = { query: interaction.options.getString('query'), url: interaction.options.getString('url'), mode: interaction.options.getString('mode'), tipe: interaction.options.getString('tipe'), persen: interaction.options.getInteger('persen'), target: interaction.options.getUser('target'), id: interaction.options.getInteger('id') };
         const sendReply = async (payload, autoDelete = false) => {
             const msg = await interaction.editReply(payload).catch(()=>{});
             if (autoDelete && msg) setTimeout(() => interaction.deleteReply().catch(()=>{}), 15000);

@@ -33,6 +33,41 @@ module.exports = {
             await backupManager.runBackup();
         });
 
+        // 0.5 Tempban Expiration Check - Runs every minute
+        let isTempbanCheckRunning = false;
+        cron.schedule('* * * * *', async () => {
+            if (isTempbanCheckRunning) return;
+            isTempbanCheckRunning = true;
+            try {
+                const UserStrike = require('../models/UserStrike');
+                const expiredTempbans = await UserStrike.findAll({
+                    where: {
+                        isTempBanned: true,
+                        tempbanExpiresAt: {
+                            [require('sequelize').Op.lt]: new Date()
+                        }
+                    }
+                });
+
+                for (const record of expiredTempbans) {
+                    try {
+                        const guild = await client.guilds.fetch(record.guildId);
+                        if (guild) {
+                            await guild.members.unban(record.userId, 'Masa Tempban selesai').catch(() => {});
+                        }
+                    } catch (err) {
+                        logger.error(`[Cron] Gagal unban user ${record.userId}: ${err.message}`);
+                    }
+                    record.isTempBanned = false;
+                    record.tempbanExpiresAt = null;
+                    await record.save();
+                }
+            } catch (err) {
+                logger.error('[Cron] Gagal memproses Tempban:', err);
+            }
+            isTempbanCheckRunning = false;
+        });
+
         // 1. QOTD Scheduler - Runs every minute to check if it's time to post
         let isQotdRunning = false;
         cron.schedule('* * * * *', async () => {

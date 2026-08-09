@@ -111,7 +111,7 @@ module.exports = {
         .addSubcommand(sub => sub.setName('stats').setDescription('Lihat diagnostik spesifikasi server, RAM, dan OS Naura.'))
         .addSubcommand(sub => sub.setName('info').setDescription('Tampilkan info spesifik server saat ini atau info bot secara umum.'))
         .addSubcommand(sub => sub.setName('about').setDescription('Kenalan lebih dekat dengan Naura dan Aryandita!'))
-        .addSubcommand(sub => sub.setName('help').setDescription('Buka panduan perintah interaktif Naura.'))
+        .addSubcommand(sub => sub.setName('help').setDescription('Buka panduan perintah interaktif Naura.').addStringOption(opt => opt.setName('command').setDescription('Cari nama command spesifik').setRequired(false).setAutocomplete(true)))
         .addSubcommand(sub => sub.setName('language').setDescription('Ubah bahasa bot di server ini / Change bot language')
             .addStringOption(opt => opt.setName('lang').setDescription('Pilih bahasa / Select language').setRequired(true).addChoices(
                 { name: 'Indonesian', value: 'id' },
@@ -119,6 +119,18 @@ module.exports = {
             ))),
 
     aliases: ['ping', 'stats', 'info', 'about', 'help', 'language', 'lang'],
+
+    async autocomplete(interaction, client) {
+        const focusedValue = interaction.options.getFocused().toLowerCase();
+        // Hanya autocomplete untuk subcommand help
+        if (interaction.options.getSubcommand() === 'help') {
+            const commands = Array.from(client.commands.keys());
+            const filtered = commands.filter(cmd => cmd.toLowerCase().includes(focusedValue)).slice(0, 25);
+            await interaction.respond(
+                filtered.map(cmd => ({ name: `/${cmd}`, value: cmd }))
+            ).catch(() => {});
+        }
+    },
 
     async executePrefix(message, args, client) {
         const prefix = env.PREFIX || 'n!';
@@ -821,30 +833,12 @@ async function renderHelpMenuV2(interaction, client, lang, existingResponse = nu
 // 6. LANGUAGE SYSTEM
 // ==========================================
 async function handleLanguage(interaction, guildId, newLang, currentLang) {
-    if (!interaction.member || !interaction.member.permissions.has('Administrator')) {
-        const msg = currentLang.ERROR_PERMISSION_DENIED || `${face('denied', '\u274C')} Maaf yaa, cuma Administrator yang boleh ganti bahasa server. Naura gak bisa bantu yang ini~`;
-        if (interaction.reply && !interaction.deferred) return interaction.reply({ content: msg, ephemeral: true });
-        return interaction.editReply({ content: msg });
-    }
-    if (!guildId) {
-        const msg = `${face('error', '\u274C')} Perintah ini cuma bisa dipakai di dalam server yaa / Only available in servers.`;
-        if (interaction.reply && !interaction.deferred) return interaction.reply({ content: msg, ephemeral: true });
-        return interaction.editReply({ content: msg });
-    }
+    const userId = interaction.user.id;
+    const cacheManager = require('../../src/managers/cacheManager');
+    await cacheManager.updateUserProfile(userId, { language: newLang });
 
-    if (!newLang || !['id', 'en'].includes(newLang)) {
-        const msg = currentLang.LANG_NOT_FOUND || `${face('confused', '\u2753')} Hmm, Naura belum kenal bahasa itu. Pilih \`id\` atau \`en\` yaa~`;
-        if (interaction.reply && !interaction.deferred) return interaction.reply({ content: msg, ephemeral: true });
-        return interaction.editReply({ content: msg });
-    }
-
-    const [settings] = await GuildSettings.findOrCreate({ where: { guildId } });
-
-    if (!settings.system) settings.system = { prefix: 'n!', language: 'id' };
-    settings.system = { ...settings.system, language: newLang };
-
-    settings.changed('system', true);
-    await settings.save();
+    const ui = require('../../src/config/ui');
+    ui.lang.userCache.set(userId, { lang: newLang, expiresAt: Date.now() + (5 * 60 * 1000) });
 
     const successMsg = `${face('success', '\u2705')} ${locales[newLang].LANG_SUCCESS}`;
 

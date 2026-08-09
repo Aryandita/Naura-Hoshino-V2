@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { createCanvas, GlobalFonts } = require('@napi-rs/canvas');
+const { createCanvas, GlobalFonts } = require('../canvas/canvasRuntime');
 const items = require('./items');
 const ui = require('../../src/config/ui');
 

@@ -1,6 +1,7 @@
 const { logger } = require('./logger');
 const ui = require('../config/ui');
 const env = require('../config/env');
+const redisManager = require('./redisManager');
 
 // @google/genai dan ollama keduanya berat dan keduanya hanya terpakai ketika ada
 // permintaan AI yang benar-benar masuk. Sebelumnya keduanya di-require di baris atas,
@@ -47,8 +48,7 @@ class AIManager {
         this._defaultSystemInstruction = 'Nama kamu adalah Naura Hoshino, asisten Discord virtual yang ceria, ramah, dan sangat pintar. Kamu diciptakan dan dikelola oleh Aryandita. Kamu suka menggunakan emoji dalam setiap kalimat. Gunakan bahasa Indonesia yang santai, gaul, namun tetap sopan dan sangat membantu.';
 
         // Memisahkan ruang memori: satu untuk Gemini (Gambar) dan satu untuk Verba (Teks)
-        this.geminiSessions = new Map();
-        this.verbaSessions = new Map();
+        
 
         // Global AI Task Queue
         this.queue = [];
@@ -60,8 +60,7 @@ class AIManager {
 
         // TTL Cleanup loop. unref() wajib, kalau tidak timer ini menahan event loop dan
         // proses menolak mati saat shutdown sampai watchdog memaksanya keluar.
-        this._cleanupTimer = setInterval(() => this.cleanupSessions(), CLEANUP_INTERVAL_MS);
-        if (this._cleanupTimer.unref) this._cleanupTimer.unref();
+        
     }
 
     // Mengembalikan klien Gemini, atau null bila tidak ada API key sama sekali.
@@ -113,20 +112,15 @@ class AIManager {
         return true;
     }
 
-    cleanupSessions() {
-        const now = Date.now();
-        // Bersihkan sesi Gemini
-        for (const [userId, sessionData] of this.geminiSessions.entries()) {
-            if (now - sessionData.lastAccess > SESSION_TTL_MS) {
-                this.geminiSessions.delete(userId);
-            }
-        }
-        // Bersihkan sesi Verba
-        for (const [userId, sessionData] of this.verbaSessions.entries()) {
-            if (now - sessionData.lastAccess > SESSION_TTL_MS) {
-                this.verbaSessions.delete(userId);
-            }
-        }
+    async getMemory(userId, type) {
+        if (!redisManager.isReady) return null;
+        const data = await redisManager.getCache(`ai:${type}:${userId}`);
+        return data || null;
+    }
+
+    async saveMemory(userId, type, data) {
+        if (!redisManager.isReady) return;
+        await redisManager.setCache(`ai:${type}:${userId}`, data, SESSION_TTL_MS);
     }
 
     async _processQueue() {
@@ -184,17 +178,12 @@ class AIManager {
             // LOGIKA 1: JIKA ADA GAMBAR -> PAKAI GEMINI
             // ==========================================
             if (attachment) {
-                if (!this.geminiSessions.has(userId)) {
-                    this.geminiSessions.set(userId, { history: [], lastAccess: Date.now() });
-                }
-
-                const sessionData = this.geminiSessions.get(userId);
-                sessionData.lastAccess = Date.now();
+                let sessionData = await this.getMemory(userId, 'gemini') || { history: [] };
 
                 const visionClient = this.getGenAI();
 
                 if (!visionClient) {
-                    responseText = `${ui.emojis?.error || '\u274c'} Naura belum bisa melihat gambar karena GEMINI_API_KEY belum diisi.`;
+                    responseText = `${ui.emojis?.error || '❌'} Naura belum bisa melihat gambar karena GEMINI_API_KEY belum diisi.`;
                 } else {
                     try {
                         const res = await fetch(attachment.url);
@@ -208,11 +197,31 @@ class AIManager {
                             ]}
                         ];
 
-                        const result = await visionClient.models.generateContent({
+                        const { tools, dispatchFunction } = require('../../plugin/ai/functionDispatcher');
+                        const gemConfig = { 
+                            systemInstruction: this._defaultSystemInstruction, 
+                            maxOutputTokens: 1500,
+                            tools: [{ functionDeclarations: tools }]
+                        };
+
+                        let result = await visionClient.models.generateContent({
                             model: this._defaultModel,
                             contents,
-                            config: { systemInstruction: this._defaultSystemInstruction, maxOutputTokens: 1500 }
+                            config: gemConfig
                         });
+                        
+                        if (result.functionCalls && result.functionCalls.length > 0) {
+                            for (const call of result.functionCalls) {
+                                const fnResult = await dispatchFunction(call.name, call.args, message);
+                                contents.push({ role: 'model', parts: [{ functionCall: call }] });
+                                contents.push({ role: 'user', parts: [{ functionResponse: { name: call.name, response: fnResult } }] });
+                            }
+                            result = await visionClient.models.generateContent({
+                                model: this._defaultModel,
+                                contents,
+                                config: gemConfig
+                            });
+                        }
                         responseText = result.text;
                     } catch (e) {
                         logger.error('Gagal memproses gambar untuk Vision:', e);
@@ -241,8 +250,9 @@ class AIManager {
                     };
 
                     // Ambil memori Verba jika ada
-                    if (this.verbaSessions.has(userId)) {
-                        requestBody.session_id = this.verbaSessions.get(userId).sessionId;
+                    let verbaSession = await this.getMemory(userId, 'verba');
+                    if (verbaSession && verbaSession.sessionId) {
+                        requestBody.session_id = verbaSession.sessionId;
                     }
 
                     const response = await fetch(VERBA_ENDPOINT, {
@@ -276,9 +286,7 @@ class AIManager {
 
                     // Update memori Verba
                     if (data.session_id) {
-                        this.verbaSessions.set(userId, { sessionId: data.session_id, lastAccess: Date.now() });
-                    } else if (this.verbaSessions.has(userId)) {
-                        this.verbaSessions.get(userId).lastAccess = Date.now();
+                        await this.saveMemory(userId, 'verba', { sessionId: data.session_id });
                     }
 
                     responseText = data.choices[0].message.content;
@@ -294,12 +302,7 @@ class AIManager {
 
                         const historyLimit = isPremium ? 40 : 10;
                         const roleInstruction = `Nama kamu adalah Naura Hoshino. Kamu diciptakan oleh Aryandita. Pengguna yang sedang berbicara denganmu memiliki peran: ${roleInfo}. Sesuaikan nada bicaramu dengan perannya (sangat hormat untuk Owner, ramah & elegan untuk Premium, dan santai untuk Member biasa). Gunakan bahasa Indonesia kasual.`;
-                        if (!this.geminiSessions.has(userId)) {
-                            this.geminiSessions.set(userId, { history: [], sysInstruction: roleInstruction, lastAccess: Date.now() });
-                        }
-
-                        const sessionData = this.geminiSessions.get(userId);
-                        sessionData.lastAccess = Date.now();
+                        let sessionData = await this.getMemory(userId, 'gemini') || { history: [], sysInstruction: roleInstruction };
 
                         // Prune history agar tidak overflow token
                         if (Array.isArray(sessionData.history) && sessionData.history.length > historyLimit) {
@@ -308,13 +311,34 @@ class AIManager {
 
                         sessionData.history.push({ role: 'user', parts: [{ text: prompt }] });
 
-                        const gemResult = await geminiClient.models.generateContent({
+                        const { tools, dispatchFunction } = require('../../plugin/ai/functionDispatcher');
+                        const gemConfig = { 
+                            systemInstruction: sessionData.sysInstruction || this._defaultSystemInstruction, 
+                            maxOutputTokens: 1500,
+                            tools: [{ functionDeclarations: tools }]
+                        };
+
+                        let gemResult = await geminiClient.models.generateContent({
                             model: this._defaultModel,
                             contents: sessionData.history,
-                            config: { systemInstruction: sessionData.sysInstruction || this._defaultSystemInstruction, maxOutputTokens: 1500 }
+                            config: gemConfig
                         });
+
+                        if (gemResult.functionCalls && gemResult.functionCalls.length > 0) {
+                            for (const call of gemResult.functionCalls) {
+                                const fnResult = await dispatchFunction(call.name, call.args, message);
+                                sessionData.history.push({ role: 'model', parts: [{ functionCall: call }] });
+                                sessionData.history.push({ role: 'user', parts: [{ functionResponse: { name: call.name, response: fnResult } }] });
+                            }
+                            gemResult = await geminiClient.models.generateContent({
+                                model: this._defaultModel,
+                                contents: sessionData.history,
+                                config: gemConfig
+                            });
+                        }
                         responseText = gemResult.text;
                         sessionData.history.push({ role: 'model', parts: [{ text: responseText }] });
+                        await this.saveMemory(userId, 'gemini', sessionData);
                     } catch (geminiError) {
                         // Rotasi API key jika kuota habis
                         if (geminiError.message && (geminiError.message.includes('429') || geminiError.message.includes('quota'))) {

@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  bot:
+    build: .
+    container_name: naura_bot
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      lavalink:
+        condition: service_started
+    env_file:
+      - .env
+    ports:
+      - "3070:3070"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=naura
+      - DB_PASS=naura_secret
+      - DB_NAME=naura_hoshino
+      - REDIS_URL=redis://redis:6379
+      - LAVA_NODES=[{"name":"LocalNode","host":"lavalink","port":2333,"password":"youshallnotpass","secure":false}]
+
+  db:
+    image: mysql:8.0
+    container_name: naura_db
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_secret
+      - MYSQL_DATABASE=naura_hoshino
+      - MYSQL_USER=naura
+      - MYSQL_PASSWORD=naura_secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - naura_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: naura_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - naura_redis_data:/data
+    command: redis-server --appendonly yes
+
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:4
+    container_name: naura_lavalink
+    restart: unless-stopped
+    environment:
+      - SERVER_PORT=2333
+      - LAVALINK_SERVER_PASSWORD=youshallnotpass
+    ports:
+      - "2333:2333"
+
+volumes:
+  naura_db_data:
+  naura_redis_data:

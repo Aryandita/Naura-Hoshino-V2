@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Dashboard - Naura Hoshino</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0B0C10; color: #FFFFFF; font-family: 'Outfit', sans-serif; }
+        .glass-panel { background: rgba(255,255,255,0.03); backdrop-filter: blur(16px); border: 1px solid rgba(255,182,193,0.2); }
+        .btn-primary { background-color: #FFB6C1; color: #0B0C10; }
+        .btn-primary:hover { background-color: #FFC0CB; }
+    </style>
+</head>
+<body class="min-h-screen p-8">
+    <div class="max-w-4xl mx-auto glass-panel p-8 rounded-xl">
+        <h1 class="text-3xl font-bold mb-2 text-[#FFB6C1]">Naura Music Control</h1>
+        <p class="text-gray-400 mb-8">Kelola antrean dan kendalikan pemutaran musik di server aktif Anda.</p>
+        
+        <div id="status" class="mb-6 p-4 bg-gray-800 rounded-lg">
+            <p>Loading player data...</p>
+        </div>
+
+        <div class="flex gap-4 mb-8">
+            <button onclick="control('resume')" class="btn-primary px-6 py-2 rounded-lg font-semibold">Play</button>
+            <button onclick="control('pause')" class="bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded-lg font-semibold">Pause</button>
+            <button onclick="control('skip')" class="bg-gray-700 hover:bg-gray-600 px-6 py-2 rounded-lg font-semibold">Skip</button>
+        </div>
+
+        <h2 class="text-xl font-semibold mb-4">Queue</h2>
+        <ul id="queue" class="space-y-2">
+            <!-- Queue items -->
+        </ul>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const guildId = new URLSearchParams(window.location.search).get('guild');
+
+        if (guildId) {
+            socket.emit('join_guild_music', guildId);
+
+            socket.on('music_state', (data) => {
+                const statusDiv = document.getElementById('status');
+                const queueList = document.getElementById('queue');
+
+                if (!data.isPlaying && !data.currentTrack) {
+                    statusDiv.innerHTML = '<p>Tidak ada musik yang diputar.</p>';
+                    queueList.innerHTML = '';
+                    return;
+                }
+
+                statusDiv.innerHTML = `
+                    <p class="text-lg font-semibold text-[#FFB6C1]">${data.currentTrack ? data.currentTrack.title : 'Loading...'}</p>
+                    <p class="text-sm text-gray-400">Status: ${data.isPaused ? 'Paused' : 'Playing'}</p>
+                `;
+
+                queueList.innerHTML = (data.queue || []).map(q => 
+                    `<li class="p-3 bg-gray-800 rounded-md">${q.title}</li>`
+                ).join('');
+            });
+            
+            socket.on('music_error', (data) => {
+                alert(data.message);
+            });
+        } else {
+            document.getElementById('status').innerHTML = '<p class="text-red-400">Guild ID tidak ditemukan di URL.</p>';
+        }
+
+        function control(action) {
+            if (!guildId) return;
+            socket.emit('music_control', { guildId, action });
+        }
+    </script>
+</body>
+</html>

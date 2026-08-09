@@ -55,8 +55,15 @@ module.exports = async (interaction, client) => {
                 return;
 
             case 'music_filter':
+                const cacheManager = require('../../src/managers/cacheManager');
+                const gSettings = await cacheManager.getGuildSettings(interaction.guildId);
+                const djRoleId = gSettings?.music?.djRoleId;
+                
                 const isRequester = player.currentTrack?.info?.requester?.id === interaction.user.id;
-                const isDJ = interaction.member.permissions.has('ManageChannels') || interaction.member.roles.cache.some(r => r.name.toLowerCase() === 'dj');
+                const isDJ = interaction.member.permissions.has('ManageChannels') || 
+                            (djRoleId && interaction.member.roles.cache.has(djRoleId)) ||
+                            interaction.member.roles.cache.some(r => r.name.toLowerCase() === 'dj');
+                
                 if (!isRequester && !isDJ) {
                     return interaction.editReply({ embeds: [errorEmbed.setDescription(`🛡️ | Hanya peminta lagu saat ini atau Staff (DJ) yang diizinkan.`)] });
                 }
@@ -92,8 +99,14 @@ module.exports = async (interaction, client) => {
     }
 
     // Permissions check for buttons
+    const cacheManager = require('../../src/managers/cacheManager');
+    const gSettingsBtn = await cacheManager.getGuildSettings(interaction.guildId);
+    const djRoleIdBtn = gSettingsBtn?.music?.djRoleId;
+    
     const isRequester = player.currentTrack?.info?.requester?.id === interaction.user.id;
-    const isDJ = interaction.member.permissions.has('ManageChannels') || interaction.member.roles.cache.some(r => r.name.toLowerCase() === 'dj');
+    const isDJ = interaction.member.permissions.has('ManageChannels') || 
+                 (djRoleIdBtn && interaction.member.roles.cache.has(djRoleIdBtn)) ||
+                 interaction.member.roles.cache.some(r => r.name.toLowerCase() === 'dj');
     const requiresDJ = ['music_stop', 'music_skip', 'music_pause', 'music_247', 'music_autoplay', 'music_loop', 'music_shuffle', 'music_lyrics'];
 
     if (requiresDJ.includes(interaction.customId) && !isRequester && !isDJ) {

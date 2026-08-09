@@ -15,22 +15,26 @@ const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Compo
 const { logger } = require('../../src/managers/logger');
 
 let Aki;
-try {
-    const originalReadFileSync = fs.readFileSync;
-    fs.readFileSync = function (pathStr, options) {
-        try {
-            return originalReadFileSync.apply(this, arguments);
-        } catch (err) {
-            if (err && err.code === 'ENOENT' && typeof pathStr === 'string' && (pathStr.includes('ca_bundle') || pathStr.endsWith('.pem'))) {
-                return '';
+function getAki() {
+    if (Aki) return Aki;
+    try {
+        const originalReadFileSync = fs.readFileSync;
+        fs.readFileSync = function (pathStr, options) {
+            try {
+                return originalReadFileSync.apply(this, arguments);
+            } catch (err) {
+                if (err && err.code === 'ENOENT' && typeof pathStr === 'string' && (pathStr.includes('ca_bundle') || pathStr.endsWith('.pem'))) {
+                    return '';
+                }
+                throw err;
             }
-            throw err;
-        }
-    };
-    Aki = require('aki-api').Aki;
-    fs.readFileSync = originalReadFileSync;
-} catch (e) {
-    logger.error('[Akinator Init Error]', e);
+        };
+        Aki = require('aki-api').Aki;
+        fs.readFileSync = originalReadFileSync;
+    } catch (e) {
+        logger.error('[Akinator Init Error]', e);
+    }
+    return Aki;
 }
 
 const ui = require('../../src/config/ui');
@@ -43,14 +47,15 @@ module.exports = {
     async execute(interaction) {
         await interaction.deferReply();
 
-        if (!Aki) {
+        const AkiModule = getAki();
+        if (!AkiModule) {
             const { buildErrorContainerV2 } = require('../../src/utils/NauraContainerBuilder');
             const errPayload = buildErrorContainerV2({ title: 'Akinator Offline', description: '❌ Fitur Akinator saat ini sedang tidak tersedia karena masalah modul server.', footerText: ui.getFooter('core') });
             return interaction.editReply(errPayload);
         }
 
         try {
-            const aki = new Aki({ region: 'id' }); // Indonesian region
+            const aki = new AkiModule({ region: 'id' }); // Indonesian region
             await aki.start();
 
             const { buildContainerV2 } = require('../../src/utils/NauraContainerBuilder');

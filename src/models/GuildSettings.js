@@ -41,7 +41,8 @@ const GuildSettings = sequelize.define('GuildSettings', {
             twentyFourSeven: false,
             defaultVolume: 100,
             textChannel: null,
-            voiceChannel: null
+            voiceChannel: null,
+            djRoleId: null
         }
     },
     
@@ -58,6 +59,7 @@ const GuildSettings = sequelize.define('GuildSettings', {
             sticky_roles: false,
             stickyMessage: { channelId: null, message: null },
             announcementChannel: null,
+            auditLogChannel: null,
             autoRole: null,
             autoReplies: [],
             vanityRoles: { 
@@ -66,6 +68,11 @@ const GuildSettings = sequelize.define('GuildSettings', {
                 roles: [], 
                 channelId: null, 
                 message: null 
+            },
+            features: {
+                leveling: false,
+                economy: false,
+                music: true
             },
             antinuke: { enabled: false, actions: ['kick'], whitelist: [] },
             automod: { 

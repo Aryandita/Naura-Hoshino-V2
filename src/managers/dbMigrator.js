@@ -76,6 +76,26 @@ const MIGRATIONS = [
         id: 'v8_add_index_user_warns',
         description: 'Tambah composite index (guildId, userId) ke user_warns',
         sql: 'CREATE INDEX idx_user_warns_guild_user ON user_warns(guildId, userId);'
+    },
+    {
+        id: 'v9_add_index_user_friends',
+        description: 'Tambah index pada user1Id dan user2Id di UserFriends',
+        sql: 'CREATE INDEX idx_user_friends_user1 ON UserFriends(user1Id);'
+    },
+    {
+        id: 'v10_add_index_user_friends_2',
+        description: 'Tambah index pada user2Id di UserFriends',
+        sql: 'CREATE INDEX idx_user_friends_user2 ON UserFriends(user2Id);'
+    },
+    {
+        id: 'v11_add_index_user_cosmetics',
+        description: 'Tambah index pada userId di user_cosmetics',
+        sql: 'CREATE INDEX idx_user_cosmetics_userId ON user_cosmetics(userId);'
+    },
+    {
+        id: 'v12_add_index_user_pets',
+        description: 'Tambah index pada userId di UserPets',
+        sql: 'CREATE INDEX idx_user_pets_userId ON UserPets(userId);'
     }
 ];
 

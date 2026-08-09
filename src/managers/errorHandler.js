@@ -29,6 +29,12 @@ const sendErrorLog = async (err, type, client) => {
     logger.error(`\n\x1b[41m\x1b[37m 💥 ANTI-CRASH \x1b[0m \x1b[31m${type}\x1b[0m`);
     console.error(err);
 
+    // Integrasi Sentry
+    if (process.env.SENTRY_DSN) {
+        const Sentry = require('@sentry/node');
+        Sentry.captureException(err, { tags: { type } });
+    }
+
     const now = Date.now();
     const errString = String(err?.stack || err);
     const hash = crypto.createHash('md5').update(errString).digest('hex');

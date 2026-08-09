@@ -3,6 +3,9 @@ const StickyRole = require('../models/StickyRole');
 const cacheManager = require('../managers/cacheManager');
 const { logger } = require('../managers/logger');
 const ui = require('../config/ui');
+const guildSettingsService = require('../services/guildSettingsService');
+
+const joinRate = new Map();
 const { generateWelcomeImage } = require('../../plugin/canvas/CanvasUtils');
 
 // Membaca kolom roles yang bisa berupa JSON, string JSON, atau data rusak.
@@ -107,10 +110,42 @@ module.exports = {
             const data = await cacheManager.getGuildSettings(member.guild.id);
             settings = data && data.settings ? data.settings : null;
         } catch (error) {
-            logger.error(`[GuildMemberAdd] Gagal memuat pengaturan: ${error.message}`);
+            logger.error([GuildMemberAdd] Gagal memuat pengaturan: {error.message});
             return;
         }
         if (!settings) return;
+
+        // --- ANTI-RAID SYSTEM ---
+        if (settings.antiraid && settings.antiraid.enabled && settings.antiraid.threshold) {
+            const now = Date.now();
+            let record = joinRate.get(member.guild.id);
+            if (!record || now - record.windowStart > 60000) {
+                record = { count: 0, windowStart: now };
+            }
+            record.count += 1;
+            joinRate.set(member.guild.id, record);
+
+            if (record.count >= settings.antiraid.threshold) {
+                // LOCKDOWN ACTIVATED
+                settings.lockdown = true;
+                await guildSettingsService.updateGuildSetting(member.guild.id, 'lockdown', true);
+                logger.warn(`[Anti-Raid] Server ${member.guild.name} telah dikunci otomatis karena terdeteksi raid!`);
+                joinRate.delete(member.guild.id); // Reset
+            }
+        }
+
+        // Jika sedang lockdown, usir/kick otomatis member baru ini
+        if (settings.lockdown) {
+            try {
+                await member.send(`Maaf, server **${member.guild.name}** sedang dalam status Lockdown. Coba bergabung lagi nanti!`).catch(() => {});
+                await member.kick('Auto-Kick: Server dalam status Lockdown');
+                logger.info(`[Anti-Raid] Mengeluarkan ${member.user.tag} karena lockdown aktif.`);
+            } catch (err) {
+                logger.error(`[Anti-Raid] Gagal mengusir ${member.user.tag} saat lockdown: ${err.message}`);
+            }
+            return; // Jangan lanjutkan welcome / autorole
+        }
+
 
         // Ketiga tahap berjalan terpisah. Kegagalan satu tahap tidak boleh
         // menghapus tahap berikutnya, terutama sambutan yang paling terlihat.
@@ -129,3 +164,4 @@ module.exports = {
         }
     }
 };
+
