@@ -41,20 +41,32 @@ class MusicManager {
     // LAVA_HOST dan LAVA_PASS. Ini perilaku yang ada sejak awal, bukan perubahan di sini.
     buildNodes() {
         const env = require('../config/env');
-        const hosts = String(env.LAVA_HOST || 'localhost').split(',');
-        const ports = String(env.LAVA_PORT || '2333').split(',');
-        const passwords = String(env.LAVA_PASS || 'youshallnotpass').split(',');
-        const secures = String(env.LAVA_SECURE || 'false').split(',');
+        
+        if (env.LAVA_NODES) {
+            try {
+                const nodes = JSON.parse(env.LAVA_NODES);
+                if (Array.isArray(nodes) && nodes.length > 0) {
+                    return nodes.map((node, index) => ({
+                        name: node.name || `Naura Node ${index + 1}`,
+                        host: String(node.host || 'localhost').trim(),
+                        port: parseInt(node.port) || 2333,
+                        password: String(node.password || 'youshallnotpass').trim(),
+                        secure: node.secure === true || String(node.secure).trim() === 'true'
+                    }));
+                }
+            } catch (e) {
+                console.error('\x1b[41m\x1b[37m \ud83c\udfb5 MUSIC \x1b[0m \x1b[31mGagal parse LAVA_NODES, kembali ke mode fallback 1 node.\x1b[0m');
+            }
+        }
 
-        return hosts.map((host, index) => {
-            return {
-                name: `Naura Node ${index + 1}`,
-                host: host.trim(),
-                port: parseInt((ports[index] || ports[0]).trim()),
-                password: (passwords[index] || passwords[0]).trim(),
-                secure: (secures[index] || secures[0]).trim() === 'true'
-            };
-        });
+        // Mode fallback: mendukung 1 node saja dari LAVA_HOST dkk
+        return [{
+            name: 'Naura Node 1',
+            host: String(env.LAVA_HOST).trim(),
+            port: parseInt(env.LAVA_PORT),
+            password: String(env.LAVA_PASS).trim(),
+            secure: env.LAVA_SECURE
+        }];
     }
 
     // Membuat instance Poru bila belum ada. Aman dipanggil berkali-kali.

@@ -72,6 +72,7 @@ const env = {
     MODMAIL_CATEGORY: cleanEnv(process.env.MODMAIL_CATEGORY_ID),
 
     // LAVALINK
+    LAVA_NODES: process.env.LAVA_NODES,
     LAVA_HOST: cleanEnv(process.env.LAVALINK_HOST) || 'localhost',
     LAVA_PORT: parseInt(process.env.LAVALINK_PORT) || 2333,
     LAVA_PASS: cleanEnv(process.env.LAVALINK_PASSWORD) || 'youshallnotpass',

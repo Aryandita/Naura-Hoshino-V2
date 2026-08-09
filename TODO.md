@@ -156,21 +156,21 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
     3. Setelah dua langkah di atas selesai, migrasi ke `discord-hybrid-sharding` hanya menyentuh `shard.js` dan satu manager. Riset menunjukkan penghematan overhead proses idle 40 sampai 60 persen dibanding `ShardingManager`, dan ini penting karena RAM panel terbatas.
 - [ ] **Pertimbangkan Umzug untuk migrasi database** (temuan riset)
   - `dbMigrator.js` sekarang sudah punya ledger dan gagal dengan keras, jadi urgensinya turun. Umzug tetap menarik untuk rollback dan migrasi berbasis file, bukan array di dalam kode.
-- [ ] **Bersihkan cabang mati pada `syncFallbackToMySQL()`**
+- [x] **Bersihkan cabang mati pada `syncFallbackToMySQL()`**
   - Stub `sqlite3` di sana punya `all()` yang selalu melempar error, jadi jalur itu tidak pernah bisa memulihkan data. Karena Node sudah dipatok `>= 24`, `node:sqlite` selalu tersedia dan cabang itu bisa dihapus.
 - [ ] **Amankan dashboard** (issue #18, bagian dashboard): `helmet`, `express-rate-limit`, CORS allowlist, cookie `secure` dan `httpOnly`, `SESSION_SECRET` wajib, pengecekan izin `ManageGuild` per guild, dan upgrade ke Express 5.
 - [ ] **Pecah `src/dashboard/server.js` (64 KB)** (issue #14) menjadi `middleware/`, `routes/`, dan `sockets/`.
 - [ ] **Refactor `plugin/canvas/imageManager.js` (32 KB)** menjadi beberapa renderer terpisah. Kerjakan bersamaan dengan migrasi `canvasRuntime.js` di atas supaya berkas besar itu tidak dibongkar dua kali.
 - [ ] **Tinjau `voiceStateUpdate.js` (23 KB) dan `ready.js` (18,6 KB)**
   - Dua berkas ini sekarang menjadi yang terbesar di `src/events/` setelah `interactionCreate.js` dipecah. Pola yang sama (registry plus handler kecil) layak diterapkan di sini.
-- [ ] **Bersihkan dependensi ganda dan usang**
+- [x] **Bersihkan dependensi ganda dan usang**
   - `node-fetch` dan `isomorphic-unfetch`: hapus, Node 24 sudah punya `fetch` global.
   - `dotenv`: hapus, gunakan `process.loadEnvFile()` bawaan Node.
   - `express-basic-auth`: hapus, cukup satu model autentikasi (sesi Discord OAuth).
   - `sqlite3`: **tetap dipertahankan** sebagai fallback darurat, tetapi pertimbangkan pindah ke `better-sqlite3` agar tidak perlu native build saat instalasi.
   - `@discordjs/voice` dan `libsodium-wrappers`: hapus bila tidak ada TTS atau voice di luar Lavalink.
   - `yt-dlp-wrap`: lepaskan dari jalur musik. Lavalink sudah menangani sumber audio, dan ini menambah risiko ToS serta biaya build.
-- [ ] **Perbaiki dukungan multi node Lavalink yang sudah mati diam-diam**
+- [x] **Perbaiki dukungan multi node Lavalink yang sudah mati diam-diam**
   - `musicManager.buildNodes()` masih memisah `LAVA_HOST`, `LAVA_PORT`, `LAVA_PASS`, dan `LAVA_SECURE` dengan koma, tetapi `src/config/env.js` sudah menormalkan `LAVA_PORT` dengan `parseInt` dan `LAVA_SECURE` menjadi boolean. Jadi selama nilainya lewat `env.js`, isi koma hanya berdampak pada host dan password. Putuskan: dukung penuh multi node lewat satu variabel JSON, atau buang sisa pemisah koma itu supaya tidak menyesatkan.
 
 ---

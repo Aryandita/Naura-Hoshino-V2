@@ -177,24 +177,9 @@ async function syncFallbackToMySQL(mysqlSequelize) {
 
     let database;
     try {
-        // Gunakan native sqlite dari Node.js (v22+) agar ringan, fallback ke sqlite3 jika gagal.
-        let DatabaseSync;
-        try {
-            DatabaseSync = require('node:sqlite').DatabaseSync;
-            database = new DatabaseSync('./naura_fallback.sqlite');
-        } catch (err) {
-            logger.warn(`[DB MIGRATOR] node:sqlite tidak tersedia (${err.message}). Menggunakan fallback sqlite3 eksternal.`);
-            const sqlite3 = require('sqlite3').verbose();
-            database = new sqlite3.Database('./naura_fallback.sqlite');
-
-            database.prepare = function() {
-                return {
-                    all: function() {
-                        throw new Error('Fallback sqlite3 tidak mendukung mode sinkron. Harap gunakan Node 22.5.0+');
-                    }
-                };
-            };
-        }
+        // Gunakan native sqlite dari Node.js (v22+)
+        const { DatabaseSync } = require('node:sqlite');
+        database = new DatabaseSync('./naura_fallback.sqlite');
 
         const models = Object.keys(mysqlSequelize.models);
 
