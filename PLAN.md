@@ -604,5 +604,24 @@ Sprint D — Long-term, Differensiator Utama:
 | Arcane Bot | Voice XP dan reward system |
 | LavaSrc & LavaLyrics | Ekosistem plugin Lavalink v4 |
 | Discord Developer Docs 2026 | SKU/Entitlements, UI Components, Social SDK |
+| `moeru-ai/airi` (Grok Companion) | Referensi arsitektur *Autonomous AI Waifu* untuk Voice Chat realtime, TTS/STT, integrasi gaming (Minecraft/Factorio) agar Naura terasa sebagai "cyber living" yang sesungguhnya. |
 | `TODO.md` proyek ini | Sprint aktif dan risiko yang sedang dipantau |
 | `AGENTS.md` proyek ini | Aturan arsitektur yang tidak boleh dilanggar |
+
+---
+
+## 🚀 Insight Ekstra: Pembelajaran dari `moeru-ai/airi`
+
+Berdasarkan repositori `moeru-ai/airi` (sebuah *self-hosted Grok companion / virtual cyber living*), ada beberapa ide revolusioner yang bisa kita adopsi untuk Naura:
+
+1. 🔥 **Real-Time Voice AI (Cyber Waifu)**
+   - **Konsep:** Naura tidak hanya menjawab teks atau memutar musik, tetapi bisa diajak bicara langsung (Voice Chat) di Discord.
+   - **Teknologi:** Menggunakan kombinasi STT (*Speech-to-Text* seperti Whisper) untuk mendengarkan suara user, LLM (Gemini/Groq) untuk menghasilkan respons, dan TTS (*Text-to-Speech*) untuk mengembalikan suara Naura secara *real-time*.
+
+2. 🎮 **In-Game Companion (Minecraft Integration)**
+   - **Konsep:** Airi dapat ikut bermain Minecraft dan Factorio bersama user. Mengingat Naura Hoshino V2 sudah memiliki pondasi `minecraft_ign` dan jembatan Minecraft, kita bisa menghubungkan LLM Naura ke server Minecraft, sehingga Naura bertindak sebagai NPC pintar atau asisten di dalam game.
+
+3. 🤖 **Autonomous Presence (Zero-Trigger Action)**
+   - **Konsep:** Tidak perlu memanggil `/ask`. Naura secara *autonomous* (mandiri) bisa tiba-tiba ikut nongkrong di Voice Channel, menyapa user yang baru pulang, atau ikut berkomentar saat obrolan teks sedang ramai, seolah-olah ia memiliki "kesadaran" (*cyber living*).
+
+Ide-ide ini sejalan dengan target kita menjadikan Naura "lebih dari sekadar bot, tapi asisten virtual yang hidup". Implementasi ini akan masuk ke **Sprint D — Long-term, Differensiator Utama**.

@@ -51,6 +51,7 @@ module.exports = {
             .setDescription('🎫 Atur kategori & log Sistem Tiket')
             .addChannelOption(opt => opt.setName('kategori').setDescription('Kategori channel tiket').addChannelTypes(ChannelType.GuildCategory).setRequired(true))
             .addChannelOption(opt => opt.setName('log').setDescription('Channel log penutupan tiket').addChannelTypes(ChannelType.GuildText).setRequired(false))
+            .addChannelOption(opt => opt.setName('panel').setDescription('Channel tempat mengirim pesan Panel Buka Tiket').addChannelTypes(ChannelType.GuildText).setRequired(false))
         )
         .addSubcommand(sub =>
             sub.setName('tempvoice')
@@ -207,16 +208,42 @@ module.exports = {
         if (subcommand === 'ticket') {
             const category = interaction.options.getChannel('kategori');
             const logChan = interaction.options.getChannel('log');
+            const panel = interaction.options.getChannel('panel');
 
             currentSettings.ticketCategory = category.id;
             if (logChan) currentSettings.ticketLogChannel = logChan.id;
             await saveSettings(currentSettings);
 
+            let extraMsg = '';
+            if (panel) {
+                try {
+                    const panelPayload = buildContainerV2({
+                        accentColorHex: ui.getColor('primary'),
+                        authorName: 'Naura Helpdesk Services',
+                        title: '🎫 Pusat Bantuan & Pelayanan',
+                        description: 'Selamat datang di Pusat Bantuan!\n\nJika kamu memiliki pertanyaan, ingin melaporkan sesuatu, atau membutuhkan bantuan dari Staff/Admin, silakan buat tiket baru dengan menekan tombol di bawah.\n\n⚠️ **Mohon jangan menyalahgunakan sistem tiket!**',
+                        buttonsRow: new ActionRowBuilder().addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('btn_ticket_open')
+                                .setLabel('Buka Tiket Baru')
+                                .setEmoji('🎫')
+                                .setStyle(ButtonStyle.Primary)
+                        ),
+                        footerText: ui.getFooter('core')
+                    });
+                    await panel.send(panelPayload);
+                    extraMsg = `\n✅ Pesan panel tiket berhasil dikirim ke <#${panel.id}>.`;
+                } catch (err) {
+                    logger.error(`[SetupTicket] Gagal mengirim panel: ${err.message}`);
+                    extraMsg = `\n❌ Gagal mengirim panel ke <#${panel.id}>. Pastikan bot memiliki izin Send Messages & View Channel.`;
+                }
+            }
+
             const payload = buildContainerV2({
                 accentColorHex: ui.getColor('primary'),
                 authorName: 'Naura Ticketing Module',
                 title: '🎫 Setup Tiket Berhasil',
-                description: `Kategori Tiket: <#${category.id}>\nChannel Log Tiket: ${logChan ? `<#${logChan.id}>` : '*Belum Diatur*'}`,
+                description: `Kategori Tiket: <#${category.id}>\nChannel Log Tiket: ${logChan ? `<#${logChan.id}>` : '*Belum Diatur*'}${extraMsg}`,
                 footerText: ui.getFooter('core')
             });
             return interaction.reply(payload);

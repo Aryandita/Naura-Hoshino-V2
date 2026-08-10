@@ -177,14 +177,14 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
 
 ## 🟡 Sprint 3: Observability dan Operasional
 
-- [ ] **Endpoint `GET /api/health`**
+- [x] **Endpoint `GET /api/health`**
   - **Cara Implementasi:** Buat `src/dashboard/routes/api.js`, panggil `featureRegistry.getHealthStats()`, kembalikan `200 OK` dengan payload JSON, lalu daftarkan route di `server.js`. Sertakan status MySQL (`getDbStatus()` sudah tersedia dan kini juga melaporkan `poolMax` serta `shardCount`), Redis, dan Lavalink.
-- [ ] **Docker multi-stage dan compose** (issue #15): satu stack berisi bot, Lavalink, Redis, dan MySQL. Sertakan langkah `npm run db:migrate` sebagai job terpisah sebelum service bot menyala.
+- [x] **Docker multi-stage dan compose** (issue #15): satu stack berisi bot, Lavalink, Redis, dan MySQL. Sertakan langkah `npm run db:migrate` sebagai job terpisah sebelum service bot menyala.
 - [ ] **Metrik per command** dan agregasi statistik lintas shard lewat Redis Pub/Sub.
-- [ ] **Integrasi Sentry** untuk pelacakan error produksi.
-- [ ] **Status page publik** supaya pengguna tahu saat Lavalink atau MySQL bermasalah.
-- [ ] **Audit log terpusat per guild** untuk semua aksi moderasi, perubahan setting, dan pemberian premium.
-- [ ] **`/data export` dan `/data delete`** untuk kepatuhan privasi. Bot dengan data ekonomi dan profil sebaiknya punya jalur ini sebelum diminta.
+- [x] **Integrasi Sentry** untuk pelacakan error produksi.
+- [x] **Status page publik** supaya pengguna tahu saat Lavalink atau MySQL bermasalah.
+- [x] **Audit log terpusat per guild** untuk semua aksi moderasi, perubahan setting, dan pemberian premium.
+- [x] **`/data export` dan `/data delete`** untuk kepatuhan privasi. Bot dengan data ekonomi dan profil sebaiknya punya jalur ini sebelum diminta.
 
 ---
 

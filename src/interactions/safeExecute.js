@@ -76,6 +76,17 @@ async function safeExecute(interaction, entry, client) {
             await interaction.deferUpdate();
         }
 
+        // Metrik: Catat penggunaan komponen di Redis Hash
+        try {
+            if (require('../managers/redisManager').client?.isReady) {
+                const redis = require('../managers/redisManager').client;
+                redis.hincrby('metrics:components', entry.label || 'unknown', 1);
+                redis.hincrby('metrics:components', 'total', 1);
+            }
+        } catch (e) {
+            // Abaikan gagal log metrik
+        }
+
         await entry.handler(interaction, client);
     } catch (error) {
         if (isIgnorable(error)) {

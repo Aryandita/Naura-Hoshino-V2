@@ -20,27 +20,10 @@ const COUPON_WEEKEND = 2; // top.gg menghitung vote akhir pekan sebagai dua vote
 // selisih jam server tidak menolak vote yang sah.
 const VOTE_COOLDOWN_MS = 11 * 60 * 60 * 1000;
 
+const EntitlementService = require('../../managers/entitlementService');
+
 async function extendPremium(userId, durationMs) {
-    const { sequelize } = require('../../managers/dbManager');
-    let expiry = new Date();
-
-    await sequelize.transaction(async (t) => {
-        const [profile] = await UserProfile.findOrCreate({
-            where: { userId },
-            transaction: t,
-            lock: t.LOCK.UPDATE
-        });
-
-        const stillActive = profile.isPremium && profile.premiumUntil && profile.premiumUntil > new Date();
-        const base = stillActive ? profile.premiumUntil.getTime() : Date.now();
-        expiry = new Date(base + durationMs);
-
-        profile.isPremium = true;
-        profile.premiumUntil = expiry;
-        await profile.save({ transaction: t });
-    });
-
-    return expiry;
+    return EntitlementService.extendUserPremium(userId, durationMs);
 }
 
 /**

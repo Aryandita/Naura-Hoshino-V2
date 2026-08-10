@@ -101,6 +101,11 @@ const MIGRATIONS = [
         id: 'v13_add_reputation',
         description: 'Tambah kolom reputation ke user_profiles',
         sql: 'ALTER TABLE user_profiles ADD COLUMN reputation INT DEFAULT 0;'
+    },
+    {
+        id: 'v14_make_language_nullable',
+        description: 'Ubah kolom language agar DEFAULT NULL supaya fallback ke pengaturan Guild bekerja',
+        sql: 'ALTER TABLE user_profiles MODIFY COLUMN language VARCHAR(255) DEFAULT NULL;'
     }
 ];
 

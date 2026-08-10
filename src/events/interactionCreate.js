@@ -57,13 +57,26 @@ async function handleSlashCommand(interaction, client) {
             .catch(() => {});
     }
 
+    // Periksa apakah perintah terkait dengan fitur yang dimatikan
+    const { COMMAND_FEATURE_MAP, isFeatureEnabled } = require('../config/features');
+    const featureId = COMMAND_FEATURE_MAP[interaction.commandName];
+    if (featureId && interaction.guildId) {
+        const enabled = await isFeatureEnabled(interaction.guildId, featureId);
+        if (!enabled) {
+            return interaction.reply({
+                content: `\u26a0\ufe0f **Fitur Dinonaktifkan**: Command ini adalah bagian dari modul **${featureId}**, yang saat ini dimatikan oleh Admin server.`,
+                flags: MessageFlags.Ephemeral
+            }).catch(() => {});
+        }
+    }
+
     try {
-        // Metrik: Catat penggunaan command di Redis
+        // Metrik: Catat penggunaan command di Redis Hash
         try {
             if (require('../managers/redisManager').client?.isReady) {
                 const redis = require('../managers/redisManager').client;
-                redis.incr(`metric:command:${interaction.commandName}`);
-                redis.incr('metric:command:total');
+                redis.hincrby('metrics:commands', interaction.commandName, 1);
+                redis.hincrby('metrics:commands', 'total', 1);
             }
         } catch (e) {
             // Abaikan gagal log metrik
@@ -90,7 +103,7 @@ module.exports = {
         }
 
         interaction.localeLang = await languageManager
-            .getUserLanguage(interaction.user.id)
+            .getUserLanguage(interaction.user.id, interaction.guildId)
             .catch(() => 'id');
 
         if (client.isShuttingDown) {

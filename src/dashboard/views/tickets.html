@@ -4,72 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riwayat Tiket - Naura Hoshino</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: #0B0C10;
-            color: #fff;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 { color: #FFB6C1; text-align: center; }
-        .ticket-list {
-            max-width: 800px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .ticket-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 182, 193, 0.3);
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            backdrop-filter: blur(10px);
-            transition: transform 0.2s;
-        }
-        .ticket-card:hover { transform: translateY(-2px); }
-        .ticket-info h3 { margin: 0 0 5px 0; color: #F9A8D4; }
-        .ticket-info p { margin: 0; font-size: 0.9em; color: #aaa; }
-        .badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.8em;
-            font-weight: 600;
-        }
-        .badge.open { background: #10B981; color: #fff; }
-        .badge.closed { background: #4B5563; color: #fff; }
-        .btn {
-            background: #5865F2;
-            color: white;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: background 0.2s;
-            border: none;
-            cursor: pointer;
-        }
-        .btn:hover { background: #4752C4; }
-        .btn[disabled] { background: #374151; cursor: not-allowed; }
-        .back-btn {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #FFB6C1;
-            text-decoration: none;
-            font-weight: 600;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css?v=3">
 </head>
-<body>
-    <a href="/" class="back-btn">← Kembali ke Dashboard</a>
-    <h1>Riwayat Tiket</h1>
-    <div class="ticket-list" id="ticketList">
-        <p style="text-align: center; color: #aaa;">Memuat tiket...</p>
+<body class="bg-animated min-h-screen text-white font-['Outfit'] p-6 lg:p-12 overflow-y-auto">
+
+    <!-- Kontainer Utama -->
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="flex items-center gap-4 mb-8">
+            <a href="/" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-[var(--color-muted)] hover:text-white hover:border-[var(--color-primary-glow)] transition-all duration-300">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-2xl font-cyber font-bold text-[var(--color-primary)] text-glow">Riwayat Tiket</h1>
+                <p class="text-sm text-[var(--color-muted)]">Lihat kembali percakapan tiket dukungan yang pernah kamu buka.</p>
+            </div>
+        </div>
+
+        <!-- Daftar Tiket -->
+        <div class="glass-panel p-6 rounded-3xl bg-black/40 border border-white/5 shadow-lg min-h-[400px]">
+            <div id="ticketList" class="flex flex-col gap-4">
+                <div class="text-center text-[var(--color-muted)] py-12">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-4 text-[var(--color-primary)]"></i>
+                    <p>Memuat riwayat tiketmu...</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -82,39 +45,61 @@
                 const list = document.getElementById('ticketList');
                 list.innerHTML = '';
                 
-                if (data.tickets.length === 0) {
-                    list.innerHTML = '<p style="text-align: center; color: #aaa;">Kamu belum pernah membuat tiket apapun.</p>';
+                if (!data.tickets || data.tickets.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center text-[var(--color-muted)] py-12">
+                            <i class="fa-solid fa-ticket-simple text-4xl mb-4 opacity-50"></i>
+                            <p>Kamu belum pernah membuat tiket dukungan apa pun.</p>
+                        </div>
+                    `;
                     return;
                 }
                 
                 data.tickets.forEach(ticket => {
-                    const date = new Date(ticket.createdAt).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute:'2-digit' });
+                    const dateObj = new Date(ticket.createdAt);
+                    const dateStr = dateObj.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
+                    const timeStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute:'2-digit' });
                     
                     let actionButton = '';
-                    if (ticket.status === 'closed' && ticket.transcriptPath) {
-                        actionButton = `<a href="${ticket.transcriptPath}" class="btn" target="_blank">Lihat Transkrip</a>`;
+                    let statusBadge = '';
+
+                    if (ticket.status === 'closed') {
+                        statusBadge = `<span class="px-3 py-1 text-xs font-bold rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">CLOSED</span>`;
+                        if (ticket.transcriptPath) {
+                            actionButton = `<a href="${ticket.transcriptPath}" target="_blank" class="px-4 py-2 rounded-xl bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/40 transition-colors text-sm font-semibold flex items-center gap-2"><i class="fa-solid fa-file-lines"></i> Transkrip</a>`;
+                        } else {
+                            actionButton = `<button disabled class="px-4 py-2 rounded-xl bg-zinc-800 text-zinc-500 border border-zinc-700 text-sm font-semibold cursor-not-allowed flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> Hilang</button>`;
+                        }
                     } else if (ticket.status === 'open') {
-                        actionButton = `<button class="btn" disabled>Sedang Berjalan</button>`;
+                        statusBadge = `<span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">OPEN</span>`;
+                        actionButton = `<button disabled class="px-4 py-2 rounded-xl bg-[var(--color-primary-dark)] text-white/50 border border-[var(--color-primary-dark)] text-sm font-semibold cursor-not-allowed flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin"></i> Berjalan</button>`;
                     }
                     
                     list.innerHTML += `
-                        <div class="ticket-card">
-                            <div class="ticket-info">
-                                <h3>${ticket.topic}</h3>
-                                <p>Server: ${ticket.guildName}</p>
-                                <p>Dibuat: ${date}</p>
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="margin-bottom: 10px;">
-                                    <span class="badge ${ticket.status}">${ticket.status.toUpperCase()}</span>
+                        <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5 hover:-translate-y-1 transition-transform duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <div class="flex items-center gap-3 mb-2">
+                                    <h3 class="font-cyber font-bold text-lg text-white">#${ticket.id}</h3>
+                                    ${statusBadge}
                                 </div>
+                                <p class="text-sm text-[var(--color-muted)] flex items-center gap-2">
+                                    <i class="fa-regular fa-calendar text-[var(--color-primary)]"></i> ${dateStr} &nbsp; 
+                                    <i class="fa-regular fa-clock text-[var(--color-primary)]"></i> ${timeStr}
+                                </p>
+                            </div>
+                            <div class="flex-shrink-0">
                                 ${actionButton}
                             </div>
                         </div>
                     `;
                 });
             } catch (err) {
-                document.getElementById('ticketList').innerHTML = '<p style="text-align: center; color: #EF4444;">Terjadi kesalahan saat memuat tiket.</p>';
+                document.getElementById('ticketList').innerHTML = `
+                    <div class="text-center text-red-400 py-12">
+                        <i class="fa-solid fa-triangle-exclamation text-3xl mb-4"></i>
+                        <p>Ups, gagal memuat riwayat tiket.</p>
+                    </div>
+                `;
             }
         }
         

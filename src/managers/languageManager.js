@@ -160,17 +160,35 @@ class LanguageManager {
         }
     }
 
-    async getUserLanguage(userId) {
+    async getUserLanguage(userId, guildId = null) {
         if (!userId) return this.default;
 
         const cached = this.userCache.get(userId);
-        if (cached && cached.expiresAt > Date.now()) return cached.lang;
+        if (cached && cached.expiresAt > Date.now()) {
+            return cached.lang;
+        }
 
-        let lang = this.default;
+        let lang = null;
         try {
             const cacheManager = require('./cacheManager');
             const profile = await cacheManager.getUserProfile(userId);
-            lang = this.normalize(profile?.language);
+            
+            // 1. Cek bahasa pilihan user
+            if (profile && profile.language) {
+                lang = this.normalize(profile.language);
+            } 
+            // 2. Fallback ke GuildSettings jika tidak ada pilihan user
+            else if (guildId) {
+                const settings = await cacheManager.getGuildSettings(guildId);
+                if (settings && settings.settings && settings.settings.language) {
+                    lang = this.normalize(settings.settings.language);
+                }
+            }
+            
+            // 3. Fallback ke default global
+            if (!lang) {
+                lang = this.default;
+            }
         } catch (error) {
             lang = this.default;
         }
@@ -188,22 +206,15 @@ class LanguageManager {
         if (!userId) return normalized;
 
         try {
-            const UserProfile = this._getUserProfile();
-            if (UserProfile) {
-                const [profile] = await UserProfile.findOrCreate({
-                    where: { userId },
-                    defaults: { userId, language: normalized }
-                });
-                if (profile.language !== normalized) {
-                    profile.language = normalized;
-                    await profile.save({ fields: ['language'] });
-                }
-            }
+            const cacheManager = require('./cacheManager');
+            await cacheManager.updateUserProfile(userId, { language: normalized });
+            
+            // Update local cache langsung
+            this.userCache.set(userId, { lang: normalized, expiresAt: Date.now() + CACHE_TTL_MS });
         } catch (error) {
-            logger.error(`[LanguageManager] Gagal menyimpan bahasa untuk ${userId}: ${error.message}`);
+            logger.error(`[LanguageManager] Gagal update bahasa user ${userId}:`, error);
         }
 
-        this.userCache.set(userId, { lang: normalized, expiresAt: Date.now() + CACHE_TTL_MS });
         return normalized;
     }
 

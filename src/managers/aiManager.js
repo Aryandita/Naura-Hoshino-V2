@@ -28,7 +28,7 @@ const SESSION_TTL_MS = 60 * 60 * 1000;
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 const QUEUE_DELAY_MS = 1500;
 const CHUNK_LIMIT = 1950;
-const VERBA_ENDPOINT = 'https://api.verba.ink/v1/response';
+const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 
 class AIManager {
     constructor() {
@@ -230,39 +230,40 @@ class AIManager {
                 }
             }
             // ==========================================
-            // LOGIKA 2: JIKA MURNI TEKS -> PAKAI VERBA API
+            // LOGIKA 2: JIKA MURNI TEKS -> PAKAI GROQ API
             // ==========================================
             else {
-                let characterSlug = env.VERBA_SLUG_GENERAL || env.VERBA_CHARACTER_SLUG || 'naura';
+                let systemPrompt = this._defaultSystemInstruction;
                 let roleInfo = 'Member Biasa';
                 if (isOwner) {
-                    characterSlug = env.VERBA_SLUG_OWNER || env.VERBA_CHARACTER_SLUG || 'naura';
                     roleInfo = 'Owner/Developer';
                 } else if (isPremium) {
-                    characterSlug = env.VERBA_SLUG_PREMIUM || env.VERBA_CHARACTER_SLUG || 'naura';
                     roleInfo = 'Premium Member';
                 }
+                
+                systemPrompt += `\nSaat ini kamu sedang berbicara dengan: ${message.author.username} (Role: ${roleInfo}).`;
 
                 try {
-                    const requestBody = {
-                        character: characterSlug,
-                        messages: [{ role: 'user', content: prompt }]
-                    };
+                    // Ambil memori Groq jika ada
+                    let groqSession = await this.getMemory(userId, 'groq') || { history: [] };
+                    
+                    const apiMessages = [
+                        { role: 'system', content: systemPrompt },
+                        ...groqSession.history,
+                        { role: 'user', content: prompt }
+                    ];
 
-                    // Ambil memori Verba jika ada
-                    let verbaSession = await this.getMemory(userId, 'verba');
-                    if (verbaSession && verbaSession.sessionId) {
-                        requestBody.session_id = verbaSession.sessionId;
-                    }
-
-                    const response = await fetch(VERBA_ENDPOINT, {
+                    const response = await fetch(GROQ_ENDPOINT, {
                         method: 'POST',
                         headers: {
-                            Authorization: `Bearer ${env.VERBA_API_KEY}`,
-                            'Content-Type': 'application/json',
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                            'Authorization': `Bearer ${env.GROQ_API_KEY || env.VERBA_API_KEY}`,
+                            'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify(requestBody)
+                        body: JSON.stringify({
+                            model: 'llama3-8b-8192',
+                            messages: apiMessages,
+                            max_tokens: 1500
+                        })
                     });
 
                     const textResponse = await response.text();
@@ -274,24 +275,26 @@ class AIManager {
                         } catch (e) {
                             errorMessage = `${errorMessage} - Non-JSON response`;
                         }
-                        throw new Error(`Verba API error: ${errorMessage}`);
+                        throw new Error(`Groq API error: ${errorMessage}`);
                     }
 
                     let data;
                     try {
                         data = JSON.parse(textResponse);
                     } catch (err) {
-                        throw new Error(`Invalid JSON response dari Verba API (HTTP ${response.status})`);
-                    }
-
-                    // Update memori Verba
-                    if (data.session_id) {
-                        await this.saveMemory(userId, 'verba', { sessionId: data.session_id });
+                        throw new Error(`Invalid JSON response dari Groq API (HTTP ${response.status})`);
                     }
 
                     responseText = data.choices[0].message.content;
-                } catch (verbaError) {
-                    logger.error('[Verba Error] Fallback ke Gemini:', verbaError);
+
+                    // Update memori Groq
+                    groqSession.history.push({ role: 'user', content: prompt });
+                    groqSession.history.push({ role: 'assistant', content: responseText });
+                    if (groqSession.history.length > 10) groqSession.history = groqSession.history.slice(-10); // Keep last 10 messages
+                    await this.saveMemory(userId, 'groq', groqSession);
+
+                } catch (groqError) {
+                    logger.error('[Groq Error] Fallback ke Gemini:', groqError);
 
                     // FALLBACK KE-2: Pakai Gemini
                     try {

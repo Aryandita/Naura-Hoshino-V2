@@ -29,6 +29,22 @@ const ALIAS_MAP = {
 module.exports = {
     data,
 
+    async autocomplete(interaction, client) {
+        const subCommandName = interaction.options.getSubcommand(false);
+        if (!subCommandName) return interaction.respond([]).catch(() => {});
+        const cmd = subcommands.get(subCommandName);
+        if (cmd && typeof cmd.autocomplete === 'function') {
+            try {
+                await cmd.autocomplete(interaction, client);
+            } catch (error) {
+                // Ignore autocomplete errors silently
+                interaction.respond([]).catch(() => {});
+            }
+        } else {
+            interaction.respond([]).catch(() => {});
+        }
+    },
+
     async execute(interaction) {
         const subCommandName = interaction.options.getSubcommand();
         const cmd = subcommands.get(subCommandName);

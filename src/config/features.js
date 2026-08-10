@@ -131,7 +131,7 @@ const FEATURES = Object.freeze({
         name: 'Survival RPG',
         category: 'game',
         description: 'Dunia RPG, ekonomi, quest, NPC, farming, crafting, dungeon, dan achievement.',
-        enabledByDefault: true,
+        enabledByDefault: false,
         setupKey: 'survival',
         premium: false,
         healthCheck: false,
@@ -144,7 +144,7 @@ const FEATURES = Object.freeze({
         name: 'Leveling',
         category: 'community',
         description: 'Sistem XP, rank, leaderboard, dan progres komunitas server.',
-        enabledByDefault: true,
+        enabledByDefault: false,
         setupKey: 'leveling',
         premium: false,
         healthCheck: true,
@@ -212,11 +212,47 @@ function listSetupFeatures() {
     return listFeatures().filter(feature => feature.setupKey);
 }
 
+async function isFeatureEnabled(guildId, featureId) {
+    const feature = FEATURES[featureId];
+    if (!feature) return false;
+
+    if (!guildId) return feature.enabledByDefault;
+
+    // We avoid circular dependency by requiring cacheManager inside the function
+    // since features.js is required by many places
+    const cacheManager = require('../managers/cacheManager');
+    const settings = await cacheManager.getGuildSettings(guildId);
+    
+    if (!settings || !settings.settings || !settings.settings.features) {
+        return feature.enabledByDefault;
+    }
+
+    const isEnabled = settings.settings.features[featureId];
+    return isEnabled !== undefined ? isEnabled : feature.enabledByDefault;
+}
+
+const COMMAND_FEATURE_MAP = {
+    'survival': 'survival',
+    'rank': 'leveling',
+    'leveling': 'leveling',
+    'music': 'music',
+    'play': 'music',
+    'setup': 'setup',
+    'ticket': 'ticket',
+    'modmail': 'modmail',
+    'tempvoice': 'tempVoice',
+    'ai': 'ai',
+    'ask': 'ai',
+    'core': 'core'
+};
+
 module.exports = {
     FEATURES,
+    COMMAND_FEATURE_MAP,
     listFeatures,
     getFeature,
     listFeaturesByCategory,
     listHealthCheckFeatures,
-    listSetupFeatures
+    listSetupFeatures,
+    isFeatureEnabled
 };
