@@ -19,6 +19,20 @@ const tools = [
             type: 'OBJECT',
             properties: {}
         }
+    },
+    {
+        name: 'play_music',
+        description: 'Memutar lagu atau musik di voice channel berdasarkan judul atau kata kunci.',
+        parameters: {
+            type: 'OBJECT',
+            properties: {
+                query: {
+                    type: 'STRING',
+                    description: 'Judul lagu atau penyanyi yang ingin diputar.'
+                }
+            },
+            required: ['query']
+        }
     }
 ];
 
@@ -42,6 +56,44 @@ async function dispatchFunction(name, args, message) {
                 xp: profile?.xp || 0,
                 language: profile?.language || 'id',
                 isPremium: profile?.isPremium || false
+            };
+        }
+        if (name === 'play_music') {
+            const query = args.query;
+            if (!query) return { error: 'Judul lagu tidak diberikan.' };
+            
+            const musicManager = require('../../src/managers/musicManager');
+            if (!musicManager.poru) return { error: 'Layanan musik sedang tidak aktif.' };
+            
+            const { member, guild } = message;
+            if (!member.voice.channelId) {
+                return { error: 'Kamu harus berada di Voice Channel untuk memutar lagu.' };
+            }
+            
+            const resolve = await musicManager.poru.resolve({ query, source: 'ytmsearch', requester: member.user });
+            if (!resolve || !resolve.tracks || resolve.tracks.length === 0) {
+                return { error: 'Lagu tidak ditemukan.' };
+            }
+            
+            const track = resolve.tracks[0];
+            let player = musicManager.poru.players.get(guild.id);
+            
+            if (!player) {
+                player = musicManager.poru.createConnection({
+                    guildId: guild.id,
+                    voiceChannel: member.voice.channelId,
+                    textChannel: message.channel.id,
+                    deaf: true
+                });
+            }
+            
+            player.queue.add(track);
+            if (!player.isPlaying && !player.isPaused) player.play();
+            
+            return {
+                status: 'success',
+                message: `Lagu "${track.info.title}" berhasil ditambahkan ke antrean.`,
+                track: track.info.title
             };
         }
     } catch (e) {

@@ -115,8 +115,15 @@ async function updateGeminiHistory(userId, role, content) {
         let history = await redisManager.getCache(key) || [];
         history.push({ role, parts: [{ text: content }] });
 
-        // Keep only last 10 messages (5 interactions)
-        if (history.length > 10) history = history.slice(history.length - 10);
+        if (history.length > 20) {
+            const AIMemory = require('./aiMemory');
+            const geminiClient = require('./geminiClient');
+            if (geminiClient.isAvailable()) {
+                history = await AIMemory.compressHistoryIfNeeded(geminiClient, history, userId);
+            } else {
+                history = history.slice(history.length - 20);
+            }
+        }
 
         await redisManager.setCache(key, history, 86400); // 24 hours
     } catch (e) {

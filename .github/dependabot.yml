@@ -1,0 +1,11 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    ignore:
+      # Ignore all dependencies by default, we only want security updates
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]

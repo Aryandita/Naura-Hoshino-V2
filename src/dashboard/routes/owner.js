@@ -70,13 +70,17 @@ module.exports = (client) => {
                     user.premiumUntil = null;
                 }
             }
-            await user.save();
+            const fields = [];
+            if (wallet !== undefined) fields.push('economy_wallet');
+            if (bank !== undefined) fields.push('economy_bank');
+            if (isPremium !== undefined) fields.push('isPremium', 'premiumUntil');
+            if (fields.length > 0) await user.save({ fields });
 
             if (starFragments !== undefined) {
                 const UserSurvival = require('../../models/UserSurvival');
                 const [survival] = await UserSurvival.findOrCreate({ where: { userId: targetId } });
                 survival.starFragments = Number(starFragments) || 0;
-                await survival.save();
+                await survival.save({ fields: ['starFragments'] });
             }
 
             res.json({ success: true, message: `Data ${targetId} sudah diperbarui.` });

@@ -42,6 +42,17 @@ function addRpgGroup(builder) {
         )
         .addSubcommand(sub => sub.setName('raid').setDescription('\ud83d\udc09 Serang Boss Raid Klan bersama kawan'))
         .addSubcommand(sub => sub.setName('rebirth').setDescription('Lakukan reinkarnasi setelah mencapai Level Maksimal (Lv. 50)'))
+        .addSubcommand(sub => sub.setName('gacha').setDescription('Roll Gacha untuk mendapatkan item langka!')
+            .addStringOption(option =>
+                option.setName('banner')
+                    .setDescription('Pilih banner gacha')
+                    .setRequired(true)
+                    .addChoices(
+                        { name: '📦 Standard Drop (3000 Coins)', value: 'standard' },
+                        { name: '💎 Premium Mythic (5 Coupons)', value: 'premium' }
+                    )
+            )
+        )
     );
 }
 

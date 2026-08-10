@@ -199,7 +199,7 @@ module.exports = (client) => {
 
             profile.inventory = inv;
             profile.changed('inventory', true);
-            await profile.save();
+            await profile.save({ fields: ['inventory'] });
 
             res.json({ success: true, message });
         } catch (e) {
@@ -290,7 +290,7 @@ module.exports = (client) => {
 
             profile.inventory = inv;
             profile.changed('inventory', true);
-            await profile.save();
+            await profile.save({ fields: ['inventory'] });
 
             res.json({ success: true, upgraded: isSuccess, message, forgedItemName });
         } catch (e) {

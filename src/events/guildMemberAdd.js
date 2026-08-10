@@ -3,7 +3,7 @@ const StickyRole = require('../models/StickyRole');
 const cacheManager = require('../managers/cacheManager');
 const { logger } = require('../managers/logger');
 const ui = require('../config/ui');
-const guildSettingsService = require('../services/guildSettingsService');
+const guildSettingsService = require('../managers/guildSettingsService');
 
 const joinRate = new Map();
 const { generateWelcomeImage } = require('../../plugin/canvas/CanvasUtils');
@@ -116,29 +116,32 @@ module.exports = {
         if (!settings) return;
 
         // --- ANTI-RAID SYSTEM ---
-        if (settings.antiraid && settings.antiraid.enabled && settings.antiraid.threshold) {
+        if (settings.antiRaid && settings.antiRaid.enabled) {
             const now = Date.now();
+            const timeWindow = (settings.antiRaid.seconds || 10) * 1000;
+            const threshold = settings.antiRaid.joins || 5;
+            
             let record = joinRate.get(member.guild.id);
-            if (!record || now - record.windowStart > 60000) {
+            if (!record || now - record.windowStart > timeWindow) {
                 record = { count: 0, windowStart: now };
             }
             record.count += 1;
             joinRate.set(member.guild.id, record);
 
-            if (record.count >= settings.antiraid.threshold) {
+            if (record.count >= threshold) {
                 // LOCKDOWN ACTIVATED
-                settings.lockdown = true;
-                await guildSettingsService.updateGuildSetting(member.guild.id, 'lockdown', true);
+                settings.antiRaid.lockdown = true;
+                await guildSettingsService.updateGuildSetting(member.guild.id, 'antiRaid', settings.antiRaid);
                 logger.warn(`[Anti-Raid] Server ${member.guild.name} telah dikunci otomatis karena terdeteksi raid!`);
                 joinRate.delete(member.guild.id); // Reset
             }
         }
 
         // Jika sedang lockdown, usir/kick otomatis member baru ini
-        if (settings.lockdown) {
+        if (settings.antiRaid && settings.antiRaid.lockdown) {
             try {
-                await member.send(`Maaf, server **${member.guild.name}** sedang dalam status Lockdown. Coba bergabung lagi nanti!`).catch(() => {});
-                await member.kick('Auto-Kick: Server dalam status Lockdown');
+                await member.send(`Maaf, server **${member.guild.name}** sedang dalam status Lockdown karena sistem Anti-Raid. Coba bergabung lagi nanti!`).catch(() => {});
+                await member.kick('Auto-Kick: Server dalam status Lockdown Anti-Raid');
                 logger.info(`[Anti-Raid] Mengeluarkan ${member.user.tag} karena lockdown aktif.`);
             } catch (err) {
                 logger.error(`[Anti-Raid] Gagal mengusir ${member.user.tag} saat lockdown: ${err.message}`);

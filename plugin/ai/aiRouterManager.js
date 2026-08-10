@@ -4,6 +4,7 @@ const env = require('../../src/config/env');
 const ui = require('../../src/config/ui');
 const gemini = require('./geminiClient');
 const { checkModeration, checkRateLimit, simulateTypingDelay, performWebSearchIfNeeded, updateGeminiHistory, getGeminiHistory } = require('./aiHelper');
+const AIMemory = require('./aiMemory');
 
 class AIRouterManager {
     static async processMessage(
@@ -30,6 +31,11 @@ class AIRouterManager {
             if (set.aiPersona) {
                 persona += `\n[Persona/Sifat Khusus Tambahan]: ${set.aiPersona}`;
             }
+        }
+
+        const userMemory = await AIMemory.getMemoryContext(message.author.id);
+        if (userMemory) {
+            persona += userMemory;
         }
 
         const modResult = await checkModeration(userMessage);
@@ -72,7 +78,32 @@ class AIRouterManager {
                 return message.reply(errPayload).catch(() => {});
             }
         } else {
+            let useVerba = true;
+            let forceGeminiForTools = false;
+            let usedTools = false;
+            
+            // Check intent for function calling
+            const toolKeywords = /saldo|uang|koin|profil|level|xp|premium|informasi|lagu|musik|putar|mainkan/i;
+            if (toolKeywords.test(userMessage || '')) {
+                const redisManager = require('../../src/managers/redisManager');
+                if (isOwner || isPremiumUser) {
+                    forceGeminiForTools = true;
+                } else if (redisManager.isReady) {
+                    const quotaKey = `gemini_tools_quota:${message.author.id}`;
+                    const todayUsage = parseInt(await redisManager.getCache(quotaKey) || '0', 10);
+                    if (todayUsage < 10) { // Limit 10/day for free users
+                        forceGeminiForTools = true;
+                    }
+                }
+            }
+            
+            if (forceGeminiForTools) {
+                useVerba = false;
+            }
+
             try {
+                if (!useVerba) throw new Error('INTENT_TOOL_CALL');
+                
                 const contextPrompt = `${persona}${previousBotMessage}\n\nPesan dari User (${message.author.username}): ${userMessage || '(Menyapa)'}`;
 
                 let targetSlug = env.VERBA_SLUG_GENERAL || env.VERBA_CHARACTER_SLUG || 'naura';
@@ -150,10 +181,29 @@ class AIRouterManager {
                     if (!gemini.isAvailable()) throw new Error('GEMINI_API tidak dikonfigurasi.');
 
                     const history = await getGeminiHistory(message.author.id);
-                    replyText = await gemini.generate({
+                    const { tools } = require('./functionDispatcher');
+                    
+                    const opts = {
                         parts: [{ text: promptText }],
-                        history
-                    });
+                        history,
+                        message
+                    };
+                    
+                    if (forceGeminiForTools) {
+                        opts.config = { tools: [{ functionDeclarations: tools }] };
+                        usedTools = true;
+                    }
+
+                    replyText = await gemini.generate(opts);
+                    
+                    if (usedTools && !isOwner && !isPremiumUser) {
+                        const redisManager = require('../../src/managers/redisManager');
+                        if (redisManager.isReady) {
+                            const quotaKey = `gemini_tools_quota:${message.author.id}`;
+                            const todayUsage = parseInt(await redisManager.getCache(quotaKey) || '0', 10);
+                            await redisManager.setCache(quotaKey, todayUsage + 1, 86400); // 24h expiration roughly
+                        }
+                    }
 
                     await updateGeminiHistory(message.author.id, 'user', promptText);
                     await updateGeminiHistory(message.author.id, 'model', replyText);

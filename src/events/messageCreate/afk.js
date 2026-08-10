@@ -30,7 +30,7 @@ async function notifyMentionedAfk(message) {
             });
             profile.afk_mentions = mentions;
             profile.changed('afk_mentions', true);
-            await profile.save().catch(() => {});
+            await profile.save({ fields: ['afk_mentions'] }).catch(() => {});
         }
 
         const since = `<t:${Math.floor(new Date(profile.afk_timestamp).getTime() / 1000)}:R>`;
@@ -63,7 +63,7 @@ async function welcomeBack(message) {
     profile.afk_reason = null;
     profile.afk_timestamp = null;
     profile.afk_mentions = [];
-    await profile.save().catch(() => {});
+    await profile.save({ fields: ['afk_reason', 'afk_timestamp', 'afk_mentions'] }).catch(() => {});
 
     let greeting = `${ui.getEmoji('happy') || '\uD83D\uDC4B'} Selamat datang kembali, <@${message.author.id}>! Naura tungguin dari tadi, lho.`;
     if (isOwner) {

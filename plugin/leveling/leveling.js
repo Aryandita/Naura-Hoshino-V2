@@ -163,8 +163,7 @@ async function awardXpDirect(user, guild, currentChannel, precomputedGain = null
         const currentKnownLevel = cachedLevelStr ? parseInt(cachedLevelStr, 10) : profile.level;
 
         // 3. Add XP to Redis buffer
-        const xpBufferManager = require('../../src/managers/xpBufferManager');
-        const bufferedXp = await xpBufferManager.addXp(guild.id, user.id, precomputedGain === null ? await rollXp(user.id) : precomputedGain);
+        const bufferedXp = await xpBuffer.addXp(guild.id, user.id, precomputedGain === null ? await rollXp(user.id) : precomputedGain);
 
         if (bufferedXp !== null) {
             const simulatedProfile = {

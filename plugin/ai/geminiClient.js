@@ -100,10 +100,11 @@ function extractText(response) {
  * @param {Array<object>} [opts.history] - Riwayat format { role: 'user'|'model', parts: [{ text }] }.
  * @param {string} [opts.model]
  * @param {object} [opts.config] - Diteruskan apa adanya ke SDK (maxOutputTokens, temperature, dsb).
+ * @param {object} [opts.message] - Objek message discord untuk dispatcher.
  * @returns {Promise<string>} Teks jawaban yang sudah di-trim.
  * @throws {Error} Bila GEMINI_API kosong atau jawaban Gemini kosong.
  */
-async function generate({ parts, history = [], model = DEFAULT_MODEL, config } = {}) {
+async function generate({ parts, history = [], model = DEFAULT_MODEL, config, message } = {}) {
     const client = getClient();
     if (!client) throw new Error('GEMINI_API tidak dikonfigurasi.');
 
@@ -114,11 +115,27 @@ async function generate({ parts, history = [], model = DEFAULT_MODEL, config } =
     const safeHistory = Array.isArray(history) ? history.filter(h => h && h.role && h.parts) : [];
     const contents = [...safeHistory, { role: 'user', parts }];
 
-    const response = await client.models.generateContent({
+    let response = await client.models.generateContent({
         model,
         contents,
         ...(config ? { config } : {})
     });
+    
+    // Handle function calls loop if present
+    if (response.functionCalls && response.functionCalls.length > 0 && message) {
+        const { dispatchFunction } = require('./functionDispatcher');
+        for (const call of response.functionCalls) {
+            const fnResult = await dispatchFunction(call.name, call.args, message);
+            contents.push({ role: 'model', parts: [{ functionCall: call }] });
+            contents.push({ role: 'user', parts: [{ functionResponse: { name: call.name, response: fnResult } }] });
+        }
+        
+        response = await client.models.generateContent({
+            model,
+            contents,
+            ...(config ? { config } : {})
+        });
+    }
 
     const text = extractText(response).trim();
     if (!text) throw new Error('Respons Gemini kosong atau formatnya tidak dikenali.');

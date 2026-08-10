@@ -24,9 +24,10 @@ jobs:
         run: npm run locales:check:strict
       - name: Test
         run: npm test
+      - name: Cek resolusi modul internal (Boot check)
+        run: node scripts/check-requires.js
       - name: Cek format Prettier
         run: npm run format:check
-        continue-on-error: true
 
   security:
     name: Audit Keamanan Dependensi
@@ -38,4 +39,3 @@ jobs:
           node-version: '24'
       - name: npm audit
         run: npm audit --audit-level=high
-        continue-on-error: true

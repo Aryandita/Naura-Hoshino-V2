@@ -45,7 +45,10 @@ const UserLeveling = sequelize.define('UserLeveling', {
     }
 }, {
     tableName: 'user_leveling',
-    timestamps: false 
+    timestamps: false,
+    indexes: [
+        { unique: true, fields: ['guildId', 'userId'] }
+    ]
 });
 
 module.exports = UserLeveling;

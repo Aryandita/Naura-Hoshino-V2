@@ -236,7 +236,7 @@ module.exports = {
             const username = profile.minecraft_ign;
             
             profile.minecraft_playtime = (profile.minecraft_playtime || 0) + Math.floor(Math.random() * 30) + 15;
-            await profile.save();
+            await profile.save({ fields: ['minecraft_playtime'] });
 
             const playMinutes = profile.minecraft_playtime;
             const playHours = Math.floor(playMinutes / 60);

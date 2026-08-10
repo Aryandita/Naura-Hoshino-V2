@@ -79,7 +79,7 @@ module.exports = {
                         await user.send({ embeds: [embed], components: [row] });
                         
                         profile.dailyReminded = true;
-                        await profile.save();
+                        await profile.save({ fields: ['dailyReminded'] });
 
                     } catch (dmErr) {
                         // DM tertutup atau user tidak dapat dihubungi, abaikan

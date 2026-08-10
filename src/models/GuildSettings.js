@@ -88,6 +88,12 @@ const GuildSettings = sequelize.define('GuildSettings', {
                 categoryId: null,
                 logChannelId: null // Tempat mengirim transkrip saat ditutup
             },
+            antiRaid: {
+                enabled: false,
+                joins: 5,
+                seconds: 10,
+                lockdown: false
+            },
             aiPersona: null // Prompt kepribadian khusus untuk server ini
         }
     },

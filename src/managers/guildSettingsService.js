@@ -40,7 +40,7 @@ async function updateGuildSetting(guildId, mutator) {
     row.settings = settings;
     // Sequelize tidak mendeteksi perubahan di dalam kolom JSON secara otomatis.
     row.changed('settings', true);
-    await row.save();
+    await row.save({ fields: ['settings'] });
 
     return settings;
 }

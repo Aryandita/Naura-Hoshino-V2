@@ -174,30 +174,6 @@ function syncLocal(currency, holders, nextValue) {
     }
 }
 
-/**
- * Menetapkan saldo ke nilai tertentu.
- *
- * @deprecated Fungsi ini menimpa nilai apa adanya dan TIDAK tahan terhadap
- * balapan. Untuk pengurangan saldo pakai charge(), untuk penambahan pakai
- * reward(). Dipertahankan hanya untuk kasus administratif seperti perintah owner.
- */
-async function setBalance(currency, holders = {}, value) {
-    const c = resolve(currency);
-    const safeValue = Math.max(0, Math.floor(Number(value) || 0));
-    const userId = userIdOf(holders);
-
-    syncLocal(c, holders, safeValue);
-    if (!userId) return safeValue;
-
-    if (c.owner === 'profile') {
-        await cacheManager.updateUserProfile(userId, { [c.field]: safeValue });
-    } else {
-        await cacheManager.updateUserSurvival(userId, { [c.field]: safeValue });
-    }
-
-    return safeValue;
-}
-
 function canAfford(currency, holders, amount) {
     return balanceOf(currency, holders) >= (Number(amount) || 0);
 }
@@ -312,7 +288,6 @@ module.exports = {
     emojiObjectOf,
     format,
     balanceOf,
-    setBalance,
     canAfford,
     charge,
     reward,

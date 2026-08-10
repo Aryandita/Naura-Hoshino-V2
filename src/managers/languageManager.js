@@ -196,7 +196,7 @@ class LanguageManager {
                 });
                 if (profile.language !== normalized) {
                     profile.language = normalized;
-                    await profile.save();
+                    await profile.save({ fields: ['language'] });
                 }
             }
         } catch (error) {

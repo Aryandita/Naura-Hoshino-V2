@@ -259,7 +259,7 @@ module.exports = {
                         if (modified) {
                             profile.cooldowns = newCooldowns;
                             profile.changed('cooldowns', true);
-                            await profile.save();
+                            await profile.save({ fields: ['cooldowns'] });
                         }
                     }
                 }

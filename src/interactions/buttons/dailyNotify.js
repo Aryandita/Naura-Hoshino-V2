@@ -1,6 +1,7 @@
 'use strict';
 const { MessageFlags } = require('discord.js');
 const UserProfile = require('../../models/UserProfile');
+const cacheManager = require('../../managers/cacheManager');
 
 module.exports = [
     {
@@ -14,7 +15,7 @@ module.exports = [
                 return interaction.reply({ content: '\u274c Tombol ini bukan untukmu.', flags: MessageFlags.Ephemeral });
             }
 
-            await UserProfile.update({ dailyNotify: false }, { where: { userId: targetUserId } });
+            await cacheManager.updateUserProfile(targetUserId, 'dailyNotify', false);
 
             return interaction.reply({
                 content: '\ud83d\udd15 Notifikasi Daily Reminder telah dimatikan. Kamu tidak akan menerima pesan ini lagi.',
