@@ -31,14 +31,14 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 
 ### 📌 Versi & Sumber Kebenaran
 
-| Item | Nilai | Sumber kebenaran |
-|---|:---:|---|
-| Versi Bot | `2.0.0` | [`package.json`](package.json) |
-| Versi Engine | `2.0.0` | [`package.json`](package.json) |
-| Runtime minimum | Node.js `>= 24.0.0` | `engines` di [`package.json`](package.json) |
-| Aturan & arsitektur | - | [`AGENTS.md`](AGENTS.md) |
-| Prioritas pekerjaan | - | [`TODO.md`](TODO.md) + Issues |
-| Design token & UI | - | [`DESIGN.md`](DESIGN.md) |
+| Item                |        Nilai        | Sumber kebenaran                            |
+| ------------------- | :-----------------: | ------------------------------------------- |
+| Versi Bot           |       `2.0.0`       | [`package.json`](package.json)              |
+| Versi Engine        |       `2.0.0`       | [`package.json`](package.json)              |
+| Runtime minimum     | Node.js `>= 24.0.0` | `engines` di [`package.json`](package.json) |
+| Aturan & arsitektur |          -          | [`AGENTS.md`](AGENTS.md)                    |
+| Prioritas pekerjaan |          -          | [`TODO.md`](TODO.md) + Issues               |
+| Design token & UI   |          -          | [`DESIGN.md`](DESIGN.md)                    |
 
 > Bila angka pada README ini berbeda dengan `package.json`, maka `package.json` yang benar dan README wajib diperbarui. Aturan pengembangan lengkap ada di [`AGENTS.md`](AGENTS.md), jadi README hanya memuat ringkasannya.
 
@@ -117,16 +117,16 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 
 ## 🧩 Kebutuhan Sistem
 
-| Status | Komponen | Versi Minimal | Keterangan |
-|:---:|---|:---:|---|
-| 🟢 | **Node.js** | `>= 24.0.0` | Sangat wajib. Naura memakai `process.loadEnvFile()`, `fetch` global, `node:sqlite`, dan test runner bawaan `node:test`. |
-| 🐬 | **MySQL** | `8.x` | Basis data utama untuk performa maksimal (SQLite dipakai sebagai penyimpanan darurat). |
-| 🔴 | **Redis** | *Opsional* | Untuk sistem Cache & Pub/Sub. (Akan dilewati otomatis jika `REDIS_URL` kosong). |
-| 🎧 | **Lavalink** | `v4` | Wajib di-setup jika ingin menggunakan seluruh modul Musik. |
-| 🎬 | **FFmpeg** | *Terbaru* | Modul ini sudah tersedia otomatis lewat paket `ffmpeg-static`. |
+| Status | Komponen     | Versi Minimal | Keterangan                                                                                                              |
+| :----: | ------------ | :-----------: | ----------------------------------------------------------------------------------------------------------------------- |
+|   🟢   | **Node.js**  |  `>= 24.0.0`  | Sangat wajib. Naura memakai `process.loadEnvFile()`, `fetch` global, `node:sqlite`, dan test runner bawaan `node:test`. |
+|   🐬   | **MySQL**    |     `8.x`     | Basis data utama untuk performa maksimal (SQLite dipakai sebagai penyimpanan darurat).                                  |
+|   🔴   | **Redis**    |  _Opsional_   | Untuk sistem Cache & Pub/Sub. (Akan dilewati otomatis jika `REDIS_URL` kosong).                                         |
+|   🎧   | **Lavalink** |     `v4`      | Wajib di-setup jika ingin menggunakan seluruh modul Musik.                                                              |
+|   🎬   | **FFmpeg**   |   _Terbaru_   | Modul ini sudah tersedia otomatis lewat paket `ffmpeg-static`.                                                          |
 
 > [!WARNING]
-> Beberapa dependensi bersifat *native* seperti (`@napi-rs/canvas`, `sqlite3`, `libsodium-wrappers`). Jika kamu menjalankan bot ini di **Linux**, kemungkinan besar kamu perlu memasang `build-essential` dan `python3` terlebih dahulu.
+> Beberapa dependensi bersifat _native_ seperti (`@napi-rs/canvas`, `sqlite3`, `libsodium-wrappers`). Jika kamu menjalankan bot ini di **Linux**, kemungkinan besar kamu perlu memasang `build-essential` dan `python3` terlebih dahulu.
 
 > [!NOTE]
 > **Kenapa Node 24 dan bukan versi lebih rendah?** Selain `process.loadEnvFile()`, Naura mengandalkan `fetch` global (sehingga `node-fetch` bisa dilepas), `node:sqlite` bawaan untuk penyimpanan darurat, dan `node --test` sebagai test runner tanpa dependensi tambahan. Menyeragamkan satu versi juga menghilangkan celah bug yang hanya muncul di salah satu environment.
@@ -189,10 +189,10 @@ Karena `CMD_RUN` selalu diawali `/usr/local/bin/`, token pertamanya **wajib** be
 
 ### Konfigurasi yang dipakai
 
-| Kolom panel | Nilai |
-|---|---|
-| `CMD_RUN` | `npm start` |
-| Docker image | Node **24** atau lebih baru |
+| Kolom panel   | Nilai                                                         |
+| ------------- | ------------------------------------------------------------- |
+| `CMD_RUN`     | `npm start`                                                   |
+| Docker image  | Node **24** atau lebih baru                                   |
 | `AUTO_UPDATE` | `1` bila kamu ingin panel menarik commit terbaru saat restart |
 
 Itu saja. Tidak ada perintah tambahan yang perlu kamu tulis, karena urutan migrasi sudah pindah ke dalam `package.json` lewat `prestart`.
@@ -220,40 +220,41 @@ Itu saja. Tidak ada perintah tambahan yang perlu kamu tulis, karena urutan migra
 
 Untuk mempermudah manajemen, kami telah menyediakan beberapa perintah praktis. Jalankan menggunakan terminal pilihanmu:
 
-| Perintah | Deskripsi Fungsi |
-|---|---|
-| 🚀 `npm start` | Menjalankan bot via `shard.js` (ShardingManager). **Gunakan perintah ini untuk Produksi.** Migrasi database berjalan otomatis lebih dulu lewat `prestart`. |
-| 🗃️ `npm run prestart` | Dipanggil otomatis oleh npm sebelum `start`. Menjalankan `scripts/migrate.js` dan menggagalkan `start` bila migrasi error. Jarang perlu dijalankan manual. |
-| 🗃️ `npm run db:migrate` | Menjalankan migrasi skema database secara terpisah lewat `scripts/migrate.js`. Keluar dengan kode 1 bila gagal, dan migrasi yang sudah pernah jalan dicatat di tabel `schema_migrations`. |
-| 🆘 `npm run start:no-migrate` | Menyalakan bot **tanpa** memeriksa skema. Pintu darurat saja, jangan dijadikan kebiasaan. |
-| 🔄 `npm run dev` | Menjalankan bot dengan auto-restart via `--watch`. Sangat pas untuk *development*. |
-| 📤 `npm run deploy` | Memaksa bot untuk melakukan registrasi ulang seluruh *Slash Command*. |
-| 📦 `npm run install-start`| Kombinasi instan: Pasang dependensi dan langsung nyalakan bot (termasuk migrasi). |
-| 🧪 `npm test` | Menjalankan seluruh test memakai runner bawaan Node (`node --test`). |
-| 🔍 `npm run lint` | Melakukan pengecekan kode dengan ESLint. |
-| 🔧 `npm run lint:fix` | Mengecek sekaligus mencoba memperbaiki isu kode secara otomatis (ESLint fix). |
-| 💅 `npm run format` | Merapikan estetika struktur kode dengan Prettier. |
-| 👀 `npm run format:check` | Memeriksa format kode (hanya laporan, tanpa modifikasi). |
-| 🎨 `npm run build:css` | Membangun berkas CSS dashboard. |
-| 🌐 `npm run locales:check` | Audit sinkronisasi / paritas kunci bahasa ID vs EN. |
-| 🚨 `npm run locales:check:strict` | Sama seperti audit locales biasa, namun proses digagalkan jika ada kunci yang hilang. |
+| Perintah                          | Deskripsi Fungsi                                                                                                                                                                          |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🚀 `npm start`                    | Menjalankan bot via `shard.js` (ShardingManager). **Gunakan perintah ini untuk Produksi.** Migrasi database berjalan otomatis lebih dulu lewat `prestart`.                                |
+| 🗃️ `npm run prestart`             | Dipanggil otomatis oleh npm sebelum `start`. Menjalankan `scripts/migrate.js` dan menggagalkan `start` bila migrasi error. Jarang perlu dijalankan manual.                                |
+| 🗃️ `npm run db:migrate`           | Menjalankan migrasi skema database secara terpisah lewat `scripts/migrate.js`. Keluar dengan kode 1 bila gagal, dan migrasi yang sudah pernah jalan dicatat di tabel `schema_migrations`. |
+| 🆘 `npm run start:no-migrate`     | Menyalakan bot **tanpa** memeriksa skema. Pintu darurat saja, jangan dijadikan kebiasaan.                                                                                                 |
+| 🔄 `npm run dev`                  | Menjalankan bot dengan auto-restart via `--watch`. Sangat pas untuk _development_.                                                                                                        |
+| 📤 `npm run deploy`               | Memaksa bot untuk melakukan registrasi ulang seluruh _Slash Command_.                                                                                                                     |
+| 📦 `npm run install-start`        | Kombinasi instan: Pasang dependensi dan langsung nyalakan bot (termasuk migrasi).                                                                                                         |
+| 🧪 `npm test`                     | Menjalankan seluruh test memakai runner bawaan Node (`node --test`).                                                                                                                      |
+| 🔍 `npm run lint`                 | Melakukan pengecekan kode dengan ESLint.                                                                                                                                                  |
+| 🔧 `npm run lint:fix`             | Mengecek sekaligus mencoba memperbaiki isu kode secara otomatis (ESLint fix).                                                                                                             |
+| 💅 `npm run format`               | Merapikan estetika struktur kode dengan Prettier.                                                                                                                                         |
+| 👀 `npm run format:check`         | Memeriksa format kode (hanya laporan, tanpa modifikasi).                                                                                                                                  |
+| 🎨 `npm run build:css`            | Membangun berkas CSS dashboard.                                                                                                                                                           |
+| 🌐 `npm run locales:check`        | Audit sinkronisasi / paritas kunci bahasa ID vs EN.                                                                                                                                       |
+| 🚨 `npm run locales:check:strict` | Sama seperti audit locales biasa, namun proses digagalkan jika ada kunci yang hilang.                                                                                                     |
 
-*(Catatan: Slash command akan ter-deploy otomatis saat bot pertama hidup. Hanya shard utama yang melakukan ini, dan deploy dilewati bila tanda tangan command tidak berubah. Gunakan `--no-deploy` untuk skip, atau `npm run deploy` untuk memaksa.)*
+_(Catatan: Slash command akan ter-deploy otomatis saat bot pertama hidup. Hanya shard utama yang melakukan ini, dan deploy dilewati bila tanda tangan command tidak berubah. Gunakan `--no-deploy` untuk skip, atau `npm run deploy` untuk memaksa.)_
 
 ### Pemeriksaan Otomatis di CI
 
 Setiap push dan pull request diperiksa oleh GitHub Actions memakai **Node 24**:
 
-| Pemeriksaan | Perintah | Status |
-|---|---|:---:|
-| Linting | `npm run lint` | Wajib lulus |
-| Gaya tulisan | `node scripts/check-em-dash.js` | Wajib lulus |
-| Paritas bahasa | `npm run locales:check:strict` | Wajib lulus |
-| Test | `npm test` | Wajib lulus |
-| Format | `npm run format:check` | Sementara belum memblokir |
-| Audit dependensi | `npm audit --audit-level=high` | Sementara belum memblokir |
+| Pemeriksaan      | Perintah                        |          Status           |
+| ---------------- | ------------------------------- | :-----------------------: |
+| Linting          | `npm run lint`                  |        Wajib lulus        |
+| Gaya tulisan     | `node scripts/check-em-dash.js` |        Wajib lulus        |
+| Paritas bahasa   | `npm run locales:check:strict`  |        Wajib lulus        |
+| Test             | `npm test`                      |        Wajib lulus        |
+| Format           | `npm run format:check`          | Sementara belum memblokir |
+| Audit dependensi | `npm audit --audit-level=high`  | Sementara belum memblokir |
 
 ### Pengecekan Gaya Tulisan
+
 Kami sangat menjaga standar kualitas tulisan. Teks tidak boleh terkesan kaku seperti robot, dan em dash dilarang di seluruh repo termasuk kamus bahasa.
 
 ```bash
@@ -272,101 +273,108 @@ Semua kredensial dan pengaturan penting disimpan di `.env` (berdasarkan [`src/co
 > `src/config/env.js` adalah satu-satunya sumber kebenaran untuk nama variabel dan nilai default. Seluruh akses `process.env` wajib melewati file itu, jangan pernah dibaca langsung dari modul lain.
 
 ### 🔴 Wajib Diisi (Core)
-| Variabel | Deskripsi |
-|---|---|
-| `DISCORD_TOKEN` | Token bot rahasia milikmu dari Discord Developer Portal |
-| `CLIENT_ID` | Application ID dari bot kamu |
-| `MYSQL_USER` | Username untuk akses ke Database MySQL |
-| `MYSQL_DATABASE` | Nama skema database yang akan dipakai |
+
+| Variabel         | Deskripsi                                               |
+| ---------------- | ------------------------------------------------------- |
+| `DISCORD_TOKEN`  | Token bot rahasia milikmu dari Discord Developer Portal |
+| `CLIENT_ID`      | Application ID dari bot kamu                            |
+| `MYSQL_USER`     | Username untuk akses ke Database MySQL                  |
+| `MYSQL_DATABASE` | Nama skema database yang akan dipakai                   |
 
 <details>
 <summary><b>💬 Discord Settings</b> (Klik untuk membuka)</summary>
 
-| Variabel | Default | Deskripsi |
-|---|---|---|
-| `PREFIX` | `n!` | Prefix klasik untuk menjalankan command teks |
-| `GUILD_ID` | - | ID Server khusus untuk deploy slash command instan (saat masa uji coba/dev) |
-| `OWNER_IDS` | - | Daftar ID owner yang dipisahkan oleh koma (contoh: `1234,5678`) |
-| `STAFF_GUILD_ID` | - | ID Server utama bagi para staf untuk mengurus ModMail |
-| `MODMAIL_CATEGORY_ID` | - | Kategori khusus di server staf untuk menampung tiket ModMail |
+| Variabel              | Default | Deskripsi                                                                   |
+| --------------------- | ------- | --------------------------------------------------------------------------- |
+| `PREFIX`              | `n!`    | Prefix klasik untuk menjalankan command teks                                |
+| `GUILD_ID`            | -       | ID Server khusus untuk deploy slash command instan (saat masa uji coba/dev) |
+| `OWNER_IDS`           | -       | Daftar ID owner yang dipisahkan oleh koma (contoh: `1234,5678`)             |
+| `STAFF_GUILD_ID`      | -       | ID Server utama bagi para staf untuk mengurus ModMail                       |
+| `MODMAIL_CATEGORY_ID` | -       | Kategori khusus di server staf untuk menampung tiket ModMail                |
+
 </details>
 
 <details>
 <summary><b>🗄️ Database & Cache Settings</b> (Klik untuk membuka)</summary>
 
-| Variabel | Default | Deskripsi |
-|---|---|---|
-| `MYSQL_HOST` | `127.0.0.1` | Host tujuan Database MySQL |
-| `MYSQL_PORT` | `3306` | Port tujuan Database |
-| `MYSQL_PASSWORD` | - | Password untuk user MySQL kamu |
-| `REDIS_URL` | - | *Opsional*. URL koneksi Redis. Biarkan kosong untuk mematikan Cache/PubSub eksternal. |
-| `DB_POOL_BUDGET` | `80` | Total koneksi database untuk **seluruh** shard, lalu dibagi jumlah shard. Angkanya harus di bawah `max_connections` MySQL. |
-| `DB_POOL_MAX` | - | Penimpa manual `pool.max` per proses. Isi hanya bila kamu tahu pasti kapasitas database. |
-| `SKIP_DB_MIGRATE` | - | Pintu darurat. Isi `1`, `true`, atau `yes` untuk melewati migrasi saat boot. Jangan dibiarkan menyala permanen. |
+| Variabel          | Default     | Deskripsi                                                                                                                  |
+| ----------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `MYSQL_HOST`      | `127.0.0.1` | Host tujuan Database MySQL                                                                                                 |
+| `MYSQL_PORT`      | `3306`      | Port tujuan Database                                                                                                       |
+| `MYSQL_PASSWORD`  | -           | Password untuk user MySQL kamu                                                                                             |
+| `REDIS_URL`       | -           | _Opsional_. URL koneksi Redis. Biarkan kosong untuk mematikan Cache/PubSub eksternal.                                      |
+| `DB_POOL_BUDGET`  | `80`        | Total koneksi database untuk **seluruh** shard, lalu dibagi jumlah shard. Angkanya harus di bawah `max_connections` MySQL. |
+| `DB_POOL_MAX`     | -           | Penimpa manual `pool.max` per proses. Isi hanya bila kamu tahu pasti kapasitas database.                                   |
+| `SKIP_DB_MIGRATE` | -           | Pintu darurat. Isi `1`, `true`, atau `yes` untuk melewati migrasi saat boot. Jangan dibiarkan menyala permanen.            |
 
 > [!NOTE]
 > Bila `MYSQL_DATABASE`, `MYSQL_USER`, atau `MYSQL_HOST` kosong, bot otomatis beralih ke penyimpanan darurat SQLite. Di dalam kode nilai-nilai ini dibaca sebagai `env.DB_NAME`, `env.DB_USER`, `env.DB_HOST`, `env.DB_PORT`, dan `env.DB_PASS`.
 
 > [!WARNING]
 > `pool.max` bersifat **per proses**, bukan per bot. Dua shard dengan `pool.max: 100` akan meminta 200 koneksi, sementara `max_connections` MySQL bawaan biasanya hanya 151. Karena itu Naura memakai anggaran total (`DB_POOL_BUDGET`) yang dibagi jumlah shard.
+
 </details>
 
 <details>
 <summary><b>🎧 Lavalink / Music Settings</b> (Klik untuk membuka)</summary>
 
-| Variabel | Default |
-|---|---|
-| `LAVALINK_HOST` | `localhost` |
-| `LAVALINK_PORT` | `2333` |
+| Variabel            | Default           |
+| ------------------- | ----------------- |
+| `LAVALINK_HOST`     | `localhost`       |
+| `LAVALINK_PORT`     | `2333`            |
 | `LAVALINK_PASSWORD` | `youshallnotpass` |
-| `LAVALINK_SECURE` | `false` |
+| `LAVALINK_SECURE`   | `false`           |
+
 </details>
 
 <details>
 <summary><b>🤖 AI Configuration</b> (Klik untuk membuka)</summary>
 
-| Variabel | Default | Deskripsi |
-|---|---|---|
-| `GEMINI_API_KEY` | - | API Key utama untuk Google Gemini |
-| `VERBA_API_KEY` | - | API Key untuk sistem Persona Naura |
-| `VERBA_SLUG_OWNER` | - | Persona khusus saat merespon Owner bot |
-| `VERBA_SLUG_PREMIUM` | - | Persona khusus saat merespon User Premium |
-| `VERBA_SLUG_GENERAL` | - | Persona umum sehari-hari |
-| `OLLAMA_BASE_URL` | `http://localhost:11434` | Fallback URL jika AI lokal dipakai |
-| `OLLAMA_MODEL` | `llama3.1` | Model yang akan digunakan oleh Ollama |
-| `FOOOCUS_BASE_URL` | `http://localhost:7865` | Server endpoint untuk generasi gambar lokal |
+| Variabel             | Default                  | Deskripsi                                   |
+| -------------------- | ------------------------ | ------------------------------------------- |
+| `GEMINI_API_KEY`     | -                        | API Key utama untuk Google Gemini           |
+| `VERBA_API_KEY`      | -                        | API Key untuk sistem Persona Naura          |
+| `VERBA_SLUG_OWNER`   | -                        | Persona khusus saat merespon Owner bot      |
+| `VERBA_SLUG_PREMIUM` | -                        | Persona khusus saat merespon User Premium   |
+| `VERBA_SLUG_GENERAL` | -                        | Persona umum sehari-hari                    |
+| `OLLAMA_BASE_URL`    | `http://localhost:11434` | Fallback URL jika AI lokal dipakai          |
+| `OLLAMA_MODEL`       | `llama3.1`               | Model yang akan digunakan oleh Ollama       |
+| `FOOOCUS_BASE_URL`   | `http://localhost:7865`  | Server endpoint untuk generasi gambar lokal |
+
 </details>
 
 <details>
 <summary><b>🌐 Dashboard & Webhook Endpoint</b> (Klik untuk membuka)</summary>
 
-| Variabel | Default | Deskripsi |
-|---|---|---|
-| `PORT` / `DASHBOARD_PORT`| `3070` | Port aktif untuk Dashboard Web |
-| `WEBHOOK_PORT` | `3071` | Port terpisah khusus webhook donasi/vote |
-| `SESSION_SECRET` | - | 🔴 **WAJIB DI PRODUKSI!** Dashboard akan menolak akses tanpa secret ini! |
-| `DISCORD_CLIENT_SECRET` | - | OAuth2 client secret dari Developer Portal |
-| `DISCORD_CALLBACK_URL` | - | URL untuk callback autentikasi OAuth2 |
-| `DASHBOARD_ORIGIN` | - | Origin yang di-whitelist untuk perlindungan CORS lintas domain |
-| `OWNER_EVAL_ENABLED` | `false` | Membuka rute eksekusi `eval` Owner. Nyalakan hanya saat sangat perlu (Debugging). |
-| `ERROR_WEBHOOK_URL` | - | Discord Webhook URL agar bot bisa melaporkan error krusial |
-| `WEBHOOK_AUTH_SAWERIA` | - | Password/Token webhook Saweria |
-| `WEBHOOK_AUTH_TRAKTEER`| - | Password/Token webhook Trakteer |
-| `WEBHOOK_AUTH_VOTE` | - | Password/Token webhook vote Top.gg |
+| Variabel                  | Default | Deskripsi                                                                         |
+| ------------------------- | ------- | --------------------------------------------------------------------------------- |
+| `PORT` / `DASHBOARD_PORT` | `3070`  | Port aktif untuk Dashboard Web                                                    |
+| `WEBHOOK_PORT`            | `3071`  | Port terpisah khusus webhook donasi/vote                                          |
+| `SESSION_SECRET`          | -       | 🔴 **WAJIB DI PRODUKSI!** Dashboard akan menolak akses tanpa secret ini!          |
+| `DISCORD_CLIENT_SECRET`   | -       | OAuth2 client secret dari Developer Portal                                        |
+| `DISCORD_CALLBACK_URL`    | -       | URL untuk callback autentikasi OAuth2                                             |
+| `DASHBOARD_ORIGIN`        | -       | Origin yang di-whitelist untuk perlindungan CORS lintas domain                    |
+| `OWNER_EVAL_ENABLED`      | `false` | Membuka rute eksekusi `eval` Owner. Nyalakan hanya saat sangat perlu (Debugging). |
+| `ERROR_WEBHOOK_URL`       | -       | Discord Webhook URL agar bot bisa melaporkan error krusial                        |
+| `WEBHOOK_AUTH_SAWERIA`    | -       | Password/Token webhook Saweria                                                    |
+| `WEBHOOK_AUTH_TRAKTEER`   | -       | Password/Token webhook Trakteer                                                   |
+| `WEBHOOK_AUTH_VOTE`       | -       | Password/Token webhook vote Top.gg                                                |
 
 > [!CAUTION]
 > Endpoint webhook **akan memblokir semua request (503)** jika token belum diatur. Hal ini bertujuan sebagai pengaman ekstra. Jika modul donasi terekspos tanpa auth, pihak tidak bertanggung jawab berpotensi men-suntik request palsu untuk mendapatkan role Premium secara gratis!
+
 </details>
 
 <details>
 <summary><b>🛠️ Media & Metadata Information</b> (Klik untuk membuka)</summary>
 
-| Variabel | Default | Deskripsi |
-|---|---|---|
-| `FFMPEG_PATH` | - | Kosongkan saja jika kamu ingin menggunakan modul `ffmpeg-static`. Isi jika server punya *binary* khusus. |
-| `BOT_VERSION` | `2.0.0` | Versi yang terpampang pada command /info |
-| `ENGINE_VERSION`| `2.0.0` | Versi engine yang ditandai pada footer Naura |
-| `PARTNERSHIP` | `Belum ada kolaborasi` | Label nama server/komunitas yang sedang bekerja sama (ditampilkan di profil) |
+| Variabel         | Default                | Deskripsi                                                                                                |
+| ---------------- | ---------------------- | -------------------------------------------------------------------------------------------------------- |
+| `FFMPEG_PATH`    | -                      | Kosongkan saja jika kamu ingin menggunakan modul `ffmpeg-static`. Isi jika server punya _binary_ khusus. |
+| `BOT_VERSION`    | `2.0.0`                | Versi yang terpampang pada command /info                                                                 |
+| `ENGINE_VERSION` | `2.0.0`                | Versi engine yang ditandai pada footer Naura                                                             |
+| `PARTNERSHIP`    | `Belum ada kolaborasi` | Label nama server/komunitas yang sedang bekerja sama (ditampilkan di profil)                             |
+
 </details>
 
 ---
@@ -413,14 +421,14 @@ Kami merancang Naura agar mudah dimengerti dari Sabang sampai Merauke, hingga ti
 > **Bahasa bersifat personal, bukan per server.** Dua orang di server yang sama bisa memakai bahasa berbeda. `GuildSettings.language` hanya menjadi **default** bagi user yang belum pernah memilih bahasa. Urutan resolusinya: preferensi user → default guild → `id`.
 
 ```javascript
-const lang = require('./src/managers/languageManager');
+const lang = require("./src/managers/languageManager");
 
 // Simpan pilihan preferensi si pengguna
-await lang.setUserLanguage(userId, 'en');
+await lang.setUserLanguage(userId, "en");
 
 // Dapatkan terjemahan khusus untuk UI pengguna
-const text = await lang.translate(userId, 'help.title');
-const sync = lang.translateSync('en', 'greeting', { name: 'Ryaa' });
+const text = await lang.translate(userId, "help.title");
+const sync = lang.translateSync("en", "greeting", { name: "Ryaa" });
 ```
 
 Tidak perlu pusing! Kamus inti berada di folder `language/`, sementara kata-kata unik diletakkan di `plugin/<nama-plugin>/locales/`. **Kamus inti selalu memiliki hak istimewa (prioritas).** Kamu bisa cek kelengkapan bahasa dengan perintah: `npm run locales:check`.
@@ -432,10 +440,10 @@ Tidak perlu pusing! Kamus inti berada di folder `language/`, sementara kata-kata
 Naura tidak kaku! Ia dapat memancarkan perasaannya lewat embed khusus.
 
 ```javascript
-const naura = require('./src/utils/nauraExpression');
+const naura = require("./src/utils/nauraExpression");
 
 // Naura senang karena interaksi sukses!
-const { embed, files } = naura.decorate(myEmbed, 'success');
+const { embed, files } = naura.decorate(myEmbed, "success");
 await interaction.reply({ embeds: [embed], files });
 ```
 
@@ -477,6 +485,6 @@ Sebelum menulis kode, **baca [`AGENTS.md`](AGENTS.md) lebih dulu.** File itu mem
 **ISC License** © 2026 Aryandita Praftian.
 Lihat berkas lisensi penuh di **[`LICENSE`](LICENSE)**.
 
-*Dibuat penuh dengan cinta (💜) untuk para kreator & komunitas Discord Indonesia!*
+_Dibuat penuh dengan cinta (💜) untuk para kreator & komunitas Discord Indonesia!_
 
 </div>

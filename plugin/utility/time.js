@@ -1,97 +1,117 @@
-const { SlashCommandBuilder } = require('discord.js');
-const ms = require('ms');
-const ui = require('../../src/config/ui');
-const { buildContainerV2 } = require('../../src/utils/NauraContainerBuilder');
+const { SlashCommandBuilder } = require("discord.js");
+const ms = require("ms");
+const ui = require("../../src/config/ui");
+const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('time')
-        .setDescription('Waktu dunia dan Pengaturan Timer')
-        .addSubcommand(sub =>
-            sub.setName('world')
-                .setDescription('Lihat waktu saat ini di berbagai zona waktu dunia')
+  data: new SlashCommandBuilder()
+    .setName("time")
+    .setDescription("Waktu dunia dan Pengaturan Timer")
+    .addSubcommand((sub) =>
+      sub
+        .setName("world")
+        .setDescription("Lihat waktu saat ini di berbagai zona waktu dunia"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("timer")
+        .setDescription("Pasang timer/pengingat untuk dirimu sendiri")
+        .addStringOption((opt) =>
+          opt
+            .setName("durasi")
+            .setDescription("Durasi timer (contoh: 15m, 1h, 30s)")
+            .setRequired(true),
         )
-        .addSubcommand(sub =>
-            sub.setName('timer')
-                .setDescription('Pasang timer/pengingat untuk dirimu sendiri')
-                .addStringOption(opt =>
-                    opt.setName('durasi')
-                        .setDescription('Durasi timer (contoh: 15m, 1h, 30s)')
-                        .setRequired(true)
-                )
-                .addStringOption(opt =>
-                    opt.setName('alasan')
-                        .setDescription('Pesan pengingat saat timer habis')
-                        .setRequired(false)
-                )
+        .addStringOption((opt) =>
+          opt
+            .setName("alasan")
+            .setDescription("Pesan pengingat saat timer habis")
+            .setRequired(false),
         ),
+    ),
 
-    async execute(interaction) {
-        const subcommand = interaction.options.getSubcommand();
+  async execute(interaction) {
+    const subcommand = interaction.options.getSubcommand();
 
-        if (subcommand === 'world') {
-            const now = new Date();
+    if (subcommand === "world") {
+      const now = new Date();
 
-            const timezones = [
-                { name: '🇮🇩 Jakarta (WIB)', tz: 'Asia/Jakarta' },
-                { name: '🇯🇵 Tokyo (JST)', tz: 'Asia/Tokyo' },
-                { name: '🇬🇧 London (GMT)', tz: 'Europe/London' },
-                { name: '🇺🇸 New York (EST)', tz: 'America/New_York' },
-                { name: '🌐 UTC', tz: 'UTC' }
-            ];
+      const timezones = [
+        { name: "🇮🇩 Jakarta (WIB)", tz: "Asia/Jakarta" },
+        { name: "🇯🇵 Tokyo (JST)", tz: "Asia/Tokyo" },
+        { name: "🇬🇧 London (GMT)", tz: "Europe/London" },
+        { name: "🇺🇸 New York (EST)", tz: "America/New_York" },
+        { name: "🌐 UTC", tz: "UTC" },
+      ];
 
-            let desc = '';
-            for (const tz of timezones) {
-                const timeString = now.toLocaleString('id-ID', { timeZone: tz.tz, dateStyle: 'full', timeStyle: 'medium' });
-                desc += `**${tz.name}**\n> ${timeString}\n\n`;
-            }
+      let desc = "";
+      for (const tz of timezones) {
+        const timeString = now.toLocaleString("id-ID", {
+          timeZone: tz.tz,
+          dateStyle: "full",
+          timeStyle: "medium",
+        });
+        desc += `**${tz.name}**\n> ${timeString}\n\n`;
+      }
 
-            const payload = buildContainerV2({
-                accentColorHex: ui.getColor('primary') || '#FFB6C1',
-                title: '🌍 Jam Dunia (World Clock)',
-                description: desc.trim(),
-                footerText: ui.getFooter('utility')
-            });
+      const payload = buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        title: "🌍 Jam Dunia (World Clock)",
+        description: desc.trim(),
+        footerText: ui.getFooter("utility"),
+      });
 
-            await interaction.reply(payload);
+      await interaction.reply(payload);
+    } else if (subcommand === "timer") {
+      const durasiStr = interaction.options.getString("durasi");
+      const alasan =
+        interaction.options.getString("alasan") || "Waktunya habis!";
+
+      const durationMs = ms(durasiStr);
+
+      if (
+        !durationMs ||
+        isNaN(durationMs) ||
+        durationMs < 1000 ||
+        durationMs > ms("24h")
+      ) {
+        return ui.sendError(
+          interaction,
+          "Durasi timer tidak valid. Gunakan format seperti `15m`, `1h`, atau `30s` (maks 24 jam).",
+          true,
+        );
+      }
+
+      const endTime = Date.now() + durationMs;
+
+      const payload = buildContainerV2({
+        accentColorHex: ui.getColor("success") || "#00FF00",
+        title: "⏱️ Timer Diaktifkan",
+        description: `Timer dipasang selama **${durasiStr}**.\nSaya akan mengingatkanmu pada <t:${Math.floor(endTime / 1000)}:T>.`,
+        fields: [{ name: "Pengingat", value: alasan }],
+        footerText: ui.getFooter("utility"),
+      });
+
+      await interaction.reply(payload);
+
+      setTimeout(async () => {
+        try {
+          const donePayload = buildContainerV2({
+            accentColorHex: ui.getColor("primary") || "#FFB6C1",
+            title: "⏰ WAKTU HABIS!",
+            description: `**${interaction.user.username}**, timer untuk **${durasiStr}** sudah habis!`,
+            fields: [{ name: "Pengingat", value: alasan }],
+            footerText: ui.getFooter("utility"),
+          });
+
+          await interaction.channel.send({
+            content: `<@${interaction.user.id}>`,
+            ...donePayload,
+          });
+        } catch (error) {
+          // Ignored if channel is deleted or bot lacks permissions
         }
-        else if (subcommand === 'timer') {
-            const durasiStr = interaction.options.getString('durasi');
-            const alasan = interaction.options.getString('alasan') || 'Waktunya habis!';
-
-            const durationMs = ms(durasiStr);
-
-            if (!durationMs || isNaN(durationMs) || durationMs < 1000 || durationMs > ms('24h')) {
-                return ui.sendError(interaction, 'Durasi timer tidak valid. Gunakan format seperti `15m`, `1h`, atau `30s` (maks 24 jam).', true);
-            }
-
-            const endTime = Date.now() + durationMs;
-
-            const payload = buildContainerV2({
-                accentColorHex: ui.getColor('success') || '#00FF00',
-                title: '⏱️ Timer Diaktifkan',
-                description: `Timer dipasang selama **${durasiStr}**.\nSaya akan mengingatkanmu pada <t:${Math.floor(endTime / 1000)}:T>.`,
-                fields: [{ name: 'Pengingat', value: alasan }],
-                footerText: ui.getFooter('utility')
-            });
-
-            await interaction.reply(payload);
-
-            setTimeout(async () => {
-                try {
-                    const donePayload = buildContainerV2({
-                        accentColorHex: ui.getColor('primary') || '#FFB6C1',
-                        title: '⏰ WAKTU HABIS!',
-                        description: `**${interaction.user.username}**, timer untuk **${durasiStr}** sudah habis!`,
-                        fields: [{ name: 'Pengingat', value: alasan }],
-                        footerText: ui.getFooter('utility')
-                    });
-
-                    await interaction.channel.send({ content: `<@${interaction.user.id}>`, ...donePayload });
-                } catch (error) {
-                    // Ignored if channel is deleted or bot lacks permissions
-                }
-            }, durationMs);
-        }
+      }, durationMs);
     }
+  },
 };

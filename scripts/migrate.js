@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /**
  * Langkah migrasi skema yang berdiri sendiri: `npm run db:migrate`.
@@ -19,47 +19,61 @@
  * berhenti sebelum bot dinyalakan.
  */
 
-const { sequelize } = require('../src/managers/dbManager');
-const { runMigrations, getPendingMigrations } = require('../src/managers/dbMigrator');
-const { logger } = require('../src/managers/logger');
+const { sequelize } = require("../src/managers/dbManager");
+const {
+  runMigrations,
+  getPendingMigrations,
+} = require("../src/managers/dbMigrator");
+const { logger } = require("../src/managers/logger");
 
 // Pintu darurat. Bila MySQL sedang mati dan bot harus tetap dinyalakan di atas skema
 // lama, set SKIP_DB_MIGRATE=1 di panel. Jangan dibiarkan menyala permanen: kolom baru
 // tidak akan pernah dibuat, dan fitur yang bergantung padanya akan gagal.
-const SKIP_VALUES = new Set(['1', 'true', 'yes']);
+const SKIP_VALUES = new Set(["1", "true", "yes"]);
 
-if (SKIP_VALUES.has(String(process.env.SKIP_DB_MIGRATE || '').toLowerCase())) {
-    logger.warn('[MIGRATE] SKIP_DB_MIGRATE aktif. Migrasi DILEWATI dan skema database tidak diperiksa.');
-    process.exit(0);
+if (SKIP_VALUES.has(String(process.env.SKIP_DB_MIGRATE || "").toLowerCase())) {
+  logger.warn(
+    "[MIGRATE] SKIP_DB_MIGRATE aktif. Migrasi DILEWATI dan skema database tidak diperiksa.",
+  );
+  process.exit(0);
 }
 
 async function main() {
-    await sequelize.authenticate();
-    logger.info(`[MIGRATE] Terhubung ke database (${sequelize.options.dialect}).`);
+  await sequelize.authenticate();
+  logger.info(
+    `[MIGRATE] Terhubung ke database (${sequelize.options.dialect}).`,
+  );
 
-    // Membuat tabel yang belum ada. alter: false, jadi kolom yang sudah ada tidak
-    // pernah diubah di sini; perubahan bentuk kolom hanya lewat daftar migrasi.
-    await sequelize.sync({ alter: false });
+  // Membuat tabel yang belum ada. alter: false, jadi kolom yang sudah ada tidak
+  // pernah diubah di sini; perubahan bentuk kolom hanya lewat daftar migrasi.
+  await sequelize.sync({ alter: false });
 
-    const pending = await getPendingMigrations(sequelize);
-    if (pending.length > 0) {
-        logger.info(`[MIGRATE] Migrasi tertunda: ${pending.join(', ')}`);
-    }
+  const pending = await getPendingMigrations(sequelize);
+  if (pending.length > 0) {
+    logger.info(`[MIGRATE] Migrasi tertunda: ${pending.join(", ")}`);
+  }
 
-    const result = await runMigrations(sequelize);
-    logger.success(`[MIGRATE] Beres. Dijalankan: ${result.applied.length}, dicatat menyusul: ${result.alreadyPresent.length}.`);
+  const result = await runMigrations(sequelize);
+  logger.success(
+    `[MIGRATE] Beres. Dijalankan: ${result.applied.length}, dicatat menyusul: ${result.alreadyPresent.length}.`,
+  );
 }
 
 main()
-    .catch(error => {
-        logger.error('[MIGRATE] Migrasi gagal:', error.message);
-        logger.error('[MIGRATE] Bot TIDAK dinyalakan supaya tidak berjalan di atas skema separuh jalan.');
-        process.exitCode = 1;
-    })
-    .finally(async () => {
-        try {
-            await sequelize.close();
-        } catch (closeError) {
-            logger.warn('[MIGRATE] Gagal menutup koneksi database:', closeError.message);
-        }
-    });
+  .catch((error) => {
+    logger.error("[MIGRATE] Migrasi gagal:", error.message);
+    logger.error(
+      "[MIGRATE] Bot TIDAK dinyalakan supaya tidak berjalan di atas skema separuh jalan.",
+    );
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    try {
+      await sequelize.close();
+    } catch (closeError) {
+      logger.warn(
+        "[MIGRATE] Gagal menutup koneksi database:",
+        closeError.message,
+      );
+    }
+  });

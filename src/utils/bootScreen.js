@@ -1,5 +1,5 @@
-const os = require('os');
-const env = require('../config/env');
+const os = require("os");
+const env = require("../config/env");
 
 /**
  * Display the boot screen with system info
@@ -7,21 +7,25 @@ const env = require('../config/env');
  * @param {Object} sysStatus
  */
 const displayBootScreen = (client, sysStatus) => {
-    const totalRam = (os.totalmem() / 1024 / 1024 / 1024).toFixed(2);
-    const usedRam = ((os.totalmem() - os.freemem()) / 1024 / 1024 / 1024).toFixed(2);
+  const totalRam = (os.totalmem() / 1024 / 1024 / 1024).toFixed(2);
+  const usedRam = ((os.totalmem() - os.freemem()) / 1024 / 1024 / 1024).toFixed(
+    2,
+  );
 
-    const cpuStr = os.cpus()[0].model.trim().substring(0, 48).padEnd(49);
-    const ramStr = `${usedRam} GB / ${totalRam} GB`.padEnd(49);
-    const platStr = `${os.platform()} ${os.arch()}`.substring(0, 48).padEnd(49);
-    const tagStr = client.user ? client.user.tag.padEnd(49) : 'Naura Hoshino#0000'.padEnd(49);
-    const ownerStr = 'Aryandita Praftian'.padEnd(49);
+  const cpuStr = os.cpus()[0].model.trim().substring(0, 48).padEnd(49);
+  const ramStr = `${usedRam} GB / ${totalRam} GB`.padEnd(49);
+  const platStr = `${os.platform()} ${os.arch()}`.substring(0, 48).padEnd(49);
+  const tagStr = client.user
+    ? client.user.tag.padEnd(49)
+    : "Naura Hoshino#0000".padEnd(49);
+  const ownerStr = "Aryandita Praftian".padEnd(49);
 
-    let pingText = `🟢 ONLINE (${client.ws.ping}ms)`;
-    if (pingText.length < 18) pingText = pingText.padEnd(18);
+  let pingText = `🟢 ONLINE (${client.ws.ping}ms)`;
+  if (pingText.length < 18) pingText = pingText.padEnd(18);
 
-    const verStr = `v${env.BOT_VERSION || '1.2.0'}`.padEnd(13);
+  const verStr = `v${env.BOT_VERSION || "1.2.0"}`.padEnd(13);
 
-    console.log(`
+  console.log(`
 \x1b[38;5;51m╔══════════════════════════════════════════════════════════════════════════╗\x1b[0m
 \x1b[38;5;51m║\x1b[0m \x1b[38;5;87m███╗   ██╗ █████╗ ██╗   ██╗██████╗  █████╗ \x1b[0m                          \x1b[38;5;51m║\x1b[0m
 \x1b[38;5;45m║\x1b[0m \x1b[38;5;81m████╗  ██║██╔══██╗██║   ██║██╔══██╗██╔══██╗\x1b[0m                          \x1b[38;5;45m║\x1b[0m
@@ -43,7 +47,7 @@ const displayBootScreen = (client, sysStatus) => {
 \x1b[38;5;51m║\x1b[0m   \x1b[38;5;246m└─ Discord  :\x1b[0m \x1b[38;5;82m${pingText}\x1b[0m \x1b[38;5;246m│ RSS Alerts :\x1b[0m ${sysStatus.rss}    \x1b[38;5;51m║\x1b[0m
 \x1b[38;5;51m╚══════════════════════════════════════════════════════════════════════════╝\x1b[0m
  
-\x1b[42m\x1b[30m ✨ SUCCESS \x1b[0m \x1b[32mSemua sistem siap beroperasi penuh! Naura v${env.BOT_VERSION || '1.2.0'} mengudara ^.^\x1b[0m
+\x1b[42m\x1b[30m ✨ SUCCESS \x1b[0m \x1b[32mSemua sistem siap beroperasi penuh! Naura v${env.BOT_VERSION || "1.2.0"} mengudara ^.^\x1b[0m
 `);
 };
 

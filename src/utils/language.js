@@ -1,9 +1,11 @@
-const langData = require('../config/lang.json');
-try { process.loadEnvFile(); } catch (e) {}
+const langData = require("../config/lang.json");
+try {
+  process.loadEnvFile();
+} catch (e) {}
 
 // Mengambil bahasa dari .env, default ke 'id' jika tidak diatur
 function getLang() {
-    return process.env.BOT_LANG || 'id';
+  return process.env.BOT_LANG || "id";
 }
 
 /**
@@ -12,28 +14,30 @@ function getLang() {
  * @param {object} variables - Variabel dinamis untuk direplace (contoh: { count: 5 })
  */
 function t(path, variables = {}) {
-    const lang = getLang();
-    const keys = path.split('.');
-    let result = langData;
+  const lang = getLang();
+  const keys = path.split(".");
+  let result = langData;
 
-    // Mencari data di dalam objek JSON
-    for (const key of keys) {
-        if (result[key] === undefined) {
-            console.warn(`\x1b[43m\x1b[30m ⚠️ LANG WARN \x1b[0m \x1b[33mMissing translation key: ${path}\x1b[0m`);
-            return path; // Kembalikan path jika tidak ditemukan
-        }
-        result = result[key];
+  // Mencari data di dalam objek JSON
+  for (const key of keys) {
+    if (result[key] === undefined) {
+      console.warn(
+        `\x1b[43m\x1b[30m ⚠️ LANG WARN \x1b[0m \x1b[33mMissing translation key: ${path}\x1b[0m`,
+      );
+      return path; // Kembalikan path jika tidak ditemukan
     }
+    result = result[key];
+  }
 
-    // Ambil bahasa sesuai .env, jika tidak ada fallback ke bahasa Inggris
-    let text = result[lang] || result['en'] || path;
+  // Ambil bahasa sesuai .env, jika tidak ada fallback ke bahasa Inggris
+  let text = result[lang] || result["en"] || path;
 
-    // Replace variabel dinamis (seperti {count} atau {username})
-    for (const [key, value] of Object.entries(variables)) {
-        text = text.replace(new RegExp(`{${key}}`, 'g'), value);
-    }
+  // Replace variabel dinamis (seperti {count} atau {username})
+  for (const [key, value] of Object.entries(variables)) {
+    text = text.replace(new RegExp(`{${key}}`, "g"), value);
+  }
 
-    return text;
+  return text;
 }
 
 module.exports = { t, getLang };

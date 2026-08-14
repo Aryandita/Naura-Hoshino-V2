@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /**
  * Penanganan autocomplete.
@@ -13,36 +13,39 @@
  * milik perintahnya sendiri.
  */
 
-const { logger } = require('../managers/logger');
-const { isIgnorable } = require('./safeExecute');
+const { logger } = require("../managers/logger");
+const { isIgnorable } = require("./safeExecute");
 
 // Discord menolak lebih dari 25 pilihan.
 const MAX_CHOICES = 25;
 
 async function handleAutocomplete(interaction, client) {
-    const command = client.commands?.get(interaction.commandName);
+  const command = client.commands?.get(interaction.commandName);
 
-    // Perintah tanpa penangan autocomplete tetap harus dijawab, kalau tidak
-    // pengguna melihat pesan galat di dalam kotak pilihan.
-    if (!command || typeof command.autocomplete !== 'function') {
-        return interaction.respond([]).catch(() => {});
+  // Perintah tanpa penangan autocomplete tetap harus dijawab, kalau tidak
+  // pengguna melihat pesan galat di dalam kotak pilihan.
+  if (!command || typeof command.autocomplete !== "function") {
+    return interaction.respond([]).catch(() => {});
+  }
+
+  try {
+    const result = await command.autocomplete(interaction, client);
+
+    // Perintah boleh menjawab sendiri lewat interaction.respond(). Bila sudah,
+    // jangan menjawab dua kali.
+    if (interaction.responded) return undefined;
+
+    const choices = Array.isArray(result) ? result.slice(0, MAX_CHOICES) : [];
+    return await interaction.respond(choices);
+  } catch (error) {
+    if (!isIgnorable(error)) {
+      logger.error(
+        `[AUTOCOMPLETE] Galat pada /${interaction.commandName}:`,
+        error,
+      );
     }
-
-    try {
-        const result = await command.autocomplete(interaction, client);
-
-        // Perintah boleh menjawab sendiri lewat interaction.respond(). Bila sudah,
-        // jangan menjawab dua kali.
-        if (interaction.responded) return undefined;
-
-        const choices = Array.isArray(result) ? result.slice(0, MAX_CHOICES) : [];
-        return await interaction.respond(choices);
-    } catch (error) {
-        if (!isIgnorable(error)) {
-            logger.error(`[AUTOCOMPLETE] Galat pada /${interaction.commandName}:`, error);
-        }
-        return interaction.respond([]).catch(() => {});
-    }
+    return interaction.respond([]).catch(() => {});
+  }
 }
 
 module.exports = handleAutocomplete;

@@ -1,0 +1,114 @@
+"use strict";
+
+const { createCanvas, loadImage, GlobalFonts, runWithLimit } = require("./canvasRuntime");
+
+/**
+ * Render visual kartu anime berkualitas tinggi
+ */
+async function drawAnimeCard(cardData) {
+  return await runWithLimit(async () => {
+    const width = 500;
+    const height = 750;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext("2d");
+
+    const dyeColor = cardData.dyeColor || "#FFB6C1";
+    const isGemMint = cardData.quality === "GEM_MINT";
+
+    // 1. Dark Neon Card Outer Glow & Background
+    ctx.fillStyle = "#0B0C10";
+    ctx.beginPath();
+    ctx.roundRect(15, 15, width - 30, height - 30, 24);
+    ctx.fill();
+
+    const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, 400);
+    bgGrad.addColorStop(0, "#1f1738");
+    bgGrad.addColorStop(0.7, "#110e20");
+    bgGrad.addColorStop(1, "#07080b");
+    ctx.fillStyle = bgGrad;
+    ctx.beginPath();
+    ctx.roundRect(20, 20, width - 40, height - 40, 20);
+    ctx.fill();
+
+    // 2. Outer Frame Border (Hologram / Gold / Cyber / Dye)
+    ctx.save();
+    ctx.strokeStyle = dyeColor;
+    ctx.lineWidth = isGemMint ? 4 : 2;
+    ctx.shadowColor = dyeColor;
+    ctx.shadowBlur = isGemMint ? 25 : 12;
+    ctx.beginPath();
+    ctx.roundRect(25, 25, width - 50, height - 50, 18);
+    ctx.stroke();
+    ctx.restore();
+
+    // 3. Header: Series Badge
+    ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
+    ctx.beginPath();
+    ctx.roundRect(40, 45, width - 80, 40, 10);
+    ctx.fill();
+
+    ctx.font = 'bold 13px "Orbitron", "EmojiFont"';
+    ctx.fillStyle = dyeColor;
+    ctx.textAlign = "left";
+    ctx.fillText((cardData.seriesName || "Anime Realm").toUpperCase(), 55, 70);
+
+    // Print Badge (Top Right)
+    ctx.font = 'bold 14px "Orbitron", "EmojiFont"';
+    ctx.fillStyle = cardData.printNumber <= 10 ? "#FFD700" : "#FFFFFF";
+    ctx.textAlign = "right";
+    ctx.fillText(`#${cardData.printNumber}`, width - 55, 70);
+
+    // 4. Character Center Visual Placeholder / Art
+    ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
+    ctx.beginPath();
+    ctx.roundRect(40, 100, width - 80, 450, 16);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    ctx.stroke();
+
+    // Big Character Icon / Symbol
+    ctx.font = '72px "EmojiFont"';
+    ctx.textAlign = "center";
+    ctx.fillText("🌸", width / 2, 340);
+
+    // 5. Character Name Plate
+    ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+    ctx.beginPath();
+    ctx.roundRect(40, 565, width - 80, 120, 14);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255, 182, 193, 0.2)";
+    ctx.stroke();
+
+    // Name
+    ctx.font = 'bold 24px "MontserratBold", "EmojiFont"';
+    ctx.fillStyle = "#FFFFFF";
+    ctx.textAlign = "left";
+    ctx.fillText(cardData.characterName || cardData.cardName, 60, 605);
+
+    // Quality Stars
+    const qualityMap = {
+      GEM_MINT: { stars: "⭐⭐⭐⭐ GEM MINT", color: "#FFD700" },
+      EXCELLENT: { stars: "⭐⭐⭐ EXCELLENT", color: "#86EFAC" },
+      GOOD: { stars: "⭐⭐ GOOD", color: "#93C5FD" },
+      POOR: { stars: "⭐ POOR", color: "#9CA3AF" },
+    };
+    const qual = qualityMap[cardData.quality] || qualityMap.GOOD;
+
+    ctx.font = 'bold 12px "Orbitron", "EmojiFont"';
+    ctx.fillStyle = qual.color;
+    ctx.fillText(qual.stars, 60, 638);
+
+    // Serial Code & Rarity (Bottom)
+    ctx.font = '12px "Orbitron", "EmojiFont"';
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.fillText(`CODE: ${cardData.cardCode || "NRA-0000"}`, 60, 665);
+
+    ctx.textAlign = "right";
+    ctx.fillStyle = dyeColor;
+    ctx.fillText((cardData.rarity || "RARE").replace("_", " "), width - 60, 665);
+
+    return canvas.toBuffer("image/png");
+  });
+}
+
+module.exports = { drawAnimeCard };

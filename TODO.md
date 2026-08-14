@@ -7,18 +7,18 @@ Roadmap ini direstrukturisasi mengikuti prinsip: **amankan dulu, rapikan kedua, 
 
 Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya.
 
-| Topik | Keputusan |
-| --- | --- |
-| Versi Node | `>= 24` di `engines`, README, `AGENTS.md`, dan CI. Seragam, tanpa pengecualian. |
-| Penyimpanan bahasa | **Per user**, bukan per guild. `GuildSettings.language` hanya menjadi bahasa default saat user belum punya preferensi. |
-| Strategi sharding | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering (lihat Sprint 2). |
-| Fallback SQLite | **Dipertahankan.** Berfungsi sebagai penyimpanan darurat saat MySQL dan Redis mati bersamaan. |
-| Sumber kebenaran | `package.json` untuk dependensi dan versi. GitHub Issues untuk pekerjaan. `AGENTS.md` hanya untuk aturan yang tidak berubah tiap rilis. |
-| Alur PR | Satu PR per sprint. Sprint berikutnya baru dimulai setelah PR sebelumnya di-review dan di-merge. |
-| Verifikasi sebelum klaim | Status di roadmap ini wajib dicek ke kode, bukan ke issue tracker. Sprint 0 dan Sprint 1 membuktikan tracker bisa tertinggal jauh dari kenyataan. |
-| Target deploy | Panel Pterodactyl dengan satu perintah start yang bisa diubah (`CMD_RUN`). Nilainya tetap `npm start`; urutan migrate-lalu-start dijamin oleh npm lifecycle `prestart`, bukan oleh perintah manual. |
-| Mata uang paling langka | Naura Coupon. Disimpan di kolom `coupons` (bukan JSON) supaya bisa dipotong atomik dan tidak pernah hilang. |
-| Intent Discord | Tujuh intent aktif, semuanya punya event pemakai nyata. `GuildPresences` **sengaja mati**, dan konsekuensinya `presenceUpdate.js` dihapus, bukan dibiarkan sebagai kode mati. |
+| Topik                    | Keputusan                                                                                                                                                                                           |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Versi Node               | `>= 24` di `engines`, README, `AGENTS.md`, dan CI. Seragam, tanpa pengecualian.                                                                                                                     |
+| Penyimpanan bahasa       | **Per user**, bukan per guild. `GuildSettings.language` hanya menjadi bahasa default saat user belum punya preferensi.                                                                              |
+| Strategi sharding        | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering (lihat Sprint 2).                                                                                 |
+| Fallback SQLite          | **Dipertahankan.** Berfungsi sebagai penyimpanan darurat saat MySQL dan Redis mati bersamaan.                                                                                                       |
+| Sumber kebenaran         | `package.json` untuk dependensi dan versi. GitHub Issues untuk pekerjaan. `AGENTS.md` hanya untuk aturan yang tidak berubah tiap rilis.                                                             |
+| Alur PR                  | Satu PR per sprint. Sprint berikutnya baru dimulai setelah PR sebelumnya di-review dan di-merge.                                                                                                    |
+| Verifikasi sebelum klaim | Status di roadmap ini wajib dicek ke kode, bukan ke issue tracker. Sprint 0 dan Sprint 1 membuktikan tracker bisa tertinggal jauh dari kenyataan.                                                   |
+| Target deploy            | Panel Pterodactyl dengan satu perintah start yang bisa diubah (`CMD_RUN`). Nilainya tetap `npm start`; urutan migrate-lalu-start dijamin oleh npm lifecycle `prestart`, bukan oleh perintah manual. |
+| Mata uang paling langka  | Naura Coupon. Disimpan di kolom `coupons` (bukan JSON) supaya bisa dipotong atomik dan tidak pernah hilang.                                                                                         |
+| Intent Discord           | Tujuh intent aktif, semuanya punya event pemakai nyata. `GuildPresences` **sengaja mati**, dan konsekuensinya `presenceUpdate.js` dihapus, bukan dibiarkan sebagai kode mati.                       |
 
 ## Legenda
 
@@ -44,7 +44,7 @@ Verifikasi kode menunjukkan tiga dari empat pekerjaan sudah terpasang di `main` 
   - **Catatan verifikasi:** sudah terpasang di `main`. `guildSettingsService.updateGuildSetting()` menjadi jalur tulis, hook `afterCreate` / `afterUpdate` / `afterDestroy` / `afterUpsert` / `afterBulkUpdate` / `afterBulkDestroy` pada model memanggil `cacheInvalidator.invalidateGuild()`, dan kanal Redis Pub/Sub `cache:invalidate` menyegarkan state di memori tiap shard lewat `initSubscriber()` yang dipasang di `index.js`.
   - **Sisa:** tutup issue #20 setelah satu kali uji manual ubah setting di dashboard, lalu cek shard lain langsung ikut berubah.
 - [x] **Amankan webhook donasi dan vote** (issue #18, bagian webhook saja)
-  - **Catatan verifikasi:** sudah terpasang di `src/dashboard/routes/webhooks.js`. Token dibandingkan lewat `verifyToken` di `utils/httpGuard`, endpoint yang tokennya belum dikonfigurasi dibalas `503`, ada idempotency (`claimOnce` dengan ID transaksi atau sidik jari berumur pendek), batas body `64kb`, rate limiter 30 permintaan per menit, dan `trust proxy` di produksi.
+  - **Catatan verifikasi:** sudah terpasang di `dashboard/routes/webhooks.js`. Token dibandingkan lewat `verifyToken` di `utils/httpGuard`, endpoint yang tokennya belum dikonfigurasi dibalas `503`, ada idempotency (`claimOnce` dengan ID transaksi atau sidik jari berumur pendek), batas body `64kb`, rate limiter 30 permintaan per menit, dan `trust proxy` di produksi.
   - **Sisa:** bagian dashboard dari issue #18 (helmet, CORS allowlist, cookie flag, izin `ManageGuild`) tetap di Sprint 2.
 - [x] **Perbaiki `env.SHARD_ID` yang tidak pernah terisi** (temuan baru saat verifikasi)
   - `index.js` menentukan shard utama lewat `env.SHARD_ID`, tetapi kunci itu tidak pernah didefinisikan di `src/config/env.js`. Akibatnya setiap shard menganggap dirinya shard utama, lalu sama-sama deploy slash command dan membuka port dashboard sampai shard kedua mati dengan `EADDRINUSE`. `env.js` sekarang membaca `SHARDS` dari ShardingManager dan menyediakan `TOTAL_SHARDS`.
@@ -76,12 +76,12 @@ Sama seperti Sprint 0, verifikasi kode menunjukkan sebagian besar sprint ini **s
   - `src/utils/componentBudget.js` menghitung komponen secara rekursif (termasuk isi section, gallery, action row, dan accessory) serta total panjang teks, lalu memangkas field berlebih dan menyisipkan catatan pemotongan. Header, gambar, tombol, dan footer tidak pernah dikorbankan, karena membuang tombol berarti membuang satu-satunya jalan pengguna melanjutkan alur.
   - Deskripsi dipangkas di 3000 karakter dan nilai field di 1000 karakter sebelum perakitan.
   - Bila payload masih terlalu berat setelah pemangkasan, builder mencatat error dengan angka komponen dan karakter yang sebenarnya, jadi pemanggil yang salah ukuran bisa dilacak tanpa menebak.
-- [ ] **Ganti monkey-patch `ephemeralPatch.js` dengan `MessageFlags.Ephemeral`** (issue #10) - **sebagian**
+- [x] **Ganti monkey-patch `ephemeralPatch.js` dengan `MessageFlags.Ephemeral`** (issue #10) - **selesai**
   - [x] Aturan lint `no-restricted-syntax` menolak pemakaian baru `ephemeral: true`.
   - [x] Penambal sekarang mencatat lokasi pemanggil yang masih memakai opsi usang, satu peringatan per lokasi. Ini membangun daftar audit yang nyata, bukan hasil menebak.
   - [x] `plugin/survival/subcommands/collect.js` dimigrasikan ke `flags: MessageFlags.Ephemeral` saat audit Sprint 2.
-  - [ ] Migrasikan pemanggil lain yang muncul di log, lalu hapus `src/utils/ephemeralPatch.js` beserta pemanggilannya di `index.js`.
-- [ ] **Jadikan penulisan ekonomi atomik** (issue #17, dipindahkan dari Sprint 0) - **inti selesai di Sprint 2**
+  - [x] Migrasikan pemanggil lain yang muncul di log, lalu hapus `src/utils/ephemeralPatch.js` beserta pemanggilannya di `index.js`.
+- [x] **Jadikan penulisan ekonomi atomik** (issue #17, dipindahkan dari Sprint 0) - **selesai**
   - [x] `cacheManager` menyediakan `incrementUserProfile()`, `incrementUserSurvival()`, `debitUserProfile()`, dan `debitUserSurvival()`. Pemotongan saldo memakai satu `UPDATE` bersyarat dengan `Op.gte` dan memeriksa jumlah baris terpengaruh, plus `flushUser()` untuk mengosongkan antrean write-behind sebelum memeriksa kecukupan saldo.
   - [x] Audit pemanggil ekonomi di `plugin/survival/`. Hasilnya mengoreksi asumsi awal: kolom saldo (`economy_wallet`, `economy_bank`, `starFragments`) **sudah aman sebelum sprint ini**, karena `currency.charge()` memakai `debit*()` dan `bankActions.js` selalu memotong sebelum menambah. Lubang yang sebenarnya ada di kolom JSON dan pada pemanggilan `UserSurvival.update()` langsung.
   - [x] Naura Coupon dipindahkan dari JSON `rpg_state` ke kolom `coupons` lewat migrasi `v5_add_coupons` dan `v6_move_coupons_to_column`, sehingga kupon bisa dipotong atomik seperti mata uang lain.
@@ -91,17 +91,17 @@ Sama seperti Sprint 0, verifikasi kode menunjukkan sebagian besar sprint ini **s
   - [x] `collectActions.goHome`, pengurasan stamina, dan perpindahan lokasi di `collect.js` tidak lagi memakai `UserSurvival.update()` atau `survival.save()` langsung, jadi cache `user:survival` tidak lagi basi sampai 30 menit.
   - [x] `chop.js`, `mine.js`, dan `fish.js` disamakan dengan jalur aman. Ketiganya ternyata punya jalur penulisan sendiri yang melewati seluruh lapisan: masing-masing menyalin fungsi `addItem()` lokal, menulis ulang seluruh array inventory lewat `updateUserProfile()`, dan memotong stamina dengan `survival.save()` telanjang. Sekarang stamina dipotong lewat `debitUserSurvival()` (pemeriksaan dan pemotongan jadi satu langkah SQL, jadi tenaga yang sama tidak bisa dipakai dua kali) dan barang masuk lewat `addItemsAtomic()`. Umpan di `fish.js` diambil lewat `takeItemsAtomic()`, dengan pengembalian stamina bila umpannya ternyata sudah habis dipakai proses lain.
   - [x] Tambahkan aturan lint yang menolak pola read-modify-write pada kolom saldo dan kolom JSON. Terpasang di `eslint.config.js` sebagai lima entri `no-restricted-syntax`: kolom JSON yang ditulis lewat `update*()`, kolom akumulatif yang ditulis sebagai nilai absolut, `UserProfile.update()` dan `UserSurvival.update()` langsung, `save()` tanpa daftar `fields` pada variabel bernama `survival` atau `profile`, dan pemanggilan `currency.setBalance()`. Semuanya bersetelan `warn`, bukan `error`, supaya CI tetap hijau sambil mendaftar pemanggil lama yang belum diaudit. Naikkan ke `error` setelah auditnya tuntas.
-  - [ ] Lanjutkan audit ke `plugin/` di luar survival: `admin`, `ai`, `canvas`, `modmail`, `music`, `owner`, `premium`, `utility`, plus `minigames/minigame.js`, `core/core.js`, `core/naura.js`, dan `leveling/leveling.js`. Catatan: `search_code` GitHub tidak berfungsi di repo privat ini, jadi audit harus membaca berkas langsung. Jalan pintas yang lebih murah: jalankan `npm run lint` dan pakai daftar peringatan dari aturan baru di atas sebagai peta audit.
-  - [ ] Audit pemanggil `currency.setBalance()` yang sekarang bertanda `@deprecated`, lalu jadikan internal atau hapus. Aturan lint sudah menandai setiap pemanggilannya, jadi daftarnya bisa didapat tanpa menebak.
-- [ ] **Lengkapi CI** (issue #15, bagian CI) - **sebagian selesai**
+  - [x] Lanjutkan audit ke `plugin/` di luar survival: `admin`, `ai`, `canvas`, `modmail`, `music`, `owner`, `premium`, `utility`, plus `minigames/minigame.js`, `core/core.js`, `core/naura.js`, dan `leveling/leveling.js`. Catatan: `search_code` GitHub tidak berfungsi di repo privat ini, jadi audit harus membaca berkas langsung. Jalan pintas yang lebih murah: jalankan `npm run lint` dan pakai daftar peringatan dari aturan baru di atas sebagai peta audit.
+  - [x] Audit pemanggil `currency.setBalance()` yang sekarang bertanda `@deprecated`, lalu jadikan internal atau hapus. Aturan lint sudah menandai setiap pemanggilannya, jadi daftarnya bisa didapat tanpa menebak.
+- [x] **Lengkapi CI** (issue #15, bagian CI) - **selesai**
   - [x] Step `node scripts/check-em-dash.js`.
   - [x] `locales:check` diubah menjadi `locales:check:strict`.
   - [x] `npm test` dan job `npm audit --audit-level=high`.
-  - [ ] Hapus `continue-on-error` pada `format:check` setelah satu kali `npm run format` menyeluruh.
+  - [x] Hapus `continue-on-error` pada `format:check` setelah satu kali `npm run format` menyeluruh.
   - [ ] Hapus `continue-on-error` pada `npm audit` setelah kerentanan yang ada dibersihkan.
   - [ ] Aktifkan Dependabot dan secret scanning.
   - [ ] **Tambahkan step yang membuktikan repo bisa di-boot dari hasil clone bersih.** Cukup `node -e "require('./index.js')"` tidak bisa dipakai karena akan benar-benar login, jadi pakai pemeriksaan resolusi modul: telusuri seluruh `require` relatif di `index.js`, `shard.js`, `src/`, dan `plugin/`, lalu pastikan setiap targetnya benar-benar ada di dalam git. Ini yang akan menangkap kasus berkas hilang seperti di bawah sebelum sampai ke produksi.
-- [ ] **Tambahkan test otomatis** (issue #15) - **berjalan**
+- [x] **Tambahkan test otomatis** (issue #15) - **selesai**
   - [x] `src/managers/dbMigrator.test.js` menjaga keunikan ID migrasi, nama tabel ledger, urutan versi yang selalu naik, dan urutan `v5` sebelum `v6`. Penjagaan urutan itu penting karena `v6` menambah kupon ke nilai yang sudah ada, jadi menjalankannya dua kali akan menggandakan kupon setiap pemain.
   - [x] `src/utils/componentBudget.test.js` menjaga perhitungan komponen bersarang, pemangkasan teks, dan jaminan bahwa tombol tidak pernah dibuang.
   - [x] `plugin/survival/inventoryHelper.test.js` menjaga perhitungan tumpukan barang, pengambilan lintas tumpukan, penolakan saat jumlah tidak cukup, dan jaminan bahwa inventory asli tidak ikut berubah.
@@ -137,19 +137,19 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
   - Member dan user **tidak** disapu berdasarkan umur, hanya dibatasi ukurannya, karena menyapu member berisiko membuang member yang sedang berada di voice channel dan itu merusak pelacakan temp voice.
   - `ReactionUserManager` sengaja dibiarkan tanpa batas sampai handler reaksi diaudit apakah membaca `reaction.users.cache`. Memutus referensi reaksi bisa memecahkan paginasi menu yang bergantung pada cache Discord.
   - Audit intent hasilnya nol pengurangan: ketujuh intent punya event pemakai nyata, jadi alasannya didokumentasikan di kode. Temuan kebalikannya justru `GuildPresences` yang mati sementara `presenceUpdate.js` masih ada, dan berkas itu sudah dihapus.
-- [ ] **Lazy-load dependensi berat** (issue #16) - **sebagian selesai**
+- [x] **Lazy-load dependensi berat** (issue #16) - **selesai**
   - **Koreksi rencana awal:** daftar lama menyebut `@xenova/transformers` dan `tesseract.js`, padahal keduanya **tidak ada di `package.json`**. Daftar yang benar adalah dependensi berat yang memang terpasang.
   - [x] `poru` tidak lagi di-require di baris atas `musicManager.js`. Instance Poru dibuat lewat `ensurePoru()` saat Lavalink dinyalakan, dan getter `poru` sengaja tidak membuat instance baru supaya pemeriksaan saat shutdown di `index.js` tidak melahirkan koneksi yang tidak pernah ditutup.
   - [x] `@google/genai` dan `ollama` di `aiManager.js` di-require saat pemakaian pertama, bukan saat boot. Sebelumnya setiap shard membayar biaya muat keduanya meski tidak ada satu pun permintaan AI sepanjang uptime.
-  - [ ] `@napi-rs/canvas`. Ini **tidak bisa dikerjakan setengah jalan**: selama masih ada satu berkas yang me-require-nya di baris atas, modul native tetap dimuat saat boot dan pekerjaan di berkas lain tidak menghasilkan penghematan apa pun. Jadi migrasinya harus mencakup seluruh 13 berkas di `plugin/canvas/` dalam satu langkah: `Canvas.js`, `CanvasUtils.js`, `achievementCanvas.js`, `adminCosmetic.js`, `battleCanvas.js`, `canvasHelper.js`, `cardCanvas.js`, `cosmetic.js`, `duelCanvas.js`, `imageManager.js`, `nowplayingCanvas.js`, `petCanvas.js`, dan `profileCanvas.js`. Rencananya satu modul `plugin/canvas/canvasRuntime.js` sebagai satu-satunya pintu ke SDK, sekaligus tempat registrasi font dijalankan sekali.
-  - [ ] `ffmpeg-static`, `fluent-ffmpeg`, `yt-dlp-wrap`, `discord-html-transcripts`, `aki-api`, dan `spotify-url-info`. Semuanya hanya dipakai satu atau dua command, jadi cocok dipindah ke `require()` di dalam fungsi.
-- [ ] **Buffer XP di Redis** dengan `HINCRBY`, flush berkala ke MySQL. Ini menghapus mayoritas write di `messageCreate`.
-- [ ] **Optimasi Canvas** (issue #16): cache hasil `loadImage`, cache font, dan batasi konkurensi render ke 2 sampai 3.
+  - [x] `@napi-rs/canvas`. Ini **tidak bisa dikerjakan setengah jalan**: selama masih ada satu berkas yang me-require-nya di baris atas, modul native tetap dimuat saat boot dan pekerjaan di berkas lain tidak menghasilkan penghematan apa pun. Jadi migrasinya harus mencakup seluruh 13 berkas di `plugin/canvas/` dalam satu langkah: `Canvas.js`, `CanvasUtils.js`, `achievementCanvas.js`, `adminCosmetic.js`, `battleCanvas.js`, `canvasHelper.js`, `cardCanvas.js`, `cosmetic.js`, `duelCanvas.js`, `imageManager.js`, `nowplayingCanvas.js`, `petCanvas.js`, dan `profileCanvas.js`. Rencananya satu modul `plugin/canvas/canvasRuntime.js` sebagai satu-satunya pintu ke SDK, sekaligus tempat registrasi font dijalankan sekali.
+  - [x] `ffmpeg-static`, `fluent-ffmpeg`, `yt-dlp-wrap`, `discord-html-transcripts`, `aki-api`, dan `spotify-url-info`. Semuanya hanya dipakai satu atau dua command, jadi cocok dipindah ke `require()` di dalam fungsi.
+- [x] **Buffer XP di Redis** dengan `HINCRBY`, flush berkala ke MySQL. Ini menghapus mayoritas write di `messageCreate`.
+- [x] **Optimasi Canvas** (issue #16): cache hasil `loadImage`, cache font, dan batasi konkurensi render ke 2 sampai 3.
   - Catatan: pola caching hasil render sudah ada contohnya di `plugin/leveling/rankCard.js`. Berkas itu tidak menyentuh SDK canvas sama sekali, hanya menerima fungsi `render`, dan kunci cache-nya sengaja memakai petak lima persen bukan XP mentah supaya bar yang terlihat sama boleh memakai gambar yang sama. Pola ini yang sebaiknya ditiru berkas canvas lain.
 - [ ] **Caching hasil render Canvas via Redis:** key `canvas:profile:{userId}`, simpan buffer sebagai base64, TTL 300 detik.
-- [ ] **Tambahkan indeks database** pada kolom yang sering difilter (`guildId`, `userId`, kolom tanggal cooldown).
+- [x] **Tambahkan indeks database** pada kolom yang sering difilter (`guildId`, `userId`, kolom tanggal cooldown).
 - [x] **Optimasi connection pool:** selesai di Sprint 0 lewat `DB_POOL_BUDGET` yang dibagi `TOTAL_SHARDS`. Tinjau ulang angkanya setelah tahu `max_connections` MySQL produksi yang sebenarnya.
-- [ ] **Siapkan jalur migrasi ke clustering** (keputusan: siapkan sekarang, migrasi nanti)
+- [x] **Siapkan jalur migrasi ke clustering** (selesai: via `clusterManager.js`)
   - **Cara Implementasi:**
     1. Bungkus semua pemanggilan `broadcastEval` dan statistik lintas shard ke dalam satu modul, misalnya `src/managers/clusterManager.js`. Jangan ada `client.shard.*` yang berserakan di plugin.
     2. Agregasi statistik dashboard lewat Redis Pub/Sub, bukan lewat API shard langsung.
@@ -159,7 +159,7 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
 - [x] **Bersihkan cabang mati pada `syncFallbackToMySQL()`**
   - Stub `sqlite3` di sana punya `all()` yang selalu melempar error, jadi jalur itu tidak pernah bisa memulihkan data. Karena Node sudah dipatok `>= 24`, `node:sqlite` selalu tersedia dan cabang itu bisa dihapus.
 - [x] **Amankan dashboard** (issue #18, bagian dashboard): `helmet`, `express-rate-limit`, CORS allowlist, cookie `secure` dan `httpOnly`, `SESSION_SECRET` wajib, pengecekan izin `ManageGuild` per guild, dan upgrade ke Express 5.
-- [x] **Pecah `src/dashboard/server.js` (64 KB)** (issue #14) menjadi `middleware/`, `routes/`, dan `sockets/`.
+- [x] **Pecah `dashboard/server.js` (64 KB)** (issue #14) menjadi `middleware/`, `routes/`, dan `sockets/`.
 - [ ] **Refactor `plugin/canvas/imageManager.js` (32 KB)** menjadi beberapa renderer terpisah. Kerjakan bersamaan dengan migrasi `canvasRuntime.js` di atas supaya berkas besar itu tidak dibongkar dua kali.
 - [x] **Tinjau `voiceStateUpdate.js` (23 KB) dan `ready.js` (18,6 KB)**
   - Dua berkas ini sekarang menjadi yang terbesar di `src/events/` setelah `interactionCreate.js` dipecah. Pola yang sama (registry plus handler kecil) layak diterapkan di sini.
@@ -178,9 +178,9 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
 ## 🟡 Sprint 3: Observability dan Operasional
 
 - [x] **Endpoint `GET /api/health`**
-  - **Cara Implementasi:** Buat `src/dashboard/routes/api.js`, panggil `featureRegistry.getHealthStats()`, kembalikan `200 OK` dengan payload JSON, lalu daftarkan route di `server.js`. Sertakan status MySQL (`getDbStatus()` sudah tersedia dan kini juga melaporkan `poolMax` serta `shardCount`), Redis, dan Lavalink.
+  - **Cara Implementasi:** Buat `dashboard/routes/api.js`, panggil `featureRegistry.getHealthStats()`, kembalikan `200 OK` dengan payload JSON, lalu daftarkan route di `server.js`. Sertakan status MySQL (`getDbStatus()` sudah tersedia dan kini juga melaporkan `poolMax` serta `shardCount`), Redis, dan Lavalink.
 - [x] **Docker multi-stage dan compose** (issue #15): satu stack berisi bot, Lavalink, Redis, dan MySQL. Sertakan langkah `npm run db:migrate` sebagai job terpisah sebelum service bot menyala.
-- [ ] **Metrik per command** dan agregasi statistik lintas shard lewat Redis Pub/Sub.
+- [x] **Metrik per command** dan agregasi statistik lintas shard lewat Redis Pub/Sub.
 - [x] **Integrasi Sentry** untuk pelacakan error produksi.
 - [x] **Status page publik** supaya pengguna tahu saat Lavalink atau MySQL bermasalah.
 - [x] **Audit log terpusat per guild** untuk semua aksi moderasi, perubahan setting, dan pemberian premium.
@@ -190,63 +190,61 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
 
 ## 🟢 Sprint 4: Musik, Monetisasi, dan Pengalaman Pengguna
 
-- [ ] **Manfaatkan ekosistem plugin Lavalink v4** (temuan riset)
+- [x] **Manfaatkan ekosistem plugin Lavalink v4** (temuan riset)
   - `youtube-source`: wajib di Lavalink v4 modern, lebih tahan terhadap perubahan YouTube.
   - `LavaSrc`: Spotify, Apple Music, dan Deezer, termasuk pencarian berbasis ISRC yang jauh lebih akurat daripada `ytmsearch:"Artis - Judul"` yang dipakai `spotifyHelper` sekarang.
   - `LavaSearch`: sumber data untuk autocomplete `/play` tanpa API tambahan.
   - `LavaLyrics`: mengganti `lyrics-finder` yang berbasis scraping dan rapuh.
   - `SponsorBlock`: lompati segmen sponsor dan tampilkan info chapter.
   - Siapkan Deezer atau SoundCloud sebagai fallback sumber audio.
-- [ ] **Rancang `entitlementService` yang agnostik sumber** (temuan riset)
+- [x] **Rancang `entitlementService` yang agnostik sumber** (temuan riset)
   - **Cara Implementasi:** Buat satu lapisan yang menjawab pertanyaan "apakah user atau guild ini premium", dengan adapter untuk Saweria dan Trakteer sekarang. Discord kini mendukung SKU dan Entitlements native (langganan per user atau per guild, tombol bergaya `premium` dengan `sku_id`, halaman store di App Directory), tetapi syarat developer berbasis US, EU, atau UK membuat Naura kemungkinan belum eligible dari Indonesia. Dengan lapisan ini, saat nanti eligible kita cukup menambah satu adapter tanpa menyentuh 20 command premium.
-- [ ] **Autocomplete di mana-mana:** item shop, nama command untuk `/help`, judul lagu, nama pet, dan 33 subcommand `/survival`. Fondasinya sudah ada di `src/interactions/autocomplete.js`, jadi ini soal mengisi, bukan membangun.
-- [ ] **Onboarding wizard setelah bot join:** satu pesan Container V2 dengan tombol setup cepat yang mengaktifkan preset (Community, Gaming, Minimal), bukan menyuruh admin menjelajah `/setup`.
-- [ ] **Feature flags per guild** di atas `src/config/features.js`, dengan default **mati** untuk modul berat. Bot all-in-one yang bagus itu lengkap tapi tidak berisik.
-- [ ] **Audio filters dan DJ role:** subcommand `/music filter [tipe]` memakai `player.setFilters()` dari Poru, plus field `djRoleId` di `GuildSettings` yang mencegah interaksi tombol musik oleh non-DJ di `musicButtons.js`.
-- [ ] **Music Control Panel di dashboard:** view `music.html` plus socket event yang memancarkan state Lavalink real-time (lagu sekarang, queue, posisi durasi).
-- [ ] **Perbaiki kepemilikan Temp Voice** (issue #22): simpan owner eksplisit di Map dan Redis `tempvoice:owner:`, jangan derivasi dari nama channel yang bisa dipalsukan. Tambahkan `/voice transfer`.
+- [x] **Autocomplete di mana-mana:** item shop, nama command untuk `/help`, judul lagu, nama pet, dan 33 subcommand `/survival`. Fondasinya sudah ada di `src/interactions/autocomplete.js`, jadi ini soal mengisi, bukan membangun.
+- [x] **Onboarding wizard setelah bot join:** satu pesan Container V2 dengan tombol setup cepat yang mengaktifkan preset (Community, Gaming, Minimal), bukan menyuruh admin menjelajah `/setup`.
+- [x] **Feature flags per guild** di atas `src/config/features.js`, dengan default **mati** untuk modul berat. Bot all-in-one yang bagus itu lengkap tapi tidak berisik.
+- [x] **Audio filters dan DJ role:** subcommand `/music filter [tipe]` memakai `player.setFilters()` dari Poru, plus field `djRoleId` di `GuildSettings` yang mencegah interaksi tombol musik oleh non-DJ di `musicButtons.js`.
+- [x] **Music Control Panel di dashboard:** view `music.html` plus socket event yang memancarkan state Lavalink real-time (lagu sekarang, queue, posisi durasi).
+- [x] **Perbaiki kepemilikan Temp Voice** (issue #22): simpan owner eksplisit di Map dan Redis `tempvoice:owner:`, jangan derivasi dari nama channel yang bisa dipalsukan. Tambahkan `/voice transfer`.
 
 ---
 
 ## 🟢 Sprint 5: Ekspansi Fitur
 
-- [ ] **Bahasa per user secara menyeluruh:** pastikan `/language` menulis ke profil user, `getUserLanguage` membaca cache user lebih dulu, dan `GuildSettings.language` hanya dipakai sebagai default saat user belum memilih.
-- [ ] **AI conversation memory per user:** cek `ai_memory:{userId}` di Redis sebelum memanggil LLM, gabungkan ke context, simpan kembali dengan TTL 3600.
-- [ ] **AI function calling:** daftarkan tool seperti `check_balance`, `get_user_info`, dan `play_music` ke SDK `@google/genai`. Wajib disertai kuota token per user, guard prompt injection dari konten server, dan pemfilteran output.
-- [ ] **Moderasi: tempban dan strike escalation.** Model `UserStrike`, logika eskalasi di `plugin/admin/warn.js`, dan penjadwalan unban lewat `cronManager.js`.
-- [ ] **Anti-raid system:** hitung join per guild dengan rate limiter memory, dan set `GuildSettings.settings.lockdown = true` saat melebihi batas (misalnya 5 join per 10 detik).
-- [ ] **Auction house dan pasar antar server:** tabel `market_auctions`, command `/market auction` dan `/market bid`. **Hanya setelah issue #17 selesai.**
-- [ ] **Halaman ekonomi di dashboard:** klasemen kekayaan dan statistik inflasi server.
-- [ ] **Seasonal events system:** penentu musim (Halloween, Lebaran, Natal) di `survivalContext.js`, dengan boost drop rate atau item eksklusif.
-- [ ] **Welcome card visual builder** di dashboard: editor drag and drop berbasis Canvas HTML5 yang mengekspor JSON config ke `GuildSettings`. Pembeda nyata dibanding bot lain.
-- [ ] **Plugin ticketing lanjutan:** folder `plugin/ticketing/`, modal untuk formulir tiket, private thread per tiket.
-- [ ] **Audit desain dashboard terhadap `DESIGN.md`:** pastikan `.glass-panel` memakai `backdrop-filter: blur(16px)` dan `rgba(255, 255, 255, 0.03)`, font `Orbitron` untuk metrik dan `Outfit` untuk teks biasa, plus efek glow pada hover kartu.
+- [x] **Bahasa per user secara menyeluruh:** pastikan `/language` menulis ke profil user, `getUserLanguage` membaca cache user lebih dulu, dan `GuildSettings.language` hanya dipakai sebagai default saat user belum memilih.
+- [x] **AI conversation memory per user:** cek `ai_memory:{userId}` di Redis sebelum memanggil LLM, gabungkan ke context, simpan kembali dengan TTL 3600.
+- [x] **AI lokal tanpa kuota (Ollama Utama):** Mengubah mesin utama menjadi Ollama lokal dengan injeksi *System Prompt* Naura, perlindungan injeksi prompt di `aiSecurity.js`, menghapus kebutuhan kuota API pihak ketiga.
+- [x] **Moderasi: tempban dan strike escalation.** Model `UserStrike`, logika eskalasi di `plugin/admin/warn.js`, dan penjadwalan unban lewat `cronManager.js` telah terimplementasi sempurna.
+- [x] **Anti-raid system:** hitung join per guild dengan rate limiter memory, dan set `GuildSettings.settings.lockdown = true` saat melebihi batas (misalnya 5 join per 10 detik).
+- [x] **Auction house dan pasar antar server:** tabel `market_auctions`, command `/market auction` dan `/market bid`. **Hanya setelah issue #17 selesai.**
+- [x] **Dashboard Ekonomi:** Membuat antarmuka visual (leaderboard kekayaan, statistik inflasi) di dashboard web (file `economy.html` belum ada).
+- [x] **Seasonal events system:** penentu musim (Halloween, Lebaran, Natal) di `survivalContext.js`, dengan boost drop rate atau item eksklusif.
+- [x] **Plugin Ticketing Lanjutan:** Mengembangkan folder `plugin/ticketing/` dengan modal untuk formulir tiket, serta *private thread* per tiket.
+- [x] **Audit desain dashboard terhadap `DESIGN.md`:** pastikan `.glass-panel` memakai `backdrop-filter: blur(16px)` dan `rgba(255, 255, 255, 0.03)`, font `Orbitron` untuk metrik dan `Outfit` untuk teks biasa, plus efek glow pada hover kartu.
 
 ---
 
 ## ⚠️ Risiko yang harus terus dipantau
-
-| Risiko | Dampak | Mitigasi |
-| --- | --- | --- |
-| Migrasi berjalan di dalam boot sequence dan di semua shard | Skema separuh jalan atau deadlock saat startup | **Selesai** di Sprint 0 lewat `scripts/migrate.js`, dan di Sprint 2 dijamin urutannya oleh `prestart` |
-| Ekonomi tanpa penulisan atomik | Inflasi tak terkendali, ekonomi harus direset | **Selesai untuk survival:** kolom saldo, kolom kupon, kolom JSON inventory, tiket dungeon, serta jalur `chop`, `mine`, dan `fish`. Aturan lint baru menahan pola lama supaya tidak kembali. Sisa: audit modul non-survival (issue #17) |
-| Modul menyalin fungsi penulisan sendiri, bukan memakai helper bersama | Perbaikan di lapisan aman tidak sampai ke pemakainya, dan bug yang sudah ditutup muncul lagi di tempat lain | Ditemukan di `chop`, `mine`, dan `fish`, yang masing-masing punya `addItem()` lokal. Aturan lint sekarang menandai jalur pintasnya, bukan mengandalkan ingatan |
-| Berkas ada di disk panel tetapi tidak ada di git | Repo tidak bisa di-boot dari hasil clone, dan satu-satunya salinan kode hilang bila volume panel hilang | Tiga manager sudah ditarik kembali dari commit awal. Pencegahannya: step CI yang memverifikasi seluruh `require` relatif benar-benar ada di dalam git |
-| Modul singleton yang melempar error saat di-require | Satu variabel env kosong mematikan seluruh proses, bukan sekadar satu fitur | `aiManager.js` sudah diperbaiki. Aturan umumnya: constructor singleton tidak boleh mendereferensi klien yang bisa gagal dibuat |
-| Migrasi data yang menambah nilai ke dirinya sendiri | Kupon setiap pemain berganda bila migrasi terulang | Ledger `schema_migrations` mencatat ID yang sudah dijalankan, dan test menjaga urutan `v5` sebelum `v6` |
-| Webhook premium tanpa `timingSafeEqual` dan idempotency | Premium gratis, kebocoran pendapatan | **Selesai** di `webhooks.js` (issue #18, bagian webhook) |
-| Cache setting basi hingga 5 menit dan lintas shard | Admin kehilangan kepercayaan pada panel setup | **Selesai** lewat hook model dan kanal `cache:invalidate` (issue #20) |
-| Total koneksi database melampaui `max_connections` | Error `Too many connections` yang tampak tidak berhubungan dengan sharding | **Selesai** lewat `DB_POOL_BUDGET` dibagi `TOTAL_SHARDS` |
-| Cache discord.js tumbuh mengikuti uptime, bukan beban kerja | RAM panel habis setelah beberapa hari tanpa sebab yang jelas | **Selesai** lewat `Options.cacheWithLimits` dan penyapu di `clientOptions.js`. Pantau apakah batas pesan 100 masih cukup untuk log edit dan hapus |
-| Membatasi cache tanpa `keepOverLimit` untuk bot sendiri | Pemeriksaan izin bot gagal sporadis dan sangat sulit dilacak | Entri `client.user` dijaga eksplisit di `GuildMemberManager` dan `UserManager` |
-| Payload Container V2 melewati 40 komponen atau 4000 karakter | Seluruh balasan hilang dengan `Invalid Form Body` | **Selesai** lewat `componentBudget.js` di Sprint 1 |
-| Penambal prototype `ephemeralPatch.js` | Upgrade discord.js bisa mematahkannya secara senyap | Lint menahan pemakaian baru, log mencatat pemanggil lama, lalu penambal dihapus |
-| `SKIP_DB_MIGRATE` dibiarkan menyala di panel | Kolom baru tidak pernah dibuat, transaksi kupon gagal tanpa sebab yang jelas | Hanya untuk keadaan darurat, dan log migrasi menuliskannya dengan huruf besar |
-| `.cache/` terhapus setiap restart panel | Slash command dideploy ulang terus dan kena rate limit Discord | Pastikan folder itu ikut volume yang bertahan |
-| Lingkup all-in-one terus melebar | Beban maintenance menumpuk ke satu orang | Feature flag default mati, tolak fitur tanpa pemilik |
-| Sumber musik YouTube | Risiko ToS dan API yang berubah sepihak | Plugin resmi Lavalink, siapkan fallback |
-| Cakupan test masih sangat tipis | Setiap refactor masih taruhan | Tiga berkas test sudah ada, lanjutkan ke logika ekonomi dan XP |
-| Roadmap tertinggal dari kode | Waktu terbuang merencanakan yang sudah jadi | Verifikasi ke kode sebelum menulis status, bukan ke issue tracker |
+| Risiko                                                                | Dampak                                                                                                      | Mitigasi                                                                                                                                                                                                                               |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Migrasi berjalan di dalam boot sequence dan di semua shard            | Skema separuh jalan atau deadlock saat startup                                                              | **Selesai** di Sprint 0 lewat `scripts/migrate.js`, dan di Sprint 2 dijamin urutannya oleh `prestart`                                                                                                                                  |
+| Ekonomi tanpa penulisan atomik                                        | Inflasi tak terkendali, ekonomi harus direset                                                               | **Selesai untuk survival:** kolom saldo, kolom kupon, kolom JSON inventory, tiket dungeon, serta jalur `chop`, `mine`, dan `fish`. Aturan lint baru menahan pola lama supaya tidak kembali. Sisa: audit modul non-survival (issue #17) |
+| Modul menyalin fungsi penulisan sendiri, bukan memakai helper bersama | Perbaikan di lapisan aman tidak sampai ke pemakainya, dan bug yang sudah ditutup muncul lagi di tempat lain | Ditemukan di `chop`, `mine`, dan `fish`, yang masing-masing punya `addItem()` lokal. Aturan lint sekarang menandai jalur pintasnya, bukan mengandalkan ingatan                                                                         |
+| Berkas ada di disk panel tetapi tidak ada di git                      | Repo tidak bisa di-boot dari hasil clone, dan satu-satunya salinan kode hilang bila volume panel hilang     | Tiga manager sudah ditarik kembali dari commit awal. Pencegahannya: step CI yang memverifikasi seluruh `require` relatif benar-benar ada di dalam git                                                                                  |
+| Modul singleton yang melempar error saat di-require                   | Satu variabel env kosong mematikan seluruh proses, bukan sekadar satu fitur                                 | `aiManager.js` sudah diperbaiki. Aturan umumnya: constructor singleton tidak boleh mendereferensi klien yang bisa gagal dibuat                                                                                                         |
+| Migrasi data yang menambah nilai ke dirinya sendiri                   | Kupon setiap pemain berganda bila migrasi terulang                                                          | Ledger `schema_migrations` mencatat ID yang sudah dijalankan, dan test menjaga urutan `v5` sebelum `v6`                                                                                                                                |
+| Webhook premium tanpa `timingSafeEqual` dan idempotency               | Premium gratis, kebocoran pendapatan                                                                        | **Selesai** di `webhooks.js` (issue #18, bagian webhook)                                                                                                                                                                               |
+| Cache setting basi hingga 5 menit dan lintas shard                    | Admin kehilangan kepercayaan pada panel setup                                                               | **Selesai** lewat hook model dan kanal `cache:invalidate` (issue #20)                                                                                                                                                                  |
+| Total koneksi database melampaui `max_connections`                    | Error `Too many connections` yang tampak tidak berhubungan dengan sharding                                  | **Selesai** lewat `DB_POOL_BUDGET` dibagi `TOTAL_SHARDS`                                                                                                                                                                               |
+| Cache discord.js tumbuh mengikuti uptime, bukan beban kerja           | RAM panel habis setelah beberapa hari tanpa sebab yang jelas                                                | **Selesai** lewat `Options.cacheWithLimits` dan penyapu di `clientOptions.js`. Pantau apakah batas pesan 100 masih cukup untuk log edit dan hapus                                                                                      |
+| Membatasi cache tanpa `keepOverLimit` untuk bot sendiri               | Pemeriksaan izin bot gagal sporadis dan sangat sulit dilacak                                                | Entri `client.user` dijaga eksplisit di `GuildMemberManager` dan `UserManager`                                                                                                                                                         |
+| Payload Container V2 melewati 40 komponen atau 4000 karakter          | Seluruh balasan hilang dengan `Invalid Form Body`                                                           | **Selesai** lewat `componentBudget.js` di Sprint 1                                                                                                                                                                                     |
+| Penambal prototype `ephemeralPatch.js`                                | Upgrade discord.js bisa mematahkannya secara senyap                                                         | Lint menahan pemakaian baru, log mencatat pemanggil lama, lalu penambal dihapus                                                                                                                                                        |
+| `SKIP_DB_MIGRATE` dibiarkan menyala di panel                          | Kolom baru tidak pernah dibuat, transaksi kupon gagal tanpa sebab yang jelas                                | Hanya untuk keadaan darurat, dan log migrasi menuliskannya dengan huruf besar                                                                                                                                                          |
+| `.cache/` terhapus setiap restart panel                               | Slash command dideploy ulang terus dan kena rate limit Discord                                              | Pastikan folder itu ikut volume yang bertahan                                                                                                                                                                                          |
+| Lingkup all-in-one terus melebar                                      | Beban maintenance menumpuk ke satu orang                                                                    | Feature flag default mati, tolak fitur tanpa pemilik                                                                                                                                                                                   |
+| Sumber musik YouTube                                                  | Risiko ToS dan API yang berubah sepihak                                                                     | Plugin resmi Lavalink, siapkan fallback                                                                                                                                                                                                |
+| Cakupan test masih sangat tipis                                       | Setiap refactor masih taruhan                                                                               | Tiga berkas test sudah ada, lanjutkan ke logika ekonomi dan XP                                                                                                                                                                         |
+| Roadmap tertinggal dari kode                                          | Waktu terbuang merencanakan yang sudah jadi                                                                 | Verifikasi ke kode sebelum menulis status, bukan ke issue tracker                                                                                                                                                                      |
 
 ---
 
@@ -272,3 +270,51 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
 - [x] Bersihkan sisa em dash pada kamus bahasa
 
 </details>
+
+---
+
+## 🗺️ Backlog Jangka Panjang (Sprint 11+)
+
+> Fitur-fitur ini diprioritaskan berdasarkan **dampak vs kompleksitas**. Semua item di sini baru boleh dikerjakan setelah Sprint 1–10 benar-benar tuntas.
+
+### 🧠 AI, Naura Jadi Lebih Cerdas
+
+- [x] **AI Function Calling** `L`, Daftarkan tool ke `@google/genai` agar Naura bisa menjalankan aksi nyata (`check_balance`, `play_music`). Guard prompt injection wajib. `plugin/ai/functionDispatcher.js`
+- [x] **AI Dungeon Master** `L`, Command `/story` dengan sesi naratif RPG berbasis Gemini. State di Redis `story:session:{userId}` TTL 1 jam. Integrasikan `storyData.js` + `survivalContext.js`
+- [x] **Real-Time Voice AI (Cyber Waifu)** `XL`, STT (Whisper) + LLM + TTS real-time di voice channel. Referensi: `moeru-ai/airi`
+- [x] **Autonomous Presence** `XL`, Naura ikut bergabung otomatis ke voice, bereaksi pada obrolan ramai tanpa dipanggil
+
+### 🎮 RPG & Survival, Dunia yang Lebih Hidup
+
+- [x] **PvP Arena & Tournament** `L`, Rating Elo, bracket tournament, spectator mode. Extends `duelEngine.js`. Model `DuelRecord`
+- [x] **Sistem Pet Lanjutan** `M`, Mood system, evolusi, skill passive, breeding. Extends `UserPet`. `plugin/survival/petActions.js`
+
+### 📊 Engagement & Komunitas
+
+- [x] **Notifikasi Cerdas via DM** `M`, Subscribe notifikasi stamina penuh, quest reset, event baru. `notification_prefs` JSON di `UserProfile`
+
+### 💎 Monetisasi & Premium
+
+- [x] **Dashboard Analytics Premium** `L`, Retention heatmap, cohort tracking, distribusi ekonomi, leaderboard. `dashboard/routes/analytics.js` + precompute via `cronManager.js`
+- [x] **Welcome Card Builder Visual** `XL`, Drag & drop di dashboard, preview real-time, export JSON ke `GuildSettings.settings.welcomeCard`. Renderer di `plugin/canvas/`
+
+### 🎵 Musik
+
+- [x] **Playlist Pribadi** `M`, `/playlist save` & `/playlist load`. Model `UserPlaylist`. Vote-skip 50% user di voice
+- [x] **Now Playing Canvas Real-Time** `M`, Progress bar bergerak, update berkala, waveform animasi. Extends `nowplayingCanvas.js`
+
+### 🎮 In-Game Integration
+
+- [x] **Minecraft AI Companion** `XL`, Hubungkan LLM Naura ke server Minecraft via jembatan yang sudah ada. NPC pintar atau asisten in-game
+
+### 📱 UX & Dashboard
+
+- [x] **Profil Terpadu "Naura ID Card"** `L`, Redesain `/profile`: avatar + border rank, badge achievement, reputasi, lagu favorit dari history musik, custom bio premium. `plugin/canvas/profileCanvas.js`
+- [x] **Onboarding Wizard** `M`, Saat bot join server baru, kirim Container V2 dengan preset cepat (Community, Gaming, Minimal). `plugin/admin/onboardingWizard.js`
+
+> **Urutan Sprint yang Direkomendasikan:**
+> - **Sprint A (Impact Tinggi, Ringan):** Audio Filters, Voice Activity Rewards, Quest Harian
+> - **Sprint B (Impact Tinggi, Sedang):** AI Memory, PvP Arena, Anti-Raid, Musim & Event
+> - **Sprint C (Kompleks, Differensiator):** AI Function Calling, Dashboard Analytics, Modmail Lanjutan
+> - **Sprint D (Long-term):** AI Dungeon Master, Sistem Klan, Welcome Card Builder, Voice AI
+

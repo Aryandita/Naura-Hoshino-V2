@@ -7,17 +7,17 @@
 
 ### Keputusan arsitektur yang sudah dikunci
 
-| Topik | Keputusan |
-|---|---|
-| Versi Node | `>= 24` di `engines`, README, dokumen ini, dan CI. Seragam, tanpa pengecualian. |
-| Versi bot & engine | Keduanya `2.0.0`, dan harus sama di `package.json`, `README.md`, serta default `BOT_VERSION`/`ENGINE_VERSION`. |
-| Penyimpanan bahasa | **Per user.** `GuildSettings.language` hanya menjadi bahasa default saat user belum punya preferensi. |
-| Strategi sharding | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering. Lihat aturan 1.11. |
-| Fallback SQLite | **Dipertahankan** sebagai penyimpanan darurat saat MySQL dan Redis mati bersamaan. |
-| Alur PR | **Satu PR per sprint.** Seluruh pekerjaan satu sprint menumpuk di satu branch, direview dan di-merge sekali saat sprint tuntas. |
-| Deploy di panel | **Pterodactyl.** Perintah luar terkunci, jadi `CMD_RUN` tetap `npm start` dan urutan migrasi dijamin dari dalam `package.json` lewat `prestart`. Lihat 3.8. |
-| Mata uang kupon | **Naura Coupon adalah mata uang paling langka.** Disimpan di kolom `UserSurvival.coupons`, bukan di dalam JSON `rpg_state`, agar bisa dipotong secara atomik. |
-| Prioritas kerja | Sprint 0 Hardening dan Sprint 1 Fondasi DX sudah tuntas. Sprint aktif saat ini adalah Sprint 2 Konsistensi Data & Performa di `TODO.md`, dan fitur baru ditahan sampai selesai. |
+| Topik              | Keputusan                                                                                                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Versi Node         | `>= 24` di `engines`, README, dokumen ini, dan CI. Seragam, tanpa pengecualian.                                                                                                 |
+| Versi bot & engine | Keduanya `2.0.0`, dan harus sama di `package.json`, `README.md`, serta default `BOT_VERSION`/`ENGINE_VERSION`.                                                                  |
+| Penyimpanan bahasa | **Per user.** `GuildSettings.language` hanya menjadi bahasa default saat user belum punya preferensi.                                                                           |
+| Strategi sharding  | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering. Lihat aturan 1.11.                                                           |
+| Fallback SQLite    | **Dipertahankan** sebagai penyimpanan darurat saat MySQL dan Redis mati bersamaan.                                                                                              |
+| Alur PR            | **Satu PR per sprint.** Seluruh pekerjaan satu sprint menumpuk di satu branch, direview dan di-merge sekali saat sprint tuntas.                                                 |
+| Deploy di panel    | **Pterodactyl.** Perintah luar terkunci, jadi `CMD_RUN` tetap `npm start` dan urutan migrasi dijamin dari dalam `package.json` lewat `prestart`. Lihat 3.8.                     |
+| Mata uang kupon    | **Naura Coupon adalah mata uang paling langka.** Disimpan di kolom `UserSurvival.coupons`, bukan di dalam JSON `rpg_state`, agar bisa dipotong secara atomik.                   |
+| Prioritas kerja    | Sprint 0-10 sudah tuntas (Hardening, Fondasi DX, Konsistensi Data, Observabilitas, Ticketing, Gacha, Giveaway V2, Setup Dashboard Modular). Sprint berikutnya dipilih dari backlog `TODO.md`. |
 
 ---
 
@@ -33,31 +33,31 @@
 
 ## 1.1 Bahasa & Konvensi Kode
 
-| Aturan | Penjelasan |
-|---|---|
-| **Bahasa Kode** | JavaScript (CommonJS `require`/`module.exports`). Tidak menggunakan TypeScript atau ESM. |
-| **Dynamic import** | `await import()` **diizinkan dan dianjurkan** untuk lazy-load dependensi berat, meski proyek memakai CommonJS. Ini bukan pelanggaran aturan CommonJS. |
-| **Bahasa Komentar** | Bahasa Indonesia untuk komentar inline dan log. Bahasa Inggris hanya untuk nama variabel, fungsi, dan kelas. |
-| **Indentasi** | 4 spasi. Nilai ini harus sama dengan konfigurasi Prettier di repo; bila berbeda, konfigurasi Prettier yang menang dan baris ini diperbarui. |
-| **Linting** | ESLint v10 + Prettier v3. Jalankan sebelum commit. |
-| **Testing** | `node:test` bawaan Node, dijalankan lewat `npm test`. Tidak menambah framework test eksternal. |
-| **Semicolons** | Wajib digunakan di setiap statement. |
-| **String** | Gunakan single quotes (`'...'`) untuk string biasa, backticks (`` `...` ``) untuk template literals. |
-| **Em dash** | Dilarang di seluruh repo, termasuk kamus bahasa. CI memeriksa ini lewat `scripts/check-em-dash.js`. |
+| Aturan              | Penjelasan                                                                                                                                            |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Bahasa Kode**     | JavaScript (CommonJS `require`/`module.exports`). Tidak menggunakan TypeScript atau ESM.                                                              |
+| **Dynamic import**  | `await import()` **diizinkan dan dianjurkan** untuk lazy-load dependensi berat, meski proyek memakai CommonJS. Ini bukan pelanggaran aturan CommonJS. |
+| **Bahasa Komentar** | Bahasa Indonesia untuk komentar inline dan log. Bahasa Inggris hanya untuk nama variabel, fungsi, dan kelas.                                          |
+| **Indentasi**       | 4 spasi. Nilai ini harus sama dengan konfigurasi Prettier di repo; bila berbeda, konfigurasi Prettier yang menang dan baris ini diperbarui.           |
+| **Linting**         | ESLint v10 + Prettier v3. Jalankan sebelum commit.                                                                                                    |
+| **Testing**         | `node:test` bawaan Node, dijalankan lewat `npm test`. Tidak menambah framework test eksternal.                                                        |
+| **Semicolons**      | Wajib digunakan di setiap statement.                                                                                                                  |
+| **String**          | Gunakan single quotes (`'...'`) untuk string biasa, backticks (`` `...` ``) untuk template literals.                                                  |
+| **Em dash**         | Dilarang di seluruh repo, termasuk kamus bahasa. CI memeriksa ini lewat `scripts/check-em-dash.js`.                                                   |
 
 ## 1.2 Aturan Penamaan
 
-| Elemen | Pola | Contoh |
-|---|---|---|
-| File command/plugin | `kebab-case.js` | `steal-emoji.js`, `warn.js` |
-| File manager/utility | `camelCase.js` | `cronManager.js`, `bootScreen.js` |
-| File model (Sequelize) | `PascalCase.js` | `UserProfile.js`, `GuildSettings.js` |
-| File builder/utility | `PascalCase.js` | `NauraContainerBuilder.js`, `NauraEmbedBuilder.js` |
-| Variabel & fungsi | `camelCase` | `cleanEnv()`, `buildContainerV2()` |
-| Kelas & model | `PascalCase` | `CommandHandler`, `MusicManager` |
-| Konstanta global | `UPPER_SNAKE_CASE` | `OWNER_IDS`, `LAVA_HOST` |
-| Event handler files | `camelCase.js` (nama event Discord) | `messageCreate.js`, `voiceStateUpdate.js` |
-| File test | `<nama>.test.js`, bersebelahan dengan file yang diuji | `rateLimiter.test.js`, `inventoryHelper.test.js` |
+| Elemen                 | Pola                                                  | Contoh                                             |
+| ---------------------- | ----------------------------------------------------- | -------------------------------------------------- |
+| File command/plugin    | `kebab-case.js`                                       | `steal-emoji.js`, `warn.js`                        |
+| File manager/utility   | `camelCase.js`                                        | `cronManager.js`, `bootScreen.js`                  |
+| File model (Sequelize) | `PascalCase.js`                                       | `UserProfile.js`, `GuildSettings.js`               |
+| File builder/utility   | `PascalCase.js`                                       | `NauraContainerBuilder.js`, `NauraEmbedBuilder.js` |
+| Variabel & fungsi      | `camelCase`                                           | `cleanEnv()`, `buildContainerV2()`                 |
+| Kelas & model          | `PascalCase`                                          | `CommandHandler`, `MusicManager`                   |
+| Konstanta global       | `UPPER_SNAKE_CASE`                                    | `OWNER_IDS`, `LAVA_HOST`                           |
+| Event handler files    | `camelCase.js` (nama event Discord)                   | `messageCreate.js`, `voiceStateUpdate.js`          |
+| File test              | `<nama>.test.js`, bersebelahan dengan file yang diuji | `rateLimiter.test.js`, `inventoryHelper.test.js`   |
 
 ## 1.3 Aturan Arsitektur
 
@@ -71,7 +71,7 @@
 5. **Anti-Crash Wajib**, Setiap operasi async yang berisiko (API call, Canvas render, DB query) harus di-wrap dalam `try/catch`. Global error handler sudah ada di `/src/managers/errorHandler.js`. Ini berlaku untuk **semua** tipe interaksi, termasuk tombol, select menu, modal, dan autocomplete.
 6. **Canvas Memory Safety**, Setelah merender canvas (via `@napi-rs/canvas`), pastikan buffer di-dispose untuk mencegah memory leak.
 7. **Jangan Hardcode ID**, Channel ID, role ID, dan guild ID harus disimpan di `/src/config.json` atau `GuildSettings` model, bukan di-hardcode dalam kode.
-8. **Setup Terpusat**, Seluruh konfigurasi server (Welcome, Automod, Ticket, TempVoice, Softban, dll.) harus diakses hanya melalui `/plugin/admin/setup.js`. File `setup-*.js` terpisah sudah **dihapus** dan tidak boleh dibuat ulang.
+8. **Setup Modular**, `plugin/admin/setup.js` adalah **router** (satu-satunya entry point `/setup`). Setiap subcommand ditangani oleh file terpisah di `plugin/admin/setup/<modul>.js` (satu file per modul). Handler menerima `(interaction, { currentSettings, saveSettings }, subcommand)`. Jangan menulis logic command langsung di dalam `setup.js`.
 9. **Softban Channel via GuildSettings**, Channel Honeypot Scammer Trap disimpan di `GuildSettings.settings.softbanChannelId`. Pengecekan dilakukan paling awal di `messageCreate.js` sebelum proses lain.
 10. **Layout Components V2 Wajib**, Setiap Container V2 (baik via `buildContainerV2()` maupun manual) HARUS mengikuti struktur 5-lapisan:
     ```
@@ -83,20 +83,20 @@
     ───────── separator (divider:true) ─────────
     [ Footer ]
     ```
-    Footer **SELALU** harus ada. Gunakan `ui.getFooter('core'|'utility'|'survival'|'music')` sebagai default.
 11. **Batas Payload Discord Wajib Dihormati**, Struktur 5-lapisan menambah komponen di setiap respons, jadi container panjang mudah menembus batas Discord. Lihat aturan 1.12.
 12. **Kepemilikan Tidak Boleh Diturunkan dari Data yang Bisa Dipalsukan**, Kepemilikan (misal owner Temp Voice) harus disimpan eksplisit di store, bukan diturunkan dari nama channel, topik, atau teks pesan yang bisa diubah user.
+13. **Sentralisasi Versi & Smart Canvas Invalidation**, Nilai `BOT_VERSION` dan `ENGINE_VERSION` bersumber eksklusif dari `.env` dan diakses melalui `src/config/env.js`. Seluruh cache visual Canvas di Redis (`canvas:*`) wajib terhubung ke `smartInvalidateUserCanvas(userId)` pada setiap event mutasi profil/saldo/leveling.
 
 ## 1.4 Aturan Commit & Branching
 
-| Aturan | Detail |
-|---|---|
-| Format commit | `<emoji> <tipe>: <deskripsi singkat>` contoh: `✨ feat: tambah command /weather` |
-| Tipe commit | `feat`, `fix`, `refactor`, `docs`, `style`, `perf`, `chore`, `test`, `ci` |
-| Branching | `main` untuk produksi, `dev` untuk development, `feature/<nama>` untuk fitur baru |
+| Aturan             | Detail                                                                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| Format commit      | `<emoji> <tipe>: <deskripsi singkat>` contoh: `✨ feat: tambah command /weather`                                                |
+| Tipe commit        | `feat`, `fix`, `refactor`, `docs`, `style`, `perf`, `chore`, `test`, `ci`                                                       |
+| Branching          | `main` untuk produksi, `dev` untuk development, `feature/<nama>` untuk fitur baru                                               |
 | Satu PR per sprint | Seluruh commit satu sprint dikumpulkan di satu branch `feature/<nama-sprint>`, direview dan di-merge sekali saat sprint tuntas. |
-| Referensi issue | Setiap PR yang mengerjakan item `TODO.md` wajib menyebut nomor issue terkait di deskripsi. |
-| CI wajib hijau | `lint`, `check-em-dash`, `locales:check:strict`, dan `npm test` harus lulus sebelum merge. |
+| Referensi issue    | Setiap PR yang mengerjakan item `TODO.md` wajib menyebut nomor issue terkait di deskripsi.                                      |
+| CI wajib hijau     | `lint`, `check-em-dash`, `locales:check:strict`, dan `npm test` harus lulus sebelum merge.                                      |
 
 ## 1.5 Aturan Keamanan
 
@@ -123,24 +123,24 @@ Naura Hoshino menggunakan identitas **Cyber-Anime Glassmorphism**, gabungan este
 
 ### Palet Warna Utama
 
-| Token | Hex | Fungsi |
-|---|---|---|
-| `primary` | `#FFB6C1` | Identitas brand, border panel kaca, glow text |
-| `canvas` | `#0B0C10` | Background terdalam (hitam kebiruan) |
-| `accent-pink` | `#F9A8D4` | Metrik ping & latensi |
-| `accent-purple` | `#C084FC` | Jaringan server, guild stats |
-| `accent-blue` | `#93C5FD` | Demografi user |
-| `accent-green` | `#86EFAC` | Uptime, status aktif |
-| `premium-gold` | `#FFD700` | Sistem premium/VIP, ekonomi |
-| `discord-blurple` | `#5865F2` | Tombol OAuth2, link Discord |
-| `surface-glass` | `rgba(255,255,255,0.03)` | Panel glassmorphism (+ `blur(16px)`) |
+| Token             | Hex                      | Fungsi                                        |
+| ----------------- | ------------------------ | --------------------------------------------- |
+| `primary`         | `#FFB6C1`                | Identitas brand, border panel kaca, glow text |
+| `canvas`          | `#0B0C10`                | Background terdalam (hitam kebiruan)          |
+| `accent-pink`     | `#F9A8D4`                | Metrik ping & latensi                         |
+| `accent-purple`   | `#C084FC`                | Jaringan server, guild stats                  |
+| `accent-blue`     | `#93C5FD`                | Demografi user                                |
+| `accent-green`    | `#86EFAC`                | Uptime, status aktif                          |
+| `premium-gold`    | `#FFD700`                | Sistem premium/VIP, ekonomi                   |
+| `discord-blurple` | `#5865F2`                | Tombol OAuth2, link Discord                   |
+| `surface-glass`   | `rgba(255,255,255,0.03)` | Panel glassmorphism (+ `blur(16px)`)          |
 
 ### Tipografi
 
-| Konteks | Font | Contoh Penggunaan |
-|---|---|---|
-| Angka metrik, nama sistem | **Orbitron** (700) | Ping: `42ms`, total server |
-| Body text, navigasi, tombol | **Outfit** (300–700) | Deskripsi, label, button |
+| Konteks                     | Font                 | Contoh Penggunaan          |
+| --------------------------- | -------------------- | -------------------------- |
+| Angka metrik, nama sistem   | **Orbitron** (700)   | Ping: `42ms`, total server |
+| Body text, navigasi, tombol | **Outfit** (300–700) | Deskripsi, label, button   |
 
 ### Aturan Canvas (@napi-rs/canvas)
 
@@ -313,13 +313,14 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 ## 2.2 Peta Direktori Lengkap & Pilar Utama
 
 > **Penjelasan Pilar Direktori Utama:**
+>
 > - `src/config/`: Menyimpan seluruh file pengaturan dasar (UI, konstan, environment, aset statis) yang **tidak boleh memiliki state berubah-ubah** (stateless config).
-> - `src/managers/`: Menyimpan sistem "pengendali" atau mesin utama bot (mis. `musicManager`, `aiManager`, `dbManager`). Mereka memegang *state*, *cache*, dan berinteraksi dengan API/database secara langsung.
+> - `src/managers/`: Menyimpan sistem "pengendali" atau mesin utama bot (mis. `musicManager`, `aiManager`, `dbManager`). Mereka memegang _state_, _cache_, dan berinteraksi dengan API/database secara langsung.
 > - `src/models/`: Menyimpan skema database tunggal (Sequelize) untuk konsistensi struktur data yang dipakai lintas modul.
-> - `src/utils/`: Menyimpan alat bantu (*helpers*) yang dapat dipanggil berkali-kali tanpa state (mis. `survivalHelper`, `NauraContainerBuilder`, utilitas kanvas).
+> - `src/utils/`: Menyimpan alat bantu (_helpers_) yang dapat dipanggil berkali-kali tanpa state (mis. `survivalHelper`, `NauraContainerBuilder`, utilitas kanvas).
 > - `src/events/`: Pendengar event Discord. Hanya berisi routing dan pengecekan awal, tanpa logika fitur.
 > - `src/interactions/`: Penanganan Button, Select Menu, dan Modal lewat registry per tipe interaksi. Folder ini sudah menjadi rumah resmi logika interaksi, dan `interactionCreate.js` hanya bertugas merutekan.
-> - `plugin/`: **HANYA** berisi *command router* dan pendefinisian Slash Command. Tidak boleh ada logika berat, akses database langsung tanpa manager, atau kelas helper di dalamnya.
+> - `plugin/`: **HANYA** berisi _command router_ dan pendefinisian Slash Command. Tidak boleh ada logika berat, akses database langsung tanpa manager, atau kelas helper di dalamnya.
 > - `src/dashboard/`: Menyimpan aplikasi web lokal untuk UI pemantauan dan pengelolaan berbasis Express/EJS.
 
 ```text
@@ -356,6 +357,8 @@ Naura-Hoshino-V2/
 │   │   ├── survival/           #       RPG engines (duel, craft, shop)
 │   │   ├── musicManager.js     #       Poru Lavalink wrapper
 │   │   ├── aiManager.js        #       LLM router
+│   │   ├── metricsManager.js   #       Logging penggunaan command/komponen via Redis
+│   │   ├── auditLogManager.js  #       Audit log fleksibel (delete, edit, kick, dll)
 │   │   └── ...
 │   │
 │   ├── models/                 #    Database Schemas (Sequelize)
@@ -370,20 +373,27 @@ Naura-Hoshino-V2/
 │   │   ├── NauraContainerBuilder.js # Components V2 builder
 │   │   ├── componentBudget.js  #       Penjaga batas payload Discord
 │   │   └── ...
-│   │
-│   └── dashboard/              #    Web Dashboard
-│       ├── middleware/         #       Auth, izin, owner guard
-│       ├── routes/             #       Endpoint public, user, guild, owner
-│       ├── sockets/            #       Socket.IO realtime
-│       └── utils/              #       Rate limiter & formatter
+│
+├── dashboard/                  # 🌐 WEB DASHBOARD
+│   ├── middleware/             #    Auth, izin, owner guard
+│   ├── routes/                 #    Endpoint public, user, guild, owner
+│   ├── sockets/                #    Socket.IO realtime
+│   ├── public/                 #    Frontend CSS, JS, HTML
+│   └── utils/                  #    Rate limiter & formatter
 │
 ├── plugin/                     # 🔌 COMMAND MODULES (Hanya Router & Subcommands)
 │   ├── core/                   #    /ping, /stats, /info, dll
 │   ├── music/                  #    /play, /queue, dll
 │   ├── ai/                     #    /ai chat, /ai imagine
-│   ├── admin/                  #    /setup, /ban, /kick, automod
-│   ├── survival/               #    /survival (33+ subcommands murni)
-│   ├── utility/                #    /afk, /poll, /reminder
+│   ├── admin/                  #    /setup (router), /ban, /kick, /giveaway, automod
+│   │   └── setup/              #       11 file modular: softban.js, greetings.js, automod.js,
+│   │                           #       modmail.js, ticket.js, tempvoice.js, autorole.js,
+│   │                           #       ai.js, vanity.js, minecraft.js, dashboard.js
+│   ├── survival/               #    /survival (55+ subcommands) + /gacha (3 banner)
+│   │   └── subcommands/        #       Subcommand handler survival
+│   ├── modmail/                #    n!modmail: private thread + Component V2 admin panel
+│   ├── ticketing/              #    /ticket setup: panel tiket, modal, ekspor transkrip HTML
+│   ├── utility/                #    /afk, /poll, /reminder, /data (GDPR export/delete)
 │   └── <kategori>/locales/     #    Terjemahan khusus per plugin
 ```
 
@@ -493,6 +503,7 @@ sequenceDiagram
 ## 2.7 Alur Command Loader (CommandHandler)
 
 `CommandHandler.js` melakukan:
+
 1. **Scan rekursif** folder `/plugin/` menggunakan `fast-glob`
 2. Setiap file yang mengekspor `data` (SlashCommandBuilder) + `execute` function dianggap command valid
 3. Command di-register ke `client.commands` Collection. **Alias disimpan di `client.aliases` yang terpisah**, agar tidak mengotori daftar command asli, dan tabrakan nama harus dideteksi saat load.
@@ -508,26 +519,26 @@ sequenceDiagram
 
 ```javascript
 // plugin/<kategori>/namaCommand.js
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('command-name')
-        .setDescription('Deskripsi command'),
+  data: new SlashCommandBuilder()
+    .setName("command-name")
+    .setDescription("Deskripsi command"),
 
-    // Opsional: metadata tambahan
-    cooldown: 5,        // detik
-    premium: false,     // apakah butuh VIP
-    ownerOnly: false,   // apakah hanya owner
+  // Opsional: metadata tambahan
+  cooldown: 5, // detik
+  premium: false, // apakah butuh VIP
+  ownerOnly: false, // apakah hanya owner
 
-    async execute(interaction, client) {
-        // Logic command di sini
-    },
+  async execute(interaction, client) {
+    // Logic command di sini
+  },
 
-    // Opsional: wajib diisi bila command punya opsi autocomplete
-    async autocomplete(interaction, client) {
-        // Ambil data dari cache, balas cepat
-    }
+  // Opsional: wajib diisi bila command punya opsi autocomplete
+  async autocomplete(interaction, client) {
+    // Ambil data dari cache, balas cepat
+  },
 };
 ```
 
@@ -540,47 +551,60 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 
 ### Model Utama & Relasinya
 
-| Model | Tabel | Fungsi | Key Fields |
-|---|---|---|---|
-| `UserProfile` | `user_profiles` | Master data user, termasuk preferensi bahasa | `userId`, `economy_wallet`, `economy_bank`, `inventory` (JSON), `cooldowns` (JSON), `language` |
-| `UserLeveling` | `user_leveling` | XP & level per-guild | `userId`, `guildId`, `xp`, `level`, `totalXp` |
-| `UserSurvival` | `UserSurvivals` | RPG stats & mata uang langka | `userId`, `starFragments`, `coupons`, `hp`, `stamina`, `rpg_state` (JSON) |
-| `GuildSettings` | `guild_settings` | Config per-server | `guildId`, `language` (default guild saja), `settings` (JSON: softbanChannelId, automod, greetings, dll.) |
-| `UserPlaylist` | `user_playlists` | Cloud playlist | `userId`, `name`, `tracks` (JSON) |
-| `PremiumVoucher` | `premium_vouchers` | Voucher VIP | `code`, `duration`, `usedBy` |
-| `UserPet` | `user_pets` | Virtual pet | `userId`, `name`, `type`, `level`, `hunger`, `happiness` |
-| `UserFriend` | `user_friends` | Sistem pertemanan | `userId`, `friendId`, `status` |
-| `UserQuest` | `user_quests` | Quest tracking | `userId`, `workCount`, `dungeonKills`, `collectCount`, `isClaimed` |
-| `ModMail` | `modmails` | Tiket modmail | `userId`, `guildId`, `channelId`, `status` |
-| `Giveaway` | `giveaways` | Data giveaway | `messageId`, `channelId`, `prize`, `endTime` |
-| `SocialAlert` | `social_alerts` | RSS/social notif | `guildId`, `platform`, `channelId`, `url` |
-| `CanvasAsset` | `canvas_assets` | Aset canvas kustom | `name`, `type`, `url`, `price`, `isPremiumOnly` |
-| `CryptoMarket` | `crypto_markets` | Pasar kripto virtual | `symbol`, `price`, `change` |
-| `GameItem` | `game_items` | Item database game | `id`, `name`, `category`, `rarity`, `attributes` |
-| `GuildClan` | `guild_clans` | Sistem klan server | `guildId`, `clanId`, `name`, `members`, `level` |
-| `StickyRole` | `sticky_roles` | Sticky roles saat rejoin | `userId`, `guildId`, `roleIds` |
-| `StoryProgress` | `story_progresses` | Progress cerita RPG | `userId`, `chapterId`, `flags` |
-| `UserAchievement` | `user_achievements` | Sistem pencapaian | `userId`, `achievementId`, `unlockedAt` |
-| `UserBirthday` | `user_birthdays` | Tanggal ulang tahun | `userId`, `birthday`, `timezone` |
-| `UserCard` | `user_cards` | Kartu koleksi | `userId`, `cardId`, `count` |
-| `UserChild` | `user_children` | Adopsi anak virtual | `userId`, `name`, `age`, `happiness` |
-| `UserCosmetic` | `user_cosmetics` | Kosmetik & skin | `userId`, `assetId`, `equipped` |
-| `UserCrypto` | `user_cryptos` | Portofolio kripto virtual | `userId`, `symbol`, `amount`, `avgBuyPrice` |
-| `UserFarm` | `user_farms` | Data ladang farming | `userId`, `plots`, `lastHarvest` |
-| `UserNPC` | `user_npcs` | Relasi NPC per-user | `userId`, `npcId`, `affection`, `lastInteract` |
-| `UserReminder` | `user_reminders` | Pengingat terjadwal | `userId`, `channelId`, `message`, `remindAt` |
-| `UserWarn` | `user_warns` | Riwayat peringatan moderasi | `userId`, `guildId`, `reason`, `moderatorId` |
+| Model             | Tabel               | Fungsi                                       | Key Fields                                                                                                |
+| ----------------- | ------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `UserProfile`     | `user_profiles`     | Master data user, termasuk preferensi bahasa | `userId`, `economy_wallet`, `economy_bank`, `inventory` (JSON), `cooldowns` (JSON), `language`            |
+| `UserLeveling`    | `user_leveling`     | XP & level per-guild                         | `userId`, `guildId`, `xp`, `level`, `totalXp`                                                             |
+| `UserSurvival`    | `UserSurvivals`     | RPG stats & mata uang langka                 | `userId`, `starFragments`, `coupons`, `hp`, `stamina`, `rpg_state` (JSON)                                 |
+| `GuildSettings`   | `guild_settings`    | Config per-server                            | `guildId`, `language` (default guild saja), `settings` (JSON: softbanChannelId, automod, greetings, dll.) |
+| `UserPlaylist`    | `user_playlists`    | Cloud playlist                               | `userId`, `name`, `tracks` (JSON)                                                                         |
+| `PremiumVoucher`  | `premium_vouchers`  | Voucher VIP                                  | `code`, `duration`, `usedBy`                                                                              |
+| `UserPet`         | `user_pets`         | Virtual pet                                  | `userId`, `name`, `type`, `level`, `hunger`, `happiness`                                                  |
+| `UserFriend`      | `user_friends`      | Sistem pertemanan                            | `userId`, `friendId`, `status`                                                                            |
+| `UserQuest`       | `user_quests`       | Quest tracking                               | `userId`, `workCount`, `dungeonKills`, `collectCount`, `isClaimed`                                        |
+| `ModMail`         | `modmails`          | Tiket modmail (n!modmail, Private Thread)    | `userId`, `guildId`, `channelId`, `closed`                                                                |
+| `UserTicket`      | `user_tickets`      | Tiket dukungan via /ticket setup + thread    | `userId`, `guildId`, `ticketId` (Thread ID), `topic`, `status`, `transcriptPath`                          |
+| `Giveaway`        | `giveaways`         | Data giveaway (V2: berbasis peserta)         | `messageId`, `channelId`, `prize`, `endTime`, `requirements` (JSON), `participants` (JSON), `winners` (JSON) |
+| `SocialAlert`     | `social_alerts`     | RSS/social notif                             | `guildId`, `platform`, `channelId`, `url`                                                                 |
+| `CanvasAsset`     | `canvas_assets`     | Aset canvas kustom                           | `name`, `type`, `url`, `price`, `isPremiumOnly`                                                           |
+| `CryptoMarket`    | `crypto_markets`    | Pasar kripto virtual                         | `symbol`, `price`, `change`                                                                               |
+| `GameItem`        | `game_items`        | Item database game                           | `id`, `name`, `category`, `rarity`, `attributes`                                                          |
+| `GuildClan`       | `guild_clans`       | Sistem klan server                           | `guildId`, `clanId`, `name`, `members`, `level`                                                           |
+| `StickyRole`      | `sticky_roles`      | Sticky roles saat rejoin                     | `userId`, `guildId`, `roleIds`                                                                            |
+| `StoryProgress`   | `story_progresses`  | Progress cerita RPG                          | `userId`, `chapterId`, `flags`                                                                            |
+| `UserAchievement` | `user_achievements` | Sistem pencapaian                            | `userId`, `achievementId`, `unlockedAt`                                                                   |
+| `UserBirthday`    | `user_birthdays`    | Tanggal ulang tahun                          | `userId`, `birthday`, `timezone`                                                                          |
+| `UserCard`        | `user_cards`        | Kartu koleksi                                | `userId`, `cardId`, `count`                                                                               |
+| `UserChild`       | `user_children`     | Adopsi anak virtual                          | `userId`, `name`, `age`, `happiness`                                                                      |
+| `UserCosmetic`    | `user_cosmetics`    | Kosmetik & skin                              | `userId`, `assetId`, `equipped`                                                                           |
+| `UserCrypto`      | `user_cryptos`      | Portofolio kripto virtual                    | `userId`, `symbol`, `amount`, `avgBuyPrice`                                                               |
+| `UserFarm`        | `user_farms`        | Data ladang farming                          | `userId`, `plots`, `lastHarvest`                                                                          |
+| `UserNPC`         | `user_npcs`         | Relasi NPC per-user                          | `userId`, `npcId`, `affection`, `lastInteract`                                                            |
+| `UserReminder`    | `user_reminders`    | Pengingat terjadwal                          | `userId`, `channelId`, `message`, `remindAt`                                                              |
+| `UserWarn`        | `user_warns`        | Riwayat peringatan moderasi                  | `userId`, `guildId`, `reason`, `moderatorId`                                                              |
 
 ### Daftar Migrasi Bernomor
 
-| ID | Fungsi |
-|---|---|
-| `v1_add_mannersPoint` | Kolom poin sopan santun |
-| `v2_add_dailyNotify` | Kolom pengingat daily |
-| `v3_add_economy_deposit` | Kolom JSON deposito bank |
-| `v4_add_economy_investments` | Kolom JSON portofolio investasi |
-| `v5_add_coupons` | Kolom `coupons` di `UserSurvivals` |
-| `v6_move_coupons_to_column` | Memindahkan kupon lama dari JSON `rpg_state` ke kolom baru |
+| ID                              | Fungsi                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------- |
+| `v1_add_mannersPoint`           | Kolom poin sopan santun                                                   |
+| `v2_add_dailyNotify`            | Kolom pengingat daily                                                     |
+| `v3_add_economy_deposit`        | Kolom JSON deposito bank                                                  |
+| `v4_add_economy_investments`    | Kolom JSON portofolio investasi                                           |
+| `v5_add_coupons`                | Kolom `coupons` di `UserSurvivals`                                        |
+| `v6_move_coupons_to_column`     | Memindahkan kupon lama dari JSON `rpg_state` ke kolom baru                |
+| `v7_add_user_strikes`           | Model `UserStrike`: riwayat peringatan moderasi + eskalasi otomatis       |
+| `v8_add_sticky_roles`           | Model `StickyRole`: simpan role saat rejoin                               |
+| `v9_add_role_lease`             | Model `RoleLease`: sewa role berbayar dengan `expiresAt`                  |
+| `v10_add_social_alert`          | Model `SocialAlert`: RSS & notif sosial per guild                         |
+| `v11_add_market_auction`        | Model `MarketAuction`: tabel lelang lintas server                         |
+| `v12_add_user_npc`              | Model `UserNPC`: relasi NPC per-user + kolom afeksi                       |
+| `v13_add_story_progress`        | Model `StoryProgress`: progress cerita RPG multi-chapter                  |
+| `v14_add_user_achievement`      | Model `UserAchievement`: sistem pencapaian user                           |
+| `v15_add_user_birthday`         | Model `UserBirthday`: tanggal lahir + timezone user                       |
+| `v16_add_user_cosmetic`         | Model `UserCosmetic`: skin & kosmetik yang di-equip                       |
+| `v17_add_user_farm`             | Model `UserFarm`: ladang farming + jadwal panen                           |
+| `v18_add_giveaway_participants` | Kolom `requirements`, `participants`, `winners` di tabel `giveaways`      |
 
 > [!CAUTION]
 > `v6_move_coupons_to_column` adalah migrasi **data** yang menambah nilai, bukan sekadar perubahan skema. Menjalankannya dua kali akan menggandakan kupon setiap pemain. Ia aman hanya karena tercatat di `schema_migrations`, dan ada test yang menjaga sifat itu. Perlakukan setiap migrasi data serupa dengan kehati-hatian yang sama.
@@ -593,44 +617,44 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 
 > Nilai versi dan dependensi di bawah harus selalu cocok dengan `package.json`. Bila berbeda, `package.json` yang benar.
 
-| Property | Value |
-|---|---|
-| **Nama** | Naura Hoshino Intelligence |
-| **Versi** | 2.0.0 |
-| **Engine** | 2.0.0 |
-| **Deskripsi** | Bot Discord multifungsi dengan AI, High-Fidelity Audio, Canvas Modern, Sistem Ekonomi, dan Web Dashboard |
-| **Author** | Aryandita Praftian (Ryaa) |
-| **License** | ISC |
-| **Runtime** | Node.js ≥ 24.0.0 |
-| **Framework** | discord.js v14.26+ |
-| **Database** | MySQL (primary) / SQLite (fallback darurat) |
-| **ORM** | Sequelize v6 |
-| **Cache** | Redis v4 (opsional) |
-| **Audio** | Poru v5 + Lavalink v4 |
-| **AI** | Google Gemini (`@google/genai`) + Verba + Ollama (opsional) |
-| **Canvas** | `@napi-rs/canvas` v0.1.53 |
-| **Web Server** | Express v4 + Socket.IO v4 |
-| **Panel hosting** | Pterodactyl (`CMD_RUN = npm start`) |
+| Property          | Value                                                                                                    |
+| ----------------- | -------------------------------------------------------------------------------------------------------- |
+| **Nama**          | Naura Hoshino Intelligence                                                                               |
+| **Versi**         | 2.0.0                                                                                                    |
+| **Engine**        | 2.0.0                                                                                                    |
+| **Deskripsi**     | Bot Discord multifungsi dengan AI, High-Fidelity Audio, Canvas Modern, Sistem Ekonomi, dan Web Dashboard |
+| **Author**        | Aryandita Praftian (Ryaa)                                                                                |
+| **License**       | ISC                                                                                                      |
+| **Runtime**       | Node.js ≥ 24.0.0                                                                                         |
+| **Framework**     | discord.js v14.26+                                                                                       |
+| **Database**      | MySQL (primary) / SQLite (fallback darurat)                                                              |
+| **ORM**           | Sequelize v6                                                                                             |
+| **Cache**         | Redis v4 (opsional)                                                                                      |
+| **Audio**         | Poru v5 + Lavalink v4                                                                                    |
+| **AI**            | Google Gemini (`@google/genai`) + Verba + Ollama (opsional)                                              |
+| **Canvas**        | `@napi-rs/canvas` v0.1.53                                                                                |
+| **Web Server**    | Express v4 + Socket.IO v4                                                                                |
+| **Panel hosting** | Pterodactyl (`CMD_RUN = npm start`)                                                                      |
 
 ## 3.2 NPM Scripts
 
-| Script | Command | Fungsi |
-|---|---|---|
-| `prestart` | `node scripts/migrate.js` | Dipanggil npm otomatis sebelum `start`. Menggagalkan `start` bila migrasi error. |
-| `npm run start` | `node shard.js` | Menjalankan bot via ShardingManager (produksi), setelah `prestart` |
-| `npm run start:no-migrate` | `node shard.js` | Pintu darurat, menyalakan bot tanpa memeriksa skema |
-| `npm run db:migrate` | `node scripts/migrate.js` | Menjalankan migrasi secara manual dan terpisah |
-| `npm run dev` | `node --watch shard.js` | Development dengan auto-restart |
-| `npm run deploy` | `node index.js --deploy` | Deploy slash commands ke Discord API |
-| `npm run install-start` | `npm install && npm start` | Fresh install + start (termasuk migrasi) |
-| `npm run lint` | `eslint .` | Linting seluruh repo |
-| `npm run lint:fix` | `eslint . --fix` | Linting + perbaikan otomatis |
-| `npm run format` | `prettier --write .` | Format seluruh repo |
-| `npm run format:check` | `prettier --check .` | Verifikasi format (dipakai CI) |
-| `npm test` | `node --test` | Menjalankan test `node:test` |
-| `npm run build:css` | `tailwindcss -i ... -o ...` | Build CSS dashboard |
-| `npm run locales:check` | `node scripts/validate-locales.js` | Audit paritas kunci bahasa |
-| `npm run locales:check:strict` | `node scripts/validate-locales.js --strict` | Audit bahasa mode gagal-keras (dipakai CI) |
+| Script                         | Command                                     | Fungsi                                                                           |
+| ------------------------------ | ------------------------------------------- | -------------------------------------------------------------------------------- |
+| `prestart`                     | `node scripts/migrate.js`                   | Dipanggil npm otomatis sebelum `start`. Menggagalkan `start` bila migrasi error. |
+| `npm run start`                | `node shard.js`                             | Menjalankan bot via ShardingManager (produksi), setelah `prestart`               |
+| `npm run start:no-migrate`     | `node shard.js`                             | Pintu darurat, menyalakan bot tanpa memeriksa skema                              |
+| `npm run db:migrate`           | `node scripts/migrate.js`                   | Menjalankan migrasi secara manual dan terpisah                                   |
+| `npm run dev`                  | `node --watch shard.js`                     | Development dengan auto-restart                                                  |
+| `npm run deploy`               | `node index.js --deploy`                    | Deploy slash commands ke Discord API                                             |
+| `npm run install-start`        | `npm install && npm start`                  | Fresh install + start (termasuk migrasi)                                         |
+| `npm run lint`                 | `eslint .`                                  | Linting seluruh repo                                                             |
+| `npm run lint:fix`             | `eslint . --fix`                            | Linting + perbaikan otomatis                                                     |
+| `npm run format`               | `prettier --write .`                        | Format seluruh repo                                                              |
+| `npm run format:check`         | `prettier --check .`                        | Verifikasi format (dipakai CI)                                                   |
+| `npm test`                     | `node --test`                               | Menjalankan test `node:test`                                                     |
+| `npm run build:css`            | `tailwindcss -i ... -o ...`                 | Build CSS dashboard                                                              |
+| `npm run locales:check`        | `node scripts/validate-locales.js`          | Audit paritas kunci bahasa                                                       |
+| `npm run locales:check:strict` | `node scripts/validate-locales.js --strict` | Audit bahasa mode gagal-keras (dipakai CI)                                       |
 
 ## 3.3 Environment Variables
 
@@ -642,106 +666,106 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 
 ### Discord Core
 
-| Variable | Wajib | Default | Deskripsi |
-|---|---|---|---|
-| `DISCORD_TOKEN` | ⚠️ | - | Token bot Discord |
-| `CLIENT_ID` | ⚠️ | - | Application/Client ID Discord |
-| `PREFIX` | ❌ | `n!` | Prefix command legacy |
-| `OWNER_IDS` | ❌ | - | ID owner, comma-separated |
-| `GUILD_ID` | ❌ | - | ID guild untuk development |
-| `STAFF_GUILD_ID` | ❌ | - | Guild staf tempat tiket ModMail dikelola |
-| `MODMAIL_CATEGORY_ID` | ❌ | - | Kategori penampung channel tiket ModMail |
+| Variable              | Wajib | Default | Deskripsi                                |
+| --------------------- | ----- | ------- | ---------------------------------------- |
+| `DISCORD_TOKEN`       | ⚠️    | -       | Token bot Discord                        |
+| `CLIENT_ID`           | ⚠️    | -       | Application/Client ID Discord            |
+| `PREFIX`              | ❌    | `n!`    | Prefix command legacy                    |
+| `OWNER_IDS`           | ❌    | -       | ID owner, comma-separated                |
+| `GUILD_ID`            | ❌    | -       | ID guild untuk development               |
+| `STAFF_GUILD_ID`      | ❌    | -       | Guild staf tempat tiket ModMail dikelola |
+| `MODMAIL_CATEGORY_ID` | ❌    | -       | Kategori penampung channel tiket ModMail |
 
 ### Version
 
-| Variable | Wajib | Default | Deskripsi |
-|---|---|---|---|
-| `BOT_VERSION` | ❌ | `2.0.0` | Versi bot yang ditampilkan di `/info` |
-| `ENGINE_VERSION` | ❌ | `2.0.0` | Versi engine internal, tampil di footer |
-| `PARTNERSHIP` | ❌ | `Belum ada kolaborasi` | Label komunitas mitra yang tampil di profil |
+| Variable         | Wajib | Default                | Deskripsi                                   |
+| ---------------- | ----- | ---------------------- | ------------------------------------------- |
+| `BOT_VERSION`    | ❌    | `2.0.0`                | Versi bot yang ditampilkan di `/info`       |
+| `ENGINE_VERSION` | ❌    | `2.0.0`                | Versi engine internal, tampil di footer     |
+| `PARTNERSHIP`    | ❌    | `Belum ada kolaborasi` | Label komunitas mitra yang tampil di profil |
 
 ### Database (MySQL)
 
-| Variable | Wajib | Default | Deskripsi |
-|---|---|---|---|
-| `MYSQL_HOST` | ❌ | `127.0.0.1` | Host database |
-| `MYSQL_PORT` | ❌ | `3306` | Port database |
-| `MYSQL_USER` | ⚠️ | - | Username database |
-| `MYSQL_PASSWORD` | ❌ | - | Password database |
-| `MYSQL_DATABASE` | ⚠️ | - | Nama database |
-| `DB_POOL_BUDGET` | ❌ | `80` | Total koneksi untuk seluruh shard, dibagi jumlah shard |
-| `DB_POOL_MAX` | ❌ | - | Penimpa manual `pool.max` per proses |
-| `SKIP_DB_MIGRATE` | ❌ | - | Pintu darurat. `1`, `true`, atau `yes` melewati migrasi saat boot. Jangan permanen. |
+| Variable          | Wajib | Default     | Deskripsi                                                                           |
+| ----------------- | ----- | ----------- | ----------------------------------------------------------------------------------- |
+| `MYSQL_HOST`      | ❌    | `127.0.0.1` | Host database                                                                       |
+| `MYSQL_PORT`      | ❌    | `3306`      | Port database                                                                       |
+| `MYSQL_USER`      | ⚠️    | -           | Username database                                                                   |
+| `MYSQL_PASSWORD`  | ❌    | -           | Password database                                                                   |
+| `MYSQL_DATABASE`  | ⚠️    | -           | Nama database                                                                       |
+| `DB_POOL_BUDGET`  | ❌    | `80`        | Total koneksi untuk seluruh shard, dibagi jumlah shard                              |
+| `DB_POOL_MAX`     | ❌    | -           | Penimpa manual `pool.max` per proses                                                |
+| `SKIP_DB_MIGRATE` | ❌    | -           | Pintu darurat. `1`, `true`, atau `yes` melewati migrasi saat boot. Jangan permanen. |
 
 > [!NOTE]
 > Di dalam kode, nilai-nilai ini diakses sebagai `env.DB_HOST`, `env.DB_PORT`, `env.DB_USER`, `env.DB_PASS`, dan `env.DB_NAME`. Bila salah satu dari `DB_NAME`, `DB_USER`, atau `DB_HOST` kosong, bot otomatis memakai fallback SQLite (`naura_fallback.sqlite`).
 
 ### Web Dashboard & OAuth2
 
-| Variable | Wajib | Default | Deskripsi |
-|---|---|---|---|
-| `PORT` / `DASHBOARD_PORT` | ❌ | `3070` | Port dashboard web |
-| `WEBHOOK_PORT` | ❌ | `3071` | Port terpisah untuk webhook donasi & vote |
-| `DISCORD_CLIENT_SECRET` | ❌ | - | OAuth2 client secret |
-| `DISCORD_CALLBACK_URL` | ❌ | `http://localhost:3070/auth/discord/callback` | OAuth2 redirect URL |
-| `SESSION_SECRET` | ⚠️ di produksi | - | Secret Express session. Dashboard menolak akses bila kosong di produksi. |
-| `DASHBOARD_ORIGIN` | ❌ | - | Origin yang di-whitelist untuk perlindungan CORS |
-| `OWNER_EVAL_ENABLED` | ❌ | `false` | Membuka rute `eval` owner. Wajib `false` di produksi. |
+| Variable                  | Wajib          | Default                                       | Deskripsi                                                                |
+| ------------------------- | -------------- | --------------------------------------------- | ------------------------------------------------------------------------ |
+| `PORT` / `DASHBOARD_PORT` | ❌             | `3070`                                        | Port dashboard web                                                       |
+| `WEBHOOK_PORT`            | ❌             | `3071`                                        | Port terpisah untuk webhook donasi & vote                                |
+| `DISCORD_CLIENT_SECRET`   | ❌             | -                                             | OAuth2 client secret                                                     |
+| `DISCORD_CALLBACK_URL`    | ❌             | `http://localhost:3070/auth/discord/callback` | OAuth2 redirect URL                                                      |
+| `SESSION_SECRET`          | ⚠️ di produksi | -                                             | Secret Express session. Dashboard menolak akses bila kosong di produksi. |
+| `DASHBOARD_ORIGIN`        | ❌             | -                                             | Origin yang di-whitelist untuk perlindungan CORS                         |
+| `OWNER_EVAL_ENABLED`      | ❌             | `false`                                       | Membuka rute `eval` owner. Wajib `false` di produksi.                    |
 
 ### Webhook Auth (Monetisasi)
 
 > [!CAUTION]
 > Ketiga token ini menjaga jalur pendapatan. Bila kosong, endpoint terkait WAJIB membalas `503` dan bukan memproses request.
 
-| Variable | Wajib | Default | Deskripsi |
-|---|---|---|---|
-| `WEBHOOK_AUTH_SAWERIA` | ❌ | - | Token verifikasi webhook Saweria |
-| `WEBHOOK_AUTH_TRAKTEER` | ❌ | - | Token verifikasi webhook Trakteer |
-| `WEBHOOK_AUTH_VOTE` | ❌ | - | Token verifikasi webhook vote Top.gg |
+| Variable                | Wajib | Default | Deskripsi                            |
+| ----------------------- | ----- | ------- | ------------------------------------ |
+| `WEBHOOK_AUTH_SAWERIA`  | ❌    | -       | Token verifikasi webhook Saweria     |
+| `WEBHOOK_AUTH_TRAKTEER` | ❌    | -       | Token verifikasi webhook Trakteer    |
+| `WEBHOOK_AUTH_VOTE`     | ❌    | -       | Token verifikasi webhook vote Top.gg |
 
 ### Lavalink (Music)
 
-| Variable | Wajib | Default | Deskripsi |
-|---|---|---|---|
-| `LAVALINK_HOST` | ❌ | `localhost` | Hostname Lavalink node |
-| `LAVALINK_PORT` | ❌ | `2333` | Port Lavalink node |
-| `LAVALINK_PASSWORD` | ❌ | `youshallnotpass` | Password Lavalink |
-| `LAVALINK_SECURE` | ❌ | `false` | Gunakan SSL/TLS |
+| Variable            | Wajib | Default           | Deskripsi              |
+| ------------------- | ----- | ----------------- | ---------------------- |
+| `LAVALINK_HOST`     | ❌    | `localhost`       | Hostname Lavalink node |
+| `LAVALINK_PORT`     | ❌    | `2333`            | Port Lavalink node     |
+| `LAVALINK_PASSWORD` | ❌    | `youshallnotpass` | Password Lavalink      |
+| `LAVALINK_SECURE`   | ❌    | `false`           | Gunakan SSL/TLS        |
 
 ### API Keys
 
-| Variable | Wajib | Default | Deskripsi |
-|---|---|---|---|
-| `GEMINI_API_KEY` | ❌ | - | Google Gemini AI API key |
-| `OMDB_API_KEY` | ❌ | - | OMDB (movie database) API key |
-| `SPOTIFY_CLIENT_ID` | ❌ | - | Spotify API client ID |
-| `SPOTIFY_CLIENT_SECRET` | ❌ | - | Spotify API client secret |
+| Variable                | Wajib | Default | Deskripsi                     |
+| ----------------------- | ----- | ------- | ----------------------------- |
+| `GEMINI_API_KEY`        | ❌    | -       | Google Gemini AI API key      |
+| `OMDB_API_KEY`          | ❌    | -       | OMDB (movie database) API key |
+| `SPOTIFY_CLIENT_ID`     | ❌    | -       | Spotify API client ID         |
+| `SPOTIFY_CLIENT_SECRET` | ❌    | -       | Spotify API client secret     |
 
 ### AI Lokal & Generasi Gambar
 
-| Variable | Wajib | Default | Deskripsi |
-|---|---|---|---|
-| `OLLAMA_BASE_URL` | ❌ | `http://localhost:11434` | Endpoint Ollama untuk fallback LLM lokal |
-| `OLLAMA_MODEL` | ❌ | `llama3.1` | Model yang dipakai Ollama |
-| `FOOOCUS_BASE_URL` | ❌ | `http://localhost:7865` | Endpoint generasi gambar lokal |
+| Variable           | Wajib | Default                  | Deskripsi                                |
+| ------------------ | ----- | ------------------------ | ---------------------------------------- |
+| `OLLAMA_BASE_URL`  | ❌    | `http://localhost:11434` | Endpoint Ollama untuk fallback LLM lokal |
+| `OLLAMA_MODEL`     | ❌    | `llama3.1`               | Model yang dipakai Ollama                |
+| `FOOOCUS_BASE_URL` | ❌    | `http://localhost:7865`  | Endpoint generasi gambar lokal           |
 
 ### Verba AI (Opsional)
 
-| Variable | Wajib | Default | Deskripsi |
-|---|---|---|---|
-| `VERBA_API_KEY` | ❌ | - | Verba AI API key |
-| `VERBA_SLUG_OWNER` | ❌ | - | Slug karakter untuk owner |
-| `VERBA_SLUG_PREMIUM` | ❌ | - | Slug karakter untuk premium user |
-| `VERBA_SLUG_GENERAL` | ❌ | - | Slug karakter untuk general user |
-| `VERBA_CHARACTER_SLUG` | ❌ | - | Legacy fallback slug |
+| Variable               | Wajib | Default | Deskripsi                        |
+| ---------------------- | ----- | ------- | -------------------------------- |
+| `VERBA_API_KEY`        | ❌    | -       | Verba AI API key                 |
+| `VERBA_SLUG_OWNER`     | ❌    | -       | Slug karakter untuk owner        |
+| `VERBA_SLUG_PREMIUM`   | ❌    | -       | Slug karakter untuk premium user |
+| `VERBA_SLUG_GENERAL`   | ❌    | -       | Slug karakter untuk general user |
+| `VERBA_CHARACTER_SLUG` | ❌    | -       | Legacy fallback slug             |
 
 ### Infrastructure & Media
 
-| Variable | Wajib | Default | Deskripsi |
-|---|---|---|---|
-| `REDIS_URL` | ❌ | - | Redis connection URL. Bila kosong, cache berjalan in-memory per shard. |
-| `ERROR_WEBHOOK_URL` | ❌ | - | Discord webhook untuk error reporting |
-| `FFMPEG_PATH` | ❌ | - | Kosongkan untuk memakai `ffmpeg-static`, isi bila server punya binary sendiri |
+| Variable            | Wajib | Default | Deskripsi                                                                     |
+| ------------------- | ----- | ------- | ----------------------------------------------------------------------------- |
+| `REDIS_URL`         | ❌    | -       | Redis connection URL. Bila kosong, cache berjalan in-memory per shard.        |
+| `ERROR_WEBHOOK_URL` | ❌    | -       | Discord webhook untuk error reporting                                         |
+| `FFMPEG_PATH`       | ❌    | -       | Kosongkan untuk memakai `ffmpeg-static`, isi bila server punya binary sendiri |
 
 ## 3.4 Infrastruktur & Dependensi Eksternal
 
@@ -772,26 +796,26 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 
 > `package.json` adalah sumber kebenaran. Tabel ini hanya ringkasan peran, bukan daftar lengkap.
 
-| Package | Versi | Fungsi |
-|---|---|---|
-| `discord.js` | ^14.26.4 | Framework bot Discord |
-| `sequelize` | ^6.37.8 | ORM untuk MySQL/SQLite |
-| `mysql2` | ^3.9.7 | MySQL driver |
-| `sqlite3` | ^5.1.7 | SQLite fallback driver (penyimpanan darurat) |
-| `redis` | ^4.7.1 | Redis client |
-| `poru` | ^5.3.0 | Lavalink audio client |
-| `@google/genai` | ^1.46.0 | Google Gemini AI SDK |
-| `ollama` | ^0.5.15 | LLM lokal (opsional) |
-| `@napi-rs/canvas` | ^0.1.53 | Canvas rendering (native) |
-| `express` | ^4.18.2 | Web server dashboard |
-| `socket.io` | ^4.8.3 | Real-time dashboard updates |
-| `passport-discord` | ^0.1.4 | Discord OAuth2 |
-| `axios` | ^1.6.8 | HTTP client |
-| `fast-glob` | ^3.3.3 | File pattern matching |
-| `node-cron` | ^4.6.0 | Cron job scheduler |
-| `msedge-tts` | ^1.1.0 | Text-to-speech |
-| `ffmpeg-static` | ^5.2.0 | Binary FFmpeg bawaan |
-| `eslint` / `prettier` | ^10.4.1 / ^3.8.3 | Linting & formatting (devDependencies) |
+| Package               | Versi            | Fungsi                                       |
+| --------------------- | ---------------- | -------------------------------------------- |
+| `discord.js`          | ^14.26.4         | Framework bot Discord                        |
+| `sequelize`           | ^6.37.8          | ORM untuk MySQL/SQLite                       |
+| `mysql2`              | ^3.9.7           | MySQL driver                                 |
+| `sqlite3`             | ^5.1.7           | SQLite fallback driver (penyimpanan darurat) |
+| `redis`               | ^4.7.1           | Redis client                                 |
+| `poru`                | ^5.3.0           | Lavalink audio client                        |
+| `@google/genai`       | ^1.46.0          | Google Gemini AI SDK                         |
+| `ollama`              | ^0.5.15          | LLM lokal (opsional)                         |
+| `@napi-rs/canvas`     | ^0.1.53          | Canvas rendering (native)                    |
+| `express`             | ^4.18.2          | Web server dashboard                         |
+| `socket.io`           | ^4.8.3           | Real-time dashboard updates                  |
+| `passport-discord`    | ^0.1.4           | Discord OAuth2                               |
+| `axios`               | ^1.6.8           | HTTP client                                  |
+| `fast-glob`           | ^3.3.3           | File pattern matching                        |
+| `node-cron`           | ^4.6.0           | Cron job scheduler                           |
+| `msedge-tts`          | ^1.1.0           | Text-to-speech                               |
+| `ffmpeg-static`       | ^5.2.0           | Binary FFmpeg bawaan                         |
+| `eslint` / `prettier` | ^10.4.1 / ^3.8.3 | Linting & formatting (devDependencies)       |
 
 > [!CAUTION]
 > **Dependensi yang dijadwalkan dihapus (Sprint 2).** Jangan tambahkan pemakaian baru pada paket-paket ini: `node-fetch` dan `isomorphic-unfetch` (Node 24 sudah punya `fetch` global), `dotenv` (gunakan `process.loadEnvFile()`), `express-basic-auth` (cukup satu model autentikasi), `yt-dlp-wrap` (Lavalink sudah menangani sumber audio), serta `@discordjs/voice` dan `libsodium-wrappers` bila tidak ada voice di luar Lavalink.
@@ -826,6 +850,7 @@ File ini menyimpan ID yang spesifik per-deployment:
 ## 3.6 Sistem Lokalisasi (i18n)
 
 Bot mendukung multi-bahasa via file JSON di `/language/`:
+
 - `id.json`, Bahasa Indonesia (default)
 - `en.json`, English
 
@@ -853,17 +878,19 @@ Placeholder menggunakan format `{variable}` yang di-replace saat runtime. Kunci 
 
 Dashboard berjalan di **port 3070** (default) menggunakan Express.js, sementara webhook monetisasi mendengarkan di **port 3071** yang terpisah:
 
-| Endpoint | Method | Fungsi |
-|---|---|---|
-| `/` | GET | Landing page dashboard |
-| `/auth/discord` | GET | OAuth2 login via Discord |
-| `/auth/discord/callback` | GET | OAuth2 callback handler |
-| `/api/stats` | GET | Bot statistics (JSON) |
-| `/api/health` | GET | Health check (direncanakan, Sprint 3): status MySQL, Redis, Lavalink |
-| `/api/webhook/health` | GET | Health check server webhook |
-| `/api/webhook/saweria` | POST | Saweria donation webhook |
-| `/api/webhook/trakteer` | POST | Trakteer donation webhook |
-| `/api/webhook/vote` | POST | Top.gg vote webhook |
+| Endpoint                 | Method | Fungsi                                                               |
+| ------------------------ | ------ | -------------------------------------------------------------------- |
+| `/`                      | GET    | Landing page dashboard                                               |
+| `/auth/discord`          | GET    | OAuth2 login via Discord                                             |
+| `/auth/discord/callback` | GET    | OAuth2 callback handler                                              |
+| `/api/stats`             | GET    | Bot statistics (JSON)                                                |
+| `/api/health`            | GET    | Health check: status MySQL, Redis, Lavalink (selesai Sprint 3)       |
+| `/api/me/persona`        | POST   | Update AI persona per-user (premium, disimpan per user bukan guild)  |
+| `/api/tickets/me`        | GET    | Riwayat tiket support milik user yang sedang login                   |
+| `/api/webhook/health`    | GET    | Health check server webhook                                          |
+| `/api/webhook/saweria`   | POST   | Saweria donation webhook                                             |
+| `/api/webhook/trakteer`  | POST   | Trakteer donation webhook                                            |
+| `/api/webhook/vote`      | POST   | Top.gg vote webhook                                                  |
 
 Dashboard menggunakan **Socket.IO** untuk real-time updates pada metrik telemetri.
 
@@ -881,10 +908,10 @@ Panel mengunci perintah luar dan hanya menyisakan variabel `CMD_RUN`, yang selal
 
 **Konfigurasi resmi:**
 
-| Kolom panel | Nilai |
-|---|---|
-| `CMD_RUN` | `npm start` |
-| Docker image | Node 24 atau lebih baru |
+| Kolom panel   | Nilai                                           |
+| ------------- | ----------------------------------------------- |
+| `CMD_RUN`     | `npm start`                                     |
+| Docker image  | Node 24 atau lebih baru                         |
 | `AUTO_UPDATE` | `1` bila panel diizinkan menarik commit terbaru |
 
 Urutan setiap restart: `git pull` → `npm install` → `prestart` (migrasi) → `start` (`node shard.js`).
@@ -894,6 +921,7 @@ Urutan setiap restart: `git pull` → `npm install` → `prestart` (migrasi) →
 
 > [!WARNING]
 > Tiga penyebab kegagalan restart yang paling sering:
+>
 > 1. Docker image masih Node di bawah 24.
 > 2. `git pull` gagal karena ada perubahan lokal dari File Manager panel, sehingga bot tetap jalan memakai kode lama. Selalu baca log restart.
 > 3. Folder `.cache/` terhapus, sehingga seluruh slash command di-deploy ulang tanpa perlu.
@@ -911,4 +939,4 @@ Urutan setiap restart: `git pull` → `npm install` → `prestart` (migrasi) →
 
 ---
 
-> *Dokumen ini di-generate sebagai panduan lengkap untuk agent dan developer yang bekerja pada ekosistem Naura Hoshino. Untuk prioritas pekerjaan aktif, lihat `TODO.md` dan GitHub Issues. Untuk panduan instalasi & pemakaian, lihat `README.md`. Untuk detail visual dan design tokens, lihat [DESIGN.md]*
+> _Dokumen ini di-generate sebagai panduan lengkap untuk agent dan developer yang bekerja pada ekosistem Naura Hoshino. Untuk prioritas pekerjaan aktif, lihat `TODO.md` dan GitHub Issues. Untuk panduan instalasi & pemakaian, lihat `README.md`. Untuk detail visual dan design tokens, lihat [DESIGN.md]_

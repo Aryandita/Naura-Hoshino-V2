@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naura Social Feed | Autonomous Community Hub</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/tokens.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0b0c10;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8 flex justify-center">
+    <div class="w-full max-w-3xl space-y-6">
+        <!-- Top Bar -->
+        <header class="glass-panel-interactive p-6 rounded-3xl flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-pink-400/20 border border-pink-400 flex items-center justify-center text-xl shadow-[0_0_15px_rgba(255,182,193,0.5)]">
+                    🌸
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold font-cyber text-glow text-white">NAURA SOCIAL FEED</h1>
+                    <p class="text-xs text-gray-400">Autonomous Timeline • Daily Stories & Server Buzz</p>
+                </div>
+            </div>
+            <a href="/" class="glass-panel-interactive px-4 py-2 rounded-xl text-xs font-bold text-pink-300 hover:text-white transition-all">
+                ← Dashboard
+            </a>
+        </header>
+
+        <!-- Feed List Container -->
+        <div id="feedList" class="space-y-4">
+            <div class="glass-panel-interactive p-6 rounded-2xl text-center text-gray-400 font-cyber text-sm">
+                ⏳ Memuat postingan terbaru dari Naura...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadFeed() {
+            try {
+                const res = await fetch("/api/feed");
+                const posts = await res.json();
+                const container = document.getElementById("feedList");
+
+                container.innerHTML = posts.map(p => `
+                    <div class="glass-panel-interactive p-6 rounded-2xl space-y-4 border border-pink-400/10">
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-pink-400/20 flex items-center justify-center font-bold text-pink-300 text-lg border border-pink-400/40">
+                                    🌸
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="font-bold text-white text-sm font-cyber">${p.author}</h3>
+                                        <span class="badge-cyber text-[9px]">${p.tag}</span>
+                                    </div>
+                                    <p class="text-[11px] text-gray-400">${p.handle} • ${p.timestamp}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="text-sm text-gray-200 leading-relaxed">${p.content}</p>
+
+                        <div class="flex items-center gap-4 pt-2 border-t border-white/5 text-xs text-gray-400 font-cyber">
+                            <button class="hover:text-pink-300 transition-colors flex items-center gap-1.5 font-bold">
+                                💖 <span>${p.likes} Suka</span>
+                            </button>
+                            <span class="text-gray-600">•</span>
+                            <span class="text-[11px] text-gray-500">Tersinkronisasi Otomatis</span>
+                        </div>
+                    </div>
+                `).join("");
+            } catch (e) {
+                document.getElementById("feedList").innerHTML = `<div class="glass-panel-interactive p-6 rounded-2xl text-center text-red-400 font-cyber text-sm">Gagal memuat feed sosial.</div>`;
+            }
+        }
+        loadFeed();
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /**
  * Konteks bersama untuk panel Temp Voice.
@@ -7,11 +7,11 @@
  * ada satu.
  */
 
-const { PermissionFlagsBits } = require('discord.js');
-const UserProfile = require('../../models/UserProfile');
-const tempVoiceRegistry = require('../../managers/tempVoiceRegistry');
-const { logger } = require('../../managers/logger');
-const env = require('../../config/env');
+const { PermissionFlagsBits } = require("discord.js");
+const UserProfile = require("../../models/UserProfile");
+const tempVoiceRegistry = require("../../managers/tempVoiceRegistry");
+const { logger } = require("../../managers/logger");
+const env = require("../../config/env");
 
 /**
  * Pemeriksaan kepemilikan berbasis nama channel.
@@ -25,7 +25,7 @@ const env = require('../../config/env');
  * ruangan warisan yang hidup.
  */
 function isRoomOwnerByName(channel, user) {
-    return channel.name.includes(user.username);
+  return channel.name.includes(user.username);
 }
 
 /**
@@ -37,9 +37,9 @@ function isRoomOwnerByName(channel, user) {
  * pemeriksaan izin yang terlewat akan otomatis lolos, bukan gagal.
  */
 function isRoomOwner(channel, user) {
-    const known = tempVoiceRegistry.isOwnerSync(channel.id, user.id);
-    if (known !== null) return known;
-    return isRoomOwnerByName(channel, user);
+  const known = tempVoiceRegistry.isOwnerSync(channel.id, user.id);
+  if (known !== null) return known;
+  return isRoomOwnerByName(channel, user);
 }
 
 /**
@@ -49,16 +49,16 @@ function isRoomOwner(channel, user) {
  * ada di memori tapi masih tersimpan di Redis.
  */
 async function resolveRoomOwner(channel, user) {
-    const known = await tempVoiceRegistry.isOwner(channel.id, user.id);
-    if (known !== null) return known;
+  const known = await tempVoiceRegistry.isOwner(channel.id, user.id);
+  if (known !== null) return known;
 
-    const legacy = isRoomOwnerByName(channel, user);
-    if (legacy) {
-        logger.warn(
-            `[TempVoice] Ruangan ${channel.id} tidak ada di registry, jatuh ke pencocokan nama untuk ${user.id}. Ruangan warisan sebelum registry aktif.`
-        );
-    }
-    return legacy;
+  const legacy = isRoomOwnerByName(channel, user);
+  if (legacy) {
+    logger.warn(
+      `[TempVoice] Ruangan ${channel.id} tidak ada di registry, jatuh ke pencocokan nama untuk ${user.id}. Ruangan warisan sebelum registry aktif.`,
+    );
+  }
+  return legacy;
 }
 
 /**
@@ -68,34 +68,43 @@ async function resolveRoomOwner(channel, user) {
  *          null bila pengguna tidak sedang berada di voice channel.
  */
 async function resolveVoiceContext(interaction) {
-    const channel = interaction.member?.voice?.channel;
-    if (!channel) return null;
+  const channel = interaction.member?.voice?.channel;
+  if (!channel) return null;
 
-    const isAdmin = interaction.member.permissions.has(PermissionFlagsBits.ManageChannels);
-    const isBotOwner = Boolean(env.OWNER_IDS?.includes(interaction.user.id));
+  const isAdmin = interaction.member.permissions.has(
+    PermissionFlagsBits.ManageChannels,
+  );
+  const isBotOwner = Boolean(env.OWNER_IDS?.includes(interaction.user.id));
 
-    let isPremium = false;
-    try {
-        const profile = await UserProfile.findOne({ where: { userId: interaction.user.id } });
-        isPremium = Boolean(profile?.isPremium);
-    } catch (error) {
-        // Kegagalan membaca profil tidak boleh mematikan panel. Pengguna hanya
-        // kehilangan akses ke fitur premium untuk sesaat.
-        isPremium = false;
-    }
+  let isPremium = false;
+  try {
+    const profile = await UserProfile.findOne({
+      where: { userId: interaction.user.id },
+    });
+    isPremium = Boolean(profile?.isPremium);
+  } catch (error) {
+    // Kegagalan membaca profil tidak boleh mematikan panel. Pengguna hanya
+    // kehilangan akses ke fitur premium untuk sesaat.
+    isPremium = false;
+  }
 
-    return {
-        channel,
-        isAdmin,
-        isBotOwner,
-        isPremium,
-        isOwner: await resolveRoomOwner(channel, interaction.user),
-        // Boleh memakai fitur premium panel.
-        isPrivileged: isPremium || isBotOwner || isAdmin
-    };
+  return {
+    channel,
+    isAdmin,
+    isBotOwner,
+    isPremium,
+    isOwner: await resolveRoomOwner(channel, interaction.user),
+    // Boleh memakai fitur premium panel.
+    isPrivileged: isPremium || isBotOwner || isAdmin,
+  };
 }
 
 const PREMIUM_ONLY = (feature) =>
-    `\ud83d\udc51 **Fitur Eksklusif!** ${feature} hanya untuk pengguna Premium.`;
+  `\ud83d\udc51 **Fitur Eksklusif!** ${feature} hanya untuk pengguna Premium.`;
 
-module.exports = { resolveVoiceContext, isRoomOwner, resolveRoomOwner, PREMIUM_ONLY };
+module.exports = {
+  resolveVoiceContext,
+  isRoomOwner,
+  resolveRoomOwner,
+  PREMIUM_ONLY,
+};

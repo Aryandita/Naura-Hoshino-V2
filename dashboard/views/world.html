@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naura Cyber Mini-World | 2D Pixel Realm</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/tokens.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            background-color: #0b0c10;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            overflow: hidden;
+        }
+        #worldCanvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            background: radial-gradient(circle at center, #1a0b2e 0%, #0b0c10 100%);
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+        .hud-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            pointer-events: none;
+        }
+        .hud-interactive {
+            pointer-events: auto;
+        }
+        .pixel-badge {
+            font-family: 'Orbitron', sans-serif;
+            background: rgba(255, 182, 193, 0.1);
+            border: 1px solid rgba(255, 182, 193, 0.3);
+            box-shadow: 0 0 15px rgba(255, 182, 193, 0.2);
+        }
+    </style>
+</head>
+<body class="relative select-none">
+    <!-- 2D Pixel World Canvas -->
+    <canvas id="worldCanvas"></canvas>
+
+    <!-- Top HUD Navigation -->
+    <div class="hud-overlay flex justify-between items-start">
+        <div class="hud-interactive glass-panel-interactive px-6 py-4 rounded-2xl flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-pink-400/20 border border-pink-400 flex items-center justify-center text-pink-300 font-black font-cyber text-lg shadow-[0_0_12px_rgba(255,182,193,0.5)]">
+                🌸
+            </div>
+            <div>
+                <h1 class="text-xl font-bold font-cyber text-glow text-white tracking-wider">NAURA PIXEL REALM</h1>
+                <p class="text-xs text-gray-400">Cyber-Fantasy Interactive Island • Real-time Realm</p>
+            </div>
+        </div>
+
+        <div class="hud-interactive flex items-center gap-3">
+            <div class="glass-panel-interactive px-4 py-2 rounded-xl flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></span>
+                <span id="realmStatus" class="text-xs font-cyber font-bold text-gray-200">WORLD ONLINE</span>
+            </div>
+            <a href="/" class="glass-panel-interactive px-4 py-2 rounded-xl text-xs font-bold text-pink-300 hover:text-white transition-all">
+                ← Kembali ke Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Bottom Controls HUD -->
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 hud-interactive glass-panel-interactive p-4 rounded-2xl flex items-center gap-4 border border-pink-400/20 shadow-2xl">
+        <button id="spawnPetBtn" class="btn-cyber-primary text-xs">
+            🐾 Panggil Pet (Kirin/Bahamut)
+        </button>
+        <button id="cheerBtn" class="glass-panel-interactive px-4 py-2 rounded-lg text-xs font-bold text-pink-300 hover:bg-pink-400/10 transition-all">
+            ✨ Beri Semangat (Particle Burst)
+        </button>
+        <div class="h-6 w-px bg-white/10"></div>
+        <div class="text-[11px] text-gray-400 font-cyber">
+            Pet Aktif: <span id="petCount" class="text-pink-300 font-bold">1</span> | Partikel: <span id="particleCount" class="text-green-300 font-bold">0</span>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("worldCanvas");
+        const ctx = canvas.getContext("2d");
+        const petCountEl = document.getElementById("petCount");
+        const particleCountEl = document.getElementById("particleCount");
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener("resize", resize);
+        resize();
+
+        // Game Entities
+        const particles = [];
+        const pets = [
+            { x: window.innerWidth / 2, y: window.innerHeight / 2, vx: 1.2, vy: 0.8, type: "kirin", name: "Celestial Kirin", color: "#FFD700", radius: 18 },
+            { x: window.innerWidth / 2 + 80, y: window.innerHeight / 2 - 40, vx: -1.0, vy: 0.6, type: "leviathan", name: "Abyssal Leviathan", color: "#00FFFF", radius: 22 }
+        ];
+
+        function createParticleBurst(x, y, color = "#FFB6C1") {
+            for (let i = 0; i < 25; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 4 + 1;
+                particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 1.0,
+                    decay: Math.random() * 0.02 + 0.015,
+                    color
+                });
+            }
+        }
+
+        // Draw Floating Cyber Island
+        function drawIsland() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2 + 50;
+
+            // Island Shadow & Glow
+            ctx.save();
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY + 80, 260, 60, 0, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(255, 182, 193, 0.08)";
+            ctx.shadowColor = "rgba(255, 182, 193, 0.4)";
+            ctx.shadowBlur = 40;
+            ctx.fill();
+            ctx.restore();
+
+            // Main Island Base
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, 320, 140, 0, 0, Math.PI * 2);
+            const islandGrad = ctx.createLinearGradient(centerX - 320, centerY - 140, centerX + 320, centerY + 140);
+            islandGrad.addColorStop(0, "#1f1738");
+            islandGrad.addColorStop(0.5, "#2a1b4e");
+            islandGrad.addColorStop(1, "#120e24");
+            ctx.fillStyle = islandGrad;
+            ctx.fill();
+            ctx.strokeStyle = "rgba(255, 182, 193, 0.3)";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Neon Grid lines on island surface
+            ctx.strokeStyle = "rgba(255, 182, 193, 0.12)";
+            ctx.lineWidth = 1;
+            for (let i = -240; i <= 240; i += 40) {
+                ctx.beginPath();
+                ctx.moveTo(centerX + i, centerY - 80);
+                ctx.lineTo(centerX + i * 1.2, centerY + 80);
+                ctx.stroke();
+            }
+
+            // Crystal Core in Center
+            const time = Date.now() * 0.003;
+            const crystalY = centerY - 60 + Math.sin(time) * 10;
+            ctx.save();
+            ctx.translate(centerX, crystalY);
+            ctx.rotate(time * 0.5);
+            ctx.beginPath();
+            ctx.moveTo(0, -20);
+            ctx.lineTo(15, 0);
+            ctx.lineTo(0, 20);
+            ctx.lineTo(-15, 0);
+            ctx.closePath();
+            ctx.fillStyle = "#FFB6C1";
+            ctx.shadowColor = "#FFB6C1";
+            ctx.shadowBlur = 20;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // Animation Loop
+        function loop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawIsland();
+
+            // Update & Render Pets
+            pets.forEach((pet) => {
+                pet.x += pet.vx;
+                pet.y += pet.vy;
+
+                // Island boundary constraint
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2 + 50;
+                const dx = (pet.x - centerX) / 260;
+                const dy = (pet.y - centerY) / 100;
+                if (dx * dx + dy * dy > 0.8) {
+                    pet.vx *= -1;
+                    pet.vy *= -1;
+                }
+
+                // Draw Pet Glow Body
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(pet.x, pet.y, pet.radius, 0, Math.PI * 2);
+                ctx.fillStyle = pet.color;
+                ctx.shadowColor = pet.color;
+                ctx.shadowBlur = 18;
+                ctx.fill();
+
+                // Draw Pet Label
+                ctx.font = 'bold 11px "Orbitron", sans-serif';
+                ctx.fillStyle = "#ffffff";
+                ctx.textAlign = "center";
+                ctx.fillText(pet.name, pet.x, pet.y - pet.radius - 8);
+                ctx.restore();
+            });
+
+            // Update & Render Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= p.decay;
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            petCountEl.textContent = pets.length;
+            particleCountEl.textContent = particles.length;
+
+            requestAnimationFrame(loop);
+        }
+        loop();
+
+        // Interactions
+        document.getElementById("cheerBtn").addEventListener("click", () => {
+            createParticleBurst(canvas.width / 2, canvas.height / 2, "#F9A8D4");
+        });
+
+        document.getElementById("spawnPetBtn").addEventListener("click", () => {
+            const types = [
+                { type: "bahamut", name: "Dread Bahamut", color: "#FF4444", radius: 24 },
+                { type: "garuda", name: "Solar Garuda", color: "#FFAA00", radius: 19 },
+                { type: "kitsune", name: "Spirit Kitsune", color: "#FF88DD", radius: 17 }
+            ];
+            const chosen = types[Math.floor(Math.random() * types.length)];
+            pets.push({
+                x: canvas.width / 2 + (Math.random() * 80 - 40),
+                y: canvas.height / 2 + (Math.random() * 40 - 20),
+                vx: (Math.random() - 0.5) * 2,
+                vy: (Math.random() - 0.5) * 1.5,
+                ...chosen
+            });
+            createParticleBurst(canvas.width / 2, canvas.height / 2, chosen.color);
+        });
+
+        // Click on Canvas creates burst
+        canvas.addEventListener("click", (e) => {
+            createParticleBurst(e.clientX, e.clientY, "#00FFFF");
+        });
+    </script>
+</body>
+</html>

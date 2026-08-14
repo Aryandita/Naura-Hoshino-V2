@@ -1,42 +1,44 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../managers/dbManager');
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../managers/dbManager");
 
-const UserStrike = sequelize.define('UserStrike', {
+const UserStrike = sequelize.define(
+  "UserStrike",
+  {
     id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
     },
     userId: {
-        type: DataTypes.STRING,
-        allowNull: false
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     guildId: {
-        type: DataTypes.STRING,
-        allowNull: false
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     strikes: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
     },
     isTempBanned: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
     },
     tempbanExpiresAt: {
-        type: DataTypes.DATE,
-        allowNull: true
+      type: DataTypes.DATE,
+      allowNull: true,
     },
     lastStrikeAt: {
-        type: DataTypes.DATE,
-        allowNull: true
-    }
-}, {
-    tableName: 'user_strikes',
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+  },
+  {
+    tableName: "user_strikes",
     timestamps: true,
-    indexes: [
-        { unique: true, fields: ['userId', 'guildId'] }
-    ]
-});
+    indexes: [{ unique: true, fields: ["userId", "guildId"] }],
+  },
+);
 
 module.exports = UserStrike;

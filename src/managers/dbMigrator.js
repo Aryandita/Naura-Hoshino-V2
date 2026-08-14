@@ -1,5 +1,5 @@
-const { logger } = require('../../src/managers/logger');
-const fs = require('fs');
+const { logger } = require("../managers/logger");
+const fs = require("fs");
 
 // ==========================================
 // SISTEM MIGRASI BERNOMOR (Rule 1.7)
@@ -10,7 +10,7 @@ const fs = require('fs');
 // boot dan hanya "berhasil" karena MySQL menolaknya dengan error kolom duplikat.
 // Pola itu menyembunyikan kegagalan nyata dan membuat migrasi yang bukan ALTER
 // (misalnya UPDATE data) mustahil ditulis dengan aman.
-const LEDGER_TABLE = 'schema_migrations';
+const LEDGER_TABLE = "schema_migrations";
 
 // Error MySQL yang berarti "perubahan ini sudah ada". Aman dicatat sebagai
 // selesai, karena database sudah berada pada bentuk yang diinginkan.
@@ -29,110 +29,167 @@ const ALREADY_APPLIED_ERRNOS = new Set([1050, 1060, 1061, 1091]);
  * akan menggandakan angkanya.
  */
 const MIGRATIONS = [
-    {
-        id: 'v1_add_mannersPoint',
-        description: 'Tambah kolom mannersPoint ke user_leveling',
-        sql: 'ALTER TABLE user_leveling ADD COLUMN mannersPoint INT DEFAULT 100;'
-    },
-    {
-        id: 'v2_add_dailyNotify',
-        description: 'Tambah kolom dailyNotify ke user_profiles',
-        sql: 'ALTER TABLE user_profiles ADD COLUMN dailyNotify TINYINT(1) DEFAULT 1;'
-    },
-    {
-        id: 'v3_add_economy_deposit',
-        description: 'Tambah kolom economy_deposit ke user_profiles',
-        sql: 'ALTER TABLE user_profiles ADD COLUMN economy_deposit JSON DEFAULT NULL;'
-    },
-    {
-        id: 'v4_add_economy_investments',
-        description: 'Tambah kolom economy_investments ke user_profiles',
-        sql: 'ALTER TABLE user_profiles ADD COLUMN economy_investments JSON DEFAULT NULL;'
-    },
-    {
-        id: 'v5_add_coupons',
-        description: 'Tambah kolom coupons ke UserSurvivals (Naura Coupon jadi kolom sendiri)',
-        sql: 'ALTER TABLE UserSurvivals ADD COLUMN coupons INT NOT NULL DEFAULT 0;'
-    },
-    {
-        id: 'v6_move_coupons_to_column',
-        description: 'Pindahkan saldo Naura Coupon dari rpg_state ke kolom coupons',
-        // Naura Coupon dulu dititipkan di dalam kolom JSON rpg_state supaya tidak
-        // perlu migrasi. Akibatnya kupon jadi satu-satunya mata uang yang dipotong
-        // dengan pola baca-ubah-tulis, karena kolom JSON tidak bisa dipotong lewat
-        // satu UPDATE bersyarat. Sekarang saldonya dipindah ke kolom angka, lalu
-        // kuncinya dibuang dari rpg_state supaya tidak ada dua sumber kebenaran.
-        //
-        // JSON_TYPE mengembalikan NULL bila kuncinya tidak ada, jadi baris yang
-        // belum pernah punya kupon tidak ikut tersentuh.
-        sql: "UPDATE UserSurvivals SET coupons = coupons + CAST(JSON_EXTRACT(rpg_state, '$.coupons') AS UNSIGNED), rpg_state = JSON_REMOVE(rpg_state, '$.coupons') WHERE JSON_TYPE(JSON_EXTRACT(rpg_state, '$.coupons')) IN ('INTEGER', 'UNSIGNED INTEGER', 'DOUBLE', 'DECIMAL');"
-    },
-    {
-        id: 'v7_add_index_user_leveling',
-        description: 'Tambah composite index (guildId, userId) ke user_leveling',
-        sql: 'CREATE INDEX idx_user_leveling_guild_user ON user_leveling(guildId, userId);'
-    },
-    {
-        id: 'v8_add_index_user_warns',
-        description: 'Tambah composite index (guildId, userId) ke user_warns',
-        sql: 'CREATE INDEX idx_user_warns_guild_user ON user_warns(guildId, userId);'
-    },
-    {
-        id: 'v9_add_index_user_friends',
-        description: 'Tambah index pada user1Id dan user2Id di UserFriends',
-        sql: 'CREATE INDEX idx_user_friends_user1 ON UserFriends(user1Id);'
-    },
-    {
-        id: 'v10_add_index_user_friends_2',
-        description: 'Tambah index pada user2Id di UserFriends',
-        sql: 'CREATE INDEX idx_user_friends_user2 ON UserFriends(user2Id);'
-    },
-    {
-        id: 'v11_add_index_user_cosmetics',
-        description: 'Tambah index pada userId di user_cosmetics',
-        sql: 'CREATE INDEX idx_user_cosmetics_userId ON user_cosmetics(userId);'
-    },
-    {
-        id: 'v12_add_index_user_pets',
-        description: 'Tambah index pada userId di UserPets',
-        sql: 'CREATE INDEX idx_user_pets_userId ON UserPets(userId);'
-    },
-    {
-        id: 'v13_add_reputation',
-        description: 'Tambah kolom reputation ke user_profiles',
-        sql: 'ALTER TABLE user_profiles ADD COLUMN reputation INT DEFAULT 0;'
-    },
-    {
-        id: 'v14_make_language_nullable',
-        description: 'Ubah kolom language agar DEFAULT NULL supaya fallback ke pengaturan Guild bekerja',
-        sql: 'ALTER TABLE user_profiles MODIFY COLUMN language VARCHAR(255) DEFAULT NULL;'
-    }
+  {
+    id: "v1_add_mannersPoint",
+    description: "Tambah kolom mannersPoint ke user_leveling",
+    sql: "ALTER TABLE user_leveling ADD COLUMN mannersPoint INT DEFAULT 100;",
+  },
+  {
+    id: "v2_add_dailyNotify",
+    description: "Tambah kolom dailyNotify ke user_profiles",
+    sql: "ALTER TABLE user_profiles ADD COLUMN dailyNotify TINYINT(1) DEFAULT 1;",
+  },
+  {
+    id: "v3_add_economy_deposit",
+    description: "Tambah kolom economy_deposit ke user_profiles",
+    sql: "ALTER TABLE user_profiles ADD COLUMN economy_deposit JSON DEFAULT NULL;",
+  },
+  {
+    id: "v4_add_economy_investments",
+    description: "Tambah kolom economy_investments ke user_profiles",
+    sql: "ALTER TABLE user_profiles ADD COLUMN economy_investments JSON DEFAULT NULL;",
+  },
+  {
+    id: "v5_add_coupons",
+    description:
+      "Tambah kolom coupons ke UserSurvivals (Naura Coupon jadi kolom sendiri)",
+    sql: "ALTER TABLE UserSurvivals ADD COLUMN coupons INT NOT NULL DEFAULT 0;",
+  },
+  {
+    id: "v6_move_coupons_to_column",
+    description: "Pindahkan saldo Naura Coupon dari rpg_state ke kolom coupons",
+    // Naura Coupon dulu dititipkan di dalam kolom JSON rpg_state supaya tidak
+    // perlu migrasi. Akibatnya kupon jadi satu-satunya mata uang yang dipotong
+    // dengan pola baca-ubah-tulis, karena kolom JSON tidak bisa dipotong lewat
+    // satu UPDATE bersyarat. Sekarang saldonya dipindah ke kolom angka, lalu
+    // kuncinya dibuang dari rpg_state supaya tidak ada dua sumber kebenaran.
+    //
+    // JSON_TYPE mengembalikan NULL bila kuncinya tidak ada, jadi baris yang
+    // belum pernah punya kupon tidak ikut tersentuh.
+    sql: "UPDATE UserSurvivals SET coupons = coupons + CAST(JSON_EXTRACT(rpg_state, '$.coupons') AS UNSIGNED), rpg_state = JSON_REMOVE(rpg_state, '$.coupons') WHERE JSON_TYPE(JSON_EXTRACT(rpg_state, '$.coupons')) IN ('INTEGER', 'UNSIGNED INTEGER', 'DOUBLE', 'DECIMAL');",
+  },
+  {
+    id: "v7_add_index_user_leveling",
+    description: "Tambah composite index (guildId, userId) ke user_leveling",
+    sql: "CREATE INDEX idx_user_leveling_guild_user ON user_leveling(guildId, userId);",
+  },
+  {
+    id: "v8_add_index_user_warns",
+    description: "Tambah composite index (guildId, userId) ke user_warns",
+    sql: "CREATE INDEX idx_user_warns_guild_user ON user_warns(guildId, userId);",
+  },
+  {
+    id: "v9_add_index_user_friends",
+    description: "Tambah index pada user1Id dan user2Id di UserFriends",
+    sql: "CREATE INDEX idx_user_friends_user1 ON UserFriends(user1Id);",
+  },
+  {
+    id: "v10_add_index_user_friends_2",
+    description: "Tambah index pada user2Id di UserFriends",
+    sql: "CREATE INDEX idx_user_friends_user2 ON UserFriends(user2Id);",
+  },
+  {
+    id: "v11_add_index_user_cosmetics",
+    description: "Tambah index pada userId di user_cosmetics",
+    sql: "CREATE INDEX idx_user_cosmetics_userId ON user_cosmetics(userId);",
+  },
+  {
+    id: "v12_add_index_user_pets",
+    description: "Tambah index pada userId di UserPets",
+    sql: "CREATE INDEX idx_user_pets_userId ON UserPets(userId);",
+  },
+  {
+    id: "v13_add_reputation",
+    description: "Tambah kolom reputation ke user_profiles",
+    sql: "ALTER TABLE user_profiles ADD COLUMN reputation INT DEFAULT 0;",
+  },
+  {
+    id: "v14_make_language_nullable",
+    description:
+      "Ubah kolom language agar DEFAULT NULL supaya fallback ke pengaturan Guild bekerja",
+    sql: "ALTER TABLE user_profiles MODIFY COLUMN language VARCHAR(255) DEFAULT NULL;",
+  },
+  {
+    id: "v15_add_aiPersona",
+    description: "Tambah kolom aiPersona ke user_profiles",
+    sql: "ALTER TABLE user_profiles ADD COLUMN aiPersona JSON DEFAULT NULL;",
+  },
+  {
+    id: "v16_add_activeBanners",
+    description: "Tambah kolom activeBanners ke user_profiles",
+    sql: "ALTER TABLE user_profiles ADD COLUMN activeBanners JSON DEFAULT NULL;",
+  },
+  {
+    id: "v17_add_role_leases",
+    description: "Buat tabel role_leases untuk sewa role berbayar",
+    sql: "CREATE TABLE IF NOT EXISTS role_leases ( id INT AUTO_INCREMENT PRIMARY KEY, userId VARCHAR(191) NOT NULL, guildId VARCHAR(191) NOT NULL, roleId VARCHAR(191) NOT NULL, expiresAt DATETIME NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, UNIQUE KEY idx_role_leases_unique (guildId, userId, roleId), INDEX idx_role_leases_expiresAt (expiresAt) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+  },
+  {
+    id: "v18_giveaway_participants",
+    description: "Tambah kolom requirements, participants, dan winners ke giveaways (Giveaway Lanjutan Sprint 9)",
+    sql: "ALTER TABLE giveaways ADD COLUMN requirements JSON DEFAULT NULL, ADD COLUMN participants JSON DEFAULT NULL, ADD COLUMN winners JSON DEFAULT NULL;",
+  },
+  {
+    id: "v19_add_clan_columns",
+    description: "Tambah kolom clanId di UserSurvivals",
+    sql: "ALTER TABLE UserSurvivals ADD COLUMN clanId INT DEFAULT NULL;",
+  },
+  {
+    id: "v20_add_clan_quests",
+    description: "Tambah kolom questsState di GuildClans",
+    sql: "ALTER TABLE GuildClans ADD COLUMN questsState JSON DEFAULT NULL;",
+  },
+  {
+    id: "v21_create_duel_records",
+    description: "Buat tabel duel_records untuk menyimpan PvP MMR dan statistik",
+    sql: "CREATE TABLE IF NOT EXISTS duel_records ( userId VARCHAR(191) NOT NULL PRIMARY KEY, mmr INT NOT NULL DEFAULT 1000, matchesPlayed INT NOT NULL DEFAULT 0, wins INT NOT NULL DEFAULT 0, losses INT NOT NULL DEFAULT 0, kills INT NOT NULL DEFAULT 0, deaths INT NOT NULL DEFAULT 0, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+  },
+  {
+    id: "v22_add_notification_prefs",
+    description: "Tambah kolom notification_prefs ke user_profiles",
+    sql: "ALTER TABLE user_profiles ADD COLUMN notification_prefs JSON DEFAULT NULL;",
+  },
+  {
+    id: "v23_upgrade_user_pets",
+    description: "Sistem Pet Lanjutan: Tambah mood, evolutionStage, dan passiveSkill",
+    sql: "ALTER TABLE UserPets ADD COLUMN mood VARCHAR(255) DEFAULT 'happy', ADD COLUMN evolutionStage INT DEFAULT 1, ADD COLUMN passiveSkill VARCHAR(255) DEFAULT NULL;",
+  },
+  {
+    id: "v24_add_world_boss_and_clan_territory",
+    description: "Buat tabel world_bosses dan clan_territories untuk MMORPG Survival",
+    sql: "CREATE TABLE IF NOT EXISTS world_bosses ( id INT AUTO_INCREMENT PRIMARY KEY, bossId VARCHAR(191) NOT NULL UNIQUE, name VARCHAR(255) NOT NULL, title VARCHAR(255) NOT NULL DEFAULT 'Ancient Calamity', element VARCHAR(64) NOT NULL DEFAULT 'DARK', maxHp BIGINT NOT NULL DEFAULT 1000000, currentHp BIGINT NOT NULL DEFAULT 1000000, baseAttack INT NOT NULL DEFAULT 150, defense INT NOT NULL DEFAULT 50, status VARCHAR(64) NOT NULL DEFAULT 'ACTIVE', damageLeaderboard JSON NOT NULL, rewardsPool JSON NOT NULL, spawnTime DATETIME NOT NULL, endTime DATETIME NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; CREATE TABLE IF NOT EXISTS clan_territories ( id INT AUTO_INCREMENT PRIMARY KEY, territoryId VARCHAR(191) NOT NULL UNIQUE, name VARCHAR(255) NOT NULL, clanId INT DEFAULT NULL, controlPoints INT NOT NULL DEFAULT 0, taxYield INT NOT NULL DEFAULT 1000, buffEffect VARCHAR(128) NOT NULL DEFAULT 'EXTRA_GOLD_10', contestedAt DATETIME DEFAULT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+  },
+  {
+    id: "v25_upgrade_user_cards_system",
+    description: "Upgrade tabel user_cards dengan cardCode, printNumber, quality, frame, dan dyeColor",
+    sql: "ALTER TABLE user_cards ADD COLUMN cardCode VARCHAR(32) DEFAULT NULL, ADD COLUMN characterName VARCHAR(255) DEFAULT NULL, ADD COLUMN seriesName VARCHAR(255) DEFAULT NULL, ADD COLUMN printNumber INT NOT NULL DEFAULT 1, ADD COLUMN quality VARCHAR(32) NOT NULL DEFAULT 'GOOD', ADD COLUMN frame VARCHAR(64) NOT NULL DEFAULT 'DEFAULT', ADD COLUMN dyeColor VARCHAR(32) DEFAULT NULL, ADD COLUMN imageUrl TEXT DEFAULT NULL, ADD COLUMN isLocked BOOLEAN DEFAULT FALSE, ADD COLUMN burnValue INT DEFAULT 100;",
+  }
 ];
 
 function isAlreadyApplied(err) {
-    const errno = err && err.original && err.original.errno;
-    return ALREADY_APPLIED_ERRNOS.has(errno);
+  const errno = err && err.original && err.original.errno;
+  return ALREADY_APPLIED_ERRNOS.has(errno);
 }
 
 /** Membuat tabel catatan bila belum ada. Aman dipanggil berkali-kali. */
 async function ensureLedger(sequelize) {
-    await sequelize.query(
-        `CREATE TABLE IF NOT EXISTS ${LEDGER_TABLE} (
+  await sequelize.query(
+    `CREATE TABLE IF NOT EXISTS ${LEDGER_TABLE} (
             id VARCHAR(191) NOT NULL PRIMARY KEY,
             applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`
-    );
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+  );
 }
 
 async function loadAppliedIds(sequelize) {
-    const [rows] = await sequelize.query(`SELECT id FROM ${LEDGER_TABLE};`);
-    return new Set((rows || []).map(row => row.id));
+  const [rows] = await sequelize.query(`SELECT id FROM ${LEDGER_TABLE};`);
+  return new Set((rows || []).map((row) => row.id));
 }
 
 async function recordMigration(sequelize, id) {
-    await sequelize.query(`INSERT IGNORE INTO ${LEDGER_TABLE} (id) VALUES (?);`, {
-        replacements: [id]
-    });
+  await sequelize.query(`INSERT IGNORE INTO ${LEDGER_TABLE} (id) VALUES (?);`, {
+    replacements: [id],
+  });
 }
 
 /**
@@ -145,10 +202,12 @@ async function recordMigration(sequelize, id) {
  * @returns {Promise<Array<string>>}
  */
 async function getPendingMigrations(sequelize) {
-    if (sequelize.options.dialect !== 'mysql') return [];
-    await ensureLedger(sequelize);
-    const done = await loadAppliedIds(sequelize);
-    return MIGRATIONS.filter(migration => !done.has(migration.id)).map(migration => migration.id);
+  if (sequelize.options.dialect !== "mysql") return [];
+  await ensureLedger(sequelize);
+  const done = await loadAppliedIds(sequelize);
+  return MIGRATIONS.filter((migration) => !done.has(migration.id)).map(
+    (migration) => migration.id,
+  );
 }
 
 /**
@@ -163,47 +222,61 @@ async function getPendingMigrations(sequelize) {
  * @returns {Promise<{ applied: Array<string>, alreadyPresent: Array<string> }>}
  */
 async function runMigrations(sequelize) {
-    if (sequelize.options.dialect !== 'mysql') {
-        logger.info('[DB MIGRATOR] Melewati migrasi, bukan MySQL (mode SQLite fallback).');
-        return { applied: [], alreadyPresent: [] };
+  if (sequelize.options.dialect !== "mysql") {
+    logger.info(
+      "[DB MIGRATOR] Melewati migrasi, bukan MySQL (mode SQLite fallback).",
+    );
+    return { applied: [], alreadyPresent: [] };
+  }
+
+  await ensureLedger(sequelize);
+  const done = await loadAppliedIds(sequelize);
+  const pending = MIGRATIONS.filter((migration) => !done.has(migration.id));
+
+  if (pending.length === 0) {
+    logger.success(
+      `[DB MIGRATOR] Tidak ada migrasi tertunda (${MIGRATIONS.length} sudah tercatat).`,
+    );
+    return { applied: [], alreadyPresent: [] };
+  }
+
+  logger.info(
+    `[DB MIGRATOR] ${pending.length} migrasi tertunda dari total ${MIGRATIONS.length}.`,
+  );
+
+  const applied = [];
+  const alreadyPresent = [];
+
+  for (const migration of pending) {
+    try {
+      await sequelize.query(migration.sql);
+      await recordMigration(sequelize, migration.id);
+      applied.push(migration.id);
+      logger.db(
+        `[DB MIGRATOR] Migrasi '${migration.id}' berhasil: ${migration.description}`,
+      );
+    } catch (err) {
+      if (isAlreadyApplied(err)) {
+        // Perubahannya sudah ada di database, hanya catatannya yang belum.
+        await recordMigration(sequelize, migration.id);
+        alreadyPresent.push(migration.id);
+        logger.info(
+          `[DB MIGRATOR] Migrasi '${migration.id}' dicatat selesai (perubahan sudah ada di database).`,
+        );
+        continue;
+      }
+
+      logger.error(
+        `[DB MIGRATOR] Migrasi '${migration.id}' gagal: ${err.message}`,
+      );
+      throw new Error(`Migrasi '${migration.id}' gagal: ${err.message}`);
     }
+  }
 
-    await ensureLedger(sequelize);
-    const done = await loadAppliedIds(sequelize);
-    const pending = MIGRATIONS.filter(migration => !done.has(migration.id));
-
-    if (pending.length === 0) {
-        logger.success(`[DB MIGRATOR] Tidak ada migrasi tertunda (${MIGRATIONS.length} sudah tercatat).`);
-        return { applied: [], alreadyPresent: [] };
-    }
-
-    logger.info(`[DB MIGRATOR] ${pending.length} migrasi tertunda dari total ${MIGRATIONS.length}.`);
-
-    const applied = [];
-    const alreadyPresent = [];
-
-    for (const migration of pending) {
-        try {
-            await sequelize.query(migration.sql);
-            await recordMigration(sequelize, migration.id);
-            applied.push(migration.id);
-            logger.db(`[DB MIGRATOR] Migrasi '${migration.id}' berhasil: ${migration.description}`);
-        } catch (err) {
-            if (isAlreadyApplied(err)) {
-                // Perubahannya sudah ada di database, hanya catatannya yang belum.
-                await recordMigration(sequelize, migration.id);
-                alreadyPresent.push(migration.id);
-                logger.info(`[DB MIGRATOR] Migrasi '${migration.id}' dicatat selesai (perubahan sudah ada di database).`);
-                continue;
-            }
-
-            logger.error(`[DB MIGRATOR] Migrasi '${migration.id}' gagal: ${err.message}`);
-            throw new Error(`Migrasi '${migration.id}' gagal: ${err.message}`);
-        }
-    }
-
-    logger.success(`[DB MIGRATOR] Selesai. ${applied.length} dijalankan, ${alreadyPresent.length} dicatat menyusul.`);
-    return { applied, alreadyPresent };
+  logger.success(
+    `[DB MIGRATOR] Selesai. ${applied.length} dijalankan, ${alreadyPresent.length} dicatat menyusul.`,
+  );
+  return { applied, alreadyPresent };
 }
 
 // ==========================================
@@ -211,65 +284,78 @@ async function runMigrations(sequelize) {
 // ==========================================
 
 async function syncFallbackToMySQL(mysqlSequelize) {
-    if (!fs.existsSync('./naura_fallback.sqlite')) return;
+  if (!fs.existsSync("./naura_fallback.sqlite")) return;
 
-    logger.info('[DB MIGRATOR] Mendeteksi file SQLite lokal. Memulai proses pemindahan data ke MySQL...');
+  logger.info(
+    "[DB MIGRATOR] Mendeteksi file SQLite lokal. Memulai proses pemindahan data ke MySQL...",
+  );
 
-    let database;
-    try {
-        // Gunakan native sqlite dari Node.js (v22+)
-        const { DatabaseSync } = require('node:sqlite');
-        database = new DatabaseSync('./naura_fallback.sqlite');
+  let database;
+  try {
+    // Gunakan native sqlite dari Node.js (v22+)
+    const { DatabaseSync } = require("node:sqlite");
+    database = new DatabaseSync("./naura_fallback.sqlite");
 
-        const models = Object.keys(mysqlSequelize.models);
+    const models = Object.keys(mysqlSequelize.models);
 
-        for (const modelName of models) {
-            const MysqlModel = mysqlSequelize.models[modelName];
+    for (const modelName of models) {
+      const MysqlModel = mysqlSequelize.models[modelName];
 
+      try {
+        const stmt = database.prepare(`SELECT * FROM ${MysqlModel.tableName}`);
+        const rows = stmt.all();
+
+        if (rows && rows.length > 0) {
+          logger.db(
+            `[DB MIGRATOR] Memindahkan ${rows.length} baris ke tabel ${MysqlModel.tableName}...`,
+          );
+          for (const row of rows) {
             try {
-                const stmt = database.prepare(`SELECT * FROM ${MysqlModel.tableName}`);
-                const rows = stmt.all();
-
-                if (rows && rows.length > 0) {
-                    logger.db(`[DB MIGRATOR] Memindahkan ${rows.length} baris ke tabel ${MysqlModel.tableName}...`);
-                    for (const row of rows) {
-                        try {
-                            const [record, created] = await MysqlModel.findOrCreate({
-                                where: {
-                                    [MysqlModel.primaryKeyAttributes[0]]: row[MysqlModel.primaryKeyAttributes[0]]
-                                },
-                                defaults: row
-                            });
-                            if (!created) {
-                                await record.update(row);
-                            }
-                        } catch (rowErr) {
-                            logger.warn(`[DB MIGRATOR] Skip baris invalid di ${MysqlModel.tableName}: ${rowErr.message}`);
-                        }
-                    }
-                }
-            } catch (tableErr) {
-                logger.warn(`[DB MIGRATOR] Tabel ${MysqlModel.tableName} dilewati saat sync fallback: ${tableErr.message}`);
+              const [record, created] = await MysqlModel.findOrCreate({
+                where: {
+                  [MysqlModel.primaryKeyAttributes[0]]:
+                    row[MysqlModel.primaryKeyAttributes[0]],
+                },
+                defaults: row,
+              });
+              if (!created) {
+                await record.update(row);
+              }
+            } catch (rowErr) {
+              logger.warn(
+                `[DB MIGRATOR] Skip baris invalid di ${MysqlModel.tableName}: ${rowErr.message}`,
+              );
             }
+          }
         }
-
-        logger.success('[DB MIGRATOR] Pemindahan data selesai. Menghapus database SQLite sementara...');
-    } catch (e) {
-        logger.error('[DB MIGRATOR ERROR] Gagal memindahkan data:', e.message);
-    } finally {
-        if (database) database.close();
-        try {
-            fs.unlinkSync('./naura_fallback.sqlite');
-        } catch (unlinkError) {
-            logger.warn(`[DB MIGRATOR] Gagal menghapus database SQLite fallback: ${unlinkError.message}`);
-        }
+      } catch (tableErr) {
+        logger.warn(
+          `[DB MIGRATOR] Tabel ${MysqlModel.tableName} dilewati saat sync fallback: ${tableErr.message}`,
+        );
+      }
     }
+
+    logger.success(
+      "[DB MIGRATOR] Pemindahan data selesai. Menghapus database SQLite sementara...",
+    );
+  } catch (e) {
+    logger.error("[DB MIGRATOR ERROR] Gagal memindahkan data:", e.message);
+  } finally {
+    if (database) database.close();
+    try {
+      fs.unlinkSync("./naura_fallback.sqlite");
+    } catch (unlinkError) {
+      logger.warn(
+        `[DB MIGRATOR] Gagal menghapus database SQLite fallback: ${unlinkError.message}`,
+      );
+    }
+  }
 }
 
 module.exports = {
-    runMigrations,
-    syncFallbackToMySQL,
-    getPendingMigrations,
-    MIGRATIONS,
-    LEDGER_TABLE
+  runMigrations,
+  syncFallbackToMySQL,
+  getPendingMigrations,
+  MIGRATIONS,
+  LEDGER_TABLE,
 };

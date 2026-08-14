@@ -1,11 +1,12 @@
-const { logger } = require('../../src/managers/logger');
-try { process.loadEnvFile(); } catch (e) {}
-
+const { logger } = require("../managers/logger");
+try {
+  process.loadEnvFile();
+} catch (e) {}
 
 // Helper untuk membersihkan tanda kutip yang tidak sengaja terbawa dari panel Pterodactyl
 const cleanEnv = (val) => {
-    if (!val) return val;
-    return val.replace(/^["']|["']$/g, '').trim();
+  if (!val) return val;
+  return val.replace(/^["']|["']$/g, "").trim();
 };
 
 // ShardingManager discord.js mengisi SHARDS pada setiap proses anak berisi array
@@ -17,113 +18,125 @@ const cleanEnv = (val) => {
 // deploy slash command dan membuka port dashboard, dan shard kedua mati dengan
 // EADDRINUSE.
 const readShardId = () => {
-    const raw = process.env.SHARDS;
-    if (raw) {
-        try {
-            const list = JSON.parse(raw);
-            if (Array.isArray(list) && list.length > 0) return String(list[0]);
-        } catch (e) {
-            // Format tak terduga. Jatuh ke SHARD_ID manual di bawah.
-        }
+  const raw = process.env.SHARDS;
+  if (raw) {
+    try {
+      const list = JSON.parse(raw);
+      if (Array.isArray(list) && list.length > 0) return String(list[0]);
+    } catch (e) {
+      // Format tak terduga. Jatuh ke SHARD_ID manual di bawah.
     }
-    const manual = cleanEnv(process.env.SHARD_ID);
-    return manual ? manual : undefined;
+  }
+  const manual = cleanEnv(process.env.SHARD_ID);
+  return manual ? manual : undefined;
 };
 
 const env = {
-    // RUNTIME
-    NODE_ENV: cleanEnv(process.env.NODE_ENV) || 'development',
+  // RUNTIME
+  NODE_ENV: cleanEnv(process.env.NODE_ENV) || "development",
 
-    // SHARDING
-    // SHARD_ID sengaja dibiarkan undefined saat proses dijalankan mandiri
-    // (node index.js), karena pemanggil membedakan "mandiri" dan "anak shard"
-    // lewat typeof.
-    SHARD_ID: readShardId(),
-    TOTAL_SHARDS: parseInt(process.env.TOTAL_SHARDS) || 1,
+  // SHARDING
+  // SHARD_ID sengaja dibiarkan undefined saat proses dijalankan mandiri
+  // (node index.js), karena pemanggil membedakan "mandiri" dan "anak shard"
+  // lewat typeof.
+  SHARD_ID: readShardId(),
+  TOTAL_SHARDS: parseInt(process.env.TOTAL_SHARDS) || 1,
 
-    // DISCORD CORE
-    TOKEN: cleanEnv(process.env.DISCORD_TOKEN),
-    CLIENT_ID: cleanEnv(process.env.CLIENT_ID),
-    PREFIX: cleanEnv(process.env.PREFIX) || 'n!',
-    GUILD_ID: cleanEnv(process.env.GUILD_ID),
-    OWNER_IDS: process.env.OWNER_IDS ? process.env.OWNER_IDS.split(',').map(id => cleanEnv(id)) : [],
+  // DISCORD CORE
+  TOKEN: cleanEnv(process.env.DISCORD_TOKEN),
+  CLIENT_ID: cleanEnv(process.env.CLIENT_ID),
+  PREFIX: cleanEnv(process.env.PREFIX) || "n!",
+  GUILD_ID: cleanEnv(process.env.GUILD_ID),
+  OWNER_IDS: process.env.OWNER_IDS
+    ? process.env.OWNER_IDS.split(",").map((id) => cleanEnv(id))
+    : [],
 
-    // VERSION & PARTNERSHIP CONFIG
-    BOT_VERSION: cleanEnv(process.env.BOT_VERSION) || '2.0.0',
-    ENGINE_VERSION: cleanEnv(process.env.ENGINE_VERSION) || '2.0.0',
-    PARTNERSHIP: cleanEnv(process.env.PARTNERSHIP) || 'Belum ada kolaborasi',
+  // VERSION & PARTNERSHIP CONFIG
+  BOT_VERSION: cleanEnv(process.env.BOT_VERSION) || "2.1.0",
+  ENGINE_VERSION: cleanEnv(process.env.ENGINE_VERSION) || "2.1.0",
+  PARTNERSHIP: cleanEnv(process.env.PARTNERSHIP) || "Belum ada kolaborasi",
 
-    // MYSQL DATABASE
-    DB_HOST: cleanEnv(process.env.MYSQL_HOST) || '127.0.0.1',
-    DB_PORT: parseInt(process.env.MYSQL_PORT) || 3306,
-    DB_USER: cleanEnv(process.env.MYSQL_USER),
-    DB_PASS: cleanEnv(process.env.MYSQL_PASSWORD),
-    DB_NAME: cleanEnv(process.env.MYSQL_DATABASE),
+  // MYSQL DATABASE
+  DB_HOST: cleanEnv(process.env.MYSQL_HOST) || "127.0.0.1",
+  DB_PORT: parseInt(process.env.MYSQL_PORT) || 3306,
+  DB_USER: cleanEnv(process.env.MYSQL_USER),
+  DB_PASS: cleanEnv(process.env.MYSQL_PASSWORD),
+  DB_NAME: cleanEnv(process.env.MYSQL_DATABASE),
 
-    // POOL KONEKSI DATABASE
-    // Pool bersifat per proses. DB_POOL_BUDGET adalah anggaran TOTAL untuk seluruh
-    // shard, lalu dbManager membaginya dengan TOTAL_SHARDS. Isi DB_POOL_MAX hanya
-    // bila ingin memaksa angka per proses secara manual.
-    DB_POOL_BUDGET: parseInt(process.env.DB_POOL_BUDGET) || 80,
-    DB_POOL_MAX: parseInt(process.env.DB_POOL_MAX) || 0,
+  // POOL KONEKSI DATABASE
+  // Pool bersifat per proses. DB_POOL_BUDGET adalah anggaran TOTAL untuk seluruh
+  // shard, lalu dbManager membaginya dengan TOTAL_SHARDS. Isi DB_POOL_MAX hanya
+  // bila ingin memaksa angka per proses secara manual.
+  DB_POOL_BUDGET: parseInt(process.env.DB_POOL_BUDGET) || 80,
+  DB_POOL_MAX: parseInt(process.env.DB_POOL_MAX) || 0,
 
-    // MODMAIL
-    STAFF_GUILD: cleanEnv(process.env.STAFF_GUILD_ID),
-    MODMAIL_CATEGORY: cleanEnv(process.env.MODMAIL_CATEGORY_ID),
+  // MODMAIL
+  STAFF_GUILD: cleanEnv(process.env.STAFF_GUILD_ID),
+  MODMAIL_CATEGORY: cleanEnv(process.env.MODMAIL_CATEGORY_ID),
 
-    // LAVALINK
-    LAVA_NODES: process.env.LAVA_NODES,
-    LAVA_HOST: cleanEnv(process.env.LAVALINK_HOST) || 'localhost',
-    LAVA_PORT: parseInt(process.env.LAVALINK_PORT) || 2333,
-    LAVA_PASS: cleanEnv(process.env.LAVALINK_PASSWORD) || 'youshallnotpass',
-    LAVA_SECURE: process.env.LAVALINK_SECURE === 'true',
+  // LAVALINK
+  LAVA_NODES: process.env.LAVA_NODES,
+  LAVA_HOST: cleanEnv(process.env.LAVALINK_HOST) || "localhost",
+  LAVA_PORT: parseInt(process.env.LAVALINK_PORT) || 2333,
+  LAVA_PASS: cleanEnv(process.env.LAVALINK_PASSWORD) || "youshallnotpass",
+  LAVA_SECURE: process.env.LAVALINK_SECURE === "true",
 
-    // GEMINI AI
-    GEMINI_API: cleanEnv(process.env.GEMINI_API_KEY),
+  // SPOTIFY (poru-spotify)
+  SPOTIFY_CLIENT_ID: cleanEnv(process.env.SPOTIFY_CLIENT_ID),
+  SPOTIFY_CLIENT_SECRET: cleanEnv(process.env.SPOTIFY_CLIENT_SECRET),
 
-    // VERBA API
-    VERBA_API_KEY: cleanEnv(process.env.VERBA_API_KEY),
-    VERBA_SLUG_OWNER: cleanEnv(process.env.VERBA_SLUG_OWNER),
-    VERBA_SLUG_PREMIUM: cleanEnv(process.env.VERBA_SLUG_PREMIUM),
-    VERBA_SLUG_GENERAL: cleanEnv(process.env.VERBA_SLUG_GENERAL),
-    VERBA_CHARACTER_SLUG: cleanEnv(process.env.VERBA_CHARACTER_SLUG), // Legacy support
+  // GEMINI AI
+  GEMINI_API: cleanEnv(process.env.GEMINI_API_KEY),
 
-    // REDIS
-    REDIS_URL: cleanEnv(process.env.REDIS_URL),
+  // VERBA API
+  VERBA_API_KEY: cleanEnv(process.env.VERBA_API_KEY),
+  VERBA_SLUG_OWNER: cleanEnv(process.env.VERBA_SLUG_OWNER),
+  VERBA_SLUG_PREMIUM: cleanEnv(process.env.VERBA_SLUG_PREMIUM),
+  VERBA_SLUG_GENERAL: cleanEnv(process.env.VERBA_SLUG_GENERAL),
+  VERBA_CHARACTER_SLUG: cleanEnv(process.env.VERBA_CHARACTER_SLUG), // Legacy support
 
-    // OLLAMA (Local AI Fallback)
-    OLLAMA_BASE_URL: cleanEnv(process.env.OLLAMA_BASE_URL) || 'http://localhost:11434',
-    OLLAMA_MODEL: cleanEnv(process.env.OLLAMA_MODEL) || 'llama3.1',
+  // REDIS
+  REDIS_URL: cleanEnv(process.env.REDIS_URL),
 
-    // FOOOCUS (Local Image Generation)
-    FOOOCUS_BASE_URL: cleanEnv(process.env.FOOOCUS_BASE_URL) || 'http://localhost:7865',
+  // OLLAMA (Local AI Fallback)
+  OLLAMA_BASE_URL:
+    cleanEnv(process.env.OLLAMA_BASE_URL) || "http://localhost:11434",
+  OLLAMA_MODEL: cleanEnv(process.env.OLLAMA_MODEL) || "llama3.1",
 
-    // MEDIA TOOLING
-    // Dipakai downloaderCompress.js. Kosongkan saja bila memakai ffmpeg-static
-    // bawaan npm; isi hanya kalau host menyediakan binary FFmpeg sendiri.
-    FFMPEG_PATH: cleanEnv(process.env.FFMPEG_PATH),
+  // FOOOCUS (Local Image Generation)
+  FOOOCUS_BASE_URL:
+    cleanEnv(process.env.FOOOCUS_BASE_URL) || "http://localhost:7865",
 
-    // ERROR REPORTING
-    ERROR_WEBHOOK_URL: cleanEnv(process.env.ERROR_WEBHOOK_URL),
+  // MEDIA TOOLING
+  // Dipakai downloaderCompress.js. Kosongkan saja bila memakai ffmpeg-static
+  // bawaan npm; isi hanya kalau host menyediakan binary FFmpeg sendiri.
+  FFMPEG_PATH: cleanEnv(process.env.FFMPEG_PATH),
+  OMDB_API_KEY: cleanEnv(process.env.OMDB_API_KEY),
 
-    // WEBHOOK PREMIUM (Saweria, Trakteer & Top.gg)
-    WEBHOOK_AUTH_SAWERIA: cleanEnv(process.env.WEBHOOK_AUTH_SAWERIA),
-    WEBHOOK_AUTH_TRAKTEER: cleanEnv(process.env.WEBHOOK_AUTH_TRAKTEER),
-    WEBHOOK_AUTH_VOTE: cleanEnv(process.env.WEBHOOK_AUTH_VOTE),
+  // ERROR REPORTING
+  ERROR_WEBHOOK_URL: cleanEnv(process.env.ERROR_WEBHOOK_URL),
 
-    // WEB DASHBOARD & PORTS (Dynamic Pterodactyl Resolution)
-    DASHBOARD_PORT: parseInt(process.env.PORT || process.env.SERVER_PORT || process.env.DASHBOARD_PORT) || 3070,
-    WEBHOOK_PORT: parseInt(process.env.WEBHOOK_PORT) || 3071,
-    SESSION_SECRET: cleanEnv(process.env.SESSION_SECRET),
-    CALLBACK_URL: cleanEnv(process.env.DISCORD_CALLBACK_URL)
+  // WEBHOOK PREMIUM (Saweria, Trakteer & Top.gg)
+  WEBHOOK_AUTH_SAWERIA: cleanEnv(process.env.WEBHOOK_AUTH_SAWERIA),
+  WEBHOOK_AUTH_TRAKTEER: cleanEnv(process.env.WEBHOOK_AUTH_TRAKTEER),
+  WEBHOOK_AUTH_VOTE: cleanEnv(process.env.WEBHOOK_AUTH_VOTE),
+
+  // WEB DASHBOARD & PORTS (Dynamic Pterodactyl Resolution)
+  DASHBOARD_PORT:
+    parseInt(
+      process.env.PORT || process.env.SERVER_PORT || process.env.DASHBOARD_PORT,
+    ) || 3070,
+  WEBHOOK_PORT: parseInt(process.env.WEBHOOK_PORT) || 3071,
+  SESSION_SECRET: cleanEnv(process.env.SESSION_SECRET),
+  CALLBACK_URL: cleanEnv(process.env.DISCORD_CALLBACK_URL),
 };
 
 // Variabel yang wajib ada sebelum bot boleh menyala
-const REQUIRED_KEYS = ['TOKEN', 'CLIENT_ID', 'DB_USER', 'DB_NAME'];
+const REQUIRED_KEYS = ["TOKEN", "CLIENT_ID", "DB_USER", "DB_NAME"];
 
 /** Daftar variabel wajib yang masih kosong. */
 function getMissingEnvKeys() {
-    return REQUIRED_KEYS.filter(key => !env[key]);
+  return REQUIRED_KEYS.filter((key) => !env[key]);
 }
 
 /**
@@ -139,35 +152,51 @@ function getMissingEnvKeys() {
  * @returns {boolean} true jika seluruh variabel wajib terisi
  */
 function validateEnv({ fatal = false } = {}) {
-    const missing = getMissingEnvKeys();
+  const missing = getMissingEnvKeys();
 
-    if (missing.length > 0) {
-        for (const key of missing) {
-            logger.error(`\x1b[41m\x1b[37m FATAL ERROR \x1b[0m \x1b[31mVariabel ${key} belum diisi di dalam file .env!\x1b[0m`);
-        }
-        if (fatal) {
-            logger.error('\x1b[31mBot dihentikan karena konfigurasi wajib belum lengkap.\x1b[0m');
-            process.exit(1);
-        }
-        return false;
+  if (missing.length > 0) {
+    for (const key of missing) {
+      logger.error(
+        `\x1b[41m\x1b[37m FATAL ERROR \x1b[0m \x1b[31mVariabel ${key} belum diisi di dalam file .env!\x1b[0m`,
+      );
     }
+    if (fatal) {
+      logger.error(
+        "\x1b[31mBot dihentikan karena konfigurasi wajib belum lengkap.\x1b[0m",
+      );
+      process.exit(1);
+    }
+    return false;
+  }
 
-    // Peringatan opsional (tidak menghentikan bot)
-    if (!env.GEMINI_API) {
-        logger.warn('GEMINI_API_KEY tidak ditemukan di .env. Fitur AI utama mungkin tidak berfungsi.');
-    }
-    if (!env.VERBA_API_KEY) {
-        logger.warn('VERBA_API_KEY tidak ditemukan di .env. Fallback ke Gemini akan digunakan.');
-    }
-    if (!env.SESSION_SECRET) {
-        logger.warn('SESSION_SECRET tidak ditemukan di .env. Sesi Web Dashboard sebaiknya tidak memakai secret bawaan.');
-    }
+  // Peringatan opsional (tidak menghentikan bot)
+  if (!env.GEMINI_API) {
+    logger.warn(
+      "GEMINI_API_KEY tidak ditemukan di .env. Fitur AI utama mungkin tidak berfungsi.",
+    );
+  }
+  if (!env.VERBA_API_KEY) {
+    logger.warn(
+      "VERBA_API_KEY tidak ditemukan di .env. Fallback ke Gemini akan digunakan.",
+    );
+  }
+  if (!env.SESSION_SECRET) {
+    logger.warn(
+      "SESSION_SECRET tidak ditemukan di .env. Sesi Web Dashboard sebaiknya tidak memakai secret bawaan.",
+    );
+  }
 
-    return true;
+  return true;
 }
 
 // Dipasang non-enumerable agar tidak ikut terbaca saat env di-iterasi/di-serialize.
-Object.defineProperty(env, 'validateEnv', { value: validateEnv, enumerable: false });
-Object.defineProperty(env, 'getMissingEnvKeys', { value: getMissingEnvKeys, enumerable: false });
+Object.defineProperty(env, "validateEnv", {
+  value: validateEnv,
+  enumerable: false,
+});
+Object.defineProperty(env, "getMissingEnvKeys", {
+  value: getMissingEnvKeys,
+  enumerable: false,
+});
 
 module.exports = env;

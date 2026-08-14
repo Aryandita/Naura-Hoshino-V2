@@ -1,5 +1,5 @@
-const { GoogleGenAI } = require('@google/genai');
-const env = require('../../config/env');
+const { GoogleGenAI } = require("@google/genai");
+const env = require("../../config/env");
 
 /**
  * Satu titik masuk untuk seluruh pemanggilan Gemini di alur messageCreate.
@@ -8,12 +8,14 @@ const env = require('../../config/env');
  * env.js mendefinisikan GEMINI_API_KEY. Akibatnya klien selalu null dan
  * kegagalannya tertelan diam-diam oleh blok catch di sekitarnya.
  */
-const MODEL = 'gemini-2.5-flash';
+const MODEL = "gemini-2.5-flash";
 
-const client = env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: env.GEMINI_API_KEY }) : null;
+const client = env.GEMINI_API_KEY
+  ? new GoogleGenAI({ apiKey: env.GEMINI_API_KEY })
+  : null;
 
 function isAvailable() {
-    return Boolean(client);
+  return Boolean(client);
 }
 
 /**
@@ -24,14 +26,14 @@ function isAvailable() {
  * @returns {Promise<string|null>} null bila kunci API tidak dipasang.
  */
 async function generateText(prompt) {
-    if (!client) return null;
+  if (!client) return null;
 
-    const response = await client.models.generateContent({
-        model: MODEL,
-        contents: prompt
-    });
+  const response = await client.models.generateContent({
+    model: MODEL,
+    contents: prompt,
+  });
 
-    return typeof response.text === 'string' ? response.text.trim() : null;
+  return typeof response.text === "string" ? response.text.trim() : null;
 }
 
 module.exports = { MODEL, isAvailable, generateText };

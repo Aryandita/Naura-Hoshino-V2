@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /**
  * Registry kepemilikan Temp Voice.
@@ -25,8 +25,8 @@
  * opsional dan tidak ada jalur yang gagal karenanya.
  */
 
-const redis = require('./redisManager');
-const { logger } = require('./logger');
+const redis = require("./redisManager");
+const { logger } = require("./logger");
 
 // Seminggu. Ruangan sementara tidak pernah sepanjang itu, tapi TTL yang longgar
 // lebih aman daripada kehilangan pemetaan pada ruangan yang memang dibiarkan
@@ -42,14 +42,16 @@ const memory = new Map();
  * Catat kepemilikan sebuah ruangan.
  */
 async function register(channelId, data) {
-    memory.set(channelId, data);
-    try {
-        await redis.setCache(keyFor(channelId), data, TTL_SECONDS);
-    } catch (error) {
-        // Kegagalan Redis tidak boleh membatalkan pembuatan ruangan. Kita cuma
-        // kehilangan ketahanan terhadap restart, bukan fungsinya.
-        logger.warn(`[TempVoice] Gagal menyimpan kepemilikan ${channelId}: ${error.message}`);
-    }
+  memory.set(channelId, data);
+  try {
+    await redis.setCache(keyFor(channelId), data, TTL_SECONDS);
+  } catch (error) {
+    // Kegagalan Redis tidak boleh membatalkan pembuatan ruangan. Kita cuma
+    // kehilangan ketahanan terhadap restart, bukan fungsinya.
+    logger.warn(
+      `[TempVoice] Gagal menyimpan kepemilikan ${channelId}: ${error.message}`,
+    );
+  }
 }
 
 /**
@@ -58,20 +60,22 @@ async function register(channelId, data) {
  * Ini jalur yang memulihkan keadaan setelah restart.
  */
 async function get(channelId) {
-    const local = memory.get(channelId);
-    if (local) return local;
+  const local = memory.get(channelId);
+  if (local) return local;
 
-    try {
-        const stored = await redis.getCache(keyFor(channelId));
-        if (stored && stored.ownerId) {
-            memory.set(channelId, stored);
-            return stored;
-        }
-    } catch (error) {
-        logger.warn(`[TempVoice] Gagal membaca kepemilikan ${channelId}: ${error.message}`);
+  try {
+    const stored = await redis.getCache(keyFor(channelId));
+    if (stored && stored.ownerId) {
+      memory.set(channelId, stored);
+      return stored;
     }
+  } catch (error) {
+    logger.warn(
+      `[TempVoice] Gagal membaca kepemilikan ${channelId}: ${error.message}`,
+    );
+  }
 
-    return null;
+  return null;
 }
 
 /**
@@ -81,35 +85,37 @@ async function get(channelId) {
  * tahu", bukan "bukan pemilik". Pemanggil wajib membedakan keduanya.
  */
 function getSync(channelId) {
-    return memory.get(channelId) || null;
+  return memory.get(channelId) || null;
 }
 
 /**
  * @returns {boolean|null} null bila kepemilikan ruangan ini tidak diketahui.
  */
 function isOwnerSync(channelId, userId) {
-    const entry = memory.get(channelId);
-    if (!entry) return null;
-    return entry.ownerId === userId;
+  const entry = memory.get(channelId);
+  if (!entry) return null;
+  return entry.ownerId === userId;
 }
 
 async function isOwner(channelId, userId) {
-    const entry = await get(channelId);
-    if (!entry) return null;
-    return entry.ownerId === userId;
+  const entry = await get(channelId);
+  if (!entry) return null;
+  return entry.ownerId === userId;
 }
 
 async function isTracked(channelId) {
-    return Boolean(await get(channelId));
+  return Boolean(await get(channelId));
 }
 
 async function unregister(channelId) {
-    memory.delete(channelId);
-    try {
-        await redis.deleteCache(keyFor(channelId));
-    } catch (error) {
-        logger.warn(`[TempVoice] Gagal menghapus kepemilikan ${channelId}: ${error.message}`);
-    }
+  memory.delete(channelId);
+  try {
+    await redis.deleteCache(keyFor(channelId));
+  } catch (error) {
+    logger.warn(
+      `[TempVoice] Gagal menghapus kepemilikan ${channelId}: ${error.message}`,
+    );
+  }
 }
 
 /**
@@ -120,22 +126,22 @@ async function unregister(channelId) {
  * fitur itu mustahil.
  */
 async function transfer(channelId, newOwnerId) {
-    const entry = await get(channelId);
-    if (!entry) return null;
+  const entry = await get(channelId);
+  if (!entry) return null;
 
-    const updated = { ...entry, ownerId: newOwnerId };
-    await register(channelId, updated);
-    return updated;
+  const updated = { ...entry, ownerId: newOwnerId };
+  await register(channelId, updated);
+  return updated;
 }
 
 module.exports = {
-    register,
-    get,
-    getSync,
-    isOwner,
-    isOwnerSync,
-    isTracked,
-    unregister,
-    transfer,
-    TTL_SECONDS,
+  register,
+  get,
+  getSync,
+  isOwner,
+  isOwnerSync,
+  isTracked,
+  unregister,
+  transfer,
+  TTL_SECONDS,
 };

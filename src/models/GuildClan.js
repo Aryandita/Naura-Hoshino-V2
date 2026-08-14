@@ -1,44 +1,53 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../managers/dbManager');
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../managers/dbManager");
 
-const GuildClan = sequelize.define('GuildClan', {
+const GuildClan = sequelize.define(
+  "GuildClan",
+  {
     id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
     },
     name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
     },
     leaderId: {
-        type: DataTypes.STRING,
-        allowNull: false
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     guildId: {
-        type: DataTypes.STRING,
-        allowNull: false
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     members: {
-        type: DataTypes.JSON,
-        defaultValue: []
+      type: DataTypes.JSON,
+      defaultValue: [],
     },
     level: {
-        type: DataTypes.INTEGER,
-        defaultValue: 1
+      type: DataTypes.INTEGER,
+      defaultValue: 1,
     },
     vault: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
     },
     bossHp: {
-        type: DataTypes.INTEGER,
-        defaultValue: 1000
-    }
-}, {
-    tableName: 'GuildClans',
-    timestamps: true
-});
+      type: DataTypes.INTEGER,
+      defaultValue: 1000,
+    },
+    questsState: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
+  },
+  {
+    tableName: "GuildClans",
+    timestamps: true,
+    indexes: [{ fields: ["guildId"] }]
+  },
+);
 
 module.exports = GuildClan;

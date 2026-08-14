@@ -1,0 +1,95 @@
+"use strict";
+
+/**
+ * Hadiah vote top.gg.
+ *
+ * Sengaja dipisah dari berkas webhook supaya aturan hadiahnya bisa dipakai
+ * ulang (misalnya oleh perintah `/vote` di dalam bot) tanpa menyalin logika.
+ */
+
+const { logger } = require("../src/managers/logger");
+const UserProfile = require("../src/models/UserProfile");
+const UserSurvival = require("../src/models/UserSurvival");
+const currency = require("../../src/survival/engines/currency");
+
+const TRIAL_HOURS = 12;
+const COUPON_PER_VOTE = 1;
+const COUPON_WEEKEND = 2; // top.gg menghitung vote akhir pekan sebagai dua vote.
+
+// top.gg membuka vote berikutnya setiap 12 jam. Ambangnya dipasang 11 jam agar
+// selisih jam server tidak menolak vote yang sah.
+const VOTE_COOLDOWN_MS = 11 * 60 * 60 * 1000;
+
+const EntitlementService = require("../src/managers/entitlementService");
+
+async function extendPremium(userId, durationMs) {
+  return EntitlementService.extendUserPremium(userId, durationMs);
+}
+
+/**
+ * Berikan hadiah satu kali vote.
+ *
+ * @returns {Promise<{ok: boolean, reason?: string, expiry?: Date, coupons?: number, totalCoupons?: number, streak?: number}>}
+ */
+async function grantVoteRewards(
+  userId,
+  { isWeekend = false, force = false } = {},
+) {
+  const [survival] = await UserSurvival.findOrCreate({ where: { userId } });
+  const state = survival.rpg_state || {};
+  const lastVote = state.last_vote_at
+    ? new Date(state.last_vote_at).getTime()
+    : 0;
+
+  // Penjaga anti-kirim-ulang: melindungi dari webhook ganda maupun percobaan
+  // memanggil endpoint berkali-kali.
+  if (!force && lastVote && Date.now() - lastVote < VOTE_COOLDOWN_MS) {
+    return {
+      ok: false,
+      reason: "cooldown",
+      nextAt: new Date(lastVote + VOTE_COOLDOWN_MS),
+    };
+  }
+
+  const expiry = await extendPremium(userId, TRIAL_HOURS * 60 * 60 * 1000);
+
+  const streak = (Number(state.vote_streak) || 0) + 1;
+
+  // Catatan vote ditulis LEBIH DULU, dan hanya kolom rpg_state yang disentuh.
+  //
+  // Sejak Naura Coupon punya kolom angka sendiri, currency.reward() memakai
+  // increment atomik lewat cacheManager, sedangkan survival.save() menulis
+  // nilai absolut dari objek di memori. Bila keduanya sama-sama menyentuh kolom
+  // coupons, satu vote bisa terhitung dua kali: sekali oleh save(), sekali lagi
+  // saat antrean increment di-flush. Membatasi `fields` menutup jalur itu.
+  survival.rpg_state = {
+    ...(survival.rpg_state || {}),
+    last_vote_at: new Date().toISOString(),
+    vote_streak: streak,
+    vote_total: (Number(state.vote_total) || 0) + 1,
+  };
+  survival.changed("rpg_state", true);
+  await survival.save({ fields: ["rpg_state"] });
+
+  const coupons = isWeekend ? COUPON_WEEKEND : COUPON_PER_VOTE;
+  const totalCoupons = await currency.reward(
+    currency.COUPON,
+    { survival },
+    coupons,
+  );
+
+  logger.info(
+    `[VOTE] ${userId} menerima ${coupons} Naura Coupon (total ${totalCoupons}), vote ke-${streak}.`,
+  );
+
+  return { ok: true, expiry, coupons, totalCoupons, streak, isWeekend };
+}
+
+module.exports = {
+  TRIAL_HOURS,
+  COUPON_PER_VOTE,
+  COUPON_WEEKEND,
+  VOTE_COOLDOWN_MS,
+  grantVoteRewards,
+  extendPremium,
+};

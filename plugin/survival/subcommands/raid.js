@@ -1,128 +1,132 @@
-'use strict';
+"use strict";
 
-const { MessageFlags } = require('discord.js');
-
-const GuildClan = require('../../../src/models/GuildClan');
-const UserSurvival = require('../../../src/models/UserSurvival');
-const ui = require('../../../src/config/ui');
-const currency = require('../currency');
-const { rollCouponDrop, dropLine } = require('../couponRewards');
-const { buildContainerV2, buildErrorContainerV2 } = require('../../../src/utils/NauraContainerBuilder');
-
-const STAMINA_COST = 15;
-const BOSS_MAX_HP = 1000;
-const CRIT_CHANCE = 0.2;
-const CRIT_MULTIPLIER = 1.5;
-
-function e(name, fallback) {
-    return ui.getEmoji(name) || fallback;
-}
-
-function findUserClan(clans, userId) {
-    return clans.find(clan => {
-        const members = Array.isArray(clan.members) ? clan.members : [];
-        return clan.leaderId === userId || members.includes(userId);
-    });
-}
-
-function ephemeralError(interaction, message) {
-    return interaction.reply({
-        ...buildErrorContainerV2({ errorMessage: message }),
-        flags: MessageFlags.Ephemeral
-    });
-}
+const { MessageFlags } = require("discord.js");
+const { buildContainerV2, buildErrorContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const ui = require("../../../src/config/ui");
+const worldBossEngine = require("../../../src/survival/engines/worldBossEngine");
+const petActions = require("../../../src/survival/helpers/petActions");
+const cacheManager = require("../../../src/managers/cacheManager");
+const UserPet = require("../../../src/models/UserPet");
 
 module.exports = {
-    async execute(interaction) {
-        const user = interaction.user;
-        const guildId = interaction.guildId;
+  name: "raid",
+  description: "Ikuti pertempuran World Boss Global bersama seluruh petualang!",
 
-        const [survival] = await UserSurvival.findOrCreate({ where: { userId: user.id } });
+  async execute(interaction, context) {
+    const action = interaction.options.getString("aksi") || "status";
+    const userId = interaction.user.id;
 
-        if ((survival.stamina || 0) < STAMINA_COST) {
-            return ephemeralError(
-                interaction,
-                `Staminamu tinggal ${survival.stamina || 0}, belum cukup buat ikut Boss Raid yaa. Istirahat dulu sebentar, Naura tunggu kok! (butuh ${STAMINA_COST} stamina)`
-            );
-        }
+    if (action === "status") {
+      let boss = await worldBossEngine.getActiveBoss();
 
-        const clans = await GuildClan.findAll({ where: { guildId } });
-        const userClan = findUserClan(clans, user.id);
+      if (!boss) {
+        // Auto-spawn demo boss bila belum ada
+        boss = await worldBossEngine.spawnBoss();
+      }
 
-        if (!userClan) {
-            return ephemeralError(
-                interaction,
-                'Kamu belum punya klan di server ini. Gabung dulu lewat `/survival clan`, nanti kita raid bareng-bareng!'
-            );
-        }
+      const hpPercent = Math.max(0, Math.round((Number(boss.currentHp) / Number(boss.maxHp)) * 100));
+      const expTs = Math.floor(new Date(boss.endTime).getTime() / 1000);
 
-        if ((userClan.bossHp || 0) <= 0) {
-            return interaction.reply({
-                ...buildContainerV2({
-                    accentColorHex: ui.getColor('success') || '#00FF00',
-                    authorName: 'Naura Guild Boss Raid',
-                    title: `${e('cheers', '\uD83D\uDC09')} Bossnya sudah tumbang!`,
-                    iconURL: user.displayAvatarURL(),
-                    description: `Naga raid klan **${userClan.name}** sudah kalah hari ini. Hebat banget kalian! Bossnya bakal muncul lagi besok, jadi istirahat dulu yaa.`,
-                    footerText: ui.getFooter('survival')
-                }),
-                flags: MessageFlags.Ephemeral
-            });
-        }
+      const payload = buildContainerV2({
+        accentColorHex: "#9900EF",
+        authorName: "⚔️ Global Raid Event",
+        title: `🔥 [WORLD BOSS] ${boss.name}`,
+        description: [
+          `**"${boss.title}"**`,
+          ``,
+          `❤️ **HP Boss:** ${Number(boss.currentHp).toLocaleString("id-ID")} / ${Number(boss.maxHp).toLocaleString("id-ID")} (\`${hpPercent}%\`)`,
+          `⏳ **Batas Waktu:** Berakhir <t:${expTs}:R>`,
+          `💎 **Pool Hadiah:** ${boss.rewardsPool.starFragments} Star Fragments & ${boss.rewardsPool.coupons} Naura Coupons!`,
+          ``,
+          `*Gunakan \`/survival raid aksi:serang\` untuk mengerahkan pet dan menyerang Boss!*`,
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
 
-        const strength = survival.strength || 1;
-        const agility = survival.agility || 1;
-        const baseDamage = Math.floor(Math.random() * 30) + (strength * 5) + (agility * 2);
-        const isCritical = Math.random() < CRIT_CHANCE;
-        const finalDamage = isCritical ? Math.floor(baseDamage * CRIT_MULTIPLIER) : baseDamage;
-
-        userClan.bossHp = Math.max(0, (userClan.bossHp || BOSS_MAX_HP) - finalDamage);
-        userClan.changed('bossHp', true);
-        await userClan.save();
-
-        survival.stamina -= STAMINA_COST;
-        await survival.save();
-
-        // Hadiah serangan lewat helper mata uang supaya aturan NSF seragam.
-        const rewardNsf = Math.floor(finalDamage / 2) + 20;
-        await currency.reward(currency.FRAGMENT, { survival }, rewardNsf);
-
-        const isDefeated = userClan.bossHp <= 0;
-
-        // Naura Coupon hanya jatuh saat bosnya benar-benar tumbang, bukan tiap
-        // serangan, supaya tidak bisa dipanen dengan menyerang berulang kali.
-        const coupon = isDefeated ? await rollCouponDrop('clan_boss_kill', { survival }) : { gained: 0 };
-        const couponText = dropLine(coupon);
-
-        const nsfEmoji = currency.emojiOf(currency.FRAGMENT);
-
-        const heading = isCritical
-            ? `${e('shocked', '\uD83D\uDCA5')} Serangan telak!`
-            : `${e('impressed', '\u2694\uFE0F')} Serangan Boss Raid`;
-
-        const penutup = isDefeated
-            ? `${e('cheers', '\uD83C\uDF89')} **Luar biasa! Klan ${userClan.name} berhasil menumbangkan bossnya hari ini!** Kas klan ikut bertambah, Naura bangga banget sama kalian.`
-            : `${e('happy', '\uD83D\uDCAA')} Ajak anggota klanmu ikut menyerang yaa, sedikit lagi bossnya pasti tumbang!`;
-
-        const payload = buildContainerV2({
-            accentColorHex: isDefeated ? '#FFD700' : '#FF4C4C',
-            authorName: 'Naura Guild Boss Raid',
-            title: heading,
-            iconURL: user.displayAvatarURL(),
-            description: [
-                `<@${user.id}> menyerang boss klan **${userClan.name}** dan memberi **${finalDamage} damage**!`,
-                isCritical ? '*Wah, kena titik lemahnya! Naura sampai ikut kaget.*' : '',
-                '',
-                `> Sisa HP boss: **${userClan.bossHp} / ${BOSS_MAX_HP}**`,
-                `> Hadiah serangan: ${nsfEmoji} **+${rewardNsf} NSF**`,
-                `> Sisa staminamu: **${survival.stamina} / 100**`,
-                '',
-                penutup,
-                couponText
-            ].filter(Boolean).join('\n'),
-            footerText: ui.getFooter('survival')
-        });
-
-        return interaction.reply(payload);
+      return interaction.reply(payload);
     }
+
+    if (action === "serang") {
+      // Ambil pet aktif user untuk mendapatkan passive buff
+      const activePet = await UserPet.findOne({ where: { userId, isActive: true } });
+      const petBuffs = activePet ? petActions.getPassiveBuffs(activePet.type, activePet.evolutionStage || 1) : {};
+
+      const result = await worldBossEngine.attackBoss(userId, interaction.user.username, {
+        userLevel: context?.survival?.level || 1,
+        petBuffs,
+      });
+
+      if (!result.success) {
+        if (result.reason === "NO_ACTIVE_BOSS" || result.reason === "BOSS_EXPIRED") {
+          return interaction.reply({
+            ...buildErrorContainerV2({
+              title: "Tidak Ada Boss Aktif",
+              description: "Saat ini belum ada World Boss yang muncul. Tunggu pengumuman jadwal raid selanjutnya!",
+              footerText: ui.getFooter("survival"),
+            }),
+            flags: MessageFlags.Ephemeral,
+          });
+        }
+      }
+
+      const critText = result.isCrit ? " 💥 **CRITICAL HIT!**" : "";
+      const petNote = activePet ? ` (Buff Pet **${activePet.name || activePet.type}** aktif!)` : "";
+
+      const desc = [
+        `⚔️ Kamu melancarkan serangan dahsyat ke **${result.bossName}**!${critText}`,
+        ``,
+        `💥 **Damage Dihasilkan:** \`${result.damage.toLocaleString("id-ID")}\` DMG${petNote}`,
+        `❤️ **Sisa HP Boss:** \`${result.currentHp.toLocaleString("id-ID")} / ${Number(result.maxHp).toLocaleString("id-ID")}\``,
+        `🏆 **Total Kontribusimu:** \`${result.userTotalDamage.toLocaleString("id-ID")}\` DMG`,
+      ];
+
+      if (result.isDefeated) {
+        desc.push(
+          ``,
+          `🎉 **WORLD BOSS TELAH DITUMBANGKAN!**`,
+          `Hadiah telah dibagikan secara proporsional ke semua petualang yang berpartisipasi!`,
+        );
+      }
+
+      const payload = buildContainerV2({
+        accentColorHex: result.isDefeated ? "#22C55E" : "#E74C3C",
+        title: result.isDefeated ? "🏆 World Boss Telah Kalah!" : "⚔️ Serangan Berhasil!",
+        description: desc.join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.reply(payload);
+    }
+
+    if (action === "leaderboard") {
+      const boss = await worldBossEngine.getActiveBoss();
+      if (!boss) {
+        return interaction.reply({
+          ...buildErrorContainerV2({
+            title: "Tidak Ada Data",
+            description: "Belum ada World Boss yang sedang aktif.",
+            footerText: ui.getFooter("survival"),
+          }),
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+
+      const leaderboard = Object.values(boss.damageLeaderboard || {}).sort((a, b) => b.totalDamage - a.totalDamage);
+      const top10 = leaderboard.slice(0, 10);
+
+      const lines = top10.map((p, idx) => {
+        const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `\`#${idx + 1}\``;
+        return `${medal} **${p.username}**: \`${p.totalDamage.toLocaleString("id-ID")}\` DMG (${p.hits}x hit)`;
+      });
+
+      const payload = buildContainerV2({
+        accentColorHex: "#F1C40F",
+        title: `🏆 Peringkat Kontribusi Raid, ${boss.name}`,
+        description: lines.length > 0 ? lines.join("\n") : "Belum ada pemain yang menyerang boss ini!",
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.reply(payload);
+    }
+  },
 };
