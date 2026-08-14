@@ -30,14 +30,14 @@ async function addPlayerXP(userId, xpAmount) {
   let totalXpAdded = parseInt(xpAmount);
   if (xpAmount > 0) {
     totalXpAdded = Math.floor(totalXpAdded * diffConfig.expMultiplier);
-    
+
     // Buff Kolaboratif Klan
     if (survival && survival.clanId) {
       try {
         const GuildClan = require("../../models/GuildClan");
         const clan = await GuildClan.findByPk(survival.clanId);
         if (clan) {
-          const buffMultiplier = 1 + (clan.level * 0.02); // +2% per level
+          const buffMultiplier = 1 + clan.level * 0.02; // +2% per level
           totalXpAdded = Math.floor(totalXpAdded * buffMultiplier);
         }
       } catch (e) {

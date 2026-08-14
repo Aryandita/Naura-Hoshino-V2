@@ -12,9 +12,7 @@ const UserProfile = require("../../src/models/UserProfile");
 const GuildSettings = require("../../src/models/GuildSettings");
 const UserPlaylist = require("../../src/models/UserPlaylist");
 
-const {
-  generateMusicProfileImage,
-} = require("../../src/canvas/canvasHelper");
+const { generateMusicProfileImage } = require("../../src/canvas/canvasHelper");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -666,17 +664,20 @@ async function runMusicLogic(
 
     try {
       const cacheManager = require("../../src/managers/cacheManager");
-      const userProfile = await cacheManager.getUserProfile(interaction.user.id);
+      const userProfile = await cacheManager.getUserProfile(user.id);
       let equippedBanner = null;
       try {
         if (userProfile && userProfile.activeBanners) {
-          const banners = typeof userProfile.activeBanners === "string" ? JSON.parse(userProfile.activeBanners) : userProfile.activeBanners;
+          const banners =
+            typeof userProfile.activeBanners === "string"
+              ? JSON.parse(userProfile.activeBanners)
+              : userProfile.activeBanners;
           const bannerId = banners.music;
           if (bannerId) {
-             equippedBanner = `./plugin/canvas/assets/banners/${bannerId}.png`;
-             // For now we will assume the banner image files are provided. Wait, I should use absolute path or require!
-             // Let's just pass bannerId, we can load it in canvas
-             equippedBanner = bannerId;
+            equippedBanner = `./plugin/canvas/assets/banners/${bannerId}.png`;
+            // For now we will assume the banner image files are provided. Wait, I should use absolute path or require!
+            // Let's just pass bannerId, we can load it in canvas
+            equippedBanner = bannerId;
           }
         }
       } catch (e) {}

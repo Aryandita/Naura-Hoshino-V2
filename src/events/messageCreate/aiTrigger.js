@@ -3,8 +3,8 @@
 const { PermissionFlagsBits } = require("discord.js");
 
 const env = require("../../config/env");
-const { checkPremiumStatus } = require("../../../plugin/premium/premiumHelper");
-const AIRouterManager = require("../../../plugin/ai/aiRouterManager");
+const { checkPremiumStatus } = require("../../premium/premiumHelper");
+const AIRouterManager = require("../../ai/aiRouterManager");
 const persona = require("./persona");
 
 function isMentioningBot(message, client) {

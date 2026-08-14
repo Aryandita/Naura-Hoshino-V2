@@ -5,9 +5,7 @@ const cacheManager = require("../../managers/cacheManager");
 const ui = require("../../config/ui");
 
 async function openTicketFromMenu(interaction, client) {
-  const {
-    createTicketChannel,
-  } = require("../../modmail/modmailHelper");
+  const { createTicketChannel } = require("../../modmail/modmailHelper");
   const targetGuildId = interaction.values[0];
 
   const guildData = await cacheManager.getGuildSettings(targetGuildId);
@@ -51,7 +49,7 @@ async function openTicketFromMenu(interaction, client) {
       originalMessage || interaction,
       { id: targetGuildId, categoryId: guildData.settings.modmail.categoryId },
       client,
-      draft
+      draft,
     );
     await redisManager.client.del(draftKey);
   } catch (error) {

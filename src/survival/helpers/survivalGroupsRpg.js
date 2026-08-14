@@ -14,7 +14,9 @@ function addRpgGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("event")
-          .setDescription("🎁 Ambil hadiah harian dari Event Musiman yang sedang aktif!"),
+          .setDescription(
+            "🎁 Ambil hadiah harian dari Event Musiman yang sedang aktif!",
+          ),
       )
       .addSubcommand((sub) =>
         sub
@@ -75,7 +77,9 @@ function addRpgGroup(builder) {
           .addBooleanOption((opt) =>
             opt
               .setName("ranked")
-              .setDescription("Mainkan mode Ranked untuk mendapatkan poin MMR? (Opsional)")
+              .setDescription(
+                "Mainkan mode Ranked untuk mendapatkan poin MMR? (Opsional)",
+              )
               .setRequired(false),
           ),
       )
@@ -111,8 +115,8 @@ function addRpgGroup(builder) {
               .addChoices(
                 { name: "Lihat Status Pet", value: "view" },
                 { name: "Beri Makan", value: "feed" },
-                { name: "Ajak Main", value: "play" }
-              )
+                { name: "Ajak Main", value: "play" },
+              ),
           ),
       )
       .addSubcommand((sub) =>
@@ -182,7 +186,9 @@ function addRpgGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("raid")
-          .setDescription("🐉 Serang World Boss Global bersama seluruh petualang!")
+          .setDescription(
+            "🐉 Serang World Boss Global bersama seluruh petualang!",
+          )
           .addStringOption((opt) =>
             opt
               .setName("aksi")

@@ -1,16 +1,14 @@
 "use strict";
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const gemini = require("../../../src/ai/geminiClient");
 
 const ui = require("../../../src/config/ui");
-const env = require("../../../src/config/env");
 const GuildSettings = require("../../../src/models/GuildSettings");
 const { logger } = require("../../../src/managers/logger");
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 
-const MODEL = "gemini-2.5-flash";
 const PROVIDER = "Gemini 2.5 Flash";
 
 function e(name, fallback) {
@@ -45,10 +43,10 @@ module.exports = async function chat(interaction) {
 
   let replyText;
   try {
-    const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: MODEL, systemInstruction });
-    const result = await model.startChat().sendMessage(prompt);
-    replyText = result.response.text();
+    replyText = await gemini.generate({
+      parts: [{ text: prompt }],
+      config: { systemInstruction },
+    });
   } catch (error) {
     logger.error("[AI Chat] Gemini gagal menjawab", error);
     replyText =

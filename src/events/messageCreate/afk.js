@@ -2,7 +2,7 @@ const { EmbedBuilder } = require("discord.js");
 const ui = require("../../config/ui");
 const env = require("../../config/env");
 const UserProfile = require("../../models/UserProfile");
-const { checkPremiumStatus } = require("../../../plugin/premium/premiumHelper");
+const { checkPremiumStatus } = require("../../premium/premiumHelper");
 
 const MAX_STORED_MENTIONS = 15;
 const NOTICE_LIFETIME_MS = 10000;

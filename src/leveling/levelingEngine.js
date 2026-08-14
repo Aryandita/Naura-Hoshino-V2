@@ -5,13 +5,13 @@
 // Pengguna premium mendapat penggandaan XP otomatis.
 
 const { AttachmentBuilder } = require("discord.js");
-const { logger } = require("../../src/managers/logger");
-const redisManager = require("../../src/managers/redisManager");
-const UserLeveling = require("../../src/models/UserLeveling");
-const cacheManager = require("../../src/managers/cacheManager");
-const CanvasUtils = require("../../src/canvas/CanvasUtils");
-const ui = require("../../src/config/ui");
-const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
+const { logger } = require("../managers/logger");
+const redisManager = require("../managers/redisManager");
+const UserLeveling = require("../models/UserLeveling");
+const cacheManager = require("../managers/cacheManager");
+const CanvasUtils = require("../canvas/CanvasUtils");
+const ui = require("../config/ui");
+const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
 const xpBuffer = require("./xpBuffer");
 
 const CONFIG = {
@@ -29,12 +29,12 @@ function getNextLevelXp(level) {
 }
 
 function getRoleBadge(level, isPremium) {
-  if (isPremium) return "\ud83d\udc51 V.I.P Premium";
-  if (level >= 100) return "\u2726 Legenda Abadi \u2726";
-  if (level >= 50) return "\u2727 Pahlawan Senior";
-  if (level >= 25) return "\u2727 Petualang Tangguh";
-  if (level >= 10) return "\u2727 Pengembara Berbakat";
-  return "\u2727 Pendatang Baru";
+  if (isPremium) return "👑 V.I.P Premium";
+  if (level >= 100) return "✦ Legenda Abadi ✦";
+  if (level >= 50) return "✧ Pahlawan Senior";
+  if (level >= 25) return "✧ Petualang Tangguh";
+  if (level >= 10) return "✧ Pengembara Berbakat";
+  return "✧ Pendatang Baru";
 }
 
 async function isPremiumUser(userId) {
@@ -96,7 +96,7 @@ async function announceLevelUp(profile, user, guild, currentChannel) {
 
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#FFB6C1",
-      authorName: "\u2726 LEVEL UP! \u2726",
+      authorName: "✦ LEVEL UP! ✦",
       iconURL: user.displayAvatarURL(),
       expression: "levelup",
       description:

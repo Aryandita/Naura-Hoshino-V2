@@ -193,32 +193,37 @@ module.exports = {
       let commandList = [];
       for (const [cmdName, cmdData] of client.commands.entries()) {
         if (!cmdData.data || !Array.isArray(cmdData.data.options)) {
-           commandList.push(cmdName);
-           continue;
+          commandList.push(cmdName);
+          continue;
         }
-        
-        const hasSubcommands = cmdData.data.options.some(opt => opt.type === 1 || opt.type === 2);
+
+        const hasSubcommands = cmdData.data.options.some(
+          (opt) => opt.type === 1 || opt.type === 2,
+        );
         if (!hasSubcommands) {
           commandList.push(cmdName);
         } else {
-          cmdData.data.options.forEach(opt => {
-            if (opt.type === 2) { // Subcommand Group
+          cmdData.data.options.forEach((opt) => {
+            if (opt.type === 2) {
+              // Subcommand Group
               if (Array.isArray(opt.options)) {
-                opt.options.forEach(sub => {
-                  if (sub.type === 1) commandList.push(`${cmdName} ${opt.name} ${sub.name}`);
+                opt.options.forEach((sub) => {
+                  if (sub.type === 1)
+                    commandList.push(`${cmdName} ${opt.name} ${sub.name}`);
                 });
               }
-            } else if (opt.type === 1) { // Subcommand
+            } else if (opt.type === 1) {
+              // Subcommand
               commandList.push(`${cmdName} ${opt.name}`);
             }
           });
         }
       }
-      
+
       const filtered = commandList
         .filter((cmd) => cmd.toLowerCase().includes(focusedValue))
         .slice(0, 25);
-        
+
       await interaction
         .respond(filtered.map((cmd) => ({ name: `/${cmd}`, value: cmd })))
         .catch(() => {});
@@ -680,24 +685,30 @@ async function handleInfo(interaction, client, lang) {
     ];
   }
 
-  const pet = await UserPet.findOne({ where: { userId: interaction.user.id, isActive: true } });
+  const pet = await UserPet.findOne({
+    where: { userId: interaction.user.id, isActive: true },
+  });
   let petAttachment = null;
-  
+
   if (pet) {
     const fs = require("fs");
     const path = require("path");
     const { AttachmentBuilder } = require("discord.js");
     const ePet = e("pet", "\uD83D\uDC3E");
-    const imgPath = path.join(__dirname, "../../assets/survival/pets", `${pet.petType}.png`);
+    const imgPath = path.join(
+      __dirname,
+      "../../assets/survival/pets",
+      `${pet.petType}.png`,
+    );
     if (fs.existsSync(imgPath)) {
-       petAttachment = new AttachmentBuilder(imgPath, { name: "pet.png" });
+      petAttachment = new AttachmentBuilder(imgPath, { name: "pet.png" });
     }
-    
+
     // Tambahkan separator virtual di field (karena buildContainerV2 tidak mendukung separator manual di fields array dengan mudah)
     // Atau kita gabungkan di description.
     fields.push({
       name: `─────────\n${ePet} Peliharaan Aktif`,
-      value: `**Spesies:** ${String(pet.petType).toUpperCase()}\n**Level:** ${pet.petLevel || 1} | **Mood:** ${String(pet.mood || 'normal').toUpperCase()}`
+      value: `**Spesies:** ${String(pet.petType).toUpperCase()}\n**Level:** ${pet.petLevel || 1} | **Mood:** ${String(pet.mood || "normal").toUpperCase()}`,
     });
   }
 

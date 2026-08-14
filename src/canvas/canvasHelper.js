@@ -390,7 +390,9 @@ async function generateMusicPanelImage(track, currentPos, clientAvatar) {
           responseType: "arraybuffer",
           timeout: 5000,
         });
-        trackThumbImg = await canvasRuntime.loadImage(Buffer.from(response.data));
+        trackThumbImg = await canvasRuntime.loadImage(
+          Buffer.from(response.data),
+        );
       }
     } catch (e2) {}
   }

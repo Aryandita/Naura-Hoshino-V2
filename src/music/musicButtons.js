@@ -122,7 +122,7 @@ module.exports = async (interaction, client) => {
         const {
           applyLavalinkFilter,
           premiumFilters,
-        } = require("../../plugin/music/musicFilters");
+        } = require("./musicFilters");
         const filterType = interaction.values[0];
 
         if (premiumFilters.includes(filterType)) {
@@ -433,15 +433,22 @@ module.exports = async (interaction, client) => {
 
     case "music_skip": {
       const voiceChannel = interaction.member?.voice?.channel;
-      const listeners = voiceChannel ? voiceChannel.members.filter((m) => !m.user.bot).size : 1;
-      
+      const listeners = voiceChannel
+        ? voiceChannel.members.filter((m) => !m.user.bot).size
+        : 1;
+
       player.skipVotes = player.skipVotes || new Set();
       player.skipVotes.add(interaction.user.id);
-      
+
       const requiredVotes = Math.max(1, Math.ceil(listeners / 2));
-      const isRequester = player.currentTrack?.info?.requester?.id === interaction.user.id;
-      
-      if (listeners <= 1 || isRequester || player.skipVotes.size >= requiredVotes) {
+      const isRequester =
+        player.currentTrack?.info?.requester?.id === interaction.user.id;
+
+      if (
+        listeners <= 1 ||
+        isRequester ||
+        player.skipVotes.size >= requiredVotes
+      ) {
         player.skipVotes.clear();
         safeStopTrack(player);
         return interaction.editReply({

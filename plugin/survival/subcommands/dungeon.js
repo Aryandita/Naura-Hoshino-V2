@@ -10,15 +10,17 @@ const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const diffHelper = require("../../../src/survival/helpers/difficultyHelper");
 const currency = require("../../../src/survival/engines/currency");
-const combat = require("../dungeonCombat");
-const render = require("../dungeonRender");
-const rewards = require("../dungeonRewards");
+const combat = require("../../../src/survival/engines/dungeonCombat");
+const render = require("../../../src/survival/engines/dungeonRender");
+const rewards = require("../../../src/survival/engines/dungeonRewards");
 const helpers = require("../../../src/survival/helpers/craftHelpers");
-const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
+const {
+  safeParseInventory,
+} = require("../../../src/survival/engines/inventoryHelper");
 const {
   DUNGEON_PASS_ID,
   DUNGEON_SPECIAL_PASS_ID,
-} = require("../items_dungeon");
+} = require("../../../src/survival/data/items_dungeon");
 
 const COLLECTOR_MS = 90000;
 const CHOICE_MS = 60000;

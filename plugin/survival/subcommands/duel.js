@@ -22,7 +22,9 @@ const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const currencyHelper = require("../../../src/survival/engines/currency");
 const engine = require("../../../src/survival/engines/duelEngine");
-const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
+const {
+  safeParseInventory,
+} = require("../../../src/survival/engines/inventoryHelper");
 
 const INVITE_MS = 30000;
 const BATTLE_MS = 240000;
@@ -219,8 +221,12 @@ module.exports = {
       }
 
       const UserPet = require("../../../src/models/UserPet");
-      const p1Pet = await UserPet.findOne({ where: { userId: challenger.id, isActive: true } });
-      const p2Pet = await UserPet.findOne({ where: { userId: opponent.id, isActive: true } });
+      const p1Pet = await UserPet.findOne({
+        where: { userId: challenger.id, isActive: true },
+      });
+      const p2Pet = await UserPet.findOne({
+        where: { userId: opponent.id, isActive: true },
+      });
 
       const p1 = engine.buildFighter(challenger, p1Profile, p1Survival, p1Pet);
       const p2 = engine.buildFighter(opponent, p2Profile, p2Survival, p2Pet);
@@ -336,7 +342,13 @@ module.exports = {
 
       battleCollector.on("end", async () => {
         try {
-          const eloChanges = await engine.settle(p1Survival, p1, p2Survival, p2, isRanked);
+          const eloChanges = await engine.settle(
+            p1Survival,
+            p1,
+            p2Survival,
+            p2,
+            isRanked,
+          );
 
           if (!winner) {
             if (wager > 0) {
@@ -370,8 +382,14 @@ module.exports = {
           );
           let eloText = "";
           if (isRanked && eloChanges) {
-            const wChange = eloChanges.winner.diff > 0 ? `+${eloChanges.winner.diff}` : eloChanges.winner.diff;
-            const lChange = eloChanges.loser.diff > 0 ? `+${eloChanges.loser.diff}` : eloChanges.loser.diff;
+            const wChange =
+              eloChanges.winner.diff > 0
+                ? `+${eloChanges.winner.diff}`
+                : eloChanges.winner.diff;
+            const lChange =
+              eloChanges.loser.diff > 0
+                ? `+${eloChanges.loser.diff}`
+                : eloChanges.loser.diff;
             eloText = `\n**MMR Changes:**\n> 📈 <@${eloChanges.winner.id}>: **${eloChanges.winner.mmr}** (${wChange})\n> 📉 <@${eloChanges.loser.id}>: **${eloChanges.loser.mmr}** (${lChange})\n`;
           }
 
@@ -384,7 +402,7 @@ module.exports = {
               `<@${loser.id}> juga hebat, jangan sedih ya~`,
               "",
               `**Hadiah:** ${prizeText}`,
-              eloText
+              eloText,
             ].join("\n"),
             expression: "Impressed",
             colorKey: "success",

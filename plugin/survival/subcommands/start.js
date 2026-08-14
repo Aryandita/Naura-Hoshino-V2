@@ -6,7 +6,10 @@ const UserProfile = require("../../../src/models/UserProfile");
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
-const { safeParseInventory, addOrStackItem } = require("../../../src/survival/engines/inventoryHelper");
+const {
+  safeParseInventory,
+  addOrStackItem,
+} = require("../../../src/survival/engines/inventoryHelper");
 const {
   buildContainerV2,
   buildErrorContainerV2,

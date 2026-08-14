@@ -3,8 +3,8 @@ const { logger } = require("../../managers/logger");
 const ModMail = require("../../models/ModMail");
 const persona = require("./persona");
 const { handleModmailDM } = require("../../modmail/modmailHelper");
-const { checkPremiumStatus } = require("../../../plugin/premium/premiumHelper");
-const { awardXp } = require("../../../plugin/leveling/leveling");
+const { checkPremiumStatus } = require("../../premium/premiumHelper");
+const { awardXp } = require("../../leveling/levelingEngine");
 
 /**
  * Menangani seluruh pesan yang masuk lewat DM: modmail bila ada sesi aktif,
@@ -57,7 +57,7 @@ module.exports = async function handleDirectMessage(message, client) {
       .replace(new RegExp(`<@!?${client.user.id}>`, "g"), "")
       .trim();
 
-    const AIRouterManager = require("../../../plugin/ai/aiRouterManager");
+    const AIRouterManager = require("../../ai/aiRouterManager");
     await AIRouterManager.processMessage(
       client,
       message,

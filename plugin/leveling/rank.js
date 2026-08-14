@@ -10,13 +10,16 @@
 const { SlashCommandBuilder, AttachmentBuilder } = require("discord.js");
 const { logger } = require("../../src/managers/logger");
 const { Op } = require("sequelize");
-const { CanvasUtils } = require("../../plugin/canvas/Canvas");
+const { CanvasUtils } = require("../../src/canvas/CanvasUtils");
 const UserLeveling = require("../../src/models/UserLeveling");
 const cacheManager = require("../../src/managers/cacheManager");
 const ui = require("../../src/config/ui");
-const { getNextLevelXp, getRoleBadge } = require("./leveling");
-const rankCard = require("./rankCard");
-const xpBuffer = require("./xpBuffer");
+const {
+  getNextLevelXp,
+  getRoleBadge,
+} = require("../../src/leveling/levelingEngine");
+const rankCard = require("../../src/leveling/rankCard");
+const xpBuffer = require("../../src/leveling/xpBuffer");
 const {
   buildContainerV2,
   buildErrorContainerV2,

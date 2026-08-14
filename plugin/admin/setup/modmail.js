@@ -1,7 +1,12 @@
-const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+} = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 
-module.exports = async function handle(interaction, { currentSettings, saveSettings }) {
+module.exports = async function handle(
+  interaction,
+  { currentSettings, saveSettings },
+) {
   const category = interaction.options.getChannel("kategori");
   const role = interaction.options.getRole("role");
 

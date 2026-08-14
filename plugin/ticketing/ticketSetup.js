@@ -1,6 +1,13 @@
 "use strict";
 
-const { SlashCommandBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  PermissionFlagsBits,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  MessageFlags,
+} = require("discord.js");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
 
@@ -12,7 +19,7 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("setup")
-        .setDescription("Kirim panel pembuatan tiket ke channel ini.")
+        .setDescription("Kirim panel pembuatan tiket ke channel ini."),
     ),
 
   async execute(interaction, client) {
@@ -37,7 +44,7 @@ module.exports = {
       });
 
       await interaction.channel.send(payload);
-      
+
       await interaction.reply({
         content: `${ui.getEmoji("success") || "✅"} Panel Tiket berhasil dipasang di channel ini.`,
         flags: MessageFlags.Ephemeral,

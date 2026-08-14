@@ -7,16 +7,16 @@
 
 ### Keputusan arsitektur yang sudah dikunci
 
-| Topik              | Keputusan                                                                                                                                                                       |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Versi Node         | `>= 24` di `engines`, README, dokumen ini, dan CI. Seragam, tanpa pengecualian.                                                                                                 |
-| Versi bot & engine | Keduanya `2.0.0`, dan harus sama di `package.json`, `README.md`, serta default `BOT_VERSION`/`ENGINE_VERSION`.                                                                  |
-| Penyimpanan bahasa | **Per user.** `GuildSettings.language` hanya menjadi bahasa default saat user belum punya preferensi.                                                                           |
-| Strategi sharding  | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering. Lihat aturan 1.11.                                                           |
-| Fallback SQLite    | **Dipertahankan** sebagai penyimpanan darurat saat MySQL dan Redis mati bersamaan.                                                                                              |
-| Alur PR            | **Satu PR per sprint.** Seluruh pekerjaan satu sprint menumpuk di satu branch, direview dan di-merge sekali saat sprint tuntas.                                                 |
-| Deploy di panel    | **Pterodactyl.** Perintah luar terkunci, jadi `CMD_RUN` tetap `npm start` dan urutan migrasi dijamin dari dalam `package.json` lewat `prestart`. Lihat 3.8.                     |
-| Mata uang kupon    | **Naura Coupon adalah mata uang paling langka.** Disimpan di kolom `UserSurvival.coupons`, bukan di dalam JSON `rpg_state`, agar bisa dipotong secara atomik.                   |
+| Topik              | Keputusan                                                                                                                                                                                     |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Versi Node         | `>= 24` di `engines`, README, dokumen ini, dan CI. Seragam, tanpa pengecualian.                                                                                                               |
+| Versi bot & engine | Keduanya `2.0.0`, dan harus sama di `package.json`, `README.md`, serta default `BOT_VERSION`/`ENGINE_VERSION`.                                                                                |
+| Penyimpanan bahasa | **Per user.** `GuildSettings.language` hanya menjadi bahasa default saat user belum punya preferensi.                                                                                         |
+| Strategi sharding  | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering. Lihat aturan 1.11.                                                                         |
+| Fallback SQLite    | **Dipertahankan** sebagai penyimpanan darurat saat MySQL dan Redis mati bersamaan.                                                                                                            |
+| Alur PR            | **Satu PR per sprint.** Seluruh pekerjaan satu sprint menumpuk di satu branch, direview dan di-merge sekali saat sprint tuntas.                                                               |
+| Deploy di panel    | **Pterodactyl.** Perintah luar terkunci, jadi `CMD_RUN` tetap `npm start` dan urutan migrasi dijamin dari dalam `package.json` lewat `prestart`. Lihat 3.8.                                   |
+| Mata uang kupon    | **Naura Coupon adalah mata uang paling langka.** Disimpan di kolom `UserSurvival.coupons`, bukan di dalam JSON `rpg_state`, agar bisa dipotong secara atomik.                                 |
 | Prioritas kerja    | Sprint 0-10 sudah tuntas (Hardening, Fondasi DX, Konsistensi Data, Observabilitas, Ticketing, Gacha, Giveaway V2, Setup Dashboard Modular). Sprint berikutnya dipilih dari backlog `TODO.md`. |
 
 ---
@@ -551,60 +551,60 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 
 ### Model Utama & Relasinya
 
-| Model             | Tabel               | Fungsi                                       | Key Fields                                                                                                |
-| ----------------- | ------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `UserProfile`     | `user_profiles`     | Master data user, termasuk preferensi bahasa | `userId`, `economy_wallet`, `economy_bank`, `inventory` (JSON), `cooldowns` (JSON), `language`            |
-| `UserLeveling`    | `user_leveling`     | XP & level per-guild                         | `userId`, `guildId`, `xp`, `level`, `totalXp`                                                             |
-| `UserSurvival`    | `UserSurvivals`     | RPG stats & mata uang langka                 | `userId`, `starFragments`, `coupons`, `hp`, `stamina`, `rpg_state` (JSON)                                 |
-| `GuildSettings`   | `guild_settings`    | Config per-server                            | `guildId`, `language` (default guild saja), `settings` (JSON: softbanChannelId, automod, greetings, dll.) |
-| `UserPlaylist`    | `user_playlists`    | Cloud playlist                               | `userId`, `name`, `tracks` (JSON)                                                                         |
-| `PremiumVoucher`  | `premium_vouchers`  | Voucher VIP                                  | `code`, `duration`, `usedBy`                                                                              |
-| `UserPet`         | `user_pets`         | Virtual pet                                  | `userId`, `name`, `type`, `level`, `hunger`, `happiness`                                                  |
-| `UserFriend`      | `user_friends`      | Sistem pertemanan                            | `userId`, `friendId`, `status`                                                                            |
-| `UserQuest`       | `user_quests`       | Quest tracking                               | `userId`, `workCount`, `dungeonKills`, `collectCount`, `isClaimed`                                        |
-| `ModMail`         | `modmails`          | Tiket modmail (n!modmail, Private Thread)    | `userId`, `guildId`, `channelId`, `closed`                                                                |
-| `UserTicket`      | `user_tickets`      | Tiket dukungan via /ticket setup + thread    | `userId`, `guildId`, `ticketId` (Thread ID), `topic`, `status`, `transcriptPath`                          |
+| Model             | Tabel               | Fungsi                                       | Key Fields                                                                                                   |
+| ----------------- | ------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `UserProfile`     | `user_profiles`     | Master data user, termasuk preferensi bahasa | `userId`, `economy_wallet`, `economy_bank`, `inventory` (JSON), `cooldowns` (JSON), `language`               |
+| `UserLeveling`    | `user_leveling`     | XP & level per-guild                         | `userId`, `guildId`, `xp`, `level`, `totalXp`                                                                |
+| `UserSurvival`    | `UserSurvivals`     | RPG stats & mata uang langka                 | `userId`, `starFragments`, `coupons`, `hp`, `stamina`, `rpg_state` (JSON)                                    |
+| `GuildSettings`   | `guild_settings`    | Config per-server                            | `guildId`, `language` (default guild saja), `settings` (JSON: softbanChannelId, automod, greetings, dll.)    |
+| `UserPlaylist`    | `user_playlists`    | Cloud playlist                               | `userId`, `name`, `tracks` (JSON)                                                                            |
+| `PremiumVoucher`  | `premium_vouchers`  | Voucher VIP                                  | `code`, `duration`, `usedBy`                                                                                 |
+| `UserPet`         | `user_pets`         | Virtual pet                                  | `userId`, `name`, `type`, `level`, `hunger`, `happiness`                                                     |
+| `UserFriend`      | `user_friends`      | Sistem pertemanan                            | `userId`, `friendId`, `status`                                                                               |
+| `UserQuest`       | `user_quests`       | Quest tracking                               | `userId`, `workCount`, `dungeonKills`, `collectCount`, `isClaimed`                                           |
+| `ModMail`         | `modmails`          | Tiket modmail (n!modmail, Private Thread)    | `userId`, `guildId`, `channelId`, `closed`                                                                   |
+| `UserTicket`      | `user_tickets`      | Tiket dukungan via /ticket setup + thread    | `userId`, `guildId`, `ticketId` (Thread ID), `topic`, `status`, `transcriptPath`                             |
 | `Giveaway`        | `giveaways`         | Data giveaway (V2: berbasis peserta)         | `messageId`, `channelId`, `prize`, `endTime`, `requirements` (JSON), `participants` (JSON), `winners` (JSON) |
-| `SocialAlert`     | `social_alerts`     | RSS/social notif                             | `guildId`, `platform`, `channelId`, `url`                                                                 |
-| `CanvasAsset`     | `canvas_assets`     | Aset canvas kustom                           | `name`, `type`, `url`, `price`, `isPremiumOnly`                                                           |
-| `CryptoMarket`    | `crypto_markets`    | Pasar kripto virtual                         | `symbol`, `price`, `change`                                                                               |
-| `GameItem`        | `game_items`        | Item database game                           | `id`, `name`, `category`, `rarity`, `attributes`                                                          |
-| `GuildClan`       | `guild_clans`       | Sistem klan server                           | `guildId`, `clanId`, `name`, `members`, `level`                                                           |
-| `StickyRole`      | `sticky_roles`      | Sticky roles saat rejoin                     | `userId`, `guildId`, `roleIds`                                                                            |
-| `StoryProgress`   | `story_progresses`  | Progress cerita RPG                          | `userId`, `chapterId`, `flags`                                                                            |
-| `UserAchievement` | `user_achievements` | Sistem pencapaian                            | `userId`, `achievementId`, `unlockedAt`                                                                   |
-| `UserBirthday`    | `user_birthdays`    | Tanggal ulang tahun                          | `userId`, `birthday`, `timezone`                                                                          |
-| `UserCard`        | `user_cards`        | Kartu koleksi                                | `userId`, `cardId`, `count`                                                                               |
-| `UserChild`       | `user_children`     | Adopsi anak virtual                          | `userId`, `name`, `age`, `happiness`                                                                      |
-| `UserCosmetic`    | `user_cosmetics`    | Kosmetik & skin                              | `userId`, `assetId`, `equipped`                                                                           |
-| `UserCrypto`      | `user_cryptos`      | Portofolio kripto virtual                    | `userId`, `symbol`, `amount`, `avgBuyPrice`                                                               |
-| `UserFarm`        | `user_farms`        | Data ladang farming                          | `userId`, `plots`, `lastHarvest`                                                                          |
-| `UserNPC`         | `user_npcs`         | Relasi NPC per-user                          | `userId`, `npcId`, `affection`, `lastInteract`                                                            |
-| `UserReminder`    | `user_reminders`    | Pengingat terjadwal                          | `userId`, `channelId`, `message`, `remindAt`                                                              |
-| `UserWarn`        | `user_warns`        | Riwayat peringatan moderasi                  | `userId`, `guildId`, `reason`, `moderatorId`                                                              |
+| `SocialAlert`     | `social_alerts`     | RSS/social notif                             | `guildId`, `platform`, `channelId`, `url`                                                                    |
+| `CanvasAsset`     | `canvas_assets`     | Aset canvas kustom                           | `name`, `type`, `url`, `price`, `isPremiumOnly`                                                              |
+| `CryptoMarket`    | `crypto_markets`    | Pasar kripto virtual                         | `symbol`, `price`, `change`                                                                                  |
+| `GameItem`        | `game_items`        | Item database game                           | `id`, `name`, `category`, `rarity`, `attributes`                                                             |
+| `GuildClan`       | `guild_clans`       | Sistem klan server                           | `guildId`, `clanId`, `name`, `members`, `level`                                                              |
+| `StickyRole`      | `sticky_roles`      | Sticky roles saat rejoin                     | `userId`, `guildId`, `roleIds`                                                                               |
+| `StoryProgress`   | `story_progresses`  | Progress cerita RPG                          | `userId`, `chapterId`, `flags`                                                                               |
+| `UserAchievement` | `user_achievements` | Sistem pencapaian                            | `userId`, `achievementId`, `unlockedAt`                                                                      |
+| `UserBirthday`    | `user_birthdays`    | Tanggal ulang tahun                          | `userId`, `birthday`, `timezone`                                                                             |
+| `UserCard`        | `user_cards`        | Kartu koleksi                                | `userId`, `cardId`, `count`                                                                                  |
+| `UserChild`       | `user_children`     | Adopsi anak virtual                          | `userId`, `name`, `age`, `happiness`                                                                         |
+| `UserCosmetic`    | `user_cosmetics`    | Kosmetik & skin                              | `userId`, `assetId`, `equipped`                                                                              |
+| `UserCrypto`      | `user_cryptos`      | Portofolio kripto virtual                    | `userId`, `symbol`, `amount`, `avgBuyPrice`                                                                  |
+| `UserFarm`        | `user_farms`        | Data ladang farming                          | `userId`, `plots`, `lastHarvest`                                                                             |
+| `UserNPC`         | `user_npcs`         | Relasi NPC per-user                          | `userId`, `npcId`, `affection`, `lastInteract`                                                               |
+| `UserReminder`    | `user_reminders`    | Pengingat terjadwal                          | `userId`, `channelId`, `message`, `remindAt`                                                                 |
+| `UserWarn`        | `user_warns`        | Riwayat peringatan moderasi                  | `userId`, `guildId`, `reason`, `moderatorId`                                                                 |
 
 ### Daftar Migrasi Bernomor
 
-| ID                              | Fungsi                                                                    |
-| ------------------------------- | ------------------------------------------------------------------------- |
-| `v1_add_mannersPoint`           | Kolom poin sopan santun                                                   |
-| `v2_add_dailyNotify`            | Kolom pengingat daily                                                     |
-| `v3_add_economy_deposit`        | Kolom JSON deposito bank                                                  |
-| `v4_add_economy_investments`    | Kolom JSON portofolio investasi                                           |
-| `v5_add_coupons`                | Kolom `coupons` di `UserSurvivals`                                        |
-| `v6_move_coupons_to_column`     | Memindahkan kupon lama dari JSON `rpg_state` ke kolom baru                |
-| `v7_add_user_strikes`           | Model `UserStrike`: riwayat peringatan moderasi + eskalasi otomatis       |
-| `v8_add_sticky_roles`           | Model `StickyRole`: simpan role saat rejoin                               |
-| `v9_add_role_lease`             | Model `RoleLease`: sewa role berbayar dengan `expiresAt`                  |
-| `v10_add_social_alert`          | Model `SocialAlert`: RSS & notif sosial per guild                         |
-| `v11_add_market_auction`        | Model `MarketAuction`: tabel lelang lintas server                         |
-| `v12_add_user_npc`              | Model `UserNPC`: relasi NPC per-user + kolom afeksi                       |
-| `v13_add_story_progress`        | Model `StoryProgress`: progress cerita RPG multi-chapter                  |
-| `v14_add_user_achievement`      | Model `UserAchievement`: sistem pencapaian user                           |
-| `v15_add_user_birthday`         | Model `UserBirthday`: tanggal lahir + timezone user                       |
-| `v16_add_user_cosmetic`         | Model `UserCosmetic`: skin & kosmetik yang di-equip                       |
-| `v17_add_user_farm`             | Model `UserFarm`: ladang farming + jadwal panen                           |
-| `v18_add_giveaway_participants` | Kolom `requirements`, `participants`, `winners` di tabel `giveaways`      |
+| ID                              | Fungsi                                                               |
+| ------------------------------- | -------------------------------------------------------------------- |
+| `v1_add_mannersPoint`           | Kolom poin sopan santun                                              |
+| `v2_add_dailyNotify`            | Kolom pengingat daily                                                |
+| `v3_add_economy_deposit`        | Kolom JSON deposito bank                                             |
+| `v4_add_economy_investments`    | Kolom JSON portofolio investasi                                      |
+| `v5_add_coupons`                | Kolom `coupons` di `UserSurvivals`                                   |
+| `v6_move_coupons_to_column`     | Memindahkan kupon lama dari JSON `rpg_state` ke kolom baru           |
+| `v7_add_user_strikes`           | Model `UserStrike`: riwayat peringatan moderasi + eskalasi otomatis  |
+| `v8_add_sticky_roles`           | Model `StickyRole`: simpan role saat rejoin                          |
+| `v9_add_role_lease`             | Model `RoleLease`: sewa role berbayar dengan `expiresAt`             |
+| `v10_add_social_alert`          | Model `SocialAlert`: RSS & notif sosial per guild                    |
+| `v11_add_market_auction`        | Model `MarketAuction`: tabel lelang lintas server                    |
+| `v12_add_user_npc`              | Model `UserNPC`: relasi NPC per-user + kolom afeksi                  |
+| `v13_add_story_progress`        | Model `StoryProgress`: progress cerita RPG multi-chapter             |
+| `v14_add_user_achievement`      | Model `UserAchievement`: sistem pencapaian user                      |
+| `v15_add_user_birthday`         | Model `UserBirthday`: tanggal lahir + timezone user                  |
+| `v16_add_user_cosmetic`         | Model `UserCosmetic`: skin & kosmetik yang di-equip                  |
+| `v17_add_user_farm`             | Model `UserFarm`: ladang farming + jadwal panen                      |
+| `v18_add_giveaway_participants` | Kolom `requirements`, `participants`, `winners` di tabel `giveaways` |
 
 > [!CAUTION]
 > `v6_move_coupons_to_column` adalah migrasi **data** yang menambah nilai, bukan sekadar perubahan skema. Menjalankannya dua kali akan menggandakan kupon setiap pemain. Ia aman hanya karena tercatat di `schema_migrations`, dan ada test yang menjaga sifat itu. Perlakukan setiap migrasi data serupa dengan kehati-hatian yang sama.
@@ -878,19 +878,19 @@ Placeholder menggunakan format `{variable}` yang di-replace saat runtime. Kunci 
 
 Dashboard berjalan di **port 3070** (default) menggunakan Express.js, sementara webhook monetisasi mendengarkan di **port 3071** yang terpisah:
 
-| Endpoint                 | Method | Fungsi                                                               |
-| ------------------------ | ------ | -------------------------------------------------------------------- |
-| `/`                      | GET    | Landing page dashboard                                               |
-| `/auth/discord`          | GET    | OAuth2 login via Discord                                             |
-| `/auth/discord/callback` | GET    | OAuth2 callback handler                                              |
-| `/api/stats`             | GET    | Bot statistics (JSON)                                                |
-| `/api/health`            | GET    | Health check: status MySQL, Redis, Lavalink (selesai Sprint 3)       |
-| `/api/me/persona`        | POST   | Update AI persona per-user (premium, disimpan per user bukan guild)  |
-| `/api/tickets/me`        | GET    | Riwayat tiket support milik user yang sedang login                   |
-| `/api/webhook/health`    | GET    | Health check server webhook                                          |
-| `/api/webhook/saweria`   | POST   | Saweria donation webhook                                             |
-| `/api/webhook/trakteer`  | POST   | Trakteer donation webhook                                            |
-| `/api/webhook/vote`      | POST   | Top.gg vote webhook                                                  |
+| Endpoint                 | Method | Fungsi                                                              |
+| ------------------------ | ------ | ------------------------------------------------------------------- |
+| `/`                      | GET    | Landing page dashboard                                              |
+| `/auth/discord`          | GET    | OAuth2 login via Discord                                            |
+| `/auth/discord/callback` | GET    | OAuth2 callback handler                                             |
+| `/api/stats`             | GET    | Bot statistics (JSON)                                               |
+| `/api/health`            | GET    | Health check: status MySQL, Redis, Lavalink (selesai Sprint 3)      |
+| `/api/me/persona`        | POST   | Update AI persona per-user (premium, disimpan per user bukan guild) |
+| `/api/tickets/me`        | GET    | Riwayat tiket support milik user yang sedang login                  |
+| `/api/webhook/health`    | GET    | Health check server webhook                                         |
+| `/api/webhook/saweria`   | POST   | Saweria donation webhook                                            |
+| `/api/webhook/trakteer`  | POST   | Trakteer donation webhook                                           |
+| `/api/webhook/vote`      | POST   | Top.gg vote webhook                                                 |
 
 Dashboard menggunakan **Socket.IO** untuk real-time updates pada metrik telemetri.
 

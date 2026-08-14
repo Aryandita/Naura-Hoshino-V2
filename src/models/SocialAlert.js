@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../managers/dbManager");
+const { sequelize } = require("../config/database");
 
 const SocialAlert = sequelize.define(
   "SocialAlert",
@@ -16,7 +16,7 @@ const SocialAlert = sequelize.define(
   {
     tableName: "social_alerts",
     timestamps: true, // Berguna untuk mengetahui kapan alert ini didaftarkan
-    indexes: [{ fields: ["guildId"] }]
+    indexes: [{ fields: ["guildId"] }],
   },
 );
 

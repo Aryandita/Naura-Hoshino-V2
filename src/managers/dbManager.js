@@ -1,48 +1,14 @@
 // src/managers/dbManager.js
-const { Sequelize } = require("sequelize");
+const {
+  sequelize,
+  hasMySQLConfig,
+  SHARD_COUNT,
+  POOL_MAX,
+} = require("../config/database");
 const env = require("../config/env");
 const redisManager = require("./redisManager");
 const { logger } = require("../managers/logger");
 
-// ==========================================
-// 1. INISIALISASI KONEKSI DATABASE
-// ==========================================
-const hasMySQLConfig = env.DB_NAME && env.DB_USER && env.DB_HOST;
-
-// Pool bersifat per PROSES, bukan per bot. Nilai lama (max: 100) berarti dua shard
-// saja sudah meminta 200 koneksi, sementara max_connections MySQL biasanya 151.
-// Gejalanya muncul sebagai 'Too many connections' yang seolah tidak berhubungan
-// dengan sharding. Karena itu anggaran total dibagi jumlah shard.
-const SHARD_COUNT = env.TOTAL_SHARDS > 0 ? env.TOTAL_SHARDS : 1;
-const POOL_MAX =
-  env.DB_POOL_MAX > 0
-    ? env.DB_POOL_MAX
-    : Math.max(5, Math.floor(env.DB_POOL_BUDGET / SHARD_COUNT));
-
-const sequelize = hasMySQLConfig
-  ? new Sequelize(env.DB_NAME, env.DB_USER, env.DB_PASS, {
-      host: env.DB_HOST,
-      port: env.DB_PORT,
-      dialect: "mysql",
-      logging: false,
-      dialectOptions: { connectTimeout: 120000 },
-      pool: {
-        max: POOL_MAX,
-        min: 2,
-        acquire: 120000,
-        idle: 15000,
-        evict: 5000,
-      },
-    })
-  : new Sequelize({
-      dialect: "sqlite",
-      storage: "./naura_fallback.sqlite",
-      logging: false,
-    });
-
-// ==========================================
-// 2. EKSPOR SEQUELIZE TERLEBIH DAHULU (SANGAT KRUSIAL)
-// ==========================================
 module.exports = { sequelize };
 
 // ==========================================
@@ -158,7 +124,7 @@ function setupAssociations() {
     // Safe fallback jika dipanggil saat circular dependency belum selesai
   }
 }
-setupAssociations();
+// setupAssociations will be called at module end or in connectToDatabase
 
 // ==========================================
 // 5. FUNGSI KONEKSI DAN SINKRONISASI TABEL
@@ -398,3 +364,6 @@ const healthCheckTimer = setInterval(async () => {
 if (healthCheckTimer.unref) healthCheckTimer.unref();
 
 module.exports.healthCheckTimer = healthCheckTimer;
+module.exports.setupAssociations = setupAssociations;
+
+setupAssociations();

@@ -50,9 +50,9 @@ function maxHpFor(survival, bonus) {
 function buildFighter(user, profile, survival, activePet = null) {
   const className = (survival.rpg_state && survival.rpg_state.class) || null;
   const bonus = bonusFor(className);
-  
+
   const petBuffs = petActions.getBuffs(activePet);
-  
+
   const maxHp = maxHpFor(survival, bonus) + petBuffs.hp;
 
   const strength =
@@ -76,17 +76,24 @@ function buildFighter(user, profile, survival, activePet = null) {
     agility,
     intelligence,
     luck,
-    weaponDmg: (Number(profile.weapon_level) || 1) * 10 + strength * 3 + petBuffs.dmg,
-    petBuffs: petBuffs
+    weaponDmg:
+      (Number(profile.weapon_level) || 1) * 10 + strength * 3 + petBuffs.dmg,
+    petBuffs: petBuffs,
   };
 }
 
 function dodgeChance(target) {
-  return Math.min(45, target.agility * 1.5 + (target.petBuffs ? target.petBuffs.dodge : 0));
+  return Math.min(
+    45,
+    target.agility * 1.5 + (target.petBuffs ? target.petBuffs.dodge : 0),
+  );
 }
 
 function critChance(active) {
-  return Math.min(50, active.luck * 1.5 + (active.petBuffs ? active.petBuffs.crit : 0));
+  return Math.min(
+    50,
+    active.luck * 1.5 + (active.petBuffs ? active.petBuffs.crit : 0),
+  );
 }
 
 function roll(chancePercent) {
@@ -182,7 +189,13 @@ function calculateElo(winnerMmr, loserMmr) {
 }
 
 /** Simpan kondisi akhir kedua petarung. Tidak ada yang benar-benar mati. */
-async function settle(p1Survival, p1State, p2Survival, p2State, isRanked = false) {
+async function settle(
+  p1Survival,
+  p1State,
+  p2Survival,
+  p2State,
+  isRanked = false,
+) {
   p1Survival.hp = Math.max(MIN_HP_AFTER, Math.floor(p1State.hp));
   p1Survival.stamina = Math.max(MIN_STAMINA_AFTER, Math.floor(p1State.stamina));
   await p1Survival.save();
@@ -200,30 +213,34 @@ async function settle(p1Survival, p1State, p2Survival, p2State, isRanked = false
     // Tentukan siapa yang menang
     let winnerId = p1State.hp > 0 ? p1Id : p2Id;
     let loserId = p1State.hp > 0 ? p2Id : p1Id;
-    
+
     // Jika seri (keduanya 0 HP atau time out), anggap tidak ada perubahan MMR drastis,
     // tapi untuk duel, biasanya ada satu yang HP nya <=0 duluan.
 
-    let [wRecord] = await DuelRecord.findOrCreate({ where: { userId: winnerId } });
-    let [lRecord] = await DuelRecord.findOrCreate({ where: { userId: loserId } });
+    let [wRecord] = await DuelRecord.findOrCreate({
+      where: { userId: winnerId },
+    });
+    let [lRecord] = await DuelRecord.findOrCreate({
+      where: { userId: loserId },
+    });
 
     const { winnerDiff, loserDiff } = calculateElo(wRecord.mmr, lRecord.mmr);
 
     wRecord.mmr += winnerDiff;
     wRecord.matchesPlayed += 1;
-    wRecord.wins += 1;
-    wRecord.kills += 1;
-    await wRecord.save();
+    await wRecord.save({ fields: ["mmr", "matchesPlayed", "wins", "kills"] });
 
     lRecord.mmr = Math.max(0, lRecord.mmr + loserDiff); // loserDiff is negative
     lRecord.matchesPlayed += 1;
     lRecord.losses += 1;
     lRecord.deaths += 1;
-    await lRecord.save();
+    await lRecord.save({
+      fields: ["mmr", "matchesPlayed", "losses", "deaths"],
+    });
 
     eloChanges = {
       winner: { id: winnerId, diff: winnerDiff, mmr: wRecord.mmr },
-      loser: { id: loserId, diff: loserDiff, mmr: lRecord.mmr }
+      loser: { id: loserId, diff: loserDiff, mmr: lRecord.mmr },
     };
   }
 

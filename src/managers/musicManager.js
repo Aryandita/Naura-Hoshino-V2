@@ -84,16 +84,18 @@ class MusicManager {
     const options = {
       library: "discord.js",
       clientName: "Naura-Hoshino-Music-System/3.1",
-      plugins: []
+      plugins: [],
     };
 
     if (env.SPOTIFY_CLIENT_ID && env.SPOTIFY_CLIENT_SECRET) {
       try {
         const { Spotify } = require("poru-spotify");
-        options.plugins.push(new Spotify({
-          clientID: env.SPOTIFY_CLIENT_ID,
-          clientSecret: env.SPOTIFY_CLIENT_SECRET,
-        }));
+        options.plugins.push(
+          new Spotify({
+            clientID: env.SPOTIFY_CLIENT_ID,
+            clientSecret: env.SPOTIFY_CLIENT_SECRET,
+          }),
+        );
       } catch (e) {
         console.error("Gagal memuat poru-spotify:", e.message);
       }

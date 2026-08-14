@@ -3,7 +3,7 @@
 // TRIGGER: Context menu "⚑ Report Pesan", bukan per-pesan.
 // AI hanya aktif saat ada laporan dari user Discord.
 
-const gemini = require("../../plugin/ai/geminiClient");
+const gemini = require("../ai/geminiClient");
 const redisManager = require("../managers/redisManager");
 const { logger } = require("../managers/logger");
 

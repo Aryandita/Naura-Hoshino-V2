@@ -203,7 +203,7 @@ async function shutdown() {
     // Penyangga XP hidup di Redis, jadi harus disetor lebih dulu selagi koneksi
     // database dan Redis masih terbuka. Bila dilewati, XP dari lima menit
     // terakhir sebelum restart akan hilang.
-    const xpBuffer = require("./plugin/leveling/xpBuffer");
+    const xpBuffer = require("./src/leveling/xpBuffer");
     if (xpBuffer && xpBuffer.flush) {
       console.log("[-] Menyetorkan penyangga XP ke database...");
       xpBuffer.stop();

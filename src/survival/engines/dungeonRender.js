@@ -10,7 +10,7 @@ const {
   AttachmentBuilder,
 } = require("discord.js");
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
-const { drawBattle } = require("../canvas/battleCanvas");
+const { drawBattle } = require("../../canvas/battleCanvas");
 const ui = require("../../config/ui");
 const helpers = require("../helpers/craftHelpers");
 const currency = require("./currency");

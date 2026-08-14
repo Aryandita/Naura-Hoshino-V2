@@ -288,39 +288,51 @@ const COUPON_ITEMS = [
   {
     id: "banner_cyberpunk",
     name: "Banner: Cyberpunk City",
-    description: "Background profil bertema kota neon futuristik di malam hari. Sangat keren untuk dipasang di Profil dan Kartu Musik.",
+    description:
+      "Background profil bertema kota neon futuristik di malam hari. Sangat keren untuk dipasang di Profil dan Kartu Musik.",
     price: 0,
     couponPrice: 10,
     sellPrice: 20000,
     category: "banner",
     rarity: "Epic",
     currency: "coupon",
-    attributes: { banner_url: "https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=800&auto=format&fit=crop" }
+    attributes: {
+      banner_url:
+        "https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=800&auto=format&fit=crop",
+    },
   },
   {
     id: "banner_fantasy",
     name: "Banner: Fantasy Forest",
-    description: "Background bertema hutan fantasi yang damai dengan peri bercahaya.",
+    description:
+      "Background bertema hutan fantasi yang damai dengan peri bercahaya.",
     price: 0,
     couponPrice: 10,
     sellPrice: 20000,
     category: "banner",
     rarity: "Epic",
     currency: "coupon",
-    attributes: { banner_url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop" }
+    attributes: {
+      banner_url:
+        "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop",
+    },
   },
   {
     id: "banner_dark_gothic",
     name: "Banner: Dark Gothic Castle",
-    description: "Background gelap dengan tema kastil gothic kuno yang misterius.",
+    description:
+      "Background gelap dengan tema kastil gothic kuno yang misterius.",
     price: 0,
     couponPrice: 15,
     sellPrice: 30000,
     category: "banner",
     rarity: "Mythic",
     currency: "coupon",
-    attributes: { banner_url: "https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?q=80&w=800&auto=format&fit=crop" }
-  }
+    attributes: {
+      banner_url:
+        "https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?q=80&w=800&auto=format&fit=crop",
+    },
+  },
 ];
 
 const COUPON_ITEM_IDS = COUPON_ITEMS.map((it) => it.id);

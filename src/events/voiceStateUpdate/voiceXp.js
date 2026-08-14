@@ -1,7 +1,7 @@
 const { Collection } = require("discord.js");
 const { logger } = require("../../managers/logger");
 const UserLeveling = require("../../models/UserLeveling");
-const { checkLevelUp } = require("../../../plugin/leveling/leveling");
+const { checkLevelUp } = require("../../leveling/levelingEngine");
 
 // Cache session in memory
 const voiceSessions = new Collection();

@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../managers/dbManager");
+const { sequelize } = require("../config/database");
 const UserProfile = require("./UserProfile");
 
 const DuelRecord = sequelize.define(
@@ -44,7 +44,7 @@ const DuelRecord = sequelize.define(
   {
     tableName: "duel_records",
     timestamps: true,
-  }
+  },
 );
 
 DuelRecord.belongsTo(UserProfile, {

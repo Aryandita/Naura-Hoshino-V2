@@ -9,7 +9,9 @@ const {
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
 const itemsConfig = require("../../../src/survival/data/items");
-const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
+const {
+  safeParseInventory,
+} = require("../../../src/survival/engines/inventoryHelper");
 const ui = require("../../../src/config/ui");
 const {
   buildContainerV2,
