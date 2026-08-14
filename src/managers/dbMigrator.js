@@ -163,6 +163,16 @@ const MIGRATIONS = [
     id: "v25_upgrade_user_cards_system",
     description: "Upgrade tabel user_cards dengan cardCode, printNumber, quality, frame, dan dyeColor",
     sql: "ALTER TABLE user_cards ADD COLUMN cardCode VARCHAR(32) DEFAULT NULL, ADD COLUMN characterName VARCHAR(255) DEFAULT NULL, ADD COLUMN seriesName VARCHAR(255) DEFAULT NULL, ADD COLUMN printNumber INT NOT NULL DEFAULT 1, ADD COLUMN quality VARCHAR(32) NOT NULL DEFAULT 'GOOD', ADD COLUMN frame VARCHAR(64) NOT NULL DEFAULT 'DEFAULT', ADD COLUMN dyeColor VARCHAR(32) DEFAULT NULL, ADD COLUMN imageUrl TEXT DEFAULT NULL, ADD COLUMN isLocked BOOLEAN DEFAULT FALSE, ADD COLUMN burnValue INT DEFAULT 100;",
+  },
+  {
+    id: "v26_create_user_card_decks",
+    description: "Buat tabel user_card_decks untuk TCG Battle Deck & Tower of Babel",
+    sql: "CREATE TABLE IF NOT EXISTS user_card_decks ( userId VARCHAR(32) NOT NULL PRIMARY KEY, activeDeck JSON NOT NULL, towerFloor INT NOT NULL DEFAULT 1, highestFloor INT NOT NULL DEFAULT 1, wins INT NOT NULL DEFAULT 0, losses INT NOT NULL DEFAULT 0, eloRating INT NOT NULL DEFAULT 1000, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX idx_user_card_decks_elo (eloRating) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+  },
+  {
+    id: "v27_create_minecraft_links",
+    description: "Buat tabel minecraft_links untuk penautan akun Minecraft & Discord",
+    sql: "CREATE TABLE IF NOT EXISTS minecraft_links ( userId VARCHAR(32) NOT NULL PRIMARY KEY, mcUsername VARCHAR(64) NOT NULL, mcUuid VARCHAR(64) DEFAULT NULL, isVerified BOOLEAN DEFAULT FALSE, verificationCode VARCHAR(16) DEFAULT NULL, totalSyncRewards INT DEFAULT 0, lastSyncedAt DATETIME DEFAULT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX idx_minecraft_links_mcUsername (mcUsername) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
   }
 ];
 

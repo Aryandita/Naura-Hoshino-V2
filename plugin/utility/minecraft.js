@@ -101,6 +101,22 @@ module.exports = {
     )
     .addSubcommand((sub) =>
       sub
+        .setName("sync")
+        .setDescription("🔄 Sinkronisasi waktu bermain dan klaim hadiah Star Fragments/Kupon dari server Minecraft"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("broadcast")
+        .setDescription("📢 Kirim pesan pengumuman ke dalam game Minecraft via RCON")
+        .addStringOption((opt) =>
+          opt
+            .setName("message")
+            .setDescription("Pesan yang ingin disiarkan ke server Minecraft")
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
         .setName("bridge")
         .setDescription("🔧 Atur jembatan chat Discord-Minecraft (Dua Arah)")
         .addChannelOption((opt) =>
@@ -290,6 +306,9 @@ module.exports = {
           return interaction.editReply(errPayload);
         }
 
+        const MinecraftBridgeService = require("../../src/services/minecraftBridge");
+        const code = await MinecraftBridgeService.generateLinkCode(interaction.user.id, profileData.name);
+
         const cacheManager = require("../../src/managers/cacheManager");
         await cacheManager.updateUserProfile(interaction.user.id, {
           minecraft_ign: profileData.name,
@@ -297,9 +316,9 @@ module.exports = {
 
         const linkPayload = buildContainerV2({
           accentColorHex: ui.getColor("success") || "#22c55e",
-          authorName: "🔗 Integrasi Identitas Berhasil!",
+          authorName: "🔗 Integrasi Identitas Minecraft",
           iconURL: interaction.client.user.displayAvatarURL(),
-          description: `Identitas Discord-mu kini resmi bertaut dengan profil Minecraft **${profileData.name}**.\n\n> ${ui.getEmoji("info") || "💡"} *Akses perintah \`/minecraft stats\` untuk membuka panel statistik dan riwayat petualanganmu!*`,
+          description: `Akun Discord-mu sedang ditautkan dengan Minecraft **${profileData.name}**!\n\n🔑 **Kode Verifikasi Anda:** \`${code}\`\n\n> 💡 *Jalankan perintah berikut di dalam server Minecraft:* \n\`\`\`/naura link ${code}\`\`\`\n*Setelah verifikasi selesai, kamu akan mendapatkan bonus +500 Star Fragments 🌟 dan bisa mengklaim hadiah playtime dengan \`/minecraft sync\`!*`,
           footerText: "Naura Minecraft Network Sync",
         });
 
@@ -308,10 +327,76 @@ module.exports = {
         logger.error("[Link Account Error]:", error.message);
         const errPayload = buildErrorContainerV2({
           title: "Gagal Memvalidasi Akun",
-          description: `${ui.getEmoji("error") || "❌"} Gagal memvalidasi akun. Server Mojang menolak permintaan atau username tidak ditemukan.`,
+          description: `${ui.getEmoji("error") || "❌"} Gagal memvalidasi akun: ${error.message}`,
           footerText: ui.getFooter("core"),
         });
         return interaction.editReply(errPayload);
+      }
+    } else if (subcommand === "sync") {
+      const MinecraftBridgeService = require("../../src/services/minecraftBridge");
+      const syncRes = await MinecraftBridgeService.syncRewards(interaction.user.id);
+
+      if (!syncRes.success) {
+        return interaction.editReply({
+          ...buildErrorContainerV2({
+            title: "Sinkronisasi Gagal",
+            description: syncRes.message,
+            footerText: ui.getFooter("core"),
+          }),
+        });
+      }
+
+      const syncPayload = buildContainerV2({
+        accentColorHex: "#86EFAC",
+        title: "🔄 Sinkronisasi Realm Berhasil!",
+        description: `Waktu bermain di Minecraft **${syncRes.mcUsername}** berhasil dikonversi ke ekonomi Discord!\n\n🌟 **Star Fragments:** \`+${syncRes.starFragments} NSF\`\n🎟️ **Naura Coupon:** \`+${syncRes.coupons} Kupon\``,
+        footerText: "Naura Minecraft Realm Sync",
+      });
+
+      return interaction.editReply(syncPayload);
+    } else if (subcommand === "broadcast") {
+      const msgText = interaction.options.getString("message");
+      const GuildSettings = require("../../src/models/GuildSettings");
+      const { sendRconCommand } = require("../../src/utils/rcon");
+
+      const settings = await GuildSettings.findOne({ where: { guildId: interaction.guild.id } });
+      const mc = settings?.settings?.minecraft || {};
+
+      if (!mc.ip || !mc.rconPassword) {
+        return interaction.editReply({
+          ...buildErrorContainerV2({
+            title: "RCON Belum Dikonfigurasi",
+            description: "Server ini belum mengonfigurasi IP/Password RCON. Gunakan `/minecraft bridge` terlebih dahulu.",
+            footerText: ui.getFooter("core"),
+          }),
+        });
+      }
+
+      try {
+        const rawJson = JSON.stringify([
+          { text: "[Discord | ", color: "light_purple" },
+          { text: interaction.user.username, color: "aqua", bold: true },
+          { text: "] ", color: "light_purple" },
+          { text: msgText, color: "white" }
+        ]);
+        await sendRconCommand(mc.ip, mc.rconPort || 25575, mc.rconPassword, `tellraw @a ${rawJson}`);
+
+        const bcPayload = buildContainerV2({
+          accentColorHex: "#C084FC",
+          title: "📢 Pesan Berhasil Disiarkan ke Minecraft!",
+          description: `Pesan telah dikirim ke seluruh pemain di server Minecraft:\n\n> *"${msgText}"*`,
+          footerText: "Naura Minecraft RCON Broadcast",
+        });
+
+        return interaction.editReply(bcPayload);
+      } catch (err) {
+        return interaction.editReply({
+          ...buildErrorContainerV2({
+            title: "Gagal Mengirim Broadcast RCON",
+            description: `Koneksi ke server Minecraft RCON gagal: ${err.message}`,
+            footerText: ui.getFooter("core"),
+          }),
+        });
       }
     } else if (subcommand === "stats") {
       const profile = await UserProfile.findOne({

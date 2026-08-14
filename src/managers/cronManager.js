@@ -237,6 +237,46 @@ module.exports = {
       }
     });
 
+    // 0.9 Daily Server Chronicle Broadcast - Runs at 01:00 UTC (08:00 WIB) every day
+    cron.schedule("0 1 * * *", async () => {
+      logger.info("[Cron] Menerbitkan Koran Harian 'The Hoshino Times' ke guild...");
+      try {
+        const ServerChronicleEngine = require("../ai/serverChronicleEngine");
+        const { drawChronicleNewspaper } = require("../canvas/chronicleCanvas");
+        const { AttachmentBuilder } = require("discord.js");
+
+        for (const [guildId, guild] of client.guilds.cache) {
+          try {
+            const settings = await GuildSettings.findOne({ where: { guildId } });
+            const s = settings?.settings || {};
+            const channelId = s.chronicleChannelId || s.channels?.general || s.channels?.news;
+            if (!channelId) continue;
+
+            const channel = await guild.channels.fetch(channelId).catch(() => null);
+            if (!channel || !channel.isTextBased()) continue;
+
+            const chronicleData = await ServerChronicleEngine.generateChronicleData(guild);
+            const imgBuffer = await drawChronicleNewspaper(chronicleData);
+            const attachment = new AttachmentBuilder(imgBuffer, { name: "hoshino-times.png" });
+
+            const payload = buildContainerV2({
+              accentColorHex: "#FFB6C1",
+              title: `📰 THE HOSHINO TIMES - Edisi Pagi ${chronicleData.date}`,
+              description: `Selamat pagi warga **${guild.name}**! Edisi harian koran server telah terbit.\n\n👑 **Member of the Day:** **${chronicleData.topUser.username}** (\`${chronicleData.topUser.count} pesan\`)\n⚡ **Headline:** *${chronicleData.headline}*`,
+              footerText: ui.getFooter("utility"),
+              media: attachment,
+            });
+
+            await channel.send({ ...payload, files: [attachment] });
+          } catch (gErr) {
+            logger.warn(`[Cron] Gagal kirim chronicle ke guild ${guildId}: ${gErr.message}`);
+          }
+        }
+      } catch (err) {
+        logger.error("[Cron] Gagal memproses broadcast koran harian:", err);
+      }
+    });
+
     // 1. QOTD Scheduler - Runs every minute to check if it's time to post
     let isQotdRunning = false;
     cron.schedule("* * * * *", async () => {

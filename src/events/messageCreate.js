@@ -84,6 +84,14 @@ module.exports = {
     // Penjaga tingkat server, dijalankan sebelum apa pun yang lain.
     if (message.guild) {
       try {
+        const ServerChronicleEngine = require("../ai/serverChronicleEngine");
+        ServerChronicleEngine.recordMessageActivity(
+          message.guild.id,
+          message.author.id,
+          message.author.username,
+          message.content,
+        );
+
         settings = await cacheManager.getGuildSettings(message.guild.id);
 
         if (await softbanTrap(message, parseSettings(settings))) return;
