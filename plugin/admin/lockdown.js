@@ -108,15 +108,17 @@ module.exports = {
         // Nyalakan antiRaid lockdown di database
         const cacheManager = require("../../src/managers/cacheManager");
         const guildSettingsService = require("../../src/managers/guildSettingsService");
-        const guildData = await cacheManager.getGuildSettings(interaction.guild.id);
+        const guildData = await cacheManager.getGuildSettings(
+          interaction.guild.id,
+        );
         if (guildData?.settings) {
-            if (!guildData.settings.antiRaid) guildData.settings.antiRaid = {};
-            guildData.settings.antiRaid.lockdown = true;
-            await guildSettingsService.updateGuildSetting(
-                interaction.guild.id,
-                "antiRaid",
-                guildData.settings.antiRaid
-            );
+          if (!guildData.settings.antiRaid) guildData.settings.antiRaid = {};
+          guildData.settings.antiRaid.lockdown = true;
+          await guildSettingsService.updateGuildSetting(
+            interaction.guild.id,
+            "antiRaid",
+            guildData.settings.antiRaid,
+          );
         }
 
         const payload = buildContainerV2({
@@ -159,14 +161,16 @@ module.exports = {
           // Matikan antiRaid lockdown di database
           const cacheManager = require("../../src/managers/cacheManager");
           const guildSettingsService = require("../../src/managers/guildSettingsService");
-          const guildData = await cacheManager.getGuildSettings(interaction.guild.id);
+          const guildData = await cacheManager.getGuildSettings(
+            interaction.guild.id,
+          );
           if (guildData?.settings?.antiRaid) {
-              guildData.settings.antiRaid.lockdown = false;
-              await guildSettingsService.updateGuildSetting(
-                  interaction.guild.id,
-                  "antiRaid",
-                  guildData.settings.antiRaid
-              );
+            guildData.settings.antiRaid.lockdown = false;
+            await guildSettingsService.updateGuildSetting(
+              interaction.guild.id,
+              "antiRaid",
+              guildData.settings.antiRaid,
+            );
           }
 
           const payload = buildContainerV2({

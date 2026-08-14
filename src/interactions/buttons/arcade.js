@@ -41,7 +41,11 @@ module.exports = [
       }
 
       if (isCorrect && rewardFrags > 0) {
-        await currency.reward(session.userId, { starFragments: rewardFrags }, "Arcade Trivia Reward");
+        await currency.reward(
+          session.userId,
+          { starFragments: rewardFrags },
+          "Arcade Trivia Reward",
+        );
       }
 
       const resultPayload = buildContainerV2({
@@ -104,7 +108,11 @@ module.exports = [
       if (session.userInputs.length === session.targetSequence.length) {
         await redisManager.del(`arcade:rhythm:${sessionId}`);
         const rewardFrags = session.bet > 0 ? session.bet * 2 : 100;
-        await currency.reward(session.userId, { starFragments: rewardFrags }, "Arcade Rhythm Perfect Clear");
+        await currency.reward(
+          session.userId,
+          { starFragments: rewardFrags },
+          "Arcade Rhythm Perfect Clear",
+        );
 
         const winPayload = buildContainerV2({
           accentColorHex: "#FFD700",
@@ -117,7 +125,12 @@ module.exports = [
       }
 
       // Save intermediate progress
-      await redisManager.set(`arcade:rhythm:${sessionId}`, JSON.stringify(session), "EX", 60);
+      await redisManager.set(
+        `arcade:rhythm:${sessionId}`,
+        JSON.stringify(session),
+        "EX",
+        60,
+      );
     },
   },
 ];

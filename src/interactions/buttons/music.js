@@ -8,7 +8,7 @@ module.exports = [
     // showModal(), jadi tidak boleh di-defer dari luar.
     onError: "Terjadi kesalahan pada panel musik.",
     async handler(interaction, client) {
-      const musicButtonsHandler = require("../../../plugin/music/musicButtons");
+      const musicButtonsHandler = require("../../music/musicButtons");
       await musicButtonsHandler(interaction, client);
     },
   },

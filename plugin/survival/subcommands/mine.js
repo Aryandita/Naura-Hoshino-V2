@@ -175,13 +175,21 @@ module.exports = {
       const ore = rollOre(pickaxe.bonus);
 
       // === SEASONAL EVENT BOOST ===
-      const { getCurrentSeason, checkNauraBirthdayEncounter } = require("../../../src/survival/helpers/survivalContext");
+      const {
+        getCurrentSeason,
+        checkNauraBirthdayEncounter,
+      } = require("../../../src/survival/helpers/survivalContext");
       const season = getCurrentSeason();
       const seasonDrops = [];
       if (season) {
         ore.amount = Math.max(1, Math.floor(ore.amount * season.dropBoost));
         if (season.exclusiveItem && Math.random() < 0.25) {
-          seasonDrops.push({ id: season.exclusiveItem, name: "Event Item", amount: 1, type: "material" });
+          seasonDrops.push({
+            id: season.exclusiveItem,
+            name: "Event Item",
+            amount: 1,
+            type: "material",
+          });
         }
       }
 
@@ -189,7 +197,7 @@ module.exports = {
       // Transaksi terkunci di dalam helper yang mengerjakan keduanya sekaligus.
       const itemsToStore = [
         { id: ore.id, name: ore.name, amount: ore.amount, type: "material" },
-        ...seasonDrops
+        ...seasonDrops,
       ];
       const stored = await addItemsAtomic(user.id, itemsToStore);
 
@@ -232,10 +240,14 @@ module.exports = {
 
       if (season) {
         if (season.dropBoost > 1.0) {
-          lines.push(`\n${e("impressed", "\u2728")} **[${season.label}]** Hasil tambang meningkat x${season.dropBoost}!`);
+          lines.push(
+            `\n${e("impressed", "\u2728")} **[${season.label}]** Hasil tambang meningkat x${season.dropBoost}!`,
+          );
         }
         if (seasonDrops.length > 0) {
-          lines.push(`${e("cheers", "\uD83C\uDF81")} **[${season.label}]** Kamu juga menemukan item eksklusif event!`);
+          lines.push(
+            `${e("cheers", "\uD83C\uDF81")} **[${season.label}]** Kamu juga menemukan item eksklusif event!`,
+          );
         }
       }
 

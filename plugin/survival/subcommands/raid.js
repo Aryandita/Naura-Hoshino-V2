@@ -1,7 +1,10 @@
 "use strict";
 
 const { MessageFlags } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 const worldBossEngine = require("../../../src/survival/engines/worldBossEngine");
 const petActions = require("../../../src/survival/helpers/petActions");
@@ -24,7 +27,10 @@ module.exports = {
         boss = await worldBossEngine.spawnBoss();
       }
 
-      const hpPercent = Math.max(0, Math.round((Number(boss.currentHp) / Number(boss.maxHp)) * 100));
+      const hpPercent = Math.max(
+        0,
+        Math.round((Number(boss.currentHp) / Number(boss.maxHp)) * 100),
+      );
       const expTs = Math.floor(new Date(boss.endTime).getTime() / 1000);
 
       const payload = buildContainerV2({
@@ -48,20 +54,35 @@ module.exports = {
 
     if (action === "serang") {
       // Ambil pet aktif user untuk mendapatkan passive buff
-      const activePet = await UserPet.findOne({ where: { userId, isActive: true } });
-      const petBuffs = activePet ? petActions.getPassiveBuffs(activePet.type, activePet.evolutionStage || 1) : {};
-
-      const result = await worldBossEngine.attackBoss(userId, interaction.user.username, {
-        userLevel: context?.survival?.level || 1,
-        petBuffs,
+      const activePet = await UserPet.findOne({
+        where: { userId, isActive: true },
       });
+      const petBuffs = activePet
+        ? petActions.getPassiveBuffs(
+            activePet.type,
+            activePet.evolutionStage || 1,
+          )
+        : {};
+
+      const result = await worldBossEngine.attackBoss(
+        userId,
+        interaction.user.username,
+        {
+          userLevel: context?.survival?.level || 1,
+          petBuffs,
+        },
+      );
 
       if (!result.success) {
-        if (result.reason === "NO_ACTIVE_BOSS" || result.reason === "BOSS_EXPIRED") {
+        if (
+          result.reason === "NO_ACTIVE_BOSS" ||
+          result.reason === "BOSS_EXPIRED"
+        ) {
           return interaction.reply({
             ...buildErrorContainerV2({
               title: "Tidak Ada Boss Aktif",
-              description: "Saat ini belum ada World Boss yang muncul. Tunggu pengumuman jadwal raid selanjutnya!",
+              description:
+                "Saat ini belum ada World Boss yang muncul. Tunggu pengumuman jadwal raid selanjutnya!",
               footerText: ui.getFooter("survival"),
             }),
             flags: MessageFlags.Ephemeral,
@@ -70,7 +91,9 @@ module.exports = {
       }
 
       const critText = result.isCrit ? " 💥 **CRITICAL HIT!**" : "";
-      const petNote = activePet ? ` (Buff Pet **${activePet.name || activePet.type}** aktif!)` : "";
+      const petNote = activePet
+        ? ` (Buff Pet **${activePet.name || activePet.type}** aktif!)`
+        : "";
 
       const desc = [
         `⚔️ Kamu melancarkan serangan dahsyat ke **${result.bossName}**!${critText}`,
@@ -90,7 +113,9 @@ module.exports = {
 
       const payload = buildContainerV2({
         accentColorHex: result.isDefeated ? "#22C55E" : "#E74C3C",
-        title: result.isDefeated ? "🏆 World Boss Telah Kalah!" : "⚔️ Serangan Berhasil!",
+        title: result.isDefeated
+          ? "🏆 World Boss Telah Kalah!"
+          : "⚔️ Serangan Berhasil!",
         description: desc.join("\n"),
         footerText: ui.getFooter("survival"),
       });
@@ -111,18 +136,30 @@ module.exports = {
         });
       }
 
-      const leaderboard = Object.values(boss.damageLeaderboard || {}).sort((a, b) => b.totalDamage - a.totalDamage);
+      const leaderboard = Object.values(boss.damageLeaderboard || {}).sort(
+        (a, b) => b.totalDamage - a.totalDamage,
+      );
       const top10 = leaderboard.slice(0, 10);
 
       const lines = top10.map((p, idx) => {
-        const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `\`#${idx + 1}\``;
+        const medal =
+          idx === 0
+            ? "🥇"
+            : idx === 1
+              ? "🥈"
+              : idx === 2
+                ? "🥉"
+                : `\`#${idx + 1}\``;
         return `${medal} **${p.username}**: \`${p.totalDamage.toLocaleString("id-ID")}\` DMG (${p.hits}x hit)`;
       });
 
       const payload = buildContainerV2({
         accentColorHex: "#F1C40F",
         title: `🏆 Peringkat Kontribusi Raid, ${boss.name}`,
-        description: lines.length > 0 ? lines.join("\n") : "Belum ada pemain yang menyerang boss ini!",
+        description:
+          lines.length > 0
+            ? lines.join("\n")
+            : "Belum ada pemain yang menyerang boss ini!",
         footerText: ui.getFooter("survival"),
       });
 

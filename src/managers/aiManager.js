@@ -2,6 +2,7 @@ const { logger } = require("./logger");
 const ui = require("../config/ui");
 const env = require("../config/env");
 const redisManager = require("./redisManager");
+const cacheManager = require("./cacheManager");
 
 // @google/genai dan ollama keduanya berat dan keduanya hanya terpakai ketika ada
 // permintaan AI yang benar-benar masuk. Sebelumnya keduanya di-require di baris atas,
@@ -127,7 +128,11 @@ class AIManager {
 
   async saveMemory(userId, type, data) {
     if (!redisManager.isReady) return;
-    await redisManager.setCache(`ai_memory:${type}:${userId}`, data, SESSION_TTL_SECONDS);
+    await redisManager.setCache(
+      `ai_memory:${type}:${userId}`,
+      data,
+      SESSION_TTL_SECONDS,
+    );
   }
 
   async _processQueue() {
@@ -174,7 +179,9 @@ class AIManager {
       // Guard AI Prompt Injection
       const { isPromptSafe } = require("../utils/aiSecurity");
       if (!isPromptSafe(prompt)) {
-        return message.reply("❌ Maaf, Naura tidak diizinkan untuk merespon prompt tersebut karena terdeteksi sebagai upaya pelanggaran sistem keamanan (Prompt Injection/Jailbreak).");
+        return message.reply(
+          "❌ Maaf, Naura tidak diizinkan untuk merespon prompt tersebut karena terdeteksi sebagai upaya pelanggaran sistem keamanan (Prompt Injection/Jailbreak).",
+        );
       }
 
       // ----------------------------------------------------
@@ -186,7 +193,10 @@ class AIManager {
         if (userProfile && userProfile.aiPersona) {
           const { name, systemPrompt } = userProfile.aiPersona;
           if (name) {
-            baseInstruction = baseInstruction.replace("Nama kamu adalah Naura Hoshino", `Nama kamu adalah ${name}`);
+            baseInstruction = baseInstruction.replace(
+              "Nama kamu adalah Naura Hoshino",
+              `Nama kamu adalah ${name}`,
+            );
           }
           if (systemPrompt) {
             baseInstruction += `\n\n[Instruksi Khusus Pengguna Ini]:\n${systemPrompt}`;
@@ -251,7 +261,7 @@ class AIManager {
             const {
               tools,
               dispatchFunction,
-            } = require("../../plugin/ai/functionDispatcher");
+            } = require("../ai/functionDispatcher");
             const gemConfig = {
               systemInstruction: baseInstruction,
               maxOutputTokens: 1500,
@@ -302,7 +312,7 @@ class AIManager {
       // ==========================================
       else {
         let systemPrompt = baseInstruction;
-        
+
         systemPrompt += `\nPengetahuan Sistem Naura:
 - Ekonomi Naura menggunakan mode "Survival". Mata uang utamanya "Star Fragments" (⭐) dan "Coupons" (🎟️).
 - Fitur Tiket Naura mendukung mode "Private Thread" dan "Text Channel".
@@ -317,7 +327,9 @@ Jawablah dalam bahasa Indonesia kasual.`;
 
         try {
           // 1. OLLAMA LOKAL (UTAMA)
-          let ollamaSession = (await this.getMemory(userId, "ollama")) || { history: [] };
+          let ollamaSession = (await this.getMemory(userId, "ollama")) || {
+            history: [],
+          };
           const apiMessages = [
             { role: "system", content: systemPrompt },
             ...ollamaSession.history,
@@ -332,16 +344,21 @@ Jawablah dalam bahasa Indonesia kasual.`;
           responseText = ollamaResponse.message.content;
 
           ollamaSession.history.push({ role: "user", content: prompt });
-          ollamaSession.history.push({ role: "assistant", content: responseText });
-          if (ollamaSession.history.length > 20) ollamaSession.history = ollamaSession.history.slice(-20);
+          ollamaSession.history.push({
+            role: "assistant",
+            content: responseText,
+          });
+          if (ollamaSession.history.length > 20)
+            ollamaSession.history = ollamaSession.history.slice(-20);
           await this.saveMemory(userId, "ollama", ollamaSession);
-
         } catch (ollamaError) {
           logger.error("[Ollama Error] Fallback ke Groq:", ollamaError);
 
           // 2. GROQ API (FALLBACK 1)
           try {
-            let groqSession = (await this.getMemory(userId, "groq")) || { history: [] };
+            let groqSession = (await this.getMemory(userId, "groq")) || {
+              history: [],
+            };
             const apiMessages = [
               { role: "system", content: systemPrompt },
               ...groqSession.history,
@@ -362,15 +379,19 @@ Jawablah dalam bahasa Indonesia kasual.`;
             });
 
             const textResponse = await response.text();
-            if (!response.ok) throw new Error(`Groq API error: HTTP ${response.status}`);
+            if (!response.ok)
+              throw new Error(`Groq API error: HTTP ${response.status}`);
             const data = JSON.parse(textResponse);
             responseText = data.choices[0].message.content;
 
             groqSession.history.push({ role: "user", content: prompt });
-            groqSession.history.push({ role: "assistant", content: responseText });
-            if (groqSession.history.length > 10) groqSession.history = groqSession.history.slice(-10);
+            groqSession.history.push({
+              role: "assistant",
+              content: responseText,
+            });
+            if (groqSession.history.length > 10)
+              groqSession.history = groqSession.history.slice(-10);
             await this.saveMemory(userId, "groq", groqSession);
-
           } catch (groqError) {
             logger.error("[Groq Error] Fallback ke Gemini Text:", groqError);
 
@@ -379,8 +400,13 @@ Jawablah dalam bahasa Indonesia kasual.`;
               const geminiClient = this.getGenAI();
               if (!geminiClient) throw new Error("Gemini tidak dikonfigurasi.");
 
-              let sessionData = (await this.getMemory(userId, "gemini")) || { history: [] };
-              sessionData.history.push({ role: "user", parts: [{ text: prompt }] });
+              let sessionData = (await this.getMemory(userId, "gemini")) || {
+                history: [],
+              };
+              sessionData.history.push({
+                role: "user",
+                parts: [{ text: prompt }],
+              });
 
               const gemConfig = {
                 systemInstruction: systemPrompt,
@@ -394,12 +420,18 @@ Jawablah dalam bahasa Indonesia kasual.`;
               });
 
               responseText = gemResult.text;
-              sessionData.history.push({ role: "model", parts: [{ text: responseText }] });
-              if (sessionData.history.length > 10) sessionData.history = sessionData.history.slice(-10);
+              sessionData.history.push({
+                role: "model",
+                parts: [{ text: responseText }],
+              });
+              if (sessionData.history.length > 10)
+                sessionData.history = sessionData.history.slice(-10);
               await this.saveMemory(userId, "gemini", sessionData);
-
             } catch (geminiError) {
-              logger.error("[Gemini Text Error] Semua layanan AI gagal:", geminiError);
+              logger.error(
+                "[Gemini Text Error] Semua layanan AI gagal:",
+                geminiError,
+              );
               responseText = `${ui.emojis?.error || "\u274c"} Semua layanan AI sedang sibuk atau tidak tersedia. Coba lagi nanti ya!`;
             }
           }

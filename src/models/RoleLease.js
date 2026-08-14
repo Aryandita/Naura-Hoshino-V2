@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../managers/dbManager");
+const { sequelize } = require("../config/database");
 
 const RoleLease = sequelize.define(
   "RoleLease",
@@ -24,7 +24,7 @@ const RoleLease = sequelize.define(
     expiresAt: {
       type: DataTypes.DATE,
       allowNull: false,
-    }
+    },
   },
   {
     tableName: "role_leases",
@@ -35,10 +35,10 @@ const RoleLease = sequelize.define(
       },
       {
         fields: ["guildId", "userId", "roleId"],
-        unique: true
-      }
+        unique: true,
+      },
     ],
-  }
+  },
 );
 
 module.exports = RoleLease;

@@ -17,12 +17,15 @@ module.exports = (client) => {
     try {
       const cacheKey = "analytics:cache:overview";
       const cached = await redisManager.getCache(cacheKey);
-      if (cached) return res.json(typeof cached === "string" ? JSON.parse(cached) : cached);
+      if (cached)
+        return res.json(
+          typeof cached === "string" ? JSON.parse(cached) : cached,
+        );
 
       const totalUsers = await UserProfile.count();
       const totalGuilds = client.guilds ? client.guilds.cache.size : 0;
       const totalPets = await UserPet.count();
-      
+
       // Hitung total ekonomi
       const ecoStats = await UserProfile.findAll({
         attributes: [

@@ -57,23 +57,19 @@ function requireLogin(req, res, next) {
 /** Endpoint JSON: belum login dibalas 401, bukan redirect. */
 function requireApiLogin(req, res, next) {
   if (isLoggedIn(req)) return next();
-  return res
-    .status(401)
-    .json({
-      success: false,
-      error: "Kamu belum login ya. Masuk dulu lewat Discord.",
-    });
+  return res.status(401).json({
+    success: false,
+    error: "Kamu belum login ya. Masuk dulu lewat Discord.",
+  });
 }
 
 /** Endpoint khusus owner bot. */
 function requireOwner(req, res, next) {
   if (!isLoggedIn(req)) {
-    return res
-      .status(401)
-      .json({
-        success: false,
-        error: "Kamu belum login ya. Masuk dulu lewat Discord.",
-      });
+    return res.status(401).json({
+      success: false,
+      error: "Kamu belum login ya. Masuk dulu lewat Discord.",
+    });
   }
   if (!isOwner(req.user.id)) {
     return res
@@ -112,12 +108,10 @@ function canManageGuild(user, guildId) {
  */
 function requireGuildManager(req, res, next) {
   if (!isLoggedIn(req)) {
-    return res
-      .status(401)
-      .json({
-        success: false,
-        error: "Kamu belum login ya. Masuk dulu lewat Discord.",
-      });
+    return res.status(401).json({
+      success: false,
+      error: "Kamu belum login ya. Masuk dulu lewat Discord.",
+    });
   }
 
   const guildId = req.body?.guildId || req.query?.guildId;
@@ -128,12 +122,10 @@ function requireGuildManager(req, res, next) {
   }
 
   if (!canManageGuild(req.user, guildId)) {
-    return res
-      .status(403)
-      .json({
-        success: false,
-        error: "Kamu tidak punya izin Kelola Server di server itu.",
-      });
+    return res.status(403).json({
+      success: false,
+      error: "Kamu tidak punya izin Kelola Server di server itu.",
+    });
   }
 
   req.guildId = String(guildId);
@@ -149,22 +141,18 @@ function requireGuildManager(req, res, next) {
  */
 function requireSelfOrOwner(req, res, next) {
   if (!isLoggedIn(req)) {
-    return res
-      .status(401)
-      .json({
-        success: false,
-        error: "Kamu belum login ya. Masuk dulu lewat Discord.",
-      });
+    return res.status(401).json({
+      success: false,
+      error: "Kamu belum login ya. Masuk dulu lewat Discord.",
+    });
   }
 
   const targetId = req.body?.userId || req.query?.userId || req.user.id;
   if (String(targetId) !== String(req.user.id) && !isOwner(req.user.id)) {
-    return res
-      .status(403)
-      .json({
-        success: false,
-        error: "Kamu hanya boleh mengubah datamu sendiri.",
-      });
+    return res.status(403).json({
+      success: false,
+      error: "Kamu hanya boleh mengubah datamu sendiri.",
+    });
   }
 
   req.targetUserId = String(targetId);

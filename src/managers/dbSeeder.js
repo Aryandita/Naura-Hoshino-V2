@@ -49,7 +49,7 @@ const seedInitialData = async () => {
   try {
     const itemCount = await GameItem.count();
     if (itemCount === 0) {
-      const staticItems = require("../../plugin/survival/items_static");
+      const staticItems = require("../survival/data/items_static");
       const bulkData = staticItems.map((item) => {
         const {
           id,

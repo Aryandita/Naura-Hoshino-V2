@@ -154,16 +154,25 @@ module.exports = {
       }
 
       // === SEASONAL EVENT BOOST ===
-      const { getCurrentSeason, checkNauraBirthdayEncounter } = require("../../../src/survival/helpers/survivalContext");
+      const {
+        getCurrentSeason,
+        checkNauraBirthdayEncounter,
+      } = require("../../../src/survival/helpers/survivalContext");
       const season = getCurrentSeason();
       const seasonDrops = [];
       if (season) {
         rewardAmount = Math.max(1, Math.floor(rewardAmount * season.dropBoost));
         if (season.dropBoost > 1.0) {
-           bonusLine += `\n${e("impressed", "\u2728")} **[${season.label}]** Hasil tebangan meningkat x${season.dropBoost}!`;
+          bonusLine += `\n${e("impressed", "\u2728")} **[${season.label}]** Hasil tebangan meningkat x${season.dropBoost}!`;
         }
-        if (season.exclusiveItem && Math.random() < 0.25) { // 25% drop rate
-          seasonDrops.push({ id: season.exclusiveItem, name: "Event Item", amount: 1, type: "material" });
+        if (season.exclusiveItem && Math.random() < 0.25) {
+          // 25% drop rate
+          seasonDrops.push({
+            id: season.exclusiveItem,
+            name: "Event Item",
+            amount: 1,
+            type: "material",
+          });
           bonusLine += `\n${e("cheers", "\uD83C\uDF81")} **[${season.label}]** Kamu juga menemukan item eksklusif event!`;
         }
       }
@@ -177,7 +186,7 @@ module.exports = {
           amount: rewardAmount,
           type: "material",
         },
-        ...seasonDrops
+        ...seasonDrops,
       ];
 
       const stored = await addItemsAtomic(user.id, itemsToStore);

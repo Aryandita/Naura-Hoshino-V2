@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../managers/dbManager");
+const { sequelize } = require("../config/database");
 
 const Giveaway = sequelize.define(
   "Giveaway",
@@ -20,7 +20,8 @@ const Giveaway = sequelize.define(
     requirements: {
       type: DataTypes.JSON,
       defaultValue: null,
-      comment: 'JSON: { requiredRoleId, minLevel, minAccountAgeDays, mustBeBooster }',
+      comment:
+        "JSON: { requiredRoleId, minLevel, minAccountAgeDays, mustBeBooster }",
     },
     // Daftar peserta (userId[]) yang sudah klik tombol dan lulus verifikasi
     participants: {
@@ -36,10 +37,7 @@ const Giveaway = sequelize.define(
   {
     tableName: "giveaways",
     timestamps: false,
-    indexes: [
-      { fields: ["guildId"] },
-      { fields: ["ended", "endTime"] }
-    ]
+    indexes: [{ fields: ["guildId"] }, { fields: ["ended", "endTime"] }],
   },
 );
 

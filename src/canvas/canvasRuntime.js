@@ -123,12 +123,15 @@ module.exports = {
     return loadCanvas().createCanvas(...args);
   },
 
-  GlobalFonts: new Proxy({}, {
-    get: function(target, prop) {
-      registerFontsOnce();
-      return loadCanvas().GlobalFonts[prop];
-    }
-  }),
+  GlobalFonts: new Proxy(
+    {},
+    {
+      get: function (target, prop) {
+        registerFontsOnce();
+        return loadCanvas().GlobalFonts[prop];
+      },
+    },
+  ),
 
   loadImage: loadCachedImage,
 
@@ -195,11 +198,17 @@ module.exports = {
         `canvas:inventory:${userId}`,
         `canvas:card:${userId}`,
       ];
-      await Promise.all(keys.map((k) => redisManager.deleteCache(k).catch(() => {})));
-      logger.debug(`[CanvasRuntime] Smart invalidated canvas cache for user: ${userId}`);
+      await Promise.all(
+        keys.map((k) => redisManager.deleteCache(k).catch(() => {})),
+      );
+      logger.debug(
+        `[CanvasRuntime] Smart invalidated canvas cache for user: ${userId}`,
+      );
     } catch (e) {
-      logger.error(`[CanvasRuntime] Gagal invalidate canvas cache untuk user: ${userId}`, e);
+      logger.error(
+        `[CanvasRuntime] Gagal invalidate canvas cache untuk user: ${userId}`,
+        e,
+      );
     }
   },
 };
-

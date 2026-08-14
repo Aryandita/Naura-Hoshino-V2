@@ -1,9 +1,15 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 const { logger } = require("../../../src/managers/logger");
 
-module.exports = async function handle(interaction, { currentSettings, saveSettings }) {
+module.exports = async function handle(
+  interaction,
+  { currentSettings, saveSettings },
+) {
   const mode = interaction.options.getString("mode");
   const category = interaction.options.getChannel("kategori");
   const logChan = interaction.options.getChannel("log");
@@ -13,7 +19,8 @@ module.exports = async function handle(interaction, { currentSettings, saveSetti
     return interaction.reply(
       buildErrorContainerV2({
         title: "Kategori Diperlukan",
-        description: "Kamu memilih mode `Text Channel`, jadi opsi `kategori` wajib diisi!",
+        description:
+          "Kamu memilih mode `Text Channel`, jadi opsi `kategori` wajib diisi!",
         footerText: ui.getFooter("core"),
       }),
     );

@@ -1,6 +1,12 @@
 "use strict";
 
-const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags } = require("discord.js");
+const {
+  ActionRowBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
+  MessageFlags,
+} = require("discord.js");
 const { buildErrorContainerV2 } = require("../../utils/NauraContainerBuilder");
 
 module.exports = [
@@ -12,15 +18,22 @@ module.exports = [
       // Cek apakah user sudah punya tiket yang belum ditutup
       const UserTicket = require("../../models/UserTicket");
       const openTickets = await UserTicket.count({
-        where: { userId: interaction.user.id, guildId: interaction.guildId, status: "open" },
+        where: {
+          userId: interaction.user.id,
+          guildId: interaction.guildId,
+          status: "open",
+        },
       });
 
       if (openTickets >= 3) {
         return interaction.reply({
-          embeds: [buildErrorContainerV2({ 
-            title: "Batas Maksimal Tiket", 
-            description: "Kamu sudah memiliki 3 tiket yang masih terbuka. Harap tunggu hingga staf menutupnya sebelum membuka yang baru." 
-          })],
+          embeds: [
+            buildErrorContainerV2({
+              title: "Batas Maksimal Tiket",
+              description:
+                "Kamu sudah memiliki 3 tiket yang masih terbuka. Harap tunggu hingga staf menutupnya sebelum membuka yang baru.",
+            }),
+          ],
           flags: MessageFlags.Ephemeral,
         });
       }
@@ -52,8 +65,8 @@ module.exports = [
     async handler(interaction, client) {
       // Hanya biarkan staf yang bisa mematikan tiket, atau pemilik tiket.
       // Untuk memastikannya, panggil helper dari ticketManager
-      const { closeTicket } = require("../../../plugin/ticketing/ticketManager");
+      const { closeTicket } = require("../../managers/ticketManager");
       await closeTicket(interaction, client);
     },
-  }
+  },
 ];

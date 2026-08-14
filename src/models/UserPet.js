@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../managers/dbManager");
+const { sequelize } = require("../config/database");
 
 const UserPet = sequelize.define("UserPet", {
   id: {
@@ -24,7 +24,7 @@ const UserPet = sequelize.define("UserPet", {
   isActive: { type: DataTypes.BOOLEAN, defaultValue: false }, // Apakah pet ini sedang dipakai/dibawa
   petLevel: { type: DataTypes.INTEGER, defaultValue: 1 },
   petExp: { type: DataTypes.INTEGER, defaultValue: 0 },
-  
+
   // --- ADVANCED SYSTEM ---
   mood: { type: DataTypes.STRING, defaultValue: "happy" }, // 'happy', 'normal', 'sad', 'angry'
   evolutionStage: { type: DataTypes.INTEGER, defaultValue: 1 },

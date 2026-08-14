@@ -1,7 +1,7 @@
 // Pembuatan kartu tier premium. Sebelumnya blok ini ditulis dua kali dengan
 // isi yang identik di subcommand info dan check.
 const { AttachmentBuilder } = require("discord.js");
-const { CanvasUtils } = require("../../plugin/canvas/Canvas");
+const { CanvasUtils } = require("../canvas/CanvasUtils");
 const { logger } = require("../managers/logger");
 
 function toBuffer(canvas) {

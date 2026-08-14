@@ -1,7 +1,12 @@
-const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+} = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 
-module.exports = async function handle(interaction, { currentSettings, saveSettings }) {
+module.exports = async function handle(
+  interaction,
+  { currentSettings, saveSettings },
+) {
   const enabled = interaction.options.getBoolean("aktif");
   const logChan = interaction.options.getChannel("log");
 

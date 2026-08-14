@@ -81,12 +81,20 @@ class ClusterManager {
   startStatsPublisher(client) {
     const STATS_INTERVAL = 3000;
     setInterval(() => {
-      if (!client.isReady() || !redisManager.client || !redisManager.client.isReady) return;
+      if (
+        !client.isReady() ||
+        !redisManager.client ||
+        !redisManager.client.isReady
+      )
+        return;
 
       const totalMem = os.totalmem();
       const usedMem = totalMem - os.freemem();
-      const usersCount = client.guilds.cache.reduce((acc, g) => acc + (g.memberCount || 0), 0);
-      
+      const usersCount = client.guilds.cache.reduce(
+        (acc, g) => acc + (g.memberCount || 0),
+        0,
+      );
+
       const stats = {
         shardId: this.getShardIds(client),
         ramUsed: (usedMem / 1024 / 1024).toFixed(2),
@@ -94,7 +102,7 @@ class ClusterManager {
         ping: client.ws.ping,
         guilds: client.guilds.cache.size,
         users: usersCount,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       // Siarkan ke kanal Pub/Sub khusus statistik

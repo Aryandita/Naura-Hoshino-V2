@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../managers/dbManager");
+const { sequelize } = require("../config/database");
 
 /**
  * Menginvalidasi cache setelah setiap penulisan.
@@ -104,7 +104,7 @@ const GuildSettings = sequelize.define(
         },
         aiPersona: {
           name: null,
-          systemPrompt: null
+          systemPrompt: null,
         },
       },
     },

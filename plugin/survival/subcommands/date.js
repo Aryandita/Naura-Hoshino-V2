@@ -13,7 +13,9 @@ const path = require("path");
 const UserSurvival = require("../../../src/models/UserSurvival");
 const UserNPC = require("../../../src/models/UserNPC");
 const cacheManager = require("../../../src/managers/cacheManager");
-const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
+const {
+  safeParseInventory,
+} = require("../../../src/survival/engines/inventoryHelper");
 const ui = require("../../../src/config/ui");
 const npcConfig = require("../../../src/survival/data/npcs");
 const {

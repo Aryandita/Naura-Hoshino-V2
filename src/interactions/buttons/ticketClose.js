@@ -32,14 +32,17 @@ module.exports = {
       const discordTranscripts = require("discord-html-transcripts");
 
       // Generate Transcript
-      const attachment = await discordTranscripts.createTranscript(channelOrThread, {
-        limit: -1,
-        returnType: "attachment",
-        filename: `transcript-${channelOrThread.id}.html`,
-        saveImages: true,
-        footerText: "Diekspor oleh Naura Hoshino V2",
-        poweredBy: false,
-      });
+      const attachment = await discordTranscripts.createTranscript(
+        channelOrThread,
+        {
+          limit: -1,
+          returnType: "attachment",
+          filename: `transcript-${channelOrThread.id}.html`,
+          saveImages: true,
+          footerText: "Diekspor oleh Naura Hoshino V2",
+          poweredBy: false,
+        },
+      );
 
       // Simpan transcript ke local dashboard public folder
       const publicDir = path.join(
@@ -83,7 +86,7 @@ module.exports = {
 
       // Lock dan arsipkan thread atau hapus channel
       await channelOrThread.send(
-        `🔒 Tiket ini telah ditutup oleh <@${interaction.user.id}>. ${channelOrThread.isThread() ? 'Thread ini akan segera diarsipkan.' : 'Channel ini akan dihapus.'}`
+        `🔒 Tiket ini telah ditutup oleh <@${interaction.user.id}>. ${channelOrThread.isThread() ? "Thread ini akan segera diarsipkan." : "Channel ini akan dihapus."}`,
       );
       setTimeout(async () => {
         try {

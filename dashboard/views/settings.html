@@ -1,475 +1,737 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>System Config | Naura OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
     <style>
-        .node-header {
-            cursor: move;
-        }
+      .node-header {
+        cursor: move;
+      }
     </style>
-</head>
-<body class="min-h-screen p-4 md:p-8 flex items-center justify-center bg-animated theme-none" id="mainBody">
-    
-    <div class="w-full max-w-6xl glass-card rounded-[24px] p-4 md:p-10 border border-[var(--color-hairline)] shadow-2xl relative overflow-hidden animate-fade-in">
-        
-        <!-- Header Settings -->
-        <div class="flex items-center justify-between mb-8 pb-4 border-b border-[var(--color-hairline)]">
-            <h1 class="text-2xl font-black font-cyber text-glow tracking-wider text-white">
-                <i class="fa-solid fa-sliders text-[var(--color-primary)] mr-3"></i>SYSTEM CONFIG
-            </h1>
-            <a href="/" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-[var(--color-muted)] hover:text-white hover:border-[var(--color-primary-glow)] transition-all duration-300">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </a>
-        </div>
+  </head>
+  <body
+    class="min-h-screen p-4 md:p-8 flex items-center justify-center bg-animated theme-none"
+    id="mainBody"
+  >
+    <div
+      class="w-full max-w-6xl glass-card rounded-[24px] p-4 md:p-10 border border-[var(--color-hairline)] shadow-2xl relative overflow-hidden animate-fade-in"
+    >
+      <!-- Header Settings -->
+      <div
+        class="flex items-center justify-between mb-8 pb-4 border-b border-[var(--color-hairline)]"
+      >
+        <h1
+          class="text-2xl font-black font-cyber text-glow tracking-wider text-white"
+        >
+          <i class="fa-solid fa-sliders text-[var(--color-primary)] mr-3"></i
+          >SYSTEM CONFIG
+        </h1>
+        <a
+          href="/"
+          class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-[var(--color-muted)] hover:text-white hover:border-[var(--color-primary-glow)] transition-all duration-300"
+        >
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </a>
+      </div>
 
-        <!-- Alert Notification -->
-        <div id="alertBox" class="hidden mb-6 p-4 rounded-xl font-bold text-sm flex items-center gap-3 transition-all"></div>
-        
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
-            <!-- LEFT COLUMN: SETTINGS FORM -->
-            <form id="settingsForm" class="space-y-5">
-                
-                <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5">
-                    <label class="block text-gray-300 font-semibold mb-2 text-xs font-cyber tracking-widest uppercase">
-                        <i class="fa-solid fa-hashtag mr-2 text-[var(--color-primary)]"></i>Guild ID (Server Target)
-                    </label>
-                    <input type="text" id="guildId" required class="theme-input font-cyber" placeholder="Masukkan ID Server untuk memuat settings...">
-                </div>
-                
-                <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5">
-                    <label class="block text-gray-300 font-semibold mb-2 text-xs font-cyber tracking-widest uppercase">
-                        <i class="fa-solid fa-keyboard mr-2 text-[var(--color-primary)]"></i>Custom Prefix
-                    </label>
-                    <input type="text" id="prefix" class="theme-input font-cyber" placeholder="Default: n!">
-                </div>
+      <!-- Alert Notification -->
+      <div
+        id="alertBox"
+        class="hidden mb-6 p-4 rounded-xl font-bold text-sm flex items-center gap-3 transition-all"
+      ></div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5">
-                        <label class="block text-gray-300 font-semibold mb-2 text-xs font-cyber tracking-widest uppercase">
-                            <i class="fa-solid fa-brain mr-2 text-[var(--color-primary)]"></i>Verba Slug (Public)
-                        </label>
-                        <input type="text" id="verbaSlug1" class="theme-input font-cyber" placeholder="Contoh: naurahoshino_4b8">
-                    </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- LEFT COLUMN: SETTINGS FORM -->
+        <form id="settingsForm" class="space-y-5">
+          <div
+            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
+          >
+            <label
+              class="block text-gray-300 font-semibold mb-2 text-xs font-cyber tracking-widest uppercase"
+            >
+              <i
+                class="fa-solid fa-hashtag mr-2 text-[var(--color-primary)]"
+              ></i
+              >Guild ID (Server Target)
+            </label>
+            <input
+              type="text"
+              id="guildId"
+              required
+              class="theme-input font-cyber"
+              placeholder="Masukkan ID Server untuk memuat settings..."
+            />
+          </div>
 
-                    <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5">
-                        <label class="block text-gray-300 font-semibold mb-2 text-xs font-cyber tracking-widest uppercase">
-                            <i class="fa-solid fa-brain mr-2 text-[var(--color-primary)]"></i>Verba Slug (Owner)
-                        </label>
-                        <input type="text" id="verbaSlug2" class="theme-input font-cyber" placeholder="Contoh: hoshino_owner_1a2">
-                    </div>
-                </div>
+          <div
+            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
+          >
+            <label
+              class="block text-gray-300 font-semibold mb-2 text-xs font-cyber tracking-widest uppercase"
+            >
+              <i
+                class="fa-solid fa-keyboard mr-2 text-[var(--color-primary)]"
+              ></i
+              >Custom Prefix
+            </label>
+            <input
+              type="text"
+              id="prefix"
+              class="theme-input font-cyber"
+              placeholder="Default: n!"
+            />
+          </div>
 
-                <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5">
-                    <div class="flex justify-between items-center mb-3">
-                        <label class="block text-gray-300 font-semibold text-xs font-cyber tracking-widest uppercase">
-                            <i class="fa-solid fa-user-pen mr-2 text-[var(--color-primary)]"></i>Custom Persona (Sifat AI)
-                        </label>
-                        
-                        <!-- AI Persona Templates Presets -->
-                        <div class="flex gap-1.5 text-[9px] font-cyber">
-                            <button type="button" onclick="applyPreset('tsundere')" class="px-2 py-1 rounded bg-red-950/40 text-red-400 border border-red-500/20 hover:bg-red-900/40 hover:text-white transition">Tsundere</button>
-                            <button type="button" onclick="applyPreset('formal')" class="px-2 py-1 rounded bg-blue-950/40 text-blue-400 border border-blue-500/20 hover:bg-blue-900/40 hover:text-white transition">Formal</button>
-                            <button type="button" onclick="applyPreset('cyber')" class="px-2 py-1 rounded bg-pink-950/40 text-pink-400 border border-pink-500/20 hover:bg-pink-900/40 hover:text-white transition">Cyber-Girl</button>
-                        </div>
-                    </div>
-                    <textarea id="customPersona" rows="2" class="theme-input text-sm" placeholder="Contoh: Jawablah sebagai asisten yang galak tapi lucu..."></textarea>
-                </div>
-
-                <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5">
-                    <label class="block text-gray-300 font-semibold mb-2 text-xs font-cyber tracking-widest uppercase">
-                        <i class="fa-solid fa-book-open mr-2 text-[var(--color-primary)]"></i>Server Knowledge (FAQ/Aturan)
-                    </label>
-                    <textarea id="serverKnowledge" rows="3" class="theme-input text-sm" placeholder="Tulis aturan server atau FAQ di sini agar AI bisa menjawab pertanyaan member..."></textarea>
-                </div>
-
-                <!-- Toggles -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="glass-panel p-4 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between">
-                        <div>
-                            <p class="text-white font-bold text-xs"><i class="fa-solid fa-robot text-[var(--color-accent-purple)] mr-2"></i>Auto-Moderation</p>
-                            <p class="text-[9px] text-gray-500 mt-0.5">Filter kata kasar & spam</p>
-                        </div>
-                        <div class="relative inline-flex items-center cursor-pointer select-none">
-                            <input type="checkbox" id="automod" class="sr-only peer">
-                            <div class="w-10 h-5.5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-pink-400"></div>
-                        </div>
-                    </div>
-
-                    <div class="glass-panel p-4 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between">
-                        <div>
-                            <p class="text-white font-bold text-xs"><i class="fa-solid fa-headphones text-[var(--color-accent-blue)] mr-2"></i>24/7 Music Mode</p>
-                            <p class="text-[9px] text-gray-500 mt-0.5">Bot standby di Voice Channel</p>
-                        </div>
-                        <div class="relative inline-flex items-center cursor-pointer select-none">
-                            <input type="checkbox" id="twentyFourSeven" class="sr-only peer">
-                            <div class="w-10 h-5.5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-pink-400"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <button type="submit" id="submitBtn" class="w-full btn-primary py-4 font-cyber tracking-widest text-sm uppercase">
-                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Deploy Settings
-                </button>
-            </form>
-
-            <!-- RIGHT COLUMN: BEHAVIOR TREE & SANDBOX -->
-            <div class="space-y-6 flex flex-col justify-between">
-                
-                <!-- SVG Node Logic Builder -->
-                <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5 relative overflow-hidden h-[260px]" id="nodeCanvas">
-                    <h4 class="text-xs font-bold text-cyan-400 font-cyber tracking-widest uppercase mb-4 flex items-center gap-2"><i class="fa-solid fa-network-wired"></i> AI Behavior Nodes</h4>
-                    <svg id="nodeSvg" class="absolute inset-0 pointer-events-none w-full h-full"></svg>
-                    
-                    <!-- Trigger Node -->
-                    <div id="nodeTrigger" class="absolute w-36 glass-panel p-2 rounded-lg bg-cyan-950/30 border border-cyan-500/40 text-[10px] select-none z-30" style="left: 20px; top: 70px;">
-                        <div class="node-header font-cyber font-bold text-cyan-400 border-b border-cyan-500/20 pb-1 mb-1.5 flex justify-between">
-                            <span>Trigger</span>
-                            <i class="fa-solid fa-circle-play"></i>
-                        </div>
-                        <div class="text-gray-400 mb-1 text-[9px]">Mention / Badword</div>
-                        <div class="socket-out absolute right-[-6px] top-[50%] translate-y-[-50%] w-3.5 h-3.5 bg-cyan-400 rounded-full border-2 border-black cursor-pointer shadow-[0_0_8px_#00ffff]"></div>
-                    </div>
-
-                    <!-- Condition Node -->
-                    <div id="nodeCond" class="absolute w-36 glass-panel p-2 rounded-lg bg-pink-950/30 border border-pink-500/40 text-[10px] select-none z-30" style="left: 190px; top: 120px;">
-                        <div class="socket-in absolute left-[-6px] top-[50%] translate-y-[-50%] w-3.5 h-3.5 bg-pink-400 rounded-full border-2 border-black cursor-pointer shadow-[0_0_8px_#ffb6c1]"></div>
-                        <div class="node-header font-cyber font-bold text-pink-400 border-b border-pink-500/20 pb-1 mb-1.5 flex justify-between">
-                            <span>Condition</span>
-                            <i class="fa-solid fa-filter"></i>
-                        </div>
-                        <div class="text-gray-400 mb-1 text-[9px]">Premium / Limit Check</div>
-                        <div class="socket-out absolute right-[-6px] top-[50%] translate-y-[-50%] w-3.5 h-3.5 bg-pink-400 rounded-full border-2 border-black cursor-pointer shadow-[0_0_8px_#ffb6c1]"></div>
-                    </div>
-
-                    <!-- Action Node -->
-                    <div id="nodeAction" class="absolute w-36 glass-panel p-2 rounded-lg bg-purple-950/30 border border-purple-500/40 text-[10px] select-none z-30" style="left: 360px; top: 60px;">
-                        <div class="socket-in absolute left-[-6px] top-[50%] translate-y-[-50%] w-3.5 h-3.5 bg-purple-400 rounded-full border-2 border-black cursor-pointer shadow-[0_0_8px_#c084fc]"></div>
-                        <div class="node-header font-cyber font-bold text-purple-400 border-b border-purple-500/20 pb-1 mb-1.5 flex justify-between">
-                            <span>Action</span>
-                            <i class="fa-solid fa-paper-plane"></i>
-                        </div>
-                        <div class="text-gray-400 mb-1 text-[9px]">Reply Persona AI</div>
-                    </div>
-                </div>
-
-                <!-- Live Chat Sandbox -->
-                <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5 flex flex-col h-[320px]">
-                    <h4 class="text-xs font-bold text-pink-400 font-cyber tracking-widest uppercase mb-3 flex items-center gap-1.5"><i class="fa-solid fa-comments"></i> AI Live Persona Sandbox</h4>
-                    
-                    <div id="sandboxChatArea" class="flex-grow overflow-y-auto space-y-3 bg-black/50 border border-white/5 rounded-xl p-3.5 text-xs mb-3 font-assist font-light flex flex-col">
-                        <div class="bg-pink-500/10 text-pink-300 p-2.5 rounded-xl border border-pink-500/10 max-w-[85%] self-start leading-relaxed">
-                            Halo! Di sini kamu bisa langsung menguji sifat asisten dan rules yang baru dikonfigurasi sebelum di-deploy. Cobalah menyapa Naura!
-                        </div>
-                    </div>
-
-                    <div class="flex gap-2">
-                        <input type="text" id="sandboxInput" placeholder="Ketik pesan percobaan..." class="flex-grow bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-pink-500 transition duration-300">
-                        <button type="button" onclick="sendSandboxMessage()" class="bg-pink-500 hover:bg-pink-400 text-black px-4 rounded-xl text-xs font-bold font-cyber transition duration-300 uppercase"><i class="fa-solid fa-paper-plane"></i></button>
-                    </div>
-                </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div
+              class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
+            >
+              <label
+                class="block text-gray-300 font-semibold mb-2 text-xs font-cyber tracking-widest uppercase"
+              >
+                <i
+                  class="fa-solid fa-brain mr-2 text-[var(--color-primary)]"
+                ></i
+                >Verba Slug (Public)
+              </label>
+              <input
+                type="text"
+                id="verbaSlug1"
+                class="theme-input font-cyber"
+                placeholder="Contoh: naurahoshino_4b8"
+              />
             </div>
+
+            <div
+              class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
+            >
+              <label
+                class="block text-gray-300 font-semibold mb-2 text-xs font-cyber tracking-widest uppercase"
+              >
+                <i
+                  class="fa-solid fa-brain mr-2 text-[var(--color-primary)]"
+                ></i
+                >Verba Slug (Owner)
+              </label>
+              <input
+                type="text"
+                id="verbaSlug2"
+                class="theme-input font-cyber"
+                placeholder="Contoh: hoshino_owner_1a2"
+              />
+            </div>
+          </div>
+
+          <div
+            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
+          >
+            <div class="flex justify-between items-center mb-3">
+              <label
+                class="block text-gray-300 font-semibold text-xs font-cyber tracking-widest uppercase"
+              >
+                <i
+                  class="fa-solid fa-user-pen mr-2 text-[var(--color-primary)]"
+                ></i
+                >Custom Persona (Sifat AI)
+              </label>
+
+              <!-- AI Persona Templates Presets -->
+              <div class="flex gap-1.5 text-[9px] font-cyber">
+                <button
+                  type="button"
+                  onclick="applyPreset('tsundere')"
+                  class="px-2 py-1 rounded bg-red-950/40 text-red-400 border border-red-500/20 hover:bg-red-900/40 hover:text-white transition"
+                >
+                  Tsundere
+                </button>
+                <button
+                  type="button"
+                  onclick="applyPreset('formal')"
+                  class="px-2 py-1 rounded bg-blue-950/40 text-blue-400 border border-blue-500/20 hover:bg-blue-900/40 hover:text-white transition"
+                >
+                  Formal
+                </button>
+                <button
+                  type="button"
+                  onclick="applyPreset('cyber')"
+                  class="px-2 py-1 rounded bg-pink-950/40 text-pink-400 border border-pink-500/20 hover:bg-pink-900/40 hover:text-white transition"
+                >
+                  Cyber-Girl
+                </button>
+              </div>
+            </div>
+            <textarea
+              id="customPersona"
+              rows="2"
+              class="theme-input text-sm"
+              placeholder="Contoh: Jawablah sebagai asisten yang galak tapi lucu..."
+            ></textarea>
+          </div>
+
+          <div
+            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
+          >
+            <label
+              class="block text-gray-300 font-semibold mb-2 text-xs font-cyber tracking-widest uppercase"
+            >
+              <i
+                class="fa-solid fa-book-open mr-2 text-[var(--color-primary)]"
+              ></i
+              >Server Knowledge (FAQ/Aturan)
+            </label>
+            <textarea
+              id="serverKnowledge"
+              rows="3"
+              class="theme-input text-sm"
+              placeholder="Tulis aturan server atau FAQ di sini agar AI bisa menjawab pertanyaan member..."
+            ></textarea>
+          </div>
+
+          <!-- Toggles -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div
+              class="glass-panel p-4 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between"
+            >
+              <div>
+                <p class="text-white font-bold text-xs">
+                  <i
+                    class="fa-solid fa-robot text-[var(--color-accent-purple)] mr-2"
+                  ></i
+                  >Auto-Moderation
+                </p>
+                <p class="text-[9px] text-gray-500 mt-0.5">
+                  Filter kata kasar & spam
+                </p>
+              </div>
+              <div
+                class="relative inline-flex items-center cursor-pointer select-none"
+              >
+                <input type="checkbox" id="automod" class="sr-only peer" />
+                <div
+                  class="w-10 h-5.5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-pink-400"
+                ></div>
+              </div>
+            </div>
+
+            <div
+              class="glass-panel p-4 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between"
+            >
+              <div>
+                <p class="text-white font-bold text-xs">
+                  <i
+                    class="fa-solid fa-headphones text-[var(--color-accent-blue)] mr-2"
+                  ></i
+                  >24/7 Music Mode
+                </p>
+                <p class="text-[9px] text-gray-500 mt-0.5">
+                  Bot standby di Voice Channel
+                </p>
+              </div>
+              <div
+                class="relative inline-flex items-center cursor-pointer select-none"
+              >
+                <input
+                  type="checkbox"
+                  id="twentyFourSeven"
+                  class="sr-only peer"
+                />
+                <div
+                  class="w-10 h-5.5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-pink-400"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            id="submitBtn"
+            class="w-full btn-primary py-4 font-cyber tracking-widest text-sm uppercase"
+          >
+            <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Deploy Settings
+          </button>
+        </form>
+
+        <!-- RIGHT COLUMN: BEHAVIOR TREE & SANDBOX -->
+        <div class="space-y-6 flex flex-col justify-between">
+          <!-- SVG Node Logic Builder -->
+          <div
+            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5 relative overflow-hidden h-[260px]"
+            id="nodeCanvas"
+          >
+            <h4
+              class="text-xs font-bold text-cyan-400 font-cyber tracking-widest uppercase mb-4 flex items-center gap-2"
+            >
+              <i class="fa-solid fa-network-wired"></i> AI Behavior Nodes
+            </h4>
+            <svg
+              id="nodeSvg"
+              class="absolute inset-0 pointer-events-none w-full h-full"
+            ></svg>
+
+            <!-- Trigger Node -->
+            <div
+              id="nodeTrigger"
+              class="absolute w-36 glass-panel p-2 rounded-lg bg-cyan-950/30 border border-cyan-500/40 text-[10px] select-none z-30"
+              style="left: 20px; top: 70px"
+            >
+              <div
+                class="node-header font-cyber font-bold text-cyan-400 border-b border-cyan-500/20 pb-1 mb-1.5 flex justify-between"
+              >
+                <span>Trigger</span>
+                <i class="fa-solid fa-circle-play"></i>
+              </div>
+              <div class="text-gray-400 mb-1 text-[9px]">Mention / Badword</div>
+              <div
+                class="socket-out absolute right-[-6px] top-[50%] translate-y-[-50%] w-3.5 h-3.5 bg-cyan-400 rounded-full border-2 border-black cursor-pointer shadow-[0_0_8px_#00ffff]"
+              ></div>
+            </div>
+
+            <!-- Condition Node -->
+            <div
+              id="nodeCond"
+              class="absolute w-36 glass-panel p-2 rounded-lg bg-pink-950/30 border border-pink-500/40 text-[10px] select-none z-30"
+              style="left: 190px; top: 120px"
+            >
+              <div
+                class="socket-in absolute left-[-6px] top-[50%] translate-y-[-50%] w-3.5 h-3.5 bg-pink-400 rounded-full border-2 border-black cursor-pointer shadow-[0_0_8px_#ffb6c1]"
+              ></div>
+              <div
+                class="node-header font-cyber font-bold text-pink-400 border-b border-pink-500/20 pb-1 mb-1.5 flex justify-between"
+              >
+                <span>Condition</span>
+                <i class="fa-solid fa-filter"></i>
+              </div>
+              <div class="text-gray-400 mb-1 text-[9px]">
+                Premium / Limit Check
+              </div>
+              <div
+                class="socket-out absolute right-[-6px] top-[50%] translate-y-[-50%] w-3.5 h-3.5 bg-pink-400 rounded-full border-2 border-black cursor-pointer shadow-[0_0_8px_#ffb6c1]"
+              ></div>
+            </div>
+
+            <!-- Action Node -->
+            <div
+              id="nodeAction"
+              class="absolute w-36 glass-panel p-2 rounded-lg bg-purple-950/30 border border-purple-500/40 text-[10px] select-none z-30"
+              style="left: 360px; top: 60px"
+            >
+              <div
+                class="socket-in absolute left-[-6px] top-[50%] translate-y-[-50%] w-3.5 h-3.5 bg-purple-400 rounded-full border-2 border-black cursor-pointer shadow-[0_0_8px_#c084fc]"
+              ></div>
+              <div
+                class="node-header font-cyber font-bold text-purple-400 border-b border-purple-500/20 pb-1 mb-1.5 flex justify-between"
+              >
+                <span>Action</span>
+                <i class="fa-solid fa-paper-plane"></i>
+              </div>
+              <div class="text-gray-400 mb-1 text-[9px]">Reply Persona AI</div>
+            </div>
+          </div>
+
+          <!-- Live Chat Sandbox -->
+          <div
+            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5 flex flex-col h-[320px]"
+          >
+            <h4
+              class="text-xs font-bold text-pink-400 font-cyber tracking-widest uppercase mb-3 flex items-center gap-1.5"
+            >
+              <i class="fa-solid fa-comments"></i> AI Live Persona Sandbox
+            </h4>
+
+            <div
+              id="sandboxChatArea"
+              class="flex-grow overflow-y-auto space-y-3 bg-black/50 border border-white/5 rounded-xl p-3.5 text-xs mb-3 font-assist font-light flex flex-col"
+            >
+              <div
+                class="bg-pink-500/10 text-pink-300 p-2.5 rounded-xl border border-pink-500/10 max-w-[85%] self-start leading-relaxed"
+              >
+                Halo! Di sini kamu bisa langsung menguji sifat asisten dan rules
+                yang baru dikonfigurasi sebelum di-deploy. Cobalah menyapa
+                Naura!
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <input
+                type="text"
+                id="sandboxInput"
+                placeholder="Ketik pesan percobaan..."
+                class="flex-grow bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-pink-500 transition duration-300"
+              />
+              <button
+                type="button"
+                onclick="sendSandboxMessage()"
+                class="bg-pink-500 hover:bg-pink-400 text-black px-4 rounded-xl text-xs font-bold font-cyber transition duration-300 uppercase"
+              >
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
 
     <!-- Scripts -->
     <script>
-        // Apply background theme on load
-        const savedBg = localStorage.getItem('bgTheme') || 'none';
-        const body = document.getElementById('mainBody');
-        function resolveBgUrl(url) {
-            if (url && url.startsWith('adaptive-')) {
-                const suffix = url.substring('adaptive-'.length);
-                return window.innerWidth < 768 ? `/assets/dashboard/bg_mobile_${suffix}.png` : `/assets/dashboard/bg_pc_${suffix}.png`;
-            }
-            return url;
+      // Apply background theme on load
+      const savedBg = localStorage.getItem("bgTheme") || "none";
+      const body = document.getElementById("mainBody");
+      function resolveBgUrl(url) {
+        if (url && url.startsWith("adaptive-")) {
+          const suffix = url.substring("adaptive-".length);
+          return window.innerWidth < 768
+            ? `/assets/dashboard/bg_mobile_${suffix}.png`
+            : `/assets/dashboard/bg_pc_${suffix}.png`;
         }
-        if (savedBg !== 'none' && savedBg !== 'white') {
+        return url;
+      }
+      if (savedBg !== "none" && savedBg !== "white") {
+        body.style.backgroundImage = `url('${resolveBgUrl(savedBg)}')`;
+        if (savedBg && savedBg.startsWith("adaptive-")) {
+          window.addEventListener("resize", () => {
             body.style.backgroundImage = `url('${resolveBgUrl(savedBg)}')`;
-            if (savedBg && savedBg.startsWith('adaptive-')) {
-                window.addEventListener('resize', () => {
-                    body.style.backgroundImage = `url('${resolveBgUrl(savedBg)}')`;
-                });
-            }
-        } else if (savedBg === 'white') {
-            body.style.backgroundColor = '#f3f4f6';
-            body.classList.remove('theme-none');
-            body.classList.add('theme-white');
+          });
         }
+      } else if (savedBg === "white") {
+        body.style.backgroundColor = "#f3f4f6";
+        body.classList.remove("theme-none");
+        body.classList.add("theme-white");
+      }
 
-        // Apply Glassmorphism customization
-        const savedBlur = localStorage.getItem('glassBlur') || '16';
-        const savedOpacity = localStorage.getItem('glassOpacity') || '3';
-        document.documentElement.style.setProperty('--glass-blur', savedBlur + 'px');
-        document.documentElement.style.setProperty('--glass-opacity', (savedOpacity / 100).toFixed(2));
+      // Apply Glassmorphism customization
+      const savedBlur = localStorage.getItem("glassBlur") || "16";
+      const savedOpacity = localStorage.getItem("glassOpacity") || "3";
+      document.documentElement.style.setProperty(
+        "--glass-blur",
+        savedBlur + "px",
+      );
+      document.documentElement.style.setProperty(
+        "--glass-opacity",
+        (savedOpacity / 100).toFixed(2),
+      );
 
-        // Sound effect integration
-        let sfxPlayer = null;
-        function playClickSfx() {
-            const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
-            if (sfxEnabled) {
-                if (!sfxPlayer) {
-                    sfxPlayer = new Audio('/assets/dashboard/click.mp3');
-                }
-                sfxPlayer.currentTime = 0;
-                sfxPlayer.play().catch(() => {});
-            }
+      // Sound effect integration
+      let sfxPlayer = null;
+      function playClickSfx() {
+        const sfxEnabled = localStorage.getItem("sfxEnabled") !== "false";
+        if (sfxEnabled) {
+          if (!sfxPlayer) {
+            sfxPlayer = new Audio("/assets/dashboard/click.mp3");
+          }
+          sfxPlayer.currentTime = 0;
+          sfxPlayer.play().catch(() => {});
         }
-        document.querySelectorAll('button, a, input[type="checkbox"]').forEach(el => {
-            el.addEventListener('click', playClickSfx);
+      }
+      document
+        .querySelectorAll('button, a, input[type="checkbox"]')
+        .forEach((el) => {
+          el.addEventListener("click", playClickSfx);
         });
 
-        // AI Presets Templates
-        function applyPreset(presetType) {
-            const textAreas = {
-                'tsundere': "Jawablah sebagai asisten yang tsundere (galak tapi perhatian). Sering gunakan kata 'B-Baka!' dan bertingkah ketus terhadap pengguna.",
-                'formal': "Jawablah dengan bahasa yang formal, santun, terstruktur, dan sangat profesional layaknya operator layanan pelanggan.",
-                'cyber': "Jawablah sebagai gadis siber imut yang penuh energi, ceria, menggunakan banyak emotikon bintang-bintang (* ^ ω ^) dan sangat ramah."
-            };
-            const current = document.getElementById('customPersona').value.trim();
-            if (current) {
-                document.getElementById('customPersona').value = current + "\n\n" + textAreas[presetType];
-            } else {
-                document.getElementById('customPersona').value = textAreas[presetType];
-            }
+      // AI Presets Templates
+      function applyPreset(presetType) {
+        const textAreas = {
+          tsundere:
+            "Jawablah sebagai asisten yang tsundere (galak tapi perhatian). Sering gunakan kata 'B-Baka!' dan bertingkah ketus terhadap pengguna.",
+          formal:
+            "Jawablah dengan bahasa yang formal, santun, terstruktur, dan sangat profesional layaknya operator layanan pelanggan.",
+          cyber:
+            "Jawablah sebagai gadis siber imut yang penuh energi, ceria, menggunakan banyak emotikon bintang-bintang (* ^ ω ^) dan sangat ramah.",
+        };
+        const current = document.getElementById("customPersona").value.trim();
+        if (current) {
+          document.getElementById("customPersona").value =
+            current + "\n\n" + textAreas[presetType];
+        } else {
+          document.getElementById("customPersona").value =
+            textAreas[presetType];
         }
+      }
 
-        // Drag & Drop Node Builder SVG Renderer
-        const nodeCanvas = document.getElementById('nodeCanvas');
-        const nodeSvg = document.getElementById('nodeSvg');
+      // Drag & Drop Node Builder SVG Renderer
+      const nodeCanvas = document.getElementById("nodeCanvas");
+      const nodeSvg = document.getElementById("nodeSvg");
 
-        function drawNodeConnections() {
-            nodeSvg.innerHTML = ''; // Reset paths
-            
-            const n1Out = document.querySelector('#nodeTrigger .socket-out').getBoundingClientRect();
-            const n2In = document.querySelector('#nodeCond .socket-in').getBoundingClientRect();
-            const n2Out = document.querySelector('#nodeCond .socket-out').getBoundingClientRect();
-            const n3In = document.querySelector('#nodeAction .socket-in').getBoundingClientRect();
-            
-            const canvasRect = nodeCanvas.getBoundingClientRect();
-            
-            const x1 = n1Out.left + n1Out.width/2 - canvasRect.left;
-            const y1 = n1Out.top + n1Out.height/2 - canvasRect.top;
-            
-            const x2 = n2In.left + n2In.width/2 - canvasRect.left;
-            const y2 = n2In.top + n2In.height/2 - canvasRect.top;
-            
-            const x3 = n2Out.left + n2Out.width/2 - canvasRect.left;
-            const y3 = n2Out.top + n2Out.height/2 - canvasRect.top;
-            
-            const x4 = n3In.left + n3In.width/2 - canvasRect.left;
-            const y4 = n3In.top + n3In.height/2 - canvasRect.top;
-            
-            // Neon glowing curves
-            nodeSvg.innerHTML += `
-                <path d="M ${x1} ${y1} C ${(x1+x2)/2} ${y1}, ${(x1+x2)/2} ${y2}, ${x2} ${y2}" 
+      function drawNodeConnections() {
+        nodeSvg.innerHTML = ""; // Reset paths
+
+        const n1Out = document
+          .querySelector("#nodeTrigger .socket-out")
+          .getBoundingClientRect();
+        const n2In = document
+          .querySelector("#nodeCond .socket-in")
+          .getBoundingClientRect();
+        const n2Out = document
+          .querySelector("#nodeCond .socket-out")
+          .getBoundingClientRect();
+        const n3In = document
+          .querySelector("#nodeAction .socket-in")
+          .getBoundingClientRect();
+
+        const canvasRect = nodeCanvas.getBoundingClientRect();
+
+        const x1 = n1Out.left + n1Out.width / 2 - canvasRect.left;
+        const y1 = n1Out.top + n1Out.height / 2 - canvasRect.top;
+
+        const x2 = n2In.left + n2In.width / 2 - canvasRect.left;
+        const y2 = n2In.top + n2In.height / 2 - canvasRect.top;
+
+        const x3 = n2Out.left + n2Out.width / 2 - canvasRect.left;
+        const y3 = n2Out.top + n2Out.height / 2 - canvasRect.top;
+
+        const x4 = n3In.left + n3In.width / 2 - canvasRect.left;
+        const y4 = n3In.top + n3In.height / 2 - canvasRect.top;
+
+        // Neon glowing curves
+        nodeSvg.innerHTML += `
+                <path d="M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1}, ${(x1 + x2) / 2} ${y2}, ${x2} ${y2}" 
                       stroke="#00FFFF" stroke-width="3" fill="none" style="filter: drop-shadow(0 0 5px #00FFFF);" />
-                <path d="M ${x3} ${y3} C ${(x3+x4)/2} ${y3}, ${(x3+x4)/2} ${y4}, ${x4} ${y4}" 
+                <path d="M ${x3} ${y3} C ${(x3 + x4) / 2} ${y3}, ${(x3 + x4) / 2} ${y4}, ${x4} ${y4}" 
                       stroke="#FFB6C1" stroke-width="3" fill="none" style="filter: drop-shadow(0 0 5px #FFB6C1);" />
             `;
-        }
+      }
 
-        function initNodeDragging(nodeId) {
-            const el = document.getElementById(nodeId);
-            let startX, startY;
-            let elemStartX, elemStartY;
-            
-            const dragHeader = el.querySelector('.node-header') || el;
-            dragHeader.addEventListener('mousedown', dragStart);
-            dragHeader.addEventListener('touchstart', dragStart, { passive: false });
-            
-            function dragStart(e) {
-                e.preventDefault();
-                if (e.type === 'touchstart') {
-                    startX = e.touches[0].clientX;
-                    startY = e.touches[0].clientY;
-                } else {
-                    startX = e.clientX;
-                    startY = e.clientY;
-                }
-                elemStartX = el.offsetLeft;
-                elemStartY = el.offsetTop;
-                
-                document.addEventListener('mousemove', dragMove);
-                document.addEventListener('mouseup', dragEnd);
-                document.addEventListener('touchmove', dragMove, { passive: false });
-                document.addEventListener('touchend', dragEnd);
-            }
-            
-            function dragMove(e) {
-                let clientX, clientY;
-                if (e.type === 'touchmove') {
-                    clientX = e.touches[0].clientX;
-                    clientY = e.touches[0].clientY;
-                } else {
-                    clientX = e.clientX;
-                    clientY = e.clientY;
-                }
-                const dx = clientX - startX;
-                const dy = clientY - startY;
-                
-                el.style.left = (elemStartX + dx) + 'px';
-                el.style.top = (elemStartY + dy) + 'px';
-                
-                drawNodeConnections();
-            }
-            
-            function dragEnd() {
-                document.removeEventListener('mousemove', dragMove);
-                document.removeEventListener('mouseup', dragEnd);
-                document.removeEventListener('touchmove', dragMove);
-                document.removeEventListener('touchend', dragEnd);
-            }
-        }
+      function initNodeDragging(nodeId) {
+        const el = document.getElementById(nodeId);
+        let startX, startY;
+        let elemStartX, elemStartY;
 
-        initNodeDragging('nodeTrigger');
-        initNodeDragging('nodeCond');
-        initNodeDragging('nodeAction');
-
-        // Draw connections after DOM fully loads and aligns
-        window.addEventListener('load', () => {
-            setTimeout(drawNodeConnections, 200);
+        const dragHeader = el.querySelector(".node-header") || el;
+        dragHeader.addEventListener("mousedown", dragStart);
+        dragHeader.addEventListener("touchstart", dragStart, {
+          passive: false,
         });
-        window.addEventListener('resize', drawNodeConnections);
 
-        // --- LIVE SANDBOX CONTROLLER ---
-        async function sendSandboxMessage() {
-            const input = document.getElementById('sandboxInput');
-            const msg = input.value.trim();
-            if (!msg) return;
-            
-            input.value = '';
-            const chatArea = document.getElementById('sandboxChatArea');
-            
-            chatArea.innerHTML += `
+        function dragStart(e) {
+          e.preventDefault();
+          if (e.type === "touchstart") {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+          } else {
+            startX = e.clientX;
+            startY = e.clientY;
+          }
+          elemStartX = el.offsetLeft;
+          elemStartY = el.offsetTop;
+
+          document.addEventListener("mousemove", dragMove);
+          document.addEventListener("mouseup", dragEnd);
+          document.addEventListener("touchmove", dragMove, { passive: false });
+          document.addEventListener("touchend", dragEnd);
+        }
+
+        function dragMove(e) {
+          let clientX, clientY;
+          if (e.type === "touchmove") {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+          } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+          }
+          const dx = clientX - startX;
+          const dy = clientY - startY;
+
+          el.style.left = elemStartX + dx + "px";
+          el.style.top = elemStartY + dy + "px";
+
+          drawNodeConnections();
+        }
+
+        function dragEnd() {
+          document.removeEventListener("mousemove", dragMove);
+          document.removeEventListener("mouseup", dragEnd);
+          document.removeEventListener("touchmove", dragMove);
+          document.removeEventListener("touchend", dragEnd);
+        }
+      }
+
+      initNodeDragging("nodeTrigger");
+      initNodeDragging("nodeCond");
+      initNodeDragging("nodeAction");
+
+      // Draw connections after DOM fully loads and aligns
+      window.addEventListener("load", () => {
+        setTimeout(drawNodeConnections, 200);
+      });
+      window.addEventListener("resize", drawNodeConnections);
+
+      // --- LIVE SANDBOX CONTROLLER ---
+      async function sendSandboxMessage() {
+        const input = document.getElementById("sandboxInput");
+        const msg = input.value.trim();
+        if (!msg) return;
+
+        input.value = "";
+        const chatArea = document.getElementById("sandboxChatArea");
+
+        chatArea.innerHTML += `
                 <div class="bg-gray-800 text-white p-2.5 rounded-xl border border-white/5 max-w-[85%] self-end leading-relaxed text-right ml-auto">
                     ${msg}
                 </div>
             `;
-            chatArea.scrollTop = chatArea.scrollHeight;
-            
-            const typingId = 'typing_' + Date.now();
-            chatArea.innerHTML += `
+        chatArea.scrollTop = chatArea.scrollHeight;
+
+        const typingId = "typing_" + Date.now();
+        chatArea.innerHTML += `
                 <div id="${typingId}" class="bg-pink-500/5 text-pink-300 p-2.5 rounded-xl border border-pink-500/10 max-w-[85%] self-start leading-relaxed animate-pulse">
                     Naura sedang berpikir...
                 </div>
             `;
-            chatArea.scrollTop = chatArea.scrollHeight;
-            
-            try {
-                const res = await fetch('/api/settings/sandbox', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: msg,
-                        customPersona: document.getElementById('customPersona').value,
-                        serverKnowledge: document.getElementById('serverKnowledge').value
-                    })
-                });
-                const data = await res.json();
-                
-                document.getElementById(typingId).remove();
-                
-                chatArea.innerHTML += `
+        chatArea.scrollTop = chatArea.scrollHeight;
+
+        try {
+          const res = await fetch("/api/settings/sandbox", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: msg,
+              customPersona: document.getElementById("customPersona").value,
+              serverKnowledge: document.getElementById("serverKnowledge").value,
+            }),
+          });
+          const data = await res.json();
+
+          document.getElementById(typingId).remove();
+
+          chatArea.innerHTML += `
                     <div class="bg-pink-500/10 text-pink-300 p-2.5 rounded-xl border border-pink-500/10 max-w-[85%] self-start leading-relaxed">
                         ${data.reply}
                     </div>
                 `;
-            } catch (e) {
-                document.getElementById(typingId).remove();
-                chatArea.innerHTML += `
+        } catch (e) {
+          document.getElementById(typingId).remove();
+          chatArea.innerHTML += `
                     <div class="bg-red-500/10 text-red-400 p-2.5 rounded-xl border border-red-500/10 max-w-[85%] self-start leading-relaxed">
                         Gagal menghubungi asisten sandbox.
                     </div>
                 `;
-            }
-            chatArea.scrollTop = chatArea.scrollHeight;
         }
+        chatArea.scrollTop = chatArea.scrollHeight;
+      }
 
-        // Add Enter Key Bind for Sandbox Input
-        document.getElementById('sandboxInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') sendSandboxMessage();
+      // Add Enter Key Bind for Sandbox Input
+      document
+        .getElementById("sandboxInput")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter") sendSandboxMessage();
         });
 
-        // --- FETCH EXISTING SETTINGS ---
-        async function fetchSettings(guildId) {
-            try {
-                const response = await fetch(`/api/settings/load?guildId=${guildId}`);
-                if (!response.ok) return;
-                const data = await response.json();
+      // --- FETCH EXISTING SETTINGS ---
+      async function fetchSettings(guildId) {
+        try {
+          const response = await fetch(`/api/settings/load?guildId=${guildId}`);
+          if (!response.ok) return;
+          const data = await response.json();
 
-                document.getElementById('prefix').value = data.prefix || '';
-                document.getElementById('verbaSlug1').value = data.verbaSlug1 || '';
-                document.getElementById('verbaSlug2').value = data.verbaSlug2 || '';
-                document.getElementById('customPersona').value = data.customPersona || '';
-                document.getElementById('serverKnowledge').value = data.serverKnowledge || '';
-                document.getElementById('automod').checked = data.automod === true;
-                document.getElementById('twentyFourSeven').checked = data.twentyFourSeven === true;
-            } catch (err) {
-                console.error("Gagal memuat setting:", err);
-            }
+          document.getElementById("prefix").value = data.prefix || "";
+          document.getElementById("verbaSlug1").value = data.verbaSlug1 || "";
+          document.getElementById("verbaSlug2").value = data.verbaSlug2 || "";
+          document.getElementById("customPersona").value =
+            data.customPersona || "";
+          document.getElementById("serverKnowledge").value =
+            data.serverKnowledge || "";
+          document.getElementById("automod").checked = data.automod === true;
+          document.getElementById("twentyFourSeven").checked =
+            data.twentyFourSeven === true;
+        } catch (err) {
+          console.error("Gagal memuat setting:", err);
         }
+      }
 
-        const guildIdInput = document.getElementById('guildId');
-        guildIdInput.addEventListener('change', (e) => {
-            const val = e.target.value.trim();
-            if (val.length >= 17) {
-                fetchSettings(val);
-            }
-        });
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const guildIdParam = urlParams.get('guildId');
-        if (guildIdParam) {
-            guildIdInput.value = guildIdParam;
-            fetchSettings(guildIdParam);
+      const guildIdInput = document.getElementById("guildId");
+      guildIdInput.addEventListener("change", (e) => {
+        const val = e.target.value.trim();
+        if (val.length >= 17) {
+          fetchSettings(val);
         }
+      });
 
-        // --- SUBMIT FORM ---
-        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            const alertBox = document.getElementById('alertBox');
-            
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Menyimpan...';
-            btn.classList.add('opacity-70', 'cursor-not-allowed');
-            
-            const payload = {
-                guildId: document.getElementById('guildId').value,
-                prefix: document.getElementById('prefix').value,
-                automod: document.getElementById('automod').checked ? 'true' : 'false',
-                twentyFourSeven: document.getElementById('twentyFourSeven').checked ? 'true' : 'false',
-                verbaSlug1: document.getElementById('verbaSlug1').value,
-                verbaSlug2: document.getElementById('verbaSlug2').value,
-                customPersona: document.getElementById('customPersona').value,
-                serverKnowledge: document.getElementById('serverKnowledge').value
-            };
+      const urlParams = new URLSearchParams(window.location.search);
+      const guildIdParam = urlParams.get("guildId");
+      if (guildIdParam) {
+        guildIdInput.value = guildIdParam;
+        fetchSettings(guildIdParam);
+      }
 
-            try {
-                const response = await fetch('/api/settings', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                const result = await response.json();
-                alertBox.classList.remove('hidden', 'bg-red-500/20', 'text-red-400', 'border-red-500/50');
-                alertBox.classList.add('bg-emerald-500/20', 'text-emerald-400', 'border', 'border-emerald-500/50');
-                alertBox.innerHTML = '<i class="fa-solid fa-check-circle text-xl"></i> ' + (result.message || 'Pengaturan berhasil disimpan!');
-            } catch (err) {
-                alertBox.classList.remove('hidden', 'bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500/50');
-                alertBox.classList.add('bg-red-500/20', 'text-red-400', 'border', 'border-red-500/50');
-                alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-xl"></i> Gagal menyimpan pengaturan sistem.';
-            } finally {
-                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Deploy Settings';
-                btn.classList.remove('opacity-70', 'cursor-not-allowed');
-            }
+      // --- SUBMIT FORM ---
+      document
+        .getElementById("settingsForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const btn = document.getElementById("submitBtn");
+          const alertBox = document.getElementById("alertBox");
+
+          btn.innerHTML =
+            '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Menyimpan...';
+          btn.classList.add("opacity-70", "cursor-not-allowed");
+
+          const payload = {
+            guildId: document.getElementById("guildId").value,
+            prefix: document.getElementById("prefix").value,
+            automod: document.getElementById("automod").checked
+              ? "true"
+              : "false",
+            twentyFourSeven: document.getElementById("twentyFourSeven").checked
+              ? "true"
+              : "false",
+            verbaSlug1: document.getElementById("verbaSlug1").value,
+            verbaSlug2: document.getElementById("verbaSlug2").value,
+            customPersona: document.getElementById("customPersona").value,
+            serverKnowledge: document.getElementById("serverKnowledge").value,
+          };
+
+          try {
+            const response = await fetch("/api/settings", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+            alertBox.classList.remove(
+              "hidden",
+              "bg-red-500/20",
+              "text-red-400",
+              "border-red-500/50",
+            );
+            alertBox.classList.add(
+              "bg-emerald-500/20",
+              "text-emerald-400",
+              "border",
+              "border-emerald-500/50",
+            );
+            alertBox.innerHTML =
+              '<i class="fa-solid fa-check-circle text-xl"></i> ' +
+              (result.message || "Pengaturan berhasil disimpan!");
+          } catch (err) {
+            alertBox.classList.remove(
+              "hidden",
+              "bg-emerald-500/20",
+              "text-emerald-400",
+              "border-emerald-500/50",
+            );
+            alertBox.classList.add(
+              "bg-red-500/20",
+              "text-red-400",
+              "border",
+              "border-red-500/50",
+            );
+            alertBox.innerHTML =
+              '<i class="fa-solid fa-triangle-exclamation text-xl"></i> Gagal menyimpan pengaturan sistem.';
+          } finally {
+            btn.innerHTML =
+              '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Deploy Settings';
+            btn.classList.remove("opacity-70", "cursor-not-allowed");
+          }
         });
     </script>
-</body>
+  </body>
 </html>

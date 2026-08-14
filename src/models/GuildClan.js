@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../managers/dbManager");
+const { sequelize } = require("../config/database");
 
 const GuildClan = sequelize.define(
   "GuildClan",
@@ -46,7 +46,7 @@ const GuildClan = sequelize.define(
   {
     tableName: "GuildClans",
     timestamps: true,
-    indexes: [{ fields: ["guildId"] }]
+    indexes: [{ fields: ["guildId"] }],
   },
 );
 

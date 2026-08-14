@@ -107,7 +107,7 @@ function rows({ npc, canGreet, stepsLeft, cost }) {
         .setCustomId("roam_gacha")
         .setLabel("Buka Toko Gacha")
         .setEmoji(e("gacha", "🎰"))
-        .setStyle(ButtonStyle.Primary)
+        .setStyle(ButtonStyle.Primary),
     );
   }
 
@@ -200,7 +200,12 @@ async function runRoam({ interaction, location, hour, luck }) {
       ...payload,
       components: [
         ...payload.components,
-        ...rows({ npc: result.npc, canGreet: result.found && !greeted, stepsLeft, cost }),
+        ...rows({
+          npc: result.npc,
+          canGreet: result.found && !greeted,
+          stepsLeft,
+          cost,
+        }),
       ],
     };
   };
@@ -261,11 +266,15 @@ async function runRoam({ interaction, location, hour, luck }) {
       return i.editReply(render(null, notes.join("\n"))).catch(() => {});
     }
 
-    if (i.customId === "roam_gacha" && result.found && result.npc.id === "luna_gacha") {
-        // Open the Gacha Banner shop
-        const { showGachaBannerShop } = require("./gachaBanner");
-        await showGachaBannerShop(i, user);
-        return;
+    if (
+      i.customId === "roam_gacha" &&
+      result.found &&
+      result.npc.id === "luna_gacha"
+    ) {
+      // Open the Gacha Banner shop
+      const { showGachaBannerShop } = require("./gachaBanner");
+      await showGachaBannerShop(i, user);
+      return;
     }
 
     if (i.customId === "roam_again") {

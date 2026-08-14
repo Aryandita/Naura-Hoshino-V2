@@ -77,7 +77,7 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
 
   // --- Siaran statistik berkala (Lintas Shard via Redis) ---
   const shardStats = new Map();
-  
+
   if (redisManager.client && redisManager.client.isReady) {
     redisManager.initPubSub("cluster:stats_update", (data) => {
       if (data && data.shardId !== undefined) {
@@ -111,11 +111,11 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
         }
         totalGuilds += stats.guilds || 0;
         totalUsers += stats.users || 0;
-        totalRamUsed += (parseFloat(stats.ramUsed) * 1024 * 1024) || 0;
+        totalRamUsed += parseFloat(stats.ramUsed) * 1024 * 1024 || 0;
         pingSum += stats.ping || 0;
         pingCount++;
       }
-      
+
       if (pingCount > 0) avgPing = Math.round(pingSum / pingCount);
     }
 

@@ -5,7 +5,7 @@ const { EmbedBuilder } = require("discord.js");
 const env = require("../../config/env");
 const ui = require("../../config/ui");
 const { logger } = require("../../managers/logger");
-const { awardXp } = require("../../../plugin/leveling/leveling");
+const { awardXp } = require("../../leveling/levelingEngine");
 
 // Subcommand yang perlu dibuang dari argumen sebelum dibaca sebagai teks bebas.
 const SUBCOMMAND_WORDS = ["balance", "buy", "ping", "set", "add", "remove"];

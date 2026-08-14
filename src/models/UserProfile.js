@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../managers/dbManager");
+const { sequelize } = require("../config/database");
 
 const UserProfile = sequelize.define(
   "UserProfile",
@@ -138,26 +138,26 @@ const UserProfile = sequelize.define(
       allowNull: true,
     },
     dailyReminded: { type: DataTypes.BOOLEAN, defaultValue: false },
-    
+
     // --- PREFERENSI NOTIFIKASI DM ---
     notification_prefs: {
       type: DataTypes.JSON,
       defaultValue: {
         dm_authorized: false, // Apakah user sudah menyetujui penerimaan DM
-        stamina_full: true,   // Notif Stamina
-        quest_reset: true,    // Notif Quest
-        event_news: true      // Notif Event Baru
-      }
+        stamina_full: true, // Notif Stamina
+        quest_reset: true, // Notif Quest
+        event_news: true, // Notif Event Baru
+      },
     },
-    
+
     // --- AI PERSONA ---
     aiPersona: {
       type: DataTypes.JSON,
       defaultValue: {
         name: null,
         systemPrompt: null,
-        avatarUrl: null
-      }
+        avatarUrl: null,
+      },
     },
 
     // --- KOSMETIK ---
@@ -165,9 +165,9 @@ const UserProfile = sequelize.define(
       type: DataTypes.JSON,
       defaultValue: {
         profile: null,
-        music: null
-      }
-    }
+        music: null,
+      },
+    },
   },
   {
     tableName: "user_profiles",

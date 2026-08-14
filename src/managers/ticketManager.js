@@ -3,10 +3,10 @@
 const fs = require("fs");
 const path = require("path");
 const { AttachmentBuilder, MessageFlags } = require("discord.js");
-const UserTicket = require("../../src/models/UserTicket");
-const { logger } = require("../../src/managers/logger");
-const ui = require("../../src/config/ui");
-const { buildErrorContainerV2 } = require("../../src/utils/NauraContainerBuilder");
+const UserTicket = require("../models/UserTicket");
+const { logger } = require("./logger");
+const ui = require("../config/ui");
+const { buildErrorContainerV2 } = require("../utils/NauraContainerBuilder");
 
 /**
  * Merender daftar pesan menjadi string HTML sederhana (bisa dipercantik dengan CSS Glassmorphism)
@@ -34,20 +34,19 @@ function generateHtmlTranscript(messages, ticket) {
         <div class="container">
             <h1>Transkrip Tiket</h1>
             <p><strong>Topik:</strong> ${ticket.topic}</p>
-            <p><strong>Ditutup pada:</strong> ${new Date().toLocaleString('id-ID')}</p>
+            <p><strong>Ditutup pada:</strong> ${new Date().toLocaleString("id-ID")}</p>
             <hr>
   `;
 
-  // Messages di Discord dikembalikan dari terbaru ke terlama, kita reverse
   const sortedMsgs = Array.from(messages.values()).reverse();
-  
+
   for (const msg of sortedMsgs) {
-    if (!msg.content && msg.embeds.length === 0) continue; // Skip pesan kosong
-    
+    if (!msg.content && msg.embeds.length === 0) continue;
+
     const isBot = msg.author.bot;
     const authorClass = isBot ? "author bot" : "author";
-    const time = msg.createdAt.toLocaleString('id-ID');
-    
+    const time = msg.createdAt.toLocaleString("id-ID");
+
     let content = msg.content || "";
     if (msg.embeds.length > 0 && msg.embeds[0].description) {
       content += `\n[Embed]: ${msg.embeds[0].description}`;
@@ -73,15 +72,18 @@ function generateHtmlTranscript(messages, ticket) {
 async function closeTicket(interaction, client) {
   try {
     const thread = interaction.channel;
-    
+
     // Cari data tiket di DB
     const ticketData = await UserTicket.findOne({
-      where: { ticketId: thread.id, status: "open" }
+      where: { ticketId: thread.id, status: "open" },
     });
 
     if (!ticketData) {
       return interaction.reply({
-        embeds: [buildErrorContainerV2({ title: "Tiket Tidak Ditemukan", description: "Tiket ini sudah ditutup atau tidak ada di database." })],
+        ...buildErrorContainerV2({
+          title: "Tiket Tidak Ditemukan",
+          description: "Tiket ini sudah ditutup atau tidak ada di database.",
+        }),
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -90,7 +92,10 @@ async function closeTicket(interaction, client) {
     const hasPerm = interaction.member.permissions.has("ManageMessages");
     if (interaction.user.id !== ticketData.userId && !hasPerm) {
       return interaction.reply({
-        embeds: [buildErrorContainerV2({ title: "Akses Ditolak", description: "Kamu tidak berhak menutup tiket ini." })],
+        ...buildErrorContainerV2({
+          title: "Akses Ditolak",
+          description: "Kamu tidak berhak menutup tiket ini.",
+        }),
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -111,10 +116,15 @@ async function closeTicket(interaction, client) {
 
     // 2. Buat Transkrip
     const htmlStr = generateHtmlTranscript(allMessages, ticketData);
-    
+
     // 3. Simpan Transkrip ke Disk
     const filename = `ticket_${ticketData.id}_${Date.now()}.html`;
-    const publicPath = path.join(__dirname, "../../dashboard/public/transcripts");
+    const publicPath = path.join(
+      process.cwd(),
+      "dashboard",
+      "public",
+      "transcripts",
+    );
     if (!fs.existsSync(publicPath)) {
       fs.mkdirSync(publicPath, { recursive: true });
     }
@@ -124,38 +134,51 @@ async function closeTicket(interaction, client) {
     // 4. Update Database
     await ticketData.update({
       status: "closed",
-      transcriptPath: `/transcripts/${filename}`
+      transcriptPath: `/transcripts/${filename}`,
     });
 
     // 5. Kirim DM ke Pengguna dengan file HTML
     try {
       const owner = await client.users.fetch(ticketData.userId);
       if (owner) {
-        const att = new AttachmentBuilder(Buffer.from(htmlStr), { name: filename });
+        const att = new AttachmentBuilder(Buffer.from(htmlStr), {
+          name: filename,
+        });
         await owner.send({
           content: `Halo! Tiket bantuanmu dengan topik **"${ticketData.topic}"** telah ditutup.\nBerikut adalah lampiran transkrip percakapan kita.`,
-          files: [att]
+          files: [att],
         });
       }
     } catch (e) {
-      logger.warn(`[TICKETING] Gagal mengirim transkrip via DM ke ${ticketData.userId}`);
+      logger.warn(
+        `[TICKETING] Gagal mengirim transkrip via DM ke ${ticketData.userId}`,
+      );
     }
 
     // 6. Arsipkan dan Kunci Thread
-    await interaction.editReply(`${ui.getEmoji("success") || "✅"} Tiket berhasil ditutup. Menyimpan transkrip dan mengunci thread...`);
-    
+    await interaction.editReply(
+      `${ui.getEmoji("success") || "✅"} Tiket berhasil ditutup. Menyimpan transkrip dan mengunci thread...`,
+    );
+
     await thread.send(`🔒 Tiket ini ditutup oleh **${interaction.user.tag}**.`);
     await thread.setArchived(true, "Tiket ditutup");
     await thread.setLocked(true, "Tiket ditutup");
-    
   } catch (error) {
     logger.error("[TICKETING] Error menutup tiket:", error);
     try {
-      await interaction.editReply("Terjadi kesalahan sistem saat mencoba menutup tiket.");
+      const errorMsg = "Terjadi kesalahan sistem saat mencoba menutup tiket.";
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply(errorMsg);
+      } else {
+        await interaction.reply({
+          content: errorMsg,
+          flags: MessageFlags.Ephemeral,
+        });
+      }
     } catch (e) {}
   }
 }
 
 module.exports = {
-  closeTicket
+  closeTicket,
 };

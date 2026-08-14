@@ -10,14 +10,19 @@ const {
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
-const { advanceTime, getTimeState } = require("../../../src/survival/helpers/survivalTime");
+const {
+  advanceTime,
+  getTimeState,
+} = require("../../../src/survival/helpers/survivalTime");
 const diffHelper = require("../../../src/survival/helpers/difficultyHelper");
 const currency = require("../../../src/survival/engines/currency");
 const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
-const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
+const {
+  safeParseInventory,
+} = require("../../../src/survival/engines/inventoryHelper");
 
 const COLLECTOR_MS = 120000;
 const STUDY_HOURS = 3;
@@ -125,7 +130,9 @@ module.exports = {
         const timeState = getTimeState(timeUpdate.hour);
 
         try {
-          const { incrementQuestProgress } = require("../../../src/survival/engines/questGenerator");
+          const {
+            incrementQuestProgress,
+          } = require("../../../src/survival/engines/questGenerator");
           await incrementQuestProgress(user.id, "study");
         } catch (err) {
           // Papan misi opsional.

@@ -7,10 +7,12 @@ const NSF_PER_MINUTE = 1;
 
 async function handleVoiceState(oldState, newState) {
   if (!redisManager.isReady) return;
-  if (newState.member.user.bot) return;
+  if (newState.member?.user?.bot) return;
 
-  const userId = newState.member.id;
-  const guildId = newState.guild.id;
+  const userId = newState.member?.id;
+  const guildId = newState.guild?.id;
+  if (!userId || !guildId) return;
+
   const redisKey = `voice:active:${guildId}:${userId}`;
 
   const joinedChannel = !oldState.channelId && newState.channelId;
@@ -27,7 +29,7 @@ async function handleVoiceState(oldState, newState) {
   const isAfk =
     newState.selfDeaf ||
     newState.serverDeaf ||
-    (newState.selfMute && newState.serverMute); // Just a simple heuristic
+    (newState.selfMute && newState.serverMute);
 
   if (
     joinedChannel ||

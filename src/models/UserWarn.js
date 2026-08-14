@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../managers/dbManager");
+const { sequelize } = require("../config/database");
 
 const UserWarn = sequelize.define(
   "UserWarn",
@@ -29,9 +29,7 @@ const UserWarn = sequelize.define(
   {
     tableName: "user_warns",
     timestamps: true,
-    indexes: [
-      { fields: ["guildId", "userId"] }
-    ]
+    indexes: [{ fields: ["guildId", "userId"] }],
   },
 );
 

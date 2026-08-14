@@ -1,9 +1,7 @@
 // Lokasi: src/events/poru/queueEnd.js
 const { logger } = require("../../managers/logger");
 const ui = require("../../config/ui");
-const {
-  buildContainerV2,
-} = require("../../utils/NauraContainerBuilder");
+const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
 const env = require("../../config/env");
 const LyricsManager = require("../LyricsManager");
 const { GoogleGenerativeAI } = require("@google/generative-ai");

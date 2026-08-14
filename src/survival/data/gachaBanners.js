@@ -20,7 +20,8 @@ const BANNERS = {
   gold: {
     id: "gold",
     name: "Gold Mystic Crate",
-    description: "Peti perlengkapan berkelas. Memerlukan Naura Star Fragments (NFS).",
+    description:
+      "Peti perlengkapan berkelas. Memerlukan Naura Star Fragments (NFS).",
     currency: "starFragments",
     cost: 150,
     pityMax: 40, // Pity di 40 roll = Guarantee Legendary (Higher Rate)

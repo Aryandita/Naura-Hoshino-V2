@@ -47,10 +47,13 @@ class AIRouterManager {
     const cacheManager = require("../managers/cacheManager");
     const userProfile = await cacheManager.getUserProfile(message.author.id);
     if (userProfile && userProfile.aiPersona) {
-        const uPersona = typeof userProfile.aiPersona === "string" ? JSON.parse(userProfile.aiPersona) : userProfile.aiPersona;
-        if (uPersona.systemPrompt) {
-            persona += `\n[Persona Khusus User (${message.author.username})]: ${uPersona.systemPrompt}`;
-        }
+      const uPersona =
+        typeof userProfile.aiPersona === "string"
+          ? JSON.parse(userProfile.aiPersona)
+          : userProfile.aiPersona;
+      if (uPersona.systemPrompt) {
+        persona += `\n[Persona Khusus User (${message.author.username})]: ${uPersona.systemPrompt}`;
+      }
     }
 
     const userMemory = await AIMemory.getMemoryContext(message.author.id);

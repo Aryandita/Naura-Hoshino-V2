@@ -60,7 +60,8 @@ module.exports = [
   {
     id: "bendera_merah_putih",
     name: "Bendera Merah Putih",
-    description: "Kain dua warna yang berkibar gagah. Bisa ditukarkan ke NPC Spesial Kemerdekaan!",
+    description:
+      "Kain dua warna yang berkibar gagah. Bisa ditukarkan ke NPC Spesial Kemerdekaan!",
     price: 0,
     sellPrice: 50,
     category: "materials",
@@ -69,7 +70,8 @@ module.exports = [
   {
     id: "ketupat",
     name: "Ketupat Lebaran",
-    description: "Beras yang dibungkus anyaman daun kelapa. Kumpulkan untuk ditukar saat Lebaran tiba!",
+    description:
+      "Beras yang dibungkus anyaman daun kelapa. Kumpulkan untuk ditukar saat Lebaran tiba!",
     price: 0,
     sellPrice: 10,
     category: "consumable",
@@ -78,7 +80,8 @@ module.exports = [
   {
     id: "opor_ayam",
     name: "Opor Ayam Spesial",
-    description: "Makanan khas Idul Fitri yang sangat lezat. Memulihkan energi secara penuh!",
+    description:
+      "Makanan khas Idul Fitri yang sangat lezat. Memulihkan energi secara penuh!",
     price: 0,
     sellPrice: 500,
     category: "consumable",
@@ -88,7 +91,8 @@ module.exports = [
   {
     id: "birthday_cake",
     name: "Kue Ulang Tahun",
-    description: "Kue manis dengan lilin. Hadiah khusus di hari ulang tahun Naura!",
+    description:
+      "Kue manis dengan lilin. Hadiah khusus di hari ulang tahun Naura!",
     price: 0,
     sellPrice: 200,
     category: "consumable",

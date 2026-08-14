@@ -1,15 +1,20 @@
 "use strict";
 
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
 const VoiceManager = require("../../src/managers/voiceManager");
 const aiManager = require("../../src/managers/aiManager");
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName("voice")
-    .setDescription("🎙️ Interaksi suara dengan Naura Voice Companion")
+    .setName("aivoice")
+    .setDescription(
+      "🎙️ Interaksi suara AI dan TTS dengan Naura Voice Companion",
+    )
     .addSubcommand((sub) =>
       sub
         .setName("speak")
@@ -24,7 +29,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("chat")
-        .setDescription("Bicara dengan Naura AI dan dengarkan jawabannya secara langsung")
+        .setDescription(
+          "Bicara dengan Naura AI dan dengarkan jawabannya secara langsung",
+        )
         .addStringOption((opt) =>
           opt
             .setName("tanya")
@@ -39,7 +46,8 @@ module.exports = {
       return interaction.reply({
         ...buildErrorContainerV2({
           title: "Tidak di Voice Channel",
-          description: "Kamu harus bergabung ke dalam Voice Channel terlebih dahulu sebelum memanggil suara Naura!",
+          description:
+            "Kamu harus bergabung ke dalam Voice Channel terlebih dahulu sebelum memanggil suara Naura!",
           footerText: ui.getFooter("utility"),
         }),
         flags: MessageFlags.Ephemeral,
@@ -71,12 +79,22 @@ module.exports = {
 
       try {
         const aiClient = aiManager.getGenAI();
-        let replyText = "Halo! Senang bisa mengobrol denganmu di voice channel.";
+        let replyText =
+          "Halo! Senang bisa mengobrol denganmu di voice channel.";
 
         if (aiClient) {
           const res = await aiClient.models.generateContent({
             model: aiManager._defaultModel,
-            contents: [{ role: "user", parts: [{ text: `Kamu adalah Naura Hoshino, asisten virtual anime yang ceria. Jawab singkat padat maksimal 2 kalimat ramah dalam bahasa Indonesia: ${query}` }] }],
+            contents: [
+              {
+                role: "user",
+                parts: [
+                  {
+                    text: `Kamu adalah Naura Hoshino, asisten virtual anime yang ceria. Jawab singkat padat maksimal 2 kalimat ramah dalam bahasa Indonesia: ${query}`,
+                  },
+                ],
+              },
+            ],
           });
           replyText = res.text || replyText;
         }

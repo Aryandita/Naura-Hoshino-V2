@@ -2,7 +2,10 @@
 
 const UserSurvival = require("../../../src/models/UserSurvival");
 const ui = require("../../../src/config/ui");
-const { advanceTime, getTimeState } = require("../../../src/survival/helpers/survivalTime");
+const {
+  advanceTime,
+  getTimeState,
+} = require("../../../src/survival/helpers/survivalTime");
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");

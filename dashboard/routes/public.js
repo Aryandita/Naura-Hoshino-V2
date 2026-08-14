@@ -207,7 +207,7 @@ module.exports = (client) => {
           });
         }
       }
-      
+
       const userIds = topProfiles.map((p) => p.userId);
       const survivalMap = {};
       if (userIds.length > 0) {

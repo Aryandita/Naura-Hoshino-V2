@@ -9,7 +9,9 @@ const UserNPC = require("../../../src/models/UserNPC");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const currency = require("../../../src/survival/engines/currency");
-const { rollCouponDrop } = require("../../../src/survival/helpers/couponRewards");
+const {
+  rollCouponDrop,
+} = require("../../../src/survival/helpers/couponRewards");
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
