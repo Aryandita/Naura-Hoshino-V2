@@ -160,6 +160,81 @@ const resultCard = ({
     footerText: ui.getFooter("utility"),
   });
 
+/**
+ * Kartu hasil unduhan album multi-foto (dibagi per fase pengiriman).
+ */
+const multiPhotoPhaseCard = ({
+  client,
+  platform,
+  sourceUrl,
+  phase = 1,
+  totalPhases = 1,
+  startIdx = 1,
+  endIdx = 10,
+  totalPhotos = 10,
+  mediaNames = [],
+  rows = null,
+}) => {
+  if (totalPhases === 1) {
+    return buildContainerV2({
+      accentColorHex: ui.getColor("primary") || "#FFB6C1",
+      authorName: "Naura Media Downloader Engine",
+      title: `${e("download", "\uD83D\uDCE5")} Medianya sudah Naura ambil!`,
+      iconURL: client.user.displayAvatarURL(),
+      expression: "success",
+      description:
+        `${platformEmojiOf(platform)} **Platform:** ${platformNameOf(platform)}\n` +
+        `**Sumber:** [Lihat postingan aslinya](${sourceUrl})\n` +
+        `**Kualitas:** Asli, kualitas terbaik (HD)\n` +
+        `**Total Foto:** \`${totalPhotos} foto\`\n\n` +
+        `> ${e("sparkles", "\uD83C\uDF38")} *Semua fotonya sudah Naura kumpulkan dengan rapi buat kamu!*`,
+      mediaAttachmentNames: mediaNames,
+      buttonsRow: rows && rows.length > 0 ? rows : null,
+      footerText: ui.getFooter("utility"),
+    });
+  }
+
+  if (phase === 1) {
+    return buildContainerV2({
+      accentColorHex: ui.getColor("primary") || "#FFB6C1",
+      authorName: "Naura Media Downloader Engine",
+      title: `${e("download", "\uD83D\uDCE5")} Medianya sudah Naura ambil! (Bagian 1/2)`,
+      iconURL: client.user.displayAvatarURL(),
+      expression: "happy",
+      description:
+        `${platformEmojiOf(platform)} **Platform:** ${platformNameOf(platform)}\n` +
+        `**Sumber:** [Lihat postingan aslinya](${sourceUrl})\n` +
+        `**Kualitas:** Asli, kualitas terbaik (HD)\n` +
+        `**Koleksi Album:** 📸 Menampilkan **${endIdx}** dari total **${totalPhotos} foto**\n\n` +
+        `> ${e("sparkles", "\u2728")} *Fotonya banyak banget! Biar tidak terpotong oleh batas Discord (maks. 10 foto per pesan), Naura bagi jadi 2 pengiriman ya. Sisa fotonya ada di pesan berikutnya di bawah ini~*`,
+      mediaAttachmentNames: mediaNames,
+      buttonsRow: rows && rows.length > 0 ? rows : null,
+      footerText: ui.getFooter("utility"),
+    });
+  }
+
+  // Phase 2
+  const limitNote =
+    totalPhotos > 20
+      ? `\n> ${e("info", "\u2139\uFE0F")} *Catatan: Menampilkan batas maksimal 20 foto dari total ${totalPhotos} foto agar tidak spam.*\n`
+      : "";
+
+  return buildContainerV2({
+    accentColorHex: ui.getColor("accent-pink") || "#F9A8D4",
+    authorName: "Naura Media Downloader Engine",
+    title: `🌸 Kelanjutan Foto Album (Bagian 2/2)`,
+    iconURL: client.user.displayAvatarURL(),
+    expression: "love",
+    description:
+      `${e("camera_with_flash", "\uD83D\uDCF8")} **Lanjutan Galeri:** Foto ke-**${startIdx}** sampai **${endIdx}** dari total **${totalPhotos} foto**` +
+      limitNote +
+      `\n> ${e("success", "\uD83D\uDC96")} *Taraa~! Semua fotonya sudah lengkap Naura kirimkan untuk kamu. Selamat menikmati!*`,
+    mediaAttachmentNames: mediaNames,
+    buttonsRow: rows && rows.length > 0 ? rows : null,
+    footerText: ui.getFooter("utility"),
+  });
+};
+
 /** Kartu kegagalan kompresi manual. */
 const compressFailedCard = ({ client, title, description }) =>
   buildContainerV2({
@@ -183,5 +258,6 @@ module.exports = {
   fetchingCard,
   compressingCard,
   resultCard,
+  multiPhotoPhaseCard,
   compressFailedCard,
 };

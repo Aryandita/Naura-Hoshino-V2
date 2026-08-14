@@ -4,11 +4,11 @@
 // PERINTAH /downloader
 // ==========================================
 // Berkas ini hanya mengatur alur. Seluruh pekerjaan berat ada di:
-//   downloaderCore.js      konstanta, cache, validasi content-type
-//   downloaderChain.js     urutan provider + penyaringan hasil
-//   downloaderFetch.js     unduh berkas tunggal + kompresi
-//   downloaderPicker.js    menu resolusi manual
-//   downloaderRender.js    seluruh kartu yang dilihat pengguna
+//   src/downloader/downloaderCore.js      konstanta, cache, validasi content-type
+//   src/downloader/downloaderChain.js     urutan provider + penyaringan hasil
+//   src/downloader/downloaderFetch.js     unduh berkas tunggal + kompresi
+//   src/downloader/downloaderPicker.js    menu resolusi manual
+//   src/downloader/downloaderRender.js    seluruh kartu yang dilihat pengguna
 
 const {
   SlashCommandBuilder,
@@ -19,15 +19,15 @@ const {
 const { logger } = require("../../src/managers/logger");
 const ui = require("../../src/config/ui");
 const RateLimiter = require("../../src/utils/rateLimiter");
-const core = require("./downloaderCore");
-const { runChain } = require("./downloaderChain");
-const { prepareSingleMedia } = require("./downloaderFetch");
-const picker = require("./downloaderPicker");
-const render = require("./downloaderRender");
+const core = require("../../src/downloader/downloaderCore");
+const { runChain } = require("../../src/downloader/downloaderChain");
+const { prepareSingleMedia } = require("../../src/downloader/downloaderFetch");
+const picker = require("../../src/downloader/downloaderPicker");
+const render = require("../../src/downloader/downloaderRender");
 const {
   getUploadLimitBytes,
   getUploadLimitMB,
-} = require("./downloaderCompress");
+} = require("../../src/downloader/downloaderCompress");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -92,22 +92,93 @@ module.exports = {
 
       if (!data) return interaction.editReply(render.failureCard(platform));
 
-      const mediaGalleryRefs = [];
-      const otherFileRefs = [];
       const actionRow = new ActionRowBuilder();
-      let attachments = [];
-      let linkManualText = "";
-      let primaryAttachmentName = null;
-      let resolutionPickerSource = null;
 
+      // Tambahkan tombol link postingan asli jika valid
+      if (url.length <= 512) {
+        const btn = new ButtonBuilder()
+          .setLabel("Lihat Postingan")
+          .setURL(url)
+          .setStyle(ButtonStyle.Link);
+        const emoji = ui.parseEmoji(
+          ui.getEmoji("download") || "\uD83D\uDCE5",
+        );
+        if (emoji) btn.setEmoji(emoji);
+        actionRow.addComponents(btn);
+      }
+
+      // ==========================================
+      // KASUS 1: ALBUM MULTI-FOTO / PICKER
+      // ==========================================
       if (data.status === "picker" && Array.isArray(data.picker)) {
-        for (const item of data.picker.slice(0, core.MAX_ATTACHMENTS)) {
-          mediaGalleryRefs.push(item.url);
+        const totalItems = data.picker.length;
+        const usableRows = actionRow.components.length > 0 ? [actionRow] : [];
+
+        // Bila foto <= 10, kirim langsung dalam 1 fase
+        if (totalItems <= core.MAX_ATTACHMENTS) {
+          const payload = render.multiPhotoPhaseCard({
+            client: interaction.client,
+            platform,
+            sourceUrl: url,
+            phase: 1,
+            totalPhases: 1,
+            startIdx: 1,
+            endIdx: totalItems,
+            totalPhotos: totalItems,
+            mediaNames: data.picker.map((item) => item.url),
+            rows: usableRows,
+          });
+
+          return await interaction.editReply(payload);
         }
-        if (data.picker.length > core.MAX_ATTACHMENTS) {
-          linkManualText += `\n\n${render.e("read", "\u2139\uFE0F")} *Baru ${core.MAX_ATTACHMENTS} media pertama yang Naura tampilkan, dari total ${data.picker.length}.*`;
-        }
-      } else if (data.url) {
+
+        // Bila foto > 10, bagi menjadi 2 fase pengiriman agar tidak terpotong batas Discord
+        const phase1Items = data.picker.slice(0, 10);
+        const phase2Items = data.picker.slice(10, 20);
+
+        const phase1Payload = render.multiPhotoPhaseCard({
+          client: interaction.client,
+          platform,
+          sourceUrl: url,
+          phase: 1,
+          totalPhases: 2,
+          startIdx: 1,
+          endIdx: 10,
+          totalPhotos: totalItems,
+          mediaNames: phase1Items.map((item) => item.url),
+          rows: [],
+        });
+
+        await interaction.editReply(phase1Payload);
+
+        const endIdx = Math.min(20, totalItems);
+        const phase2Payload = render.multiPhotoPhaseCard({
+          client: interaction.client,
+          platform,
+          sourceUrl: url,
+          phase: 2,
+          totalPhases: 2,
+          startIdx: 11,
+          endIdx,
+          totalPhotos: totalItems,
+          mediaNames: phase2Items.map((item) => item.url),
+          rows: usableRows,
+        });
+
+        return await interaction.followUp(phase2Payload);
+      }
+
+      // ==========================================
+      // KASUS 2: MEDIA TUNGGAL (VIDEO / SINGLE FOTO)
+      // ==========================================
+      if (data.url) {
+        const mediaGalleryRefs = [];
+        const otherFileRefs = [];
+        let attachments = [];
+        let linkManualText = "";
+        let primaryAttachmentName = null;
+        let resolutionPickerSource = null;
+
         const prepared = await prepareSingleMedia({
           interaction,
           data,
@@ -147,72 +218,72 @@ module.exports = {
             linkManualText += `\n\n${render.e("read", "\uD83D\uDD17")} **Tautan cadangan:** [klik di sini](${data.url})`;
           }
         }
-      } else {
-        return interaction.editReply(render.unsupportedCard());
-      }
 
-      if (primaryAttachmentName) {
-        const ext = primaryAttachmentName.split(".").pop().toLowerCase();
-        const visual = [
-          "mp4",
-          "webm",
-          "mov",
-          "avi",
-          "mkv",
-          "jpg",
-          "jpeg",
-          "png",
-          "webp",
-          "gif",
-          "bmp",
-          "heic",
-        ];
-        if (visual.includes(ext)) mediaGalleryRefs.push(primaryAttachmentName);
-        else otherFileRefs.push(primaryAttachmentName);
-      }
+        if (primaryAttachmentName) {
+          const ext = primaryAttachmentName.split(".").pop().toLowerCase();
+          const visual = [
+            "mp4",
+            "webm",
+            "mov",
+            "avi",
+            "mkv",
+            "jpg",
+            "jpeg",
+            "png",
+            "webp",
+            "gif",
+            "bmp",
+            "heic",
+          ];
+          if (visual.includes(ext)) mediaGalleryRefs.push(primaryAttachmentName);
+          else otherFileRefs.push(primaryAttachmentName);
+        }
 
-      const rows = [actionRow];
-      if (resolutionPickerSource)
-        rows.push(picker.buildResolutionRow(interaction.id));
-      const usableRows = rows.filter((row) => row && row.components.length > 0);
+        const rows = [actionRow];
+        if (resolutionPickerSource)
+          rows.push(picker.buildResolutionRow(interaction.id));
+        const usableRows = rows.filter((row) => row && row.components.length > 0);
 
-      const qualityLabel = preselectedHeight
-        ? ` | pilihan kamu: **${preselectedHeight}p**`
-        : "";
-      const resolutionText =
-        primaryAttachmentName && primaryAttachmentName.includes("compressed")
-          ? `terkompresi two-pass${qualityLabel}`
-          : `asli, kualitas terbaik${qualityLabel}`;
+        const qualityLabel = preselectedHeight
+          ? ` | pilihan kamu: **${preselectedHeight}p**`
+          : "";
+        const resolutionText =
+          primaryAttachmentName && primaryAttachmentName.includes("compressed")
+            ? `terkompresi two-pass${qualityLabel}`
+            : `asli, kualitas terbaik${qualityLabel}`;
 
-      const payload = render.resultCard({
-        client: interaction.client,
-        platform,
-        sourceUrl: url,
-        resolutionText,
-        extraText: linkManualText,
-        mediaNames: mediaGalleryRefs,
-        fileNames: otherFileRefs,
-        rows: usableRows,
-      });
-
-      if (attachments.length > 0) payload.files = attachments;
-
-      const sentMessage = await interaction.editReply(payload);
-
-      if (resolutionPickerSource) {
-        picker.attachResolutionCollector({
-          interaction,
-          message: sentMessage,
-          sourcePath: resolutionPickerSource,
+        const payload = render.resultCard({
+          client: interaction.client,
           platform,
           sourceUrl: url,
-          limitBytes,
-          limitMB,
-          extraRows: actionRow.components.length > 0 ? [actionRow] : [],
+          resolutionText,
+          extraText: linkManualText,
+          mediaNames: mediaGalleryRefs,
+          fileNames: otherFileRefs,
+          rows: usableRows,
         });
+
+        if (attachments.length > 0) payload.files = attachments;
+
+        const sentMessage = await interaction.editReply(payload);
+
+        if (resolutionPickerSource) {
+          picker.attachResolutionCollector({
+            interaction,
+            message: sentMessage,
+            sourcePath: resolutionPickerSource,
+            platform,
+            sourceUrl: url,
+            limitBytes,
+            limitMB,
+            extraRows: actionRow.components.length > 0 ? [actionRow] : [],
+          });
+        }
+
+        return;
       }
 
-      return;
+      return interaction.editReply(render.unsupportedCard());
     } catch (error) {
       logger.error(`[Downloader] Kesalahan tak terduga: ${error.message}`);
       await interaction.editReply(render.failureCard(platform)).catch(() => {});
