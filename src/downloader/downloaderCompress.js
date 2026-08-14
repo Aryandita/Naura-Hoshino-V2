@@ -104,10 +104,44 @@ const compressWithFFmpeg = (
     );
     const passlogPrefix = path.join(os.tmpdir(), `naura_pass_${timestamp}`);
 
-    getFfmpeg().ffprobe(inputPath, (err, metadata) => {
-      if (err) return reject(new Error(`FFprobe gagal: ${err.message}`));
+    const { execFile } = require("child_process");
 
-      const duration = parseFloat(metadata.format.duration) || 60;
+    const getDuration = () =>
+      new Promise((resolveDur) => {
+        getFfmpeg().ffprobe(inputPath, (err, metadata) => {
+          if (!err && metadata?.format?.duration) {
+            const dur = parseFloat(metadata.format.duration);
+            if (dur > 0) return resolveDur(dur);
+          }
+
+          execFile(currentPath, ["-i", inputPath], (execErr, stdout, stderr) => {
+            const out = (stderr || "") + (stdout || "");
+            const durMatch = out.match(
+              /Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/i,
+            );
+            if (durMatch) {
+              const hours = parseInt(durMatch[1], 10);
+              const mins = parseInt(durMatch[2], 10);
+              const secs = parseFloat(durMatch[3]);
+              const totalSecs = hours * 3600 + mins * 60 + secs;
+              if (totalSecs > 0) return resolveDur(totalSecs);
+            }
+
+            try {
+              const stats = fs.statSync(inputPath);
+              const estimated = Math.max(
+                10,
+                Math.min(300, stats.size / (1024 * 1024 * 0.8)),
+              );
+              return resolveDur(estimated);
+            } catch {
+              return resolveDur(60);
+            }
+          });
+        });
+      });
+
+    getDuration().then((duration) => {
       const totalBitrate = Math.floor((targetSizeMB * 8192 * 0.97) / duration);
       const audioBitrate = duration > 300 ? 96 : 128;
       const videoBitrate = Math.max(totalBitrate - audioBitrate, 150);
@@ -180,7 +214,8 @@ const compressWithFFmpeg = (
           `-passlogfile ${passlogPrefix}`,
           "-preset fast",
           "-an",
-          "-f mp4",
+          "-f null",
+          "-y",
           ...vfOptions,
         ])
         .output(NULL_DEVICE)

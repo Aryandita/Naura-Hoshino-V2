@@ -193,35 +193,77 @@ const tryEmbed = async (shortcode) => {
 };
 
 /**
- * Jalur cadangan terakhir: layanan pengalih ddinstagram yang me-redirect
- * langsung ke berkas mp4 di CDN Instagram.
- * @param {string} shortcode
- * @returns {Promise<object|null>}
+ * Jalur cadangan: ddinstagram API JSON untuk membaca carousel foto atau video.
  */
-const tryRedirectService = async (shortcode) => {
+const tryVxInstagram = async (shortcode) => {
   try {
-    logger.info("[Downloader][IG] Mencoba layanan pengalih ddinstagram...");
-    const redirectUrl = "https://ddinstagram.com/videos/" + shortcode + "/1";
-    const res = await axios.get(redirectUrl, {
-      timeout: 12000,
+    logger.info("[Downloader][IG] Mencoba ddinstagram JSON API...");
+    const apiUrl = "https://api.ddinstagram.com/p/" + shortcode;
+    const res = await axios.get(apiUrl, {
+      timeout: 10000,
       httpsAgent,
-      maxRedirects: 5,
       headers: { "User-Agent": UA },
-      validateStatus: () => true,
     });
 
-    const finalUrl = res.request?.res?.responseUrl;
-    if (isInstagramCdn(finalUrl)) {
-      return { status: "stream", url: finalUrl };
+    const d = res.data;
+    if (!d) return null;
+
+    if (Array.isArray(d.carousel_media) && d.carousel_media.length > 0) {
+      const items = d.carousel_media
+        .map((m) => ({ url: m.url, type: m.type === "video" ? "video" : "photo" }))
+        .filter((i) => i.url);
+      if (items.length > 0) {
+        return items.length === 1
+          ? { status: "stream", url: items[0].url }
+          : { status: "picker", picker: items };
+      }
+    }
+
+    if (d.url) {
+      return { status: "stream", url: d.url };
     }
   } catch (e) {
-    logger.error(`[Downloader][IG] Layanan pengalih gagal: ${e.message}`);
+    logger.info(`[Downloader][IG] ddinstagram API tidak tersedia: ${e.message}`);
   }
   return null;
 };
 
 /**
- * Resolver Instagram berurutan: GraphQL -> embed -> pengalih.
+ * Jalur cadangan terakhir: layanan pengalih ddinstagram yang me-redirect
+ * langsung ke berkas mp4 atau image di CDN Instagram.
+ * @param {string} shortcode
+ * @returns {Promise<object|null>}
+ */
+const tryRedirectService = async (shortcode) => {
+  const candidates = [
+    "https://ddinstagram.com/videos/" + shortcode + "/1",
+    "https://ddinstagram.com/images/" + shortcode + "/1",
+  ];
+
+  for (const redirectUrl of candidates) {
+    try {
+      logger.info(`[Downloader][IG] Mencoba layanan pengalih: ${redirectUrl}...`);
+      const res = await axios.get(redirectUrl, {
+        timeout: 10000,
+        httpsAgent,
+        maxRedirects: 5,
+        headers: { "User-Agent": UA },
+        validateStatus: () => true,
+      });
+
+      const finalUrl = res.request?.res?.responseUrl;
+      if (isInstagramCdn(finalUrl)) {
+        return { status: "stream", url: finalUrl };
+      }
+    } catch (e) {
+      // lanjut ke URL berikutnya
+    }
+  }
+  return null;
+};
+
+/**
+ * Resolver Instagram berurutan: GraphQL -> embed -> VxJSON -> pengalih.
  * @param {string} url
  * @returns {Promise<object|null>}
  */
@@ -234,7 +276,7 @@ const resolveInstagram = async (url) => {
     return null;
   }
 
-  for (const step of [tryGraphQL, tryEmbed, tryRedirectService]) {
+  for (const step of [tryGraphQL, tryVxInstagram, tryEmbed, tryRedirectService]) {
     const result = await step(shortcode);
     if (result) return result;
   }
