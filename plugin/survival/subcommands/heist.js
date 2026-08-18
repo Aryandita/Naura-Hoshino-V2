@@ -4,23 +4,14 @@ const { MessageFlags } = require("discord.js");
 const UserSurvival = require("../../../src/models/UserSurvival");
 const UserNPC = require("../../../src/models/UserNPC");
 const cacheManager = require("../../../src/managers/cacheManager");
-const {
-  safeParseInventory,
-  takeItemsAtomic,
-} = require("../../../src/survival/engines/inventoryHelper");
+const { safeParseInventory, takeItemsAtomic } = require("../../../src/survival/engines/inventoryHelper");
 const ui = require("../../../src/config/ui");
-const {
-  advanceTime,
-  getTimeState,
-} = require("../../../src/survival/helpers/survivalTime");
+const { advanceTime, getTimeState } = require("../../../src/survival/helpers/survivalTime");
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const currency = require("../../../src/survival/engines/currency");
-const {
-  rollCouponDrop,
-  dropLine,
-} = require("../../../src/survival/helpers/couponRewards");
+const { rollCouponDrop, dropLine } = require("../../../src/survival/helpers/couponRewards");
 
 // Perampokan terjadi di kota, jadi rampasan dan dendanya memakai Naura Coin.
 const LOOT_MIN = 50;

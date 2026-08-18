@@ -114,7 +114,7 @@ module.exports = {
 
       let endPayload;
       if (winner) {
-        let [userLevel] = await UserLeveling.findOrCreate({
+        const [userLevel] = await UserLeveling.findOrCreate({
           where: { userId: winner.id, guildId },
         });
         userLevel.mannersPoint += 100;

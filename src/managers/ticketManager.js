@@ -103,7 +103,7 @@ async function closeTicket(interaction, client) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     // 1. Fetch seluruh pesan dari thread
-    let allMessages = [];
+    const allMessages = [];
     let lastId;
     while (true) {
       const options = { limit: 100 };

@@ -9,9 +9,16 @@ const env = require("./src/config/env");
 // Kode keluar yang dipakai index.js saat konfigurasi wajib belum lengkap.
 const EXIT_CODE_BAD_CONFIG = 78;
 
-// Validasi konfigurasi SEBELUM shard di-spawn. Kalau ada yang kurang, proses berhenti
-// di sini sehingga anak shard tidak pernah lahir lalu mati berulang (respawn loop).
-env.validateEnv({ fatal: true });
+// Validasi konfigurasi SEBELUM shard di-spawn.
+env.validateEnv({ fatal: false });
+
+if (!env.TOKEN) {
+  logger.warn(
+    "\x1b[33m[SHARDING] DISCORD_TOKEN belum diatur di .env. Membuka Dashboard Web secara langsung...\x1b[0m",
+  );
+  require("./index.js");
+  return;
+}
 
 console.log(
   "\n\x1b[46m\x1b[30m ⚙️ SHARD MANAGER \x1b[0m \x1b[36mStarting Sharding Manager...\x1b[0m\n",

@@ -1,11 +1,47 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+const path = require("node:path");
+const fs = require("node:fs");
 const { logger } = require("../../src/managers/logger");
 const GuildSettings = require("../../src/models/GuildSettings");
+const VoiceManager = require("../../src/managers/voiceManager");
 const ui = require("../../src/config/ui");
 const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
+
+const OFFICIAL_SOUNDBOARDS = {
+  intro: {
+    name: "intro",
+    title: "Naura Intro (Indonesian)",
+    file: path.resolve(__dirname, "../../assets/audio/Intro (ID).mp3"),
+  },
+  "intro-en": {
+    name: "intro-en",
+    title: "Naura Intro (English)",
+    file: path.resolve(__dirname, "../../assets/audio/Intro (EN).mp3"),
+  },
+  "ai-chat": {
+    name: "ai-chat",
+    title: "AI Chat Greeting (Indonesian)",
+    file: path.resolve(__dirname, "../../assets/audio/Ai Chat Intro (ID).mp3"),
+  },
+  "ai-chat-en": {
+    name: "ai-chat-en",
+    title: "AI Chat Greeting (English)",
+    file: path.resolve(__dirname, "../../assets/audio/Ai Chat Intro (EN).mp3"),
+  },
+  welcome: {
+    name: "welcome",
+    title: "Server Welcome Greeting (Indonesian)",
+    file: path.resolve(__dirname, "../../assets/audio/Server Join (ID).mp3"),
+  },
+  "welcome-en": {
+    name: "welcome-en",
+    title: "Server Welcome Greeting (English)",
+    file: path.resolve(__dirname, "../../assets/audio/Server Join (EN).mp3"),
+  },
+};
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -62,8 +98,8 @@ module.exports = {
 
     const cacheManager = require("../../src/managers/cacheManager");
     const settingsData = await cacheManager.getGuildSettings(guildId);
-    let [settings] = await GuildSettings.findOrCreate({ where: { guildId } });
-    let currentSettings = settingsData?.settings || settings.settings || {};
+    const [settings] = await GuildSettings.findOrCreate({ where: { guildId } });
+    const currentSettings = settingsData?.settings || settings.settings || {};
     if (!currentSettings.soundboards) currentSettings.soundboards = {};
 
     if (subcommand === "add") {
@@ -145,20 +181,31 @@ module.exports = {
     }
 
     if (subcommand === "list") {
-      const list = Object.keys(currentSettings.soundboards);
-      if (list.length === 0) {
-        const emptyPayload = buildContainerV2({
-          title: "Daftar Soundboard",
-          description: "ℹ️ Belum ada soundboard kustom di server ini.",
-          footerText: ui.getFooter("music"),
+      const customList = Object.keys(currentSettings.soundboards);
+      const officialList = Object.keys(OFFICIAL_SOUNDBOARDS);
+
+      const fields = [
+        {
+          name: "✨ Soundboard Resmi (Official)",
+          value: officialList
+            .map((name) => `• \`/soundboard play ${name}\` - *${OFFICIAL_SOUNDBOARDS[name].title}*`)
+            .join("\n"),
+        },
+      ];
+
+      if (customList.length > 0) {
+        fields.push({
+          name: "🎙️ Soundboard Kustom Server",
+          value: customList.map((name) => `• **${name}**`).join("\n"),
         });
-        return interaction.editReply(emptyPayload);
       }
 
       const payload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#00FFFF",
-        title: "🎙️ Daftar Soundboard Kustom",
-        description: list.map((name) => `• **${name}**`).join("\n"),
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        title: "🎙️ Daftar Efek Suara Soundboard",
+        description:
+          "Mainkan efek suara langsung di Voice Channel tanpa menghentikan antrean musik utama!",
+        fields,
         footerText: "Gunakan /soundboard play <nama> untuk memutar",
       });
 
@@ -177,12 +224,33 @@ module.exports = {
       }
 
       const nama = interaction.options.getString("nama").toLowerCase();
+      const official = OFFICIAL_SOUNDBOARDS[nama];
+
+      // JALUR 1: Official Preset (File Audio Lokal)
+      if (official && fs.existsSync(official.file)) {
+        const played = await VoiceManager.playFile(
+          official.file,
+          interaction.member,
+        );
+
+        if (played) {
+          const payload = buildContainerV2({
+            accentColorHex: ui.getColor("primary") || "#FFB6C1",
+            title: "🎙️ Naura Official Soundboard",
+            description: `✨ Memutar efek suara resmi: **${official.title}** di <#${voiceChannel.id}>!`,
+            footerText: ui.getFooter("music"),
+          });
+          return interaction.editReply(payload);
+        }
+      }
+
+      // JALUR 2: Custom Server Soundboard URL
       const url = currentSettings.soundboards[nama];
 
       if (!url) {
         const errPayload = buildErrorContainerV2({
           title: "Tidak Ditemukan",
-          description: "❌ Soundboard tidak ditemukan di server ini.",
+          description: `❌ Soundboard **${nama}** tidak ditemukan. Gunakan \`/soundboard list\` untuk melihat daftar yang tersedia.`,
           footerText: ui.getFooter("music"),
         });
         return interaction.editReply(errPayload);

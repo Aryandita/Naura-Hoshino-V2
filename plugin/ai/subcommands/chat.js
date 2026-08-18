@@ -1,6 +1,6 @@
 "use strict";
 
-const gemini = require("../../../src/ai/geminiClient");
+const geminiClient = require("../../../src/ai/geminiClient");
 
 const ui = require("../../../src/config/ui");
 const GuildSettings = require("../../../src/models/GuildSettings");
@@ -9,6 +9,7 @@ const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 
+const MODEL = "gemini-2.5-flash";
 const PROVIDER = "Gemini 2.5 Flash";
 
 function e(name, fallback) {
@@ -43,9 +44,9 @@ module.exports = async function chat(interaction) {
 
   let replyText;
   try {
-    replyText = await gemini.generate({
-      parts: [{ text: prompt }],
-      config: { systemInstruction },
+    replyText = await geminiClient.generate({
+      parts: [{ text: `${systemInstruction}\n\nUser: ${prompt}\nNaura:` }],
+      model: MODEL,
     });
   } catch (error) {
     logger.error("[AI Chat] Gemini gagal menjawab", error);

@@ -1,13 +1,7 @@
-const {
-  buildContainerV2,
-} = require("../../../src/utils/NauraContainerBuilder");
+const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 
-module.exports = async function handle(
-  interaction,
-  { currentSettings, saveSettings },
-  subcommand,
-) {
+module.exports = async function handle(interaction, { currentSettings, saveSettings }, subcommand) {
   if (subcommand === "ai") {
     const channel = interaction.options.getChannel("channel");
     currentSettings.aiChannelId = channel.id;

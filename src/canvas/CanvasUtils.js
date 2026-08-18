@@ -194,8 +194,8 @@ const wrapText = (ctx, text, x, y, maxWidth, lineHeight, maxLines) => {
   let currentY = y;
   let lineCount = 1;
   for (let n = 0; n < words.length; n++) {
-    let testLine = line + words[n] + " ";
-    let metrics = ctx.measureText(testLine);
+    const testLine = line + words[n] + " ";
+    const metrics = ctx.measureText(testLine);
     if (metrics.width > maxWidth && n > 0) {
       if (lineCount === maxLines) {
         ctx.fillText(line.trim() + "...", x, currentY);
@@ -1040,10 +1040,151 @@ async function generatePremiumInfoCard(user, isPremium, daysLeft) {
         tier: daysLeft > 90 ? "vip" : daysLeft > 30 ? "friends" : "supporter",
       }
     : { name: "Regular Member", tier: "none" };
-  return generatePremiumTierCard(user, tierData, isPremium, daysLeft, null);
+  return generatePremiumTierCard(
+    user,
+    tierData,
+    isPremium,
+    daysLeft,
+    null,
+  );
 }
 
-const canvasExports = {
+async function generateRankCard(
+  user,
+  level = 1,
+  xp = 0,
+  targetXp = 100,
+  rankNumber = 1,
+  roleBadge = "Novice",
+  isPremium = false,
+  customBg = null,
+  customBorder = null,
+) {
+  const W = 900,
+    H = 280;
+  const canvas = createCanvas(W, H);
+  const ctx = canvas.getContext("2d");
+
+  // Background
+  let bgImg = null;
+  if (customBg) {
+    try {
+      bgImg = await loadImage(customBg);
+    } catch (_) {}
+  }
+
+  if (bgImg) {
+    ctx.drawImage(bgImg, 0, 0, W, H);
+    drawRoundedRect(ctx, 0, 0, W, H, 0, "rgba(11, 12, 16, 0.6)");
+  } else {
+    const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+    bgGrad.addColorStop(0, "#0b0c10");
+    bgGrad.addColorStop(1, "#161922");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Inner Glass Panel
+  drawRoundedRect(ctx, 20, 20, W - 40, H - 40, 20, "rgba(255, 255, 255, 0.04)");
+
+  // Avatar + Ring
+  const avatarSize = 160;
+  const avatarX = 55,
+    avatarY = 60;
+  const accentColor = isPremium ? "#FFD700" : "#FFB6C1";
+
+  ctx.save();
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 5;
+  ctx.shadowColor = accentColor;
+  ctx.shadowBlur = 18;
+  ctx.beginPath();
+  ctx.arc(
+    avatarX + avatarSize / 2,
+    avatarY + avatarSize / 2,
+    avatarSize / 2 + 6,
+    0,
+    Math.PI * 2,
+  );
+  ctx.stroke();
+  ctx.restore();
+
+  try {
+    const avatarUrl = user.displayAvatarURL
+      ? user.displayAvatarURL({ extension: "png", size: 256 })
+      : user.avatarURL;
+    await drawAvatar(ctx, avatarUrl, avatarX, avatarY, avatarSize, accentColor);
+  } catch (_) {
+    drawRoundedRect(
+      ctx,
+      avatarX,
+      avatarY,
+      avatarSize,
+      avatarSize,
+      avatarSize / 2,
+      "#333",
+    );
+  }
+
+  // Custom Border asset if equipped
+  if (customBorder) {
+    try {
+      const borderImg = await loadImage(customBorder);
+      if (borderImg) {
+        ctx.drawImage(borderImg, avatarX - 10, avatarY - 10, avatarSize + 20, avatarSize + 20);
+      }
+    } catch (_) {}
+  }
+
+  // Neon Badges (Top Right): Rank & Role
+  ctx.textAlign = "right";
+  ctx.fillStyle = "#ffffff";
+  ctx.font = 'bold 26px "MontserratBold", "EmojiFont", sans-serif';
+  ctx.fillText(`RANK #${rankNumber}`, W - 45, 65);
+
+  ctx.fillStyle = accentColor;
+  ctx.font = 'bold 20px "MontserratBold", "EmojiFont", sans-serif';
+  ctx.fillText(`LEVEL ${level}`, W - 45, 95);
+
+  // User Info (Left next to avatar)
+  ctx.textAlign = "left";
+  const textX = avatarX + avatarSize + 30;
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = 'bold 32px "MontserratBold", "EmojiFont", sans-serif';
+  const displayName = truncateText(ctx, (user.displayName || user.username || "User").toUpperCase(), 350);
+  ctx.fillText(displayName, textX, 90);
+
+  ctx.fillStyle = "#8e98b0";
+  ctx.font = '18px "Inter", "EmojiFont", sans-serif';
+  ctx.fillText(roleBadge ? String(roleBadge) : "Adventurer", textX, 120);
+
+  // XP Progress Bar
+  const barX = textX;
+  const barY = 160;
+  const barW = W - textX - 45;
+  const barH = 22;
+  const pct = targetXp > 0 ? Math.min(100, Math.max(0, (xp / targetXp) * 100)) : 0;
+
+  drawRoundedProgressBar(ctx, barX, barY, barW, barH, 11, pct, [
+    isPremium ? "#FF8C00" : "#FF69B4",
+    accentColor,
+  ]);
+
+  // XP Text
+  ctx.fillStyle = "#8e98b0";
+  ctx.font = '16px "Inter", "EmojiFont", sans-serif';
+  ctx.fillText(`${Number(xp).toLocaleString()} / ${Number(targetXp).toLocaleString()} XP`, barX, 215);
+
+  ctx.textAlign = "right";
+  ctx.fillStyle = accentColor;
+  ctx.font = 'bold 16px "InterBold", "EmojiFont", sans-serif';
+  ctx.fillText(`${Math.floor(pct)}%`, barX + barW, 215);
+
+  return canvas;
+}
+
+const CanvasUtils = {
   drawRoundedRect,
   drawRoundedProgressBar,
   drawAvatar,
@@ -1059,9 +1200,25 @@ const canvasExports = {
   generateLevel,
   generatePremiumTierCard,
   generatePremiumInfoCard,
+  generateRankCard,
 };
 
 module.exports = {
-  ...canvasExports,
-  CanvasUtils: canvasExports,
+  drawRoundedRect,
+  drawRoundedProgressBar,
+  drawAvatar,
+  drawCircularImage,
+  drawArcProgressBar,
+  wrapText,
+  truncateText,
+  formatDur,
+  generateSurvivalProfileImage,
+  generateMusicProfileImage,
+  generateMusicPanelImage,
+  generateWelcomeImage,
+  generateLevel,
+  generatePremiumTierCard,
+  generatePremiumInfoCard,
+  generateRankCard,
+  CanvasUtils,
 };

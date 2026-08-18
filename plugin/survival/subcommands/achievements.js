@@ -8,9 +8,7 @@ const {
 
 const UserAchievement = require("../../../src/models/UserAchievement");
 const achievementsPool = require("../../../src/survival/data/achievementsData");
-const {
-  generateAchievementImage,
-} = require("../../../src/canvas/achievementCanvas");
+const { generateAchievementImage } = require("../../../src/canvas/achievementCanvas");
 const ui = require("../../../src/config/ui");
 const {
   buildContainerV2,

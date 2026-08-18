@@ -32,7 +32,7 @@ const sendErrorLog = async (err, type, client) => {
   console.error(err);
 
   // Integrasi Sentry
-  if (process.env.SENTRY_DSN) {
+  if (env.SENTRY_DSN) {
     const Sentry = require("@sentry/node");
     Sentry.captureException(err, { tags: { type } });
   }

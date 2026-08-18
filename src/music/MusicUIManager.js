@@ -374,7 +374,9 @@ class MusicUIManager {
       }
       if (!channel) return;
 
-      const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
+      const {
+        buildContainerV2,
+      } = require("../utils/NauraContainerBuilder");
       const row247 = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("music_247")

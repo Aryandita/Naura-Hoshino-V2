@@ -100,7 +100,9 @@ module.exports = {
           .setLabel("Lihat Postingan")
           .setURL(url)
           .setStyle(ButtonStyle.Link);
-        const emoji = ui.parseEmoji(ui.getEmoji("download") || "\uD83D\uDCE5");
+        const emoji = ui.parseEmoji(
+          ui.getEmoji("download") || "\uD83D\uDCE5",
+        );
         if (emoji) btn.setEmoji(emoji);
         actionRow.addComponents(btn);
       }
@@ -233,17 +235,14 @@ module.exports = {
             "bmp",
             "heic",
           ];
-          if (visual.includes(ext))
-            mediaGalleryRefs.push(primaryAttachmentName);
+          if (visual.includes(ext)) mediaGalleryRefs.push(primaryAttachmentName);
           else otherFileRefs.push(primaryAttachmentName);
         }
 
         const rows = [actionRow];
         if (resolutionPickerSource)
           rows.push(picker.buildResolutionRow(interaction.id));
-        const usableRows = rows.filter(
-          (row) => row && row.components.length > 0,
-        );
+        const usableRows = rows.filter((row) => row && row.components.length > 0);
 
         const qualityLabel = preselectedHeight
           ? ` | pilihan kamu: **${preselectedHeight}p**`

@@ -6,10 +6,7 @@ const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const leveling = require("../../../src/survival/engines/survivalLeveling");
 const currency = require("../../../src/survival/engines/currency");
-const {
-  rollCouponDrop,
-  dropLine,
-} = require("../../../src/survival/helpers/couponRewards");
+const { rollCouponDrop, dropLine } = require("../../../src/survival/helpers/couponRewards");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -72,9 +69,7 @@ module.exports = {
     const holders = { survival, profile };
 
     if (action === "info") {
-      const userClan = survival.clanId
-        ? await GuildClan.findByPk(survival.clanId)
-        : null;
+      const userClan = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
 
       if (!userClan) {
         return card(interaction, {
@@ -97,54 +92,40 @@ module.exports = {
         ? leaderUser.username
         : "pemimpin misterius";
 
-      let state =
-        typeof userClan.questsState === "string"
-          ? JSON.parse(userClan.questsState)
-          : userClan.questsState;
+      let state = typeof userClan.questsState === "string" ? JSON.parse(userClan.questsState) : userClan.questsState;
       let needsSave = false;
       const todayDate = new Date();
       todayDate.setHours(0, 0, 0, 0);
-      todayDate.setDate(
-        todayDate.getDate() -
-          (todayDate.getDay() === 0 ? 6 : todayDate.getDay() - 1),
-      );
+      todayDate.setDate(todayDate.getDate() - (todayDate.getDay() === 0 ? 6 : todayDate.getDay() - 1));
       const currentWeek = todayDate.toISOString().split("T")[0];
-
-      const {
-        generateClanQuestsForClan,
-      } = require("../../../src/survival/engines/questGenerator");
+      
+      const { generateClanQuestsForClan } = require("../../../src/survival/engines/questGenerator");
       if (!state || state.lastWeeklyReset !== currentWeek) {
-        state = generateClanQuestsForClan(userClan);
-        needsSave = true;
+         state = generateClanQuestsForClan(userClan);
+         needsSave = true;
       }
-
+      
       let rewardTotal = 0;
-      let questLines = [];
+      const questLines = [];
       const nsfEmoji = currency.emojiOf(currency.FRAGMENT);
       state.weekly.forEach((q, idx) => {
-        const icon = q.claimed
-          ? e("cheers", "✅")
-          : q.current >= q.target
-            ? e("impressed", "⭐")
-            : e("thinking", "⏳");
-        if (q.current >= q.target && !q.claimed) {
-          q.claimed = true;
-          rewardTotal += q.reward;
-          needsSave = true;
-        }
-        questLines.push(
-          `**${idx + 1}.** ${icon} ${q.title}\n> Progres: \`${q.current} / ${q.target}\` • Kas Klan: ${nsfEmoji} **${q.reward}**`,
-        );
+         const icon = q.claimed ? e("cheers", "✅") : (q.current >= q.target ? e("impressed", "⭐") : e("thinking", "⏳"));
+         if (q.current >= q.target && !q.claimed) {
+            q.claimed = true;
+            rewardTotal += q.reward;
+            needsSave = true;
+         }
+         questLines.push(`**${idx + 1}.** ${icon} ${q.title}\n> Progres: \`${q.current} / ${q.target}\` • Kas Klan: ${nsfEmoji} **${q.reward}**`);
       });
 
       if (rewardTotal > 0) {
-        userClan.vault = (userClan.vault || 0) + rewardTotal;
+         userClan.vault = (userClan.vault || 0) + rewardTotal;
       }
 
       if (needsSave) {
-        userClan.questsState = state;
-        userClan.changed("questsState", true);
-        await userClan.save();
+         userClan.questsState = state;
+         userClan.changed("questsState", true);
+         await userClan.save();
       }
 
       const description = [
@@ -161,9 +142,7 @@ module.exports = {
       ];
 
       if (rewardTotal > 0) {
-        description.push(
-          `\n${e("cheers", "🎉")} Misi diselesaikan! Kas klan bertambah **${rewardTotal.toLocaleString("id-ID")} NSF**!`,
-        );
+        description.push(`\n${e("cheers", "🎉")} Misi diselesaikan! Kas klan bertambah **${rewardTotal.toLocaleString("id-ID")} NSF**!`);
       }
 
       return card(interaction, {
@@ -175,34 +154,31 @@ module.exports = {
     }
 
     if (action === "leave") {
-      const userClan = survival.clanId
-        ? await GuildClan.findByPk(survival.clanId)
-        : null;
-      if (!userClan)
-        return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
-
+      const userClan = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
+      if (!userClan) return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
+      
       if (userClan.leaderId === user.id) {
-        await userClan.destroy();
-        survival.clanId = null;
-        await survival.save();
-        return card(interaction, {
-          color: "#ff4757",
-          title: `${e("shocked", "💥")} Klan Dibubarkan`,
-          description: `Kamu adalah pemimpin klan. Karena kamu keluar, klan **${userClan.name}** resmi dibubarkan.`,
-        });
+         await userClan.destroy();
+         survival.clanId = null;
+         await survival.save();
+         return card(interaction, {
+            color: "#ff4757",
+            title: `${e("shocked", "💥")} Klan Dibubarkan`,
+            description: `Kamu adalah pemimpin klan. Karena kamu keluar, klan **${userClan.name}** resmi dibubarkan.`
+         });
       }
-
-      userClan.members = userClan.members.filter((id) => id !== user.id);
+      
+      userClan.members = userClan.members.filter(id => id !== user.id);
       userClan.changed("members", true);
       await userClan.save();
-
+      
       survival.clanId = null;
       await survival.save();
-
+      
       return card(interaction, {
-        color: "#ff4757",
-        title: `${e("shy", "👋")} Keluar dari Klan`,
-        description: `Kamu telah keluar dari klan **${userClan.name}**.`,
+         color: "#ff4757",
+         title: `${e("shy", "👋")} Keluar dari Klan`,
+         description: `Kamu telah keluar dari klan **${userClan.name}**.`
       });
     }
 
@@ -213,9 +189,7 @@ module.exports = {
           "Naura belum tahu nama klannya. Tulis namanya dulu ya!",
         );
 
-      const existing = survival.clanId
-        ? await GuildClan.findByPk(survival.clanId)
-        : null;
+      const existing = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
       if (existing)
         return fail(
           interaction,
@@ -265,9 +239,7 @@ module.exports = {
           "Naura belum tahu klan mana yang mau kamu masuki. Tulis namanya ya!",
         );
 
-      const existing = survival.clanId
-        ? await GuildClan.findByPk(survival.clanId)
-        : null;
+      const existing = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
       if (existing)
         return fail(
           interaction,
@@ -304,9 +276,7 @@ module.exports = {
     }
 
     if (action === "deposit") {
-      const userClan = survival.clanId
-        ? await GuildClan.findByPk(survival.clanId)
-        : null;
+      const userClan = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
       if (!userClan)
         return fail(
           interaction,
@@ -363,9 +333,7 @@ module.exports = {
     }
 
     if (action === "raid") {
-      const userClan = survival.clanId
-        ? await GuildClan.findByPk(survival.clanId)
-        : null;
+      const userClan = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
       if (!userClan)
         return fail(
           interaction,
@@ -440,16 +408,13 @@ module.exports = {
 
     if (action === "blessing") {
       const guildWarEngine = require("../../../src/survival/engines/guildWarEngine");
-      const blessing = await guildWarEngine.getServerBlessing(
-        interaction.guildId,
-      );
+      const blessing = await guildWarEngine.getServerBlessing(interaction.guildId);
 
       if (!blessing) {
         return card(interaction, {
           color: "#9CA3AF",
           title: "🕊️ Server Blessing Tidak Aktif",
-          description:
-            "Server ini belum memiliki Server Blessing aktif. Menangkan Clan War mingguan untuk mengaktifkan 2x XP Boost & 2x Stamina Regeneration selama 24 jam!",
+          description: "Server ini belum memiliki Server Blessing aktif. Menangkan Clan War mingguan untuk mengaktifkan 2x XP Boost & 2x Stamina Regeneration selama 24 jam!",
         });
       }
 

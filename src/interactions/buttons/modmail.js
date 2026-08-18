@@ -20,7 +20,9 @@ module.exports = [
     defer: "reply",
     onError: "Terjadi kesalahan saat membuat tiket.",
     async handler(interaction, client) {
-      const { createTicketChannel } = require("../../modmail/modmailHelper");
+      const {
+        createTicketChannel,
+      } = require("../../modmail/modmailHelper");
       const guildData = await cacheManager.getGuildSettings(
         interaction.guild.id,
       );
@@ -114,28 +116,24 @@ module.exports = [
       if (channel) {
         const logEmbed = new EmbedBuilder()
           .setColor("#FF0000")
-          .setDescription(
-            `🔒 Tiket ini ditutup oleh Pengguna (<@${interaction.user.id}>).`,
-          );
+          .setDescription(`🔒 Tiket ini ditutup oleh Pengguna (<@${interaction.user.id}>).`);
         await channel.send({ embeds: [logEmbed] });
 
         // Rename thread to mark as closed, or delete it
         if (channel.isThread()) {
-          await channel
-            .setArchived(true, "Ditutup oleh pengguna")
-            .catch(() => {});
+            await channel.setArchived(true, "Ditutup oleh pengguna").catch(() => {});
         } else {
-          setTimeout(() => channel.delete().catch(() => {}), 5000);
+            setTimeout(() => channel.delete().catch(() => {}), 5000);
         }
       }
 
       await interaction.reply({
-        content: "✅ Tiket modmail telah berhasil ditutup.",
-        flags: 32768 | 64, // IsComponentsV2 | Ephemeral
+          content: "✅ Tiket modmail telah berhasil ditutup.",
+          flags: 32768 | 64 // IsComponentsV2 | Ephemeral
       });
       return undefined;
-    },
-  },
+    }
+  }
 ];
 
 function showUserReplyModal(interaction) {

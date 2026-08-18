@@ -3,17 +3,12 @@
 const UserQuest = require("../../../src/models/UserQuest");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
-const {
-  generateQuestsForUser,
-} = require("../../../src/survival/engines/questGenerator");
+const { generateQuestsForUser } = require("../../../src/survival/engines/questGenerator");
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const currency = require("../../../src/survival/engines/currency");
-const {
-  rollCouponDrop,
-  dropLine,
-} = require("../../../src/survival/helpers/couponRewards");
+const { rollCouponDrop, dropLine } = require("../../../src/survival/helpers/couponRewards");
 
 function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
@@ -50,10 +45,7 @@ module.exports = async function questBoard(interaction, user, survivalData) {
   const today = new Date().toISOString().split("T")[0];
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
-  todayDate.setDate(
-    todayDate.getDate() -
-      (todayDate.getDay() === 0 ? 6 : todayDate.getDay() - 1),
-  );
+  todayDate.setDate(todayDate.getDate() - (todayDate.getDay() === 0 ? 6 : todayDate.getDay() - 1));
   const currentWeek = todayDate.toISOString().split("T")[0];
 
   const profile = await cacheManager.getUserProfile(user.id);

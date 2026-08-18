@@ -73,6 +73,20 @@ module.exports = {
         footerText: ui.getFooter("core"),
       });
 
+      const audioFilePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "assets",
+        "audio",
+        "Intro (ID).mp3",
+      );
+      if (fs.existsSync(audioFilePath)) {
+        payload.files = [
+          new AttachmentBuilder(audioFilePath, { name: "Naura_Intro_ID.mp3" }),
+        ];
+      }
+
       await interaction.editReply(payload);
     } else if (subcommand === "gallery") {
       const galleryPath = path.join(

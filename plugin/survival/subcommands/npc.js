@@ -17,7 +17,7 @@ const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const npcConfig = require("../../../src/survival/data/npcs");
-const aiManager = require("../../../src/managers/aiManager");
+const geminiClient = require("../../../src/ai/geminiClient");
 const actions = require("../../../src/survival/helpers/npcActions");
 const {
   COLLECTOR_MS,
@@ -45,36 +45,24 @@ async function composeGreeting(ctx) {
 
   let seasonInfoEn = "";
   let seasonInfoId = "";
-  const {
-    getCurrentSeason,
-  } = require("../../../src/survival/helpers/survivalContext");
+  const { getCurrentSeason } = require("../../../src/survival/helpers/survivalContext");
   const season = getCurrentSeason();
   if (season) {
     if (season.name === "ramadhan") {
-      seasonInfoEn =
-        "\nCurrently, it is the holy month of Ramadan. Many people are fasting. Mention the festive or fasting vibe.";
-      seasonInfoId =
-        "\nSaat ini sedang bulan Ramadhan. Banyak orang sedang berpuasa. Singgung suasana puasa atau persahabatan di bulan suci ini.";
+      seasonInfoEn = "\nCurrently, it is the holy month of Ramadan. Many people are fasting. Mention the festive or fasting vibe.";
+      seasonInfoId = "\nSaat ini sedang bulan Ramadhan. Banyak orang sedang berpuasa. Singgung suasana puasa atau persahabatan di bulan suci ini.";
     } else if (season.name === "kemerdekaan") {
-      seasonInfoEn =
-        "\nCurrently, it is Independence Day (Kemerdekaan) month. Mention the red and white flag or patriotic spirit.";
-      seasonInfoId =
-        "\nSaat ini sedang bulan Kemerdekaan Indonesia. Singgung semangat merah putih, lomba tujuh belasan, atau hari kemerdekaan.";
+      seasonInfoEn = "\nCurrently, it is Independence Day (Kemerdekaan) month. Mention the red and white flag or patriotic spirit.";
+      seasonInfoId = "\nSaat ini sedang bulan Kemerdekaan Indonesia. Singgung semangat merah putih, lomba tujuh belasan, atau hari kemerdekaan.";
     } else if (season.name === "naura_birthday") {
-      seasonInfoEn =
-        "\nCurrently, it is Naura's Birthday celebration! People are happy and festive.";
-      seasonInfoId =
-        "\nSaat ini sedang perayaan Ulang Tahun Naura! Suasana sangat ceria dan penuh pesta.";
+      seasonInfoEn = "\nCurrently, it is Naura's Birthday celebration! People are happy and festive.";
+      seasonInfoId = "\nSaat ini sedang perayaan Ulang Tahun Naura! Suasana sangat ceria dan penuh pesta.";
     } else if (season.name === "new_year") {
-      seasonInfoEn =
-        "\nCurrently, it is New Year! Mention fireworks, new resolutions or festive vibes.";
-      seasonInfoId =
-        "\nSaat ini adalah perayaan Tahun Baru! Singgung soal kembang api, resolusi baru, atau perayaan meriah.";
+      seasonInfoEn = "\nCurrently, it is New Year! Mention fireworks, new resolutions or festive vibes.";
+      seasonInfoId = "\nSaat ini adalah perayaan Tahun Baru! Singgung soal kembang api, resolusi baru, atau perayaan meriah.";
     } else if (season.name === "lebaran") {
-      seasonInfoEn =
-        "\nCurrently, it is Eid al-Fitr (Lebaran)! People are wearing new clothes, eating Ketupat and asking for forgiveness.";
-      seasonInfoId =
-        "\nSaat ini sedang Hari Raya Idul Fitri (Lebaran)! Singgung saling bermaaf-maafan, baju baru, atau ketupat.";
+      seasonInfoEn = "\nCurrently, it is Eid al-Fitr (Lebaran)! People are wearing new clothes, eating Ketupat and asking for forgiveness.";
+      seasonInfoId = "\nSaat ini sedang Hari Raya Idul Fitri (Lebaran)! Singgung saling bermaaf-maafan, baju baru, atau ketupat.";
     }
   }
 
@@ -84,7 +72,7 @@ async function composeGreeting(ctx) {
       : `Kamu adalah karakter NPC di sebuah game RPG Discord bernama Naura Hoshino.\nNama kamu: ${npc.name}.\nPekerjaan: ${npc.title}.\nSifat kamu: ${npc.personality}.\nKamu sedang berada di: ${lokasi}, pada ${timeOfDay} (jam dalam game ${inGameHour}).\nTingkat kedekatan kamu dengan pemain (${username}) adalah ${affection}/100 (${relLabel}).\nSesuaikan kehangatanmu dengan kedekatan itu: sopan pada kenalan, mesra pada pacar atau pasangan.${seasonInfoId}\nBerikan satu sapaan pendek yang natural dalam bahasa Indonesia. Maksimal dua kalimat pendek.`;
 
   try {
-    const response = await aiManager.generateResponse(prompt);
+    const response = await geminiClient.generate({ parts: [{ text: prompt }] });
     if (response) return response;
   } catch (error) {
     // Diamkan; kalimat cadangan sudah disiapkan.

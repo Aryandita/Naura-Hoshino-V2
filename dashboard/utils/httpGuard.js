@@ -16,8 +16,8 @@
  */
 
 const crypto = require("crypto");
-const redisManager = require("../src/managers/redisManager");
-const { logger } = require("../src/managers/logger");
+const redisManager = require("../../src/managers/redisManager");
+const { logger } = require("../../src/managers/logger");
 
 // ==========================================
 // Perbandingan token

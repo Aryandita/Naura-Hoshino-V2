@@ -212,19 +212,18 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
 
 - [x] **Bahasa per user secara menyeluruh:** pastikan `/language` menulis ke profil user, `getUserLanguage` membaca cache user lebih dulu, dan `GuildSettings.language` hanya dipakai sebagai default saat user belum memilih.
 - [x] **AI conversation memory per user:** cek `ai_memory:{userId}` di Redis sebelum memanggil LLM, gabungkan ke context, simpan kembali dengan TTL 3600.
-- [x] **AI lokal tanpa kuota (Ollama Utama):** Mengubah mesin utama menjadi Ollama lokal dengan injeksi _System Prompt_ Naura, perlindungan injeksi prompt di `aiSecurity.js`, menghapus kebutuhan kuota API pihak ketiga.
+- [x] **AI lokal tanpa kuota (Ollama Utama):** Mengubah mesin utama menjadi Ollama lokal dengan injeksi *System Prompt* Naura, perlindungan injeksi prompt di `aiSecurity.js`, menghapus kebutuhan kuota API pihak ketiga.
 - [x] **Moderasi: tempban dan strike escalation.** Model `UserStrike`, logika eskalasi di `plugin/admin/warn.js`, dan penjadwalan unban lewat `cronManager.js` telah terimplementasi sempurna.
 - [x] **Anti-raid system:** hitung join per guild dengan rate limiter memory, dan set `GuildSettings.settings.lockdown = true` saat melebihi batas (misalnya 5 join per 10 detik).
 - [x] **Auction house dan pasar antar server:** tabel `market_auctions`, command `/market auction` dan `/market bid`. **Hanya setelah issue #17 selesai.**
 - [x] **Dashboard Ekonomi:** Membuat antarmuka visual (leaderboard kekayaan, statistik inflasi) di dashboard web (file `economy.html` belum ada).
 - [x] **Seasonal events system:** penentu musim (Halloween, Lebaran, Natal) di `survivalContext.js`, dengan boost drop rate atau item eksklusif.
-- [x] **Plugin Ticketing Lanjutan:** Mengembangkan folder `plugin/ticketing/` dengan modal untuk formulir tiket, serta _private thread_ per tiket.
+- [x] **Plugin Ticketing Lanjutan:** Mengembangkan folder `plugin/ticketing/` dengan modal untuk formulir tiket, serta *private thread* per tiket.
 - [x] **Audit desain dashboard terhadap `DESIGN.md`:** pastikan `.glass-panel` memakai `backdrop-filter: blur(16px)` dan `rgba(255, 255, 255, 0.03)`, font `Orbitron` untuk metrik dan `Outfit` untuk teks biasa, plus efek glow pada hover kartu.
 
 ---
 
 ## ⚠️ Risiko yang harus terus dipantau
-
 | Risiko                                                                | Dampak                                                                                                      | Mitigasi                                                                                                                                                                                                                               |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Migrasi berjalan di dalam boot sequence dan di semua shard            | Skema separuh jalan atau deadlock saat startup                                                              | **Selesai** di Sprint 0 lewat `scripts/migrate.js`, dan di Sprint 2 dijamin urutannya oleh `prestart`                                                                                                                                  |
@@ -314,8 +313,8 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
 - [x] **Onboarding Wizard** `M`, Saat bot join server baru, kirim Container V2 dengan preset cepat (Community, Gaming, Minimal). `plugin/admin/onboardingWizard.js`
 
 > **Urutan Sprint yang Direkomendasikan:**
->
 > - **Sprint A (Impact Tinggi, Ringan):** Audio Filters, Voice Activity Rewards, Quest Harian
 > - **Sprint B (Impact Tinggi, Sedang):** AI Memory, PvP Arena, Anti-Raid, Musim & Event
 > - **Sprint C (Kompleks, Differensiator):** AI Function Calling, Dashboard Analytics, Modmail Lanjutan
 > - **Sprint D (Long-term):** AI Dungeon Master, Sistem Klan, Welcome Card Builder, Voice AI
+

@@ -1,4 +1,3 @@
-// src/managers/dbManager.js
 const {
   sequelize,
   hasMySQLConfig,
@@ -9,6 +8,9 @@ const env = require("../config/env");
 const redisManager = require("./redisManager");
 const { logger } = require("../managers/logger");
 
+// ==========================================
+// EKSPOR SEQUELIZE
+// ==========================================
 module.exports = { sequelize };
 
 // ==========================================
@@ -124,7 +126,7 @@ function setupAssociations() {
     // Safe fallback jika dipanggil saat circular dependency belum selesai
   }
 }
-// setupAssociations will be called at module end or in connectToDatabase
+setupAssociations();
 
 // ==========================================
 // 5. FUNGSI KONEKSI DAN SINKRONISASI TABEL
@@ -364,6 +366,3 @@ const healthCheckTimer = setInterval(async () => {
 if (healthCheckTimer.unref) healthCheckTimer.unref();
 
 module.exports.healthCheckTimer = healthCheckTimer;
-module.exports.setupAssociations = setupAssociations;
-
-setupAssociations();

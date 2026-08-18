@@ -26,7 +26,7 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    let size = interaction.options.getInteger("ukuran") || 9;
+    const size = interaction.options.getInteger("ukuran") || 9;
     let bombs =
       interaction.options.getInteger("bom") || Math.floor(size * size * 0.15); // 15% bomb density
 

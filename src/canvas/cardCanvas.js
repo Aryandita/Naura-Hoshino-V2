@@ -1,11 +1,6 @@
 "use strict";
 
-const {
-  createCanvas,
-  loadImage,
-  GlobalFonts,
-  runWithLimit,
-} = require("./canvasRuntime");
+const { createCanvas, loadImage, GlobalFonts, runWithLimit } = require("./canvasRuntime");
 
 /**
  * Render visual kartu anime berkualitas tinggi
@@ -26,14 +21,7 @@ async function drawAnimeCard(cardData) {
     ctx.roundRect(15, 15, width - 30, height - 30, 24);
     ctx.fill();
 
-    const bgGrad = ctx.createRadialGradient(
-      width / 2,
-      height / 2,
-      50,
-      width / 2,
-      height / 2,
-      400,
-    );
+    const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, 400);
     bgGrad.addColorStop(0, "#1f1738");
     bgGrad.addColorStop(0.7, "#110e20");
     bgGrad.addColorStop(1, "#07080b");
@@ -117,11 +105,7 @@ async function drawAnimeCard(cardData) {
 
     ctx.textAlign = "right";
     ctx.fillStyle = dyeColor;
-    ctx.fillText(
-      (cardData.rarity || "RARE").replace("_", " "),
-      width - 60,
-      665,
-    );
+    ctx.fillText((cardData.rarity || "RARE").replace("_", " "), width - 60, 665);
 
     return canvas.toBuffer("image/png");
   });

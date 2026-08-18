@@ -89,8 +89,8 @@ class CommandHandler {
   }
 
   async load(autoDeploy = false) {
-    let commandsArray = [];
-    let commandNames = new Set();
+    const commandsArray = [];
+    const commandNames = new Set();
     const pendingAliases = [];
 
     try {

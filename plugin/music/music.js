@@ -12,7 +12,9 @@ const UserProfile = require("../../src/models/UserProfile");
 const GuildSettings = require("../../src/models/GuildSettings");
 const UserPlaylist = require("../../src/models/UserPlaylist");
 
-const { generateMusicProfileImage } = require("../../src/canvas/canvasHelper");
+const {
+  generateMusicProfileImage,
+} = require("../../src/canvas/canvasHelper");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -69,7 +71,7 @@ async function runMusicLogic(
       const calculateTop5 = (jsonInput) => {
         if (!jsonInput) return [];
         try {
-          let data =
+          const data =
             typeof jsonInput === "string" ? JSON.parse(jsonInput) : jsonInput;
           if (!data.history) return [];
           const sorted = Object.entries(data.history).sort(
@@ -204,7 +206,7 @@ async function runMusicLogic(
       player.is247 = false;
     }
 
-    let query = args.query;
+    const query = args.query;
     if (!query) {
       const errPayload = buildErrorContainerV2({
         title: "Query Kosong",
@@ -217,7 +219,7 @@ async function runMusicLogic(
     let res;
     let searchSource = "ytsearch";
     let finalQuery = query;
-    let isDirectLink = !!query.match(/^(https?:\/\/)/);
+    const isDirectLink = !!query.match(/^(https?:\/\/)/);
 
     if (!isDirectLink) {
       if (query.startsWith("scsearch:")) searchSource = "scsearch";
@@ -668,16 +670,13 @@ async function runMusicLogic(
       let equippedBanner = null;
       try {
         if (userProfile && userProfile.activeBanners) {
-          const banners =
-            typeof userProfile.activeBanners === "string"
-              ? JSON.parse(userProfile.activeBanners)
-              : userProfile.activeBanners;
+          const banners = typeof userProfile.activeBanners === "string" ? JSON.parse(userProfile.activeBanners) : userProfile.activeBanners;
           const bannerId = banners.music;
           if (bannerId) {
-            equippedBanner = `./plugin/canvas/assets/banners/${bannerId}.png`;
-            // For now we will assume the banner image files are provided. Wait, I should use absolute path or require!
-            // Let's just pass bannerId, we can load it in canvas
-            equippedBanner = bannerId;
+             equippedBanner = `./plugin/canvas/assets/banners/${bannerId}.png`;
+             // For now we will assume the banner image files are provided. Wait, I should use absolute path or require!
+             // Let's just pass bannerId, we can load it in canvas
+             equippedBanner = bannerId;
           }
         }
       } catch (e) {}
@@ -1113,7 +1112,7 @@ async function runMusicLogic(
     }
     player.is247 = !player.is247;
     try {
-      let [guildData] = await GuildSettings.findOrCreate({
+      const [guildData] = await GuildSettings.findOrCreate({
         where: { guildId: guild.id },
       });
       guildData.music = {
@@ -1388,9 +1387,9 @@ module.exports = {
         return interaction.respond([]).catch(() => {});
 
       const choices = res.tracks.slice(0, 25).map((track) => {
-        let title = track.info.title;
-        let author = track.info.author;
-        let duration = formatDuration(track.info.length);
+        const title = track.info.title;
+        const author = track.info.author;
+        const duration = formatDuration(track.info.length);
         let label = `${title} - ${author} (${duration})`;
         if (label.length > 100) label = label.substring(0, 97) + "...";
         return { name: label, value: track.info.uri || track.info.title };

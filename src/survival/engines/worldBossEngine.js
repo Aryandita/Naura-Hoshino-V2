@@ -26,11 +26,7 @@ class WorldBossEngine {
     });
 
     if (boss && redisManager.isReady) {
-      await redisManager.setCache(
-        BOSS_CACHE_KEY,
-        JSON.stringify(boss.toJSON()),
-        30,
-      );
+      await redisManager.setCache(BOSS_CACHE_KEY, JSON.stringify(boss.toJSON()), 30);
     }
 
     return boss ? boss.toJSON() : null;
@@ -65,11 +61,7 @@ class WorldBossEngine {
     });
 
     if (redisManager.isReady) {
-      await redisManager.setCache(
-        BOSS_CACHE_KEY,
-        JSON.stringify(newBoss.toJSON()),
-        60,
-      );
+      await redisManager.setCache(BOSS_CACHE_KEY, JSON.stringify(newBoss.toJSON()), 60);
       await redisManager.publish(RAID_CHANNEL, {
         type: "SPAWN",
         boss: newBoss.toJSON(),
@@ -83,21 +75,14 @@ class WorldBossEngine {
   /**
    * Serang World Boss
    */
-  static async attackBoss(
-    userId,
-    username,
-    { userLevel = 1, petBuffs = {} } = {},
-  ) {
+  static async attackBoss(userId, username, { userLevel = 1, petBuffs = {} } = {}) {
     const boss = await this.getActiveBoss();
     if (!boss || boss.status !== "ACTIVE") {
       return { success: false, reason: "NO_ACTIVE_BOSS" };
     }
 
     if (new Date() > new Date(boss.endTime)) {
-      await WorldBoss.update(
-        { status: "DESPAWNED" },
-        { where: { bossId: boss.bossId } },
-      );
+      await WorldBoss.update({ status: "DESPAWNED" }, { where: { bossId: boss.bossId } });
       if (redisManager.isReady) await redisManager.deleteCache(BOSS_CACHE_KEY);
       return { success: false, reason: "BOSS_EXPIRED" };
     }
@@ -105,8 +90,7 @@ class WorldBossEngine {
     // Hitung damage pemain
     const baseDmg = Math.floor(Math.random() * 80) + 100 + userLevel * 5;
     const petDmgBuff = petBuffs.damage || 0;
-    const critBonus =
-      Math.random() * 100 < 15 + (petBuffs.crit || 0) ? 1.75 : 1.0;
+    const critBonus = Math.random() * 100 < (15 + (petBuffs.crit || 0)) ? 1.75 : 1.0;
     const totalDamage = Math.floor((baseDmg + petDmgBuff) * critBonus);
     const isCrit = critBonus > 1.0;
 
@@ -133,9 +117,7 @@ class WorldBossEngine {
       dbBoss.status = "DEFEATED";
     }
 
-    await dbBoss.save({
-      fields: ["currentHp", "damageLeaderboard", "status"],
-    });
+    await dbBoss.save();
 
     // Invalidate / update Redis
     if (redisManager.isReady) {
@@ -143,11 +125,7 @@ class WorldBossEngine {
         await redisManager.deleteCache(BOSS_CACHE_KEY);
         await this._distributeRewards(dbBoss);
       } else {
-        await redisManager.setCache(
-          BOSS_CACHE_KEY,
-          JSON.stringify(dbBoss.toJSON()),
-          30,
-        );
+        await redisManager.setCache(BOSS_CACHE_KEY, JSON.stringify(dbBoss.toJSON()), 30);
       }
 
       await redisManager.publish(RAID_CHANNEL, {
@@ -181,27 +159,16 @@ class WorldBossEngine {
 
       const totalPoolFrag = boss.rewardsPool?.starFragments || 5000;
       const totalPoolCoupons = boss.rewardsPool?.coupons || 30;
-      const totalDmgDealt =
-        participants.reduce((sum, p) => sum + (p.totalDamage || 0), 0) || 1;
+      const totalDmgDealt = participants.reduce((sum, p) => sum + (p.totalDamage || 0), 0) || 1;
 
       for (const p of participants) {
         const share = p.totalDamage / totalDmgDealt;
         const rewardFrag = Math.max(50, Math.floor(totalPoolFrag * share));
         const rewardCoupons = Math.max(1, Math.floor(totalPoolCoupons * share));
 
-        await cacheManager.incrementUserSurvival(
-          p.userId,
-          "starFragments",
-          rewardFrag,
-        );
-        await cacheManager.incrementUserSurvival(
-          p.userId,
-          "coupons",
-          rewardCoupons,
-        );
-        logger.info(
-          `[WorldBoss Reward] User ${p.userId} (${p.username}) dapat ${rewardFrag} Fragments, ${rewardCoupons} Coupons.`,
-        );
+        await cacheManager.incrementUserSurvival(p.userId, "starFragments", rewardFrag);
+        await cacheManager.incrementUserSurvival(p.userId, "coupons", rewardCoupons);
+        logger.info(`[WorldBoss Reward] User ${p.userId} (${p.username}) dapat ${rewardFrag} Fragments, ${rewardCoupons} Coupons.`);
       }
     } catch (e) {
       logger.error("[WorldBoss] Gagal membagikan reward raid:", e);

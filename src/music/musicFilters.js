@@ -138,7 +138,7 @@ module.exports = {
     const filterType = interaction.options.getString("type");
 
     if (premiumFilters.includes(filterType)) {
-      let [profile] = await UserProfile.findOrCreate({
+      const [profile] = await UserProfile.findOrCreate({
         where: { userId: interaction.user.id },
       });
       if (

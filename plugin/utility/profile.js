@@ -90,7 +90,11 @@ async function createBusinessCard(user, profile, topFriend, streak) {
   );
 
   ctx.fillStyle = "#f39c12"; // gold/star color
-  ctx.fillText(`Reputasi: ⭐ ${profile.reputation || 0}`, 230, 240);
+  ctx.fillText(
+    `Reputasi: ⭐ ${profile.reputation || 0}`,
+    230,
+    240,
+  );
 
   // Social Media Pills
   let yPos = 270;

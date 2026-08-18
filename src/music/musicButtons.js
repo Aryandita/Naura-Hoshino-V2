@@ -126,7 +126,7 @@ module.exports = async (interaction, client) => {
         const filterType = interaction.values[0];
 
         if (premiumFilters.includes(filterType)) {
-          let [profile] = await UserProfile.findOrCreate({
+          const [profile] = await UserProfile.findOrCreate({
             where: { userId: interaction.user.id },
           });
           if (
@@ -192,7 +192,7 @@ module.exports = async (interaction, client) => {
   switch (interaction.customId) {
     case "music_save":
       try {
-        let [userProfile] = await UserProfile.findOrCreate({
+        const [userProfile] = await UserProfile.findOrCreate({
           where: { userId: interaction.user.id },
         });
         if (!player.currentTrack || !player.currentTrack.info)
@@ -205,8 +205,8 @@ module.exports = async (interaction, client) => {
           });
 
         const savedData = `${player.currentTrack.info.title} | ${player.currentTrack.info.uri}`;
-        let rawPl = userProfile.music_playlist;
-        let playlist = Array.isArray(rawPl)
+        const rawPl = userProfile.music_playlist;
+        const playlist = Array.isArray(rawPl)
           ? rawPl
           : typeof rawPl === "string"
             ? (() => {
@@ -221,7 +221,8 @@ module.exports = async (interaction, client) => {
         if (!playlist.includes(savedData)) {
           playlist.push(savedData);
           userProfile.music_playlist = playlist;
-          await userProfile.save();
+          userProfile.changed("music_playlist", true);
+          await userProfile.save({ fields: ["music_playlist"] });
           const payload = buildContainerV2({
             accentColorHex: "#22c55e",
             title: "Lagu Difavoritkan",
@@ -248,7 +249,7 @@ module.exports = async (interaction, client) => {
       break;
 
     case "music_lyrics": {
-      let [profile] = await UserProfile.findOrCreate({
+      const [profile] = await UserProfile.findOrCreate({
         where: { userId: interaction.user.id },
       });
       if (
@@ -281,7 +282,7 @@ module.exports = async (interaction, client) => {
     }
 
     case "music_autoplay": {
-      let [profile] = await UserProfile.findOrCreate({
+      const [profile] = await UserProfile.findOrCreate({
         where: { userId: interaction.user.id },
       });
       if (
@@ -363,10 +364,10 @@ module.exports = async (interaction, client) => {
       player.is247 = !player.is247;
 
       try {
-        let [guildData] = await GuildSettings.findOrCreate({
+        const [guildData] = await GuildSettings.findOrCreate({
           where: { guildId: interaction.guildId },
         });
-        let musicData = guildData.music || {};
+        const musicData = guildData.music || {};
         musicData.twentyFourSeven = player.is247;
         musicData.voiceChannel = player.is247 ? player.voiceChannel : null;
         musicData.textChannel = player.is247 ? player.textChannel : null;
@@ -433,22 +434,15 @@ module.exports = async (interaction, client) => {
 
     case "music_skip": {
       const voiceChannel = interaction.member?.voice?.channel;
-      const listeners = voiceChannel
-        ? voiceChannel.members.filter((m) => !m.user.bot).size
-        : 1;
-
+      const listeners = voiceChannel ? voiceChannel.members.filter((m) => !m.user.bot).size : 1;
+      
       player.skipVotes = player.skipVotes || new Set();
       player.skipVotes.add(interaction.user.id);
-
+      
       const requiredVotes = Math.max(1, Math.ceil(listeners / 2));
-      const isRequester =
-        player.currentTrack?.info?.requester?.id === interaction.user.id;
-
-      if (
-        listeners <= 1 ||
-        isRequester ||
-        player.skipVotes.size >= requiredVotes
-      ) {
+      const isRequester = player.currentTrack?.info?.requester?.id === interaction.user.id;
+      
+      if (listeners <= 1 || isRequester || player.skipVotes.size >= requiredVotes) {
         player.skipVotes.clear();
         safeStopTrack(player);
         return interaction.editReply({

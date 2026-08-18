@@ -1,4 +1,4 @@
-/* global rowInvite, rowGame, cacheManager, row, gameStartTime, difficulty */
+/* global rowInvite, rowGame, row, gameStartTime, difficulty */
 const {
   SlashCommandBuilder,
   ActionRowBuilder,
@@ -15,9 +15,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
-const { GoogleGenAI } = require("@google/genai");
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const geminiClient = require("../../src/ai/geminiClient");
 
 const triviaDBFallback = {
   pemula: [
@@ -442,7 +440,7 @@ module.exports = {
       },
       deferReply: async () => {},
       editReply: async (payload) => {
-        let msgPayload =
+        const msgPayload =
           typeof payload === "string"
             ? { content: payload, embeds: [], components: [], files: [] }
             : {
@@ -456,7 +454,7 @@ module.exports = {
         return await message.reply(msgPayload);
       },
       reply: async (payload) => {
-        let msgPayload =
+        const msgPayload =
           typeof payload === "string"
             ? { content: payload, embeds: [], components: [], files: [] }
             : {
@@ -470,7 +468,7 @@ module.exports = {
         return await message.reply(msgPayload);
       },
       followUp: async (payload) => {
-        let msgPayload =
+        const msgPayload =
           typeof payload === "string"
             ? { content: payload, embeds: [], components: [], files: [] }
             : {
@@ -495,7 +493,7 @@ module.exports = {
     // Ganti fetchReply behavior untuk RPS dan wordle agar collector jalan di pesan yang sama
     let lastMsg = null;
     mockInteraction.editReply = async (payload) => {
-      let msgPayload =
+      const msgPayload =
         typeof payload === "string"
           ? { content: payload, embeds: [], components: [], files: [] }
           : {
@@ -521,7 +519,7 @@ async function runMinigameLogic(interaction) {
   const user = interaction.user;
 
   // Memuat profil MySQL
-  let [profile] = await UserProfile.findOrCreate({
+  const [profile] = await UserProfile.findOrCreate({
     where: { userId: user.id },
   });
 
@@ -611,7 +609,7 @@ async function runMinigameLogic(interaction) {
       const answer = n1 + n2;
 
       // Menyiapkan 4 pilihan acak
-      let options = [answer, answer + 5, answer - 3, answer + 10].sort(
+      const options = [answer, answer + 5, answer - 3, answer + 10].sort(
         () => Math.random() - 0.5,
       );
 
@@ -674,7 +672,7 @@ async function runMinigameLogic(interaction) {
             footerText: ui.getFooter("core"),
           });
 
-          await gi.update({ content: null, ...winPayload });
+          await gi.update(winPayload);
         } else {
           // Jika klik salah
           await ui.sendError(gi, "err_sys_4", true);
@@ -727,12 +725,12 @@ async function runMinigameLogic(interaction) {
                     "a": "Tulis jawaban yang benar di sini (harus sama persis dengan salah satu isi options)"
                 }`;
 
-      const response = await ai.models.generateContent({
+      const rawText = await geminiClient.generate({
         model: "gemini-2.5-flash",
-        contents: promptAI,
+        parts: [{ text: promptAI }],
       });
 
-      const jsonText = response.text
+      const jsonText = (rawText || "")
         .replace(/```json/gi, "")
         .replace(/```/gi, "")
         .trim();
@@ -966,7 +964,7 @@ async function runMinigameLogic(interaction) {
         footerText: ui.getFooter("core"),
       });
 
-      await i.update({ ...resPayload, components: [] });
+      await i.update(resPayload);
       collector.stop();
     });
 
@@ -996,7 +994,7 @@ async function runMinigameLogic(interaction) {
       });
     }
 
-    let board = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    const board = [0, 1, 2, 3, 4, 5, 6, 7, 8];
     const checkWin = (b) => {
       const wins = [
         [0, 1, 2],
@@ -1008,7 +1006,7 @@ async function runMinigameLogic(interaction) {
         [0, 4, 8],
         [2, 4, 6],
       ];
-      for (let w of wins) {
+      for (const w of wins) {
         if (b[w[0]] === b[w[1]] && b[w[1]] === b[w[2]]) return b[w[0]];
       }
       if (b.every((c) => c === "X" || c === "O")) return "DRAW";
@@ -1035,10 +1033,20 @@ async function runMinigameLogic(interaction) {
       return rows;
     };
 
-    await interaction.editReply({
-      content: `🕹️ **Tic-Tac-Toe** | Taruhan: **${taruhan.toLocaleString()}** ${coinEmoji}\nKamu adalah ❌. Lawan AI bot ⭕!`,
-      components: buildBoardUI(board),
-    });
+    const renderTtt = (desc, disabled = false) =>
+      buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        title: "🕹️ Tic-Tac-Toe Minigame",
+        description: desc,
+        buttonsRow: buildBoardUI(board, disabled),
+        footerText: ui.getFooter("core"),
+      });
+
+    await interaction.editReply(
+      renderTtt(
+        `Taruhan: **${taruhan.toLocaleString()}** ${coinEmoji}\nKamu adalah ❌. Lawan AI bot ⭕!`,
+      ),
+    );
     const message = await interaction.fetchReply();
     const collector = message.createMessageComponentCollector({
       componentType: ComponentType.Button,
@@ -1074,24 +1082,30 @@ async function runMinigameLogic(interaction) {
         } else {
           msg = `🤝 **SERI!** Permainan imbang, koin dikembalikan.`;
         }
-        await profile.save();
-        await i.update({ content: msg, components: buildBoardUI(board, true) });
+        await profile.save({ fields: ["economy_wallet", "minigame_tttWin"] });
+        await i.update(renderTtt(msg, true));
         collector.stop();
       } else {
-        await i.update({ components: buildBoardUI(board) });
+        await i.update(
+          renderTtt(
+            `Taruhan: **${taruhan.toLocaleString()}** ${coinEmoji}\nGiliran berikutnya! Kamu ❌ vs AI ⭕.`,
+          ),
+        );
         collector.resetTimer();
       }
     });
 
-    collector.on("end", (collected) => {
+    collector.on("end", async (collected) => {
       if (checkWin(board) === null) {
         profile.economy_wallet -= taruhan;
-        profile.save();
-        interaction
-          .editReply({
-            content: `⏰ **WAKTU HABIS!** Kamu dianggap WO dan kehilangan taruhan.`,
-            components: buildBoardUI(board, true),
-          })
+        await profile.save({ fields: ["economy_wallet"] });
+        await interaction
+          .editReply(
+            renderTtt(
+              `⏰ **WAKTU HABIS!** Kamu dianggap WO dan kehilangan taruhan.`,
+              true,
+            ),
+          )
           .catch(() => {});
       }
     });
@@ -1109,7 +1123,7 @@ async function runMinigameLogic(interaction) {
       wordleWords[Math.floor(Math.random() * wordleWords.length)];
     let attempts = 0;
     const maxAttempts = 6;
-    let gridHistory = [];
+    const gridHistory = [];
 
     profile.economy_wallet -= taruhan;
     await profile.save();
@@ -1134,9 +1148,9 @@ async function runMinigameLogic(interaction) {
       attempts++;
 
       let resultRow = "";
-      let targetArr = targetWord.split("");
-      let guessArr = guess.split("");
-      let statusArr = ["⬛", "⬛", "⬛", "⬛", "⬛"];
+      const targetArr = targetWord.split("");
+      const guessArr = guess.split("");
+      const statusArr = ["⬛", "⬛", "⬛", "⬛", "⬛"];
 
       for (let i = 0; i < 5; i++) {
         if (guessArr[i] === targetArr[i]) {
@@ -1388,13 +1402,13 @@ async function runMinigameLogic(interaction) {
       "UNIVERSITAS",
     ];
     const word = words[Math.floor(Math.random() * words.length)];
-    let guessed = [];
+    const guessed = [];
     let wrongAttempts = 0;
     const maxAttempts = 6;
 
     const buildHangmanString = () => {
       let str = "";
-      for (let char of word) {
+      for (const char of word) {
         if (guessed.includes(char)) str += char + " ";
         else str += "_ ";
       }
@@ -1530,9 +1544,9 @@ async function runMinigameLogic(interaction) {
   // ==========================================
   else if (subcommand === "memory") {
     const emojis = ["🍎", "🍌", "🍇", "🍉", "🍓", "🍒"];
-    let board = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+    const board = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
     let flipped = [];
-    let matched = [];
+    const matched = [];
     let attempts = 0;
 
     const buildMemoryBoard = (disableAll = false) => {
@@ -1561,14 +1575,18 @@ async function runMinigameLogic(interaction) {
       return rows;
     };
 
-    const payload = buildContainerV2({
-      accentColorHex: ui.colors ? ui.colors.primary : "#00FFFF",
-      title: "🎴 Memory Match",
-      description: "Cocokkan pasangan emoji!\nPercobaan: **" + attempts + "**",
-      footerText: ui.getFooter("core"),
-    });
+    const renderMemory = (desc, disabled = false) =>
+      buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#00FFFF",
+        title: "🎴 Memory Match",
+        description: desc,
+        buttonsRow: buildMemoryBoard(disabled),
+        footerText: ui.getFooter("core"),
+      });
 
-    await interaction.editReply({ ...payload, components: buildMemoryBoard() });
+    await interaction.editReply(
+      renderMemory("Cocokkan pasangan emoji!\nPercobaan: **" + attempts + "**"),
+    );
     const message = await interaction.fetchReply();
 
     const collector = message.createMessageComponentCollector({
@@ -1584,14 +1602,12 @@ async function runMinigameLogic(interaction) {
 
       if (flipped.length === 2) {
         attempts++;
-        const midPayload = buildContainerV2({
-          accentColorHex: ui.colors ? ui.colors.primary : "#00FFFF",
-          title: "🎴 Memory Match",
-          description:
+        await i.update(
+          renderMemory(
             "Cocokkan pasangan emoji!\nPercobaan: **" + attempts + "**",
-          footerText: ui.getFooter("core"),
-        });
-        await i.update({ ...midPayload, components: buildMemoryBoard(true) });
+            true,
+          ),
+        );
 
         const [first, second] = flipped;
         if (board[first] === board[second]) {
@@ -1606,36 +1622,29 @@ async function runMinigameLogic(interaction) {
             await cacheManager.incrementUserProfile(user.id, {
               economy_wallet: profile.isPremium ? 1000 : 500,
             });
-            const winPayload = buildContainerV2({
-              accentColorHex: "#22c55e",
-              title: "🎉 Kamu Menang!",
-              description:
+            await interaction.editReply(
+              renderMemory(
                 "Berhasil mencocokkan semua dalam **" +
-                attempts +
-                "** percobaan!\nKamu mendapat 500 koin!",
-              footerText: ui.getFooter("core"),
-            });
-            await interaction.editReply({
-              ...winPayload,
-              components: buildMemoryBoard(true),
-            });
+                  attempts +
+                  "** percobaan!\nKamu mendapat 500 koin!",
+                true,
+              ),
+            );
             collector.stop("win");
           } else {
-            const nextPayload = buildContainerV2({
-              accentColorHex: ui.colors ? ui.colors.primary : "#00FFFF",
-              title: "🎴 Memory Match",
-              description:
+            await interaction.editReply(
+              renderMemory(
                 "Cocokkan pasangan emoji!\nPercobaan: **" + attempts + "**",
-              footerText: ui.getFooter("core"),
-            });
-            await interaction.editReply({
-              ...nextPayload,
-              components: buildMemoryBoard(),
-            });
+              ),
+            );
           }
         }, 1000);
       } else {
-        await i.update({ components: buildMemoryBoard() });
+        await i.update(
+          renderMemory(
+            "Cocokkan pasangan emoji!\nPercobaan: **" + attempts + "**",
+          ),
+        );
       }
       collector.resetTimer();
     });
@@ -1905,11 +1914,11 @@ async function runMinigameLogic(interaction) {
 
         let generatedChallenge = "";
         try {
-          const response = await ai.models.generateContent({
+          const rawText = await geminiClient.generate({
             model: "gemini-2.5-flash",
-            contents: promptAI,
+            parts: [{ text: promptAI }],
           });
-          generatedChallenge = response.text.trim();
+          generatedChallenge = (rawText || "").trim();
         } catch (err) {
           logger.error("[TOD GEMINI ERROR]", err);
           if (isTruth) {
@@ -2044,7 +2053,7 @@ async function runMinigameLogic(interaction) {
 
     let descString = `> Inilah daftar pemain kuis terbaik di server!\n\n`;
     sortedUsers.forEach((u, i) => {
-      let medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "🏅";
+      const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "🏅";
       let score = 0;
       if (isMath) score = u.minigame_mathScore;
       else if (isTrivia) score = u.minigame_triviaScore;

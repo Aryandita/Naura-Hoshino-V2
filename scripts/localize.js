@@ -7,11 +7,11 @@ async function extractStrings() {
     absolute: true,
   });
 
-  let extracted = {};
+  const extracted = {};
   let keyCounter = 1;
 
   for (const file of files) {
-    let content = fs.readFileSync(file, "utf8");
+    const content = fs.readFileSync(file, "utf8");
 
     // Regex untuk menemukan ui.sendError(..., 'teks', ...)
     const sendErrorRegex = /ui\.sendError\(([^,]+),\s*(['"`])(.*?)\2(.*?)\)/g;

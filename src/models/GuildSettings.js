@@ -104,7 +104,7 @@ const GuildSettings = sequelize.define(
         },
         aiPersona: {
           name: null,
-          systemPrompt: null,
+          systemPrompt: null
         },
       },
     },

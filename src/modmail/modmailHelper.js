@@ -123,24 +123,17 @@ async function initiateNewTicket(message, client) {
   if (guildsWithModmail.length === 1) {
     // Single server, create directly
     await createTicketChannel(message, guildsWithModmail[0], client, {
-      content: message.content.replace(/^n!modmail\s*/i, ""),
-      attachments: Array.from(message.attachments.values()),
+        content: message.content.replace(/^n!modmail\s*/i, ""),
+        attachments: Array.from(message.attachments.values())
     });
   } else {
     // Save draft in Redis to use later
     const redisManager = require("../managers/redisManager");
     const draft = {
       content: message.content.replace(/^n!modmail\s*/i, ""),
-      attachments: Array.from(message.attachments.values()).map((a) => ({
-        name: a.name,
-        url: a.url,
-      })),
+      attachments: Array.from(message.attachments.values()).map(a => ({ name: a.name, url: a.url }))
     };
-    await redisManager.setCache(
-      `modmail:draft:${message.author.id}`,
-      draft,
-      300,
-    ); // 5 mins
+    await redisManager.setCache(`modmail:draft:${message.author.id}`, draft, 300); // 5 mins
 
     const selectMenu = new StringSelectMenuBuilder()
       .setCustomId("mm_select_server")
@@ -179,29 +172,24 @@ async function createTicketChannel(message, guildData, client, draft = null) {
       throw new Error("Master channel untuk modmail tidak ditemukan.");
 
     let channel;
-
+    
     // Always create a PrivateThread if possible. If masterChannel is a category, we have a problem.
     // Modmail requires a TextChannel to create a thread. We should fall back to a text channel if a category is provided.
     let targetChannel = masterChannel;
     if (targetChannel.type === ChannelType.GuildCategory) {
-      targetChannel =
-        guild.channels.cache.find(
-          (c) =>
-            c.parentId === targetChannel.id && c.type === ChannelType.GuildText,
-        ) || guild.channels.cache.find((c) => c.type === ChannelType.GuildText);
+        targetChannel = guild.channels.cache.find(c => c.parentId === targetChannel.id && c.type === ChannelType.GuildText) || 
+                        guild.channels.cache.find(c => c.type === ChannelType.GuildText);
     }
-
+    
     if (!targetChannel || targetChannel.type !== ChannelType.GuildText) {
-      throw new Error(
-        "Kategori modmail tidak memiliki text channel untuk membuat thread.",
-      );
+        throw new Error("Kategori modmail tidak memiliki text channel untuk membuat thread.");
     }
-
+    
     channel = await targetChannel.threads.create({
-      name: `mm-${(message.author || message.user).username.substring(0, 20)}`,
-      autoArchiveDuration: 10080,
-      type: ChannelType.PrivateThread, // PRIVATE THREAD FOR MODMAIL
-      reason: "Modmail Ticket",
+        name: `mm-${(message.author || message.user).username.substring(0, 20)}`,
+        autoArchiveDuration: 10080,
+        type: ChannelType.PrivateThread, // PRIVATE THREAD FOR MODMAIL
+        reason: "Modmail Ticket",
     });
 
     const authorId = message.author ? message.author.id : message.user.id;
@@ -223,12 +211,10 @@ async function createTicketChannel(message, guildData, client, draft = null) {
     const staffRoleId = settings?.settings?.modmail?.staffRoleId;
     const tagContent = staffRoleId ? `<@&${staffRoleId}>` : "@here";
 
-    const initialContent = draft
-      ? draft.content
-      : message.content || "*Hanya Memilih Menu*";
+    const initialContent = draft ? draft.content : (message.content || "*Hanya Memilih Menu*");
     const attachments = draft && draft.attachments ? draft.attachments : [];
-
-    let descriptionText = `**Pengguna:** <@${authorId}> (${authorId})\n**Server:** ${guild.name}\n\n**Pesan Awal:**\n${initialContent || "*Hanya Lampiran*"}`;
+    
+    const descriptionText = `**Pengguna:** <@${authorId}> (${authorId})\n**Server:** ${guild.name}\n\n**Pesan Awal:**\n${initialContent || "*Hanya Lampiran*"}`;
 
     const welcomePayload = buildContainerV2({
       accentColorHex: "#FFB6C1",
@@ -241,45 +227,51 @@ async function createTicketChannel(message, guildData, client, draft = null) {
       // Adding buttons for the admins to reply and close directly from the initial embed
       buttonsRow: new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId("mm_reply")
-          .setLabel("Balas")
-          .setEmoji(ui.getEmoji("support") || "💬")
-          .setStyle(ButtonStyle.Primary),
+            .setCustomId("mm_reply")
+            .setLabel("Balas")
+            .setEmoji(ui.getEmoji("support") || "💬")
+            .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
-          .setCustomId("mm_reply_anon")
-          .setLabel("Balas Anonim")
-          .setEmoji(ui.getEmoji("mask") || "🎭")
-          .setStyle(ButtonStyle.Secondary),
+            .setCustomId("mm_reply_anon")
+            .setLabel("Balas Anonim")
+            .setEmoji(ui.getEmoji("mask") || "🎭")
+            .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
-          .setCustomId("mm_close")
-          .setLabel("Tutup Tiket")
-          .setEmoji(ui.getEmoji("lock") || "🔒")
-          .setStyle(ButtonStyle.Danger),
-      ),
+            .setCustomId("mm_close")
+            .setLabel("Tutup Tiket")
+            .setEmoji(ui.getEmoji("lock") || "🔒")
+            .setStyle(ButtonStyle.Danger)
+      )
     });
 
-    const payload = { content: tagContent, ...welcomePayload };
+    if (tagContent) {
+      await channel.send({ content: tagContent }).catch(() => {});
+    }
 
+    const payload = { ...welcomePayload };
+    
     const files = [];
     if (attachments && attachments.length > 0) {
-      attachments.forEach((att) => {
-        files.push(new AttachmentBuilder(att.url, { name: att.name }));
-      });
-
-      // Use the first attachment as banner if it's an image
-      if (files[0].name.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-        payload.bannerAttachmentName = files[0].name;
-      }
+        attachments.forEach(att => {
+            files.push(new AttachmentBuilder(att.url, { name: att.name }));
+        });
+        
+        // Use the first attachment as banner if it's an image
+        if (files[0].name.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+            payload.bannerAttachmentName = files[0].name;
+        }
     }
-
+    
     const ticketBanner = ui.getBanner("ticket");
     if (ticketBanner && files.length === 0) {
-      files.push(new AttachmentBuilder(ticketBanner, { name: "banner.png" }));
+      files.push(
+        new AttachmentBuilder(ticketBanner, { name: "banner.png" }),
+      );
       payload.bannerAttachmentName = "banner.png";
     }
-
+    
     if (files.length > 0) {
-      payload.files = files;
+        payload.files = files;
     }
 
     await channel.send(payload);

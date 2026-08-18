@@ -25,11 +25,7 @@ class MetricsManager {
   logComponent(componentName) {
     try {
       if (redisManager.client && redisManager.client.isReady) {
-        redisManager.client.hincrby(
-          "metrics:components",
-          componentName || "unknown",
-          1,
-        );
+        redisManager.client.hincrby("metrics:components", componentName || "unknown", 1);
         redisManager.client.hincrby("metrics:components", "total", 1);
       }
     } catch (e) {
@@ -42,11 +38,10 @@ class MetricsManager {
    */
   async getMetrics() {
     if (!redisManager.client || !redisManager.client.isReady) return null;
-
+    
     try {
       const commands = await redisManager.client.hgetall("metrics:commands");
-      const components =
-        await redisManager.client.hgetall("metrics:components");
+      const components = await redisManager.client.hgetall("metrics:components");
       return { commands, components };
     } catch (e) {
       return null;

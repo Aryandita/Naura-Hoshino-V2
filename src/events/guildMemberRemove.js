@@ -42,7 +42,9 @@ module.exports = {
         const channel = member.guild.channels.cache.get(leaveData.channelId);
         if (channel) {
           const ui = require("../config/ui");
-          const { generateWelcomeImage } = require("../canvas/CanvasUtils");
+          const {
+            generateWelcomeImage,
+          } = require("../canvas/CanvasUtils");
           const { EmbedBuilder, AttachmentBuilder } = require("discord.js");
 
           let parsedMessage = leaveData.message || "Sampai jumpa {member}!";

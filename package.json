@@ -16,6 +16,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "node --test",
+    "build": "npm run build:css",
     "build:css": "tailwindcss -i ./dashboard/public/css/input.css -o ./dashboard/public/css/tailwind-compiled.css",
     "locales:check": "node scripts/validate-locales.js",
     "locales:check:strict": "node scripts/validate-locales.js --strict",

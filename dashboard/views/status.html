@@ -1,337 +1,224 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Naura Hoshino - System Status</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="/css/style.css?v=3" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css?v=3">
     <style>
-      .glass-panel {
-        background: rgba(15, 12, 41, 0.6);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 1rem;
-      }
-      .status-dot {
-        height: 12px;
-        width: 12px;
-        border-radius: 50%;
-        display: inline-block;
-      }
-      .status-online {
-        background-color: #10b981;
-        box-shadow: 0 0 10px #10b981;
-      }
-      .status-offline {
-        background-color: #ef4444;
-        box-shadow: 0 0 10px #ef4444;
-      }
-      .text-glow {
-        text-shadow: 0 0 10px currentColor;
-      }
+        .glass-panel {
+            background: rgba(15, 12, 41, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+        }
+        .status-dot {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-online { background-color: #10B981; box-shadow: 0 0 10px #10B981; }
+        .status-offline { background-color: #EF4444; box-shadow: 0 0 10px #EF4444; }
+        .text-glow { text-shadow: 0 0 10px currentColor; }
     </style>
-  </head>
+</head>
 
-  <body
-    class="flex flex-col min-h-screen bg-[#0B0C10] text-gray-200 overflow-x-hidden p-6 font-sans"
-  >
+<body class="flex flex-col min-h-screen bg-[#0B0C10] text-gray-200 overflow-x-hidden p-6 font-sans">
+    
     <div class="max-w-4xl mx-auto w-full flex-grow">
-      <header class="text-center my-10">
-        <h1
-          class="text-4xl font-bold text-[#FFB6C1] text-glow tracking-wider font-orbitron mb-2"
-        >
-          NAURA SYSTEM STATUS
-        </h1>
-        <p class="text-gray-400">
-          Pemantauan operasional real-time seluruh modul Naura Hoshino V2.
-        </p>
-      </header>
+        <header class="text-center my-10">
+            <h1 class="text-4xl font-bold text-[#FFB6C1] text-glow tracking-wider font-orbitron mb-2">NAURA SYSTEM STATUS</h1>
+            <p class="text-gray-400">Pemantauan operasional real-time seluruh modul Naura Hoshino V2.</p>
+        </header>
 
-      <!-- Main Status Overview -->
-      <div
-        class="glass-panel p-8 mb-8 text-center flex flex-col items-center justify-center"
-      >
-        <div id="mainStatusIcon" class="text-6xl mb-4 text-emerald-400">
-          <i class="fa-solid fa-check-circle"></i>
-        </div>
-        <h2 id="mainStatusText" class="text-2xl font-bold text-white mb-2">
-          All Systems Operational
-        </h2>
-        <p class="text-sm text-gray-400">
-          Last updated: <span id="lastUpdated">Just now</span>
-        </p>
-      </div>
-
-      <!-- Detailed Services -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- MySQL Database -->
-        <div class="glass-panel p-6 flex flex-col h-full">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-database text-[#93C5FD]"></i> MySQL Database
-            </h3>
-            <span id="dbDot" class="status-dot status-offline"></span>
-          </div>
-          <div class="text-sm text-gray-300 mt-auto">
-            <p>
-              Status:
-              <span id="dbText" class="font-bold text-red-400">Unknown</span>
-            </p>
-            <p>
-              Active Connections:
-              <span id="dbConnections" class="text-white">0</span> /
-              <span id="dbPoolMax">0</span>
-            </p>
-          </div>
-        </div>
-
-        <!-- Redis Cache -->
-        <div class="glass-panel p-6 flex flex-col h-full">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-bolt text-[#F9A8D4]"></i> Redis Cache
-            </h3>
-            <span id="redisDot" class="status-dot status-offline"></span>
-          </div>
-          <div class="text-sm text-gray-300 mt-auto">
-            <p>
-              Status:
-              <span id="redisText" class="font-bold text-red-400"
-                >Disconnected</span
-              >
-            </p>
-            <p class="text-xs mt-2 text-gray-500">
-              Menangani rate limiting & caching UI.
-            </p>
-          </div>
-        </div>
-
-        <!-- Lavalink Music -->
-        <div class="glass-panel p-6 flex flex-col h-full">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-music text-[#C084FC]"></i> Lavalink Nodes
-            </h3>
-            <span id="lavaDot" class="status-dot status-offline"></span>
-          </div>
-          <div class="text-sm text-gray-300 mt-auto">
-            <p>
-              Status:
-              <span id="lavaText" class="font-bold text-red-400">Offline</span>
-            </p>
-            <p>
-              Connected Nodes:
-              <span id="lavaNodes" class="text-white">0/0</span>
-            </p>
-          </div>
-        </div>
-
-        <!-- Bot Core -->
-        <div
-          class="glass-panel p-6 flex flex-col h-full md:col-span-2 lg:col-span-3"
-        >
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-robot text-[#FFB6C1]"></i> Bot Core Process
-            </h3>
-            <span id="botDot" class="status-dot status-offline"></span>
-          </div>
-
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-            <div class="bg-black/30 p-3 rounded-lg border border-white/5">
-              <p class="text-xs text-gray-400 uppercase">Uptime</p>
-              <p id="uptimeText" class="text-lg font-bold text-white">0h 0m</p>
+        <!-- Main Status Overview -->
+        <div class="glass-panel p-8 mb-8 text-center flex flex-col items-center justify-center">
+            <div id="mainStatusIcon" class="text-6xl mb-4 text-emerald-400">
+                <i class="fa-solid fa-check-circle"></i>
             </div>
-            <div class="bg-black/30 p-3 rounded-lg border border-white/5">
-              <p class="text-xs text-gray-400 uppercase">Memory (Heap)</p>
-              <p id="memoryText" class="text-lg font-bold text-white">0 MB</p>
-            </div>
-            <div class="bg-black/30 p-3 rounded-lg border border-white/5">
-              <p class="text-xs text-gray-400 uppercase">Guilds</p>
-              <p id="guildsText" class="text-lg font-bold text-white">0</p>
-            </div>
-            <div class="bg-black/30 p-3 rounded-lg border border-white/5">
-              <p class="text-xs text-gray-400 uppercase">WebSocket Ping</p>
-              <p id="pingText" class="text-lg font-bold text-[#86EFAC]">0 ms</p>
-            </div>
-          </div>
+            <h2 id="mainStatusText" class="text-2xl font-bold text-white mb-2">All Systems Operational</h2>
+            <p class="text-sm text-gray-400">Last updated: <span id="lastUpdated">Just now</span></p>
         </div>
-      </div>
 
-      <div class="text-center mt-8">
-        <button
-          onclick="fetchStatus()"
-          class="px-6 py-2 bg-[#FFB6C1]/20 hover:bg-[#FFB6C1]/40 border border-[#FFB6C1]/50 text-white rounded-full transition-all duration-300 backdrop-blur-md"
-        >
-          <i class="fa-solid fa-rotate-right mr-2"></i> Refresh Status
-        </button>
-        <a
-          href="/"
-          class="ml-4 px-6 py-2 bg-transparent hover:bg-white/5 border border-white/10 text-gray-300 rounded-full transition-all duration-300"
-        >
-          Kembali ke Dashboard
-        </a>
-      </div>
+        <!-- Detailed Services -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- MySQL Database -->
+            <div class="glass-panel p-6 flex flex-col h-full">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-database text-[#93C5FD]"></i> MySQL Database
+                    </h3>
+                    <span id="dbDot" class="status-dot status-offline"></span>
+                </div>
+                <div class="text-sm text-gray-300 mt-auto">
+                    <p>Status: <span id="dbText" class="font-bold text-red-400">Unknown</span></p>
+                    <p>Active Connections: <span id="dbConnections" class="text-white">0</span> / <span id="dbPoolMax">0</span></p>
+                </div>
+            </div>
+
+            <!-- Redis Cache -->
+            <div class="glass-panel p-6 flex flex-col h-full">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-bolt text-[#F9A8D4]"></i> Redis Cache
+                    </h3>
+                    <span id="redisDot" class="status-dot status-offline"></span>
+                </div>
+                <div class="text-sm text-gray-300 mt-auto">
+                    <p>Status: <span id="redisText" class="font-bold text-red-400">Disconnected</span></p>
+                    <p class="text-xs mt-2 text-gray-500">Menangani rate limiting & caching UI.</p>
+                </div>
+            </div>
+
+            <!-- Lavalink Music -->
+            <div class="glass-panel p-6 flex flex-col h-full">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-music text-[#C084FC]"></i> Lavalink Nodes
+                    </h3>
+                    <span id="lavaDot" class="status-dot status-offline"></span>
+                </div>
+                <div class="text-sm text-gray-300 mt-auto">
+                    <p>Status: <span id="lavaText" class="font-bold text-red-400">Offline</span></p>
+                    <p>Connected Nodes: <span id="lavaNodes" class="text-white">0/0</span></p>
+                </div>
+            </div>
+
+            <!-- Bot Core -->
+            <div class="glass-panel p-6 flex flex-col h-full md:col-span-2 lg:col-span-3">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-robot text-[#FFB6C1]"></i> Bot Core Process
+                    </h3>
+                    <span id="botDot" class="status-dot status-offline"></span>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                    <div class="bg-black/30 p-3 rounded-lg border border-white/5">
+                        <p class="text-xs text-gray-400 uppercase">Uptime</p>
+                        <p id="uptimeText" class="text-lg font-bold text-white">0h 0m</p>
+                    </div>
+                    <div class="bg-black/30 p-3 rounded-lg border border-white/5">
+                        <p class="text-xs text-gray-400 uppercase">Memory (Heap)</p>
+                        <p id="memoryText" class="text-lg font-bold text-white">0 MB</p>
+                    </div>
+                    <div class="bg-black/30 p-3 rounded-lg border border-white/5">
+                        <p class="text-xs text-gray-400 uppercase">Guilds</p>
+                        <p id="guildsText" class="text-lg font-bold text-white">0</p>
+                    </div>
+                    <div class="bg-black/30 p-3 rounded-lg border border-white/5">
+                        <p class="text-xs text-gray-400 uppercase">WebSocket Ping</p>
+                        <p id="pingText" class="text-lg font-bold text-[#86EFAC]">0 ms</p>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <div class="text-center mt-8">
+            <button onclick="fetchStatus()" class="px-6 py-2 bg-[#FFB6C1]/20 hover:bg-[#FFB6C1]/40 border border-[#FFB6C1]/50 text-white rounded-full transition-all duration-300 backdrop-blur-md">
+                <i class="fa-solid fa-rotate-right mr-2"></i> Refresh Status
+            </button>
+            <a href="/" class="ml-4 px-6 py-2 bg-transparent hover:bg-white/5 border border-white/10 text-gray-300 rounded-full transition-all duration-300">
+                Kembali ke Dashboard
+            </a>
+        </div>
     </div>
 
     <script>
-      function formatUptime(seconds) {
-        if (!seconds) return "0s";
-        const d = Math.floor(seconds / (3600 * 24));
-        const h = Math.floor((seconds % (3600 * 24)) / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = Math.floor(seconds % 60);
-
-        let result = "";
-        if (d > 0) result += d + "d ";
-        if (h > 0) result += h + "h ";
-        if (m > 0) result += m + "m ";
-        if (result === "") result = s + "s";
-        return result.trim();
-      }
-
-      async function fetchStatus() {
-        try {
-          const response = await fetch("/api/health");
-          const data = await response.json();
-
-          if (data.status === "ok") {
-            document.getElementById("lastUpdated").innerText =
-              new Date().toLocaleTimeString();
-
-            // DB
-            const dbOk =
-              data.services.database && data.services.database.isConnected;
-            document.getElementById("dbDot").className = dbOk
-              ? "status-dot status-online"
-              : "status-dot status-offline";
-            document.getElementById("dbText").innerText = dbOk
-              ? "Online"
-              : "Offline";
-            document.getElementById("dbText").className = dbOk
-              ? "font-bold text-emerald-400"
-              : "font-bold text-red-400";
-            document.getElementById("dbConnections").innerText = data.services
-              .database
-              ? data.services.database.activeConnections
-              : "0";
-            document.getElementById("dbPoolMax").innerText = data.services
-              .database
-              ? data.services.database.poolMax
-              : "0";
-
-            // Redis
-            const redisOk =
-              data.services.redis && data.services.redis.connected;
-            document.getElementById("redisDot").className = redisOk
-              ? "status-dot status-online"
-              : "status-dot status-offline";
-            document.getElementById("redisText").innerText = redisOk
-              ? "Online"
-              : "Offline";
-            document.getElementById("redisText").className = redisOk
-              ? "font-bold text-emerald-400"
-              : "font-bold text-red-400";
-
-            // Lavalink
-            const lavaTotal = data.services.lavalink
-              ? data.services.lavalink.nodes
-              : 0;
-            const lavaOk = data.services.lavalink
-              ? data.services.lavalink.connected
-              : 0;
-            const lavaIsOk = lavaTotal > 0 && lavaOk > 0;
-
-            document.getElementById("lavaDot").className = lavaIsOk
-              ? "status-dot status-online"
-              : lavaTotal > 0
-                ? "status-dot bg-yellow-500 shadow-[0_0_10px_#EAB308]"
-                : "status-dot status-offline";
-            document.getElementById("lavaText").innerText = lavaIsOk
-              ? "Online"
-              : lavaTotal > 0
-                ? "Degraded"
-                : "Offline";
-            document.getElementById("lavaText").className = lavaIsOk
-              ? "font-bold text-emerald-400"
-              : lavaTotal > 0
-                ? "font-bold text-yellow-400"
-                : "font-bold text-red-400";
-            document.getElementById("lavaNodes").innerText =
-              `${lavaOk}/${lavaTotal}`;
-
-            // Bot Core
-            const botOk = data.bot && data.bot.uptimeSeconds > 0;
-            document.getElementById("botDot").className = botOk
-              ? "status-dot status-online"
-              : "status-dot status-offline";
-            document.getElementById("uptimeText").innerText = formatUptime(
-              data.bot.uptimeSeconds,
-            );
-            document.getElementById("memoryText").innerText =
-              data.bot.memoryUsageMB + " MB";
-            document.getElementById("guildsText").innerText = data.bot.guilds;
-            document.getElementById("pingText").innerText =
-              data.bot.ping + " ms";
-
-            // Main Status
-            if (dbOk && redisOk && botOk) {
-              document.getElementById("mainStatusIcon").className =
-                "text-6xl mb-4 text-emerald-400";
-              document.getElementById("mainStatusIcon").innerHTML =
-                '<i class="fa-solid fa-check-circle"></i>';
-              document.getElementById("mainStatusText").innerText =
-                "All Systems Operational";
-              document.getElementById("mainStatusText").className =
-                "text-2xl font-bold text-white mb-2";
-            } else if (botOk && (!dbOk || !redisOk)) {
-              document.getElementById("mainStatusIcon").className =
-                "text-6xl mb-4 text-yellow-400";
-              document.getElementById("mainStatusIcon").innerHTML =
-                '<i class="fa-solid fa-triangle-exclamation"></i>';
-              document.getElementById("mainStatusText").innerText =
-                "Degraded Performance";
-              document.getElementById("mainStatusText").className =
-                "text-2xl font-bold text-yellow-400 mb-2";
-            } else {
-              document.getElementById("mainStatusIcon").className =
-                "text-6xl mb-4 text-red-500";
-              document.getElementById("mainStatusIcon").innerHTML =
-                '<i class="fa-solid fa-circle-xmark"></i>';
-              document.getElementById("mainStatusText").innerText =
-                "Major Outage";
-              document.getElementById("mainStatusText").className =
-                "text-2xl font-bold text-red-500 mb-2";
-            }
-          }
-        } catch (err) {
-          console.error("Failed to fetch status:", err);
-          document.getElementById("mainStatusIcon").className =
-            "text-6xl mb-4 text-red-500";
-          document.getElementById("mainStatusIcon").innerHTML =
-            '<i class="fa-solid fa-circle-xmark"></i>';
-          document.getElementById("mainStatusText").innerText =
-            "Unable to Reach Server";
-          document.getElementById("mainStatusText").className =
-            "text-2xl font-bold text-red-500 mb-2";
-
-          ["dbDot", "redisDot", "lavaDot", "botDot"].forEach(
-            (id) =>
-              (document.getElementById(id).className =
-                "status-dot status-offline"),
-          );
+        function formatUptime(seconds) {
+            if (!seconds) return "0s";
+            const d = Math.floor(seconds / (3600*24));
+            const h = Math.floor(seconds % (3600*24) / 3600);
+            const m = Math.floor(seconds % 3600 / 60);
+            const s = Math.floor(seconds % 60);
+            
+            let result = "";
+            if (d > 0) result += d + "d ";
+            if (h > 0) result += h + "h ";
+            if (m > 0) result += m + "m ";
+            if (result === "") result = s + "s";
+            return result.trim();
         }
-      }
 
-      // Auto fetch on load and every 10 seconds
-      fetchStatus();
-      setInterval(fetchStatus, 10000);
+        async function fetchStatus() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    document.getElementById('lastUpdated').innerText = new Date().toLocaleTimeString();
+                    
+                    // DB
+                    const dbOk = data.services.database && data.services.database.isConnected;
+                    document.getElementById('dbDot').className = dbOk ? 'status-dot status-online' : 'status-dot status-offline';
+                    document.getElementById('dbText').innerText = dbOk ? 'Online' : 'Offline';
+                    document.getElementById('dbText').className = dbOk ? 'font-bold text-emerald-400' : 'font-bold text-red-400';
+                    document.getElementById('dbConnections').innerText = data.services.database ? data.services.database.activeConnections : '0';
+                    document.getElementById('dbPoolMax').innerText = data.services.database ? data.services.database.poolMax : '0';
+                    
+                    // Redis
+                    const redisOk = data.services.redis && data.services.redis.connected;
+                    document.getElementById('redisDot').className = redisOk ? 'status-dot status-online' : 'status-dot status-offline';
+                    document.getElementById('redisText').innerText = redisOk ? 'Online' : 'Offline';
+                    document.getElementById('redisText').className = redisOk ? 'font-bold text-emerald-400' : 'font-bold text-red-400';
+                    
+                    // Lavalink
+                    const lavaTotal = data.services.lavalink ? data.services.lavalink.nodes : 0;
+                    const lavaOk = data.services.lavalink ? data.services.lavalink.connected : 0;
+                    const lavaIsOk = lavaTotal > 0 && lavaOk > 0;
+                    
+                    document.getElementById('lavaDot').className = lavaIsOk ? 'status-dot status-online' : (lavaTotal > 0 ? 'status-dot bg-yellow-500 shadow-[0_0_10px_#EAB308]' : 'status-dot status-offline');
+                    document.getElementById('lavaText').innerText = lavaIsOk ? 'Online' : (lavaTotal > 0 ? 'Degraded' : 'Offline');
+                    document.getElementById('lavaText').className = lavaIsOk ? 'font-bold text-emerald-400' : (lavaTotal > 0 ? 'font-bold text-yellow-400' : 'font-bold text-red-400');
+                    document.getElementById('lavaNodes').innerText = `${lavaOk}/${lavaTotal}`;
+                    
+                    // Bot Core
+                    const botOk = data.bot && data.bot.uptimeSeconds > 0;
+                    document.getElementById('botDot').className = botOk ? 'status-dot status-online' : 'status-dot status-offline';
+                    document.getElementById('uptimeText').innerText = formatUptime(data.bot.uptimeSeconds);
+                    document.getElementById('memoryText').innerText = data.bot.memoryUsageMB + ' MB';
+                    document.getElementById('guildsText').innerText = data.bot.guilds;
+                    document.getElementById('pingText').innerText = data.bot.ping + ' ms';
+                    
+                    // Main Status
+                    if (dbOk && redisOk && botOk) {
+                        document.getElementById('mainStatusIcon').className = 'text-6xl mb-4 text-emerald-400';
+                        document.getElementById('mainStatusIcon').innerHTML = '<i class="fa-solid fa-check-circle"></i>';
+                        document.getElementById('mainStatusText').innerText = 'All Systems Operational';
+                        document.getElementById('mainStatusText').className = 'text-2xl font-bold text-white mb-2';
+                    } else if (botOk && (!dbOk || !redisOk)) {
+                        document.getElementById('mainStatusIcon').className = 'text-6xl mb-4 text-yellow-400';
+                        document.getElementById('mainStatusIcon').innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                        document.getElementById('mainStatusText').innerText = 'Degraded Performance';
+                        document.getElementById('mainStatusText').className = 'text-2xl font-bold text-yellow-400 mb-2';
+                    } else {
+                        document.getElementById('mainStatusIcon').className = 'text-6xl mb-4 text-red-500';
+                        document.getElementById('mainStatusIcon').innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+                        document.getElementById('mainStatusText').innerText = 'Major Outage';
+                        document.getElementById('mainStatusText').className = 'text-2xl font-bold text-red-500 mb-2';
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch status:", err);
+                document.getElementById('mainStatusIcon').className = 'text-6xl mb-4 text-red-500';
+                document.getElementById('mainStatusIcon').innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+                document.getElementById('mainStatusText').innerText = 'Unable to Reach Server';
+                document.getElementById('mainStatusText').className = 'text-2xl font-bold text-red-500 mb-2';
+                
+                ['dbDot', 'redisDot', 'lavaDot', 'botDot'].forEach(id => document.getElementById(id).className = 'status-dot status-offline');
+            }
+        }
+        
+        // Auto fetch on load and every 10 seconds
+        fetchStatus();
+        setInterval(fetchStatus, 10000);
     </script>
-  </body>
+</body>
 </html>

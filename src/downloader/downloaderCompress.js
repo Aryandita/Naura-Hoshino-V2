@@ -17,10 +17,10 @@ function getFfmpeg() {
 }
 let _ffmpegStaticCache = null;
 function getFfmpegStatic() {
-  if (_ffmpegStaticCache === null)
-    _ffmpegStaticCache = require("ffmpeg-static");
+  if (_ffmpegStaticCache === null) _ffmpegStaticCache = require("ffmpeg-static");
   return _ffmpegStaticCache;
 }
+const env = require("../config/env");
 const { logger } = require("../managers/logger");
 const { NULL_DEVICE } = require("./downloaderCore");
 
@@ -29,8 +29,8 @@ const { NULL_DEVICE } = require("./downloaderCore");
  * @returns {string}
  */
 function resolveFfmpegPath() {
-  if (process.env.FFMPEG_PATH && fs.existsSync(process.env.FFMPEG_PATH)) {
-    return process.env.FFMPEG_PATH;
+  if (env.FFMPEG_PATH && fs.existsSync(env.FFMPEG_PATH)) {
+    return env.FFMPEG_PATH;
   }
 
   if (getFfmpegStatic() && fs.existsSync(getFfmpegStatic())) {
@@ -115,34 +115,30 @@ const compressWithFFmpeg = (
             if (dur > 0) return resolveDur(dur);
           }
 
-          execFile(
-            currentPath,
-            ["-i", inputPath],
-            (execErr, stdout, stderr) => {
-              const out = (stderr || "") + (stdout || "");
-              const durMatch = out.match(
-                /Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/i,
-              );
-              if (durMatch) {
-                const hours = parseInt(durMatch[1], 10);
-                const mins = parseInt(durMatch[2], 10);
-                const secs = parseFloat(durMatch[3]);
-                const totalSecs = hours * 3600 + mins * 60 + secs;
-                if (totalSecs > 0) return resolveDur(totalSecs);
-              }
+          execFile(currentPath, ["-i", inputPath], (execErr, stdout, stderr) => {
+            const out = (stderr || "") + (stdout || "");
+            const durMatch = out.match(
+              /Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/i,
+            );
+            if (durMatch) {
+              const hours = parseInt(durMatch[1], 10);
+              const mins = parseInt(durMatch[2], 10);
+              const secs = parseFloat(durMatch[3]);
+              const totalSecs = hours * 3600 + mins * 60 + secs;
+              if (totalSecs > 0) return resolveDur(totalSecs);
+            }
 
-              try {
-                const stats = fs.statSync(inputPath);
-                const estimated = Math.max(
-                  10,
-                  Math.min(300, stats.size / (1024 * 1024 * 0.8)),
-                );
-                return resolveDur(estimated);
-              } catch {
-                return resolveDur(60);
-              }
-            },
-          );
+            try {
+              const stats = fs.statSync(inputPath);
+              const estimated = Math.max(
+                10,
+                Math.min(300, stats.size / (1024 * 1024 * 0.8)),
+              );
+              return resolveDur(estimated);
+            } catch {
+              return resolveDur(60);
+            }
+          });
         });
       });
 

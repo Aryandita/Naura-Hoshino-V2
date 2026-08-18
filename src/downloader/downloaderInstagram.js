@@ -210,10 +210,7 @@ const tryVxInstagram = async (shortcode) => {
 
     if (Array.isArray(d.carousel_media) && d.carousel_media.length > 0) {
       const items = d.carousel_media
-        .map((m) => ({
-          url: m.url,
-          type: m.type === "video" ? "video" : "photo",
-        }))
+        .map((m) => ({ url: m.url, type: m.type === "video" ? "video" : "photo" }))
         .filter((i) => i.url);
       if (items.length > 0) {
         return items.length === 1
@@ -226,9 +223,7 @@ const tryVxInstagram = async (shortcode) => {
       return { status: "stream", url: d.url };
     }
   } catch (e) {
-    logger.info(
-      `[Downloader][IG] ddinstagram API tidak tersedia: ${e.message}`,
-    );
+    logger.info(`[Downloader][IG] ddinstagram API tidak tersedia: ${e.message}`);
   }
   return null;
 };
@@ -247,9 +242,7 @@ const tryRedirectService = async (shortcode) => {
 
   for (const redirectUrl of candidates) {
     try {
-      logger.info(
-        `[Downloader][IG] Mencoba layanan pengalih: ${redirectUrl}...`,
-      );
+      logger.info(`[Downloader][IG] Mencoba layanan pengalih: ${redirectUrl}...`);
       const res = await axios.get(redirectUrl, {
         timeout: 10000,
         httpsAgent,
@@ -283,12 +276,7 @@ const resolveInstagram = async (url) => {
     return null;
   }
 
-  for (const step of [
-    tryGraphQL,
-    tryVxInstagram,
-    tryEmbed,
-    tryRedirectService,
-  ]) {
+  for (const step of [tryGraphQL, tryVxInstagram, tryEmbed, tryRedirectService]) {
     const result = await step(shortcode);
     if (result) return result;
   }

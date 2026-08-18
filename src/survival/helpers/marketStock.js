@@ -10,10 +10,7 @@ const UserSurvival = require("../../models/UserSurvival");
 const items = require("../data/items");
 const currencyHelper = require("../engines/currency");
 const { sellMultiplier } = require("./specialEffects");
-const {
-  safeParseInventory,
-  addOrStackItem,
-} = require("../engines/inventoryHelper");
+const { safeParseInventory, addOrStackItem } = require("../engines/inventoryHelper");
 
 const FRAGMENT = currencyHelper.byKind(currencyHelper.FRAGMENT);
 
@@ -164,7 +161,7 @@ async function sell(userId, itemId, sellAll) {
       ? addOrStackItem(kept, { id: itemId, name: item.name, amount: left })
       : kept;
 
-  await cacheManager.updateUserProfile(userId, { inventory: nextInv });
+  await cacheManager.mutateUserProfileJson(userId, "inventory", () => nextInv);
   const balance = await currencyHelper.reward(
     FRAGMENT,
     { survival, profile },
@@ -209,13 +206,13 @@ async function buy(userId, itemId, price) {
 
   if (itemId === "prop_gudang") {
     survival.propertyId = "gudang";
-    await survival.save();
+    await survival.save({ fields: ["propertyId"] });
     return { ok: true, itemName: "Gudang Tua", price, balance };
   }
 
   if (itemId === "veh_bicycle") {
     survival.vehicle = "bicycle";
-    await survival.save();
+    await survival.save({ fields: ["vehicle"] });
     return { ok: true, itemName: "Sepeda Kayuh", price, balance };
   }
 
@@ -226,7 +223,7 @@ async function buy(userId, itemId, price) {
     name: itemName,
     amount: 1,
   });
-  await cacheManager.updateUserProfile(userId, { inventory: nextInv });
+  await cacheManager.mutateUserProfileJson(userId, "inventory", () => nextInv);
 
   return { ok: true, itemName, price, balance };
 }

@@ -1,8 +1,8 @@
 "use strict";
 
 const express = require("express");
-const { getDbStatus } = require("../src/managers/dbManager");
-const redisManager = require("../src/managers/redisManager");
+const { getDbStatus } = require("../../src/managers/dbManager");
+const redisManager = require("../../src/managers/redisManager");
 
 module.exports = (client) => {
   const router = express.Router();
@@ -83,6 +83,41 @@ module.exports = (client) => {
       res.json({ success: true, action });
     } catch (error) {
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.post("/chat", async (req, res) => {
+    try {
+      const { message, prompt, history, username: reqUsername } = req.body || {};
+      const textPrompt = String(message || prompt || "").trim();
+      if (!textPrompt) {
+        return res.status(400).json({ error: "Pesan tidak boleh kosong." });
+      }
+
+      const userId = req.user?.id || null;
+      const username = req.user?.username || reqUsername || "Teman Baik";
+      const env = require("../../src/config/env");
+      const isOwner = userId && env.OWNER_IDS && env.OWNER_IDS.includes(userId);
+      const isPremium = req.user?.db?.isPremium || false;
+
+      const aiManager = require("../../src/managers/aiManager");
+      const result = await aiManager.chatCompanion({
+        prompt: textPrompt,
+        history: Array.isArray(history) ? history : [],
+        userId,
+        username,
+        isOwner,
+        isPremium,
+      });
+
+      res.json({
+        success: true,
+        reply: result.reply,
+        source: result.source,
+        username: result.username,
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message || "Gagal memproses pesan." });
     }
   });
 

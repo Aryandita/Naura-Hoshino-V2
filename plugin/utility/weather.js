@@ -15,121 +15,31 @@ const {
 const axios = require("axios");
 
 const weatherCodes = {
-  0: {
-    name: "Cerah / Sunny",
-    emoji: ui.getEmoji("weather_sunny") || "☀️",
-    color: "#f1c40f",
-  },
-  1: {
-    name: "Cerah Berawan / Mainly Clear",
-    emoji: ui.getEmoji("weather_mainly_clear") || "🌤️",
-    color: "#f1c40f",
-  },
-  2: {
-    name: "Berawan / Partly Cloudy",
-    emoji: ui.getEmoji("weather_cloudy") || "⛅",
-    color: "#95a5a6",
-  },
-  3: {
-    name: "Mendung / Overcast",
-    emoji: ui.getEmoji("weather_overcast") || "☁️",
-    color: "#95a5a6",
-  },
-  45: {
-    name: "Kabut / Fog",
-    emoji: ui.getEmoji("weather_fog") || "🌫️",
-    color: "#bdc3c7",
-  },
-  48: {
-    name: "Kabut Beku / Depositing Rime Fog",
-    emoji: ui.getEmoji("weather_fog") || "🌫️",
-    color: "#bdc3c7",
-  },
-  51: {
-    name: "Gerimis Ringan / Light Drizzle",
-    emoji: ui.getEmoji("weather_rain") || "🌧️",
-    color: "#3498db",
-  },
-  53: {
-    name: "Gerimis Sedang / Moderate Drizzle",
-    emoji: ui.getEmoji("weather_rain") || "🌧️",
-    color: "#3498db",
-  },
-  55: {
-    name: "Gerimis Lebat / Dense Drizzle",
-    emoji: ui.getEmoji("weather_rain") || "🌧️",
-    color: "#3498db",
-  },
-  61: {
-    name: "Hujan Ringan / Slight Rain",
-    emoji: ui.getEmoji("weather_rain") || "🌧️",
-    color: "#3498db",
-  },
-  63: {
-    name: "Hujan Sedang / Moderate Rain",
-    emoji: ui.getEmoji("weather_rain") || "🌧️",
-    color: "#3498db",
-  },
-  65: {
-    name: "Hujan Lebat / Heavy Rain",
-    emoji: ui.getEmoji("weather_rain") || "🌧️",
-    color: "#2980b9",
-  },
-  71: {
-    name: "Salju Tipis / Slight Snow Fall",
-    emoji: ui.getEmoji("weather_snow") || "❄️",
-    color: "#ffffff",
-  },
-  73: {
-    name: "Salju Sedang / Moderate Snow Fall",
-    emoji: ui.getEmoji("weather_snow") || "❄️",
-    color: "#ffffff",
-  },
-  75: {
-    name: "Salju Tebal / Heavy Snow Fall",
-    emoji: ui.getEmoji("weather_snow") || "❄️",
-    color: "#ffffff",
-  },
-  80: {
-    name: "Hujan Mandi Ringan / Slight Rain Showers",
-    emoji: ui.getEmoji("weather_rain") || "🌧️",
-    color: "#3498db",
-  },
-  81: {
-    name: "Hujan Mandi Sedang / Moderate Rain Showers",
-    emoji: ui.getEmoji("weather_rain") || "🌧️",
-    color: "#3498db",
-  },
-  82: {
-    name: "Hujan Mandi Lebat / Violent Rain Showers",
-    emoji: ui.getEmoji("weather_rain") || "🌧️",
-    color: "#2980b9",
-  },
-  95: {
-    name: "Badai Petir / Thunderstorm",
-    emoji: ui.getEmoji("weather_thunder") || "⛈️",
-    color: "#9b59b6",
-  },
-  96: {
-    name: "Badai Petir Es Ringan / Thunderstorm with Slight Hail",
-    emoji: ui.getEmoji("weather_thunder") || "⛈️",
-    color: "#9b59b6",
-  },
-  99: {
-    name: "Badai Petir Es Lebat / Thunderstorm with Heavy Hail",
-    emoji: ui.getEmoji("weather_thunder") || "⛈️",
-    color: "#9b59b6",
-  },
+  0: { name: "Cerah / Sunny", emoji: ui.getEmoji("weather_sunny") || "☀️", color: "#f1c40f" },
+  1: { name: "Cerah Berawan / Mainly Clear", emoji: ui.getEmoji("weather_mainly_clear") || "🌤️", color: "#f1c40f" },
+  2: { name: "Berawan / Partly Cloudy", emoji: ui.getEmoji("weather_cloudy") || "⛅", color: "#95a5a6" },
+  3: { name: "Mendung / Overcast", emoji: ui.getEmoji("weather_overcast") || "☁️", color: "#95a5a6" },
+  45: { name: "Kabut / Fog", emoji: ui.getEmoji("weather_fog") || "🌫️", color: "#bdc3c7" },
+  48: { name: "Kabut Beku / Depositing Rime Fog", emoji: ui.getEmoji("weather_fog") || "🌫️", color: "#bdc3c7" },
+  51: { name: "Gerimis Ringan / Light Drizzle", emoji: ui.getEmoji("weather_rain") || "🌧️", color: "#3498db" },
+  53: { name: "Gerimis Sedang / Moderate Drizzle", emoji: ui.getEmoji("weather_rain") || "🌧️", color: "#3498db" },
+  55: { name: "Gerimis Lebat / Dense Drizzle", emoji: ui.getEmoji("weather_rain") || "🌧️", color: "#3498db" },
+  61: { name: "Hujan Ringan / Slight Rain", emoji: ui.getEmoji("weather_rain") || "🌧️", color: "#3498db" },
+  63: { name: "Hujan Sedang / Moderate Rain", emoji: ui.getEmoji("weather_rain") || "🌧️", color: "#3498db" },
+  65: { name: "Hujan Lebat / Heavy Rain", emoji: ui.getEmoji("weather_rain") || "🌧️", color: "#2980b9" },
+  71: { name: "Salju Tipis / Slight Snow Fall", emoji: ui.getEmoji("weather_snow") || "❄️", color: "#ffffff" },
+  73: { name: "Salju Sedang / Moderate Snow Fall", emoji: ui.getEmoji("weather_snow") || "❄️", color: "#ffffff" },
+  75: { name: "Salju Tebal / Heavy Snow Fall", emoji: ui.getEmoji("weather_snow") || "❄️", color: "#ffffff" },
+  80: { name: "Hujan Mandi Ringan / Slight Rain Showers", emoji: ui.getEmoji("weather_rain") || "🌧️", color: "#3498db" },
+  81: { name: "Hujan Mandi Sedang / Moderate Rain Showers", emoji: ui.getEmoji("weather_rain") || "🌧️", color: "#3498db" },
+  82: { name: "Hujan Mandi Lebat / Violent Rain Showers", emoji: ui.getEmoji("weather_rain") || "🌧️", color: "#2980b9" },
+  95: { name: "Badai Petir / Thunderstorm", emoji: ui.getEmoji("weather_thunder") || "⛈️", color: "#9b59b6" },
+  96: { name: "Badai Petir Es Ringan / Thunderstorm with Slight Hail", emoji: ui.getEmoji("weather_thunder") || "⛈️", color: "#9b59b6" },
+  99: { name: "Badai Petir Es Lebat / Thunderstorm with Heavy Hail", emoji: ui.getEmoji("weather_thunder") || "⛈️", color: "#9b59b6" },
 };
 
 function getWeatherInfo(code) {
-  return (
-    weatherCodes[code] || {
-      name: "Tidak Diketahui / Unknown",
-      emoji: "⛅",
-      color: "#95a5a6",
-    }
-  );
+  return weatherCodes[code] || { name: "Tidak Diketahui / Unknown", emoji: "⛅", color: "#95a5a6" };
 }
 
 /**
@@ -141,11 +51,7 @@ async function fetchFromOpenMeteo(city) {
     { timeout: 5000 },
   );
 
-  if (
-    !geoRes.data ||
-    !geoRes.data.results ||
-    geoRes.data.results.length === 0
-  ) {
+  if (!geoRes.data || !geoRes.data.results || geoRes.data.results.length === 0) {
     return null;
   }
 
@@ -185,16 +91,12 @@ async function fetchFromOpenMeteo(city) {
  * Fetch cuaca dari wttr.in (Public Global Weather Fallback)
  */
 async function fetchFromWttrIn(city) {
-  const res = await axios.get(
-    `https://wttr.in/${encodeURIComponent(city)}?format=j1`,
-    {
-      timeout: 5000,
-    },
-  );
+  const res = await axios.get(`https://wttr.in/${encodeURIComponent(city)}?format=j1`, {
+    timeout: 5000,
+  });
 
   const data = res.data;
-  if (!data || !data.current_condition || data.current_condition.length === 0)
-    return null;
+  if (!data || !data.current_condition || data.current_condition.length === 0) return null;
 
   const cur = data.current_condition[0];
   const area = data.nearest_area?.[0] || {};
@@ -238,9 +140,7 @@ async function fetchWeatherWaterfall(city) {
     const openMeteo = await fetchFromOpenMeteo(city);
     if (openMeteo) return openMeteo;
   } catch (err) {
-    logger.warn(
-      `[Weather Search] Open-Meteo error (${err.message}), beralih ke wttr.in...`,
-    );
+    logger.warn(`[Weather Search] Open-Meteo error (${err.message}), beralih ke wttr.in...`);
   }
 
   try {
@@ -256,9 +156,7 @@ async function fetchWeatherWaterfall(city) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("weather")
-    .setDescription(
-      "⛅ Cek cuaca dan ramalan prakiraan cuaca di suatu kota secara lengkap.",
-    )
+    .setDescription("⛅ Cek cuaca dan ramalan prakiraan cuaca di suatu kota secara lengkap.")
     .addStringOption((opt) =>
       opt
         .setName("kota")
@@ -282,32 +180,16 @@ module.exports = {
         return interaction.editReply(errPayload);
       }
 
-      const {
-        current,
-        daily,
-        cityName,
-        stateName,
-        countryName,
-        lat,
-        lon,
-        sourceName,
-      } = weatherData;
+      const { current, daily, cityName, stateName, countryName, lat, lon, sourceName } = weatherData;
 
       const formatDate = (dateStr) => {
         const date = new Date(dateStr);
-        return date.toLocaleDateString("id-ID", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        });
+        return date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
       };
 
       const cacheManager = require("../../src/managers/cacheManager");
       const profile = await cacheManager.getUserProfile(interaction.user.id);
-      const isPremium =
-        profile.isPremium &&
-        profile.premiumUntil &&
-        new Date(profile.premiumUntil) > new Date();
+      const isPremium = profile.isPremium && profile.premiumUntil && new Date(profile.premiumUntil) > new Date();
 
       const buildButtonsRow = (activeDay, disabledAll = false) => {
         return new ActionRowBuilder().addComponents(
@@ -369,16 +251,12 @@ module.exports = {
                 name: "📍 Koordinat Exact",
                 value: `\`${lat.toFixed(2)}, ${lon.toFixed(2)}\``,
               },
-              {
-                name: "🛰️ Satelit Status",
-                value: `Live Telemetry OK (${sourceName})`,
-              },
+              { name: "🛰️ Satelit Status", value: `Live Telemetry OK (${sourceName})` },
             );
           } else {
             fields.push({
               name: "💎 VIP Weather Metrics",
-              value:
-                "Gunakan `/premium` untuk membuka koordinat & telemetry terperinci!",
+              value: "Gunakan `/premium` untuk membuka koordinat & telemetry terperinci!",
             });
           }
         } else {
@@ -435,8 +313,7 @@ module.exports = {
         if (i.user.id !== interaction.user.id) {
           const errPayload = buildErrorContainerV2({
             title: "Akses Ditolak",
-            description:
-              "Gunakan perintah `/weather` untuk mencari cuaca kota Anda sendiri!",
+            description: "Gunakan perintah `/weather` untuk mencari cuaca kota Anda sendiri!",
             footerText: ui.getFooter("utility"),
           });
           return i.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
@@ -464,3 +341,4 @@ module.exports = {
     }
   },
 };
+

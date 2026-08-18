@@ -16,7 +16,7 @@ const SocialAlert = sequelize.define(
   {
     tableName: "social_alerts",
     timestamps: true, // Berguna untuk mengetahui kapan alert ini didaftarkan
-    indexes: [{ fields: ["guildId"] }],
+    indexes: [{ fields: ["guildId"] }]
   },
 );
 

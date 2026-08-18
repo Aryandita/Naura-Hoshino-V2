@@ -1,379 +1,272 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leaderboard | Naura OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="/css/style.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
     <!-- tokens.css harus setelah style.css agar warna ikut ui.colors bot -->
-    <link rel="stylesheet" href="/css/tokens.css" />
+    <link rel="stylesheet" href="/css/tokens.css">
     <script src="/js/naura-ui.js"></script>
-  </head>
-  <body
-    class="min-h-screen p-4 md:p-8 flex flex-col items-center bg-animated theme-none"
-    id="mainBody"
-  >
+</head>
+<body class="min-h-screen p-4 md:p-8 flex flex-col items-center bg-animated theme-none" id="mainBody">
     <div class="w-full max-w-5xl animate-fade-in">
-      <!-- Header -->
-      <div
-        class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-4 border-b border-[var(--color-hairline)] gap-4"
-      >
-        <div>
-          <h1
-            class="text-3xl font-black font-cyber text-glow tracking-wider text-white flex items-center gap-3"
-          >
-            <i class="fa-solid fa-trophy text-yellow-400 animate-pulse"></i>
-            HALL OF FAME
-          </h1>
-          <p
-            class="text-[10px] text-gray-400 uppercase tracking-widest font-cyber mt-1"
-            data-i18n="lb.title"
-          >
-            Papan Peringkat
-          </p>
-        </div>
-        <div class="flex items-center gap-2">
-          <button
-            id="langToggle"
-            title="Bahasa / Language"
-            class="btn-discord px-4 py-2.5 text-xs font-cyber tracking-widest uppercase bg-transparent border border-[var(--color-hairline)] text-gray-300 hover:text-white hover:border-[var(--color-primary-glow)] hover:bg-[var(--color-surface-glass)]"
-          >
-            <i class="fa-solid fa-language mr-2"></i
-            ><span id="langLabel">ID</span>
-          </button>
-          <a
-            href="/"
-            class="btn-discord px-5 py-2.5 text-xs font-cyber tracking-widest uppercase bg-transparent border border-[var(--color-hairline)] text-gray-300 hover:text-white hover:border-[var(--color-primary-glow)] hover:bg-[var(--color-surface-glass)]"
-          >
-            <i class="fa-solid fa-arrow-left mr-2"></i
-            ><span data-i18n="nav.home">Beranda</span>
-          </a>
-        </div>
-      </div>
 
-      <!-- Tab kategori -->
-      <div
-        class="flex flex-wrap items-center gap-2.5 mb-6 p-2 rounded-2xl glass-panel bg-black/40 border-white/5"
-      >
-        <button data-cat="wealth" id="btnTabWealth" class="tab-btn">
-          <i class="fa-solid fa-vault text-yellow-400"></i>
-          <span data-i18n="lb.wealth">Terkaya</span> 🪙
-        </button>
-        <button data-cat="chat_level" id="btnTabChatLevel" class="tab-btn">
-          <i class="fa-solid fa-comments text-cyan-400"></i>
-          <span data-i18n="lb.chat_level">Level Obrolan</span> 💬
-        </button>
-        <button data-cat="rpg_level" id="btnTabRpgLevel" class="tab-btn">
-          <i class="fa-solid fa-shield-halved text-purple-400"></i>
-          <span data-i18n="lb.rpg_level">Level Survival</span> ⚔️
-        </button>
-        <button data-cat="trivia" id="btnTabTrivia" class="tab-btn">
-          <i class="fa-solid fa-gamepad text-emerald-400"></i>
-          <span data-i18n="lb.trivia">Trivia</span> 🎮
-        </button>
-        <button data-cat="music" id="btnTabMusic" class="tab-btn">
-          <i class="fa-solid fa-music text-pink-400"></i>
-          <span data-i18n="lb.music">Musik</span> 🎵
-        </button>
-      </div>
-
-      <!-- Tabel -->
-      <div
-        class="glass-panel rounded-3xl overflow-hidden shadow-2xl border border-[var(--color-hairline)] bg-black/45"
-      >
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead
-              class="bg-black/60 border-b border-[var(--color-hairline-strong)] text-xs tracking-wider text-[var(--color-muted)] font-cyber"
-            >
-              <tr>
-                <th
-                  class="px-3 md:px-6 py-5 text-center w-16 md:w-20"
-                  data-i18n="lb.rank"
-                >
-                  Peringkat
-                </th>
-                <th class="px-3 md:px-6 py-5" data-i18n="lb.player">Pemain</th>
-                <th class="px-3 md:px-6 py-5 text-center">Level</th>
-                <th class="px-3 md:px-6 py-5 text-right" data-i18n="lb.score">
-                  Nilai
-                </th>
-                <th class="px-3 md:px-6 py-5 text-center w-28 md:w-36">Tier</th>
-              </tr>
-            </thead>
-            <tbody id="leaderboard-body" class="text-sm bg-black/20"></tbody>
-          </table>
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-4 border-b border-[var(--color-hairline)] gap-4">
+            <div>
+                <h1 class="text-3xl font-black font-cyber text-glow tracking-wider text-white flex items-center gap-3">
+                    <i class="fa-solid fa-trophy text-yellow-400 animate-pulse"></i> HALL OF FAME
+                </h1>
+                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-cyber mt-1" data-i18n="lb.title">Papan Peringkat</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="langToggle" title="Bahasa / Language" class="btn-discord px-4 py-2.5 text-xs font-cyber tracking-widest uppercase bg-transparent border border-[var(--color-hairline)] text-gray-300 hover:text-white hover:border-[var(--color-primary-glow)] hover:bg-[var(--color-surface-glass)]">
+                    <i class="fa-solid fa-language mr-2"></i><span id="langLabel">ID</span>
+                </button>
+                <a href="/" class="btn-discord px-5 py-2.5 text-xs font-cyber tracking-widest uppercase bg-transparent border border-[var(--color-hairline)] text-gray-300 hover:text-white hover:border-[var(--color-primary-glow)] hover:bg-[var(--color-surface-glass)]">
+                    <i class="fa-solid fa-arrow-left mr-2"></i><span data-i18n="nav.home">Beranda</span>
+                </a>
+            </div>
         </div>
-      </div>
+
+        <!-- Tab kategori -->
+        <div class="flex flex-wrap items-center gap-2.5 mb-6 p-2 rounded-2xl glass-panel bg-black/40 border-white/5">
+            <button data-cat="wealth" id="btnTabWealth" class="tab-btn">
+                <i class="fa-solid fa-vault text-yellow-400"></i> <span data-i18n="lb.wealth">Terkaya</span> 🪙
+            </button>
+            <button data-cat="chat_level" id="btnTabChatLevel" class="tab-btn">
+                <i class="fa-solid fa-comments text-cyan-400"></i> <span data-i18n="lb.chat_level">Level Obrolan</span> 💬
+            </button>
+            <button data-cat="rpg_level" id="btnTabRpgLevel" class="tab-btn">
+                <i class="fa-solid fa-shield-halved text-purple-400"></i> <span data-i18n="lb.rpg_level">Level Survival</span> ⚔️
+            </button>
+            <button data-cat="trivia" id="btnTabTrivia" class="tab-btn">
+                <i class="fa-solid fa-gamepad text-emerald-400"></i> <span data-i18n="lb.trivia">Trivia</span> 🎮
+            </button>
+            <button data-cat="music" id="btnTabMusic" class="tab-btn">
+                <i class="fa-solid fa-music text-pink-400"></i> <span data-i18n="lb.music">Musik</span> 🎵
+            </button>
+        </div>
+
+        <!-- Tabel -->
+        <div class="glass-panel rounded-3xl overflow-hidden shadow-2xl border border-[var(--color-hairline)] bg-black/45">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-black/60 border-b border-[var(--color-hairline-strong)] text-xs tracking-wider text-[var(--color-muted)] font-cyber">
+                        <tr>
+                            <th class="px-3 md:px-6 py-5 text-center w-16 md:w-20" data-i18n="lb.rank">Peringkat</th>
+                            <th class="px-3 md:px-6 py-5" data-i18n="lb.player">Pemain</th>
+                            <th class="px-3 md:px-6 py-5 text-center">Level</th>
+                            <th class="px-3 md:px-6 py-5 text-right" data-i18n="lb.score">Nilai</th>
+                            <th class="px-3 md:px-6 py-5 text-center w-28 md:w-36">Tier</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body" class="text-sm bg-black/20"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <style>
-      .tab-btn {
-        padding: 0.625rem 1rem;
-        border-radius: 0.75rem;
-        font-family: "Orbitron", sans-serif;
-        font-size: 0.75rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.2s ease;
-        background: rgba(0, 0, 0, 0.4);
-        color: #9ca3af;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-      }
-      .tab-btn:hover {
-        color: #fff;
-      }
-      .tab-btn[aria-selected="true"] {
-        background: var(--color-primary-glow);
-        color: #fff;
-        border-color: var(--color-primary);
-        box-shadow: 0 0 16px var(--color-primary-glow);
-      }
+        .tab-btn {
+            padding: 0.625rem 1rem;
+            border-radius: 0.75rem;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            background: rgba(0, 0, 0, 0.4);
+            color: #9ca3af;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .tab-btn:hover { color: #fff; }
+        .tab-btn[aria-selected="true"] {
+            background: var(--color-primary-glow);
+            color: #fff;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 16px var(--color-primary-glow);
+        }
     </style>
 
     <script>
-      (function () {
-        "use strict";
+        (function () {
+            'use strict';
 
-        var currentType = "wealth";
-        var body = document.getElementById("mainBody");
-        var tbody = document.getElementById("leaderboard-body");
+            var currentType = 'wealth';
+            var body = document.getElementById('mainBody');
+            var tbody = document.getElementById('leaderboard-body');
 
-        /* --- Latar belakang ---
-         * resolveBgUrl dulu ditulis ulang di sini, padahal app.js sudah
-         * punya versinya sendiri. Sekarang keduanya memakai NauraUI. */
-        var savedBg = localStorage.getItem("bgTheme") || "none";
-        function paintBackground() {
-          body.style.backgroundImage =
-            "url('" + NauraUI.resolveBgUrl(savedBg) + "')";
-        }
-        if (savedBg !== "none" && savedBg !== "white") {
-          paintBackground();
-          if (savedBg.indexOf("adaptive-") === 0) {
-            window.addEventListener("resize", paintBackground);
-          }
-        } else if (savedBg === "white") {
-          body.style.backgroundColor = "#f3f4f6";
-          body.classList.remove("theme-none");
-          body.classList.add("theme-white");
-        }
+            /* --- Latar belakang ---
+             * resolveBgUrl dulu ditulis ulang di sini, padahal app.js sudah
+             * punya versinya sendiri. Sekarang keduanya memakai NauraUI. */
+            var savedBg = localStorage.getItem('bgTheme') || 'none';
+            function paintBackground() {
+                body.style.backgroundImage = "url('" + NauraUI.resolveBgUrl(savedBg) + "')";
+            }
+            if (savedBg !== 'none' && savedBg !== 'white') {
+                paintBackground();
+                if (savedBg.indexOf('adaptive-') === 0) {
+                    window.addEventListener('resize', paintBackground);
+                }
+            } else if (savedBg === 'white') {
+                body.style.backgroundColor = '#f3f4f6';
+                body.classList.remove('theme-none');
+                body.classList.add('theme-white');
+            }
 
-        /* --- Bunyi klik --- */
-        document.addEventListener("click", function (event) {
-          if (event.target.closest("button, a, tbody tr"))
-            NauraUI.playClickSfx();
-        });
-
-        /* --- Pengalih bahasa --- */
-        var langToggle = document.getElementById("langToggle");
-        var langLabel = document.getElementById("langLabel");
-
-        function syncLangLabel() {
-          langLabel.textContent = NauraUI.lang.toUpperCase();
-        }
-
-        langToggle.addEventListener("click", async function () {
-          await NauraUI.setLanguage(NauraUI.lang === "id" ? "en" : "id");
-          syncLangLabel();
-          render(currentType);
-        });
-
-        /* --- State satu baris penuh, dihiasi ekspresi Naura --- */
-        function fullRowState(kind, options) {
-          tbody.innerHTML =
-            '<tr><td colspan="5">' +
-            NauraUI.stateHtml(kind, options) +
-            "</td></tr>";
-        }
-
-        /* --- Tab --- */
-        var TABS = {
-          wealth: "btnTabWealth",
-          chat_level: "btnTabChatLevel",
-          rpg_level: "btnTabRpgLevel",
-          trivia: "btnTabTrivia",
-          music: "btnTabMusic",
-        };
-
-        Object.keys(TABS).forEach(function (type) {
-          document
-            .getElementById(TABS[type])
-            .addEventListener("click", function () {
-              setCategory(type);
+            /* --- Bunyi klik --- */
+            document.addEventListener('click', function (event) {
+                if (event.target && typeof event.target.closest === 'function' && event.target.closest('button, a, tbody tr')) NauraUI.playClickSfx();
             });
-        });
 
-        function setCategory(type) {
-          currentType = type;
-          Object.keys(TABS).forEach(function (key) {
-            document
-              .getElementById(TABS[key])
-              .setAttribute("aria-selected", key === type ? "true" : "false");
-          });
-          render(type);
-        }
+            /* --- Pengalih bahasa --- */
+            var langToggle = document.getElementById('langToggle');
+            var langLabel = document.getElementById('langLabel');
 
-        /* --- Angka mengikuti bahasa aktif --- */
-        function num(value) {
-          return Number(value || 0).toLocaleString(
-            NauraUI.lang === "en" ? "en-US" : "id-ID",
-          );
-        }
+            function syncLangLabel() {
+                langLabel.textContent = NauraUI.lang.toUpperCase();
+            }
 
-        function medal(index) {
-          var colors = ["text-yellow-400", "text-gray-300", "text-orange-500"];
-          if (index > 2) {
-            return (
-              '<span class="text-gray-500 font-bold font-cyber text-base">#' +
-              (index + 1) +
-              "</span>"
-            );
-          }
-          return (
-            '<i class="fa-solid fa-medal ' + colors[index] + ' text-3xl"></i>'
-          );
-        }
+            langToggle.addEventListener('click', async function () {
+                await NauraUI.setLanguage(NauraUI.lang === 'id' ? 'en' : 'id');
+                syncLangLabel();
+                render(currentType);
+            });
 
-        function badge(user) {
-          if (user.isOwner) {
-            return '<span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs px-3 py-1 rounded-full font-bold font-cyber"><i class="fa-solid fa-crown mr-1"></i>OWNER</span>';
-          }
-          if (user.isPremium) {
-            return '<span class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 text-xs px-3 py-1 rounded-full font-bold font-cyber"><i class="fa-solid fa-star mr-1"></i>VIP</span>';
-          }
-          return '<span class="text-gray-500 bg-black/40 border border-white/5 px-3 py-1 rounded-full text-xs font-semibold">Member</span>';
-        }
+            /* --- State satu baris penuh, dihiasi ekspresi Naura --- */
+            function fullRowState(kind, options) {
+                tbody.innerHTML =
+                    '<tr><td colspan="5">' + NauraUI.stateHtml(kind, options) + '</td></tr>';
+            }
 
-        function value(type, u) {
-          if (type === "chat_level") {
-            return (
-              '<div class="text-cyan-400 font-bold font-cyber">Lv. ' +
-              u.chatLevel +
-              '</div><div class="text-[9px] text-gray-500">' +
-              num(u.chatXp) +
-              " XP</div>"
-            );
-          }
-          if (type === "rpg_level") {
-            return (
-              '<div class="text-purple-400 font-bold font-cyber">Lv. ' +
-              u.rpgLevel +
-              '</div><div class="text-[9px] text-gray-500">' +
-              num(u.rpgXp) +
-              " XP</div>"
-            );
-          }
-          if (type === "trivia") {
-            return (
-              '<div class="text-emerald-400 font-bold font-cyber">🎮 ' +
-              num(u.points) +
-              "</div>"
-            );
-          }
-          if (type === "music") {
-            return (
-              '<div class="text-pink-400 font-bold font-cyber">🎵 ' +
-              num(u.tracks) +
-              "</div>"
-            );
-          }
-          return (
-            '<div class="text-yellow-400 font-bold font-cyber">⭐ ' +
-            num(u.starFragments) +
-            "</div>"
-          );
-        }
+            /* --- Tab --- */
+            var TABS = {
+                wealth: 'btnTabWealth',
+                chat_level: 'btnTabChatLevel',
+                rpg_level: 'btnTabRpgLevel',
+                trivia: 'btnTabTrivia',
+                music: 'btnTabMusic'
+            };
 
-        async function render(type) {
-          fullRowState("loading");
+            Object.keys(TABS).forEach(function (type) {
+                document.getElementById(TABS[type]).addEventListener('click', function () {
+                    setCategory(type);
+                });
+            });
 
-          var users;
-          try {
-            var res = await fetch(
-              "/api/leaderboard?type=" + type + "&limit=20",
-            );
-            if (!res.ok) throw new Error("HTTP " + res.status);
-            users = await res.json();
-          } catch (err) {
-            console.error("[Leaderboard]", err);
-            return fullRowState("error");
-          }
+            function setCategory(type) {
+                currentType = type;
+                Object.keys(TABS).forEach(function (key) {
+                    document
+                        .getElementById(TABS[key])
+                        .setAttribute('aria-selected', key === type ? 'true' : 'false');
+                });
+                render(type);
+            }
 
-          if (!Array.isArray(users) || users.length === 0)
-            return fullRowState("empty");
+            /* --- Angka mengikuti bahasa aktif --- */
+            function num(value) {
+                return Number(value || 0).toLocaleString(NauraUI.lang === 'en' ? 'en-US' : 'id-ID');
+            }
 
-          /* Avatar cadangan dulu menunjuk /assets/dashboard/naura.png yang
-           * ternyata tidak ada di repo, jadi barisnya menampilkan ikon
-           * gambar rusak. Sekarang jatuh ke ekspresi Naura. */
-          var fallbackAvatar = NauraUI.expressionUrl("shy");
+            function medal(index) {
+                var colors = ['text-yellow-400', 'text-gray-300', 'text-orange-500'];
+                if (index > 2) {
+                    return '<span class="text-gray-500 font-bold font-cyber text-base">#' + (index + 1) + '</span>';
+                }
+                return '<i class="fa-solid fa-medal ' + colors[index] + ' text-3xl"></i>';
+            }
 
-          tbody.innerHTML = users
-            .map(function (u, index) {
-              var rowStyle =
-                index < 3
-                  ? [
-                      "bg-yellow-500/5 border-l-4 border-yellow-400",
-                      "bg-gray-400/5 border-l-4 border-gray-300",
-                      "bg-orange-500/5 border-l-4 border-orange-500",
-                    ][index]
-                  : "border-b border-[var(--color-hairline)] hover:bg-[var(--color-surface-glass-hover)] border-l-4 border-transparent";
+            function badge(user) {
+                if (user.isOwner) {
+                    return '<span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs px-3 py-1 rounded-full font-bold font-cyber"><i class="fa-solid fa-crown mr-1"></i>OWNER</span>';
+                }
+                if (user.isPremium) {
+                    return '<span class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 text-xs px-3 py-1 rounded-full font-bold font-cyber"><i class="fa-solid fa-star mr-1"></i>VIP</span>';
+                }
+                return '<span class="text-gray-500 bg-black/40 border border-white/5 px-3 py-1 rounded-full text-xs font-semibold">Member</span>';
+            }
 
-              return (
-                '<tr class="' +
-                rowStyle +
-                ' transition duration-300">' +
-                '<td class="px-3 md:px-6 py-4 text-center">' +
-                medal(index) +
-                "</td>" +
-                '<td class="px-3 md:px-6 py-4 font-assist text-white">' +
-                '<div class="flex items-center gap-3">' +
-                '<img src="' +
-                (u.avatar || fallbackAvatar) +
-                '" loading="lazy" class="w-10 h-10 rounded-full border border-pink-400/40 object-cover" onerror="this.onerror=null;this.src=\'' +
-                fallbackAvatar +
-                "'\">" +
-                '<div class="flex flex-col min-w-0">' +
-                '<span class="font-bold text-sm leading-tight text-white truncate">' +
-                u.name +
-                "</span>" +
-                '<span class="text-[9px] text-gray-400 font-cyber tracking-wider">' +
-                u.userId +
-                "</span>" +
-                "</div></div></td>" +
-                '<td class="px-3 md:px-6 py-4 text-center font-cyber">' +
-                '<div class="flex items-center justify-center gap-2">' +
-                '<span class="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-bold border border-cyan-500/20">Lv.' +
-                u.chatLevel +
-                "</span>" +
-                '<span class="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 text-[10px] font-bold border border-purple-500/20">Lv.' +
-                u.rpgLevel +
-                "</span>" +
-                "</div></td>" +
-                '<td class="px-3 md:px-6 py-4 text-right font-cyber">' +
-                value(type, u) +
-                "</td>" +
-                '<td class="px-3 md:px-6 py-4 text-center">' +
-                badge(u) +
-                "</td>" +
-                "</tr>"
-              );
-            })
-            .join("");
-        }
+            function value(type, u) {
+                if (type === 'chat_level') {
+                    return '<div class="text-cyan-400 font-bold font-cyber">Lv. ' + u.chatLevel + '</div><div class="text-[9px] text-gray-500">' + num(u.chatXp) + ' XP</div>';
+                }
+                if (type === 'rpg_level') {
+                    return '<div class="text-purple-400 font-bold font-cyber">Lv. ' + u.rpgLevel + '</div><div class="text-[9px] text-gray-500">' + num(u.rpgXp) + ' XP</div>';
+                }
+                if (type === 'trivia') {
+                    return '<div class="text-emerald-400 font-bold font-cyber">🎮 ' + num(u.points) + '</div>';
+                }
+                if (type === 'music') {
+                    return '<div class="text-pink-400 font-bold font-cyber">🎵 ' + num(u.tracks) + '</div>';
+                }
+                return (
+                    '<div class="text-yellow-400 font-bold font-cyber">⭐ ' + num(u.starFragments) + '</div>'
+                );
+            }
 
-        /* Tunggu bahasa siap dulu supaya teksnya tidak sempat berkedip. */
-        NauraUI.loadLanguage().then(function () {
-          syncLangLabel();
-          setCategory("wealth");
-        });
-      })();
+            async function render(type) {
+                fullRowState('loading');
+
+                var users;
+                try {
+                    var res = await fetch('/api/leaderboard?type=' + type + '&limit=20');
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    users = await res.json();
+                } catch (err) {
+                    console.error('[Leaderboard]', err);
+                    return fullRowState('error');
+                }
+
+                if (!Array.isArray(users) || users.length === 0) return fullRowState('empty');
+
+                /* Avatar cadangan dulu menunjuk /assets/dashboard/naura.png yang
+                 * ternyata tidak ada di repo, jadi barisnya menampilkan ikon
+                 * gambar rusak. Sekarang jatuh ke ekspresi Naura. */
+                var fallbackAvatar = NauraUI.expressionUrl('shy');
+
+                tbody.innerHTML = users
+                    .map(function (u, index) {
+                        var rowStyle =
+                            index < 3
+                                ? ['bg-yellow-500/5 border-l-4 border-yellow-400', 'bg-gray-400/5 border-l-4 border-gray-300', 'bg-orange-500/5 border-l-4 border-orange-500'][index]
+                                : 'border-b border-[var(--color-hairline)] hover:bg-[var(--color-surface-glass-hover)] border-l-4 border-transparent';
+
+                        return (
+                            '<tr class="' + rowStyle + ' transition duration-300">' +
+                            '<td class="px-3 md:px-6 py-4 text-center">' + medal(index) + '</td>' +
+                            '<td class="px-3 md:px-6 py-4 font-assist text-white">' +
+                            '<div class="flex items-center gap-3">' +
+                            '<img src="' + (u.avatar || fallbackAvatar) + '" loading="lazy" class="w-10 h-10 rounded-full border border-pink-400/40 object-cover" onerror="this.onerror=null;this.src=\'' + fallbackAvatar + '\'">' +
+                            '<div class="flex flex-col min-w-0">' +
+                            '<span class="font-bold text-sm leading-tight text-white truncate">' + u.name + '</span>' +
+                            '<span class="text-[9px] text-gray-400 font-cyber tracking-wider">' + u.userId + '</span>' +
+                            '</div></div></td>' +
+                            '<td class="px-3 md:px-6 py-4 text-center font-cyber">' +
+                            '<div class="flex items-center justify-center gap-2">' +
+                            '<span class="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-bold border border-cyan-500/20">Lv.' + u.chatLevel + '</span>' +
+                            '<span class="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 text-[10px] font-bold border border-purple-500/20">Lv.' + u.rpgLevel + '</span>' +
+                            '</div></td>' +
+                            '<td class="px-3 md:px-6 py-4 text-right font-cyber">' + value(type, u) + '</td>' +
+                            '<td class="px-3 md:px-6 py-4 text-center">' + badge(u) + '</td>' +
+                            '</tr>'
+                        );
+                    })
+                    .join('');
+            }
+
+            /* Tunggu bahasa siap dulu supaya teksnya tidak sempat berkedip. */
+            NauraUI.loadLanguage().then(function () {
+                syncLangLabel();
+                setCategory('wealth');
+            });
+        })();
     </script>
-  </body>
+</body>
 </html>

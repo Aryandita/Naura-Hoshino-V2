@@ -131,19 +131,17 @@ class CardBattleEngine {
   static computeCardStats(card) {
     const catalog = CardEngine.getCatalog();
     const searchName = (card.characterName || "").toLowerCase();
-    const meta = catalog.find(
-      (c) =>
-        (c.name && c.name.toLowerCase().includes(searchName)) ||
-        (c.id && c.id.toLowerCase() === searchName) ||
-        (searchName && c.name && searchName.includes(c.name.toLowerCase())),
+    const meta = catalog.find((c) => 
+      (c.name && c.name.toLowerCase().includes(searchName)) || 
+      (c.id && c.id.toLowerCase() === searchName) ||
+      (searchName && c.name && searchName.includes(c.name.toLowerCase()))
     ) || {
       rarity: "COMMON",
       element: "NATURE",
     };
 
     const base = RARITY_BASE_STATS[meta.rarity] || RARITY_BASE_STATS.COMMON;
-    const qualityInfo =
-      QUALITY_MULTIPLIERS[card.quality] || QUALITY_MULTIPLIERS.GOOD;
+    const qualityInfo = QUALITY_MULTIPLIERS[card.quality] || QUALITY_MULTIPLIERS.GOOD;
 
     // Serial Print Multiplier (Low print is stronger)
     let printBonus = 1.0;
@@ -156,9 +154,7 @@ class CardBattleEngine {
     const totalDef = Math.round(base.def * qualityInfo.statMult * printBonus);
     const totalSpd = Math.round(base.spd * qualityInfo.statMult * printBonus);
 
-    const charKey = (card.characterName || "")
-      .toLowerCase()
-      .replace(/[^a-z]/g, "");
+    const charKey = (card.characterName || "").toLowerCase().replace(/[^a-z]/g, "");
     const skill = CHARACTER_SKILLS[charKey] || DEFAULT_SKILL;
 
     return {
@@ -193,20 +189,13 @@ class CardBattleEngine {
     // Regen 1 energy per turn
     if (attacker.energy < attacker.maxEnergy) attacker.energy += 1;
 
-    if (
-      actionType === "SKILL" &&
-      attacker.energy >= attacker.skill.energyCost
-    ) {
+    if (actionType === "SKILL" && attacker.energy >= attacker.skill.energyCost) {
       attacker.energy -= attacker.skill.energyCost;
-      const elMult = this.getElementMultiplier(
-        attacker.skill.element,
-        defender.element,
-      );
+      const elMult = this.getElementMultiplier(attacker.skill.element, defender.element);
       let effectiveDef = defender.def;
-      if (attacker.skill.ignoreDef)
-        effectiveDef *= 1 - attacker.skill.ignoreDef;
+      if (attacker.skill.ignoreDef) effectiveDef *= 1 - attacker.skill.ignoreDef;
 
-      let rawDmg = attacker.atk * attacker.skill.dmgMult - effectiveDef * 0.5;
+      let rawDmg = (attacker.atk * attacker.skill.dmgMult) - (effectiveDef * 0.5);
       rawDmg = Math.max(50, rawDmg) * elMult;
 
       if (Math.random() < attacker.critRate + (attacker.skill.critBonus || 0)) {
@@ -219,10 +208,7 @@ class CardBattleEngine {
 
       if (attacker.skill.lifesteal) {
         const heal = Math.round(damageDealt * attacker.skill.lifesteal);
-        attacker.currentHp = Math.min(
-          attacker.maxHp,
-          attacker.currentHp + heal,
-        );
+        attacker.currentHp = Math.min(attacker.maxHp, attacker.currentHp + heal);
         log = `${attacker.characterName} melepaskan Ultimate **${attacker.skill.name}**! Menyebabkan **${damageDealt}** DMG ${isCrit ? "(💥 CRITICAL!)" : ""} dan menyerap **+${heal}** HP!`;
       } else {
         log = `${attacker.characterName} melepaskan Ultimate **${attacker.skill.name}**! Menyebabkan **${damageDealt}** DMG ${isCrit ? "(💥 CRITICAL!)" : ""}!`;
@@ -233,11 +219,8 @@ class CardBattleEngine {
       log = `${attacker.characterName} mengambil posisi bertahan (🛡️ Defense +50% & +1 Energy)!`;
     } else {
       // Normal Attack
-      const elMult = this.getElementMultiplier(
-        attacker.element,
-        defender.element,
-      );
-      let rawDmg = attacker.atk - defender.def * 0.4;
+      const elMult = this.getElementMultiplier(attacker.element, defender.element);
+      let rawDmg = attacker.atk - (defender.def * 0.4);
       rawDmg = Math.max(30, rawDmg) * elMult;
 
       if (Math.random() < attacker.critRate) {
@@ -271,21 +254,12 @@ class CardBattleEngine {
     const baseDef = isBoss ? 200 + floor * 20 : 80 + floor * 10;
 
     const bossNames = [
-      "Slime Sovereign",
-      "Flame Drake",
-      "Leviathan Hatchling",
-      "Shadow Lord",
-      "Thunder Titan",
-      "Abyss Dragon",
-      "Celestial Valkyrie",
-      "Chrono Guardian",
-      "Apex Behemoth",
-      "Void Arbiter",
+      "Slime Sovereign", "Flame Drake", "Leviathan Hatchling", "Shadow Lord",
+      "Thunder Titan", "Abyss Dragon", "Celestial Valkyrie", "Chrono Guardian",
+      "Apex Behemoth", "Void Arbiter"
     ];
 
-    const name = isBoss
-      ? bossNames[(floor / 10 - 1) % bossNames.length]
-      : `Tower Monster Lt.${floor}`;
+    const name = isBoss ? bossNames[(floor / 10 - 1) % bossNames.length] : `Tower Monster Lt.${floor}`;
 
     return {
       cardCode: `TOWER-F${floor}`,

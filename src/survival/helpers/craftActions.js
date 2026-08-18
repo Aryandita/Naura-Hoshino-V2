@@ -27,7 +27,7 @@ async function spendStamina(userId, survival, cost) {
 }
 
 async function saveInventory(userId, inventory) {
-  await cacheManager.updateUserProfile(userId, { inventory });
+  await cacheManager.mutateUserProfileJson(userId, "inventory", () => inventory);
 }
 
 async function bumpQuest(userId) {

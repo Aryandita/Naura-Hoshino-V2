@@ -13,12 +13,7 @@
 // Ingin mengubah emoji? Sunting berkas kecil di src/config/ui/emojis_*.js.
 
 const { colors, monsters, dividers, links, footers } = require("./ui/palette");
-const {
-  banners,
-  characters,
-  backgrounds,
-  survivalBackgrounds,
-} = require("./ui/assets");
+const { banners, characters, backgrounds, survivalBackgrounds } = require("./ui/assets");
 const emojisBase = require("./ui/emojis_base");
 const emojisGame = require("./ui/emojis_game");
 const emojisMedia = require("./ui/emojis_media");

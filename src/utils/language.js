@@ -1,11 +1,9 @@
 const langData = require("../config/lang.json");
-try {
-  process.loadEnvFile();
-} catch (e) {}
+const env = require("../config/env");
 
-// Mengambil bahasa dari .env, default ke 'id' jika tidak diatur
+// Mengambil bahasa dari env, default ke 'id' jika tidak diatur
 function getLang() {
-  return process.env.BOT_LANG || "id";
+  return env.BOT_LANG || "id";
 }
 
 /**

@@ -27,7 +27,7 @@ module.exports = async function handleReputation(message, client, ctx) {
       // Set a 1-minute cooldown for giving rep via thanks
       await redisManager.setCache(cooldownKey, true, 60);
 
-      let addedTo = [];
+      const addedTo = [];
       for (const [id, user] of mentionedUsers) {
         // Increment reputation
         await cacheManager.incrementUserProfile(id, { reputation: 1 });

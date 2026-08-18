@@ -15,17 +15,9 @@ class ServerChronicleEngine {
       await redisManager.hincrby(todayKey, `user:${userId}:${username}`, 1);
       await redisManager.expire(todayKey, 172800); // 48 jam
 
-      if (
-        content &&
-        content.length > 10 &&
-        content.length < 120 &&
-        !content.startsWith("/")
-      ) {
+      if (content && content.length > 10 && content.length < 120 && !content.startsWith("/")) {
         const quotesKey = `chronicle:quotes:${guildId}:${new Date().toISOString().slice(0, 10)}`;
-        await redisManager.lpush(
-          quotesKey,
-          JSON.stringify({ username, text: content }),
-        );
+        await redisManager.lpush(quotesKey, JSON.stringify({ username, text: content }));
         await redisManager.ltrim(quotesKey, 0, 20);
         await redisManager.expire(quotesKey, 172800);
       }
@@ -45,11 +37,7 @@ class ServerChronicleEngine {
     const rawActivity = await redisManager.hgetall(todayKey);
     const rawQuotes = await redisManager.lrange(quotesKey, 0, 10);
 
-    let topUser = {
-      username: "Warga Teladan",
-      count: 42,
-      userId: guild.ownerId,
-    };
+    let topUser = { username: "Warga Teladan", count: 42, userId: guild.ownerId };
     let totalMessages = 0;
 
     if (rawActivity && Object.keys(rawActivity).length > 0) {
@@ -70,23 +58,14 @@ class ServerChronicleEngine {
       totalMessages = Math.floor(Math.random() * 200) + 150;
     }
 
-    const quotes = (rawQuotes || [])
-      .map((q) => {
-        try {
-          return JSON.parse(q);
-        } catch (e) {
-          return null;
-        }
-      })
-      .filter(Boolean);
+    const quotes = (rawQuotes || []).map((q) => {
+      try { return JSON.parse(q); } catch (e) { return null; }
+    }).filter(Boolean);
 
     // AI Headline & Horoscope Generation
     let headline = `Sensasi Hari Ini di ${guild.name}!`;
     let gossip = `Bintang terik menyinari guild ${guild.name}. Tetaplah waspada terhadap drop rate gacha dan bahaya monster Tower of Babel!`;
-    let quoteHighlight =
-      quotes.length > 0
-        ? `"${quotes[0].text}", ${quotes[0].username}`
-        : `"Hari yang cerah untuk berpetualang!", Naura`;
+    const quoteHighlight = quotes.length > 0 ? `"${quotes[0].text}", ${quotes[0].username}` : `"Hari yang cerah untuk berpetualang!", Naura`;
 
     try {
       if (aiManager && typeof aiManager.ask === "function") {
@@ -105,12 +84,7 @@ class ServerChronicleEngine {
     }
 
     return {
-      date: new Date().toLocaleDateString("id-ID", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
+      date: new Date().toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
       guildName: guild.name,
       guildIcon: guild.iconURL({ extension: "png" }),
       headline,

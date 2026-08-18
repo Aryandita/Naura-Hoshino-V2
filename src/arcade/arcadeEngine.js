@@ -9,12 +9,7 @@ const TRIVIA_BANK = [
   },
   {
     q: "Apa nama teknik domain expansion milik Gojo Satoru?",
-    options: [
-      "Malevolent Shrine",
-      "Infinite Void",
-      "Chimera Shadow Garden",
-      "Self-Embodiment of Perfection",
-    ],
+    options: ["Malevolent Shrine", "Infinite Void", "Chimera Shadow Garden", "Self-Embodiment of Perfection"],
     answerIndex: 1,
     category: "Anime",
   },
@@ -73,11 +68,7 @@ class ArcadeEngine {
     const number = Math.floor(Math.random() * 37); // 0 to 36
     let color = "BLACK";
     if (number === 0) color = "GREEN";
-    else if (
-      [
-        1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36,
-      ].includes(number)
-    ) {
+    else if ([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36].includes(number)) {
       color = "RED";
     }
 

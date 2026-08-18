@@ -10,10 +10,21 @@ class RedisManager {
       return;
     }
 
-    this.client = createClient({ url: redisUrl });
+    this.client = createClient({
+      url: redisUrl,
+      socket: {
+        reconnectStrategy: (retries) => {
+          if (retries > 2) {
+            return new Error("[Redis] Max reconnect attempts reached");
+          }
+          return 1000;
+        },
+        connectTimeout: 2000,
+      },
+    });
 
     this.client.on("error", (err) =>
-      logger.error("[Redis] Connection error:", err.message),
+      logger.warn("[Redis] Connection error:", err.message),
     );
     this.client.on("connect", () =>
       logger.success("[Redis] Terhubung ke Redis Cache System."),
@@ -30,7 +41,11 @@ class RedisManager {
 
   async connect() {
     if (!this.client) return;
-    await this.client.connect();
+    try {
+      await this.client.connect();
+    } catch (error) {
+      logger.warn("[Redis] Gagal terhubung ke Redis server, sistem cache berjalan dalam mode memori fallback.");
+    }
   }
 
   async setCache(key, data, expirationInSeconds = 3600) {

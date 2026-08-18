@@ -3,7 +3,16 @@
 const { Sequelize } = require("sequelize");
 const env = require("./env");
 
-const hasMySQLConfig = Boolean(env.DB_NAME && env.DB_USER && env.DB_HOST);
+const hasMySQLConfig =
+  !env.USE_SQLITE &&
+  Boolean(
+    env.DB_NAME &&
+      env.DB_USER &&
+      env.DB_HOST &&
+      env.DB_HOST !== "sqlite" &&
+      (env.USE_MYSQL ||
+        (env.DB_HOST !== "127.0.0.1" && env.DB_HOST !== "localhost")),
+  );
 const SHARD_COUNT = env.TOTAL_SHARDS > 0 ? env.TOTAL_SHARDS : 1;
 const POOL_MAX =
   env.DB_POOL_MAX > 0

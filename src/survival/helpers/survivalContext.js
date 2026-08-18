@@ -165,7 +165,7 @@ function getCurrentSeason() {
       label: "🎉 Event Kemerdekaan",
       boostType: "fragment",
       dropBoost: 2.0,
-      exclusiveItem: "bendera_merah_putih",
+      exclusiveItem: "bendera_merah_putih"
     };
   }
 
@@ -176,7 +176,7 @@ function getCurrentSeason() {
       label: "🎂 Ulang Tahun Naura",
       boostType: "coin",
       dropBoost: 2.0,
-      exclusiveItem: "birthday_cake",
+      exclusiveItem: "birthday_cake"
     };
   }
 
@@ -187,7 +187,7 @@ function getCurrentSeason() {
       label: "🎆 Event Tahun Baru",
       boostType: "coupon",
       dropBoost: 1.0, // No multiplier, just daily random
-      exclusiveItem: "firework",
+      exclusiveItem: "firework"
     };
   }
 
@@ -196,37 +196,31 @@ function getCurrentSeason() {
     2025: { ramadhanStart: "03-01", ramadhanEnd: "03-30", lebaran: "03-31" },
     2026: { ramadhanStart: "02-18", ramadhanEnd: "03-19", lebaran: "03-20" },
     2027: { ramadhanStart: "02-08", ramadhanEnd: "03-09", lebaran: "03-10" },
-    2028: { ramadhanStart: "01-28", ramadhanEnd: "02-26", lebaran: "02-27" },
+    2028: { ramadhanStart: "01-28", ramadhanEnd: "02-26", lebaran: "02-27" }
   };
 
   const currYearHijri = hijriMap[y];
   if (currYearHijri) {
     const todayStr = `${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-
+    
     // Masa Ramadhan (Daily Ketupat)
-    if (
-      todayStr >= currYearHijri.ramadhanStart &&
-      todayStr <= currYearHijri.ramadhanEnd
-    ) {
+    if (todayStr >= currYearHijri.ramadhanStart && todayStr <= currYearHijri.ramadhanEnd) {
       return {
         name: "ramadhan",
         label: "🌙 Bulan Ramadhan",
         boostType: "none",
         dropBoost: 1.0,
-        exclusiveItem: "ketupat",
+        exclusiveItem: "ketupat"
       };
     }
     // Hari Lebaran (Tukar Ketupat)
-    if (
-      todayStr === currYearHijri.lebaran ||
-      todayStr === getNextDayStr(currYearHijri.lebaran)
-    ) {
+    if (todayStr === currYearHijri.lebaran || todayStr === getNextDayStr(currYearHijri.lebaran)) {
       return {
         name: "lebaran",
         label: "🕌 Hari Raya Idul Fitri",
         boostType: "none",
         dropBoost: 1.0,
-        exclusiveItem: "opor_ayam",
+        exclusiveItem: "opor_ayam"
       };
     }
   }
@@ -247,11 +241,7 @@ async function checkNauraBirthdayEncounter(interaction, userId) {
   // 15% chance to encounter Naura
   if (Math.random() > 0.15) return;
 
-  const {
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle,
-  } = require("discord.js");
+  const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
   const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
   const cacheManager = require("../../managers/cacheManager");
   const ui = require("../../config/ui");
@@ -261,7 +251,7 @@ async function checkNauraBirthdayEncounter(interaction, userId) {
       .setCustomId("naura_bday_greet")
       .setLabel("Sapa Naura & Kasih Selamat!")
       .setStyle(ButtonStyle.Success)
-      .setEmoji("🎂"),
+      .setEmoji("🎂")
   );
 
   const payload = buildContainerV2({
@@ -270,52 +260,40 @@ async function checkNauraBirthdayEncounter(interaction, userId) {
     title: "Ketemu Naura!",
     iconURL: interaction.client.user.displayAvatarURL(),
     expression: "happy",
-    description:
-      "Eh, kebetulan banget kita ketemu di sini! Hari ini ulang tahunku lho... hihi.",
+    description: "Eh, kebetulan banget kita ketemu di sini! Hari ini ulang tahunku lho... hihi.",
     footerText: ui.getFooter("survival"),
   });
 
-  const msg = await interaction
-    .followUp({
-      ...payload,
-      embeds: [],
-      components: [...payload.components, row],
-      flags: 64, // Ephemeral
-    })
-    .catch(() => {});
+  const msg = await interaction.followUp({
+    ...payload,
+    embeds: [],
+    components: [...payload.components, row],
+    flags: 64 // Ephemeral
+  }).catch(() => {});
 
   if (!msg) return;
 
   const collector = msg.createMessageComponentCollector({
     filter: (i) => i.user.id === userId && i.customId === "naura_bday_greet",
     time: 15000,
-    max: 1,
+    max: 1
   });
 
   collector.on("collect", async (i) => {
     await cacheManager.incrementUserSurvival(userId, "coupons", 1);
-
+    
     const thxPayload = buildContainerV2({
       accentColorHex: ui.getColor("primary"),
       authorName: "Naura Hoshino",
       title: "Makasih yaa!",
       iconURL: interaction.client.user.displayAvatarURL(),
       expression: "cheers",
-      description:
-        "Makasih banyak ucapannya! Ini aku kasih 1 Naura Coupon buat kamu. Semoga petualanganmu hari ini menyenangkan!",
+      description: "Makasih banyak ucapannya! Ini aku kasih 1 Naura Coupon buat kamu. Semoga petualanganmu hari ini menyenangkan!",
       footerText: ui.getFooter("survival"),
     });
 
-    await i
-      .update({ ...thxPayload, embeds: [], components: thxPayload.components })
-      .catch(() => {});
+    await i.update({ ...thxPayload, embeds: [], components: thxPayload.components }).catch(() => {});
   });
 }
 
-module.exports = {
-  attachAutoDelete,
-  createMockInteraction,
-  AUTO_DELETE_MS,
-  getCurrentSeason,
-  checkNauraBirthdayEncounter,
-};
+module.exports = { attachAutoDelete, createMockInteraction, AUTO_DELETE_MS, getCurrentSeason, checkNauraBirthdayEncounter };

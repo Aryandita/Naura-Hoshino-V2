@@ -1,22 +1,52 @@
-// Lokasi: src/managers/voiceManager.js
-"use strict";
-
 const { logger } = require("../managers/logger");
 const googleTTS = require("google-tts-api");
 
+let djsVoice = null;
+function getVoiceLib() {
+  if (djsVoice !== null) return djsVoice;
+  try {
+    djsVoice = require("@discordjs/voice");
+  } catch (_) {
+    djsVoice = false;
+  }
+  return djsVoice;
+}
+
 class VoiceManager {
   static async speak(text, member) {
-    if (!member || !member.voice || !member.voice.channel) {
-      logger.warn("[TTS] Member tidak berada di dalam Voice Channel.");
+    const voice = getVoiceLib();
+    if (!voice) return false;
+    const {
+      joinVoiceChannel,
+      createAudioPlayer,
+      createAudioResource,
+      AudioPlayerStatus,
+    } = voice;
+    if (!member || !member.voice.channel) {
+      console.log(
+        "\x1b[41m\x1b[37m 🔊 TTS ERROR \x1b[0m \x1b[31mMember tidak berada di dalam Voice Channel.\x1b[0m",
+      );
       return;
     }
 
     const voiceChannel = member.voice.channel;
     const guildId = voiceChannel.guild.id;
-    const client = member.client;
 
     try {
+      // Cek konflik dengan Poru (Lavalink)
+      const client = member.client;
+      if (client && client.poru && client.poru.players) {
+        const player = client.poru.players.get(guildId);
+        if (player && player.isPlaying) {
+          console.log(
+            "\x1b[43m\x1b[30m 🔊 TTS INFO \x1b[0m \x1b[33mVoice channel sedang digunakan oleh Poru untuk memutar musik. Membatalkan TTS agar tidak membajak koneksi.\x1b[0m",
+          );
+          return;
+        }
+      }
+
       // 1. Dapatkan URL Audio dari Google TTS (Bahasa Indonesia)
+      // Limit text ke 195 karakter agar tidak terkena RangeError dari API Google TTS
       const safeText =
         text.length > 195 ? text.substring(0, 192) + "..." : text;
       const audioUrl = googleTTS.getAudioUrl(safeText, {
@@ -25,79 +55,102 @@ class VoiceManager {
         host: "https://translate.google.com",
       });
 
-      // 2. Coba pakai Poru (Lavalink) jika tersedia
-      const poru = client?.poru || client?.musicManager?.poru;
-      if (poru) {
-        let player = poru.players.get(guildId);
-        if (!player) {
-          player = poru.createConnection({
-            guildId,
-            voiceChannel: voiceChannel.id,
-            textChannel: member.guild?.systemChannelId || voiceChannel.id,
-            deaf: true,
-          });
-        }
+      // 2. Buat Resource Audio
+      const resource = createAudioResource(audioUrl);
+      const player = createAudioPlayer();
 
-        const res = await poru.resolve({
-          query: audioUrl,
-          requester: member.user,
-        });
-        if (res && res.tracks && res.tracks.length > 0) {
-          const track = res.tracks[0];
-          player.queue.add(track);
-          if (!player.isPlaying && !player.isPaused) {
-            await player.play();
-          }
-          return;
-        }
-      }
+      // 3. Bergabung ke Voice Channel
+      const connection = joinVoiceChannel({
+        channelId: voiceChannel.id,
+        guildId: guildId,
+        adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+        selfDeaf: true,
+      });
 
-      // 3. Fallback ke @discordjs/voice jika terinstall
-      try {
-        const {
-          joinVoiceChannel,
-          createAudioPlayer,
-          createAudioResource,
-          AudioPlayerStatus,
-        } = require("@discordjs/voice");
+      // 4. Mainkan Suara
+      connection.subscribe(player);
+      player.play(resource);
 
-        const resource = createAudioResource(audioUrl);
-        const player = createAudioPlayer();
+      // 5. Cleanup Setelah Selesai Berbicara
+      player.on(AudioPlayerStatus.Idle, () => {
+        player.stop();
+        try {
+          connection.destroy();
+        } catch (e) {}
+      });
 
-        const connection = joinVoiceChannel({
-          channelId: voiceChannel.id,
-          guildId: guildId,
-          adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-          selfDeaf: true,
-        });
-
-        connection.subscribe(player);
-        player.play(resource);
-
-        player.on(AudioPlayerStatus.Idle, () => {
-          player.stop();
-          try {
-            connection.destroy();
-          } catch (e) {}
-        });
-
-        player.on("error", (error) => {
-          logger.error("[VoiceManager] Audio Player Error:", error.message);
-          try {
-            connection.destroy();
-          } catch (e) {}
-        });
-      } catch (voicePkgError) {
-        if (voicePkgError.code === "MODULE_NOT_FOUND") {
-          logger.info(
-            `[VoiceManager] Suara disimulasikan (Lavalink/DiscordJS Voice belum aktif): "${safeText}"`,
-          );
-        } else {
-          throw voicePkgError;
-        }
-      }
+      player.on("error", (error) => {
+        logger.error(
+          "\x1b[41m\x1b[37m ⚠️ AUDIO PLAYER ERROR \x1b[0m",
+          error.message,
+        );
+        try {
+          connection.destroy();
+        } catch (e) {}
+      });
     } catch (error) {
-      logger.error("[VoiceManager] Error memutar suara TTS:", error);
+      logger.error("\x1b[41m\x1b[37m ⚠️ GOOGLE TTS ERROR \x1b[0m", error);
+    }
+  }
+
+  static async playFile(filePath, member) {
+    if (!member || !member.voice.channel) {
+      return false;
+    }
+
+    const voice = getVoiceLib();
+    if (!voice) return false;
+
+    const {
+      joinVoiceChannel,
+      createAudioPlayer,
+      createAudioResource,
+      AudioPlayerStatus,
+    } = voice;
+
+    const voiceChannel = member.voice.channel;
+    const guildId = voiceChannel.guild.id;
+
+    try {
+      const client = member.client;
+      if (client && client.poru && client.poru.players) {
+        const player = client.poru.players.get(guildId);
+        if (player && player.isPlaying) {
+          return false;
+        }
+      }
+
+      const resource = createAudioResource(filePath);
+      const player = createAudioPlayer();
+
+      const connection = joinVoiceChannel({
+        channelId: voiceChannel.id,
+        guildId: guildId,
+        adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+        selfDeaf: true,
+      });
+
+      connection.subscribe(player);
+      player.play(resource);
+
+      player.on(AudioPlayerStatus.Idle, () => {
+        player.stop();
+        try {
+          connection.destroy();
+        } catch (e) {}
+      });
+
+      player.on("error", (error) => {
+        logger.error("[VoiceManager] Audio Player Error:", error.message);
+        try {
+          connection.destroy();
+        } catch (e) {}
+      });
+
+      return true;
+    } catch (error) {
+      logger.error("[VoiceManager] Gagal memutar file audio:", error.message);
+      return false;
     }
   }
 }
