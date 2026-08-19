@@ -117,7 +117,7 @@ function exchangeView(snap) {
 
   return buildContainerV2({
     accentColorHex: ui.getColor("economy") || "#FFD700",
-    authorName: "Naura Central Bank \u2014 Loket Penukaran",
+    authorName: "Naura Central Bank • Loket Penukaran",
     title: `${currencyHelper.emojiOf(COIN)} Tukar Mata Uang`,
     expression: "Cheers",
     description: [
@@ -148,7 +148,7 @@ function savingsView(snap) {
 
   return buildContainerV2({
     accentColorHex: ui.getColor("economy") || "#FFD700",
-    authorName: "Naura Central Bank \u2014 Tabungan",
+    authorName: "Naura Central Bank • Tabungan",
     title: `${e("bank")} Setor & Tarik ${COIN.short}`,
     expression: "Read",
     description: [
@@ -193,12 +193,12 @@ function depositView(snap) {
       );
 
   const termList = Object.values(DEPOSIT_TERMS)
-    .map((t) => `> **${t.label}** \u2014 ${t.name}, terkunci ${t.days} hari`)
+    .map((t) => `> **${t.label}** : ${t.name}, terkunci ${t.days} hari`)
     .join("\n");
 
   return buildContainerV2({
     accentColorHex: ui.getColor("economy") || "#FFD700",
-    authorName: "Naura Central Bank \u2014 Deposito",
+    authorName: "Naura Central Bank • Deposito",
     title: `${e("achievement_locked")} Deposito Berjangka`,
     expression: "Thinking",
     description: [
@@ -255,7 +255,7 @@ function investView(snap, valuations) {
 
   const payload = buildContainerV2({
     accentColorHex: ui.getColor("economy") || "#FFD700",
-    authorName: "Naura Central Bank \u2014 Papan Investasi",
+    authorName: "Naura Central Bank • Papan Investasi",
     title: `${e("stats")} Papan Investasi Naura`,
     expression: "Impressed",
     description: [

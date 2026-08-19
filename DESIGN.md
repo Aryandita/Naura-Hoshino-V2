@@ -354,3 +354,35 @@ Sistem antarmuka Naura Hoshino V2 memadukan estetika Cyber-Anime Glassmorphism d
   > *"B-Bukan karena aku cerewet ya, Kak {displayName}... tapi istirahat dulu sebentar sebelum coba lagi! 🌸"*
 - **Penyebutan Nama Personal:** Hindari kata panggilan kaku atau generik seperti "Master". Selalu gunakan `{displayName}` atau `{username}` pengguna agar interaksi terasa dekat, hangat, dan nyata.
 
+---
+
+## 🚀 Advanced UI/UX Patterns (Part 3 Guidelines)
+
+Berdasarkan referensi teknik desain tingkat lanjut (*"Top 5 Advanced UX/UI Design Tips and Tricks Every Designer Needs to Know About - Part 3"*), ekosistem antarmuka Naura menerapkan 5 standar berikut:
+
+### 1. Behavioral Personalization & Adaptive Display Modes
+- **Newbie Mode (Lv. 1-5 / Akun Baru):** Menampilkan panduan ramah, milestone langkah awal, dan tombol aksi pemula (*"Ayo mulai petualangan pertamamu bareng Naura!"*).
+- **Veteran / Super User Mode (Lv. >5 / Akun Aktif):** Menyajikan *high-density power stats*, matriks atribut, streak, dan tombol aksi cepat (*batch actions*).
+
+### 2. Smarter & Predictive Search UX
+- **Context-Aware Autocomplete:** Setiap item autocomplete diperkaya dengan tag penjelas (`[Item • 500 Koin]`, `[Musik • Populer]`, `[Command • Admin]`).
+- **Graceful Fallback:** Bila query pengguna tidak menemukan hasil persis, berikan daftar rekomendasi populer Naura daripada membiarkan hasil pencarian kosong.
+
+### 3. Visual Timelines & Human Connection in Multi-Step Workflows
+- **Visual Step Tracker:** Proses multi-langkah (status tiket, ekspedisi dungeon, antrean musik) ditampilkan dengan timeline horizontal terstruktur:
+  `✅ Laporan Diterima ── ⏳ Dalam Pemeriksaan Staff ── ⚪ Selesai & Terarsip`
+- **Pesan Empatik:** Menghilangkan kecemasan pengguna dengan kata-kata penenang dari Naura di setiap fase aktif.
+
+### 4. Context-Driven Input Ergonomics
+- **Quick-Preset Controls:** Untuk transaksi yang sering berulang (bank, transfer, belanja, tempa), sediakan baris tombol preset angka instan `[+1]`, `[+5]`, `[+10]`, `[Semua / MAX]`, `[Reset]` di samping input modal manual.
+
+### 5. Categorical Color-Coding System
+Setiap modul di Naura Hoshino memiliki aksen warna terstandarisasi untuk memudahkan pemindaian visual (*visual scanning rhythm*):
+- **Core, Social & Identity:** Soft Primary Pink (`#FFC0CB`)
+- **Music, Voice & Audio:** Sky Blue (`#8A2BE2` / `#93C5FD`)
+- **Economy, Shop & VIP:** Rich Gold (`#FFD700`)
+- **Survival RPG, Quest & Crafting:** Fresh Emerald Green (`#228B22` / `#86EFAC`)
+- **Admin, Governance & Setup:** Futuristic Purple (`#9400D3` / `#C084FC`)
+- **Security, Softban & Emergency:** Vivid Ruby Red (`#FF0000` / `#F87171`)
+
+

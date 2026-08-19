@@ -196,4 +196,15 @@ module.exports = {
   spring: "<a:spring:1500715167594582037>",
   winter: "<a:winter:1500717689457344603>",
   autumn: "<:autumn:1500715165425995817>",
+
+  // --- UX Step Timelines & Advanced Ergonomics ---
+  step_done: "<a:done:1492712310173732954>",
+  step_active: "<a:Loading1:1492696844646613042>",
+  step_pending: "\u26AA",
+  step_arrow: "<a:Arrow:1492696901051744298>",
+  mode_newbie: "\uD83C\uDF31",
+  mode_veteran: "\uD83D\uDC51",
+  btn_preset: "\u26A1",
+  btn_max: "\uD83D\uDD25",
+  btn_reset: "\uD83D\uDD04",
 };

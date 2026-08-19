@@ -223,10 +223,197 @@ function getPersonalityResponse(type, { user = null, context = {}, lang = "id" }
   }
 }
 
+/**
+ * Visual Timeline Step Tracker: Menggambarkan tahapan multi-langkah dengan emoji status & pesan empatik
+ * @param {object} options
+ * @param {Array<{ label: string, desc?: string }>} options.steps
+ * @param {number} [options.currentStepIndex=0]
+ * @param {string|object} [options.user=null]
+ * @param {string} [options.lang="id"]
+ * @returns {{ timeline: string, currentStep: object, isComplete: boolean, message: string }}
+ */
+function buildTimelineStepTracker({
+  steps = [],
+  currentStepIndex = 0,
+  user = null,
+  lang = "id",
+}) {
+  if (!Array.isArray(steps) || steps.length === 0) {
+    return { timeline: "", currentStep: null, isComplete: false, message: "" };
+  }
+
+  const name = resolveUserName(user);
+  const isEn = lang === "en";
+
+  const emojiDone = ui.getEmoji("step_done") || "✅";
+  const emojiActive = ui.getEmoji("step_active") || "⏳";
+  const emojiPending = ui.getEmoji("step_pending") || "⚪";
+  const emojiArrow = ui.getEmoji("step_arrow") || "➔";
+
+  const renderedSteps = steps.map((step, idx) => {
+    let icon = emojiPending;
+    let labelText = step.label;
+
+    if (idx < currentStepIndex) {
+      icon = emojiDone;
+      labelText = `~~${step.label}~~`;
+    } else if (idx === currentStepIndex) {
+      icon = emojiActive;
+      labelText = `**[${step.label}]**`;
+    }
+
+    return `${icon} ${labelText}`;
+  });
+
+  const timeline = renderedSteps.join(` ${emojiArrow} `);
+  const isComplete = currentStepIndex >= steps.length;
+  const currentStep = isComplete ? steps[steps.length - 1] : steps[currentStepIndex] || steps[0];
+
+  let message = "";
+  if (isComplete) {
+    message = isEn
+      ? `All steps completed smoothly for you, ${name}! 🎉`
+      : `Seluruh tahapan telah selesai tuntas untuk Kak ${name}! 🎉`;
+  } else {
+    message = isEn
+      ? `Hang tight ${name}, we are currently at: **${currentStep.label}**~ ✨`
+      : `Mohon tunggu sebentar ya Kak ${name}, saat ini proses sedang di tahap: **${currentStep.label}**~ ✨`;
+  }
+
+  return {
+    timeline,
+    currentStep,
+    isComplete,
+    message,
+  };
+}
+
+/**
+ * Categorical Color-Coding System: Mengembalikan warna hex token resmi per modul
+ * @param {string} category
+ * @returns {string} Hex color
+ */
+function getModuleCategoryColor(category) {
+  const cat = String(category || "").toLowerCase();
+  switch (cat) {
+    case "core":
+    case "social":
+    case "identity":
+      return ui.getColor("primary") || "#FFC0CB";
+
+    case "music":
+    case "audio":
+    case "voice":
+      return ui.getColor("music") || "#8A2BE2";
+
+    case "economy":
+    case "shop":
+    case "vip":
+    case "gacha":
+      return ui.getColor("economy") || "#FFD700";
+
+    case "survival":
+    case "quest":
+    case "craft":
+    case "farm":
+      return ui.getColor("crafting") || "#228B22";
+
+    case "admin":
+    case "setup":
+    case "moderation":
+      return ui.getColor("rank") || "#9400D3";
+
+    case "security":
+    case "softban":
+    case "emergency":
+      return ui.getColor("error") || "#FF0000";
+
+    default:
+      return ui.getColor("primary") || "#FFC0CB";
+  }
+}
+
+/**
+ * Adaptive Density View: Menentukan apakah menampilkan panduan pemula atau statistik padat veteran
+ * @param {object} options
+ * @param {number} [options.level=1]
+ * @param {boolean} [options.isVeteran=false]
+ * @param {string|object} [options.user=null]
+ * @param {string} [options.lang="id"]
+ * @returns {{ isVeteran: boolean, modeBadge: string, focusTip: string }}
+ */
+function buildAdaptiveDensityView({
+  level = 1,
+  isVeteran = false,
+  user = null,
+  lang = "id",
+}) {
+  const name = resolveUserName(user);
+  const isEn = lang === "en";
+  const veteranStatus = Boolean(isVeteran || level > 5);
+
+  const modeBadge = veteranStatus
+    ? (ui.getEmoji("mode_veteran") || "👑") + (isEn ? " Veteran Mode" : " Mode Veteran")
+    : (ui.getEmoji("mode_newbie") || "🌱") + (isEn ? " Newbie Guide" : " Panduan Pemula");
+
+  const focusTip = veteranStatus
+    ? (isEn
+        ? `Welcome back, ${name}! High-density stats and shortcut matrix are activated.`
+        : `Selamat kembali, Kak ${name}! Matriks statistik padat dan pintasan aksi aktif.`)
+    : (isEn
+        ? `Welcome, ${name}! Complete your initial starter quests to unlock advanced power stats.`
+        : `Halo Kak ${name}! Selesaikan quest langkah awal untuk membuka statistik lengkap.`);
+
+  return {
+    isVeteran: veteranStatus,
+    modeBadge,
+    focusTip,
+  };
+}
+
+/**
+ * Predictive Search Helper: Memfilter dan memperkaya hasil pencarian dengan context tags
+ * @param {object} options
+ * @param {string} options.query
+ * @param {Array<{ name: string, value: string, category?: string, price?: number }>} options.items
+ * @param {number} [options.maxResults=25]
+ * @param {Array<{ name: string, value: string }>} [options.fallbackRecommendations=[]]
+ * @returns {Array<{ name: string, value: string }>}
+ */
+function filterPredictiveSearch({
+  query = "",
+  items = [],
+  maxResults = 25,
+  fallbackRecommendations = [],
+}) {
+  const cleanQuery = String(query || "").trim().toLowerCase();
+
+  if (!cleanQuery) {
+    return items.slice(0, maxResults);
+  }
+
+  const matches = items.filter((item) => {
+    const itemName = String(item.name || "").toLowerCase();
+    const itemCat = String(item.category || "").toLowerCase();
+    return itemName.includes(cleanQuery) || itemCat.includes(cleanQuery);
+  });
+
+  if (matches.length > 0) {
+    return matches.slice(0, maxResults);
+  }
+
+  // Bila query tidak ditemukan, berikan rekomendasi cerdas Naura
+  return fallbackRecommendations.slice(0, maxResults);
+}
+
 module.exports = {
   resolveUserName,
   buildGoalGradientBar,
   formatRecommendationBadge,
   buildPriceAnchor,
   getPersonalityResponse,
+  buildTimelineStepTracker,
+  getModuleCategoryColor,
+  buildAdaptiveDensityView,
+  filterPredictiveSearch,
 };

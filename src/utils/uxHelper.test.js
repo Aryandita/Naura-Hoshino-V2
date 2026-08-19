@@ -98,3 +98,82 @@ test("uxHelper - getPersonalityResponse produces personalized anime voice withou
   assert.ok(ikeaRes.includes("Kak Ryaa"));
   assert.ok(ikeaRes.includes("estetik banget"));
 });
+
+test("uxHelper - buildTimelineStepTracker renders progressive visual steps", () => {
+  const steps = [
+    { label: "Buka Tiket" },
+    { label: "Pemeriksaan Staff" },
+    { label: "Tuntas" },
+  ];
+
+  const inProgress = uxHelper.buildTimelineStepTracker({
+    steps,
+    currentStepIndex: 1,
+    user: "Aryandita",
+    lang: "id",
+  });
+
+  assert.equal(inProgress.isComplete, false);
+  assert.ok(inProgress.timeline.includes("Buka Tiket"));
+  assert.ok(inProgress.timeline.includes("**[Pemeriksaan Staff]**"));
+  assert.ok(inProgress.message.includes("Pemeriksaan Staff"));
+  assert.ok(inProgress.message.includes("Kak Aryandita"));
+
+  const completed = uxHelper.buildTimelineStepTracker({
+    steps,
+    currentStepIndex: 3,
+    user: "Aryandita",
+    lang: "id",
+  });
+  assert.equal(completed.isComplete, true);
+  assert.ok(completed.message.includes("selesai tuntas"));
+});
+
+test("uxHelper - getModuleCategoryColor returns cohesive module colors", () => {
+  assert.equal(uxHelper.getModuleCategoryColor("core"), "#FFC0CB");
+  assert.equal(uxHelper.getModuleCategoryColor("music"), "#8A2BE2");
+  assert.equal(uxHelper.getModuleCategoryColor("economy"), "#FFD700");
+  assert.equal(uxHelper.getModuleCategoryColor("survival"), "#228B22");
+  assert.equal(uxHelper.getModuleCategoryColor("admin"), "#9400D3");
+});
+
+test("uxHelper - buildAdaptiveDensityView separates beginner vs veteran views", () => {
+  const newbie = uxHelper.buildAdaptiveDensityView({
+    level: 2,
+    user: "NewbiePlayer",
+    lang: "id",
+  });
+  assert.equal(newbie.isVeteran, false);
+  assert.ok(newbie.modeBadge.includes("Panduan Pemula"));
+
+  const veteran = uxHelper.buildAdaptiveDensityView({
+    level: 15,
+    user: "ProPlayer",
+    lang: "id",
+  });
+  assert.equal(veteran.isVeteran, true);
+  assert.ok(veteran.modeBadge.includes("Mode Veteran"));
+});
+
+test("uxHelper - filterPredictiveSearch finds matches and falls back gracefully", () => {
+  const catalog = [
+    { name: "Kapak Kayu", value: "axe_wood", category: "tools" },
+    { name: "Pedang Besi", value: "sword_iron", category: "weapons" },
+    { name: "Apel Merah", value: "apple_red", category: "food" },
+  ];
+
+  const matched = uxHelper.filterPredictiveSearch({
+    query: "pedang",
+    items: catalog,
+  });
+  assert.equal(matched.length, 1);
+  assert.equal(matched[0].value, "sword_iron");
+
+  const fallback = uxHelper.filterPredictiveSearch({
+    query: "pesawat",
+    items: catalog,
+    fallbackRecommendations: [{ name: "⭐ Rekomendasi: Kapak Kayu", value: "axe_wood" }],
+  });
+  assert.equal(fallback.length, 1);
+  assert.equal(fallback[0].value, "axe_wood");
+});
