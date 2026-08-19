@@ -320,3 +320,37 @@ Bentuk secara keseluruhan harus terasa ergonomis, ramah, dan sangat _fluid_. Sud
 ### Transisi Modul
 
 Saat navigasi _hamburger_ ditekan pada _mobile_, sistem CSS mengeksekusi kelas utilitas `transform` yang digabungkan dengan durasi transisi `300ms` dan pengaturan kurva kemudahan (_ease-in-out_), menciptakan pergerakan menu luncur modern yang menutupi _z-index_ lapisan layar utama dengan anggun.
+
+---
+
+## UX Psychology & Emotional Persona Guidelines
+
+Sistem antarmuka Naura Hoshino V2 memadukan estetika Cyber-Anime Glassmorphism dengan **6 Prinsip Psikologi UX** untuk menciptakan interaksi yang adiktif, intuitif, dan bermakna secara emosional.
+
+### 1. Decision Fatigue & Smart Defaults (Hick's Law)
+- **Rekomendasi Cerdas:** Setiap kali menyajikan daftar pilihan (menu atau tombol), tandai opsi terbaik dengan lencana `⭐ Rekomendasi Naura` menggunakan gaya Primary Pink Glow.
+- **Progressive Disclosure:** Tampilkan maksimal 3 sampai 4 aksi vital di tampilan utama. Fitur lanjutan atau opsi tambahan disembunyikan dalam sub-menu kontekstual.
+
+### 2. Goal Gradient Effect (Artificial Head Start)
+- **Momentum Awal:** Onboarding, quest pemula, dan level progress tidak pernah dimulai dari 0%. Berikan dorongan awal (misal: Starter Kit langsung terisi 20%).
+- **Kawaii Progress Bar:** Gunakan visual progress `[▰▰▰▱▱▱▱] 40%` yang disertai pesan penyemangat dinamis menyebut nama pengguna:
+  > *"Tinggal 60 XP lagi lho! Semangat ya, Kak {displayName}~ ✨"*
+
+### 3. Reciprocity (The Gift / Value-First Principle)
+- **Instant Delight:** Berikan kegembiraan atau fungsi instan pada interaksi pertama (rekomendasi lagu, bonus sambutan, ramalan harian) sebelum meminta input atau konfigurasi lanjutan.
+- **Surprise Care Gifts:** Hadiah kejutan kecil secara berkala saat pengguna berinteraksi aktif dengan Naura.
+
+### 4. The IKEA Effect & Endowment Effect (Personalization)
+- **Kepemilikan Emosional:** Berikan kebebasan kustomisasi kartu profil (warna aksen, background canvas, gelar kustom, nama virtual pet, dan preferensi persona AI).
+- **Apresiasi Personal:** Naura selalu memberikan apresiasi hangat saat pengguna mengubah tampilan atau menyelesaikan karya:
+  > *"Wah, selera Kak {displayName} bagus banget! Kartu profilmu sekarang jadi makin estetik~ 💕"*
+
+### 5. Anchoring & Contrast Effect (Visual Hierarchy)
+- **Hierarki Aksi Kontras:** Maksimal 1 tombol Primary (Pink/Blurple) per baris aksi (`ActionRow`). Tombol sekunder memakai warna netral, dan tombol destruktif memakai merah kontras.
+- **Price Anchoring di Shop:** Tampilkan perbandingan nilai secara transparan, menonjolkan keuntungan bundle hemat (`[HEMAT 25%]`).
+
+### 6. Peak-End Rule & Expressive Persona Feedback
+- **Respons Dinamis & Ramah:** Respon error, cooldown, atau rate-limit disampaikan dengan gaya anime yang ekspresif dan peduli (tsundere/kuudere ceria), bukan teks terminal kaku:
+  > *"B-Bukan karena aku cerewet ya, Kak {displayName}... tapi istirahat dulu sebentar sebelum coba lagi! 🌸"*
+- **Penyebutan Nama Personal:** Hindari kata panggilan kaku atau generik seperti "Master". Selalu gunakan `{displayName}` atau `{username}` pengguna agar interaksi terasa dekat, hangat, dan nyata.
+

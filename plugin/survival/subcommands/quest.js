@@ -33,11 +33,18 @@ function statusIcon(quest) {
 
 function renderQuests(list, nsfEmoji) {
   return list
-    .map(
-      (q, idx) =>
+    .map((q, idx) => {
+      const goalBar = ui.ux.buildGoalGradientBar({
+        current: q.current || 0,
+        target: q.target || 1,
+        length: 8,
+        lang: "id",
+      });
+      return (
         `**${idx + 1}.** ${statusIcon(q)} ${q.title}\n` +
-        `> Progres: \`${q.current} / ${q.target}\` \u2022 Hadiah: ${nsfEmoji} **${q.reward} NSF**`,
-    )
+        `> \`${goalBar.bar}\` \`${q.current} / ${q.target}\` (${goalBar.percent}%) \u2022 Hadiah: ${nsfEmoji} **${q.reward} NSF**`
+      );
+    })
     .join("\n\n");
 }
 
@@ -128,21 +135,22 @@ module.exports = async function questBoard(interaction, user, survivalData) {
   const weeklyText =
     renderQuests(state.weekly, nsfEmoji) || "*Belum ada misi mingguan.*";
 
+  const userName = ui.ux.resolveUserName(interaction);
   const parts = [
-    "Ini papan misimu hari ini! Selesaikan saja pelan-pelan, hadiahnya Naura kasih otomatis begitu tuntas.",
+    `Halo Kak **${userName}**! Ini papan misimu hari ini. Selesaikan pelan-pelan ya, hadiahnya Naura kirimkan otomatis begitu tuntas! ✨`,
     "",
-    `**${e("read", "\uD83D\uDCC5")} Misi Harian \u2014 ${today}**`,
+    `**${e("read", "\uD83D\uDCC5")} Misi Harian • ${today}**`,
     dailyText,
     "",
-    `**${e("impressed", "\uD83D\uDC51")} Misi Mingguan \u2014 Minggu ini**`,
+    `**${e("impressed", "\uD83D\uDC51")} Misi Mingguan • Minggu ini**`,
     weeklyText,
   ];
 
   if (rewardTotal > 0) {
     parts.push(
       "",
-      `**${e("cheers", "\uD83C\uDF81")} Hebat, Naura ikut senang!**`,
-      "Kamu baru saja menyelesaikan:",
+      `**${e("cheers", "\uD83C\uDF81")} Hebat, Naura ikut bangga!**`,
+      `Kak **${userName}** baru saja menyelesaikan:`,
       claimed.map((title) => `- **${title}**`).join("\n"),
       "",
       `Hadiahnya sudah masuk: ${currency.format(currency.FRAGMENT, rewardTotal)}!`,
@@ -166,7 +174,7 @@ module.exports = async function questBoard(interaction, user, survivalData) {
   const payload = buildContainerV2({
     accentColorHex: ui.getColor("primary") || "#FFB6C1",
     authorName: "Naura Quest Board",
-    title: `${e("read", "\uD83D\uDCDC")} Papan Misi ${user.username}`,
+    title: `${e("read", "\uD83D\uDCDC")} Papan Misi ${userName}`,
     iconURL: user.displayAvatarURL(),
     expression: rewardTotal > 0 ? "success" : "info",
     description: parts.join("\n"),

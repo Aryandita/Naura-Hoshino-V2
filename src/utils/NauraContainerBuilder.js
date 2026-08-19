@@ -2,6 +2,7 @@ const { MessageFlags } = require("discord.js");
 const ui = require("../config/ui");
 const nauraExpression = require("./nauraExpression");
 const nauraText = require("./nauraText");
+const uxHelper = require("./uxHelper");
 const languageManager = require("../managers/languageManager");
 const {
   MAX_DESCRIPTION_LENGTH,
@@ -351,11 +352,60 @@ function buildSuccessContainerV2(opts) {
   });
 }
 
+function buildPersonaContainerV2({
+  type = "default",
+  user = null,
+  context = {},
+  lang = "id",
+  title = null,
+  accentColorHex = null,
+  fields = [],
+  buttonsRow = null,
+  footerText = null,
+  expression = null,
+}) {
+  const message = uxHelper.getPersonalityResponse(type, { user, context, lang });
+  const defaultExpressionMap = {
+    cooldown: "blush",
+    error: "confused",
+    levelUp: "cheer",
+    ikeaAppreciation: "wink",
+    peakEndClosure: "happy",
+    starterWelcome: "wave",
+  };
+
+  const chosenExpression =
+    expression || defaultExpressionMap[type] || "smile";
+
+  const defaultTitleMap = {
+    cooldown: "🌸 Istirahat Dulu Sebentar",
+    error: "⚠️ Ups, Terjadi Kendala",
+    levelUp: "🎉 Level Up Milestone!",
+    ikeaAppreciation: "✨ Kustomisasi Disimpan",
+    peakEndClosure: "🌸 Naura Siap Membantu",
+    starterWelcome: "🎁 Sambutan Spesial Naura",
+  };
+
+  const finalTitle = title || defaultTitleMap[type] || "🌸 Naura Hoshino";
+
+  return buildContainerV2({
+    accentColorHex: accentColorHex || ui.getColor("primary") || "#FFB6C1",
+    title: finalTitle,
+    description: message,
+    expression: chosenExpression,
+    fields,
+    buttonsRow,
+    footerText: footerText || ui.getFooter("core"),
+  });
+}
+
 module.exports = {
   buildContainerV2,
   buildErrorContainerV2,
   buildLoadingContainerV2,
   buildSuccessContainerV2,
+  buildPersonaContainerV2,
   textDisplay,
   separatorComp,
+  ux: uxHelper,
 };

@@ -152,5 +152,10 @@
     "err_sys_93": "✅ Nama diubah!",
     "err_sys_94": "✅ Kapasitas diubah.",
     "err_sys_95": "❌ Gagal mengubah status Voice Channel.",
-    "err_sys_96": "❌ Gagal memanggil API Discord."
+    "err_sys_96": "❌ Gagal memanggil API Discord.",
+    "ux_smart_rec": "⭐ Rekomendasi Naura",
+    "ux_headstart_cheer": "Awal yang hebat, Kak {user}! Naura sudah siapkan momentum awal untukmu~ ✨",
+    "ux_ikea_appreciation": "Wah, selera Kak {user} estetik banget! Kartu profilmu sekarang jadi makin memukau~ 💕",
+    "ux_peak_end_prompt": "Semua beres untuk Kak {user}! Ada yang bisa Naura bantu selanjutnya? 🌸",
+    "ux_save_deal": "[HEMAT {percent}%]"
 }

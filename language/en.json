@@ -152,5 +152,10 @@
     "err_sys_93": "✅ Nama diubah!",
     "err_sys_94": "✅ Kapasitas diubah.",
     "err_sys_95": "You must be in a Voice Channel!",
-    "err_sys_96": "Failed to process the request."
+    "err_sys_96": "Failed to process the request.",
+    "ux_smart_rec": "⭐ Naura's Recommendation",
+    "ux_headstart_cheer": "Awesome start, {user}! Naura has prepared your initial momentum~ ✨",
+    "ux_ikea_appreciation": "Wow, your taste is aesthetic and amazing, {user}! Your profile looks truly breathtaking now~ 💕",
+    "ux_peak_end_prompt": "All done for you, {user}! Is there anything else Naura can help with next? 🌸",
+    "ux_save_deal": "[SAVE {percent}%]"
 }

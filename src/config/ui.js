@@ -38,6 +38,9 @@ module.exports = {
   // --- Tautan resmi (tetap di level atas seperti sebelumnya) ---
   ...links,
 
+  // --- UX Psychology & Emotional Persona Helper ---
+  ux: require("../utils/uxHelper"),
+
   // --- Emoji: dasar, permainan, lalu media.
   // Urutan penggabungan menentukan siapa yang menang bila ada kunci kembar.
   emojis: {

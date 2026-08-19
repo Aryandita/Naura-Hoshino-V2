@@ -865,8 +865,11 @@ async function handleAbout(interaction, client, lang) {
  * @param {number} categoryIndex - Indeks kategori yang sedang aktif (0-based).
  * @param {boolean} disabled - Apakah select menu dinonaktifkan (saat timeout).
  */
-function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false) {
+function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false, user = null) {
   const categoryKeys = HELP_CATEGORY_KEYS;
+  const userName = ui.ux.resolveUserName(user);
+  const isEn = lang && (lang.LANG_CODE === "en" || lang.HELP_TITLE?.includes("Help"));
+
   const categories = {
     core: {
       emoji: e("help_core", "\u2699\uFE0F"),
@@ -876,7 +879,7 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false) {
     },
     music: {
       emoji: e("help_music", "\uD83C\uDFB5"),
-      label: lang.HELP_CAT_MUSIC_LABEL,
+      label: isEn ? "⭐ Music & Audio (Popular)" : "⭐ Musik & Audio (Populer)",
       desc: lang.HELP_CAT_MUSIC_DESC,
       content: formatHelpContent(lang.HELP_CONTENT_MUSIC),
     },
@@ -888,7 +891,7 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false) {
     },
     survival: {
       emoji: e("help_survival", "\uD83C\uDFD5\uFE0F"),
-      label: lang.HELP_CAT_SURVIVAL_LABEL,
+      label: isEn ? "⭐ RPG Survival (Featured)" : "⭐ RPG Survival (Rekomendasi)",
       desc: lang.HELP_CAT_SURVIVAL_DESC,
       content: formatHelpContent(lang.HELP_CONTENT_SURVIVAL),
     },
@@ -903,9 +906,13 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false) {
   // Tentukan konten yang ditampilkan di dalam Container
   const activeKey = categoryIndex >= 0 ? categoryKeys[categoryIndex] : null;
   const activeCat = activeKey ? categories[activeKey] : null;
+  const greeting = isEn
+    ? `Hello **${userName}**! Naura is excited to guide you through all the awesome commands~ ✨`
+    : `Halo Kak **${userName}**! Naura senang banget bisa bantu memandu petualanganmu di sini~ ✨`;
+
   const bodyContent = activeCat
     ? `${activeCat.emoji} **${activeCat.label}**\n\n${activeCat.content}`
-    : formatHelpContent(lang.HELP_DESC);
+    : `${greeting}\n\n${formatHelpContent(lang.HELP_DESC)}`;
 
   // Hitung warna accent (primary pink Naura menjadi integer RGB)
   const primaryHex = (ui.getColor("primary") || "#FFB6C1").replace("#", "");
@@ -981,6 +988,7 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false) {
 }
 
 async function handleHelp(interaction, client, langParam) {
+  const userName = ui.ux.resolveUserName(interaction);
   // Tentukan teks berdasarkan bahasa guild
   const isIndo =
     langParam.HELP_TITLE && langParam.HELP_TITLE.includes("Pusat Bantuan");
@@ -995,16 +1003,16 @@ async function handleHelp(interaction, client, langParam) {
       .setPlaceholder(placeholderText)
       .addOptions(
         {
-          label: "English",
-          description: "Show help menu in English",
-          value: "en",
-          emoji: "\uD83C\uDDEC\uD83C\uDDE7",
-        },
-        {
           label: "Indonesia",
           description: "Tampilkan menu bantuan dalam Bahasa Indonesia",
           value: "id",
           emoji: "\uD83C\uDDEE\uD83C\uDDE9",
+        },
+        {
+          label: "English",
+          description: "Show help menu in English",
+          value: "en",
+          emoji: "\uD83C\uDDEC\uD83C\uDDE7",
         },
       ),
   );
@@ -1016,8 +1024,8 @@ async function handleHelp(interaction, client, langParam) {
     iconURL: client.user.displayAvatarURL(),
     expression: "help",
     description: isIndo
-      ? "Halo! Sebelum mulai, pilih dulu bahasa yang paling nyaman buat kamu di bawah ini yaa~ Nanti Naura pandu semuanya pakai bahasa itu."
-      : "Hi there! Before we start, pick the language you are most comfortable with below. Naura will guide you in that language from now on.",
+      ? `Halo Kak **${userName}**! Sebelum mulai, pilih dulu bahasa yang paling nyaman buat kamu di bawah ini yaa~ Nanti Naura pandu semuanya pakai bahasa itu.`
+      : `Hi **${userName}**! Before we start, pick the language you are most comfortable with below. Naura will guide you in that language from now on.`,
     buttonsRow: langSelectRow,
     footerText: ui.getFooter("core"),
   });
@@ -1070,7 +1078,7 @@ async function renderHelpMenuV2(
 ) {
   let currentIndex = -1; // -1 = halaman default (deskripsi umum)
 
-  const initialData = buildHelpPayload(lang, client, currentIndex, false);
+  const initialData = buildHelpPayload(lang, client, currentIndex, false, interaction.user);
   const payload = {
     content: null,
     embeds: [], // penting: membersihkan embed pemilihan bahasa sebelumnya
@@ -1133,7 +1141,7 @@ async function renderHelpMenuV2(
         return;
       }
 
-      const updatedData = buildHelpPayload(lang, client, currentIndex, false);
+      const updatedData = buildHelpPayload(lang, client, currentIndex, false, interaction.user);
       await i.update({
         embeds: [],
         flags: updatedData.flags,
@@ -1146,7 +1154,7 @@ async function renderHelpMenuV2(
 
   collector.on("end", async () => {
     try {
-      const disabledData = buildHelpPayload(lang, client, currentIndex, true);
+      const disabledData = buildHelpPayload(lang, client, currentIndex, true, interaction.user);
       const target = existingResponse || response;
       if (target && target.edit) {
         await target

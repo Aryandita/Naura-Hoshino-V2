@@ -44,9 +44,11 @@ module.exports = async function handle(interaction, { currentSettings }) {
   
   const minecraftStatus = currentSettings.minecraft?.bridgeEnabled ? "🟢 Aktif" : "🔴 Belum Diatur";
 
+  const adminName = ui.ux.resolveUserName(interaction);
+
   // Membangun tampilan UI Dashboard 
   const dashboardDesc = 
-    `Selamat datang di Master Setup Dashboard! Di sini kamu bisa mengonfigurasikan seluruh sistem server secara terpusat.\n\n` +
+    `Selamat datang Kak **${adminName}** di Master Setup Dashboard! Di sini kamu bisa mengonfigurasikan seluruh sistem server secara terpusat dengan cepat dan mudah.\n\n` +
     `**${ui.getEmoji("setup_category_security") || "🔒"} KEAMANAN & MODERASI**\n` +
     `${ui.getEmoji("setup_softban") || "🛡️"} **Softban Trap:** ${softbanChan ? `✅ <#${softbanChan}>` : "🔴 Belum Diatur"}\n` +
     `${ui.getEmoji("setup_automod") || "🤖"} **Automod:** ${autoModStatus}\n` +
@@ -72,13 +74,19 @@ module.exports = async function handle(interaction, { currentSettings }) {
       .setPlaceholder("Pilih kategori setup untuk diedit...")
       .addOptions([
         {
-          label: "Softban Channel",
+          label: "⭐ Softban Channel (Rekomendasi Keamanan)",
           value: "setup_softban",
           description: "Atur channel perangkap auto-ban scammer",
           emoji: ui.parseEmoji(ui.getEmoji("setup_softban") || "🛡️"),
         },
         {
-          label: "Greetings",
+          label: "⭐ Automod & Anti-Spam (Rekomendasi)",
+          value: "setup_automod",
+          description: "Atur filter chat dan punishment",
+          emoji: ui.parseEmoji(ui.getEmoji("setup_automod") || "🤖"),
+        },
+        {
+          label: "⭐ Greetings / Welcome (Rekomendasi Komunitas)",
           value: "setup_greetings",
           description: "Atur pesan selamat datang dan keluar",
           emoji: ui.parseEmoji(ui.getEmoji("setup_welcome") || "👋"),
@@ -88,12 +96,6 @@ module.exports = async function handle(interaction, { currentSettings }) {
           value: "setup_modmail",
           description: "Atur kategori tiket dan role staff",
           emoji: ui.parseEmoji(ui.getEmoji("setup_modmail") || "📩"),
-        },
-        {
-          label: "Automod & Security",
-          value: "setup_automod",
-          description: "Atur filter chat dan punishment",
-          emoji: ui.parseEmoji(ui.getEmoji("setup_automod") || "🤖"),
         },
         {
           label: "Ticketing System",
