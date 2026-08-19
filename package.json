@@ -71,7 +71,7 @@
     "node_extra_ca_certs_mozilla_bundle": "^1.0.6",
     "node-cron": "^4.6.0",
     "ollama": "^0.5.15",
-    "parse-duration": "^2.1.6",
+    "parse-duration": "^2.1.8",
     "passport": "^0.7.0",
     "passport-discord": "^0.1.4",
     "pg": "^8.23.0",
