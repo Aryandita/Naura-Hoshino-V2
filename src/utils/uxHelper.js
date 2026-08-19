@@ -53,9 +53,10 @@ function resolveUserName(userOrInteraction) {
  * @param {number} [options.length=10] - Panjang bar karakter
  * @param {string} [options.fillChar="▰"]
  * @param {string} [options.emptyChar="▱"]
+ * @param {boolean} [options.useCustomEmojis=false] - Gunakan custom emoji Discord dari ui.js (bar_filled / bar_empty)
  * @param {string|object} [options.user] - User atau Interaction untuk penyebutan nama
  * @param {string} [options.lang="id"]
- * @returns {{ bar: string, percent: number, current: number, target: number, remaining: number, cheerMessage: string }}
+ * @returns {{ bar: string, customBar: string, percent: number, current: number, target: number, remaining: number, cheerMessage: string }}
  */
 function buildGoalGradientBar({
   current = 0,
@@ -64,6 +65,7 @@ function buildGoalGradientBar({
   length = 10,
   fillChar = "▰",
   emptyChar = "▱",
+  useCustomEmojis = false,
   user = null,
   lang = "id",
 }) {
@@ -74,7 +76,16 @@ function buildGoalGradientBar({
 
   const filledCount = Math.min(length, Math.max(0, Math.round(rawRatio * length)));
   const emptyCount = Math.max(0, length - filledCount);
-  const bar = `${fillChar.repeat(filledCount)}${emptyChar.repeat(emptyCount)}`;
+
+  // Unicode text progress bar (aman untuk codeblocks monospace)
+  const unicodeBar = `${fillChar.repeat(filledCount)}${emptyChar.repeat(emptyCount)}`;
+
+  // Custom Discord emojis progress bar dari ui.js
+  const emojiFilled = ui.getEmoji("bar_filled") || "<:AfterDot:1488166236004159509>";
+  const emojiEmpty = ui.getEmoji("bar_empty") || "<:BeforeDot:1488166108081950882>";
+  const customBar = `${emojiFilled.repeat(filledCount)}${emojiEmpty.repeat(emptyCount)}`;
+
+  const bar = useCustomEmojis ? customBar : unicodeBar;
 
   const remaining = Math.max(0, safeTarget - (current + headStart));
   const name = resolveUserName(user);
@@ -104,6 +115,7 @@ function buildGoalGradientBar({
 
   return {
     bar,
+    customBar,
     percent,
     current: current + headStart,
     target: safeTarget,

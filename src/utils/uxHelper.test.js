@@ -35,9 +35,20 @@ test("uxHelper - buildGoalGradientBar with head start and encouragement", () => 
 
   assert.equal(result.percent, 50);
   assert.equal(result.bar, "▰▰▰▰▰▱▱▱▱▱");
+  assert.ok(result.customBar.includes("<:AfterDot:"));
+  assert.ok(result.customBar.includes("<:BeforeDot:"));
   assert.equal(result.remaining, 50);
   assert.ok(result.cheerMessage.includes("Kak Aryandita"));
   assert.ok(result.cheerMessage.includes("Progresmu mantap"));
+
+  // Test useCustomEmojis: true
+  const customResult = uxHelper.buildGoalGradientBar({
+    current: 50,
+    target: 100,
+    useCustomEmojis: true,
+    length: 4,
+  });
+  assert.equal(customResult.bar, "<:AfterDot:1488166236004159509><:AfterDot:1488166236004159509><:BeforeDot:1488166108081950882><:BeforeDot:1488166108081950882>");
 });
 
 test("uxHelper - formatRecommendationBadge adds smart highlight", () => {
