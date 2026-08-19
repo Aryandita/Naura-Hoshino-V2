@@ -66,27 +66,67 @@ const env = {
   ENGINE_VERSION: cleanEnv(process.env.ENGINE_VERSION) || "2.1.0",
   PARTNERSHIP: cleanEnv(process.env.PARTNERSHIP) || "Belum ada kolaborasi",
 
-  // DATABASE (Multi-Dialect: PostgreSQL / Supabase, MySQL, SQLite)
+  // SUPABASE (Primary Relational Cloud Provider)
+  SUPABASE_URL:
+    cleanEnv(process.env.SUPABASE_URL) ||
+    "https://ceqkjzvrxyifxzgxtkig.supabase.co",
+  SUPABASE_KEY:
+    cleanEnv(
+      process.env.SUPABASE_KEY ||
+        process.env.SUPABASE_ANON_KEY ||
+        process.env.SUPABASE_PUBLISHABLE_KEY,
+    ) || "sb_publishable_9gd0-5FflbVgYPCd7WGAwQ_dJLMxyRX",
+  SUPABASE_PROJECT_ID:
+    cleanEnv(process.env.SUPABASE_PROJECT_ID) || "ceqkjzvrxyifxzgxtkig",
+
+  // DATABASE (Multi-Dialect: Supabase / PostgreSQL, MySQL, SQLite Fallback)
   DATABASE_URL: cleanEnv(
-    process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL,
+    process.env.DATABASE_URL ||
+      process.env.SUPABASE_DATABASE_URL ||
+      process.env.SUPABASE_DB_URL,
   ),
   DB_DIALECT:
     cleanEnv(process.env.DB_DIALECT) ||
-    (cleanEnv(process.env.DATABASE_URL)?.startsWith("postgres")
+    (cleanEnv(process.env.DATABASE_URL)?.startsWith("postgres") ||
+    process.env.SUPABASE_URL ||
+    process.env.SUPABASE_DATABASE_URL
       ? "postgres"
-      : ""),
-  DB_HOST: cleanEnv(process.env.DB_HOST || process.env.MYSQL_HOST),
-  DB_PORT: parseInt(process.env.DB_PORT || process.env.MYSQL_PORT) || 0,
-  DB_USER: cleanEnv(process.env.DB_USER || process.env.MYSQL_USER),
+      : "postgres"),
+  DB_HOST: cleanEnv(
+    process.env.DB_HOST ||
+      process.env.SUPABASE_DB_HOST ||
+      process.env.MYSQL_HOST ||
+      "db.ceqkjzvrxyifxzgxtkig.supabase.co",
+  ),
+  DB_PORT:
+    parseInt(
+      process.env.DB_PORT ||
+        process.env.SUPABASE_DB_PORT ||
+        process.env.MYSQL_PORT,
+    ) || 5432,
+  DB_USER: cleanEnv(
+    process.env.DB_USER ||
+      process.env.SUPABASE_DB_USER ||
+      process.env.MYSQL_USER ||
+      "postgres",
+  ),
   DB_PASS: cleanEnv(
     process.env.DB_PASSWORD ||
       process.env.DB_PASS ||
+      process.env.SUPABASE_DB_PASSWORD ||
       process.env.MYSQL_PASSWORD,
   ),
-  DB_NAME: cleanEnv(process.env.DB_NAME || process.env.MYSQL_DATABASE),
+  DB_NAME: cleanEnv(
+    process.env.DB_NAME ||
+      process.env.SUPABASE_DB_NAME ||
+      process.env.MYSQL_DATABASE ||
+      "postgres",
+  ),
   DB_SSL:
-    cleanEnv(process.env.DB_SSL) === "true" ||
-    cleanEnv(process.env.DB_SSL) === "1",
+    cleanEnv(process.env.DB_SSL) === "false" ||
+    cleanEnv(process.env.DB_SSL) === "0"
+      ? false
+      : true,
   USE_SQLITE:
     cleanEnv(process.env.USE_SQLITE) === "true" ||
     cleanEnv(process.env.USE_SQLITE) === "1",

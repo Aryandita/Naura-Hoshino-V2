@@ -7,11 +7,12 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 
 <br />
 
-[![Versi](https://img.shields.io/badge/Versi-2.0.0-FFB6C1?style=for-the-badge)](package.json)
+[![Versi](https://img.shields.io/badge/Versi-2.1.0-FFB6C1?style=for-the-badge)](package.json)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D%2024.0.0-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.js.org)
-[![MySQL](https://img.shields.io/badge/MySQL-8.x-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com)
-[![Redis](https://img.shields.io/badge/Redis-opsional-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas%20%7C%20Local-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com)
+[![Redis](https://img.shields.io/badge/Redis-Cache%20%26%20PubSub-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io)
 [![Lavalink](https://img.shields.io/badge/Lavalink-v4-FF6B6B?style=for-the-badge&logo=musicbrainz&logoColor=white)](https://lavalink.dev)
 [![License](https://img.shields.io/badge/License-ISC-8A2BE2?style=for-the-badge)](LICENSE)
 
@@ -27,14 +28,14 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 <br />
 
 > [!NOTE]
-> Proyek ini masih dalam pengembangan aktif. Beberapa modul sedang dirapikan, lihat [`TODO.md`](TODO.md) dan tab **Issues** untuk daftar pekerjaan yang sedang berjalan. **Sprint 0 Hardening dan Sprint 1 Fondasi Developer Experience sudah selesai.** Prioritas saat ini adalah **Sprint 2 Konsistensi Data & Performa**, dan fitur baru ditahan sampai sprint itu tuntas.
+> Proyek ini beroperasi pada arsitektur **Polyglot Multi-Database** dengan Supabase PostgreSQL, MongoDB, Redis, dan fallback SQLite darurat. Seluruh roadmap fitur **Sprint 0 hingga Sprint 14** telah diimplementasikan dan diverifikasi oleh pengujian otomatis TestSprite QA Suite.
 
 ### 📌 Versi & Sumber Kebenaran
 
 | Item                |        Nilai        | Sumber kebenaran                            |
 | ------------------- | :-----------------: | ------------------------------------------- |
-| Versi Bot           |       `2.0.0`       | [`package.json`](package.json)              |
-| Versi Engine        |       `2.0.0`       | [`package.json`](package.json)              |
+| Versi Bot           |       `2.1.0`       | [`package.json`](package.json)              |
+| Versi Engine        |       `2.1.0`       | [`package.json`](package.json)              |
 | Runtime minimum     | Node.js `>= 24.0.0` | `engines` di [`package.json`](package.json) |
 | Aturan & arsitektur |          -          | [`AGENTS.md`](AGENTS.md)                    |
 | Prioritas pekerjaan |          -          | [`TODO.md`](TODO.md) + Issues               |
@@ -117,13 +118,14 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 
 ## 🧩 Kebutuhan Sistem
 
-| Status | Komponen     | Versi Minimal | Keterangan                                                                                                              |
-| :----: | ------------ | :-----------: | ----------------------------------------------------------------------------------------------------------------------- |
-|   🟢   | **Node.js**  |  `>= 24.0.0`  | Sangat wajib. Naura memakai `process.loadEnvFile()`, `fetch` global, `node:sqlite`, dan test runner bawaan `node:test`. |
-|   🐬   | **MySQL**    |     `8.x`     | Basis data utama untuk performa maksimal (SQLite dipakai sebagai penyimpanan darurat).                                  |
-|   🔴   | **Redis**    |  _Opsional_   | Untuk sistem Cache & Pub/Sub. (Akan dilewati otomatis jika `REDIS_URL` kosong).                                         |
-|   🎧   | **Lavalink** |     `v4`      | Wajib di-setup jika ingin menggunakan seluruh modul Musik.                                                              |
-|   🎬   | **FFmpeg**   |   _Terbaru_   | Modul ini sudah tersedia otomatis lewat paket `ffmpeg-static`.                                                          |
+| Status | Komponen         | Versi Minimal | Keterangan                                                                                                              |
+| :----: | ---------------- | :-----------: | ----------------------------------------------------------------------------------------------------------------------- |
+|   🟢   | **Node.js**      |  `>= 24.0.0`  | Sangat wajib. Naura memakai `process.loadEnvFile()`, `fetch` global, `node:sqlite`, dan test runner bawaan `node:test`. |
+|   ⚡   | **Supabase (PG)**|  `PostgreSQL` | Basis data cloud relasional & transaksional utama (SQLite dipakai sebagai penyimpanan darurat).                         |
+|   🍃   | **MongoDB**      |  `>= 7.x`     | Basis data dokumen untuk audit log, transkrip tiket, dan riwayat chat AI bervolume besar.                               |
+|   🔴   | **Redis**        |  _Opsional_   | Untuk sistem Cache & Pub/Sub. (Akan dilewati otomatis jika `REDIS_URL` kosong).                                         |
+|   🎧   | **Lavalink**     |     `v4`      | Wajib di-setup jika ingin menggunakan seluruh modul Musik.                                                              |
+|   🎬   | **FFmpeg**       |   _Terbaru_   | Modul ini sudah tersedia otomatis lewat paket `ffmpeg-static`.                                                          |
 
 > [!WARNING]
 > Beberapa dependensi bersifat _native_ seperti (`@napi-rs/canvas`, `sqlite3`, `libsodium-wrappers`). Jika kamu menjalankan bot ini di **Linux**, kemungkinan besar kamu perlu memasang `build-essential` dan `python3` terlebih dahulu.
@@ -132,7 +134,7 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 > **Kenapa Node 24 dan bukan versi lebih rendah?** Selain `process.loadEnvFile()`, Naura mengandalkan `fetch` global (sehingga `node-fetch` bisa dilepas), `node:sqlite` bawaan untuk penyimpanan darurat, dan `node --test` sebagai test runner tanpa dependensi tambahan. Menyeragamkan satu versi juga menghilangkan celah bug yang hanya muncul di salah satu environment.
 
 > [!TIP]
-> **SQLite bukan sekadar pilihan pengembangan.** Saat MySQL dan Redis mati bersamaan, data ditulis sementara ke `naura_fallback.sqlite`, lalu disinkronkan kembali ke MySQL saat pulih. Jangan hapus dependensi `sqlite3`.
+> **SQLite bukan sekadar pilihan pengembangan.** Saat Supabase dan Redis mati bersamaan, data ditulis sementara ke `naura_fallback.sqlite`, lalu disinkronkan kembali ke database cloud saat pulih. Jangan hapus dependensi `sqlite3`.
 
 ---
 
@@ -278,8 +280,6 @@ Semua kredensial dan pengaturan penting disimpan di `.env` (berdasarkan [`src/co
 | ---------------- | ------------------------------------------------------- |
 | `DISCORD_TOKEN`  | Token bot rahasia milikmu dari Discord Developer Portal |
 | `CLIENT_ID`      | Application ID dari bot kamu                            |
-| `MYSQL_USER`     | Username untuk akses ke Database MySQL                  |
-| `MYSQL_DATABASE` | Nama skema database yang akan dipakai                   |
 
 <details>
 <summary><b>💬 Discord Settings</b> (Klik untuk membuka)</summary>
@@ -297,21 +297,29 @@ Semua kredensial dan pengaturan penting disimpan di `.env` (berdasarkan [`src/co
 <details>
 <summary><b>🗄️ Database & Cache Settings</b> (Klik untuk membuka)</summary>
 
-| Variabel          | Default     | Deskripsi                                                                                                                  |
-| ----------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `MYSQL_HOST`      | `127.0.0.1` | Host tujuan Database MySQL                                                                                                 |
-| `MYSQL_PORT`      | `3306`      | Port tujuan Database                                                                                                       |
-| `MYSQL_PASSWORD`  | -           | Password untuk user MySQL kamu                                                                                             |
-| `REDIS_URL`       | -           | _Opsional_. URL koneksi Redis. Biarkan kosong untuk mematikan Cache/PubSub eksternal.                                      |
-| `DB_POOL_BUDGET`  | `80`        | Total koneksi database untuk **seluruh** shard, lalu dibagi jumlah shard. Angkanya harus di bawah `max_connections` MySQL. |
-| `DB_POOL_MAX`     | -           | Penimpa manual `pool.max` per proses. Isi hanya bila kamu tahu pasti kapasitas database.                                   |
-| `SKIP_DB_MIGRATE` | -           | Pintu darurat. Isi `1`, `true`, atau `yes` untuk melewati migrasi saat boot. Jangan dibiarkan menyala permanen.            |
+| Variabel              | Default                                         | Deskripsi                                                                                                                   |
+| --------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `SUPABASE_URL`        | `https://ceqkjzvrxyifxzgxtkig.supabase.co`      | URL REST/API endpoint project Supabase kamu                                                                                 |
+| `SUPABASE_KEY`        | `sb_publishable_...`                            | Anon / Publishable key project Supabase                                                                                     |
+| `SUPABASE_PROJECT_ID` | `ceqkjzvrxyifxzgxtkig`                          | Project ID unik Supabase                                                                                                    |
+| `DATABASE_URL`        | -                                               | URI koneksi PostgreSQL direct / transaction pooler                                                                          |
+| `DB_HOST`             | `db.ceqkjzvrxyifxzgxtkig.supabase.co`           | Host database PostgreSQL / Supabase                                                                                         |
+| `DB_PORT`             | `5432`                                          | Port database PostgreSQL (5432) atau Session Pooler (6543)                                                                  |
+| `DB_USER`             | `postgres`                                      | Username database                                                                                                           |
+| `DB_PASSWORD`         | -                                               | Password database PostgreSQL / Supabase                                                                                     |
+| `DB_NAME`             | `postgres`                                      | Nama database                                                                                                               |
+| `DB_SSL`              | `true`                                          | Mengaktifkan enkripsi SSL koneksi database cloud                                                                            |
+| `MONGO_URI`           | `mongodb://127.0.0.1:27017/naura_hoshino`       | Connection string MongoDB untuk riwayat AI Chat, transkrip tiket, dan audit log                                             |
+| `REDIS_URL`           | -                                               | _Opsional_. URL koneksi Redis. Biarkan kosong untuk mematikan Cache/PubSub eksternal.                                       |
+| `DB_POOL_BUDGET`      | `80`                                            | Total koneksi database untuk **seluruh** shard, lalu dibagi jumlah shard.                                                   |
+| `DB_POOL_MAX`         | -                                               | Penimpa manual `pool.max` per proses. Isi hanya bila kamu tahu pasti kapasitas database.                                    |
+| `SKIP_DB_MIGRATE`     | -                                               | Pintu darurat. Isi `1`, `true`, atau `yes` untuk melewati migrasi saat boot. Jangan dibiarkan menyala permanen.             |
 
 > [!NOTE]
-> Bila `MYSQL_DATABASE`, `MYSQL_USER`, atau `MYSQL_HOST` kosong, bot otomatis beralih ke penyimpanan darurat SQLite. Di dalam kode nilai-nilai ini dibaca sebagai `env.DB_NAME`, `env.DB_USER`, `env.DB_HOST`, `env.DB_PORT`, dan `env.DB_PASS`.
+> Bila kredensial database cloud tidak terisi atau gagal terhubung, bot otomatis beralih ke penyimpanan darurat SQLite (`naura_fallback.sqlite`). Di dalam kode nilai-nilai ini diakses melalui `src/config/env.js`.
 
 > [!WARNING]
-> `pool.max` bersifat **per proses**, bukan per bot. Dua shard dengan `pool.max: 100` akan meminta 200 koneksi, sementara `max_connections` MySQL bawaan biasanya hanya 151. Karena itu Naura memakai anggaran total (`DB_POOL_BUDGET`) yang dibagi jumlah shard.
+> `pool.max` bersifat **per proses**, bukan per bot. Dua shard dengan `pool.max: 100` akan meminta 200 koneksi. Karena itu Naura memakai anggaran total (`DB_POOL_BUDGET`) yang dibagi jumlah shard agar tetap dalam kuota pooler.
 
 </details>
 
