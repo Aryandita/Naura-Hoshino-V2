@@ -40,7 +40,7 @@ module.exports = {
       } catch (e) {
         /* abaikan */
       }
-
+      
       const mode = guildSettings?.ticketMode || "thread";
       const categoryId = guildSettings?.ticketCategory;
 
@@ -63,12 +63,7 @@ module.exports = {
             },
             {
               id: interaction.client.user.id,
-              allow: [
-                "ViewChannel",
-                "SendMessages",
-                "ReadMessageHistory",
-                "ManageChannels",
-              ],
+              allow: ["ViewChannel", "SendMessages", "ReadMessageHistory", "ManageChannels"],
             },
           ],
           reason: `Tiket baru dari ${interaction.user.tag}`,
@@ -110,9 +105,7 @@ module.exports = {
       });
 
       // Mention peran admin bila perlu (bisa juga tidak usah, cukup user)
-      await ticketChannelOrThread.send({
-        content: `<@${interaction.user.id}>`,
-      });
+      await ticketChannelOrThread.send({ content: `<@${interaction.user.id}>` });
       await ticketChannelOrThread.send(threadContainer);
 
       await interaction.editReply(

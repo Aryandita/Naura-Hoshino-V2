@@ -20,7 +20,7 @@ module.exports = {
       if (!logChannel) return;
 
       // Kita cari tahu apa yang berubah
-      let changes = [];
+      const changes = [];
 
       if (oldChannel.name !== newChannel.name) {
         changes.push(

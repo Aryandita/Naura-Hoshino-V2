@@ -9,6 +9,7 @@ const {
 } = require("discord.js");
 const {
   buildContainerV2,
+  buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 
@@ -16,68 +17,53 @@ module.exports = async function handle(interaction, { currentSettings }) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   // Ambil semua status untuk ditampilkan di dashboard
-  const softbanChan =
-    currentSettings.softbanChannelId || currentSettings.honeypotChannelId;
-  const autoModStatus = currentSettings.automod?.enabled
-    ? "🟢 Aktif"
-    : "🔴 Nonaktif";
-  const aiAutomodStatus = currentSettings.aiAutomod?.enabled
-    ? "🟢 Aktif"
-    : "🔴 Nonaktif";
-
+  const softbanChan = currentSettings.softbanChannelId || currentSettings.honeypotChannelId;
+  const autoModStatus = currentSettings.automod?.enabled ? "🟢 Aktif" : "🔴 Nonaktif";
+  const aiAutomodStatus = currentSettings.aiAutomod?.enabled ? "🟢 Aktif" : "🔴 Nonaktif";
+  
   const welcomeChan = currentSettings.greetings?.welcome?.channelId;
-  const welcomeStatus = currentSettings.greetings?.welcome?.enabled
-    ? `🟢 <#${welcomeChan}>`
-    : "🔴 Nonaktif";
-
+  const welcomeStatus = currentSettings.greetings?.welcome?.enabled ? `🟢 <#${welcomeChan}>` : "🔴 Nonaktif";
+  
   const modmailCat = currentSettings.modmailCategory;
   const modmailStatus = modmailCat ? "✅ Kategori OK" : "🔴 Belum Diatur";
-
-  const ticketMode =
-    currentSettings.ticketMode === "thread"
-      ? "Thread Mode"
-      : currentSettings.ticketMode === "channel"
-        ? "Channel Mode"
-        : "🔴 Belum Diatur";
-  const ticketStatus = currentSettings.ticketMode
-    ? `🟢 ${ticketMode}`
-    : "🔴 Belum Diatur";
-
+  
+  const ticketMode = currentSettings.ticketMode === "thread" ? "Thread Mode" : (currentSettings.ticketMode === "channel" ? "Channel Mode" : "🔴 Belum Diatur");
+  const ticketStatus = currentSettings.ticketMode ? `🟢 ${ticketMode}` : "🔴 Belum Diatur";
+  
   const tempvoiceChan = currentSettings.tempvoiceChannel;
-  const tempvoiceStatus = tempvoiceChan
-    ? `✅ <#${tempvoiceChan}>`
-    : "🔴 Belum Diatur";
-
+  const tempvoiceStatus = tempvoiceChan ? `✅ <#${tempvoiceChan}>` : "🔴 Belum Diatur";
+  
   const aiChan = currentSettings.aiChannelId;
   const aiStatus = aiChan ? `✅ <#${aiChan}>` : "🔴 Belum Diatur";
-
+  
   const autoRole = currentSettings.autoroleId;
   const autoRoleStatus = autoRole ? `✅ <@&${autoRole}>` : "🔴 Belum Diatur";
-
+  
   const vanityRole = currentSettings.vanityRoleId;
   const vanityStatus = vanityRole ? `✅ <@&${vanityRole}>` : "🔴 Belum Diatur";
+  
+  const minecraftStatus = currentSettings.minecraft?.bridgeEnabled ? "🟢 Aktif" : "🔴 Belum Diatur";
 
-  const minecraftStatus = currentSettings.minecraft?.bridgeEnabled
-    ? "🟢 Aktif"
-    : "🔴 Belum Diatur";
-
-  // Membangun tampilan UI Dashboard
-  const dashboardDesc =
+  // Membangun tampilan UI Dashboard 
+  const dashboardDesc = 
     `Selamat datang di Master Setup Dashboard! Di sini kamu bisa mengonfigurasikan seluruh sistem server secara terpusat.\n\n` +
     `**${ui.getEmoji("setup_category_security") || "🔒"} KEAMANAN & MODERASI**\n` +
     `${ui.getEmoji("setup_softban") || "🛡️"} **Softban Trap:** ${softbanChan ? `✅ <#${softbanChan}>` : "🔴 Belum Diatur"}\n` +
     `${ui.getEmoji("setup_automod") || "🤖"} **Automod:** ${autoModStatus}\n` +
     `${ui.getEmoji("setup_automod") || "🤖"} **AI Automod:** ${aiAutomodStatus}\n\n` +
+    
     `**${ui.getEmoji("setup_category_channel") || "📢"} CHANNEL & SISTEM**\n` +
     `${ui.getEmoji("setup_welcome") || "👋"} **Welcome:** ${welcomeStatus}\n` +
     `${ui.getEmoji("setup_modmail") || "📩"} **Modmail:** ${modmailStatus}\n` +
     `${ui.getEmoji("setup_ticket") || "🎫"} **Tiket:** ${ticketStatus}\n` +
     `${ui.getEmoji("setup_tempvoice") || "🔊"} **TempVoice:** ${tempvoiceStatus}\n\n` +
+    
     `**${ui.getEmoji("setup_category_ai") || "🤖"} AI & LAINNYA**\n` +
     `${ui.getEmoji("setup_ai") || "🧠"} **AI Channel:** ${aiStatus}\n` +
     `${ui.getEmoji("setup_autorole") || "🎭"} **Auto-Role:** ${autoRoleStatus}\n` +
     `${ui.getEmoji("setup_vanity") || "✍️"} **Vanity Role:** ${vanityStatus}\n` +
     `${ui.getEmoji("setup_minecraft") || "🎮"} **Minecraft:** ${minecraftStatus}\n\n` +
+    
     `*Pilih kategori dari menu di bawah untuk mengedit pengaturannya:*`;
 
   const row = new ActionRowBuilder().addComponents(
@@ -158,8 +144,7 @@ module.exports = async function handle(interaction, { currentSettings }) {
     accentColorHex: ui.getColor("primary") || "#2b2d31",
     authorName: "Naura Admin Governance Engine",
     title: "⚙️ Naura Master Setup Dashboard",
-    iconURL:
-      interaction.guild.iconURL() || interaction.client.user.displayAvatarURL(),
+    iconURL: interaction.guild.iconURL() || interaction.client.user.displayAvatarURL(),
     description: dashboardDesc,
     buttonsRow: row,
     footerText: ui.getFooter("core"),
@@ -175,7 +160,11 @@ module.exports = async function handle(interaction, { currentSettings }) {
   collector.on("collect", async (i) => {
     if (i.user.id !== interaction.user.id) {
       return i.reply({
-        content: "Ini bukan menumu!",
+        ...buildErrorContainerV2({
+          title: "Akses Ditolak",
+          description: "❌ Ini bukan menu setup milikmu.",
+          footerText: ui.getFooter("core"),
+        }),
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -190,15 +179,12 @@ module.exports = async function handle(interaction, { currentSettings }) {
           .setPlaceholder("Pilih channel perangkap scammer...")
           .addChannelTypes(ChannelType.GuildText),
       );
-      await i.update(
-        buildContainerV2({
-          title: "🛡️ Setup Softban / Honeypot",
-          description:
-            "Silakan pilih channel yang akan dijadikan Softban / Honeypot Scammer Trap:",
-          buttonsRow: chanSelect,
-          footerText: ui.getFooter("core"),
-        }),
-      );
+      await i.update(buildContainerV2({
+        title: "🛡️ Setup Softban / Honeypot",
+        description: "Silakan pilih channel yang akan dijadikan Softban / Honeypot Scammer Trap:",
+        buttonsRow: chanSelect,
+        footerText: ui.getFooter("core"),
+      }));
     } else if (selection === "setup_greetings") {
       const chanSelect = new ActionRowBuilder().addComponents(
         new ChannelSelectMenuBuilder()
@@ -206,29 +192,24 @@ module.exports = async function handle(interaction, { currentSettings }) {
           .setPlaceholder("Pilih channel Welcome...")
           .addChannelTypes(ChannelType.GuildText),
       );
-      await i.update(
-        buildContainerV2({
-          title: "👋 Setup Greetings (Welcome)",
-          description:
-            "Silakan pilih channel untuk Pesan Selamat Datang (Welcome):",
-          buttonsRow: chanSelect,
-          footerText: ui.getFooter("core"),
-        }),
-      );
+      await i.update(buildContainerV2({
+        title: "👋 Setup Greetings (Welcome)",
+        description: "Silakan pilih channel untuk Pesan Selamat Datang (Welcome):",
+        buttonsRow: chanSelect,
+        footerText: ui.getFooter("core"),
+      }));
     } else if (selection === "setup_autorole") {
       const roleSelect = new ActionRowBuilder().addComponents(
         new RoleSelectMenuBuilder()
           .setCustomId("select_auto_role")
           .setPlaceholder("Pilih Auto-Role member baru..."),
       );
-      await i.update(
-        buildContainerV2({
-          title: "🎭 Setup Auto-Role",
-          description: "Silakan pilih role otomatis untuk member baru:",
-          buttonsRow: roleSelect,
-          footerText: ui.getFooter("core"),
-        }),
-      );
+      await i.update(buildContainerV2({
+        title: "🎭 Setup Auto-Role",
+        description: "Silakan pilih role otomatis untuk member baru:",
+        buttonsRow: roleSelect,
+        footerText: ui.getFooter("core"),
+      }));
     } else if (selection === "setup_ai") {
       const chanSelect = new ActionRowBuilder().addComponents(
         new ChannelSelectMenuBuilder()
@@ -236,15 +217,12 @@ module.exports = async function handle(interaction, { currentSettings }) {
           .setPlaceholder("Pilih channel AI Chat...")
           .addChannelTypes(ChannelType.GuildText),
       );
-      await i.update(
-        buildContainerV2({
-          title: "🧠 Setup AI Channel",
-          description:
-            "Silakan pilih channel untuk percakapan otomatis dengan AI Naura:",
-          buttonsRow: chanSelect,
-          footerText: ui.getFooter("core"),
-        }),
-      );
+      await i.update(buildContainerV2({
+        title: "🧠 Setup AI Channel",
+        description: "Silakan pilih channel untuk percakapan otomatis dengan AI Naura:",
+        buttonsRow: chanSelect,
+        footerText: ui.getFooter("core"),
+      }));
     } else if (selection === "setup_tempvoice") {
       const chanSelect = new ActionRowBuilder().addComponents(
         new ChannelSelectMenuBuilder()
@@ -252,24 +230,19 @@ module.exports = async function handle(interaction, { currentSettings }) {
           .setPlaceholder("Pilih voice channel generator...")
           .addChannelTypes(ChannelType.GuildVoice),
       );
-      await i.update(
-        buildContainerV2({
-          title: "🔊 Setup TempVoice",
-          description:
-            "Silakan pilih Voice Channel yang akan menjadi generator (bila dijoin, otomatis buat room baru):",
-          buttonsRow: chanSelect,
-          footerText: ui.getFooter("core"),
-        }),
-      );
+      await i.update(buildContainerV2({
+        title: "🔊 Setup TempVoice",
+        description: "Silakan pilih Voice Channel yang akan menjadi generator (bila dijoin, otomatis buat room baru):",
+        buttonsRow: chanSelect,
+        footerText: ui.getFooter("core"),
+      }));
     } else {
       // Untuk modul yang butuh banyak input (seperti ticket, minecraft, dll), arahkan ke subcommand
-      await i.update(
-        buildContainerV2({
-          title: "💡 Info Config",
-          description: `Modul **${selection.replace("setup_", "")}** membutuhkan beberapa argumen sekaligus.\n\nSilakan gunakan subcommand langsung:\n\`/setup ${selection.replace("setup_", "")}\``,
-          footerText: ui.getFooter("core"),
-        }),
-      );
+      await i.update(buildContainerV2({
+        title: "💡 Info Config",
+        description: `Modul **${selection.replace("setup_", "")}** membutuhkan beberapa argumen sekaligus.\n\nSilakan gunakan subcommand langsung:\n\`/setup ${selection.replace("setup_", "")}\``,
+        footerText: ui.getFooter("core"),
+      }));
     }
   });
 };

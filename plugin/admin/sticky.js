@@ -32,7 +32,7 @@ module.exports = {
   async execute(interaction) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const sub = interaction.options.getSubcommand();
-    let [settings] = await GuildSettings.findOrCreate({
+    const [settings] = await GuildSettings.findOrCreate({
       where: { guildId: interaction.guild.id },
     });
 

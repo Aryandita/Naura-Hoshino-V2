@@ -20,6 +20,8 @@ const {
   version: djsVersion,
 } = require("discord.js");
 const os = require("node:os");
+const path = require("node:path");
+const fs = require("node:fs");
 const { sequelize } = require("../../src/managers/dbManager");
 const GuildSettings = require("../../src/models/GuildSettings");
 const ui = require("../../src/config/ui");
@@ -190,40 +192,35 @@ module.exports = {
     const focusedValue = interaction.options.getFocused().toLowerCase();
     // Hanya autocomplete untuk subcommand help
     if (interaction.options.getSubcommand() === "help") {
-      let commandList = [];
+      const commandList = [];
       for (const [cmdName, cmdData] of client.commands.entries()) {
         if (!cmdData.data || !Array.isArray(cmdData.data.options)) {
-          commandList.push(cmdName);
-          continue;
+           commandList.push(cmdName);
+           continue;
         }
-
-        const hasSubcommands = cmdData.data.options.some(
-          (opt) => opt.type === 1 || opt.type === 2,
-        );
+        
+        const hasSubcommands = cmdData.data.options.some(opt => opt.type === 1 || opt.type === 2);
         if (!hasSubcommands) {
           commandList.push(cmdName);
         } else {
-          cmdData.data.options.forEach((opt) => {
-            if (opt.type === 2) {
-              // Subcommand Group
+          cmdData.data.options.forEach(opt => {
+            if (opt.type === 2) { // Subcommand Group
               if (Array.isArray(opt.options)) {
-                opt.options.forEach((sub) => {
-                  if (sub.type === 1)
-                    commandList.push(`${cmdName} ${opt.name} ${sub.name}`);
+                opt.options.forEach(sub => {
+                  if (sub.type === 1) commandList.push(`${cmdName} ${opt.name} ${sub.name}`);
                 });
               }
-            } else if (opt.type === 1) {
-              // Subcommand
+            } else if (opt.type === 1) { // Subcommand
               commandList.push(`${cmdName} ${opt.name}`);
             }
           });
         }
       }
-
+      
       const filtered = commandList
         .filter((cmd) => cmd.toLowerCase().includes(focusedValue))
         .slice(0, 25);
-
+        
       await interaction
         .respond(filtered.map((cmd) => ({ name: `/${cmd}`, value: cmd })))
         .catch(() => {});
@@ -600,7 +597,7 @@ async function handleStats(interaction, client, lang) {
       },
       {
         name: `${eSoftware} ${cleanSoftware}`,
-        value: `${dot} **Node.js:** \`${process.version}\`\n${dot} **Discord.js:** \`v${djsVersion}\`\n${dot} **Engine:** \`Naura Core v${env.ENGINE_VERSION || "1.1.0"}\``,
+        value: `${dot} **Node.js:** \`${process.version}\`\n${dot} **Discord.js:** \`v${djsVersion}\`\n${dot} **Engine:** \`Naura Core v${env.ENGINE_VERSION || "2.1.0"}\``,
       },
       {
         name: `${eReach} ${cleanReach}`,
@@ -685,30 +682,24 @@ async function handleInfo(interaction, client, lang) {
     ];
   }
 
-  const pet = await UserPet.findOne({
-    where: { userId: interaction.user.id, isActive: true },
-  });
+  const pet = await UserPet.findOne({ where: { userId: interaction.user.id, isActive: true } });
   let petAttachment = null;
-
+  
   if (pet) {
     const fs = require("fs");
     const path = require("path");
     const { AttachmentBuilder } = require("discord.js");
     const ePet = e("pet", "\uD83D\uDC3E");
-    const imgPath = path.join(
-      __dirname,
-      "../../assets/survival/pets",
-      `${pet.petType}.png`,
-    );
+    const imgPath = path.join(__dirname, "../../assets/survival/pets", `${pet.petType}.png`);
     if (fs.existsSync(imgPath)) {
-      petAttachment = new AttachmentBuilder(imgPath, { name: "pet.png" });
+       petAttachment = new AttachmentBuilder(imgPath, { name: "pet.png" });
     }
-
+    
     // Tambahkan separator virtual di field (karena buildContainerV2 tidak mendukung separator manual di fields array dengan mudah)
     // Atau kita gabungkan di description.
     fields.push({
       name: `─────────\n${ePet} Peliharaan Aktif`,
-      value: `**Spesies:** ${String(pet.petType).toUpperCase()}\n**Level:** ${pet.petLevel || 1} | **Mood:** ${String(pet.mood || "normal").toUpperCase()}`,
+      value: `**Spesies:** ${String(pet.petType).toUpperCase()}\n**Level:** ${pet.petLevel || 1} | **Mood:** ${String(pet.mood || 'normal').toUpperCase()}`
     });
   }
 
@@ -840,10 +831,24 @@ async function handleAbout(interaction, client, lang) {
     footerText: ui.getFooter("core"),
   });
 
+  const files = [];
   if (aboutBanner) {
-    payload.files = [
-      new AttachmentBuilder(aboutBanner, { name: "banner.png" }),
-    ];
+    files.push(new AttachmentBuilder(aboutBanner, { name: "banner.png" }));
+  }
+
+  const isEn = lang && (lang.LANG_CODE === "en" || lang.ABOUT_TITLE?.includes("Meet"));
+  const audioFileName = isEn ? "Intro (EN).mp3" : "Intro (ID).mp3";
+  const audioFilePath = path.join(__dirname, "../../assets/audio", audioFileName);
+  if (fs.existsSync(audioFilePath)) {
+    files.push(
+      new AttachmentBuilder(audioFilePath, {
+        name: `Naura_Intro_${isEn ? "EN" : "ID"}.mp3`,
+      }),
+    );
+  }
+
+  if (files.length > 0) {
+    payload.files = files;
   }
 
   return interaction.editReply(payload);

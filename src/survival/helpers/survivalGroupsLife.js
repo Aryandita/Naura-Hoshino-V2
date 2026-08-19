@@ -59,6 +59,22 @@ function addLifeGroup(builder) {
         sub
           .setName("rest")
           .setDescription("Tidur di kasur untuk memulihkan stamina & nyawa"),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("expedition")
+          .setDescription("Kirim Pet aktif dalam ekspedisi idle dungeon untuk mencari hadiah langka")
+          .addIntegerOption((opt) =>
+            opt
+              .setName("durasi")
+              .setDescription("Durasi ekspedisi pet")
+              .addChoices(
+                { name: "1 Jam (Cepat)", value: 1 },
+                { name: "4 Jam (Menengah)", value: 4 },
+                { name: "8 Jam (Panjang & Hadiah Terbesar)", value: 8 },
+              )
+              .setRequired(true),
+          ),
       ),
   );
 }

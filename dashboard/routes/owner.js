@@ -17,14 +17,14 @@
 
 const express = require("express");
 const os = require("os");
-const { logger } = require("../src/managers/logger");
-const UserProfile = require("../src/models/UserProfile");
-const GuildSettings = require("../src/models/GuildSettings");
+const env = require("../../src/config/env");
+const { logger } = require("../../src/managers/logger");
+const UserProfile = require("../../src/models/UserProfile");
+const GuildSettings = require("../../src/models/GuildSettings");
 const { requireOwner } = require("../middleware/auth");
 const { formatMemory } = require("../utils/format");
 
-const EVAL_ENABLED =
-  String(process.env.OWNER_EVAL_ENABLED || "").toLowerCase() === "true";
+const EVAL_ENABLED = Boolean(env.OWNER_EVAL_ENABLED);
 
 function broadcast(client, message) {
   if (client.dashboardIo)
@@ -82,7 +82,7 @@ module.exports = (client) => {
       if (fields.length > 0) await user.save({ fields });
 
       if (starFragments !== undefined) {
-        const UserSurvival = require("../src/models/UserSurvival");
+        const UserSurvival = require("../../src/models/UserSurvival");
         const [survival] = await UserSurvival.findOrCreate({
           where: { userId: targetId },
         });
@@ -115,17 +115,17 @@ module.exports = (client) => {
 
     try {
       const util = require("util");
-      // eslint-disable-next-line no-eval
+       
       let evaled = await eval(code);
       if (typeof evaled !== "string")
         evaled = util.inspect(evaled, { depth: 0 });
 
       const secrets = [
         client.token,
-        process.env.GEMINI_API_KEY,
-        process.env.VERBA_API_KEY,
-        process.env.DB_PASS,
-        process.env.SESSION_SECRET,
+        env.GEMINI_API,
+        env.VERBA_API_KEY,
+        env.DB_PASS,
+        env.SESSION_SECRET,
       ].filter(Boolean);
 
       let sanitized = evaled;

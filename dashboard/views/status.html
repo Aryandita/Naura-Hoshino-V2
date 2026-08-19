@@ -1,337 +1,488 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Naura Hoshino - System Status</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Telemetry | Naura OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="/css/style.css?v=3" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css?v=4">
+    <link rel="stylesheet" href="/css/tokens.css?v=2">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/naura-ui.js"></script>
     <style>
-      .glass-panel {
-        background: rgba(15, 12, 41, 0.6);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 1rem;
-      }
-      .status-dot {
-        height: 12px;
-        width: 12px;
-        border-radius: 50%;
-        display: inline-block;
-      }
-      .status-online {
-        background-color: #10b981;
-        box-shadow: 0 0 10px #10b981;
-      }
-      .status-offline {
-        background-color: #ef4444;
-        box-shadow: 0 0 10px #ef4444;
-      }
-      .text-glow {
-        text-shadow: 0 0 10px currentColor;
-      }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #0B0C10;
+        }
+        .font-orbitron {
+            font-family: 'Orbitron', monospace;
+        }
+        .font-cyber {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(15, 12, 41, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 1.25rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-panel:hover {
+            border-color: rgba(255, 182, 193, 0.3);
+            box-shadow: 0 12px 40px 0 rgba(255, 182, 193, 0.1);
+        }
+        .status-dot {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        .status-online { 
+            background-color: #10B981; 
+            box-shadow: 0 0 12px #10B981, 0 0 24px rgba(16, 185, 129, 0.4); 
+        }
+        .status-degraded { 
+            background-color: #F59E0B; 
+            box-shadow: 0 0 12px #F59E0B, 0 0 24px rgba(245, 158, 11, 0.4); 
+        }
+        .status-offline { 
+            background-color: #EF4444; 
+            box-shadow: 0 0 12px #EF4444, 0 0 24px rgba(239, 68, 68, 0.4); 
+        }
+        .text-glow-pink { text-shadow: 0 0 12px rgba(255, 182, 193, 0.7); }
+        .text-glow-green { text-shadow: 0 0 12px rgba(134, 239, 172, 0.7); }
+        .text-glow-cyan { text-shadow: 0 0 12px rgba(0, 255, 255, 0.7); }
+        .text-glow-gold { text-shadow: 0 0 12px rgba(255, 215, 0, 0.7); }
+        .pulse-indicator {
+            animation: pulse-glow 2s infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.92); }
+        }
     </style>
-  </head>
+</head>
 
-  <body
-    class="flex flex-col min-h-screen bg-[#0B0C10] text-gray-200 overflow-x-hidden p-6 font-sans"
-  >
-    <div class="max-w-4xl mx-auto w-full flex-grow">
-      <header class="text-center my-10">
-        <h1
-          class="text-4xl font-bold text-[#FFB6C1] text-glow tracking-wider font-orbitron mb-2"
-        >
-          NAURA SYSTEM STATUS
-        </h1>
-        <p class="text-gray-400">
-          Pemantauan operasional real-time seluruh modul Naura Hoshino V2.
-        </p>
-      </header>
-
-      <!-- Main Status Overview -->
-      <div
-        class="glass-panel p-8 mb-8 text-center flex flex-col items-center justify-center"
-      >
-        <div id="mainStatusIcon" class="text-6xl mb-4 text-emerald-400">
-          <i class="fa-solid fa-check-circle"></i>
-        </div>
-        <h2 id="mainStatusText" class="text-2xl font-bold text-white mb-2">
-          All Systems Operational
-        </h2>
-        <p class="text-sm text-gray-400">
-          Last updated: <span id="lastUpdated">Just now</span>
-        </p>
-      </div>
-
-      <!-- Detailed Services -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- MySQL Database -->
-        <div class="glass-panel p-6 flex flex-col h-full">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-database text-[#93C5FD]"></i> MySQL Database
-            </h3>
-            <span id="dbDot" class="status-dot status-offline"></span>
-          </div>
-          <div class="text-sm text-gray-300 mt-auto">
-            <p>
-              Status:
-              <span id="dbText" class="font-bold text-red-400">Unknown</span>
-            </p>
-            <p>
-              Active Connections:
-              <span id="dbConnections" class="text-white">0</span> /
-              <span id="dbPoolMax">0</span>
-            </p>
-          </div>
-        </div>
-
-        <!-- Redis Cache -->
-        <div class="glass-panel p-6 flex flex-col h-full">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-bolt text-[#F9A8D4]"></i> Redis Cache
-            </h3>
-            <span id="redisDot" class="status-dot status-offline"></span>
-          </div>
-          <div class="text-sm text-gray-300 mt-auto">
-            <p>
-              Status:
-              <span id="redisText" class="font-bold text-red-400"
-                >Disconnected</span
-              >
-            </p>
-            <p class="text-xs mt-2 text-gray-500">
-              Menangani rate limiting & caching UI.
-            </p>
-          </div>
-        </div>
-
-        <!-- Lavalink Music -->
-        <div class="glass-panel p-6 flex flex-col h-full">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-music text-[#C084FC]"></i> Lavalink Nodes
-            </h3>
-            <span id="lavaDot" class="status-dot status-offline"></span>
-          </div>
-          <div class="text-sm text-gray-300 mt-auto">
-            <p>
-              Status:
-              <span id="lavaText" class="font-bold text-red-400">Offline</span>
-            </p>
-            <p>
-              Connected Nodes:
-              <span id="lavaNodes" class="text-white">0/0</span>
-            </p>
-          </div>
-        </div>
-
-        <!-- Bot Core -->
-        <div
-          class="glass-panel p-6 flex flex-col h-full md:col-span-2 lg:col-span-3"
-        >
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-robot text-[#FFB6C1]"></i> Bot Core Process
-            </h3>
-            <span id="botDot" class="status-dot status-offline"></span>
-          </div>
-
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-            <div class="bg-black/30 p-3 rounded-lg border border-white/5">
-              <p class="text-xs text-gray-400 uppercase">Uptime</p>
-              <p id="uptimeText" class="text-lg font-bold text-white">0h 0m</p>
+<body class="flex flex-col min-h-screen text-gray-200 overflow-x-hidden p-4 md:p-8" id="mainBody">
+    <div class="max-w-6xl mx-auto w-full flex-grow">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-4 border-b border-[var(--color-hairline)] gap-4">
+            <div>
+                <div class="flex items-center gap-3">
+                    <h1 class="text-3xl md:text-4xl font-black font-orbitron text-[#FFB6C1] text-glow-pink tracking-wider flex items-center gap-3">
+                        <i class="fa-solid fa-satellite-dish text-[#00ffff] animate-pulse"></i> LIVE TELEMETRY
+                    </h1>
+                    <span id="socketBadge" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-orbitron font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                        <span id="socketBadgeText">SOCKET.IO LIVE</span>
+                    </span>
+                </div>
+                <p class="text-xs text-gray-400 uppercase tracking-widest font-orbitron mt-1">Real-time Multi-Service & Cluster Telemetry Monitor</p>
             </div>
-            <div class="bg-black/30 p-3 rounded-lg border border-white/5">
-              <p class="text-xs text-gray-400 uppercase">Memory (Heap)</p>
-              <p id="memoryText" class="text-lg font-bold text-white">0 MB</p>
+            
+            <div class="flex items-center gap-2">
+                <button id="langToggle" title="Bahasa / Language" class="btn-discord px-4 py-2.5 text-xs font-orbitron tracking-widest uppercase bg-transparent border border-[var(--color-hairline)] text-gray-300 hover:text-white hover:border-[var(--color-primary-glow)] hover:bg-[var(--color-surface-glass)]">
+                    <i class="fa-solid fa-language mr-2"></i><span id="langLabel">ID</span>
+                </button>
+                <a href="/" class="btn-discord px-5 py-2.5 text-xs font-orbitron tracking-widest uppercase bg-transparent border border-[var(--color-hairline)] text-gray-300 hover:text-white hover:border-[var(--color-primary-glow)] hover:bg-[var(--color-surface-glass)]">
+                    <i class="fa-solid fa-arrow-left mr-2"></i><span>Beranda</span>
+                </a>
             </div>
-            <div class="bg-black/30 p-3 rounded-lg border border-white/5">
-              <p class="text-xs text-gray-400 uppercase">Guilds</p>
-              <p id="guildsText" class="text-lg font-bold text-white">0</p>
-            </div>
-            <div class="bg-black/30 p-3 rounded-lg border border-white/5">
-              <p class="text-xs text-gray-400 uppercase">WebSocket Ping</p>
-              <p id="pingText" class="text-lg font-bold text-[#86EFAC]">0 ms</p>
-            </div>
-          </div>
-        </div>
-      </div>
+        </header>
 
-      <div class="text-center mt-8">
-        <button
-          onclick="fetchStatus()"
-          class="px-6 py-2 bg-[#FFB6C1]/20 hover:bg-[#FFB6C1]/40 border border-[#FFB6C1]/50 text-white rounded-full transition-all duration-300 backdrop-blur-md"
-        >
-          <i class="fa-solid fa-rotate-right mr-2"></i> Refresh Status
-        </button>
-        <a
-          href="/"
-          class="ml-4 px-6 py-2 bg-transparent hover:bg-white/5 border border-white/10 text-gray-300 rounded-full transition-all duration-300"
-        >
-          Kembali ke Dashboard
-        </a>
-      </div>
+        <!-- Main Status Overview Hero -->
+        <div class="glass-panel p-6 md:p-8 mb-8 text-center flex flex-col items-center justify-center relative overflow-hidden">
+            <div class="absolute top-4 right-4 flex items-center gap-2">
+                <span id="heartbeatDot" class="w-3 h-3 rounded-full bg-cyan-400 opacity-0 transition-opacity duration-300"></span>
+                <span class="text-[10px] font-orbitron text-gray-500 uppercase tracking-wider" id="streamModeText">Stream: Initializing</span>
+            </div>
+
+            <div id="mainStatusIcon" class="text-5xl md:text-6xl mb-3 text-emerald-400 pulse-indicator">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h2 id="mainStatusText" class="text-2xl md:text-3xl font-black font-orbitron text-white mb-2">Semua Sistem Beroperasi Normal</h2>
+            <p class="text-sm text-gray-400">Pembaruan terakhir: <span id="lastUpdated" class="text-gray-300 font-orbitron">Memuat data...</span></p>
+        </div>
+
+        <!-- 3 Database Pillars: MySQL, MongoDB, Redis -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold font-orbitron text-white flex items-center gap-2">
+                    <i class="fa-solid fa-server text-[#93C5FD]"></i> DATABASE CLUSTER PILLARS
+                </h2>
+                <span class="text-xs text-gray-400 font-orbitron uppercase tracking-wider">3-Tier Storage Engine</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- MySQL Relational Core -->
+                <div class="glass-panel p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-base font-bold font-orbitron text-white flex items-center gap-2">
+                                <i class="fa-solid fa-database text-[#93C5FD]"></i> MySQL Relational
+                            </h3>
+                            <span id="dbDot" class="status-dot status-offline"></span>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-4">Penyimpanan utama akun, profil pengguna, ekonomi, dan konfigurasi server.</p>
+                    </div>
+
+                    <div class="space-y-2 pt-4 border-t border-white/5 text-xs font-orbitron">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Status:</span>
+                            <span id="dbText" class="font-bold text-red-400">Unknown</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Active Pool:</span>
+                            <span class="text-white"><span id="dbConnections">0</span> / <span id="dbPoolMax">0</span></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Dialect Engine:</span>
+                            <span id="dbDialect" class="text-cyan-400">mysql2</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MongoDB Atlas Cloud -->
+                <div class="glass-panel p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-base font-bold font-orbitron text-white flex items-center gap-2">
+                                <i class="fa-solid fa-leaf text-[#86EFAC]"></i> MongoDB Atlas
+                            </h3>
+                            <span id="mongoDot" class="status-dot status-offline"></span>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-4">Audit log perintah bot, riwayat percakapan AI multi-turn, dan transkrip tiket.</p>
+                    </div>
+
+                    <div class="space-y-2 pt-4 border-t border-white/5 text-xs font-orbitron">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Status:</span>
+                            <span id="mongoText" class="font-bold text-red-400">Disconnected</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Registered Models:</span>
+                            <span id="mongoModelsCount" class="text-white">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Cluster Storage:</span>
+                            <span id="mongoHost" class="text-emerald-400 truncate max-w-[120px]">Atlas Cloud</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Redis High-Speed Cache -->
+                <div class="glass-panel p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-base font-bold font-orbitron text-white flex items-center gap-2">
+                                <i class="fa-solid fa-bolt text-[#F9A8D4]"></i> Redis Cache & Pub/Sub
+                            </h3>
+                            <span id="redisDot" class="status-dot status-offline"></span>
+                        </div>
+                        <p class="text-xs text-gray-400 mb-4">Buffer XP berkecepatan tinggi, rate limiting interaksi, dan sinkronisasi lintas shard.</p>
+                    </div>
+
+                    <div class="space-y-2 pt-4 border-t border-white/5 text-xs font-orbitron">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Status:</span>
+                            <span id="redisText" class="font-bold text-red-400">Disconnected</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Pub/Sub Engine:</span>
+                            <span id="redisPubSub" class="text-pink-400">Active</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Mode:</span>
+                            <span class="text-gray-300">In-Memory Store</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secondary Services: Lavalink & Bot Core Metrics -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Lavalink Nodes -->
+            <div class="glass-panel p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-base font-bold font-orbitron text-white flex items-center gap-2">
+                            <i class="fa-solid fa-music text-[#C084FC]"></i> Lavalink Audio Cluster
+                        </h3>
+                        <span id="lavaDot" class="status-dot status-offline"></span>
+                    </div>
+                    <p class="text-xs text-gray-400 mb-4">Pemrosesan audio lossless, filter real-time, dan pemutar musik voice channel.</p>
+                </div>
+
+                <div class="space-y-2 pt-4 border-t border-white/5 text-xs font-orbitron">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Status Node:</span>
+                        <span id="lavaText" class="font-bold text-red-400">Offline</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-400">Connected Nodes:</span>
+                        <span id="lavaNodes" class="text-white">0 / 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bot Core Process Telemetry -->
+            <div class="glass-panel p-6 lg:col-span-2 flex flex-col justify-between">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-base font-bold font-orbitron text-white flex items-center gap-2">
+                        <i class="fa-solid fa-robot text-[#FFB6C1]"></i> Bot Core Process & Resources
+                    </h3>
+                    <div class="flex items-center gap-2">
+                        <span id="botDot" class="status-dot status-offline"></span>
+                        <span class="text-[10px] font-orbitron text-gray-400" id="versionBadge">v2.1.0</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="bg-black/40 p-3 rounded-xl border border-white/5 text-center">
+                        <p class="text-[10px] text-gray-400 uppercase font-orbitron tracking-wider">Uptime</p>
+                        <p id="uptimeText" class="text-base font-bold font-orbitron text-white mt-1">0s</p>
+                    </div>
+                    <div class="bg-black/40 p-3 rounded-xl border border-white/5 text-center">
+                        <p class="text-[10px] text-gray-400 uppercase font-orbitron tracking-wider">Heap Memory</p>
+                        <p id="memoryText" class="text-base font-bold font-orbitron text-[#F9A8D4] mt-1">0 MB</p>
+                    </div>
+                    <div class="bg-black/40 p-3 rounded-xl border border-white/5 text-center">
+                        <p class="text-[10px] text-gray-400 uppercase font-orbitron tracking-wider">Total Server</p>
+                        <p id="guildsText" class="text-base font-bold font-orbitron text-[#93C5FD] mt-1">0</p>
+                    </div>
+                    <div class="bg-black/40 p-3 rounded-xl border border-white/5 text-center">
+                        <p class="text-[10px] text-gray-400 uppercase font-orbitron tracking-wider">WebSocket Ping</p>
+                        <p id="pingText" class="text-base font-bold font-orbitron text-[#86EFAC] mt-1">0 ms</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Footer -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
+            <button id="refreshBtn" class="px-6 py-2.5 bg-[#FFB6C1]/20 hover:bg-[#FFB6C1]/30 border border-[#FFB6C1]/40 text-white rounded-full transition-all duration-300 font-orbitron text-xs tracking-wider flex items-center gap-2 hover:scale-105">
+                <i class="fa-solid fa-rotate-right" id="refreshIcon"></i> Perbarui Data Telemetry
+            </button>
+            <a href="/" class="px-6 py-2.5 bg-black/40 hover:bg-white/5 border border-white/10 text-gray-300 rounded-full transition-all duration-300 font-orbitron text-xs tracking-wider">
+                Kembali ke Beranda
+            </a>
+        </div>
     </div>
 
     <script>
-      function formatUptime(seconds) {
-        if (!seconds) return "0s";
-        const d = Math.floor(seconds / (3600 * 24));
-        const h = Math.floor((seconds % (3600 * 24)) / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = Math.floor(seconds % 60);
+        (function () {
+            'use strict';
 
-        let result = "";
-        if (d > 0) result += d + "d ";
-        if (h > 0) result += h + "h ";
-        if (m > 0) result += m + "m ";
-        if (result === "") result = s + "s";
-        return result.trim();
-      }
+            var refreshBtn = document.getElementById('refreshBtn');
+            var refreshIcon = document.getElementById('refreshIcon');
+            var heartbeatDot = document.getElementById('heartbeatDot');
+            var streamModeText = document.getElementById('streamModeText');
+            var socketBadge = document.getElementById('socketBadge');
+            var socketBadgeText = document.getElementById('socketBadgeText');
 
-      async function fetchStatus() {
-        try {
-          const response = await fetch("/api/health");
-          const data = await response.json();
-
-          if (data.status === "ok") {
-            document.getElementById("lastUpdated").innerText =
-              new Date().toLocaleTimeString();
-
-            // DB
-            const dbOk =
-              data.services.database && data.services.database.isConnected;
-            document.getElementById("dbDot").className = dbOk
-              ? "status-dot status-online"
-              : "status-dot status-offline";
-            document.getElementById("dbText").innerText = dbOk
-              ? "Online"
-              : "Offline";
-            document.getElementById("dbText").className = dbOk
-              ? "font-bold text-emerald-400"
-              : "font-bold text-red-400";
-            document.getElementById("dbConnections").innerText = data.services
-              .database
-              ? data.services.database.activeConnections
-              : "0";
-            document.getElementById("dbPoolMax").innerText = data.services
-              .database
-              ? data.services.database.poolMax
-              : "0";
-
-            // Redis
-            const redisOk =
-              data.services.redis && data.services.redis.connected;
-            document.getElementById("redisDot").className = redisOk
-              ? "status-dot status-online"
-              : "status-dot status-offline";
-            document.getElementById("redisText").innerText = redisOk
-              ? "Online"
-              : "Offline";
-            document.getElementById("redisText").className = redisOk
-              ? "font-bold text-emerald-400"
-              : "font-bold text-red-400";
-
-            // Lavalink
-            const lavaTotal = data.services.lavalink
-              ? data.services.lavalink.nodes
-              : 0;
-            const lavaOk = data.services.lavalink
-              ? data.services.lavalink.connected
-              : 0;
-            const lavaIsOk = lavaTotal > 0 && lavaOk > 0;
-
-            document.getElementById("lavaDot").className = lavaIsOk
-              ? "status-dot status-online"
-              : lavaTotal > 0
-                ? "status-dot bg-yellow-500 shadow-[0_0_10px_#EAB308]"
-                : "status-dot status-offline";
-            document.getElementById("lavaText").innerText = lavaIsOk
-              ? "Online"
-              : lavaTotal > 0
-                ? "Degraded"
-                : "Offline";
-            document.getElementById("lavaText").className = lavaIsOk
-              ? "font-bold text-emerald-400"
-              : lavaTotal > 0
-                ? "font-bold text-yellow-400"
-                : "font-bold text-red-400";
-            document.getElementById("lavaNodes").innerText =
-              `${lavaOk}/${lavaTotal}`;
-
-            // Bot Core
-            const botOk = data.bot && data.bot.uptimeSeconds > 0;
-            document.getElementById("botDot").className = botOk
-              ? "status-dot status-online"
-              : "status-dot status-offline";
-            document.getElementById("uptimeText").innerText = formatUptime(
-              data.bot.uptimeSeconds,
-            );
-            document.getElementById("memoryText").innerText =
-              data.bot.memoryUsageMB + " MB";
-            document.getElementById("guildsText").innerText = data.bot.guilds;
-            document.getElementById("pingText").innerText =
-              data.bot.ping + " ms";
-
-            // Main Status
-            if (dbOk && redisOk && botOk) {
-              document.getElementById("mainStatusIcon").className =
-                "text-6xl mb-4 text-emerald-400";
-              document.getElementById("mainStatusIcon").innerHTML =
-                '<i class="fa-solid fa-check-circle"></i>';
-              document.getElementById("mainStatusText").innerText =
-                "All Systems Operational";
-              document.getElementById("mainStatusText").className =
-                "text-2xl font-bold text-white mb-2";
-            } else if (botOk && (!dbOk || !redisOk)) {
-              document.getElementById("mainStatusIcon").className =
-                "text-6xl mb-4 text-yellow-400";
-              document.getElementById("mainStatusIcon").innerHTML =
-                '<i class="fa-solid fa-triangle-exclamation"></i>';
-              document.getElementById("mainStatusText").innerText =
-                "Degraded Performance";
-              document.getElementById("mainStatusText").className =
-                "text-2xl font-bold text-yellow-400 mb-2";
-            } else {
-              document.getElementById("mainStatusIcon").className =
-                "text-6xl mb-4 text-red-500";
-              document.getElementById("mainStatusIcon").innerHTML =
-                '<i class="fa-solid fa-circle-xmark"></i>';
-              document.getElementById("mainStatusText").innerText =
-                "Major Outage";
-              document.getElementById("mainStatusText").className =
-                "text-2xl font-bold text-red-500 mb-2";
+            var langToggle = document.getElementById('langToggle');
+            var langLabel = document.getElementById('langLabel');
+            function syncLangLabel() { 
+                if (langLabel && window.NauraUI) langLabel.textContent = NauraUI.lang.toUpperCase(); 
             }
-          }
-        } catch (err) {
-          console.error("Failed to fetch status:", err);
-          document.getElementById("mainStatusIcon").className =
-            "text-6xl mb-4 text-red-500";
-          document.getElementById("mainStatusIcon").innerHTML =
-            '<i class="fa-solid fa-circle-xmark"></i>';
-          document.getElementById("mainStatusText").innerText =
-            "Unable to Reach Server";
-          document.getElementById("mainStatusText").className =
-            "text-2xl font-bold text-red-500 mb-2";
+            if (langToggle && window.NauraUI) {
+                langToggle.addEventListener('click', async function () {
+                    NauraUI.playClickSfx();
+                    await NauraUI.setLanguage(NauraUI.lang === 'id' ? 'en' : 'id');
+                    syncLangLabel();
+                });
+                syncLangLabel();
+            }
 
-          ["dbDot", "redisDot", "lavaDot", "botDot"].forEach(
-            (id) =>
-              (document.getElementById(id).className =
-                "status-dot status-offline"),
-          );
-        }
-      }
+            document.addEventListener('click', function (event) {
+                if (event.target && typeof event.target.closest === 'function' && event.target.closest('button, a')) {
+                    if (window.NauraUI) NauraUI.playClickSfx();
+                }
+            });
 
-      // Auto fetch on load and every 10 seconds
-      fetchStatus();
-      setInterval(fetchStatus, 10000);
+            function formatUptime(seconds) {
+                if (!seconds || seconds <= 0) return "0s";
+                var d = Math.floor(seconds / (3600 * 24));
+                var h = Math.floor((seconds % (3600 * 24)) / 3600);
+                var m = Math.floor((seconds % 3600) / 60);
+                var s = Math.floor(seconds % 60);
+
+                var parts = [];
+                if (d > 0) parts.push(d + "d");
+                if (h > 0) parts.push(h + "h");
+                if (m > 0) parts.push(m + "m");
+                if (parts.length === 0 || s > 0) parts.push(s + "s");
+                return parts.join(" ");
+            }
+
+            function blinkHeartbeat() {
+                if (heartbeatDot) {
+                    heartbeatDot.style.opacity = '1';
+                    setTimeout(function () {
+                        heartbeatDot.style.opacity = '0';
+                    }, 400);
+                }
+            }
+
+            function applyTelemetryData(healthData) {
+                blinkHeartbeat();
+                document.getElementById('lastUpdated').innerText = new Date().toLocaleTimeString();
+
+                var services = healthData.services || {};
+                var bot = healthData.bot || {};
+
+                // 1. MySQL Database
+                var db = services.database || {};
+                var dbOk = !!db.isConnected;
+                document.getElementById('dbDot').className = dbOk ? 'status-dot status-online' : 'status-dot status-offline';
+                document.getElementById('dbText').innerText = dbOk ? (db.isFallback ? 'SQLite (Fallback)' : 'Connected') : 'Disconnected';
+                document.getElementById('dbText').className = dbOk ? 'font-bold text-emerald-400' : 'font-bold text-red-400';
+                document.getElementById('dbConnections').innerText = db.activeConnections !== undefined ? db.activeConnections : '0';
+                document.getElementById('dbPoolMax').innerText = db.poolMax !== undefined ? db.poolMax : '0';
+                if (db.dialect) document.getElementById('dbDialect').innerText = db.dialect;
+
+                // 2. MongoDB Atlas
+                var mongo = services.mongodb || {};
+                var mongoOk = mongo.state === 'connected' || mongo.readyState === 1;
+                document.getElementById('mongoDot').className = mongoOk ? 'status-dot status-online' : (mongo.state === 'connecting' ? 'status-dot status-degraded' : 'status-dot status-offline');
+                document.getElementById('mongoText').innerText = mongoOk ? 'Connected' : (mongo.state ? mongo.state.toUpperCase() : 'Disconnected');
+                document.getElementById('mongoText').className = mongoOk ? 'font-bold text-emerald-400' : (mongo.state === 'connecting' ? 'font-bold text-yellow-400' : 'font-bold text-red-400');
+                document.getElementById('mongoModelsCount').innerText = mongo.models && Array.isArray(mongo.models) ? mongo.models.length : '0';
+                if (mongo.host) document.getElementById('mongoHost').innerText = mongo.host;
+
+                // 3. Redis Cache
+                var redis = services.redis || {};
+                var redisOk = !!redis.connected;
+                document.getElementById('redisDot').className = redisOk ? 'status-dot status-online' : 'status-dot status-offline';
+                document.getElementById('redisText').innerText = redisOk ? 'Ready' : 'Disconnected';
+                document.getElementById('redisText').className = redisOk ? 'font-bold text-emerald-400' : 'font-bold text-red-400';
+
+                // 4. Lavalink
+                var lava = services.lavalink || {};
+                var lavaTotal = Number(lava.nodes) || 0;
+                var lavaOk = Number(lava.connected) || 0;
+                var lavaIsOk = lavaTotal > 0 && lavaOk > 0;
+                document.getElementById('lavaDot').className = lavaIsOk ? 'status-dot status-online' : (lavaTotal > 0 ? 'status-dot status-degraded' : 'status-dot status-offline');
+                document.getElementById('lavaText').innerText = lavaIsOk ? 'Online' : (lavaTotal > 0 ? 'Degraded' : 'Offline');
+                document.getElementById('lavaText').className = lavaIsOk ? 'font-bold text-emerald-400' : (lavaTotal > 0 ? 'font-bold text-yellow-400' : 'font-bold text-red-400');
+                document.getElementById('lavaNodes').innerText = lavaOk + ' / ' + lavaTotal;
+
+                // 5. Bot Process
+                var botOk = bot.uptimeSeconds !== undefined && bot.uptimeSeconds >= 0;
+                document.getElementById('botDot').className = botOk ? 'status-dot status-online' : 'status-dot status-offline';
+                document.getElementById('uptimeText').innerText = formatUptime(bot.uptimeSeconds);
+                document.getElementById('memoryText').innerText = (bot.memoryUsageMB || 0) + ' MB';
+                document.getElementById('guildsText').innerText = Number(bot.guilds || 0).toLocaleString();
+                
+                var ping = Number(bot.ping || 0);
+                var pingEl = document.getElementById('pingText');
+                pingEl.innerText = ping >= 0 ? ping + ' ms' : 'N/A';
+                if (ping < 100) pingEl.className = 'text-base font-bold font-orbitron text-[#86EFAC] mt-1';
+                else if (ping < 250) pingEl.className = 'text-base font-bold font-orbitron text-yellow-400 mt-1';
+                else pingEl.className = 'text-base font-bold font-orbitron text-red-400 mt-1';
+
+                // 6. Main Hero Status
+                var mainIcon = document.getElementById('mainStatusIcon');
+                var mainText = document.getElementById('mainStatusText');
+
+                if (dbOk && mongoOk && redisOk && botOk) {
+                    mainIcon.className = 'text-5xl md:text-6xl mb-3 text-emerald-400 pulse-indicator';
+                    mainIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                    mainText.innerText = 'Semua Sistem Beroperasi Normal';
+                    mainText.className = 'text-2xl md:text-3xl font-black font-orbitron text-white mb-2';
+                } else if (botOk && (dbOk || mongoOk || redisOk)) {
+                    mainIcon.className = 'text-5xl md:text-6xl mb-3 text-yellow-400 pulse-indicator';
+                    mainIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                    mainText.innerText = 'Performa Sistem Terdegradasi';
+                    mainText.className = 'text-2xl md:text-3xl font-black font-orbitron text-yellow-400 mb-2';
+                } else {
+                    mainIcon.className = 'text-5xl md:text-6xl mb-3 text-red-500 pulse-indicator';
+                    mainIcon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+                    mainText.innerText = 'Gangguan Operasional Kritis';
+                    mainText.className = 'text-2xl md:text-3xl font-black font-orbitron text-red-500 mb-2';
+                }
+            }
+
+            // --- REST Polling Function ---
+            async function fetchHealthApi() {
+                try {
+                    if (refreshIcon) refreshIcon.classList.add('fa-spin');
+                    var response = await fetch('/api/health');
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    var data = await response.json();
+                    if (data.status === 'ok') {
+                        applyTelemetryData(data);
+                    }
+                } catch (err) {
+                    console.warn('[Telemetry] REST fetch warning:', err);
+                } finally {
+                    if (refreshIcon) setTimeout(function () { refreshIcon.classList.remove('fa-spin'); }, 500);
+                }
+            }
+
+            // --- Socket.IO Real-time Connection ---
+            var socket = null;
+            if (typeof io !== 'undefined') {
+                socket = io();
+
+                socket.on('connect', function () {
+                    if (streamModeText) streamModeText.innerText = 'Stream: Live (Socket.IO)';
+                    if (socketBadge) {
+                        socketBadge.className = 'hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-orbitron font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30';
+                        if (socketBadgeText) socketBadgeText.innerText = 'SOCKET.IO LIVE';
+                    }
+                });
+
+                socket.on('disconnect', function () {
+                    if (streamModeText) streamModeText.innerText = 'Stream: Fallback Polling';
+                    if (socketBadge) {
+                        socketBadge.className = 'hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-orbitron font-semibold bg-yellow-500/10 text-yellow-400 border border-yellow-500/30';
+                        if (socketBadgeText) socketBadgeText.innerText = 'FALLBACK POLLING';
+                    }
+                });
+
+                socket.on('stats_update', function (socketStats) {
+                    // Adaptasi socketStats ke format telemetry
+                    var healthPayload = {
+                        status: 'ok',
+                        bot: {
+                            uptimeSeconds: 1, // Akan disinkronkan via health
+                            memoryUsageMB: parseFloat(socketStats.ramUsed || 0),
+                            guilds: socketStats.guilds || 0,
+                            ping: socketStats.ping !== undefined ? socketStats.ping : -1
+                        },
+                        services: {
+                            database: socketStats.dbStatus || {},
+                            mongodb: socketStats.mongoStatus || {},
+                            redis: { connected: !!socketStats.redisStatus },
+                            lavalink: { nodes: 1, connected: 1 }
+                        }
+                    };
+                    if (socketStats.botVersion && document.getElementById('versionBadge')) {
+                        document.getElementById('versionBadge').innerText = 'v' + socketStats.botVersion;
+                    }
+                    applyTelemetryData(healthPayload);
+                });
+            }
+
+            // Initial load & Polling interval (5 seconds fallback)
+            fetchHealthApi();
+            setInterval(fetchHealthApi, 5000);
+
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function () {
+                    fetchHealthApi();
+                });
+            }
+        })();
     </script>
-  </body>
+</body>
 </html>

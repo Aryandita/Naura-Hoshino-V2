@@ -9,8 +9,8 @@ async function runMigration() {
   const idPath = path.join(__dirname, "..", "language", "id.json");
   const enPath = path.join(__dirname, "..", "language", "en.json");
 
-  let idData = JSON.parse(fs.readFileSync(idPath, "utf8"));
-  let enData = JSON.parse(fs.readFileSync(enPath, "utf8"));
+  const idData = JSON.parse(fs.readFileSync(idPath, "utf8"));
+  const enData = JSON.parse(fs.readFileSync(enPath, "utf8"));
 
   // 2. Ambil semua file javascript
   const files = await glob(["plugin/**/*.js", "src/events/**/*.js"], {

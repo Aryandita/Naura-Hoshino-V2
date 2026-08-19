@@ -9,6 +9,11 @@ const {
   UserWarn,
 } = require("../../models");
 const cacheManager = require("../../managers/cacheManager");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../utils/NauraContainerBuilder");
+const ui = require("../../config/ui");
 const { logger } = require("../../managers/logger");
 
 module.exports = {
@@ -21,19 +26,25 @@ module.exports = {
 
     if (interaction.user.id !== targetUserId) {
       await interaction.reply({
-        content: "❌ Ini bukan konfirmasi untukmu, kak!",
+        ...buildErrorContainerV2({
+          title: "Akses Ditolak",
+          description: "❌ Ini bukan konfirmasi untukmu, kak!",
+          footerText: ui.getFooter("core"),
+        }),
         flags: MessageFlags.Ephemeral,
       });
       return true;
     }
 
     if (action === "cancel") {
-      await interaction.update({
-        content:
+      const cancelPayload = buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        title: "Penghapusan Dibatalkan",
+        description:
           "Syukurlah! Naura senang kakak memutuskan untuk tetap menyimpan datanya bersama Naura~ 🥰",
-        embeds: [],
-        components: [],
+        footerText: ui.getFooter("core"),
       });
+      await interaction.update(cancelPayload);
       return true;
     }
 
@@ -50,23 +61,26 @@ module.exports = {
         await cacheManager.invalidateUserProfile(targetUserId);
         await cacheManager.invalidateUserSurvival(targetUserId);
 
-        await interaction.update({
-          content:
-            "✅ Selesai... Naura sudah menghapus seluruh data kakak. Terima kasih sudah bermain bersama Naura ya, kak! Sampai jumpa lagi... 🥺👋",
-          embeds: [],
-          components: [],
+        const successPayload = buildContainerV2({
+          accentColorHex: ui.getColor("success") || "#22c55e",
+          title: "✅ Data Dihapus",
+          description:
+            "Selesai... Naura sudah menghapus seluruh data kakak. Terima kasih sudah bermain bersama Naura ya, kak! Sampai jumpa lagi... 🥺👋",
+          footerText: ui.getFooter("core"),
         });
+        await interaction.update(successPayload);
       } catch (err) {
         logger.error(
           `[DATA DELETE] Gagal menghapus data user ${targetUserId}:`,
           err,
         );
-        await interaction.update({
-          content:
+        const errPayload = buildErrorContainerV2({
+          title: "Gagal Menghapus Data",
+          description:
             "❌ Maaf kak, terjadi kesalahan saat mencoba menghapus datamu. Tolong lapor ke developer ya!",
-          embeds: [],
-          components: [],
+          footerText: ui.getFooter("core"),
         });
+        await interaction.update(errPayload);
       }
       return true;
     }

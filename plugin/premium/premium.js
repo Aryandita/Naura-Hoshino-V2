@@ -5,10 +5,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
-const {
-  tierByKey,
-  buildBenefitsDescription,
-} = require("../../src/premium/premiumTiers");
+const { tierByKey, buildBenefitsDescription } = require("../../src/premium/premiumTiers");
 const store = require("../../src/premium/premiumStore");
 const { sendPremiumDM } = require("../../src/premium/premiumNotify");
 const { runInfo } = require("../../src/premium/premiumInfoView");

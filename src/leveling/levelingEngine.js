@@ -100,19 +100,16 @@ async function announceLevelUp(profile, user, guild, currentChannel) {
       iconURL: user.displayAvatarURL(),
       expression: "levelup",
       description:
-        `Yeay, selamat ya **${user.username}**!\n` +
+        `Yeay, selamat ya <@${user.id}>!\n` +
         `Kamu baru naik ke **Level ${profile.level}**. Naura ikut senang banget~\n\n` +
         `> Gelar baru kamu: **${badge}**\n` +
         `> XP berikutnya: **${nextXp} XP**`,
       bannerAttachmentName: "naura-levelup.webp",
+      files: [attachment],
       footerText: "Makin sering ngobrol, makin kuat. Naura temani terus ya!",
     });
 
-    const sent = await targetChannel.send({
-      content: `<@${user.id}>`,
-      ...payload,
-      files: [attachment],
-    });
+    const sent = await targetChannel.send(payload);
     setTimeout(() => sent.delete().catch(() => {}), CONFIG.NOTICE_TTL);
   } catch (e) {
     logger.error("[LEVELING] Gagal mengirim notifikasi naik level:", e);
@@ -298,7 +295,7 @@ async function awardXp(user, guild, currentChannel, messageContent = "") {
   const gainedLevels = applyLevelUp(row);
   if (gainedLevels === 0) return;
 
-  await row.save();
+  await row.save({ fields: ["level", "xp"] });
   await xpBuffer.invalidateBase(guild.id, user.id);
   await announceLevelUp(row, user, guild, currentChannel);
 }

@@ -66,7 +66,7 @@ async function executeOnboarding(interaction, client) {
   // Membangun payload Container V2 untuk satu halaman onboarding
   const generateContainer = (pageIndex) => {
     const page = pages[pageIndex];
-    let files = [];
+    const files = [];
     let bannerAttachmentName;
 
     // Lampirkan gambar lokal jika ada sebagai banner

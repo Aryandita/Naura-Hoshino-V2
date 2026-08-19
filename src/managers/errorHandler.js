@@ -32,7 +32,7 @@ const sendErrorLog = async (err, type, client) => {
   console.error(err);
 
   // Integrasi Sentry
-  if (process.env.SENTRY_DSN) {
+  if (env.SENTRY_DSN) {
     const Sentry = require("@sentry/node");
     Sentry.captureException(err, { tags: { type } });
   }
@@ -76,12 +76,14 @@ const sendErrorLog = async (err, type, client) => {
       const owner = await client.users.fetch(ownerId).catch(() => null);
 
       if (owner) {
+        const ui = require("../config/ui");
         const errEmbed = new EmbedBuilder()
           .setColor("#00FFFF")
-          .setTitle(`⚠️ Naura Versi ${env.BOT_VERSION || "1.2.0"} - ${type}`)
+          .setTitle(`⚠️ Naura Versi ${env.BOT_VERSION || "2.1.0"} - ${type}`)
           .setDescription(
             `\`\`\`js\n${String(err?.stack || err).substring(0, 4000)}\n\`\`\``,
           )
+          .setFooter({ text: ui.getFooter("core") })
           .setTimestamp();
 
         await owner.send({ embeds: [errEmbed] }).catch(() => {});

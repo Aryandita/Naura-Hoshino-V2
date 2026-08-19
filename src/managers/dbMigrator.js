@@ -9,14 +9,8 @@ const fs = require("fs");
 // Tabel catatan migrasi. Sebelum ini, setiap migrasi dijalankan ulang pada tiap
 // boot dan hanya "berhasil" karena MySQL menolaknya dengan error kolom duplikat.
 // Pola itu menyembunyikan kegagalan nyata dan membuat migrasi yang bukan ALTER
-// (misalnya UPDATE data) mustahil ditulis dengan aman.
+// Tabel catatan migrasi.
 const LEDGER_TABLE = "schema_migrations";
-
-// Error MySQL yang berarti "perubahan ini sudah ada". Aman dicatat sebagai
-// selesai, karena database sudah berada pada bentuk yang diinginkan.
-// 1050 = tabel sudah ada, 1060 = kolom sudah ada, 1061 = index sudah ada,
-// 1091 = kolom/index yang mau dihapus tidak ada.
-const ALREADY_APPLIED_ERRNOS = new Set([1050, 1060, 1061, 1091]);
 
 /**
  * Daftar migrasi yang dijalankan secara berurutan.
@@ -126,8 +120,7 @@ const MIGRATIONS = [
   },
   {
     id: "v18_giveaway_participants",
-    description:
-      "Tambah kolom requirements, participants, dan winners ke giveaways (Giveaway Lanjutan Sprint 9)",
+    description: "Tambah kolom requirements, participants, dan winners ke giveaways (Giveaway Lanjutan Sprint 9)",
     sql: "ALTER TABLE giveaways ADD COLUMN requirements JSON DEFAULT NULL, ADD COLUMN participants JSON DEFAULT NULL, ADD COLUMN winners JSON DEFAULT NULL;",
   },
   {
@@ -142,8 +135,7 @@ const MIGRATIONS = [
   },
   {
     id: "v21_create_duel_records",
-    description:
-      "Buat tabel duel_records untuk menyimpan PvP MMR dan statistik",
+    description: "Buat tabel duel_records untuk menyimpan PvP MMR dan statistik",
     sql: "CREATE TABLE IF NOT EXISTS duel_records ( userId VARCHAR(191) NOT NULL PRIMARY KEY, mmr INT NOT NULL DEFAULT 1000, matchesPlayed INT NOT NULL DEFAULT 0, wins INT NOT NULL DEFAULT 0, losses INT NOT NULL DEFAULT 0, kills INT NOT NULL DEFAULT 0, deaths INT NOT NULL DEFAULT 0, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
   },
   {
@@ -153,49 +145,66 @@ const MIGRATIONS = [
   },
   {
     id: "v23_upgrade_user_pets",
-    description:
-      "Sistem Pet Lanjutan: Tambah mood, evolutionStage, dan passiveSkill",
+    description: "Sistem Pet Lanjutan: Tambah mood, evolutionStage, dan passiveSkill",
     sql: "ALTER TABLE UserPets ADD COLUMN mood VARCHAR(255) DEFAULT 'happy', ADD COLUMN evolutionStage INT DEFAULT 1, ADD COLUMN passiveSkill VARCHAR(255) DEFAULT NULL;",
   },
   {
     id: "v24_add_world_boss_and_clan_territory",
-    description:
-      "Buat tabel world_bosses dan clan_territories untuk MMORPG Survival",
+    description: "Buat tabel world_bosses dan clan_territories untuk MMORPG Survival",
     sql: "CREATE TABLE IF NOT EXISTS world_bosses ( id INT AUTO_INCREMENT PRIMARY KEY, bossId VARCHAR(191) NOT NULL UNIQUE, name VARCHAR(255) NOT NULL, title VARCHAR(255) NOT NULL DEFAULT 'Ancient Calamity', element VARCHAR(64) NOT NULL DEFAULT 'DARK', maxHp BIGINT NOT NULL DEFAULT 1000000, currentHp BIGINT NOT NULL DEFAULT 1000000, baseAttack INT NOT NULL DEFAULT 150, defense INT NOT NULL DEFAULT 50, status VARCHAR(64) NOT NULL DEFAULT 'ACTIVE', damageLeaderboard JSON NOT NULL, rewardsPool JSON NOT NULL, spawnTime DATETIME NOT NULL, endTime DATETIME NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; CREATE TABLE IF NOT EXISTS clan_territories ( id INT AUTO_INCREMENT PRIMARY KEY, territoryId VARCHAR(191) NOT NULL UNIQUE, name VARCHAR(255) NOT NULL, clanId INT DEFAULT NULL, controlPoints INT NOT NULL DEFAULT 0, taxYield INT NOT NULL DEFAULT 1000, buffEffect VARCHAR(128) NOT NULL DEFAULT 'EXTRA_GOLD_10', contestedAt DATETIME DEFAULT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
   },
   {
     id: "v25_upgrade_user_cards_system",
-    description:
-      "Upgrade tabel user_cards dengan cardCode, printNumber, quality, frame, dan dyeColor",
+    description: "Upgrade tabel user_cards dengan cardCode, printNumber, quality, frame, dan dyeColor",
     sql: "ALTER TABLE user_cards ADD COLUMN cardCode VARCHAR(32) DEFAULT NULL, ADD COLUMN characterName VARCHAR(255) DEFAULT NULL, ADD COLUMN seriesName VARCHAR(255) DEFAULT NULL, ADD COLUMN printNumber INT NOT NULL DEFAULT 1, ADD COLUMN quality VARCHAR(32) NOT NULL DEFAULT 'GOOD', ADD COLUMN frame VARCHAR(64) NOT NULL DEFAULT 'DEFAULT', ADD COLUMN dyeColor VARCHAR(32) DEFAULT NULL, ADD COLUMN imageUrl TEXT DEFAULT NULL, ADD COLUMN isLocked BOOLEAN DEFAULT FALSE, ADD COLUMN burnValue INT DEFAULT 100;",
   },
   {
     id: "v26_create_user_card_decks",
-    description:
-      "Buat tabel user_card_decks untuk TCG Battle Deck & Tower of Babel",
+    description: "Buat tabel user_card_decks untuk TCG Battle Deck & Tower of Babel",
     sql: "CREATE TABLE IF NOT EXISTS user_card_decks ( userId VARCHAR(32) NOT NULL PRIMARY KEY, activeDeck JSON NOT NULL, towerFloor INT NOT NULL DEFAULT 1, highestFloor INT NOT NULL DEFAULT 1, wins INT NOT NULL DEFAULT 0, losses INT NOT NULL DEFAULT 0, eloRating INT NOT NULL DEFAULT 1000, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX idx_user_card_decks_elo (eloRating) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
   },
   {
     id: "v27_create_minecraft_links",
-    description:
-      "Buat tabel minecraft_links untuk penautan akun Minecraft & Discord",
+    description: "Buat tabel minecraft_links untuk penautan akun Minecraft & Discord",
     sql: "CREATE TABLE IF NOT EXISTS minecraft_links ( userId VARCHAR(32) NOT NULL PRIMARY KEY, mcUsername VARCHAR(64) NOT NULL, mcUuid VARCHAR(64) DEFAULT NULL, isVerified BOOLEAN DEFAULT FALSE, verificationCode VARCHAR(16) DEFAULT NULL, totalSyncRewards INT DEFAULT 0, lastSyncedAt DATETIME DEFAULT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX idx_minecraft_links_mcUsername (mcUsername) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
-  },
+  }
 ];
+
+const ALREADY_APPLIED_ERRNOS = new Set([1050, 1060, 1061, 1091]);
+const ALREADY_APPLIED_PG_CODES = new Set([
+  "42701",
+  "42P07",
+  "42710",
+  "42704",
+  "23505",
+]);
 
 function isAlreadyApplied(err) {
   const errno = err && err.original && err.original.errno;
-  return ALREADY_APPLIED_ERRNOS.has(errno);
+  if (errno && ALREADY_APPLIED_ERRNOS.has(errno)) return true;
+  const code = err && err.original && err.original.code;
+  if (code && ALREADY_APPLIED_PG_CODES.has(code)) return true;
+  return false;
 }
 
 /** Membuat tabel catatan bila belum ada. Aman dipanggil berkali-kali. */
 async function ensureLedger(sequelize) {
-  await sequelize.query(
-    `CREATE TABLE IF NOT EXISTS ${LEDGER_TABLE} (
-            id VARCHAR(191) NOT NULL PRIMARY KEY,
-            applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
-  );
+  const isPostgres = sequelize.options.dialect === "postgres";
+  if (isPostgres) {
+    await sequelize.query(
+      `CREATE TABLE IF NOT EXISTS ${LEDGER_TABLE} (
+              id VARCHAR(191) NOT NULL PRIMARY KEY,
+              applied_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+          );`,
+    );
+  } else {
+    await sequelize.query(
+      `CREATE TABLE IF NOT EXISTS ${LEDGER_TABLE} (
+              id VARCHAR(191) NOT NULL PRIMARY KEY,
+              applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+    );
+  }
 }
 
 async function loadAppliedIds(sequelize) {
@@ -204,9 +213,22 @@ async function loadAppliedIds(sequelize) {
 }
 
 async function recordMigration(sequelize, id) {
-  await sequelize.query(`INSERT IGNORE INTO ${LEDGER_TABLE} (id) VALUES (?);`, {
-    replacements: [id],
-  });
+  const isPostgres = sequelize.options.dialect === "postgres";
+  if (isPostgres) {
+    await sequelize.query(
+      `INSERT INTO ${LEDGER_TABLE} (id) VALUES (?) ON CONFLICT (id) DO NOTHING;`,
+      {
+        replacements: [id],
+      },
+    );
+  } else {
+    await sequelize.query(
+      `INSERT IGNORE INTO ${LEDGER_TABLE} (id) VALUES (?);`,
+      {
+        replacements: [id],
+      },
+    );
+  }
 }
 
 /**
@@ -219,7 +241,7 @@ async function recordMigration(sequelize, id) {
  * @returns {Promise<Array<string>>}
  */
 async function getPendingMigrations(sequelize) {
-  if (sequelize.options.dialect !== "mysql") return [];
+  if (sequelize.options.dialect === "sqlite") return [];
   await ensureLedger(sequelize);
   const done = await loadAppliedIds(sequelize);
   return MIGRATIONS.filter((migration) => !done.has(migration.id)).map(
@@ -239,9 +261,9 @@ async function getPendingMigrations(sequelize) {
  * @returns {Promise<{ applied: Array<string>, alreadyPresent: Array<string> }>}
  */
 async function runMigrations(sequelize) {
-  if (sequelize.options.dialect !== "mysql") {
+  if (sequelize.options.dialect === "sqlite") {
     logger.info(
-      "[DB MIGRATOR] Melewati migrasi, bukan MySQL (mode SQLite fallback).",
+      "[DB MIGRATOR] Melewati migrasi, bukan MySQL/PostgreSQL (mode SQLite fallback).",
     );
     return { applied: [], alreadyPresent: [] };
   }
@@ -255,6 +277,17 @@ async function runMigrations(sequelize) {
       `[DB MIGRATOR] Tidak ada migrasi tertunda (${MIGRATIONS.length} sudah tercatat).`,
     );
     return { applied: [], alreadyPresent: [] };
+  }
+
+  // Khusus Postgres: Jika model sudah disinkronkan oleh Sequelize, catat semua migrasi ke ledger
+  if (sequelize.options.dialect === "postgres") {
+    for (const migration of pending) {
+      await recordMigration(sequelize, migration.id);
+    }
+    logger.success(
+      `[DB MIGRATOR] Inisialisasi skema PostgreSQL selesai (${pending.length} migrasi dicatat ke ledger).`,
+    );
+    return { applied: pending.map((m) => m.id), alreadyPresent: [] };
   }
 
   logger.info(

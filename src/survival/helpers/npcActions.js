@@ -64,14 +64,16 @@ async function gift(i, ctx) {
   }
 
   survival.starFragments -= GIFT_COST;
-  await survival.save();
+  await survival.save({ fields: ["starFragments"] });
 
   const bonus = Math.floor(Math.random() * 5) + 3;
   npcData.affection = Math.min(100, npcData.affection + bonus);
   npcData.dailyGifts = giftsToday + 1;
   npcData.lastInteraction = now;
   refreshRelationship(npcData, npc);
-  await npcData.save();
+  await npcData.save({
+    fields: ["affection", "dailyGifts", "lastInteraction", "relationshipLevel"],
+  });
 
   return reply(
     i,
@@ -103,11 +105,12 @@ async function marry(i, ctx) {
 
   inventory.splice(ringIndex, 1);
   profile.inventory = inventory;
-  await profile.save();
+  profile.changed("inventory", true);
+  await profile.save({ fields: ["inventory"] });
 
   npcData.relationshipLevel = 4;
   npcData.lastInteraction = now;
-  await npcData.save();
+  await npcData.save({ fields: ["relationshipLevel", "lastInteraction"] });
 
   let extraMsg = "";
   const rpgState = survival.rpg_state || {};
@@ -116,7 +119,8 @@ async function marry(i, ctx) {
   if (!rpgState.unlocked_cutscenes.includes("wedding")) {
     rpgState.unlocked_cutscenes.push("wedding");
     survival.rpg_state = rpgState;
-    await survival.save();
+    survival.changed("rpg_state", true);
+    await survival.save({ fields: ["rpg_state"] });
     extraMsg = t("npc.cutscene_unlocked");
   }
 
@@ -152,8 +156,14 @@ async function repair(i, ctx) {
   profile.tool_pickaxeDurability = 100;
   profile.tool_axeDurability = 100;
   profile.tool_fishingRodDurability = 100;
-  await profile.save();
-  await survival.save();
+  await profile.save({
+    fields: [
+      "tool_pickaxeDurability",
+      "tool_axeDurability",
+      "tool_fishingRodDurability",
+    ],
+  });
+  await survival.save({ fields: ["starFragments"] });
 
   return reply(
     i,
@@ -187,7 +197,8 @@ async function tax(i, ctx) {
   rpgState.tax_due = 0;
   rpgState.house_seized = false;
   survival.rpg_state = rpgState;
-  await survival.save();
+  survival.changed("rpg_state", true);
+  await survival.save({ fields: ["starFragments", "rpg_state"] });
 
   return reply(
     i,

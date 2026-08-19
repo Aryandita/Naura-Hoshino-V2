@@ -79,7 +79,7 @@ async function handleShop(interaction, userId) {
 
   const options = assets.map((asset) => {
     const isOwned = ownedAssetIds.includes(asset.id);
-    let label = `[${asset.type.toUpperCase()}] ${asset.name}`;
+    const label = `[${asset.type.toUpperCase()}] ${asset.name}`;
     let description = `Harga: ${asset.price} NC ${asset.isPremiumOnly ? "| \u{1F451} VIP Only" : ""}`;
 
     if (isOwned) {

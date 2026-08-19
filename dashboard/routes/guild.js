@@ -12,9 +12,9 @@
 
 const express = require("express");
 const { EmbedBuilder } = require("discord.js");
-const { logger } = require("../src/managers/logger");
-const ui = require("../src/config/ui");
-const GuildSettings = require("../src/models/GuildSettings");
+const { logger } = require("../../src/managers/logger");
+const ui = require("../../src/config/ui");
+const GuildSettings = require("../../src/models/GuildSettings");
 const { requireGuildManager } = require("../middleware/auth");
 
 /** Nilai bawaan tata letak kartu welcomer. */
@@ -197,10 +197,12 @@ module.exports = (client) => {
       });
     } catch (e) {
       logger.error("[API WELCOMER SAVE] Error:", e);
-      res.status(500).json({
-        success: false,
-        message: "Naura gagal menyimpan pengaturan welcomer.",
-      });
+      res
+        .status(500)
+        .json({
+          success: false,
+          message: "Naura gagal menyimpan pengaturan welcomer.",
+        });
     }
   });
 
@@ -225,9 +227,11 @@ module.exports = (client) => {
           .status(404)
           .json({ error: "Pengaturan Minecraft belum ada untuk server ini." });
       if (!mc.bridgeEnabled || !mc.bridgeChannelId) {
-        return res.status(400).json({
-          error: "Bridge belum diaktifkan atau kanalnya belum diatur.",
-        });
+        return res
+          .status(400)
+          .json({
+            error: "Bridge belum diaktifkan atau kanalnya belum diatur.",
+          });
       }
 
       const channel = await client.channels

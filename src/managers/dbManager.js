@@ -1,4 +1,3 @@
-// src/managers/dbManager.js
 const {
   sequelize,
   hasMySQLConfig,
@@ -9,6 +8,9 @@ const env = require("../config/env");
 const redisManager = require("./redisManager");
 const { logger } = require("../managers/logger");
 
+// ==========================================
+// EKSPOR SEQUELIZE
+// ==========================================
 module.exports = { sequelize };
 
 // ==========================================
@@ -36,6 +38,21 @@ const UserStrike = require("../models/UserStrike");
 const UserTicket = require("../models/UserTicket");
 const MarketAuction = require("../models/MarketAuction");
 const RoleLease = require("../models/RoleLease");
+const UserLeveling = require("../models/UserLeveling");
+const UserWarn = require("../models/UserWarn");
+const UserFriend = require("../models/UserFriend");
+const ClanTerritory = require("../models/ClanTerritory");
+const DuelRecord = require("../models/DuelRecord");
+const GuildClan = require("../models/GuildClan");
+const MinecraftLink = require("../models/MinecraftLink");
+const SocialAlert = require("../models/SocialAlert");
+const StoryProgress = require("../models/StoryProgress");
+const UserAchievement = require("../models/UserAchievement");
+const UserBirthday = require("../models/UserBirthday");
+const UserCard = require("../models/UserCard");
+const UserCardDeck = require("../models/UserCardDeck");
+const UserPlaylist = require("../models/UserPlaylist");
+const WorldBoss = require("../models/WorldBoss");
 
 // ==========================================
 // 4. SETUP RELASI (ASSOCIATIONS)
@@ -124,7 +141,7 @@ function setupAssociations() {
     // Safe fallback jika dipanggil saat circular dependency belum selesai
   }
 }
-// setupAssociations will be called at module end or in connectToDatabase
+setupAssociations();
 
 // ==========================================
 // 5. FUNGSI KONEKSI DAN SINKRONISASI TABEL
@@ -205,7 +222,7 @@ const connectToDatabase = async () => {
 
     if (!hasMySQLConfig) {
       logger.warn(
-        "\n\x1b[43m\x1b[30m ⚠️ FALLBACK DB \x1b[0m \x1b[33mMenggunakan SQLite lokal sebagai Fallback sementara karena kredensial MySQL tidak ditemukan.\x1b[0m",
+        "\n\x1b[43m\x1b[30m ⚠️ FALLBACK DB \x1b[0m \x1b[33mMenggunakan SQLite lokal sebagai Fallback sementara karena kredensial database eksternal tidak ditemukan.\x1b[0m",
       );
     } else if (isPrimaryProcess) {
       // Pemindahan data fallback juga cukup dilakukan satu proses.
@@ -216,8 +233,9 @@ const connectToDatabase = async () => {
     return true;
   } catch (error) {
     isDbOnline = false;
+    const dbType = sequelize.options.dialect.toUpperCase();
     logger.error(
-      "\n\x1b[41m\x1b[37m 💥 DATABASE ERROR \x1b[0m \x1b[31mKoneksi MySQL ditolak atau terputus:\x1b[0m",
+      `\n\x1b[41m\x1b[37m 💥 DATABASE ERROR \x1b[0m \x1b[31mKoneksi ${dbType} ditolak atau terputus:\x1b[0m`,
     );
     logger.error(error.message);
     logger.error(
@@ -326,9 +344,9 @@ const healthCheckTimer = setInterval(async () => {
     isDbOnline = false;
     if (isReconnecting) return;
     isReconnecting = true;
-    // PERBAIKAN: Indikator DB Terputus yang jauh lebih mencolok
+    const dbType = sequelize.options.dialect.toUpperCase();
     logger.error(
-      "\n\x1b[41m\x1b[37m 🚨 DB ALERT \x1b[0m \x1b[31mKONEKSI MYSQL TERPUTUS!\x1b[0m",
+      `\n\x1b[41m\x1b[37m 🚨 DB ALERT \x1b[0m \x1b[31mKONEKSI ${dbType} TERPUTUS!\x1b[0m`,
     );
     logger.error(`\x1b[31mDetail Error: ${err.message}\x1b[0m`);
     logger.error(
@@ -339,7 +357,7 @@ const healthCheckTimer = setInterval(async () => {
       await sequelize.authenticate();
       isDbOnline = true;
       logger.success(
-        "\x1b[42m\x1b[30m ✨ RECONNECTED \x1b[0m \x1b[32mBerhasil terhubung kembali ke database MySQL.\x1b[0m",
+        `\x1b[42m\x1b[30m ✨ RECONNECTED \x1b[0m \x1b[32mBerhasil terhubung kembali ke database ${dbType}.\x1b[0m`,
       );
 
       if (hasMySQLConfig && isPrimaryProcess) {
@@ -364,6 +382,3 @@ const healthCheckTimer = setInterval(async () => {
 if (healthCheckTimer.unref) healthCheckTimer.unref();
 
 module.exports.healthCheckTimer = healthCheckTimer;
-module.exports.setupAssociations = setupAssociations;
-
-setupAssociations();

@@ -29,11 +29,7 @@ async function submitReply(interaction, client) {
   }
 
   const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
-  const {
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle,
-  } = require("discord.js");
+  const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 
   const replyPayload = buildContainerV2({
     accentColorHex: "#FFB6C1",
@@ -44,17 +40,17 @@ async function submitReply(interaction, client) {
     description: replyText,
     footerText: ui.getFooter("core"),
     buttonsRow: new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("mm_user_reply")
-        .setLabel("Balas")
-        .setEmoji(ui.getEmoji("support") || "💬")
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId("mm_user_close")
-        .setLabel("Tutup Tiket")
-        .setEmoji(ui.getEmoji("lock") || "🔒")
-        .setStyle(ButtonStyle.Danger),
-    ),
+        new ButtonBuilder()
+            .setCustomId("mm_user_reply")
+            .setLabel("Balas")
+            .setEmoji(ui.getEmoji("support") || "💬")
+            .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+            .setCustomId("mm_user_close")
+            .setLabel("Tutup Tiket")
+            .setEmoji(ui.getEmoji("lock") || "🔒")
+            .setStyle(ButtonStyle.Danger)
+    )
   });
 
   try {
@@ -110,7 +106,7 @@ async function submitUserReply(interaction, client) {
     authorName: `Balasan dari ${interaction.user.tag}`,
     iconURL: interaction.user.displayAvatarURL(),
     description: replyText,
-    footerText: ui.getFooter("core"),
+    footerText: ui.getFooter("core")
   });
 
   await channel.send(replyPayload);
@@ -124,9 +120,5 @@ async function submitUserReply(interaction, client) {
 module.exports = [
   { id: "mm_modal_reply", label: "modmail-balas", handler: submitReply },
   { id: "mm_modal_anon", label: "modmail-balas-anonim", handler: submitReply },
-  {
-    id: "mm_modal_user_reply",
-    label: "modmail-user-balas",
-    handler: submitUserReply,
-  },
+  { id: "mm_modal_user_reply", label: "modmail-user-balas", handler: submitUserReply },
 ];

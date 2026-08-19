@@ -23,7 +23,7 @@ const displayBootScreen = (client, sysStatus) => {
   let pingText = `🟢 ONLINE (${client.ws.ping}ms)`;
   if (pingText.length < 18) pingText = pingText.padEnd(18);
 
-  const verStr = `v${env.BOT_VERSION || "1.2.0"}`.padEnd(13);
+  const verStr = `v${env.BOT_VERSION || "2.1.0"}`.padEnd(13);
 
   console.log(`
 \x1b[38;5;51m╔══════════════════════════════════════════════════════════════════════════╗\x1b[0m
@@ -43,11 +43,12 @@ const displayBootScreen = (client, sysStatus) => {
 \x1b[38;5;51m║\x1b[0m                                                                          \x1b[38;5;51m║\x1b[0m
 \x1b[38;5;51m║\x1b[0m \x1b[38;5;226m✦ STATUS MODUL & DATABASE\x1b[0m                                                \x1b[38;5;51m║\x1b[0m
 \x1b[38;5;51m║\x1b[0m   \x1b[38;5;246m├─ Database :\x1b[0m ${sysStatus.db} \x1b[38;5;246m│ Lavalink   :\x1b[0m ${sysStatus.music}      \x1b[38;5;51m║\x1b[0m
-\x1b[38;5;51m║\x1b[0m   \x1b[38;5;246m├─ Redis    :\x1b[0m ${sysStatus.redis} \x1b[38;5;246m│ Commands   :\x1b[0m ${sysStatus.cmds}    \x1b[38;5;51m║\x1b[0m
-\x1b[38;5;51m║\x1b[0m   \x1b[38;5;246m└─ Discord  :\x1b[0m \x1b[38;5;82m${pingText}\x1b[0m \x1b[38;5;246m│ RSS Alerts :\x1b[0m ${sysStatus.rss}    \x1b[38;5;51m║\x1b[0m
+\x1b[38;5;51m║\x1b[0m   \x1b[38;5;246m├─ MongoDB  :\x1b[0m ${sysStatus.mongo || "\x1b[33m🟡 SKIPPED   \x1b[0m"} \x1b[38;5;246m│ Commands   :\x1b[0m ${sysStatus.cmds}    \x1b[38;5;51m║\x1b[0m
+\x1b[38;5;51m║\x1b[0m   \x1b[38;5;246m├─ Redis    :\x1b[0m ${sysStatus.redis} \x1b[38;5;246m│ RSS Alerts :\x1b[0m ${sysStatus.rss}    \x1b[38;5;51m║\x1b[0m
+\x1b[38;5;51m║\x1b[0m   \x1b[38;5;246m└─ Discord  :\x1b[0m \x1b[38;5;82m${pingText}\x1b[0m                                           \x1b[38;5;51m║\x1b[0m
 \x1b[38;5;51m╚══════════════════════════════════════════════════════════════════════════╝\x1b[0m
  
-\x1b[42m\x1b[30m ✨ SUCCESS \x1b[0m \x1b[32mSemua sistem siap beroperasi penuh! Naura v${env.BOT_VERSION || "1.2.0"} mengudara ^.^\x1b[0m
+\x1b[42m\x1b[30m ✨ SUCCESS \x1b[0m \x1b[32mSemua sistem siap beroperasi penuh! Naura v${env.BOT_VERSION || "2.1.0"} mengudara ^.^\x1b[0m
 `);
 };
 

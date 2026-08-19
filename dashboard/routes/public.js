@@ -7,8 +7,9 @@
 
 const express = require("express");
 const os = require("os");
-const { logger } = require("../src/managers/logger");
-const UserProfile = require("../src/models/UserProfile");
+const { logger } = require("../../src/managers/logger");
+const UserProfile = require("../../src/models/UserProfile");
+const env = require("../../src/config/env");
 const { formatUptime, formatMemory } = require("../utils/format");
 const { isOwner } = require("../middleware/auth");
 
@@ -16,7 +17,7 @@ const LEADERBOARD_CACHE_TTL = 60; // detik
 
 function safeRedis() {
   try {
-    const redisManager = require("../src/managers/redisManager");
+    const redisManager = require("../../src/managers/redisManager");
     if (redisManager.client && redisManager.client.isReady) return redisManager;
   } catch {
     // Redis opsional; abaikan bila tidak tersedia.
@@ -58,6 +59,19 @@ module.exports = (client) => {
       uptime: formatUptime(client.uptime),
       ram: `${memory.usedGb}GB / ${memory.totalGb}GB`,
       ramPercent: memory.percent,
+      botVersion: env.BOT_VERSION,
+      engineVersion: env.ENGINE_VERSION,
+      partnership: env.PARTNERSHIP,
+    });
+  });
+
+  // --- Versi sistem & info konfigurasi env.js ---
+  router.get("/api/version", (req, res) => {
+    res.json({
+      botVersion: env.BOT_VERSION,
+      engineVersion: env.ENGINE_VERSION,
+      partnership: env.PARTNERSHIP,
+      nodeVersion: process.version,
     });
   });
 
@@ -70,7 +84,7 @@ module.exports = (client) => {
         if (cached) return res.json(cached);
       }
 
-      const UserSurvival = require("../src/models/UserSurvival");
+      const UserSurvival = require("../../src/models/UserSurvival");
       const users = await UserSurvival.findAll({
         attributes: ["starFragments", "coupons"],
       });
@@ -124,8 +138,8 @@ module.exports = (client) => {
         if (cached) return res.json(cached);
       }
 
-      const UserSurvival = require("../src/models/UserSurvival");
-      const { sequelize } = require("../src/managers/dbManager");
+      const UserSurvival = require("../../src/models/UserSurvival");
+      const { sequelize } = require("../../src/managers/dbManager");
 
       const profileAttributes = [
         "userId",
@@ -207,7 +221,7 @@ module.exports = (client) => {
           });
         }
       }
-
+      
       const userIds = topProfiles.map((p) => p.userId);
       const survivalMap = {};
       if (userIds.length > 0) {

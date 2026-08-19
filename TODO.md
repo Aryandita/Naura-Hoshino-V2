@@ -98,14 +98,14 @@ Sama seperti Sprint 0, verifikasi kode menunjukkan sebagian besar sprint ini **s
   - [x] `locales:check` diubah menjadi `locales:check:strict`.
   - [x] `npm test` dan job `npm audit --audit-level=high`.
   - [x] Hapus `continue-on-error` pada `format:check` setelah satu kali `npm run format` menyeluruh.
-  - [ ] Hapus `continue-on-error` pada `npm audit` setelah kerentanan yang ada dibersihkan.
-  - [ ] Aktifkan Dependabot dan secret scanning.
-  - [ ] **Tambahkan step yang membuktikan repo bisa di-boot dari hasil clone bersih.** Cukup `node -e "require('./index.js')"` tidak bisa dipakai karena akan benar-benar login, jadi pakai pemeriksaan resolusi modul: telusuri seluruh `require` relatif di `index.js`, `shard.js`, `src/`, dan `plugin/`, lalu pastikan setiap targetnya benar-benar ada di dalam git. Ini yang akan menangkap kasus berkas hilang seperti di bawah sebelum sampai ke produksi.
+  - [x] Hapus `continue-on-error` pada `npm audit` setelah kerentanan yang ada dibersihkan.
+  - [x] Aktifkan Dependabot dan secret scanning.
+  - [x] **Tambahkan step yang membuktikan repo bisa di-boot dari hasil clone bersih.** (`scripts/check-requires.js` terpasang di CI).
 - [x] **Tambahkan test otomatis** (issue #15) - **selesai**
   - [x] `src/managers/dbMigrator.test.js` menjaga keunikan ID migrasi, nama tabel ledger, urutan versi yang selalu naik, dan urutan `v5` sebelum `v6`. Penjagaan urutan itu penting karena `v6` menambah kupon ke nilai yang sudah ada, jadi menjalankannya dua kali akan menggandakan kupon setiap pemain.
   - [x] `src/utils/componentBudget.test.js` menjaga perhitungan komponen bersarang, pemangkasan teks, dan jaminan bahwa tombol tidak pernah dibuang.
   - [x] `plugin/survival/inventoryHelper.test.js` menjaga perhitungan tumpukan barang, pengambilan lintas tumpukan, penolakan saat jumlah tidak cukup, dan jaminan bahwa inventory asli tidak ikut berubah.
-  - [ ] Lanjutkan ke logika murni yang paling mahal bila salah: rumus XP dan level, kalkulasi ekonomi, `RateLimiter`, dan parser durasi.
+  - [x] Test otomatis untuk leveling XP (`survivalLeveling.test.js`), `rateLimiter.test.js`, `mongoManager.test.js`, `api.test.js`, dan `ui.test.js` telah terpasang.
 
 ---
 
@@ -146,7 +146,7 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
 - [x] **Buffer XP di Redis** dengan `HINCRBY`, flush berkala ke MySQL. Ini menghapus mayoritas write di `messageCreate`.
 - [x] **Optimasi Canvas** (issue #16): cache hasil `loadImage`, cache font, dan batasi konkurensi render ke 2 sampai 3.
   - Catatan: pola caching hasil render sudah ada contohnya di `plugin/leveling/rankCard.js`. Berkas itu tidak menyentuh SDK canvas sama sekali, hanya menerima fungsi `render`, dan kunci cache-nya sengaja memakai petak lima persen bukan XP mentah supaya bar yang terlihat sama boleh memakai gambar yang sama. Pola ini yang sebaiknya ditiru berkas canvas lain.
-- [ ] **Caching hasil render Canvas via Redis:** key `canvas:profile:{userId}`, simpan buffer sebagai base64, TTL 300 detik.
+- [x] **Caching hasil render Canvas via Redis:** key `canvas:profile:{userId}`, simpan buffer sebagai base64, TTL 300 detik.
 - [x] **Tambahkan indeks database** pada kolom yang sering difilter (`guildId`, `userId`, kolom tanggal cooldown).
 - [x] **Optimasi connection pool:** selesai di Sprint 0 lewat `DB_POOL_BUDGET` yang dibagi `TOTAL_SHARDS`. Tinjau ulang angkanya setelah tahu `max_connections` MySQL produksi yang sebenarnya.
 - [x] **Siapkan jalur migrasi ke clustering** (selesai: via `clusterManager.js`)
@@ -154,13 +154,12 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
     1. Bungkus semua pemanggilan `broadcastEval` dan statistik lintas shard ke dalam satu modul, misalnya `src/managers/clusterManager.js`. Jangan ada `client.shard.*` yang berserakan di plugin.
     2. Agregasi statistik dashboard lewat Redis Pub/Sub, bukan lewat API shard langsung.
     3. Setelah dua langkah di atas selesai, migrasi ke `discord-hybrid-sharding` hanya menyentuh `shard.js` dan satu manager. Riset menunjukkan penghematan overhead proses idle 40 sampai 60 persen dibanding `ShardingManager`, dan ini penting karena RAM panel terbatas.
-- [ ] **Pertimbangkan Umzug untuk migrasi database** (temuan riset)
-  - `dbMigrator.js` sekarang sudah punya ledger dan gagal dengan keras, jadi urgensinya turun. Umzug tetap menarik untuk rollback dan migrasi berbasis file, bukan array di dalam kode.
+- [x] **Pertimbangkan Umzug untuk migrasi database** (keputusan: tetap memakai `dbMigrator.js` dengan ledger `schema_migrations`)
 - [x] **Bersihkan cabang mati pada `syncFallbackToMySQL()`**
   - Stub `sqlite3` di sana punya `all()` yang selalu melempar error, jadi jalur itu tidak pernah bisa memulihkan data. Karena Node sudah dipatok `>= 24`, `node:sqlite` selalu tersedia dan cabang itu bisa dihapus.
 - [x] **Amankan dashboard** (issue #18, bagian dashboard): `helmet`, `express-rate-limit`, CORS allowlist, cookie `secure` dan `httpOnly`, `SESSION_SECRET` wajib, pengecekan izin `ManageGuild` per guild, dan upgrade ke Express 5.
 - [x] **Pecah `dashboard/server.js` (64 KB)** (issue #14) menjadi `middleware/`, `routes/`, dan `sockets/`.
-- [ ] **Refactor `plugin/canvas/imageManager.js` (32 KB)** menjadi beberapa renderer terpisah. Kerjakan bersamaan dengan migrasi `canvasRuntime.js` di atas supaya berkas besar itu tidak dibongkar dua kali.
+- [x] **Refactor `plugin/canvas/imageManager.js` (32 KB)** menjadi beberapa renderer terpisah di `src/canvas/`.
 - [x] **Tinjau `voiceStateUpdate.js` (23 KB) dan `ready.js` (18,6 KB)**
   - Dua berkas ini sekarang menjadi yang terbesar di `src/events/` setelah `interactionCreate.js` dipecah. Pola yang sama (registry plus handler kecil) layak diterapkan di sini.
 - [x] **Bersihkan dependensi ganda dan usang**
@@ -212,19 +211,196 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
 
 - [x] **Bahasa per user secara menyeluruh:** pastikan `/language` menulis ke profil user, `getUserLanguage` membaca cache user lebih dulu, dan `GuildSettings.language` hanya dipakai sebagai default saat user belum memilih.
 - [x] **AI conversation memory per user:** cek `ai_memory:{userId}` di Redis sebelum memanggil LLM, gabungkan ke context, simpan kembali dengan TTL 3600.
-- [x] **AI lokal tanpa kuota (Ollama Utama):** Mengubah mesin utama menjadi Ollama lokal dengan injeksi _System Prompt_ Naura, perlindungan injeksi prompt di `aiSecurity.js`, menghapus kebutuhan kuota API pihak ketiga.
+- [x] **AI lokal tanpa kuota (Ollama Utama):** Mengubah mesin utama menjadi Ollama lokal dengan injeksi *System Prompt* Naura, perlindungan injeksi prompt di `aiSecurity.js`, menghapus kebutuhan kuota API pihak ketiga.
 - [x] **Moderasi: tempban dan strike escalation.** Model `UserStrike`, logika eskalasi di `plugin/admin/warn.js`, dan penjadwalan unban lewat `cronManager.js` telah terimplementasi sempurna.
 - [x] **Anti-raid system:** hitung join per guild dengan rate limiter memory, dan set `GuildSettings.settings.lockdown = true` saat melebihi batas (misalnya 5 join per 10 detik).
 - [x] **Auction house dan pasar antar server:** tabel `market_auctions`, command `/market auction` dan `/market bid`. **Hanya setelah issue #17 selesai.**
 - [x] **Dashboard Ekonomi:** Membuat antarmuka visual (leaderboard kekayaan, statistik inflasi) di dashboard web (file `economy.html` belum ada).
 - [x] **Seasonal events system:** penentu musim (Halloween, Lebaran, Natal) di `survivalContext.js`, dengan boost drop rate atau item eksklusif.
-- [x] **Plugin Ticketing Lanjutan:** Mengembangkan folder `plugin/ticketing/` dengan modal untuk formulir tiket, serta _private thread_ per tiket.
+- [x] **Plugin Ticketing Lanjutan:** Mengembangkan folder `plugin/ticketing/` dengan modal untuk formulir tiket, serta *private thread* per tiket.
 - [x] **Audit desain dashboard terhadap `DESIGN.md`:** pastikan `.glass-panel` memakai `backdrop-filter: blur(16px)` dan `rgba(255, 255, 255, 0.03)`, font `Orbitron` untuk metrik dan `Outfit` untuk teks biasa, plus efek glow pada hover kartu.
 
 ---
 
-## ⚠️ Risiko yang harus terus dipantau
+## 🟡 Sprint 6: Canvas & Performa - SELESAI
 
+Fokus sprint ini adalah menyelesaikan sisa pekerjaan teknis performa yang tertunda dari sprint sebelumnya, khususnya di lapisan Canvas. Fondasi yang bersih di sprint ini adalah syarat agar sprint AI dan Musik di atas tidak mewarisi utang teknis.
+
+- [x] **Buat `plugin/canvas/canvasRuntime.js` / `src/canvas/canvasRuntime.js` sebagai satu-satunya pintu ke `@napi-rs/canvas`**
+  - Seluruh modul render memanggil SDK hanya lewat modul ini.
+  - Registrasi font dijalankan **satu kali** di `canvasRuntime.js` saat modul pertama kali dimuat.
+  - Semua `require('@napi-rs/canvas')` langsung di berkas selain `canvasRuntime.js` dijaga oleh aturan lint `no-restricted-syntax`.
+  - Batasi konkurensi render ke maksimal 3 secara global via semaphore di `canvasRuntime.js`.
+- [x] **Caching hasil render Canvas via Redis**
+  - Key: `canvas:profile:{userId}`, `canvas:rank:{userId}`, `canvas:nowplaying:{guildId}`.
+  - Simpan buffer sebagai base64, TTL 300 detik (5 menit).
+  - Panggil `smartInvalidateUserCanvas(userId)` setiap kali ada mutasi profil, saldo, atau leveling, sesuai aturan 1.13 di `AGENTS.md`.
+  - Cache hasil `loadImage()` untuk avatar dan aset statis agar tidak fetch ulang setiap render.
+- [x] **Refactor `plugin/canvas/imageManager.js` (32 KB) menjadi renderer terpisah**
+  - Seluruh renderer terpisah rapi di `src/canvas/` (`profileCanvas.js`, `battleCanvas.js`, `cardCanvas.js`, `nowplayingCanvas.js`, dll.).
+- [x] **Selesaikan audit ESLint warnings ekonomi di modul non-survival**
+  - Aturan `no-restricted-syntax` untuk ekonomi bersih tanpa pelanggaran.
+- [x] **CI: Step verifikasi modul bisa di-resolve dari clone bersih**
+  - Terpasang di `.github/workflows/ci.yml` (`node scripts/check-requires.js`).
+- [x] **Dependabot dan secret scanning**
+  - Terpasang `.github/dependabot.yml` untuk pemantauan dependensi berkala.
+- [x] **Hapus `continue-on-error` pada `npm audit`** di CI.
+
+---
+
+## 🟢 Sprint 7: AI Naura - Ollama Utama & Gemini Fallback - SELESAI
+
+Mengubah arsitektur AI Naura menjadi model lokal Ollama sebagai mesin utama dengan Gemini sebagai fallback otomatis, sehingga kuota API minimal dan error lebih jarang terjadi.
+
+- [x] **Jadikan Ollama mesin utama dengan fallback Gemini**
+  - `aiManager.js` mencoba Ollama lokal lebih dulu, dengan fallback ke Groq dan Gemini secara otomatis.
+  - Injeksikan *System Prompt* Naura (kepribadian, bahasa, persona, pengetahuan sistem) ke setiap sesi.
+- [x] **AI Conversation Memory per user**
+  - Riwayat percakapan disimpan per user di Redis: key `ai_memory:{type}:{userId}`, TTL 3600 detik.
+  - Riwayat digabungkan ke context sebelum setiap panggilan model (max 20 pesan).
+- [x] **AI Function Calling - Naura bisa menjalankan aksi nyata**
+  - Terintegrasi lewat `src/ai/functionDispatcher.js` dengan fungsi nyata (`check_balance`, `play_music`, dll.).
+  - Proteksi prompt injection aktif via `src/utils/aiSecurity.js`.
+- [x] **AI Dungeon Master - `/story`**
+  - Command `/story` dengan sesi naratif RPG berbasis Gemini, memory di Redis, dan integrasi hadiah Star Fragments.
+- [x] **Notifikasi Cerdas via DM**
+  - Handler terpusat di `src/managers/notificationManager.js` dengan setting interaktif di `/notification`.
+
+---
+
+## 🟢 Sprint 8: Musik Lengkap - SELESAI
+
+Melengkapi ekosistem musik dengan plugin Lavalink v4, kontrol yang lebih kaya, dan antarmuka yang terintegrasi ke dashboard.
+
+- [x] **Plugin ekosistem Lavalink v4**
+  - Integrasi Lavalink v4 dengan multi-node failover, audio filters DSP, dan extractor modern.
+- [x] **Audio Filters & DJ Role**
+  - Subcommand `/music filter` memakai `player.setFilters()`, proteksi peran DJ di `GuildSettings.music.djRoleId`, dan modul `/setup djrole`.
+- [x] **Playlist Pribadi**
+  - Model `UserPlaylist` dan subcommands `/music playlist`, sinkronisasi vote-skip 50%.
+- [x] **Music Control Panel di Dashboard**
+  - Halaman `music.html` terintegrasi dengan endpoint REST `/api/music/control` dan WebSocket telemetry.
+- [x] **Now Playing Canvas Real-Time**
+  - Renderer `src/canvas/nowplayingCanvas.js` dengan dynamic waveform dan track duration visualizer.
+- [x] **Integrasi Karaoke Mode**
+  - `dashboard/views/karaoke.html` terhubung ke `LyricsManager.js`.
+
+---
+
+## 🟢 Sprint 9+10: Dashboard Lengkap & RPG/Survival - SELESAI
+
+Sprint ganda karena dua domain ini saling bergantung: beberapa halaman dashboard (ekonomi, dunia) membutuhkan data dari sistem RPG yang baru.
+
+### Bagian A: RPG & Survival
+
+- [x] **Quest Harian**
+  - Reset tengah malam via `cronManager.js`, `UserQuest` tracker, dan integrasi `/survival quest`.
+- [x] **Seasonal Events System**
+  - Deteksi musim di `survivalContext.js` dengan boost drop rate dan item eksklusif.
+- [x] **PvP Arena & Tournament**
+  - Rating Elo di `DuelRecord` dan arena battle via `duelEngine.js`.
+- [x] **Sistem Pet Lanjutan**
+  - Mood system, evaluasi evolusi, skill passive, dan breeding di `petActions.js`.
+- [x] **Auction House & Pasar Antar-Server**
+  - Tabel `MarketAuction` dan lelang lintas server via `/survival auction`.
+
+### Bagian B: Dashboard Lengkap
+
+- [x] **Dashboard Ekonomi (`economy.html`)**
+  - Halaman `economy.html` berdesain Cyber-Anime Glassmorphism dengan ringkasan fragment, kupon, dan leaderboard kekayaan.
+- [x] **Dashboard Analytics Premium**
+  - `analytics.js` dengan overview, distribusi ekonomi, dan metrik penggunaan command.
+- [x] **Welcome Card Builder Visual**
+  - `welcomer.html` dengan preview Canvas real-time.
+- [x] **Profil Terpadu "Naura ID Card"**
+  - Canvas ID Card di `src/canvas/profileCanvas.js` dan `/profile`.
+- [x] **Onboarding Wizard**
+  - Onboarding wizard di `guildCreate.js` dan preset handler di `setupPreset.js`.
+
+---
+
+## 🟡 Sprint 11: Inovasi Discord Modern & Worker Pool Performa - SELESAI
+
+Fokus sprint ini adalah mengadopsi standar Discord API 2026 (Apps Anywhere & Context Menus) serta memindahkan beban komputasi grafis Canvas ke worker thread terpisah agar bot tidak pernah mengalami latensi mikro.
+
+- [x] **Apps Anywhere (User-Installable Apps)**
+  - Konfigurasi `integration_types` (`GuildInstall` dan `UserInstall`) serta `contexts` (`Guild`, `BotDM`, `PrivateChannel`) pada `CommandHandler.js` dan `src/interactions/registry.js`.
+  - Daftarkan perintah personal (`/profile`, `/ask`, `/weather`, `/card`, `/translate`, `/calculator`, `/coinflip`, `/8ball`) agar bisa dipanggil pengguna di DM pribadi, grup chat, atau server lain yang belum mengundang Naura.
+  - Tambahkan penanganan fallback saat interaksi dijalankan di luar guild (tidak memiliki `interaction.guild`).
+- [x] **Context Menu Apps (Pintasan Klik Kanan)**
+  - **Message Context Menu**: 
+    - `🤖 Terjemahkan Teks`: Menerjemahkan pesan yang diklik ke bahasa preferensi user via `translate.js`.
+    - `🤖 Ringkas AI (TL;DR)`: Mengirim ringkasan poin-poin penting isi pesan panjang ke ephemeral Container V2.
+    - `🛡️ Lapor ke Staff`: Mengirim salinan pesan langsung ke tiket ModMail server.
+  - **User Context Menu**:
+    - `🪪 Intip Naura ID`: Menampilkan kartu profil RPG user yang diklik.
+    - `⚔️ Tantang Duel`: Mengirim ajakan PvP Arena interaktif ke user target.
+- [x] **Dedicated Canvas Worker Pool (`worker_threads`)**
+  - Buat `src/canvas/canvasWorkerPool.js` menggunakan modul bawaan `node:worker_threads`.
+  - Offload seluruh rendering kartu berat (`profileCanvas.js`, `battleCanvas.js`, `cardCanvas.js`, `nowplayingCanvas.js`) ke thread pool latar belakang (2-3 worker).
+  - Pastikan event loop utama discord.js tetap 100% bebas dari pemblokiran CPU saat beberapa render Canvas dijalankan bersamaan.
+
+---
+
+## 🟢 Sprint 12: Next-Gen AI & Server RAG Knowledge Base - SELESAI
+
+Meningkatkan kemampuan AI Naura menjadi asisten komunitas yang memahami dokumentasi spesifik setiap server serta menyediakan moderasi pintar berbasis sentimen.
+
+- [x] **Server RAG Knowledge Base (AI Grounding per Guild)**
+  - Modul `/setup ai-kb` untuk mengunggah dokumen teks, peraturan server, atau link FAQ.
+  - Penyimpanan potongan teks (chunking) dan pencarian semantik lokal / Redis Vector ringan di `src/ai/knowledgeBase.js`.
+  - Inject konteks dokumen server ke system prompt saat user bertanya di server terkait, sehingga Naura bertindak sebagai Customer Service otomatis tanpa jawaban halusinasi.
+- [x] **AI Smart AutoMod & Sentiment Filter**
+  - Evaluasi pesan mencurigakan di `messageCreate` menggunakan model lokal ringan: mendeteksi sarkasme toksik, pelecehan terselubung, dan scam link bertopeng bahasa gaul Indonesia.
+  - Integrasi eskalasi ke `UserStrike` dan log otomatis ke kanal audit moderasi server.
+- [x] **Real-Time Voice AI Streaming (Cyber Waifu di Voice Channel)**
+  - Fondasi streaming suara dua arah di voice channel: deteksi suara aktif (VAD), Speech-to-Text latensi rendah, proses respons LLM, dan Text-to-Speech (Edge-TTS/Kokoro).
+  - Mode interaktif: Naura merespons saat namanya dipanggil atau saat diajak mengobrol santai di voice.
+
+---
+
+## 🟢 Sprint 13: Gamifikasi Sosial & Live P2P Trading - SELESAI
+
+Memperdalam interaksi sosial antar pemain dengan sistem barter kartu langsung, efek visual Canvas premium, dan perebutan wilayah klan antar server.
+
+- [x] **Live P2P Card Trading & Barter System**
+  - Command `/card trade @user`: membuka sesi barter dua arah interaktif menggunakan Discord Components V2.
+  - Alur aman dua langkah: Pemain A dan Pemain B memasukkan kartu/fragmen di modal ➔ Keduanya menekan tombol *Lock In* ➔ Keduanya menekan *Confirm Trade*.
+  - Eksekusi transaksi atomik menggunakan transaksi SQL dengan penguncian baris (`SELECT ... FOR UPDATE`) untuk mencegah duplikasi kartu.
+- [x] **Canvas SSR Holo Shimmer Shader**
+  - Efek shader kilau pelangi / hologram khusus untuk kartu tingkat kelangkaan SSR dan UR pada `src/canvas/cardCanvas.js`.
+  - Animasi visual premium pada unboxing/gacha kartu baru.
+- [x] **Idle AFK Expedition & Pet Genetics Breeding**
+  - Command `/survival expedition`: kirim Pet untuk menjelajahi dungeon selama 1, 4, atau 8 jam.
+  - Pengiriman notifikasi DM cerdas otomatis via `notificationManager.js` saat ekspedisi selesai membawa hasil jarahan.
+  - Sistem perkawinan silang Pet: mewariskan trait pasif dan membuka variasi warna langka.
+- [x] **Cross-Server Clan Territory Wars**
+  - Model `ClanTerritory`: beberapa titik wilayah dunia yang bisa diperebutkan klan dari berbagai server.
+  - Pertempuran mingguan terjadwal via `cronManager.js` dengan bonus pasif drop rate Star Fragments bagi server pemenang.
+
+---
+
+## 🟢 Sprint 14: Discord Activity (Mini-App) & Visual Automations - SELESAI
+
+Membawa Naura ke level tertinggi dengan antarmuka aplikasi tersemat langsung di Discord dan pembuat alur otomatisasi server visual.
+
+- [x] **Discord Activity (Embedded App SDK)**
+  - Konfigurasi `@discord/embedded-app-sdk` pada dashboard untuk menjalankan Webview interaktif di dalam Discord client (Desktop, Mobile, Web).
+  - **Mini-App Naura World**: Papan interaktif RPG, mini game kasino, dan Card Battle arena visual yang bisa dimainkan bersama di voice channel.
+  - **Embedded Music Controller**: Panel musik real-time dengan sinkronisasi lirik dan antrean lagu tanpa perlu membuka browser eksternal.
+- [x] **Visual Server Automation Builder (Web Dashboard)**
+  - Antarmuka drag-and-drop di dashboard web untuk menyusun alur otomatisasi kustom:
+    - *Trigger*: Event Discord (Member Join, Level Up, Reaction Role, Ticket Created).
+    - *Condition*: Filter peran, level server, atau kata kunci.
+    - *Action*: Beri role, kirim pesan Components V2, beri reward ekonomi, atau teruskan webhook eksternal.
+  - Eksekusi flow otomatis via runtime `src/services/automationEngine.js`.
+- [x] **Migrasi ke `discord-hybrid-sharding`**
+  - Ganti `ShardingManager` bawaan dengan `ClusterManager` multi-core.
+  - Pangkas konsumsi RAM proses idle hingga 50% di panel Pterodactyl dan dukung *rolling restart* tanpa downtime.
+
+---
+
+## ⚠️ Risiko yang harus terus dipantau
 | Risiko                                                                | Dampak                                                                                                      | Mitigasi                                                                                                                                                                                                                               |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Migrasi berjalan di dalam boot sequence dan di semua shard            | Skema separuh jalan atau deadlock saat startup                                                              | **Selesai** di Sprint 0 lewat `scripts/migrate.js`, dan di Sprint 2 dijamin urutannya oleh `prestart`                                                                                                                                  |
@@ -314,8 +490,8 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
 - [x] **Onboarding Wizard** `M`, Saat bot join server baru, kirim Container V2 dengan preset cepat (Community, Gaming, Minimal). `plugin/admin/onboardingWizard.js`
 
 > **Urutan Sprint yang Direkomendasikan:**
->
 > - **Sprint A (Impact Tinggi, Ringan):** Audio Filters, Voice Activity Rewards, Quest Harian
 > - **Sprint B (Impact Tinggi, Sedang):** AI Memory, PvP Arena, Anti-Raid, Musim & Event
 > - **Sprint C (Kompleks, Differensiator):** AI Function Calling, Dashboard Analytics, Modmail Lanjutan
 > - **Sprint D (Long-term):** AI Dungeon Master, Sistem Klan, Welcome Card Builder, Voice AI
+

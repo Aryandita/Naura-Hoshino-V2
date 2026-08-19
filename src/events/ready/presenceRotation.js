@@ -19,7 +19,7 @@ module.exports = {
           (ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
         );
         const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-        let result = [];
+        const result = [];
         if (days > 0) result.push(`${days}d`);
         if (hours > 0) result.push(`${hours}h`);
         if (minutes > 0) result.push(`${minutes}m`);

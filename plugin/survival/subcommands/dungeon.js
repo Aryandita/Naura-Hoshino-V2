@@ -14,9 +14,7 @@ const combat = require("../../../src/survival/engines/dungeonCombat");
 const render = require("../../../src/survival/engines/dungeonRender");
 const rewards = require("../../../src/survival/engines/dungeonRewards");
 const helpers = require("../../../src/survival/helpers/craftHelpers");
-const {
-  safeParseInventory,
-} = require("../../../src/survival/engines/inventoryHelper");
+const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
 const {
   DUNGEON_PASS_ID,
   DUNGEON_SPECIAL_PASS_ID,

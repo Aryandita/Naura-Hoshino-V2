@@ -1,9 +1,7 @@
-// Lokasi: src/events/poru/trackStart.js
 const { logger } = require("../../managers/logger");
 const cacheManager = require("../../managers/cacheManager");
 const MusicUIManager = require("../MusicUIManager");
-const VoiceManager = require("../../managers/voiceManager");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const geminiClient = require("../../ai/geminiClient");
 const {
   rankAutoplayCandidates,
   beginPlaybackTransition,
@@ -101,16 +99,12 @@ module.exports = {
           let djText = `Lagu selanjutnya, ${trackTitle} dari ${trackAuthor}, spesial request dari ${requesterName}. Selamat mendengarkan!`;
 
           try {
-            const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-            const model = genAI.getGenerativeModel({
-              model: "gemini-2.5-flash-latest",
-            });
             const prompt = `Sebagai Naura, penyiar radio virtual yang ceria, buat 1 kalimat pembuka untuk mengumumkan bahwa lagu "${trackTitle}" dari "${trackAuthor}" yang di-request oleh "${requesterName}" akan diputar. Gunakan bahasa gaul. TANPA EMOJI, TANPA SIMBOL.`;
 
             // Timeout 3 detik agar Gemini yang lambat tidak menyebabkan lagu terjeda terlalu lama
             const AI_DJ_TIMEOUT_MS = 3000;
             const aiResultText = await Promise.race([
-              model.generateContent(prompt).then((r) => r.response.text()),
+              geminiClient.generate({ parts: [{ text: prompt }] }),
               new Promise((resolve) =>
                 setTimeout(() => resolve(null), AI_DJ_TIMEOUT_MS),
               ),
@@ -249,16 +243,14 @@ module.exports = {
     if (
       player.isAutoplayMode &&
       !player.prefetchedAutoplayTrack &&
-      process.env.GEMINI_API_KEY
+      geminiClient.isAvailable()
     ) {
       try {
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const prompt = `Aku sedang memutar lagu "${activeTrack.info.title}" oleh "${activeTrack.info.author}".
                 Berikan 1 rekomendasi lagu selanjutnya yang memiliki vibe sangat mirip. Balas HANYA dengan format murni: "Judul Lagu - Nama Artis".`;
 
-        const aiResult = await model.generateContent(prompt);
-        const aiQuery = aiResult.response.text().trim();
+        const aiResult = await geminiClient.generate({ parts: [{ text: prompt }] });
+        const aiQuery = (aiResult || "").trim();
 
         const searchRes = await manager.poru.resolve({
           query: `ytsearch:${aiQuery}`,

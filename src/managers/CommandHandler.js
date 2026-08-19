@@ -89,8 +89,8 @@ class CommandHandler {
   }
 
   async load(autoDeploy = false) {
-    let commandsArray = [];
-    let commandNames = new Set();
+    const commandsArray = [];
+    const commandNames = new Set();
     const pendingAliases = [];
 
     try {
@@ -140,7 +140,23 @@ class CommandHandler {
 
             if (command.data) {
               if (cmdName !== "naura") {
-                commandsArray.push(command.data.toJSON());
+                const json = command.data.toJSON();
+                // Apps Anywhere (User-Installable Apps): Izinkan perintah personal dijalankan di mana saja
+                const USER_INSTALLABLE_COMMANDS = new Set([
+                  "profile",
+                  "ask",
+                  "weather",
+                  "card",
+                  "translate",
+                  "calculator",
+                  "coinflip",
+                  "8ball",
+                ]);
+                if (USER_INSTALLABLE_COMMANDS.has(cmdName)) {
+                  if (!json.integration_types) json.integration_types = [0, 1];
+                  if (!json.contexts) json.contexts = [0, 1, 2];
+                }
+                commandsArray.push(json);
               }
             }
           }
@@ -149,6 +165,17 @@ class CommandHandler {
             `[COMMANDS] Gagal memuat file command ${path.basename(filePath)}: ${err.message}`,
           );
         }
+      }
+
+      // Muat Context Menu Commands (Pintasan Klik Kanan)
+      try {
+        const { getContextMenuCommands } = require("../interactions/contextMenus");
+        const contextMenus = getContextMenuCommands();
+        for (const cm of contextMenus) {
+          commandsArray.push(cm);
+        }
+      } catch (err) {
+        logger.warn(`[COMMANDS] Gagal memuat context menu commands: ${err.message}`);
       }
 
       // Register default hybrid short aliases

@@ -242,7 +242,7 @@ async function reward(currency, holders = {}, amount) {
       const GuildClan = require("../../models/GuildClan");
       const clan = await GuildClan.findByPk(holders.survival.clanId);
       if (clan) {
-        const buffMultiplier = 1 + clan.level * 0.02; // +2% per level
+        const buffMultiplier = 1 + (clan.level * 0.02); // +2% per level
         gain = Math.floor(gain * buffMultiplier);
       }
     } catch (e) {

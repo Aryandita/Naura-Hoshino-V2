@@ -46,7 +46,7 @@ const GuildClan = sequelize.define(
   {
     tableName: "GuildClans",
     timestamps: true,
-    indexes: [{ fields: ["guildId"] }],
+    indexes: [{ fields: ["guildId"] }]
   },
 );
 

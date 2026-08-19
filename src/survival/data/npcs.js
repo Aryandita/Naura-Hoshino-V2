@@ -5,9 +5,8 @@ module.exports = {
     name: "Luna",
     title: "Penjaga Toko Gacha",
     location: "desa",
-    type: "teman",
-    personality:
-      "Ceria, sangat antusias dengan pernak-pernik kosmetik, selalu mempromosikan banner terbarunya.",
+    type: "teman", 
+    personality: "Ceria, sangat antusias dengan pernak-pernik kosmetik, selalu mempromosikan banner terbarunya.",
     image: "gacha_npc.jpeg",
   },
   kades_tirto: {

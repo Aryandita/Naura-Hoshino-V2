@@ -34,7 +34,7 @@ module.exports = {
       where: { guildId: interaction.guild.id },
     });
 
-    let automod = settings.settings.automod || {
+    const automod = settings.settings.automod || {
       enabled: true,
       antiInvite: false,
       antiCaps: false,

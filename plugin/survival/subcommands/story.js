@@ -20,9 +20,7 @@ const currency = require("../../../src/survival/engines/currency");
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
-const {
-  safeParseInventory,
-} = require("../../../src/survival/engines/inventoryHelper");
+const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
 
 const COLLECTOR_MS = 300000;
 

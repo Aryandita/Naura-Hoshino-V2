@@ -33,7 +33,7 @@ module.exports = {
 
   async execute(interaction) {
     const word = words[Math.floor(Math.random() * words.length)];
-    let guessed = new Set();
+    const guessed = new Set();
     let mistakes = 0;
     const maxMistakes = 6;
 

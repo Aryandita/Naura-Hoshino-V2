@@ -7,9 +7,9 @@
  * ulang (misalnya oleh perintah `/vote` di dalam bot) tanpa menyalin logika.
  */
 
-const { logger } = require("../src/managers/logger");
-const UserProfile = require("../src/models/UserProfile");
-const UserSurvival = require("../src/models/UserSurvival");
+const { logger } = require("../../src/managers/logger");
+const UserProfile = require("../../src/models/UserProfile");
+const UserSurvival = require("../../src/models/UserSurvival");
 const currency = require("../../src/survival/engines/currency");
 
 const TRIAL_HOURS = 12;
@@ -20,7 +20,7 @@ const COUPON_WEEKEND = 2; // top.gg menghitung vote akhir pekan sebagai dua vote
 // selisih jam server tidak menolak vote yang sah.
 const VOTE_COOLDOWN_MS = 11 * 60 * 60 * 1000;
 
-const EntitlementService = require("../src/managers/entitlementService");
+const EntitlementService = require("../../src/managers/entitlementService");
 
 async function extendPremium(userId, durationMs) {
   return EntitlementService.extendUserPremium(userId, durationMs);

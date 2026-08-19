@@ -1,5 +1,3 @@
-"use strict";
-
 const { handleVoiceState } = require("../../services/voiceRewards");
 
 module.exports = {

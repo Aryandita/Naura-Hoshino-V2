@@ -1,787 +1,543 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcomer Editor | Naura OS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="/css/style.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
     <style>
-      .welcome-card {
-        background-size: cover;
-        background-position: center;
-        position: relative;
-        overflow: hidden;
-        border: 2px solid var(--color-hairline);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-        transition:
-          border-color 0.3s ease,
-          box-shadow 0.3s ease;
-      }
-      .discord-mockup {
-        background-color: #2b2d31;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-      }
+        .welcome-card {
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid var(--color-hairline);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .discord-mockup {
+            background-color: #2b2d31;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        }
     </style>
-  </head>
-  <body
-    class="min-h-screen p-4 md:p-8 flex items-center justify-center bg-animated theme-none"
-    id="mainBody"
-  >
-    <div
-      class="w-full max-w-6xl glass-card rounded-3xl p-4 md:p-10 border border-[var(--color-hairline)] shadow-2xl relative overflow-hidden animate-fade-in"
-    >
-      <!-- Header Welcomer -->
-      <div
-        class="flex items-center justify-between mb-8 pb-4 border-b border-[var(--color-hairline)]"
-      >
-        <h1
-          class="text-2xl font-black font-cyber text-glow tracking-wider text-white"
-        >
-          <i
-            class="fa-solid fa-image-portrait text-[var(--color-primary)] mr-3"
-          ></i
-          >WELCOMER EDITOR
-        </h1>
-        <a
-          href="/"
-          class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-[var(--color-muted)] hover:text-white hover:border-[var(--color-primary-glow)] transition-all duration-300"
-        >
-          <i class="fa-solid fa-xmark text-xl"></i>
-        </a>
-      </div>
-
-      <div
-        id="alertBox"
-        class="hidden mb-6 p-4 rounded-xl font-bold text-sm flex items-center gap-3 transition-all"
-      ></div>
-
-      <!-- Grid layout: Form (Left) vs live preview (Right) -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- FORMULIR -->
-        <form id="welcomerForm" class="space-y-5">
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between"
-          >
-            <div>
-              <p class="text-white font-bold text-sm">
-                <i
-                  class="fa-solid fa-power-off text-[var(--color-accent-green)] mr-2"
-                ></i
-                >Aktifkan Welcomer
-              </p>
-              <p class="text-[10px] text-gray-500 mt-1">
-                Kirim kartu sambutan saat ada member baru
-              </p>
-            </div>
-            <div
-              class="relative inline-flex items-center cursor-pointer select-none"
-            >
-              <input type="checkbox" id="enabled" class="sr-only peer" />
-              <div
-                class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-400"
-              ></div>
-            </div>
-          </div>
-
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
-          >
-            <label
-              class="block text-gray-300 font-semibold mb-2.5 text-xs font-cyber tracking-widest uppercase"
-              >Guild ID (Server)</label
-            >
-            <input
-              type="text"
-              id="guildId"
-              required
-              class="theme-input font-cyber"
-              placeholder="Masukkan ID Server untuk memuat..."
-            />
-          </div>
-
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
-          >
-            <label
-              class="block text-gray-300 font-semibold mb-2.5 text-xs font-cyber tracking-widest uppercase"
-              >Channel ID (Tempat Kirim Sambutan)</label
-            >
-            <input type="text" id="channelId" class="theme-input font-cyber" />
-          </div>
-
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
-          >
-            <label
-              class="block text-gray-300 font-semibold mb-2.5 text-xs font-cyber tracking-widest uppercase"
-              >Background URL (JPG/PNG)</label
-            >
-            <input
-              type="url"
-              id="backgroundUrl"
-              class="theme-input text-xs font-cyber"
-              placeholder="https://contoh.com/gambar.png"
-            />
-          </div>
-
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
-          >
-            <div class="flex justify-between items-end mb-2.5">
-              <label
-                class="block text-gray-300 font-semibold text-xs font-cyber tracking-widest uppercase"
-                >Teks Sambutan</label
-              >
-              <span
-                class="text-[10px] text-pink-400 font-cyber font-bold select-none"
-                >{user} {server} {memberCount}</span
-              >
-            </div>
-            <textarea
-              id="message"
-              rows="3"
-              class="theme-input text-sm"
-              placeholder="Halo {user}, selamat datang di {server}! Kamu adalah member ke-{memberCount}."
-            ></textarea>
-          </div>
-
-          <!-- Visual Layout Controls -->
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5 space-y-4"
-          >
-            <p
-              class="text-white font-bold text-xs font-cyber tracking-widest uppercase mb-2"
-            >
-              <i
-                class="fa-solid fa-arrows-up-down-left-right text-pink-400 mr-2"
-              ></i
-              >Visual Customizer
-            </p>
-
-            <div>
-              <label
-                class="block text-[10px] text-gray-400 font-cyber mb-1.5 uppercase"
-                >Judul Sambutan</label
-              >
-              <input
-                type="text"
-                id="titleText"
-                class="theme-input text-xs font-cyber"
-                placeholder="WELCOME TO SERVER"
-              />
-            </div>
-
-            <div>
-              <label
-                class="block text-[10px] text-gray-400 font-cyber mb-1.5 uppercase"
-                >Warna Cahaya Neon (Glow Color)</label
-              >
-              <input
-                type="color"
-                id="glowColor"
-                class="w-full h-8 bg-transparent border-0 cursor-pointer rounded-xl"
-                value="#00FFFF"
-              />
-            </div>
-
-            <div
-              class="grid grid-cols-2 gap-4 text-[10px] text-gray-400 font-cyber"
-            >
-              <div>
-                <label class="block mb-1">Ukuran Avatar (Radius)</label>
-                <input
-                  type="range"
-                  id="avatarSize"
-                  min="40"
-                  max="150"
-                  value="110"
-                  class="w-full accent-pink-400"
-                />
-              </div>
-              <div>
-                <label class="block mb-1">Ukuran Judul</label>
-                <input
-                  type="range"
-                  id="titleSize"
-                  min="12"
-                  max="48"
-                  value="26"
-                  class="w-full accent-pink-400"
-                />
-              </div>
-              <div>
-                <label class="block mb-1">Ukuran Nama</label>
-                <input
-                  type="range"
-                  id="nameSize"
-                  min="20"
-                  max="90"
-                  value="55"
-                  class="w-full accent-pink-400"
-                />
-              </div>
-              <div>
-                <label class="block mb-1">Ukuran Subtitle</label>
-                <input
-                  type="range"
-                  id="subtitleSize"
-                  min="12"
-                  max="36"
-                  value="22"
-                  class="w-full accent-pink-400"
-                />
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            id="submitBtn"
-            class="w-full btn-primary py-4 font-cyber tracking-widest text-sm uppercase"
-          >
-            <i class="fa-solid fa-floppy-disk mr-2"></i> Simpan Desain
-          </button>
-        </form>
-
-        <!-- LIVE PREVIEW -->
-        <div class="flex flex-col gap-4">
-          <h3
-            class="text-gray-400 font-bold uppercase tracking-widest text-xs font-cyber mb-1"
-          >
-            <i class="fa-solid fa-eye text-pink-400 mr-2"></i>Interactive Canvas
-            Workspace
-          </h3>
-
-          <!-- Discord dark mockup -->
-          <div class="discord-mockup rounded-2xl p-5 shadow-2xl">
-            <div class="flex items-start gap-4">
-              <img
-                src="/assets/naura.png"
-                class="w-10 h-10 rounded-full border border-pink-500/20"
-                alt="Bot Avatar"
-                onerror="this.src = '/assets/dashboard/naura.png'"
-              />
-              <div class="w-full">
-                <div class="flex items-center gap-2 mb-1.5 select-none">
-                  <span class="font-bold text-white text-sm"
-                    >Naura Hoshino</span
-                  >
-                  <span
-                    class="bg-[#5865F2] text-white text-[9px] px-1.5 py-0.5 rounded font-bold font-cyber"
-                    >BOT</span
-                  >
-                  <span class="text-[10px] text-gray-400">Hari ini 12:00</span>
-                </div>
-
-                <!-- Embed message texts preview -->
-                <p
-                  id="previewText"
-                  class="text-gray-300 text-sm mb-4 whitespace-pre-wrap leading-relaxed"
-                >
-                  Halo
-                  <span
-                    class="text-[#5865F2] bg-[#5865F2]/20 px-1.5 py-0.5 rounded font-semibold text-xs"
-                    >@NewMember</span
-                  >, selamat datang di Server Kami! Kamu adalah member ke-1,234.
-                </p>
-
-                <!-- Card graphics canvas preview mockup -->
-                <div
-                  id="previewCard"
-                  class="welcome-card w-full rounded-2xl relative overflow-hidden"
-                  style="
-                    aspect-ratio: 1000/330;
-                    background-image: url(&quot;https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop&quot;);
-                  "
-                >
-                  <div
-                    id="previewOverlay"
-                    class="absolute inset-0 bg-black/65 pointer-events-none rounded-2xl m-2 border border-dashed border-white/10 z-0"
-                  ></div>
-
-                  <!-- Guide lines for snapping -->
-                  <div
-                    id="guideX"
-                    class="absolute inset-y-0 w-px bg-cyan-400/50 pointer-events-none hidden z-40"
-                  ></div>
-                  <div
-                    id="guideY"
-                    class="absolute inset-x-0 h-px bg-cyan-400/50 pointer-events-none hidden z-40"
-                  ></div>
-
-                  <!-- DRAGGABLE ELEMENTS -->
-                  <!-- Avatar -->
-                  <div
-                    id="dragAvatar"
-                    class="absolute cursor-move select-none z-30 flex items-center justify-center"
-                    style="transform: translate(-50%, -50%)"
-                  >
-                    <img
-                      src="https://cdn.discordapp.com/embed/avatars/1.png"
-                      class="w-full h-full rounded-full border-4 border-[var(--color-primary)] shadow-[0_0_15px_var(--color-primary-glow)] pointer-events-none"
-                      alt="User Avatar"
-                      id="previewAvatarImg"
-                    />
-                  </div>
-
-                  <!-- Title -->
-                  <div
-                    id="dragTitle"
-                    class="absolute cursor-move select-none z-30 font-cyber font-black tracking-widest text-glow"
-                    style="transform: translate(0, -50%)"
-                  >
-                    WELCOME TO SERVER
-                  </div>
-
-                  <!-- Name -->
-                  <div
-                    id="dragName"
-                    class="absolute cursor-move select-none z-30 font-cyber font-black text-white"
-                    style="transform: translate(0, -50%)"
-                  >
-                    NewMember
-                  </div>
-
-                  <!-- Subtitle & decor -->
-                  <div
-                    id="dragSubtitle"
-                    class="absolute cursor-move select-none z-30 font-assist font-bold text-gray-300 flex flex-col gap-1.5"
-                    style="transform: translate(0, -50%)"
-                  >
-                    <span>@NewMember • Anggota #1,234</span>
-                    <div id="accentLine" class="h-1 w-32 rounded-full"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <p class="text-[10px] text-gray-500 text-center mt-3 leading-relaxed">
-            <i
-              class="fa-solid fa-arrows-up-down-left-right text-pink-400 mr-1.5"
-            ></i
-            >Seret elemen langsung pada gambar pratinjau di atas untuk mengatur
-            posisinya secara interaktif.
-          </p>
+</head>
+<body class="min-h-screen p-4 md:p-8 flex items-center justify-center bg-animated theme-none" id="mainBody">
+    <div class="w-full max-w-6xl glass-card rounded-3xl p-4 md:p-10 border border-[var(--color-hairline)] shadow-2xl relative overflow-hidden animate-fade-in">
+        
+        <!-- Header Welcomer -->
+        <div class="flex items-center justify-between mb-8 pb-4 border-b border-[var(--color-hairline)]">
+            <h1 class="text-2xl font-black font-cyber text-glow tracking-wider text-white">
+                <i class="fa-solid fa-image-portrait text-[var(--color-primary)] mr-3"></i>WELCOMER EDITOR
+            </h1>
+            <a href="/" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-[var(--color-muted)] hover:text-white hover:border-[var(--color-primary-glow)] transition-all duration-300">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </a>
         </div>
-      </div>
+
+        <div id="alertBox" class="hidden mb-6 p-4 rounded-xl font-bold text-sm flex items-center gap-3 transition-all"></div>
+
+        <!-- Grid layout: Form (Left) vs live preview (Right) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- FORMULIR -->
+            <form id="welcomerForm" class="space-y-5">
+                
+                <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between">
+                    <div>
+                        <p class="text-white font-bold text-sm"><i class="fa-solid fa-power-off text-[var(--color-accent-green)] mr-2"></i>Aktifkan Welcomer</p>
+                        <p class="text-[10px] text-gray-500 mt-1">Kirim kartu sambutan saat ada member baru</p>
+                    </div>
+                    <div class="relative inline-flex items-center cursor-pointer select-none">
+                        <input type="checkbox" id="enabled" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-400"></div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5">
+                    <label class="block text-gray-300 font-semibold mb-2.5 text-xs font-cyber tracking-widest uppercase">Guild ID (Server)</label>
+                    <input type="text" id="guildId" required class="theme-input font-cyber" placeholder="Masukkan ID Server untuk memuat...">
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5">
+                    <label class="block text-gray-300 font-semibold mb-2.5 text-xs font-cyber tracking-widest uppercase">Channel ID (Tempat Kirim Sambutan)</label>
+                    <input type="text" id="channelId" class="theme-input font-cyber">
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5">
+                    <label class="block text-gray-300 font-semibold mb-2.5 text-xs font-cyber tracking-widest uppercase">Background URL (JPG/PNG)</label>
+                    <input type="url" id="backgroundUrl" class="theme-input text-xs font-cyber" placeholder="https://contoh.com/gambar.png">
+                </div>
+
+                <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5">
+                    <div class="flex justify-between items-end mb-2.5">
+                        <label class="block text-gray-300 font-semibold text-xs font-cyber tracking-widest uppercase">Teks Sambutan</label>
+                        <span class="text-[10px] text-pink-400 font-cyber font-bold select-none">{user} {server} {memberCount}</span>
+                    </div>
+                    <textarea id="message" rows="3" class="theme-input text-sm" placeholder="Halo {user}, selamat datang di {server}! Kamu adalah member ke-{memberCount}."></textarea>
+                </div>
+
+                <!-- Visual Layout Controls -->
+                <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5 space-y-4">
+                    <p class="text-white font-bold text-xs font-cyber tracking-widest uppercase mb-2"><i class="fa-solid fa-arrows-up-down-left-right text-pink-400 mr-2"></i>Visual Customizer</p>
+                    
+                    <div>
+                        <label class="block text-[10px] text-gray-400 font-cyber mb-1.5 uppercase">Judul Sambutan</label>
+                        <input type="text" id="titleText" class="theme-input text-xs font-cyber" placeholder="WELCOME TO SERVER">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] text-gray-400 font-cyber mb-1.5 uppercase">Warna Cahaya Neon (Glow Color)</label>
+                        <input type="color" id="glowColor" class="w-full h-8 bg-transparent border-0 cursor-pointer rounded-xl" value="#00FFFF">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 text-[10px] text-gray-400 font-cyber">
+                        <div>
+                            <label class="block mb-1">Ukuran Avatar (Radius)</label>
+                            <input type="range" id="avatarSize" min="40" max="150" value="110" class="w-full accent-pink-400">
+                        </div>
+                        <div>
+                            <label class="block mb-1">Ukuran Judul</label>
+                            <input type="range" id="titleSize" min="12" max="48" value="26" class="w-full accent-pink-400">
+                        </div>
+                        <div>
+                            <label class="block mb-1">Ukuran Nama</label>
+                            <input type="range" id="nameSize" min="20" max="90" value="55" class="w-full accent-pink-400">
+                        </div>
+                        <div>
+                            <label class="block mb-1">Ukuran Subtitle</label>
+                            <input type="range" id="subtitleSize" min="12" max="36" value="22" class="w-full accent-pink-400">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full btn-primary py-4 font-cyber tracking-widest text-sm uppercase">
+                    <i class="fa-solid fa-floppy-disk mr-2"></i> Simpan Desain
+                </button>
+            </form>
+            
+            <!-- LIVE PREVIEW -->
+            <div class="flex flex-col gap-4">
+                <h3 class="text-gray-400 font-bold uppercase tracking-widest text-xs font-cyber mb-1">
+                    <i class="fa-solid fa-eye text-pink-400 mr-2"></i>Interactive Canvas Workspace
+                </h3>
+                
+                <!-- Discord dark mockup -->
+                <div class="discord-mockup rounded-2xl p-5 shadow-2xl">
+                    <div class="flex items-start gap-4">
+                        <img src="/assets/naura.png" class="w-10 h-10 rounded-full border border-pink-500/20" alt="Bot Avatar" onerror="this.src='/assets/dashboard/naura.png'">
+                        <div class="w-full">
+                            <div class="flex items-center gap-2 mb-1.5 select-none">
+                                <span class="font-bold text-white text-sm">Naura Hoshino</span>
+                                <span class="bg-[#5865F2] text-white text-[9px] px-1.5 py-0.5 rounded font-bold font-cyber">BOT</span>
+                                <span class="text-[10px] text-gray-400">Hari ini 12:00</span>
+                            </div>
+                            
+                            <!-- Embed message texts preview -->
+                            <p id="previewText" class="text-gray-300 text-sm mb-4 whitespace-pre-wrap leading-relaxed">Halo <span class="text-[#5865F2] bg-[#5865F2]/20 px-1.5 py-0.5 rounded font-semibold text-xs">@NewMember</span>, selamat datang di Server Kami! Kamu adalah member ke-1,234.</p>
+                            
+                            <!-- Card graphics canvas preview mockup -->
+                            <div id="previewCard" class="welcome-card w-full rounded-2xl relative overflow-hidden" style="aspect-ratio: 1000/330; background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop');">
+                                <div id="previewOverlay" class="absolute inset-0 bg-black/65 pointer-events-none rounded-2xl m-2 border border-dashed border-white/10 z-0"></div>
+                                
+                                <!-- Guide lines for snapping -->
+                                <div id="guideX" class="absolute inset-y-0 w-px bg-cyan-400/50 pointer-events-none hidden z-40"></div>
+                                <div id="guideY" class="absolute inset-x-0 h-px bg-cyan-400/50 pointer-events-none hidden z-40"></div>
+
+                                <!-- DRAGGABLE ELEMENTS -->
+                                <!-- Avatar -->
+                                <div id="dragAvatar" class="absolute cursor-move select-none z-30 flex items-center justify-center" style="transform: translate(-50%, -50%);">
+                                    <img src="https://cdn.discordapp.com/embed/avatars/1.png" class="w-full h-full rounded-full border-4 border-[var(--color-primary)] shadow-[0_0_15px_var(--color-primary-glow)] pointer-events-none" alt="User Avatar" id="previewAvatarImg">
+                                </div>
+
+                                <!-- Title -->
+                                <div id="dragTitle" class="absolute cursor-move select-none z-30 font-cyber font-black tracking-widest text-glow" style="transform: translate(0, -50%);">
+                                    WELCOME TO SERVER
+                                </div>
+
+                                <!-- Name -->
+                                <div id="dragName" class="absolute cursor-move select-none z-30 font-cyber font-black text-white" style="transform: translate(0, -50%);">
+                                    NewMember
+                                </div>
+
+                                <!-- Subtitle & decor -->
+                                <div id="dragSubtitle" class="absolute cursor-move select-none z-30 font-assist font-bold text-gray-300 flex flex-col gap-1.5" style="transform: translate(0, -50%);">
+                                    <span>@NewMember   •   Anggota #1,234</span>
+                                    <div id="accentLine" class="h-1 w-32 rounded-full"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-[10px] text-gray-500 text-center mt-3 leading-relaxed">
+                    <i class="fa-solid fa-arrows-up-down-left-right text-pink-400 mr-1.5"></i>Seret elemen langsung pada gambar pratinjau di atas untuk mengatur posisinya secara interaktif.
+                </p>
+            </div>
+        </div>
     </div>
 
     <script>
-      // Apply background theme on load
-      const savedBg = localStorage.getItem("bgTheme") || "none";
-      const body = document.getElementById("mainBody");
-      function resolveBgUrl(url) {
-        if (url && url.startsWith("adaptive-")) {
-          const suffix = url.substring("adaptive-".length);
-          return window.innerWidth < 768
-            ? `/assets/dashboard/bg_mobile_${suffix}.png`
-            : `/assets/dashboard/bg_pc_${suffix}.png`;
+        // Apply background theme on load
+        const savedBg = localStorage.getItem('bgTheme') || 'none';
+        const body = document.getElementById('mainBody');
+        function resolveBgUrl(url) {
+            if (url && url.startsWith('adaptive-')) {
+                const suffix = url.substring('adaptive-'.length);
+                return window.innerWidth < 768 ? `/assets/dashboard/bg_mobile_${suffix}.png` : `/assets/dashboard/bg_pc_${suffix}.png`;
+            }
+            return url;
         }
-        return url;
-      }
-      if (savedBg !== "none" && savedBg !== "white") {
-        body.style.backgroundImage = `url('${resolveBgUrl(savedBg)}')`;
-        if (savedBg && savedBg.startsWith("adaptive-")) {
-          window.addEventListener("resize", () => {
+        if (savedBg !== 'none' && savedBg !== 'white') {
             body.style.backgroundImage = `url('${resolveBgUrl(savedBg)}')`;
-          });
+            if (savedBg && savedBg.startsWith('adaptive-')) {
+                window.addEventListener('resize', () => {
+                    body.style.backgroundImage = `url('${resolveBgUrl(savedBg)}')`;
+                });
+            }
+        } else if (savedBg === 'white') {
+            body.style.backgroundColor = '#f3f4f6';
+            body.classList.remove('theme-none');
+            body.classList.add('theme-white');
         }
-      } else if (savedBg === "white") {
-        body.style.backgroundColor = "#f3f4f6";
-        body.classList.remove("theme-none");
-        body.classList.add("theme-white");
-      }
 
-      // Sound effect integration
-      let sfxPlayer = null;
-      function playClickSfx() {
-        const sfxEnabled = localStorage.getItem("sfxEnabled") !== "false";
-        if (sfxEnabled) {
-          if (!sfxPlayer) {
-            sfxPlayer = new Audio("/assets/dashboard/click.mp3");
-          }
-          sfxPlayer.currentTime = 0;
-          sfxPlayer.play().catch(() => {});
+        // Sound effect integration
+        let sfxPlayer = null;
+        function playClickSfx() {
+            const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
+            if (sfxEnabled) {
+                if (!sfxPlayer) {
+                    sfxPlayer = new Audio('/assets/dashboard/click.mp3');
+                }
+                sfxPlayer.currentTime = 0;
+                sfxPlayer.play().catch(() => {});
+            }
         }
-      }
-      document
-        .querySelectorAll('button, a, input[type="checkbox"]')
-        .forEach((el) => {
-          el.addEventListener("click", playClickSfx);
+        document.querySelectorAll('button, a, input[type="checkbox"]').forEach(el => {
+            el.addEventListener('click', playClickSfx);
         });
 
-      // Config local state
-      let welcomerConfig = {
-        avatarX: 180,
-        avatarY: 165,
-        avatarSize: 110,
-        titleX: 370,
-        titleY: 105,
-        titleSize: 26,
-        titleText: "WELCOME TO SERVER",
-        nameX: 370,
-        nameY: 170,
-        nameSize: 55,
-        subtitleX: 370,
-        subtitleY: 220,
-        subtitleSize: 22,
-        glowColor: "#00FFFF",
-      };
+        // Config local state
+        let welcomerConfig = {
+            avatarX: 180,
+            avatarY: 165,
+            avatarSize: 110,
+            titleX: 370,
+            titleY: 105,
+            titleSize: 26,
+            titleText: 'WELCOME TO SERVER',
+            nameX: 370,
+            nameY: 170,
+            nameSize: 55,
+            subtitleX: 370,
+            subtitleY: 220,
+            subtitleSize: 22,
+            glowColor: '#00FFFF'
+        };
 
-      const previewCard = document.getElementById("previewCard");
-      const guideX = document.getElementById("guideX");
-      const guideY = document.getElementById("guideY");
+        const previewCard = document.getElementById('previewCard');
+        const guideX = document.getElementById('guideX');
+        const guideY = document.getElementById('guideY');
 
-      function renderLayout() {
-        const cardWidth = previewCard.clientWidth;
-        const cardHeight = previewCard.clientHeight;
+        function renderLayout() {
+            const cardWidth = previewCard.clientWidth;
+            const cardHeight = previewCard.clientHeight;
 
-        const scaleX = cardWidth / 1000;
-        const scaleY = cardHeight / 330;
+            const scaleX = cardWidth / 1000;
+            const scaleY = cardHeight / 330;
 
-        // Avatar
-        const avatarEl = document.getElementById("dragAvatar");
-        avatarEl.style.left = welcomerConfig.avatarX * scaleX + "px";
-        avatarEl.style.top = welcomerConfig.avatarY * scaleY + "px";
-        avatarEl.style.width = welcomerConfig.avatarSize * 2 * scaleX + "px";
-        avatarEl.style.height = welcomerConfig.avatarSize * 2 * scaleX + "px";
+            // Avatar
+            const avatarEl = document.getElementById('dragAvatar');
+            avatarEl.style.left = (welcomerConfig.avatarX * scaleX) + 'px';
+            avatarEl.style.top = (welcomerConfig.avatarY * scaleY) + 'px';
+            avatarEl.style.width = ((welcomerConfig.avatarSize * 2) * scaleX) + 'px';
+            avatarEl.style.height = ((welcomerConfig.avatarSize * 2) * scaleX) + 'px';
 
-        // Title
-        const titleEl = document.getElementById("dragTitle");
-        titleEl.style.left = welcomerConfig.titleX * scaleX + "px";
-        titleEl.style.top = welcomerConfig.titleY * scaleY + "px";
-        titleEl.style.fontSize = welcomerConfig.titleSize * scaleX + "px";
-        titleEl.style.color = welcomerConfig.glowColor;
-        titleEl.innerText = welcomerConfig.titleText;
+            // Title
+            const titleEl = document.getElementById('dragTitle');
+            titleEl.style.left = (welcomerConfig.titleX * scaleX) + 'px';
+            titleEl.style.top = (welcomerConfig.titleY * scaleY) + 'px';
+            titleEl.style.fontSize = (welcomerConfig.titleSize * scaleX) + 'px';
+            titleEl.style.color = welcomerConfig.glowColor;
+            titleEl.innerText = welcomerConfig.titleText;
 
-        // Name
-        const nameEl = document.getElementById("dragName");
-        nameEl.style.left = welcomerConfig.nameX * scaleX + "px";
-        nameEl.style.top = welcomerConfig.nameY * scaleY + "px";
-        nameEl.style.fontSize = welcomerConfig.nameSize * scaleX + "px";
+            // Name
+            const nameEl = document.getElementById('dragName');
+            nameEl.style.left = (welcomerConfig.nameX * scaleX) + 'px';
+            nameEl.style.top = (welcomerConfig.nameY * scaleY) + 'px';
+            nameEl.style.fontSize = (welcomerConfig.nameSize * scaleX) + 'px';
 
-        // Subtitle
-        const subtitleEl = document.getElementById("dragSubtitle");
-        subtitleEl.style.left = welcomerConfig.subtitleX * scaleX + "px";
-        subtitleEl.style.top = welcomerConfig.subtitleY * scaleY + "px";
-        subtitleEl.style.fontSize = welcomerConfig.subtitleSize * scaleX + "px";
+            // Subtitle
+            const subtitleEl = document.getElementById('dragSubtitle');
+            subtitleEl.style.left = (welcomerConfig.subtitleX * scaleX) + 'px';
+            subtitleEl.style.top = (welcomerConfig.subtitleY * scaleY) + 'px';
+            subtitleEl.style.fontSize = (welcomerConfig.subtitleSize * scaleX) + 'px';
 
-        const accentLine = document.getElementById("accentLine");
-        accentLine.style.backgroundColor = welcomerConfig.glowColor;
-        accentLine.style.boxShadow = `0 0 8px ${welcomerConfig.glowColor}`;
-        previewCard.style.borderColor = welcomerConfig.glowColor;
-        previewCard.style.boxShadow = `0 0 20px ${welcomerConfig.glowColor}80`;
-      }
-
-      function makeDraggable(el, keyPrefix) {
-        let startX, startY;
-        let elemStartX, elemStartY;
-
-        el.addEventListener("mousedown", dragStart);
-        el.addEventListener("touchstart", dragStart, { passive: false });
-
-        function dragStart(e) {
-          e.preventDefault();
-          const scaleX = previewCard.clientWidth / 1000;
-          const scaleY = previewCard.clientHeight / 330;
-
-          if (e.type === "touchstart") {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-          } else {
-            startX = e.clientX;
-            startY = e.clientY;
-          }
-
-          elemStartX = welcomerConfig[keyPrefix + "X"] * scaleX;
-          elemStartY = welcomerConfig[keyPrefix + "Y"] * scaleY;
-
-          document.addEventListener("mousemove", dragMove);
-          document.addEventListener("mouseup", dragEnd);
-          document.addEventListener("touchmove", dragMove, { passive: false });
-          document.addEventListener("touchend", dragEnd);
+            const accentLine = document.getElementById('accentLine');
+            accentLine.style.backgroundColor = welcomerConfig.glowColor;
+            accentLine.style.boxShadow = `0 0 8px ${welcomerConfig.glowColor}`;
+            previewCard.style.borderColor = welcomerConfig.glowColor;
+            previewCard.style.boxShadow = `0 0 20px ${welcomerConfig.glowColor}80`;
         }
 
-        function dragMove(e) {
-          e.preventDefault();
-          let clientX, clientY;
-          if (e.type === "touchmove") {
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
-          } else {
-            clientX = e.clientX;
-            clientY = e.clientY;
-          }
+        function makeDraggable(el, keyPrefix) {
+            let startX, startY;
+            let elemStartX, elemStartY;
 
-          const dx = clientX - startX;
-          const dy = clientY - startY;
+            el.addEventListener('mousedown', dragStart);
+            el.addEventListener('touchstart', dragStart, { passive: false });
 
-          let newX = elemStartX + dx;
-          let newY = elemStartY + dy;
+            function dragStart(e) {
+                e.preventDefault();
+                const scaleX = previewCard.clientWidth / 1000;
+                const scaleY = previewCard.clientHeight / 330;
 
-          const cardWidth = previewCard.clientWidth;
-          const cardHeight = previewCard.clientHeight;
+                if (e.type === 'touchstart') {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                } else {
+                    startX = e.clientX;
+                    startY = e.clientY;
+                }
 
-          // snap to horizontal center 50%
-          if (Math.abs(newX - cardWidth / 2) < 10) {
-            newX = cardWidth / 2;
-            guideX.style.left = cardWidth / 2 + "px";
-            guideX.classList.remove("hidden");
-          } else {
-            guideX.classList.add("hidden");
-          }
+                elemStartX = welcomerConfig[keyPrefix + 'X'] * scaleX;
+                elemStartY = welcomerConfig[keyPrefix + 'Y'] * scaleY;
 
-          // snap to vertical center 50%
-          if (Math.abs(newY - cardHeight / 2) < 10) {
-            newY = cardHeight / 2;
-            guideY.style.top = cardHeight / 2 + "px";
-            guideY.classList.remove("hidden");
-          } else {
-            guideY.classList.add("hidden");
-          }
+                document.addEventListener('mousemove', dragMove);
+                document.addEventListener('mouseup', dragEnd);
+                document.addEventListener('touchmove', dragMove, { passive: false });
+                document.addEventListener('touchend', dragEnd);
+            }
 
-          const scaleX = cardWidth / 1000;
-          const scaleY = cardHeight / 330;
+            function dragMove(e) {
+                e.preventDefault();
+                let clientX, clientY;
+                if (e.type === 'touchmove') {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
 
-          welcomerConfig[keyPrefix + "X"] = Math.round(newX / scaleX);
-          welcomerConfig[keyPrefix + "Y"] = Math.round(newY / scaleY);
+                const dx = clientX - startX;
+                const dy = clientY - startY;
 
-          renderLayout();
+                let newX = elemStartX + dx;
+                let newY = elemStartY + dy;
+
+                const cardWidth = previewCard.clientWidth;
+                const cardHeight = previewCard.clientHeight;
+
+                // snap to horizontal center 50%
+                if (Math.abs(newX - cardWidth / 2) < 10) {
+                    newX = cardWidth / 2;
+                    guideX.style.left = (cardWidth / 2) + 'px';
+                    guideX.classList.remove('hidden');
+                } else {
+                    guideX.classList.add('hidden');
+                }
+
+                // snap to vertical center 50%
+                if (Math.abs(newY - cardHeight / 2) < 10) {
+                    newY = cardHeight / 2;
+                    guideY.style.top = (cardHeight / 2) + 'px';
+                    guideY.classList.remove('hidden');
+                } else {
+                    guideY.classList.add('hidden');
+                }
+
+                const scaleX = cardWidth / 1000;
+                const scaleY = cardHeight / 330;
+
+                welcomerConfig[keyPrefix + 'X'] = Math.round(newX / scaleX);
+                welcomerConfig[keyPrefix + 'Y'] = Math.round(newY / scaleY);
+
+                renderLayout();
+            }
+
+            function dragEnd() {
+                document.removeEventListener('mousemove', dragMove);
+                document.removeEventListener('mouseup', dragEnd);
+                document.removeEventListener('touchmove', dragMove);
+                document.removeEventListener('touchend', dragEnd);
+
+                guideX.classList.add('hidden');
+                guideY.classList.add('hidden');
+            }
         }
 
-        function dragEnd() {
-          document.removeEventListener("mousemove", dragMove);
-          document.removeEventListener("mouseup", dragEnd);
-          document.removeEventListener("touchmove", dragMove);
-          document.removeEventListener("touchend", dragEnd);
+        // Bind draggables
+        makeDraggable(document.getElementById('dragAvatar'), 'avatar');
+        makeDraggable(document.getElementById('dragTitle'), 'title');
+        makeDraggable(document.getElementById('dragName'), 'name');
+        makeDraggable(document.getElementById('dragSubtitle'), 'subtitle');
 
-          guideX.classList.add("hidden");
-          guideY.classList.add("hidden");
+        // Bind Customizer Controls to State
+        document.getElementById('titleText').addEventListener('input', (e) => {
+            welcomerConfig.titleText = e.target.value || 'WELCOME TO SERVER';
+            renderLayout();
+        });
+
+        document.getElementById('glowColor').addEventListener('input', (e) => {
+            welcomerConfig.glowColor = e.target.value;
+            renderLayout();
+        });
+
+        document.getElementById('avatarSize').addEventListener('input', (e) => {
+            welcomerConfig.avatarSize = parseInt(e.target.value);
+            renderLayout();
+        });
+
+        document.getElementById('titleSize').addEventListener('input', (e) => {
+            welcomerConfig.titleSize = parseInt(e.target.value);
+            renderLayout();
+        });
+
+        document.getElementById('nameSize').addEventListener('input', (e) => {
+            welcomerConfig.nameSize = parseInt(e.target.value);
+            renderLayout();
+        });
+
+        document.getElementById('subtitleSize').addEventListener('input', (e) => {
+            welcomerConfig.subtitleSize = parseInt(e.target.value);
+            renderLayout();
+        });
+
+        // Load settings on Guild ID inputs
+        async function fetchSettings(guildId) {
+            try {
+                const response = await fetch(`/api/welcomer?guildId=${guildId}`);
+                if (!response.ok) return;
+                const data = await response.json();
+
+                document.getElementById('enabled').checked = data.enabled || false;
+                document.getElementById('channelId').value = data.channelId || '';
+                document.getElementById('backgroundUrl').value = data.background || '';
+                document.getElementById('message').value = data.message || '';
+
+                welcomerConfig = {
+                    avatarX: data.avatarX !== undefined ? data.avatarX : 180,
+                    avatarY: data.avatarY !== undefined ? data.avatarY : 165,
+                    avatarSize: data.avatarSize !== undefined ? data.avatarSize : 110,
+                    titleX: data.titleX !== undefined ? data.titleX : 370,
+                    titleY: data.titleY !== undefined ? data.titleY : 105,
+                    titleSize: data.titleSize !== undefined ? data.titleSize : 26,
+                    titleText: data.titleText || 'WELCOME TO SERVER',
+                    nameX: data.nameX !== undefined ? data.nameX : 370,
+                    nameY: data.nameY !== undefined ? data.nameY : 170,
+                    nameSize: data.nameSize !== undefined ? data.nameSize : 55,
+                    subtitleX: data.subtitleX !== undefined ? data.subtitleX : 370,
+                    subtitleY: data.subtitleY !== undefined ? data.subtitleY : 220,
+                    subtitleSize: data.subtitleSize !== undefined ? data.subtitleSize : 22,
+                    glowColor: data.glowColor || '#00FFFF'
+                };
+
+                // Sync customizer UI
+                document.getElementById('titleText').value = welcomerConfig.titleText;
+                document.getElementById('glowColor').value = welcomerConfig.glowColor;
+                document.getElementById('avatarSize').value = welcomerConfig.avatarSize;
+                document.getElementById('titleSize').value = welcomerConfig.titleSize;
+                document.getElementById('nameSize').value = welcomerConfig.nameSize;
+                document.getElementById('subtitleSize').value = welcomerConfig.subtitleSize;
+
+                if (data.background) {
+                    previewCard.style.backgroundImage = `url('${data.background}')`;
+                } else {
+                    previewCard.style.backgroundImage = "url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop')";
+                }
+
+                // Update text preview
+                let text = data.message || "Halo {user}, selamat datang di {server}! Kamu adalah member ke-{memberCount}.";
+                text = text.replace(/{user}/g, '<span class="text-[#5865F2] bg-[#5865F2]/20 px-1.5 py-0.5 rounded font-semibold text-xs">@NewMember</span>')
+                           .replace(/{server}/g, '<strong>Server Kami</strong>')
+                           .replace(/{memberCount}/g, '<strong>1,234</strong>');
+                document.getElementById('previewText').innerHTML = text;
+
+                renderLayout();
+            } catch (err) {
+                console.error("Gagal memuat setting welcomer:", err);
+            }
         }
-      }
 
-      // Bind draggables
-      makeDraggable(document.getElementById("dragAvatar"), "avatar");
-      makeDraggable(document.getElementById("dragTitle"), "title");
-      makeDraggable(document.getElementById("dragName"), "name");
-      makeDraggable(document.getElementById("dragSubtitle"), "subtitle");
+        const guildIdInput = document.getElementById('guildId');
+        guildIdInput.addEventListener('change', (e) => {
+            const val = e.target.value.trim();
+            if (val.length >= 17) {
+                fetchSettings(val);
+            }
+        });
 
-      // Bind Customizer Controls to State
-      document.getElementById("titleText").addEventListener("input", (e) => {
-        welcomerConfig.titleText = e.target.value || "WELCOME TO SERVER";
-        renderLayout();
-      });
-
-      document.getElementById("glowColor").addEventListener("input", (e) => {
-        welcomerConfig.glowColor = e.target.value;
-        renderLayout();
-      });
-
-      document.getElementById("avatarSize").addEventListener("input", (e) => {
-        welcomerConfig.avatarSize = parseInt(e.target.value);
-        renderLayout();
-      });
-
-      document.getElementById("titleSize").addEventListener("input", (e) => {
-        welcomerConfig.titleSize = parseInt(e.target.value);
-        renderLayout();
-      });
-
-      document.getElementById("nameSize").addEventListener("input", (e) => {
-        welcomerConfig.nameSize = parseInt(e.target.value);
-        renderLayout();
-      });
-
-      document.getElementById("subtitleSize").addEventListener("input", (e) => {
-        welcomerConfig.subtitleSize = parseInt(e.target.value);
-        renderLayout();
-      });
-
-      // Load settings on Guild ID inputs
-      async function fetchSettings(guildId) {
-        try {
-          const response = await fetch(`/api/welcomer?guildId=${guildId}`);
-          if (!response.ok) return;
-          const data = await response.json();
-
-          document.getElementById("enabled").checked = data.enabled || false;
-          document.getElementById("channelId").value = data.channelId || "";
-          document.getElementById("backgroundUrl").value =
-            data.background || "";
-          document.getElementById("message").value = data.message || "";
-
-          welcomerConfig = {
-            avatarX: data.avatarX !== undefined ? data.avatarX : 180,
-            avatarY: data.avatarY !== undefined ? data.avatarY : 165,
-            avatarSize: data.avatarSize !== undefined ? data.avatarSize : 110,
-            titleX: data.titleX !== undefined ? data.titleX : 370,
-            titleY: data.titleY !== undefined ? data.titleY : 105,
-            titleSize: data.titleSize !== undefined ? data.titleSize : 26,
-            titleText: data.titleText || "WELCOME TO SERVER",
-            nameX: data.nameX !== undefined ? data.nameX : 370,
-            nameY: data.nameY !== undefined ? data.nameY : 170,
-            nameSize: data.nameSize !== undefined ? data.nameSize : 55,
-            subtitleX: data.subtitleX !== undefined ? data.subtitleX : 370,
-            subtitleY: data.subtitleY !== undefined ? data.subtitleY : 220,
-            subtitleSize:
-              data.subtitleSize !== undefined ? data.subtitleSize : 22,
-            glowColor: data.glowColor || "#00FFFF",
-          };
-
-          // Sync customizer UI
-          document.getElementById("titleText").value = welcomerConfig.titleText;
-          document.getElementById("glowColor").value = welcomerConfig.glowColor;
-          document.getElementById("avatarSize").value =
-            welcomerConfig.avatarSize;
-          document.getElementById("titleSize").value = welcomerConfig.titleSize;
-          document.getElementById("nameSize").value = welcomerConfig.nameSize;
-          document.getElementById("subtitleSize").value =
-            welcomerConfig.subtitleSize;
-
-          if (data.background) {
-            previewCard.style.backgroundImage = `url('${data.background}')`;
-          } else {
-            previewCard.style.backgroundImage =
-              "url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop')";
-          }
-
-          // Update text preview
-          let text =
-            data.message ||
-            "Halo {user}, selamat datang di {server}! Kamu adalah member ke-{memberCount}.";
-          text = text
-            .replace(
-              /{user}/g,
-              '<span class="text-[#5865F2] bg-[#5865F2]/20 px-1.5 py-0.5 rounded font-semibold text-xs">@NewMember</span>',
-            )
-            .replace(/{server}/g, "<strong>Server Kami</strong>")
-            .replace(/{memberCount}/g, "<strong>1,234</strong>");
-          document.getElementById("previewText").innerHTML = text;
-
-          renderLayout();
-        } catch (err) {
-          console.error("Gagal memuat setting welcomer:", err);
+        // Initialize from URL query param if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const guildIdParam = urlParams.get('guildId');
+        if (guildIdParam) {
+            guildIdInput.value = guildIdParam;
+            fetchSettings(guildIdParam);
+        } else {
+            // Default render values
+            renderLayout();
         }
-      }
 
-      const guildIdInput = document.getElementById("guildId");
-      guildIdInput.addEventListener("change", (e) => {
-        const val = e.target.value.trim();
-        if (val.length >= 17) {
-          fetchSettings(val);
-        }
-      });
+        window.addEventListener('resize', renderLayout);
 
-      // Initialize from URL query param if present
-      const urlParams = new URLSearchParams(window.location.search);
-      const guildIdParam = urlParams.get("guildId");
-      if (guildIdParam) {
-        guildIdInput.value = guildIdParam;
-        fetchSettings(guildIdParam);
-      } else {
-        // Default render values
-        renderLayout();
-      }
+        // --- LIVE PREVIEW BINDINGS FOR TEXT ---
+        const messageInput = document.getElementById('message');
+        const bgInput = document.getElementById('backgroundUrl');
+        const previewText = document.getElementById('previewText');
 
-      window.addEventListener("resize", renderLayout);
+        messageInput.addEventListener('input', (e) => {
+            let text = e.target.value || "Halo {user}, selamat datang di {server}! Kamu adalah member ke-{memberCount}.";
+            text = text.replace(/{user}/g, '<span class="text-[#5865F2] bg-[#5865F2]/20 px-1.5 py-0.5 rounded font-semibold text-xs">@NewMember</span>')
+                           .replace(/{server}/g, '<strong>Server Kami</strong>')
+                           .replace(/{memberCount}/g, '<strong>1,234</strong>');
+            previewText.innerHTML = text;
+        });
 
-      // --- LIVE PREVIEW BINDINGS FOR TEXT ---
-      const messageInput = document.getElementById("message");
-      const bgInput = document.getElementById("backgroundUrl");
-      const previewText = document.getElementById("previewText");
+        bgInput.addEventListener('input', (e) => {
+            const url = e.target.value || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop";
+            previewCard.style.backgroundImage = `url('${url}')`;
+        });
 
-      messageInput.addEventListener("input", (e) => {
-        let text =
-          e.target.value ||
-          "Halo {user}, selamat datang di {server}! Kamu adalah member ke-{memberCount}.";
-        text = text
-          .replace(
-            /{user}/g,
-            '<span class="text-[#5865F2] bg-[#5865F2]/20 px-1.5 py-0.5 rounded font-semibold text-xs">@NewMember</span>',
-          )
-          .replace(/{server}/g, "<strong>Server Kami</strong>")
-          .replace(/{memberCount}/g, "<strong>1,234</strong>");
-        previewText.innerHTML = text;
-      });
+        // --- FORM SUBMISSION ---
+        document.getElementById('welcomerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const alertBox = document.getElementById('alertBox');
+            
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Menyimpan...';
+            btn.classList.add('opacity-70', 'cursor-not-allowed');
+            
+            const payload = {
+                guildId: document.getElementById('guildId').value,
+                enabled: document.getElementById('enabled').checked,
+                channelId: document.getElementById('channelId').value,
+                backgroundUrl: document.getElementById('backgroundUrl').value,
+                message: document.getElementById('message').value,
+                ...welcomerConfig // includes all custom coordinates and glowColor
+            };
 
-      bgInput.addEventListener("input", (e) => {
-        const url =
-          e.target.value ||
-          "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop";
-        previewCard.style.backgroundImage = `url('${url}')`;
-      });
-
-      // --- FORM SUBMISSION ---
-      document
-        .getElementById("welcomerForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const btn = document.getElementById("submitBtn");
-          const alertBox = document.getElementById("alertBox");
-
-          btn.innerHTML =
-            '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Menyimpan...';
-          btn.classList.add("opacity-70", "cursor-not-allowed");
-
-          const payload = {
-            guildId: document.getElementById("guildId").value,
-            enabled: document.getElementById("enabled").checked,
-            channelId: document.getElementById("channelId").value,
-            backgroundUrl: document.getElementById("backgroundUrl").value,
-            message: document.getElementById("message").value,
-            ...welcomerConfig, // includes all custom coordinates and glowColor
-          };
-
-          try {
-            const response = await fetch("/api/welcomer", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            });
-
-            const result = await response.json();
-            alertBox.classList.remove(
-              "hidden",
-              "bg-red-500/20",
-              "text-red-400",
-              "border-red-500/50",
-            );
-            alertBox.classList.add(
-              "bg-emerald-500/20",
-              "text-emerald-400",
-              "border",
-              "border-emerald-500/50",
-            );
-            alertBox.innerHTML =
-              '<i class="fa-solid fa-check-circle text-xl"></i> ' +
-              (result.message || "Desain Welcomer berhasil disimpan!");
-          } catch (err) {
-            alertBox.classList.remove(
-              "hidden",
-              "bg-emerald-500/20",
-              "text-emerald-400",
-              "border-emerald-500/50",
-            );
-            alertBox.classList.add(
-              "bg-red-500/20",
-              "text-red-400",
-              "border",
-              "border-red-500/50",
-            );
-            alertBox.innerHTML =
-              '<i class="fa-solid fa-triangle-exclamation text-xl"></i> Gagal menyimpan pengaturan.';
-          } finally {
-            btn.innerHTML =
-              '<i class="fa-solid fa-floppy-disk mr-2"></i> Simpan Desain';
-            btn.classList.remove("opacity-70", "cursor-not-allowed");
-          }
+            try {
+                const response = await fetch('/api/welcomer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                alertBox.classList.remove('hidden', 'bg-red-500/20', 'text-red-400', 'border-red-500/50');
+                alertBox.classList.add('bg-emerald-500/20', 'text-emerald-400', 'border', 'border-emerald-500/50');
+                alertBox.innerHTML = '<i class="fa-solid fa-check-circle text-xl"></i> ' + (result.message || 'Desain Welcomer berhasil disimpan!');
+            } catch (err) {
+                alertBox.classList.remove('hidden', 'bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500/50');
+                alertBox.classList.add('bg-red-500/20', 'text-red-400', 'border', 'border-red-500/50');
+                alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-xl"></i> Gagal menyimpan pengaturan.';
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i> Simpan Desain';
+                btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            }
         });
     </script>
-  </body>
+</body>
 </html>

@@ -34,6 +34,7 @@ const DiscordStrategy = require("passport-discord").Strategy;
 const { Server } = require("socket.io");
 const helmet = require("helmet");
 const { rateLimit } = require("express-rate-limit");
+const env = require("../src/config/env");
 
 const { logger } = require("../src/managers/logger");
 const { requireLogin, requireApiLogin } = require("./middleware/auth");
@@ -41,7 +42,7 @@ const { createRateLimiter } = require("./utils/httpGuard");
 
 /** Daftar origin yang boleh memanggil dashboard dari domain lain. */
 function parseOrigins() {
-  return String(process.env.DASHBOARD_ORIGIN || "")
+  return String(env.DASHBOARD_ORIGIN || "")
     .split(/[\s,]+/)
     .filter(Boolean);
 }
@@ -52,7 +53,7 @@ module.exports = (client) => {
   // ==================================================================
   require("./routes/webhooks")(client);
 
-  const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = env.NODE_ENV === "production";
 
   // ==================================================================
   // 2. Prasyarat keamanan
@@ -63,7 +64,7 @@ module.exports = (client) => {
   // kode ini bisa menandatangani cookie sesinya sendiri, mengaku sebagai
   // Owner, dan membuka seluruh God Mode di /api/owner. Di produksi, itu bukan
   // peringatan; itu alasan untuk tidak menyalakan dashboard sama sekali.
-  if (!process.env.SESSION_SECRET) {
+  if (!env.SESSION_SECRET) {
     if (isProduction) {
       logger.error(
         "[DASHBOARD] SESSION_SECRET belum diatur. Dashboard TIDAK dinyalakan " +
@@ -79,19 +80,16 @@ module.exports = (client) => {
 
   // Kunci acak per proses jauh lebih baik daripada nilai tetap yang bisa ditebak.
   const sessionSecret =
-    process.env.SESSION_SECRET || crypto.randomBytes(32).toString("hex");
+    env.SESSION_SECRET || crypto.randomBytes(32).toString("hex");
 
   // ==================================================================
   // 3. Server web utama
   // ==================================================================
   const webApp = express();
-  const webPort =
-    parseInt(
-      process.env.PORT || process.env.SERVER_PORT || process.env.DASHBOARD_PORT,
-      10,
-    ) || 3070;
+  const webPort = 3000;
 
-  if (isProduction) webApp.set("trust proxy", 1);
+  // Percayai proxy reverse (Cloud Run, Nginx, Pterodactyl) untuk IP header X-Forwarded-For
+  webApp.set("trust proxy", 1);
 
   // --- Header keamanan dasar ---
   // Menggunakan helmet untuk keamanan standar. Content-Security-Policy dimatikan
@@ -161,6 +159,11 @@ module.exports = (client) => {
       limit: 300,
       standardHeaders: true,
       legacyHeaders: false,
+      validate: {
+        xForwardedForHeader: false,
+        forwardedHeader: false,
+        default: false,
+      },
     }),
   );
   webApp.use(
@@ -170,6 +173,11 @@ module.exports = (client) => {
       limit: 20,
       standardHeaders: true,
       legacyHeaders: false,
+      validate: {
+        xForwardedForHeader: false,
+        forwardedHeader: false,
+        default: false,
+      },
     }),
   );
   webApp.use(
@@ -179,11 +187,16 @@ module.exports = (client) => {
       limit: 30,
       standardHeaders: true,
       legacyHeaders: false,
+      validate: {
+        xForwardedForHeader: false,
+        forwardedHeader: false,
+        default: false,
+      },
     }),
   );
 
   // --- Login Discord ---
-  if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
+  if (!env.CLIENT_ID || !env.CLIENT_SECRET) {
     logger.warn(
       "[DASHBOARD] DISCORD_CLIENT_ID / SECRET belum diatur. Login Web UI dimatikan.",
     );
@@ -191,9 +204,9 @@ module.exports = (client) => {
     passport.use(
       new DiscordStrategy(
         {
-          clientID: process.env.DISCORD_CLIENT_ID,
-          clientSecret: process.env.DISCORD_CLIENT_SECRET,
-          callbackURL: process.env.DISCORD_CALLBACK_URL,
+          clientID: env.CLIENT_ID,
+          clientSecret: env.CLIENT_SECRET,
+          callbackURL: env.CALLBACK_URL,
           scope: ["identify", "guilds"],
         },
         (accessToken, refreshToken, profile, done) => done(null, profile),
@@ -294,6 +307,8 @@ module.exports = (client) => {
   webApp.get("/settings", requireLogin, view("settings.html"));
   webApp.get("/tickets", requireLogin, view("tickets.html"));
   webApp.get("/welcomer", requireLogin, view("welcomer.html"));
+  webApp.get("/automations", requireLogin, view("automations.html"));
+  webApp.get("/activity", view("activity.html"));
   webApp.get("/music", requireLogin, view("music.html"));
   webApp.get("/economy", view("economy.html"));
   webApp.get("/status", view("status.html"));
@@ -317,8 +332,8 @@ module.exports = (client) => {
 
   require("./sockets")(client, io, { sessionMiddleware });
 
-  webServer.listen(webPort, () => {
-    logger.info(`[DASHBOARD] Web UI berjalan di http://localhost:${webPort}`);
+  webServer.listen(webPort, "0.0.0.0", () => {
+    logger.info(`[DASHBOARD] Web UI berjalan di http://0.0.0.0:${webPort}`);
   });
 
   return { webApp, webServer, io };

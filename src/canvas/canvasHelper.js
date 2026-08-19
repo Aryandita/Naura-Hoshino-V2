@@ -88,8 +88,8 @@ const wrapText = (ctx, text, x, y, maxWidth, lineHeight, maxLines) => {
   let lineCount = 1;
 
   for (let n = 0; n < words.length; n++) {
-    let testLine = line + words[n] + " ";
-    let metrics = ctx.measureText(testLine);
+    const testLine = line + words[n] + " ";
+    const metrics = ctx.measureText(testLine);
 
     if (metrics.width > maxWidth && n > 0) {
       if (lineCount === maxLines) {
@@ -390,9 +390,7 @@ async function generateMusicPanelImage(track, currentPos, clientAvatar) {
           responseType: "arraybuffer",
           timeout: 5000,
         });
-        trackThumbImg = await canvasRuntime.loadImage(
-          Buffer.from(response.data),
-        );
+        trackThumbImg = await canvasRuntime.loadImage(Buffer.from(response.data));
       }
     } catch (e2) {}
   }

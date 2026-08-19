@@ -26,7 +26,7 @@ module.exports = {
     const guildId = interaction.guild.id;
 
     try {
-      let [guildData] = await GuildSettings.findOrCreate({
+      const [guildData] = await GuildSettings.findOrCreate({
         where: { guildId },
       });
 
@@ -61,7 +61,8 @@ module.exports = {
 
       guildData.settings.features = features;
       guildData.changed("settings", true);
-      await guildData.save();
+      await guildData.save({ fields: ["settings"] });
+      invalidateGuildSettings(guildId);
 
       // Render container hasil
       const container = buildContainerV2({
@@ -70,11 +71,7 @@ module.exports = {
         color: "#10B981",
       });
 
-      await interaction.update({
-        ...container,
-        components: [], // Hapus tombol
-        files: [], // Hapus gambar jika ada
-      });
+      await interaction.update(container);
     } catch (error) {
       await interaction.reply({
         content: "❌ Terjadi kesalahan saat menyimpan pengaturan preset.",

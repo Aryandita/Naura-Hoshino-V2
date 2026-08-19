@@ -58,7 +58,7 @@ module.exports = {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
-      let [settings] = await GuildSettings.findOrCreate({
+      const [settings] = await GuildSettings.findOrCreate({
         where: { guildId: interaction.guild.id },
       });
       const currentSettings = settings.settings || {};

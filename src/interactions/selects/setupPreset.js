@@ -34,7 +34,7 @@ module.exports = [
       const guildId = interaction.guildId;
 
       try {
-        let [settings] = await GuildSettings.findOrCreate({
+        const [settings] = await GuildSettings.findOrCreate({
           where: { guildId },
         });
 
@@ -101,9 +101,6 @@ module.exports = [
         });
 
         await interaction.editReply(successPayload);
-
-        // Optional: Update original message to remove select menu so it can't be clicked again easily
-        await interaction.message.edit({ components: [] }).catch(() => {});
       } catch (error) {
         logger.error(
           `[ONBOARDING PRESET] Gagal menyimpan preset untuk ${guildId}:`,

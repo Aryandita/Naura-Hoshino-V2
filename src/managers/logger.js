@@ -65,13 +65,15 @@ const logger = {
   },
 };
 
+const env = require("../config/env");
+
 // Sentry Integration (Optional)
 let Sentry = null;
 try {
-  if (process.env.SENTRY_DSN) {
+  if (env.SENTRY_DSN) {
     Sentry = require("@sentry/node");
     Sentry.init({
-      dsn: process.env.SENTRY_DSN,
+      dsn: env.SENTRY_DSN,
       tracesSampleRate: 1.0,
     });
     logger.system("[SENTRY] Sentry initialized for error tracking.");

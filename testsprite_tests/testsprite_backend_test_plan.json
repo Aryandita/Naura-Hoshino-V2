@@ -1,0 +1,47 @@
+[
+  {
+    "id": "TC001",
+    "title": "get api health returns complete system status",
+    "description": "Verify that GET /api/health returns a 200 response with uptime, memory usage, shard status, database connectivity, and Lavalink node status, reflecting the current health of the system."
+  },
+  {
+    "id": "TC002",
+    "title": "get api stats returns general bot statistics",
+    "description": "Verify that GET /api/stats returns a 200 response containing total users, total guilds, and RAM usage statistics for the bot."
+  },
+  {
+    "id": "TC003",
+    "title": "get api leaderboard returns ranked players or error",
+    "description": "Verify that GET /api/leaderboard with valid type parameters (e.g., wealth, trivia) returns a 200 response with a ranked list of players, and with an invalid type returns a 500 error response."
+  },
+  {
+    "id": "TC004",
+    "title": "get api user me returns authenticated user profile",
+    "description": "Verify that GET /api/user/@me with a valid authentication token returns a 200 response with the authenticated user's Discord profile and session data."
+  },
+  {
+    "id": "TC005",
+    "title": "post api user language updates user language preference",
+    "description": "Verify that POST /api/user/language with a valid language code and authentication token returns a 200 response confirming the update, and invalid language codes return a 400 error."
+  },
+  {
+    "id": "TC006",
+    "title": "get api guild id settings returns guild configuration",
+    "description": "Verify that GET /api/guild/:id/settings with valid authentication and guild access returns a 200 response with guild settings including welcomer configuration and AI persona data, and without permission returns 403."
+  },
+  {
+    "id": "TC007",
+    "title": "post api guild id automations saves automation workflows",
+    "description": "Verify that POST /api/guild/:id/automations with valid workflow data returns a 200 response confirming the save and activates the automation, and malformed data returns a 400 error."
+  },
+  {
+    "id": "TC008",
+    "title": "post api webhook saweria processes donation webhook",
+    "description": "Verify that POST /api/webhook/saweria with a valid Authorization header and new transaction key returns a 200 response and credits donation rewards exactly once, and invalid authorization returns 401."
+  },
+  {
+    "id": "TC009",
+    "title": "post api webhook trakteer processes donation webhook",
+    "description": "Verify that POST /api/webhook/trakteer with a valid Authorization header and new transaction key returns a 200 response and processes rewards, and duplicate transaction keys skip processing but return 200."
+  }
+]

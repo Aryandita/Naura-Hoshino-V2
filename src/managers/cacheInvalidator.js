@@ -1,4 +1,4 @@
-// src/managers/cacheInvalidator.js
+const env = require("../config/env");
 const redisManager = require("./redisManager");
 const { logger } = require("./logger");
 
@@ -7,7 +7,7 @@ const CHANNEL = "cache:invalidate";
 
 // Penanda asal pesan. Hanya untuk keperluan diagnosa, shard asal tetap ikut
 // memproses pesannya sendiri karena penyegaran bersifat idempoten.
-const ORIGIN = `shard-${process.env.SHARD_ID ?? "main"}-${process.pid}`;
+const ORIGIN = `shard-${env.SHARD_ID ?? "main"}-${process.pid}`;
 
 function guildKey(guildId) {
   return `guild:settings:${guildId}`;

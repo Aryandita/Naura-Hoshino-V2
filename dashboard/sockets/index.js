@@ -10,10 +10,12 @@
  */
 
 const os = require("os");
-const { logger } = require("../src/managers/logger");
-const { getDbStatus } = require("../src/managers/dbManager");
-const RateLimiter = require("../../utils/rateLimiter");
-const redisManager = require("../src/managers/redisManager");
+const { logger } = require("../../src/managers/logger");
+const { getDbStatus } = require("../../src/managers/dbManager");
+const RateLimiter = require("../../src/utils/rateLimiter");
+const redisManager = require("../../src/managers/redisManager");
+const mongoManager = require("../../src/managers/mongoManager");
+const env = require("../../src/config/env");
 
 const STATS_INTERVAL_MS = 3000;
 const MUSIC_INTERVAL_MS = 2000;
@@ -77,7 +79,7 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
 
   // --- Siaran statistik berkala (Lintas Shard via Redis) ---
   const shardStats = new Map();
-
+  
   if (redisManager.client && redisManager.client.isReady) {
     redisManager.initPubSub("cluster:stats_update", (data) => {
       if (data && data.shardId !== undefined) {
@@ -111,11 +113,11 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
         }
         totalGuilds += stats.guilds || 0;
         totalUsers += stats.users || 0;
-        totalRamUsed += parseFloat(stats.ramUsed) * 1024 * 1024 || 0;
+        totalRamUsed += (parseFloat(stats.ramUsed) * 1024 * 1024) || 0;
         pingSum += stats.ping || 0;
         pingCount++;
       }
-
+      
       if (pingCount > 0) avgPing = Math.round(pingSum / pingCount);
     }
 
@@ -126,6 +128,10 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       guilds: totalGuilds,
       users: totalUsers,
       dbStatus: getDbStatus(),
+      mongoStatus: mongoManager ? mongoManager.getStatus() : null,
+      redisStatus: !!(redisManager.client && redisManager.client.isReady),
+      botVersion: env.BOT_VERSION,
+      engineVersion: env.ENGINE_VERSION,
     });
   }, STATS_INTERVAL_MS);
 
@@ -193,80 +199,46 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       const limited = await RateLimiter.isRateLimited(
         socket.id,
         "dashboard_chat",
-        5,
+        6,
         10,
       );
       if (limited) {
         return socket.emit("chat_response", {
           reply:
-            "Pelan-pelan ya, Naura masih mengetik. Tunggu beberapa detik lagi.",
+            "Pelan-pelan ya sahabatku! Naura masih menyusun kata-kata manis. Tunggu sebentar ya! ✨",
         });
       }
 
-      const message = String(data?.message || "").slice(0, 2000);
+      const message = String(data?.message || data?.prompt || "").slice(0, 2000);
       if (!message) return;
 
-      const env = require("../src/config/env");
+      const history = Array.isArray(data?.history) ? data.history : [];
+      const userId = socketUserId(socket);
+      const sessionUser = socket.request?.session?.passport?.user;
+      const username = sessionUser?.username || data?.username || "Teman Baik";
+      const isOwner = userId && env.OWNER_IDS && env.OWNER_IDS.includes(userId);
 
-      // --- Mesin utama: Verba ---
+      const aiManager = require("../../src/managers/aiManager");
+
       try {
-        const response = await fetch("https://api.verba.ink/v1/response", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${env.VERBA_API_KEY}`,
-            "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0",
-          },
-          body: JSON.stringify({
-            character: env.VERBA_CHARACTER_SLUG || "naura",
-            messages: [{ role: "user", content: message }],
-          }),
+        const response = await aiManager.chatCompanion({
+          prompt: message,
+          history,
+          userId,
+          username,
+          isOwner,
         });
 
-        const rawText = await response.text();
-        if (!response.ok)
-          throw new Error(`Verba API error: HTTP ${response.status}`);
-
-        const result = JSON.parse(rawText);
-        const reply =
-          result?.choices?.[0]?.message?.content ||
-          result?.message?.content ||
-          result?.content;
-        if (!reply) throw new Error("Verba mengembalikan jawaban kosong.");
-
-        return socket.emit("chat_response", { reply });
-      } catch (error) {
-        logger.warn(
-          `[SOCKET CHAT] Verba gagal (${error.message}). Beralih ke cadangan...`,
-        );
-      }
-
-      // --- Cadangan 1: Gemini ---
-      try {
-        const { GoogleGenerativeAI } = require("@google/generative-ai");
-        const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-        const result = await model.startChat().sendMessage(message);
-        return socket.emit("chat_response", { reply: result.response.text() });
-      } catch (geminiError) {
-        logger.warn(`[SOCKET CHAT] Gemini gagal (${geminiError.message}).`);
-      }
-
-      // --- Cadangan 2: Ollama ---
-      try {
-        const { Ollama } = require("ollama");
-        const ollamaClient = new Ollama({ host: env.OLLAMA_BASE_URL });
-        const ollamaResponse = await ollamaClient.chat({
-          model: env.OLLAMA_MODEL,
-          messages: [{ role: "user", content: message }],
-        });
         return socket.emit("chat_response", {
-          reply: ollamaResponse.message.content,
+          reply: response.reply,
+          source: response.source,
+          username: response.username,
         });
-      } catch (ollamaError) {
+      } catch (err) {
+        logger.error("[SOCKET CHAT ERROR]", err);
         return socket.emit("chat_response", {
           reply:
-            "Maaf ya, otak Naura lagi ngambek sebentar. Coba lagi nanti, oke?",
+            "Aduh, Naura tersandung kabel sebentar! 🌸 Coba sapa Naura lagi ya, Naura selalu siap nemenin kamu kok! ✨",
         });
       }
     });

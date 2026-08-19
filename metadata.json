@@ -1,0 +1,6 @@
+{
+  "name": "Naura Hoshino Dashboard",
+  "description": "Discord bot dashboard and control panel for Naura Hoshino with interactive management, analytics, and music controls.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -139,9 +139,7 @@ async function applyItemEffect(effect, { survival, userId }) {
       // Ditetaskan lewat `/survival consume` atau `/survival pet`
       return applySimplePerk(survival, "eternal_pet_egg", { pending: true });
     case "mythic_celestial_egg":
-      return applySimplePerk(survival, "mythic_celestial_egg", {
-        pending: true,
-      });
+      return applySimplePerk(survival, "mythic_celestial_egg", { pending: true });
     case "egg_leviathan":
       return applySimplePerk(survival, "egg_leviathan", { pending: true });
     case "egg_bahamut":
