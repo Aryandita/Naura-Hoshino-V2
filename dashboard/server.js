@@ -307,6 +307,8 @@ module.exports = (client) => {
   webApp.get("/settings", requireLogin, view("settings.html"));
   webApp.get("/tickets", requireLogin, view("tickets.html"));
   webApp.get("/welcomer", requireLogin, view("welcomer.html"));
+  webApp.get("/automations", requireLogin, view("automations.html"));
+  webApp.get("/activity", view("activity.html"));
   webApp.get("/music", requireLogin, view("music.html"));
   webApp.get("/economy", view("economy.html"));
   webApp.get("/status", view("status.html"));

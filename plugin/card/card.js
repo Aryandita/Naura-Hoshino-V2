@@ -125,6 +125,36 @@ module.exports = {
             .setDescription("Kode warna hex (misal: #FFB6C1 atau #00FFFF)")
             .setRequired(true),
         ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("trade")
+        .setDescription("🤝 Buka tawaran barter kartu dan Star Fragments dengan pemain lain")
+        .addUserOption((opt) =>
+          opt
+            .setName("target")
+            .setDescription("Pemain yang ingin diajak barter")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("kartuku")
+            .setDescription("Kode kartu milikmu yang ingin kamu berikan (misal: nra-7x9q)")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("kartu_target")
+            .setDescription("Kode kartu milik target yang ingin kamu tukar (Opsional)")
+            .setRequired(false),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName("star_fragments")
+            .setDescription("Bonus Star Fragments yang kamu tawarkan (Opsional)")
+            .setMinValue(0)
+            .setRequired(false),
+        ),
     ),
 
   async execute(interaction) {
@@ -580,6 +610,99 @@ module.exports = {
         title: "🎨 Kartu Berhasil Diwarnai!",
         description: `Kartu **${card.characterName}** kini memancarkan aura warna \`${hex}\`!`,
         footerText: ui.getFooter("core"),
+      });
+
+      return interaction.editReply(payload);
+    }
+
+    if (subcommand === "trade") {
+      const targetUser = interaction.options.getUser("target");
+      const myCardCode = interaction.options.getString("kartuku").trim();
+      const targetCardCode = interaction.options.getString("kartu_target") ? interaction.options.getString("kartu_target").trim() : null;
+      const starFragOffer = interaction.options.getInteger("star_fragments") || 0;
+
+      if (targetUser.id === userId || targetUser.bot) {
+        return interaction.reply({
+          ...buildErrorContainerV2({
+            title: "Target Barter Tidak Valid",
+            description: "Kamu tidak dapat melakukan barter dengan dirimu sendiri atau bot.",
+          }),
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+
+      await interaction.deferReply();
+
+      // Cek kepemilikan kartu pengirim
+      const myCard = await UserCard.findOne({ where: { cardCode: myCardCode, userId } });
+      if (!myCard) {
+        return interaction.editReply({
+          ...buildErrorContainerV2({
+            title: "Kartu Tidak Ditemukan",
+            description: `Kartu dengan kode \`${myCardCode}\` tidak ada di inventory kamu!`,
+          }),
+        });
+      }
+
+      // Cek kepemilikan kartu target jika diisi
+      let targetCard = null;
+      if (targetCardCode) {
+        targetCard = await UserCard.findOne({ where: { cardCode: targetCardCode, userId: targetUser.id } });
+        if (!targetCard) {
+          return interaction.editReply({
+            ...buildErrorContainerV2({
+              title: "Kartu Target Tidak Valid",
+              description: `Kartu dengan kode \`${targetCardCode}\` tidak ditemukan di koleksi <@${targetUser.id}>!`,
+            }),
+          });
+        }
+      }
+
+      // Cek kecukupan star fragments pengirim
+      if (starFragOffer > 0) {
+        const UserSurvival = require("../../src/models/UserSurvival");
+        const surv = await UserSurvival.findOne({ where: { userId } });
+        if (!surv || (surv.starFragments || 0) < starFragOffer) {
+          return interaction.editReply({
+            ...buildErrorContainerV2({
+              title: "Star Fragments Tidak Cukup",
+              description: `Saldo Star Fragments milikmu tidak mencukupi untuk menawarkan ${starFragOffer} NSF!`,
+            }),
+          });
+        }
+      }
+
+      const tradeId = crypto.randomBytes(6).toString("hex");
+      const tradeSession = {
+        tradeId,
+        initiatorId: userId,
+        targetUserId: targetUser.id,
+        initiatorCardCode: myCardCode,
+        targetCardCode,
+        starFragmentsOffer: starFragOffer,
+        createdAt: Date.now(),
+      };
+
+      await redisManager.setCache(`card:trade:${tradeId}`, JSON.stringify(tradeSession), 120); // 2 min TTL
+
+      const buttonsRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`card_trade_accept_${tradeId}`)
+          .setLabel("🤝 Terima Barter")
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId(`card_trade_decline_${tradeId}`)
+          .setLabel("❌ Tolak")
+          .setStyle(ButtonStyle.Secondary),
+      );
+
+      const payload = buildContainerV2({
+        accentColorHex: "#38BDF8",
+        authorName: "🎴 Live P2P Card Barter",
+        title: "Tawaran Barter Kartu Diajukan!",
+        description: `<@${userId}> mengajak <@${targetUser.id}> untuk melakukan pertukaran kartu:\n\n**Tawaran dari <@${userId}>:**\n- 🎴 **${myCard.characterName}** (\`${myCard.cardCode}\` - *${myCard.rarity}*)${starFragOffer > 0 ? `\n- ⭐ **+${starFragOffer.toLocaleString()} Star Fragments**` : ""}\n\n**Permintaan Kartu:**\n- ${targetCard ? `🎴 **${targetCard.characterName}** (\`${targetCard.cardCode}\` - *${targetCard.rarity}*)` : "*Bebas / Tanpa Kartu Tukar*"}\n\n<@${targetUser.id}>, silakan tekan tombol di bawah untuk menyetujui transaksi barter ini (berlaku 2 menit).`,
+        footerText: ui.getFooter("core"),
+        buttonsRow,
       });
 
       return interaction.editReply(payload);

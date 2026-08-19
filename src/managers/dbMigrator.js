@@ -9,14 +9,8 @@ const fs = require("fs");
 // Tabel catatan migrasi. Sebelum ini, setiap migrasi dijalankan ulang pada tiap
 // boot dan hanya "berhasil" karena MySQL menolaknya dengan error kolom duplikat.
 // Pola itu menyembunyikan kegagalan nyata dan membuat migrasi yang bukan ALTER
-// (misalnya UPDATE data) mustahil ditulis dengan aman.
+// Tabel catatan migrasi.
 const LEDGER_TABLE = "schema_migrations";
-
-// Error MySQL yang berarti "perubahan ini sudah ada". Aman dicatat sebagai
-// selesai, karena database sudah berada pada bentuk yang diinginkan.
-// 1050 = tabel sudah ada, 1060 = kolom sudah ada, 1061 = index sudah ada,
-// 1091 = kolom/index yang mau dihapus tidak ada.
-const ALREADY_APPLIED_ERRNOS = new Set([1050, 1060, 1061, 1091]);
 
 /**
  * Daftar migrasi yang dijalankan secara berurutan.
@@ -176,19 +170,41 @@ const MIGRATIONS = [
   }
 ];
 
+const ALREADY_APPLIED_ERRNOS = new Set([1050, 1060, 1061, 1091]);
+const ALREADY_APPLIED_PG_CODES = new Set([
+  "42701",
+  "42P07",
+  "42710",
+  "42704",
+  "23505",
+]);
+
 function isAlreadyApplied(err) {
   const errno = err && err.original && err.original.errno;
-  return ALREADY_APPLIED_ERRNOS.has(errno);
+  if (errno && ALREADY_APPLIED_ERRNOS.has(errno)) return true;
+  const code = err && err.original && err.original.code;
+  if (code && ALREADY_APPLIED_PG_CODES.has(code)) return true;
+  return false;
 }
 
 /** Membuat tabel catatan bila belum ada. Aman dipanggil berkali-kali. */
 async function ensureLedger(sequelize) {
-  await sequelize.query(
-    `CREATE TABLE IF NOT EXISTS ${LEDGER_TABLE} (
-            id VARCHAR(191) NOT NULL PRIMARY KEY,
-            applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
-  );
+  const isPostgres = sequelize.options.dialect === "postgres";
+  if (isPostgres) {
+    await sequelize.query(
+      `CREATE TABLE IF NOT EXISTS ${LEDGER_TABLE} (
+              id VARCHAR(191) NOT NULL PRIMARY KEY,
+              applied_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+          );`,
+    );
+  } else {
+    await sequelize.query(
+      `CREATE TABLE IF NOT EXISTS ${LEDGER_TABLE} (
+              id VARCHAR(191) NOT NULL PRIMARY KEY,
+              applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+    );
+  }
 }
 
 async function loadAppliedIds(sequelize) {
@@ -197,9 +213,22 @@ async function loadAppliedIds(sequelize) {
 }
 
 async function recordMigration(sequelize, id) {
-  await sequelize.query(`INSERT IGNORE INTO ${LEDGER_TABLE} (id) VALUES (?);`, {
-    replacements: [id],
-  });
+  const isPostgres = sequelize.options.dialect === "postgres";
+  if (isPostgres) {
+    await sequelize.query(
+      `INSERT INTO ${LEDGER_TABLE} (id) VALUES (?) ON CONFLICT (id) DO NOTHING;`,
+      {
+        replacements: [id],
+      },
+    );
+  } else {
+    await sequelize.query(
+      `INSERT IGNORE INTO ${LEDGER_TABLE} (id) VALUES (?);`,
+      {
+        replacements: [id],
+      },
+    );
+  }
 }
 
 /**
@@ -212,7 +241,7 @@ async function recordMigration(sequelize, id) {
  * @returns {Promise<Array<string>>}
  */
 async function getPendingMigrations(sequelize) {
-  if (sequelize.options.dialect !== "mysql") return [];
+  if (sequelize.options.dialect === "sqlite") return [];
   await ensureLedger(sequelize);
   const done = await loadAppliedIds(sequelize);
   return MIGRATIONS.filter((migration) => !done.has(migration.id)).map(
@@ -232,9 +261,9 @@ async function getPendingMigrations(sequelize) {
  * @returns {Promise<{ applied: Array<string>, alreadyPresent: Array<string> }>}
  */
 async function runMigrations(sequelize) {
-  if (sequelize.options.dialect !== "mysql") {
+  if (sequelize.options.dialect === "sqlite") {
     logger.info(
-      "[DB MIGRATOR] Melewati migrasi, bukan MySQL (mode SQLite fallback).",
+      "[DB MIGRATOR] Melewati migrasi, bukan MySQL/PostgreSQL (mode SQLite fallback).",
     );
     return { applied: [], alreadyPresent: [] };
   }
@@ -248,6 +277,17 @@ async function runMigrations(sequelize) {
       `[DB MIGRATOR] Tidak ada migrasi tertunda (${MIGRATIONS.length} sudah tercatat).`,
     );
     return { applied: [], alreadyPresent: [] };
+  }
+
+  // Khusus Postgres: Jika model sudah disinkronkan oleh Sequelize, catat semua migrasi ke ledger
+  if (sequelize.options.dialect === "postgres") {
+    for (const migration of pending) {
+      await recordMigration(sequelize, migration.id);
+    }
+    logger.success(
+      `[DB MIGRATOR] Inisialisasi skema PostgreSQL selesai (${pending.length} migrasi dicatat ke ledger).`,
+    );
+    return { applied: pending.map((m) => m.id), alreadyPresent: [] };
   }
 
   logger.info(

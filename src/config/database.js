@@ -3,46 +3,118 @@
 const { Sequelize } = require("sequelize");
 const env = require("./env");
 
-const hasMySQLConfig =
+const isExternalDb =
   !env.USE_SQLITE &&
   Boolean(
-    env.DB_NAME &&
-      env.DB_USER &&
-      env.DB_HOST &&
-      env.DB_HOST !== "sqlite" &&
-      (env.USE_MYSQL ||
-        (env.DB_HOST !== "127.0.0.1" && env.DB_HOST !== "localhost")),
+    env.DATABASE_URL ||
+      (env.DB_NAME &&
+        env.DB_USER &&
+        env.DB_HOST &&
+        env.DB_HOST !== "sqlite" &&
+        (env.USE_MYSQL ||
+          env.DB_DIALECT === "postgres" ||
+          env.DB_HOST.includes("supabase") ||
+          (env.DB_HOST !== "127.0.0.1" && env.DB_HOST !== "localhost"))),
   );
+
+const hasMySQLConfig = isExternalDb;
 const SHARD_COUNT = env.TOTAL_SHARDS > 0 ? env.TOTAL_SHARDS : 1;
 const POOL_MAX =
   env.DB_POOL_MAX > 0
     ? env.DB_POOL_MAX
     : Math.max(5, Math.floor(env.DB_POOL_BUDGET / SHARD_COUNT));
 
-const sequelize = hasMySQLConfig
-  ? new Sequelize(env.DB_NAME, env.DB_USER, env.DB_PASS, {
-      host: env.DB_HOST,
-      port: env.DB_PORT,
-      dialect: "mysql",
-      logging: false,
-      dialectOptions: { connectTimeout: 120000 },
-      pool: {
-        max: POOL_MAX,
-        min: 2,
-        acquire: 120000,
-        idle: 15000,
-        evict: 5000,
-      },
-    })
-  : new Sequelize({
+const determineDialect = () => {
+  if (env.DB_DIALECT) return env.DB_DIALECT.toLowerCase();
+  if (
+    env.DATABASE_URL &&
+    (env.DATABASE_URL.startsWith("postgres://") ||
+      env.DATABASE_URL.startsWith("postgresql://"))
+  ) {
+    return "postgres";
+  }
+  if (
+    env.DB_PORT === 5432 ||
+    env.DB_PORT === 6543 ||
+    (env.DB_HOST &&
+      (env.DB_HOST.includes("supabase") || env.DB_HOST.includes("postgres")))
+  ) {
+    return "postgres";
+  }
+  return "mysql";
+};
+
+const dialect = determineDialect();
+
+const getDialectOptions = () => {
+  const isSupabase =
+    (env.DB_HOST && env.DB_HOST.includes("supabase")) ||
+    (env.DATABASE_URL && env.DATABASE_URL.includes("supabase"));
+
+  const needsSsl = env.DB_SSL || isSupabase;
+
+  if (dialect === "postgres") {
+    return {
+      connectTimeout: 120000,
+      ...(needsSsl
+        ? {
+            ssl: {
+              require: true,
+              rejectUnauthorized: false,
+            },
+          }
+        : {}),
+    };
+  }
+
+  return { connectTimeout: 120000 };
+};
+
+const createSequelizeInstance = () => {
+  if (!isExternalDb) {
+    return new Sequelize({
       dialect: "sqlite",
       storage: "./naura_fallback.sqlite",
       logging: false,
     });
+  }
+
+  const poolConfig = {
+    max: POOL_MAX,
+    min: 2,
+    acquire: 120000,
+    idle: 15000,
+    evict: 5000,
+  };
+
+  const dialectOptions = getDialectOptions();
+
+  if (env.DATABASE_URL) {
+    return new Sequelize(env.DATABASE_URL, {
+      dialect,
+      logging: false,
+      dialectOptions,
+      pool: poolConfig,
+    });
+  }
+
+  const defaultPort = dialect === "postgres" ? 5432 : 3306;
+  return new Sequelize(env.DB_NAME, env.DB_USER, env.DB_PASS, {
+    host: env.DB_HOST,
+    port: env.DB_PORT || defaultPort,
+    dialect,
+    logging: false,
+    dialectOptions,
+    pool: poolConfig,
+  });
+};
+
+const sequelize = createSequelizeInstance();
 
 module.exports = {
   sequelize,
   hasMySQLConfig,
+  hasDatabaseConfig: isExternalDb,
   SHARD_COUNT,
   POOL_MAX,
 };

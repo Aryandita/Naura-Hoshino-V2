@@ -14,6 +14,7 @@ const { logger } = require("../../src/managers/logger");
 const { getDbStatus } = require("../../src/managers/dbManager");
 const RateLimiter = require("../../src/utils/rateLimiter");
 const redisManager = require("../../src/managers/redisManager");
+const mongoManager = require("../../src/managers/mongoManager");
 const env = require("../../src/config/env");
 
 const STATS_INTERVAL_MS = 3000;
@@ -127,6 +128,8 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       guilds: totalGuilds,
       users: totalUsers,
       dbStatus: getDbStatus(),
+      mongoStatus: mongoManager ? mongoManager.getStatus() : null,
+      redisStatus: !!(redisManager.client && redisManager.client.isReady),
       botVersion: env.BOT_VERSION,
       engineVersion: env.ENGINE_VERSION,
     });

@@ -61,7 +61,8 @@ module.exports = {
 
       guildData.settings.features = features;
       guildData.changed("settings", true);
-      await guildData.save();
+      await guildData.save({ fields: ["settings"] });
+      invalidateGuildSettings(guildId);
 
       // Render container hasil
       const container = buildContainerV2({

@@ -316,6 +316,17 @@ Jawablah dalam bahasa Indonesia kasual.`;
 
         systemPrompt += `\nSaat ini kamu sedang berbicara dengan: ${message.author.username} (Role: ${roleInfo}).`;
 
+        // RAG Server Knowledge Base Integration
+        if (message.guildId) {
+          try {
+            const knowledgeBase = require("../ai/knowledgeBase");
+            const kbContext = await knowledgeBase.getKnowledgeContext(message.guildId, prompt);
+            if (kbContext) systemPrompt += `\n${kbContext}`;
+          } catch (e) {
+            // Ignore knowledge base fetch failure
+          }
+        }
+
         try {
           // 1. OLLAMA LOKAL (UTAMA)
           const ollamaSession = (await this.getMemory(userId, "ollama")) || { history: [] };

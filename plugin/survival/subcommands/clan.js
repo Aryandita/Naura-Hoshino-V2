@@ -406,6 +406,30 @@ module.exports = {
       });
     }
 
+    if (action === "territory") {
+      const ClanTerritory = require("../../../src/models/ClanTerritory");
+      const territories = await ClanTerritory.findAll();
+
+      if (territories.length === 0) {
+        return card(interaction, {
+          color: "#9CA3AF",
+          title: "🏰 Peta Teritori Wilayah Klan",
+          description: "Belum ada teritori yang tercatat dalam peta dunia Naura RPG.",
+        });
+      }
+
+      const list = territories.map((t) => {
+        const ownerClan = t.clanId ? `Klan ID \`#${t.clanId}\`` : "*Netral / Belum Dikuasai*";
+        return `📍 **${t.name}**\n- Penguasa: ${ownerClan}\n- Control Points: **${t.controlPoints} pts**\n- Hasil Pajak: ⭐ **${t.taxYield} NSF/hari**\n- Buff Wilayah: \`${t.buffEffect}\``;
+      }).join("\n\n");
+
+      return card(interaction, {
+        color: "#38BDF8",
+        title: "🏰 Peta Wilayah & Teritori Klan Lintas Server",
+        description: `Berikut status penguasaan teritori strategis di dunia Naura RPG:\n\n${list}\n\n*Klan yang menguasai teritori memperoleh pendapatan pasif Star Fragments dan buff wilayah setiap reset mingguan.*`,
+      });
+    }
+
     if (action === "blessing") {
       const guildWarEngine = require("../../../src/survival/engines/guildWarEngine");
       const blessing = await guildWarEngine.getServerBlessing(interaction.guildId);
@@ -434,7 +458,7 @@ module.exports = {
 
     return fail(
       interaction,
-      "Naura belum mengenali aksi itu. Coba pilih **info**, **create**, **join**, **deposit**, **raid**, atau **blessing** ya.",
+      "Naura belum mengenali aksi itu. Coba pilih **info**, **create**, **join**, **deposit**, **raid**, **territory**, atau **blessing** ya.",
     );
   },
 };

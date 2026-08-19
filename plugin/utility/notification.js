@@ -74,7 +74,7 @@ module.exports = {
 
         profile.notification_prefs = prefs;
         profile.changed("notification_prefs", true);
-        await profile.save();
+        await profile.save({ fields: ["notification_prefs"] });
 
         await i.update({
            components: [...payload.components, buildMenu(prefs)]

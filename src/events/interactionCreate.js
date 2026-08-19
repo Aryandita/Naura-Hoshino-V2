@@ -129,6 +129,26 @@ module.exports = {
       return handleSlashCommand(interaction, client);
     }
 
+    if (interaction.isContextMenuCommand()) {
+      const { resolveContextMenu } = require("../interactions/contextMenus");
+      const handler = resolveContextMenu(interaction.commandName);
+      if (handler) {
+        try {
+          return await handler.execute(interaction, client);
+        } catch (error) {
+          logger.error(
+            `[CONTEXT MENU ERROR] Galat saat mengeksekusi ${interaction.commandName}:`,
+            error,
+          );
+          return await respondError(
+            interaction,
+            "Terjadi kesalahan saat memproses context menu ini.",
+          );
+        }
+      }
+      return undefined;
+    }
+
     const kind = kindOf(interaction);
     if (!kind) return undefined;
 

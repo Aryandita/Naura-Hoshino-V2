@@ -98,17 +98,59 @@ async function drawAnimeCard(cardData) {
     ctx.fillStyle = qual.color;
     ctx.fillText(qual.stars, 60, 638);
 
+    // 5.5 SSR & UR Holo Shimmer Overlay (Rainbow Hologram Shader)
+    const isSSRorUR = cardData.rarity === "SSR" || cardData.rarity === "UR" || cardData.rarity === "SECRET_RARE";
+    if (isSSRorUR) {
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      const holoGrad = ctx.createLinearGradient(40, 100, width - 40, 550);
+      holoGrad.addColorStop(0, "rgba(255, 0, 128, 0.25)");
+      holoGrad.addColorStop(0.2, "rgba(255, 200, 0, 0.2)");
+      holoGrad.addColorStop(0.4, "rgba(0, 255, 128, 0.25)");
+      holoGrad.addColorStop(0.6, "rgba(0, 200, 255, 0.25)");
+      holoGrad.addColorStop(0.8, "rgba(128, 0, 255, 0.2)");
+      holoGrad.addColorStop(1, "rgba(255, 0, 128, 0.25)");
+
+      ctx.fillStyle = holoGrad;
+      ctx.beginPath();
+      ctx.roundRect(40, 100, width - 80, 450, 16);
+      ctx.fill();
+
+      // Sparkles
+      ctx.fillStyle = "#FFFFFF";
+      const sparklePositions = [
+        [80, 140], [420, 160], [120, 380], [380, 400], [250, 180], [160, 480], [340, 490]
+      ];
+      for (const [sx, sy] of sparklePositions) {
+        ctx.beginPath();
+        ctx.arc(sx, sy, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(sx - 8, sy);
+        ctx.lineTo(sx + 8, sy);
+        ctx.moveTo(sx, sy - 8);
+        ctx.lineTo(sx, sy + 8);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
     // Serial Code & Rarity (Bottom)
     ctx.font = '12px "Orbitron", "EmojiFont"';
     ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
     ctx.fillText(`CODE: ${cardData.cardCode || "NRA-0000"}`, 60, 665);
 
     ctx.textAlign = "right";
-    ctx.fillStyle = dyeColor;
+    ctx.fillStyle = isSSRorUR ? "#FFD700" : dyeColor;
     ctx.fillText((cardData.rarity || "RARE").replace("_", " "), width - 60, 665);
 
     return canvas.toBuffer("image/png");
   });
 }
 
-module.exports = { drawAnimeCard };
+module.exports = {
+  drawAnimeCard,
+  renderCard: drawAnimeCard,
+};

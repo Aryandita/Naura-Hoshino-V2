@@ -3,17 +3,21 @@
 const express = require("express");
 const { getDbStatus } = require("../../src/managers/dbManager");
 const redisManager = require("../../src/managers/redisManager");
+const mongoManager = require("../../src/managers/mongoManager");
 
 module.exports = (client) => {
   const router = express.Router();
 
   router.get("/health", async (req, res) => {
     try {
-      // DB Status
+      // DB Status (MySQL / Sequelize)
       const dbStatus = getDbStatus();
 
+      // MongoDB Status
+      const mongoStatus = mongoManager ? mongoManager.getStatus() : { state: "disabled", readyState: 0, models: [] };
+
       // Redis Status
-      const redisStatus = redisManager.client && redisManager.client.isReady;
+      const redisStatus = !!(redisManager.client && redisManager.client.isReady);
 
       // Lavalink Status
       let lavalinkNodes = 0;
@@ -21,10 +25,13 @@ module.exports = (client) => {
 
       // Check if poru is initialized (musicManager ensures it)
       if (client.poru && client.poru.nodes) {
-        lavalinkNodes = client.poru.nodes.size;
-        lavalinkConnected = client.poru.nodes.filter(
-          (node) => node.isConnected,
-        ).size;
+        const nodesList = client.poru.nodes.values
+          ? Array.from(client.poru.nodes.values())
+          : (Array.isArray(client.poru.nodes) ? client.poru.nodes : []);
+        lavalinkNodes = nodesList.length;
+        lavalinkConnected = nodesList.filter(
+          (node) => node && node.isConnected,
+        ).length;
       }
 
       // Uptime Bot
@@ -44,6 +51,7 @@ module.exports = (client) => {
         },
         services: {
           database: dbStatus,
+          mongodb: mongoStatus,
           redis: {
             connected: redisStatus,
           },

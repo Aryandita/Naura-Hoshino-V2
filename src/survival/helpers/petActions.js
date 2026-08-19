@@ -147,9 +147,50 @@ function getBuffs(pet) {
   return buff;
 }
 
+/**
+ * Mengawinkan 2 pet untuk melahirkan offspring pet baru
+ * @param {object} parentA
+ * @param {object} parentB
+ * @param {string} userId
+ * @returns {object} Data pet bayi baru
+ */
+function breedPets(parentA, parentB, userId) {
+  if (!parentA || !parentB) throw new Error("Dua pet induk dibutuhkan untuk breeding!");
+  if (parentA.petLevel < 5 || parentB.petLevel < 5) {
+    throw new Error("Kedua pet induk minimal harus level 5 untuk dapat kawin!");
+  }
+
+  // Determine offspring type (50% parentA, 50% parentB, or 10% hybrid mutation)
+  const rand = Math.random();
+  let offspringType = parentA.petType;
+  if (rand > 0.55) {
+    offspringType = parentB.petType;
+  } else if (rand < 0.1) {
+    offspringType = "kirin"; // Rare celestial mutation
+  }
+
+  // Passive skill inheritance
+  const inheritedPassive = Math.random() > 0.5 ? parentA.passiveSkill : parentB.passiveSkill;
+
+  return {
+    userId,
+    petName: `Baby ${offspringType.toUpperCase()}`,
+    petType: offspringType,
+    petLevel: 1,
+    petExp: 0,
+    evolutionStage: 1,
+    passiveSkill: inheritedPassive || "none",
+    hunger: 100,
+    affection: 100,
+    mood: "happy",
+    isActive: false,
+  };
+}
+
 module.exports = {
   evaluateMood,
   evaluateEvolution,
   getBuffs,
-  PASSIVE_BUFFS
+  breedPets,
+  PASSIVE_BUFFS,
 };

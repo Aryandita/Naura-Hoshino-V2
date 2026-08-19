@@ -51,7 +51,13 @@ module.exports = {
   // ==========================================
 
   getFooter(category = "core") {
-    return this.footers[category] || this.footers.core;
+    const env = require("./env");
+    const ver = env.BOT_VERSION || "2.1.0";
+    const template = this.footers[category] || this.footers.core;
+    if (typeof template === "string") {
+      return template.replace(/v\d+\.\d+\.\d+/g, `v${ver}`);
+    }
+    return template;
   },
 
   getPremiumColor(tier) {

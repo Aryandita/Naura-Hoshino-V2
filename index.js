@@ -27,6 +27,7 @@ const { loadEvents } = require("./src/managers/eventLoader");
 const clientOptions = require("./src/config/clientOptions");
 const MusicManager = require("./src/managers/musicManager");
 const redisManager = require("./src/managers/redisManager");
+const mongoManager = require("./src/managers/mongoManager");
 const { logger } = require("./src/managers/logger");
 const RssManager = require("./src/managers/rssManager");
 const { connectToDatabase } = require("./src/managers/dbManager");
@@ -76,6 +77,7 @@ async function startBot() {
 
   const sysStatus = {
     db: "\x1b[31m\ud83d\udd34 OFFLINE   \x1b[0m",
+    mongo: "\x1b[33m\ud83d\udfe1 SKIPPED   \x1b[0m",
     redis: "\x1b[33m\ud83d\udfe1 SKIPPED   \x1b[0m",
     music: "\x1b[32m\ud83d\udfe2 INITIALIZED\x1b[0m",
     cmds: "\x1b[33m\ud83d\udfe1 BACKGROUND\x1b[0m",
@@ -113,6 +115,20 @@ async function startBot() {
     } catch (error) {
       sysStatus.db = "\x1b[31m\ud83d\udd34 ERROR     \x1b[0m";
       logger.error("[BOOT] Koneksi database gagal:", error.message);
+    }
+
+    if (env.MONGODB_URI) {
+      try {
+        const mongoConnected = await mongoManager.connect();
+        if (mongoConnected) {
+          sysStatus.mongo = "\x1b[32m\ud83d\udfe2 CONNECTED \x1b[0m";
+        } else {
+          sysStatus.mongo = "\x1b[31m\ud83d\udd34 ERROR     \x1b[0m";
+        }
+      } catch (mongoErr) {
+        sysStatus.mongo = "\x1b[31m\ud83d\udd34 ERROR     \x1b[0m";
+        logger.error("[BOOT] Koneksi MongoDB gagal:", mongoErr.message);
+      }
     }
 
     if (env.REDIS_URL) {
@@ -240,6 +256,11 @@ async function shutdown() {
     if (redisManager && redisManager.client) {
       console.log("[-] Menutup koneksi Redis...");
       await redisManager.client.quit();
+    }
+
+    if (mongoManager && mongoManager.isReady) {
+      console.log("[-] Menutup koneksi MongoDB Atlas...");
+      await mongoManager.disconnect();
     }
 
     clearTimeout(forceExit);

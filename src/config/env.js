@@ -66,11 +66,27 @@ const env = {
   ENGINE_VERSION: cleanEnv(process.env.ENGINE_VERSION) || "2.1.0",
   PARTNERSHIP: cleanEnv(process.env.PARTNERSHIP) || "Belum ada kolaborasi",
 
-  // MYSQL DATABASE
-  DB_HOST: cleanEnv(process.env.MYSQL_HOST),
-  DB_PORT: parseInt(process.env.MYSQL_PORT) || 3306,
-  DB_USER: cleanEnv(process.env.MYSQL_USER),
-  DB_NAME: cleanEnv(process.env.MYSQL_DATABASE),
+  // DATABASE (Multi-Dialect: PostgreSQL / Supabase, MySQL, SQLite)
+  DATABASE_URL: cleanEnv(
+    process.env.DATABASE_URL || process.env.SUPABASE_DATABASE_URL,
+  ),
+  DB_DIALECT:
+    cleanEnv(process.env.DB_DIALECT) ||
+    (cleanEnv(process.env.DATABASE_URL)?.startsWith("postgres")
+      ? "postgres"
+      : ""),
+  DB_HOST: cleanEnv(process.env.DB_HOST || process.env.MYSQL_HOST),
+  DB_PORT: parseInt(process.env.DB_PORT || process.env.MYSQL_PORT) || 0,
+  DB_USER: cleanEnv(process.env.DB_USER || process.env.MYSQL_USER),
+  DB_PASS: cleanEnv(
+    process.env.DB_PASSWORD ||
+      process.env.DB_PASS ||
+      process.env.MYSQL_PASSWORD,
+  ),
+  DB_NAME: cleanEnv(process.env.DB_NAME || process.env.MYSQL_DATABASE),
+  DB_SSL:
+    cleanEnv(process.env.DB_SSL) === "true" ||
+    cleanEnv(process.env.DB_SSL) === "1",
   USE_SQLITE:
     cleanEnv(process.env.USE_SQLITE) === "true" ||
     cleanEnv(process.env.USE_SQLITE) === "1",
@@ -112,6 +128,9 @@ const env = {
 
   // REDIS
   REDIS_URL: cleanEnv(process.env.REDIS_URL),
+
+  // MONGODB
+  MONGODB_URI: cleanEnv(process.env.MONGODB_URI || process.env.MONGO_URI),
 
   // OLLAMA (Local AI Fallback)
   OLLAMA_BASE_URL:

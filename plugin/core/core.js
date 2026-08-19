@@ -597,7 +597,7 @@ async function handleStats(interaction, client, lang) {
       },
       {
         name: `${eSoftware} ${cleanSoftware}`,
-        value: `${dot} **Node.js:** \`${process.version}\`\n${dot} **Discord.js:** \`v${djsVersion}\`\n${dot} **Engine:** \`Naura Core v${env.ENGINE_VERSION || "1.1.0"}\``,
+        value: `${dot} **Node.js:** \`${process.version}\`\n${dot} **Discord.js:** \`v${djsVersion}\`\n${dot} **Engine:** \`Naura Core v${env.ENGINE_VERSION || "2.1.0"}\``,
       },
       {
         name: `${eReach} ${cleanReach}`,

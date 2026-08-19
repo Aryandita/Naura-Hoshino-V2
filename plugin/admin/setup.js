@@ -21,6 +21,7 @@ const handlers = {
   ai: require("./setup/ai"),
   "ai-automod": require("./setup/ai"),
   "ai-config": require("./setup/ai"),
+  "ai-kb": require("./setup/ai"),
   vanity: require("./setup/vanity"),
   minecraft: require("./setup/minecraft"),
   faq: require("./setup/faq"),
@@ -120,6 +121,28 @@ module.exports = {
         .setDescription("🧠 Atur channel untuk percakapan AI otomatis")
         .addChannelOption((opt) =>
           opt.setName("channel").setDescription("Channel teks untuk chat AI").addChannelTypes(ChannelType.GuildText).setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("ai-kb")
+        .setDescription("📚 Atur Knowledge Base / Dokumen Peraturan Server untuk AI")
+        .addStringOption((opt) =>
+          opt
+            .setName("aksi")
+            .setDescription("Pilih tindakan")
+            .addChoices(
+              { name: "Tambah Dokumen", value: "tambah" },
+              { name: "Lihat Daftar", value: "list" },
+              { name: "Reset Knowledge Base", value: "reset" },
+            )
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt.setName("judul").setDescription("Judul dokumen / topik").setRequired(false),
+        )
+        .addStringOption((opt) =>
+          opt.setName("konten").setDescription("Teks lengkap dokumen / peraturan / FAQ").setRequired(false),
         ),
     )
     .addSubcommand((sub) =>

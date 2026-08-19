@@ -69,4 +69,56 @@ module.exports = async function handle(interaction, { currentSettings, saveSetti
 
     return interaction.reply(payload);
   }
+
+  if (subcommand === "ai-kb") {
+    const aksi = interaction.options.getString("aksi") || "list";
+    const judul = interaction.options.getString("judul");
+    const konten = interaction.options.getString("konten");
+    const knowledgeBase = require("../../../src/ai/knowledgeBase");
+
+    if (aksi === "tambah") {
+      if (!judul || !konten) {
+        return interaction.reply({
+          content: "❌ Harap sertakan judul dan konten dokumen untuk ditambahkan ke Knowledge Base.",
+          ephemeral: true,
+        });
+      }
+
+      const count = await knowledgeBase.addKnowledge(interaction.guildId, judul, konten);
+      const payload = buildContainerV2({
+        accentColorHex: "#38BDF8",
+        authorName: "Naura AI RAG Knowledge Base",
+        title: "📚 Dokumen Berhasil Dipelajari!",
+        description: `Naura berhasil mempelajari dokumen **${judul}** ke dalam memori pengetahuan server ini (${count} potongan teks tersimpan).\n\nSekarang member bisa bertanya kepada Naura seputar isi dokumen ini!`,
+        footerText: ui.getFooter("core"),
+      });
+      return interaction.reply(payload);
+    }
+
+    if (aksi === "reset") {
+      await knowledgeBase.clearKnowledge(interaction.guildId);
+      const payload = buildContainerV2({
+        accentColorHex: "#EF4444",
+        authorName: "Naura AI RAG Knowledge Base",
+        title: "🗑️ Knowledge Base Direset",
+        description: "Seluruh memori dokumen dan peraturan server untuk AI telah dibersihkan.",
+        footerText: ui.getFooter("core"),
+      });
+      return interaction.reply(payload);
+    }
+
+    // Default: list
+    const docs = await knowledgeBase.listKnowledge(interaction.guildId);
+    const payload = buildContainerV2({
+      accentColorHex: "#38BDF8",
+      authorName: "Naura AI RAG Knowledge Base",
+      title: "📖 Daftar Dokumen Pengetahuan Server",
+      description: docs.length > 0
+        ? `Berikut dokumen yang sudah dipelajari Naura di server ini:\n${docs.map((d, i) => `${i + 1}. **${d}**`).join("\n")}\n\n*Gunakan \`/setup ai-kb\` untuk menambah dokumen baru.*`
+        : "Belum ada dokumen yang dipelajari Naura di server ini.\nGunakan `/setup ai-kb` dengan aksi **Tambah** untuk mendaftarkan peraturan/FAQ server.",
+      footerText: ui.getFooter("core"),
+    });
+    return interaction.reply(payload);
+  }
 };
+

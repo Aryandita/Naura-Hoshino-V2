@@ -144,15 +144,22 @@ module.exports = [
           message:
             "currency.setBalance() sudah usang. Pakai charge() untuk memotong, reward() untuk menambah, atau cacheManager.increment*() bila butuh delta langsung.",
         },
+
+        // Larangan memanggil @napi-rs/canvas langsung di luar canvasRuntime.js
+        {
+          selector:
+            'CallExpression[callee.name="require"][arguments.0.value="@napi-rs/canvas"]',
+          message:
+            "Dilarang me-require '@napi-rs/canvas' langsung. Gunakan 'src/canvas/canvasRuntime.js' sebagai satu-satunya gateway.",
+        },
       ],
     },
   },
 
   {
-    // cacheManager adalah satu-satunya tempat yang memang berhak menyentuh
-    // model secara langsung. Seluruh aturan di atas justru dirancang supaya
-    // semua penulisan bermuara ke berkas ini.
+    // cacheManager dan canvasRuntime memiliki hak khusus mengakses modul inti/native
     files: [
+      "src/canvas/canvasRuntime.js",
       "src/managers/cacheManager.js",
       "src/managers/dbMigrator.js",
       "src/managers/dbSeeder.js",

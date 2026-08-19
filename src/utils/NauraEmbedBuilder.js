@@ -11,7 +11,7 @@ class NauraEmbedBuilder extends EmbedBuilder {
     super(data);
     // Default visual aesthetics
     this.setColor(ui.getColor("primary"));
-    this.setFooter({ text: "Naura Hoshino created by Aryandita ✨" });
+    this.setFooter({ text: ui.getFooter("core") });
     this.setTimestamp();
 
     // Lampiran gambar ekspresi. EmbedBuilder tidak bisa membawa file sendiri,

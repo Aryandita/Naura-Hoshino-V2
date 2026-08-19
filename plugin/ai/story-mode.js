@@ -27,16 +27,13 @@ module.exports = {
     const onCooldown = await redisManager.getCache(cooldownKey);
     if (onCooldown) {
       const remaining = Math.ceil((onCooldown - Date.now()) / 60000);
-      return interaction.reply({
-        embeds: [
-          buildErrorContainerV2({
-            title: "Sedang Beristirahat",
-            description: `⏳ | Naura masih memikirkan jalan ceritamu selanjutnya. Tunggu sekitar ${remaining} menit lagi ya!`,
-            footerText: ui.getFooter("utility"),
-          })
-        ],
-        flags: MessageFlags.Ephemeral
-      });
+      return interaction.reply(
+        buildErrorContainerV2({
+          title: "Sedang Beristirahat",
+          description: `⏳ | Naura masih memikirkan jalan ceritamu selanjutnya. Tunggu sekitar ${remaining} menit lagi ya!`,
+          footerText: ui.getFooter("utility"),
+        })
+      );
     }
 
     await interaction.deferReply();
@@ -93,15 +90,13 @@ Jangan membuat pilihan untuk pemain, tapi berikan mereka deskripsi apa yang terj
       return interaction.editReply(payload);
     } catch (e) {
       await redisManager.client.del(cooldownKey);
-      return interaction.editReply({
-        embeds: [
-          buildErrorContainerV2({
-            title: "Sihir Gagal",
-            description: `❌ | Naura kehilangan koneksi ke dunia fantasi. Coba lagi nanti ya!`,
-            footerText: ui.getFooter("utility"),
-          })
-        ]
-      });
+      return interaction.editReply(
+        buildErrorContainerV2({
+          title: "Sihir Gagal",
+          description: "❌ | Naura kehilangan koneksi ke dunia fantasi. Coba lagi nanti ya!",
+          footerText: ui.getFooter("utility"),
+        })
+      );
     }
   },
 };
