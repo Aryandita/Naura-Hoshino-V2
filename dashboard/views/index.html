@@ -48,6 +48,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css?v=3">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 
 <body class="flex h-screen overflow-hidden bg-animated" id="mainBody">
@@ -218,8 +219,8 @@
                 </div>
             </header>
 
-            <!-- SCROLLABLE MAIN CONTENT AREA -->
-            <main class="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 w-full flex flex-col items-center justify-start pb-28 md:pb-12 space-y-6">
+            <!-- SCROLLABLE MAIN CONTENT AREA (Generous bottom padding for full scroll clearance) -->
+            <main class="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 w-full flex flex-col items-center justify-start pb-44 md:pb-32 space-y-6">
 
                         <!-- SECTION 1: HOME (System Overview Metrics) -->
         <section id="sec-home" class="dashboard-section block animate-fade-in w-full max-w-7xl mx-auto space-y-6">
@@ -677,8 +678,8 @@
                     </div>
                 </div>
 
-                <!-- Statistics Profile metrics -->
-                <div id="tabStats" class="space-y-6">
+                <!-- Statistics Profile metrics (dengan padding bawah ekstra untuk kelancaran scrolling) -->
+                <div id="tabStats" class="space-y-6 pb-24">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Level & Currency Breakdown -->
                         <div class="glass-panel p-6 rounded-2xl bg-black/40 border border-pink-500/20 shadow-lg">
@@ -724,24 +725,30 @@
                         </div>
                     </div>
 
-                    <!-- Music Analytics Charts with Friends -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Music Analytics Charts with Friends (Realtime Database Connected) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-10 mb-8">
                         <!-- Bar Chart: Tracks listened with friends -->
-                        <div class="glass-panel p-6 rounded-2xl bg-black/40 border border-cyan-500/20 shadow-lg">
-                            <h4 class="text-xs font-bold text-cyan-400 font-cyber tracking-widest uppercase mb-4 flex items-center gap-2">
-                                <i class="fa-solid fa-chart-column text-cyan-400"></i> Top 5 Teman Mabar Musik (Jumlah Track)
-                            </h4>
-                            <div class="relative h-64 w-full flex items-center justify-center">
+                        <div class="glass-panel p-6 rounded-2xl bg-black/40 border border-cyan-500/20 shadow-lg flex flex-col">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-xs font-bold text-cyan-400 font-cyber tracking-widest uppercase flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-column text-cyan-400"></i> Top 5 Teman Mabar Musik (Jumlah Track)
+                                </h4>
+                                <span class="text-[9px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-cyber font-bold border border-cyan-500/30">REALTIME DB</span>
+                            </div>
+                            <div class="relative h-72 w-full flex items-center justify-center p-2">
                                 <canvas id="friendTracksBarChart"></canvas>
                             </div>
                         </div>
 
                         <!-- Doughnut Chart: Duration listened with friends -->
-                        <div class="glass-panel p-6 rounded-2xl bg-black/40 border border-pink-500/20 shadow-lg">
-                            <h4 class="text-xs font-bold text-pink-400 font-cyber tracking-widest uppercase mb-4 flex items-center gap-2">
-                                <i class="fa-solid fa-chart-pie text-pink-400"></i> Top 5 Lama Mendengarkan Musik Bersama
-                            </h4>
-                            <div class="relative h-64 w-full flex items-center justify-center">
+                        <div class="glass-panel p-6 rounded-2xl bg-black/40 border border-pink-500/20 shadow-lg flex flex-col">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-xs font-bold text-pink-400 font-cyber tracking-widest uppercase flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-pie text-pink-400"></i> Top 5 Lama Mendengarkan Musik Bersama
+                                </h4>
+                                <span class="text-[9px] px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 font-cyber font-bold border border-pink-500/30">REALTIME DB</span>
+                            </div>
+                            <div class="relative h-72 w-full flex items-center justify-center p-2">
                                 <canvas id="friendDurationPieChart"></canvas>
                             </div>
                         </div>
@@ -3625,49 +3632,69 @@
         let friendTracksChartInstance = null;
         let friendDurationChartInstance = null;
 
-        function renderMusicFriendCharts(db) {
+        async function renderMusicFriendCharts(dbOrFriends) {
             const barCanvas = document.getElementById('friendTracksBarChart');
             const pieCanvas = document.getElementById('friendDurationPieChart');
             if (!barCanvas || !pieCanvas || typeof Chart === 'undefined') return;
 
-            let tracking = {};
-            if (db && db.music_trackingData) {
-                try {
-                    tracking = typeof db.music_trackingData === 'string' ? JSON.parse(db.music_trackingData) : db.music_trackingData;
-                } catch (e) {}
+            let friendList = [];
+
+            if (Array.isArray(dbOrFriends)) {
+                friendList = dbOrFriends;
+            } else if (dbOrFriends && typeof dbOrFriends === 'object') {
+                let tracking = {};
+                if (dbOrFriends.music_trackingData) {
+                    try {
+                        tracking = typeof dbOrFriends.music_trackingData === 'string'
+                            ? JSON.parse(dbOrFriends.music_trackingData)
+                            : dbOrFriends.music_trackingData;
+                    } catch (e) {}
+                }
+
+                const friendsData = tracking.friends || {};
+                friendList = Object.entries(friendsData).map(([name, obj]) => ({
+                    name,
+                    count: typeof obj === 'number' ? obj : (Number(obj.tracks) || Number(obj.count) || 1),
+                    durationMs: typeof obj === 'object' && obj && obj.durationMs
+                        ? Number(obj.durationMs)
+                        : ((typeof obj === 'number' ? obj : 1) * 210000)
+                }));
             }
 
-            const friendsData = tracking.friends || {};
-            let friendList = Object.entries(friendsData).map(([name, obj]) => ({
-                name,
-                count: typeof obj === 'number' ? obj : (obj.count || obj.tracks || 1),
-                durationMs: typeof obj === 'object' && obj.durationMs ? obj.durationMs : ((typeof obj === 'number' ? obj : 1) * 210000)
-            }));
+            // Jika belum ada data mabar lokal di sesi user, ambil dari database agregat backend
+            if (friendList.length === 0) {
+                try {
+                    const res = await fetch('/api/analytics/music-friends');
+                    const data = await res.json();
+                    if (data && Array.isArray(data.friends) && data.friends.length > 0) {
+                        friendList = data.friends;
+                    }
+                } catch (err) {
+                    console.warn('[MusicAnalytics] Fetch fallback error:', err);
+                }
+            }
 
+            // Jika database baru dan belum ada data sama sekali, buat representasi data awal
             if (friendList.length === 0) {
                 friendList = [
-                    { name: 'Aryandita', count: 42, durationMs: 42 * 210000 },
-                    { name: 'KuroNeko', count: 28, durationMs: 28 * 195000 },
-                    { name: 'Sakura_Miku', count: 19, durationMs: 19 * 230000 },
-                    { name: 'Lofi_Master', count: 14, durationMs: 14 * 180000 },
-                    { name: 'CyberGamer', count: 9, durationMs: 9 * 200000 }
+                    { name: 'Belum Ada Mabar', count: 0, durationMs: 0 }
                 ];
             }
 
-            const topByCount = [...friendList].sort((a, b) => b.count - a.count).slice(0, 5);
+            const topByCount = [...friendList].sort((a, b) => (b.count || 0) - (a.count || 0)).slice(0, 5);
             const barLabels = topByCount.map(f => f.name);
-            const barData = topByCount.map(f => f.count);
+            const barData = topByCount.map(f => f.count || 0);
 
-            const topByDuration = [...friendList].sort((a, b) => b.durationMs - a.durationMs).slice(0, 5);
+            const topByDuration = [...friendList].sort((a, b) => (b.durationMs || 0) - (a.durationMs || 0)).slice(0, 5);
             const pieLabels = topByDuration.map(f => f.name);
-            const pieData = topByDuration.map(f => Math.round(f.durationMs / 60000));
+            const pieData = topByDuration.map(f => Math.max(1, Math.round((f.durationMs || 0) / 60000)));
 
             const colors = ['#f472b6', '#38bdf8', '#c084fc', '#4ade80', '#fbbf24'];
 
             if (friendTracksChartInstance) {
                 friendTracksChartInstance.data.labels = barLabels;
                 friendTracksChartInstance.data.datasets[0].data = barData;
-                friendTracksChartInstance.update('none');
+                friendTracksChartInstance.update();
             } else {
                 friendTracksChartInstance = new Chart(barCanvas.getContext('2d'), {
                     type: 'bar',
@@ -3685,6 +3712,9 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        layout: {
+                            padding: { bottom: 12 }
+                        },
                         plugins: {
                             legend: { display: false },
                             tooltip: {
@@ -3696,8 +3726,25 @@
                             }
                         },
                         scales: {
-                            x: { ticks: { color: '#9ca3af', font: { family: 'Outfit', size: 11 } }, grid: { display: false } },
-                            y: { ticks: { color: '#9ca3af', font: { family: 'Orbitron', size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                            x: {
+                                ticks: {
+                                    color: '#9ca3af',
+                                    font: { family: 'Outfit', size: 11 },
+                                    maxRotation: 0,
+                                    autoSkip: false,
+                                    padding: 8
+                                },
+                                grid: { display: false }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: '#9ca3af',
+                                    font: { family: 'Orbitron', size: 10 },
+                                    stepSize: 5
+                                },
+                                grid: { color: 'rgba(255,255,255,0.05)' }
+                            }
                         }
                     }
                 });
@@ -3706,7 +3753,7 @@
             if (friendDurationChartInstance) {
                 friendDurationChartInstance.data.labels = pieLabels;
                 friendDurationChartInstance.data.datasets[0].data = pieData;
-                friendDurationChartInstance.update('none');
+                friendDurationChartInstance.update();
             } else {
                 friendDurationChartInstance = new Chart(pieCanvas.getContext('2d'), {
                     type: 'doughnut',
@@ -3724,11 +3771,19 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         cutout: '60%',
+                        layout: {
+                            padding: { bottom: 8 }
+                        },
                         plugins: {
                             legend: {
                                 display: true,
                                 position: 'bottom',
-                                labels: { color: '#d1d5db', font: { family: 'Outfit', size: 10 }, boxWidth: 12 }
+                                labels: {
+                                    color: '#d1d5db',
+                                    font: { family: 'Outfit', size: 10 },
+                                    boxWidth: 12,
+                                    padding: 12
+                                }
                             },
                             tooltip: {
                                 backgroundColor: 'rgba(10,13,20,0.95)',
@@ -5290,8 +5345,30 @@
         fetchUser();
         loadHomeTopLeaderboard();
 
+        // Setup Realtime Socket.IO Connection
+        if (typeof io !== 'undefined') {
+            const socket = io();
+
+            socket.on('connect', () => {
+                console.log('[Socket] Connected to Naura Realtime Gateway:', socket.id);
+            });
+
+            socket.on('stats_update', (data) => {
+                updateTelemetryMetrics(data);
+            });
+
+            socket.on('music_analytics_update', (data) => {
+                console.log('[Socket] Live Music Analytics received:', data);
+                if (data && data.music_trackingData) {
+                    renderMusicFriendCharts(data.music_trackingData);
+                } else {
+                    renderMusicFriendCharts();
+                }
+            });
+        }
+
         // Background interval check for uptime/etc
-        setInterval(fetchStats, 30000);
+        setInterval(fetchStats, 15000);
     </script>
 
     <!-- MOBILE BOTTOM NAVIGATION BAR (Thumb-Zone Ergonomics) -->

@@ -33,11 +33,14 @@ assets/cache/
 Thumbs.db
 .idea/
 .vscode/
+.obsidian/
 
 # Konfigurasi git lokal & project terpisah (jangan pernah di-commit)
 .gitconfig
 portfolio-site/
 *.docx
- 
+*.rar
+*.7z
+
 testsprite_tests/tmp/
 testsprite_tests/tmp/config.json
