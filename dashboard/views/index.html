@@ -47,8 +47,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css?v=3">
+    <link rel="stylesheet" href="/css/tokens.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/naura-ui.js"></script>
 </head>
 
 <body class="flex h-screen overflow-hidden bg-animated" id="mainBody">
@@ -60,10 +62,11 @@
         <span>DALAM MODE FALLBACK (SQLITE)</span>
     </div>
 
-    <!-- Loading Screen for Language Change -->
-    <div id="loadingScreen" class="loading-screen hidden">
+    <!-- Loading Screen (Cyber-Anime Naura Floating Thinking Expression) -->
+    <div id="loadingScreen" class="loading-screen">
+        <img class="loading-figure" src="/assets/Naura_Expression/Thinking.png" alt="Naura Thinking" onerror="this.src='/assets/Naura_Expression/Read.png'">
         <div class="loading-text text-glow">NAURA OS</div>
-        <div id="loadingMotiv" class="font-assist text-[var(--color-muted)]">Hampir siap! ✨</div>
+        <div id="loadingMotiv" class="font-assist text-sm text-[var(--color-muted)] font-medium">Sedang menyiapkan sistem untukmu... ✨</div>
     </div>
 
     <!-- Mobile Sidebar Backdrop Blur Overlay -->
@@ -5340,10 +5343,19 @@
         initHomeCommandChart();
         loadGlassStyle();
 
-        // Initial fetch
-        fetchStats();
-        fetchUser();
-        loadHomeTopLeaderboard();
+        // Initial fetch with smooth loading screen fade-out
+        Promise.allSettled([
+            fetchStats(),
+            fetchUser(),
+            loadHomeTopLeaderboard()
+        ]).then(() => {
+            const ls = document.getElementById('loadingScreen');
+            if (ls) {
+                setTimeout(() => {
+                    ls.classList.add('hidden');
+                }, 350);
+            }
+        });
 
         // Setup Realtime Socket.IO Connection
         if (typeof io !== 'undefined') {

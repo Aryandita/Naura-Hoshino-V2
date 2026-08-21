@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="/css/tokens.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/naura-ui.js"></script>
     <style>
         body {
             background-color: #0b0c10;
@@ -35,6 +36,13 @@
     </style>
 </head>
 <body class="relative h-screen flex flex-col items-center justify-between p-8 select-none">
+    <!-- Loading Screen (Cyber-Anime Naura Floating Thinking Expression) -->
+    <div id="loadingScreen" class="loading-screen">
+        <img class="loading-figure" src="/assets/Naura_Expression/Thinking.png" alt="Naura Thinking" onerror="this.src='/assets/Naura_Expression/Read.png'">
+        <div class="loading-text text-glow">KARAOKE STUDIO</div>
+        <div class="font-assist text-sm text-[var(--color-muted)] font-medium">Menyiapkan panggung audio spectrum... ✨</div>
+    </div>
+
     <!-- Spectrum Particle Canvas -->
     <canvas id="spectrumCanvas" class="absolute inset-0 w-full h-full -z-10"></canvas>
 
@@ -139,6 +147,12 @@
                 document.getElementById("progressBar").style.width = `${percent}%`;
             }
         });
+
+        // Hide loading screen once studio is ready
+        setTimeout(() => {
+            const ls = document.getElementById("loadingScreen");
+            if (ls) ls.classList.add("hidden");
+        }, 400);
     </script>
 </body>
 </html>

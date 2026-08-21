@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/tokens.css">
+    <script src="/js/naura-ui.js"></script>
     <style>
         .welcome-card {
             background-size: cover;
@@ -25,6 +27,13 @@
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8 flex items-center justify-center bg-animated theme-none" id="mainBody">
+
+    <!-- Loading Screen (Cyber-Anime Naura Floating Thinking Expression) -->
+    <div id="loadingScreen" class="loading-screen">
+        <img class="loading-figure" src="/assets/Naura_Expression/Thinking.png" alt="Naura Thinking" onerror="this.src='/assets/Naura_Expression/Read.png'">
+        <div class="loading-text text-glow">NAURA OS</div>
+        <div class="font-assist text-sm text-[var(--color-muted)] font-medium">Memuat Welcomer Editor... ✨</div>
+    </div>
     <div class="w-full max-w-6xl glass-card rounded-3xl p-4 md:p-10 border border-[var(--color-hairline)] shadow-2xl relative overflow-hidden animate-fade-in">
         
         <!-- Header Welcomer -->
@@ -474,10 +483,15 @@
         const guildIdParam = urlParams.get('guildId');
         if (guildIdParam) {
             guildIdInput.value = guildIdParam;
-            fetchSettings(guildIdParam);
+            fetchSettings(guildIdParam).finally(() => {
+                const ls = document.getElementById('loadingScreen');
+                if (ls) setTimeout(() => ls.classList.add('hidden'), 350);
+            });
         } else {
             // Default render values
             renderLayout();
+            const ls = document.getElementById('loadingScreen');
+            if (ls) setTimeout(() => ls.classList.add('hidden'), 350);
         }
 
         window.addEventListener('resize', renderLayout);

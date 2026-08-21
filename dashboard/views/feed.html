@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/tokens.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/js/naura-ui.js"></script>
     <style>
         body {
             background-color: #0b0c10;
@@ -39,18 +40,34 @@
 
         <!-- Feed List Container -->
         <div id="feedList" class="space-y-4">
-            <div class="glass-panel-interactive p-6 rounded-2xl text-center text-gray-400 font-cyber text-sm">
-                ⏳ Memuat postingan terbaru dari Naura...
+            <div class="py-12">
+                <script>document.write(typeof NauraUI !== 'undefined' ? NauraUI.stateHtml('loading', { title: 'Memuat Cerita...', body: 'Naura sedang merapikan postingan timeline terbaru.' }) : 'Memuat...');</script>
             </div>
         </div>
     </div>
 
     <script>
         async function loadFeed() {
+            const container = document.getElementById("feedList");
+            if (typeof NauraUI !== 'undefined') {
+                container.innerHTML = NauraUI.stateHtml('loading', {
+                    title: 'Memuat Cerita...',
+                    body: 'Naura sedang merapikan postingan timeline terbaru.'
+                });
+            }
             try {
                 const res = await fetch("/api/feed");
                 const posts = await res.json();
-                const container = document.getElementById("feedList");
+
+                if (!Array.isArray(posts) || posts.length === 0) {
+                    container.innerHTML = typeof NauraUI !== 'undefined'
+                        ? NauraUI.stateHtml('empty', {
+                            title: 'Belum Ada Cerita',
+                            body: 'Belum ada postingan baru di linimasa saat ini.'
+                        })
+                        : '<p class="text-center text-gray-500">Belum ada postingan.</p>';
+                    return;
+                }
 
                 container.innerHTML = posts.map(p => `
                     <div class="glass-panel-interactive p-6 rounded-2xl space-y-4 border border-pink-400/10">
