@@ -41,6 +41,8 @@ async function greet(i, ctx) {
     i,
     `${e("happy", "\uD83D\uDCAC")} ${t("npc.greet_title")}`,
     t("npc.greet_body", { name: npc.name, bonus }),
+    "success",
+    npc,
   );
 }
 
@@ -79,6 +81,8 @@ async function gift(i, ctx) {
     i,
     `${e("cheers", "\uD83C\uDF81")} ${t("npc.gift_title")}`,
     t("npc.gift_body", { name: npc.name, cost: `${GIFT_COST} ${coin}`, bonus }),
+    "success",
+    npc,
   );
 }
 
@@ -169,6 +173,8 @@ async function repair(i, ctx) {
     i,
     `${e("impressed", "\u2692\uFE0F")} ${t("npc.repair_title")}`,
     t("npc.repair_body", { name: npc.name, cost: `${REPAIR_COST} ${coin}` }),
+    "success",
+    npc,
   );
 }
 
@@ -204,6 +210,8 @@ async function tax(i, ctx) {
     i,
     `${e("read", "\uD83D\uDCBC")} ${t("npc.tax_title")}`,
     t("npc.tax_paid", { name: npc.name, cost: `${cost} ${coin}` }),
+    "primary",
+    npc,
   );
 }
 

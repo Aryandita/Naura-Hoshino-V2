@@ -103,6 +103,7 @@ async function announceLevelUp(profile, user, guild, currentChannel) {
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#FFB6C1",
       authorName: "✦ LEVEL UP! ✦",
+      title: `Selamat Naik ke Level ${profile.level}!`,
       iconURL: user.displayAvatarURL(),
       expression: "levelup",
       description:
@@ -115,7 +116,10 @@ async function announceLevelUp(profile, user, guild, currentChannel) {
       footerText: "Makin sering ngobrol, makin kuat. Naura temani terus ya!",
     });
 
-    const sent = await targetChannel.send(payload);
+    const sent = await targetChannel.send({
+      ...payload,
+      flags: payload.flags || MessageFlags.IsComponentsV2,
+    });
     setTimeout(() => sent.delete().catch(() => {}), CONFIG.NOTICE_TTL);
   } catch (e) {
     logger.error("[LEVELING] Gagal mengirim notifikasi naik level:", e);

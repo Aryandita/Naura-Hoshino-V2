@@ -190,17 +190,15 @@ module.exports = {
           fallback: t("npc.ai_fallback"),
         });
 
-        // Naura tidak punya berkas potret, jadi wajahnya diambil dari foto
-        // profil bot supaya ia tampil sebagai dirinya sendiri.
+        // Potret NPC ditampilkan di pojok kanan atas (accessory)
         const portrait = findPortrait(npc);
         const files = [];
-        let bannerAttachmentName;
         let iconURL;
 
         if (portrait) {
           const fileName = `npc_${npc.id}${path.extname(portrait)}`;
           files.push(new AttachmentBuilder(portrait, { name: fileName }));
-          bannerAttachmentName = fileName;
+          iconURL = `attachment://${fileName}`;
         } else {
           iconURL = interaction.client.user.displayAvatarURL({ size: 512 });
         }
@@ -218,10 +216,10 @@ module.exports = {
 
         const infoPayload = buildContainerV2({
           accentColorHex: ui.getColor("primary") || "#FFB6C1",
+          authorName: `Warga ${String(lokasi).toUpperCase()} • ${npc.type === "romansa" ? "💖 Romansa" : "💙 Teman"}`,
           title: `${npc.name} (${npc.title})`,
           iconURL,
           description,
-          bannerAttachmentName,
           files,
           footerText: ui.getFooter("survival"),
         });

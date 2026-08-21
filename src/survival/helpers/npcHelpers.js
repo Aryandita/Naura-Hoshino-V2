@@ -27,14 +27,10 @@ const NPC_SERVICES = {
   pak_anif: "tax",
 };
 
-const CHARACTER_DIR = path.join(
-  __dirname,
-  "..",
-  "..",
-  "assets",
-  "survival",
-  "characters",
-);
+const CHARACTER_DIRS = [
+  path.join(process.cwd(), "assets", "survival", "characters"),
+  path.join(__dirname, "..", "..", "..", "assets", "survival", "characters"),
+];
 const IMAGE_EXTENSIONS = [".png", ".webp", ".jpeg", ".jpg"];
 
 /** Emoji dari ui.js, dengan cadangan sederhana bila kunci belum terisi. */
@@ -48,10 +44,13 @@ function e(name, fallback) {
  * bisa diajak bicara.
  */
 function findPortrait(npc) {
+  if (!npc) return null;
   const candidates = [];
-  if (npc.image) candidates.push(path.join(CHARACTER_DIR, npc.image));
-  for (const ext of IMAGE_EXTENSIONS) {
-    candidates.push(path.join(CHARACTER_DIR, `${npc.id}${ext}`));
+  for (const dir of CHARACTER_DIRS) {
+    if (npc.image) candidates.push(path.join(dir, npc.image));
+    for (const ext of IMAGE_EXTENSIONS) {
+      candidates.push(path.join(dir, `${npc.id}${ext}`));
+    }
   }
 
   for (const candidate of candidates) {
@@ -153,15 +152,29 @@ function buildActions(npc, npcData, t) {
   return row;
 }
 
+const { AttachmentBuilder } = require("discord.js");
+
 /**
  * Balasan singkat yang hanya terlihat oleh pemain. Flag Components V2 harus
  * digabung dengan flag ephemeral, bukan lewat opsi ephemeral yang lama.
  */
-function reply(i, title, description, colorName = "success") {
+function reply(i, title, description, colorName = "success", npc = null) {
+  const portrait = npc ? findPortrait(npc) : null;
+  const files = [];
+  let iconURL;
+
+  if (portrait) {
+    const fileName = `npc_${npc.id}${path.extname(portrait)}`;
+    files.push(new AttachmentBuilder(portrait, { name: fileName }));
+    iconURL = `attachment://${fileName}`;
+  }
+
   const payload = buildContainerV2({
     accentColorHex: ui.getColor(colorName) || "#FFB6C1",
     title,
+    iconURL,
     description,
+    files,
     footerText: ui.getFooter("survival"),
   });
 
@@ -172,12 +185,13 @@ function reply(i, title, description, colorName = "success") {
   });
 }
 
-function fail(i, message, t) {
+function fail(i, message, t, npc = null) {
   return reply(
     i,
     `${e("cry", "\u274C")} ${t("common.error.title")}`,
     message,
     "error",
+    npc,
   );
 }
 

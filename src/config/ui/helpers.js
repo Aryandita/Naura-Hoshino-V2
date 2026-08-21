@@ -136,18 +136,25 @@ async function sendError(interaction, errorMessage, ephemeral = false, opts = {}
     ...opts,
   });
 
+  const finalFlags =
+    (containerPayload.flags || MessageFlags.IsComponentsV2) |
+    (ephemeral ? MessageFlags.Ephemeral : 0);
+
   try {
     let msg;
     if (interaction.deferred || interaction.replied) {
-      msg = await interaction.editReply(containerPayload);
+      msg = await interaction.editReply({ ...containerPayload, flags: finalFlags });
     } else if (typeof interaction.reply === "function") {
       msg = await interaction.reply({
         ...containerPayload,
-        flags: ephemeral ? MessageFlags.Ephemeral : undefined,
+        flags: finalFlags,
         fetchReply: !ephemeral,
       });
     } else if (typeof interaction.channel?.send === "function") {
-      msg = await interaction.channel.send(containerPayload);
+      msg = await interaction.channel.send({
+        ...containerPayload,
+        flags: containerPayload.flags || MessageFlags.IsComponentsV2,
+      });
     }
 
     if (!ephemeral && msg) {
@@ -178,18 +185,25 @@ async function sendMaintenance(interaction, maintenanceMessage, ephemeral = fals
     ...opts,
   });
 
+  const finalFlags =
+    (containerPayload.flags || MessageFlags.IsComponentsV2) |
+    (ephemeral ? MessageFlags.Ephemeral : 0);
+
   try {
     let msg;
     if (interaction.deferred || interaction.replied) {
-      msg = await interaction.editReply(containerPayload);
+      msg = await interaction.editReply({ ...containerPayload, flags: finalFlags });
     } else if (typeof interaction.reply === "function") {
       msg = await interaction.reply({
         ...containerPayload,
-        flags: ephemeral ? MessageFlags.Ephemeral : undefined,
+        flags: finalFlags,
         fetchReply: !ephemeral,
       });
     } else if (typeof interaction.channel?.send === "function") {
-      msg = await interaction.channel.send(containerPayload);
+      msg = await interaction.channel.send({
+        ...containerPayload,
+        flags: containerPayload.flags || MessageFlags.IsComponentsV2,
+      });
     }
 
     return msg;
@@ -210,18 +224,25 @@ async function sendLoading(interaction, loadingMessage, ephemeral = false, opts 
     ...opts,
   });
 
+  const finalFlags =
+    (containerPayload.flags || MessageFlags.IsComponentsV2) |
+    (ephemeral ? MessageFlags.Ephemeral : 0);
+
   try {
     let msg;
     if (interaction.deferred || interaction.replied) {
-      msg = await interaction.editReply(containerPayload);
+      msg = await interaction.editReply({ ...containerPayload, flags: finalFlags });
     } else if (typeof interaction.reply === "function") {
       msg = await interaction.reply({
         ...containerPayload,
-        flags: ephemeral ? MessageFlags.Ephemeral : undefined,
+        flags: finalFlags,
         fetchReply: !ephemeral,
       });
     } else if (typeof interaction.channel?.send === "function") {
-      msg = await interaction.channel.send(containerPayload);
+      msg = await interaction.channel.send({
+        ...containerPayload,
+        flags: containerPayload.flags || MessageFlags.IsComponentsV2,
+      });
     }
 
     return msg;
