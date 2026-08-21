@@ -1,244 +1,285 @@
 'use strict';
 
-const os = require('os');
+const os  = require('os');
 const env = require('../config/env');
 
-// ─── Konstanta Warna ANSI 256 ──────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+//  Palet warna ANSI 256 — sesuai Design Identity "Cyber-Anime Glassmorphism"
+//  dari AGENTS.md §1.6 (primary #FFB6C1, accent-gold #FFD700, cyan #93C5FD)
+// ═══════════════════════════════════════════════════════════════════════════
 const C = {
-    reset:  '\x1b[0m',
-    bold:   '\x1b[1m',
-    // Palette utama: pink-ke-rose (identitas Naura)
-    pink1:  '\x1b[38;5;218m',   // #FFB6C1 light pink
-    pink2:  '\x1b[38;5;213m',   // hot pink
-    pink3:  '\x1b[38;5;207m',   // deeper rose
-    // Aksen & teks
-    gold:   '\x1b[38;5;220m',   // #FFD700
-    cyan:   '\x1b[38;5;51m',    // border/box
-    white:  '\x1b[38;5;255m',
-    grey:   '\x1b[38;5;245m',
-    dim:    '\x1b[38;5;240m',
-    // Status
-    green:  '\x1b[38;5;82m',
-    yellow: '\x1b[38;5;226m',
-    red:    '\x1b[38;5;196m',
-    // Background badge
-    bgPink:  '\x1b[48;5;218m\x1b[38;5;16m',
-    bgGreen: '\x1b[42m\x1b[30m',
+    r:    '\x1b[0m',            // reset
+    b:    '\x1b[1m',            // bold
+    // ── Gradient pink (identitas utama Naura) ─────────────────────────────
+    p0:   '\x1b[38;5;225m',    // very light pink  (baris 1)
+    p1:   '\x1b[38;5;218m',    // #FFB6C1 light pink (baris 2)
+    p2:   '\x1b[38;5;213m',    // hot pink          (baris 3)
+    p3:   '\x1b[38;5;205m',    // deeper rose       (baris 4)
+    p4:   '\x1b[38;5;199m',    // vivid magenta     (baris 5)
+    p5:   '\x1b[38;5;197m',    // deep rose         (baris 6)
+    p6:   '\x1b[38;5;161m',    // crimson-rose      (baris 7)
+    // ── Aksen ─────────────────────────────────────────────────────────────
+    gold: '\x1b[38;5;220m',    // #FFD700 premium gold
+    gol2: '\x1b[38;5;214m',    // amber gold
+    cyan: '\x1b[38;5;87m',     // bright cyan (box border)
+    sky:  '\x1b[38;5;153m',    // accent-blue #93C5FD
+    mint: '\x1b[38;5;122m',    // accent-green #86EFAC
+    purp: '\x1b[38;5;183m',    // accent-purple #C084FC
+    // ── Netral ────────────────────────────────────────────────────────────
+    w:    '\x1b[38;5;255m',    // bright white
+    g1:   '\x1b[38;5;252m',    // light grey
+    g2:   '\x1b[38;5;245m',    // mid grey
+    g3:   '\x1b[38;5;240m',    // dim grey
+    g4:   '\x1b[38;5;235m',    // very dim
+    // ── Status ────────────────────────────────────────────────────────────
+    ok:   '\x1b[38;5;82m',     // connected / ok
+    warn: '\x1b[38;5;226m',    // warning / skipped
+    err:  '\x1b[38;5;196m',    // error
+    // ── Background badges ─────────────────────────────────────────────────
+    bgOk:  '\x1b[48;5;28m\x1b[38;5;255m',
+    bgPink:'\x1b[48;5;218m\x1b[38;5;16m',
+    bgGold:'\x1b[48;5;220m\x1b[38;5;16m',
 };
 
-// ─── Lebar inner box (62 char visible) ────────────────────────────────────
-const W = 76;   // lebar total termasuk '║' kiri-kanan
-const IW = W - 4; // inner width (tanpa '║ ' dan ' ║')
+// ═══════════════════════════════════════════════════════════════════════════
+//  Dimensi box  — 80 karakter lebar total (visible)
+// ═══════════════════════════════════════════════════════════════════════════
+const BOX_W  = 80;              // lebar total termasuk '║' kiri-kanan
+const INNER  = BOX_W - 4;      // inner width (setelah '║ ' dan ' ║')
 
-const box = {
-    tl: '╔', tr: '╗', bl: '╚', br: '╝',
-    h: '═', v: '║', sep: '╠', sepEnd: '╣',
-    dotH: '·',
-};
+// ── Karakter box-drawing ──────────────────────────────────────────────────
+const TL = '╔', TR = '╗', BL = '╚', BR = '╝';
+const HL = '═', VL = '║', SL = '╠', SR = '╣';
+
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+
+/** Strip semua ANSI escape codes → hitung panjang visible */
+const vLen = (s) => s.replace(/\x1b\[[0-9;]*m/g, '').length;
+
+/** Garis horizontal penuh */
+const hLine = (l, r, ch, color = C.cyan) =>
+    `${color}${l}${ch.repeat(BOX_W - 2)}${r}${C.r}`;
+
 
 /**
- * Membuat garis horizontal penuh sesuai lebar box
- * @param {'solid'|'dot'} style
+ * Satu baris box, padding kanan otomatis.
+ * @param {string} content  - sudah mengandung ANSI codes
+ * @param {number} vis      - panjang VISIBLE dari content
  */
-const hLine = (left, right, char) =>
-    `${C.cyan}${left}${char.repeat(W - 2)}${right}${C.reset}`;
-
-/**
- * Membuat satu baris box dengan konten rata kiri, padding kanan otomatis.
- * Semua ANSI escape dihitung agar tidak mempengaruhi panjang visible.
- * @param {string} content  - string sudah mengandung kode warna ANSI
- * @param {number} visLen   - panjang visible (tanpa ANSI) dari content
- */
-const row = (content, visLen) => {
-    const pad = IW - visLen;
-    const padding = pad > 0 ? ' '.repeat(pad) : '';
-    return `${C.cyan}║${C.reset} ${content}${padding} ${C.cyan}║${C.reset}`;
+const row = (content, vis) => {
+    const pad = Math.max(0, INNER - vis);
+    return `${C.cyan}${VL}${C.r} ${content}${' '.repeat(pad)} ${C.cyan}${VL}${C.r}`;
 };
 
 /** Baris kosong */
-const emptyRow = () => row('', 0);
+const blank = () => row('', 0);
 
-/**
- * Format waktu ke string readable
- */
+/** Format timestamp */
 const nowStr = () => {
-    const d = new Date();
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
-           `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    const d = new Date(), z = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`;
 };
 
-/**
- * Menghitung panjang visible string (strip ANSI escape codes)
- */
-const vLen = (str) => str.replace(/\x1b\[[0-9;]*m/g, '').length;
-
-/**
- * Membuat pasangan label + value dengan warna berbeda
- */
-const field = (label, value, labelColor = C.grey, valueColor = C.white) => {
-    const content = `${labelColor}${label}${C.reset}  ${valueColor}${value}${C.reset}`;
-    const visible = vLen(label) + 2 + vLen(value);
-    return { content, visible };
+/** Buat dua-kolom sejajar, padding tengah otomatis */
+const dual = (lbl1, val1, lbl2, val2, totalWidth = INNER) => {
+    const left  = `${C.g2}${lbl1}${C.r} ${val1}`;
+    const right = `${C.g2}${lbl2}${C.r} ${val2}`;
+    const lv = vLen(lbl1) + 1 + vLen(val1);
+    const rv = vLen(lbl2) + 1 + vLen(val2);
+    const mid = Math.max(1, totalWidth - lv - rv);
+    return { content: `${left}${' '.repeat(mid)}${right}`, vis: lv + mid + rv };
 };
 
-/**
- * Membuat dua kolom per baris (untuk status grid)
- */
-const dualField = (l1, v1, l2, v2) => {
-    const col1 = `${C.grey}${l1}${C.reset}  ${v1}`;
-    const col2 = `${C.grey}${l2}${C.reset}  ${v2}`;
-    const gap = ' '.repeat(4);
-    const content = `${col1}${gap}${col2}`;
-    const visible = vLen(col1) + 4 + vLen(col2);
-    return { content, visible };
+/** Heading seksi dengan glow style */
+const secHead = (icon, title, color = C.gold) => {
+    const txt = `${icon}  ${color}${C.b}${title}${C.r}`;
+    const vis = 3 + title.length;   // icon(1) + '  ' + title
+    return { content: txt, vis };
 };
 
-// ─── ASCII Banner "NAURA" (font: ANSI Shadow, compact) ─────────────────────
-// Lebar visible setiap baris banner diukur manual (strip ANSI) untuk presisi
-const banner = [
-    [`${C.pink1} ██╗  ██╗ █████╗ ██╗   ██╗██████╗  █████╗ ${C.reset}`,  44],
-    [`${C.pink2} ███╗  ██║██╔══██╗██║   ██║██╔══██╗██╔══██╗${C.reset}`, 45],
-    [`${C.pink2} ██╔██╗ ██║███████║██║   ██║██████╔╝███████║${C.reset}`, 45],
-    [`${C.pink3} ██║╚██╗██║██╔══██║██║   ██║██╔══██╗██╔══██║${C.reset}`,45],
-    [`${C.pink3} ██║ ╚████║██║  ██║╚██████╔╝██║  ██║██║  ██║${C.reset}`,45],
-    [`${C.dim}  ╚═╝  ╚═══╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝${C.reset}`,46],
+// ═══════════════════════════════════════════════════════════════════════════
+//  ASCII Art Banner — "NAURA HOSHINO"
+//  Font: ANSI Shadow (bold block) dengan gradient pink 7-baris
+//  Setiap baris: [ansi_string, visible_length]
+// ═══════════════════════════════════════════════════════════════════════════
+//
+//   ██╗  ██╗ █████╗ ██╗   ██╗██████╗  █████╗
+//   ███╗  ██║██╔══██╗██║   ██║██╔══██╗██╔══██╗
+//   ██╔██╗ ██║███████║██║   ██║██████╔╝███████║
+//   ██║╚██╗██║██╔══██║██║   ██║██╔══██╗██╔══██║
+//   ██║ ╚████║██║  ██║╚██████╔╝██║  ██║██║  ██║
+//   ╚═╝  ╚═══╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
+//
+const BANNER_LINES = [
+    // baris 1
+    [`${C.p0}  ██╗  ██╗  █████╗  ██╗   ██╗ ██████╗   █████╗  ${C.r}`,  50],
+    // baris 2
+    [`${C.p1}  ███╗ ██║ ██╔══██╗ ██║   ██║ ██╔══██╗ ██╔══██╗ ${C.r}`,  50],
+    // baris 3
+    [`${C.p2}  ██╔██╗██║ ███████║ ██║   ██║ ██████╔╝ ███████║ ${C.r}`,  50],
+    // baris 4
+    [`${C.p3}  ██║╚████║ ██╔══██║ ██║   ██║ ██╔══██╗ ██╔══██║ ${C.r}`,  50],
+    // baris 5
+    [`${C.p4}  ██║ ╚███║ ██║  ██║ ╚██████╔╝ ██║  ██║ ██║  ██║ ${C.r}`,  50],
+    // baris 6
+    [`${C.p5}  ╚═╝  ╚══╝ ╚═╝  ╚═╝  ╚═════╝  ╚═╝  ╚═╝ ╚═╝  ╚═╝ ${C.r}`, 51],
+    // baris 7 — sub-title "H O S H I N O"
+    [`${C.g3}  ──────────────────────────── ${C.gold}H  O  S  H  I  N  O${C.r}${C.g3} ───${C.r}`, 56],
 ];
 
-/**
- * Render baris banner dengan sub-label di sisi kanan (inline dalam box)
- */
-const bannerRow = (bannerContent, bannerVis, rightContent, rightVis) => {
-    const gap = IW - bannerVis - rightVis;
-    const spaces = gap > 0 ? ' '.repeat(gap) : ' ';
-    return `${C.cyan}║${C.reset} ${bannerContent}${spaces}${rightContent} ${C.cyan}║${C.reset}`;
-};
-
-// ─── Label kanan yang muncul di samping banner ─────────────────────────────
-const rightLabels = (ver, tag, owner, nodeVer) => {
-    // Potong tag agar kolom kanan tidak overflow (maks 20 char)
-    const shortTag = tag.length > 20 ? tag.substring(0, 18) + '…' : tag;
-    const engVer = env.ENGINE_VERSION || '2.1.0';
+// ═══════════════════════════════════════════════════════════════════════════
+//  Label kolom kanan di samping banner
+//  [ansi_string, visible_length]
+// ═══════════════════════════════════════════════════════════════════════════
+const buildRightLabels = (botVer, botTag, nodeVer) => {
+    const engVer = env.ENGINE_VERSION || botVer;
+    // Potong tag max 16 char agar label kanan tidak overflow di baris banner
+    const tag16  = botTag.length > 16 ? botTag.substring(0, 14) + '…' : botTag;
     return [
-        [`${C.gold}✦ H O S H I N O${C.reset}`,              16],
-        [`${C.grey}ver ${C.white}${ver}${C.reset}`,          4 + ver.length],
-        [`${C.grey}@${C.pink1}${shortTag}${C.reset}`,        1 + shortTag.length],
-        [`${C.grey}by ${C.white}${owner}${C.reset}`,         3 + owner.length],
-        [`${C.grey}node ${C.cyan}${nodeVer}${C.reset}`,      5 + nodeVer.length],
-        [`${C.dim}engine v${engVer}${C.reset}`,              8 + engVer.length],
+        [`${C.p1}✿ ${C.w}${C.b}Naura Hoshino${C.r}`,             15],
+        [`${C.g2}version  ${C.gold}${C.b}v${botVer}${C.r}`,       9 + botVer.length],
+        [`${C.g2}engine   ${C.gol2}v${engVer}${C.r}`,             9 + engVer.length],
+        [`${C.g2}discord  ${C.purp}${tag16}${C.r}`,               9 + tag16.length],
+        [`${C.g2}runtime  ${C.sky}${nodeVer}${C.r}`,              9 + nodeVer.length],
+        [`${C.g2}platform ${C.mint}Pterodactyl${C.r}`,            20],
+        [`${C.g4}by ${C.g2}Aryandita Praftian${C.r}`,             21],
     ];
 };
 
-// ─── Entry Point ────────────────────────────────────────────────────────────
 /**
- * Menampilkan boot screen ke stdout
+ * Render baris banner + kolom kanan dalam satu baris box
+ */
+const bannerRow = (bannerStr, bannerVis, rightStr, rightVis) => {
+    const gap = INNER - bannerVis - rightVis;
+    const spaces = gap > 0 ? ' '.repeat(gap) : ' ';
+    return `${C.cyan}${VL}${C.r} ${bannerStr}${spaces}${rightStr} ${C.cyan}${VL}${C.r}`;
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Fungsi utama
+// ═══════════════════════════════════════════════════════════════════════════
+/**
+ * Menampilkan boot screen ke stdout saat bot siap.
  * @param {import('discord.js').Client} client
  * @param {Object} sysStatus
  */
 const displayBootScreen = (client, sysStatus) => {
-    // Data sistem
-    const totalRam = (os.totalmem() / 1024 / 1024 / 1024).toFixed(1);
-    const usedRam  = ((os.totalmem() - os.freemem()) / 1024 / 1024 / 1024).toFixed(1);
-    const cpuModel = os.cpus()[0].model.trim().replace(/\s+/g, ' ');
-    const cpuCores = os.cpus().length;
-    const nodeVer  = process.version;
-    const platform = `${os.platform()} ${os.arch()}`;
-    const botVer   = env.BOT_VERSION || '2.1.0';
+
+    // ── Data runtime ──────────────────────────────────────────────────────
+    const botVer   = env.BOT_VERSION   || '2.1.0';
     const botTag   = client.user ? client.user.tag : 'Naura Hoshino#0000';
-    const ownerName= 'Aryandita';
-    const shardId  = env.SHARD_ID != null ? `Shard #${env.SHARD_ID}` : 'No Sharding';
+    const nodeVer  = process.version;
+    const cpuRaw   = os.cpus()[0].model.trim().replace(/\s+/g, ' ');
+    const cpuCores = os.cpus().length;
+    const cpuDisp  = cpuRaw.length > 32 ? cpuRaw.substring(0, 30) + '…' : cpuRaw;
+    const totalRam = (os.totalmem() / 1073741824).toFixed(1);
+    const usedRam  = ((os.totalmem() - os.freemem()) / 1073741824).toFixed(1);
+    const ramPct   = Math.round(((os.totalmem() - os.freemem()) / os.totalmem()) * 100);
+    const platform = `${os.platform()} / ${os.arch()}`;
+    const shardTxt = env.SHARD_ID != null ? `Shard #${env.SHARD_ID}` : 'Standalone';
     const bootTime = nowStr();
 
-    // Potong nama CPU jika terlalu panjang
-    const cpuDisplay = cpuModel.length > 38
-        ? cpuModel.substring(0, 36) + '…'
-        : cpuModel;
+    // ── RAM bar visual (10 segmen) ────────────────────────────────────────
+    const barFill  = Math.round(ramPct / 10);
+    const ramBar   = `[${C.p2}${'█'.repeat(barFill)}${C.g3}${'░'.repeat(10 - barFill)}${C.r}]`;
 
-    // Label kanan banner (array dari fungsi)
-    const rLabels = rightLabels(botVer, botTag, ownerName, nodeVer);
+    // ── Label banner kanan ────────────────────────────────────────────────
+    const rLabels  = buildRightLabels(botVer, botTag, nodeVer);
 
-    // ─── Mulai render ───────────────────────────────────────────────────────
-    const lines = [];
+    // ── Mulai menyusun baris ──────────────────────────────────────────────
+    const L = [];
 
-    // Top border
-    lines.push(hLine(box.tl, box.tr, box.h));
+    // ┌─ Top border ─────────────────────────────────────────────────────┐
+    L.push(hLine(TL, TR, HL));
 
-    // Banner + label kanan
-    for (let i = 0; i < banner.length; i++) {
-        const [bc, bv] = banner[i];
+    // ┌─ Banner + label kanan ───────────────────────────────────────────┐
+    const numBannerRows = BANNER_LINES.length;
+    for (let i = 0; i < numBannerRows; i++) {
+        const [bc, bv] = BANNER_LINES[i];
         const [rc, rv] = rLabels[i] || ['', 0];
-        lines.push(bannerRow(bc, bv, rc, rv));
+        L.push(bannerRow(bc, bv, rc, rv));
     }
 
-    // Separator tipis
-    lines.push(hLine(box.sep, box.sepEnd, box.h));
+    // ┌─ Divider seksi ─────────────────────────────────────────────────┐
+    L.push(hLine(SL, SR, HL));
 
-    // ── Seksi: Identitas Sistem ──────────────────────────────────────────────
-    const secSys = `${C.gold}${C.bold}  SISTEM & RUNTIME${C.reset}`;
-    lines.push(row(secSys, 18));
-    lines.push(emptyRow());
+    // ┌─ SISTEM & RUNTIME ──────────────────────────────────────────────┐
+    const sh = secHead('⬡', 'SISTEM  &  RUNTIME');
+    L.push(row(sh.content, sh.vis));
+    L.push(blank());
 
-    // Bot tag
-    const f1 = field('  ╭ Bot     :', botTag);
-    lines.push(row(f1.content, f1.visible));
+    // Bot identity
+    const botLine = `${C.g2}╭ Bot      ${C.r}${C.p1}${botTag}${C.r}`;
+    L.push(row(botLine, 10 + botTag.length));
 
     // CPU
-    const f2 = field('  ├ CPU     :', `${cpuDisplay} (${cpuCores} cores)`);
-    lines.push(row(f2.content, f2.visible));
+    const cpuLine = `${C.g2}├ CPU      ${C.r}${C.w}${cpuDisp}${C.r}  ${C.g3}(${cpuCores} cores)${C.r}`;
+    L.push(row(cpuLine, 10 + cpuDisp.length + 2 + 1 + cpuCores.toString().length + 7));
 
-    // RAM + Platform dalam satu baris
-    const ramStr  = `${usedRam} / ${totalRam} GB`;
-    const f3 = dualField('  ├ RAM     :', `${C.white}${ramStr}${C.reset}`, 'Platform :', `${C.white}${platform}${C.reset}`);
-    lines.push(row(f3.content, f3.visible));
+    // RAM dengan bar
+    const ramLabel = `${C.g2}├ RAM      ${C.r}${C.w}${usedRam} / ${totalRam} GB${C.r}  ${ramBar}  ${C.g3}${ramPct}%${C.r}`;
+    const ramVis   = 10 + (usedRam + ' / ' + totalRam + ' GB').length + 2 + 14 + 2 + String(ramPct).length + 1;
+    L.push(row(ramLabel, ramVis));
 
-    // Node + Shard
-    const f4 = dualField('  ├ Node.js :', `${C.cyan}${nodeVer}${C.reset}`, 'Shard    :', `${C.white}${shardId}${C.reset}`);
-    lines.push(row(f4.content, f4.visible));
+    // Platform + Shard (dual column)
+    const d1 = dual(
+        '├ Platform', `${C.sky}${platform}${C.r}`,
+        'Shard', `${C.purp}${shardTxt}${C.r}`
+    );
+    L.push(row(d1.content, d1.vis));
 
-    // Boot time
-    const f5 = field('  ╰ Boot    :', bootTime, C.grey, C.dim);
-    lines.push(row(f5.content, f5.visible));
+    // Node version + Boot time (dual)
+    const d2 = dual(
+        '╰ Node.js ', `${C.mint}${nodeVer}${C.r}`,
+        'Boot', `${C.g3}${bootTime}${C.r}`
+    );
+    L.push(row(d2.content, d2.vis));
 
-    lines.push(emptyRow());
+    L.push(blank());
 
-    // ── Separator & Seksi: Status Modul ─────────────────────────────────────
-    lines.push(hLine(box.sep, box.sepEnd, box.h));
+    // ┌─ Divider seksi ─────────────────────────────────────────────────┐
+    L.push(hLine(SL, SR, HL));
 
-    const secMod = `${C.gold}${C.bold}  MODUL & KONEKSI${C.reset}`;
-    lines.push(row(secMod, 17));
-    lines.push(emptyRow());
+    // ┌─ MODUL & KONEKSI ───────────────────────────────────────────────┐
+    const mh = secHead('⬡', 'MODUL  &  KONEKSI');
+    L.push(row(mh.content, mh.vis));
+    L.push(blank());
 
-    // Status baris 1: DB + Redis
-    const s1 = dualField('  ╭ Database:', sysStatus.db, 'Redis    :', sysStatus.redis);
-    lines.push(row(s1.content, s1.visible));
+    // Database + Redis
+    const ms1 = dual('╭ Supabase', sysStatus.db,    'Redis  ', sysStatus.redis);
+    L.push(row(ms1.content, ms1.vis));
 
-    // Status baris 2: MongoDB + Lavalink
-    const mongoVal = sysStatus.mongo || `${C.yellow}⏭  SKIPPED${C.reset}`;
-    const s2 = dualField('  ├ MongoDB :', mongoVal, 'Lavalink :', sysStatus.music);
-    lines.push(row(s2.content, s2.visible));
+    // MongoDB + Lavalink
+    const mongoVal = sysStatus.mongo || `${C.warn}⏭  SKIPPED${C.r}`;
+    const ms2 = dual('├ MongoDB ', mongoVal,          'Lavalink', sysStatus.music);
+    L.push(row(ms2.content, ms2.vis));
 
-    // Status baris 3: Commands + RSS
-    const s3 = dualField('  ├ Commands:', sysStatus.cmds, 'RSS Alerts:', sysStatus.rss);
-    lines.push(row(s3.content, s3.visible));
+    // Commands + RSS
+    const ms3 = dual('├ Commands', sysStatus.cmds,   'RSS Feed', sysStatus.rss);
+    L.push(row(ms3.content, ms3.vis));
 
-    // Discord status
-    const discordVal = `${C.green}🟢 CONNECTED${C.reset}`;
-    const f6 = field('  ╰ Discord :', discordVal, C.grey);
-    lines.push(row(f6.content, f6.visible));
+    // Discord (full width)
+    const discLine = `${C.g2}╰ Discord   ${C.r}${C.ok}🟢 CONNECTED${C.r}`;
+    L.push(row(discLine, 12 + 12));
 
-    lines.push(emptyRow());
+    L.push(blank());
 
-    // Bottom border
-    lines.push(hLine(box.bl, box.br, box.h));
+    // ┌─ Bottom border ─────────────────────────────────────────────────┐
+    L.push(hLine(BL, BR, HL));
 
-    // Success badge
-    lines.push(
-        `\n ${C.bgGreen} ✨ READY ${C.reset}  ` +
-        `${C.green}Naura Hoshino ${C.white}v${botVer}${C.green} berhasil mengudara${C.reset}  ` +
-        `${C.dim}[ ${bootTime} ]${C.reset}\n`
+    // ┌─ Ready badge ───────────────────────────────────────────────────┐
+    L.push(
+        `\n ` +
+        `${C.bgOk} ✨ ONLINE ${C.r}  ` +
+        `${C.p1}${C.b}Naura Hoshino${C.r} ` +
+        `${C.g2}v${botVer}${C.r} ` +
+        `${C.g2}sudah mengudara dan siap melayani!${C.r}` +
+        `\n ${C.g4}${'─'.repeat(BOX_W - 2)}${C.r}` +
+        `\n ${C.g3}Waktu Boot: ${bootTime}  ·  Engine v${env.ENGINE_VERSION || botVer}  ·  ${shardTxt}${C.r}\n`
     );
 
-    console.log('\n' + lines.join('\n'));
+    console.log('\n' + L.join('\n'));
 };
 
 module.exports = { displayBootScreen };
