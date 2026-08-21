@@ -198,6 +198,7 @@ const env = {
   WEBHOOK_AUTH_SAWERIA: cleanEnv(process.env.WEBHOOK_AUTH_SAWERIA),
   WEBHOOK_AUTH_TRAKTEER: cleanEnv(process.env.WEBHOOK_AUTH_TRAKTEER),
   WEBHOOK_AUTH_VOTE: cleanEnv(process.env.WEBHOOK_AUTH_VOTE),
+  TOPGG_TOKEN: cleanEnv(process.env.TOPGG_TOKEN || process.env.TOP_GG_TOKEN),
 
   // WEB DASHBOARD & PORTS (Dynamic Pterodactyl Resolution)
   DASHBOARD_PORT:

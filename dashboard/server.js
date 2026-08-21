@@ -49,9 +49,9 @@ function parseOrigins() {
 
 module.exports = (client) => {
   // ==================================================================
-  // 1. Server webhook (port terpisah)
+  // 1. Server webhook (bisa diakses via port webhook tersendiri maupun port web utama)
   // ==================================================================
-  require("./routes/webhooks")(client);
+  const webhookApp = require("./routes/webhooks")(client);
 
   const isProduction = env.NODE_ENV === "production";
 
@@ -131,6 +131,12 @@ module.exports = (client) => {
   webApp.use(express.urlencoded({ extended: true, limit: "256kb" }));
   webApp.use(express.static(path.join(__dirname, "public")));
   webApp.use("/assets", express.static(path.join(__dirname, "../assets")));
+
+  // --- Webhook Routes Mounting ---
+  // Pasang rute webhook ke webApp utama agar URL https://domain/api/webhook/* langsung aktif
+  if (webhookApp) {
+    webApp.use(webhookApp);
+  }
 
   // --- Sesi (harus lebih dulu dari seluruh rute) ---
   const sessionMiddleware = session({

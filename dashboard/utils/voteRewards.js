@@ -125,9 +125,27 @@ async function grantVoteRewards(
     { survival },
     coupons,
   );
+  await currency.reward(
+    currency.COIN,
+    { survival },
+    1500,
+  );
+
+  try {
+    const cacheManager = require("../../src/managers/cacheManager");
+    if (typeof cacheManager.smartInvalidateUserCanvas === "function") {
+      cacheManager.smartInvalidateUserCanvas(userId);
+    }
+    if (typeof cacheManager.invalidateUserProfile === "function") {
+      cacheManager.invalidateUserProfile(userId);
+    }
+    if (typeof cacheManager.invalidateUserSurvival === "function") {
+      cacheManager.invalidateUserSurvival(userId);
+    }
+  } catch {}
 
   logger.info(
-    `[VOTE] ${userId} menerima ${coupons} Naura Coupon (total ${totalCoupons}), vote ke-${streak} (streak hari: ${daysStreak}).`,
+    `[VOTE] ${userId} menerima ${coupons} Naura Coupon (total ${totalCoupons}) + 1.500 Coins, vote ke-${streak} (streak hari: ${daysStreak}).`,
   );
 
   return {
@@ -135,6 +153,7 @@ async function grantVoteRewards(
     expiry,
     coupons,
     totalCoupons,
+    coins: 1500,
     streak,
     daysStreak,
     isWeekend,

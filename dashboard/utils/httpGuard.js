@@ -60,7 +60,8 @@ function readToken(req, headerNames) {
  * variabel env-nya belum diisi.
  */
 function verifyToken(req, envKey, headerNames) {
-  const expected = process.env[envKey];
+  const envConfig = require("../../src/config/env");
+  const expected = (envConfig[envKey] || process.env[envKey] || "").trim();
   if (!expected) return "not_configured";
   const received = readToken(req, headerNames);
   if (!received) return "mismatch";

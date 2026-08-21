@@ -25,7 +25,12 @@ module.exports = {
         .setURL(topGgLink)
         .setEmoji(ui.parseEmoji(ui.getEmoji("heart") || "💖")),
       new ButtonBuilder()
-        .setLabel("Bantuan / Kontak Owner")
+        .setCustomId("btn_vote_claim")
+        .setLabel("Klaim Hadiah Vote")
+        .setStyle(ButtonStyle.Success)
+        .setEmoji(ui.parseEmoji(ui.getEmoji("gift") || "🎁")),
+      new ButtonBuilder()
+        .setLabel("Bantuan / Support")
         .setStyle(ButtonStyle.Link)
         .setURL("https://dsc.gg/naura-hoshino")
         .setEmoji(ui.parseEmoji(ui.getEmoji("support") || "💬"))
@@ -73,7 +78,12 @@ module.exports = {
         .setURL(topGgLink)
         .setEmoji(ui.parseEmoji(ui.getEmoji("heart") || "💖")),
       new ButtonBuilder()
-        .setLabel("Bantuan / Kontak Owner")
+        .setCustomId("btn_vote_claim")
+        .setLabel("Klaim Hadiah Vote")
+        .setStyle(ButtonStyle.Success)
+        .setEmoji(ui.parseEmoji(ui.getEmoji("gift") || "🎁")),
+      new ButtonBuilder()
+        .setLabel("Bantuan / Support")
         .setStyle(ButtonStyle.Link)
         .setURL("https://dsc.gg/naura-hoshino")
         .setEmoji(ui.parseEmoji(ui.getEmoji("support") || "💬"))
