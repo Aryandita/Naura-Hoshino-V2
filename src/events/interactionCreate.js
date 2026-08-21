@@ -175,8 +175,11 @@ module.exports = {
 
     const entry = registry.resolve(kind, interaction.customId);
 
-    // Komponen dinamis yang dikelola oleh collector lokal (minigame, kuis, duel, dll.)
-    const isLocalCollector = /^(mg_|mquiz_|duel_|ttt_|aki_|hangman_|memory_|wordle_|rps_|musicquiz_|trivia_|tod_|btn_)/.test(interaction.customId);
+    // Komponen dinamis yang dikelola oleh collector lokal (minigame, survival, NPC, bank, dungeon, kuis, musik, dll.)
+    const isLocalCollector =
+      /^(mg_|mquiz_|duel_|ttt_|aki_|hangman_|memory_|wordle_|rps_|musicquiz_|trivia_|tod_|btn_|collect_|npc_|date_|roam_|tut_|bank_|dungeon_|gacha_|fish_|mine_|chop_|hunt_|explore_|shop_|casino_|trade_|profile_|pet_|pvp_|quiz_|quest_|story_|craft_|inv_|card_|music_|mm_|naura_)/.test(
+        interaction.customId,
+      );
     if (!entry && isLocalCollector) {
       return undefined;
     }
