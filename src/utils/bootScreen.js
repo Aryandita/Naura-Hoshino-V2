@@ -180,6 +180,16 @@ const displayBootScreen = (client, sysStatus) => {
     const shardTxt = env.SHARD_ID != null ? `Shard #${env.SHARD_ID}` : 'Standalone';
     const bootTime = nowStr();
 
+    // ── URL dashboard & webhook ───────────────────────────────────────────
+    const dashPort   = env.DASHBOARD_PORT;
+    const webhPort   = env.WEBHOOK_PORT;
+    const originList = String(env.DASHBOARD_ORIGIN || '')
+        .split(/[\s,]+/).filter(Boolean);
+    const dashUrl    = originList.length > 0
+        ? originList[0]
+        : `http://localhost:${dashPort}`;
+    const webhUrl    = `http://localhost:${webhPort}`;
+
     // ── RAM bar visual (10 segmen) ────────────────────────────────────────
     const barFill  = Math.round(ramPct / 10);
     const ramBar   = `[${C.p2}${'█'.repeat(barFill)}${C.g3}${'░'.repeat(10 - barFill)}${C.r}]`;
@@ -265,6 +275,29 @@ const displayBootScreen = (client, sysStatus) => {
 
     L.push(blank());
 
+    // ── Seksi: Alamat Server ─────────────────────────────────────────────────
+    L.push(hLine(SL, SR, HL));
+
+    const ah = secHead('⧡', 'ALAMAT  AKSES', C.sky);
+    L.push(row(ah.content, ah.vis));
+    L.push(blank());
+
+    // Dashboard URL
+    const da = dual(
+        '╭ Dashboard', `${C.sky}${C.b}${dashUrl}${C.r}`,
+        'port', `${C.gold}${C.b}:${dashPort}${C.r}`
+    );
+    L.push(row(da.content, da.vis));
+
+    // Webhook URL
+    const wa = dual(
+        '╰ Webhook  ', `${C.purp}${webhUrl}${C.r}`,
+        'port', `${C.gold}:${webhPort}${C.r}`
+    );
+    L.push(row(wa.content, wa.vis));
+
+    L.push(blank());
+
     // ┌─ Bottom border ─────────────────────────────────────────────────┐
     L.push(hLine(BL, BR, HL));
 
@@ -276,7 +309,7 @@ const displayBootScreen = (client, sysStatus) => {
         `${C.g2}v${botVer}${C.r} ` +
         `${C.g2}sudah mengudara dan siap melayani!${C.r}` +
         `\n ${C.g4}${'─'.repeat(BOX_W - 2)}${C.r}` +
-        `\n ${C.g3}Waktu Boot: ${bootTime}  ·  Engine v${env.ENGINE_VERSION || botVer}  ·  ${shardTxt}${C.r}\n`
+        `\n ${C.g3}Dashboard: ${C.sky}${dashUrl}${C.r}${C.g3}  ·  Webhook: ${C.purp}:${webhPort}${C.r}${C.g3}  ·  ${bootTime}  ·  ${shardTxt}${C.r}\n`
     );
 
     console.log('\n' + L.join('\n'));

@@ -106,7 +106,7 @@ module.exports = {
         {
             // Branding AI engine
             name: 'Custom Status',
-            state: '🧠 Naura Intelligent Systems  ·  Gemini 2.0 Flash 🔮',
+            state: '🧠 Naura Intelligent Systems  ·  Pintar & Siap menangani semuanya! 🔮',
             type: ActivityType.Custom,
             status: PresenceUpdateStatus.Online,
         },
@@ -165,14 +165,14 @@ module.exports = {
         {
             // Help CTA
             name: 'Custom Status',
-            state: '💡 /help  ·  Semua perintah Naura ada di sini 🌸',
+            state: '💡 /core help  ·  Semua perintah Naura ada di sini 🌸',
             type: ActivityType.Custom,
             status: PresenceUpdateStatus.Online,
         },
         {
             // Greeting branding
             name: 'Custom Status',
-            state: '✨ Halo! Aku Naura  ·  Bot multifungsi versi 2.1 💖',
+            state: '✨ Halo! Aku Naura  ·  Bot multifungsi versi 2.0 💖',
             type: ActivityType.Custom,
             status: PresenceUpdateStatus.Online,
         },

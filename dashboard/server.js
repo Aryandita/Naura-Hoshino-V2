@@ -86,7 +86,9 @@ module.exports = (client) => {
   // 3. Server web utama
   // ==================================================================
   const webApp = express();
-  const webPort = 3000;
+  // Baca port dari env.DASHBOARD_PORT (didahulukan) → PORT (Pterodactyl) → fallback 3000
+  // Ini menghormati konfigurasi panel Pterodactyl tanpa override manual.
+  const webPort = env.DASHBOARD_PORT;
 
   // Percayai proxy reverse (Cloud Run, Nginx, Pterodactyl) untuk IP header X-Forwarded-For
   webApp.set("trust proxy", 1);
@@ -335,7 +337,14 @@ module.exports = (client) => {
   require("./sockets")(client, io, { sessionMiddleware });
 
   webServer.listen(webPort, "0.0.0.0", () => {
-    logger.info(`[DASHBOARD] Web UI berjalan di http://0.0.0.0:${webPort}`);
+    // Tampilkan URL yang benar-benar bisa diakses:
+    // - Jika DASHBOARD_ORIGIN diset (domain/subdomain publik), pakai itu.
+    // - Jika tidak, tampilkan alamat loopback dengan port aktif.
+    const publicOrigins = parseOrigins();
+    const displayUrl = publicOrigins.length > 0
+      ? publicOrigins[0]
+      : `http://localhost:${webPort}`;
+    logger.info(`[DASHBOARD] Web UI berjalan di ${displayUrl}  (port ${webPort})`);
   });
 
   return { webApp, webServer, io };
