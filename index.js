@@ -119,11 +119,14 @@ async function startBot() {
 
     if (env.MONGODB_URI) {
       try {
-        const mongoConnected = await mongoManager.connect();
+        const mongoConnected = await Promise.race([
+          mongoManager.connect(),
+          new Promise((resolve) => setTimeout(() => resolve(false), 4000)),
+        ]);
         if (mongoConnected) {
           sysStatus.mongo = "\x1b[32m\ud83d\udfe2 CONNECTED \x1b[0m";
         } else {
-          sysStatus.mongo = "\x1b[31m\ud83d\udd34 ERROR     \x1b[0m";
+          sysStatus.mongo = "\x1b[33m\ud83d\udfe1 CONNECTING\x1b[0m";
         }
       } catch (mongoErr) {
         sysStatus.mongo = "\x1b[31m\ud83d\udd34 ERROR     \x1b[0m";
@@ -132,8 +135,15 @@ async function startBot() {
     }
 
     if (env.REDIS_URL) {
-      await redisManager.connect();
-      sysStatus.redis = "\x1b[32m\ud83d\udfe2 CONNECTED \x1b[0m";
+      try {
+        await Promise.race([
+          redisManager.connect(),
+          new Promise((resolve) => setTimeout(() => resolve(false), 4000)),
+        ]);
+        sysStatus.redis = "\x1b[32m\ud83d\udfe2 CONNECTED \x1b[0m";
+      } catch (redisErr) {
+        sysStatus.redis = "\x1b[33m\ud83d\udfe1 STANDBY   \x1b[0m";
+      }
     }
 
     client.once("clientReady", () => {
