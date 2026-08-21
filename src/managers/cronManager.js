@@ -1,11 +1,9 @@
-const { EmbedBuilder } = require("discord.js");
 const cron = require("node-cron");
 const { logger } = require("../managers/logger");
 const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
 const ui = require("../config/ui");
 const GuildSettings = require("../models/GuildSettings");
 const UserBirthday = require("../models/UserBirthday");
-const Giveaway = require("../models/Giveaway");
 
 const clusterManager = require("./clusterManager");
 
@@ -159,39 +157,39 @@ module.exports = {
         const UserSurvival = require("../models/UserSurvival");
         const UserProfile = require("../models/UserProfile");
         const { sendNotification } = require("./notificationManager");
+        const cacheManager = require("./cacheManager");
 
         // Cari user yang staminanya >= 100
         const fullStaminaUsers = await UserSurvival.findAll({
           where: { stamina: { [require("sequelize").Op.gte]: 100 } },
-          include: [{ model: UserProfile, attributes: ["notification_prefs"] }]
+          include: [{ model: UserProfile, attributes: ["userId", "notification_prefs"] }],
         });
 
         for (const survival of fullStaminaUsers) {
-           const profile = survival.UserProfile;
-           if (!profile) continue;
+          const profile = survival.UserProfile;
+          if (!profile) continue;
 
-           const prefs = profile.notification_prefs || {};
-           
-           // Jika dia mensubscribe stamina_full dan belum ada notifikasi_stamina_sent hari ini
-           // Wait, kita perlu memastikan notif tidak spam berkali-kali. 
-           // Tambahkan record sent_stamina ke prefs.
-           if (prefs.stamina_full && !prefs.sent_stamina) {
-              const payload = buildContainerV2({
-                accentColorHex: ui.getColor("success"),
-                title: "⚡ Stamina RPG Penuh!",
-                description: "Staminamu sudah 100/100! Jangan sampai terbuang sia-sia, yuk lanjut petualangannya di Naura RPG!",
-                expression: "Impressed",
-                footerText: "Ketik /notification di server untuk mematikan notifikasi"
+          const prefs = profile.notification_prefs || {};
+
+          // Jika dia mensubscribe stamina_full dan belum ada notifikasi_stamina_sent hari ini
+          if (prefs.stamina_full && !prefs.sent_stamina) {
+            const payload = buildContainerV2({
+              accentColorHex: ui.getColor("success") || "#22C55E",
+              title: `${ui.getEmoji("stamina") || "⚡"} Stamina RPG Penuh!`,
+              description: "Staminamu sudah 100/100! Jangan sampai terbuang sia-sia, yuk lanjut petualangannya di Naura RPG!",
+              expression: "impressed",
+              footerText: ui.getFooter("utility"),
+            });
+
+            const sent = await sendNotification(client, survival.userId, "stamina_full", payload);
+            if (sent) {
+              await cacheManager.mutateUserProfileJson(survival.userId, "notification_prefs", (prefsObj) => {
+                const obj = (prefsObj && typeof prefsObj === "object") ? prefsObj : {};
+                obj.sent_stamina = true;
+                return obj;
               });
-
-              const sent = await sendNotification(client, survival.userId, "stamina_full", payload);
-              if (sent) {
-                 prefs.sent_stamina = true;
-                 profile.notification_prefs = prefs;
-                 profile.changed("notification_prefs", true);
-                 await profile.save({ fields: ["notification_prefs"] });
-              }
-           }
+            }
+          }
         }
       } catch (err) {
         logger.error("[Cron] Gagal memproses Stamina Notif:", err);
@@ -202,38 +200,35 @@ module.exports = {
     // Reset notif status every day at 00:00 (also Quest reset notif)
     cron.schedule("0 0 * * *", async () => {
       try {
-         const UserProfile = require("../models/UserProfile");
-         const { sendNotification } = require("./notificationManager");
-         const profiles = await UserProfile.findAll();
+        const UserProfile = require("../models/UserProfile");
+        const { sendNotification } = require("./notificationManager");
+        const cacheManager = require("./cacheManager");
+        const profiles = await UserProfile.findAll();
 
-         for (const profile of profiles) {
-           let updated = false;
-           const prefs = profile.notification_prefs || {};
-           
-           if (prefs.sent_stamina) {
-              prefs.sent_stamina = false;
-              updated = true;
-           }
+        for (const profile of profiles) {
+          const prefs = profile.notification_prefs || {};
 
-           if (prefs.quest_reset) {
-              const payload = buildContainerV2({
-                accentColorHex: ui.getColor("primary"),
-                title: "📜 Quest Harian Direset!",
-                description: "Misi Harian (Daily Quest) RPG kamu sudah diperbarui. Yuk cek `/survival rpg quest` dan kumpulkan hadiahnya hari ini!",
-                expression: "Happy",
-                footerText: "Ketik /notification di server untuk mematikan notifikasi"
-              });
-              await sendNotification(client, profile.userId, "quest_reset", payload);
-           }
+          if (prefs.quest_reset) {
+            const payload = buildContainerV2({
+              accentColorHex: ui.getColor("primary") || "#FFB6C1",
+              title: `${ui.getEmoji("desc") || "📜"} Quest Harian Direset!`,
+              description: "Misi Harian (Daily Quest) RPG kamu sudah diperbarui. Yuk cek `/survival rpg quest` dan kumpulkan hadiahnya hari ini!",
+              expression: "happy",
+              footerText: ui.getFooter("utility"),
+            });
+            await sendNotification(client, profile.userId, "quest_reset", payload);
+          }
 
-           if (updated) {
-              profile.notification_prefs = prefs;
-              profile.changed("notification_prefs", true);
-              await profile.save({ fields: ["notification_prefs"] });
-           }
-         }
+          if (prefs.sent_stamina) {
+            await cacheManager.mutateUserProfileJson(profile.userId, "notification_prefs", (prefsObj) => {
+              const obj = (prefsObj && typeof prefsObj === "object") ? prefsObj : {};
+              obj.sent_stamina = false;
+              return obj;
+            });
+          }
+        }
       } catch (e) {
-         logger.error("[Cron] Gagal memproses reset notif harian:", e);
+        logger.error("[Cron] Gagal memproses reset notif harian:", e);
       }
     });
 
@@ -670,6 +665,114 @@ module.exports = {
         logger.info("[Cron Analytics] Precomputed dashboard analytics cache.");
       } catch (err) {
         logger.error("[Cron Analytics Precompute Error]", err);
+      }
+    });
+
+    // 7. World Boss Global Raid Auto-Spawn - Runs every Sunday at 15:00 WIB (08:00 UTC)
+    cron.schedule("0 8 * * 0", async () => {
+      try {
+        const worldBossEngine = require("../survival/engines/worldBossEngine");
+        const activeBoss = await worldBossEngine.getActiveBoss();
+        if (!activeBoss) {
+          logger.info("[Cron WorldBoss] Spawning Sunday Special World Boss (15:00 WIB)...");
+          await worldBossEngine.spawnBoss({
+            bossId: `boss_sunday_${Date.now()}`,
+            name: "Calamity Leviathan Prime",
+            title: "Penguasa Kehampaan Neo-Hoshino (Event Mingguan)",
+            element: "DARK",
+            maxHp: 1500000,
+            durationMinutes: 180,
+            rewardsPool: { starFragments: 15000, coupons: 100 },
+          });
+        }
+      } catch (err) {
+        logger.error("[Cron WorldBoss Spawn Error]", err);
+      }
+    });
+
+    // 8. Prediction Market Auto-Lock Check - Runs every minute
+    cron.schedule("* * * * *", async () => {
+      try {
+        const PredictionMarket = require("../models/PredictionMarket");
+        const { Op } = require("sequelize");
+        const expiredMarkets = await PredictionMarket.findAll({
+          where: {
+            status: "OPEN",
+            lockTime: {
+              [Op.lte]: new Date(),
+            },
+          },
+        });
+
+        for (const market of expiredMarkets) {
+          market.status = "LOCKED";
+          await market.save();
+          const redisManager = require("./redisManager");
+          if (redisManager.isReady) {
+            await redisManager.deleteCache(`prediction:market:${market.marketId}`);
+          }
+          logger.info(`[Cron Prediction] Market ${market.marketId} automatically LOCKED as lockTime passed.`);
+        }
+      } catch (err) {
+        logger.error("[Cron Prediction Auto-Lock Error]", err);
+      }
+    });
+
+    // 9. Daily Morning Newspaper Publication (The Hoshino Times) - Runs every day at 08:00 WIB (01:00 UTC)
+    cron.schedule("0 1 * * *", async () => {
+      try {
+        const ServerChronicleEngine = require("../ai/serverChronicleEngine");
+        logger.info("[Cron Chronicle] Triggering daily morning newspaper publication (08:00 WIB)...");
+        await ServerChronicleEngine.publishMorningChronicle(client);
+      } catch (err) {
+        logger.error("[Cron Chronicle Morning Publication Error]", err);
+      }
+    });
+
+    // 10. Weekly Clan Territory War Reset - Runs every Monday at 00:00 WIB (Sunday 17:00 UTC)
+    cron.schedule("0 17 * * 0", async () => {
+      try {
+        const TerritoryWarEngine = require("../services/territoryWarEngine");
+        logger.info("[Cron Territory] Resetting weekly control points for Clan Territory War...");
+        await TerritoryWarEngine.resetWeeklyWar();
+      } catch (err) {
+        logger.error("[Cron Territory War Reset Error]", err);
+      }
+    });
+
+    // 11. Hourly Server Stock Market Fluctuation Tick (Every hour at minute 0)
+    cron.schedule("0 * * * *", async () => {
+      try {
+        const StockMarketEngine = require("../services/stockMarketEngine");
+        logger.info("[Cron Stock] Updating hourly stock market prices and candle cycles...");
+        await StockMarketEngine.updateMarketTick();
+      } catch (err) {
+        logger.error("[Cron Stock Tick Error]", err);
+      }
+    });
+
+    // 12. Monthly Galactic Coliseum Championship Reset (1st of every month at 00:00 WIB / 17:00 UTC)
+    cron.schedule("0 17 1 * *", async () => {
+      try {
+        const ColiseumTeam = require("../models/ColiseumTeam");
+        logger.info("[Cron Coliseum] Resetting monthly tournament divisions and distributing trophies...");
+        const teams = await ColiseumTeam.findAll();
+        for (const t of teams) {
+          t.eloRating = Math.max(1200, Math.floor(t.eloRating * 0.9));
+          t.divisionTier = t.eloRating >= 2100 ? "MASTER" : t.eloRating >= 1900 ? "DIAMOND" : t.eloRating >= 1700 ? "PLATINUM" : t.eloRating >= 1500 ? "GOLD" : t.eloRating >= 1300 ? "SILVER" : "BRONZE";
+          await t.save();
+        }
+      } catch (err) {
+        logger.error("[Cron Coliseum Reset Error]", err);
+      }
+    });
+
+    // 13. Autonomous Notification Dispatcher - Runs every 30 minutes
+    cron.schedule("*/30 * * * *", async () => {
+      try {
+        logger.debug("[Cron Notification] Autonomous notification cycle tick.");
+      } catch (err) {
+        logger.error("[Cron Notification Center Error]", err);
       }
     });
   },

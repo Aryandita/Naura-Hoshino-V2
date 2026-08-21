@@ -254,7 +254,12 @@ async function handleAIReport(interaction, guildSettings) {
   if (auditChannelId) {
     const auditChannel = interaction.guild.channels.cache.get(auditChannelId);
     if (auditChannel) {
-      const scoreEmoji = score >= 70 ? "🔴" : score >= 30 ? "🟡" : "🟢";
+      const eRed = ui.getEmoji("redping") || "🔴";
+      const eYellow = ui.getEmoji("yellowping") || "🟡";
+      const eGreen = ui.getEmoji("greenping") || "🟢";
+      const eWarn = ui.getEmoji("warning") || "⚠️";
+      const eDone = ui.getEmoji("success") || "✅";
+      const scoreEmoji = score >= 70 ? eRed : score >= 30 ? eYellow : eGreen;
       const auditPayload = buildContainerV2({
         accentColorHex:
           score >= 70 ? "#FF0000" : score >= 30 ? "#FFD700" : "#00FF00",
@@ -274,10 +279,10 @@ async function handleAIReport(interaction, guildSettings) {
           `> ${analysis.reason}`,
           "",
           isLearningMode
-            ? "⚠️ **Mode Belajar aktif.** Tidak ada aksi otomatis."
+            ? `${eWarn} **Mode Belajar aktif.** Tidak ada aksi otomatis.`
             : isViolation
-              ? "✅ **Aksi otomatis dijalankan.**"
-              : "✅ **Tidak ada aksi otomatis (skor di bawah threshold).**",
+              ? `${eDone} **Aksi otomatis dijalankan.**`
+              : `${eDone} **Tidak ada aksi otomatis (skor di bawah threshold).**`,
         ].join("\n"),
         footerText: ui.getFooter("core"),
       });
@@ -313,7 +318,7 @@ async function handleAIReport(interaction, guildSettings) {
       buildContainerV2({
         accentColorHex: "#FF0000",
         authorName: "Naura AI Automod, Aksi Diambil",
-        title: "🚨 Pesan Dilaporkan & Ditindak",
+        title: `${ui.getEmoji("shield_alert") || "🚨"} Pesan Dilaporkan & Ditindak`,
         description: `Pesan dari <@${reportedMessage.author.id}> telah **dihapus** dan user di-**timeout** selama 10 menit.\n\n**Alasan:** ${analysis.reason}\n**Skor Pelanggaran:** ${score}/100`,
         footerText: ui.getFooter("core"),
       }),
@@ -326,7 +331,7 @@ async function handleAIReport(interaction, guildSettings) {
       buildContainerV2({
         accentColorHex: "#FFD700",
         authorName: "Naura AI Automod, Perlu Review",
-        title: "⚠️ Laporan Diteruskan ke Admin",
+        title: `${ui.getEmoji("warning") || "⚠️"} Laporan Diteruskan ke Admin`,
         description: `Pesan yang kamu laporkan memiliki skor **${score}/100** (batas: ${threshold}).\n\nLaporan telah diteruskan ke admin untuk ditinjau. Terima kasih sudah membantu menjaga server!`,
         footerText: ui.getFooter("core"),
       }),
@@ -338,7 +343,7 @@ async function handleAIReport(interaction, guildSettings) {
     buildContainerV2({
       accentColorHex: "#00FF00",
       authorName: "Naura AI Automod, Hasil Analisis",
-      title: "✅ Pesan Tidak Melanggar",
+      title: `${ui.getEmoji("success") || "✅"} Pesan Tidak Melanggar`,
       description: `AI tidak mendeteksi pelanggaran pada pesan tersebut (skor: **${score}/100**).\n\nJika kamu tetap merasa ada yang salah, hubungi admin server secara langsung.`,
       footerText: ui.getFooter("core"),
     }),

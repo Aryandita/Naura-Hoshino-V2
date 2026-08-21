@@ -1,18 +1,25 @@
-const { Client, MessageFlags } = require("discord.js");
+"use strict";
+
 const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
 const ui = require("../config/ui");
 const UserProfile = require("../models/UserProfile");
 const { logger } = require("./logger");
 
+const e = (name, fallback = "") => ui.getEmoji(name) || fallback;
+const SNOWFLAKE_REGEX = /^\d{17,20}$/;
+
 /**
  * Memastikan user sudah autorisasi DM. Jika belum, kirim pesan perkenalan terlebih dahulu.
  */
 async function ensureDmAuthorized(client, userId, profile) {
-  const prefs = profile.notification_prefs || {
+  if (!userId || !SNOWFLAKE_REGEX.test(String(userId))) return false;
+  if (!client || !client.users) return false;
+
+  const prefs = (profile && profile.notification_prefs) || {
     dm_authorized: false,
     stamina_full: true,
     quest_reset: true,
-    event_news: true
+    event_news: true,
   };
 
   if (prefs.dm_authorized) return true;
@@ -22,24 +29,25 @@ async function ensureDmAuthorized(client, userId, profile) {
     if (!user) return false;
 
     const welcomePayload = buildContainerV2({
-      accentColorHex: ui.getColor("primary"),
-      title: "👋 Hai! Ini layanan Notifikasi DM Naura!",
+      accentColorHex: ui.getColor("primary") || "#FFB6C1",
+      title: `${e("core", "🌸")} Layanan Notifikasi Pintar Naura`,
       description: [
-        "Naura akan mengirimkan pesan ke DM ini untuk memberitahu kamu tentang:",
-        "⚔️ **Stamina Penuh** (Jangan sampai energi terbuang!)",
-        "📜 **Quest Reset** (Misi baru setiap jam 00:00)",
-        "⏰ **Custom Reminder** (Timer yang kamu buat sendiri)",
+        `Halo Kak **${user.displayName || user.username}**! ${e("naura_happy", "✨")}`,
+        "Naura akan mengirimkan pembaruan penting langsung ke DM kamu untuk:",
+        `${e("stamina", "⚡")} **Stamina RPG Penuh** (Jangan sampai energimu terbuang!)`,
+        `${e("desc", "📜")} **Quest Reset** (Misi harian baru setiap jam 00:00 WIB)`,
+        `${e("clock", "⏰")} **Custom Reminder** (Pengingat waktu yang kamu jadwalkan)`,
         "",
-        "> **PENTING:** Jika kamu merasa terganggu, kamu **TIDAK PERLU** melaporkan bot ini sebagai spam! Cukup matikan kapan saja dengan mengetik `/notification` di server.",
+        `> ${e("info", "ℹ️")} **PENTING:** Jika kamu ingin menonaktifkan notifikasi ini, kamu **TIDAK PERLU** menandai sebagai spam. Cukup atur kapan saja lewat command \`/notifications\` di server.`,
         "",
-        "Terima kasih sudah menggunakan Naura Hoshino V2! ❤️"
+        `Terima kasih sudah berpetualang bersama Naura! ${e("naura_blowkiss", "💖")}`,
       ].join("\n"),
-      expression: "Happy",
-      footerText: "Ketik /notification di server untuk mematikan notifikasi"
+      expression: "happy",
+      footerText: ui.getFooter("utility"),
     });
 
     await user.send(welcomePayload);
-    
+
     // Update db
     prefs.dm_authorized = true;
     profile.notification_prefs = prefs;
@@ -55,12 +63,15 @@ async function ensureDmAuthorized(client, userId, profile) {
 
 /**
  * Mengirim notifikasi pintar via DM
- * @param {Client} client 
- * @param {string} userId 
+ * @param {object} client - Discord Client
+ * @param {string} userId - Target User ID
  * @param {string} type - 'stamina_full' | 'quest_reset' | 'event_news' | 'custom_reminder'
  * @param {object} payload - Hasil dari buildContainerV2
  */
 async function sendNotification(client, userId, type, payload) {
+  if (!userId || !SNOWFLAKE_REGEX.test(String(userId))) return false;
+  if (!client || !client.users) return false;
+
   try {
     const profile = await UserProfile.findByPk(userId);
     if (!profile) return false;
@@ -69,11 +80,11 @@ async function sendNotification(client, userId, type, payload) {
       dm_authorized: false,
       stamina_full: true,
       quest_reset: true,
-      event_news: true
+      event_news: true,
     };
 
-    // Cek apakah user mensubscribe notifikasi tipe ini (selain custom reminder, custom reminder default masuk asal authorized)
-    if (type !== 'custom_reminder' && !prefs[type]) return false;
+    // Cek apakah user mensubscribe notifikasi tipe ini (selain custom reminder)
+    if (type !== "custom_reminder" && !prefs[type]) return false;
 
     // Pastikan autorisasi
     const authorized = await ensureDmAuthorized(client, userId, profile);
@@ -82,24 +93,15 @@ async function sendNotification(client, userId, type, payload) {
     const user = await client.users.fetch(userId);
     if (!user) return false;
 
-    // Tambahkan footer anti-spam
-    payload.embeds = payload.embeds || [];
-    if (payload.embeds[0]) {
-       // Modifikasi embed V2 sudah menggunakan structure flat atau embeds array. 
-       // Karena menggunakan buildContainerV2, footer bisa jadi sudah ada, tapi kita timpa saja di object jika perlu.
-       // Tapi buildContainerV2 me-return JSON payload.
-    }
-    
-    // Kita cuma perlu send
     await user.send(payload);
     return true;
   } catch (err) {
-    logger.warn(`[NotificationManager] Gagal mengirim notif ${type} ke ${userId}:`, err.message);
+    logger.warn(`[NotificationManager] Gagal mengirim notif ${type} ke ${userId}: ${err.message}`);
     return false;
   }
 }
 
 module.exports = {
   sendNotification,
-  ensureDmAuthorized
+  ensureDmAuthorized,
 };

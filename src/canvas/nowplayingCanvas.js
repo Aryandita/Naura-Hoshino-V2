@@ -48,15 +48,24 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
   ctx.stroke();
   ctx.shadowBlur = 0; // Reset shadow
 
-  // Glassmorphism Main Board
-  ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
-  ctx.strokeStyle = isVIP
-    ? "rgba(255, 215, 0, 0.6)"
-    : "rgba(255, 182, 193, 0.15)";
-  ctx.lineWidth = isVIP ? 2.5 : 1.5;
+  // Glassmorphism Main Board with Tinted Soft Shadow
+  ctx.save();
+  ctx.shadowColor = "rgba(11, 12, 16, 0.85)";
+  ctx.shadowBlur = 25;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 10;
+  ctx.fillStyle = "rgba(255, 255, 255, 0.035)";
   ctx.beginPath();
   ctx.roundRect(20, 20, 760, 250, 20);
   ctx.fill();
+  ctx.restore();
+
+  ctx.strokeStyle = isVIP
+    ? "rgba(255, 215, 0, 0.6)"
+    : "rgba(255, 182, 193, 0.2)";
+  ctx.lineWidth = isVIP ? 2.5 : 1.5;
+  ctx.beginPath();
+  ctx.roundRect(20, 20, 760, 250, 20);
   ctx.stroke();
 
   // 2. Load and draw Thumbnail (Album Art)
@@ -77,14 +86,14 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
     }
   }
 
-  // Draw Thumbnail Box
+  // Draw Thumbnail Box with Tinted Shadow & Glow
   ctx.save();
-  ctx.shadowBlur = 15;
-  ctx.shadowColor = "rgba(255, 182, 193, 0.3)";
+  ctx.shadowBlur = 20;
+  ctx.shadowColor = isVIP ? "rgba(255, 215, 0, 0.4)" : "rgba(255, 182, 193, 0.35)";
 
   // Round clipping for Album Art
   ctx.beginPath();
-  ctx.roundRect(40, 45, 200, 200, 15);
+  ctx.roundRect(40, 45, 200, 200, 16);
   ctx.clip();
 
   if (artLoaded && albumArt) {
@@ -120,7 +129,7 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "left";
 
-  // Title (Outfit Bold / sans-serif)
+  // Title (MontserratBold / sans-serif)
   ctx.font = 'bold 26px "MontserratBold", "EmojiFont"';
   const rawTitle = trackInfo.title || "Unknown Track";
   const titleText =
@@ -131,7 +140,7 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
   ctx.fillText(titleText, 270, 85);
   ctx.shadowBlur = 0; // Reset
 
-  // Artist (Outfit / Light sans-serif)
+  // Artist (Inter / Light sans-serif)
   ctx.fillStyle = "#ffb6c1";
   ctx.font = '20px "Inter", "EmojiFont"';
   const rawAuthor = trackInfo.author || "Unknown Artist";
@@ -181,9 +190,9 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
   ctx.roundRect(270, 185, 480 * progressPercent, 10, 5);
   ctx.fill();
 
-  // Timer Text (Orbitron / sans-serif)
+  // Timer Text (MontserratBold / sans-serif)
   ctx.fillStyle = "#ffffff";
-  ctx.font = '14px "InterBold", "EmojiFont"';
+  ctx.font = 'bold 14px "MontserratBold", "EmojiFont"';
 
   const formatDuration = (ms) => {
     if (!ms || isNaN(ms)) return "0:00";

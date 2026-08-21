@@ -102,18 +102,18 @@ function renderLfgDisplay(state, preset) {
   }
 
   const statusText = isFull
-    ? "🟢 **TIM LENGKAP & SIAP MAIN!**"
-    : `🟡 **Mencari Pemain (${currentCount}/${state.maxSlots})**`;
+    ? `${ui.getEmoji("greenping") || "🟢"} **TIM LENGKAP & SIAP MAIN!**`
+    : `${ui.getEmoji("yellowping") || "🟡"} **Mencari Pemain (${currentCount}/${state.maxSlots})**`;
 
   return buildContainerV2({
     accentColorHex: isFull ? "#22c55e" : ui.getColor("primary") || "#FFB6C1",
     authorName: `Lobby LFG • Dibuat oleh ${state.hostTag}`,
-    title: `🎮 ${state.title} (${preset.name})`,
+    title: `${ui.getEmoji("arcade") || "🎮"} ${state.title} (${preset.name})`,
     description: [
       `**Status:** ${statusText}`,
       state.description ? `**Catatan:** *${state.description}*` : "",
       "",
-      "### 👥 Susunan Tim (Roster):",
+      `### ${ui.getEmoji("member") || "👥"} Susunan Tim (Roster):`,
       ...rosterLines,
     ]
       .filter(Boolean)
@@ -140,17 +140,17 @@ function buildLfgButtons(preset, state) {
     new ButtonBuilder()
       .setCustomId("lfg_leave")
       .setLabel("Keluar")
-      .setEmoji("🚪")
+      .setEmoji(ui.parseEmoji(ui.getEmoji("logout")) || { name: "🚪" })
       .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId("lfg_ping")
       .setLabel("Ping Tim")
-      .setEmoji("🔔")
+      .setEmoji(ui.parseEmoji(ui.getEmoji("bell")) || { name: "🔔" })
       .setStyle(ButtonStyle.Success),
     new ButtonBuilder()
       .setCustomId("lfg_close")
       .setLabel("Tutup Lobby")
-      .setEmoji("🗑️")
+      .setEmoji(ui.parseEmoji(ui.getEmoji("trash_can")) || { name: "🗑️" })
       .setStyle(ButtonStyle.Danger),
   );
 
@@ -247,7 +247,7 @@ module.exports = {
       if (customId === "lfg_close") {
         if (i.user.id !== state.hostId && !i.memberPermissions?.has("ManageGuild")) {
           return i.reply({
-            content: "❌ Hanya pembuat lobby atau admin yang dapat menutup lobby ini.",
+            content: `${ui.getEmoji("error") || "❌"} Hanya pembuat lobby atau admin yang dapat menutup lobby ini.`,
             flags: 64,
           });
         }
@@ -255,7 +255,7 @@ module.exports = {
         const closedContainer = buildContainerV2({
           accentColorHex: ui.getColor("error") || "#ef4444",
           authorName: "Lobby LFG Ditutup",
-          title: `🔒 Lobby ${state.title} telah ditutup`,
+          title: `${ui.getEmoji("lock") || "🔒"} Lobby ${state.title} telah ditutup`,
           description: `Lobby ini telah ditutup oleh <@${i.user.id}>. Terima kasih!`,
           footerText: ui.getFooter("utility"),
         });
@@ -267,13 +267,13 @@ module.exports = {
         const isParticipant = state.members.some((m) => m.userId === i.user.id);
         if (!isParticipant) {
           return i.reply({
-            content: "❌ Kamu harus bergabung ke dalam tim untuk memanggil anggota lain.",
+            content: `${ui.getEmoji("error") || "❌"} Kamu harus bergabung ke dalam tim untuk memanggil anggota lain.`,
             flags: 64,
           });
         }
         const mentions = state.members.map((m) => `<@${m.userId}>`).join(" ");
         return i.reply({
-          content: `🔔 **Panggilan Mabar LFG (${state.title})!**\nPerhatian untuk tim: ${mentions}\n*Dipanggil oleh <@${i.user.id}>!*`,
+          content: `${ui.getEmoji("bell") || "🔔"} **Panggilan Mabar LFG (${state.title})!**\nPerhatian untuk tim: ${mentions}\n*Dipanggil oleh <@${i.user.id}>!*`,
         });
       }
 
@@ -282,7 +282,7 @@ module.exports = {
         const existingIdx = state.members.findIndex((m) => m.userId === i.user.id);
         if (existingIdx === -1) {
           return i.reply({
-            content: "ℹ️ Kamu belum bergabung di dalam lobby ini.",
+            content: `${ui.getEmoji("info") || "ℹ️"} Kamu belum bergabung di dalam lobby ini.`,
             flags: 64,
           });
         }
@@ -303,7 +303,7 @@ module.exports = {
         const roleObj = preset.roles.find((r) => r.id === roleId) || {
           id: roleId,
           label: roleId,
-          emoji: "🎮",
+          emoji: ui.getEmoji("arcade") || "🎮",
         };
 
         const existingIdx = state.members.findIndex((m) => m.userId === i.user.id);
@@ -317,7 +317,7 @@ module.exports = {
           // Tambah member baru
           if (state.members.length >= state.maxSlots) {
             return i.reply({
-              content: "❌ Maaf, slot tim sudah penuh!",
+              content: `${ui.getEmoji("error") || "❌"} Maaf, slot tim sudah penuh!`,
               flags: 64,
             });
           }
@@ -341,7 +341,7 @@ module.exports = {
         if (state.members.length === state.maxSlots) {
           const mentions = state.members.map((m) => `<@${m.userId}>`).join(" ");
           await interaction.followUp({
-            content: `🎉 **Tim ${state.title} sudah lengkap!**\nAnggota: ${mentions}\n*Selamat bermain dan semoga menang!* 🌟`,
+            content: `${ui.getEmoji("celebrate") || "🎉"} **Tim ${state.title} sudah lengkap!**\nAnggota: ${mentions}\n*Selamat bermain dan semoga menang!* ${ui.getEmoji("star") || "🌟"}`,
           });
         }
       }

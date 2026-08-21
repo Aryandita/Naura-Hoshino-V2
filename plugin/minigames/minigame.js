@@ -1,4 +1,5 @@
 /* global rowInvite, rowGame, row, gameStartTime, difficulty */
+const fs = require("node:fs");
 const {
   SlashCommandBuilder,
   ActionRowBuilder,
@@ -6,9 +7,11 @@ const {
   ButtonStyle,
   ComponentType,
   MessageFlags,
+  AttachmentBuilder,
 } = require("discord.js");
 const { logger } = require("../../src/managers/logger");
 const UserProfile = require("../../src/models/UserProfile");
+const UserSurvival = require("../../src/models/UserSurvival");
 const cacheManager = require("../../src/managers/cacheManager");
 const ui = require("../../src/config/ui");
 const {
@@ -16,6 +19,10 @@ const {
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
 const geminiClient = require("../../src/ai/geminiClient");
+const {
+  getUserPremiumTier,
+  getMinigameMultiplier,
+} = require("../../src/premium/premiumHelper");
 
 const triviaDBFallback = {
   pemula: [
@@ -275,7 +282,7 @@ module.exports = {
         .addIntegerOption((opt) =>
           opt
             .setName("taruhan")
-            .setDescription("Jumlah taruhan koin")
+            .setDescription("Jumlah taruhan NSF (Star Fragments)")
             .setRequired(true),
         )
         .addUserOption((opt) =>
@@ -293,7 +300,7 @@ module.exports = {
         .addIntegerOption((opt) =>
           opt
             .setName("taruhan")
-            .setDescription("Jumlah taruhan koin")
+            .setDescription("Jumlah taruhan NSF (Star Fragments)")
             .setRequired(true),
         )
         .addUserOption((opt) =>
@@ -311,7 +318,7 @@ module.exports = {
         .addIntegerOption((opt) =>
           opt
             .setName("taruhan")
-            .setDescription("Jumlah taruhan koin")
+            .setDescription("Jumlah taruhan NSF (Star Fragments)")
             .setRequired(true),
         ),
     )
@@ -334,7 +341,7 @@ module.exports = {
         .addIntegerOption((opt) =>
           opt
             .setName("taruhan")
-            .setDescription("Jumlah koin taruhan (opsional)")
+            .setDescription("Jumlah taruhan NSF (opsional)")
             .setRequired(false),
         ),
     )
@@ -514,16 +521,250 @@ module.exports = {
   },
 };
 
+const MINIGAME_INFOS = {
+  math: {
+    title: "Kuis Matematika Kecepatan",
+    emoji: "🧮",
+    description:
+      "Uji seberapa cepat otakmu berhitung di bawah tekanan waktu!\n\n" +
+      "**Cara Bermain:**\n" +
+      "> 1. Jawab soal hitungan yang Naura berikan secepat mungkin.\n" +
+      "> 2. Semakin tinggi tingkat kesulitan, semakin besar hadiah NSF yang bisa kamu raih!\n" +
+      "> 3. Hati-hati, jika waktu habis kamu dianggap salah lho ya~",
+    tip: "Fokus dan jangan panik ya! Naura yakin kamu jago berhitung!",
+  },
+  trivia: {
+    title: "Kuis Pengetahuan Umum AI",
+    emoji: "🧠",
+    description:
+      "Tantang wawasan dan pengetahuanmu bersama AI Naura!\n\n" +
+      "**Cara Bermain:**\n" +
+      "> 1. Naura akan memberikan pertanyaan pilihan ganda dari berbagai topik dunia.\n" +
+      "> 2. Pilih salah satu tombol opsi jawaban yang menurutmu paling tepat.\n" +
+      "> 3. Jawaban benar akan memberimu hadiah NSF dan tambahan XP!",
+    tip: "Baca soalnya pelan-pelan yaa, jangan sampai terjebak opsi tipuan!",
+  },
+  rps: {
+    title: "Batu Gunting Kertas",
+    emoji: "✂️",
+    description:
+      "Permainan klasik adu insting dan keberuntungan!\n\n" +
+      "**Cara Bermain:**\n" +
+      "> 1. Pasang taruhan NSF dan pilih lawan bermain (AI Naura atau temanmu).\n" +
+      "> 2. Pilih antara Batu 🪨, Gunting ✂️, atau Kertas 📄.\n" +
+      "> 3. Pemenang berhak membawa pulang seluruh taruhan NSF!",
+    tip: "Batu mengalahkan gunting, gunting memotong kertas, kertas membungkus batu!",
+  },
+  tictactoe: {
+    title: "Tic-Tac-Toe Arena",
+    emoji: "⭕",
+    description:
+      "Adu strategi kotak 3x3 klasik yang legendaris!\n\n" +
+      "**Cara Bermain:**\n" +
+      "> 1. Pilih kotak grid 3x3 secara bergantian dengan lawanmu.\n" +
+      "> 2. Buat garis lurus 3 simbol (horizontal, vertikal, atau diagonal) untuk menang.\n" +
+      "> 3. Waspadai dan kunci setiap langkah jebakan lawan!",
+    tip: "Kuasai kotak tengah untuk peluang menang yang lebih tinggi!",
+  },
+  wordle: {
+    title: "Tebak Kata 5 Huruf (Wordle)",
+    emoji: "🟩",
+    description:
+      "Tebak kata rahasia misterius 5 huruf dalam 6 kesempatan!\n\n" +
+      "**Cara Bermain:**\n" +
+      "> 1. Masukkan kata tebakan 5 huruf ke kolom pesan.\n" +
+      "> 2. 🟩 **Hijau:** Huruf tepat dan posisi sudah benar.\n" +
+      "> 3. 🟨 **Kuning:** Huruf ada di dalam kata tapi posisinya keliru.\n" +
+      "> 4. ⬛ **Abu-abu:** Huruf tidak ada sama sekali di dalam kata.",
+    tip: "Mulai dengan kata yang memiliki banyak huruf vokal seperti 'SUARA' atau 'MELON'!",
+  },
+  duel: {
+    title: "Duel Matematika Real-Time",
+    emoji: "⚔️",
+    description:
+      "Tantangan hitung cepat 1 lawan 1 langsung di server!\n\n" +
+      "**Cara Bermain:**\n" +
+      "> 1. Tantang temanmu dengan taruhan NSF.\n" +
+      "> 2. Siapa yang menjawab soal matematika dengan benar dan paling cepat akan menang!\n" +
+      "> 3. Pemenang berhak atas seluruh saldo hadiah taruhan NSF!",
+    tip: "Pastikan koneksimu stabil dan jemarimu siap mengetik cepat!",
+  },
+  akinator: {
+    title: "Akinator Sang Cenayang",
+    emoji: "🧞",
+    description:
+      "Pikirkan satu karakter, dan biarkan Jin Naura menebaknya!\n\n" +
+      "**Cara Bermain:**\n" +
+      "> 1. Pikirkan satu tokoh fiksi, artis, anime, atau tokoh dunia di kepalamu.\n" +
+      "> 2. Jawab pertanyaan Naura dengan jujur (Ya, Tidak, Mungkin, dsb).\n" +
+      "> 3. Lihat apakah Naura berhasil membaca pikiranmu!",
+    tip: "Jangan ganti karakter di tengah jalan yaa, nanti Naura bingung~",
+  },
+  hangman: {
+    title: "Hangman Tebak Huruf",
+    emoji: "🔤",
+    description:
+      "Tebak huruf demi huruf sebelum kesempatanmu habis!\n\n" +
+      "**Cara Bermain:**\n" +
+      "> 1. Tebak huruf yang menyusun kata rahasia misterius.\n" +
+      "> 2. Setiap tebakan salah akan mengurangi nyawa/kesempatanmu.\n" +
+      "> 3. Selesaikan seluruh kata sebelum boneka hangman tergantung lengkap!",
+    tip: "Tebak huruf vokal utama (A, I, U, E, O) terlebih dahulu!",
+  },
+  memory: {
+    title: "Memory Match Emoji",
+    emoji: "🎴",
+    description:
+      "Uji daya ingat visualmu dengan mencocokkan pasangan kartu!\n\n" +
+      "**Cara Bermain:**\n" +
+      "> 1. Buka dua kartu pada grid yang disediakan.\n" +
+      "> 2. Ingat posisi simbol emoji yang muncul di balik kartu.\n" +
+      "> 3. Cocokkan semua pasangan kartu secepat mungkin!",
+    tip: "Konsentrasi penuh dan simpan koordinat kartu di memorimu!",
+  },
+  tebakkata: {
+    title: "Tebak Kata Anagram",
+    emoji: "🔠",
+    description:
+      "Susun huruf-huruf yang berantakan menjadi kata yang bermakna!\n\n" +
+      "**Cara Bermain:**\n" +
+      "> 1. Perhatikan susunan huruf yang diacak oleh Naura.\n" +
+      "> 2. Ketik kata asli yang benar sebelum batas waktu habis.\n" +
+      "> 3. Raih hadiah NSF dan kebanggaan jika tebakanmu tepat!",
+    tip: "Coba bunyikan rangkaian hurufnya di dalam hati untuk menemukan polanya!",
+  },
+  tebakgambar: {
+    title: "Tebak Gambar Misteri",
+    emoji: "🖼️",
+    description:
+      "Tebak objek atau makna tersembunyi dari gambar petunjuk!\n\n" +
+      "**Cara Bermain:**\n" +
+      "> 1. Perhatikan gambar petunjuk yang Naura kirimkan.\n" +
+      "> 2. Ketik jawaban tebakanmu di chat.\n" +
+      "> 3. Siapa cepat dan tepat, dia yang menang!",
+    tip: "Perhatikan detail-detail kecil pada gambar yaa!",
+  },
+  tts: {
+    title: "Teka-Teki Silang Mini",
+    emoji: "📝",
+    description:
+      "Isi kotak mendatar dan menurun dengan jawaban cerdasmu!\n\n" +
+      "**Cara Bermain:**\n" +
+      "> 1. Baca petunjuk soal mendatar dan menurun.\n" +
+      "> 2. Tuliskan jawaban yang sesuai dengan jumlah huruf.\n" +
+      "> 3. Lengkapi semua kotak untuk menyelesaikan TTS!",
+    tip: "Kerjakan petunjuk yang paling kamu yakin terlebih dahulu!",
+  },
+  tod: {
+    title: "Truth or Dare Party",
+    emoji: "🎭",
+    description:
+      "Game seru penguji kejujuran dan keberanian bersama teman!\n\n" +
+      "**Cara Bermain:**\n" +
+      "> 1. Pilih antara **Jujur (Truth)** atau **Tantangan (Dare)**.\n" +
+      "> 2. Jawab pertanyaan rahasia atau lakukan tantangan seru dari Naura.\n" +
+      "> 3. Bersenang-senanglah bersama teman-teman servermu!",
+    tip: "Jangan curang ya, lakukan tantangan dengan penuh percaya diri!",
+  },
+};
+
+async function showMinigameIntro(interaction, subcommand, onStart) {
+  const info = MINIGAME_INFOS[subcommand];
+  if (!info) return onStart();
+
+  const bannerPath =
+    ui.getBanner("minigame") ||
+    "./assets/general/Minigame & Arcade Banner.jpeg";
+  const bannerName = "minigame-banner.jpeg";
+  const files = [];
+  let bannerAttachmentName = null;
+
+  if (fs.existsSync(bannerPath)) {
+    files.push(new AttachmentBuilder(bannerPath, { name: bannerName }));
+    bannerAttachmentName = bannerName;
+  }
+
+  const rowIntro = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`mg_intro_start_${interaction.user.id}`)
+      .setLabel("Lanjutkan Bermain 🚀")
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId(`mg_intro_cancel_${interaction.user.id}`)
+      .setLabel("Batal")
+      .setStyle(ButtonStyle.Secondary),
+  );
+
+  const introPayload = buildContainerV2({
+    accentColorHex: ui.getColor("primary") || "#FFB6C1",
+    authorName: "Naura Minigames & Arcade Hub",
+    title: `${info.emoji} ${info.title}`,
+    iconURL: interaction.user.displayAvatarURL(),
+    expression: "cheers",
+    description:
+      `${info.description}\n\n` +
+      `💡 **Tips Naura:** *${info.tip}*\n\n` +
+      `Tekan tombol **Lanjutkan Bermain 🚀** di bawah jika kamu sudah siap!`,
+    bannerAttachmentName,
+    bannerPosition: "bottom",
+    files,
+    buttonsRow: rowIntro,
+    footerText: ui.getFooter("core"),
+  });
+
+  const replyMsg = await interaction.editReply(introPayload);
+
+  try {
+    const confirmation = await replyMsg.awaitMessageComponent({
+      filter: (i) =>
+        i.user.id === interaction.user.id &&
+        (i.customId.startsWith("mg_intro_start_") ||
+          i.customId.startsWith("mg_intro_cancel_")),
+      time: 60000,
+    });
+
+    if (confirmation.customId.startsWith("mg_intro_cancel_")) {
+      const cancelPayload = buildContainerV2({
+        title: "Bermain Dibatalkan",
+        description:
+          "Kamu membatalkan permainan. Kapan-kapan kita main bareng lagi yaa! 👋",
+        footerText: ui.getFooter("core"),
+      });
+      return confirmation.update({
+        ...cancelPayload,
+        components: [],
+        files: [],
+      });
+    }
+
+    await confirmation.deferUpdate();
+    return onStart();
+  } catch (_) {
+    return interaction
+      .editReply({
+        components: [],
+      })
+      .catch(() => {});
+  }
+}
+
 async function runMinigameLogic(interaction) {
   const subcommand = interaction.options.getSubcommand();
   const user = interaction.user;
 
-  // Memuat profil MySQL
+  // Memuat profil & survival
   const [profile] = await UserProfile.findOrCreate({
     where: { userId: user.id },
   });
+  const [survival] = await UserSurvival.findOrCreate({
+    where: { userId: user.id },
+  });
 
-  const coinEmoji = ui.emojis.coin || "🪙";
+  const premiumTier = getUserPremiumTier(profile);
+  const nsfMultiplier = getMinigameMultiplier(premiumTier);
+
+  const nsfEmoji = ui.getEmoji("nsf") || ui.getEmoji("star_fragment") || "⭐";
+  const coinEmoji = `${nsfEmoji} NSF`;
   const errorEmoji = ui.emojis.error || "❌";
   const sendError = (msg) => {
     const errPayload = buildErrorContainerV2({
@@ -534,10 +775,12 @@ async function runMinigameLogic(interaction) {
     return interaction.editReply(errPayload);
   };
 
-  // ==========================================
-  // ⚔️ SISTEM DUEL MULTIPLAYER REAL-TIME
-  // ==========================================
-  if (subcommand === "duel") {
+  const executeGame = async () => {
+    let gameStartTime = Date.now();
+    // ==========================================
+    // ⚔️ SISTEM DUEL MULTIPLAYER REAL-TIME
+    // ==========================================
+    if (subcommand === "duel") {
     const opponent = interaction.options.getUser("lawan");
     const taruhan = interaction.options.getInteger("taruhan") || 0;
 
@@ -545,19 +788,21 @@ async function runMinigameLogic(interaction) {
     if (opponent.id === user.id)
       return sendError("Kamu tidak bisa menantang dirimu sendiri!");
 
-    const [opponentProfile] = await UserProfile.findOrCreate({
+    const [opponentSurvival] = await UserSurvival.findOrCreate({
       where: { userId: opponent.id },
     });
 
-    // Cek saldo taruhan di MySQL
+    // Cek saldo taruhan NSF di database survival
     if (taruhan > 0) {
-      if (profile.economy_wallet < taruhan)
+      const userNsf = Number(survival.starFragments || 0);
+      const oppNsf = Number(opponentSurvival.starFragments || 0);
+      if (userNsf < taruhan)
         return sendError(
-          `Saldo koinmu tidak cukup untuk bertaruh sebesar **${taruhan.toLocaleString()}**!`,
+          `Saldo Star Fragments (NSF) kamu tidak cukup untuk bertaruh sebesar **${taruhan.toLocaleString()}** ${coinEmoji}! (Saldo: ${userNsf.toLocaleString()} ${nsfEmoji})`,
         );
-      if (opponentProfile.economy_wallet < taruhan)
+      if (oppNsf < taruhan)
         return sendError(
-          `Saldo <@${opponent.id}> tidak cukup untuk taruhan ini!`,
+          `Saldo Star Fragments (NSF) <@${opponent.id}> tidak cukup untuk taruhan ini!`,
         );
     }
 
@@ -573,78 +818,74 @@ async function runMinigameLogic(interaction) {
     );
     const invitePayload = buildContainerV2({
       accentColorHex: ui.colors.primary || "#00FFFF",
-      title: "⚔️ TANTANGAN DUEL ⚔️",
+      title: `${ui.getEmoji("battle") || "⚔️"} TANTANGAN DUEL ${ui.getEmoji("battle") || "⚔️"}`,
       description: `<@${user.id}> menantang <@${opponent.id}> untuk duel matematika kecepatan!\n\n**Taruhan:** ${taruhan.toLocaleString()} ${coinEmoji}\n\nApakah kamu berani menerima tantangan ini?`,
       buttonsRow: rowInvite,
       footerText: "Tantangan ini akan kadaluarsa dalam 30 detik.",
     });
 
-    const gameStartTime = Date.now();
     const response = await interaction.editReply({
       content: `<@${opponent.id}>`,
       ...invitePayload,
+      fetchReply: true,
     });
 
+    const filter = (i) => i.user.id === opponent.id;
     const collectorInvite = response.createMessageComponentCollector({
-      filter: (i) => i.user.id === opponent.id,
+      filter,
       time: 30000,
     });
 
     collectorInvite.on("collect", async (i) => {
       if (i.customId === "duel_decline") {
         await i.update({
-          content: `❌ <@${opponent.id}> lari dari tantangan duel.`,
+          content: `❌ <@${opponent.id}> menolak tantangan duel.`,
           embeds: [],
           components: [],
         });
         return collectorInvite.stop();
       }
 
-      // Jika diterima, proses game
       await i.deferUpdate();
+      collectorInvite.stop();
 
-      const difficulty = "pemula";
-      const n1 = Math.floor(Math.random() * 50) + 10;
-      const n2 = Math.floor(Math.random() * 50) + 10;
-      const answer = n1 + n2;
+      // MEMULAI GAME DUEL
+      const num1 = Math.floor(Math.random() * 50) + 10;
+      const num2 = Math.floor(Math.random() * 50) + 10;
+      const answer = num1 + num2;
 
-      // Menyiapkan 4 pilihan acak
-      const options = [answer, answer + 5, answer - 3, answer + 10].sort(
-        () => Math.random() - 0.5,
-      );
+      const options = [
+        answer,
+        answer + Math.floor(Math.random() * 5) + 1,
+        answer - Math.floor(Math.random() * 5) - 1,
+        answer + 10,
+      ].sort(() => Math.random() - 0.5);
 
       const rowGame = new ActionRowBuilder().addComponents(
-        options.map((opt, i) =>
+        options.map((opt) =>
           new ButtonBuilder()
-            .setCustomId(`ans_${opt}`)
+            .setCustomId(`duel_${opt}`)
             .setLabel(opt.toString())
             .setStyle(ButtonStyle.Primary),
         ),
       );
-      const gamePayload = buildContainerV2({
-        accentColorHex: "#FF0000",
-        title: "⚡ PERTANDINGAN DIMULAI ⚡",
-        description: `Siapa yang paling cepat menekan jawaban yang benar?!\n\n**SOAL:** Berapa hasil dari **${n1} + ${n2}**?`,
+
+      const duelPayload = buildContainerV2({
+        accentColorHex: "#FF0055",
+        title: `${ui.getEmoji("battle") || "⚔️"} DUEL DIMULAI: SIAPA CEPAT DIA DAPAT!`,
+        description: `Berapa hasil dari: **${num1} + ${num2}** ?\n\nSiapapun yang menekan jawaban benar lebih dulu akan menang!`,
         buttonsRow: rowGame,
-        footerText: "Cepat! Waktu terus berjalan (15 Detik)",
+        footerText: "Waktu menjawab: 15 detik",
       });
 
-      await interaction.editReply({
-        content: `🔥 **DUEL DIMULAI:** <@${user.id}> vs <@${opponent.id}> 🔥`,
-        ...gamePayload,
-      });
+      await interaction.editReply({ content: null, ...duelPayload });
 
       const gameCollector = response.createMessageComponentCollector({
-        componentType: ComponentType.Button,
+        filter: (gi) => gi.user.id === user.id || gi.user.id === opponent.id,
         time: 15000,
       });
 
       gameCollector.on("collect", async (gi) => {
-        // Pastikan hanya mereka berdua yang bisa klik
-        if (gi.user.id !== user.id && gi.user.id !== opponent.id) {
-          return ui.sendError(gi, "err_sys_3", true);
-        }
-
         const chosen = parseInt(gi.customId.split("_")[1]);
         const winner = gi.user;
         const loser = winner.id === user.id ? opponent : user;
@@ -654,20 +895,24 @@ async function runMinigameLogic(interaction) {
 
           await cacheManager.incrementUserProfile(winner.id, {
             minigame_duelScore: 10,
-            economy_wallet: taruhan > 0 ? taruhan : 0,
           });
 
           if (taruhan > 0) {
-            await cacheManager.debitUserProfile(
+            await cacheManager.incrementUserSurvival(
+              winner.id,
+              "starFragments",
+              taruhan,
+            );
+            await cacheManager.debitUserSurvival(
               loser.id,
-              "economy_wallet",
+              "starFragments",
               taruhan,
             );
           }
 
           const winPayload = buildContainerV2({
             accentColorHex: "#22c55e",
-            title: "🏆 PEMENANG DUEL",
+            title: `${ui.getEmoji("trophy") || "🏆"} PEMENANG DUEL`,
             description: `Tembakan cepat dari <@${winner.id}> tepat sasaran!\n\n**Jawaban Benar:** ${answer}\n\n**Hadiah Pemenang:**\n> +10 Poin Duel\n> ${taruhan > 0 ? `+${taruhan.toLocaleString()} ${coinEmoji}` : "Tidak ada taruhan"}`,
             footerText: ui.getFooter("core"),
           });
@@ -684,7 +929,7 @@ async function runMinigameLogic(interaction) {
           interaction
             .editReply({
               content:
-                "⏰ Pertandingan dibatalkan karena waktu habis, tidak ada yang menjawab.",
+                `${ui.getEmoji("clock") || "⏰"} Pertandingan dibatalkan karena waktu habis, tidak ada yang menjawab.`,
               embeds: [],
               components: [],
             })
@@ -697,7 +942,7 @@ async function runMinigameLogic(interaction) {
       if (reason === "time") {
         interaction
           .editReply({
-            content: `⏰ <@${opponent.id}> terlalu lama merespons. Tantangan dibatalkan.`,
+            content: `${ui.getEmoji("clock") || "⏰"} <@${opponent.id}> terlalu lama merespons. Tantangan dibatalkan.`,
             embeds: [],
             components: [],
           })
@@ -757,6 +1002,15 @@ async function runMinigameLogic(interaction) {
     const shuffledOptions = [...qData.options].sort(() => Math.random() - 0.5);
     const correctIndex = shuffledOptions.indexOf(qData.a);
 
+    const row = new ActionRowBuilder().addComponents(
+      shuffledOptions.map((opt, index) =>
+        new ButtonBuilder()
+          .setCustomId(`trivia_${index}`)
+          .setLabel(opt.length > 80 ? opt.substring(0, 77) + "..." : opt)
+          .setStyle(ButtonStyle.Primary),
+      ),
+    );
+
     const payload = buildContainerV2({
       accentColorHex: conf.color,
       authorName: `Kuis Trivia AI [${diff.toUpperCase()}]`,
@@ -794,18 +1048,34 @@ async function runMinigameLogic(interaction) {
       );
 
       if (selectedIndex === correctIndex) {
-        profile.economy_wallet += profile.isPremium ? conf.coin * 2 : conf.coin;
+        const rewardNsf = Math.floor(conf.coin * nsfMultiplier);
         profile.minigame_triviaScore += conf.score;
         await profile.save();
-        await i.update({
-          content: `🎉 **TEPAT SEKALI!** Kamu mendapat **${conf.coin}** ${coinEmoji}!`,
-          components: [newRow],
+        await cacheManager.incrementUserSurvival(user.id, "starFragments", rewardNsf);
+
+        const winPayload = buildContainerV2({
+          accentColorHex: "#22c55e",
+          authorName: `Kuis Trivia AI [${diff.toUpperCase()}]`,
+          iconURL: user.displayAvatarURL(),
+          title: `${ui.getEmoji("celebrate") || "🎉"} JAWABAN TEPAT SEKALI!`,
+          description: `Hebat! Jawabanmu **${qData.a}** adalah benar!\n\n> 💰 **Hadiah:** +${rewardNsf} ${coinEmoji}\n> 🏆 **Skor:** +${conf.score} Poin`,
+          buttonsRow: newRow,
+          footerText: ui.getFooter("core"),
         });
+
+        await i.update(winPayload);
       } else {
-        await i.update({
-          content: `❌ **SALAH!** Jawaban yang benar adalah **${qData.a}**.`,
-          components: [newRow],
+        const losePayload = buildContainerV2({
+          accentColorHex: "#ef4444",
+          authorName: `Kuis Trivia AI [${diff.toUpperCase()}]`,
+          iconURL: user.displayAvatarURL(),
+          title: `${ui.getEmoji("error") || "❌"} JAWABAN KURANG TEPAT`,
+          description: `Sayang sekali! Jawaban yang benar adalah **${qData.a}**.\nTetap semangat dan coba lagi yaa!`,
+          buttonsRow: newRow,
+          footerText: ui.getFooter("core"),
         });
+
+        await i.update(losePayload);
       }
       collector.stop("answered");
     });
@@ -825,12 +1095,17 @@ async function runMinigameLogic(interaction) {
               .setDisabled(true),
           ),
         );
-        interaction
-          .editReply({
-            content: `⏰ **WAKTU HABIS!**`,
-            components: [disabledRow],
-          })
-          .catch(() => {});
+        const timePayload = buildContainerV2({
+          accentColorHex: "#f59e0b",
+          authorName: `Kuis Trivia AI [${diff.toUpperCase()}]`,
+          iconURL: user.displayAvatarURL(),
+          title: `${ui.getEmoji("clock") || "⏰"} WAKTU HABIS!`,
+          description: `Waktu berpikirmu telah habis!\nJawaban yang benar adalah **${qData.a}**.`,
+          buttonsRow: disabledRow,
+          footerText: ui.getFooter("core"),
+        });
+
+        interaction.editReply(timePayload).catch(() => {});
       }
     });
   }
@@ -853,6 +1128,7 @@ async function runMinigameLogic(interaction) {
     });
 
     await interaction.editReply(payload);
+    const gameStartTime = Date.now();
 
     const filter = (m) => m.author.id === user.id;
     const collector = interaction.channel.createMessageCollector({
@@ -862,34 +1138,60 @@ async function runMinigameLogic(interaction) {
     });
 
     collector.on("collect", async (m) => {
-      if (m.content.replace(/\s+/g, "").trim() === mathData.answer) {
+      if (String(m.content).replace(/\s+/g, "").trim() === String(mathData.answer)) {
         const timeTaken = Date.now() - gameStartTime;
-        if (timeTaken < 1500 && difficulty === "grandmaster") {
-          // Mustahil kalkulasi manusia secepat ini
-          await m.reply({
-            content:
-              "🚨 **ANTI-CHEAT:** Terdeteksi Auto-Typer / Selfbot. Kamu menjawab perhitungan rumit dalam waktu kurang dari 1.5 detik! Koin dibatalkan.",
+        if (timeTaken < 1500 && diff === "grandmaster") {
+          const cheatPayload = buildContainerV2({
+            accentColorHex: "#ef4444",
+            title: `${ui.getEmoji("shield_alert") || "🚨"} ANTI-CHEAT`,
+            description: "Terdeteksi Auto-Typer / Selfbot. Kamu menjawab perhitungan rumit dalam waktu kurang dari 1.5 detik! Hadiah dibatalkan.",
+            footerText: ui.getFooter("core"),
           });
+          await m.reply(cheatPayload);
           return collector.stop("cheat");
         }
-        profile.economy_wallet += profile.isPremium ? conf.coin * 2 : conf.coin;
+        const rewardNsf = Math.floor(conf.coin * nsfMultiplier);
         profile.minigame_mathScore += conf.score;
         await profile.save();
-        m.reply(
-          `✅ **BENAR!** Jawaban yang tepat adalah **${mathData.answer}**.\nKamu mendapatkan **${conf.coin}** ${coinEmoji} dan **${conf.score}** Poin Math!`,
-        );
+        await cacheManager.incrementUserSurvival(user.id, "starFragments", rewardNsf);
+
+        const winPayload = buildContainerV2({
+          accentColorHex: "#22c55e",
+          authorName: `Kuis Matematika [${diff.toUpperCase()}]`,
+          iconURL: user.displayAvatarURL(),
+          title: `${ui.getEmoji("success") || "✅"} HITUNGAN BENAR!`,
+          description: `Luar biasa! Hasil hitungan dari **${mathData.question}** memang **${mathData.answer}**.\n\n> 💰 **Hadiah:** +${rewardNsf} ${coinEmoji}\n> 🏆 **Skor:** +${conf.score} Poin Math`,
+          footerText: ui.getFooter("core"),
+        });
+
+        m.reply(winPayload);
       } else {
-        m.reply(
-          `❌ **SALAH!** Jawaban yang benar adalah **${mathData.answer}**.`,
-        );
+        const losePayload = buildContainerV2({
+          accentColorHex: "#ef4444",
+          authorName: `Kuis Matematika [${diff.toUpperCase()}]`,
+          iconURL: user.displayAvatarURL(),
+          title: `${ui.getEmoji("error") || "❌"} HITUNGAN SALAH`,
+          description: `Jawabanmu belum tepat!\nHasil yang benar dari **${mathData.question}** adalah: **${mathData.answer}**`,
+          footerText: ui.getFooter("core"),
+        });
+
+        m.reply(losePayload);
       }
     });
 
     collector.on("end", (collected) => {
-      if (collected.size === 0)
-        interaction.followUp(
-          `⏰ Waktu habis, <@${user.id}>! Jawaban yang benar adalah **${mathData.answer}**.`,
-        );
+      if (collected.size === 0) {
+        const timePayload = buildContainerV2({
+          accentColorHex: "#f59e0b",
+          authorName: `Kuis Matematika [${diff.toUpperCase()}]`,
+          iconURL: user.displayAvatarURL(),
+          title: `${ui.getEmoji("clock") || "⏰"} WAKTU HABIS!`,
+          description: `Waktu berhitung telah habis, <@${user.id}>!\nHasil yang benar adalah: **${mathData.answer}**.`,
+          footerText: ui.getFooter("core"),
+        });
+
+        interaction.followUp(timePayload).catch(() => {});
+      }
     });
   }
 
@@ -899,8 +1201,11 @@ async function runMinigameLogic(interaction) {
   else if (subcommand === "rps") {
     const taruhan = interaction.options.getInteger("taruhan");
     const opponent = interaction.options.getUser("lawan");
-    if (taruhan <= 0 || profile.economy_wallet < taruhan)
-      return sendError(`Taruhan tidak valid atau saldo kurang!`);
+    const curSurv = await cacheManager.getUserSurvival(user.id);
+    const curNsf = curSurv ? Number(curSurv.starFragments || 0) : Number(survival.starFragments || 0);
+
+    if (taruhan <= 0 || curNsf < taruhan)
+      return sendError(`Taruhan tidak valid atau saldo Star Fragments (NSF) tidak cukup! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`);
 
     if (opponent && !opponent.bot && opponent.id !== user.id) {
       return interaction.editReply({
@@ -909,6 +1214,21 @@ async function runMinigameLogic(interaction) {
         flags: MessageFlags.Ephemeral,
       });
     }
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("rps_batu")
+        .setLabel("Batu 🪨")
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId("rps_gunting")
+        .setLabel("Gunting ✂️")
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId("rps_kertas")
+        .setLabel("Kertas 📄")
+        .setStyle(ButtonStyle.Primary),
+    );
 
     const payload = buildContainerV2({
       accentColorHex: ui.colors.primary || "#00FFFF",
@@ -938,24 +1258,24 @@ async function runMinigameLogic(interaction) {
       let color = "#FFD700";
 
       if (userChoice === botChoice) {
-        result = `SERI! Kalian berdua memilih **${userChoice}**.\nKoin taruhan dikembalikan.`;
+        result = `SERI! Kalian berdua memilih **${userChoice}**.\nTaruhan NSF dikembalikan.`;
         color = "#FFFF00";
       } else if (
         (userChoice === "batu" && botChoice === "gunting") ||
         (userChoice === "gunting" && botChoice === "kertas") ||
         (userChoice === "kertas" && botChoice === "batu")
       ) {
-        profile.economy_wallet += profile.isPremium ? taruhan * 2 : taruhan;
+        const winNsf = profile.isPremium ? taruhan * 2 : taruhan;
         profile.minigame_rpsWin += 1;
+        await profile.save();
+        await cacheManager.incrementUserSurvival(user.id, "starFragments", winNsf);
         result = `MENANG! Bot memilih **${botChoice}**.\nKamu memenangkan **${(taruhan * 2).toLocaleString()}** ${coinEmoji}!`;
         color = "#00FF00";
       } else {
-        profile.economy_wallet -= taruhan;
-        result = `KALAH! Bot memilih **${botChoice}**.\nKamu kehilangan taruhanmu.`;
+        await cacheManager.debitUserSurvival(user.id, "starFragments", taruhan);
+        result = `KALAH! Bot memilih **${botChoice}**.\nKamu kehilangan **${taruhan.toLocaleString()}** ${coinEmoji}.`;
         color = "#FF0000";
       }
-
-      await profile.save();
 
       const resPayload = buildContainerV2({
         accentColorHex: color,
@@ -984,8 +1304,11 @@ async function runMinigameLogic(interaction) {
   else if (subcommand === "tictactoe") {
     const taruhan = interaction.options.getInteger("taruhan");
     const opponent = interaction.options.getUser("lawan");
-    if (taruhan <= 0 || profile.economy_wallet < taruhan)
-      return sendError(`Taruhan tidak valid atau saldo kurang!`);
+    const curSurv = await cacheManager.getUserSurvival(user.id);
+    const curNsf = curSurv ? Number(curSurv.starFragments || 0) : Number(survival.starFragments || 0);
+
+    if (taruhan <= 0 || curNsf < taruhan)
+      return sendError(`Taruhan tidak valid atau saldo Star Fragments (NSF) tidak cukup! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`);
 
     if (opponent && !opponent.bot && opponent.id !== user.id) {
       return interaction.editReply({
@@ -1036,7 +1359,7 @@ async function runMinigameLogic(interaction) {
     const renderTtt = (desc, disabled = false) =>
       buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        title: "🕹️ Tic-Tac-Toe Minigame",
+        title: `${ui.getEmoji("arcade") || "🕹️"} Tic-Tac-Toe Minigame`,
         description: desc,
         buttonsRow: buildBoardUI(board, disabled),
         footerText: ui.getFooter("core"),
@@ -1073,16 +1396,17 @@ async function runMinigameLogic(interaction) {
       if (status) {
         let msg = "";
         if (status === "X") {
-          profile.economy_wallet += profile.isPremium ? taruhan * 2 : taruhan;
+          const winNsf = profile.isPremium ? taruhan * 2 : taruhan;
           profile.minigame_tttWin += 1;
-          msg = `🏆 **KAMU MENANG!** Kamu mendapatkan **${(taruhan * 2).toLocaleString()}** ${coinEmoji}.`;
+          await profile.save({ fields: ["minigame_tttWin"] });
+          await cacheManager.incrementUserSurvival(user.id, "starFragments", winNsf);
+          msg = `${ui.getEmoji("trophy") || "🏆"} **KAMU MENANG!** Kamu mendapatkan **${(taruhan * 2).toLocaleString()}** ${coinEmoji}.`;
         } else if (status === "O") {
-          profile.economy_wallet -= taruhan;
-          msg = `💀 **KAMU KALAH!** Bot AI memenangkan taruhanmu.`;
+          await cacheManager.debitUserSurvival(user.id, "starFragments", taruhan);
+          msg = `${ui.getEmoji("skull") || "💀"} **KAMU KALAH!** Bot AI memenangkan taruhan **${taruhan.toLocaleString()}** ${coinEmoji}.`;
         } else {
-          msg = `🤝 **SERI!** Permainan imbang, koin dikembalikan.`;
+          msg = `${ui.getEmoji("handshake") || "🤝"} **SERI!** Permainan imbang, taruhan NSF dikembalikan.`;
         }
-        await profile.save({ fields: ["economy_wallet", "minigame_tttWin"] });
         await i.update(renderTtt(msg, true));
         collector.stop();
       } else {
@@ -1097,8 +1421,7 @@ async function runMinigameLogic(interaction) {
 
     collector.on("end", async (collected) => {
       if (checkWin(board) === null) {
-        profile.economy_wallet -= taruhan;
-        await profile.save({ fields: ["economy_wallet"] });
+        await cacheManager.debitUserSurvival(user.id, "starFragments", taruhan);
         await interaction
           .editReply(
             renderTtt(
@@ -1116,8 +1439,11 @@ async function runMinigameLogic(interaction) {
   // ==========================================
   else if (subcommand === "wordle") {
     const taruhan = interaction.options.getInteger("taruhan");
-    if (taruhan <= 0 || profile.economy_wallet < taruhan)
-      return sendError(`Taruhan tidak valid atau saldo kurang!`);
+    const curSurv = await cacheManager.getUserSurvival(user.id);
+    const curNsf = curSurv ? Number(curSurv.starFragments || 0) : Number(survival.starFragments || 0);
+
+    if (taruhan <= 0 || curNsf < taruhan)
+      return sendError(`Taruhan tidak valid atau saldo Star Fragments (NSF) tidak cukup! (Saldo: ${curNsf.toLocaleString()} ${nsfEmoji})`);
 
     const targetWord =
       wordleWords[Math.floor(Math.random() * wordleWords.length)];
@@ -1125,8 +1451,7 @@ async function runMinigameLogic(interaction) {
     const maxAttempts = 6;
     const gridHistory = [];
 
-    profile.economy_wallet -= taruhan;
-    await profile.save();
+    await cacheManager.debitUserSurvival(user.id, "starFragments", taruhan);
 
     const payload = buildContainerV2({
       accentColorHex: "#2b2d31",
@@ -1170,16 +1495,16 @@ async function runMinigameLogic(interaction) {
       gridHistory.push(`\`${guess}\` | ${resultRow}`);
 
       if (guess === targetWord) {
-        profile.economy_wallet += profile.isPremium
-          ? taruhan * 3 * 2
-          : taruhan * 3;
+        const winMultiplier = profile.isPremium ? 6 : 3;
+        const winNsf = taruhan * winMultiplier;
         profile.minigame_wordleWin += 1;
         await profile.save();
+        await cacheManager.incrementUserSurvival(user.id, "starFragments", winNsf);
 
         const winPayload = buildContainerV2({
           accentColorHex: "#22c55e",
-          title: "🎉 TEPAT SEKALI!",
-          description: `Target Kata: **${targetWord}**\n\n${gridHistory.join("\n")}\n\nKamu memenangkan **${(taruhan * 3).toLocaleString()}** ${coinEmoji}!`,
+          title: `${ui.getEmoji("celebrate") || "🎉"} TEPAT SEKALI!`,
+          description: `Target Kata: **${targetWord}**\n\n${gridHistory.join("\n")}\n\nKamu memenangkan **${winNsf.toLocaleString()}** ${coinEmoji}!`,
           footerText: ui.getFooter("core"),
         });
 
@@ -1191,7 +1516,7 @@ async function runMinigameLogic(interaction) {
       if (attempts >= maxAttempts) {
         const losePayload = buildContainerV2({
           accentColorHex: "#ef4444",
-          title: "💀 KESEMPATAN HABIS!",
+          title: `${ui.getEmoji("skull") || "💀"} KESEMPATAN HABIS!`,
           description: `Target Kata yang benar adalah: **${targetWord}**\n\n${gridHistory.join("\n")}\n\nKamu kehilangan taruhanmu.`,
           footerText: ui.getFooter("core"),
         });
@@ -1214,9 +1539,13 @@ async function runMinigameLogic(interaction) {
 
     collector.on("end", (collected, reason) => {
       if (reason === "time") {
-        interaction.followUp(
-          `⏰ Waktu menebak habis! Kata yang benar adalah **${targetWord}**.`,
-        );
+        const timePayload = buildContainerV2({
+          accentColorHex: "#f59e0b",
+          title: `${ui.getEmoji("clock") || "⏰"} WAKTU MENEBAK HABIS!`,
+          description: `Waktu bermain telah habis!\nTarget Kata yang benar adalah **${targetWord}**.`,
+          footerText: ui.getFooter("core"),
+        });
+        interaction.followUp(timePayload).catch(() => {});
       }
     });
   }
@@ -1225,13 +1554,24 @@ async function runMinigameLogic(interaction) {
   // 🧞 AKINATOR
   // ==========================================
   else if (subcommand === "akinator") {
-    const { Aki } = require("aki-api");
-    const region = "id";
-    const aki = new Aki({ region });
+    let Aki;
+    let aki;
+    try {
+      ({ Aki } = require("aki-api"));
+      const region = "id";
+      aki = new Aki({ region });
+    } catch (err) {
+      const errPayload = buildErrorContainerV2({
+        title: "Akinator Sedang Pemeliharaan",
+        description: "Modul Akinator sedang dalam perbaikan paket server. Silakan coba minigame seru lainnya dulu ya!",
+        footerText: ui.getFooter("core"),
+      });
+      return interaction.editReply(errPayload);
+    }
 
     const loadingAki = buildContainerV2({
       accentColorHex: ui.colors ? ui.colors.primary : "#00FFFF",
-      title: "🧞 Akinator",
+      title: `${ui.getEmoji("magic") || "🧞"} Akinator`,
       iconURL: "https://i.imgur.com/2U5K1r1.png",
       description:
         "Sedang memanggil Akinator dari lampu ajaib... Mohon tunggu.",
@@ -1245,7 +1585,7 @@ async function runMinigameLogic(interaction) {
     } catch (e) {
       const errPayload = buildErrorContainerV2({
         title: "Akinator Offline",
-        description: "Akinator sedang tidur, coba lagi nanti.",
+        description: "Akinator sedang tidur atau tidak merespons, coba lagi nanti ya.",
         footerText: ui.getFooter("core"),
       });
       return interaction.editReply(errPayload);
@@ -1289,7 +1629,7 @@ async function runMinigameLogic(interaction) {
 
       return buildContainerV2({
         accentColorHex: ui.colors ? ui.colors.primary : "#00FFFF",
-        title: "🧞 Akinator (Pertanyaan ke-" + (aki.currentStep + 1) + ")",
+        title: `${ui.getEmoji("magic") || "🧞"} Akinator (Pertanyaan ke-${aki.currentStep + 1})`,
         description:
           "**" +
           aki.question +
@@ -1346,7 +1686,7 @@ async function runMinigameLogic(interaction) {
 
           const winPayload = buildContainerV2({
             accentColorHex: "#22c55e",
-            title: "🧞 Akinator Berhasil Menebak!",
+            title: `${ui.getEmoji("magic") || "🧞"} Akinator Berhasil Menebak!`,
             description:
               "Saya yakin karakter yang kamu pikirkan adalah **" +
               guess.name +
@@ -1430,7 +1770,7 @@ async function runMinigameLogic(interaction) {
 
     const payload = buildContainerV2({
       accentColorHex: ui.colors ? ui.colors.primary : "#00FFFF",
-      title: "🔤 Hangman",
+      title: `${ui.getEmoji("desc") || "🔤"} Hangman`,
       description:
         "Ketik satu huruf untuk menebak kata berikut!\n\n**" +
         buildHangmanString() +
@@ -1473,18 +1813,21 @@ async function runMinigameLogic(interaction) {
       const isWin = word.split("").every((c) => guessed.includes(c));
 
       if (isWin) {
+        const rewardNsf = Math.floor(250 * nsfMultiplier);
+        await cacheManager.incrementUserSurvival(user.id, "starFragments", rewardNsf);
+
         const winPayload = buildContainerV2({
           accentColorHex: "#22c55e",
-          title: "🎉 TEPAT SEKALI!",
+          title: `${ui.getEmoji("celebrate") || "🎉"} TEPAT SEKALI!`,
           description:
             "Kata yang benar adalah: **" +
             word +
-            "**\n\nKamu berhasil menyelamatkannya!",
+            "**\n\nKamu berhasil menyelamatkannya!\nKamu mendapatkan **" +
+            rewardNsf +
+            "** " +
+            coinEmoji +
+            "!",
           footerText: ui.getFooter("core"),
-        });
-
-        await cacheManager.incrementUserProfile(user.id, {
-          economy_wallet: profile.isPremium ? 1000 : 500,
         });
 
         await interaction.editReply(winPayload);
@@ -1495,7 +1838,7 @@ async function runMinigameLogic(interaction) {
       if (wrongAttempts >= maxAttempts) {
         const losePayload = buildContainerV2({
           accentColorHex: "#ef4444",
-          title: "💀 GAME OVER",
+          title: `${ui.getEmoji("skull") || "💀"} GAME OVER`,
           description:
             "Kata yang benar adalah: **" +
             word +
@@ -1512,7 +1855,7 @@ async function runMinigameLogic(interaction) {
 
       const updatePayload = buildContainerV2({
         accentColorHex: ui.colors ? ui.colors.primary : "#00FFFF",
-        title: "🔤 Hangman",
+        title: `${ui.getEmoji("desc") || "🔤"} Hangman`,
         description:
           "Huruf tertebak: " +
           guessed.join(", ") +
@@ -1532,9 +1875,13 @@ async function runMinigameLogic(interaction) {
 
     collector.on("end", (collected, reason) => {
       if (reason === "time") {
-        interaction.followUp(
-          "⏰ Waktu habis! Kata yang benar adalah **" + word + "**.",
-        );
+        const timePayload = buildContainerV2({
+          accentColorHex: "#f59e0b",
+          title: `${ui.getEmoji("clock") || "⏰"} WAKTU HABIS!`,
+          description: `Waktu bermain telah habis!\nKata yang benar adalah **${word}**.`,
+          footerText: ui.getFooter("core"),
+        });
+        interaction.followUp(timePayload).catch(() => {});
       }
     });
   }
@@ -1578,7 +1925,7 @@ async function runMinigameLogic(interaction) {
     const renderMemory = (desc, disabled = false) =>
       buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#00FFFF",
-        title: "🎴 Memory Match",
+        title: `${ui.getEmoji("arcade") || "🎴"} Memory Match`,
         description: desc,
         buttonsRow: buildMemoryBoard(disabled),
         footerText: ui.getFooter("core"),
@@ -1619,14 +1966,17 @@ async function runMinigameLogic(interaction) {
           const isWin = matched.length === board.length;
 
           if (isWin) {
-            await cacheManager.incrementUserProfile(user.id, {
-              economy_wallet: profile.isPremium ? 1000 : 500,
-            });
+            const rewardNsf = profile.isPremium ? 500 : 250;
+            await cacheManager.incrementUserSurvival(user.id, "starFragments", rewardNsf);
             await interaction.editReply(
               renderMemory(
                 "Berhasil mencocokkan semua dalam **" +
                   attempts +
-                  "** percobaan!\nKamu mendapat 500 koin!",
+                  "** percobaan!\nKamu mendapat **" +
+                  rewardNsf +
+                  "** " +
+                  coinEmoji +
+                  "!",
                 true,
               ),
             );
@@ -1651,7 +2001,13 @@ async function runMinigameLogic(interaction) {
 
     collector.on("end", (collected, reason) => {
       if (reason === "time") {
-        interaction.followUp("⏰ Waktu habis!");
+        const timePayload = buildContainerV2({
+          accentColorHex: "#f59e0b",
+          title: `${ui.getEmoji("clock") || "⏰"} WAKTU HABIS!`,
+          description: "Waktu untuk mencocokkan emoji telah habis! Silakan coba lagi kapan-kapan yaa! 👋",
+          footerText: ui.getFooter("core"),
+        });
+        interaction.followUp(timePayload).catch(() => {});
       }
     });
   }
@@ -1682,6 +2038,7 @@ async function runMinigameLogic(interaction) {
       footerText: ui.getFooter("core"),
     });
     await interaction.editReply(tebakKataPayload);
+    const gameStartTime = Date.now();
 
     const filter1 = (m) => m.author.id === user.id;
     const collector1 = interaction.channel.createMessageCollector({
@@ -1691,31 +2048,60 @@ async function runMinigameLogic(interaction) {
     });
 
     collector1.on("collect", async (m) => {
-      if (m.content.replace(/\s+/g, "").trim().toUpperCase() === targetWord) {
+      const userAns = String(m.content).replace(/\s+/g, "").trim().toUpperCase();
+      const targetAns = String(targetWord).replace(/\s+/g, "").trim().toUpperCase();
+      if (userAns === targetAns) {
         const timeTaken = Date.now() - gameStartTime;
         if (timeTaken < 1000) {
-          await m.reply({
-            content:
-              "🚨 **ANTI-CHEAT:** Jawaban terlalu cepat (< 1 detik). Koin dibatalkan.",
+          const cheatPayload = buildContainerV2({
+            accentColorHex: "#ef4444",
+            title: `${ui.getEmoji("shield_alert") || "🚨"} ANTI-CHEAT`,
+            description: "Jawaban terlalu cepat (< 1 detik). Hadiah dibatalkan.",
+            footerText: ui.getFooter("core"),
           });
+          await m.reply(cheatPayload);
           return collector1.stop("cheat");
         }
-        await cacheManager.incrementUserProfile(user.id, {
-          economy_wallet: profile.isPremium ? rewardCoin * 2 : rewardCoin,
+        const rewardNsf = Math.floor(rewardCoin * nsfMultiplier);
+        await cacheManager.incrementUserSurvival(user.id, "starFragments", rewardNsf);
+
+        const winPayload = buildContainerV2({
+          accentColorHex: "#22c55e",
+          authorName: `Tebak Kata [${diff.toUpperCase()}]`,
+          iconURL: user.displayAvatarURL(),
+          title: `${ui.getEmoji("success") || "✅"} SUSUNAN KATA BENAR!`,
+          description: `Pintar sekali! Kata yang tepat adalah **${targetWord}**.\n\n> 💰 **Hadiah:** +${rewardNsf} ${coinEmoji}`,
+          footerText: ui.getFooter("core"),
         });
-        m.reply(
-          `✅ **BENAR!** Kata yang tepat adalah **${targetWord}**.\nKamu mendapatkan **${rewardCoin}** ${coinEmoji}!`,
-        );
+
+        m.reply(winPayload);
       } else {
-        m.reply(`❌ **SALAH!** Kata yang benar adalah **${targetWord}**.`);
+        const losePayload = buildContainerV2({
+          accentColorHex: "#ef4444",
+          authorName: `Tebak Kata [${diff.toUpperCase()}]`,
+          iconURL: user.displayAvatarURL(),
+          title: `${ui.getEmoji("error") || "❌"} TEBAKAN SALAH`,
+          description: `Kata yang benar adalah **${targetWord}**.\nCoba lagi di permainan berikutnya yaa!`,
+          footerText: ui.getFooter("core"),
+        });
+
+        m.reply(losePayload);
       }
     });
 
     collector1.on("end", (collected) => {
-      if (collected.size === 0)
-        interaction.followUp(
-          `⏰ Waktu habis! Kata yang benar adalah **${targetWord}**.`,
-        );
+      if (collected.size === 0) {
+        const timePayload = buildContainerV2({
+          accentColorHex: "#f59e0b",
+          authorName: `Tebak Kata [${diff.toUpperCase()}]`,
+          iconURL: user.displayAvatarURL(),
+          title: `${ui.getEmoji("clock") || "⏰"} WAKTU HABIS!`,
+          description: `Waktu menyusun kata telah habis!\nKata yang benar adalah **${targetWord}**.`,
+          footerText: ui.getFooter("core"),
+        });
+
+        interaction.followUp(timePayload).catch(() => {});
+      }
     });
   } else if (subcommand === "tebakgambar") {
     const gameData =
@@ -1724,12 +2110,13 @@ async function runMinigameLogic(interaction) {
 
     const tebakGambarPayload = buildContainerV2({
       accentColorHex: ui.getColor ? ui.getColor("primary") : "#00FFFF",
-      title: "🖼️ Tebak Gambar Objek",
-      description: `Ketik apa objek yang ada pada gambar di atas!\n\n💡 **Klu:** ${gameData.clue}\n\n⏳ Waktu: **20 detik**\n> 💰 Hadiah: **${rewardCoin}** ${coinEmoji}`,
+      title: `${ui.getEmoji("desc") || "🖼️"} Tebak Gambar Objek`,
+      description: `Ketik apa objek yang ada pada gambar di atas!\n\n${ui.getEmoji("sparkle") || "💡"} **Klu:** ${gameData.clue}\n\n${ui.getEmoji("clock") || "⏳"} Waktu: **20 detik**\n> 💰 Hadiah: **${rewardCoin}** ${coinEmoji}`,
       footerText: ui.getFooter("core"),
     });
 
     await interaction.editReply(tebakGambarPayload);
+    const gameStartTime = Date.now();
 
     const filter2 = (m) => m.author.id === user.id;
     const collector2 = interaction.channel.createMessageCollector({
@@ -1739,36 +2126,60 @@ async function runMinigameLogic(interaction) {
     });
 
     collector2.on("collect", async (m) => {
-      if (
-        m.content.replace(/\s+/g, "").trim().toLowerCase() ===
-        gameData.answer.toLowerCase()
-      ) {
+      const userAns = String(m.content).replace(/\s+/g, "").trim().toLowerCase();
+      const targetAns = String(gameData.answer).replace(/\s+/g, "").trim().toLowerCase();
+      if (userAns === targetAns) {
         const timeTaken = Date.now() - gameStartTime;
         if (timeTaken < 1000) {
-          await m.reply({
-            content:
-              "🚨 **ANTI-CHEAT:** Jawaban terlalu cepat (< 1 detik). Koin dibatalkan.",
+          const cheatPayload = buildContainerV2({
+            accentColorHex: "#ef4444",
+            title: `${ui.getEmoji("shield_alert") || "🚨"} ANTI-CHEAT`,
+            description: "Jawaban terlalu cepat (< 1 detik). Hadiah dibatalkan.",
+            footerText: ui.getFooter("core"),
           });
+          await m.reply(cheatPayload);
           return collector2.stop("cheat");
         }
-        await cacheManager.incrementUserProfile(user.id, {
-          economy_wallet: profile.isPremium ? rewardCoin * 2 : rewardCoin,
+        const rewardNsf = Math.floor(rewardCoin * nsfMultiplier);
+        await cacheManager.incrementUserSurvival(user.id, "starFragments", rewardNsf);
+
+        const winPayload = buildContainerV2({
+          accentColorHex: "#22c55e",
+          authorName: "Tebak Gambar Objek",
+          iconURL: user.displayAvatarURL(),
+          title: `${ui.getEmoji("success") || "✅"} TEBAKAN OBJEK BENAR!`,
+          description: `Hebat! Objek pada gambar tersebut memang **${gameData.answer}**.\n\n> 💰 **Hadiah:** +${rewardNsf} ${coinEmoji}`,
+          footerText: ui.getFooter("core"),
         });
-        m.reply(
-          `✅ **BENAR!** Objek itu adalah **${gameData.answer}**.\nKamu mendapatkan **${rewardCoin}** ${coinEmoji}!`,
-        );
+
+        m.reply(winPayload);
       } else {
-        m.reply(
-          `❌ **SALAH!** Jawaban yang benar adalah **${gameData.answer}**.`,
-        );
+        const losePayload = buildContainerV2({
+          accentColorHex: "#ef4444",
+          authorName: "Tebak Gambar Objek",
+          iconURL: user.displayAvatarURL(),
+          title: `${ui.getEmoji("error") || "❌"} TEBAKAN SALAH`,
+          description: `Bukan itu objeknya!\nJawaban yang benar adalah **${gameData.answer}**.`,
+          footerText: ui.getFooter("core"),
+        });
+
+        m.reply(losePayload);
       }
     });
 
     collector2.on("end", (collected) => {
-      if (collected.size === 0)
-        interaction.followUp(
-          `⏰ Waktu habis! Jawaban yang benar adalah **${gameData.answer}**.`,
-        );
+      if (collected.size === 0) {
+        const timePayload = buildContainerV2({
+          accentColorHex: "#f59e0b",
+          authorName: "Tebak Gambar Objek",
+          iconURL: user.displayAvatarURL(),
+          title: `${ui.getEmoji("clock") || "⏰"} WAKTU HABIS!`,
+          description: `Waktu menebak telah habis!\nObjek yang benar adalah **${gameData.answer}**.`,
+          footerText: ui.getFooter("core"),
+        });
+
+        interaction.followUp(timePayload).catch(() => {});
+      }
     });
   } else if (subcommand === "tts") {
     const gameData = ttsDB[Math.floor(Math.random() * ttsDB.length)];
@@ -1776,12 +2187,13 @@ async function runMinigameLogic(interaction) {
 
     const ttsPayload = buildContainerV2({
       accentColorHex: "#FF00FF",
-      title: "📝 Teka Teki Silang Mini",
-      description: `Jawablah kedua klu di bawah ini secara berurutan, pisahkan dengan **spasi**.\n*(Contoh jawaban: \`buku pensil\`)*\n\n${gameData.clue}\n\n⏳ Waktu: **25 detik**\n> 💰 Hadiah: **${rewardCoin}** ${coinEmoji}`,
+      title: `${ui.getEmoji("notes") || "📝"} Teka Teki Silang Mini`,
+      description: `Jawablah kedua klu di bawah ini secara berurutan, pisahkan dengan **spasi**.\n*(Contoh jawaban: \`buku pensil\`)*\n\n${gameData.clue}\n\n${ui.getEmoji("clock") || "⏳"} Waktu: **25 detik**\n> 💰 Hadiah: **${rewardCoin}** ${coinEmoji}`,
       footerText: ui.getFooter("core"),
     });
 
     await interaction.editReply(ttsPayload);
+    const gameStartTime = Date.now();
 
     const filter = (m) => m.author.id === user.id;
     const collector = interaction.channel.createMessageCollector({
@@ -1791,36 +2203,60 @@ async function runMinigameLogic(interaction) {
     });
 
     collector.on("collect", async (m) => {
-      if (
-        m.content.replace(/\s+/g, "").trim().toLowerCase() ===
-        gameData.answer.toLowerCase()
-      ) {
+      const userAns = String(m.content).replace(/\s+/g, "").trim().toLowerCase();
+      const targetAns = String(gameData.answer).replace(/\s+/g, "").trim().toLowerCase();
+      if (userAns === targetAns) {
         const timeTaken = Date.now() - gameStartTime;
         if (timeTaken < 1000) {
-          await m.reply({
-            content:
-              "🚨 **ANTI-CHEAT:** Jawaban terlalu cepat (< 1 detik). Koin dibatalkan.",
+          const cheatPayload = buildContainerV2({
+            accentColorHex: "#ef4444",
+            title: `${ui.getEmoji("shield_alert") || "🚨"} ANTI-CHEAT`,
+            description: "Jawaban terlalu cepat (< 1 detik). Hadiah dibatalkan.",
+            footerText: ui.getFooter("core"),
           });
+          await m.reply(cheatPayload);
           return collector.stop("cheat");
         }
-        await cacheManager.incrementUserProfile(user.id, {
-          economy_wallet: profile.isPremium ? rewardCoin * 2 : rewardCoin,
+        const rewardNsf = Math.floor(rewardCoin * nsfMultiplier);
+        await cacheManager.incrementUserSurvival(user.id, "starFragments", rewardNsf);
+
+        const winPayload = buildContainerV2({
+          accentColorHex: "#22c55e",
+          authorName: "Teka Teki Silang Mini",
+          iconURL: user.displayAvatarURL(),
+          title: `${ui.getEmoji("success") || "✅"} JAWABAN TTS TEPAT!`,
+          description: `Luar biasa! Kamu berhasil memecahkan TTS ini dengan sempurna.\n\n> 📝 **Kunci:** \`${gameData.answer}\`\n> 💰 **Hadiah:** +${rewardNsf} ${coinEmoji}`,
+          footerText: ui.getFooter("core"),
         });
-        m.reply(
-          `✅ **BENAR!** Kamu menyelesaikan TTS ini.\nKamu mendapatkan **${rewardCoin}** ${coinEmoji}!`,
-        );
+
+        m.reply(winPayload);
       } else {
-        m.reply(
-          `❌ **SALAH!** Jawaban yang tepat adalah: **${gameData.answer}**.`,
-        );
+        const losePayload = buildContainerV2({
+          accentColorHex: "#ef4444",
+          authorName: "Teka Teki Silang Mini",
+          iconURL: user.displayAvatarURL(),
+          title: `${ui.getEmoji("error") || "❌"} JAWABAN TTS SALAH`,
+          description: `Jawabanmu belum sesuai dengan kedua klu.\nJawaban yang tepat adalah: **${gameData.answer}**`,
+          footerText: ui.getFooter("core"),
+        });
+
+        m.reply(losePayload);
       }
     });
 
     collector.on("end", (collected) => {
-      if (collected.size === 0)
-        interaction.followUp(
-          `⏰ Waktu habis! Jawaban yang benar adalah **${gameData.answer}**.`,
-        );
+      if (collected.size === 0) {
+        const timePayload = buildContainerV2({
+          accentColorHex: "#f59e0b",
+          authorName: "Teka Teki Silang Mini",
+          iconURL: user.displayAvatarURL(),
+          title: `${ui.getEmoji("clock") || "⏰"} WAKTU HABIS!`,
+          description: `Waktu menyelesaikan TTS telah habis!\nJawaban yang benar adalah **${gameData.answer}**.`,
+          footerText: ui.getFooter("core"),
+        });
+
+        interaction.followUp(timePayload).catch(() => {});
+      }
     });
   }
 
@@ -1832,9 +2268,26 @@ async function runMinigameLogic(interaction) {
     const initiator = interaction.user;
     let currentPlayer = initiator;
 
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("tod_truth")
+        .setLabel("Truth (Jujur)")
+        .setStyle(ButtonStyle.Success)
+        .setEmoji(ui.getEmoji("tod_truth") || "📝"),
+      new ButtonBuilder()
+        .setCustomId("tod_dare")
+        .setLabel("Dare (Tantangan)")
+        .setStyle(ButtonStyle.Danger)
+        .setEmoji(ui.getEmoji("tod_dare") || "😈"),
+      new ButtonBuilder()
+        .setCustomId("tod_spin")
+        .setLabel("Putar Botol 🔄")
+        .setStyle(ButtonStyle.Primary),
+    );
+
     const todPayload = buildContainerV2({
       accentColorHex: ui.colors.primary || "#FFB6C1",
-      title: "🎭 TRUTH OR DARE 🎭",
+      title: `${ui.getEmoji("setup_autorole") || "🎭"} TRUTH OR DARE ${ui.getEmoji("setup_autorole") || "🎭"}`,
       description: `Sekarang giliran <@${currentPlayer.id}> untuk memilih!\n\nApakah kamu memilih **Truth** (Jujur) atau **Dare** (Tantangan)?`,
       iconURL: currentPlayer.displayAvatarURL(),
       buttonsRow: row,
@@ -1880,7 +2333,7 @@ async function runMinigameLogic(interaction) {
 
         const spinPayload = buildContainerV2({
           accentColorHex: ui.colors.primary || "#FFB6C1",
-          title: "🔄 BOTOL BERPUTAR... 🔄",
+          title: `${ui.getEmoji("trade") || "🔄"} BOTOL BERPUTAR... ${ui.getEmoji("trade") || "🔄"}`,
           description: `Botol menunjuk ke <@${currentPlayer.id}>!\n\nSekarang giliran <@${currentPlayer.id}> untuk memilih **Truth** atau **Dare**!`,
           iconURL: currentPlayer.displayAvatarURL(),
           buttonsRow: row,
@@ -1972,7 +2425,7 @@ async function runMinigameLogic(interaction) {
       if (i.customId === "tod_done" || i.customId === "tod_next_turn") {
         if (i.user.id !== currentPlayer.id) {
           return i.reply({
-            content: "❌ Hanya pemain aktif yang bisa menekan tombol ini!",
+            content: `${ui.getEmoji("error") || "❌"} Hanya pemain aktif yang bisa menekan tombol ini!`,
             flags: MessageFlags.Ephemeral,
           });
         }
@@ -1988,7 +2441,7 @@ async function runMinigameLogic(interaction) {
           );
           const donePayload = buildContainerV2({
             accentColorHex: "#2ecc71",
-            title: "🎉 TANTANGAN SELESAI 🎉",
+            title: `${ui.getEmoji("celebrate") || "🎉"} TANTANGAN SELESAI ${ui.getEmoji("celebrate") || "🎉"}`,
             description: `Hebat! <@${currentPlayer.id}> berhasil menyelesaikan tantangan mereka!\n\nApakah kalian ingin bermain lagi?`,
             buttonsRow: nextRow,
             footerText: ui.getFooter("core"),
@@ -2002,7 +2455,7 @@ async function runMinigameLogic(interaction) {
 
           const nextPayload = buildContainerV2({
             accentColorHex: ui.colors.primary || "#FFB6C1",
-            title: "🎭 TRUTH OR DARE 🎭",
+            title: `${ui.getEmoji("setup_autorole") || "🎭"} TRUTH OR DARE ${ui.getEmoji("setup_autorole") || "🎭"}`,
             description: `Sekarang giliran <@${currentPlayer.id}> untuk memilih!\n\nApakah kamu memilih **Truth** (Jujur) atau **Dare** (Tantangan)?`,
             iconURL: currentPlayer.displayAvatarURL(),
             buttonsRow: row,
@@ -2030,9 +2483,9 @@ async function runMinigameLogic(interaction) {
     const isDuel = category === "duel";
 
     let title = "";
-    if (isMath) title = "🧮 Top 10 GrandMaster Matematika";
-    else if (isTrivia) title = "🧠 Top 10 GrandMaster Trivia";
-    else if (isDuel) title = "⚔️ Top 10 Jawara Duel Naura";
+    if (isMath) title = `${ui.getEmoji("tools") || "🧮"} Top 10 GrandMaster Matematika`;
+    else if (isTrivia) title = `${ui.getEmoji("intelligence") || "🧠"} Top 10 GrandMaster Trivia`;
+    else if (isDuel) title = `${ui.getEmoji("battle") || "⚔️"} Top 10 Jawara Duel Naura`;
 
     const allUsers = await UserProfile.findAll();
     const sortedUsers = allUsers
@@ -2053,13 +2506,13 @@ async function runMinigameLogic(interaction) {
 
     let descString = `> Inilah daftar pemain kuis terbaik di server!\n\n`;
     sortedUsers.forEach((u, i) => {
-      const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : "🏅";
+      const medal = i === 0 ? (ui.getEmoji("badge_gold") || "🥇") : i === 1 ? (ui.getEmoji("badge_silver") || "🥈") : i === 2 ? (ui.getEmoji("badge_bronze") || "🥉") : "🏅";
       let score = 0;
       if (isMath) score = u.minigame_mathScore;
       else if (isTrivia) score = u.minigame_triviaScore;
       else if (isDuel) score = u.minigame_duelScore;
 
-      descString += `${medal} **#${i + 1}** | <@${u.userId}>\n> 🏆 Skor: **${score.toLocaleString()}** Poin\n\n`;
+      descString += `${medal} **#${i + 1}** | <@${u.userId}>\n> ${ui.getEmoji("trophy") || "🏆"} Skor: **${score.toLocaleString()}** Poin\n\n`;
     });
 
     const {
@@ -2077,4 +2530,11 @@ async function runMinigameLogic(interaction) {
 
     return interaction.editReply(payload);
   }
+};
+
+  if (subcommand === "leaderboard") {
+    return executeGame();
+  }
+
+  return showMinigameIntro(interaction, subcommand, executeGame);
 }

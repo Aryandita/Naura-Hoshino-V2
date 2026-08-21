@@ -71,7 +71,7 @@ module.exports = {
 
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#FFB6C1",
-      authorName: "📊 Polling Baru!",
+      authorName: `${ui.getEmoji("poll") || "📊"} Polling Baru!`,
       iconURL: interaction.user.displayAvatarURL(),
       title: question,
       description: `Pilih salah satu opsi di bawah ini!\n${multiVote ? "*(Kamu bisa memilih lebih dari satu)*" : "*(Hanya bisa memilih satu)*"}\n\nBerakhir <t:${Math.floor(Date.now() / 1000) + durationMin * 60}:R>`,
@@ -162,7 +162,7 @@ module.exports = {
 
       const updatePayload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        authorName: "📊 Polling Berjalan",
+        authorName: `${ui.getEmoji("poll") || "📊"} Polling Berjalan`,
         iconURL: interaction.user.displayAvatarURL(),
         title: question,
         description: resultDesc,
@@ -196,7 +196,7 @@ module.exports = {
 
       const resultPayload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#22c55e",
-        authorName: "📊 Polling Berakhir",
+        authorName: `${ui.getEmoji("poll") || "📊"} Polling Berakhir`,
         iconURL: interaction.user.displayAvatarURL(),
         title: question,
         description: resultDesc,

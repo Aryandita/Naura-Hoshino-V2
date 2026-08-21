@@ -35,6 +35,8 @@ const colors = {
   light: "#f0f0f0",
 
   // --- Premium Tier Colors ---
+  premium_voter: "#F43F5E",
+  premium_starter: "#38bdf8",
   premium_supporter: "#C0C0C0",
   premium_friends: "#A855F7",
   premium_vip: "#FFD700",
@@ -60,8 +62,9 @@ const links = {
   support_server: "https://dsc.gg/naura-hoshino",
   invite:
     "https://discord.com/oauth2/authorize?client_id=1483665745727721543&permissions=8&scope=bot%20applications.commands",
-  vote: "",
+  vote: "https://top.gg/bot/1483665745727721543?s=00487c531de33",
   saweria: "",
+  email: "naurahoshino@gmail.com",
 };
 
 const footers = {

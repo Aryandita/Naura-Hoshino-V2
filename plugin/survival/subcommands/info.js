@@ -114,26 +114,34 @@ module.exports = {
           ? `> ${e("sparkle")} Berkah aktif: **${perkNames.length}** (${perkNames.slice(0, 4).join(", ")})`
           : `> ${e("sparkle")} Belum ada berkah khusus. Kumpulkan Naura Coupon dulu, yuk!`;
 
-      // Gambar profil bersifat pemanis. Kalau kanvas gagal, kartunya tetap tampil.
       let files = [];
       let bannerAttachmentName;
       try {
         const {
           generateSurvivalProfileImage,
-        } = require("../../../src/canvas/CanvasUtils");
+        } = require('../../../src/canvas/CanvasUtils');
+        const botAvatar = interaction.client.user?.displayAvatarURL({ extension: 'png', size: 128 });
         const buffer = await generateSurvivalProfileImage(
           user,
           profile,
           survival,
           ui,
+          {
+            activePets,
+            marriedNPCs,
+            botAvatar,
+            gear:         stats.gear,
+            isRegistered: stats.isRegistered,
+          },
         );
         if (buffer) {
           files = [new AttachmentBuilder(buffer, { name: IMAGE_NAME })];
           bannerAttachmentName = IMAGE_NAME;
         }
       } catch (canvasError) {
-        logger.warn("[SURVIVAL INFO CANVAS]", canvasError.message);
+        logger.warn('[SURVIVAL INFO CANVAS]', canvasError.message);
       }
+
 
       const payload = buildContainerV2({
         accentColorHex: stats.timeState.color || ui.getColor("primary"),

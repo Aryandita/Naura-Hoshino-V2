@@ -68,95 +68,12 @@ module.exports = {
         logger.warn("[Voice Status Warn]", e);
       }
 
-      // ==========================================
-      // 🎧 FITUR AI DJ (RADIO ANNOUNCER)
-      // ==========================================
-      let isDjActive = false;
-      try {
-        // Gunakan cacheManager sesuai aturan AGENTS.md 1.9 (bukan GuildSettings.findOrCreate langsung)
-        const guildData = await cacheManager.getGuildSettings(player.guildId);
-
-        const isAutoplayRequest =
-          activeTrack.info.requester?.id === manager.client.user.id;
-
-        if (
-          guildData &&
-          guildData.aiVoiceEnabled &&
-          activeTrack.info.requester &&
-          !isAutoplayRequest
-        ) {
-          isDjActive = true;
-          player.pause(true);
-
-          const requesterName =
-            activeTrack.info.requester.displayName ||
-            activeTrack.info.requester.username ||
-            "Seseorang";
-          const trackTitle = activeTrack.info.title.substring(0, 30);
-          const trackAuthor = activeTrack.info.author.substring(0, 20);
-
-          // Teks default jika Gemini timeout atau gagal
-          let djText = `Lagu selanjutnya, ${trackTitle} dari ${trackAuthor}, spesial request dari ${requesterName}. Selamat mendengarkan!`;
-
-          try {
-            const prompt = `Sebagai Naura, penyiar radio virtual yang ceria, buat 1 kalimat pembuka untuk mengumumkan bahwa lagu "${trackTitle}" dari "${trackAuthor}" yang di-request oleh "${requesterName}" akan diputar. Gunakan bahasa gaul. TANPA EMOJI, TANPA SIMBOL.`;
-
-            // Timeout 3 detik agar Gemini yang lambat tidak menyebabkan lagu terjeda terlalu lama
-            const AI_DJ_TIMEOUT_MS = 3000;
-            const aiResultText = await Promise.race([
-              geminiClient.generate({ parts: [{ text: prompt }] }),
-              new Promise((resolve) =>
-                setTimeout(() => resolve(null), AI_DJ_TIMEOUT_MS),
-              ),
-            ]);
-
-            if (aiResultText) {
-              djText = aiResultText
-                .replace(/[^\w\s.,?!'a-zA-Z0-9áéíóúÁÉÍÓÚñÑüÜ-]/g, "")
-                .trim();
-            } else {
-              console.warn(
-                `\x1b[43m\x1b[30m 🎤 AI DJ \x1b[0m \x1b[33mGemini timeout, menggunakan teks default.\x1b[0m`,
-              );
-            }
-          } catch (e) {
-            console.warn(
-              `\x1b[43m\x1b[30m 🎤 AI DJ \x1b[0m \x1b[33mGemini gagal (${e.message}), menggunakan teks default.\x1b[0m`,
-            );
-          }
-
-          console.log(
-            `\x1b[45m\x1b[37m 🎤 AI DJ \x1b[0m \x1b[35m${djText}\x1b[0m`,
-          );
-
-          const DJ_PAUSE_MS = 5000;
-          setTimeout(() => {
-            try {
-              if (player.isPaused) player.pause(false);
-              // Fade-in halus setelah AI DJ selesai bicara
-              beginPlaybackTransition(player, activeTrack, player.baseVolume);
-            } catch (e) {
-              logger.error(
-                "[DJ ERROR] Gagal mengembalikan volume setelah DJ.",
-                e,
-              );
-            }
-          }, DJ_PAUSE_MS);
-        } else {
-          if (player.isPaused) player.pause(false);
-        }
-      } catch (e) {
-        logger.error("\x1b[41m\x1b[37m ⚠️ AI DJ FATAL ERROR \x1b[0m", e);
-        if (player.isPaused) player.pause(false);
+      // Mulai transisi playback (fade-in)
+      if (player.isPaused) {
+        try { player.pause(false); } catch (e) {}
       }
+      beginPlaybackTransition(player, activeTrack, player.baseVolume);
 
-      if (!isDjActive && player.isPaused) player.pause(false);
-
-      // Jalur non-DJ: mulai transisi (fade-in) begitu lagu benar-benar main,
-      // sekaligus pasang pengawas agar fade-out otomatis menjelang lagu ini habis.
-      if (!isDjActive) {
-        beginPlaybackTransition(player, activeTrack, player.baseVolume);
-      }
 
       let recommendedTracks = [];
       try {
@@ -362,8 +279,46 @@ module.exports = {
       }
     }
 
-    if (!player.isAutoplayMode) player.prefetchedAutoplayTrack = null;
+    if (!player.isAutoplayMode) {
+      player.prefetchedAutoplayTrack = null;
+    }
 
-    return recommendedTracks;
+    // 3. Susun daftar lengkap rekomendasi dari sistem autoplay
+    const combinedRecs = [];
+    const seenIds = new Set();
+    if (activeTrack && activeTrack.info && activeTrack.info.identifier) {
+      seenIds.add(activeTrack.info.identifier);
+    }
+
+    if (player.prefetchedAutoplayTrack && player.prefetchedAutoplayTrack.info) {
+      const id = player.prefetchedAutoplayTrack.info.identifier;
+      if (id && !seenIds.has(id)) {
+        seenIds.add(id);
+        combinedRecs.push(player.prefetchedAutoplayTrack);
+      }
+    }
+
+    if (Array.isArray(player.autoplayQueue)) {
+      for (const t of player.autoplayQueue) {
+        const id = t.info && t.info.identifier;
+        if (id && !seenIds.has(id)) {
+          seenIds.add(id);
+          combinedRecs.push(t);
+        }
+      }
+    }
+
+    if (Array.isArray(recommendedTracks)) {
+      for (const t of recommendedTracks) {
+        const id = t.info && t.info.identifier;
+        if (id && !seenIds.has(id)) {
+          seenIds.add(id);
+          combinedRecs.push(t);
+        }
+      }
+    }
+
+    player.recommendedTracks = combinedRecs;
+    return combinedRecs;
   },
 };

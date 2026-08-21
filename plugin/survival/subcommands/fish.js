@@ -55,14 +55,143 @@ function rollCatch() {
 module.exports = {
   async execute(interaction) {
     const user = interaction.user;
-    const profile = await cacheManager.getUserProfile(user.id);
+    const action = interaction.options?.getString("aksi") || "cast";
+    const zone = interaction.options?.getString("zona");
+    const fishInput = interaction.options?.getString("ikan");
 
+    // 1. LIHAT VIVARIUM AQUARIUM
+    if (action === "vivarium") {
+      const vivariumEngine = require("../../../src/survival/engines/vivariumEngine");
+      const { drawVivarium } = require("../../../src/canvas/vivariumCanvas");
+      const { AttachmentBuilder } = require("discord.js");
+
+      const vivarium = await vivariumEngine.getVivarium(user.id);
+      const files = [];
+      try {
+        const vivBuf = await drawVivarium(vivarium);
+        files.push(new AttachmentBuilder(vivBuf, { name: "vivarium.png" }));
+      } catch (err) {
+        // Fallback
+      }
+
+      const fishList = vivarium.fishes.map((f) => `**• ${f.emoji} ${f.name}** (\`${f.rarity}\` | +${f.ticketYield} ${ui.getEmoji("star") || "⭐"}/jam)`).join("\n") || "*Belum ada ikan di akuarium.*";
+
+      const payload = buildContainerV2({
+        accentColorHex: "#38BDF8",
+        authorName: `${ui.getEmoji("water") || "🌊"} Holographic Deep-Sea Vivarium`,
+        title: `${ui.getEmoji("sparkles") || "✨"} Akuarium Virtual Milik ${user.displayName || user.username}`,
+        description: [
+          `Selamat datang di akuarium holografis laut dalam milikmu!`,
+          ``,
+          `${ui.getEmoji("ticket") || "🎟️"} **Pendapatan Tiket:** \`+${vivarium.hourlyIncome} Star Fragments / jam\``,
+          `${ui.getEmoji("fish") || "🐟"} **Koleksi Spesies (${vivarium.totalFishes}/10 Ekor):**`,
+          fishList,
+          ``,
+          `-# ${ui.getEmoji("sparkle") || "💡"} *Gunakan \`/survival activity fish aksi:collect\` untuk menarik koin atau pancing ikan laut dalam baru dengan opsi \`zona:Midnight Trench\`!*`,
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.editReply({ ...payload, files });
+    }
+
+    // 2. KLAIM TIKET PENGUNJUNG VIVARIUM
+    if (action === "collect") {
+      const vivariumEngine = require("../../../src/survival/engines/vivariumEngine");
+      const collectRes = await vivariumEngine.claimTicketRevenue(user.id);
+
+      if (!collectRes.success) {
+        const payload = buildContainerV2({
+          accentColorHex: "#F59E0B",
+          title: "Tiket Belum Tersedia",
+          description: "Belum ada akumulasi koin tiket pengunjung yang bisa ditarik saat ini.",
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.editReply(payload);
+      }
+
+      const payload = buildContainerV2({
+        accentColorHex: "#86EFAC",
+        authorName: `${ui.getEmoji("ticket") || "🎟️"} Loket Tiket Vivarium`,
+        title: `${ui.getEmoji("sparkles") || "✨"} Hasil Tiket Pengunjung Masuk Kas!`,
+        description: `Kamu berhasil mengklaim **+${collectRes.revenue.toLocaleString("id-ID")} Star Fragments** dari hasil kunjungan akuarium selama ${collectRes.hoursPassed} jam terakhir!`,
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.editReply(payload);
+    }
+
+    // 3. TARUH IKAN KE VIVARIUM
+    if (action === "deposit") {
+      const vivariumEngine = require("../../../src/survival/engines/vivariumEngine");
+      const targetFishId = fishInput || "neon_guppy";
+      const depRes = await vivariumEngine.depositFish(user.id, targetFishId);
+
+      if (!depRes.success) {
+        let msg = "Gagal menempatkan ikan ke akuarium.";
+        if (depRes.reason === "INVALID_FISH") msg = "ID Ikan tidak valid! Pilihan: `neon_guppy`, `prism_clownfish`, `cyber_anglerfish`, `phantom_eel`, `astral_jellyfish`.";
+        if (depRes.reason === "VIVARIUM_FULL") msg = "Akuarium sudah penuh (Maksimal 10 ekor ikan)!";
+
+        const payload = buildContainerV2({
+          accentColorHex: "#EF4444",
+          title: "Gagal Menempatkan Ikan",
+          description: msg,
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.editReply(payload);
+      }
+
+      const payload = buildContainerV2({
+        accentColorHex: "#86EFAC",
+        authorName: `${ui.getEmoji("water") || "🌊"} Ekosistem Vivarium Diperbarui`,
+        title: `${ui.getEmoji("celebrate") || "🎉"} Ikan Baru Masuk Akuarium!`,
+        description: `**${depRes.fish.emoji} ${depRes.fish.name}** berhasil ditempatkan di dalam Vivarium! Pendapatan tiket naik menjadi **+${depRes.newHourlyIncome} ${ui.getEmoji("star") || "⭐"}/jam**!`,
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.editReply(payload);
+    }
+
+    // 4. DEEP-SEA FISHING (Jika zona ditentukan)
+    if (zone) {
+      const vivariumEngine = require("../../../src/survival/engines/vivariumEngine");
+      const deepRes = await vivariumEngine.castDeepSea(user.id, zone);
+
+      if (!deepRes.success) {
+        const payload = buildContainerV2({
+          accentColorHex: "#EF4444",
+          title: "Energi Tidak Cukup",
+          description: `Kamu membutuhkan ${deepRes.cost || 15} Energy untuk memancing di zona laut dalam ${zone}!`,
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.editReply(payload);
+      }
+
+      const caught = deepRes.fish;
+      const payload = buildContainerV2({
+        accentColorHex: caught.rarity === "MYTHIC" ? "#FFD700" : caught.rarity === "EPIC" ? "#C084FC" : "#38BDF8",
+        authorName: `${ui.getEmoji("water") || "🌊"} Deep-Sea Cyber-Fishing (${deepRes.zone})`,
+        title: `${ui.getEmoji("celebrate") || "🎉"} Berhasil Menangkap: ${caught.emoji} ${caught.name}!`,
+        description: [
+          `Kail laut dalammu berhasil mengangkat spesies langka dari kegelapan samudra!`,
+          ``,
+          `${ui.getEmoji("star") || "⭐"} **Kelangkaan:** \`${caught.rarity}\``,
+          `${ui.getEmoji("coin") || "💵"} **Nilai Jual Pasar:** \`${caught.price} Star Fragments\``,
+          `${ui.getEmoji("ticket") || "🎟️"} **Yield Tiket Akuarium:** \`+${caught.ticketYield} ${ui.getEmoji("star") || "⭐"}/jam\``,
+          ``,
+          `-# ${ui.getEmoji("sparkle") || "💡"} *Tempatkan ikan ini di akuarium dengan \`/survival activity fish aksi:deposit ikan:${caught.id}\`!*`,
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.editReply(payload);
+    }
+
+    const profile = await cacheManager.getUserProfile(user.id);
     const inventory = safeParseInventory(profile.inventory);
     const hasRod = inventory.some((i) => i && i.id === "fishing_rod");
 
     if (!hasRod) return ui.sendError(interaction, "err_sys_46", true);
-    // Pemeriksaan ramah supaya pesannya jelas. Kebenarannya tetap ditentukan
-    // oleh takeItemsAtomic() di bawah, bukan oleh pembacaan ini.
     if (countStack(inventory, BAIT_ID) <= 0)
       return ui.sendError(interaction, "err_sys_47", true);
 

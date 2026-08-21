@@ -69,14 +69,19 @@ module.exports = {
         
         const row = new ActionRowBuilder();
         
+        const eNsf = ui.getEmoji("nsf") || "💠";
+        const eCoin = ui.getEmoji("coin") || "🪙";
+        const eCoupon = ui.getEmoji("coupon") || "🎫";
+        const eShop = ui.getEmoji("shop_cart") || "🛍️";
+
         shop.forEach((item, index) => {
             const roleObj = interaction.guild.roles.cache.get(item.roleId);
             const roleName = roleObj ? roleObj.name : "Role Terhapus";
             
             desc += `**${index + 1}. ${roleName}** (${item.days} Hari)\n`;
-            desc += `> 💠 ${item.prices.nsf} NSF\n`;
-            desc += `> 🪙 ${item.prices.coin} Coin\n`;
-            desc += `> 🎫 ${item.prices.coupon} Coupon\n\n`;
+            desc += `> ${eNsf} ${item.prices.nsf} NSF\n`;
+            desc += `> ${eCoin} ${item.prices.coin} Coin\n`;
+            desc += `> ${eCoupon} ${item.prices.coupon} Coupon\n\n`;
 
             if (row.components.length < 5) {
                 row.addComponents(
@@ -90,7 +95,7 @@ module.exports = {
 
         const payload = buildContainerV2({
             accentColorHex: ui.getColor("primary") || "#FFB6C1",
-            title: "🛍️ Role Shop",
+            title: `${eShop} Role Shop`,
             description: desc,
             buttonsRow: row,
             footerText: ui.getFooter("core")

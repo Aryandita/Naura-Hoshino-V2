@@ -3,7 +3,6 @@
 const { ApplicationCommandType, MessageFlags } = require("discord.js");
 const { buildContainerV2, buildErrorContainerV2 } = require("../../utils/NauraContainerBuilder");
 const { translateText } = require("../../utils/translateHelper");
-const languageManager = require("../../managers/languageManager");
 
 module.exports = {
   name: "🤖 Terjemahkan Teks",

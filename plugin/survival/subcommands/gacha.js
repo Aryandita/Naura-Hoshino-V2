@@ -134,32 +134,32 @@ module.exports = {
 
     // Tentukan warna berdasarkan rarity
     let color = "#FFFFFF";
-    let starEmoji = "⭐";
+    let starEmoji = ui.getEmoji("star") || "⭐";
     if (rarityRolled === "Biasa") color = "#A0A0A0";
     if (rarityRolled === "Langka") {
       color = "#3B82F6";
-      starEmoji = "🌟";
+      starEmoji = ui.getEmoji("star") || "🌟";
     }
     if (rarityRolled === "Epic") {
       color = "#A855F7";
-      starEmoji = "✨";
+      starEmoji = ui.getEmoji("sparkles") || "✨";
     }
     if (rarityRolled === "Legendary") {
       color = "#F59E0B";
-      starEmoji = "🔥";
+      starEmoji = ui.getEmoji("fire") || "🔥";
     }
     if (rarityRolled === "Mythic") {
       color = "#EF4444";
-      starEmoji = "💎";
+      starEmoji = ui.getEmoji("diamond") || "💎";
     }
 
     const pityDesc = isPity
-      ? "\n\n*(🎉 Pity Tercapai! Hadiah Terjamin!)*"
+      ? `\n\n*(${ui.getEmoji("celebrate") || "🎉"} Pity Tercapai! Hadiah Terjamin!)*`
       : `\n\n*(Pity Banner: ${currentPity}/${banner.pityMax})*`;
 
     const payload = buildContainerV2({
       accentColorHex: color,
-      title: `🎰 Gacha: ${banner.name}`,
+      title: `${ui.getEmoji("gacha") || "🎰"} Gacha: ${banner.name}`,
       description: `Kamu melakukan roll gacha dan mendapatkan:\n\n${starEmoji} **${itemWon.name}**\n> *Kelangkaan:* **${rarityRolled}**\n> *Deskripsi:* ${itemWon.description}${pityDesc}`,
       footerText: ui.getFooter("survival"),
     });

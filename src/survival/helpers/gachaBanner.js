@@ -34,11 +34,14 @@ async function showGachaBannerShop(interaction, user) {
             .setStyle(ButtonStyle.Secondary)
     );
 
+    const eGacha = ui.getEmoji("gacha_store") || "🎰";
+    const eCoupon = ui.getEmoji("coupon") || "🎫";
+
     const payload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        title: "🎰 Toko Gacha Luna",
+        title: `${eGacha} Toko Gacha Luna`,
         authorName: "Luna Gacha",
-        description: `Halo ${user.username}! Selamat datang di Toko Gacha Kosmetik.\n\nKamu bisa mendapatkan **Banner** eksklusif untuk dipasang di Profil dan Music Card milikmu!\n\n**Saldo Kuponmu:** ${coupons} 🎫\n*Satu kali roll butuh ${GACHA_COST_COUPON} Kupon.*`,
+        description: `Halo ${user.username}! Selamat datang di Toko Gacha Kosmetik.\n\nKamu bisa mendapatkan **Banner** eksklusif untuk dipasang di Profil dan Music Card milikmu!\n\n**Saldo Kuponmu:** ${coupons} ${eCoupon}\n*Satu kali roll butuh ${GACHA_COST_COUPON} Kupon.*`,
         iconURL: "https://i.imgur.com/example.png", // Fallback if no banner
         buttonsRow: row,
         footerText: ui.getFooter("survival")
@@ -90,7 +93,7 @@ async function showGachaBannerShop(interaction, user) {
 
             const rewardPayload = buildContainerV2({
                 accentColorHex: selected.rarity >= 4 ? "#FFD700" : "#FFB6C1",
-                title: "🎉 Selamat!",
+                title: `${ui.getEmoji("celebrate") || "🎉"} Selamat!`,
                 description: `Kamu mendapatkan kosmetik eksklusif:\n\n**[ ${selected.name} ]** (${selected.rarity}★)\n\nBanner ini sudah ditambahkan ke dalam tasmu.`,
                 footerText: ui.getFooter("survival")
             });

@@ -63,7 +63,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("success"),
         authorName: "Naura Privacy Center",
-        title: "📥 Data Ekspor Selesai",
+        title: `${ui.getEmoji("deposit") || "📥"} Data Ekspor Selesai`,
         description:
           "Seluruh data profil dan RPG/Survival kamu berhasil dikumpulkan. Silakan unduh file `.json` yang terlampir pada pesan ini.\n\n*Data ini hanya dikirimkan kepada kamu secara privat (ephemeral).*",
         footerText: ui.getFooter("core"),
@@ -76,7 +76,7 @@ module.exports = {
       const btnConfirm = new ButtonBuilder()
         .setCustomId("btn_data_confirm_delete")
         .setLabel("Ya, Hapus Dataku")
-        .setEmoji("🗑️")
+        .setEmoji(ui.parseEmoji(ui.getEmoji("trash_can")) || { name: "🗑️" })
         .setStyle(ButtonStyle.Danger);
 
       const btnCancel = new ButtonBuilder()
@@ -89,7 +89,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: "#FF0000",
         authorName: "Naura Privacy Center",
-        title: "⚠️ Konfirmasi Penghapusan Data",
+        title: `${ui.getEmoji("warning") || "⚠️"} Konfirmasi Penghapusan Data`,
         description:
           "Kamu yakin ingin menghapus **SELURUH** datamu?\n\nIni akan menghapus secara permanen:\n- Seluruh level, balance (koin/kupon)\n- Inventaris RPG, pet, farm\n- Pengaturan profil & history premium\n\n**Tindakan ini tidak bisa dibatalkan!**",
         buttonsRow: row,
@@ -126,7 +126,7 @@ module.exports = {
           await i.update(
             buildContainerV2({
               accentColorHex: ui.getColor("success"),
-              title: "✅ Data Berhasil Dihapus",
+              title: `${ui.getEmoji("success") || "✅"} Data Berhasil Dihapus`,
               description:
                 "Seluruh datamu telah dihapus secara permanen dari database Naura.",
               footerText: ui.getFooter("core"),
@@ -136,7 +136,7 @@ module.exports = {
           await i.update(
             buildContainerV2({
               accentColorHex: ui.getColor("utility"),
-              title: "❌ Penghapusan Dibatalkan",
+              title: `${ui.getEmoji("error") || "❌"} Penghapusan Dibatalkan`,
               description: "Penghapusan data dibatalkan. Datamu tetap aman.",
               footerText: ui.getFooter("core"),
             }),

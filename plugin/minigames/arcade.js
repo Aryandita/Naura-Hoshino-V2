@@ -222,8 +222,8 @@ module.exports = {
 
       const payload = buildContainerV2({
         accentColorHex: "#F9A8D4",
-        title: "🎶 Rhythm Tap: Ikuti Pola Warna!",
-        description: `Tekan tombol warna berikut secara berurutan:\n\n# ${displayPattern}\n\n⏱️ *Tekan tombol sesuai urutan dari kiri ke kanan!*`,
+        title: `${ui.getEmoji("music_note") || "🎶"} Rhythm Tap: Ikuti Pola Warna!`,
+        description: `Tekan tombol warna berikut secara berurutan:\n\n# ${displayPattern}\n\n${ui.getEmoji("clock") || "⏱️"} *Tekan tombol sesuai urutan dari kiri ke kanan!*`,
         footerText: "Holo-Arcade Rhythm Engine",
         buttonsRow: actionRow,
       });

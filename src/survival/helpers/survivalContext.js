@@ -15,6 +15,7 @@ const {
   resolveLanguageSync,
   resolveLanguage,
 } = require("../../utils/localePatch");
+const ui = require("../../config/ui");
 
 const AUTO_DELETE_MS = 90000; // 90 detik (1 menit 30 detik)
 
@@ -90,10 +91,12 @@ function createMockInteraction({ message, client, subCmdName, args }) {
     client: client,
     deferReply: async () => {
       const loadingPayload = buildLoadingContainerV2({
-        title: "Naura Loading System...",
+        authorName: "Naura Survival System",
+        title: "Menyiapkan Petualangan...",
         loadingMessage:
-          "Naura sedang menyiapkan semuanya buat kamu, tunggu sebentar yaa~ \u26fa\u2728",
+          "Naura sedang menyiapkan data ekspedisi survival untukmu, tunggu sebentar yaa~ ✨",
         footerText: `Sedang menyiapkan untuk ${message.author.username}`,
+        withBanner: true,
       });
       loadingMsg = await message.reply(loadingPayload);
     },
@@ -131,16 +134,22 @@ function createMockInteraction({ message, client, subCmdName, args }) {
     fetchLang: () => resolveLanguage(message),
   };
 
-  // Getter, bukan nilai tetap, agar bahasa yang baru saja masuk cache langsung terpakai.
+  // Getter & Setter, bukan nilai tetap, agar bahasa yang baru saja masuk cache langsung terpakai.
   Object.defineProperty(mock, "localeLang", {
     get() {
-      return resolveLanguageSync(message);
+      return this._localeLang || resolveLanguageSync(message);
+    },
+    set(value) {
+      this._localeLang = languageManager.normalize(value);
     },
     configurable: true,
   });
   Object.defineProperty(mock, "lang", {
     get() {
-      return resolveLanguageSync(message);
+      return this._localeLang || resolveLanguageSync(message);
+    },
+    set(value) {
+      this._localeLang = languageManager.normalize(value);
     },
     configurable: true,
   });
@@ -162,7 +171,7 @@ function getCurrentSeason() {
   if (m === 8 && d >= 17 && d <= 31) {
     return {
       name: "kemerdekaan",
-      label: "🎉 Event Kemerdekaan",
+      label: `${ui.getEmoji("celebrate") || "🎉"} Event Kemerdekaan`,
       boostType: "fragment",
       dropBoost: 2.0,
       exclusiveItem: "bendera_merah_putih"
@@ -173,7 +182,7 @@ function getCurrentSeason() {
   if (m === 6 && d >= 11 && d <= 13) {
     return {
       name: "naura_birthday",
-      label: "🎂 Ulang Tahun Naura",
+      label: `${ui.getEmoji("cake") || "🎂"} Ulang Tahun Naura`,
       boostType: "coin",
       dropBoost: 2.0,
       exclusiveItem: "birthday_cake"
@@ -184,7 +193,7 @@ function getCurrentSeason() {
   if ((m === 12 && d === 31) || (m === 1 && d === 1)) {
     return {
       name: "new_year",
-      label: "🎆 Event Tahun Baru",
+      label: `${ui.getEmoji("party") || "🎆"} Event Tahun Baru`,
       boostType: "coupon",
       dropBoost: 1.0, // No multiplier, just daily random
       exclusiveItem: "firework"
@@ -207,7 +216,7 @@ function getCurrentSeason() {
     if (todayStr >= currYearHijri.ramadhanStart && todayStr <= currYearHijri.ramadhanEnd) {
       return {
         name: "ramadhan",
-        label: "🌙 Bulan Ramadhan",
+        label: `${ui.getEmoji("night") || "🌙"} Bulan Ramadhan`,
         boostType: "none",
         dropBoost: 1.0,
         exclusiveItem: "ketupat"
@@ -217,7 +226,7 @@ function getCurrentSeason() {
     if (todayStr === currYearHijri.lebaran || todayStr === getNextDayStr(currYearHijri.lebaran)) {
       return {
         name: "lebaran",
-        label: "🕌 Hari Raya Idul Fitri",
+        label: `${ui.getEmoji("mosque") || "🕌"} Hari Raya Idul Fitri`,
         boostType: "none",
         dropBoost: 1.0,
         exclusiveItem: "opor_ayam"
@@ -244,20 +253,22 @@ async function checkNauraBirthdayEncounter(interaction, userId) {
   const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
   const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
   const cacheManager = require("../../managers/cacheManager");
-  const ui = require("../../config/ui");
+
+  const eNaura = ui.getEmoji("about") || "🌸";
+  const eHeart = ui.getEmoji("heart") || "💖";
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("naura_bday_greet")
       .setLabel("Sapa Naura & Kasih Selamat!")
       .setStyle(ButtonStyle.Success)
-      .setEmoji("🎂")
+      .setEmoji(ui.parseEmoji(ui.getEmoji("cake")) || { name: "🎂" })
   );
 
   const payload = buildContainerV2({
     accentColorHex: ui.getColor("primary") || "#FFC0CB",
     authorName: "Naura Hoshino",
-    title: "Ketemu Naura!",
+    title: `${eNaura} Ketemu Naura!`,
     iconURL: interaction.client.user.displayAvatarURL(),
     expression: "happy",
     description: "Eh, kebetulan banget kita ketemu di sini! Hari ini ulang tahunku lho... hihi.",
@@ -285,7 +296,7 @@ async function checkNauraBirthdayEncounter(interaction, userId) {
     const thxPayload = buildContainerV2({
       accentColorHex: ui.getColor("primary"),
       authorName: "Naura Hoshino",
-      title: "Makasih yaa!",
+      title: `${eHeart} Makasih yaa!`,
       iconURL: interaction.client.user.displayAvatarURL(),
       expression: "cheers",
       description: "Makasih banyak ucapannya! Ini aku kasih 1 Naura Coupon buat kamu. Semoga petualanganmu hari ini menyenangkan!",

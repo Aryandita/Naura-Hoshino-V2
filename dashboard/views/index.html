@@ -114,6 +114,9 @@
                 <a href="#" id="link-support" class="nav-link" onclick="switchSection('support')">
                     <i class="fa-solid fa-heart mr-3"></i> <span class="lang-support">Support Dev</span>
                 </a>
+                <a href="/portfolio" class="nav-link hover:border-emerald-500/40 group">
+                    <i class="fa-solid fa-id-badge mr-3 text-emerald-400 group-hover:scale-110 transition"></i> <span class="text-emerald-300 font-semibold">Creator Portfolio</span>
+                </a>
             </nav>
         </aside>
 
@@ -183,6 +186,16 @@
                             <span class="text-[10px] text-gray-400 uppercase tracking-widest hidden md:inline">Coins:</span>
                             <span id="headerWalletText" class="text-white">0</span>
                         </div>
+                    </div>
+
+                    <!-- Creator Portfolio Quick Link -->
+                    <div class="flex items-center select-none shrink-0">
+                        <a href="/portfolio" id="headerPortfolioBtn"
+                            class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/60 text-xs font-cyber transition shadow-[0_0_10px_rgba(16,185,129,0.2)] hover:scale-105 active:scale-95 cursor-pointer"
+                            title="Buka Portofolio Creator (Aryandita)">
+                            <i class="fa-solid fa-id-badge text-emerald-400"></i>
+                            <span class="font-semibold hidden sm:inline">Portfolio</span>
+                        </a>
                     </div>
 
                     <!-- Dedicated Discord Auth Header Slot (Visible across Mobile & Desktop) -->
@@ -427,7 +440,7 @@
 
                             <div class="flex justify-between items-center bg-black/30 p-2.5 rounded-xl border border-white/5">
                                 <span class="text-gray-400 flex items-center gap-2"><i class="fa-solid fa-database text-cyan-400"></i> Database ORM</span>
-                                <span class="text-cyan-300 font-bold">Sequelize + MySQL</span>
+                                <span class="text-cyan-300 font-bold">Sequelize + PostgreSQL</span>
                             </div>
 
                             <div class="flex justify-between items-center bg-black/30 p-2.5 rounded-xl border border-white/5">
@@ -1451,19 +1464,19 @@
                             </div>
 
                             <!-- Master Audio Controls Grid -->
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                                 <!-- BGM Toggle Card -->
                                 <div class="glass-panel p-4 bg-black/30 rounded-2xl border border-white/5 flex items-center justify-between hover:border-pink-500/30 transition">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 shrink-0">
                                             <i class="fa-solid fa-music text-base"></i>
                                         </div>
-                                        <div>
-                                            <h4 class="font-bold text-white text-xs sm:text-sm font-cyber">Background Music</h4>
-                                            <p class="text-[10px] text-[var(--color-muted)]">Musik latar variatif</p>
+                                        <div class="min-w-0">
+                                            <h4 class="font-bold text-white text-xs sm:text-sm font-cyber truncate">Background Music</h4>
+                                            <p class="text-[10px] text-[var(--color-muted)] truncate">Musik latar variatif</p>
                                         </div>
                                     </div>
-                                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                    <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
                                         <input type="checkbox" id="bgmToggle" class="sr-only peer" onchange="toggleBgm()">
                                         <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-400"></div>
                                     </label>
@@ -1471,28 +1484,28 @@
 
                                 <!-- SFX Toggle Card -->
                                 <div class="glass-panel p-4 bg-black/30 rounded-2xl border border-white/5 flex items-center justify-between hover:border-cyan-500/30 transition">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shrink-0">
                                             <i class="fa-solid fa-wand-magic-sparkles text-base"></i>
                                         </div>
-                                        <div>
-                                            <h4 class="font-bold text-white text-xs sm:text-sm font-cyber">Sound Effects</h4>
-                                            <p class="text-[10px] text-[var(--color-muted)]">SFX klik tombol & navigasi</p>
+                                        <div class="min-w-0">
+                                            <h4 class="font-bold text-white text-xs sm:text-sm font-cyber truncate">Sound Effects</h4>
+                                            <p class="text-[10px] text-[var(--color-muted)] truncate">SFX klik tombol & navigasi</p>
                                         </div>
                                     </div>
-                                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                                    <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
                                         <input type="checkbox" id="sfxToggle" class="sr-only peer" checked onchange="toggleSfx()">
                                         <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-400"></div>
                                     </label>
                                 </div>
 
                                 <!-- Volume Slider Card -->
-                                <div class="glass-panel p-4 bg-black/30 rounded-2xl border border-white/5 flex flex-col justify-center gap-2 hover:border-yellow-500/30 transition">
-                                    <div class="flex items-center justify-between text-xs font-cyber">
-                                        <span class="text-gray-300 font-bold flex items-center gap-1.5">
-                                            <i id="volIcon" class="fa-solid fa-volume-high text-yellow-400"></i> Master Volume
+                                <div class="glass-panel p-4 bg-black/30 rounded-2xl border border-white/5 flex flex-col justify-center gap-2 hover:border-yellow-500/30 transition col-span-1 sm:col-span-2 lg:col-span-1">
+                                    <div class="flex items-center justify-between text-xs font-cyber gap-2">
+                                        <span class="text-gray-300 font-bold flex items-center gap-1.5 truncate">
+                                            <i id="volIcon" class="fa-solid fa-volume-high text-yellow-400 shrink-0"></i> <span>Master Volume</span>
                                         </span>
-                                        <span id="volValueText" class="text-yellow-400 font-bold">50%</span>
+                                        <span id="volValueText" class="text-yellow-400 font-bold shrink-0">50%</span>
                                     </div>
                                     <input type="range" id="volSlider" min="0" max="100" value="50" oninput="adjustBgmVolume()" class="w-full accent-pink-400 cursor-pointer h-1.5 bg-gray-700 rounded-lg">
                                 </div>
@@ -1725,7 +1738,7 @@
                     <i class="fa-solid fa-heart animate-pulse text-pink-500 mr-2"></i> SUPPORT DEVELOPERS</h2>
                 <p class="text-gray-400 text-sm mt-3 font-assist font-light">Bantu kami terus mengembangkan Naura OS dengan dukungan penuhmu!</p>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
                 <!-- Saweria Donation Card -->
                 <div class="support-card border-t-4 border-[#FF3366] bg-black/40 flex flex-col h-full rounded-3xl p-6 glass-panel shadow-lg">
                     <div class="flex-grow flex flex-col items-center">
@@ -1760,11 +1773,28 @@
                         <div class="w-24 h-24 rounded-3xl bg-[var(--color-discord-blurple)]/10 border border-[var(--color-discord-blurple)]/30 flex items-center justify-center text-[var(--color-discord-blurple)] text-5xl mb-6 mt-2 shadow-[0_0_25px_rgba(88,101,242,0.3)] hover:scale-110 transition duration-500">
                             <i class="fa-brands fa-discord"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-white mb-3 font-cyber">Community Server</h3>
+                        <h3 class="text-xl font-bold text-white mb-3 font-cyber">Community</h3>
                         <p class="text-gray-400 text-xs leading-relaxed mb-6 text-center">Gabung server support kami untuk memantau update status bot, game RPG, dan mabar.</p>
                     </div>
                     <a href="#" target="_blank"
-                        class="btn-discord w-full hover:shadow-[0_0_20px_rgba(88,101,242,0.4)] shadow-none py-3.5 text-sm uppercase tracking-wider mt-auto text-center font-cyber font-bold rounded-xl">Join Community</a>
+                        class="btn-discord w-full hover:shadow-[0_0_20px_rgba(88,101,242,0.4)] shadow-none py-3.5 text-sm uppercase tracking-wider mt-auto text-center font-cyber font-bold rounded-xl">Join Server</a>
+                </div>
+
+                <!-- Creator Portfolio Card (Card #4) -->
+                <div class="support-card border-t-4 border-emerald-500 bg-black/40 flex flex-col h-full rounded-3xl p-6 glass-panel shadow-lg hover:border-emerald-400 transition duration-300">
+                    <div class="flex-grow flex flex-col items-center">
+                        <div class="w-24 h-24 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-5xl mb-6 mt-2 shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:scale-110 transition duration-500 overflow-hidden">
+                            <img src="/owner_photo.jpeg" alt="Aryandita" class="w-full h-full object-cover object-top" onerror="this.src='/assets/dashboard/owner_photo.jpeg'">
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1 font-cyber">Aryandita</h3>
+                        <span class="text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-wider mb-2">Creator Portfolio</span>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-6 text-center">Kenali lebih dekat sosok di balik Naura Hoshino. Pelajari latar belakang, keahlian perhotelan, dan karya arsitektur sistem.</p>
+                    </div>
+                    <a href="/portfolio"
+                        class="btn-primary w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] shadow-none py-3.5 text-sm uppercase tracking-wider mt-auto text-center font-cyber font-bold rounded-xl flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-id-badge"></i>
+                        <span>View Portfolio</span>
+                    </a>
                 </div>
             </div>
         </section>
@@ -3979,6 +4009,95 @@
                         appendCliLine(`  reload [command]  - Melakukan hot-reload command bot`, 'text-gray-400');
                         appendCliLine(`  eval [JS script]  - Eksekusi kode JS langsung pada backend`, 'text-gray-400');
                         appendCliLine(`  stats             - Menampilkan resource dan uptime OS`, 'text-gray-400');
+                        appendCliLine(`  premium grant [uid] [days] - Suntik status premium ke user`, 'text-gray-400');
+                        appendCliLine(`  premium revoke [uid]      - Cabut status premium user`, 'text-gray-400');
+                        appendCliLine(`  vouchers          - Tampilkan daftar voucher V.I.P`, 'text-gray-400');
+                        appendCliLine(`  vouchers create [days] [count] - Generate voucher V.I.P baru`, 'text-gray-400');
+                    } else if (cmd === 'premium') {
+                        const subParts = args.split(' ');
+                        const subCmd = subParts[0]?.toLowerCase();
+                        const targetUid = subParts[1];
+                        const days = subParts[2] || 30;
+
+                        if (subCmd === 'grant' && targetUid) {
+                            appendCliLine(`Injecting premium ${days} days to ${targetUid}...`, 'text-yellow-400');
+                            try {
+                                const res = await fetch('/api/owner/premium/grant', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ userId: targetUid, days })
+                                });
+                                const result = await res.json();
+                                if (result.success) {
+                                    appendCliLine(`Berhasil: ${result.message}`, 'text-green-400');
+                                } else {
+                                    appendCliLine(`Gagal: ${result.error}`, 'text-red-400');
+                                }
+                            } catch (err) {
+                                appendCliLine(`Gagal menghubungi server.`, 'text-red-400');
+                            }
+                        } else if (subCmd === 'revoke' && targetUid) {
+                            appendCliLine(`Revoking premium from ${targetUid}...`, 'text-yellow-400');
+                            try {
+                                const res = await fetch('/api/owner/premium/revoke', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ userId: targetUid })
+                                });
+                                const result = await res.json();
+                                if (result.success) {
+                                    appendCliLine(`Berhasil: ${result.message}`, 'text-green-400');
+                                } else {
+                                    appendCliLine(`Gagal: ${result.error}`, 'text-red-400');
+                                }
+                            } catch (err) {
+                                appendCliLine(`Gagal menghubungi server.`, 'text-red-400');
+                            }
+                        } else {
+                            appendCliLine(`Format salah. Gunakan: premium grant [userId] [days] atau premium revoke [userId]`, 'text-red-400');
+                        }
+                    } else if (cmd === 'vouchers') {
+                        const subParts = args.split(' ');
+                        const subCmd = subParts[0]?.toLowerCase();
+
+                        if (subCmd === 'create') {
+                            const days = subParts[1] || 30;
+                            const count = subParts[2] || 1;
+                            appendCliLine(`Creating ${count} voucher(s) of ${days} days...`, 'text-yellow-400');
+                            try {
+                                const res = await fetch('/api/owner/vouchers/create', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ days, count })
+                                });
+                                const result = await res.json();
+                                if (result.success) {
+                                    appendCliLine(`Berhasil: ${result.message}`, 'text-green-400');
+                                    result.codes.forEach(c => appendCliLine(`  • ${c}`, 'text-cyan-300 font-bold'));
+                                } else {
+                                    appendCliLine(`Gagal: ${result.error}`, 'text-red-400');
+                                }
+                            } catch (err) {
+                                appendCliLine(`Gagal menghubungi server.`, 'text-red-400');
+                            }
+                        } else {
+                            appendCliLine(`Fetching voucher list...`, 'text-yellow-400');
+                            try {
+                                const res = await fetch('/api/owner/vouchers');
+                                const result = await res.json();
+                                if (result.success) {
+                                    appendCliLine(`Daftar Voucher V.I.P (${result.vouchers.length} total):`, 'text-cyan-400 font-bold');
+                                    result.vouchers.slice(0, 15).forEach(v => {
+                                        const status = v.isRedeemed ? `[REDEEMED by ${v.redeemedBy}]` : `[ACTIVE - ${v.durationDays}d]`;
+                                        appendCliLine(`  ${v.code} - ${status}`, v.isRedeemed ? 'text-gray-500' : 'text-green-400');
+                                    });
+                                } else {
+                                    appendCliLine(`Gagal: ${result.error}`, 'text-red-400');
+                                }
+                            } catch (err) {
+                                appendCliLine(`Gagal menghubungi server.`, 'text-red-400');
+                            }
+                        }
                     } else if (cmd === 'stats') {
                         appendCliLine(`Loading stats...`, 'text-yellow-400');
                         try {

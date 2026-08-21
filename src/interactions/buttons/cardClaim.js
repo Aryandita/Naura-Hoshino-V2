@@ -47,8 +47,8 @@ module.exports = {
 
     const payload = buildContainerV2({
       accentColorHex: "#FFB6C1",
-      authorName: "🎴 Anime Card Claimed!",
-      title: `✨ ${card.characterName} (#${card.printNumber})`,
+      authorName: `${ui.getEmoji("arcade") || "🎴"} Anime Card Claimed!`,
+      title: `${ui.getEmoji("sparkles") || "✨"} ${card.characterName} (#${card.printNumber})`,
       description: [
         `Selamat <@${userId}>! Kamu berhasil mengklaim kartu:`,
         ``,

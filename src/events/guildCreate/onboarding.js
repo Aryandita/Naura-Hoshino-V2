@@ -45,33 +45,33 @@ module.exports = {
     const row = new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder()
         .setCustomId("setup_preset")
-        .setPlaceholder("⚙️ Pilih Preset Setup Cepat...")
+        .setPlaceholder(`${ui.stripCustomEmojis(ui.getEmoji("settings") || "⚙️")} Pilih Preset Setup Cepat...`)
         .addOptions([
           {
             label: "Community Preset",
             description: "Fitur standar (Automod, Musik, AI, Ekonomi ringan).",
             value: "preset_community",
-            emoji: "🌍",
+            emoji: ui.parseEmoji(ui.getEmoji("globe")) || { name: "🌍" },
           },
           {
             label: "Gaming/RPG Preset",
             description: "Fokus RPG, Leveling, Musik, tanpa Automod ketat.",
             value: "preset_gaming",
-            emoji: "🎮",
+            emoji: ui.parseEmoji(ui.getEmoji("arcade")) || { name: "🎮" },
           },
           {
             label: "Minimal Preset",
             description: "Hanya fitur inti (Musik & AI), fitur lain mati.",
             value: "preset_minimal",
-            emoji: "🍃",
+            emoji: ui.parseEmoji(ui.getEmoji("leaf")) || { name: "🍃" },
           },
         ]),
     );
 
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#FFB6C1",
-      title: "✨ Halo! Aku Naura Hoshino!",
-      description: `Terima kasih sudah mengundangku ke **${guild.name}**!\n\nAku adalah asisten cerdas yang dilengkapi dengan AI Llama 3, Music Player 24/7, RPG System, dan Admin Tools.\n\nUntuk memulai dengan cepat, silakan pilih **Preset Setup** di bawah ini agar aku bisa mengatur semuanya secara otomatis. Nanti kamu juga bisa mengubahnya detail di dashboard \`/setup\`.`,
+      title: `${ui.getEmoji("sparkles") || "✨"} Halo! Aku Naura Hoshino!`,
+      description: `Terima kasih sudah mengundangku ke **${guild.name}**!\n\nAku adalah asisten cerdas yang dilengkapi dengan AI Gemini, Music Player 24/7, RPG System, dan Admin Tools.\n\nUntuk memulai dengan cepat, silakan pilih **Preset Setup** di bawah ini agar aku bisa mengatur semuanya secara otomatis. Nanti kamu juga bisa mengubahnya detail di dashboard \`/setup\`.`,
       buttonsRow: row,
       footerText: "Naura Setup Wizard • Hanya Admin",
     });

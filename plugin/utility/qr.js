@@ -22,7 +22,7 @@ module.exports = {
 
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#FFB6C1",
-      title: "📱 QR Code Dihasilkan",
+      title: `${ui.getEmoji("tools") || "📱"} QR Code Dihasilkan`,
       description: `**Isi:** \`${text}\``,
       mediaAttachmentNames: [qrUrl],
       footerText: ui.getFooter("utility"),

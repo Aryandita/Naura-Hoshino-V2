@@ -1,4 +1,5 @@
-// Lokasi: plugin/survival/storyData.js
+// Lokasi: src/survival/data/storyData.js
+const ui = require("../../config/ui");
 
 const storyData = [
   {
@@ -51,7 +52,9 @@ const storyData = [
           reqId: "wood",
           reqAmount: 10,
           btnLabel: "Serahkan 10 Kayu",
-          btnEmoji: "🪵",
+          get btnEmoji() {
+            return ui.getEmoji("wood") || "🪵";
+          },
           failMsg:
             'Hector Swallowtail: "Kayu yang kamu bawa masih kurang, {player}. Tebanglah lebih banyak di hutan!"',
         },
@@ -107,7 +110,9 @@ const storyData = [
           reqId: "iron_ore",
           reqAmount: 5,
           btnLabel: "Ekstrak 5 Iron Ore",
-          btnEmoji: "⛏️",
+          get btnEmoji() {
+            return ui.getEmoji("mining") || ui.getEmoji("pickaxe") || "⛏️";
+          },
           failMsg:
             "Kamu kekurangan Iron Ore untuk mensintesis pedang. Kembalilah menambang!",
         },
@@ -158,7 +163,9 @@ const storyData = [
           type: "coin",
           reqAmount: 15000,
           btnLabel: "Bayar 15,000 Koin",
-          btnEmoji: "🪙",
+          get btnEmoji() {
+            return ui.getEmoji("coin") || "🪙";
+          },
           failMsg:
             'Garry Frostsnow: "Uangmu tidak cukup, rakyat jelata! Menyingkir dari hadapanku!"',
         },
@@ -194,7 +201,9 @@ const storyData = [
           reqId: "diamond",
           reqAmount: 1,
           btnLabel: "Korbankan 1 Diamond",
-          btnEmoji: "💎",
+          get btnEmoji() {
+            return ui.getEmoji("diamond") || "💎";
+          },
           failMsg:
             "Kapasitas sihirmu gagal berevolusi. Kamu butuh setidaknya 1 Diamond murni!",
         },

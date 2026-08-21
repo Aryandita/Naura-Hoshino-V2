@@ -27,7 +27,36 @@ function addGatherGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("fish")
-          .setDescription("Memancing ikan di laut atau pantai utara"),
+          .setDescription("Memancing ikan di laut dangkal atau samudra laut dalam & Vivarium")
+          .addStringOption((opt) =>
+            opt
+              .setName("aksi")
+              .setDescription("Pilih aksi memancing / vivarium")
+              .addChoices(
+                { name: "🎣 Lempar Kail (Cast)", value: "cast" },
+                { name: "🌊 Lihat Holographic Vivarium", value: "vivarium" },
+                { name: "📥 Taruh Ikan ke Akuarium", value: "deposit" },
+                { name: "💰 Klaim Tiket Pengunjung", value: "collect" },
+              )
+              .setRequired(false),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("zona")
+              .setDescription("Pilih kedalaman laut")
+              .addChoices(
+                { name: "Coral Reef (0 - 200m)", value: "CORAL_REEF" },
+                { name: "Midnight Trench (200 - 1000m)", value: "MIDNIGHT_TRENCH" },
+                { name: "Abyssal Core (1000m+)", value: "ABYSSAL_CORE" },
+              )
+              .setRequired(false),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("ikan")
+              .setDescription("ID Ikan untuk dimasukkan ke Vivarium")
+              .setRequired(false),
+          ),
       )
       .addSubcommand((sub) =>
         sub

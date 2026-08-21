@@ -28,7 +28,6 @@ class AIRouterManager {
     settings,
   ) {
     let replyText = "";
-    let usedEngine = "Verba AI";
 
     if (settings && settings.settings) {
       const set = settings.settings;
@@ -81,7 +80,6 @@ class AIRouterManager {
     const attachment = message.attachments.first();
 
     if (attachment) {
-      usedEngine = "Gemini Vision";
       try {
         if (!gemini.isAvailable())
           throw new Error("GEMINI_API tidak dikonfigurasi.");
@@ -119,9 +117,9 @@ class AIRouterManager {
       let forceGeminiForTools = false;
       let usedTools = false;
 
-      // Check intent for function calling
+      // Check intent for function calling (8 Core Tools)
       const toolKeywords =
-        /saldo|uang|koin|profil|level|xp|premium|informasi|lagu|musik|putar|mainkan/i;
+        /saldo|uang|koin|profil|level|xp|premium|informasi|lagu|musik|putar|mainkan|jeda|pause|skip|stop|antrean|queue|tas|inventory|barang|item|peringkat|leaderboard|top|server|anggota|member|ingatkan|reminder|ingat|daily|hadiah|klaim/i;
       if (toolKeywords.test(userMessage || "")) {
         const redisManager = require("../managers/redisManager");
         if (isOwner || isPremiumUser) {
@@ -132,8 +130,8 @@ class AIRouterManager {
             (await redisManager.getCache(quotaKey)) || "0",
             10,
           );
-          if (todayUsage < 10) {
-            // Limit 10/day for free users
+          if (todayUsage < 25) {
+            // Limit 25/day for free users
             forceGeminiForTools = true;
           }
         }
@@ -225,7 +223,7 @@ class AIRouterManager {
         );
         await updateGeminiHistory(message.author.id, "model", replyText);
       } catch (verbaError) {
-        logger.error(`[VERBA API ERROR] ${verbaError.message}`);
+        logger.warn(`[Verba AI] ${verbaError.message} -> Mengalihkan ke Gemini Engine`);
 
         const userRole = isOwner
           ? "Owner"
@@ -235,7 +233,6 @@ class AIRouterManager {
         logger.info(
           `[AI Router] Beralih ke Gemini (Fallback) untuk ${userRole} (${message.author.username})`,
         );
-        usedEngine = "Gemini AI (Fallback)";
 
         const promptText = `${persona}${previousBotMessage}\n\nPesan dari ${userRole} (${message.author.username}): ${userMessage || "(Menyapa)"}`;
 
@@ -277,7 +274,6 @@ class AIRouterManager {
           logger.error("[GEMINI FALLBACK ERROR]", geminiError);
 
           try {
-            usedEngine = "Ollama Local AI (Fallback)";
             logger.info(
               `[AI Router] Beralih ke Ollama untuk ${userRole} (${message.author.username})`,
             );
@@ -345,7 +341,7 @@ class AIRouterManager {
         iconURL: isFirst ? client.user.displayAvatarURL() : undefined,
         description: chunks[i] || "...",
         footerText: isLast
-          ? `Powered by Naura Intelligent System \u2022 ${usedEngine} \u2022 Untuk ${message.author.username}`
+          ? `Powered by Naura Intelligent System \u2022 Untuk ${message.author.displayName || message.author.username}`
           : undefined,
       });
 
@@ -355,6 +351,11 @@ class AIRouterManager {
         await message.channel.send(payload).catch(() => {});
       }
     }
+
+    // Jalankan ekstraksi memori otomatis di latar belakang (non-blocking)
+    AIMemory.extractAndSave(message.author.id, userMessage, replyText, gemini).catch((err) => {
+      logger.warn("[AI Router] Background memory extraction error:", err.message);
+    });
 
     if (
       settings &&

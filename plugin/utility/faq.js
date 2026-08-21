@@ -46,7 +46,7 @@ module.exports = {
       return interaction.editReply(
         buildErrorContainerV2({
           title: "Khusus Server",
-          description: "❌ Perintah ini hanya dapat digunakan di dalam server Discord.",
+          description: `${ui.getEmoji("error") || "❌"} Perintah ini hanya dapat digunakan di dalam server Discord.`,
           footerText: ui.getFooter("utility"),
         }),
       );
@@ -60,7 +60,7 @@ module.exports = {
         const payload = buildContainerV2({
           accentColorHex: ui.getColor("primary") || "#FFB6C1",
           authorName: "Naura Knowledge Assistant",
-          title: "📚 Basis Pengetahuan Server",
+          title: `${ui.getEmoji("book") || "📚"} Basis Pengetahuan Server`,
           description:
             "Server ini belum mendaftarkan FAQ resmi. Admin server dapat menambahkannya melalui `/setup faq`!",
           footerText: ui.getFooter("utility"),
@@ -76,7 +76,7 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
         authorName: "Naura Knowledge Assistant",
-        title: `📚 Daftar FAQ ${interaction.guild.name}`,
+        title: `${ui.getEmoji("book") || "📚"} Daftar FAQ ${interaction.guild.name}`,
         description:
           "Berikut adalah ringkasan topik panduan & aturan server yang telah diajarkan ke Naura:",
         fields: fields.slice(0, 10),
@@ -124,12 +124,12 @@ module.exports = {
 
         const replyText =
           aiResponse ||
-          "Aduh, maaf yaa... Naura lagi sedikit pusing dan belum bisa menjawab pertanyaanmu sekarang. Coba tanyakan ke staf server yaa~ 🌸";
+          `Aduh, maaf yaa... Naura lagi sedikit pusing dan belum bisa menjawab pertanyaanmu sekarang. Coba tanyakan ke staf server yaa~ ${ui.getEmoji("sakura") || "🌸"}`;
 
         const payload = buildContainerV2({
           accentColorHex: ui.getColor("primary") || "#FFB6C1",
           authorName: "Naura Knowledge Assistant",
-          title: "🧠 Jawaban Naura FAQ",
+          title: `${ui.getEmoji("intelligence") || "🧠"} Jawaban Naura FAQ`,
           description: `**Pertanyaan:** *${query}*\n\n${replyText}`,
           footerText: ui.getFooter("utility"),
         });
@@ -139,7 +139,7 @@ module.exports = {
         return interaction.editReply(
           buildErrorContainerV2({
             title: "Gagal Menjawab",
-            description: "❌ Terjadi kendala saat memproses jawaban AI. Silakan coba sesaat lagi.",
+            description: `${ui.getEmoji("error") || "❌"} Terjadi kendala saat memproses jawaban AI. Silakan coba sesaat lagi.`,
             footerText: ui.getFooter("utility"),
           }),
         );

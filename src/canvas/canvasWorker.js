@@ -28,6 +28,46 @@ if (parentPort) {
           result = await cardCanvas.renderCard(payload);
           break;
         }
+        case "renderBoss": {
+          const bossCanvas = require("./bossCanvas");
+          result = await bossCanvas.renderBossCard(payload);
+          break;
+        }
+        case "renderCafe": {
+          const cafeCanvas = require("./cafeCanvas");
+          result = await cafeCanvas.renderCafeCard(payload);
+          break;
+        }
+        case "renderPetHabitat": {
+          const petHabitatCanvas = require("./petHabitatCanvas");
+          result = await petHabitatCanvas.renderPetHabitat(payload);
+          break;
+        }
+        case "renderTerritoryMap": {
+          const territoryCanvas = require("./territoryCanvas");
+          result = await territoryCanvas.renderTerritoryMap(payload);
+          break;
+        }
+        case "renderGuildHall": {
+          const guildHallCanvas = require("./guildHallCanvas");
+          result = await guildHallCanvas.renderGuildHall(payload);
+          break;
+        }
+        case "renderColiseumMatch": {
+          const coliseumCanvas = require("./coliseumCanvas");
+          result = await coliseumCanvas.renderColiseumMatch(payload);
+          break;
+        }
+        case "renderVivarium": {
+          const vivariumCanvas = require("./vivariumCanvas");
+          result = await vivariumCanvas.renderVivarium(payload);
+          break;
+        }
+        case "renderStockMarket": {
+          const stockCanvas = require("./stockCanvas");
+          result = await stockCanvas.renderStockMarket(payload);
+          break;
+        }
         default:
           throw new Error(`Unknown canvas worker task: ${task}`);
       }

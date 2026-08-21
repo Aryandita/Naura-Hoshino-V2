@@ -54,3 +54,43 @@ test("NauraContainerBuilder - Default footer uses ui.getFooter('core')", () => {
     "Container V2 payload harus menyertakan teks footer terpusat",
   );
 });
+
+test("NauraContainerBuilder - Standardized Error, Loading, and Maintenance V2 Containers", () => {
+  const {
+    buildErrorContainerV2,
+    buildLoadingContainerV2,
+    buildMaintenanceContainerV2,
+  } = require("../utils/NauraContainerBuilder");
+
+  // 1. Error Container V2
+  const errorContainer = buildErrorContainerV2({
+    errorMessage: "Contoh pesan kesalahan sistem",
+    withBanner: true,
+  });
+  assert.equal(errorContainer.flags, 32768, "Harus menyertakan IsComponentsV2 flag");
+  assert.ok(Array.isArray(errorContainer.components), "Harus memiliki komponen V2");
+  assert.ok(errorContainer.files.length > 0, "Harus menyertakan banner atau icon file attachment");
+
+  // 2. Loading Container V2
+  const loadingContainer = buildLoadingContainerV2({
+    loadingMessage: "Sedang memproses permintaan data...",
+    withBanner: true,
+  });
+  assert.equal(loadingContainer.flags, 32768, "Harus menyertakan IsComponentsV2 flag");
+  assert.ok(Array.isArray(loadingContainer.components), "Harus memiliki komponen V2");
+  assert.ok(loadingContainer.files.length > 0, "Harus menyertakan banner loading file attachment");
+
+  // 3. Maintenance Container V2
+  const maintenanceContainer = buildMaintenanceContainerV2({
+    maintenanceMessage: "Sedang dalam peningkatan performa server...",
+  });
+  assert.equal(maintenanceContainer.flags, 32768, "Harus menyertakan IsComponentsV2 flag");
+  assert.ok(Array.isArray(maintenanceContainer.components), "Harus memiliki komponen V2");
+  assert.ok(maintenanceContainer.files.length > 0, "Maintenance container harus otomatis membawa banner attachment");
+});
+
+test("UI Helpers - sendError, sendMaintenance, and sendLoading methods exist", () => {
+  assert.equal(typeof ui.sendError, "function", "ui.sendError harus berupa function");
+  assert.equal(typeof ui.sendMaintenance, "function", "ui.sendMaintenance harus berupa function");
+  assert.equal(typeof ui.sendLoading, "function", "ui.sendLoading harus berupa function");
+});

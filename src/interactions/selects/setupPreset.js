@@ -5,21 +5,21 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../utils/NauraContainerBuilder");
-const ui = require("../../config/ui");
 const GuildSettings = require("../../models/GuildSettings");
 const cacheManager = require("../../managers/cacheManager");
 const { logger } = require("../../managers/logger");
 
 module.exports = [
   {
-    customId: "setup_preset",
-    async handler(interaction, client) {
+    id: "setup_preset",
+    label: "setup-preset-select",
+    async handler(interaction) {
       // Hanya admin yang boleh mengatur preset
-      if (!interaction.member.permissions.has("Administrator")) {
+      if (!interaction.member.permissions.has("Administrator") && !interaction.member.permissions.has("ManageGuild")) {
         const errPayload = buildErrorContainerV2({
           title: "Akses Ditolak",
-          description:
-            "❌ | Hanya Administrator server yang bisa menggunakan Setup Wizard ini.",
+          errorMessage:
+            "Hanya Administrator server yang bisa menggunakan Setup Wizard ini.",
           footerText: "Naura Setup Wizard",
         });
         return interaction.reply({
@@ -94,13 +94,13 @@ module.exports = [
         cacheManager.invalidateGuildSettings(guildId);
 
         const successPayload = buildContainerV2({
-          accentColorHex: "#10B981", // Emerald Green
-          title: "✅ Preset Diterapkan",
+          accentColorHex: "#10B981",
+          title: "Preset Diterapkan",
           description: `Preset **${preset.replace("preset_", "").toUpperCase()}** telah berhasil diterapkan pada server ini!\n\nSemua konfigurasi dasar sudah diatur. Anda bisa menggunakan perintah \`/setup\` untuk kustomisasi lebih lanjut.`,
           footerText: "Naura Setup Wizard",
         });
 
-        await interaction.editReply(successPayload);
+        return interaction.editReply(successPayload);
       } catch (error) {
         logger.error(
           `[ONBOARDING PRESET] Gagal menyimpan preset untuk ${guildId}:`,
@@ -108,8 +108,8 @@ module.exports = [
         );
         const errPayload = buildErrorContainerV2({
           title: "Terjadi Kesalahan",
-          description:
-            "❌ | Gagal menyimpan pengaturan preset. Silakan coba lagi nanti.",
+          errorMessage:
+            "Gagal menyimpan pengaturan preset. Silakan coba lagi nanti.",
           footerText: "Naura Setup Wizard",
         });
         return interaction.editReply(errPayload);

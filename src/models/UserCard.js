@@ -1,3 +1,5 @@
+"use strict";
+
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/database");
 
@@ -14,10 +16,14 @@ const UserCard = sequelize.define(
     rarity: { type: DataTypes.STRING(64), allowNull: false, defaultValue: "RARE" },
     printNumber: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
     quality: { type: DataTypes.STRING(32), allowNull: false, defaultValue: "GOOD" }, // POOR, GOOD, EXCELLENT, GEM_MINT
-    frame: { type: DataTypes.STRING(64), allowNull: false, defaultValue: "DEFAULT" }, // DEFAULT, HOLO, CYBER, GOLD, VOID
+    frame: { type: DataTypes.STRING(64), allowNull: false, defaultValue: "DEFAULT" }, // DEFAULT, HOLO, CYBER, GOLD, VOID, HOLO_AWAKENED
     dyeColor: { type: DataTypes.STRING(32), allowNull: true },
     imageUrl: { type: DataTypes.TEXT, allowNull: true },
     isLocked: { type: DataTypes.BOOLEAN, defaultValue: false },
+    isAwakened: { type: DataTypes.BOOLEAN, defaultValue: false },
+    awakeningLevel: { type: DataTypes.INTEGER, defaultValue: 0 },
+    inscription: { type: DataTypes.STRING(128), allowNull: true },
+    originalMinterId: { type: DataTypes.STRING(191), allowNull: true },
     burnValue: { type: DataTypes.INTEGER, defaultValue: 100 },
     quantity: { type: DataTypes.INTEGER, defaultValue: 1 },
   },
@@ -28,4 +34,3 @@ const UserCard = sequelize.define(
 );
 
 module.exports = UserCard;
-

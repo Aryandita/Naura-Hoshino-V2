@@ -63,7 +63,7 @@ module.exports = {
       return buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#3498db",
         authorName: "Naura Hangman System",
-        title: `🔤 Hangman Game (Sisa Nyawa: ${maxMistakes - mistakes})`,
+        title: `${ui.getEmoji("desc") || "🔤"} Hangman Game (Sisa Nyawa: ${maxMistakes - mistakes})`,
         description: `${generateBoard()}\n\n> *Ketik 1 huruf di chat untuk menebak!*`,
         footerText: ui.getFooter("core"),
       });
@@ -105,7 +105,7 @@ module.exports = {
             ? ui.getColor("success") || "#00FF00"
             : ui.getColor("error") || "#FF0000",
           authorName: "Naura Hangman System",
-          title: isWin ? "🏆 Kamu Menang!" : "💀 Kamu Kalah!",
+          title: isWin ? `${ui.getEmoji("trophy") || "🏆"} Kamu Menang!` : `${ui.getEmoji("skull") || "💀"} Kamu Kalah!`,
           description: `\`\`\`\n${stages[mistakes]}\n\nKata yang benar adalah: ${word}\n\`\`\``,
           footerText: ui.getFooter("core"),
         });

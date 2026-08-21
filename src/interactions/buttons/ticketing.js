@@ -17,10 +17,10 @@ module.exports = [
 
       if (openTickets >= 3) {
         return interaction.reply({
-          embeds: [buildErrorContainerV2({ 
+          ...buildErrorContainerV2({ 
             title: "Batas Maksimal Tiket", 
             description: "Kamu sudah memiliki 3 tiket yang masih terbuka. Harap tunggu hingga staf menutupnya sebelum membuka yang baru." 
-          })],
+          }),
           flags: MessageFlags.Ephemeral,
         });
       }

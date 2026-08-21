@@ -33,8 +33,8 @@ const {
 } = require("../../src/utils/NauraContainerBuilder");
 
 const locales = {
-  id: require("./locales/id.json"),
-  en: require("./locales/en.json"),
+  id: require("../../assets/language/id.json"),
+  en: require("../../assets/language/en.json"),
 };
 
 // ==========================================
@@ -136,7 +136,7 @@ module.exports = {
       sub
         .setName("ping")
         .setDescription(
-          "Cek respons latensi Discord, Database MySQL, & Lavalink.",
+          "Cek respons latensi Discord, Database Supabase, & Lavalink.",
         ),
     )
     .addSubcommand((sub) =>
@@ -186,7 +186,7 @@ module.exports = {
         ),
     ),
 
-  aliases: ["ping", "stats", "info", "about", "help", "language", "lang"],
+  aliases: ["ping", "stats", "info", "about", "help"],
 
   async autocomplete(interaction, client) {
     const focusedValue = interaction.options.getFocused().toLowerCase();
@@ -248,9 +248,11 @@ module.exports = {
       createdTimestamp: message.createdTimestamp,
       deferReply: async () => {
         const loadingPayload = buildLoadingContainerV2({
-          authorName: "Naura Loading System...",
-          description: `${face("loading", "\u23F3")} Tunggu sebentar yaa, Naura lagi siapin semuanya buat kamu~ ${e("sparkle", "\u2728")}`,
+          authorName: "Naura Task Runner",
+          title: "Sedang Menyiapkan...",
+          loadingMessage: `Tunggu sebentar yaa, Naura lagi siapin semuanya buat kamu~ ${e("sparkle", "✨")}`,
           footerText: `Sedang menyiapkan untuk ${message.author.username}`,
+          withBanner: true,
         });
         replyMsg = await message.reply(loadingPayload);
       },
@@ -351,9 +353,11 @@ async function handlePing(interaction, client, lang) {
   const offline = e("offline", "\uD83D\uDD34");
 
   const loadingPayload = buildLoadingContainerV2({
-    authorName: "Naura Loading System...",
-    description: `${face("loading", "\u23F3")} ${lang.PING_LOADING}`,
+    authorName: "Naura Latency Diagnostic",
+    title: "Mengukur Latensi...",
+    loadingMessage: lang.PING_LOADING || "Menghubungi shard dan gateway Discord...",
     footerText: `Sedang menyiapkan untuk ${interaction.user.username}`,
+    withBanner: true,
   });
 
   let sent;
@@ -403,9 +407,9 @@ async function handlePing(interaction, client, lang) {
         let i = 1;
         nodes.forEach((node) => {
           const status = node.isConnected
-            ? `${online} \`${node.ping}ms\``
-            : `${offline} Disconnected`;
-          nodeArr.push(`${dot} **Naura Node ${i}:** ${status}`);
+            ? `${online} Online (Aktif)`
+            : `${offline} Offline (Mati)`;
+          nodeArr.push(`${dot} **${node.name || `Naura Node ${i}`}:** ${status}`);
           i++;
         });
         lavalinkStr = "\n" + nodeArr.join("\n");
@@ -513,7 +517,7 @@ async function handlePing(interaction, client, lang) {
       },
       {
         name: `${eMemorySystem} Naura Memory Systems`,
-        value: `${dot} **MySQL Server:** ${dbPing}\n${dot} **Redis Cache:** ${redisPing}`,
+        value: `${dot} **Supabase (PostgreSQL):** ${dbPing}\n${dot} **Redis Cache:** ${redisPing}`,
       },
       {
         name: `${eIntellSystem} Naura Intelligent Systems`,
@@ -821,9 +825,11 @@ async function handleAbout(interaction, client, lang) {
     fields: [
       { name: `${eStats} TELEMETRI SHARD & SISTEM`, value: sysStatus },
       {
-        name: `${eDeveloper} DEVELOPER / CREATOR`,
+        name: `${eDeveloper} DEVELOPER & KONTAK RESMI`,
         value:
-          "`Aryandita` (Developer Utama & Pencipta Ekosistem Naura Hoshino)",
+          "**Aryandita** (Pencipta & Developer Utama Naura Hoshino)\n" +
+          `${ui.getEmoji("email") || "📧"} **Email Resmi:** \`naurahoshino@gmail.com\`\n` +
+          `${ui.getEmoji("translate") || "🌐"} **Support Server:** [dsc.gg/naura-hoshino](https://dsc.gg/naura-hoshino)`,
       },
     ],
     bannerAttachmentName: aboutBanner ? "banner.png" : null,
@@ -959,6 +965,25 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false, us
   const footerText = ui.stripCustomEmojis(ui.getFooter("core"));
   const eHelp = e("help", "\uD83D\uDCDA");
 
+  // Dynamic banner per kategori
+  const categoryBanners = {
+    core: ui.getBanner("utility") || "./assets/general/Utility & Tools Banner.jpeg",
+    music: ui.getBanner("music") || "./assets/general/Music Banner.jpeg",
+    minigame: ui.getBanner("minigame") || "./assets/general/Minigame & Arcade Banner.jpeg",
+    survival: ui.getBanner("economy") || "./assets/general/Economy & Market Banner.jpeg",
+    admin: ui.getBanner("admin") || "./assets/general/Admin & Security Banner.jpeg",
+  };
+
+  const activeBannerPath = activeKey
+    ? categoryBanners[activeKey]
+    : ui.getBanner("help") || "./assets/general/Utility & Tools Banner.jpeg";
+  const bannerFilename = `help-banner-${activeKey || "main"}.jpeg`;
+  const files = [];
+
+  if (activeBannerPath && fs.existsSync(activeBannerPath)) {
+    files.push(new AttachmentBuilder(activeBannerPath, { name: bannerFilename }));
+  }
+
   const containerComponents = [
     {
       type: 10,
@@ -966,15 +991,27 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false, us
     },
     { type: 14, divider: true, spacing: 1 },
     { type: 10, content: bodyContent },
+  ];
+
+  if (files.length > 0) {
+    containerComponents.push({ type: 14, divider: true, spacing: 1 });
+    containerComponents.push({
+      type: 12, // MEDIA_GALLERY
+      items: [{ media: { url: `attachment://${bannerFilename}` } }],
+    });
+  }
+
+  containerComponents.push(
     { type: 14, divider: true, spacing: 1 },
     selectRow.toJSON(),
     navRow.toJSON(),
     { type: 14, divider: false, spacing: 1 },
     { type: 10, content: `-# ${footerText}` },
-  ];
+  );
 
   return {
     flags: MessageFlags.IsComponentsV2,
+    files,
     components: [
       {
         type: 17,
@@ -1017,6 +1054,19 @@ async function handleHelp(interaction, client, langParam) {
       ),
   );
 
+  const langBannerPath =
+    ui.getBanner("help") || "./assets/general/Utility & Tools Banner.jpeg";
+  const langBannerName = "help-lang-banner.jpeg";
+  const langFiles = [];
+  let langBannerAttachmentName = null;
+
+  if (fs.existsSync(langBannerPath)) {
+    langFiles.push(
+      new AttachmentBuilder(langBannerPath, { name: langBannerName }),
+    );
+    langBannerAttachmentName = langBannerName;
+  }
+
   const langPayload = buildContainerV2({
     accentColorHex: ui.getColor("primary") || "#FFB6C1",
     authorName: "Naura Help System",
@@ -1026,6 +1076,9 @@ async function handleHelp(interaction, client, langParam) {
     description: isIndo
       ? `Halo Kak **${userName}**! Sebelum mulai, pilih dulu bahasa yang paling nyaman buat kamu di bawah ini yaa~ Nanti Naura pandu semuanya pakai bahasa itu.`
       : `Hi **${userName}**! Before we start, pick the language you are most comfortable with below. Naura will guide you in that language from now on.`,
+    bannerAttachmentName: langBannerAttachmentName,
+    bannerPosition: "bottom",
+    files: langFiles,
     buttonsRow: langSelectRow,
     footerText: ui.getFooter("core"),
   });
@@ -1084,6 +1137,7 @@ async function renderHelpMenuV2(
     embeds: [], // penting: membersihkan embed pemilihan bahasa sebelumnya
     flags: initialData.flags,
     components: initialData.components,
+    files: initialData.files || [],
   };
 
   let response;
@@ -1146,6 +1200,7 @@ async function renderHelpMenuV2(
         embeds: [],
         flags: updatedData.flags,
         components: updatedData.components,
+        files: updatedData.files || [],
       });
     } catch (err) {
       // Abaikan error (misal interaction sudah expire)
@@ -1162,6 +1217,7 @@ async function renderHelpMenuV2(
             embeds: [],
             flags: disabledData.flags,
             components: disabledData.components,
+            files: disabledData.files || [],
           })
           .catch(() => {});
       }

@@ -76,7 +76,7 @@ module.exports = {
       
       if (!bannerData) {
         return interaction.reply({
-          embeds: [buildErrorContainerV2({ title: "Banner Tidak Ditemukan", description: "Banner gacha tidak valid." })],
+          ...buildErrorContainerV2({ title: "Banner Tidak Ditemukan", description: "Banner gacha tidak valid." }),
           flags: MessageFlags.Ephemeral
         });
       }
@@ -84,7 +84,7 @@ module.exports = {
       const survival = await cacheManager.getUserSurvival(userId);
       if (!survival) {
         return interaction.reply({
-          embeds: [buildErrorContainerV2({ title: "Profil Tidak Ditemukan", description: "Kamu belum memulai perjalanan survival." })],
+          ...buildErrorContainerV2({ title: "Profil Tidak Ditemukan", description: "Kamu belum memulai perjalanan survival." }),
           flags: MessageFlags.Ephemeral
         });
       }
@@ -107,7 +107,7 @@ module.exports = {
       if (balance < cost) {
         const currName = currencyType === "coin" ? "Naura Coin" : (currencyType === "starFragments" ? "NFS" : "Naura Coupon");
         return interaction.reply({
-          embeds: [buildErrorContainerV2({ title: "Saldo Tidak Cukup", description: `Kamu membutuhkan ${cost} ${currName} untuk roll banner ini.` })],
+          ...buildErrorContainerV2({ title: "Saldo Tidak Cukup", description: `Kamu membutuhkan ${cost} ${currName} untuk roll banner ini.` }),
           flags: MessageFlags.Ephemeral
         });
       }
@@ -133,9 +133,9 @@ module.exports = {
       const pullResult = pullGachaItem(bannerData.pool, bannerData.banner, pityCounter);
       
       if (!pullResult || !pullResult.item) {
-        return interaction.editReply({
-          embeds: [buildErrorContainerV2({ title: "Gagal Roll", description: "Terjadi kesalahan internal saat menarik item." })]
-        });
+        return interaction.editReply(
+          buildErrorContainerV2({ title: "Gagal Roll", description: "Terjadi kesalahan internal saat menarik item." })
+        );
       }
 
       // Reset Pity if we got the highest rarity
@@ -169,7 +169,7 @@ module.exports = {
         accentColorHex: colorMap[pullResult.item.rarity] || "#FFFFFF",
         authorName: "Luna - Penjaga Gacha",
         iconURL: "attachment://luna_gacha.jpeg",
-        title: `🎰 Hasil Gacha: ${bannerData.banner.name}`,
+        title: `${ui.getEmoji("gacha_store") || "🎰"} Hasil Gacha: ${bannerData.banner.name}`,
         description: `Selamat! Kamu mendapatkan **${pullResult.item.name}** [${pullResult.item.rarity}]\n\n${pullResult.item.description}`,
         footerText: pullResult.isPity ? "Guaranteed Pity!" : `Pity Counter: ${pityCounter}/${bannerData.banner.pityMax}`,
       });
@@ -183,7 +183,7 @@ module.exports = {
 
       if (!targetItem || targetItem.category !== "banner") {
         return interaction.reply({
-          embeds: [buildErrorContainerV2({ title: "Item Tidak Valid", description: "ID yang dimasukkan bukan banner." })],
+          ...buildErrorContainerV2({ title: "Item Tidak Valid", description: "ID yang dimasukkan bukan banner." }),
           flags: MessageFlags.Ephemeral
         });
       }
@@ -195,7 +195,7 @@ module.exports = {
 
       if (!inventory[itemId] || inventory[itemId] <= 0) {
         return interaction.reply({
-          embeds: [buildErrorContainerV2({ title: "Item Tidak Dimiliki", description: "Kamu tidak memiliki banner ini di inventory." })],
+          ...buildErrorContainerV2({ title: "Item Tidak Dimiliki", description: "Kamu tidak memiliki banner ini di inventory." }),
           flags: MessageFlags.Ephemeral
         });
       }
@@ -206,7 +206,7 @@ module.exports = {
       });
 
       return interaction.reply({
-        embeds: [buildContainerV2({ title: "Banner Terpasang!", description: `Kamu berhasil memasang **${targetItem.name}** sebagai banner profil & musik utamamu.` })],
+        ...buildContainerV2({ title: "Banner Terpasang!", description: `Kamu berhasil memasang **${targetItem.name}** sebagai banner profil & musik utamamu.` }),
         flags: MessageFlags.Ephemeral
       });
     }

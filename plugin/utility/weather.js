@@ -224,7 +224,7 @@ module.exports = {
           accentColorHex = info.color;
           const condName = current.customDesc || info.name;
           title = `${info.emoji} Cuaca Saat Ini di ${cityName}${stateName}, ${countryName}`;
-          description = `Kondisi: **${condName}**${isPremium ? " 💎 [VIP Telemetry]" : ""}`;
+          description = `Kondisi: **${condName}**${isPremium ? ` ${ui.getEmoji("vip") || "💎"} [VIP Telemetry]` : ""}`;
 
           fields = [
             {
@@ -248,14 +248,14 @@ module.exports = {
           if (isPremium) {
             fields.push(
               {
-                name: "📍 Koordinat Exact",
+                name: `${ui.getEmoji("lokasi") || "📍"} Koordinat Exact`,
                 value: `\`${lat.toFixed(2)}, ${lon.toFixed(2)}\``,
               },
-              { name: "🛰️ Satelit Status", value: `Live Telemetry OK (${sourceName})` },
+              { name: `${ui.getEmoji("about") || "🛰️"} Satelit Status`, value: `Live Telemetry OK (${sourceName})` },
             );
           } else {
             fields.push({
-              name: "💎 VIP Weather Metrics",
+              name: `${ui.getEmoji("vip") || "💎"} VIP Weather Metrics`,
               value: "Gunakan `/premium` untuk membuka koordinat & telemetry terperinci!",
             });
           }

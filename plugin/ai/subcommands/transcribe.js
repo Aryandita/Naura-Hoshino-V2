@@ -124,9 +124,10 @@ module.exports = async function transcribe(interaction) {
   await interaction.editReply(
     buildLoadingContainerV2({
       authorName: "Naura Whisper Transcriber",
-      title: `${e("thinking", "\uD83C\uDFA4")} Naura lagi mendengarkan`,
-      description:
-        "Sabar sebentar yaa, Naura sedang menyimak berkasmu baik-baik supaya tidak ada kata yang terlewat.",
+      title: "Naura Sedang Mendengarkan...",
+      loadingMessage:
+        "Sabar sebentar yaa, Naura sedang menyimak rekaman suaramu baik-baik supaya tidak ada kata yang terlewat.",
+      withBanner: true,
       footerText: ui.getFooter("core"),
     }),
   );

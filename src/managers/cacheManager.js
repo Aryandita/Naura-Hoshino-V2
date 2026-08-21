@@ -79,19 +79,22 @@ class CacheManager {
   // ==========================================
 
   _enqueue(queue, userId, { set = null, inc = null } = {}) {
+    if (!userId) return;
     if (!queue.has(userId)) queue.set(userId, { set: {}, inc: {} });
     const entry = queue.get(userId);
 
-    if (set) {
+    if (set && typeof set === "object") {
       for (const [field, value] of Object.entries(set)) {
+        if (!SAFE_COLUMN.test(field)) continue;
         entry.set[field] = value;
         // Nilai absolut yang lebih baru membatalkan delta yang belum ditulis.
         delete entry.inc[field];
       }
     }
 
-    if (inc) {
+    if (inc && typeof inc === "object") {
       for (const [field, delta] of Object.entries(inc)) {
+        if (!SAFE_COLUMN.test(field)) continue;
         const amount = Number(delta) || 0;
         if (Object.prototype.hasOwnProperty.call(entry.set, field)) {
           // Sudah ada nilai absolut menunggu; majukan nilainya saja.
@@ -164,11 +167,23 @@ class CacheManager {
     queue.delete(userId);
 
     try {
-      if (Object.keys(entry.set).length > 0) {
-        await Model.update(entry.set, { where: { userId } });
+      const validAttributes = Model && Model.rawAttributes ? Model.rawAttributes : null;
+      const setKeys = Object.keys(entry.set).filter(
+        (k) => SAFE_COLUMN.test(k) && (!validAttributes || validAttributes[k]),
+      );
+      const incKeys = Object.keys(entry.inc).filter(
+        (k) => SAFE_COLUMN.test(k) && (!validAttributes || validAttributes[k]),
+      );
+
+      if (setKeys.length > 0) {
+        const safeSet = {};
+        for (const k of setKeys) safeSet[k] = entry.set[k];
+        await Model.update(safeSet, { where: { userId } });
       }
-      if (Object.keys(entry.inc).length > 0) {
-        await Model.increment(entry.inc, { where: { userId } });
+      if (incKeys.length > 0) {
+        const safeInc = {};
+        for (const k of incKeys) safeInc[k] = entry.inc[k];
+        await Model.increment(safeInc, { where: { userId } });
       }
     } catch (error) {
       logger.error(
@@ -184,15 +199,26 @@ class CacheManager {
     const entries = Array.from(queue.entries());
     queue.clear();
 
+    const validAttributes = Model && Model.rawAttributes ? Model.rawAttributes : null;
+
     for (const [userId, { set, inc }] of entries) {
       try {
-        if (Object.keys(set).length > 0) {
-          await Model.update(set, { where: { userId } });
+        const setKeys = Object.keys(set).filter(
+          (k) => SAFE_COLUMN.test(k) && (!validAttributes || validAttributes[k]),
+        );
+        const incKeys = Object.keys(inc).filter(
+          (k) => SAFE_COLUMN.test(k) && (!validAttributes || validAttributes[k]),
+        );
+
+        if (setKeys.length > 0) {
+          const safeSet = {};
+          for (const k of setKeys) safeSet[k] = set[k];
+          await Model.update(safeSet, { where: { userId } });
         }
-        if (Object.keys(inc).length > 0) {
-          // increment() menghasilkan `kolom = kolom + delta` di level SQL,
-          // sehingga aman terhadap balapan antar shard maupun antar command.
-          await Model.increment(inc, { where: { userId } });
+        if (incKeys.length > 0) {
+          const safeInc = {};
+          for (const k of incKeys) safeInc[k] = inc[k];
+          await Model.increment(safeInc, { where: { userId } });
         }
       } catch (error) {
         logger.error(
@@ -210,13 +236,21 @@ class CacheManager {
 
   /** Helper bersama untuk increment atomik pada model mana pun. */
   async _increment(userId, deltas, { cacheKey, ttl, loader, queue }) {
-    if (!userId || !deltas || Object.keys(deltas).length === 0) return false;
+    if (!userId || !deltas || typeof deltas !== "object") return false;
+
+    const cleanDeltas = {};
+    for (const [field, delta] of Object.entries(deltas)) {
+      if (SAFE_COLUMN.test(field)) {
+        cleanDeltas[field] = Number(delta) || 0;
+      }
+    }
+    if (Object.keys(cleanDeltas).length === 0) return false;
 
     try {
       const current = await loader();
       if (current) {
-        for (const [field, delta] of Object.entries(deltas)) {
-          current[field] = (Number(current[field]) || 0) + (Number(delta) || 0);
+        for (const [field, delta] of Object.entries(cleanDeltas)) {
+          current[field] = (Number(current[field]) || 0) + delta;
         }
         await redisManager.setCache(cacheKey, current, ttl);
       }
@@ -228,7 +262,7 @@ class CacheManager {
     }
 
     // Database tetap menerima delta, bukan hasil hitungan lokal.
-    this._enqueue(queue, userId, { inc: deltas });
+    this._enqueue(queue, userId, { inc: cleanDeltas });
     return true;
   }
 
@@ -450,11 +484,17 @@ class CacheManager {
    * Untuk kolom JSON, pakai mutateUserProfileJson().
    *
    * @param {string} userId - ID Discord User
-   * @param {Object} updateData - Key/Value pasang untuk diupdate
+   * @param {Object|string} fieldOrData - Key/Value pasang untuk diupdate atau nama kolom
+   * @param {any} [maybeValue] - Nilai jika parameter kedua adalah nama kolom
    * @returns {Promise<boolean>} Status keberhasilan cache
    */
-  async updateUserProfile(userId, updateData) {
-    if (!userId || !updateData) return false;
+  async updateUserProfile(userId, fieldOrData, maybeValue) {
+    if (!userId || fieldOrData === undefined || fieldOrData === null) return false;
+    let updateData = fieldOrData;
+    if (typeof fieldOrData === "string") {
+      updateData = { [fieldOrData]: maybeValue };
+    }
+    if (!updateData || typeof updateData !== "object") return false;
     const cacheKey = `user:profile:${userId}`;
 
     try {
@@ -489,9 +529,14 @@ class CacheManager {
    * Gunakan ini untuk economy_wallet, economy_bank, leveling_xp, dan sejenisnya.
    *
    * @param {string} userId
-   * @param {Object<string, number>} deltas - Contoh: { economy_wallet: 250, leveling_xp: 15 }
+   * @param {Object<string, number>|string} fieldOrDeltas - Contoh: { economy_wallet: 250, leveling_xp: 15 } atau 'economy_wallet'
+   * @param {number} [maybeAmount] - Nilai penambahan jika parameter kedua adalah nama kolom
    */
-  async incrementUserProfile(userId, deltas) {
+  async incrementUserProfile(userId, fieldOrDeltas, maybeAmount) {
+    let deltas = fieldOrDeltas;
+    if (typeof fieldOrDeltas === "string") {
+      deltas = { [fieldOrDeltas]: maybeAmount };
+    }
     return this._increment(userId, deltas, {
       cacheKey: `user:profile:${userId}`,
       ttl: PROFILE_TTL,
@@ -602,10 +647,16 @@ class CacheManager {
    * Untuk kolom JSON (rpg_state, shop_purchases), pakai mutateUserSurvivalJson().
    *
    * @param {string} userId - ID Discord User
-   * @param {Object} updateData - Data yang diupdate
+   * @param {Object|string} fieldOrData - Data yang diupdate atau nama kolom
+   * @param {any} [maybeValue] - Nilai jika parameter kedua adalah nama kolom
    */
-  async updateUserSurvival(userId, updateData) {
-    if (!userId || !updateData) return false;
+  async updateUserSurvival(userId, fieldOrData, maybeValue) {
+    if (!userId || fieldOrData === undefined || fieldOrData === null) return false;
+    let updateData = fieldOrData;
+    if (typeof fieldOrData === "string") {
+      updateData = { [fieldOrData]: maybeValue };
+    }
+    if (!updateData || typeof updateData !== "object") return false;
     const cacheKey = `user:survival:${userId}`;
 
     try {
@@ -629,9 +680,14 @@ class CacheManager {
    * Gunakan untuk starFragments, coupons, hp, hunger, thirst, stamina, survival_xp.
    *
    * @param {string} userId
-   * @param {Object<string, number>} deltas - Contoh: { starFragments: 120, hunger: -5 }
+   * @param {Object<string, number>|string} fieldOrDeltas - Contoh: { starFragments: 120, hunger: -5 } atau 'starFragments'
+   * @param {number} [maybeAmount] - Nilai penambahan jika parameter kedua adalah nama kolom
    */
-  async incrementUserSurvival(userId, deltas) {
+  async incrementUserSurvival(userId, fieldOrDeltas, maybeAmount) {
+    let deltas = fieldOrDeltas;
+    if (typeof fieldOrDeltas === "string") {
+      deltas = { [fieldOrDeltas]: maybeAmount };
+    }
     return this._increment(userId, deltas, {
       cacheKey: `user:survival:${userId}`,
       ttl: SURVIVAL_TTL,

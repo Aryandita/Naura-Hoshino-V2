@@ -7,6 +7,7 @@ const { drawCardBattleArena } = require("../../canvas/cardBattleCanvas");
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
 const UserCardDeck = require("../../models/UserCardDeck");
 const currency = require("../../survival/engines/currency");
+const ui = require("../../config/ui");
 
 module.exports = [
   {
@@ -21,7 +22,7 @@ module.exports = [
     const sessionRaw = await redisManager.get(`card:battle:${sessionId}`);
     if (!sessionRaw) {
       return interaction.reply({
-        content: "❌ Sesi pertempuran kartu sudah berakhir atau kedaluwarsa.",
+        content: `${ui.getEmoji("error") || "❌"} Sesi pertempuran kartu sudah berakhir atau kedaluwarsa.`,
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -34,7 +35,7 @@ module.exports = [
 
     if (!isP1 && !isP2) {
       return interaction.reply({
-        content: "❌ Anda bukan peserta dalam pertempuran kartu ini.",
+        content: `${ui.getEmoji("error") || "❌"} Anda bukan peserta dalam pertempuran kartu ini.`,
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -42,7 +43,7 @@ module.exports = [
     const expectedUser = session.turn === 1 ? session.p1UserId : session.p2UserId;
     if (interaction.user.id !== expectedUser && action !== "forfeit") {
       return interaction.reply({
-        content: "⏳ Tunggu giliran Anda!",
+        content: `${ui.getEmoji("clock") || "⏳"} Tunggu giliran Anda!`,
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -51,11 +52,10 @@ module.exports = [
 
     if (action === "forfeit") {
       await redisManager.del(`card:battle:${sessionId}`);
-      const winnerId = isP1 ? session.p2UserId : session.p1UserId;
       const winnerName = isP1 ? session.p2User.username : session.p1User.username;
 
       const container = buildContainerV2({
-        title: "🏳️ Pertempuran Kartu Berakhir (Menyerah)",
+        title: `${ui.getEmoji("flag_white") || "🏳️"} Pertempuran Kartu Berakhir (Menyerah)`,
         description: `${interaction.user.username} menyerah! **${winnerName}** memenangkan duel kartu ini!`,
         color: 0xffb6c1,
         authorName: "Naura Card TCG Arena",
@@ -115,14 +115,14 @@ module.exports = [
         p2: session.p2Card,
         p1User: session.p1User,
         p2User: session.p2User,
-        turnLog: `${turnRes.log}\n🏆 **${winnerUser.username} KELUAR SEBAGAI PEMENANG!**`,
+        turnLog: `${turnRes.log}\n${ui.getEmoji("trophy") || "🏆"} **${winnerUser.username} KELUAR SEBAGAI PEMENANG!**`,
         roundNumber: session.roundNumber,
       });
 
       const attachment = new AttachmentBuilder(endBuffer, { name: "card-clash-victory.png" });
       const container = buildContainerV2({
-        title: "🏆 Victory in Card Clash!",
-        description: `Pertarungan sengit telah usai!\n\n👑 **Pemenang:** <@${winnerId}>\n💀 **Gugur:** ${loserUser.username}\n📜 **Kemenangan:** ${session.isTower ? `Menaklukkan Lantai ${session.towerFloor} Tower of Babel!` : "Mendapatkan +25 ELO Points & Kebanggaan!"}`,
+        title: `${ui.getEmoji("trophy") || "🏆"} Victory in Card Clash!`,
+        description: `Pertarungan sengit telah usai!\n\n${ui.getEmoji("crown") || "👑"} **Pemenang:** <@${winnerId}>\n${ui.getEmoji("skull") || "💀"} **Gugur:** ${loserUser.username}\n${ui.getEmoji("book") || "📜"} **Kemenangan:** ${session.isTower ? `Menaklukkan Lantai ${session.towerFloor} Tower of Babel!` : "Mendapatkan +25 ELO Points & Kebanggaan!"}`,
         color: 0xffd700,
         authorName: "Naura TCG Arena Champion",
         media: attachment,
@@ -138,7 +138,7 @@ module.exports = [
     if (session.isPvE && session.turn === 2) {
       const aiAction = session.p2Card.energy >= session.p2Card.skill.energyCost ? "SKILL" : (Math.random() < 0.25 ? "DEFEND" : "ATTACK");
       const aiTurnRes = CardBattleEngine.executeTurn(session.p2Card, session.p1Card, aiAction);
-      turnRes.log += `\n🤖 ${aiTurnRes.log}`;
+      turnRes.log += `\n${ui.getEmoji("robot") || "🤖"} ${aiTurnRes.log}`;
 
       if (aiTurnRes.isDefenderFainted) {
         await redisManager.del(`card:battle:${sessionId}`);
@@ -147,13 +147,13 @@ module.exports = [
           p2: session.p2Card,
           p1User: session.p1User,
           p2User: session.p2User,
-          turnLog: `${turnRes.log}\n💀 **${session.p1User.username} Telah Dikalahkan!**`,
+          turnLog: `${turnRes.log}\n${ui.getEmoji("skull") || "💀"} **${session.p1User.username} Telah Dikalahkan!**`,
           roundNumber: session.roundNumber,
         });
 
         const attachment = new AttachmentBuilder(endBuffer, { name: "card-clash-defeat.png" });
         const container = buildContainerV2({
-          title: "💀 Defeat in Tower of Babel",
+          title: `${ui.getEmoji("skull") || "💀"} Defeat in Tower of Babel`,
           description: `Kartu Anda telah tumbang di Lantai ${session.towerFloor}.\nPerkuat deck dan tingkatkan kualitas kartu Anda untuk menantang kembali!`,
           color: 0xff0000,
           authorName: "Tower of Babel",
@@ -186,26 +186,30 @@ module.exports = [
     const actionRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(`card_battle_atk_${sessionId}`)
-        .setLabel("⚔️ Attack")
+        .setLabel("Attack")
+        .setEmoji(ui.parseEmoji(ui.getEmoji("battle")) || { name: "⚔️" })
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId(`card_battle_skill_${sessionId}`)
-        .setLabel(`✨ Skill (${nextCard.skill.name})`)
+        .setLabel(`Skill (${nextCard.skill.name})`)
+        .setEmoji(ui.parseEmoji(ui.getEmoji("sparkles")) || { name: "✨" })
         .setStyle(ButtonStyle.Success)
         .setDisabled(nextCard.energy < nextCard.skill.energyCost),
       new ButtonBuilder()
         .setCustomId(`card_battle_def_${sessionId}`)
-        .setLabel("🛡️ Defend")
+        .setLabel("Defend")
+        .setEmoji(ui.parseEmoji(ui.getEmoji("shield")) || { name: "🛡️" })
         .setStyle(ButtonStyle.Secondary),
       new ButtonBuilder()
         .setCustomId(`card_battle_forfeit_${sessionId}`)
-        .setLabel("🏳️ Forfeit")
+        .setLabel("Forfeit")
+        .setEmoji(ui.parseEmoji(ui.getEmoji("flag_white")) || { name: "🏳️" })
         .setStyle(ButtonStyle.Danger),
     );
 
     const container = buildContainerV2({
-      title: `⚔️ Giliran: ${nextUser.username}`,
-      description: `Pilih aksi bertarung Anda untuk ronde ke-${session.roundNumber}!\n⚡ **Energy Saat Ini:** ${nextCard.energy}/${nextCard.maxEnergy}`,
+      title: `${ui.getEmoji("battle") || "⚔️"} Giliran: ${nextUser.username}`,
+      description: `Pilih aksi bertarung Anda untuk ronde ke-${session.roundNumber}!\n${ui.getEmoji("stamina") || "⚡"} **Energy Saat Ini:** ${nextCard.energy}/${nextCard.maxEnergy}`,
       color: 0xffb6c1,
       authorName: "Naura TCG Card Clash",
       media: attachment,

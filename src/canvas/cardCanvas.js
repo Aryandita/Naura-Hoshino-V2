@@ -1,6 +1,4 @@
-"use strict";
-
-const { createCanvas, loadImage, GlobalFonts, runWithLimit } = require("./canvasRuntime");
+const { createCanvas, runWithLimit } = require("./canvasRuntime");
 
 /**
  * Render visual kartu anime berkualitas tinggi
@@ -79,11 +77,25 @@ async function drawAnimeCard(cardData) {
     ctx.strokeStyle = "rgba(255, 182, 193, 0.2)";
     ctx.stroke();
 
-    // Name
-    ctx.font = 'bold 24px "MontserratBold", "EmojiFont"';
+    // Name & Awakening Badge
+    ctx.font = 'bold 22px "MontserratBold", "EmojiFont"';
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "left";
-    ctx.fillText(cardData.characterName || cardData.cardName, 60, 605);
+    const nameStr = (cardData.characterName || cardData.cardName || "Unknown").substring(0, 18);
+    ctx.fillText(nameStr, 60, 600);
+
+    if (cardData.isAwakened) {
+      ctx.font = 'bold 12px "Orbitron", "EmojiFont"';
+      ctx.fillStyle = "#A855F7";
+      ctx.fillText("⚡ AWAKENED", 60 + ctx.measureText(nameStr).width + 12, 600);
+    }
+
+    // Inscription / Digital Signature (if present)
+    if (cardData.inscription) {
+      ctx.font = 'italic 11px "Outfit", "EmojiFont"';
+      ctx.fillStyle = "#F9A8D4";
+      ctx.fillText(`✍️ "${cardData.inscription.substring(0, 30)}"`, 60, 620);
+    }
 
     // Quality Stars
     const qualityMap = {
@@ -96,10 +108,10 @@ async function drawAnimeCard(cardData) {
 
     ctx.font = 'bold 12px "Orbitron", "EmojiFont"';
     ctx.fillStyle = qual.color;
-    ctx.fillText(qual.stars, 60, 638);
+    ctx.fillText(qual.stars, 60, cardData.inscription ? 640 : 635);
 
-    // 5.5 SSR & UR Holo Shimmer Overlay (Rainbow Hologram Shader)
-    const isSSRorUR = cardData.rarity === "SSR" || cardData.rarity === "UR" || cardData.rarity === "SECRET_RARE";
+    // 5.5 SSR & UR & Awakened Holo Shimmer Overlay (Rainbow Hologram Shader)
+    const isSSRorUR = cardData.rarity === "SSR" || cardData.rarity === "UR" || cardData.rarity === "SECRET_RARE" || cardData.isAwakened;
     if (isSSRorUR) {
       ctx.save();
       ctx.globalCompositeOperation = "screen";
@@ -140,11 +152,11 @@ async function drawAnimeCard(cardData) {
     // Serial Code & Rarity (Bottom)
     ctx.font = '12px "Orbitron", "EmojiFont"';
     ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-    ctx.fillText(`CODE: ${cardData.cardCode || "NRA-0000"}`, 60, 665);
+    ctx.fillText(`CODE: ${cardData.cardCode || "NRA-0000"}`, 60, 668);
 
     ctx.textAlign = "right";
     ctx.fillStyle = isSSRorUR ? "#FFD700" : dyeColor;
-    ctx.fillText((cardData.rarity || "RARE").replace("_", " "), width - 60, 665);
+    ctx.fillText((cardData.rarity || "RARE").replace("_", " "), width - 60, 668);
 
     return canvas.toBuffer("image/png");
   });

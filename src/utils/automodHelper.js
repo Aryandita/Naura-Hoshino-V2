@@ -91,7 +91,7 @@ async function handleAutomod(message, client) {
 
     const warnEmbed = new EmbedBuilder()
       .setColor(ui.getColor ? ui.getColor("error") : "#FF0000")
-      .setTitle("🚨 Peringatan AutoMod")
+      .setTitle(`${ui.getEmoji("shield_alert") || "🚨"} Peringatan AutoMod`)
       .setDescription(
         `<@${message.author.id}>, pesanmu otomatis dihapus karena:\n**${reason}**`,
       );

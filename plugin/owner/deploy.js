@@ -22,7 +22,9 @@ module.exports = {
 
     const loadingPayload = buildLoadingContainerV2({
       authorName: "Naura Deploy System",
-      description: `${ui.getEmoji("loading") || "⏳"} Mengambil daftar command terdaftar...`,
+      title: "Menyiapkan Registrasi...",
+      loadingMessage: "Mengambil daftar command terdaftar...",
+      withBanner: true,
       footerText: ui.getFooter("core"),
     });
     const msg = await message.reply(loadingPayload);
@@ -51,8 +53,10 @@ module.exports = {
 
     if (commandsData.length === 0) {
       const errPayload = buildErrorContainerV2({
+        authorName: "Naura Deploy System",
         title: "Deploy Gagal",
-        description: `${ui.getEmoji("warning") || "⚠️"} Tidak ada slash command valid yang ditemukan.`,
+        errorMessage: "Tidak ada slash command valid yang ditemukan.",
+        withBanner: true,
         footerText: ui.getFooter("core"),
       });
       return msg.edit(errPayload);
@@ -64,7 +68,9 @@ module.exports = {
     try {
       const updatingPayload = buildLoadingContainerV2({
         authorName: "Naura Deploy System",
-        description: `${ui.getEmoji("loading") || "⏳"} Mendaftarkan ${commandsData.length} slash commands...`,
+        title: "Mendaftarkan Commands...",
+        loadingMessage: `Mendaftarkan ${commandsData.length} slash commands ke Discord API...`,
+        withBanner: true,
         footerText: ui.getFooter("core"),
       });
       await msg.edit(updatingPayload);

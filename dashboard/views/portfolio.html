@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I Gede Aryandita Praftian | Front Office & Hospitality Specialist</title>
+    <meta name="description" content="Personal Portfolio of I Gede Aryandita Praftian (Arya) - Front Office & Hospitality Specialist with Digital Innovation & System Architecture capabilities.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS (CDN for standalone preview) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    },
+                    colors: {
+                        dark: {
+                            base: '#08090C',
+                            card: '#0D1117',
+                            border: '#1E2633',
+                            hover: '#161B22'
+                        },
+                        accent: {
+                            emerald: '#10B981',
+                            cyan: '#06B6D4',
+                            indigo: '#6366F1',
+                            amber: '#F59E0B'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #08090C;
+            color: #E2E8F0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.07) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.06) 0%, transparent 45%),
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+        }
+
+        .bento-card {
+            background: rgba(13, 17, 23, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bento-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .bento-card:hover {
+            border-color: rgba(16, 185, 129, 0.35);
+            box-shadow: 0 12px 36px -10px rgba(0, 0, 0, 0.6), 0 0 24px -6px rgba(16, 185, 129, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .bento-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Custom Scrollbar for Terminal */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(16, 185, 129, 0.4);
+        }
+
+        /* Toast Animation */
+        #toastNotification {
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-emerald-500/30 selection:text-emerald-300">
+
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 pointer-events-none flex items-center gap-3 px-4 py-3 bg-[#0D1117] border border-emerald-500/40 rounded-xl shadow-2xl text-sm font-medium text-white">
+        <span class="flex h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+        <span id="toastMessage">Teks disalin ke clipboard!</span>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="w-full max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-4 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-3 group">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-600 p-[1px] flex items-center justify-center transition group-hover:scale-105">
+                <div class="w-full h-full bg-[#08090C] rounded-[11px] flex items-center justify-center">
+                    <span class="font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 text-base">A</span>
+                </div>
+            </div>
+            <div>
+                <span class="font-bold text-white tracking-tight group-hover:text-emerald-400 transition">I GEDE ARYANDITA PRAFTIAN</span>
+                <span class="block text-[11px] font-mono text-gray-500 tracking-wider">FRONT OFFICE & HOSPITALITY | SYSTEM ARCHITECT</span>
+            </div>
+        </a>
+
+        <div class="flex items-center gap-3">
+            <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs text-gray-300">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Bali, Indonesia (UTC+8)</span>
+            </div>
+            <a href="/" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/10 text-xs font-medium text-gray-200 transition hover:border-emerald-500/40">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                <span>Naura Dashboard</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Bento Grid Container -->
+    <main class="w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 flex-1">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
+
+            <!-- Card 1: Hero Spotlight (Col Span 2) -->
+            <div class="bento-card p-6 sm:p-8 md:col-span-2 flex flex-col justify-between">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                    <div class="relative group shrink-0">
+                        <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-br from-emerald-400 via-cyan-500 to-indigo-500 p-[2px] shadow-[0_0_24px_rgba(16,185,129,0.3)]">
+                            <div class="w-full h-full bg-[#08090C] rounded-[14px] flex items-center justify-center overflow-hidden">
+                                <img src="/owner_photo.jpeg" alt="I Gede Aryandita Praftian" class="w-full h-full object-cover object-top group-hover:scale-105 transition duration-500" onerror="this.src='/assets/dashboard/owner_photo.jpeg'">
+                            </div>
+                        </div>
+                        <div class="absolute -bottom-2 -right-2 px-2.5 py-0.5 rounded-full bg-[#0D1117] border border-emerald-500/40 text-[10px] font-mono font-bold text-emerald-400 shadow-md">
+                            OWNER
+                        </div>
+                    </div>
+
+                    <div class="flex-1 min-w-0">
+                        <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                            <h1 class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tracking-tight">I Gede Aryandita Praftian</h1>
+                            <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium font-mono">Arya</span>
+                        </div>
+                        <p class="text-emerald-400 font-semibold text-sm sm:text-base mb-2">
+                            Front Office & Hospitality Specialist &bull; Bot Creator
+                        </p>
+                        <p class="text-gray-400 text-xs sm:text-sm leading-relaxed max-w-xl">
+                            Profesional muda di bidang perhotelan asal Badung, Bali. Berfokus pada pelayanan prima (<em>Guest Relations</em> & <em>Front Office Operations</em>), penguasaan sistem hotel, komunikasi multibahasa (Indonesia & Inggris), serta memiliki antusiasme tinggi dalam inovasi teknologi digital.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex flex-wrap items-center gap-2 text-xs text-gray-300">
+                        <span class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/10">
+                            <span class="text-emerald-400">📍</span> Sempidi, Badung, Bali
+                        </span>
+                        <span class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/10">
+                            <span class="text-cyan-400">🎂</span> 11 Juni 2007 (18 Tahun)
+                        </span>
+                        <span class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/10 font-mono">
+                            <span class="text-indigo-400">🗣️</span> ID & EN (Spoken & Written)
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="copyToClipboard('paryandita@gmail.com', 'Email (paryandita@gmail.com) disalin!')" class="px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/10 hover:border-emerald-500/40 text-xs font-medium text-white transition flex items-center gap-1.5 cursor-pointer">
+                            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                            <span>Email</span>
+                        </button>
+                        <a href="https://wa.me/6281237378491" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/10 hover:border-green-500/40 text-xs font-medium text-white transition flex items-center gap-1.5">
+                            <span class="text-green-400 font-bold">WA</span>
+                            <span>WhatsApp</span>
+                        </a>
+                        <button onclick="copyToClipboard('aryaa_0607', 'Discord Username (aryaa_0607) disalin!')" class="px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/10 hover:border-[#5865F2]/50 text-xs font-medium text-white transition flex items-center gap-1.5 cursor-pointer">
+                            <span class="text-[#5865F2] font-bold">DC</span>
+                            <span>Discord</span>
+                        </button>
+                        <a href="https://github.com/Aryandita" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/10 hover:border-cyan-500/40 text-xs font-medium text-white transition flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-cyan-400" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                            <span>GitHub</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Riwayat Pendidikan (Col Span 1) -->
+            <div class="bento-card p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs font-mono font-bold text-cyan-400 tracking-wider uppercase">ACADEMIC JOURNEY</span>
+                        <span class="text-xs text-gray-500 font-mono">Pendidikan</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <!-- LPK -->
+                        <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 relative pl-3.5 before:absolute before:left-0 before:top-3 before:bottom-3 before:w-1 before:bg-emerald-400 before:rounded-full">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-white">LPK Pratama Widya Mandala</span>
+                                <span class="text-[10px] font-mono text-emerald-400 font-bold">2026 - Present</span>
+                            </div>
+                            <p class="text-[11px] text-gray-400 mt-0.5">Job Training Center (Front Office & Hospitality)</p>
+                        </div>
+
+                        <!-- SMK -->
+                        <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 relative pl-3.5 before:absolute before:left-0 before:top-3 before:bottom-3 before:w-1 before:bg-cyan-400 before:rounded-full">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-white">SMK Pratama Widya Mandala Badung</span>
+                                <span class="text-[10px] font-mono text-gray-400">2023 - 2026</span>
+                            </div>
+                            <p class="text-[11px] text-gray-400 mt-0.5">Vocational High School</p>
+                        </div>
+
+                        <!-- SMP -->
+                        <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 relative pl-3.5 before:absolute before:left-0 before:top-3 before:bottom-3 before:w-1 before:bg-indigo-400 before:rounded-full">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-white">SMP Negeri 3 Mengwi</span>
+                                <span class="text-[10px] font-mono text-gray-400">2020 - 2023</span>
+                            </div>
+                            <p class="text-[11px] text-gray-400 mt-0.5">Junior High School</p>
+                        </div>
+
+                        <!-- SD -->
+                        <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 relative pl-3.5 before:absolute before:left-0 before:top-3 before:bottom-3 before:w-1 before:bg-gray-500 before:rounded-full">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-white">SD No. 3 Sempidi</span>
+                                <span class="text-[10px] font-mono text-gray-400">2014 - 2020</span>
+                            </div>
+                            <p class="text-[11px] text-gray-400 mt-0.5">Elementary School</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-gray-400">
+                    <span>Key Attribute:</span>
+                    <span class="font-mono text-emerald-300 font-semibold">Service Excellence ✨</span>
+                </div>
+            </div>
+
+            <!-- Card 3: Flagship Project - Naura Hoshino V2 (Col Span 2) -->
+            <div class="bento-card p-6 sm:p-8 md:col-span-2 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-[11px] font-mono font-bold tracking-wider">
+                                KARYA ARSITEKTUR UTAMA
+                            </span>
+                            <span class="text-xs text-gray-500 font-mono">v2.1.0 (Engine 2.1.0)</span>
+                        </div>
+                        <a href="https://github.com/Aryandita/Naura-Hoshino-V2" target="_blank" rel="noopener noreferrer" class="text-xs font-mono text-gray-400 hover:text-white transition flex items-center gap-1">
+                            <span>GitHub Repo</span>
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        </a>
+                    </div>
+
+                    <h2 class="text-xl sm:text-2xl font-bold text-white mb-2 tracking-tight">
+                        Naura Hoshino V2 - Autonomous AI & Server Ecosystem
+                    </h2>
+                    <p class="text-gray-400 text-xs sm:text-sm leading-relaxed mb-5">
+                        Infrastruktur bot Discord tingkat enterprise yang dirancang dan dibangun mandiri oleh Aryandita. Mengintegrasikan 4 lapisan database, sistem streaming audio Lavalink terdistribusi, rendering grafis Canvas di latar belakang via Worker Threads, serta pemanggilan alat Function Calling Gemini AI.
+                    </p>
+
+                    <!-- Architecture Badges Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-3">
+                            <span class="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 font-mono text-xs font-bold">SQL</span>
+                            <div>
+                                <h4 class="text-xs font-bold text-white">Supabase & PostgreSQL</h4>
+                                <p class="text-[11px] text-gray-400">Transaksi perbankan, saldo, dan ledger migrasi atomik.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-3">
+                            <span class="p-1.5 rounded-lg bg-red-500/10 text-red-400 font-mono text-xs font-bold">RED</span>
+                            <div>
+                                <h4 class="text-xs font-bold text-white">Redis Pub/Sub & Cache</h4>
+                                <p class="text-[11px] text-gray-400">Invalidasi visual Canvas, rate-limiter, dan queue buffering.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-3">
+                            <span class="p-1.5 rounded-lg bg-green-500/10 text-green-400 font-mono text-xs font-bold">MGO</span>
+                            <div>
+                                <h4 class="text-xs font-bold text-white">MongoDB Document Vault</h4>
+                                <p class="text-[11px] text-gray-400">AI chat history, transkrip tiket HTML, dan command audit log.</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-3">
+                            <span class="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 font-mono text-xs font-bold">CPU</span>
+                            <div>
+                                <h4 class="text-xs font-bold text-white">Canvas Worker Thread Pool</h4>
+                                <p class="text-[11px] text-gray-400">Rendering banner & profile non-blocking pada event loop.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-white/[0.06] text-xs">
+                    <span class="text-gray-400">Reliabilitas: <span class="text-emerald-400 font-mono font-semibold">109/109 Unit Tests Passed</span></span>
+                    <a href="/" class="text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1 transition">
+                        <span>Buka Dashboard</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Card 4: Interactive Live Terminal (Col Span 1 - Full Height without gap) -->
+            <div class="bento-card p-5 flex flex-col font-mono bg-[#090C10]/95 border-emerald-500/20 h-full min-h-[360px]">
+                <!-- Terminal Top Bar -->
+                <div class="flex items-center justify-between pb-3 mb-2 border-b border-white/10 shrink-0">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-[#FF5F56] inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-[#FFBD2E] inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-[#27C93F] inline-block"></span>
+                    </div>
+                    <span class="text-[10px] text-gray-400 tracking-wider">aryandita@guest-system:~$</span>
+                </div>
+
+                <!-- Terminal Output Box (Expands to fill entire height right to the prompt) -->
+                <div id="terminalScreen" class="flex-1 min-h-0 custom-scrollbar overflow-y-auto text-[11px] text-gray-300 space-y-1.5 pr-1 font-mono flex flex-col justify-start">
+                    <div class="text-emerald-400 font-bold">Aryandita Guest & System Console v2.4</div>
+                    <div class="text-gray-500 text-[10px]">Ketik 'help' untuk melihat daftar perintah.</div>
+                    <div class="text-gray-400">------------------------------------</div>
+                </div>
+
+                <!-- Terminal Prompt Input -->
+                <div class="mt-2 pt-2 border-t border-white/10 flex items-center gap-2 shrink-0">
+                    <span class="text-emerald-400 text-xs font-bold">></span>
+                    <input type="text" id="terminalInput" placeholder="Ketik perintah..." class="w-full bg-transparent text-xs text-white placeholder-gray-600 focus:outline-none font-mono">
+                </div>
+            </div>
+
+            <!-- Card 5: Keahlian Utama: Fokus Hospitality & Front Office (Col Span 2) -->
+            <div class="bento-card p-6 sm:p-8 md:col-span-2">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h3 class="text-lg font-bold text-white tracking-tight">Keahlian & Kompetensi Utama</h3>
+                        <p class="text-xs text-gray-400 mt-0.5">Spesialisasi pelayanan Front Office perhotelan dengan keunggulan adaptasi teknologi.</p>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-lg bg-white/[0.04] text-[11px] font-mono text-emerald-400 border border-emerald-500/20">
+                        Hospitality First 🛎️
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Front Office Operations (Prioritas 1) -->
+                    <div class="p-4 rounded-xl bg-white/[0.02] border border-emerald-500/20 relative before:absolute before:left-0 before:top-3 before:bottom-3 before:w-1 before:bg-emerald-400 before:rounded-full pl-4">
+                        <h4 class="text-xs font-bold text-emerald-400 font-mono mb-2.5 flex items-center gap-2">
+                            <span>🛎️</span> FRONT OFFICE & GUEST SERVICE
+                        </h4>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Hotel PMS & Reservation</span>
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Guest Greeting & Escort</span>
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Check-in / Check-out</span>
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Telephone Etiquette</span>
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Handling Inquiries</span>
+                        </div>
+                    </div>
+
+                    <!-- Communication & Languages (Prioritas 2) -->
+                    <div class="p-4 rounded-xl bg-white/[0.02] border border-cyan-500/20 relative before:absolute before:left-0 before:top-3 before:bottom-3 before:w-1 before:bg-cyan-400 before:rounded-full pl-4">
+                        <h4 class="text-xs font-bold text-cyan-400 font-mono mb-2.5 flex items-center gap-2">
+                            <span>🗣️</span> COMMUNICATION & LANGUAGES
+                        </h4>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">English (Spoken & Written)</span>
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Bahasa Indonesia Standard</span>
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Active Listening</span>
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Polite & Courteous</span>
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Public Relation</span>
+                        </div>
+                    </div>
+
+                    <!-- Professional Attitude & Service (Prioritas 3) -->
+                    <div class="p-4 rounded-xl bg-white/[0.02] border border-amber-500/20 relative before:absolute before:left-0 before:top-3 before:bottom-3 before:w-1 before:bg-amber-400 before:rounded-full pl-4">
+                        <h4 class="text-xs font-bold text-amber-400 font-mono mb-2.5 flex items-center gap-2">
+                            <span>🌟</span> SERVICE EXCELLENCE & ATTITUDE
+                        </h4>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Fast Learner & Adaptable</span>
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">High Work Dedication</span>
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Professional Grooming</span>
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Team Coordination</span>
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Problem Solving</span>
+                        </div>
+                    </div>
+
+                    <!-- IT & Digital Innovation (Supporting Strength) -->
+                    <div class="p-4 rounded-xl bg-white/[0.02] border border-indigo-500/20 relative before:absolute before:left-0 before:top-3 before:bottom-3 before:w-1 before:bg-indigo-400 before:rounded-full pl-4">
+                        <h4 class="text-xs font-bold text-indigo-400 font-mono mb-2.5 flex items-center gap-2">
+                            <span>⚡</span> IT & SYSTEM INNOVATION
+                        </h4>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Hotel Digitalization</span>
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Node.js (>=24) Automation</span>
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Polyglot DB & Cache</span>
+                            <span class="px-2.5 py-1 rounded-md bg-white/[0.04] text-xs text-gray-200 border border-white/5">Tech Troubleshooting</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 6: Direct Contact Hub (Col Span 1) -->
+            <div class="bento-card p-6 flex flex-col justify-between">
+                <div>
+                    <span class="text-xs font-mono font-bold text-cyan-400 tracking-wider uppercase block mb-1">DIRECT CONTACT</span>
+                    <h3 class="text-lg font-bold text-white mb-2">Hubungi Saya</h3>
+                    <p class="text-gray-400 text-xs leading-relaxed mb-4">
+                        Tersedia untuk wawancara kerja perhotelan, internship/training Front Office, atau kolaborasi sistem digital.
+                    </p>
+
+                    <div class="space-y-2.5">
+                        <!-- Email -->
+                        <button onclick="copyToClipboard('paryandita@gmail.com', 'Email (paryandita@gmail.com) disalin!')" class="w-full px-4 py-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-xs font-medium text-gray-200 flex items-center justify-between transition group text-left cursor-pointer">
+                            <span class="flex items-center gap-2.5">
+                                <svg class="w-4 h-4 text-emerald-400 group-hover:text-emerald-300 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                <span>paryandita@gmail.com</span>
+                            </span>
+                            <span class="text-gray-500 font-mono text-[10px]">Copy &rarr;</span>
+                        </button>
+
+                        <!-- WhatsApp -->
+                        <a href="https://wa.me/6281237378491" target="_blank" rel="noopener noreferrer" class="w-full px-4 py-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-xs font-medium text-gray-200 flex items-center justify-between transition group">
+                            <span class="flex items-center gap-2.5">
+                                <span class="text-green-400 font-bold text-sm">💬</span>
+                                <span>081 237 378 491</span>
+                            </span>
+                            <span class="text-gray-500 font-mono text-[10px]">Chat &rarr;</span>
+                        </a>
+
+                        <!-- Discord -->
+                        <button onclick="copyToClipboard('aryaa_0607', 'Discord Username (aryaa_0607) disalin!')" class="w-full px-4 py-2.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 text-xs font-medium text-gray-200 flex items-center justify-between transition group text-left cursor-pointer">
+                            <span class="flex items-center gap-2.5">
+                                <svg class="w-4 h-4 text-[#5865F2] group-hover:text-cyan-300 transition" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.893.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+                                <span>Discord: aryaa_0607</span>
+                            </span>
+                            <span class="text-gray-500 font-mono text-[10px]">Copy &rarr;</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-white/[0.06] text-center">
+                    <a href="/" class="text-xs font-mono text-emerald-400 hover:text-emerald-300 transition inline-flex items-center gap-1.5">
+                        <span>&larr; Kembali ke Naura Dashboard</span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 text-center border-t border-white/[0.05] mt-6">
+        <p class="text-xs text-gray-500 font-mono">
+            Designed & Engineered by <span class="text-gray-300 font-bold">I Gede Aryandita Praftian</span> &copy; 2026. All rights reserved.
+        </p>
+    </footer>
+
+    <!-- Interactive Scripts -->
+    <script>
+        // Toast Notification Helper
+        function copyToClipboard(text, message = 'Teks berhasil disalin!') {
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.getElementById('toastNotification');
+                const toastMsg = document.getElementById('toastMessage');
+                toastMsg.innerText = message;
+                toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+                toast.classList.add('translate-y-0', 'opacity-100');
+
+                setTimeout(() => {
+                    toast.classList.remove('translate-y-0', 'opacity-100');
+                    toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+                }, 2800);
+            });
+        }
+
+        // Terminal Interactive Emulator
+        const terminalScreen = document.getElementById('terminalScreen');
+        const terminalInput = document.getElementById('terminalInput');
+
+        const cliHistory = [];
+        let cliHistoryIndex = -1;
+
+        const terminalCommands = {
+            help: () => [
+                '<span class="text-cyan-400 font-bold">Perintah Tersedia:</span>',
+                '  <span class="text-emerald-300">whoami</span>      - Profil & spesialisasi perhotelan',
+                '  <span class="text-emerald-300">hospitality</span> - Rincian keahlian Front Office & Guest Service',
+                '  <span class="text-emerald-300">skills</span>      - Ringkasan kompetensi perhotelan & teknologi',
+                '  <span class="text-emerald-300">education</span>   - Riwayat jenjang pendidikan & training',
+                '  <span class="text-emerald-300">projects</span>    - Karya sistem & portofolio',
+                '  <span class="text-emerald-300">contact</span>     - Email, WhatsApp, dan Discord',
+                '  <span class="text-emerald-300">clear</span>       - Bersihkan layar terminal'
+            ],
+            whoami: () => [
+                '<span class="text-white font-bold">Nama:</span> I Gede Aryandita Praftian (Arya)',
+                '<span class="text-white font-bold">Spesialisasi:</span> Front Office & Hospitality Specialist',
+                '<span class="text-white font-bold">Asal:</span> Sempidi, Badung, Bali, Indonesia',
+                '<span class="text-white font-bold">Lahir:</span> 11 Juni 2007 (18 Tahun)',
+                '<span class="text-white font-bold">Discord:</span> aryaa_0607',
+                '<span class="text-white font-bold">Karakter:</span> Fast learner, service-oriented, communicative'
+            ],
+            hospitality: () => [
+                '<span class="text-emerald-400 font-bold">Kompetensi Front Office & Guest Relations:</span>',
+                '• Hotel System Operations (PMS & Reservation Systems)',
+                '• Guest Greeting, Handling, and Escorting Procedures',
+                '• Professional English & Indonesian Communication',
+                '• Telephone Etiquette & Concierge Services',
+                '• Service Excellence & Complaint Resolution'
+            ],
+            education: () => [
+                '<span class="text-cyan-400 font-bold">Riwayat Pendidikan:</span>',
+                '1. <span class="text-emerald-300">LPK Pratama Widya Mandala</span> (Front Office & Hospitality, 2026 - Present)',
+                '2. <span class="text-cyan-300">SMK Pratama Widya Mandala Badung</span> (2023 - 2026)',
+                '3. <span class="text-indigo-300">SMP Negeri 3 Mengwi</span> (2020 - 2023)',
+                '4. <span class="text-gray-400">SD No. 3 Sempidi</span> (2014 - 2020)'
+            ],
+            skills: () => [
+                '<span class="text-emerald-400 font-bold">Keahlian & Kemampuan:</span>',
+                '• Hospitality: Front Office, PMS, Guest Greeting & Handling',
+                '• Languages: English & Bahasa Indonesia (Spoken & Written)',
+                '• Soft Skills: Fast learner, high dedication, active listening',
+                '• Digital & IT: Node.js (>=24), System Automation, Database Management'
+            ],
+            projects: () => [
+                '<span class="text-cyan-400 font-bold">Featured Projects:</span>',
+                '1. <span class="text-white font-bold">Front Office Hospitality Training</span> (LPK Pratama Widya Mandala)',
+                '2. <span class="text-white font-bold">Naura Hoshino V2</span> (Discord Multi-Shard Bot & AI Ecosystem)',
+                '3. <span class="text-white font-bold">Hotel System Digitalization Initiative</span>'
+            ],
+            contact: () => [
+                '<span class="text-emerald-400 font-bold">Informasi Kontak Langsung:</span>',
+                '• Discord: <span class="text-white font-bold">aryaa_0607</span>',
+                '• Email: <a href="mailto:paryandita@gmail.com" class="text-cyan-300 underline">paryandita@gmail.com</a>',
+                '• WhatsApp: <a href="https://wa.me/6281237378491" target="_blank" class="text-emerald-300 underline">081 237 378 491</a>',
+                '• GitHub: <a href="https://github.com/Aryandita" target="_blank" class="text-cyan-300 underline">github.com/Aryandita</a>'
+            ],
+            clear: () => {
+                terminalScreen.innerHTML = '';
+                return [];
+            }
+        };
+
+        terminalInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const rawCmd = terminalInput.value.trim();
+                if (!rawCmd) return;
+
+                cliHistory.push(rawCmd);
+                cliHistoryIndex = cliHistory.length;
+
+                // Echo command
+                const cmdLine = document.createElement('div');
+                cmdLine.innerHTML = `<span class="text-emerald-400 font-bold">></span> <span class="text-white">${escapeHtml(rawCmd)}</span>`;
+                terminalScreen.appendChild(cmdLine);
+
+                const cmd = rawCmd.toLowerCase();
+                if (terminalCommands[cmd]) {
+                    const output = terminalCommands[cmd]();
+                    output.forEach(line => {
+                        const outDiv = document.createElement('div');
+                        outDiv.innerHTML = line;
+                        terminalScreen.appendChild(outDiv);
+                    });
+                } else {
+                    const errDiv = document.createElement('div');
+                    errDiv.className = 'text-red-400';
+                    errDiv.innerText = `Perintah '${rawCmd}' tidak dikenal. Ketik 'help' untuk petunjuk.`;
+                    terminalScreen.appendChild(errDiv);
+                }
+
+                terminalInput.value = '';
+                terminalScreen.scrollTop = terminalScreen.scrollHeight;
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (cliHistoryIndex > 0) {
+                    cliHistoryIndex--;
+                    terminalInput.value = cliHistory[cliHistoryIndex];
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (cliHistoryIndex < cliHistory.length - 1) {
+                    cliHistoryIndex++;
+                    terminalInput.value = cliHistory[cliHistoryIndex];
+                } else {
+                    cliHistoryIndex = cliHistory.length;
+                    terminalInput.value = '';
+                }
+            }
+        });
+
+        function escapeHtml(text) {
+            return text.replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[m];
+            });
+        }
+    </script>
+</body>
+</html>

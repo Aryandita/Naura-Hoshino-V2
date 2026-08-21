@@ -138,22 +138,62 @@ module.exports = {
         )
         .addStringOption((opt) =>
           opt
-            .setName("kartuku")
-            .setDescription("Kode kartu milikmu yang ingin kamu berikan (misal: nra-7x9q)")
+            .setName("my_card")
+            .setDescription("Kode kartu yang ingin kamu tawarkan (misal: nra-7x9q)")
             .setRequired(true),
         )
         .addStringOption((opt) =>
           opt
-            .setName("kartu_target")
-            .setDescription("Kode kartu milik target yang ingin kamu tukar (Opsional)")
+            .setName("target_card")
+            .setDescription("Kode kartu milik target yang kamu inginkan (Opsional)")
             .setRequired(false),
         )
         .addIntegerOption((opt) =>
           opt
             .setName("star_fragments")
-            .setDescription("Bonus Star Fragments yang kamu tawarkan (Opsional)")
+            .setDescription("Tambahan Star Fragments yang ingin kamu sertakan dalam tawaran")
             .setMinValue(0)
             .setRequired(false),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("fuse")
+        .setDescription("⚡ Gabungkan 3 kartu sejenis untuk membangkitkan 1 Kartu Awakened")
+        .addStringOption((opt) =>
+          opt
+            .setName("main_card")
+            .setDescription("Kode kartu utama yang ingin dibangkitkan (misal: nra-7x9q)")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("material_1")
+            .setDescription("Kode kartu bahan ke-1 (akan dibakar)")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("material_2")
+            .setDescription("Kode kartu bahan ke-2 (akan dibakar)")
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("inscribe")
+        .setDescription("✍️ Ukir pesan / tanda tangan digital pada kartu koleksimu (Biaya: 100 ⭐)")
+        .addStringOption((opt) =>
+          opt
+            .setName("code")
+            .setDescription("Kode unik kartu")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("text")
+            .setDescription("Teks ukiran / pesan digital (maks 40 karakter)")
+            .setRequired(true),
         ),
     ),
 
@@ -504,13 +544,25 @@ module.exports = {
       const cards = await UserCard.findAll({ where: { userId }, limit: 20, order: [["createdAt", "DESC"]] });
 
       if (cards.length === 0) {
-        return interaction.editReply({
-          ...buildErrorContainerV2({
-            title: "Koleksi Kosong",
-            description: "Kamu belum memiliki kartu anime. Dapatkan lewat `/card drop` atau `/card daily`!",
-            footerText: ui.getFooter("core"),
-          }),
+        const emptyState = ui.ux.buildEmptyStatePrompt({
+          type: "barter",
+          user: interaction.user,
+          lang: "id",
+          actionCmd: "/card daily",
+          ctaLabel: "🎴 Buka Kartu Harian",
+          ctaCustomId: "card_claim_daily_cta",
         });
+
+        const emptyPayload = buildContainerV2({
+          accentColorHex: "#F9A8D4",
+          title: emptyState.title,
+          description: emptyState.description,
+          expression: emptyState.expression,
+          buttonsRow: emptyState.buttonsRow,
+          footerText: ui.getFooter("core"),
+        });
+
+        return interaction.editReply(emptyPayload);
       }
 
       const lines = cards.map(
@@ -696,16 +748,112 @@ module.exports = {
           .setStyle(ButtonStyle.Secondary),
       );
 
+      const timeline = ui.ux.buildVisualTimeline({
+        steps: [
+          { label: "Ajukan Tawaran" },
+          { label: "Verifikasi Lawan" },
+          { label: "Konfirmasi Barter" },
+          { label: "Selesai" },
+        ],
+        currentStepIndex: 1,
+        user: interaction.user,
+        lang: "id",
+      });
+
       const payload = buildContainerV2({
         accentColorHex: "#38BDF8",
         authorName: "🎴 Live P2P Card Barter",
         title: "Tawaran Barter Kartu Diajukan!",
-        description: `<@${userId}> mengajak <@${targetUser.id}> untuk melakukan pertukaran kartu:\n\n**Tawaran dari <@${userId}>:**\n- 🎴 **${myCard.characterName}** (\`${myCard.cardCode}\` - *${myCard.rarity}*)${starFragOffer > 0 ? `\n- ⭐ **+${starFragOffer.toLocaleString()} Star Fragments**` : ""}\n\n**Permintaan Kartu:**\n- ${targetCard ? `🎴 **${targetCard.characterName}** (\`${targetCard.cardCode}\` - *${targetCard.rarity}*)` : "*Bebas / Tanpa Kartu Tukar*"}\n\n<@${targetUser.id}>, silakan tekan tombol di bawah untuk menyetujui transaksi barter ini (berlaku 2 menit).`,
+        description: `${timeline.timeline}\n*${timeline.message}*\n\n<@${userId}> mengajak <@${targetUser.id}> untuk melakukan pertukaran kartu:\n\n**Tawaran dari <@${userId}>:**\n- 🎴 **${myCard.characterName}** (\`${myCard.cardCode}\` - *${myCard.rarity}*)${starFragOffer > 0 ? `\n- ⭐ **+${starFragOffer.toLocaleString()} Star Fragments**` : ""}\n\n**Permintaan Kartu:**\n- ${targetCard ? `🎴 **${targetCard.characterName}** (\`${targetCard.cardCode}\` - *${targetCard.rarity}*)` : "*Bebas / Tanpa Kartu Tukar*"}\n\n<@${targetUser.id}>, silakan tekan tombol di bawah untuk menyetujui transaksi barter ini (berlaku 2 menit).`,
         footerText: ui.getFooter("core"),
         buttonsRow,
       });
 
       return interaction.editReply(payload);
+    }
+
+    if (subcommand === "fuse") {
+      const mainCardCode = interaction.options.getString("main_card");
+      const mat1 = interaction.options.getString("material_1");
+      const mat2 = interaction.options.getString("material_2");
+
+      const result = await CardEngine.fuseCards(userId, mainCardCode, mat1, mat2);
+      if (!result.success) {
+        let msg = "Gagal melakukan Card Fusion.";
+        if (result.reason === "THREE_CARDS_REQUIRED") msg = "Dibutuhkan 3 kartu untuk melakukan fusion!";
+        if (result.reason === "DUPLICATE_CODES_SELECTED") msg = "Kode kartu yang dipilih tidak boleh sama!";
+        if (result.reason === "CARDS_NOT_FOUND_OR_NOT_OWNED") msg = "Salah satu atau lebih kartu tidak ditemukan di koleksimu!";
+
+        return interaction.editReply({
+          ...buildErrorContainerV2({
+            title: "Fusion Gagal",
+            description: msg,
+            footerText: ui.getFooter("core"),
+          }),
+        });
+      }
+
+      const imgBuffer = await drawAnimeCard(result.card);
+      const attachment = new AttachmentBuilder(imgBuffer, { name: "awakened_card.png" });
+
+      const payload = buildContainerV2({
+        accentColorHex: "#A855F7",
+        authorName: "⚡ Card Awakening & Fusion",
+        title: "✨ Kartu Berhasil Dibangkitkan!",
+        description: [
+          `Selamat! Kartu **${result.card.characterName}** telah berhasil mencapai status **AWAKENED ⚡**!`,
+          ``,
+          `🏷️ **Kode Kartu:** \`${result.card.cardCode}\``,
+          `⭐ **Tingkat Kelangkaan:** \`${result.card.rarity}\``,
+          `✨ **Awakening Level:** \`Tier ${result.card.awakeningLevel}\``,
+          `🔥 **Nilai Jual (Burn):** \`${result.card.burnValue} ⭐\``,
+          ``,
+          `-# 🎴 Dua kartu bahan telah dikorbankan untuk memperkuat kartu utama ini!`,
+        ].join("\n"),
+        footerText: ui.getFooter("core"),
+      });
+
+      return interaction.editReply({ ...payload, files: [attachment] });
+    }
+
+    if (subcommand === "inscribe") {
+      const code = interaction.options.getString("code");
+      const text = interaction.options.getString("text");
+
+      const result = await CardEngine.inscribeCard(userId, code, text);
+      if (!result.success) {
+        let msg = "Gagal mengukir kartu.";
+        if (result.reason === "CARD_NOT_FOUND") msg = `Kartu dengan kode \`${code}\` tidak ditemukan di koleksimu!`;
+        if (result.reason === "INSUFFICIENT_FUNDS") msg = `Saldo Star Fragments tidak cukup (Biaya: 100 ⭐)!`;
+
+        return interaction.editReply({
+          ...buildErrorContainerV2({
+            title: "Ukiran Gagal",
+            description: msg,
+            footerText: ui.getFooter("core"),
+          }),
+        });
+      }
+
+      const imgBuffer = await drawAnimeCard(result.card);
+      const attachment = new AttachmentBuilder(imgBuffer, { name: "inscribed_card.png" });
+
+      const payload = buildContainerV2({
+        accentColorHex: "#F9A8D4",
+        authorName: "✍️ Digital Card Inscription",
+        title: "✨ Ukiran Kartu Berhasil!",
+        description: [
+          `Pesan digital telah diukir permanen pada kartu **${result.card.characterName}** (\`${result.card.cardCode}\`)!`,
+          ``,
+          `💬 **Ukiran Pesan:** *"${result.inscription}"*`,
+          `👤 **Pencetak Asli:** <@${userId}>`,
+          ``,
+          `-# 💡 *Ukiran pesan dan tanda tangan ini akan tetap tersimpan saat kartu dibarter via \`/card trade\`!*`,
+        ].join("\n"),
+        footerText: ui.getFooter("core"),
+      });
+
+      return interaction.editReply({ ...payload, files: [attachment] });
     }
   },
 };

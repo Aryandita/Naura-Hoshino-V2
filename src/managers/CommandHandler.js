@@ -104,8 +104,9 @@ class CommandHandler {
 
       for (const filePath of commandFiles) {
         try {
-          delete require.cache[require.resolve(filePath)];
-          const command = require(filePath);
+          const absPath = path.resolve(filePath);
+          delete require.cache[require.resolve(absPath)];
+          const command = require(absPath);
 
           // Pastikan file tersebut adalah command yang valid
           if (

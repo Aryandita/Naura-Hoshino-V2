@@ -42,7 +42,7 @@ module.exports = {
 
     if (!isPremium && text.length > 500) {
       const errPayload = buildErrorContainerV2({
-        title: "💎 Batas Karakter Terjemahan",
+        title: `${ui.getEmoji("vip") || "💎"} Batas Karakter Terjemahan`,
         description: `Pengguna standar hanya dapat menerjemahkan maksimal **500 karakter** per teks (teks kamu: ${text.length} karakter).\nGunakan \`/premium\` untuk batas terjemahan tanpa batas!`,
         footerText: ui.getFooter("utility"),
       });
@@ -67,13 +67,13 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#3498db",
         authorName: "Google Translate Integration",
-        title: `🌐 Hasil Terjemahan Teks`,
+        title: `${ui.getEmoji("translate") || "🌐"} Hasil Terjemahan Teks`,
         iconURL:
           "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Google_Translate_logo.svg/512px-Google_Translate_logo.svg.png",
         fields: [
-          { name: `📥 Teks Asal (${sourceLang.toUpperCase()})`, value: text },
+          { name: `${ui.getEmoji("deposit") || "📥"} Teks Asal (${sourceLang.toUpperCase()})`, value: text },
           {
-            name: `📤 Terjemahan (${targetLang.toUpperCase()})`,
+            name: `${ui.getEmoji("success") || "📤"} Terjemahan (${targetLang.toUpperCase()})`,
             value: translatedText,
           },
         ],

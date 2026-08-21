@@ -17,7 +17,10 @@ const rateLimiter = require("../utils/rateLimiter");
 const registry = require("../interactions/registry");
 const handleAutocomplete = require("../interactions/autocomplete");
 const { safeExecute, respondError } = require("../interactions/safeExecute");
-const { buildErrorContainerV2 } = require("../utils/NauraContainerBuilder");
+const {
+  buildErrorContainerV2,
+  buildMaintenanceContainerV2,
+} = require("../utils/NauraContainerBuilder");
 
 // Batas laju perintah slash (tidak berubah dari versi sebelumnya).
 const SLASH_LIMIT = { max: 5, seconds: 5 };
@@ -51,8 +54,14 @@ async function handleSlashCommand(interaction, client) {
   if (limited) {
     return interaction
       .reply({
-        content:
-          "\u26a0\ufe0f **Slow down!** Kamu mengirim perintah terlalu cepat. Harap tunggu beberapa detik.",
+        ...buildErrorContainerV2({
+          authorName: "Naura Rate Limit",
+          title: "Slow Down!",
+          errorMessage:
+            "Kamu mengirim perintah terlalu cepat. Harap tunggu beberapa detik ya!",
+          lang: interaction.localeLang,
+          expression: "sleepy",
+        }),
         flags: MessageFlags.Ephemeral,
       })
       .catch(() => {});
@@ -69,7 +78,13 @@ async function handleSlashCommand(interaction, client) {
     if (!enabled) {
       return interaction
         .reply({
-          content: `\u26a0\ufe0f **Fitur Dinonaktifkan**: Command ini adalah bagian dari modul **${featureId}**, yang saat ini dimatikan oleh Admin server.`,
+          ...buildErrorContainerV2({
+            authorName: "Naura Feature Guard",
+            title: "Fitur Dinonaktifkan",
+            errorMessage: `Command ini adalah bagian dari modul **${featureId}**, yang saat ini dimatikan oleh Admin server.`,
+            lang: interaction.localeLang,
+            expression: "denied",
+          }),
           flags: MessageFlags.Ephemeral,
         })
         .catch(() => {});
@@ -118,8 +133,14 @@ module.exports = {
     if (client.isShuttingDown) {
       return interaction
         .reply({
-          content:
-            "\u26a0\ufe0f **Naura sedang dalam proses restart/shutdown.** Mohon tunggu beberapa saat.",
+          ...buildMaintenanceContainerV2({
+            authorName: "Naura System Status",
+            title: "Sedang Restart / Pemeliharaan",
+            maintenanceMessage:
+              "Naura sedang dalam proses pemeliharaan atau restart server. Mohon tunggu beberapa saat ya!",
+            lang: interaction.localeLang,
+            withBanner: true,
+          }),
           flags: MessageFlags.Ephemeral,
         })
         .catch(() => {});
@@ -154,6 +175,12 @@ module.exports = {
 
     const entry = registry.resolve(kind, interaction.customId);
 
+    // Komponen dinamis yang dikelola oleh collector lokal (minigame, kuis, duel, dll.)
+    const isLocalCollector = /^(mg_|mquiz_|duel_|ttt_|aki_|hangman_|memory_|wordle_|rps_|musicquiz_|trivia_|tod_|btn_)/.test(interaction.customId);
+    if (!entry && isLocalCollector) {
+      return undefined;
+    }
+
     // Komponen dari pesan lama yang penanganya sudah dihapus.
     // Teksnya memakai i18n agar user ID/EN mendapat pesan yang sesuai.
     if (!entry) {
@@ -161,8 +188,8 @@ module.exports = {
         `[INTERAKSI] Tidak ada penangan untuk ${kind}:${interaction.customId}`,
       );
       return interaction
-        .reply(
-          buildErrorContainerV2({
+        .reply({
+          ...buildErrorContainerV2({
             lang: interaction.localeLang,
             title: tr(
               interaction.localeLang,
@@ -174,7 +201,8 @@ module.exports = {
             ),
             expressionImage: false,
           }),
-        )
+          flags: MessageFlags.Ephemeral,
+        })
         .catch(() => {});
     }
 
@@ -189,8 +217,14 @@ module.exports = {
     if (limited) {
       return interaction
         .reply({
-          content:
-            "\u26a0\ufe0f **Pelan-pelan ya!** Kamu menekan tombol terlalu cepat.",
+          ...buildErrorContainerV2({
+            authorName: "Naura Action Guard",
+            title: "Pelan-Pelan Ya!",
+            errorMessage:
+              "Kamu menekan tombol terlalu cepat. Harap berikan jeda sebentar ya!",
+            lang: interaction.localeLang,
+            expression: "sleepy",
+          }),
           flags: MessageFlags.Ephemeral,
         })
         .catch(() => {});

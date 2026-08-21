@@ -76,19 +76,19 @@ module.exports = {
       const randomKetupat = Math.floor(Math.random() * 10) + 1; // 1-10 Ketupat
       itemsToGive.push({ id: "ketupat", name: "Ketupat Lebaran", amount: randomKetupat, type: "consumable" });
       
-      lines.push(`> 🍙 **${randomKetupat}x Ketupat Lebaran**`);
+      lines.push(`> ${e("consumable", "🍙")} **${randomKetupat}x Ketupat Lebaran**`);
       lines.push("", `${e("happy", "🌙")} Selamat menunaikan ibadah puasa! Kumpulkan terus ketupatnya untuk ditukar saat Lebaran nanti.`);
     }
     else {
       // Event lain (Kemerdekaan, Ultah Naura) biasanya punya exclusive item
       if (season.exclusiveItem) {
         itemsToGive.push({ id: "event_box", name: "Kotak Hadiah Event", amount: 1, type: "consumable" });
-        lines.push(`> 🎁 **1x Kotak Hadiah Event**`);
+        lines.push(`> ${e("gift", "🎁")} **1x Kotak Hadiah Event**`);
       }
       
       // Default bonus
       const randomNSF = Math.floor(Math.random() * 50) + 50;
-      await cacheManager.incrementUserProfile(user.id, "starFragments", randomNSF);
+      await cacheManager.incrementUserSurvival(user.id, "starFragments", randomNSF);
       lines.push(`> ${e("nsf", "⭐")} **${randomNSF}x Naura Star Fragment**`);
     }
 

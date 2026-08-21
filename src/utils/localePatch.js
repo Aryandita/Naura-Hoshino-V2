@@ -95,7 +95,10 @@ function patchPrototype(proto, label) {
   if (
     defineIfAbsent(proto, "localeLang", {
       get() {
-        return resolveLanguageSync(this);
+        return this._localeLang || resolveLanguageSync(this);
+      },
+      set(value) {
+        this._localeLang = languageManager.normalize(value);
       },
     })
   )
@@ -104,7 +107,10 @@ function patchPrototype(proto, label) {
   if (
     defineIfAbsent(proto, "lang", {
       get() {
-        return resolveLanguageSync(this);
+        return this._localeLang || resolveLanguageSync(this);
+      },
+      set(value) {
+        this._localeLang = languageManager.normalize(value);
       },
     })
   )

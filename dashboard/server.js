@@ -315,6 +315,8 @@ module.exports = (client) => {
   webApp.get("/world", view("world.html"));
   webApp.get("/karaoke", view("karaoke.html"));
   webApp.get("/feed", view("feed.html"));
+  webApp.get("/portfolio", view("portfolio.html"));
+  webApp.get("/owner", view("portfolio.html"));
 
   // ==================================================================
   // 4. Realtime

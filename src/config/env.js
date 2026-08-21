@@ -146,7 +146,7 @@ const env = {
   MODMAIL_CATEGORY: cleanEnv(process.env.MODMAIL_CATEGORY_ID),
 
   // LAVALINK
-  LAVA_NODES: process.env.LAVA_NODES,
+  LAVA_NODES: cleanEnv(process.env.LAVA_NODES) || cleanEnv(process.env.LAVALINK_NODES),
   LAVA_HOST: cleanEnv(process.env.LAVALINK_HOST) || "localhost",
   LAVA_PORT: parseInt(process.env.LAVALINK_PORT) || 2333,
   LAVA_PASS: cleanEnv(process.env.LAVALINK_PASSWORD) || "youshallnotpass",
@@ -158,6 +158,10 @@ const env = {
 
   // GEMINI AI
   GEMINI_API: cleanEnv(process.env.GEMINI_API_KEY),
+
+  // GROQ CLOUD AI (High-Speed & Failover Fallback)
+  GROQ_API_KEY: cleanEnv(process.env.GROQ_API_KEY),
+  GROQ_MODEL: cleanEnv(process.env.GROQ_MODEL) || "llama-3.3-70b-versatile",
 
   // VERBA API
   VERBA_API_KEY: cleanEnv(process.env.VERBA_API_KEY),

@@ -16,10 +16,20 @@ async function executeOnboarding(interaction, client) {
   const user = interaction.user;
   const botAvatar = client.user.displayAvatarURL({ size: 128 });
 
+  const eStar = ui.getEmoji("star") || "🌟";
+  const eBook = ui.getEmoji("desc") || "📖";
+  const eClock = ui.getEmoji("clock") || "🕒";
+  const eHeart = ui.getEmoji("heart") || "❤️";
+  const eHunger = ui.getEmoji("hunger") || "🥩";
+  const eStamina = ui.getEmoji("stamina") || "⚡";
+  const eHealth = ui.getEmoji("health") || "💖";
+  const eAlert = ui.getEmoji("shield_alert") || "🚨";
+  const eChat = ui.getEmoji("chat") || "💬";
+
   const pages = [
     {
-      title: "🌟 Selamat Datang di Dunia Baru!",
-      desc: `Halo **${user.username}**! Aku Naura.\nSepertinya ini pertama kalinya kamu menginjakkan kaki di dunia Survival RPG ini.\n\n▬▬▬\n\n💬 **Naura:** "Dunia ini sangat luas, mulai dari Desa yang asri, Tambang yang gelap, hingga gemerlap Naura City. Tapi, untuk bertahan hidup, kamu butuh kerja keras!"`,
+      title: `${eStar} Selamat Datang di Dunia Baru!`,
+      desc: `Halo **${user.username}**! Aku Naura.\nSepertinya ini pertama kalinya kamu menginjakkan kaki di dunia Survival RPG ini.\n\n▬▬▬\n\n${eChat} **Naura:** "Dunia ini sangat luas, mulai dari Desa yang asri, Tambang yang gelap, hingga gemerlap Naura City. Tapi, untuk bertahan hidup, kamu butuh kerja keras!"`,
       imgPath: path.join(
         __dirname,
         "..",
@@ -30,8 +40,8 @@ async function executeOnboarding(interaction, client) {
       ),
     },
     {
-      title: "📖 Cara Bermain (Basic)",
-      desc: `Untuk bertahan hidup, kamu harus menjaga 3 indikator utama:\n\n🥩 **Lapar (Hunger) & Haus (Thirst):** Jika habis, kamu akan pingsan.\n⚡ **Stamina:** Dibutuhkan untuk bekerja dan memancing.\n💖 **HP (Darah):** Untuk bertarung di Gua/Dungeon.\n\n▬▬▬\n\n💬 **Naura:** "Gunakan \`/survival work\` untuk mencari uang, dan beli makanan di \`/survival shop\` sebelum kamu kelaparan!"`,
+      title: `${eBook} Cara Bermain (Basic)`,
+      desc: `Untuk bertahan hidup, kamu harus menjaga 3 indikator utama:\n\n${eHunger} **Lapar (Hunger) & Haus (Thirst):** Jika habis, kamu akan pingsan.\n${eStamina} **Stamina:** Dibutuhkan untuk bekerja dan memancing.\n${eHealth} **HP (Darah):** Untuk bertarung di Gua/Dungeon.\n\n▬▬▬\n\n${eChat} **Naura:** "Gunakan \`/survival work\` untuk mencari uang, dan beli makanan di \`/survival shop\` sebelum kamu kelaparan!"`,
       imgPath: path.join(
         __dirname,
         "..",
@@ -42,8 +52,8 @@ async function executeOnboarding(interaction, client) {
       ),
     },
     {
-      title: "🕒 Jam Malam & Rumah Sakit",
-      desc: `Dunia ini memiliki sistem waktu (Pagi/Siang/Sore/Malam) dan Cuaca (Cerah/Hujan/Badai) yang berganti.\n\n🚨 **Aturan Penting:** Jangan begadang melewati jam 24:00 (Tengah Malam) in-game! Jika melanggar, kamu akan pingsan, waktu akan melompat keesokan harinya, dan kamu harus membayar denda rumah sakit yang sangat mahal!\n\n▬▬▬\n\n💬 **Naura:** "Suster Maya di Rumah Sakit Kota galak loh kalau kamu masuk UGD gara-gara begadang!"`,
+      title: `${eClock} Jam Malam & Rumah Sakit`,
+      desc: `Dunia ini memiliki sistem waktu (Pagi/Siang/Sore/Malam) dan Cuaca (Cerah/Hujan/Badai) yang berganti.\n\n${eAlert} **Aturan Penting:** Jangan begadang melewati jam 24:00 (Tengah Malam) in-game! Jika melanggar, kamu akan pingsan, waktu akan melompat keesokan harinya, dan kamu harus membayar denda rumah sakit yang sangat mahal!\n\n▬▬▬\n\n${eChat} **Naura:** "Suster Maya di Rumah Sakit Kota galak loh kalau kamu masuk UGD gara-gara begadang!"`,
       imgPath: path.join(
         __dirname,
         "..",
@@ -55,8 +65,8 @@ async function executeOnboarding(interaction, client) {
       ),
     },
     {
-      title: "❤️ Penduduk & Relasi",
-      desc: `Ada 16 NPC Khas Nusantara yang tersebar!\nKamu bisa menyapa mereka di \`/survival npc\` atau memberikan hadiah. Semakin tinggi afeksi (hati) mereka, kamu bisa menjalin hubungan dari Teman, Sahabat, hingga Menikah!\n\n▬▬▬\n\n💬 **Naura:** "Yuk mulai! Aku sudah tak sabar melihat petualanganmu. Klik tombol di bawah untuk membuat profilmu!"`,
+      title: `${eHeart} Penduduk & Relasi`,
+      desc: `Ada 16 NPC Khas Nusantara yang tersebar!\nKamu bisa menyapa mereka di \`/survival npc\` atau memberikan hadiah. Semakin tinggi afeksi (hati) mereka, kamu bisa menjalin hubungan dari Teman, Sahabat, hingga Menikah!\n\n▬▬▬\n\n${eChat} **Naura:** "Yuk mulai! Aku sudah tak sabar melihat petualanganmu. Klik tombol di bawah untuk membuat profilmu!"`,
       imgPath: path.join(__dirname, "..", "..", "assets", "core", "avatar.png"),
     },
   ];
@@ -125,7 +135,7 @@ async function executeOnboarding(interaction, client) {
             .setCustomId("tut_start")
             .setLabel("Mulai Petualangan!")
             .setStyle(ButtonStyle.Success)
-            .setEmoji("✅"),
+            .setEmoji(ui.parseEmoji(ui.getEmoji("check")) || { name: "✅" }),
         );
         const lastContainer = generateContainer(currentPage);
         await i.editReply({ ...lastContainer, components: [finalRow] });
@@ -139,7 +149,7 @@ async function executeOnboarding(interaction, client) {
 
       const finishPayload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#00FF00",
-        title: "🎉 Profil Survival Dibuat!",
+        title: `${ui.getEmoji("celebrate") || "🎉"} Profil Survival Dibuat!`,
         description:
           "Kamu sekarang resmi menjadi penduduk Desa Naura. Silakan ulangi perintah `/survival` kamu tadi untuk bermain!",
         footerText: ui.getFooter("survival"),

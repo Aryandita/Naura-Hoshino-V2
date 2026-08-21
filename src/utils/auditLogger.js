@@ -3,6 +3,7 @@
 const { logger } = require("../managers/logger");
 const { buildContainerV2 } = require("./NauraContainerBuilder");
 const { getGuildSettings } = require("../managers/cacheManager");
+const ui = require("../config/ui");
 
 /**
  * Utility untuk mencatat log aksi moderasi, pembelian, atau pengaturan ke channel audit.
@@ -71,7 +72,7 @@ class AuditLogger {
       }
 
       const container = buildContainerV2({
-        title: `🛡️ Audit Log: ${action}`,
+        title: `${ui.getEmoji("shield") || "🛡️"} Audit Log: ${action}`,
         description: fullDesc,
         color: accentColor,
         footerText: `Guild ID: ${guildId}`,

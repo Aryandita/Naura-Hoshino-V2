@@ -128,7 +128,7 @@ module.exports = {
 
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#00FF00",
-        title: "✅ Pengingat Dihapus",
+        title: `${ui.getEmoji("success") || "✅"} Pengingat Dihapus`,
         description: `Pengingat dengan ID **${id}** berhasil dihapus dari sistem.`,
         footerText: ui.getFooter("utility"),
       });

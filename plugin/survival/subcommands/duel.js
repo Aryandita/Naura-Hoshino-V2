@@ -159,7 +159,7 @@ module.exports = {
         `<@${opponent.id}>, kamu ditantang <@${challenger.id}> ke Battle Arena!`,
         "",
         `**Taruhan:** ${wagerText}`,
-        `**Mode:** ${isRanked ? "⚔️ RANKED" : "Kasual"}`,
+        `**Mode:** ${isRanked ? `${ui.getEmoji("battle") || "⚔️"} RANKED` : "Kasual"}`,
         "",
         "Naura jadi juri hari ini. Mau terima tantangannya?",
       ].join("\n"),
@@ -372,7 +372,7 @@ module.exports = {
           if (isRanked && eloChanges) {
             const wChange = eloChanges.winner.diff > 0 ? `+${eloChanges.winner.diff}` : eloChanges.winner.diff;
             const lChange = eloChanges.loser.diff > 0 ? `+${eloChanges.loser.diff}` : eloChanges.loser.diff;
-            eloText = `\n**MMR Changes:**\n> 📈 <@${eloChanges.winner.id}>: **${eloChanges.winner.mmr}** (${wChange})\n> 📉 <@${eloChanges.loser.id}>: **${eloChanges.loser.mmr}** (${lChange})\n`;
+            eloText = `\n**MMR Changes:**\n> ${ui.getEmoji("chart") || "📈"} <@${eloChanges.winner.id}>: **${eloChanges.winner.mmr}** (${wChange})\n> ${ui.getEmoji("stock_down") || "📉"} <@${eloChanges.loser.id}>: **${eloChanges.loser.mmr}** (${lChange})\n`;
           }
 
           const payload = card({

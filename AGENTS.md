@@ -19,7 +19,7 @@
 | Alur PR            | **Satu PR per sprint.** Seluruh pekerjaan satu sprint menumpuk di satu branch, direview dan di-merge sekali saat sprint tuntas.                                                 |
 | Deploy di panel    | **Pterodactyl.** Perintah luar terkunci, jadi `CMD_RUN` tetap `npm start` dan urutan migrasi dijamin dari dalam `package.json` lewat `prestart`. Lihat 3.8.                     |
 | Mata uang kupon    | **Naura Coupon adalah mata uang paling langka.** Disimpan di kolom `UserSurvival.coupons`, bukan di dalam JSON `rpg_state`, agar bisa dipotong secara atomik.                   |
-| Prioritas kerja    | Sprint 0-14 sudah tuntas (Hardening, DX, Data Atomicity, Observabilitas, Ticketing, Gacha, Giveaway V2, Modular Setup, Apps Anywhere, AI RAG & Voice, RPG Barter/Pet, Automations). |
+| Prioritas kerja    | Sprint 0-16 sudah tuntas (Hardening, DX, Data Atomicity, Observabilitas, Ticketing, Gacha, Giveaway V2, Modular Setup, Apps Anywhere, AI RAG & Voice, RPG Barter/Pet, Automations, Advanced UX/UI Masterclass, Full Function Calling, Persistent AI Memory, AI Dungeon Master V2). |
 
 ---
 
@@ -93,6 +93,7 @@
 16. **Standar Apps Anywhere & Context Menu**, Semua context menu handler wajib terpusat di `/src/interactions/contextMenus/` dan seluruh command publik wajib mendukung instalasi fleksibel (User Apps & Guild) dengan menyertakan metadata `integration_types` dan `contexts` yang tepat.
 17. **Isolasi Alur Kerja Server Automation**, Eksekusi trigger dan action otomatisasi server pada `src/services/automationEngine.js` wajib divalidasi skemanya dan dijalankan secara aman agar tidak menimbulkan infinite feedback loop.
 18. **Standar Psikologi & Advanced UX/UI**, Setiap antarmuka interaktif wajib menerapkan prinsip psikologi UX (Smart Defaults, Goal Gradient, Reciprocity, IKEA Effect, Anchoring/Contrast, Peak-End Rule) serta standar Advanced UX/UI (Adaptive Display Modes, Smarter Predictive Search, Visual Step Timelines, Input Ergonomics, dan Color-Coding Hierarchy) via `src/utils/uxHelper.js`. Respon bot wajib menyebut nama personal pengguna (`{displayName}` / `{username}`) dan dilarang menggunakan panggilan generik seperti 'Master'. Seluruh emoji yang digunakan wajib terdaftar di `src/config/ui.js` / `emojis_base.js` agar dapat dikustomisasi secara terpusat.
+19. **Standar Function Calling & Persistent AI Memory**, Seluruh tool Function Calling wajib terpusat di `/src/ai/functionDispatcher.js` dengan deklarasi skema JSON valid (`type: "OBJECT"`). Loop pemanggilan tool di `geminiClient.js` wajib mendukung eksekusi berantai (maksimal 3 putaran). Ekstraksi memori AI jangka panjang (`AIMemory.extractAndSave`) wajib dieksekusi secara non-blocking di latar belakang tanpa menunda respons pesan Discord. Input durasi waktu wajib menggunakan parser aman (`safeParseDuration`) dengan regex fallback.
 
 ## 1.4 Aturan Commit & Branching
 
@@ -931,12 +932,12 @@ File ini menyimpan ID yang spesifik per-deployment:
 
 ## 3.6 Sistem Lokalisasi (i18n)
 
-Bot mendukung multi-bahasa via file JSON di `/language/`:
+Bot mendukung multi-bahasa via kamus terpadu tunggal di `/assets/language/`:
 
-- `id.json`, Bahasa Indonesia (default)
-- `en.json`, English
+- `assets/language/id.json`, Bahasa Indonesia (default)
+- `assets/language/en.json`, English
 
-Kamus khusus per plugin berada di `plugin/<kategori>/locales/`, dan **kamus inti selalu berprioritas** di atas kamus plugin.
+Seluruh kunci terjemahan (inti, pesan bersama, dan fitur plugin) disatukan secara terpusat di kedua berkas tersebut agar pemuatan instan dan audit paritas bahasa berjalan 100% konsisten.
 
 > [!IMPORTANT]
 > **Bahasa disimpan per user** di tabel `user_profiles`, karena setiap user punya preferensi sendiri meski berada di server yang sama. `GuildSettings.language` hanya dipakai sebagai **default guild** saat user belum pernah memilih bahasa. Akses selalu lewat `languageManager.js` dan helper `language.js`, dan nilainya wajib diambil dari cache agar tidak menyentuh database di setiap balasan.

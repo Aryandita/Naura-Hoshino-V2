@@ -272,13 +272,24 @@ function investView(snap, valuations) {
   return { payload, rows };
 }
 
-function promptView(title, description) {
+function promptView(title, description, balance = 0, unit = "") {
+  let buttonsRow = null;
+  if (balance > 0) {
+    const chips = ui.ux.buildQuickNumericChips({
+      totalBalance: balance,
+      prefix: "bank_chip",
+      unit,
+    });
+    buttonsRow = chips.buttonsRow;
+  }
+
   return buildContainerV2({
     accentColorHex: ui.getColor("info") || "#57C7FF",
     authorName: "Naura Central Bank",
     title: `${e("naura_thinking")} ${title}`,
     expression: "Thinking",
-    description: `${description}\n\n${e("clock")} Naura tunggu jawabanmu di chat selama **30 detik** ya.`,
+    description: `${description}\n\n${buttonsRow ? `${e("sparkle") || "💡"} *Gunakan tombol quick chips di bawah atau ketik nominal di chat:*\n` : ""}${e("clock")} Naura tunggu jawabanmu selama **30 detik** ya.`,
+    buttonsRow,
     footerText: ui.getFooter("survival"),
   });
 }

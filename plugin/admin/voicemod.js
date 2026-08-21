@@ -86,14 +86,14 @@ module.exports = {
 
     if (!member) {
       return interaction.reply({
-        content: "❌ User tidak ditemukan di server.",
+        content: `${ui.getEmoji("error") || "❌"} User tidak ditemukan di server.`,
         flags: MessageFlags.Ephemeral,
       });
     }
 
     if (!member.voice.channel) {
       return interaction.reply({
-        content: `❌ **${user.username}** sedang tidak berada di Voice Channel mana pun.`,
+        content: `${ui.getEmoji("error") || "❌"} **${user.username}** sedang tidak berada di Voice Channel mana pun.`,
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -102,17 +102,17 @@ module.exports = {
       if (subcommand === "mute") {
         await member.voice.setMute(true, reason);
         await interaction.reply(
-          `✅ Berhasil melakukan Server Mute pada **${user.username}**.\n> Alasan: ${reason}`,
+          `${ui.getEmoji("success") || "✅"} Berhasil melakukan Server Mute pada **${user.username}**.\n> Alasan: ${reason}`,
         );
       } else if (subcommand === "unmute") {
         await member.voice.setMute(false, "Di-unmute oleh moderator");
         await interaction.reply(
-          `✅ Berhasil melepas Server Mute pada **${user.username}**.`,
+          `${ui.getEmoji("success") || "✅"} Berhasil melepas Server Mute pada **${user.username}**.`,
         );
       } else if (subcommand === "kick") {
         await member.voice.disconnect(reason);
         await interaction.reply(
-          `✅ Berhasil menendang **${user.username}** dari Voice Channel.\n> Alasan: ${reason}`,
+          `${ui.getEmoji("success") || "✅"} Berhasil menendang **${user.username}** dari Voice Channel.\n> Alasan: ${reason}`,
         );
       } else if (subcommand === "move") {
         const targetChannel = interaction.options.getChannel("channel");
@@ -121,14 +121,14 @@ module.exports = {
           "Dipindahkan oleh moderator",
         );
         await interaction.reply(
-          `✅ Berhasil memindahkan **${user.username}** ke channel **${targetChannel.name}**.`,
+          `${ui.getEmoji("success") || "✅"} Berhasil memindahkan **${user.username}** ke channel **${targetChannel.name}**.`,
         );
       }
     } catch (error) {
       logger.error("[VoiceMod Error]", error);
       await interaction.reply({
         content:
-          "❌ Gagal melakukan aksi moderasi voice. Pastikan posisiku lebih tinggi dari user tersebut dan aku memiliki izin yang cukup.",
+          `${ui.getEmoji("error") || "❌"} Gagal melakukan aksi moderasi voice. Pastikan posisiku lebih tinggi dari user tersebut dan aku memiliki izin yang cukup.`,
         flags: MessageFlags.Ephemeral,
       });
     }

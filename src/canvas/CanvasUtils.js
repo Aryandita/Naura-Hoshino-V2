@@ -16,7 +16,7 @@ const UI_COLORS = {
 };
 
 // ==========================================
-// 🚀 IN-MEMORY IMAGE CACHE (LRU)
+// ðŸš€ IN-MEMORY IMAGE CACHE (LRU)
 // ==========================================
 const MAX_CACHE_SIZE = 50; // Diturunkan dari 100 agar memori RAM tidak membengkak
 const imageCache = new Map();
@@ -60,7 +60,7 @@ async function getCachedImage(url) {
 }
 
 // ==========================================
-// 🛠️ HELPER DASAR (GABUNGAN)
+// ðŸ› ï¸ HELPER DASAR (GABUNGAN)
 // ==========================================
 function drawRoundedRect(ctx, x, y, w, h, r, color, glowColor) {
   ctx.beginPath();
@@ -89,7 +89,7 @@ function drawRoundedProgressBar(
 ) {
   drawRoundedRect(ctx, x, y, width, height, radius, "rgba(0,0,0,0.5)");
 
-  // ✨ FIX: Mengamankan nilai persentase agar tidak tembus (maksimal 100, minimal 0)
+  // âœ¨ FIX: Mengamankan nilai persentase agar tidak tembus (maksimal 100, minimal 0)
   const safePercentage = Math.min(Math.max(percentage, 0), 100);
   const progressWidth = Math.max(radius * 2, (safePercentage / 100) * width);
 
@@ -228,431 +228,1183 @@ const truncateText = (ctx, text, maxWidth) => {
 };
 
 // ==========================================
-// 🎮 SURVIVAL RPG PROFILE CANVAS
+// ðŸŽ® SURVIVAL RPG PROFILE CANVAS â€” V3
+// Canvas: 1000 x 640px â€” Extended Layout
 // ==========================================
-async function generateSurvivalProfileImage(user, profile, survival, ui) {
-  const canvas = createCanvas(900, 500);
-  const ctx = canvas.getContext("2d");
+async function generateSurvivalProfileImage(user, profile, survival, ui, extras = {}) {
+  const W = 1000;
+  const H = 640;
+  const canvas = createCanvas(W, H);
+  const ctx = canvas.getContext('2d');
 
-  const currentLevel = parseInt(survival.survival_level) || 1;
-  const currentXP = parseInt(survival.survival_xp) || 0;
-  const reqXP = leveling.getExpRequirement(currentLevel);
-  const maxStatCap = leveling.getMaxStatCap(currentLevel);
+  const {
+    activePets   = [],
+    marriedNPCs  = [],
+    botAvatar    = null,
+    gear         = null,
+    isRegistered = false,
+  } = extras;
 
-  // Background
-  drawRoundedRect(ctx, 0, 0, 900, 500, 25, "#1e1f22");
+  const currentLevel = parseInt(survival.survival_level, 10) || 1;
+  const currentXP    = parseInt(survival.survival_xp, 10) || 0;
+  const reqXP        = leveling.getExpRequirement(currentLevel);
+  const maxStatCap   = leveling.getMaxStatCap(currentLevel);
+  const maxHP        = 100 + Math.min(survival.strength || 1, maxStatCap) * 10;
+  const rpgState     = survival.rpg_state || {};
 
-  // Dynamic Location Background
-  const fs = require("fs");
-  const bgPath = ui.getSurvivalBackground(
-    survival.currentLocation || "village",
-    survival.inGameHour || 6,
-  );
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // 1. BACKGROUND (location-aware)
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const fs      = require('fs');
+  const bgPath  = ui.getSurvivalBackground(survival.currentLocation || 'village', survival.inGameHour || 6);
+  const MARGIN  = 16;
+  const RADIUS  = 18;
 
-  let bgImgLoaded = false;
+  // Base card fill
+  ctx.save();
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(0, 0, W, H, RADIUS);
+  else ctx.rect(0, 0, W, H);
+  ctx.fillStyle = '#17191e';
+  ctx.fill();
+  ctx.restore();
+
+  // Dynamic bg image
   if (fs.existsSync(bgPath)) {
     try {
       const bgImg = await loadImage(bgPath);
       ctx.save();
       ctx.beginPath();
-      ctx.roundRect(20, 20, 860, 460, 15);
+      if (ctx.roundRect) ctx.roundRect(MARGIN, MARGIN, W - MARGIN * 2, H - MARGIN * 2, RADIUS - 4);
+      else ctx.rect(MARGIN, MARGIN, W - MARGIN * 2, H - MARGIN * 2);
       ctx.clip();
-      ctx.drawImage(bgImg, 20, 20, 860, 460);
-
-      // Dark overlay for readability
-      ctx.fillStyle = "rgba(15, 15, 20, 0.75)";
-      ctx.fillRect(20, 20, 860, 460);
-
+      ctx.drawImage(bgImg, MARGIN, MARGIN, W - MARGIN * 2, H - MARGIN * 2);
+      ctx.fillStyle = 'rgba(10, 11, 16, 0.80)';
+      ctx.fillRect(MARGIN, MARGIN, W - MARGIN * 2, H - MARGIN * 2);
       ctx.restore();
-      bgImgLoaded = true;
-    } catch (e) {
-      console.error(
-        "\x1b[41m\x1b[37m 💥 CanvasUtils \x1b[0m \x1b[31mFailed to load survival bg:",
-        e,
-        "\x1b[0m",
-      );
+    } catch (_) {
+      drawRoundedRect(ctx, MARGIN, MARGIN, W - MARGIN * 2, H - MARGIN * 2, RADIUS - 4, '#1e2028');
     }
+  } else {
+    drawRoundedRect(ctx, MARGIN, MARGIN, W - MARGIN * 2, H - MARGIN * 2, RADIUS - 4, '#1e2028');
+  }
+
+  // Outer border glow
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,182,193,0.25)';
+  ctx.lineWidth = 1.5;
+  ctx.shadowBlur = 12;
+  ctx.shadowColor = 'rgba(255,182,193,0.35)';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(MARGIN, MARGIN, W - MARGIN * 2, H - MARGIN * 2, RADIUS - 4);
+  else ctx.rect(MARGIN, MARGIN, W - MARGIN * 2, H - MARGIN * 2);
+  ctx.stroke();
+  ctx.restore();
+
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // 2. AVATAR (circular, top-left)
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const AVA_R   = 50;
+  const AVA_CX  = MARGIN + 22 + AVA_R;
+  const AVA_CY  = MARGIN + 22 + AVA_R;
+  const avatarUrl = user.displayAvatarURL({ extension: 'png', size: 256 });
+  try {
+    const avaImg = await loadImage(avatarUrl);
+    // Glow ring
+    ctx.save();
+    ctx.shadowBlur = 18;
+    ctx.shadowColor = 'rgba(255,182,193,0.65)';
+    ctx.beginPath();
+    ctx.arc(AVA_CX, AVA_CY, AVA_R + 3, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,182,193,0.7)';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.restore();
+    // Clip & draw
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(AVA_CX, AVA_CY, AVA_R, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(avaImg, AVA_CX - AVA_R, AVA_CY - AVA_R, AVA_R * 2, AVA_R * 2);
+    ctx.restore();
+  } catch (_) {}
+
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // 3. IDENTITY (name, level, XP)
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const INFO_X       = AVA_CX + AVA_R + 18;
+  const rebirthCount = rpgState.rebirth_count || 0;
+  const diffText     = rpgState.difficulty || 'Normal';
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 26px "MontserratBold", sans-serif';
+  ctx.fillText(user.displayName.toUpperCase(), INFO_X, AVA_CY - 18);
+
+  ctx.fillStyle = '#FFD700';
+  ctx.font = '14px "Inter", sans-serif';
+  const subtitleParts = [`Lv.${currentLevel}  Survivor`, `Mode ${diffText}`];
+  if (rebirthCount > 0) subtitleParts.push(`Rebirth x${rebirthCount}`);
+  ctx.fillText(subtitleParts.join('  |  '), INFO_X, AVA_CY + 5);
+
+  const XP_W = 240;
+  ctx.fillStyle = '#8e98b0';
+  ctx.font = '11px "Inter", sans-serif';
+  ctx.fillText(`XP: ${currentXP.toLocaleString('id-ID')} / ${reqXP.toLocaleString('id-ID')}`, INFO_X, AVA_CY + 23);
+  drawRoundedProgressBar(ctx, INFO_X, AVA_CY + 29, XP_W, 10, 5, (currentXP / reqXP) * 100, ['#00D9FF', '#0055FF']);
+
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // 4. WALLET (top-right)
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const WALLET_X  = W - MARGIN - 18;
+  const WALLET_Y0 = MARGIN + 18;
+  const walletItems = [
+    { label: 'NAURA COIN',    value: (profile.economy_wallet || 0).toLocaleString('id-ID'), color: '#FFD700' },
+    { label: 'STAR FRAGMENT', value: (survival.starFragments  || 0).toLocaleString('id-ID'), color: '#00D9FF' },
+    { label: 'COUPON',        value: (survival.coupons        || 0).toLocaleString('id-ID'), color: '#FFB6C1' },
+  ];
+  walletItems.forEach((item, i) => {
+    const yBase = WALLET_Y0 + i * 42;
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#8e98b0';
+    ctx.font = '10px "InterBold", sans-serif';
+    ctx.fillText(item.label, WALLET_X, yBase);
+    ctx.fillStyle = item.color;
+    ctx.font = '19px "MontserratBold", sans-serif';
+    ctx.fillText(item.value, WALLET_X, yBase + 20);
+  });
+
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // 5. DIVIDER 1
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const DIV_Y1 = AVA_CY + AVA_R + 20;
+  ctx.fillStyle = 'rgba(255,255,255,0.10)';
+  ctx.fillRect(MARGIN + 10, DIV_Y1, W - (MARGIN + 10) * 2, 1);
+
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // 6. THREE-COLUMN BODY
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const GAP     = 14;
+  const COL_W   = Math.floor((W - MARGIN * 2 - GAP * 2) / 3);
+  const COL_TOP = DIV_Y1 + 18;
+  const COL_H   = 248;
+  const C1_X    = MARGIN + 2;
+  const C2_X    = C1_X + COL_W + GAP;
+  const C3_X    = C2_X + COL_W + GAP;
+
+  // Helper: glassmorphism card
+  const glassCard = (x, y, w, h, accentColor = 'rgba(255,255,255,0.03)') => {
+    ctx.save();
+    ctx.fillStyle = accentColor;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x, y, w, h, 12);
+    else ctx.rect(x, y, w, h);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  glassCard(C1_X, COL_TOP, COL_W, COL_H, 'rgba(255,80,80,0.04)');
+  glassCard(C2_X, COL_TOP, COL_W, COL_H, 'rgba(147,88,235,0.04)');
+  glassCard(C3_X, COL_TOP, COL_W - 4, COL_H, 'rgba(255,182,193,0.04)');
+
+  // Helper: section heading with underline accent
+  const sectionHead = (text, x, y, accentColor, lineWidth = 70) => {
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px "InterBold", sans-serif';
+    ctx.fillText(text, x + 14, y + 20);
+    ctx.fillStyle = accentColor;
+    ctx.fillRect(x + 14, y + 24, lineWidth, 2);
+  };
+
+  // â”€â”€ COL 1: STATUS FISIK â”€â”€
+  sectionHead('STATUS FISIK', C1_X, COL_TOP, '#FF6B6B', 72);
+
+  const bars = [
+    { label: `HP  ${survival.hp !== undefined ? survival.hp : maxHP}/${maxHP}`, pct: survival.hp !== undefined ? (survival.hp / maxHP) * 100 : 100, colors: ['#FF3333', '#FF7070'] },
+    { label: `Lapar  ${survival.hunger || 0}/100`,    pct: survival.hunger || 0,  colors: ['#FF8C00', '#FFBB44'] },
+    { label: `Haus  ${survival.thirst || 0}/100`,     pct: survival.thirst || 0,  colors: ['#00BFFF', '#87CEFA'] },
+    { label: `Stamina  ${survival.stamina || 0}/100`, pct: survival.stamina || 0, colors: ['#32CD32', '#98FB98'] },
+  ];
+  const BAR_W = COL_W - 30;
+  let barY = COL_TOP + 42;
+  bars.forEach((b) => {
+    ctx.fillStyle = '#cccccc';
+    ctx.font = '11px "Inter", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(b.label, C1_X + 14, barY);
+    barY += 5;
+    drawRoundedProgressBar(ctx, C1_X + 14, barY, BAR_W, 11, 5.5, b.pct, b.colors);
+    barY += 25;
+  });
+
+  // Lokasi chip
+  const LOCATION_NAMES_C = { desa: 'Desa Pemula', village: 'Desa Pemula', jalanan: 'Pinggir Jalan', kota: 'Kota Naura', city: 'Kota Naura', hutan: 'Hutan Pinus', laut: 'Pantai Selatan', pantai: 'Pantai Selatan', sawah: 'Sawah Desa', tambang: 'Tambang Kuno', academy: 'Naura Academy', park: 'Amusement Park', prison: 'Penjara Kota' };
+  const locKey  = survival.currentLocation || 'desa';
+  const locName = LOCATION_NAMES_C[locKey] || locKey.toUpperCase();
+  const locChipY = barY + 4;
+  drawRoundedRect(ctx, C1_X + 14, locChipY, BAR_W, 30, 8, 'rgba(0,0,0,0.35)');
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#8e98b0';
+  ctx.font = '10px "InterBold", sans-serif';
+  ctx.fillText('LOKASI SAAT INI', C1_X + 20, locChipY + 12);
+  ctx.fillStyle = '#00D9FF';
+  ctx.font = '11px "Inter", sans-serif';
+  ctx.fillText(locName, C1_X + 20, locChipY + 25);
+
+  // â”€â”€ COL 2: STATS ATRIBUT â”€â”€
+  sectionHead('STATS ATRIBUT', C2_X, COL_TOP, '#9B59B6', 82);
+
+  const statDefs = [
+    { name: 'Kekuatan',      key: 'strength',     color: '#DC143C' },
+    { name: 'Kelincahan',    key: 'agility',      color: '#00FA9A' },
+    { name: 'Kepintaran',    key: 'intelligence', color: '#9370DB' },
+    { name: 'Keberuntungan', key: 'luck',         color: '#FFD700' },
+  ];
+  const STAT_W = COL_W - 30;
+  let stY = COL_TOP + 42;
+  statDefs.forEach((st) => {
+    const val = survival[st.key] || 1;
+    const pct = (val / maxStatCap) * 100;
+    drawRoundedRect(ctx, C2_X + 14, stY, STAT_W, 36, 8, 'rgba(0,0,0,0.35)');
+    ctx.fillStyle = st.color;
+    ctx.fillRect(C2_X + 14, stY, 4, 36);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#eeeeee';
+    ctx.font = '12px "InterBold", sans-serif';
+    ctx.fillText(st.name, C2_X + 24, stY + 13);
+    drawRoundedProgressBar(ctx, C2_X + 24, stY + 20, STAT_W - 60, 7, 3.5, pct, [st.color, st.color + 'AA']);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = st.color;
+    ctx.font = 'bold 12px "MontserratBold", sans-serif';
+    ctx.fillText(`${val}/${maxStatCap}`, C2_X + 14 + STAT_W - 2, stY + 13);
+    stY += 46;
+  });
+
+  // â”€â”€ COL 3: KEAHLIAN â”€â”€
+  sectionHead('KEAHLIAN', C3_X, COL_TOP, '#FFB6C1', 56);
+
+  const className = rpgState.class || null;
+  const CLASS_NAMES  = { warrior: 'Pejuang', mage: 'Penyihir', rogue: 'Pencuri', hunter: 'Pemburu', healer: 'Penyembuh', bard: 'Penghibur' };
+  const CLASS_SKILLS = { warrior: 'Tebasan Badai', mage: 'Ledakan Aura', rogue: 'Bayangan Gelap', hunter: 'Bidikan Tepat', healer: 'Cahaya Suci', bard: 'Melodi Jiwa' };
+  const STAT_SKILL   = [
+    { key: 'strength',     skill: 'Pukulan Keras', color: '#DC143C' },
+    { key: 'agility',      skill: 'Lari Kilat',    color: '#00FA9A' },
+    { key: 'intelligence', skill: 'Pikiran Tajam',  color: '#9370DB' },
+    { key: 'luck',         skill: 'Hoki Murni',     color: '#FFD700' },
+  ];
+
+  const dispClass   = className ? (CLASS_NAMES[className] || className) : 'Penyintas';
+  const activeSkill = className
+    ? (CLASS_SKILLS[className] || 'Kemampuan Khusus')
+    : (() => { const best = STAT_SKILL.reduce((a, b) => (survival[a.key] || 1) >= (survival[b.key] || 1) ? a : b); return best.skill; })();
+  const skillColor  = className ? '#FFB6C1' : (STAT_SKILL.find(s => s.skill === activeSkill)?.color || '#FFB6C1');
+  const SKILL_W     = COL_W - 32;
+  let skY = COL_TOP + 42;
+
+  // Kelas badge
+  drawRoundedRect(ctx, C3_X + 14, skY, SKILL_W, 36, 8, 'rgba(255,182,193,0.10)');
+  ctx.textAlign = 'left';  ctx.fillStyle = '#8e98b0'; ctx.font = '10px "InterBold", sans-serif';
+  ctx.fillText('KELAS', C3_X + 20, skY + 13);
+  ctx.textAlign = 'right'; ctx.fillStyle = '#FFB6C1'; ctx.font = 'bold 14px "MontserratBold", sans-serif';
+  ctx.fillText(dispClass, C3_X + 14 + SKILL_W - 6, skY + 24);
+  skY += 44;
+
+  // Skill aktif
+  drawRoundedRect(ctx, C3_X + 14, skY, SKILL_W, 36, 8, 'rgba(0,0,0,0.30)');
+  ctx.fillStyle = skillColor;
+  ctx.fillRect(C3_X + 14, skY + 9, 3, 18);
+  ctx.textAlign = 'left'; ctx.fillStyle = '#8e98b0'; ctx.font = '10px "InterBold", sans-serif';
+  ctx.fillText('SKILL AKTIF', C3_X + 22, skY + 13);
+  ctx.fillStyle = '#ffffff'; ctx.font = '12px "Inter", sans-serif';
+  ctx.fillText(activeSkill, C3_X + 22, skY + 27);
+  skY += 44;
+
+  // Berkah aktif
+  const perks     = rpgState.perks || {};
+  const perkCount = Object.keys(perks).length;
+  drawRoundedRect(ctx, C3_X + 14, skY, SKILL_W, 36, 8, 'rgba(0,0,0,0.25)');
+  ctx.textAlign = 'left'; ctx.fillStyle = '#8e98b0'; ctx.font = '10px "InterBold", sans-serif';
+  ctx.fillText('BERKAH AKTIF', C3_X + 22, skY + 13);
+  ctx.fillStyle = perkCount > 0 ? '#00FA9A' : '#555';
+  ctx.font = 'bold 12px "MontserratBold", sans-serif';
+  ctx.fillText(perkCount > 0 ? `${perkCount} berkah` : 'Belum ada', C3_X + 22, skY + 27);
+  skY += 44;
+
+  // Pasif bonus
+  const passives = [];
+  if ((survival.strength || 1) > 1) passives.push(`HP +${(Math.min(survival.strength, maxStatCap) - 1) * 10}`);
+  if ((survival.luck || 1) > 1) passives.push(`Hoki +${survival.luck - 1}`);
+  if (passives.length > 0) {
+    drawRoundedRect(ctx, C3_X + 14, skY, SKILL_W, 36, 8, 'rgba(0,0,0,0.20)');
+    ctx.textAlign = 'left'; ctx.fillStyle = '#8e98b0'; ctx.font = '10px "InterBold", sans-serif';
+    ctx.fillText('PASIF BONUS', C3_X + 22, skY + 13);
+    ctx.fillStyle = '#FFD700'; ctx.font = '11px "Inter", sans-serif';
+    const passTxt = passives.join(' | ');
+    ctx.fillText(passTxt.length > 28 ? passTxt.substring(0, 26) + '...' : passTxt, C3_X + 22, skY + 27);
+    skY += 44;
+  }
+
+  // Rebirth badge
+  if (rebirthCount > 0) {
+    drawRoundedRect(ctx, C3_X + 14, skY, SKILL_W, 30, 8, 'rgba(255,215,0,0.12)');
+    ctx.textAlign = 'center'; ctx.fillStyle = '#FFD700'; ctx.font = 'bold 12px "InterBold", sans-serif';
+    ctx.fillText(`REBIRTH x${rebirthCount}`, C3_X + 14 + SKILL_W / 2, skY + 19);
+  }
+
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // 7. DIVIDER 2
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const DIV_Y2 = COL_TOP + COL_H + 16;
+  ctx.fillStyle = 'rgba(255,255,255,0.10)';
+  ctx.fillRect(MARGIN + 10, DIV_Y2, W - (MARGIN + 10) * 2, 1);
+
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // 8. BOTTOM ROW: Quest / Pet / NPC Spouse
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const BOT_TOP = DIV_Y2 + 16;
+  const BOT_H   = 98;
+
+  glassCard(C1_X, BOT_TOP, COL_W, BOT_H, 'rgba(255,215,0,0.05)');
+  glassCard(C2_X, BOT_TOP, COL_W, BOT_H, 'rgba(50,205,50,0.05)');
+  glassCard(C3_X, BOT_TOP, COL_W - 4, BOT_H, 'rgba(255,100,160,0.05)');
+
+  // Accent top border strips per card
+  ctx.fillStyle = 'rgba(255,215,0,0.45)';  ctx.fillRect(C1_X, BOT_TOP, COL_W, 2);
+  ctx.fillStyle = 'rgba(50,205,50,0.45)';  ctx.fillRect(C2_X, BOT_TOP, COL_W, 2);
+  ctx.fillStyle = 'rgba(255,100,160,0.45)'; ctx.fillRect(C3_X, BOT_TOP, COL_W - 4, 2);
+
+  // Quest card
+  ctx.textAlign = 'left'; ctx.fillStyle = '#FFD700'; ctx.font = 'bold 11px "InterBold", sans-serif';
+  ctx.fillText('QUEST', C1_X + 14, BOT_TOP + 18);
+  let questText  = 'Tidak ada quest aktif';
+  let questColor = '#8e98b0';
+  if (!isRegistered) { questText = 'Daftar via /survival start'; questColor = '#FF8C00'; }
+  else if (gear && !gear.axe && !gear.pickaxe) { questText = 'Tempa alat pertamamu!'; questColor = '#FFD700'; }
+  const questWords = questText.split(' ');
+  const questLines = [];
+  let questLineStr = '';
+  for (const w of questWords) {
+    if ((questLineStr + w).length > 34 && questLineStr.length > 0) { questLines.push(questLineStr.trim()); questLineStr = ''; }
+    questLineStr += w + ' ';
+  }
+  if (questLineStr.trim()) questLines.push(questLineStr.trim());
+  ctx.fillStyle = questColor; ctx.font = '12px "Inter", sans-serif';
+  questLines.slice(0, 3).forEach((ql, qi) => ctx.fillText(ql, C1_X + 14, BOT_TOP + 38 + qi * 17));
+
+  // Pet card
+  ctx.textAlign = 'left'; ctx.fillStyle = '#32CD32'; ctx.font = 'bold 11px "InterBold", sans-serif';
+  ctx.fillText('PET AKTIF', C2_X + 14, BOT_TOP + 18);
+  const activePet = Array.isArray(activePets) && activePets.length > 0 ? activePets[0] : null;
+  if (activePet) {
+    const petName    = activePet.petName || activePet.petType || 'Pet';
+    const petType    = (activePet.petType || '').toLowerCase();
+    const PET_COLORS   = { wolf: '#DC143C', cat: '#FFB6C1', dragon: '#FF6B00' };
+    const PET_BONUS_TXT = { wolf: '+2 Strength', cat: '+2 Luck', dragon: '+3 STR / +1 LUK' };
+    ctx.fillStyle = PET_COLORS[petType] || '#32CD32';
+    ctx.font = 'bold 13px "MontserratBold", sans-serif';
+    ctx.fillText(petName, C2_X + 14, BOT_TOP + 42);
+    ctx.fillStyle = '#8e98b0'; ctx.font = '11px "Inter", sans-serif';
+    ctx.fillText(PET_BONUS_TXT[petType] || 'Teman setia', C2_X + 14, BOT_TOP + 58);
+    ctx.fillStyle = '#555'; ctx.font = '10px "Inter", sans-serif';
+    ctx.fillText('Efek bonus aktif', C2_X + 14, BOT_TOP + 73);
+  } else {
+    ctx.fillStyle = '#555'; ctx.font = '12px "Inter", sans-serif';
+    ctx.fillText('Belum ada teman berbulu', C2_X + 14, BOT_TOP + 46);
+    ctx.fillStyle = '#444'; ctx.font = '11px "Inter", sans-serif';
+    ctx.fillText('Pelihara di /survival pet', C2_X + 14, BOT_TOP + 63);
+  }
+
+  // NPC Spouse card
+  ctx.textAlign = 'left'; ctx.fillStyle = '#FF64A0'; ctx.font = 'bold 11px "InterBold", sans-serif';
+  ctx.fillText('PASANGAN NPC', C3_X + 14, BOT_TOP + 18);
+  const npc = Array.isArray(marriedNPCs) && marriedNPCs.length > 0 ? marriedNPCs[0] : null;
+  if (npc) {
+    const npcId = npc.npcId || 'NPC';
+    ctx.fillStyle = '#FFB6C1'; ctx.font = 'bold 13px "MontserratBold", sans-serif';
+    ctx.fillText(npcId, C3_X + 14, BOT_TOP + 42);
+    ctx.fillStyle = '#8e98b0'; ctx.font = '11px "Inter", sans-serif';
+    ctx.fillText('Status: Menikah', C3_X + 14, BOT_TOP + 58);
+    const npcAffection = npc.affection || npc.affectionPoints || 0;
+    if (npcAffection > 0) {
+      ctx.fillStyle = '#FF64A0'; ctx.font = '11px "Inter", sans-serif';
+      ctx.fillText(`Kasih sayang: ${npcAffection}`, C3_X + 14, BOT_TOP + 73);
+    }
+  } else {
+    ctx.fillStyle = '#555'; ctx.font = '12px "Inter", sans-serif';
+    ctx.fillText('Masih sendiri~', C3_X + 14, BOT_TOP + 46);
+    ctx.fillStyle = '#444'; ctx.font = '11px "Inter", sans-serif';
+    ctx.fillText('Kunjungi NPC di /npc chat', C3_X + 14, BOT_TOP + 63);
+  }
+
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // 9. DIVIDER 3
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const DIV_Y3 = BOT_TOP + BOT_H + 14;
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.fillRect(MARGIN + 10, DIV_Y3, W - (MARGIN + 10) * 2, 1);
+
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // 10. FOOTER BAR (Naura branded)
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const FOOT_TOP  = DIV_Y3 + 10;
+  const FOOT_H    = 46;
+  const FOOT_MID  = FOOT_TOP + FOOT_H / 2;
+
+  // Footer glass card
+  drawRoundedRect(ctx, MARGIN + 4, FOOT_TOP, W - (MARGIN + 4) * 2, FOOT_H, 10, 'rgba(255,182,193,0.05)');
+
+  // Gradient wash left -> right
+  const footGrad = ctx.createLinearGradient(MARGIN + 4, 0, W - MARGIN - 4, 0);
+  footGrad.addColorStop(0, 'rgba(255,182,193,0.10)');
+  footGrad.addColorStop(1, 'rgba(255,182,193,0)');
+  ctx.fillStyle = footGrad;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(MARGIN + 4, FOOT_TOP, W - (MARGIN + 4) * 2, FOOT_H, 10);
+  else ctx.rect(MARGIN + 4, FOOT_TOP, W - (MARGIN + 4) * 2, FOOT_H);
+  ctx.fill();
+
+  // Naura bot avatar circle
+  const BOT_AVA_R  = 17;
+  const BOT_AVA_CX = MARGIN + 22 + BOT_AVA_R;
+  if (botAvatar) {
+    try {
+      const botImg = await loadImage(botAvatar);
+      ctx.save();
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(255,182,193,0.5)';
+      ctx.beginPath();
+      ctx.arc(BOT_AVA_CX, FOOT_MID, BOT_AVA_R + 2, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,182,193,0.55)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(BOT_AVA_CX, FOOT_MID, BOT_AVA_R, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(botImg, BOT_AVA_CX - BOT_AVA_R, FOOT_MID - BOT_AVA_R, BOT_AVA_R * 2, BOT_AVA_R * 2);
+      ctx.restore();
+    } catch (_) {}
+  }
+
+  // System label
+  ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(255,182,193,0.85)';
+  ctx.font = 'bold 13px "MontserratBold", sans-serif';
+  ctx.fillText('Naura Survival System', BOT_AVA_CX + BOT_AVA_R + 10, FOOT_MID + 5);
+
+  // Right side: game time & version
+  ctx.textAlign = 'right';
+  ctx.fillStyle = 'rgba(142,152,176,0.65)';
+  ctx.font = '11px "Inter", sans-serif';
+  const dayNum  = survival.inGameDay  || 1;
+  const hourNum = (survival.inGameHour || 6).toString().padStart(2, '0');
+  ctx.fillText(`Hari ke-${dayNum}  |  ${hourNum}:00  |  v2.1.0`, W - MARGIN - 16, FOOT_MID + 5);
+
+  return canvas.toBuffer('image/png');
+}
+
+
+// ==========================================
+// ðŸŽµ MUSIC PROFILE CANVAS â€” PREMIUM REDESIGN
+// Canvas: 1100 x 680px
+// ==========================================
+async function generateMusicProfileImage(user, stats, clientAvatar) {
+  const W = 1100;
+  const H = 680;
+  const canvas = createCanvas(W, H);
+  const ctx = canvas.getContext('2d');
+
+  const isVIP    = Boolean(stats.isPremium);
+  const accentHex = isVIP ? '#FFD700' : '#00D9FF';
+  const ac2Hex    = isVIP ? '#FFA500' : '#0055FF';
+
+  const hexToRgb = (hex) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return { r, g, b };
+  };
+  const ac = hexToRgb(accentHex);
+
+  // ─── 1. BACKGROUND (Dynamic Music Profile Banner / Gradient Fallback) ─────
+  const fs = require('fs');
+  const bannerPath = ui.getBanner?.('musicProfile') || ui.getBanner?.('nowPlaying') || './assets/music/Now Playing Banner.jpeg';
+  let bgImgLoaded = false;
+  if (bannerPath && fs.existsSync(bannerPath)) {
+    try {
+      const bgImg = await loadImage(bannerPath);
+      ctx.drawImage(bgImg, 0, 0, W, H);
+      // Dark elegant overlay so cards and text pop out
+      ctx.fillStyle = 'rgba(7, 10, 18, 0.82)';
+      ctx.fillRect(0, 0, W, H);
+      bgImgLoaded = true;
+    } catch (_) {}
   }
 
   if (!bgImgLoaded) {
-    drawRoundedRect(ctx, 20, 20, 860, 460, 15, "#2b2d31");
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#06080f');
+    bg.addColorStop(0.5, '#0b0f1c');
+    bg.addColorStop(1, '#080c14');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
   }
 
-  // Header & Title
-  ctx.fillStyle = "#ffffff";
-  ctx.font = '30px "MontserratBold", "EmojiFont", sans-serif';
-  ctx.textAlign = "left";
-  ctx.fillText(`${user.displayName.toUpperCase()}`, 170, 65);
+  // Left ambient glow (accent)
+  const glowL = ctx.createRadialGradient(160, 180, 20, 160, 180, 420);
+  glowL.addColorStop(0, `rgba(${ac.r},${ac.g},${ac.b},0.14)`);
+  glowL.addColorStop(1, 'rgba(6,8,15,0)');
+  ctx.fillStyle = glowL;
+  ctx.fillRect(0, 0, W, H);
 
-  ctx.fillStyle = ui.colors?.economy || "#FFD700";
-  ctx.font = '20px "Inter", "EmojiFont", sans-serif';
-  ctx.fillText(`Level ${currentLevel} Survivor`, 170, 95);
+  // Right ambient glow (secondary)
+  const glowR = ctx.createRadialGradient(W - 200, H - 150, 10, W - 200, H - 150, 380);
+  glowR.addColorStop(0, isVIP ? 'rgba(255,165,0,0.1)' : 'rgba(0,85,255,0.08)');
+  glowR.addColorStop(1, 'rgba(6,8,15,0)');
+  ctx.fillStyle = glowR;
+  ctx.fillRect(0, 0, W, H);
 
-  ctx.fillStyle = "#8e98b0";
-  ctx.font = '14px "InterBold", sans-serif';
-  ctx.fillText(`XP: ${currentXP} / ${reqXP}`, 170, 115);
-  drawRoundedProgressBar(ctx, 170, 125, 200, 10, 5, (currentXP / reqXP) * 100, [
-    "#00D9FF",
-    "#0055FF",
-  ]);
+  // Subtle dot grid
+  ctx.fillStyle = 'rgba(255,255,255,0.022)';
+  for (let gx = 20; gx < W; gx += 40) {
+    for (let gy = 20; gy < H; gy += 40) {
+      ctx.beginPath();
+      ctx.arc(gx, gy, 1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
 
-  // Avatar
-  const avatarUrl = user.displayAvatarURL({ extension: "png", size: 256 });
-  await drawAvatar(ctx, avatarUrl, 40, 30, 100);
-
-  // Dual Currency Header: Naura Coin (NC) & Naura Star Fragment (NSF)
-  ctx.textAlign = "right";
-
-  // Naura Coin (NC)
-  ctx.fillStyle = "#8e98b0";
-  ctx.font = '13px "InterBold", sans-serif';
-  ctx.fillText("NAURA COIN (NC)", 850, 48);
-
-  ctx.fillStyle = ui.colors?.economy || "#FFD700";
-  ctx.font = '22px "MontserratBold", sans-serif';
-  ctx.fillText(
-    `${(profile.economy_wallet || 0).toLocaleString("id-ID")}`,
-    850,
-    72,
-  );
-
-  // Naura Star Fragment (NSF)
-  ctx.fillStyle = "#8e98b0";
-  ctx.font = '13px "InterBold", sans-serif';
-  ctx.fillText("STAR FRAGMENT (NSF)", 850, 96);
-
-  ctx.fillStyle = "#00D9FF";
-  ctx.font = '22px "MontserratBold", sans-serif';
-  ctx.fillText(
-    `${(survival.starFragments || 0).toLocaleString("id-ID")}`,
-    850,
-    120,
-  );
-
-  // Garis Pembatas
-  ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-  ctx.fillRect(40, 150, 820, 2);
-
-  // Status Fisik
-  ctx.textAlign = "left";
-  ctx.fillStyle = "#ffffff";
-  ctx.font = '20px "InterBold", sans-serif';
-  ctx.fillText("STATUS FISIK", 50, 185);
-
-  const maxHP = 100 + Math.min(survival.strength || 1, maxStatCap) * 10;
-  const hpColor = ["#ff0000", "#ff4d4d"];
-  const hungerColor = ["#ff8c00", "#ffa500"];
-  const thirstColor = ["#00bfff", "#87cefa"];
-  const staminaColor = ["#32cd32", "#98fb98"];
-
-  ctx.font = '15px "Inter", sans-serif';
-
-  ctx.fillText(`Health (HP) - ${maxHP}/${maxHP}`, 50, 220);
-  drawRoundedProgressBar(ctx, 50, 230, 350, 15, 7.5, 100, hpColor);
-
-  ctx.fillStyle = "#ffffff";
-  ctx.fillText(`Lapar (Hunger) - ${survival.hunger || 0}/100`, 50, 280);
-  drawRoundedProgressBar(
-    ctx,
-    50,
-    290,
-    350,
-    15,
-    7.5,
-    survival.hunger || 0,
-    hungerColor,
-  );
-
-  ctx.fillStyle = "#ffffff";
-  ctx.fillText(`Haus (Thirst) - ${survival.thirst || 0}/100`, 50, 340);
-  drawRoundedProgressBar(
-    ctx,
-    50,
-    350,
-    350,
-    15,
-    7.5,
-    survival.thirst || 0,
-    thirstColor,
-  );
-
-  ctx.fillStyle = "#ffffff";
-  ctx.fillText(`Stamina (Energy) - ${survival.stamina || 0}/100`, 50, 400);
-  drawRoundedProgressBar(
-    ctx,
-    50,
-    410,
-    350,
-    15,
-    7.5,
-    survival.stamina || 0,
-    staminaColor,
-  );
-
-  // Stats RPG Atribut
-  ctx.font = '20px "InterBold", sans-serif';
-  ctx.fillText("STATS ATRIBUT", 450, 185);
-
-  const stats = [
-    { name: "Kekuatan", val: survival.strength || 1, color: "#DC143C" },
-    { name: "Kelincahan", val: survival.agility || 1, color: "#00FA9A" },
-    { name: "Kepintaran", val: survival.intelligence || 1, color: "#9370DB" },
-    { name: "Keberuntungan", val: survival.luck || 1, color: "#FFD700" },
-  ];
-
-  let statY = 220;
-  stats.forEach((st) => {
-    drawRoundedRect(ctx, 450, statY, 400, 40, 10, "rgba(0,0,0,0.3)");
-    ctx.fillStyle = st.color;
-    ctx.fillRect(450, statY, 10, 40);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = '18px "InterBold", sans-serif';
-    ctx.fillText(st.name, 480, statY + 26);
-    ctx.textAlign = "right";
-    ctx.fillText(`${st.val}/${maxStatCap}`, 830, statY + 26);
-    ctx.textAlign = "left";
-    statY += 55;
-  });
-
-  return canvas.toBuffer("image/png");
-}
-
-// ==========================================
-// 🎵 MUSIC PROFILE CANVAS
-// ==========================================
-async function generateMusicProfileImage(user, stats, clientAvatar) {
-  const canvas = createCanvas(1000, 650);
-  const ctx = canvas.getContext("2d");
-
-  const isVIP = stats.isPremium;
-  const themeColor = isVIP ? UI_COLORS.gold : UI_COLORS.primary;
-
-  const bgGradient = ctx.createLinearGradient(
-    0,
-    0,
-    canvas.width,
-    canvas.height,
-  );
-  bgGradient.addColorStop(0, "#090a0f");
-  bgGradient.addColorStop(1, "#111522");
-  ctx.fillStyle = bgGradient;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+  // Outer canvas border
   ctx.save();
-  const blurGlow = ctx.createRadialGradient(200, 200, 50, 200, 200, 400);
-  blurGlow.addColorStop(
-    0,
-    isVIP ? "rgba(255, 215, 0, 0.15)" : "rgba(0, 217, 255, 0.15)",
-  );
-  blurGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = blurGlow;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = `rgba(${ac.r},${ac.g},${ac.b},0.18)`;
+  ctx.lineWidth = 1.5;
+  ctx.shadowBlur = 16;
+  ctx.shadowColor = `rgba(${ac.r},${ac.g},${ac.b},0.3)`;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(10, 10, W - 20, H - 20, 22);
+  else ctx.rect(10, 10, W - 20, H - 20);
+  ctx.stroke();
   ctx.restore();
 
-  const fillRoundedRect = (x, y, w, h, r, color) => {
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(x, y, w, h, r);
-    else ctx.rect(x, y, w, h);
-    ctx.fillStyle = color;
-    ctx.fill();
-  };
+  // â”€â”€â”€ 2. HEADER CARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const HDR_X = 24; const HDR_Y = 24;
+  const HDR_W = W - 48; const HDR_H = 210;
 
-  fillRoundedRect(40, 40, 920, 200, 25, "rgba(255, 255, 255, 0.03)");
-  ctx.strokeStyle = isVIP ? "rgba(255, 215, 0, 0.5)" : "rgba(0, 217, 255, 0.3)";
-  ctx.lineWidth = isVIP ? 2 : 1;
-  if (ctx.roundRect) {
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(HDR_X, HDR_Y, HDR_W, HDR_H, 18);
+  else ctx.rect(HDR_X, HDR_Y, HDR_W, HDR_H);
+  ctx.fill();
+  ctx.strokeStyle = `rgba(${ac.r},${ac.g},${ac.b},0.22)`;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
+
+  // Accent left strip on header
+  const gradStrip = ctx.createLinearGradient(HDR_X, HDR_Y, HDR_X, HDR_Y + HDR_H);
+  gradStrip.addColorStop(0, accentHex);
+  gradStrip.addColorStop(1, ac2Hex);
+  ctx.fillStyle = gradStrip;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(HDR_X, HDR_Y, 4, HDR_H, [18, 0, 0, 18]);
+  else ctx.fillRect(HDR_X, HDR_Y, 4, HDR_H);
+  ctx.fill();
+
+  // â”€â”€â”€ 3. AVATAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const AVA_R = 72;
+  const AVA_CX = HDR_X + 24 + AVA_R;
+  const AVA_CY = HDR_Y + HDR_H / 2;
+
+  // VIP outer glow ring
+  if (isVIP) {
+    ctx.save();
+    ctx.shadowBlur = 24;
+    ctx.shadowColor = '#FFD700';
     ctx.beginPath();
-    ctx.roundRect(40, 40, 920, 200, 25);
+    ctx.arc(AVA_CX, AVA_CY, AVA_R + 4, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,215,0,0.7)';
+    ctx.lineWidth = 2.5;
     ctx.stroke();
+    ctx.restore();
+  } else {
+    ctx.save();
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = `rgba(${ac.r},${ac.g},${ac.b},0.6)`;
+    ctx.beginPath();
+    ctx.arc(AVA_CX, AVA_CY, AVA_R + 3, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(${ac.r},${ac.g},${ac.b},0.65)`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
   }
 
-  let userAvatarImg;
+  // Avatar clip & draw
+  let userAvatarImg = null;
   try {
-    userAvatarImg = await loadImage(
-      user.displayAvatarURL({ extension: "png", size: 256 }),
-    );
-  } catch (e) {
-    userAvatarImg = await loadImage(clientAvatar);
+    userAvatarImg = await loadImage(user.displayAvatarURL({ extension: 'png', size: 256 }));
+  } catch (_) {
+    try { userAvatarImg = await loadImage(clientAvatar); } catch (_2) {}
+  }
+  if (userAvatarImg) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(AVA_CX, AVA_CY, AVA_R, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(userAvatarImg, AVA_CX - AVA_R, AVA_CY - AVA_R, AVA_R * 2, AVA_R * 2);
+    ctx.restore();
   }
 
-  drawCircularImage(ctx, userAvatarImg, 135, 140, 70, themeColor);
+  // â”€â”€â”€ 4. IDENTITY (name, username, badge) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const ID_X = AVA_CX + AVA_R + 24;
 
-  ctx.fillStyle = UI_COLORS.textMain;
-  ctx.font = 'bold 36px "MontserratBold", "EmojiFont", sans-serif';
-  ctx.fillText(user.displayName || user.username, 230, 110);
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 38px "MontserratBold", sans-serif';
+  ctx.fillText(user.displayName || user.username, ID_X, AVA_CY - 26);
 
-  ctx.fillStyle = themeColor;
-  ctx.font = '20px "Inter", sans-serif';
-  ctx.fillText(`@${user.username}`, 230, 145);
+  ctx.fillStyle = accentHex;
+  ctx.font = '19px "Inter", sans-serif';
+  ctx.fillText(`@${user.username}`, ID_X, AVA_CY + 6);
 
-  ctx.fillStyle = isVIP ? "#FFD700" : UI_COLORS.textSub;
-  ctx.font = 'bold 18px "InterBold", "EmojiFont", sans-serif';
-  ctx.fillText(isVIP ? "👑 VIP Prestige" : "🔹 Member Profile", 230, 185);
+  // Badge (pill drawn manually, no emoji)
+  const BADGE_LABEL = isVIP ? 'VIP PRESTIGE' : 'MEMBER PROFILE';
+  const BADGE_COLOR = isVIP ? '#FFD700' : '#8e98b0';
+  ctx.font = 'bold 13px "InterBold", sans-serif';
+  const badgeW = ctx.measureText(BADGE_LABEL).width + 28;
+  ctx.fillStyle = isVIP ? 'rgba(255,215,0,0.12)' : 'rgba(255,255,255,0.06)';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(ID_X, AVA_CY + 18, badgeW, 26, 13);
+  else ctx.rect(ID_X, AVA_CY + 18, badgeW, 26);
+  ctx.fill();
+  // Small square indicator
+  ctx.fillStyle = BADGE_COLOR;
+  ctx.fillRect(ID_X + 10, AVA_CY + 28, 6, 6);
+  ctx.fillStyle = BADGE_COLOR;
+  ctx.fillText(BADGE_LABEL, ID_X + 22, AVA_CY + 36);
 
-  ctx.fillStyle = UI_COLORS.textSub;
-  ctx.font = '16px "Inter", sans-serif';
-  ctx.textAlign = "left";
-  ctx.fillText("Total Trek", 550, 90);
-  ctx.fillText("Total Durasi", 730, 90);
+  // â”€â”€â”€ 5. STAT BOXES (right of header) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const STAT_START_X = W - 530;
+  const STAT_Y       = HDR_Y + 28;
+  const STAT_BOX_W   = 155;
+  const STAT_BOX_H   = HDR_H - 56;
 
-  ctx.fillStyle = UI_COLORS.textMain;
-  ctx.font = 'bold 28px "MontserratBold", sans-serif';
-  ctx.fillText(`${stats.tracksListened || 0}`, 550, 125);
-  ctx.fillText(`${formatDur(stats.totalDurationMs)}`, 730, 125);
+  const statBoxes = [
+    { label: 'TOTAL TREK',    value: `${stats.tracksListened || 0}`,       color: accentHex },
+    { label: 'TOTAL DURASI',  value: formatDur(stats.totalDurationMs),      color: accentHex },
+    { label: 'TERAKHIR DIPUTAR', value: truncateText(ctx, stats.lastListened || 'Belum ada', STAT_BOX_W - 16), color: '#F9A8D4', big: false },
+  ];
 
-  ctx.fillStyle = UI_COLORS.textSub;
-  ctx.font = '16px "Inter", sans-serif';
-  ctx.fillText("Terakhir Diputar:", 550, 180);
-
-  ctx.fillStyle = UI_COLORS.textMain;
-  ctx.font = 'bold 20px "InterBold", "EmojiFont", sans-serif';
-  const lastListenedText = truncateText(ctx, stats.lastListened, 380);
-  ctx.fillText(lastListenedText, 550, 210);
-
-  const cardY = 270;
-  const cardW = 286;
-  const cardH = 310;
-  const gap = 30;
-
-  const drawList = (items, startX, startY) => {
-    if (!items || items.length === 0) {
-      ctx.fillStyle = UI_COLORS.textSub;
-      ctx.font = 'italic 18px "Inter", sans-serif';
-      ctx.fillText("Belum ada data", startX, startY);
-      return;
+  statBoxes.forEach((sb, i) => {
+    const bx = STAT_START_X + i * (STAT_BOX_W + 20);
+    // Box bg
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(bx, STAT_Y, STAT_BOX_W, STAT_BOX_H, 12);
+    else ctx.rect(bx, STAT_Y, STAT_BOX_W, STAT_BOX_H);
+    ctx.fill();
+    // Top accent line
+    const acGrad = ctx.createLinearGradient(bx, STAT_Y, bx + STAT_BOX_W, STAT_Y);
+    acGrad.addColorStop(0, accentHex);
+    acGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = acGrad;
+    ctx.fillRect(bx + 12, STAT_Y, STAT_BOX_W - 24, 2);
+    // Label
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#8e98b0';
+    ctx.font = '11px "InterBold", sans-serif';
+    ctx.fillText(sb.label, bx + 12, STAT_Y + 24);
+    // Value
+    ctx.fillStyle = sb.color;
+    ctx.font = sb.big === false ? '16px "MontserratBold", sans-serif' : 'bold 30px "MontserratBold", sans-serif';
+    if (sb.big === false) {
+      // Multi-line wrap for last played
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '15px "InterBold", sans-serif';
+      wrapText(ctx, sb.value, bx + 12, STAT_Y + 50, STAT_BOX_W - 16, 20, 4);
+    } else {
+      ctx.fillText(sb.value, bx + 12, STAT_Y + 75);
     }
+  });
 
-    ctx.font = 'bold 18px "InterBold", "EmojiFont", sans-serif';
-    items.forEach((item, i) => {
-      ctx.fillStyle = themeColor;
-      ctx.fillText(`${i + 1}.`, startX, startY + i * 45);
-      ctx.fillStyle = UI_COLORS.textMain;
-      const itemText = truncateText(ctx, item, cardW - 50);
-      ctx.fillText(itemText, startX + 25, startY + i * 45);
-    });
-  };
+  // â”€â”€â”€ 6. GRADIENT DIVIDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const DIV_Y = HDR_Y + HDR_H + 20;
+  const divGrad = ctx.createLinearGradient(24, DIV_Y, W - 24, DIV_Y);
+  divGrad.addColorStop(0, 'rgba(0,0,0,0)');
+  divGrad.addColorStop(0.3, `rgba(${ac.r},${ac.g},${ac.b},0.4)`);
+  divGrad.addColorStop(0.7, `rgba(${ac.r},${ac.g},${ac.b},0.4)`);
+  divGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = divGrad;
+  ctx.fillRect(24, DIV_Y, W - 48, 1);
 
-  fillRoundedRect(40, cardY, cardW, cardH, 20, "rgba(0, 0, 0, 0.4)");
-  ctx.fillStyle = themeColor;
-  ctx.font = 'bold 22px "MontserratBold", "EmojiFont", sans-serif';
-  ctx.fillText("🎵 Top 5 Trek", 60, cardY + 45);
-  drawList(stats.topTracks, 60, cardY + 100);
+  // â”€â”€â”€ 7. THREE LIST CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const CARD_Y   = DIV_Y + 20;
+  const CARD_H   = H - CARD_Y - 50;
+  const CARD_GAP = 20;
+  const CARD_W   = Math.floor((W - 48 - CARD_GAP * 2) / 3);
 
-  fillRoundedRect(
-    40 + cardW + gap,
-    cardY,
-    cardW,
-    cardH,
-    20,
-    "rgba(0, 0, 0, 0.4)",
-  );
-  ctx.fillStyle = isVIP ? "#FFA500" : "#FFD700";
-  ctx.font = 'bold 22px "MontserratBold", "EmojiFont", sans-serif';
-  ctx.fillText("🏰 Top 5 Server", 40 + cardW + gap + 20, cardY + 45);
-  drawList(stats.topServers, 40 + cardW + gap + 20, cardY + 100);
+  const cardDefs = [
+    { title: 'TOP 5 TREK',   items: stats.topTracks,   color: accentHex,   lineColor: accentHex },
+    { title: 'TOP 5 SERVER', items: stats.topServers,  color: isVIP ? '#FFA500' : '#FFD700', lineColor: isVIP ? '#FFA500' : '#FFD700' },
+    { title: 'TOP 5 RELASI', items: stats.topFriends,  color: '#FF6B7A',   lineColor: '#FF6B7A' },
+  ];
 
-  fillRoundedRect(
-    40 + (cardW + gap) * 2,
-    cardY,
-    cardW,
-    cardH,
-    20,
-    "rgba(0, 0, 0, 0.4)",
-  );
-  ctx.fillStyle = "#ff4757";
-  ctx.font = 'bold 22px "MontserratBold", "EmojiFont", sans-serif';
-  ctx.fillText("🤝 Top 5 Relasi", 40 + (cardW + gap) * 2 + 20, cardY + 45);
-  drawList(stats.topFriends, 40 + (cardW + gap) * 2 + 20, cardY + 100);
+  const rankColors = [accentHex, '#ffffff', '#8e98b0', '#6b7280', '#4b5563'];
 
-  try {
-    const nauraLogoImg = await loadImage(clientAvatar);
-    drawCircularImage(ctx, nauraLogoImg, 930, 615, 20);
-  } catch (e) {}
+  cardDefs.forEach((card, ci) => {
+    const cx = 24 + ci * (CARD_W + CARD_GAP);
 
-  ctx.fillStyle = UI_COLORS.textSub;
-  ctx.font = 'bold 14px "MontserratBold", sans-serif';
-  ctx.textAlign = "right";
-  ctx.fillText("Naura Music Intelligence", 890, 620);
+    // Card background
+    ctx.fillStyle = 'rgba(0,0,0,0.38)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(cx, CARD_Y, CARD_W, CARD_H, 16);
+    else ctx.rect(cx, CARD_Y, CARD_W, CARD_H);
+    ctx.fill();
 
-  return canvas.toBuffer("image/png");
+    // Card border
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(cx, CARD_Y, CARD_W, CARD_H, 16);
+    else ctx.rect(cx, CARD_Y, CARD_W, CARD_H);
+    ctx.stroke();
+    ctx.restore();
+
+    // Colored top strip
+    const stripGrad = ctx.createLinearGradient(cx, CARD_Y, cx + CARD_W, CARD_Y);
+    stripGrad.addColorStop(0, card.lineColor);
+    stripGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = stripGrad;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(cx, CARD_Y, CARD_W, 3, [16, 16, 0, 0]);
+    else ctx.fillRect(cx, CARD_Y, CARD_W, 3);
+    ctx.fill();
+
+    // Card title (NO emoji â€” icon drawn as shape)
+    ctx.textAlign = 'left';
+    ctx.fillStyle = card.color;
+    ctx.font = 'bold 16px "MontserratBold", sans-serif';
+    ctx.fillText(card.title, cx + 18, CARD_Y + 36);
+
+    // Thin separator below title
+    ctx.fillStyle = 'rgba(255,255,255,0.06)';
+    ctx.fillRect(cx + 18, CARD_Y + 44, CARD_W - 36, 1);
+
+    // List items
+    const listY0 = CARD_Y + 66;
+    const ROW_H  = Math.floor((CARD_H - 80) / 5);
+
+    if (!card.items || card.items.length === 0) {
+      ctx.fillStyle = '#4b5560';
+      ctx.font = 'italic 15px "Inter", sans-serif';
+      ctx.fillText('Belum ada data', cx + 18, listY0 + 20);
+    } else {
+      card.items.slice(0, 5).forEach((item, ri) => {
+        const ry = listY0 + ri * ROW_H;
+
+        // Alternating row bg
+        if (ri % 2 === 0) {
+          ctx.fillStyle = 'rgba(255,255,255,0.025)';
+          ctx.beginPath();
+          if (ctx.roundRect) ctx.roundRect(cx + 8, ry - 14, CARD_W - 16, ROW_H, 6);
+          else ctx.rect(cx + 8, ry - 14, CARD_W - 16, ROW_H);
+          ctx.fill();
+        }
+
+        // Rank badge (circle with number)
+        const rankC = hexToRgb(rankColors[ri] || '#4b5563');
+        ctx.fillStyle = `rgba(${rankC.r},${rankC.g},${rankC.b},0.18)`;
+        ctx.beginPath();
+        ctx.arc(cx + 28, ry - 3, 13, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = rankColors[ri] || '#4b5563';
+        ctx.font = 'bold 12px "MontserratBold", sans-serif';
+        ctx.fillText(`${ri + 1}`, cx + 28, ry + 1);
+
+        // Item text
+        ctx.textAlign = 'left';
+        ctx.fillStyle = ri === 0 ? '#ffffff' : '#c9d1e0';
+        ctx.font = ri === 0 ? 'bold 14px "InterBold", sans-serif' : '13px "Inter", sans-serif';
+        const itemText = truncateText(ctx, String(item), CARD_W - 68);
+        ctx.fillText(itemText, cx + 48, ry + 1);
+      });
+    }
+  });
+
+  // â”€â”€â”€ 8. FOOTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Naura avatar circle
+  let nauraImg = null;
+  try { nauraImg = await loadImage(clientAvatar); } catch (_) {}
+  if (nauraImg) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(W - 36, H - 26, 16, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.drawImage(nauraImg, W - 52, H - 42, 32, 32);
+    ctx.restore();
+  }
+
+  ctx.textAlign = 'right';
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.font = 'bold 13px "MontserratBold", sans-serif';
+  ctx.fillText('Naura Music Intelligence', W - 60, H - 20);
+
+  return canvas.toBuffer('image/png');
 }
 
-// ==========================================
-// 🎵 MUSIC PANEL CANVAS
-// ==========================================
+
+// ============================================================
+// ðŸŽµ generateMusicPanelImage â€” Redesigned Premium Card Layout
+// Canvas: 750 x 240px â€” Glassmorphism + Neon Glow + Waveform
+// ============================================================
 async function generateMusicPanelImage(track, currentPos, clientAvatar) {
-  const canvas = createCanvas(600, 280);
-  const ctx = canvas.getContext("2d");
+  const W = 750;
+  const H = 240;
+  const canvas = createCanvas(W, H);
+  const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = UI_COLORS.background;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // --- 1. Platform detection & accent color ---
+  const source = (
+    track?.info?.originalSource ||
+    track?.info?.sourceName ||
+    'youtube'
+  ).toLowerCase();
 
-  let trackImageUrl = track.info.image;
-  if (!trackImageUrl && track.info.sourceName === "youtube") {
+  let accentHex = '#FFB6C1'; // Default: Naura Pink
+  let platformLabel = 'LAVALINK';
+  if (source.includes('spotify'))   { accentHex = '#1DB954'; platformLabel = 'SPOTIFY'; }
+  else if (source.includes('ytm'))  { accentHex = '#FF0000'; platformLabel = 'YT MUSIC'; }
+  else if (source.includes('youtube')) { accentHex = '#FF0000'; platformLabel = 'YOUTUBE'; }
+  else if (source.includes('soundcloud')) { accentHex = '#FF5500'; platformLabel = 'SOUNDCLOUD'; }
+
+  // Convert hex accent to rgba components for gradients
+  const hexToRgb = (hex) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return { r, g, b };
+  };
+  const ac = hexToRgb(accentHex);
+
+  // --- 2. Background: Dynamic Now Playing Banner / Fallback ---
+  const fs = require('fs');
+  const bannerPath = ui.getBanner?.('musicNowPlaying') || ui.getBanner?.('nowPlaying') || './assets/music/Now Playing Banner.jpeg';
+  let bgImgLoaded = false;
+  if (bannerPath && fs.existsSync(bannerPath)) {
+    try {
+      const bgImg = await loadImage(bannerPath);
+      ctx.drawImage(bgImg, 0, 0, W, H);
+      // Dark overlay for high contrast and readability
+      ctx.fillStyle = 'rgba(9, 11, 16, 0.78)';
+      ctx.fillRect(0, 0, W, H);
+      bgImgLoaded = true;
+    } catch (_) {}
+  }
+
+  if (!bgImgLoaded) {
+    ctx.fillStyle = '#090b10';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Ambient radial glow pulsing from the album art area (left)
+  const glow = ctx.createRadialGradient(115, H / 2, 10, 115, H / 2, 280);
+  glow.addColorStop(0, `rgba(${ac.r},${ac.g},${ac.b},0.18)`);
+  glow.addColorStop(1, 'rgba(9,11,16,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle right-side secondary glow for depth
+  const glowR = ctx.createRadialGradient(W - 60, H / 2, 5, W - 60, H / 2, 200);
+  glowR.addColorStop(0, `rgba(${ac.r},${ac.g},${ac.b},0.08)`);
+  glowR.addColorStop(1, 'rgba(9,11,16,0)');
+  ctx.fillStyle = glowR;
+  ctx.fillRect(0, 0, W, H);
+
+  // --- 3. Glassmorphism card border ---
+  ctx.save();
+  ctx.strokeStyle = `rgba(${ac.r},${ac.g},${ac.b},0.35)`;
+  ctx.lineWidth = 1.5;
+  ctx.shadowBlur = 12;
+  ctx.shadowColor = `rgba(${ac.r},${ac.g},${ac.b},0.4)`;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(8, 8, W - 16, H - 16, 18);
+  else ctx.rect(8, 8, W - 16, H - 16);
+  ctx.stroke();
+  ctx.restore();
+
+  // Inner glass fill
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.025)';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(8, 8, W - 16, H - 16, 18);
+  else ctx.rect(8, 8, W - 16, H - 16);
+  ctx.fill();
+  ctx.restore();
+
+  // --- 4. Album Art (rounded rect, left side) ---
+  const ART_X = 24;
+  const ART_Y = 24;
+  const ART_W = 192;
+  const ART_H = 192;
+  const ART_R = 14;
+
+  // Art shadow / glow
+  ctx.save();
+  ctx.shadowBlur = 28;
+  ctx.shadowColor = `rgba(${ac.r},${ac.g},${ac.b},0.55)`;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(ART_X, ART_Y, ART_W, ART_H, ART_R);
+  else ctx.rect(ART_X, ART_Y, ART_W, ART_H);
+  ctx.fillStyle = `rgba(${ac.r},${ac.g},${ac.b},0.1)`;
+  ctx.fill();
+  ctx.restore();
+
+  // Load thumbnail
+  let trackImageUrl = track?.info?.image;
+  if (!trackImageUrl && source.includes('youtube')) {
     trackImageUrl = `https://img.youtube.com/vi/${track.info.identifier}/mqdefault.jpg`;
   }
-  if (
-    !trackImageUrl ||
-    typeof trackImageUrl !== "string" ||
-    !trackImageUrl.startsWith("http")
-  ) {
+  if (!trackImageUrl || typeof trackImageUrl !== 'string' || !trackImageUrl.startsWith('http')) {
     trackImageUrl = clientAvatar;
   }
 
-  let trackThumbImg;
+  let thumbImg = null;
   try {
-    const response = await axios.get(trackImageUrl, {
-      responseType: "arraybuffer",
-      timeout: 5000,
-    });
-    trackThumbImg = await loadImage(Buffer.from(response.data));
-  } catch (error) {
-    trackThumbImg = await loadImage(clientAvatar);
+    const resp = await axios.get(trackImageUrl, { responseType: 'arraybuffer', timeout: 5000 });
+    thumbImg = await loadImage(Buffer.from(resp.data));
+  } catch (_) {
+    try {
+      if (clientAvatar && clientAvatar.startsWith('http')) {
+        const resp = await axios.get(clientAvatar, { responseType: 'arraybuffer', timeout: 5000 });
+        thumbImg = await loadImage(Buffer.from(resp.data));
+      }
+    } catch (_2) {}
   }
 
-  drawCircularImage(ctx, trackThumbImg, 120, 140, 90, UI_COLORS.primary);
+  // Draw art with clip
+  ctx.save();
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(ART_X, ART_Y, ART_W, ART_H, ART_R);
+  else ctx.rect(ART_X, ART_Y, ART_W, ART_H);
+  ctx.clip();
 
-  ctx.fillStyle = UI_COLORS.textSub;
-  ctx.font = '16px "InterBold", "EmojiFont"';
-  ctx.textAlign = "center";
-  ctx.fillText(track.info.author.substring(0, 25), 120, 260);
+  if (thumbImg) {
+    ctx.drawImage(thumbImg, ART_X, ART_Y, ART_W, ART_H);
+  } else {
+    // Fallback vinyl-like placeholder
+    const fbGrad = ctx.createLinearGradient(ART_X, ART_Y, ART_X + ART_W, ART_Y + ART_H);
+    fbGrad.addColorStop(0, '#1a0d2e');
+    fbGrad.addColorStop(1, '#0b0c10');
+    ctx.fillStyle = fbGrad;
+    ctx.fillRect(ART_X, ART_Y, ART_W, ART_H);
 
-  ctx.fillStyle = UI_COLORS.primary;
-  ctx.font = '20px "MontserratBold", "EmojiFont"';
-  ctx.textAlign = "left";
-  wrapText(ctx, track.info.title, 230, 100, 170, 25, 4);
+    // Concentric rings
+    for (let r = 30; r < 90; r += 18) {
+      ctx.beginPath();
+      ctx.arc(ART_X + ART_W / 2, ART_Y + ART_H / 2, r, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(${ac.r},${ac.g},${ac.b},0.15)`;
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    }
+    // Center dot
+    ctx.beginPath();
+    ctx.arc(ART_X + ART_W / 2, ART_Y + ART_H / 2, 14, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${ac.r},${ac.g},${ac.b},0.5)`;
+    ctx.fill();
+  }
+  ctx.restore();
 
-  drawArcProgressBar(
-    ctx,
-    480,
-    140,
-    70,
-    currentPos,
-    track.info.length,
-    UI_COLORS.primary,
-    8,
-  );
+  // Art border outline
+  ctx.save();
+  ctx.strokeStyle = `rgba(${ac.r},${ac.g},${ac.b},0.6)`;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(ART_X, ART_Y, ART_W, ART_H, ART_R);
+  else ctx.rect(ART_X, ART_Y, ART_W, ART_H);
+  ctx.stroke();
+  ctx.restore();
 
-  ctx.fillStyle = UI_COLORS.textSub;
-  ctx.font = '18px "InterBold", "EmojiFont"';
-  ctx.textAlign = "center";
-  ctx.fillText("Naura", 480, 145);
+  // Platform badge on art (bottom-left corner)
+  const BADGE_X = ART_X + 8;
+  const BADGE_Y = ART_Y + ART_H - 26;
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(BADGE_X, BADGE_Y, platformLabel.length * 7.5 + 14, 20, 5);
+  else ctx.rect(BADGE_X, BADGE_Y, platformLabel.length * 7.5 + 14, 20);
+  ctx.fill();
+  ctx.fillStyle = accentHex;
+  ctx.font = 'bold 10px "MontserratBold", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(platformLabel, BADGE_X + 7, BADGE_Y + 13.5);
+  ctx.restore();
 
-  ctx.fillStyle = UI_COLORS.textSub;
-  ctx.font = '14px "Inter", "EmojiFont"';
-  ctx.fillText(formatDur(currentPos), 430, 230);
-  ctx.fillText(formatDur(track.info.length), 530, 230);
+  // --- 5. Info zone (right of album art) ---
+  const INFO_X = ART_X + ART_W + 22;
+  const INFO_W = W - INFO_X - 20;
 
-  ctx.fillStyle = UI_COLORS.primary;
-  ctx.font = '16px "MontserratBold", "EmojiFont"';
-  ctx.textAlign = "left";
-  ctx.fillText("Naura Audio System", 20, 30);
+  // "NOW PLAYING" label â€” gambar segitiga play manual (â–¶ tidak ada di font Montserrat)
+  ctx.save();
+  ctx.fillStyle = `rgba(${ac.r},${ac.g},${ac.b},0.9)`;
+  ctx.beginPath();
+  ctx.moveTo(INFO_X,     35);
+  ctx.lineTo(INFO_X + 9, 40);
+  ctx.lineTo(INFO_X,     45);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 
-  return canvas.toBuffer("image/png");
+  ctx.fillStyle = `rgba(${ac.r},${ac.g},${ac.b},0.85)`;
+  ctx.font = 'bold 11px "MontserratBold", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('NOW PLAYING', INFO_X + 14, 42);
+
+  // Separator line under label
+  ctx.save();
+  ctx.strokeStyle = `rgba(${ac.r},${ac.g},${ac.b},0.3)`;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(INFO_X, 50);
+  ctx.lineTo(INFO_X + INFO_W, 50);
+  ctx.stroke();
+  ctx.restore();
+
+  // Track title (max 2 lines, 22px bold)
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.9)';
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 22px "MontserratBold", "EmojiFont", sans-serif';
+  ctx.textAlign = 'left';
+  wrapText(ctx, track.info.title || 'Unknown Track', INFO_X, 80, INFO_W, 28, 2);
+  ctx.restore();
+
+  // Artist name
+  ctx.fillStyle = '#F9A8D4';
+  ctx.font = '14px "Inter", "EmojiFont", sans-serif';
+  ctx.textAlign = 'left';
+  const artist = (track.info.author || 'Unknown Artist').substring(0, 40);
+  ctx.fillText(artist, INFO_X, 140);
+
+  // --- 6. Waveform / equalizer bars ---
+  const BAR_CNT = 28;
+  const BAR_W = 3;
+  const BAR_GAP = 6;
+  const WAVE_X = INFO_X;
+  const WAVE_BASE_Y = 168;
+  const WAVE_MAX_H = 18;
+
+  ctx.save();
+  for (let i = 0; i < BAR_CNT; i++) {
+    const phase = (currentPos / 900 + i * 0.55);
+    const barH = Math.max(3, Math.abs(Math.sin(phase) * Math.cos(i * 0.4)) * WAVE_MAX_H + 3);
+    const bx = WAVE_X + i * (BAR_W + BAR_GAP);
+    const by = WAVE_BASE_Y - barH;
+
+    // Gradient fill per bar
+    const barGrad = ctx.createLinearGradient(bx, by, bx, WAVE_BASE_Y);
+    barGrad.addColorStop(0, `rgba(${ac.r},${ac.g},${ac.b},0.95)`);
+    barGrad.addColorStop(1, `rgba(${ac.r},${ac.g},${ac.b},0.25)`);
+    ctx.fillStyle = barGrad;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(bx, by, BAR_W, barH, 2);
+    else ctx.rect(bx, by, BAR_W, barH);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // --- 7. Progress bar (horizontal, full INFO_W) ---
+  const PB_X = INFO_X;
+  const PB_Y = 182;
+  const PB_H = 6;
+  const PB_W = INFO_W;
+
+  const duration = track.info.length || 1;
+  const progress = Math.max(0, Math.min(1, currentPos / duration));
+
+  // Track (background)
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(PB_X, PB_Y, PB_W, PB_H, 3);
+  else ctx.rect(PB_X, PB_Y, PB_W, PB_H);
+  ctx.fill();
+
+  // Filled portion with gradient
+  if (progress > 0) {
+    const pbFill = ctx.createLinearGradient(PB_X, 0, PB_X + PB_W, 0);
+    pbFill.addColorStop(0, accentHex);
+    pbFill.addColorStop(1, `rgba(${ac.r},${ac.g},${ac.b},0.6)`);
+    ctx.fillStyle = pbFill;
+    ctx.shadowBlur = 6;
+    ctx.shadowColor = `rgba(${ac.r},${ac.g},${ac.b},0.7)`;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(PB_X, PB_Y, PB_W * progress, PB_H, 3);
+    else ctx.rect(PB_X, PB_Y, PB_W * progress, PB_H);
+    ctx.fill();
+
+    // Playhead dot
+    const dotX = PB_X + PB_W * progress;
+    ctx.beginPath();
+    ctx.arc(dotX, PB_Y + PB_H / 2, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = accentHex;
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // --- 8. Timestamps ---
+  ctx.font = '12px "Inter", sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.textAlign = 'left';
+  if (track.info.isStream) {
+    ctx.fillStyle = '#FF4757';
+    ctx.font = 'bold 12px "InterBold", sans-serif';
+    ctx.fillText('ðŸ”´ LIVE STREAM', PB_X, PB_Y + 22);
+  } else {
+    ctx.fillText(formatDur(currentPos), PB_X, PB_Y + 22);
+    ctx.textAlign = 'right';
+    ctx.fillText(formatDur(duration), PB_X + PB_W, PB_Y + 22);
+  }
+
+  // --- 9. Bottom brand watermark â€” gambar bintang 4-titik manual (âœ¦ tidak ada di font) ---
+  ctx.save();
+  ctx.font = 'bold 10px "MontserratBold", sans-serif';
+  ctx.textAlign = 'right';
+  const wmText = 'HOSHINO FM';
+  const wmW = ctx.measureText(wmText).width;
+  // Cross/star shape sebelum teks
+  const sx = W - 16 - wmW - 10;
+  const sy = H - 17;
+  ctx.fillStyle = `rgba(${ac.r},${ac.g},${ac.b},0.55)`;
+  // Horizontal bar
+  ctx.fillRect(sx - 4, sy - 1, 8, 2);
+  // Vertical bar
+  ctx.fillRect(sx - 1, sy - 4, 2, 8);
+  // Diagonal dots (bintang 4 sudut)
+  ctx.beginPath(); ctx.arc(sx - 3, sy - 3, 1.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(sx + 3, sy - 3, 1.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(sx - 3, sy + 3, 1.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(sx + 3, sy + 3, 1.2, 0, Math.PI * 2); ctx.fill();
+  // Teks watermark
+  ctx.fillStyle = `rgba(${ac.r},${ac.g},${ac.b},0.5)`;
+  ctx.fillText(wmText, W - 16, H - 12);
+  ctx.restore();
+
+  return canvas.toBuffer('image/png');
 }
 
 // ==========================================
-// 👋 GREETING / WELCOME CANVAS (REMASTERED)
+// ðŸ‘‹ GREETING / WELCOME CANVAS (REMASTERED)
 // ==========================================
 async function generateWelcomeImage(
   member,
@@ -755,7 +1507,7 @@ async function generateWelcomeImage(
   const countText = isWelcome
     ? `Anggota #${member.guild.memberCount}`
     : `Sisa #${member.guild.memberCount}`;
-  ctx.fillText(`${tag}   •   ${countText}`, subtitleX, subtitleY);
+  ctx.fillText(`${tag}   â€¢   ${countText}`, subtitleX, subtitleY);
 
   ctx.fillStyle = customGlow;
   ctx.fillRect(subtitleX, subtitleY + 25, 150, 4);
@@ -764,7 +1516,7 @@ async function generateWelcomeImage(
 }
 
 // ==========================================
-// 📈 LEVEL UP CANVAS (FUNGSI BARU)
+// ðŸ“ˆ LEVEL UP CANVAS (FUNGSI BARU)
 // ==========================================
 async function generateLevel(user, level) {
   const canvas = createCanvas(800, 250);
@@ -816,6 +1568,20 @@ async function generatePremiumTierCard(
   const ctx = canvas.getContext("2d");
 
   const tierColorMap = {
+    voter: {
+      primary: "#F43F5E",
+      glow: "rgba(244,63,94,0.4)",
+      from: "#2b0a14",
+      to: "#1c060d",
+      badge: "VOTER",
+    },
+    starter: {
+      primary: "#38bdf8",
+      glow: "rgba(56,189,248,0.4)",
+      from: "#0c1b2f",
+      to: "#071324",
+      badge: "STARTER",
+    },
     supporter: {
       primary: "#C0C0C0",
       glow: "rgba(192,192,192,0.4)",
@@ -974,7 +1740,7 @@ async function generatePremiumTierCard(
   ctx.font = '16px "Inter", "EmojiFont"';
   if (isPremium && premiumUntil) {
     ctx.fillText(
-      `STATUS: AKTIF  •  Berakhir: ${new Date(premiumUntil).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}`,
+      `STATUS: AKTIF  â€¢  Berakhir: ${new Date(premiumUntil).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}`,
       textX,
       165,
     );
@@ -1084,8 +1850,20 @@ async function generateRankCard(
     ctx.fillRect(0, 0, W, H);
   }
 
-  // Inner Glass Panel
+  // Inner Glass Panel with Tinted Soft Shadow & Neon Glow Border
+  ctx.save();
+  ctx.shadowColor = "rgba(11, 12, 16, 0.8)";
+  ctx.shadowBlur = 24;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 8;
   drawRoundedRect(ctx, 20, 20, W - 40, H - 40, 20, "rgba(255, 255, 255, 0.04)");
+  ctx.restore();
+
+  ctx.strokeStyle = isPremium ? "rgba(255, 215, 0, 0.5)" : "rgba(255, 182, 193, 0.25)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(20, 20, W - 40, H - 40, 20);
+  ctx.stroke();
 
   // Avatar + Ring
   const avatarSize = 160;

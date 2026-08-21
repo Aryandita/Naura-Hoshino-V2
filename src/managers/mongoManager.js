@@ -16,6 +16,7 @@ try {
 const TicketTranscript = require("../models/mongo/TicketTranscript");
 const AiChatHistory = require("../models/mongo/AiChatHistory");
 const CommandAuditLog = require("../models/mongo/CommandAuditLog");
+const AiMemory = require("../models/mongo/AiMemory");
 
 class MongoManager {
   constructor() {
@@ -23,6 +24,7 @@ class MongoManager {
       TicketTranscript,
       AiChatHistory,
       CommandAuditLog,
+      AiMemory,
     };
     this._isConnecting = false;
     this._setupListeners();
@@ -242,6 +244,47 @@ class MongoManager {
     } catch (error) {
       logger.error("[MongoDB] Gagal mengambil command audit logs:", error.message);
       return [];
+    }
+  }
+
+  // ==========================================
+  // 🧠 4. AI PERSISTENT MEMORY APIS
+  // ==========================================
+
+  /**
+   * Simpan atau perbarui memori AI jangka panjang untuk user
+   * @param {string} userId
+   * @param {Object} memoryData
+   */
+  async saveAiMemory(userId, memoryData) {
+    if (!this.isReady || !userId) return null;
+    try {
+      return await AiMemory.findOneAndUpdate(
+        { userId },
+        {
+          ...memoryData,
+          userId,
+          lastInteraction: new Date(),
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true },
+      );
+    } catch (error) {
+      logger.error("[MongoDB] Gagal menyimpan AiMemory:", error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Ambil data memori AI user
+   * @param {string} userId
+   */
+  async getAiMemory(userId) {
+    if (!this.isReady || !userId) return null;
+    try {
+      return await AiMemory.findOne({ userId }).lean();
+    } catch (error) {
+      logger.error("[MongoDB] Gagal mengambil AiMemory:", error.message);
+      return null;
     }
   }
 }

@@ -173,6 +173,33 @@ components:
     borderColor: "{colors.premium-gold}"
     textColor: "{colors.on-dark}"
     rounded: "{rounded.md}"
+  bottom-nav-mobile:
+    backgroundColor: "{colors.surface-glass}"
+    borderColor: "{colors.hairline}"
+    textColor: "{colors.muted}"
+    activeTextColor: "{colors.primary}"
+    activeIndicatorColor: "{colors.primary-glow}"
+    height: 64px
+    rounded: "{rounded.xxl}"
+    padding: 8px 16px
+  empty-state-card:
+    backgroundColor: "{colors.surface-glass}"
+    borderColor: "{colors.hairline}"
+    textColor: "{colors.body-strong}"
+    rounded: "{rounded.xl}"
+    padding: 24px
+  timeline-step-indicator:
+    activeColor: "{colors.primary}"
+    completedColor: "{colors.accent-green}"
+    inactiveColor: "{colors.muted}"
+    lineColor: "{colors.hairline-strong}"
+  numeric-quick-chip:
+    backgroundColor: "{colors.surface-glass-hover}"
+    borderColor: "{colors.hairline}"
+    textColor: "{colors.primary}"
+    rounded: "{rounded.md}"
+    padding: 6px 12px
+    height: 32px
 ---
 
 ## Overview
@@ -356,33 +383,144 @@ Sistem antarmuka Naura Hoshino V2 memadukan estetika Cyber-Anime Glassmorphism d
 
 ---
 
-## 🚀 Advanced UI/UX Patterns (Part 3 Guidelines)
+## 🎨 UI/UX Masterclass & Design System Guidelines
 
-Berdasarkan referensi teknik desain tingkat lanjut (*"Top 5 Advanced UX/UI Design Tips and Tricks Every Designer Needs to Know About - Part 3"*), ekosistem antarmuka Naura menerapkan 5 standar berikut:
+Sistem antarmuka Naura Hoshino V2 mengintegrasikan 4 pilar teknik desain kelas industri (*UXpeak Design Masterclass*) yang dipadukan dengan estetika **Cyber-Anime Glassmorphism** dan **Psikologi UX**:
 
-### 1. Behavioral Personalization & Adaptive Display Modes
-- **Newbie Mode (Lv. 1-5 / Akun Baru):** Menampilkan panduan ramah, milestone langkah awal, dan tombol aksi pemula (*"Ayo mulai petualangan pertamamu bareng Naura!"*).
-- **Veteran / Super User Mode (Lv. >5 / Akun Aktif):** Menyajikan *high-density power stats*, matriks atribut, streak, dan tombol aksi cepat (*batch actions*).
+```
+┌───────────────────────────────────────────────────────────────────────────────────────────┐
+│                                NAURA UI/UX MASTERCLASS FRAMEWORK                          │
+├───────────────────────────────┬───────────────────────────────────────────────────────────┤
+│ Pilar 1: Visual & Depth       │ Tinted Soft Shadows, Visual Cues & Information Priority   │
+│ Pilar 2: Interaction & Flow   │ Selectable Cards, Low Interaction Cost & Active Empty State│
+│ Pilar 3: Ergonomics & Timeline│ Context-Aware Numeric Inputs & Visual Step Timelines      │
+│ Pilar 4: Mobile & Navigation  │ Floating Glass Bottom Nav, Thumb Zone & State Clarity     │
+└───────────────────────────────┴───────────────────────────────────────────────────────────┘
+```
 
-### 2. Smarter & Predictive Search UX
-- **Context-Aware Autocomplete:** Setiap item autocomplete diperkaya dengan tag penjelas (`[Item • 500 Koin]`, `[Musik • Populer]`, `[Command • Admin]`).
-- **Graceful Fallback:** Bila query pengguna tidak menemukan hasil persis, berikan daftar rekomendasi populer Naura daripada membiarkan hasil pencarian kosong.
+---
 
-### 3. Visual Timelines & Human Connection in Multi-Step Workflows
-- **Visual Step Tracker:** Proses multi-langkah (status tiket, ekspedisi dungeon, antrean musik) ditampilkan dengan timeline horizontal terstruktur:
-  `✅ Laporan Diterima ── ⏳ Dalam Pemeriksaan Staff ── ⚪ Selesai & Terarsip`
-- **Pesan Empatik:** Menghilangkan kecemasan pengguna dengan kata-kata penenang dari Naura di setiap fase aktif.
+### 🌟 Pilar 1: Visual Depth, Tinted Soft Shadows & Hierarchy
 
-### 4. Context-Driven Input Ergonomics
-- **Quick-Preset Controls:** Untuk transaksi yang sering berulang (bank, transfer, belanja, tempa), sediakan baris tombol preset angka instan `[+1]`, `[+5]`, `[+10]`, `[Semua / MAX]`, `[Reset]` di samping input modal manual.
+#### 1. Tinted Soft Shadows (Canvas & Glass Surfaces)
+* **Aturan Utama:** Jangan pernah menggunakan bayangan hitam pekat (*pure opaque black drop shadows* `rgba(0, 0, 0, 0.8)`).
+* **Solusi Tinted Shadow:** Pada kanvas gelap luar angkasa (`#0B0C10`), gunakan bayangan lembut ber-radius difus besar yang di-*tint* mengikuti warna latar dan pendaran aksen:
+  * `box-shadow: 0 16px 32px -8px rgba(11, 12, 16, 0.7), 0 0 20px 2px rgba(255, 182, 193, 0.15)`
+  * Pada Canvas Worker (`@napi-rs/canvas`): render bayangan ambient berlapis lembut sebelum menggambar panel kaca.
 
-### 5. Categorical Color-Coding System
+#### 2. Prioritas Informasi (Information Scannability)
+* **Visual Cues:** Gunakan variasi *scale*, *weight*, warna aksen, dan ikon penjelas agar mata pengguna langsung tertuju pada data terpenting tanpa harus membaca seluruh teks.
+* **Standar Tipografi:**
+  * **Data & Angka Inti:** Orbitron (Bold 700, 24-48px) dengan efek *text-glow*.
+  * **Label & Konteks:** Outfit (Medium 500 / Light 300, 12-16px) dengan warna *muted* `#9CA3AF`.
+
+#### 3. Asset & Imagery Quality
+* Avatar, item sprite, dan banner wajib memiliki resolusi tajam, rasio aspek konsisten (1:1 untuk badge/avatar, 16:9 untuk banner), dan dipadukan dengan *inner hairline* lembut `{colors.hairline}`.
+
+---
+
+### ⚡ Pilar 2: Efisiensi Interaksi & Ergonomi Layar
+
+#### 1. Selectable Cards vs Plain Text Lists
+* Hindari menyajikan informasi panjang dalam bentuk blok teks polos atau tabel ASCII yang membosankan.
+* Bungkus opsi, status modul, dan item toko dalam bentuk **Selectable Cards** yang memuat:
+  * Ikon kustom dari `ui.getEmoji()`.
+  * Label judul tebal dan deskripsi ringkas 1 baris.
+  * Status badge pill (`[Aktif]`, `[Level 5]`, `[500 Koin]`).
+
+#### 2. Reducing Interaction Cost & Progressive Disclosure
+* **1-Click Direct Exposure:** Tampilkan aksi dengan frekuensi tinggi (misal: panen, klaim harian, refresh) secara langsung di tampilan utama tanpa menyembunyikannya di dalam sub-menu berlapis.
+* **Progressive Disclosure:** Hanya 3 sampai 4 opsi primer yang ditampilkan di layar utama; parameter lanjutan diletakkan pada tombol "Opsi Lanjutan" atau modal.
+
+#### 3. Active Empty States as Growth Opportunities
+* **Prinsip:** Layar kosong (inventori kosong, riwayat kosong, belum ada tiket) **bukanlah jalan buntu**, melainkan peluang untuk mengarahkan pengguna ke aksi berikutnya.
+* **Standar Empty State Naura:**
+  1. Tampilkan ekspresi persona Naura yang bersahabat (*Confused* / *Encouraging*).
+  2. Berikan pesan copywriting hangat yang memanggil nama pengguna (`{displayName}`).
+  3. Sediakan tombol *Call-to-Action* (CTA) instan:
+     * *Contoh Inventori Kosong:* `[🌾 Mulai Bertani]` `[🛒 Kunjungi Toko]` `[🎁 Klaim Starter]`
+     * *Contoh Antrean Musik Kosong:* `[🎵 Putar Rekomendasi Naura]` `[📻 Radio Anime]`
+
+---
+
+### 🛠️ Pilar 3: Pola Input Ergonomis, Timelines & Ritme Kategori
+
+#### 1. Context-Aware Numeric Input Patterns
+* **One-Time / Infrequent Setup (Onboarding/Config):** Gunakan slider visual atau select-menu dengan opsi terstruktur.
+* **Frequent / Repeated Transactions (Bank, Transfer, Barter, Tempa):**
+  * Sediakan **Quick-Preset Chips** berupa tombol kalkulasi cepat: `[10%]`, `[25%]`, `[50%]`, `[Semua / MAX]`, `[+100]`, `[+1K]`.
+  * Hindari memaksa pengguna mengetik nominal angka panjang secara manual jika bisa diselesaikan dalam 1 klik.
+
+#### 2. Visual Step Timelines & Human Connection
+* Proses multi-langkah (`/setup`, `/ticket`, `/barter`, `/giveaway`) wajib divisualisasikan dengan linimasa horizontal terstruktur:
+  `[1️⃣ Form Input] ──▶ [2️⃣ Konfirmasi Partner] ──▶ [3️⃣ Transaksi Selesai]`
+* **Humanized Touchpoints:** Tampilkan avatar rekan transaksi, badge verifikasi keamanan, dan pesan penenang dari Naura di setiap fase aktif untuk membangun rasa percaya (*trust*).
+
+#### 3. Categorical Color-Coding System
 Setiap modul di Naura Hoshino memiliki aksen warna terstandarisasi untuk memudahkan pemindaian visual (*visual scanning rhythm*):
-- **Core, Social & Identity:** Soft Primary Pink (`#FFC0CB`)
-- **Music, Voice & Audio:** Sky Blue (`#8A2BE2` / `#93C5FD`)
-- **Economy, Shop & VIP:** Rich Gold (`#FFD700`)
-- **Survival RPG, Quest & Crafting:** Fresh Emerald Green (`#228B22` / `#86EFAC`)
-- **Admin, Governance & Setup:** Futuristic Purple (`#9400D3` / `#C084FC`)
-- **Security, Softban & Emergency:** Vivid Ruby Red (`#FF0000` / `#F87171`)
+* **Core, Social & Identity:** Soft Primary Pink (`#FFB6C1`)
+* **Music, Voice & Audio:** Sky Blue (`#93C5FD` / `#8A2BE2`)
+* **Economy, Shop & VIP:** Rich Gold (`#FFD700`)
+* **Survival RPG, Quest & Crafting:** Fresh Emerald Green (`#86EFAC`)
+* **Admin, Governance & Setup:** Futuristic Purple (`#C084FC`)
+* **Security, Softban & Emergency:** Vivid Ruby Red (`#F87171`)
+
+---
+
+### 📱 Pilar 4: Mobile Bottom Navigation Bar & Thumb Zone
+
+#### 1. Thumb Zone Ergonomics
+* Pada antarmuka Web Dashboard seluler dan Discord Mobile Client, letakkan tombol kontrol utama dan navigasi di area sepertiga bawah layar (*Natural Thumb Zone*).
+
+#### 2. Floating Glass Bottom Navigation Bar
+* **Spesifikasi Teknis:**
+  * Komponen: `{components.bottom-nav-mobile}`
+  * Posisi: `fixed bottom-4 inset-x-4 z-50` (mengambang di atas konten dengan margin 16px).
+  * Material: `backdrop-filter: blur(16px)` dengan latar `rgba(11, 12, 16, 0.85)` dan border tipis `{colors.hairline}`.
+  * Tinggi & Touch Area: Minimal 64px dengan area sentuh ikon minimal `48px x 48px`.
+* **State Clarity:**
+  * **Tab Aktif:** Ikon menyala warna `{colors.primary}` dengan *neon pill glow* di latar belakang dan label teks tegas.
+  * **Tab Inaktif:** Ikon warna `{colors.muted}` (#6B7280) tanpa pendaran.
+  * **Micro-Interactions:** Transisi *spring animation* halus (durasi 200ms) saat kursor menyentuh atau pengguna berpindah tab.
+* **Navigasi Inti:**
+  1. `[🏠 Beranda]` - Overview status & telemetri
+  2. `[⚙️ Modul]` - Pengaturan server & bot
+  3. `[📊 Rank]` - Leaderboard & level
+  4. `[💎 VIP]` - Premium & monetisasi
+  5. `[👤 Profil]` - Akun & kartu petualang
+
+---
+
+## 🧠 UX Psychology & Emotional Persona Guidelines
+
+Sistem antarmuka Naura Hoshino V2 memadukan estetika Cyber-Anime Glassmorphism dengan **6 Prinsip Psikologi UX** untuk menciptakan interaksi yang adiktif, intuitif, dan bermakna secara emosional.
+
+### 1. Decision Fatigue & Smart Defaults (Hick's Law)
+- **Rekomendasi Cerdas:** Setiap kali menyajikan daftar pilihan (menu atau tombol), tandai opsi terbaik dengan lencana `⭐ Rekomendasi Naura` menggunakan gaya Primary Pink Glow.
+- **Progressive Disclosure:** Tampilkan maksimal 3 sampai 4 aksi vital di tampilan utama. Fitur lanjutan atau opsi tambahan disembunyikan dalam sub-menu kontekstual.
+
+### 2. Goal Gradient Effect (Artificial Head Start)
+- **Momentum Awal:** Onboarding, quest pemula, dan level progress tidak pernah dimulai dari 0%. Berikan dorongan awal (misal: Starter Kit langsung terisi 20%).
+- **Kawaii Progress Bar:** Gunakan visual progress `[▰▰▰▱▱▱▱] 40%` yang disertai pesan penyemangat dinamis menyebut nama pengguna:
+  > *"Tinggal 60 XP lagi lho! Semangat ya, Kak {displayName}~ ✨"*
+
+### 3. Reciprocity (The Gift / Value-First Principle)
+- **Instant Delight:** Berikan kegembiraan atau fungsi instan pada interaksi pertama (rekomendasi lagu, bonus sambutan, ramalan harian) sebelum meminta input atau konfigurasi lanjutan.
+- **Surprise Care Gifts:** Hadiah kejutan kecil secara berkala saat pengguna berinteraksi aktif dengan Naura.
+
+### 4. The IKEA Effect & Endowment Effect (Personalization)
+- **Kepemilikan Emosional:** Berikan kebebasan kustomisasi kartu profil (warna aksen, background canvas, gelar kustom, nama virtual pet, dan preferensi persona AI).
+- **Apresiasi Personal:** Naura selalu memberikan apresiasi hangat saat pengguna mengubah tampilan atau menyelesaikan karya:
+  > *"Wah, selera Kak {displayName} bagus banget! Kartu profilmu sekarang jadi makin estetik~ 💕"*
+
+### 5. Anchoring & Contrast Effect (Visual Hierarchy)
+- **Hierarki Aksi Kontras:** Maksimal 1 tombol Primary (Pink/Blurple) per baris aksi (`ActionRow`). Tombol sekunder memakai warna netral, dan tombol destruktif memakai merah kontras.
+- **Price Anchoring di Shop:** Tampilkan perbandingan nilai secara transparan, menonjolkan keuntungan bundle hemat (`[HEMAT 25%]`).
+
+### 6. Peak-End Rule & Expressive Persona Feedback
+- **Respons Dinamis & Ramah:** Respon error, cooldown, atau rate-limit disampaikan dengan gaya anime yang ekspresif dan peduli (tsundere/kuudere ceria), bukan teks terminal kaku:
+  > *"B-Bukan karena aku cerewet ya, Kak {displayName}... tapi istirahat dulu sebentar sebelum coba lagi! 🌸"*
+- **Penyebutan Nama Personal:** Hindari kata panggilan kaku atau generik seperti "Master". Selalu gunakan `{displayName}` atau `{username}` pengguna agar interaksi terasa dekat, hangat, dan nyata.
+
 
 

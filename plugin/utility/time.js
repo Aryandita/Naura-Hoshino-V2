@@ -56,7 +56,7 @@ module.exports = {
 
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        title: "🌍 Jam Dunia (World Clock)",
+        title: `${ui.getEmoji("clock") || "🌍"} Jam Dunia (World Clock)`,
         description: desc.trim(),
         footerText: ui.getFooter("utility"),
       });

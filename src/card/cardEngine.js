@@ -1,6 +1,5 @@
 "use strict";
 
-const crypto = require("crypto");
 const redisManager = require("../managers/redisManager");
 const UserCard = require("../models/UserCard");
 const { logger } = require("../managers/logger");
@@ -132,6 +131,92 @@ class CardEngine {
     return {
       success: true,
       card: minted,
+    };
+  }
+
+  /**
+   * Gabungkan 3 kartu sejenis/duplikat menjadi Kartu Awakened
+   */
+  static async fuseCards(userId, cardCode1, cardCode2, cardCode3) {
+    if (!cardCode1 || !cardCode2 || !cardCode3) {
+      return { success: false, reason: "THREE_CARDS_REQUIRED" };
+    }
+
+    const uniqueCodes = new Set([cardCode1, cardCode2, cardCode3]);
+    if (uniqueCodes.size !== 3) {
+      return { success: false, reason: "DUPLICATE_CODES_SELECTED" };
+    }
+
+    const cards = await UserCard.findAll({
+      where: {
+        userId,
+        cardCode: [cardCode1, cardCode2, cardCode3],
+      },
+    });
+
+    if (cards.length !== 3) {
+      return { success: false, reason: "CARDS_NOT_FOUND_OR_NOT_OWNED" };
+    }
+
+    // Pastikan kartu target utama adalah cardCode1
+    const mainCard = cards.find((c) => c.cardCode === cardCode1);
+    const materialCards = cards.filter((c) => c.cardCode !== cardCode1);
+
+    if (!mainCard || materialCards.length !== 2) {
+      return { success: false, reason: "INVALID_SELECTION" };
+    }
+
+    // Hapus 2 kartu material
+    for (const mat of materialCards) {
+      await mat.destroy();
+    }
+
+    // Upgrade main card
+    mainCard.isAwakened = true;
+    mainCard.awakeningLevel = (mainCard.awakeningLevel || 0) + 1;
+    mainCard.frame = "HOLO_AWAKENED";
+
+    // Naikkan rarity 1 tingkat jika belum tertinggi
+    if (mainCard.rarity === "RARE") mainCard.rarity = "ULTRA_RARE";
+    else if (mainCard.rarity === "ULTRA_RARE") mainCard.rarity = "SECRET_MYTHIC";
+
+    mainCard.burnValue = Number(mainCard.burnValue || 100) * 2;
+    await mainCard.save();
+
+    logger.info(`[CardEngine] User ${userId} membangkitkan kartu Awakened: ${mainCard.characterName} [${mainCard.cardCode}]`);
+    return {
+      success: true,
+      card: mainCard.toJSON(),
+    };
+  }
+
+  /**
+   * Ukir pesan / tanda tangan digital pada kartu koleksi
+   */
+  static async inscribeCard(userId, cardCode, text) {
+    if (!text || text.trim().length === 0) {
+      return { success: false, reason: "EMPTY_TEXT" };
+    }
+
+    const card = await UserCard.findOne({ where: { userId, cardCode } });
+    if (!card) return { success: false, reason: "CARD_NOT_FOUND" };
+
+    const cacheManager = require("../managers/cacheManager");
+    const fee = 100;
+    const debit = await cacheManager.debitUserSurvival(userId, "starFragments", fee);
+    if (!debit.ok) {
+      return { success: false, reason: "INSUFFICIENT_FUNDS", requiredFee: fee };
+    }
+
+    card.inscription = text.trim().substring(0, 40);
+    if (!card.originalMinterId) card.originalMinterId = userId;
+    await card.save();
+
+    logger.info(`[CardEngine] User ${userId} mengukir kartu ${cardCode}: "${card.inscription}"`);
+    return {
+      success: true,
+      card: card.toJSON(),
+      inscription: card.inscription,
     };
   }
 }

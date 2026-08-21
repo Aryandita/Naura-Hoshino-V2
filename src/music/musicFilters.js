@@ -148,7 +148,7 @@ module.exports = {
       ) {
         return interaction.editReply(
           buildErrorContainerV2({
-            title: "💎 Fitur V.I.P Terkunci",
+            title: `${ui.getEmoji("vip") || "💎"} Fitur V.I.P Terkunci`,
             description: `❌ | Filter **${filterType.toUpperCase()}** adalah fitur eksklusif Premium! Gunakan \`/premium\` untuk berlangganan.`,
             footerText: ui.getFooter("music"),
           }),
@@ -164,8 +164,8 @@ module.exports = {
 
     const payload = buildContainerV2({
       accentColorHex: ui.colors.primary || "#FFB6C1",
-      title: "🎛️ Filter Audio",
-      description: `${ui.getEmoji("filter") || "🎛️"} | Filter DSP Audio diubah ke: **${player.currentFilterName}**.`,
+      title: `${ui.getEmoji("tools") || "🎛️"} Filter Audio`,
+      description: `${ui.getEmoji("tools") || "🎛️"} | Filter DSP Audio diubah ke: **${player.currentFilterName}**.`,
       footerText: ui.getFooter("music"),
     });
 

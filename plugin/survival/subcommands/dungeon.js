@@ -52,11 +52,26 @@ module.exports = {
     const passes = rewards.availablePasses(inventory);
 
     if (passes.normal < 1 && passes.special < 1) {
+      const emptyState = ui.ux.buildEmptyStatePrompt({
+        type: "dungeon",
+        user,
+        lang: "id",
+        actionCmd: "/survival shop",
+        ctaLabel: "🛒 Kunjungi Warung Desa",
+        ctaCustomId: "dungeon_cta_shop",
+      });
+
+      const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
       return interaction.editReply(
-        errorView(
-          "Pintu batunya terkunci, sayang. Kamu butuh **Dungeon Pass** dulu \u2014 Pak Damar menjualnya di warung desa. " +
-            "Kalau mau tantangan dua kali lebih berat dengan jarahan dua kali lipat, cari **Dungeon Special Pass** di butik Mbak Rini di kota, ya!",
-        ),
+        buildContainerV2({
+          accentColorHex: ui.getColor("crafting") || "#228B22",
+          authorName: "Catatan Dungeon Naura",
+          title: emptyState.title,
+          description: emptyState.description,
+          expression: emptyState.expression,
+          buttonsRow: emptyState.buttonsRow,
+          footerText: ui.getFooter("survival"),
+        }),
       );
     }
 

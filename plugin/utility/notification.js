@@ -48,7 +48,7 @@ module.exports = {
 
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("primary"),
-      title: "⚙️ Pengaturan Notifikasi DM",
+      title: `${ui.getEmoji("settings") || "⚙️"} Pengaturan Notifikasi DM`,
       description: "Centang notifikasi yang ingin kamu terima melalui Direct Message. Custom Reminder selalu aktif dan akan dikirim secara otomatis ke DM kamu jika disetel menggunakan `/remind`.",
       expression: "Happy",
       footerText: ui.getFooter("utility")
@@ -81,7 +81,7 @@ module.exports = {
         });
 
         await i.followUp({
-          content: "✅ Pengaturan notifikasimu telah disimpan!",
+          content: `${ui.getEmoji("success") || "✅"} Pengaturan notifikasimu telah disimpan!`,
           flags: MessageFlags.Ephemeral
         });
       }

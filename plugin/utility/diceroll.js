@@ -21,10 +21,10 @@ module.exports = {
 
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#e74c3c",
-      authorName: "🎲 Roll Dadu",
+      authorName: `${ui.getEmoji("dice") || "🎲"} Roll Dadu`,
       title: `Dadu D${sides}`,
       iconURL: interaction.user.displayAvatarURL(),
-      description: `Kamu melempar dadu **D${sides}** dan mendapatkan angka:\n\n# 🎲 ${result}`,
+      description: `Kamu melempar dadu **D${sides}** dan mendapatkan angka:\n\n# ${ui.getEmoji("dice") || "🎲"} ${result}`,
       footerText: ui.getFooter("utility"),
     });
 

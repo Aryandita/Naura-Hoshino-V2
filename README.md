@@ -399,23 +399,19 @@ Naura-Hoshino-V2/
 ├─ 🗂️ TODO.md                # Prioritas sprint yang sedang berjalan
 ├─ 🎨 DESIGN.md              # Design token & panduan visual
 ├─ 🖼️ assets/                # Kumpulan font, gambar, serta aset UI Canvas
+│  ├─ language/              # Sistem lokalisasi kamus terpadu (id.json, en.json)
 │  └─ Naura_Expression/      # Folder rahasia 15+ Ekspresi Wajah Naura
-├─ 🌍 language/              # Sistem lokalisasi & kamus utama (id.json, en.json)
 ├─ 🧩 plugin/                # Semua fungsi command, rapi terbagi dalam sub-kategori
-│  └─ <kategori>/locales/    # Terjemahan khusus untuk setiap sub-plugin
 ├─ 🔧 scripts/               # Alat-alat kecil utilitas pemeliharaan sistem
 │  └─ migrate.js             # Runner migrasi database (dipanggil prestart)
 └─ 📂 src/
    ├─ ⚙️ config/             # Pengaturan statis, konstanta UI & validasi ENV
+   ├─ 🎨 canvas/             # Seluruh visual renderer Canvas (Worker Thread Pool)
    ├─ 🌐 dashboard/          # Markas Express + Socket.io Web Dashboard
-   │  ├─ middleware/         # Algoritma penjaga gawang Auth, Izin, & Owner
-   │  ├─ routes/             # Kumpulan endpoint (public, user, guild, owner)
-   │  ├─ sockets/            # Kendali real-time & sinkronisasi data live
-   │  └─ utils/              # Pengelola batas akses (rate limiter) & pemformatan
    ├─ 📡 events/             # Pendengar event (Listener) inti dari Discord
    ├─ 🎛️ interactions/      # Registry Button, Select Menu, Modal, & Autocomplete
    ├─ 🧠 managers/           # Otak pusat (Database, Cache, Cronjob, Logger, dsb)
-   ├─ 🗃️ models/             # Kerangka Tabel Sequelize
+   ├─ 🗃️ models/             # Kerangka Tabel Sequelize & Dokumen Mongoose
    └─ 🛠️ utils/              # Builder Component V2 canggih dan asisten bantuan lainnya
 ```
 
@@ -439,7 +435,7 @@ const text = await lang.translate(userId, "help.title");
 const sync = lang.translateSync("en", "greeting", { name: "Ryaa" });
 ```
 
-Tidak perlu pusing! Kamus inti berada di folder `language/`, sementara kata-kata unik diletakkan di `plugin/<nama-plugin>/locales/`. **Kamus inti selalu memiliki hak istimewa (prioritas).** Kamu bisa cek kelengkapan bahasa dengan perintah: `npm run locales:check`.
+Seluruh kamus terpadu diletakkan di `assets/language/id.json` dan `assets/language/en.json` agar pemuatan instan dan audit paritas selalu 100% lengkap. Kamu bisa cek kelengkapan bahasa dengan perintah: `npm run locales:check:strict`.
 
 ---
 

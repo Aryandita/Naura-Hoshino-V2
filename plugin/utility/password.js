@@ -40,7 +40,7 @@ module.exports = {
 
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("success") || "#00FF00",
-      title: "🔑 Password Generator",
+      title: `${ui.getEmoji("key") || "🔑"} Password Generator`,
       description: `Berikut adalah password acakmu (${length} karakter):\n\n\`\`\`\n${password}\n\`\`\`\n*Tolong simpan password ini dengan aman!*`,
       footerText: ui.getFooter("utility"),
     });

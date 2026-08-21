@@ -65,9 +65,12 @@ module.exports = {
 
   getPremiumColor(tier) {
     const map = {
+      voter: this.colors.premium_voter || "#F43F5E",
+      starter: this.colors.premium_starter || "#38bdf8",
       supporter: this.colors.premium_supporter,
       friends: this.colors.premium_friends,
       vip: this.colors.premium_vip,
+      0: this.colors.premium_starter || "#38bdf8",
       1: this.colors.premium_supporter,
       2: this.colors.premium_friends,
       3: this.colors.premium_vip,
@@ -77,20 +80,24 @@ module.exports = {
 
   getPremiumEmoji(tier) {
     const map = {
-      supporter: this.emojis.premium_supporter,
-      friends: this.emojis.premium_friends,
-      vip: this.emojis.premium_vip,
+      voter: this.emojis.premium_voter || "🗳️",
+      starter: this.emojis.premium_starter || "🌱",
+      supporter: this.emojis.premium_supporter || "🌟",
+      friends: this.emojis.premium_friends || "💫",
+      vip: this.emojis.premium_vip || "👑",
       none: this.emojis.vip,
     };
     return map[tier] || this.emojis.premium_badge;
   },
 
-  // Supporter: <= 30 hari, Friends: 31-90 hari, VIP: > 90 hari
+  // Voter: <= 1 hari (trial/vote), Starter: 2-7 hari, Supporter: 8-30 hari, Friends: 31-90 hari, VIP: > 90 hari
   getPremiumTier(daysLeft, isPremium) {
     if (!isPremium || daysLeft <= 0) return "none";
     if (daysLeft > 90) return "vip";
     if (daysLeft > 30) return "friends";
-    return "supporter";
+    if (daysLeft > 7) return "supporter";
+    if (daysLeft > 1) return "starter";
+    return "voter";
   },
 
   stripCustomEmojis(text) {
@@ -162,8 +169,16 @@ module.exports = {
     );
   },
 
-  async sendError(interaction, errorMessage, ephemeral = false) {
-    return helpers.sendError(interaction, errorMessage, ephemeral);
+  async sendError(interaction, errorMessage, ephemeral = false, opts = {}) {
+    return helpers.sendError(interaction, errorMessage, ephemeral, opts);
+  },
+
+  async sendMaintenance(interaction, maintenanceMessage, ephemeral = false, opts = {}) {
+    return helpers.sendMaintenance(interaction, maintenanceMessage, ephemeral, opts);
+  },
+
+  async sendLoading(interaction, loadingMessage, ephemeral = false, opts = {}) {
+    return helpers.sendLoading(interaction, loadingMessage, ephemeral, opts);
   },
 
   hybrid(idText, enText) {

@@ -1,5 +1,6 @@
 const os = require("os");
 const env = require("../config/env");
+const ui = require("../config/ui");
 
 /**
  * Display the boot screen with system info
@@ -20,7 +21,7 @@ const displayBootScreen = (client, sysStatus) => {
     : "Naura Hoshino#0000".padEnd(49);
   const ownerStr = "Aryandita Praftian".padEnd(49);
 
-  let pingText = `🟢 ONLINE (${client.ws.ping}ms)`;
+  let pingText = "🟢 ONLINE";
   if (pingText.length < 18) pingText = pingText.padEnd(18);
 
   const verStr = `v${env.BOT_VERSION || "2.1.0"}`.padEnd(13);
@@ -43,7 +44,7 @@ const displayBootScreen = (client, sysStatus) => {
 \x1b[38;5;51m║\x1b[0m                                                                          \x1b[38;5;51m║\x1b[0m
 \x1b[38;5;51m║\x1b[0m \x1b[38;5;226m✦ STATUS MODUL & DATABASE\x1b[0m                                                \x1b[38;5;51m║\x1b[0m
 \x1b[38;5;51m║\x1b[0m   \x1b[38;5;246m├─ Database :\x1b[0m ${sysStatus.db} \x1b[38;5;246m│ Lavalink   :\x1b[0m ${sysStatus.music}      \x1b[38;5;51m║\x1b[0m
-\x1b[38;5;51m║\x1b[0m   \x1b[38;5;246m├─ MongoDB  :\x1b[0m ${sysStatus.mongo || "\x1b[33m🟡 SKIPPED   \x1b[0m"} \x1b[38;5;246m│ Commands   :\x1b[0m ${sysStatus.cmds}    \x1b[38;5;51m║\x1b[0m
+\x1b[38;5;51m║\x1b[0m   \x1b[38;5;246m├─ MongoDB  :\x1b[0m ${sysStatus.mongo || `\x1b[33m🟡 SKIPPED   \x1b[0m`} \x1b[38;5;246m│ Commands   :\x1b[0m ${sysStatus.cmds}    \x1b[38;5;51m║\x1b[0m
 \x1b[38;5;51m║\x1b[0m   \x1b[38;5;246m├─ Redis    :\x1b[0m ${sysStatus.redis} \x1b[38;5;246m│ RSS Alerts :\x1b[0m ${sysStatus.rss}    \x1b[38;5;51m║\x1b[0m
 \x1b[38;5;51m║\x1b[0m   \x1b[38;5;246m└─ Discord  :\x1b[0m \x1b[38;5;82m${pingText}\x1b[0m                                           \x1b[38;5;51m║\x1b[0m
 \x1b[38;5;51m╚══════════════════════════════════════════════════════════════════════════╝\x1b[0m
