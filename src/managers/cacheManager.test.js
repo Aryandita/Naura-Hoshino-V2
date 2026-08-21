@@ -3,26 +3,41 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const cacheManager = require("./cacheManager");
+const redisManager = require("./redisManager");
 const UserProfile = require("../models/UserProfile");
 const UserSurvival = require("../models/UserSurvival");
 
 test("CacheManager - Signature Normalization & Write-Behind Safety", async (t) => {
   const userId = "test_user_cache_12345";
 
-  // Pastikan UserProfile ada lebih dulu agar foreign key UserSurvivals_userId_fkey terpenuhi
-  try {
-    await UserProfile.findOrCreate({ where: { userId } });
-  } catch (e) {
-    // ignore
-  }
+  // Mock loader dan Redis agar unit test sepenuhnya terisolasi dan tidak bergantung pada koneksi DB/Redis
+  const origGetUserSurvival = cacheManager.getUserSurvival;
+  const origGetUserProfile = cacheManager.getUserProfile;
+  const origSetCache = redisManager.setCache;
+  const origGetCache = redisManager.getCache;
 
-  t.after(async () => {
-    try {
-      await UserSurvival.destroy({ where: { userId } });
-      await UserProfile.destroy({ where: { userId } });
-    } catch (e) {
-      // ignore
-    }
+  cacheManager.getUserSurvival = async () => ({
+    userId,
+    stamina: 100,
+    starFragments: 500,
+    coupons: 5,
+  });
+  cacheManager.getUserProfile = async () => ({
+    userId,
+    economy_wallet: 1000,
+    economy_bank: 5000,
+    dailyNotify: true,
+  });
+  redisManager.setCache = async () => true;
+  redisManager.getCache = async () => null;
+
+  t.after(() => {
+    cacheManager.getUserSurvival = origGetUserSurvival;
+    cacheManager.getUserProfile = origGetUserProfile;
+    redisManager.setCache = origSetCache;
+    redisManager.getCache = origGetCache;
+    cacheManager.survivalQueue.delete(userId);
+    cacheManager.writeQueue.delete(userId);
   });
 
   await t.test("incrementUserSurvival normalizes string field and numeric value", async () => {
