@@ -28,7 +28,7 @@ module.exports = {
     activities: [
 
         // ╔══════════════════════════════════════════════════════╗
-        // ║  📊  LIVE STATS — Ditampilkan bergantian tiap siklus  ║
+        // ║  📊  LIVE STATS, Ditampilkan bergantian tiap siklus  ║
         // ╚══════════════════════════════════════════════════════╝
 
         {
@@ -75,13 +75,13 @@ module.exports = {
         // ╚═══════════════════════════════════════════════╝
 
         {
-            // Survival RPG — fitur inti Naura
+            // Survival RPG, fitur inti Naura
             name: 'Survival RPG  ·  Tambang & Eksplorasi Hutan 🏕️',
             type: ActivityType.Playing,
             status: PresenceUpdateStatus.Online,
         },
         {
-            // AI Dungeon — fitur premium
+            // AI Dungeon, fitur premium
             name: 'AI Dungeon Master  ·  Mode Petualangan 🗡️',
             type: ActivityType.Playing,
             status: PresenceUpdateStatus.Online,

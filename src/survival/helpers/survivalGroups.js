@@ -178,6 +178,54 @@ function addEconomyGroup(builder) {
                 { name: "Naura Coin", value: "coin" },
               ),
           ),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("caravan")
+          .setDescription("Ekspedisi karavan dagang antariksa & bursa komoditas")
+          .addStringOption((opt) =>
+            opt
+              .setName("aksi")
+              .setDescription("Pilih aksi karavan")
+              .setRequired(false)
+              .addChoices(
+                { name: "Status (Cek Karavan)", value: "status" },
+                { name: "Market (Bursa Harga & Rute)", value: "market" },
+                { name: "Dispatch (Berangkatkan)", value: "dispatch" },
+                { name: "Claim (Cairkan Laba)", value: "claim" },
+              ),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("rute")
+              .setDescription("Pilih rute tujuan ekspor")
+              .setRequired(false)
+              .addChoices(
+                { name: "Neo Tokyo Orbit (30m · +35% Laba)", value: "tokyo" },
+                { name: "Starlight Outpost (60m · +75% Laba)", value: "outpost" },
+                { name: "Galactic Core Nexus (120m · +150% Laba)", value: "nexus" },
+              ),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("komoditas")
+              .setDescription("Komoditas kargo yang dikirim")
+              .setRequired(false)
+              .addChoices(
+                { name: "Kayu Jati Emas 🪵", value: "GOLDEN_WOOD" },
+                { name: "Ikan Mitos Samudera 🐟", value: "MYTHIC_FISH" },
+                { name: "Bijih Kristal Kosmik 💎", value: "COSMIC_ORE" },
+                { name: "Kain Sutra Nebula 👘", value: "ASTRAL_SILK" },
+              ),
+          )
+          .addIntegerOption((opt) =>
+            opt
+              .setName("jumlah")
+              .setDescription("Jumlah unit komoditas (min: 5 unit)")
+              .setRequired(false)
+              .setMinValue(5)
+              .setMaxValue(500),
+          ),
       ),
   );
 }

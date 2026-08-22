@@ -195,6 +195,51 @@ module.exports = {
             .setDescription("Teks ukiran / pesan digital (maks 40 karakter)")
             .setRequired(true),
         ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("awaken")
+        .setDescription("⚡ Lakukan Celestial Fusion pada 3 kartu duplikat untuk membuka wujud Mythic Awakened!")
+        .addStringOption((opt) =>
+          opt
+            .setName("card1")
+            .setDescription("Kode kartu utama yang ingin di-awaken (misal: nra-7x9q)")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("card2")
+            .setDescription("Kode kartu duplikat ke-2 sebagai material")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("card3")
+            .setDescription("Kode kartu duplikat ke-3 sebagai material")
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("frame")
+        .setDescription("🎨 Tempa bingkai holografik bercahaya pada kartu koleksimu (Biaya: 150 ⭐)")
+        .addStringOption((opt) =>
+          opt
+            .setName("code")
+            .setDescription("Kode unik kartu yang ingin ditempa")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("style")
+            .setDescription("Gaya bingkai holografik")
+            .setRequired(true)
+            .addChoices(
+              { name: "☀️ Solar Flare Gold (Api Keemasan)", value: "solar_flare" },
+              { name: "⚡ Cyber Matrix Emerald (Matrix Neon)", value: "cyber_matrix" },
+              { name: "🔮 Prismatic Violet (Hologram Pelangi)", value: "prismatic" },
+            ),
+        ),
     ),
 
   async execute(interaction) {
@@ -849,6 +894,97 @@ module.exports = {
           `👤 **Pencetak Asli:** <@${userId}>`,
           ``,
           `-# 💡 *Ukiran pesan dan tanda tangan ini akan tetap tersimpan saat kartu dibarter via \`/card trade\`!*`,
+        ].join("\n"),
+        footerText: ui.getFooter("core"),
+      });
+
+      return interaction.editReply({ ...payload, files: [attachment] });
+    }
+
+    if (subcommand === "awaken") {
+      await interaction.deferReply();
+      const card1 = interaction.options.getString("card1");
+      const card2 = interaction.options.getString("card2");
+      const card3 = interaction.options.getString("card3");
+
+      const result = await CardEngine.awakenCard(userId, card1, card2, card3);
+      if (!result.success) {
+        let msg = "Gagal melakukan awakening kartu.";
+        if (result.reason === "CARD_NOT_FOUND") msg = "Salah satu kartu tidak ditemukan atau bukan milikmu!";
+        if (result.reason === "DUPLICATE_CODES") msg = "Ketiga kode kartu yang dimasukkan harus berbeda!";
+        if (result.reason === "CHARACTER_MISMATCH") msg = "Ketiga kartu harus merupakan karakter anime yang sama!";
+
+        return interaction.editReply({
+          ...buildErrorContainerV2({
+            title: "Awakening Gagal",
+            description: msg,
+            footerText: ui.getFooter("core"),
+          }),
+        });
+      }
+
+      const imgBuffer = await drawAnimeCard(result.card);
+      const attachment = new AttachmentBuilder(imgBuffer, { name: "awakened_card.png" });
+
+      const payload = buildContainerV2({
+        accentColorHex: "#FFD700",
+        authorName: "⚡ Celestial Card Fusion & Awakening",
+        title: `✨ Wujud Mythic Awakened Terbuka: ${result.card.characterName}!`,
+        description: [
+          `Selamat, <@${userId}>! Tiga kartu berhasil disatukan dalam fusi kosmik bintang.`,
+          ``,
+          `🎴 **Kartu Utama:** **${result.card.characterName}** (\`${result.card.cardCode}\`)`,
+          `⭐ **Tier Baru:** \`${result.card.rarity}\` (Awakening Level: +${result.card.awakeningLevel})`,
+          `💎 **Kekuatan Nilai:** Nilai Star Fragments berlipat ganda!`,
+          ``,
+          `-# 💡 *Kartu ini kini memancarkan aura neon keemasan dan siap mendominasi TCG Tower & Battle!*`,
+        ].join("\n"),
+        footerText: ui.getFooter("core"),
+      });
+
+      return interaction.editReply({ ...payload, files: [attachment] });
+    }
+
+    if (subcommand === "frame") {
+      await interaction.deferReply();
+      const code = interaction.options.getString("code");
+      const style = interaction.options.getString("style");
+
+      const result = await CardEngine.setFrameStyle(userId, code, style);
+      if (!result.success) {
+        let msg = "Gagal menempa bingkai kartu.";
+        if (result.reason === "CARD_NOT_FOUND") msg = `Kartu dengan kode \`${code}\` tidak ditemukan di koleksimu!`;
+        if (result.reason === "INSUFFICIENT_FUNDS") msg = "Saldo Star Fragments tidak cukup (Biaya: 150 ⭐)!";
+
+        return interaction.editReply({
+          ...buildErrorContainerV2({
+            title: "Tempa Bingkai Gagal",
+            description: msg,
+            footerText: ui.getFooter("core"),
+          }),
+        });
+      }
+
+      const imgBuffer = await drawAnimeCard(result.card);
+      const attachment = new AttachmentBuilder(imgBuffer, { name: "framed_card.png" });
+
+      const styleNames = {
+        solar_flare: "☀️ Solar Flare Gold",
+        cyber_matrix: "⚡ Cyber Matrix Emerald",
+        prismatic: "🔮 Prismatic Violet",
+      };
+
+      const payload = buildContainerV2({
+        accentColorHex: "#06B6D4",
+        authorName: "🎨 Holographic Frame Alchemist",
+        title: "✨ Penempaan Bingkai Holografik Berhasil!",
+        description: [
+          `Bingkai kartu **${result.card.characterName}** (\`${result.card.cardCode}\`) berhasil ditempa ulang!`,
+          ``,
+          `🎨 **Gaya Bingkai:** **${styleNames[style] || style}**`,
+          `⭐ **Biaya:** \`150 Star Fragments\``,
+          ``,
+          `-# 💡 *Bingkai holografik ini akan bersinar menyala saat kartu dipamerkan di \`/card view\` atau dipasang di \`/room view\`!*`,
         ].join("\n"),
         footerText: ui.getFooter("core"),
       });

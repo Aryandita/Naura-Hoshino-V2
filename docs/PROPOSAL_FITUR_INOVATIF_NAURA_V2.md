@@ -64,7 +64,7 @@ Berdasarkan riset tren Discord bot global tahun 2025–2026:
 ---
 
 ### FITUR 1: 🌌 HOSHINO ASTRAL SANCTUARY & SERVER MOOD WEATHER
-> *"Langit malam di server ini terasa hangat... Bintang Vega memancarkan energi keberuntungan untuk memancing hari ini!"* — Naura
+> *"Langit malam di server ini terasa hangat... Bintang Vega memancarkan energi keberuntungan untuk memancing hari ini!"*, Naura
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -100,7 +100,7 @@ Setiap server Discord memiliki "aura emosi" yang dinamis. Fitur ini membaca deny
 ---
 
 ### FITUR 2: 🛋️ NAURA LIVING ROOM & CHIBI CYBER-POD DECORATOR
-> *"Kamar virtualmu terlihat nyaman, {displayName}... Tapi bagaimana kalau poster bertanda tangan anime idol digantung di sebelah kasur cyber itu?"* — Naura
+> *"Kamar virtualmu terlihat nyaman, {displayName}... Tapi bagaimana kalau poster bertanda tangan anime idol digantung di sebelah kasur cyber itu?"*, Naura
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -135,7 +135,7 @@ Mengubah profil user yang biasanya sekadar gambar kartu datar menjadi **Ruang Hi
 ---
 
 ### FITUR 3: ⚔️ CO-OP CELESTIAL RAID: AI DUNGEON MASTER LIVE
-> *"PERINGATAN KOSMIK: Void Leviathan muncul di orbit server! Seluruh Guild, siapkan formasi tempur!"* — Naura
+> *"PERINGATAN KOSMIK: Void Leviathan muncul di orbit server! Seluruh Guild, siapkan formasi tempur!"*, Naura
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -177,7 +177,7 @@ Menghadirkan pertarungan bos server berskala epik di mana seluruh anggota server
 ---
 
 ### FITUR 4: 🎴 ANIME CARD AWAKENING, HOLOGRAM FOIL & FRAME LAB
-> *"Kartu Bintang 5 ini telah mencapai batas potensinya... Ayo kita lakukan 'Celestial Awakening' untuk membuka animasi aura neon!"* — Naura
+> *"Kartu Bintang 5 ini telah mencapai batas potensinya... Ayo kita lakukan 'Celestial Awakening' untuk membuka animasi aura neon!"*, Naura
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -214,7 +214,7 @@ Meningkatkan sistem kartu anime gacha dari sekadar koleksi gambar biasa menjadi 
 ---
 
 ### FITUR 5: 📻 NAURA VIRTUAL RADIO DJ & VOICE CHANNEL COMPANION
-> *"Halo semuanya di Voice Channel! Lagu berikutnya dipersembahkan oleh @Arya untuk seluruh guild — mari nikmati lofi beat di malam berbintang ini~"* — Naura DJ
+> *"Halo semuanya di Voice Channel! Lagu berikutnya dipersembahkan oleh @Arya untuk seluruh guild, mari nikmati lofi beat di malam berbintang ini~"*, Naura DJ
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -249,7 +249,7 @@ Mengubah bot musik biasa yang hanya memutar URL menjadi **Host Radio Virtual yan
 ---
 
 ### FITUR 6: 🐫 CROSS-SERVER TRADE CARAVAN & MERCHANT CARTEL
-> *"Karavan Dagang Server Kita sedang melintasi Gurun Pasir Kosmik menuju Server Tetangga! Waspada terhadap serangan bandit antariksa!"* — Naura
+> *"Karavan Dagang Server Kita sedang melintasi Gurun Pasir Kosmik menuju Server Tetangga! Waspada terhadap serangan bandit antariksa!"*, Naura
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -287,7 +287,7 @@ Menghubungkan ekonomi survival antar-server Discord yang menggunakan bot Naura k
 ---
 
 ### FITUR 7: ⏳ NAURA CHRONICLE & MEMORY TIME-CAPSULE
-> *"Kapsul waktu yang kita kubur satu tahun lalu telah terbuka! Mari kita lihat apa pesan dari dirimu di masa lalu..."* — Naura
+> *"Kapsul waktu yang kita kubur satu tahun lalu telah terbuka! Mari kita lihat apa pesan dari dirimu di masa lalu..."*, Naura
 
 ```
 ┌──────────────────────────────────────────────────────────────┐

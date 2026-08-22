@@ -219,6 +219,37 @@ class CardEngine {
       inscription: card.inscription,
     };
   }
+
+  /**
+   * Menempa bingkai holografik khusus pada kartu anime
+   */
+  static async setFrameStyle(userId, cardCode, frameStyle) {
+    const validStyles = ["solar_flare", "cyber_matrix", "prismatic"];
+    if (!validStyles.includes(frameStyle)) {
+      return { success: false, reason: "INVALID_STYLE" };
+    }
+
+    const card = await UserCard.findOne({ where: { userId, cardCode } });
+    if (!card) return { success: false, reason: "CARD_NOT_FOUND" };
+
+    const cacheManager = require("../managers/cacheManager");
+    const fee = 150;
+    const debit = await cacheManager.debitUserSurvival(userId, "starFragments", fee);
+    if (!debit.ok) {
+      return { success: false, reason: "INSUFFICIENT_FUNDS", requiredFee: fee };
+    }
+
+    card.frame = frameStyle;
+    card.frameStyle = frameStyle;
+    await card.save();
+
+    logger.info(`[CardEngine] User ${userId} menempa bingkai ${frameStyle} pada kartu ${cardCode}`);
+    return {
+      success: true,
+      card: card.toJSON(),
+      frameStyle,
+    };
+  }
 }
 
 module.exports = CardEngine;

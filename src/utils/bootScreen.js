@@ -4,7 +4,7 @@ const os  = require('os');
 const env = require('../config/env');
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  Palet warna ANSI 256 — sesuai Design Identity "Cyber-Anime Glassmorphism"
+//  Palet warna ANSI 256, sesuai Design Identity "Cyber-Anime Glassmorphism"
 //  dari AGENTS.md §1.6 (primary #FFB6C1, accent-gold #FFD700, cyan #93C5FD)
 // ═══════════════════════════════════════════════════════════════════════════
 const C = {
@@ -42,7 +42,7 @@ const C = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  Dimensi box  — 80 karakter lebar total (visible)
+//  Dimensi box, 80 karakter lebar total (visible)
 // ═══════════════════════════════════════════════════════════════════════════
 const BOX_W  = 80;              // lebar total termasuk '║' kiri-kanan
 const INNER  = BOX_W - 4;      // inner width (setelah '║ ' dan ' ║')
@@ -99,7 +99,7 @@ const secHead = (icon, title, color = C.gold) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  ASCII Art Banner — "NAURA HOSHINO"
+//  ASCII Art Banner, "NAURA HOSHINO"
 //  Font: ANSI Shadow (bold block) dengan gradient pink 7-baris
 //  Setiap baris: [ansi_string, visible_length]
 // ═══════════════════════════════════════════════════════════════════════════
@@ -124,7 +124,7 @@ const BANNER_LINES = [
     [`${C.p4}  ██║ ╚███║ ██║  ██║ ╚██████╔╝ ██║  ██║ ██║  ██║ ${C.r}`,  50],
     // baris 6
     [`${C.p5}  ╚═╝  ╚══╝ ╚═╝  ╚═╝  ╚═════╝  ╚═╝  ╚═╝ ╚═╝  ╚═╝ ${C.r}`, 51],
-    // baris 7 — sub-title "H O S H I N O"
+    // baris 7, sub-title "H O S H I N O"
     [`${C.g3}  ──────────────────────────── ${C.gold}H  O  S  H  I  N  O${C.r}${C.g3} ───${C.r}`, 56],
 ];
 

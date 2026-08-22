@@ -157,7 +157,9 @@ class WorldBossEngine {
 
       const eCrit = ui.getEmoji("boss_strike") || "💥";
       const eHit = ui.getEmoji("battle") || "⚔️";
-      message = isCrit ? `${eCrit} Serangan Kritikal Dahsyat!` : `${eHit} Serangan mengenai bos!`;
+      message = isCrit
+        ? `${eCrit} **${username}** melancarkan **Serangan Kritikal Kosmik Dahsyat**! (\`${damageDealt.toLocaleString("id-ID")}\` DMG)`
+        : `${eHit} **${username}** menebas bos dengan presisi tinggi! (\`${damageDealt.toLocaleString("id-ID")}\` DMG)`;
     } else if (actionType === "shield") {
       // Tank Action: Meredam enrage dan menghancurkan armor bos
       const guardPower = Math.floor(Math.random() * 50) + 70 + userLevel * 4;
@@ -176,7 +178,7 @@ class WorldBossEngine {
       roles.tanks[userId].username = username;
 
       const eShield = ui.getEmoji("shield_defend") || "🛡️";
-      message = `${eShield} Kamu memasang Cyber Shield untuk melindungi party dari serangan balasan bos!`;
+      message = `${eShield} **${username}** mengaktifkan **Cyber Aegis Barrier**, meredam serangan balasan bos untuk seluruh party!`;
     } else if (actionType === "heal") {
       // Healer Action: Memulihkan semangat tempur & stamina kolektif
       healAmount = Math.floor(Math.random() * 40) + 50 + userLevel * 3;
@@ -186,7 +188,7 @@ class WorldBossEngine {
       roles.healers[userId].username = username;
 
       const eHeal = ui.getEmoji("heal_aura") || "💖";
-      message = `${eHeal} Kamu menebarkan Nano-Healing Aura ke seluruh petualang di server!`;
+      message = `${eHeal} **${username}** memancarkan **Nano-Healing Sanctuary**, menyembuhkan stamina seluruh petualang!`;
     } else if (actionType === "buff") {
       // Buffer Action: Menaikkan drop pool bos
       buffAdded = Math.floor(Math.random() * 20) + 10;
@@ -201,7 +203,7 @@ class WorldBossEngine {
       dbBoss.changed("rewardsPool", true);
 
       const eStar = ui.getEmoji("star_resonance") || "🔮";
-      message = `${eStar} Kamu menyalurkan Star Resonance! Pool hadiah bertambah +${buffAdded} Fragments!`;
+      message = `${eStar} **${username}** menyalurkan **Star Resonance**! Pool hadiah raid bertambah \`+${buffAdded}\` Star Fragments!`;
     }
 
     // 2. Evaluasi Transisi Fase (Phase 2 pada HP <= 50% bila belum pernah, Phase 3 pada HP <= 20%)

@@ -28,31 +28,61 @@ async function drawAnimeCard(cardData) {
     ctx.roundRect(20, 20, width - 40, height - 40, 20);
     ctx.fill();
 
-    // 2. Outer Frame Border (Hologram / Gold / Cyber / Dye)
+    // 2. Outer Frame Border (Hologram / Gold / Cyber / Dye / Awakening)
+    const isAwakened = cardData.isAwakened || false;
+    const frameStyle = cardData.frameStyle || "default";
+
     ctx.save();
-    ctx.strokeStyle = dyeColor;
-    ctx.lineWidth = isGemMint ? 4 : 2;
-    ctx.shadowColor = dyeColor;
-    ctx.shadowBlur = isGemMint ? 25 : 12;
+    if (isAwakened) {
+      const awkGrad = ctx.createLinearGradient(0, 0, width, height);
+      awkGrad.addColorStop(0, "#FFD700");
+      awkGrad.addColorStop(0.5, "#F43F5E");
+      awkGrad.addColorStop(1, "#06B6D4");
+      ctx.strokeStyle = awkGrad;
+      ctx.lineWidth = 5;
+      ctx.shadowColor = "#FFD700";
+      ctx.shadowBlur = 30;
+    } else if (frameStyle === "solar_flare") {
+      ctx.strokeStyle = "#FF8C00";
+      ctx.lineWidth = 4;
+      ctx.shadowColor = "#FFA500";
+      ctx.shadowBlur = 22;
+    } else if (frameStyle === "cyber_matrix") {
+      ctx.strokeStyle = "#10B981";
+      ctx.lineWidth = 3;
+      ctx.shadowColor = "#10B981";
+      ctx.shadowBlur = 18;
+    } else if (frameStyle === "prismatic") {
+      ctx.strokeStyle = "#C084FC";
+      ctx.lineWidth = 3.5;
+      ctx.shadowColor = "#E879F9";
+      ctx.shadowBlur = 20;
+    } else {
+      ctx.strokeStyle = dyeColor;
+      ctx.lineWidth = isGemMint ? 4 : 2;
+      ctx.shadowColor = dyeColor;
+      ctx.shadowBlur = isGemMint ? 25 : 12;
+    }
     ctx.beginPath();
     ctx.roundRect(25, 25, width - 50, height - 50, 18);
     ctx.stroke();
     ctx.restore();
 
-    // 3. Header: Series Badge
+    // 3. Header: Series Badge & Awakening Chip
     ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
     ctx.beginPath();
     ctx.roundRect(40, 45, width - 80, 40, 10);
     ctx.fill();
 
     ctx.font = 'bold 13px "Orbitron", "EmojiFont"';
-    ctx.fillStyle = dyeColor;
+    ctx.fillStyle = isAwakened ? "#FFD700" : dyeColor;
     ctx.textAlign = "left";
-    ctx.fillText((cardData.seriesName || "Anime Realm").toUpperCase(), 55, 70);
+    const headerPrefix = isAwakened ? "✦ AWAKENED · " : "";
+    ctx.fillText(`${headerPrefix}${(cardData.seriesName || "Anime Realm").toUpperCase()}`, 55, 70);
 
     // Print Badge (Top Right)
     ctx.font = 'bold 14px "Orbitron", "EmojiFont"';
-    ctx.fillStyle = cardData.printNumber <= 10 ? "#FFD700" : "#FFFFFF";
+    ctx.fillStyle = isAwakened ? "#FFD700" : (cardData.printNumber <= 10 ? "#FFD700" : "#FFFFFF");
     ctx.textAlign = "right";
     ctx.fillText(`#${cardData.printNumber}`, width - 55, 70);
 

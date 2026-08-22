@@ -17,6 +17,8 @@ const TicketTranscript = require("../models/mongo/TicketTranscript");
 const AiChatHistory = require("../models/mongo/AiChatHistory");
 const CommandAuditLog = require("../models/mongo/CommandAuditLog");
 const AiMemory = require("../models/mongo/AiMemory");
+const UserRoom = require("../models/mongo/UserRoom");
+const TimeCapsule = require("../models/mongo/TimeCapsule");
 
 class MongoManager {
   constructor() {
@@ -25,6 +27,8 @@ class MongoManager {
       AiChatHistory,
       CommandAuditLog,
       AiMemory,
+      UserRoom,
+      TimeCapsule,
     };
     this._isConnecting = false;
     this._setupListeners();
