@@ -35,7 +35,8 @@ Kebanyakan bot Discord populer saat ini (Mudae, Karuta, Dank Memer, MEE6, Unbeli
 1. **Cyber-Anime Glassmorphism Visuals:** Seluruh antarmuka visual (Canvas Profil, Banner Level, Kartu RPG, Room Decorator) menggunakan standar desain mewah 60fps-like dengan pencahayaan neon, frosted glass, dan partikel bercahaya.
 2. **Polyglot Persistence Power:** Integritas transaksi finansial aman melalui Supabase (PostgreSQL), latensi nol dengan Redis Cache & Pub/Sub, memori jangka panjang tanpa batas di MongoDB Atlas, dan ketahanan darurat dengan SQLite fallback.
 3. **Non-Blocking Compute Ecosystem:** Rendering Canvas berat dialihkan ke *Worker Threads Pool*, memastikan event loop bot tidak pernah freeze walau ribuan render terjadi serentak.
-4. **Adaptive Contextual Intelligence:** Menggunakan Google Gemini AI dengan Function Calling berantai dan memori relasional untuk interaksi yang personal dan relevan dengan nama asli tiap anggota server.
+4. **Adaptive Contextual Intelligence:** Menggunakan Google Gemini AI dengan Function Calling berantai dan memori relasional untuk interaksi yang kontekstual.
+5. **Hyper-Personalized Human Touch:** Seluruh interaksi dialog, narasi AI Dungeon Master, respon sapaan, dan siaran radio DJ **wajib menyebut nama personal pengguna** (`{displayName}` / `{username}`) dan **dilarang menggunakan panggilan generik seperti 'Master'** agar setiap anggota server merasakan sentuhan personal dan mengetahui secara jelas siapa yang sedang diajak berbicara.
 
 ---
 
@@ -99,7 +100,7 @@ Setiap server Discord memiliki "aura emosi" yang dinamis. Fitur ini membaca deny
 ---
 
 ### FITUR 2: 🛋️ NAURA LIVING ROOM & CHIBI CYBER-POD DECORATOR
-> *"Kamar virtualmu terlihat nyaman, Master... Tapi bagaimana kalau poster bertanda tangan anime idol digantung di sebelah kasur cyber itu?"* — Naura
+> *"Kamar virtualmu terlihat nyaman, {displayName}... Tapi bagaimana kalau poster bertanda tangan anime idol digantung di sebelah kasur cyber itu?"* — Naura
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
