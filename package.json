@@ -20,7 +20,8 @@
     "build:css": "tailwindcss -i ./dashboard/public/css/input.css -o ./dashboard/public/css/tailwind-compiled.css",
     "locales:check": "node scripts/validate-locales.js",
     "locales:check:strict": "node scripts/validate-locales.js --strict",
-    "test:requires": "node scripts/check-requires.js"
+    "test:requires": "node scripts/check-requires.js",
+    "assistant": "node assistant/server.js"
   },
   "engines": {
     "node": ">=24.0.0"

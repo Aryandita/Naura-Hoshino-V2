@@ -197,6 +197,12 @@ const MIGRATIONS = [
     id: "v33_create_sprint20_milestone_tables",
     description: "Buat tabel coliseum_teams, guild_personas, server_stocks, user_stock_holdings, dan tambah kolom hallLayout di GuildClans",
     sql: "ALTER TABLE GuildClans ADD COLUMN hallLayout JSON DEFAULT NULL; CREATE TABLE IF NOT EXISTS coliseum_teams ( id INT AUTO_INCREMENT PRIMARY KEY, userId VARCHAR(191) NOT NULL UNIQUE, teamName VARCHAR(128) NOT NULL DEFAULT 'Vanguard Squad', formation JSON NOT NULL, eloRating INT NOT NULL DEFAULT 1200, divisionTier VARCHAR(32) NOT NULL DEFAULT 'BRONZE', wins INT NOT NULL DEFAULT 0, losses INT NOT NULL DEFAULT 0, lastFoughtAt DATETIME DEFAULT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; CREATE TABLE IF NOT EXISTS guild_personas ( id INT AUTO_INCREMENT PRIMARY KEY, personaId VARCHAR(64) NOT NULL UNIQUE, guildId VARCHAR(64) NOT NULL, channelId VARCHAR(64) DEFAULT NULL, name VARCHAR(128) NOT NULL, systemPrompt TEXT NOT NULL, voiceTone VARCHAR(64) NOT NULL DEFAULT 'TSUNDERE', avatarUrl VARCHAR(255) DEFAULT NULL, isActive BOOLEAN NOT NULL DEFAULT TRUE, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; CREATE TABLE IF NOT EXISTS server_stocks ( ticker VARCHAR(32) PRIMARY KEY, name VARCHAR(128) NOT NULL, guildId VARCHAR(64) DEFAULT NULL, clanId INT DEFAULT NULL, currentPrice FLOAT NOT NULL DEFAULT 100.0, previousPrice FLOAT NOT NULL DEFAULT 100.0, totalShares INT NOT NULL DEFAULT 10000, availableShares INT NOT NULL DEFAULT 10000, dividendYield FLOAT NOT NULL DEFAULT 0.05, history24h JSON NOT NULL, isHighRisk BOOLEAN NOT NULL DEFAULT FALSE, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; CREATE TABLE IF NOT EXISTS user_stock_holdings ( id INT AUTO_INCREMENT PRIMARY KEY, userId VARCHAR(191) NOT NULL, ticker VARCHAR(32) NOT NULL, sharesOwned INT NOT NULL DEFAULT 0, avgBuyPrice FLOAT NOT NULL DEFAULT 0.0, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, UNIQUE KEY uk_user_ticker (userId, ticker) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+  },
+  {
+    id: "v34_add_voiceMinutes_to_user_leveling",
+    description: "Tambah kolom voiceMinutes ke user_leveling untuk tracking Voice XP dan aktivitas voice",
+    sql: "ALTER TABLE user_leveling ADD COLUMN voiceMinutes INT DEFAULT 0;",
+    pgSql: 'ALTER TABLE "user_leveling" ADD COLUMN IF NOT EXISTS "voiceMinutes" INTEGER DEFAULT 0;',
   }
 ];
 
@@ -309,27 +315,20 @@ async function runMigrations(sequelize) {
     return { applied: [], alreadyPresent: [] };
   }
 
-  // Khusus Postgres: Jika model sudah disinkronkan oleh Sequelize, catat semua migrasi ke ledger
-  if (sequelize.options.dialect === "postgres") {
-    for (const migration of pending) {
-      await recordMigration(sequelize, migration.id);
-    }
-    logger.success(
-      `[DB MIGRATOR] Inisialisasi skema PostgreSQL selesai (${pending.length} migrasi dicatat ke ledger).`,
-    );
-    return { applied: pending.map((m) => m.id), alreadyPresent: [] };
-  }
-
   logger.info(
     `[DB MIGRATOR] ${pending.length} migrasi tertunda dari total ${MIGRATIONS.length}.`,
   );
 
   const applied = [];
   const alreadyPresent = [];
+  const isPostgres = sequelize.options.dialect === "postgres";
 
   for (const migration of pending) {
+    const querySql = isPostgres && migration.pgSql ? migration.pgSql : migration.sql;
     try {
-      await sequelize.query(migration.sql);
+      if (querySql) {
+        await sequelize.query(querySql);
+      }
       await recordMigration(sequelize, migration.id);
       applied.push(migration.id);
       logger.db(

@@ -343,6 +343,7 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 > - `src/utils/`: Menyimpan alat bantu (_helpers_) yang dapat dipanggil berkali-kali tanpa state (mis. `survivalHelper`, `NauraContainerBuilder`, `translateHelper`).
 > - `src/events/`: Pendengar event Discord. Hanya berisi routing dan pengecekan awal, tanpa logika fitur.
 > - `src/interactions/`: Penanganan Button, Select Menu, Modal, Autocomplete, dan Context Menus.
+> - `src/<domain>/`: Folder berfokus domain khusus (seperti `src/survival/`, `src/music/`, `src/card/`) yang membungkus logika, helper, dan sub-sistem khusus agar tidak mengotori `managers` atau `utils` global.
 > - `plugin/`: **HANYA** berisi _command router_ dan pendefinisian Slash Command. Tidak boleh ada logika berat, akses database langsung tanpa manager, atau kelas helper di dalamnya.
 > - `dashboard/`: Menyimpan aplikasi web lokal untuk UI pemantauan, visual automations builder, dan Discord Embedded Activity.
 > - `testsprite_tests/`: Berkas test suite otomatis, skenario Python, PRD standar, dan laporan QA TestSprite AI.
