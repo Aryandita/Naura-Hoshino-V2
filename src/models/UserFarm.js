@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../managers/dbManager");
+const { sequelize } = require("../config/database");
 
 const UserFarm = sequelize.define("UserFarm", {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },

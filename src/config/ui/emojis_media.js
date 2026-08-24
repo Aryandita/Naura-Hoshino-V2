@@ -5,21 +5,21 @@
 
 module.exports = {
   // --- Downloader ---
-  tiktok: "<:tiktok:1547565608970203176>",
+  tiktok: "<:TikTok:1532358959460253890>",
   instagram: "<:Instagram:1532358955165024256>",
   twitter: "<:X_:1532358957048401950>",
   facebook: "<:Facebook:1532358953344700437>",
   threads: "<:Threads:1532358951528562860>",
   download: "<a:download:1525035127611064431>",
-  camera_with_flash: "\uD83D\uDCF8",
-  clapper: "\uD83C\uDFAC",
-  music_note: "\uD83C\uDFB5",
-  bird: "\uD83D\uDC26",
-  pushpin: "\uD83D\uDCCC",
-  robot: "\uD83E\uDD16",
-  thread: "\uD83E\uDDF5",
-  globe_with_meridians: "\uD83C\uDF10",
-  tv: "\uD83D\uDCFA",
+  camera_with_flash: "📸",
+  clapper: "🎬",
+  music_note: "🎵",
+  bird: "🐦",
+  pushpin: "📌",
+  robot: "🤖",
+  thread: "🧵",
+  globe_with_meridians: "🌐",
+  tv: "📺",
 
   // --- Utility Commands (Anime, Movie, Weather) ---
   anime_search: "<:search:1525032346406096946>",
@@ -68,6 +68,18 @@ module.exports = {
   musicLyrics: "<:Lyrics:1484705972919337070>",
   musicShuffle: "<:Shuffle:1484705970469867641>",
   music247: "<a:Moon:1492696850602524682>",
+  radio: "📻",
+  speaker: "🔊",
+  mute: "🔇",
+  mic: "🎙️",
+  soundboard: "🔊",
+  music_hq: "<:Lyrics:1484705972919337070>",
+  audio_wave: "<a:DiscSpinner1:1492696912145678488>",
+  music_filter: "<:Filter:1484705994020753529>",
+  music_equalizer: "🎛️",
+  music_record: "💿",
+  audio_stereo: "🎧",
+  sound_bell: "🔔",
 
   // --- Music Filters (DSP) ---
   normal: "<:MusicDisc:1484706066662031483>",
@@ -85,28 +97,28 @@ module.exports = {
   quest_clock: "<a:clock:1492712296697298954>",
 
   // --- Achievements & Titles ---
-  achievement_badge: "\uD83C\uDFC5",
-  achievement_locked: "\uD83D\uDD12",
-  achievement_unlocked: "\uD83D\uDD13",
+  achievement_badge: "<:1000460336:1492712280650158290>",
+  achievement_locked: "<a:1000460273:1492696909486362674>",
+  achievement_unlocked: "<a:firstplace:1499383537688641738>",
 
   // --- Location Minigames ---
-  fishing_net: "\uD83C\uDFA3",
-  fish_rare: "\uD83D\uDC21",
-  fish_legendary: "\uD83E\uDD88",
-  wood_oak: "\uD83E\uDEB5",
-  wood_mahogany: "\uD83C\uDF33",
-  ore_gold: "\uD83D\uDFE1",
-  ore_ruby: "\uD83D\uDD34",
+  fishing_net: "🎣",
+  fish_rare: "🐡",
+  fish_legendary: "🦈",
+  wood_oak: "🪵",
+  wood_mahogany: "🌲",
+  ore_gold: "🟡",
+  ore_ruby: "🔴",
 
   // --- Guild & Co-op ---
-  guild_banner: "\uD83C\uDF8C",
-  guild_shield: "\uD83D\uDEE1\uFE0F",
+  guild_banner: "🎌",
+  guild_shield: "🛡️",
 
   // --- Gacha ---
-  gacha_pull: "\uD83C\uDFB0",
-  gacha_legendary: "\u2728",
+  gacha_pull: "🎰",
+  gacha_legendary: "✨",
 
   // --- Story Quest ---
-  story_scroll: "\uD83D\uDCDC",
-  story_book: "\uD83D\uDCD6",
+  story_scroll: "📜",
+  story_book: "📖",
 };

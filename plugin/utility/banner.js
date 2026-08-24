@@ -36,7 +36,7 @@ module.exports = {
     const profile = await cacheManager.getUserProfile(userId);
     
     // Fallback if null
-    let activeBanners = profile.activeBanners || { profile: null, music: null };
+    const activeBanners = profile.activeBanners || { profile: null, music: null };
 
     if (bannerId === "default") {
         activeBanners[type] = null;

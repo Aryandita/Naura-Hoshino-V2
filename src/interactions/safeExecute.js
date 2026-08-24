@@ -33,22 +33,27 @@ function isIgnorable(error) {
   return Boolean(error && IGNORED_CODES.has(error.code));
 }
 
+const { buildErrorContainerV2 } = require("../utils/NauraContainerBuilder");
+
 /** Kirim pesan galat ke pengguna, apa pun keadaan interaksinya. */
 async function respondError(interaction, message) {
-  const embed = new EmbedBuilder()
-    .setColor("#FF0000")
-    .setDescription(`\u274c **${message}**`);
+  const containerPayload = buildErrorContainerV2({
+    errorMessage: message,
+    lang: interaction.localeLang || "id",
+    withBanner: true,
+  });
 
   try {
+    const finalFlags = (containerPayload.flags || MessageFlags.IsComponentsV2) | MessageFlags.Ephemeral;
     if (interaction.deferred || interaction.replied) {
       await interaction.followUp({
-        embeds: [embed],
-        flags: MessageFlags.Ephemeral,
+        ...containerPayload,
+        flags: finalFlags,
       });
     } else {
       await interaction.reply({
-        embeds: [embed],
-        flags: MessageFlags.Ephemeral,
+        ...containerPayload,
+        flags: finalFlags,
       });
     }
   } catch (error) {

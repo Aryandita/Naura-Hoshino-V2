@@ -1,7 +1,7 @@
 "use strict";
 
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../managers/dbManager");
+const { sequelize } = require("../config/database");
 
 const WorldBoss = sequelize.define(
   "WorldBoss",
@@ -28,7 +28,12 @@ const WorldBoss = sequelize.define(
     element: {
       type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: "DARK",
+      defaultValue: "DARK", // DARK, FIRE, WATER, HOLY, LIGHTNING
+    },
+    phase: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1, // 1: Normal, 2: Shield Phase, 3: Enrage Phase
     },
     maxHp: {
       type: DataTypes.BIGINT,
@@ -39,6 +44,16 @@ const WorldBoss = sequelize.define(
       type: DataTypes.BIGINT,
       allowNull: false,
       defaultValue: 1000000,
+    },
+    shieldHp: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    maxShieldHp: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+      defaultValue: 0,
     },
     baseAttack: {
       type: DataTypes.INTEGER,
@@ -59,6 +74,24 @@ const WorldBoss = sequelize.define(
       type: DataTypes.JSON,
       allowNull: false,
       defaultValue: {},
+    },
+    roleContributions: {
+      type: DataTypes.JSON,
+      allowNull: false,
+      defaultValue: {
+        tanks: {},
+        healers: {},
+        dps: {},
+        buffers: {},
+      },
+    },
+    mvpUserId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    lastHitUserId: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     rewardsPool: {
       type: DataTypes.JSON,

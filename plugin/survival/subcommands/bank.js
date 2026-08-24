@@ -95,12 +95,15 @@ module.exports = {
       time: COLLECTOR_MS,
     });
 
+    let activePromptRun = null;
+
     /**
-     * Tanya nominal lewat chat, lalu jalankan transaksinya.
+     * Tanya nominal lewat chat atau quick chips, lalu jalankan transaksinya.
      * Kartu utama selalu dirapikan kembali setelah selesai.
      */
-    const askAmount = async (i, { title, description, run }) => {
-      await i.editReply(views.promptView(title, description));
+    const askAmount = async (i, { title, description, balance = 0, unit = "", run }) => {
+      activePromptRun = run;
+      await i.editReply(views.promptView(title, description, balance, unit));
 
       if (!interaction.channel) return;
 
@@ -112,6 +115,7 @@ module.exports = {
 
       chat.on("collect", async (m) => {
         try {
+          activePromptRun = null;
           const result = await run(m.content.trim());
           await m.reply(
             result.ok
@@ -133,7 +137,8 @@ module.exports = {
       });
 
       chat.on("end", async (collected) => {
-        if (collected.size === 0) {
+        if (collected.size === 0 && activePromptRun) {
+          activePromptRun = null;
           await interaction
             .followUp({
               ...views.failView(
@@ -153,6 +158,23 @@ module.exports = {
         const id = i.customId;
 
         if (id === "bank_back") return showMain(i);
+
+        if (id.startsWith("bank_chip_")) {
+          const parts = id.split("_");
+          const chipAmount = parts[parts.length - 1];
+          if (activePromptRun && chipAmount) {
+            const runner = activePromptRun;
+            activePromptRun = null;
+            const result = await runner(chipAmount);
+            await interaction.followUp({
+              ...(result.ok
+                ? views.successView(result.title, result.description)
+                : views.failView(failText(result))),
+              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+            });
+            return showMain(interaction);
+          }
+        }
 
         if (id === "bank_menu_exchange") {
           return i.editReply(views.exchangeView(await snapshotNow()));
@@ -180,6 +202,7 @@ module.exports = {
 
         // --- Penukaran mata uang ---
         if (id === "bank_ex_to_coin" || id === "bank_ex_to_nsf") {
+          const snap = await snapshotNow();
           const toCoin = id === "bank_ex_to_coin";
           const fromKind = toCoin
             ? currencyHelper.FRAGMENT
@@ -187,12 +210,15 @@ module.exports = {
           const toKind = toCoin ? currencyHelper.COIN : currencyHelper.FRAGMENT;
           const fromCurrency = currencyHelper.byKind(fromKind);
           const toCurrency = currencyHelper.byKind(toKind);
+          const availableBalance = toCoin ? snap.fragment : snap.coin;
 
           return askAmount(i, {
             title: `Tukar ${fromCurrency.short} ke ${toCurrency.short}`,
             description: toCoin
               ? `Tulis jumlah **${fromCurrency.name}** yang mau ditukar. Minimal **${views.n(MIN_EXCHANGE_NSF)} ${fromCurrency.short}** untuk dapat 1 ${toCurrency.short}.`
               : `Tulis jumlah **${fromCurrency.name}** yang mau dipecah. Setiap 1 ${fromCurrency.short} jadi **${views.n(MIN_EXCHANGE_NSF)} ${toCurrency.short}**.`,
+            balance: availableBalance,
+            unit: fromCurrency.short,
             run: async (raw) => {
               const result = await actions.exchangeMoney(
                 user.id,
@@ -226,12 +252,17 @@ module.exports = {
 
         // --- Tabungan ---
         if (id === "bank_savings_in" || id === "bank_savings_out") {
+          const snap = await snapshotNow();
           const toBank = id === "bank_savings_in";
+          const availableBalance = toBank ? snap.coin : snap.bank;
+
           return askAmount(i, {
             title: toBank ? "Setor ke rekening" : "Tarik ke dompet",
             description: toBank
               ? "Tulis jumlah **Naura Coin** yang mau kamu simpan di rekening."
               : "Tulis jumlah **Naura Coin** yang mau kamu ambil dari rekening.",
+            balance: availableBalance,
+            unit: "Coin",
             run: async (raw) => {
               const result = await actions.moveSavings(user.id, raw, toBank);
               if (!result.ok) return result;
@@ -253,10 +284,13 @@ module.exports = {
 
         // --- Deposito ---
         if (id.startsWith("bank_dep_create_")) {
+          const snap = await snapshotNow();
           const termKey = id.replace("bank_dep_create_", "");
           return askAmount(i, {
             title: "Buka deposito baru",
             description: `Tulis jumlah **Naura Coin** dari rekening yang mau dititipkan. Minimal **${views.n(MIN_DEPOSIT_COIN)} Coin**.`,
+            balance: snap.bank,
+            unit: "Coin",
             run: async (raw) => {
               const result = await actions.createDeposit(user.id, termKey, raw);
               if (!result.ok) return result;

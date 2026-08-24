@@ -23,9 +23,10 @@
 
 const express = require("express");
 const { EmbedBuilder } = require("discord.js");
-const { logger } = require("../src/managers/logger");
-const UserProfile = require("../src/models/UserProfile");
-const ui = require("../src/config/ui");
+const env = require("../../src/config/env");
+const { logger } = require("../../src/managers/logger");
+const UserProfile = require("../../src/models/UserProfile");
+const ui = require("../../src/config/ui");
 const { grantVoteRewards, extendPremium } = require("../utils/voteRewards");
 const {
   verifyToken,
@@ -101,7 +102,7 @@ module.exports = (client) => {
 
   // Di belakang reverse proxy, req.ip harus membaca X-Forwarded-For agar
   // pembatas laju tidak melihat semua orang sebagai satu IP yang sama.
-  if (process.env.NODE_ENV === "production") app.set("trust proxy", 1);
+  if (env.NODE_ENV === "production") app.set("trust proxy", 1);
 
   // Tanpa ini, token webhook bisa ditebak dengan percobaan tak terbatas.
   app.use(
@@ -279,10 +280,17 @@ module.exports = (client) => {
     res.status(200).json({ ok: true }),
   );
 
-  const port = process.env.WEBHOOK_PORT || 3071;
-  app.listen(port, () => {
-    logger.info(`[WEBHOOK] Server webhook berjalan di port ${port}`);
-  });
+  const port = env.WEBHOOK_PORT || 3071;
+  try {
+    const server = app.listen(port, () => {
+      logger.info(`[WEBHOOK] Server webhook berjalan di port ${port}`);
+    });
+    server.on("error", (err) => {
+      logger.warn(`[WEBHOOK] Webhook server port ${port} tidak dapat dibuka (${err.message}). Webhook endpoints tetap aktif via API utama.`);
+    });
+  } catch (err) {
+    logger.warn(`[WEBHOOK] Gagal membuka port ${port}:`, err.message);
+  }
 
   return app;
 };

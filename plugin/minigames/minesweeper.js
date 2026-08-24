@@ -26,7 +26,7 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    let size = interaction.options.getInteger("ukuran") || 9;
+    const size = interaction.options.getInteger("ukuran") || 9;
     let bombs =
       interaction.options.getInteger("bom") || Math.floor(size * size * 0.15); // 15% bomb density
 
@@ -90,7 +90,7 @@ module.exports = {
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#95a5a6",
       authorName: "Naura Minesweeper Engine",
-      title: `💣 Minesweeper (${size}x${size}) - ${bombs} Bom`,
+      title: `${ui.getEmoji("bomb") || "💣"} Minesweeper (${size}x${size}) - ${bombs} Bom`,
       description: `Klik blok spoiler di bawah ini untuk mengungkap bidang!\n\n${boardString}`,
       footerText: ui.getFooter("core"),
     });

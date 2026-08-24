@@ -75,7 +75,7 @@ class GuildWarEngine {
     }
 
     return {
-      winnerClanId,
+      winnerClanId: winningClanId,
       guildId,
       expiresAt,
     };

@@ -8,26 +8,27 @@ const { buildTierCard } = require("./premiumCard");
 function activeDescription(targetUser, tierData, tierEmoji, expiry, daysLeft) {
   const stamp = Math.floor(expiry.getTime() / 1000);
   return [
-    `${tierEmoji} **${targetUser.username}** adalah member **${tierData.name}**!`,
+    `${tierEmoji} **${targetUser.username}** terdaftar sebagai anggota **${tierData.name}**!`,
     ``,
-    `Berakhir <t:${stamp}:F> (<t:${stamp}:R>)`,
-    `Sisa waktu: **${daysLeft} hari**`,
+    `⏳ **Masa Berlaku:** Berakhir <t:${stamp}:F> (<t:${stamp}:R>)`,
+    `📅 **Sisa Durasi:** **${daysLeft} hari**`,
     ``,
-    `Semua keuntungan tier ini sedang kamu nikmati. Ketik \`/premium benefits\` kalau mau melihat rinciannya.`,
+    `Seluruh keistimewaan dan benefit tier ini aktif untuk akunmu. Ketik \`/premium benefits\` untuk melihat rincian lengkapnya.`,
   ].join("\n");
 }
 
 function regularDescription(targetUser) {
   return [
-    `**${targetUser.username}** sekarang masih memakai status **reguler**.`,
+    `**${targetUser.username}** saat ini masih berstatus sebagai **Regular Member**.`,
     ``,
-    `Kalau naik ke **Naura V.I.P**, ini yang menanti:`,
-    `\u30fb 2x Global XP Boost`,
-    `\u30fb Musik menemani 24/7`,
-    `\u30fb Dungeon tanpa batas dan bonus ekonomi`,
-    `\u30fb Kartu profil Gold Glow`,
+    `Tingkatkan ke **Naura V.I.P** untuk membuka berbagai fitur eksklusif:`,
+    `・ Hingga 2.0x Global XP Multiplier & Bonus Gaji Kerja`,
+    `・ Musik Siaga 24/7 di Voice Channel & DSP Audio Filters`,
+    `・ Autoplay AI Dropdown Rekomendasi Musik Cerdas`,
+    `・ Akses Dungeon RPG Tanpa Batas (> Lantai 50)`,
+    `・ Kartu Profil Gold Glow & VIP Badges Eksklusif`,
     ``,
-    `Ketik \`/premium info\` kapan pun kamu siap ya.`,
+    `Gunakan perintah \`/premium info\` untuk memilih paket langgananmu!`,
   ].join("\n");
 }
 

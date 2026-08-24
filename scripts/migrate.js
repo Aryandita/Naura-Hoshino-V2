@@ -19,14 +19,9 @@
  * berhenti sebelum bot dinyalakan.
  */
 
-const { sequelize } = require("../src/managers/dbManager");
-const {
-  runMigrations,
-  getPendingMigrations,
-} = require("../src/managers/dbMigrator");
 const { logger } = require("../src/managers/logger");
 
-// Pintu darurat. Bila MySQL sedang mati dan bot harus tetap dinyalakan di atas skema
+// Pintu darurat. Bila database sedang mati dan bot harus tetap dinyalakan di atas skema
 // lama, set SKIP_DB_MIGRATE=1 di panel. Jangan dibiarkan menyala permanen: kolom baru
 // tidak akan pernah dibuat, dan fitur yang bergantung padanya akan gagal.
 const SKIP_VALUES = new Set(["1", "true", "yes"]);
@@ -37,6 +32,12 @@ if (SKIP_VALUES.has(String(process.env.SKIP_DB_MIGRATE || "").toLowerCase())) {
   );
   process.exit(0);
 }
+
+const { sequelize } = require("../src/managers/dbManager");
+const {
+  runMigrations,
+  getPendingMigrations,
+} = require("../src/managers/dbMigrator");
 
 async function main() {
   await sequelize.authenticate();

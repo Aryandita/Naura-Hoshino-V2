@@ -17,10 +17,10 @@ module.exports = [
 
       if (openTickets >= 3) {
         return interaction.reply({
-          embeds: [buildErrorContainerV2({ 
+          ...buildErrorContainerV2({ 
             title: "Batas Maksimal Tiket", 
             description: "Kamu sudah memiliki 3 tiket yang masih terbuka. Harap tunggu hingga staf menutupnya sebelum membuka yang baru." 
-          })],
+          }),
           flags: MessageFlags.Ephemeral,
         });
       }
@@ -52,7 +52,7 @@ module.exports = [
     async handler(interaction, client) {
       // Hanya biarkan staf yang bisa mematikan tiket, atau pemilik tiket.
       // Untuk memastikannya, panggil helper dari ticketManager
-      const { closeTicket } = require("../../../plugin/ticketing/ticketManager");
+      const { closeTicket } = require("../../managers/ticketManager");
       await closeTicket(interaction, client);
     },
   }

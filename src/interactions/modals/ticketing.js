@@ -55,7 +55,8 @@ module.exports = [
           footerText: "Tiket dijamin kerahasiaannya",
         });
 
-        await thread.send({ content: `<@${interaction.user.id}>`, ...payload });
+        await thread.send({ content: `<@${interaction.user.id}>` }).catch(() => {});
+        await thread.send(payload);
 
         // Beri respons ke user di channel publik
         await interaction.followUp({
@@ -66,7 +67,7 @@ module.exports = [
       } catch (error) {
         require("../../managers/logger").logger.error("[TICKETING] Gagal membuat tiket:", error);
         await interaction.followUp({
-          embeds: [buildErrorContainerV2({ title: "Gagal Membuat Tiket", description: "Terjadi kesalahan saat memproses permintaanmu." })],
+          ...buildErrorContainerV2({ title: "Gagal Membuat Tiket", description: "Terjadi kesalahan saat memproses permintaanmu." }),
           flags: MessageFlags.Ephemeral,
         });
       }

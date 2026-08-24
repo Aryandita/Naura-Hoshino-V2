@@ -158,26 +158,22 @@ async function applyToDatabase(guildId, userId, xp, messages) {
   const addedMessages = toInt(messages);
   if (addedXp <= 0 && addedMessages <= 0) return;
 
-  // Kedua nilai sudah lewat toInt, jadi tidak ada teks pengguna yang masuk ke SQL.
-  const [affected] = await UserLeveling.update(
-    {
-      xp: sequelize.literal(`xp + ${addedXp}`),
-      messageCount: sequelize.literal(`messageCount + ${addedMessages}`),
+  const [row, created] = await UserLeveling.findOrCreate({
+    where: { userId, guildId },
+    defaults: {
+      xp: addedXp,
+      level: 1,
+      messageCount: addedMessages,
       lastActivity: new Date(),
     },
-    { where: { userId, guildId } },
-  );
+  });
 
-  if (affected === 0) {
-    await UserLeveling.findOrCreate({
-      where: { userId, guildId },
-      defaults: {
-        xp: addedXp,
-        level: 1,
-        messageCount: addedMessages,
-        lastActivity: new Date(),
-      },
+  if (!created) {
+    await row.increment({
+      xp: addedXp,
+      messageCount: addedMessages,
     });
+    await row.update({ lastActivity: new Date() }).catch(() => {});
   }
 }
 

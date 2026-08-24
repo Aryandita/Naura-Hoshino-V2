@@ -17,14 +17,14 @@
 
 const express = require("express");
 const os = require("os");
-const { logger } = require("../src/managers/logger");
-const UserProfile = require("../src/models/UserProfile");
-const GuildSettings = require("../src/models/GuildSettings");
+const env = require("../../src/config/env");
+const { logger } = require("../../src/managers/logger");
+const UserProfile = require("../../src/models/UserProfile");
+const GuildSettings = require("../../src/models/GuildSettings");
 const { requireOwner } = require("../middleware/auth");
 const { formatMemory } = require("../utils/format");
 
-const EVAL_ENABLED =
-  String(process.env.OWNER_EVAL_ENABLED || "").toLowerCase() === "true";
+const EVAL_ENABLED = Boolean(env.OWNER_EVAL_ENABLED);
 
 function broadcast(client, message) {
   if (client.dashboardIo)
@@ -82,7 +82,7 @@ module.exports = (client) => {
       if (fields.length > 0) await user.save({ fields });
 
       if (starFragments !== undefined) {
-        const UserSurvival = require("../src/models/UserSurvival");
+        const UserSurvival = require("../../src/models/UserSurvival");
         const [survival] = await UserSurvival.findOrCreate({
           where: { userId: targetId },
         });
@@ -115,17 +115,17 @@ module.exports = (client) => {
 
     try {
       const util = require("util");
-      // eslint-disable-next-line no-eval
+       
       let evaled = await eval(code);
       if (typeof evaled !== "string")
         evaled = util.inspect(evaled, { depth: 0 });
 
       const secrets = [
         client.token,
-        process.env.GEMINI_API_KEY,
-        process.env.VERBA_API_KEY,
-        process.env.DB_PASS,
-        process.env.SESSION_SECRET,
+        env.GEMINI_API,
+        env.VERBA_API_KEY,
+        env.DB_PASS,
+        env.SESSION_SECRET,
       ].filter(Boolean);
 
       let sanitized = evaled;
@@ -417,6 +417,155 @@ module.exports = (client) => {
     } catch (e) {
       logger.error("[OWNER ANNOUNCEMENT] Error:", e);
       res.status(500).json({ error: "Terjadi kesalahan sistem." });
+    }
+  });
+
+  // --- Suntik status Premium langsung dari Dashboard ---
+  router.post("/api/owner/premium/grant", async (req, res) => {
+    const { userId, days = 30 } = req.body || {};
+    if (!userId) {
+      return res.status(400).json({ error: "User ID Discord wajib diisi." });
+    }
+    const daysNum = Math.max(1, parseInt(days) || 30);
+
+    try {
+      const [profile] = await UserProfile.findOrCreate({ where: { userId } });
+      const store = require("../../src/premium/premiumStore");
+      const ui = require("../../src/config/ui");
+      const { tierDisplayName } = require("../../src/premium/premiumTiers");
+      const { sendPremiumDM } = require("../../src/premium/premiumNotify");
+
+      const newExpiry = await store.grantPremium(userId, profile, daysNum);
+      const tierKey = ui.getPremiumTier(daysNum, true);
+      const displayName = tierDisplayName(tierKey, daysNum);
+
+      let dmSent = false;
+      try {
+        dmSent = await sendPremiumDM(client, userId, "activated", {
+          username: profile.username || "Member VIP",
+          tierName: displayName,
+          premiumUntil: newExpiry,
+        });
+      } catch (dmErr) {}
+
+      broadcast(client, `Status premium (${displayName}) diberikan ke user ${userId}.`);
+
+      res.json({
+        success: true,
+        message: `Berhasil mengaktifkan status ${displayName} (${daysNum} hari) untuk user ${userId}.`,
+        newExpiry,
+        tier: tierKey,
+        dmSent,
+      });
+    } catch (e) {
+      logger.error("[OWNER GRANT PREMIUM] Error:", e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // --- Cabut status Premium dari Dashboard ---
+  router.post("/api/owner/premium/revoke", async (req, res) => {
+    const { userId } = req.body || {};
+    if (!userId) {
+      return res.status(400).json({ error: "User ID Discord wajib diisi." });
+    }
+
+    try {
+      const profile = await UserProfile.findByPk(userId);
+      if (!profile) {
+        return res.status(404).json({ error: "Profil pengguna tidak ditemukan." });
+      }
+
+      const store = require("../../src/premium/premiumStore");
+      const { sendPremiumDM } = require("../../src/premium/premiumNotify");
+
+      await store.revokePremium(userId, profile);
+      try {
+        await sendPremiumDM(client, userId, "removed", {
+          username: profile.username || "Member",
+        });
+      } catch (dmErr) {}
+
+      broadcast(client, `Status premium dicabut dari user ${userId}.`);
+
+      res.json({
+        success: true,
+        message: `Status premium user ${userId} telah berhasil dicabut.`,
+      });
+    } catch (e) {
+      logger.error("[OWNER REVOKE PREMIUM] Error:", e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // --- Dapatkan daftar Voucher V.I.P ---
+  router.get("/api/owner/vouchers", async (req, res) => {
+    try {
+      const PremiumVoucher = require("../../src/models/PremiumVoucher");
+      const vouchers = await PremiumVoucher.findAll({
+        order: [["createdAt", "DESC"]],
+        limit: 100,
+      });
+      res.json({ success: true, vouchers });
+    } catch (e) {
+      logger.error("[OWNER GET VOUCHERS] Error:", e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // --- Buat kode Voucher baru dari Dashboard ---
+  router.post("/api/owner/vouchers/create", async (req, res) => {
+    const { days = 30, expiredInDays = null, count = 1 } = req.body || {};
+    const daysNum = Math.max(1, parseInt(days) || 30);
+    const countNum = Math.min(50, Math.max(1, parseInt(count) || 1));
+
+    try {
+      const crypto = require("crypto");
+      const PremiumVoucher = require("../../src/models/PremiumVoucher");
+      const store = require("../../src/premium/premiumStore");
+
+      let expiresAt = null;
+      if (expiredInDays) {
+        expiresAt = new Date(Date.now() + Number(expiredInDays) * store.DAY_MS);
+      }
+
+      const createdCodes = [];
+      for (let i = 0; i < countNum; i++) {
+        const code = "NAURA-VIP-" + crypto.randomBytes(5).toString("hex").toUpperCase();
+        await PremiumVoucher.create({
+          code,
+          durationDays: daysNum,
+          expiresAt,
+        });
+        createdCodes.push(code);
+      }
+
+      res.json({
+        success: true,
+        message: `Berhasil membuat ${createdCodes.length} kode voucher V.I.P (${daysNum} hari).`,
+        codes: createdCodes,
+      });
+    } catch (e) {
+      logger.error("[OWNER CREATE VOUCHERS] Error:", e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // --- Hapus voucher yang belum digunakan ---
+  router.delete("/api/owner/vouchers/:code", async (req, res) => {
+    const { code } = req.params;
+    if (!code) return res.status(400).json({ error: "Kode voucher wajib diisi." });
+
+    try {
+      const PremiumVoucher = require("../../src/models/PremiumVoucher");
+      const deleted = await PremiumVoucher.destroy({ where: { code } });
+      if (!deleted) {
+        return res.status(404).json({ error: "Kode voucher tidak ditemukan." });
+      }
+      res.json({ success: true, message: `Voucher ${code} berhasil dihapus.` });
+    } catch (e) {
+      logger.error("[OWNER DELETE VOUCHER] Error:", e);
+      res.status(500).json({ error: e.message });
     }
   });
 

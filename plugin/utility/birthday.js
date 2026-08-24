@@ -84,7 +84,7 @@ module.exports = {
         });
       }
 
-      let [bday, created] = await UserBirthday.findOrCreate({
+      const [bday, created] = await UserBirthday.findOrCreate({
         where: { userId: interaction.user.id },
         defaults: { day, month, year },
       });
@@ -141,7 +141,7 @@ module.exports = {
       ];
 
       const today = new Date();
-      let nextBday = new Date(today.getFullYear(), bday.month - 1, bday.day);
+      const nextBday = new Date(today.getFullYear(), bday.month - 1, bday.day);
       if (today > nextBday) {
         nextBday.setFullYear(today.getFullYear() + 1);
       }
@@ -187,7 +187,7 @@ module.exports = {
 
       const sortedBirthdays = birthdays
         .map((b) => {
-          let nextBday = new Date(today.getFullYear(), b.month - 1, b.day);
+          const nextBday = new Date(today.getFullYear(), b.month - 1, b.day);
           if (today > nextBday) nextBday.setFullYear(today.getFullYear() + 1);
 
           const daysLeft = Math.ceil(

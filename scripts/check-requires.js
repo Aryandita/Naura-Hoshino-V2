@@ -18,7 +18,7 @@ function checkFile(filePath) {
     const importPath = match[1];
     // Only check relative local imports
     if (importPath.startsWith("./") || importPath.startsWith("../")) {
-      let resolvedPath = path.resolve(path.dirname(filePath), importPath);
+      const resolvedPath = path.resolve(path.dirname(filePath), importPath);
 
       let found = false;
       // Test possible extensions and directory index

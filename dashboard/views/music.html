@@ -8,8 +8,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/tokens.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/naura-ui.js"></script>
     <style>
         :root {
             --primary: #FFB6C1;
@@ -97,9 +100,8 @@
                 <div class="glass-panel p-6">
                     <h2 class="text-xl font-semibold mb-4 text-[#F9A8D4]">Now Playing</h2>
                     
-                    <div id="noMusicState" class="text-center py-12 text-gray-500">
-                        <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
-                        <p>Tidak ada lagu yang diputar di server ini.</p>
+                    <div id="noMusicState">
+                        <script>document.write(typeof NauraUI !== 'undefined' ? NauraUI.stateHtml('empty', { title: 'Belum Ada Lagu', body: 'Tidak ada lagu yang sedang diputar di server ini. Putar lagu yuk!' }) : '<p class="text-center text-gray-500 py-8">Tidak ada lagu yang diputar.</p>');</script>
                     </div>
 
                     <div id="playingState" class="hidden">

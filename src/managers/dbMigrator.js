@@ -9,14 +9,8 @@ const fs = require("fs");
 // Tabel catatan migrasi. Sebelum ini, setiap migrasi dijalankan ulang pada tiap
 // boot dan hanya "berhasil" karena MySQL menolaknya dengan error kolom duplikat.
 // Pola itu menyembunyikan kegagalan nyata dan membuat migrasi yang bukan ALTER
-// (misalnya UPDATE data) mustahil ditulis dengan aman.
+// Tabel catatan migrasi.
 const LEDGER_TABLE = "schema_migrations";
-
-// Error MySQL yang berarti "perubahan ini sudah ada". Aman dicatat sebagai
-// selesai, karena database sudah berada pada bentuk yang diinginkan.
-// 1050 = tabel sudah ada, 1060 = kolom sudah ada, 1061 = index sudah ada,
-// 1091 = kolom/index yang mau dihapus tidak ada.
-const ALREADY_APPLIED_ERRNOS = new Set([1050, 1060, 1061, 1091]);
 
 /**
  * Daftar migrasi yang dijalankan secara berurutan.
@@ -173,22 +167,80 @@ const MIGRATIONS = [
     id: "v27_create_minecraft_links",
     description: "Buat tabel minecraft_links untuk penautan akun Minecraft & Discord",
     sql: "CREATE TABLE IF NOT EXISTS minecraft_links ( userId VARCHAR(32) NOT NULL PRIMARY KEY, mcUsername VARCHAR(64) NOT NULL, mcUuid VARCHAR(64) DEFAULT NULL, isVerified BOOLEAN DEFAULT FALSE, verificationCode VARCHAR(16) DEFAULT NULL, totalSyncRewards INT DEFAULT 0, lastSyncedAt DATETIME DEFAULT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX idx_minecraft_links_mcUsername (mcUsername) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+  },
+  {
+    id: "v28_create_prediction_markets_and_bets",
+    description: "Buat tabel prediction_markets dan prediction_bets untuk Pari-Mutuel Prediction Market",
+    sql: "CREATE TABLE IF NOT EXISTS prediction_markets ( marketId VARCHAR(64) NOT NULL PRIMARY KEY, guildId VARCHAR(32) NOT NULL, creatorId VARCHAR(32) NOT NULL, title VARCHAR(255) NOT NULL, description TEXT DEFAULT NULL, category VARCHAR(32) NOT NULL DEFAULT 'COMMUNITY', options JSON NOT NULL, totalPool BIGINT NOT NULL DEFAULT 0, status VARCHAR(32) NOT NULL DEFAULT 'OPEN', winningOptionId INT DEFAULT NULL, lockTime DATETIME NOT NULL, resolveTime DATETIME DEFAULT NULL, houseFeePercent INT NOT NULL DEFAULT 5, maxBetPerUser INT NOT NULL DEFAULT 10000, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX idx_prediction_markets_guildId (guildId), INDEX idx_prediction_markets_status (status) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; CREATE TABLE IF NOT EXISTS prediction_bets ( betId VARCHAR(64) NOT NULL PRIMARY KEY, marketId VARCHAR(64) NOT NULL, guildId VARCHAR(32) NOT NULL, userId VARCHAR(32) NOT NULL, username VARCHAR(128) NOT NULL DEFAULT 'Anonymous', optionId INT NOT NULL, amount BIGINT NOT NULL, payout BIGINT NOT NULL DEFAULT 0, status VARCHAR(32) NOT NULL DEFAULT 'PENDING', createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX idx_prediction_bets_marketId (marketId), INDEX idx_prediction_bets_userId (userId), INDEX idx_prediction_bets_guild_user (guildId, userId) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+  },
+  {
+    id: "v29_upgrade_world_boss_phases",
+    description: "Tambah kolom phase, shieldHp, maxShieldHp, roleContributions, mvpUserId, dan lastHitUserId ke world_bosses",
+    sql: "ALTER TABLE world_bosses ADD COLUMN phase INT NOT NULL DEFAULT 1, ADD COLUMN shieldHp BIGINT NOT NULL DEFAULT 0, ADD COLUMN maxShieldHp BIGINT NOT NULL DEFAULT 0, ADD COLUMN roleContributions JSON DEFAULT NULL, ADD COLUMN mvpUserId VARCHAR(191) DEFAULT NULL, ADD COLUMN lastHitUserId VARCHAR(191) DEFAULT NULL;",
+  },
+  {
+    id: "v30_create_user_cafes",
+    description: "Buat tabel user_cafes untuk Cozy Cyber-Cafe & Maid Lounge Sim",
+    sql: "CREATE TABLE IF NOT EXISTS user_cafes ( userId VARCHAR(32) NOT NULL PRIMARY KEY, cafeName VARCHAR(64) NOT NULL DEFAULT 'Cyber Maid Lounge', level INT NOT NULL DEFAULT 1, reputation INT NOT NULL DEFAULT 0, unlockedRecipes JSON NOT NULL, activeDishes JSON NOT NULL, theme VARCHAR(32) NOT NULL DEFAULT 'CYBER_NEON', customersServed INT NOT NULL DEFAULT 0, uncollectedRevenue BIGINT NOT NULL DEFAULT 0, lastCollectedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+  },
+  {
+    id: "v31_upgrade_user_cards_fusion_inscription",
+    description: "Tambah kolom isAwakened, awakeningLevel, inscription, dan originalMinterId ke user_cards",
+    sql: "ALTER TABLE user_cards ADD COLUMN isAwakened BOOLEAN DEFAULT FALSE, ADD COLUMN awakeningLevel INT DEFAULT 0, ADD COLUMN inscription VARCHAR(128) DEFAULT NULL, ADD COLUMN originalMinterId VARCHAR(191) DEFAULT NULL;",
+  },
+  {
+    id: "v32_upgrade_territories_and_pets",
+    description: "Tambah kolom defenseLevel, clanName, contributingClanIds ke clan_territories dan fusionCount, cosmicAura, habitatRoom ke UserPets",
+    sql: "ALTER TABLE clan_territories ADD COLUMN clanName VARCHAR(128) DEFAULT NULL, ADD COLUMN defenseLevel INT NOT NULL DEFAULT 1, ADD COLUMN maxControlPoints INT NOT NULL DEFAULT 1000, ADD COLUMN lastTaxClaimedAt DATETIME DEFAULT NULL, ADD COLUMN contributingClanIds JSON DEFAULT NULL; ALTER TABLE UserPets ADD COLUMN fusionCount INT NOT NULL DEFAULT 0, ADD COLUMN cosmicAura BOOLEAN NOT NULL DEFAULT FALSE, ADD COLUMN habitatRoom JSON DEFAULT NULL;",
+  },
+  {
+    id: "v33_create_sprint20_milestone_tables",
+    description: "Buat tabel coliseum_teams, guild_personas, server_stocks, user_stock_holdings, dan tambah kolom hallLayout di GuildClans",
+    sql: "ALTER TABLE GuildClans ADD COLUMN hallLayout JSON DEFAULT NULL; CREATE TABLE IF NOT EXISTS coliseum_teams ( id INT AUTO_INCREMENT PRIMARY KEY, userId VARCHAR(191) NOT NULL UNIQUE, teamName VARCHAR(128) NOT NULL DEFAULT 'Vanguard Squad', formation JSON NOT NULL, eloRating INT NOT NULL DEFAULT 1200, divisionTier VARCHAR(32) NOT NULL DEFAULT 'BRONZE', wins INT NOT NULL DEFAULT 0, losses INT NOT NULL DEFAULT 0, lastFoughtAt DATETIME DEFAULT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; CREATE TABLE IF NOT EXISTS guild_personas ( id INT AUTO_INCREMENT PRIMARY KEY, personaId VARCHAR(64) NOT NULL UNIQUE, guildId VARCHAR(64) NOT NULL, channelId VARCHAR(64) DEFAULT NULL, name VARCHAR(128) NOT NULL, systemPrompt TEXT NOT NULL, voiceTone VARCHAR(64) NOT NULL DEFAULT 'TSUNDERE', avatarUrl VARCHAR(255) DEFAULT NULL, isActive BOOLEAN NOT NULL DEFAULT TRUE, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; CREATE TABLE IF NOT EXISTS server_stocks ( ticker VARCHAR(32) PRIMARY KEY, name VARCHAR(128) NOT NULL, guildId VARCHAR(64) DEFAULT NULL, clanId INT DEFAULT NULL, currentPrice FLOAT NOT NULL DEFAULT 100.0, previousPrice FLOAT NOT NULL DEFAULT 100.0, totalShares INT NOT NULL DEFAULT 10000, availableShares INT NOT NULL DEFAULT 10000, dividendYield FLOAT NOT NULL DEFAULT 0.05, history24h JSON NOT NULL, isHighRisk BOOLEAN NOT NULL DEFAULT FALSE, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; CREATE TABLE IF NOT EXISTS user_stock_holdings ( id INT AUTO_INCREMENT PRIMARY KEY, userId VARCHAR(191) NOT NULL, ticker VARCHAR(32) NOT NULL, sharesOwned INT NOT NULL DEFAULT 0, avgBuyPrice FLOAT NOT NULL DEFAULT 0.0, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, UNIQUE KEY uk_user_ticker (userId, ticker) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+  },
+  {
+    id: "v34_add_voiceMinutes_to_user_leveling",
+    description: "Tambah kolom voiceMinutes ke user_leveling untuk tracking Voice XP dan aktivitas voice",
+    sql: "ALTER TABLE user_leveling ADD COLUMN voiceMinutes INT DEFAULT 0;",
+    pgSql: 'ALTER TABLE "user_leveling" ADD COLUMN IF NOT EXISTS "voiceMinutes" INTEGER DEFAULT 0;',
   }
 ];
 
+const ALREADY_APPLIED_ERRNOS = new Set([1050, 1060, 1061, 1091]);
+const ALREADY_APPLIED_PG_CODES = new Set([
+  "42701",
+  "42P07",
+  "42710",
+  "42704",
+  "23505",
+]);
+
 function isAlreadyApplied(err) {
   const errno = err && err.original && err.original.errno;
-  return ALREADY_APPLIED_ERRNOS.has(errno);
+  if (errno && ALREADY_APPLIED_ERRNOS.has(errno)) return true;
+  const code = err && err.original && err.original.code;
+  if (code && ALREADY_APPLIED_PG_CODES.has(code)) return true;
+  return false;
 }
 
 /** Membuat tabel catatan bila belum ada. Aman dipanggil berkali-kali. */
 async function ensureLedger(sequelize) {
-  await sequelize.query(
-    `CREATE TABLE IF NOT EXISTS ${LEDGER_TABLE} (
-            id VARCHAR(191) NOT NULL PRIMARY KEY,
-            applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
-  );
+  const isPostgres = sequelize.options.dialect === "postgres";
+  if (isPostgres) {
+    await sequelize.query(
+      `CREATE TABLE IF NOT EXISTS ${LEDGER_TABLE} (
+              id VARCHAR(191) NOT NULL PRIMARY KEY,
+              applied_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+          );`,
+    );
+  } else {
+    await sequelize.query(
+      `CREATE TABLE IF NOT EXISTS ${LEDGER_TABLE} (
+              id VARCHAR(191) NOT NULL PRIMARY KEY,
+              applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+    );
+  }
 }
 
 async function loadAppliedIds(sequelize) {
@@ -197,9 +249,22 @@ async function loadAppliedIds(sequelize) {
 }
 
 async function recordMigration(sequelize, id) {
-  await sequelize.query(`INSERT IGNORE INTO ${LEDGER_TABLE} (id) VALUES (?);`, {
-    replacements: [id],
-  });
+  const isPostgres = sequelize.options.dialect === "postgres";
+  if (isPostgres) {
+    await sequelize.query(
+      `INSERT INTO ${LEDGER_TABLE} (id) VALUES (?) ON CONFLICT (id) DO NOTHING;`,
+      {
+        replacements: [id],
+      },
+    );
+  } else {
+    await sequelize.query(
+      `INSERT IGNORE INTO ${LEDGER_TABLE} (id) VALUES (?);`,
+      {
+        replacements: [id],
+      },
+    );
+  }
 }
 
 /**
@@ -212,7 +277,7 @@ async function recordMigration(sequelize, id) {
  * @returns {Promise<Array<string>>}
  */
 async function getPendingMigrations(sequelize) {
-  if (sequelize.options.dialect !== "mysql") return [];
+  if (sequelize.options.dialect === "sqlite") return [];
   await ensureLedger(sequelize);
   const done = await loadAppliedIds(sequelize);
   return MIGRATIONS.filter((migration) => !done.has(migration.id)).map(
@@ -232,9 +297,9 @@ async function getPendingMigrations(sequelize) {
  * @returns {Promise<{ applied: Array<string>, alreadyPresent: Array<string> }>}
  */
 async function runMigrations(sequelize) {
-  if (sequelize.options.dialect !== "mysql") {
+  if (sequelize.options.dialect === "sqlite") {
     logger.info(
-      "[DB MIGRATOR] Melewati migrasi, bukan MySQL (mode SQLite fallback).",
+      "[DB MIGRATOR] Melewati migrasi, bukan MySQL/PostgreSQL (mode SQLite fallback).",
     );
     return { applied: [], alreadyPresent: [] };
   }
@@ -256,10 +321,14 @@ async function runMigrations(sequelize) {
 
   const applied = [];
   const alreadyPresent = [];
+  const isPostgres = sequelize.options.dialect === "postgres";
 
   for (const migration of pending) {
+    const querySql = isPostgres && migration.pgSql ? migration.pgSql : migration.sql;
     try {
-      await sequelize.query(migration.sql);
+      if (querySql) {
+        await sequelize.query(querySql);
+      }
       await recordMigration(sequelize, migration.id);
       applied.push(migration.id);
       logger.db(

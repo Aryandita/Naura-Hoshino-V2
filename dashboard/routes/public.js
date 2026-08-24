@@ -7,8 +7,9 @@
 
 const express = require("express");
 const os = require("os");
-const { logger } = require("../src/managers/logger");
-const UserProfile = require("../src/models/UserProfile");
+const { logger } = require("../../src/managers/logger");
+const UserProfile = require("../../src/models/UserProfile");
+const env = require("../../src/config/env");
 const { formatUptime, formatMemory } = require("../utils/format");
 const { isOwner } = require("../middleware/auth");
 
@@ -16,7 +17,7 @@ const LEADERBOARD_CACHE_TTL = 60; // detik
 
 function safeRedis() {
   try {
-    const redisManager = require("../src/managers/redisManager");
+    const redisManager = require("../../src/managers/redisManager");
     if (redisManager.client && redisManager.client.isReady) return redisManager;
   } catch {
     // Redis opsional; abaikan bila tidak tersedia.
@@ -58,6 +59,19 @@ module.exports = (client) => {
       uptime: formatUptime(client.uptime),
       ram: `${memory.usedGb}GB / ${memory.totalGb}GB`,
       ramPercent: memory.percent,
+      botVersion: env.BOT_VERSION,
+      engineVersion: env.ENGINE_VERSION,
+      partnership: env.PARTNERSHIP,
+    });
+  });
+
+  // --- Versi sistem & info konfigurasi env.js ---
+  router.get("/api/version", (req, res) => {
+    res.json({
+      botVersion: env.BOT_VERSION,
+      engineVersion: env.ENGINE_VERSION,
+      partnership: env.PARTNERSHIP,
+      nodeVersion: process.version,
     });
   });
 
@@ -70,7 +84,7 @@ module.exports = (client) => {
         if (cached) return res.json(cached);
       }
 
-      const UserSurvival = require("../src/models/UserSurvival");
+      const UserSurvival = require("../../src/models/UserSurvival");
       const users = await UserSurvival.findAll({
         attributes: ["starFragments", "coupons"],
       });
@@ -108,6 +122,113 @@ module.exports = (client) => {
     }
   });
 
+  // --- Analitik Musik Mabar (Realtime dari Database) ---
+  router.get("/api/analytics/music-friends", async (req, res) => {
+    try {
+      const sessionUserId = req.user?.id || req.session?.passport?.user?.id || null;
+      if (sessionUserId) {
+        const myProfile = await UserProfile.findOne({
+          where: { userId: sessionUserId },
+          attributes: ["userId", "music_trackingData", "music_tracksListened", "music_totalDurationMs"],
+        });
+        if (myProfile && myProfile.music_trackingData) {
+          let raw = myProfile.music_trackingData;
+          if (typeof raw === "string") {
+            try {
+              raw = JSON.parse(raw);
+            } catch (e) {
+              raw = null;
+            }
+          }
+          if (raw && raw.friends && Object.keys(raw.friends).length > 0) {
+            const list = Object.entries(raw.friends).map(([key, obj]) => ({
+              name: typeof obj === "object" && obj && obj.name ? obj.name : key,
+              count:
+                typeof obj === "object" && obj
+                  ? Number(obj.tracks) || Number(obj.count) || 1
+                  : 1,
+              durationMs:
+                typeof obj === "object" && obj
+                  ? Number(obj.durationMs) || 0
+                  : Number(obj) || 0,
+            }));
+            return res.json({ source: "user", friends: list });
+          }
+        }
+      }
+
+      // Query agregat dari database UserProfile jika belum ada data mabar personal
+      const profiles = await UserProfile.findAll({
+        attributes: [
+          "userId",
+          "music_tracksListened",
+          "music_totalDurationMs",
+          "music_trackingData",
+          "music_topFriend",
+        ],
+        order: [["music_totalDurationMs", "DESC"]],
+        limit: 25,
+      });
+
+      const aggregatedFriends = new Map();
+
+      for (const p of profiles) {
+        let tracking = p.music_trackingData;
+        if (typeof tracking === "string") {
+          try {
+            tracking = JSON.parse(tracking);
+          } catch (e) {
+            tracking = null;
+          }
+        }
+        if (tracking && tracking.friends && typeof tracking.friends === "object") {
+          for (const [key, obj] of Object.entries(tracking.friends)) {
+            const name = typeof obj === "object" && obj && obj.name ? obj.name : key;
+            const count =
+              typeof obj === "object" && obj
+                ? Number(obj.tracks) || Number(obj.count) || 1
+                : 1;
+            const dur =
+              typeof obj === "object" && obj
+                ? Number(obj.durationMs) || 0
+                : Number(obj) || 0;
+            const existing = aggregatedFriends.get(name) || {
+              name,
+              count: 0,
+              durationMs: 0,
+            };
+            existing.count += count;
+            existing.durationMs += dur;
+            aggregatedFriends.set(name, existing);
+          }
+        }
+      }
+
+      const list = Array.from(aggregatedFriends.values());
+
+      // Jika belum ada riwayat mabar antar user, ambil dari top pemutar musik di database
+      if (list.length === 0 && profiles.length > 0) {
+        for (const p of profiles) {
+          if (p.music_tracksListened > 0 || p.music_totalDurationMs > 0) {
+            let uName = "Member #" + p.userId.slice(-4);
+            const cached = client.users?.cache?.get(p.userId);
+            if (cached) uName = cached.username;
+            list.push({
+              name: uName,
+              count: p.music_tracksListened || 0,
+              durationMs: p.music_totalDurationMs || 0,
+            });
+          }
+        }
+      }
+
+      return res.json({ source: "community", friends: list });
+    } catch (err) {
+      logger.error("[API MUSIC ANALYTICS] Error:", err);
+      return res.status(500).json({ error: "Gagal memuat analitik musik." });
+    }
+  });
+
   // --- Leaderboard ---
   router.get("/api/leaderboard", async (req, res) => {
     try {
@@ -124,8 +245,7 @@ module.exports = (client) => {
         if (cached) return res.json(cached);
       }
 
-      const UserSurvival = require("../src/models/UserSurvival");
-      const { sequelize } = require("../src/managers/dbManager");
+      const UserSurvival = require("../../src/models/UserSurvival");
 
       const profileAttributes = [
         "userId",

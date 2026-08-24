@@ -91,6 +91,9 @@ function addRpgGroup(builder) {
               .addChoices(
                 { name: "🏆 Papan Peringkat MMR", value: "leaderboard" },
                 { name: "📊 Statistik PvP Pribadi", value: "stats" },
+                { name: "⚔️ Galactic Coliseum 3v3 Match", value: "coliseum_match" },
+                { name: "🛡️ Formasi Tim & Divisi Coliseum", value: "coliseum_team" },
+                { name: "👑 Papan Peringkat Divisi Master", value: "coliseum_leaderboard" },
               ),
           ),
       )
@@ -142,7 +145,10 @@ function addRpgGroup(builder) {
               .setDescription("Pilih aksi klan")
               .setRequired(true)
               .addChoices(
-                { name: "Info Klan Saya", value: "info" },
+                { name: "🏰 Dashboard & Info Klan", value: "info" },
+                { name: "🏡 2.5D Guild Hall Lounge", value: "hall" },
+                { name: "☕ Seduh Kopi Lounge (+25 Energy)", value: "coffee" },
+                { name: "🛋️ Beli Furnitur Lounge", value: "furniture" },
                 { name: "Buat Klan Baru", value: "create" },
                 { name: "Gabung Klan", value: "join" },
                 { name: "Sumbang Vault", value: "deposit" },
@@ -150,7 +156,7 @@ function addRpgGroup(builder) {
               ),
           )
           .addStringOption((opt) =>
-            opt.setName("nama").setDescription("Nama klan").setRequired(false),
+            opt.setName("nama").setDescription("Nama klan atau ID furnitur").setRequired(false),
           )
           .addIntegerOption((opt) =>
             opt
@@ -215,6 +221,62 @@ function addRpgGroup(builder) {
                 { name: "📦 Standard Drop (3000 Coins)", value: "standard" },
                 { name: "💎 Premium Mythic (5 Coupons)", value: "premium" },
               ),
+          ),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("conquest")
+          .setDescription("🏰 Perang Faksi Wilayah Klan & Klaim Pajak Sektor (Neo-Hoshino)")
+          .addStringOption((opt) =>
+            opt
+              .setName("aksi")
+              .setDescription("Aksi perang wilayah")
+              .addChoices(
+                { name: "🗺️ Lihat Peta Wilayah", value: "map" },
+                { name: "⚔️ Serang Sektor", value: "attack" },
+                { name: "🛡️ Perkuat Pertahanan", value: "defend" },
+                { name: "💰 Klaim Pajak Kas Klan", value: "tax" },
+              )
+              .setRequired(false),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("sektor")
+              .setDescription("ID Sektor target")
+              .addChoices(
+                { name: "Neon Cyber-Docks", value: "SECTOR_DOCKS" },
+                { name: "Crystal Quarry", value: "SECTOR_MINES" },
+                { name: "Babel Citadel", value: "SECTOR_CITADEL" },
+                { name: "Sakura Valley", value: "SECTOR_VALLEY" },
+                { name: "Central Cyber-Hub", value: "SECTOR_PLAZA" },
+              )
+              .setRequired(false),
+          )
+          .addIntegerOption((opt) =>
+            opt
+              .setName("energi")
+              .setDescription("Jumlah poin energi yang dikerahkan (10-500)")
+              .setMinValue(10)
+              .setMaxValue(500)
+              .setRequired(false),
+          ),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("abyss")
+          .setDescription("🌀 Jelajahi Labirin Rogue-lite Prosedural 50 Lantai (The Neo-Abyss)")
+          .addStringOption((opt) =>
+            opt
+              .setName("aksi")
+              .setDescription("Pilih aksi ekspedisi labirin")
+              .addChoices(
+                { name: "🚀 Mulai / Lanjutkan Ekspedisi", value: "start" },
+                { name: "🚪 Masuki Ruangan 1", value: "room_1" },
+                { name: "🚪 Masuki Ruangan 2", value: "room_2" },
+                { name: "🚪 Masuki Ruangan 3", value: "room_3" },
+                { name: "🏁 Selesaikan & Klaim Hadiah", value: "leave" },
+              )
+              .setRequired(false),
           ),
       ),
   );

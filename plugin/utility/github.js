@@ -40,19 +40,19 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: "#2b3137",
         authorName: "GitHub Profile Search",
-        title: `🐙 ${data.name || data.login}`,
+        title: `${ui.getEmoji("about") || "🐙"} ${data.name || data.login}`,
         iconURL:
           data.avatar_url ||
           "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
-        description: `${data.bio || "Tidak ada bio."}\n\n🔗 [Lihat Profil GitHub](${data.html_url})`,
+        description: `${data.bio || "Tidak ada bio."}\n\n${ui.getEmoji("about") || "🔗"} [Lihat Profil GitHub](${data.html_url})`,
         fields: [
           {
-            name: "👥 Followers / Following",
+            name: `${ui.getEmoji("member") || "👥"} Followers / Following`,
             value: `${data.followers} / ${data.following}`,
           },
-          { name: "📁 Public Repos", value: `${data.public_repos}` },
-          { name: "🏢 Perusahaan", value: data.company || "Tidak ada" },
-          { name: "📍 Lokasi", value: data.location || "Tidak diketahui" },
+          { name: `${ui.getEmoji("shop_box") || "📁"} Public Repos`, value: `${data.public_repos}` },
+          { name: `${ui.getEmoji("bank") || "🏢"} Perusahaan`, value: data.company || "Tidak ada" },
+          { name: `${ui.getEmoji("lokasi") || "📍"} Lokasi`, value: data.location || "Tidak diketahui" },
         ],
         footerText: ui.getFooter("utility"),
       });

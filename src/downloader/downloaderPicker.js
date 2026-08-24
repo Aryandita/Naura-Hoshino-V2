@@ -95,7 +95,7 @@ const attachResolutionCollector = ({
           platform,
           sourceUrl,
           resolutionText: `${chosenHeight}p (two-pass, pilihan kamu)`,
-          extraText: `\n\n${render.e("cheers", "\u2728")} *Ukuran akhirnya ${mb(picked.sizeBytes)} MB. Pas!*`,
+          extraText: `\n\n${render.e("naura_cheers", "✨")} *Ukuran akhirnya ${mb(picked.sizeBytes)} MB. Pas!*`,
           mediaNames: [finalName],
         });
         payload.files = [
@@ -109,7 +109,7 @@ const attachResolutionCollector = ({
         render.compressFailedCard({
           client: interaction.client,
           title: "Masih Kelewat Batas",
-          description: `${render.e("cry", "\uD83D\uDE22")} Naura sudah coba kecilkan ke **${chosenHeight}p**, tapi hasilnya ${mb(picked.sizeBytes)} MB dan masih di atas batas ${limitMB.toFixed(0)} MB. Coba pilih resolusi yang lebih rendah, ya.`,
+          description: `${render.e("naura_cry", "😢")} Naura sudah coba kecilkan ke **${chosenHeight}p**, tapi hasilnya ${mb(picked.sizeBytes)} MB dan masih di atas batas ${limitMB.toFixed(0)} MB. Coba pilih resolusi yang lebih rendah, ya.`,
         }),
       );
     } catch (pickErr) {

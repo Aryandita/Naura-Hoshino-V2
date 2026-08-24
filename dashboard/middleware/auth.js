@@ -8,7 +8,7 @@
  * semuanya agar setiap rute cukup memasang penjaga yang tepat.
  */
 
-const env = require("../src/config/env");
+const env = require("../../src/config/env");
 
 // Discord permission bit untuk MANAGE_GUILD (1 << 5).
 const MANAGE_GUILD = 1n << 5n;
@@ -18,13 +18,9 @@ const MANAGE_GUILD = 1n << 5n;
  * (string tunggal / dipisah koma). Hasilnya selalu array string unik.
  */
 function getOwnerIds() {
-  const fromConfig = Array.isArray(env.OWNER_IDS)
+  return Array.isArray(env.OWNER_IDS)
     ? env.OWNER_IDS.map(String)
     : [];
-  const fromRaw = String(process.env.OWNER_ID || "")
-    .split(/[\s,]+/)
-    .filter(Boolean);
-  return [...new Set([...fromConfig, ...fromRaw])];
 }
 
 /**

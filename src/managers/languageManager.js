@@ -29,64 +29,20 @@ class LanguageManager {
 
   loadLanguages() {
     const root = path.join(__dirname, "..", "..");
-    const langPath = path.join(root, "language");
+    const langPath = path.join(root, "assets", "language");
 
-    // 1. Kamus utama: language/id.json & language/en.json
+    // Kamus terpadu tunggal: assets/language/id.json & assets/language/en.json
     for (const lang of this.supported) {
       const file = path.join(langPath, `${lang}.json`);
       const data = this._readJson(file);
       if (data) this.strings[lang] = data;
     }
 
-    // 2. Kamus bersama: language/shared/<lang>.json
-    //    Rumah bagi teks yang dipakai lintas plugin, terutama oleh builder
-    //    embed dan Container V2 (pesan loading, sukses, error). Dipisah dari
-    //    kamus utama supaya mudah dirawat, dan digabung tanpa menimpa agar
-    //    kamus utama tetap menjadi sumber kebenaran bila ada nama bentrok.
-    let sharedCount = 0;
-    for (const lang of this.supported) {
-      const file = path.join(langPath, "shared", `${lang}.json`);
-      const data = this._readJson(file);
-      if (!data) continue;
-      this.strings[lang] = this._mergeWithoutOverwrite(
-        this.strings[lang],
-        data,
-      );
-      sharedCount++;
-    }
-
-    // 3. Kamus milik plugin: plugin/<kategori>/locales/<lang>.json
-    //    Digabung tanpa menimpa kunci yang sudah ada, dengan alasan yang sama.
-    const pluginPath = path.join(root, "plugin");
-    let categories = [];
-    try {
-      categories = fs
-        .readdirSync(pluginPath, { withFileTypes: true })
-        .filter((entry) => entry.isDirectory())
-        .map((entry) => entry.name);
-    } catch (error) {
-      categories = [];
-    }
-
-    let mergedCount = 0;
-    for (const category of categories) {
-      for (const lang of this.supported) {
-        const file = path.join(pluginPath, category, "locales", `${lang}.json`);
-        const data = this._readJson(file);
-        if (!data) continue;
-        this.strings[lang] = this._mergeWithoutOverwrite(
-          this.strings[lang],
-          data,
-        );
-        mergedCount++;
-      }
-    }
-
     const summary = this.supported
       .map((lang) => `${lang}=${Object.keys(this.strings[lang] || {}).length}`)
       .join(", ");
     logger.info(
-      `[LanguageManager] Kamus dimuat (${summary}), ${sharedCount} berkas bersama dan ${mergedCount} berkas locale plugin digabung.`,
+      `[LanguageManager] Kamus terpadu dimuat (${summary}) dari assets/language/.`,
     );
   }
 
@@ -131,6 +87,21 @@ class LanguageManager {
     if (typeof lang !== "string") return this.default;
     const base = lang.toLowerCase().split("-")[0];
     return this.supported.includes(base) ? base : this.default;
+  }
+
+  /**
+   * Ambil objek kamus bahasa secara sinkron berdasarkan kode bahasa ('id' atau 'en').
+   * @param {string} [lang]
+   * @returns {Object}
+   */
+  getLanguageSync(lang) {
+    const code = this.normalize(lang);
+    return this.strings[code] || this.strings[this.default] || {};
+  }
+
+  /** Alias untuk getLanguageSync */
+  getDictionary(lang) {
+    return this.getLanguageSync(lang);
   }
 
   /**

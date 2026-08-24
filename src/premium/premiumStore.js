@@ -43,7 +43,8 @@ async function persist(userId, profile, changes) {
 
   if (profile && typeof profile.save === "function") {
     try {
-      await profile.save();
+      const fields = changes && typeof changes === "object" ? Object.keys(changes) : undefined;
+      await profile.save(fields ? { fields } : undefined);
       return true;
     } catch (error) {
       logger.error(

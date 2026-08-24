@@ -1,14 +1,11 @@
 "use strict";
 
-const { EmbedBuilder, MessageFlags } = require("discord.js");
+const { MessageFlags } = require("discord.js");
 const { updateGuildSetting } = require("../../managers/guildSettingsService");
-
-function successEmbed(title, description) {
-  return new EmbedBuilder()
-    .setColor("#FF69B4")
-    .setTitle(title)
-    .setDescription(description);
-}
+const {
+  buildSuccessContainerV2,
+} = require("../../utils/NauraContainerBuilder");
+const ui = require("../../config/ui");
 
 module.exports = [
   {
@@ -26,13 +23,15 @@ module.exports = [
         settings.minecraft = { ...settings.minecraft, ip, port };
       });
 
+      const payload = buildSuccessContainerV2({
+        authorName: "Naura Setup Manager",
+        title: `${ui.getEmoji("minecraft") || "🎮"} Setup Minecraft Status Berhasil!`,
+        description: `Server IP: **${ip}:${port}** telah disimpan.\nNaura akan melacak status server ini secara real-time.`,
+        footerText: ui.getFooter("core"),
+      });
+
       return interaction.reply({
-        embeds: [
-          successEmbed(
-            "\ud83c\udfae Setup Minecraft Status Berhasil!",
-            `Server IP: **${ip}:${port}** telah disimpan.\nNaura akan melacak status server ini.`,
-          ),
-        ],
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     },
@@ -55,13 +54,15 @@ module.exports = [
         };
       });
 
+      const payload = buildSuccessContainerV2({
+        authorName: "Naura Setup Manager",
+        title: `${ui.getEmoji("pin") || "📌"} Setup Pesan Lengket Berhasil!`,
+        description: `Pesan lengket dipasang di <#${channelId}>:\n>>> ${messageText}`,
+        footerText: ui.getFooter("core"),
+      });
+
       return interaction.reply({
-        embeds: [
-          successEmbed(
-            "\ud83d\udccc Setup Pesan Lengket Berhasil!",
-            `Pesan lengket dipasang di <#${channelId}>:\n>>> ${messageText}`,
-          ),
-        ],
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     },
@@ -89,13 +90,15 @@ module.exports = [
         else settings.autoReplies.push({ trigger, response });
       });
 
+      const payload = buildSuccessContainerV2({
+        authorName: "Naura Auto Responder",
+        title: `${ui.getEmoji("robot") || "🤖"} Setup Auto Responder Berhasil!`,
+        description: `Naura akan otomatis membalas kata kunci **"${trigger}"** dengan:\n>>> ${response}`,
+        footerText: ui.getFooter("core"),
+      });
+
       return interaction.reply({
-        embeds: [
-          successEmbed(
-            "\ud83e\udd16 Setup Auto Responder Berhasil!",
-            `Naura akan otomatis membalas kata kunci **"${trigger}"** dengan:\n>>> ${response}`,
-          ),
-        ],
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     },

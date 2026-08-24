@@ -10,10 +10,25 @@ class RedisManager {
       return;
     }
 
-    this.client = createClient({ url: redisUrl });
+    this.client = createClient({
+      url: redisUrl,
+      socket: {
+        reconnectStrategy: (retries) => {
+          if (retries > 10) {
+            logger.warn(
+              "[Redis] Melebihi batas maksimal percobaan reconnect (10 kali).",
+            );
+            return new Error("[Redis] Max reconnect attempts reached");
+          }
+          return Math.min(retries * 500, 5000);
+        },
+        connectTimeout: 10000,
+        keepAlive: 30000,
+      },
+    });
 
     this.client.on("error", (err) =>
-      logger.error("[Redis] Connection error:", err.message),
+      logger.warn("[Redis] Connection error:", err.message),
     );
     this.client.on("connect", () =>
       logger.success("[Redis] Terhubung ke Redis Cache System."),
@@ -28,9 +43,37 @@ class RedisManager {
     return Boolean(this.client && this.client.isReady);
   }
 
+  async ping() {
+    if (!this.isReady) return false;
+    try {
+      const res = await this.client.ping();
+      return res === "PONG";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async disconnect() {
+    if (this.subscriber) {
+      try {
+        await this.subscriber.quit();
+      } catch (e) {}
+    }
+    if (this.client) {
+      try {
+        await this.client.quit();
+        logger.info("[Redis] Koneksi Redis ditutup dengan aman.");
+      } catch (e) {}
+    }
+  }
+
   async connect() {
     if (!this.client) return;
-    await this.client.connect();
+    try {
+      await this.client.connect();
+    } catch (error) {
+      logger.warn("[Redis] Gagal terhubung ke Redis server, sistem cache berjalan dalam mode memori fallback.");
+    }
   }
 
   async setCache(key, data, expirationInSeconds = 3600) {
@@ -62,6 +105,24 @@ class RedisManager {
       // Tanpa penjaga ini, Redis yang putus di tengah invalidasi cache akan
       // menjadi unhandled rejection dan bisa menjatuhkan seluruh shard.
       logger.error("[Redis] Gagal menghapus cache:", error.message);
+    }
+  }
+
+  async deleteByPattern(pattern) {
+    if (!this.isReady) return;
+    try {
+      const keys = [];
+      for await (const key of this.client.scanIterator({
+        MATCH: pattern,
+        COUNT: 100,
+      })) {
+        keys.push(key);
+      }
+      if (keys.length > 0) {
+        await this.client.del(keys);
+      }
+    } catch (error) {
+      logger.error("[Redis] Gagal menghapus cache dengan pattern:", error.message);
     }
   }
 

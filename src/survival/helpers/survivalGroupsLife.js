@@ -45,6 +45,8 @@ function addLifeGroup(builder) {
                 { name: "Lihat Status Pet", value: "view" },
                 { name: "Jinakkan Hewan Liar", value: "tame" },
                 { name: "Beri Makan", value: "feed" },
+                { name: "🏡 Kunjungi Pet Habitat", value: "habitat" },
+                { name: "⚡ Cosmic Ascension Fusion", value: "fuse" },
               ),
           )
           .addStringOption((opt) =>
@@ -53,12 +55,64 @@ function addLifeGroup(builder) {
               .setDescription("Pilih pet spesifik (Autocomplete)")
               .setRequired(false)
               .setAutocomplete(true),
+          )
+          .addIntegerOption((opt) =>
+            opt
+              .setName("target_pet_id")
+              .setDescription("ID Pet bahan untuk Cosmic Fusion")
+              .setRequired(false),
           ),
       )
       .addSubcommand((sub) =>
         sub
           .setName("rest")
           .setDescription("Tidur di kasur untuk memulihkan stamina & nyawa"),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("expedition")
+          .setDescription("Kirim Pet aktif dalam ekspedisi idle dungeon untuk mencari hadiah langka")
+          .addIntegerOption((opt) =>
+            opt
+              .setName("durasi")
+              .setDescription("Durasi ekspedisi pet")
+              .addChoices(
+                { name: "1 Jam (Cepat)", value: 1 },
+                { name: "4 Jam (Menengah)", value: 4 },
+                { name: "8 Jam (Panjang & Hadiah Terbesar)", value: 8 },
+              )
+              .setRequired(true),
+          ),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("cafe")
+          .setDescription("☕ Kelola Cozy Cyber-Cafe, masak hidangan, dan layani pelanggan!")
+          .addStringOption((opt) =>
+            opt
+              .setName("aksi")
+              .setDescription("Aksi kafe yang ingin dilakukan")
+              .addChoices(
+                { name: "Lihat Status Kafe", value: "status" },
+                { name: "Masak Menu (Cook)", value: "cook" },
+                { name: "Layani Tamu NPC (Serve)", value: "serve" },
+                { name: "Klaim Pendapatan Pasif (Collect)", value: "collect" },
+                { name: "Beli Menu Kafe Pemain Lain (Order)", value: "order" },
+              )
+              .setRequired(false),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("resep")
+              .setDescription("ID Resep untuk dimasak / dipesan (misal: sakura_latte, cyber_ramen)")
+              .setRequired(false),
+          )
+          .addUserOption((opt) =>
+            opt
+              .setName("target_user")
+              .setDescription("Pemain yang kafenya ingin kamu kunjungi (untuk aksi order)")
+              .setRequired(false),
+          ),
       ),
   );
 }

@@ -3,7 +3,7 @@
 const express = require("express");
 const router = express.Router();
 const { requireApiLogin } = require("../middleware/auth");
-const UserTicket = require("../src/models/UserTicket");
+const UserTicket = require("../../src/models/UserTicket");
 
 module.exports = (client) => {
   // Mendapatkan semua tiket milik pengguna yang sedang login

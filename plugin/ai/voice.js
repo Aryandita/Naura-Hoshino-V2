@@ -31,6 +31,17 @@ module.exports = {
             .setDescription("Pertanyaan atau sapaan ke Naura")
             .setRequired(true),
         ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("waifu")
+        .setDescription("Aktifkan mode Cyber Waifu Voice AI real-time di voice channel")
+        .addBooleanOption((opt) =>
+          opt
+            .setName("aktif")
+            .setDescription("Nyalakan atau matikan mode Cyber Waifu")
+            .setRequired(true),
+        ),
     ),
 
   async execute(interaction) {
@@ -100,6 +111,40 @@ module.exports = {
             footerText: ui.getFooter("utility"),
           }),
         });
+      }
+    }
+
+    if (subcommand === "waifu") {
+      const aktif = interaction.options.getBoolean("aktif");
+      const voiceAgent = require("../../src/ai/voiceAgent");
+
+      if (aktif) {
+        voiceAgent.startSession(interaction.guildId, {
+          channelId: member.voice.channel.id,
+          initiatorId: interaction.user.id,
+        });
+
+        const payload = buildContainerV2({
+          accentColorHex: "#38BDF8",
+          authorName: "🎙️ Cyber Waifu Voice AI",
+          title: "🤖 Mode Cyber Waifu Aktif!",
+          description: `Naura sekarang mendengarkan obrolan di **${member.voice.channel.name}**!\n\nPanggil nama **Naura** di voice chat untuk mulai berbicara dengannya secara real-time.`,
+          footerText: ui.getFooter("utility"),
+        });
+
+        return interaction.reply(payload);
+      } else {
+        voiceAgent.stopSession(interaction.guildId);
+
+        const payload = buildContainerV2({
+          accentColorHex: "#64748B",
+          authorName: "🎙️ Cyber Waifu Voice AI",
+          title: "💤 Mode Cyber Waifu Dinonaktifkan",
+          description: `Naura telah berhenti mendengarkan voice channel **${member.voice.channel.name}**. Sampai jumpa lagi!`,
+          footerText: ui.getFooter("utility"),
+        });
+
+        return interaction.reply(payload);
       }
     }
   },

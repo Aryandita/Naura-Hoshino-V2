@@ -1,18 +1,18 @@
 const fs = require("fs");
 const path = require("path");
 
-const idPath = path.join(__dirname, "..", "language", "id.json");
-const enPath = path.join(__dirname, "..", "language", "en.json");
+const idPath = path.join(__dirname, "..", "assets", "language", "id.json");
+const enPath = path.join(__dirname, "..", "assets", "language", "en.json");
 
-let idData = JSON.parse(fs.readFileSync(idPath, "utf8"));
-let enData = JSON.parse(fs.readFileSync(enPath, "utf8"));
+const idData = JSON.parse(fs.readFileSync(idPath, "utf8"));
+const enData = JSON.parse(fs.readFileSync(enPath, "utf8"));
 
 // Bersihkan karakter garbage dari proses regex sebelumnya (seperti dYZY, dY, dY` dsb.)
 const cleanText = (str) => {
   return str.replace(/dY[^\s]*\s?/g, "").trim();
 };
 
-for (let key in idData) {
+for (const key in idData) {
   if (key.startsWith("err_sys_")) {
     let text = idData[key];
     text = cleanText(text);

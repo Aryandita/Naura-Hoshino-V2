@@ -1,4 +1,3 @@
-// Lokasi: src/managers/LyricsManager.js
 const {
   ActionRowBuilder,
   ButtonBuilder,
@@ -10,7 +9,8 @@ const { logger } = require("../managers/logger");
 const axios = require("axios");
 const lyricsFinder = require("lyrics-finder");
 const ui = require("../config/ui");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const geminiClient = require("../ai/geminiClient");
+const redisManager = require("../managers/redisManager");
 
 class LyricsManager {
   constructor(client) {
@@ -82,21 +82,19 @@ class LyricsManager {
       } catch (e) {}
     }
 
-    if (!result && process.env.GEMINI_API_KEY) {
+    if (!result && geminiClient.isAvailable()) {
       // Fallback 2: Gemini 2.5 Flash
       try {
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const prompt = `Tuliskan lirik lagu lengkap untuk "${cleanTitle}" oleh "${cleanArtist}". Balas HANYA teks lirik tanpa komentar. Jika tidak tahu, balas "NOT_FOUND".`;
 
-        const aiResult = await model.generateContent(prompt);
-        const aiText = aiResult.response.text().trim();
+        const aiResult = await geminiClient.generate({ parts: [{ text: prompt }] });
+        const aiText = (aiResult || "").trim();
         if (aiText && aiText !== "NOT_FOUND")
           result = { type: "plain", data: aiText };
       } catch (e) {}
     }
 
-    if (result && redisManager.client && redisManager.client.isReady) {
+    if (result && redisManager.isReady()) {
       await redisManager.setCache(cacheKey, result, 24 * 60 * 60); // Cache 24 jam
     }
 

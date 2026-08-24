@@ -36,23 +36,23 @@ module.exports = {
     }
     const percentage = Math.abs(hash) % 101;
 
-    let emoji = "💔";
+    let emoji = ui.getEmoji("heart_broken") || "💔";
     let desc = "Hmm... Mungkin lebih baik berteman saja.";
 
     if (percentage >= 40) {
-      emoji = "❤️‍🩹";
+      emoji = ui.getEmoji("heart_mending") || "❤️‍🩹";
       desc = "Ada sedikit kecocokan, tapi butuh usaha ekstra!";
     }
     if (percentage >= 60) {
-      emoji = "💖";
+      emoji = ui.getEmoji("heart") || "💖";
       desc = "Cukup serasi! Kalian mungkin cocok satu sama lain.";
     }
     if (percentage >= 80) {
-      emoji = "💞";
+      emoji = ui.getEmoji("heart_revolving") || "💞";
       desc = "Wow! Kalian berdua sangat serasi! Pasangan yang ideal!";
     }
     if (percentage >= 95) {
-      emoji = "💘";
+      emoji = ui.getEmoji("heart_arrow") || "💘";
       desc = "SEMPURNA! Takdir sudah mempertemukan kalian berdua!";
     }
 

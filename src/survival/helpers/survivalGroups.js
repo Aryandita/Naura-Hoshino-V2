@@ -27,7 +27,36 @@ function addGatherGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("fish")
-          .setDescription("Memancing ikan di laut atau pantai utara"),
+          .setDescription("Memancing ikan di laut dangkal atau samudra laut dalam & Vivarium")
+          .addStringOption((opt) =>
+            opt
+              .setName("aksi")
+              .setDescription("Pilih aksi memancing / vivarium")
+              .addChoices(
+                { name: "🎣 Lempar Kail (Cast)", value: "cast" },
+                { name: "🌊 Lihat Holographic Vivarium", value: "vivarium" },
+                { name: "📥 Taruh Ikan ke Akuarium", value: "deposit" },
+                { name: "💰 Klaim Tiket Pengunjung", value: "collect" },
+              )
+              .setRequired(false),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("zona")
+              .setDescription("Pilih kedalaman laut")
+              .addChoices(
+                { name: "Coral Reef (0 - 200m)", value: "CORAL_REEF" },
+                { name: "Midnight Trench (200 - 1000m)", value: "MIDNIGHT_TRENCH" },
+                { name: "Abyssal Core (1000m+)", value: "ABYSSAL_CORE" },
+              )
+              .setRequired(false),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("ikan")
+              .setDescription("ID Ikan untuk dimasukkan ke Vivarium")
+              .setRequired(false),
+          ),
       )
       .addSubcommand((sub) =>
         sub
@@ -148,6 +177,54 @@ function addEconomyGroup(builder) {
                 { name: "Star Fragment (NSF)", value: "nsf" },
                 { name: "Naura Coin", value: "coin" },
               ),
+          ),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("caravan")
+          .setDescription("Ekspedisi karavan dagang antariksa & bursa komoditas")
+          .addStringOption((opt) =>
+            opt
+              .setName("aksi")
+              .setDescription("Pilih aksi karavan")
+              .setRequired(false)
+              .addChoices(
+                { name: "Status (Cek Karavan)", value: "status" },
+                { name: "Market (Bursa Harga & Rute)", value: "market" },
+                { name: "Dispatch (Berangkatkan)", value: "dispatch" },
+                { name: "Claim (Cairkan Laba)", value: "claim" },
+              ),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("rute")
+              .setDescription("Pilih rute tujuan ekspor")
+              .setRequired(false)
+              .addChoices(
+                { name: "Neo Tokyo Orbit (30m · +35% Laba)", value: "tokyo" },
+                { name: "Starlight Outpost (60m · +75% Laba)", value: "outpost" },
+                { name: "Galactic Core Nexus (120m · +150% Laba)", value: "nexus" },
+              ),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("komoditas")
+              .setDescription("Komoditas kargo yang dikirim")
+              .setRequired(false)
+              .addChoices(
+                { name: "Kayu Jati Emas 🪵", value: "GOLDEN_WOOD" },
+                { name: "Ikan Mitos Samudera 🐟", value: "MYTHIC_FISH" },
+                { name: "Bijih Kristal Kosmik 💎", value: "COSMIC_ORE" },
+                { name: "Kain Sutra Nebula 👘", value: "ASTRAL_SILK" },
+              ),
+          )
+          .addIntegerOption((opt) =>
+            opt
+              .setName("jumlah")
+              .setDescription("Jumlah unit komoditas (min: 5 unit)")
+              .setRequired(false)
+              .setMinValue(5)
+              .setMaxValue(500),
           ),
       ),
   );

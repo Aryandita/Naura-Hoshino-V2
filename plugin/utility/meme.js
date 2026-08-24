@@ -30,8 +30,8 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#ff9ff3",
         authorName: `r/${data.subreddit}`,
-        title: `😂 ${data.title}`,
-        description: `🔗 [Lihat Post Asli di Reddit](${data.postLink})`,
+        title: `${ui.getEmoji("happy") || "😂"} ${data.title}`,
+        description: `${ui.getEmoji("about") || "🔗"} [Lihat Post Asli di Reddit](${data.postLink})`,
         mediaAttachmentNames: [data.url],
         footerText: `👍 ${data.ups} | ${ui.getFooter("utility")}`,
       });

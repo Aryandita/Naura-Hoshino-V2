@@ -17,15 +17,22 @@ function msOf(value) {
   return Number(value) || 0;
 }
 
-function labelOf(key, value) {
-  if (value && typeof value === "object" && value.name) return value.name;
-  return key;
+function countOf(value) {
+  if (value && typeof value === "object") return Number(value.tracks) || Number(value.count) || 1;
+  return 1;
+}
+
+function labelOf(label, previous) {
+  if (label && typeof label === "string" && label.trim().length > 0) return label.trim();
+  if (previous && typeof previous === "object" && previous.name) return previous.name;
+  return "Teman Discord";
 }
 
 function bump(bucket, key, label, durationMs) {
   const previous = bucket[key];
   bucket[key] = {
     name: labelOf(label, previous),
+    tracks: (previous ? countOf(previous) : 0) + 1,
     durationMs: msOf(previous) + durationMs,
   };
 }
@@ -47,7 +54,7 @@ function topOf(bucket, fallback) {
   for (const [key, value] of Object.entries(bucket)) {
     const ms = msOf(value);
     if (ms > best.durationMs)
-      best = { name: labelOf(key, value), durationMs: ms };
+      best = { name: labelOf(value && value.name ? value.name : key, value), durationMs: ms };
   }
   return best;
 }
@@ -88,20 +95,12 @@ class MusicAnalytics {
 
     player.analyticsStartTime = null;
 
-    if (durationMs < MIN_DURATION_MS || durationMs > MAX_DURATION_MS) return;
+    if (durationMs < MIN_DURATION_MS) return;
+    if (durationMs > MAX_DURATION_MS) durationMs = MAX_DURATION_MS;
 
-    // Jangan melebihi panjang asli lagunya.
-    if (
-      !track.info.isStream &&
-      track.info.length &&
-      durationMs > track.info.length
-    ) {
-      durationMs = track.info.length;
-    }
-
-    const guild = client.guilds.cache.get(player.guildId);
+    const guild = client.guilds?.cache?.get(player.guildId);
     const voiceChannel = guild
-      ? guild.channels.cache.get(player.voiceChannel)
+      ? guild.channels?.cache?.get(player.voiceChannel)
       : null;
 
     try {
@@ -145,6 +144,15 @@ class MusicAnalytics {
         music_topServer: topOf(buckets.servers, "Belum ada server"),
         music_topFriend: topOf(buckets.friends, "Belum mabar"),
       });
+
+      // Siarkan pembaruan analitik realtime ke dashboard
+      if (client.dashboardIo) {
+        client.dashboardIo.emit("music_analytics_update", {
+          userId,
+          music_trackingData: buckets,
+          timestamp: Date.now(),
+        });
+      }
     } catch (error) {
       logger.error("[MusicAnalytics] Gagal merekam analitik:", error.message);
     }

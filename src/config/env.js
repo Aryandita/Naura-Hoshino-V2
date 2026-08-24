@@ -1,4 +1,3 @@
-const { logger } = require("../managers/logger");
 try {
   process.loadEnvFile();
 } catch (e) {}
@@ -6,7 +5,16 @@ try {
 // Helper untuk membersihkan tanda kutip yang tidak sengaja terbawa dari panel Pterodactyl
 const cleanEnv = (val) => {
   if (!val) return val;
-  return val.replace(/^["']|["']$/g, "").trim();
+  const cleaned = val.replace(/^["']|["']$/g, "").trim();
+  if (
+    cleaned.startsWith("YOUR_") ||
+    cleaned.endsWith("_HERE") ||
+    cleaned === "YOUR_DISCORD_BOT_TOKEN_HERE" ||
+    cleaned === "YOUR_CLIENT_ID_HERE"
+  ) {
+    return "";
+  }
+  return cleaned;
 };
 
 // ShardingManager discord.js mengisi SHARDS pada setiap proses anak berisi array
@@ -45,8 +53,10 @@ const env = {
   // DISCORD CORE
   TOKEN: cleanEnv(process.env.DISCORD_TOKEN),
   CLIENT_ID: cleanEnv(process.env.CLIENT_ID),
+  CLIENT_SECRET: cleanEnv(process.env.DISCORD_CLIENT_SECRET),
   PREFIX: cleanEnv(process.env.PREFIX) || "n!",
   GUILD_ID: cleanEnv(process.env.GUILD_ID),
+  SENTRY_DSN: cleanEnv(process.env.SENTRY_DSN),
   OWNER_IDS: process.env.OWNER_IDS
     ? process.env.OWNER_IDS.split(",").map((id) => cleanEnv(id))
     : [],
@@ -56,12 +66,73 @@ const env = {
   ENGINE_VERSION: cleanEnv(process.env.ENGINE_VERSION) || "2.1.0",
   PARTNERSHIP: cleanEnv(process.env.PARTNERSHIP) || "Belum ada kolaborasi",
 
-  // MYSQL DATABASE
-  DB_HOST: cleanEnv(process.env.MYSQL_HOST) || "127.0.0.1",
-  DB_PORT: parseInt(process.env.MYSQL_PORT) || 3306,
-  DB_USER: cleanEnv(process.env.MYSQL_USER),
-  DB_PASS: cleanEnv(process.env.MYSQL_PASSWORD),
-  DB_NAME: cleanEnv(process.env.MYSQL_DATABASE),
+  // SUPABASE (Primary Relational Cloud Provider)
+  SUPABASE_URL:
+    cleanEnv(process.env.SUPABASE_URL) ||
+    "https://ceqkjzvrxyifxzgxtkig.supabase.co",
+  SUPABASE_KEY:
+    cleanEnv(
+      process.env.SUPABASE_KEY ||
+        process.env.SUPABASE_ANON_KEY ||
+        process.env.SUPABASE_PUBLISHABLE_KEY,
+    ) || "sb_publishable_9gd0-5FflbVgYPCd7WGAwQ_dJLMxyRX",
+  SUPABASE_PROJECT_ID:
+    cleanEnv(process.env.SUPABASE_PROJECT_ID) || "ceqkjzvrxyifxzgxtkig",
+
+  // DATABASE (Multi-Dialect: Supabase / PostgreSQL, MySQL, SQLite Fallback)
+  DATABASE_URL: cleanEnv(
+    process.env.DATABASE_URL ||
+      process.env.SUPABASE_DATABASE_URL ||
+      process.env.SUPABASE_DB_URL,
+  ),
+  DB_DIALECT:
+    cleanEnv(process.env.DB_DIALECT) ||
+    (cleanEnv(process.env.DATABASE_URL)?.startsWith("postgres") ||
+    process.env.SUPABASE_URL ||
+    process.env.SUPABASE_DATABASE_URL
+      ? "postgres"
+      : "postgres"),
+  DB_HOST: cleanEnv(
+    process.env.DB_HOST ||
+      process.env.SUPABASE_DB_HOST ||
+      process.env.MYSQL_HOST ||
+      "db.ceqkjzvrxyifxzgxtkig.supabase.co",
+  ),
+  DB_PORT:
+    parseInt(
+      process.env.DB_PORT ||
+        process.env.SUPABASE_DB_PORT ||
+        process.env.MYSQL_PORT,
+    ) || 5432,
+  DB_USER: cleanEnv(
+    process.env.DB_USER ||
+      process.env.SUPABASE_DB_USER ||
+      process.env.MYSQL_USER ||
+      "postgres",
+  ),
+  DB_PASS: cleanEnv(
+    process.env.DB_PASSWORD ||
+      process.env.DB_PASS ||
+      process.env.SUPABASE_DB_PASSWORD ||
+      process.env.MYSQL_PASSWORD,
+  ),
+  DB_NAME: cleanEnv(
+    process.env.DB_NAME ||
+      process.env.SUPABASE_DB_NAME ||
+      process.env.MYSQL_DATABASE ||
+      "postgres",
+  ),
+  DB_SSL:
+    cleanEnv(process.env.DB_SSL) === "false" ||
+    cleanEnv(process.env.DB_SSL) === "0"
+      ? false
+      : true,
+  USE_SQLITE:
+    cleanEnv(process.env.USE_SQLITE) === "true" ||
+    cleanEnv(process.env.USE_SQLITE) === "1",
+  USE_MYSQL:
+    cleanEnv(process.env.USE_MYSQL) === "true" ||
+    cleanEnv(process.env.USE_MYSQL) === "1",
 
   // POOL KONEKSI DATABASE
   // Pool bersifat per proses. DB_POOL_BUDGET adalah anggaran TOTAL untuk seluruh
@@ -75,7 +146,7 @@ const env = {
   MODMAIL_CATEGORY: cleanEnv(process.env.MODMAIL_CATEGORY_ID),
 
   // LAVALINK
-  LAVA_NODES: process.env.LAVA_NODES,
+  LAVA_NODES: cleanEnv(process.env.LAVA_NODES) || cleanEnv(process.env.LAVALINK_NODES),
   LAVA_HOST: cleanEnv(process.env.LAVALINK_HOST) || "localhost",
   LAVA_PORT: parseInt(process.env.LAVALINK_PORT) || 2333,
   LAVA_PASS: cleanEnv(process.env.LAVALINK_PASSWORD) || "youshallnotpass",
@@ -88,6 +159,10 @@ const env = {
   // GEMINI AI
   GEMINI_API: cleanEnv(process.env.GEMINI_API_KEY),
 
+  // GROQ CLOUD AI (High-Speed & Failover Fallback)
+  GROQ_API_KEY: cleanEnv(process.env.GROQ_API_KEY),
+  GROQ_MODEL: cleanEnv(process.env.GROQ_MODEL) || "llama-3.3-70b-versatile",
+
   // VERBA API
   VERBA_API_KEY: cleanEnv(process.env.VERBA_API_KEY),
   VERBA_SLUG_OWNER: cleanEnv(process.env.VERBA_SLUG_OWNER),
@@ -97,6 +172,9 @@ const env = {
 
   // REDIS
   REDIS_URL: cleanEnv(process.env.REDIS_URL),
+
+  // MONGODB
+  MONGODB_URI: cleanEnv(process.env.MONGODB_URI || process.env.MONGO_URI),
 
   // OLLAMA (Local AI Fallback)
   OLLAMA_BASE_URL:
@@ -120,19 +198,22 @@ const env = {
   WEBHOOK_AUTH_SAWERIA: cleanEnv(process.env.WEBHOOK_AUTH_SAWERIA),
   WEBHOOK_AUTH_TRAKTEER: cleanEnv(process.env.WEBHOOK_AUTH_TRAKTEER),
   WEBHOOK_AUTH_VOTE: cleanEnv(process.env.WEBHOOK_AUTH_VOTE),
+  TOPGG_TOKEN: cleanEnv(process.env.TOPGG_TOKEN || process.env.TOP_GG_TOKEN),
 
   // WEB DASHBOARD & PORTS (Dynamic Pterodactyl Resolution)
   DASHBOARD_PORT:
     parseInt(
       process.env.PORT || process.env.SERVER_PORT || process.env.DASHBOARD_PORT,
-    ) || 3070,
+    ) || 3000,
+  DASHBOARD_ORIGIN: cleanEnv(process.env.DASHBOARD_ORIGIN) || "",
   WEBHOOK_PORT: parseInt(process.env.WEBHOOK_PORT) || 3071,
   SESSION_SECRET: cleanEnv(process.env.SESSION_SECRET),
   CALLBACK_URL: cleanEnv(process.env.DISCORD_CALLBACK_URL),
+  OWNER_EVAL_ENABLED: cleanEnv(process.env.OWNER_EVAL_ENABLED) === "true",
 };
 
 // Variabel yang wajib ada sebelum bot boleh menyala
-const REQUIRED_KEYS = ["TOKEN", "CLIENT_ID", "DB_USER", "DB_NAME"];
+const REQUIRED_KEYS = ["TOKEN", "CLIENT_ID"];
 
 /** Daftar variabel wajib yang masih kosong. */
 function getMissingEnvKeys() {
@@ -156,12 +237,12 @@ function validateEnv({ fatal = false } = {}) {
 
   if (missing.length > 0) {
     for (const key of missing) {
-      logger.error(
-        `\x1b[41m\x1b[37m FATAL ERROR \x1b[0m \x1b[31mVariabel ${key} belum diisi di dalam file .env!\x1b[0m`,
+      console.warn(
+        `\x1b[43m\x1b[30m PERINGATAN CONFIG \x1b[0m \x1b[33mVariabel ${key} belum diisi di dalam file .env!\x1b[0m`,
       );
     }
-    if (fatal) {
-      logger.error(
+    if (fatal && process.env.STRICT_CONFIG === "true") {
+      console.error(
         "\x1b[31mBot dihentikan karena konfigurasi wajib belum lengkap.\x1b[0m",
       );
       process.exit(1);
@@ -171,18 +252,18 @@ function validateEnv({ fatal = false } = {}) {
 
   // Peringatan opsional (tidak menghentikan bot)
   if (!env.GEMINI_API) {
-    logger.warn(
-      "GEMINI_API_KEY tidak ditemukan di .env. Fitur AI utama mungkin tidak berfungsi.",
+    console.warn(
+      "[CONFIG] GEMINI_API_KEY tidak ditemukan di .env. Fitur AI utama mungkin tidak berfungsi.",
     );
   }
   if (!env.VERBA_API_KEY) {
-    logger.warn(
-      "VERBA_API_KEY tidak ditemukan di .env. Fallback ke Gemini akan digunakan.",
+    console.warn(
+      "[CONFIG] VERBA_API_KEY tidak ditemukan di .env. Fallback ke Gemini akan digunakan.",
     );
   }
   if (!env.SESSION_SECRET) {
-    logger.warn(
-      "SESSION_SECRET tidak ditemukan di .env. Sesi Web Dashboard sebaiknya tidak memakai secret bawaan.",
+    console.warn(
+      "[CONFIG] SESSION_SECRET tidak ditemukan di .env. Sesi Web Dashboard sebaiknya tidak memakai secret bawaan.",
     );
   }
 

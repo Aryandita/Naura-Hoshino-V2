@@ -214,7 +214,7 @@ async function createTicketChannel(message, guildData, client, draft = null) {
     const initialContent = draft ? draft.content : (message.content || "*Hanya Memilih Menu*");
     const attachments = draft && draft.attachments ? draft.attachments : [];
     
-    let descriptionText = `**Pengguna:** <@${authorId}> (${authorId})\n**Server:** ${guild.name}\n\n**Pesan Awal:**\n${initialContent || "*Hanya Lampiran*"}`;
+    const descriptionText = `**Pengguna:** <@${authorId}> (${authorId})\n**Server:** ${guild.name}\n\n**Pesan Awal:**\n${initialContent || "*Hanya Lampiran*"}`;
 
     const welcomePayload = buildContainerV2({
       accentColorHex: "#FFB6C1",
@@ -244,7 +244,11 @@ async function createTicketChannel(message, guildData, client, draft = null) {
       )
     });
 
-    const payload = { content: tagContent, ...welcomePayload };
+    if (tagContent) {
+      await channel.send({ content: tagContent }).catch(() => {});
+    }
+
+    const payload = { ...welcomePayload };
     
     const files = [];
     if (attachments && attachments.length > 0) {

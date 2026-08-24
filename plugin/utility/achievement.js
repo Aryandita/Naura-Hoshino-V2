@@ -23,7 +23,7 @@ module.exports = {
 
   async execute(interaction) {
     let text = interaction.options.getString("teks");
-    let icon =
+    const icon =
       interaction.options.getInteger("icon") ||
       Math.floor(Math.random() * 39) + 1;
 

@@ -35,6 +35,8 @@ const colors = {
   light: "#f0f0f0",
 
   // --- Premium Tier Colors ---
+  premium_voter: "#F43F5E",
+  premium_starter: "#38bdf8",
   premium_supporter: "#C0C0C0",
   premium_friends: "#A855F7",
   premium_vip: "#FFD700",
@@ -53,28 +55,31 @@ const dividers = {
   generalDividers: "",
 };
 
+const env = require("../env");
+
 const links = {
   dashboards: "hyperion.kythia.xyz:3070",
   support_server: "https://dsc.gg/naura-hoshino",
   invite:
     "https://discord.com/oauth2/authorize?client_id=1483665745727721543&permissions=8&scope=bot%20applications.commands",
-  vote: "",
+  vote: "https://top.gg/bot/1483665745727721543?s=00487c531de33",
   saweria: "",
+  email: "naurahoshino@gmail.com",
 };
 
 const footers = {
-  core: "Naura Hoshino Core v1.2.0 \u2022 Created by Aryandita \u2728",
-  utility: "Naura Utility Feature \u2022 Created by Aryandita \u2728",
-  survival: "Naura RPG Survival Edition \u2022 Created by Aryandita \u2728",
-  music: "Naura High-Fidelity Audio System \u2022 Created by Aryandita \u2728",
+  core: `Naura Hoshino Core v${env.BOT_VERSION || "2.1.0"} • Created by Aryandita ✨`,
+  utility: `Naura Utility Feature v${env.BOT_VERSION || "2.1.0"} • Created by Aryandita ✨`,
+  survival: `Naura RPG Survival Edition v${env.BOT_VERSION || "2.1.0"} • Created by Aryandita ✨`,
+  music: `Naura High-Fidelity Audio System v${env.BOT_VERSION || "2.1.0"} • Created by Aryandita ✨`,
 
   // --- Premium Tier Footers ---
   premium:
-    "Naura V.I.P Project \u2022 Terima kasih telah mendukung Naura! \uD83D\uDC8E",
-  premium_supporter: "Naura Supporter Tier \u2022 Bersama kita tumbuh \u2728",
+    `Naura V.I.P Project v${env.BOT_VERSION || "2.1.0"} • Terima kasih telah mendukung Naura! 💎`,
+  premium_supporter: `Naura Supporter Tier v${env.BOT_VERSION || "2.1.0"} • Bersama kita tumbuh ✨`,
   premium_friends:
-    "Naura Friends Tier \u2022 Terima kasih sahabat setia \uD83D\uDCAB",
-  premium_vip: "Naura V.I.P Tier \u2022 Kamu adalah yang terpilih \uD83D\uDC51",
+    `Naura Friends Tier v${env.BOT_VERSION || "2.1.0"} • Terima kasih sahabat setia 💫`,
+  premium_vip: `Naura V.I.P Tier v${env.BOT_VERSION || "2.1.0"} • Kamu adalah yang terpilih 👑`,
 };
 
 module.exports = { colors, monsters, dividers, links, footers };

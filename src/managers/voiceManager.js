@@ -1,16 +1,27 @@
-// Lokasi: src/managers/voiceManager.js
-const {
-  joinVoiceChannel,
-  createAudioPlayer,
-  createAudioResource,
-  AudioPlayerStatus,
-  getVoiceConnection,
-} = require("@discordjs/voice");
 const { logger } = require("../managers/logger");
 const googleTTS = require("google-tts-api");
 
+let djsVoice = null;
+function getVoiceLib() {
+  if (djsVoice !== null) return djsVoice;
+  try {
+    djsVoice = require("@discordjs/voice");
+  } catch (_) {
+    djsVoice = false;
+  }
+  return djsVoice;
+}
+
 class VoiceManager {
   static async speak(text, member) {
+    const voice = getVoiceLib();
+    if (!voice) return false;
+    const {
+      joinVoiceChannel,
+      createAudioPlayer,
+      createAudioResource,
+      AudioPlayerStatus,
+    } = voice;
     if (!member || !member.voice.channel) {
       console.log(
         "\x1b[41m\x1b[37m 🔊 TTS ERROR \x1b[0m \x1b[31mMember tidak berada di dalam Voice Channel.\x1b[0m",
@@ -79,6 +90,67 @@ class VoiceManager {
       });
     } catch (error) {
       logger.error("\x1b[41m\x1b[37m ⚠️ GOOGLE TTS ERROR \x1b[0m", error);
+    }
+  }
+
+  static async playFile(filePath, member) {
+    if (!member || !member.voice.channel) {
+      return false;
+    }
+
+    const voice = getVoiceLib();
+    if (!voice) return false;
+
+    const {
+      joinVoiceChannel,
+      createAudioPlayer,
+      createAudioResource,
+      AudioPlayerStatus,
+    } = voice;
+
+    const voiceChannel = member.voice.channel;
+    const guildId = voiceChannel.guild.id;
+
+    try {
+      const client = member.client;
+      if (client && client.poru && client.poru.players) {
+        const player = client.poru.players.get(guildId);
+        if (player && player.isPlaying) {
+          return false;
+        }
+      }
+
+      const resource = createAudioResource(filePath);
+      const player = createAudioPlayer();
+
+      const connection = joinVoiceChannel({
+        channelId: voiceChannel.id,
+        guildId: guildId,
+        adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+        selfDeaf: true,
+      });
+
+      connection.subscribe(player);
+      player.play(resource);
+
+      player.on(AudioPlayerStatus.Idle, () => {
+        player.stop();
+        try {
+          connection.destroy();
+        } catch (e) {}
+      });
+
+      player.on("error", (error) => {
+        logger.error("[VoiceManager] Audio Player Error:", error.message);
+        try {
+          connection.destroy();
+        } catch (e) {}
+      });
+
+      return true;
+    } catch (error) {
+      logger.error("[VoiceManager] Gagal memutar file audio:", error.message);
+      return false;
     }
   }
 }

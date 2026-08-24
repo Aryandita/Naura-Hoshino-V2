@@ -10,6 +10,7 @@ const {
 } = require("discord.js");
 const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
 const { logger } = require("../managers/logger");
+const ui = require("../config/ui");
 const path = require("path");
 
 module.exports = {
@@ -20,15 +21,14 @@ module.exports = {
     );
 
     try {
-      // Temukan channel yang bisa dikirimi pesan
+      // Cari channel pertama yang bisa dikirimi pesan oleh bot (Text channel)
       const channel =
+        guild.systemChannel ||
         guild.channels.cache.find(
           (c) =>
-            c.type === 0 &&
-            c
-              .permissionsFor(guild.members.me)
-              .has(["SendMessages", "ViewChannel"]),
-        ) || guild.systemChannel;
+            c.isTextBased() &&
+            c.permissionsFor(guild.members.me).has("SendMessages"),
+        );
 
       if (
         !channel ||
@@ -40,15 +40,18 @@ module.exports = {
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("setup_preset_community")
-          .setLabel("👥 Preset Komunitas")
+          .setLabel("Preset Komunitas")
+          .setEmoji(ui.parseEmoji(ui.getEmoji("member")) || { name: "👥" })
           .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
           .setCustomId("setup_preset_gaming")
-          .setLabel("🎮 Preset Gaming")
+          .setLabel("Preset Gaming")
+          .setEmoji(ui.parseEmoji(ui.getEmoji("arcade")) || { name: "🎮" })
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
           .setCustomId("setup_preset_minimal")
-          .setLabel("🍃 Preset Minimalis")
+          .setLabel("Preset Minimalis")
+          .setEmoji(ui.parseEmoji(ui.getEmoji("leaf")) || { name: "🍃" })
           .setStyle(ButtonStyle.Success),
       );
 
@@ -64,7 +67,7 @@ module.exports = {
       });
 
       const container = buildContainerV2({
-        title: "✨ Terima Kasih Telah Mengundang Naura!",
+        title: `${ui.getEmoji("sparkles") || "✨"} Terima Kasih Telah Mengundang Naura!`,
         description: `Halo semuanya! Namaku **Naura Hoshino** (≧▽≦)\n\nTerima kasih ya sudah memberikan Naura tempat di server **${guild.name}**. Naura siap membantu kakak mengatur server ini menjadi jauh lebih seru dan rapi!\n\nUntuk memulai, silakan pilih salah satu **Preset Setup Cepat** di bawah ini agar Naura bisa menyesuaikan fitur-fiturnya dengan kebutuhan server kakak.`,
         color: "#FFB6C1",
         buttonsRow: row,

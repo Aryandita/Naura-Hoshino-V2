@@ -1,12 +1,10 @@
-// Lokasi: src/events/poru/queueEnd.js
 const { logger } = require("../../managers/logger");
 const ui = require("../../config/ui");
 const {
   buildContainerV2,
 } = require("../../utils/NauraContainerBuilder");
-const env = require("../../config/env");
 const LyricsManager = require("../LyricsManager");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const geminiClient = require("../../ai/geminiClient");
 const {
   rankAutoplayCandidates,
   clearTransitionTimers,
@@ -100,22 +98,18 @@ module.exports = {
         }
       }
 
-      // Integrasi Env yang Sehat (Fallback ke Gemini AI)
-      const geminiKey = env.GEMINI_API || process.env.GEMINI_API_KEY;
-
-      if (!trackToPlay && geminiKey && player.previousTrack) {
+      // Fallback ke Gemini AI jika native Mix kosong
+      if (!trackToPlay && geminiClient.isAvailable() && player.previousTrack) {
         console.log(
           `\x1b[45m\x1b[37m 💿 AUTOPLAY \x1b[0m \x1b[35mMencari lagu rekomendasi AI Fallback...\x1b[0m`,
         );
         try {
-          const genAI = new GoogleGenerativeAI(geminiKey);
-          const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
           const activeTrack = player.previousTrack;
           const prompt = `Aku sedang memutar lagu "${activeTrack.info.title}" oleh "${activeTrack.info.author}".
 Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang sama, tidak harus dari artis yang sama. Balas HANYA dengan format murni: "Judul Lagu - Nama Artis". TANPA KUTIP, TANPA SIMBOL.`;
 
-          const aiResult = await model.generateContent(prompt);
-          const aiQuery = aiResult.response.text().trim();
+          const aiResult = await geminiClient.generate({ parts: [{ text: prompt }] });
+          const aiQuery = (aiResult || "").trim();
 
           const searchRes = await manager.poru.resolve({
             query: `ytsearch:${aiQuery}`,
@@ -231,10 +225,11 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
     const channel = manager.client.channels.cache.get(player.textChannel);
     if (channel) {
       const exitPayload = buildContainerV2({
-        accentColorHex: ui.getColor("error") || "#ff0000",
-        title: "⏹️ Pemutusan Sesi",
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        title: `${ui.getEmoji("offline") || ui.getEmoji("power") || "🔌"} Pemutusan Sesi Audio`,
         description:
-          "Antrean lagu telah habis. Naura pamit dari Voice Channel!",
+          `Antrean lagu telah habis. Naura pamit dari Voice Channel! ${ui.getEmoji("naura_blowkiss") || "👋"}`,
+        expression: "happy",
         footerText: ui.getFooter("music"),
       });
       channel

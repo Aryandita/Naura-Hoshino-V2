@@ -82,30 +82,31 @@ function buildDetailPayload(tierInfo, qrisName, selectRow) {
   const btnRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`premium_contact_owner_${tierInfo.tier}`)
-      .setLabel("Sudah bayar - konfirmasi ke owner")
+      .setLabel("Sudah bayar - Konfirmasi ke Owner")
+      .setEmoji("✅")
       .setStyle(ButtonStyle.Success),
   );
 
   return buildContainerV2({
     accentColorHex: ui.getPremiumColor(tierInfo.tier),
-    title: `${ui.getPremiumEmoji(tierInfo.tier)} Rincian paket: ${tierInfo.name}`,
+    title: `${ui.getPremiumEmoji(tierInfo.tier)} Rincian Paket: ${tierInfo.name}`,
     description: [
-      `**Harga:** \`${tierInfo.price}\` untuk ${tierInfo.days} hari`,
+      `**Harga:** \`${tierInfo.price}\` untuk durasi **${tierInfo.days} hari**`,
       ``,
-      `**Fitur yang kamu dapatkan:**`,
-      ...tierInfo.features.map((f) => `\u30fb ${f}`),
+      `**Fitur & Keistimewaan yang kamu dapatkan:**`,
+      ...tierInfo.features.map((f) => `・ ${f}`),
       ``,
-      `**Cara pembayarannya gampang:**`,
-      `1. Pindai QR di bawah dengan dompet digital apa pun`,
-      `2. Kirim sesuai nominal **${tierInfo.price}**`,
-      `3. Tekan tombol **Sudah bayar** di bawah`,
-      `4. Owner akan segera memproses langgananmu`,
+      `**Cara Pembayaran:**`,
+      `1. Pindai kode QRIS di bawah menggunakan e-wallet atau mobile banking apa pun`,
+      `2. Masukkan nominal transfer tepat sebesar **${tierInfo.price}**`,
+      `3. Setelah transfer berhasil, klik tombol **Sudah bayar** di bawah ini`,
+      `4. Tim Owner Naura akan segera memvalidasi dan mengaktifkan status premiummu!`,
       ``,
-      `-# QRIS berlaku untuk semua e-wallet dan mobile banking. Konfirmasinya masih manual ya.`,
+      `-# QRIS mendukung GoPay, OVO, DANA, ShopeePay, LinkAja, BCA, Mandiri, BRI, BNI, dan semua bank di Indonesia.`,
     ].join("\n"),
     bannerAttachmentName: qrisName,
     buttonsRow: [selectRow, btnRow],
-    footerText: ui.getFooter(`premium_${tierInfo.tier}`),
+    footerText: ui.getFooter("premium"),
   });
 }
 
@@ -117,19 +118,20 @@ function buildConfirmPayload() {
 
   return buildContainerV2({
     accentColorHex: ui.getColor("success"),
-    title: "Langkah terakhir, konfirmasi pembayaran",
+    title: "Konfirmasi Pembayaran Langganan",
     expression: "success",
     description: [
-      `Terima kasih sudah menyelesaikan pembayarannya!`,
+      `Terima kasih telah melakukan pembayaran langganan Naura Premium! 🎉`,
       ``,
-      `**Hubungi owner berikut ya:** ${owners}`,
+      `**Silakan hubungi Owner berikut:** ${owners}`,
+      `📧 **Atau kirimkan bukti transfer via Email Resmi:** \`naurahoshino@gmail.com\``,
       ``,
-      `**Sertakan ini saat konfirmasi:**`,
-      `\u30fb Username Discord kamu`,
-      `\u30fb Bukti transfer atau tangkapan layar pembayaran`,
-      `\u30fb Paket yang kamu beli`,
+      `**Mohon lampirkan informasi berikut saat konfirmasi:**`,
+      `・ Username Discord kamu`,
+      `・ Tangkapan layar / bukti transfer pembayaran`,
+      `・ Paket yang kamu pilih`,
       ``,
-      `-# Naura titip pesan ke owner, biasanya cepat kok diprosesnya.`,
+      `-# Status premium akan aktif maksimal dalam 1x24 jam setelah konfirmasi diterima.`,
     ].join("\n"),
     footerText: ui.getFooter("premium"),
   });

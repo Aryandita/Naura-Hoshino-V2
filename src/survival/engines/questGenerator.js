@@ -224,7 +224,7 @@ async function incrementQuestProgress(userId, action, amount = 1) {
     const quest = await UserQuest.findOne({ where: { userId } });
     if (!quest || !quest.questsState) return;
 
-    let state =
+    const state =
       typeof quest.questsState === "string"
         ? JSON.parse(quest.questsState)
         : quest.questsState;

@@ -1,6 +1,7 @@
 "use strict";
 
-const { EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require("discord.js");
+const { EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, AttachmentBuilder } = require("discord.js");
+const fs = require("node:fs");
 const { logger } = require("../managers/logger");
 const Giveaway = require("../models/Giveaway");
 const ui = require("../config/ui");
@@ -73,6 +74,18 @@ class GiveawayManager {
                 winnerText = winnerIds.map((id) => `<@${id}>`).join(", ");
             }
 
+            const bannerPath =
+                ui.getBanner("giveaway") ||
+                "./assets/general/Giveaway & Event Banner.jpeg";
+            const bannerName = "giveaway-end-banner.jpeg";
+            const files = [];
+            let bannerAttachmentName = null;
+
+            if (fs.existsSync(bannerPath)) {
+                files.push(new AttachmentBuilder(bannerPath, { name: bannerName }));
+                bannerAttachmentName = bannerName;
+            }
+
             // Bangun payload pesan giveaway berakhir
             const endPayload = buildContainerV2({
                 accentColorHex: "#86EFAC",
@@ -81,6 +94,9 @@ class GiveawayManager {
                     `**Pemenang:** ${winnerText}\n` +
                     `**Disponsori oleh:** <@${gwData.hostId}>\n` +
                     `**Total peserta:** ${allParticipants.length} orang`,
+                bannerAttachmentName,
+                bannerPosition: "bottom",
+                files,
                 footerText: manualEnd
                     ? "Diakhiri secara manual"
                     : ui.getFooter("core"),

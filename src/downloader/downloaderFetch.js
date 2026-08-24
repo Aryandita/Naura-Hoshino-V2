@@ -132,7 +132,7 @@ const shrink = async ({
     ok: true,
     name,
     attachment: new AttachmentBuilder(result.path, { name }),
-    note: `\n\n${render.e("sparkle", "\uD83D\uDDDC\uFE0F")} *Naura kecilkan dari ${mb(sizeBytes)} MB jadi ${mb(result.sizeBytes)} MB${preselectedHeight ? ` @ ${preselectedHeight}p` : ""}.*`,
+    note: `\n\n${render.e("naura_cheers", "✨")} *Naura kecilkan dari ${mb(sizeBytes)} MB jadi ${mb(result.sizeBytes)} MB${preselectedHeight ? ` @ ${preselectedHeight}p` : ""}.*`,
   };
 };
 
@@ -192,7 +192,7 @@ const prepareSingleMedia = async ({
       logger.error(
         `[Downloader] Gagal mengunduh media: ${downloadErr.message}`,
       );
-      state.linkManualText += `\n\n${render.e("annoy", "\u26A0\uFE0F")} **Medianya gagal Naura unduh otomatis.** Pakai tombol di bawah untuk mengunduhnya sendiri, ya.`;
+      state.linkManualText += `\n\n${render.e("naura_annoy", "⚠️")} **Medianya gagal Naura unduh otomatis.** Pakai tombol di bawah untuk mengunduhnya sendiri, ya.`;
       return state;
     }
   }
@@ -232,8 +232,8 @@ const prepareSingleMedia = async ({
 
   if (!delivered) {
     state.linkManualText += state.resolutionPickerSource
-      ? `\n\n${render.e("thinking", "\uD83C\uDF9A\uFE0F")} **Videonya masih kebesaran buat dikirim langsung.** Pilih resolusi di menu bawah, nanti Naura kompres ulang lalu kirimkan.`
-      : `\n\n${render.e("annoy", "\u26A0\uFE0F")} **Medianya lebih dari ${limitMB.toFixed(0)} MB.** Silakan unduh manual lewat tombol di bawah, ya.`;
+      ? `\n\n${render.e("naura_thinking", "🎞️")} **Videonya masih kebesaran buat dikirim langsung.** Pilih resolusi di menu bawah, nanti Naura kompres ulang lalu kirimkan.`
+      : `\n\n${render.e("naura_annoy", "⚠️")} **Medianya lebih dari ${limitMB.toFixed(0)} MB.** Silakan unduh manual lewat tombol di bawah, ya.`;
   }
 
   return state;

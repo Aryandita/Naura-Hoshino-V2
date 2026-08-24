@@ -6,7 +6,7 @@ const UserSurvival = require("../../../src/models/UserSurvival");
 const MarketAuction = require("../../../src/models/MarketAuction");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
-const { safeParseInventory, takeItemsAtomic } = require("../../../src/survival/engines/inventoryHelper");
+const { safeParseInventory, takeItemsAtomic, addItemsAtomic } = require("../../../src/survival/engines/inventoryHelper");
 const RateLimiter = require("../../../src/utils/rateLimiter");
 const { Op } = require("sequelize");
 
@@ -297,7 +297,6 @@ async function handleClaim(interaction) {
       }));
     } else if (isWinner) {
       // Winner gets items
-      const { addItemsAtomic } = require("../../../src/survival/engines/inventoryHelper");
       await addItemsAtomic(userId, [{ id: auction.itemId, amount: auction.amount }]);
 
       // NOTE: We do NOT set status="claimed" here for the seller side.
@@ -320,7 +319,6 @@ async function handleClaim(interaction) {
       }
       
       // Give winner items
-      const { addItemsAtomic } = require("../../../src/survival/engines/inventoryHelper");
       await addItemsAtomic(auction.highestBidderId, [{ id: auction.itemId, amount: auction.amount }]);
       
       auction.status = "claimed";
@@ -335,7 +333,6 @@ async function handleClaim(interaction) {
     // Auction unsold
     if (isSeller) {
       // Return items
-      const { addItemsAtomic } = require("../../../src/survival/engines/inventoryHelper");
       await addItemsAtomic(userId, [{ id: auction.itemId, amount: auction.amount }]);
 
       auction.status = "claimed";

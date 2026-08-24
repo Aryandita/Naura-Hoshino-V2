@@ -10,8 +10,8 @@
  */
 
 const express = require("express");
-const { logger } = require("../src/managers/logger");
-const UserProfile = require("../src/models/UserProfile");
+const { logger } = require("../../src/managers/logger");
+const UserProfile = require("../../src/models/UserProfile");
 const {
   requireApiLogin,
   requireSelfOrOwner,
@@ -49,7 +49,7 @@ module.exports = (client) => {
       const [profile] = await UserProfile.findOrCreate({
         where: { userId: req.user.id },
       });
-      const UserSurvival = require("../src/models/UserSurvival");
+      const UserSurvival = require("../../src/models/UserSurvival");
       const [survival] = await UserSurvival.findOrCreate({
         where: { userId: req.user.id },
       });
@@ -79,7 +79,7 @@ module.exports = (client) => {
   // ------------------------------------------------------------------
   router.get("/api/me/language", requireApiLogin, async (req, res) => {
     try {
-      const languageManager = require("../src/managers/languageManager");
+      const languageManager = require("../../src/managers/languageManager");
       const lang = await languageManager.getUserLanguage(req.user.id);
       res.json({
         success: true,
@@ -99,7 +99,7 @@ module.exports = (client) => {
 
   router.post("/api/me/language", requireApiLogin, async (req, res) => {
     try {
-      const languageManager = require("../src/managers/languageManager");
+      const languageManager = require("../../src/managers/languageManager");
       const supported = languageManager.SUPPORTED_LANGUAGES || ["id", "en"];
       const lang = String(req.body?.language || "").toLowerCase();
 
@@ -132,7 +132,7 @@ module.exports = (client) => {
   router.post("/api/me/persona", requireApiLogin, async (req, res) => {
     try {
       const { name, systemPrompt, avatarUrl } = req.body;
-      const cacheManager = require("../src/managers/cacheManager");
+      const cacheManager = require("../../src/managers/cacheManager");
       const profile = await cacheManager.getUserProfile(req.user.id);
       
       if (!profile.isPremium) {
@@ -162,8 +162,8 @@ module.exports = (client) => {
   router.get("/api/profile", requireSelfOrOwner, async (req, res) => {
     try {
       const userId = req.targetUserId;
-      const UserSurvival = require("../src/models/UserSurvival");
-      const UserNPC = require("../src/models/UserNPC");
+      const UserSurvival = require("../../src/models/UserSurvival");
+      const UserNPC = require("../../src/models/UserNPC");
 
       const [profile] = await UserProfile.findOrCreate({ where: { userId } });
       const [survival] = await UserSurvival.findOrCreate({ where: { userId } });
@@ -240,7 +240,7 @@ module.exports = (client) => {
           .json({ success: false, error: "Parameternya belum lengkap ya." });
       }
 
-      const GameItem = require("../src/models/GameItem");
+      const GameItem = require("../../src/models/GameItem");
       const profile = await UserProfile.findByPk(req.targetUserId);
       if (!profile)
         return res
@@ -312,7 +312,7 @@ module.exports = (client) => {
             error: "Item yang mau dilebur belum dipilih.",
           });
 
-      const GameItem = require("../src/models/GameItem");
+      const GameItem = require("../../src/models/GameItem");
       const profile = await UserProfile.findByPk(req.targetUserId);
       if (!profile)
         return res

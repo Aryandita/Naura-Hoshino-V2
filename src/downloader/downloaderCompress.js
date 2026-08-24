@@ -20,6 +20,7 @@ function getFfmpegStatic() {
   if (_ffmpegStaticCache === null) _ffmpegStaticCache = require("ffmpeg-static");
   return _ffmpegStaticCache;
 }
+const env = require("../config/env");
 const { logger } = require("../managers/logger");
 const { NULL_DEVICE } = require("./downloaderCore");
 
@@ -28,8 +29,8 @@ const { NULL_DEVICE } = require("./downloaderCore");
  * @returns {string}
  */
 function resolveFfmpegPath() {
-  if (process.env.FFMPEG_PATH && fs.existsSync(process.env.FFMPEG_PATH)) {
-    return process.env.FFMPEG_PATH;
+  if (env.FFMPEG_PATH && fs.existsSync(env.FFMPEG_PATH)) {
+    return env.FFMPEG_PATH;
   }
 
   if (getFfmpegStatic() && fs.existsSync(getFfmpegStatic())) {

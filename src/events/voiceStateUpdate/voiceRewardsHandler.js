@@ -1,6 +1,4 @@
-"use strict";
-
-const { handleVoiceState } = require("../../../plugin/utility/voiceRewards");
+const { handleVoiceState } = require("../../services/voiceRewards");
 
 module.exports = {
   async execute(oldState, newState, client) {

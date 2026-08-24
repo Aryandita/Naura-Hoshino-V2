@@ -15,7 +15,7 @@ module.exports = {
     ),
 
   async execute(interaction) {
-    let hex = interaction.options.getString("hex").replace("#", "");
+    const hex = interaction.options.getString("hex").replace("#", "");
 
     if (!/^[0-9A-Fa-f]{6}$/i.test(hex)) {
       return interaction.reply({

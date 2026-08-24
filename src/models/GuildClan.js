@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../managers/dbManager");
+const { sequelize } = require("../config/database");
 
 const GuildClan = sequelize.define(
   "GuildClan",
@@ -41,6 +41,16 @@ const GuildClan = sequelize.define(
     questsState: {
       type: DataTypes.JSON,
       allowNull: true,
+    },
+    hallLayout: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: {
+        theme: "CYBERPUNK_LOUNGE",
+        furniture: ["neon_sofa", "coffee_maker"],
+        jukeboxTrack: "Hoshino Beats #1",
+        lastCoffeeServedAt: null,
+      },
     },
   },
   {

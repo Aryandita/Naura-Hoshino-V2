@@ -201,5 +201,34 @@ module.exports = {
       logger.error(`[CanvasRuntime] Gagal invalidate canvas cache untuk user: ${userId}`, e);
     }
   },
+
+  /**
+   * Eksekusi render di worker thread terpisah
+   * @param {string} task
+   * @param {any} payload
+   * @returns {Promise<any>}
+   */
+  renderInWorker: async function (task, payload) {
+    try {
+      const workerPool = require("./canvasWorkerPool");
+      return await workerPool.runTask(task, payload);
+    } catch (err) {
+      logger.warn(`[CanvasRuntime] Worker rendering fallback to main thread for task ${task}: ${err.message}`);
+      // Fallback to main thread execution if worker failed
+      switch (task) {
+        case "renderProfile":
+          return await require("./profileCanvas").generateProfileCard(payload);
+        case "renderBattle":
+          return await require("./battleCanvas").renderBattle(payload);
+        case "renderNowPlaying":
+          return await require("./nowplayingCanvas").renderNowPlayingCard(payload);
+        case "renderCard":
+          return await require("./cardCanvas").renderCard(payload);
+        default:
+          throw err;
+      }
+    }
+  },
 };
+
 

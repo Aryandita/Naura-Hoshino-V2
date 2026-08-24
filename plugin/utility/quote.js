@@ -19,7 +19,7 @@ module.exports = {
 
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("accent") || "#9b59b6",
-        authorName: "💡 Kutipan Hari Ini",
+        authorName: `${ui.getEmoji("sparkle") || "💡"} Kutipan Hari Ini`,
         title: data.author
           ? `Quote oleh ${data.author}`
           : "Kutipan Inspirasional",
@@ -53,7 +53,7 @@ module.exports = {
 
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("accent") || "#9b59b6",
-        authorName: "💡 Kutipan Hari Ini",
+        authorName: `${ui.getEmoji("sparkle") || "💡"} Kutipan Hari Ini`,
         title: `Quote oleh ${data.author}`,
         description: `*"${data.content}"*\n\n- **${data.author}**`,
         footerText: ui.getFooter("utility"),

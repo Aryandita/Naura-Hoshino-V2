@@ -19,7 +19,7 @@ const { safeParseInventory } = require("../../../src/survival/engines/inventoryH
 const ui = require("../../../src/config/ui");
 const currency = require("../../../src/survival/engines/currency");
 const helpers = require("../../../src/survival/helpers/craftHelpers");
-const { listAvailable, getBlueprint } = require("../craftBlueprints");
+const { listAvailable, getBlueprint } = require("../../../src/survival/data/craftBlueprints");
 const {
   SMELT_RECIPES,
   getSmeltRecipe,

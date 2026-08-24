@@ -93,7 +93,7 @@
             }
 
             document.addEventListener('click', function (event) {
-                if (event.target.closest('button, a, tbody tr')) NauraUI.playClickSfx();
+                if (event.target && typeof event.target.closest === 'function' && event.target.closest('button, a, tbody tr')) NauraUI.playClickSfx();
             });
 
             var langToggle = document.getElementById('langToggle');

@@ -10,15 +10,15 @@ const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const diffHelper = require("../../../src/survival/helpers/difficultyHelper");
 const currency = require("../../../src/survival/engines/currency");
-const combat = require("../dungeonCombat");
-const render = require("../dungeonRender");
-const rewards = require("../dungeonRewards");
+const combat = require("../../../src/survival/engines/dungeonCombat");
+const render = require("../../../src/survival/engines/dungeonRender");
+const rewards = require("../../../src/survival/engines/dungeonRewards");
 const helpers = require("../../../src/survival/helpers/craftHelpers");
 const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
 const {
   DUNGEON_PASS_ID,
   DUNGEON_SPECIAL_PASS_ID,
-} = require("../items_dungeon");
+} = require("../../../src/survival/data/items_dungeon");
 
 const COLLECTOR_MS = 90000;
 const CHOICE_MS = 60000;
@@ -52,11 +52,26 @@ module.exports = {
     const passes = rewards.availablePasses(inventory);
 
     if (passes.normal < 1 && passes.special < 1) {
+      const emptyState = ui.ux.buildEmptyStatePrompt({
+        type: "dungeon",
+        user,
+        lang: "id",
+        actionCmd: "/survival shop",
+        ctaLabel: "🛒 Kunjungi Warung Desa",
+        ctaCustomId: "dungeon_cta_shop",
+      });
+
+      const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
       return interaction.editReply(
-        errorView(
-          "Pintu batunya terkunci, sayang. Kamu butuh **Dungeon Pass** dulu \u2014 Pak Damar menjualnya di warung desa. " +
-            "Kalau mau tantangan dua kali lebih berat dengan jarahan dua kali lipat, cari **Dungeon Special Pass** di butik Mbak Rini di kota, ya!",
-        ),
+        buildContainerV2({
+          accentColorHex: ui.getColor("crafting") || "#228B22",
+          authorName: "Catatan Dungeon Naura",
+          title: emptyState.title,
+          description: emptyState.description,
+          expression: emptyState.expression,
+          buttonsRow: emptyState.buttonsRow,
+          footerText: ui.getFooter("survival"),
+        }),
       );
     }
 

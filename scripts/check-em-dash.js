@@ -25,7 +25,6 @@ const SKIP_DIRS = new Set([
   "node_modules",
   ".git",
   ".github/ISSUE_TEMPLATE",
-  "assets",
   "bin",
   "coverage",
   "dist",

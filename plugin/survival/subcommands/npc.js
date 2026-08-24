@@ -17,7 +17,7 @@ const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const npcConfig = require("../../../src/survival/data/npcs");
-const aiManager = require("../../ai/aiManager");
+const geminiClient = require("../../../src/ai/geminiClient");
 const actions = require("../../../src/survival/helpers/npcActions");
 const {
   COLLECTOR_MS,
@@ -72,7 +72,7 @@ async function composeGreeting(ctx) {
       : `Kamu adalah karakter NPC di sebuah game RPG Discord bernama Naura Hoshino.\nNama kamu: ${npc.name}.\nPekerjaan: ${npc.title}.\nSifat kamu: ${npc.personality}.\nKamu sedang berada di: ${lokasi}, pada ${timeOfDay} (jam dalam game ${inGameHour}).\nTingkat kedekatan kamu dengan pemain (${username}) adalah ${affection}/100 (${relLabel}).\nSesuaikan kehangatanmu dengan kedekatan itu: sopan pada kenalan, mesra pada pacar atau pasangan.${seasonInfoId}\nBerikan satu sapaan pendek yang natural dalam bahasa Indonesia. Maksimal dua kalimat pendek.`;
 
   try {
-    const response = await aiManager.generateResponse(prompt);
+    const response = await geminiClient.generate({ parts: [{ text: prompt }] });
     if (response) return response;
   } catch (error) {
     // Diamkan; kalimat cadangan sudah disiapkan.
@@ -190,17 +190,15 @@ module.exports = {
           fallback: t("npc.ai_fallback"),
         });
 
-        // Naura tidak punya berkas potret, jadi wajahnya diambil dari foto
-        // profil bot supaya ia tampil sebagai dirinya sendiri.
+        // Potret NPC ditampilkan di pojok kanan atas (accessory)
         const portrait = findPortrait(npc);
         const files = [];
-        let bannerAttachmentName;
         let iconURL;
 
         if (portrait) {
           const fileName = `npc_${npc.id}${path.extname(portrait)}`;
           files.push(new AttachmentBuilder(portrait, { name: fileName }));
-          bannerAttachmentName = fileName;
+          iconURL = `attachment://${fileName}`;
         } else {
           iconURL = interaction.client.user.displayAvatarURL({ size: 512 });
         }
@@ -218,10 +216,10 @@ module.exports = {
 
         const infoPayload = buildContainerV2({
           accentColorHex: ui.getColor("primary") || "#FFB6C1",
+          authorName: `Warga ${String(lokasi).toUpperCase()} • ${npc.type === "romansa" ? "💖 Romansa" : "💙 Teman"}`,
           title: `${npc.name} (${npc.title})`,
           iconURL,
           description,
-          bannerAttachmentName,
           files,
           footerText: ui.getFooter("survival"),
         });

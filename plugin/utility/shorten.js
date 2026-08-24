@@ -50,7 +50,7 @@ module.exports = {
 
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#00FF00",
-        title: "🔗 URL Berhasil Dipendekkan",
+        title: `${ui.getEmoji("about") || "🔗"} URL Berhasil Dipendekkan`,
         fields: [
           { name: "URL Asli", value: url },
           { name: "URL Pendek", value: data.shorturl },

@@ -1,7 +1,13 @@
 "use strict";
 
-const { EmbedBuilder, MessageFlags } = require("discord.js");
+const { MessageFlags } = require("discord.js");
 const { updateGuildSetting } = require("../../managers/guildSettingsService");
+const {
+  buildContainerV2,
+  buildSuccessContainerV2,
+  buildErrorContainerV2,
+} = require("../../utils/NauraContainerBuilder");
+const ui = require("../../config/ui");
 
 /** Bersihkan peta global chat di memori untuk satu guild. */
 function clearGlobalChatCache(client, guildId) {
@@ -25,15 +31,16 @@ module.exports = [
 
       clearGlobalChatCache(client, interaction.guild.id);
 
-      const embed = new EmbedBuilder()
-        .setColor("#FF0000")
-        .setTitle("\ud83d\udcf4 Global Chat Dinonaktifkan")
-        .setDescription(
-          "Jaringan Global Chat untuk server ini telah dimatikan.",
-        );
+      const payload = buildContainerV2({
+        accentColorHex: ui.getColor("danger") || "#EF4444",
+        authorName: "Naura Setup Security",
+        title: `${ui.getEmoji("offline") || "📴"} Global Chat Dinonaktifkan`,
+        description: "Jaringan Global Chat untuk server ini telah dimatikan.",
+        footerText: ui.getFooter("core"),
+      });
 
       return interaction.reply({
-        embeds: [embed],
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     },
@@ -86,12 +93,14 @@ module.exports = [
         };
       });
 
-      const embed = new EmbedBuilder()
-        .setColor("#FF69B4")
-        .setTitle("\ud83d\udee1\ufe0f Automod Diaktifkan")
-        .setDescription("Sistem Automod & Keamanan Naura sekarang berjalan.");
+      const payload = buildSuccessContainerV2({
+        authorName: "Naura AutoMod Guard",
+        title: `${ui.getEmoji("shield") || "🛡️"} Automod Diaktifkan`,
+        description: "Sistem Automod & Keamanan Naura sekarang berjalan aktif di server ini.",
+        footerText: ui.getFooter("core"),
+      });
 
-      return interaction.editReply({ embeds: [embed] });
+      return interaction.editReply(payload);
     },
   },
 
@@ -103,13 +112,16 @@ module.exports = [
         settings.automod = { ...settings.automod, enabled: false };
       });
 
-      const embed = new EmbedBuilder()
-        .setColor("#FF0000")
-        .setTitle("\ud83d\udee1\ufe0f Automod Dinonaktifkan")
-        .setDescription("Sistem Automod & Keamanan Naura dinonaktifkan.");
+      const payload = buildContainerV2({
+        accentColorHex: ui.getColor("danger") || "#EF4444",
+        authorName: "Naura AutoMod Guard",
+        title: `${ui.getEmoji("shield") || "🛡️"} Automod Dinonaktifkan`,
+        description: "Sistem Automod & Keamanan Naura telah dinonaktifkan.",
+        footerText: ui.getFooter("core"),
+      });
 
       return interaction.reply({
-        embeds: [embed],
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     },

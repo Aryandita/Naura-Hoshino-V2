@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../managers/dbManager");
+const { sequelize } = require("../config/database");
 
 const UserLeveling = sequelize.define(
   "UserLeveling",
@@ -32,6 +32,11 @@ const UserLeveling = sequelize.define(
     },
     // Jumlah pesan valid yang telah dikirim
     messageCount: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    // Total menit di voice channel
+    voiceMinutes: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },

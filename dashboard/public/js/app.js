@@ -13,7 +13,7 @@ function initAudio() {
         sfxPlayer = new Audio('/assets/dashboard/click.mp3');
     }
 
-    const bgmEnabled = localStorage.getItem('bgmEnabled') !== 'false';
+    const bgmEnabled = localStorage.getItem('bgmEnabled') === 'true';
     const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
     const masterVol = localStorage.getItem('masterVolume') !== null ? parseFloat(localStorage.getItem('masterVolume')) : 50;
 
@@ -37,9 +37,13 @@ function initAudio() {
     }
 
     const registerAudioListeners = () => {
-        document.querySelectorAll('button, a, [onclick]').forEach(el => {
+        document.querySelectorAll('button, a, [onclick], .cursor-pointer').forEach(el => {
             if (!el.dataset.hasAudioListener) {
-                el.addEventListener('click', playClickSfx);
+                el.addEventListener('click', (e) => {
+                    if (e.target && typeof e.target.closest === 'function') {
+                        playClickSfx();
+                    }
+                });
                 el.dataset.hasAudioListener = 'true';
             }
         });
@@ -58,7 +62,7 @@ function playClickSfx() {
 }
 
 function toggleBgm() {
-    const checked = document.getElementById('bgmToggle').checked;
+    const checked = document.getElementById('bgmToggle') ? document.getElementById('bgmToggle').checked : false;
     localStorage.setItem('bgmEnabled', checked);
     if (checked && bgmPlayer) {
         bgmPlayer.play().catch(() => {});
@@ -69,13 +73,15 @@ function toggleBgm() {
 }
 
 function toggleSfx() {
-    const checked = document.getElementById('sfxToggle').checked;
+    const checked = document.getElementById('sfxToggle') ? document.getElementById('sfxToggle').checked : true;
     localStorage.setItem('sfxEnabled', checked);
     playClickSfx();
 }
 
 function adjustBgmVolume() {
-    const vol = document.getElementById('volSlider').value;
+    const slider = document.getElementById('volSlider');
+    if (!slider) return;
+    const vol = slider.value;
     localStorage.setItem('masterVolume', vol);
     if (bgmPlayer) {
         bgmPlayer.volume = vol / 100;

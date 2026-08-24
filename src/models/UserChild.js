@@ -1,6 +1,6 @@
 // src/models/UserChild.js
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../managers/dbManager");
+const { sequelize } = require("../config/database");
 
 const UserChild = sequelize.define("UserChild", {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },

@@ -1,9 +1,9 @@
 "use strict";
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-
+const geminiClient = require("../../../src/ai/geminiClient");
+const { tools } = require("../../../src/ai/functionDispatcher");
+const AIMemory = require("../../../src/ai/aiMemory");
 const ui = require("../../../src/config/ui");
-const env = require("../../../src/config/env");
 const GuildSettings = require("../../../src/models/GuildSettings");
 const { logger } = require("../../../src/managers/logger");
 const {
@@ -17,23 +17,44 @@ function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
 }
 
-/** Rangkai perintah sistem, lengkap dengan penyesuaian khusus server. */
-async function buildInstruction(guildId) {
+/** Rangkai perintah sistem, lengkap dengan memori user & penyesuaian khusus server. */
+async function buildInstruction(guildId, userId, username) {
   let instruction =
-    "Kamu adalah Naura Hoshino, gadis asisten virtual yang ceria, perhatian, dan murah senyum. " +
-    "Bicaralah langsung kepada pengguna dengan hangat dan akrab, seperti teman dekat yang senang membantu. " +
-    'Sebut dirimu "Naura", bukan "saya".';
+    "Kamu adalah Naura Hoshino, gadis asisten virtual yang ceria, perhatian, suportif, dan murah senyum. " +
+    "Bicaralah langsung kepada pengguna dengan hangat dan akrab, seperti sahabat dekat yang senang membantu. " +
+    'Sebut dirimu "Naura", bukan "saya". Jika kamu menggunakan tools/function call untuk mengambil data, sampaikan hasilnya dengan gaya bahasa yang natural, santai, dan ramah.';
 
-  const [row] = await GuildSettings.findOrCreate({
-    where: { guildId: guildId || "DM" },
-  });
-  const settings = row.settings || {};
-
-  if (settings.ai?.customPersona) {
-    instruction += ` Sifat khusus di server ini: ${settings.ai.customPersona}`;
+  if (username) {
+    instruction += ` Kamu saat ini sedang berbicara dengan ${username}.`;
   }
-  if (settings.ai?.serverKnowledge) {
-    instruction += ` Hal khusus yang perlu kamu tahu tentang server ini: ${settings.ai.serverKnowledge}`;
+
+  // Inject AI Memory Context (nama panggilan, preferensi musik, fakta)
+  if (userId) {
+    try {
+      const memoryContext = await AIMemory.getMemoryContext(userId);
+      if (memoryContext) {
+        instruction += `\n${memoryContext}`;
+      }
+    } catch (memErr) {
+      logger.warn("[AI Chat] Gagal memuat AIMemory:", memErr.message);
+    }
+  }
+
+  // Server-specific settings
+  try {
+    const [row] = await GuildSettings.findOrCreate({
+      where: { guildId: guildId || "DM" },
+    });
+    const settings = row.settings || {};
+
+    if (settings.ai?.customPersona) {
+      instruction += ` Sifat khusus di server ini: ${settings.ai.customPersona}`;
+    }
+    if (settings.ai?.serverKnowledge) {
+      instruction += ` Hal khusus yang perlu kamu tahu tentang server ini: ${settings.ai.serverKnowledge}`;
+    }
+  } catch (err) {
+    // Abaikan error DB settings
   }
 
   return instruction;
@@ -41,16 +62,36 @@ async function buildInstruction(guildId) {
 
 module.exports = async function chat(interaction) {
   const prompt = interaction.options.getString("pesan");
-  const systemInstruction = await buildInstruction(interaction.guildId);
+  const userId = interaction.user.id;
+  const username = interaction.user.username;
+  const systemInstruction = await buildInstruction(interaction.guildId, userId, username);
+
+  const messageProxy = {
+    author: interaction.user,
+    user: interaction.user,
+    member: interaction.member,
+    guild: interaction.guild,
+    channel: interaction.channel,
+  };
 
   let replyText;
   try {
-    const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: MODEL, systemInstruction });
-    const result = await model.startChat().sendMessage(prompt);
-    replyText = result.response.text();
+    replyText = await geminiClient.generate({
+      parts: [{ text: prompt }],
+      model: MODEL,
+      config: {
+        systemInstruction,
+        tools: [{ functionDeclarations: tools }],
+      },
+      message: messageProxy,
+    });
+
+    // Jalankan ekstraksi memori otomatis di latar belakang (non-blocking)
+    AIMemory.extractAndSave(userId, prompt, replyText, geminiClient).catch((err) => {
+      logger.warn("[AI Chat] Background memory extraction error:", err.message);
+    });
   } catch (error) {
-    logger.error("[AI Chat] Gemini gagal menjawab", error);
+    logger.error("[AI Chat] Gemini gagal menjawab:", error);
     replyText =
       "Maaf yaa, pikiran Naura lagi tersendat sedikit. Coba tanya lagi sebentar lagi, ya?";
   }
@@ -61,7 +102,7 @@ module.exports = async function chat(interaction) {
     title: `${e("happy", "\uD83D\uDCAC")} Naura menjawab`,
     iconURL: interaction.client.user.displayAvatarURL(),
     description: `**Kamu bertanya:**\n${prompt}\n\n**Naura:**\n${replyText}`,
-    footerText: `Powered by ${PROVIDER} \u2022 Diminta oleh ${interaction.user.username}`,
+    footerText: `Powered by Naura Intelligent System \u2022 Diminta oleh ${interaction.user.displayName || interaction.user.username}`,
   });
 
   return interaction.editReply(payload);

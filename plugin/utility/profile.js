@@ -288,7 +288,7 @@ module.exports = {
         const payload = buildContainerV2({
           accentColorHex: isBotOwner ? "#00FFFF" : "#FFD700",
           authorName: "Naura VIP Identity Card",
-          title: `🪪 ${targetUser.username}, Business Card`,
+          title: `${ui.getEmoji("id") || "🪪"} ${targetUser.username}, Business Card`,
           iconURL: targetUser.displayAvatarURL(),
           description: `*Global Chat Network | ${friends.length} Teman*`,
           files: [attachment],
@@ -335,14 +335,14 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("primary"),
         authorName: `Profil Pengguna Naura`,
-        title: `👤 ${targetUser.username}`,
+        title: `${ui.getEmoji("about") || "👤"} ${targetUser.username}`,
         iconURL: targetUser.displayAvatarURL(),
         description: hasSocial
           ? undefined
           : "*User ini belum menautkan akun sosial media.*",
         fields: [
           {
-            name: "💳 Ekonomi",
+            name: `${ui.getEmoji("wallet") || "💳"} Ekonomi`,
             value: `**Saldo Tunai:** ${ui.getEmoji("coin") || "🪙"} ${profile.economy_wallet.toLocaleString("id-ID")} ${ui.currencyName || "Naura Coin"}`,
           },
           {

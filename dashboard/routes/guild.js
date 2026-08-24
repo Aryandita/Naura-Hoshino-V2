@@ -12,9 +12,9 @@
 
 const express = require("express");
 const { EmbedBuilder } = require("discord.js");
-const { logger } = require("../src/managers/logger");
-const ui = require("../src/config/ui");
-const GuildSettings = require("../src/models/GuildSettings");
+const { logger } = require("../../src/managers/logger");
+const ui = require("../../src/config/ui");
+const GuildSettings = require("../../src/models/GuildSettings");
 const { requireGuildManager } = require("../middleware/auth");
 
 /** Nilai bawaan tata letak kartu welcomer. */

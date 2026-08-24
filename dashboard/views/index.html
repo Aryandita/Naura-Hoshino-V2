@@ -25,18 +25,32 @@
         @media (max-width: 768px) {
             .sidebar-nav {
                 position: fixed !important;
-                top: 0; left: -100%;
-                height: 100vh; width: 280px;
-                transition: left 0.3s ease;
-                z-index: 40;
+                top: 0 !important;
+                left: 0 !important;
+                bottom: 0 !important;
+                height: 100vh !important;
+                width: 280px !important;
+                max-width: 85vw !important;
+                transform: translateX(-100%) !important;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                z-index: 60 !important;
+                background: rgba(11, 12, 16, 0.96) !important;
+                backdrop-filter: blur(20px) !important;
+                -webkit-backdrop-filter: blur(20px) !important;
+                box-shadow: 10px 0 40px rgba(0, 0, 0, 0.8) !important;
             }
-            .sidebar-nav.open { left: 0 !important; }
+            .sidebar-nav.open {
+                transform: translateX(0) !important;
+            }
         }
     </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css?v=3">
+    <link rel="stylesheet" href="/css/tokens.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/naura-ui.js"></script>
 </head>
 
 <body class="flex h-screen overflow-hidden bg-animated" id="mainBody">
@@ -48,23 +62,24 @@
         <span>DALAM MODE FALLBACK (SQLITE)</span>
     </div>
 
-    <!-- Loading Screen for Language Change -->
-    <div id="loadingScreen" class="loading-screen hidden">
+    <!-- Loading Screen (Cyber-Anime Naura Floating Thinking Expression) -->
+    <div id="loadingScreen" class="loading-screen">
+        <img class="loading-figure" src="/assets/Naura_Expression/Thinking.png" alt="Naura Thinking" onerror="this.src='/assets/Naura_Expression/Read.png'">
         <div class="loading-text text-glow">NAURA OS</div>
-        <div id="loadingMotiv" class="font-assist text-[var(--color-muted)]">Hampir siap! ✨</div>
+        <div id="loadingMotiv" class="font-assist text-sm text-[var(--color-muted)] font-medium">Sedang menyiapkan sistem untukmu... ✨</div>
     </div>
 
     <!-- Mobile Sidebar Backdrop Blur Overlay -->
-    <div id="mobileOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden" onclick="toggleHamburger()">
+    <div id="mobileOverlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[55] hidden transition-opacity duration-300 cursor-pointer" onclick="toggleHamburger()">
     </div>
 
     <!-- Master Layout Wrapper -->
     <div class="flex h-full w-full overflow-hidden">
 
         <!-- LEFT SIDEBAR -->
-        <aside id="sidebar" class="sidebar-nav shrink-0">
+        <aside id="sidebar" class="sidebar-nav fixed md:static inset-y-0 left-0 h-full flex flex-col overflow-hidden shadow-2xl md:shadow-none z-50 transition-all duration-300 transform -translate-x-full md:translate-x-0 shrink-0">
             <!-- Brand Logo Header -->
-            <div class="p-6 border-b border-[var(--color-hairline)] flex flex-col items-center">
+            <div class="p-6 border-b border-[var(--color-hairline)] flex flex-col items-center shrink-0">
                 <div
                     class="sidebar-logo text-glow font-cyber text-2xl font-black tracking-widest gradient-text-pink mb-1 select-none">
                     NAURA HOSHINO
@@ -75,7 +90,7 @@
             </div>
 
             <!-- Navigation Menu Links -->
-            <nav class="flex-grow py-6 overflow-y-auto space-y-2">
+            <nav class="flex-grow py-4 overflow-y-auto space-y-1.5 min-h-0">
                 <a href="#" id="link-home" class="nav-link active" onclick="switchSection('home')">
                     <i class="fa-solid fa-gauge-high mr-3"></i> <span class="lang-home">Home</span>
                 </a>
@@ -103,37 +118,33 @@
                 <a href="#" id="link-support" class="nav-link" onclick="switchSection('support')">
                     <i class="fa-solid fa-heart mr-3"></i> <span class="lang-support">Support Dev</span>
                 </a>
-            </nav>
-
-            <!-- Bottom Auth Integration Slot -->
-            <div class="p-6 border-t border-[var(--color-hairline)]" id="sidebarAuthArea">
-                <a href="/auth/discord" class="btn-discord w-full text-center text-sm py-2.5">
-                    <i class="fa-brands fa-discord mr-2"></i> Login with Discord
+                <a href="/portfolio" class="nav-link hover:border-emerald-500/40 group">
+                    <i class="fa-solid fa-id-badge mr-3 text-emerald-400 group-hover:scale-110 transition"></i> <span class="text-emerald-300 font-semibold">Creator Portfolio</span>
                 </a>
-            </div>
+            </nav>
         </aside>
 
         <!-- RIGHT CONTAINER (HEADER + MAIN CONTENT) -->
         <div class="flex-grow flex flex-col h-full overflow-hidden w-full min-w-0">
 
             <!-- TOP HEADER (Full Width Edge-to-Edge) -->
-            <header class="top-header flex items-center justify-between px-4 sm:px-6 lg:px-8 shrink-0 w-full gap-4 border-b border-[var(--color-hairline)] bg-[var(--color-surface-glass)] backdrop-blur-md">
-                <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+            <header class="top-header flex items-center justify-between px-3 sm:px-6 lg:px-8 shrink-0 w-full gap-2 sm:gap-4 border-b border-[var(--color-hairline)] bg-[var(--color-surface-glass)] backdrop-blur-md">
+                <div class="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1 sm:flex-initial overflow-hidden">
                     <!-- Mobile Drawer Toggle Button (Sleek Control Menu) -->
-                    <button id="hamburgerBtn" onclick="toggleHamburger()" aria-label="Menu Navigasi"
-                        class="md:hidden touch-target rounded-xl glass-panel text-white hover:text-[var(--color-primary)] hover:border-[var(--color-primary-glow)] transition-all shadow-md shrink-0">
-                        <i class="fa-solid fa-sliders text-base text-[var(--color-primary)]"></i>
+                    <button id="hamburgerBtn" onclick="toggleHamburger()" type="button" aria-label="Menu Navigasi" aria-expanded="false"
+                        class="md:hidden touch-target rounded-xl glass-panel text-white hover:text-[var(--color-primary)] hover:border-[var(--color-primary-glow)] active:scale-95 transition-all shadow-md shrink-0 flex items-center justify-center w-10 h-10 min-w-[40px] min-h-[40px] cursor-pointer">
+                        <i class="fa-solid fa-bars text-base text-[var(--color-primary)]"></i>
                     </button>
-                    <h2 class="text-xs sm:text-sm md:text-base font-bold tracking-widest text-white uppercase font-cyber select-none whitespace-nowrap min-w-0 flex-shrink-0 text-glow"
+                    <h2 class="text-xs sm:text-sm md:text-base font-bold tracking-wider sm:tracking-widest text-white uppercase font-cyber select-none truncate min-w-0 max-w-[160px] xs:max-w-[220px] sm:max-w-[260px] md:max-w-md lg:max-w-none text-glow"
                         id="pageTitle">
                         SYSTEM OVERVIEW
                     </h2>
                 </div>
 
-                <div class="flex items-center gap-3 sm:gap-6 shrink-0">
+                <div class="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 shrink-0">
                     <!-- Database Engine Active Badge (Clean Responsive Pill) -->
                     <div id="dbStatusBadge"
-                        class="hidden sm:flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-pink-500/30 shadow-[0_0_8px_rgba(236,72,153,0.15)] select-none">
+                        class="hidden md:flex items-center gap-2 bg-black/40 px-2.5 sm:px-3 py-1.5 rounded-full border border-pink-500/30 shadow-[0_0_8px_rgba(236,72,153,0.15)] select-none">
                         <span class="relative flex h-2 w-2">
                             <span id="dbBadgePing"
                                 class="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
@@ -145,7 +156,7 @@
 
                     <!-- Websocket Core Connection status pulse badge -->
                     <div
-                        class="hidden sm:flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-green-500/30 shadow-[0_0_8px_rgba(34,197,94,0.15)] select-none">
+                        class="hidden lg:flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full border border-green-500/30 shadow-[0_0_8px_rgba(34,197,94,0.15)] select-none">
                         <span class="relative flex h-2 w-2">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                             <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500 shadow-[0_0_5px_#22c55e]"></span>
@@ -153,28 +164,66 @@
                         <span class="text-[10px] uppercase font-bold text-green-400 font-cyber text-glow-green">CORE ONLINE</span>
                     </div>
 
+                    <!-- BGM Mini-Player Header Control Pill -->
+                    <div id="headerBgmWidget" class="flex items-center gap-1.5 sm:gap-2 bg-black/40 px-2.5 sm:px-3 py-1.5 rounded-full border border-pink-500/30 shadow-[0_0_8px_rgba(236,72,153,0.15)] select-none text-xs font-cyber" title="Pemutar Musik Latar (BGM)">
+                        <button id="headerBgmPlayBtn" onclick="toggleBgm(); event.stopPropagation();" title="Putar / Jeda BGM" class="text-pink-400 hover:text-pink-300 transition flex items-center justify-center w-5 h-5 cursor-pointer">
+                            <i id="headerBgmIcon" class="fa-solid fa-play text-xs"></i>
+                        </button>
+                        <div onclick="switchSection('settings'); switchTab('sound');" class="cursor-pointer flex items-center gap-1.5 max-w-[85px] xs:max-w-[110px] sm:max-w-[135px] truncate" title="Klik untuk Pengaturan Audio & Playlist BGM">
+                            <span id="headerBgmEq" class="hidden xs:inline-flex items-end gap-0.5 h-3">
+                                <span class="w-0.5 h-1.5 bg-pink-400 rounded-full"></span>
+                                <span class="w-0.5 h-2.5 bg-pink-300 rounded-full"></span>
+                                <span class="w-0.5 h-1 bg-pink-400 rounded-full"></span>
+                            </span>
+                            <span id="headerBgmTrackName" class="text-[10px] text-gray-200 truncate font-semibold">Cyber Lofi</span>
+                        </div>
+                        <button onclick="nextBgmTrack(); event.stopPropagation();" title="Ganti Lagu Berikutnya" class="text-gray-400 hover:text-white transition w-4 h-4 flex items-center justify-center cursor-pointer">
+                            <i class="fa-solid fa-forward-step text-[10px]"></i>
+                        </button>
+                    </div>
+
                     <!-- Economy Synced Balance display -->
                     <div id="headerWallet" class="hidden sm:block select-none" title="Naura Coins (Saldo Koin)">
-                        <div class="economy-badge cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 font-cyber text-xs font-bold shadow-[0_0_8px_rgba(234,179,8,0.2)] hover:scale-105 transition"
+                        <div class="economy-badge cursor-pointer flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 font-cyber text-xs font-bold shadow-[0_0_8px_rgba(234,179,8,0.2)] hover:scale-105 transition"
                             onclick="switchSection('profile'); switchProfileTab('stats')">
                             <i class="fa-solid fa-coins text-yellow-400"></i>
-                            <span class="text-[10px] text-gray-400 uppercase tracking-widest">Coins:</span>
+                            <span class="text-[10px] text-gray-400 uppercase tracking-widest hidden md:inline">Coins:</span>
                             <span id="headerWalletText" class="text-white">0</span>
                         </div>
+                    </div>
+
+                    <!-- Creator Portfolio Quick Link -->
+                    <div class="flex items-center select-none shrink-0">
+                        <a href="/portfolio" id="headerPortfolioBtn"
+                            class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/60 text-xs font-cyber transition shadow-[0_0_10px_rgba(16,185,129,0.2)] hover:scale-105 active:scale-95 cursor-pointer"
+                            title="Buka Portofolio Creator (Aryandita)">
+                            <i class="fa-solid fa-id-badge text-emerald-400"></i>
+                            <span class="font-semibold hidden sm:inline">Portfolio</span>
+                        </a>
+                    </div>
+
+                    <!-- Dedicated Discord Auth Header Slot (Visible across Mobile & Desktop) -->
+                    <div id="headerAuthArea" class="flex items-center select-none shrink-0">
+                        <a href="/auth/discord" id="headerAuthBtn"
+                            class="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-[#5865F2]/20 hover:bg-[#5865F2] text-white border border-[#5865F2]/40 hover:border-[#5865F2] text-xs font-cyber transition shadow-[0_0_12px_rgba(88,101,242,0.25)] hover:scale-105 active:scale-95 cursor-pointer"
+                            title="Login dengan Akun Discord">
+                            <i class="fa-brands fa-discord text-sm text-[#7289da]"></i>
+                            <span class="font-semibold hidden xs:inline">Login</span>
+                        </a>
                     </div>
 
                     <!-- Bot / User avatar profile icon -->
                     <div class="flex items-center select-none">
                         <div class="relative cursor-pointer" onclick="switchSection('profile')">
                             <img id="headerUserAvatar" src="/assets/dashboard/naura.png"
-                                class="w-10 h-10 rounded-full border-2 border-[var(--color-primary)] shadow-[0_0_12px_var(--color-primary-glow)] hover:scale-105 transition duration-300">
+                                class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-[var(--color-primary)] shadow-[0_0_12px_var(--color-primary-glow)] hover:scale-105 transition duration-300">
                         </div>
                     </div>
                 </div>
             </header>
 
-            <!-- SCROLLABLE MAIN CONTENT AREA -->
-            <main class="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 w-full flex flex-col items-center justify-start pb-28 md:pb-12 space-y-6">
+            <!-- SCROLLABLE MAIN CONTENT AREA (Generous bottom padding for full scroll clearance) -->
+            <main class="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-8 w-full flex flex-col items-center justify-start pb-44 md:pb-32 space-y-6">
 
                         <!-- SECTION 1: HOME (System Overview Metrics) -->
         <section id="sec-home" class="dashboard-section block animate-fade-in w-full max-w-7xl mx-auto space-y-6">
@@ -192,36 +241,36 @@
                     <div class="w-3 h-3 rounded-full bg-pink-500 animate-ping"></div>
                     <div class="text-left font-cyber">
                         <div class="text-[10px] text-pink-400 font-bold tracking-widest uppercase">Engine Version</div>
-                        <div class="text-xs text-white font-semibold">v1.2.0 (Hoshino Core)</div>
+                        <div id="displayQuickEngineVersion" class="text-xs text-white font-semibold">v2.1.0 (Hoshino Core)</div>
                     </div>
                 </div>
             </div>
 
             <!-- Telemetry Metrics Grid Layout (4 Cards) -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="telemetry-card border-accent-pink group">
+                <div id="cardTelemetryPing" class="telemetry-card border-accent-pink group">
                     <div class="label-uppercase text-[var(--color-body)] mb-2 font-cyber text-[10px] tracking-widest">
                         Network Latency</div>
-                    <div class="display-xl text-white font-cyber"><span id="statPing">0</span><span
-                            class="text-xl text-[var(--color-muted)] ml-1.5">ms</span></div>
+                    <div class="display-xl text-white font-cyber"><span id="statPing" class="telemetry-metric-value">0</span><span
+                            class="text-xl text-[var(--color-muted)] ml-1.5 font-normal">ms</span></div>
                     <i class="fa-solid fa-bolt bg-icon"></i>
                 </div>
-                <div class="telemetry-card border-accent-green group">
+                <div id="cardTelemetryUptime" class="telemetry-card border-accent-green group">
                     <div class="label-uppercase text-[var(--color-body)] mb-2 font-cyber text-[10px] tracking-widest">
                         System Uptime</div>
-                    <div class="display-md text-white mt-3 font-cyber text-glow-green" id="statUptime">0h 0m</div>
+                    <div class="display-md text-white mt-3 font-cyber text-glow-green telemetry-metric-value" id="statUptime">0h 0m</div>
                     <i class="fa-solid fa-clock bg-icon"></i>
                 </div>
-                <div class="telemetry-card border-accent-blue group">
+                <div id="cardTelemetryUsers" class="telemetry-card border-accent-blue group">
                     <div class="label-uppercase text-[var(--color-body)] mb-2 font-cyber text-[10px] tracking-widest">
                         Total Users</div>
-                    <div class="display-xl text-white font-cyber" id="statUsers">0</div>
+                    <div class="display-xl text-white font-cyber"><span id="statUsers" class="telemetry-metric-value">0</span></div>
                     <i class="fa-solid fa-users bg-icon"></i>
                 </div>
-                <div class="telemetry-card border-accent-purple group">
+                <div id="cardTelemetryGuilds" class="telemetry-card border-accent-purple group">
                     <div class="label-uppercase text-[var(--color-body)] mb-2 font-cyber text-[10px] tracking-widest">
                         Active Guilds</div>
-                    <div class="display-xl text-white font-cyber" id="statServers">0</div>
+                    <div class="display-xl text-white font-cyber"><span id="statServers" class="telemetry-metric-value">0</span></div>
                     <i class="fa-solid fa-network-wired bg-icon"></i>
                 </div>
             </div>
@@ -375,12 +424,12 @@
                         <div class="space-y-3.5 text-xs font-cyber">
                             <div class="flex justify-between items-center bg-black/30 p-2.5 rounded-xl border border-white/5">
                                 <span class="text-gray-400 flex items-center gap-2"><i class="fa-solid fa-robot text-pink-400"></i> Bot Version</span>
-                                <span class="text-white font-bold text-pink-400">v1.2.0</span>
+                                <span id="displaySpecBotVersion" class="text-white font-bold text-pink-400">v2.1.0</span>
                             </div>
 
                             <div class="flex justify-between items-center bg-black/30 p-2.5 rounded-xl border border-white/5">
                                 <span class="text-gray-400 flex items-center gap-2"><i class="fa-solid fa-gears text-yellow-400"></i> Core Engine</span>
-                                <span class="text-yellow-300 font-bold">v1.1.0</span>
+                                <span id="displaySpecEngineVersion" class="text-yellow-300 font-bold">v2.1.0</span>
                             </div>
 
                             <div class="flex justify-between items-center bg-black/30 p-2.5 rounded-xl border border-white/5">
@@ -395,7 +444,7 @@
 
                             <div class="flex justify-between items-center bg-black/30 p-2.5 rounded-xl border border-white/5">
                                 <span class="text-gray-400 flex items-center gap-2"><i class="fa-solid fa-database text-cyan-400"></i> Database ORM</span>
-                                <span class="text-cyan-300 font-bold">Sequelize + MySQL</span>
+                                <span class="text-cyan-300 font-bold">Sequelize + PostgreSQL</span>
                             </div>
 
                             <div class="flex justify-between items-center bg-black/30 p-2.5 rounded-xl border border-white/5">
@@ -632,8 +681,8 @@
                     </div>
                 </div>
 
-                <!-- Statistics Profile metrics -->
-                <div id="tabStats" class="space-y-6">
+                <!-- Statistics Profile metrics (dengan padding bawah ekstra untuk kelancaran scrolling) -->
+                <div id="tabStats" class="space-y-6 pb-24">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Level & Currency Breakdown -->
                         <div class="glass-panel p-6 rounded-2xl bg-black/40 border border-pink-500/20 shadow-lg">
@@ -679,24 +728,30 @@
                         </div>
                     </div>
 
-                    <!-- Music Analytics Charts with Friends -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Music Analytics Charts with Friends (Realtime Database Connected) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-10 mb-8">
                         <!-- Bar Chart: Tracks listened with friends -->
-                        <div class="glass-panel p-6 rounded-2xl bg-black/40 border border-cyan-500/20 shadow-lg">
-                            <h4 class="text-xs font-bold text-cyan-400 font-cyber tracking-widest uppercase mb-4 flex items-center gap-2">
-                                <i class="fa-solid fa-chart-column text-cyan-400"></i> Top 5 Teman Mabar Musik (Jumlah Track)
-                            </h4>
-                            <div class="relative h-64 w-full flex items-center justify-center">
+                        <div class="glass-panel p-6 rounded-2xl bg-black/40 border border-cyan-500/20 shadow-lg flex flex-col">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-xs font-bold text-cyan-400 font-cyber tracking-widest uppercase flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-column text-cyan-400"></i> Top 5 Teman Mabar Musik (Jumlah Track)
+                                </h4>
+                                <span class="text-[9px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-cyber font-bold border border-cyan-500/30">REALTIME DB</span>
+                            </div>
+                            <div class="relative h-72 w-full flex items-center justify-center p-2">
                                 <canvas id="friendTracksBarChart"></canvas>
                             </div>
                         </div>
 
                         <!-- Doughnut Chart: Duration listened with friends -->
-                        <div class="glass-panel p-6 rounded-2xl bg-black/40 border border-pink-500/20 shadow-lg">
-                            <h4 class="text-xs font-bold text-pink-400 font-cyber tracking-widest uppercase mb-4 flex items-center gap-2">
-                                <i class="fa-solid fa-chart-pie text-pink-400"></i> Top 5 Lama Mendengarkan Musik Bersama
-                            </h4>
-                            <div class="relative h-64 w-full flex items-center justify-center">
+                        <div class="glass-panel p-6 rounded-2xl bg-black/40 border border-pink-500/20 shadow-lg flex flex-col">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-xs font-bold text-pink-400 font-cyber tracking-widest uppercase flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-pie text-pink-400"></i> Top 5 Lama Mendengarkan Musik Bersama
+                                </h4>
+                                <span class="text-[9px] px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 font-cyber font-bold border border-pink-500/30">REALTIME DB</span>
+                            </div>
+                            <div class="relative h-72 w-full flex items-center justify-center p-2">
                                 <canvas id="friendDurationPieChart"></canvas>
                             </div>
                         </div>
@@ -1394,39 +1449,133 @@
                             class="flex-1 px-4 py-3 rounded-xl text-[var(--color-muted)] hover:text-white hover:bg-white/5 transition-all font-bold flex items-center justify-center gap-2.5 whitespace-nowrap text-xs sm:text-sm">
                             <i class="fa-solid fa-wand-magic-sparkles text-cyan-400"></i> Glassmorphism
                         </button>
+                        <button type="button" onclick="switchSetTab('account')" id="btnSetAccount"
+                            class="flex-1 px-4 py-3 rounded-xl text-[var(--color-muted)] hover:text-white hover:bg-white/5 transition-all font-bold flex items-center justify-center gap-2.5 whitespace-nowrap text-xs sm:text-sm">
+                            <i class="fa-brands fa-discord text-indigo-400"></i> Account
+                        </button>
                     </div>
 
                     <!-- Content wrapper card -->
                     <div class="glass-panel p-6 md:p-8 rounded-3xl bg-black/40 border-white/5 shadow-lg flex-grow min-h-[400px]">
                         <!-- Sound setup -->
                         <div id="setSound">
-                            <h3 class="title-md mb-5 text-white font-cyber"><i
-                                    class="fa-solid fa-volume-high text-pink-400 mr-2"></i>Audio Preferences</h3>
-                            <div class="flex flex-col gap-4">
-                                <div class="flex items-center justify-between glass-panel p-4 bg-black/20 rounded-xl">
-                                    <div>
-                                        <h4 class="font-bold text-white text-sm">Background Music (BGM)</h4>
-                                        <p class="text-[10px] text-[var(--color-muted)]">Putar musik latar instrumental lofi santai.</p>
-                                    </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="bgmToggle" class="sr-only peer" onchange="toggleBgm()">
-                                        <div
-                                            class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-400">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                                <div>
+                                    <h3 class="title-md text-white font-cyber flex items-center gap-2">
+                                        <i class="fa-solid fa-volume-high text-pink-400"></i>Audio & BGM Preferences
+                                    </h3>
+                                    <p class="text-xs text-[var(--color-muted)] font-assist">Atur musik latar variatif, volume master, dan efek suara interaksi dashboard.</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span id="bgmStatusBadge" class="px-2.5 py-1 rounded-full text-[10px] font-cyber font-bold uppercase bg-pink-500/20 text-pink-400 border border-pink-500/30 shadow-[0_0_8px_rgba(236,72,153,0.2)]">
+                                        <i class="fa-solid fa-music mr-1"></i> BGM Ready
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Master Audio Controls Grid -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                                <!-- BGM Toggle Card -->
+                                <div class="glass-panel p-4 bg-black/30 rounded-2xl border border-white/5 flex items-center justify-between hover:border-pink-500/30 transition">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-10 h-10 rounded-xl bg-pink-500/10 border border-pink-500/20 flex items-center justify-center text-pink-400 shrink-0">
+                                            <i class="fa-solid fa-music text-base"></i>
                                         </div>
+                                        <div class="min-w-0">
+                                            <h4 class="font-bold text-white text-xs sm:text-sm font-cyber truncate">Background Music</h4>
+                                            <p class="text-[10px] text-[var(--color-muted)] truncate">Musik latar variatif</p>
+                                        </div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
+                                        <input type="checkbox" id="bgmToggle" class="sr-only peer" onchange="toggleBgm()">
+                                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-400"></div>
                                     </label>
                                 </div>
 
-                                <div class="flex items-center justify-between glass-panel p-4 bg-black/20 rounded-xl">
-                                    <div>
-                                        <h4 class="font-bold text-white text-sm">Sound Effects (SFX)</h4>
-                                        <p class="text-[10px] text-[var(--color-muted)]">Efek suara audio saat mengklik tombol & berpindah menu.</p>
-                                    </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="sfxToggle" class="sr-only peer" checked onchange="toggleSfx()">
-                                        <div
-                                            class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-400">
+                                <!-- SFX Toggle Card -->
+                                <div class="glass-panel p-4 bg-black/30 rounded-2xl border border-white/5 flex items-center justify-between hover:border-cyan-500/30 transition">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shrink-0">
+                                            <i class="fa-solid fa-wand-magic-sparkles text-base"></i>
                                         </div>
+                                        <div class="min-w-0">
+                                            <h4 class="font-bold text-white text-xs sm:text-sm font-cyber truncate">Sound Effects</h4>
+                                            <p class="text-[10px] text-[var(--color-muted)] truncate">SFX klik tombol & navigasi</p>
+                                        </div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
+                                        <input type="checkbox" id="sfxToggle" class="sr-only peer" checked onchange="toggleSfx()">
+                                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-400"></div>
                                     </label>
+                                </div>
+
+                                <!-- Volume Slider Card -->
+                                <div class="glass-panel p-4 bg-black/30 rounded-2xl border border-white/5 flex flex-col justify-center gap-2 hover:border-yellow-500/30 transition col-span-1 sm:col-span-2 lg:col-span-1">
+                                    <div class="flex items-center justify-between text-xs font-cyber gap-2">
+                                        <span class="text-gray-300 font-bold flex items-center gap-1.5 truncate">
+                                            <i id="volIcon" class="fa-solid fa-volume-high text-yellow-400 shrink-0"></i> <span>Master Volume</span>
+                                        </span>
+                                        <span id="volValueText" class="text-yellow-400 font-bold shrink-0">50%</span>
+                                    </div>
+                                    <input type="range" id="volSlider" min="0" max="100" value="50" oninput="adjustBgmVolume()" class="w-full accent-pink-400 cursor-pointer h-1.5 bg-gray-700 rounded-lg">
+                                </div>
+                            </div>
+
+                            <!-- Live Audio Spectrum Visualizer & Active Player Deck -->
+                            <div class="glass-panel p-5 bg-black/50 rounded-2xl border border-pink-500/20 mb-6 relative overflow-hidden shadow-[0_0_20px_rgba(236,72,153,0.1)]">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-3 z-10 relative">
+                                    <div class="flex items-center gap-3">
+                                        <div class="relative flex h-3 w-3">
+                                            <span id="nowPlayingPulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-3 w-3 bg-pink-500 shadow-[0_0_8px_#ec4899]"></span>
+                                        </div>
+                                        <div>
+                                            <div class="text-[10px] text-pink-400 font-cyber font-bold tracking-widest uppercase flex items-center gap-2">
+                                                <span>NOW PLAYING</span>
+                                                <span id="activeBgmGenre" class="px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 text-[9px]">Chill Lo-fi</span>
+                                                <span id="activeBgmBpm" class="text-gray-400 text-[9px]">78 BPM</span>
+                                            </div>
+                                            <h4 id="activeBgmTitle" class="text-base sm:text-lg font-bold text-white font-cyber text-glow">Cyber Kawaii Lofi</h4>
+                                        </div>
+                                    </div>
+
+                                    <!-- Quick Player Action Controls -->
+                                    <div class="flex items-center gap-2 self-end sm:self-auto">
+                                        <button onclick="prevBgmTrack()" title="Lagu Sebelumnya" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 transition flex items-center justify-center cursor-pointer">
+                                            <i class="fa-solid fa-backward-step text-xs"></i>
+                                        </button>
+                                        <button id="mainPlayBtn" onclick="toggleBgm()" title="Play / Pause" class="w-11 h-11 rounded-xl bg-gradient-to-r from-pink-500 to-rose-400 hover:from-pink-400 hover:to-rose-300 text-black font-bold shadow-[0_0_15px_rgba(236,72,153,0.4)] transition flex items-center justify-center cursor-pointer">
+                                            <i id="mainPlayIcon" class="fa-solid fa-play text-sm"></i>
+                                        </button>
+                                        <button onclick="nextBgmTrack()" title="Lagu Berikutnya" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 transition flex items-center justify-center cursor-pointer">
+                                            <i class="fa-solid fa-forward-step text-xs"></i>
+                                        </button>
+                                        <button id="shuffleBtn" onclick="toggleShuffle()" title="Mode Acak (Shuffle)" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-pink-400 border border-white/10 transition flex items-center justify-center cursor-pointer">
+                                            <i class="fa-solid fa-shuffle text-xs"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Spectrum Wave Canvas Visualizer -->
+                                <div class="w-full h-24 bg-black/40 rounded-xl border border-white/5 relative overflow-hidden flex items-center justify-center">
+                                    <canvas id="visualizerCanvas" width="800" height="96" class="w-full h-full block"></canvas>
+                                    <div id="visualizerPlaceholder" class="absolute inset-0 flex items-center justify-center text-gray-500 font-cyber text-xs pointer-events-none">
+                                        <i class="fa-solid fa-wave-square mr-2 text-pink-400/50"></i> Aktifkan BGM untuk melihat spektrum frekuensi real-time
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Varied BGM Tracks Selection Matrix -->
+                            <div class="mb-2">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-xs sm:text-sm font-bold text-white font-cyber uppercase tracking-wider flex items-center gap-2">
+                                        <i class="fa-solid fa-compact-disc text-pink-400"></i> Pilihan BGM Variatif (6 Tema Musik)
+                                    </h4>
+                                    <span class="text-[10px] text-gray-400 font-cyber">Pilih tema musik favoritmu</span>
+                                </div>
+
+                                <div id="bgmTrackGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                                    <!-- Dynamic Track Cards will be populated here -->
                                 </div>
                             </div>
                         </div>
@@ -1561,6 +1710,31 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Account / Session Auth setup -->
+                        <div id="setAccount" class="hidden animate-fade-in">
+                            <h3 class="title-md mb-2 text-white font-cyber flex items-center gap-2">
+                                <i class="fa-brands fa-discord text-indigo-400"></i> Account & Discord Session
+                            </h3>
+                            <p class="text-xs text-[var(--color-muted)] font-assist mb-6">Hubungkan akun Discord untuk sinkronisasi profil, RPG inventory, saldo koin, dan status server.</p>
+
+                            <div id="settingsAuthArea" class="space-y-4">
+                                <div class="glass-panel p-6 bg-black/30 rounded-2xl border border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 rounded-2xl bg-[#5865F2]/20 border border-[#5865F2]/40 flex items-center justify-center text-[#5865F2] text-2xl shrink-0">
+                                            <i class="fa-brands fa-discord"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-white text-sm font-cyber">Status Autentikasi</h4>
+                                            <p class="text-xs text-gray-400 font-assist">Masuk dengan Discord untuk membuka semua fitur interaktif.</p>
+                                        </div>
+                                    </div>
+                                    <a href="/auth/discord" class="btn-discord px-6 py-2.5 text-xs font-bold font-cyber uppercase tracking-wider shrink-0">
+                                        <i class="fa-brands fa-discord mr-2"></i> Login with Discord
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1574,7 +1748,7 @@
                     <i class="fa-solid fa-heart animate-pulse text-pink-500 mr-2"></i> SUPPORT DEVELOPERS</h2>
                 <p class="text-gray-400 text-sm mt-3 font-assist font-light">Bantu kami terus mengembangkan Naura OS dengan dukungan penuhmu!</p>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
                 <!-- Saweria Donation Card -->
                 <div class="support-card border-t-4 border-[#FF3366] bg-black/40 flex flex-col h-full rounded-3xl p-6 glass-panel shadow-lg">
                     <div class="flex-grow flex flex-col items-center">
@@ -1609,11 +1783,28 @@
                         <div class="w-24 h-24 rounded-3xl bg-[var(--color-discord-blurple)]/10 border border-[var(--color-discord-blurple)]/30 flex items-center justify-center text-[var(--color-discord-blurple)] text-5xl mb-6 mt-2 shadow-[0_0_25px_rgba(88,101,242,0.3)] hover:scale-110 transition duration-500">
                             <i class="fa-brands fa-discord"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-white mb-3 font-cyber">Community Server</h3>
+                        <h3 class="text-xl font-bold text-white mb-3 font-cyber">Community</h3>
                         <p class="text-gray-400 text-xs leading-relaxed mb-6 text-center">Gabung server support kami untuk memantau update status bot, game RPG, dan mabar.</p>
                     </div>
                     <a href="#" target="_blank"
-                        class="btn-discord w-full hover:shadow-[0_0_20px_rgba(88,101,242,0.4)] shadow-none py-3.5 text-sm uppercase tracking-wider mt-auto text-center font-cyber font-bold rounded-xl">Join Community</a>
+                        class="btn-discord w-full hover:shadow-[0_0_20px_rgba(88,101,242,0.4)] shadow-none py-3.5 text-sm uppercase tracking-wider mt-auto text-center font-cyber font-bold rounded-xl">Join Server</a>
+                </div>
+
+                <!-- Creator Portfolio Card (Card #4) -->
+                <div class="support-card border-t-4 border-emerald-500 bg-black/40 flex flex-col h-full rounded-3xl p-6 glass-panel shadow-lg hover:border-emerald-400 transition duration-300">
+                    <div class="flex-grow flex flex-col items-center">
+                        <div class="w-24 h-24 rounded-3xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-5xl mb-6 mt-2 shadow-[0_0_25px_rgba(16,185,129,0.3)] hover:scale-110 transition duration-500 overflow-hidden">
+                            <img src="/owner_photo.jpeg" alt="Aryandita" class="w-full h-full object-cover object-top" onerror="this.src='/assets/dashboard/owner_photo.jpeg'">
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-1 font-cyber">Aryandita</h3>
+                        <span class="text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-wider mb-2">Creator Portfolio</span>
+                        <p class="text-gray-400 text-xs leading-relaxed mb-6 text-center">Kenali lebih dekat sosok di balik Naura Hoshino. Pelajari latar belakang, keahlian perhotelan, dan karya arsitektur sistem.</p>
+                    </div>
+                    <a href="/portfolio"
+                        class="btn-primary w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-black hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] shadow-none py-3.5 text-sm uppercase tracking-wider mt-auto text-center font-cyber font-bold rounded-xl flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-id-badge"></i>
+                        <span>View Portfolio</span>
+                    </a>
                 </div>
             </div>
         </section>
@@ -1637,20 +1828,20 @@
             </div>
 
             <!-- Full-Width 2-Column Balanced Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full h-[calc(100vh-240px)] min-h-[520px]">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 w-full h-auto lg:h-[calc(100vh-240px)] min-h-[500px]">
                 <!-- Left Column (1 Col): AI Agent Profile & Quick Prompts Panel -->
-                <div class="glass-panel p-6 bg-black/40 rounded-3xl border border-pink-500/20 flex flex-col justify-between shadow-lg relative overflow-hidden">
+                <div class="glass-panel p-4 sm:p-6 bg-black/40 rounded-2xl sm:rounded-3xl border border-pink-500/20 flex flex-col justify-between shadow-lg relative overflow-hidden">
                     <div>
                         <!-- Agent Avatar Card -->
-                        <div class="flex flex-col items-center text-center pb-6 border-b border-white/5 relative z-10">
+                        <div class="flex flex-col items-center text-center pb-5 sm:pb-6 border-b border-white/5 relative z-10">
                             <div class="relative mb-3">
                                 <img src="/assets/dashboard/naura.png"
-                                    class="w-20 h-20 rounded-full border-2 border-pink-400 shadow-[0_0_20px_rgba(244,114,182,0.5)] object-cover">
+                                    class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-pink-400 shadow-[0_0_20px_rgba(244,114,182,0.5)] object-cover">
                                 <div
-                                    class="absolute bottom-1 right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-black animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]">
+                                    class="absolute bottom-1 right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-black animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]">
                                 </div>
                             </div>
-                            <h3 class="font-bold text-white text-lg font-cyber tracking-wider">Naura Hoshino</h3>
+                            <h3 class="font-bold text-white text-base sm:text-lg font-cyber tracking-wider">Naura Hoshino</h3>
                             <p class="text-xs text-pink-400 font-bold font-cyber text-glow mt-0.5">Cyber AI Companion</p>
                             <p class="text-[11px] text-gray-400 font-assist font-light mt-2 px-2">
                                 Siap menjawab pertanyaan, mengontrol lagu, memberikan rekomendasi, dan mengobrol 24/7!
@@ -1658,8 +1849,8 @@
                         </div>
 
                         <!-- Quick Prompts Preset Suggestions -->
-                        <div class="pt-5 space-y-2.5">
-                            <h4 class="text-[10px] font-bold text-cyan-400 font-cyber tracking-widest uppercase mb-3 flex items-center gap-1.5">
+                        <div class="pt-4 sm:pt-5 space-y-2 sm:space-y-2.5">
+                            <h4 class="text-[10px] font-bold text-cyan-400 font-cyber tracking-widest uppercase mb-2 sm:mb-3 flex items-center gap-1.5">
                                 <i class="fa-solid fa-lightbulb text-cyan-400"></i> Quick Prompt Presets
                             </h4>
                             <button type="button" onclick="sendQuickPrompt('Halo Naura! Kenalan dong ✨')" class="w-full text-left p-2.5 rounded-xl bg-black/40 border border-white/5 hover:border-pink-500/40 text-xs text-gray-300 hover:text-white transition flex items-center justify-between group">
@@ -1681,45 +1872,45 @@
                         </div>
                     </div>
 
-                    <div class="pt-4 border-t border-white/5 text-[10px] text-gray-500 font-assist text-center">
+                    <div class="pt-3 sm:pt-4 border-t border-white/5 text-[10px] text-gray-500 font-assist text-center mt-3 sm:mt-0">
                         Powered by Verba & Gemini 2.5 Flash
                     </div>
                 </div>
 
                 <!-- Right Column (2 Cols): Main Interactive Chat Box (Stretches Full Width) -->
-                <div class="lg:col-span-2 glass-panel bg-black/40 rounded-3xl overflow-hidden flex flex-col h-full shadow-[0_0_40px_rgba(236,72,153,0.15)] border border-pink-500/30 relative">
+                <div class="lg:col-span-2 glass-panel bg-black/40 rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col min-h-[480px] h-[520px] sm:h-[600px] lg:h-full w-full shadow-[0_0_40px_rgba(236,72,153,0.15)] border border-pink-500/30 relative">
                     <!-- Faded circuit overlay & scanlines -->
                     <div class="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/circuit-board.png')]"></div>
                     <div class="absolute inset-0 pointer-events-none opacity-[0.05] bg-[linear-gradient(transparent_50%,rgba(0,0,0,1)_50%)] bg-[length:100%_4px]"></div>
                     <!-- Top Glow bar -->
                     <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-400 to-pink-500 opacity-100 shadow-[0_0_15px_#ec4899]"></div>
 
-                    <div class="bg-black/60 p-4 border-b border-white/5 flex items-center justify-between shrink-0 shadow-sm backdrop-blur-md relative z-10">
-                        <div class="flex items-center gap-3">
-                            <img src="/assets/dashboard/naura.png" class="w-9 h-9 rounded-full border border-pink-400 object-cover">
+                    <div class="bg-black/60 p-3 sm:p-4 border-b border-white/5 flex items-center justify-between shrink-0 shadow-sm backdrop-blur-md relative z-10 w-full">
+                        <div class="flex items-center gap-2.5 sm:gap-3">
+                            <img src="/assets/dashboard/naura.png" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-pink-400 object-cover">
                             <div>
-                                <h3 class="font-bold text-white text-sm font-cyber flex items-center gap-1.5">Naura AI Session <i class="fa-solid fa-circle text-[8px] text-green-400 animate-pulse"></i></h3>
-                                <p class="text-[10px] text-gray-400 font-assist">Sesi percakapan real-time terenkripsi</p>
+                                <h3 class="font-bold text-white text-xs sm:text-sm font-cyber flex items-center gap-1.5">Naura AI Session <i class="fa-solid fa-circle text-[8px] text-green-400 animate-pulse"></i></h3>
+                                <p class="text-[9px] sm:text-[10px] text-gray-400 font-assist">Sesi percakapan real-time terenkripsi</p>
                             </div>
                         </div>
-                        <button type="button" onclick="clearChatMessages()" class="text-xs text-gray-400 hover:text-pink-400 transition font-cyber flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5">
-                            <i class="fa-solid fa-trash-can text-[11px]"></i> Bersihkan Chat
+                        <button type="button" onclick="clearChatMessages()" class="text-[11px] sm:text-xs text-gray-400 hover:text-pink-400 transition font-cyber flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-white/5 border border-white/5">
+                            <i class="fa-solid fa-trash-can text-[10px] sm:text-[11px]"></i> <span class="hidden xs:inline">Bersihkan</span> Chat
                         </button>
                     </div>
 
-                    <div class="chat-messages flex-grow p-6 overflow-y-auto space-y-5 bg-gradient-to-b from-transparent to-black/40 relative z-10" id="chatMessages">
-                        <div class="bg-black/60 text-white p-4 rounded-2xl rounded-tl-none self-start max-w-[85%] border border-pink-500/40 leading-relaxed shadow-[0_0_15px_rgba(236,72,153,0.15)] backdrop-blur-md">
+                    <div class="chat-messages flex-grow p-3 sm:p-5 md:p-6 overflow-y-auto space-y-3.5 sm:space-y-5 bg-gradient-to-b from-transparent to-black/40 relative z-10 w-full" id="chatMessages">
+                        <div class="bg-black/60 text-white p-3.5 sm:p-4 rounded-2xl rounded-tl-none self-start w-full sm:w-auto max-w-[95%] sm:max-w-[85%] border border-pink-500/40 text-xs sm:text-sm leading-relaxed shadow-[0_0_15px_rgba(236,72,153,0.15)] backdrop-blur-md break-words">
                             <div class="font-bold text-pink-400 mb-1">Konnichiwa! 👋</div>
                             <div>Ada yang bisa Naura bantu hari ini? Kamu bisa bertanya atau langsung memilih preset prompt di sebelah kiri ya! ✨</div>
                         </div>
                     </div>
 
-                    <form id="chatForm" class="p-4 bg-black/60 border-t border-white/5 flex gap-3 items-center shrink-0 backdrop-blur-md relative z-10">
+                    <form id="chatForm" class="p-2.5 sm:p-4 bg-black/60 border-t border-white/5 flex gap-2 sm:gap-3 items-center shrink-0 backdrop-blur-md relative z-10 w-full">
                         <input type="text" id="chatInput" placeholder="Mulai percakapan dengan Naura..."
-                            class="flex-grow bg-black/50 border border-white/10 rounded-full px-6 py-3 text-sm text-white focus:outline-none focus:border-pink-500 focus:bg-black/70 transition duration-300 shadow-inner focus:shadow-[0_0_15px_rgba(236,72,153,0.2)]">
+                            class="flex-grow bg-black/50 border border-white/10 rounded-full px-4 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm text-white focus:outline-none focus:border-pink-500 focus:bg-black/70 transition duration-300 shadow-inner focus:shadow-[0_0_15px_rgba(236,72,153,0.2)]">
                         <button type="submit"
-                            class="w-11 h-11 shrink-0 rounded-full bg-pink-500 text-black flex items-center justify-center hover:bg-pink-400 hover:shadow-[0_0_25px_rgba(236,72,153,0.8)] hover:scale-105 shadow-[0_0_10px_rgba(236,72,153,0.4)] transition-all duration-300"><i
-                                class="fa-solid fa-paper-plane text-base"></i></button>
+                            class="w-10 h-10 sm:w-11 sm:h-11 shrink-0 rounded-full bg-pink-500 text-black flex items-center justify-center hover:bg-pink-400 hover:shadow-[0_0_25px_rgba(236,72,153,0.8)] hover:scale-105 shadow-[0_0_10px_rgba(236,72,153,0.4)] transition-all duration-300 touch-target"><i
+                                class="fa-solid fa-paper-plane text-sm sm:text-base"></i></button>
                     </form>
                 </div>
             </div>
@@ -1732,6 +1923,131 @@
     <!-- SOCKET.IO & APPLICATION SCRIPTS -->
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        // Web Audio API Synthesizer for SFX
+        window.playSynthSfx = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) {
+                        this.ctx = new AudioCtx();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume().catch(() => {});
+                }
+            },
+            playButton() {
+                const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
+                if (!sfxEnabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.05);
+                    gain.gain.setValueAtTime(0.03, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+                    osc.start(now);
+                    osc.stop(now + 0.06);
+                } catch (e) {}
+            },
+            playHover() {
+                const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
+                if (!sfxEnabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1200, now);
+                    osc.frequency.exponentialRampToValueAtTime(150, now + 0.04);
+                    gain.gain.setValueAtTime(0.015, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
+                    osc.start(now);
+                    osc.stop(now + 0.04);
+                } catch (e) {}
+            },
+            playTab() {
+                const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
+                if (!sfxEnabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const filter = this.ctx.createBiquadFilter();
+                    const gain = this.ctx.createGain();
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(250, now);
+                    osc.frequency.exponentialRampToValueAtTime(650, now + 0.12);
+                    filter.type = 'lowpass';
+                    filter.Q.setValueAtTime(4, now);
+                    filter.frequency.setValueAtTime(600, now);
+                    filter.frequency.exponentialRampToValueAtTime(1800, now + 0.12);
+                    gain.gain.setValueAtTime(0.035, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } catch (e) {}
+            },
+            playStartup() {
+                const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
+                if (!sfxEnabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const chords = [261.63, 329.63, 392.00, 523.25, 659.25];
+                    chords.forEach((freq, idx) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+                        gain.gain.setValueAtTime(0, now);
+                        gain.gain.linearRampToValueAtTime(0.015, now + idx * 0.04 + 0.02);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
+                        osc.start(now + idx * 0.04);
+                        osc.stop(now + 0.7);
+                    });
+                } catch (e) {}
+            },
+            playTone(freq = 440, duration = 0.1, type = 'sine', volume = 0.03) {
+                const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
+                if (!sfxEnabled) return;
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(volume, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+                    osc.start(now);
+                    osc.stop(now + duration);
+                } catch (e) {}
+            }
+        };
+        const playSynthSfx = window.playSynthSfx;
+
         const socket = io();
         let currentUser = null;
         let isOwner = false;
@@ -1776,14 +2092,28 @@
 
         // Layout Navigation Logic
         function toggleHamburger() {
+            try {
+                if (window.playSynthSfx && typeof window.playSynthSfx.playButton === 'function') {
+                    window.playSynthSfx.playButton();
+                }
+            } catch (e) {}
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('mobileOverlay');
-            if (sidebar.classList.contains('open')) {
+            const btn = document.getElementById('hamburgerBtn');
+            if (!sidebar) return;
+            const isOpen = sidebar.classList.contains('open');
+            if (isOpen) {
                 sidebar.classList.remove('open');
-                overlay.classList.add('hidden');
+                sidebar.classList.add('-translate-x-full');
+                sidebar.classList.remove('translate-x-0');
+                if (overlay) overlay.classList.add('hidden');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
             } else {
                 sidebar.classList.add('open');
-                overlay.classList.remove('hidden');
+                sidebar.classList.remove('-translate-x-full');
+                sidebar.classList.add('translate-x-0');
+                if (overlay) overlay.classList.remove('hidden');
+                if (btn) btn.setAttribute('aria-expanded', 'true');
             }
         }
 
@@ -1871,6 +2201,8 @@
                 const overlay = document.getElementById('mobileOverlay');
                 if (sidebar && sidebar.classList.contains('open')) {
                     sidebar.classList.remove('open');
+                    sidebar.classList.add('-translate-x-full');
+                    sidebar.classList.remove('translate-x-0');
                     if (overlay) overlay.classList.add('hidden');
                 }
 
@@ -1919,7 +2251,7 @@
         // Settings Sub Tabs
         function switchSetTab(tab) {
             if (typeof playSynthSfx !== 'undefined') playSynthSfx.playTab();
-            ['Sound', 'Bg', 'Lang', 'Glass'].forEach(t => {
+            ['Sound', 'Bg', 'Lang', 'Glass', 'Account'].forEach(t => {
                 const el = document.getElementById('set' + t);
                 const btn = document.getElementById('btnSet' + t);
                 if (el) el.classList.add('hidden');
@@ -1928,7 +2260,7 @@
                     btn.classList.add('text-[var(--color-muted)]');
                 }
             });
-            const tMap = { 'sound': 'Sound', 'bg': 'Bg', 'lang': 'Lang', 'glass': 'Glass' };
+            const tMap = { 'sound': 'Sound', 'bg': 'Bg', 'lang': 'Lang', 'glass': 'Glass', 'account': 'Account' };
             const el = document.getElementById('set' + tMap[tab]);
             const btn = document.getElementById('btnSet' + tMap[tab]);
             if (el) el.classList.remove('hidden');
@@ -1971,55 +2303,713 @@
             document.documentElement.style.setProperty('--glass-opacity', (savedOpacity / 100).toFixed(2));
         }
 
-        // SFX & Background Music Core integration
-        let bgmPlayer = null;
+        // ==========================================
+        // 🌸 NAURA MULTI-TRACK BGM PLAYLIST & ENGINE
+        // ==========================================
+        const BGM_TRACKS = [
+            {
+                id: 'cyber-lofi',
+                name: 'Cyber Kawaii Lofi',
+                genre: 'Chill Lo-fi',
+                bpm: 76,
+                icon: 'fa-heart',
+                color: '#ffb6c1',
+                desc: 'Alunan chord e-piano santai, vinyl texture lembut, dan melodi pentatonik dreamy.',
+                theme: 'lofi'
+            },
+            {
+                id: 'synthwave',
+                name: 'Neo-Tokyo Synthwave',
+                genre: 'Retrowave 80s',
+                bpm: 116,
+                icon: 'fa-bolt',
+                color: '#f472b6',
+                desc: 'Bassline 80s menghentak, filter resonance sweep dinamis, dan synth lead neon.',
+                theme: 'synthwave'
+            },
+            {
+                id: 'ambient-space',
+                name: 'Starlight Space Ambient',
+                genre: 'Cosmic Zen',
+                bpm: 60,
+                icon: 'fa-star',
+                color: '#93c5fd',
+                desc: 'Pad kosmik ethereal menenangkan dengan kilauan crystal chimes di angkasa.',
+                theme: 'ambient'
+            },
+            {
+                id: 'cafe-jazz',
+                name: 'Midnight Cafe Jazz',
+                genre: 'Jazzhop Lounge',
+                bpm: 82,
+                icon: 'fa-mug-saucer',
+                color: '#fcd34d',
+                desc: 'Progresi chord 7th & 9th jazz klasik, walking bass hangat, dan rhodes akustik.',
+                theme: 'jazz'
+            },
+            {
+                id: 'chiptune',
+                name: 'Akihabara 8-Bit Arcade',
+                genre: 'Chiptune Retro',
+                bpm: 130,
+                icon: 'fa-gamepad',
+                color: '#86efac',
+                desc: 'Square wave ceria bergaya Game Boy arcade vintage penuh nostalgia petualangan.',
+                theme: 'chiptune'
+            },
+            {
+                id: 'city-pop',
+                name: 'Sunset Drive City Pop',
+                genre: 'Future Funk',
+                bpm: 110,
+                icon: 'fa-sun',
+                color: '#c084fc',
+                desc: 'Groovy slap bass, sparkling synth brass stabs, dan vibes sore hari yang enerjik.',
+                theme: 'citypop'
+            }
+        ];
+
         let sfxPlayer = null;
 
-        function initAudio() {
-            if (!bgmPlayer) {
-                bgmPlayer = new Audio('/assets/dashboard/bgmusic.mp3');
-                bgmPlayer.loop = true;
+        const NauraBgmEngine = {
+            audioCtx: null,
+            analyser: null,
+            masterGain: null,
+            isPlaying: false,
+            currentTrackIndex: 0,
+            isShuffle: false,
+            stepIndex: 0,
+            stepTimer: null,
+            visualizerAnimation: null,
+
+            init() {
+                if (!this.audioCtx) {
+                    try {
+                        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                        this.audioCtx = new AudioContextClass();
+                        this.analyser = this.audioCtx.createAnalyser();
+                        this.analyser.fftSize = 64;
+                        this.analyser.smoothingTimeConstant = 0.8;
+
+                        this.masterGain = this.audioCtx.createGain();
+                        const vol = localStorage.getItem('masterVolume') !== null ? parseFloat(localStorage.getItem('masterVolume')) : 50;
+                        this.masterGain.gain.setValueAtTime((vol / 100) * 0.35, this.audioCtx.currentTime);
+
+                        const compressor = this.audioCtx.createDynamicsCompressor();
+                        compressor.threshold.setValueAtTime(-12, this.audioCtx.currentTime);
+                        compressor.knee.setValueAtTime(30, this.audioCtx.currentTime);
+                        compressor.ratio.setValueAtTime(8, this.audioCtx.currentTime);
+                        compressor.attack.setValueAtTime(0.003, this.audioCtx.currentTime);
+                        compressor.release.setValueAtTime(0.25, this.audioCtx.currentTime);
+
+                        this.masterGain.connect(compressor);
+                        compressor.connect(this.analyser);
+                        this.analyser.connect(this.audioCtx.destination);
+                    } catch (e) {
+                        console.warn('[BGM Engine] Web Audio init error:', e);
+                    }
+                }
+                if (this.audioCtx && this.audioCtx.state === 'suspended') {
+                    this.audioCtx.resume();
+                }
+            },
+
+            getCurrentTrack() {
+                return BGM_TRACKS[this.currentTrackIndex] || BGM_TRACKS[0];
+            },
+
+            play() {
+                this.init();
+                if (!this.audioCtx) return;
+                this.isPlaying = true;
+                this.stepIndex = 0;
+                localStorage.setItem('bgmEnabled', 'true');
+                this.scheduleNextStep();
+                this.updateUI();
+                this.startVisualizer();
+            },
+
+            pause() {
+                this.isPlaying = false;
+                localStorage.setItem('bgmEnabled', 'false');
+                if (this.stepTimer) {
+                    clearTimeout(this.stepTimer);
+                    this.stepTimer = null;
+                }
+                this.updateUI();
+                if (this.visualizerAnimation) {
+                    cancelAnimationFrame(this.visualizerAnimation);
+                    this.visualizerAnimation = null;
+                }
+                const canvas = document.getElementById('visualizerCanvas');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+                const ph = document.getElementById('visualizerPlaceholder');
+                if (ph) ph.style.display = 'flex';
+            },
+
+            setVolume(volPercent) {
+                if (this.masterGain && this.audioCtx) {
+                    const gainVal = (volPercent / 100) * 0.35;
+                    this.masterGain.gain.setTargetAtTime(gainVal, this.audioCtx.currentTime, 0.05);
+                }
+            },
+
+            setTrack(index) {
+                if (index < 0) index = BGM_TRACKS.length - 1;
+                if (index >= BGM_TRACKS.length) index = 0;
+                this.currentTrackIndex = index;
+                localStorage.setItem('bgmSelectedTrack', index);
+                this.stepIndex = 0;
+                this.updateUI();
+                if (this.isPlaying) {
+                    if (this.stepTimer) clearTimeout(this.stepTimer);
+                    this.scheduleNextStep();
+                }
+            },
+
+            nextTrack() {
+                if (this.isShuffle) {
+                    let nextIdx = Math.floor(Math.random() * BGM_TRACKS.length);
+                    if (nextIdx === this.currentTrackIndex && BGM_TRACKS.length > 1) {
+                        nextIdx = (nextIdx + 1) % BGM_TRACKS.length;
+                    }
+                    this.setTrack(nextIdx);
+                } else {
+                    this.setTrack((this.currentTrackIndex + 1) % BGM_TRACKS.length);
+                }
+            },
+
+            prevTrack() {
+                this.setTrack((this.currentTrackIndex - 1 + BGM_TRACKS.length) % BGM_TRACKS.length);
+            },
+
+            playTone(freq, duration, type = 'sine', gainVal = 0.12, filterFreq = 2000) {
+                if (!this.audioCtx || !this.isPlaying) return;
+                try {
+                    const now = this.audioCtx.currentTime;
+                    const osc = this.audioCtx.createOscillator();
+                    const filter = this.audioCtx.createBiquadFilter();
+                    const gain = this.audioCtx.createGain();
+
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, now);
+
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(filterFreq, now);
+
+                    gain.gain.setValueAtTime(0.001, now);
+                    gain.gain.linearRampToValueAtTime(gainVal, now + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.masterGain);
+
+                    osc.start(now);
+                    osc.stop(now + duration + 0.05);
+                } catch (e) { }
+            },
+
+            playPadChord(freqs, duration, type = 'triangle', filterCutoff = 800) {
+                freqs.forEach(f => this.playTone(f, duration, type, 0.06, filterCutoff));
+            },
+
+            playBass(freq, duration, type = 'sine') {
+                this.playTone(freq, duration, type, 0.16, 400);
+            },
+
+            playPercussion(type) {
+                if (!this.audioCtx || !this.isPlaying) return;
+                const now = this.audioCtx.currentTime;
+                try {
+                    if (type === 'kick') {
+                        const osc = this.audioCtx.createOscillator();
+                        const gain = this.audioCtx.createGain();
+                        osc.frequency.setValueAtTime(130, now);
+                        osc.frequency.exponentialRampToValueAtTime(35, now + 0.12);
+                        gain.gain.setValueAtTime(0.2, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+                        osc.connect(gain);
+                        gain.connect(this.masterGain);
+                        osc.start(now);
+                        osc.stop(now + 0.15);
+                    } else if (type === 'snare') {
+                        const bufferSize = Math.floor(this.audioCtx.sampleRate * 0.1);
+                        const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+                        const data = buffer.getChannelData(0);
+                        for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.12;
+                        const noise = this.audioCtx.createBufferSource();
+                        noise.buffer = buffer;
+                        const filter = this.audioCtx.createBiquadFilter();
+                        filter.type = 'highpass';
+                        filter.frequency.setValueAtTime(1200, now);
+                        const gain = this.audioCtx.createGain();
+                        gain.gain.setValueAtTime(0.1, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+                        noise.connect(filter);
+                        filter.connect(gain);
+                        gain.connect(this.masterGain);
+                        noise.start(now);
+                    } else if (type === 'hihat') {
+                        const osc = this.audioCtx.createOscillator();
+                        const gain = this.audioCtx.createGain();
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(8500, now);
+                        gain.gain.setValueAtTime(0.025, now);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+                        osc.connect(gain);
+                        gain.connect(this.masterGain);
+                        osc.start(now);
+                        osc.stop(now + 0.035);
+                    }
+                } catch (e) { }
+            },
+
+            scheduleNextStep() {
+                if (!this.isPlaying) return;
+                const track = this.getCurrentTrack();
+                const beatDuration = (60 / track.bpm) * 1000;
+                const sixteenth = beatDuration / 4;
+
+                const step = this.stepIndex % 32;
+                const bar = Math.floor(step / 8);
+                const barStep = step % 8;
+
+                // Track 1: Cyber Kawaii Lofi
+                if (track.theme === 'lofi') {
+                    const chords = [
+                        [174.61, 220.00, 261.63, 329.63], // Fmaj7
+                        [164.81, 196.00, 246.94, 293.66], // Em7
+                        [146.83, 174.61, 220.00, 261.63], // Dm7
+                        [130.81, 164.81, 196.00, 246.94]  // Cmaj7
+                    ];
+                    const bassNotes = [87.31, 82.41, 73.42, 65.41];
+                    const melodyScale = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50];
+
+                    if (barStep === 0) {
+                        this.playPadChord(chords[bar], beatDuration * 1.8 / 1000, 'triangle', 750);
+                        this.playBass(bassNotes[bar], beatDuration * 1.2 / 1000, 'sine');
+                        this.playPercussion('kick');
+                    } else if (barStep === 4) {
+                        this.playPercussion('snare');
+                    } else if (barStep === 2 || barStep === 6) {
+                        this.playPercussion('hihat');
+                    }
+
+                    if (barStep === 1 || barStep === 3 || barStep === 5 || barStep === 7) {
+                        if (Math.random() > 0.35) {
+                            const note = melodyScale[Math.floor(Math.random() * melodyScale.length)];
+                            this.playTone(note, 0.35, 'sine', 0.07, 1800);
+                        }
+                    }
+                }
+                // Track 2: Neo-Tokyo Synthwave
+                else if (track.theme === 'synthwave') {
+                    const bassScale = [110.00, 87.31, 130.81, 98.00];
+                    const arpNotes = [
+                        [220.00, 261.63, 329.63, 440.00, 523.25, 659.25],
+                        [174.61, 220.00, 261.63, 349.23, 440.00, 523.25],
+                        [130.81, 164.81, 196.00, 261.63, 329.63, 392.00],
+                        [196.00, 246.94, 293.66, 392.00, 493.88, 587.33]
+                    ];
+                    const arp = arpNotes[bar];
+                    const arpNote = arp[barStep % arp.length];
+                    this.playTone(arpNote, 0.12, 'sawtooth', 0.045, 1200 + (barStep * 150));
+
+                    if (barStep % 2 === 0) {
+                        this.playBass(bassScale[bar], 0.18, 'sawtooth');
+                    }
+                    if (barStep === 0 || barStep === 4) {
+                        this.playPercussion('kick');
+                    }
+                    if (barStep === 4) {
+                        this.playPercussion('snare');
+                    }
+                    if (barStep % 2 === 1) {
+                        this.playPercussion('hihat');
+                    }
+                }
+                // Track 3: Starlight Space Ambient
+                else if (track.theme === 'ambient') {
+                    const ambientPads = [
+                        [146.83, 220.00, 329.63, 440.00],
+                        [123.47, 185.00, 220.00, 293.66],
+                        [98.00, 146.83, 185.00, 246.94],
+                        [110.00, 164.81, 220.00, 293.66]
+                    ];
+                    const starChimes = [659.25, 739.99, 880.00, 987.77, 1174.66, 1318.51];
+
+                    if (barStep === 0) {
+                        this.playPadChord(ambientPads[bar], beatDuration * 3.5 / 1000, 'sine', 600);
+                        this.playBass(ambientPads[bar][0] / 2, beatDuration * 3.0 / 1000, 'sine');
+                    }
+                    if (Math.random() > 0.5) {
+                        const chime = starChimes[Math.floor(Math.random() * starChimes.length)];
+                        this.playTone(chime, 1.2, 'sine', 0.04, 2800);
+                    }
+                }
+                // Track 4: Midnight Cafe Jazz
+                else if (track.theme === 'jazz') {
+                    const jazzChords = [
+                        [146.83, 220.00, 261.63, 329.63, 392.00],
+                        [98.00, 174.61, 246.94, 329.63],
+                        [130.81, 196.00, 246.94, 293.66, 329.63],
+                        [110.00, 174.61, 207.65, 261.63]
+                    ];
+                    const walkBass = [
+                        [73.42, 82.41, 87.31, 92.50],
+                        [49.00, 55.00, 61.74, 65.41],
+                        [65.41, 73.42, 82.41, 87.31],
+                        [55.00, 61.74, 69.30, 73.42]
+                    ];
+
+                    if (barStep === 0) {
+                        this.playPadChord(jazzChords[bar], beatDuration * 1.5 / 1000, 'triangle', 850);
+                    }
+                    if (barStep % 2 === 0) {
+                        const noteIdx = Math.floor(barStep / 2);
+                        this.playBass(walkBass[bar][noteIdx], beatDuration * 0.45 / 1000, 'triangle');
+                    }
+                    if (barStep % 2 === 1) {
+                        this.playPercussion('hihat');
+                    }
+                    if (barStep === 4) {
+                        this.playPercussion('snare');
+                    }
+                }
+                // Track 5: Akihabara 8-Bit Arcade
+                else if (track.theme === 'chiptune') {
+                    const chipRoots = [261.63, 196.00, 220.00, 174.61];
+                    const chipMelody = [523.25, 659.25, 783.99, 1046.50, 783.99, 659.25];
+                    const note = chipMelody[(barStep * 2) % chipMelody.length];
+
+                    this.playTone(note, 0.08, 'square', 0.05, 3200);
+
+                    if (barStep % 2 === 0) {
+                        this.playBass(chipRoots[bar] / 2, 0.12, 'triangle');
+                    }
+                    if (barStep === 0 || barStep === 4) {
+                        this.playPercussion('kick');
+                    }
+                    if (barStep === 4) {
+                        this.playPercussion('snare');
+                    }
+                }
+                // Track 6: Sunset Drive City Pop
+                else if (track.theme === 'citypop') {
+                    const oudouChords = [
+                        [174.61, 220.00, 261.63, 329.63],
+                        [196.00, 246.94, 293.66, 349.23],
+                        [164.81, 196.00, 246.94, 293.66],
+                        [220.00, 261.63, 329.63, 392.00]
+                    ];
+                    const bassFunk = [87.31, 98.00, 82.41, 110.00];
+
+                    if (barStep === 0 || barStep === 3 || barStep === 6) {
+                        this.playPadChord(oudouChords[bar], 0.22, 'sawtooth', 1300);
+                    }
+                    if (barStep % 2 === 0) {
+                        this.playBass(bassFunk[bar], 0.14, 'sawtooth');
+                    }
+                    if (barStep === 0 || barStep === 4) {
+                        this.playPercussion('kick');
+                    }
+                    if (barStep === 4) {
+                        this.playPercussion('snare');
+                    }
+                    if (barStep % 2 === 1) {
+                        this.playPercussion('hihat');
+                    }
+                }
+
+                this.stepIndex++;
+                this.stepTimer = setTimeout(() => this.scheduleNextStep(), sixteenth);
+            },
+
+            updateUI() {
+                const track = this.getCurrentTrack();
+
+                // 1. Header Mini Player
+                const headerIcon = document.getElementById('headerBgmIcon');
+                const headerTrack = document.getElementById('headerBgmTrackName');
+                const headerEq = document.getElementById('headerBgmEq');
+                if (headerIcon) {
+                    headerIcon.className = this.isPlaying ? 'fa-solid fa-pause text-xs' : 'fa-solid fa-play text-xs';
+                }
+                if (headerTrack) {
+                    headerTrack.innerText = track.name;
+                }
+                if (headerEq) {
+                    if (this.isPlaying) {
+                        headerEq.classList.remove('hidden');
+                        headerEq.classList.add('inline-flex');
+                    } else {
+                        headerEq.classList.add('hidden');
+                        headerEq.classList.remove('inline-flex');
+                    }
+                }
+
+                // 2. Settings Deck
+                const bgmToggle = document.getElementById('bgmToggle');
+                if (bgmToggle) bgmToggle.checked = this.isPlaying;
+
+                const mainPlayIcon = document.getElementById('mainPlayIcon');
+                if (mainPlayIcon) {
+                    mainPlayIcon.className = this.isPlaying ? 'fa-solid fa-pause text-sm' : 'fa-solid fa-play text-sm';
+                }
+
+                const nowPlayingPulse = document.getElementById('nowPlayingPulse');
+                if (nowPlayingPulse) {
+                    nowPlayingPulse.className = this.isPlaying ? 'animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75' : 'hidden';
+                }
+
+                const activeTitle = document.getElementById('activeBgmTitle');
+                if (activeTitle) activeTitle.innerText = track.name;
+
+                const activeGenre = document.getElementById('activeBgmGenre');
+                if (activeGenre) activeGenre.innerText = track.genre;
+
+                const activeBpm = document.getElementById('activeBgmBpm');
+                if (activeBpm) activeBpm.innerText = `${track.bpm} BPM`;
+
+                const bgmBadge = document.getElementById('bgmStatusBadge');
+                if (bgmBadge) {
+                    bgmBadge.innerHTML = this.isPlaying
+                        ? `<i class="fa-solid fa-compact-disc fa-spin text-pink-400 mr-1"></i> BGM Playing`
+                        : `<i class="fa-solid fa-music mr-1"></i> BGM Paused`;
+                }
+
+                // Render track cards with active glow state
+                renderBgmTrackList();
+            },
+
+            startVisualizer() {
+                const canvas = document.getElementById('visualizerCanvas');
+                if (!canvas || !this.analyser) return;
+                const ph = document.getElementById('visualizerPlaceholder');
+                if (ph) ph.style.display = 'none';
+
+                const ctx = canvas.getContext('2d');
+                const bufferLength = this.analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+
+                const draw = () => {
+                    if (!this.isPlaying) return;
+                    this.visualizerAnimation = requestAnimationFrame(draw);
+                    this.analyser.getByteFrequencyData(dataArray);
+
+                    ctx.fillStyle = 'rgba(11, 12, 16, 0.35)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    const barWidth = (canvas.width / bufferLength) * 1.5;
+                    let x = 0;
+                    const halfW = canvas.width / 2;
+
+                    for (let i = 0; i < bufferLength; i++) {
+                        const val = dataArray[i];
+                        const barH = (val / 255) * (canvas.height - 10);
+
+                        const grad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barH);
+                        grad.addColorStop(0, '#ffb6c1');
+                        grad.addColorStop(0.5, '#f472b6');
+                        grad.addColorStop(1, '#00ffff');
+
+                        ctx.fillStyle = grad;
+                        ctx.shadowColor = '#00ffff';
+                        ctx.shadowBlur = 6;
+
+                        ctx.fillRect(halfW + x, canvas.height - barH, barWidth - 3, barH);
+                        ctx.fillRect(halfW - x - barWidth, canvas.height - barH, barWidth - 3, barH);
+
+                        x += barWidth;
+                    }
+                    ctx.shadowBlur = 0;
+                };
+
+                if (this.visualizerAnimation) cancelAnimationFrame(this.visualizerAnimation);
+                draw();
             }
+        };
+
+        function renderBgmTrackList() {
+            const container = document.getElementById('bgmTrackGrid');
+            if (!container) return;
+
+            const curIdx = NauraBgmEngine.currentTrackIndex;
+            const isPlaying = NauraBgmEngine.isPlaying;
+
+            container.innerHTML = BGM_TRACKS.map((track, idx) => {
+                const isActive = curIdx === idx;
+                const activeBorder = isActive ? 'border-pink-400 shadow-[0_0_15px_rgba(236,72,153,0.3)] bg-pink-500/10' : 'border-white/5 bg-black/30 hover:border-white/20';
+                const activeText = isActive ? 'text-pink-400' : 'text-white';
+                const playingIndicator = isActive && isPlaying
+                    ? `<span class="inline-flex items-center gap-1 text-[10px] text-pink-400 font-cyber font-bold animate-pulse"><i class="fa-solid fa-volume-high"></i> PLAYING</span>`
+                    : `<span class="text-[10px] text-gray-400 font-cyber">${track.bpm} BPM</span>`;
+
+                return `
+                    <div onclick="setBgmTrack(${idx})" class="cursor-pointer glass-panel p-3.5 rounded-2xl border transition duration-200 group flex flex-col justify-between ${activeBorder}">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs" style="background: ${track.color}20; color: ${track.color}; border: 1px solid ${track.color}40;">
+                                        <i class="fa-solid ${track.icon}"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-xs font-bold font-cyber ${activeText} group-hover:text-pink-300 transition">${track.name}</h5>
+                                        <span class="text-[9px] text-gray-400">${track.genre}</span>
+                                    </div>
+                                </div>
+                                <div>${playingIndicator}</div>
+                            </div>
+                            <p class="text-[10px] text-gray-400 line-clamp-2 leading-relaxed mb-2">${track.desc}</p>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-white/5">
+                            <span class="text-[9px] px-2 py-0.5 rounded-md bg-white/5 text-gray-300 font-cyber">Track #${idx + 1}</span>
+                            <span class="text-[10px] font-cyber ${isActive ? 'text-pink-400 font-bold' : 'text-gray-400 group-hover:text-white'}">
+                                ${isActive && isPlaying ? '<i class="fa-solid fa-pause mr-1"></i> Sedang Diputar' : '<i class="fa-solid fa-play mr-1"></i> Pilih & Putar'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setBgmTrack(index) {
+            playClickSfx();
+            if (NauraBgmEngine.currentTrackIndex === index && NauraBgmEngine.isPlaying) {
+                NauraBgmEngine.pause();
+            } else {
+                NauraBgmEngine.setTrack(index);
+                NauraBgmEngine.play();
+            }
+        }
+
+        function toggleBgm() {
+            playClickSfx();
+            if (NauraBgmEngine.isPlaying) {
+                NauraBgmEngine.pause();
+            } else {
+                NauraBgmEngine.play();
+            }
+        }
+
+        function nextBgmTrack() {
+            playClickSfx();
+            NauraBgmEngine.nextTrack();
+            if (!NauraBgmEngine.isPlaying) {
+                NauraBgmEngine.play();
+            }
+        }
+
+        function prevBgmTrack() {
+            playClickSfx();
+            NauraBgmEngine.prevTrack();
+            if (!NauraBgmEngine.isPlaying) {
+                NauraBgmEngine.play();
+            }
+        }
+
+        function toggleShuffle() {
+            playClickSfx();
+            NauraBgmEngine.isShuffle = !NauraBgmEngine.isShuffle;
+            const shuffleBtn = document.getElementById('shuffleBtn');
+            if (shuffleBtn) {
+                if (NauraBgmEngine.isShuffle) {
+                    shuffleBtn.classList.add('text-pink-400', 'border-pink-500/40', 'bg-pink-500/20');
+                    shuffleBtn.classList.remove('text-gray-400');
+                } else {
+                    shuffleBtn.classList.remove('text-pink-400', 'border-pink-500/40', 'bg-pink-500/20');
+                    shuffleBtn.classList.add('text-gray-400');
+                }
+            }
+        }
+
+        function toggleSfx() {
+            const toggle = document.getElementById('sfxToggle');
+            const checked = toggle ? toggle.checked : true;
+            localStorage.setItem('sfxEnabled', checked);
+            playClickSfx();
+        }
+
+        function adjustBgmVolume() {
+            const slider = document.getElementById('volSlider');
+            if (!slider) return;
+            const vol = slider.value;
+            localStorage.setItem('masterVolume', vol);
+
+            const volText = document.getElementById('volValueText');
+            if (volText) volText.innerText = `${vol}%`;
+
+            const volIcon = document.getElementById('volIcon');
+            if (volIcon) {
+                if (vol == 0) {
+                    volIcon.className = 'fa-solid fa-volume-xmark text-gray-500';
+                } else if (vol < 50) {
+                    volIcon.className = 'fa-solid fa-volume-low text-yellow-400';
+                } else {
+                    volIcon.className = 'fa-solid fa-volume-high text-yellow-400';
+                }
+            }
+
+            NauraBgmEngine.setVolume(parseFloat(vol));
+        }
+
+        function playClickSfx() {
+            const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
+            if (sfxEnabled && sfxPlayer) {
+                sfxPlayer.currentTime = 0;
+                sfxPlayer.play().catch(() => { });
+            }
+        }
+
+        function initAudio() {
             if (!sfxPlayer) {
                 sfxPlayer = new Audio('/assets/dashboard/click.mp3');
             }
 
-            const bgmEnabled = localStorage.getItem('bgmEnabled') !== 'false';
+            const savedTrack = localStorage.getItem('bgmSelectedTrack');
+            if (savedTrack !== null) {
+                NauraBgmEngine.currentTrackIndex = parseInt(savedTrack, 10) || 0;
+            }
+
+            const bgmEnabled = localStorage.getItem('bgmEnabled') === 'true';
             const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
             const masterVol = localStorage.getItem('masterVolume') !== null ? parseFloat(localStorage.getItem('masterVolume')) : 50;
 
             const bgmToggleEl = document.getElementById('bgmToggle');
             const sfxToggleEl = document.getElementById('sfxToggle');
             const volSliderEl = document.getElementById('volSlider');
+            const volTextEl = document.getElementById('volValueText');
 
             if (bgmToggleEl) bgmToggleEl.checked = bgmEnabled;
             if (sfxToggleEl) sfxToggleEl.checked = sfxEnabled;
             if (volSliderEl) volSliderEl.value = masterVol;
+            if (volTextEl) volTextEl.innerText = `${masterVol}%`;
 
-            bgmPlayer.volume = masterVol / 100;
+            renderBgmTrackList();
+            NauraBgmEngine.updateUI();
 
             if (bgmEnabled) {
                 const startBgm = () => {
-                    bgmPlayer.play().catch(() => { });
-                    startVisualizer();
+                    NauraBgmEngine.play();
                     if (typeof playSynthSfx !== 'undefined') playSynthSfx.playStartup();
                 };
-                startBgm();
                 document.body.addEventListener('click', startBgm, { once: true });
                 document.body.addEventListener('touchstart', startBgm, { once: true });
-            } else {
-                const startGesture = () => {
-                    if (typeof playSynthSfx !== 'undefined') playSynthSfx.playStartup();
-                };
-                document.body.addEventListener('click', startGesture, { once: true });
-                document.body.addEventListener('touchstart', startGesture, { once: true });
             }
 
-            // Bind click and hover effects
+            // Bind click and hover effects safely
             const registerAudioListeners = () => {
                 document.querySelectorAll('button, a, [onclick], .cursor-pointer').forEach(el => {
                     if (!el.dataset.hasAudioListener) {
-                        el.addEventListener('click', playClickSfx);
+                        el.addEventListener('click', (e) => {
+                            if (e.target && typeof e.target.closest === 'function') {
+                                playClickSfx();
+                            }
+                        });
                         el.addEventListener('mouseenter', () => {
                             if (typeof playSynthSfx !== 'undefined') playSynthSfx.playHover();
                         });
@@ -2032,204 +3022,10 @@
             observer.observe(document.body, { childList: true, subtree: true });
         }
 
-        let audioCtx = null;
-        let analyser = null;
-        let source = null;
-        let visualizerAnimation = null;
-
-        function startVisualizer() {
-            if (!bgmPlayer) return;
-            if (!audioCtx) {
-                try {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    analyser = audioCtx.createAnalyser();
-                    analyser.fftSize = 64;
-                    source = audioCtx.createMediaElementSource(bgmPlayer);
-                    source.connect(analyser);
-                    analyser.connect(audioCtx.destination);
-                } catch (e) {
-                    console.error("Web Audio API error:", e);
-                    return;
-                }
-            }
-
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-
-            const canvas = document.getElementById('visualizerCanvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const bufferLength = analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-
-            function draw() {
-                visualizerAnimation = requestAnimationFrame(draw);
-                analyser.getByteFrequencyData(dataArray);
-
-                ctx.fillStyle = 'rgba(11, 12, 16, 0.35)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                const barWidth = (canvas.width / bufferLength) * 1.5;
-                let barHeight;
-                let x = 0;
-
-                for (let i = 0; i < bufferLength; i++) {
-                    barHeight = dataArray[i] / 2;
-
-                    const grad = ctx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
-                    grad.addColorStop(0, '#ffb6c1');
-                    grad.addColorStop(1, '#00ffff');
-
-                    ctx.fillStyle = grad;
-                    ctx.shadowColor = '#00ffff';
-                    ctx.shadowBlur = 4;
-
-                    const halfW = canvas.width / 2;
-                    const barH = barHeight * 0.8;
-                    ctx.fillRect(halfW + x, canvas.height - barH, barWidth - 2, barH);
-                    ctx.fillRect(halfW - x - barWidth, canvas.height - barH, barWidth - 2, barH);
-
-                    x += barWidth;
-                }
-                ctx.shadowBlur = 0;
-            }
-
-            if (visualizerAnimation) cancelAnimationFrame(visualizerAnimation);
-            draw();
-        }
-
-        function playClickSfx() {
-            const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
-            if (sfxEnabled && sfxPlayer) {
-                sfxPlayer.currentTime = 0;
-                sfxPlayer.play().catch(() => { });
-            }
-        }
-
-        function toggleBgm() {
-            const checked = document.getElementById('bgmToggle').checked;
-            localStorage.setItem('bgmEnabled', checked);
-            if (checked && bgmPlayer) {
-                bgmPlayer.play().catch(() => { });
-                startVisualizer();
-            } else if (bgmPlayer) {
-                bgmPlayer.pause();
-                if (visualizerAnimation) cancelAnimationFrame(visualizerAnimation);
-            }
-            playClickSfx();
-        }
-
-        function toggleSfx() {
-            const checked = document.getElementById('sfxToggle').checked;
-            localStorage.setItem('sfxEnabled', checked);
-            playClickSfx();
-        }
-
-        function adjustBgmVolume() {
-            const vol = document.getElementById('volSlider').value;
-            localStorage.setItem('masterVolume', vol);
-            if (bgmPlayer) {
-                bgmPlayer.volume = vol / 100;
-            }
-        }
-
         function setBg(url) {
             localStorage.setItem('bgTheme', url);
             applyBg(url);
         }
-
-        // Web Audio API Synthesizer for SFX
-        const playSynthSfx = {
-            ctx: null,
-            init() {
-                if (!this.ctx) {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (this.ctx.state === 'suspended') {
-                    this.ctx.resume();
-                }
-            },
-            playHover() {
-                const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
-                if (!sfxEnabled) return;
-                try {
-                    this.init();
-                    const now = this.ctx.currentTime;
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(1200, now);
-                    osc.frequency.exponentialRampToValueAtTime(150, now + 0.04);
-
-                    gain.gain.setValueAtTime(0.015, now);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.04);
-
-                    osc.start(now);
-                    osc.stop(now + 0.04);
-                } catch (e) { }
-            },
-            playTab() {
-                const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
-                if (!sfxEnabled) return;
-                try {
-                    this.init();
-                    const now = this.ctx.currentTime;
-                    const osc = this.ctx.createOscillator();
-                    const filter = this.ctx.createBiquadFilter();
-                    const gain = this.ctx.createGain();
-
-                    osc.connect(filter);
-                    filter.connect(gain);
-                    gain.connect(this.ctx.destination);
-
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(250, now);
-                    osc.frequency.exponentialRampToValueAtTime(650, now + 0.12);
-
-                    filter.type = 'lowpass';
-                    filter.Q.setValueAtTime(4, now);
-                    filter.frequency.setValueAtTime(600, now);
-                    filter.frequency.exponentialRampToValueAtTime(1800, now + 0.12);
-
-                    gain.gain.setValueAtTime(0.035, now);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
-
-                    osc.start(now);
-                    osc.stop(now + 0.15);
-                } catch (e) { }
-            },
-            playStartup() {
-                const sfxEnabled = localStorage.getItem('sfxEnabled') !== 'false';
-                if (!sfxEnabled) return;
-                try {
-                    this.init();
-                    const now = this.ctx.currentTime;
-                    const chords = [261.63, 329.63, 392.00, 523.25, 659.25]; // C4, E4, G4, C5, E5
-                    chords.forEach((freq, idx) => {
-                        const osc = this.ctx.createOscillator();
-                        const gain = this.ctx.createGain();
-
-                        osc.connect(gain);
-                        gain.connect(this.ctx.destination);
-
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(freq, now + idx * 0.04);
-
-                        gain.gain.setValueAtTime(0, now);
-                        gain.gain.linearRampToValueAtTime(0.015, now + idx * 0.04 + 0.02);
-                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
-
-                        osc.start(now + idx * 0.04);
-                        osc.stop(now + 0.7);
-                    });
-                } catch (e) { }
-            }
-        };
 
         function applyBg(url) {
             if (!url) url = localStorage.getItem('bgTheme') || 'none';
@@ -2313,15 +3109,162 @@
             }
         }
 
+        // Update System & Engine Version Displays
+        function updateSystemVersions(data) {
+            if (!data) return;
+            const botVer = data.botVersion ? (String(data.botVersion).startsWith('v') ? data.botVersion : `v${data.botVersion}`) : 'v2.1.0';
+            const engineVer = data.engineVersion ? (String(data.engineVersion).startsWith('v') ? data.engineVersion : `v${data.engineVersion}`) : 'v2.1.0';
+
+            const quickVerEl = document.getElementById('displayQuickEngineVersion');
+            if (quickVerEl) quickVerEl.innerText = `${engineVer} (Hoshino Core)`;
+
+            const specBotEl = document.getElementById('displaySpecBotVersion');
+            if (specBotEl) specBotEl.innerText = botVer;
+
+            const specEngEl = document.getElementById('displaySpecEngineVersion');
+            if (specEngEl) specEngEl.innerText = engineVer;
+        }
+
+        // Telemetry Counter Animation & Card Glow Transitions
+        const telemetryAnimState = {};
+
+        function animateTelemetryCounter(elId, targetVal, options = {}) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+
+            const duration = options.duration || 650;
+            const cardId = options.cardId;
+            const pulseClass = options.pulseClass || 'metric-pulse';
+            const cardPulseClass = options.cardPulseClass || 'card-glow-pulse';
+            const isFloat = options.isFloat || false;
+
+            const cleanTarget = isFloat ? parseFloat(targetVal) : parseInt(targetVal, 10);
+            if (isNaN(cleanTarget)) {
+                el.innerText = targetVal || '0';
+                return;
+            }
+
+            // Extract numeric start value from element
+            const currentRaw = el.innerText.replace(/[^0-9.-]/g, '');
+            let startVal = parseFloat(currentRaw);
+            if (isNaN(startVal)) startVal = 0;
+
+            // Trigger card pulse & number pulse
+            el.classList.remove(pulseClass);
+            void el.offsetWidth; // Reflow
+            el.classList.add(pulseClass);
+
+            if (cardId) {
+                const card = document.getElementById(cardId);
+                if (card) {
+                    card.classList.remove(cardPulseClass);
+                    void card.offsetWidth; // Reflow
+                    card.classList.add(cardPulseClass);
+                    setTimeout(() => card.classList.remove(cardPulseClass), 800);
+                }
+            }
+
+            // Cancel any active animation frame
+            if (telemetryAnimState[elId]) {
+                cancelAnimationFrame(telemetryAnimState[elId]);
+            }
+
+            if (startVal === cleanTarget) {
+                el.innerText = options.formatFn ? options.formatFn(cleanTarget) : cleanTarget.toLocaleString('id-ID');
+                setTimeout(() => el.classList.remove(pulseClass), 700);
+                return;
+            }
+
+            const startTime = performance.now();
+
+            function updateCount(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                // Ease Out Cubic
+                const ease = 1 - Math.pow(1 - progress, 3);
+                const currentVal = startVal + (cleanTarget - startVal) * ease;
+
+                const displayNum = isFloat ? currentVal.toFixed(1) : Math.round(currentVal);
+                el.innerText = options.formatFn ? options.formatFn(displayNum) : displayNum.toLocaleString('id-ID');
+
+                if (progress < 1) {
+                    telemetryAnimState[elId] = requestAnimationFrame(updateCount);
+                } else {
+                    el.innerText = options.formatFn ? options.formatFn(cleanTarget) : cleanTarget.toLocaleString('id-ID');
+                    delete telemetryAnimState[elId];
+                    setTimeout(() => el.classList.remove(pulseClass), 700);
+                }
+            }
+
+            telemetryAnimState[elId] = requestAnimationFrame(updateCount);
+        }
+
+        function updateTelemetryUptime(newUptime) {
+            const uptimeEl = document.getElementById('statUptime');
+            if (!uptimeEl || !newUptime) return;
+
+            if (uptimeEl.innerText !== String(newUptime)) {
+                uptimeEl.innerText = newUptime;
+                uptimeEl.classList.remove('metric-pulse-green');
+                void uptimeEl.offsetWidth;
+                uptimeEl.classList.add('metric-pulse-green');
+
+                const card = document.getElementById('cardTelemetryUptime');
+                if (card) {
+                    card.classList.remove('card-glow-pulse');
+                    void card.offsetWidth;
+                    card.classList.add('card-glow-pulse');
+                    setTimeout(() => card.classList.remove('card-glow-pulse'), 800);
+                }
+                setTimeout(() => uptimeEl.classList.remove('metric-pulse-green'), 700);
+            }
+        }
+
+        function updateTelemetryMetrics(data) {
+            if (!data) return;
+
+            // 1. Latency (Ping)
+            if (data.ping !== undefined) {
+                animateTelemetryCounter('statPing', data.ping, {
+                    cardId: 'cardTelemetryPing',
+                    duration: 500,
+                    formatFn: (v) => String(v)
+                });
+            }
+
+            // 2. Uptime
+            if (data.uptime) {
+                updateTelemetryUptime(data.uptime);
+            }
+
+            // 3. Users
+            if (data.users !== undefined) {
+                animateTelemetryCounter('statUsers', data.users, {
+                    cardId: 'cardTelemetryUsers',
+                    duration: 700,
+                    formatFn: (v) => parseInt(v, 10).toLocaleString('id-ID')
+                });
+            }
+
+            // 4. Guilds / Servers
+            const guildCount = data.guilds !== undefined ? data.guilds : data.servers;
+            if (guildCount !== undefined) {
+                animateTelemetryCounter('statServers', guildCount, {
+                    cardId: 'cardTelemetryGuilds',
+                    duration: 700,
+                    formatFn: (v) => parseInt(v, 10).toLocaleString('id-ID')
+                });
+            }
+
+            updateSystemVersions(data);
+        }
+
         // Fetch API Stats
         async function fetchStats() {
             try {
                 const res = await fetch('/api/stats');
                 const data = await res.json();
-                document.getElementById('statPing').innerText = data.ping;
-                document.getElementById('statUptime').innerText = data.uptime;
-                document.getElementById('statUsers').innerText = data.users.toLocaleString('id-ID');
-                document.getElementById('statServers').innerText = data.servers.toLocaleString('id-ID');
+                updateTelemetryMetrics(data);
             } catch (e) { }
         }
 
@@ -2392,21 +3335,90 @@
                         renderMusicFriendCharts(data.db);
                     }
 
-                    // Sidebar auth logout update
-                    document.getElementById('sidebarAuthArea').innerHTML = `
-                        <a href="/auth/logout" class="btn-discord w-full text-center text-sm py-2.5 bg-red-950/40 border border-red-500/20 text-red-400 hover:bg-red-600 hover:text-white transition duration-300">
-                            <i class="fa-solid fa-right-from-bracket mr-2"></i> Logout
-                        </a>
-                    `;
+                    // Header auth logout update
+                    const headerAuthEl = document.getElementById('headerAuthArea');
+                    if (headerAuthEl) {
+                        headerAuthEl.innerHTML = `
+                            <a href="/auth/logout" id="headerAuthBtn" title="Logout (${currentUser.username})"
+                                class="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-red-950/40 hover:bg-red-600 text-red-300 hover:text-white border border-red-500/30 text-xs font-cyber transition shadow-sm hover:scale-105 active:scale-95 cursor-pointer">
+                                <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                                <span class="font-semibold hidden xs:inline">Logout</span>
+                            </a>
+                        `;
+                    }
+
+                    // Settings auth status update
+                    const settingsAuthEl = document.getElementById('settingsAuthArea');
+                    if (settingsAuthEl) {
+                        const avatarUrl = `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png`;
+                        settingsAuthEl.innerHTML = `
+                            <div class="glass-panel p-6 bg-black/30 rounded-2xl border border-pink-500/20 flex flex-col md:flex-row items-center justify-between gap-4">
+                                <div class="flex items-center gap-4">
+                                    <img src="${avatarUrl}" class="w-14 h-14 rounded-full border-2 border-pink-400 shadow-[0_0_12px_rgba(255,182,193,0.4)] object-cover" onerror="this.src='/assets/dashboard/naura.png'">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <h4 class="font-bold text-white text-base font-cyber">${currentUser.username}</h4>
+                                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30 font-cyber font-bold">CONNECTED</span>
+                                        </div>
+                                        <p class="text-xs text-gray-400 font-assist">ID: ${currentUser.id} • Sesi Discord aktif dan tersinkronisasi</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <button onclick="switchSection('profile')" class="btn-primary px-4 py-2 text-xs font-cyber font-bold">
+                                        <i class="fa-solid fa-user mr-1.5"></i> Buka Profil
+                                    </button>
+                                    <a href="/auth/logout" class="btn-discord px-4 py-2 text-xs bg-red-950/40 border border-red-500/30 text-red-300 hover:bg-red-600 hover:text-white transition font-cyber font-bold">
+                                        <i class="fa-solid fa-right-from-bracket mr-1.5"></i> Logout
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    }
                 } else {
                     // Unauthenticated state
                     document.getElementById('headerUserAvatar').src = `/assets/dashboard/naura.png`;
                     document.getElementById('headerWallet').classList.add('hidden');
-                    document.getElementById('sidebarAuthArea').innerHTML = `
-                        <a href="/auth/discord" class="btn-discord w-full text-center text-sm py-2.5">
-                            <i class="fa-brands fa-discord mr-2"></i> Login with Discord
-                        </a>
-                    `;
+                    
+                    const sidebarAuthEl = document.getElementById('sidebarAuthArea');
+                    if (sidebarAuthEl) {
+                        sidebarAuthEl.innerHTML = `
+                            <a href="/auth/discord" class="btn-discord w-full text-center text-xs sm:text-sm py-2.5 flex items-center justify-center gap-2 shadow-lg hover:scale-102 transition">
+                                <i class="fa-brands fa-discord text-base"></i> Login with Discord
+                            </a>
+                        `;
+                    }
+
+                    const headerAuthEl = document.getElementById('headerAuthArea');
+                    if (headerAuthEl) {
+                        headerAuthEl.innerHTML = `
+                            <a href="/auth/discord" id="headerAuthBtn"
+                                class="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-[#5865F2]/20 hover:bg-[#5865F2] text-white border border-[#5865F2]/40 hover:border-[#5865F2] text-xs font-cyber transition shadow-[0_0_12px_rgba(88,101,242,0.25)] hover:scale-105 active:scale-95 cursor-pointer"
+                                title="Login dengan Akun Discord">
+                                <i class="fa-brands fa-discord text-sm text-[#7289da]"></i>
+                                <span class="font-semibold hidden xs:inline">Login</span>
+                            </a>
+                        `;
+                    }
+
+                    const settingsAuthEl = document.getElementById('settingsAuthArea');
+                    if (settingsAuthEl) {
+                        settingsAuthEl.innerHTML = `
+                            <div class="glass-panel p-6 bg-black/30 rounded-2xl border border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-2xl bg-[#5865F2]/20 border border-[#5865F2]/40 flex items-center justify-center text-[#5865F2] text-2xl shrink-0">
+                                        <i class="fa-brands fa-discord"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-white text-sm font-cyber">Status Autentikasi</h4>
+                                        <p class="text-xs text-gray-400 font-assist">Masuk dengan Discord untuk membuka semua fitur interaktif & RPG.</p>
+                                    </div>
+                                </div>
+                                <a href="/auth/discord" class="btn-discord px-6 py-2.5 text-xs font-bold font-cyber uppercase tracking-wider shrink-0">
+                                    <i class="fa-brands fa-discord mr-2"></i> Login with Discord
+                                </a>
+                            </div>
+                        `;
+                    }
                 }
             } catch (e) { }
         }
@@ -2623,49 +3635,69 @@
         let friendTracksChartInstance = null;
         let friendDurationChartInstance = null;
 
-        function renderMusicFriendCharts(db) {
+        async function renderMusicFriendCharts(dbOrFriends) {
             const barCanvas = document.getElementById('friendTracksBarChart');
             const pieCanvas = document.getElementById('friendDurationPieChart');
             if (!barCanvas || !pieCanvas || typeof Chart === 'undefined') return;
 
-            let tracking = {};
-            if (db && db.music_trackingData) {
-                try {
-                    tracking = typeof db.music_trackingData === 'string' ? JSON.parse(db.music_trackingData) : db.music_trackingData;
-                } catch (e) {}
+            let friendList = [];
+
+            if (Array.isArray(dbOrFriends)) {
+                friendList = dbOrFriends;
+            } else if (dbOrFriends && typeof dbOrFriends === 'object') {
+                let tracking = {};
+                if (dbOrFriends.music_trackingData) {
+                    try {
+                        tracking = typeof dbOrFriends.music_trackingData === 'string'
+                            ? JSON.parse(dbOrFriends.music_trackingData)
+                            : dbOrFriends.music_trackingData;
+                    } catch (e) {}
+                }
+
+                const friendsData = tracking.friends || {};
+                friendList = Object.entries(friendsData).map(([name, obj]) => ({
+                    name,
+                    count: typeof obj === 'number' ? obj : (Number(obj.tracks) || Number(obj.count) || 1),
+                    durationMs: typeof obj === 'object' && obj && obj.durationMs
+                        ? Number(obj.durationMs)
+                        : ((typeof obj === 'number' ? obj : 1) * 210000)
+                }));
             }
 
-            const friendsData = tracking.friends || {};
-            let friendList = Object.entries(friendsData).map(([name, obj]) => ({
-                name,
-                count: typeof obj === 'number' ? obj : (obj.count || obj.tracks || 1),
-                durationMs: typeof obj === 'object' && obj.durationMs ? obj.durationMs : ((typeof obj === 'number' ? obj : 1) * 210000)
-            }));
+            // Jika belum ada data mabar lokal di sesi user, ambil dari database agregat backend
+            if (friendList.length === 0) {
+                try {
+                    const res = await fetch('/api/analytics/music-friends');
+                    const data = await res.json();
+                    if (data && Array.isArray(data.friends) && data.friends.length > 0) {
+                        friendList = data.friends;
+                    }
+                } catch (err) {
+                    console.warn('[MusicAnalytics] Fetch fallback error:', err);
+                }
+            }
 
+            // Jika database baru dan belum ada data sama sekali, buat representasi data awal
             if (friendList.length === 0) {
                 friendList = [
-                    { name: 'Aryandita', count: 42, durationMs: 42 * 210000 },
-                    { name: 'KuroNeko', count: 28, durationMs: 28 * 195000 },
-                    { name: 'Sakura_Miku', count: 19, durationMs: 19 * 230000 },
-                    { name: 'Lofi_Master', count: 14, durationMs: 14 * 180000 },
-                    { name: 'CyberGamer', count: 9, durationMs: 9 * 200000 }
+                    { name: 'Belum Ada Mabar', count: 0, durationMs: 0 }
                 ];
             }
 
-            const topByCount = [...friendList].sort((a, b) => b.count - a.count).slice(0, 5);
+            const topByCount = [...friendList].sort((a, b) => (b.count || 0) - (a.count || 0)).slice(0, 5);
             const barLabels = topByCount.map(f => f.name);
-            const barData = topByCount.map(f => f.count);
+            const barData = topByCount.map(f => f.count || 0);
 
-            const topByDuration = [...friendList].sort((a, b) => b.durationMs - a.durationMs).slice(0, 5);
+            const topByDuration = [...friendList].sort((a, b) => (b.durationMs || 0) - (a.durationMs || 0)).slice(0, 5);
             const pieLabels = topByDuration.map(f => f.name);
-            const pieData = topByDuration.map(f => Math.round(f.durationMs / 60000));
+            const pieData = topByDuration.map(f => Math.max(1, Math.round((f.durationMs || 0) / 60000)));
 
             const colors = ['#f472b6', '#38bdf8', '#c084fc', '#4ade80', '#fbbf24'];
 
             if (friendTracksChartInstance) {
                 friendTracksChartInstance.data.labels = barLabels;
                 friendTracksChartInstance.data.datasets[0].data = barData;
-                friendTracksChartInstance.update('none');
+                friendTracksChartInstance.update();
             } else {
                 friendTracksChartInstance = new Chart(barCanvas.getContext('2d'), {
                     type: 'bar',
@@ -2683,6 +3715,9 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        layout: {
+                            padding: { bottom: 12 }
+                        },
                         plugins: {
                             legend: { display: false },
                             tooltip: {
@@ -2694,8 +3729,25 @@
                             }
                         },
                         scales: {
-                            x: { ticks: { color: '#9ca3af', font: { family: 'Outfit', size: 11 } }, grid: { display: false } },
-                            y: { ticks: { color: '#9ca3af', font: { family: 'Orbitron', size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                            x: {
+                                ticks: {
+                                    color: '#9ca3af',
+                                    font: { family: 'Outfit', size: 11 },
+                                    maxRotation: 0,
+                                    autoSkip: false,
+                                    padding: 8
+                                },
+                                grid: { display: false }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: '#9ca3af',
+                                    font: { family: 'Orbitron', size: 10 },
+                                    stepSize: 5
+                                },
+                                grid: { color: 'rgba(255,255,255,0.05)' }
+                            }
                         }
                     }
                 });
@@ -2704,7 +3756,7 @@
             if (friendDurationChartInstance) {
                 friendDurationChartInstance.data.labels = pieLabels;
                 friendDurationChartInstance.data.datasets[0].data = pieData;
-                friendDurationChartInstance.update('none');
+                friendDurationChartInstance.update();
             } else {
                 friendDurationChartInstance = new Chart(pieCanvas.getContext('2d'), {
                     type: 'doughnut',
@@ -2722,11 +3774,19 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         cutout: '60%',
+                        layout: {
+                            padding: { bottom: 8 }
+                        },
                         plugins: {
                             legend: {
                                 display: true,
                                 position: 'bottom',
-                                labels: { color: '#d1d5db', font: { family: 'Outfit', size: 10 }, boxWidth: 12 }
+                                labels: {
+                                    color: '#d1d5db',
+                                    font: { family: 'Outfit', size: 10 },
+                                    boxWidth: 12,
+                                    padding: 12
+                                }
                             },
                             tooltip: {
                                 backgroundColor: 'rgba(10,13,20,0.95)',
@@ -2870,7 +3930,7 @@
 
             // Append user text bubble
             chatMessages.innerHTML += `
-                <div class="bg-[var(--color-primary)] text-[var(--color-on-primary)] p-3 rounded-2xl rounded-tr-none self-end max-w-[80%] font-semibold leading-relaxed shadow-sm">
+                <div class="bg-[var(--color-primary)] text-[var(--color-on-primary)] p-3 sm:p-3.5 rounded-2xl rounded-tr-none self-end max-w-[92%] sm:max-w-[80%] font-semibold text-xs sm:text-sm leading-relaxed shadow-sm break-words">
                     ${text}
                 </div>
             `;
@@ -2880,7 +3940,7 @@
 
             const loaderId = 'loader_' + Date.now();
             chatMessages.innerHTML += `
-                <div id="${loaderId}" class="bg-[rgba(255,182,193,0.02)] text-[var(--color-muted)] p-3 rounded-2xl rounded-tl-none self-start border border-[var(--color-hairline)] select-none">
+                <div id="${loaderId}" class="bg-[rgba(255,182,193,0.02)] text-[var(--color-muted)] p-2.5 sm:p-3 rounded-2xl rounded-tl-none self-start border border-[var(--color-hairline)] select-none text-xs">
                     <span class="animate-pulse">● ● ●</span>
                 </div>
             `;
@@ -2892,7 +3952,7 @@
             if (loaders.length > 0) loaders[loaders.length - 1].remove();
 
             chatMessages.innerHTML += `
-                <div class="bg-[rgba(255,182,193,0.06)] text-white p-3.5 rounded-2xl rounded-tl-none self-start max-w-[80%] border border-[var(--color-hairline)] leading-relaxed shadow-sm">
+                <div class="bg-[rgba(255,182,193,0.06)] text-white p-3 sm:p-4 rounded-2xl rounded-tl-none self-start max-w-[95%] sm:max-w-[85%] border border-[var(--color-hairline)] text-xs sm:text-sm leading-relaxed shadow-sm break-words">
                     ${data.reply.replace(/\n/g, '<br>')}
                 </div>
             `;
@@ -3007,6 +4067,95 @@
                         appendCliLine(`  reload [command]  - Melakukan hot-reload command bot`, 'text-gray-400');
                         appendCliLine(`  eval [JS script]  - Eksekusi kode JS langsung pada backend`, 'text-gray-400');
                         appendCliLine(`  stats             - Menampilkan resource dan uptime OS`, 'text-gray-400');
+                        appendCliLine(`  premium grant [uid] [days] - Suntik status premium ke user`, 'text-gray-400');
+                        appendCliLine(`  premium revoke [uid]      - Cabut status premium user`, 'text-gray-400');
+                        appendCliLine(`  vouchers          - Tampilkan daftar voucher V.I.P`, 'text-gray-400');
+                        appendCliLine(`  vouchers create [days] [count] - Generate voucher V.I.P baru`, 'text-gray-400');
+                    } else if (cmd === 'premium') {
+                        const subParts = args.split(' ');
+                        const subCmd = subParts[0]?.toLowerCase();
+                        const targetUid = subParts[1];
+                        const days = subParts[2] || 30;
+
+                        if (subCmd === 'grant' && targetUid) {
+                            appendCliLine(`Injecting premium ${days} days to ${targetUid}...`, 'text-yellow-400');
+                            try {
+                                const res = await fetch('/api/owner/premium/grant', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ userId: targetUid, days })
+                                });
+                                const result = await res.json();
+                                if (result.success) {
+                                    appendCliLine(`Berhasil: ${result.message}`, 'text-green-400');
+                                } else {
+                                    appendCliLine(`Gagal: ${result.error}`, 'text-red-400');
+                                }
+                            } catch (err) {
+                                appendCliLine(`Gagal menghubungi server.`, 'text-red-400');
+                            }
+                        } else if (subCmd === 'revoke' && targetUid) {
+                            appendCliLine(`Revoking premium from ${targetUid}...`, 'text-yellow-400');
+                            try {
+                                const res = await fetch('/api/owner/premium/revoke', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ userId: targetUid })
+                                });
+                                const result = await res.json();
+                                if (result.success) {
+                                    appendCliLine(`Berhasil: ${result.message}`, 'text-green-400');
+                                } else {
+                                    appendCliLine(`Gagal: ${result.error}`, 'text-red-400');
+                                }
+                            } catch (err) {
+                                appendCliLine(`Gagal menghubungi server.`, 'text-red-400');
+                            }
+                        } else {
+                            appendCliLine(`Format salah. Gunakan: premium grant [userId] [days] atau premium revoke [userId]`, 'text-red-400');
+                        }
+                    } else if (cmd === 'vouchers') {
+                        const subParts = args.split(' ');
+                        const subCmd = subParts[0]?.toLowerCase();
+
+                        if (subCmd === 'create') {
+                            const days = subParts[1] || 30;
+                            const count = subParts[2] || 1;
+                            appendCliLine(`Creating ${count} voucher(s) of ${days} days...`, 'text-yellow-400');
+                            try {
+                                const res = await fetch('/api/owner/vouchers/create', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ days, count })
+                                });
+                                const result = await res.json();
+                                if (result.success) {
+                                    appendCliLine(`Berhasil: ${result.message}`, 'text-green-400');
+                                    result.codes.forEach(c => appendCliLine(`  • ${c}`, 'text-cyan-300 font-bold'));
+                                } else {
+                                    appendCliLine(`Gagal: ${result.error}`, 'text-red-400');
+                                }
+                            } catch (err) {
+                                appendCliLine(`Gagal menghubungi server.`, 'text-red-400');
+                            }
+                        } else {
+                            appendCliLine(`Fetching voucher list...`, 'text-yellow-400');
+                            try {
+                                const res = await fetch('/api/owner/vouchers');
+                                const result = await res.json();
+                                if (result.success) {
+                                    appendCliLine(`Daftar Voucher V.I.P (${result.vouchers.length} total):`, 'text-cyan-400 font-bold');
+                                    result.vouchers.slice(0, 15).forEach(v => {
+                                        const status = v.isRedeemed ? `[REDEEMED by ${v.redeemedBy}]` : `[ACTIVE - ${v.durationDays}d]`;
+                                        appendCliLine(`  ${v.code} - ${status}`, v.isRedeemed ? 'text-gray-500' : 'text-green-400');
+                                    });
+                                } else {
+                                    appendCliLine(`Gagal: ${result.error}`, 'text-red-400');
+                                }
+                            } catch (err) {
+                                appendCliLine(`Gagal menghubungi server.`, 'text-red-400');
+                            }
+                        }
                     } else if (cmd === 'stats') {
                         appendCliLine(`Loading stats...`, 'text-yellow-400');
                         try {
@@ -3554,6 +4703,7 @@
 
         // 3D Card Hover & Reflection Glare delegation
         document.addEventListener('mousemove', (e) => {
+            if (!e.target || typeof e.target.closest !== 'function') return;
             const card = e.target.closest('.rpg-item-card');
             if (!card) return;
 
@@ -3577,6 +4727,7 @@
         });
 
         document.addEventListener('mouseleave', (e) => {
+            if (!e.target || typeof e.target.closest !== 'function') return;
             const card = e.target.closest('.rpg-item-card');
             if (!card) return;
 
@@ -3925,13 +5076,7 @@
         // Live stats websocket updates
 
         socket.on('stats_update', (data) => {
-            const pingEl = document.getElementById('statPing');
-            const usersEl = document.getElementById('statUsers');
-            const serversEl = document.getElementById('statServers');
-
-            if (pingEl) pingEl.innerText = data.ping;
-            if (usersEl) usersEl.innerText = parseInt(data.users).toLocaleString('id-ID');
-            if (serversEl) serversEl.innerText = parseInt(data.guilds).toLocaleString('id-ID');
+            updateTelemetryMetrics(data);
 
             // Update Database Engine Active Badge & Fallback Warning Banner
             if (data.dbStatus) {
@@ -3984,24 +5129,208 @@
             }
         });
 
+        // --- MULTI-TURN AI CHAT CLIENT ---
+        let chatHistory = [];
+        let isWaitingForAi = false;
+        let chatPendingTimeout = null;
+
+        function formatAiMarkdown(text) {
+            if (!text) return '';
+            let formatted = String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+
+            // Format bold **text**
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="text-pink-300 font-semibold">$1</strong>');
+            // Format italic *text*
+            formatted = formatted.replace(/\*(.*?)\*/g, '<em class="text-gray-200">$1</em>');
+            // Format inline code `code`
+            formatted = formatted.replace(/`(.*?)`/g, '<code class="bg-black/60 px-1.5 py-0.5 rounded text-cyan-300 font-mono text-xs border border-cyan-500/20">$1</code>');
+            // Format line breaks
+            formatted = formatted.replace(/\n/g, '<br>');
+            return formatted;
+        }
+
+        function appendUserChatMessage(text) {
+            const container = document.getElementById('chatMessages');
+            if (!container) return;
+
+            const userAvatar = currentUser && currentUser.avatar 
+                ? `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png` 
+                : '/assets/dashboard/naura.png';
+            const username = currentUser ? currentUser.username : 'Kamu';
+
+            const bubble = document.createElement('div');
+            bubble.className = "flex gap-2.5 items-end justify-end self-end w-full animate-fade-in";
+            bubble.innerHTML = `
+                <div class="bg-gradient-to-br from-pink-600/30 to-purple-600/30 border border-pink-400/40 text-white p-3.5 sm:p-4 rounded-2xl rounded-tr-none max-w-[92%] sm:max-w-[80%] text-xs sm:text-sm leading-relaxed shadow-[0_0_20px_rgba(236,72,153,0.2)] backdrop-blur-md break-words">
+                    <div class="font-bold text-pink-300 text-[11px] mb-1 flex items-center justify-end gap-1.5">
+                        <span>${username}</span>
+                        <i class="fa-solid fa-user text-[10px]"></i>
+                    </div>
+                    <div>${formatAiMarkdown(text)}</div>
+                </div>
+                <img src="${userAvatar}" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-pink-400/50 object-cover shrink-0 mb-1" onerror="this.src='/assets/dashboard/naura.png'">
+            `;
+            container.appendChild(bubble);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showAiTypingIndicator() {
+            hideAiTypingIndicator();
+            const container = document.getElementById('chatMessages');
+            if (!container) return;
+
+            const indicator = document.createElement('div');
+            indicator.id = 'nauraTypingBubble';
+            indicator.className = "flex gap-2.5 items-end self-start w-full animate-fade-in";
+            indicator.innerHTML = `
+                <img src="/assets/dashboard/naura.png" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-pink-400/60 object-cover shrink-0 mb-1">
+                <div class="bg-black/60 border border-pink-500/40 text-white px-4 py-3 rounded-2xl rounded-tl-none max-w-[85%] text-xs flex items-center gap-2.5 backdrop-blur-md shadow-[0_0_15px_rgba(236,72,153,0.15)]">
+                    <span class="text-pink-400 font-bold font-cyber text-glow">Naura sedang mengetik</span>
+                    <div class="flex gap-1 items-center">
+                        <span class="w-1.5 h-1.5 rounded-full bg-pink-400 animate-bounce"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-bounce [animation-delay:0.2s]"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-pink-300 animate-bounce [animation-delay:0.4s]"></span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(indicator);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function hideAiTypingIndicator() {
+            const indicator = document.getElementById('nauraTypingBubble');
+            if (indicator) indicator.remove();
+        }
+
+        function appendAiChatMessage(replyText, source = 'gemini') {
+            hideAiTypingIndicator();
+            const container = document.getElementById('chatMessages');
+            if (!container) return;
+
+            const bubble = document.createElement('div');
+            bubble.className = "flex gap-2.5 items-end self-start w-full animate-fade-in";
+            bubble.innerHTML = `
+                <img src="/assets/dashboard/naura.png" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-pink-400 shadow-[0_0_10px_rgba(255,182,193,0.5)] object-cover shrink-0 mb-1">
+                <div class="bg-black/70 text-white p-3.5 sm:p-4 rounded-2xl rounded-tl-none max-w-[92%] sm:max-w-[85%] border border-pink-500/40 text-xs sm:text-sm leading-relaxed shadow-[0_0_20px_rgba(236,72,153,0.15)] backdrop-blur-md break-words relative group">
+                    <div class="flex items-center justify-between gap-2 mb-1.5 pb-1 border-b border-white/5">
+                        <div class="font-bold text-pink-400 font-cyber flex items-center gap-1.5 text-xs">
+                            <span>Naura Hoshino</span>
+                            <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 uppercase font-mono">SAHABAT</span>
+                        </div>
+                        <span class="text-[9px] text-gray-500 font-mono">${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div class="text-gray-100">${formatAiMarkdown(replyText)}</div>
+                </div>
+            `;
+            container.appendChild(bubble);
+            container.scrollTop = container.scrollHeight;
+
+            if (typeof playSynthSfx !== 'undefined' && playSynthSfx.playTone) {
+                try {
+                    playSynthSfx.playTone(880, 0.08, 'sine', 0.03);
+                } catch (e) {}
+            }
+        }
+
+        async function handleChatSubmit(e) {
+            if (e) e.preventDefault();
+            const input = document.getElementById('chatInput');
+            if (!input) return;
+            const text = input.value.trim();
+            if (!text || isWaitingForAi) return;
+
+            input.value = '';
+            appendUserChatMessage(text);
+            showAiTypingIndicator();
+            isWaitingForAi = true;
+
+            const currentTurn = { role: 'user', content: text };
+            chatHistory.push(currentTurn);
+            if (chatHistory.length > 16) chatHistory = chatHistory.slice(-16);
+
+            let hasResponded = false;
+
+            const onResponse = (replyText, source) => {
+                if (hasResponded) return;
+                hasResponded = true;
+                isWaitingForAi = false;
+                if (chatPendingTimeout) clearTimeout(chatPendingTimeout);
+                appendAiChatMessage(replyText, source);
+                chatHistory.push({ role: 'assistant', content: replyText });
+                if (chatHistory.length > 16) chatHistory = chatHistory.slice(-16);
+            };
+
+            // 1. Kirim lewat Socket.io realtime
+            try {
+                socket.emit('chat_message', {
+                    message: text,
+                    history: chatHistory.slice(0, -1),
+                    username: currentUser ? currentUser.username : 'Teman'
+                });
+            } catch (err) {}
+
+            // Set socket response listener
+            const socketHandler = (data) => {
+                if (data && data.reply) {
+                    socket.off('chat_response', socketHandler);
+                    onResponse(data.reply, data.source || 'gemini');
+                }
+            };
+            socket.once('chat_response', socketHandler);
+
+            // 2. HTTP Fallback timer bila socket tidak membalas dalam 4 detik
+            chatPendingTimeout = setTimeout(async () => {
+                if (hasResponded) return;
+                try {
+                    const res = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            message: text,
+                            history: chatHistory.slice(0, -1),
+                            username: currentUser ? currentUser.username : 'Teman'
+                        })
+                    });
+                    const data = await res.json();
+                    if (data && data.reply) {
+                        onResponse(data.reply, data.source || 'api_rest');
+                    } else {
+                        onResponse('Halo sahabatku! Naura selalu siap menemani kamu di server ya! ✨🌸', 'fallback');
+                    }
+                } catch (apiErr) {
+                    onResponse('Semangat ya sahabatku! Naura selalu mendukung setiap aktivitasmu di sini! 💖🌸', 'local');
+                }
+            }, 4000);
+        }
+
+        const chatFormEl = document.getElementById('chatForm');
+        if (chatFormEl) {
+            chatFormEl.addEventListener('submit', handleChatSubmit);
+        }
+
         // Quick prompt helper
         function sendQuickPrompt(promptText) {
             const input = document.getElementById('chatInput');
-            const form = document.getElementById('chatForm');
-            if (input) input.value = promptText;
-            if (form) {
-                const event = new Event('submit', { cancelable: true, bubbles: true });
-                form.dispatchEvent(event);
+            if (input) {
+                input.value = promptText;
+                handleChatSubmit();
             }
         }
 
         function clearChatMessages() {
+            chatHistory = [];
             const chatMessages = document.getElementById('chatMessages');
             if (chatMessages) {
                 chatMessages.innerHTML = `
-                    <div class="bg-black/60 text-white p-4 rounded-2xl rounded-tl-none self-start max-w-[85%] border border-pink-500/40 leading-relaxed shadow-[0_0_15px_rgba(236,72,153,0.15)] backdrop-blur-md">
-                        <div class="font-bold text-pink-400 mb-1">Konnichiwa! 👋</div>
-                        <div>Ada yang bisa Naura bantu hari ini? Kamu bisa bertanya atau langsung memilih preset prompt di sebelah kiri ya! ✨</div>
+                    <div class="bg-black/60 text-white p-3.5 sm:p-4 rounded-2xl rounded-tl-none self-start w-full sm:w-auto max-w-[95%] sm:max-w-[85%] border border-pink-500/40 text-xs sm:text-sm leading-relaxed shadow-[0_0_15px_rgba(236,72,153,0.15)] backdrop-blur-md break-words">
+                        <div class="font-bold text-pink-400 mb-1 flex items-center gap-2">
+                            <span>Konnichiwa! 👋</span>
+                            <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 uppercase font-mono">SAHABAT</span>
+                        </div>
+                        <div>Hai sahabatku! Ada yang bisa Naura bantu hari ini? Mau cerita, mabar, cek status server, atau tanya tips game? Naura siap temani 24/7! 🌸✨</div>
                     </div>
                 `;
             }
@@ -4014,13 +5343,44 @@
         initHomeCommandChart();
         loadGlassStyle();
 
-        // Initial fetch
-        fetchStats();
-        fetchUser();
-        loadHomeTopLeaderboard();
+        // Initial fetch with smooth loading screen fade-out
+        Promise.allSettled([
+            fetchStats(),
+            fetchUser(),
+            loadHomeTopLeaderboard()
+        ]).then(() => {
+            const ls = document.getElementById('loadingScreen');
+            if (ls) {
+                setTimeout(() => {
+                    ls.classList.add('hidden');
+                }, 350);
+            }
+        });
+
+        // Setup Realtime Socket.IO Connection
+        if (typeof io !== 'undefined') {
+            const socket = io();
+
+            socket.on('connect', () => {
+                console.log('[Socket] Connected to Naura Realtime Gateway:', socket.id);
+            });
+
+            socket.on('stats_update', (data) => {
+                updateTelemetryMetrics(data);
+            });
+
+            socket.on('music_analytics_update', (data) => {
+                console.log('[Socket] Live Music Analytics received:', data);
+                if (data && data.music_trackingData) {
+                    renderMusicFriendCharts(data.music_trackingData);
+                } else {
+                    renderMusicFriendCharts();
+                }
+            });
+        }
 
         // Background interval check for uptime/etc
-        setInterval(fetchStats, 30000);
+        setInterval(fetchStats, 15000);
     </script>
 
     <!-- MOBILE BOTTOM NAVIGATION BAR (Thumb-Zone Ergonomics) -->

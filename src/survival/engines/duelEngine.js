@@ -198,14 +198,14 @@ async function settle(p1Survival, p1State, p2Survival, p2State, isRanked = false
     const p2Id = p2State.id;
 
     // Tentukan siapa yang menang
-    let winnerId = p1State.hp > 0 ? p1Id : p2Id;
-    let loserId = p1State.hp > 0 ? p2Id : p1Id;
+    const winnerId = p1State.hp > 0 ? p1Id : p2Id;
+    const loserId = p1State.hp > 0 ? p2Id : p1Id;
     
     // Jika seri (keduanya 0 HP atau time out), anggap tidak ada perubahan MMR drastis,
     // tapi untuk duel, biasanya ada satu yang HP nya <=0 duluan.
 
-    let [wRecord] = await DuelRecord.findOrCreate({ where: { userId: winnerId } });
-    let [lRecord] = await DuelRecord.findOrCreate({ where: { userId: loserId } });
+    const [wRecord] = await DuelRecord.findOrCreate({ where: { userId: winnerId } });
+    const [lRecord] = await DuelRecord.findOrCreate({ where: { userId: loserId } });
 
     const { winnerDiff, loserDiff } = calculateElo(wRecord.mmr, lRecord.mmr);
 

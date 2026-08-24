@@ -10,9 +10,9 @@ module.exports = {
     
   async execute(interaction) {
     const userId = interaction.user.id;
-    let [profile] = await UserProfile.findOrCreate({ where: { userId } });
+    const [profile] = await UserProfile.findOrCreate({ where: { userId } });
     
-    let prefs = profile.notification_prefs || {
+    const prefs = profile.notification_prefs || {
       dm_authorized: false,
       stamina_full: true,
       quest_reset: true,
@@ -48,7 +48,7 @@ module.exports = {
 
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("primary"),
-      title: "⚙️ Pengaturan Notifikasi DM",
+      title: `${ui.getEmoji("settings") || "⚙️"} Pengaturan Notifikasi DM`,
       description: "Centang notifikasi yang ingin kamu terima melalui Direct Message. Custom Reminder selalu aktif dan akan dikirim secara otomatis ke DM kamu jika disetel menggunakan `/remind`.",
       expression: "Happy",
       footerText: ui.getFooter("utility")
@@ -74,14 +74,14 @@ module.exports = {
 
         profile.notification_prefs = prefs;
         profile.changed("notification_prefs", true);
-        await profile.save();
+        await profile.save({ fields: ["notification_prefs"] });
 
         await i.update({
            components: [...payload.components, buildMenu(prefs)]
         });
 
         await i.followUp({
-          content: "✅ Pengaturan notifikasimu telah disimpan!",
+          content: `${ui.getEmoji("success") || "✅"} Pengaturan notifikasimu telah disimpan!`,
           flags: MessageFlags.Ephemeral
         });
       }

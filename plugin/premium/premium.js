@@ -5,13 +5,13 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
-const { tierByKey, buildBenefitsDescription } = require("./premiumTiers");
-const store = require("./premiumStore");
-const { sendPremiumDM } = require("./premiumNotify");
-const { runInfo } = require("./premiumInfoView");
-const { runCheck } = require("./premiumCheckView");
-const { runRedeem } = require("./premiumRedeem");
-const admin = require("./premiumAdmin");
+const { tierByKey, buildBenefitsDescription } = require("../../src/premium/premiumTiers");
+const store = require("../../src/premium/premiumStore");
+const { sendPremiumDM } = require("../../src/premium/premiumNotify");
+const { runInfo } = require("../../src/premium/premiumInfoView");
+const { runCheck } = require("../../src/premium/premiumCheckView");
+const { runRedeem } = require("../../src/premium/premiumRedeem");
+const admin = require("../../src/premium/premiumAdmin");
 
 const OWNER_ONLY = ["add", "remove", "generate_voucher", "stats"];
 

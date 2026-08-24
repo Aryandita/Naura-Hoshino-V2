@@ -1,7 +1,7 @@
 "use strict";
 
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../managers/dbManager");
+const { sequelize } = require("../config/database");
 
 const UserCardDeck = sequelize.define(
   "UserCardDeck",

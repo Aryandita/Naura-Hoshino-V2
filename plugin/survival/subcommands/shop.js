@@ -100,7 +100,7 @@ module.exports = {
       Object.keys(coupons.CATEGORIES).forEach((cat) => {
         coupons.stockByCategory(cat).forEach((it) => {
           available.push({
-            name: `🎟️ ${it.name} (${it.price} Kupon)`,
+            name: `${ui.getEmoji("ticket") || "🎟️"} ${it.name} (${it.price} Kupon)`,
             value: purchase.encodeChoice(it.id, it.price, true),
           });
         });

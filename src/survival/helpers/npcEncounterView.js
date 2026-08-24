@@ -68,7 +68,9 @@ async function greet(userId, npc) {
   row.affection = (row.affection || 0) + encounter.AFFECTION_GAIN;
   row.lastInteraction = new Date();
   refreshRelationship(row, npc);
-  await row.save();
+  await row.save({
+    fields: ["affection", "lastInteraction", "relationshipLevel"],
+  });
 
   return {
     cooled: true,

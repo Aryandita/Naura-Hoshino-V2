@@ -6,7 +6,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { createCanvas, GlobalFonts } = require("../canvas/canvasRuntime");
+const { createCanvas, GlobalFonts } = require("../../canvas/canvasRuntime");
 const items = require("../data/items");
 const ui = require("../../config/ui");
 

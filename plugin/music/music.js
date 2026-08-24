@@ -71,7 +71,7 @@ async function runMusicLogic(
       const calculateTop5 = (jsonInput) => {
         if (!jsonInput) return [];
         try {
-          let data =
+          const data =
             typeof jsonInput === "string" ? JSON.parse(jsonInput) : jsonInput;
           if (!data.history) return [];
           const sorted = Object.entries(data.history).sort(
@@ -206,7 +206,7 @@ async function runMusicLogic(
       player.is247 = false;
     }
 
-    let query = args.query;
+    const query = args.query;
     if (!query) {
       const errPayload = buildErrorContainerV2({
         title: "Query Kosong",
@@ -219,7 +219,7 @@ async function runMusicLogic(
     let res;
     let searchSource = "ytsearch";
     let finalQuery = query;
-    let isDirectLink = !!query.match(/^(https?:\/\/)/);
+    const isDirectLink = !!query.match(/^(https?:\/\/)/);
 
     if (!isDirectLink) {
       if (query.startsWith("scsearch:")) searchSource = "scsearch";
@@ -666,7 +666,7 @@ async function runMusicLogic(
 
     try {
       const cacheManager = require("../../src/managers/cacheManager");
-      const userProfile = await cacheManager.getUserProfile(interaction.user.id);
+      const userProfile = await cacheManager.getUserProfile(user.id);
       let equippedBanner = null;
       try {
         if (userProfile && userProfile.activeBanners) {
@@ -1080,6 +1080,115 @@ async function runMusicLogic(
     return sendReply(payload, true);
   }
 
+  if (subcommand === "dedicate") {
+    const targetUser = args.target;
+    const pesan = args.pesan || args.query;
+
+    if (!targetUser) {
+      const errPayload = buildErrorContainerV2({
+        title: "Target Tidak Valid",
+        description: `${eError} | Harap sebutkan user yang ingin kamu beri dedikasi lagu!`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    if (!pesan || pesan.trim().length === 0) {
+      const errPayload = buildErrorContainerV2({
+        title: "Pesan Kosong",
+        description: `${eError} | Tuliskan pesan dedikasi yang ingin disampaikan!`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    const payload = buildContainerV2({
+      accentColorHex: ui.getColor("primary") || "#FFB6C1",
+      authorName: "💌 Dedikasi Lagu",
+      title: "Dedikasi Lagu Terkirim!",
+      description: [
+        `Pesan dedikasi untuk <@${targetUser.id}> berhasil dikirimkan!`,
+        ``,
+        `💬 **Pesan:** *"${pesan.trim()}"*`,
+        `👤 **Dari:** <@${user.id}>`,
+      ].join("\n"),
+      footerText: ui.getFooter("music"),
+    });
+
+    return sendReply(payload);
+  }
+
+  if (subcommand === "quiz") {
+    const musicQuizEngine = require("../../src/music/musicQuizEngine");
+    const totalRounds = args.ronde || args.id || 5;
+    const session = await musicQuizEngine.startQuizSession(guild.id, channel.id, totalRounds);
+    const round1 = session.rounds[0];
+
+    const choicesRow = new ActionRowBuilder().addComponents(
+      round1.choices.map((choice, idx) =>
+        new ButtonBuilder()
+          .setCustomId(`mquiz_ans_${idx}`)
+          .setLabel(choice)
+          .setStyle(ButtonStyle.Primary),
+      ),
+    );
+
+    const payload = buildContainerV2({
+      accentColorHex: "#F43F5E",
+      authorName: `🎵 Anime Music Quiz, Ronde 1 / ${session.totalRounds}`,
+      title: "Tebak Judul Lagu!",
+      description: [
+        `Dengarkan lirik / cuplikan lagu berikut ini:`,
+        ``,
+        `> ${round1.audioHint}`,
+        ``,
+        `📺 **Petunjuk Anime:** \`${round1.anime}\` | **Artis:** \`${round1.artist}\``,
+        ``,
+        `-# ⚡ *Tekan tombol pilihan jawaban di bawah secepat mungkin untuk mendapatkan combo streak bonus!*`,
+      ].join("\n"),
+      footerText: ui.getFooter("music"),
+      buttonsRow: choicesRow,
+    });
+
+    const replyMsg = await sendReply(payload);
+    if (!replyMsg) return;
+
+    const collector = replyMsg.createMessageComponentCollector({
+      componentType: ComponentType.Button,
+      time: 45000,
+    });
+
+    collector.on("collect", async (btnInteraction) => {
+      const choiceIdx = parseInt(btnInteraction.customId.replace("mquiz_ans_", ""), 10);
+      const chosenText = round1.choices[choiceIdx];
+      const answerRes = await musicQuizEngine.submitAnswer(
+        guild.id,
+        btnInteraction.user.id,
+        btnInteraction.user.displayName || btnInteraction.user.username,
+        chosenText,
+        Date.now() - session.startedAt,
+      );
+
+      if (!answerRes.success) {
+        return btnInteraction.reply({ content: "❌ Kamu sudah menjawab ronde ini!", flags: 64 });
+      }
+
+      if (answerRes.isCorrect) {
+        return btnInteraction.reply({
+          content: `🎉 **BENAR!** Jawabanmu tepat: **${answerRes.correctAnswer}** (+${answerRes.pointsGained} Poin | Streak x${answerRes.streak})!`,
+          flags: 64,
+        });
+      } else {
+        return btnInteraction.reply({
+          content: `❌ **SALAH!** Jawaban yang benar adalah **${answerRes.correctAnswer}**. Streak terputus!`,
+          flags: 64,
+        });
+      }
+    });
+
+    return;
+  }
+
   if (subcommand === "247") {
     const cacheManager = require("../../src/managers/cacheManager");
     const profile = await cacheManager.getUserProfile(user.id);
@@ -1112,7 +1221,7 @@ async function runMusicLogic(
     }
     player.is247 = !player.is247;
     try {
-      let [guildData] = await GuildSettings.findOrCreate({
+      const [guildData] = await GuildSettings.findOrCreate({
         where: { guildId: guild.id },
       });
       guildData.music = {
@@ -1160,11 +1269,11 @@ async function runMusicLogic(
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("music")
-    .setDescription("Sistem Musik Hi-Fi Naura Hoshino")
+    .setDescription("Sistem musik interaktif Naura")
     .addSubcommand((sub) =>
       sub
         .setName("play")
-        .setDescription("Putar musik dari Spotify, YouTube, SoundCloud")
+        .setDescription("Putar musik dari YouTube, Spotify, atau SoundCloud")
         .addStringOption((opt) =>
           opt
             .setName("query")
@@ -1174,90 +1283,93 @@ module.exports = {
         ),
     )
     .addSubcommand((sub) =>
+      sub.setName("pause").setDescription("Jeda musik yang sedang berputar"),
+    )
+    .addSubcommand((sub) =>
+      sub.setName("resume").setDescription("Lanjutkan kembali lagu yang dijeda"),
+    )
+    .addSubcommand((sub) =>
+      sub.setName("skip").setDescription("Lewati lagu yang sedang berputar"),
+    )
+    .addSubcommand((sub) =>
+      sub.setName("stop").setDescription("Hentikan musik dan hapus antrean"),
+    )
+    .addSubcommand((sub) =>
       sub
-        .setName("lofi")
-        .setDescription("Putar siaran Lofi Hip-Hop 24/7 tanpa henti"),
-    )
-    .addSubcommand((sub) =>
-      sub.setName("radio").setDescription("Putar siaran musik 24/7 populer"),
-    )
-    .addSubcommand((sub) =>
-      sub.setName("pause").setDescription("Jeda lagu yang sedang berputar"),
-    )
-    .addSubcommand((sub) =>
-      sub.setName("resume").setDescription("Lanjutkan lagu yang dijeda"),
-    )
-    .addSubcommand((sub) =>
-      sub.setName("skip").setDescription("Lewati lagu saat ini"),
-    )
-    .addSubcommand((sub) =>
-      sub.setName("stop").setDescription("Hentikan musik dan matikan koneksi"),
+        .setName("queue")
+        .setDescription("Lihat daftar antrean lagu saat ini"),
     )
     .addSubcommand((sub) =>
       sub
         .setName("nowplaying")
-        .setDescription("Tampilkan info lagu & visualizer"),
-    )
-    .addSubcommand((sub) =>
-      sub.setName("queue").setDescription("Tampilkan antrean lagu"),
+        .setDescription("Lihat informasi lagu yang sedang diputar"),
     )
     .addSubcommand((sub) =>
       sub
         .setName("volume")
-        .setDescription("Atur volume pemutaran (10 - 100)")
+        .setDescription("Atur volume pemutaran musik")
         .addIntegerOption((opt) =>
           opt
             .setName("persen")
-            .setDescription("Persentase volume (10-100)")
+            .setDescription("Tingkat volume (1 - 150%)")
             .setRequired(true)
-            .setMinValue(10)
-            .setMaxValue(100),
+            .setMinValue(1)
+            .setMaxValue(150),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("loop")
-        .setDescription("Atur mode pengulangan (Track/Queue/Off)")
+        .setDescription("Atur mode pengulangan musik")
         .addStringOption((opt) =>
           opt
             .setName("mode")
             .setDescription("Pilih mode loop")
             .setRequired(true)
             .addChoices(
-              { name: "Track", value: "track" },
-              { name: "Queue", value: "queue" },
-              { name: "Off", value: "off" },
+              { name: "📴 Matikan Loop (Off)", value: "off" },
+              { name: "🔂 Ulangi Lagu Ini (Track)", value: "track" },
+              { name: "🔁 Ulangi Seluruh Antrean (Queue)", value: "queue" },
             ),
         ),
     )
     .addSubcommand((sub) =>
-      sub.setName("shuffle").setDescription("Acak urutan antrean lagu"),
-    )
-    .addSubcommand((sub) =>
-      sub.setName("clear").setDescription("Kosongkan antrean lagu"),
+      sub
+        .setName("shuffle")
+        .setDescription("Acak urutan lagu dalam antrean"),
     )
     .addSubcommand((sub) =>
       sub
         .setName("247")
-        .setDescription("Aktifkan mode siaga 24/7 di voice channel (VIP Only)"),
+        .setDescription("Aktifkan atau matikan mode 24/7 di Voice Channel"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("lyrics")
+        .setDescription("Cari lirik lagu yang sedang diputar atau berdasarkan judul")
+        .addStringOption((opt) =>
+          opt
+            .setName("query")
+            .setDescription("Judul lagu yang ingin dicari liriknya")
+            .setRequired(false),
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("filter")
-        .setDescription("Terapkan filter audio (Bassboost, Nightcore, 8D)")
+        .setDescription("Terapkan efek DSP audio profesional")
         .addStringOption((opt) =>
           opt
             .setName("tipe")
-            .setDescription("Jenis filter")
+            .setDescription("Pilih filter audio")
             .setRequired(true)
             .addChoices(
-              { name: "Off (Clear Filters)", value: "off" },
-              { name: "Bassboost", value: "bassboost" },
+              { name: "Original (Reset)", value: "reset" },
+              { name: "Bass Boost", value: "bassboost" },
               { name: "Nightcore", value: "nightcore" },
               { name: "8D Audio", value: "8d" },
+              { name: "Vaporwave", value: "vaporwave" },
               { name: "Pop", value: "pop" },
-              { name: "Soft", value: "soft" },
-              { name: "Treblebass", value: "treblebass" },
               { name: "Karaoke", value: "karaoke" },
               { name: "Vibrato", value: "vibrato" },
               { name: "Tremolo", value: "tremolo" },
@@ -1267,137 +1379,149 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("profile")
-        .setDescription("Lihat statistik & kartu profil Audiophile")
+        .setDescription("Tampilkan kartu profil musik statistik personal kamu")
         .addUserOption((opt) =>
           opt
             .setName("target")
-            .setDescription("User yang ingin dilihat")
+            .setDescription("User yang ingin dilihat profil musiknya")
             .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
       sub
-        .setName("import")
-        .setDescription("Impor playlist dari Spotify/YouTube ke database")
-        .addStringOption((opt) =>
-          opt
-            .setName("url")
-            .setDescription("URL Playlist Spotify/YouTube")
-            .setRequired(true),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("myplaylist")
-        .setDescription("Lihat daftar playlist kustom milikmu"),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("playplaylist")
-        .setDescription("Putar playlist kustom dari ID")
-        .addIntegerOption((opt) =>
-          opt.setName("id").setDescription("ID Playlist").setRequired(true),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("share")
-        .setDescription("Dapatkan kode unik untuk membagikan playlist")
-        .addIntegerOption((opt) =>
-          opt
-            .setName("id")
-            .setDescription("ID Playlist yang dibagikan")
-            .setRequired(true),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("load")
-        .setDescription("Salin playlist milik orang lain dari kode")
+        .setName("save")
+        .setDescription("Simpan antrean saat ini menjadi Cloud Playlist pribadi")
         .addStringOption((opt) =>
           opt
             .setName("query")
-            .setDescription("Kode unik playlist (misal: NRA...URA)")
+            .setDescription("Nama playlist yang ingin disimpan")
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("playlist")
+        .setDescription("Putar salah satu Cloud Playlist milikmu")
+        .addStringOption((opt) =>
+          opt
+            .setName("query")
+            .setDescription("Nama playlist yang ingin diputar")
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("dedicate")
+        .setDescription("Kirim pesan dedikasi / ucapan lagu kepada seseorang")
+        .addUserOption((opt) =>
+          opt
+            .setName("target")
+            .setDescription("User yang ingin kamu tuju")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("pesan")
+            .setDescription("Pesan dedikasi / ucapan yang ingin disampaikan")
             .setRequired(true),
         ),
     ),
 
   async autocomplete(interaction) {
     const focusedValue = interaction.options.getFocused();
-    if (!focusedValue || focusedValue.trim().length === 0)
+    if (!focusedValue || focusedValue.trim().length === 0) {
       return interaction.respond([]).catch(() => {});
+    }
+
+    const cleanQuery = focusedValue.replace(/^(sc:|ytm:|yt:|spsearch:|ytsearch:|scsearch:|ytmsearch:|amsearch:)/, "").trim();
+    const fallbackChoice = {
+      name: `🔎 Cari: ${cleanQuery.length > 90 ? cleanQuery.substring(0, 87) + "..." : cleanQuery}`,
+      value: (cleanQuery.length > 100 ? cleanQuery.substring(0, 100) : cleanQuery) || focusedValue.substring(0, 100),
+    };
 
     try {
+      // Spotify link: langsung tekan Enter
       if (focusedValue.match(/^(https?:\/\/)?(open\.)?spotify\.com\//)) {
         return interaction
           .respond([
             {
-              name: `🎧 [Spotify Link] Click to load track/playlist`,
-              value: focusedValue,
+              name: `🎧 [Spotify Link] Tekan Enter untuk memutar link`,
+              value: focusedValue.substring(0, 100),
             },
           ])
           .catch(() => {});
       }
 
+      // URL langsung (YouTube, SoundCloud, dll)
+      if (focusedValue.match(/^https?:\/\//)) {
+        return interaction
+          .respond([
+            {
+              name: `🔗 [Direct URL] Tekan Enter untuk memutar link`,
+              value: focusedValue.substring(0, 100),
+            },
+          ])
+          .catch(() => {});
+      }
+
+      if (cleanQuery.length < 2) {
+        return interaction.respond([fallbackChoice]).catch(() => {});
+      }
+
+      // Gunakan _poru langsung tanpa memicu lazy-init jika belum siap
+      const manager = interaction.client.musicManager;
+      if (!manager || !manager._poru) {
+        return interaction.respond([fallbackChoice]).catch(() => {});
+      }
+      const poru = manager._poru;
+
+      // Tentukan search engine berdasarkan prefix
       const searchEngine = focusedValue.startsWith("sc:")
         ? "scsearch"
         : focusedValue.startsWith("ytm:")
           ? "ytmsearch"
           : "ytsearch";
-      const cleanQuery = focusedValue.replace(/^(sc:|ytm:|yt:)/, "").trim();
 
-      if (cleanQuery.length < 2) return interaction.respond([]).catch(() => {});
-
-      const poru = interaction.client.musicManager.poru;
-      const node = poru.nodes.first();
-      let searchResult = [];
-
-      if (node) {
-        try {
-          const lavaSearchUrl = `http${node.secure ? "s" : ""}://${node.host}:${node.port}/v4/loadsearch?query=${encodeURIComponent(`${searchEngine}:${cleanQuery}`)}`;
-          const response = await fetch(lavaSearchUrl, {
-            headers: {
-              Authorization: node.password,
-            },
-          });
-          if (response.ok) {
-            const data = await response.json();
-            if (data && data.texts && data.texts.length > 0) {
-              searchResult = data.texts.slice(0, 25).map((t) => ({
-                name: `🔍 ${t.text.length > 95 ? t.text.substring(0, 95) + "..." : t.text}`,
-                value: t.text.substring(0, 100),
-              }));
-            }
-          }
-        } catch (e) {
-          // Fallback to poru.resolve
-        }
-      }
-
-      if (searchResult.length > 0) {
-        return interaction.respond(searchResult).catch(() => {});
-      }
-
-      const res = await poru.resolve({
+      // Timeout 2000ms untuk mengakomodasi latency 3-node Lavalink
+      const searchPromise = poru.resolve({
         query: `${searchEngine}:${cleanQuery}`,
         requester: interaction.user,
       });
 
-      if (!res || !res.tracks || res.tracks.length === 0)
-        return interaction.respond([]).catch(() => {});
+      const res = await Promise.race([
+        searchPromise,
+        new Promise((resolve) => setTimeout(() => resolve(null), 2000)),
+      ]);
 
-      const choices = res.tracks.slice(0, 25).map((track) => {
-        let title = track.info.title;
-        let author = track.info.author;
-        let duration = formatDuration(track.info.length);
+      if (!res || !res.tracks || res.tracks.length === 0) {
+        return interaction.respond([fallbackChoice]).catch(() => {});
+      }
+
+      const choices = res.tracks.slice(0, 24).map((track) => {
+        const title = track.info.title || "Unknown Track";
+        const author = track.info.author || "Unknown Artist";
+        const duration = formatDuration(track.info.length);
         let label = `${title} - ${author} (${duration})`;
         if (label.length > 100) label = label.substring(0, 97) + "...";
-        return { name: label, value: track.info.uri || track.info.title };
+
+        // Gunakan URI langsung sebagai value - paling reliable untuk playback
+        // Fallback ke ytsearch jika URI tidak tersedia
+        const uri = track.info.uri;
+        const val = uri && uri.startsWith("http")
+          ? uri.substring(0, 100)
+          : `ytsearch:${title} ${author}`.substring(0, 100);
+
+        return { name: label, value: val };
       });
+
+      // Tambahkan opsi pencarian manual di posisi terakhir jika ada tempat
+      if (choices.length < 25) {
+        choices.push(fallbackChoice);
+      }
 
       return interaction.respond(choices).catch(() => {});
     } catch (error) {
-      return interaction.respond([]).catch(() => {});
+      return interaction.respond([fallbackChoice]).catch(() => {});
     }
   },
 
@@ -1411,7 +1535,9 @@ module.exports = {
       tipe: interaction.options.getString("tipe"),
       persen: interaction.options.getInteger("persen"),
       target: interaction.options.getUser("target"),
+      pesan: interaction.options.getString("pesan"),
       id: interaction.options.getInteger("id"),
+      ronde: interaction.options.getInteger("ronde"),
     };
     const sendReply = async (payload, autoDelete = false) => {
       const msg = await interaction.editReply(payload).catch(() => {});

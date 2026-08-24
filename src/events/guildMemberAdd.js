@@ -1,4 +1,6 @@
 const { Events, EmbedBuilder, AttachmentBuilder } = require("discord.js");
+const path = require("node:path");
+const fs = require("node:fs");
 const StickyRole = require("../models/StickyRole");
 const cacheManager = require("../managers/cacheManager");
 const { logger } = require("../managers/logger");
@@ -110,6 +112,22 @@ async function sendWelcome(member, settings) {
     } catch (err) {
       // Gambar gagal dirender bukan alasan untuk membatalkan sambutan.
       logger.error("[Welcomer Image Error]", err);
+    }
+  }
+
+  if (welcome.attachAudio) {
+    const langCode = settings?.language === "en" ? "EN" : "ID";
+    const audioFilePath = path.join(
+      __dirname,
+      `../../assets/audio/Server Join (${langCode}).mp3`,
+    );
+    if (fs.existsSync(audioFilePath)) {
+      if (!payload.files) payload.files = [];
+      payload.files.push(
+        new AttachmentBuilder(audioFilePath, {
+          name: `Welcome_${langCode}.mp3`,
+        }),
+      );
     }
   }
 

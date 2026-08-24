@@ -30,7 +30,7 @@ function findLocaleDirs(dir, found = []) {
 
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
-    if (["node_modules", ".git", "assets"].includes(entry.name)) continue;
+    if (["node_modules", ".git"].includes(entry.name)) continue;
     findLocaleDirs(path.join(dir, entry.name), found);
   }
   return found;

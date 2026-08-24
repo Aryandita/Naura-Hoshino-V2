@@ -1,14 +1,12 @@
-try {
-  process.loadEnvFile();
-} catch (e) {}
+const env = require("./src/config/env");
 
 // Inisialisasi Sentry paling awal untuk menangkap semua potensi error
 const Sentry = require("@sentry/node");
 const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 
-if (process.env.SENTRY_DSN) {
+if (env.SENTRY_DSN) {
   Sentry.init({
-    dsn: process.env.SENTRY_DSN,
+    dsn: env.SENTRY_DSN,
     integrations: [nodeProfilingIntegration()],
     tracesSampleRate: 1.0,
     profilesSampleRate: 1.0,
@@ -29,11 +27,11 @@ const { loadEvents } = require("./src/managers/eventLoader");
 const clientOptions = require("./src/config/clientOptions");
 const MusicManager = require("./src/managers/musicManager");
 const redisManager = require("./src/managers/redisManager");
+const mongoManager = require("./src/managers/mongoManager");
 const { logger } = require("./src/managers/logger");
 const RssManager = require("./src/managers/rssManager");
 const { connectToDatabase } = require("./src/managers/dbManager");
 const { seedInitialData } = require("./src/managers/dbSeeder");
-const env = require("./src/config/env");
 
 // Kode keluar khusus untuk konfigurasi yang tidak lengkap. shard.js membaca kode
 // ini dan mematikan respawn, sehingga tidak terjadi siklus lahir-mati tanpa henti.
@@ -47,14 +45,11 @@ const SHUTDOWN_TIMEOUT_MS = 10_000;
 const isShardChild = typeof env.SHARD_ID !== "undefined";
 const isPrimaryShard = !isShardChild || env.SHARD_ID === "0";
 
-// Saat berjalan mandiri (node index.js), validasi wajib bersifat fatal.
-// Saat menjadi anak shard, shard.js sudah memvalidasi lebih dulu; di sini kita tetap
-// berhenti, tetapi dengan kode keluar khusus agar respawn dimatikan.
-if (!env.validateEnv({ fatal: !isShardChild })) {
-  logger.error(
-    `[BOOT] Konfigurasi wajib belum lengkap. Shard berhenti dengan kode ${EXIT_CODE_BAD_CONFIG} (tanpa respawn).`,
+// Saat berjalan mandiri (node index.js), validasi tetap berjalan informatif
+if (!env.validateEnv({ fatal: false })) {
+  logger.warn(
+    `[BOOT] Konfigurasi environment belum lengkap. Menjalankan sistem dengan SQLite fallback & Web Dashboard.`,
   );
-  process.exit(EXIT_CODE_BAD_CONFIG);
 }
 
 const client = new Client({
@@ -82,6 +77,7 @@ async function startBot() {
 
   const sysStatus = {
     db: "\x1b[31m\ud83d\udd34 OFFLINE   \x1b[0m",
+    mongo: "\x1b[33m\ud83d\udfe1 SKIPPED   \x1b[0m",
     redis: "\x1b[33m\ud83d\udfe1 SKIPPED   \x1b[0m",
     music: "\x1b[32m\ud83d\udfe2 INITIALIZED\x1b[0m",
     cmds: "\x1b[33m\ud83d\udfe1 BACKGROUND\x1b[0m",
@@ -121,9 +117,33 @@ async function startBot() {
       logger.error("[BOOT] Koneksi database gagal:", error.message);
     }
 
+    if (env.MONGODB_URI) {
+      try {
+        const mongoConnected = await Promise.race([
+          mongoManager.connect(),
+          new Promise((resolve) => setTimeout(() => resolve(false), 4000)),
+        ]);
+        if (mongoConnected) {
+          sysStatus.mongo = "\x1b[32m\ud83d\udfe2 CONNECTED \x1b[0m";
+        } else {
+          sysStatus.mongo = "\x1b[33m\ud83d\udfe1 CONNECTING\x1b[0m";
+        }
+      } catch (mongoErr) {
+        sysStatus.mongo = "\x1b[31m\ud83d\udd34 ERROR     \x1b[0m";
+        logger.error("[BOOT] Koneksi MongoDB gagal:", mongoErr.message);
+      }
+    }
+
     if (env.REDIS_URL) {
-      await redisManager.connect();
-      sysStatus.redis = "\x1b[32m\ud83d\udfe2 CONNECTED \x1b[0m";
+      try {
+        await Promise.race([
+          redisManager.connect(),
+          new Promise((resolve) => setTimeout(() => resolve(false), 4000)),
+        ]);
+        sysStatus.redis = "\x1b[32m\ud83d\udfe2 CONNECTED \x1b[0m";
+      } catch (redisErr) {
+        sysStatus.redis = "\x1b[33m\ud83d\udfe1 STANDBY   \x1b[0m";
+      }
     }
 
     client.once("clientReady", () => {
@@ -141,24 +161,25 @@ async function startBot() {
       const cacheInvalidator = require("./src/managers/cacheInvalidator");
       cacheInvalidator.initSubscriber(client);
 
-      // Web Dashboard hanya boleh dijalankan oleh satu proses. Bila setiap shard
-      // mencoba listen di port yang sama, shard berikutnya crash dengan EADDRINUSE.
+      // Web Dashboard dijalankan pada shard utama
       if (!isPrimaryShard) {
         logger.info(
           `[DASHBOARD] Shard #${env.SHARD_ID} melewati Web Dashboard (dijalankan shard utama).`,
         );
         return;
       }
+    });
 
+    if (isPrimaryShard) {
       try {
         require("./dashboard/server.js")(client);
       } catch (err) {
         logger.error(
-          "\x1b[41m\x1b[37m \ud83d\udca5 ERROR \x1b[0m \x1b[31mGagal menjalankan Web Dashboard:\x1b[0m",
+          "\x1b[41m\x1b[37m 💥 ERROR \x1b[0m \x1b[31mGagal menjalankan Web Dashboard:\x1b[0m",
           err.message,
         );
       }
-    });
+    }
 
     const cronManager = require("./src/managers/cronManager");
     cronManager.init(client);
@@ -166,11 +187,18 @@ async function startBot() {
     const clusterManager = require("./src/managers/clusterManager");
     clusterManager.startStatsPublisher(client);
 
-    // Tanpa await, token yang salah hanya muncul sebagai unhandled rejection.
-    await client.login(env.TOKEN);
+    if (env.TOKEN) {
+      try {
+        await client.login(env.TOKEN);
+      } catch (loginErr) {
+        logger.error("[BOOT] Gagal login ke Discord Gateway:", loginErr.message);
+      }
+    } else {
+      logger.info("[BOOT] DISCORD_TOKEN tidak disetel. Web Dashboard aktif pada port 3000.");
+    }
   } catch (error) {
     logger.error(
-      "\n\x1b[41m\x1b[37m \ud83d\udca5 FATAL ERROR \x1b[0m \x1b[31mTerjadi kesalahan fatal saat booting:\x1b[0m\n",
+      "\n\x1b[41m\x1b[37m 💥 FATAL ERROR \x1b[0m \x1b[31mTerjadi kesalahan fatal saat booting:\x1b[0m\n",
       error,
     );
     process.exitCode = 1;
@@ -203,7 +231,7 @@ async function shutdown() {
     // Penyangga XP hidup di Redis, jadi harus disetor lebih dulu selagi koneksi
     // database dan Redis masih terbuka. Bila dilewati, XP dari lima menit
     // terakhir sebelum restart akan hilang.
-    const xpBuffer = require("./plugin/leveling/xpBuffer");
+    const xpBuffer = require("./src/leveling/xpBuffer");
     if (xpBuffer && xpBuffer.flush) {
       console.log("[-] Menyetorkan penyangga XP ke database...");
       xpBuffer.stop();
@@ -238,6 +266,11 @@ async function shutdown() {
     if (redisManager && redisManager.client) {
       console.log("[-] Menutup koneksi Redis...");
       await redisManager.client.quit();
+    }
+
+    if (mongoManager && mongoManager.isReady) {
+      console.log("[-] Menutup koneksi MongoDB Atlas...");
+      await mongoManager.disconnect();
     }
 
     clearTimeout(forceExit);
