@@ -1,7 +1,10 @@
-const { MessageFlags } = require("discord.js");
+const { MessageFlags, AttachmentBuilder } = require("discord.js");
+const fs = require("node:fs");
+const path = require("node:path");
 const ui = require("../config/ui");
 const nauraExpression = require("./nauraExpression");
 const nauraText = require("./nauraText");
+const uxHelper = require("./uxHelper");
 const languageManager = require("../managers/languageManager");
 const {
   MAX_DESCRIPTION_LENGTH,
@@ -77,6 +80,8 @@ function buildContainerV2({
   description,
   fields = [],
   bannerAttachmentName,
+  topBannerAttachmentName,
+  bannerPosition = "bottom",
   mediaAttachmentNames = [],
   fileAttachmentNames = [],
   files = [],
@@ -164,6 +169,16 @@ function buildContainerV2({
     containerComponents.push(separatorComp(true, 1));
   }
 
+  // ── Top Banner (jika bannerPosition === 'top' atau ada topBannerAttachmentName) ──
+  const topRef = topBannerAttachmentName || (bannerPosition === "top" ? bannerAttachmentName : null);
+  if (topRef) {
+    containerComponents.push({
+      type: 12,
+      items: [{ media: { url: resolveMediaUrl(topRef) } }],
+    });
+    containerComponents.push(separatorComp(true, 1));
+  }
+
   const descriptionAlreadyShown =
     !headerText && Boolean(headerIconURL) && Boolean(bodyDescription);
   if (bodyDescription && !descriptionAlreadyShown) {
@@ -178,16 +193,19 @@ function buildContainerV2({
     });
   }
 
-  const galleryRefs = [
-    bannerAttachmentName,
+  // ── Bottom Banner / Media Gallery ──
+  const bottomBannerRef = bannerPosition !== "top" ? bannerAttachmentName : null;
+  const bottomGalleryRefs = [
+    bottomBannerRef,
     ...(Array.isArray(mediaAttachmentNames) ? mediaAttachmentNames : []),
     expressionGalleryRef,
   ].filter(Boolean);
 
-  if (galleryRefs.length > 0) {
+  if (bottomGalleryRefs.length > 0) {
+    containerComponents.push(separatorComp(true, 1));
     containerComponents.push({
       type: 12,
-      items: galleryRefs.map((ref) => ({
+      items: bottomGalleryRefs.map((ref) => ({
         media: { url: resolveMediaUrl(ref) },
       })),
     });
@@ -264,6 +282,31 @@ function buildContainerV2({
   };
 }
 
+function resolveSmartBanner(type) {
+  const bannerMap = {
+    error: ui.banners.errorWebp || ui.banners.errorCompressed || ui.banners.error,
+    loading: ui.banners.loadingWebp || ui.banners.loadingCompressed || ui.banners.loading,
+    maintenance: ui.banners.maintenanceWebp || ui.banners.maintenanceCompressed || ui.banners.maintenance,
+  };
+
+  const rawPath = bannerMap[type];
+  if (!rawPath) return null;
+
+  const absolutePath = path.isAbsolute(rawPath)
+    ? rawPath
+    : path.resolve(process.cwd(), rawPath);
+
+  if (fs.existsSync(absolutePath)) {
+    const ext = path.extname(absolutePath) || ".webp";
+    const attachmentName = `banner_${type}${ext}`;
+    return {
+      name: attachmentName,
+      file: new AttachmentBuilder(absolutePath, { name: attachmentName }),
+    };
+  }
+  return null;
+}
+
 function buildErrorContainerV2(opts) {
   const lang = pick(opts, "lang");
   const rawError =
@@ -273,6 +316,7 @@ function buildErrorContainerV2(opts) {
         pick(opts, "description") ||
         t(lang, "common.error.reason_fallback");
   const title = pick(opts, "title") || t(lang, "common.error.title");
+  const authorName = pick(opts, "authorName") || "Naura System Guard";
   const footerText = pick(opts, "footerText") || ui.getFooter("core");
   const errEmoji =
     nauraExpression.getEmoji("error") || ui.getEmoji("error") || "❌";
@@ -281,12 +325,32 @@ function buildErrorContainerV2(opts) {
   const errorMessage =
     typeof opts === "string" ? nauraText.error(rawError, lang) : rawError;
 
+  const withBanner = pick(opts, "withBanner");
+  let bannerAttachmentName = pick(opts, "bannerAttachmentName");
+  const files = [...(pick(opts, "files") || [])];
+
+  if (withBanner && !bannerAttachmentName) {
+    const bannerInfo = resolveSmartBanner("error");
+    if (bannerInfo) {
+      bannerAttachmentName = bannerInfo.name;
+      files.push(bannerInfo.file);
+    }
+  }
+
   return buildContainerV2({
     accentColorHex:
-      pick(opts, "accentColorHex") || ui.getColor("primary") || "#FFC0CB",
+      pick(opts, "accentColorHex") || ui.getColor("danger") || ui.getColor("error") || "#EF4444",
+    authorName,
     title: `${errEmoji} ${title}`,
     description: errorMessage,
     expression,
+    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
+    expressionEmoji: pick(opts, "expressionEmoji") !== undefined ? pick(opts, "expressionEmoji") : true,
+    expressionAs: pick(opts, "expressionAs") || "icon",
+    fields: pick(opts, "fields") || [],
+    buttonsRow: pick(opts, "buttonsRow"),
+    bannerAttachmentName,
+    files,
     footerText,
   });
 }
@@ -300,6 +364,7 @@ function buildLoadingContainerV2(opts) {
         pick(opts, "description") ||
         t(lang, "common.loading.body");
   const title = pick(opts, "title") || t(lang, "common.loading.title");
+  const authorName = pick(opts, "authorName") || "Naura Task Runner";
   const footerText = pick(opts, "footerText") || ui.getFooter("core");
   const loadEmoji =
     nauraExpression.getEmoji("loading") || ui.getEmoji("loading") || "⏳";
@@ -308,15 +373,82 @@ function buildLoadingContainerV2(opts) {
       ? pick(opts, "expression")
       : "loading";
 
+  const withBanner = pick(opts, "withBanner");
+  let bannerAttachmentName = pick(opts, "bannerAttachmentName");
+  const files = [...(pick(opts, "files") || [])];
+
+  if (withBanner && !bannerAttachmentName) {
+    const bannerInfo = resolveSmartBanner("loading");
+    if (bannerInfo) {
+      bannerAttachmentName = bannerInfo.name;
+      files.push(bannerInfo.file);
+    }
+  }
+
   return buildContainerV2({
     accentColorHex:
-      pick(opts, "accentColorHex") || ui.getColor("primary") || "#FFC0CB",
+      pick(opts, "accentColorHex") || ui.getColor("accent-blue") || ui.getColor("primary") || "#38BDF8",
+    authorName,
     title: `${loadEmoji} ${title}`,
     description:
       typeof opts === "string"
         ? nauraText.loading(rawLoading, lang)
         : rawLoading,
     expression,
+    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
+    expressionEmoji: pick(opts, "expressionEmoji") !== undefined ? pick(opts, "expressionEmoji") : true,
+    expressionAs: pick(opts, "expressionAs") || "icon",
+    fields: pick(opts, "fields") || [],
+    buttonsRow: pick(opts, "buttonsRow"),
+    bannerAttachmentName,
+    files,
+    footerText,
+  });
+}
+
+function buildMaintenanceContainerV2(opts) {
+  const lang = pick(opts, "lang");
+  const rawMaintenance =
+    typeof opts === "string"
+      ? opts
+      : pick(opts, "maintenanceMessage") ||
+        pick(opts, "description") ||
+        (lang ? t(lang, "common.maintenance.body") : null) ||
+        "Sistem sedang dalam proses pemeliharaan atau peningkatan performa server. Mohon tunggu sebentar ya!";
+  const title = pick(opts, "title") || "Pemeliharaan Sistem";
+  const authorName = pick(opts, "authorName") || "Naura Maintenance Center";
+  const footerText = pick(opts, "footerText") || ui.getFooter("core");
+  const warnEmoji =
+    nauraExpression.getEmoji("warning") || ui.getEmoji("warning") || "🛠️";
+  const expression =
+    pick(opts, "expression") !== undefined ? pick(opts, "expression") : "sleepy";
+
+  const withBanner = pick(opts, "withBanner") !== false;
+  let bannerAttachmentName = pick(opts, "bannerAttachmentName");
+  const files = [...(pick(opts, "files") || [])];
+
+  if (withBanner && !bannerAttachmentName) {
+    const bannerInfo = resolveSmartBanner("maintenance");
+    if (bannerInfo) {
+      bannerAttachmentName = bannerInfo.name;
+      files.push(bannerInfo.file);
+    }
+  }
+
+  return buildContainerV2({
+    accentColorHex:
+      pick(opts, "accentColorHex") || ui.getColor("warning") || "#F59E0B",
+    authorName,
+    title: `${warnEmoji} ${title}`,
+    description: rawMaintenance,
+    expression,
+    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
+    expressionEmoji: pick(opts, "expressionEmoji") !== undefined ? pick(opts, "expressionEmoji") : true,
+    expressionAs: pick(opts, "expressionAs") || "icon",
+    fields: pick(opts, "fields") || [],
+    buttonsRow: pick(opts, "buttonsRow"),
+    bannerAttachmentName,
+    files,
     footerText,
   });
 }
@@ -330,6 +462,7 @@ function buildSuccessContainerV2(opts) {
         pick(opts, "description") ||
         t(lang, "common.success.body");
   const title = pick(opts, "title") || t(lang, "common.success.title");
+  const authorName = pick(opts, "authorName") || "Naura Assistant";
   const footerText = pick(opts, "footerText") || ui.getFooter("core");
   const okEmoji =
     nauraExpression.getEmoji("success") || ui.getEmoji("success") || "✅";
@@ -338,16 +471,81 @@ function buildSuccessContainerV2(opts) {
       ? pick(opts, "expression")
       : "success";
 
+  const withBanner = pick(opts, "withBanner");
+  let bannerAttachmentName = pick(opts, "bannerAttachmentName");
+  const files = [...(pick(opts, "files") || [])];
+
   return buildContainerV2({
     accentColorHex:
-      pick(opts, "accentColorHex") || ui.getColor("primary") || "#FFC0CB",
+      pick(opts, "accentColorHex") || ui.getColor("success") || "#22C55E",
+    authorName,
     title: `${okEmoji} ${title}`,
     description:
       typeof opts === "string"
         ? nauraText.success(rawSuccess, lang)
         : rawSuccess,
     expression,
+    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
+    expressionEmoji: pick(opts, "expressionEmoji") !== undefined ? pick(opts, "expressionEmoji") : true,
+    expressionAs: pick(opts, "expressionAs") || "icon",
+    fields: pick(opts, "fields") || [],
+    buttonsRow: pick(opts, "buttonsRow"),
+    bannerAttachmentName,
+    files,
     footerText,
+  });
+}
+
+function buildPersonaContainerV2({
+  type = "default",
+  user = null,
+  context = {},
+  lang = "id",
+  title = null,
+  accentColorHex = null,
+  fields = [],
+  buttonsRow = null,
+  footerText = null,
+  expression = null,
+}) {
+  const message = uxHelper.getPersonalityResponse(type, { user, context, lang });
+  const defaultExpressionMap = {
+    cooldown: "blush",
+    error: "confused",
+    levelUp: "cheer",
+    ikeaAppreciation: "wink",
+    peakEndClosure: "happy",
+    starterWelcome: "wave",
+  };
+
+  const chosenExpression =
+    expression || defaultExpressionMap[type] || "smile";
+
+  const eNaura = ui.getEmoji("about") || "🌸";
+  const eWarn = ui.getEmoji("warning") || "⚠️";
+  const eParty = ui.getEmoji("celebrate") || "🎉";
+  const eSparkle = ui.getEmoji("sparkles") || "✨";
+  const eGift = ui.getEmoji("gift") || "🎁";
+
+  const defaultTitleMap = {
+    cooldown: `${eNaura} Istirahat Dulu Sebentar`,
+    error: `${eWarn} Ups, Terjadi Kendala`,
+    levelUp: `${eParty} Level Up Milestone!`,
+    ikeaAppreciation: `${eSparkle} Kustomisasi Disimpan`,
+    peakEndClosure: `${eNaura} Naura Siap Membantu`,
+    starterWelcome: `${eGift} Sambutan Spesial Naura`,
+  };
+
+  const finalTitle = title || defaultTitleMap[type] || `${eNaura} Naura Hoshino`;
+
+  return buildContainerV2({
+    accentColorHex: accentColorHex || ui.getColor("primary") || "#FFB6C1",
+    title: finalTitle,
+    description: message,
+    expression: chosenExpression,
+    fields,
+    buttonsRow,
+    footerText: footerText || ui.getFooter("core"),
   });
 }
 
@@ -355,7 +553,10 @@ module.exports = {
   buildContainerV2,
   buildErrorContainerV2,
   buildLoadingContainerV2,
+  buildMaintenanceContainerV2,
   buildSuccessContainerV2,
+  buildPersonaContainerV2,
   textDisplay,
   separatorComp,
+  ux: uxHelper,
 };

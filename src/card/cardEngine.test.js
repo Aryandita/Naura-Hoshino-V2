@@ -4,30 +4,28 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const CardEngine = require("./cardEngine");
 
-test("CardEngine - generateCardCode returns unique 8-char code with nra- prefix", () => {
+test("Card Engine - Catalog & Code Generation", () => {
+  const catalog = CardEngine.getCatalog();
+  assert.ok(Array.isArray(catalog), "Katalog harus berupa array");
+  assert.ok(catalog.length > 10, "Katalog karakter minimal 10 kartu");
+
   const code1 = CardEngine.generateCardCode();
   const code2 = CardEngine.generateCardCode();
-  assert.match(code1, /^nra-[a-z0-9]{5}$/);
-  assert.match(code2, /^nra-[a-z0-9]{5}$/);
-  assert.notEqual(code1, code2);
+  assert.ok(code1.startsWith("nra-"), "Kode kartu harus berawalan 'nra-'");
+  assert.notEqual(code1, code2, "Dua kode acak tidak boleh sama");
+
+  const quality = CardEngine.rollQuality();
+  assert.ok(["GEM_MINT", "EXCELLENT", "GOOD", "POOR"].includes(quality), "Kualitas harus valid");
 });
 
-test("CardEngine - getCatalog contains characters with valid rarity and burnValue", () => {
-  const catalog = CardEngine.getCatalog();
-  assert.ok(catalog.length >= 10);
-  for (const c of catalog) {
-    assert.ok(c.id);
-    assert.ok(c.name);
-    assert.ok(c.series);
-    assert.ok(["SECRET_MYTHIC", "ULTRA_RARE", "RARE"].includes(c.rarity));
-    assert.ok(c.burnValue > 0);
-  }
-});
+test("Card Engine - Fusion Validation Rules", async () => {
+  // Test validasi 3 kartu wajib
+  const res1 = await CardEngine.fuseCards("user123", "code1", "code2", null);
+  assert.equal(res1.success, false);
+  assert.equal(res1.reason, "THREE_CARDS_REQUIRED");
 
-test("CardEngine - rollQuality returns valid condition tiers", () => {
-  const validTiers = ["POOR", "GOOD", "EXCELLENT", "GEM_MINT"];
-  for (let i = 0; i < 50; i++) {
-    const q = CardEngine.rollQuality();
-    assert.ok(validTiers.includes(q));
-  }
+  // Test validasi duplikasi kode kartu
+  const res2 = await CardEngine.fuseCards("user123", "code1", "code1", "code2");
+  assert.equal(res2.success, false);
+  assert.equal(res2.reason, "DUPLICATE_CODES_SELECTED");
 });

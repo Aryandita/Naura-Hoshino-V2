@@ -33,8 +33,8 @@ const {
 } = require("../../src/utils/NauraContainerBuilder");
 
 const locales = {
-  id: require("./locales/id.json"),
-  en: require("./locales/en.json"),
+  id: require("../../assets/language/id.json"),
+  en: require("../../assets/language/en.json"),
 };
 
 // ==========================================
@@ -136,7 +136,7 @@ module.exports = {
       sub
         .setName("ping")
         .setDescription(
-          "Cek respons latensi Discord, Database MySQL, & Lavalink.",
+          "Cek respons latensi Discord, Database Supabase, & Lavalink.",
         ),
     )
     .addSubcommand((sub) =>
@@ -186,7 +186,7 @@ module.exports = {
         ),
     ),
 
-  aliases: ["ping", "stats", "info", "about", "help", "language", "lang"],
+  aliases: ["ping", "stats", "info", "about", "help"],
 
   async autocomplete(interaction, client) {
     const focusedValue = interaction.options.getFocused().toLowerCase();
@@ -248,9 +248,11 @@ module.exports = {
       createdTimestamp: message.createdTimestamp,
       deferReply: async () => {
         const loadingPayload = buildLoadingContainerV2({
-          authorName: "Naura Loading System...",
-          description: `${face("loading", "\u23F3")} Tunggu sebentar yaa, Naura lagi siapin semuanya buat kamu~ ${e("sparkle", "\u2728")}`,
+          authorName: "Naura Task Runner",
+          title: "Sedang Menyiapkan...",
+          loadingMessage: `Tunggu sebentar yaa, Naura lagi siapin semuanya buat kamu~ ${e("sparkle", "✨")}`,
           footerText: `Sedang menyiapkan untuk ${message.author.username}`,
+          withBanner: true,
         });
         replyMsg = await message.reply(loadingPayload);
       },
@@ -351,9 +353,11 @@ async function handlePing(interaction, client, lang) {
   const offline = e("offline", "\uD83D\uDD34");
 
   const loadingPayload = buildLoadingContainerV2({
-    authorName: "Naura Loading System...",
-    description: `${face("loading", "\u23F3")} ${lang.PING_LOADING}`,
+    authorName: "Naura Latency Diagnostic",
+    title: "Mengukur Latensi...",
+    loadingMessage: lang.PING_LOADING || "Menghubungi shard dan gateway Discord...",
     footerText: `Sedang menyiapkan untuk ${interaction.user.username}`,
+    withBanner: true,
   });
 
   let sent;
@@ -403,9 +407,9 @@ async function handlePing(interaction, client, lang) {
         let i = 1;
         nodes.forEach((node) => {
           const status = node.isConnected
-            ? `${online} \`${node.ping}ms\``
-            : `${offline} Disconnected`;
-          nodeArr.push(`${dot} **Naura Node ${i}:** ${status}`);
+            ? `${online} Online (Aktif)`
+            : `${offline} Offline (Mati)`;
+          nodeArr.push(`${dot} **${node.name || `Naura Node ${i}`}:** ${status}`);
           i++;
         });
         lavalinkStr = "\n" + nodeArr.join("\n");
@@ -513,7 +517,7 @@ async function handlePing(interaction, client, lang) {
       },
       {
         name: `${eMemorySystem} Naura Memory Systems`,
-        value: `${dot} **MySQL Server:** ${dbPing}\n${dot} **Redis Cache:** ${redisPing}`,
+        value: `${dot} **Supabase (PostgreSQL):** ${dbPing}\n${dot} **Redis Cache:** ${redisPing}`,
       },
       {
         name: `${eIntellSystem} Naura Intelligent Systems`,
@@ -821,9 +825,11 @@ async function handleAbout(interaction, client, lang) {
     fields: [
       { name: `${eStats} TELEMETRI SHARD & SISTEM`, value: sysStatus },
       {
-        name: `${eDeveloper} DEVELOPER / CREATOR`,
+        name: `${eDeveloper} DEVELOPER & KONTAK RESMI`,
         value:
-          "`Aryandita` (Developer Utama & Pencipta Ekosistem Naura Hoshino)",
+          "**Aryandita** (Pencipta & Developer Utama Naura Hoshino)\n" +
+          `${ui.getEmoji("email") || "📧"} **Email Resmi:** \`naurahoshino@gmail.com\`\n` +
+          `${ui.getEmoji("translate") || "🌐"} **Support Server:** [dsc.gg/naura-hoshino](https://dsc.gg/naura-hoshino)`,
       },
     ],
     bannerAttachmentName: aboutBanner ? "banner.png" : null,
@@ -865,8 +871,11 @@ async function handleAbout(interaction, client, lang) {
  * @param {number} categoryIndex - Indeks kategori yang sedang aktif (0-based).
  * @param {boolean} disabled - Apakah select menu dinonaktifkan (saat timeout).
  */
-function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false) {
+function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false, user = null) {
   const categoryKeys = HELP_CATEGORY_KEYS;
+  const userName = ui.ux.resolveUserName(user);
+  const isEn = lang && (lang.LANG_CODE === "en" || lang.HELP_TITLE?.includes("Help"));
+
   const categories = {
     core: {
       emoji: e("help_core", "\u2699\uFE0F"),
@@ -876,7 +885,7 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false) {
     },
     music: {
       emoji: e("help_music", "\uD83C\uDFB5"),
-      label: lang.HELP_CAT_MUSIC_LABEL,
+      label: isEn ? "⭐ Music & Audio (Popular)" : "⭐ Musik & Audio (Populer)",
       desc: lang.HELP_CAT_MUSIC_DESC,
       content: formatHelpContent(lang.HELP_CONTENT_MUSIC),
     },
@@ -888,7 +897,7 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false) {
     },
     survival: {
       emoji: e("help_survival", "\uD83C\uDFD5\uFE0F"),
-      label: lang.HELP_CAT_SURVIVAL_LABEL,
+      label: isEn ? "⭐ RPG Survival (Featured)" : "⭐ RPG Survival (Rekomendasi)",
       desc: lang.HELP_CAT_SURVIVAL_DESC,
       content: formatHelpContent(lang.HELP_CONTENT_SURVIVAL),
     },
@@ -903,9 +912,13 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false) {
   // Tentukan konten yang ditampilkan di dalam Container
   const activeKey = categoryIndex >= 0 ? categoryKeys[categoryIndex] : null;
   const activeCat = activeKey ? categories[activeKey] : null;
+  const greeting = isEn
+    ? `Hello **${userName}**! Naura is excited to guide you through all the awesome commands~ ✨`
+    : `Halo Kak **${userName}**! Naura senang banget bisa bantu memandu petualanganmu di sini~ ✨`;
+
   const bodyContent = activeCat
     ? `${activeCat.emoji} **${activeCat.label}**\n\n${activeCat.content}`
-    : formatHelpContent(lang.HELP_DESC);
+    : `${greeting}\n\n${formatHelpContent(lang.HELP_DESC)}`;
 
   // Hitung warna accent (primary pink Naura menjadi integer RGB)
   const primaryHex = (ui.getColor("primary") || "#FFB6C1").replace("#", "");
@@ -952,6 +965,25 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false) {
   const footerText = ui.stripCustomEmojis(ui.getFooter("core"));
   const eHelp = e("help", "\uD83D\uDCDA");
 
+  // Dynamic banner per kategori
+  const categoryBanners = {
+    core: ui.getBanner("utility") || "./assets/general/Utility & Tools Banner.jpeg",
+    music: ui.getBanner("music") || "./assets/general/Music Banner.jpeg",
+    minigame: ui.getBanner("minigame") || "./assets/general/Minigame & Arcade Banner.jpeg",
+    survival: ui.getBanner("economy") || "./assets/general/Economy & Market Banner.jpeg",
+    admin: ui.getBanner("admin") || "./assets/general/Admin & Security Banner.jpeg",
+  };
+
+  const activeBannerPath = activeKey
+    ? categoryBanners[activeKey]
+    : ui.getBanner("help") || "./assets/general/Utility & Tools Banner.jpeg";
+  const bannerFilename = `help-banner-${activeKey || "main"}.jpeg`;
+  const files = [];
+
+  if (activeBannerPath && fs.existsSync(activeBannerPath)) {
+    files.push(new AttachmentBuilder(activeBannerPath, { name: bannerFilename }));
+  }
+
   const containerComponents = [
     {
       type: 10,
@@ -959,15 +991,27 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false) {
     },
     { type: 14, divider: true, spacing: 1 },
     { type: 10, content: bodyContent },
+  ];
+
+  if (files.length > 0) {
+    containerComponents.push({ type: 14, divider: true, spacing: 1 });
+    containerComponents.push({
+      type: 12, // MEDIA_GALLERY
+      items: [{ media: { url: `attachment://${bannerFilename}` } }],
+    });
+  }
+
+  containerComponents.push(
     { type: 14, divider: true, spacing: 1 },
     selectRow.toJSON(),
     navRow.toJSON(),
     { type: 14, divider: false, spacing: 1 },
     { type: 10, content: `-# ${footerText}` },
-  ];
+  );
 
   return {
     flags: MessageFlags.IsComponentsV2,
+    files,
     components: [
       {
         type: 17,
@@ -981,6 +1025,7 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false) {
 }
 
 async function handleHelp(interaction, client, langParam) {
+  const userName = ui.ux.resolveUserName(interaction);
   // Tentukan teks berdasarkan bahasa guild
   const isIndo =
     langParam.HELP_TITLE && langParam.HELP_TITLE.includes("Pusat Bantuan");
@@ -995,19 +1040,32 @@ async function handleHelp(interaction, client, langParam) {
       .setPlaceholder(placeholderText)
       .addOptions(
         {
-          label: "English",
-          description: "Show help menu in English",
-          value: "en",
-          emoji: "\uD83C\uDDEC\uD83C\uDDE7",
-        },
-        {
           label: "Indonesia",
           description: "Tampilkan menu bantuan dalam Bahasa Indonesia",
           value: "id",
           emoji: "\uD83C\uDDEE\uD83C\uDDE9",
         },
+        {
+          label: "English",
+          description: "Show help menu in English",
+          value: "en",
+          emoji: "\uD83C\uDDEC\uD83C\uDDE7",
+        },
       ),
   );
+
+  const langBannerPath =
+    ui.getBanner("help") || "./assets/general/Utility & Tools Banner.jpeg";
+  const langBannerName = "help-lang-banner.jpeg";
+  const langFiles = [];
+  let langBannerAttachmentName = null;
+
+  if (fs.existsSync(langBannerPath)) {
+    langFiles.push(
+      new AttachmentBuilder(langBannerPath, { name: langBannerName }),
+    );
+    langBannerAttachmentName = langBannerName;
+  }
 
   const langPayload = buildContainerV2({
     accentColorHex: ui.getColor("primary") || "#FFB6C1",
@@ -1016,8 +1074,11 @@ async function handleHelp(interaction, client, langParam) {
     iconURL: client.user.displayAvatarURL(),
     expression: "help",
     description: isIndo
-      ? "Halo! Sebelum mulai, pilih dulu bahasa yang paling nyaman buat kamu di bawah ini yaa~ Nanti Naura pandu semuanya pakai bahasa itu."
-      : "Hi there! Before we start, pick the language you are most comfortable with below. Naura will guide you in that language from now on.",
+      ? `Halo Kak **${userName}**! Sebelum mulai, pilih dulu bahasa yang paling nyaman buat kamu di bawah ini yaa~ Nanti Naura pandu semuanya pakai bahasa itu.`
+      : `Hi **${userName}**! Before we start, pick the language you are most comfortable with below. Naura will guide you in that language from now on.`,
+    bannerAttachmentName: langBannerAttachmentName,
+    bannerPosition: "bottom",
+    files: langFiles,
     buttonsRow: langSelectRow,
     footerText: ui.getFooter("core"),
   });
@@ -1070,12 +1131,13 @@ async function renderHelpMenuV2(
 ) {
   let currentIndex = -1; // -1 = halaman default (deskripsi umum)
 
-  const initialData = buildHelpPayload(lang, client, currentIndex, false);
+  const initialData = buildHelpPayload(lang, client, currentIndex, false, interaction.user);
   const payload = {
     content: null,
     embeds: [], // penting: membersihkan embed pemilihan bahasa sebelumnya
     flags: initialData.flags,
     components: initialData.components,
+    files: initialData.files || [],
   };
 
   let response;
@@ -1133,11 +1195,12 @@ async function renderHelpMenuV2(
         return;
       }
 
-      const updatedData = buildHelpPayload(lang, client, currentIndex, false);
+      const updatedData = buildHelpPayload(lang, client, currentIndex, false, interaction.user);
       await i.update({
         embeds: [],
         flags: updatedData.flags,
         components: updatedData.components,
+        files: updatedData.files || [],
       });
     } catch (err) {
       // Abaikan error (misal interaction sudah expire)
@@ -1146,7 +1209,7 @@ async function renderHelpMenuV2(
 
   collector.on("end", async () => {
     try {
-      const disabledData = buildHelpPayload(lang, client, currentIndex, true);
+      const disabledData = buildHelpPayload(lang, client, currentIndex, true, interaction.user);
       const target = existingResponse || response;
       if (target && target.edit) {
         await target
@@ -1154,6 +1217,7 @@ async function renderHelpMenuV2(
             embeds: [],
             flags: disabledData.flags,
             components: disabledData.components,
+            files: disabledData.files || [],
           })
           .catch(() => {});
       }

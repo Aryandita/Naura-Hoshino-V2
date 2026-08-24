@@ -1,17 +1,20 @@
 const {
   sequelize,
   hasMySQLConfig,
+  hasSupabaseConfig,
+  hasDatabaseConfig,
   SHARD_COUNT,
   POOL_MAX,
 } = require("../config/database");
 const env = require("../config/env");
 const redisManager = require("./redisManager");
+const supabaseManager = require("./supabaseManager");
 const { logger } = require("../managers/logger");
 
 // ==========================================
 // EKSPOR SEQUELIZE
 // ==========================================
-module.exports = { sequelize };
+module.exports = { sequelize, supabaseManager };
 
 // ==========================================
 // 3. IMPORT MODEL
@@ -164,15 +167,23 @@ const isPrimaryProcess =
 
 const connectToDatabase = async () => {
   try {
+    // Inisialisasi Supabase SDK Client jika konfigurasi tersedia
+    if (hasSupabaseConfig || env.SUPABASE_URL) {
+      supabaseManager.initSupabase();
+    }
+
     await sequelize.authenticate();
     isDbOnline = true;
+    const dbDialect = sequelize.options.dialect.toUpperCase();
+    const providerName = hasSupabaseConfig || env.SUPABASE_URL ? "Supabase (PostgreSQL)" : dbDialect;
+
     // Mencegah penghapusan kolom tak disengaja di production
     if (env.NODE_ENV === "production") {
       await sequelize.sync({ alter: false }); // Biarkan migrator khusus yang merubah tabel
-      logger.info("Database terhubung (Production Safe-Sync mode).");
+      logger.info(`Database ${providerName} terhubung (Production Safe-Sync mode).`);
     } else {
       await sequelize.sync({ alter: { drop: false } });
-      logger.info("Database disinkronkan (Development mode, Drop prevented).");
+      logger.info(`Database ${providerName} disinkronkan (Development mode, Drop prevented).`);
     }
 
     // ==========================================
@@ -220,7 +231,7 @@ const connectToDatabase = async () => {
       );
     }
 
-    if (!hasMySQLConfig) {
+    if (!hasDatabaseConfig) {
       logger.warn(
         "\n\x1b[43m\x1b[30m ⚠️ FALLBACK DB \x1b[0m \x1b[33mMenggunakan SQLite lokal sebagai Fallback sementara karena kredensial database eksternal tidak ditemukan.\x1b[0m",
       );

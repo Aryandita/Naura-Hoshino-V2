@@ -103,9 +103,18 @@ module.exports = {
       { where: { userId: user.id } },
     );
 
+    const userName = ui.ux.resolveUserName(interaction);
+    const goalBar = ui.ux.buildGoalGradientBar({
+      current: 0,
+      target: 100,
+      headStart: 20,
+      user: interaction,
+      lang: "id",
+    });
+
     const daftarBarang = STARTER_KIT.map(
       (item) =>
-        `${item.icon} **${item.name}**${item.amount > 1 ? ` \u00D7${item.amount}` : ""} \u2014 ${item.note}`,
+        `${item.icon} **${item.name}**${item.amount > 1 ? ` \u00D7${item.amount}` : ""} : ${item.note}`,
     ).join("\n");
 
     const payload = buildContainerV2({
@@ -114,7 +123,10 @@ module.exports = {
       title: `${e("cheers", "\uD83C\uDF92")} Selamat datang, petualang baru!`,
       iconURL: user.displayAvatarURL(),
       description:
-        `Halo **${user.displayName}**! Naura senang banget kamu ikut bertualang di sini.\n\n` +
+        `Halo Kak **${userName}**! Naura senang banget kamu ikut bertualang di sini.\n\n` +
+        `**${e("sparkle", "\u2728")} Momentum Awal Petualangan:**\n` +
+        `\`${goalBar.bar}\` **${goalBar.percent}% Starter Progress Unlocked!**\n` +
+        `> *${goalBar.cheerMessage}*\n\n` +
         `Naura sudah siapkan bekal lengkap buat kamu. Semuanya masih dari kayu, tapi cukup kok buat hari pertama:\n\n${daftarBarang}\n\n` +
         "Semuanya sudah Naura masukkan ke tasmu. Coba mulai dengan `/survival collect` buat mengumpulkan bahan pertamamu, yaa!",
       footerText: ui.getFooter("survival"),

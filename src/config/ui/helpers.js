@@ -120,32 +120,48 @@ function characterImagePath(imageFileName) {
   return existingPath(charPath);
 }
 
+const { MessageFlags } = require("discord.js");
+
 // Pengirim pesan error standar (Components V2).
 // Payload sudah membawa `files` sendiri termasuk wajah Naura, jadi jangan
 // pernah dikosongkan paksa atau gambarnya tidak akan terkirim.
-async function sendError(interaction, errorMessage, ephemeral = false) {
+async function sendError(interaction, errorMessage, ephemeral = false, opts = {}) {
   const {
     buildErrorContainerV2,
   } = require("../../utils/NauraContainerBuilder");
-  const containerPayload = buildErrorContainerV2({ errorMessage });
+  const containerPayload = buildErrorContainerV2({
+    errorMessage,
+    lang: interaction?.localeLang || interaction?.lang || "id",
+    withBanner: opts.withBanner !== undefined ? opts.withBanner : true,
+    ...opts,
+  });
+
+  const finalFlags =
+    (containerPayload.flags || MessageFlags.IsComponentsV2) |
+    (ephemeral ? MessageFlags.Ephemeral : 0);
 
   try {
     let msg;
     if (interaction.deferred || interaction.replied) {
-      msg = await interaction.editReply(containerPayload);
-    } else {
+      msg = await interaction.editReply({ ...containerPayload, flags: finalFlags });
+    } else if (typeof interaction.reply === "function") {
       msg = await interaction.reply({
         ...containerPayload,
-        ephemeral,
+        flags: finalFlags,
         fetchReply: !ephemeral,
+      });
+    } else if (typeof interaction.channel?.send === "function") {
+      msg = await interaction.channel.send({
+        ...containerPayload,
+        flags: containerPayload.flags || MessageFlags.IsComponentsV2,
       });
     }
 
-    if (!ephemeral) {
+    if (!ephemeral && msg) {
       setTimeout(() => {
         if (interaction.deleteReply) {
           interaction.deleteReply().catch(() => {});
-        } else if (msg && msg.delete) {
+        } else if (msg.delete) {
           msg.delete().catch(() => {});
         }
       }, 15000);
@@ -154,6 +170,84 @@ async function sendError(interaction, errorMessage, ephemeral = false) {
     return msg;
   } catch (e) {
     logger.error("[UI SendError]", e);
+  }
+}
+
+// Pengirim pesan maintenance mode standar (Components V2).
+async function sendMaintenance(interaction, maintenanceMessage, ephemeral = false, opts = {}) {
+  const {
+    buildMaintenanceContainerV2,
+  } = require("../../utils/NauraContainerBuilder");
+  const containerPayload = buildMaintenanceContainerV2({
+    maintenanceMessage,
+    lang: interaction?.localeLang || interaction?.lang || "id",
+    withBanner: opts.withBanner !== false,
+    ...opts,
+  });
+
+  const finalFlags =
+    (containerPayload.flags || MessageFlags.IsComponentsV2) |
+    (ephemeral ? MessageFlags.Ephemeral : 0);
+
+  try {
+    let msg;
+    if (interaction.deferred || interaction.replied) {
+      msg = await interaction.editReply({ ...containerPayload, flags: finalFlags });
+    } else if (typeof interaction.reply === "function") {
+      msg = await interaction.reply({
+        ...containerPayload,
+        flags: finalFlags,
+        fetchReply: !ephemeral,
+      });
+    } else if (typeof interaction.channel?.send === "function") {
+      msg = await interaction.channel.send({
+        ...containerPayload,
+        flags: containerPayload.flags || MessageFlags.IsComponentsV2,
+      });
+    }
+
+    return msg;
+  } catch (e) {
+    logger.error("[UI SendMaintenance]", e);
+  }
+}
+
+// Pengirim pesan loading state standar (Components V2).
+async function sendLoading(interaction, loadingMessage, ephemeral = false, opts = {}) {
+  const {
+    buildLoadingContainerV2,
+  } = require("../../utils/NauraContainerBuilder");
+  const containerPayload = buildLoadingContainerV2({
+    loadingMessage,
+    lang: interaction?.localeLang || interaction?.lang || "id",
+    withBanner: opts.withBanner !== undefined ? opts.withBanner : true,
+    ...opts,
+  });
+
+  const finalFlags =
+    (containerPayload.flags || MessageFlags.IsComponentsV2) |
+    (ephemeral ? MessageFlags.Ephemeral : 0);
+
+  try {
+    let msg;
+    if (interaction.deferred || interaction.replied) {
+      msg = await interaction.editReply({ ...containerPayload, flags: finalFlags });
+    } else if (typeof interaction.reply === "function") {
+      msg = await interaction.reply({
+        ...containerPayload,
+        flags: finalFlags,
+        fetchReply: !ephemeral,
+      });
+    } else if (typeof interaction.channel?.send === "function") {
+      msg = await interaction.channel.send({
+        ...containerPayload,
+        flags: containerPayload.flags || MessageFlags.IsComponentsV2,
+      });
+    }
+
+    return msg;
+  } catch (e) {
+    logger.error("[UI SendLoading]", e);
   }
 }
 
@@ -167,5 +261,7 @@ module.exports = {
   survivalBackgroundKey,
   characterImagePath,
   sendError,
+  sendMaintenance,
+  sendLoading,
   LOCATION_BG,
 };

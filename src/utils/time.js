@@ -1,3 +1,5 @@
+const ui = require("../config/ui");
+
 /**
  * Converts milliseconds to a human-readable time string.
  * @param {number} ms - The number of milliseconds.
@@ -5,7 +7,7 @@
  */
 function msToTime(ms) {
   if (ms < 1000) {
-    return "Baru saja mulai ✨";
+    return `Baru saja mulai ${ui.getEmoji("sparkles") || "✨"}`;
   }
 
   const seconds = Math.floor((ms / 1000) % 60);

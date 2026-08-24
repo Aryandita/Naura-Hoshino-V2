@@ -17,9 +17,11 @@ async function openTicketFromMenu(interaction, client) {
   }
 
   const loadingPayload = buildLoadingContainerV2({
+    authorName: "Naura Modmail Assistant",
     title: "Membuka Tiket...",
-    description: `${ui.getEmoji("loading") || "⏳"} Naura sedang mengetuk pintu server... Sabar ya! 🌸`,
+    loadingMessage: "Naura sedang mengetuk pintu server... Sabar ya! 🌸",
     footerText: `Sedang menyiapkan untuk ${interaction.user.username}`,
+    withBanner: true,
   });
 
   await interaction.update(loadingPayload);
@@ -45,9 +47,11 @@ async function openTicketFromMenu(interaction, client) {
     await redisManager.client.del(draftKey);
   } catch (error) {
     const errPayload = buildErrorContainerV2({
+      authorName: "Naura Modmail Assistant",
       title: "Gagal Membuka Tiket",
-      description: "❌ Terjadi kesalahan saat memproses tiket modmail.",
+      errorMessage: "Terjadi kesalahan saat memproses tiket modmail.",
       footerText: ui.getFooter("core"),
+      withBanner: true,
     });
     await interaction
       .editReply(errPayload)

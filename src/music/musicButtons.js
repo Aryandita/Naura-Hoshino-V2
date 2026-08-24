@@ -68,14 +68,36 @@ module.exports = async (interaction, client) => {
             requester: interaction.user,
           });
           if (res && res.tracks && res.tracks.length > 0) {
-            player.queue.add(res.tracks[0]);
+            const addedTrack = res.tracks[0];
+            player.queue.add(addedTrack);
             if (!player.isPlaying && !player.isPaused) player.play();
+
+            // Bersihkan track yang sudah dipilih dari rekomendasi
+            if (Array.isArray(player.recommendedTracks)) {
+              player.recommendedTracks = player.recommendedTracks.filter(
+                (t) => t.info?.uri !== trackUri && t.info?.identifier !== addedTrack.info?.identifier,
+              );
+            }
+            if (Array.isArray(player.autoplayQueue)) {
+              player.autoplayQueue = player.autoplayQueue.filter(
+                (t) => t.info?.uri !== trackUri && t.info?.identifier !== addedTrack.info?.identifier,
+              );
+            }
+            if (player.prefetchedAutoplayTrack?.info?.identifier === addedTrack.info?.identifier) {
+              player.prefetchedAutoplayTrack = player.autoplayQueue?.shift() || null;
+            }
+
+            // Perbarui panel Now Playing
+            if (client.musicManager?.updatePanelEmbed) {
+              client.musicManager.updatePanelEmbed(player);
+            }
+
             return interaction
               .editReply(
                 buildContainerV2({
-                  description: `${getEmoji("nowplaying")} | Trek **[${res.tracks[0].info.title}](${res.tracks[0].info.uri})** ditambahkan!`,
+                  description: `${getEmoji("nowplaying")} | Trek **[${addedTrack.info.title}](${addedTrack.info.uri})** berhasil dimasukkan ke antrean!`,
                   footerText: ui.getFooter("music"),
-                })
+                }),
               )
               .catch(() => {});
           }
@@ -83,9 +105,9 @@ module.exports = async (interaction, client) => {
           return interaction
             .editReply(
               buildErrorContainerV2({
-                description: `❌ | Gagal memuat trek rekomendasi.`,
+                description: "❌ | Gagal memuat trek rekomendasi.",
                 footerText: ui.getFooter("music"),
-              })
+              }),
             )
             .catch(() => {});
         }
@@ -131,14 +153,13 @@ module.exports = async (interaction, client) => {
             !profile.premiumUntil ||
             profile.premiumUntil <= new Date()
           ) {
-            return interaction.editReply({
-              embeds: [
-                buildErrorContainerV2({
-                  title: "💎 Fitur V.I.P Terkunci",
-                  description: `❌ | Filter **${filterType.toUpperCase()}** adalah fitur eksklusif Premium! Gunakan \`/premium\` untuk berlangganan.`,
-                }),
-              ],
-            });
+            return interaction.editReply(
+            buildErrorContainerV2({
+              title: `${ui.getEmoji("vip") || "💎"} Fitur V.I.P Terkunci`,
+              description: `❌ | Filter **${filterType.toUpperCase()}** adalah fitur eksklusif Premium! Gunakan \`/premium\` untuk berlangganan.`,
+              footerText: ui.getFooter("music"),
+            })
+          );
           }
         }
 

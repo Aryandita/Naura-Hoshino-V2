@@ -51,21 +51,69 @@ async function grantVoteRewards(
     };
   }
 
+  // Periksa apakah streak masih berlanjut (toleransi jeda 36 jam antar vote)
+  const MAX_STREAK_GAP_MS = 36 * 60 * 60 * 1000;
+  let streak = 1;
+  let daysStreak = (Number(state.vote_days_streak) || 0);
+
+  if (lastVote && Date.now() - lastVote <= MAX_STREAK_GAP_MS) {
+    streak = (Number(state.vote_streak) || 0) + 1;
+    // Periksa apakah hari ini berbeda dengan vote terakhir
+    const lastDate = new Date(lastVote).toDateString();
+    const currentDate = new Date().toDateString();
+    if (lastDate !== currentDate) {
+      daysStreak += 1;
+    }
+  } else {
+    streak = 1;
+    daysStreak = 1;
+  }
+
+  // Perpanjang status premium Voter (12 jam per vote)
   const expiry = await extendPremium(userId, TRIAL_HOURS * 60 * 60 * 1000);
 
-  const streak = (Number(state.vote_streak) || 0) + 1;
+  // Periksa pencapaian 30 hari vote berturut-turut
+  let unlockedBiggestFan = false;
+  if (daysStreak >= 30 || streak >= 60) {
+    try {
+      const UserAchievement = require("../../src/models/UserAchievement");
+      const [userAch] = await UserAchievement.findOrCreate({ where: { userId } });
+      const unlocked = userAch.unlockedAchievements || [];
+
+      if (!unlocked.includes("naura_biggest_fan")) {
+        unlocked.push("naura_biggest_fan");
+        userAch.unlockedAchievements = unlocked;
+        userAch.changed("unlockedAchievements", true);
+        await userAch.save();
+        unlockedBiggestFan = true;
+
+        // Hadiahkan Starter Plan (7 Hari)
+        const [profile] = await UserProfile.findOrCreate({ where: { userId } });
+        const store = require("../../src/premium/premiumStore");
+        const newExpiry = await store.grantPremium(userId, profile, 7);
+
+        // Notifikasi DM
+        const { sendPremiumDM } = require("../../src/premium/premiumNotify");
+        const client = global.client || require("../../src/managers/clientManager")?.client;
+        if (client) {
+          await sendPremiumDM(client, userId, "activated", {
+            username: profile.username || "Voter Setia",
+            tierName: "🌱 Naura Starter (Pencapaian 30 Hari Vote)",
+            premiumUntil: newExpiry,
+          }).catch(() => {});
+        }
+      }
+    } catch (achErr) {
+      logger.error("[VoteRewards Achievement Error]", achErr);
+    }
+  }
 
   // Catatan vote ditulis LEBIH DULU, dan hanya kolom rpg_state yang disentuh.
-  //
-  // Sejak Naura Coupon punya kolom angka sendiri, currency.reward() memakai
-  // increment atomik lewat cacheManager, sedangkan survival.save() menulis
-  // nilai absolut dari objek di memori. Bila keduanya sama-sama menyentuh kolom
-  // coupons, satu vote bisa terhitung dua kali: sekali oleh save(), sekali lagi
-  // saat antrean increment di-flush. Membatasi `fields` menutup jalur itu.
   survival.rpg_state = {
     ...(survival.rpg_state || {}),
     last_vote_at: new Date().toISOString(),
     vote_streak: streak,
+    vote_days_streak: daysStreak,
     vote_total: (Number(state.vote_total) || 0) + 1,
   };
   survival.changed("rpg_state", true);
@@ -77,12 +125,40 @@ async function grantVoteRewards(
     { survival },
     coupons,
   );
-
-  logger.info(
-    `[VOTE] ${userId} menerima ${coupons} Naura Coupon (total ${totalCoupons}), vote ke-${streak}.`,
+  await currency.reward(
+    currency.COIN,
+    { survival },
+    1500,
   );
 
-  return { ok: true, expiry, coupons, totalCoupons, streak, isWeekend };
+  try {
+    const cacheManager = require("../../src/managers/cacheManager");
+    if (typeof cacheManager.smartInvalidateUserCanvas === "function") {
+      cacheManager.smartInvalidateUserCanvas(userId);
+    }
+    if (typeof cacheManager.invalidateUserProfile === "function") {
+      cacheManager.invalidateUserProfile(userId);
+    }
+    if (typeof cacheManager.invalidateUserSurvival === "function") {
+      cacheManager.invalidateUserSurvival(userId);
+    }
+  } catch {}
+
+  logger.info(
+    `[VOTE] ${userId} menerima ${coupons} Naura Coupon (total ${totalCoupons}) + 1.500 Coins, vote ke-${streak} (streak hari: ${daysStreak}).`,
+  );
+
+  return {
+    ok: true,
+    expiry,
+    coupons,
+    totalCoupons,
+    coins: 1500,
+    streak,
+    daysStreak,
+    isWeekend,
+    unlockedBiggestFan,
+  };
 }
 
 module.exports = {

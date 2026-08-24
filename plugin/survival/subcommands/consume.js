@@ -176,7 +176,7 @@ module.exports = {
             petName: "Kirin Surgawi",
             passiveSkill: "celestial_1",
             imgName: "kirin.png",
-            title: "✨ Kirin Surgawi Menetas!",
+            title: `${ui.getEmoji("sparkles") || "✨"} Kirin Surgawi Menetas!`,
             desc: "Makhluk sakral pelindung dimensi Hoshino ini kini setia menemanimu.",
             skillDesc: "+30 HP, +15 DMG, +8 Dodge, +8 Crit (All-Rounder)"
           },
@@ -185,7 +185,7 @@ module.exports = {
             petName: "Leviathan Samudra",
             passiveSkill: "tank_1",
             imgName: "leviathan.png",
-            title: "🌊 Leviathan Laut Dalam Menetas!",
+            title: `${ui.getEmoji("water") || "🌊"} Leviathan Laut Dalam Menetas!`,
             desc: "Raksasa samudra purba ini melindungimu dengan lapisan aura perisai air abadi.",
             skillDesc: "+80 HP (Drastis!), +2 DMG, +1 Dodge, +1 Crit (Immortal Tanker)"
           },
@@ -194,7 +194,7 @@ module.exports = {
             petName: "Bahamut Kehancuran",
             passiveSkill: "berserk_1",
             imgName: "bahamut.png",
-            title: "🔥 Bahamut Kehancuran Menetas!",
+            title: `${ui.getEmoji("fire") || "🔥"} Bahamut Kehancuran Menetas!`,
             desc: "Naga api apokaliptik pembawa kehancuran mutlak siap membakar semua lawanmu.",
             skillDesc: "+5 HP, +35 DMG (Drastis!), +1 Dodge, +2 Crit (Pure Berserker)"
           },
@@ -203,7 +203,7 @@ module.exports = {
             petName: "Garuda Badai Surya",
             passiveSkill: "agility_1",
             imgName: "garuda.png",
-            title: "⚡ Garuda Badai Surya Menetas!",
+            title: `${ui.getEmoji("stamina") || "⚡"} Garuda Badai Surya Menetas!`,
             desc: "Dewa angin dan kilat suci ini memberimu kecepatan gerak secepat cahaya.",
             skillDesc: "+10 HP, +5 DMG, +20 Dodge & +15 Crit (Drastis!) (Phantom God)"
           }
@@ -234,10 +234,10 @@ module.exports = {
           });
 
           lines.push(
-            `🌟 **KEJAIBAN MITOLOGI!** Telur mitologi bergetar dahsyat dan menetaskan **${hatch.petName}**!`,
+            `${ui.getEmoji("star") || "🌟"} **KEJAIBAN MITOLOGI!** Telur mitologi bergetar dahsyat dan menetaskan **${hatch.petName}**!`,
             `${hatch.desc}`,
-            `> ⚔️ **Passive Skill Aktif:** \`${hatch.passiveSkill}\` (${hatch.skillDesc})`,
-            `> 🐾 Ketik \`/survival rpg pet\` untuk merawat, melihat evolusi, dan bermain bersamanya!`
+            `> ${ui.getEmoji("battle") || "⚔️"} **Passive Skill Aktif:** \`${hatch.passiveSkill}\` (${hatch.skillDesc})`,
+            `> ${ui.getEmoji("cat_pet") || "🐾"} Ketik \`/survival rpg pet\` untuk merawat, melihat evolusi, dan bermain bersamanya!`
           );
 
           let petAttachment = null;

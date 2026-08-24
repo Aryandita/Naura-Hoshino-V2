@@ -70,7 +70,7 @@ module.exports = {
         .setDescription("Lihat profil milik orang lain")
         .setRequired(false),
     ),
-  aliases: ["profile", "level", "xp"],
+  aliases: ["level", "xp"],
 
   async execute(interaction) {
     const isSlash = typeof interaction.deferReply === "function";

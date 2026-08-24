@@ -145,11 +145,112 @@ module.exports = {
         description.push(`\n${e("cheers", "🎉")} Misi diselesaikan! Kas klan bertambah **${rewardTotal.toLocaleString("id-ID")} NSF**!`);
       }
 
-      return card(interaction, {
-        color: ui.getColor("primary") || "#FFB6C1",
+      const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+      const hubButtons = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId("clan_hub_hall").setLabel("🏡 2.5D Guild Hall").setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId("clan_hub_coffee").setLabel("☕ Seduh Kopi (+25 Energy)").setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId("clan_hub_raid").setLabel("⚔️ Serang Bos").setStyle(ButtonStyle.Danger),
+      );
+
+      const payload = buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        authorName: "🏰 Master Clan Hub & Dashboard",
         title: `${e("cheers", "🛡️")} Klan ${userClan.name}`,
-        expression: "info",
+        iconURL: interaction.user.displayAvatarURL(),
         description: description.join("\n"),
+        footerText: ui.getFooter("survival"),
+        buttonsRow: hubButtons,
+      });
+
+      return interaction.editReply({ ...payload, embeds: [] });
+    }
+
+    // 2. 2.5D GUILD HALL LOUNGE
+    if (action === "hall") {
+      const userClan = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
+      if (!userClan) return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
+
+      const guildHallEngine = require("../../../src/survival/engines/guildHallEngine");
+      const { drawGuildHall } = require("../../../src/canvas/guildHallCanvas");
+      const { AttachmentBuilder } = require("discord.js");
+
+      const hallData = await guildHallEngine.getHall(userClan.id);
+      const files = [];
+      try {
+        const hallBuf = await drawGuildHall(hallData);
+        files.push(new AttachmentBuilder(hallBuf, { name: "guild_hall.png" }));
+      } catch (err) {
+        // Fallback jika canvas worker terkendala
+      }
+
+      const furnituresList = hallData.layout.furniture.map((f) => `\`${f}\``).join(", ") || "*Belum ada furnitur*";
+      const payload = buildContainerV2({
+        accentColorHex: "#F472B6",
+        authorName: "🏰 2.5D Guild Hall & Lounge",
+        title: `✨ Ruang Santai Klan ${userClan.name}`,
+        description: [
+          `Selamat datang di 2.5D Guild Hall milik klan **${userClan.name}**!`,
+          ``,
+          `💰 **Kas Brankas:** \`${(userClan.vault || 0).toLocaleString("id-ID")} Star Fragments\``,
+          `🛋️ **Furnitur Terpasang:** ${furnituresList}`,
+          `☕ **Fasilitas Barista:** \`${hallData.layout.furniture.includes("coffee_maker") ? "Tersedia (+25 Energy/hari)" : "Belum Dibeli"}\``,
+          ``,
+          `-# 💡 *Gunakan \`/survival rpg clan aksi:coffee\` untuk minum kopi atau \`aksi:furniture\` untuk membeli perabot baru!*`,
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.editReply({ ...payload, files, embeds: [] });
+    }
+
+    // 3. MINUM KOPI LOUNGE (+25 ENERGY)
+    if (action === "coffee") {
+      const userClan = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
+      if (!userClan) return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
+
+      const guildHallEngine = require("../../../src/survival/engines/guildHallEngine");
+      const coffeeRes = await guildHallEngine.claimCoffeeBuff(user.id, userClan.id);
+
+      if (!coffeeRes.success) {
+        let msg = "Gagal meminum kopi di lounge klan.";
+        if (coffeeRes.reason === "NO_COFFEE_MAKER") msg = "Klanmu belum memiliki mesin `coffee_maker` di Guild Hall! Beli dengan `/survival rpg clan aksi:furniture nama:coffee_maker`.";
+
+        return fail(interaction, msg);
+      }
+
+      return card(interaction, {
+        color: "#86EFAC",
+        title: "☕ Secangkir Kopi Hangat Dinikmati!",
+        description: `Kamu menikmati secangkir kopi segar di lounge klan **${coffeeRes.clanName}**! Memulihkan **+${coffeeRes.energyGained} Energy**!`,
+      });
+    }
+
+    // 4. BELI FURNITUR LOUNGE
+    if (action === "furniture") {
+      const userClan = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
+      if (!userClan) return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
+
+      if (userClan.leaderId !== user.id) {
+        return fail(interaction, "Hanya pemimpin klan yang berhak membeli dan menata dekorasi Guild Hall!");
+      }
+
+      const furnitureId = clanNameInput || "arcade_cabinet";
+      const guildHallEngine = require("../../../src/survival/engines/guildHallEngine");
+      const buyRes = await guildHallEngine.buyFurniture(userClan.id, furnitureId);
+
+      if (!buyRes.success) {
+        let msg = "Gagal membeli furnitur.";
+        if (buyRes.reason === "INVALID_FURNITURE") msg = `ID Furnitur tidak valid! Pilihan: \`neon_sofa\` (2k), \`coffee_maker\` (3k), \`arcade_cabinet\` (5k), \`sakura_bonsai\` (4k), \`trophy_case\` (7.5k).`;
+        if (buyRes.reason === "ALREADY_OWNED") msg = "Klanmu sudah memiliki furnitur ini di dalam Guild Hall!";
+        if (buyRes.reason === "INSUFFICIENT_VAULT") msg = `Saldo kas klan tidak cukup! Butuh ${buyRes.cost.toLocaleString("id-ID")} ⭐, kas klan saat ini: ${buyRes.current.toLocaleString("id-ID")} ⭐.`;
+
+        return fail(interaction, msg);
+      }
+
+      return card(interaction, {
+        color: "#86EFAC",
+        title: "🎉 Furnitur Baru Terpasang!",
+        description: `Klan **${userClan.name}** berhasil membeli **${buyRes.item.emoji} ${buyRes.item.name}** seharga **${buyRes.item.cost.toLocaleString("id-ID")} ⭐**! Sisa kas: **${buyRes.remainingVault.toLocaleString("id-ID")} ⭐**.`,
       });
     }
 

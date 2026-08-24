@@ -49,9 +49,9 @@ function parseOrigins() {
 
 module.exports = (client) => {
   // ==================================================================
-  // 1. Server webhook (port terpisah)
+  // 1. Server webhook (bisa diakses via port webhook tersendiri maupun port web utama)
   // ==================================================================
-  require("./routes/webhooks")(client);
+  const webhookApp = require("./routes/webhooks")(client);
 
   const isProduction = env.NODE_ENV === "production";
 
@@ -86,7 +86,9 @@ module.exports = (client) => {
   // 3. Server web utama
   // ==================================================================
   const webApp = express();
-  const webPort = 3000;
+  // Baca port dari env.DASHBOARD_PORT (didahulukan) → PORT (Pterodactyl) → fallback 3000
+  // Ini menghormati konfigurasi panel Pterodactyl tanpa override manual.
+  const webPort = env.DASHBOARD_PORT;
 
   // Percayai proxy reverse (Cloud Run, Nginx, Pterodactyl) untuk IP header X-Forwarded-For
   webApp.set("trust proxy", 1);
@@ -129,6 +131,12 @@ module.exports = (client) => {
   webApp.use(express.urlencoded({ extended: true, limit: "256kb" }));
   webApp.use(express.static(path.join(__dirname, "public")));
   webApp.use("/assets", express.static(path.join(__dirname, "../assets")));
+
+  // --- Webhook Routes Mounting ---
+  // Pasang rute webhook ke webApp utama agar URL https://domain/api/webhook/* langsung aktif
+  if (webhookApp) {
+    webApp.use(webhookApp);
+  }
 
   // --- Sesi (harus lebih dulu dari seluruh rute) ---
   const sessionMiddleware = session({
@@ -315,6 +323,8 @@ module.exports = (client) => {
   webApp.get("/world", view("world.html"));
   webApp.get("/karaoke", view("karaoke.html"));
   webApp.get("/feed", view("feed.html"));
+  webApp.get("/portfolio", view("portfolio.html"));
+  webApp.get("/owner", view("portfolio.html"));
 
   // ==================================================================
   // 4. Realtime
@@ -333,7 +343,14 @@ module.exports = (client) => {
   require("./sockets")(client, io, { sessionMiddleware });
 
   webServer.listen(webPort, "0.0.0.0", () => {
-    logger.info(`[DASHBOARD] Web UI berjalan di http://0.0.0.0:${webPort}`);
+    // Tampilkan URL yang benar-benar bisa diakses:
+    // - Jika DASHBOARD_ORIGIN diset (domain/subdomain publik), pakai itu.
+    // - Jika tidak, tampilkan alamat loopback dengan port aktif.
+    const publicOrigins = parseOrigins();
+    const displayUrl = publicOrigins.length > 0
+      ? publicOrigins[0]
+      : `http://localhost:${webPort}`;
+    logger.info(`[DASHBOARD] Web UI berjalan di ${displayUrl}  (port ${webPort})`);
   });
 
   return { webApp, webServer, io };

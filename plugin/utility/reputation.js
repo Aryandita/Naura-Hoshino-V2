@@ -65,7 +65,7 @@ module.exports = {
 
       const payload = buildContainerV2({
         accentColorHex: ui.colors.primary || "#FFB6C1",
-        title: "🌟 Status Reputasi",
+        title: `${ui.getEmoji("star") || "🌟"} Status Reputasi`,
         description: `<@${target.id}> memiliki **${rep}** ${repEmoji} Reputasi.\n\n-# *Reputasi didapatkan ketika seseorang mengucapkan terima kasih dan tag namamu.*`,
         footerText: ui.getFooter("utility"),
         expression: "happy"
@@ -99,16 +99,16 @@ module.exports = {
       for (let i = 0; i < topUsers.length; i++) {
         const u = topUsers[i];
         let prefix = `${i + 1}.`;
-        if (i === 0) prefix = "🥇";
-        if (i === 1) prefix = "🥈";
-        if (i === 2) prefix = "🥉";
+        if (i === 0) prefix = ui.getEmoji("badge_gold") || "🥇";
+        if (i === 1) prefix = ui.getEmoji("badge_silver") || "🥈";
+        if (i === 2) prefix = ui.getEmoji("badge_bronze") || "🥉";
 
         list += `**${prefix}** <@${u.userId}>, **${u.reputation}** ${repEmoji}\n`;
       }
 
       const payload = buildContainerV2({
         accentColorHex: ui.colors.primary || "#FFD700",
-        title: "🏆 Peringkat Reputasi Global",
+        title: `${ui.getEmoji("trophy") || "🏆"} Peringkat Reputasi Global`,
         description: `Ini adalah pengguna dengan reputasi tertinggi yang sering membantu orang lain:\n\n${list}`,
         footerText: ui.getFooter("utility"),
         expression: "impressed"
@@ -195,16 +195,16 @@ module.exports = {
         let lbText = "";
         for (let i = 0; i < topUsers.length; i++) {
           let medal = "🏅";
-          if (i === 0) medal = "🥇";
-          else if (i === 1) medal = "🥈";
-          else if (i === 2) medal = "🥉";
+          if (i === 0) medal = ui.getEmoji("badge_gold") || "🥇";
+          else if (i === 1) medal = ui.getEmoji("badge_silver") || "🥈";
+          else if (i === 2) medal = ui.getEmoji("badge_bronze") || "🥉";
 
           lbText += `${medal} <@${topUsers[i].userId}>, **${topUsers[i].reputation}** ${repEmoji}\n`;
         }
         
         await interaction.followUp(buildContainerV2({
             accentColorHex: ui.colors.primary || "#FFD700",
-            title: "🌟 Kondisi Leaderboard Saat Ini",
+            title: `${ui.getEmoji("star") || "🌟"} Kondisi Leaderboard Saat Ini`,
             description: lbText,
             footerText: ui.getFooter("utility"),
             expression: "impressed"

@@ -127,14 +127,30 @@ async function generate({
     : [];
   const contents = [...safeHistory, { role: "user", parts }];
 
-  let response = await client.models.generateContent({
-    model,
-    contents,
-    ...(config ? { config } : {}),
-  });
+  let response;
+  try {
+    response = await client.models.generateContent({
+      model,
+      contents,
+      ...(config ? { config } : {}),
+    });
+  } catch (err) {
+    if (env.GROQ_API_KEY) {
+      logger.warn(`[Gemini -> Groq Failover] Gemini error (${err.message}), switching to Groq API...`);
+      return await generateGroqFallback({ parts, history, config });
+    }
+    throw err;
+  }
 
-  // Handle function calls loop if present
-  if (response.functionCalls && response.functionCalls.length > 0 && message) {
+  // Handle function calls loop if present (max 3 rounds)
+  let loopCount = 0;
+  while (
+    response.functionCalls &&
+    response.functionCalls.length > 0 &&
+    message &&
+    loopCount < 3
+  ) {
+    loopCount++;
     const { dispatchFunction } = require("./functionDispatcher");
     for (const call of response.functionCalls) {
       const fnResult = await dispatchFunction(call.name, call.args, message);
@@ -153,9 +169,56 @@ async function generate({
   }
 
   const text = extractText(response).trim();
-  if (!text)
+  if (!text) {
+    if (env.GROQ_API_KEY) {
+      return await generateGroqFallback({ parts, history, config });
+    }
     throw new Error("Respons Gemini kosong atau formatnya tidak dikenali.");
+  }
 
+  return text;
+}
+
+/**
+ * Fallback generator menggunakan Groq Cloud OpenAI-compatible endpoint.
+ */
+async function generateGroqFallback({ parts, history = [], config }) {
+  if (!env.GROQ_API_KEY) throw new Error("GROQ_API_KEY tidak dikonfigurasi.");
+
+  const messages = [];
+
+  // Konversi history
+  for (const h of history) {
+    const role = h.role === "model" ? "assistant" : "user";
+    const content = h.parts?.map((p) => p.text || "").join(" ") || "";
+    if (content) messages.push({ role, content });
+  }
+
+  const currentContent = parts.map((p) => p.text || "").join(" ") || "";
+  messages.push({ role: "user", content: currentContent });
+
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${env.GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: env.GROQ_MODEL || "llama-3.3-70b-versatile",
+      messages,
+      temperature: config?.temperature ?? 0.7,
+      max_tokens: config?.maxOutputTokens ?? 1024,
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`Groq API Error (${res.status}): ${errText}`);
+  }
+
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content?.trim() || "";
+  if (!text) throw new Error("Respons Groq kosong.");
   return text;
 }
 
@@ -164,5 +227,6 @@ module.exports = {
   isAvailable,
   extractText,
   generate,
+  generateGroqFallback,
   DEFAULT_MODEL,
 };

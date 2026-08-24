@@ -4,7 +4,9 @@ const {
     SlashCommandBuilder,
     PermissionFlagsBits,
     MessageFlags,
+    AttachmentBuilder,
 } = require("discord.js");
+const fs = require("node:fs");
 const ms = require("ms");
 const Giveaway = require("../../src/models/Giveaway");
 const ui = require("../../src/config/ui");
@@ -102,18 +104,25 @@ module.exports = {
         .addSubcommand((sub) =>
             sub
                 .setName("reroll")
-                .setDescription("Undi ulang pemenang baru dari peserta yang sama")
+                .setDescription("Undi pemenang baru untuk giveaway yang sudah berakhir")
                 .addStringOption((opt) =>
                     opt
                         .setName("message_id")
-                        .setDescription("ID pesan giveaway yang sudah berakhir")
+                        .setDescription("ID pesan giveaway")
                         .setRequired(true),
+                )
+                .addIntegerOption((opt) =>
+                    opt
+                        .setName("jumlah")
+                        .setDescription("Jumlah pemenang baru yang diundi (default: 1)")
+                        .setRequired(false)
+                        .setMinValue(1),
                 ),
         )
         .addSubcommand((sub) =>
             sub
                 .setName("list")
-                .setDescription("Lihat semua giveaway aktif di server ini"),
+                .setDescription("Lihat daftar giveaway yang sedang aktif di server ini"),
         ),
 
     async execute(interaction) {
@@ -126,13 +135,13 @@ module.exports = {
             const durasiStr = interaction.options.getString("durasi");
             const durasiMs = ms(durasiStr);
 
-            if (!durasiMs || durasiMs <= 0) {
+            if (!durasiMs || durasiMs < 10000 || durasiMs > ms("30d")) {
                 return interaction.reply(
                     ephemeral(
                         buildErrorContainerV2({
                             title: "Formatnya belum pas",
                             description:
-                                "Naura belum paham durasinya. Coba tulis seperti `1h`, `1d`, atau `30m` ya!",
+                                "Naura belum paham durasinya. Coba tulis seperti `1h`, `1d`, atau `30m` ya! (Min 10s, Max 30d)",
                             footerText: ui.getFooter("core"),
                         }),
                     ),
@@ -171,15 +180,42 @@ module.exports = {
 
             await interaction.deferReply();
 
+            const timeline = ui.ux.buildVisualTimeline({
+                steps: [
+                    { label: "Pendaftaran Terbuka" },
+                    { label: "Pengundian Pemenang" },
+                    { label: "Klaim Hadiah" },
+                ],
+                currentStepIndex: 0,
+                user: interaction.user,
+                lang: "id",
+            });
+
+            const bannerPath =
+                ui.getBanner("giveaway") ||
+                "./assets/general/Giveaway & Event Banner.jpeg";
+            const bannerName = "giveaway-banner.jpeg";
+            const files = [];
+            let bannerAttachmentName = null;
+
+            if (fs.existsSync(bannerPath)) {
+                files.push(new AttachmentBuilder(bannerPath, { name: bannerName }));
+                bannerAttachmentName = bannerName;
+            }
+
             const payload = buildContainerV2({
                 accentColorHex: ui.getColor("accent") || "#F9A8D4",
                 title: `${PARTY} GIVEAWAY: ${hadiah}`,
                 description:
+                    `${timeline.timeline}\n\n` +
                     `Klik tombol di bawah untuk ikut serta ya! Naura doakan kamu menang.\n\n` +
                     `${dot()} **Jumlah pemenang:** ${pemenang}\n` +
                     `${dot()} **Disponsori oleh:** <@${interaction.user.id}>\n` +
                     `${dot()} **Berakhir:** <t:${unixEnd}:R>` +
                     syaratLines,
+                bannerAttachmentName,
+                bannerPosition: "bottom",
+                files,
                 footerText: ui.getFooter("core"),
             });
 
@@ -215,7 +251,23 @@ module.exports = {
 
             // Edit pesan untuk menambahkan tombol setelah messageId diketahui
             const joinButton = GiveawayManager.buildJoinButton(reply.id, 0);
-            await reply.edit({ ...payload, components: [joinButton] }).catch(() => {});
+            const updatedPayload = buildContainerV2({
+                accentColorHex: ui.getColor("accent") || "#F9A8D4",
+                title: `${PARTY} GIVEAWAY: ${hadiah}`,
+                description:
+                    `${timeline.timeline}\n\n` +
+                    `Klik tombol di bawah untuk ikut serta ya! Naura doakan kamu menang.\n\n` +
+                    `${dot()} **Jumlah pemenang:** ${pemenang}\n` +
+                    `${dot()} **Disponsori oleh:** <@${interaction.user.id}>\n` +
+                    `${dot()} **Berakhir:** <t:${unixEnd}:R>` +
+                    syaratLines,
+                bannerAttachmentName,
+                bannerPosition: "bottom",
+                files,
+                buttonsRow: joinButton,
+                footerText: ui.getFooter("core"),
+            });
+            await reply.edit(updatedPayload).catch(() => {});
 
             return;
         }

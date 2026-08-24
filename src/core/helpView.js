@@ -5,10 +5,13 @@ const {
   ButtonBuilder,
   ButtonStyle,
   StringSelectMenuBuilder,
+  AttachmentBuilder,
   MessageFlags,
 } = require("discord.js");
+const fs = require("node:fs");
 
 const ui = require("../config/ui");
+const languageManager = require("../managers/languageManager");
 const {
   buildFeatureOverviewText,
   buildFeatureSummaryFields,
@@ -47,7 +50,12 @@ function featureOverviewContent(lang) {
   return `${intro}\n\n${overview}\n\n${registryFields}`;
 }
 
-function buildHelpCategories(lang) {
+function buildHelpCategories(langInput) {
+  const lang =
+    typeof langInput === "object" && langInput !== null
+      ? langInput
+      : languageManager.getLanguageSync(langInput);
+
   return {
     overview: {
       emoji: e("help", "📚"),
@@ -57,32 +65,32 @@ function buildHelpCategories(lang) {
     },
     core: {
       emoji: e("help_core", "⚙️"),
-      label: lang.HELP_CAT_CORE_LABEL,
-      desc: lang.HELP_CAT_CORE_DESC,
+      label: lang.HELP_CAT_CORE_LABEL || "Core & Utility",
+      desc: lang.HELP_CAT_CORE_DESC || "Perintah esensial bot",
       content: formatHelpContent(lang.HELP_CONTENT_CORE),
     },
     music: {
       emoji: e("help_music", "🎵"),
-      label: lang.HELP_CAT_MUSIC_LABEL,
-      desc: lang.HELP_CAT_MUSIC_DESC,
+      label: lang.HELP_CAT_MUSIC_LABEL || "Music",
+      desc: lang.HELP_CAT_MUSIC_DESC || "Pemutar audio",
       content: formatHelpContent(lang.HELP_CONTENT_MUSIC),
     },
     minigame: {
       emoji: e("help_game", "🎮"),
-      label: lang.HELP_CAT_GAME_LABEL,
-      desc: lang.HELP_CAT_GAME_DESC,
+      label: lang.HELP_CAT_GAME_LABEL || "Minigames",
+      desc: lang.HELP_CAT_GAME_DESC || "Arcade mini games",
       content: formatHelpContent(lang.HELP_CONTENT_GAME),
     },
     survival: {
       emoji: e("help_survival", "🏕️"),
-      label: lang.HELP_CAT_SURVIVAL_LABEL,
-      desc: lang.HELP_CAT_SURVIVAL_DESC,
+      label: lang.HELP_CAT_SURVIVAL_LABEL || "Survival RPG",
+      desc: lang.HELP_CAT_SURVIVAL_DESC || "Petualangan RPG",
       content: formatHelpContent(lang.HELP_CONTENT_SURVIVAL),
     },
     admin: {
       emoji: e("help_admin", "🛠️"),
-      label: lang.HELP_CAT_ADMIN_LABEL,
-      desc: lang.HELP_CAT_ADMIN_DESC,
+      label: lang.HELP_CAT_ADMIN_LABEL || "Admin & Security",
+      desc: lang.HELP_CAT_ADMIN_DESC || "Pengaturan server",
       content: formatHelpContent(lang.HELP_CONTENT_ADMIN),
     },
   };
@@ -132,25 +140,56 @@ function buildHelpPayload(lang, categoryIndex = 0, disabled = false) {
   const footerText = ui.stripCustomEmojis(ui.getFooter("core"));
   const eHelp = e("help", "📚");
 
+  const categoryBanners = {
+    overview: ui.getBanner("help") || "./assets/general/Utility & Tools Banner.jpeg",
+    core: ui.getBanner("utility") || "./assets/general/Utility & Tools Banner.jpeg",
+    music: ui.getBanner("music") || "./assets/general/Music Banner.jpeg",
+    minigame: ui.getBanner("minigame") || "./assets/general/Minigame & Arcade Banner.jpeg",
+    survival: ui.getBanner("economy") || "./assets/general/Economy & Market Banner.jpeg",
+    admin: ui.getBanner("admin") || "./assets/general/Admin & Security Banner.jpeg",
+  };
+
+  const activeBannerPath = categoryBanners[activeKey] || categoryBanners.overview;
+  const bannerFilename = `help-banner-${activeKey || "overview"}.jpeg`;
+  const files = [];
+
+  if (activeBannerPath && fs.existsSync(activeBannerPath)) {
+    files.push(new AttachmentBuilder(activeBannerPath, { name: bannerFilename }));
+  }
+
+  const containerComponents = [
+    {
+      type: 10,
+      content: `## ${eHelp} ${lang.HELP_TITLE || "Naura Help System"}`,
+    },
+    { type: 14, divider: true, spacing: 1 },
+    { type: 10, content: bodyContent },
+  ];
+
+  if (files.length > 0) {
+    containerComponents.push({ type: 14, divider: true, spacing: 1 });
+    containerComponents.push({
+      type: 12, // MEDIA_GALLERY
+      items: [{ media: { url: `attachment://${bannerFilename}` } }],
+    });
+  }
+
+  containerComponents.push(
+    { type: 14, divider: true, spacing: 1 },
+    selectRow.toJSON(),
+    navRow.toJSON(),
+    { type: 14, divider: false, spacing: 1 },
+    { type: 10, content: `-# ${footerText}` },
+  );
+
   return {
     flags: MessageFlags.IsComponentsV2,
+    files,
     components: [
       {
         type: 17,
         accent_color: accentColor,
-        components: [
-          {
-            type: 10,
-            content: `## ${eHelp} ${lang.HELP_TITLE || "Naura Help System"}`,
-          },
-          { type: 14, divider: true, spacing: 1 },
-          { type: 10, content: bodyContent },
-          { type: 14, divider: true, spacing: 1 },
-          selectRow.toJSON(),
-          navRow.toJSON(),
-          { type: 14, divider: false, spacing: 1 },
-          { type: 10, content: `-# ${footerText}` },
-        ],
+        components: containerComponents,
       },
     ],
     _categoryKeys: categoryKeys,

@@ -1,11 +1,10 @@
-"use strict";
-
-const { EmbedBuilder } = require("discord.js");
-
 const env = require("../../config/env");
-const ui = require("../../config/ui");
 const { logger } = require("../../managers/logger");
 const { awardXp } = require("../../leveling/levelingEngine");
+const {
+  buildLoadingContainerV2,
+  buildErrorContainerV2,
+} = require("../../utils/NauraContainerBuilder");
 
 // Subcommand yang perlu dibuang dari argumen sebelum dibaca sebagai teks bebas.
 const SUBCOMMAND_WORDS = ["balance", "buy", "ping", "set", "add", "remove"];
@@ -34,20 +33,14 @@ function resolveCommand(client, name) {
   );
 }
 
-function buildLoadingEmbed(message, client, commandName) {
-  return new EmbedBuilder()
-    .setColor(ui.getColor ? ui.getColor("primary") : "#FFB6C1")
-    .setAuthor({
-      name: "Naura Loading System...",
-      iconURL: client.user.displayAvatarURL(),
-    })
-    .setDescription(
-      `${ui.getEmoji("loading") || "\u23F3"} Tunggu sebentar ya, Naura lagi siapin perintah \`${commandName}\` buat kamu! \u2728`,
-    )
-    .setFooter({
-      text: `Sedang menyiapkan untuk ${message.author.username}`,
-      iconURL: message.author.displayAvatarURL(),
-    });
+function buildLoadingPayload(message, client, commandName) {
+  return buildLoadingContainerV2({
+    authorName: "Naura Task Runner",
+    title: "Sedang Memproses Perintah...",
+    loadingMessage: `Tunggu sebentar ya, Naura sedang menyiapkan perintah \`${commandName}\` untuk Kak **${message.author.displayName || message.author.username}**! ✨`,
+    lang: message.localeLang,
+    withBanner: true,
+  });
 }
 
 function normalizePayload(payload) {
@@ -194,7 +187,7 @@ module.exports = async function handlePrefixCommand(message, client) {
   if (!command) return true;
 
   const loadingMsg = await message
-    .reply({ embeds: [buildLoadingEmbed(message, client, commandName)] })
+    .reply(buildLoadingPayload(message, client, commandName))
     .catch(() => null);
 
   try {
@@ -231,16 +224,15 @@ module.exports = async function handlePrefixCommand(message, client) {
     logger.error(`[HYBRID ERROR] Command (${commandName}):`, error);
     if (loadingMsg) {
       await loadingMsg
-        .edit({
-          content: null,
-          embeds: [
-            new EmbedBuilder()
-              .setColor(ui.getColor ? ui.getColor("error") : "#FF0000")
-              .setDescription(
-                `${ui.getEmoji("error") || "\u274C"} Maaf ya, ada yang tersendat waktu Naura jalanin \`${commandName}\`. Coba lagi sebentar lagi, ya?`,
-              ),
-          ],
-        })
+        .edit(
+          buildErrorContainerV2({
+            authorName: "Naura System Guard",
+            title: "Perintah Terkendala",
+            errorMessage: `Maaf ya Kak **${message.author.displayName || message.author.username}**, terjadi kendala saat Naura menjalankan perintah \`${commandName}\`. Coba lagi sebentar lagi ya!`,
+            lang: message.localeLang,
+            withBanner: true,
+          }),
+        )
         .catch(() => {});
     }
   }

@@ -19,7 +19,7 @@ module.exports = {
 
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#FFB6C1",
-      authorName: `🔍 Membongkar Pesan yang Dihapus (${sniped.author.tag || sniped.author.username})`,
+      authorName: `${ui.getEmoji("search") || "🔍"} Membongkar Pesan yang Dihapus (${sniped.author.tag || sniped.author.username})`,
       title: `Pesan Dihapus oleh ${sniped.author.username}`,
       iconURL: sniped.author.displayAvatarURL(),
       description: `**Pengirim:** <@${sniped.author.id}>\n\n**Isi Pesan:**\n${sniped.content ? `> ${sniped.content}` : "*Pesan kosong (Hanya media)*"}`,

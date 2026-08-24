@@ -60,6 +60,10 @@ class MusicUIManager {
         track.info.title,
       );
 
+      if (Array.isArray(recommendedTracks) && recommendedTracks.length > 0) {
+        player.recommendedTracks = recommendedTracks;
+      }
+
       if (!player.currentFilterName)
         player.currentFilterName = "Original Audio";
 
@@ -97,12 +101,27 @@ class MusicUIManager {
         // 🎵 BUILD COMPONENTS V2 MUSIC PANEL
         // ==========================================
         const containerComponents = [];
+        const fs = require("node:fs");
+        const bannerPath =
+          ui.getBanner("music") ||
+          "./assets/general/Music Banner.jpeg";
+        const bannerName = "music-banner.jpeg";
+        const hasBanner = fs.existsSync(bannerPath);
 
         // --- Header: Author (nama bot) ---
         containerComponents.push(
           textDisplay(`-# ✦  N A U R A  M U S I C  P A N E L  ✦`),
         );
         containerComponents.push(separatorComp(true, 1));
+
+        // --- Top Banner: Banner Musik ---
+        if (hasBanner) {
+          containerComponents.push({
+            type: 12, // MEDIA_GALLERY
+            items: [{ media: { url: `attachment://${bannerName}` } }],
+          });
+          containerComponents.push(separatorComp(true, 1));
+        }
 
         // --- Now Playing Info ---
         containerComponents.push(
@@ -114,17 +133,19 @@ class MusicUIManager {
               `${track.info.author}\n\n` +
               `**Requested by**\n` +
               `${requesterText}\n\n` +
-              `---\n` +
               `**━━━ 𝐒𝐘𝐒𝐓𝐄𝐌 𝐏𝐀𝐑𝐀𝐌𝐄𝐓𝐄𝐑𝐒 ━━━**\n` +
-              `> 🔊 **Volume:** \`${player.volume}%\`\n` +
-              `> ${ui.stripCustomEmojis(ui.getEmoji("filter") || "🎛️")} **Filter DSP:** \`${player.currentFilterName}\`\n` +
-              `> **Looping:** \`${player.loop}\`\n` +
-              `> **Autoplay:** \`${player.isAutoplayMode ? "Aktif" : "Nonaktif"}\`\n` +
-              `> **Mode 24/7:** \`${player.is247 ? "Aktif" : "Nonaktif"}\``,
+              `> ${ui.getEmoji("musicVolUp") || "🔊"} **Volume:** \`${player.volume}%\`\n` +
+              `> ${ui.getEmoji("filter") || "🎛️"} **Filter DSP:** \`${player.currentFilterName}\`\n` +
+              `> ${ui.getEmoji("musicLoop") || "🔁"} **Looping:** \`${player.loop}\`\n` +
+              `> ${ui.getEmoji("musicAutoplay") || "🤖"} **Autoplay:** \`${player.isAutoplayMode ? "Aktif" : "Nonaktif"}\`\n` +
+              `> ${ui.getEmoji("music247") || "🌙"} **Mode 24/7:** \`${player.is247 ? "Aktif" : "Nonaktif"}\``,
           ),
         );
 
-        // --- Canvas Image sebagai Media Gallery ---
+        // --- Pemisah sebelum Canvas ---
+        containerComponents.push(separatorComp(true, 1));
+
+        // --- Canvas Image sebagai Media Gallery (di bagian bawah) ---
         const uniqueFileName = `naura-panel-${Date.now()}.png`;
         const imageBuffer = await generateMusicPanelImage(
           track,
@@ -261,19 +282,93 @@ class MusicUIManager {
         // ── Separator tipis: Pemisah Konten dari Tombol ───────────────
         containerComponents.push(separatorComp(false, 1));
 
-        // Tambahkan rows rekomendasi jika ada
-        if (recommendedTracks && recommendedTracks.length > 0) {
+        // Tambahkan dropdown rekomendasi lagu berikutnya khusus saat mode Autoplay aktif (fitur premium)
+        const getRecommendations = () => {
+          const combined = [];
+          const seenIds = new Set();
+          if (track && track.info && track.info.identifier) {
+            seenIds.add(track.info.identifier);
+          }
+          if (player.currentTrack && player.currentTrack.info && player.currentTrack.info.identifier) {
+            seenIds.add(player.currentTrack.info.identifier);
+          }
+
+          // 1. Pilihan Autoplay Utama (Prefetched) jika ada
+          if (player.prefetchedAutoplayTrack && player.prefetchedAutoplayTrack.info) {
+            const id = player.prefetchedAutoplayTrack.info.identifier;
+            if (id && !seenIds.has(id)) {
+              seenIds.add(id);
+              combined.push({
+                ...player.prefetchedAutoplayTrack,
+                isAutoplayNext: true,
+              });
+            }
+          }
+
+          // 2. Buffer Antrean Autoplay
+          if (Array.isArray(player.autoplayQueue)) {
+            for (const t of player.autoplayQueue) {
+              const id = t && t.info && t.info.identifier;
+              if (id && !seenIds.has(id)) {
+                seenIds.add(id);
+                combined.push(t);
+              }
+            }
+          }
+
+          // 3. Rekomendasi yang tersimpan di player / parameter
+          const recs = (Array.isArray(player.recommendedTracks) && player.recommendedTracks.length > 0)
+            ? player.recommendedTracks
+            : (Array.isArray(recommendedTracks) && recommendedTracks.length > 0 ? recommendedTracks : []);
+
+          for (const t of recs) {
+            const id = t && t.info && t.info.identifier;
+            if (id && !seenIds.has(id)) {
+              seenIds.add(id);
+              combined.push(t);
+            }
+          }
+
+          return combined;
+        };
+
+        const activeRecs = getRecommendations();
+        // Dropdown hanya tampil jika Autoplay aktif bagi pengguna VIP / Premium
+        if (player.isAutoplayMode && activeRecs.length > 0) {
+          const placeholder = (player.prefetchedAutoplayTrack && player.prefetchedAutoplayTrack.info && player.prefetchedAutoplayTrack.info.title)
+            ? `🤖 Autoplay: ${player.prefetchedAutoplayTrack.info.title}`.substring(0, 95)
+            : "📻 Rekomendasi Autoplay Berikutnya";
+
           const rowDropdown = new ActionRowBuilder().addComponents(
             new StringSelectMenuBuilder()
               .setCustomId("music_recommendation")
-              .setPlaceholder("📻 Rekomendasi Trek Audio Berikutnya")
+              .setPlaceholder(placeholder)
               .addOptions(
-                recommendedTracks.slice(0, 5).map((t) => ({
-                  label: t.info.title.substring(0, 95),
-                  description: t.info.author.substring(0, 40),
-                  value: t.info.uri.substring(0, 100),
-                  emoji: "🎵",
-                })),
+                activeRecs.slice(0, 10).map((t, idx) => {
+                  const isTopAutoplay = t.isAutoplayNext || idx === 0;
+                  const rawTitle = t.info && t.info.title ? t.info.title : "Unknown Title";
+                  const label = rawTitle.length > 100 ? rawTitle.substring(0, 97) + "..." : rawTitle;
+
+                  const rawDesc = isTopAutoplay
+                    ? `[Autoplay Selanjutnya] ${(t.info && t.info.author) || "Unknown Artist"}`
+                    : ((t.info && t.info.author) || "Unknown Artist");
+                  const desc = rawDesc.length > 100 ? rawDesc.substring(0, 97) + "..." : rawDesc;
+
+                  const value = (t.info && t.info.uri && t.info.uri.startsWith("http"))
+                    ? t.info.uri.substring(0, 100)
+                    : `ytsearch:${t.info && t.info.title} ${t.info && t.info.author}`.substring(0, 100);
+
+                  const customEmoji = isTopAutoplay
+                    ? (ui.parseEmoji(ui.getEmoji("musicAutoplay")) || { name: "🤖" })
+                    : (ui.parseEmoji(ui.getEmoji("normal")) || ui.parseEmoji(ui.getEmoji("music_note")) || { name: "🎵" });
+
+                  return {
+                    label: label,
+                    description: desc,
+                    value: value,
+                    emoji: customEmoji,
+                  };
+                }),
               ),
           );
           containerComponents.push(rowDropdown.toJSON());
@@ -290,11 +385,18 @@ class MusicUIManager {
           textDisplay(`-# ${ui.stripCustomEmojis(ui.getFooter("music"))}`),
         );
 
+        const filesArray = [attachment];
+        if (hasBanner) {
+          filesArray.push(
+            new AttachmentBuilder(bannerPath, { name: bannerName }),
+          );
+        }
+
         const payload = {
           content: null,
           embeds: [],
           flags: MessageFlags.IsComponentsV2,
-          files: [attachment],
+          files: filesArray,
           components: [
             {
               type: 17, // CONTAINER
@@ -393,11 +495,12 @@ class MusicUIManager {
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
         authorName: "✦ NAURA 24/7 STANDBY ENGINE ✦",
-        title: "🌙 Mode Siaga 24/7 Aktif",
+        title: `${ui.getEmoji("night") || "🌙"} Mode Siaga 24/7 Aktif`,
         description:
           `Naura sedang siaga di Voice Channel <#${player.voiceChannel}>.\n\n` +
-          `> 💤 **Status Stream:** Pasif (0kbps Bandwidth & 0% CPU Load)\n` +
-          `> 🎵 Putar lagu baru kapan saja dengan perintah \`/music play <judul/URL>\` atau gunakan tombol di bawah.`,
+          `> ${ui.getEmoji("naura_sleepy") || "💤"} **Status Stream:** Pasif (0kbps Bandwidth & 0% CPU Load)\n` +
+          `> ${ui.getEmoji("music") || "🎵"} Putar lagu baru kapan saja dengan perintah \`/music play <judul/URL>\` atau gunakan tombol di bawah.`,
+        expression: "sleepy",
         buttonsRow: row247,
         footerText: ui.getFooter("music"),
       });

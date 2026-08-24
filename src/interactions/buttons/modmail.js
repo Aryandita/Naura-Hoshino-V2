@@ -13,7 +13,7 @@ const ui = require("../../config/ui");
 
 module.exports = [
   {
-    id: "ticket_open",
+    id: "mm_open",
     label: "tiket-buka",
     // Membuat channel butuh beberapa panggilan API; defer lebih dulu supaya
     // tidak menabrak batas tiga detik.

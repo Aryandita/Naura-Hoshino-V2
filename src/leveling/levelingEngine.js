@@ -28,8 +28,12 @@ function getNextLevelXp(level) {
   return Math.floor(5 * Math.pow(level, 2) + 50 * level + 100);
 }
 
-function getRoleBadge(level, isPremium) {
-  if (isPremium) return "👑 V.I.P Premium";
+function getRoleBadge(level, tier = "none") {
+  if (tier === "vip") return "👑 V.I.P Member";
+  if (tier === "friends") return "💫 Friends Member";
+  if (tier === "supporter") return "🌟 Supporter Member";
+  if (tier === "starter") return "🌱 Starter Member";
+  if (tier === "voter") return "🗳️ Voter Member";
   if (level >= 100) return "✦ Legenda Abadi ✦";
   if (level >= 50) return "✧ Pahlawan Senior";
   if (level >= 25) return "✧ Petualang Tangguh";
@@ -91,12 +95,15 @@ async function announceLevelUp(profile, user, guild, currentChannel) {
       name: "naura-levelup.webp",
     });
 
-    const badge = getRoleBadge(profile.level, await isPremiumUser(user.id));
+    const userProfile = await cacheManager.getUserProfile(user.id);
+    const { getUserPremiumTier } = require("../premium/premiumHelper");
+    const badge = getRoleBadge(profile.level, getUserPremiumTier(userProfile));
     const nextXp = getNextLevelXp(profile.level).toLocaleString("id-ID");
 
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#FFB6C1",
       authorName: "✦ LEVEL UP! ✦",
+      title: `Selamat Naik ke Level ${profile.level}!`,
       iconURL: user.displayAvatarURL(),
       expression: "levelup",
       description:
@@ -109,7 +116,10 @@ async function announceLevelUp(profile, user, guild, currentChannel) {
       footerText: "Makin sering ngobrol, makin kuat. Naura temani terus ya!",
     });
 
-    const sent = await targetChannel.send(payload);
+    const sent = await targetChannel.send({
+      ...payload,
+      flags: payload.flags || MessageFlags.IsComponentsV2,
+    });
     setTimeout(() => sent.delete().catch(() => {}), CONFIG.NOTICE_TTL);
   } catch (e) {
     logger.error("[LEVELING] Gagal mengirim notifikasi naik level:", e);
@@ -146,7 +156,11 @@ async function checkLevelUp(profile, user, guild, currentChannel) {
 async function rollXp(userId) {
   const span = CONFIG.MSG_XP.max - CONFIG.MSG_XP.min + 1;
   let gained = Math.floor(Math.random() * span) + CONFIG.MSG_XP.min;
-  if (await isPremiumUser(userId)) gained *= 2;
+  const userProfile = await cacheManager.getUserProfile(userId);
+  const { getUserPremiumTier, getXpMultiplier } = require("../premium/premiumHelper");
+  const tier = getUserPremiumTier(userProfile);
+  const multiplier = getXpMultiplier(tier);
+  gained = Math.floor(gained * multiplier);
   return gained;
 }
 

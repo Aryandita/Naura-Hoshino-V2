@@ -6,6 +6,7 @@ const UserCard = require("../../models/UserCard");
 const UserSurvival = require("../../models/UserSurvival");
 const { buildContainerV2, buildErrorContainerV2 } = require("../../utils/NauraContainerBuilder");
 const { sequelize } = require("../../managers/dbManager");
+const ui = require("../../config/ui");
 
 module.exports = [{
   prefix: "card_trade_",
@@ -22,8 +23,8 @@ module.exports = [{
     if (!tradeDataRaw) {
       return interaction.reply({
         ...buildErrorContainerV2({
-          title: "Sesi Barter Kedaluwarsa",
-          errorMessage: "Tawaran barter kartu ini sudah kedaluwarsa atau telah diproses.",
+          title: "Sesi Kadaluarsa",
+          description: "Sesi barter kartu ini telah berakhir atau dibatalkan.",
         }),
         flags: MessageFlags.Ephemeral,
       });
@@ -33,10 +34,7 @@ module.exports = [{
 
     if (interaction.user.id !== trade.targetUserId) {
       return interaction.reply({
-        ...buildErrorContainerV2({
-          title: "Bukan Giliranmu",
-          errorMessage: "Hanya penerima tawaran yang dapat menerima atau menolak barter ini.",
-        }),
+        content: `${ui.getEmoji("error") || "❌"} Anda bukan penerima tawaran barter kartu ini.`,
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -44,7 +42,7 @@ module.exports = [{
     if (isDecline) {
       await redisManager.deleteCache(`card:trade:${tradeId}`);
       const payload = buildContainerV2({
-        title: "🏳️ Tawaran Barter Ditolak",
+        title: `${ui.getEmoji("flag_white") || "🏳️"} Tawaran Barter Ditolak`,
         description: `<@${trade.targetUserId}> telah menolak tawaran barter dari <@${trade.initiatorId}>.`,
         color: "#64748B",
       });
@@ -65,7 +63,7 @@ module.exports = [{
         if (!cardA) {
           await t.rollback();
           return interaction.reply({
-            content: "❌ Kartu milik pengirim tawaran sudah tidak tersedia di inventory!",
+            content: `${ui.getEmoji("error") || "❌"} Kartu milik pengirim tawaran sudah tidak tersedia di inventory!`,
             flags: MessageFlags.Ephemeral,
           });
         }
@@ -81,7 +79,7 @@ module.exports = [{
           if (!cardB) {
             await t.rollback();
             return interaction.reply({
-              content: "❌ Kartumu sudah tidak tersedia di inventory!",
+              content: `${ui.getEmoji("error") || "❌"} Kartumu sudah tidak tersedia di inventory!`,
               flags: MessageFlags.Ephemeral,
             });
           }
@@ -98,7 +96,7 @@ module.exports = [{
           if (!survivalA || (survivalA.starFragments || 0) < trade.starFragmentsOffer) {
             await t.rollback();
             return interaction.reply({
-              content: "❌ Saldo Star Fragments pengirim tawaran tidak mencukupi!",
+              content: `${ui.getEmoji("error") || "❌"} Saldo Star Fragments pengirim tawaran tidak mencukupi!`,
               flags: MessageFlags.Ephemeral,
             });
           }
@@ -127,8 +125,8 @@ module.exports = [{
         await redisManager.deleteCache(`card:trade:${tradeId}`);
 
         const payload = buildContainerV2({
-          title: "🎉 Transaksi Barter Kartu Sukses!",
-          description: `Selamat! Barter kartu antara <@${trade.initiatorId}> dan <@${trade.targetUserId}> telah selesai dengan aman!\n\n**Pertukaran:**\n- <@${trade.targetUserId}> menerima: **${cardA.characterName}** (\`${cardA.cardCode}\`)${trade.starFragmentsOffer > 0 ? ` + ⭐ **${trade.starFragmentsOffer.toLocaleString()} NSF**` : ""}\n- <@${trade.initiatorId}> menerima: ${cardB ? `**${cardB.characterName}** (\`${cardB.cardCode}\`)` : "*Tanpa kartu tukar*"}`,
+          title: `${ui.getEmoji("celebrate") || "🎉"} Transaksi Barter Kartu Sukses!`,
+          description: `Selamat! Barter kartu antara <@${trade.initiatorId}> dan <@${trade.targetUserId}> telah selesai dengan aman!\n\n**Pertukaran:**\n- <@${trade.targetUserId}> menerima: **${cardA.characterName}** (\`${cardA.cardCode}\`)${trade.starFragmentsOffer > 0 ? ` + ${ui.getEmoji("star") || "⭐"} **${trade.starFragmentsOffer.toLocaleString()} NSF**` : ""}\n- <@${trade.initiatorId}> menerima: ${cardB ? `**${cardB.characterName}** (\`${cardB.cardCode}\`)` : "*Tanpa kartu tukar*"}`,
           color: "#10B981",
         });
 

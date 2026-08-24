@@ -149,8 +149,15 @@ module.exports = {
 
     if (bestMultiplier > 1) salary = Math.floor(salary * bestMultiplier);
 
-    const isVIP = profile.isPremium && profile.premiumUntil > new Date();
-    if (isVIP) salary = Math.floor(salary * 1.5);
+    const {
+      getUserPremiumTier,
+      getWorkWageBonus,
+    } = require("../../../src/premium/premiumHelper");
+    const tier = getUserPremiumTier(profile);
+    const wageBonusPercent = getWorkWageBonus(tier);
+    if (wageBonusPercent > 0) {
+      salary = Math.floor(salary * (1 + wageBonusPercent));
+    }
 
     const newHunger = Math.max(
       0,

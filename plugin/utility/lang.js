@@ -37,7 +37,7 @@ module.exports = {
 
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("accent") || "#FF69B4",
-        title: "🌐 Bahasa Diperbarui / Language Updated",
+        title: `${ui.getEmoji("translate") || "🌐"} Bahasa Diperbarui / Language Updated`,
         description: translatedMsg,
         footerText: ui.getFooter("utility"),
       });

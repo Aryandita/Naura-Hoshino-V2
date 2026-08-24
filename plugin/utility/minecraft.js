@@ -193,7 +193,7 @@ module.exports = {
         const payload = buildContainerV2({
           accentColorHex: ui.getColor("success") || "#00FF00",
           authorName: "Naura Minecraft Radar",
-          title: `🟢 Status Server ${ip}`,
+          title: `${ui.getEmoji("greenping") || "🟢"} Status Server ${ip}`,
           description: `Radar Naura berhasil mendeteksi sinyal dari **${ip}**!`,
           fields,
           footerText: ui.getFooter("utility"),
@@ -316,9 +316,9 @@ module.exports = {
 
         const linkPayload = buildContainerV2({
           accentColorHex: ui.getColor("success") || "#22c55e",
-          authorName: "🔗 Integrasi Identitas Minecraft",
+          authorName: `${ui.getEmoji("about") || "🔗"} Integrasi Identitas Minecraft`,
           iconURL: interaction.client.user.displayAvatarURL(),
-          description: `Akun Discord-mu sedang ditautkan dengan Minecraft **${profileData.name}**!\n\n🔑 **Kode Verifikasi Anda:** \`${code}\`\n\n> 💡 *Jalankan perintah berikut di dalam server Minecraft:* \n\`\`\`/naura link ${code}\`\`\`\n*Setelah verifikasi selesai, kamu akan mendapatkan bonus +500 Star Fragments 🌟 dan bisa mengklaim hadiah playtime dengan \`/minecraft sync\`!*`,
+          description: `Akun Discord-mu sedang ditautkan dengan Minecraft **${profileData.name}**!\n\n${ui.getEmoji("key") || "🔑"} **Kode Verifikasi Anda:** \`${code}\`\n\n> ${ui.getEmoji("sparkle") || "💡"} *Jalankan perintah berikut di dalam server Minecraft:* \n\`\`\`/naura link ${code}\`\`\`\n*Setelah verifikasi selesai, kamu akan mendapatkan bonus +500 Star Fragments ${ui.getEmoji("star") || "🌟"} dan bisa mengklaim hadiah playtime dengan \`/minecraft sync\`!*`,
           footerText: "Naura Minecraft Network Sync",
         });
 
@@ -348,8 +348,8 @@ module.exports = {
 
       const syncPayload = buildContainerV2({
         accentColorHex: "#86EFAC",
-        title: "🔄 Sinkronisasi Realm Berhasil!",
-        description: `Waktu bermain di Minecraft **${syncRes.mcUsername}** berhasil dikonversi ke ekonomi Discord!\n\n🌟 **Star Fragments:** \`+${syncRes.starFragments} NSF\`\n🎟️ **Naura Coupon:** \`+${syncRes.coupons} Kupon\``,
+        title: `${ui.getEmoji("trade") || "🔄"} Sinkronisasi Realm Berhasil!`,
+        description: `Waktu bermain di Minecraft **${syncRes.mcUsername}** berhasil dikonversi ke ekonomi Discord!\n\n${ui.getEmoji("star") || "🌟"} **Star Fragments:** \`+${syncRes.starFragments} NSF\`\n${ui.getEmoji("ticket") || "🎟️"} **Naura Coupon:** \`+${syncRes.coupons} Kupon\``,
         footerText: "Naura Minecraft Realm Sync",
       });
 
@@ -383,7 +383,7 @@ module.exports = {
 
         const bcPayload = buildContainerV2({
           accentColorHex: "#C084FC",
-          title: "📢 Pesan Berhasil Disiarkan ke Minecraft!",
+          title: `${ui.getEmoji("announce_update") || "📢"} Pesan Berhasil Disiarkan ke Minecraft!`,
           description: `Pesan telah dikirim ke seluruh pemain di server Minecraft:\n\n> *"${msgText}"*`,
           footerText: "Naura Minecraft RCON Broadcast",
         });
@@ -547,10 +547,10 @@ module.exports = {
       await settingsModel.save();
       cacheManager.invalidateGuildSettings(interaction.guild.id);
 
-      const statusEmoji = mc.bridgeEnabled ? "🟢" : "🔴";
+      const statusEmoji = mc.bridgeEnabled ? (ui.getEmoji("greenping") || "🟢") : (ui.getEmoji("redping") || "🔴");
       const bridgePayload = buildContainerV2({
         accentColorHex: mc.bridgeEnabled ? "#22c55e" : "#ef4444",
-        title: "🌐 Minecraft Chat Bridge Configuration",
+        title: `${ui.getEmoji("translate") || "🌐"} Minecraft Chat Bridge Configuration`,
         description: `Pengaturan jembatan chat Minecraft berhasil diperbarui!\n\n**Status:** ${statusEmoji} ${mc.bridgeEnabled ? "Aktif" : "Nonaktif"}\n**Channel:** <#${mc.bridgeChannelId}>\n**IP RCON:** \`${mc.ip || "Belum Disetel"}:${mc.rconPort || 25575}\`\n**RCON Pass:** \`${mc.rconPassword ? "****** (Tersimpan)" : "Belum Disetel"}\``,
         footerText: "Naura Minecraft Bridge Engine",
       });

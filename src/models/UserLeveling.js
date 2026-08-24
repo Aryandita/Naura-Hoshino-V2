@@ -35,6 +35,11 @@ const UserLeveling = sequelize.define(
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
+    // Total menit di voice channel
+    voiceMinutes: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
     // Waktu terakhir user mendapatkan XP (digunakan untuk sistem cooldown)
     lastActivity: {
       type: DataTypes.DATE,

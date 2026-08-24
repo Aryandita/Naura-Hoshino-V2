@@ -39,19 +39,24 @@ function buildPomodoroContainer(session) {
     : isFocus
       ? "#60A5FA"
       : "#34D399";
-  const modeTitle = isFocus ? "🍅 Sesi Fokus Belajar" : "☕ Waktu Istirahat";
+  const modeTitle = isFocus ? "Sesi Fokus Belajar" : "Waktu Istirahat";
+  const eIcon = isFocus ? (ui.getEmoji("book") || "📚") : (ui.getEmoji("coffee") || "☕");
+  const eClock = ui.getEmoji("clock") || "⏳";
+  const eFire = ui.getEmoji("fire") || "🔥";
+  const eLeaf = ui.getEmoji("bonsai") || "🌿";
+  const eSparkle = ui.getEmoji("sparkle") || "💡";
 
   return buildContainerV2({
     accentColorHex: statusColor,
     authorName: `Pomodoro Timer • ${session.username}`,
-    title: `${isFocus ? "📚" : "☕"} ${modeTitle} (Siklus #${session.cycle})`,
+    title: `${eIcon} ${modeTitle} (Siklus #${session.cycle})`,
     description: [
-      `### ⏳ Sisa Waktu: \`${formatTime(session.timeLeft)}\``,
-      `**Status:** ${session.isPaused ? "⏸️ Dijeda" : isFocus ? "🔥 Sedang Fokus Bekerja / Belajar" : "🌿 Rehat & Minum Air"}`,
+      `### ${eClock} Sisa Waktu: \`${formatTime(session.timeLeft)}\``,
+      `**Status:** ${session.isPaused ? "⏸️ Dijeda" : isFocus ? `${eFire} Sedang Fokus Bekerja / Belajar` : `${eLeaf} Rehat & Minum Air`}`,
       `**Target Fokus:** ${session.focusDuration / 60} Menit | **Istirahat:** ${session.breakDuration / 60} Menit`,
-      session.voiceChannelId ? `**Voice Room:** <#${session.voiceChannelId}> (Notifikasi Audio Aktif 🔊)` : "",
+      session.voiceChannelId ? `**Voice Room:** <#${session.voiceChannelId}> (Notifikasi Audio Aktif)` : "",
       "",
-      "💡 *Gunakan tombol di bawah untuk mengontrol sesi belajarmu.*",
+      `${eSparkle} *Gunakan tombol di bawah untuk mengontrol sesi belajarmu.*`,
     ]
       .filter(Boolean)
       .join("\n"),
@@ -144,8 +149,8 @@ module.exports = {
         buildContainerV2({
           accentColorHex: ui.getColor("success") || "#22c55e",
           authorName: "Pomodoro Selesai",
-          title: "🎉 Sesi Belajar Berakhir!",
-          description: `Hebat! Kamu telah fokus belajar selama **${totalMins} Menit**.\n✨ **Reward Fokus:** +${xpEarned} Survival XP!`,
+          title: `${ui.getEmoji("celebrate") || "🎉"} Sesi Belajar Berakhir!`,
+          description: `Hebat! Kamu telah fokus belajar selama **${totalMins} Menit**.\n${ui.getEmoji("sparkles") || "✨"} **Reward Fokus:** +${xpEarned} Survival XP!`,
           footerText: ui.getFooter("utility"),
         }),
       );
@@ -289,8 +294,8 @@ module.exports = {
           const finalContainer = buildContainerV2({
             accentColorHex: ui.getColor("success") || "#22c55e",
             authorName: "Pomodoro Selesai",
-            title: "🎉 Sesi Belajar Berakhir!",
-            description: `Hebat! Kamu telah fokus belajar selama **${totalMins} Menit**.\n✨ **Reward Fokus:** +${xpEarned} Survival XP!`,
+            title: `${ui.getEmoji("celebrate") || "🎉"} Sesi Belajar Berakhir!`,
+            description: `Hebat! Kamu telah fokus belajar selama **${totalMins} Menit**.\n${ui.getEmoji("sparkles") || "✨"} **Reward Fokus:** +${xpEarned} Survival XP!`,
             footerText: ui.getFooter("utility"),
           });
 

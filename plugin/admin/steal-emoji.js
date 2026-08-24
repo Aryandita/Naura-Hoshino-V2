@@ -61,7 +61,7 @@ module.exports = {
 
       const successPayload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#22c55e",
-        title: "🕵️‍♂️ Pencurian Berhasil!",
+        title: `${ui.getEmoji("detective") || "🕵️‍♂️"} Pencurian Berhasil!`,
         iconURL: emojiUrl,
         description: `Berhasil menyusup dan mengambil aset! Emoji ${newEmoji} telah di-import ke server ini dengan nama **${newEmoji.name}**.\n\n> *Gunakan \`:${newEmoji.name}:\` untuk memanggilnya.*`,
         footerText: ui.getFooter("core"),

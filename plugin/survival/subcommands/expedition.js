@@ -46,7 +46,7 @@ module.exports = {
         return interaction.reply({
           ...buildContainerV2({
             accentColorHex: "#F59E0B",
-            authorName: "🐾 Pet Dungeon Expedition",
+            authorName: `${ui.getEmoji("cat_pet") || "🐾"} Pet Dungeon Expedition`,
             title: "Pet Sedang Menjelajah!",
             description: `Pet aktifmu **${pet.petName || pet.petType}** sedang dalam ekspedisi dungeon.\n\nSisa waktu: **${minutes} menit** lagi.\nNaura akan mengirimkan notifikasi saat pet kamu kembali membawa jarahan!`,
             footerText: ui.getFooter("survival"),
@@ -72,9 +72,9 @@ module.exports = {
         const lootList = expData.loot.map((it) => `• **${it.id.replace("_", " ")}** x${it.amount}`).join("\n");
         const claimContainer = buildContainerV2({
           accentColorHex: "#10B981",
-          authorName: "🐾 Ekspedisi Selesai!",
+          authorName: `${ui.getEmoji("cat_pet") || "🐾"} Ekspedisi Selesai!`,
           title: `Pet ${pet.petName || pet.petType} Telah Kembali!`,
-          description: `Pet kamu berhasil pulang membawa banyak jarahan berharga!\n\n**Hasil Ekspedisi:**\n- ⭐ **+${expData.fragments} Star Fragments**\n- 🐾 **+${expData.exp} Pet EXP** (Level Sekarang: **Lv.${pet.petLevel}**)\n\n**Barang Jarahan:**\n${lootList}`,
+          description: `Pet kamu berhasil pulang membawa banyak jarahan berharga!\n\n**Hasil Ekspedisi:**\n- ${ui.getEmoji("star") || "⭐"} **+${expData.fragments} Star Fragments**\n- ${ui.getEmoji("cat_pet") || "🐾"} **+${expData.exp} Pet EXP** (Level Sekarang: **Lv.${pet.petLevel}**)\n\n**Barang Jarahan:**\n${lootList}`,
           footerText: ui.getFooter("survival"),
         });
 
@@ -98,9 +98,9 @@ module.exports = {
 
     const payload = buildContainerV2({
       accentColorHex: "#38BDF8",
-      authorName: "🐾 Pet Dungeon Expedition",
+      authorName: `${ui.getEmoji("cat_pet") || "🐾"} Pet Dungeon Expedition`,
       title: "Pet Berangkat Menjelajah!",
-      description: `Pet kamu **${pet.petName || pet.petType}** telah berangkat menjelajahi dungeon selama **${durationHours} jam**!\n\n**Estimasi Hadiah:**\n- ⭐ **+${expConfig.fragments} Star Fragments**\n- 🐾 **+${expConfig.exp} Pet EXP**\n- 🎁 Bahan material langka`,
+      description: `Pet kamu **${pet.petName || pet.petType}** telah berangkat menjelajahi dungeon selama **${durationHours} jam**!\n\n**Estimasi Hadiah:**\n- ${ui.getEmoji("star") || "⭐"} **+${expConfig.fragments} Star Fragments**\n- ${ui.getEmoji("cat_pet") || "🐾"} **+${expConfig.exp} Pet EXP**\n- ${ui.getEmoji("gift") || "🎁"} Bahan material langka`,
       footerText: ui.getFooter("survival"),
     });
 

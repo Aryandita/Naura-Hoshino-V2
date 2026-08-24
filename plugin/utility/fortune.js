@@ -139,7 +139,7 @@ module.exports = {
           `**Warna Keberuntungan:** ${lastFortune.luckyColor || "Sakura Pink"}`,
           `**Barang Pembawa Hoki:** ${lastFortune.luckyItem || "Teh Hangat"}`,
           "",
-          `💡 *Kembalilah besok setelah pergantian hari untuk menarik ramalan baru!*`,
+          `${ui.getEmoji("sparkle") || "💡"} *Kembalilah besok setelah pergantian hari untuk menarik ramalan baru!*`,
         ].join("\n"),
         footerText: ui.getFooter("utility"),
       });
@@ -197,8 +197,8 @@ module.exports = {
     }
 
     const rewardText = picked.fragments > 0
-      ? `✨ **Hadiah Keberuntungan:** +${picked.fragments} Star Fragments\n🌟 **Buff RPG (24 Jam):** +${Math.round(picked.expBoost * 100)}% EXP & +${Math.round(picked.goldBoost * 100)}% Gold Boost`
-      : "🛡️ **Amulet Perlindungan Naura:** Menghalau segala energi negatif hari ini!";
+      ? `${ui.getEmoji("sparkles") || "✨"} **Hadiah Keberuntungan:** +${picked.fragments} Star Fragments\n${ui.getEmoji("star") || "🌟"} **Buff RPG (24 Jam):** +${Math.round(picked.expBoost * 100)}% EXP & +${Math.round(picked.goldBoost * 100)}% Gold Boost`
+      : `${ui.getEmoji("shield") || "🛡️"} **Amulet Perlindungan Naura:** Menghalau segala energi negatif hari ini!`;
 
     const payload = buildContainerV2({
       accentColorHex: picked.color,
@@ -207,7 +207,7 @@ module.exports = {
       description: [
         `*"${aiWisdom}"*`,
         "",
-        "### 🍀 Elemen Keberuntungan Hari Ini:",
+        `### ${ui.getEmoji("fortune") || "🍀"} Elemen Keberuntungan Hari Ini:`,
         `• **Barang Hoki:** ${luckyItem}`,
         `• **Warna Hoki:** ${luckyColor}`,
         `• **Arah Hoki:** ${luckyDirection}`,

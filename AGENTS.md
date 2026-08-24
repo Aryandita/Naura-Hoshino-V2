@@ -1,6 +1,6 @@
 # 🌸 NAURA HOSHINO, Agent Governance & Architecture Guide
 
-> **Versi:** 2.0.0 · **Engine:** 2.0.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14
+> **Versi:** 2.1.0 · **Engine:** 2.1.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14
 
 > [!IMPORTANT]
 > **Sumber kebenaran.** `package.json` adalah sumber kebenaran untuk versi dan daftar dependensi. `src/config/env.js` adalah sumber kebenaran untuk variabel environment. GitHub Issues adalah sumber kebenaran untuk pekerjaan yang sedang berjalan. `TODO.md` adalah sumber kebenaran untuk prioritas sprint. Dokumen ini berisi **aturan** yang tidak berubah tiap rilis. Bila ada tabel di dokumen ini yang bertentangan dengan file-file di atas, file itulah yang menang, dan tabel di sini harus diperbarui.
@@ -10,14 +10,16 @@
 | Topik              | Keputusan                                                                                                                                                                       |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Versi Node         | `>= 24` di `engines`, README, dokumen ini, dan CI. Seragam, tanpa pengecualian.                                                                                                 |
-| Versi bot & engine | Keduanya `2.0.0`, dan harus sama di `package.json`, `README.md`, serta default `BOT_VERSION`/`ENGINE_VERSION`.                                                                  |
+| Versi bot & engine | Keduanya `2.1.0`, dan harus sama di `package.json`, `README.md`, serta default `BOT_VERSION`/`ENGINE_VERSION`.                                                                  |
+| Polyglot Database  | **Multi-Database Ecosystem.** Supabase (PostgreSQL) untuk data relasional/transaksi, Redis untuk cache/invalidation, MongoDB untuk audit log/transkrip/AI chat, dan SQLite untuk fallback darurat.  |
 | Penyimpanan bahasa | **Per user.** `GuildSettings.language` hanya menjadi bahasa default saat user belum punya preferensi.                                                                           |
 | Strategi sharding  | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering. Lihat aturan 1.11.                                                           |
-| Fallback SQLite    | **Dipertahankan** sebagai penyimpanan darurat saat MySQL dan Redis mati bersamaan.                                                                                              |
+| Worker Threads     | **Dedicated Canvas Worker Pool.** Rendering Canvas dialihkan ke `worker_threads` terpisah agar event loop bot tetap non-blocking.                                                |
+| Fallback SQLite    | **Dipertahankan** sebagai penyimpanan darurat saat Supabase dan Redis mati bersamaan.                                                                                           |
 | Alur PR            | **Satu PR per sprint.** Seluruh pekerjaan satu sprint menumpuk di satu branch, direview dan di-merge sekali saat sprint tuntas.                                                 |
 | Deploy di panel    | **Pterodactyl.** Perintah luar terkunci, jadi `CMD_RUN` tetap `npm start` dan urutan migrasi dijamin dari dalam `package.json` lewat `prestart`. Lihat 3.8.                     |
 | Mata uang kupon    | **Naura Coupon adalah mata uang paling langka.** Disimpan di kolom `UserSurvival.coupons`, bukan di dalam JSON `rpg_state`, agar bisa dipotong secara atomik.                   |
-| Prioritas kerja    | Sprint 0-10 sudah tuntas (Hardening, Fondasi DX, Konsistensi Data, Observabilitas, Ticketing, Gacha, Giveaway V2, Setup Dashboard Modular). Sprint berikutnya dipilih dari backlog `TODO.md`. |
+| Prioritas kerja    | Sprint 0-16 sudah tuntas (Hardening, DX, Data Atomicity, Observabilitas, Ticketing, Gacha, Giveaway V2, Modular Setup, Apps Anywhere, AI RAG & Voice, RPG Barter/Pet, Automations, Advanced UX/UI Masterclass, Full Function Calling, Persistent AI Memory, AI Dungeon Master V2). |
 
 ---
 
@@ -86,6 +88,12 @@
 11. **Batas Payload Discord Wajib Dihormati**, Struktur 5-lapisan menambah komponen di setiap respons, jadi container panjang mudah menembus batas Discord. Lihat aturan 1.12.
 12. **Kepemilikan Tidak Boleh Diturunkan dari Data yang Bisa Dipalsukan**, Kepemilikan (misal owner Temp Voice) harus disimpan eksplisit di store, bukan diturunkan dari nama channel, topik, atau teks pesan yang bisa diubah user.
 13. **Sentralisasi Versi & Smart Canvas Invalidation**, Nilai `BOT_VERSION` dan `ENGINE_VERSION` bersumber eksklusif dari `.env` dan diakses melalui `src/config/env.js`. Seluruh cache visual Canvas di Redis (`canvas:*`) wajib terhubung ke `smartInvalidateUserCanvas(userId)` pada setiap event mutasi profil/saldo/leveling.
+14. **Pemisahan Domain Polyglot Database**, Gunakan Supabase (PostgreSQL) untuk data relasional/transaksional inti (saldo, inventory, guild settings), Redis untuk cache berkecepatan tinggi dan pesan Pub/Sub, MongoDB (`/src/models/mongo/`) untuk dokumen tidak terstruktur bervolume besar (AI chat history, ticket transcript HTML, command audit logs), serta SQLite internal untuk fallback darurat.
+15. **Canvas Offloading via Worker Threads**, Rendering Canvas berat yang membutuhkan CPU compute wajib didelegasikan ke `canvasWorkerPool.js` berbasis `node:worker_threads` untuk mencegah blocking pada event loop utama bot.
+16. **Standar Apps Anywhere & Context Menu**, Semua context menu handler wajib terpusat di `/src/interactions/contextMenus/` dan seluruh command publik wajib mendukung instalasi fleksibel (User Apps & Guild) dengan menyertakan metadata `integration_types` dan `contexts` yang tepat.
+17. **Isolasi Alur Kerja Server Automation**, Eksekusi trigger dan action otomatisasi server pada `src/services/automationEngine.js` wajib divalidasi skemanya dan dijalankan secara aman agar tidak menimbulkan infinite feedback loop.
+18. **Standar Psikologi & Advanced UX/UI**, Setiap antarmuka interaktif wajib menerapkan prinsip psikologi UX (Smart Defaults, Goal Gradient, Reciprocity, IKEA Effect, Anchoring/Contrast, Peak-End Rule) serta standar Advanced UX/UI (Adaptive Display Modes, Smarter Predictive Search, Visual Step Timelines, Input Ergonomics, dan Color-Coding Hierarchy) via `src/utils/uxHelper.js`. Respon bot wajib menyebut nama personal pengguna (`{displayName}` / `{username}`) dan dilarang menggunakan panggilan generik seperti 'Master'. Seluruh emoji yang digunakan wajib terdaftar di `src/config/ui.js` / `emojis_base.js` agar dapat dikustomisasi secara terpusat.
+19. **Standar Function Calling & Persistent AI Memory**, Seluruh tool Function Calling wajib terpusat di `/src/ai/functionDispatcher.js` dengan deklarasi skema JSON valid (`type: "OBJECT"`). Loop pemanggilan tool di `geminiClient.js` wajib mendukung eksekusi berantai (maksimal 3 putaran). Ekstraksi memori AI jangka panjang (`AIMemory.extractAndSave`) wajib dieksekusi secara non-blocking di latar belakang tanpa menunda respons pesan Discord. Input durasi waktu wajib menggunakan parser aman (`safeParseDuration`) dengan regex fallback.
 
 ## 1.4 Aturan Commit & Branching
 
@@ -195,22 +203,33 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 - Premium embed: `#FFD700` (gold).
 - Error embed: gunakan warna merah standar Discord.
 
-## 1.7 Aturan Migration & Database
+## 1.7 Aturan Multi-Database & Migrasi
 
 > [!IMPORTANT]
-> Pelanggaran aturan ini bisa menyebabkan schema yang tidak konsisten antara environment development dan production.
+> Naura Hoshino V2 menerapkan arsitektur **Polyglot Persistence**, di mana masing-masing database memegang domain tanggung jawab yang terpisah dan terisolasi:
 
+### 1.7.1 Supabase & PostgreSQL (Relasional & Transaksional Utama)
 - **ALTER TABLE DILARANG di `dbManager.js`**, Semua migration kolom (`ADD COLUMN`, `MODIFY COLUMN`, `DROP COLUMN`, dll.) harus berada **eksklusif** di `dbMigrator.js` dengan sistem versi bernomor. Tidak boleh ada raw `sequelize.query('ALTER TABLE ...')` di dalam `connectToDatabase()`.
 - **`sync({ alter: true })` DILARANG di production.** Produksi memakai `sync({ alter: false })`, development memakai `sync({ alter: { drop: false } })`. Perubahan kolom selalu lewat migrator.
 - **Migrasi adalah langkah terpisah yang dijamin npm, bukan bagian dari boot.** Script `prestart` di `package.json` menjalankan `node scripts/migrate.js` sebelum `start`. Bila migrasi gagal, prosesnya keluar dengan kode 1 dan bot tidak pernah menyala, sehingga tidak mungkin berjalan di atas skema separuh jalan.
-  - Jangan memindahkan `runMigrations()` kembali ke dalam `index.js`. Panel hosting hanya memberi satu perintah start, jadi `prestart` adalah satu-satunya tempat yang menjamin urutannya.
-  - `SKIP_DB_MIGRATE` (`1`, `true`, atau `yes`) dan `npm run start:no-migrate` adalah pintu darurat. Keduanya tidak boleh menjadi konfigurasi permanen, karena migrasi baru akan terus dilewati secara diam-diam.
-- **Hanya satu shard yang boleh menjalankan migrasi.** Karena migrasi kini berjalan sebagai proses terpisah sebelum `shard.js`, syarat ini terpenuhi otomatis. Jangan menambahkan jalur migrasi lain di dalam kode per shard.
-- **Migrasi data yang menambah nilai wajib dijaga ledger.** `schema_migrations` adalah satu-satunya pengaman agar migrasi seperti `v6_move_coupons_to_column` tidak berjalan dua kali dan menggandakan saldo. Setiap migrasi data yang bersifat menambah wajib punya test yang membuktikan ia hanya berjalan sekali.
-- **Seeding data awal** (CanvasAsset, GameItem, dll.) boleh tetap di `connectToDatabase()`, namun HARUS dipisah ke fungsi `seedInitialData()` yang dipanggil terpisah agar mudah di-test dan tidak bercampur dengan logic koneksi.
-- **Gunakan `try/catch` per-migration** di `dbMigrator.js` dengan log yang jelas, bukan silent catch kosong (`catch (e) {}`).
-- **Fallback SQLite wajib dipertahankan** sebagai penyimpanan darurat saat MySQL dan Redis mati bersamaan. Jangan menghapus jalur ini demi kerapian. Karena Node dipatok `>= 24`, jalur ini memakai `node:sqlite` bawaan.
-- **Ukuran connection pool harus sadar shard.** Nilai `pool.max` berlaku per proses, jadi dikalikan jumlah shard. Jaga totalnya tetap di bawah `max_connections` MySQL.
+- **Migrasi data yang menambah nilai wajib dijaga ledger.** `schema_migrations` adalah satu-satunya pengaman agar migrasi seperti `v6_move_coupons_to_column` tidak berjalan dua kali dan menggandakan saldo.
+- **Ukuran connection pool harus sadar shard.** Nilai `pool.max` berlaku per proses, jadi dikalikan jumlah shard. Jaga totalnya tetap di bawah batas pooler Supabase / PostgreSQL.
+- **Dukungan SDK Multi-Akses**, Selain Sequelize ORM untuk relasi data kompleks, modul `supabaseManager.js` menyediakan instance JS Client `@supabase/supabase-js` untuk operasi realtime, storage, dan query langsung.
+
+### 1.7.2 MongoDB (Dokumen Terdistribusi & Log Skala Besar)
+- **Folder Model Khusus**, Semua definisi skema Mongoose wajib berada di `/src/models/mongo/`.
+- **Non-Blocking Async Logging**, Operasi penulisan ke MongoDB (seperti `AiChatHistory`, `CommandAuditLog`, dan `TicketTranscript`) tidak boleh memblokir alur interaksi Discord utama. Jalankan secara async dengan penanganan error internal.
+- **Koneksi Terkelola**, Akses koneksi MongoDB wajib melalui `mongoManager.js` yang menyediakan *safe fallback* dan reconnect otomatis bila koneksi terputus.
+- **Indeks Efisien**, Setiap skema dokumen MongoDB wajib memiliki indeks komposit pada `guildId`, `userId`, atau `createdAt` untuk menjaga performa kueri log.
+
+### 1.7.3 Redis (Cache Berkecepatan Tinggi & Pesan Terdistribusi)
+- **Key Prefixing Wajib**, Semua key di Redis wajib memiliki namespace yang jelas: `cache:*` (entitas DB), `canvas:*` (buffer render), `ratelimit:*` (penjaga request), dan `session:*` (dashboard web).
+- **TTL Wajib**, Setiap entri cache wajib menyertakan TTL (*Time to Live*) untuk mencegah akumulasi memori yang tidak terkontrol.
+- **Invalidasi Shard Terkoordinasi**, Pembersihan cache lintas proses/shard wajib disiarkan melalui channel Redis Pub/Sub `cache:invalidate`.
+
+### 1.7.4 SQLite (Penyimpanan Darurat Offline)
+- **Fallback SQLite wajib dipertahankan** sebagai penyimpanan darurat saat Supabase dan Redis mati bersamaan. Karena Node dipatok `>= 24`, jalur ini memakai modul bawaan `node:sqlite`.
+- Data darurat yang tertulis ke SQLite akan disinkronkan kembali secara otomatis ke Supabase melalui `syncFallbackToMySQL()` setelah koneksi remote pulih.
 
 ## 1.8 Aturan Konsistensi Data (Ekonomi & Counter)
 
@@ -291,20 +310,22 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 ## 2.1 Diagram Arsitektur Tingkat Tinggi
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│                         ENTRY POINTS                                │
-│                                                                     │
-│  npm start ─── prestart: scripts/migrate.js (proses terpisah)        │
-│       │                                                             │
-│  shard.js ─── ShardingManager ──► index.js (per shard)              │
-│                                    │                                │
-│                                    ├─► Discord Client (discord.js)  │
-│                                    ├─► MusicManager (Poru/Lavalink) │
-│                                    ├─► RssManager                   │
-│                                    ├─► CronManager                  │
-│                                    ├─► Dashboard (Express:3070)     │
-│                                    └─► Webhook server (:3071)       │
-└────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                ENTRY POINTS                                 │
+│                                                                             │
+│  npm start ─── prestart: scripts/migrate.js (proses terpisah)               │
+│       │                                                                     │
+│  shard.js ─── ShardingManager ──► index.js (per shard)                      │
+│                                    │                                        │
+│                                    ├─► Discord Client (discord.js)          │
+│                                    ├─► MusicManager (Poru/Lavalink)         │
+│                                    ├─► Database Managers (Supabase/Mongo/Redis)│
+│                                    ├─► CanvasWorkerPool (Worker Threads)    │
+│                                    ├─► AutomationEngine (Server Workflows)  │
+│                                    ├─► RssManager & CronManager             │
+│                                    ├─► Dashboard (Express:3070)             │
+│                                    └─► Webhook server (:3071)               │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 > [!NOTE]
@@ -315,13 +336,17 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 > **Penjelasan Pilar Direktori Utama:**
 >
 > - `src/config/`: Menyimpan seluruh file pengaturan dasar (UI, konstan, environment, aset statis) yang **tidak boleh memiliki state berubah-ubah** (stateless config).
-> - `src/managers/`: Menyimpan sistem "pengendali" atau mesin utama bot (mis. `musicManager`, `aiManager`, `dbManager`). Mereka memegang _state_, _cache_, dan berinteraksi dengan API/database secara langsung.
-> - `src/models/`: Menyimpan skema database tunggal (Sequelize) untuk konsistensi struktur data yang dipakai lintas modul.
-> - `src/utils/`: Menyimpan alat bantu (_helpers_) yang dapat dipanggil berkali-kali tanpa state (mis. `survivalHelper`, `NauraContainerBuilder`, utilitas kanvas).
+> - `src/managers/`: Menyimpan sistem "pengendali" atau mesin utama bot (mis. `musicManager`, `aiManager`, `dbManager`, `supabaseManager`, `mongoManager`, `redisManager`). Mereka memegang _state_, _cache_, dan berinteraksi dengan API/database secara langsung.
+> - `src/models/`: Menyimpan skema database Sequelize (Supabase PostgreSQL) dan Mongoose (`src/models/mongo/`) untuk konsistensi struktur data yang dipakai lintas modul.
+> - `src/services/`: Menyimpan engine komputasi dan background execution (mis. `automationEngine.js`).
+> - `src/canvas/`: Menyimpan sistem render kartu grafis dan worker thread pool (`canvasWorkerPool.js`).
+> - `src/utils/`: Menyimpan alat bantu (_helpers_) yang dapat dipanggil berkali-kali tanpa state (mis. `survivalHelper`, `NauraContainerBuilder`, `translateHelper`).
 > - `src/events/`: Pendengar event Discord. Hanya berisi routing dan pengecekan awal, tanpa logika fitur.
-> - `src/interactions/`: Penanganan Button, Select Menu, dan Modal lewat registry per tipe interaksi. Folder ini sudah menjadi rumah resmi logika interaksi, dan `interactionCreate.js` hanya bertugas merutekan.
+> - `src/interactions/`: Penanganan Button, Select Menu, Modal, Autocomplete, dan Context Menus.
+> - `src/<domain>/`: Folder berfokus domain khusus (seperti `src/survival/`, `src/music/`, `src/card/`) yang membungkus logika, helper, dan sub-sistem khusus agar tidak mengotori `managers` atau `utils` global.
 > - `plugin/`: **HANYA** berisi _command router_ dan pendefinisian Slash Command. Tidak boleh ada logika berat, akses database langsung tanpa manager, atau kelas helper di dalamnya.
-> - `src/dashboard/`: Menyimpan aplikasi web lokal untuk UI pemantauan dan pengelolaan berbasis Express/EJS.
+> - `dashboard/`: Menyimpan aplikasi web lokal untuk UI pemantauan, visual automations builder, dan Discord Embedded Activity.
+> - `testsprite_tests/`: Berkas test suite otomatis, skenario Python, PRD standar, dan laporan QA TestSprite AI.
 
 ```text
 Naura-Hoshino-V2/
@@ -330,65 +355,89 @@ Naura-Hoshino-V2/
 ├── package.json                # 📦 Dependencies & scripts (sumber kebenaran versi)
 ├── AGENTS.md                   # 📘 Dokumen ini, aturan & arsitektur
 ├── README.md                   # 📗 Panduan instalasi & pemakaian
-├── TODO.md                     # 🗂️ Prioritas sprint aktif
+├── TODO.md                     # 🗂️ Prioritas sprint aktif (Sprint 0-14 selesai)
 ├── DESIGN.md                   # 🎨 Style guide & design tokens
 ├── assets/                     # 🖼️ Font, gambar, aset Canvas, ekspresi Naura
 ├── language/                   # 🌍 Kamus inti (id.json, en.json)
 ├── scripts/                    # 🔧 Utilitas pemeliharaan
 │   ├── migrate.js              #    Runner migrasi (dipanggil prestart)
 │   ├── validate-locales.js     #    Audit paritas bahasa
-│   └── check-em-dash.js        #    Penjaga gaya tulisan
+│   ├── check-em-dash.js        #    Penjaga gaya tulisan
+│   └── check-requires.js       #    Pemeriksa resolusi internal require
+│
+├── testsprite_tests/           # 🧪 TestSprite AI QA Testing Suite
+│   ├── TC001...TC009.py        #    Skenario test runner Python
+│   ├── standard_prd.json       #    Standardized PRD schema
+│   ├── testsprite_backend...   #    Backend test plan
+│   └── testsprite-mcp-report   #    Laporan komprehensif 100% Passed
 │
 ├── src/                        # 🧠 CORE ENGINE (Pilar Utama)
 │   ├── config/                 #    Stateless Configuration
 │   │   ├── env.js              #       Centralized env parser (sumber kebenaran env)
 │   │   ├── ui.js               #       UI constants (emoji, warna)
+│   │   ├── database.js         #       Konfigurasi multi-database (Supabase, Mongo, Redis)
 │   │   ├── features.js         #       Feature registry & flags
 │   │   ├── survival/           #       Konfigurasi RPG (items, npcs, currency)
 │   │   └── ...
 │   │
 │   ├── managers/               #    Stateful Managers & Controllers
-│   │   ├── CommandHandler.js   #       Slash command loader & deployer
-│   │   ├── dbManager.js        #       Database connection
+│   │   ├── CommandHandler.js   #       Slash command & context menu loader
+│   │   ├── dbManager.js        #       Database connection (Sequelize / PostgreSQL)
+│   │   ├── supabaseManager.js  #       Supabase JS Client SDK wrapper (@supabase/supabase-js)
+│   │   ├── mongoManager.js     #       MongoDB connection manager (Mongoose)
+│   │   ├── redisManager.js     #       Redis client & Pub/Sub
+│   │   ├── cacheManager.js     #       Cache terpusat, increment, debit, mutate JSON
 │   │   ├── dbMigrator.js       #       Migrasi schema bernomor + ledger
 │   │   ├── guildSettingsService.js #   Satu-satunya jalur tulis GuildSettings
-│   │   ├── cacheManager.js     #       Cache terpusat, increment, debit, mutate JSON
-│   │   ├── redisManager.js     #       Redis client & Pub/Sub
-│   │   ├── survival/           #       RPG engines (duel, craft, shop)
 │   │   ├── musicManager.js     #       Poru Lavalink wrapper
 │   │   ├── aiManager.js        #       LLM router
-│   │   ├── metricsManager.js   #       Logging penggunaan command/komponen via Redis
-│   │   ├── auditLogManager.js  #       Audit log fleksibel (delete, edit, kick, dll)
 │   │   └── ...
 │   │
-│   ├── models/                 #    Database Schemas (Sequelize)
+│   ├── models/                 #    Database Schemas (Sequelize & Mongoose)
 │   │   ├── UserProfile.js      #       Master user data + preferensi bahasa
 │   │   ├── UserSurvival.js     #       RPG stats + kolom coupons
+│   │   ├── mongo/              #       MongoDB Document Schemas
+│   │   │   ├── AiChatHistory.js#          Riwayat percakapan AI berskala besar
+│   │   │   ├── CommandAuditLog #          Audit log eksekusi command
+│   │   │   └── TicketTranscript#          Transkrip HTML tiket terdistribusi
+│   │   └── ...
+│   │
+│   ├── services/               #    Background Engines & Services
+│   │   └── automationEngine.js #       Visual Server Automation engine
+│   │
+│   ├── canvas/                 #    Graphic Rendering & Worker Threads
+│   │   ├── canvasWorkerPool.js #       Pool worker threads non-blocking
+│   │   ├── canvasWorker.js     #       Worker script eksekutor Canvas
+│   │   ├── cardCanvas.js       #       Shader shimmer & kartu koleksi
 │   │   └── ...
 │   │
 │   ├── events/                 #    Discord event listeners (routing saja)
 │   ├── interactions/           #    Registry Button, Select Menu, Modal, Autocomplete
+│   │   └── contextMenus/       #       Context menu handlers (Message & User)
 │   │
 │   ├── utils/                  #    Stateless Helpers & Utilities
 │   │   ├── NauraContainerBuilder.js # Components V2 builder
 │   │   ├── componentBudget.js  #       Penjaga batas payload Discord
+│   │   ├── translateHelper.js  #       Helper translasi multi-provider
 │   │   └── ...
+│   │
+│   └── ai/                     #    Advanced AI Subsystems
+│       ├── knowledgeBase.js    #       Server RAG Knowledge Base
+│       ├── smartAutoMod.js     #       AI Toxicity & Scam Evaluator
+│       └── voiceAgent.js       #       Real-time Voice AI Companion
 │
-├── dashboard/                  # 🌐 WEB DASHBOARD
+├── dashboard/                  # 🌐 WEB DASHBOARD & ACTIVITIES
 │   ├── middleware/             #    Auth, izin, owner guard
 │   ├── routes/                 #    Endpoint public, user, guild, owner
 │   ├── sockets/                #    Socket.IO realtime
-│   ├── public/                 #    Frontend CSS, JS, HTML
+│   ├── views/                  #    Status, Automations builder, Discord Activity
 │   └── utils/                  #    Rate limiter & formatter
 │
 ├── plugin/                     # 🔌 COMMAND MODULES (Hanya Router & Subcommands)
 │   ├── core/                   #    /ping, /stats, /info, dll
 │   ├── music/                  #    /play, /queue, dll
-│   ├── ai/                     #    /ai chat, /ai imagine
+│   ├── ai/                     #    /ai chat, /ai imagine, /voice waifu
 │   ├── admin/                  #    /setup (router), /ban, /kick, /giveaway, automod
-│   │   └── setup/              #       11 file modular: softban.js, greetings.js, automod.js,
-│   │                           #       modmail.js, ticket.js, tempvoice.js, autorole.js,
-│   │                           #       ai.js, vanity.js, minecraft.js, dashboard.js
 │   ├── survival/               #    /survival (55+ subcommands) + /gacha (3 banner)
 │   │   └── subcommands/        #       Subcommand handler survival
 │   ├── modmail/                #    n!modmail: private thread + Component V2 admin panel
@@ -542,14 +591,19 @@ module.exports = {
 };
 ```
 
-## 2.8 Database Schema Overview
+## 2.8 Database Schema & Storage Overview
 
-Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai penyimpanan darurat). Saat boot, produksi memakai `sequelize.sync({ alter: false })` dan development memakai `sync({ alter: { drop: false } })`; seluruh perubahan kolom dilakukan oleh `dbMigrator.js`. Total: **28 model**.
+Naura Hoshino V2 mengadopsi pendekatan **Polyglot Persistence** yang membagi penyimpanan menjadi 3 layer database:
+
+1. **Supabase & PostgreSQL (via Sequelize ORM & Supabase JS Client)**: Menyimpan master data transaksional, profil user, saldo ekonomi, dan konfigurasi server (Total: **28 model**).
+2. **MongoDB (via Mongoose ODM)**: Menyimpan dokumen bervolume tinggi, riwayat chat AI, jejak audit command, dan transkrip tiket.
+3. **Redis**: Cache in-memory berkecepatan tinggi, lock concurrency, pub/sub invalidasi, dan rate limiter counter.
+4. **SQLite (`node:sqlite`)**: Penyimpanan darurat offline jika koneksi remote terputus.
 
 > [!CAUTION]
-> Nama tabel tidak seragam. `UserSurvival` memakai `UserSurvivals` dengan `timestamps: true`, sementara `UserProfile` memakai `user_profiles` dengan `timestamps: false`. Selalu periksa `tableName` di file model sebelum menulis SQL mentah untuk migrasi.
+> Nama tabel Sequelize tidak seragam. `UserSurvival` memakai `UserSurvivals` dengan `timestamps: true`, sementara `UserProfile` memakai `user_profiles` dengan `timestamps: false`. Selalu periksa `tableName` di file model sebelum menulis SQL mentah untuk migrasi.
 
-### Model Utama & Relasinya
+### Model Utama Sequelize (Supabase / PostgreSQL)
 
 | Model             | Tabel               | Fungsi                                       | Key Fields                                                                                                |
 | ----------------- | ------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
@@ -582,6 +636,24 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 | `UserNPC`         | `user_npcs`         | Relasi NPC per-user                          | `userId`, `npcId`, `affection`, `lastInteract`                                                            |
 | `UserReminder`    | `user_reminders`    | Pengingat terjadwal                          | `userId`, `channelId`, `message`, `remindAt`                                                              |
 | `UserWarn`        | `user_warns`        | Riwayat peringatan moderasi                  | `userId`, `guildId`, `reason`, `moderatorId`                                                              |
+
+### Model Dokumen Mongoose (MongoDB)
+
+| Model               | Collection          | Fungsi                                          | Key Fields                                                                 |
+| ------------------- | ------------------- | ----------------------------------------------- | -------------------------------------------------------------------------- |
+| `AiChatHistory`     | `ai_chat_histories` | Riwayat percakapan sesi AI interaktif per-user  | `userId`, `guildId`, `channelId`, `messages` (Array: role, content, time)  |
+| `CommandAuditLog`   | `command_audit_logs`| Jejak audit eksekusi slash command & parameter  | `commandName`, `userId`, `guildId`, `options` (Mixed), `executionTimeMs`   |
+| `TicketTranscript`  | `ticket_transcripts`| Transkrip lengkap percakapan tiket format HTML  | `ticketId`, `guildId`, `userId`, `htmlContent`, `closedBy`, `closedAt`     |
+
+### Pola Penyimpanan Redis
+
+| Namespace       | Tipe Data | Fungsi                                             | TTL Default      |
+| --------------- | --------- | -------------------------------------------------- | ---------------- |
+| `cache:user:*`  | Hash/JSON | Cache entitas profil user & leveling               | 10 Menit         |
+| `cache:guild:*` | Hash/JSON | Cache pengaturan server (`GuildSettings`)          | 5 Menit          |
+| `canvas:*`      | Buffer    | Cache grafis kartu SSR/profil sebelum invalidasi   | 1 Jam            |
+| `ratelimit:*`   | String    | Counter sliding window proteksi rate limit API/Bot | 1 Menit          |
+| `session:*`     | String    | Sesi login OAuth2 Web Dashboard                    | 24 Jam           |
 
 ### Daftar Migrasi Bernomor
 
@@ -620,19 +692,19 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 | Property          | Value                                                                                                    |
 | ----------------- | -------------------------------------------------------------------------------------------------------- |
 | **Nama**          | Naura Hoshino Intelligence                                                                               |
-| **Versi**         | 2.0.0                                                                                                    |
-| **Engine**        | 2.0.0                                                                                                    |
+| **Versi**         | 2.1.0                                                                                                    |
+| **Engine**        | 2.1.0                                                                                                    |
 | **Deskripsi**     | Bot Discord multifungsi dengan AI, High-Fidelity Audio, Canvas Modern, Sistem Ekonomi, dan Web Dashboard |
 | **Author**        | Aryandita Praftian (Ryaa)                                                                                |
 | **License**       | ISC                                                                                                      |
 | **Runtime**       | Node.js ≥ 24.0.0                                                                                         |
 | **Framework**     | discord.js v14.26+                                                                                       |
-| **Database**      | MySQL (primary) / SQLite (fallback darurat)                                                              |
-| **ORM**           | Sequelize v6                                                                                             |
-| **Cache**         | Redis v4 (opsional)                                                                                      |
+| **Database**      | Supabase / PostgreSQL (primary) / MongoDB (documents & logs) / SQLite (fallback)                         |
+| **ORM / SDK**     | Sequelize v6, Mongoose v9, @supabase/supabase-js v2                                                      |
+| **Cache**         | Redis (primary) / In-Memory (fallback)                                                                   |
 | **Audio**         | Poru v5 + Lavalink v4                                                                                    |
 | **AI**            | Google Gemini (`@google/genai`) + Verba + Ollama (opsional)                                              |
-| **Canvas**        | `@napi-rs/canvas` v0.1.53                                                                                |
+| **Canvas**        | `@napi-rs/canvas` v0.1.53 + Dedicated Worker Threads Pool                                                |
 | **Web Server**    | Express v4 + Socket.IO v4                                                                                |
 | **Panel hosting** | Pterodactyl (`CMD_RUN = npm start`)                                                                      |
 
@@ -652,6 +724,7 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 | `npm run format`               | `prettier --write .`                        | Format seluruh repo                                                              |
 | `npm run format:check`         | `prettier --check .`                        | Verifikasi format (dipakai CI)                                                   |
 | `npm test`                     | `node --test`                               | Menjalankan test `node:test`                                                     |
+| `npm run test:requires`        | `node scripts/check-requires.js`            | Memeriksa integritas resolusi internal modul                                     |
 | `npm run build:css`            | `tailwindcss -i ... -o ...`                 | Build CSS dashboard                                                              |
 | `npm run locales:check`        | `node scripts/validate-locales.js`          | Audit paritas kunci bahasa                                                       |
 | `npm run locales:check:strict` | `node scripts/validate-locales.js --strict` | Audit bahasa mode gagal-keras (dipakai CI)                                       |
@@ -680,25 +753,36 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 
 | Variable         | Wajib | Default                | Deskripsi                                   |
 | ---------------- | ----- | ---------------------- | ------------------------------------------- |
-| `BOT_VERSION`    | ❌    | `2.0.0`                | Versi bot yang ditampilkan di `/info`       |
-| `ENGINE_VERSION` | ❌    | `2.0.0`                | Versi engine internal, tampil di footer     |
+| `BOT_VERSION`    | ❌    | `2.1.0`                | Versi bot yang ditampilkan di `/info`       |
+| `ENGINE_VERSION` | ❌    | `2.1.0`                | Versi engine internal, tampil di footer     |
 | `PARTNERSHIP`    | ❌    | `Belum ada kolaborasi` | Label komunitas mitra yang tampil di profil |
 
-### Database (MySQL)
+### Relational Database (Supabase & PostgreSQL)
 
-| Variable          | Wajib | Default     | Deskripsi                                                                           |
-| ----------------- | ----- | ----------- | ----------------------------------------------------------------------------------- |
-| `MYSQL_HOST`      | ❌    | `127.0.0.1` | Host database                                                                       |
-| `MYSQL_PORT`      | ❌    | `3306`      | Port database                                                                       |
-| `MYSQL_USER`      | ⚠️    | -           | Username database                                                                   |
-| `MYSQL_PASSWORD`  | ❌    | -           | Password database                                                                   |
-| `MYSQL_DATABASE`  | ⚠️    | -           | Nama database                                                                       |
-| `DB_POOL_BUDGET`  | ❌    | `80`        | Total koneksi untuk seluruh shard, dibagi jumlah shard                              |
-| `DB_POOL_MAX`     | ❌    | -           | Penimpa manual `pool.max` per proses                                                |
-| `SKIP_DB_MIGRATE` | ❌    | -           | Pintu darurat. `1`, `true`, atau `yes` melewati migrasi saat boot. Jangan permanen. |
+| Variable              | Wajib | Default                                         | Deskripsi                                                                           |
+| --------------------- | ----- | ----------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `SUPABASE_URL`        | ❌    | `https://ceqkjzvrxyifxzgxtkig.supabase.co`      | URL REST/API project Supabase                                                       |
+| `SUPABASE_KEY`        | ❌    | `sb_publishable_9gd0-5FflbVgYPCd7WGAwQ_dJLMxyRX`| Anon / Publishable key project Supabase                                             |
+| `SUPABASE_PROJECT_ID` | ❌    | `ceqkjzvrxyifxzgxtkig`                          | Identifier unik project Supabase                                                    |
+| `DATABASE_URL`        | ❌    | -                                               | PostgreSQL connection URI (opsional, jika menggunakan direct URI / pooler)          |
+| `DB_HOST`             | ❌    | `db.ceqkjzvrxyifxzgxtkig.supabase.co`           | Host database PostgreSQL / Supabase                                                 |
+| `DB_PORT`             | ❌    | `5432`                                          | Port database PostgreSQL (5432) atau Session Pooler (6543)                          |
+| `DB_USER`             | ❌    | `postgres`                                      | Username database                                                                   |
+| `DB_PASSWORD`         | ❌    | -                                               | Password database Supabase                                                          |
+| `DB_NAME`             | ❌    | `postgres`                                      | Nama database                                                                       |
+| `DB_SSL`              | ❌    | `true`                                          | Mengaktifkan SSL enkripsi untuk koneksi cloud Supabase                              |
+| `DB_POOL_BUDGET`      | ❌    | `80`                                            | Total koneksi untuk seluruh shard, dibagi jumlah shard                              |
+| `DB_POOL_MAX`         | ❌    | -                                               | Penimpa manual `pool.max` per proses                                                |
+| `SKIP_DB_MIGRATE`     | ❌    | -                                               | Pintu darurat. `1`, `true`, atau `yes` melewati migrasi saat boot. Jangan permanen. |
 
 > [!NOTE]
-> Di dalam kode, nilai-nilai ini diakses sebagai `env.DB_HOST`, `env.DB_PORT`, `env.DB_USER`, `env.DB_PASS`, dan `env.DB_NAME`. Bila salah satu dari `DB_NAME`, `DB_USER`, atau `DB_HOST` kosong, bot otomatis memakai fallback SQLite (`naura_fallback.sqlite`).
+> Di dalam kode, nilai-nilai ini diakses melalui `src/config/env.js` dan `src/config/database.js`. Bila host database remote tidak dapat dijangkau, bot otomatis memakai fallback SQLite lokal (`naura_fallback.sqlite`).
+
+### Document Database (MongoDB)
+
+| Variable    | Wajib | Default                                         | Deskripsi                                                  |
+| ----------- | ----- | ----------------------------------------------- | ---------------------------------------------------------- |
+| `MONGO_URI` | ❌    | `mongodb://127.0.0.1:27017/naura_hoshino`       | Connection string MongoDB untuk log, AI history & transkrip |
 
 ### Web Dashboard & OAuth2
 
@@ -772,21 +856,19 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 ### Services yang Dibutuhkan
 
 ```
-┌────────────────────────────────────────────────────┐
-│                    Naura Hoshino Runtime                      │
-│                                                              │
+┌────────────────────────────────────────────────────────────┐
+│                  Naura Hoshino Runtime                     │
+│                                                            │
 │  ┌────────────┐  ┌──────────────┐  ┌──────────────────┐    │
-│  │  Discord API │  │  MySQL/Maria │  │  Lavalink v4     │    │
-│  │  (WAJIB)     │  │  DB (WAJIB)  │  │  + youtube-src   │    │
-│  │              │  │              │  │  + LavaSrc       │    │
-│  └─────────────┘  └──────────────┘  └──────────────────┘    │
-│                                                              │
+│  │ Discord API│  │ Supabase / PG│  │ MongoDB Database │    │
+│  │ (WAJIB)    │  │ (WAJIB)      │  │ (Audit & Logs)   │    │
+│  └────────────┘  └──────────────┘  └──────────────────┘    │
+│                                                            │
 │  ┌────────────┐  ┌──────────────┐  ┌──────────────────┐    │
-│  │  Redis       │  │  Google      │  │  Spotify API     │    │
-│  │  (Opsional)  │  │  Gemini API  │  │  (Opsional)      │    │
-│  │              │  │  (Opsional)  │  │                  │    │
-│  └─────────────┘  └──────────────┘  └──────────────────┘    │
-└─────────────────────────────────────────────────────┘
+│  │ Redis Cache│  │ Google Gemini│  │ Lavalink v4      │    │
+│  │ & Pub/Sub  │  │ API (AI)     │  │ Audio Stream Node│    │
+│  └────────────┘  └──────────────┘  └──────────────────┘    │
+└────────────────────────────────────────────────────────────┘
 ```
 
 > [!NOTE]
@@ -796,23 +878,25 @@ Database menggunakan **Sequelize ORM** dengan **MySQL** (fallback SQLite sebagai
 
 > `package.json` adalah sumber kebenaran. Tabel ini hanya ringkasan peran, bukan daftar lengkap.
 
-| Package               | Versi            | Fungsi                                       |
-| --------------------- | ---------------- | -------------------------------------------- |
-| `discord.js`          | ^14.26.4         | Framework bot Discord                        |
-| `sequelize`           | ^6.37.8          | ORM untuk MySQL/SQLite                       |
-| `mysql2`              | ^3.9.7           | MySQL driver                                 |
-| `sqlite3`             | ^5.1.7           | SQLite fallback driver (penyimpanan darurat) |
-| `redis`               | ^4.7.1           | Redis client                                 |
-| `poru`                | ^5.3.0           | Lavalink audio client                        |
-| `@google/genai`       | ^1.46.0          | Google Gemini AI SDK                         |
-| `ollama`              | ^0.5.15          | LLM lokal (opsional)                         |
-| `@napi-rs/canvas`     | ^0.1.53          | Canvas rendering (native)                    |
-| `express`             | ^4.18.2          | Web server dashboard                         |
-| `socket.io`           | ^4.8.3           | Real-time dashboard updates                  |
-| `passport-discord`    | ^0.1.4           | Discord OAuth2                               |
-| `axios`               | ^1.6.8           | HTTP client                                  |
-| `fast-glob`           | ^3.3.3           | File pattern matching                        |
-| `node-cron`           | ^4.6.0           | Cron job scheduler                           |
+| Package                 | Versi            | Fungsi                                       |
+| ----------------------- | ---------------- | -------------------------------------------- |
+| `discord.js`            | ^14.26.4         | Framework bot Discord                        |
+| `sequelize`             | ^6.37.8          | ORM untuk Supabase (PostgreSQL)/SQLite       |
+| `pg` / `pg-hstore`      | ^8.23.0 / ^2.3.4 | Driver PostgreSQL untuk Sequelize            |
+| `@supabase/supabase-js` | ^2.99.0          | Official Supabase JavaScript SDK Client      |
+| `mongoose`              | ^9.9.3           | ODM untuk MongoDB (audit logs & transcripts) |
+| `sqlite3`               | ^5.1.7           | SQLite fallback driver (penyimpanan darurat) |
+| `redis` / `ioredis`     | ^4.7.1 / ^5.9.3  | Redis client & high-speed caching            |
+| `poru`                  | ^5.3.0           | Lavalink audio client                        |
+| `@google/genai`         | ^1.46.0          | Google Gemini AI SDK                         |
+| `ollama`                | ^0.5.15          | LLM lokal (opsional)                         |
+| `@napi-rs/canvas`       | ^0.1.53          | Canvas rendering (native)                    |
+| `express`               | ^5.2.1           | Web server dashboard                         |
+| `socket.io`             | ^4.8.3           | Real-time dashboard updates                  |
+| `passport-discord`      | ^0.1.4           | Discord OAuth2                               |
+| `axios`                 | ^1.6.8           | HTTP client                                  |
+| `fast-glob`             | ^3.3.3           | File pattern matching                        |
+| `node-cron`             | ^4.6.0           | Cron job scheduler                           |
 | `msedge-tts`          | ^1.1.0           | Text-to-speech                               |
 | `ffmpeg-static`       | ^5.2.0           | Binary FFmpeg bawaan                         |
 | `eslint` / `prettier` | ^10.4.1 / ^3.8.3 | Linting & formatting (devDependencies)       |
@@ -849,12 +933,12 @@ File ini menyimpan ID yang spesifik per-deployment:
 
 ## 3.6 Sistem Lokalisasi (i18n)
 
-Bot mendukung multi-bahasa via file JSON di `/language/`:
+Bot mendukung multi-bahasa via kamus terpadu tunggal di `/assets/language/`:
 
-- `id.json`, Bahasa Indonesia (default)
-- `en.json`, English
+- `assets/language/id.json`, Bahasa Indonesia (default)
+- `assets/language/en.json`, English
 
-Kamus khusus per plugin berada di `plugin/<kategori>/locales/`, dan **kamus inti selalu berprioritas** di atas kamus plugin.
+Seluruh kunci terjemahan (inti, pesan bersama, dan fitur plugin) disatukan secara terpusat di kedua berkas tersebut agar pemuatan instan dan audit paritas bahasa berjalan 100% konsisten.
 
 > [!IMPORTANT]
 > **Bahasa disimpan per user** di tabel `user_profiles`, karena setiap user punya preferensi sendiri meski berada di server yang sama. `GuildSettings.language` hanya dipakai sebagai **default guild** saat user belum pernah memilih bahasa. Akses selalu lewat `languageManager.js` dan helper `language.js`, dan nilainya wajib diambil dari cache agar tidak menyentuh database di setiap balasan.

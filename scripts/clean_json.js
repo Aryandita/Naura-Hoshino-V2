@@ -1,8 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const idPath = path.join(__dirname, "..", "language", "id.json");
-const enPath = path.join(__dirname, "..", "language", "en.json");
+const idPath = path.join(__dirname, "..", "assets", "language", "id.json");
+const enPath = path.join(__dirname, "..", "assets", "language", "en.json");
 
 const idData = JSON.parse(fs.readFileSync(idPath, "utf8"));
 const enData = JSON.parse(fs.readFileSync(enPath, "utf8"));

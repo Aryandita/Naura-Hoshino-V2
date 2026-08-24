@@ -225,10 +225,11 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
     const channel = manager.client.channels.cache.get(player.textChannel);
     if (channel) {
       const exitPayload = buildContainerV2({
-        accentColorHex: ui.getColor("error") || "#ff0000",
-        title: "⏹️ Pemutusan Sesi",
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        title: `${ui.getEmoji("offline") || ui.getEmoji("power") || "🔌"} Pemutusan Sesi Audio`,
         description:
-          "Antrean lagu telah habis. Naura pamit dari Voice Channel!",
+          `Antrean lagu telah habis. Naura pamit dari Voice Channel! ${ui.getEmoji("naura_blowkiss") || "👋"}`,
+        expression: "happy",
         footerText: ui.getFooter("music"),
       });
       channel

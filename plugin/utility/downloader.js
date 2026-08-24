@@ -100,9 +100,7 @@ module.exports = {
           .setLabel("Lihat Postingan")
           .setURL(url)
           .setStyle(ButtonStyle.Link);
-        const emoji = ui.parseEmoji(
-          ui.getEmoji("download") || "\uD83D\uDCE5",
-        );
+        const emoji = ui.parseEmoji(ui.getEmoji("core") || "🌸");
         if (emoji) btn.setEmoji(emoji);
         actionRow.addComponents(btn);
       }
@@ -206,16 +204,14 @@ module.exports = {
         ) {
           if (data.url.length <= 512) {
             const btn = new ButtonBuilder()
-              .setLabel("Unduh manual")
+              .setLabel("Unduh Manual")
               .setURL(data.url)
               .setStyle(ButtonStyle.Link);
-            const emoji = ui.parseEmoji(
-              ui.getEmoji("download") || "\uD83D\uDCE5",
-            );
+            const emoji = ui.parseEmoji(ui.getEmoji("core") || "🌸");
             if (emoji) btn.setEmoji(emoji);
             actionRow.addComponents(btn);
           } else {
-            linkManualText += `\n\n${render.e("read", "\uD83D\uDD17")} **Tautan cadangan:** [klik di sini](${data.url})`;
+            linkManualText += `\n\n${render.e("naura_read", "📖")} **Tautan cadangan:** [klik di sini](${data.url})`;
           }
         }
 

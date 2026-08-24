@@ -3,7 +3,6 @@
 const {
   ActionRowBuilder,
   ChannelSelectMenuBuilder,
-  EmbedBuilder,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
@@ -11,23 +10,21 @@ const {
 } = require("discord.js");
 
 const { updateGuildSetting } = require("../../managers/guildSettingsService");
+const {
+  buildContainerV2,
+  buildSuccessContainerV2,
+} = require("../../utils/NauraContainerBuilder");
+const ui = require("../../config/ui");
 
 const SPECIAL_CHANNEL_LABELS = {
-  ai: "\ud83e\udd16 AI Chat",
-  levelUp: "\ud83d\udcc8 Level-Up",
-  counting: "\ud83d\udd22 Counting Game",
-  tod: "\ud83d\ude08 Truth or Dare",
+  ai: `${ui.getEmoji("robot") || "🤖"} AI Chat`,
+  levelUp: `${ui.getEmoji("chart") || "📈"} Level-Up`,
+  counting: `${ui.getEmoji("numbers") || "🔢"} Counting Game`,
+  tod: `${ui.getEmoji("sparkles") || "✨"} Truth or Dare`,
 };
 
 function labelFor(type) {
   return SPECIAL_CHANNEL_LABELS[type] || SPECIAL_CHANNEL_LABELS.tod;
-}
-
-function successEmbed(title, description) {
-  return new EmbedBuilder()
-    .setColor("#FF69B4")
-    .setTitle(title)
-    .setDescription(description);
 }
 
 module.exports = [
@@ -37,18 +34,22 @@ module.exports = [
     handler(interaction) {
       const channelType = interaction.values[0];
 
-      const embed = successEmbed(
-        "\ud83d\udcfa Setup Special Channel",
-        `Pilih channel baru untuk **${labelFor(channelType)}**:`,
-      );
-
       const menu = new ChannelSelectMenuBuilder()
         .setCustomId(`select_special_channel_submit_${channelType}`)
         .setPlaceholder("Pilih channel...");
 
+      const row = new ActionRowBuilder().addComponents(menu);
+
+      const payload = buildContainerV2({
+        authorName: "Naura Channel Config",
+        title: `${ui.getEmoji("tv") || "📺"} Setup Special Channel`,
+        description: `Pilih channel baru untuk **${labelFor(channelType)}**:`,
+        buttonsRow: row,
+        footerText: ui.getFooter("core"),
+      });
+
       return interaction.reply({
-        embeds: [embed],
-        components: [new ActionRowBuilder().addComponents(menu)],
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     },
@@ -64,13 +65,15 @@ module.exports = [
         settings.announcementChannel = channelId;
       });
 
+      const payload = buildSuccessContainerV2({
+        authorName: "Naura Setup Manager",
+        title: `${ui.getEmoji("announcement") || "📢"} Setup Announcement Channel Berhasil!`,
+        description: `Channel pengumuman otomatis (Welcome/Logs) disetel ke <#${channelId}>.`,
+        footerText: ui.getFooter("core"),
+      });
+
       return interaction.reply({
-        embeds: [
-          successEmbed(
-            "\ud83d\udce2 Setup Announcement Channel Berhasil!",
-            `Channel pengumuman otomatis (Welcome/Logs) disetel ke <#${channelId}>.`,
-          ),
-        ],
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     },
@@ -93,13 +96,15 @@ module.exports = [
       }
       client.globalChatChannels.set(channelId, interaction.guild.id);
 
+      const payload = buildSuccessContainerV2({
+        authorName: "Naura Global Chat",
+        title: `${ui.getEmoji("globe") || "🌐"} Setup Global Chat Berhasil!`,
+        description: `Channel <#${channelId}> telah terhubung ke Naura Global Chat!`,
+        footerText: ui.getFooter("core"),
+      });
+
       return interaction.reply({
-        embeds: [
-          successEmbed(
-            "\ud83c\udf10 Setup Global Chat Berhasil!",
-            `Channel <#${channelId}> terhubung ke Naura Global Chat!`,
-          ),
-        ],
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     },
@@ -117,13 +122,15 @@ module.exports = [
         settings.starboard = { enabled: true, channelId, threshold };
       });
 
+      const payload = buildSuccessContainerV2({
+        authorName: "Naura Starboard",
+        title: `${ui.getEmoji("star") || "⭐"} Setup Starboard Berhasil!`,
+        description: `Channel Starboard disetel ke <#${channelId}> dengan batas minimal **${threshold} ⭐**.`,
+        footerText: ui.getFooter("core"),
+      });
+
       return interaction.reply({
-        embeds: [
-          successEmbed(
-            "\u2b50 Setup Starboard Berhasil!",
-            `Channel Starboard disetel ke <#${channelId}> dengan batas minimal **${threshold} \u2b50**.`,
-          ),
-        ],
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     },
@@ -137,7 +144,7 @@ module.exports = [
 
       const modal = new ModalBuilder()
         .setCustomId(`modal_setup_sticky_content_${channelId}`)
-        .setTitle("\ud83d\udccc Isi Pesan Sticky");
+        .setTitle("Isi Pesan Sticky");
 
       const input = new TextInputBuilder()
         .setCustomId("input_sticky_message")
@@ -164,13 +171,15 @@ module.exports = [
         settings.automod.logChannel = channelId;
       });
 
+      const payload = buildSuccessContainerV2({
+        authorName: "Naura AutoMod Guard",
+        title: `${ui.getEmoji("shield") || "🛡️"} Log Automod Disetel`,
+        description: `Channel log audit keamanan disetel ke <#${channelId}>.`,
+        footerText: ui.getFooter("core"),
+      });
+
       return interaction.reply({
-        embeds: [
-          successEmbed(
-            "\ud83d\udee1\ufe0f Log Automod Disetel",
-            `Channel log audit keamanan disetel ke <#${channelId}>.`,
-          ),
-        ],
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     },
@@ -188,13 +197,15 @@ module.exports = [
         settings.channels[channelType] = channelId;
       });
 
+      const payload = buildSuccessContainerV2({
+        authorName: "Naura Channel Config",
+        title: `${ui.getEmoji("tv") || "📺"} Special Channel Disetel!`,
+        description: `Channel untuk **${labelFor(channelType)}** berhasil disetel ke <#${channelId}>.`,
+        footerText: ui.getFooter("core"),
+      });
+
       return interaction.reply({
-        embeds: [
-          successEmbed(
-            "\ud83d\udcfa Special Channel Disetel!",
-            `Channel untuk **${labelFor(channelType)}** berhasil disetel ke <#${channelId}>.`,
-          ),
-        ],
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     },
@@ -210,13 +221,15 @@ module.exports = [
         settings.autoRole = roleId;
       });
 
+      const payload = buildSuccessContainerV2({
+        authorName: "Naura Auto-Role",
+        title: `${ui.getEmoji("theater") || "🎭"} Setup Auto-Role Berhasil!`,
+        description: `Member baru bergabung akan otomatis diberikan role <@&${roleId}>.`,
+        footerText: ui.getFooter("core"),
+      });
+
       return interaction.reply({
-        embeds: [
-          successEmbed(
-            "\ud83c\udfad Setup Auto-Role Berhasil!",
-            `Member baru bergabung akan otomatis diberikan role <@&${roleId}>.`,
-          ),
-        ],
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     },
@@ -232,13 +245,15 @@ module.exports = [
         settings.softbanChannelId = channelId;
       });
 
+      const payload = buildSuccessContainerV2({
+        authorName: "Naura Scammer Trap",
+        title: `${ui.getEmoji("shield") || "🛡️"} Setup Softban Berhasil!`,
+        description: `Channel Honeypot Scammer Trap berhasil disetel ke <#${channelId}>.`,
+        footerText: ui.getFooter("core"),
+      });
+
       return interaction.reply({
-        embeds: [
-          successEmbed(
-            "🛡️ Setup Softban Berhasil!",
-            `Channel Honeypot Scammer Trap berhasil disetel ke <#${channelId}>.`,
-          ),
-        ],
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     },
@@ -254,13 +269,15 @@ module.exports = [
         settings.announcementChannel = channelId;
       });
 
+      const payload = buildSuccessContainerV2({
+        authorName: "Naura Greetings",
+        title: `${ui.getEmoji("wave") || "👋"} Setup Greetings Berhasil!`,
+        description: `Channel Welcome/Leave berhasil disetel ke <#${channelId}>.`,
+        footerText: ui.getFooter("core"),
+      });
+
       return interaction.reply({
-        embeds: [
-          successEmbed(
-            "👋 Setup Greetings Berhasil!",
-            `Channel Welcome/Leave berhasil disetel ke <#${channelId}>.`,
-          ),
-        ],
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     },
@@ -276,13 +293,15 @@ module.exports = [
         settings.aiChannelId = channelId;
       });
 
+      const payload = buildSuccessContainerV2({
+        authorName: "Naura AI Assistant",
+        title: `${ui.getEmoji("brain") || "🧠"} Setup AI Channel Berhasil!`,
+        description: `Channel percakapan otomatis AI berhasil disetel ke <#${channelId}>.`,
+        footerText: ui.getFooter("core"),
+      });
+
       return interaction.reply({
-        embeds: [
-          successEmbed(
-            "🧠 Setup AI Channel Berhasil!",
-            `Channel percakapan otomatis AI berhasil disetel ke <#${channelId}>.`,
-          ),
-        ],
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     },

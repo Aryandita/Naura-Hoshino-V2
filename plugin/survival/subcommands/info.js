@@ -44,9 +44,17 @@ module.exports = {
         activePets,
       });
 
+      const userName = ui.ux.resolveUserName(interaction);
+      const adaptive = ui.ux.buildAdaptiveDensityView({
+        level: stats.level || 1,
+        isVeteran: stats.rebirthCount > 0 || (stats.level || 1) > 5,
+        user: interaction,
+        lang: "id",
+      });
+
       const partnerName = marriedNPCs.length > 0 ? marriedNPCs[0].npcId : null;
       const partnerDisplay = partnerName
-        ? `${e("wedding_ring")} **${partnerName}** \u2014 Naura ikut senang lihat kalian bahagia!`
+        ? `${e("wedding_ring")} **${partnerName}** : Naura ikut senang lihat kalian bahagia!`
         : "Masih sendiri, dan itu sama sekali nggak apa-apa~";
 
       // --- Gelar dan pencapaian ---
@@ -106,34 +114,44 @@ module.exports = {
           ? `> ${e("sparkle")} Berkah aktif: **${perkNames.length}** (${perkNames.slice(0, 4).join(", ")})`
           : `> ${e("sparkle")} Belum ada berkah khusus. Kumpulkan Naura Coupon dulu, yuk!`;
 
-      // Gambar profil bersifat pemanis. Kalau kanvas gagal, kartunya tetap tampil.
       let files = [];
       let bannerAttachmentName;
       try {
         const {
           generateSurvivalProfileImage,
-        } = require("../../../src/canvas/CanvasUtils");
+        } = require('../../../src/canvas/CanvasUtils');
+        const botAvatar = interaction.client.user?.displayAvatarURL({ extension: 'png', size: 128 });
         const buffer = await generateSurvivalProfileImage(
           user,
           profile,
           survival,
           ui,
+          {
+            activePets,
+            marriedNPCs,
+            botAvatar,
+            gear:         stats.gear,
+            isRegistered: stats.isRegistered,
+          },
         );
         if (buffer) {
           files = [new AttachmentBuilder(buffer, { name: IMAGE_NAME })];
           bannerAttachmentName = IMAGE_NAME;
         }
       } catch (canvasError) {
-        logger.warn("[SURVIVAL INFO CANVAS]", canvasError.message);
+        logger.warn('[SURVIVAL INFO CANVAS]', canvasError.message);
       }
+
 
       const payload = buildContainerV2({
         accentColorHex: stats.timeState.color || ui.getColor("primary"),
-        authorName: `Catatan Petualangan ${user.displayName || user.username} \u2022 ${stats.rebirthCount}x Rebirth`,
-        title: `${e("help_survival")} Naura sudah rapikan profilmu!`,
+        authorName: `Catatan Petualangan ${userName} \u2022 ${stats.rebirthCount}x Rebirth`,
+        title: `${e("help_survival")} Profil Petualangan: ${userName} [${adaptive.modeBadge}]`,
         iconURL: user.displayAvatarURL(),
         expression: "Cheers",
         description: [
+          `*${adaptive.focusTip}*`,
+          "",
           `${e("clock")} **Waktu di dunia Naura:**`,
           timeLine,
           "",
@@ -163,10 +181,10 @@ module.exports = {
           {
             name: `${e("stats")} Statistik RPG (batas ${stats.maxStat})`,
             value: [
-              `> ${e("strength")} STR: **${survival.strength || 1}** (+${stats.pet.bonusStrength}) \u2014 kekuatan seranganmu`,
-              `> ${e("agility")} AGI: **${survival.agility || 1}** \u2014 peluang menghindar dan kabur`,
-              `> ${e("intelligence")} INT: **${survival.intelligence || 1}** \u2014 bonus gaji dan diskon toko`,
-              `> ${e("luck")} LUK: **${survival.luck || 1}** (+${stats.pet.bonusLuck}) \u2014 peluang jarahan langka`,
+              `> ${e("strength")} STR: **${survival.strength || 1}** (+${stats.pet.bonusStrength}) : kekuatan seranganmu`,
+              `> ${e("agility")} AGI: **${survival.agility || 1}** : peluang menghindar dan kabur`,
+              `> ${e("intelligence")} INT: **${survival.intelligence || 1}** : bonus gaji dan diskon toko`,
+              `> ${e("luck")} LUK: **${survival.luck || 1}** (+${stats.pet.bonusLuck}) : peluang jarahan langka`,
             ].join("\n"),
           },
           {

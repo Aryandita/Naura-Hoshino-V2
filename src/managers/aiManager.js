@@ -197,6 +197,19 @@ class AIManager {
         logger.warn("[AI] Gagal mengambil persona pengguna", e);
       }
 
+      // ----------------------------------------------------
+      // Persistent AI Memory Context
+      // ----------------------------------------------------
+      try {
+        const AIMemory = require("../ai/aiMemory");
+        const memoryContext = await AIMemory.getMemoryContext(userId);
+        if (memoryContext) {
+          baseInstruction += `\n${memoryContext}`;
+        }
+      } catch (memErr) {
+        // Safe fallback
+      }
+
       // Cek apakah ada attachment gambar
       let attachment = message.attachments.find(
         (a) => a.contentType && a.contentType.startsWith("image/"),
@@ -502,6 +515,14 @@ Jawablah dalam bahasa Indonesia kasual.`;
         } else {
           await message.channel.send(chunks[i]);
         }
+      }
+
+      // Ekstraksi memori di latar belakang (non-blocking)
+      try {
+        const AIMemory = require("../ai/aiMemory");
+        AIMemory.extractAndSave(userId, prompt, responseText).catch(() => {});
+      } catch (memErr) {
+        // Safe fallback
       }
     } catch (error) {
       logger.error("\x1b[31m[AI ERROR]\x1b[0m Gagal merespons:", error);

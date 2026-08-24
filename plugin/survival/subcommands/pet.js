@@ -18,6 +18,7 @@ const {
 } = require("../../../src/survival/engines/inventoryHelper");
 const {
   buildContainerV2,
+  buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const petActions = require("../../../src/survival/helpers/petActions");
 const fs = require("fs");
@@ -73,7 +74,7 @@ module.exports = {
     if (pets.length === 0) return interaction.respond([]).catch(() => {});
     
     const available = pets.map(p => ({
-      name: `🐾 ${p.petName || p.petType} (Lv.${p.petLevel || 1})`,
+      name: `${ui.getEmoji("cat_pet") || "🐾"} ${p.petName || p.petType} (Lv.${p.petLevel || 1})`,
       value: String(p.id)
     }));
     
@@ -100,6 +101,91 @@ module.exports = {
     }
     
     const action = interaction.options.getString("aksi");
+    const targetPetIdOption = interaction.options.getInteger("target_pet_id");
+
+    // 1. KUNJUNGI PET HABITAT (SANCTUARY)
+    if (action === "habitat") {
+      const petHabitatEngine = require("../../../src/survival/engines/petHabitatEngine");
+      const { drawPetHabitatCard } = require("../../../src/canvas/petHabitatCanvas");
+      const habitatData = await petHabitatEngine.getHabitat(user.id);
+      const files = [];
+
+      try {
+        const habitatBuffer = await drawPetHabitatCard(habitatData);
+        files.push(new AttachmentBuilder(habitatBuffer, { name: "pet_habitat.png" }));
+      } catch (err) {
+        // Fallback jika canvas gagal
+      }
+
+      const active = habitatData.activePet || pet;
+      const payload = buildContainerV2({
+        accentColorHex: active.cosmicAura ? "#C084FC" : "#F472B6",
+        authorName: `${ui.getEmoji("home") || "🏡"} Sanctuary & Cosmic Pet Habitat`,
+        title: `${ui.getEmoji("sparkles") || "✨"} Kamar Santai ${active.petName || active.petType}`,
+        description: [
+          `Selamat datang di ruang santai habitat peliharaanmu! Di sini kamu bisa merawat dan bermain bersama pet aktif.`,
+          ``,
+          `${ui.getEmoji("cat_pet") || "🐾"} **Pet Aktif:** **${active.petName || active.petType}** (Level ${active.petLevel || 1})`,
+          `${ui.getEmoji("heart") || "💖"} **Kasih Sayang:** \`${active.affection || 0}%\` | **Mood:** \`${String(active.mood || "happy").toUpperCase()}\``,
+          active.cosmicAura ? `${ui.getEmoji("sparkle") || "🌌"} **Status Khusus:** \`COSMIC ASCENDED ${ui.getEmoji("sparkles") || "✨"}\` (Skill: \`${active.passiveSkill}\`)` : `${ui.getEmoji("magic") || "🔮"} **Evolusi:** \`Stage ${active.evolutionStage || 1}\``,
+          ``,
+          `${ui.getEmoji("arcade") || "🎾"} **Mainan Tersedia:** \`Cyber Laser Pointer\`, \`Sakura Plush Ball\`, \`Catnip Circuit\``,
+          ``,
+          `-# ${ui.getEmoji("sparkle") || "💡"} *Untuk melakukan Cosmic Fusion, naikkan 2 pet ke Level 10 lalu jalankan \`/survival life pet aksi:fuse\`!*`,
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.editReply({ ...payload, files });
+    }
+
+    // 2. COSMIC ASCENSION FUSION
+    if (action === "fuse") {
+      const petHabitatEngine = require("../../../src/survival/engines/petHabitatEngine");
+      if (!targetPetIdOption) {
+        return interaction.editReply({
+          ...buildErrorContainerV2({
+            title: "Pet Bahan Diperlukan",
+            description: "Tentukan ID Pet kedua yang akan dikorbankan menggunakan opsi `target_pet_id`!",
+            footerText: ui.getFooter("survival"),
+          }),
+        });
+      }
+
+      const fuseRes = await petHabitatEngine.fusePets(user.id, pet.id, targetPetIdOption);
+      if (!fuseRes.success) {
+        let msg = "Gagal melakukan Cosmic Fusion.";
+        if (fuseRes.reason === "SAME_PET_SELECTED") msg = "Kamu tidak bisa menggabungkan pet dengan dirinya sendiri!";
+        if (fuseRes.reason === "PETS_NOT_FOUND") msg = "Salah satu atau kedua pet tidak ditemukan di kandangmu!";
+        if (fuseRes.reason === "MAX_LEVEL_REQUIRED") msg = `Kedua pet harus mencapai Level Maksimal (Level 10) untuk Cosmic Ascension! (Pet 1: Lv.${fuseRes.pet1Level}, Pet 2: Lv.${fuseRes.pet2Level})`;
+
+        return interaction.editReply({
+          ...buildErrorContainerV2({
+            title: "Cosmic Fusion Gagal",
+            description: msg,
+            footerText: ui.getFooter("survival"),
+          }),
+        });
+      }
+
+      const payload = buildContainerV2({
+        accentColorHex: "#C084FC",
+        authorName: `${ui.getEmoji("sparkle") || "🌌"} Ritual Cosmic Pet Ascension`,
+        title: `${ui.getEmoji("celebrate") || "🎉"} COSMIC ASCENSION BERHASIL!`,
+        description: [
+          `Selamat! Dua energi pet telah menyatu menjadi wujud baru: **${fuseRes.newType.toUpperCase().replace("_", " ")}**!`,
+          ``,
+          `${ui.getEmoji("sparkles") || "✨"} **Cosmic Aura:** \`AKTIF ${ui.getEmoji("sparkle") || "🌌"}\``,
+          `${ui.getEmoji("magic") || "🔮"} **Passive Skill Baru:** \`${fuseRes.passiveSkill}\``,
+          `${ui.getEmoji("sparkles") || "💫"} **Mood Abadi:** \`ASCENDED\``,
+          ``,
+          `-# ${ui.getEmoji("sparkle") || "💡"} *Pet varian Cosmic memberikan bonus drop rate dan damage tertinggi saat ekspedisi dan raid!*`,
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.editReply(payload);
+    }
 
     // Handle Image attachment
     const getPetImage = (petType) => {
@@ -162,7 +248,7 @@ module.exports = {
       await pet.save();
 
       if (evo.evolved) {
-        const evoPayload = ephemeral(`🌟 **LUAR BIASA!** Peliharaanmu **${evo.oldName}** berevolusi menjadi **${evo.newName}**!`);
+        const evoPayload = ephemeral(`${ui.getEmoji("star") || "🌟"} **LUAR BIASA!** Peliharaanmu **${evo.oldName}** berevolusi menjadi **${evo.newName}**!`);
         if (asFollowUp) responder.followUp(evoPayload);
         else interaction.followUp(evoPayload);
       } else if (naikLevel) {
@@ -209,7 +295,7 @@ module.exports = {
       await pet.save();
 
       if (evo.evolved) {
-        const evoPayload = ephemeral(`🌟 **LUAR BIASA!** Peliharaanmu **${evo.oldName}** berevolusi menjadi **${evo.newName}**!`);
+        const evoPayload = ephemeral(`${ui.getEmoji("star") || "🌟"} **LUAR BIASA!** Peliharaanmu **${evo.oldName}** berevolusi menjadi **${evo.newName}**!`);
         if (asFollowUp) responder.followUp(evoPayload);
         else interaction.followUp(evoPayload);
       } else if (naikLevel) {

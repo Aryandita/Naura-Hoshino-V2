@@ -42,6 +42,16 @@ const GuildClan = sequelize.define(
       type: DataTypes.JSON,
       allowNull: true,
     },
+    hallLayout: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: {
+        theme: "CYBERPUNK_LOUNGE",
+        furniture: ["neon_sofa", "coffee_maker"],
+        jukeboxTrack: "Hoshino Beats #1",
+        lastCoffeeServedAt: null,
+      },
+    },
   },
   {
     tableName: "GuildClans",
