@@ -333,6 +333,15 @@ Semua kredensial dan pengaturan penting disimpan di `.env` (berdasarkan [`src/co
 | `LAVALINK_PASSWORD` | `youshallnotpass` |
 | `LAVALINK_SECURE`   | `false`           |
 
+**Link Spotify & LavaSrc.** Node Lavalink lokal (service `lavalink` di `docker-compose.yml`) sudah dikonfigurasi dengan plugin **LavaSrc** + **youtube-source** lewat `docker/lavalink/application.yml`, sehingga link Spotify (`open.spotify.com/track|album|playlist|artist`) dimainkan secara native. Kredensial `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` wajib diisi di `.env` agar plugin bisa mencari dan mirror berbasis ISRC. Untuk menyalakan node: `docker compose up -d lavalink`. Bila node yang dipakai TIDAK punya LavaSrc, bot otomatis jatuh ke translasi manual (`src/music/spotifyResolver.js`: Web API Spotify → `ytsearch` ISRC/judul).
+
+| Variabel                       | Default |
+| ------------------------------ | ------- |
+| `SPOTIFY_CLIENT_ID`            | -       |
+| `SPOTIFY_CLIENT_SECRET`        | -       |
+| `SPOTIFY_MARKET`               | `ID`    |
+| `SPOTIFY_MAX_PLAYLIST_TRACKS`  | `100`   |
+
 </details>
 
 <details>

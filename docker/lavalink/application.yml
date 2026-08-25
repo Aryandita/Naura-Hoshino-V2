@@ -1,0 +1,87 @@
+# Konfigurasi Lavalink v4 untuk container Naura Hoshino (docker-compose).
+# File ini di-mount ke /opt/Lavalink/application.yml oleh docker-compose.yml.
+#
+# Plugin yang dipakai:
+#   - youtube-source : sumber YouTube modern (bawaan Lavalink v4 deprecated).
+#                      WAJIB ada karena menjadi target mirroring LavaSrc.
+#   - LavaSrc        : resolusi native link Spotify (+ lyrics Spotify).
+#
+# Catatan versi: cek halaman Releases kedua repo secara berkala dan naikkan
+# patch version-nya; koordinat group:artifact tidak berubah antar patch.
+plugins:
+  - dependency: "dev.lavalink.youtube:youtube-v2:1.13.0"
+    snapshot: false
+    repository: "https://maven.lavalink.dev/releases"
+  - dependency: "com.github.topi314.lavasrc:lavasrc-plugin:4.8.1"
+    snapshot: false
+    repository: "https://maven.lavalink.dev/releases"
+
+lavaplayer:
+  # Sumber YouTube bawaan dimatikan; digantikan youtube-source plugin di atas.
+  youtube:
+    enabled: false
+
+server:
+  port: 2333
+  password: "${LAVALINK_SERVER_PASSWORD:youshallnotpass}"
+  http2:
+    enabled: false # Bila true, Poru/node harus mendukung HTTP/2
+
+lavalink:
+  plugins:
+    youtube:
+      # Client InnerTube bawaan youtube-source; tambahkan poToken/OAuth di sini
+      # jika produksi mulai kena pembatasan YouTube.
+      clients:
+        - MUSIC
+        - WEB
+        - ANDROID_VR
+  server:
+    sources:
+      # Semua source bawaan non-YouTube tetap aktif (soundcloud, bandcamp, dll.)
+      bandcamp: true
+      soundcloud: true
+      twitch: true
+      vimeo: true
+      nico: true
+      http: true # warning: tanpa proxy, ini bisa membocorkan IP node
+      local: false
+    youtubePlaylistLoadLimit: 6
+
+plugins:
+  lavasrc:
+    providers:
+      # Mirroring: metadata Spotify dicari ke sumber playable.
+      # 1) Cari berdasarkan ISRC (paling akurat) bila track punya ISRC.
+      # 2) Fallback pencarian judul umum.
+      - "ytsearch:\"%ISRC%\""
+      - "ytsearch:%QUERY%"
+    sources:
+      spotify: true
+      applemusic: false
+      deezer: false
+      flowerytts: false
+      youtube: true
+    lyrics-sources:
+      spotify: true
+    spotify:
+      clientId: "${SPOTIFY_CLIENT_ID}"
+      clientSecret: "${SPOTIFY_CLIENT_SECRET}"
+      # Pasar regional untuk top tracks & filter katalog (ISO 3166-1 alpha-2)
+      countryCode: "${SPOTIFY_MARKET:ID}"
+      playlistLoadLimit: 6 # x100 track per halaman
+      albumLoadLimit: 6 # x50 track per halaman
+      resolveArtistsInSearch: true
+      localFiles: false
+
+metrics:
+  prometheus:
+    enabled: false
+    endpoint: /metrics
+
+logging:
+  file:
+    path: ./logs/
+  level:
+    root: INFO
+    lavalink: INFO
