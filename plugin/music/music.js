@@ -12,14 +12,13 @@ const UserProfile = require("../../src/models/UserProfile");
 const GuildSettings = require("../../src/models/GuildSettings");
 const UserPlaylist = require("../../src/models/UserPlaylist");
 
-const {
-  generateMusicProfileImage,
-} = require("../../src/canvas/canvasHelper");
+const { generateMusicProfileImage } = require("../../src/canvas/canvasHelper");
 const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
 const { getPlatformIcon } = require("../../src/canvas/CanvasUtils");
+const { resolveSpotifyQuery } = require("../../src/music/spotifyResolver");
 
 const formatDuration = (ms) => {
   if (!ms || isNaN(ms)) return "0:00";
@@ -216,7 +215,6 @@ async function runMusicLogic(
       return sendReply(errPayload, true);
     }
 
-    let res;
     let searchSource = "ytsearch";
     let finalQuery = query;
     const isDirectLink = !!query.match(/^(https?:\/\/)/);
@@ -238,9 +236,10 @@ async function runMusicLogic(
     });
     await sendReply(searchingPayload, false);
 
-    // Langsung berikan ke Poru. LavaSrc dan youtube-plugin di server akan
-    // mengurus link Spotify/YouTube secara native, termasuk playlist!
-    res = await poru.resolve({ query: finalQuery, requester: user });
+    // Lewati resolver terpadu: LavaSrc di node menyelesaikan link Spotify
+    // secara native, dan bila node tidak punya plugin, spotifyResolver
+    // menerjemahkannya manual (Web API -> ytsearch ISRC/judul).
+    const res = await resolveSpotifyQuery(poru, finalQuery, user);
 
     if (
       !res ||
@@ -260,7 +259,11 @@ async function runMusicLogic(
     let brandColor = "#FF0000";
     let brandEmoji = ui.getEmoji("youtube") || "▶️";
 
-    if (query.includes("spotify.com") || searchSource === "spsearch") {
+    if (
+      query.includes("spotify.com") ||
+      searchSource === "spsearch" ||
+      res.pluginInfo?.source === "spotify-fallback"
+    ) {
       brandColor = "#1DB954";
       brandEmoji = ui.getEmoji("spotify") || "🎵";
     } else if (searchSource === "scsearch") {
@@ -275,8 +278,7 @@ async function runMusicLogic(
       const trackToPlay = res.tracks[0];
       for (const track of res.tracks) {
         track.info.requester = user;
-        if (query.includes("spotify.com"))
-          track.info.originalSource = "spotify";
+        // originalSource sudah distempel oleh spotifyResolver untuk link Spotify.
         player.queue.add(track);
       }
       const playlistPayload = buildContainerV2({
@@ -293,7 +295,6 @@ async function runMusicLogic(
 
     const track = res.tracks[0];
     track.info.requester = user;
-    if (query.includes("spotify.com")) track.info.originalSource = "spotify";
     player.queue.add(track);
     if (!player.isPlaying && !player.isPaused) player.play();
 
@@ -563,14 +564,12 @@ async function runMusicLogic(
     (async () => {
       for (const query of playlist.tracks) {
         try {
-          const res = await poru.resolve({
-            query: query.match(
-              /^(?:https?:\/\/|spsearch:|ytmsearch:|ytsearch:|scsearch:|amsearch:)/,
-            )
-              ? query
-              : `ytsearch:${query}`,
-            requester: user,
-          });
+          const finalQuery = query.match(
+            /^(?:https?:\/\/|spsearch:|ytmsearch:|ytsearch:|scsearch:|amsearch:)/,
+          )
+            ? query
+            : `ytsearch:${query}`;
+          const res = await resolveSpotifyQuery(poru, finalQuery, user);
           if (res && res.tracks && res.tracks.length > 0) {
             res.tracks[0].info.requester = user;
             player.queue.add(res.tracks[0]);
@@ -670,13 +669,16 @@ async function runMusicLogic(
       let equippedBanner = null;
       try {
         if (userProfile && userProfile.activeBanners) {
-          const banners = typeof userProfile.activeBanners === "string" ? JSON.parse(userProfile.activeBanners) : userProfile.activeBanners;
+          const banners =
+            typeof userProfile.activeBanners === "string"
+              ? JSON.parse(userProfile.activeBanners)
+              : userProfile.activeBanners;
           const bannerId = banners.music;
           if (bannerId) {
-             equippedBanner = `./plugin/canvas/assets/banners/${bannerId}.png`;
-             // For now we will assume the banner image files are provided. Wait, I should use absolute path or require!
-             // Let's just pass bannerId, we can load it in canvas
-             equippedBanner = bannerId;
+            equippedBanner = `./plugin/canvas/assets/banners/${bannerId}.png`;
+            // For now we will assume the banner image files are provided. Wait, I should use absolute path or require!
+            // Let's just pass bannerId, we can load it in canvas
+            equippedBanner = bannerId;
           }
         }
       } catch (e) {}
@@ -1121,7 +1123,11 @@ async function runMusicLogic(
   if (subcommand === "quiz") {
     const musicQuizEngine = require("../../src/music/musicQuizEngine");
     const totalRounds = args.ronde || args.id || 5;
-    const session = await musicQuizEngine.startQuizSession(guild.id, channel.id, totalRounds);
+    const session = await musicQuizEngine.startQuizSession(
+      guild.id,
+      channel.id,
+      totalRounds,
+    );
     const round1 = session.rounds[0];
 
     const choicesRow = new ActionRowBuilder().addComponents(
@@ -1159,7 +1165,10 @@ async function runMusicLogic(
     });
 
     collector.on("collect", async (btnInteraction) => {
-      const choiceIdx = parseInt(btnInteraction.customId.replace("mquiz_ans_", ""), 10);
+      const choiceIdx = parseInt(
+        btnInteraction.customId.replace("mquiz_ans_", ""),
+        10,
+      );
       const chosenText = round1.choices[choiceIdx];
       const answerRes = await musicQuizEngine.submitAnswer(
         guild.id,
@@ -1170,7 +1179,10 @@ async function runMusicLogic(
       );
 
       if (!answerRes.success) {
-        return btnInteraction.reply({ content: "❌ Kamu sudah menjawab ronde ini!", flags: 64 });
+        return btnInteraction.reply({
+          content: "❌ Kamu sudah menjawab ronde ini!",
+          flags: 64,
+        });
       }
 
       if (answerRes.isCorrect) {
@@ -1286,7 +1298,9 @@ module.exports = {
       sub.setName("pause").setDescription("Jeda musik yang sedang berputar"),
     )
     .addSubcommand((sub) =>
-      sub.setName("resume").setDescription("Lanjutkan kembali lagu yang dijeda"),
+      sub
+        .setName("resume")
+        .setDescription("Lanjutkan kembali lagu yang dijeda"),
     )
     .addSubcommand((sub) =>
       sub.setName("skip").setDescription("Lewati lagu yang sedang berputar"),
@@ -1295,9 +1309,7 @@ module.exports = {
       sub.setName("stop").setDescription("Hentikan musik dan hapus antrean"),
     )
     .addSubcommand((sub) =>
-      sub
-        .setName("queue")
-        .setDescription("Lihat daftar antrean lagu saat ini"),
+      sub.setName("queue").setDescription("Lihat daftar antrean lagu saat ini"),
     )
     .addSubcommand((sub) =>
       sub
@@ -1334,9 +1346,7 @@ module.exports = {
         ),
     )
     .addSubcommand((sub) =>
-      sub
-        .setName("shuffle")
-        .setDescription("Acak urutan lagu dalam antrean"),
+      sub.setName("shuffle").setDescription("Acak urutan lagu dalam antrean"),
     )
     .addSubcommand((sub) =>
       sub
@@ -1346,7 +1356,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("lyrics")
-        .setDescription("Cari lirik lagu yang sedang diputar atau berdasarkan judul")
+        .setDescription(
+          "Cari lirik lagu yang sedang diputar atau berdasarkan judul",
+        )
         .addStringOption((opt) =>
           opt
             .setName("query")
@@ -1390,7 +1402,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("save")
-        .setDescription("Simpan antrean saat ini menjadi Cloud Playlist pribadi")
+        .setDescription(
+          "Simpan antrean saat ini menjadi Cloud Playlist pribadi",
+        )
         .addStringOption((opt) =>
           opt
             .setName("query")
@@ -1433,10 +1447,17 @@ module.exports = {
       return interaction.respond([]).catch(() => {});
     }
 
-    const cleanQuery = focusedValue.replace(/^(sc:|ytm:|yt:|spsearch:|ytsearch:|scsearch:|ytmsearch:|amsearch:)/, "").trim();
+    const cleanQuery = focusedValue
+      .replace(
+        /^(sc:|ytm:|yt:|spsearch:|ytsearch:|scsearch:|ytmsearch:|amsearch:)/,
+        "",
+      )
+      .trim();
     const fallbackChoice = {
       name: `🔎 Cari: ${cleanQuery.length > 90 ? cleanQuery.substring(0, 87) + "..." : cleanQuery}`,
-      value: (cleanQuery.length > 100 ? cleanQuery.substring(0, 100) : cleanQuery) || focusedValue.substring(0, 100),
+      value:
+        (cleanQuery.length > 100 ? cleanQuery.substring(0, 100) : cleanQuery) ||
+        focusedValue.substring(0, 100),
     };
 
     try {
@@ -1507,9 +1528,10 @@ module.exports = {
         // Gunakan URI langsung sebagai value - paling reliable untuk playback
         // Fallback ke ytsearch jika URI tidak tersedia
         const uri = track.info.uri;
-        const val = uri && uri.startsWith("http")
-          ? uri.substring(0, 100)
-          : `ytsearch:${title} ${author}`.substring(0, 100);
+        const val =
+          uri && uri.startsWith("http")
+            ? uri.substring(0, 100)
+            : `ytsearch:${title} ${author}`.substring(0, 100);
 
         return { name: label, value: val };
       });
