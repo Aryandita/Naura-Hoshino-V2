@@ -152,9 +152,13 @@ const env = {
   LAVA_PASS: cleanEnv(process.env.LAVALINK_PASSWORD) || "youshallnotpass",
   LAVA_SECURE: process.env.LAVALINK_SECURE === "true",
 
-  // SPOTIFY (poru-spotify)
+  // SPOTIFY (poru-spotify + LavaSrc node + spotifyResolver fallback)
   SPOTIFY_CLIENT_ID: cleanEnv(process.env.SPOTIFY_CLIENT_ID),
   SPOTIFY_CLIENT_SECRET: cleanEnv(process.env.SPOTIFY_CLIENT_SECRET),
+  // Pasar regional untuk Web API & countryCode LavaSrc (ISO 3166-1 alpha-2)
+  SPOTIFY_MARKET: cleanEnv(process.env.SPOTIFY_MARKET) || "ID",
+  // Batas jumlah track playlist Spotify saat translasi manual bot-side
+  SPOTIFY_MAX_PLAYLIST_TRACKS: parseInt(process.env.SPOTIFY_MAX_PLAYLIST_TRACKS) || 100,
 
   // GEMINI AI
   GEMINI_API: cleanEnv(process.env.GEMINI_API_KEY),

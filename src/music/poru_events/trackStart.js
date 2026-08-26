@@ -110,8 +110,8 @@ module.exports = {
       try {
         let searchQuery;
         if (activeTrack.info.originalSource === "spotify") {
-          // Spotify track fallback query
-          searchQuery = `ytsearch:${activeTrack.info.author} ${activeTrack.info.title} mix`;
+          // Spotify fallback: samakan pola query dengan spotifyResolver.
+          searchQuery = `ytsearch:${activeTrack.info.author} - ${activeTrack.info.title}`;
         } else {
           // Native YouTube Mix URL
           searchQuery = `https://www.youtube.com/watch?v=${activeTrack.info.identifier}&list=RD${activeTrack.info.identifier}`;
