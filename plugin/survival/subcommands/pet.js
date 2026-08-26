@@ -245,7 +245,18 @@ module.exports = {
       
       petActions.evaluateMood(pet);
       const evo = petActions.evaluateEvolution(pet);
-      await pet.save();
+      // Rule 1.8: fields eksplisit sesuai kolom yang dimutasi play/feed.
+      await pet.save({
+        fields: [
+          "hunger",
+          "affection",
+          "petExp",
+          "petLevel",
+          "mood",
+          "evolutionStage",
+          "petType",
+        ],
+      });
 
       if (evo.evolved) {
         const evoPayload = ephemeral(`${ui.getEmoji("star") || "🌟"} **LUAR BIASA!** Peliharaanmu **${evo.oldName}** berevolusi menjadi **${evo.newName}**!`);
@@ -275,9 +286,12 @@ module.exports = {
         return asFollowUp ? responder.followUp(errPayload) : responder.reply(errPayload);
       }
 
-      profile.inventory = removeItem(inv, food.id, 1);
-      profile.changed("inventory", true);
-      await profile.save();
+      // Rule 1.10: profile berasal dari cache (objek JSON tanpa .save()).
+      // Penulisan inventory wajib lewat cacheManager agar tidak crash dan
+      // cache ikut diperbarui.
+      await cacheManager.updateUserProfile(user.id, {
+        inventory: removeItem(inv, food.id, 1),
+      });
 
       pet.hunger = Math.min(100, (pet.hunger || 0) + food.hunger);
       pet.affection = Math.min(100, (pet.affection || 0) + 5);
@@ -292,7 +306,18 @@ module.exports = {
 
       petActions.evaluateMood(pet);
       const evo = petActions.evaluateEvolution(pet);
-      await pet.save();
+      // Rule 1.8: fields eksplisit sesuai kolom yang dimutasi play/feed.
+      await pet.save({
+        fields: [
+          "hunger",
+          "affection",
+          "petExp",
+          "petLevel",
+          "mood",
+          "evolutionStage",
+          "petType",
+        ],
+      });
 
       if (evo.evolved) {
         const evoPayload = ephemeral(`${ui.getEmoji("star") || "🌟"} **LUAR BIASA!** Peliharaanmu **${evo.oldName}** berevolusi menjadi **${evo.newName}**!`);
@@ -366,7 +391,20 @@ module.exports = {
           );
         }
 
-        await profile.decrement("economy_wallet", { by: BREED_FEE });
+        // Rule 1.8/1.10: potong biaya lewat debit atomik; profile dari cache
+        // tidak punya .decrement(), dan penulisan wajib lewat cacheManager.
+        const breedDebit = await cacheManager.debitUserProfile(
+          user.id,
+          "economy_wallet",
+          BREED_FEE,
+        );
+        if (!breedDebit.ok) {
+          return i.followUp(
+            ephemeral(
+              `${e("cry", "\u274C")} **Ki Prawiro:** "Jasa breeding butuh ${BREED_FEE.toLocaleString("id-ID")} Coin. Uangmu belum cukup."`
+            )
+          );
+        }
 
         // Kombinasikan dua pet pertama yang level >= 15
         const p1 = eligiblePets[0];

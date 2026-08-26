@@ -113,7 +113,8 @@ module.exports = {
     }
 
     survival.currentLocation = tujuan;
-    await survival.save();
+    // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
+    await survival.save({ fields: ["currentLocation"] });
 
     const timeUpdate = await advanceTime(user.id, Math.ceil(travelTime));
     const timeState = getTimeState(timeUpdate.hour);

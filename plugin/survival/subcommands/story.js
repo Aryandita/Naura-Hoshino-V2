@@ -242,7 +242,8 @@ module.exports = {
 
       storyProgress.currentArc = chapter.nextArc;
       storyProgress.currentChapter = chapter.nextChapter;
-      await storyProgress.save();
+      // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
+      await storyProgress.save({ fields: ["currentArc", "currentChapter"] });
 
       const successPayload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#22c55e",

@@ -10,7 +10,9 @@ module.exports = {
     // ==========================================
     // 🧹 AUTO-CLEANUP MODMAIL TERBENGKALAI (48 JAM)
     // ==========================================
-    setInterval(
+    // Rule 1.9: timer level-modul wajib unref agar tidak menahan proses
+    // saat graceful shutdown.
+    const cleanupTimer = setInterval(
       async () => {
         try {
           const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
@@ -27,7 +29,9 @@ module.exports = {
             const channel = guild.channels.cache.get(ticket.channelId);
 
             ticket.closed = true;
-            await ticket.save();
+            // Rule 1.8: save dengan fields eksplisit agar tidak menimpa
+            // kolom lain yang sedang diubah proses konkuren.
+            await ticket.save({ fields: ["closed"] });
 
             try {
               const user = await client.users.fetch(ticket.userId);
@@ -56,5 +60,6 @@ module.exports = {
       },
       60 * 60 * 1000,
     ); // Check every 1 hour
+    if (cleanupTimer.unref) cleanupTimer.unref();
   },
 };

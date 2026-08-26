@@ -159,29 +159,40 @@ module.exports = {
       salary = Math.floor(salary * (1 + wageBonusPercent));
     }
 
-    const newHunger = Math.max(
-      0,
-      (survival.hunger || 0) -
-        Math.floor(job.time * 5 * diffConfig.drainMultiplier),
-    );
-    const newThirst = Math.max(
-      0,
-      (survival.thirst || 0) -
-        Math.floor(job.time * 6 * diffConfig.drainMultiplier),
-    );
+    const drainHunger = Math.floor(job.time * 5 * diffConfig.drainMultiplier);
+    const drainThirst = Math.floor(job.time * 6 * diffConfig.drainMultiplier);
 
-    await cacheManager.updateUserSurvival(user.id, {
-      hunger: newHunger,
-      thirst: newThirst,
-    });
+    const newHunger = Math.max(0, (survival.hunger || 0) - drainHunger);
+    const newThirst = Math.max(0, (survival.thirst || 0) - drainThirst);
 
-    // Pekerjaan ini ada di kota, jadi upahnya dibayar dalam Naura Coin dan
-    // dicatat lewat modul mata uang, bukan menimpa kolom NSF langsung.
+    // Rule 1.8: upah dulu, biaya belakangan. Bila penulisan gaji gagal,
+    // pemain tidak boleh kehilangan tenaga untuk hasil yang tidak masuk.
     const walletAfter = await currency.reward(
       currency.COIN,
       { survival, profile },
       salary,
     );
+
+    // Rule 1.8: kuras statistik sebagai delta negatif atomik, bukan nilai
+    // absolut hasil pembacaan cache. Dua shift yang selesai berdekatan bisa
+    // saling menimpa bila ditulis absolut. Statistik yang akan menyentuh nol
+    // ditulis sebagai angka pasti supaya tidak pernah minus.
+    const drain = {};
+    const floored = {};
+    for (const [field, amount] of [
+      ["hunger", drainHunger],
+      ["thirst", drainThirst],
+    ]) {
+      if (amount <= 0) continue;
+      const now = Number(survival[field]) || 0;
+      if (now - amount <= 0) floored[field] = 0;
+      else drain[field] = -amount;
+    }
+
+    if (Object.keys(drain).length > 0) {
+      await cacheManager.incrementUserSurvival(user.id, drain);
+    }
+    await cacheManager.updateUserSurvival(user.id, floored);
 
     const xpData = await leveling.addPlayerXP(user.id, job.time * 15);
 
@@ -205,7 +216,8 @@ module.exports = {
       }
 
       quest.workCount = (quest.workCount || 0) + 1;
-      await quest.save();
+      // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
+      await quest.save({ fields: ["workCount"] });
     } catch (err) {
       // Papan misi opsional, jadi galatnya tidak boleh membatalkan gaji.
     }
@@ -217,9 +229,9 @@ module.exports = {
       `> ${e("read", "\uD83D\uDC5D")} Saldo dompetmu sekarang: **${walletAfter.toLocaleString("id-ID")}**`,
     ];
 
-    if (isVIP)
+    if (wageBonusPercent > 0)
       lines.push(
-        `> ${e("impressed", "\uD83D\uDC8E")} Bonus VIP **+50%** ikut dihitung`,
+        `> ${e("impressed", "\uD83D\uDC8E")} Bonus VIP **+${Math.round(wageBonusPercent * 100)}%** ikut dihitung`,
       );
     if (activeBoosterName)
       lines.push(

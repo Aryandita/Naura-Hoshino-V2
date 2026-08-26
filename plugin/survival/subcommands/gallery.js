@@ -237,7 +237,8 @@ module.exports = {
           gallery_album: album,
         };
         survival.changed("rpg_state", true);
-        await survival.save();
+        // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
+        await survival.save({ fields: ["rpg_state"] });
 
         const payload = photoPayload(opened);
         return i.editReply({

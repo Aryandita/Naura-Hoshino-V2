@@ -439,6 +439,10 @@ class MusicUIManager {
           await currentMsg.edit(updatePayload).catch(() => {});
         } catch (e) {}
       }, updateIntervalMs);
+      // Rule 1.9: interval per-player sudah dibersihkan via clearInterval di
+      // jalur ganti track/destroy; unref hanya pengaman agar proses tidak
+      // pernah tertahan oleh timer ini saat shutdown.
+      if (interval.unref) interval.unref();
 
       manager.uiCache.set(player.guildId, {
         messageId: message.id,

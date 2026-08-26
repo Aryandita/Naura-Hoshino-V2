@@ -1,0 +1,45 @@
+/* =====================================================================
+ * input.css - Entry CSS tunggal dashboard-v2.
+ *
+ * Menggantikan Tailwind CDN + style.css eksternal dari dashboard lama.
+ * Urutan import penting:
+ *   1. tailwindcss  - utility layer Tailwind v4
+ *   2. fontawesome  - ikon self-host (webfont ikut dibundel Vite)
+ *   3. style.css    - gaya dasar glassmorphism warisan dashboard lama
+ *   4. tokens.css   - override warna agar selaras src/config/ui.js bot
+ * ===================================================================== */
+
+/* Font eksternal harus jadi import paling awal agar urutan @import valid */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss";
+@import "@fortawesome/fontawesome-free/css/all.min.css";
+@import "./style.css";
+@import "./tokens.css";
+
+/* Tema Tailwind v4: padanan konfigurasi CDN lama (tailwind.config).
+ * Class yang dihasilkan: font-cyber, text-primary, bg-dark-card,
+ * border-accent-pink, text-premium-gold, dst. */
+@theme {
+    --font-cyber: "Orbitron", sans-serif;
+    --font-outfit: "Outfit", sans-serif;
+    --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+    --color-primary: #ffb6c1;
+    --color-accent-pink: #f9a8d4;
+    --color-accent-purple: #c084fc;
+    --color-accent-blue: #93c5fd;
+    --color-accent-green: #86efac;
+    --color-accent-cyan: #06b6d4;
+    --color-accent-emerald: #10b981;
+    --color-premium-gold: #ffd700;
+
+    --color-dark-base: #08090c;
+    --color-dark-card: #0d1117;
+    --color-dark-border: #1e2633;
+    --color-dark-hover: #161b22;
+}
+
+/* darkMode: 'class' dari config CDN lama */
+@custom-variant dark (&:where(.dark, .dark *));

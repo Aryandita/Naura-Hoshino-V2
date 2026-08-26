@@ -125,7 +125,8 @@ module.exports = async function questBoard(interaction, user, survivalData) {
     quest.questsState = state;
     quest.changed("questsState", true);
     quest.lastReset = today;
-    await quest.save();
+    // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
+    await quest.save({ fields: ["questsState", "lastReset"] });
   }
 
   const nsfEmoji = currency.emojiOf(currency.FRAGMENT);

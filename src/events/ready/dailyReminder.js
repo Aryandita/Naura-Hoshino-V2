@@ -15,7 +15,9 @@ module.exports = {
     // ==========================================
     // 🎁 NOTIFIKASI DAILY REWARD OTOMATIS
     // ==========================================
-    setInterval(
+    // Rule 1.9: timer level-modul wajib unref agar tidak menahan proses
+    // saat graceful shutdown.
+    const reminderTimer = setInterval(
       async () => {
         try {
           const now = new Date();
@@ -112,6 +114,7 @@ module.exports = {
       },
       60 * 60 * 1000,
     ); // Jalankan setiap jam
+    if (reminderTimer.unref) reminderTimer.unref();
 
     console.log(
       "\x1b[45m\x1b[37m 🎁 REMINDER \x1b[0m \x1b[35mSistem notifikasi Daily Reward berhasil diaktifkan.\x1b[0m",

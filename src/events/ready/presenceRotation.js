@@ -28,7 +28,7 @@ module.exports = {
 
       // --- 📊 EVENT LOOP LAG MONITOR ---
       let isSystemLagging = false;
-      setInterval(async () => {
+      const lagMonitorTimer = setInterval(async () => {
         const start = Date.now();
         await new Promise((resolve) => setImmediate(resolve));
         const lag = Date.now() - start;
@@ -49,6 +49,7 @@ module.exports = {
           }
         }
       }, 5000);
+      if (lagMonitorTimer.unref) lagMonitorTimer.unref();
 
       // --- 🏷️ DYNAMIC GUILD PREFIX CACHE ---
       let guildPrefixes = [];
@@ -79,7 +80,7 @@ module.exports = {
         }
       })();
 
-      setInterval(() => {
+      const presenceTimer = setInterval(() => {
         const activity = activities[currentIndex];
 
         // Resolve Lavalink & Music telemetry values
@@ -147,6 +148,9 @@ module.exports = {
 
         currentIndex = (currentIndex + 1) % activities.length;
       }, 15000); // Berganti setiap 15 detik
+      // Rule 1.9: timer level-modul wajib unref agar tidak menahan proses
+      // saat graceful shutdown.
+      if (presenceTimer.unref) presenceTimer.unref();
 
       console.log(
         "\x1b[45m\x1b[37m ✨ PRESENCE \x1b[0m \x1b[35mRotasi status Naura berhasil diaktifkan.\x1b[0m",

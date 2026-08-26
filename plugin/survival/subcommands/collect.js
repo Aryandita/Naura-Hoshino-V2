@@ -29,6 +29,7 @@ const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const npcs = require("../../../src/survival/data/npcs");
 const actions = require("../../../src/survival/helpers/collectActions");
+const currency = require("../../../src/survival/engines/currency");
 const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
 const { getTimeState } = require("../../../src/survival/helpers/survivalTime");
 
@@ -198,7 +199,10 @@ module.exports = {
       }
 
       const lootText = result.gained
-        .map((g) => `> ${e("shop_box")} **${g.amount}x ${g.name}**`)
+        .map(
+          (g) =>
+            `> ${e("shop_box")} **${g.amount}x ${g.name}**${g.bonus ? " *(bonus!)*" : ""}`,
+        )
         .join("\n");
 
       const payload = closingCard({
@@ -214,6 +218,9 @@ module.exports = {
           `> ${e("hunger")} Lapar -${result.cost.hunger} \u2022 ${e("thirst")} Haus -${result.cost.thirst}`,
           `> ${e("stamina")} Stamina -${result.cost.stamina} \u2022 ${e("clock")} Waktu +${result.hours} jam`,
           `> ${e("experience")} XP +${result.xp}`,
+          "",
+          `**Upah eksplorasi:**`,
+          `> ${currency.format(currency.FRAGMENT, result.nsf || 0)}`,
           "",
           `${result.timeState.emoji} Sekarang hari ke-**${result.day}**, pukul ${String(result.hour).padStart(2, "0")}:00 (${result.timeState.label}).`,
           result.passedOut

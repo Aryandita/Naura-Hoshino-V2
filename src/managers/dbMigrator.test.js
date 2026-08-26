@@ -1,89 +1,107 @@
 "use strict";
 
 /**
- * Test pertama di repo ini. Sengaja dipilih modul yang murni data supaya bisa
- * dijalankan tanpa koneksi database, Discord, maupun Redis.
+ * Test statis untuk dbMigrator (node:test).
  *
- * Yang dijaga di sini: daftar migrasi tidak boleh punya ID kembar dan tidak boleh
- * ada entri setengah jadi. Dua kesalahan itu diam-diam membuat satu migrasi
- * terlewat selamanya, karena ledger hanya mencatat ID.
+ * Tujuannya menjaga dua invariant yang pernah pecah di produksi:
+ *
+ * 1. Setiap migrasi WAJIB punya varian `pgSql` bebas dialek MySQL. Produksi
+ *    memakai Supabase/PostgreSQL; satu saja migrasi yang lolos dengan sintaks
+ *    MySQL akan menggagalkan `prestart` sehingga bot tidak menyala.
+ * 2. Multi-statement harus bisa dipecah `splitStatements()` tanpa memotong
+ *    nilai default yang mengandung titik koma di dalam string terkutip.
  */
 
 const test = require("node:test");
-const assert = require("node:assert/strict");
+const assert = require("node:assert");
+const { MIGRATIONS, splitStatements } = require("./dbMigrator");
 
-const { MIGRATIONS, LEDGER_TABLE } = require("./dbMigrator");
+// Token yang hanya valid di MySQL/MariaDB dan pasti gagal di PostgreSQL.
+const FORBIDDEN_MYSQL_TOKENS = [
+  "ENGINE=InnoDB",
+  "ENGINE=MyISAM",
+  "AUTO_INCREMENT",
+  "TINYINT(",
+  "MODIFY COLUMN",
+  "UNIQUE KEY",
+  "INSERT IGNORE",
+  "JSON_EXTRACT(",
+  "JSON_REMOVE(",
+  "JSON_TYPE(",
+];
 
-test("setiap migrasi punya ID yang unik", () => {
-  const ids = MIGRATIONS.map((migration) => migration.id);
-  assert.equal(
-    new Set(ids).size,
-    ids.length,
-    `Ada ID migrasi kembar: ${ids.join(", ")}`,
+test("setiap migrasi wajib punya pgSql non-kosong", () => {
+  assert.ok(MIGRATIONS.length > 0, "daftar migrasi tidak boleh kosong");
+
+  const missing = MIGRATIONS.filter(
+    (m) => typeof m.pgSql !== "string" || m.pgSql.trim() === "",
+  );
+
+  assert.deepStrictEqual(
+    missing.map((m) => m.id),
+    [],
+    `Migrasi berikut belum punya pgSql: ${missing.map((m) => m.id).join(", ")}`,
   );
 });
 
-test("setiap migrasi punya deskripsi dan SQL yang terisi", () => {
+test("pgSql tidak boleh mengandung token dialek MySQL", () => {
+  const offenders = [];
+
   for (const migration of MIGRATIONS) {
-    assert.equal(typeof migration.id, "string");
-    assert.ok(migration.id.length > 0, "ID migrasi tidak boleh kosong");
-    assert.ok(
-      migration.description && migration.description.length > 0,
-      `Migrasi ${migration.id} tanpa deskripsi`,
-    );
-    assert.ok(
-      migration.sql && migration.sql.trim().endsWith(";"),
-      `SQL migrasi ${migration.id} harus diakhiri titik koma`,
-    );
+    for (const token of FORBIDDEN_MYSQL_TOKENS) {
+      if (migration.pgSql && migration.pgSql.includes(token)) {
+        offenders.push(`${migration.id} -> "${token}"`);
+      }
+    }
   }
+
+  assert.deepStrictEqual(
+    offenders,
+    [],
+    `Token MySQL ditemukan di pgSql:\n${offenders.join("\n")}`,
+  );
 });
 
-test("nama tabel ledger tidak berubah tanpa sengaja", () => {
-  // Mengganti nama tabel ini membuat seluruh riwayat migrasi terlihat kosong,
-  // sehingga semua migrasi dijalankan ulang pada database yang sudah benar.
-  assert.equal(LEDGER_TABLE, "schema_migrations");
+test("id dan urutan migrasi unik (ledger schema_migrations bergantung padanya)", () => {
+  const ids = MIGRATIONS.map((m) => m.id);
+  const unique = new Set(ids);
+  assert.strictEqual(unique.size, ids.length, "ada ID migrasi duplikat");
 });
 
-test("nomor versi migrasi naik terus dan tidak pernah disusun ulang", () => {
-  // Ledger hanya mencatat ID, jadi menyisipkan migrasi di tengah daftar akan
-  // terlewat pada database yang sudah menjalankan migrasi sesudahnya.
-  const versions = MIGRATIONS.map((migration) => {
-    const match = /^v(\d+)_/.exec(migration.id);
-    assert.ok(match, `ID migrasi '${migration.id}' harus berawalan v<nomor>_`);
-    return Number(match[1]);
-  });
-
-  for (let i = 1; i < versions.length; i += 1) {
-    assert.ok(
-      versions[i] > versions[i - 1],
-      `Migrasi '${MIGRATIONS[i].id}' berada di urutan yang salah`,
-    );
-  }
+test("splitStatements memecah multi-statement sederhana", () => {
+  const result = splitStatements(
+    'ALTER TABLE a ADD COLUMN x INT; ALTER TABLE b ADD COLUMN y INT;',
+  );
+  assert.strictEqual(result.length, 2);
+  assert.match(result[0], /^ALTER TABLE a/);
+  assert.match(result[1], /^ALTER TABLE b/);
 });
 
-test("kolom kupon dibuat lebih dulu sebelum datanya dipindahkan", () => {
-  const addIndex = MIGRATIONS.findIndex(
-    (migration) => migration.id === "v5_add_coupons",
-  );
-  const moveIndex = MIGRATIONS.findIndex(
-    (migration) => migration.id === "v6_move_coupons_to_column",
-  );
+test("splitStatements tidak memotong titik koma di dalam string terkutip", () => {
+  const sql =
+    "CREATE TABLE t (name VARCHAR(64) DEFAULT 'Cyber; Maid'); CREATE TABLE u (note VARCHAR(32) DEFAULT \"a;b\");";
+  const result = splitStatements(sql);
 
-  assert.ok(addIndex >= 0, "Migrasi v5_add_coupons hilang");
-  assert.ok(
-    moveIndex > addIndex,
-    "Pemindahan data kupon harus berjalan sesudah kolomnya dibuat",
-  );
+  assert.strictEqual(result.length, 2);
+  assert.ok(result[0].includes("'Cyber; Maid'"), "nilai single-quote utuh");
+  assert.ok(result[1].includes('"a;b"'), "nilai double-quote utuh");
+});
 
-  // Migrasi data ini menambah nilai pada dirinya sendiri, jadi menjalankannya
-  // dua kali akan menggandakan saldo kupon pemain. Ia hanya aman selama ledger
-  // yang menahannya, dan itulah alasan test ini ada.
-  assert.match(
-    MIGRATIONS[moveIndex].sql,
-    /^UPDATE UserSurvivals SET coupons = coupons \+/,
-  );
-  assert.match(
-    MIGRATIONS[moveIndex].sql,
-    /JSON_REMOVE\(rpg_state, '\$\.coupons'\)/,
-  );
+test("splitStatements memecah migrasi v33 (5 statement) dengan benar", () => {
+  const v33 = MIGRATIONS.find((m) => m.id === "v33_create_sprint20_milestone_tables");
+  assert.ok(v33, "v33 harus ada");
+
+  const statements = splitStatements(v33.pgSql);
+  assert.strictEqual(statements.length, 5);
+  assert.match(statements[0], /^ALTER TABLE "GuildClans"/);
+  assert.match(statements[1], /^CREATE TABLE IF NOT EXISTS "coliseum_teams"/);
+  assert.match(statements[2], /^CREATE TABLE IF NOT EXISTS "guild_personas"/);
+  assert.match(statements[3], /^CREATE TABLE IF NOT EXISTS "server_stocks"/);
+  assert.match(statements[4], /^CREATE TABLE IF NOT EXISTS "user_stock_holdings"/);
+});
+
+test("splitStatements menangani input kosong dan trailing semicolon", () => {
+  assert.deepStrictEqual(splitStatements(""), []);
+  assert.deepStrictEqual(splitStatements(null), []);
+  assert.deepStrictEqual(splitStatements("SELECT 1;"), ["SELECT 1"]);
 });

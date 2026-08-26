@@ -166,24 +166,50 @@ module.exports = {
 
       // Dompet kota ikut dikosongkan; sebelumnya hanya tabungan yang direset
       // sehingga pemain bisa membawa seluruh Naura Coin melewati reinkarnasi.
-      profile.economy_wallet = 0;
-      profile.economy_bank = 0;
-      profile.inventory = [];
-      profile.tool_pickaxeLevel = 1;
-      profile.tool_pickaxeDurability = 100;
-      profile.tool_axeLevel = 1;
-      profile.tool_axeDurability = 100;
-      profile.tool_fishingRodLevel = 1;
-      profile.tool_fishingRodDurability = 100;
-      profile.weapon_level = 1;
-      profile.dungeon_floor = 1;
+      // Rule 1.10: penulisan UserProfile wajib lewat cacheManager agar cache
+      // tidak menyimpan nilai lama dan antrean flush tidak tertimpa.
+      await cacheManager.updateUserProfile(user.id, {
+        economy_wallet: 0,
+        economy_bank: 0,
+        inventory: [],
+        tool_pickaxeLevel: 1,
+        tool_pickaxeDurability: 100,
+        tool_axeLevel: 1,
+        tool_axeDurability: 100,
+        tool_fishingRodLevel: 1,
+        tool_fishingRodDurability: 100,
+        weapon_level: 1,
+        dungeon_floor: 1,
+      });
 
       await UserNPC.destroy({ where: { userId: user.id } });
       await UserFarm.destroy({ where: { userId: user.id } });
       await UserPet.destroy({ where: { userId: user.id } });
 
-      await survival.save();
-      await profile.save();
+      // Rule 1.8: fields eksplisit sesuai daftar kolom yang memang direset.
+      await survival.save({
+        fields: [
+          "hunger",
+          "thirst",
+          "stamina",
+          "hp",
+          "strength",
+          "agility",
+          "intelligence",
+          "luck",
+          "survival_xp",
+          "survival_level",
+          "starFragments",
+          "propertyId",
+          "currentLocation",
+          "vehicle",
+          "inGameDay",
+          "inGameHour",
+          "shop_purchases",
+          "shop_last_reset_day",
+          "rpg_state",
+        ],
+      });
 
       // Hadiah keberanian memulai dari nol.
       const coupon = await rollCouponDrop("rebirth", { survival });

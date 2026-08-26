@@ -44,3 +44,11 @@ portfolio-site/
 
 testsprite_tests/tmp/
 testsprite_tests/tmp/config.json
+
+# Dashboard V2: artefak build & konfigurasi lokal berisi secret
+dashboard-v2/dist/
+.roo/mcp.json
+scripts/tmp-*
+
+# Model 3D format berat (melebihi batas GitHub); versi .glb yang dipakai
+assets/3D Model Naura/*.obj

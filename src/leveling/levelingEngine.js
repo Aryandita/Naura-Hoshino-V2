@@ -4,7 +4,7 @@
 // Memberi XP setiap kali pengguna aktif mengobrol di server.
 // Pengguna premium mendapat penggandaan XP otomatis.
 
-const { AttachmentBuilder } = require("discord.js");
+const { AttachmentBuilder, MessageFlags } = require("discord.js");
 const { logger } = require("../managers/logger");
 const redisManager = require("../managers/redisManager");
 const UserLeveling = require("../models/UserLeveling");

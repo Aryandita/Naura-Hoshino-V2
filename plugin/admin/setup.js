@@ -1117,7 +1117,8 @@ module.exports = {
     const saveSettings = async (newSettings) => {
       settingsRecord.settings = newSettings;
       settingsRecord.changed("settings", true);
-      await settingsRecord.save();
+      // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
+      await settingsRecord.save({ fields: ["settings"] });
       await cacheManager.invalidateGuildSettings(interaction.guild.id).catch(() => {});
     };
 

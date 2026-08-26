@@ -4,7 +4,11 @@ const { AttachmentBuilder } = require("discord.js");
 
 const ui = require("../../config/ui");
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
-const { safeParseInventory } = require("../engines/inventoryHelper");
+const {
+  safeParseInventory,
+  takeItemsAtomic,
+} = require("../engines/inventoryHelper");
+const cacheManager = require("../../managers/cacheManager");
 const {
   GREET_COOLDOWN_MS,
   MAX_DAILY_GIFTS,
@@ -35,7 +39,11 @@ async function greet(i, ctx) {
   npcData.affection = Math.min(100, npcData.affection + bonus);
   npcData.lastInteraction = now;
   refreshRelationship(npcData, npc);
-  await npcData.save();
+  // Rule 1.8: fields eksplisit agar penulisan tidak menimpa kolom lain
+  // yang sedang menunggu di antrean flush cache.
+  await npcData.save({
+    fields: ["affection", "lastInteraction", "relationshipLevel"],
+  });
 
   return reply(
     i,
@@ -61,12 +69,16 @@ async function gift(i, ctx) {
     );
   }
 
-  if (survival.starFragments < GIFT_COST) {
+  // Rule 1.8: potong saldo lewat debit atomik (UPDATE bersyarat), bukan
+  // baca-ubah-tulis. Kegagalan berarti saldo tidak cukup dan bukan error.
+  const debit = await cacheManager.debitUserSurvival(
+    survival.userId,
+    "starFragments",
+    GIFT_COST,
+  );
+  if (!debit.ok) {
     return fail(i, t("npc.gift_poor", { cost: `${GIFT_COST} ${coin}` }), t);
   }
-
-  survival.starFragments -= GIFT_COST;
-  await survival.save({ fields: ["starFragments"] });
 
   const bonus = Math.floor(Math.random() * 5) + 3;
   npcData.affection = Math.min(100, npcData.affection + bonus);
@@ -107,10 +119,15 @@ async function marry(i, ctx) {
     return fail(i, t("npc.marry_not_ready", { name: npc.name }), t);
   }
 
-  inventory.splice(ringIndex, 1);
-  profile.inventory = inventory;
-  profile.changed("inventory", true);
-  await profile.save({ fields: ["inventory"] });
+  // Rule 1.8: ambil cincin lewat helper atomik (SELECT ... FOR UPDATE),
+  // bukan splice manual pada salinan cache. Bila pengambilan gagal karena
+  // cincin sudah terpakai di sesi lain, lamaran dibatalkan tanpa efek samping.
+  const taken = await takeItemsAtomic(profile.userId, [
+    { id: "wedding_ring", amount: 1 },
+  ]);
+  if (!taken.ok) {
+    return fail(i, t("npc.marry_no_ring"), t);
+  }
 
   npcData.relationshipLevel = 4;
   npcData.lastInteraction = now;
@@ -152,11 +169,16 @@ async function marry(i, ctx) {
 async function repair(i, ctx) {
   const { npc, survival, profile, t, coin } = ctx;
 
-  if (survival.starFragments < REPAIR_COST) {
-    return fail(i, t("npc.repair_poor", { cost: `${REPAIR_COST} ${coin}` }), t);
-  }
+  // Rule 1.8: urutan aman "barang dulu, biaya belakangan". Perbarui alat
+  // lebih dulu, lalu potong biaya lewat debit atomik. Bila saldo ternyata
+  // tidak cukup saat pemotongan, nilai alat dikembalikan (kompensasi)
+  // agar pemain tidak kehilangan uang tanpa mendapat apa pun.
+  const previousDurability = {
+    pickaxe: profile.tool_pickaxeDurability,
+    axe: profile.tool_axeDurability,
+    rod: profile.tool_fishingRodDurability,
+  };
 
-  survival.starFragments -= REPAIR_COST;
   profile.tool_pickaxeDurability = 100;
   profile.tool_axeDurability = 100;
   profile.tool_fishingRodDurability = 100;
@@ -167,7 +189,27 @@ async function repair(i, ctx) {
       "tool_fishingRodDurability",
     ],
   });
-  await survival.save({ fields: ["starFragments"] });
+
+  const debit = await cacheManager.debitUserSurvival(
+    survival.userId,
+    "starFragments",
+    REPAIR_COST,
+  );
+  if (!debit.ok) {
+    profile.tool_pickaxeDurability = previousDurability.pickaxe;
+    profile.tool_axeDurability = previousDurability.axe;
+    profile.tool_fishingRodDurability = previousDurability.rod;
+    await profile
+      .save({
+        fields: [
+          "tool_pickaxeDurability",
+          "tool_axeDurability",
+          "tool_fishingRodDurability",
+        ],
+      })
+      .catch(() => {});
+    return fail(i, t("npc.repair_poor", { cost: `${REPAIR_COST} ${coin}` }), t);
+  }
 
   return reply(
     i,
@@ -199,12 +241,22 @@ async function tax(i, ctx) {
     return fail(i, t("npc.tax_poor", { cost: `${cost} ${coin}` }), t);
   }
 
-  survival.starFragments -= cost;
+  // Rule 1.8: potong pajak lewat debit atomik, lalu bersihkan status pajak
+  // di kolom JSON secara terpisah agar dua penulisan tidak saling menimpa.
+  const debit = await cacheManager.debitUserSurvival(
+    survival.userId,
+    "starFragments",
+    cost,
+  );
+  if (!debit.ok) {
+    return fail(i, t("npc.tax_poor", { cost: `${cost} ${coin}` }), t);
+  }
+
   rpgState.tax_due = 0;
   rpgState.house_seized = false;
   survival.rpg_state = rpgState;
   survival.changed("rpg_state", true);
-  await survival.save({ fields: ["starFragments", "rpg_state"] });
+  await survival.save({ fields: ["rpg_state"] });
 
   return reply(
     i,

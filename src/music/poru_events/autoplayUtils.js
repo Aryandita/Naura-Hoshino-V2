@@ -144,6 +144,9 @@ function smoothFade(
       } catch (e) {}
     }
   }, stepTime);
+  // Rule 1.9: timer berumur pendek ini dibersihkan via clearTransitionTimers,
+  // unref hanya pengaman agar tidak pernah menahan proses saat shutdown.
+  if (player._fadeInterval.unref) player._fadeInterval.unref();
 }
 
 /**
@@ -182,6 +185,7 @@ function startFadeOutWatcher(player, track, baseVolume, fadeOutMs = 6000) {
       );
     }
   }, 1000);
+  if (player._endWatcher.unref) player._endWatcher.unref();
 }
 
 /**

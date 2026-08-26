@@ -125,7 +125,9 @@ module.exports = {
       if (needsSave) {
          userClan.questsState = state;
          userClan.changed("questsState", true);
-         await userClan.save();
+         // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain yang
+         // sedang diubah anggota klan lain secara konkuren.
+         await userClan.save({ fields: ["questsState", "vault"] });
       }
 
       const description = [
@@ -259,9 +261,9 @@ module.exports = {
       if (!userClan) return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
       
       if (userClan.leaderId === user.id) {
-         await userClan.destroy();
-         survival.clanId = null;
-         await survival.save();
+          await userClan.destroy();
+          survival.clanId = null;
+          await survival.save({ fields: ["clanId"] });
          return card(interaction, {
             color: "#ff4757",
             title: `${e("shocked", "💥")} Klan Dibubarkan`,
@@ -271,10 +273,10 @@ module.exports = {
       
       userClan.members = userClan.members.filter(id => id !== user.id);
       userClan.changed("members", true);
-      await userClan.save();
+      await userClan.save({ fields: ["members"] });
       
       survival.clanId = null;
-      await survival.save();
+      await survival.save({ fields: ["clanId"] });
       
       return card(interaction, {
          color: "#ff4757",
@@ -319,7 +321,7 @@ module.exports = {
       });
 
       survival.clanId = newClan.id;
-      await survival.save();
+      await survival.save({ fields: ["clanId"] });
 
       return card(interaction, {
         color: "#FFD700",
@@ -363,10 +365,10 @@ module.exports = {
 
       targetClan.members = [...targetClan.members, user.id];
       targetClan.changed("members", true);
-      await targetClan.save();
+      await targetClan.save({ fields: ["members"] });
 
       survival.clanId = targetClan.id;
-      await survival.save();
+      await survival.save({ fields: ["clanId"] });
 
       return card(interaction, {
         color: ui.getColor("success") || "#22c55e",
@@ -410,7 +412,9 @@ module.exports = {
         leveledUp = true;
       }
 
-      await userClan.save();
+      // Rule 1.8: fields eksplisit agar penulisan kas/level tidak menimpa
+      // kolom lain seperti questsState atau bossHp.
+      await userClan.save({ fields: ["vault", "level"] });
 
       const lines = [
         `Terima kasih! Kamu menyumbang ${currency.format(currency.FRAGMENT, amountInput)} ke kas klan **${userClan.name}**.`,
@@ -447,8 +451,18 @@ module.exports = {
         );
       }
 
-      survival.stamina -= RAID_STAMINA;
-      await survival.save();
+      // Rule 1.8: potong stamina lewat debit atomik, bukan baca-ubah-tulis.
+      const staminaDebit = await cacheManager.debitUserSurvival(
+        user.id,
+        "stamina",
+        RAID_STAMINA,
+      );
+      if (!staminaDebit.ok) {
+        return fail(
+          interaction,
+          `Staminamu tinggal **${survival.stamina || 0}**, sedangkan menyerang boss butuh **${RAID_STAMINA}**. Istirahat dulu ya, Naura khawatir.`,
+        );
+      }
 
       const damage =
         Math.floor(Math.random() * 50) + (survival.strength || 1) * 10 + 20;
@@ -470,7 +484,10 @@ module.exports = {
       }
 
       userClan.bossHp = bossHp;
-      await userClan.save();
+      // Rule 1.8: fields eksplisit; vault ikut ditulis bila boss tumbang.
+      await userClan.save(
+        defeated ? { fields: ["bossHp", "vault"] } : { fields: ["bossHp"] },
+      );
 
       if (!defeated) {
         return card(interaction, {

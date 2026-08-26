@@ -156,7 +156,9 @@ module.exports = {
     survival.currentLocation = "prison";
     survival.stamina = 10;
     survival.hp = 10;
-    await survival.save();
+    // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain seperti
+    // starFragments yang mungkin berubah lewat jalur atomik.
+    await survival.save({ fields: ["currentLocation", "stamina", "hp"] });
 
     const lines = [
       "Alarmnya bunyi kencang banget! Bripka Agus dan timnya nyergap kamu sebelum sempat keluar dari brankas. Naura sedih lihat kamu digelandang...",

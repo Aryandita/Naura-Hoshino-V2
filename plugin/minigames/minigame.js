@@ -1050,7 +1050,8 @@ async function runMinigameLogic(interaction) {
       if (selectedIndex === correctIndex) {
         const rewardNsf = Math.floor(conf.coin * nsfMultiplier);
         profile.minigame_triviaScore += conf.score;
-        await profile.save();
+        // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
+        await profile.save({ fields: ["minigame_triviaScore"] });
         await cacheManager.incrementUserSurvival(user.id, "starFragments", rewardNsf);
 
         const winPayload = buildContainerV2({
@@ -1152,7 +1153,8 @@ async function runMinigameLogic(interaction) {
         }
         const rewardNsf = Math.floor(conf.coin * nsfMultiplier);
         profile.minigame_mathScore += conf.score;
-        await profile.save();
+        // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
+        await profile.save({ fields: ["minigame_mathScore"] });
         await cacheManager.incrementUserSurvival(user.id, "starFragments", rewardNsf);
 
         const winPayload = buildContainerV2({
@@ -1267,7 +1269,8 @@ async function runMinigameLogic(interaction) {
       ) {
         const winNsf = profile.isPremium ? taruhan * 2 : taruhan;
         profile.minigame_rpsWin += 1;
-        await profile.save();
+        // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
+        await profile.save({ fields: ["minigame_rpsWin"] });
         await cacheManager.incrementUserSurvival(user.id, "starFragments", winNsf);
         result = `MENANG! Bot memilih **${botChoice}**.\nKamu memenangkan **${(taruhan * 2).toLocaleString()}** ${coinEmoji}!`;
         color = "#00FF00";
@@ -1498,7 +1501,8 @@ async function runMinigameLogic(interaction) {
         const winMultiplier = profile.isPremium ? 6 : 3;
         const winNsf = taruhan * winMultiplier;
         profile.minigame_wordleWin += 1;
-        await profile.save();
+        // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
+        await profile.save({ fields: ["minigame_wordleWin"] });
         await cacheManager.incrementUserSurvival(user.id, "starFragments", winNsf);
 
         const winPayload = buildContainerV2({

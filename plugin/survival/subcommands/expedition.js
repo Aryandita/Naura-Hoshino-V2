@@ -67,7 +67,8 @@ module.exports = {
           pet.petLevel = (pet.petLevel || 1) + Math.floor(pet.petExp / 100);
           pet.petExp = pet.petExp % 100;
         }
-        await pet.save();
+        // Rule 1.8: fields eksplisit agar tidak menimpa kolom pet lain.
+        await pet.save({ fields: ["petExp", "petLevel"] });
 
         const lootList = expData.loot.map((it) => `• **${it.id.replace("_", " ")}** x${it.amount}`).join("\n");
         const claimContainer = buildContainerV2({

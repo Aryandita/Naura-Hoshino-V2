@@ -307,6 +307,9 @@ module.exports = (client) => {
     return res.json({ reply });
   });
 
+  // --- Route untuk Dashboard V2 (Vite) ---
+  webApp.use("/v2", express.static(path.join(__dirname, "../dashboard-v2/dist")));
+
   // --- Halaman ---
   const view = (name) => (req, res) =>
     res.sendFile(path.join(__dirname, "views", name));

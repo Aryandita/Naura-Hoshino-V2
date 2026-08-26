@@ -160,7 +160,18 @@ module.exports = {
 
     survival.rpg_state = rpgState;
     survival.changed("rpg_state", true);
-    await survival.save();
+    // Rule 1.8: fields eksplisit. Kolom stat ikut ditulis karena applyBonus
+    // mengubahnya di memori; kolom lain tetap aman dari penimpaan.
+    await survival.save({
+      fields: [
+        "rpg_state",
+        "hp",
+        "strength",
+        "agility",
+        "intelligence",
+        "luck",
+      ],
+    });
 
     const biaya = isSwitching
       ? `*Biaya administrasi ganti kelas ${coinEmoji} **${SWITCH_FEE.toLocaleString("id-ID")} Coin** sudah Naura potong, dan bonus kelas lamamu Naura cabut biar adil.*`

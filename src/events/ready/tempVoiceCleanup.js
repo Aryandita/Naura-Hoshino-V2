@@ -44,7 +44,7 @@ module.exports = {
     // ==========================================
     // 🗑️ GARBAGE COLLECTOR TEMP VOICE (Setiap 5 Menit)
     // ==========================================
-    setInterval(
+    const cleanupTimer = setInterval(
       async () => {
         if (
           !client.trackedTempChannels ||
@@ -73,5 +73,8 @@ module.exports = {
       },
       5 * 60 * 1000,
     );
+    // Rule 1.9: timer level-modul wajib unref agar tidak menahan proses
+    // saat graceful shutdown.
+    if (cleanupTimer.unref) cleanupTimer.unref();
   },
 };

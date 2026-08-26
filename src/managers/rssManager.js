@@ -14,7 +14,10 @@ class RssManager {
     );
 
     this.checkAllFeeds();
-    setInterval(() => this.checkAllFeeds(), 600000);
+    // Rule 1.9: timer level-modul wajib unref agar tidak menahan proses
+    // saat graceful shutdown.
+    const feedTimer = setInterval(() => this.checkAllFeeds(), 600000);
+    if (feedTimer.unref) feedTimer.unref();
   }
 
   async checkAllFeeds() {

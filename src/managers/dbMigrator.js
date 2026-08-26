@@ -206,6 +206,110 @@ const MIGRATIONS = [
   }
 ];
 
+/**
+ * Varian PostgreSQL untuk migrasi lama yang hanya punya SQL dialek MySQL.
+ *
+ * Produksi memakai Supabase/PostgreSQL, sementara entri `sql` di atas ditulis
+ * sejak era MySQL (TINYINT, MODIFY COLUMN, ENGINE=InnoDB, AUTO_INCREMENT,
+ * JSON_EXTRACT, dll.). Tanpa varian ini, `prestart` gagal total pada database
+ * PostgreSQL baru sehingga bot tidak pernah menyala.
+ *
+ * Aturan translasi yang dipakai:
+ *   - TINYINT(1)                -> SMALLINT
+ *   - MODIFY COLUMN             -> ALTER COLUMN ... TYPE/SET DEFAULT/DROP NOT NULL
+ *   - ENGINE=InnoDB/CHARSET     -> dihapus
+ *   - INT AUTO_INCREMENT        -> SERIAL
+ *   - FLOAT                     -> DOUBLE PRECISION
+ *   - DATETIME                  -> TIMESTAMPTZ
+ *   - UNIQUE KEY nama (kol)     -> CONSTRAINT nama UNIQUE (kol)
+ *   - INDEX inline              -> CREATE INDEX terpisah
+ *   - JSON_EXTRACT(k,'$.x')     -> k->>'x'
+ *
+ * Semua identifier camelCase dikutip eksplisit agar cocok dengan kolom yang
+ * dibuat Sequelize (PostgreSQL melipat huruf kecil bila tidak dikutip).
+ * Setiap ALTER ADD COLUMN memakai IF NOT EXISTS agar aman dijalankan ulang
+ * setelah tabel dibuat oleh `sync()`.
+ */
+const PG_SQL_OVERRIDES = {
+  v1_add_mannersPoint:
+    'ALTER TABLE "user_leveling" ADD COLUMN IF NOT EXISTS "mannersPoint" INTEGER DEFAULT 100;',
+  v2_add_dailyNotify:
+    'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "dailyNotify" SMALLINT DEFAULT 1;',
+  v3_add_economy_deposit:
+    'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "economy_deposit" JSON DEFAULT NULL;',
+  v4_add_economy_investments:
+    'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "economy_investments" JSON DEFAULT NULL;',
+  v5_add_coupons:
+    'ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "coupons" INTEGER NOT NULL DEFAULT 0;',
+  // Migrasi DATA: pindahkan kupon dari JSON rpg_state ke kolom coupons.
+  // Guard memakai cast ::jsonb karena tipe `json` tidak punya operator `?`.
+  // Idempoten secara nilai: baris tanpa kunci 'coupons' tidak tersentuh.
+  v6_move_coupons_to_column:
+    "UPDATE \"UserSurvivals\" SET coupons = coupons + CAST(rpg_state->>'coupons' AS INTEGER), rpg_state = rpg_state - 'coupons' WHERE rpg_state IS NOT NULL AND (rpg_state::jsonb -> 'coupons') IS NOT NULL AND jsonb_typeof(rpg_state::jsonb -> 'coupons') = 'number';",
+  v7_add_index_user_leveling:
+    'CREATE INDEX IF NOT EXISTS idx_user_leveling_guild_user ON "user_leveling" ("guildId", "userId");',
+  v8_add_index_user_warns:
+    'CREATE INDEX IF NOT EXISTS idx_user_warns_guild_user ON "user_warns" ("guildId", "userId");',
+  v9_add_index_user_friends:
+    'CREATE INDEX IF NOT EXISTS idx_user_friends_user1 ON "UserFriends" ("user1Id");',
+  v10_add_index_user_friends_2:
+    'CREATE INDEX IF NOT EXISTS idx_user_friends_user2 ON "UserFriends" ("user2Id");',
+  v11_add_index_user_cosmetics:
+    'CREATE INDEX IF NOT EXISTS idx_user_cosmetics_userId ON "user_cosmetics" ("userId");',
+  v12_add_index_user_pets:
+    'CREATE INDEX IF NOT EXISTS idx_user_pets_userId ON "UserPets" ("userId");',
+  v13_add_reputation:
+    'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "reputation" INTEGER DEFAULT 0;',
+  v14_make_language_nullable:
+    'ALTER TABLE "user_profiles" ALTER COLUMN "language" DROP NOT NULL; ALTER TABLE "user_profiles" ALTER COLUMN "language" SET DEFAULT NULL;',
+  v15_add_aiPersona:
+    'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "aiPersona" JSON DEFAULT NULL;',
+  v16_add_activeBanners:
+    'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "activeBanners" JSON DEFAULT NULL;',
+  v17_add_role_leases:
+    'CREATE TABLE IF NOT EXISTS "role_leases" ("id" SERIAL PRIMARY KEY, "userId" VARCHAR(191) NOT NULL, "guildId" VARCHAR(191) NOT NULL, "roleId" VARCHAR(191) NOT NULL, "expiresAt" TIMESTAMPTZ NOT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL, CONSTRAINT "idx_role_leases_unique" UNIQUE ("guildId", "userId", "roleId")); CREATE INDEX IF NOT EXISTS "idx_role_leases_expiresAt" ON "role_leases" ("expiresAt");',
+  v18_giveaway_participants:
+    'ALTER TABLE "giveaways" ADD COLUMN IF NOT EXISTS "requirements" JSON DEFAULT NULL, ADD COLUMN IF NOT EXISTS "participants" JSON DEFAULT NULL, ADD COLUMN IF NOT EXISTS "winners" JSON DEFAULT NULL;',
+  v19_add_clan_columns:
+    'ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "clanId" INTEGER DEFAULT NULL;',
+  v20_add_clan_quests:
+    'ALTER TABLE "GuildClans" ADD COLUMN IF NOT EXISTS "questsState" JSON DEFAULT NULL;',
+  v21_create_duel_records:
+    'CREATE TABLE IF NOT EXISTS "duel_records" ("userId" VARCHAR(191) NOT NULL PRIMARY KEY, "mmr" INTEGER NOT NULL DEFAULT 1000, "matchesPlayed" INTEGER NOT NULL DEFAULT 0, "wins" INTEGER NOT NULL DEFAULT 0, "losses" INTEGER NOT NULL DEFAULT 0, "kills" INTEGER NOT NULL DEFAULT 0, "deaths" INTEGER NOT NULL DEFAULT 0, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL);',
+  v22_add_notification_prefs:
+    'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "notification_prefs" JSON DEFAULT NULL;',
+  v23_upgrade_user_pets:
+    "ALTER TABLE \"UserPets\" ADD COLUMN IF NOT EXISTS \"mood\" VARCHAR(255) DEFAULT 'happy', ADD COLUMN IF NOT EXISTS \"evolutionStage\" INTEGER DEFAULT 1, ADD COLUMN IF NOT EXISTS \"passiveSkill\" VARCHAR(255) DEFAULT NULL;",
+  v24_add_world_boss_and_clan_territory:
+    "CREATE TABLE IF NOT EXISTS \"world_bosses\" (\"id\" SERIAL PRIMARY KEY, \"bossId\" VARCHAR(191) NOT NULL UNIQUE, \"name\" VARCHAR(255) NOT NULL, \"title\" VARCHAR(255) NOT NULL DEFAULT 'Ancient Calamity', \"element\" VARCHAR(64) NOT NULL DEFAULT 'DARK', \"maxHp\" BIGINT NOT NULL DEFAULT 1000000, \"currentHp\" BIGINT NOT NULL DEFAULT 1000000, \"baseAttack\" INTEGER NOT NULL DEFAULT 150, \"defense\" INTEGER NOT NULL DEFAULT 50, \"status\" VARCHAR(64) NOT NULL DEFAULT 'ACTIVE', \"damageLeaderboard\" JSON NOT NULL, \"rewardsPool\" JSON NOT NULL, \"spawnTime\" TIMESTAMPTZ NOT NULL, \"endTime\" TIMESTAMPTZ NOT NULL, \"createdAt\" TIMESTAMPTZ NOT NULL, \"updatedAt\" TIMESTAMPTZ NOT NULL); CREATE TABLE IF NOT EXISTS \"clan_territories\" (\"id\" SERIAL PRIMARY KEY, \"territoryId\" VARCHAR(191) NOT NULL UNIQUE, \"name\" VARCHAR(255) NOT NULL, \"clanId\" INTEGER DEFAULT NULL, \"controlPoints\" INTEGER NOT NULL DEFAULT 0, \"taxYield\" INTEGER NOT NULL DEFAULT 1000, \"buffEffect\" VARCHAR(128) NOT NULL DEFAULT 'EXTRA_GOLD_10', \"contestedAt\" TIMESTAMPTZ DEFAULT NULL, \"createdAt\" TIMESTAMPTZ NOT NULL, \"updatedAt\" TIMESTAMPTZ NOT NULL);",
+  v25_upgrade_user_cards_system:
+    "ALTER TABLE \"user_cards\" ADD COLUMN IF NOT EXISTS \"cardCode\" VARCHAR(32) DEFAULT NULL, ADD COLUMN IF NOT EXISTS \"characterName\" VARCHAR(255) DEFAULT NULL, ADD COLUMN IF NOT EXISTS \"seriesName\" VARCHAR(255) DEFAULT NULL, ADD COLUMN IF NOT EXISTS \"printNumber\" INTEGER NOT NULL DEFAULT 1, ADD COLUMN IF NOT EXISTS \"quality\" VARCHAR(32) NOT NULL DEFAULT 'GOOD', ADD COLUMN IF NOT EXISTS \"frame\" VARCHAR(64) NOT NULL DEFAULT 'DEFAULT', ADD COLUMN IF NOT EXISTS \"dyeColor\" VARCHAR(32) DEFAULT NULL, ADD COLUMN IF NOT EXISTS \"imageUrl\" TEXT DEFAULT NULL, ADD COLUMN IF NOT EXISTS \"isLocked\" BOOLEAN DEFAULT FALSE, ADD COLUMN IF NOT EXISTS \"burnValue\" INTEGER DEFAULT 100;",
+  v26_create_user_card_decks:
+    'CREATE TABLE IF NOT EXISTS "user_card_decks" ("userId" VARCHAR(32) NOT NULL PRIMARY KEY, "activeDeck" JSON NOT NULL, "towerFloor" INTEGER NOT NULL DEFAULT 1, "highestFloor" INTEGER NOT NULL DEFAULT 1, "wins" INTEGER NOT NULL DEFAULT 0, "losses" INTEGER NOT NULL DEFAULT 0, "eloRating" INTEGER NOT NULL DEFAULT 1000, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS "idx_user_card_decks_elo" ON "user_card_decks" ("eloRating");',
+  v27_create_minecraft_links:
+    'CREATE TABLE IF NOT EXISTS "minecraft_links" ("userId" VARCHAR(32) NOT NULL PRIMARY KEY, "mcUsername" VARCHAR(64) NOT NULL, "mcUuid" VARCHAR(64) DEFAULT NULL, "isVerified" BOOLEAN DEFAULT FALSE, "verificationCode" VARCHAR(16) DEFAULT NULL, "totalSyncRewards" INTEGER DEFAULT 0, "lastSyncedAt" TIMESTAMPTZ DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS "idx_minecraft_links_mcUsername" ON "minecraft_links" ("mcUsername");',
+  v28_create_prediction_markets_and_bets:
+    "CREATE TABLE IF NOT EXISTS \"prediction_markets\" (\"marketId\" VARCHAR(64) NOT NULL PRIMARY KEY, \"guildId\" VARCHAR(32) NOT NULL, \"creatorId\" VARCHAR(32) NOT NULL, \"title\" VARCHAR(255) NOT NULL, \"description\" TEXT DEFAULT NULL, \"category\" VARCHAR(32) NOT NULL DEFAULT 'COMMUNITY', \"options\" JSON NOT NULL, \"totalPool\" BIGINT NOT NULL DEFAULT 0, \"status\" VARCHAR(32) NOT NULL DEFAULT 'OPEN', \"winningOptionId\" INTEGER DEFAULT NULL, \"lockTime\" TIMESTAMPTZ NOT NULL, \"resolveTime\" TIMESTAMPTZ DEFAULT NULL, \"houseFeePercent\" INTEGER NOT NULL DEFAULT 5, \"maxBetPerUser\" INTEGER NOT NULL DEFAULT 10000, \"createdAt\" TIMESTAMPTZ NOT NULL, \"updatedAt\" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS \"idx_prediction_markets_guildId\" ON \"prediction_markets\" (\"guildId\"); CREATE INDEX IF NOT EXISTS \"idx_prediction_markets_status\" ON \"prediction_markets\" (\"status\"); CREATE TABLE IF NOT EXISTS \"prediction_bets\" (\"betId\" VARCHAR(64) NOT NULL PRIMARY KEY, \"marketId\" VARCHAR(64) NOT NULL, \"guildId\" VARCHAR(32) NOT NULL, \"userId\" VARCHAR(32) NOT NULL, \"username\" VARCHAR(128) NOT NULL DEFAULT 'Anonymous', \"optionId\" INTEGER NOT NULL, \"amount\" BIGINT NOT NULL, \"payout\" BIGINT NOT NULL DEFAULT 0, \"status\" VARCHAR(32) NOT NULL DEFAULT 'PENDING', \"createdAt\" TIMESTAMPTZ NOT NULL, \"updatedAt\" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS \"idx_prediction_bets_marketId\" ON \"prediction_bets\" (\"marketId\"); CREATE INDEX IF NOT EXISTS \"idx_prediction_bets_userId\" ON \"prediction_bets\" (\"userId\"); CREATE INDEX IF NOT EXISTS \"idx_prediction_bets_guild_user\" ON \"prediction_bets\" (\"guildId\", \"userId\");",
+  v29_upgrade_world_boss_phases:
+    'ALTER TABLE "world_bosses" ADD COLUMN IF NOT EXISTS "phase" INTEGER NOT NULL DEFAULT 1, ADD COLUMN IF NOT EXISTS "shieldHp" BIGINT NOT NULL DEFAULT 0, ADD COLUMN IF NOT EXISTS "maxShieldHp" BIGINT NOT NULL DEFAULT 0, ADD COLUMN IF NOT EXISTS "roleContributions" JSON DEFAULT NULL, ADD COLUMN IF NOT EXISTS "mvpUserId" VARCHAR(191) DEFAULT NULL, ADD COLUMN IF NOT EXISTS "lastHitUserId" VARCHAR(191) DEFAULT NULL;',
+  v30_create_user_cafes:
+    "CREATE TABLE IF NOT EXISTS \"user_cafes\" (\"userId\" VARCHAR(32) NOT NULL PRIMARY KEY, \"cafeName\" VARCHAR(64) NOT NULL DEFAULT 'Cyber Maid Lounge', \"level\" INTEGER NOT NULL DEFAULT 1, \"reputation\" INTEGER NOT NULL DEFAULT 0, \"unlockedRecipes\" JSON NOT NULL, \"activeDishes\" JSON NOT NULL, \"theme\" VARCHAR(32) NOT NULL DEFAULT 'CYBER_NEON', \"customersServed\" INTEGER NOT NULL DEFAULT 0, \"uncollectedRevenue\" BIGINT NOT NULL DEFAULT 0, \"lastCollectedAt\" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, \"createdAt\" TIMESTAMPTZ NOT NULL, \"updatedAt\" TIMESTAMPTZ NOT NULL);",
+  v31_upgrade_user_cards_fusion_inscription:
+    'ALTER TABLE "user_cards" ADD COLUMN IF NOT EXISTS "isAwakened" BOOLEAN DEFAULT FALSE, ADD COLUMN IF NOT EXISTS "awakeningLevel" INTEGER DEFAULT 0, ADD COLUMN IF NOT EXISTS "inscription" VARCHAR(128) DEFAULT NULL, ADD COLUMN IF NOT EXISTS "originalMinterId" VARCHAR(191) DEFAULT NULL;',
+  v32_upgrade_territories_and_pets:
+    'ALTER TABLE "clan_territories" ADD COLUMN IF NOT EXISTS "clanName" VARCHAR(128) DEFAULT NULL, ADD COLUMN IF NOT EXISTS "defenseLevel" INTEGER NOT NULL DEFAULT 1, ADD COLUMN IF NOT EXISTS "maxControlPoints" INTEGER NOT NULL DEFAULT 1000, ADD COLUMN IF NOT EXISTS "lastTaxClaimedAt" TIMESTAMPTZ DEFAULT NULL, ADD COLUMN IF NOT EXISTS "contributingClanIds" JSON DEFAULT NULL; ALTER TABLE "UserPets" ADD COLUMN IF NOT EXISTS "fusionCount" INTEGER NOT NULL DEFAULT 0, ADD COLUMN IF NOT EXISTS "cosmicAura" BOOLEAN NOT NULL DEFAULT FALSE, ADD COLUMN IF NOT EXISTS "habitatRoom" JSON DEFAULT NULL;',
+  v33_create_sprint20_milestone_tables:
+    'ALTER TABLE "GuildClans" ADD COLUMN IF NOT EXISTS "hallLayout" JSON DEFAULT NULL; CREATE TABLE IF NOT EXISTS "coliseum_teams" ("id" SERIAL PRIMARY KEY, "userId" VARCHAR(191) NOT NULL UNIQUE, "teamName" VARCHAR(128) NOT NULL DEFAULT \'Vanguard Squad\', "formation" JSON NOT NULL, "eloRating" INTEGER NOT NULL DEFAULT 1200, "divisionTier" VARCHAR(32) NOT NULL DEFAULT \'BRONZE\', "wins" INTEGER NOT NULL DEFAULT 0, "losses" INTEGER NOT NULL DEFAULT 0, "lastFoughtAt" TIMESTAMPTZ DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE TABLE IF NOT EXISTS "guild_personas" ("id" SERIAL PRIMARY KEY, "personaId" VARCHAR(64) NOT NULL UNIQUE, "guildId" VARCHAR(64) NOT NULL, "channelId" VARCHAR(64) DEFAULT NULL, "name" VARCHAR(128) NOT NULL, "systemPrompt" TEXT NOT NULL, "voiceTone" VARCHAR(64) NOT NULL DEFAULT \'TSUNDERE\', "avatarUrl" VARCHAR(255) DEFAULT NULL, "isActive" BOOLEAN NOT NULL DEFAULT TRUE, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE TABLE IF NOT EXISTS "server_stocks" ("ticker" VARCHAR(32) PRIMARY KEY, "name" VARCHAR(128) NOT NULL, "guildId" VARCHAR(64) DEFAULT NULL, "clanId" INTEGER DEFAULT NULL, "currentPrice" DOUBLE PRECISION NOT NULL DEFAULT 100.0, "previousPrice" DOUBLE PRECISION NOT NULL DEFAULT 100.0, "totalShares" INTEGER NOT NULL DEFAULT 10000, "availableShares" INTEGER NOT NULL DEFAULT 10000, "dividendYield" DOUBLE PRECISION NOT NULL DEFAULT 0.05, "history24h" JSON NOT NULL, "isHighRisk" BOOLEAN NOT NULL DEFAULT FALSE, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE TABLE IF NOT EXISTS "user_stock_holdings" ("id" SERIAL PRIMARY KEY, "userId" VARCHAR(191) NOT NULL, "ticker" VARCHAR(32) NOT NULL, "sharesOwned" INTEGER NOT NULL DEFAULT 0, "avgBuyPrice" DOUBLE PRECISION NOT NULL DEFAULT 0.0, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL, CONSTRAINT "uk_user_ticker" UNIQUE ("userId", "ticker"));',
+};
+
+// Tempelkan override ke entri migrasi yang belum punya pgSql. Entri yang sudah
+// mendefinisikan pgSql sendiri (mis. v34) tidak ditimpa.
+for (const migration of MIGRATIONS) {
+  if (!migration.pgSql && PG_SQL_OVERRIDES[migration.id]) {
+    migration.pgSql = PG_SQL_OVERRIDES[migration.id];
+  }
+}
+
 const ALREADY_APPLIED_ERRNOS = new Set([1050, 1060, 1061, 1091]);
 const ALREADY_APPLIED_PG_CODES = new Set([
   "42701",
@@ -221,6 +325,48 @@ function isAlreadyApplied(err) {
   const code = err && err.original && err.original.code;
   if (code && ALREADY_APPLIED_PG_CODES.has(code)) return true;
   return false;
+}
+
+/**
+ * Pecah string SQL multi-statement menjadi daftar statement tunggal.
+ *
+ * node-postgres menolak beberapa driver-level multi-command saat binding
+ * dipakai, dan penanganan error per-statement jadi tidak mungkin kalau dua
+ * ALTER digabung dalam satu panggilan. Pemecahan dilakukan pada titik koma
+ * DI LUAR string terkutip (single maupun double quote) agar nilai default
+ * seperti 'Cyber Maid Lounge' tidak ikut terpotong.
+ *
+ * @param {string} sql - SQL mentah yang mungkin berisi beberapa statement
+ * @returns {string[]} Daftar statement non-kosong siap dieksekusi berurutan
+ */
+function splitStatements(sql) {
+  const statements = [];
+  let current = "";
+  let quoteChar = null;
+
+  for (const char of String(sql || "")) {
+    if (quoteChar) {
+      current += char;
+      if (char === quoteChar) quoteChar = null;
+      continue;
+    }
+    if (char === "'" || char === '"') {
+      quoteChar = char;
+      current += char;
+      continue;
+    }
+    if (char === ";") {
+      const trimmed = current.trim();
+      if (trimmed) statements.push(trimmed);
+      current = "";
+      continue;
+    }
+    current += char;
+  }
+
+  const tail = current.trim();
+  if (tail) statements.push(tail);
+  return statements;
 }
 
 /** Membuat tabel catatan bila belum ada. Aman dipanggil berkali-kali. */
@@ -327,7 +473,11 @@ async function runMigrations(sequelize) {
     const querySql = isPostgres && migration.pgSql ? migration.pgSql : migration.sql;
     try {
       if (querySql) {
-        await sequelize.query(querySql);
+        // Eksekusi per-statement agar error bisa dilokalisasi dan multi-
+        // statement (v14, v24, v28, v32, v33) tetap aman di PostgreSQL.
+        for (const statement of splitStatements(querySql)) {
+          await sequelize.query(statement);
+        }
       }
       await recordMigration(sequelize, migration.id);
       applied.push(migration.id);
@@ -437,4 +587,5 @@ module.exports = {
   getPendingMigrations,
   MIGRATIONS,
   LEDGER_TABLE,
+  splitStatements,
 };

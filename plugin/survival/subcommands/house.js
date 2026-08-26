@@ -174,7 +174,8 @@ module.exports = {
         });
         survival.rpg_state = rpgState;
         survival.changed("rpg_state", true);
-        await survival.save();
+        // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
+        await survival.save({ fields: ["rpg_state"] });
 
         return i.followUp(
           ephemeral(
@@ -197,7 +198,8 @@ module.exports = {
       const removed = rpgState.active_decorations.splice(index, 1)[0];
       survival.rpg_state = rpgState;
       survival.changed("rpg_state", true);
-      await survival.save();
+      // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
+      await survival.save({ fields: ["rpg_state"] });
 
       return i.followUp(
         ephemeral(

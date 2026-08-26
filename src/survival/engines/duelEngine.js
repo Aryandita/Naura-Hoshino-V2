@@ -185,11 +185,15 @@ function calculateElo(winnerMmr, loserMmr) {
 async function settle(p1Survival, p1State, p2Survival, p2State, isRanked = false) {
   p1Survival.hp = Math.max(MIN_HP_AFTER, Math.floor(p1State.hp));
   p1Survival.stamina = Math.max(MIN_STAMINA_AFTER, Math.floor(p1State.stamina));
-  await p1Survival.save();
+  // Rule 1.8: fields eksplisit agar tidak menimpa kolom numerik lain
+  // (mis. starFragments) yang sedang diubah proses konkuren.
+  await p1Survival.save({ fields: ["hp", "stamina"] });
 
   p2Survival.hp = Math.max(MIN_HP_AFTER, Math.floor(p2State.hp));
   p2Survival.stamina = Math.max(MIN_STAMINA_AFTER, Math.floor(p2State.stamina));
-  await p2Survival.save();
+  // Rule 1.8: fields eksplisit agar tidak menimpa kolom numerik lain
+  // (mis. starFragments) yang sedang diubah proses konkuren.
+  await p2Survival.save({ fields: ["hp", "stamina"] });
 
   let eloChanges = null;
 
@@ -213,13 +217,18 @@ async function settle(p1Survival, p1State, p2Survival, p2State, isRanked = false
     wRecord.matchesPlayed += 1;
     wRecord.wins += 1;
     wRecord.kills += 1;
-    await wRecord.save();
+    // Rule 1.8: fields eksplisit agar penulisan tidak menimpa kolom lain.
+    await wRecord.save({
+      fields: ["mmr", "matchesPlayed", "wins", "kills"],
+    });
 
     lRecord.mmr = Math.max(0, lRecord.mmr + loserDiff); // loserDiff is negative
     lRecord.matchesPlayed += 1;
     lRecord.losses += 1;
     lRecord.deaths += 1;
-    await lRecord.save();
+    await lRecord.save({
+      fields: ["mmr", "matchesPlayed", "losses", "deaths"],
+    });
 
     eloChanges = {
       winner: { id: winnerId, diff: winnerDiff, mmr: wRecord.mmr },

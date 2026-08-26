@@ -1,6 +1,7 @@
 // Lokasi: src/utils/CanvasUtils.js
 const { createCanvas, loadImage, GlobalFonts } = require("./canvasRuntime");
 const { logger } = require("../managers/logger");
+const ui = require("../config/ui");
 const path = require("path");
 const axios = require("axios");
 const leveling = require("../survival/engines/survivalLeveling");

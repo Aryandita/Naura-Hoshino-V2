@@ -8,6 +8,7 @@ const UserQuest = require("../../models/UserQuest");
 const cacheManager = require("../../managers/cacheManager");
 const items = require("../data/items");
 const leveling = require("../engines/survivalLeveling");
+const currency = require("../engines/currency");
 const { advanceTime, getTimeState } = require("./survivalTime");
 const { addItemsAtomic } = require("../engines/inventoryHelper");
 
@@ -47,6 +48,20 @@ const LOOT = {
     xp: 4,
   },
 };
+
+// Upah kecil berupa Naura Star Fragment untuk setiap sesi eksplorasi yang
+// berhasil. Grinding barang kini ikut memberi makan loop mata uang: kerja di
+// kota membayar Coin, eksplorasi alam membayar NSF, dan Coupon tetap langka.
+const NSF_REWARD = {
+  hutan: 30,
+  tambang: 80,
+  laut: 25,
+  sampah: 10,
+};
+
+// Peluang jarahan bonus per sesi. Sengaja rendah supaya tetap terasa sebagai
+// kejutan, bukan jatah pasti yang bisa dihitung pemain.
+const BONUS_LOOT_CHANCE = 0.2;
 
 // Mengais tanpa alat: hasilnya sedikit, tenaganya terkuras jauh lebih banyak.
 const BARE_HANDS = {
@@ -143,6 +158,21 @@ async function grantLoot({ userId, lokasi, bareHands, activePets }) {
     const pool = bonus.cat ? table.base.concat(table.cat) : table.base;
     const rolled = pool[Math.floor(Math.random() * pool.length)];
     gained.push({ id: rolled, name: nameOf(rolled), amount: 1 });
+
+    // Jarahan bonus: satu gulungan ekstra dari pool yang sama. Serigala
+    // membantu berburu di hutan sehingga peluangnya naik sedikit.
+    const bonusChance = lokasi === "hutan" && bonus.wolf
+      ? BONUS_LOOT_CHANCE + 0.1
+      : BONUS_LOOT_CHANCE;
+    if (Math.random() < bonusChance) {
+      const extra = pool[Math.floor(Math.random() * pool.length)];
+      gained.push({
+        id: extra,
+        name: nameOf(extra),
+        amount: 1,
+        bonus: true,
+      });
+    }
   }
 
   // Serigala membantu menghemat tenaga saat menambang.
@@ -160,6 +190,19 @@ async function grantLoot({ userId, lokasi, bareHands, activePets }) {
   // boleh kehilangan stamina untuk hasil yang tidak pernah masuk tas.
   const stored = await addItemsAtomic(userId, gained);
   if (!stored.ok) return { ok: false, reason: "write_failed" };
+
+  // Upah NSF lewat modul mata uang agar buff klan dan sinkronisasi cache
+  // diterapkan sama seperti sumber pendapatan lainnya.
+  let nsf = 0;
+  try {
+    nsf = await currency.reward(
+      currency.FRAGMENT,
+      { survival, profile },
+      NSF_REWARD[lokasi] || 10,
+    );
+  } catch (e) {
+    // Hadiah uang bersifat pemanis; kegagalannya tidak membatalkan jarahan.
+  }
 
   // Statistik dikurangi sebagai delta, bukan nilai absolut hasil pembacaan.
   // Nilai absolut membuat dua eksplorasi yang selesai berdekatan saling menimpa,
@@ -204,7 +247,16 @@ async function grantLoot({ userId, lokasi, bareHands, activePets }) {
       quest.lastReset = today;
     }
     quest.collectCount = (quest.collectCount || 0) + 1;
-    await quest.save();
+    // Rule 1.8: fields eksplisit karena cabang reset menulis lima kolom.
+    await quest.save({
+      fields: [
+        "workCount",
+        "dungeonKills",
+        "collectCount",
+        "isClaimed",
+        "lastReset",
+      ],
+    });
   } catch (e) {
     // Diamkan saja, hadiah utamanya sudah masuk.
   }
@@ -215,6 +267,7 @@ async function grantLoot({ userId, lokasi, bareHands, activePets }) {
     cost,
     hours,
     xp,
+    nsf,
     bareStory: bare ? bare.story : null,
     day: timeUpdate.day,
     hour: timeUpdate.hour,

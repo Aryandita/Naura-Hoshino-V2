@@ -5,20 +5,40 @@
 > [!IMPORTANT]
 > **Sumber kebenaran.** `package.json` adalah sumber kebenaran untuk versi dan daftar dependensi. `src/config/env.js` adalah sumber kebenaran untuk variabel environment. GitHub Issues adalah sumber kebenaran untuk pekerjaan yang sedang berjalan. `TODO.md` adalah sumber kebenaran untuk prioritas sprint. Dokumen ini berisi **aturan** yang tidak berubah tiap rilis. Bila ada tabel di dokumen ini yang bertentangan dengan file-file di atas, file itulah yang menang, dan tabel di sini harus diperbarui.
 
+## ⚡ Quick Reference (untuk agent)
+
+| Kebutuhan            | Perintah / Lokasi                                                                 |
+| -------------------- | --------------------------------------------------------------------------------- |
+| Jalankan bot         | `npm start` (prestart: build dashboard-v2 + migrasi) atau `npm run dev`           |
+| Test satu file       | `node --test src/utils/rateLimiter.test.js` (node:test, colocated dengan source)  |
+| Lint + format        | `npm run lint` · `npm run format:check`                                           |
+| Paritas bahasa       | `npm run locales:check:strict` (kamus di `assets/language/id.json` & `en.json`)   |
+| Integritas require   | `npm run test:requires`                                                           |
+| Tulis data user      | HANYA via `cacheManager` (increment/debit/mutateJson), bukan model langsung       |
+| Tulis GuildSettings  | HANYA via `guildSettingsService.updateGuildSetting()`                             |
+| Render Canvas        | HANYA via `src/canvas/canvasRuntime.js` -> `canvasWorkerPool.js` (enforce ESLint) |
+| Migrasi skema        | Eksklusif di `dbMigrator.js` bernomor + ledger; DILARANG ALTER TABLE di tempat lain |
+| UI respons command   | `buildContainerV2()` dari `NauraContainerBuilder.js`, struktur 5-lapisan          |
+
+Aturan mode-specific yang sudah didistilasi (non-obvious only): `.roo/rules-code/AGENTS.md`, `.roo/rules-debug/AGENTS.md`, `.roo/rules-ask/AGENTS.md`, `.roo/rules-architect/AGENTS.md`.
+
+Catatan akurasi dokumen: `prestart` saat ini juga menjalankan build dashboard-v2; script `check-em-dash` belum masuk CI meski disebut di bagian 1.4.
+
 ### Keputusan arsitektur yang sudah dikunci
 
-| Topik              | Keputusan                                                                                                                                                                       |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Versi Node         | `>= 24` di `engines`, README, dokumen ini, dan CI. Seragam, tanpa pengecualian.                                                                                                 |
-| Versi bot & engine | Keduanya `2.1.0`, dan harus sama di `package.json`, `README.md`, serta default `BOT_VERSION`/`ENGINE_VERSION`.                                                                  |
-| Polyglot Database  | **Multi-Database Ecosystem.** Supabase (PostgreSQL) untuk data relasional/transaksi, Redis untuk cache/invalidation, MongoDB untuk audit log/transkrip/AI chat, dan SQLite untuk fallback darurat.  |
-| Penyimpanan bahasa | **Per user.** `GuildSettings.language` hanya menjadi bahasa default saat user belum punya preferensi.                                                                           |
-| Strategi sharding  | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering. Lihat aturan 1.11.                                                           |
-| Worker Threads     | **Dedicated Canvas Worker Pool.** Rendering Canvas dialihkan ke `worker_threads` terpisah agar event loop bot tetap non-blocking.                                                |
-| Fallback SQLite    | **Dipertahankan** sebagai penyimpanan darurat saat Supabase dan Redis mati bersamaan.                                                                                           |
-| Alur PR            | **Satu PR per sprint.** Seluruh pekerjaan satu sprint menumpuk di satu branch, direview dan di-merge sekali saat sprint tuntas.                                                 |
-| Deploy di panel    | **Pterodactyl.** Perintah luar terkunci, jadi `CMD_RUN` tetap `npm start` dan urutan migrasi dijamin dari dalam `package.json` lewat `prestart`. Lihat 3.8.                     |
-| Mata uang kupon    | **Naura Coupon adalah mata uang paling langka.** Disimpan di kolom `UserSurvival.coupons`, bukan di dalam JSON `rpg_state`, agar bisa dipotong secara atomik.                   |
+| Topik              | Keputusan                                                                                                                                                                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Versi Node         | `>= 24` di `engines`, README, dokumen ini, dan CI. Seragam, tanpa pengecualian.                                                                                                                                                                                                    |
+| Versi bot & engine | Keduanya `2.1.0`, dan harus sama di `package.json`, `README.md`, serta default `BOT_VERSION`/`ENGINE_VERSION`.                                                                                                                                                                     |
+| Polyglot Database  | **Multi-Database Ecosystem.** Supabase (PostgreSQL) untuk data relasional/transaksi, Redis untuk cache/invalidation, MongoDB untuk audit log/transkrip/AI chat, dan SQLite untuk fallback darurat.                                                                                 |
+| Penyimpanan bahasa | **Per user.** `GuildSettings.language` hanya menjadi bahasa default saat user belum punya preferensi.                                                                                                                                                                              |
+| Strategi sharding  | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering. Lihat aturan 1.11.                                                                                                                                                              |
+| Worker Threads     | **Dedicated Canvas Worker Pool.** Rendering Canvas dialihkan ke `worker_threads` terpisah agar event loop bot tetap non-blocking.                                                                                                                                                  |
+| Fallback SQLite    | **Dipertahankan** sebagai penyimpanan darurat saat Supabase dan Redis mati bersamaan.                                                                                                                                                                                              |
+| Alur PR            | **Satu PR per sprint.** Seluruh pekerjaan satu sprint menumpuk di satu branch, direview dan di-merge sekali saat sprint tuntas.                                                                                                                                                    |
+| Deploy di panel    | **Pterodactyl.** Perintah luar terkunci, jadi `CMD_RUN` tetap `npm start` dan urutan migrasi dijamin dari dalam `package.json` lewat `prestart`. Lihat 3.8.                                                                                                                        |
+| Mata uang kupon    | **Naura Coupon adalah mata uang paling langka.** Disimpan di kolom `UserSurvival.coupons`, bukan di dalam JSON `rpg_state`, agar bisa dipotong secara atomik.                                                                                                                      |
+| Desain Survival    | **Sub-brand Naura Wilds (Hybrid Nature-Tech).** Seluruh UI survival memakai token dari `src/utils/survivalUIHelper.js`; detail visual ada di `DESIGN.md` bagian Survival RPG Design System.                                                                                        |
 | Prioritas kerja    | Sprint 0-16 sudah tuntas (Hardening, DX, Data Atomicity, Observabilitas, Ticketing, Gacha, Giveaway V2, Modular Setup, Apps Anywhere, AI RAG & Voice, RPG Barter/Pet, Automations, Advanced UX/UI Masterclass, Full Function Calling, Persistent AI Memory, AI Dungeon Master V2). |
 
 ---
@@ -94,6 +114,7 @@
 17. **Isolasi Alur Kerja Server Automation**, Eksekusi trigger dan action otomatisasi server pada `src/services/automationEngine.js` wajib divalidasi skemanya dan dijalankan secara aman agar tidak menimbulkan infinite feedback loop.
 18. **Standar Psikologi & Advanced UX/UI**, Setiap antarmuka interaktif wajib menerapkan prinsip psikologi UX (Smart Defaults, Goal Gradient, Reciprocity, IKEA Effect, Anchoring/Contrast, Peak-End Rule) serta standar Advanced UX/UI (Adaptive Display Modes, Smarter Predictive Search, Visual Step Timelines, Input Ergonomics, dan Color-Coding Hierarchy) via `src/utils/uxHelper.js`. Respon bot wajib menyebut nama personal pengguna (`{displayName}` / `{username}`) dan dilarang menggunakan panggilan generik seperti 'Master'. Seluruh emoji yang digunakan wajib terdaftar di `src/config/ui.js` / `emojis_base.js` agar dapat dikustomisasi secara terpusat.
 19. **Standar Function Calling & Persistent AI Memory**, Seluruh tool Function Calling wajib terpusat di `/src/ai/functionDispatcher.js` dengan deklarasi skema JSON valid (`type: "OBJECT"`). Loop pemanggilan tool di `geminiClient.js` wajib mendukung eksekusi berantai (maksimal 3 putaran). Ekstraksi memori AI jangka panjang (`AIMemory.extractAndSave`) wajib dieksekusi secara non-blocking di latar belakang tanpa menunda respons pesan Discord. Input durasi waktu wajib menggunakan parser aman (`safeParseDuration`) dengan regex fallback.
+20. **Standar Desain Survival (Naura Wilds)**, Seluruh antarmuka sistem survival (container, embed, canvas) wajib memakai token warna dan helper dari `/src/utils/survivalUIHelper.js` sesuai sub-brand Naura Wilds yang didefinisikan di `DESIGN.md`. Dilarang hardcode hex warna survival di dalam plugin. Bar vital wajib memakai threshold warna moss/amber/danger, panel pertarungan wajib aksen danger, dan footer wajib `ui.getFooter('survival')`.
 
 ## 1.4 Aturan Commit & Branching
 
@@ -195,6 +216,18 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 - **Container Manual (non-`buildContainerV2`)**, Jika membangun container secara manual (seperti `MusicUIManager.js`), WAJIB mengikuti struktur 5-lapisan di atas secara eksplisit menggunakan `separatorComp(true, 1)` dan `separatorComp(false, 1)` dari `NauraContainerBuilder.js`.
 - **Satu aksi utama per Section.** Jangan menumpuk banyak tombol primary dalam satu blok.
 
+### Aturan Desain Survival (Naura Wilds)
+
+> [!IMPORTANT]
+> Sistem survival memiliki sub-brand visual sendiri bernama **Naura Wilds** dengan pendekatan **Hybrid Nature-Tech**: fondasi tetap Cyber-Anime Glassmorphism, tetapi lapisan survival memakai palet earth-tone. Referensi lengkap ada di `DESIGN.md` bagian "Survival RPG Design System - Naura Wilds".
+
+- **Sumber Token Terpusat**, Semua warna survival (emerald, moss, amber, bark, river, danger), skala rarity item, dan helper bar vital bersumber eksklusif dari `src/utils/survivalUIHelper.js`. Jangan hardcode hex survival di plugin atau event handler.
+- **Palet Earth-Tone Wajib**, Panel survival memakai tinted glass hijau (`surface-glass-wilds`) dengan hairline hijau, bukan surface glass pink global. Warna primary pink global tidak boleh ditimpa oleh emerald di luar domain survival.
+- **Threshold Vital Otomatis**, Bar HP/Stamina/Hunger wajib memakai `buildVitalsBar()` dari `survivalUIHelper.js`: moss saat sehat (>50%), amber saat waspada (20-50%), danger saat kritis (<20%).
+- **Skala Rarity Konsisten**, Pill rarity inventory, gacha, shop, crafting, dan drop dungeon wajib memakai `getRarityColor()`: Common abu, Uncommon emerald, Rare biru, Epic ungu, Legendary gold, Mythic pink.
+- **Panel Pertarungan**, Dungeon, duel, world boss, dan coliseum wajib memakai aksen `wilds-danger` (#F87171) dengan log serangan maksimal 5 baris per respons.
+- **Footer & Canvas**, Footer respons survival wajib `ui.getFooter('survival')`. Render canvas survival wajib lewat `canvasWorkerPool.js` dengan dispose buffer, cache `canvas:*`, dan invalidasi via `smartInvalidateUserCanvas(userId)`.
+
 ### Aturan Embed Discord (Legacy)
 
 - Hanya digunakan untuk pesan loading sementara dan error inline.
@@ -209,6 +242,7 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 > Naura Hoshino V2 menerapkan arsitektur **Polyglot Persistence**, di mana masing-masing database memegang domain tanggung jawab yang terpisah dan terisolasi:
 
 ### 1.7.1 Supabase & PostgreSQL (Relasional & Transaksional Utama)
+
 - **ALTER TABLE DILARANG di `dbManager.js`**, Semua migration kolom (`ADD COLUMN`, `MODIFY COLUMN`, `DROP COLUMN`, dll.) harus berada **eksklusif** di `dbMigrator.js` dengan sistem versi bernomor. Tidak boleh ada raw `sequelize.query('ALTER TABLE ...')` di dalam `connectToDatabase()`.
 - **`sync({ alter: true })` DILARANG di production.** Produksi memakai `sync({ alter: false })`, development memakai `sync({ alter: { drop: false } })`. Perubahan kolom selalu lewat migrator.
 - **Migrasi adalah langkah terpisah yang dijamin npm, bukan bagian dari boot.** Script `prestart` di `package.json` menjalankan `node scripts/migrate.js` sebelum `start`. Bila migrasi gagal, prosesnya keluar dengan kode 1 dan bot tidak pernah menyala, sehingga tidak mungkin berjalan di atas skema separuh jalan.
@@ -217,17 +251,20 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 - **Dukungan SDK Multi-Akses**, Selain Sequelize ORM untuk relasi data kompleks, modul `supabaseManager.js` menyediakan instance JS Client `@supabase/supabase-js` untuk operasi realtime, storage, dan query langsung.
 
 ### 1.7.2 MongoDB (Dokumen Terdistribusi & Log Skala Besar)
+
 - **Folder Model Khusus**, Semua definisi skema Mongoose wajib berada di `/src/models/mongo/`.
 - **Non-Blocking Async Logging**, Operasi penulisan ke MongoDB (seperti `AiChatHistory`, `CommandAuditLog`, dan `TicketTranscript`) tidak boleh memblokir alur interaksi Discord utama. Jalankan secara async dengan penanganan error internal.
-- **Koneksi Terkelola**, Akses koneksi MongoDB wajib melalui `mongoManager.js` yang menyediakan *safe fallback* dan reconnect otomatis bila koneksi terputus.
+- **Koneksi Terkelola**, Akses koneksi MongoDB wajib melalui `mongoManager.js` yang menyediakan _safe fallback_ dan reconnect otomatis bila koneksi terputus.
 - **Indeks Efisien**, Setiap skema dokumen MongoDB wajib memiliki indeks komposit pada `guildId`, `userId`, atau `createdAt` untuk menjaga performa kueri log.
 
 ### 1.7.3 Redis (Cache Berkecepatan Tinggi & Pesan Terdistribusi)
+
 - **Key Prefixing Wajib**, Semua key di Redis wajib memiliki namespace yang jelas: `cache:*` (entitas DB), `canvas:*` (buffer render), `ratelimit:*` (penjaga request), dan `session:*` (dashboard web).
-- **TTL Wajib**, Setiap entri cache wajib menyertakan TTL (*Time to Live*) untuk mencegah akumulasi memori yang tidak terkontrol.
+- **TTL Wajib**, Setiap entri cache wajib menyertakan TTL (_Time to Live_) untuk mencegah akumulasi memori yang tidak terkontrol.
 - **Invalidasi Shard Terkoordinasi**, Pembersihan cache lintas proses/shard wajib disiarkan melalui channel Redis Pub/Sub `cache:invalidate`.
 
 ### 1.7.4 SQLite (Penyimpanan Darurat Offline)
+
 - **Fallback SQLite wajib dipertahankan** sebagai penyimpanan darurat saat Supabase dan Redis mati bersamaan. Karena Node dipatok `>= 24`, jalur ini memakai modul bawaan `node:sqlite`.
 - Data darurat yang tertulis ke SQLite akan disinkronkan kembali secara otomatis ke Supabase melalui `syncFallbackToMySQL()` setelah koneksi remote pulih.
 
@@ -418,6 +455,7 @@ Naura-Hoshino-V2/
 │   ├── utils/                  #    Stateless Helpers & Utilities
 │   │   ├── NauraContainerBuilder.js # Components V2 builder
 │   │   ├── componentBudget.js  #       Penjaga batas payload Discord
+│   │   ├── survivalUIHelper.js #       Token & helper UI sub-brand Naura Wilds
 │   │   ├── translateHelper.js  #       Helper translasi multi-provider
 │   │   └── ...
 │   │
@@ -511,11 +549,13 @@ sequenceDiagram
 ```mermaid
 graph LR
     A["/play command"] --> B["musicManager (Poru)"]
-    B --> S{"Spotify link?"}
-    S -->|Ya| SP["spotifyHelper.resolveSpotify (ytmsearch:Artis - Judul)"]
-    S -->|Tidak| C["ytmsearch / scsearch langsung"]
-    SP --> C
-    C --> D["Lavalink Node v4"]
+    B --> R["spotifyResolver.resolveSpotifyQuery"]
+    R -->|URL/prefix Spotify: coba native dulu| LAVA["LavaSrc plugin di node (metadata + mirror ISRC/judul)"]
+    R -->|node tanpa LavaSrc: translasi manual| FB["Web API Spotify -> ytsearch ISRC -> Artis - Judul"]
+    R -->|Bukan Spotify| C["passthrough ke poru.resolve"]
+    FB --> C
+    LAVA --> D["Lavalink Node v4 (+ youtube-source)"]
+    C --> D
     D --> E["Audio Stream"]
     B --> F["MusicUIManager"]
     F --> G["Components V2 Container Panel (accent = warna platform)"]
@@ -527,7 +567,7 @@ graph LR
 ```
 
 > [!NOTE]
-> Arah pengembangan (Sprint 4): resolusi Spotify pindah ke plugin **LavaSrc** dengan pencarian berbasis ISRC, autocomplete `/play` memakai **LavaSearch**, lirik memakai **LavaLyrics** (menggantikan scraping `lyrics-finder`), dan **SponsorBlock** untuk melompati segmen sponsor. Sumber audio harus punya fallback selain YouTube.
+> Resolusi Spotify kini dua lapis: jalur utama native via plugin **LavaSrc** di node (`docker/lavalink/application.yml`), dan bila node tidak punya plugin, `src/music/spotifyResolver.js` menerjemahkan manual via Web API Spotify menjadi query `ytsearch:"{ISRC}"` lalu `ytsearch:{Artis} - {Judul}`. Autocomplete `/play` direncanakan memakai **LavaSearch**, lirik memakai **LavaLyrics**, dan **SponsorBlock** untuk melompati segmen sponsor. Sumber audio harus punya fallback selain YouTube.
 
 ## 2.6 Alur Softban Scammer Trap (Honeypot Channel)
 
@@ -605,78 +645,78 @@ Naura Hoshino V2 mengadopsi pendekatan **Polyglot Persistence** yang membagi pen
 
 ### Model Utama Sequelize (Supabase / PostgreSQL)
 
-| Model             | Tabel               | Fungsi                                       | Key Fields                                                                                                |
-| ----------------- | ------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `UserProfile`     | `user_profiles`     | Master data user, termasuk preferensi bahasa | `userId`, `economy_wallet`, `economy_bank`, `inventory` (JSON), `cooldowns` (JSON), `language`            |
-| `UserLeveling`    | `user_leveling`     | XP & level per-guild                         | `userId`, `guildId`, `xp`, `level`, `totalXp`                                                             |
-| `UserSurvival`    | `UserSurvivals`     | RPG stats & mata uang langka                 | `userId`, `starFragments`, `coupons`, `hp`, `stamina`, `rpg_state` (JSON)                                 |
-| `GuildSettings`   | `guild_settings`    | Config per-server                            | `guildId`, `language` (default guild saja), `settings` (JSON: softbanChannelId, automod, greetings, dll.) |
-| `UserPlaylist`    | `user_playlists`    | Cloud playlist                               | `userId`, `name`, `tracks` (JSON)                                                                         |
-| `PremiumVoucher`  | `premium_vouchers`  | Voucher VIP                                  | `code`, `duration`, `usedBy`                                                                              |
-| `UserPet`         | `user_pets`         | Virtual pet                                  | `userId`, `name`, `type`, `level`, `hunger`, `happiness`                                                  |
-| `UserFriend`      | `user_friends`      | Sistem pertemanan                            | `userId`, `friendId`, `status`                                                                            |
-| `UserQuest`       | `user_quests`       | Quest tracking                               | `userId`, `workCount`, `dungeonKills`, `collectCount`, `isClaimed`                                        |
-| `ModMail`         | `modmails`          | Tiket modmail (n!modmail, Private Thread)    | `userId`, `guildId`, `channelId`, `closed`                                                                |
-| `UserTicket`      | `user_tickets`      | Tiket dukungan via /ticket setup + thread    | `userId`, `guildId`, `ticketId` (Thread ID), `topic`, `status`, `transcriptPath`                          |
+| Model             | Tabel               | Fungsi                                       | Key Fields                                                                                                   |
+| ----------------- | ------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `UserProfile`     | `user_profiles`     | Master data user, termasuk preferensi bahasa | `userId`, `economy_wallet`, `economy_bank`, `inventory` (JSON), `cooldowns` (JSON), `language`               |
+| `UserLeveling`    | `user_leveling`     | XP & level per-guild                         | `userId`, `guildId`, `xp`, `level`, `totalXp`                                                                |
+| `UserSurvival`    | `UserSurvivals`     | RPG stats & mata uang langka                 | `userId`, `starFragments`, `coupons`, `hp`, `stamina`, `rpg_state` (JSON)                                    |
+| `GuildSettings`   | `guild_settings`    | Config per-server                            | `guildId`, `language` (default guild saja), `settings` (JSON: softbanChannelId, automod, greetings, dll.)    |
+| `UserPlaylist`    | `user_playlists`    | Cloud playlist                               | `userId`, `name`, `tracks` (JSON)                                                                            |
+| `PremiumVoucher`  | `premium_vouchers`  | Voucher VIP                                  | `code`, `duration`, `usedBy`                                                                                 |
+| `UserPet`         | `user_pets`         | Virtual pet                                  | `userId`, `name`, `type`, `level`, `hunger`, `happiness`                                                     |
+| `UserFriend`      | `user_friends`      | Sistem pertemanan                            | `userId`, `friendId`, `status`                                                                               |
+| `UserQuest`       | `user_quests`       | Quest tracking                               | `userId`, `workCount`, `dungeonKills`, `collectCount`, `isClaimed`                                           |
+| `ModMail`         | `modmails`          | Tiket modmail (n!modmail, Private Thread)    | `userId`, `guildId`, `channelId`, `closed`                                                                   |
+| `UserTicket`      | `user_tickets`      | Tiket dukungan via /ticket setup + thread    | `userId`, `guildId`, `ticketId` (Thread ID), `topic`, `status`, `transcriptPath`                             |
 | `Giveaway`        | `giveaways`         | Data giveaway (V2: berbasis peserta)         | `messageId`, `channelId`, `prize`, `endTime`, `requirements` (JSON), `participants` (JSON), `winners` (JSON) |
-| `SocialAlert`     | `social_alerts`     | RSS/social notif                             | `guildId`, `platform`, `channelId`, `url`                                                                 |
-| `CanvasAsset`     | `canvas_assets`     | Aset canvas kustom                           | `name`, `type`, `url`, `price`, `isPremiumOnly`                                                           |
-| `CryptoMarket`    | `crypto_markets`    | Pasar kripto virtual                         | `symbol`, `price`, `change`                                                                               |
-| `GameItem`        | `game_items`        | Item database game                           | `id`, `name`, `category`, `rarity`, `attributes`                                                          |
-| `GuildClan`       | `guild_clans`       | Sistem klan server                           | `guildId`, `clanId`, `name`, `members`, `level`                                                           |
-| `StickyRole`      | `sticky_roles`      | Sticky roles saat rejoin                     | `userId`, `guildId`, `roleIds`                                                                            |
-| `StoryProgress`   | `story_progresses`  | Progress cerita RPG                          | `userId`, `chapterId`, `flags`                                                                            |
-| `UserAchievement` | `user_achievements` | Sistem pencapaian                            | `userId`, `achievementId`, `unlockedAt`                                                                   |
-| `UserBirthday`    | `user_birthdays`    | Tanggal ulang tahun                          | `userId`, `birthday`, `timezone`                                                                          |
-| `UserCard`        | `user_cards`        | Kartu koleksi                                | `userId`, `cardId`, `count`                                                                               |
-| `UserChild`       | `user_children`     | Adopsi anak virtual                          | `userId`, `name`, `age`, `happiness`                                                                      |
-| `UserCosmetic`    | `user_cosmetics`    | Kosmetik & skin                              | `userId`, `assetId`, `equipped`                                                                           |
-| `UserCrypto`      | `user_cryptos`      | Portofolio kripto virtual                    | `userId`, `symbol`, `amount`, `avgBuyPrice`                                                               |
-| `UserFarm`        | `user_farms`        | Data ladang farming                          | `userId`, `plots`, `lastHarvest`                                                                          |
-| `UserNPC`         | `user_npcs`         | Relasi NPC per-user                          | `userId`, `npcId`, `affection`, `lastInteract`                                                            |
-| `UserReminder`    | `user_reminders`    | Pengingat terjadwal                          | `userId`, `channelId`, `message`, `remindAt`                                                              |
-| `UserWarn`        | `user_warns`        | Riwayat peringatan moderasi                  | `userId`, `guildId`, `reason`, `moderatorId`                                                              |
+| `SocialAlert`     | `social_alerts`     | RSS/social notif                             | `guildId`, `platform`, `channelId`, `url`                                                                    |
+| `CanvasAsset`     | `canvas_assets`     | Aset canvas kustom                           | `name`, `type`, `url`, `price`, `isPremiumOnly`                                                              |
+| `CryptoMarket`    | `crypto_markets`    | Pasar kripto virtual                         | `symbol`, `price`, `change`                                                                                  |
+| `GameItem`        | `game_items`        | Item database game                           | `id`, `name`, `category`, `rarity`, `attributes`                                                             |
+| `GuildClan`       | `guild_clans`       | Sistem klan server                           | `guildId`, `clanId`, `name`, `members`, `level`                                                              |
+| `StickyRole`      | `sticky_roles`      | Sticky roles saat rejoin                     | `userId`, `guildId`, `roleIds`                                                                               |
+| `StoryProgress`   | `story_progresses`  | Progress cerita RPG                          | `userId`, `chapterId`, `flags`                                                                               |
+| `UserAchievement` | `user_achievements` | Sistem pencapaian                            | `userId`, `achievementId`, `unlockedAt`                                                                      |
+| `UserBirthday`    | `user_birthdays`    | Tanggal ulang tahun                          | `userId`, `birthday`, `timezone`                                                                             |
+| `UserCard`        | `user_cards`        | Kartu koleksi                                | `userId`, `cardId`, `count`                                                                                  |
+| `UserChild`       | `user_children`     | Adopsi anak virtual                          | `userId`, `name`, `age`, `happiness`                                                                         |
+| `UserCosmetic`    | `user_cosmetics`    | Kosmetik & skin                              | `userId`, `assetId`, `equipped`                                                                              |
+| `UserCrypto`      | `user_cryptos`      | Portofolio kripto virtual                    | `userId`, `symbol`, `amount`, `avgBuyPrice`                                                                  |
+| `UserFarm`        | `user_farms`        | Data ladang farming                          | `userId`, `plots`, `lastHarvest`                                                                             |
+| `UserNPC`         | `user_npcs`         | Relasi NPC per-user                          | `userId`, `npcId`, `affection`, `lastInteract`                                                               |
+| `UserReminder`    | `user_reminders`    | Pengingat terjadwal                          | `userId`, `channelId`, `message`, `remindAt`                                                                 |
+| `UserWarn`        | `user_warns`        | Riwayat peringatan moderasi                  | `userId`, `guildId`, `reason`, `moderatorId`                                                                 |
 
 ### Model Dokumen Mongoose (MongoDB)
 
-| Model               | Collection          | Fungsi                                          | Key Fields                                                                 |
-| ------------------- | ------------------- | ----------------------------------------------- | -------------------------------------------------------------------------- |
-| `AiChatHistory`     | `ai_chat_histories` | Riwayat percakapan sesi AI interaktif per-user  | `userId`, `guildId`, `channelId`, `messages` (Array: role, content, time)  |
-| `CommandAuditLog`   | `command_audit_logs`| Jejak audit eksekusi slash command & parameter  | `commandName`, `userId`, `guildId`, `options` (Mixed), `executionTimeMs`   |
-| `TicketTranscript`  | `ticket_transcripts`| Transkrip lengkap percakapan tiket format HTML  | `ticketId`, `guildId`, `userId`, `htmlContent`, `closedBy`, `closedAt`     |
+| Model              | Collection           | Fungsi                                         | Key Fields                                                                |
+| ------------------ | -------------------- | ---------------------------------------------- | ------------------------------------------------------------------------- |
+| `AiChatHistory`    | `ai_chat_histories`  | Riwayat percakapan sesi AI interaktif per-user | `userId`, `guildId`, `channelId`, `messages` (Array: role, content, time) |
+| `CommandAuditLog`  | `command_audit_logs` | Jejak audit eksekusi slash command & parameter | `commandName`, `userId`, `guildId`, `options` (Mixed), `executionTimeMs`  |
+| `TicketTranscript` | `ticket_transcripts` | Transkrip lengkap percakapan tiket format HTML | `ticketId`, `guildId`, `userId`, `htmlContent`, `closedBy`, `closedAt`    |
 
 ### Pola Penyimpanan Redis
 
-| Namespace       | Tipe Data | Fungsi                                             | TTL Default      |
-| --------------- | --------- | -------------------------------------------------- | ---------------- |
-| `cache:user:*`  | Hash/JSON | Cache entitas profil user & leveling               | 10 Menit         |
-| `cache:guild:*` | Hash/JSON | Cache pengaturan server (`GuildSettings`)          | 5 Menit          |
-| `canvas:*`      | Buffer    | Cache grafis kartu SSR/profil sebelum invalidasi   | 1 Jam            |
-| `ratelimit:*`   | String    | Counter sliding window proteksi rate limit API/Bot | 1 Menit          |
-| `session:*`     | String    | Sesi login OAuth2 Web Dashboard                    | 24 Jam           |
+| Namespace       | Tipe Data | Fungsi                                             | TTL Default |
+| --------------- | --------- | -------------------------------------------------- | ----------- |
+| `cache:user:*`  | Hash/JSON | Cache entitas profil user & leveling               | 10 Menit    |
+| `cache:guild:*` | Hash/JSON | Cache pengaturan server (`GuildSettings`)          | 5 Menit     |
+| `canvas:*`      | Buffer    | Cache grafis kartu SSR/profil sebelum invalidasi   | 1 Jam       |
+| `ratelimit:*`   | String    | Counter sliding window proteksi rate limit API/Bot | 1 Menit     |
+| `session:*`     | String    | Sesi login OAuth2 Web Dashboard                    | 24 Jam      |
 
 ### Daftar Migrasi Bernomor
 
-| ID                              | Fungsi                                                                    |
-| ------------------------------- | ------------------------------------------------------------------------- |
-| `v1_add_mannersPoint`           | Kolom poin sopan santun                                                   |
-| `v2_add_dailyNotify`            | Kolom pengingat daily                                                     |
-| `v3_add_economy_deposit`        | Kolom JSON deposito bank                                                  |
-| `v4_add_economy_investments`    | Kolom JSON portofolio investasi                                           |
-| `v5_add_coupons`                | Kolom `coupons` di `UserSurvivals`                                        |
-| `v6_move_coupons_to_column`     | Memindahkan kupon lama dari JSON `rpg_state` ke kolom baru                |
-| `v7_add_user_strikes`           | Model `UserStrike`: riwayat peringatan moderasi + eskalasi otomatis       |
-| `v8_add_sticky_roles`           | Model `StickyRole`: simpan role saat rejoin                               |
-| `v9_add_role_lease`             | Model `RoleLease`: sewa role berbayar dengan `expiresAt`                  |
-| `v10_add_social_alert`          | Model `SocialAlert`: RSS & notif sosial per guild                         |
-| `v11_add_market_auction`        | Model `MarketAuction`: tabel lelang lintas server                         |
-| `v12_add_user_npc`              | Model `UserNPC`: relasi NPC per-user + kolom afeksi                       |
-| `v13_add_story_progress`        | Model `StoryProgress`: progress cerita RPG multi-chapter                  |
-| `v14_add_user_achievement`      | Model `UserAchievement`: sistem pencapaian user                           |
-| `v15_add_user_birthday`         | Model `UserBirthday`: tanggal lahir + timezone user                       |
-| `v16_add_user_cosmetic`         | Model `UserCosmetic`: skin & kosmetik yang di-equip                       |
-| `v17_add_user_farm`             | Model `UserFarm`: ladang farming + jadwal panen                           |
-| `v18_add_giveaway_participants` | Kolom `requirements`, `participants`, `winners` di tabel `giveaways`      |
+| ID                              | Fungsi                                                               |
+| ------------------------------- | -------------------------------------------------------------------- |
+| `v1_add_mannersPoint`           | Kolom poin sopan santun                                              |
+| `v2_add_dailyNotify`            | Kolom pengingat daily                                                |
+| `v3_add_economy_deposit`        | Kolom JSON deposito bank                                             |
+| `v4_add_economy_investments`    | Kolom JSON portofolio investasi                                      |
+| `v5_add_coupons`                | Kolom `coupons` di `UserSurvivals`                                   |
+| `v6_move_coupons_to_column`     | Memindahkan kupon lama dari JSON `rpg_state` ke kolom baru           |
+| `v7_add_user_strikes`           | Model `UserStrike`: riwayat peringatan moderasi + eskalasi otomatis  |
+| `v8_add_sticky_roles`           | Model `StickyRole`: simpan role saat rejoin                          |
+| `v9_add_role_lease`             | Model `RoleLease`: sewa role berbayar dengan `expiresAt`             |
+| `v10_add_social_alert`          | Model `SocialAlert`: RSS & notif sosial per guild                    |
+| `v11_add_market_auction`        | Model `MarketAuction`: tabel lelang lintas server                    |
+| `v12_add_user_npc`              | Model `UserNPC`: relasi NPC per-user + kolom afeksi                  |
+| `v13_add_story_progress`        | Model `StoryProgress`: progress cerita RPG multi-chapter             |
+| `v14_add_user_achievement`      | Model `UserAchievement`: sistem pencapaian user                      |
+| `v15_add_user_birthday`         | Model `UserBirthday`: tanggal lahir + timezone user                  |
+| `v16_add_user_cosmetic`         | Model `UserCosmetic`: skin & kosmetik yang di-equip                  |
+| `v17_add_user_farm`             | Model `UserFarm`: ladang farming + jadwal panen                      |
+| `v18_add_giveaway_participants` | Kolom `requirements`, `participants`, `winners` di tabel `giveaways` |
 
 > [!CAUTION]
 > `v6_move_coupons_to_column` adalah migrasi **data** yang menambah nilai, bukan sekadar perubahan skema. Menjalankannya dua kali akan menggandakan kupon setiap pemain. Ia aman hanya karena tercatat di `schema_migrations`, dan ada test yang menjaga sifat itu. Perlakukan setiap migrasi data serupa dengan kehati-hatian yang sama.
@@ -759,30 +799,30 @@ Naura Hoshino V2 mengadopsi pendekatan **Polyglot Persistence** yang membagi pen
 
 ### Relational Database (Supabase & PostgreSQL)
 
-| Variable              | Wajib | Default                                         | Deskripsi                                                                           |
-| --------------------- | ----- | ----------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `SUPABASE_URL`        | ❌    | `https://ceqkjzvrxyifxzgxtkig.supabase.co`      | URL REST/API project Supabase                                                       |
-| `SUPABASE_KEY`        | ❌    | `sb_publishable_9gd0-5FflbVgYPCd7WGAwQ_dJLMxyRX`| Anon / Publishable key project Supabase                                             |
-| `SUPABASE_PROJECT_ID` | ❌    | `ceqkjzvrxyifxzgxtkig`                          | Identifier unik project Supabase                                                    |
-| `DATABASE_URL`        | ❌    | -                                               | PostgreSQL connection URI (opsional, jika menggunakan direct URI / pooler)          |
-| `DB_HOST`             | ❌    | `db.ceqkjzvrxyifxzgxtkig.supabase.co`           | Host database PostgreSQL / Supabase                                                 |
-| `DB_PORT`             | ❌    | `5432`                                          | Port database PostgreSQL (5432) atau Session Pooler (6543)                          |
-| `DB_USER`             | ❌    | `postgres`                                      | Username database                                                                   |
-| `DB_PASSWORD`         | ❌    | -                                               | Password database Supabase                                                          |
-| `DB_NAME`             | ❌    | `postgres`                                      | Nama database                                                                       |
-| `DB_SSL`              | ❌    | `true`                                          | Mengaktifkan SSL enkripsi untuk koneksi cloud Supabase                              |
-| `DB_POOL_BUDGET`      | ❌    | `80`                                            | Total koneksi untuk seluruh shard, dibagi jumlah shard                              |
-| `DB_POOL_MAX`         | ❌    | -                                               | Penimpa manual `pool.max` per proses                                                |
-| `SKIP_DB_MIGRATE`     | ❌    | -                                               | Pintu darurat. `1`, `true`, atau `yes` melewati migrasi saat boot. Jangan permanen. |
+| Variable              | Wajib | Default                                          | Deskripsi                                                                           |
+| --------------------- | ----- | ------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `SUPABASE_URL`        | ❌    | `https://ceqkjzvrxyifxzgxtkig.supabase.co`       | URL REST/API project Supabase                                                       |
+| `SUPABASE_KEY`        | ❌    | `sb_publishable_9gd0-5FflbVgYPCd7WGAwQ_dJLMxyRX` | Anon / Publishable key project Supabase                                             |
+| `SUPABASE_PROJECT_ID` | ❌    | `ceqkjzvrxyifxzgxtkig`                           | Identifier unik project Supabase                                                    |
+| `DATABASE_URL`        | ❌    | -                                                | PostgreSQL connection URI (opsional, jika menggunakan direct URI / pooler)          |
+| `DB_HOST`             | ❌    | `db.ceqkjzvrxyifxzgxtkig.supabase.co`            | Host database PostgreSQL / Supabase                                                 |
+| `DB_PORT`             | ❌    | `5432`                                           | Port database PostgreSQL (5432) atau Session Pooler (6543)                          |
+| `DB_USER`             | ❌    | `postgres`                                       | Username database                                                                   |
+| `DB_PASSWORD`         | ❌    | -                                                | Password database Supabase                                                          |
+| `DB_NAME`             | ❌    | `postgres`                                       | Nama database                                                                       |
+| `DB_SSL`              | ❌    | `true`                                           | Mengaktifkan SSL enkripsi untuk koneksi cloud Supabase                              |
+| `DB_POOL_BUDGET`      | ❌    | `80`                                             | Total koneksi untuk seluruh shard, dibagi jumlah shard                              |
+| `DB_POOL_MAX`         | ❌    | -                                                | Penimpa manual `pool.max` per proses                                                |
+| `SKIP_DB_MIGRATE`     | ❌    | -                                                | Pintu darurat. `1`, `true`, atau `yes` melewati migrasi saat boot. Jangan permanen. |
 
 > [!NOTE]
 > Di dalam kode, nilai-nilai ini diakses melalui `src/config/env.js` dan `src/config/database.js`. Bila host database remote tidak dapat dijangkau, bot otomatis memakai fallback SQLite lokal (`naura_fallback.sqlite`).
 
 ### Document Database (MongoDB)
 
-| Variable    | Wajib | Default                                         | Deskripsi                                                  |
-| ----------- | ----- | ----------------------------------------------- | ---------------------------------------------------------- |
-| `MONGO_URI` | ❌    | `mongodb://127.0.0.1:27017/naura_hoshino`       | Connection string MongoDB untuk log, AI history & transkrip |
+| Variable    | Wajib | Default                                   | Deskripsi                                                   |
+| ----------- | ----- | ----------------------------------------- | ----------------------------------------------------------- |
+| `MONGO_URI` | ❌    | `mongodb://127.0.0.1:27017/naura_hoshino` | Connection string MongoDB untuk log, AI history & transkrip |
 
 ### Web Dashboard & OAuth2
 
@@ -897,9 +937,9 @@ Naura Hoshino V2 mengadopsi pendekatan **Polyglot Persistence** yang membagi pen
 | `axios`                 | ^1.6.8           | HTTP client                                  |
 | `fast-glob`             | ^3.3.3           | File pattern matching                        |
 | `node-cron`             | ^4.6.0           | Cron job scheduler                           |
-| `msedge-tts`          | ^1.1.0           | Text-to-speech                               |
-| `ffmpeg-static`       | ^5.2.0           | Binary FFmpeg bawaan                         |
-| `eslint` / `prettier` | ^10.4.1 / ^3.8.3 | Linting & formatting (devDependencies)       |
+| `msedge-tts`            | ^1.1.0           | Text-to-speech                               |
+| `ffmpeg-static`         | ^5.2.0           | Binary FFmpeg bawaan                         |
+| `eslint` / `prettier`   | ^10.4.1 / ^3.8.3 | Linting & formatting (devDependencies)       |
 
 > [!CAUTION]
 > **Dependensi yang dijadwalkan dihapus (Sprint 2).** Jangan tambahkan pemakaian baru pada paket-paket ini: `node-fetch` dan `isomorphic-unfetch` (Node 24 sudah punya `fetch` global), `dotenv` (gunakan `process.loadEnvFile()`), `express-basic-auth` (cukup satu model autentikasi), `yt-dlp-wrap` (Lavalink sudah menangani sumber audio), serta `@discordjs/voice` dan `libsodium-wrappers` bila tidak ada voice di luar Lavalink.
@@ -962,19 +1002,19 @@ Placeholder menggunakan format `{variable}` yang di-replace saat runtime. Kunci 
 
 Dashboard berjalan di **port 3070** (default) menggunakan Express.js, sementara webhook monetisasi mendengarkan di **port 3071** yang terpisah:
 
-| Endpoint                 | Method | Fungsi                                                               |
-| ------------------------ | ------ | -------------------------------------------------------------------- |
-| `/`                      | GET    | Landing page dashboard                                               |
-| `/auth/discord`          | GET    | OAuth2 login via Discord                                             |
-| `/auth/discord/callback` | GET    | OAuth2 callback handler                                              |
-| `/api/stats`             | GET    | Bot statistics (JSON)                                                |
-| `/api/health`            | GET    | Health check: status MySQL, Redis, Lavalink (selesai Sprint 3)       |
-| `/api/me/persona`        | POST   | Update AI persona per-user (premium, disimpan per user bukan guild)  |
-| `/api/tickets/me`        | GET    | Riwayat tiket support milik user yang sedang login                   |
-| `/api/webhook/health`    | GET    | Health check server webhook                                          |
-| `/api/webhook/saweria`   | POST   | Saweria donation webhook                                             |
-| `/api/webhook/trakteer`  | POST   | Trakteer donation webhook                                            |
-| `/api/webhook/vote`      | POST   | Top.gg vote webhook                                                  |
+| Endpoint                 | Method | Fungsi                                                              |
+| ------------------------ | ------ | ------------------------------------------------------------------- |
+| `/`                      | GET    | Landing page dashboard                                              |
+| `/auth/discord`          | GET    | OAuth2 login via Discord                                            |
+| `/auth/discord/callback` | GET    | OAuth2 callback handler                                             |
+| `/api/stats`             | GET    | Bot statistics (JSON)                                               |
+| `/api/health`            | GET    | Health check: status MySQL, Redis, Lavalink (selesai Sprint 3)      |
+| `/api/me/persona`        | POST   | Update AI persona per-user (premium, disimpan per user bukan guild) |
+| `/api/tickets/me`        | GET    | Riwayat tiket support milik user yang sedang login                  |
+| `/api/webhook/health`    | GET    | Health check server webhook                                         |
+| `/api/webhook/saweria`   | POST   | Saweria donation webhook                                            |
+| `/api/webhook/trakteer`  | POST   | Trakteer donation webhook                                           |
+| `/api/webhook/vote`      | POST   | Top.gg vote webhook                                                 |
 
 Dashboard menggunakan **Socket.IO** untuk real-time updates pada metrik telemetri.
 

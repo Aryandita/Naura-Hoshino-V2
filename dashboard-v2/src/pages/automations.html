@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Automation Builder | Naura OS</title>
+    <link rel="stylesheet" href="/vendor/tailwind-built.css">
+    <script src="/vendor/naura-ui.js"></script>
+</head>
+<body class="min-h-screen p-4 md:p-8 flex flex-col items-center bg-animated theme-none" id="mainBody">
+    <div class="w-full max-w-5xl animate-fade-in">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-4 border-b border-[var(--color-hairline)] gap-4">
+            <div>
+                <h1 class="text-3xl font-black font-cyber text-glow tracking-wider text-white flex items-center gap-3">
+                    <i class="fa-solid fa-wand-magic-sparkles text-pink-400 animate-pulse"></i> AUTOMATION BUILDER
+                </h1>
+                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-cyber mt-1">Alur Kerja & Triggers Cerdas Server</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="/" class="btn-discord px-5 py-2.5 text-xs font-cyber tracking-widest uppercase bg-transparent border border-[var(--color-hairline)] text-gray-300 hover:text-white hover:border-[var(--color-primary-glow)] hover:bg-[var(--color-surface-glass)]">
+                    <i class="fa-solid fa-arrow-left mr-2"></i><span>Kembali</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Workflow Canvas Container -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Left: Flow List -->
+            <div class="telemetry-card md:col-span-1">
+                <div class="flex items-center justify-between mb-4 border-b border-[var(--color-hairline)] pb-2">
+                    <h2 class="font-cyber font-bold text-sm text-pink-300 uppercase tracking-wider">Daftar Workflow</h2>
+                    <button id="btnNewFlow" class="px-2 py-1 bg-pink-500 hover:bg-pink-600 rounded text-xs text-white font-cyber">+ Baru</button>
+                </div>
+                <div id="flowList" class="space-y-3">
+                    <div class="p-3 bg-[var(--color-surface-glass)] border border-[var(--color-primary-glow)] rounded-lg cursor-pointer">
+                        <div class="text-xs font-cyber font-bold text-white">✨ Auto-Role Member Baru</div>
+                        <div class="text-[10px] text-gray-400 mt-1">Trigger: Member Join ➔ Add Role</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Flow Designer -->
+            <div class="telemetry-card md:col-span-2">
+                <h2 class="font-cyber font-bold text-sm text-pink-300 uppercase tracking-wider mb-4 border-b border-[var(--color-hairline)] pb-2">Editor Alur Kerja</h2>
+                
+                <div class="space-y-4">
+                    <!-- Step 1: Trigger -->
+                    <div class="p-4 bg-[var(--color-surface-glass)] border border-[var(--color-hairline)] rounded-lg">
+                        <div class="text-xs font-cyber text-pink-400 font-bold uppercase mb-2">1. Pilih Pemicu (Trigger)</div>
+                        <select id="selectTrigger" class="w-full bg-[#0B0C10] border border-[var(--color-hairline)] rounded px-3 py-2 text-xs text-white font-cyber focus:outline-none focus:border-pink-500">
+                            <option value="MEMBER_JOIN">👤 Member Baru Bergabung (Member Join)</option>
+                            <option value="LEVEL_UP">🌟 Member Naik Level (Level Up)</option>
+                            <option value="TICKET_CREATE">🎫 Tiket Baru Dibuka (Ticket Created)</option>
+                        </select>
+                    </div>
+
+                    <!-- Step 2: Action -->
+                    <div class="p-4 bg-[var(--color-surface-glass)] border border-[var(--color-hairline)] rounded-lg">
+                        <div class="text-xs font-cyber text-cyan-400 font-bold uppercase mb-2">2. Tindakan Otomatis (Action)</div>
+                        <select id="selectAction" class="w-full bg-[#0B0C10] border border-[var(--color-hairline)] rounded px-3 py-2 text-xs text-white font-cyber focus:outline-none focus:border-cyan-500 mb-3">
+                            <option value="SEND_DM">📩 Kirim DM Sambutan Kustom</option>
+                            <option value="ADD_ROLE">🎭 Berikan Role Otomatis</option>
+                            <option value="REWARD_CURRENCY">⭐ Berikan Bonus Star Fragments</option>
+                        </select>
+                        <textarea id="actionMessage" placeholder="Pesan sambutan atau detail payload..." class="w-full h-24 bg-[#0B0C10] border border-[var(--color-hairline)] rounded p-2 text-xs text-gray-200 font-cyber focus:outline-none focus:border-cyan-500"></textarea>
+                    </div>
+
+                    <button id="btnSaveFlow" class="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-90 rounded-lg text-white font-cyber font-bold text-xs uppercase tracking-widest transition">
+                        <i class="fa-solid fa-save mr-2"></i> Simpan Alur Kerja
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script type="module">
+    import { NauraViewer } from '../components/NauraViewer/index.js';
+    NauraViewer.init({ context: 'automations' });
+</script>
+</body>
+</html>
+

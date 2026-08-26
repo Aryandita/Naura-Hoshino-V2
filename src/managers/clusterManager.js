@@ -80,7 +80,7 @@ class ClusterManager {
    */
   startStatsPublisher(client) {
     const STATS_INTERVAL = 3000;
-    setInterval(() => {
+    const statsTimer = setInterval(() => {
       if (!client.isReady() || !redisManager.client || !redisManager.client.isReady) return;
 
       const totalMem = os.totalmem();
@@ -100,6 +100,9 @@ class ClusterManager {
       // Siarkan ke kanal Pub/Sub khusus statistik
       redisManager.publish("cluster:stats_update", stats).catch(() => {});
     }, STATS_INTERVAL);
+    // Rule 1.9: timer level-modul wajib unref agar tidak menahan proses
+    // saat graceful shutdown.
+    if (statsTimer.unref) statsTimer.unref();
   }
 }
 

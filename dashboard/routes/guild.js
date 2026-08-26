@@ -124,7 +124,12 @@ module.exports = (client) => {
 
       model.settings = settings;
       model.changed("settings", true);
-      await model.save();
+      // Rule 1.8/1.10: fields eksplisit + invalidasi cache lintas shard agar
+      // bot langsung membaca pengaturan terbaru.
+      await model.save({ fields: ["settings"] });
+      await require("../../src/managers/cacheManager")
+        .invalidateGuildSettings(req.guildId)
+        .catch(() => {});
 
       res.json({ success: true, message: "Pengaturannya sudah Naura simpan!" });
     } catch (e) {
@@ -189,7 +194,11 @@ module.exports = (client) => {
       settings.greetings.welcome = welcome;
       model.settings = settings;
       model.changed("settings", true);
-      await model.save();
+      // Rule 1.8/1.10: fields eksplisit + invalidasi cache lintas shard.
+      await model.save({ fields: ["settings"] });
+      await require("../../src/managers/cacheManager")
+        .invalidateGuildSettings(req.guildId)
+        .catch(() => {});
 
       res.json({
         success: true,
