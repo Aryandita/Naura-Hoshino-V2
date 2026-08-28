@@ -12,25 +12,43 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("status")
-        .setDescription("Lihat status siaran radio Naura di Voice Channel saat ini"),
+        .setDescription(
+          "Lihat status siaran radio Naura di Voice Channel saat ini",
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("message")
-        .setDescription("Kirimkan titipan salam atau curhat ke stasiun radio Naura")
-        .addStringOption((opt) => opt.setName("pesan").setDescription("Isi pesan yang ingin dibacakan").setRequired(true).setMaxLength(180))
-        .addBooleanOption((opt) => opt.setName("anon").setDescription("Kirim sebagai pengirim rahasia (anonim)").setRequired(false)),
+        .setDescription(
+          "Kirimkan titipan salam atau curhat ke stasiun radio Naura",
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("pesan")
+            .setDescription("Isi pesan yang ingin dibacakan")
+            .setRequired(true)
+            .setMaxLength(180),
+        )
+        .addBooleanOption((opt) =>
+          opt
+            .setName("anon")
+            .setDescription("Kirim sebagai pengirim rahasia (anonim)")
+            .setRequired(false),
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("lofi")
-        .setDescription("Nyalakan mode Midnight Lo-Fi & Starlight Chill Soundscape"),
+        .setDescription(
+          "Nyalakan mode Midnight Lo-Fi & Starlight Chill Soundscape",
+        ),
     ),
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
     const user = interaction.user;
-    const displayName = interaction.member?.displayName || user.displayName || user.username;
+    const displayName =
+      interaction.member?.displayName || user.displayName || user.username;
     const guildId = interaction.guildId;
 
     if (subcommand === "status") {
@@ -38,11 +56,14 @@ module.exports = {
       const pending = await radioService.getPendingRadioMessages(guildId);
       const presets = radioService.getPresets();
 
-      const msgLines = pending.length > 0
-        ? pending.map((m) => `• **${m.author}**: "${m.text}"`).join("\n")
-        : "*Belum ada titipan salam di antrean radio.*";
+      const msgLines =
+        pending.length > 0
+          ? pending.map((m) => `• **${m.author}**: "${m.text}"`).join("\n")
+          : "*Belum ada titipan salam di antrean radio.*";
 
-      const presetLines = presets.map((p) => `• **${p.name}**\n  _${p.desc}_`).join("\n");
+      const presetLines = presets
+        .map((p) => `• **${p.name}**\n  _${p.desc}_`)
+        .join("\n");
 
       const payload = buildContainerV2({
         authorName: "NAURA VIRTUAL RADIO 2.1",
@@ -51,7 +72,10 @@ module.exports = {
         footerText: ui.getFooter("music"),
       });
 
-      return interaction.editReply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+      return interaction.editReply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
 
     if (subcommand === "message") {
@@ -59,7 +83,12 @@ module.exports = {
       const pesan = interaction.options.getString("pesan");
       const isAnon = interaction.options.getBoolean("anon") || false;
 
-      const entry = await radioService.queueRadioMessage(guildId, displayName, pesan, isAnon);
+      const entry = await radioService.queueRadioMessage(
+        guildId,
+        displayName,
+        pesan,
+        isAnon,
+      );
 
       const payload = buildContainerV2({
         authorName: "NAURA VIRTUAL RADIO 2.1",
@@ -68,7 +97,10 @@ module.exports = {
         footerText: ui.getFooter("music"),
       });
 
-      return interaction.editReply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+      return interaction.editReply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
 
     if (subcommand === "lofi") {
@@ -80,7 +112,10 @@ module.exports = {
         footerText: ui.getFooter("music"),
       });
 
-      return interaction.editReply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+      return interaction.editReply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
   },
 };

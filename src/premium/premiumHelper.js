@@ -110,7 +110,7 @@ function getWorkWageBonus(tier) {
     case "starter":
       return 0.15; // +15%
     case "voter":
-      return 0.10; // +10%
+      return 0.1; // +10%
     default:
       return 0.0;
   }

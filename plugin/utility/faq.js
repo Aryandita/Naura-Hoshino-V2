@@ -19,11 +19,15 @@ const {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("faq")
-    .setDescription("Tanya asisten AI Naura tentang aturan & informasi server ini")
+    .setDescription(
+      "Tanya asisten AI Naura tentang aturan & informasi server ini",
+    )
     .addSubcommand((sub) =>
       sub
         .setName("ask")
-        .setDescription("Tanyakan apa pun tentang panduan, aturan, atau info server")
+        .setDescription(
+          "Tanyakan apa pun tentang panduan, aturan, atau info server",
+        )
         .addStringOption((opt) =>
           opt
             .setName("pertanyaan")
@@ -34,7 +38,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("list")
-        .setDescription("Lihat topik FAQ dan panduan yang tersedia di server ini"),
+        .setDescription(
+          "Lihat topik FAQ dan panduan yang tersedia di server ini",
+        ),
     ),
 
   async execute(interaction) {
@@ -70,7 +76,10 @@ module.exports = {
 
       const fields = serverFaqs.map((item, idx) => ({
         name: `${idx + 1}. ${item.question}`,
-        value: item.answer.length > 250 ? item.answer.slice(0, 247) + "..." : item.answer,
+        value:
+          item.answer.length > 250
+            ? item.answer.slice(0, 247) + "..."
+            : item.answer,
       }));
 
       const payload = buildContainerV2({
@@ -92,7 +101,10 @@ module.exports = {
       let prompt;
       if (serverFaqs.length > 0) {
         const faqContext = serverFaqs
-          .map((f, i) => `[Topik ${i + 1}]: Pertanyaan: ${f.question}\nJawaban/Panduan: ${f.answer}`)
+          .map(
+            (f, i) =>
+              `[Topik ${i + 1}]: Pertanyaan: ${f.question}\nJawaban/Panduan: ${f.answer}`,
+          )
           .join("\n\n");
 
         prompt = [

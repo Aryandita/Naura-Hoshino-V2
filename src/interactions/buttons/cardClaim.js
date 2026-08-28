@@ -3,7 +3,10 @@
 const { AttachmentBuilder, MessageFlags } = require("discord.js");
 const CardEngine = require("../../card/cardEngine");
 const { drawAnimeCard } = require("../../canvas/cardCanvas");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../utils/NauraContainerBuilder");
 const ui = require("../../config/ui");
 
 module.exports = {
@@ -11,7 +14,10 @@ module.exports = {
   label: "card-claim",
 
   async handler(interaction) {
-    const cardIndex = parseInt(interaction.customId.replace("card_claim_", ""), 10);
+    const cardIndex = parseInt(
+      interaction.customId.replace("card_claim_", ""),
+      10,
+    );
     const channelId = interaction.channelId;
     const userId = interaction.user.id;
 
@@ -32,7 +38,8 @@ module.exports = {
       return interaction.reply({
         ...buildErrorContainerV2({
           title: "Sesi Kadaluarsa",
-          description: "Sesi drop kartu ini sudah berakhir atau tidak ditemukan.",
+          description:
+            "Sesi drop kartu ini sudah berakhir atau tidak ditemukan.",
           footerText: ui.getFooter("core"),
         }),
         flags: MessageFlags.Ephemeral,
@@ -43,7 +50,9 @@ module.exports = {
 
     const card = result.card;
     const cardBuffer = await drawAnimeCard(card);
-    const attachment = new AttachmentBuilder(cardBuffer, { name: `${card.cardCode}.png` });
+    const attachment = new AttachmentBuilder(cardBuffer, {
+      name: `${card.cardCode}.png`,
+    });
 
     const payload = buildContainerV2({
       accentColorHex: "#FFB6C1",

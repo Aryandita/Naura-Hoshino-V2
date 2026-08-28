@@ -188,7 +188,10 @@ module.exports = {
         {
           name: "✨ Soundboard Resmi (Official)",
           value: officialList
-            .map((name) => `• \`/soundboard play ${name}\` - *${OFFICIAL_SOUNDBOARDS[name].title}*`)
+            .map(
+              (name) =>
+                `• \`/soundboard play ${name}\` - *${OFFICIAL_SOUNDBOARDS[name].title}*`,
+            )
             .join("\n"),
         },
       ];

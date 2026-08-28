@@ -53,8 +53,7 @@ module.exports = {
                           accentColorHex: ui.getColor("warning") || "#FFA500",
                           authorName: "Naura Voice Guard",
                           title: `${ui.getEmoji("offline") || ui.getEmoji("power") || "🔌"} Otomatis Disconnect`,
-                          description:
-                            `Naura telah keluar dari Voice Channel karena sendirian selama **3 menit** untuk menghemat resource server. Silakan panggil kembali dengan \`/music play\`! ${ui.getEmoji("naura_sleepy") || "💤"}`,
+                          description: `Naura telah keluar dari Voice Channel karena sendirian selama **3 menit** untuk menghemat resource server. Silakan panggil kembali dengan \`/music play\`! ${ui.getEmoji("naura_sleepy") || "💤"}`,
                           expression: "sleepy",
                           footerText: ui.getFooter("music"),
                         });

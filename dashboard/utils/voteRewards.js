@@ -54,7 +54,7 @@ async function grantVoteRewards(
   // Periksa apakah streak masih berlanjut (toleransi jeda 36 jam antar vote)
   const MAX_STREAK_GAP_MS = 36 * 60 * 60 * 1000;
   let streak = 1;
-  let daysStreak = (Number(state.vote_days_streak) || 0);
+  let daysStreak = Number(state.vote_days_streak) || 0;
 
   if (lastVote && Date.now() - lastVote <= MAX_STREAK_GAP_MS) {
     streak = (Number(state.vote_streak) || 0) + 1;
@@ -77,7 +77,9 @@ async function grantVoteRewards(
   if (daysStreak >= 30 || streak >= 60) {
     try {
       const UserAchievement = require("../../src/models/UserAchievement");
-      const [userAch] = await UserAchievement.findOrCreate({ where: { userId } });
+      const [userAch] = await UserAchievement.findOrCreate({
+        where: { userId },
+      });
       const unlocked = userAch.unlockedAchievements || [];
 
       if (!unlocked.includes("naura_biggest_fan")) {
@@ -94,7 +96,8 @@ async function grantVoteRewards(
 
         // Notifikasi DM
         const { sendPremiumDM } = require("../../src/premium/premiumNotify");
-        const client = global.client || require("../../src/managers/clientManager")?.client;
+        const client =
+          global.client || require("../../src/managers/clientManager")?.client;
         if (client) {
           await sendPremiumDM(client, userId, "activated", {
             username: profile.username || "Voter Setia",
@@ -125,11 +128,7 @@ async function grantVoteRewards(
     { survival },
     coupons,
   );
-  await currency.reward(
-    currency.COIN,
-    { survival },
-    1500,
-  );
+  await currency.reward(currency.COIN, { survival }, 1500);
 
   try {
     const cacheManager = require("../../src/managers/cacheManager");

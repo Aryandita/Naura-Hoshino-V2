@@ -70,9 +70,21 @@ class RadioService {
    */
   getPresets() {
     return [
-      { id: "lofi_rain", name: "Midnight Lo-Fi & Rainy Cafe 🌧️", desc: "Kombinasi melodi lo-fi dengan rintik hujan lembut" },
-      { id: "starlight_chill", name: "Starlight Ambient Lounge 🌌", desc: "Suasana santai malam berbintang bernuansa kosmik" },
-      { id: "tokyo_cafe", name: "Cyber Shibuya Coffeehouse ☕", desc: "Nuansa kafe hangat di tengah gemerlap kota cyberpunk" },
+      {
+        id: "lofi_rain",
+        name: "Midnight Lo-Fi & Rainy Cafe 🌧️",
+        desc: "Kombinasi melodi lo-fi dengan rintik hujan lembut",
+      },
+      {
+        id: "starlight_chill",
+        name: "Starlight Ambient Lounge 🌌",
+        desc: "Suasana santai malam berbintang bernuansa kosmik",
+      },
+      {
+        id: "tokyo_cafe",
+        name: "Cyber Shibuya Coffeehouse ☕",
+        desc: "Nuansa kafe hangat di tengah gemerlap kota cyberpunk",
+      },
     ];
   }
 }

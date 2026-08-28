@@ -13,7 +13,10 @@ const CardEngine = require("../../src/card/cardEngine");
 const CardBattleEngine = require("../../src/card/cardBattleEngine");
 const { drawAnimeCard } = require("../../src/canvas/cardCanvas");
 const { drawCardBattleArena } = require("../../src/canvas/cardBattleCanvas");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
 const UserCard = require("../../src/models/UserCard");
 const UserCardDeck = require("../../src/models/UserCardDeck");
@@ -24,16 +27,16 @@ const currency = require("../../src/survival/engines/currency");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("card")
-    .setDescription("🎴 Sistem Koleksi Kartu Anime, TCG Battle & Tower of Babel")
+    .setDescription(
+      "🎴 Sistem Koleksi Kartu Anime, TCG Battle & Tower of Babel",
+    )
     .addSubcommand((sub) =>
       sub
         .setName("drop")
         .setDescription("Munculkan 3 kartu anime untuk diperebutkan di chat!"),
     )
     .addSubcommand((sub) =>
-      sub
-        .setName("daily")
-        .setDescription("Buka 1 kartu gratis harianmu!"),
+      sub.setName("daily").setDescription("Buka 1 kartu gratis harianmu!"),
     )
     .addSubcommand((sub) =>
       sub
@@ -81,7 +84,9 @@ module.exports = {
         .addUserOption((opt) =>
           opt
             .setName("opponent")
-            .setDescription("Pemain yang ingin ditantang (kosongkan untuk melawan AI)")
+            .setDescription(
+              "Pemain yang ingin ditantang (kosongkan untuk melawan AI)",
+            )
             .setRequired(false),
         )
         .addIntegerOption((opt) =>
@@ -96,7 +101,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("tower")
-        .setDescription("Tantang lantai Tower of Babel dan panjat menara legendaris!"),
+        .setDescription(
+          "Tantang lantai Tower of Babel dan panjat menara legendaris!",
+        ),
     )
     .addSubcommand((sub) =>
       sub
@@ -112,7 +119,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("dye")
-        .setDescription("Warnai bingkai kartu dengan warna Hex pilihanmu (Biaya: 100 NSF)")
+        .setDescription(
+          "Warnai bingkai kartu dengan warna Hex pilihanmu (Biaya: 100 NSF)",
+        )
         .addStringOption((opt) =>
           opt
             .setName("code")
@@ -129,7 +138,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("trade")
-        .setDescription("🤝 Buka tawaran barter kartu dan Star Fragments dengan pemain lain")
+        .setDescription(
+          "🤝 Buka tawaran barter kartu dan Star Fragments dengan pemain lain",
+        )
         .addUserOption((opt) =>
           opt
             .setName("target")
@@ -139,19 +150,25 @@ module.exports = {
         .addStringOption((opt) =>
           opt
             .setName("my_card")
-            .setDescription("Kode kartu yang ingin kamu tawarkan (misal: nra-7x9q)")
+            .setDescription(
+              "Kode kartu yang ingin kamu tawarkan (misal: nra-7x9q)",
+            )
             .setRequired(true),
         )
         .addStringOption((opt) =>
           opt
             .setName("target_card")
-            .setDescription("Kode kartu milik target yang kamu inginkan (Opsional)")
+            .setDescription(
+              "Kode kartu milik target yang kamu inginkan (Opsional)",
+            )
             .setRequired(false),
         )
         .addIntegerOption((opt) =>
           opt
             .setName("star_fragments")
-            .setDescription("Tambahan Star Fragments yang ingin kamu sertakan dalam tawaran")
+            .setDescription(
+              "Tambahan Star Fragments yang ingin kamu sertakan dalam tawaran",
+            )
             .setMinValue(0)
             .setRequired(false),
         ),
@@ -159,11 +176,15 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("fuse")
-        .setDescription("⚡ Gabungkan 3 kartu sejenis untuk membangkitkan 1 Kartu Awakened")
+        .setDescription(
+          "⚡ Gabungkan 3 kartu sejenis untuk membangkitkan 1 Kartu Awakened",
+        )
         .addStringOption((opt) =>
           opt
             .setName("main_card")
-            .setDescription("Kode kartu utama yang ingin dibangkitkan (misal: nra-7x9q)")
+            .setDescription(
+              "Kode kartu utama yang ingin dibangkitkan (misal: nra-7x9q)",
+            )
             .setRequired(true),
         )
         .addStringOption((opt) =>
@@ -182,7 +203,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("inscribe")
-        .setDescription("✍️ Ukir pesan / tanda tangan digital pada kartu koleksimu (Biaya: 100 ⭐)")
+        .setDescription(
+          "✍️ Ukir pesan / tanda tangan digital pada kartu koleksimu (Biaya: 100 ⭐)",
+        )
         .addStringOption((opt) =>
           opt
             .setName("code")
@@ -199,11 +222,15 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("awaken")
-        .setDescription("⚡ Lakukan Celestial Fusion pada 3 kartu duplikat untuk membuka wujud Mythic Awakened!")
+        .setDescription(
+          "⚡ Lakukan Celestial Fusion pada 3 kartu duplikat untuk membuka wujud Mythic Awakened!",
+        )
         .addStringOption((opt) =>
           opt
             .setName("card1")
-            .setDescription("Kode kartu utama yang ingin di-awaken (misal: nra-7x9q)")
+            .setDescription(
+              "Kode kartu utama yang ingin di-awaken (misal: nra-7x9q)",
+            )
             .setRequired(true),
         )
         .addStringOption((opt) =>
@@ -222,7 +249,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("frame")
-        .setDescription("🎨 Tempa bingkai holografik bercahaya pada kartu koleksimu (Biaya: 150 ⭐)")
+        .setDescription(
+          "🎨 Tempa bingkai holografik bercahaya pada kartu koleksimu (Biaya: 150 ⭐)",
+        )
         .addStringOption((opt) =>
           opt
             .setName("code")
@@ -235,9 +264,18 @@ module.exports = {
             .setDescription("Gaya bingkai holografik")
             .setRequired(true)
             .addChoices(
-              { name: "☀️ Solar Flare Gold (Api Keemasan)", value: "solar_flare" },
-              { name: "⚡ Cyber Matrix Emerald (Matrix Neon)", value: "cyber_matrix" },
-              { name: "🔮 Prismatic Violet (Hologram Pelangi)", value: "prismatic" },
+              {
+                name: "☀️ Solar Flare Gold (Api Keemasan)",
+                value: "solar_flare",
+              },
+              {
+                name: "⚡ Cyber Matrix Emerald (Matrix Neon)",
+                value: "cyber_matrix",
+              },
+              {
+                name: "🔮 Prismatic Violet (Hologram Pelangi)",
+                value: "prismatic",
+              },
             ),
         ),
     ),
@@ -247,7 +285,9 @@ module.exports = {
     const userId = interaction.user.id;
 
     if (subcommand === "drop") {
-      const dropSession = await CardEngine.createDropSession(interaction.channelId);
+      const dropSession = await CardEngine.createDropSession(
+        interaction.channelId,
+      );
 
       const buttonsRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -264,7 +304,9 @@ module.exports = {
           .setStyle(ButtonStyle.Primary),
       );
 
-      const lines = dropSession.cards.map((c, i) => `**${i + 1}.** ${c.name}, *${c.series}*`);
+      const lines = dropSession.cards.map(
+        (c, i) => `**${i + 1}.** ${c.name}, *${c.series}*`,
+      );
 
       const payload = buildContainerV2({
         accentColorHex: "#F9A8D4",
@@ -284,14 +326,17 @@ module.exports = {
         return interaction.editReply({
           ...buildErrorContainerV2({
             title: "Hadiah Harian Sudah Diambil",
-            description: "Kamu sudah mengklaim kartu harian gratis hari ini. Coba lagi besok!",
+            description:
+              "Kamu sudah mengklaim kartu harian gratis hari ini. Coba lagi besok!",
             footerText: ui.getFooter("core"),
           }),
         });
       }
 
       const imgBuffer = await drawAnimeCard(card);
-      const attachment = new AttachmentBuilder(imgBuffer, { name: "daily_card.png" });
+      const attachment = new AttachmentBuilder(imgBuffer, {
+        name: "daily_card.png",
+      });
 
       const payload = buildContainerV2({
         accentColorHex: "#FFD700",
@@ -325,13 +370,18 @@ module.exports = {
           return interaction.editReply({
             ...buildErrorContainerV2({
               title: "Kartu Tidak Valid",
-              description: "Pastikan Anda memiliki ketiga kartu tersebut di koleksi Anda.",
+              description:
+                "Pastikan Anda memiliki ketiga kartu tersebut di koleksi Anda.",
               footerText: ui.getFooter("core"),
             }),
           });
         }
 
-        userDeck.activeDeck = [card1Code.trim(), card2Code.trim(), card3Code.trim()];
+        userDeck.activeDeck = [
+          card1Code.trim(),
+          card2Code.trim(),
+          card3Code.trim(),
+        ];
         await userDeck.save();
 
         const payload = buildContainerV2({
@@ -346,13 +396,22 @@ module.exports = {
 
       // View Deck
       const currentDeckCodes = userDeck.activeDeck || [];
-      const deckCards = currentDeckCodes.length > 0
-        ? await UserCard.findAll({ where: { userId, cardCode: currentDeckCodes } })
-        : [];
+      const deckCards =
+        currentDeckCodes.length > 0
+          ? await UserCard.findAll({
+              where: { userId, cardCode: currentDeckCodes },
+            })
+          : [];
 
-      const listText = deckCards.length > 0
-        ? deckCards.map((c, i) => `**Slot ${i + 1}:** ${c.characterName} (\`${c.cardCode}\`) - 🌟 ${c.quality} #${c.printNumber}`).join("\n")
-        : "*Deck masih kosong. Gunakan `/card deck card1:.. card2:.. card3:..` untuk mengatur deck.*";
+      const listText =
+        deckCards.length > 0
+          ? deckCards
+              .map(
+                (c, i) =>
+                  `**Slot ${i + 1}:** ${c.characterName} (\`${c.cardCode}\`) - 🌟 ${c.quality} #${c.printNumber}`,
+              )
+              .join("\n")
+          : "*Deck masih kosong. Gunakan `/card deck card1:.. card2:.. card3:..` untuk mengatur deck.*";
 
       const payload = buildContainerV2({
         accentColorHex: "#C084FC",
@@ -371,7 +430,9 @@ module.exports = {
 
       let leadCard;
       if (currentDeckCodes.length > 0) {
-        leadCard = await UserCard.findOne({ where: { userId, cardCode: currentDeckCodes[0] } });
+        leadCard = await UserCard.findOne({
+          where: { userId, cardCode: currentDeckCodes[0] },
+        });
       }
       if (!leadCard) {
         leadCard = await UserCard.findOne({ where: { userId } });
@@ -381,7 +442,8 @@ module.exports = {
         return interaction.editReply({
           ...buildErrorContainerV2({
             title: "Belum Memiliki Kartu",
-            description: "Anda membutuhkan minimal 1 kartu anime untuk menantang Tower of Babel. Gunakan `/card drop` atau `/card daily`!",
+            description:
+              "Anda membutuhkan minimal 1 kartu anime untuk menantang Tower of Babel. Gunakan `/card drop` atau `/card daily`!",
             footerText: ui.getFooter("core"),
           }),
         });
@@ -407,7 +469,12 @@ module.exports = {
         roundNumber: 1,
       };
 
-      await redisManager.set(`card:battle:${sessionId}`, JSON.stringify(sessionData), "EX", 600);
+      await redisManager.set(
+        `card:battle:${sessionId}`,
+        JSON.stringify(sessionData),
+        "EX",
+        600,
+      );
 
       const arenaBuffer = await drawCardBattleArena({
         p1: p1Card,
@@ -418,7 +485,9 @@ module.exports = {
         roundNumber: 1,
       });
 
-      const attachment = new AttachmentBuilder(arenaBuffer, { name: "tower-battle.png" });
+      const attachment = new AttachmentBuilder(arenaBuffer, {
+        name: "tower-battle.png",
+      });
 
       const actionRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -449,7 +518,11 @@ module.exports = {
         buttonsRow: actionRow,
       });
 
-      return interaction.editReply({ ...payload, files: [attachment], components: [actionRow] });
+      return interaction.editReply({
+        ...payload,
+        files: [attachment],
+        components: [actionRow],
+      });
     }
 
     if (subcommand === "battle") {
@@ -459,22 +532,30 @@ module.exports = {
 
       const [p1Deck] = await UserCardDeck.findOrCreate({ where: { userId } });
       const p1DeckCodes = p1Deck.activeDeck || [];
-      const leadCard = p1DeckCodes.length > 0
-        ? await UserCard.findOne({ where: { userId, cardCode: p1DeckCodes[0] } })
-        : await UserCard.findOne({ where: { userId } });
+      const leadCard =
+        p1DeckCodes.length > 0
+          ? await UserCard.findOne({
+              where: { userId, cardCode: p1DeckCodes[0] },
+            })
+          : await UserCard.findOne({ where: { userId } });
 
       if (!leadCard) {
         return interaction.editReply({
           ...buildErrorContainerV2({
             title: "Belum Memiliki Kartu",
-            description: "Anda membutuhkan minimal 1 kartu anime untuk bertarung. Buka kartu lewat `/card drop` atau `/card daily`!",
+            description:
+              "Anda membutuhkan minimal 1 kartu anime untuk bertarung. Buka kartu lewat `/card drop` atau `/card daily`!",
             footerText: ui.getFooter("core"),
           }),
         });
       }
 
       if (bet > 0) {
-        const canDebit = await currency.charge(userId, { starFragments: bet }, "Card Battle Bet Escrow");
+        const canDebit = await currency.charge(
+          userId,
+          { starFragments: bet },
+          "Card Battle Bet Escrow",
+        );
         if (!canDebit) {
           return interaction.editReply({
             ...buildErrorContainerV2({
@@ -506,11 +587,16 @@ module.exports = {
       } else {
         // PvP Opponent Battle
         p2User = { username: opponent.username };
-        const [p2Deck] = await UserCardDeck.findOrCreate({ where: { userId: opponent.id } });
+        const [p2Deck] = await UserCardDeck.findOrCreate({
+          where: { userId: opponent.id },
+        });
         const p2DeckCodes = p2Deck.activeDeck || [];
-        const oppCard = p2DeckCodes.length > 0
-          ? await UserCard.findOne({ where: { userId: opponent.id, cardCode: p2DeckCodes[0] } })
-          : await UserCard.findOne({ where: { userId: opponent.id } });
+        const oppCard =
+          p2DeckCodes.length > 0
+            ? await UserCard.findOne({
+                where: { userId: opponent.id, cardCode: p2DeckCodes[0] },
+              })
+            : await UserCard.findOne({ where: { userId: opponent.id } });
 
         if (!oppCard) {
           return interaction.editReply({
@@ -539,7 +625,12 @@ module.exports = {
         roundNumber: 1,
       };
 
-      await redisManager.set(`card:battle:${sessionId}`, JSON.stringify(sessionData), "EX", 600);
+      await redisManager.set(
+        `card:battle:${sessionId}`,
+        JSON.stringify(sessionData),
+        "EX",
+        600,
+      );
 
       const arenaBuffer = await drawCardBattleArena({
         p1: p1Card,
@@ -550,7 +641,9 @@ module.exports = {
         roundNumber: 1,
       });
 
-      const attachment = new AttachmentBuilder(arenaBuffer, { name: "card-battle-start.png" });
+      const attachment = new AttachmentBuilder(arenaBuffer, {
+        name: "card-battle-start.png",
+      });
 
       const actionRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -581,12 +674,20 @@ module.exports = {
         buttonsRow: actionRow,
       });
 
-      return interaction.editReply({ ...payload, files: [attachment], components: [actionRow] });
+      return interaction.editReply({
+        ...payload,
+        files: [attachment],
+        components: [actionRow],
+      });
     }
 
     if (subcommand === "collection") {
       await interaction.deferReply();
-      const cards = await UserCard.findAll({ where: { userId }, limit: 20, order: [["createdAt", "DESC"]] });
+      const cards = await UserCard.findAll({
+        where: { userId },
+        limit: 20,
+        order: [["createdAt", "DESC"]],
+      });
 
       if (cards.length === 0) {
         const emptyState = ui.ux.buildEmptyStatePrompt({
@@ -629,19 +730,24 @@ module.exports = {
       const code = interaction.options.getString("code").trim();
       await interaction.deferReply();
 
-      const card = await UserCard.findOne({ where: { cardCode: code, userId } });
+      const card = await UserCard.findOne({
+        where: { cardCode: code, userId },
+      });
       if (!card) {
         return interaction.editReply({
           ...buildErrorContainerV2({
             title: "Kartu Tidak Ditemukan",
-            description: "Kartu dengan kode tersebut tidak ditemukan di koleksimu.",
+            description:
+              "Kartu dengan kode tersebut tidak ditemukan di koleksimu.",
             footerText: ui.getFooter("core"),
           }),
         });
       }
 
       const imgBuffer = await drawAnimeCard(card);
-      const attachment = new AttachmentBuilder(imgBuffer, { name: `${card.cardCode}.png` });
+      const attachment = new AttachmentBuilder(imgBuffer, {
+        name: `${card.cardCode}.png`,
+      });
 
       const payload = buildContainerV2({
         accentColorHex: card.dyeColor || "#FFB6C1",
@@ -658,7 +764,9 @@ module.exports = {
       const code = interaction.options.getString("code").trim();
       await interaction.deferReply();
 
-      const card = await UserCard.findOne({ where: { cardCode: code, userId } });
+      const card = await UserCard.findOne({
+        where: { cardCode: code, userId },
+      });
       if (!card) {
         return interaction.editReply({
           ...buildErrorContainerV2({
@@ -671,7 +779,11 @@ module.exports = {
 
       const rewardFrag = card.burnValue || 100;
       await card.destroy();
-      await cacheManager.incrementUserSurvival(userId, "starFragments", rewardFrag);
+      await cacheManager.incrementUserSurvival(
+        userId,
+        "starFragments",
+        rewardFrag,
+      );
 
       const payload = buildContainerV2({
         accentColorHex: "#E74C3C",
@@ -688,7 +800,9 @@ module.exports = {
       const hex = interaction.options.getString("hex").trim();
       await interaction.deferReply();
 
-      const card = await UserCard.findOne({ where: { cardCode: code, userId } });
+      const card = await UserCard.findOne({
+        where: { cardCode: code, userId },
+      });
       if (!card) {
         return interaction.editReply({
           ...buildErrorContainerV2({
@@ -715,14 +829,18 @@ module.exports = {
     if (subcommand === "trade") {
       const targetUser = interaction.options.getUser("target");
       const myCardCode = interaction.options.getString("kartuku").trim();
-      const targetCardCode = interaction.options.getString("kartu_target") ? interaction.options.getString("kartu_target").trim() : null;
-      const starFragOffer = interaction.options.getInteger("star_fragments") || 0;
+      const targetCardCode = interaction.options.getString("kartu_target")
+        ? interaction.options.getString("kartu_target").trim()
+        : null;
+      const starFragOffer =
+        interaction.options.getInteger("star_fragments") || 0;
 
       if (targetUser.id === userId || targetUser.bot) {
         return interaction.reply({
           ...buildErrorContainerV2({
             title: "Target Barter Tidak Valid",
-            description: "Kamu tidak dapat melakukan barter dengan dirimu sendiri atau bot.",
+            description:
+              "Kamu tidak dapat melakukan barter dengan dirimu sendiri atau bot.",
           }),
           flags: MessageFlags.Ephemeral,
         });
@@ -731,7 +849,9 @@ module.exports = {
       await interaction.deferReply();
 
       // Cek kepemilikan kartu pengirim
-      const myCard = await UserCard.findOne({ where: { cardCode: myCardCode, userId } });
+      const myCard = await UserCard.findOne({
+        where: { cardCode: myCardCode, userId },
+      });
       if (!myCard) {
         return interaction.editReply({
           ...buildErrorContainerV2({
@@ -744,7 +864,9 @@ module.exports = {
       // Cek kepemilikan kartu target jika diisi
       let targetCard = null;
       if (targetCardCode) {
-        targetCard = await UserCard.findOne({ where: { cardCode: targetCardCode, userId: targetUser.id } });
+        targetCard = await UserCard.findOne({
+          where: { cardCode: targetCardCode, userId: targetUser.id },
+        });
         if (!targetCard) {
           return interaction.editReply({
             ...buildErrorContainerV2({
@@ -780,7 +902,11 @@ module.exports = {
         createdAt: Date.now(),
       };
 
-      await redisManager.setCache(`card:trade:${tradeId}`, JSON.stringify(tradeSession), 120); // 2 min TTL
+      await redisManager.setCache(
+        `card:trade:${tradeId}`,
+        JSON.stringify(tradeSession),
+        120,
+      ); // 2 min TTL
 
       const buttonsRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -822,12 +948,20 @@ module.exports = {
       const mat1 = interaction.options.getString("material_1");
       const mat2 = interaction.options.getString("material_2");
 
-      const result = await CardEngine.fuseCards(userId, mainCardCode, mat1, mat2);
+      const result = await CardEngine.fuseCards(
+        userId,
+        mainCardCode,
+        mat1,
+        mat2,
+      );
       if (!result.success) {
         let msg = "Gagal melakukan Card Fusion.";
-        if (result.reason === "THREE_CARDS_REQUIRED") msg = "Dibutuhkan 3 kartu untuk melakukan fusion!";
-        if (result.reason === "DUPLICATE_CODES_SELECTED") msg = "Kode kartu yang dipilih tidak boleh sama!";
-        if (result.reason === "CARDS_NOT_FOUND_OR_NOT_OWNED") msg = "Salah satu atau lebih kartu tidak ditemukan di koleksimu!";
+        if (result.reason === "THREE_CARDS_REQUIRED")
+          msg = "Dibutuhkan 3 kartu untuk melakukan fusion!";
+        if (result.reason === "DUPLICATE_CODES_SELECTED")
+          msg = "Kode kartu yang dipilih tidak boleh sama!";
+        if (result.reason === "CARDS_NOT_FOUND_OR_NOT_OWNED")
+          msg = "Salah satu atau lebih kartu tidak ditemukan di koleksimu!";
 
         return interaction.editReply({
           ...buildErrorContainerV2({
@@ -839,7 +973,9 @@ module.exports = {
       }
 
       const imgBuffer = await drawAnimeCard(result.card);
-      const attachment = new AttachmentBuilder(imgBuffer, { name: "awakened_card.png" });
+      const attachment = new AttachmentBuilder(imgBuffer, {
+        name: "awakened_card.png",
+      });
 
       const payload = buildContainerV2({
         accentColorHex: "#A855F7",
@@ -868,8 +1004,10 @@ module.exports = {
       const result = await CardEngine.inscribeCard(userId, code, text);
       if (!result.success) {
         let msg = "Gagal mengukir kartu.";
-        if (result.reason === "CARD_NOT_FOUND") msg = `Kartu dengan kode \`${code}\` tidak ditemukan di koleksimu!`;
-        if (result.reason === "INSUFFICIENT_FUNDS") msg = `Saldo Star Fragments tidak cukup (Biaya: 100 ⭐)!`;
+        if (result.reason === "CARD_NOT_FOUND")
+          msg = `Kartu dengan kode \`${code}\` tidak ditemukan di koleksimu!`;
+        if (result.reason === "INSUFFICIENT_FUNDS")
+          msg = `Saldo Star Fragments tidak cukup (Biaya: 100 ⭐)!`;
 
         return interaction.editReply({
           ...buildErrorContainerV2({
@@ -881,7 +1019,9 @@ module.exports = {
       }
 
       const imgBuffer = await drawAnimeCard(result.card);
-      const attachment = new AttachmentBuilder(imgBuffer, { name: "inscribed_card.png" });
+      const attachment = new AttachmentBuilder(imgBuffer, {
+        name: "inscribed_card.png",
+      });
 
       const payload = buildContainerV2({
         accentColorHex: "#F9A8D4",
@@ -910,9 +1050,12 @@ module.exports = {
       const result = await CardEngine.awakenCard(userId, card1, card2, card3);
       if (!result.success) {
         let msg = "Gagal melakukan awakening kartu.";
-        if (result.reason === "CARD_NOT_FOUND") msg = "Salah satu kartu tidak ditemukan atau bukan milikmu!";
-        if (result.reason === "DUPLICATE_CODES") msg = "Ketiga kode kartu yang dimasukkan harus berbeda!";
-        if (result.reason === "CHARACTER_MISMATCH") msg = "Ketiga kartu harus merupakan karakter anime yang sama!";
+        if (result.reason === "CARD_NOT_FOUND")
+          msg = "Salah satu kartu tidak ditemukan atau bukan milikmu!";
+        if (result.reason === "DUPLICATE_CODES")
+          msg = "Ketiga kode kartu yang dimasukkan harus berbeda!";
+        if (result.reason === "CHARACTER_MISMATCH")
+          msg = "Ketiga kartu harus merupakan karakter anime yang sama!";
 
         return interaction.editReply({
           ...buildErrorContainerV2({
@@ -924,7 +1067,9 @@ module.exports = {
       }
 
       const imgBuffer = await drawAnimeCard(result.card);
-      const attachment = new AttachmentBuilder(imgBuffer, { name: "awakened_card.png" });
+      const attachment = new AttachmentBuilder(imgBuffer, {
+        name: "awakened_card.png",
+      });
 
       const payload = buildContainerV2({
         accentColorHex: "#FFD700",
@@ -953,8 +1098,10 @@ module.exports = {
       const result = await CardEngine.setFrameStyle(userId, code, style);
       if (!result.success) {
         let msg = "Gagal menempa bingkai kartu.";
-        if (result.reason === "CARD_NOT_FOUND") msg = `Kartu dengan kode \`${code}\` tidak ditemukan di koleksimu!`;
-        if (result.reason === "INSUFFICIENT_FUNDS") msg = "Saldo Star Fragments tidak cukup (Biaya: 150 ⭐)!";
+        if (result.reason === "CARD_NOT_FOUND")
+          msg = `Kartu dengan kode \`${code}\` tidak ditemukan di koleksimu!`;
+        if (result.reason === "INSUFFICIENT_FUNDS")
+          msg = "Saldo Star Fragments tidak cukup (Biaya: 150 ⭐)!";
 
         return interaction.editReply({
           ...buildErrorContainerV2({
@@ -966,7 +1113,9 @@ module.exports = {
       }
 
       const imgBuffer = await drawAnimeCard(result.card);
-      const attachment = new AttachmentBuilder(imgBuffer, { name: "framed_card.png" });
+      const attachment = new AttachmentBuilder(imgBuffer, {
+        name: "framed_card.png",
+      });
 
       const styleNames = {
         solar_flare: "☀️ Solar Flare Gold",

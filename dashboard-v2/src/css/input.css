@@ -10,7 +10,7 @@
  * ===================================================================== */
 
 /* Font eksternal harus jadi import paling awal agar urutan @import valid */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Outfit:wght@300;400;500;600;700&display=swap");
 
 @import "tailwindcss";
 @import "@fortawesome/fontawesome-free/css/all.min.css";
@@ -21,24 +21,24 @@
  * Class yang dihasilkan: font-cyber, text-primary, bg-dark-card,
  * border-accent-pink, text-premium-gold, dst. */
 @theme {
-    --font-cyber: "Orbitron", sans-serif;
-    --font-outfit: "Outfit", sans-serif;
-    --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-cyber: "Orbitron", sans-serif;
+  --font-outfit: "Outfit", sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-    --color-primary: #ffb6c1;
-    --color-accent-pink: #f9a8d4;
-    --color-accent-purple: #c084fc;
-    --color-accent-blue: #93c5fd;
-    --color-accent-green: #86efac;
-    --color-accent-cyan: #06b6d4;
-    --color-accent-emerald: #10b981;
-    --color-premium-gold: #ffd700;
+  --color-primary: #ffb6c1;
+  --color-accent-pink: #f9a8d4;
+  --color-accent-purple: #c084fc;
+  --color-accent-blue: #93c5fd;
+  --color-accent-green: #86efac;
+  --color-accent-cyan: #06b6d4;
+  --color-accent-emerald: #10b981;
+  --color-premium-gold: #ffd700;
 
-    --color-dark-base: #08090c;
-    --color-dark-card: #0d1117;
-    --color-dark-border: #1e2633;
-    --color-dark-hover: #161b22;
+  --color-dark-base: #08090c;
+  --color-dark-card: #0d1117;
+  --color-dark-border: #1e2633;
+  --color-dark-hover: #161b22;
 }
 
 /* darkMode: 'class' dari config CDN lama */

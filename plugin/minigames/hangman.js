@@ -105,7 +105,9 @@ module.exports = {
             ? ui.getColor("success") || "#00FF00"
             : ui.getColor("error") || "#FF0000",
           authorName: "Naura Hangman System",
-          title: isWin ? `${ui.getEmoji("trophy") || "🏆"} Kamu Menang!` : `${ui.getEmoji("skull") || "💀"} Kamu Kalah!`,
+          title: isWin
+            ? `${ui.getEmoji("trophy") || "🏆"} Kamu Menang!`
+            : `${ui.getEmoji("skull") || "💀"} Kamu Kalah!`,
           description: `\`\`\`\n${stages[mistakes]}\n\nKata yang benar adalah: ${word}\n\`\`\``,
           footerText: ui.getFooter("core"),
         });

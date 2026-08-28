@@ -119,8 +119,11 @@ module.exports = {
       try {
         const {
           generateSurvivalProfileImage,
-        } = require('../../../src/canvas/CanvasUtils');
-        const botAvatar = interaction.client.user?.displayAvatarURL({ extension: 'png', size: 128 });
+        } = require("../../../src/canvas/CanvasUtils");
+        const botAvatar = interaction.client.user?.displayAvatarURL({
+          extension: "png",
+          size: 128,
+        });
         const buffer = await generateSurvivalProfileImage(
           user,
           profile,
@@ -130,7 +133,7 @@ module.exports = {
             activePets,
             marriedNPCs,
             botAvatar,
-            gear:         stats.gear,
+            gear: stats.gear,
             isRegistered: stats.isRegistered,
           },
         );
@@ -139,9 +142,8 @@ module.exports = {
           bannerAttachmentName = IMAGE_NAME;
         }
       } catch (canvasError) {
-        logger.warn('[SURVIVAL INFO CANVAS]', canvasError.message);
+        logger.warn("[SURVIVAL INFO CANVAS]", canvasError.message);
       }
-
 
       const payload = buildContainerV2({
         accentColorHex: stats.timeState.color || ui.getColor("primary"),

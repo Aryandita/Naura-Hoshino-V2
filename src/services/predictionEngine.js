@@ -52,7 +52,9 @@ class PredictionEngine {
     });
 
     await this._invalidateCache(guildId, marketId);
-    logger.info(`[PredictionEngine] Market dibuat: ${marketId} (${title}) di guild ${guildId}`);
+    logger.info(
+      `[PredictionEngine] Market dibuat: ${marketId} (${title}) di guild ${guildId}`,
+    );
     return market.toJSON();
   }
 
@@ -61,13 +63,20 @@ class PredictionEngine {
    */
   static async getMarket(marketId) {
     if (redisManager.isReady) {
-      const cached = await redisManager.getCache(`${MARKET_CACHE_PREFIX}${marketId}`);
-      if (cached) return typeof cached === "string" ? JSON.parse(cached) : cached;
+      const cached = await redisManager.getCache(
+        `${MARKET_CACHE_PREFIX}${marketId}`,
+      );
+      if (cached)
+        return typeof cached === "string" ? JSON.parse(cached) : cached;
     }
 
     const market = await PredictionMarket.findByPk(marketId);
     if (market && redisManager.isReady) {
-      await redisManager.setCache(`${MARKET_CACHE_PREFIX}${marketId}`, JSON.stringify(market.toJSON()), 30);
+      await redisManager.setCache(
+        `${MARKET_CACHE_PREFIX}${marketId}`,
+        JSON.stringify(market.toJSON()),
+        30,
+      );
     }
     return market ? market.toJSON() : null;
   }
@@ -90,19 +99,32 @@ class PredictionEngine {
   /**
    * Pasang taruhan pada pasar prediksi (Pari-Mutuel Bet)
    */
-  static async placeBet({ marketId, guildId, userId, username = "Anonymous", optionId, amount }) {
+  static async placeBet({
+    marketId,
+    guildId,
+    userId,
+    username = "Anonymous",
+    optionId,
+    amount,
+  }) {
     const betAmount = Math.floor(Number(amount));
     if (isNaN(betAmount) || betAmount <= 0) {
       return { success: false, reason: "INVALID_AMOUNT" };
     }
 
-    const debitResult = await cacheManager.debitUserSurvival(userId, "starFragments", betAmount);
+    const debitResult = await cacheManager.debitUserSurvival(
+      userId,
+      "starFragments",
+      betAmount,
+    );
     if (!debitResult.ok) {
       const currentSurvival = await cacheManager.getUserSurvival(userId);
       return {
         success: false,
         reason: "INSUFFICIENT_FUNDS",
-        balance: currentSurvival ? Number(currentSurvival.starFragments || 0) : 0,
+        balance: currentSurvival
+          ? Number(currentSurvival.starFragments || 0)
+          : 0,
       };
     }
 
@@ -116,31 +138,55 @@ class PredictionEngine {
 
       if (!market) {
         // Refund bila market tidak ada
-        await cacheManager.incrementUserSurvival(userId, "starFragments", betAmount);
+        await cacheManager.incrementUserSurvival(
+          userId,
+          "starFragments",
+          betAmount,
+        );
         return { success: false, reason: "MARKET_NOT_FOUND" };
       }
 
       if (market.status !== "OPEN" || new Date() > new Date(market.lockTime)) {
         // Refund bila market sudah terkunci
-        await cacheManager.incrementUserSurvival(userId, "starFragments", betAmount);
+        await cacheManager.incrementUserSurvival(
+          userId,
+          "starFragments",
+          betAmount,
+        );
         return { success: false, reason: "MARKET_LOCKED_OR_CLOSED" };
       }
 
       const options = Array.isArray(market.options) ? [...market.options] : [];
-      const optionIndex = options.findIndex((o) => Number(o.id) === Number(optionId));
+      const optionIndex = options.findIndex(
+        (o) => Number(o.id) === Number(optionId),
+      );
       if (optionIndex === -1) {
-        await cacheManager.incrementUserSurvival(userId, "starFragments", betAmount);
+        await cacheManager.incrementUserSurvival(
+          userId,
+          "starFragments",
+          betAmount,
+        );
         return { success: false, reason: "INVALID_OPTION" };
       }
 
       if (betAmount > (market.maxBetPerUser || 10000)) {
-        await cacheManager.incrementUserSurvival(userId, "starFragments", betAmount);
-        return { success: false, reason: "EXCEEDS_MAX_BET", maxBet: market.maxBetPerUser || 10000 };
+        await cacheManager.incrementUserSurvival(
+          userId,
+          "starFragments",
+          betAmount,
+        );
+        return {
+          success: false,
+          reason: "EXCEEDS_MAX_BET",
+          maxBet: market.maxBetPerUser || 10000,
+        };
       }
 
       // Mutasi options dan pool
-      options[optionIndex].totalBet = Number(options[optionIndex].totalBet || 0) + betAmount;
-      options[optionIndex].bettorCount = Number(options[optionIndex].bettorCount || 0) + 1;
+      options[optionIndex].totalBet =
+        Number(options[optionIndex].totalBet || 0) + betAmount;
+      options[optionIndex].bettorCount =
+        Number(options[optionIndex].bettorCount || 0) + 1;
 
       const newTotalPool = Number(market.totalPool || 0) + betAmount;
 
@@ -186,7 +232,9 @@ class PredictionEngine {
    * Kunci pasar taruhan (tidak bisa bertaruh lagi, menunggu hasil)
    */
   static async lockMarket(marketId, guildId) {
-    const market = await PredictionMarket.findOne({ where: { marketId, guildId } });
+    const market = await PredictionMarket.findOne({
+      where: { marketId, guildId },
+    });
     if (!market) return { success: false, reason: "MARKET_NOT_FOUND" };
     if (market.status !== "OPEN") return { success: false, reason: "NOT_OPEN" };
 
@@ -213,8 +261,11 @@ class PredictionEngine {
       }
 
       const options = market.options || [];
-      const winningOption = options.find((o) => Number(o.id) === Number(winningOptionId));
-      if (!winningOption) return { success: false, reason: "INVALID_WINNING_OPTION" };
+      const winningOption = options.find(
+        (o) => Number(o.id) === Number(winningOptionId),
+      );
+      if (!winningOption)
+        return { success: false, reason: "INVALID_WINNING_OPTION" };
 
       const totalPool = Number(market.totalPool || 0);
       const winningOptionTotalBet = Number(winningOption.totalBet || 0);
@@ -245,7 +296,11 @@ class PredictionEngine {
             await bet.save({ transaction: t });
 
             // Berikan saldo ke pemenang lewat cacheManager
-            await cacheManager.incrementUserSurvival(bet.userId, "starFragments", payout);
+            await cacheManager.incrementUserSurvival(
+              bet.userId,
+              "starFragments",
+              payout,
+            );
 
             totalPayoutDistributed += payout;
           } else {
@@ -262,8 +317,12 @@ class PredictionEngine {
             transaction: t,
           });
           if (activeBoss) {
-            const currentPool = activeBoss.rewardsPool || { starFragments: 5000, coupons: 30 };
-            currentPool.starFragments = (Number(currentPool.starFragments) || 5000) + houseFeeCollected;
+            const currentPool = activeBoss.rewardsPool || {
+              starFragments: 5000,
+              coupons: 30,
+            };
+            currentPool.starFragments =
+              (Number(currentPool.starFragments) || 5000) + houseFeeCollected;
             activeBoss.rewardsPool = currentPool;
             activeBoss.changed("rewardsPool", true);
             await activeBoss.save({ transaction: t });
@@ -276,7 +335,11 @@ class PredictionEngine {
           bet.payout = Number(bet.amount);
           await bet.save({ transaction: t });
 
-          await cacheManager.incrementUserSurvival(bet.userId, "starFragments", Number(bet.amount));
+          await cacheManager.incrementUserSurvival(
+            bet.userId,
+            "starFragments",
+            Number(bet.amount),
+          );
         }
       }
 
@@ -327,7 +390,11 @@ class PredictionEngine {
         bet.payout = Number(bet.amount);
         await bet.save({ transaction: t });
 
-        await cacheManager.incrementUserSurvival(bet.userId, "starFragments", Number(bet.amount));
+        await cacheManager.incrementUserSurvival(
+          bet.userId,
+          "starFragments",
+          Number(bet.amount),
+        );
       }
 
       market.status = "CANCELLED";

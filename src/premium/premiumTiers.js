@@ -10,7 +10,8 @@ const PREMIUM_TIERS = {
     days: 0.5,
     price: "Gratis (Top.gg Vote)",
     emoji: "🗳️",
-    description: "Paket apresiasi yang aktif otomatis setiap kali kamu memberikan vote di Top.gg.",
+    description:
+      "Paket apresiasi yang aktif otomatis setiap kali kamu memberikan vote di Top.gg.",
     features: [
       `${YES} **1.15x Global XP Boost** - nikmati lonjakan XP gratis`,
       `${YES} **+10% Bonus Gaji Kerja** - pendapatan kerja survival ekstra`,
@@ -29,7 +30,8 @@ const PREMIUM_TIERS = {
     days: 7,
     price: "Rp 10.000",
     emoji: "🌱",
-    description: "Paket hemat untuk kamu yang ingin mencoba sensasi fitur premium Naura.",
+    description:
+      "Paket hemat untuk kamu yang ingin mencoba sensasi fitur premium Naura.",
     features: [
       `${YES} **1.25x Global XP Boost** - percepat progres levelmu`,
       `${YES} **+15% Bonus Gaji Kerja** - penghasilan harian lebih banyak`,
@@ -48,7 +50,8 @@ const PREMIUM_TIERS = {
     days: 30,
     price: "Rp 25.000",
     emoji: "🌟",
-    description: "Paket bulanan favorit untuk menemani perjalananmu bersama Naura.",
+    description:
+      "Paket bulanan favorit untuk menemani perjalananmu bersama Naura.",
     features: [
       `${YES} **1.5x Global XP Boost** - naik level lebih cepat di semua server`,
       `${YES} **Banner Profil Custom** - pasang banner sendiri di kartu profil`,
@@ -68,7 +71,8 @@ const PREMIUM_TIERS = {
     days: 90,
     price: "Rp 45.000",
     emoji: "💫",
-    description: "Pilihan terbaik untuk penikmat audio premium dan survival antusias.",
+    description:
+      "Pilihan terbaik untuk penikmat audio premium dan survival antusias.",
     features: [
       `${YES} **Semua fitur Supporter**`,
       `${YES} **Mode Siaga Musik 24/7** - Naura standby di voice channel tanpa henti`,
@@ -90,7 +94,8 @@ const PREMIUM_TIERS = {
     days: 365,
     price: "Rp 75.000",
     emoji: "👑",
-    description: "Paket terlengkap tahunan. Akses tanpa batas ke seluruh keistimewaan Naura.",
+    description:
+      "Paket terlengkap tahunan. Akses tanpa batas ke seluruh keistimewaan Naura.",
     features: [
       `${YES} **Semua fitur Friends**`,
       `${YES} **2.0x Global XP Boost** - kecepatan leveling tertinggi di Naura`,

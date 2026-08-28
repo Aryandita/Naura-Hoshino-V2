@@ -4,4 +4,4 @@
 // ekstraksi <style> inline gagal saat build), berkas ini tempat meletakkan
 // inisialisasi lintas-halaman di masa depan tanpa menyentuh script inline
 // warisan yang besar.
-document.documentElement.dataset.nauraV2 = '1';
+document.documentElement.dataset.nauraV2 = "1";

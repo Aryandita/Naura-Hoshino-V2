@@ -8,26 +8,40 @@ const {
   MessageFlags,
   PermissionsBitField,
 } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
 const predictionEngine = require("../../src/services/predictionEngine");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("predict")
-    .setDescription("Pasar taruhan prediksi sosial Pari-Mutuel (Hoshino Predictions)")
+    .setDescription(
+      "Pasar taruhan prediksi sosial Pari-Mutuel (Hoshino Predictions)",
+    )
     .addSubcommand((sub) =>
       sub
         .setName("create")
         .setDescription("Buat pasar prediksi baru di server")
         .addStringOption((opt) =>
-          opt.setName("judul").setDescription("Pertanyaan atau peristiwa yang diprediksi").setRequired(true),
+          opt
+            .setName("judul")
+            .setDescription("Pertanyaan atau peristiwa yang diprediksi")
+            .setRequired(true),
         )
         .addStringOption((opt) =>
-          opt.setName("opsi_a").setDescription("Label Opsi 1 (Default: Ya)").setRequired(false),
+          opt
+            .setName("opsi_a")
+            .setDescription("Label Opsi 1 (Default: Ya)")
+            .setRequired(false),
         )
         .addStringOption((opt) =>
-          opt.setName("opsi_b").setDescription("Label Opsi 2 (Default: Tidak)").setRequired(false),
+          opt
+            .setName("opsi_b")
+            .setDescription("Label Opsi 2 (Default: Tidak)")
+            .setRequired(false),
         )
         .addStringOption((opt) =>
           opt
@@ -42,10 +56,16 @@ module.exports = {
             ),
         )
         .addIntegerOption((opt) =>
-          opt.setName("durasi_menit").setDescription("Durasi pasar dibuka dalam menit (Default: 60)").setRequired(false),
+          opt
+            .setName("durasi_menit")
+            .setDescription("Durasi pasar dibuka dalam menit (Default: 60)")
+            .setRequired(false),
         )
         .addIntegerOption((opt) =>
-          opt.setName("maks_bet").setDescription("Batas maksimal taruhan per user (Default: 10.000)").setRequired(false),
+          opt
+            .setName("maks_bet")
+            .setDescription("Batas maksimal taruhan per user (Default: 10.000)")
+            .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
@@ -53,7 +73,10 @@ module.exports = {
         .setName("view")
         .setDescription("Lihat status detail dan rasio odds pasar prediksi")
         .addStringOption((opt) =>
-          opt.setName("market_id").setDescription("ID Pasar Prediksi (misal: pred_...)").setRequired(true),
+          opt
+            .setName("market_id")
+            .setDescription("ID Pasar Prediksi (misal: pred_...)")
+            .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
@@ -61,7 +84,10 @@ module.exports = {
         .setName("bet")
         .setDescription("Pasang taruhan Star Fragments pada salah satu opsi")
         .addStringOption((opt) =>
-          opt.setName("market_id").setDescription("ID Pasar Prediksi").setRequired(true),
+          opt
+            .setName("market_id")
+            .setDescription("ID Pasar Prediksi")
+            .setRequired(true),
         )
         .addIntegerOption((opt) =>
           opt
@@ -74,26 +100,43 @@ module.exports = {
             ),
         )
         .addIntegerOption((opt) =>
-          opt.setName("jumlah").setDescription("Jumlah Star Fragments yang ditaruhkan").setRequired(true),
+          opt
+            .setName("jumlah")
+            .setDescription("Jumlah Star Fragments yang ditaruhkan")
+            .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
-      sub.setName("list").setDescription("Lihat daftar pasar prediksi yang sedang aktif di server ini"),
+      sub
+        .setName("list")
+        .setDescription(
+          "Lihat daftar pasar prediksi yang sedang aktif di server ini",
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("lock")
-        .setDescription("Kunci pasar agar tidak ada yang bisa bertaruh lagi (Admin / Creator)")
+        .setDescription(
+          "Kunci pasar agar tidak ada yang bisa bertaruh lagi (Admin / Creator)",
+        )
         .addStringOption((opt) =>
-          opt.setName("market_id").setDescription("ID Pasar Prediksi").setRequired(true),
+          opt
+            .setName("market_id")
+            .setDescription("ID Pasar Prediksi")
+            .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("resolve")
-        .setDescription("Selesaikan pasar dan bagikan payout kemenangan (Admin / Creator)")
+        .setDescription(
+          "Selesaikan pasar dan bagikan payout kemenangan (Admin / Creator)",
+        )
         .addStringOption((opt) =>
-          opt.setName("market_id").setDescription("ID Pasar Prediksi").setRequired(true),
+          opt
+            .setName("market_id")
+            .setDescription("ID Pasar Prediksi")
+            .setRequired(true),
         )
         .addIntegerOption((opt) =>
           opt
@@ -109,9 +152,14 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("cancel")
-        .setDescription("Batalkan pasar dan kembalikan 100% koin ke peserta (Admin / Creator)")
+        .setDescription(
+          "Batalkan pasar dan kembalikan 100% koin ke peserta (Admin / Creator)",
+        )
         .addStringOption((opt) =>
-          opt.setName("market_id").setDescription("ID Pasar Prediksi").setRequired(true),
+          opt
+            .setName("market_id")
+            .setDescription("ID Pasar Prediksi")
+            .setRequired(true),
         ),
     ),
 
@@ -121,8 +169,12 @@ module.exports = {
     const userId = interaction.user.id;
     const username = interaction.user.username;
     const isMod =
-      interaction.member?.permissions?.has(PermissionsBitField.Flags.ManageGuild) ||
-      interaction.member?.permissions?.has(PermissionsBitField.Flags.Administrator);
+      interaction.member?.permissions?.has(
+        PermissionsBitField.Flags.ManageGuild,
+      ) ||
+      interaction.member?.permissions?.has(
+        PermissionsBitField.Flags.Administrator,
+      );
 
     // ==========================================
     // 1. CREATE MARKET
@@ -132,7 +184,8 @@ module.exports = {
       const optA = interaction.options.getString("opsi_a") || "Ya";
       const optB = interaction.options.getString("opsi_b") || "Tidak";
       const category = interaction.options.getString("kategori") || "COMMUNITY";
-      const durationMinutes = interaction.options.getInteger("durasi_menit") || 60;
+      const durationMinutes =
+        interaction.options.getInteger("durasi_menit") || 60;
       const maxBetPerUser = interaction.options.getInteger("maks_bet") || 10000;
 
       const market = await predictionEngine.createMarket({
@@ -206,8 +259,10 @@ module.exports = {
 
       const optionLines = options.map((opt) => {
         const pool = Number(opt.pool || opt.totalBet) || 0;
-        const odds = pool > 0 && totalPool > 0 ? (totalPool / pool).toFixed(2) : "1.00";
-        const percent = totalPool > 0 ? ((pool / totalPool) * 100).toFixed(1) : "0.0";
+        const odds =
+          pool > 0 && totalPool > 0 ? (totalPool / pool).toFixed(2) : "1.00";
+        const percent =
+          totalPool > 0 ? ((pool / totalPool) * 100).toFixed(1) : "0.0";
         return `**[${opt.id}] ${opt.label}**\n↳ Pool: \`${pool.toLocaleString("id-ID")}\` ${ui.getEmoji("star") || "⭐"} (${percent}%) | Multiplier: \`${odds}x\``;
       });
 
@@ -245,7 +300,12 @@ module.exports = {
       );
 
       const payload = buildContainerV2({
-        accentColorHex: market.status === "OPEN" ? "#38BDF8" : market.status === "RESOLVED" ? "#22C55E" : "#EF4444",
+        accentColorHex:
+          market.status === "OPEN"
+            ? "#38BDF8"
+            : market.status === "RESOLVED"
+              ? "#22C55E"
+              : "#EF4444",
         authorName: `${eChart} Prediction Market [${statusBadge}]`,
         title: market.title,
         description: [
@@ -283,8 +343,10 @@ module.exports = {
 
       if (!result.success) {
         let msg = "Terjadi kesalahan saat memasang taruhan.";
-        if (result.reason === "MARKET_NOT_FOUND") msg = "Pasar prediksi tidak ditemukan.";
-        if (result.reason === "MARKET_LOCKED_OR_CLOSED") msg = "Pasar prediksi telah dikunci atau selesai.";
+        if (result.reason === "MARKET_NOT_FOUND")
+          msg = "Pasar prediksi tidak ditemukan.";
+        if (result.reason === "MARKET_LOCKED_OR_CLOSED")
+          msg = "Pasar prediksi telah dikunci atau selesai.";
         if (result.reason === "INSUFFICIENT_FUNDS")
           msg = `Saldo Star Fragments kamu tidak mencukupi! (Saldumu: \`${(result.balance || 0).toLocaleString("id-ID")}\` ⭐)`;
         if (result.reason === "EXCEEDS_MAX_BET")
@@ -333,7 +395,8 @@ module.exports = {
           ...buildContainerV2({
             accentColorHex: "#38BDF8",
             title: "Daftar Pasar Prediksi",
-            description: "Belum ada pasar prediksi yang sedang aktif di server ini.\nBuat pasar baru dengan `/predict create`!",
+            description:
+              "Belum ada pasar prediksi yang sedang aktif di server ini.\nBuat pasar baru dengan `/predict create`!",
             footerText: ui.getFooter("utility"),
           }),
           flags: MessageFlags.Ephemeral,
@@ -385,7 +448,8 @@ module.exports = {
         return interaction.reply({
           ...buildErrorContainerV2({
             title: "Akses Ditolak",
-            description: "Hanya pembuat pasar atau moderator server yang dapat mengunci pasar ini.",
+            description:
+              "Hanya pembuat pasar atau moderator server yang dapat mengunci pasar ini.",
             footerText: ui.getFooter("utility"),
           }),
           flags: MessageFlags.Ephemeral,
@@ -439,19 +503,25 @@ module.exports = {
         return interaction.reply({
           ...buildErrorContainerV2({
             title: "Akses Ditolak",
-            description: "Hanya pembuat pasar atau moderator server yang dapat menyelesaikan pasar ini.",
+            description:
+              "Hanya pembuat pasar atau moderator server yang dapat menyelesaikan pasar ini.",
             footerText: ui.getFooter("utility"),
           }),
           flags: MessageFlags.Ephemeral,
         });
       }
 
-      const res = await predictionEngine.resolveMarket(marketId, guildId, winningOptionId);
+      const res = await predictionEngine.resolveMarket(
+        marketId,
+        guildId,
+        winningOptionId,
+      );
       if (!res.success) {
         return interaction.reply({
           ...buildErrorContainerV2({
             title: "Gagal Menyelesaikan",
-            description: "Pasar sudah diselesaikan sebelumnya atau data opsi tidak valid.",
+            description:
+              "Pasar sudah diselesaikan sebelumnya atau data opsi tidak valid.",
             footerText: ui.getFooter("utility"),
           }),
           flags: MessageFlags.Ephemeral,
@@ -504,7 +574,8 @@ module.exports = {
         return interaction.reply({
           ...buildErrorContainerV2({
             title: "Akses Ditolak",
-            description: "Hanya pembuat pasar atau moderator server yang dapat membatalkan pasar ini.",
+            description:
+              "Hanya pembuat pasar atau moderator server yang dapat membatalkan pasar ini.",
             footerText: ui.getFooter("utility"),
           }),
           flags: MessageFlags.Ephemeral,

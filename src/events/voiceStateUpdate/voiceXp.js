@@ -2,7 +2,10 @@ const { Collection } = require("discord.js");
 const { logger } = require("../../managers/logger");
 const UserLeveling = require("../../models/UserLeveling");
 const cacheManager = require("../../managers/cacheManager");
-const { getUserPremiumTier, getXpMultiplier } = require("../../premium/premiumHelper");
+const {
+  getUserPremiumTier,
+  getXpMultiplier,
+} = require("../../premium/premiumHelper");
 const { checkLevelUp } = require("../../leveling/levelingEngine");
 
 // Cache session in memory
@@ -22,15 +25,12 @@ module.exports = {
     const isAfkChannel = (channelId) =>
       guild.afkChannelId && channelId === guild.afkChannelId;
 
-    const isDeafened = (state) =>
-      Boolean(state?.selfDeaf || state?.serverDeaf);
+    const isDeafened = (state) => Boolean(state?.selfDeaf || state?.serverDeaf);
 
     // Deteksi apakah user dalam status aktif di voice
     const isCurrentlyActive = (state) =>
       Boolean(
-        state.channelId &&
-          !isAfkChannel(state.channelId) &&
-          !isDeafened(state),
+        state.channelId && !isAfkChannel(state.channelId) && !isDeafened(state),
       );
 
     const wasActive = isCurrentlyActive(oldState);
@@ -58,11 +58,20 @@ module.exports = {
             const userProfile = await cacheManager.getUserProfile(userId);
             const tier = getUserPremiumTier(userProfile);
             const multiplier = getXpMultiplier(tier);
-            const earnedXp = Math.max(1, Math.floor(durationMinutes * 10 * multiplier));
+            const earnedXp = Math.max(
+              1,
+              Math.floor(durationMinutes * 10 * multiplier),
+            );
 
             const [profile] = await UserLeveling.findOrCreate({
               where: { userId, guildId },
-              defaults: { xp: 0, level: 1, messageCount: 0, voiceMinutes: 0, lastActivity: new Date() },
+              defaults: {
+                xp: 0,
+                level: 1,
+                messageCount: 0,
+                voiceMinutes: 0,
+                lastActivity: new Date(),
+              },
             });
 
             // Increment dengan safe fallback jika kolom voiceMinutes belum termigrasi
@@ -90,7 +99,9 @@ module.exports = {
             const channelObj =
               newState.channel ||
               oldState.channel ||
-              guild.channels.cache.get(newState.channelId || oldState.channelId);
+              guild.channels.cache.get(
+                newState.channelId || oldState.channelId,
+              );
 
             if (channelObj && member.user) {
               await checkLevelUp(profile, member.user, guild, channelObj);

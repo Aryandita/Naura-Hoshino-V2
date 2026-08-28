@@ -120,7 +120,8 @@ const MIGRATIONS = [
   },
   {
     id: "v18_giveaway_participants",
-    description: "Tambah kolom requirements, participants, dan winners ke giveaways (Giveaway Lanjutan Sprint 9)",
+    description:
+      "Tambah kolom requirements, participants, dan winners ke giveaways (Giveaway Lanjutan Sprint 9)",
     sql: "ALTER TABLE giveaways ADD COLUMN requirements JSON DEFAULT NULL, ADD COLUMN participants JSON DEFAULT NULL, ADD COLUMN winners JSON DEFAULT NULL;",
   },
   {
@@ -135,7 +136,8 @@ const MIGRATIONS = [
   },
   {
     id: "v21_create_duel_records",
-    description: "Buat tabel duel_records untuk menyimpan PvP MMR dan statistik",
+    description:
+      "Buat tabel duel_records untuk menyimpan PvP MMR dan statistik",
     sql: "CREATE TABLE IF NOT EXISTS duel_records ( userId VARCHAR(191) NOT NULL PRIMARY KEY, mmr INT NOT NULL DEFAULT 1000, matchesPlayed INT NOT NULL DEFAULT 0, wins INT NOT NULL DEFAULT 0, losses INT NOT NULL DEFAULT 0, kills INT NOT NULL DEFAULT 0, deaths INT NOT NULL DEFAULT 0, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
   },
   {
@@ -145,65 +147,94 @@ const MIGRATIONS = [
   },
   {
     id: "v23_upgrade_user_pets",
-    description: "Sistem Pet Lanjutan: Tambah mood, evolutionStage, dan passiveSkill",
+    description:
+      "Sistem Pet Lanjutan: Tambah mood, evolutionStage, dan passiveSkill",
     sql: "ALTER TABLE UserPets ADD COLUMN mood VARCHAR(255) DEFAULT 'happy', ADD COLUMN evolutionStage INT DEFAULT 1, ADD COLUMN passiveSkill VARCHAR(255) DEFAULT NULL;",
   },
   {
     id: "v24_add_world_boss_and_clan_territory",
-    description: "Buat tabel world_bosses dan clan_territories untuk MMORPG Survival",
+    description:
+      "Buat tabel world_bosses dan clan_territories untuk MMORPG Survival",
     sql: "CREATE TABLE IF NOT EXISTS world_bosses ( id INT AUTO_INCREMENT PRIMARY KEY, bossId VARCHAR(191) NOT NULL UNIQUE, name VARCHAR(255) NOT NULL, title VARCHAR(255) NOT NULL DEFAULT 'Ancient Calamity', element VARCHAR(64) NOT NULL DEFAULT 'DARK', maxHp BIGINT NOT NULL DEFAULT 1000000, currentHp BIGINT NOT NULL DEFAULT 1000000, baseAttack INT NOT NULL DEFAULT 150, defense INT NOT NULL DEFAULT 50, status VARCHAR(64) NOT NULL DEFAULT 'ACTIVE', damageLeaderboard JSON NOT NULL, rewardsPool JSON NOT NULL, spawnTime DATETIME NOT NULL, endTime DATETIME NOT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; CREATE TABLE IF NOT EXISTS clan_territories ( id INT AUTO_INCREMENT PRIMARY KEY, territoryId VARCHAR(191) NOT NULL UNIQUE, name VARCHAR(255) NOT NULL, clanId INT DEFAULT NULL, controlPoints INT NOT NULL DEFAULT 0, taxYield INT NOT NULL DEFAULT 1000, buffEffect VARCHAR(128) NOT NULL DEFAULT 'EXTRA_GOLD_10', contestedAt DATETIME DEFAULT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
   },
   {
     id: "v25_upgrade_user_cards_system",
-    description: "Upgrade tabel user_cards dengan cardCode, printNumber, quality, frame, dan dyeColor",
+    description:
+      "Upgrade tabel user_cards dengan cardCode, printNumber, quality, frame, dan dyeColor",
     sql: "ALTER TABLE user_cards ADD COLUMN cardCode VARCHAR(32) DEFAULT NULL, ADD COLUMN characterName VARCHAR(255) DEFAULT NULL, ADD COLUMN seriesName VARCHAR(255) DEFAULT NULL, ADD COLUMN printNumber INT NOT NULL DEFAULT 1, ADD COLUMN quality VARCHAR(32) NOT NULL DEFAULT 'GOOD', ADD COLUMN frame VARCHAR(64) NOT NULL DEFAULT 'DEFAULT', ADD COLUMN dyeColor VARCHAR(32) DEFAULT NULL, ADD COLUMN imageUrl TEXT DEFAULT NULL, ADD COLUMN isLocked BOOLEAN DEFAULT FALSE, ADD COLUMN burnValue INT DEFAULT 100;",
   },
   {
     id: "v26_create_user_card_decks",
-    description: "Buat tabel user_card_decks untuk TCG Battle Deck & Tower of Babel",
+    description:
+      "Buat tabel user_card_decks untuk TCG Battle Deck & Tower of Babel",
     sql: "CREATE TABLE IF NOT EXISTS user_card_decks ( userId VARCHAR(32) NOT NULL PRIMARY KEY, activeDeck JSON NOT NULL, towerFloor INT NOT NULL DEFAULT 1, highestFloor INT NOT NULL DEFAULT 1, wins INT NOT NULL DEFAULT 0, losses INT NOT NULL DEFAULT 0, eloRating INT NOT NULL DEFAULT 1000, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX idx_user_card_decks_elo (eloRating) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
   },
   {
     id: "v27_create_minecraft_links",
-    description: "Buat tabel minecraft_links untuk penautan akun Minecraft & Discord",
+    description:
+      "Buat tabel minecraft_links untuk penautan akun Minecraft & Discord",
     sql: "CREATE TABLE IF NOT EXISTS minecraft_links ( userId VARCHAR(32) NOT NULL PRIMARY KEY, mcUsername VARCHAR(64) NOT NULL, mcUuid VARCHAR(64) DEFAULT NULL, isVerified BOOLEAN DEFAULT FALSE, verificationCode VARCHAR(16) DEFAULT NULL, totalSyncRewards INT DEFAULT 0, lastSyncedAt DATETIME DEFAULT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX idx_minecraft_links_mcUsername (mcUsername) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
   },
   {
     id: "v28_create_prediction_markets_and_bets",
-    description: "Buat tabel prediction_markets dan prediction_bets untuk Pari-Mutuel Prediction Market",
+    description:
+      "Buat tabel prediction_markets dan prediction_bets untuk Pari-Mutuel Prediction Market",
     sql: "CREATE TABLE IF NOT EXISTS prediction_markets ( marketId VARCHAR(64) NOT NULL PRIMARY KEY, guildId VARCHAR(32) NOT NULL, creatorId VARCHAR(32) NOT NULL, title VARCHAR(255) NOT NULL, description TEXT DEFAULT NULL, category VARCHAR(32) NOT NULL DEFAULT 'COMMUNITY', options JSON NOT NULL, totalPool BIGINT NOT NULL DEFAULT 0, status VARCHAR(32) NOT NULL DEFAULT 'OPEN', winningOptionId INT DEFAULT NULL, lockTime DATETIME NOT NULL, resolveTime DATETIME DEFAULT NULL, houseFeePercent INT NOT NULL DEFAULT 5, maxBetPerUser INT NOT NULL DEFAULT 10000, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX idx_prediction_markets_guildId (guildId), INDEX idx_prediction_markets_status (status) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; CREATE TABLE IF NOT EXISTS prediction_bets ( betId VARCHAR(64) NOT NULL PRIMARY KEY, marketId VARCHAR(64) NOT NULL, guildId VARCHAR(32) NOT NULL, userId VARCHAR(32) NOT NULL, username VARCHAR(128) NOT NULL DEFAULT 'Anonymous', optionId INT NOT NULL, amount BIGINT NOT NULL, payout BIGINT NOT NULL DEFAULT 0, status VARCHAR(32) NOT NULL DEFAULT 'PENDING', createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX idx_prediction_bets_marketId (marketId), INDEX idx_prediction_bets_userId (userId), INDEX idx_prediction_bets_guild_user (guildId, userId) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
   },
   {
     id: "v29_upgrade_world_boss_phases",
-    description: "Tambah kolom phase, shieldHp, maxShieldHp, roleContributions, mvpUserId, dan lastHitUserId ke world_bosses",
+    description:
+      "Tambah kolom phase, shieldHp, maxShieldHp, roleContributions, mvpUserId, dan lastHitUserId ke world_bosses",
     sql: "ALTER TABLE world_bosses ADD COLUMN phase INT NOT NULL DEFAULT 1, ADD COLUMN shieldHp BIGINT NOT NULL DEFAULT 0, ADD COLUMN maxShieldHp BIGINT NOT NULL DEFAULT 0, ADD COLUMN roleContributions JSON DEFAULT NULL, ADD COLUMN mvpUserId VARCHAR(191) DEFAULT NULL, ADD COLUMN lastHitUserId VARCHAR(191) DEFAULT NULL;",
   },
   {
     id: "v30_create_user_cafes",
-    description: "Buat tabel user_cafes untuk Cozy Cyber-Cafe & Maid Lounge Sim",
+    description:
+      "Buat tabel user_cafes untuk Cozy Cyber-Cafe & Maid Lounge Sim",
     sql: "CREATE TABLE IF NOT EXISTS user_cafes ( userId VARCHAR(32) NOT NULL PRIMARY KEY, cafeName VARCHAR(64) NOT NULL DEFAULT 'Cyber Maid Lounge', level INT NOT NULL DEFAULT 1, reputation INT NOT NULL DEFAULT 0, unlockedRecipes JSON NOT NULL, activeDishes JSON NOT NULL, theme VARCHAR(32) NOT NULL DEFAULT 'CYBER_NEON', customersServed INT NOT NULL DEFAULT 0, uncollectedRevenue BIGINT NOT NULL DEFAULT 0, lastCollectedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
   },
   {
     id: "v31_upgrade_user_cards_fusion_inscription",
-    description: "Tambah kolom isAwakened, awakeningLevel, inscription, dan originalMinterId ke user_cards",
+    description:
+      "Tambah kolom isAwakened, awakeningLevel, inscription, dan originalMinterId ke user_cards",
     sql: "ALTER TABLE user_cards ADD COLUMN isAwakened BOOLEAN DEFAULT FALSE, ADD COLUMN awakeningLevel INT DEFAULT 0, ADD COLUMN inscription VARCHAR(128) DEFAULT NULL, ADD COLUMN originalMinterId VARCHAR(191) DEFAULT NULL;",
   },
   {
     id: "v32_upgrade_territories_and_pets",
-    description: "Tambah kolom defenseLevel, clanName, contributingClanIds ke clan_territories dan fusionCount, cosmicAura, habitatRoom ke UserPets",
+    description:
+      "Tambah kolom defenseLevel, clanName, contributingClanIds ke clan_territories dan fusionCount, cosmicAura, habitatRoom ke UserPets",
     sql: "ALTER TABLE clan_territories ADD COLUMN clanName VARCHAR(128) DEFAULT NULL, ADD COLUMN defenseLevel INT NOT NULL DEFAULT 1, ADD COLUMN maxControlPoints INT NOT NULL DEFAULT 1000, ADD COLUMN lastTaxClaimedAt DATETIME DEFAULT NULL, ADD COLUMN contributingClanIds JSON DEFAULT NULL; ALTER TABLE UserPets ADD COLUMN fusionCount INT NOT NULL DEFAULT 0, ADD COLUMN cosmicAura BOOLEAN NOT NULL DEFAULT FALSE, ADD COLUMN habitatRoom JSON DEFAULT NULL;",
   },
   {
     id: "v33_create_sprint20_milestone_tables",
-    description: "Buat tabel coliseum_teams, guild_personas, server_stocks, user_stock_holdings, dan tambah kolom hallLayout di GuildClans",
+    description:
+      "Buat tabel coliseum_teams, guild_personas, server_stocks, user_stock_holdings, dan tambah kolom hallLayout di GuildClans",
     sql: "ALTER TABLE GuildClans ADD COLUMN hallLayout JSON DEFAULT NULL; CREATE TABLE IF NOT EXISTS coliseum_teams ( id INT AUTO_INCREMENT PRIMARY KEY, userId VARCHAR(191) NOT NULL UNIQUE, teamName VARCHAR(128) NOT NULL DEFAULT 'Vanguard Squad', formation JSON NOT NULL, eloRating INT NOT NULL DEFAULT 1200, divisionTier VARCHAR(32) NOT NULL DEFAULT 'BRONZE', wins INT NOT NULL DEFAULT 0, losses INT NOT NULL DEFAULT 0, lastFoughtAt DATETIME DEFAULT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; CREATE TABLE IF NOT EXISTS guild_personas ( id INT AUTO_INCREMENT PRIMARY KEY, personaId VARCHAR(64) NOT NULL UNIQUE, guildId VARCHAR(64) NOT NULL, channelId VARCHAR(64) DEFAULT NULL, name VARCHAR(128) NOT NULL, systemPrompt TEXT NOT NULL, voiceTone VARCHAR(64) NOT NULL DEFAULT 'TSUNDERE', avatarUrl VARCHAR(255) DEFAULT NULL, isActive BOOLEAN NOT NULL DEFAULT TRUE, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; CREATE TABLE IF NOT EXISTS server_stocks ( ticker VARCHAR(32) PRIMARY KEY, name VARCHAR(128) NOT NULL, guildId VARCHAR(64) DEFAULT NULL, clanId INT DEFAULT NULL, currentPrice FLOAT NOT NULL DEFAULT 100.0, previousPrice FLOAT NOT NULL DEFAULT 100.0, totalShares INT NOT NULL DEFAULT 10000, availableShares INT NOT NULL DEFAULT 10000, dividendYield FLOAT NOT NULL DEFAULT 0.05, history24h JSON NOT NULL, isHighRisk BOOLEAN NOT NULL DEFAULT FALSE, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; CREATE TABLE IF NOT EXISTS user_stock_holdings ( id INT AUTO_INCREMENT PRIMARY KEY, userId VARCHAR(191) NOT NULL, ticker VARCHAR(32) NOT NULL, sharesOwned INT NOT NULL DEFAULT 0, avgBuyPrice FLOAT NOT NULL DEFAULT 0.0, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, UNIQUE KEY uk_user_ticker (userId, ticker) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
   },
   {
     id: "v34_add_voiceMinutes_to_user_leveling",
-    description: "Tambah kolom voiceMinutes ke user_leveling untuk tracking Voice XP dan aktivitas voice",
+    description:
+      "Tambah kolom voiceMinutes ke user_leveling untuk tracking Voice XP dan aktivitas voice",
     sql: "ALTER TABLE user_leveling ADD COLUMN voiceMinutes INT DEFAULT 0;",
-    pgSql: 'ALTER TABLE "user_leveling" ADD COLUMN IF NOT EXISTS "voiceMinutes" INTEGER DEFAULT 0;',
-  }
+    pgSql:
+      'ALTER TABLE "user_leveling" ADD COLUMN IF NOT EXISTS "voiceMinutes" INTEGER DEFAULT 0;',
+  },
+  {
+    id: "v35_create_user_portfolios",
+    description:
+      "Buat tabel user_portfolios untuk sistem Member Portfolio publik (Sprint 21)",
+    sql: "CREATE TABLE IF NOT EXISTS user_portfolios (userId VARCHAR(191) NOT NULL PRIMARY KEY, isPublic TINYINT(1) NOT NULL DEFAULT 0, bio TEXT DEFAULT NULL, tagline VARCHAR(80) DEFAULT NULL, theme VARCHAR(20) NOT NULL DEFAULT 'default', accentColor VARCHAR(7) DEFAULT NULL, bgType VARCHAR(20) NOT NULL DEFAULT 'particles', bgValue VARCHAR(500) DEFAULT NULL, showcaseSections JSON DEFAULT NULL, pinnedCardId VARCHAR(191) DEFAULT NULL, socialLinks JSON DEFAULT NULL, customBadge VARCHAR(20) DEFAULT NULL, viewCount INT NOT NULL DEFAULT 0, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    pgSql:
+      'CREATE TABLE IF NOT EXISTS "user_portfolios" ("userId" VARCHAR(191) NOT NULL PRIMARY KEY, "isPublic" SMALLINT NOT NULL DEFAULT 0, "bio" TEXT DEFAULT NULL, "tagline" VARCHAR(80) DEFAULT NULL, "theme" VARCHAR(20) NOT NULL DEFAULT \'default\', "accentColor" VARCHAR(7) DEFAULT NULL, "bgType" VARCHAR(20) NOT NULL DEFAULT \'particles\', "bgValue" VARCHAR(500) DEFAULT NULL, "showcaseSections" JSON DEFAULT NULL, "pinnedCardId" VARCHAR(191) DEFAULT NULL, "socialLinks" JSON DEFAULT NULL, "customBadge" VARCHAR(20) DEFAULT NULL, "viewCount" INTEGER NOT NULL DEFAULT 0, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL);',
+  },
+  {
+    id: "v36_create_season_passes",
+    description:
+      "Buat tabel season_progress untuk sistem Musim & Battle Pass 30-Hari",
+    sql: "CREATE TABLE IF NOT EXISTS season_progress (id INT AUTO_INCREMENT PRIMARY KEY, userId VARCHAR(191) NOT NULL, seasonId INT NOT NULL DEFAULT 1, xp INT NOT NULL DEFAULT 0, level INT NOT NULL DEFAULT 1, isPremiumPass TINYINT(1) NOT NULL DEFAULT 0, claimedTiersFree JSON DEFAULT NULL, claimedTiersPremium JSON DEFAULT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, UNIQUE KEY uk_user_season (userId, seasonId)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    pgSql:
+      'CREATE TABLE IF NOT EXISTS "season_progress" ("id" SERIAL PRIMARY KEY, "userId" VARCHAR(191) NOT NULL, "seasonId" INTEGER NOT NULL DEFAULT 1, "xp" INTEGER NOT NULL DEFAULT 0, "level" INTEGER NOT NULL DEFAULT 1, "isPremiumPass" SMALLINT NOT NULL DEFAULT 0, "claimedTiersFree" JSON DEFAULT NULL, "claimedTiersPremium" JSON DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL, CONSTRAINT "uk_user_season" UNIQUE ("userId", "seasonId"));',
+  },
 ];
 
 /**
@@ -279,21 +310,21 @@ const PG_SQL_OVERRIDES = {
   v22_add_notification_prefs:
     'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "notification_prefs" JSON DEFAULT NULL;',
   v23_upgrade_user_pets:
-    "ALTER TABLE \"UserPets\" ADD COLUMN IF NOT EXISTS \"mood\" VARCHAR(255) DEFAULT 'happy', ADD COLUMN IF NOT EXISTS \"evolutionStage\" INTEGER DEFAULT 1, ADD COLUMN IF NOT EXISTS \"passiveSkill\" VARCHAR(255) DEFAULT NULL;",
+    'ALTER TABLE "UserPets" ADD COLUMN IF NOT EXISTS "mood" VARCHAR(255) DEFAULT \'happy\', ADD COLUMN IF NOT EXISTS "evolutionStage" INTEGER DEFAULT 1, ADD COLUMN IF NOT EXISTS "passiveSkill" VARCHAR(255) DEFAULT NULL;',
   v24_add_world_boss_and_clan_territory:
-    "CREATE TABLE IF NOT EXISTS \"world_bosses\" (\"id\" SERIAL PRIMARY KEY, \"bossId\" VARCHAR(191) NOT NULL UNIQUE, \"name\" VARCHAR(255) NOT NULL, \"title\" VARCHAR(255) NOT NULL DEFAULT 'Ancient Calamity', \"element\" VARCHAR(64) NOT NULL DEFAULT 'DARK', \"maxHp\" BIGINT NOT NULL DEFAULT 1000000, \"currentHp\" BIGINT NOT NULL DEFAULT 1000000, \"baseAttack\" INTEGER NOT NULL DEFAULT 150, \"defense\" INTEGER NOT NULL DEFAULT 50, \"status\" VARCHAR(64) NOT NULL DEFAULT 'ACTIVE', \"damageLeaderboard\" JSON NOT NULL, \"rewardsPool\" JSON NOT NULL, \"spawnTime\" TIMESTAMPTZ NOT NULL, \"endTime\" TIMESTAMPTZ NOT NULL, \"createdAt\" TIMESTAMPTZ NOT NULL, \"updatedAt\" TIMESTAMPTZ NOT NULL); CREATE TABLE IF NOT EXISTS \"clan_territories\" (\"id\" SERIAL PRIMARY KEY, \"territoryId\" VARCHAR(191) NOT NULL UNIQUE, \"name\" VARCHAR(255) NOT NULL, \"clanId\" INTEGER DEFAULT NULL, \"controlPoints\" INTEGER NOT NULL DEFAULT 0, \"taxYield\" INTEGER NOT NULL DEFAULT 1000, \"buffEffect\" VARCHAR(128) NOT NULL DEFAULT 'EXTRA_GOLD_10', \"contestedAt\" TIMESTAMPTZ DEFAULT NULL, \"createdAt\" TIMESTAMPTZ NOT NULL, \"updatedAt\" TIMESTAMPTZ NOT NULL);",
+    'CREATE TABLE IF NOT EXISTS "world_bosses" ("id" SERIAL PRIMARY KEY, "bossId" VARCHAR(191) NOT NULL UNIQUE, "name" VARCHAR(255) NOT NULL, "title" VARCHAR(255) NOT NULL DEFAULT \'Ancient Calamity\', "element" VARCHAR(64) NOT NULL DEFAULT \'DARK\', "maxHp" BIGINT NOT NULL DEFAULT 1000000, "currentHp" BIGINT NOT NULL DEFAULT 1000000, "baseAttack" INTEGER NOT NULL DEFAULT 150, "defense" INTEGER NOT NULL DEFAULT 50, "status" VARCHAR(64) NOT NULL DEFAULT \'ACTIVE\', "damageLeaderboard" JSON NOT NULL, "rewardsPool" JSON NOT NULL, "spawnTime" TIMESTAMPTZ NOT NULL, "endTime" TIMESTAMPTZ NOT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE TABLE IF NOT EXISTS "clan_territories" ("id" SERIAL PRIMARY KEY, "territoryId" VARCHAR(191) NOT NULL UNIQUE, "name" VARCHAR(255) NOT NULL, "clanId" INTEGER DEFAULT NULL, "controlPoints" INTEGER NOT NULL DEFAULT 0, "taxYield" INTEGER NOT NULL DEFAULT 1000, "buffEffect" VARCHAR(128) NOT NULL DEFAULT \'EXTRA_GOLD_10\', "contestedAt" TIMESTAMPTZ DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL);',
   v25_upgrade_user_cards_system:
-    "ALTER TABLE \"user_cards\" ADD COLUMN IF NOT EXISTS \"cardCode\" VARCHAR(32) DEFAULT NULL, ADD COLUMN IF NOT EXISTS \"characterName\" VARCHAR(255) DEFAULT NULL, ADD COLUMN IF NOT EXISTS \"seriesName\" VARCHAR(255) DEFAULT NULL, ADD COLUMN IF NOT EXISTS \"printNumber\" INTEGER NOT NULL DEFAULT 1, ADD COLUMN IF NOT EXISTS \"quality\" VARCHAR(32) NOT NULL DEFAULT 'GOOD', ADD COLUMN IF NOT EXISTS \"frame\" VARCHAR(64) NOT NULL DEFAULT 'DEFAULT', ADD COLUMN IF NOT EXISTS \"dyeColor\" VARCHAR(32) DEFAULT NULL, ADD COLUMN IF NOT EXISTS \"imageUrl\" TEXT DEFAULT NULL, ADD COLUMN IF NOT EXISTS \"isLocked\" BOOLEAN DEFAULT FALSE, ADD COLUMN IF NOT EXISTS \"burnValue\" INTEGER DEFAULT 100;",
+    'ALTER TABLE "user_cards" ADD COLUMN IF NOT EXISTS "cardCode" VARCHAR(32) DEFAULT NULL, ADD COLUMN IF NOT EXISTS "characterName" VARCHAR(255) DEFAULT NULL, ADD COLUMN IF NOT EXISTS "seriesName" VARCHAR(255) DEFAULT NULL, ADD COLUMN IF NOT EXISTS "printNumber" INTEGER NOT NULL DEFAULT 1, ADD COLUMN IF NOT EXISTS "quality" VARCHAR(32) NOT NULL DEFAULT \'GOOD\', ADD COLUMN IF NOT EXISTS "frame" VARCHAR(64) NOT NULL DEFAULT \'DEFAULT\', ADD COLUMN IF NOT EXISTS "dyeColor" VARCHAR(32) DEFAULT NULL, ADD COLUMN IF NOT EXISTS "imageUrl" TEXT DEFAULT NULL, ADD COLUMN IF NOT EXISTS "isLocked" BOOLEAN DEFAULT FALSE, ADD COLUMN IF NOT EXISTS "burnValue" INTEGER DEFAULT 100;',
   v26_create_user_card_decks:
     'CREATE TABLE IF NOT EXISTS "user_card_decks" ("userId" VARCHAR(32) NOT NULL PRIMARY KEY, "activeDeck" JSON NOT NULL, "towerFloor" INTEGER NOT NULL DEFAULT 1, "highestFloor" INTEGER NOT NULL DEFAULT 1, "wins" INTEGER NOT NULL DEFAULT 0, "losses" INTEGER NOT NULL DEFAULT 0, "eloRating" INTEGER NOT NULL DEFAULT 1000, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS "idx_user_card_decks_elo" ON "user_card_decks" ("eloRating");',
   v27_create_minecraft_links:
     'CREATE TABLE IF NOT EXISTS "minecraft_links" ("userId" VARCHAR(32) NOT NULL PRIMARY KEY, "mcUsername" VARCHAR(64) NOT NULL, "mcUuid" VARCHAR(64) DEFAULT NULL, "isVerified" BOOLEAN DEFAULT FALSE, "verificationCode" VARCHAR(16) DEFAULT NULL, "totalSyncRewards" INTEGER DEFAULT 0, "lastSyncedAt" TIMESTAMPTZ DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS "idx_minecraft_links_mcUsername" ON "minecraft_links" ("mcUsername");',
   v28_create_prediction_markets_and_bets:
-    "CREATE TABLE IF NOT EXISTS \"prediction_markets\" (\"marketId\" VARCHAR(64) NOT NULL PRIMARY KEY, \"guildId\" VARCHAR(32) NOT NULL, \"creatorId\" VARCHAR(32) NOT NULL, \"title\" VARCHAR(255) NOT NULL, \"description\" TEXT DEFAULT NULL, \"category\" VARCHAR(32) NOT NULL DEFAULT 'COMMUNITY', \"options\" JSON NOT NULL, \"totalPool\" BIGINT NOT NULL DEFAULT 0, \"status\" VARCHAR(32) NOT NULL DEFAULT 'OPEN', \"winningOptionId\" INTEGER DEFAULT NULL, \"lockTime\" TIMESTAMPTZ NOT NULL, \"resolveTime\" TIMESTAMPTZ DEFAULT NULL, \"houseFeePercent\" INTEGER NOT NULL DEFAULT 5, \"maxBetPerUser\" INTEGER NOT NULL DEFAULT 10000, \"createdAt\" TIMESTAMPTZ NOT NULL, \"updatedAt\" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS \"idx_prediction_markets_guildId\" ON \"prediction_markets\" (\"guildId\"); CREATE INDEX IF NOT EXISTS \"idx_prediction_markets_status\" ON \"prediction_markets\" (\"status\"); CREATE TABLE IF NOT EXISTS \"prediction_bets\" (\"betId\" VARCHAR(64) NOT NULL PRIMARY KEY, \"marketId\" VARCHAR(64) NOT NULL, \"guildId\" VARCHAR(32) NOT NULL, \"userId\" VARCHAR(32) NOT NULL, \"username\" VARCHAR(128) NOT NULL DEFAULT 'Anonymous', \"optionId\" INTEGER NOT NULL, \"amount\" BIGINT NOT NULL, \"payout\" BIGINT NOT NULL DEFAULT 0, \"status\" VARCHAR(32) NOT NULL DEFAULT 'PENDING', \"createdAt\" TIMESTAMPTZ NOT NULL, \"updatedAt\" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS \"idx_prediction_bets_marketId\" ON \"prediction_bets\" (\"marketId\"); CREATE INDEX IF NOT EXISTS \"idx_prediction_bets_userId\" ON \"prediction_bets\" (\"userId\"); CREATE INDEX IF NOT EXISTS \"idx_prediction_bets_guild_user\" ON \"prediction_bets\" (\"guildId\", \"userId\");",
+    'CREATE TABLE IF NOT EXISTS "prediction_markets" ("marketId" VARCHAR(64) NOT NULL PRIMARY KEY, "guildId" VARCHAR(32) NOT NULL, "creatorId" VARCHAR(32) NOT NULL, "title" VARCHAR(255) NOT NULL, "description" TEXT DEFAULT NULL, "category" VARCHAR(32) NOT NULL DEFAULT \'COMMUNITY\', "options" JSON NOT NULL, "totalPool" BIGINT NOT NULL DEFAULT 0, "status" VARCHAR(32) NOT NULL DEFAULT \'OPEN\', "winningOptionId" INTEGER DEFAULT NULL, "lockTime" TIMESTAMPTZ NOT NULL, "resolveTime" TIMESTAMPTZ DEFAULT NULL, "houseFeePercent" INTEGER NOT NULL DEFAULT 5, "maxBetPerUser" INTEGER NOT NULL DEFAULT 10000, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS "idx_prediction_markets_guildId" ON "prediction_markets" ("guildId"); CREATE INDEX IF NOT EXISTS "idx_prediction_markets_status" ON "prediction_markets" ("status"); CREATE TABLE IF NOT EXISTS "prediction_bets" ("betId" VARCHAR(64) NOT NULL PRIMARY KEY, "marketId" VARCHAR(64) NOT NULL, "guildId" VARCHAR(32) NOT NULL, "userId" VARCHAR(32) NOT NULL, "username" VARCHAR(128) NOT NULL DEFAULT \'Anonymous\', "optionId" INTEGER NOT NULL, "amount" BIGINT NOT NULL, "payout" BIGINT NOT NULL DEFAULT 0, "status" VARCHAR(32) NOT NULL DEFAULT \'PENDING\', "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS "idx_prediction_bets_marketId" ON "prediction_bets" ("marketId"); CREATE INDEX IF NOT EXISTS "idx_prediction_bets_userId" ON "prediction_bets" ("userId"); CREATE INDEX IF NOT EXISTS "idx_prediction_bets_guild_user" ON "prediction_bets" ("guildId", "userId");',
   v29_upgrade_world_boss_phases:
     'ALTER TABLE "world_bosses" ADD COLUMN IF NOT EXISTS "phase" INTEGER NOT NULL DEFAULT 1, ADD COLUMN IF NOT EXISTS "shieldHp" BIGINT NOT NULL DEFAULT 0, ADD COLUMN IF NOT EXISTS "maxShieldHp" BIGINT NOT NULL DEFAULT 0, ADD COLUMN IF NOT EXISTS "roleContributions" JSON DEFAULT NULL, ADD COLUMN IF NOT EXISTS "mvpUserId" VARCHAR(191) DEFAULT NULL, ADD COLUMN IF NOT EXISTS "lastHitUserId" VARCHAR(191) DEFAULT NULL;',
   v30_create_user_cafes:
-    "CREATE TABLE IF NOT EXISTS \"user_cafes\" (\"userId\" VARCHAR(32) NOT NULL PRIMARY KEY, \"cafeName\" VARCHAR(64) NOT NULL DEFAULT 'Cyber Maid Lounge', \"level\" INTEGER NOT NULL DEFAULT 1, \"reputation\" INTEGER NOT NULL DEFAULT 0, \"unlockedRecipes\" JSON NOT NULL, \"activeDishes\" JSON NOT NULL, \"theme\" VARCHAR(32) NOT NULL DEFAULT 'CYBER_NEON', \"customersServed\" INTEGER NOT NULL DEFAULT 0, \"uncollectedRevenue\" BIGINT NOT NULL DEFAULT 0, \"lastCollectedAt\" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, \"createdAt\" TIMESTAMPTZ NOT NULL, \"updatedAt\" TIMESTAMPTZ NOT NULL);",
+    'CREATE TABLE IF NOT EXISTS "user_cafes" ("userId" VARCHAR(32) NOT NULL PRIMARY KEY, "cafeName" VARCHAR(64) NOT NULL DEFAULT \'Cyber Maid Lounge\', "level" INTEGER NOT NULL DEFAULT 1, "reputation" INTEGER NOT NULL DEFAULT 0, "unlockedRecipes" JSON NOT NULL, "activeDishes" JSON NOT NULL, "theme" VARCHAR(32) NOT NULL DEFAULT \'CYBER_NEON\', "customersServed" INTEGER NOT NULL DEFAULT 0, "uncollectedRevenue" BIGINT NOT NULL DEFAULT 0, "lastCollectedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL);',
   v31_upgrade_user_cards_fusion_inscription:
     'ALTER TABLE "user_cards" ADD COLUMN IF NOT EXISTS "isAwakened" BOOLEAN DEFAULT FALSE, ADD COLUMN IF NOT EXISTS "awakeningLevel" INTEGER DEFAULT 0, ADD COLUMN IF NOT EXISTS "inscription" VARCHAR(128) DEFAULT NULL, ADD COLUMN IF NOT EXISTS "originalMinterId" VARCHAR(191) DEFAULT NULL;',
   v32_upgrade_territories_and_pets:
@@ -470,7 +501,8 @@ async function runMigrations(sequelize) {
   const isPostgres = sequelize.options.dialect === "postgres";
 
   for (const migration of pending) {
-    const querySql = isPostgres && migration.pgSql ? migration.pgSql : migration.sql;
+    const querySql =
+      isPostgres && migration.pgSql ? migration.pgSql : migration.sql;
     try {
       if (querySql) {
         // Eksekusi per-statement agar error bisa dilokalisasi dan multi-

@@ -5,14 +5,14 @@
  * Naura hanya akan diam idle.
  */
 
-export default function(viewer) {
-    return {
-        init() {
-            // Set ke idle saat pertama kali load
-            viewer.setMood('idle');
-        },
-        cleanup() {
-            // Tidak ada event listener yang perlu dibersihkan
-        }
-    };
+export default function (viewer) {
+  return {
+    init() {
+      // Set ke idle saat pertama kali load
+      viewer.setMood("idle");
+    },
+    cleanup() {
+      // Tidak ada event listener yang perlu dibersihkan
+    },
+  };
 }

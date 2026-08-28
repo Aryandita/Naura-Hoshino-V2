@@ -128,7 +128,11 @@ class AIManager {
 
   async saveMemory(userId, type, data) {
     if (!redisManager.isReady) return;
-    await redisManager.setCache(`ai_memory:${type}:${userId}`, data, SESSION_TTL_SECONDS);
+    await redisManager.setCache(
+      `ai_memory:${type}:${userId}`,
+      data,
+      SESSION_TTL_SECONDS,
+    );
   }
 
   async _processQueue() {
@@ -175,7 +179,9 @@ class AIManager {
       // Guard AI Prompt Injection
       const { isPromptSafe } = require("../utils/aiSecurity");
       if (!isPromptSafe(prompt)) {
-        return message.reply("❌ Maaf, Naura tidak diizinkan untuk merespon prompt tersebut karena terdeteksi sebagai upaya pelanggaran sistem keamanan (Prompt Injection/Jailbreak).");
+        return message.reply(
+          "❌ Maaf, Naura tidak diizinkan untuk merespon prompt tersebut karena terdeteksi sebagai upaya pelanggaran sistem keamanan (Prompt Injection/Jailbreak).",
+        );
       }
 
       // ----------------------------------------------------
@@ -187,7 +193,10 @@ class AIManager {
         if (userProfile && userProfile.aiPersona) {
           const { name, systemPrompt } = userProfile.aiPersona;
           if (name) {
-            baseInstruction = baseInstruction.replace("Nama kamu adalah Naura Hoshino", `Nama kamu adalah ${name}`);
+            baseInstruction = baseInstruction.replace(
+              "Nama kamu adalah Naura Hoshino",
+              `Nama kamu adalah ${name}`,
+            );
           }
           if (systemPrompt) {
             baseInstruction += `\n\n[Instruksi Khusus Pengguna Ini]:\n${systemPrompt}`;
@@ -316,7 +325,7 @@ class AIManager {
       // ==========================================
       else {
         let systemPrompt = baseInstruction;
-        
+
         systemPrompt += `\nPengetahuan Sistem Naura:
 - Ekonomi Naura menggunakan mode "Survival". Mata uang utamanya "Star Fragments" (⭐) dan "Coupons" (🎟️).
 - Fitur Tiket Naura mendukung mode "Private Thread" dan "Text Channel".
@@ -333,7 +342,10 @@ Jawablah dalam bahasa Indonesia kasual.`;
         if (message.guildId) {
           try {
             const knowledgeBase = require("../ai/knowledgeBase");
-            const kbContext = await knowledgeBase.getKnowledgeContext(message.guildId, prompt);
+            const kbContext = await knowledgeBase.getKnowledgeContext(
+              message.guildId,
+              prompt,
+            );
             if (kbContext) systemPrompt += `\n${kbContext}`;
           } catch (e) {
             // Ignore knowledge base fetch failure
@@ -342,7 +354,9 @@ Jawablah dalam bahasa Indonesia kasual.`;
 
         try {
           // 1. OLLAMA LOKAL (UTAMA)
-          const ollamaSession = (await this.getMemory(userId, "ollama")) || { history: [] };
+          const ollamaSession = (await this.getMemory(userId, "ollama")) || {
+            history: [],
+          };
           const apiMessages = [
             { role: "system", content: systemPrompt },
             ...ollamaSession.history,
@@ -357,16 +371,21 @@ Jawablah dalam bahasa Indonesia kasual.`;
           responseText = ollamaResponse.message.content;
 
           ollamaSession.history.push({ role: "user", content: prompt });
-          ollamaSession.history.push({ role: "assistant", content: responseText });
-          if (ollamaSession.history.length > 20) ollamaSession.history = ollamaSession.history.slice(-20);
+          ollamaSession.history.push({
+            role: "assistant",
+            content: responseText,
+          });
+          if (ollamaSession.history.length > 20)
+            ollamaSession.history = ollamaSession.history.slice(-20);
           await this.saveMemory(userId, "ollama", ollamaSession);
-
         } catch (ollamaError) {
           logger.error("[Ollama Error] Fallback ke Groq:", ollamaError);
 
           // 2. GROQ API (FALLBACK 1)
           try {
-            const groqSession = (await this.getMemory(userId, "groq")) || { history: [] };
+            const groqSession = (await this.getMemory(userId, "groq")) || {
+              history: [],
+            };
             const apiMessages = [
               { role: "system", content: systemPrompt },
               ...groqSession.history,
@@ -387,15 +406,19 @@ Jawablah dalam bahasa Indonesia kasual.`;
             });
 
             const textResponse = await response.text();
-            if (!response.ok) throw new Error(`Groq API error: HTTP ${response.status}`);
+            if (!response.ok)
+              throw new Error(`Groq API error: HTTP ${response.status}`);
             const data = JSON.parse(textResponse);
             responseText = data.choices[0].message.content;
 
             groqSession.history.push({ role: "user", content: prompt });
-            groqSession.history.push({ role: "assistant", content: responseText });
-            if (groqSession.history.length > 10) groqSession.history = groqSession.history.slice(-10);
+            groqSession.history.push({
+              role: "assistant",
+              content: responseText,
+            });
+            if (groqSession.history.length > 10)
+              groqSession.history = groqSession.history.slice(-10);
             await this.saveMemory(userId, "groq", groqSession);
-
           } catch (groqError) {
             logger.error("[Groq Error] Fallback ke Gemini Text:", groqError);
 
@@ -404,8 +427,13 @@ Jawablah dalam bahasa Indonesia kasual.`;
               const geminiClient = this.getGenAI();
               if (!geminiClient) throw new Error("Gemini tidak dikonfigurasi.");
 
-              const sessionData = (await this.getMemory(userId, "gemini")) || { history: [] };
-              sessionData.history.push({ role: "user", parts: [{ text: prompt }] });
+              const sessionData = (await this.getMemory(userId, "gemini")) || {
+                history: [],
+              };
+              sessionData.history.push({
+                role: "user",
+                parts: [{ text: prompt }],
+              });
 
               const gemConfig = {
                 systemInstruction: systemPrompt,
@@ -419,12 +447,18 @@ Jawablah dalam bahasa Indonesia kasual.`;
               });
 
               responseText = gemResult.text;
-              sessionData.history.push({ role: "model", parts: [{ text: responseText }] });
-              if (sessionData.history.length > 10) sessionData.history = sessionData.history.slice(-10);
+              sessionData.history.push({
+                role: "model",
+                parts: [{ text: responseText }],
+              });
+              if (sessionData.history.length > 10)
+                sessionData.history = sessionData.history.slice(-10);
               await this.saveMemory(userId, "gemini", sessionData);
-
             } catch (geminiError) {
-              logger.error("[Gemini Text Error] Semua layanan AI gagal:", geminiError);
+              logger.error(
+                "[Gemini Text Error] Semua layanan AI gagal:",
+                geminiError,
+              );
               responseText = `${ui.emojis?.error || "\u274c"} Semua layanan AI sedang sibuk atau tidak tersedia. Coba lagi nanti ya!`;
             }
           }
@@ -560,7 +594,10 @@ Jawablah dalam bahasa Indonesia kasual.`;
           userSurvival = await cacheManager.getUserSurvival(userId);
         }
       } catch (dbErr) {
-        logger.warn("[AI Companion] Gagal memuat data player dari database:", dbErr.message);
+        logger.warn(
+          "[AI Companion] Gagal memuat data player dari database:",
+          dbErr.message,
+        );
       }
     }
 
@@ -579,8 +616,8 @@ Jawablah dalam bahasa Indonesia kasual.`;
       const roleText = isOwner
         ? "👑 Developer / Owner"
         : isPremium
-        ? "⭐ VIP Premium Member"
-        : "Player / Teman Server";
+          ? "⭐ VIP Premium Member"
+          : "Player / Teman Server";
       systemInstruction += `\n\n[Teman Bicara]: ${username} (${roleText})`;
     }
 
@@ -597,8 +634,14 @@ Jawablah dalam bahasa Indonesia kasual.`;
         if (userProfile.minigame_triviaScore) {
           systemInstruction += `\n- Skor Trivia: ${userProfile.minigame_triviaScore} poin`;
         }
-        if (Array.isArray(userProfile.inventory) && userProfile.inventory.length > 0) {
-          const items = userProfile.inventory.slice(0, 6).map((i) => i.name || i.id || i).join(", ");
+        if (
+          Array.isArray(userProfile.inventory) &&
+          userProfile.inventory.length > 0
+        ) {
+          const items = userProfile.inventory
+            .slice(0, 6)
+            .map((i) => i.name || i.id || i)
+            .join(", ");
           systemInstruction += `\n- Inventory: ${items}`;
         }
       }
@@ -613,7 +656,8 @@ Jawablah dalam bahasa Indonesia kasual.`;
           systemInstruction += `\n- Coupons: 🎟️ ${userSurvival.coupons.toLocaleString("id-ID")}`;
         }
       }
-      systemInstruction += "\n(Gunakan data ini secara santai dan natural jika temanmu membahas tentang koin, level, atau petualangannya di server!)";
+      systemInstruction +=
+        "\n(Gunakan data ini secara santai dan natural jika temanmu membahas tentang koin, level, atau petualangannya di server!)";
     }
 
     // 1. Coba panggil Gemini (@google/genai SDK) terlebih dahulu
@@ -623,7 +667,10 @@ Jawablah dalam bahasa Indonesia kasual.`;
         const contents = [];
         if (Array.isArray(history)) {
           for (const item of history.slice(-12)) {
-            const role = item.role === "assistant" || item.role === "model" ? "model" : "user";
+            const role =
+              item.role === "assistant" || item.role === "model"
+                ? "model"
+                : "user";
             const text = item.content || item.text || item.message || "";
             if (text) {
               contents.push({
@@ -657,17 +704,21 @@ Jawablah dalam bahasa Indonesia kasual.`;
         }
       }
     } catch (gemErr) {
-      logger.warn("[AI Companion] Gemini SDK gagal, mencoba fallback:", gemErr.message);
+      logger.warn(
+        "[AI Companion] Gemini SDK gagal, mencoba fallback:",
+        gemErr.message,
+      );
     }
 
     // 2. Fallback ke Groq / Verba / Ollama
     try {
-      const apiMessages = [
-        { role: "system", content: systemInstruction },
-      ];
+      const apiMessages = [{ role: "system", content: systemInstruction }];
       if (Array.isArray(history)) {
         for (const item of history.slice(-8)) {
-          const role = item.role === "assistant" || item.role === "model" ? "assistant" : "user";
+          const role =
+            item.role === "assistant" || item.role === "model"
+              ? "assistant"
+              : "user";
           const content = item.content || item.text || item.message || "";
           if (content) apiMessages.push({ role, content });
         }
@@ -707,7 +758,8 @@ Jawablah dalam bahasa Indonesia kasual.`;
       `Semangat terus ya ${username}! 💖 Apapun yang sedang kamu kerjakan di server maupun di dunia nyata, Naura selalu ada di sini buat nemenin dan dukung kamu! 🌟`,
       `Wah seru banget! Makasih ya udah ajak Naura ngobrol. Ada hal menyenangkan apa lagi yang terjadi hari ini? Naura siap dengerin! ☕🌸`,
     ];
-    const pickedReply = friendlyReplies[Math.floor(Math.random() * friendlyReplies.length)];
+    const pickedReply =
+      friendlyReplies[Math.floor(Math.random() * friendlyReplies.length)];
     return {
       reply: pickedReply,
       source: "companion_engine",

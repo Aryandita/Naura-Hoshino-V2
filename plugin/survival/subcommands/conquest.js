@@ -1,7 +1,10 @@
 "use strict";
 
 const { AttachmentBuilder } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 const territoryWarEngine = require("../../../src/services/territoryWarEngine");
 const { drawTerritoryMap } = require("../../../src/canvas/territoryCanvas");
@@ -9,7 +12,8 @@ const GuildClan = require("../../../src/models/GuildClan");
 
 module.exports = {
   name: "conquest",
-  description: "🏰 Perang Faksi Wilayah Klan & Klaim Pajak Sektor (Neo-Hoshino)",
+  description:
+    "🏰 Perang Faksi Wilayah Klan & Klaim Pajak Sektor (Neo-Hoshino)",
 
   async execute(interaction) {
     const action = interaction.options.getString("aksi") || "map";
@@ -20,7 +24,11 @@ module.exports = {
     // Cari klan pemain
     const allClans = await GuildClan.findAll();
     const userClan = allClans.find((c) => {
-      const members = Array.isArray(c.members) ? c.members : (typeof c.members === "string" ? JSON.parse(c.members) : []);
+      const members = Array.isArray(c.members)
+        ? c.members
+        : typeof c.members === "string"
+          ? JSON.parse(c.members)
+          : [];
       return c.leaderId === userId || members.includes(userId);
     });
 
@@ -31,13 +39,18 @@ module.exports = {
 
       try {
         const mapBuffer = await drawTerritoryMap(territories);
-        files.push(new AttachmentBuilder(mapBuffer, { name: "territory_map.png" }));
+        files.push(
+          new AttachmentBuilder(mapBuffer, { name: "territory_map.png" }),
+        );
       } catch (err) {
         // Fallback jika canvas gagal
       }
 
       const territoryList = territories
-        .map((t) => `**• ${t.name}** (\`${t.territoryId}\`)\n  - Penguasa: **${t.clanName || "Netral"}** | Poin: \`${t.controlPoints}/1000\`\n  - Pajak: \`${t.taxYield} ⭐/jam\` | *${t.buffEffect}*`)
+        .map(
+          (t) =>
+            `**• ${t.name}** (\`${t.territoryId}\`)\n  - Penguasa: **${t.clanName || "Netral"}** | Poin: \`${t.controlPoints}/1000\`\n  - Pajak: \`${t.taxYield} ⭐/jam\` | *${t.buffEffect}*`,
+        )
         .join("\n\n");
 
       const payload = buildContainerV2({
@@ -49,7 +62,9 @@ module.exports = {
           ``,
           territoryList,
           ``,
-          userClan ? `🚩 **Klan Anda:** **${userClan.name}** (Level ${userClan.level})` : `⚠️ *Anda belum bergabung dengan klan mana pun!*`,
+          userClan
+            ? `🚩 **Klan Anda:** **${userClan.name}** (Level ${userClan.level})`
+            : `⚠️ *Anda belum bergabung dengan klan mana pun!*`,
           ``,
           `-# 💡 *Gunakan \`/survival rpg conquest aksi:attack sektor:SECTOR_DOCKS energi:50\` untuk menyerang!*`,
         ].join("\n"),
@@ -64,7 +79,8 @@ module.exports = {
       return interaction.editReply({
         ...buildErrorContainerV2({
           title: "Klan Diperlukan",
-          description: "Kamu harus menjadi anggota atau pemimpin klan untuk berpartisipasi dalam Perang Wilayah!",
+          description:
+            "Kamu harus menjadi anggota atau pemimpin klan untuk berpartisipasi dalam Perang Wilayah!",
           footerText: ui.getFooter("survival"),
         }),
       });
@@ -129,8 +145,10 @@ module.exports = {
       const taxRes = await territoryWarEngine.claimClanTax(userClan.id);
       if (!taxRes.success) {
         let msg = "Gagal mengklaim pajak wilayah.";
-        if (taxRes.reason === "NO_TERRITORIES_OWNED") msg = "Klan milikmu belum menguasai sektor wilayah mana pun!";
-        if (taxRes.reason === "NO_ACCUMULATED_TAX") msg = "Belum ada akumulasi pajak baru yang dapat diklaim saat ini.";
+        if (taxRes.reason === "NO_TERRITORIES_OWNED")
+          msg = "Klan milikmu belum menguasai sektor wilayah mana pun!";
+        if (taxRes.reason === "NO_ACCUMULATED_TAX")
+          msg = "Belum ada akumulasi pajak baru yang dapat diklaim saat ini.";
 
         return interaction.editReply({
           ...buildErrorContainerV2({

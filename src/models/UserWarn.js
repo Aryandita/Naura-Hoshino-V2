@@ -29,9 +29,7 @@ const UserWarn = sequelize.define(
   {
     tableName: "user_warns",
     timestamps: true,
-    indexes: [
-      { fields: ["guildId", "userId"] }
-    ]
+    indexes: [{ fields: ["guildId", "userId"] }],
   },
 );
 

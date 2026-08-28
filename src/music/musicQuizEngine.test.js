@@ -5,7 +5,11 @@ const assert = require("node:assert/strict");
 const MusicQuizEngine = require("./musicQuizEngine");
 
 test("MusicQuizEngine - Session Setup and Rounds", async () => {
-  const session = await MusicQuizEngine.startQuizSession("guild_music_test", "channel_123", 4);
+  const session = await MusicQuizEngine.startQuizSession(
+    "guild_music_test",
+    "channel_123",
+    4,
+  );
   assert.ok(session, "Sesi kuis harus dibuat");
   assert.equal(session.totalRounds, 4, "Total ronde harus 4");
   assert.equal(session.currentRoundIndex, 0, "Mulai di ronde 0");
@@ -15,7 +19,10 @@ test("MusicQuizEngine - Session Setup and Rounds", async () => {
   assert.ok(r1.audioHint, "Harus memiliki petunjuk audio/lirik");
   assert.ok(r1.correctAnswer, "Harus memiliki jawaban benar");
   assert.equal(r1.choices.length, 4, "Harus ada 4 pilihan tebakan");
-  assert.ok(r1.choices.includes(r1.correctAnswer), "Pilihan harus memuat jawaban yang benar");
+  assert.ok(
+    r1.choices.includes(r1.correctAnswer),
+    "Pilihan harus memuat jawaban yang benar",
+  );
 });
 
 test("MusicQuizEngine - Scoring Math & Streak Multipliers", () => {

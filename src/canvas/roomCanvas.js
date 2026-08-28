@@ -2,7 +2,17 @@
 
 const { createCanvas, loadImage } = require("@napi-rs/canvas");
 
-function drawRoundedRect(ctx, x, y, width, height, radius, fillStyle, strokeStyle, lineWidth = 1) {
+function drawRoundedRect(
+  ctx,
+  x,
+  y,
+  width,
+  height,
+  radius,
+  fillStyle,
+  strokeStyle,
+  lineWidth = 1,
+) {
   ctx.beginPath();
   if (ctx.roundRect) {
     ctx.roundRect(x, y, width, height, radius);
@@ -33,7 +43,8 @@ async function renderRoomCanvas(roomData, user, pet = null) {
   const canvas = createCanvas(W, H);
   const ctx = canvas.getContext("2d");
 
-  const displayName = roomData.displayName || user?.displayName || user?.username || "Pengelana";
+  const displayName =
+    roomData.displayName || user?.displayName || user?.username || "Pengelana";
   const level = roomData.level || 1;
   const comfort = roomData.comfortScore || 100;
   const likes = roomData.likesCount || 0;
@@ -78,7 +89,9 @@ async function renderRoomCanvas(roomData, user, pet = null) {
       ctx.closePath();
 
       const isEven = (gx + gy) % 2 === 0;
-      ctx.fillStyle = isEven ? "rgba(18, 24, 38, 0.85)" : "rgba(13, 17, 28, 0.85)";
+      ctx.fillStyle = isEven
+        ? "rgba(18, 24, 38, 0.85)"
+        : "rgba(13, 17, 28, 0.85)";
       ctx.fill();
       ctx.strokeStyle = "rgba(6, 182, 212, 0.2)";
       ctx.lineWidth = 1;
@@ -90,10 +103,16 @@ async function renderRoomCanvas(roomData, user, pet = null) {
   // Left Wall (Isometric Back-Left)
   ctx.save();
   ctx.beginPath();
-  ctx.moveTo(originX - (gridSize * tileW) / 2, originY - 100 + (gridSize * tileH) / 2);
+  ctx.moveTo(
+    originX - (gridSize * tileW) / 2,
+    originY - 100 + (gridSize * tileH) / 2,
+  );
   ctx.lineTo(originX, originY - 100);
   ctx.lineTo(originX, originY - 260);
-  ctx.lineTo(originX - (gridSize * tileW) / 2, originY - 260 + (gridSize * tileH) / 2);
+  ctx.lineTo(
+    originX - (gridSize * tileW) / 2,
+    originY - 260 + (gridSize * tileH) / 2,
+  );
   ctx.closePath();
   ctx.fillStyle = "rgba(10, 14, 24, 0.9)";
   ctx.fill();
@@ -105,8 +124,14 @@ async function renderRoomCanvas(roomData, user, pet = null) {
   ctx.save();
   ctx.beginPath();
   ctx.moveTo(originX, originY - 100);
-  ctx.lineTo(originX + (gridSize * tileW) / 2, originY - 100 + (gridSize * tileH) / 2);
-  ctx.lineTo(originX + (gridSize * tileW) / 2, originY - 260 + (gridSize * tileH) / 2);
+  ctx.lineTo(
+    originX + (gridSize * tileW) / 2,
+    originY - 100 + (gridSize * tileH) / 2,
+  );
+  ctx.lineTo(
+    originX + (gridSize * tileW) / 2,
+    originY - 260 + (gridSize * tileH) / 2,
+  );
   ctx.lineTo(originX, originY - 260);
   ctx.closePath();
   ctx.fillStyle = "rgba(15, 20, 32, 0.9)";
@@ -118,7 +143,17 @@ async function renderRoomCanvas(roomData, user, pet = null) {
   // 4. Wall Mounted Live Holo-Card Frame (Left Wall)
   const holoX = originX - 140;
   const holoY = originY - 220;
-  drawRoundedRect(ctx, holoX - 35, holoY - 10, 70, 95, 8, "rgba(6, 182, 212, 0.15)", "#06B6D4", 1.5);
+  drawRoundedRect(
+    ctx,
+    holoX - 35,
+    holoY - 10,
+    70,
+    95,
+    8,
+    "rgba(6, 182, 212, 0.15)",
+    "#06B6D4",
+    1.5,
+  );
 
   ctx.font = 'bold 9px "JetBrains Mono", monospace';
   ctx.fillStyle = "#06B6D4";
@@ -128,17 +163,22 @@ async function renderRoomCanvas(roomData, user, pet = null) {
   ctx.fillText("🎴", holoX, holoY + 40);
   ctx.font = 'bold 8px "Outfit", sans-serif';
   ctx.fillStyle = "#E2E8F0";
-  ctx.fillText(roomData.holoCardName ? roomData.holoCardName.slice(0, 10) : "Waifu Frame", holoX, holoY + 70);
+  ctx.fillText(
+    roomData.holoCardName ? roomData.holoCardName.slice(0, 10) : "Waifu Frame",
+    holoX,
+    holoY + 70,
+  );
 
   // 5. Furniture Items Placement (Icons & Capsules)
-  const furniture = roomData.furniture && roomData.furniture.length > 0
-    ? roomData.furniture
-    : [
-        { name: "Cyber Bed", icon: "🛏️", x: 1, y: 1 },
-        { name: "Kotatsu Table", icon: "🍵", x: 3, y: 3 },
-        { name: "Neon Synthesizer", icon: "🎹", x: 4, y: 1 },
-        { name: "Bonsai Plant", icon: "🪴", x: 1, y: 4 },
-      ];
+  const furniture =
+    roomData.furniture && roomData.furniture.length > 0
+      ? roomData.furniture
+      : [
+          { name: "Cyber Bed", icon: "🛏️", x: 1, y: 1 },
+          { name: "Kotatsu Table", icon: "🍵", x: 3, y: 3 },
+          { name: "Neon Synthesizer", icon: "🎹", x: 4, y: 1 },
+          { name: "Bonsai Plant", icon: "🪴", x: 1, y: 4 },
+        ];
 
   for (const item of furniture) {
     const fx = item.x || 2;
@@ -174,7 +214,17 @@ async function renderRoomCanvas(roomData, user, pet = null) {
   ctx.restore();
 
   // 7. Top Header Glass Bar (Room Stats)
-  drawRoundedRect(ctx, 24, 20, W - 48, 64, 16, "rgba(13, 17, 23, 0.8)", "rgba(255, 255, 255, 0.1)", 1);
+  drawRoundedRect(
+    ctx,
+    24,
+    20,
+    W - 48,
+    64,
+    16,
+    "rgba(13, 17, 23, 0.8)",
+    "rgba(255, 255, 255, 0.1)",
+    1,
+  );
 
   // Avatar in Top Left
   const avSize = 44;
@@ -203,7 +253,11 @@ async function renderRoomCanvas(roomData, user, pet = null) {
 
   ctx.font = '12px "Outfit", sans-serif';
   ctx.fillStyle = "#8E98B0";
-  ctx.fillText(`Kenyamanan: ${comfort}/1000 · ${furniture.length} Furnitur Terpasang`, 88, 68);
+  ctx.fillText(
+    `Kenyamanan: ${comfort}/1000 · ${furniture.length} Furnitur Terpasang`,
+    88,
+    68,
+  );
 
   // Top Right Metrics: Level & Likes
   ctx.textAlign = "right";
@@ -216,7 +270,17 @@ async function renderRoomCanvas(roomData, user, pet = null) {
   ctx.fillText(`${likes} Likes ❤️`, W - 48, 68);
 
   // 8. Outer Glass Frame
-  drawRoundedRect(ctx, 16, 12, W - 32, H - 24, 20, null, "rgba(255, 255, 255, 0.08)", 1.5);
+  drawRoundedRect(
+    ctx,
+    16,
+    12,
+    W - 32,
+    H - 24,
+    20,
+    null,
+    "rgba(255, 255, 255, 0.08)",
+    1.5,
+  );
 
   return canvas.toBuffer("image/png");
 }

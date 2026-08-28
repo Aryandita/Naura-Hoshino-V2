@@ -195,32 +195,37 @@ module.exports = {
       const commandList = [];
       for (const [cmdName, cmdData] of client.commands.entries()) {
         if (!cmdData.data || !Array.isArray(cmdData.data.options)) {
-           commandList.push(cmdName);
-           continue;
+          commandList.push(cmdName);
+          continue;
         }
-        
-        const hasSubcommands = cmdData.data.options.some(opt => opt.type === 1 || opt.type === 2);
+
+        const hasSubcommands = cmdData.data.options.some(
+          (opt) => opt.type === 1 || opt.type === 2,
+        );
         if (!hasSubcommands) {
           commandList.push(cmdName);
         } else {
-          cmdData.data.options.forEach(opt => {
-            if (opt.type === 2) { // Subcommand Group
+          cmdData.data.options.forEach((opt) => {
+            if (opt.type === 2) {
+              // Subcommand Group
               if (Array.isArray(opt.options)) {
-                opt.options.forEach(sub => {
-                  if (sub.type === 1) commandList.push(`${cmdName} ${opt.name} ${sub.name}`);
+                opt.options.forEach((sub) => {
+                  if (sub.type === 1)
+                    commandList.push(`${cmdName} ${opt.name} ${sub.name}`);
                 });
               }
-            } else if (opt.type === 1) { // Subcommand
+            } else if (opt.type === 1) {
+              // Subcommand
               commandList.push(`${cmdName} ${opt.name}`);
             }
           });
         }
       }
-      
+
       const filtered = commandList
         .filter((cmd) => cmd.toLowerCase().includes(focusedValue))
         .slice(0, 25);
-        
+
       await interaction
         .respond(filtered.map((cmd) => ({ name: `/${cmd}`, value: cmd })))
         .catch(() => {});
@@ -355,7 +360,8 @@ async function handlePing(interaction, client, lang) {
   const loadingPayload = buildLoadingContainerV2({
     authorName: "Naura Latency Diagnostic",
     title: "Mengukur Latensi...",
-    loadingMessage: lang.PING_LOADING || "Menghubungi shard dan gateway Discord...",
+    loadingMessage:
+      lang.PING_LOADING || "Menghubungi shard dan gateway Discord...",
     footerText: `Sedang menyiapkan untuk ${interaction.user.username}`,
     withBanner: true,
   });
@@ -409,7 +415,9 @@ async function handlePing(interaction, client, lang) {
           const status = node.isConnected
             ? `${online} Online (Aktif)`
             : `${offline} Offline (Mati)`;
-          nodeArr.push(`${dot} **${node.name || `Naura Node ${i}`}:** ${status}`);
+          nodeArr.push(
+            `${dot} **${node.name || `Naura Node ${i}`}:** ${status}`,
+          );
           i++;
         });
         lavalinkStr = "\n" + nodeArr.join("\n");
@@ -686,24 +694,30 @@ async function handleInfo(interaction, client, lang) {
     ];
   }
 
-  const pet = await UserPet.findOne({ where: { userId: interaction.user.id, isActive: true } });
+  const pet = await UserPet.findOne({
+    where: { userId: interaction.user.id, isActive: true },
+  });
   let petAttachment = null;
-  
+
   if (pet) {
     const fs = require("fs");
     const path = require("path");
     const { AttachmentBuilder } = require("discord.js");
     const ePet = e("pet", "\uD83D\uDC3E");
-    const imgPath = path.join(__dirname, "../../assets/survival/pets", `${pet.petType}.png`);
+    const imgPath = path.join(
+      __dirname,
+      "../../assets/survival/pets",
+      `${pet.petType}.png`,
+    );
     if (fs.existsSync(imgPath)) {
-       petAttachment = new AttachmentBuilder(imgPath, { name: "pet.png" });
+      petAttachment = new AttachmentBuilder(imgPath, { name: "pet.png" });
     }
-    
+
     // Tambahkan separator virtual di field (karena buildContainerV2 tidak mendukung separator manual di fields array dengan mudah)
     // Atau kita gabungkan di description.
     fields.push({
       name: `─────────\n${ePet} Peliharaan Aktif`,
-      value: `**Spesies:** ${String(pet.petType).toUpperCase()}\n**Level:** ${pet.petLevel || 1} | **Mood:** ${String(pet.mood || 'normal').toUpperCase()}`
+      value: `**Spesies:** ${String(pet.petType).toUpperCase()}\n**Level:** ${pet.petLevel || 1} | **Mood:** ${String(pet.mood || "normal").toUpperCase()}`,
     });
   }
 
@@ -842,9 +856,14 @@ async function handleAbout(interaction, client, lang) {
     files.push(new AttachmentBuilder(aboutBanner, { name: "banner.png" }));
   }
 
-  const isEn = lang && (lang.LANG_CODE === "en" || lang.ABOUT_TITLE?.includes("Meet"));
+  const isEn =
+    lang && (lang.LANG_CODE === "en" || lang.ABOUT_TITLE?.includes("Meet"));
   const audioFileName = isEn ? "Intro (EN).mp3" : "Intro (ID).mp3";
-  const audioFilePath = path.join(__dirname, "../../assets/audio", audioFileName);
+  const audioFilePath = path.join(
+    __dirname,
+    "../../assets/audio",
+    audioFileName,
+  );
   if (fs.existsSync(audioFilePath)) {
     files.push(
       new AttachmentBuilder(audioFilePath, {
@@ -871,10 +890,17 @@ async function handleAbout(interaction, client, lang) {
  * @param {number} categoryIndex - Indeks kategori yang sedang aktif (0-based).
  * @param {boolean} disabled - Apakah select menu dinonaktifkan (saat timeout).
  */
-function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false, user = null) {
+function buildHelpPayload(
+  lang,
+  client,
+  categoryIndex = -1,
+  disabled = false,
+  user = null,
+) {
   const categoryKeys = HELP_CATEGORY_KEYS;
   const userName = ui.ux.resolveUserName(user);
-  const isEn = lang && (lang.LANG_CODE === "en" || lang.HELP_TITLE?.includes("Help"));
+  const isEn =
+    lang && (lang.LANG_CODE === "en" || lang.HELP_TITLE?.includes("Help"));
 
   const categories = {
     core: {
@@ -897,7 +923,9 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false, us
     },
     survival: {
       emoji: e("help_survival", "\uD83C\uDFD5\uFE0F"),
-      label: isEn ? "⭐ RPG Survival (Featured)" : "⭐ RPG Survival (Rekomendasi)",
+      label: isEn
+        ? "⭐ RPG Survival (Featured)"
+        : "⭐ RPG Survival (Rekomendasi)",
       desc: lang.HELP_CAT_SURVIVAL_DESC,
       content: formatHelpContent(lang.HELP_CONTENT_SURVIVAL),
     },
@@ -967,11 +995,17 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false, us
 
   // Dynamic banner per kategori
   const categoryBanners = {
-    core: ui.getBanner("utility") || "./assets/general/Utility & Tools Banner.jpeg",
+    core:
+      ui.getBanner("utility") || "./assets/general/Utility & Tools Banner.jpeg",
     music: ui.getBanner("music") || "./assets/general/Music Banner.jpeg",
-    minigame: ui.getBanner("minigame") || "./assets/general/Minigame & Arcade Banner.jpeg",
-    survival: ui.getBanner("economy") || "./assets/general/Economy & Market Banner.jpeg",
-    admin: ui.getBanner("admin") || "./assets/general/Admin & Security Banner.jpeg",
+    minigame:
+      ui.getBanner("minigame") ||
+      "./assets/general/Minigame & Arcade Banner.jpeg",
+    survival:
+      ui.getBanner("economy") ||
+      "./assets/general/Economy & Market Banner.jpeg",
+    admin:
+      ui.getBanner("admin") || "./assets/general/Admin & Security Banner.jpeg",
   };
 
   const activeBannerPath = activeKey
@@ -981,7 +1015,9 @@ function buildHelpPayload(lang, client, categoryIndex = -1, disabled = false, us
   const files = [];
 
   if (activeBannerPath && fs.existsSync(activeBannerPath)) {
-    files.push(new AttachmentBuilder(activeBannerPath, { name: bannerFilename }));
+    files.push(
+      new AttachmentBuilder(activeBannerPath, { name: bannerFilename }),
+    );
   }
 
   const containerComponents = [
@@ -1131,7 +1167,13 @@ async function renderHelpMenuV2(
 ) {
   let currentIndex = -1; // -1 = halaman default (deskripsi umum)
 
-  const initialData = buildHelpPayload(lang, client, currentIndex, false, interaction.user);
+  const initialData = buildHelpPayload(
+    lang,
+    client,
+    currentIndex,
+    false,
+    interaction.user,
+  );
   const payload = {
     content: null,
     embeds: [], // penting: membersihkan embed pemilihan bahasa sebelumnya
@@ -1195,7 +1237,13 @@ async function renderHelpMenuV2(
         return;
       }
 
-      const updatedData = buildHelpPayload(lang, client, currentIndex, false, interaction.user);
+      const updatedData = buildHelpPayload(
+        lang,
+        client,
+        currentIndex,
+        false,
+        interaction.user,
+      );
       await i.update({
         embeds: [],
         flags: updatedData.flags,
@@ -1209,7 +1257,13 @@ async function renderHelpMenuV2(
 
   collector.on("end", async () => {
     try {
-      const disabledData = buildHelpPayload(lang, client, currentIndex, true, interaction.user);
+      const disabledData = buildHelpPayload(
+        lang,
+        client,
+        currentIndex,
+        true,
+        interaction.user,
+      );
       const target = existingResponse || response;
       if (target && target.edit) {
         await target

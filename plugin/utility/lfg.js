@@ -97,7 +97,9 @@ function renderLfgDisplay(state, preset) {
         `\`[Slot ${i + 1}]\` ${member.roleEmoji} **${member.roleLabel}**, <@${member.userId}>`,
       );
     } else {
-      rosterLines.push(`\`[Slot ${i + 1}]\` ⚪ *[Slot Kosong - Klik tombol role untuk gabung]*`);
+      rosterLines.push(
+        `\`[Slot ${i + 1}]\` ⚪ *[Slot Kosong - Klik tombol role untuk gabung]*`,
+      );
     }
   }
 
@@ -125,14 +127,16 @@ function renderLfgDisplay(state, preset) {
 function buildLfgButtons(preset, state) {
   const isFull = state.members.length >= state.maxSlots;
 
-  const roleButtons = preset.roles.slice(0, 4).map((r) =>
-    new ButtonBuilder()
-      .setCustomId(`lfg_role_${r.id}`)
-      .setLabel(r.label)
-      .setEmoji(r.emoji)
-      .setStyle(ButtonStyle.Primary)
-      .setDisabled(isFull),
-  );
+  const roleButtons = preset.roles
+    .slice(0, 4)
+    .map((r) =>
+      new ButtonBuilder()
+        .setCustomId(`lfg_role_${r.id}`)
+        .setLabel(r.label)
+        .setEmoji(r.emoji)
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(isFull),
+    );
 
   const row1 = new ActionRowBuilder().addComponents(roleButtons);
 
@@ -160,7 +164,9 @@ function buildLfgButtons(preset, state) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("lfg")
-    .setDescription("Cari teman mabar & susun tim dengan role otomatis (Looking For Group)")
+    .setDescription(
+      "Cari teman mabar & susun tim dengan role otomatis (Looking For Group)",
+    )
     .addSubcommand((sub) =>
       sub
         .setName("create")
@@ -182,7 +188,9 @@ module.exports = {
         .addStringOption((opt) =>
           opt
             .setName("judul")
-            .setDescription("Judul mabar (contoh: Push Rank Immortal / Farming)")
+            .setDescription(
+              "Judul mabar (contoh: Push Rank Immortal / Farming)",
+            )
             .setRequired(true),
         )
         .addIntegerOption((opt) =>
@@ -245,7 +253,10 @@ module.exports = {
 
       // 1. Tutup Lobby
       if (customId === "lfg_close") {
-        if (i.user.id !== state.hostId && !i.memberPermissions?.has("ManageGuild")) {
+        if (
+          i.user.id !== state.hostId &&
+          !i.memberPermissions?.has("ManageGuild")
+        ) {
           return i.reply({
             content: `${ui.getEmoji("error") || "❌"} Hanya pembuat lobby atau admin yang dapat menutup lobby ini.`,
             flags: 64,
@@ -259,7 +270,10 @@ module.exports = {
           description: `Lobby ini telah ditutup oleh <@${i.user.id}>. Terima kasih!`,
           footerText: ui.getFooter("utility"),
         });
-        return i.update({ ...closedContainer, components: closedContainer.components });
+        return i.update({
+          ...closedContainer,
+          components: closedContainer.components,
+        });
       }
 
       // 2. Ping Tim
@@ -279,7 +293,9 @@ module.exports = {
 
       // 3. Keluar dari Tim
       if (customId === "lfg_leave") {
-        const existingIdx = state.members.findIndex((m) => m.userId === i.user.id);
+        const existingIdx = state.members.findIndex(
+          (m) => m.userId === i.user.id,
+        );
         if (existingIdx === -1) {
           return i.reply({
             content: `${ui.getEmoji("info") || "ℹ️"} Kamu belum bergabung di dalam lobby ini.`,
@@ -306,7 +322,9 @@ module.exports = {
           emoji: ui.getEmoji("arcade") || "🎮",
         };
 
-        const existingIdx = state.members.findIndex((m) => m.userId === i.user.id);
+        const existingIdx = state.members.findIndex(
+          (m) => m.userId === i.user.id,
+        );
 
         if (existingIdx !== -1) {
           // Ganti role

@@ -41,4 +41,5 @@ const UserRoomSchema = new mongoose.Schema(
   },
 );
 
-module.exports = mongoose.models.UserRoom || mongoose.model("UserRoom", UserRoomSchema);
+module.exports =
+  mongoose.models.UserRoom || mongoose.model("UserRoom", UserRoomSchema);

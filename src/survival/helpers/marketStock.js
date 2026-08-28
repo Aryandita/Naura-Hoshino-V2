@@ -10,7 +10,10 @@ const UserSurvival = require("../../models/UserSurvival");
 const items = require("../data/items");
 const currencyHelper = require("../engines/currency");
 const { sellMultiplier } = require("./specialEffects");
-const { safeParseInventory, addOrStackItem } = require("../engines/inventoryHelper");
+const {
+  safeParseInventory,
+  addOrStackItem,
+} = require("../engines/inventoryHelper");
 
 const FRAGMENT = currencyHelper.byKind(currencyHelper.FRAGMENT);
 

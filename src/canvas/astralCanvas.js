@@ -2,7 +2,17 @@
 
 const { createCanvas, loadImage } = require("@napi-rs/canvas");
 
-function drawRoundedRect(ctx, x, y, width, height, radius, fillStyle, strokeStyle, lineWidth = 1) {
+function drawRoundedRect(
+  ctx,
+  x,
+  y,
+  width,
+  height,
+  radius,
+  fillStyle,
+  strokeStyle,
+  lineWidth = 1,
+) {
   ctx.beginPath();
   if (ctx.roundRect) {
     ctx.roundRect(x, y, width, height, radius);
@@ -64,8 +74,28 @@ async function renderOmikujiCard(omikuji, user) {
   ctx.restore();
 
   // 3. Outer Frame & Glass Panel
-  drawRoundedRect(ctx, 24, 24, W - 48, H - 48, 28, "rgba(255, 255, 255, 0.02)", "rgba(255, 255, 255, 0.12)", 1.5);
-  drawRoundedRect(ctx, 36, 36, W - 72, H - 72, 22, "rgba(13, 17, 23, 0.7)", `${accentColor}66`, 2);
+  drawRoundedRect(
+    ctx,
+    24,
+    24,
+    W - 48,
+    H - 48,
+    28,
+    "rgba(255, 255, 255, 0.02)",
+    "rgba(255, 255, 255, 0.12)",
+    1.5,
+  );
+  drawRoundedRect(
+    ctx,
+    36,
+    36,
+    W - 72,
+    H - 72,
+    22,
+    "rgba(13, 17, 23, 0.7)",
+    `${accentColor}66`,
+    2,
+  );
 
   // 4. Header: Celestial Tag & Date
   ctx.textAlign = "center";
@@ -118,7 +148,15 @@ async function renderOmikujiCard(omikuji, user) {
       ctx.restore();
     }
   } catch (_) {
-    drawRoundedRect(ctx, avX, avY, avatarSize, avatarSize, avatarSize / 2, "#1E2633");
+    drawRoundedRect(
+      ctx,
+      avX,
+      avY,
+      avatarSize,
+      avatarSize,
+      avatarSize / 2,
+      "#1E2633",
+    );
   }
 
   // Display Name under Avatar
@@ -130,9 +168,21 @@ async function renderOmikujiCard(omikuji, user) {
   // 7. Categories Matrix (Rezeki, Asmara, Petualangan, Mood)
   const catY = 365;
   const cats = [
-    { label: "💰 Rezeki", val: omikuji.categories?.wealth || 85, color: "#10B981" },
-    { label: "💖 Asmara", val: omikuji.categories?.romance || 80, color: "#FFB6C1" },
-    { label: "⚔️ Petualangan", val: omikuji.categories?.adventure || 90, color: "#06B6D4" },
+    {
+      label: "💰 Rezeki",
+      val: omikuji.categories?.wealth || 85,
+      color: "#10B981",
+    },
+    {
+      label: "💖 Asmara",
+      val: omikuji.categories?.romance || 80,
+      color: "#FFB6C1",
+    },
+    {
+      label: "⚔️ Petualangan",
+      val: omikuji.categories?.adventure || 90,
+      color: "#06B6D4",
+    },
     { label: "✨ Mood", val: omikuji.categories?.mood || 88, color: "#C084FC" },
   ];
 
@@ -141,7 +191,17 @@ async function renderOmikujiCard(omikuji, user) {
     const bx = 60 + (i % 2) * 270;
     const by = catY + Math.floor(i / 2) * 65;
 
-    drawRoundedRect(ctx, bx, by, 250, 52, 12, "rgba(255, 255, 255, 0.03)", "rgba(255, 255, 255, 0.08)", 1);
+    drawRoundedRect(
+      ctx,
+      bx,
+      by,
+      250,
+      52,
+      12,
+      "rgba(255, 255, 255, 0.03)",
+      "rgba(255, 255, 255, 0.08)",
+      1,
+    );
     ctx.textAlign = "left";
     ctx.font = '13px "Outfit", sans-serif';
     ctx.fillStyle = "#A0AEC0";
@@ -159,7 +219,16 @@ async function renderOmikujiCard(omikuji, user) {
 
   // 8. Lucky Charms (Number & Color)
   const charmY = 520;
-  drawRoundedRect(ctx, 60, charmY, W - 120, 60, 14, "rgba(255, 255, 255, 0.03)", "rgba(255, 255, 255, 0.08)");
+  drawRoundedRect(
+    ctx,
+    60,
+    charmY,
+    W - 120,
+    60,
+    14,
+    "rgba(255, 255, 255, 0.03)",
+    "rgba(255, 255, 255, 0.08)",
+  );
 
   ctx.textAlign = "center";
   ctx.font = '12px "JetBrains Mono", monospace';
@@ -168,11 +237,24 @@ async function renderOmikujiCard(omikuji, user) {
 
   ctx.font = 'bold 14px "Orbitron", sans-serif';
   ctx.fillStyle = "#FFD700";
-  ctx.fillText(`ANGKA: #${omikuji.luckyNumber || 7}  ·  WARNA: ${omikuji.luckyColor || "Sakura Pink"}`, W / 2, charmY + 44);
+  ctx.fillText(
+    `ANGKA: #${omikuji.luckyNumber || 7}  ·  WARNA: ${omikuji.luckyColor || "Sakura Pink"}`,
+    W / 2,
+    charmY + 44,
+  );
 
   // 9. Personal Quote
   const quoteY = 610;
-  drawRoundedRect(ctx, 60, quoteY, W - 120, 100, 16, "rgba(6, 182, 212, 0.05)", "rgba(6, 182, 212, 0.25)");
+  drawRoundedRect(
+    ctx,
+    60,
+    quoteY,
+    W - 120,
+    100,
+    16,
+    "rgba(6, 182, 212, 0.05)",
+    "rgba(6, 182, 212, 0.25)",
+  );
 
   ctx.textAlign = "center";
   ctx.font = '11px "JetBrains Mono", monospace';
@@ -181,15 +263,29 @@ async function renderOmikujiCard(omikuji, user) {
 
   ctx.font = 'italic 14px "Outfit", sans-serif';
   ctx.fillStyle = "#E2E8F0";
-  const quoteText = omikuji.personalQuote || '"Semesta sedang memayungi langkahmu."';
+  const quoteText =
+    omikuji.personalQuote || '"Semesta sedang memayungi langkahmu."';
   ctx.fillText(quoteText, W / 2, quoteY + 60, W - 160);
 
   // 10. Reward Pill & Footer
   const rewardY = 735;
-  drawRoundedRect(ctx, 120, rewardY, W - 240, 48, 24, "rgba(16, 185, 129, 0.15)", "rgba(16, 185, 129, 0.4)");
+  drawRoundedRect(
+    ctx,
+    120,
+    rewardY,
+    W - 240,
+    48,
+    24,
+    "rgba(16, 185, 129, 0.15)",
+    "rgba(16, 185, 129, 0.4)",
+  );
   ctx.font = 'bold 14px "Orbitron", sans-serif';
   ctx.fillStyle = "#10B981";
-  ctx.fillText(`+${tier.rewardCoin || 500} COINS  ·  +${tier.rewardStamina || 20} STAMINA`, W / 2, rewardY + 29);
+  ctx.fillText(
+    `+${tier.rewardCoin || 500} COINS  ·  +${tier.rewardStamina || 20} STAMINA`,
+    W / 2,
+    rewardY + 29,
+  );
 
   ctx.font = '11px "JetBrains Mono", monospace';
   ctx.fillStyle = "#64748B";
@@ -229,7 +325,17 @@ async function renderAstralWeatherBanner(weather) {
   ctx.restore();
 
   // Glass Frame
-  drawRoundedRect(ctx, 20, 20, W - 40, H - 40, 22, "rgba(255,255,255,0.02)", `${accentColor}55`, 1.5);
+  drawRoundedRect(
+    ctx,
+    20,
+    20,
+    W - 40,
+    H - 40,
+    22,
+    "rgba(255,255,255,0.02)",
+    `${accentColor}55`,
+    1.5,
+  );
 
   // Header Tag
   ctx.textAlign = "left";
@@ -240,12 +346,21 @@ async function renderAstralWeatherBanner(weather) {
   // Weather Title
   ctx.font = 'bold 36px "Orbitron", sans-serif';
   ctx.fillStyle = "#FFFFFF";
-  ctx.fillText(`${weather.emoji || "✨"} ${weather.name || "Aurora of Fortune"}`, 48, 104);
+  ctx.fillText(
+    `${weather.emoji || "✨"} ${weather.name || "Aurora of Fortune"}`,
+    48,
+    104,
+  );
 
   // Description
   ctx.font = '15px "Outfit", sans-serif';
   ctx.fillStyle = "#A0AEC0";
-  ctx.fillText(weather.description || "Pancaran aura kosmik menaungi server hari ini.", 48, 138, W - 100);
+  ctx.fillText(
+    weather.description || "Pancaran aura kosmik menaungi server hari ini.",
+    48,
+    138,
+    W - 100,
+  );
 
   // Buff Pills Container
   const pillY = 170;
@@ -257,7 +372,16 @@ async function renderAstralWeatherBanner(weather) {
     const val = buffs[k];
     const bx = 48 + i * 260;
 
-    drawRoundedRect(ctx, bx, pillY, 240, 68, 14, "rgba(255,255,255,0.03)", "rgba(255,255,255,0.1)");
+    drawRoundedRect(
+      ctx,
+      bx,
+      pillY,
+      240,
+      68,
+      14,
+      "rgba(255,255,255,0.03)",
+      "rgba(255,255,255,0.1)",
+    );
     ctx.textAlign = "left";
     ctx.font = '11px "JetBrains Mono", monospace';
     ctx.fillStyle = "#8E98B0";
@@ -272,7 +396,12 @@ async function renderAstralWeatherBanner(weather) {
   ctx.textAlign = "left";
   ctx.font = 'italic 13px "Outfit", sans-serif';
   ctx.fillStyle = "#64748B";
-  ctx.fillText(`"${weather.lore || "Bintang-bintang bersinar terang di atas server."}"`, 48, 290, W - 100);
+  ctx.fillText(
+    `"${weather.lore || "Bintang-bintang bersinar terang di atas server."}"`,
+    48,
+    290,
+    W - 100,
+  );
 
   return canvas.toBuffer("image/png");
 }

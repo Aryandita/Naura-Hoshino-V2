@@ -7,9 +7,7 @@ const {
   ButtonStyle,
   ComponentType,
 } = require("discord.js");
-const {
-  buildContainerV2,
-} = require("../../src/utils/NauraContainerBuilder");
+const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
 const redisManager = require("../../src/managers/redisManager");
 const cacheManager = require("../../src/managers/cacheManager");
@@ -62,9 +60,7 @@ function parseStoryOptions(rawText) {
   if (opt3Match) options.push(opt3Match[1].trim());
 
   // Bersihkan tag opsi dari narasi utama
-  narrative = narrative
-    .replace(/\[OPSI\s*1\][\s\S]*/i, "")
-    .trim();
+  narrative = narrative.replace(/\[OPSI\s*1\][\s\S]*/i, "").trim();
 
   // Fallback pilihan jika LLM tidak menyertakan format
   if (options.length === 0) {
@@ -76,7 +72,10 @@ function parseStoryOptions(rawText) {
   return { narrative, options };
 }
 
-async function runStoryTurn(interaction, { actionText, reset = false, newGenre = null }) {
+async function runStoryTurn(
+  interaction,
+  { actionText, reset = false, newGenre = null },
+) {
   const userId = interaction.user.id;
   const sessionKey = `story:session:${userId}`;
 
@@ -122,7 +121,9 @@ ${
     if (aiClient) {
       session.history.push({
         role: "user",
-        parts: [{ text: actionText || `Memulai petualangan babak ${currentChapter}` }],
+        parts: [
+          { text: actionText || `Memulai petualangan babak ${currentChapter}` },
+        ],
       });
 
       const gemResult = await aiClient.models.generateContent({
@@ -156,10 +157,18 @@ ${
 
   // Berikan Hadiah Bertingkat secara Atomik
   const rewards = calculateTierReward(currentChapter);
-  await cacheManager.incrementUserSurvival(userId, "starFragments", rewards.fragments);
+  await cacheManager.incrementUserSurvival(
+    userId,
+    "starFragments",
+    rewards.fragments,
+  );
   await cacheManager.incrementUserSurvival(userId, "survival_xp", rewards.xp);
   if (rewards.coupons > 0) {
-    await cacheManager.incrementUserSurvival(userId, "coupons", rewards.coupons);
+    await cacheManager.incrementUserSurvival(
+      userId,
+      "coupons",
+      rewards.coupons,
+    );
   }
 
   session.totalRewards.fragments += rewards.fragments;
@@ -229,7 +238,9 @@ ${
   }
 
   const buttonsRow =
-    buttons.length > 0 ? new ActionRowBuilder().addComponents(buttons.slice(0, 5)) : null;
+    buttons.length > 0
+      ? new ActionRowBuilder().addComponents(buttons.slice(0, 5))
+      : null;
 
   const payload = buildContainerV2({
     accentColorHex: genreColor,
@@ -245,9 +256,10 @@ ${
       : `Babak ${currentChapter}/10 \u2022 Klik tombol di bawah untuk melanjutkan`,
   });
 
-  const responseMessage = interaction.replied || interaction.deferred
-    ? await interaction.editReply(payload)
-    : await interaction.reply(payload);
+  const responseMessage =
+    interaction.replied || interaction.deferred
+      ? await interaction.editReply(payload)
+      : await interaction.reply(payload);
 
   // Setup Button Collector (3 menit interaktivitas)
   const collector = responseMessage.createMessageComponentCollector({
@@ -258,7 +270,8 @@ ${
   collector.on("collect", async (btnInteraction) => {
     if (btnInteraction.user.id !== userId) {
       return btnInteraction.reply({
-        content: "❌ Ini adalah buku petualangan pemain lain! Gunakan `/story start` untuk membuka ceritamu sendiri.",
+        content:
+          "❌ Ini adalah buku petualangan pemain lain! Gunakan `/story start` untuk membuka ceritamu sendiri.",
         flags: 64, // Ephemeral
       });
     }
@@ -271,7 +284,8 @@ ${
       const resetPayload = buildContainerV2({
         accentColorHex: ui.getColor("info") || "#3498DB",
         title: "🔄 Petualangan Direset",
-        description: "Sesi petualanganmu telah dibersihkan. Gunakan `/story start` kapan pun kamu siap bertualang kembali!",
+        description:
+          "Sesi petualanganmu telah dibersihkan. Gunakan `/story start` kapan pun kamu siap bertualang kembali!",
         footerText: ui.getFooter("utility"),
       });
       return btnInteraction.editReply(resetPayload);
@@ -285,8 +299,10 @@ ${
       });
     }
 
-    const choiceIdx = parseInt(btnInteraction.customId.replace("story_choice_", ""), 10) - 1;
-    const selectedAction = options[choiceIdx] || options[0] || "Melanjutkan perjalanan";
+    const choiceIdx =
+      parseInt(btnInteraction.customId.replace("story_choice_", ""), 10) - 1;
+    const selectedAction =
+      options[choiceIdx] || options[0] || "Melanjutkan perjalanan";
 
     return runStoryTurn(btnInteraction, {
       actionText: selectedAction,
@@ -298,7 +314,9 @@ ${
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("story")
-    .setDescription("🎮 AI Dungeon Master: Petualangan RPG interaktif multi-babak bersama Naura!")
+    .setDescription(
+      "🎮 AI Dungeon Master: Petualangan RPG interaktif multi-babak bersama Naura!",
+    )
     .addSubcommand((sub) =>
       sub
         .setName("start")
@@ -319,14 +337,18 @@ module.exports = {
         .addStringOption((opt) =>
           opt
             .setName("latar")
-            .setDescription("Latar belakang atau aksi awal karaktermu (opsional)")
+            .setDescription(
+              "Latar belakang atau aksi awal karaktermu (opsional)",
+            )
             .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("action")
-        .setDescription("Lakukan aksi tindakan bebas pada babak ceritamu saat ini.")
+        .setDescription(
+          "Lakukan aksi tindakan bebas pada babak ceritamu saat ini.",
+        )
         .addStringOption((opt) =>
           opt
             .setName("aksi")
@@ -350,7 +372,8 @@ module.exports = {
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("info") || "#3498DB",
         title: "🔄 Petualangan Direset",
-        description: "Catatan petualanganmu telah dibersihkan. Gunakan `/story start` untuk membuka babak baru!",
+        description:
+          "Catatan petualanganmu telah dibersihkan. Gunakan `/story start` untuk membuka babak baru!",
         footerText: ui.getFooter("utility"),
       });
       return interaction.editReply(payload);

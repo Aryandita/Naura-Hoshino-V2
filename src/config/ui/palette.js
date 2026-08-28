@@ -74,11 +74,9 @@ const footers = {
   music: `Naura High-Fidelity Audio System v${env.BOT_VERSION || "2.1.0"} • Created by Aryandita ✨`,
 
   // --- Premium Tier Footers ---
-  premium:
-    `Naura V.I.P Project v${env.BOT_VERSION || "2.1.0"} • Terima kasih telah mendukung Naura! 💎`,
+  premium: `Naura V.I.P Project v${env.BOT_VERSION || "2.1.0"} • Terima kasih telah mendukung Naura! 💎`,
   premium_supporter: `Naura Supporter Tier v${env.BOT_VERSION || "2.1.0"} • Bersama kita tumbuh ✨`,
-  premium_friends:
-    `Naura Friends Tier v${env.BOT_VERSION || "2.1.0"} • Terima kasih sahabat setia 💫`,
+  premium_friends: `Naura Friends Tier v${env.BOT_VERSION || "2.1.0"} • Terima kasih sahabat setia 💫`,
   premium_vip: `Naura V.I.P Tier v${env.BOT_VERSION || "2.1.0"} • Kamu adalah yang terpilih 👑`,
 };
 

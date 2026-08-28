@@ -25,81 +25,66 @@ const path = require("node:path");
 const projectRoot = path.resolve(__dirname, "..");
 const dashboardDir = path.join(projectRoot, "dashboard-v2");
 const buildRoot =
-    process.env.NAURA_V2_BUILD_DIR ||
-    path.join(os.tmpdir(), "naura-v2-build");
+  process.env.NAURA_V2_BUILD_DIR || path.join(os.tmpdir(), "naura-v2-build");
 
 /** File/folder yang ikut disalin ke area build. */
 const COPY_FILES = ["vite.config.js", "package.json"];
 const COPY_DIRS = ["src", "public"];
 
 function resetInside(parent, name) {
-    fs.rmSync(path.join(parent, name), { recursive: true, force: true });
+  fs.rmSync(path.join(parent, name), { recursive: true, force: true });
 }
 
 function ensureNodeModulesLink() {
-    const link = path.join(buildRoot, "node_modules");
-    const realTarget = path.join(dashboardDir, "node_modules");
+  const link = path.join(buildRoot, "node_modules");
+  const realTarget = path.join(dashboardDir, "node_modules");
 
-    let existing = null;
-    try {
-        existing = fs.readlinkSync(link);
-    } catch {
-        // Belum ada; akan dibuat.
-    }
+  let existing = null;
+  try {
+    existing = fs.readlinkSync(link);
+  } catch {
+    // Belum ada; akan dibuat.
+  }
 
-    if (!existing && !fs.existsSync(link)) {
-        execFileSync("cmd.exe", [
-            "/d",
-            "/c",
-            "mklink",
-            "/J",
-            link,
-            realTarget,
-        ]);
-        console.log(`[BUILD-V2] Junction node_modules dibuat.`);
-    }
+  if (!existing && !fs.existsSync(link)) {
+    execFileSync("cmd.exe", ["/d", "/c", "mklink", "/J", link, realTarget]);
+    console.log(`[BUILD-V2] Junction node_modules dibuat.`);
+  }
 }
 
 function main() {
-    if (!fs.existsSync(dashboardDir)) {
-        console.error("[BUILD-V2] Folder dashboard-v2 tidak ditemukan.");
-        process.exit(1);
-    }
+  if (!fs.existsSync(dashboardDir)) {
+    console.error("[BUILD-V2] Folder dashboard-v2 tidak ditemukan.");
+    process.exit(1);
+  }
 
-    // 1. Siapkan area build bersih (node_modules junction dipertahankan).
-    fs.mkdirSync(buildRoot, { recursive: true });
-    for (const dir of COPY_DIRS) resetInside(buildRoot, dir);
-    resetInside(buildRoot, "dist");
-    for (const file of COPY_FILES) {
-        fs.copyFileSync(
-            path.join(dashboardDir, file),
-            path.join(buildRoot, file),
-        );
-    }
-    for (const dir of COPY_DIRS) {
-        fs.cpSync(
-            path.join(dashboardDir, dir),
-            path.join(buildRoot, dir),
-            { recursive: true },
-        );
-    }
-    ensureNodeModulesLink();
-
-    // 2. Build di path tanpa spasi.
-    console.log(`[BUILD-V2] Build dari: ${buildRoot}`);
-    execSync("npm run build", {
-        cwd: buildRoot,
-        stdio: "inherit",
+  // 1. Siapkan area build bersih (node_modules junction dipertahankan).
+  fs.mkdirSync(buildRoot, { recursive: true });
+  for (const dir of COPY_DIRS) resetInside(buildRoot, dir);
+  resetInside(buildRoot, "dist");
+  for (const file of COPY_FILES) {
+    fs.copyFileSync(path.join(dashboardDir, file), path.join(buildRoot, file));
+  }
+  for (const dir of COPY_DIRS) {
+    fs.cpSync(path.join(dashboardDir, dir), path.join(buildRoot, dir), {
+      recursive: true,
     });
+  }
+  ensureNodeModulesLink();
 
-    // 3. Salin hasil build kembali ke lokasi asli.
-    resetInside(dashboardDir, "dist");
-    fs.cpSync(
-        path.join(buildRoot, "dist"),
-        path.join(dashboardDir, "dist"),
-        { recursive: true },
-    );
-    console.log(`[BUILD-V2] dist tersalin ke ${path.join(dashboardDir, "dist")}`);
+  // 2. Build di path tanpa spasi.
+  console.log(`[BUILD-V2] Build dari: ${buildRoot}`);
+  execSync("npm run build", {
+    cwd: buildRoot,
+    stdio: "inherit",
+  });
+
+  // 3. Salin hasil build kembali ke lokasi asli.
+  resetInside(dashboardDir, "dist");
+  fs.cpSync(path.join(buildRoot, "dist"), path.join(dashboardDir, "dist"), {
+    recursive: true,
+  });
+  console.log(`[BUILD-V2] dist tersalin ke ${path.join(dashboardDir, "dist")}`);
 }
 
 main();

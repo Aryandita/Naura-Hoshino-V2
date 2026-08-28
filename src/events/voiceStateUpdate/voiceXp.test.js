@@ -28,9 +28,18 @@ test("dbMigrator contains migration v34_add_voiceMinutes_to_user_leveling", () =
   const migration = MIGRATIONS.find(
     (m) => m.id === "v34_add_voiceMinutes_to_user_leveling",
   );
-  assert.ok(migration, "v34_add_voiceMinutes_to_user_leveling migration must exist");
-  assert.ok(migration.sql.includes("voiceMinutes"), "SQL must alter voiceMinutes");
-  assert.ok(migration.pgSql.includes("voiceMinutes"), "pgSql must alter voiceMinutes");
+  assert.ok(
+    migration,
+    "v34_add_voiceMinutes_to_user_leveling migration must exist",
+  );
+  assert.ok(
+    migration.sql.includes("voiceMinutes"),
+    "SQL must alter voiceMinutes",
+  );
+  assert.ok(
+    migration.pgSql.includes("voiceMinutes"),
+    "pgSql must alter voiceMinutes",
+  );
 });
 
 test("voiceXp handler exports name and execute function", () => {

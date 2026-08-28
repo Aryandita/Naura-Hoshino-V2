@@ -72,7 +72,9 @@ class RedisManager {
     try {
       await this.client.connect();
     } catch (error) {
-      logger.warn("[Redis] Gagal terhubung ke Redis server, sistem cache berjalan dalam mode memori fallback.");
+      logger.warn(
+        "[Redis] Gagal terhubung ke Redis server, sistem cache berjalan dalam mode memori fallback.",
+      );
     }
   }
 
@@ -122,7 +124,10 @@ class RedisManager {
         await this.client.del(keys);
       }
     } catch (error) {
-      logger.error("[Redis] Gagal menghapus cache dengan pattern:", error.message);
+      logger.error(
+        "[Redis] Gagal menghapus cache dengan pattern:",
+        error.message,
+      );
     }
   }
 

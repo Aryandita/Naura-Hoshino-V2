@@ -7,15 +7,22 @@ const {
   AttachmentBuilder,
   ComponentType,
 } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 const cafeEngine = require("../../../src/survival/engines/cafeEngine");
-const { CAFE_RECIPES, getRecipeById } = require("../../../src/survival/data/cafeRecipes");
+const {
+  CAFE_RECIPES,
+  getRecipeById,
+} = require("../../../src/survival/data/cafeRecipes");
 const { drawCafeCard } = require("../../../src/canvas/cafeCanvas");
 
 module.exports = {
   name: "cafe",
-  description: "☕ Kelola Cozy Cyber-Cafe & Maid Lounge, masak menu, dan layani pelanggan!",
+  description:
+    "☕ Kelola Cozy Cyber-Cafe & Maid Lounge, masak menu, dan layani pelanggan!",
 
   async execute(interaction) {
     const action = interaction.options.getString("aksi") || "status";
@@ -31,19 +38,23 @@ module.exports = {
 
       try {
         const cardBuffer = await drawCafeCard(cafe);
-        files.push(new AttachmentBuilder(cardBuffer, { name: "cafe_status.png" }));
+        files.push(
+          new AttachmentBuilder(cardBuffer, { name: "cafe_status.png" }),
+        );
       } catch (err) {
         // Fallback jika canvas gagal render
       }
 
       const dishes = cafe.activeDishes || {};
-      const dishSummary = Object.entries(dishes)
-        .filter(([, count]) => Number(count) > 0)
-        .map(([id, count]) => {
-          const r = getRecipeById(id);
-          return `- ${r ? r.emoji : "🍽️"} **${r ? r.name : id}**: \`${count} porsi\` (*${r ? r.price : 200} ⭐*)`;
-        })
-        .join("\n") || "_Etalase masih kosong. Masak hidangan baru untuk mulai berjualan!_";
+      const dishSummary =
+        Object.entries(dishes)
+          .filter(([, count]) => Number(count) > 0)
+          .map(([id, count]) => {
+            const r = getRecipeById(id);
+            return `- ${r ? r.emoji : "🍽️"} **${r ? r.name : id}**: \`${count} porsi\` (*${r ? r.price : 200} ⭐*)`;
+          })
+          .join("\n") ||
+        "_Etalase masih kosong. Masak hidangan baru untuk mulai berjualan!_";
 
       const buttonsRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -108,7 +119,8 @@ module.exports = {
             return interaction.followUp({
               ...buildErrorContainerV2({
                 title: "Belum Ada Pendapatan",
-                description: "Belum ada akumulasi koin yang bisa diklaim saat ini. Tunggu beberapa waktu lagi!",
+                description:
+                  "Belum ada akumulasi koin yang bisa diklaim saat ini. Tunggu beberapa waktu lagi!",
               }),
               flags: 64,
             });
@@ -131,7 +143,8 @@ module.exports = {
             return interaction.followUp({
               ...buildErrorContainerV2({
                 title: "Etalase Kosong",
-                description: "Tidak ada makanan/minuman yang siap disajikan! Masak menu terlebih dahulu.",
+                description:
+                  "Tidak ada makanan/minuman yang siap disajikan! Masak menu terlebih dahulu.",
               }),
               flags: 64,
             });
@@ -156,7 +169,9 @@ module.exports = {
 
         if (btnInteraction.customId === "cafe_btn_menu") {
           const recipeList = CAFE_RECIPES.map((r) => {
-            const ingList = r.ingredients.map((i) => `${i.amount}x ${i.name}`).join(", ");
+            const ingList = r.ingredients
+              .map((i) => `${i.amount}x ${i.name}`)
+              .join(", ");
             return `### ${r.emoji} ${r.name} (\`${r.id}\`)\n- **Kategori:** \`${r.category}\` | **Harga Jual:** \`${r.price} ⭐\`\n- **Bahan Diperlukan:** ${ingList}\n- **Efek Buff:** *${r.buff.description}*`;
           }).join("\n\n");
 
@@ -174,7 +189,11 @@ module.exports = {
 
         if (btnInteraction.customId === "cafe_btn_cook") {
           // Default cook first available recipe
-          const cookRes = await cafeEngine.cookRecipe(userId, "sakura_latte", 1);
+          const cookRes = await cafeEngine.cookRecipe(
+            userId,
+            "sakura_latte",
+            1,
+          );
           if (!cookRes.success) {
             return interaction.followUp({
               ...buildErrorContainerV2({
@@ -194,7 +213,9 @@ module.exports = {
                 ``,
                 `⭐ **Reputasi:** \`+${cookRes.repGain} REP\` (Total: \`${cookRes.currentRep} REP\`)`,
                 `📦 **Total Stok Etalase:** \`${cookRes.totalStock} Porsi\``,
-                cookRes.levelUp ? `\n🎉 **KAFE NAIK LEVEL!** Sekarang kafe milikmu berada di **Level ${cookRes.newLevel}**!` : "",
+                cookRes.levelUp
+                  ? `\n🎉 **KAFE NAIK LEVEL!** Sekarang kafe milikmu berada di **Level ${cookRes.newLevel}**!`
+                  : "",
               ].join("\n"),
               footerText: ui.getFooter("survival"),
             }),
@@ -213,9 +234,12 @@ module.exports = {
 
       if (!cookRes.success) {
         let msg = "Gagal memasak menu kafe.";
-        if (cookRes.reason === "RECIPE_NOT_FOUND") msg = `Resep dengan ID \`${targetRecipe}\` tidak ditemukan! Gunakan buku resep untuk melihat daftar.`;
-        if (cookRes.reason === "RECIPE_LOCKED") msg = `Resep ini masih terkunci! Memerlukan kafe Level ${cookRes.requiredLevel}.`;
-        if (cookRes.reason === "INSUFFICIENT_INGREDIENTS") msg = `Bahan mentah di inventarismu tidak cukup untuk memasak hidangan ini!`;
+        if (cookRes.reason === "RECIPE_NOT_FOUND")
+          msg = `Resep dengan ID \`${targetRecipe}\` tidak ditemukan! Gunakan buku resep untuk melihat daftar.`;
+        if (cookRes.reason === "RECIPE_LOCKED")
+          msg = `Resep ini masih terkunci! Memerlukan kafe Level ${cookRes.requiredLevel}.`;
+        if (cookRes.reason === "INSUFFICIENT_INGREDIENTS")
+          msg = `Bahan mentah di inventarismu tidak cukup untuk memasak hidangan ini!`;
 
         return interaction.editReply({
           ...buildErrorContainerV2({
@@ -236,7 +260,9 @@ module.exports = {
           `⭐ **Reputasi Kafe:** \`+${cookRes.repGain} REP\` (Total: \`${cookRes.currentRep} REP\`)`,
           `📦 **Stok Saat Ini:** \`${cookRes.totalStock} Porsi\``,
           `✨ **Khasiat Buff:** *${cookRes.buff.description}*`,
-          cookRes.levelUp ? `\n🎉 **KAFE NAIK LEVEL!** Kafe kini mencapai **Level ${cookRes.newLevel}**!` : "",
+          cookRes.levelUp
+            ? `\n🎉 **KAFE NAIK LEVEL!** Kafe kini mencapai **Level ${cookRes.newLevel}**!`
+            : "",
         ].join("\n"),
         footerText: ui.getFooter("survival"),
       });
@@ -251,7 +277,8 @@ module.exports = {
         return interaction.editReply({
           ...buildErrorContainerV2({
             title: "Etalase Kosong",
-            description: "Tidak ada makanan atau minuman siap saji di etalasemu! Masak hidangan terlebih dahulu.",
+            description:
+              "Tidak ada makanan atau minuman siap saji di etalasemu! Masak hidangan terlebih dahulu.",
             footerText: ui.getFooter("survival"),
           }),
         });
@@ -281,7 +308,8 @@ module.exports = {
         return interaction.editReply({
           ...buildErrorContainerV2({
             title: "Belum Ada Pendapatan",
-            description: "Belum ada akumulasi pendapatan pasif yang bisa diklaim saat ini. Tunggu beberapa waktu lagi!",
+            description:
+              "Belum ada akumulasi pendapatan pasif yang bisa diklaim saat ini. Tunggu beberapa waktu lagi!",
             footerText: ui.getFooter("survival"),
           }),
         });
@@ -309,21 +337,31 @@ module.exports = {
         return interaction.editReply({
           ...buildErrorContainerV2({
             title: "Pemain Tidak Ditentukan",
-            description: "Tentukan pemilik kafe yang ingin kamu kunjungi menggunakan opsi `target_user`!",
+            description:
+              "Tentukan pemilik kafe yang ingin kamu kunjungi menggunakan opsi `target_user`!",
             footerText: ui.getFooter("survival"),
           }),
         });
       }
 
       const targetRecipe = recipeId || "sakura_latte";
-      const orderRes = await cafeEngine.orderDishFromUser(userId, targetUser.id, targetRecipe, username);
+      const orderRes = await cafeEngine.orderDishFromUser(
+        userId,
+        targetUser.id,
+        targetRecipe,
+        username,
+      );
 
       if (!orderRes.success) {
         let msg = "Gagal memesan hidangan.";
-        if (orderRes.reason === "CANNOT_ORDER_FROM_SELF") msg = "Kamu tidak bisa memesan makanan dari kafemu sendiri!";
-        if (orderRes.reason === "SELLER_NO_CAFE") msg = `<@${targetUser.id}> belum membuka usaha kafe!`;
-        if (orderRes.reason === "OUT_OF_STOCK") msg = `Menu \`${targetRecipe}\` di kafe <@${targetUser.id}> sedang habis!`;
-        if (orderRes.reason === "INSUFFICIENT_FUNDS") msg = `Saldo Star Fragments milikmu tidak cukup (${orderRes.price} ⭐)!`;
+        if (orderRes.reason === "CANNOT_ORDER_FROM_SELF")
+          msg = "Kamu tidak bisa memesan makanan dari kafemu sendiri!";
+        if (orderRes.reason === "SELLER_NO_CAFE")
+          msg = `<@${targetUser.id}> belum membuka usaha kafe!`;
+        if (orderRes.reason === "OUT_OF_STOCK")
+          msg = `Menu \`${targetRecipe}\` di kafe <@${targetUser.id}> sedang habis!`;
+        if (orderRes.reason === "INSUFFICIENT_FUNDS")
+          msg = `Saldo Star Fragments milikmu tidak cukup (${orderRes.price} ⭐)!`;
 
         return interaction.editReply({
           ...buildErrorContainerV2({

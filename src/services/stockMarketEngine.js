@@ -64,8 +64,14 @@ class StockMarketEngine {
             dividendYield: def.dividendYield,
             isHighRisk: def.isHighRisk,
             history24h: [
-              { timestamp: Date.now() - 3600000 * 2, price: def.currentPrice * 0.95 },
-              { timestamp: Date.now() - 3600000, price: def.currentPrice * 0.98 },
+              {
+                timestamp: Date.now() - 3600000 * 2,
+                price: def.currentPrice * 0.95,
+              },
+              {
+                timestamp: Date.now() - 3600000,
+                price: def.currentPrice * 0.98,
+              },
               { timestamp: Date.now(), price: def.currentPrice },
             ],
           },
@@ -88,12 +94,22 @@ class StockMarketEngine {
     const totalCost = Math.floor(unitPrice * qty);
 
     if (action.toUpperCase() === "BUY") {
-      const debit = await cacheManager.debitUserSurvival(userId, "starFragments", totalCost);
+      const debit = await cacheManager.debitUserSurvival(
+        userId,
+        "starFragments",
+        totalCost,
+      );
       if (!debit.ok) {
-        return { success: false, reason: "INSUFFICIENT_FUNDS", cost: totalCost };
+        return {
+          success: false,
+          reason: "INSUFFICIENT_FUNDS",
+          cost: totalCost,
+        };
       }
 
-      let holding = await UserStockHolding.findOne({ where: { userId, ticker } });
+      let holding = await UserStockHolding.findOne({
+        where: { userId, ticker },
+      });
       if (!holding) {
         holding = await UserStockHolding.create({
           userId,
@@ -104,7 +120,9 @@ class StockMarketEngine {
       } else {
         const totalOldCost = holding.sharesOwned * holding.avgBuyPrice;
         const newTotalShares = holding.sharesOwned + qty;
-        holding.avgBuyPrice = Number(((totalOldCost + totalCost) / newTotalShares).toFixed(2));
+        holding.avgBuyPrice = Number(
+          ((totalOldCost + totalCost) / newTotalShares).toFixed(2),
+        );
         holding.sharesOwned = newTotalShares;
         await holding.save();
       }
@@ -112,10 +130,14 @@ class StockMarketEngine {
       // Sedikit dorong harga naik (+0.1% per 10 lembar)
       const priceImpact = 1 + Math.min(0.05, (qty / 100) * 0.01);
       stock.previousPrice = stock.currentPrice;
-      stock.currentPrice = Number((stock.currentPrice * priceImpact).toFixed(2));
+      stock.currentPrice = Number(
+        (stock.currentPrice * priceImpact).toFixed(2),
+      );
       await stock.save();
 
-      logger.info(`[StockMarket] User ${userId} membeli ${qty} lembar ${ticker} seharga ${totalCost} ⭐.`);
+      logger.info(
+        `[StockMarket] User ${userId} membeli ${qty} lembar ${ticker} seharga ${totalCost} ⭐.`,
+      );
       return {
         success: true,
         action: "BUY",
@@ -128,7 +150,9 @@ class StockMarketEngine {
       };
     } else {
       // SELL
-      const holding = await UserStockHolding.findOne({ where: { userId, ticker } });
+      const holding = await UserStockHolding.findOne({
+        where: { userId, ticker },
+      });
       if (!holding || holding.sharesOwned < qty) {
         return {
           success: false,
@@ -145,15 +169,24 @@ class StockMarketEngine {
         await holding.save();
       }
 
-      await cacheManager.incrementUserSurvival(userId, "starFragments", totalCost);
+      await cacheManager.incrementUserSurvival(
+        userId,
+        "starFragments",
+        totalCost,
+      );
 
       // Sedikit dorong harga turun (-0.1% per 10 lembar)
       const priceImpact = 1 - Math.min(0.05, (qty / 100) * 0.01);
       stock.previousPrice = stock.currentPrice;
-      stock.currentPrice = Math.max(10.0, Number((stock.currentPrice * priceImpact).toFixed(2)));
+      stock.currentPrice = Math.max(
+        10.0,
+        Number((stock.currentPrice * priceImpact).toFixed(2)),
+      );
       await stock.save();
 
-      logger.info(`[StockMarket] User ${userId} menjual ${qty} lembar ${ticker} dan menerima ${totalCost} ⭐.`);
+      logger.info(
+        `[StockMarket] User ${userId} menjual ${qty} lembar ${ticker} dan menerima ${totalCost} ⭐.`,
+      );
       return {
         success: true,
         action: "SELL",
@@ -184,7 +217,10 @@ class StockMarketEngine {
       const currentValue = Math.floor(currentPrice * h.sharesOwned);
       const totalBuyCost = Math.floor(h.avgBuyPrice * h.sharesOwned);
       const profitLoss = currentValue - totalBuyCost;
-      const profitPercent = totalBuyCost > 0 ? Number(((profitLoss / totalBuyCost) * 100).toFixed(1)) : 0;
+      const profitPercent =
+        totalBuyCost > 0
+          ? Number(((profitLoss / totalBuyCost) * 100).toFixed(1))
+          : 0;
 
       totalPortfolioValue += currentValue;
       items.push({
@@ -210,8 +246,13 @@ class StockMarketEngine {
    * Pendaftaran Startup Baru oleh Klan (IPO)
    */
   static async launchStartupIPO(clanId, ticker, name, isHighRisk = false) {
-    const cleanTicker = ticker.toUpperCase().replace(/[^A-Z0-9_]/g, "").substring(0, 10);
-    const existing = await ServerStock.findOne({ where: { ticker: cleanTicker } });
+    const cleanTicker = ticker
+      .toUpperCase()
+      .replace(/[^A-Z0-9_]/g, "")
+      .substring(0, 10);
+    const existing = await ServerStock.findOne({
+      where: { ticker: cleanTicker },
+    });
     if (existing) {
       return { success: false, reason: "TICKER_ALREADY_EXISTS" };
     }
@@ -221,7 +262,12 @@ class StockMarketEngine {
 
     const ipoCost = 25000;
     if (Number(clan.vault || 0) < ipoCost) {
-      return { success: false, reason: "INSUFFICIENT_VAULT", cost: ipoCost, current: clan.vault };
+      return {
+        success: false,
+        reason: "INSUFFICIENT_VAULT",
+        cost: ipoCost,
+        current: clan.vault,
+      };
     }
 
     clan.vault = Number(clan.vault || 0) - ipoCost;
@@ -236,12 +282,14 @@ class StockMarketEngine {
       previousPrice: 100.0,
       totalShares: 10000,
       availableShares: 10000,
-      dividendYield: isHighRisk ? 0.10 : 0.05,
+      dividendYield: isHighRisk ? 0.1 : 0.05,
       isHighRisk,
       history24h: [{ timestamp: Date.now(), price: 100.0 }],
     });
 
-    logger.info(`[StockMarket] Klan ${clan.name} resmi meluncurkan IPO Startup ${cleanTicker} (${name})!`);
+    logger.info(
+      `[StockMarket] Klan ${clan.name} resmi meluncurkan IPO Startup ${cleanTicker} (${name})!`,
+    );
     return {
       success: true,
       stock: newStock.toJSON(),
@@ -257,7 +305,10 @@ class StockMarketEngine {
     for (const stock of stocks) {
       const volatility = stock.isHighRisk ? 0.15 : 0.04;
       const changePercent = (Math.random() * 2 - 0.98) * volatility;
-      const newPrice = Math.max(10.0, Number((stock.currentPrice * (1 + changePercent)).toFixed(2)));
+      const newPrice = Math.max(
+        10.0,
+        Number((stock.currentPrice * (1 + changePercent)).toFixed(2)),
+      );
 
       stock.previousPrice = stock.currentPrice;
       stock.currentPrice = newPrice;

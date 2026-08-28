@@ -43,7 +43,10 @@ function initSupabase() {
     return supabaseClient;
   } catch (error) {
     isInitialized = true;
-    logger.error("[SUPABASE] Gagal inisialisasi Supabase Client:", error.message);
+    logger.error(
+      "[SUPABASE] Gagal inisialisasi Supabase Client:",
+      error.message,
+    );
     return null;
   }
 }

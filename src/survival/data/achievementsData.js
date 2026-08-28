@@ -132,7 +132,8 @@ const achievementsPool = [
   {
     id: "naura_biggest_fan",
     title: "Naura Biggest Fan",
-    description: "Memberikan dukungan vote di Top.gg selama 30 hari berturut-turut tanpa terputus.",
+    description:
+      "Memberikan dukungan vote di Top.gg selama 30 hari berturut-turut tanpa terputus.",
     emoji: ui.getEmoji("star_sparkle") || "🌟",
     color: "#F43F5E",
   },

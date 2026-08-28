@@ -10,8 +10,15 @@ test("StockMarketEngine - Default Listed Stocks and $NRA Volatile Index", () => 
 
   const nraStock = DEFAULT_STOCKS.find((s) => s.ticker === "NAURA_COIN");
   assert.ok(nraStock, "Harus ada saham NAURA_COIN");
-  assert.equal(nraStock.isHighRisk, true, "NAURA_COIN harus bertipe isHighRisk");
-  assert.ok(nraStock.dividendYield >= 0.1, "Dividen NAURA_COIN harus tinggi (>=10%)");
+  assert.equal(
+    nraStock.isHighRisk,
+    true,
+    "NAURA_COIN harus bertipe isHighRisk",
+  );
+  assert.ok(
+    nraStock.dividendYield >= 0.1,
+    "Dividen NAURA_COIN harus tinggi (>=10%)",
+  );
 
   const aiStock = DEFAULT_STOCKS.find((s) => s.ticker === "HOSHINO_AI");
   assert.ok(aiStock, "Harus ada HOSHINO_AI");

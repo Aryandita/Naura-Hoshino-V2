@@ -17,11 +17,16 @@ module.exports = [
 
       try {
         const ticket = await UserTicket.findOne({
-          where: { ticketId: channelOrThread.id, guildId: interaction.guild.id },
+          where: {
+            ticketId: channelOrThread.id,
+            guildId: interaction.guild.id,
+          },
         });
 
         if (!ticket) {
-          return interaction.editReply("❌ Data tiket tidak ditemukan di database.");
+          return interaction.editReply(
+            "❌ Data tiket tidak ditemukan di database.",
+          );
         }
 
         if (ticket.status === "closed") {
@@ -31,14 +36,17 @@ module.exports = [
         const discordTranscripts = require("discord-html-transcripts");
 
         // Generate Transcript
-        const attachment = await discordTranscripts.createTranscript(channelOrThread, {
-          limit: -1,
-          returnType: "attachment",
-          filename: `transcript-${channelOrThread.id}.html`,
-          saveImages: true,
-          footerText: "Diekspor oleh Naura Hoshino V2",
-          poweredBy: false,
-        });
+        const attachment = await discordTranscripts.createTranscript(
+          channelOrThread,
+          {
+            limit: -1,
+            returnType: "attachment",
+            filename: `transcript-${channelOrThread.id}.html`,
+            saveImages: true,
+            footerText: "Diekspor oleh Naura Hoshino V2",
+            poweredBy: false,
+          },
+        );
 
         // Simpan transcript ke local dashboard public folder
         const publicDir = path.join(
@@ -86,7 +94,9 @@ module.exports = [
           console.error("[TicketClose] Gagal DM user:", err);
         }
 
-        await interaction.editReply("✅ Tiket berhasil ditutup dan transkrip telah dikirim.");
+        await interaction.editReply(
+          "✅ Tiket berhasil ditutup dan transkrip telah dikirim.",
+        );
 
         // Lock dan arsipkan thread atau hapus channel
         await channelOrThread.send(
@@ -107,7 +117,9 @@ module.exports = [
         }, 3000);
       } catch (error) {
         console.error("[TicketClose] Terjadi kesalahan:", error);
-        return interaction.editReply("❌ Terjadi kesalahan sistem saat mencoba menutup tiket.");
+        return interaction.editReply(
+          "❌ Terjadi kesalahan sistem saat mencoba menutup tiket.",
+        );
       }
     },
   },

@@ -14,9 +14,21 @@ async function drawCafeCard(cafeData) {
     const ctx = canvas.getContext("2d");
 
     const themeColors = {
-      CYBER_NEON: { primary: "#FFB6C1", secondary: "#4C1D95", accent: "#38BDF8" },
-      MAID_CLASSIC: { primary: "#F9A8D4", secondary: "#831843", accent: "#FDE047" },
-      SAKURA_ZEN: { primary: "#FDA4AF", secondary: "#064E3B", accent: "#86EFAC" },
+      CYBER_NEON: {
+        primary: "#FFB6C1",
+        secondary: "#4C1D95",
+        accent: "#38BDF8",
+      },
+      MAID_CLASSIC: {
+        primary: "#F9A8D4",
+        secondary: "#831843",
+        accent: "#FDE047",
+      },
+      SAKURA_ZEN: {
+        primary: "#FDA4AF",
+        secondary: "#064E3B",
+        accent: "#86EFAC",
+      },
     };
 
     const theme = themeColors[cafeData.theme] || themeColors.CYBER_NEON;
@@ -100,7 +112,9 @@ async function drawCafeCard(cafeData) {
     ctx.fillText("🍽️ ETALASE MENU SIAP SAJI", 40, 200);
 
     const dishes = cafeData.activeDishes || {};
-    const dishEntries = Object.entries(dishes).filter(([, count]) => Number(count) > 0);
+    const dishEntries = Object.entries(dishes).filter(
+      ([, count]) => Number(count) > 0,
+    );
 
     if (dishEntries.length === 0) {
       ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
@@ -111,13 +125,22 @@ async function drawCafeCard(cafeData) {
       ctx.font = '15px "Outfit", "EmojiFont"';
       ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
       ctx.textAlign = "center";
-      ctx.fillText("Etalase masih kosong! Masak hidangan baru dengan /survival cafe cook", width / 2, 340);
+      ctx.fillText(
+        "Etalase masih kosong! Masak hidangan baru dengan /survival cafe cook",
+        width / 2,
+        340,
+      );
     } else {
       const cardW = (width - 110) / 3;
       const cardH = 230;
 
       dishEntries.slice(0, 3).forEach(([recipeId, count], idx) => {
-        const recipe = getRecipeById(recipeId) || { name: recipeId, emoji: "🍱", price: 200, buff: { description: "Buff Khusus" } };
+        const recipe = getRecipeById(recipeId) || {
+          name: recipeId,
+          emoji: "🍱",
+          price: 200,
+          buff: { description: "Buff Khusus" },
+        };
         const cardX = 40 + idx * (cardW + 15);
         const cardY = 220;
 
@@ -135,7 +158,11 @@ async function drawCafeCard(cafeData) {
 
         ctx.font = 'bold 14px "Outfit", "EmojiFont"';
         ctx.fillStyle = "#FFFFFF";
-        ctx.fillText(recipe.name.substring(0, 18), cardX + cardW / 2, cardY + 85);
+        ctx.fillText(
+          recipe.name.substring(0, 18),
+          cardX + cardW / 2,
+          cardY + 85,
+        );
 
         // Stock Badge
         ctx.font = 'bold 12px "Orbitron", "EmojiFont"';
@@ -145,7 +172,11 @@ async function drawCafeCard(cafeData) {
         // Price
         ctx.font = '12px "Orbitron", "EmojiFont"';
         ctx.fillStyle = "#FFD700";
-        ctx.fillText(`${recipe.price || 200} ⭐ / porsi`, cardX + cardW / 2, cardY + 140);
+        ctx.fillText(
+          `${recipe.price || 200} ⭐ / porsi`,
+          cardX + cardW / 2,
+          cardY + 140,
+        );
 
         // Buff description
         ctx.font = '11px "Outfit", "EmojiFont"';

@@ -68,7 +68,7 @@ module.exports = [
         TextEncoder: "readonly",
         TextDecoder: "readonly",
         AbortController: "readonly",
-       AbortSignal: "readonly",
+        AbortSignal: "readonly",
       },
     },
     rules: {

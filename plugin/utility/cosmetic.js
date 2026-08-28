@@ -23,9 +23,7 @@ module.exports = {
     .addSubcommand((subcommand) =>
       subcommand
         .setName("shop")
-        .setDescription(
-          "🛒 Beli aset kosmetik baru untuk menghias profilmu",
-        ),
+        .setDescription("🛒 Beli aset kosmetik baru untuk menghias profilmu"),
     )
     .addSubcommand((subcommand) =>
       subcommand
@@ -52,9 +50,7 @@ async function handleShop(interaction, userId) {
   try {
     assets = await CanvasAsset.findAll();
   } catch (err) {
-    return interaction.editReply(
-      "❌ Terjadi kesalahan saat memuat data toko.",
-    );
+    return interaction.editReply("❌ Terjadi kesalahan saat memuat data toko.");
   }
 
   if (!assets || assets.length === 0) {
@@ -191,9 +187,7 @@ async function handleEquip(interaction, userId) {
     .map((uc) => {
       return {
         label: `[${uc.asset.type.toUpperCase()}] ${uc.asset.name}`,
-        description: uc.isActive
-          ? "✅ Sedang dipakai"
-          : "Klik untuk memakai",
+        description: uc.isActive ? "✅ Sedang dipakai" : "Klik untuk memakai",
         value: uc.id.toString(),
         emoji: uc.isActive ? "🌟" : "⬜",
       };

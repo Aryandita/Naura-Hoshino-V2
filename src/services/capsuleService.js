@@ -7,10 +7,19 @@ class CapsuleService {
   /**
    * Mengubur Kapsul Waktu baru
    */
-  async buryCapsule(guildId, authorId, authorName, title, message, durationMonths = 1) {
+  async buryCapsule(
+    guildId,
+    authorId,
+    authorName,
+    title,
+    message,
+    durationMonths = 1,
+  ) {
     const code = `cps-${Math.random().toString(36).substring(2, 7)}`;
     const now = new Date();
-    const unlockDate = new Date(now.getTime() + durationMonths * 30 * 24 * 60 * 60 * 1000);
+    const unlockDate = new Date(
+      now.getTime() + durationMonths * 30 * 24 * 60 * 60 * 1000,
+    );
 
     const capsule = new TimeCapsule({
       capsuleCode: code,
@@ -22,11 +31,20 @@ class CapsuleService {
       buryDate: now,
       unlockDate,
       isUnlocked: false,
-      participants: [{ userId: authorId, username: authorName, note: "Pencipta Kapsul", timestamp: now }],
+      participants: [
+        {
+          userId: authorId,
+          username: authorName,
+          note: "Pencipta Kapsul",
+          timestamp: now,
+        },
+      ],
     });
 
     await capsule.save();
-    logger.info(`[CapsuleService] Kapsul Waktu ${code} ("${title}") dikubur oleh ${authorName} untuk dibuka pada ${unlockDate.toISOString()}`);
+    logger.info(
+      `[CapsuleService] Kapsul Waktu ${code} ("${title}") dikubur oleh ${authorName} untuk dibuka pada ${unlockDate.toISOString()}`,
+    );
     return capsule;
   }
 
@@ -34,7 +52,9 @@ class CapsuleService {
    * Dapatkan daftar kapsul di server
    */
   async listGuildCapsules(guildId) {
-    return await TimeCapsule.find({ guildId }).sort({ unlockDate: 1 }).limit(10);
+    return await TimeCapsule.find({ guildId })
+      .sort({ unlockDate: 1 })
+      .limit(10);
   }
 
   /**

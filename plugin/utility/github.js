@@ -50,9 +50,18 @@ module.exports = {
             name: `${ui.getEmoji("member") || "👥"} Followers / Following`,
             value: `${data.followers} / ${data.following}`,
           },
-          { name: `${ui.getEmoji("shop_box") || "📁"} Public Repos`, value: `${data.public_repos}` },
-          { name: `${ui.getEmoji("bank") || "🏢"} Perusahaan`, value: data.company || "Tidak ada" },
-          { name: `${ui.getEmoji("lokasi") || "📍"} Lokasi`, value: data.location || "Tidak diketahui" },
+          {
+            name: `${ui.getEmoji("shop_box") || "📁"} Public Repos`,
+            value: `${data.public_repos}`,
+          },
+          {
+            name: `${ui.getEmoji("bank") || "🏢"} Perusahaan`,
+            value: data.company || "Tidak ada",
+          },
+          {
+            name: `${ui.getEmoji("lokasi") || "📍"} Lokasi`,
+            value: data.location || "Tidak diketahui",
+          },
         ],
         footerText: ui.getFooter("utility"),
       });

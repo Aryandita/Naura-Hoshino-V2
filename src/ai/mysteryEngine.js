@@ -12,22 +12,26 @@ const PRESET_SCENARIOS = [
     title: "Misteri Pembunuhan di Lab Cyber-Sakura",
     victim: "Prof. Hiroshi (Ilmuwan Quantum)",
     location: "Laboratorium Sayap Barat Neo-Hoshino",
-    crimeScene: "Korban ditemukan tergeletak dekat terminal holografis yang hangus.",
+    crimeScene:
+      "Korban ditemukan tergeletak dekat terminal holografis yang hangus.",
     weapon: "Overloaded Quantum Discharger",
     suspects: [
       {
         id: "dr_ren",
         name: "Dr. Ren (Asisten Peneliti)",
         motive: "Iri atas hak paten penemuan AI Quantum.",
-        alibi: "Saya berada di ruang arsip memeriksa data hingga alarm berbunyi.",
+        alibi:
+          "Saya berada di ruang arsip memeriksa data hingga alarm berbunyi.",
         isCulprit: true,
-        secretFlaw: "Log akses terminal menunjukkan sidik jari kuantum Dr. Ren 2 menit sebelum listrik padam.",
+        secretFlaw:
+          "Log akses terminal menunjukkan sidik jari kuantum Dr. Ren 2 menit sebelum listrik padam.",
       },
       {
         id: "security_klaus",
         name: "Klaus (Kepala Keamanan Cyber)",
         motive: "Pernah diancam dipecat oleh korban.",
-        alibi: "Saya sedang berpatroli di gerbang utama bersama drone pengawas.",
+        alibi:
+          "Saya sedang berpatroli di gerbang utama bersama drone pengawas.",
         isCulprit: false,
         secretFlaw: "Kamera gerbang utama mengonfirmasi kehadirannya.",
       },
@@ -53,7 +57,8 @@ class MysteryEngine {
    * Mulai sesi penyelidikan kasus baru
    */
   static async createGameSession(guildId, hostUserId, playerList = []) {
-    const scenario = PRESET_SCENARIOS[Math.floor(Math.random() * PRESET_SCENARIOS.length)];
+    const scenario =
+      PRESET_SCENARIOS[Math.floor(Math.random() * PRESET_SCENARIOS.length)];
     const sessionId = `case_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
     const sessionData = {
@@ -69,10 +74,16 @@ class MysteryEngine {
     };
 
     if (redisManager.isReady) {
-      await redisManager.setCache(`${SESSION_PREFIX}${guildId}`, JSON.stringify(sessionData), 3600);
+      await redisManager.setCache(
+        `${SESSION_PREFIX}${guildId}`,
+        JSON.stringify(sessionData),
+        3600,
+      );
     }
 
-    logger.info(`[MysteryEngine] Kasus dimulai: ${scenario.title} di guild ${guildId}`);
+    logger.info(
+      `[MysteryEngine] Kasus dimulai: ${scenario.title} di guild ${guildId}`,
+    );
     return sessionData;
   }
 
@@ -103,7 +114,11 @@ class MysteryEngine {
     session.currentClueIndex += 1;
 
     if (redisManager.isReady) {
-      await redisManager.setCache(`${SESSION_PREFIX}${guildId}`, JSON.stringify(session), 3600);
+      await redisManager.setCache(
+        `${SESSION_PREFIX}${guildId}`,
+        JSON.stringify(session),
+        3600,
+      );
     }
 
     return {
@@ -117,7 +132,12 @@ class MysteryEngine {
   /**
    * Interogasi tersangka via Gemini AI
    */
-  static async interrogateSuspect(guildId, suspectId, question, askerName = "Detektif") {
+  static async interrogateSuspect(
+    guildId,
+    suspectId,
+    question,
+    askerName = "Detektif",
+  ) {
     const session = await this.getSession(guildId);
     if (!session || session.status !== "INVESTIGATION") {
       return { success: false, reason: "NO_ACTIVE_INVESTIGATION" };
@@ -143,7 +163,9 @@ Jawab dalam 1-2 kalimat roleplay singkat, tegas, dan penuh karakter. TANPA EMOJI
       const DJ_TIMEOUT_MS = 3500;
       responseText = await Promise.race([
         geminiClient.generate({ parts: [{ text: prompt }] }),
-        new Promise((resolve) => setTimeout(() => resolve(null), DJ_TIMEOUT_MS)),
+        new Promise((resolve) =>
+          setTimeout(() => resolve(null), DJ_TIMEOUT_MS),
+        ),
       ]);
     } catch (err) {
       logger.warn("[MysteryEngine] AI Interrogation error:", err.message);
@@ -164,7 +186,11 @@ Jawab dalam 1-2 kalimat roleplay singkat, tegas, dan penuh karakter. TANPA EMOJI
     });
 
     if (redisManager.isReady) {
-      await redisManager.setCache(`${SESSION_PREFIX}${guildId}`, JSON.stringify(session), 3600);
+      await redisManager.setCache(
+        `${SESSION_PREFIX}${guildId}`,
+        JSON.stringify(session),
+        3600,
+      );
     }
 
     return {
@@ -179,12 +205,17 @@ Jawab dalam 1-2 kalimat roleplay singkat, tegas, dan penuh karakter. TANPA EMOJI
    */
   static async submitAccusation(guildId, userId, accusedSuspectId) {
     const session = await this.getSession(guildId);
-    if (!session || (session.status !== "INVESTIGATION" && session.status !== "TRIAL")) {
+    if (
+      !session ||
+      (session.status !== "INVESTIGATION" && session.status !== "TRIAL")
+    ) {
       return { success: false, reason: "NO_ACTIVE_INVESTIGATION" };
     }
 
     const culprit = session.scenario.suspects.find((s) => s.isCulprit);
-    const chosenSuspect = session.scenario.suspects.find((s) => s.id === accusedSuspectId);
+    const chosenSuspect = session.scenario.suspects.find(
+      (s) => s.id === accusedSuspectId,
+    );
 
     if (!chosenSuspect) {
       return { success: false, reason: "INVALID_SUSPECT" };
@@ -197,7 +228,11 @@ Jawab dalam 1-2 kalimat roleplay singkat, tegas, dan penuh karakter. TANPA EMOJI
     session.solvedAt = Date.now();
 
     if (redisManager.isReady) {
-      await redisManager.setCache(`${SESSION_PREFIX}${guildId}`, JSON.stringify(session), 600);
+      await redisManager.setCache(
+        `${SESSION_PREFIX}${guildId}`,
+        JSON.stringify(session),
+        600,
+      );
     }
 
     let reward = 0;

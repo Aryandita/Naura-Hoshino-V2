@@ -6,13 +6,17 @@ const {
   ButtonStyle,
   ComponentType,
 } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 const abyssEngine = require("../../../src/survival/engines/abyssEngine");
 
 module.exports = {
   name: "abyss",
-  description: "🌀 Jelajahi Labirin Rogue-lite Prosedural 50 Lantai (The Neo-Abyss)",
+  description:
+    "🌀 Jelajahi Labirin Rogue-lite Prosedural 50 Lantai (The Neo-Abyss)",
 
   async execute(interaction) {
     const action = interaction.options.getString("aksi") || "start";
@@ -25,7 +29,8 @@ module.exports = {
         return interaction.editReply({
           ...buildErrorContainerV2({
             title: "Tidak Ada Ekspedisi",
-            description: "Kamu sedang tidak berada di dalam labirin The Neo-Abyss.",
+            description:
+              "Kamu sedang tidak berada di dalam labirin The Neo-Abyss.",
             footerText: ui.getFooter("survival"),
           }),
         });
@@ -54,7 +59,8 @@ module.exports = {
 
     if (!run || run.status === "DEFEATED" || run.status === "VICTORY") {
       run = await abyssEngine.startRun(userId);
-      outcomeText = "🚀 *Kamu melangkah masuk ke dalam gerbang dimensi The Neo-Abyss Lantai 1!*";
+      outcomeText =
+        "🚀 *Kamu melangkah masuk ke dalam gerbang dimensi The Neo-Abyss Lantai 1!*";
     } else if (action.startsWith("room_")) {
       const choiceIdx = parseInt(action.replace("room_", ""), 10) - 1;
       const processRes = await abyssEngine.chooseRoom(userId, choiceIdx);
@@ -103,13 +109,28 @@ module.exports = {
       .map((c, idx) => `**Pilihan ${idx + 1}:** ${c.label}`)
       .join("\n");
 
-    const relicsDesc = run.relics.length > 0 ? run.relics.map((r) => `\`${r}\``).join(", ") : "*Belum ada Relic*";
+    const relicsDesc =
+      run.relics.length > 0
+        ? run.relics.map((r) => `\`${r}\``).join(", ")
+        : "*Belum ada Relic*";
 
     const buttonsRow = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId("abyss_btn_1").setLabel("🚪 Pilihan 1").setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId("abyss_btn_2").setLabel("🚪 Pilihan 2").setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId("abyss_btn_3").setLabel("🚪 Pilihan 3").setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId("abyss_btn_leave").setLabel("🏁 Keluar").setStyle(ButtonStyle.Danger),
+      new ButtonBuilder()
+        .setCustomId("abyss_btn_1")
+        .setLabel("🚪 Pilihan 1")
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId("abyss_btn_2")
+        .setLabel("🚪 Pilihan 2")
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId("abyss_btn_3")
+        .setLabel("🚪 Pilihan 3")
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId("abyss_btn_leave")
+        .setLabel("🏁 Keluar")
+        .setStyle(ButtonStyle.Danger),
     );
 
     const payload = buildContainerV2({
@@ -139,7 +160,10 @@ module.exports = {
 
     collector.on("collect", async (btnInteraction) => {
       if (btnInteraction.user.id !== userId) {
-        return btnInteraction.reply({ content: "❌ Ini bukan ekspedisi labirin milikmu!", flags: 64 });
+        return btnInteraction.reply({
+          content: "❌ Ini bukan ekspedisi labirin milikmu!",
+          flags: 64,
+        });
       }
 
       await btnInteraction.deferUpdate();

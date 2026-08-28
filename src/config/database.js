@@ -5,23 +5,23 @@ const env = require("./env");
 
 const isSupabaseConfig = Boolean(
   (env.DB_HOST && env.DB_HOST.includes("supabase")) ||
-    (env.DATABASE_URL && env.DATABASE_URL.includes("supabase")) ||
-    env.SUPABASE_URL ||
-    env.SUPABASE_KEY,
+  (env.DATABASE_URL && env.DATABASE_URL.includes("supabase")) ||
+  env.SUPABASE_URL ||
+  env.SUPABASE_KEY,
 );
 
 const isExternalDb =
   !env.USE_SQLITE &&
   Boolean(
     env.DATABASE_URL ||
-      (env.DB_NAME &&
-        env.DB_USER &&
-        env.DB_HOST &&
-        env.DB_HOST !== "sqlite" &&
-        (env.USE_MYSQL ||
-          env.DB_DIALECT === "postgres" ||
-          isSupabaseConfig ||
-          (env.DB_HOST !== "127.0.0.1" && env.DB_HOST !== "localhost"))),
+    (env.DB_NAME &&
+      env.DB_USER &&
+      env.DB_HOST &&
+      env.DB_HOST !== "sqlite" &&
+      (env.USE_MYSQL ||
+        env.DB_DIALECT === "postgres" ||
+        isSupabaseConfig ||
+        (env.DB_HOST !== "127.0.0.1" && env.DB_HOST !== "localhost"))),
   );
 
 const hasMySQLConfig = isExternalDb;
@@ -130,4 +130,3 @@ module.exports = {
   SHARD_COUNT,
   POOL_MAX,
 };
-

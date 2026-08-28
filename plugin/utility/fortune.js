@@ -109,12 +109,23 @@ const LUCKY_COLORS = [
   "Cosmic Indigo",
 ];
 
-const LUCKY_DIRECTIONS = ["Utara", "Timur Laut", "Timur", "Tenggara", "Selatan", "Barat Daya", "Barat", "Barat Laut"];
+const LUCKY_DIRECTIONS = [
+  "Utara",
+  "Timur Laut",
+  "Timur",
+  "Tenggara",
+  "Selatan",
+  "Barat Daya",
+  "Barat",
+  "Barat Laut",
+];
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("fortune")
-    .setDescription("Tarik ramalan harian Omikuji dari Naura & dapatkan Buff RPG harian!"),
+    .setDescription(
+      "Tarik ramalan harian Omikuji dari Naura & dapatkan Buff RPG harian!",
+    ),
 
   async execute(interaction) {
     await interaction.deferReply();
@@ -128,7 +139,8 @@ module.exports = {
     if (rpgState.last_fortune_date === todayStr) {
       const lastFortune = rpgState.last_fortune || {};
       const payload = buildContainerV2({
-        accentColorHex: lastFortune.color || ui.getColor("primary") || "#FFB6C1",
+        accentColorHex:
+          lastFortune.color || ui.getColor("primary") || "#FFB6C1",
         authorName: "Naura Daily Omikuji",
         title: `${lastFortune.emoji || "🌸"} Ramalan Hari Ini Sudah Ditarik`,
         description: [
@@ -149,23 +161,33 @@ module.exports = {
     // Roll Fortune
     const roll = Math.random();
     let picked;
-    if (roll < 0.15) picked = FORTUNE_TIERS[0]; // Daikichi 15%
-    else if (roll < 0.40) picked = FORTUNE_TIERS[1]; // Chukichi 25%
-    else if (roll < 0.65) picked = FORTUNE_TIERS[2]; // Shokichi 25%
-    else if (roll < 0.85) picked = FORTUNE_TIERS[3]; // Kichi 20%
-    else if (roll < 0.95) picked = FORTUNE_TIERS[4]; // Suekichi 10%
+    if (roll < 0.15)
+      picked = FORTUNE_TIERS[0]; // Daikichi 15%
+    else if (roll < 0.4)
+      picked = FORTUNE_TIERS[1]; // Chukichi 25%
+    else if (roll < 0.65)
+      picked = FORTUNE_TIERS[2]; // Shokichi 25%
+    else if (roll < 0.85)
+      picked = FORTUNE_TIERS[3]; // Kichi 20%
+    else if (roll < 0.95)
+      picked = FORTUNE_TIERS[4]; // Suekichi 10%
     else picked = FORTUNE_TIERS[5]; // Kyo 5%
 
-    const luckyItem = LUCKY_ITEMS[Math.floor(Math.random() * LUCKY_ITEMS.length)];
-    const luckyColor = LUCKY_COLORS[Math.floor(Math.random() * LUCKY_COLORS.length)];
-    const luckyDirection = LUCKY_DIRECTIONS[Math.floor(Math.random() * LUCKY_DIRECTIONS.length)];
+    const luckyItem =
+      LUCKY_ITEMS[Math.floor(Math.random() * LUCKY_ITEMS.length)];
+    const luckyColor =
+      LUCKY_COLORS[Math.floor(Math.random() * LUCKY_COLORS.length)];
+    const luckyDirection =
+      LUCKY_DIRECTIONS[Math.floor(Math.random() * LUCKY_DIRECTIONS.length)];
     const luckyNumber = Math.floor(Math.random() * 99) + 1;
 
     // AI Wisdom from Naura persona
     let aiWisdom = picked.desc;
     try {
       const prompt = `Kamu adalah Naura Hoshino, asisten virtual anime yang imut dan bijak. User ${interaction.user.username} baru saja menarik ramalan harian Omikuji dan mendapatkan ${picked.kanji} (${picked.title}). Berikan satu nasehat harian atau kata-kata penyemangat yang manis, hangat, dan menginspirasi dalam bahasa Indonesia. Maksimal 2 kalimat.`;
-      const response = await geminiClient.generate({ parts: [{ text: prompt }] });
+      const response = await geminiClient.generate({
+        parts: [{ text: prompt }],
+      });
       if (response) aiWisdom = response.trim();
     } catch (_) {}
 
@@ -193,12 +215,17 @@ module.exports = {
     });
 
     if (picked.fragments > 0) {
-      await cacheManager.incrementUserSurvival(userId, "starFragments", picked.fragments);
+      await cacheManager.incrementUserSurvival(
+        userId,
+        "starFragments",
+        picked.fragments,
+      );
     }
 
-    const rewardText = picked.fragments > 0
-      ? `${ui.getEmoji("sparkles") || "✨"} **Hadiah Keberuntungan:** +${picked.fragments} Star Fragments\n${ui.getEmoji("star") || "🌟"} **Buff RPG (24 Jam):** +${Math.round(picked.expBoost * 100)}% EXP & +${Math.round(picked.goldBoost * 100)}% Gold Boost`
-      : `${ui.getEmoji("shield") || "🛡️"} **Amulet Perlindungan Naura:** Menghalau segala energi negatif hari ini!`;
+    const rewardText =
+      picked.fragments > 0
+        ? `${ui.getEmoji("sparkles") || "✨"} **Hadiah Keberuntungan:** +${picked.fragments} Star Fragments\n${ui.getEmoji("star") || "🌟"} **Buff RPG (24 Jam):** +${Math.round(picked.expBoost * 100)}% EXP & +${Math.round(picked.goldBoost * 100)}% Gold Boost`
+        : `${ui.getEmoji("shield") || "🛡️"} **Amulet Perlindungan Naura:** Menghalau segala energi negatif hari ini!`;
 
     const payload = buildContainerV2({
       accentColorHex: picked.color,

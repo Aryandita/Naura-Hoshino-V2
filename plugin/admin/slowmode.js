@@ -40,8 +40,7 @@ module.exports = {
       if (!ms) {
         const errPayload = buildErrorContainerV2({
           title: "Format Salah",
-          description:
-            `${ui.getEmoji("error") || "❌"} Format durasi tidak valid. Gunakan format seperti \`5s\`, \`10s\`, \`1m\`, \`1h\`, atau \`off\`.`,
+          description: `${ui.getEmoji("error") || "❌"} Format durasi tidak valid. Gunakan format seperti \`5s\`, \`10s\`, \`1m\`, \`1h\`, atau \`off\`.`,
           footerText: ui.getFooter("core"),
         });
         return interaction.reply({
@@ -54,8 +53,7 @@ module.exports = {
       if (seconds > 21600) {
         const errPayload = buildErrorContainerV2({
           title: "Batas Maksimum",
-          description:
-            `${ui.getEmoji("error") || "❌"} Durasi maksimum untuk slowmode adalah 6 jam (21600 detik).`,
+          description: `${ui.getEmoji("error") || "❌"} Durasi maksimum untuk slowmode adalah 6 jam (21600 detik).`,
           footerText: ui.getFooter("core"),
         });
         return interaction.reply({
@@ -81,8 +79,7 @@ module.exports = {
       logger.error("[Slowmode Error]", error);
       const errPayload = buildErrorContainerV2({
         title: "Gagal Set Slowmode",
-        description:
-          `${ui.getEmoji("error") || "❌"} Gagal mengatur slowmode. Pastikan bot memiliki izin Manage Channels.`,
+        description: `${ui.getEmoji("error") || "❌"} Gagal mengatur slowmode. Pastikan bot memiliki izin Manage Channels.`,
         footerText: ui.getFooter("core"),
       });
       await interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });

@@ -22,7 +22,12 @@ class SmartAutoMod {
    */
   async evaluate(content, options = {}) {
     if (!content || content.length < 5) {
-      return { isViolation: false, category: "none", reason: "", confidence: 0 };
+      return {
+        isViolation: false,
+        category: "none",
+        reason: "",
+        confidence: 0,
+      };
     }
 
     // 1. Fast heuristic check (Zero API latency)
@@ -31,7 +36,8 @@ class SmartAutoMod {
         return {
           isViolation: true,
           category: "phishing_scam",
-          reason: "Tautan atau penawaran palsu terdeteksi oleh sistem heuristik.",
+          reason:
+            "Tautan atau penawaran palsu terdeteksi oleh sistem heuristik.",
           confidence: 0.95,
         };
       }
@@ -57,7 +63,12 @@ Format jawaban HANYA JSON tanpa markdown:
 
       const aiResponse = await aiManager.generateText(prompt);
       if (!aiResponse) {
-        return { isViolation: false, category: "none", reason: "", confidence: 0 };
+        return {
+          isViolation: false,
+          category: "none",
+          reason: "",
+          confidence: 0,
+        };
       }
 
       const cleaned = aiResponse
@@ -67,14 +78,21 @@ Format jawaban HANYA JSON tanpa markdown:
 
       const parsed = JSON.parse(cleaned);
       return {
-        isViolation: Boolean(parsed.isViolation && (parsed.confidence || 0) >= 0.75),
+        isViolation: Boolean(
+          parsed.isViolation && (parsed.confidence || 0) >= 0.75,
+        ),
         category: parsed.category || "none",
         reason: parsed.reason || "Pelanggaran terdeteksi oleh AI Moderation",
         confidence: Number(parsed.confidence) || 0.8,
       };
     } catch (e) {
       logger.debug("[SmartAutoMod] AI evaluation skipped / error:", e.message);
-      return { isViolation: false, category: "none", reason: "", confidence: 0 };
+      return {
+        isViolation: false,
+        category: "none",
+        reason: "",
+        confidence: 0,
+      };
     }
   }
 }

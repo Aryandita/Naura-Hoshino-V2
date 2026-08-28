@@ -169,7 +169,9 @@ module.exports = {
         footerText: `Dibuat oleh ${interaction.user.username} • Total Suara: ${totalVotes}`,
       });
 
-      await interaction.editReply({ ...updatePayload, components: rows }).catch(() => {});
+      await interaction
+        .editReply({ ...updatePayload, components: rows })
+        .catch(() => {});
     });
 
     collector.on("end", async () => {

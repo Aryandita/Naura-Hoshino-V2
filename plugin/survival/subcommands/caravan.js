@@ -2,7 +2,10 @@
 
 const { MessageFlags } = require("discord.js");
 const tradeEngine = require("../../../src/services/tradeEngine");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 
 module.exports = {
@@ -12,18 +15,25 @@ module.exports = {
   async execute(interaction, context) {
     const action = interaction.options.getString("aksi") || "status";
     const user = interaction.user;
-    const displayName = interaction.member?.displayName || user.displayName || user.username;
+    const displayName =
+      interaction.member?.displayName || user.displayName || user.username;
 
     if (action === "market") {
       const market = tradeEngine.getMarketPrices();
       const routes = tradeEngine.getRoutes();
 
       const marketLines = Object.values(market)
-        .map((m) => `• **${m.name}**: \`${m.currentPrice.toLocaleString("id-ID")}\` Koin / ${m.unit} (${m.trend})`)
+        .map(
+          (m) =>
+            `• **${m.name}**: \`${m.currentPrice.toLocaleString("id-ID")}\` Koin / ${m.unit} (${m.trend})`,
+        )
         .join("\n");
 
       const routeLines = Object.values(routes)
-        .map((r) => `• **${r.name}**\n  ⏱️ Durasi: \`${r.durationMinutes}m\` | 📈 Margin: \`+${r.profitMarginPercent}%\` | ⚠️ Risiko: \`${r.riskPercent}%\``)
+        .map(
+          (r) =>
+            `• **${r.name}**\n  ⏱️ Durasi: \`${r.durationMinutes}m\` | 📈 Margin: \`+${r.profitMarginPercent}%\` | ⚠️ Risiko: \`${r.riskPercent}%\``,
+        )
         .join("\n");
 
       const payload = buildContainerV2({
@@ -33,15 +43,25 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.reply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
 
     if (action === "dispatch") {
       const routeId = interaction.options.getString("rute") || "tokyo";
-      const commodity = interaction.options.getString("komoditas") || "GOLDEN_WOOD";
+      const commodity =
+        interaction.options.getString("komoditas") || "GOLDEN_WOOD";
       const amount = interaction.options.getInteger("jumlah") || 10;
 
-      const res = await tradeEngine.dispatchCaravan(user.id, displayName, routeId, commodity, amount);
+      const res = await tradeEngine.dispatchCaravan(
+        user.id,
+        displayName,
+        routeId,
+        commodity,
+        amount,
+      );
 
       if (!res.success) {
         let msg = "Gagal memberangkatkan karavan.";
@@ -52,7 +72,8 @@ module.exports = {
           msg = `Kamu sudah memiliki karavan yang sedang dalam perjalanan menuju **${res.caravan?.route?.name}**!`;
         }
         if (res.reason === "MINIMUM_AMOUNT") {
-          msg = "Jumlah muatan minimal yang dapat diberangkatkan adalah 5 unit!";
+          msg =
+            "Jumlah muatan minimal yang dapat diberangkatkan adalah 5 unit!";
         }
 
         const payload = buildErrorContainerV2({
@@ -60,7 +81,10 @@ module.exports = {
           description: msg,
           footerText: ui.getFooter("survival"),
         });
-        return interaction.reply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2,
+        });
       }
 
       const crv = res.caravan;
@@ -83,7 +107,10 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.reply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
 
     if (action === "claim") {
@@ -91,15 +118,21 @@ module.exports = {
 
       if (!res.success) {
         let msg = "Tidak ada laba yang dapat diklaim.";
-        if (res.reason === "NO_ACTIVE_CARAVAN") msg = "Kamu tidak memiliki karavan yang sedang aktif atau menunggu klaim!";
-        if (res.reason === "STILL_TRAVELING") msg = `Karavanmu masih dalam perjalanan! Sisa waktu tempuh sekitar \`${res.remainingMinutes} menit\` lagi.`;
+        if (res.reason === "NO_ACTIVE_CARAVAN")
+          msg =
+            "Kamu tidak memiliki karavan yang sedang aktif atau menunggu klaim!";
+        if (res.reason === "STILL_TRAVELING")
+          msg = `Karavanmu masih dalam perjalanan! Sisa waktu tempuh sekitar \`${res.remainingMinutes} menit\` lagi.`;
 
         const payload = buildErrorContainerV2({
           title: "Klaim Belum Siap",
           description: msg,
           footerText: ui.getFooter("survival"),
         });
-        return interaction.reply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2,
+        });
       }
 
       const netProfit = res.profit - res.invested;
@@ -121,7 +154,10 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.reply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
 
     // Default action: "status"
@@ -133,7 +169,10 @@ module.exports = {
         description: `Halo, **${displayName}**! Saat ini kamu belum memberangkatkan karavan dagang.\n\n💡 *Gunakan \`/survival caravan market\` untuk mengecek bursa harga dan berangkatkan karavanmu!*`,
         footerText: ui.getFooter("survival"),
       });
-      return interaction.reply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
 
     const finishTs = Math.floor(new Date(active.finishTime).getTime() / 1000);
@@ -141,7 +180,9 @@ module.exports = {
 
     const payload = buildContainerV2({
       authorName: "GALACTIC MERCHANT CARTEL",
-      title: isDone ? "✨ Karavan Telah Tiba di Tujuan!" : "🐫 Karavan Sedang Melintasi Rute Kosmik",
+      title: isDone
+        ? "✨ Karavan Telah Tiba di Tujuan!"
+        : "🐫 Karavan Sedang Melintasi Rute Kosmik",
       description: [
         `Berikut adalah status ekspedisi karavan milik **${displayName}**:`,
         ``,
@@ -151,11 +192,16 @@ module.exports = {
         `📈 **Estimasi Hasil:** \`${active.potentialProfit.toLocaleString("id-ID")}\` Koin`,
         `⏳ **Status Waktu:** ${isDone ? "**Sudah Tiba & Siap Diklaim!**" : `Tiba <t:${finishTs}:R>`}`,
         ``,
-        isDone ? `👉 *Ketik \`/survival caravan claim\` untuk mengambil koin labamu!*` : `*Pengawal karavan sedang berjaga-jaga dari ancaman bandit.*`,
+        isDone
+          ? `👉 *Ketik \`/survival caravan claim\` untuk mengambil koin labamu!*`
+          : `*Pengawal karavan sedang berjaga-jaga dari ancaman bandit.*`,
       ].join("\n"),
       footerText: ui.getFooter("survival"),
     });
 
-    return interaction.reply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+    return interaction.reply({
+      ...payload,
+      flags: MessageFlags.IsComponentsV2,
+    });
   },
 };

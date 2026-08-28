@@ -36,7 +36,9 @@ module.exports = [
         const cacheManager = require("../../managers/cacheManager");
         let guildSettings = null;
         try {
-          const data = await cacheManager.getGuildSettings(interaction.guild.id);
+          const data = await cacheManager.getGuildSettings(
+            interaction.guild.id,
+          );
           guildSettings = data?.settings;
         } catch (e) {
           /* abaikan */
@@ -64,7 +66,12 @@ module.exports = [
               },
               {
                 id: interaction.client.user.id,
-                allow: ["ViewChannel", "SendMessages", "ReadMessageHistory", "ManageChannels"],
+                allow: [
+                  "ViewChannel",
+                  "SendMessages",
+                  "ReadMessageHistory",
+                  "ManageChannels",
+                ],
               },
             ],
             reason: `Tiket baru dari ${interaction.user.tag}`,
@@ -116,7 +123,9 @@ module.exports = [
           ],
         });
 
-        await ticketChannelOrThread.send({ content: `<@${interaction.user.id}>` });
+        await ticketChannelOrThread.send({
+          content: `<@${interaction.user.id}>`,
+        });
         await ticketChannelOrThread.send(threadContainer);
 
         return interaction.editReply(

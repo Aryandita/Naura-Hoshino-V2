@@ -1,6 +1,10 @@
 "use strict";
 
-const { SlashCommandBuilder, AttachmentBuilder, MessageFlags } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  AttachmentBuilder,
+  MessageFlags,
+} = require("discord.js");
 const { renderRoomCanvas } = require("../../src/canvas/roomCanvas");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const UserRoom = require("../../src/models/mongo/UserRoom");
@@ -10,12 +14,20 @@ const ui = require("../../src/config/ui");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("room")
-    .setDescription("🛋️ Kelola dan kunjungi Kamar Virtual Cyber-Pod Isometrik 2.5D")
+    .setDescription(
+      "🛋️ Kelola dan kunjungi Kamar Virtual Cyber-Pod Isometrik 2.5D",
+    )
     .addSubcommand((sub) =>
       sub
         .setName("view")
-        .setDescription("Lihat kamar virtual 2.5D milikmu atau teman satu server")
-        .addUserOption((opt) => opt.setName("target").setDescription("User pemilik kamar yang ingin dilihat")),
+        .setDescription(
+          "Lihat kamar virtual 2.5D milikmu atau teman satu server",
+        )
+        .addUserOption((opt) =>
+          opt
+            .setName("target")
+            .setDescription("User pemilik kamar yang ingin dilihat"),
+        ),
     )
     .addSubcommand((sub) =>
       sub
@@ -26,25 +38,47 @@ module.exports = {
       sub
         .setName("guestbook")
         .setDescription("Tinggalkan pesan hologram di buku tamu kamar teman")
-        .addUserOption((opt) => opt.setName("target").setDescription("Pemilik kamar").setRequired(true))
-        .addStringOption((opt) => opt.setName("pesan").setDescription("Isi pesan hologram").setRequired(true).setMaxLength(150)),
+        .addUserOption((opt) =>
+          opt
+            .setName("target")
+            .setDescription("Pemilik kamar")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("pesan")
+            .setDescription("Isi pesan hologram")
+            .setRequired(true)
+            .setMaxLength(150),
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("gift")
-        .setDescription("Kirimkan secangkir kopi / teh untuk menambah stamina teman")
-        .addUserOption((opt) => opt.setName("target").setDescription("Penerima kado").setRequired(true)),
+        .setDescription(
+          "Kirimkan secangkir kopi / teh untuk menambah stamina teman",
+        )
+        .addUserOption((opt) =>
+          opt
+            .setName("target")
+            .setDescription("Penerima kado")
+            .setRequired(true),
+        ),
     ),
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
     const user = interaction.user;
-    const authorDisplayName = interaction.member?.displayName || user.displayName || user.username;
+    const authorDisplayName =
+      interaction.member?.displayName || user.displayName || user.username;
 
     if (subcommand === "view") {
       await interaction.deferReply();
       const targetUser = interaction.options.getUser("target") || user;
-      const targetDisplayName = interaction.guild?.members.cache.get(targetUser.id)?.displayName || targetUser.displayName || targetUser.username;
+      const targetDisplayName =
+        interaction.guild?.members.cache.get(targetUser.id)?.displayName ||
+        targetUser.displayName ||
+        targetUser.username;
 
       let room = null;
       try {
@@ -69,13 +103,18 @@ module.exports = {
         };
       }
 
-      const roomBuffer = await renderRoomCanvas(room, targetUser, { icon: "🐱" });
-      const attachment = new AttachmentBuilder(roomBuffer, { name: "cyber-room.png" });
+      const roomBuffer = await renderRoomCanvas(room, targetUser, {
+        icon: "🐱",
+      });
+      const attachment = new AttachmentBuilder(roomBuffer, {
+        name: "cyber-room.png",
+      });
 
-      const guestEntries = (room.guestbook || [])
-        .slice(-3)
-        .map((g) => `• **${g.fromName}**: "${g.message}"`)
-        .join("\n") || "*Belum ada catatan di buku tamu.*";
+      const guestEntries =
+        (room.guestbook || [])
+          .slice(-3)
+          .map((g) => `• **${g.fromName}**: "${g.message}"`)
+          .join("\n") || "*Belum ada catatan di buku tamu.*";
 
       const payload = buildContainerV2({
         authorName: "NAURA LIVING ROOM 2.5D",
@@ -104,7 +143,10 @@ module.exports = {
           description: `Kamu tidak bisa menulis di buku tamu kamarmu sendiri ya, **${authorDisplayName}**! Kunjungi kamar temanmu untuk meninggalkan pesan hangat~ ✨`,
           footerText: ui.getFooter("survival"),
         });
-        return interaction.editReply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+        return interaction.editReply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2,
+        });
       }
 
       try {
@@ -134,7 +176,10 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.editReply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+      return interaction.editReply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
 
     if (subcommand === "gift") {
@@ -148,7 +193,10 @@ module.exports = {
           description: `Gunakan secangkir kopi ini untuk menyemangati temanmu ya, **${authorDisplayName}**!`,
           footerText: ui.getFooter("survival"),
         });
-        return interaction.editReply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+        return interaction.editReply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2,
+        });
       }
 
       try {
@@ -162,7 +210,10 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.editReply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+      return interaction.editReply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
 
     if (subcommand === "decorate") {
@@ -173,7 +224,10 @@ module.exports = {
         description: `Halo, **${authorDisplayName}**! Kamu bisa mengatur dan membeli furnitur kamar baru melalui Web Dashboard di **http://localhost:19130/portfolio** atau gunakan koin RPG untuk memperluas luas grid kamarmu!\n\n✨ *Setiap furnitur baru yang kamu pasang akan meningkatkan skor kenyamanan dan regenerasi staminamu.*`,
         footerText: ui.getFooter("survival"),
       });
-      return interaction.editReply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+      return interaction.editReply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
   },
 };

@@ -5,10 +5,30 @@ const cacheManager = require("../managers/cacheManager");
 const { logger } = require("../managers/logger");
 
 const COMMODITIES = {
-  GOLDEN_WOOD: { id: "GOLDEN_WOOD", name: "Kayu Jati Emas 🪵", basePrice: 120, unit: "balok" },
-  MYTHIC_FISH: { id: "MYTHIC_FISH", name: "Ikan Mitos Samudera 🐟", basePrice: 250, unit: "ekor" },
-  COSMIC_ORE: { id: "COSMIC_ORE", name: "Bijih Kristal Kosmik 💎", basePrice: 380, unit: "bongkah" },
-  ASTRAL_SILK: { id: "ASTRAL_SILK", name: "Kain Sutra Nebula 👘", basePrice: 500, unit: "gulung" },
+  GOLDEN_WOOD: {
+    id: "GOLDEN_WOOD",
+    name: "Kayu Jati Emas 🪵",
+    basePrice: 120,
+    unit: "balok",
+  },
+  MYTHIC_FISH: {
+    id: "MYTHIC_FISH",
+    name: "Ikan Mitos Samudera 🐟",
+    basePrice: 250,
+    unit: "ekor",
+  },
+  COSMIC_ORE: {
+    id: "COSMIC_ORE",
+    name: "Bijih Kristal Kosmik 💎",
+    basePrice: 380,
+    unit: "bongkah",
+  },
+  ASTRAL_SILK: {
+    id: "ASTRAL_SILK",
+    name: "Kain Sutra Nebula 👘",
+    basePrice: 500,
+    unit: "gulung",
+  },
 };
 
 const TRADE_ROUTES = {
@@ -72,11 +92,16 @@ class TradeEngine {
     const comm = COMMODITIES[commodityKey];
     if (!comm) return { success: false, reason: "INVALID_COMMODITY" };
 
-    if (!amount || amount < 5) return { success: false, reason: "MINIMUM_AMOUNT", min: 5 };
+    if (!amount || amount < 5)
+      return { success: false, reason: "MINIMUM_AMOUNT", min: 5 };
 
     const existing = await this.getActiveCaravan(userId);
     if (existing && existing.status === "EN_ROUTE") {
-      return { success: false, reason: "CARAVAN_ALREADY_ACTIVE", caravan: existing };
+      return {
+        success: false,
+        reason: "CARAVAN_ALREADY_ACTIVE",
+        caravan: existing,
+      };
     }
 
     const market = this.getMarketPrices();
@@ -84,13 +109,23 @@ class TradeEngine {
     const totalCost = unitPrice * amount;
 
     // Potong koin modal karavan secara atomik
-    const debit = await cacheManager.debitUserProfile(userId, "economy_wallet", totalCost);
+    const debit = await cacheManager.debitUserProfile(
+      userId,
+      "economy_wallet",
+      totalCost,
+    );
     if (!debit.ok) {
-      return { success: false, reason: "INSUFFICIENT_FUNDS", requiredCost: totalCost };
+      return {
+        success: false,
+        reason: "INSUFFICIENT_FUNDS",
+        requiredCost: totalCost,
+      };
     }
 
     const finishTime = Date.now() + route.durationMinutes * 60 * 1000;
-    const potentialProfit = Math.round(totalCost * (1 + route.profitMarginPercent / 100));
+    const potentialProfit = Math.round(
+      totalCost * (1 + route.profitMarginPercent / 100),
+    );
 
     const caravan = {
       id: `crv_${Date.now()}`,
@@ -109,11 +144,17 @@ class TradeEngine {
     const key = `caravan:active:${userId}`;
     if (redisManager.isReady) {
       try {
-        await redisManager.set(key, JSON.stringify(caravan), route.durationMinutes * 60 + 3600);
+        await redisManager.set(
+          key,
+          JSON.stringify(caravan),
+          route.durationMinutes * 60 + 3600,
+        );
       } catch (_) {}
     }
 
-    logger.info(`[TradeEngine] User ${displayName} memberangkatkan karavan ${comm.name} (${amount}x) via ${route.name}`);
+    logger.info(
+      `[TradeEngine] User ${displayName} memberangkatkan karavan ${comm.name} (${amount}x) via ${route.name}`,
+    );
     return {
       success: true,
       caravan,
@@ -160,7 +201,11 @@ class TradeEngine {
     }
 
     // Tambah keuntungan ke dompet secara atomik
-    await cacheManager.incrementUserProfile(userId, "economy_wallet", actualProfit);
+    await cacheManager.incrementUserProfile(
+      userId,
+      "economy_wallet",
+      actualProfit,
+    );
 
     // Hapus karavan aktif
     const key = `caravan:active:${userId}`;
@@ -170,7 +215,9 @@ class TradeEngine {
       } catch (_) {}
     }
 
-    logger.info(`[TradeEngine] User ${displayName} mengklaim laba karavan: +${actualProfit} koin (Ambushed: ${wasAmbushed})`);
+    logger.info(
+      `[TradeEngine] User ${displayName} mengklaim laba karavan: +${actualProfit} koin (Ambushed: ${wasAmbushed})`,
+    );
     return {
       success: true,
       profit: actualProfit,

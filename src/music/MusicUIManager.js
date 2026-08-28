@@ -103,8 +103,7 @@ class MusicUIManager {
         const containerComponents = [];
         const fs = require("node:fs");
         const bannerPath =
-          ui.getBanner("music") ||
-          "./assets/general/Music Banner.jpeg";
+          ui.getBanner("music") || "./assets/general/Music Banner.jpeg";
         const bannerName = "music-banner.jpeg";
         const hasBanner = fs.existsSync(bannerPath);
 
@@ -289,12 +288,19 @@ class MusicUIManager {
           if (track && track.info && track.info.identifier) {
             seenIds.add(track.info.identifier);
           }
-          if (player.currentTrack && player.currentTrack.info && player.currentTrack.info.identifier) {
+          if (
+            player.currentTrack &&
+            player.currentTrack.info &&
+            player.currentTrack.info.identifier
+          ) {
             seenIds.add(player.currentTrack.info.identifier);
           }
 
           // 1. Pilihan Autoplay Utama (Prefetched) jika ada
-          if (player.prefetchedAutoplayTrack && player.prefetchedAutoplayTrack.info) {
+          if (
+            player.prefetchedAutoplayTrack &&
+            player.prefetchedAutoplayTrack.info
+          ) {
             const id = player.prefetchedAutoplayTrack.info.identifier;
             if (id && !seenIds.has(id)) {
               seenIds.add(id);
@@ -317,9 +323,13 @@ class MusicUIManager {
           }
 
           // 3. Rekomendasi yang tersimpan di player / parameter
-          const recs = (Array.isArray(player.recommendedTracks) && player.recommendedTracks.length > 0)
-            ? player.recommendedTracks
-            : (Array.isArray(recommendedTracks) && recommendedTracks.length > 0 ? recommendedTracks : []);
+          const recs =
+            Array.isArray(player.recommendedTracks) &&
+            player.recommendedTracks.length > 0
+              ? player.recommendedTracks
+              : Array.isArray(recommendedTracks) && recommendedTracks.length > 0
+                ? recommendedTracks
+                : [];
 
           for (const t of recs) {
             const id = t && t.info && t.info.identifier;
@@ -335,9 +345,15 @@ class MusicUIManager {
         const activeRecs = getRecommendations();
         // Dropdown hanya tampil jika Autoplay aktif bagi pengguna VIP / Premium
         if (player.isAutoplayMode && activeRecs.length > 0) {
-          const placeholder = (player.prefetchedAutoplayTrack && player.prefetchedAutoplayTrack.info && player.prefetchedAutoplayTrack.info.title)
-            ? `🤖 Autoplay: ${player.prefetchedAutoplayTrack.info.title}`.substring(0, 95)
-            : "📻 Rekomendasi Autoplay Berikutnya";
+          const placeholder =
+            player.prefetchedAutoplayTrack &&
+            player.prefetchedAutoplayTrack.info &&
+            player.prefetchedAutoplayTrack.info.title
+              ? `🤖 Autoplay: ${player.prefetchedAutoplayTrack.info.title}`.substring(
+                  0,
+                  95,
+                )
+              : "📻 Rekomendasi Autoplay Berikutnya";
 
           const rowDropdown = new ActionRowBuilder().addComponents(
             new StringSelectMenuBuilder()
@@ -346,21 +362,37 @@ class MusicUIManager {
               .addOptions(
                 activeRecs.slice(0, 10).map((t, idx) => {
                   const isTopAutoplay = t.isAutoplayNext || idx === 0;
-                  const rawTitle = t.info && t.info.title ? t.info.title : "Unknown Title";
-                  const label = rawTitle.length > 100 ? rawTitle.substring(0, 97) + "..." : rawTitle;
+                  const rawTitle =
+                    t.info && t.info.title ? t.info.title : "Unknown Title";
+                  const label =
+                    rawTitle.length > 100
+                      ? rawTitle.substring(0, 97) + "..."
+                      : rawTitle;
 
                   const rawDesc = isTopAutoplay
                     ? `[Autoplay Selanjutnya] ${(t.info && t.info.author) || "Unknown Artist"}`
-                    : ((t.info && t.info.author) || "Unknown Artist");
-                  const desc = rawDesc.length > 100 ? rawDesc.substring(0, 97) + "..." : rawDesc;
+                    : (t.info && t.info.author) || "Unknown Artist";
+                  const desc =
+                    rawDesc.length > 100
+                      ? rawDesc.substring(0, 97) + "..."
+                      : rawDesc;
 
-                  const value = (t.info && t.info.uri && t.info.uri.startsWith("http"))
-                    ? t.info.uri.substring(0, 100)
-                    : `ytsearch:${t.info && t.info.title} ${t.info && t.info.author}`.substring(0, 100);
+                  const value =
+                    t.info && t.info.uri && t.info.uri.startsWith("http")
+                      ? t.info.uri.substring(0, 100)
+                      : `ytsearch:${t.info && t.info.title} ${t.info && t.info.author}`.substring(
+                          0,
+                          100,
+                        );
 
                   const customEmoji = isTopAutoplay
-                    ? (ui.parseEmoji(ui.getEmoji("musicAutoplay")) || { name: "🤖" })
-                    : (ui.parseEmoji(ui.getEmoji("normal")) || ui.parseEmoji(ui.getEmoji("music_note")) || { name: "🎵" });
+                    ? ui.parseEmoji(ui.getEmoji("musicAutoplay")) || {
+                        name: "🤖",
+                      }
+                    : ui.parseEmoji(ui.getEmoji("normal")) ||
+                      ui.parseEmoji(ui.getEmoji("music_note")) || {
+                        name: "🎵",
+                      };
 
                   return {
                     label: label,
@@ -480,9 +512,7 @@ class MusicUIManager {
       }
       if (!channel) return;
 
-      const {
-        buildContainerV2,
-      } = require("../utils/NauraContainerBuilder");
+      const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
       const row247 = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("music_247")

@@ -71,7 +71,9 @@ function addLifeGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("expedition")
-          .setDescription("Kirim Pet aktif dalam ekspedisi idle dungeon untuk mencari hadiah langka")
+          .setDescription(
+            "Kirim Pet aktif dalam ekspedisi idle dungeon untuk mencari hadiah langka",
+          )
           .addIntegerOption((opt) =>
             opt
               .setName("durasi")
@@ -87,7 +89,9 @@ function addLifeGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("cafe")
-          .setDescription("☕ Kelola Cozy Cyber-Cafe, masak hidangan, dan layani pelanggan!")
+          .setDescription(
+            "☕ Kelola Cozy Cyber-Cafe, masak hidangan, dan layani pelanggan!",
+          )
           .addStringOption((opt) =>
             opt
               .setName("aksi")
@@ -104,13 +108,17 @@ function addLifeGroup(builder) {
           .addStringOption((opt) =>
             opt
               .setName("resep")
-              .setDescription("ID Resep untuk dimasak / dipesan (misal: sakura_latte, cyber_ramen)")
+              .setDescription(
+                "ID Resep untuk dimasak / dipesan (misal: sakura_latte, cyber_ramen)",
+              )
               .setRequired(false),
           )
           .addUserOption((opt) =>
             opt
               .setName("target_user")
-              .setDescription("Pemain yang kafenya ingin kamu kunjungi (untuk aksi order)")
+              .setDescription(
+                "Pemain yang kafenya ingin kamu kunjungi (untuk aksi order)",
+              )
               .setRequired(false),
           ),
       ),

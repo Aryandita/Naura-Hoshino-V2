@@ -96,7 +96,8 @@ module.exports = [
       const payload = buildSuccessContainerV2({
         authorName: "Naura AutoMod Guard",
         title: `${ui.getEmoji("shield") || "🛡️"} Automod Diaktifkan`,
-        description: "Sistem Automod & Keamanan Naura sekarang berjalan aktif di server ini.",
+        description:
+          "Sistem Automod & Keamanan Naura sekarang berjalan aktif di server ini.",
         footerText: ui.getFooter("core"),
       });
 

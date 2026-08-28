@@ -1,301 +1,428 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Naura Hoshino - Music Control Panel</title>
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/tokens.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Orbitron:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/tokens.css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/naura-ui.js"></script>
     <style>
-        :root {
-            --primary: #FFB6C1;
-            --canvas: #0B0C10;
-            --accent-pink: #F9A8D4;
-            --surface-glass: rgba(255, 255, 255, 0.03);
-            --surface-border: rgba(255, 182, 193, 0.2);
-        }
-        body {
-            background-color: var(--canvas);
-            color: #ffffff;
-            font-family: 'Outfit', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-image: radial-gradient(circle at top right, rgba(255, 182, 193, 0.1), transparent 40%),
-                              radial-gradient(circle at bottom left, rgba(249, 168, 212, 0.05), transparent 40%);
-            min-height: 100vh;
-        }
-        .glass-panel {
-            background: var(--surface-glass);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--surface-border);
-            border-radius: 16px;
-        }
-        .metric-font {
-            font-family: 'Orbitron', sans-serif;
-        }
-        .progress-bar-bg {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 9999px;
-            height: 8px;
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-        }
-        .progress-bar-fill {
-            background: linear-gradient(90deg, var(--primary), var(--accent-pink));
-            height: 100%;
-            width: 0%;
-            transition: width 0.5s linear;
-        }
-        .btn-control {
-            background: var(--surface-glass);
-            border: 1px solid var(--surface-border);
-            color: var(--primary);
-            transition: all 0.2s ease;
-        }
-        .btn-control:hover {
-            background: rgba(255, 182, 193, 0.1);
-            transform: scale(1.05);
-        }
-        .btn-control:active {
-            transform: scale(0.95);
-        }
-        .queue-item {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            transition: background 0.2s;
-        }
-        .queue-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        .queue-item:last-child {
-            border-bottom: none;
-        }
+      :root {
+        --primary: #ffb6c1;
+        --canvas: #0b0c10;
+        --accent-pink: #f9a8d4;
+        --surface-glass: rgba(255, 255, 255, 0.03);
+        --surface-border: rgba(255, 182, 193, 0.2);
+      }
+      body {
+        background-color: var(--canvas);
+        color: #ffffff;
+        font-family: "Outfit", sans-serif;
+        margin: 0;
+        padding: 0;
+        background-image:
+          radial-gradient(
+            circle at top right,
+            rgba(255, 182, 193, 0.1),
+            transparent 40%
+          ),
+          radial-gradient(
+            circle at bottom left,
+            rgba(249, 168, 212, 0.05),
+            transparent 40%
+          );
+        min-height: 100vh;
+      }
+      .glass-panel {
+        background: var(--surface-glass);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--surface-border);
+        border-radius: 16px;
+      }
+      .metric-font {
+        font-family: "Orbitron", sans-serif;
+      }
+      .progress-bar-bg {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 9999px;
+        height: 8px;
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+      }
+      .progress-bar-fill {
+        background: linear-gradient(90deg, var(--primary), var(--accent-pink));
+        height: 100%;
+        width: 0%;
+        transition: width 0.5s linear;
+      }
+      .btn-control {
+        background: var(--surface-glass);
+        border: 1px solid var(--surface-border);
+        color: var(--primary);
+        transition: all 0.2s ease;
+      }
+      .btn-control:hover {
+        background: rgba(255, 182, 193, 0.1);
+        transform: scale(1.05);
+      }
+      .btn-control:active {
+        transform: scale(0.95);
+      }
+      .queue-item {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: background 0.2s;
+      }
+      .queue-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .queue-item:last-child {
+        border-bottom: none;
+      }
     </style>
-</head>
-<body class="p-6">
+  </head>
+  <body class="p-6">
     <div class="max-w-5xl mx-auto">
-        <header class="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-[#FFB6C1] metric-font">Naura Music</h1>
-                <p class="text-gray-400 mt-1">Control Panel Real-Time</p>
-            </div>
-            <div class="glass-panel px-4 py-2 flex items-center gap-3 w-full md:w-auto">
-                <span class="text-sm text-gray-300 whitespace-nowrap">Server ID:</span>
-                <input type="text" id="guildIdInput" placeholder="Masukkan ID Server" class="bg-transparent border-b border-gray-600 focus:border-[#FFB6C1] outline-none text-white px-2 py-1 text-sm metric-font w-full md:w-48">
-                <button id="connectBtn" class="btn-control px-4 py-1 rounded-lg text-sm font-semibold">Connect</button>
-            </div>
-        </header>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Now Playing Section -->
-            <div class="lg:col-span-2 space-y-6">
-                <div class="glass-panel p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-[#F9A8D4]">Now Playing</h2>
-                    
-                    <div id="noMusicState">
-                        <script>document.write(typeof NauraUI !== 'undefined' ? NauraUI.stateHtml('empty', { title: 'Belum Ada Lagu', body: 'Tidak ada lagu yang sedang diputar di server ini. Putar lagu yuk!' }) : '<p class="text-center text-gray-500 py-8">Tidak ada lagu yang diputar.</p>');</script>
-                    </div>
-
-                    <div id="playingState" class="hidden">
-                        <div class="flex flex-col md:flex-row gap-6 items-center md:items-start mb-6">
-                            <div class="w-32 h-32 rounded-xl bg-gray-800 flex-shrink-0 border border-[#FFB6C1]/30 flex items-center justify-center overflow-hidden relative shadow-[0_0_15px_rgba(255,182,193,0.2)]">
-                                <img id="trackImage" src="" alt="Thumbnail" class="w-full h-full object-cover hidden">
-                                <svg id="trackIcon" class="w-12 h-12 text-[#FFB6C1]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
-                            </div>
-                            <div class="flex-1 text-center md:text-left min-w-0 w-full">
-                                <h3 id="trackTitle" class="text-2xl font-bold truncate mb-2 text-white" title="">-</h3>
-                                <p id="trackAuthor" class="text-gray-400 mb-4 truncate">-</p>
-                                
-                                <!-- Progress Bar -->
-                                <div class="mb-2 flex justify-between text-xs text-gray-400 metric-font">
-                                    <span id="timeCurrent">00:00</span>
-                                    <span id="timeTotal">00:00</span>
-                                </div>
-                                <div class="progress-bar-bg mb-6">
-                                    <div id="progressBar" class="progress-bar-fill"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Controls -->
-                        <div class="flex justify-center gap-4">
-                            <button onclick="controlPlayer('previous')" class="btn-control w-12 h-12 rounded-full flex items-center justify-center" title="Previous (Not available for streaming)">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"/></svg>
-                            </button>
-                            <button onclick="controlPlayer('pause')" id="playPauseBtn" class="btn-control w-14 h-14 rounded-full flex items-center justify-center text-white bg-gradient-to-r from-[#FFB6C1] to-[#F9A8D4] border-none shadow-[0_0_15px_rgba(255,182,193,0.4)]">
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                            </button>
-                            <button onclick="controlPlayer('skip')" class="btn-control w-12 h-12 rounded-full flex items-center justify-center" title="Skip">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M11.555 14.832A1 1 0 0013 14V6a1 1 0 00-1.555-.832L6 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"/></svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Voice Channel Members -->
-                <div class="glass-panel p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-[#93C5FD]">Pendengar Aktif</h2>
-                    <div id="membersList" class="flex flex-wrap gap-3">
-                        <div class="text-gray-500 text-sm">Belum terhubung ke server.</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Queue Section -->
-            <div class="glass-panel p-6 lg:h-[calc(100vh-120px)] flex flex-col">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold text-[#86EFAC]">Antrean</h2>
-                    <span id="queueCount" class="text-sm bg-[#FFB6C1]/20 text-[#FFB6C1] px-2 py-1 rounded-full metric-font">0 lagu</span>
-                </div>
-                
-                <div id="queueList" class="flex-1 overflow-y-auto pr-2 space-y-1">
-                    <div class="text-center py-8 text-gray-500 text-sm">Antrean kosong.</div>
-                </div>
-            </div>
+      <header
+        class="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+      >
+        <div>
+          <h1 class="text-3xl font-bold text-[#FFB6C1] metric-font">
+            Naura Music
+          </h1>
+          <p class="text-gray-400 mt-1">Control Panel Real-Time</p>
         </div>
+        <div
+          class="glass-panel px-4 py-2 flex items-center gap-3 w-full md:w-auto"
+        >
+          <span class="text-sm text-gray-300 whitespace-nowrap"
+            >Server ID:</span
+          >
+          <input
+            type="text"
+            id="guildIdInput"
+            placeholder="Masukkan ID Server"
+            class="bg-transparent border-b border-gray-600 focus:border-[#FFB6C1] outline-none text-white px-2 py-1 text-sm metric-font w-full md:w-48"
+          />
+          <button
+            id="connectBtn"
+            class="btn-control px-4 py-1 rounded-lg text-sm font-semibold"
+          >
+            Connect
+          </button>
+        </div>
+      </header>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Now Playing Section -->
+        <div class="lg:col-span-2 space-y-6">
+          <div class="glass-panel p-6">
+            <h2 class="text-xl font-semibold mb-4 text-[#F9A8D4]">
+              Now Playing
+            </h2>
+
+            <div id="noMusicState">
+              <script>
+                document.write(
+                  typeof NauraUI !== "undefined"
+                    ? NauraUI.stateHtml("empty", {
+                        title: "Belum Ada Lagu",
+                        body: "Tidak ada lagu yang sedang diputar di server ini. Putar lagu yuk!",
+                      })
+                    : '<p class="text-center text-gray-500 py-8">Tidak ada lagu yang diputar.</p>',
+                );
+              </script>
+            </div>
+
+            <div id="playingState" class="hidden">
+              <div
+                class="flex flex-col md:flex-row gap-6 items-center md:items-start mb-6"
+              >
+                <div
+                  class="w-32 h-32 rounded-xl bg-gray-800 flex-shrink-0 border border-[#FFB6C1]/30 flex items-center justify-center overflow-hidden relative shadow-[0_0_15px_rgba(255,182,193,0.2)]"
+                >
+                  <img
+                    id="trackImage"
+                    src=""
+                    alt="Thumbnail"
+                    class="w-full h-full object-cover hidden"
+                  />
+                  <svg
+                    id="trackIcon"
+                    class="w-12 h-12 text-[#FFB6C1]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                    ></path>
+                  </svg>
+                </div>
+                <div class="flex-1 text-center md:text-left min-w-0 w-full">
+                  <h3
+                    id="trackTitle"
+                    class="text-2xl font-bold truncate mb-2 text-white"
+                    title=""
+                  >
+                    -
+                  </h3>
+                  <p id="trackAuthor" class="text-gray-400 mb-4 truncate">-</p>
+
+                  <!-- Progress Bar -->
+                  <div
+                    class="mb-2 flex justify-between text-xs text-gray-400 metric-font"
+                  >
+                    <span id="timeCurrent">00:00</span>
+                    <span id="timeTotal">00:00</span>
+                  </div>
+                  <div class="progress-bar-bg mb-6">
+                    <div id="progressBar" class="progress-bar-fill"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Controls -->
+              <div class="flex justify-center gap-4">
+                <button
+                  onclick="controlPlayer('previous')"
+                  class="btn-control w-12 h-12 rounded-full flex items-center justify-center"
+                  title="Previous (Not available for streaming)"
+                >
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"
+                    />
+                  </svg>
+                </button>
+                <button
+                  onclick="controlPlayer('pause')"
+                  id="playPauseBtn"
+                  class="btn-control w-14 h-14 rounded-full flex items-center justify-center text-white bg-gradient-to-r from-[#FFB6C1] to-[#F9A8D4] border-none shadow-[0_0_15px_rgba(255,182,193,0.4)]"
+                >
+                  <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fill-rule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </button>
+                <button
+                  onclick="controlPlayer('skip')"
+                  class="btn-control w-12 h-12 rounded-full flex items-center justify-center"
+                  title="Skip"
+                >
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      d="M11.555 14.832A1 1 0 0013 14V6a1 1 0 00-1.555-.832L6 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Voice Channel Members -->
+          <div class="glass-panel p-6">
+            <h2 class="text-xl font-semibold mb-4 text-[#93C5FD]">
+              Pendengar Aktif
+            </h2>
+            <div id="membersList" class="flex flex-wrap gap-3">
+              <div class="text-gray-500 text-sm">
+                Belum terhubung ke server.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Queue Section -->
+        <div class="glass-panel p-6 lg:h-[calc(100vh-120px)] flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-semibold text-[#86EFAC]">Antrean</h2>
+            <span
+              id="queueCount"
+              class="text-sm bg-[#FFB6C1]/20 text-[#FFB6C1] px-2 py-1 rounded-full metric-font"
+              >0 lagu</span
+            >
+          </div>
+
+          <div id="queueList" class="flex-1 overflow-y-auto pr-2 space-y-1">
+            <div class="text-center py-8 text-gray-500 text-sm">
+              Antrean kosong.
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
-        const socket = io();
-        const urlParams = new URLSearchParams(window.location.search);
-        let currentGuildId = urlParams.get('guild') || localStorage.getItem('naura_music_guild') || '';
-        
-        const guildInput = document.getElementById('guildIdInput');
-        const connectBtn = document.getElementById('connectBtn');
-        
-        if (currentGuildId) {
-            guildInput.value = currentGuildId;
+      const socket = io();
+      const urlParams = new URLSearchParams(window.location.search);
+      let currentGuildId =
+        urlParams.get("guild") ||
+        localStorage.getItem("naura_music_guild") ||
+        "";
+
+      const guildInput = document.getElementById("guildIdInput");
+      const connectBtn = document.getElementById("connectBtn");
+
+      if (currentGuildId) {
+        guildInput.value = currentGuildId;
+      }
+
+      // Format MS to MM:SS
+      function formatTime(ms) {
+        if (!ms || ms < 0) return "00:00";
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+      }
+
+      // Generate thumbnail
+      function getThumbnail(uri) {
+        if (uri && uri.includes("youtube.com/watch?v=")) {
+          const id = uri.split("v=")[1]?.split("&")[0];
+          if (id) return `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
+        } else if (uri && uri.includes("youtu.be/")) {
+          const id = uri.split("youtu.be/")[1]?.split("?")[0];
+          if (id) return `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
         }
+        return null;
+      }
 
-        // Format MS to MM:SS
-        function formatTime(ms) {
-            if (!ms || ms < 0) return '00:00';
-            const totalSeconds = Math.floor(ms / 1000);
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
-            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
+      // Connect to Guild Room
+      function connectToGuild() {
+        const guildId = guildInput.value.trim();
+        if (!guildId) return alert("Masukkan ID Server!");
 
-        // Generate thumbnail
-        function getThumbnail(uri) {
-            if (uri && uri.includes('youtube.com/watch?v=')) {
-                const id = uri.split('v=')[1]?.split('&')[0];
-                if (id) return `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
-            } else if (uri && uri.includes('youtu.be/')) {
-                const id = uri.split('youtu.be/')[1]?.split('?')[0];
-                if (id) return `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
-            }
-            return null;
-        }
+        // Unsubscribe from previous if any
+        socket.emit("leave_guild_music", currentGuildId);
+        socket.emit("join_guild_music", guildId);
 
-        // Connect to Guild Room
-        function connectToGuild() {
-            const guildId = guildInput.value.trim();
-            if (!guildId) return alert('Masukkan ID Server!');
-            
-            // Unsubscribe from previous if any
-            socket.emit('leave_guild_music', currentGuildId);
-            socket.emit('join_guild_music', guildId); 
-            
-            currentGuildId = guildId;
-            localStorage.setItem('naura_music_guild', currentGuildId);
-            
-            // Update URL parameters
-            const newUrl = new URL(window.location);
-            newUrl.searchParams.set('guild', currentGuildId);
-            window.history.pushState({}, '', newUrl);
+        currentGuildId = guildId;
+        localStorage.setItem("naura_music_guild", currentGuildId);
 
-            connectBtn.textContent = 'Terhubung';
-            connectBtn.classList.add('border-green-500', 'text-green-500');
-            setTimeout(() => {
-                connectBtn.textContent = 'Connect';
-                connectBtn.classList.remove('border-green-500', 'text-green-500');
-            }, 2000);
-        }
+        // Update URL parameters
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set("guild", currentGuildId);
+        window.history.pushState({}, "", newUrl);
 
-        connectBtn.addEventListener('click', connectToGuild);
+        connectBtn.textContent = "Terhubung";
+        connectBtn.classList.add("border-green-500", "text-green-500");
+        setTimeout(() => {
+          connectBtn.textContent = "Connect";
+          connectBtn.classList.remove("border-green-500", "text-green-500");
+        }, 2000);
+      }
 
-        // Receive Music State
-        socket.on('music_state', (state) => {
-            if (!state) return;
-            
-            const { currentTrack, queue, members } = state;
-            
-            // Members
-            const membersList = document.getElementById('membersList');
-            if (members && members.length > 0) {
-                membersList.innerHTML = members.map(m => `
+      connectBtn.addEventListener("click", connectToGuild);
+
+      // Receive Music State
+      socket.on("music_state", (state) => {
+        if (!state) return;
+
+        const { currentTrack, queue, members } = state;
+
+        // Members
+        const membersList = document.getElementById("membersList");
+        if (members && members.length > 0) {
+          membersList.innerHTML = members
+            .map(
+              (m) => `
                     <div class="flex items-center gap-2 bg-white/5 rounded-full pl-1 pr-3 py-1 border border-white/10" title="${m.username}">
                         <img src="${m.avatar}" class="w-6 h-6 rounded-full" alt="avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
                         <span class="text-xs truncate max-w-[100px]">${m.username}</span>
                     </div>
-                `).join('');
-            } else {
-                membersList.innerHTML = '<div class="text-gray-500 text-sm">Tidak ada orang di Voice Channel.</div>';
-            }
+                `,
+            )
+            .join("");
+        } else {
+          membersList.innerHTML =
+            '<div class="text-gray-500 text-sm">Tidak ada orang di Voice Channel.</div>';
+        }
 
-            // Now Playing
-            const noMusic = document.getElementById('noMusicState');
-            const playing = document.getElementById('playingState');
-            const trackImage = document.getElementById('trackImage');
-            const trackIcon = document.getElementById('trackIcon');
-            
-            if (currentTrack) {
-                noMusic.classList.add('hidden');
-                playing.classList.remove('hidden');
-                
-                document.getElementById('trackTitle').textContent = currentTrack.title;
-                document.getElementById('trackTitle').title = currentTrack.title;
-                document.getElementById('trackAuthor').textContent = currentTrack.author || 'Lavalink Audio';
-                
-                document.getElementById('timeCurrent').textContent = formatTime(currentTrack.position);
-                document.getElementById('timeTotal').textContent = formatTime(currentTrack.duration);
-                
-                let percent = 0;
-                if (currentTrack.duration > 0) {
-                    percent = Math.min(100, (currentTrack.position / currentTrack.duration) * 100);
-                }
-                document.getElementById('progressBar').style.width = `${percent}%`;
+        // Now Playing
+        const noMusic = document.getElementById("noMusicState");
+        const playing = document.getElementById("playingState");
+        const trackImage = document.getElementById("trackImage");
+        const trackIcon = document.getElementById("trackIcon");
 
-                // Set Thumbnail
-                const thumbnail = getThumbnail(currentTrack.uri);
-                if (thumbnail) {
-                    trackImage.src = thumbnail;
-                    trackImage.classList.remove('hidden');
-                    trackIcon.classList.add('hidden');
-                } else {
-                    trackImage.classList.add('hidden');
-                    trackIcon.classList.remove('hidden');
-                }
-                
-                // Play/Pause button state
-                const btn = document.getElementById('playPauseBtn');
-                if (currentTrack.isPaused) {
-                    // Play icon
-                    btn.innerHTML = `<svg class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>`;
-                } else {
-                    // Pause icon
-                    btn.innerHTML = `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>`;
-                }
-            } else {
-                noMusic.classList.remove('hidden');
-                playing.classList.add('hidden');
-            }
-            
-            // Queue
-            const queueList = document.getElementById('queueList');
-            document.getElementById('queueCount').textContent = `${queue ? queue.length : 0} lagu`;
-            
-            if (queue && queue.length > 0) {
-                queueList.innerHTML = queue.map((track, i) => `
+        if (currentTrack) {
+          noMusic.classList.add("hidden");
+          playing.classList.remove("hidden");
+
+          document.getElementById("trackTitle").textContent =
+            currentTrack.title;
+          document.getElementById("trackTitle").title = currentTrack.title;
+          document.getElementById("trackAuthor").textContent =
+            currentTrack.author || "Lavalink Audio";
+
+          document.getElementById("timeCurrent").textContent = formatTime(
+            currentTrack.position,
+          );
+          document.getElementById("timeTotal").textContent = formatTime(
+            currentTrack.duration,
+          );
+
+          let percent = 0;
+          if (currentTrack.duration > 0) {
+            percent = Math.min(
+              100,
+              (currentTrack.position / currentTrack.duration) * 100,
+            );
+          }
+          document.getElementById("progressBar").style.width = `${percent}%`;
+
+          // Set Thumbnail
+          const thumbnail = getThumbnail(currentTrack.uri);
+          if (thumbnail) {
+            trackImage.src = thumbnail;
+            trackImage.classList.remove("hidden");
+            trackIcon.classList.add("hidden");
+          } else {
+            trackImage.classList.add("hidden");
+            trackIcon.classList.remove("hidden");
+          }
+
+          // Play/Pause button state
+          const btn = document.getElementById("playPauseBtn");
+          if (currentTrack.isPaused) {
+            // Play icon
+            btn.innerHTML = `<svg class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>`;
+          } else {
+            // Pause icon
+            btn.innerHTML = `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>`;
+          }
+        } else {
+          noMusic.classList.remove("hidden");
+          playing.classList.add("hidden");
+        }
+
+        // Queue
+        const queueList = document.getElementById("queueList");
+        document.getElementById("queueCount").textContent =
+          `${queue ? queue.length : 0} lagu`;
+
+        if (queue && queue.length > 0) {
+          queueList.innerHTML = queue
+            .map(
+              (track, i) => `
                     <div class="queue-item p-3 flex justify-between items-center rounded-lg">
                         <div class="min-w-0 pr-4">
                             <div class="text-sm font-medium text-white truncate">${i + 1}. ${track.title}</div>
@@ -305,27 +432,31 @@
                             ${formatTime(track.duration)}
                         </div>
                     </div>
-                `).join('');
-            } else {
-                queueList.innerHTML = '<div class="text-center py-8 text-gray-500 text-sm">Antrean kosong.</div>';
-            }
-        });
-
-        socket.on('music_error', (data) => {
-            alert(data.message);
-        });
-
-        // Control functions
-        function controlPlayer(action) {
-            if (!currentGuildId) return alert('Silakan Connect ke server terlebih dahulu!');
-            // Socket emit map from previous music.html
-            socket.emit('music_control', { guildId: currentGuildId, action });
+                `,
+            )
+            .join("");
+        } else {
+          queueList.innerHTML =
+            '<div class="text-center py-8 text-gray-500 text-sm">Antrean kosong.</div>';
         }
-        
-        // Auto connect if saved
-        if (currentGuildId) {
-            setTimeout(connectToGuild, 500);
-        }
+      });
+
+      socket.on("music_error", (data) => {
+        alert(data.message);
+      });
+
+      // Control functions
+      function controlPlayer(action) {
+        if (!currentGuildId)
+          return alert("Silakan Connect ke server terlebih dahulu!");
+        // Socket emit map from previous music.html
+        socket.emit("music_control", { guildId: currentGuildId, action });
+      }
+
+      // Auto connect if saved
+      if (currentGuildId) {
+        setTimeout(connectToGuild, 500);
+      }
     </script>
-</body>
+  </body>
 </html>

@@ -70,10 +70,11 @@ module.exports = {
 
       // Mulai transisi playback (fade-in)
       if (player.isPaused) {
-        try { player.pause(false); } catch (e) {}
+        try {
+          player.pause(false);
+        } catch (e) {}
       }
       beginPlaybackTransition(player, activeTrack, player.baseVolume);
-
 
       let recommendedTracks = [];
       try {
@@ -166,7 +167,9 @@ module.exports = {
         const prompt = `Aku sedang memutar lagu "${activeTrack.info.title}" oleh "${activeTrack.info.author}".
                 Berikan 1 rekomendasi lagu selanjutnya yang memiliki vibe sangat mirip. Balas HANYA dengan format murni: "Judul Lagu - Nama Artis".`;
 
-        const aiResult = await geminiClient.generate({ parts: [{ text: prompt }] });
+        const aiResult = await geminiClient.generate({
+          parts: [{ text: prompt }],
+        });
         const aiQuery = (aiResult || "").trim();
 
         const searchRes = await manager.poru.resolve({

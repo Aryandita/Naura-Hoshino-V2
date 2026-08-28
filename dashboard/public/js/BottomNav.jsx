@@ -10,7 +10,10 @@
 
 import React, { useState, useEffect } from "react";
 
-export default function BottomNav({ activeSection = "home", onNavigate = () => {} }) {
+export default function BottomNav({
+  activeSection = "home",
+  onNavigate = () => {},
+}) {
   const [currentSection, setCurrentSection] = useState(activeSection);
 
   useEffect(() => {
@@ -29,7 +32,10 @@ export default function BottomNav({ activeSection = "home", onNavigate = () => {
     if (e) e.preventDefault();
     setCurrentSection(id);
     onNavigate(id);
-    if (typeof window !== "undefined" && typeof window.switchSection === "function") {
+    if (
+      typeof window !== "undefined" &&
+      typeof window.switchSection === "function"
+    ) {
       window.switchSection(id);
     }
   };

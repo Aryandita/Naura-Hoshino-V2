@@ -6,10 +6,18 @@ const AbyssEngine = require("./abyssEngine");
 
 test("AbyssEngine - Procedural Choices Generation", () => {
   const choicesFloor1 = AbyssEngine._generateChoices(1);
-  assert.equal(choicesFloor1.length, 3, "Lantai biasa harus memiliki 3 pilihan ruangan");
+  assert.equal(
+    choicesFloor1.length,
+    3,
+    "Lantai biasa harus memiliki 3 pilihan ruangan",
+  );
 
   const choicesFloor10 = AbyssEngine._generateChoices(10);
-  assert.equal(choicesFloor10.length, 1, "Lantai Boss harus memiliki 1 pintu Guardian");
+  assert.equal(
+    choicesFloor10.length,
+    1,
+    "Lantai Boss harus memiliki 1 pintu Guardian",
+  );
   assert.equal(choicesFloor10[0].type, "GUARDIAN");
   assert.ok(choicesFloor10[0].monsterName.includes("Sentinel"));
 });

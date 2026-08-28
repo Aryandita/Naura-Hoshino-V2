@@ -102,12 +102,16 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("sync")
-        .setDescription("🔄 Sinkronisasi waktu bermain dan klaim hadiah Star Fragments/Kupon dari server Minecraft"),
+        .setDescription(
+          "🔄 Sinkronisasi waktu bermain dan klaim hadiah Star Fragments/Kupon dari server Minecraft",
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("broadcast")
-        .setDescription("📢 Kirim pesan pengumuman ke dalam game Minecraft via RCON")
+        .setDescription(
+          "📢 Kirim pesan pengumuman ke dalam game Minecraft via RCON",
+        )
         .addStringOption((opt) =>
           opt
             .setName("message")
@@ -307,7 +311,10 @@ module.exports = {
         }
 
         const MinecraftBridgeService = require("../../src/services/minecraftBridge");
-        const code = await MinecraftBridgeService.generateLinkCode(interaction.user.id, profileData.name);
+        const code = await MinecraftBridgeService.generateLinkCode(
+          interaction.user.id,
+          profileData.name,
+        );
 
         const cacheManager = require("../../src/managers/cacheManager");
         await cacheManager.updateUserProfile(interaction.user.id, {
@@ -334,7 +341,9 @@ module.exports = {
       }
     } else if (subcommand === "sync") {
       const MinecraftBridgeService = require("../../src/services/minecraftBridge");
-      const syncRes = await MinecraftBridgeService.syncRewards(interaction.user.id);
+      const syncRes = await MinecraftBridgeService.syncRewards(
+        interaction.user.id,
+      );
 
       if (!syncRes.success) {
         return interaction.editReply({
@@ -359,14 +368,17 @@ module.exports = {
       const GuildSettings = require("../../src/models/GuildSettings");
       const { sendRconCommand } = require("../../src/utils/rcon");
 
-      const settings = await GuildSettings.findOne({ where: { guildId: interaction.guild.id } });
+      const settings = await GuildSettings.findOne({
+        where: { guildId: interaction.guild.id },
+      });
       const mc = settings?.settings?.minecraft || {};
 
       if (!mc.ip || !mc.rconPassword) {
         return interaction.editReply({
           ...buildErrorContainerV2({
             title: "RCON Belum Dikonfigurasi",
-            description: "Server ini belum mengonfigurasi IP/Password RCON. Gunakan `/minecraft bridge` terlebih dahulu.",
+            description:
+              "Server ini belum mengonfigurasi IP/Password RCON. Gunakan `/minecraft bridge` terlebih dahulu.",
             footerText: ui.getFooter("core"),
           }),
         });
@@ -377,9 +389,14 @@ module.exports = {
           { text: "[Discord | ", color: "light_purple" },
           { text: interaction.user.username, color: "aqua", bold: true },
           { text: "] ", color: "light_purple" },
-          { text: msgText, color: "white" }
+          { text: msgText, color: "white" },
         ]);
-        await sendRconCommand(mc.ip, mc.rconPort || 25575, mc.rconPassword, `tellraw @a ${rawJson}`);
+        await sendRconCommand(
+          mc.ip,
+          mc.rconPort || 25575,
+          mc.rconPassword,
+          `tellraw @a ${rawJson}`,
+        );
 
         const bcPayload = buildContainerV2({
           accentColorHex: "#C084FC",
@@ -547,7 +564,9 @@ module.exports = {
       await settingsModel.save();
       cacheManager.invalidateGuildSettings(interaction.guild.id);
 
-      const statusEmoji = mc.bridgeEnabled ? (ui.getEmoji("greenping") || "🟢") : (ui.getEmoji("redping") || "🔴");
+      const statusEmoji = mc.bridgeEnabled
+        ? ui.getEmoji("greenping") || "🟢"
+        : ui.getEmoji("redping") || "🔴";
       const bridgePayload = buildContainerV2({
         accentColorHex: mc.bridgeEnabled ? "#22c55e" : "#ef4444",
         title: `${ui.getEmoji("translate") || "🌐"} Minecraft Chat Bridge Configuration`,

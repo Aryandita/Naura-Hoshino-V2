@@ -27,7 +27,11 @@ class WorldBossEngine {
     });
 
     if (boss && redisManager.isReady) {
-      await redisManager.setCache(BOSS_CACHE_KEY, JSON.stringify(boss.toJSON()), 30);
+      await redisManager.setCache(
+        BOSS_CACHE_KEY,
+        JSON.stringify(boss.toJSON()),
+        30,
+      );
     }
 
     return boss ? boss.toJSON() : null;
@@ -72,28 +76,42 @@ class WorldBossEngine {
     });
 
     if (redisManager.isReady) {
-      await redisManager.setCache(BOSS_CACHE_KEY, JSON.stringify(newBoss.toJSON()), 60);
+      await redisManager.setCache(
+        BOSS_CACHE_KEY,
+        JSON.stringify(newBoss.toJSON()),
+        60,
+      );
       await redisManager.publish(RAID_CHANNEL, {
         type: "SPAWN",
         boss: newBoss.toJSON(),
       });
     }
 
-    logger.info(`[WorldBoss 2.0] Spawned: ${name} (${title}) with ${maxHp} HP [Element: ${element}]`);
+    logger.info(
+      `[WorldBoss 2.0] Spawned: ${name} (${title}) with ${maxHp} HP [Element: ${element}]`,
+    );
     return newBoss.toJSON();
   }
 
   /**
    * Serang World Boss dengan dukungan aksi peran taktis (DPS, Tank, Healer, Buffer)
    */
-  static async executeRaidAction(userId, username, actionType = "serang", { userLevel = 1, petBuffs = {} } = {}) {
+  static async executeRaidAction(
+    userId,
+    username,
+    actionType = "serang",
+    { userLevel = 1, petBuffs = {} } = {},
+  ) {
     const boss = await this.getActiveBoss();
     if (!boss || boss.status !== "ACTIVE") {
       return { success: false, reason: "NO_ACTIVE_BOSS" };
     }
 
     if (new Date() > new Date(boss.endTime)) {
-      await WorldBoss.update({ status: "DESPAWNED" }, { where: { bossId: boss.bossId } });
+      await WorldBoss.update(
+        { status: "DESPAWNED" },
+        { where: { bossId: boss.bossId } },
+      );
       if (redisManager.isReady) await redisManager.deleteCache(BOSS_CACHE_KEY);
       return { success: false, reason: "BOSS_EXPIRED" };
     }
@@ -106,7 +124,12 @@ class WorldBossEngine {
 
     let currentPhase = dbBoss.phase || 1;
     let shieldHp = Number(dbBoss.shieldHp || 0);
-    const roles = dbBoss.roleContributions || { tanks: {}, healers: {}, dps: {}, buffers: {} };
+    const roles = dbBoss.roleContributions || {
+      tanks: {},
+      healers: {},
+      dps: {},
+      buffers: {},
+    };
     const leaderboard = dbBoss.damageLeaderboard || {};
 
     let damageDealt = 0;
@@ -182,7 +205,8 @@ class WorldBossEngine {
     } else if (actionType === "heal") {
       // Healer Action: Memulihkan semangat tempur & stamina kolektif
       healAmount = Math.floor(Math.random() * 40) + 50 + userLevel * 3;
-      if (!roles.healers[userId]) roles.healers[userId] = { heals: 0, points: 0, username };
+      if (!roles.healers[userId])
+        roles.healers[userId] = { heals: 0, points: 0, username };
       roles.healers[userId].heals += 1;
       roles.healers[userId].points += healAmount;
       roles.healers[userId].username = username;
@@ -192,13 +216,18 @@ class WorldBossEngine {
     } else if (actionType === "buff") {
       // Buffer Action: Menaikkan drop pool bos
       buffAdded = Math.floor(Math.random() * 20) + 10;
-      if (!roles.buffers[userId]) roles.buffers[userId] = { buffs: 0, points: 0, username };
+      if (!roles.buffers[userId])
+        roles.buffers[userId] = { buffs: 0, points: 0, username };
       roles.buffers[userId].buffs += 1;
       roles.buffers[userId].points += buffAdded;
       roles.buffers[userId].username = username;
 
-      const currentPool = dbBoss.rewardsPool || { starFragments: 5000, coupons: 30 };
-      currentPool.starFragments = (Number(currentPool.starFragments) || 5000) + buffAdded;
+      const currentPool = dbBoss.rewardsPool || {
+        starFragments: 5000,
+        coupons: 30,
+      };
+      currentPool.starFragments =
+        (Number(currentPool.starFragments) || 5000) + buffAdded;
       dbBoss.rewardsPool = currentPool;
       dbBoss.changed("rewardsPool", true);
 
@@ -210,7 +239,13 @@ class WorldBossEngine {
     const newHp = Math.max(0, currentHp - damageDealt);
     const newHpPercent = (newHp / maxHp) * 100;
 
-    if (newHpPercent <= 50 && newHpPercent > 20 && currentPhase === 1 && !dbBoss.shieldHp && dbBoss.maxShieldHp > 0) {
+    if (
+      newHpPercent <= 50 &&
+      newHpPercent > 20 &&
+      currentPhase === 1 &&
+      !dbBoss.shieldHp &&
+      dbBoss.maxShieldHp > 0
+    ) {
       currentPhase = 2; // Aktifkan Shield Phase
       shieldHp = Number(dbBoss.maxShieldHp);
     } else if (newHpPercent <= 20 && newHp > 0) {
@@ -223,7 +258,9 @@ class WorldBossEngine {
       dbBoss.lastHitUserId = userId;
 
       // Cari MVP (total kontribusi damage tertinggi)
-      const topDamage = Object.values(leaderboard).sort((a, b) => b.totalDamage - a.totalDamage)[0];
+      const topDamage = Object.values(leaderboard).sort(
+        (a, b) => b.totalDamage - a.totalDamage,
+      )[0];
       if (topDamage) {
         dbBoss.mvpUserId = topDamage.userId;
       }
@@ -245,7 +282,11 @@ class WorldBossEngine {
         await redisManager.deleteCache(BOSS_CACHE_KEY);
         await this._distributeRewards(dbBoss);
       } else {
-        await redisManager.setCache(BOSS_CACHE_KEY, JSON.stringify(dbBoss.toJSON()), 30);
+        await redisManager.setCache(
+          BOSS_CACHE_KEY,
+          JSON.stringify(dbBoss.toJSON()),
+          30,
+        );
       }
 
       await redisManager.publish(RAID_CHANNEL, {
@@ -298,13 +339,17 @@ class WorldBossEngine {
 
       const totalPoolFrag = boss.rewardsPool?.starFragments || 5000;
       const totalPoolCoupons = boss.rewardsPool?.coupons || 30;
-      const totalDmgDealt = participants.reduce((sum, p) => sum + (p.totalDamage || 0), 0) || 1;
+      const totalDmgDealt =
+        participants.reduce((sum, p) => sum + (p.totalDamage || 0), 0) || 1;
 
       // 1. Payout kontribusi DPS
       for (const p of participants) {
         const share = p.totalDamage / totalDmgDealt;
         let rewardFrag = Math.max(50, Math.floor(totalPoolFrag * share * 0.7)); // 70% pool untuk DPS
-        let rewardCoupons = Math.max(1, Math.floor(totalPoolCoupons * share * 0.7));
+        let rewardCoupons = Math.max(
+          1,
+          Math.floor(totalPoolCoupons * share * 0.7),
+        );
 
         // Bonus MVP (1.5x)
         if (boss.mvpUserId && p.userId === boss.mvpUserId) {
@@ -318,9 +363,19 @@ class WorldBossEngine {
           rewardCoupons += 2;
         }
 
-        await cacheManager.incrementUserSurvival(p.userId, "starFragments", rewardFrag);
-        await cacheManager.incrementUserSurvival(p.userId, "coupons", rewardCoupons);
-        logger.info(`[WorldBoss 2.0 Reward] DPS ${p.userId} (${p.username}) dapat ${rewardFrag} Fragments, ${rewardCoupons} Coupons.`);
+        await cacheManager.incrementUserSurvival(
+          p.userId,
+          "starFragments",
+          rewardFrag,
+        );
+        await cacheManager.incrementUserSurvival(
+          p.userId,
+          "coupons",
+          rewardCoupons,
+        );
+        logger.info(
+          `[WorldBoss 2.0 Reward] DPS ${p.userId} (${p.username}) dapat ${rewardFrag} Fragments, ${rewardCoupons} Coupons.`,
+        );
       }
 
       // 2. Payout Tank & Healer & Buffer Support (30% pool)
@@ -331,12 +386,21 @@ class WorldBossEngine {
       ]);
 
       const supportPoolFrag = Math.floor(totalPoolFrag * 0.3);
-      const perSupportFrag = Math.max(100, Math.floor(supportPoolFrag / (supportUsers.size || 1)));
+      const perSupportFrag = Math.max(
+        100,
+        Math.floor(supportPoolFrag / (supportUsers.size || 1)),
+      );
 
       for (const uId of supportUsers) {
-        await cacheManager.incrementUserSurvival(uId, "starFragments", perSupportFrag);
+        await cacheManager.incrementUserSurvival(
+          uId,
+          "starFragments",
+          perSupportFrag,
+        );
         await cacheManager.incrementUserSurvival(uId, "coupons", 1);
-        logger.info(`[WorldBoss 2.0 Support Reward] User ${uId} dapat ${perSupportFrag} Fragments, 1 Coupon.`);
+        logger.info(
+          `[WorldBoss 2.0 Support Reward] User ${uId} dapat ${perSupportFrag} Fragments, 1 Coupon.`,
+        );
       }
     } catch (e) {
       logger.error("[WorldBoss 2.0] Gagal membagikan reward raid:", e);

@@ -228,7 +228,10 @@ class MongoManager {
     try {
       return await CommandAuditLog.create(logData);
     } catch (error) {
-      logger.error("[MongoDB] Gagal mencatat command audit log:", error.message);
+      logger.error(
+        "[MongoDB] Gagal mencatat command audit log:",
+        error.message,
+      );
       return null;
     }
   }
@@ -246,7 +249,10 @@ class MongoManager {
         .limit(limit)
         .lean();
     } catch (error) {
-      logger.error("[MongoDB] Gagal mengambil command audit logs:", error.message);
+      logger.error(
+        "[MongoDB] Gagal mengambil command audit logs:",
+        error.message,
+      );
       return [];
     }
   }

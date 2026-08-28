@@ -286,7 +286,9 @@ module.exports = (client) => {
       logger.info(`[WEBHOOK] Server webhook berjalan di port ${port}`);
     });
     server.on("error", (err) => {
-      logger.warn(`[WEBHOOK] Webhook server port ${port} tidak dapat dibuka (${err.message}). Webhook endpoints tetap aktif via API utama.`);
+      logger.warn(
+        `[WEBHOOK] Webhook server port ${port} tidak dapat dibuka (${err.message}). Webhook endpoints tetap aktif via API utama.`,
+      );
     });
   } catch (err) {
     logger.warn(`[WEBHOOK] Gagal membuka port ${port}:`, err.message);

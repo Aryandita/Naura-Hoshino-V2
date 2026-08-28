@@ -1,7 +1,10 @@
 "use strict";
 
 const rawParseDuration = require("parse-duration");
-const parseDuration = typeof rawParseDuration === "function" ? rawParseDuration : rawParseDuration?.default;
+const parseDuration =
+  typeof rawParseDuration === "function"
+    ? rawParseDuration
+    : rawParseDuration?.default;
 
 function safeParseDuration(str) {
   if (!str) return 0;
@@ -11,7 +14,9 @@ function safeParseDuration(str) {
       if (parsed) return parsed;
     } catch (e) {}
   }
-  const match = String(str).trim().match(/^(\d+)\s*(s|m|h|d|w|min|sec|hour|day)?$/i);
+  const match = String(str)
+    .trim()
+    .match(/^(\d+)\s*(s|m|h|d|w|min|sec|hour|day)?$/i);
   if (match) {
     const num = parseInt(match[1], 10);
     const unit = (match[2] || "m").toLowerCase();
@@ -178,7 +183,9 @@ async function dispatchFunction(name, args = {}, message = {}) {
         survivalXp: survival?.survival_xp || 0,
         reputation: profile?.reputation || 0,
         characterClass: profile?.characterClass || "None",
-        isPremium: Boolean(profile?.isPremium && profile?.premiumUntil > new Date()),
+        isPremium: Boolean(
+          profile?.isPremium && profile?.premiumUntil > new Date(),
+        ),
         language: profile?.language || "id",
       };
     }
@@ -201,36 +208,58 @@ async function dispatchFunction(name, args = {}, message = {}) {
       const player = musicManager.poru.players.get(guild.id);
 
       if (action === "pause") {
-        if (!player || !player.isPlaying) return { error: "Tidak ada lagu yang sedang diputar untuk dijeda." };
+        if (!player || !player.isPlaying)
+          return { error: "Tidak ada lagu yang sedang diputar untuk dijeda." };
         player.pause(true);
-        return { status: "success", message: "Musik berhasil dijeda (paused)." };
+        return {
+          status: "success",
+          message: "Musik berhasil dijeda (paused).",
+        };
       }
 
       if (action === "resume") {
-        if (!player || !player.isPaused) return { error: "Musik tidak sedang dalam keadaan jeda." };
+        if (!player || !player.isPaused)
+          return { error: "Musik tidak sedang dalam keadaan jeda." };
         player.pause(false);
-        return { status: "success", message: "Musik dilanjutkan kembali (resumed)." };
+        return {
+          status: "success",
+          message: "Musik dilanjutkan kembali (resumed).",
+        };
       }
 
       if (action === "skip") {
-        if (!player || !player.currentTrack) return { error: "Tidak ada lagu yang sedang diputar untuk dilewati." };
+        if (!player || !player.currentTrack)
+          return {
+            error: "Tidak ada lagu yang sedang diputar untuk dilewati.",
+          };
         const skippedTitle = player.currentTrack.info?.title || "Lagu saat ini";
         player.stop();
-        return { status: "success", message: `Lagu "${skippedTitle}" berhasil dilewati.` };
+        return {
+          status: "success",
+          message: `Lagu "${skippedTitle}" berhasil dilewati.`,
+        };
       }
 
       if (action === "stop") {
-        if (!player) return { error: "Bot tidak sedang memutar musik di server ini." };
+        if (!player)
+          return { error: "Bot tidak sedang memutar musik di server ini." };
         player.destroy();
-        return { status: "success", message: "Pemutaran musik dihentikan dan Naura keluar dari Voice Channel." };
+        return {
+          status: "success",
+          message:
+            "Pemutaran musik dihentikan dan Naura keluar dari Voice Channel.",
+        };
       }
 
       if (action === "queue") {
-        if (!player || !player.currentTrack) return { message: "Antrean musik saat ini kosong." };
+        if (!player || !player.currentTrack)
+          return { message: "Antrean musik saat ini kosong." };
         return {
           nowPlaying: player.currentTrack.info?.title,
           totalQueue: player.queue.length,
-          upcoming: player.queue.slice(0, 5).map((t, idx) => `${idx + 1}. ${t.info?.title}`),
+          upcoming: player.queue
+            .slice(0, 5)
+            .map((t, idx) => `${idx + 1}. ${t.info?.title}`),
         };
       }
 
@@ -241,7 +270,10 @@ async function dispatchFunction(name, args = {}, message = {}) {
       }
 
       if (!member || !member.voice || !member.voice.channelId) {
-        return { error: "Kamu harus bergabung ke dalam Voice Channel terlebih dahulu agar Naura bisa memutarkan musik." };
+        return {
+          error:
+            "Kamu harus bergabung ke dalam Voice Channel terlebih dahulu agar Naura bisa memutarkan musik.",
+        };
       }
 
       const resolve = await musicManager.poru.resolve({
@@ -342,7 +374,9 @@ async function dispatchFunction(name, args = {}, message = {}) {
     if (name === "get_server_stats") {
       const guild = message.guild;
       if (!guild) {
-        return { error: "Fungsi ini hanya dapat dijalankan di dalam server Discord." };
+        return {
+          error: "Fungsi ini hanya dapat dijalankan di dalam server Discord.",
+        };
       }
       return {
         serverName: guild.name,
@@ -364,7 +398,10 @@ async function dispatchFunction(name, args = {}, message = {}) {
 
       const ms = safeParseDuration(durationStr);
       if (!ms || ms < 5000) {
-        return { error: "Format durasi tidak valid (minimal 10s, contoh: '10m', '1h', '1d')." };
+        return {
+          error:
+            "Format durasi tidak valid (minimal 10s, contoh: '10m', '1h', '1d').",
+        };
       }
 
       const remindAt = new Date(Date.now() + ms);
@@ -392,7 +429,10 @@ async function dispatchFunction(name, args = {}, message = {}) {
         const onCooldown = await redisManager.getCache(cooldownKey);
         if (onCooldown) {
           const remainingMs = Number(onCooldown) - Date.now();
-          const remainingHours = Math.max(1, Math.ceil(remainingMs / (60 * 60 * 1000)));
+          const remainingHours = Math.max(
+            1,
+            Math.ceil(remainingMs / (60 * 60 * 1000)),
+          );
           return {
             status: "cooldown",
             message: `Kamu sudah mengklaim hadiah harianmu. Silakan kembali lagi dalam ${remainingHours} jam.`,
@@ -401,21 +441,35 @@ async function dispatchFunction(name, args = {}, message = {}) {
       }
 
       const profile = await cacheManager.getUserProfile(userId);
-      const isVIP = Boolean(profile?.isPremium && profile?.premiumUntil > new Date());
+      const isVIP = Boolean(
+        profile?.isPremium && profile?.premiumUntil > new Date(),
+      );
 
       const rewardFragments = isVIP ? 350 : 200;
       const rewardXp = isVIP ? 100 : 50;
       const rewardCoupons = isVIP ? 1 : 0;
 
-      await cacheManager.incrementUserSurvival(userId, "starFragments", rewardFragments);
+      await cacheManager.incrementUserSurvival(
+        userId,
+        "starFragments",
+        rewardFragments,
+      );
       await cacheManager.incrementUserSurvival(userId, "survival_xp", rewardXp);
       if (rewardCoupons > 0) {
-        await cacheManager.incrementUserSurvival(userId, "coupons", rewardCoupons);
+        await cacheManager.incrementUserSurvival(
+          userId,
+          "coupons",
+          rewardCoupons,
+        );
       }
 
       if (redisManager.isReady) {
         // 24 jam cooldown
-        await redisManager.setCache(cooldownKey, Date.now() + 24 * 60 * 60 * 1000, 24 * 60 * 60);
+        await redisManager.setCache(
+          cooldownKey,
+          Date.now() + 24 * 60 * 60 * 1000,
+          24 * 60 * 60,
+        );
       }
 
       return {
@@ -430,7 +484,9 @@ async function dispatchFunction(name, args = {}, message = {}) {
     }
   } catch (e) {
     logger.error(`[AI Function] Gagal menjalankan function call "${name}":`, e);
-    return { error: `Terjadi kesalahan saat menjalankan ${name}: ${e.message}` };
+    return {
+      error: `Terjadi kesalahan saat menjalankan ${name}: ${e.message}`,
+    };
   }
 
   return { error: `Function "${name}" tidak ditemukan.` };

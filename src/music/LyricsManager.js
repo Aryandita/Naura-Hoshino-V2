@@ -87,7 +87,9 @@ class LyricsManager {
       try {
         const prompt = `Tuliskan lirik lagu lengkap untuk "${cleanTitle}" oleh "${cleanArtist}". Balas HANYA teks lirik tanpa komentar. Jika tidak tahu, balas "NOT_FOUND".`;
 
-        const aiResult = await geminiClient.generate({ parts: [{ text: prompt }] });
+        const aiResult = await geminiClient.generate({
+          parts: [{ text: prompt }],
+        });
         const aiText = (aiResult || "").trim();
         if (aiText && aiText !== "NOT_FOUND")
           result = { type: "plain", data: aiText };

@@ -57,7 +57,10 @@ class MusicQuizEngine {
    */
   static async startQuizSession(guildId, channelId, totalRounds = 5) {
     const shuffled = [...SONG_QUESTIONS].sort(() => 0.5 - Math.random());
-    const rounds = shuffled.slice(0, Math.min(totalRounds, SONG_QUESTIONS.length));
+    const rounds = shuffled.slice(
+      0,
+      Math.min(totalRounds, SONG_QUESTIONS.length),
+    );
 
     const sessionData = {
       guildId,
@@ -72,10 +75,16 @@ class MusicQuizEngine {
     };
 
     if (redisManager.isReady) {
-      await redisManager.setCache(`${QUIZ_PREFIX}${guildId}`, JSON.stringify(sessionData), 1800);
+      await redisManager.setCache(
+        `${QUIZ_PREFIX}${guildId}`,
+        JSON.stringify(sessionData),
+        1800,
+      );
     }
 
-    logger.info(`[MusicQuiz] Sesi kuis dimulai di guild ${guildId} (${rounds.length} ronde).`);
+    logger.info(
+      `[MusicQuiz] Sesi kuis dimulai di guild ${guildId} (${rounds.length} ronde).`,
+    );
     return sessionData;
   }
 
@@ -92,7 +101,13 @@ class MusicQuizEngine {
   /**
    * Jawab pertanyaan ronde aktif
    */
-  static async submitAnswer(guildId, userId, username = "Peserta", chosenChoice, responseTimeMs = 3000) {
+  static async submitAnswer(
+    guildId,
+    userId,
+    username = "Peserta",
+    chosenChoice,
+    responseTimeMs = 3000,
+  ) {
     const session = await this.getSession(guildId);
     if (!session || session.status !== "PLAYING") {
       return { success: false, reason: "NO_ACTIVE_QUIZ" };
@@ -108,7 +123,9 @@ class MusicQuizEngine {
 
     session.roundAnsweredUsers.push(userId);
 
-    const isCorrect = chosenChoice.trim().toLowerCase() === currentRound.correctAnswer.toLowerCase();
+    const isCorrect =
+      chosenChoice.trim().toLowerCase() ===
+      currentRound.correctAnswer.toLowerCase();
     if (!session.scores[userId]) {
       session.scores[userId] = { username, score: 0, streak: 0 };
     }
@@ -116,8 +133,14 @@ class MusicQuizEngine {
     let pointsGained = 0;
     if (isCorrect) {
       session.scores[userId].streak = (session.scores[userId].streak || 0) + 1;
-      const speedBonus = Math.max(0, Math.floor((10000 - responseTimeMs) / 200));
-      const streakMultiplier = Math.min(2.0, 1.0 + (session.scores[userId].streak - 1) * 0.2);
+      const speedBonus = Math.max(
+        0,
+        Math.floor((10000 - responseTimeMs) / 200),
+      );
+      const streakMultiplier = Math.min(
+        2.0,
+        1.0 + (session.scores[userId].streak - 1) * 0.2,
+      );
       pointsGained = Math.floor((100 + speedBonus) * streakMultiplier);
       session.scores[userId].score += pointsGained;
     } else {
@@ -125,7 +148,11 @@ class MusicQuizEngine {
     }
 
     if (redisManager.isReady) {
-      await redisManager.setCache(`${QUIZ_PREFIX}${guildId}`, JSON.stringify(session), 1800);
+      await redisManager.setCache(
+        `${QUIZ_PREFIX}${guildId}`,
+        JSON.stringify(session),
+        1800,
+      );
     }
 
     return {
@@ -154,7 +181,11 @@ class MusicQuizEngine {
     }
 
     if (redisManager.isReady) {
-      await redisManager.setCache(`${QUIZ_PREFIX}${guildId}`, JSON.stringify(session), 1800);
+      await redisManager.setCache(
+        `${QUIZ_PREFIX}${guildId}`,
+        JSON.stringify(session),
+        1800,
+      );
     }
 
     return {
@@ -179,13 +210,25 @@ class MusicQuizEngine {
 
     // Hadiah untuk Top 3
     if (sortedPlayers.length > 0 && sortedPlayers[0].score > 0) {
-      await cacheManager.incrementUserSurvival(sortedPlayers[0].userId, "starFragments", 500);
+      await cacheManager.incrementUserSurvival(
+        sortedPlayers[0].userId,
+        "starFragments",
+        500,
+      );
     }
     if (sortedPlayers.length > 1 && sortedPlayers[1].score > 0) {
-      await cacheManager.incrementUserSurvival(sortedPlayers[1].userId, "starFragments", 300);
+      await cacheManager.incrementUserSurvival(
+        sortedPlayers[1].userId,
+        "starFragments",
+        300,
+      );
     }
     if (sortedPlayers.length > 2 && sortedPlayers[2].score > 0) {
-      await cacheManager.incrementUserSurvival(sortedPlayers[2].userId, "starFragments", 150);
+      await cacheManager.incrementUserSurvival(
+        sortedPlayers[2].userId,
+        "starFragments",
+        150,
+      );
     }
 
     if (redisManager.isReady) {

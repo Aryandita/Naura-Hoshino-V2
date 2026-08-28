@@ -71,7 +71,10 @@ module.exports = {
         iconURL:
           "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Google_Translate_logo.svg/512px-Google_Translate_logo.svg.png",
         fields: [
-          { name: `${ui.getEmoji("deposit") || "📥"} Teks Asal (${sourceLang.toUpperCase()})`, value: text },
+          {
+            name: `${ui.getEmoji("deposit") || "📥"} Teks Asal (${sourceLang.toUpperCase()})`,
+            value: text,
+          },
           {
             name: `${ui.getEmoji("success") || "📤"} Terjemahan (${targetLang.toUpperCase()})`,
             value: translatedText,

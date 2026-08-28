@@ -9,7 +9,9 @@ function loadContextMenus() {
   if (contextMenus.size > 0) return contextMenus;
 
   const currentDir = __dirname;
-  const files = fs.readdirSync(currentDir).filter((f) => f.endsWith(".js") && f !== "index.js");
+  const files = fs
+    .readdirSync(currentDir)
+    .filter((f) => f.endsWith(".js") && f !== "index.js");
 
   for (const file of files) {
     try {

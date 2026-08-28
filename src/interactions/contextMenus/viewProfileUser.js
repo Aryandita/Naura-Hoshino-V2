@@ -1,7 +1,14 @@
 "use strict";
 
-const { ApplicationCommandType, MessageFlags, AttachmentBuilder } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../utils/NauraContainerBuilder");
+const {
+  ApplicationCommandType,
+  MessageFlags,
+  AttachmentBuilder,
+} = require("discord.js");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../utils/NauraContainerBuilder");
 const { renderInWorker } = require("../../canvas/canvasRuntime");
 const UserProfile = require("../../models/UserProfile");
 const UserLeveling = require("../../models/UserLeveling");
@@ -29,9 +36,15 @@ module.exports = {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
-      const [profile] = await UserProfile.findOrCreate({ where: { userId: targetUser.id } });
-      const [leveling] = await UserLeveling.findOrCreate({ where: { userId: targetUser.id } });
-      const [survival] = await UserSurvival.findOrCreate({ where: { userId: targetUser.id } });
+      const [profile] = await UserProfile.findOrCreate({
+        where: { userId: targetUser.id },
+      });
+      const [leveling] = await UserLeveling.findOrCreate({
+        where: { userId: targetUser.id },
+      });
+      const [survival] = await UserSurvival.findOrCreate({
+        where: { userId: targetUser.id },
+      });
 
       const payload = {
         username: targetUser.username,
@@ -47,7 +60,9 @@ module.exports = {
       };
 
       const buffer = await renderInWorker("renderProfile", payload);
-      const attachment = new AttachmentBuilder(buffer, { name: "naura_id_card.png" });
+      const attachment = new AttachmentBuilder(buffer, {
+        name: "naura_id_card.png",
+      });
 
       const container = buildContainerV2({
         title: `🪪 Naura ID Card - ${targetUser.username}`,
@@ -61,7 +76,8 @@ module.exports = {
       await interaction.editReply(
         buildErrorContainerV2({
           title: "Gagal Memuat Profil",
-          errorMessage: "Terjadi kesalahan saat merender kartu profil Naura ID.",
+          errorMessage:
+            "Terjadi kesalahan saat merender kartu profil Naura ID.",
         }),
       );
     }

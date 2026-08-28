@@ -175,15 +175,22 @@ const connectToDatabase = async () => {
     await sequelize.authenticate();
     isDbOnline = true;
     const dbDialect = sequelize.options.dialect.toUpperCase();
-    const providerName = hasSupabaseConfig || env.SUPABASE_URL ? "Supabase (PostgreSQL)" : dbDialect;
+    const providerName =
+      hasSupabaseConfig || env.SUPABASE_URL
+        ? "Supabase (PostgreSQL)"
+        : dbDialect;
 
     // Mencegah penghapusan kolom tak disengaja di production
     if (env.NODE_ENV === "production") {
       await sequelize.sync({ alter: false }); // Biarkan migrator khusus yang merubah tabel
-      logger.info(`Database ${providerName} terhubung (Production Safe-Sync mode).`);
+      logger.info(
+        `Database ${providerName} terhubung (Production Safe-Sync mode).`,
+      );
     } else {
       await sequelize.sync({ alter: { drop: false } });
-      logger.info(`Database ${providerName} disinkronkan (Development mode, Drop prevented).`);
+      logger.info(
+        `Database ${providerName} disinkronkan (Development mode, Drop prevented).`,
+      );
     }
 
     // ==========================================

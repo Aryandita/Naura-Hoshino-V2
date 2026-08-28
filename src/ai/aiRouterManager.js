@@ -46,10 +46,13 @@ class AIRouterManager {
     const cacheManager = require("../managers/cacheManager");
     const userProfile = await cacheManager.getUserProfile(message.author.id);
     if (userProfile && userProfile.aiPersona) {
-        const uPersona = typeof userProfile.aiPersona === "string" ? JSON.parse(userProfile.aiPersona) : userProfile.aiPersona;
-        if (uPersona.systemPrompt) {
-            persona += `\n[Persona Khusus User (${message.author.username})]: ${uPersona.systemPrompt}`;
-        }
+      const uPersona =
+        typeof userProfile.aiPersona === "string"
+          ? JSON.parse(userProfile.aiPersona)
+          : userProfile.aiPersona;
+      if (uPersona.systemPrompt) {
+        persona += `\n[Persona Khusus User (${message.author.username})]: ${uPersona.systemPrompt}`;
+      }
     }
 
     const userMemory = await AIMemory.getMemoryContext(message.author.id);
@@ -223,7 +226,9 @@ class AIRouterManager {
         );
         await updateGeminiHistory(message.author.id, "model", replyText);
       } catch (verbaError) {
-        logger.warn(`[Verba AI] ${verbaError.message} -> Mengalihkan ke Gemini Engine`);
+        logger.warn(
+          `[Verba AI] ${verbaError.message} -> Mengalihkan ke Gemini Engine`,
+        );
 
         const userRole = isOwner
           ? "Owner"
@@ -353,8 +358,16 @@ class AIRouterManager {
     }
 
     // Jalankan ekstraksi memori otomatis di latar belakang (non-blocking)
-    AIMemory.extractAndSave(message.author.id, userMessage, replyText, gemini).catch((err) => {
-      logger.warn("[AI Router] Background memory extraction error:", err.message);
+    AIMemory.extractAndSave(
+      message.author.id,
+      userMessage,
+      replyText,
+      gemini,
+    ).catch((err) => {
+      logger.warn(
+        "[AI Router] Background memory extraction error:",
+        err.message,
+      );
     });
 
     if (

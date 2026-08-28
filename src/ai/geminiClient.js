@@ -136,7 +136,9 @@ async function generate({
     });
   } catch (err) {
     if (env.GROQ_API_KEY) {
-      logger.warn(`[Gemini -> Groq Failover] Gemini error (${err.message}), switching to Groq API...`);
+      logger.warn(
+        `[Gemini -> Groq Failover] Gemini error (${err.message}), switching to Groq API...`,
+      );
       return await generateGroqFallback({ parts, history, config });
     }
     throw err;

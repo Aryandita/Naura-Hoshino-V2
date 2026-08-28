@@ -14,10 +14,14 @@ module.exports = (client) => {
       const dbStatus = getDbStatus();
 
       // MongoDB Status
-      const mongoStatus = mongoManager ? mongoManager.getStatus() : { state: "disabled", readyState: 0, models: [] };
+      const mongoStatus = mongoManager
+        ? mongoManager.getStatus()
+        : { state: "disabled", readyState: 0, models: [] };
 
       // Redis Status
-      const redisStatus = !!(redisManager.client && redisManager.client.isReady);
+      const redisStatus = !!(
+        redisManager.client && redisManager.client.isReady
+      );
 
       // Lavalink Status
       let lavalinkNodes = 0;
@@ -27,7 +31,9 @@ module.exports = (client) => {
       if (client.poru && client.poru.nodes) {
         const nodesList = client.poru.nodes.values
           ? Array.from(client.poru.nodes.values())
-          : (Array.isArray(client.poru.nodes) ? client.poru.nodes : []);
+          : Array.isArray(client.poru.nodes)
+            ? client.poru.nodes
+            : [];
         lavalinkNodes = nodesList.length;
         lavalinkConnected = nodesList.filter(
           (node) => node && node.isConnected,
@@ -96,7 +102,12 @@ module.exports = (client) => {
 
   router.post("/chat", async (req, res) => {
     try {
-      const { message, prompt, history, username: reqUsername } = req.body || {};
+      const {
+        message,
+        prompt,
+        history,
+        username: reqUsername,
+      } = req.body || {};
       const textPrompt = String(message || prompt || "").trim();
       if (!textPrompt) {
         return res.status(400).json({ error: "Pesan tidak boleh kosong." });
@@ -125,7 +136,9 @@ module.exports = (client) => {
         username: result.username,
       });
     } catch (error) {
-      res.status(500).json({ error: error.message || "Gagal memproses pesan." });
+      res
+        .status(500)
+        .json({ error: error.message || "Gagal memproses pesan." });
     }
   });
 

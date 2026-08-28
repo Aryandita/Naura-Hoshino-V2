@@ -26,7 +26,7 @@ const UserPet = sequelize.define("UserPet", {
   isActive: { type: DataTypes.BOOLEAN, defaultValue: false },
   petLevel: { type: DataTypes.INTEGER, defaultValue: 1 },
   petExp: { type: DataTypes.INTEGER, defaultValue: 0 },
-  
+
   // --- ADVANCED & ASCENSION SYSTEM ---
   mood: { type: DataTypes.STRING(32), defaultValue: "happy" }, // 'happy', 'normal', 'sad', 'energized', 'ascended'
   evolutionStage: { type: DataTypes.INTEGER, defaultValue: 1 },

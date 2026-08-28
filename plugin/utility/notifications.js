@@ -14,7 +14,9 @@ const ui = require("../../src/config/ui");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("notifications")
-    .setDescription("🔔 Atur preferensi notifikasi cerdas Naura ke Direct Message (DM) kamu."),
+    .setDescription(
+      "🔔 Atur preferensi notifikasi cerdas Naura ke Direct Message (DM) kamu.",
+    ),
 
   async execute(interaction) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -33,7 +35,8 @@ module.exports = {
       const eVote = ui.getEmoji("topgg") || "🗳️";
       const eBell = ui.getEmoji("bell") || "🔔";
 
-      const statusIcon = (val) => (val ? `${eGreen} **Aktif**` : `${eRed} **Nonaktif**`);
+      const statusIcon = (val) =>
+        val ? `${eGreen} **Aktif**` : `${eRed} **Nonaktif**`;
 
       const desc =
         `Halo Kak **${displayName}**! Di sini kamu bisa mengatur notifikasi otomatis apa saja yang ingin dikirimkan Naura ke DM pribadimu secara real-time:\n\n` +
@@ -48,31 +51,53 @@ module.exports = {
         new ButtonBuilder()
           .setCustomId("toggle_notif_stamina_full")
           .setLabel(`Stamina: ${currentPrefs.stamina_full ? "ON" : "OFF"}`)
-          .setStyle(currentPrefs.stamina_full ? ButtonStyle.Success : ButtonStyle.Secondary)
+          .setStyle(
+            currentPrefs.stamina_full
+              ? ButtonStyle.Success
+              : ButtonStyle.Secondary,
+          )
           .setEmoji(ui.parseEmoji(ui.getEmoji("stamina")) || { name: "⚡" }),
         new ButtonBuilder()
           .setCustomId("toggle_notif_daily_streak")
           .setLabel(`Daily: ${currentPrefs.daily_streak ? "ON" : "OFF"}`)
-          .setStyle(currentPrefs.daily_streak ? ButtonStyle.Success : ButtonStyle.Secondary)
+          .setStyle(
+            currentPrefs.daily_streak
+              ? ButtonStyle.Success
+              : ButtonStyle.Secondary,
+          )
           .setEmoji(ui.parseEmoji(ui.getEmoji("fire")) || { name: "🔥" }),
         new ButtonBuilder()
           .setCustomId("toggle_notif_stock_alert")
           .setLabel(`Saham: ${currentPrefs.stock_alert ? "ON" : "OFF"}`)
-          .setStyle(currentPrefs.stock_alert ? ButtonStyle.Success : ButtonStyle.Secondary)
-          .setEmoji(ui.parseEmoji(ui.getEmoji("chart")) || { name: "📈" })
+          .setStyle(
+            currentPrefs.stock_alert
+              ? ButtonStyle.Success
+              : ButtonStyle.Secondary,
+          )
+          .setEmoji(ui.parseEmoji(ui.getEmoji("chart")) || { name: "📈" }),
       );
 
       const row2 = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("toggle_notif_idle_revenue")
-          .setLabel(`Kafe/Vivarium: ${currentPrefs.idle_revenue ? "ON" : "OFF"}`)
-          .setStyle(currentPrefs.idle_revenue ? ButtonStyle.Success : ButtonStyle.Secondary)
+          .setLabel(
+            `Kafe/Vivarium: ${currentPrefs.idle_revenue ? "ON" : "OFF"}`,
+          )
+          .setStyle(
+            currentPrefs.idle_revenue
+              ? ButtonStyle.Success
+              : ButtonStyle.Secondary,
+          )
           .setEmoji(ui.parseEmoji(ui.getEmoji("cafe")) || { name: "🎪" }),
         new ButtonBuilder()
           .setCustomId("toggle_notif_vote_reminder")
           .setLabel(`Vote: ${currentPrefs.vote_reminder ? "ON" : "OFF"}`)
-          .setStyle(currentPrefs.vote_reminder ? ButtonStyle.Success : ButtonStyle.Secondary)
-          .setEmoji(ui.parseEmoji(ui.getEmoji("topgg")) || { name: "🗳️" })
+          .setStyle(
+            currentPrefs.vote_reminder
+              ? ButtonStyle.Success
+              : ButtonStyle.Secondary,
+          )
+          .setEmoji(ui.parseEmoji(ui.getEmoji("topgg")) || { name: "🗳️" }),
       );
 
       return {
@@ -90,7 +115,8 @@ module.exports = {
     const initialMsg = await interaction.editReply(renderPayload(prefs));
 
     const collector = initialMsg.createMessageComponentCollector({
-      filter: (i) => i.user.id === userId && i.customId.startsWith("toggle_notif_"),
+      filter: (i) =>
+        i.user.id === userId && i.customId.startsWith("toggle_notif_"),
       time: 120000,
     });
 
@@ -99,7 +125,11 @@ module.exports = {
       const newStatus = !prefs[key];
 
       try {
-        prefs = await notificationCenter.setUserPreference(userId, key, newStatus);
+        prefs = await notificationCenter.setUserPreference(
+          userId,
+          key,
+          newStatus,
+        );
         await btnInt.update(renderPayload(prefs));
       } catch (err) {
         await btnInt.reply({

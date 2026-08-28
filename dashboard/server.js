@@ -250,6 +250,14 @@ module.exports = (client) => {
   webApp.use(require("./routes/socialFeed")(client));
   webApp.use("/api", require("./routes/api")(client));
 
+  // --- Route Portfolio Member (Sprint 21) ---
+  // Static: serve file 3D model langsung dari folder assets
+  webApp.use(
+    "/assets/3d",
+    express.static(path.join(__dirname, "../assets/3D Model Naura")),
+  );
+  webApp.use(require("./routes/portfolio")(client));
+
   // --- Uji coba persona AI dari halaman pengaturan ---
   webApp.post("/api/settings/sandbox", requireApiLogin, async (req, res) => {
     const { message, customPersona, serverKnowledge } = req.body || {};
@@ -308,7 +316,10 @@ module.exports = (client) => {
   });
 
   // --- Route untuk Dashboard V2 (Vite) ---
-  webApp.use("/v2", express.static(path.join(__dirname, "../dashboard-v2/dist")));
+  webApp.use(
+    "/v2",
+    express.static(path.join(__dirname, "../dashboard-v2/dist")),
+  );
 
   // --- Halaman ---
   const view = (name) => (req, res) =>
@@ -326,7 +337,9 @@ module.exports = (client) => {
   webApp.get("/world", view("world.html"));
   webApp.get("/karaoke", view("karaoke.html"));
   webApp.get("/feed", view("feed.html"));
-  webApp.get("/portfolio", view("portfolio.html"));
+  webApp.get("/portfolio", requireLogin, view("portfolio.html"));
+  // /portfolio/me/edit, halaman edit portfolio (sama dengan portfolio.html, data diambil via API)
+  webApp.get("/portfolio/me/edit", requireLogin, view("portfolio.html"));
   webApp.get("/owner", view("portfolio.html"));
 
   // ==================================================================
@@ -350,10 +363,13 @@ module.exports = (client) => {
     // - Jika DASHBOARD_ORIGIN diset (domain/subdomain publik), pakai itu.
     // - Jika tidak, tampilkan alamat loopback dengan port aktif.
     const publicOrigins = parseOrigins();
-    const displayUrl = publicOrigins.length > 0
-      ? publicOrigins[0]
-      : `http://localhost:${webPort}`;
-    logger.info(`[DASHBOARD] Web UI berjalan di ${displayUrl}  (port ${webPort})`);
+    const displayUrl =
+      publicOrigins.length > 0
+        ? publicOrigins[0]
+        : `http://localhost:${webPort}`;
+    logger.info(
+      `[DASHBOARD] Web UI berjalan di ${displayUrl}  (port ${webPort})`,
+    );
   });
 
   return { webApp, webServer, io };

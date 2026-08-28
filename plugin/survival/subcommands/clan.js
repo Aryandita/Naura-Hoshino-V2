@@ -6,7 +6,10 @@ const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const leveling = require("../../../src/survival/engines/survivalLeveling");
 const currency = require("../../../src/survival/engines/currency");
-const { rollCouponDrop, dropLine } = require("../../../src/survival/helpers/couponRewards");
+const {
+  rollCouponDrop,
+  dropLine,
+} = require("../../../src/survival/helpers/couponRewards");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -69,7 +72,9 @@ module.exports = {
     const holders = { survival, profile };
 
     if (action === "info") {
-      const userClan = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
+      const userClan = survival.clanId
+        ? await GuildClan.findByPk(survival.clanId)
+        : null;
 
       if (!userClan) {
         return card(interaction, {
@@ -92,42 +97,56 @@ module.exports = {
         ? leaderUser.username
         : "pemimpin misterius";
 
-      let state = typeof userClan.questsState === "string" ? JSON.parse(userClan.questsState) : userClan.questsState;
+      let state =
+        typeof userClan.questsState === "string"
+          ? JSON.parse(userClan.questsState)
+          : userClan.questsState;
       let needsSave = false;
       const todayDate = new Date();
       todayDate.setHours(0, 0, 0, 0);
-      todayDate.setDate(todayDate.getDate() - (todayDate.getDay() === 0 ? 6 : todayDate.getDay() - 1));
+      todayDate.setDate(
+        todayDate.getDate() -
+          (todayDate.getDay() === 0 ? 6 : todayDate.getDay() - 1),
+      );
       const currentWeek = todayDate.toISOString().split("T")[0];
-      
-      const { generateClanQuestsForClan } = require("../../../src/survival/engines/questGenerator");
+
+      const {
+        generateClanQuestsForClan,
+      } = require("../../../src/survival/engines/questGenerator");
       if (!state || state.lastWeeklyReset !== currentWeek) {
-         state = generateClanQuestsForClan(userClan);
-         needsSave = true;
+        state = generateClanQuestsForClan(userClan);
+        needsSave = true;
       }
-      
+
       let rewardTotal = 0;
       const questLines = [];
       const nsfEmoji = currency.emojiOf(currency.FRAGMENT);
       state.weekly.forEach((q, idx) => {
-         const icon = q.claimed ? e("cheers", "✅") : (q.current >= q.target ? e("impressed", "⭐") : e("thinking", "⏳"));
-         if (q.current >= q.target && !q.claimed) {
-            q.claimed = true;
-            rewardTotal += q.reward;
-            needsSave = true;
-         }
-         questLines.push(`**${idx + 1}.** ${icon} ${q.title}\n> Progres: \`${q.current} / ${q.target}\` • Kas Klan: ${nsfEmoji} **${q.reward}**`);
+        const icon = q.claimed
+          ? e("cheers", "✅")
+          : q.current >= q.target
+            ? e("impressed", "⭐")
+            : e("thinking", "⏳");
+        if (q.current >= q.target && !q.claimed) {
+          q.claimed = true;
+          rewardTotal += q.reward;
+          needsSave = true;
+        }
+        questLines.push(
+          `**${idx + 1}.** ${icon} ${q.title}\n> Progres: \`${q.current} / ${q.target}\` • Kas Klan: ${nsfEmoji} **${q.reward}**`,
+        );
       });
 
       if (rewardTotal > 0) {
-         userClan.vault = (userClan.vault || 0) + rewardTotal;
+        userClan.vault = (userClan.vault || 0) + rewardTotal;
       }
 
       if (needsSave) {
-         userClan.questsState = state;
-         userClan.changed("questsState", true);
-         // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain yang
-         // sedang diubah anggota klan lain secara konkuren.
-         await userClan.save({ fields: ["questsState", "vault"] });
+        userClan.questsState = state;
+        userClan.changed("questsState", true);
+        // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain yang
+        // sedang diubah anggota klan lain secara konkuren.
+        await userClan.save({ fields: ["questsState", "vault"] });
       }
 
       const description = [
@@ -144,14 +163,29 @@ module.exports = {
       ];
 
       if (rewardTotal > 0) {
-        description.push(`\n${e("cheers", "🎉")} Misi diselesaikan! Kas klan bertambah **${rewardTotal.toLocaleString("id-ID")} NSF**!`);
+        description.push(
+          `\n${e("cheers", "🎉")} Misi diselesaikan! Kas klan bertambah **${rewardTotal.toLocaleString("id-ID")} NSF**!`,
+        );
       }
 
-      const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+      const {
+        ActionRowBuilder,
+        ButtonBuilder,
+        ButtonStyle,
+      } = require("discord.js");
       const hubButtons = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId("clan_hub_hall").setLabel("🏡 2.5D Guild Hall").setStyle(ButtonStyle.Primary),
-        new ButtonBuilder().setCustomId("clan_hub_coffee").setLabel("☕ Seduh Kopi (+25 Energy)").setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId("clan_hub_raid").setLabel("⚔️ Serang Bos").setStyle(ButtonStyle.Danger),
+        new ButtonBuilder()
+          .setCustomId("clan_hub_hall")
+          .setLabel("🏡 2.5D Guild Hall")
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId("clan_hub_coffee")
+          .setLabel("☕ Seduh Kopi (+25 Energy)")
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId("clan_hub_raid")
+          .setLabel("⚔️ Serang Bos")
+          .setStyle(ButtonStyle.Danger),
       );
 
       const payload = buildContainerV2({
@@ -169,8 +203,11 @@ module.exports = {
 
     // 2. 2.5D GUILD HALL LOUNGE
     if (action === "hall") {
-      const userClan = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
-      if (!userClan) return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
+      const userClan = survival.clanId
+        ? await GuildClan.findByPk(survival.clanId)
+        : null;
+      if (!userClan)
+        return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
 
       const guildHallEngine = require("../../../src/survival/engines/guildHallEngine");
       const { drawGuildHall } = require("../../../src/canvas/guildHallCanvas");
@@ -185,7 +222,9 @@ module.exports = {
         // Fallback jika canvas worker terkendala
       }
 
-      const furnituresList = hallData.layout.furniture.map((f) => `\`${f}\``).join(", ") || "*Belum ada furnitur*";
+      const furnituresList =
+        hallData.layout.furniture.map((f) => `\`${f}\``).join(", ") ||
+        "*Belum ada furnitur*";
       const payload = buildContainerV2({
         accentColorHex: "#F472B6",
         authorName: "🏰 2.5D Guild Hall & Lounge",
@@ -207,15 +246,23 @@ module.exports = {
 
     // 3. MINUM KOPI LOUNGE (+25 ENERGY)
     if (action === "coffee") {
-      const userClan = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
-      if (!userClan) return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
+      const userClan = survival.clanId
+        ? await GuildClan.findByPk(survival.clanId)
+        : null;
+      if (!userClan)
+        return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
 
       const guildHallEngine = require("../../../src/survival/engines/guildHallEngine");
-      const coffeeRes = await guildHallEngine.claimCoffeeBuff(user.id, userClan.id);
+      const coffeeRes = await guildHallEngine.claimCoffeeBuff(
+        user.id,
+        userClan.id,
+      );
 
       if (!coffeeRes.success) {
         let msg = "Gagal meminum kopi di lounge klan.";
-        if (coffeeRes.reason === "NO_COFFEE_MAKER") msg = "Klanmu belum memiliki mesin `coffee_maker` di Guild Hall! Beli dengan `/survival rpg clan aksi:furniture nama:coffee_maker`.";
+        if (coffeeRes.reason === "NO_COFFEE_MAKER")
+          msg =
+            "Klanmu belum memiliki mesin `coffee_maker` di Guild Hall! Beli dengan `/survival rpg clan aksi:furniture nama:coffee_maker`.";
 
         return fail(interaction, msg);
       }
@@ -229,22 +276,34 @@ module.exports = {
 
     // 4. BELI FURNITUR LOUNGE
     if (action === "furniture") {
-      const userClan = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
-      if (!userClan) return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
+      const userClan = survival.clanId
+        ? await GuildClan.findByPk(survival.clanId)
+        : null;
+      if (!userClan)
+        return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
 
       if (userClan.leaderId !== user.id) {
-        return fail(interaction, "Hanya pemimpin klan yang berhak membeli dan menata dekorasi Guild Hall!");
+        return fail(
+          interaction,
+          "Hanya pemimpin klan yang berhak membeli dan menata dekorasi Guild Hall!",
+        );
       }
 
       const furnitureId = clanNameInput || "arcade_cabinet";
       const guildHallEngine = require("../../../src/survival/engines/guildHallEngine");
-      const buyRes = await guildHallEngine.buyFurniture(userClan.id, furnitureId);
+      const buyRes = await guildHallEngine.buyFurniture(
+        userClan.id,
+        furnitureId,
+      );
 
       if (!buyRes.success) {
         let msg = "Gagal membeli furnitur.";
-        if (buyRes.reason === "INVALID_FURNITURE") msg = `ID Furnitur tidak valid! Pilihan: \`neon_sofa\` (2k), \`coffee_maker\` (3k), \`arcade_cabinet\` (5k), \`sakura_bonsai\` (4k), \`trophy_case\` (7.5k).`;
-        if (buyRes.reason === "ALREADY_OWNED") msg = "Klanmu sudah memiliki furnitur ini di dalam Guild Hall!";
-        if (buyRes.reason === "INSUFFICIENT_VAULT") msg = `Saldo kas klan tidak cukup! Butuh ${buyRes.cost.toLocaleString("id-ID")} ⭐, kas klan saat ini: ${buyRes.current.toLocaleString("id-ID")} ⭐.`;
+        if (buyRes.reason === "INVALID_FURNITURE")
+          msg = `ID Furnitur tidak valid! Pilihan: \`neon_sofa\` (2k), \`coffee_maker\` (3k), \`arcade_cabinet\` (5k), \`sakura_bonsai\` (4k), \`trophy_case\` (7.5k).`;
+        if (buyRes.reason === "ALREADY_OWNED")
+          msg = "Klanmu sudah memiliki furnitur ini di dalam Guild Hall!";
+        if (buyRes.reason === "INSUFFICIENT_VAULT")
+          msg = `Saldo kas klan tidak cukup! Butuh ${buyRes.cost.toLocaleString("id-ID")} ⭐, kas klan saat ini: ${buyRes.current.toLocaleString("id-ID")} ⭐.`;
 
         return fail(interaction, msg);
       }
@@ -257,31 +316,34 @@ module.exports = {
     }
 
     if (action === "leave") {
-      const userClan = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
-      if (!userClan) return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
-      
+      const userClan = survival.clanId
+        ? await GuildClan.findByPk(survival.clanId)
+        : null;
+      if (!userClan)
+        return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
+
       if (userClan.leaderId === user.id) {
-          await userClan.destroy();
-          survival.clanId = null;
-          await survival.save({ fields: ["clanId"] });
-         return card(interaction, {
-            color: "#ff4757",
-            title: `${e("shocked", "💥")} Klan Dibubarkan`,
-            description: `Kamu adalah pemimpin klan. Karena kamu keluar, klan **${userClan.name}** resmi dibubarkan.`
-         });
+        await userClan.destroy();
+        survival.clanId = null;
+        await survival.save({ fields: ["clanId"] });
+        return card(interaction, {
+          color: "#ff4757",
+          title: `${e("shocked", "💥")} Klan Dibubarkan`,
+          description: `Kamu adalah pemimpin klan. Karena kamu keluar, klan **${userClan.name}** resmi dibubarkan.`,
+        });
       }
-      
-      userClan.members = userClan.members.filter(id => id !== user.id);
+
+      userClan.members = userClan.members.filter((id) => id !== user.id);
       userClan.changed("members", true);
       await userClan.save({ fields: ["members"] });
-      
+
       survival.clanId = null;
       await survival.save({ fields: ["clanId"] });
-      
+
       return card(interaction, {
-         color: "#ff4757",
-         title: `${e("shy", "👋")} Keluar dari Klan`,
-         description: `Kamu telah keluar dari klan **${userClan.name}**.`
+        color: "#ff4757",
+        title: `${e("shy", "👋")} Keluar dari Klan`,
+        description: `Kamu telah keluar dari klan **${userClan.name}**.`,
       });
     }
 
@@ -292,7 +354,9 @@ module.exports = {
           "Naura belum tahu nama klannya. Tulis namanya dulu ya!",
         );
 
-      const existing = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
+      const existing = survival.clanId
+        ? await GuildClan.findByPk(survival.clanId)
+        : null;
       if (existing)
         return fail(
           interaction,
@@ -342,7 +406,9 @@ module.exports = {
           "Naura belum tahu klan mana yang mau kamu masuki. Tulis namanya ya!",
         );
 
-      const existing = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
+      const existing = survival.clanId
+        ? await GuildClan.findByPk(survival.clanId)
+        : null;
       if (existing)
         return fail(
           interaction,
@@ -379,7 +445,9 @@ module.exports = {
     }
 
     if (action === "deposit") {
-      const userClan = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
+      const userClan = survival.clanId
+        ? await GuildClan.findByPk(survival.clanId)
+        : null;
       if (!userClan)
         return fail(
           interaction,
@@ -438,7 +506,9 @@ module.exports = {
     }
 
     if (action === "raid") {
-      const userClan = survival.clanId ? await GuildClan.findByPk(survival.clanId) : null;
+      const userClan = survival.clanId
+        ? await GuildClan.findByPk(survival.clanId)
+        : null;
       if (!userClan)
         return fail(
           interaction,
@@ -532,14 +602,19 @@ module.exports = {
         return card(interaction, {
           color: "#9CA3AF",
           title: "🏰 Peta Teritori Wilayah Klan",
-          description: "Belum ada teritori yang tercatat dalam peta dunia Naura RPG.",
+          description:
+            "Belum ada teritori yang tercatat dalam peta dunia Naura RPG.",
         });
       }
 
-      const list = territories.map((t) => {
-        const ownerClan = t.clanId ? `Klan ID \`#${t.clanId}\`` : "*Netral / Belum Dikuasai*";
-        return `📍 **${t.name}**\n- Penguasa: ${ownerClan}\n- Control Points: **${t.controlPoints} pts**\n- Hasil Pajak: ⭐ **${t.taxYield} NSF/hari**\n- Buff Wilayah: \`${t.buffEffect}\``;
-      }).join("\n\n");
+      const list = territories
+        .map((t) => {
+          const ownerClan = t.clanId
+            ? `Klan ID \`#${t.clanId}\``
+            : "*Netral / Belum Dikuasai*";
+          return `📍 **${t.name}**\n- Penguasa: ${ownerClan}\n- Control Points: **${t.controlPoints} pts**\n- Hasil Pajak: ⭐ **${t.taxYield} NSF/hari**\n- Buff Wilayah: \`${t.buffEffect}\``;
+        })
+        .join("\n\n");
 
       return card(interaction, {
         color: "#38BDF8",
@@ -550,13 +625,16 @@ module.exports = {
 
     if (action === "blessing") {
       const guildWarEngine = require("../../../src/survival/engines/guildWarEngine");
-      const blessing = await guildWarEngine.getServerBlessing(interaction.guildId);
+      const blessing = await guildWarEngine.getServerBlessing(
+        interaction.guildId,
+      );
 
       if (!blessing) {
         return card(interaction, {
           color: "#9CA3AF",
           title: "🕊️ Server Blessing Tidak Aktif",
-          description: "Server ini belum memiliki Server Blessing aktif. Menangkan Clan War mingguan untuk mengaktifkan 2x XP Boost & 2x Stamina Regeneration selama 24 jam!",
+          description:
+            "Server ini belum memiliki Server Blessing aktif. Menangkan Clan War mingguan untuk mengaktifkan 2x XP Boost & 2x Stamina Regeneration selama 24 jam!",
         });
       }
 

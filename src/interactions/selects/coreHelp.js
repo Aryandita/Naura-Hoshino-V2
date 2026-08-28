@@ -11,7 +11,9 @@ module.exports = [
     async handler(interaction) {
       const selectedValue = interaction.values[0];
       const categoryIndex = HELP_CATEGORY_KEYS.indexOf(selectedValue);
-      const userLang = await languageManager.getUserLanguage(interaction.user.id);
+      const userLang = await languageManager.getUserLanguage(
+        interaction.user.id,
+      );
       const lang = languageManager.getLanguageSync(userLang);
 
       const payload = buildHelpPayload(

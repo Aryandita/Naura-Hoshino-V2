@@ -241,7 +241,9 @@ const compressFailedCard = ({ client, title, description }) =>
     iconURL: client.user.displayAvatarURL(),
     expression: "cry",
     withBanner: true,
-    description: description || "Berkas tidak dapat dikompresi ke batas ukuran yang diminta.",
+    description:
+      description ||
+      "Berkas tidak dapat dikompresi ke batas ukuran yang diminta.",
     footerText: ui.getFooter("utility"),
   });
 

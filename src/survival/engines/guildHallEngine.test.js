@@ -5,7 +5,10 @@ const assert = require("node:assert/strict");
 const { FURNITURE_CATALOG } = require("./guildHallEngine");
 
 test("GuildHallEngine - Furniture Catalog Data Integrity", () => {
-  assert.ok(Array.isArray(FURNITURE_CATALOG), "FURNITURE_CATALOG harus berupa array");
+  assert.ok(
+    Array.isArray(FURNITURE_CATALOG),
+    "FURNITURE_CATALOG harus berupa array",
+  );
   assert.ok(FURNITURE_CATALOG.length >= 5, "Harus ada minimal 5 furnitur");
 
   for (const item of FURNITURE_CATALOG) {

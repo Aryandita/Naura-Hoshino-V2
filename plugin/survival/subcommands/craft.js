@@ -15,11 +15,16 @@ const {
 } = require("../../../src/utils/NauraContainerBuilder");
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
-const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
+const {
+  safeParseInventory,
+} = require("../../../src/survival/engines/inventoryHelper");
 const ui = require("../../../src/config/ui");
 const currency = require("../../../src/survival/engines/currency");
 const helpers = require("../../../src/survival/helpers/craftHelpers");
-const { listAvailable, getBlueprint } = require("../../../src/survival/data/craftBlueprints");
+const {
+  listAvailable,
+  getBlueprint,
+} = require("../../../src/survival/data/craftBlueprints");
 const {
   SMELT_RECIPES,
   getSmeltRecipe,

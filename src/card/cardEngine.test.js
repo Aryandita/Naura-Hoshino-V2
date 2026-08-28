@@ -15,7 +15,10 @@ test("Card Engine - Catalog & Code Generation", () => {
   assert.notEqual(code1, code2, "Dua kode acak tidak boleh sama");
 
   const quality = CardEngine.rollQuality();
-  assert.ok(["GEM_MINT", "EXCELLENT", "GOOD", "POOR"].includes(quality), "Kualitas harus valid");
+  assert.ok(
+    ["GEM_MINT", "EXCELLENT", "GOOD", "POOR"].includes(quality),
+    "Kualitas harus valid",
+  );
 });
 
 test("Card Engine - Fusion Validation Rules", async () => {

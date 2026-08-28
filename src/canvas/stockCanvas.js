@@ -64,7 +64,9 @@ async function drawStockMarket(stocks = []) {
       ctx.beginPath();
       ctx.roundRect(cardX, cardY, cardW, cardH, 10);
       ctx.fill();
-      ctx.strokeStyle = isUp ? "rgba(16, 185, 129, 0.3)" : "rgba(239, 68, 68, 0.3)";
+      ctx.strokeStyle = isUp
+        ? "rgba(16, 185, 129, 0.3)"
+        : "rgba(239, 68, 68, 0.3)";
       ctx.stroke();
 
       ctx.font = 'bold 15px "MontserratBold", "EmojiFont"';
@@ -77,11 +79,17 @@ async function drawStockMarket(stocks = []) {
 
       ctx.font = '11px "Outfit", "EmojiFont"';
       ctx.fillStyle = "#94A3B8";
-      ctx.fillText(`Dividen: ${Math.floor((stk.dividendYield || 0.05) * 100)}% | ${isUp ? "▲ Bullish" : "▼ Bearish"}`, cardX + 15, cardY + 78);
+      ctx.fillText(
+        `Dividen: ${Math.floor((stk.dividendYield || 0.05) * 100)}% | ${isUp ? "▲ Bullish" : "▼ Bearish"}`,
+        cardX + 15,
+        cardY + 78,
+      );
     });
 
     // 5. Special $NRA Volatile Index Card at Bottom
-    const nraStock = stocks.find((s) => s.isHighRisk || s.ticker === "NAURA_COIN") || stocks[4];
+    const nraStock =
+      stocks.find((s) => s.isHighRisk || s.ticker === "NAURA_COIN") ||
+      stocks[4];
     if (nraStock) {
       const bottomY = 300;
       ctx.fillStyle = "rgba(236, 72, 153, 0.06)";
@@ -97,12 +105,24 @@ async function drawStockMarket(stocks = []) {
 
       ctx.font = 'bold 24px "Orbitron", "EmojiFont"';
       ctx.fillStyle = "#FFD700";
-      ctx.fillText(`HARGA: ${nraStock.currentPrice} ⭐ / LEMBAR`, 60, bottomY + 75);
+      ctx.fillText(
+        `HARGA: ${nraStock.currentPrice} ⭐ / LEMBAR`,
+        60,
+        bottomY + 75,
+      );
 
       ctx.font = '13px "Outfit", "EmojiFont"';
       ctx.fillStyle = "#E2E8F0";
-      ctx.fillText("Indeks dengan volatilitas tinggi (-40% s.d. +60%)! Cocok untuk trader agresif.", 60, bottomY + 110);
-      ctx.fillText(`Dividen Fantastis: ${Math.floor((nraStock.dividendYield || 0.12) * 100)}% per siklus!`, 60, bottomY + 130);
+      ctx.fillText(
+        "Indeks dengan volatilitas tinggi (-40% s.d. +60%)! Cocok untuk trader agresif.",
+        60,
+        bottomY + 110,
+      );
+      ctx.fillText(
+        `Dividen Fantastis: ${Math.floor((nraStock.dividendYield || 0.12) * 100)}% per siklus!`,
+        60,
+        bottomY + 130,
+      );
     }
 
     return canvas.toBuffer("image/png");

@@ -30,34 +30,60 @@ async function handleDashboard(interaction, { currentSettings }) {
   const eRed = ui.getEmoji("redping") || "🔴";
   const eCheck = ui.getEmoji("success") || "✅";
 
-  const softbanChan = currentSettings.softbanChannelId || currentSettings.honeypotChannelId;
-  const autoModStatus = currentSettings.automod?.enabled ? `${eGreen} Aktif` : `${eRed} Nonaktif`;
-  const aiAutomodStatus = currentSettings.aiAutomod?.enabled ? `${eGreen} Aktif` : `${eRed} Nonaktif`;
-  
+  const softbanChan =
+    currentSettings.softbanChannelId || currentSettings.honeypotChannelId;
+  const autoModStatus = currentSettings.automod?.enabled
+    ? `${eGreen} Aktif`
+    : `${eRed} Nonaktif`;
+  const aiAutomodStatus = currentSettings.aiAutomod?.enabled
+    ? `${eGreen} Aktif`
+    : `${eRed} Nonaktif`;
+
   const welcomeChan = currentSettings.greetings?.welcome?.channelId;
-  const welcomeStatus = currentSettings.greetings?.welcome?.enabled ? `${eGreen} <#${welcomeChan}>` : `${eRed} Nonaktif`;
-  
+  const welcomeStatus = currentSettings.greetings?.welcome?.enabled
+    ? `${eGreen} <#${welcomeChan}>`
+    : `${eRed} Nonaktif`;
+
   const modmailCat = currentSettings.modmailCategory;
-  const modmailStatus = modmailCat ? `${eCheck} Kategori OK` : `${eRed} Belum Diatur`;
-  
-  const ticketMode = currentSettings.ticketMode === "thread" ? "Thread Mode" : (currentSettings.ticketMode === "channel" ? "Channel Mode" : `${eRed} Belum Diatur`);
-  const ticketStatus = currentSettings.ticketMode ? `${eGreen} ${ticketMode}` : `${eRed} Belum Diatur`;
-  
+  const modmailStatus = modmailCat
+    ? `${eCheck} Kategori OK`
+    : `${eRed} Belum Diatur`;
+
+  const ticketMode =
+    currentSettings.ticketMode === "thread"
+      ? "Thread Mode"
+      : currentSettings.ticketMode === "channel"
+        ? "Channel Mode"
+        : `${eRed} Belum Diatur`;
+  const ticketStatus = currentSettings.ticketMode
+    ? `${eGreen} ${ticketMode}`
+    : `${eRed} Belum Diatur`;
+
   const tempvoiceChan = currentSettings.tempvoiceChannel;
-  const tempvoiceStatus = tempvoiceChan ? `${eCheck} <#${tempvoiceChan}>` : `${eRed} Belum Diatur`;
-  
+  const tempvoiceStatus = tempvoiceChan
+    ? `${eCheck} <#${tempvoiceChan}>`
+    : `${eRed} Belum Diatur`;
+
   const aiChan = currentSettings.aiChannelId;
   const aiStatus = aiChan ? `${eCheck} <#${aiChan}>` : `${eRed} Belum Diatur`;
-  
+
   const autoRole = currentSettings.autoroleId;
-  const autoRoleStatus = autoRole ? `${eCheck} <@&${autoRole}>` : `${eRed} Belum Diatur`;
-  
+  const autoRoleStatus = autoRole
+    ? `${eCheck} <@&${autoRole}>`
+    : `${eRed} Belum Diatur`;
+
   const vanityRole = currentSettings.vanityRoleId;
-  const vanityStatus = vanityRole ? `${eCheck} <@&${vanityRole}>` : `${eRed} Belum Diatur`;
-  
-  const minecraftStatus = currentSettings.minecraft?.bridgeEnabled ? `${eGreen} Aktif` : `${eRed} Belum Diatur`;
+  const vanityStatus = vanityRole
+    ? `${eCheck} <@&${vanityRole}>`
+    : `${eRed} Belum Diatur`;
+
+  const minecraftStatus = currentSettings.minecraft?.bridgeEnabled
+    ? `${eGreen} Aktif`
+    : `${eRed} Belum Diatur`;
   const chronicleChan = currentSettings.chronicleChannelId;
-  const chronicleStatus = chronicleChan ? `${eCheck} <#${chronicleChan}>` : `${eRed} Belum Diatur`;
+  const chronicleStatus = chronicleChan
+    ? `${eCheck} <#${chronicleChan}>`
+    : `${eRed} Belum Diatur`;
 
   const adminName = ui.ux.resolveUserName(interaction);
   const timeline = ui.ux.buildVisualTimeline({
@@ -71,27 +97,24 @@ async function handleDashboard(interaction, { currentSettings }) {
     lang: "id",
   });
 
-  const dashboardDesc = 
+  const dashboardDesc =
     `${timeline.timeline}\n*${timeline.message}*\n\n` +
     `Selamat datang Kak **${adminName}** di Master Setup Dashboard! Di sini kamu bisa mengonfigurasikan seluruh sistem server secara terpusat dengan cepat dan mudah.\n\n` +
     `**${ui.getEmoji("setup_category_security") || "🔒"} KEAMANAN & MODERASI**\n` +
     `${ui.getEmoji("setup_softban") || "🛡️"} **Softban Trap:** ${softbanChan ? `✅ <#${softbanChan}>` : "🔴 Belum Diatur"}\n` +
     `${ui.getEmoji("setup_automod") || "🤖"} **Automod:** ${autoModStatus}\n` +
     `${ui.getEmoji("setup_automod") || "🤖"} **AI Automod:** ${aiAutomodStatus}\n\n` +
-    
     `**${ui.getEmoji("setup_category_channel") || "📢"} CHANNEL & SISTEM**\n` +
     `${ui.getEmoji("setup_welcome") || "👋"} **Welcome:** ${welcomeStatus}\n` +
     `${ui.getEmoji("setup_modmail") || "📩"} **Modmail:** ${modmailStatus}\n` +
     `${ui.getEmoji("setup_ticket") || "🎫"} **Tiket:** ${ticketStatus}\n` +
     `${ui.getEmoji("setup_tempvoice") || "🔊"} **TempVoice:** ${tempvoiceStatus}\n` +
     `${ui.getEmoji("setup_chronicle") || "📰"} **Koran Harian:** ${chronicleStatus}\n\n` +
-    
     `**${ui.getEmoji("setup_category_ai") || "🤖"} AI & LAINNYA**\n` +
     `${ui.getEmoji("setup_ai") || "🧠"} **AI Channel:** ${aiStatus}\n` +
     `${ui.getEmoji("setup_autorole") || "🎭"} **Auto-Role:** ${autoRoleStatus}\n` +
     `${ui.getEmoji("setup_vanity") || "✍️"} **Vanity Role:** ${vanityStatus}\n` +
     `${ui.getEmoji("setup_minecraft") || "🎮"} **Minecraft:** ${minecraftStatus}\n\n` +
-    
     `*Pilih kategori dari menu di bawah untuk mengedit pengaturannya:*`;
 
   const row = new ActionRowBuilder().addComponents(
@@ -200,7 +223,8 @@ async function handleDashboard(interaction, { currentSettings }) {
   const msg = await interaction.editReply(payload);
 
   const collector = msg.createMessageComponentCollector({
-    filter: (i) => i.user.id === interaction.user.id && i.customId === "master_setup_menu",
+    filter: (i) =>
+      i.user.id === interaction.user.id && i.customId === "master_setup_menu",
     time: 120000,
   });
 
@@ -249,7 +273,9 @@ async function handleGreetings(interaction, { currentSettings, saveSettings }) {
   currentSettings.greetings.welcome = {
     enabled,
     channelId: welcomeChan.id,
-    message: currentSettings.greetings.welcome?.message || "Selamat datang di server {user}!",
+    message:
+      currentSettings.greetings.welcome?.message ||
+      "Selamat datang di server {user}!",
     image: true,
   };
   await saveSettings(currentSettings);
@@ -311,7 +337,8 @@ async function handleTicket(interaction, { currentSettings, saveSettings }) {
     return interaction.reply(
       buildErrorContainerV2({
         title: "Kategori Diperlukan",
-        description: "Kamu memilih mode `Text Channel`, jadi opsi `kategori` wajib diisi!",
+        description:
+          "Kamu memilih mode `Text Channel`, jadi opsi `kategori` wajib diisi!",
         footerText: ui.getFooter("core"),
       }),
     );
@@ -329,13 +356,14 @@ async function handleTicket(interaction, { currentSettings, saveSettings }) {
         accentColorHex: ui.getColor("primary"),
         authorName: "Naura Helpdesk Services",
         title: `${ui.getEmoji("setup_ticket") || "🎫"} Pusat Bantuan & Pelayanan`,
-        description:
-          `Selamat datang di Pusat Bantuan!\n\nJika kamu memiliki pertanyaan, ingin melaporkan sesuatu, atau membutuhkan bantuan dari Staff/Admin, silakan buat tiket baru dengan menekan tombol di bawah.\n\n${ui.getEmoji("warning") || "⚠️"} **Mohon jangan menyalahgunakan sistem tiket!**`,
+        description: `Selamat datang di Pusat Bantuan!\n\nJika kamu memiliki pertanyaan, ingin melaporkan sesuatu, atau membutuhkan bantuan dari Staff/Admin, silakan buat tiket baru dengan menekan tombol di bawah.\n\n${ui.getEmoji("warning") || "⚠️"} **Mohon jangan menyalahgunakan sistem tiket!**`,
         buttonsRow: new ActionRowBuilder().addComponents(
           new ButtonBuilder()
             .setCustomId("btn_ticket_open")
             .setLabel("Buka Tiket Baru")
-            .setEmoji(ui.parseEmoji(ui.getEmoji("setup_ticket")) || { name: "🎫" })
+            .setEmoji(
+              ui.parseEmoji(ui.getEmoji("setup_ticket")) || { name: "🎫" },
+            )
             .setStyle(ButtonStyle.Primary),
         ),
         footerText: ui.getFooter("core"),
@@ -443,13 +471,16 @@ async function handleFaq(interaction, { currentSettings, saveSettings }) {
       return interaction.reply(
         buildErrorContainerV2({
           title: "Input Tidak Lengkap",
-          description: "Untuk menambah FAQ, opsi `slug`, `judul`, dan `konten` wajib diisi!",
+          description:
+            "Untuk menambah FAQ, opsi `slug`, `judul`, dan `konten` wajib diisi!",
           footerText: ui.getFooter("core"),
         }),
       );
     }
 
-    const existingIdx = currentSettings.faqList.findIndex((f) => f.slug === slug);
+    const existingIdx = currentSettings.faqList.findIndex(
+      (f) => f.slug === slug,
+    );
     if (existingIdx !== -1) {
       currentSettings.faqList[existingIdx] = { slug, title, body };
     } else {
@@ -479,7 +510,9 @@ async function handleFaq(interaction, { currentSettings, saveSettings }) {
     }
 
     const beforeCount = currentSettings.faqList.length;
-    currentSettings.faqList = currentSettings.faqList.filter((f) => f.slug !== slug);
+    currentSettings.faqList = currentSettings.faqList.filter(
+      (f) => f.slug !== slug,
+    );
     if (currentSettings.faqList.length === beforeCount) {
       return interaction.reply(
         buildErrorContainerV2({
@@ -502,9 +535,12 @@ async function handleFaq(interaction, { currentSettings, saveSettings }) {
   }
 
   // Aksi list
-  const listText = currentSettings.faqList.length > 0
-    ? currentSettings.faqList.map((f, i) => `**${i + 1}. \`${f.slug}\`** - ${f.title}`).join("\n")
-    : "Belum ada entri FAQ di server ini. Tambahkan dengan `/setup faq aksi:tambah`.";
+  const listText =
+    currentSettings.faqList.length > 0
+      ? currentSettings.faqList
+          .map((f, i) => `**${i + 1}. \`${f.slug}\`** - ${f.title}`)
+          .join("\n")
+      : "Belum ada entri FAQ di server ini. Tambahkan dengan `/setup faq aksi:tambah`.";
 
   const payload = buildContainerV2({
     accentColorHex: "#38BDF8",
@@ -534,7 +570,11 @@ async function handleChronicle(interaction, { currentSettings, saveSettings }) {
   return interaction.reply(payload);
 }
 
-async function handleAi(interaction, { currentSettings, saveSettings }, subcommand) {
+async function handleAi(
+  interaction,
+  { currentSettings, saveSettings },
+  subcommand,
+) {
   if (subcommand === "ai") {
     const channel = interaction.options.getChannel("channel");
     currentSettings.aiChannelId = channel.id;
@@ -554,13 +594,15 @@ async function handleAi(interaction, { currentSettings, saveSettings }, subcomma
     const enabled = interaction.options.getBoolean("aktif");
     const auditChannel = interaction.options.getChannel("audit-channel");
     const threshold = interaction.options.getInteger("threshold") ?? 70;
-    const learningMode = interaction.options.getBoolean("learning-mode") ?? false;
+    const learningMode =
+      interaction.options.getBoolean("learning-mode") ?? false;
 
     if (!currentSettings.aiAutomod) currentSettings.aiAutomod = {};
     currentSettings.aiAutomod.enabled = enabled;
     currentSettings.aiAutomod.toxicityThreshold = threshold;
     currentSettings.aiAutomod.learningMode = learningMode;
-    if (auditChannel) currentSettings.aiAutomod.auditChannelId = auditChannel.id;
+    if (auditChannel)
+      currentSettings.aiAutomod.auditChannelId = auditChannel.id;
     await saveSettings(currentSettings);
 
     const payload = buildContainerV2({
@@ -571,7 +613,9 @@ async function handleAi(interaction, { currentSettings, saveSettings }, subcomma
         `**Status:** ${enabled ? `${ui.getEmoji("greenping") || "🟢"} Aktif` : `${ui.getEmoji("redping") || "🔴"} Nonaktif`}`,
         `**Threshold Aksi:** Skor ≥ ${threshold}/100`,
         `**Mode Belajar:** ${learningMode ? `${ui.getEmoji("success") || "✅"} Aktif (hanya log, tidak ada aksi)` : `${ui.getEmoji("error") || "❌"} Nonaktif (aksi otomatis)`}`,
-        auditChannel ? `**Channel Audit:** <#${auditChannel.id}>` : "**Channel Audit:** *Belum Diatur*",
+        auditChannel
+          ? `**Channel Audit:** <#${auditChannel.id}>`
+          : "**Channel Audit:** *Belum Diatur*",
       ].join("\n"),
       footerText: ui.getFooter("core"),
     });
@@ -609,7 +653,11 @@ async function handleAi(interaction, { currentSettings, saveSettings }, subcomma
         });
       }
 
-      const count = await knowledgeBase.addKnowledge(interaction.guildId, judul, konten);
+      const count = await knowledgeBase.addKnowledge(
+        interaction.guildId,
+        judul,
+        konten,
+      );
       const payload = buildContainerV2({
         accentColorHex: "#38BDF8",
         authorName: "Naura AI RAG Knowledge Base",
@@ -626,7 +674,8 @@ async function handleAi(interaction, { currentSettings, saveSettings }, subcomma
         accentColorHex: "#EF4444",
         authorName: "Naura AI RAG Knowledge Base",
         title: `${ui.getEmoji("trash_can") || "🗑️"} Knowledge Base Direset`,
-        description: "Seluruh memori dokumen dan peraturan server untuk AI telah dibersihkan.",
+        description:
+          "Seluruh memori dokumen dan peraturan server untuk AI telah dibersihkan.",
         footerText: ui.getFooter("core"),
       });
       return interaction.reply(payload);
@@ -637,9 +686,10 @@ async function handleAi(interaction, { currentSettings, saveSettings }, subcomma
       accentColorHex: "#38BDF8",
       authorName: "Naura AI RAG Knowledge Base",
       title: `${ui.getEmoji("book") || "📖"} Daftar Dokumen Pengetahuan Server`,
-      description: docs.length > 0
-        ? `Berikut dokumen yang sudah dipelajari Naura di server ini:\n${docs.map((d, i) => `${i + 1}. **${d}**`).join("\n")}\n\n*Gunakan \`/setup ai-kb\` untuk menambah dokumen baru.*`
-        : "Belum ada dokumen yang dipelajari Naura di server ini.\nGunakan `/setup ai-kb` dengan aksi **Tambah** untuk mendaftarkan peraturan/FAQ server.",
+      description:
+        docs.length > 0
+          ? `Berikut dokumen yang sudah dipelajari Naura di server ini:\n${docs.map((d, i) => `${i + 1}. **${d}**`).join("\n")}\n\n*Gunakan \`/setup ai-kb\` untuk menambah dokumen baru.*`
+          : "Belum ada dokumen yang dipelajari Naura di server ini.\nGunakan `/setup ai-kb` dengan aksi **Tambah** untuk mendaftarkan peraturan/FAQ server.",
       footerText: ui.getFooter("core"),
     });
     return interaction.reply(payload);
@@ -658,7 +708,7 @@ async function handleWizard(interaction) {
         (p) =>
           `**${p.title}**\n` +
           `• Deskripsi: ${p.shortDesc}\n` +
-          `• Channel dibuat: ${p.channels.map((c) => `\`#${c.name}\``).join(", ")}`
+          `• Channel dibuat: ${p.channels.map((c) => `\`#${c.name}\``).join(", ")}`,
       )
       .join("\n\n") +
     "\n\n*Pilih tombol preset di bawah untuk menerapkan konfigurasi:*";
@@ -678,7 +728,7 @@ async function handleWizard(interaction) {
       .setCustomId("wizard_apply_music")
       .setLabel("Preset Music")
       .setStyle(ButtonStyle.Success)
-      .setEmoji(ui.parseEmoji(ui.getEmoji("music_note")) || { name: "☕" })
+      .setEmoji(ui.parseEmoji(ui.getEmoji("music_note")) || { name: "☕" }),
   );
 
   const payload = {
@@ -692,19 +742,28 @@ async function handleWizard(interaction) {
     components: [btnRow],
   };
 
-  const msg = interaction.deferred || interaction.replied
-    ? await interaction.editReply(payload)
-    : await interaction.reply({ ...payload, flags: MessageFlags.Ephemeral });
+  const msg =
+    interaction.deferred || interaction.replied
+      ? await interaction.editReply(payload)
+      : await interaction.reply({ ...payload, flags: MessageFlags.Ephemeral });
 
-  const filter = (i) => i.user.id === interaction.user.id && i.customId.startsWith("wizard_apply_");
-  const collector = msg.createMessageComponentCollector({ filter, time: 60000 });
+  const filter = (i) =>
+    i.user.id === interaction.user.id && i.customId.startsWith("wizard_apply_");
+  const collector = msg.createMessageComponentCollector({
+    filter,
+    time: 60000,
+  });
 
   collector.on("collect", async (btnInt) => {
     const key = btnInt.customId.replace("wizard_apply_", "");
     await btnInt.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
-      const result = await onboardingWizard.applyPreset(interaction.guild, key, interaction.user);
+      const result = await onboardingWizard.applyPreset(
+        interaction.guild,
+        key,
+        interaction.user,
+      );
       const resPayload = buildContainerV2({
         accentColorHex: "#10B981",
         authorName: "Onboarding Wizard Selesai",
@@ -774,13 +833,19 @@ async function handleDiagnostics(interaction) {
   let mongoStatus = `${eYellow} Belum Terhubung`;
   try {
     const mStatus = mongoManager.getStatus();
-    mongoStatus = mStatus.connected ? `${eGreen} Terhubung` : `${eYellow} Offline (Fallback Safe)`;
+    mongoStatus = mStatus.connected
+      ? `${eGreen} Terhubung`
+      : `${eYellow} Offline (Fallback Safe)`;
   } catch {
     mongoStatus = `${eYellow} Standby`;
   }
 
-  const aiGemini = env.GEMINI_API ? `${eGreen} Gemini 2.5 Flash Aktif` : `${eRed} Nonaktif`;
-  const aiGroq = env.GROQ_API_KEY ? `${eGreen} Groq Failover Siap` : `${eYellow} Tidak Dikonfigurasi`;
+  const aiGemini = env.GEMINI_API
+    ? `${eGreen} Gemini 2.5 Flash Aktif`
+    : `${eRed} Nonaktif`;
+  const aiGroq = env.GROQ_API_KEY
+    ? `${eGreen} Groq Failover Siap`
+    : `${eYellow} Tidak Dikonfigurasi`;
 
   const workerStats = canvasWorkerPool.getStats();
   const workerStatus = `${eGreen} ${workerStats.activeWorkers}/${workerStats.poolSize} Active (Queue: ${workerStats.queueLength})`;
@@ -806,7 +871,7 @@ async function handleDiagnostics(interaction) {
       .setCustomId("diag_repair_channels")
       .setLabel("Periksa Channel Server")
       .setEmoji(ui.parseEmoji(ui.getEmoji("tools")) || { name: "🔧" })
-      .setStyle(ButtonStyle.Primary)
+      .setStyle(ButtonStyle.Primary),
   );
 
   if (isOwner) {
@@ -820,14 +885,16 @@ async function handleDiagnostics(interaction) {
         .setCustomId("diag_owner_export_json")
         .setLabel("Ekspor Metrik JSON")
         .setEmoji(ui.parseEmoji(ui.getEmoji("poll")) || { name: "📊" })
-        .setStyle(ButtonStyle.Success)
+        .setStyle(ButtonStyle.Success),
     );
   }
 
   const payload = {
     ...buildContainerV2({
       accentColorHex: isOwner ? "#FFD700" : "#38BDF8",
-      authorName: isOwner ? "Master Diagnostics (Owner Mode)" : "Server Diagnostics",
+      authorName: isOwner
+        ? "Master Diagnostics (Owner Mode)"
+        : "Server Diagnostics",
       title: `${ui.getEmoji("stats") || "📊"} Status & Pemeriksaan Mandiri`,
       description: desc,
       expression: "info",
@@ -836,12 +903,17 @@ async function handleDiagnostics(interaction) {
     components: [btnRow],
   };
 
-  const msg = interaction.deferred || interaction.replied
-    ? await interaction.editReply(payload)
-    : await interaction.reply({ ...payload, flags: MessageFlags.Ephemeral });
+  const msg =
+    interaction.deferred || interaction.replied
+      ? await interaction.editReply(payload)
+      : await interaction.reply({ ...payload, flags: MessageFlags.Ephemeral });
 
-  const filter = (i) => i.user.id === interaction.user.id && i.customId.startsWith("diag_");
-  const collector = msg.createMessageComponentCollector({ filter, time: 60000 });
+  const filter = (i) =>
+    i.user.id === interaction.user.id && i.customId.startsWith("diag_");
+  const collector = msg.createMessageComponentCollector({
+    filter,
+    time: 60000,
+  });
 
   collector.on("collect", async (btnInt) => {
     if (btnInt.customId === "diag_flush_guild_cache") {
@@ -857,7 +929,10 @@ async function handleDiagnostics(interaction) {
       });
     } else if (btnInt.customId === "diag_owner_global_flush") {
       if (!isOwner) {
-        return btnInt.reply({ content: `${eCross} Akses ditolak. Hanya Bot Owner yang dapat menjalankan aksi ini.`, flags: MessageFlags.Ephemeral });
+        return btnInt.reply({
+          content: `${eCross} Akses ditolak. Hanya Bot Owner yang dapat menjalankan aksi ini.`,
+          flags: MessageFlags.Ephemeral,
+        });
       }
       await cacheManager.invalidateGuildSettings("global");
       await btnInt.reply({
@@ -866,7 +941,10 @@ async function handleDiagnostics(interaction) {
       });
     } else if (btnInt.customId === "diag_owner_export_json") {
       if (!isOwner) {
-        return btnInt.reply({ content: `${eCross} Akses ditolak.`, flags: MessageFlags.Ephemeral });
+        return btnInt.reply({
+          content: `${eCross} Akses ditolak.`,
+          flags: MessageFlags.Ephemeral,
+        });
       }
       const dump = {
         timestamp: new Date().toISOString(),
@@ -908,7 +986,9 @@ const handlers = {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("setup")
-    .setDescription("⚙️ [ADMIN] Master Setup Dashboard Governance Naura Hoshino.")
+    .setDescription(
+      "⚙️ [ADMIN] Master Setup Dashboard Governance Naura Hoshino.",
+    )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addSubcommand((sub) =>
       sub
@@ -918,7 +998,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("wizard")
-        .setDescription("🪄 Onboarding Wizard: Terapkan template server 1-klik"),
+        .setDescription(
+          "🪄 Onboarding Wizard: Terapkan template server 1-klik",
+        ),
     )
     .addSubcommand((sub) =>
       sub
@@ -928,9 +1010,15 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("softban")
-        .setDescription("🛡️ Atur Channel Softban / Perangkap Scammer (Honeypot Trap)")
+        .setDescription(
+          "🛡️ Atur Channel Softban / Perangkap Scammer (Honeypot Trap)",
+        )
         .addChannelOption((opt) =>
-          opt.setName("channel").setDescription("Pilih channel yang dijadikan perangkap scammer").addChannelTypes(ChannelType.GuildText).setRequired(true),
+          opt
+            .setName("channel")
+            .setDescription("Pilih channel yang dijadikan perangkap scammer")
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
@@ -938,10 +1026,17 @@ module.exports = {
         .setName("greetings")
         .setDescription("👋 Atur channel & status pesan Welcome/Leave")
         .addChannelOption((opt) =>
-          opt.setName("channel").setDescription("Channel Selamat Datang").addChannelTypes(ChannelType.GuildText).setRequired(true),
+          opt
+            .setName("channel")
+            .setDescription("Channel Selamat Datang")
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(true),
         )
         .addBooleanOption((opt) =>
-          opt.setName("aktif").setDescription("Aktifkan pesan selamat datang?").setRequired(false),
+          opt
+            .setName("aktif")
+            .setDescription("Aktifkan pesan selamat datang?")
+            .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
@@ -949,10 +1044,17 @@ module.exports = {
         .setName("automod")
         .setDescription("🛡️ Atur modul Automod & Log Audit Security")
         .addBooleanOption((opt) =>
-          opt.setName("aktif").setDescription("Aktifkan sistem Anti-Spam & Automod?").setRequired(true),
+          opt
+            .setName("aktif")
+            .setDescription("Aktifkan sistem Anti-Spam & Automod?")
+            .setRequired(true),
         )
         .addChannelOption((opt) =>
-          opt.setName("log").setDescription("Channel log audit keamanan").addChannelTypes(ChannelType.GuildText).setRequired(false),
+          opt
+            .setName("log")
+            .setDescription("Channel log audit keamanan")
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
@@ -960,10 +1062,17 @@ module.exports = {
         .setName("modmail")
         .setDescription("📩 Atur kategori & role staff Modmail")
         .addChannelOption((opt) =>
-          opt.setName("kategori").setDescription("Kategori untuk tiket Modmail").addChannelTypes(ChannelType.GuildCategory).setRequired(true),
+          opt
+            .setName("kategori")
+            .setDescription("Kategori untuk tiket Modmail")
+            .addChannelTypes(ChannelType.GuildCategory)
+            .setRequired(true),
         )
         .addRoleOption((opt) =>
-          opt.setName("role").setDescription("Role Staff Modmail").setRequired(false),
+          opt
+            .setName("role")
+            .setDescription("Role Staff Modmail")
+            .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
@@ -971,17 +1080,35 @@ module.exports = {
         .setName("ticket")
         .setDescription("🎫 Atur kategori & log Sistem Tiket")
         .addStringOption((opt) =>
-          opt.setName("mode").setDescription("Gunakan Private Thread atau Text Channel?")
-            .addChoices({ name: "Private Thread", value: "thread" }, { name: "Text Channel", value: "channel" }).setRequired(true),
+          opt
+            .setName("mode")
+            .setDescription("Gunakan Private Thread atau Text Channel?")
+            .addChoices(
+              { name: "Private Thread", value: "thread" },
+              { name: "Text Channel", value: "channel" },
+            )
+            .setRequired(true),
         )
         .addChannelOption((opt) =>
-          opt.setName("kategori").setDescription("Kategori channel tiket (wajib jika mode channel)").addChannelTypes(ChannelType.GuildCategory).setRequired(false),
+          opt
+            .setName("kategori")
+            .setDescription("Kategori channel tiket (wajib jika mode channel)")
+            .addChannelTypes(ChannelType.GuildCategory)
+            .setRequired(false),
         )
         .addChannelOption((opt) =>
-          opt.setName("log").setDescription("Channel log penutupan tiket").addChannelTypes(ChannelType.GuildText).setRequired(false),
+          opt
+            .setName("log")
+            .setDescription("Channel log penutupan tiket")
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(false),
         )
         .addChannelOption((opt) =>
-          opt.setName("panel").setDescription("Channel tempat mengirim pesan Panel Buka Tiket").addChannelTypes(ChannelType.GuildText).setRequired(false),
+          opt
+            .setName("panel")
+            .setDescription("Channel tempat mengirim pesan Panel Buka Tiket")
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
@@ -989,15 +1116,24 @@ module.exports = {
         .setName("tempvoice")
         .setDescription("🔊 Atur Master Voice Channel untuk TempVoice Hub")
         .addChannelOption((opt) =>
-          opt.setName("channel").setDescription("Channel Voice utama").addChannelTypes(ChannelType.GuildVoice).setRequired(true),
+          opt
+            .setName("channel")
+            .setDescription("Channel Voice utama")
+            .addChannelTypes(ChannelType.GuildVoice)
+            .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("autorole")
-        .setDescription("🎭 Atur Auto-Role otomatis untuk member yang baru bergabung")
+        .setDescription(
+          "🎭 Atur Auto-Role otomatis untuk member yang baru bergabung",
+        )
         .addRoleOption((opt) =>
-          opt.setName("role").setDescription("Pilih role yang akan diberikan").setRequired(true),
+          opt
+            .setName("role")
+            .setDescription("Pilih role yang akan diberikan")
+            .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
@@ -1005,7 +1141,11 @@ module.exports = {
         .setName("ai")
         .setDescription("🧠 Atur Channel Khusus AI Chat Otomatis")
         .addChannelOption((opt) =>
-          opt.setName("channel").setDescription("Channel khusus AI").addChannelTypes(ChannelType.GuildText).setRequired(true),
+          opt
+            .setName("channel")
+            .setDescription("Channel khusus AI")
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
@@ -1013,16 +1153,35 @@ module.exports = {
         .setName("ai-automod")
         .setDescription("🤖 Konfigurasi AI Toxicity Detection & Spam Guard")
         .addBooleanOption((opt) =>
-          opt.setName("aktif").setDescription("Aktifkan AI Automod?").setRequired(true),
+          opt
+            .setName("aktif")
+            .setDescription("Aktifkan AI Automod?")
+            .setRequired(true),
         )
         .addChannelOption((opt) =>
-          opt.setName("audit-channel").setDescription("Channel khusus audit & laporan AI").addChannelTypes(ChannelType.GuildText).setRequired(false),
+          opt
+            .setName("audit-channel")
+            .setDescription("Channel khusus audit & laporan AI")
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(false),
         )
         .addIntegerOption((opt) =>
-          opt.setName("threshold").setDescription("Ambang batas sensitivitas skor toksisitas (0-100, default: 70)").setMinValue(1).setMaxValue(100).setRequired(false),
+          opt
+            .setName("threshold")
+            .setDescription(
+              "Ambang batas sensitivitas skor toksisitas (0-100, default: 70)",
+            )
+            .setMinValue(1)
+            .setMaxValue(100)
+            .setRequired(false),
         )
         .addBooleanOption((opt) =>
-          opt.setName("learning-mode").setDescription("Mode Belajar (hanya log, tanpa menghapus pesan/timeout)?").setRequired(false),
+          opt
+            .setName("learning-mode")
+            .setDescription(
+              "Mode Belajar (hanya log, tanpa menghapus pesan/timeout)?",
+            )
+            .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
@@ -1030,71 +1189,139 @@ module.exports = {
         .setName("ai-config")
         .setDescription("🤖 Kustomisasi Persona/Sifat AI khusus server ini")
         .addStringOption((opt) =>
-          opt.setName("persona").setDescription("Tuliskan sifat, kepribadian, atau instruksi karakter untuk Naura").setRequired(true),
+          opt
+            .setName("persona")
+            .setDescription(
+              "Tuliskan sifat, kepribadian, atau instruksi karakter untuk Naura",
+            )
+            .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("ai-kb")
-        .setDescription("📚 Kelola dokumen peraturan/FAQ server untuk dipelajari AI (RAG)")
-        .addStringOption((opt) =>
-          opt.setName("aksi").setDescription("Pilih aksi").addChoices({ name: "Lihat Dokumen", value: "list" }, { name: "Tambah Dokumen", value: "tambah" }, { name: "Reset Semua", value: "reset" }).setRequired(true),
+        .setDescription(
+          "📚 Kelola dokumen peraturan/FAQ server untuk dipelajari AI (RAG)",
         )
         .addStringOption((opt) =>
-          opt.setName("judul").setDescription("Judul dokumen / bagian peraturan").setRequired(false),
+          opt
+            .setName("aksi")
+            .setDescription("Pilih aksi")
+            .addChoices(
+              { name: "Lihat Dokumen", value: "list" },
+              { name: "Tambah Dokumen", value: "tambah" },
+              { name: "Reset Semua", value: "reset" },
+            )
+            .setRequired(true),
         )
         .addStringOption((opt) =>
-          opt.setName("konten").setDescription("Isi teks peraturan atau penjelasan server").setRequired(false),
+          opt
+            .setName("judul")
+            .setDescription("Judul dokumen / bagian peraturan")
+            .setRequired(false),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("konten")
+            .setDescription("Isi teks peraturan atau penjelasan server")
+            .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("vanity")
-        .setDescription("✍️ Berikan role reward otomatis bila member memasang link/teks di Custom Status")
+        .setDescription(
+          "✍️ Berikan role reward otomatis bila member memasang link/teks di Custom Status",
+        )
         .addStringOption((opt) =>
-          opt.setName("vanity").setDescription("Teks yang wajib ada di custom status (contoh: .gg/naura)").setRequired(true),
+          opt
+            .setName("vanity")
+            .setDescription(
+              "Teks yang wajib ada di custom status (contoh: .gg/naura)",
+            )
+            .setRequired(true),
         )
         .addRoleOption((opt) =>
-          opt.setName("role").setDescription("Role yang akan diberikan jika status sesuai").setRequired(true),
+          opt
+            .setName("role")
+            .setDescription("Role yang akan diberikan jika status sesuai")
+            .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("minecraft")
-        .setDescription("🎮 Hubungkan server Discord dengan Server Minecraft (Chat Bridge)")
+        .setDescription(
+          "🎮 Hubungkan server Discord dengan Server Minecraft (Chat Bridge)",
+        )
         .addStringOption((opt) =>
-          opt.setName("ip").setDescription("IP Server Minecraft (contoh: play.hypixel.net)").setRequired(true),
+          opt
+            .setName("ip")
+            .setDescription("IP Server Minecraft (contoh: play.hypixel.net)")
+            .setRequired(true),
         )
         .addIntegerOption((opt) =>
-          opt.setName("port").setDescription("Port Server Minecraft (default: 25565)").setRequired(false),
+          opt
+            .setName("port")
+            .setDescription("Port Server Minecraft (default: 25565)")
+            .setRequired(false),
         )
         .addChannelOption((opt) =>
-          opt.setName("bridge-channel").setDescription("Channel Discord untuk sinkronisasi chat Minecraft").addChannelTypes(ChannelType.GuildText).setRequired(false),
+          opt
+            .setName("bridge-channel")
+            .setDescription("Channel Discord untuk sinkronisasi chat Minecraft")
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("faq")
-        .setDescription("📌 Kelola daftar Frequently Asked Questions (FAQ) Server")
-        .addStringOption((opt) =>
-          opt.setName("aksi").setDescription("Pilih aksi").addChoices({ name: "Lihat Daftar FAQ", value: "list" }, { name: "Tambah / Edit FAQ", value: "tambah" }, { name: "Hapus FAQ", value: "hapus" }).setRequired(true),
+        .setDescription(
+          "📌 Kelola daftar Frequently Asked Questions (FAQ) Server",
         )
         .addStringOption((opt) =>
-          opt.setName("slug").setDescription("Kata kunci / ID FAQ (contoh: rules, store, ip)").setRequired(false),
+          opt
+            .setName("aksi")
+            .setDescription("Pilih aksi")
+            .addChoices(
+              { name: "Lihat Daftar FAQ", value: "list" },
+              { name: "Tambah / Edit FAQ", value: "tambah" },
+              { name: "Hapus FAQ", value: "hapus" },
+            )
+            .setRequired(true),
         )
         .addStringOption((opt) =>
-          opt.setName("judul").setDescription("Judul FAQ yang menarik").setRequired(false),
+          opt
+            .setName("slug")
+            .setDescription("Kata kunci / ID FAQ (contoh: rules, store, ip)")
+            .setRequired(false),
         )
         .addStringOption((opt) =>
-          opt.setName("konten").setDescription("Isi jawaban atau penjelasan FAQ").setRequired(false),
+          opt
+            .setName("judul")
+            .setDescription("Judul FAQ yang menarik")
+            .setRequired(false),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("konten")
+            .setDescription("Isi jawaban atau penjelasan FAQ")
+            .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("chronicle")
-        .setDescription("📰 Atur Channel Terbitan Koran Harian Pagi (The Hoshino Times)")
+        .setDescription(
+          "📰 Atur Channel Terbitan Koran Harian Pagi (The Hoshino Times)",
+        )
         .addChannelOption((opt) =>
-          opt.setName("channel").setDescription("Channel tujuan koran harian pagi").addChannelTypes(ChannelType.GuildText).setRequired(true),
+          opt
+            .setName("channel")
+            .setDescription("Channel tujuan koran harian pagi")
+            .addChannelTypes(ChannelType.GuildText)
+            .setRequired(true),
         ),
     ),
 
@@ -1107,9 +1334,10 @@ module.exports = {
 
     let currentSettings;
     try {
-      currentSettings = typeof settingsRecord.settings === "string"
-        ? JSON.parse(settingsRecord.settings)
-        : settingsRecord.settings || {};
+      currentSettings =
+        typeof settingsRecord.settings === "string"
+          ? JSON.parse(settingsRecord.settings)
+          : settingsRecord.settings || {};
     } catch (e) {
       currentSettings = {};
     }
@@ -1119,7 +1347,9 @@ module.exports = {
       settingsRecord.changed("settings", true);
       // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
       await settingsRecord.save({ fields: ["settings"] });
-      await cacheManager.invalidateGuildSettings(interaction.guild.id).catch(() => {});
+      await cacheManager
+        .invalidateGuildSettings(interaction.guild.id)
+        .catch(() => {});
     };
 
     const handler = handlers[subcommand];
@@ -1136,8 +1366,11 @@ module.exports = {
     try {
       await handler(interaction, { currentSettings, saveSettings }, subcommand);
     } catch (error) {
-      logger.error(`[Setup] Gagal mengeksekusi subcommand ${subcommand}:`, error);
-      
+      logger.error(
+        `[Setup] Gagal mengeksekusi subcommand ${subcommand}:`,
+        error,
+      );
+
       const errMsg = {
         ...buildErrorContainerV2({
           title: "Setup Gagal",

@@ -17,12 +17,24 @@ class ServerChronicleEngine {
     if (!guildId || !userId || !redisManager.isReady) return;
     try {
       const todayKey = `chronicle:activity:${guildId}:${new Date().toISOString().slice(0, 10)}`;
-      await redisManager.client.hIncrBy(todayKey, `user:${userId}:${username}`, 1);
+      await redisManager.client.hIncrBy(
+        todayKey,
+        `user:${userId}:${username}`,
+        1,
+      );
       await redisManager.client.expire(todayKey, 172800); // 48 jam
 
-      if (content && content.length > 10 && content.length < 120 && !content.startsWith("/")) {
+      if (
+        content &&
+        content.length > 10 &&
+        content.length < 120 &&
+        !content.startsWith("/")
+      ) {
         const quotesKey = `chronicle:quotes:${guildId}:${new Date().toISOString().slice(0, 10)}`;
-        await redisManager.client.lPush(quotesKey, JSON.stringify({ username, text: content }));
+        await redisManager.client.lPush(
+          quotesKey,
+          JSON.stringify({ username, text: content }),
+        );
         await redisManager.client.lTrim(quotesKey, 0, 20);
         await redisManager.client.expire(quotesKey, 172800);
       }
@@ -51,7 +63,11 @@ class ServerChronicleEngine {
       }
     }
 
-    let topUser = { username: "Warga Teladan", count: 42, userId: guild.ownerId };
+    let topUser = {
+      username: "Warga Teladan",
+      count: 42,
+      userId: guild.ownerId,
+    };
     let totalMessages = 0;
 
     if (rawActivity && Object.keys(rawActivity).length > 0) {
@@ -72,14 +88,23 @@ class ServerChronicleEngine {
       totalMessages = Math.floor(Math.random() * 200) + 150;
     }
 
-    const quotes = (rawQuotes || []).map((q) => {
-      try { return JSON.parse(q); } catch (e) { return null; }
-    }).filter(Boolean);
+    const quotes = (rawQuotes || [])
+      .map((q) => {
+        try {
+          return JSON.parse(q);
+        } catch (e) {
+          return null;
+        }
+      })
+      .filter(Boolean);
 
     // AI Headline & Horoscope Generation
     let headline = `Sensasi Hari Ini di ${guild.name}!`;
     let gossip = `Bintang terik menyinari guild ${guild.name}. Tetaplah waspada terhadap drop rate gacha dan bahaya monster Tower of Babel!`;
-    const quoteHighlight = quotes.length > 0 ? `"${quotes[0].text}", ${quotes[0].username}` : `"Hari yang cerah untuk berpetualang!", Naura`;
+    const quoteHighlight =
+      quotes.length > 0
+        ? `"${quotes[0].text}", ${quotes[0].username}`
+        : `"Hari yang cerah untuk berpetualang!", Naura`;
 
     try {
       if (aiManager && typeof aiManager.ask === "function") {
@@ -98,7 +123,12 @@ class ServerChronicleEngine {
     }
 
     return {
-      date: new Date().toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" }),
+      date: new Date().toLocaleDateString("id-ID", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
       guildName: guild.name,
       guildIcon: guild.iconURL({ extension: "png" }),
       headline,
@@ -114,16 +144,23 @@ class ServerChronicleEngine {
    * Publikasikan koran pagi otomatis ke seluruh guild yang mengaktifkannya
    */
   static async publishMorningChronicle(client) {
-    logger.info("[CHRONICLE] Memulai publikasi koran pagi harian 'The Hoshino Times'...");
+    logger.info(
+      "[CHRONICLE] Memulai publikasi koran pagi harian 'The Hoshino Times'...",
+    );
 
     for (const guild of client.guilds.cache.values()) {
       try {
-        const settingsRecord = await GuildSettings.findOne({ where: { guildId: guild.id } });
+        const settingsRecord = await GuildSettings.findOne({
+          where: { guildId: guild.id },
+        });
         if (!settingsRecord) continue;
 
         let settings = {};
         try {
-          settings = typeof settingsRecord.settings === "string" ? JSON.parse(settingsRecord.settings) : (settingsRecord.settings || {});
+          settings =
+            typeof settingsRecord.settings === "string"
+              ? JSON.parse(settingsRecord.settings)
+              : settingsRecord.settings || {};
         } catch (err) {
           settings = {};
         }
@@ -131,12 +168,16 @@ class ServerChronicleEngine {
         const channelId = settings.chronicleChannelId;
         if (!channelId) continue;
 
-        const channel = guild.channels.cache.get(channelId) || (await guild.channels.fetch(channelId).catch(() => null));
+        const channel =
+          guild.channels.cache.get(channelId) ||
+          (await guild.channels.fetch(channelId).catch(() => null));
         if (!channel || !channel.isTextBased()) continue;
 
         const chronicleData = await this.generateChronicleData(guild);
         const imgBuffer = await drawChronicleNewspaper(chronicleData);
-        const attachment = new AttachmentBuilder(imgBuffer, { name: "hoshino-times.png" });
+        const attachment = new AttachmentBuilder(imgBuffer, {
+          name: "hoshino-times.png",
+        });
 
         const payload = buildContainerV2({
           accentColorHex: "#FFB6C1",
@@ -156,9 +197,14 @@ class ServerChronicleEngine {
         });
 
         await channel.send({ ...payload, files: [attachment] });
-        logger.info(`[CHRONICLE] Koran pagi berhasil diterbitkan ke channel ${channel.id} di guild ${guild.name}`);
+        logger.info(
+          `[CHRONICLE] Koran pagi berhasil diterbitkan ke channel ${channel.id} di guild ${guild.name}`,
+        );
       } catch (err) {
-        logger.warn(`[CHRONICLE] Gagal menerbitkan koran pagi di guild ${guild.id}:`, err.message);
+        logger.warn(
+          `[CHRONICLE] Gagal menerbitkan koran pagi di guild ${guild.id}:`,
+          err.message,
+        );
       }
     }
   }

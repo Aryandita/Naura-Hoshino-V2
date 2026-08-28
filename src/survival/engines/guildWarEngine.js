@@ -15,7 +15,8 @@ class GuildWarEngine {
   static async getWarStatus() {
     if (redisManager.isReady) {
       const cached = await redisManager.getCache(WAR_STATE_KEY);
-      if (cached) return typeof cached === "string" ? JSON.parse(cached) : cached;
+      if (cached)
+        return typeof cached === "string" ? JSON.parse(cached) : cached;
     }
 
     const defaultState = {
@@ -33,11 +34,18 @@ class GuildWarEngine {
   /**
    * Serang base klan lawan dalam Clan War
    */
-  static async attackClanBase(attackerUserId, attackerClanId, targetClanId, { power = 100 } = {}) {
+  static async attackClanBase(
+    attackerUserId,
+    attackerClanId,
+    targetClanId,
+    { power = 100 } = {},
+  ) {
     const warState = await this.getWarStatus();
     const damage = Math.floor(Math.random() * 50) + power;
 
-    logger.info(`[ClanWar] User ${attackerUserId} (Clan ${attackerClanId}) menyerang Clan ${targetClanId} dengan ${damage} Damage!`);
+    logger.info(
+      `[ClanWar] User ${attackerUserId} (Clan ${attackerClanId}) menyerang Clan ${targetClanId} dengan ${damage} Damage!`,
+    );
 
     return {
       success: true,
@@ -61,17 +69,27 @@ class GuildWarEngine {
     warState.blessingExpiresAt = expiresAt.toISOString();
 
     if (redisManager.isReady) {
-      await redisManager.setCache(WAR_STATE_KEY, JSON.stringify(warState), 86400);
+      await redisManager.setCache(
+        WAR_STATE_KEY,
+        JSON.stringify(warState),
+        86400,
+      );
       // Simpan Server Blessing Key di Redis selama 24 jam (86400 detik)
       const blessingKey = `${SERVER_BLESSING_KEY_PREFIX}${guildId}`;
-      await redisManager.setCache(blessingKey, JSON.stringify({
-        clanId: winningClanId,
-        xpMultiplier: 2.0,
-        staminaRegenMultiplier: 2.0,
-        expiresAt: expiresAt.toISOString(),
-      }), 86400);
+      await redisManager.setCache(
+        blessingKey,
+        JSON.stringify({
+          clanId: winningClanId,
+          xpMultiplier: 2.0,
+          staminaRegenMultiplier: 2.0,
+          expiresAt: expiresAt.toISOString(),
+        }),
+        86400,
+      );
 
-      logger.success(`[ClanWar] Clan ${winningClanId} di Guild ${guildId} menang! Server Blessing 2x XP & Stamina aktif 24 jam.`);
+      logger.success(
+        `[ClanWar] Clan ${winningClanId} di Guild ${guildId} menang! Server Blessing 2x XP & Stamina aktif 24 jam.`,
+      );
     }
 
     return {

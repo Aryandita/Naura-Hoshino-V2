@@ -101,7 +101,10 @@ module.exports = {
      * Tanya nominal lewat chat atau quick chips, lalu jalankan transaksinya.
      * Kartu utama selalu dirapikan kembali setelah selesai.
      */
-    const askAmount = async (i, { title, description, balance = 0, unit = "", run }) => {
+    const askAmount = async (
+      i,
+      { title, description, balance = 0, unit = "", run },
+    ) => {
       activePromptRun = run;
       await i.editReply(views.promptView(title, description, balance, unit));
 

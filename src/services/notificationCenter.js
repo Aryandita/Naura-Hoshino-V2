@@ -62,7 +62,9 @@ async function getUserPreferences(userId) {
       return { ...DEFAULT_PREFS, ...prefs };
     }
   } catch (err) {
-    logger.warn(`[NotificationCenter] Gagal mengambil preferensi user ${userId}: ${err.message}`);
+    logger.warn(
+      `[NotificationCenter] Gagal mengambil preferensi user ${userId}: ${err.message}`,
+    );
   }
   return { ...DEFAULT_PREFS };
 }
@@ -78,11 +80,15 @@ async function setUserPreference(userId, key, enabled) {
   const currentPrefs = await getUserPreferences(userId);
   currentPrefs[key] = Boolean(enabled);
 
-  await cacheManager.mutateUserProfileJson(userId, "notification_prefs", (prefs) => {
-    const obj = (prefs && typeof prefs === "object") ? prefs : {};
-    obj[key] = Boolean(enabled);
-    return obj;
-  });
+  await cacheManager.mutateUserProfileJson(
+    userId,
+    "notification_prefs",
+    (prefs) => {
+      const obj = prefs && typeof prefs === "object" ? prefs : {};
+      obj[key] = Boolean(enabled);
+      return obj;
+    },
+  );
 
   return currentPrefs;
 }
@@ -123,11 +129,15 @@ async function sendDirectNotification(client, userId, type, data = {}) {
     });
 
     await user.send(payload);
-    logger.info(`[NotificationCenter] DM ${type} berhasil dikirim ke ${user.tag} (${userId}).`);
+    logger.info(
+      `[NotificationCenter] DM ${type} berhasil dikirim ke ${user.tag} (${userId}).`,
+    );
     return true;
   } catch (err) {
     // Error jika user mematikan DM dari server/bot
-    logger.debug(`[NotificationCenter] Gagal kirim DM ke ${userId} (${err.message}).`);
+    logger.debug(
+      `[NotificationCenter] Gagal kirim DM ke ${userId} (${err.message}).`,
+    );
     return false;
   }
 }

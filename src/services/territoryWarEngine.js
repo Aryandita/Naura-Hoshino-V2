@@ -66,12 +66,19 @@ class TerritoryWarEngine {
   /**
    * Serang sektor wilayah dengan poin energi klan
    */
-  static async attackTerritory({ clanId, clanName, territoryId, energySpent = 50 }) {
+  static async attackTerritory({
+    clanId,
+    clanName,
+    territoryId,
+    energySpent = 50,
+  }) {
     const energy = Math.max(10, Math.floor(Number(energySpent) || 50));
     let territory = await ClanTerritory.findOne({ where: { territoryId } });
 
     if (!territory) {
-      const def = DEFAULT_SECTORS.find((s) => s.territoryId === territoryId) || DEFAULT_SECTORS[0];
+      const def =
+        DEFAULT_SECTORS.find((s) => s.territoryId === territoryId) ||
+        DEFAULT_SECTORS[0];
       territory = await ClanTerritory.create({
         territoryId: def.territoryId,
         name: def.name,
@@ -111,7 +118,9 @@ class TerritoryWarEngine {
       territory.lastTaxClaimedAt = new Date();
       await territory.save();
 
-      logger.info(`[TerritoryWar] Klan ${clanName} (#${clanId}) berhasil merebut ${territory.name}!`);
+      logger.info(
+        `[TerritoryWar] Klan ${clanName} (#${clanId}) berhasil merebut ${territory.name}!`,
+      );
       return {
         success: true,
         action: "CAPTURED",
@@ -137,7 +146,9 @@ class TerritoryWarEngine {
    * Klaim akumulasi pajak dari seluruh sektor yang dikuasai klan
    */
   static async claimClanTax(clanId) {
-    const territories = await ClanTerritory.findAll({ where: { clanId: Number(clanId) } });
+    const territories = await ClanTerritory.findAll({
+      where: { clanId: Number(clanId) },
+    });
     if (territories.length === 0) {
       return { success: false, reason: "NO_TERRITORIES_OWNED" };
     }
@@ -146,8 +157,13 @@ class TerritoryWarEngine {
     const now = Date.now();
 
     for (const terr of territories) {
-      const lastClaim = terr.lastTaxClaimedAt ? new Date(terr.lastTaxClaimedAt).getTime() : now - 3600000;
-      const hoursPassed = Math.min(24, Math.max(0.1, (now - lastClaim) / (1000 * 60 * 60)));
+      const lastClaim = terr.lastTaxClaimedAt
+        ? new Date(terr.lastTaxClaimedAt).getTime()
+        : now - 3600000;
+      const hoursPassed = Math.min(
+        24,
+        Math.max(0.1, (now - lastClaim) / (1000 * 60 * 60)),
+      );
       const earned = Math.floor(hoursPassed * (terr.taxYield || 500));
 
       if (earned > 0) {
@@ -167,7 +183,9 @@ class TerritoryWarEngine {
       await clan.save();
     }
 
-    logger.info(`[TerritoryWar] Klan #${clanId} mengklaim ${totalTaxEarned} ⭐ pajak wilayah.`);
+    logger.info(
+      `[TerritoryWar] Klan #${clanId} mengklaim ${totalTaxEarned} ⭐ pajak wilayah.`,
+    );
     return {
       success: true,
       claimedTax: totalTaxEarned,
@@ -179,7 +197,9 @@ class TerritoryWarEngine {
    * Reset mingguan perang wilayah (Weekly War Reset)
    */
   static async resetWeeklyWar() {
-    logger.info("[TerritoryWar] Menjalankan Weekly War Reset untuk seluruh sektor...");
+    logger.info(
+      "[TerritoryWar] Menjalankan Weekly War Reset untuk seluruh sektor...",
+    );
     const territories = await ClanTerritory.findAll();
     for (const terr of territories) {
       terr.controlPoints = Math.floor(Number(terr.controlPoints || 0) * 0.5); // Kurangi 50% untuk persaingan baru

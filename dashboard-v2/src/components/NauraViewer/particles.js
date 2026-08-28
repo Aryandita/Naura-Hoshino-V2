@@ -5,7 +5,7 @@
  * menggunakan warna brand Naura (pink keunguan pastel).
  */
 
-import * as THREE from 'three';
+import * as THREE from "three";
 
 /**
  * Buat particle system.
@@ -13,52 +13,52 @@ import * as THREE from 'three';
  * @returns {{ points: THREE.Points, update: (delta: number, elapsed: number) => void }}
  */
 export function createParticleSystem(modelScene) {
-    const particleCount = 250;
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    const colors = new Float32Array(particleCount * 3);
-    const sizes = new Float32Array(particleCount);
-    // Data tambahan untuk animasi individual (fase, orbit speed, radius)
-    const animData = [];
+  const particleCount = 250;
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(particleCount * 3);
+  const colors = new Float32Array(particleCount * 3);
+  const sizes = new Float32Array(particleCount);
+  // Data tambahan untuk animasi individual (fase, orbit speed, radius)
+  const animData = [];
 
-    const colorPink = new THREE.Color('#FFB6C1');
-    const colorPurple = new THREE.Color('#C084FC');
+  const colorPink = new THREE.Color("#FFB6C1");
+  const colorPurple = new THREE.Color("#C084FC");
 
-    for (let i = 0; i < particleCount; i++) {
-        // Sebar partikel dalam bentuk silinder/bola di sekitar model
-        const theta = Math.random() * Math.PI * 2;
-        const radius = 1.0 + Math.random() * 1.5;
-        const y = (Math.random() - 0.5) * 3.0 + 1.0; // Offset Y agar menutupi seluruh tubuh
+  for (let i = 0; i < particleCount; i++) {
+    // Sebar partikel dalam bentuk silinder/bola di sekitar model
+    const theta = Math.random() * Math.PI * 2;
+    const radius = 1.0 + Math.random() * 1.5;
+    const y = (Math.random() - 0.5) * 3.0 + 1.0; // Offset Y agar menutupi seluruh tubuh
 
-        positions[i * 3 + 0] = Math.cos(theta) * radius;
-        positions[i * 3 + 1] = y;
-        positions[i * 3 + 2] = Math.sin(theta) * radius;
+    positions[i * 3 + 0] = Math.cos(theta) * radius;
+    positions[i * 3 + 1] = y;
+    positions[i * 3 + 2] = Math.sin(theta) * radius;
 
-        // Gradient acak antara pink dan ungu
-        const mixedColor = colorPink.clone().lerp(colorPurple, Math.random());
-        colors[i * 3 + 0] = mixedColor.r;
-        colors[i * 3 + 1] = mixedColor.g;
-        colors[i * 3 + 2] = mixedColor.b;
+    // Gradient acak antara pink dan ungu
+    const mixedColor = colorPink.clone().lerp(colorPurple, Math.random());
+    colors[i * 3 + 0] = mixedColor.r;
+    colors[i * 3 + 1] = mixedColor.g;
+    colors[i * 3 + 2] = mixedColor.b;
 
-        sizes[i] = Math.random() * 0.05 + 0.02;
+    sizes[i] = Math.random() * 0.05 + 0.02;
 
-        animData.push({
-            phase: Math.random() * Math.PI * 2,
-            speed: (Math.random() - 0.5) * 0.5 + 0.1, // Orbit speed
-            rY: (Math.random() - 0.5) * 0.2,          // Vertical drift
-        });
-    }
+    animData.push({
+      phase: Math.random() * Math.PI * 2,
+      speed: (Math.random() - 0.5) * 0.5 + 0.1, // Orbit speed
+      rY: (Math.random() - 0.5) * 0.2, // Vertical drift
+    });
+  }
 
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
 
-    // Shader material kustom sederhana untuk particle glowing
-    const material = new THREE.ShaderMaterial({
-        uniforms: {
-            time: { value: 0 },
-        },
-        vertexShader: `
+  // Shader material kustom sederhana untuk particle glowing
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      time: { value: 0 },
+    },
+    vertexShader: `
             attribute float size;
             attribute vec3 color;
             varying vec3 vColor;
@@ -73,7 +73,7 @@ export function createParticleSystem(modelScene) {
                 gl_Position = projectionMatrix * mvPosition;
             }
         `,
-        fragmentShader: `
+    fragmentShader: `
             varying vec3 vColor;
             
             void main() {
@@ -87,40 +87,40 @@ export function createParticleSystem(modelScene) {
                 gl_FragColor = vec4(vColor, alpha * 0.8);
             }
         `,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-    });
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
 
-    const points = new THREE.Points(geometry, material);
-    // Masukkan ke dalam scene utama tapi bukan sebagai child langsung dari model
-    // agar orbitnya independen dari rotasi model
-    points.position.copy(modelScene.position);
+  const points = new THREE.Points(geometry, material);
+  // Masukkan ke dalam scene utama tapi bukan sebagai child langsung dari model
+  // agar orbitnya independen dari rotasi model
+  points.position.copy(modelScene.position);
 
-    function update(delta, elapsed) {
-        material.uniforms.time.value = elapsed;
+  function update(delta, elapsed) {
+    material.uniforms.time.value = elapsed;
 
-        const pos = geometry.attributes.position.array;
-        
-        for (let i = 0; i < particleCount; i++) {
-            const data = animData[i];
-            
-            // Orbit manual (karena rotasi Points merotasi semua partikel searah)
-            const x = pos[i * 3 + 0];
-            const z = pos[i * 3 + 2];
-            
-            const cosA = Math.cos(data.speed * delta);
-            const sinA = Math.sin(data.speed * delta);
-            
-            pos[i * 3 + 0] = x * cosA - z * sinA;
-            pos[i * 3 + 2] = x * sinA + z * cosA;
-            
-            // Vertical drift
-            pos[i * 3 + 1] += Math.sin(elapsed + data.phase) * data.rY * delta;
-        }
-        
-        geometry.attributes.position.needsUpdate = true;
+    const pos = geometry.attributes.position.array;
+
+    for (let i = 0; i < particleCount; i++) {
+      const data = animData[i];
+
+      // Orbit manual (karena rotasi Points merotasi semua partikel searah)
+      const x = pos[i * 3 + 0];
+      const z = pos[i * 3 + 2];
+
+      const cosA = Math.cos(data.speed * delta);
+      const sinA = Math.sin(data.speed * delta);
+
+      pos[i * 3 + 0] = x * cosA - z * sinA;
+      pos[i * 3 + 2] = x * sinA + z * cosA;
+
+      // Vertical drift
+      pos[i * 3 + 1] += Math.sin(elapsed + data.phase) * data.rY * delta;
     }
 
-    return { points, update };
+    geometry.attributes.position.needsUpdate = true;
+  }
+
+  return { points, update };
 }

@@ -57,7 +57,11 @@ async function drawPetHabitatCard(habitatData) {
 
     ctx.textAlign = "right";
     ctx.fillStyle = "#FFD700";
-    ctx.fillText(`LEVEL ${pet.petLevel || 1}  |  💖 ${pet.affection || 0}% KASIH SAYANG`, width - 40, 50);
+    ctx.fillText(
+      `LEVEL ${pet.petLevel || 1}  |  💖 ${pet.affection || 0}% KASIH SAYANG`,
+      width - 40,
+      50,
+    );
     ctx.textAlign = "left";
 
     // 4. Pet Name & Cosmic Badge
@@ -69,7 +73,11 @@ async function drawPetHabitatCard(habitatData) {
     if (isCosmic) {
       ctx.font = 'bold 12px "Orbitron", "EmojiFont"';
       ctx.fillStyle = "#C084FC";
-      ctx.fillText("✨ COSMIC ASCENDED", 40 + ctx.measureText(nameStr).width + 15, 95);
+      ctx.fillText(
+        "✨ COSMIC ASCENDED",
+        40 + ctx.measureText(nameStr).width + 15,
+        95,
+      );
     }
 
     // 5. Center Showcase Box (Habitat Room)
@@ -83,7 +91,13 @@ async function drawPetHabitatCard(habitatData) {
     // Pet Avatar Representation
     ctx.font = '60px "EmojiFont"';
     ctx.textAlign = "center";
-    const petEmoji = isCosmic ? "🌌" : pet.petType.includes("dragon") ? "🐉" : pet.petType.includes("cat") ? "🐱" : "🐺";
+    const petEmoji = isCosmic
+      ? "🌌"
+      : pet.petType.includes("dragon")
+        ? "🐉"
+        : pet.petType.includes("cat")
+          ? "🐱"
+          : "🐺";
     ctx.fillText(petEmoji, width / 2, 220);
 
     ctx.font = 'bold 16px "Outfit", "EmojiFont"';
@@ -92,7 +106,11 @@ async function drawPetHabitatCard(habitatData) {
 
     ctx.font = '13px "Outfit", "EmojiFont"';
     ctx.fillStyle = "#94A3B8";
-    ctx.fillText(`Mood: ${pet.mood ? pet.mood.toUpperCase() : "HAPPY"}  |  Skill: ${pet.passiveSkill || "LUCKY_DROP"}`, width / 2, 290);
+    ctx.fillText(
+      `Mood: ${pet.mood ? pet.mood.toUpperCase() : "HAPPY"}  |  Skill: ${pet.passiveSkill || "LUCKY_DROP"}`,
+      width / 2,
+      290,
+    );
     ctx.textAlign = "left";
 
     // 6. Bottom Stats & Toys
@@ -109,7 +127,11 @@ async function drawPetHabitatCard(habitatData) {
 
     ctx.font = '13px "Outfit", "EmojiFont"';
     ctx.fillStyle = "#CBD5E1";
-    ctx.fillText("• Cyber Laser Pointer   • Sakura Plush Ball   • Catnip Circuit", 55, 440);
+    ctx.fillText(
+      "• Cyber Laser Pointer   • Sakura Plush Ball   • Catnip Circuit",
+      55,
+      440,
+    );
 
     return canvas.toBuffer("image/png");
   });

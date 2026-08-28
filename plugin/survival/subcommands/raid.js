@@ -1,7 +1,17 @@
 "use strict";
 
-const { MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder, ComponentType } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const {
+  MessageFlags,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  AttachmentBuilder,
+  ComponentType,
+} = require("discord.js");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 const worldBossEngine = require("../../../src/survival/engines/worldBossEngine");
 const petActions = require("../../../src/survival/helpers/petActions");
@@ -10,7 +20,8 @@ const { drawBossCard } = require("../../../src/canvas/bossCanvas");
 
 module.exports = {
   name: "raid",
-  description: "Ikuti pertempuran World Boss 2.0 Global bersama seluruh petualang!",
+  description:
+    "Ikuti pertempuran World Boss 2.0 Global bersama seluruh petualang!",
 
   async execute(interaction, context) {
     const action = interaction.options.getString("aksi") || "status";
@@ -23,14 +34,24 @@ module.exports = {
         boss = await worldBossEngine.spawnBoss();
       }
 
-      const hpPercent = Math.max(0, Math.round((Number(boss.currentHp) / Number(boss.maxHp)) * 100));
+      const hpPercent = Math.max(
+        0,
+        Math.round((Number(boss.currentHp) / Number(boss.maxHp)) * 100),
+      );
       const expTs = Math.floor(new Date(boss.endTime).getTime() / 1000);
-      const phaseBadge = boss.phase === 3 ? `${ui.getEmoji("stamina") || "⚡"} ENRAGED` : boss.phase === 2 ? `${ui.getEmoji("shield") || "🛡️"} SHIELDED` : `${ui.getEmoji("battle") || "⚔️"} NORMAL`;
+      const phaseBadge =
+        boss.phase === 3
+          ? `${ui.getEmoji("stamina") || "⚡"} ENRAGED`
+          : boss.phase === 2
+            ? `${ui.getEmoji("shield") || "🛡️"} SHIELDED`
+            : `${ui.getEmoji("battle") || "⚔️"} NORMAL`;
 
       const files = [];
       try {
         const cardBuffer = await drawBossCard(boss);
-        files.push(new AttachmentBuilder(cardBuffer, { name: "world_boss.png" }));
+        files.push(
+          new AttachmentBuilder(cardBuffer, { name: "world_boss.png" }),
+        );
       } catch (err) {
         // Fallback jika canvas gagal render
       }
@@ -110,10 +131,19 @@ module.exports = {
             });
           }
 
-          const leaderboard = Object.values(freshBoss.damageLeaderboard || {}).sort((a, b) => b.totalDamage - a.totalDamage);
+          const leaderboard = Object.values(
+            freshBoss.damageLeaderboard || {},
+          ).sort((a, b) => b.totalDamage - a.totalDamage);
           const top10 = leaderboard.slice(0, 10);
           const lines = top10.map((p, idx) => {
-            const medal = idx === 0 ? (ui.getEmoji("badge_gold") || "🥇") : idx === 1 ? (ui.getEmoji("badge_silver") || "🥈") : idx === 2 ? (ui.getEmoji("badge_bronze") || "🥉") : `\`#${idx + 1}\``;
+            const medal =
+              idx === 0
+                ? ui.getEmoji("badge_gold") || "🥇"
+                : idx === 1
+                  ? ui.getEmoji("badge_silver") || "🥈"
+                  : idx === 2
+                    ? ui.getEmoji("badge_bronze") || "🥉"
+                    : `\`#${idx + 1}\``;
             return `${medal} **${p.username}**: \`${p.totalDamage.toLocaleString("id-ID")}\` DMG (${p.hits}x hit)`;
           });
 
@@ -121,7 +151,10 @@ module.exports = {
             ...buildContainerV2({
               accentColorHex: "#F1C40F",
               title: `${ui.getEmoji("trophy") || "🏆"} Peringkat Kontribusi Raid, ${freshBoss.name}`,
-              description: lines.length > 0 ? lines.join("\n") : "Belum ada pemain yang menyerang boss ini!",
+              description:
+                lines.length > 0
+                  ? lines.join("\n")
+                  : "Belum ada pemain yang menyerang boss ini!",
               footerText: ui.getFooter("survival"),
             }),
             flags: MessageFlags.Ephemeral,
@@ -136,19 +169,32 @@ module.exports = {
         };
 
         const chosenAction = actionMap[btnInt.customId] || "serang";
-        const activePet = await UserPet.findOne({ where: { userId: actorId, isActive: true } });
-        const petBuffs = activePet ? petActions.getPassiveBuffs(activePet.type, activePet.evolutionStage || 1) : {};
-
-        const res = await worldBossEngine.executeRaidAction(actorId, actorUsername, chosenAction, {
-          userLevel: context?.survival?.level || 1,
-          petBuffs,
+        const activePet = await UserPet.findOne({
+          where: { userId: actorId, isActive: true },
         });
+        const petBuffs = activePet
+          ? petActions.getPassiveBuffs(
+              activePet.type,
+              activePet.evolutionStage || 1,
+            )
+          : {};
+
+        const res = await worldBossEngine.executeRaidAction(
+          actorId,
+          actorUsername,
+          chosenAction,
+          {
+            userLevel: context?.survival?.level || 1,
+            petBuffs,
+          },
+        );
 
         if (!res.success) {
           return btnInt.reply({
             ...buildErrorContainerV2({
               title: "Aksi Gagal",
-              description: "World Boss telah selesai atau waktu raid telah habis!",
+              description:
+                "World Boss telah selesai atau waktu raid telah habis!",
               footerText: ui.getFooter("survival"),
             }),
             flags: MessageFlags.Ephemeral,
@@ -173,7 +219,9 @@ module.exports = {
         return btnInt.reply({
           ...buildContainerV2({
             accentColorHex: res.isDefeated ? "#22C55E" : "#9900EF",
-            title: res.isDefeated ? `${ui.getEmoji("trophy") || "🏆"} World Boss Ditaklukkan!` : `${ui.getEmoji("battle") || "⚔️"} Aksi Raid Berhasil!`,
+            title: res.isDefeated
+              ? `${ui.getEmoji("trophy") || "🏆"} World Boss Ditaklukkan!`
+              : `${ui.getEmoji("battle") || "⚔️"} Aksi Raid Berhasil!`,
             description: desc.join("\n"),
             footerText: ui.getFooter("survival"),
           }),
@@ -185,19 +233,32 @@ module.exports = {
     }
 
     if (["serang", "shield", "heal", "buff"].includes(action)) {
-      const activePet = await UserPet.findOne({ where: { userId, isActive: true } });
-      const petBuffs = activePet ? petActions.getPassiveBuffs(activePet.type, activePet.evolutionStage || 1) : {};
-
-      const result = await worldBossEngine.executeRaidAction(userId, interaction.user.username, action, {
-        userLevel: context?.survival?.level || 1,
-        petBuffs,
+      const activePet = await UserPet.findOne({
+        where: { userId, isActive: true },
       });
+      const petBuffs = activePet
+        ? petActions.getPassiveBuffs(
+            activePet.type,
+            activePet.evolutionStage || 1,
+          )
+        : {};
+
+      const result = await worldBossEngine.executeRaidAction(
+        userId,
+        interaction.user.username,
+        action,
+        {
+          userLevel: context?.survival?.level || 1,
+          petBuffs,
+        },
+      );
 
       if (!result.success) {
         return interaction.reply({
           ...buildErrorContainerV2({
             title: "Tidak Ada Boss Aktif",
-            description: "Saat ini belum ada World Boss yang muncul. Tunggu jadwal raid hari Minggu pukul 15:00 WIB!",
+            description:
+              "Saat ini belum ada World Boss yang muncul. Tunggu jadwal raid hari Minggu pukul 15:00 WIB!",
             footerText: ui.getFooter("survival"),
           }),
           flags: MessageFlags.Ephemeral,
@@ -221,7 +282,9 @@ module.exports = {
 
       const payload = buildContainerV2({
         accentColorHex: result.isDefeated ? "#22C55E" : "#E74C3C",
-        title: result.isDefeated ? `${ui.getEmoji("trophy") || "🏆"} World Boss Telah Kalah!` : `${ui.getEmoji("battle") || "⚔️"} Aksi Raid Berhasil!`,
+        title: result.isDefeated
+          ? `${ui.getEmoji("trophy") || "🏆"} World Boss Telah Kalah!`
+          : `${ui.getEmoji("battle") || "⚔️"} Aksi Raid Berhasil!`,
         description: desc.join("\n"),
         footerText: ui.getFooter("survival"),
       });
@@ -242,18 +305,30 @@ module.exports = {
         });
       }
 
-      const leaderboard = Object.values(boss.damageLeaderboard || {}).sort((a, b) => b.totalDamage - a.totalDamage);
+      const leaderboard = Object.values(boss.damageLeaderboard || {}).sort(
+        (a, b) => b.totalDamage - a.totalDamage,
+      );
       const top10 = leaderboard.slice(0, 10);
 
       const lines = top10.map((p, idx) => {
-        const medal = idx === 0 ? (ui.getEmoji("badge_gold") || "🥇") : idx === 1 ? (ui.getEmoji("badge_silver") || "🥈") : idx === 2 ? (ui.getEmoji("badge_bronze") || "🥉") : `\`#${idx + 1}\``;
+        const medal =
+          idx === 0
+            ? ui.getEmoji("badge_gold") || "🥇"
+            : idx === 1
+              ? ui.getEmoji("badge_silver") || "🥈"
+              : idx === 2
+                ? ui.getEmoji("badge_bronze") || "🥉"
+                : `\`#${idx + 1}\``;
         return `${medal} **${p.username}**: \`${p.totalDamage.toLocaleString("id-ID")}\` DMG (${p.hits}x hit)`;
       });
 
       const payload = buildContainerV2({
         accentColorHex: "#F1C40F",
         title: `${ui.getEmoji("trophy") || "🏆"} Peringkat Kontribusi Raid, ${boss.name}`,
-        description: lines.length > 0 ? lines.join("\n") : "Belum ada pemain yang menyerang boss ini!",
+        description:
+          lines.length > 0
+            ? lines.join("\n")
+            : "Belum ada pemain yang menyerang boss ini!",
         footerText: ui.getFooter("survival"),
       });
 

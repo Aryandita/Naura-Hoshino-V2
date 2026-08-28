@@ -23,7 +23,11 @@ async function fetchFromJikan(query) {
     { timeout: 5000 },
   );
 
-  if (!response.data || !response.data.data || response.data.data.length === 0) {
+  if (
+    !response.data ||
+    !response.data.data ||
+    response.data.data.length === 0
+  ) {
     return null;
   }
 
@@ -31,8 +35,13 @@ async function fetchFromJikan(query) {
     title: item.title_english || item.title,
     titleJapanese: item.title_japanese || "",
     synopsis: item.synopsis || "Tidak ada sinopsis.",
-    genres: item.genres && item.genres.length > 0 ? item.genres.map((g) => g.name).join(", ") : "N/A",
-    score: item.score ? `${ui.getEmoji("star") || "⭐"} **${item.score}** / 10` : "N/A",
+    genres:
+      item.genres && item.genres.length > 0
+        ? item.genres.map((g) => g.name).join(", ")
+        : "N/A",
+    score: item.score
+      ? `${ui.getEmoji("star") || "⭐"} **${item.score}** / 10`
+      : "N/A",
     type: item.type || "N/A",
     episodes: item.episodes ? `${item.episodes} Ep` : "Unknown",
     status: item.status || "N/A",
@@ -75,7 +84,10 @@ async function fetchFromAniList(query) {
       variables: { search: query },
     },
     {
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
       timeout: 5000,
     },
   );
@@ -84,14 +96,22 @@ async function fetchFromAniList(query) {
   if (!mediaList || mediaList.length === 0) return null;
 
   return mediaList.map((item) => {
-    const rawSynopsis = (item.description || "Tidak ada sinopsis.").replace(/<[^>]*>?/gm, "");
-    const scoreVal = item.averageScore ? (item.averageScore / 10).toFixed(1) : null;
+    const rawSynopsis = (item.description || "Tidak ada sinopsis.").replace(
+      /<[^>]*>?/gm,
+      "",
+    );
+    const scoreVal = item.averageScore
+      ? (item.averageScore / 10).toFixed(1)
+      : null;
     return {
       title: item.title.english || item.title.romaji,
       titleJapanese: item.title.native || "",
       synopsis: rawSynopsis,
-      genres: item.genres && item.genres.length > 0 ? item.genres.join(", ") : "N/A",
-      score: scoreVal ? `${ui.getEmoji("star") || "⭐"} **${scoreVal}** / 10` : "N/A",
+      genres:
+        item.genres && item.genres.length > 0 ? item.genres.join(", ") : "N/A",
+      score: scoreVal
+        ? `${ui.getEmoji("star") || "⭐"} **${scoreVal}** / 10`
+        : "N/A",
       type: item.format || "ANIME",
       episodes: item.episodes ? `${item.episodes} Ep` : "Unknown",
       status: item.status ? item.status.replace("_", " ") : "N/A",
@@ -116,13 +136,17 @@ async function fetchFromKitsu(query) {
 
   return data.map((item) => {
     const attr = item.attributes;
-    const scoreVal = attr.averageRating ? (parseFloat(attr.averageRating) / 10).toFixed(1) : null;
+    const scoreVal = attr.averageRating
+      ? (parseFloat(attr.averageRating) / 10).toFixed(1)
+      : null;
     return {
       title: attr.titles?.en || attr.titles?.en_jp || attr.canonicalTitle,
       titleJapanese: attr.titles?.ja_jp || "",
       synopsis: attr.synopsis || "Tidak ada sinopsis.",
       genres: "Anime",
-      score: scoreVal ? `${ui.getEmoji("star") || "⭐"} **${scoreVal}** / 10` : "N/A",
+      score: scoreVal
+        ? `${ui.getEmoji("star") || "⭐"} **${scoreVal}** / 10`
+        : "N/A",
       type: (attr.subtype || "TV").toUpperCase(),
       episodes: attr.episodeCount ? `${attr.episodeCount} Ep` : "Unknown",
       status: (attr.status || "N/A").toUpperCase(),
@@ -141,14 +165,18 @@ async function searchAnimeWaterfall(query) {
     const jikanResults = await fetchFromJikan(query);
     if (jikanResults && jikanResults.length > 0) return jikanResults;
   } catch (err) {
-    logger.warn(`[Anime Search] Jikan API error (${err.message}), beralih ke AniList...`);
+    logger.warn(
+      `[Anime Search] Jikan API error (${err.message}), beralih ke AniList...`,
+    );
   }
 
   try {
     const aniListResults = await fetchFromAniList(query);
     if (aniListResults && aniListResults.length > 0) return aniListResults;
   } catch (err) {
-    logger.warn(`[Anime Search] AniList API error (${err.message}), beralih ke Kitsu...`);
+    logger.warn(
+      `[Anime Search] AniList API error (${err.message}), beralih ke Kitsu...`,
+    );
   }
 
   try {
@@ -227,8 +255,13 @@ module.exports = {
 
       const buildPayload = (index, disabledButtons = false) => {
         const anime = results[index];
-        const japaneseTitle = anime.titleJapanese ? `\n*${anime.titleJapanese}*` : "";
-        const cleanSynopsis = anime.synopsis.length > 800 ? `${anime.synopsis.substring(0, 797)}...` : anime.synopsis;
+        const japaneseTitle = anime.titleJapanese
+          ? `\n*${anime.titleJapanese}*`
+          : "";
+        const cleanSynopsis =
+          anime.synopsis.length > 800
+            ? `${anime.synopsis.substring(0, 797)}...`
+            : anime.synopsis;
 
         const fields = [
           {

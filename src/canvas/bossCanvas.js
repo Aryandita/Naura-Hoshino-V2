@@ -27,7 +27,10 @@ async function drawBossCard(bossData) {
     const phase = bossData.phase || 1;
     const shieldHp = Number(bossData.shieldHp || 0);
     const maxShieldHp = Number(bossData.maxShieldHp || maxHp * 0.25);
-    const shieldPercent = maxShieldHp > 0 ? Math.min(100, Math.max(0, (shieldHp / maxShieldHp) * 100)) : 0;
+    const shieldPercent =
+      maxShieldHp > 0
+        ? Math.min(100, Math.max(0, (shieldHp / maxShieldHp) * 100))
+        : 0;
 
     // 1. Background Panel (Cyber Dark Glassmorphism)
     ctx.fillStyle = "#0B0C10";
@@ -62,13 +65,19 @@ async function drawBossCard(bossData) {
     ctx.fillText((bossData.title || "ANCIENT CALAMITY").toUpperCase(), 40, 50);
 
     // Badges (Top Right)
-    const phaseBadge = phase === 3 ? "⚡ ENRAGED" : phase === 2 ? "🛡️ SHIELDED" : "⚔️ NORMAL";
-    const phaseColor = phase === 3 ? "#EF4444" : phase === 2 ? "#38BDF8" : "#22C55E";
+    const phaseBadge =
+      phase === 3 ? "⚡ ENRAGED" : phase === 2 ? "🛡️ SHIELDED" : "⚔️ NORMAL";
+    const phaseColor =
+      phase === 3 ? "#EF4444" : phase === 2 ? "#38BDF8" : "#22C55E";
 
     ctx.font = 'bold 12px "Orbitron", "EmojiFont"';
     ctx.fillStyle = phaseColor;
     ctx.textAlign = "right";
-    ctx.fillText(`${phaseBadge}  |  ELEMENT: ${bossData.element || "DARK"}`, width - 40, 50);
+    ctx.fillText(
+      `${phaseBadge}  |  ELEMENT: ${bossData.element || "DARK"}`,
+      width - 40,
+      50,
+    );
 
     // Boss Name
     ctx.font = 'bold 30px "MontserratBold", "EmojiFont"';
@@ -132,7 +141,11 @@ async function drawBossCard(bossData) {
       ctx.font = '10px "Orbitron", "EmojiFont"';
       ctx.fillStyle = "#E0F2FE";
       ctx.textAlign = "left";
-      ctx.fillText(`CYBER SHIELD: ${shieldHp.toLocaleString("id-ID")} / ${maxShieldHp.toLocaleString("id-ID")}`, barX + 5, sBarY + 11);
+      ctx.fillText(
+        `CYBER SHIELD: ${shieldHp.toLocaleString("id-ID")} / ${maxShieldHp.toLocaleString("id-ID")}`,
+        barX + 5,
+        sBarY + 11,
+      );
     }
 
     // 5. Leaderboard / Raid Overview Split Cards (Bottom Area)
@@ -169,7 +182,11 @@ async function drawBossCard(bossData) {
     const pool = bossData.rewardsPool || { starFragments: 5000, coupons: 30 };
     ctx.font = 'bold 12px "Orbitron", "EmojiFont"';
     ctx.fillStyle = "#FFD700";
-    ctx.fillText(`💎 Pool: ${Number(pool.starFragments || 5000).toLocaleString("id-ID")} ⭐ | ${pool.coupons || 30} 🎟️`, 55, cardY + 190);
+    ctx.fillText(
+      `💎 Pool: ${Number(pool.starFragments || 5000).toLocaleString("id-ID")} ⭐ | ${pool.coupons || 30} 🎟️`,
+      55,
+      cardY + 190,
+    );
 
     // Card Right: Top 3 MVP Raid Damage Contributors
     ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
@@ -183,13 +200,19 @@ async function drawBossCard(bossData) {
     ctx.fillStyle = "#FFD700";
     ctx.fillText("🏆 TOP RAID CONTRIBUTORS", 40 + cardW + 35, cardY + 30);
 
-    const leaderboard = Object.values(bossData.damageLeaderboard || {}).sort((a, b) => b.totalDamage - a.totalDamage);
+    const leaderboard = Object.values(bossData.damageLeaderboard || {}).sort(
+      (a, b) => b.totalDamage - a.totalDamage,
+    );
     const top3 = leaderboard.slice(0, 3);
 
     if (top3.length === 0) {
       ctx.font = '13px "Outfit", "EmojiFont"';
       ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-      ctx.fillText("Belum ada petualang yang menyerang!", 40 + cardW + 35, cardY + 80);
+      ctx.fillText(
+        "Belum ada petualang yang menyerang!",
+        40 + cardW + 35,
+        cardY + 80,
+      );
     } else {
       top3.forEach((p, idx) => {
         const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉";
@@ -202,7 +225,11 @@ async function drawBossCard(bossData) {
         ctx.font = 'bold 12px "Orbitron", "EmojiFont"';
         ctx.fillStyle = "#93C5FD";
         ctx.textAlign = "right";
-        ctx.fillText(`${Number(p.totalDamage).toLocaleString("id-ID")} DMG`, width - 55, entryY);
+        ctx.fillText(
+          `${Number(p.totalDamage).toLocaleString("id-ID")} DMG`,
+          width - 55,
+          entryY,
+        );
         ctx.textAlign = "left";
       });
     }

@@ -7,7 +7,10 @@ const {
   ButtonStyle,
   MessageFlags,
 } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
 const mysteryEngine = require("../../src/ai/mysteryEngine");
 
@@ -23,7 +26,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("clue")
-        .setDescription("Buka petunjuk forensik berikutnya dari tempat kejadian"),
+        .setDescription(
+          "Buka petunjuk forensik berikutnya dari tempat kejadian",
+        ),
     )
     .addSubcommand((sub) =>
       sub
@@ -35,7 +40,10 @@ module.exports = {
             .setDescription("ID Tersangka yang ingin diinterogasi")
             .addChoices(
               { name: "Dr. Ren (Asisten Peneliti)", value: "dr_ren" },
-              { name: "Klaus (Kepala Keamanan Cyber)", value: "security_klaus" },
+              {
+                name: "Klaus (Kepala Keamanan Cyber)",
+                value: "security_klaus",
+              },
               { name: "Chloe (Spesialis Enkripsi)", value: "hacker_chloe" },
             )
             .setRequired(true),
@@ -50,14 +58,19 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("accuse")
-        .setDescription("Ajukan tuduhan vonis pelaku utama di ruang sidang (Trial)")
+        .setDescription(
+          "Ajukan tuduhan vonis pelaku utama di ruang sidang (Trial)",
+        )
         .addStringOption((opt) =>
           opt
             .setName("tersangka")
             .setDescription("Pilih siapa pelaku pembunuhan sebenarnya")
             .addChoices(
               { name: "Dr. Ren (Asisten Peneliti)", value: "dr_ren" },
-              { name: "Klaus (Kepala Keamanan Cyber)", value: "security_klaus" },
+              {
+                name: "Klaus (Kepala Keamanan Cyber)",
+                value: "security_klaus",
+              },
               { name: "Chloe (Spesialis Enkripsi)", value: "hacker_chloe" },
             )
             .setRequired(true),
@@ -66,13 +79,16 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("status")
-        .setDescription("Lihat status penyelidikan dan daftar bukti yang sudah ditemukan"),
+        .setDescription(
+          "Lihat status penyelidikan dan daftar bukti yang sudah ditemukan",
+        ),
     ),
 
   async execute(interaction) {
     if (!interaction.guild) {
       return interaction.reply({
-        content: "❌ Command ini hanya dapat digunakan di dalam server Discord.",
+        content:
+          "❌ Command ini hanya dapat digunakan di dalam server Discord.",
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -85,10 +101,15 @@ module.exports = {
     // 1. START CASE
     if (subcommand === "start") {
       await interaction.deferReply();
-      const session = await mysteryEngine.createGameSession(guildId, userId, [interaction.user]);
+      const session = await mysteryEngine.createGameSession(guildId, userId, [
+        interaction.user,
+      ]);
 
       const suspectsList = session.scenario.suspects
-        .map((s, idx) => `**${idx + 1}. ${s.name}**\n- *Motif:* ${s.motive}\n- *Alibi:* "${s.alibi}"`)
+        .map(
+          (s, idx) =>
+            `**${idx + 1}. ${s.name}**\n- *Motif:* ${s.motive}\n- *Alibi:* "${s.alibi}"`,
+        )
         .join("\n\n");
 
       const buttonsRow = new ActionRowBuilder().addComponents(
@@ -132,8 +153,12 @@ module.exports = {
 
       if (!res.success) {
         let msg = "Gagal membuka petunjuk.";
-        if (res.reason === "NO_ACTIVE_INVESTIGATION") msg = "Tidak ada kasus aktif di server ini! Mulai dengan `/mystery start`.";
-        if (res.reason === "ALL_CLUES_REVEALED") msg = "Seluruh petunjuk forensik di TKP sudah terbuka! Saatnya sidang `/mystery accuse`.";
+        if (res.reason === "NO_ACTIVE_INVESTIGATION")
+          msg =
+            "Tidak ada kasus aktif di server ini! Mulai dengan `/mystery start`.";
+        if (res.reason === "ALL_CLUES_REVEALED")
+          msg =
+            "Seluruh petunjuk forensik di TKP sudah terbuka! Saatnya sidang `/mystery accuse`.";
 
         return interaction.editReply({
           ...buildErrorContainerV2({
@@ -167,13 +192,19 @@ module.exports = {
       const suspectId = interaction.options.getString("tersangka");
       const question = interaction.options.getString("pertanyaan");
 
-      const res = await mysteryEngine.interrogateSuspect(guildId, suspectId, question, username);
+      const res = await mysteryEngine.interrogateSuspect(
+        guildId,
+        suspectId,
+        question,
+        username,
+      );
 
       if (!res.success) {
         return interaction.editReply({
           ...buildErrorContainerV2({
             title: "Interogasi Gagal",
-            description: "Tidak ada penyelidikan aktif atau tersangka tidak valid! Mulai dengan `/mystery start`.",
+            description:
+              "Tidak ada penyelidikan aktif atau tersangka tidak valid! Mulai dengan `/mystery start`.",
             footerText: ui.getFooter("utility"),
           }),
         });
@@ -200,7 +231,11 @@ module.exports = {
     if (subcommand === "accuse") {
       await interaction.deferReply();
       const accusedId = interaction.options.getString("tersangka");
-      const res = await mysteryEngine.submitAccusation(guildId, userId, accusedId);
+      const res = await mysteryEngine.submitAccusation(
+        guildId,
+        userId,
+        accusedId,
+      );
 
       if (!res.success) {
         return interaction.editReply({
@@ -259,7 +294,8 @@ module.exports = {
         return interaction.editReply({
           ...buildErrorContainerV2({
             title: "Tidak Ada Kasus",
-            description: "Belum ada kasus aktif di server ini. Gunakan `/mystery start` untuk memulai.",
+            description:
+              "Belum ada kasus aktif di server ini. Gunakan `/mystery start` untuk memulai.",
             footerText: ui.getFooter("utility"),
           }),
         });

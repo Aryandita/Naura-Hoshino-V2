@@ -75,16 +75,24 @@ module.exports = async (interaction, client) => {
             // Bersihkan track yang sudah dipilih dari rekomendasi
             if (Array.isArray(player.recommendedTracks)) {
               player.recommendedTracks = player.recommendedTracks.filter(
-                (t) => t.info?.uri !== trackUri && t.info?.identifier !== addedTrack.info?.identifier,
+                (t) =>
+                  t.info?.uri !== trackUri &&
+                  t.info?.identifier !== addedTrack.info?.identifier,
               );
             }
             if (Array.isArray(player.autoplayQueue)) {
               player.autoplayQueue = player.autoplayQueue.filter(
-                (t) => t.info?.uri !== trackUri && t.info?.identifier !== addedTrack.info?.identifier,
+                (t) =>
+                  t.info?.uri !== trackUri &&
+                  t.info?.identifier !== addedTrack.info?.identifier,
               );
             }
-            if (player.prefetchedAutoplayTrack?.info?.identifier === addedTrack.info?.identifier) {
-              player.prefetchedAutoplayTrack = player.autoplayQueue?.shift() || null;
+            if (
+              player.prefetchedAutoplayTrack?.info?.identifier ===
+              addedTrack.info?.identifier
+            ) {
+              player.prefetchedAutoplayTrack =
+                player.autoplayQueue?.shift() || null;
             }
 
             // Perbarui panel Now Playing
@@ -134,7 +142,7 @@ module.exports = async (interaction, client) => {
             buildErrorContainerV2({
               description: `🛡️ | Hanya peminta lagu saat ini atau Staff (DJ) yang diizinkan.`,
               footerText: ui.getFooter("music"),
-            })
+            }),
           );
         }
 
@@ -154,12 +162,12 @@ module.exports = async (interaction, client) => {
             profile.premiumUntil <= new Date()
           ) {
             return interaction.editReply(
-            buildErrorContainerV2({
-              title: `${ui.getEmoji("vip") || "💎"} Fitur V.I.P Terkunci`,
-              description: `❌ | Filter **${filterType.toUpperCase()}** adalah fitur eksklusif Premium! Gunakan \`/premium\` untuk berlangganan.`,
-              footerText: ui.getFooter("music"),
-            })
-          );
+              buildErrorContainerV2({
+                title: `${ui.getEmoji("vip") || "💎"} Fitur V.I.P Terkunci`,
+                description: `❌ | Filter **${filterType.toUpperCase()}** adalah fitur eksklusif Premium! Gunakan \`/premium\` untuk berlangganan.`,
+                footerText: ui.getFooter("music"),
+              }),
+            );
           }
         }
 
@@ -169,7 +177,7 @@ module.exports = async (interaction, client) => {
           buildContainerV2({
             description: `${getEmoji("filter")} | Filter DSP Audio diubah ke: **${player.currentFilterName}**.`,
             footerText: ui.getFooter("music"),
-          })
+          }),
         );
     }
     return;
@@ -217,7 +225,7 @@ module.exports = async (interaction, client) => {
             buildErrorContainerV2({
               description: `❌ | Tidak ada data trek valid.`,
               footerText: ui.getFooter("music"),
-            })
+            }),
           );
 
         const savedData = `${player.currentTrack.info.title} | ${player.currentTrack.info.uri}`;
@@ -319,7 +327,7 @@ module.exports = async (interaction, client) => {
         buildContainerV2({
           description: `${getEmoji("musicAutoplay")} | Autoplay AI **${player.isAutoplayMode ? "DIAKTIFKAN" : "DIMATIKAN"}**.`,
           footerText: ui.getFooter("music"),
-        })
+        }),
       );
     }
 
@@ -330,7 +338,7 @@ module.exports = async (interaction, client) => {
         buildContainerV2({
           description: `${getEmoji("musicShuffle")} | Antrean berhasil diacak (shuffled)!`,
           footerText: ui.getFooter("music"),
-        })
+        }),
       );
 
     case "music_loop":
@@ -347,7 +355,7 @@ module.exports = async (interaction, client) => {
         buildContainerV2({
           description: `${getEmoji("musicLoop")} | Looping diatur ke: **${modeNames[player.loop]}**.`,
           footerText: ui.getFooter("music"),
-        })
+        }),
       );
 
     case "music_247": {
@@ -407,7 +415,7 @@ module.exports = async (interaction, client) => {
         buildContainerV2({
           description: `${getEmoji("music247")} | Mode Siaga 24/7 **${player.is247 ? "DIAKTIFKAN" : "DIMATIKAN"}**.`,
           footerText: ui.getFooter("music"),
-        })
+        }),
       );
     }
 
@@ -418,7 +426,7 @@ module.exports = async (interaction, client) => {
         buildContainerV2({
           description: `${getEmoji("musicVolDown")} | Volume diturunkan ke **${player.volume}%**.`,
           footerText: ui.getFooter("music"),
-        })
+        }),
       );
 
     case "music_volup":
@@ -428,7 +436,7 @@ module.exports = async (interaction, client) => {
         buildContainerV2({
           description: `${getEmoji("musicVolUp")} | Volume dinaikkan ke **${player.volume}%**.`,
           footerText: ui.getFooter("music"),
-        })
+        }),
       );
 
     case "music_pause":
@@ -438,34 +446,41 @@ module.exports = async (interaction, client) => {
         buildContainerV2({
           description: `${getEmoji("musicPlayPause")} | Transmisi audio **${player.isPaused ? "DIJEDA" : "DILANJUTKAN"}**.`,
           footerText: ui.getFooter("music"),
-        })
+        }),
       );
 
     case "music_skip": {
       const voiceChannel = interaction.member?.voice?.channel;
-      const listeners = voiceChannel ? voiceChannel.members.filter((m) => !m.user.bot).size : 1;
-      
+      const listeners = voiceChannel
+        ? voiceChannel.members.filter((m) => !m.user.bot).size
+        : 1;
+
       player.skipVotes = player.skipVotes || new Set();
       player.skipVotes.add(interaction.user.id);
-      
+
       const requiredVotes = Math.max(1, Math.ceil(listeners / 2));
-      const isRequester = player.currentTrack?.info?.requester?.id === interaction.user.id;
-      
-      if (listeners <= 1 || isRequester || player.skipVotes.size >= requiredVotes) {
+      const isRequester =
+        player.currentTrack?.info?.requester?.id === interaction.user.id;
+
+      if (
+        listeners <= 1 ||
+        isRequester ||
+        player.skipVotes.size >= requiredVotes
+      ) {
         player.skipVotes.clear();
         safeStopTrack(player);
         return interaction.editReply(
           buildContainerV2({
             description: `${getEmoji("musicSkip")} | Melewati trek saat ini. Bersiap memutar selanjutnya...`,
             footerText: ui.getFooter("music"),
-          })
+          }),
         );
       } else {
         return interaction.editReply(
           buildContainerV2({
             description: `${getEmoji("musicSkip")} | Vote skip dicatat (**${player.skipVotes.size}/${requiredVotes}** suara dari pendengar).`,
             footerText: ui.getFooter("music"),
-          })
+          }),
         );
       }
     }
@@ -481,7 +496,7 @@ module.exports = async (interaction, client) => {
           buildContainerV2({
             description: `${getEmoji("music247")} | Musik dihentikan. Mode 24/7 aktif (Siaga Pasif 0kbps).`,
             footerText: ui.getFooter("music"),
-          })
+          }),
         );
       } else {
         player.is247 = false;
@@ -490,7 +505,7 @@ module.exports = async (interaction, client) => {
           buildErrorContainerV2({
             description: `${getEmoji("musicStop")} | Transmisi dihentikan. Naura pamit dari Voice Channel.`,
             footerText: ui.getFooter("music"),
-          })
+          }),
         );
       }
     }

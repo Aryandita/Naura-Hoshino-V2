@@ -29,7 +29,10 @@ class KnowledgeBase {
         const sentences = trimmed.split(/(?<=[.!?])\s+/);
         let current = "";
         for (const sentence of sentences) {
-          if ((current + " " + sentence).length > chunkSize && current.length > 0) {
+          if (
+            (current + " " + sentence).length > chunkSize &&
+            current.length > 0
+          ) {
             chunks.push(current.trim());
             current = sentence;
           } else {
@@ -59,7 +62,8 @@ class KnowledgeBase {
       let currentData = [];
       const existing = await redisManager.getCache(key);
       if (existing) {
-        currentData = typeof existing === "string" ? JSON.parse(existing) : existing;
+        currentData =
+          typeof existing === "string" ? JSON.parse(existing) : existing;
       }
 
       const newEntries = chunks.map((chunk, idx) => ({
@@ -76,7 +80,10 @@ class KnowledgeBase {
       await redisManager.setCache(key, JSON.stringify(trimmed), 86400 * 30); // 30 days TTL
       return newEntries.length;
     } catch (e) {
-      logger.error(`[KnowledgeBase] Gagal menambahkan knowledge untuk guild ${guildId}:`, e);
+      logger.error(
+        `[KnowledgeBase] Gagal menambahkan knowledge untuk guild ${guildId}:`,
+        e,
+      );
       return 0;
     }
   }
@@ -103,7 +110,8 @@ class KnowledgeBase {
       const existing = await redisManager.getCache(key);
       if (!existing) return [];
 
-      const data = typeof existing === "string" ? JSON.parse(existing) : existing;
+      const data =
+        typeof existing === "string" ? JSON.parse(existing) : existing;
       if (!Array.isArray(data) || data.length === 0) return [];
 
       const queryKeywords = this._extractKeywords(query);
@@ -125,7 +133,10 @@ class KnowledgeBase {
         .sort((a, b) => b.score - a.score)
         .slice(0, topK);
     } catch (e) {
-      logger.error(`[KnowledgeBase] Gagal mencari knowledge untuk guild ${guildId}:`, e);
+      logger.error(
+        `[KnowledgeBase] Gagal mencari knowledge untuk guild ${guildId}:`,
+        e,
+      );
       return [];
     }
   }

@@ -85,19 +85,27 @@ function buildGoalGradientBar({
   lang = "id",
 }) {
   const safeTarget = Math.max(1, target);
-  const adjustedCurrent = Math.min(safeTarget, Math.max(0, current + headStart));
+  const adjustedCurrent = Math.min(
+    safeTarget,
+    Math.max(0, current + headStart),
+  );
   const rawRatio = adjustedCurrent / safeTarget;
   const percent = Math.min(100, Math.round(rawRatio * 100));
 
-  const filledCount = Math.min(length, Math.max(0, Math.round(rawRatio * length)));
+  const filledCount = Math.min(
+    length,
+    Math.max(0, Math.round(rawRatio * length)),
+  );
   const emptyCount = Math.max(0, length - filledCount);
 
   // Unicode text progress bar (aman untuk codeblocks monospace)
   const unicodeBar = `${fillChar.repeat(filledCount)}${emptyChar.repeat(emptyCount)}`;
 
   // Custom Discord emojis progress bar dari ui.js
-  const emojiFilled = ui.getEmoji("bar_filled") || "<:AfterDot:1488166236004159509>";
-  const emojiEmpty = ui.getEmoji("bar_empty") || "<:BeforeDot:1488166108081950882>";
+  const emojiFilled =
+    ui.getEmoji("bar_filled") || "<:AfterDot:1488166236004159509>";
+  const emojiEmpty =
+    ui.getEmoji("bar_empty") || "<:BeforeDot:1488166108081950882>";
   const customBar = `${emojiFilled.repeat(filledCount)}${emojiEmpty.repeat(emptyCount)}`;
 
   const bar = useCustomEmojis ? customBar : unicodeBar;
@@ -196,7 +204,10 @@ function buildPriceAnchor({
  * @param {string} [options.lang="id"]
  * @returns {string}
  */
-function getPersonalityResponse(type, { user = null, context = {}, lang = "id" } = {}) {
+function getPersonalityResponse(
+  type,
+  { user = null, context = {}, lang = "id" } = {},
+) {
   const name = resolveUserName(user);
   const isEn = lang === "en";
 
@@ -246,7 +257,9 @@ function getPersonalityResponse(type, { user = null, context = {}, lang = "id" }
     }
 
     default:
-      return isEn ? `Always happy to help, ${name}! ${eNaura}` : `Naura selalu senang membantumu, Kak ${name}! ${eNaura}`;
+      return isEn
+        ? `Always happy to help, ${name}! ${eNaura}`
+        : `Naura selalu senang membantumu, Kak ${name}! ${eNaura}`;
   }
 }
 
@@ -294,7 +307,9 @@ function buildTimelineStepTracker({
 
   const timeline = renderedSteps.join(` ${emojiArrow} `);
   const isComplete = currentStepIndex >= steps.length;
-  const currentStep = isComplete ? steps[steps.length - 1] : steps[currentStepIndex] || steps[0];
+  const currentStep = isComplete
+    ? steps[steps.length - 1]
+    : steps[currentStepIndex] || steps[0];
 
   let message = "";
   if (isComplete) {
@@ -380,16 +395,18 @@ function buildAdaptiveDensityView({
   const veteranStatus = Boolean(isVeteran || level > 5);
 
   const modeBadge = veteranStatus
-    ? (ui.getEmoji("mode_veteran") || "👑") + (isEn ? " Veteran Mode" : " Mode Veteran")
-    : (ui.getEmoji("mode_newbie") || "🌱") + (isEn ? " Newbie Guide" : " Panduan Pemula");
+    ? (ui.getEmoji("mode_veteran") || "👑") +
+      (isEn ? " Veteran Mode" : " Mode Veteran")
+    : (ui.getEmoji("mode_newbie") || "🌱") +
+      (isEn ? " Newbie Guide" : " Panduan Pemula");
 
   const focusTip = veteranStatus
-    ? (isEn
-        ? `Welcome back, ${name}! High-density stats and shortcut matrix are activated.`
-        : `Selamat kembali, Kak ${name}! Matriks statistik padat dan pintasan aksi aktif.`)
-    : (isEn
-        ? `Welcome, ${name}! Complete your initial starter quests to unlock advanced power stats.`
-        : `Halo Kak ${name}! Selesaikan quest langkah awal untuk membuka statistik lengkap.`);
+    ? isEn
+      ? `Welcome back, ${name}! High-density stats and shortcut matrix are activated.`
+      : `Selamat kembali, Kak ${name}! Matriks statistik padat dan pintasan aksi aktif.`
+    : isEn
+      ? `Welcome, ${name}! Complete your initial starter quests to unlock advanced power stats.`
+      : `Halo Kak ${name}! Selesaikan quest langkah awal untuk membuka statistik lengkap.`;
 
   return {
     isVeteran: veteranStatus,
@@ -413,7 +430,9 @@ function filterPredictiveSearch({
   maxResults = 25,
   fallbackRecommendations = [],
 }) {
-  const cleanQuery = String(query || "").trim().toLowerCase();
+  const cleanQuery = String(query || "")
+    .trim()
+    .toLowerCase();
 
   if (!cleanQuery) {
     return items.slice(0, maxResults);
@@ -465,7 +484,18 @@ function buildVisualTimeline({
   const name = resolveUserName(user);
   const isEn = lang === "en";
 
-  const numEmojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
+  const numEmojis = [
+    "1️⃣",
+    "2️⃣",
+    "3️⃣",
+    "4️⃣",
+    "5️⃣",
+    "6️⃣",
+    "7️⃣",
+    "8️⃣",
+    "9️⃣",
+    "🔟",
+  ];
   const emojiDone = ui.getEmoji("step_done") || "✅";
   const emojiActive = ui.getEmoji("step_active") || "⏳";
   const emojiArrow = " ──▶ ";
@@ -490,7 +520,9 @@ function buildVisualTimeline({
     : steps[currentStepIndex] || steps[0];
   const percent = Math.min(
     100,
-    Math.round((Math.max(0, currentStepIndex) / Math.max(1, steps.length)) * 100),
+    Math.round(
+      (Math.max(0, currentStepIndex) / Math.max(1, steps.length)) * 100,
+    ),
   );
 
   let message = "";
@@ -560,7 +592,9 @@ function buildEmptyStatePrompt({
   const templates = {
     inventory: {
       expression: "Akward",
-      title: isEn ? "Your Inventory is Empty" : "Tas & Inventarismu Masih Kosong",
+      title: isEn
+        ? "Your Inventory is Empty"
+        : "Tas & Inventarismu Masih Kosong",
       desc: isEn
         ? `Looks like you haven't stored any items yet, ${name}. Let's explore Naura's world, gather materials, or craft tools to fill your bag! ${eSparkle}`
         : `Wah, sepertinya kamu belum menyimpan barang apa pun di tasmu, Kak ${name}. Yuk jelajahi dunia Naura, kumpulkan bahan, atau tempa alat pertamamu! ${eSparkle}`,
@@ -584,7 +618,9 @@ function buildEmptyStatePrompt({
       desc: isEn
         ? `The trading lounge is peaceful right now, ${name}. Pick your duplicate anime cards and invite a friend to exchange your dream cards! ${eCard}${eSparkle}`
         : `Ruang barter masih hening nih, Kak ${name}. Pilih kartu anime koleksimu dan ajak teman untuk saling bertukar kartu impian! ${eCard}${eSparkle}`,
-      cta: isEn ? `${eCard} View Card Collection` : `${eCard} Lihat Koleksi Kartu`,
+      cta: isEn
+        ? `${eCard} View Card Collection`
+        : `${eCard} Lihat Koleksi Kartu`,
       defaultCmd: "/card collection",
       customId: "empty_cta_cards",
     },
@@ -624,7 +660,9 @@ function buildEmptyStatePrompt({
       desc: isEn
         ? `Incredible! All your daily quests are finished for today, ${name}. Take a good rest, fresh quests will refresh tomorrow morning! ${eStar}`
         : `Luar biasa! Seluruh quest harianmu sudah terselesaikan dengan sempurna hari ini, Kak ${name}. Istirahatlah sejenak, misi baru akan kembali besok pagi! ${eStar}`,
-      cta: isEn ? `${eGift} Claim Quest Rewards` : `${eGift} Periksa Quest Harian`,
+      cta: isEn
+        ? `${eGift} Claim Quest Rewards`
+        : `${eGift} Periksa Quest Harian`,
       defaultCmd: "/survival quest",
       customId: "empty_cta_quest",
     },
@@ -650,7 +688,11 @@ function buildEmptyStatePrompt({
 
   let buttonsRow = null;
   try {
-    const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+    const {
+      ActionRowBuilder,
+      ButtonBuilder,
+      ButtonStyle,
+    } = require("discord.js");
     buttonsRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(buttonId)
@@ -702,7 +744,11 @@ function buildQuickNumericChips({
   const safeCurrent = Math.max(0, Number(currentAmount) || 0);
 
   let chipDefinitions = customChips;
-  if (!chipDefinitions || !Array.isArray(chipDefinitions) || chipDefinitions.length === 0) {
+  if (
+    !chipDefinitions ||
+    !Array.isArray(chipDefinitions) ||
+    chipDefinitions.length === 0
+  ) {
     chipDefinitions = [
       { label: "10%", ratio: 0.1 },
       { label: "25%", ratio: 0.25 },
@@ -713,7 +759,11 @@ function buildQuickNumericChips({
     ];
   }
 
-  const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+  const {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+  } = require("discord.js");
   const chips = [];
   const buttons = [];
 

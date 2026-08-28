@@ -70,7 +70,7 @@ test("id dan urutan migrasi unik (ledger schema_migrations bergantung padanya)",
 
 test("splitStatements memecah multi-statement sederhana", () => {
   const result = splitStatements(
-    'ALTER TABLE a ADD COLUMN x INT; ALTER TABLE b ADD COLUMN y INT;',
+    "ALTER TABLE a ADD COLUMN x INT; ALTER TABLE b ADD COLUMN y INT;",
   );
   assert.strictEqual(result.length, 2);
   assert.match(result[0], /^ALTER TABLE a/);
@@ -88,7 +88,9 @@ test("splitStatements tidak memotong titik koma di dalam string terkutip", () =>
 });
 
 test("splitStatements memecah migrasi v33 (5 statement) dengan benar", () => {
-  const v33 = MIGRATIONS.find((m) => m.id === "v33_create_sprint20_milestone_tables");
+  const v33 = MIGRATIONS.find(
+    (m) => m.id === "v33_create_sprint20_milestone_tables",
+  );
   assert.ok(v33, "v33 harus ada");
 
   const statements = splitStatements(v33.pgSql);
@@ -97,7 +99,10 @@ test("splitStatements memecah migrasi v33 (5 statement) dengan benar", () => {
   assert.match(statements[1], /^CREATE TABLE IF NOT EXISTS "coliseum_teams"/);
   assert.match(statements[2], /^CREATE TABLE IF NOT EXISTS "guild_personas"/);
   assert.match(statements[3], /^CREATE TABLE IF NOT EXISTS "server_stocks"/);
-  assert.match(statements[4], /^CREATE TABLE IF NOT EXISTS "user_stock_holdings"/);
+  assert.match(
+    statements[4],
+    /^CREATE TABLE IF NOT EXISTS "user_stock_holdings"/,
+  );
 });
 
 test("splitStatements menangani input kosong dan trailing semicolon", () => {

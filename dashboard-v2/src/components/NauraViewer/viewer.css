@@ -4,220 +4,297 @@
  */
 
 :root {
-    --nv-primary: #FFB6C1;
-    --nv-primary-glow: rgba(255, 182, 193, 0.4);
-    --nv-bg-glass: rgba(11, 12, 16, 0.65);
-    --nv-border: rgba(255, 182, 193, 0.25);
-    --nv-zindex: 9999;
+  --nv-primary: #ffb6c1;
+  --nv-primary-glow: rgba(255, 182, 193, 0.4);
+  --nv-bg-glass: rgba(11, 12, 16, 0.65);
+  --nv-border: rgba(255, 182, 193, 0.25);
+  --nv-zindex: 9999;
 }
 
 #naura-viewer-container {
-    position: fixed;
-    right: 24px;
-    bottom: 24px;
-    z-index: var(--nv-zindex);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    pointer-events: none; /* Biar klik tembus jika klik area kosong container */
-    font-family: 'Outfit', sans-serif;
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: var(--nv-zindex);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none; /* Biar klik tembus jika klik area kosong container */
+  font-family: "Outfit", sans-serif;
 }
 
 .nv-panel {
-    position: relative;
-    background: var(--nv-bg-glass);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--nv-border);
-    border-radius: 20px;
-    box-shadow: 
-        0 10px 40px rgba(0, 0, 0, 0.6),
-        0 0 20px var(--nv-primary-glow) inset;
-    overflow: hidden;
-    pointer-events: auto; /* Tangkap klik di panel */
-    display: flex;
-    flex-direction: column;
-    transition: all 0.3s ease;
+  position: relative;
+  background: var(--nv-bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--nv-border);
+  border-radius: 20px;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.6),
+    0 0 20px var(--nv-primary-glow) inset;
+  overflow: hidden;
+  pointer-events: auto; /* Tangkap klik di panel */
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
 }
 
 /* State: Expanded */
 .nv-panel.is-expanded {
-    width: 320px;
-    height: 480px;
+  width: 320px;
+  height: 480px;
 }
 
 /* State: Minimized */
 .nv-panel.is-minimized {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    cursor: pointer;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
 .nv-panel.is-minimized:hover {
-    transform: scale(1.05);
-    box-shadow: 
-        0 10px 40px rgba(0, 0, 0, 0.6),
-        0 0 30px var(--nv-primary-glow) inset,
-        0 0 15px var(--nv-primary-glow);
+  transform: scale(1.05);
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.6),
+    0 0 30px var(--nv-primary-glow) inset,
+    0 0 15px var(--nv-primary-glow);
 }
 
 /* Canvas Container */
 .nv-canvas-wrapper {
-    flex: 1;
-    width: 100%;
-    height: 100%;
-    position: relative;
-    /* Hilangkan background agar transparan */
-    background: transparent;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  /* Hilangkan background agar transparan */
+  background: transparent;
 }
 
 #naura-viewer-canvas {
-    width: 100% !important;
-    height: 100% !important;
-    display: block;
-    outline: none;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  outline: none;
 }
 
 /* UI Overlay (Hanya tampil saat expanded) */
 .nv-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .nv-panel.is-expanded .nv-overlay {
-    opacity: 1;
+  opacity: 1;
 }
 
 /* Header & Controls */
 .nv-header {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 12px 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: linear-gradient(to bottom, rgba(11, 12, 16, 0.8) 0%, transparent 100%);
-    pointer-events: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(
+    to bottom,
+    rgba(11, 12, 16, 0.8) 0%,
+    transparent 100%
+  );
+  pointer-events: auto;
 }
 
 .nv-title {
-    font-family: 'Orbitron', sans-serif;
-    color: var(--nv-primary);
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-shadow: 0 0 10px var(--nv-primary-glow);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  font-family: "Orbitron", sans-serif;
+  color: var(--nv-primary);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px var(--nv-primary-glow);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .nv-status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #10B981;
-    box-shadow: 0 0 8px #10B981;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
 }
 
 .nv-btn {
-    background: transparent;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    padding: 4px;
-    opacity: 0.6;
-    transition: opacity 0.2s, color 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  opacity: 0.6;
+  transition:
+    opacity 0.2s,
+    color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nv-btn:hover {
-    opacity: 1;
-    color: var(--nv-primary);
+  opacity: 1;
+  color: var(--nv-primary);
 }
 
 /* Mood Badge */
 .nv-mood-badge {
-    position: absolute;
-    bottom: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 11px;
-    color: #fff;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    pointer-events: auto;
-    opacity: 0;
-    transition: opacity 0.3s, transform 0.3s;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 11px;
+  color: #fff;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  pointer-events: auto;
+  opacity: 0;
+  transition:
+    opacity 0.3s,
+    transform 0.3s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .nv-mood-badge.is-visible {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 /* Loading Screen */
 .nv-loading {
-    position: absolute;
-    inset: 0;
-    background: var(--nv-bg-glass);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: var(--nv-primary);
-    font-family: 'Orbitron', sans-serif;
-    font-size: 12px;
-    letter-spacing: 2px;
-    z-index: 10;
-    transition: opacity 0.5s ease;
+  position: absolute;
+  inset: 0;
+  background: var(--nv-bg-glass);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--nv-primary);
+  font-family: "Orbitron", sans-serif;
+  font-size: 12px;
+  letter-spacing: 2px;
+  z-index: 10;
+  transition: opacity 0.5s ease;
 }
 
 .nv-loading.is-hidden {
-    opacity: 0;
-    pointer-events: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .nv-spinner {
-    width: 40px;
-    height: 40px;
-    border: 2px solid rgba(255, 182, 193, 0.2);
-    border-top-color: var(--nv-primary);
-    border-radius: 50%;
-    animation: nv-spin 1s linear infinite;
-    margin-bottom: 16px;
-    box-shadow: 0 0 15px var(--nv-primary-glow);
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(255, 182, 193, 0.2);
+  border-top-color: var(--nv-primary);
+  border-radius: 50%;
+  animation: nv-spin 1s linear infinite;
+  margin-bottom: 16px;
+  box-shadow: 0 0 15px var(--nv-primary-glow);
 }
 
 @keyframes nv-spin {
-    to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    #naura-viewer-container {
-        right: 16px;
-        bottom: 80px; /* Di atas bottom nav */
-    }
-    
-    .nv-panel.is-expanded {
-        width: 240px;
-        height: 360px;
-    }
+  #naura-viewer-container {
+    right: 16px;
+    bottom: 80px; /* Di atas bottom nav */
+  }
+
+  .nv-panel.is-expanded {
+    width: 240px;
+    height: 360px;
+  }
+}
+
+/* 2D Fallback */
+.nv-2d-wrapper {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.nv-2d-wrapper.is-hidden {
+  display: none;
+}
+
+.nv-2d-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  transition: transform 0.3s ease;
+}
+
+.nv-panel.is-minimized .nv-2d-avatar {
+  border-radius: 50%;
+}
+
+/* Chat Bubble */
+.nv-chat-bubble {
+  position: absolute;
+  top: 50px;
+  right: 20px;
+  left: 20px;
+  background: rgba(25, 25, 30, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 182, 193, 0.4);
+  border-radius: 12px 12px 12px 12px;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow:
+    0 4px 15px rgba(0, 0, 0, 0.3),
+    0 0 15px rgba(255, 182, 193, 0.2);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(10px) scale(0.95);
+  transition:
+    opacity 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 20;
+  text-align: center;
+}
+
+.nv-chat-bubble.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.nv-chat-bubble.is-hidden {
+  display: none;
+}
+
+.nv-canvas-wrapper.is-hidden {
+  display: none !important;
 }

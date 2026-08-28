@@ -64,7 +64,10 @@ const logger = {
     broadcastLog("db", message);
   },
   debug: (message) => {
-    if (process.env.DEBUG === "true" || process.env.NODE_ENV === "development") {
+    if (
+      process.env.DEBUG === "true" ||
+      process.env.NODE_ENV === "development"
+    ) {
       console.log(`\x1b[90m 🔍 DEBUG \x1b[0m \x1b[90m${message}\x1b[0m`);
     }
   },

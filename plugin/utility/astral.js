@@ -1,8 +1,15 @@
 "use strict";
 
-const { SlashCommandBuilder, AttachmentBuilder, MessageFlags } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  AttachmentBuilder,
+  MessageFlags,
+} = require("discord.js");
 const astralService = require("../../src/services/astralService");
-const { renderOmikujiCard, renderAstralWeatherBanner } = require("../../src/canvas/astralCanvas");
+const {
+  renderOmikujiCard,
+  renderAstralWeatherBanner,
+} = require("../../src/canvas/astralCanvas");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const cacheManager = require("../../src/managers/cacheManager");
 const ui = require("../../src/config/ui");
@@ -10,33 +17,46 @@ const ui = require("../../src/config/ui");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("astral")
-    .setDescription("🌌 Masuki Hoshino Astral Sanctuary untuk ramalan bintang & cuaca kosmik server")
+    .setDescription(
+      "🌌 Masuki Hoshino Astral Sanctuary untuk ramalan bintang & cuaca kosmik server",
+    )
     .addSubcommand((sub) =>
       sub
         .setName("weather")
-        .setDescription("Lihat kondisi Cuaca Astral Server dan bonus buff aktif hari ini"),
+        .setDescription(
+          "Lihat kondisi Cuaca Astral Server dan bonus buff aktif hari ini",
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("omikuji")
-        .setDescription("Tarik Kartu Tarot Omikuji Bintang harian untuk berkah, rezeki, dan panduan"),
+        .setDescription(
+          "Tarik Kartu Tarot Omikuji Bintang harian untuk berkah, rezeki, dan panduan",
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("observe")
-        .setDescription("Gunakan Teropong Bintang untuk mengamati rasi bintang dan mengumpulkan Stardust"),
+        .setDescription(
+          "Gunakan Teropong Bintang untuk mengamati rasi bintang dan mengumpulkan Stardust",
+        ),
     ),
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
     const user = interaction.user;
-    const displayName = interaction.member?.displayName || user.displayName || user.username;
+    const displayName =
+      interaction.member?.displayName || user.displayName || user.username;
 
     if (subcommand === "weather") {
       await interaction.deferReply();
-      const weather = await astralService.getGuildAstralWeather(interaction.guildId);
+      const weather = await astralService.getGuildAstralWeather(
+        interaction.guildId,
+      );
       const bannerBuffer = await renderAstralWeatherBanner(weather);
-      const attachment = new AttachmentBuilder(bannerBuffer, { name: "astral-weather.png" });
+      const attachment = new AttachmentBuilder(bannerBuffer, {
+        name: "astral-weather.png",
+      });
 
       const buffList = Object.entries(weather.buffs || {})
         .map(([k, v]) => `• **${k}**: \`+${v}%\``)
@@ -59,7 +79,10 @@ module.exports = {
 
     if (subcommand === "omikuji") {
       await interaction.deferReply();
-      const omikujiResult = await astralService.drawDailyOmikuji(user.id, displayName);
+      const omikujiResult = await astralService.drawDailyOmikuji(
+        user.id,
+        displayName,
+      );
 
       if (!omikujiResult.canClaim) {
         const payload = buildContainerV2({
@@ -76,15 +99,25 @@ module.exports = {
 
       const omikuji = omikujiResult.result;
       const cardBuffer = await renderOmikujiCard(omikuji, user);
-      const attachment = new AttachmentBuilder(cardBuffer, { name: "tarot-omikuji.png" });
+      const attachment = new AttachmentBuilder(cardBuffer, {
+        name: "tarot-omikuji.png",
+      });
 
       // Berikan reward koin dan stamina secara atomik
       try {
         if (omikuji.tier?.rewardCoin) {
-          await cacheManager.incrementUserProfile(user.id, "economy_wallet", omikuji.tier.rewardCoin);
+          await cacheManager.incrementUserProfile(
+            user.id,
+            "economy_wallet",
+            omikuji.tier.rewardCoin,
+          );
         }
         if (omikuji.tier?.rewardStamina) {
-          await cacheManager.incrementUserSurvival(user.id, "stamina", omikuji.tier.rewardStamina);
+          await cacheManager.incrementUserSurvival(
+            user.id,
+            "stamina",
+            omikuji.tier.rewardStamina,
+          );
         }
       } catch (_) {}
 
@@ -109,7 +142,11 @@ module.exports = {
       const stardustGain = obs.constellation?.stardust || 150;
 
       try {
-        await cacheManager.incrementUserSurvival(user.id, "starFragments", stardustGain);
+        await cacheManager.incrementUserSurvival(
+          user.id,
+          "starFragments",
+          stardustGain,
+        );
       } catch (_) {}
 
       const payload = buildContainerV2({

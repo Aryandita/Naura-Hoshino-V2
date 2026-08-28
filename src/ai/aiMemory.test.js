@@ -20,7 +20,10 @@ test("AIMemory - extractAndSave nickname detection", async () => {
   redisManager.getCache = async () => ({});
 
   // User explicitly asks to be called "Ryo"
-  await AIMemory.extractAndSave("user_test_99", "Halo Naura, panggil aku Ryo ya!");
+  await AIMemory.extractAndSave(
+    "user_test_99",
+    "Halo Naura, panggil aku Ryo ya!",
+  );
 
   assert.ok(savedDoc);
   assert.equal(savedDoc.nickname, "Ryo");
@@ -41,7 +44,10 @@ test("AIMemory - extractAndSave music preference detection", async () => {
   };
   mongoManager.getAiMemory = async () => ({ musicPrefs: ["J-Pop"] });
 
-  await AIMemory.extractAndSave("user_test_music", "Aku paling suka lagu Lofi Hip Hop");
+  await AIMemory.extractAndSave(
+    "user_test_music",
+    "Aku paling suka lagu Lofi Hip Hop",
+  );
 
   assert.ok(savedDoc);
   assert.ok(savedDoc.musicPrefs.includes("Lofi Hip Hop"));

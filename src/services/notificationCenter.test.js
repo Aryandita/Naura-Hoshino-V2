@@ -23,11 +23,8 @@ describe("NotificationCenter Service", () => {
   });
 
   it("setUserPreference throws error on invalid key", async () => {
-    await assert.rejects(
-      async () => {
-        await notificationCenter.setUserPreference("123", "invalid_key", true);
-      },
-      /tidak valid/
-    );
+    await assert.rejects(async () => {
+      await notificationCenter.setUserPreference("123", "invalid_key", true);
+    }, /tidak valid/);
   });
 });

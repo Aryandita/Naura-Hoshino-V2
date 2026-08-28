@@ -14,7 +14,9 @@ const combat = require("../../../src/survival/engines/dungeonCombat");
 const render = require("../../../src/survival/engines/dungeonRender");
 const rewards = require("../../../src/survival/engines/dungeonRewards");
 const helpers = require("../../../src/survival/helpers/craftHelpers");
-const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
+const {
+  safeParseInventory,
+} = require("../../../src/survival/engines/inventoryHelper");
 const {
   DUNGEON_PASS_ID,
   DUNGEON_SPECIAL_PASS_ID,
@@ -61,7 +63,9 @@ module.exports = {
         ctaCustomId: "dungeon_cta_shop",
       });
 
-      const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+      const {
+        buildContainerV2,
+      } = require("../../../src/utils/NauraContainerBuilder");
       return interaction.editReply(
         buildContainerV2({
           accentColorHex: ui.getColor("crafting") || "#228B22",

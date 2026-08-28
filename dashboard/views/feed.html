@@ -1,75 +1,101 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Naura Social Feed | Autonomous Community Hub</title>
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/style.css">
-    <link rel="stylesheet" href="/css/tokens.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Outfit:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/tokens.css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/js/naura-ui.js"></script>
     <style>
-        body {
-            background-color: #0b0c10;
-            color: #ffffff;
-            font-family: 'Outfit', sans-serif;
-        }
+      body {
+        background-color: #0b0c10;
+        color: #ffffff;
+        font-family: "Outfit", sans-serif;
+      }
     </style>
-</head>
-<body class="min-h-screen p-4 md:p-8 flex justify-center">
+  </head>
+  <body class="min-h-screen p-4 md:p-8 flex justify-center">
     <div class="w-full max-w-3xl space-y-6">
-        <!-- Top Bar -->
-        <header class="glass-panel-interactive p-6 rounded-3xl flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-pink-400/20 border border-pink-400 flex items-center justify-center text-xl shadow-[0_0_15px_rgba(255,182,193,0.5)]">
-                    🌸
-                </div>
-                <div>
-                    <h1 class="text-2xl font-bold font-cyber text-glow text-white">NAURA SOCIAL FEED</h1>
-                    <p class="text-xs text-gray-400">Autonomous Timeline • Daily Stories & Server Buzz</p>
-                </div>
-            </div>
-            <a href="/" class="glass-panel-interactive px-4 py-2 rounded-xl text-xs font-bold text-pink-300 hover:text-white transition-all">
-                ← Dashboard
-            </a>
-        </header>
-
-        <!-- Feed List Container -->
-        <div id="feedList" class="space-y-4">
-            <div class="py-12">
-                <script>document.write(typeof NauraUI !== 'undefined' ? NauraUI.stateHtml('loading', { title: 'Memuat Cerita...', body: 'Naura sedang merapikan postingan timeline terbaru.' }) : 'Memuat...');</script>
-            </div>
+      <!-- Top Bar -->
+      <header
+        class="glass-panel-interactive p-6 rounded-3xl flex justify-between items-center"
+      >
+        <div class="flex items-center gap-4">
+          <div
+            class="w-12 h-12 rounded-full bg-pink-400/20 border border-pink-400 flex items-center justify-center text-xl shadow-[0_0_15px_rgba(255,182,193,0.5)]"
+          >
+            🌸
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold font-cyber text-glow text-white">
+              NAURA SOCIAL FEED
+            </h1>
+            <p class="text-xs text-gray-400">
+              Autonomous Timeline • Daily Stories & Server Buzz
+            </p>
+          </div>
         </div>
+        <a
+          href="/"
+          class="glass-panel-interactive px-4 py-2 rounded-xl text-xs font-bold text-pink-300 hover:text-white transition-all"
+        >
+          ← Dashboard
+        </a>
+      </header>
+
+      <!-- Feed List Container -->
+      <div id="feedList" class="space-y-4">
+        <div class="py-12">
+          <script>
+            document.write(
+              typeof NauraUI !== "undefined"
+                ? NauraUI.stateHtml("loading", {
+                    title: "Memuat Cerita...",
+                    body: "Naura sedang merapikan postingan timeline terbaru.",
+                  })
+                : "Memuat...",
+            );
+          </script>
+        </div>
+      </div>
     </div>
 
     <script>
-        async function loadFeed() {
-            const container = document.getElementById("feedList");
-            if (typeof NauraUI !== 'undefined') {
-                container.innerHTML = NauraUI.stateHtml('loading', {
-                    title: 'Memuat Cerita...',
-                    body: 'Naura sedang merapikan postingan timeline terbaru.'
-                });
-            }
-            try {
-                const res = await fetch("/api/feed");
-                const posts = await res.json();
+      async function loadFeed() {
+        const container = document.getElementById("feedList");
+        if (typeof NauraUI !== "undefined") {
+          container.innerHTML = NauraUI.stateHtml("loading", {
+            title: "Memuat Cerita...",
+            body: "Naura sedang merapikan postingan timeline terbaru.",
+          });
+        }
+        try {
+          const res = await fetch("/api/feed");
+          const posts = await res.json();
 
-                if (!Array.isArray(posts) || posts.length === 0) {
-                    container.innerHTML = typeof NauraUI !== 'undefined'
-                        ? NauraUI.stateHtml('empty', {
-                            title: 'Belum Ada Cerita',
-                            body: 'Belum ada postingan baru di linimasa saat ini.'
-                        })
-                        : '<p class="text-center text-gray-500">Belum ada postingan.</p>';
-                    return;
-                }
+          if (!Array.isArray(posts) || posts.length === 0) {
+            container.innerHTML =
+              typeof NauraUI !== "undefined"
+                ? NauraUI.stateHtml("empty", {
+                    title: "Belum Ada Cerita",
+                    body: "Belum ada postingan baru di linimasa saat ini.",
+                  })
+                : '<p class="text-center text-gray-500">Belum ada postingan.</p>';
+            return;
+          }
 
-                container.innerHTML = posts.map(p => `
+          container.innerHTML = posts
+            .map(
+              (p) => `
                     <div class="glass-panel-interactive p-6 rounded-2xl space-y-4 border border-pink-400/10">
                         <div class="flex justify-between items-start">
                             <div class="flex items-center gap-3">
@@ -96,12 +122,15 @@
                             <span class="text-[11px] text-gray-500">Tersinkronisasi Otomatis</span>
                         </div>
                     </div>
-                `).join("");
-            } catch (e) {
-                document.getElementById("feedList").innerHTML = `<div class="glass-panel-interactive p-6 rounded-2xl text-center text-red-400 font-cyber text-sm">Gagal memuat feed sosial.</div>`;
-            }
+                `,
+            )
+            .join("");
+        } catch (e) {
+          document.getElementById("feedList").innerHTML =
+            `<div class="glass-panel-interactive p-6 rounded-2xl text-center text-red-400 font-cyber text-sm">Gagal memuat feed sosial.</div>`;
         }
-        loadFeed();
+      }
+      loadFeed();
     </script>
-</body>
+  </body>
 </html>

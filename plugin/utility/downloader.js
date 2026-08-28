@@ -231,14 +231,17 @@ module.exports = {
             "bmp",
             "heic",
           ];
-          if (visual.includes(ext)) mediaGalleryRefs.push(primaryAttachmentName);
+          if (visual.includes(ext))
+            mediaGalleryRefs.push(primaryAttachmentName);
           else otherFileRefs.push(primaryAttachmentName);
         }
 
         const rows = [actionRow];
         if (resolutionPickerSource)
           rows.push(picker.buildResolutionRow(interaction.id));
-        const usableRows = rows.filter((row) => row && row.components.length > 0);
+        const usableRows = rows.filter(
+          (row) => row && row.components.length > 0,
+        );
 
         const qualityLabel = preselectedHeight
           ? ` | pilihan kamu: **${preselectedHeight}p**`

@@ -14,7 +14,10 @@ test("SupabaseManager - Instance & Functions", () => {
 test("SupabaseManager - Client Initialization & Availability", () => {
   const client = supabaseManager.getSupabaseClient();
   const available = supabaseManager.isSupabaseAvailable();
-  assert.ok(available, "Supabase client harus siap/tersedia dengan default config");
+  assert.ok(
+    available,
+    "Supabase client harus siap/tersedia dengan default config",
+  );
   assert.ok(client, "Instance Supabase client harus terbentuk");
   assert.ok(client.from, "Supabase client harus memiliki method from()");
   assert.ok(client.auth, "Supabase client harus memiliki namespace auth");

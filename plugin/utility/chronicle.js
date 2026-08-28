@@ -1,20 +1,30 @@
 "use strict";
 
-const { SlashCommandBuilder, AttachmentBuilder, MessageFlags } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  AttachmentBuilder,
+  MessageFlags,
+} = require("discord.js");
 const ServerChronicleEngine = require("../../src/ai/serverChronicleEngine");
 const { drawChronicleNewspaper } = require("../../src/canvas/chronicleCanvas");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("chronicle")
-    .setDescription("📰 Baca Koran Harian & Ramalan Server 'The Hoshino Times'"),
+    .setDescription(
+      "📰 Baca Koran Harian & Ramalan Server 'The Hoshino Times'",
+    ),
 
   async execute(interaction) {
     if (!interaction.guild) {
       return interaction.reply({
-        content: "❌ Command ini hanya dapat digunakan di dalam server Discord.",
+        content:
+          "❌ Command ini hanya dapat digunakan di dalam server Discord.",
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -22,9 +32,13 @@ module.exports = {
     await interaction.deferReply();
 
     try {
-      const chronicleData = await ServerChronicleEngine.generateChronicleData(interaction.guild);
+      const chronicleData = await ServerChronicleEngine.generateChronicleData(
+        interaction.guild,
+      );
       const imgBuffer = await drawChronicleNewspaper(chronicleData);
-      const attachment = new AttachmentBuilder(imgBuffer, { name: "hoshino-times.png" });
+      const attachment = new AttachmentBuilder(imgBuffer, {
+        name: "hoshino-times.png",
+      });
 
       const payload = buildContainerV2({
         accentColorHex: "#FFB6C1",

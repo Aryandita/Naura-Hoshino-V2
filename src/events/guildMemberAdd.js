@@ -159,7 +159,7 @@ module.exports = {
       const now = Date.now();
       const timeWindow = (settings.antiRaid.seconds || 10) * 1000;
       const threshold = settings.antiRaid.joins || 5;
-      
+
       const redisKey = `raid:joins:${member.guild.id}`;
       let record = await redisManager.getCache(redisKey);
 
@@ -167,9 +167,13 @@ module.exports = {
         record = { count: 0, windowStart: now };
       }
       record.count += 1;
-      
+
       // Store in redis with TTL matching timeWindow (plus a little buffer)
-      await redisManager.setCache(redisKey, record, Math.ceil(timeWindow / 1000) + 5);
+      await redisManager.setCache(
+        redisKey,
+        record,
+        Math.ceil(timeWindow / 1000) + 5,
+      );
 
       if (record.count >= threshold) {
         // LOCKDOWN ACTIVATED

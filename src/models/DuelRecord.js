@@ -44,7 +44,7 @@ const DuelRecord = sequelize.define(
   {
     tableName: "duel_records",
     timestamps: true,
-  }
+  },
 );
 
 DuelRecord.belongsTo(UserProfile, {

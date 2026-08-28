@@ -8,11 +8,46 @@ const ui = require("../../config/ui");
 const ABYSS_PREFIX = "abyss:run:";
 
 const RELICS_CATALOG = [
-  { id: "vampiric_fang", name: "Vampiric Fang", get emoji() { return ui.getEmoji("drop") || "🩸"; }, desc: "+15% Lifesteal per Serangan" },
-  { id: "overclock_core", name: "Overclocked Core", get emoji() { return ui.getEmoji("flash") || "⚡"; }, desc: "+25% Peluang Serangan Kritis" },
-  { id: "sakura_shield", name: "Sakura Ward", get emoji() { return ui.getEmoji("flower") || "🌸"; }, desc: "+50 Shield Pertahanan di Awal Tempur" },
-  { id: "phantom_cloak", name: "Phantom Cloak", get emoji() { return ui.getEmoji("shield") || "🧥"; }, desc: "+20% Peluang Menghindar (Dodge)" },
-  { id: "star_resonator", name: "Astral Resonator", get emoji() { return ui.getEmoji("star") || "⭐"; }, desc: "+50% Bonus Perolehan Star Fragments" },
+  {
+    id: "vampiric_fang",
+    name: "Vampiric Fang",
+    get emoji() {
+      return ui.getEmoji("drop") || "🩸";
+    },
+    desc: "+15% Lifesteal per Serangan",
+  },
+  {
+    id: "overclock_core",
+    name: "Overclocked Core",
+    get emoji() {
+      return ui.getEmoji("flash") || "⚡";
+    },
+    desc: "+25% Peluang Serangan Kritis",
+  },
+  {
+    id: "sakura_shield",
+    name: "Sakura Ward",
+    get emoji() {
+      return ui.getEmoji("flower") || "🌸";
+    },
+    desc: "+50 Shield Pertahanan di Awal Tempur",
+  },
+  {
+    id: "phantom_cloak",
+    name: "Phantom Cloak",
+    get emoji() {
+      return ui.getEmoji("shield") || "🧥";
+    },
+    desc: "+20% Peluang Menghindar (Dodge)",
+  },
+  {
+    id: "star_resonator",
+    name: "Astral Resonator",
+    get emoji() {
+      return ui.getEmoji("star") || "⭐";
+    },
+    desc: "+50% Bonus Perolehan Star Fragments",
+  },
 ];
 
 class AbyssEngine {
@@ -41,10 +76,16 @@ class AbyssEngine {
     };
 
     if (redisManager.isReady) {
-      await redisManager.setCache(`${ABYSS_PREFIX}${userId}`, JSON.stringify(runData), 3600);
+      await redisManager.setCache(
+        `${ABYSS_PREFIX}${userId}`,
+        JSON.stringify(runData),
+        3600,
+      );
     }
 
-    logger.info(`[AbyssEngine] User ${userId} memulai ekspedisi The Neo-Abyss.`);
+    logger.info(
+      `[AbyssEngine] User ${userId} memulai ekspedisi The Neo-Abyss.`,
+    );
     return runData;
   }
 
@@ -64,7 +105,13 @@ class AbyssEngine {
   static _generateChoices(floor) {
     if (floor % 10 === 0) {
       return [
-        { type: "GUARDIAN", label: `${ui.getEmoji("skull") || "👹"} Gerbang Penjaga Lantai ${floor}`, monsterName: `Abyss Sentinel Floor ${floor}`, hp: 150 + floor * 15, dmg: 20 + floor * 2 },
+        {
+          type: "GUARDIAN",
+          label: `${ui.getEmoji("skull") || "👹"} Gerbang Penjaga Lantai ${floor}`,
+          monsterName: `Abyss Sentinel Floor ${floor}`,
+          hp: 150 + floor * 15,
+          dmg: 20 + floor * 2,
+        },
       ];
     }
 
@@ -74,13 +121,31 @@ class AbyssEngine {
     for (let i = 0; i < 3; i++) {
       const type = types[Math.floor(Math.random() * types.length)];
       if (type === "COMBAT") {
-        choices.push({ type, label: `${ui.getEmoji("battle") || "⚔️"} Ruang Monster Liar`, monsterName: "Cyber Phantom", hp: 60 + floor * 8, dmg: 12 + floor * 2 });
+        choices.push({
+          type,
+          label: `${ui.getEmoji("battle") || "⚔️"} Ruang Monster Liar`,
+          monsterName: "Cyber Phantom",
+          hp: 60 + floor * 8,
+          dmg: 12 + floor * 2,
+        });
       } else if (type === "RELIC") {
-        choices.push({ type, label: `${ui.getEmoji("gift") || "🎁"} Peti Harta Relic`, reward: "RELIC_DROP" });
+        choices.push({
+          type,
+          label: `${ui.getEmoji("gift") || "🎁"} Peti Harta Relic`,
+          reward: "RELIC_DROP",
+        });
       } else if (type === "CAMPFIRE") {
-        choices.push({ type, label: `${ui.getEmoji("fire") || "🔥"} Api Unggun Pemulihan`, healPercent: 35 });
+        choices.push({
+          type,
+          label: `${ui.getEmoji("fire") || "🔥"} Api Unggun Pemulihan`,
+          healPercent: 35,
+        });
       } else {
-        choices.push({ type, label: `${ui.getEmoji("magic") || "🔮"} Air Mancur Misterius`, mysteryEvent: true });
+        choices.push({
+          type,
+          label: `${ui.getEmoji("magic") || "🔮"} Air Mancur Misterius`,
+          mysteryEvent: true,
+        });
       }
     }
 
@@ -101,15 +166,23 @@ class AbyssEngine {
 
     if (choice.type === "COMBAT" || choice.type === "GUARDIAN") {
       // Simulasi tempur singkat
-      const hasCrit = run.relics.includes("overclock_core") && Math.random() < 0.4;
-      const playerDmg = hasCrit ? Math.floor(run.attackPower * 1.8) : run.attackPower;
-      const monsterDmg = Math.max(5, choice.dmg - (run.relics.includes("sakura_shield") ? 8 : 0));
+      const hasCrit =
+        run.relics.includes("overclock_core") && Math.random() < 0.4;
+      const playerDmg = hasCrit
+        ? Math.floor(run.attackPower * 1.8)
+        : run.attackPower;
+      const monsterDmg = Math.max(
+        5,
+        choice.dmg - (run.relics.includes("sakura_shield") ? 8 : 0),
+      );
 
       const rounds = Math.ceil(choice.hp / playerDmg);
       const totalTaken = Math.max(0, rounds * monsterDmg);
 
       run.currentHp = Math.max(0, run.currentHp - totalTaken);
-      const earnedFrag = (choice.type === "GUARDIAN" ? 150 : 35) * (run.relics.includes("star_resonator") ? 1.5 : 1);
+      const earnedFrag =
+        (choice.type === "GUARDIAN" ? 150 : 35) *
+        (run.relics.includes("star_resonator") ? 1.5 : 1);
       run.fragmentsCollected += Math.floor(earnedFrag);
 
       if (run.currentHp <= 0) {
@@ -125,9 +198,12 @@ class AbyssEngine {
       run.currentHp = Math.min(run.maxHp, run.currentHp + healAmount);
       outcome.log = `${ui.getEmoji("fire") || "🔥"} Kamu beristirahat di dekat api unggun. Memulihkan **+${healAmount} HP**!`;
     } else if (choice.type === "RELIC") {
-      const uncollected = RELICS_CATALOG.filter((r) => !run.relics.includes(r.id));
+      const uncollected = RELICS_CATALOG.filter(
+        (r) => !run.relics.includes(r.id),
+      );
       if (uncollected.length > 0) {
-        const gainedRelic = uncollected[Math.floor(Math.random() * uncollected.length)];
+        const gainedRelic =
+          uncollected[Math.floor(Math.random() * uncollected.length)];
         run.relics.push(gainedRelic.id);
         outcome.log = `${ui.getEmoji("gift") || "🎁"} Kamu menemukan Relic Kuno: **${gainedRelic.emoji} ${gainedRelic.name}** (*${gainedRelic.desc}*)!`;
       } else {
@@ -151,7 +227,11 @@ class AbyssEngine {
     if (run.currentFloor > 50) {
       run.status = "VICTORY";
       outcome.log += `\n\n${ui.getEmoji("celebrate") || "🎉"} **SELAMAT! KAMU TELAH MENAKLUKKAN SELURUH 50 LANTAI THE NEO-ABYSS!**`;
-      await cacheManager.incrementUserSurvival(userId, "starFragments", run.fragmentsCollected + 1000);
+      await cacheManager.incrementUserSurvival(
+        userId,
+        "starFragments",
+        run.fragmentsCollected + 1000,
+      );
       await this._saveRun(userId, run);
       return { success: true, run, outcome, isFinished: true };
     }
@@ -176,7 +256,11 @@ class AbyssEngine {
 
     const totalCoins = run.fragmentsCollected;
     if (totalCoins > 0) {
-      await cacheManager.incrementUserSurvival(userId, "starFragments", totalCoins);
+      await cacheManager.incrementUserSurvival(
+        userId,
+        "starFragments",
+        totalCoins,
+      );
     }
 
     if (redisManager.isReady) {
@@ -193,7 +277,11 @@ class AbyssEngine {
 
   static async _saveRun(userId, run) {
     if (redisManager.isReady) {
-      await redisManager.setCache(`${ABYSS_PREFIX}${userId}`, JSON.stringify(run), 3600);
+      await redisManager.setCache(
+        `${ABYSS_PREFIX}${userId}`,
+        JSON.stringify(run),
+        3600,
+      );
     }
   }
 }

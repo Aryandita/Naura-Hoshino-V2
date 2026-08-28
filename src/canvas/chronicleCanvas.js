@@ -34,7 +34,11 @@ async function drawChronicleNewspaper(data) {
 
   ctx.fillStyle = "#93C5FD";
   ctx.font = "14px 'Outfit', sans-serif";
-  ctx.fillText(`EDISI RESMI SERVER: ${data.guildName.toUpperCase()} | 📅 ${data.date}`, 400, 115);
+  ctx.fillText(
+    `EDISI RESMI SERVER: ${data.guildName.toUpperCase()} | 📅 ${data.date}`,
+    400,
+    115,
+  );
 
   // Divider Line
   ctx.strokeStyle = "#FFB6C1";
@@ -125,14 +129,22 @@ async function drawChronicleNewspaper(data) {
 
   ctx.fillStyle = "#FFFFFF";
   ctx.font = "16px 'Outfit', sans-serif";
-  ctx.fillText(`👥 Total Warga: ${data.memberCount} | 📨 Total Obrolan: ${data.totalMessages}`, 400, 835);
+  ctx.fillText(
+    `👥 Total Warga: ${data.memberCount} | 📨 Total Obrolan: ${data.totalMessages}`,
+    400,
+    835,
+  );
   ctx.fillStyle = "#86EFAC";
   ctx.fillText("🌸 Status Server: Sangat Aktif & Penuh Keberkahan", 400, 870);
 
   // Footer Tagline
   ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
   ctx.font = "12px 'Outfit', sans-serif";
-  ctx.fillText("Diterbitkan secara otonom oleh Naura Hoshino AI Engine • Terus ramaikan server!", 400, 945);
+  ctx.fillText(
+    "Diterbitkan secara otonom oleh Naura Hoshino AI Engine • Terus ramaikan server!",
+    400,
+    945,
+  );
 
   return canvas.toBuffer("image/png");
 }

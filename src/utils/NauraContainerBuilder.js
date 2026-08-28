@@ -170,7 +170,9 @@ function buildContainerV2({
   }
 
   // ── Top Banner (jika bannerPosition === 'top' atau ada topBannerAttachmentName) ──
-  const topRef = topBannerAttachmentName || (bannerPosition === "top" ? bannerAttachmentName : null);
+  const topRef =
+    topBannerAttachmentName ||
+    (bannerPosition === "top" ? bannerAttachmentName : null);
   if (topRef) {
     containerComponents.push({
       type: 12,
@@ -194,7 +196,8 @@ function buildContainerV2({
   }
 
   // ── Bottom Banner / Media Gallery ──
-  const bottomBannerRef = bannerPosition !== "top" ? bannerAttachmentName : null;
+  const bottomBannerRef =
+    bannerPosition !== "top" ? bannerAttachmentName : null;
   const bottomGalleryRefs = [
     bottomBannerRef,
     ...(Array.isArray(mediaAttachmentNames) ? mediaAttachmentNames : []),
@@ -284,9 +287,16 @@ function buildContainerV2({
 
 function resolveSmartBanner(type) {
   const bannerMap = {
-    error: ui.banners.errorWebp || ui.banners.errorCompressed || ui.banners.error,
-    loading: ui.banners.loadingWebp || ui.banners.loadingCompressed || ui.banners.loading,
-    maintenance: ui.banners.maintenanceWebp || ui.banners.maintenanceCompressed || ui.banners.maintenance,
+    error:
+      ui.banners.errorWebp || ui.banners.errorCompressed || ui.banners.error,
+    loading:
+      ui.banners.loadingWebp ||
+      ui.banners.loadingCompressed ||
+      ui.banners.loading,
+    maintenance:
+      ui.banners.maintenanceWebp ||
+      ui.banners.maintenanceCompressed ||
+      ui.banners.maintenance,
   };
 
   const rawPath = bannerMap[type];
@@ -339,13 +349,22 @@ function buildErrorContainerV2(opts) {
 
   return buildContainerV2({
     accentColorHex:
-      pick(opts, "accentColorHex") || ui.getColor("danger") || ui.getColor("error") || "#EF4444",
+      pick(opts, "accentColorHex") ||
+      ui.getColor("danger") ||
+      ui.getColor("error") ||
+      "#EF4444",
     authorName,
     title: `${errEmoji} ${title}`,
     description: errorMessage,
     expression,
-    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
-    expressionEmoji: pick(opts, "expressionEmoji") !== undefined ? pick(opts, "expressionEmoji") : true,
+    expressionImage:
+      pick(opts, "expressionImage") !== undefined
+        ? pick(opts, "expressionImage")
+        : "auto",
+    expressionEmoji:
+      pick(opts, "expressionEmoji") !== undefined
+        ? pick(opts, "expressionEmoji")
+        : true,
     expressionAs: pick(opts, "expressionAs") || "icon",
     fields: pick(opts, "fields") || [],
     buttonsRow: pick(opts, "buttonsRow"),
@@ -387,7 +406,10 @@ function buildLoadingContainerV2(opts) {
 
   return buildContainerV2({
     accentColorHex:
-      pick(opts, "accentColorHex") || ui.getColor("accent-blue") || ui.getColor("primary") || "#38BDF8",
+      pick(opts, "accentColorHex") ||
+      ui.getColor("accent-blue") ||
+      ui.getColor("primary") ||
+      "#38BDF8",
     authorName,
     title: `${loadEmoji} ${title}`,
     description:
@@ -395,8 +417,14 @@ function buildLoadingContainerV2(opts) {
         ? nauraText.loading(rawLoading, lang)
         : rawLoading,
     expression,
-    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
-    expressionEmoji: pick(opts, "expressionEmoji") !== undefined ? pick(opts, "expressionEmoji") : true,
+    expressionImage:
+      pick(opts, "expressionImage") !== undefined
+        ? pick(opts, "expressionImage")
+        : "auto",
+    expressionEmoji:
+      pick(opts, "expressionEmoji") !== undefined
+        ? pick(opts, "expressionEmoji")
+        : true,
     expressionAs: pick(opts, "expressionAs") || "icon",
     fields: pick(opts, "fields") || [],
     buttonsRow: pick(opts, "buttonsRow"),
@@ -421,7 +449,9 @@ function buildMaintenanceContainerV2(opts) {
   const warnEmoji =
     nauraExpression.getEmoji("warning") || ui.getEmoji("warning") || "🛠️";
   const expression =
-    pick(opts, "expression") !== undefined ? pick(opts, "expression") : "sleepy";
+    pick(opts, "expression") !== undefined
+      ? pick(opts, "expression")
+      : "sleepy";
 
   const withBanner = pick(opts, "withBanner") !== false;
   let bannerAttachmentName = pick(opts, "bannerAttachmentName");
@@ -442,8 +472,14 @@ function buildMaintenanceContainerV2(opts) {
     title: `${warnEmoji} ${title}`,
     description: rawMaintenance,
     expression,
-    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
-    expressionEmoji: pick(opts, "expressionEmoji") !== undefined ? pick(opts, "expressionEmoji") : true,
+    expressionImage:
+      pick(opts, "expressionImage") !== undefined
+        ? pick(opts, "expressionImage")
+        : "auto",
+    expressionEmoji:
+      pick(opts, "expressionEmoji") !== undefined
+        ? pick(opts, "expressionEmoji")
+        : true,
     expressionAs: pick(opts, "expressionAs") || "icon",
     fields: pick(opts, "fields") || [],
     buttonsRow: pick(opts, "buttonsRow"),
@@ -485,8 +521,14 @@ function buildSuccessContainerV2(opts) {
         ? nauraText.success(rawSuccess, lang)
         : rawSuccess,
     expression,
-    expressionImage: pick(opts, "expressionImage") !== undefined ? pick(opts, "expressionImage") : "auto",
-    expressionEmoji: pick(opts, "expressionEmoji") !== undefined ? pick(opts, "expressionEmoji") : true,
+    expressionImage:
+      pick(opts, "expressionImage") !== undefined
+        ? pick(opts, "expressionImage")
+        : "auto",
+    expressionEmoji:
+      pick(opts, "expressionEmoji") !== undefined
+        ? pick(opts, "expressionEmoji")
+        : true,
     expressionAs: pick(opts, "expressionAs") || "icon",
     fields: pick(opts, "fields") || [],
     buttonsRow: pick(opts, "buttonsRow"),
@@ -508,7 +550,11 @@ function buildPersonaContainerV2({
   footerText = null,
   expression = null,
 }) {
-  const message = uxHelper.getPersonalityResponse(type, { user, context, lang });
+  const message = uxHelper.getPersonalityResponse(type, {
+    user,
+    context,
+    lang,
+  });
   const defaultExpressionMap = {
     cooldown: "blush",
     error: "confused",
@@ -518,8 +564,7 @@ function buildPersonaContainerV2({
     starterWelcome: "wave",
   };
 
-  const chosenExpression =
-    expression || defaultExpressionMap[type] || "smile";
+  const chosenExpression = expression || defaultExpressionMap[type] || "smile";
 
   const eNaura = ui.getEmoji("about") || "🌸";
   const eWarn = ui.getEmoji("warning") || "⚠️";
@@ -536,7 +581,8 @@ function buildPersonaContainerV2({
     starterWelcome: `${eGift} Sambutan Spesial Naura`,
   };
 
-  const finalTitle = title || defaultTitleMap[type] || `${eNaura} Naura Hoshino`;
+  const finalTitle =
+    title || defaultTitleMap[type] || `${eNaura} Naura Hoshino`;
 
   return buildContainerV2({
     accentColorHex: accentColorHex || ui.getColor("primary") || "#FFB6C1",

@@ -47,7 +47,9 @@ module.exports = {
       // Ambil respons sukses berdasarkan bahasa yang baru
       const newStr =
         languageManager.getString(newLangId, "core.language") || {};
-      const title = newStr.successTitle || `${ui.getEmoji("success") || "✅"} Bahasa Diperbarui!`;
+      const title =
+        newStr.successTitle ||
+        `${ui.getEmoji("success") || "✅"} Bahasa Diperbarui!`;
       const descId = "Bahasa kamu berhasil diubah menjadi **Indonesia**.";
       const descEn =
         "Your language has been successfully changed to **English**.";

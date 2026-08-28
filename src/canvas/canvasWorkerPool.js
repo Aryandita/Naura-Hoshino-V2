@@ -50,7 +50,9 @@ class CanvasWorkerPool {
 
       worker.on("exit", (code) => {
         if (code !== 0) {
-          logger.warn(`[CanvasWorkerPool] Worker #${index} exited with code ${code}`);
+          logger.warn(
+            `[CanvasWorkerPool] Worker #${index} exited with code ${code}`,
+          );
           this._replaceWorker(worker, scriptPath, index);
         }
       });
@@ -58,7 +60,10 @@ class CanvasWorkerPool {
       this.workers.push(worker);
       this.freeWorkers.push(worker);
     } catch (e) {
-      logger.error(`[CanvasWorkerPool] Gagal menginisialisasi Worker #${index}:`, e);
+      logger.error(
+        `[CanvasWorkerPool] Gagal menginisialisasi Worker #${index}:`,
+        e,
+      );
     }
   }
 
@@ -106,7 +111,11 @@ class CanvasWorkerPool {
       const timer = setTimeout(() => {
         if (this.pendingTasks.has(id)) {
           this.pendingTasks.delete(id);
-          reject(new Error(`[CanvasWorkerPool] Task ${task} timed out after ${timeoutMs}ms`));
+          reject(
+            new Error(
+              `[CanvasWorkerPool] Task ${task} timed out after ${timeoutMs}ms`,
+            ),
+          );
         }
       }, timeoutMs);
 

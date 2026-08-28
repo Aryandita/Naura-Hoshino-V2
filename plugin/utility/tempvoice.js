@@ -165,7 +165,8 @@ module.exports = {
       } catch (error) {
         const errPayload = buildErrorContainerV2({
           title: "Gagal",
-          description: "Gagal mengeluarkan member. Mungkin Naura tidak memiliki akses.",
+          description:
+            "Gagal mengeluarkan member. Mungkin Naura tidak memiliki akses.",
           footerText: ui.getFooter("utility"),
         });
         return interaction.editReply(errPayload);

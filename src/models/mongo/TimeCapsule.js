@@ -29,4 +29,6 @@ const TimeCapsuleSchema = new mongoose.Schema(
   },
 );
 
-module.exports = mongoose.models.TimeCapsule || mongoose.model("TimeCapsule", TimeCapsuleSchema);
+module.exports =
+  mongoose.models.TimeCapsule ||
+  mongoose.model("TimeCapsule", TimeCapsuleSchema);

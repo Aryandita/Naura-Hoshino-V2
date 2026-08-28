@@ -157,7 +157,10 @@ async function rollXp(userId) {
   const span = CONFIG.MSG_XP.max - CONFIG.MSG_XP.min + 1;
   let gained = Math.floor(Math.random() * span) + CONFIG.MSG_XP.min;
   const userProfile = await cacheManager.getUserProfile(userId);
-  const { getUserPremiumTier, getXpMultiplier } = require("../premium/premiumHelper");
+  const {
+    getUserPremiumTier,
+    getXpMultiplier,
+  } = require("../premium/premiumHelper");
   const tier = getUserPremiumTier(userProfile);
   const multiplier = getXpMultiplier(tier);
   gained = Math.floor(gained * multiplier);

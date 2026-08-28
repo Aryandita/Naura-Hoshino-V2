@@ -27,7 +27,9 @@ function addGatherGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("fish")
-          .setDescription("Memancing ikan di laut dangkal atau samudra laut dalam & Vivarium")
+          .setDescription(
+            "Memancing ikan di laut dangkal atau samudra laut dalam & Vivarium",
+          )
           .addStringOption((opt) =>
             opt
               .setName("aksi")
@@ -46,7 +48,10 @@ function addGatherGroup(builder) {
               .setDescription("Pilih kedalaman laut")
               .addChoices(
                 { name: "Coral Reef (0 - 200m)", value: "CORAL_REEF" },
-                { name: "Midnight Trench (200 - 1000m)", value: "MIDNIGHT_TRENCH" },
+                {
+                  name: "Midnight Trench (200 - 1000m)",
+                  value: "MIDNIGHT_TRENCH",
+                },
                 { name: "Abyssal Core (1000m+)", value: "ABYSSAL_CORE" },
               )
               .setRequired(false),
@@ -182,7 +187,9 @@ function addEconomyGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("caravan")
-          .setDescription("Ekspedisi karavan dagang antariksa & bursa komoditas")
+          .setDescription(
+            "Ekspedisi karavan dagang antariksa & bursa komoditas",
+          )
           .addStringOption((opt) =>
             opt
               .setName("aksi")
@@ -202,8 +209,14 @@ function addEconomyGroup(builder) {
               .setRequired(false)
               .addChoices(
                 { name: "Neo Tokyo Orbit (30m · +35% Laba)", value: "tokyo" },
-                { name: "Starlight Outpost (60m · +75% Laba)", value: "outpost" },
-                { name: "Galactic Core Nexus (120m · +150% Laba)", value: "nexus" },
+                {
+                  name: "Starlight Outpost (60m · +75% Laba)",
+                  value: "outpost",
+                },
+                {
+                  name: "Galactic Core Nexus (120m · +150% Laba)",
+                  value: "nexus",
+                },
               ),
           )
           .addStringOption((opt) =>

@@ -15,13 +15,17 @@ test("PredictionEngine - Pari-Mutuel payout calculation formula", () => {
   // User A bet 2000 on Option 1 (Total Option 1 = 4000) -> 50% of winning pool
   const userABet = 2000;
   const winningOptionTotalBet = 4000;
-  const userAPayout = Math.floor((userABet / winningOptionTotalBet) * distributablePool);
+  const userAPayout = Math.floor(
+    (userABet / winningOptionTotalBet) * distributablePool,
+  );
 
   assert.equal(userAPayout, 4750); // 9500 * 0.5 = 4750
 
   // User B bet 2000 on Option 1 -> 50%
   const userBBet = 2000;
-  const userBPayout = Math.floor((userBBet / winningOptionTotalBet) * distributablePool);
+  const userBPayout = Math.floor(
+    (userBBet / winningOptionTotalBet) * distributablePool,
+  );
   assert.equal(userBPayout, 4750);
 
   assert.equal(userAPayout + userBPayout, distributablePool);

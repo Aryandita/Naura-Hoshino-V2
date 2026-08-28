@@ -56,7 +56,10 @@ async function ensureDmAuthorized(client, userId, profile) {
 
     return true;
   } catch (err) {
-    logger.error(`[NotificationManager] Gagal mengirim pesan autorisasi ke user ${userId}:`, err.message);
+    logger.error(
+      `[NotificationManager] Gagal mengirim pesan autorisasi ke user ${userId}:`,
+      err.message,
+    );
     return false;
   }
 }
@@ -96,7 +99,9 @@ async function sendNotification(client, userId, type, payload) {
     await user.send(payload);
     return true;
   } catch (err) {
-    logger.warn(`[NotificationManager] Gagal mengirim notif ${type} ke ${userId}: ${err.message}`);
+    logger.warn(
+      `[NotificationManager] Gagal mengirim notif ${type} ke ${userId}: ${err.message}`,
+    );
     return false;
   }
 }

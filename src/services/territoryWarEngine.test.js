@@ -5,7 +5,10 @@ const assert = require("node:assert/strict");
 const { DEFAULT_SECTORS } = require("./territoryWarEngine");
 
 test("TerritoryWarEngine - Default 5 Sectors Setup", () => {
-  assert.ok(Array.isArray(DEFAULT_SECTORS), "DEFAULT_SECTORS harus berupa array");
+  assert.ok(
+    Array.isArray(DEFAULT_SECTORS),
+    "DEFAULT_SECTORS harus berupa array",
+  );
   assert.ok(DEFAULT_SECTORS.length >= 5, "Harus ada minimal 5 sektor");
 
   const sectorIds = DEFAULT_SECTORS.map((t) => t.territoryId);

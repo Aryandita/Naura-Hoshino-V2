@@ -22,7 +22,8 @@ test("Dashboard API Route - GET /api/health returns correct structure", async ()
 
   // Cari handler GET /health
   const healthRoute = router.stack.find(
-    (layer) => layer.route && layer.route.path === "/health" && layer.route.methods.get,
+    (layer) =>
+      layer.route && layer.route.path === "/health" && layer.route.methods.get,
   );
   assert.ok(healthRoute, "Endpoint GET /health harus terdaftar");
 

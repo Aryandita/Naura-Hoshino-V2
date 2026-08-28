@@ -19,7 +19,14 @@ async function drawAnimeCard(cardData) {
     ctx.roundRect(15, 15, width - 30, height - 30, 24);
     ctx.fill();
 
-    const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 50, width / 2, height / 2, 400);
+    const bgGrad = ctx.createRadialGradient(
+      width / 2,
+      height / 2,
+      50,
+      width / 2,
+      height / 2,
+      400,
+    );
     bgGrad.addColorStop(0, "#1f1738");
     bgGrad.addColorStop(0.7, "#110e20");
     bgGrad.addColorStop(1, "#07080b");
@@ -78,11 +85,19 @@ async function drawAnimeCard(cardData) {
     ctx.fillStyle = isAwakened ? "#FFD700" : dyeColor;
     ctx.textAlign = "left";
     const headerPrefix = isAwakened ? "✦ AWAKENED · " : "";
-    ctx.fillText(`${headerPrefix}${(cardData.seriesName || "Anime Realm").toUpperCase()}`, 55, 70);
+    ctx.fillText(
+      `${headerPrefix}${(cardData.seriesName || "Anime Realm").toUpperCase()}`,
+      55,
+      70,
+    );
 
     // Print Badge (Top Right)
     ctx.font = 'bold 14px "Orbitron", "EmojiFont"';
-    ctx.fillStyle = isAwakened ? "#FFD700" : (cardData.printNumber <= 10 ? "#FFD700" : "#FFFFFF");
+    ctx.fillStyle = isAwakened
+      ? "#FFD700"
+      : cardData.printNumber <= 10
+        ? "#FFD700"
+        : "#FFFFFF";
     ctx.textAlign = "right";
     ctx.fillText(`#${cardData.printNumber}`, width - 55, 70);
 
@@ -111,13 +126,21 @@ async function drawAnimeCard(cardData) {
     ctx.font = 'bold 22px "MontserratBold", "EmojiFont"';
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "left";
-    const nameStr = (cardData.characterName || cardData.cardName || "Unknown").substring(0, 18);
+    const nameStr = (
+      cardData.characterName ||
+      cardData.cardName ||
+      "Unknown"
+    ).substring(0, 18);
     ctx.fillText(nameStr, 60, 600);
 
     if (cardData.isAwakened) {
       ctx.font = 'bold 12px "Orbitron", "EmojiFont"';
       ctx.fillStyle = "#A855F7";
-      ctx.fillText("⚡ AWAKENED", 60 + ctx.measureText(nameStr).width + 12, 600);
+      ctx.fillText(
+        "⚡ AWAKENED",
+        60 + ctx.measureText(nameStr).width + 12,
+        600,
+      );
     }
 
     // Inscription / Digital Signature (if present)
@@ -141,7 +164,11 @@ async function drawAnimeCard(cardData) {
     ctx.fillText(qual.stars, 60, cardData.inscription ? 640 : 635);
 
     // 5.5 SSR & UR & Awakened Holo Shimmer Overlay (Rainbow Hologram Shader)
-    const isSSRorUR = cardData.rarity === "SSR" || cardData.rarity === "UR" || cardData.rarity === "SECRET_RARE" || cardData.isAwakened;
+    const isSSRorUR =
+      cardData.rarity === "SSR" ||
+      cardData.rarity === "UR" ||
+      cardData.rarity === "SECRET_RARE" ||
+      cardData.isAwakened;
     if (isSSRorUR) {
       ctx.save();
       ctx.globalCompositeOperation = "screen";
@@ -161,7 +188,13 @@ async function drawAnimeCard(cardData) {
       // Sparkles
       ctx.fillStyle = "#FFFFFF";
       const sparklePositions = [
-        [80, 140], [420, 160], [120, 380], [380, 400], [250, 180], [160, 480], [340, 490]
+        [80, 140],
+        [420, 160],
+        [120, 380],
+        [380, 400],
+        [250, 180],
+        [160, 480],
+        [340, 490],
       ];
       for (const [sx, sy] of sparklePositions) {
         ctx.beginPath();
@@ -186,7 +219,11 @@ async function drawAnimeCard(cardData) {
 
     ctx.textAlign = "right";
     ctx.fillStyle = isSSRorUR ? "#FFD700" : dyeColor;
-    ctx.fillText((cardData.rarity || "RARE").replace("_", " "), width - 60, 668);
+    ctx.fillText(
+      (cardData.rarity || "RARE").replace("_", " "),
+      width - 60,
+      668,
+    );
 
     return canvas.toBuffer("image/png");
   });

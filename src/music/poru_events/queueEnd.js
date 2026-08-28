@@ -1,8 +1,6 @@
 const { logger } = require("../../managers/logger");
 const ui = require("../../config/ui");
-const {
-  buildContainerV2,
-} = require("../../utils/NauraContainerBuilder");
+const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
 const LyricsManager = require("../LyricsManager");
 const geminiClient = require("../../ai/geminiClient");
 const {
@@ -108,7 +106,9 @@ module.exports = {
           const prompt = `Aku sedang memutar lagu "${activeTrack.info.title}" oleh "${activeTrack.info.author}".
 Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang sama, tidak harus dari artis yang sama. Balas HANYA dengan format murni: "Judul Lagu - Nama Artis". TANPA KUTIP, TANPA SIMBOL.`;
 
-          const aiResult = await geminiClient.generate({ parts: [{ text: prompt }] });
+          const aiResult = await geminiClient.generate({
+            parts: [{ text: prompt }],
+          });
           const aiQuery = (aiResult || "").trim();
 
           const searchRes = await manager.poru.resolve({
@@ -227,8 +227,7 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
       const exitPayload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
         title: `${ui.getEmoji("offline") || ui.getEmoji("power") || "🔌"} Pemutusan Sesi Audio`,
-        description:
-          `Antrean lagu telah habis. Naura pamit dari Voice Channel! ${ui.getEmoji("naura_blowkiss") || "👋"}`,
+        description: `Antrean lagu telah habis. Naura pamit dari Voice Channel! ${ui.getEmoji("naura_blowkiss") || "👋"}`,
         expression: "happy",
         footerText: ui.getFooter("music"),
       });

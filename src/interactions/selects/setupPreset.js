@@ -15,7 +15,10 @@ module.exports = [
     label: "setup-preset-select",
     async handler(interaction) {
       // Hanya admin yang boleh mengatur preset
-      if (!interaction.member.permissions.has("Administrator") && !interaction.member.permissions.has("ManageGuild")) {
+      if (
+        !interaction.member.permissions.has("Administrator") &&
+        !interaction.member.permissions.has("ManageGuild")
+      ) {
         const errPayload = buildErrorContainerV2({
           title: "Akses Ditolak",
           errorMessage:

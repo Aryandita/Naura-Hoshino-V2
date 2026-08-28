@@ -21,7 +21,8 @@ module.exports = {
       return interaction.reply({
         ...buildErrorContainerV2({
           title: "Khusus Server",
-          errorMessage: "Fitur pelaporan hanya dapat digunakan di dalam server komunitas.",
+          errorMessage:
+            "Fitur pelaporan hanya dapat digunakan di dalam server komunitas.",
         }),
         flags: MessageFlags.Ephemeral,
       });
@@ -36,7 +37,9 @@ module.exports = {
       .setCustomId("report_reason")
       .setLabel("Alasan Pelaporan")
       .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder("Jelaskan mengapa pesan ini melanggar peraturan server...")
+      .setPlaceholder(
+        "Jelaskan mengapa pesan ini melanggar peraturan server...",
+      )
       .setRequired(true)
       .setMaxLength(500);
 

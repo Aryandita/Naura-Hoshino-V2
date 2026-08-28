@@ -125,11 +125,17 @@ module.exports = (client) => {
   // --- Analitik Musik Mabar (Realtime dari Database) ---
   router.get("/api/analytics/music-friends", async (req, res) => {
     try {
-      const sessionUserId = req.user?.id || req.session?.passport?.user?.id || null;
+      const sessionUserId =
+        req.user?.id || req.session?.passport?.user?.id || null;
       if (sessionUserId) {
         const myProfile = await UserProfile.findOne({
           where: { userId: sessionUserId },
-          attributes: ["userId", "music_trackingData", "music_tracksListened", "music_totalDurationMs"],
+          attributes: [
+            "userId",
+            "music_trackingData",
+            "music_tracksListened",
+            "music_totalDurationMs",
+          ],
         });
         if (myProfile && myProfile.music_trackingData) {
           let raw = myProfile.music_trackingData;
@@ -181,9 +187,14 @@ module.exports = (client) => {
             tracking = null;
           }
         }
-        if (tracking && tracking.friends && typeof tracking.friends === "object") {
+        if (
+          tracking &&
+          tracking.friends &&
+          typeof tracking.friends === "object"
+        ) {
           for (const [key, obj] of Object.entries(tracking.friends)) {
-            const name = typeof obj === "object" && obj && obj.name ? obj.name : key;
+            const name =
+              typeof obj === "object" && obj && obj.name ? obj.name : key;
             const count =
               typeof obj === "object" && obj
                 ? Number(obj.tracks) || Number(obj.count) || 1
@@ -327,7 +338,7 @@ module.exports = (client) => {
           });
         }
       }
-      
+
       const userIds = topProfiles.map((p) => p.userId);
       const survivalMap = {};
       if (userIds.length > 0) {

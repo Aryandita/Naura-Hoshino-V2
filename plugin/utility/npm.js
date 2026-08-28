@@ -47,7 +47,10 @@ module.exports = {
           "https://raw.githubusercontent.com/npm/logos/master/npm%20logo/npm-logo-red.png",
         description: `${data.description || "Tidak ada deskripsi."}\n\n${ui.getEmoji("about") || "🔗"} [Lihat Halaman NPM](https://www.npmjs.com/package/${data.name})`,
         fields: [
-          { name: `${ui.getEmoji("desc") || "🏷️"} Versi Terbaru`, value: `\`${latest}\`` },
+          {
+            name: `${ui.getEmoji("desc") || "🏷️"} Versi Terbaru`,
+            value: `\`${latest}\``,
+          },
           {
             name: `${ui.getEmoji("notes") || "📄"} Lisensi`,
             value: `\`${latestData.license || "Tidak diketahui"}\``,

@@ -4,15 +4,44 @@ const { MessageFlags } = require("discord.js");
 const UserPet = require("../../../src/models/UserPet");
 const UserSurvival = require("../../../src/models/UserSurvival");
 const redisManager = require("../../../src/managers/redisManager");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
-const { addItemsAtomic } = require("../../../src/survival/engines/inventoryHelper");
+const {
+  addItemsAtomic,
+} = require("../../../src/survival/engines/inventoryHelper");
 const notificationManager = require("../../../src/managers/notificationManager");
 
 const EXPEDITION_DURATIONS = {
-  1: { hours: 1, seconds: 3600, exp: 150, fragments: 80, loot: [{ id: "mystic_herb", amount: 2 }] },
-  4: { hours: 4, seconds: 14400, exp: 600, fragments: 350, loot: [{ id: "dragon_meat", amount: 2 }, { id: "iron_ore", amount: 5 }] },
-  8: { hours: 8, seconds: 28800, exp: 1500, fragments: 900, loot: [{ id: "legendary_gem", amount: 1 }, { id: "ancient_relic", amount: 2 }] },
+  1: {
+    hours: 1,
+    seconds: 3600,
+    exp: 150,
+    fragments: 80,
+    loot: [{ id: "mystic_herb", amount: 2 }],
+  },
+  4: {
+    hours: 4,
+    seconds: 14400,
+    exp: 600,
+    fragments: 350,
+    loot: [
+      { id: "dragon_meat", amount: 2 },
+      { id: "iron_ore", amount: 5 },
+    ],
+  },
+  8: {
+    hours: 8,
+    seconds: 28800,
+    exp: 1500,
+    fragments: 900,
+    loot: [
+      { id: "legendary_gem", amount: 1 },
+      { id: "ancient_relic", amount: 2 },
+    ],
+  },
 };
 
 module.exports = {
@@ -25,19 +54,22 @@ module.exports = {
       return interaction.reply({
         ...buildErrorContainerV2({
           title: "Tidak Ada Pet Aktif",
-          description: "Kamu harus mengaktifkan satu Pet terlebih dahulu sebelum memulai ekspedisi!\nGunakan `/survival pet` untuk memilih pet aktif.",
+          description:
+            "Kamu harus mengaktifkan satu Pet terlebih dahulu sebelum memulai ekspedisi!\nGunakan `/survival pet` untuk memilih pet aktif.",
         }),
         flags: MessageFlags.Ephemeral,
       });
     }
 
-    const expConfig = EXPEDITION_DURATIONS[durationHours] || EXPEDITION_DURATIONS[1];
+    const expConfig =
+      EXPEDITION_DURATIONS[durationHours] || EXPEDITION_DURATIONS[1];
     const redisKey = `pet_expedition:${userId}`;
 
     // Cek apakah sedang dalam ekspedisi
     const existing = await redisManager.getCache(redisKey);
     if (existing) {
-      const expData = typeof existing === "string" ? JSON.parse(existing) : existing;
+      const expData =
+        typeof existing === "string" ? JSON.parse(existing) : existing;
       const now = Date.now();
       const timeLeft = Math.max(0, Math.ceil((expData.endTime - now) / 1000));
 
@@ -58,7 +90,10 @@ module.exports = {
         await redisManager.deleteCache(redisKey);
 
         // Tambah Star Fragments dan Item
-        await UserSurvival.increment({ starFragments: expData.fragments }, { where: { userId } });
+        await UserSurvival.increment(
+          { starFragments: expData.fragments },
+          { where: { userId } },
+        );
         await addItemsAtomic(userId, expData.loot);
 
         // Tambah Pet EXP
@@ -70,7 +105,9 @@ module.exports = {
         // Rule 1.8: fields eksplisit agar tidak menimpa kolom pet lain.
         await pet.save({ fields: ["petExp", "petLevel"] });
 
-        const lootList = expData.loot.map((it) => `• **${it.id.replace("_", " ")}** x${it.amount}`).join("\n");
+        const lootList = expData.loot
+          .map((it) => `• **${it.id.replace("_", " ")}** x${it.amount}`)
+          .join("\n");
         const claimContainer = buildContainerV2({
           accentColorHex: "#10B981",
           authorName: `${ui.getEmoji("cat_pet") || "🐾"} Ekspedisi Selesai!`,
@@ -84,7 +121,7 @@ module.exports = {
     }
 
     // Mulai ekspedisi baru
-    const endTime = Date.now() + (expConfig.seconds * 1000);
+    const endTime = Date.now() + expConfig.seconds * 1000;
     const expeditionPayload = {
       petId: pet.id,
       petName: pet.petName || pet.petType,
@@ -95,7 +132,11 @@ module.exports = {
       loot: expConfig.loot,
     };
 
-    await redisManager.setCache(redisKey, JSON.stringify(expeditionPayload), expConfig.seconds + 60);
+    await redisManager.setCache(
+      redisKey,
+      JSON.stringify(expeditionPayload),
+      expConfig.seconds + 60,
+    );
 
     const payload = buildContainerV2({
       accentColorHex: "#38BDF8",

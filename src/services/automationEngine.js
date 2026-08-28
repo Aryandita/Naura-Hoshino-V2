@@ -36,7 +36,10 @@ class AutomationEngine {
         await this._executeFlow(flow, eventContext);
       }
     } catch (e) {
-      logger.error(`[AutomationEngine] Gagal mengeksekusi trigger ${triggerType}:`, e);
+      logger.error(
+        `[AutomationEngine] Gagal mengeksekusi trigger ${triggerType}:`,
+        e,
+      );
     }
   }
 
@@ -61,7 +64,9 @@ class AutomationEngine {
         try {
           await this._executeAction(act, ctx);
         } catch (err) {
-          logger.warn(`[AutomationEngine] Gagal menjalankan aksi ${act.type}: ${err.message}`);
+          logger.warn(
+            `[AutomationEngine] Gagal menjalankan aksi ${act.type}: ${err.message}`,
+          );
         }
       }
     }
@@ -75,7 +80,9 @@ class AutomationEngine {
       case "MIN_LEVEL":
         return (ctx.level || 0) >= cond.value;
       case "KEYWORD_MATCH":
-        return String(ctx.text || "").toLowerCase().includes(String(cond.keyword).toLowerCase());
+        return String(ctx.text || "")
+          .toLowerCase()
+          .includes(String(cond.keyword).toLowerCase());
       default:
         return true;
     }
@@ -95,7 +102,9 @@ class AutomationEngine {
         if (user && action.message) {
           const container = buildContainerV2({
             title: action.title || "🌸 Pesan Otomatisasi Naura",
-            description: action.message.replace(/{user}/g, `<@${user.id}>`).replace(/{server}/g, guild?.name || ""),
+            description: action.message
+              .replace(/{user}/g, `<@${user.id}>`)
+              .replace(/{server}/g, guild?.name || ""),
             color: action.color || "#FFB6C1",
           });
           await user.send(container).catch(() => {});

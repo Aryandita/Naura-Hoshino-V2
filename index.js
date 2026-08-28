@@ -191,10 +191,15 @@ async function startBot() {
       try {
         await client.login(env.TOKEN);
       } catch (loginErr) {
-        logger.error("[BOOT] Gagal login ke Discord Gateway:", loginErr.message);
+        logger.error(
+          "[BOOT] Gagal login ke Discord Gateway:",
+          loginErr.message,
+        );
       }
     } else {
-      logger.info("[BOOT] DISCORD_TOKEN tidak disetel. Web Dashboard aktif pada port 3000.");
+      logger.info(
+        "[BOOT] DISCORD_TOKEN tidak disetel. Web Dashboard aktif pada port 3000.",
+      );
     }
   } catch (error) {
     logger.error(

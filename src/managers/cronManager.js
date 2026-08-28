@@ -7,7 +7,6 @@ const UserBirthday = require("../models/UserBirthday");
 
 const clusterManager = require("./clusterManager");
 
-
 module.exports = {
   init(client) {
     const isMasterShard = clusterManager.isMasterShard(client);
@@ -71,7 +70,7 @@ module.exports = {
 
     // 0.6 Daily Quest Reset - Runs at 00:00 every day
     cron.schedule("0 0 * * *", async () => {
-      // Tidak melakukan apa-apa. Reset quest sekarang menggunakan sistem *lazy-evaluation* 
+      // Tidak melakukan apa-apa. Reset quest sekarang menggunakan sistem *lazy-evaluation*
       // yang dilakukan oleh `questGenerator.js` saat user bertindak atau membuka papan misi.
       // Melakukan bulk update di sini akan menghapus progress misi mingguan secara tidak sengaja.
     });
@@ -95,13 +94,20 @@ module.exports = {
           try {
             const guild = await client.guilds.fetch(lease.guildId);
             if (guild) {
-              const member = await guild.members.fetch(lease.userId).catch(() => null);
+              const member = await guild.members
+                .fetch(lease.userId)
+                .catch(() => null);
               if (member) {
-                await member.roles.remove(lease.roleId, "Masa sewa role selesai").catch(() => {});
+                await member.roles
+                  .remove(lease.roleId, "Masa sewa role selesai")
+                  .catch(() => {});
               }
             }
           } catch (err) {
-            logger.error(`[Cron] Gagal memproses kadaluwarsa role lease ${lease.id}:`, err);
+            logger.error(
+              `[Cron] Gagal memproses kadaluwarsa role lease ${lease.id}:`,
+              err,
+            );
           }
           await lease.destroy();
         }
@@ -136,9 +142,14 @@ module.exports = {
               expression: "Happy",
               footerText: ui.getFooter("utility"),
             });
-            await sendNotification(client, rem.userId, "custom_reminder", payload);
+            await sendNotification(
+              client,
+              rem.userId,
+              "custom_reminder",
+              payload,
+            );
           } catch (err) {
-             logger.error(`[Cron] Gagal mengirim reminder ${rem.id}:`, err);
+            logger.error(`[Cron] Gagal mengirim reminder ${rem.id}:`, err);
           }
           await rem.destroy();
         }
@@ -162,7 +173,12 @@ module.exports = {
         // Cari user yang staminanya >= 100
         const fullStaminaUsers = await UserSurvival.findAll({
           where: { stamina: { [require("sequelize").Op.gte]: 100 } },
-          include: [{ model: UserProfile, attributes: ["userId", "notification_prefs"] }],
+          include: [
+            {
+              model: UserProfile,
+              attributes: ["userId", "notification_prefs"],
+            },
+          ],
         });
 
         for (const survival of fullStaminaUsers) {
@@ -176,18 +192,29 @@ module.exports = {
             const payload = buildContainerV2({
               accentColorHex: ui.getColor("success") || "#22C55E",
               title: `${ui.getEmoji("stamina") || "⚡"} Stamina RPG Penuh!`,
-              description: "Staminamu sudah 100/100! Jangan sampai terbuang sia-sia, yuk lanjut petualangannya di Naura RPG!",
+              description:
+                "Staminamu sudah 100/100! Jangan sampai terbuang sia-sia, yuk lanjut petualangannya di Naura RPG!",
               expression: "impressed",
               footerText: ui.getFooter("utility"),
             });
 
-            const sent = await sendNotification(client, survival.userId, "stamina_full", payload);
+            const sent = await sendNotification(
+              client,
+              survival.userId,
+              "stamina_full",
+              payload,
+            );
             if (sent) {
-              await cacheManager.mutateUserProfileJson(survival.userId, "notification_prefs", (prefsObj) => {
-                const obj = (prefsObj && typeof prefsObj === "object") ? prefsObj : {};
-                obj.sent_stamina = true;
-                return obj;
-              });
+              await cacheManager.mutateUserProfileJson(
+                survival.userId,
+                "notification_prefs",
+                (prefsObj) => {
+                  const obj =
+                    prefsObj && typeof prefsObj === "object" ? prefsObj : {};
+                  obj.sent_stamina = true;
+                  return obj;
+                },
+              );
             }
           }
         }
@@ -212,19 +239,30 @@ module.exports = {
             const payload = buildContainerV2({
               accentColorHex: ui.getColor("primary") || "#FFB6C1",
               title: `${ui.getEmoji("desc") || "📜"} Quest Harian Direset!`,
-              description: "Misi Harian (Daily Quest) RPG kamu sudah diperbarui. Yuk cek `/survival rpg quest` dan kumpulkan hadiahnya hari ini!",
+              description:
+                "Misi Harian (Daily Quest) RPG kamu sudah diperbarui. Yuk cek `/survival rpg quest` dan kumpulkan hadiahnya hari ini!",
               expression: "happy",
               footerText: ui.getFooter("utility"),
             });
-            await sendNotification(client, profile.userId, "quest_reset", payload);
+            await sendNotification(
+              client,
+              profile.userId,
+              "quest_reset",
+              payload,
+            );
           }
 
           if (prefs.sent_stamina) {
-            await cacheManager.mutateUserProfileJson(profile.userId, "notification_prefs", (prefsObj) => {
-              const obj = (prefsObj && typeof prefsObj === "object") ? prefsObj : {};
-              obj.sent_stamina = false;
-              return obj;
-            });
+            await cacheManager.mutateUserProfileJson(
+              profile.userId,
+              "notification_prefs",
+              (prefsObj) => {
+                const obj =
+                  prefsObj && typeof prefsObj === "object" ? prefsObj : {};
+                obj.sent_stamina = false;
+                return obj;
+              },
+            );
           }
         }
       } catch (e) {
@@ -234,7 +272,9 @@ module.exports = {
 
     // 0.9 Daily Server Chronicle Broadcast - Runs at 01:00 UTC (08:00 WIB) every day
     cron.schedule("0 1 * * *", async () => {
-      logger.info("[Cron] Menerbitkan Koran Harian 'The Hoshino Times' ke guild...");
+      logger.info(
+        "[Cron] Menerbitkan Koran Harian 'The Hoshino Times' ke guild...",
+      );
       try {
         const ServerChronicleEngine = require("../ai/serverChronicleEngine");
         const { drawChronicleNewspaper } = require("../canvas/chronicleCanvas");
@@ -242,17 +282,25 @@ module.exports = {
 
         for (const [guildId, guild] of client.guilds.cache) {
           try {
-            const settings = await GuildSettings.findOne({ where: { guildId } });
+            const settings = await GuildSettings.findOne({
+              where: { guildId },
+            });
             const s = settings?.settings || {};
-            const channelId = s.chronicleChannelId || s.channels?.general || s.channels?.news;
+            const channelId =
+              s.chronicleChannelId || s.channels?.general || s.channels?.news;
             if (!channelId) continue;
 
-            const channel = await guild.channels.fetch(channelId).catch(() => null);
+            const channel = await guild.channels
+              .fetch(channelId)
+              .catch(() => null);
             if (!channel || !channel.isTextBased()) continue;
 
-            const chronicleData = await ServerChronicleEngine.generateChronicleData(guild);
+            const chronicleData =
+              await ServerChronicleEngine.generateChronicleData(guild);
             const imgBuffer = await drawChronicleNewspaper(chronicleData);
-            const attachment = new AttachmentBuilder(imgBuffer, { name: "hoshino-times.png" });
+            const attachment = new AttachmentBuilder(imgBuffer, {
+              name: "hoshino-times.png",
+            });
 
             const payload = buildContainerV2({
               accentColorHex: "#FFB6C1",
@@ -264,7 +312,9 @@ module.exports = {
 
             await channel.send({ ...payload, files: [attachment] });
           } catch (gErr) {
-            logger.warn(`[Cron] Gagal kirim chronicle ke guild ${guildId}: ${gErr.message}`);
+            logger.warn(
+              `[Cron] Gagal kirim chronicle ke guild ${guildId}: ${gErr.message}`,
+            );
           }
         }
       } catch (err) {
@@ -661,7 +711,11 @@ module.exports = {
           timestamp: Date.now(),
         };
 
-        await redisManager.setCache("analytics:cache:overview", JSON.stringify(overview), 1900);
+        await redisManager.setCache(
+          "analytics:cache:overview",
+          JSON.stringify(overview),
+          1900,
+        );
         logger.info("[Cron Analytics] Precomputed dashboard analytics cache.");
       } catch (err) {
         logger.error("[Cron Analytics Precompute Error]", err);
@@ -674,7 +728,9 @@ module.exports = {
         const worldBossEngine = require("../survival/engines/worldBossEngine");
         const activeBoss = await worldBossEngine.getActiveBoss();
         if (!activeBoss) {
-          logger.info("[Cron WorldBoss] Spawning Sunday Special World Boss (15:00 WIB)...");
+          logger.info(
+            "[Cron WorldBoss] Spawning Sunday Special World Boss (15:00 WIB)...",
+          );
           await worldBossEngine.spawnBoss({
             bossId: `boss_sunday_${Date.now()}`,
             name: "Calamity Leviathan Prime",
@@ -709,9 +765,13 @@ module.exports = {
           await market.save();
           const redisManager = require("./redisManager");
           if (redisManager.isReady) {
-            await redisManager.deleteCache(`prediction:market:${market.marketId}`);
+            await redisManager.deleteCache(
+              `prediction:market:${market.marketId}`,
+            );
           }
-          logger.info(`[Cron Prediction] Market ${market.marketId} automatically LOCKED as lockTime passed.`);
+          logger.info(
+            `[Cron Prediction] Market ${market.marketId} automatically LOCKED as lockTime passed.`,
+          );
         }
       } catch (err) {
         logger.error("[Cron Prediction Auto-Lock Error]", err);
@@ -722,7 +782,9 @@ module.exports = {
     cron.schedule("0 1 * * *", async () => {
       try {
         const ServerChronicleEngine = require("../ai/serverChronicleEngine");
-        logger.info("[Cron Chronicle] Triggering daily morning newspaper publication (08:00 WIB)...");
+        logger.info(
+          "[Cron Chronicle] Triggering daily morning newspaper publication (08:00 WIB)...",
+        );
         await ServerChronicleEngine.publishMorningChronicle(client);
       } catch (err) {
         logger.error("[Cron Chronicle Morning Publication Error]", err);
@@ -733,7 +795,9 @@ module.exports = {
     cron.schedule("0 17 * * 0", async () => {
       try {
         const TerritoryWarEngine = require("../services/territoryWarEngine");
-        logger.info("[Cron Territory] Resetting weekly control points for Clan Territory War...");
+        logger.info(
+          "[Cron Territory] Resetting weekly control points for Clan Territory War...",
+        );
         await TerritoryWarEngine.resetWeeklyWar();
       } catch (err) {
         logger.error("[Cron Territory War Reset Error]", err);
@@ -744,7 +808,9 @@ module.exports = {
     cron.schedule("0 * * * *", async () => {
       try {
         const StockMarketEngine = require("../services/stockMarketEngine");
-        logger.info("[Cron Stock] Updating hourly stock market prices and candle cycles...");
+        logger.info(
+          "[Cron Stock] Updating hourly stock market prices and candle cycles...",
+        );
         await StockMarketEngine.updateMarketTick();
       } catch (err) {
         logger.error("[Cron Stock Tick Error]", err);
@@ -755,11 +821,24 @@ module.exports = {
     cron.schedule("0 17 1 * *", async () => {
       try {
         const ColiseumTeam = require("../models/ColiseumTeam");
-        logger.info("[Cron Coliseum] Resetting monthly tournament divisions and distributing trophies...");
+        logger.info(
+          "[Cron Coliseum] Resetting monthly tournament divisions and distributing trophies...",
+        );
         const teams = await ColiseumTeam.findAll();
         for (const t of teams) {
           t.eloRating = Math.max(1200, Math.floor(t.eloRating * 0.9));
-          t.divisionTier = t.eloRating >= 2100 ? "MASTER" : t.eloRating >= 1900 ? "DIAMOND" : t.eloRating >= 1700 ? "PLATINUM" : t.eloRating >= 1500 ? "GOLD" : t.eloRating >= 1300 ? "SILVER" : "BRONZE";
+          t.divisionTier =
+            t.eloRating >= 2100
+              ? "MASTER"
+              : t.eloRating >= 1900
+                ? "DIAMOND"
+                : t.eloRating >= 1700
+                  ? "PLATINUM"
+                  : t.eloRating >= 1500
+                    ? "GOLD"
+                    : t.eloRating >= 1300
+                      ? "SILVER"
+                      : "BRONZE";
           await t.save();
         }
       } catch (err) {

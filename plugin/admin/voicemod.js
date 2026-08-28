@@ -127,8 +127,7 @@ module.exports = {
     } catch (error) {
       logger.error("[VoiceMod Error]", error);
       await interaction.reply({
-        content:
-          `${ui.getEmoji("error") || "❌"} Gagal melakukan aksi moderasi voice. Pastikan posisiku lebih tinggi dari user tersebut dan aku memiliki izin yang cukup.`,
+        content: `${ui.getEmoji("error") || "❌"} Gagal melakukan aksi moderasi voice. Pastikan posisiku lebih tinggi dari user tersebut dan aku memiliki izin yang cukup.`,
         flags: MessageFlags.Ephemeral,
       });
     }

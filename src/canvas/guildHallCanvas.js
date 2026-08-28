@@ -48,7 +48,11 @@ async function drawGuildHall(hallData) {
 
     ctx.textAlign = "right";
     ctx.fillStyle = "#FFD700";
-    ctx.fillText(`KAS KLAN: ${(hallData.vault || 0).toLocaleString("id-ID")} ⭐`, width - 40, 50);
+    ctx.fillText(
+      `KAS KLAN: ${(hallData.vault || 0).toLocaleString("id-ID")} ⭐`,
+      width - 40,
+      50,
+    );
     ctx.textAlign = "left";
 
     // 4. Clan Name
@@ -75,7 +79,11 @@ async function drawGuildHall(hallData) {
     ctx.font = 'bold 14px "Outfit", "EmojiFont"';
     ctx.fillStyle = "#38BDF8";
     ctx.textAlign = "center";
-    ctx.fillText("☕ Lounge Barista Aktif: Minum kopi untuk +25 Energy harian!", width / 2, 310);
+    ctx.fillText(
+      "☕ Lounge Barista Aktif: Minum kopi untuk +25 Energy harian!",
+      width / 2,
+      310,
+    );
     ctx.textAlign = "left";
 
     // 6. Bottom Decor Summary
@@ -92,7 +100,9 @@ async function drawGuildHall(hallData) {
 
     ctx.font = '12px "Outfit", "EmojiFont"';
     ctx.fillStyle = "#CBD5E1";
-    const decorStr = furnitures.map((f) => f.replace("_", " ").toUpperCase()).join("  •  ") || "Belum ada furnitur terpasang";
+    const decorStr =
+      furnitures.map((f) => f.replace("_", " ").toUpperCase()).join("  •  ") ||
+      "Belum ada furnitur terpasang";
     ctx.fillText(decorStr, 55, 440);
 
     return canvas.toBuffer("image/png");

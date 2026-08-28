@@ -211,13 +211,13 @@ Ditemukan saat menyiapkan pekerjaan performa, dan sifatnya P0 karena membuat rep
 
 - [x] **Bahasa per user secara menyeluruh:** pastikan `/language` menulis ke profil user, `getUserLanguage` membaca cache user lebih dulu, dan `GuildSettings.language` hanya dipakai sebagai default saat user belum memilih.
 - [x] **AI conversation memory per user:** cek `ai_memory:{userId}` di Redis sebelum memanggil LLM, gabungkan ke context, simpan kembali dengan TTL 3600.
-- [x] **AI lokal tanpa kuota (Ollama Utama):** Mengubah mesin utama menjadi Ollama lokal dengan injeksi *System Prompt* Naura, perlindungan injeksi prompt di `aiSecurity.js`, menghapus kebutuhan kuota API pihak ketiga.
+- [x] **AI lokal tanpa kuota (Ollama Utama):** Mengubah mesin utama menjadi Ollama lokal dengan injeksi _System Prompt_ Naura, perlindungan injeksi prompt di `aiSecurity.js`, menghapus kebutuhan kuota API pihak ketiga.
 - [x] **Moderasi: tempban dan strike escalation.** Model `UserStrike`, logika eskalasi di `plugin/admin/warn.js`, dan penjadwalan unban lewat `cronManager.js` telah terimplementasi sempurna.
 - [x] **Anti-raid system:** hitung join per guild dengan rate limiter memory, dan set `GuildSettings.settings.lockdown = true` saat melebihi batas (misalnya 5 join per 10 detik).
 - [x] **Auction house dan pasar antar server:** tabel `market_auctions`, command `/market auction` dan `/market bid`. **Hanya setelah issue #17 selesai.**
 - [x] **Dashboard Ekonomi:** Membuat antarmuka visual (leaderboard kekayaan, statistik inflasi) di dashboard web (file `economy.html` belum ada).
 - [x] **Seasonal events system:** penentu musim (Halloween, Lebaran, Natal) di `survivalContext.js`, dengan boost drop rate atau item eksklusif.
-- [x] **Plugin Ticketing Lanjutan:** Mengembangkan folder `plugin/ticketing/` dengan modal untuk formulir tiket, serta *private thread* per tiket.
+- [x] **Plugin Ticketing Lanjutan:** Mengembangkan folder `plugin/ticketing/` dengan modal untuk formulir tiket, serta _private thread_ per tiket.
 - [x] **Audit desain dashboard terhadap `DESIGN.md`:** pastikan `.glass-panel` memakai `backdrop-filter: blur(16px)` dan `rgba(255, 255, 255, 0.03)`, font `Orbitron` untuk metrik dan `Outfit` untuk teks biasa, plus efek glow pada hover kartu.
 
 ---
@@ -254,7 +254,7 @@ Mengubah arsitektur AI Naura menjadi model lokal Ollama sebagai mesin utama deng
 
 - [x] **Jadikan Ollama mesin utama dengan fallback Gemini**
   - `aiManager.js` mencoba Ollama lokal lebih dulu, dengan fallback ke Groq dan Gemini secara otomatis.
-  - Injeksikan *System Prompt* Naura (kepribadian, bahasa, persona, pengetahuan sistem) ke setiap sesi.
+  - Injeksikan _System Prompt_ Naura (kepribadian, bahasa, persona, pengetahuan sistem) ke setiap sesi.
 - [x] **AI Conversation Memory per user**
   - Riwayat percakapan disimpan per user di Redis: key `ai_memory:{type}:{userId}`, TTL 3600 detik.
   - Riwayat digabungkan ke context sebelum setiap panggilan model (max 20 pesan).
@@ -328,7 +328,7 @@ Fokus sprint ini adalah mengadopsi standar Discord API 2026 (Apps Anywhere & Con
   - Daftarkan perintah personal (`/profile`, `/ask`, `/weather`, `/card`, `/translate`, `/calculator`, `/coinflip`, `/8ball`) agar bisa dipanggil pengguna di DM pribadi, grup chat, atau server lain yang belum mengundang Naura.
   - Tambahkan penanganan fallback saat interaksi dijalankan di luar guild (tidak memiliki `interaction.guild`).
 - [x] **Context Menu Apps (Pintasan Klik Kanan)**
-  - **Message Context Menu**: 
+  - **Message Context Menu**:
     - `🤖 Terjemahkan Teks`: Menerjemahkan pesan yang diklik ke bahasa preferensi user via `translate.js`.
     - `🤖 Ringkas AI (TL;DR)`: Mengirim ringkasan poin-poin penting isi pesan panjang ke ephemeral Container V2.
     - `🛡️ Lapor ke Staff`: Mengirim salinan pesan langsung ke tiket ModMail server.
@@ -365,7 +365,7 @@ Memperdalam interaksi sosial antar pemain dengan sistem barter kartu langsung, e
 
 - [x] **Live P2P Card Trading & Barter System**
   - Command `/card trade @user`: membuka sesi barter dua arah interaktif menggunakan Discord Components V2.
-  - Alur aman dua langkah: Pemain A dan Pemain B memasukkan kartu/fragmen di modal ➔ Keduanya menekan tombol *Lock In* ➔ Keduanya menekan *Confirm Trade*.
+  - Alur aman dua langkah: Pemain A dan Pemain B memasukkan kartu/fragmen di modal ➔ Keduanya menekan tombol _Lock In_ ➔ Keduanya menekan _Confirm Trade_.
   - Eksekusi transaksi atomik menggunakan transaksi SQL dengan penguncian baris (`SELECT ... FOR UPDATE`) untuk mencegah duplikasi kartu.
 - [x] **Canvas SSR Holo Shimmer Shader**
   - Efek shader kilau pelangi / hologram khusus untuk kartu tingkat kelangkaan SSR dan UR pada `src/canvas/cardCanvas.js`.
@@ -390,19 +390,19 @@ Membawa Naura ke level tertinggi dengan antarmuka aplikasi tersemat langsung di 
   - **Embedded Music Controller**: Panel musik real-time dengan sinkronisasi lirik dan antrean lagu tanpa perlu membuka browser eksternal.
 - [x] **Visual Server Automation Builder (Web Dashboard)**
   - Antarmuka drag-and-drop di dashboard web untuk menyusun alur otomatisasi kustom:
-    - *Trigger*: Event Discord (Member Join, Level Up, Reaction Role, Ticket Created).
-    - *Condition*: Filter peran, level server, atau kata kunci.
-    - *Action*: Beri role, kirim pesan Components V2, beri reward ekonomi, atau teruskan webhook eksternal.
+    - _Trigger_: Event Discord (Member Join, Level Up, Reaction Role, Ticket Created).
+    - _Condition_: Filter peran, level server, atau kata kunci.
+    - _Action_: Beri role, kirim pesan Components V2, beri reward ekonomi, atau teruskan webhook eksternal.
   - Eksekusi flow otomatis via runtime `src/services/automationEngine.js`.
 - [x] **Migrasi ke `discord-hybrid-sharding`**
   - Ganti `ShardingManager` bawaan dengan `ClusterManager` multi-core.
-  - Pangkas konsumsi RAM proses idle hingga 50% di panel Pterodactyl dan dukung *rolling restart* tanpa downtime.
+  - Pangkas konsumsi RAM proses idle hingga 50% di panel Pterodactyl dan dukung _rolling restart_ tanpa downtime.
 
 ---
 
 ## 🟠 Sprint 15: Advanced UX/UI Masterclass & Ergonomics Engine - SELESAI
 
-Mengintegrasikan 4 pilar teknik desain kelas industri (*UXpeak UI/UX Masterclass*) ke seluruh antarmuka Discord bot, Web Dashboard seluler, Canvas Graphics, dan UX Psychology Engine.
+Mengintegrasikan 4 pilar teknik desain kelas industri (_UXpeak UI/UX Masterclass_) ke seluruh antarmuka Discord bot, Web Dashboard seluler, Canvas Graphics, dan UX Psychology Engine.
 
 - [x] **Empty State Revamp ke Seluruh Ekosistem Bot**
   - Buat helper terpusat `uxHelper.buildEmptyStatePrompt()` di `src/utils/uxHelper.js`.
@@ -411,12 +411,12 @@ Mengintegrasikan 4 pilar teknik desain kelas industri (*UXpeak UI/UX Masterclass
   - Buat helper `uxHelper.buildVisualTimeline()` untuk format horizontal step tracker (`[1️⃣ Form] ──▶ [2️⃣ Konfirmasi] ──▶ [3️⃣ Selesai]`).
   - Terapkan pada alur wizard `/setup`, transaksi `/barter`, sistem `/ticket`, dan pengundian `/giveaway`.
 - [x] **Context-Aware Numeric Input & Quick Chips**
-  - Sediakan tombol kalkulasi instan (`[10%]`, `[25%]`, `[50%]`, `[MAX]`, `[+100]`, `[+1K]`) pada antarmuka transaksi ekonomi `/pay`, `/deposit`, `/withdraw`, dan `/barter` untuk memangkas *interaction cost*.
+  - Sediakan tombol kalkulasi instan (`[10%]`, `[25%]`, `[50%]`, `[MAX]`, `[+100]`, `[+1K]`) pada antarmuka transaksi ekonomi `/pay`, `/deposit`, `/withdraw`, dan `/barter` untuk memangkas _interaction cost_.
 - [x] **Mobile Bottom Navigation Bar & Thumb Zone di Web Dashboard**
   - Rancang komponen kaca mengambang `BottomNav.jsx` dengan standardisasi tinggi minimal 64px dan area sentuh 48px.
-  - Implementasikan status aktif dengan *neon pill glow* `#FFB6C1` dan transisi *spring micro-interaction*.
+  - Implementasikan status aktif dengan _neon pill glow_ `#FFB6C1` dan transisi _spring micro-interaction_.
 - [x] **Canvas Tinted Soft Shadows & Information Scannability**
-  - Tingkatkan kartu Canvas (`profileCanvas.js`, `rankCard.js`, `nowplayingCanvas.js`) menggunakan bayangan lembut berlapis yang di-*tint* dengan warna canvas `#0B0C10` dan neon glow.
+  - Tingkatkan kartu Canvas (`profileCanvas.js`, `rankCard.js`, `nowplayingCanvas.js`) menggunakan bayangan lembut berlapis yang di-_tint_ dengan warna canvas `#0B0C10` dan neon glow.
   - Standarisasi hierarki teks: Orbitron Bold untuk angka inti dan Outfit untuk label kontekstual.
 - [x] **Automated Testing & Verifikasi UX Helper**
   - Tambahkan unit test untuk `buildEmptyStatePrompt`, `buildVisualTimeline`, dan perhitungan `quick-chips` di `src/utils/uxHelper.test.js`.
@@ -461,7 +461,7 @@ Mengintegrasikan tiga fitur unggulan paling inovatif dan bernilai retensi tinggi
   - Integrasi otomatis pada event `src/music/poru_events/trackStart.js` saat mode AI Voice aktif di server.
 - [x] **Dynamic Prediction Market ("Hoshino Predictions / Pari-Mutuel Bets")**
   - Model Sequelize `PredictionMarket.js` dan `PredictionBet.js` dengan migrasi `v28_create_prediction_markets_and_bets`.
-  - Layanan `src/services/predictionEngine.js` dengan kalkulasi formula Pari-Mutuel, odds rasio dinamis, transaksi SQL atomik, limit batas bet 10.000 ⭐, serta fee 5% yang otomatis dialirkan ke *World Boss Bounty Vault*.
+  - Layanan `src/services/predictionEngine.js` dengan kalkulasi formula Pari-Mutuel, odds rasio dinamis, transaksi SQL atomik, limit batas bet 10.000 ⭐, serta fee 5% yang otomatis dialirkan ke _World Boss Bounty Vault_.
   - Slash command `/predict` (`create`, `view`, `bet`, `list`, `lock`, `resolve`, `cancel`) dengan tombol interaktif dan auto-lock cron per menit.
 - [x] **Automated Unit Testing & Paritas Sistem**
   - Menambahkan unit tests: `src/services/predictionEngine.test.js`, `src/services/radioDjService.test.js`, dan `src/survival/engines/worldBossEngine.test.js`.
@@ -486,7 +486,7 @@ Mengintegrasikan tiga pilar fitur retensi dan interaksi sosial: Mini-game simula
 - [x] **Card Fusion, Holographic Awakening, & Digital Inscription**
   - Model `UserCard.js` di-upgrade dengan kolom `isAwakened`, `awakeningLevel`, `inscription`, dan `originalMinterId` lewat migrasi `v31`.
   - Logika `cardEngine.js` (`fuseCards` & `inscribeCard`) untuk membakar 2 kartu material, meningkatkan kelangkaan kartu utama ke status **AWAKENED ⚡**, serta mengukir pesan digital permanen (100 ⭐).
-  - Renderer `cardCanvas.js` mendukung badge neon *Awakened*, shader holografis berkilau, dan cetakan tanda tangan digital.
+  - Renderer `cardCanvas.js` mendukung badge neon _Awakened_, shader holografis berkilau, dan cetakan tanda tangan digital.
   - Slash command `/card fuse` dan `/card inscribe` terdaftar pada `plugin/card/card.js`.
 - [x] **Automated Unit Testing & Paritas Sistem**
   - Unit tests baru: `src/survival/engines/cafeEngine.test.js`, `src/card/cardEngine.test.js`, dan `src/ai/serverChronicleEngine.test.js`.
@@ -497,10 +497,11 @@ Mengintegrasikan tiga pilar fitur retensi dan interaksi sosial: Mini-game simula
 ## 🟢 Sprint 19: Grand Expansion Quintet (Mystery, Conquest, Abyss, Habitat, & Quiz) - SELESAI
 
 Membawa Naura ke level interaksi sosial, kompetisi faksi klan, dan mini-game deduksi tertinggi melalui 5 pilar fitur:
+
 1. **AI Murder Mystery / Cyber Detective Game Master (`/mystery`)**: Game deduksi sosial prosedural dengan interogasi AI Gemini, petunjuk forensik bertahap, dan sidang vonis vonis berhadiah Star Fragments.
-2. **Guild Territory War & Node Domination (`/survival rpg conquest`)**: Perang perebutan 5 sektor strategis kota Neo-Hoshino dengan poin energi klan, royalti pajak kas klan harian, dan reset mingguan (*Weekly War Reset*).
-3. **Procedural Rogue-lite Labyrinth ("The Neo-Abyss") (`/survival rpg abyss`)**: Ekspedisi dungeon 50 lantai dengan *Synergy Relics*, ruang pertemuan bercabang, dan *Permadeath run*.
-4. **Interactive Pet Habitat & Cosmic Fusion Sanctuary (`/survival life pet habitat`)**: Ruang habitat santai Canvas, interaksi mainan cerdas, dan peleburan 2 Pet level 10 menjadi varian *Cosmic Ascended*.
+2. **Guild Territory War & Node Domination (`/survival rpg conquest`)**: Perang perebutan 5 sektor strategis kota Neo-Hoshino dengan poin energi klan, royalti pajak kas klan harian, dan reset mingguan (_Weekly War Reset_).
+3. **Procedural Rogue-lite Labyrinth ("The Neo-Abyss") (`/survival rpg abyss`)**: Ekspedisi dungeon 50 lantai dengan _Synergy Relics_, ruang pertemuan bercabang, dan _Permadeath run_.
+4. **Interactive Pet Habitat & Cosmic Fusion Sanctuary (`/survival life pet habitat`)**: Ruang habitat santai Canvas, interaksi mainan cerdas, dan peleburan 2 Pet level 10 menjadi varian _Cosmic Ascended_.
 5. **Interactive Music Quiz & Soundboard Stage (`/music quiz`)**: Mini-game kuis tebak cuplikan lagu anime/pop berkecepatan tinggi dengan streak multipliers dan hadiah Star Fragments.
 
 - [x] **AI Murder Mystery Game Master (`/mystery`)**
@@ -512,11 +513,11 @@ Membawa Naura ke level interaksi sosial, kompetisi faksi klan, dan mini-game ded
   - Peta visual taktis 5 sektor `src/canvas/territoryCanvas.js` terhubung ke worker thread.
   - Subcommand `plugin/survival/subcommands/conquest.js` (`map`, `attack`, `defend`, `tax`) dan cron reset mingguan di `cronManager.js`.
 - [x] **Procedural Rogue-lite Labyrinth ("The Neo-Abyss") (`/survival rpg abyss`)**
-  - Engine `src/survival/engines/abyssEngine.js` dengan generator 50 lantai, 5 katalog Synergy Relics (`vampiric_fang`, `overclock_core`, `sakura_shield`, `phantom_cloak`, `star_resonator`), dan mekanika *Permadeath*.
+  - Engine `src/survival/engines/abyssEngine.js` dengan generator 50 lantai, 5 katalog Synergy Relics (`vampiric_fang`, `overclock_core`, `sakura_shield`, `phantom_cloak`, `star_resonator`), dan mekanika _Permadeath_.
   - Subcommand `plugin/survival/subcommands/abyss.js` dengan tombol aksi cepat pilihan ruangan dan klaim jarahan.
 - [x] **Pet Habitat & Cosmic Ascension Fusion (`/survival life pet`)**
   - Model `UserPet.js` di-upgrade dengan `fusionCount`, `cosmicAura`, dan `habitatRoom` (migrasi `v32`).
-  - Engine `src/survival/engines/petHabitatEngine.js` untuk interaksi mainan habitat dan peleburan 2 Pet level 10 menjadi varian *Cosmic Ascended*.
+  - Engine `src/survival/engines/petHabitatEngine.js` untuk interaksi mainan habitat dan peleburan 2 Pet level 10 menjadi varian _Cosmic Ascended_.
   - Visual habitat Canvas `src/canvas/petHabitatCanvas.js` dan integrasi subcommand `/survival life pet aksi:habitat` dan `aksi:fuse`.
 - [x] **Interactive Music Quiz (`/music quiz`)**
   - Engine `src/music/musicQuizEngine.js` dengan bank soal anime OST/Pop, sistem skor kecepatan & kombo streak, dan alokasi hadiah Top 3.
@@ -530,10 +531,11 @@ Membawa Naura ke level interaksi sosial, kompetisi faksi klan, dan mini-game ded
 ## 🟢 Sprint 20: Milestone Special Quintet (Guild Hall, Coliseum, Persona Studio, Vivarium, & Stock Market) - SELESAI
 
 Membawa Naura ke edisi puncak milestone V2.2 melalui 5 pilar inovasi visual, sosial, dan ekonomi:
+
 1. **Visual 2.5D Guild Hall & Clan Master Hub (`/survival clan info` & `hall`)**: Ruang kumpul visual 2.5D di Canvas, kustomisasi furnitur cyberpunk, avatar anggota klan, seduhan kopi harian (+25 Energy), dan Master Hub Dashboard interaktif.
-2. **Galactic Coliseum & Cross-Server 3v3 Arena (`/survival arena coliseum_match`)**: Duel turnamen PvP 3v3 asinkron dengan Elo Rating, 6 tingkatan divisi (Bronze s.d. Master), matchmaking seimbang, kartu visual duel di Canvas, dan reset bulanan (*Monthly Championship Reset*).
-3. **AI Multi-Persona Studio & Custom Companion Tuner (`/persona`)**: Pembuatan kepribadian AI kustom per server/channel (*Tsundere Maid*, *Cyber Hacker*, *Ancient Sage*, *Blacksmith*, *Kuudere*) dengan tone of voice dan sistem instruksi terisolasi via Gemini.
-4. **Deep-Sea Cyber-Fishing & Holographic Vivarium (`/survival activity fish`)**: Ekosistem memancing laut dalam 3 zona kedalaman (*Coral Reef*, *Midnight Trench*, *Abyssal Core*), 12+ ikan sibernetik langka, dan akuarium holografis Canvas penghasil tiket pasif.
+2. **Galactic Coliseum & Cross-Server 3v3 Arena (`/survival arena coliseum_match`)**: Duel turnamen PvP 3v3 asinkron dengan Elo Rating, 6 tingkatan divisi (Bronze s.d. Master), matchmaking seimbang, kartu visual duel di Canvas, dan reset bulanan (_Monthly Championship Reset_).
+3. **AI Multi-Persona Studio & Custom Companion Tuner (`/persona`)**: Pembuatan kepribadian AI kustom per server/channel (_Tsundere Maid_, _Cyber Hacker_, _Ancient Sage_, _Blacksmith_, _Kuudere_) dengan tone of voice dan sistem instruksi terisolasi via Gemini.
+4. **Deep-Sea Cyber-Fishing & Holographic Vivarium (`/survival activity fish`)**: Ekosistem memancing laut dalam 3 zona kedalaman (_Coral Reef_, _Midnight Trench_, _Abyssal Core_), 12+ ikan sibernetik langka, dan akuarium holografis Canvas penghasil tiket pasif.
 5. **Server Activity Stock Exchange & Virtual Startups (`/stock`)**: Bursa efek virtual yang terhubung dengan metrik server, pendirian startup klan (IPO), jual-beli saham atomik, indeks saham High Risk `$NRA` (-40% s.d. +60% swing), dan grafik performa di Canvas.
 
 - [x] **2.5D Guild Hall & Master Hub Dashboard (`/survival rpg clan`)**
@@ -565,6 +567,7 @@ Membawa Naura ke edisi puncak milestone V2.2 melalui 5 pilar inovasi visual, sos
 ---
 
 ## ⚠️ Risiko yang harus terus dipantau
+
 | Risiko                                                                | Dampak                                                                                                      | Mitigasi                                                                                                                                                                                                                               |
 | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Migrasi berjalan di dalam boot sequence dan di semua shard            | Skema separuh jalan atau deadlock saat startup                                                              | **Selesai** di Sprint 0 lewat `scripts/migrate.js`, dan di Sprint 2 dijamin urutannya oleh `prestart`                                                                                                                                  |
@@ -654,8 +657,8 @@ Membawa Naura ke edisi puncak milestone V2.2 melalui 5 pilar inovasi visual, sos
 - [x] **Onboarding Wizard** `M`, Saat bot join server baru, kirim Container V2 dengan preset cepat (Community, Gaming, Minimal). `plugin/admin/onboardingWizard.js`
 
 > **Urutan Sprint yang Direkomendasikan:**
+>
 > - **Sprint A (Impact Tinggi, Ringan):** Audio Filters, Voice Activity Rewards, Quest Harian
 > - **Sprint B (Impact Tinggi, Sedang):** AI Memory, PvP Arena, Anti-Raid, Musim & Event
 > - **Sprint C (Kompleks, Differensiator):** AI Function Calling, Dashboard Analytics, Modmail Lanjutan
 > - **Sprint D (Long-term):** AI Dungeon Master, Sistem Klan, Welcome Card Builder, Voice AI
-

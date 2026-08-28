@@ -7,7 +7,10 @@ const {
   ButtonStyle,
   AttachmentBuilder,
 } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
 const stockMarketEngine = require("../../src/services/stockMarketEngine");
 const { drawStockMarket } = require("../../src/canvas/stockCanvas");
@@ -20,7 +23,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("market")
-        .setDescription("Lihat ringkasan pergerakan harga seluruh saham di bursa efek"),
+        .setDescription(
+          "Lihat ringkasan pergerakan harga seluruh saham di bursa efek",
+        ),
     )
     .addSubcommand((sub) =>
       sub
@@ -29,7 +34,9 @@ module.exports = {
         .addStringOption((opt) =>
           opt
             .setName("ticker")
-            .setDescription("Kode Ticker Saham (contoh: HOSHINO_AI, NAURA_COIN, NEO_ENERGY)")
+            .setDescription(
+              "Kode Ticker Saham (contoh: HOSHINO_AI, NAURA_COIN, NEO_ENERGY)",
+            )
             .setRequired(true),
         )
         .addIntegerOption((opt) =>
@@ -62,12 +69,16 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("portfolio")
-        .setDescription("Lihat portofolio investasi saham, valuasi aset, dan laba/rugi"),
+        .setDescription(
+          "Lihat portofolio investasi saham, valuasi aset, dan laba/rugi",
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("ipo")
-        .setDescription("Daftarkan startup baru klan ke bursa efek (Biaya: 25.000 ⭐ dari kas klan)")
+        .setDescription(
+          "Daftarkan startup baru klan ke bursa efek (Biaya: 25.000 ⭐ dari kas klan)",
+        )
         .addStringOption((opt) =>
           opt
             .setName("ticker")
@@ -83,7 +94,9 @@ module.exports = {
         .addBooleanOption((opt) =>
           opt
             .setName("high_risk")
-            .setDescription("Apakah startup ini bertipe High Risk High Reward? (Opsional)")
+            .setDescription(
+              "Apakah startup ini bertipe High Risk High Reward? (Opsional)",
+            )
             .setRequired(false),
         ),
     ),
@@ -101,7 +114,9 @@ module.exports = {
 
       try {
         const stockBuf = await drawStockMarket(stocks);
-        files.push(new AttachmentBuilder(stockBuf, { name: "stock_market.png" }));
+        files.push(
+          new AttachmentBuilder(stockBuf, { name: "stock_market.png" }),
+        );
       } catch (err) {
         // Fallback jika canvas terkendala
       }
@@ -125,8 +140,15 @@ module.exports = {
         .join("\n\n");
 
       const buttonsRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId("stock_btn_port").setLabel("Portofolio").setEmoji(ui.parseEmoji(ui.getEmoji("briefcase")) || { name: "💼" }).setStyle(ButtonStyle.Primary),
-        new ButtonBuilder().setCustomId("stock_btn_refresh").setLabel("Refresh Pasar").setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId("stock_btn_port")
+          .setLabel("Portofolio")
+          .setEmoji(ui.parseEmoji(ui.getEmoji("briefcase")) || { name: "💼" })
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId("stock_btn_refresh")
+          .setLabel("Refresh Pasar")
+          .setStyle(ButtonStyle.Secondary),
       );
 
       const payload = buildContainerV2({
@@ -153,11 +175,18 @@ module.exports = {
       const ticker = interaction.options.getString("ticker").toUpperCase();
       const quantity = interaction.options.getInteger("jumlah");
 
-      const res = await stockMarketEngine.tradeStock(userId, ticker, "BUY", quantity);
+      const res = await stockMarketEngine.tradeStock(
+        userId,
+        ticker,
+        "BUY",
+        quantity,
+      );
       if (!res.success) {
         let msg = "Gagal membeli saham.";
-        if (res.reason === "STOCK_NOT_FOUND") msg = `Saham dengan ticker \`${ticker}\` tidak ditemukan di bursa efek!`;
-        if (res.reason === "INSUFFICIENT_FUNDS") msg = `Saldo Star Fragments tidak cukup! Butuh ${res.cost.toLocaleString("id-ID")} ⭐ untuk membeli ${quantity} lembar ${ticker}.`;
+        if (res.reason === "STOCK_NOT_FOUND")
+          msg = `Saham dengan ticker \`${ticker}\` tidak ditemukan di bursa efek!`;
+        if (res.reason === "INSUFFICIENT_FUNDS")
+          msg = `Saldo Star Fragments tidak cukup! Butuh ${res.cost.toLocaleString("id-ID")} ⭐ untuk membeli ${quantity} lembar ${ticker}.`;
 
         return interaction.editReply({
           ...buildErrorContainerV2({
@@ -198,11 +227,18 @@ module.exports = {
       const ticker = interaction.options.getString("ticker").toUpperCase();
       const quantity = interaction.options.getInteger("jumlah");
 
-      const res = await stockMarketEngine.tradeStock(userId, ticker, "SELL", quantity);
+      const res = await stockMarketEngine.tradeStock(
+        userId,
+        ticker,
+        "SELL",
+        quantity,
+      );
       if (!res.success) {
         let msg = "Gagal menjual saham.";
-        if (res.reason === "STOCK_NOT_FOUND") msg = `Saham dengan ticker \`${ticker}\` tidak ditemukan di bursa efek!`;
-        if (res.reason === "INSUFFICIENT_SHARES") msg = `Kamu hanya memiliki ${res.owned} lembar saham ${ticker}, tidak cukup untuk menjual ${res.requested} lembar!`;
+        if (res.reason === "STOCK_NOT_FOUND")
+          msg = `Saham dengan ticker \`${ticker}\` tidak ditemukan di bursa efek!`;
+        if (res.reason === "INSUFFICIENT_SHARES")
+          msg = `Kamu hanya memiliki ${res.owned} lembar saham ${ticker}, tidak cukup untuk menjual ${res.requested} lembar!`;
 
         return interaction.editReply({
           ...buildErrorContainerV2({
@@ -246,7 +282,8 @@ module.exports = {
         return interaction.editReply({
           ...buildErrorContainerV2({
             title: "Portofolio Kosong",
-            description: "Kamu belum memiliki lembar saham apa pun di bursa efek! Buka `/stock market` untuk mulai berinvestasi.",
+            description:
+              "Kamu belum memiliki lembar saham apa pun di bursa efek! Buka `/stock market` untuk mulai berinvestasi.",
             footerText: ui.getFooter("utility"),
           }),
         });
@@ -291,7 +328,11 @@ module.exports = {
       // Temukan klan pengguna
       const allClans = await GuildClan.findAll();
       const userClan = allClans.find((c) => {
-        const members = Array.isArray(c.members) ? c.members : (typeof c.members === "string" ? JSON.parse(c.members) : []);
+        const members = Array.isArray(c.members)
+          ? c.members
+          : typeof c.members === "string"
+            ? JSON.parse(c.members)
+            : [];
         return c.leaderId === userId || members.includes(userId);
       });
 
@@ -299,17 +340,25 @@ module.exports = {
         return interaction.editReply({
           ...buildErrorContainerV2({
             title: "Klan Diperlukan",
-            description: "Hanya klan terdaftar yang dapat menerbitkan Initial Public Offering (IPO) untuk mendirikan Virtual Startup!",
+            description:
+              "Hanya klan terdaftar yang dapat menerbitkan Initial Public Offering (IPO) untuk mendirikan Virtual Startup!",
             footerText: ui.getFooter("utility"),
           }),
         });
       }
 
-      const ipoRes = await stockMarketEngine.launchStartupIPO(userClan.id, ticker, name, isHighRisk);
+      const ipoRes = await stockMarketEngine.launchStartupIPO(
+        userClan.id,
+        ticker,
+        name,
+        isHighRisk,
+      );
       if (!ipoRes.success) {
         let msg = "Gagal menerbitkan IPO.";
-        if (ipoRes.reason === "TICKER_ALREADY_EXISTS") msg = `Kode ticker \`${ticker}\` sudah digunakan oleh korporat lain di bursa efek!`;
-        if (ipoRes.reason === "INSUFFICIENT_VAULT") msg = `Kas brankas klan tidak cukup! Butuh ${ipoRes.cost.toLocaleString("id-ID")} ⭐ dari kas klan.`;
+        if (ipoRes.reason === "TICKER_ALREADY_EXISTS")
+          msg = `Kode ticker \`${ticker}\` sudah digunakan oleh korporat lain di bursa efek!`;
+        if (ipoRes.reason === "INSUFFICIENT_VAULT")
+          msg = `Kas brankas klan tidak cukup! Butuh ${ipoRes.cost.toLocaleString("id-ID")} ⭐ dari kas klan.`;
 
         return interaction.editReply({
           ...buildErrorContainerV2({

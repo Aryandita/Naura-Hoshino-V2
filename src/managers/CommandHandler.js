@@ -170,13 +170,17 @@ class CommandHandler {
 
       // Muat Context Menu Commands (Pintasan Klik Kanan)
       try {
-        const { getContextMenuCommands } = require("../interactions/contextMenus");
+        const {
+          getContextMenuCommands,
+        } = require("../interactions/contextMenus");
         const contextMenus = getContextMenuCommands();
         for (const cm of contextMenus) {
           commandsArray.push(cm);
         }
       } catch (err) {
-        logger.warn(`[COMMANDS] Gagal memuat context menu commands: ${err.message}`);
+        logger.warn(
+          `[COMMANDS] Gagal memuat context menu commands: ${err.message}`,
+        );
       }
 
       // Register default hybrid short aliases

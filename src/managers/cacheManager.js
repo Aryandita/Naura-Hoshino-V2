@@ -167,7 +167,8 @@ class CacheManager {
     queue.delete(userId);
 
     try {
-      const validAttributes = Model && Model.rawAttributes ? Model.rawAttributes : null;
+      const validAttributes =
+        Model && Model.rawAttributes ? Model.rawAttributes : null;
       const setKeys = Object.keys(entry.set).filter(
         (k) => SAFE_COLUMN.test(k) && (!validAttributes || validAttributes[k]),
       );
@@ -199,15 +200,18 @@ class CacheManager {
     const entries = Array.from(queue.entries());
     queue.clear();
 
-    const validAttributes = Model && Model.rawAttributes ? Model.rawAttributes : null;
+    const validAttributes =
+      Model && Model.rawAttributes ? Model.rawAttributes : null;
 
     for (const [userId, { set, inc }] of entries) {
       try {
         const setKeys = Object.keys(set).filter(
-          (k) => SAFE_COLUMN.test(k) && (!validAttributes || validAttributes[k]),
+          (k) =>
+            SAFE_COLUMN.test(k) && (!validAttributes || validAttributes[k]),
         );
         const incKeys = Object.keys(inc).filter(
-          (k) => SAFE_COLUMN.test(k) && (!validAttributes || validAttributes[k]),
+          (k) =>
+            SAFE_COLUMN.test(k) && (!validAttributes || validAttributes[k]),
         );
 
         if (setKeys.length > 0) {
@@ -489,7 +493,8 @@ class CacheManager {
    * @returns {Promise<boolean>} Status keberhasilan cache
    */
   async updateUserProfile(userId, fieldOrData, maybeValue) {
-    if (!userId || fieldOrData === undefined || fieldOrData === null) return false;
+    if (!userId || fieldOrData === undefined || fieldOrData === null)
+      return false;
     let updateData = fieldOrData;
     if (typeof fieldOrData === "string") {
       updateData = { [fieldOrData]: maybeValue };
@@ -651,7 +656,8 @@ class CacheManager {
    * @param {any} [maybeValue] - Nilai jika parameter kedua adalah nama kolom
    */
   async updateUserSurvival(userId, fieldOrData, maybeValue) {
-    if (!userId || fieldOrData === undefined || fieldOrData === null) return false;
+    if (!userId || fieldOrData === undefined || fieldOrData === null)
+      return false;
     let updateData = fieldOrData;
     if (typeof fieldOrData === "string") {
       updateData = { [fieldOrData]: maybeValue };

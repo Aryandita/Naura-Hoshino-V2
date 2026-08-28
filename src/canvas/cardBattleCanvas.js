@@ -5,7 +5,14 @@ const { createCanvas, loadImage } = require("./canvasRuntime");
 /**
  * Render visual pertempuran kartu anime 900x500
  */
-async function drawCardBattleArena({ p1, p2, p1User, p2User, turnLog, roundNumber = 1 }) {
+async function drawCardBattleArena({
+  p1,
+  p2,
+  p1User,
+  p2User,
+  turnLog,
+  roundNumber = 1,
+}) {
   const canvas = createCanvas(900, 500);
   const ctx = canvas.getContext("2d");
 
@@ -52,10 +59,18 @@ async function drawCardBattleArena({ p1, p2, p1User, p2User, turnLog, roundNumbe
   ctx.textAlign = "left";
   ctx.fillStyle = "#FFFFFF";
   ctx.font = "bold 18px 'Outfit', sans-serif";
-  ctx.fillText(`${p1User.username || "Challenger"} (${p1.characterName})`, 70, 115);
+  ctx.fillText(
+    `${p1User.username || "Challenger"} (${p1.characterName})`,
+    70,
+    115,
+  );
   ctx.fillStyle = "#F9A8D4";
   ctx.font = "14px 'Outfit', sans-serif";
-  ctx.fillText(`${p1.elementEmoji} Elemen: ${p1.element} | 🌟 ${p1.quality} #${p1.printNumber}`, 70, 140);
+  ctx.fillText(
+    `${p1.elementEmoji} Elemen: ${p1.element} | 🌟 ${p1.quality} #${p1.printNumber}`,
+    70,
+    140,
+  );
 
   // P1 HP Bar
   const p1HpRatio = Math.max(0, p1.currentHp / p1.maxHp);
@@ -79,15 +94,27 @@ async function drawCardBattleArena({ p1, p2, p1User, p2User, turnLog, roundNumbe
   ctx.textAlign = "left";
   ctx.fillStyle = "#93C5FD";
   ctx.font = "bold 14px 'Outfit', sans-serif";
-  ctx.fillText(`⚡ Energy: ${"🔷".repeat(p1.energy)}${"▫️".repeat(p1.maxEnergy - p1.energy)} (${p1.energy}/${p1.maxEnergy})`, 70, 215);
+  ctx.fillText(
+    `⚡ Energy: ${"🔷".repeat(p1.energy)}${"▫️".repeat(p1.maxEnergy - p1.energy)} (${p1.energy}/${p1.maxEnergy})`,
+    70,
+    215,
+  );
 
   // P1 Stats & Ultimate
   ctx.fillStyle = "#E0E0E0";
   ctx.font = "14px 'Outfit', sans-serif";
-  ctx.fillText(`⚔️ ATK: ${p1.atk} | 🛡️ DEF: ${p1.def} | 💨 SPD: ${p1.spd}`, 70, 245);
+  ctx.fillText(
+    `⚔️ ATK: ${p1.atk} | 🛡️ DEF: ${p1.def} | 💨 SPD: ${p1.spd}`,
+    70,
+    245,
+  );
   ctx.fillStyle = "#FFD700";
   ctx.font = "bold 14px 'Outfit', sans-serif";
-  ctx.fillText(`✨ Ultimate: ${p1.skill.name} (${p1.skill.energyCost} Energy)`, 70, 275);
+  ctx.fillText(
+    `✨ Ultimate: ${p1.skill.name} (${p1.skill.energyCost} Energy)`,
+    70,
+    275,
+  );
   ctx.fillStyle = "#A0A0A0";
   ctx.font = "12px 'Outfit', sans-serif";
   ctx.fillText(p1.skill.desc.substring(0, 48) + "...", 70, 300);
@@ -111,10 +138,18 @@ async function drawCardBattleArena({ p1, p2, p1User, p2User, turnLog, roundNumbe
   ctx.textAlign = "left";
   ctx.fillStyle = "#FFFFFF";
   ctx.font = "bold 18px 'Outfit', sans-serif";
-  ctx.fillText(`${p2User.username || "Opponent"} (${p2.characterName})`, 510, 115);
+  ctx.fillText(
+    `${p2User.username || "Opponent"} (${p2.characterName})`,
+    510,
+    115,
+  );
   ctx.fillStyle = "#C084FC";
   ctx.font = "14px 'Outfit', sans-serif";
-  ctx.fillText(`${p2.elementEmoji} Elemen: ${p2.element} | 🌟 ${p2.quality} #${p2.printNumber}`, 510, 140);
+  ctx.fillText(
+    `${p2.elementEmoji} Elemen: ${p2.element} | 🌟 ${p2.quality} #${p2.printNumber}`,
+    510,
+    140,
+  );
 
   // P2 HP Bar
   const p2HpRatio = Math.max(0, p2.currentHp / p2.maxHp);
@@ -138,15 +173,27 @@ async function drawCardBattleArena({ p1, p2, p1User, p2User, turnLog, roundNumbe
   ctx.textAlign = "left";
   ctx.fillStyle = "#93C5FD";
   ctx.font = "bold 14px 'Outfit', sans-serif";
-  ctx.fillText(`⚡ Energy: ${"🔷".repeat(p2.energy)}${"▫️".repeat(p2.maxEnergy - p2.energy)} (${p2.energy}/${p2.maxEnergy})`, 510, 215);
+  ctx.fillText(
+    `⚡ Energy: ${"🔷".repeat(p2.energy)}${"▫️".repeat(p2.maxEnergy - p2.energy)} (${p2.energy}/${p2.maxEnergy})`,
+    510,
+    215,
+  );
 
   // P2 Stats & Ultimate
   ctx.fillStyle = "#E0E0E0";
   ctx.font = "14px 'Outfit', sans-serif";
-  ctx.fillText(`⚔️ ATK: ${p2.atk} | 🛡️ DEF: ${p2.def} | 💨 SPD: ${p2.spd}`, 510, 245);
+  ctx.fillText(
+    `⚔️ ATK: ${p2.atk} | 🛡️ DEF: ${p2.def} | 💨 SPD: ${p2.spd}`,
+    510,
+    245,
+  );
   ctx.fillStyle = "#FFD700";
   ctx.font = "bold 14px 'Outfit', sans-serif";
-  ctx.fillText(`✨ Ultimate: ${p2.skill.name} (${p2.skill.energyCost} Energy)`, 510, 275);
+  ctx.fillText(
+    `✨ Ultimate: ${p2.skill.name} (${p2.skill.energyCost} Energy)`,
+    510,
+    275,
+  );
   ctx.fillStyle = "#A0A0A0";
   ctx.font = "12px 'Outfit', sans-serif";
   ctx.fillText(p2.skill.desc.substring(0, 48) + "...", 510, 300);

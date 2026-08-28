@@ -3,7 +3,9 @@
 const fs = require("fs");
 const path = require("path");
 const { logger } = require("../../src/managers/logger");
-const { safeParseInventory } = require("../../src/survival/engines/inventoryHelper");
+const {
+  safeParseInventory,
+} = require("../../src/survival/engines/inventoryHelper");
 const cacheManager = require("../../src/managers/cacheManager");
 const ui = require("../../src/config/ui");
 const languageManager = require("../../src/managers/languageManager");

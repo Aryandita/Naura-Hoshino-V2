@@ -8,14 +8,18 @@ const {
 
 const cacheManager = require("../../../src/managers/cacheManager");
 const itemsConfig = require("../../../src/survival/data/items");
-const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
+const {
+  safeParseInventory,
+} = require("../../../src/survival/engines/inventoryHelper");
 const ui = require("../../../src/config/ui");
 const leveling = require("../../../src/survival/engines/survivalLeveling");
 const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
-const { applyItemEffect } = require("../../../src/survival/helpers/specialEffects");
+const {
+  applyItemEffect,
+} = require("../../../src/survival/helpers/specialEffects");
 
 const COLLECTOR_MS = 60000;
 const MAX_OPTIONS = 25;
@@ -178,7 +182,7 @@ module.exports = {
             imgName: "kirin.png",
             title: `${ui.getEmoji("sparkles") || "✨"} Kirin Surgawi Menetas!`,
             desc: "Makhluk sakral pelindung dimensi Hoshino ini kini setia menemanimu.",
-            skillDesc: "+30 HP, +15 DMG, +8 Dodge, +8 Crit (All-Rounder)"
+            skillDesc: "+30 HP, +15 DMG, +8 Dodge, +8 Crit (All-Rounder)",
           },
           egg_leviathan: {
             petType: "leviathan",
@@ -187,7 +191,8 @@ module.exports = {
             imgName: "leviathan.png",
             title: `${ui.getEmoji("water") || "🌊"} Leviathan Laut Dalam Menetas!`,
             desc: "Raksasa samudra purba ini melindungimu dengan lapisan aura perisai air abadi.",
-            skillDesc: "+80 HP (Drastis!), +2 DMG, +1 Dodge, +1 Crit (Immortal Tanker)"
+            skillDesc:
+              "+80 HP (Drastis!), +2 DMG, +1 Dodge, +1 Crit (Immortal Tanker)",
           },
           egg_bahamut: {
             petType: "bahamut",
@@ -196,7 +201,8 @@ module.exports = {
             imgName: "bahamut.png",
             title: `${ui.getEmoji("fire") || "🔥"} Bahamut Kehancuran Menetas!`,
             desc: "Naga api apokaliptik pembawa kehancuran mutlak siap membakar semua lawanmu.",
-            skillDesc: "+5 HP, +35 DMG (Drastis!), +1 Dodge, +2 Crit (Pure Berserker)"
+            skillDesc:
+              "+5 HP, +35 DMG (Drastis!), +1 Dodge, +2 Crit (Pure Berserker)",
           },
           egg_garuda: {
             petType: "garuda",
@@ -205,8 +211,9 @@ module.exports = {
             imgName: "garuda.png",
             title: `${ui.getEmoji("stamina") || "⚡"} Garuda Badai Surya Menetas!`,
             desc: "Dewa angin dan kilat suci ini memberimu kecepatan gerak secepat cahaya.",
-            skillDesc: "+10 HP, +5 DMG, +20 Dodge & +15 Crit (Drastis!) (Phantom God)"
-          }
+            skillDesc:
+              "+10 HP, +5 DMG, +20 Dodge & +15 Crit (Drastis!) (Phantom God)",
+          },
         };
 
         if (MYTHIC_HATCH_DATA[conf.effect]) {
@@ -217,7 +224,10 @@ module.exports = {
           const hatch = MYTHIC_HATCH_DATA[conf.effect];
 
           // Nonaktifkan pet lama
-          await UserPet.update({ isActive: false }, { where: { userId: user.id } });
+          await UserPet.update(
+            { isActive: false },
+            { where: { userId: user.id } },
+          );
 
           // Buat Pet Mitologi Baru
           await UserPet.create({
@@ -230,18 +240,21 @@ module.exports = {
             affection: 100,
             mood: "happy",
             evolutionStage: 1,
-            passiveSkill: hatch.passiveSkill
+            passiveSkill: hatch.passiveSkill,
           });
 
           lines.push(
             `${ui.getEmoji("star") || "🌟"} **KEJAIBAN MITOLOGI!** Telur mitologi bergetar dahsyat dan menetaskan **${hatch.petName}**!`,
             `${hatch.desc}`,
             `> ${ui.getEmoji("battle") || "⚔️"} **Passive Skill Aktif:** \`${hatch.passiveSkill}\` (${hatch.skillDesc})`,
-            `> ${ui.getEmoji("cat_pet") || "🐾"} Ketik \`/survival rpg pet\` untuk merawat, melihat evolusi, dan bermain bersamanya!`
+            `> ${ui.getEmoji("cat_pet") || "🐾"} Ketik \`/survival rpg pet\` untuk merawat, melihat evolusi, dan bermain bersamanya!`,
           );
 
           let petAttachment = null;
-          const imgPath = path.join(__dirname, `../../../assets/survival/pets/${hatch.imgName}`);
+          const imgPath = path.join(
+            __dirname,
+            `../../../assets/survival/pets/${hatch.imgName}`,
+          );
           if (fs.existsSync(imgPath)) {
             petAttachment = new AttachmentBuilder(imgPath, { name: "pet.png" });
           }
@@ -260,7 +273,7 @@ module.exports = {
           return i.editReply({
             ...done,
             files: petAttachment ? [petAttachment] : [],
-            embeds: []
+            embeds: [],
           });
         } else if (conf.effect === "max_romance") {
           lines.push(

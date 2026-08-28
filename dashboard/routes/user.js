@@ -88,12 +88,10 @@ module.exports = (client) => {
       });
     } catch (e) {
       logger.error("[API LANGUAGE GET] Error:", e);
-      res
-        .status(500)
-        .json({
-          success: false,
-          error: "Naura gagal membaca pilihan bahasamu.",
-        });
+      res.status(500).json({
+        success: false,
+        error: "Naura gagal membaca pilihan bahasamu.",
+      });
     }
   });
 
@@ -117,12 +115,10 @@ module.exports = (client) => {
       });
     } catch (e) {
       logger.error("[API LANGUAGE SET] Error:", e);
-      res
-        .status(500)
-        .json({
-          success: false,
-          error: "Naura gagal menyimpan pilihan bahasamu.",
-        });
+      res.status(500).json({
+        success: false,
+        error: "Naura gagal menyimpan pilihan bahasamu.",
+      });
     }
   });
 
@@ -134,25 +130,30 @@ module.exports = (client) => {
       const { name, systemPrompt, avatarUrl } = req.body;
       const cacheManager = require("../../src/managers/cacheManager");
       const profile = await cacheManager.getUserProfile(req.user.id);
-      
+
       if (!profile.isPremium) {
-          return res.status(403).json({ success: false, error: "Fitur ini hanya untuk member Premium." });
+        return res.status(403).json({
+          success: false,
+          error: "Fitur ini hanya untuk member Premium.",
+        });
       }
 
       const mutator = await cacheManager.mutateUserProfileJson(req.user.id);
       if (mutator) {
-          mutator.aiPersona = {
-              name: name || null,
-              systemPrompt: systemPrompt || null,
-              avatarUrl: avatarUrl || null
-          };
-          await mutator.save();
+        mutator.aiPersona = {
+          name: name || null,
+          systemPrompt: systemPrompt || null,
+          avatarUrl: avatarUrl || null,
+        };
+        await mutator.save();
       }
 
       res.json({ success: true, message: "Persona AI berhasil diperbarui!" });
     } catch (e) {
       logger.error("[API PERSONA SET] Error:", e);
-      res.status(500).json({ success: false, error: "Gagal menyimpan persona AI." });
+      res
+        .status(500)
+        .json({ success: false, error: "Gagal menyimpan persona AI." });
     }
   });
 
@@ -257,12 +258,10 @@ module.exports = (client) => {
 
       const item = inv[idx];
       if (itemIdOf(item) !== itemId) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            error: "Itemnya tidak cocok dengan slot itu.",
-          });
+        return res.status(400).json({
+          success: false,
+          error: "Itemnya tidak cocok dengan slot itu.",
+        });
       }
 
       let message = "";
@@ -305,12 +304,10 @@ module.exports = (client) => {
     try {
       const { itemId } = req.body || {};
       if (!itemId)
-        return res
-          .status(400)
-          .json({
-            success: false,
-            error: "Item yang mau dilebur belum dipilih.",
-          });
+        return res.status(400).json({
+          success: false,
+          error: "Item yang mau dilebur belum dipilih.",
+        });
 
       const GameItem = require("../../src/models/GameItem");
       const profile = await UserProfile.findByPk(req.targetUserId);
@@ -327,12 +324,10 @@ module.exports = (client) => {
       );
 
       if (totalAmount < 2) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            error: "Naura butuh minimal 2 item yang sama untuk melebur ya.",
-          });
+        return res.status(400).json({
+          success: false,
+          error: "Naura butuh minimal 2 item yang sama untuk melebur ya.",
+        });
       }
 
       // Ambil 2 bahan dari belakang agar tumpukan terlama tetap utuh.

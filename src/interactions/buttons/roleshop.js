@@ -1,6 +1,11 @@
 "use strict";
 
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
+const {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  MessageFlags,
+} = require("discord.js");
 const cacheManager = require("../../managers/cacheManager");
 const ui = require("../../config/ui");
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
@@ -15,17 +20,25 @@ module.exports = [
       const roleId = args[0];
       const currency = args[1]; // "nsf", "coin", "coupon"
 
-      const guildData = await cacheManager.getGuildSettings(interaction.guild.id);
-      const shop = (guildData?.settings?.roleShop) || [];
+      const guildData = await cacheManager.getGuildSettings(
+        interaction.guild.id,
+      );
+      const shop = guildData?.settings?.roleShop || [];
       const item = shop.find((r) => r.roleId === roleId);
 
       if (!item) {
-        return interaction.reply({ content: "Item ini sudah tidak dijual.", flags: MessageFlags.Ephemeral });
+        return interaction.reply({
+          content: "Item ini sudah tidak dijual.",
+          flags: MessageFlags.Ephemeral,
+        });
       }
 
       const roleObj = interaction.guild.roles.cache.get(roleId);
       if (!roleObj) {
-        return interaction.reply({ content: "Role tidak ditemukan di server.", flags: MessageFlags.Ephemeral });
+        return interaction.reply({
+          content: "Role tidak ditemukan di server.",
+          flags: MessageFlags.Ephemeral,
+        });
       }
 
       if (!currency) {
@@ -45,7 +58,7 @@ module.exports = [
             .setCustomId(`roleshop_buy_${roleId}_coupon`)
             .setLabel(`Bayar pakai Coupon (${item.prices.coupon})`)
             .setEmoji("🎫")
-            .setStyle(ButtonStyle.Success)
+            .setStyle(ButtonStyle.Success),
         );
 
         const payload = buildContainerV2({
@@ -83,7 +96,10 @@ module.exports = [
       }
 
       if (balance < price) {
-        return interaction.reply({ content: `${ui.getEmoji("cross") || "❌"} Saldo **${currencyName}** kamu tidak cukup! (Butuh: ${price})`, flags: MessageFlags.Ephemeral });
+        return interaction.reply({
+          content: `${ui.getEmoji("cross") || "❌"} Saldo **${currencyName}** kamu tidak cukup! (Butuh: ${price})`,
+          flags: MessageFlags.Ephemeral,
+        });
       }
 
       // Lakukan pemotongan saldo
@@ -114,7 +130,10 @@ module.exports = [
         footerText: ui.getFooter("core"),
       });
 
-      return interaction.reply({ ...successPayload, flags: MessageFlags.Ephemeral });
+      return interaction.reply({
+        ...successPayload,
+        flags: MessageFlags.Ephemeral,
+      });
     },
   },
 ];

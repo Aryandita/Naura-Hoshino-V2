@@ -45,7 +45,11 @@ async function drawColiseumMatch(matchData) {
 
     ctx.textAlign = "right";
     ctx.fillStyle = "#FFD700";
-    ctx.fillText(`DIVISI: ${matchData.division || "BRONZE"} (${matchData.elo || 1200} ELO)`, width - 40, 50);
+    ctx.fillText(
+      `DIVISI: ${matchData.division || "BRONZE"} (${matchData.elo || 1200} ELO)`,
+      width - 40,
+      50,
+    );
     ctx.textAlign = "left";
 
     // 4. VS Cards Showcase
@@ -86,16 +90,26 @@ async function drawColiseumMatch(matchData) {
 
     ctx.font = 'bold 18px "MontserratBold", "EmojiFont"';
     ctx.fillStyle = "#FCA5A5";
-    ctx.fillText(matchData.opponentName || "Defender AI", width - 30 - cardW, 135);
+    ctx.fillText(
+      matchData.opponentName || "Defender AI",
+      width - 30 - cardW,
+      135,
+    );
 
     ctx.font = '13px "Outfit", "EmojiFont"';
     ctx.fillStyle = "#CBD5E1";
-    ctx.fillText(`Rating: ${matchData.opponentElo || 1200} ELO`, width - 30 - cardW, 165);
+    ctx.fillText(
+      `Rating: ${matchData.opponentElo || 1200} ELO`,
+      width - 30 - cardW,
+      165,
+    );
     ctx.fillText("Formation: Tactical Defense", width - 30 - cardW, 190);
 
     // 5. Result Banner
     const isVic = matchData.isVictory;
-    ctx.fillStyle = isVic ? "rgba(134, 239, 172, 0.1)" : "rgba(248, 113, 113, 0.1)";
+    ctx.fillStyle = isVic
+      ? "rgba(134, 239, 172, 0.1)"
+      : "rgba(248, 113, 113, 0.1)";
     ctx.beginPath();
     ctx.roundRect(50, 340, width - 100, 60, 10);
     ctx.fill();
@@ -105,7 +119,13 @@ async function drawColiseumMatch(matchData) {
     ctx.font = 'bold 16px "MontserratBold", "EmojiFont"';
     ctx.fillStyle = isVic ? "#86EFAC" : "#F87171";
     ctx.textAlign = "center";
-    ctx.fillText(isVic ? `🏆 KEMENANGAN TELAK (${matchData.score})! +${matchData.eloChange} ELO` : `☠️ KEKALAHAN (${matchData.score})! ${matchData.eloChange} ELO`, width / 2, 375);
+    ctx.fillText(
+      isVic
+        ? `🏆 KEMENANGAN TELAK (${matchData.score})! +${matchData.eloChange} ELO`
+        : `☠️ KEKALAHAN (${matchData.score})! ${matchData.eloChange} ELO`,
+      width / 2,
+      375,
+    );
     ctx.textAlign = "left";
 
     return canvas.toBuffer("image/png");

@@ -194,7 +194,7 @@ function generateQuestsForUser(profile, survival) {
 function generateClanQuestsForClan(clan) {
   const level = clan.level || 1;
   const eligiblePool = QUEST_POOL;
-  
+
   const shuffledWeekly = [...eligiblePool].sort(() => Math.random() - 0.5);
   const clanQuests = shuffledWeekly.slice(0, 3).map((q) => {
     // Target misi klan dikalikan 15 (asumsi kerja sama banyak anggota)
@@ -234,12 +234,15 @@ async function incrementQuestProgress(userId, action, amount = 1) {
     const currentWeek = getWeeklyResetString();
 
     // Lazy evaluation: Jika expired, generate ulang sebelum menambah progress
-    if (state.lastDailyReset !== today || state.lastWeeklyReset !== currentWeek) {
+    if (
+      state.lastDailyReset !== today ||
+      state.lastWeeklyReset !== currentWeek
+    ) {
       const cacheManager = require("../../managers/cacheManager");
       const profile = await cacheManager.getUserProfile(userId);
       const survival = await cacheManager.getUserSurvival(userId);
       const newQuests = generateQuestsForUser(profile, survival);
-      
+
       if (state.lastDailyReset !== today) {
         state.daily = newQuests.daily;
         state.lastDailyReset = today;
@@ -340,4 +343,8 @@ async function incrementClanQuestProgress(clanId, action, amount = 1) {
   }
 }
 
-module.exports = { generateQuestsForUser, generateClanQuestsForClan, incrementQuestProgress };
+module.exports = {
+  generateQuestsForUser,
+  generateClanQuestsForClan,
+  incrementQuestProgress,
+};

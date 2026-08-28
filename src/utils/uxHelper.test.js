@@ -48,7 +48,10 @@ test("uxHelper - buildGoalGradientBar with head start and encouragement", () => 
     useCustomEmojis: true,
     length: 4,
   });
-  assert.equal(customResult.bar, "<:AfterDot:1488166236004159509><:AfterDot:1488166236004159509><:BeforeDot:1488166108081950882><:BeforeDot:1488166108081950882>");
+  assert.equal(
+    customResult.bar,
+    "<:AfterDot:1488166236004159509><:AfterDot:1488166236004159509><:BeforeDot:1488166108081950882><:BeforeDot:1488166108081950882>",
+  );
 });
 
 test("uxHelper - formatRecommendationBadge adds smart highlight", () => {
@@ -173,7 +176,9 @@ test("uxHelper - filterPredictiveSearch finds matches and falls back gracefully"
   const fallback = uxHelper.filterPredictiveSearch({
     query: "pesawat",
     items: catalog,
-    fallbackRecommendations: [{ name: "⭐ Rekomendasi: Kapak Kayu", value: "axe_wood" }],
+    fallbackRecommendations: [
+      { name: "⭐ Rekomendasi: Kapak Kayu", value: "axe_wood" },
+    ],
   });
   assert.equal(fallback.length, 1);
   assert.equal(fallback[0].value, "axe_wood");
@@ -297,4 +302,3 @@ test("uxHelper - buildQuickNumericChips calculates instant percentage and fixed 
   });
   assert.equal(zeroResult.chips.find((c) => c.label === "MAX").value, 0);
 });
-

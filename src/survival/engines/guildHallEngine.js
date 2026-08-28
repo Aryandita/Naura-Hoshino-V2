@@ -6,11 +6,51 @@ const { logger } = require("../../managers/logger");
 const ui = require("../../config/ui");
 
 const FURNITURE_CATALOG = [
-  { id: "neon_sofa", name: "Sofa Kaca Cyberpunk", cost: 2000, get emoji() { return ui.getEmoji("sofa") || "🛋️"; }, desc: "Tempat bersantai yang nyaman untuk anggota klan." },
-  { id: "coffee_maker", name: "Espresso Barista Cyber", cost: 3000, get emoji() { return ui.getEmoji("coffee") || "☕"; }, desc: "Menghasilkan seduhan kopi harian penambah stamina (+25 Energy)." },
-  { id: "arcade_cabinet", name: "Arcade Machine Retro", cost: 5000, get emoji() { return ui.getEmoji("arcade") || "🕹️"; }, desc: "Mesin game dingdong untuk hiburan di dalam lounge." },
-  { id: "sakura_bonsai", name: "Bonsai Sakura Holografis", cost: 4000, get emoji() { return ui.getEmoji("bonsai") || "🌸"; }, desc: "Tanaman bercahaya neon yang mempercantik suasana klan." },
-  { id: "trophy_case", name: "Lemari Trofi Penakluk", cost: 7500, get emoji() { return ui.getEmoji("trophy_cup") || "🏆"; }, desc: "Memamerkan pencapaian kemenangan raid dan perang wilayah." },
+  {
+    id: "neon_sofa",
+    name: "Sofa Kaca Cyberpunk",
+    cost: 2000,
+    get emoji() {
+      return ui.getEmoji("sofa") || "🛋️";
+    },
+    desc: "Tempat bersantai yang nyaman untuk anggota klan.",
+  },
+  {
+    id: "coffee_maker",
+    name: "Espresso Barista Cyber",
+    cost: 3000,
+    get emoji() {
+      return ui.getEmoji("coffee") || "☕";
+    },
+    desc: "Menghasilkan seduhan kopi harian penambah stamina (+25 Energy).",
+  },
+  {
+    id: "arcade_cabinet",
+    name: "Arcade Machine Retro",
+    cost: 5000,
+    get emoji() {
+      return ui.getEmoji("arcade") || "🕹️";
+    },
+    desc: "Mesin game dingdong untuk hiburan di dalam lounge.",
+  },
+  {
+    id: "sakura_bonsai",
+    name: "Bonsai Sakura Holografis",
+    cost: 4000,
+    get emoji() {
+      return ui.getEmoji("bonsai") || "🌸";
+    },
+    desc: "Tanaman bercahaya neon yang mempercantik suasana klan.",
+  },
+  {
+    id: "trophy_case",
+    name: "Lemari Trofi Penakluk",
+    cost: 7500,
+    get emoji() {
+      return ui.getEmoji("trophy_cup") || "🏆";
+    },
+    desc: "Memamerkan pencapaian kemenangan raid dan perang wilayah.",
+  },
 ];
 
 class GuildHallEngine {
@@ -68,7 +108,12 @@ class GuildHallEngine {
     }
 
     if (Number(clan.vault || 0) < item.cost) {
-      return { success: false, reason: "INSUFFICIENT_VAULT", cost: item.cost, current: clan.vault };
+      return {
+        success: false,
+        reason: "INSUFFICIENT_VAULT",
+        cost: item.cost,
+        current: clan.vault,
+      };
     }
 
     clan.vault = Number(clan.vault || 0) - item.cost;
@@ -76,7 +121,9 @@ class GuildHallEngine {
     clan.hallLayout = layout;
     await clan.save();
 
-    logger.info(`[GuildHall] Klan ${clan.name} membeli furnitur ${item.name} seharga ${item.cost} ⭐.`);
+    logger.info(
+      `[GuildHall] Klan ${clan.name} membeli furnitur ${item.name} seharga ${item.cost} ⭐.`,
+    );
     return {
       success: true,
       item,
@@ -101,7 +148,9 @@ class GuildHallEngine {
     // Berikan buff stamina survival
     await cacheManager.incrementUserSurvival(userId, "stamina", 25);
 
-    logger.info(`[GuildHall] User ${userId} menikmati seduhan kopi di Hall klan ${clan.name}.`);
+    logger.info(
+      `[GuildHall] User ${userId} menikmati seduhan kopi di Hall klan ${clan.name}.`,
+    );
     return {
       success: true,
       energyGained: 25,

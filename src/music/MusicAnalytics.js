@@ -18,13 +18,16 @@ function msOf(value) {
 }
 
 function countOf(value) {
-  if (value && typeof value === "object") return Number(value.tracks) || Number(value.count) || 1;
+  if (value && typeof value === "object")
+    return Number(value.tracks) || Number(value.count) || 1;
   return 1;
 }
 
 function labelOf(label, previous) {
-  if (label && typeof label === "string" && label.trim().length > 0) return label.trim();
-  if (previous && typeof previous === "object" && previous.name) return previous.name;
+  if (label && typeof label === "string" && label.trim().length > 0)
+    return label.trim();
+  if (previous && typeof previous === "object" && previous.name)
+    return previous.name;
   return "Teman Discord";
 }
 
@@ -54,7 +57,10 @@ function topOf(bucket, fallback) {
   for (const [key, value] of Object.entries(bucket)) {
     const ms = msOf(value);
     if (ms > best.durationMs)
-      best = { name: labelOf(value && value.name ? value.name : key, value), durationMs: ms };
+      best = {
+        name: labelOf(value && value.name ? value.name : key, value),
+        durationMs: ms,
+      };
   }
   return best;
 }

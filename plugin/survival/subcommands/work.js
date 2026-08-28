@@ -14,7 +14,9 @@ const currency = require("../../../src/survival/engines/currency");
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
-const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
+const {
+  safeParseInventory,
+} = require("../../../src/survival/engines/inventoryHelper");
 
 const JOBS = {
   janitor: {
@@ -197,7 +199,9 @@ module.exports = {
     const xpData = await leveling.addPlayerXP(user.id, job.time * 15);
 
     try {
-      const { incrementQuestProgress } = require("../../../src/survival/engines/questGenerator");
+      const {
+        incrementQuestProgress,
+      } = require("../../../src/survival/engines/questGenerator");
       await incrementQuestProgress(user.id, `work_${pekerjaan}`);
 
       const UserQuest = require("../../../src/models/UserQuest");

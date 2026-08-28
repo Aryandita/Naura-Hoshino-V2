@@ -40,7 +40,9 @@ function buildPomodoroContainer(session) {
       ? "#60A5FA"
       : "#34D399";
   const modeTitle = isFocus ? "Sesi Fokus Belajar" : "Waktu Istirahat";
-  const eIcon = isFocus ? (ui.getEmoji("book") || "📚") : (ui.getEmoji("coffee") || "☕");
+  const eIcon = isFocus
+    ? ui.getEmoji("book") || "📚"
+    : ui.getEmoji("coffee") || "☕";
   const eClock = ui.getEmoji("clock") || "⏳";
   const eFire = ui.getEmoji("fire") || "🔥";
   const eLeaf = ui.getEmoji("bonsai") || "🌿";
@@ -54,7 +56,9 @@ function buildPomodoroContainer(session) {
       `### ${eClock} Sisa Waktu: \`${formatTime(session.timeLeft)}\``,
       `**Status:** ${session.isPaused ? "⏸️ Dijeda" : isFocus ? `${eFire} Sedang Fokus Bekerja / Belajar` : `${eLeaf} Rehat & Minum Air`}`,
       `**Target Fokus:** ${session.focusDuration / 60} Menit | **Istirahat:** ${session.breakDuration / 60} Menit`,
-      session.voiceChannelId ? `**Voice Room:** <#${session.voiceChannelId}> (Notifikasi Audio Aktif)` : "",
+      session.voiceChannelId
+        ? `**Voice Room:** <#${session.voiceChannelId}> (Notifikasi Audio Aktif)`
+        : "",
       "",
       `${eSparkle} *Gunakan tombol di bawah untuk mengontrol sesi belajarmu.*`,
     ]
@@ -89,7 +93,9 @@ function buildPomodoroButtons(session) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("pomodoro")
-    .setDescription("Mulai sesi fokus belajar / kerja Pomodoro dengan pengingat suara VC & XP")
+    .setDescription(
+      "Mulai sesi fokus belajar / kerja Pomodoro dengan pengingat suara VC & XP",
+    )
     .addSubcommand((sub) =>
       sub
         .setName("start")
@@ -105,7 +111,9 @@ module.exports = {
         .addIntegerOption((opt) =>
           opt
             .setName("istirahat")
-            .setDescription("Durasi waktu istirahat dalam menit (default 5 menit)")
+            .setDescription(
+              "Durasi waktu istirahat dalam menit (default 5 menit)",
+            )
             .setMinValue(1)
             .setMaxValue(30)
             .setRequired(false),
@@ -113,12 +121,16 @@ module.exports = {
         .addBooleanOption((opt) =>
           opt
             .setName("suara_vc")
-            .setDescription("Nyalakan pengingat suara di Voice Channel? (default: Ya jika di VC)")
+            .setDescription(
+              "Nyalakan pengingat suara di Voice Channel? (default: Ya jika di VC)",
+            )
             .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
-      sub.setName("stop").setDescription("Hentikan sesi Pomodoro yang sedang berjalan"),
+      sub
+        .setName("stop")
+        .setDescription("Hentikan sesi Pomodoro yang sedang berjalan"),
     ),
 
   async execute(interaction) {
@@ -131,7 +143,8 @@ module.exports = {
         return interaction.reply({
           ...buildErrorContainerV2({
             title: "Tidak Ada Sesi",
-            description: "❌ Kamu tidak memiliki sesi Pomodoro yang sedang aktif.",
+            description:
+              "❌ Kamu tidak memiliki sesi Pomodoro yang sedang aktif.",
             footerText: ui.getFooter("utility"),
           }),
           flags: 64,
@@ -161,7 +174,8 @@ module.exports = {
         return interaction.reply({
           ...buildErrorContainerV2({
             title: "Sesi Sudah Ada",
-            description: "❌ Kamu sudah memiliki sesi Pomodoro yang aktif. Gunakan `/pomodoro stop` terlebih dahulu jika ingin mengulang.",
+            description:
+              "❌ Kamu sudah memiliki sesi Pomodoro yang aktif. Gunakan `/pomodoro stop` terlebih dahulu jika ingin mengulang.",
             footerText: ui.getFooter("utility"),
           }),
           flags: 64,
@@ -199,7 +213,10 @@ module.exports = {
         fetchReply: true,
       });
 
-      const audioChimePath = path.resolve(__dirname, "../../assets/audio/Intro (ID).mp3");
+      const audioChimePath = path.resolve(
+        __dirname,
+        "../../assets/audio/Intro (ID).mp3",
+      );
 
       session.interval = setInterval(async () => {
         if (session.isPaused) return;
@@ -215,26 +232,38 @@ module.exports = {
             session.mode = "break";
             session.timeLeft = session.breakDuration;
 
-            if (enableVoice && interaction.member?.voice?.channel && fs.existsSync(audioChimePath)) {
+            if (
+              enableVoice &&
+              interaction.member?.voice?.channel &&
+              fs.existsSync(audioChimePath)
+            ) {
               await VoiceManager.playFile(audioChimePath, interaction.member);
             }
 
-            await interaction.followUp({
-              content: `🔔 <@${userId}> **Waktu fokus selesai!** Saatnya istirahat selama ${breakMinutes} menit. Rileks sejenak yaa~ ☕`,
-            }).catch(() => {});
+            await interaction
+              .followUp({
+                content: `🔔 <@${userId}> **Waktu fokus selesai!** Saatnya istirahat selama ${breakMinutes} menit. Rileks sejenak yaa~ ☕`,
+              })
+              .catch(() => {});
           } else {
             // Selesai istirahat -> Masuk fokus siklus baru
             session.mode = "focus";
             session.timeLeft = session.focusDuration;
             session.cycle += 1;
 
-            if (enableVoice && interaction.member?.voice?.channel && fs.existsSync(audioChimePath)) {
+            if (
+              enableVoice &&
+              interaction.member?.voice?.channel &&
+              fs.existsSync(audioChimePath)
+            ) {
               await VoiceManager.playFile(audioChimePath, interaction.member);
             }
 
-            await interaction.followUp({
-              content: `🔔 <@${userId}> **Waktu istirahat selesai!** Mari mulai sesi fokus siklus #${session.cycle}. Semangat! 🔥`,
-            }).catch(() => {});
+            await interaction
+              .followUp({
+                content: `🔔 <@${userId}> **Waktu istirahat selesai!** Mari mulai sesi fokus siklus #${session.cycle}. Semangat! 🔥`,
+              })
+              .catch(() => {});
           }
         }
 
@@ -287,9 +316,16 @@ module.exports = {
           activePomodoros.delete(userId);
           collector.stop();
 
-          const totalMins = Math.max(1, Math.round(session.totalFocusTime / 60));
+          const totalMins = Math.max(
+            1,
+            Math.round(session.totalFocusTime / 60),
+          );
           const xpEarned = totalMins * 5;
-          await cacheManager.incrementUserSurvival(userId, "survival_xp", xpEarned);
+          await cacheManager.incrementUserSurvival(
+            userId,
+            "survival_xp",
+            xpEarned,
+          );
 
           const finalContainer = buildContainerV2({
             accentColorHex: ui.getColor("success") || "#22c55e",

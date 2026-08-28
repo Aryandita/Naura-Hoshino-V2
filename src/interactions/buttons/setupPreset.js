@@ -13,7 +13,8 @@ module.exports = [
       // Hanya administrator (atau orang yg memiliki manage guild) yang bisa mengatur
       if (!interaction.member.permissions.has("ManageGuild")) {
         return interaction.reply({
-          content: "❌ Maaf, hanya Admin server yang bisa menggunakan tombol setup ini.",
+          content:
+            "❌ Maaf, hanya Admin server yang bisa menggunakan tombol setup ini.",
           flags: MessageFlags.Ephemeral,
         });
       }

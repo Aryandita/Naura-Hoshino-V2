@@ -140,7 +140,11 @@ async function grantGift(userId, gift) {
 
   const inventory = safeParseInventory(profile.inventory);
   addItem(inventory, gift.id, gift.amount);
-  await cacheManager.mutateUserProfileJson(userId, "inventory", () => inventory);
+  await cacheManager.mutateUserProfileJson(
+    userId,
+    "inventory",
+    () => inventory,
+  );
 
   return `${pick(GIFT_LINES)} Kamu menerima **${nameOf(gift.id)} x${gift.amount}**.`;
 }

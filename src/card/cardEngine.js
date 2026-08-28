@@ -5,22 +5,118 @@ const UserCard = require("../models/UserCard");
 const { logger } = require("../managers/logger");
 
 const CHARACTERS_CATALOG = [
-  { id: "hoshino", name: "Hoshino Takanashi", series: "Blue Archive", rarity: "SECRET_MYTHIC", burnValue: 500 },
-  { id: "arona", name: "Arona", series: "Blue Archive", rarity: "ULTRA_RARE", burnValue: 350 },
-  { id: "frieren", name: "Frieren", series: "Sousou no Frieren", rarity: "SECRET_MYTHIC", burnValue: 500 },
-  { id: "fern", name: "Fern", series: "Sousou no Frieren", rarity: "ULTRA_RARE", burnValue: 300 },
-  { id: "megumin", name: "Megumin", series: "KonoSuba", rarity: "ULTRA_RARE", burnValue: 300 },
-  { id: "aqua", name: "Aqua", series: "KonoSuba", rarity: "RARE", burnValue: 200 },
-  { id: "gojo", name: "Gojo Satoru", series: "Jujutsu Kaisen", rarity: "SECRET_MYTHIC", burnValue: 500 },
-  { id: "anya", name: "Anya Forger", series: "Spy x Family", rarity: "RARE", burnValue: 200 },
-  { id: "yor", name: "Yor Forger", series: "Spy x Family", rarity: "ULTRA_RARE", burnValue: 300 },
-  { id: "rem", name: "Rem", series: "Re:Zero", rarity: "ULTRA_RARE", burnValue: 350 },
-  { id: "emilia", name: "Emilia", series: "Re:Zero", rarity: "ULTRA_RARE", burnValue: 300 },
-  { id: "hutao", name: "Hu Tao", series: "Genshin Impact", rarity: "SECRET_MYTHIC", burnValue: 500 },
-  { id: "furina", name: "Furina", series: "Genshin Impact", rarity: "SECRET_MYTHIC", burnValue: 500 },
-  { id: "raiden", name: "Raiden Shogun", series: "Genshin Impact", rarity: "SECRET_MYTHIC", burnValue: 500 },
-  { id: "march7", name: "March 7th", series: "Honkai: Star Rail", rarity: "RARE", burnValue: 200 },
-  { id: "kafka", name: "Kafka", series: "Honkai: Star Rail", rarity: "SECRET_MYTHIC", burnValue: 500 },
+  {
+    id: "hoshino",
+    name: "Hoshino Takanashi",
+    series: "Blue Archive",
+    rarity: "SECRET_MYTHIC",
+    burnValue: 500,
+  },
+  {
+    id: "arona",
+    name: "Arona",
+    series: "Blue Archive",
+    rarity: "ULTRA_RARE",
+    burnValue: 350,
+  },
+  {
+    id: "frieren",
+    name: "Frieren",
+    series: "Sousou no Frieren",
+    rarity: "SECRET_MYTHIC",
+    burnValue: 500,
+  },
+  {
+    id: "fern",
+    name: "Fern",
+    series: "Sousou no Frieren",
+    rarity: "ULTRA_RARE",
+    burnValue: 300,
+  },
+  {
+    id: "megumin",
+    name: "Megumin",
+    series: "KonoSuba",
+    rarity: "ULTRA_RARE",
+    burnValue: 300,
+  },
+  {
+    id: "aqua",
+    name: "Aqua",
+    series: "KonoSuba",
+    rarity: "RARE",
+    burnValue: 200,
+  },
+  {
+    id: "gojo",
+    name: "Gojo Satoru",
+    series: "Jujutsu Kaisen",
+    rarity: "SECRET_MYTHIC",
+    burnValue: 500,
+  },
+  {
+    id: "anya",
+    name: "Anya Forger",
+    series: "Spy x Family",
+    rarity: "RARE",
+    burnValue: 200,
+  },
+  {
+    id: "yor",
+    name: "Yor Forger",
+    series: "Spy x Family",
+    rarity: "ULTRA_RARE",
+    burnValue: 300,
+  },
+  {
+    id: "rem",
+    name: "Rem",
+    series: "Re:Zero",
+    rarity: "ULTRA_RARE",
+    burnValue: 350,
+  },
+  {
+    id: "emilia",
+    name: "Emilia",
+    series: "Re:Zero",
+    rarity: "ULTRA_RARE",
+    burnValue: 300,
+  },
+  {
+    id: "hutao",
+    name: "Hu Tao",
+    series: "Genshin Impact",
+    rarity: "SECRET_MYTHIC",
+    burnValue: 500,
+  },
+  {
+    id: "furina",
+    name: "Furina",
+    series: "Genshin Impact",
+    rarity: "SECRET_MYTHIC",
+    burnValue: 500,
+  },
+  {
+    id: "raiden",
+    name: "Raiden Shogun",
+    series: "Genshin Impact",
+    rarity: "SECRET_MYTHIC",
+    burnValue: 500,
+  },
+  {
+    id: "march7",
+    name: "March 7th",
+    series: "Honkai: Star Rail",
+    rarity: "RARE",
+    burnValue: 200,
+  },
+  {
+    id: "kafka",
+    name: "Kafka",
+    series: "Honkai: Star Rail",
+    rarity: "SECRET_MYTHIC",
+    burnValue: 500,
+  },
 ];
 
 class CardEngine {
@@ -49,7 +145,9 @@ class CardEngine {
    * Cetak kartu baru dengan serial print number atomik
    */
   static async mintCard(characterId, userId) {
-    const charData = CHARACTERS_CATALOG.find((c) => c.id === characterId) || CHARACTERS_CATALOG[0];
+    const charData =
+      CHARACTERS_CATALOG.find((c) => c.id === characterId) ||
+      CHARACTERS_CATALOG[0];
 
     // Atomic Print Number Increment via Redis
     let printNumber = 1;
@@ -79,7 +177,9 @@ class CardEngine {
       burnValue: charData.burnValue,
     });
 
-    logger.info(`[CardEngine] Minted: ${charData.name} #${printNumber} (${quality}) for user ${userId} [${cardCode}]`);
+    logger.info(
+      `[CardEngine] Minted: ${charData.name} #${printNumber} (${quality}) for user ${userId} [${cardCode}]`,
+    );
     return newCard.toJSON();
   }
 
@@ -94,12 +194,22 @@ class CardEngine {
     const sessionData = {
       dropId,
       channelId,
-      cards: selected.map((c, idx) => ({ index: idx, id: c.id, name: c.name, series: c.series, claimedBy: null })),
+      cards: selected.map((c, idx) => ({
+        index: idx,
+        id: c.id,
+        name: c.name,
+        series: c.series,
+        claimedBy: null,
+      })),
       createdAt: Date.now(),
     };
 
     if (redisManager.isReady) {
-      await redisManager.setCache(`card:drop:${channelId}`, JSON.stringify(sessionData), 60);
+      await redisManager.setCache(
+        `card:drop:${channelId}`,
+        JSON.stringify(sessionData),
+        60,
+      );
     }
 
     return sessionData;
@@ -109,7 +219,8 @@ class CardEngine {
    * Klaim kartu dari sesi chat drop
    */
   static async claimDropCard(channelId, cardIndex, userId) {
-    if (!redisManager.isReady) return { success: false, reason: "REDIS_UNAVAILABLE" };
+    if (!redisManager.isReady)
+      return { success: false, reason: "REDIS_UNAVAILABLE" };
 
     const cacheKey = `card:drop:${channelId}`;
     const rawData = await redisManager.getCache(cacheKey);
@@ -119,7 +230,12 @@ class CardEngine {
     const cardEntry = session.cards[cardIndex];
 
     if (!cardEntry) return { success: false, reason: "INVALID_CARD_INDEX" };
-    if (cardEntry.claimedBy) return { success: false, reason: "ALREADY_CLAIMED", claimedBy: cardEntry.claimedBy };
+    if (cardEntry.claimedBy)
+      return {
+        success: false,
+        reason: "ALREADY_CLAIMED",
+        claimedBy: cardEntry.claimedBy,
+      };
 
     // Set claimed
     cardEntry.claimedBy = userId;
@@ -178,12 +294,15 @@ class CardEngine {
 
     // Naikkan rarity 1 tingkat jika belum tertinggi
     if (mainCard.rarity === "RARE") mainCard.rarity = "ULTRA_RARE";
-    else if (mainCard.rarity === "ULTRA_RARE") mainCard.rarity = "SECRET_MYTHIC";
+    else if (mainCard.rarity === "ULTRA_RARE")
+      mainCard.rarity = "SECRET_MYTHIC";
 
     mainCard.burnValue = Number(mainCard.burnValue || 100) * 2;
     await mainCard.save();
 
-    logger.info(`[CardEngine] User ${userId} membangkitkan kartu Awakened: ${mainCard.characterName} [${mainCard.cardCode}]`);
+    logger.info(
+      `[CardEngine] User ${userId} membangkitkan kartu Awakened: ${mainCard.characterName} [${mainCard.cardCode}]`,
+    );
     return {
       success: true,
       card: mainCard.toJSON(),
@@ -203,7 +322,11 @@ class CardEngine {
 
     const cacheManager = require("../managers/cacheManager");
     const fee = 100;
-    const debit = await cacheManager.debitUserSurvival(userId, "starFragments", fee);
+    const debit = await cacheManager.debitUserSurvival(
+      userId,
+      "starFragments",
+      fee,
+    );
     if (!debit.ok) {
       return { success: false, reason: "INSUFFICIENT_FUNDS", requiredFee: fee };
     }
@@ -212,7 +335,9 @@ class CardEngine {
     if (!card.originalMinterId) card.originalMinterId = userId;
     await card.save();
 
-    logger.info(`[CardEngine] User ${userId} mengukir kartu ${cardCode}: "${card.inscription}"`);
+    logger.info(
+      `[CardEngine] User ${userId} mengukir kartu ${cardCode}: "${card.inscription}"`,
+    );
     return {
       success: true,
       card: card.toJSON(),
@@ -234,7 +359,11 @@ class CardEngine {
 
     const cacheManager = require("../managers/cacheManager");
     const fee = 150;
-    const debit = await cacheManager.debitUserSurvival(userId, "starFragments", fee);
+    const debit = await cacheManager.debitUserSurvival(
+      userId,
+      "starFragments",
+      fee,
+    );
     if (!debit.ok) {
       return { success: false, reason: "INSUFFICIENT_FUNDS", requiredFee: fee };
     }
@@ -243,7 +372,9 @@ class CardEngine {
     card.frameStyle = frameStyle;
     await card.save();
 
-    logger.info(`[CardEngine] User ${userId} menempa bingkai ${frameStyle} pada kartu ${cardCode}`);
+    logger.info(
+      `[CardEngine] User ${userId} menempa bingkai ${frameStyle} pada kartu ${cardCode}`,
+    );
     return {
       success: true,
       card: card.toJSON(),

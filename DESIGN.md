@@ -401,11 +401,11 @@ Dashboard V2 (`dashboard-v2/`, frontend Vite MPA yang dilayani Express di subpat
 
 ### Sumber Token & Entry CSS Tunggal
 
-| Berkas                          | Peran                                                                                                   |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Berkas                           | Peran                                                                                                                      |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `dashboard-v2/src/css/input.css` | Satu-satunya entry CSS. Urutan import wajib: Google Fonts -> `tailwindcss` -> Font Awesome -> `style.css` -> `tokens.css`. |
-| `src/css/style.css`              | Gaya dasar glassmorphism warisan (salinan mandiri dari dashboard lama).                                  |
-| `src/css/tokens.css`             | Override warna agar selaras `src/config/ui.js`; muat SETELAH style.css.                                  |
+| `src/css/style.css`              | Gaya dasar glassmorphism warisan (salinan mandiri dari dashboard lama).                                                    |
+| `src/css/tokens.css`             | Override warna agar selaras `src/config/ui.js`; muat SETELAH style.css.                                                    |
 
 - **Tailwind v4 via CLI, bukan plugin Vite.** Plugin `@tailwindcss/vite` bertabrakan dengan `<style>` inline di halaman MPA ini; build memakai `@tailwindcss/cli` (`npm run build:css`) menghasilkan `public/vendor/tailwind-built.css`.
 - **Theme token v4** didefinisikan di blok `@theme` input.css: `--font-cyber` (Orbitron), `--font-outfit`, `--color-primary`, `--color-accent-pink/purple/cyan/emerald`, `--color-premium-gold`, `--color-dark-*`. Class yang sah: `font-cyber`, `text-primary`, `border-accent-pink`, `bg-dark-card`, dst.

@@ -5,9 +5,27 @@ const cacheManager = require("../../managers/cacheManager");
 const { logger } = require("../../managers/logger");
 
 const AVAILABLE_TOYS = [
-  { id: "laser_pointer", name: "Cyber Laser Pointer", cost: 25, moodBoost: "energized", expGain: 100 },
-  { id: "sakura_ball", name: "Sakura Plush Ball", cost: 25, moodBoost: "happy", expGain: 100 },
-  { id: "catnip_circuit", name: "Digital Catnip Circuit", cost: 35, moodBoost: "ascended", expGain: 150 },
+  {
+    id: "laser_pointer",
+    name: "Cyber Laser Pointer",
+    cost: 25,
+    moodBoost: "energized",
+    expGain: 100,
+  },
+  {
+    id: "sakura_ball",
+    name: "Sakura Plush Ball",
+    cost: 25,
+    moodBoost: "happy",
+    expGain: 100,
+  },
+  {
+    id: "catnip_circuit",
+    name: "Digital Catnip Circuit",
+    cost: 35,
+    moodBoost: "ascended",
+    expGain: 150,
+  },
 ];
 
 class PetHabitatEngine {
@@ -25,7 +43,11 @@ class PetHabitatEngine {
 
     return {
       pets: pets.map((p) => p.toJSON()),
-      activePet: activePet ? (typeof activePet.toJSON === "function" ? activePet.toJSON() : activePet) : null,
+      activePet: activePet
+        ? typeof activePet.toJSON === "function"
+          ? activePet.toJSON()
+          : activePet
+        : null,
       availableToys: AVAILABLE_TOYS,
     };
   }
@@ -38,7 +60,11 @@ class PetHabitatEngine {
     if (!pet) return { success: false, reason: "PET_NOT_FOUND" };
 
     const toyCost = 25;
-    const debit = await cacheManager.debitUserSurvival(userId, "starFragments", toyCost);
+    const debit = await cacheManager.debitUserSurvival(
+      userId,
+      "starFragments",
+      toyCost,
+    );
     if (!debit.ok) {
       return { success: false, reason: "INSUFFICIENT_FUNDS", cost: toyCost };
     }
@@ -60,7 +86,9 @@ class PetHabitatEngine {
     pet.mood = pet.cosmicAura ? "ascended" : "energized";
     await pet.save();
 
-    logger.info(`[PetHabitat] User ${userId} bermain dengan pet ${pet.petName || pet.petType}. Affection: ${pet.affection}`);
+    logger.info(
+      `[PetHabitat] User ${userId} bermain dengan pet ${pet.petName || pet.petType}. Affection: ${pet.affection}`,
+    );
     return {
       success: true,
       petName: pet.petName || pet.petType,
@@ -111,7 +139,9 @@ class PetHabitatEngine {
     pet1.petExp = 0;
     await pet1.save();
 
-    logger.info(`[PetHabitat] User ${userId} membangkitkan Cosmic Pet: ${pet1.petType} (#${pet1.id})!`);
+    logger.info(
+      `[PetHabitat] User ${userId} membangkitkan Cosmic Pet: ${pet1.petType} (#${pet1.id})!`,
+    );
     return {
       success: true,
       pet: pet1.toJSON(),

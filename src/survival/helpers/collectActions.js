@@ -161,9 +161,10 @@ async function grantLoot({ userId, lokasi, bareHands, activePets }) {
 
     // Jarahan bonus: satu gulungan ekstra dari pool yang sama. Serigala
     // membantu berburu di hutan sehingga peluangnya naik sedikit.
-    const bonusChance = lokasi === "hutan" && bonus.wolf
-      ? BONUS_LOOT_CHANCE + 0.1
-      : BONUS_LOOT_CHANCE;
+    const bonusChance =
+      lokasi === "hutan" && bonus.wolf
+        ? BONUS_LOOT_CHANCE + 0.1
+        : BONUS_LOOT_CHANCE;
     if (Math.random() < bonusChance) {
       const extra = pool[Math.floor(Math.random() * pool.length)];
       gained.push({

@@ -125,7 +125,12 @@ const { MessageFlags } = require("discord.js");
 // Pengirim pesan error standar (Components V2).
 // Payload sudah membawa `files` sendiri termasuk wajah Naura, jadi jangan
 // pernah dikosongkan paksa atau gambarnya tidak akan terkirim.
-async function sendError(interaction, errorMessage, ephemeral = false, opts = {}) {
+async function sendError(
+  interaction,
+  errorMessage,
+  ephemeral = false,
+  opts = {},
+) {
   const {
     buildErrorContainerV2,
   } = require("../../utils/NauraContainerBuilder");
@@ -143,7 +148,10 @@ async function sendError(interaction, errorMessage, ephemeral = false, opts = {}
   try {
     let msg;
     if (interaction.deferred || interaction.replied) {
-      msg = await interaction.editReply({ ...containerPayload, flags: finalFlags });
+      msg = await interaction.editReply({
+        ...containerPayload,
+        flags: finalFlags,
+      });
     } else if (typeof interaction.reply === "function") {
       msg = await interaction.reply({
         ...containerPayload,
@@ -174,7 +182,12 @@ async function sendError(interaction, errorMessage, ephemeral = false, opts = {}
 }
 
 // Pengirim pesan maintenance mode standar (Components V2).
-async function sendMaintenance(interaction, maintenanceMessage, ephemeral = false, opts = {}) {
+async function sendMaintenance(
+  interaction,
+  maintenanceMessage,
+  ephemeral = false,
+  opts = {},
+) {
   const {
     buildMaintenanceContainerV2,
   } = require("../../utils/NauraContainerBuilder");
@@ -192,7 +205,10 @@ async function sendMaintenance(interaction, maintenanceMessage, ephemeral = fals
   try {
     let msg;
     if (interaction.deferred || interaction.replied) {
-      msg = await interaction.editReply({ ...containerPayload, flags: finalFlags });
+      msg = await interaction.editReply({
+        ...containerPayload,
+        flags: finalFlags,
+      });
     } else if (typeof interaction.reply === "function") {
       msg = await interaction.reply({
         ...containerPayload,
@@ -213,7 +229,12 @@ async function sendMaintenance(interaction, maintenanceMessage, ephemeral = fals
 }
 
 // Pengirim pesan loading state standar (Components V2).
-async function sendLoading(interaction, loadingMessage, ephemeral = false, opts = {}) {
+async function sendLoading(
+  interaction,
+  loadingMessage,
+  ephemeral = false,
+  opts = {},
+) {
   const {
     buildLoadingContainerV2,
   } = require("../../utils/NauraContainerBuilder");
@@ -231,7 +252,10 @@ async function sendLoading(interaction, loadingMessage, ephemeral = false, opts 
   try {
     let msg;
     if (interaction.deferred || interaction.replied) {
-      msg = await interaction.editReply({ ...containerPayload, flags: finalFlags });
+      msg = await interaction.editReply({
+        ...containerPayload,
+        flags: finalFlags,
+      });
     } else if (typeof interaction.reply === "function") {
       msg = await interaction.reply({
         ...containerPayload,

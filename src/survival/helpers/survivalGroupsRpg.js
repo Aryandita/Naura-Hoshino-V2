@@ -14,7 +14,9 @@ function addRpgGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("event")
-          .setDescription("🎁 Ambil hadiah harian dari Event Musiman yang sedang aktif!"),
+          .setDescription(
+            "🎁 Ambil hadiah harian dari Event Musiman yang sedang aktif!",
+          ),
       )
       .addSubcommand((sub) =>
         sub
@@ -75,7 +77,9 @@ function addRpgGroup(builder) {
           .addBooleanOption((opt) =>
             opt
               .setName("ranked")
-              .setDescription("Mainkan mode Ranked untuk mendapatkan poin MMR? (Opsional)")
+              .setDescription(
+                "Mainkan mode Ranked untuk mendapatkan poin MMR? (Opsional)",
+              )
               .setRequired(false),
           ),
       )
@@ -91,9 +95,18 @@ function addRpgGroup(builder) {
               .addChoices(
                 { name: "🏆 Papan Peringkat MMR", value: "leaderboard" },
                 { name: "📊 Statistik PvP Pribadi", value: "stats" },
-                { name: "⚔️ Galactic Coliseum 3v3 Match", value: "coliseum_match" },
-                { name: "🛡️ Formasi Tim & Divisi Coliseum", value: "coliseum_team" },
-                { name: "👑 Papan Peringkat Divisi Master", value: "coliseum_leaderboard" },
+                {
+                  name: "⚔️ Galactic Coliseum 3v3 Match",
+                  value: "coliseum_match",
+                },
+                {
+                  name: "🛡️ Formasi Tim & Divisi Coliseum",
+                  value: "coliseum_team",
+                },
+                {
+                  name: "👑 Papan Peringkat Divisi Master",
+                  value: "coliseum_leaderboard",
+                },
               ),
           ),
       )
@@ -114,8 +127,8 @@ function addRpgGroup(builder) {
               .addChoices(
                 { name: "Lihat Status Pet", value: "view" },
                 { name: "Beri Makan", value: "feed" },
-                { name: "Ajak Main", value: "play" }
-              )
+                { name: "Ajak Main", value: "play" },
+              ),
           ),
       )
       .addSubcommand((sub) =>
@@ -156,7 +169,10 @@ function addRpgGroup(builder) {
               ),
           )
           .addStringOption((opt) =>
-            opt.setName("nama").setDescription("Nama klan atau ID furnitur").setRequired(false),
+            opt
+              .setName("nama")
+              .setDescription("Nama klan atau ID furnitur")
+              .setRequired(false),
           )
           .addIntegerOption((opt) =>
             opt
@@ -188,7 +204,9 @@ function addRpgGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("raid")
-          .setDescription("🐉 Serang World Boss Global bersama seluruh petualang!")
+          .setDescription(
+            "🐉 Serang World Boss Global bersama seluruh petualang!",
+          )
           .addStringOption((opt) =>
             opt
               .setName("aksi")
@@ -226,7 +244,9 @@ function addRpgGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("conquest")
-          .setDescription("🏰 Perang Faksi Wilayah Klan & Klaim Pajak Sektor (Neo-Hoshino)")
+          .setDescription(
+            "🏰 Perang Faksi Wilayah Klan & Klaim Pajak Sektor (Neo-Hoshino)",
+          )
           .addStringOption((opt) =>
             opt
               .setName("aksi")
@@ -264,7 +284,9 @@ function addRpgGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("abyss")
-          .setDescription("🌀 Jelajahi Labirin Rogue-lite Prosedural 50 Lantai (The Neo-Abyss)")
+          .setDescription(
+            "🌀 Jelajahi Labirin Rogue-lite Prosedural 50 Lantai (The Neo-Abyss)",
+          )
           .addStringOption((opt) =>
             opt
               .setName("aksi")

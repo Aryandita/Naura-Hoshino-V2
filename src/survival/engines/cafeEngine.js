@@ -30,20 +30,27 @@ class CafeEngine {
     // Hitung akumulasi pendapatan idle sejak klaim terakhir
     const now = Date.now();
     const lastTime = new Date(cafe.lastCollectedAt).getTime();
-    const hoursPassed = Math.min(24, Math.max(0, (now - lastTime) / (1000 * 60 * 60)));
+    const hoursPassed = Math.min(
+      24,
+      Math.max(0, (now - lastTime) / (1000 * 60 * 60)),
+    );
 
     if (hoursPassed >= 0.1) {
-      const hourlyRate = (cafe.level || 1) * 35 + Math.floor((cafe.reputation || 0) * 0.5);
+      const hourlyRate =
+        (cafe.level || 1) * 35 + Math.floor((cafe.reputation || 0) * 0.5);
       const newRevenue = Math.floor(hoursPassed * hourlyRate);
       if (newRevenue > 0) {
-        cafe.uncollectedRevenue = Number(cafe.uncollectedRevenue || 0) + newRevenue;
+        cafe.uncollectedRevenue =
+          Number(cafe.uncollectedRevenue || 0) + newRevenue;
         cafe.lastCollectedAt = new Date();
         await cafe.save();
       }
     }
 
     if (created) {
-      logger.info(`[CafeEngine] Kafe baru dibuka untuk ${userId} (${cafe.cafeName})`);
+      logger.info(
+        `[CafeEngine] Kafe baru dibuka untuk ${userId} (${cafe.cafeName})`,
+      );
     }
 
     return cafe.toJSON();
@@ -62,7 +69,11 @@ class CafeEngine {
 
     const unlocked = cafe.unlockedRecipes || ["sakura_latte", "cyber_ramen"];
     if (!unlocked.includes(recipeId)) {
-      return { success: false, reason: "RECIPE_LOCKED", requiredLevel: recipe.requiredLevel };
+      return {
+        success: false,
+        reason: "RECIPE_LOCKED",
+        requiredLevel: recipe.requiredLevel,
+      };
     }
 
     // Ambil bahan mentah secara atomik dari inventaris UserProfile
@@ -71,7 +82,10 @@ class CafeEngine {
       amount: ing.amount * qty,
     }));
 
-    const takeResult = await inventoryHelper.takeItemsAtomic(userId, takeRequests);
+    const takeResult = await inventoryHelper.takeItemsAtomic(
+      userId,
+      takeRequests,
+    );
     if (!takeResult.ok) {
       return {
         success: false,
@@ -98,13 +112,17 @@ class CafeEngine {
       cafe.level += 1;
       levelUp = true;
       // Buka resep baru sesuai level
-      const newRecipes = CAFE_RECIPES.filter((r) => r.requiredLevel <= cafe.level).map((r) => r.id);
+      const newRecipes = CAFE_RECIPES.filter(
+        (r) => r.requiredLevel <= cafe.level,
+      ).map((r) => r.id);
       cafe.unlockedRecipes = Array.from(new Set([...unlocked, ...newRecipes]));
     }
 
     await cafe.save();
 
-    logger.info(`[CafeEngine] User ${userId} memasak ${qty}x ${recipe.name}. Reputasi: +${repGain}`);
+    logger.info(
+      `[CafeEngine] User ${userId} memasak ${qty}x ${recipe.name}. Reputasi: +${repGain}`,
+    );
     return {
       success: true,
       dishName: recipe.name,
@@ -127,14 +145,17 @@ class CafeEngine {
     if (!cafe) return { success: false, reason: "NO_CAFE" };
 
     const dishes = cafe.activeDishes || {};
-    const availableDishKeys = Object.keys(dishes).filter((k) => Number(dishes[k]) > 0);
+    const availableDishKeys = Object.keys(dishes).filter(
+      (k) => Number(dishes[k]) > 0,
+    );
 
     if (availableDishKeys.length === 0) {
       return { success: false, reason: "NO_FOOD_IN_STOCK" };
     }
 
     // NPC membeli 1-3 porsi makanan acak dari etalase
-    const chosenKey = availableDishKeys[Math.floor(Math.random() * availableDishKeys.length)];
+    const chosenKey =
+      availableDishKeys[Math.floor(Math.random() * availableDishKeys.length)];
     const recipe = getRecipeById(chosenKey);
     const maxCanSell = Math.min(3, Number(dishes[chosenKey]));
     const sellQty = Math.floor(Math.random() * maxCanSell) + 1;
@@ -152,7 +173,11 @@ class CafeEngine {
     await cafe.save();
 
     // Tambahkan saldo ke pemain lewat cacheManager
-    await cacheManager.incrementUserSurvival(userId, "starFragments", finalEarnings);
+    await cacheManager.incrementUserSurvival(
+      userId,
+      "starFragments",
+      finalEarnings,
+    );
 
     return {
       success: true,
@@ -176,8 +201,12 @@ class CafeEngine {
     // Hitung ulang akumulasi terkini
     const now = Date.now();
     const lastTime = new Date(cafe.lastCollectedAt).getTime();
-    const hoursPassed = Math.min(24, Math.max(0, (now - lastTime) / (1000 * 60 * 60)));
-    const hourlyRate = (cafe.level || 1) * 35 + Math.floor((cafe.reputation || 0) * 0.5);
+    const hoursPassed = Math.min(
+      24,
+      Math.max(0, (now - lastTime) / (1000 * 60 * 60)),
+    );
+    const hourlyRate =
+      (cafe.level || 1) * 35 + Math.floor((cafe.reputation || 0) * 0.5);
     const addedRevenue = Math.floor(hoursPassed * hourlyRate);
 
     const totalToCollect = Number(cafe.uncollectedRevenue || 0) + addedRevenue;
@@ -189,9 +218,15 @@ class CafeEngine {
     cafe.lastCollectedAt = new Date();
     await cafe.save();
 
-    await cacheManager.incrementUserSurvival(userId, "starFragments", totalToCollect);
+    await cacheManager.incrementUserSurvival(
+      userId,
+      "starFragments",
+      totalToCollect,
+    );
 
-    logger.info(`[CafeEngine] User ${userId} mengklaim ${totalToCollect} Star Fragments pendapatan idle.`);
+    logger.info(
+      `[CafeEngine] User ${userId} mengklaim ${totalToCollect} Star Fragments pendapatan idle.`,
+    );
     return {
       success: true,
       collectedAmount: totalToCollect,
@@ -203,7 +238,12 @@ class CafeEngine {
   /**
    * Beli makanan langsung dari kafe pemain lain (P2P Social Cafe)
    */
-  static async orderDishFromUser(buyerId, sellerId, recipeId, buyerUsername = "Pembeli") {
+  static async orderDishFromUser(
+    buyerId,
+    sellerId,
+    recipeId,
+    buyerUsername = "Pembeli",
+  ) {
     if (buyerId === sellerId) {
       return { success: false, reason: "CANNOT_ORDER_FROM_SELF" };
     }
@@ -219,7 +259,11 @@ class CafeEngine {
     if (!recipe) return { success: false, reason: "RECIPE_NOT_FOUND" };
 
     // Debit saldo pembeli
-    const debit = await cacheManager.debitUserSurvival(buyerId, "starFragments", recipe.price);
+    const debit = await cacheManager.debitUserSurvival(
+      buyerId,
+      "starFragments",
+      recipe.price,
+    );
     if (!debit.ok) {
       const buyerSurvival = await cacheManager.getUserSurvival(buyerId);
       return {
@@ -238,9 +282,15 @@ class CafeEngine {
     sellerCafe.changed("activeDishes", true);
     await sellerCafe.save();
 
-    await cacheManager.incrementUserSurvival(sellerId, "starFragments", recipe.price);
+    await cacheManager.incrementUserSurvival(
+      sellerId,
+      "starFragments",
+      recipe.price,
+    );
 
-    logger.info(`[CafeEngine] User ${buyerId} (${buyerUsername}) memesan ${recipe.name} dari ${sellerId} seharga ${recipe.price}`);
+    logger.info(
+      `[CafeEngine] User ${buyerId} (${buyerUsername}) memesan ${recipe.name} dari ${sellerId} seharga ${recipe.price}`,
+    );
     return {
       success: true,
       dishName: recipe.name,

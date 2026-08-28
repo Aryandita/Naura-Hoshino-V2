@@ -27,8 +27,13 @@ const ui = require("../../../src/config/ui");
 const market = require("../../../src/survival/helpers/marketStock");
 const currencyHelper = require("../../../src/survival/engines/currency");
 const { SHOPS, say } = require("../../../src/survival/data/shopkeepers");
-const { getSeason, getWeather } = require("../../../src/survival/helpers/survivalTime");
-const { getDifficultyConfig } = require("../../../src/survival/helpers/difficultyHelper");
+const {
+  getSeason,
+  getWeather,
+} = require("../../../src/survival/helpers/survivalTime");
+const {
+  getDifficultyConfig,
+} = require("../../../src/survival/helpers/difficultyHelper");
 
 const COLLECTOR_MS = 120000;
 const BANNER_NAME = "banner.png";
@@ -58,7 +63,7 @@ module.exports = {
     const [survival] = await UserSurvival.findOrCreate({
       where: { userId: interaction.user.id },
     });
-    
+
     if (!VILLAGE_KEYS.includes(survival.currentLocation)) {
       return interaction.respond([]).catch(() => {});
     }

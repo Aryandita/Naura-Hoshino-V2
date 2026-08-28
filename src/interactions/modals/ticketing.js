@@ -1,7 +1,16 @@
 "use strict";
 
-const { ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../utils/NauraContainerBuilder");
+const {
+  ChannelType,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  MessageFlags,
+} = require("discord.js");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../utils/NauraContainerBuilder");
 const UserTicket = require("../../models/UserTicket");
 const ui = require("../../config/ui");
 
@@ -15,7 +24,7 @@ module.exports = [
 
       try {
         const channel = interaction.channel;
-        
+
         // Buat private thread
         const thread = await channel.threads.create({
           name: `ticket-${interaction.user.username.substring(0, 10)}`,
@@ -55,7 +64,9 @@ module.exports = [
           footerText: "Tiket dijamin kerahasiaannya",
         });
 
-        await thread.send({ content: `<@${interaction.user.id}>` }).catch(() => {});
+        await thread
+          .send({ content: `<@${interaction.user.id}>` })
+          .catch(() => {});
         await thread.send(payload);
 
         // Beri respons ke user di channel publik
@@ -63,11 +74,16 @@ module.exports = [
           content: `${ui.getEmoji("success") || "✅"} Tiketmu berhasil dibuat! Silakan menuju ke ${thread}.`,
           flags: MessageFlags.Ephemeral,
         });
-
       } catch (error) {
-        require("../../managers/logger").logger.error("[TICKETING] Gagal membuat tiket:", error);
+        require("../../managers/logger").logger.error(
+          "[TICKETING] Gagal membuat tiket:",
+          error,
+        );
         await interaction.followUp({
-          ...buildErrorContainerV2({ title: "Gagal Membuat Tiket", description: "Terjadi kesalahan saat memproses permintaanmu." }),
+          ...buildErrorContainerV2({
+            title: "Gagal Membuat Tiket",
+            description: "Terjadi kesalahan saat memproses permintaanmu.",
+          }),
           flags: MessageFlags.Ephemeral,
         });
       }

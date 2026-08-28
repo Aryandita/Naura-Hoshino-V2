@@ -64,7 +64,11 @@ module.exports = async function chat(interaction) {
   const prompt = interaction.options.getString("pesan");
   const userId = interaction.user.id;
   const username = interaction.user.username;
-  const systemInstruction = await buildInstruction(interaction.guildId, userId, username);
+  const systemInstruction = await buildInstruction(
+    interaction.guildId,
+    userId,
+    username,
+  );
 
   const messageProxy = {
     author: interaction.user,
@@ -87,9 +91,14 @@ module.exports = async function chat(interaction) {
     });
 
     // Jalankan ekstraksi memori otomatis di latar belakang (non-blocking)
-    AIMemory.extractAndSave(userId, prompt, replyText, geminiClient).catch((err) => {
-      logger.warn("[AI Chat] Background memory extraction error:", err.message);
-    });
+    AIMemory.extractAndSave(userId, prompt, replyText, geminiClient).catch(
+      (err) => {
+        logger.warn(
+          "[AI Chat] Background memory extraction error:",
+          err.message,
+        );
+      },
+    );
   } catch (error) {
     logger.error("[AI Chat] Gemini gagal menjawab:", error);
     replyText =

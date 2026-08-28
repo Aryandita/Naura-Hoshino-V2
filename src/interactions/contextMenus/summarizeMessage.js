@@ -1,7 +1,10 @@
 "use strict";
 
 const { ApplicationCommandType, MessageFlags } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../utils/NauraContainerBuilder");
 const aiManager = require("../../managers/aiManager");
 
 module.exports = {
@@ -18,7 +21,8 @@ module.exports = {
       return interaction.reply({
         ...buildErrorContainerV2({
           title: "Teks Terlalu Pendek",
-          errorMessage: "Pesan minimal harus memiliki 20 karakter agar dapat diringkas oleh AI.",
+          errorMessage:
+            "Pesan minimal harus memiliki 20 karakter agar dapat diringkas oleh AI.",
         }),
         flags: MessageFlags.Ephemeral,
       });
@@ -44,7 +48,8 @@ module.exports = {
       await interaction.editReply(
         buildErrorContainerV2({
           title: "Gagal Meringkas",
-          errorMessage: "AI sedang sibuk atau mengalami gangguan saat meringkas teks.",
+          errorMessage:
+            "AI sedang sibuk atau mengalami gangguan saat meringkas teks.",
         }),
       );
     }

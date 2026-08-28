@@ -47,7 +47,11 @@ async function drawVivarium(vivariumData) {
 
     ctx.textAlign = "right";
     ctx.fillStyle = "#FFD700";
-    ctx.fillText(`TIKET PENGUNJUNG: +${vivariumData.hourlyIncome || 0} ⭐/JAM`, width - 40, 50);
+    ctx.fillText(
+      `TIKET PENGUNJUNG: +${vivariumData.hourlyIncome || 0} ⭐/JAM`,
+      width - 40,
+      50,
+    );
     ctx.textAlign = "left";
 
     // 4. Aquarium Tank Frame
@@ -60,9 +64,14 @@ async function drawVivarium(vivariumData) {
 
     // Swimming Fishes
     const fishCoords = [
-      { x: 100, y: 150 }, { x: 250, y: 220 }, { x: 420, y: 160 },
-      { x: 580, y: 240 }, { x: 680, y: 150 }, { x: 180, y: 290 },
-      { x: 340, y: 310 }, { x: 500, y: 290 },
+      { x: 100, y: 150 },
+      { x: 250, y: 220 },
+      { x: 420, y: 160 },
+      { x: 580, y: 240 },
+      { x: 680, y: 150 },
+      { x: 180, y: 290 },
+      { x: 340, y: 310 },
+      { x: 500, y: 290 },
     ];
 
     fishes.slice(0, 8).forEach((f, idx) => {
@@ -70,7 +79,12 @@ async function drawVivarium(vivariumData) {
       ctx.font = '42px "EmojiFont"';
       ctx.fillText(f.emoji || "🐟", pos.x, pos.y);
       ctx.font = '10px "Orbitron", "EmojiFont"';
-      ctx.fillStyle = f.rarity === "MYTHIC" ? "#FFD700" : f.rarity === "EPIC" ? "#C084FC" : "#38BDF8";
+      ctx.fillStyle =
+        f.rarity === "MYTHIC"
+          ? "#FFD700"
+          : f.rarity === "EPIC"
+            ? "#C084FC"
+            : "#38BDF8";
       ctx.fillText(f.name.split(" ")[0], pos.x - 10, pos.y + 20);
     });
 
@@ -78,7 +92,11 @@ async function drawVivarium(vivariumData) {
       ctx.font = '14px "Outfit", "EmojiFont"';
       ctx.fillStyle = "#94A3B8";
       ctx.textAlign = "center";
-      ctx.fillText("Akuarium masih kosong. Pancing ikan laut dalam dan tempatkan di sini!", width / 2, 220);
+      ctx.fillText(
+        "Akuarium masih kosong. Pancing ikan laut dalam dan tempatkan di sini!",
+        width / 2,
+        220,
+      );
       ctx.textAlign = "left";
     }
 
@@ -97,7 +115,11 @@ async function drawVivarium(vivariumData) {
     ctx.font = '12px "Outfit", "EmojiFont"';
     ctx.fillStyle = "#86EFAC";
     ctx.textAlign = "right";
-    ctx.fillText("Gunakan /survival activity fish aksi:collect untuk klaim koin!", width - 60, 415);
+    ctx.fillText(
+      "Gunakan /survival activity fish aksi:collect untuk klaim koin!",
+      width - 60,
+      415,
+    );
     ctx.textAlign = "left";
 
     return canvas.toBuffer("image/png");

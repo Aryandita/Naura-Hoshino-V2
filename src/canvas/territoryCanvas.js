@@ -71,15 +71,27 @@ async function drawTerritoryMap(territories = []) {
 
       ctx.font = '12px "Outfit", "EmojiFont"';
       ctx.fillStyle = terr.clanName ? "#86EFAC" : "#94A3B8";
-      ctx.fillText(`Penguasa: ${terr.clanName || "Netral / Liar"}`, cardX + 15, cardY + 55);
+      ctx.fillText(
+        `Penguasa: ${terr.clanName || "Netral / Liar"}`,
+        cardX + 15,
+        cardY + 55,
+      );
 
       ctx.font = '11px "Orbitron", "EmojiFont"';
       ctx.fillStyle = "#F59E0B";
-      ctx.fillText(`Poin Kontrol: ${terr.controlPoints || 0} / 1000`, cardX + 15, cardY + 75);
+      ctx.fillText(
+        `Poin Kontrol: ${terr.controlPoints || 0} / 1000`,
+        cardX + 15,
+        cardY + 75,
+      );
 
       ctx.font = '11px "Outfit", "EmojiFont"';
       ctx.fillStyle = "#38BDF8";
-      ctx.fillText(`Pajak: ${terr.taxYield || 500} ⭐/jam`, cardX + 15, cardY + 95);
+      ctx.fillText(
+        `Pajak: ${terr.taxYield || 500} ⭐/jam`,
+        cardX + 15,
+        cardY + 95,
+      );
     });
 
     // 5. Center Sektor 5 (Babel Citadel / Central Hub)
@@ -99,11 +111,19 @@ async function drawTerritoryMap(territories = []) {
 
       ctx.font = '13px "Outfit", "EmojiFont"';
       ctx.fillStyle = terr5.clanName ? "#86EFAC" : "#94A3B8";
-      ctx.fillText(`Klan Penguasa: ${terr5.clanName || "Belum Dikuasai"} | Poin Kontrol: ${terr5.controlPoints || 0}`, 60, bottomY + 65);
+      ctx.fillText(
+        `Klan Penguasa: ${terr5.clanName || "Belum Dikuasai"} | Poin Kontrol: ${terr5.controlPoints || 0}`,
+        60,
+        bottomY + 65,
+      );
 
       ctx.font = '12px "Outfit", "EmojiFont"';
       ctx.fillStyle = "#E2E8F0";
-      ctx.fillText(`Efek Bonus: ${terr5.buffEffect || "+Bonus Klan"} | Pajak: ${terr5.taxYield || 1000} ⭐/jam`, 60, bottomY + 90);
+      ctx.fillText(
+        `Efek Bonus: ${terr5.buffEffect || "+Bonus Klan"} | Pajak: ${terr5.taxYield || 1000} ⭐/jam`,
+        60,
+        bottomY + 90,
+      );
     }
 
     return canvas.toBuffer("image/png");

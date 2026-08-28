@@ -1,7 +1,10 @@
 "use strict";
 
 const { ApplicationCommandType, MessageFlags } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../utils/NauraContainerBuilder");
 const { translateText } = require("../../utils/translateHelper");
 
 module.exports = {
@@ -27,7 +30,7 @@ module.exports = {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
-      const targetLang = (interaction.localeLang === "en") ? "en" : "id";
+      const targetLang = interaction.localeLang === "en" ? "en" : "id";
       const result = await translateText(textToTranslate, targetLang);
 
       const container = buildContainerV2({

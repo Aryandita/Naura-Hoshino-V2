@@ -44,7 +44,9 @@ async function respondError(interaction, message) {
   });
 
   try {
-    const finalFlags = (containerPayload.flags || MessageFlags.IsComponentsV2) | MessageFlags.Ephemeral;
+    const finalFlags =
+      (containerPayload.flags || MessageFlags.IsComponentsV2) |
+      MessageFlags.Ephemeral;
     if (interaction.deferred || interaction.replied) {
       await interaction.followUp({
         ...containerPayload,

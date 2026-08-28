@@ -53,7 +53,12 @@ const PRESETS = {
       },
     ],
     settingsPatch: {
-      automod: { enabled: true, antiSpam: true, antiLinks: true, antiMassMention: true },
+      automod: {
+        enabled: true,
+        antiSpam: true,
+        antiLinks: true,
+        antiMassMention: true,
+      },
       aiAutomod: { enabled: true, toxicFilter: true },
       ticketMode: "channel",
     },
@@ -114,8 +119,13 @@ async function applyPreset(guild, presetKey, adminUser = null) {
 
   // Cek bot permissions di server
   const botMember = guild.members?.me;
-  if (botMember && !botMember.permissions.has(PermissionFlagsBits.ManageChannels)) {
-    throw new Error("Naura membutuhkan permission 'Manage Channels' untuk menjalankan Onboarding Wizard.");
+  if (
+    botMember &&
+    !botMember.permissions.has(PermissionFlagsBits.ManageChannels)
+  ) {
+    throw new Error(
+      "Naura membutuhkan permission 'Manage Channels' untuk menjalankan Onboarding Wizard.",
+    );
   }
 
   const createdChannels = [];
@@ -127,7 +137,7 @@ async function applyPreset(guild, presetKey, adminUser = null) {
       let existing = null;
       if (guild.channels?.cache) {
         existing = guild.channels.cache.find(
-          (c) => c.name === chDef.name && c.type === chDef.type
+          (c) => c.name === chDef.name && c.type === chDef.type,
         );
       }
 
@@ -148,14 +158,18 @@ async function applyPreset(guild, presetKey, adminUser = null) {
         settingsToUpdate[chDef.settingKey] = channel.id;
       }
     } catch (err) {
-      logger.warn(`[OnboardingWizard] Gagal membuat channel ${chDef.name}: ${err.message}`);
+      logger.warn(
+        `[OnboardingWizard] Gagal membuat channel ${chDef.name}: ${err.message}`,
+      );
     }
   }
 
   // 2. Simpan konfigurasi ke GuildSettings
   let updatedSettings = null;
   try {
-    let settings = await GuildSettings.findOne({ where: { guildId: guild.id } });
+    let settings = await GuildSettings.findOne({
+      where: { guildId: guild.id },
+    });
     if (!settings) {
       settings = await GuildSettings.create({
         guildId: guild.id,
@@ -173,7 +187,7 @@ async function applyPreset(guild, presetKey, adminUser = null) {
   }
 
   logger.info(
-    `[OnboardingWizard] Guild ${guild.id} berhasil menerapkan preset "${preset.title}".`
+    `[OnboardingWizard] Guild ${guild.id} berhasil menerapkan preset "${preset.title}".`,
   );
 
   return {

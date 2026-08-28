@@ -30,7 +30,9 @@ const ui = require("../../../src/config/ui");
 const npcs = require("../../../src/survival/data/npcs");
 const actions = require("../../../src/survival/helpers/collectActions");
 const currency = require("../../../src/survival/engines/currency");
-const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
+const {
+  safeParseInventory,
+} = require("../../../src/survival/engines/inventoryHelper");
 const { getTimeState } = require("../../../src/survival/helpers/survivalTime");
 
 const CHOICE_MS = 15000;

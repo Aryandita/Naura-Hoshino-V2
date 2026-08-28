@@ -14,7 +14,10 @@ const { CanvasUtils } = require("../../src/canvas/CanvasUtils");
 const UserLeveling = require("../../src/models/UserLeveling");
 const cacheManager = require("../../src/managers/cacheManager");
 const ui = require("../../src/config/ui");
-const { getNextLevelXp, getRoleBadge } = require("../../src/leveling/levelingEngine");
+const {
+  getNextLevelXp,
+  getRoleBadge,
+} = require("../../src/leveling/levelingEngine");
 const rankCard = require("../../src/leveling/rankCard");
 const xpBuffer = require("../../src/leveling/xpBuffer");
 const {

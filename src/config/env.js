@@ -146,7 +146,8 @@ const env = {
   MODMAIL_CATEGORY: cleanEnv(process.env.MODMAIL_CATEGORY_ID),
 
   // LAVALINK
-  LAVA_NODES: cleanEnv(process.env.LAVA_NODES) || cleanEnv(process.env.LAVALINK_NODES),
+  LAVA_NODES:
+    cleanEnv(process.env.LAVA_NODES) || cleanEnv(process.env.LAVALINK_NODES),
   LAVA_HOST: cleanEnv(process.env.LAVALINK_HOST) || "localhost",
   LAVA_PORT: parseInt(process.env.LAVALINK_PORT) || 2333,
   LAVA_PASS: cleanEnv(process.env.LAVALINK_PASSWORD) || "youshallnotpass",
@@ -158,7 +159,8 @@ const env = {
   // Pasar regional untuk Web API & countryCode LavaSrc (ISO 3166-1 alpha-2)
   SPOTIFY_MARKET: cleanEnv(process.env.SPOTIFY_MARKET) || "ID",
   // Batas jumlah track playlist Spotify saat translasi manual bot-side
-  SPOTIFY_MAX_PLAYLIST_TRACKS: parseInt(process.env.SPOTIFY_MAX_PLAYLIST_TRACKS) || 100,
+  SPOTIFY_MAX_PLAYLIST_TRACKS:
+    parseInt(process.env.SPOTIFY_MAX_PLAYLIST_TRACKS) || 100,
 
   // GEMINI AI
   GEMINI_API: cleanEnv(process.env.GEMINI_API_KEY),

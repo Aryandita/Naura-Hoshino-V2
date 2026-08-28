@@ -74,7 +74,13 @@ module.exports = {
         // Fallback
       }
 
-      const fishList = vivarium.fishes.map((f) => `**• ${f.emoji} ${f.name}** (\`${f.rarity}\` | +${f.ticketYield} ${ui.getEmoji("star") || "⭐"}/jam)`).join("\n") || "*Belum ada ikan di akuarium.*";
+      const fishList =
+        vivarium.fishes
+          .map(
+            (f) =>
+              `**• ${f.emoji} ${f.name}** (\`${f.rarity}\` | +${f.ticketYield} ${ui.getEmoji("star") || "⭐"}/jam)`,
+          )
+          .join("\n") || "*Belum ada ikan di akuarium.*";
 
       const payload = buildContainerV2({
         accentColorHex: "#38BDF8",
@@ -104,7 +110,8 @@ module.exports = {
         const payload = buildContainerV2({
           accentColorHex: "#F59E0B",
           title: "Tiket Belum Tersedia",
-          description: "Belum ada akumulasi koin tiket pengunjung yang bisa ditarik saat ini.",
+          description:
+            "Belum ada akumulasi koin tiket pengunjung yang bisa ditarik saat ini.",
           footerText: ui.getFooter("survival"),
         });
         return interaction.editReply(payload);
@@ -129,8 +136,11 @@ module.exports = {
 
       if (!depRes.success) {
         let msg = "Gagal menempatkan ikan ke akuarium.";
-        if (depRes.reason === "INVALID_FISH") msg = "ID Ikan tidak valid! Pilihan: `neon_guppy`, `prism_clownfish`, `cyber_anglerfish`, `phantom_eel`, `astral_jellyfish`.";
-        if (depRes.reason === "VIVARIUM_FULL") msg = "Akuarium sudah penuh (Maksimal 10 ekor ikan)!";
+        if (depRes.reason === "INVALID_FISH")
+          msg =
+            "ID Ikan tidak valid! Pilihan: `neon_guppy`, `prism_clownfish`, `cyber_anglerfish`, `phantom_eel`, `astral_jellyfish`.";
+        if (depRes.reason === "VIVARIUM_FULL")
+          msg = "Akuarium sudah penuh (Maksimal 10 ekor ikan)!";
 
         const payload = buildContainerV2({
           accentColorHex: "#EF4444",
@@ -169,7 +179,12 @@ module.exports = {
 
       const caught = deepRes.fish;
       const payload = buildContainerV2({
-        accentColorHex: caught.rarity === "MYTHIC" ? "#FFD700" : caught.rarity === "EPIC" ? "#C084FC" : "#38BDF8",
+        accentColorHex:
+          caught.rarity === "MYTHIC"
+            ? "#FFD700"
+            : caught.rarity === "EPIC"
+              ? "#C084FC"
+              : "#38BDF8",
         authorName: `${ui.getEmoji("water") || "🌊"} Deep-Sea Cyber-Fishing (${deepRes.zone})`,
         title: `${ui.getEmoji("celebrate") || "🎉"} Berhasil Menangkap: ${caught.emoji} ${caught.name}!`,
         description: [
@@ -283,13 +298,21 @@ module.exports = {
           let amount = 1;
 
           // === SEASONAL EVENT BOOST ===
-          const { getCurrentSeason, checkNauraBirthdayEncounter } = require("../../../src/survival/helpers/survivalContext");
+          const {
+            getCurrentSeason,
+            checkNauraBirthdayEncounter,
+          } = require("../../../src/survival/helpers/survivalContext");
           const season = getCurrentSeason();
           const seasonDrops = [];
           if (season) {
             amount = Math.max(1, Math.floor(amount * season.dropBoost));
             if (season.exclusiveItem && Math.random() < 0.25) {
-              seasonDrops.push({ id: season.exclusiveItem, name: "Event Item", amount: 1, type: "loot" });
+              seasonDrops.push({
+                id: season.exclusiveItem,
+                name: "Event Item",
+                amount: 1,
+                type: "loot",
+              });
             }
           }
 
@@ -300,7 +323,7 @@ module.exports = {
               amount: amount,
               type: "loot",
             },
-            ...seasonDrops
+            ...seasonDrops,
           ];
           const stored = await addItemsAtomic(user.id, itemsToStore);
 
@@ -339,10 +362,14 @@ module.exports = {
 
           if (season) {
             if (season.dropBoost > 1.0) {
-              lines.push(`\n${e("impressed", "\u2728")} **[${season.label}]** Hasil tangkapan meningkat x${season.dropBoost}!`);
+              lines.push(
+                `\n${e("impressed", "\u2728")} **[${season.label}]** Hasil tangkapan meningkat x${season.dropBoost}!`,
+              );
             }
             if (seasonDrops.length > 0) {
-              lines.push(`${e("cheers", "\uD83C\uDF81")} **[${season.label}]** Kamu juga mendapatkan item eksklusif event!`);
+              lines.push(
+                `${e("cheers", "\uD83C\uDF81")} **[${season.label}]** Kamu juga mendapatkan item eksklusif event!`,
+              );
             }
           }
 

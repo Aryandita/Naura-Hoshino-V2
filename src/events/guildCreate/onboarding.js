@@ -45,7 +45,9 @@ module.exports = {
     const row = new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder()
         .setCustomId("setup_preset")
-        .setPlaceholder(`${ui.stripCustomEmojis(ui.getEmoji("settings") || "⚙️")} Pilih Preset Setup Cepat...`)
+        .setPlaceholder(
+          `${ui.stripCustomEmojis(ui.getEmoji("settings") || "⚙️")} Pilih Preset Setup Cepat...`,
+        )
         .addOptions([
           {
             label: "Community Preset",

@@ -12,7 +12,9 @@ const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("vote")
-    .setDescription("🗳️ Vote Naura Hoshino dan dapatkan Trial V.I.P 12 Jam + Milestone Rewards!"),
+    .setDescription(
+      "🗳️ Vote Naura Hoshino dan dapatkan Trial V.I.P 12 Jam + Milestone Rewards!",
+    ),
 
   async execute(interaction) {
     const topGgLink = "https://top.gg/bot/1483665745727721543?s=00487c531de33";
@@ -33,7 +35,7 @@ module.exports = {
         .setLabel("Bantuan / Support")
         .setStyle(ButtonStyle.Link)
         .setURL("https://dsc.gg/naura-hoshino")
-        .setEmoji(ui.parseEmoji(ui.getEmoji("support") || "💬"))
+        .setEmoji(ui.parseEmoji(ui.getEmoji("support") || "💬")),
     );
 
     const eGift = ui.getEmoji("gift") || "🎁";
@@ -86,7 +88,7 @@ module.exports = {
         .setLabel("Bantuan / Support")
         .setStyle(ButtonStyle.Link)
         .setURL("https://dsc.gg/naura-hoshino")
-        .setEmoji(ui.parseEmoji(ui.getEmoji("support") || "💬"))
+        .setEmoji(ui.parseEmoji(ui.getEmoji("support") || "💬")),
     );
 
     const eGift = ui.getEmoji("gift") || "🎁";

@@ -7,7 +7,10 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../utils/NauraContainerBuilder");
 
 module.exports = {
   name: "⚔️ Tantang Duel",
@@ -22,7 +25,8 @@ module.exports = {
       return interaction.reply({
         ...buildErrorContainerV2({
           title: "Tantangan Tidak Valid",
-          errorMessage: "Kamu tidak bisa menantang dirimu sendiri untuk berduel!",
+          errorMessage:
+            "Kamu tidak bisa menantang dirimu sendiri untuk berduel!",
         }),
         flags: MessageFlags.Ephemeral,
       });

@@ -141,20 +141,30 @@ function buildHelpPayload(lang, categoryIndex = 0, disabled = false) {
   const eHelp = e("help", "📚");
 
   const categoryBanners = {
-    overview: ui.getBanner("help") || "./assets/general/Utility & Tools Banner.jpeg",
-    core: ui.getBanner("utility") || "./assets/general/Utility & Tools Banner.jpeg",
+    overview:
+      ui.getBanner("help") || "./assets/general/Utility & Tools Banner.jpeg",
+    core:
+      ui.getBanner("utility") || "./assets/general/Utility & Tools Banner.jpeg",
     music: ui.getBanner("music") || "./assets/general/Music Banner.jpeg",
-    minigame: ui.getBanner("minigame") || "./assets/general/Minigame & Arcade Banner.jpeg",
-    survival: ui.getBanner("economy") || "./assets/general/Economy & Market Banner.jpeg",
-    admin: ui.getBanner("admin") || "./assets/general/Admin & Security Banner.jpeg",
+    minigame:
+      ui.getBanner("minigame") ||
+      "./assets/general/Minigame & Arcade Banner.jpeg",
+    survival:
+      ui.getBanner("economy") ||
+      "./assets/general/Economy & Market Banner.jpeg",
+    admin:
+      ui.getBanner("admin") || "./assets/general/Admin & Security Banner.jpeg",
   };
 
-  const activeBannerPath = categoryBanners[activeKey] || categoryBanners.overview;
+  const activeBannerPath =
+    categoryBanners[activeKey] || categoryBanners.overview;
   const bannerFilename = `help-banner-${activeKey || "overview"}.jpeg`;
   const files = [];
 
   if (activeBannerPath && fs.existsSync(activeBannerPath)) {
-    files.push(new AttachmentBuilder(activeBannerPath, { name: bannerFilename }));
+    files.push(
+      new AttachmentBuilder(activeBannerPath, { name: bannerFilename }),
+    );
   }
 
   const containerComponents = [

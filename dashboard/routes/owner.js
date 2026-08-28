@@ -115,7 +115,7 @@ module.exports = (client) => {
 
     try {
       const util = require("util");
-       
+
       let evaled = await eval(code);
       if (typeof evaled !== "string")
         evaled = util.inspect(evaled, { depth: 0 });
@@ -448,7 +448,10 @@ module.exports = (client) => {
         });
       } catch (dmErr) {}
 
-      broadcast(client, `Status premium (${displayName}) diberikan ke user ${userId}.`);
+      broadcast(
+        client,
+        `Status premium (${displayName}) diberikan ke user ${userId}.`,
+      );
 
       res.json({
         success: true,
@@ -473,7 +476,9 @@ module.exports = (client) => {
     try {
       const profile = await UserProfile.findByPk(userId);
       if (!profile) {
-        return res.status(404).json({ error: "Profil pengguna tidak ditemukan." });
+        return res
+          .status(404)
+          .json({ error: "Profil pengguna tidak ditemukan." });
       }
 
       const store = require("../../src/premium/premiumStore");
@@ -531,7 +536,8 @@ module.exports = (client) => {
 
       const createdCodes = [];
       for (let i = 0; i < countNum; i++) {
-        const code = "NAURA-VIP-" + crypto.randomBytes(5).toString("hex").toUpperCase();
+        const code =
+          "NAURA-VIP-" + crypto.randomBytes(5).toString("hex").toUpperCase();
         await PremiumVoucher.create({
           code,
           durationDays: daysNum,
@@ -554,7 +560,8 @@ module.exports = (client) => {
   // --- Hapus voucher yang belum digunakan ---
   router.delete("/api/owner/vouchers/:code", async (req, res) => {
     const { code } = req.params;
-    if (!code) return res.status(400).json({ error: "Kode voucher wajib diisi." });
+    if (!code)
+      return res.status(400).json({ error: "Kode voucher wajib diisi." });
 
     try {
       const PremiumVoucher = require("../../src/models/PremiumVoucher");

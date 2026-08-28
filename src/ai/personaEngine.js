@@ -5,18 +5,26 @@ const geminiClient = require("./geminiClient");
 const { logger } = require("../managers/logger");
 
 const PERSONA_TONES = {
-  TSUNDERE: "Gaya bicara Tsundere: pura-pura kesal, ketus, suka bilang 'B-Bukan karena aku peduli padamu ya!', tapi sebenarnya perhatian.",
-  CYBER_HACKER: "Gaya bicara Cyber Hacker: analitis, penuh istilah teknologi (firewall, proxy, glitch, mainframe), misterius.",
-  ANCIENT_SAGE: "Gaya bicara Bijak Kuno: menggunakan bahasa puitis kuno, sering menyebut ramalan bintang dan takdir kosmis.",
-  BLACKSMITH: "Gaya bicara Pandai Besi: lantang, percaya diri, bangga pada baja tempaan dan api peleburan.",
-  KUUDERE: "Gaya bicara Kuudere: sangat tenang, dingin, minim emosi berlebihan, sangat efisien dan logis.",
+  TSUNDERE:
+    "Gaya bicara Tsundere: pura-pura kesal, ketus, suka bilang 'B-Bukan karena aku peduli padamu ya!', tapi sebenarnya perhatian.",
+  CYBER_HACKER:
+    "Gaya bicara Cyber Hacker: analitis, penuh istilah teknologi (firewall, proxy, glitch, mainframe), misterius.",
+  ANCIENT_SAGE:
+    "Gaya bicara Bijak Kuno: menggunakan bahasa puitis kuno, sering menyebut ramalan bintang dan takdir kosmis.",
+  BLACKSMITH:
+    "Gaya bicara Pandai Besi: lantang, percaya diri, bangga pada baja tempaan dan api peleburan.",
+  KUUDERE:
+    "Gaya bicara Kuudere: sangat tenang, dingin, minim emosi berlebihan, sangat efisien dan logis.",
 };
 
 class PersonaEngine {
   /**
    * Buat atau perbarui sub-persona di server
    */
-  static async createOrUpdatePersona(guildId, { personaId, channelId, name, systemPrompt, voiceTone = "TSUNDERE" }) {
+  static async createOrUpdatePersona(
+    guildId,
+    { personaId, channelId, name, systemPrompt, voiceTone = "TSUNDERE" },
+  ) {
     const pId = personaId || `persona_${Date.now()}`;
     const [persona, created] = await GuildPersona.findOrCreate({
       where: { personaId: pId },
@@ -39,7 +47,9 @@ class PersonaEngine {
       await persona.save();
     }
 
-    logger.info(`[PersonaEngine] Persona "${name}" (${voiceTone}) disimpan di guild ${guildId}.`);
+    logger.info(
+      `[PersonaEngine] Persona "${name}" (${voiceTone}) disimpan di guild ${guildId}.`,
+    );
     return persona.toJSON();
   }
 
@@ -56,23 +66,37 @@ class PersonaEngine {
    */
   static async getActivePersona(guildId, channelId = null) {
     if (channelId) {
-      const channelSpecific = await GuildPersona.findOne({ where: { guildId, channelId, isActive: true } });
+      const channelSpecific = await GuildPersona.findOne({
+        where: { guildId, channelId, isActive: true },
+      });
       if (channelSpecific) return channelSpecific.toJSON();
     }
 
-    const defaultGuild = await GuildPersona.findOne({ where: { guildId, isActive: true } });
+    const defaultGuild = await GuildPersona.findOne({
+      where: { guildId, isActive: true },
+    });
     return defaultGuild ? defaultGuild.toJSON() : null;
   }
 
   /**
    * Hasilkan balasan dengan kepribadian persona via Gemini AI
    */
-  static async chatWithPersona(guildId, channelId, userMessage, userName = "Pengguna") {
+  static async chatWithPersona(
+    guildId,
+    channelId,
+    userMessage,
+    userName = "Pengguna",
+  ) {
     const persona = await this.getActivePersona(guildId, channelId);
 
-    const toneInstruction = persona && PERSONA_TONES[persona.voiceTone] ? PERSONA_TONES[persona.voiceTone] : PERSONA_TONES.TSUNDERE;
+    const toneInstruction =
+      persona && PERSONA_TONES[persona.voiceTone]
+        ? PERSONA_TONES[persona.voiceTone]
+        : PERSONA_TONES.TSUNDERE;
     const personaName = persona ? persona.name : "Naura (Cyber Maid)";
-    const customPrompt = persona ? persona.systemPrompt : "Kamu adalah asisten anime cerdas di Discord.";
+    const customPrompt = persona
+      ? persona.systemPrompt
+      : "Kamu adalah asisten anime cerdas di Discord.";
 
     const prompt = `Nama Persona: "${personaName}".
 Instruksi Karakter: ${customPrompt}.

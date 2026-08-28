@@ -222,7 +222,12 @@ class MusicManager {
     if (!player) return;
     try {
       const cached = this.uiCache.get(player.guildId);
-      if (!cached || !cached.messageId || typeof cached.generatePayload !== "function") return;
+      if (
+        !cached ||
+        !cached.messageId ||
+        typeof cached.generatePayload !== "function"
+      )
+        return;
 
       const channel = this.client.channels.cache.get(player.textChannel);
       if (!channel) return;

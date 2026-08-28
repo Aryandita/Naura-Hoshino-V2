@@ -1,8 +1,10 @@
 node_modules/
 package-lock.json
 assets/
-src/dashboard/public/
-src/dashboard/views/
+dashboard/public/
+dashboard/views/
+dashboard-v2/
 language/
 plugin/core/locales/
 extracted_strings.json
+docker/

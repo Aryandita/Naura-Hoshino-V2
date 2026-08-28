@@ -13,8 +13,14 @@ test("Cafe Recipes Catalog - Data Integrity", () => {
     assert.ok(recipe.name, "Setiap resep harus memiliki nama");
     assert.ok(recipe.emoji, "Setiap resep harus memiliki emoji");
     assert.ok(recipe.price > 0, "Harga jual harus lebih dari 0");
-    assert.ok(Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0, "Harus memiliki bahan mentah");
-    assert.ok(recipe.buff && recipe.buff.description, "Harus memiliki info buff");
+    assert.ok(
+      Array.isArray(recipe.ingredients) && recipe.ingredients.length > 0,
+      "Harus memiliki bahan mentah",
+    );
+    assert.ok(
+      recipe.buff && recipe.buff.description,
+      "Harus memiliki info buff",
+    );
   }
 
   const latte = getRecipeById("sakura_latte");

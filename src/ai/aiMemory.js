@@ -31,7 +31,10 @@ class AIMemory {
     }
 
     // 2. Fallback baca ke MongoDB jika belum ada di cache
-    if (!memoryData && (mongoManager.isReady || typeof mongoManager.getAiMemory === "function")) {
+    if (
+      !memoryData &&
+      (mongoManager.isReady || typeof mongoManager.getAiMemory === "function")
+    ) {
       try {
         const doc = await mongoManager.getAiMemory(userId);
         if (doc) {
@@ -52,7 +55,10 @@ class AIMemory {
           }
         }
       } catch (mongoErr) {
-        logger.warn(`[AIMemory] Gagal membaca MongoDB untuk user ${userId}:`, mongoErr.message);
+        logger.warn(
+          `[AIMemory] Gagal membaca MongoDB untuk user ${userId}:`,
+          mongoErr.message,
+        );
       }
     }
 
@@ -73,13 +79,22 @@ class AIMemory {
     // 4. Susun konteks memori yang scannable dan informatif
     const lines = [];
     if (memoryData.nickname) {
-      lines.push(`- Nama panggilan/panggilan akrab user: "${memoryData.nickname}" (panggillah dengan nama ini).`);
+      lines.push(
+        `- Nama panggilan/panggilan akrab user: "${memoryData.nickname}" (panggillah dengan nama ini).`,
+      );
     }
-    if (Array.isArray(memoryData.musicPrefs) && memoryData.musicPrefs.length > 0) {
-      lines.push(`- Preferensi musik favorit user: ${memoryData.musicPrefs.join(", ")}.`);
+    if (
+      Array.isArray(memoryData.musicPrefs) &&
+      memoryData.musicPrefs.length > 0
+    ) {
+      lines.push(
+        `- Preferensi musik favorit user: ${memoryData.musicPrefs.join(", ")}.`,
+      );
     }
     if (Array.isArray(memoryData.facts) && memoryData.facts.length > 0) {
-      lines.push(`- Fakta penting tentang user: ${memoryData.facts.join("; ")}.`);
+      lines.push(
+        `- Fakta penting tentang user: ${memoryData.facts.join("; ")}.`,
+      );
     }
     if (memoryData.summary) {
       lines.push(`- Riwayat/catatan obrolan sebelumnya: ${memoryData.summary}`);
@@ -122,7 +137,10 @@ class AIMemory {
         const musicItem = musicMatch[1].trim();
         if (musicItem.length >= 3 && musicItem.length <= 40) {
           let existingPrefs = [];
-          if (mongoManager.isReady || typeof mongoManager.getAiMemory === "function") {
+          if (
+            mongoManager.isReady ||
+            typeof mongoManager.getAiMemory === "function"
+          ) {
             const current = await mongoManager.getAiMemory(userId);
             if (current && Array.isArray(current.musicPrefs)) {
               existingPrefs = current.musicPrefs;
@@ -138,18 +156,29 @@ class AIMemory {
       if (!updated) return;
 
       // Simpan ke MongoDB jika terhubung
-      if (mongoManager.isReady || typeof mongoManager.saveAiMemory === "function") {
+      if (
+        mongoManager.isReady ||
+        typeof mongoManager.saveAiMemory === "function"
+      ) {
         await mongoManager.saveAiMemory(userId, updates);
       }
 
       // Update cache di Redis
       if (redisManager.isReady) {
-        const currentCache = (await redisManager.getCache(`ai:memory:obj:${userId}`)) || {};
+        const currentCache =
+          (await redisManager.getCache(`ai:memory:obj:${userId}`)) || {};
         const merged = { ...currentCache, ...updates };
-        await redisManager.setCache(`ai:memory:obj:${userId}`, merged, MEMORY_TTL_SECONDS);
+        await redisManager.setCache(
+          `ai:memory:obj:${userId}`,
+          merged,
+          MEMORY_TTL_SECONDS,
+        );
       }
     } catch (e) {
-      logger.warn(`[AIMemory] Ekstraksi fakta gagal untuk user ${userId}:`, e.message);
+      logger.warn(
+        `[AIMemory] Ekstraksi fakta gagal untuk user ${userId}:`,
+        e.message,
+      );
     }
   }
 
@@ -162,17 +191,32 @@ class AIMemory {
     if (!userId || !summary) return;
 
     try {
-      if (mongoManager.isReady || typeof mongoManager.saveAiMemory === "function") {
+      if (
+        mongoManager.isReady ||
+        typeof mongoManager.saveAiMemory === "function"
+      ) {
         await mongoManager.saveAiMemory(userId, { summary });
       }
       if (redisManager.isReady) {
-        await redisManager.setCache(`ai:memory:${userId}`, summary, MEMORY_TTL_SECONDS);
-        const obj = (await redisManager.getCache(`ai:memory:obj:${userId}`)) || {};
+        await redisManager.setCache(
+          `ai:memory:${userId}`,
+          summary,
+          MEMORY_TTL_SECONDS,
+        );
+        const obj =
+          (await redisManager.getCache(`ai:memory:obj:${userId}`)) || {};
         obj.summary = summary;
-        await redisManager.setCache(`ai:memory:obj:${userId}`, obj, MEMORY_TTL_SECONDS);
+        await redisManager.setCache(
+          `ai:memory:obj:${userId}`,
+          obj,
+          MEMORY_TTL_SECONDS,
+        );
       }
     } catch (e) {
-      logger.warn(`[AIMemory] Gagal menyimpan memori untuk user ${userId}:`, e.message);
+      logger.warn(
+        `[AIMemory] Gagal menyimpan memori untuk user ${userId}:`,
+        e.message,
+      );
     }
   }
 
@@ -191,7 +235,10 @@ class AIMemory {
       const remainder = historyArray.slice(10);
 
       const conversationText = toSummarize
-        .map((msg) => `${msg.role}: ${msg.parts?.map((p) => p.text).join(" ") || ""}`)
+        .map(
+          (msg) =>
+            `${msg.role}: ${msg.parts?.map((p) => p.text).join(" ") || ""}`,
+        )
         .join("\n");
 
       const prompt = `Rangkum poin-poin penting dari percakapan berikut dalam 2-3 kalimat singkat. Fokus pada preferensi user, nama, atau detail penting lainnya. Jika tidak ada yang penting, balas dengan "TIDAK_ADA_YANG_PENTING".\n\nPercakapan:\n${conversationText}`;
@@ -206,7 +253,8 @@ class AIMemory {
           const doc = await mongoManager.getAiMemory(userId);
           existingSummary = doc?.summary || "";
         } else if (redisManager.isReady) {
-          existingSummary = (await redisManager.getCache(`ai:memory:${userId}`)) || "";
+          existingSummary =
+            (await redisManager.getCache(`ai:memory:${userId}`)) || "";
         }
 
         let newSummary = existingSummary

@@ -26,7 +26,11 @@ async function fetchFromOMDB(query, year) {
   if (year) searchUrl += `&y=${year}`;
 
   const searchRes = await axios.get(searchUrl, { timeout: 5000 });
-  if (!searchRes.data || searchRes.data.Response === "False" || !searchRes.data.Search) {
+  if (
+    !searchRes.data ||
+    searchRes.data.Response === "False" ||
+    !searchRes.data.Search
+  ) {
     return null;
   }
 
@@ -44,7 +48,10 @@ async function fetchFromOMDB(query, year) {
         genres: m.Genre || "N/A",
         director: m.Director || "N/A",
         actors: m.Actors || "N/A",
-        rating: m.imdbRating && m.imdbRating !== "N/A" ? `${ui.getEmoji("star") || "⭐"} **${m.imdbRating}** / 10` : "N/A",
+        rating:
+          m.imdbRating && m.imdbRating !== "N/A"
+            ? `${ui.getEmoji("star") || "⭐"} **${m.imdbRating}** / 10`
+            : "N/A",
         runtime: m.Runtime || "N/A",
         awards: m.Awards && m.Awards !== "N/A" ? m.Awards : "Tidak ada",
         url: m.imdbID ? `https://www.imdb.com/title/${m.imdbID}` : null,
@@ -64,26 +71,41 @@ async function fetchFromOMDB(query, year) {
  * Fetch film/serial dari TVMaze Public API (Gratis, Tanpa API Key)
  */
 async function fetchFromTVMaze(query) {
-  const res = await axios.get(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`, {
-    timeout: 5000,
-  });
+  const res = await axios.get(
+    `https://api.tvmaze.com/search/shows?q=${encodeURIComponent(query)}`,
+    {
+      timeout: 5000,
+    },
+  );
 
   if (!res.data || res.data.length === 0) return null;
 
   return res.data.slice(0, 5).map((entry) => {
     const show = entry.show;
-    const cleanSummary = (show.summary || "Tidak ada sinopsis.").replace(/<[^>]*>?/gm, "");
-    const year = show.premiered ? new Date(show.premiered).getFullYear() : "N/A";
-    const ratingScore = show.rating?.average ? `${ui.getEmoji("star") || "⭐"} **${show.rating.average}** / 10` : "N/A";
+    const cleanSummary = (show.summary || "Tidak ada sinopsis.").replace(
+      /<[^>]*>?/gm,
+      "",
+    );
+    const year = show.premiered
+      ? new Date(show.premiered).getFullYear()
+      : "N/A";
+    const ratingScore = show.rating?.average
+      ? `${ui.getEmoji("star") || "⭐"} **${show.rating.average}** / 10`
+      : "N/A";
 
     return {
       title: `${show.name} (${year})`,
       synopsis: cleanSummary,
-      genres: show.genres && show.genres.length > 0 ? show.genres.join(", ") : "N/A",
+      genres:
+        show.genres && show.genres.length > 0 ? show.genres.join(", ") : "N/A",
       director: show.network?.name || show.webChannel?.name || "TV Network",
       actors: show.type || "Television Show",
       rating: ratingScore,
-      runtime: show.runtime ? `${show.runtime} Menit` : show.averageRuntime ? `${show.averageRuntime} Menit` : "N/A",
+      runtime: show.runtime
+        ? `${show.runtime} Menit`
+        : show.averageRuntime
+          ? `${show.averageRuntime} Menit`
+          : "N/A",
       awards: show.status || "N/A",
       url: show.url || null,
       posterURL: show.image?.medium || show.image?.original || null,
@@ -129,14 +151,18 @@ async function searchMovieWaterfall(query, year) {
     const omdbResults = await fetchFromOMDB(query, year);
     if (omdbResults && omdbResults.length > 0) return omdbResults;
   } catch (err) {
-    logger.warn(`[Movie Search] OMDB error (${err.message}), beralih ke TVMaze...`);
+    logger.warn(
+      `[Movie Search] OMDB error (${err.message}), beralih ke TVMaze...`,
+    );
   }
 
   try {
     const tvmazeResults = await fetchFromTVMaze(query);
     if (tvmazeResults && tvmazeResults.length > 0) return tvmazeResults;
   } catch (err) {
-    logger.warn(`[Movie Search] TVMaze error (${err.message}), beralih ke Wikipedia...`);
+    logger.warn(
+      `[Movie Search] TVMaze error (${err.message}), beralih ke Wikipedia...`,
+    );
   }
 
   try {
@@ -289,9 +315,7 @@ module.exports = {
       });
 
       collector.on("end", () => {
-        interaction
-          .editReply(buildPayload(currentIndex, true))
-          .catch(() => {});
+        interaction.editReply(buildPayload(currentIndex, true)).catch(() => {});
       });
     } catch (error) {
       logger.error("[Movie Error]", error);
@@ -304,4 +328,3 @@ module.exports = {
     }
   },
 };
-

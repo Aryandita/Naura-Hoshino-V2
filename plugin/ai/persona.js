@@ -1,10 +1,10 @@
 "use strict";
 
+const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const {
-  SlashCommandBuilder,
-  MessageFlags,
-} = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../src/utils/NauraContainerBuilder");
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
 const personaEngine = require("../../src/ai/personaEngine");
 
@@ -28,8 +28,14 @@ module.exports = {
             .setDescription("Gaya bicara kepribadian AI")
             .addChoices(
               { name: "Tsundere (Ketus & Perhatian)", value: "TSUNDERE" },
-              { name: "Cyber Hacker (Analitis & Cepat)", value: "CYBER_HACKER" },
-              { name: "Ancient Sage (Puitis & Ramalan Kuno)", value: "ANCIENT_SAGE" },
+              {
+                name: "Cyber Hacker (Analitis & Cepat)",
+                value: "CYBER_HACKER",
+              },
+              {
+                name: "Ancient Sage (Puitis & Ramalan Kuno)",
+                value: "ANCIENT_SAGE",
+              },
               { name: "Blacksmith (Pandai Besi Lantang)", value: "BLACKSMITH" },
               { name: "Kuudere (Tenang & Logis)", value: "KUUDERE" },
             )
@@ -44,7 +50,9 @@ module.exports = {
         .addChannelOption((opt) =>
           opt
             .setName("channel")
-            .setDescription("Kaitkan persona ini ke channel tertentu (Opsional)")
+            .setDescription(
+              "Kaitkan persona ini ke channel tertentu (Opsional)",
+            )
             .setRequired(false),
         ),
     )
@@ -122,14 +130,18 @@ module.exports = {
         return interaction.editReply({
           ...buildErrorContainerV2({
             title: "Belum Ada Persona",
-            description: "Server ini belum memiliki persona kustom. Buat dengan `/persona create`!",
+            description:
+              "Server ini belum memiliki persona kustom. Buat dengan `/persona create`!",
             footerText: ui.getFooter("core"),
           }),
         });
       }
 
       const personaList = list
-        .map((p, idx) => `**${idx + 1}. ${p.name}** (\`${p.voiceTone}\`)\n- Lokasi: ${p.channelId ? `<#${p.channelId}>` : "Global"}\n- Prompt: *"${p.systemPrompt.substring(0, 60)}..."*`)
+        .map(
+          (p, idx) =>
+            `**${idx + 1}. ${p.name}** (\`${p.voiceTone}\`)\n- Lokasi: ${p.channelId ? `<#${p.channelId}>` : "Global"}\n- Prompt: *"${p.systemPrompt.substring(0, 60)}..."*`,
+        )
         .join("\n\n");
 
       const payload = buildContainerV2({
@@ -147,17 +159,18 @@ module.exports = {
     if (subcommand === "chat") {
       await interaction.deferReply();
       const userMessage = interaction.options.getString("pesan");
-      const res = await personaEngine.chatWithPersona(guildId, channelId, userMessage, username);
+      const res = await personaEngine.chatWithPersona(
+        guildId,
+        channelId,
+        userMessage,
+        username,
+      );
 
       const payload = buildContainerV2({
         accentColorHex: "#F472B6",
         authorName: `💬 ${res.personaName} (${res.voiceTone})`,
         title: `Menjawab ${username}`,
-        description: [
-          `> *"${userMessage}"*`,
-          ``,
-          res.reply,
-        ].join("\n"),
+        description: [`> *"${userMessage}"*`, ``, res.reply].join("\n"),
         footerText: ui.getFooter("core"),
       });
 

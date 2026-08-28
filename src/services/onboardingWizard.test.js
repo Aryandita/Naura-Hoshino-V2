@@ -25,11 +25,8 @@ describe("OnboardingWizard Service", () => {
   });
 
   it("applyPreset throws error on invalid preset key", async () => {
-    await assert.rejects(
-      async () => {
-        await onboardingWizard.applyPreset({}, "invalid_preset");
-      },
-      /tidak valid/
-    );
+    await assert.rejects(async () => {
+      await onboardingWizard.applyPreset({}, "invalid_preset");
+    }, /tidak valid/);
   });
 });

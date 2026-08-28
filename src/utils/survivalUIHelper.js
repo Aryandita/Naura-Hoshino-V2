@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 // 🌿 Naura Wilds - Survival UI Helper
 //
@@ -12,20 +12,20 @@
 // - Footer respons survival wajib getFooter() yang mendelegasikan ke
 //   ui.getFooter('survival').
 
-const { colors, footers } = require('../config/ui/palette');
-const { buildGoalGradientBar } = require('./uxHelper');
+const { colors, footers } = require("../config/ui/palette");
+const { buildGoalGradientBar } = require("./uxHelper");
 
 /**
  * Palet earth-tone Naura Wilds.
  * Harus selalu sinkron dengan tabel "Palet Earth-Tone Survival" di DESIGN.md.
  */
 const survivalColors = {
-    emerald: '#86EFAC', // Aksen utama survival, border panel kaca, glow judul
-    moss: '#34D399', // Bar vital sehat (>50%), status panen siap
-    amber: '#FBBF24', // Peringatan stamina rendah, energi, reward harian
-    bark: '#92400E', // Crafting, kayu/material mentah, workshop
-    river: '#7DD3FC', // Fishing, deep sea, vivarium, elemen air
-    danger: '#F87171', // Dungeon, world boss, duel, coliseum, HP kritis
+  emerald: "#86EFAC", // Aksen utama survival, border panel kaca, glow judul
+  moss: "#34D399", // Bar vital sehat (>50%), status panen siap
+  amber: "#FBBF24", // Peringatan stamina rendah, energi, reward harian
+  bark: "#92400E", // Crafting, kayu/material mentah, workshop
+  river: "#7DD3FC", // Fishing, deep sea, vivarium, elemen air
+  danger: "#F87171", // Dungeon, world boss, duel, coliseum, HP kritis
 };
 
 /**
@@ -33,8 +33,8 @@ const survivalColors = {
  * Menggantikan surface-glass pink global di dalam domain survival saja.
  */
 const survivalGlass = {
-    surface: 'rgba(134, 239, 172, 0.06)',
-    hairline: 'rgba(134, 239, 172, 0.2)',
+  surface: "rgba(134, 239, 172, 0.06)",
+  hairline: "rgba(134, 239, 172, 0.2)",
 };
 
 /**
@@ -42,12 +42,12 @@ const survivalGlass = {
  * Harus selalu sinkron dengan tabel "Skala Rarity Item" di DESIGN.md.
  */
 const rarityColors = {
-    common: '#9CA3AF',
-    uncommon: '#86EFAC',
-    rare: '#93C5FD',
-    epic: '#C084FC',
-    legendary: '#FFD700',
-    mythic: '#F9A8D4',
+  common: "#9CA3AF",
+  uncommon: "#86EFAC",
+  rare: "#93C5FD",
+  epic: "#C084FC",
+  legendary: "#FFD700",
+  mythic: "#F9A8D4",
 };
 
 /**
@@ -57,10 +57,10 @@ const rarityColors = {
  * @returns {string} Hex color
  */
 function getColor(name) {
-    if (name && Object.prototype.hasOwnProperty.call(survivalColors, name)) {
-        return survivalColors[name];
-    }
-    return (name && colors[name]) || survivalColors.emerald;
+  if (name && Object.prototype.hasOwnProperty.call(survivalColors, name)) {
+    return survivalColors[name];
+  }
+  return (name && colors[name]) || survivalColors.emerald;
 }
 
 /**
@@ -70,8 +70,10 @@ function getColor(name) {
  * @returns {string} Hex color
  */
 function getRarityColor(rarity) {
-    const key = String(rarity || '').trim().toLowerCase();
-    return rarityColors[key] || rarityColors.common;
+  const key = String(rarity || "")
+    .trim()
+    .toLowerCase();
+  return rarityColors[key] || rarityColors.common;
 }
 
 /**
@@ -83,14 +85,16 @@ function getRarityColor(rarity) {
  * @returns {string} Hex color
  */
 function getVitalColor(percent) {
-    const safePercent = Number.isFinite(percent) ? Math.max(0, Math.min(100, percent)) : 0;
-    if (safePercent <= 20) {
-        return survivalColors.danger;
-    }
-    if (safePercent <= 50) {
-        return survivalColors.amber;
-    }
-    return survivalColors.moss;
+  const safePercent = Number.isFinite(percent)
+    ? Math.max(0, Math.min(100, percent))
+    : 0;
+  if (safePercent <= 20) {
+    return survivalColors.danger;
+  }
+  if (safePercent <= 50) {
+    return survivalColors.amber;
+  }
+  return survivalColors.moss;
 }
 
 /**
@@ -106,18 +110,24 @@ function getVitalColor(percent) {
  * @param {string} [options.lang='id'] - Bahasa pesan penyemangat
  * @returns {{ bar: string, customBar: string, percent: number, current: number, target: number, remaining: number, cheerMessage: string, color: string }}
  */
-function buildVitalsBar({ current = 0, target = 100, length = 10, user = null, lang = 'id' } = {}) {
-    const result = buildGoalGradientBar({
-        current,
-        target,
-        length,
-        user,
-        lang,
-    });
-    return {
-        ...result,
-        color: getVitalColor(result.percent),
-    };
+function buildVitalsBar({
+  current = 0,
+  target = 100,
+  length = 10,
+  user = null,
+  lang = "id",
+} = {}) {
+  const result = buildGoalGradientBar({
+    current,
+    target,
+    length,
+    user,
+    lang,
+  });
+  return {
+    ...result,
+    color: getVitalColor(result.percent),
+  };
 }
 
 /**
@@ -127,7 +137,7 @@ function buildVitalsBar({ current = 0, target = 100, length = 10, user = null, l
  * @returns {string}
  */
 function getFooter() {
-    return footers.survival || footers.core || 'Naura Hoshino';
+  return footers.survival || footers.core || "Naura Hoshino";
 }
 
 /**
@@ -137,21 +147,21 @@ function getFooter() {
  * @returns {string}
  */
 function formatStat(value) {
-    const num = Number(value);
-    if (!Number.isFinite(num)) {
-        return '0';
-    }
-    return num.toLocaleString('id-ID');
+  const num = Number(value);
+  if (!Number.isFinite(num)) {
+    return "0";
+  }
+  return num.toLocaleString("id-ID");
 }
 
 module.exports = {
-    survivalColors,
-    survivalGlass,
-    rarityColors,
-    getColor,
-    getRarityColor,
-    getVitalColor,
-    buildVitalsBar,
-    getFooter,
-    formatStat,
+  survivalColors,
+  survivalGlass,
+  rarityColors,
+  getColor,
+  getRarityColor,
+  getVitalColor,
+  buildVitalsBar,
+  getFooter,
+  formatStat,
 };

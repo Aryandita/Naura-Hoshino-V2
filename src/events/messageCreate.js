@@ -18,6 +18,7 @@ const handleAfk = require("./messageCreate/afk");
 const handleCounting = require("./messageCreate/counting");
 const handleTruthOrDare = require("./messageCreate/truthOrDare");
 const handleReputation = require("./messageCreate/reputation");
+const handleVibe = require("./messageCreate/vibe");
 const handleSticky = require("./messageCreate/sticky");
 const handleAiTrigger = require("./messageCreate/aiTrigger");
 const handlePrefixCommand = require("./messageCreate/prefixCommand");
@@ -127,6 +128,9 @@ module.exports = {
 
     // Auto-assign reputation for thanks
     await handleReputation(message, client, ctx);
+
+    // Contextual anime mood & vibe reaction
+    await handleVibe(message, client, ctx);
 
     await handlePrefixCommand(message, client, ctx);
   },

@@ -30,8 +30,14 @@ test("CardBattleEngine - computeCardStats scaling with Quality", () => {
   const statsGood = CardBattleEngine.computeCardStats(cardGood);
   const statsMint = CardBattleEngine.computeCardStats(cardMint);
 
-  assert.ok(statsMint.maxHp > statsGood.maxHp, "GEM_MINT HP should exceed GOOD HP");
-  assert.ok(statsMint.atk > statsGood.atk, "GEM_MINT ATK should exceed GOOD ATK");
+  assert.ok(
+    statsMint.maxHp > statsGood.maxHp,
+    "GEM_MINT HP should exceed GOOD HP",
+  );
+  assert.ok(
+    statsMint.atk > statsGood.atk,
+    "GEM_MINT ATK should exceed GOOD ATK",
+  );
   assert.equal(statsMint.critRate, 0.25);
 });
 

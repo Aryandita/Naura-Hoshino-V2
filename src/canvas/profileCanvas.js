@@ -29,14 +29,22 @@ async function generateProfileCard(
     let bannerId = null;
     try {
       if (userProfile.activeBanners) {
-        const activeBanners = typeof userProfile.activeBanners === "string" ? JSON.parse(userProfile.activeBanners) : userProfile.activeBanners;
+        const activeBanners =
+          typeof userProfile.activeBanners === "string"
+            ? JSON.parse(userProfile.activeBanners)
+            : userProfile.activeBanners;
         if (activeBanners.profile) bannerId = activeBanners.profile;
       }
-    } catch(e) {}
+    } catch (e) {}
 
     if (bannerId) {
       try {
-        const bannerPath = path.join(__dirname, 'assets', 'banners', bannerId + '.png');
+        const bannerPath = path.join(
+          __dirname,
+          "assets",
+          "banners",
+          bannerId + ".png",
+        );
         const bg = await loadImage(bannerPath);
         ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
         // Tambahkan overlay gelap sedikit agar teks tetap terbaca

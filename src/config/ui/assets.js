@@ -102,4 +102,10 @@ const survivalBackgrounds = {
   twilight_malam: BG_DIR + "/twilight.png",
 };
 
-module.exports = { banners, characters, backgrounds, survivalBackgrounds, BG_DIR };
+module.exports = {
+  banners,
+  characters,
+  backgrounds,
+  survivalBackgrounds,
+  BG_DIR,
+};

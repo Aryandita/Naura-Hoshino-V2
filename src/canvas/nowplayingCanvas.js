@@ -13,7 +13,12 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
   // 1. Background (Futuristic Dark Cyberpunk Gradient or Equipped Banner)
   if (playbackInfo && playbackInfo.equippedBanner) {
     try {
-      const bannerPath = path.join(__dirname, 'assets', 'banners', playbackInfo.equippedBanner + '.png');
+      const bannerPath = path.join(
+        __dirname,
+        "assets",
+        "banners",
+        playbackInfo.equippedBanner + ".png",
+      );
       const bannerBg = await loadImage(bannerPath);
       ctx.drawImage(bannerBg, 0, 0, 800, 300);
       // Tambahkan overlay agar info lagu terbaca
@@ -89,7 +94,9 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
   // Draw Thumbnail Box with Tinted Shadow & Glow
   ctx.save();
   ctx.shadowBlur = 20;
-  ctx.shadowColor = isVIP ? "rgba(255, 215, 0, 0.4)" : "rgba(255, 182, 193, 0.35)";
+  ctx.shadowColor = isVIP
+    ? "rgba(255, 215, 0, 0.4)"
+    : "rgba(255, 182, 193, 0.35)";
 
   // Round clipping for Album Art
   ctx.beginPath();
@@ -173,9 +180,17 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
 
   ctx.fillStyle = isVIP ? "rgba(255, 215, 0, 0.6)" : "rgba(255, 182, 193, 0.5)";
   for (let i = 0; i < barsCount; i++) {
-    const wavePhase = (position / 1000 + i * 0.4);
-    const barHeight = Math.max(3, Math.abs(Math.sin(wavePhase) * Math.cos(i * 0.3)) * 20 + 4);
-    ctx.fillRect(waveStartX + i * barGap, waveBaseY - barHeight, barWidth, barHeight);
+    const wavePhase = position / 1000 + i * 0.4;
+    const barHeight = Math.max(
+      3,
+      Math.abs(Math.sin(wavePhase) * Math.cos(i * 0.3)) * 20 + 4,
+    );
+    ctx.fillRect(
+      waveStartX + i * barGap,
+      waveBaseY - barHeight,
+      barWidth,
+      barHeight,
+    );
   }
 
   // Progress Bar Background

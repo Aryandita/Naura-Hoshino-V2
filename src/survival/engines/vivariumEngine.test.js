@@ -2,10 +2,17 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { DEEP_SEA_FISHES, getFishesByZone, getFishById } = require("../data/deepSeaFishes");
+const {
+  DEEP_SEA_FISHES,
+  getFishesByZone,
+  getFishById,
+} = require("../data/deepSeaFishes");
 
 test("Deep-Sea Fishes Catalog - Zones and Data Integrity", () => {
-  assert.ok(Array.isArray(DEEP_SEA_FISHES), "DEEP_SEA_FISHES harus berupa array");
+  assert.ok(
+    Array.isArray(DEEP_SEA_FISHES),
+    "DEEP_SEA_FISHES harus berupa array",
+  );
   assert.ok(DEEP_SEA_FISHES.length >= 10, "Harus ada minimal 10 spesies");
 
   const reef = getFishesByZone("CORAL_REEF");

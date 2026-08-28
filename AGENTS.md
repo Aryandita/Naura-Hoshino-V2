@@ -7,18 +7,18 @@
 
 ## ⚡ Quick Reference (untuk agent)
 
-| Kebutuhan            | Perintah / Lokasi                                                                 |
-| -------------------- | --------------------------------------------------------------------------------- |
-| Jalankan bot         | `npm start` (prestart: build dashboard-v2 + migrasi) atau `npm run dev`           |
-| Test satu file       | `node --test src/utils/rateLimiter.test.js` (node:test, colocated dengan source)  |
-| Lint + format        | `npm run lint` · `npm run format:check`                                           |
-| Paritas bahasa       | `npm run locales:check:strict` (kamus di `assets/language/id.json` & `en.json`)   |
-| Integritas require   | `npm run test:requires`                                                           |
-| Tulis data user      | HANYA via `cacheManager` (increment/debit/mutateJson), bukan model langsung       |
-| Tulis GuildSettings  | HANYA via `guildSettingsService.updateGuildSetting()`                             |
-| Render Canvas        | HANYA via `src/canvas/canvasRuntime.js` -> `canvasWorkerPool.js` (enforce ESLint) |
-| Migrasi skema        | Eksklusif di `dbMigrator.js` bernomor + ledger; DILARANG ALTER TABLE di tempat lain |
-| UI respons command   | `buildContainerV2()` dari `NauraContainerBuilder.js`, struktur 5-lapisan          |
+| Kebutuhan           | Perintah / Lokasi                                                                   |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| Jalankan bot        | `npm start` (prestart: build dashboard-v2 + migrasi) atau `npm run dev`             |
+| Test satu file      | `node --test src/utils/rateLimiter.test.js` (node:test, colocated dengan source)    |
+| Lint + format       | `npm run lint` · `npm run format:check`                                             |
+| Paritas bahasa      | `npm run locales:check:strict` (kamus di `assets/language/id.json` & `en.json`)     |
+| Integritas require  | `npm run test:requires`                                                             |
+| Tulis data user     | HANYA via `cacheManager` (increment/debit/mutateJson), bukan model langsung         |
+| Tulis GuildSettings | HANYA via `guildSettingsService.updateGuildSetting()`                               |
+| Render Canvas       | HANYA via `src/canvas/canvasRuntime.js` -> `canvasWorkerPool.js` (enforce ESLint)   |
+| Migrasi skema       | Eksklusif di `dbMigrator.js` bernomor + ledger; DILARANG ALTER TABLE di tempat lain |
+| UI respons command  | `buildContainerV2()` dari `NauraContainerBuilder.js`, struktur 5-lapisan            |
 
 Aturan mode-specific yang sudah didistilasi (non-obvious only): `.roo/rules-code/AGENTS.md`, `.roo/rules-debug/AGENTS.md`, `.roo/rules-ask/AGENTS.md`, `.roo/rules-architect/AGENTS.md`.
 

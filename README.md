@@ -118,14 +118,14 @@ Menghadirkan UI Canvas modern, ekosistem Survival & Ekonomi interaktif, pemutar 
 
 ## 🧩 Kebutuhan Sistem
 
-| Status | Komponen         | Versi Minimal | Keterangan                                                                                                              |
-| :----: | ---------------- | :-----------: | ----------------------------------------------------------------------------------------------------------------------- |
-|   🟢   | **Node.js**      |  `>= 24.0.0`  | Sangat wajib. Naura memakai `process.loadEnvFile()`, `fetch` global, `node:sqlite`, dan test runner bawaan `node:test`. |
-|   ⚡   | **Supabase (PG)**|  `PostgreSQL` | Basis data cloud relasional & transaksional utama (SQLite dipakai sebagai penyimpanan darurat).                         |
-|   🍃   | **MongoDB**      |  `>= 7.x`     | Basis data dokumen untuk audit log, transkrip tiket, dan riwayat chat AI bervolume besar.                               |
-|   🔴   | **Redis**        |  _Opsional_   | Untuk sistem Cache & Pub/Sub. (Akan dilewati otomatis jika `REDIS_URL` kosong).                                         |
-|   🎧   | **Lavalink**     |     `v4`      | Wajib di-setup jika ingin menggunakan seluruh modul Musik.                                                              |
-|   🎬   | **FFmpeg**       |   _Terbaru_   | Modul ini sudah tersedia otomatis lewat paket `ffmpeg-static`.                                                          |
+| Status | Komponen          | Versi Minimal | Keterangan                                                                                                              |
+| :----: | ----------------- | :-----------: | ----------------------------------------------------------------------------------------------------------------------- |
+|   🟢   | **Node.js**       |  `>= 24.0.0`  | Sangat wajib. Naura memakai `process.loadEnvFile()`, `fetch` global, `node:sqlite`, dan test runner bawaan `node:test`. |
+|   ⚡   | **Supabase (PG)** | `PostgreSQL`  | Basis data cloud relasional & transaksional utama (SQLite dipakai sebagai penyimpanan darurat).                         |
+|   🍃   | **MongoDB**       |   `>= 7.x`    | Basis data dokumen untuk audit log, transkrip tiket, dan riwayat chat AI bervolume besar.                               |
+|   🔴   | **Redis**         |  _Opsional_   | Untuk sistem Cache & Pub/Sub. (Akan dilewati otomatis jika `REDIS_URL` kosong).                                         |
+|   🎧   | **Lavalink**      |     `v4`      | Wajib di-setup jika ingin menggunakan seluruh modul Musik.                                                              |
+|   🎬   | **FFmpeg**        |   _Terbaru_   | Modul ini sudah tersedia otomatis lewat paket `ffmpeg-static`.                                                          |
 
 > [!WARNING]
 > Beberapa dependensi bersifat _native_ seperti (`@napi-rs/canvas`, `sqlite3`, `libsodium-wrappers`). Jika kamu menjalankan bot ini di **Linux**, kemungkinan besar kamu perlu memasang `build-essential` dan `python3` terlebih dahulu.
@@ -276,10 +276,10 @@ Semua kredensial dan pengaturan penting disimpan di `.env` (berdasarkan [`src/co
 
 ### 🔴 Wajib Diisi (Core)
 
-| Variabel         | Deskripsi                                               |
-| ---------------- | ------------------------------------------------------- |
-| `DISCORD_TOKEN`  | Token bot rahasia milikmu dari Discord Developer Portal |
-| `CLIENT_ID`      | Application ID dari bot kamu                            |
+| Variabel        | Deskripsi                                               |
+| --------------- | ------------------------------------------------------- |
+| `DISCORD_TOKEN` | Token bot rahasia milikmu dari Discord Developer Portal |
+| `CLIENT_ID`     | Application ID dari bot kamu                            |
 
 <details>
 <summary><b>💬 Discord Settings</b> (Klik untuk membuka)</summary>
@@ -297,23 +297,23 @@ Semua kredensial dan pengaturan penting disimpan di `.env` (berdasarkan [`src/co
 <details>
 <summary><b>🗄️ Database & Cache Settings</b> (Klik untuk membuka)</summary>
 
-| Variabel              | Default                                         | Deskripsi                                                                                                                   |
-| --------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `SUPABASE_URL`        | `https://ceqkjzvrxyifxzgxtkig.supabase.co`      | URL REST/API endpoint project Supabase kamu                                                                                 |
-| `SUPABASE_KEY`        | `sb_publishable_...`                            | Anon / Publishable key project Supabase                                                                                     |
-| `SUPABASE_PROJECT_ID` | `ceqkjzvrxyifxzgxtkig`                          | Project ID unik Supabase                                                                                                    |
-| `DATABASE_URL`        | -                                               | URI koneksi PostgreSQL direct / transaction pooler                                                                          |
-| `DB_HOST`             | `db.ceqkjzvrxyifxzgxtkig.supabase.co`           | Host database PostgreSQL / Supabase                                                                                         |
-| `DB_PORT`             | `5432`                                          | Port database PostgreSQL (5432) atau Session Pooler (6543)                                                                  |
-| `DB_USER`             | `postgres`                                      | Username database                                                                                                           |
-| `DB_PASSWORD`         | -                                               | Password database PostgreSQL / Supabase                                                                                     |
-| `DB_NAME`             | `postgres`                                      | Nama database                                                                                                               |
-| `DB_SSL`              | `true`                                          | Mengaktifkan enkripsi SSL koneksi database cloud                                                                            |
-| `MONGO_URI`           | `mongodb://127.0.0.1:27017/naura_hoshino`       | Connection string MongoDB untuk riwayat AI Chat, transkrip tiket, dan audit log                                             |
-| `REDIS_URL`           | -                                               | _Opsional_. URL koneksi Redis. Biarkan kosong untuk mematikan Cache/PubSub eksternal.                                       |
-| `DB_POOL_BUDGET`      | `80`                                            | Total koneksi database untuk **seluruh** shard, lalu dibagi jumlah shard.                                                   |
-| `DB_POOL_MAX`         | -                                               | Penimpa manual `pool.max` per proses. Isi hanya bila kamu tahu pasti kapasitas database.                                    |
-| `SKIP_DB_MIGRATE`     | -                                               | Pintu darurat. Isi `1`, `true`, atau `yes` untuk melewati migrasi saat boot. Jangan dibiarkan menyala permanen.             |
+| Variabel              | Default                                    | Deskripsi                                                                                                       |
+| --------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `SUPABASE_URL`        | `https://ceqkjzvrxyifxzgxtkig.supabase.co` | URL REST/API endpoint project Supabase kamu                                                                     |
+| `SUPABASE_KEY`        | `sb_publishable_...`                       | Anon / Publishable key project Supabase                                                                         |
+| `SUPABASE_PROJECT_ID` | `ceqkjzvrxyifxzgxtkig`                     | Project ID unik Supabase                                                                                        |
+| `DATABASE_URL`        | -                                          | URI koneksi PostgreSQL direct / transaction pooler                                                              |
+| `DB_HOST`             | `db.ceqkjzvrxyifxzgxtkig.supabase.co`      | Host database PostgreSQL / Supabase                                                                             |
+| `DB_PORT`             | `5432`                                     | Port database PostgreSQL (5432) atau Session Pooler (6543)                                                      |
+| `DB_USER`             | `postgres`                                 | Username database                                                                                               |
+| `DB_PASSWORD`         | -                                          | Password database PostgreSQL / Supabase                                                                         |
+| `DB_NAME`             | `postgres`                                 | Nama database                                                                                                   |
+| `DB_SSL`              | `true`                                     | Mengaktifkan enkripsi SSL koneksi database cloud                                                                |
+| `MONGO_URI`           | `mongodb://127.0.0.1:27017/naura_hoshino`  | Connection string MongoDB untuk riwayat AI Chat, transkrip tiket, dan audit log                                 |
+| `REDIS_URL`           | -                                          | _Opsional_. URL koneksi Redis. Biarkan kosong untuk mematikan Cache/PubSub eksternal.                           |
+| `DB_POOL_BUDGET`      | `80`                                       | Total koneksi database untuk **seluruh** shard, lalu dibagi jumlah shard.                                       |
+| `DB_POOL_MAX`         | -                                          | Penimpa manual `pool.max` per proses. Isi hanya bila kamu tahu pasti kapasitas database.                        |
+| `SKIP_DB_MIGRATE`     | -                                          | Pintu darurat. Isi `1`, `true`, atau `yes` untuk melewati migrasi saat boot. Jangan dibiarkan menyala permanen. |
 
 > [!NOTE]
 > Bila kredensial database cloud tidak terisi atau gagal terhubung, bot otomatis beralih ke penyimpanan darurat SQLite (`naura_fallback.sqlite`). Di dalam kode nilai-nilai ini diakses melalui `src/config/env.js`.
@@ -335,12 +335,12 @@ Semua kredensial dan pengaturan penting disimpan di `.env` (berdasarkan [`src/co
 
 **Link Spotify & LavaSrc.** Node Lavalink lokal (service `lavalink` di `docker-compose.yml`) sudah dikonfigurasi dengan plugin **LavaSrc** + **youtube-source** lewat `docker/lavalink/application.yml`, sehingga link Spotify (`open.spotify.com/track|album|playlist|artist`) dimainkan secara native. Kredensial `SPOTIFY_CLIENT_ID` / `SPOTIFY_CLIENT_SECRET` wajib diisi di `.env` agar plugin bisa mencari dan mirror berbasis ISRC. Untuk menyalakan node: `docker compose up -d lavalink`. Bila node yang dipakai TIDAK punya LavaSrc, bot otomatis jatuh ke translasi manual (`src/music/spotifyResolver.js`: Web API Spotify → `ytsearch` ISRC/judul).
 
-| Variabel                       | Default |
-| ------------------------------ | ------- |
-| `SPOTIFY_CLIENT_ID`            | -       |
-| `SPOTIFY_CLIENT_SECRET`        | -       |
-| `SPOTIFY_MARKET`               | `ID`    |
-| `SPOTIFY_MAX_PLAYLIST_TRACKS`  | `100`   |
+| Variabel                      | Default |
+| ----------------------------- | ------- |
+| `SPOTIFY_CLIENT_ID`           | -       |
+| `SPOTIFY_CLIENT_SECRET`       | -       |
+| `SPOTIFY_MARKET`              | `ID`    |
+| `SPOTIFY_MAX_PLAYLIST_TRACKS` | `100`   |
 
 </details>
 

@@ -10,7 +10,8 @@ const ASTRAL_WEATHERS = [
     emoji: "✨",
     color: "#10B981",
     secondaryColor: "#FFD700",
-    description: "Pancaran aura kosmik hijau-emas meningkatkan keberuntungan seluruh server.",
+    description:
+      "Pancaran aura kosmik hijau-emas meningkatkan keberuntungan seluruh server.",
     buffs: {
       fishingBonus: 20,
       gachaLuck: 15,
@@ -24,7 +25,8 @@ const ASTRAL_WEATHERS = [
     emoji: "⚡",
     color: "#C084FC",
     secondaryColor: "#9333EA",
-    description: "Badai ion kosmik memicu ketegangan di dungeon dan boss battle.",
+    description:
+      "Badai ion kosmik memicu ketegangan di dungeon dan boss battle.",
     buffs: {
       dungeonLoot: 25,
       couponDropChance: 10,
@@ -38,7 +40,8 @@ const ASTRAL_WEATHERS = [
     emoji: "🌌",
     color: "#06B6D4",
     secondaryColor: "#38BDF8",
-    description: "Kedamaian langit malam menenangkan pikiran dan mempercepat pemulihan energi.",
+    description:
+      "Kedamaian langit malam menenangkan pikiran dan mempercepat pemulihan energi.",
     buffs: {
       chatExpMultiplier: 2,
       staminaRegen: 50,
@@ -52,7 +55,8 @@ const ASTRAL_WEATHERS = [
     emoji: "🌑",
     color: "#F43F5E",
     secondaryColor: "#FB7185",
-    description: "Gerhana kosmik membuka lorong pasar gelap dan transaksi rahasia.",
+    description:
+      "Gerhana kosmik membuka lorong pasar gelap dan transaksi rahasia.",
     buffs: {
       marketTaxDiscount: 30,
       stealthBonus: 20,
@@ -66,7 +70,8 @@ const ASTRAL_WEATHERS = [
     emoji: "🌸",
     color: "#FFB6C1",
     secondaryColor: "#F472B6",
-    description: "Semilir angin kelopak sakura kosmik menghangatkan hubungan sosial dan pertemanan.",
+    description:
+      "Semilir angin kelopak sakura kosmik menghangatkan hubungan sosial dan pertemanan.",
     buffs: {
       npcAffectionBonus: 30,
       cafeDiscount: 20,
@@ -80,7 +85,8 @@ const ASTRAL_WEATHERS = [
     emoji: "💎",
     color: "#E2E8F0",
     secondaryColor: "#94A3B8",
-    description: "Keseimbangan sempurna rasi bintang memperkuat perisai dan ekonomi komunitas.",
+    description:
+      "Keseimbangan sempurna rasi bintang memperkuat perisai dan ekonomi komunitas.",
     buffs: {
       clanShieldBonus: 25,
       bankInterestBonus: 15,
@@ -130,12 +136,42 @@ const OMIKUJI_TIERS = [
 ];
 
 const CONSTELLATIONS = [
-  { name: "Lyra (Harpa Kosmik)", star: "Vega", bonus: "+150 Stardust", stardust: 150 },
-  { name: "Cygnus (Angsa Bintang)", star: "Deneb", bonus: "+180 Stardust", stardust: 180 },
-  { name: "Aquila (Elang Angkasa)", star: "Altair", bonus: "+200 Stardust", stardust: 200 },
-  { name: "Orion (Pemburu Galaksi)", star: "Betelgeuse", bonus: "+250 Stardust", stardust: 250 },
-  { name: "Phoenix (Burung Api Abadi)", star: "Ankaa", bonus: "+300 Stardust", stardust: 300 },
-  { name: "Cassiopeia (Mahkota Ratu)", star: "Schedar", bonus: "+220 Stardust", stardust: 220 },
+  {
+    name: "Lyra (Harpa Kosmik)",
+    star: "Vega",
+    bonus: "+150 Stardust",
+    stardust: 150,
+  },
+  {
+    name: "Cygnus (Angsa Bintang)",
+    star: "Deneb",
+    bonus: "+180 Stardust",
+    stardust: 180,
+  },
+  {
+    name: "Aquila (Elang Angkasa)",
+    star: "Altair",
+    bonus: "+200 Stardust",
+    stardust: 200,
+  },
+  {
+    name: "Orion (Pemburu Galaksi)",
+    star: "Betelgeuse",
+    bonus: "+250 Stardust",
+    stardust: 250,
+  },
+  {
+    name: "Phoenix (Burung Api Abadi)",
+    star: "Ankaa",
+    bonus: "+300 Stardust",
+    stardust: 300,
+  },
+  {
+    name: "Cassiopeia (Mahkota Ratu)",
+    star: "Schedar",
+    bonus: "+220 Stardust",
+    stardust: 220,
+  },
 ];
 
 class AstralService {
@@ -220,7 +256,13 @@ class AstralService {
     };
 
     const luckyNumber = Math.floor(Math.random() * 99) + 1;
-    const luckyColor = ["Sakura Pink", "Cyber Cyan", "Emerald Green", "Neon Gold", "Astral Violet"][Math.floor(Math.random() * 5)];
+    const luckyColor = [
+      "Sakura Pink",
+      "Cyber Cyan",
+      "Emerald Green",
+      "Neon Gold",
+      "Astral Violet",
+    ][Math.floor(Math.random() * 5)];
 
     const personalQuotes = [
       `"Langkah berani yang ${displayName} ambil hari ini akan membuahkan hasil manis di masa depan."`,
@@ -228,7 +270,8 @@ class AstralService {
       `"Pertahankan senyuman dan kehangatanmu, ${displayName}. Energimu menerangi sekeliling."`,
       `"Hari yang sempurna bagi ${displayName} untuk mencoba hal baru dan merajut koneksi berharga."`,
     ];
-    const personalQuote = personalQuotes[Math.floor(Math.random() * personalQuotes.length)];
+    const personalQuote =
+      personalQuotes[Math.floor(Math.random() * personalQuotes.length)];
 
     const result = {
       date: today,
@@ -260,7 +303,8 @@ class AstralService {
    * @returns {Object}
    */
   observeConstellation(userId, displayName = "Pengelana") {
-    const selected = CONSTELLATIONS[Math.floor(Math.random() * CONSTELLATIONS.length)];
+    const selected =
+      CONSTELLATIONS[Math.floor(Math.random() * CONSTELLATIONS.length)];
     return {
       userId,
       displayName,

@@ -8,7 +8,10 @@ test("ArcadeEngine - getRandomTrivia returns valid trivia question", () => {
   const trivia = ArcadeEngine.getRandomTrivia();
   assert.ok(trivia.q, "Trivia question should exist");
   assert.equal(trivia.options.length, 4, "Should have 4 options");
-  assert.ok(trivia.answerIndex >= 0 && trivia.answerIndex < 4, "Answer index must be between 0 and 3");
+  assert.ok(
+    trivia.answerIndex >= 0 && trivia.answerIndex < 4,
+    "Answer index must be between 0 and 3",
+  );
 });
 
 test("ArcadeEngine - generateRhythmSequence returns specified length", () => {

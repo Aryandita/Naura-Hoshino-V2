@@ -29,7 +29,9 @@ class VoiceAgent {
       history: [],
       isSpeaking: false,
     });
-    logger.info(`[VoiceAgent] Sesi Cyber Waifu Voice AI dimulai di guild ${guildId}`);
+    logger.info(
+      `[VoiceAgent] Sesi Cyber Waifu Voice AI dimulai di guild ${guildId}`,
+    );
   }
 
   /**
@@ -40,12 +42,17 @@ class VoiceAgent {
     const session = this.activeVoiceSessions.get(guildId);
     if (session) {
       try {
-        if (session.connection && typeof session.connection.destroy === "function") {
+        if (
+          session.connection &&
+          typeof session.connection.destroy === "function"
+        ) {
           session.connection.destroy();
         }
       } catch (e) {}
       this.activeVoiceSessions.delete(guildId);
-      logger.info(`[VoiceAgent] Sesi Cyber Waifu Voice AI dihentikan di guild ${guildId}`);
+      logger.info(
+        `[VoiceAgent] Sesi Cyber Waifu Voice AI dihentikan di guild ${guildId}`,
+      );
     }
   }
 
@@ -72,7 +79,10 @@ class VoiceAgent {
 
       return response;
     } catch (e) {
-      logger.error(`[VoiceAgent] Gagal memproses input suara di guild ${guildId}:`, e);
+      logger.error(
+        `[VoiceAgent] Gagal memproses input suara di guild ${guildId}:`,
+        e,
+      );
       return "Naura mendengarmu, tapi sinyalnya agak putus-putus nih!";
     }
   }
