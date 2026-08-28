@@ -3,7 +3,7 @@
 /**
  * @namespace: src/ai/vibeMonitor.js
  * @type: Engine / Listener
- * @description: Naura Mood & Vibe — Reaksi kontekstual dan empati alami bot di channel
+ * @description: Naura Mood & Vibe, Reaksi kontekstual dan empati alami bot di channel
  */
 
 const { logger } = require('../managers/logger');

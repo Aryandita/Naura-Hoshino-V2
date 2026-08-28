@@ -69,6 +69,16 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/naura-ui.js"></script>
+    <!-- Google Model Viewer (Ultra Stable 3D WebGL Engine) -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+        }
+      }
+    </script>
     <script src="/js/naura3d.js" defer></script>
   </head>
 
@@ -489,23 +499,53 @@
                   </a>
                 </div>
               </div>
-              <!-- Canvas 3D kanan -->
+              <!-- 3D Interactive Model Viewer Section -->
               <div
                 id="naura3d-canvas-wrapper"
                 style="
-                  width: 280px;
-                  height: 240px;
+                  width: 320px;
+                  height: 250px;
                   flex-shrink: 0;
-                  border-radius: 16px;
+                  border-radius: 20px;
                   overflow: hidden;
                   position: relative;
-                  background: rgba(0, 0, 0, 0.3);
+                  background: radial-gradient(circle at center, rgba(255, 182, 193, 0.08) 0%, rgba(11, 12, 16, 0.5) 100%);
+                  border: 1px solid rgba(255, 182, 193, 0.2);
+                  box-shadow: inset 0 0 25px rgba(255, 182, 193, 0.05), 0 10px 30px rgba(0, 0, 0, 0.5);
                 "
               >
-                <!-- Three.js akan merender di sini -->
+                <model-viewer
+                  id="naura3d-viewer"
+                  src="/assets/3d/Naura%20Hoshino%203D.glb"
+                  alt="Naura Hoshino 3D Character Model"
+                  auto-rotate
+                  auto-rotate-delay="400"
+                  rotation-per-second="18deg"
+                  camera-controls
+                  touch-action="pan-y"
+                  shadow-intensity="1.5"
+                  shadow-softness="0.5"
+                  exposure="1.15"
+                  camera-orbit="0deg 75deg auto"
+                  min-camera-orbit="auto auto 40%"
+                  max-camera-orbit="auto auto 250%"
+                  interaction-prompt="none"
+                  style="width: 100%; height: 100%; background: transparent; --poster-color: transparent;"
+                >
+                  <!-- Loading State -->
+                  <div slot="poster" class="naura3d-loading">
+                    <div class="naura3d-loading-ring"></div>
+                    <span class="text-xs font-cyber text-pink-300 font-semibold tracking-wider">Memuat Model 3D...</span>
+                  </div>
+                  <!-- Error / Offline Fallback -->
+                  <div slot="error" class="naura3d-error">
+                    <img src="/assets/core/avatar.png" class="w-14 h-14 rounded-full mx-auto mb-2 border-2 border-pink-400/50 opacity-90 shadow-lg shadow-pink-500/20" alt="Naura Avatar" />
+                    <span class="text-[11px] text-gray-400 font-assist">Model 3D Offline</span>
+                  </div>
+                </model-viewer>
               </div>
             </div>
-            <!-- Tambahkan style untuk loading 3D -->
+            <!-- Styling untuk 3D container -->
             <style>
               .naura3d-loading {
                 position: absolute;
@@ -514,12 +554,14 @@
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                gap: 10px;
+                gap: 12px;
+                background: rgba(11, 12, 16, 0.7);
+                backdrop-filter: blur(8px);
               }
               .naura3d-loading-ring {
-                width: 36px;
-                height: 36px;
-                border: 2px solid rgba(255, 182, 193, 0.2);
+                width: 38px;
+                height: 38px;
+                border: 3px solid rgba(255, 182, 193, 0.2);
                 border-top-color: #ffb6c1;
                 border-radius: 50%;
                 animation: naura3d-spin 0.8s linear infinite;
@@ -529,21 +571,19 @@
                   transform: rotate(360deg);
                 }
               }
-              .naura3d-loading span {
-                font-size: 11px;
-                color: #94a3b8;
-              }
               .naura3d-no-webgl,
               .naura3d-error {
                 position: absolute;
                 inset: 0;
                 display: flex;
+                flex-direction: column;
                 align-items: center;
                 justify-content: center;
                 font-size: 11px;
                 color: #94a3b8;
                 text-align: center;
                 padding: 16px;
+                background: rgba(11, 12, 16, 0.85);
               }
             </style>
 
