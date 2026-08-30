@@ -348,6 +348,8 @@ module.exports = (client) => {
   webApp.get("/economy", view("economy.html"));
   webApp.get("/status", view("status.html"));
   webApp.get("/world", view("world.html"));
+  webApp.get("/room", view("world.html"));
+  webApp.get("/realm", view("world.html"));
   webApp.get("/karaoke", view("karaoke.html"));
   webApp.get("/feed", view("feed.html"));
   webApp.get("/portfolio", requireLogin, view("portfolio.html"));

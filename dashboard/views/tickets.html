@@ -4,18 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Riwayat Tiket - Naura Hoshino</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Orbitron:wght@500;700;900&display=swap"
       rel="stylesheet"
     />
     <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
-    <link rel="stylesheet" href="/css/style.css?v=3" />
-    <link rel="stylesheet" href="/css/tokens.css" />
-    <script src="/js/naura-ui.js"></script>
+    <link rel="stylesheet" href="/vendor/fontawesome.css" />
+    <link rel="stylesheet" href="/vendor/tailwind-built.css" />
+    <script src="/vendor/naura-ui.js"></script>
   </head>
   <body
     class="bg-animated min-h-screen text-white font-['Outfit'] p-6 lg:p-12 overflow-y-auto"
@@ -143,6 +142,11 @@
       }
 
       fetchTickets();
+    </script>
+
+    <script type="module">
+      import { NauraViewer } from "../components/NauraViewer/index.js";
+      NauraViewer.init({ context: "tickets" });
     </script>
   </body>
 </html>

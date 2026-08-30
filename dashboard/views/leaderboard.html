@@ -4,15 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Leaderboard | Naura OS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Outfit:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/css/style.css" />
-    <!-- tokens.css harus setelah style.css agar warna ikut ui.colors bot -->
-    <link rel="stylesheet" href="/css/tokens.css" />
-    <script src="/js/naura-ui.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/vendor/fontawesome.css" />
+    <link rel="stylesheet" href="/vendor/tailwind-built.css" />
+    <script src="/vendor/naura-ui.js"></script>
   </head>
   <body
     class="min-h-screen p-4 md:p-8 flex flex-col items-center bg-animated theme-none"
@@ -378,6 +382,11 @@
           setCategory("wealth");
         });
       })();
+    </script>
+
+    <script type="module">
+      import { NauraViewer } from "../components/NauraViewer/index.js";
+      NauraViewer.init({ context: "leaderboard" });
     </script>
   </body>
 </html>

@@ -11,10 +11,13 @@
       href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Outfit:wght@300;400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/css/style.css" />
-    <link rel="stylesheet" href="/css/tokens.css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="/js/naura-ui.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/vendor/fontawesome.css" />
+    <link rel="stylesheet" href="/vendor/tailwind-built.css" />
+    <script src="/vendor/naura-ui.js"></script>
     <style>
       body {
         background-color: #0b0c10;
@@ -131,6 +134,11 @@
         }
       }
       loadFeed();
+    </script>
+
+    <script type="module">
+      import { NauraViewer } from "../components/NauraViewer/index.js";
+      NauraViewer.init({ context: "feed" });
     </script>
   </body>
 </html>

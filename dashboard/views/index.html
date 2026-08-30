@@ -59,27 +59,23 @@
         }
       }
     </style>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="/css/style.css?v=3" />
-    <link rel="stylesheet" href="/css/tokens.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="/js/naura-ui.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/vendor/fontawesome.css" />
+    <link rel="stylesheet" href="/vendor/tailwind-built.css" />
+    <script type="module" src="/src/lib/chart-shim.js"></script>
+    <script src="/vendor/socket.io.min.js"></script>
+    <script src="/vendor/naura-ui.js"></script>
     <!-- Google Model Viewer (Ultra Stable 3D WebGL Engine) -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
-          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
-        }
-      }
-    </script>
-    <script src="/js/naura3d.js" defer></script>
   </head>
 
   <body class="flex h-screen overflow-hidden bg-animated" id="mainBody">
@@ -464,15 +460,17 @@
               </div>
             </div>
 
-            <!-- === 3D MODEL NAURA SHOWCASE === -->
+            <!-- 3D Interactive Model Hero Banner -->
             <div
-              class="flex flex-col lg:flex-row gap-6 mb-8 items-center glass-panel p-5 rounded-3xl bg-black/40 border border-pink-500/15 overflow-hidden"
-              style="min-height: 260px"
+              class="glass-panel p-6 rounded-3xl mb-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden"
+              style="
+                background: linear-gradient(135deg, rgba(255, 182, 193, 0.06) 0%, rgba(11, 12, 16, 0.7) 100%);
+                border: 1px solid rgba(255, 182, 193, 0.2);
+              "
             >
-              <!-- Teks kiri -->
-              <div class="flex-1 min-w-0 z-10">
+              <div class="z-10 flex-1">
                 <div
-                  class="text-[10px] font-cyber text-[var(--color-primary)] tracking-[0.18em] uppercase mb-2 opacity-80"
+                  class="text-[10px] font-cyber text-pink-300 tracking-[0.18em] uppercase mb-2 opacity-80"
                 >
                   3D Companion
                 </div>
@@ -480,7 +478,7 @@
                   class="text-2xl font-cyber text-white font-bold mb-3 leading-snug"
                 >
                   Naura Hoshino<br /><span
-                    class="text-[var(--color-primary)] text-glow"
+                    class="text-pink-300 text-glow"
                     >Interactive 3D</span
                   >
                 </h2>
@@ -492,10 +490,10 @@
                 </p>
                 <div class="flex gap-3 mt-4">
                   <a
-                    href="/u/{{ VIEW_USER_ID }}"
+                    href="/portfolio"
                     class="px-4 py-2 rounded-xl text-xs font-cyber font-bold bg-pink-500/15 border border-pink-500/40 text-pink-300 hover:bg-pink-500/25 transition"
                   >
-                    <i class="fa-solid fa-id-badge mr-1.5"></i>Portfolio Saya
+                    <i class="fa-solid fa-id-badge mr-1.5"></i>Member Portfolio
                   </a>
                 </div>
               </div>
@@ -532,12 +530,10 @@
                   interaction-prompt="none"
                   style="width: 100%; height: 100%; background: transparent; --poster-color: transparent;"
                 >
-                  <!-- Loading State -->
                   <div slot="poster" class="naura3d-loading">
                     <div class="naura3d-loading-ring"></div>
                     <span class="text-xs font-cyber text-pink-300 font-semibold tracking-wider">Memuat Model 3D...</span>
                   </div>
-                  <!-- Error / Offline Fallback -->
                   <div slot="error" class="naura3d-error">
                     <img src="/assets/core/avatar.png" class="w-14 h-14 rounded-full mx-auto mb-2 border-2 border-pink-400/50 opacity-90 shadow-lg shadow-pink-500/20" alt="Naura Avatar" />
                     <span class="text-[11px] text-gray-400 font-assist">Model 3D Offline</span>
@@ -545,47 +541,6 @@
                 </model-viewer>
               </div>
             </div>
-            <!-- Styling untuk 3D container -->
-            <style>
-              .naura3d-loading {
-                position: absolute;
-                inset: 0;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                gap: 12px;
-                background: rgba(11, 12, 16, 0.7);
-                backdrop-filter: blur(8px);
-              }
-              .naura3d-loading-ring {
-                width: 38px;
-                height: 38px;
-                border: 3px solid rgba(255, 182, 193, 0.2);
-                border-top-color: #ffb6c1;
-                border-radius: 50%;
-                animation: naura3d-spin 0.8s linear infinite;
-              }
-              @keyframes naura3d-spin {
-                to {
-                  transform: rotate(360deg);
-                }
-              }
-              .naura3d-no-webgl,
-              .naura3d-error {
-                position: absolute;
-                inset: 0;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                font-size: 11px;
-                color: #94a3b8;
-                text-align: center;
-                padding: 16px;
-                background: rgba(11, 12, 16, 0.85);
-              }
-            </style>
 
             <!-- Telemetry Metrics Grid Layout (4 Cards) -->
             <div
@@ -3858,7 +3813,7 @@
     </div>
 
     <!-- SOCKET.IO & APPLICATION SCRIPTS -->
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="/vendor/socket.io.min.js"></script>
     <script>
       // Web Audio API Synthesizer for SFX
       window.playSynthSfx = {
@@ -7814,9 +7769,15 @@
       // Initialize theme and audio
       applyBg();
       initAudio();
-      initTelemetryChart();
-      initHomeCommandChart();
       loadGlassStyle();
+
+      // Chart.js kini dibundel sebagai module (deferred), jadi window.Chart
+      // baru terisi SETELAH parsing selesai. Tunda inisialisasi chart ke
+      // event load agar tidak ReferenceError dan mematikan script utama.
+      window.addEventListener("load", () => {
+        initTelemetryChart();
+        initHomeCommandChart();
+      });
 
       // Initial fetch with smooth loading screen fade-out
       Promise.allSettled([
@@ -7909,5 +7870,10 @@
         <span>Settings</span>
       </a>
     </nav>
+
+    <script type="module">
+      import { NauraViewer } from "../components/NauraViewer/index.js";
+      NauraViewer.init({ context: "index" });
+    </script>
   </body>
 </html>

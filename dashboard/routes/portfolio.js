@@ -450,7 +450,7 @@ module.exports = (client) => {
   });
 
   // =====================================================================
-  // GET /u/:userId, Halaman HTML portfolio publik
+  // GET /u/:userId, Halaman HTML portfolio publik (dengan Dynamic Open Graph Preview)
   // =====================================================================
   router.get("/u/:userId", async (req, res) => {
     const { userId } = req.params;
@@ -459,8 +459,83 @@ module.exports = (client) => {
       return res.status(400).send("User ID tidak valid.");
     }
 
-    // Kirim halaman HTML; data diambil via fetch() dari sisi client
-    return res.sendFile(path.join(__dirname, "..", "views", "portfolio.html"));
+    const fs = require("fs");
+    const v2DistPage = path.join(
+      __dirname,
+      "..",
+      "..",
+      "dashboard-v2",
+      "dist",
+      "src",
+      "pages",
+      "portfolio.html",
+    );
+    const v2SrcPage = path.join(
+      __dirname,
+      "..",
+      "..",
+      "dashboard-v2",
+      "src",
+      "pages",
+      "portfolio.html",
+    );
+    const fallbackPage = path.join(__dirname, "..", "views", "portfolio.html");
+
+    const filePath = fs.existsSync(v2DistPage)
+      ? v2DistPage
+      : fs.existsSync(v2SrcPage)
+        ? v2SrcPage
+        : fallbackPage;
+
+    try {
+      let html = fs.readFileSync(filePath, "utf-8");
+
+      // Ambil metadata ringkas user untuk Open Graph tag
+      let discordUser = null;
+      try {
+        discordUser =
+          client.users.cache.get(userId) ||
+          (await client.users.fetch(userId).catch(() => null));
+      } catch {
+        /* ignore */
+      }
+
+      const profile = await UserProfile.findOne({ where: { userId } }).catch(
+        () => null,
+      );
+      const username =
+        discordUser?.globalName || discordUser?.username || "Petualang Naura";
+      const level = profile?.level || 1;
+      const exp = profile?.exp || 0;
+      const avatarUrl = discordUser
+        ? discordUser.displayAvatarURL({ extension: "png", size: 512 })
+        : "/assets/dashboard/naura.png";
+
+      const ogTitle = `${username} | Cyber Portfolio & Rank Level ${level}`;
+      const ogDesc = `Jelajahi profil interaktif 3D & riwayat petualangan ${username} (Level ${level} • ${exp.toLocaleString()} EXP) di ekosistem Naura Hoshino OS.`;
+
+      // Injeksi OG Meta Tags ke dalam HTML
+      const ogTags = `
+    <!-- Dynamic Open Graph / Discord Embed Preview (Sprint 21 / Proposal F9) -->
+    <meta property="og:type" content="profile" />
+    <meta property="og:title" content="${ogTitle}" />
+    <meta property="og:description" content="${ogDesc}" />
+    <meta property="og:image" content="${avatarUrl}" />
+    <meta property="og:url" content="/u/${userId}" />
+    <meta name="theme-color" content="#FFB6C1" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${ogTitle}" />
+    <meta name="twitter:description" content="${ogDesc}" />
+    <meta name="twitter:image" content="${avatarUrl}" />
+      `;
+
+      html = html.replace("</head>", `${ogTags}\n  </head>`);
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      return res.send(html);
+    } catch (err) {
+      logger.error("[PORTFOLIO] Gagal render OG portfolio HTML:", err);
+      return res.sendFile(filePath);
+    }
   });
 
   return router;
