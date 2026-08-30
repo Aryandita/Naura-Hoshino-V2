@@ -39,7 +39,7 @@ Catatan akurasi dokumen: `prestart` saat ini juga menjalankan build dashboard-v2
 | Deploy di panel    | **Pterodactyl.** Perintah luar terkunci, jadi `CMD_RUN` tetap `npm start` dan urutan migrasi dijamin dari dalam `package.json` lewat `prestart`. Lihat 3.8.                                                                                                                        |
 | Mata uang kupon    | **Naura Coupon adalah mata uang paling langka.** Disimpan di kolom `UserSurvival.coupons`, bukan di dalam JSON `rpg_state`, agar bisa dipotong secara atomik.                                                                                                                      |
 | Desain Survival    | **Sub-brand Naura Wilds (Hybrid Nature-Tech).** Seluruh UI survival memakai token dari `src/utils/survivalUIHelper.js`; detail visual ada di `DESIGN.md` bagian Survival RPG Design System.                                                                                        |
-| Prioritas kerja    | Sprint 0-16 sudah tuntas (Hardening, DX, Data Atomicity, Observabilitas, Ticketing, Gacha, Giveaway V2, Modular Setup, Apps Anywhere, AI RAG & Voice, RPG Barter/Pet, Automations, Advanced UX/UI Masterclass, Full Function Calling, Persistent AI Memory, AI Dungeon Master V2). |
+| Prioritas kerja    | Sprint 0-22 sudah tuntas (Hardening, DX, Data Atomicity, Observabilitas, Ticketing, Gacha, Giveaway V2, Modular Setup, Apps Anywhere, AI RAG & Voice, RPG Barter/Pet, Automations, Advanced UX/UI Masterclass, Full Function Calling, Persistent AI Memory, AI Dungeon Master V2, 3D Web Portfolio, Living AI Companion /naura, Music Ecosystem /music wrapped & party, Poru Audio Guard, Full Dashboard V2 MPA Migration). |
 
 ---
 

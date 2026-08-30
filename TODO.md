@@ -562,7 +562,44 @@ Membawa Naura ke edisi puncak milestone V2.2 melalui 5 pilar inovasi visual, sos
   - Renderer Canvas `src/canvas/stockCanvas.js` dan command `plugin/utility/stock.js` (`market`, `buy`, `sell`, `portfolio`, `ipo`).
 - [x] **Automated Unit Testing & Paritas Tata Kelola**
   - Menambahkan unit tests: `src/survival/engines/guildHallEngine.test.js`, `src/survival/engines/coliseumEngine.test.js`, `src/ai/personaEngine.test.js`, `src/survival/engines/vivariumEngine.test.js`, dan `src/services/stockMarketEngine.test.js`.
-  - Seluruh test suite lulus dengan hasil **103/103 passing (0 failed)**, 0 lint error, modul require valid, dan bebas larangan em dash.
+  - Seluruh test suite lulus dengan hasil **153/153 passing (0 failed)**, 0 lint error, modul require valid, dan bebas larangan em dash.
+
+---
+
+## 🌸 Sprint 21: 3D Interactive Web Portfolio & Open Graph Preview - SELESAI
+
+- [x] **Model & REST API Portfolio Member (`/portfolio`, `/api/portfolio`)**
+  - Model Sequelize `UserPortfolio.js` dengan migrasi `v34_create_user_portfolios`.
+  - Endpoint `dashboard/routes/portfolio.js`: `GET /api/portfolio/me`, `POST /api/portfolio/me`, `POST /api/portfolio/me/toggle`, `GET /api/portfolio/:userId`.
+  - Aturan premium: tema eksklusif (sakura, midnight), custom accent color, background gambar, dan badge kustom.
+- [x] **Interactive 3D Web Portfolio Page (`portfolio.html`)**
+  - Viewer 3D model Naura terintegrasi Three.js & Google Model-Viewer (`/assets/3d`).
+  - Halaman edit mandiri `/portfolio/me/edit` dan halaman publik `/u/:userId`.
+  - Dynamic Open Graph tags generator untuk preview mewah otomatis saat link dibagikan di Discord / media sosial.
+- [x] **Unit Testing Portfolio API & Model**
+  - Test suite `dashboard/routes/portfolio.test.js` memvalidasi rute dan integritas skema.
+
+---
+
+## 🌟 Sprint 22: Unified Ecosystem Subcommands, Audio Guard & Full Dashboard V2 Migration - SELESAI
+
+- [x] **Ekosistem Musik Terpadu (`/music`)**
+  - Subcommand `/music wrapped`: Rekap personal dan tahunan berdesain Cyber-Anime Glassmorphism via `src/canvas/wrappedCanvas.js` (total jam dengar, total lagu, artis favorit, genre kesukaan).
+  - Subcommand `/music party`: Mode sesi mendengarkan bersama secara kolaboratif dan voting antrean.
+- [x] **Living AI Companion Subcommand (`/naura`)**
+  - Subcommand `/naura livingroom` / `/room`: Visualisasi kamar 2.5D Isometrik interaktif dengan Chibi Naura & Pet companion via `src/canvas/roomCanvas.js`.
+  - Subcommand `/naura gallery`: Galeri Cyber Wallpaper eksklusif VIP Premium.
+  - Subcommand `/naura play`: Minigame interaktif 1v1 melawan Naura dengan respon kepribadian dinamis.
+  - Subcommand `/naura talk`: Interaksi santai, pemberian kopi, dan peningkatan poin afeksi (Affection/Friendship Level).
+  - Subcommand `/naura about`: Pengenalan lore, biodata, dan profil Naura Hoshino.
+- [x] **Perbaikan Konflik Audio Poru & VoiceManager (Auto-Disconnect Fix)**
+  - Guard di `src/managers/voiceManager.js` diperkuat untuk mencegah `@discordjs/voice` merebut sesi WebSocket Poru saat lagu baru ditemukan dan masih dalam fase loading/buffering (isPlaying = false).
+  - Properti internal `_poru` digunakan agar tidak memicu lazy initialization saat modul musik tidak digunakan.
+- [x] **Migrasi Penuh Web Dashboard V2 (Self-Contained MPA)**
+  - Menghapus residu file HTML DaisyUI lawas di `dashboard/public/status.html`.
+  - Menyinkronkan seluruh 14 halaman HTML di `dashboard/views/` ke standar modern MPA `dashboard-v2/src/pages/`.
+  - Membangun bundle Vite + Tailwind V4 production (`dashboard-v2/dist`) dan rute alias `/room` & `/realm`.
+  - Verifikasi menyeluruh: **153/153 Tests Passed (100%)**, 0 ESLint errors, dan 0 pelanggaran em dash.
 
 ---
 
