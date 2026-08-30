@@ -9,12 +9,10 @@ export default defineConfig({
   root: ".",
   publicDir: "public",
 
-  // Dilayani Express di subpath /v2 (lihat dashboard/server.js).
-  // Base relatif membuat semua URL asset menunjuk relatif terhadap
-  // lokasi HTML di dalam /v2, tanpa bentrok route /assets milik bot.
-  // Base absolut '/v2/' terbukti merusak registry proxy HTML Vite
-  // (error "No matching HTML proxy module found" yang bergeser acak).
-  base: "./",
+  // Dilayani Express di root path / (Dashboard Utama Naura V2).
+  // Menggunakan base absolut '/' agar seluruh asset di dist (bundle JS, CSS, dll.)
+  // ditautkan secara konsisten ke root /assets/... dan /vendor/...
+  base: "/",
 
   // Catatan: Tailwind diproses lewat CLI terpisah (npm run build:css),
   // bukan plugin @tailwindcss/vite, karena plugin itu bertabrakan dengan

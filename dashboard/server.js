@@ -24,6 +24,7 @@
  */
 
 const express = require("express");
+const fs = require("fs");
 const http = require("http");
 const path = require("path");
 const crypto = require("crypto");
@@ -129,6 +130,8 @@ module.exports = (client) => {
   // Batas ukuran badan permintaan menutup upaya menghabiskan memori proses.
   webApp.use(express.json({ limit: "256kb" }));
   webApp.use(express.urlencoded({ extended: true, limit: "256kb" }));
+  // Static assets: Dashboard V2 dist sebagai prioritas utama, didukung asset publik & bot
+  webApp.use(express.static(path.join(__dirname, "../dashboard-v2/dist")));
   webApp.use(express.static(path.join(__dirname, "public")));
   webApp.use("/assets", express.static(path.join(__dirname, "../assets")));
 
@@ -315,15 +318,25 @@ module.exports = (client) => {
     return res.json({ reply });
   });
 
-  // --- Route untuk Dashboard V2 (Vite) ---
-  webApp.use(
-    "/v2",
-    express.static(path.join(__dirname, "../dashboard-v2/dist")),
-  );
+  // --- Redirect legacy /v2 ke root dashboard utama ---
+  webApp.get("/v2", (req, res) => res.redirect("/"));
+  webApp.get("/v2/*", (req, res) => res.redirect("/"));
 
-  // --- Halaman ---
-  const view = (name) => (req, res) =>
-    res.sendFile(path.join(__dirname, "views", name));
+  // --- Halaman Dashboard Utama (Dashboard V2 Modern MPA) ---
+  const v2DistPages = path.join(__dirname, "../dashboard-v2/dist/src/pages");
+  const v2SrcPages = path.join(__dirname, "../dashboard-v2/src/pages");
+  const view = (name) => (req, res) => {
+    const distFile = path.join(v2DistPages, name);
+    if (fs.existsSync(distFile)) {
+      return res.sendFile(distFile);
+    }
+    const srcFile = path.join(v2SrcPages, name);
+    if (fs.existsSync(srcFile)) {
+      return res.sendFile(srcFile);
+    }
+    return res.sendFile(path.join(__dirname, "views", name));
+  };
+
   webApp.get("/", view("index.html"));
   webApp.get("/leaderboard", view("leaderboard.html"));
   webApp.get("/settings", requireLogin, view("settings.html"));
