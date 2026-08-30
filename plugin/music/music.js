@@ -116,6 +116,69 @@ async function runMusicLogic(
     }
   }
 
+  if (subcommand === "wrapped") {
+    let target = user;
+    if (isSlash && args.target) target = args.target;
+    if (target.bot) {
+      const errPayload = buildErrorContainerV2({
+        title: "Akses Ditolak",
+        description: `${eError} | Bot tidak memiliki kartu Naura Wrapped!`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+    try {
+      const cacheManager = require("../../src/managers/cacheManager");
+      const { generateWrappedCard } = require("../../src/canvas/wrappedCanvas");
+      const profile = await cacheManager.getUserProfile(target.id);
+      const calculateTop5 = (jsonInput) => {
+        if (!jsonInput) return [];
+        try {
+          const data =
+            typeof jsonInput === "string" ? JSON.parse(jsonInput) : jsonInput;
+          if (!data.history) return [];
+          const sorted = Object.entries(data.history).sort(
+            (a, b) => b[1] - a[1],
+          );
+          return sorted.slice(0, 5).map((entry) => entry[0]);
+        } catch (e) {
+          return [];
+        }
+      };
+
+      const stats = {
+        tracksListened: profile?.music_tracksListened || 0,
+        totalDurationMs: profile?.music_totalDurationMs || 0,
+        lastListened: profile?.music_lastListened || "Belum ada data",
+        topTracks: calculateTop5(profile?.music_topTrack),
+        topServers: calculateTop5(profile?.music_topServer),
+        topFriends: calculateTop5(profile?.music_topFriend),
+        isPremium: profile?.isPremium && profile?.premiumUntil > new Date(),
+      };
+
+      const imageBuffer = await generateWrappedCard(target, stats);
+      const attachment = new AttachmentBuilder(imageBuffer, {
+        name: "naura-wrapped.png",
+      });
+      const hours = (stats.totalDurationMs / (1000 * 60 * 60)).toFixed(1);
+      const wrappedPayload = buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        title: `✨ Naura Music Wrapped: ${target.displayName || target.username}`,
+        description: `Kilas balik petualangan musik **${target.displayName || target.username}** bersama Naura!\n\n🎧 **Total Lagu Didengar:** \`${stats.tracksListened} lagu\`\n⏳ **Waktu Berputar:** \`${hours} jam\`\n🎵 **Lagu Teratas:** \`${stats.topTracks[0] || "Belum ada data"}\`\n🏰 **Server Favorit:** \`${stats.topServers[0] || guild.name}\`\n\n*Terima kasih telah mewarnai harimu bersama alunan musik Naura Hoshino~* 🌸`,
+        bannerAttachmentName: "naura-wrapped.png",
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply({ ...wrappedPayload, files: [attachment] });
+    } catch (error) {
+      const errPayload = buildErrorContainerV2({
+        title: "Gagal Render Wrapped",
+        description: `${eError} | Gagal merender kartu Naura Wrapped dari server.`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+  }
+
   if (!memberVoice) {
     const errPayload = buildErrorContainerV2({
       title: "Koneksi Gagal",
@@ -1270,6 +1333,55 @@ async function runMusicLogic(
     return sendReply(payload, true);
   }
 
+  if (subcommand === "party") {
+    if (!player) {
+      player = poru.createConnection({
+        guildId: guild.id,
+        voiceChannel: memberVoice.id,
+        textChannel: channel.id,
+        deaf: true,
+      });
+    }
+
+    const currentTrack = player.currentTrack?.info;
+    const membersInVc = memberVoice.members.filter((m) => !m.user.bot);
+    const hostName = member.displayName || user.username;
+
+    const rowParty = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("queue_add_prompt")
+        .setEmoji(ui.getEmoji("music_play") || "➕")
+        .setLabel("Request Lagu Party")
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId("music_voteskip")
+        .setEmoji(ui.getEmoji("skip") || "⏭️")
+        .setLabel("Vote Skip")
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId("music_shuffle")
+        .setEmoji(ui.getEmoji("shuffle") || "🔀")
+        .setLabel("Acak Antrean")
+        .setStyle(ButtonStyle.Secondary),
+    );
+
+    const partyPayload = buildContainerV2({
+      accentColorHex: ui.getColor("accent_purple") || "#C084FC",
+      authorName: "NAURA LISTENING PARTY LOBBY",
+      title: `🎉 Sesi Listening Party: ${guild.name}`,
+      description: `**${hostName}** telah membuka sesi **Listening Party Kolaboratif** di channel **${memberVoice.name}**!\n\n` +
+        `👥 **Peserta Aktif di Voice:** \`${membersInVc.size} Pendengar\`\n` +
+        `🎵 **Sedang Memutar:** \`${currentTrack ? `${currentTrack.title} - ${currentTrack.author}` : "Belum ada lagu (Gunakan tombol request)"}\`\n` +
+        `📋 **Antrean Bersama:** \`${player.queue.length} lagu di antrean\`\n\n` +
+        `Semua anggota voice channel dapat berkontribusi memasukkan lagu dan memberikan vote skip bersama-sama! 🎧✨`,
+      expression: "happy",
+      buttonsRow: [rowParty],
+      footerText: ui.getFooter("music"),
+    });
+
+    return sendReply(partyPayload);
+  }
+
   const errPayload = buildErrorContainerV2({
     title: "Perintah Salah",
     description: `${eError} | Perintah tidak dikenali.`,
@@ -1438,6 +1550,26 @@ module.exports = {
             .setName("pesan")
             .setDescription("Pesan dedikasi / ucapan yang ingin disampaikan")
             .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("wrapped")
+        .setDescription(
+          "Lihat rekap kilas balik musik personal & server Naura Wrapped",
+        )
+        .addUserOption((opt) =>
+          opt
+            .setName("target")
+            .setDescription("User yang ingin dilihat rekap Wrapped-nya")
+            .setRequired(false),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("party")
+        .setDescription(
+          "Buka sesi Listening Party kolaboratif bersama seluruh anggota Voice",
         ),
     ),
 

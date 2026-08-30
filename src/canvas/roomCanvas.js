@@ -1,6 +1,5 @@
-"use strict";
-
-const { createCanvas, loadImage } = require("@napi-rs/canvas");
+const path = require("path");
+const { createCanvas, loadImage, runWithLimit } = require("./canvasRuntime");
 
 function drawRoundedRect(
   ctx,
@@ -202,8 +201,47 @@ async function renderRoomCanvas(roomData, user, pet = null) {
     ctx.restore();
   }
 
-  // 6. Active Pet (Walking / Sleeping on Floor)
-  const petX = originX + 20;
+  // 6. Chibi Naura Living Companion in Room
+  try {
+    const nauraImgPath = path.join(
+      __dirname,
+      "../../assets/Naura_Expression/Happy.png",
+    );
+    const nauraImg = await loadImage(nauraImgPath);
+    const nauraW = 92;
+    const nauraH = 92;
+    const nauraX = originX - 90;
+    const nauraY = originY - 110;
+
+    // Shadow under Naura
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(nauraX + nauraW / 2, nauraY + nauraH - 6, 26, 10, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+    ctx.fill();
+    ctx.drawImage(nauraImg, nauraX, nauraY, nauraW, nauraH);
+
+    // Speech bubble
+    drawRoundedRect(
+      ctx,
+      nauraX - 35,
+      nauraY - 26,
+      130,
+      24,
+      10,
+      "rgba(15, 23, 42, 0.88)",
+      "#FFB6C1",
+      1,
+    );
+    ctx.textAlign = "center";
+    ctx.font = 'bold 10px "Outfit", sans-serif';
+    ctx.fillStyle = "#FFB6C1";
+    ctx.fillText("Naura menemanimu! ✨", nauraX + 30, nauraY - 10);
+    ctx.restore();
+  } catch (_) {}
+
+  // 7. Active Pet (Walking / Sleeping on Floor)
+  const petX = originX + 30;
   const petY = originY - 40;
   ctx.save();
   ctx.font = "32px sans-serif";

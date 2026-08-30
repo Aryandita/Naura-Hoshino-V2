@@ -36,21 +36,47 @@ function face(mood, fallback) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("naura")
-    .setDescription("Berinteraksi dengan Naura Hoshino")
+    .setDescription("Berinteraksi dengan Naura Hoshino, AI Companion Setiamu")
     .addSubcommand((sub) =>
       sub.setName("about").setDescription("Kenalan lebih dekat dengan Naura!"),
     )
     .addSubcommand((sub) =>
-      sub.setName("gallery").setDescription("Lihat koleksi foto acak Naura"),
+      sub
+        .setName("room")
+        .setDescription(
+          "Kunjungi Ruang Santai (Living Room) 2.5D Isometrik Naura & Kamu",
+        )
+        .addUserOption((opt) =>
+          opt
+            .setName("target")
+            .setDescription("User pemilik kamar yang ingin dikunjungi")
+            .setRequired(false),
+        ),
     )
     .addSubcommand((sub) =>
-      sub.setName("play").setDescription("Main game bareng Naura yuk!"),
+      sub
+        .setName("gallery")
+        .setDescription(
+          "Lihat koleksi foto pose eksklusif Naura (Akses Premium VIP)",
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("talk")
+        .setDescription(
+          "Ngobrol santai, beri hadiah, dan cek tingkat kedekatan dengan Naura",
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub.setName("play").setDescription("Main minigame seru 1v1 bareng Naura!"),
     ),
 
   async execute(interaction) {
     await interaction.deferReply();
     const subcommand = interaction.options.getSubcommand();
     const user = interaction.user;
+    const authorDisplayName =
+      interaction.member?.displayName || user.displayName || user.username;
 
     if (subcommand === "about") {
       const env = require("../../src/config/env");
@@ -88,7 +114,70 @@ module.exports = {
       }
 
       await interaction.editReply(payload);
+    } else if (subcommand === "room") {
+      const { renderRoomCanvas } = require("../../src/canvas/roomCanvas");
+      const UserRoom = require("../../src/models/mongo/UserRoom");
+      const targetUser = interaction.options.getUser("target") || user;
+      const targetDisplayName =
+        interaction.guild?.members.cache.get(targetUser.id)?.displayName ||
+        targetUser.displayName ||
+        targetUser.username;
+
+      let room = null;
+      try {
+        room = await UserRoom.findOne({ userId: targetUser.id });
+      } catch (_) {}
+
+      if (!room) {
+        room = {
+          userId: targetUser.id,
+          displayName: targetDisplayName,
+          level: 1,
+          comfortScore: 180,
+          furniture: [
+            { name: "Cyber Bed", icon: "🛏️", x: 1, y: 1 },
+            { name: "Synthesizer Desk", icon: "🎹", x: 4, y: 1 },
+            { name: "Kotatsu Table", icon: "🍵", x: 2, y: 3 },
+            { name: "Neon Bonsai", icon: "🪴", x: 4, y: 4 },
+          ],
+          holoCardName: "Hoshino Spark",
+          guestbook: [],
+          likesCount: 12,
+        };
+      }
+
+      const roomBuffer = await renderRoomCanvas(room, targetUser, {
+        icon: "🐱",
+      });
+      const attachment = new AttachmentBuilder(roomBuffer, {
+        name: "naura-livingroom.png",
+      });
+
+      const payload = buildContainerV2({
+        authorName: "NAURA LIVING ROOM & CHIBI CYBER-POD",
+        title: `🛋️ Ruang Santai 2.5D: ${targetDisplayName}`,
+        description:
+          `Selamat datang di Ruang Santai Isometrik **${targetDisplayName}** bersama Naura! ✨\n\n` +
+          `📊 **Informasi Ruangan:**\n` +
+          `• Kenyamanan Ruang: \`${room.comfortScore || 180}/1000\`\n` +
+          `• Level Kamar: \`Level ${room.level || 1}\`\n` +
+          `• Total Kunjungan Suka: \`${room.likesCount || 12} ❤️\`\n\n` +
+          `*Naura siap menemanimu bersantai sambil mendengarkan musik lo-fi dan menikmati hidangan kafe cyberpunk~* 🌸`,
+        mediaUrl: "attachment://naura-livingroom.png",
+        footerText: ui.getFooter("core"),
+      });
+
+      await interaction.editReply({
+        ...payload,
+        files: [attachment],
+        flags: MessageFlags.IsComponentsV2,
+      });
     } else if (subcommand === "gallery") {
+      const cacheManager = require("../../src/managers/cacheManager");
+      const profile = await cacheManager.getUserProfile(user.id);
+      const isPremium =
+        profile?.isPremium && profile?.premiumUntil > new Date();
+
       const galleryPath = path.join(
         __dirname,
         "..",
@@ -127,17 +216,134 @@ module.exports = {
         name: randomImage,
       });
 
+      const vipBadge = isPremium
+        ? "✨ **STATUS VIP AKTIF:** Akses Galeri 4K HD Tanpa Batas Terbuka!"
+        : "🔒 **Preview Harian:** Langganan `/premium` untuk membuka seluruh koleksi HD & pose eksklusif Naura!";
+
       const payload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        title: `${e("camera", "\uD83D\uDCF8")} Koleksi Foto Naura`,
-        description:
-          "Ini salah satu foto favorit Naura! Gimana, lucu nggak? Hihi~",
+        accentColorHex: isPremium ? "#FFD700" : (ui.getColor("primary") || "#FFB6C1"),
+        authorName: isPremium ? "NAURA VIP PREMIUM ARTBOOK" : "NAURA GALLERY PREVIEW",
+        title: `${e("camera", "\uD83D\uDCF8")} Koleksi Foto Naura (${randomImage})`,
+        description: `Ini salah satu foto favorit Naura! Gimana, imut kan? Hihi~ 🌸\n\n${vipBadge}`,
         bannerAttachmentName: randomImage,
         files: [attachment],
         footerText: ui.getFooter("core"),
       });
 
       await interaction.editReply(payload);
+    } else if (subcommand === "talk") {
+      const cacheManager = require("../../src/managers/cacheManager");
+      const profile = await cacheManager.getUserProfile(user.id);
+      const rep = profile?.reputation || 0;
+
+      let affectionLevel = "Sahabat Baru 🌸";
+      if (rep >= 100) affectionLevel = "Sahabat Sejati 💖";
+      else if (rep >= 50) affectionLevel = "Teman Akrab ✨";
+      else if (rep >= 20) affectionLevel = "Teman Baik 😊";
+
+      const greetings = [
+        `Hai **${authorDisplayName}**! Senang banget bisa ketemu kamu hari ini! Kamu sudah minum air putih belum? Jangan lupa istirahat yaa~ ✨`,
+        `Halo **${authorDisplayName}**! Hari ini mau ngobrol apa sama Naura? Naura selalu siap mendengarkan ceritamu! 🌸`,
+        `Wah, **${authorDisplayName}** datang! Naura lagi dengerin lagu lo-fi nih, mau dengerin bareng? 🎧`,
+      ];
+      const randomGreeting =
+        greetings[Math.floor(Math.random() * greetings.length)];
+
+      const rowTalk = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("naura_talk_coffee")
+          .setEmoji("☕")
+          .setLabel("Suguhi Kopi (+Affection)")
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId("naura_talk_curhat")
+          .setEmoji("💭")
+          .setLabel("Ajak Curhat")
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId("naura_talk_sing")
+          .setEmoji("🎵")
+          .setLabel("Minta Dinyanyikan")
+          .setStyle(ButtonStyle.Secondary),
+      );
+
+      const payload = buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        authorName: "NAURA LIVING COMPANION",
+        title: `💬 Ngobrol Bersama Naura`,
+        description:
+          `${randomGreeting}\n\n` +
+          `💖 **Status Hubungan:**\n` +
+          `• Tingkat Kedekatan: **${affectionLevel}**\n` +
+          `• Poin Reputasi & Afeksi: \`${rep} Poin\`\n\n` +
+          `Pilih salah satu interaksi di bawah untuk mempererat pertemananmu dengan Naura!`,
+        expression: "happy",
+        buttonsRow: [rowTalk],
+        footerText: ui.getFooter("core"),
+      });
+
+      const sentMsg = await interaction.editReply(payload);
+      if (!sentMsg) return;
+
+      const collector = sentMsg.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        filter: (i) => i.user.id === user.id,
+        time: 60000,
+      });
+
+      collector.on("collect", async (i) => {
+        if (i.customId === "naura_talk_coffee") {
+          try {
+            await cacheManager.incrementUserProfile(user.id, "reputation", 5);
+          } catch (_) {}
+          const newRep = rep + 5;
+          return i.update(
+            buildContainerV2({
+              accentColorHex: ui.getColor("primary") || "#FFB6C1",
+              title: "☕ Secangkir Kopi Kosmik Disuguhkan!",
+              description: `Wah, makasih banyak yaa, **${authorDisplayName}**! Kopinya harum banget dan bikin Naura makin bersemangat menemanimu seharian! ✨\n\n💖 **Poin Afeksi:** \`+5 Poin\` (Total: \`${newRep} Poin\`)`,
+              expression: "happy",
+              footerText: ui.getFooter("core"),
+            }),
+          );
+        }
+
+        if (i.customId === "naura_talk_curhat") {
+          const advices = [
+            `Apapun yang sedang kamu hadapi sekarang, ingat ya **${authorDisplayName}**... kamu sudah berusaha dengan sangat baik hari ini! Naura selalu ada di sini untuk mendukungmu! 🌸`,
+            `Terkadang istirahat sebentar itu bukan berarti menyerah, lho. Tarik napas dalam-dalam, nikmati secangkir teh hangat, lalu melangkah lagi perlahan yaa~ ✨`,
+            `Jangan terlalu membebani dirimu ya, **${authorDisplayName}**. Kalau lelah, bersandarlah sejenak. Kamu berharga banget! 💖`,
+          ];
+          const adv = advices[Math.floor(Math.random() * advices.length)];
+          return i.update(
+            buildContainerV2({
+              accentColorHex: ui.getColor("primary") || "#FFB6C1",
+              title: "💭 Sesi Curhat Hangat Bersama Naura",
+              description: `${adv}\n\n*Naura siap mendengarkan kapan saja kamu butuh teman bicara~* 🌸`,
+              expression: "shy",
+              footerText: ui.getFooter("core"),
+            }),
+          );
+        }
+
+        if (i.customId === "naura_talk_sing") {
+          return i.update(
+            buildContainerV2({
+              accentColorHex: ui.getColor("accent_purple") || "#C084FC",
+              title: "🎵 Senandung Melodi Naura",
+              description: `*~ La la la... Di bawah langit berbintang kosmik, kita melangkah bersama menyongsong hari esok yang cerah ~* 🌸✨\n\nSemoga senandung kecil dari Naura ini bisa menghibur harimu ya, **${authorDisplayName}**!`,
+              expression: "happy",
+              footerText: ui.getFooter("core"),
+            }),
+          );
+        }
+      });
+
+      collector.on("end", () => {
+        interaction
+          .editReply({ flags: MessageFlags.IsComponentsV2, components: [] })
+          .catch(() => {});
+      });
     } else if (subcommand === "play") {
       const row1 = new ActionRowBuilder().addComponents(
         new ButtonBuilder()

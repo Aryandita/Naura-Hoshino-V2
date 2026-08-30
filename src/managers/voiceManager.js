@@ -33,7 +33,7 @@ class VoiceManager {
     const guildId = voiceChannel.guild.id;
 
     try {
-      // Cek konflik dengan Poru (Lavalink) — gunakan client.musicManager.poru yang benar
+      // Cek konflik dengan Poru (Lavalink), gunakan client.musicManager.poru yang benar
       const client = member.client;
       if (client && client.musicManager?.poru?.players) {
         const player = client.musicManager.poru.players.get(guildId);
