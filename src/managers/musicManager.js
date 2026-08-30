@@ -15,6 +15,23 @@ function loadPoru() {
   return PoruCtor;
 }
 
+const PUBLIC_LAVALINK_NODES = [
+  {
+    name: "Serenetia Public Node (SSL)",
+    host: "lavalinkv4.serenetia.com",
+    port: 443,
+    password: "https://seretia.link/discord",
+    secure: true,
+  },
+  {
+    name: "Serenetia Public Node (HTTP)",
+    host: "lavalinkv4.serenetia.com",
+    port: 80,
+    password: "https://seretia.link/discord",
+    secure: false,
+  },
+];
+
 class MusicManager {
   constructor(client) {
     this.client = client;
@@ -31,13 +48,14 @@ class MusicManager {
   buildNodes() {
     const env = require("../config/env");
     const rawNodes = env.LAVA_NODES;
+    let configuredNodes = [];
 
     if (rawNodes) {
       // 1. Format JSON Array: [{"name":"...","host":"...","port":2333,"password":"...","secure":false}]
       try {
         const nodes = JSON.parse(rawNodes);
         if (Array.isArray(nodes) && nodes.length > 0) {
-          return nodes.map((node, index) => ({
+          configuredNodes = nodes.map((node, index) => ({
             name: node.name || `Naura Node ${index + 1}`,
             host: String(node.host || "localhost").trim(),
             port: parseInt(node.port, 10) || 2333,
@@ -72,78 +90,80 @@ class MusicManager {
                 parsed.push({ name, host, port, password, secure });
               }
             });
-            if (parsed.length > 0) return parsed;
+            if (parsed.length > 0) configuredNodes = parsed;
           }
         }
-        console.error(
-          "\x1b[41m\x1b[37m 🎵 MUSIC \x1b[0m \x1b[31mGagal parse LAVA_NODES, kembali ke mode multi-env / fallback.\x1b[0m",
-        );
+        if (configuredNodes.length === 0) {
+          console.error(
+            "\x1b[41m\x1b[37m 🎵 MUSIC \x1b[0m \x1b[31mGagal parse LAVA_NODES, kembali ke mode multi-env / fallback.\x1b[0m",
+          );
+        }
       }
     }
 
-    // 3. Scan numbered environment variables (LAVALINK_HOST_2, LAVALINK_HOST_3, dst.)
-    const dynamicNodes = [];
-    if (env.LAVA_HOST) {
-      dynamicNodes.push({
-        name: "Naura Node 1",
-        host: String(env.LAVA_HOST || "localhost").trim(),
-        port: parseInt(env.LAVA_PORT, 10) || 2333,
-        password: String(env.LAVA_PASS || "youshallnotpass").trim(),
-        secure: env.LAVA_SECURE || false,
-      });
-    }
+    if (configuredNodes.length === 0) {
+      // 3. Scan numbered environment variables (LAVALINK_HOST_2, LAVALINK_HOST_3, dst.)
+      if (env.LAVA_HOST) {
+        configuredNodes.push({
+          name: "Naura Node 1",
+          host: String(env.LAVA_HOST || "localhost").trim(),
+          port: parseInt(env.LAVA_PORT, 10) || 2333,
+          password: String(env.LAVA_PASS || "youshallnotpass").trim(),
+          secure: env.LAVA_SECURE || false,
+        });
+      }
 
-    let nodeIndex = 2;
-    while (
-      process.env[`LAVALINK_HOST_${nodeIndex}`] ||
-      process.env[`LAVA_HOST_${nodeIndex}`]
-    ) {
-      const host =
+      let nodeIndex = 2;
+      while (
         process.env[`LAVALINK_HOST_${nodeIndex}`] ||
-        process.env[`LAVA_HOST_${nodeIndex}`];
-      const port =
-        parseInt(
-          process.env[`LAVALINK_PORT_${nodeIndex}`] ||
-            process.env[`LAVA_PORT_${nodeIndex}`],
-          10,
-        ) || 2333;
-      const password =
-        process.env[`LAVALINK_PASSWORD_${nodeIndex}`] ||
-        process.env[`LAVA_PASS_${nodeIndex}`] ||
-        "youshallnotpass";
-      const secure =
-        process.env[`LAVALINK_SECURE_${nodeIndex}`] === "true" ||
-        process.env[`LAVA_SECURE_${nodeIndex}`] === "true" ||
-        port === 443;
-      const name =
-        process.env[`LAVALINK_NAME_${nodeIndex}`] ||
-        process.env[`LAVA_NAME_${nodeIndex}`] ||
-        `Naura Node ${nodeIndex}`;
+        process.env[`LAVA_HOST_${nodeIndex}`]
+      ) {
+        const host =
+          process.env[`LAVALINK_HOST_${nodeIndex}`] ||
+          process.env[`LAVA_HOST_${nodeIndex}`];
+        const port =
+          parseInt(
+            process.env[`LAVALINK_PORT_${nodeIndex}`] ||
+              process.env[`LAVA_PORT_${nodeIndex}`],
+            10,
+          ) || 2333;
+        const password =
+          process.env[`LAVALINK_PASSWORD_${nodeIndex}`] ||
+          process.env[`LAVA_PASS_${nodeIndex}`] ||
+          "youshallnotpass";
+        const secure =
+          process.env[`LAVALINK_SECURE_${nodeIndex}`] === "true" ||
+          process.env[`LAVA_SECURE_${nodeIndex}`] === "true" ||
+          port === 443;
+        const name =
+          process.env[`LAVALINK_NAME_${nodeIndex}`] ||
+          process.env[`LAVA_NAME_${nodeIndex}`] ||
+          `Naura Node ${nodeIndex}`;
 
-      dynamicNodes.push({
-        name,
-        host: String(host).trim(),
-        port,
-        password: String(password).trim(),
-        secure,
-      });
-      nodeIndex++;
+        configuredNodes.push({
+          name,
+          host: String(host).trim(),
+          port,
+          password: String(password).trim(),
+          secure,
+        });
+        nodeIndex++;
+      }
     }
 
-    if (dynamicNodes.length > 0) {
-      return dynamicNodes;
+    // Gabungkan configured nodes dengan public nodes tanpa menduplikasi host:port
+    const finalNodes = [];
+    const seen = new Set();
+
+    for (const node of [...configuredNodes, ...PUBLIC_LAVALINK_NODES]) {
+      const key = `${node.host}:${node.port}`.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        finalNodes.push(node);
+      }
     }
 
-    // Mode fallback: 1 default node
-    return [
-      {
-        name: "Naura Node 1",
-        host: String(env.LAVA_HOST || "localhost").trim(),
-        port: parseInt(env.LAVA_PORT, 10) || 2333,
-        password: String(env.LAVA_PASS || "youshallnotpass").trim(),
-        secure: env.LAVA_SECURE || false,
-      },
-    ];
+    return finalNodes.length > 0 ? finalNodes : [...PUBLIC_LAVALINK_NODES];
   }
 
   ensurePoru() {

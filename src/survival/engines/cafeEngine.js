@@ -43,7 +43,7 @@ class CafeEngine {
         cafe.uncollectedRevenue =
           Number(cafe.uncollectedRevenue || 0) + newRevenue;
         cafe.lastCollectedAt = new Date();
-        await cafe.save();
+        await cafe.save({ fields: ["uncollectedRevenue", "lastCollectedAt"] });
       }
     }
 
@@ -118,7 +118,9 @@ class CafeEngine {
       cafe.unlockedRecipes = Array.from(new Set([...unlocked, ...newRecipes]));
     }
 
-    await cafe.save();
+    await cafe.save({
+      fields: ["activeDishes", "reputation", "level", "unlockedRecipes"],
+    });
 
     logger.info(
       `[CafeEngine] User ${userId} memasak ${qty}x ${recipe.name}. Reputasi: +${repGain}`,
@@ -170,7 +172,7 @@ class CafeEngine {
     const finalEarnings = totalEarned + tips;
 
     cafe.customersServed = Number(cafe.customersServed || 0) + 1;
-    await cafe.save();
+    await cafe.save({ fields: ["activeDishes", "customersServed"] });
 
     // Tambahkan saldo ke pemain lewat cacheManager
     await cacheManager.incrementUserSurvival(
@@ -216,7 +218,7 @@ class CafeEngine {
 
     cafe.uncollectedRevenue = 0;
     cafe.lastCollectedAt = new Date();
-    await cafe.save();
+    await cafe.save({ fields: ["uncollectedRevenue", "lastCollectedAt"] });
 
     await cacheManager.incrementUserSurvival(
       userId,
@@ -280,7 +282,9 @@ class CafeEngine {
     sellerCafe.customersServed = Number(sellerCafe.customersServed || 0) + 1;
     sellerCafe.reputation = Number(sellerCafe.reputation || 0) + 5;
     sellerCafe.changed("activeDishes", true);
-    await sellerCafe.save();
+    await sellerCafe.save({
+      fields: ["activeDishes", "customersServed", "reputation"],
+    });
 
     await cacheManager.incrementUserSurvival(
       sellerId,

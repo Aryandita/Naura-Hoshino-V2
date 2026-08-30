@@ -3,8 +3,7 @@ const {
   PermissionFlagsBits,
   MessageFlags,
 } = require("discord.js");
-const GuildSettings = require("../../src/models/GuildSettings");
-const cacheManager = require("../../src/managers/cacheManager");
+const guildSettingsService = require("../../src/managers/guildSettingsService");
 const ui = require("../../src/config/ui");
 
 module.exports = {
@@ -30,39 +29,47 @@ module.exports = {
   async execute(interaction) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const sub = interaction.options.getSubcommand();
-    const [settings] = await GuildSettings.findOrCreate({
-      where: { guildId: interaction.guild.id },
-    });
-
-    const automod = settings.settings.automod || {
-      enabled: true,
-      antiInvite: false,
-      antiCaps: false,
-      massMention: 5,
-      antiSpam: true,
-      badWords: [],
-    };
 
     if (sub === "toggle") {
-      automod.enabled = !automod.enabled;
-      settings.settings.automod = automod;
-      settings.changed("settings", true);
-      await settings.save();
-      await cacheManager
-        .invalidateGuildSettings(interaction.guild.id)
-        .catch(() => {});
+      let isEnabled = false;
+      await guildSettingsService.updateGuildSetting(
+        interaction.guild.id,
+        (settings) => {
+          if (!settings.automod) {
+            settings.automod = {
+              enabled: true,
+              antiInvite: false,
+              antiCaps: false,
+              massMention: 5,
+              antiSpam: true,
+              badWords: [],
+            };
+          }
+          settings.automod.enabled = !settings.automod.enabled;
+          isEnabled = settings.automod.enabled;
+        },
+      );
       return interaction.editReply(
-        `${ui.getEmoji("success") || "✅"} Automod kini **${automod.enabled ? "AKTIF" : "MATI"}**.`,
+        `${ui.getEmoji("success") || "✅"} Automod kini **${isEnabled ? "AKTIF" : "MATI"}**.`,
       );
     } else if (sub === "role") {
       const role = interaction.options.getRole("target");
-      automod.punishRole = role.id;
-      settings.settings.automod = automod;
-      settings.changed("settings", true);
-      await settings.save();
-      await cacheManager
-        .invalidateGuildSettings(interaction.guild.id)
-        .catch(() => {});
+      await guildSettingsService.updateGuildSetting(
+        interaction.guild.id,
+        (settings) => {
+          if (!settings.automod) {
+            settings.automod = {
+              enabled: true,
+              antiInvite: false,
+              antiCaps: false,
+              massMention: 5,
+              antiSpam: true,
+              badWords: [],
+            };
+          }
+          settings.automod.punishRole = role.id;
+        },
+      );
       return interaction.editReply(
         `${ui.getEmoji("success") || "✅"} Role hukuman (Isolasi) diatur ke ${role}. User yang poin tata kramanya habis akan mendapatkan role ini.`,
       );

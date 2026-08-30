@@ -18,7 +18,7 @@ module.exports = async function handleStaffReply(message, client) {
 
   if (message.content.toLowerCase() === "n!close") {
     thread.closed = true;
-    await thread.save();
+    await thread.save({ fields: ["closed"] });
 
     const user = await client.users.fetch(thread.userId).catch(() => null);
     if (user) {

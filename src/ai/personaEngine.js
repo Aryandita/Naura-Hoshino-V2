@@ -44,7 +44,9 @@ class PersonaEngine {
       persona.systemPrompt = systemPrompt;
       persona.voiceTone = voiceTone;
       if (channelId) persona.channelId = channelId;
-      await persona.save();
+      await persona.save({
+        fields: ["name", "systemPrompt", "voiceTone", "channelId"],
+      });
     }
 
     logger.info(

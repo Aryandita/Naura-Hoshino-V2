@@ -51,7 +51,7 @@ module.exports = [
       if (!ticket) return ui.sendError(interaction, "err_sys_73", true);
 
       ticket.closed = true;
-      await ticket.save();
+      await ticket.save({ fields: ["closed"] });
 
       const logEmbed = new EmbedBuilder()
         .setColor("#FF0000")
@@ -106,7 +106,7 @@ module.exports = [
       if (!ticket) return ui.sendError(interaction, "err_sys_73", true);
 
       ticket.closed = true;
-      await ticket.save();
+      await ticket.save({ fields: ["closed"] });
 
       const guild = client.guilds.cache.get(ticket.guildId);
       const channel = guild?.channels.cache.get(ticket.channelId);

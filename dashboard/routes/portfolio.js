@@ -344,11 +344,23 @@ module.exports = (client) => {
       if (showcaseSections !== undefined)
         portfolio.showcaseSections = showcaseSections;
       if (pinnedCardId !== undefined) portfolio.pinnedCardId = pinnedCardId;
-      if (socialLinks !== undefined) portfolio.socialLinks = socialLinks;
       if (isPremium && customBadge !== undefined)
         portfolio.customBadge = customBadge;
 
-      await portfolio.save();
+      await portfolio.save({
+        fields: [
+          "bio",
+          "tagline",
+          "theme",
+          "accentColor",
+          "bgType",
+          "bgValue",
+          "showcaseSections",
+          "pinnedCardId",
+          "socialLinks",
+          "customBadge",
+        ],
+      });
 
       return res.json({
         success: true,

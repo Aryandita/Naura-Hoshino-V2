@@ -35,7 +35,9 @@ class RssManager {
 
           if (alert.lastPostLink !== latestPost.link) {
             alert.lastPostLink = latestPost.link;
-            await alert.save().catch(() => {}); // Penahan error save
+            await alert
+              .save({ fields: ["lastPostLink"] })
+              .catch(() => {}); // Penahan error save
 
             const channel = this.client.channels.cache.get(
               alert.discordChannelId,

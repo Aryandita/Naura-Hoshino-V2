@@ -116,7 +116,7 @@ async function bumpFriendshipStreak(message, targetId, targetName) {
 
     friendship.streak += 1;
     friendship.lastInteraction = new Date();
-    await friendship.save();
+    await friendship.save({ fields: ["streak", "lastInteraction"] });
 
     await message.channel
       .send({

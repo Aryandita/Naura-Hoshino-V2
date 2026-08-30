@@ -277,7 +277,7 @@ async function incrementQuestProgress(userId, action, amount = 1) {
     if (changed) {
       quest.questsState = state;
       quest.changed("questsState", true);
-      await quest.save();
+      await quest.save({ fields: ["questsState"] });
     }
   } catch (e) {
     console.error(
@@ -332,7 +332,7 @@ async function incrementClanQuestProgress(clanId, action, amount = 1) {
     if (changed) {
       clan.questsState = state;
       clan.changed("questsState", true);
-      await clan.save();
+      await clan.save({ fields: ["questsState"] });
     }
   } catch (e) {
     console.error(

@@ -67,7 +67,7 @@ async function unlockAchievement(interaction, achievementId) {
     unlocked.push(achievementId);
     userAch.unlockedAchievements = unlocked;
     userAch.changed("unlockedAchievements", true);
-    await userAch.save();
+    await userAch.save({ fields: ["unlockedAchievements"] });
 
     // Hadiah kupon hanya untuk pencapaian berat. Bila datanya belum ada,
     // pencapaian tetap terbuka tanpa kupon.

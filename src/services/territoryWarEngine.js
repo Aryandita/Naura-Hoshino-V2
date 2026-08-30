@@ -96,7 +96,7 @@ class TerritoryWarEngine {
     // Jika klan penyerang sudah menjadi pemilik, tingkatkan pertahanan
     if (currentClanId === Number(clanId)) {
       territory.controlPoints = Math.min(1000, currentPoints + energy);
-      await territory.save();
+      await territory.save({ fields: ["controlPoints"] });
       return {
         success: true,
         action: "DEFENDED",
@@ -116,7 +116,15 @@ class TerritoryWarEngine {
       territory.controlPoints = capturedPoints;
       territory.contestedAt = new Date();
       territory.lastTaxClaimedAt = new Date();
-      await territory.save();
+      await territory.save({
+        fields: [
+          "clanId",
+          "clanName",
+          "controlPoints",
+          "contestedAt",
+          "lastTaxClaimedAt",
+        ],
+      });
 
       logger.info(
         `[TerritoryWar] Klan ${clanName} (#${clanId}) berhasil merebut ${territory.name}!`,
@@ -131,7 +139,7 @@ class TerritoryWarEngine {
     }
 
     territory.controlPoints = newPoints;
-    await territory.save();
+    await territory.save({ fields: ["controlPoints"] });
 
     return {
       success: true,
@@ -169,7 +177,7 @@ class TerritoryWarEngine {
       if (earned > 0) {
         totalTaxEarned += earned;
         terr.lastTaxClaimedAt = new Date();
-        await terr.save();
+        await terr.save({ fields: ["lastTaxClaimedAt"] });
       }
     }
 
@@ -180,7 +188,7 @@ class TerritoryWarEngine {
     const clan = await GuildClan.findByPk(clanId);
     if (clan) {
       clan.vault = Number(clan.vault || 0) + totalTaxEarned;
-      await clan.save();
+      await clan.save({ fields: ["vault"] });
     }
 
     logger.info(
@@ -203,7 +211,7 @@ class TerritoryWarEngine {
     const territories = await ClanTerritory.findAll();
     for (const terr of territories) {
       terr.controlPoints = Math.floor(Number(terr.controlPoints || 0) * 0.5); // Kurangi 50% untuk persaingan baru
-      await terr.save();
+      await terr.save({ fields: ["controlPoints"] });
     }
   }
 }

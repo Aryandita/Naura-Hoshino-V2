@@ -23,6 +23,7 @@ async function main() {
     const mockClient = {
         uptime: 3600000,
         ws: { ping: 28 },
+        isReady: () => true,
         guilds: {
             cache: {
                 size: 1,

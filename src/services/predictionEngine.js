@@ -239,7 +239,7 @@ class PredictionEngine {
     if (market.status !== "OPEN") return { success: false, reason: "NOT_OPEN" };
 
     market.status = "LOCKED";
-    await market.save();
+    await market.save({ fields: ["status"] });
     await this._invalidateCache(guildId, marketId);
     return { success: true, market: market.toJSON() };
   }
@@ -293,7 +293,10 @@ class PredictionEngine {
 
             bet.status = "WON";
             bet.payout = payout;
-            await bet.save({ transaction: t });
+            await bet.save({
+              fields: ["status", "payout"],
+              transaction: t,
+            });
 
             // Berikan saldo ke pemenang lewat cacheManager
             await cacheManager.incrementUserSurvival(
@@ -306,7 +309,10 @@ class PredictionEngine {
           } else {
             bet.status = "LOST";
             bet.payout = 0;
-            await bet.save({ transaction: t });
+            await bet.save({
+              fields: ["status", "payout"],
+              transaction: t,
+            });
           }
         }
 
@@ -325,7 +331,10 @@ class PredictionEngine {
               (Number(currentPool.starFragments) || 5000) + houseFeeCollected;
             activeBoss.rewardsPool = currentPool;
             activeBoss.changed("rewardsPool", true);
-            await activeBoss.save({ transaction: t });
+            await activeBoss.save({
+              fields: ["rewardsPool"],
+              transaction: t,
+            });
           }
         }
       } else {
@@ -333,7 +342,10 @@ class PredictionEngine {
         for (const bet of bets) {
           bet.status = "REFUNDED";
           bet.payout = Number(bet.amount);
-          await bet.save({ transaction: t });
+          await bet.save({
+            fields: ["status", "payout"],
+            transaction: t,
+          });
 
           await cacheManager.incrementUserSurvival(
             bet.userId,
@@ -346,7 +358,10 @@ class PredictionEngine {
       market.status = "RESOLVED";
       market.winningOptionId = Number(winningOptionId);
       market.resolveTime = new Date();
-      await market.save({ transaction: t });
+      await market.save({
+        fields: ["status", "winningOptionId", "resolveTime"],
+        transaction: t,
+      });
 
       t.afterCommit(async () => {
         await PredictionEngine._invalidateCache(guildId, marketId);
@@ -388,7 +403,10 @@ class PredictionEngine {
       for (const bet of bets) {
         bet.status = "REFUNDED";
         bet.payout = Number(bet.amount);
-        await bet.save({ transaction: t });
+        await bet.save({
+          fields: ["status", "payout"],
+          transaction: t,
+        });
 
         await cacheManager.incrementUserSurvival(
           bet.userId,
@@ -399,7 +417,10 @@ class PredictionEngine {
 
       market.status = "CANCELLED";
       market.resolveTime = new Date();
-      await market.save({ transaction: t });
+      await market.save({
+        fields: ["status", "resolveTime"],
+        transaction: t,
+      });
 
       t.afterCommit(async () => {
         await PredictionEngine._invalidateCache(guildId, marketId);

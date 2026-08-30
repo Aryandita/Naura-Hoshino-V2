@@ -40,8 +40,10 @@ const readShardId = () => {
 };
 
 const env = {
-  // RUNTIME
+  // RUNTIME & DEBUG
   NODE_ENV: cleanEnv(process.env.NODE_ENV) || "development",
+  DEBUG: process.env.DEBUG === "true",
+  SKIP_DB_MIGRATE: cleanEnv(process.env.SKIP_DB_MIGRATE) || "",
 
   // SHARDING
   // SHARD_ID sengaja dibiarkan undefined saat proses dijalankan mandiri

@@ -3,8 +3,7 @@ const {
   PermissionFlagsBits,
   MessageFlags,
 } = require("discord.js");
-const GuildSettings = require("../../src/models/GuildSettings");
-const cacheManager = require("../../src/managers/cacheManager");
+const guildSettingsService = require("../../src/managers/guildSettingsService");
 const ui = require("../../src/config/ui");
 
 module.exports = {
@@ -30,9 +29,6 @@ module.exports = {
   async execute(interaction) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const sub = interaction.options.getSubcommand();
-    const [settings] = await GuildSettings.findOrCreate({
-      where: { guildId: interaction.guild.id },
-    });
 
     if (sub === "set") {
       const role = interaction.options.getRole("role");
@@ -49,22 +45,23 @@ module.exports = {
           `${ui.getEmoji("error") || "❌"} **Akses Ditolak:** Tidak bisa memberikan role integrasi/bot (Managed Role).`,
         );
       }
-      settings.settings = { ...settings.settings, autoRole: role.id };
-      settings.changed("settings", true);
-      await settings.save();
-      await cacheManager
-        .invalidateGuildSettings(interaction.guild.id)
-        .catch(() => {});
+
+      await guildSettingsService.updateGuildSetting(
+        interaction.guild.id,
+        (settings) => {
+          settings.autoRole = role.id;
+        },
+      );
       return interaction.editReply(
         `${ui.getEmoji("success") || "✅"} Auto Role berhasil diatur ke ${role}!`,
       );
     } else {
-      settings.settings = { ...settings.settings, autoRole: null };
-      settings.changed("settings", true);
-      await settings.save();
-      await cacheManager
-        .invalidateGuildSettings(interaction.guild.id)
-        .catch(() => {});
+      await guildSettingsService.updateGuildSetting(
+        interaction.guild.id,
+        (settings) => {
+          settings.autoRole = null;
+        },
+      );
       return interaction.editReply(
         `${ui.getEmoji("success") || "✅"} Fitur Auto Role telah dimatikan.`,
       );

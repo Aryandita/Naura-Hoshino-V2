@@ -298,7 +298,15 @@ class CardEngine {
       mainCard.rarity = "SECRET_MYTHIC";
 
     mainCard.burnValue = Number(mainCard.burnValue || 100) * 2;
-    await mainCard.save();
+    await mainCard.save({
+      fields: [
+        "isAwakened",
+        "awakeningLevel",
+        "frame",
+        "rarity",
+        "burnValue",
+      ],
+    });
 
     logger.info(
       `[CardEngine] User ${userId} membangkitkan kartu Awakened: ${mainCard.characterName} [${mainCard.cardCode}]`,
@@ -333,7 +341,7 @@ class CardEngine {
 
     card.inscription = text.trim().substring(0, 40);
     if (!card.originalMinterId) card.originalMinterId = userId;
-    await card.save();
+    await card.save({ fields: ["inscription", "originalMinterId"] });
 
     logger.info(
       `[CardEngine] User ${userId} mengukir kartu ${cardCode}: "${card.inscription}"`,
@@ -370,7 +378,7 @@ class CardEngine {
 
     card.frame = frameStyle;
     card.frameStyle = frameStyle;
-    await card.save();
+    await card.save({ fields: ["frame", "frameStyle"] });
 
     logger.info(
       `[CardEngine] User ${userId} menempa bingkai ${frameStyle} pada kartu ${cardCode}`,

@@ -272,9 +272,18 @@ class WorldBossEngine {
     dbBoss.damageLeaderboard = leaderboard;
     dbBoss.roleContributions = roles;
     dbBoss.changed("damageLeaderboard", true);
-    dbBoss.changed("roleContributions", true);
-
-    await dbBoss.save();
+    await dbBoss.save({
+      fields: [
+        "status",
+        "defeatedAt",
+        "mvpUserId",
+        "currentHp",
+        "phase",
+        "shieldHp",
+        "damageLeaderboard",
+        "roleContributions",
+      ],
+    });
 
     // Invalidate / update Redis
     if (redisManager.isReady) {

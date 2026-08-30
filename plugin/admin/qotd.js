@@ -5,7 +5,7 @@ const {
 } = require("discord.js");
 const { logger } = require("../../src/managers/logger");
 const ui = require("../../src/config/ui");
-const GuildSettings = require("../../src/models/GuildSettings");
+const guildSettingsService = require("../../src/managers/guildSettingsService");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -58,21 +58,6 @@ module.exports = {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
-      const [settings] = await GuildSettings.findOrCreate({
-        where: { guildId: interaction.guild.id },
-      });
-      const currentSettings = settings.settings || {};
-
-      if (!currentSettings.qotd) {
-        currentSettings.qotd = {
-          enabled: false,
-          channelId: null,
-          questions: [],
-          lastAsked: null,
-          time: "08:00",
-        };
-      }
-
       if (subcommand === "setup") {
         const channel = interaction.options.getChannel("channel");
         const time = interaction.options.getString("jam") || "08:00";
@@ -87,13 +72,23 @@ module.exports = {
           return interaction.editReply(errPayload);
         }
 
-        currentSettings.qotd.enabled = true;
-        currentSettings.qotd.channelId = channel.id;
-        currentSettings.qotd.time = time;
-
-        settings.settings = currentSettings;
-        settings.changed("settings", true);
-        await settings.save();
+        await guildSettingsService.updateGuildSetting(
+          interaction.guild.id,
+          (currentSettings) => {
+            if (!currentSettings.qotd) {
+              currentSettings.qotd = {
+                enabled: false,
+                channelId: null,
+                questions: [],
+                lastAsked: null,
+                time: "08:00",
+              };
+            }
+            currentSettings.qotd.enabled = true;
+            currentSettings.qotd.channelId = channel.id;
+            currentSettings.qotd.time = time;
+          },
+        );
 
         const successPayload = buildContainerV2({
           accentColorHex: ui.getColor("success") || "#22c55e",
@@ -105,22 +100,41 @@ module.exports = {
         await interaction.editReply(successPayload);
       } else if (subcommand === "add") {
         const q = interaction.options.getString("pertanyaan");
-        currentSettings.qotd.questions.push(q);
+        let totalCount = 0;
 
-        settings.settings = currentSettings;
-        settings.changed("settings", true);
-        await settings.save();
+        await guildSettingsService.updateGuildSetting(
+          interaction.guild.id,
+          (currentSettings) => {
+            if (!currentSettings.qotd) {
+              currentSettings.qotd = {
+                enabled: false,
+                channelId: null,
+                questions: [],
+                lastAsked: null,
+                time: "08:00",
+              };
+            }
+            if (!Array.isArray(currentSettings.qotd.questions)) {
+              currentSettings.qotd.questions = [];
+            }
+            currentSettings.qotd.questions.push(q);
+            totalCount = currentSettings.qotd.questions.length;
+          },
+        );
 
         const successPayload = buildContainerV2({
           accentColorHex: ui.getColor("success") || "#22c55e",
           title: "Pertanyaan Ditambahkan",
-          description: `✅ Pertanyaan ditambahkan! Sekarang ada **${currentSettings.qotd.questions.length}** pertanyaan di bank QOTD.`,
+          description: `✅ Pertanyaan ditambahkan! Sekarang ada **${totalCount}** pertanyaan di bank QOTD.`,
           footerText: ui.getFooter("core"),
         });
 
         await interaction.editReply(successPayload);
       } else if (subcommand === "list") {
-        const qs = currentSettings.qotd.questions;
+        const currentSettings =
+          (await guildSettingsService.getGuildSetting(interaction.guild.id)) ||
+          {};
+        const qs = currentSettings.qotd?.questions;
         if (!qs || qs.length === 0) {
           const errPayload = buildErrorContainerV2({
             title: "Bank Kosong",
@@ -142,11 +156,21 @@ module.exports = {
 
         await interaction.editReply(listPayload);
       } else if (subcommand === "disable") {
-        currentSettings.qotd.enabled = false;
-
-        settings.settings = currentSettings;
-        settings.changed("settings", true);
-        await settings.save();
+        await guildSettingsService.updateGuildSetting(
+          interaction.guild.id,
+          (currentSettings) => {
+            if (!currentSettings.qotd) {
+              currentSettings.qotd = {
+                enabled: false,
+                channelId: null,
+                questions: [],
+                lastAsked: null,
+                time: "08:00",
+              };
+            }
+            currentSettings.qotd.enabled = false;
+          },
+        );
 
         const disablePayload = buildContainerV2({
           accentColorHex: ui.getColor("secondary") || "#6b7280",

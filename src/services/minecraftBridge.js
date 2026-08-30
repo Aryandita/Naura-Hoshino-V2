@@ -26,7 +26,7 @@ class MinecraftBridgeService {
 
     link.mcUsername = mcUsername;
     link.verificationCode = code;
-    await link.save();
+    await link.save({ fields: ["mcUsername", "verificationCode"] });
 
     return code;
   }
@@ -47,7 +47,9 @@ class MinecraftBridgeService {
     link.isVerified = true;
     link.verificationCode = null;
     link.lastSyncedAt = new Date();
-    await link.save();
+    await link.save({
+      fields: ["isVerified", "verificationCode", "lastSyncedAt"],
+    });
     await redisManager.del(`mc:link:code:${code}`);
 
     // Bonus Star Fragments untuk penautan pertama
@@ -99,7 +101,7 @@ class MinecraftBridgeService {
 
     link.lastSyncedAt = new Date();
     link.totalSyncRewards = (link.totalSyncRewards || 0) + rewardFrags;
-    await link.save();
+    await link.save({ fields: ["lastSyncedAt", "totalSyncRewards"] });
 
     return {
       success: true,

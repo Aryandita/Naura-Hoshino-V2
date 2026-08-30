@@ -572,15 +572,18 @@ async function syncFallbackToMySQL(mysqlSequelize) {
           );
           for (const row of rows) {
             try {
+              const pk = MysqlModel.primaryKeyAttributes[0];
               const [record, created] = await MysqlModel.findOrCreate({
                 where: {
-                  [MysqlModel.primaryKeyAttributes[0]]:
-                    row[MysqlModel.primaryKeyAttributes[0]],
+                  [pk]: row[pk],
                 },
                 defaults: row,
               });
               if (!created) {
-                await record.update(row);
+                const updateFields = Object.keys(row).filter(
+                  (k) => ![pk, "createdAt", "updatedAt"].includes(k),
+                );
+                await record.update(row, { fields: updateFields });
               }
             } catch (rowErr) {
               logger.warn(

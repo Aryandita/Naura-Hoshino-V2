@@ -394,7 +394,7 @@ module.exports = async (interaction, client) => {
         musicData.textChannel = player.is247 ? player.textChannel : null;
         guildData.music = musicData;
         guildData.changed("music", true);
-        await guildData.save();
+        await guildData.save({ fields: ["music"] });
         cacheManager.invalidateGuildSettings(interaction.guildId);
       } catch (e) {}
 

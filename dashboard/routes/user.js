@@ -138,15 +138,15 @@ module.exports = (client) => {
         });
       }
 
-      const mutator = await cacheManager.mutateUserProfileJson(req.user.id);
-      if (mutator) {
-        mutator.aiPersona = {
+      await cacheManager.mutateUserProfileJson(
+        req.user.id,
+        "aiPersona",
+        () => ({
           name: name || null,
           systemPrompt: systemPrompt || null,
           avatarUrl: avatarUrl || null,
-        };
-        await mutator.save();
-      }
+        }),
+      );
 
       res.json({ success: true, message: "Persona AI berhasil diperbarui!" });
     } catch (e) {

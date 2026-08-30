@@ -109,7 +109,7 @@ module.exports = {
       if (!selected) return;
 
       achievementData.activeTitle = selected.id;
-      await achievementData.save();
+      await achievementData.save({ fields: ["activeTitle"] });
 
       const files = [];
       let bannerName;

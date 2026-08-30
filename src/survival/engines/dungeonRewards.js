@@ -75,7 +75,15 @@ async function bumpDungeonQuest(userId) {
       quest.lastReset = today;
     }
     quest.dungeonKills = (quest.dungeonKills || 0) + 1;
-    await quest.save();
+    await quest.save({
+      fields: [
+        "workCount",
+        "dungeonKills",
+        "collectCount",
+        "isClaimed",
+        "lastReset",
+      ],
+    });
   } catch (err) {
     // Misi harian hanya pelengkap; kegagalannya tidak boleh membatalkan hadiah.
   }

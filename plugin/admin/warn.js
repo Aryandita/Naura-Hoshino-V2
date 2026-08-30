@@ -211,7 +211,14 @@ module.exports = {
           strikeRecord.tempbanExpiresAt = new Date(Date.now() + 86400000); // 1 hari
         }
 
-        await strikeRecord.save();
+        await strikeRecord.save({
+          fields: [
+            "strikes",
+            "lastStrikeAt",
+            "isTempBanned",
+            "tempbanExpiresAt",
+          ],
+        });
       } catch (err) {
         logger.error("[Warn] Gagal mengelola strike: " + err.message);
       }

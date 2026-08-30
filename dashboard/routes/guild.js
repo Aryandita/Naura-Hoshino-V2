@@ -14,7 +14,7 @@ const express = require("express");
 const { EmbedBuilder } = require("discord.js");
 const { logger } = require("../../src/managers/logger");
 const ui = require("../../src/config/ui");
-const GuildSettings = require("../../src/models/GuildSettings");
+const guildSettingsService = require("../../src/managers/guildSettingsService");
 const { requireGuildManager } = require("../middleware/auth");
 
 /** Nilai bawaan tata letak kartu welcomer. */
@@ -59,11 +59,6 @@ function toBool(value) {
   return value === true || value === "true";
 }
 
-async function loadSettingsModel(guildId) {
-  const [model] = await GuildSettings.findOrCreate({ where: { guildId } });
-  return model;
-}
-
 module.exports = (client) => {
   const router = express.Router();
 
@@ -72,8 +67,8 @@ module.exports = (client) => {
   // ------------------------------------------------------------------
   router.get("/api/settings/load", requireGuildManager, async (req, res) => {
     try {
-      const model = await loadSettingsModel(req.guildId);
-      const settings = model.settings || {};
+      const settings =
+        (await guildSettingsService.getGuildSetting(req.guildId)) || {};
       const ai = settings.ai || {};
 
       // Kompatibilitas: versi lama menyimpan slug & persona di akar objek,
@@ -106,30 +101,20 @@ module.exports = (client) => {
         serverKnowledge,
       } = req.body;
 
-      const model = await loadSettingsModel(req.guildId);
-      const settings = model.settings || {};
+      await guildSettingsService.updateGuildSetting(req.guildId, (settings) => {
+        if (prefix !== undefined) settings.prefix = String(prefix).slice(0, 8);
+        if (automod !== undefined) settings.automod = toBool(automod);
+        if (twentyFourSeven !== undefined)
+          settings.twentyFourSeven = toBool(twentyFourSeven);
 
-      if (prefix !== undefined) settings.prefix = String(prefix).slice(0, 8);
-      if (automod !== undefined) settings.automod = toBool(automod);
-      if (twentyFourSeven !== undefined)
-        settings.twentyFourSeven = toBool(twentyFourSeven);
-
-      if (!settings.ai) settings.ai = {};
-      if (verbaSlug1 !== undefined) settings.ai.verbaSlug1 = verbaSlug1;
-      if (verbaSlug2 !== undefined) settings.ai.verbaSlug2 = verbaSlug2;
-      if (customPersona !== undefined)
-        settings.ai.customPersona = String(customPersona).slice(0, 500);
-      if (serverKnowledge !== undefined)
-        settings.ai.serverKnowledge = String(serverKnowledge).slice(0, 1000);
-
-      model.settings = settings;
-      model.changed("settings", true);
-      // Rule 1.8/1.10: fields eksplisit + invalidasi cache lintas shard agar
-      // bot langsung membaca pengaturan terbaru.
-      await model.save({ fields: ["settings"] });
-      await require("../../src/managers/cacheManager")
-        .invalidateGuildSettings(req.guildId)
-        .catch(() => {});
+        if (!settings.ai) settings.ai = {};
+        if (verbaSlug1 !== undefined) settings.ai.verbaSlug1 = verbaSlug1;
+        if (verbaSlug2 !== undefined) settings.ai.verbaSlug2 = verbaSlug2;
+        if (customPersona !== undefined)
+          settings.ai.customPersona = String(customPersona).slice(0, 500);
+        if (serverKnowledge !== undefined)
+          settings.ai.serverKnowledge = String(serverKnowledge).slice(0, 1000);
+      });
 
       res.json({ success: true, message: "Pengaturannya sudah Naura simpan!" });
     } catch (e) {
@@ -145,8 +130,8 @@ module.exports = (client) => {
   // ------------------------------------------------------------------
   router.get("/api/welcomer", requireGuildManager, async (req, res) => {
     try {
-      const model = await loadSettingsModel(req.guildId);
-      const settings = model.settings || {};
+      const settings =
+        (await guildSettingsService.getGuildSetting(req.guildId)) || {};
       const saved = settings.greetings?.welcome || {};
 
       res.json({
@@ -165,40 +150,33 @@ module.exports = (client) => {
   router.post("/api/welcomer", requireGuildManager, async (req, res) => {
     try {
       const body = req.body || {};
-      const model = await loadSettingsModel(req.guildId);
-      const settings = model.settings || {};
 
-      if (!settings.greetings) settings.greetings = {};
-      const welcome = {
-        ...WELCOME_DEFAULTS,
-        color: ui.getColor("welcome") || ui.getColor("primary"),
-        ...(settings.greetings.welcome || {}),
-      };
+      await guildSettingsService.updateGuildSetting(req.guildId, (settings) => {
+        if (!settings.greetings) settings.greetings = {};
+        const welcome = {
+          ...WELCOME_DEFAULTS,
+          color: ui.getColor("welcome") || ui.getColor("primary"),
+          ...(settings.greetings.welcome || {}),
+        };
 
-      welcome.enabled = toBool(body.enabled);
-      welcome.channelId = body.channelId || null;
-      welcome.background = body.backgroundUrl || null;
-      welcome.message = body.message || null;
-      welcome.titleText = body.titleText || WELCOME_DEFAULTS.titleText;
-      welcome.glowColor = body.glowColor || WELCOME_DEFAULTS.glowColor;
+        welcome.enabled = toBool(body.enabled);
+        welcome.channelId = body.channelId || null;
+        welcome.background = body.backgroundUrl || null;
+        welcome.message = body.message || null;
+        welcome.titleText = body.titleText || WELCOME_DEFAULTS.titleText;
+        welcome.glowColor = body.glowColor || WELCOME_DEFAULTS.glowColor;
 
-      for (const key of NUMERIC_WELCOME_KEYS) {
-        const raw = body[key];
-        welcome[key] =
-          raw !== undefined && raw !== null && raw !== ""
-            ? Number(raw)
-            : WELCOME_DEFAULTS[key];
-        if (Number.isNaN(welcome[key])) welcome[key] = WELCOME_DEFAULTS[key];
-      }
+        for (const key of NUMERIC_WELCOME_KEYS) {
+          const raw = body[key];
+          welcome[key] =
+            raw !== undefined && raw !== null && raw !== ""
+              ? Number(raw)
+              : WELCOME_DEFAULTS[key];
+          if (Number.isNaN(welcome[key])) welcome[key] = WELCOME_DEFAULTS[key];
+        }
 
-      settings.greetings.welcome = welcome;
-      model.settings = settings;
-      model.changed("settings", true);
-      // Rule 1.8/1.10: fields eksplisit + invalidasi cache lintas shard.
-      await model.save({ fields: ["settings"] });
-      await require("../../src/managers/cacheManager")
-        .invalidateGuildSettings(req.guildId)
-        .catch(() => {});
+        settings.greetings.welcome = welcome;
+      });
 
       res.json({
         success: true,
@@ -225,9 +203,7 @@ module.exports = (client) => {
           .json({ error: "Username dan pesan wajib diisi." });
       }
 
-      const settings = await GuildSettings.findOne({
-        where: { guildId: req.guildId },
-      });
+      const settings = await guildSettingsService.getGuildSetting(req.guildId);
       const mc = settings?.settings?.minecraft;
       if (!mc)
         return res

@@ -103,7 +103,7 @@ module.exports = [
           });
           wDeck.wins += 1;
           wDeck.eloRating += 25;
-          await wDeck.save();
+          await wDeck.save({ fields: ["wins", "eloRating"] });
 
           const loserId =
             session.turn === 1 ? session.p2UserId : session.p1UserId;
@@ -112,7 +112,7 @@ module.exports = [
           });
           lDeck.losses += 1;
           lDeck.eloRating = Math.max(500, lDeck.eloRating - 20);
-          await lDeck.save();
+          await lDeck.save({ fields: ["losses", "eloRating"] });
 
           // Bet reward payout
           if (session.betAmount > 0) {
@@ -129,7 +129,7 @@ module.exports = [
           deck.towerFloor += 1;
           if (deck.towerFloor > deck.highestFloor)
             deck.highestFloor = deck.towerFloor;
-          await deck.save();
+          await deck.save({ fields: ["towerFloor", "highestFloor"] });
 
           // Tower floor reward
           const frags = session.towerFloor * 50;

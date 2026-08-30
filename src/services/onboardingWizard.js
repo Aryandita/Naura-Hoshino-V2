@@ -167,21 +167,15 @@ async function applyPreset(guild, presetKey, adminUser = null) {
   // 2. Simpan konfigurasi ke GuildSettings
   let updatedSettings = null;
   try {
-    let settings = await GuildSettings.findOne({
-      where: { guildId: guild.id },
-    });
-    if (!settings) {
-      settings = await GuildSettings.create({
-        guildId: guild.id,
-        settings: settingsToUpdate,
-      });
-    } else {
-      const merged = { ...(settings.settings || {}), ...settingsToUpdate };
-      settings.settings = merged;
-      await settings.save();
-    }
-    await cacheManager.invalidateGuildSettings(guild.id);
-    updatedSettings = settings.settings;
+    const guildSettingsService = require("../managers/guildSettingsService");
+    const updated = await guildSettingsService.updateGuildSetting(
+      guild.id,
+      (current) => ({
+        ...(current || {}),
+        ...settingsToUpdate,
+      }),
+    );
+    updatedSettings = updated?.settings || null;
   } catch (err) {
     logger.error(`[OnboardingWizard] Gagal menyimpan settings: ${err.message}`);
   }

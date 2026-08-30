@@ -84,7 +84,7 @@ class PetHabitatEngine {
     pet.petLevel = newLevel;
     pet.affection = Math.min(100, Number(pet.affection || 0) + 15);
     pet.mood = pet.cosmicAura ? "ascended" : "energized";
-    await pet.save();
+    await pet.save({ fields: ["petExp", "petLevel", "affection", "mood"] });
 
     logger.info(
       `[PetHabitat] User ${userId} bermain dengan pet ${pet.petName || pet.petType}. Affection: ${pet.affection}`,
@@ -137,7 +137,18 @@ class PetHabitatEngine {
     pet1.mood = "ascended";
     pet1.petLevel = 1;
     pet1.petExp = 0;
-    await pet1.save();
+    await pet1.save({
+      fields: [
+        "petType",
+        "cosmicAura",
+        "evolutionStage",
+        "fusionCount",
+        "passiveSkill",
+        "mood",
+        "petLevel",
+        "petExp",
+      ],
+    });
 
     logger.info(
       `[PetHabitat] User ${userId} membangkitkan Cosmic Pet: ${pet1.petType} (#${pet1.id})!`,

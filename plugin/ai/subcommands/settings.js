@@ -3,7 +3,7 @@
 const { PermissionsBitField } = require("discord.js");
 
 const ui = require("../../../src/config/ui");
-const GuildSettings = require("../../../src/models/GuildSettings");
+const guildSettingsService = require("../../../src/managers/guildSettingsService");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -41,11 +41,11 @@ function overviewCard(interaction, ai) {
     "Ini pengaturan AI yang sedang Naura pakai di server kamu:",
     "",
     "**Sifat kustom (persona):**",
-    asBlock(ai.customPersona, "Belum diatur, jadi Naura tampil apa adanya"),
+    asBlock(ai?.customPersona, "Belum diatur, jadi Naura tampil apa adanya"),
     "",
     "**FAQ / basis pengetahuan server:**",
     asBlock(
-      ai.serverKnowledge,
+      ai?.serverKnowledge,
       "Belum diatur, Naura belum punya catatan khusus",
     ),
   ].join("\n");
@@ -83,53 +83,54 @@ module.exports = async function settings(interaction) {
   const newPersona = interaction.options.getString("persona");
   const newKnowledge = interaction.options.getString("knowledge");
 
-  const [row] = await GuildSettings.findOrCreate({
-    where: { guildId: interaction.guild.id },
-  });
-  const settingsData = row.settings || {};
-  if (!settingsData.ai) settingsData.ai = {};
-
   if (newPersona === null && newKnowledge === null) {
+    const settingsData =
+      (await guildSettingsService.getGuildSetting(interaction.guild.id)) || {};
     return interaction.editReply(overviewCard(interaction, settingsData.ai));
+  }
+
+  if (newPersona !== null && newPersona.length > MAX_PERSONA) {
+    return interaction.editReply(
+      failCard(
+        "Personanya kepanjangan",
+        `Naura cuma sanggup mengingat sampai **${MAX_PERSONA} karakter**. Coba diringkas sedikit yaa?`,
+      ),
+    );
+  }
+
+  if (newKnowledge !== null && newKnowledge.length > MAX_KNOWLEDGE) {
+    return interaction.editReply(
+      failCard(
+        "Catatannya kepanjangan",
+        `FAQ server maksimal **${MAX_KNOWLEDGE} karakter** yaa. Ambil bagian yang paling penting saja.`,
+      ),
+    );
   }
 
   const changes = [];
 
-  if (newPersona !== null) {
-    if (newPersona.length > MAX_PERSONA) {
-      return interaction.editReply(
-        failCard(
-          "Personanya kepanjangan",
-          `Naura cuma sanggup mengingat sampai **${MAX_PERSONA} karakter**. Coba diringkas sedikit yaa?`,
-        ),
-      );
-    }
-    settingsData.ai.customPersona =
-      newPersona.trim() === "" ? null : newPersona.trim();
-    changes.push(
-      `${e("cheers", "\u2705")} Sifat khusus Naura sudah diperbarui.`,
-    );
-  }
+  await guildSettingsService.updateGuildSetting(
+    interaction.guild.id,
+    (settingsData) => {
+      if (!settingsData.ai) settingsData.ai = {};
 
-  if (newKnowledge !== null) {
-    if (newKnowledge.length > MAX_KNOWLEDGE) {
-      return interaction.editReply(
-        failCard(
-          "Catatannya kepanjangan",
-          `FAQ server maksimal **${MAX_KNOWLEDGE} karakter** yaa. Ambil bagian yang paling penting saja.`,
-        ),
-      );
-    }
-    settingsData.ai.serverKnowledge =
-      newKnowledge.trim() === "" ? null : newKnowledge.trim();
-    changes.push(
-      `${e("cheers", "\u2705")} Catatan khusus server sudah Naura simpan.`,
-    );
-  }
+      if (newPersona !== null) {
+        settingsData.ai.customPersona =
+          newPersona.trim() === "" ? null : newPersona.trim();
+        changes.push(
+          `${e("cheers", "\u2705")} Sifat khusus Naura sudah diperbarui.`,
+        );
+      }
 
-  row.settings = settingsData;
-  row.changed("settings", true);
-  await row.save({ fields: ["settings"] });
+      if (newKnowledge !== null) {
+        settingsData.ai.serverKnowledge =
+          newKnowledge.trim() === "" ? null : newKnowledge.trim();
+        changes.push(
+          `${e("cheers", "\u2705")} Catatan khusus server sudah Naura simpan.`,
+        );
+      }
+    },
+  );
 
   const payload = buildContainerV2({
     accentColorHex: ui.getColor("success") || "#22c55e",

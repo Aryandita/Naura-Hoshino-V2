@@ -107,8 +107,9 @@ class ColiseumEngine {
       });
     } else if (formation && Array.isArray(formation)) {
       team.formation = formation;
+      team.changed("formation", true);
       if (teamName) team.teamName = teamName;
-      await team.save();
+      await team.save({ fields: ["formation", "teamName"] });
     }
 
     return team.toJSON();
@@ -128,44 +129,48 @@ class ColiseumEngine {
         teamName: "Phantom Elite AI",
         eloRating: Math.max(
           1000,
-          userElo + Math.floor(Math.random() * 60 - 30),
+          Math.min(1500, userElo + Math.floor(Math.random() * 60) - 30),
         ),
         divisionTier: getDivision(userElo),
         formation: [
           {
             slot: 1,
-            name: "Shadowblade",
-            type: "DPS",
-            atk: 80,
-            def: 40,
-            hp: 200,
+            name: "Cyber Mech Guardian",
+            hp: 250,
+            atk: 35,
+            def: 25,
+            speed: 10,
           },
           {
             slot: 2,
-            name: "Titan Barrier",
-            type: "TANK",
-            atk: 40,
-            def: 80,
-            hp: 300,
+            name: "Holo Assassin",
+            hp: 180,
+            atk: 55,
+            def: 15,
+            speed: 25,
           },
           {
             slot: 3,
-            name: "Nano Priest",
-            type: "SUPPORT",
-            atk: 50,
-            def: 45,
-            hp: 220,
+            name: "Plasma Sorceress",
+            hp: 160,
+            atk: 65,
+            def: 10,
+            speed: 18,
           },
         ],
       };
     }
 
-    // Pilih lawan dengan Elo terdekat
+    // Matchmaking acak dengan rentang ELO terdekat
     potentialOpponents.sort(
       (a, b) =>
         Math.abs(a.eloRating - userElo) - Math.abs(b.eloRating - userElo),
     );
-    return potentialOpponents[0].toJSON();
+    const selected =
+      potentialOpponents[
+        Math.floor(Math.random() * Math.min(3, potentialOpponents.length))
+      ];
+    return selected.toJSON();
   }
 
   /**
@@ -236,7 +241,15 @@ class ColiseumEngine {
       if (isAttackerVictory) teamRecord.wins += 1;
       else teamRecord.losses += 1;
       teamRecord.lastFoughtAt = new Date();
-      await teamRecord.save();
+      await teamRecord.save({
+        fields: [
+          "eloRating",
+          "divisionTier",
+          "wins",
+          "losses",
+          "lastFoughtAt",
+        ],
+      });
     }
 
     // Reward koin

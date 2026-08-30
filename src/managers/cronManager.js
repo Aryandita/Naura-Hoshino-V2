@@ -60,7 +60,7 @@ module.exports = {
           }
           record.isTempBanned = false;
           record.tempbanExpiresAt = null;
-          await record.save();
+          await record.save({ fields: ["isTempBanned", "tempbanExpiresAt"] });
         }
       } catch (err) {
         logger.error("[Cron] Gagal memproses Tempban:", err);
@@ -388,7 +388,7 @@ module.exports = {
 
             guildData.settings = currentSettings;
             guildData.changed("settings", true);
-            await guildData.save();
+            await guildData.save({ fields: ["settings"] });
           }
         }
       } catch (err) {
@@ -762,7 +762,7 @@ module.exports = {
 
         for (const market of expiredMarkets) {
           market.status = "LOCKED";
-          await market.save();
+          await market.save({ fields: ["status"] });
           const redisManager = require("./redisManager");
           if (redisManager.isReady) {
             await redisManager.deleteCache(
@@ -839,7 +839,7 @@ module.exports = {
                     : t.eloRating >= 1300
                       ? "SILVER"
                       : "BRONZE";
-          await t.save();
+          await t.save({ fields: ["eloRating", "divisionTier"] });
         }
       } catch (err) {
         logger.error("[Cron Coliseum Reset Error]", err);

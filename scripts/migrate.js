@@ -19,6 +19,7 @@
  * berhenti sebelum bot dinyalakan.
  */
 
+const env = require("../src/config/env");
 const { logger } = require("../src/managers/logger");
 
 // Pintu darurat. Bila database sedang mati dan bot harus tetap dinyalakan di atas skema
@@ -26,7 +27,7 @@ const { logger } = require("../src/managers/logger");
 // tidak akan pernah dibuat, dan fitur yang bergantung padanya akan gagal.
 const SKIP_VALUES = new Set(["1", "true", "yes"]);
 
-if (SKIP_VALUES.has(String(process.env.SKIP_DB_MIGRATE || "").toLowerCase())) {
+if (SKIP_VALUES.has(String(env.SKIP_DB_MIGRATE || "").toLowerCase())) {
   logger.warn(
     "[MIGRATE] SKIP_DB_MIGRATE aktif. Migrasi DILEWATI dan skema database tidak diperiksa.",
   );

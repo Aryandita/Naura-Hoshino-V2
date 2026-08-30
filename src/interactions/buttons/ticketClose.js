@@ -68,7 +68,7 @@ module.exports = [
         // Update Database
         ticket.status = "closed";
         ticket.transcriptPath = `/transcripts/${transcriptFileName}`;
-        await ticket.save();
+        await ticket.save({ fields: ["status", "transcriptPath"] });
 
         // DM User
         try {

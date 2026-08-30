@@ -202,7 +202,9 @@ module.exports = {
       if (npcData.affection >= 90 && npcData.relationshipLevel < 3)
         npcData.relationshipLevel = 3;
       npcData.lastInteraction = new Date();
-      await npcData.save();
+      await npcData.save({
+        fields: ["affection", "relationshipLevel", "lastInteraction"],
+      });
 
       const portrait = findPortrait(selectedNPC);
       const files = [];

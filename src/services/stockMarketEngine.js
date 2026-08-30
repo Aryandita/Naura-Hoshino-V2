@@ -124,7 +124,7 @@ class StockMarketEngine {
           ((totalOldCost + totalCost) / newTotalShares).toFixed(2),
         );
         holding.sharesOwned = newTotalShares;
-        await holding.save();
+        await holding.save({ fields: ["avgBuyPrice", "sharesOwned"] });
       }
 
       // Sedikit dorong harga naik (+0.1% per 10 lembar)
@@ -133,7 +133,7 @@ class StockMarketEngine {
       stock.currentPrice = Number(
         (stock.currentPrice * priceImpact).toFixed(2),
       );
-      await stock.save();
+      await stock.save({ fields: ["previousPrice", "currentPrice"] });
 
       logger.info(
         `[StockMarket] User ${userId} membeli ${qty} lembar ${ticker} seharga ${totalCost} ⭐.`,
@@ -166,7 +166,7 @@ class StockMarketEngine {
       if (holding.sharesOwned <= 0) {
         await holding.destroy();
       } else {
-        await holding.save();
+        await holding.save({ fields: ["sharesOwned"] });
       }
 
       await cacheManager.incrementUserSurvival(
@@ -182,7 +182,7 @@ class StockMarketEngine {
         10.0,
         Number((stock.currentPrice * priceImpact).toFixed(2)),
       );
-      await stock.save();
+      await stock.save({ fields: ["previousPrice", "currentPrice"] });
 
       logger.info(
         `[StockMarket] User ${userId} menjual ${qty} lembar ${ticker} dan menerima ${totalCost} ⭐.`,
@@ -271,7 +271,7 @@ class StockMarketEngine {
     }
 
     clan.vault = Number(clan.vault || 0) - ipoCost;
-    await clan.save();
+    await clan.save({ fields: ["vault"] });
 
     const newStock = await ServerStock.create({
       ticker: cleanTicker,
@@ -319,7 +319,10 @@ class StockMarketEngine {
       if (history.length > 24) history = history.slice(-24);
 
       stock.history24h = history;
-      await stock.save();
+      stock.changed("history24h", true);
+      await stock.save({
+        fields: ["previousPrice", "currentPrice", "history24h"],
+      });
     }
   }
 }

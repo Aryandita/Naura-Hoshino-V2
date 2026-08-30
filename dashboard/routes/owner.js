@@ -282,7 +282,7 @@ module.exports = (client) => {
         where: { guildId },
       });
       guildData.aiVoiceEnabled = !!status;
-      await guildData.save();
+      await guildData.save({ fields: ["aiVoiceEnabled"] });
       res.json({
         success: true,
         message: `AI Voice server ${guildId} kini ${status ? "AKTIF" : "MATI"}.`,
@@ -376,7 +376,7 @@ module.exports = (client) => {
 
       guildData.settings = settings;
       guildData.changed("settings", true);
-      await guildData.save();
+      await guildData.save({ fields: ["settings"] });
       res.json({
         success: true,
         message: `Setup [${type}] tersimpan untuk server ${guildId}.`,

@@ -119,7 +119,8 @@ class GuildHallEngine {
     clan.vault = Number(clan.vault || 0) - item.cost;
     layout.furniture.push(furnitureId);
     clan.hallLayout = layout;
-    await clan.save();
+    clan.changed("hallLayout", true);
+    await clan.save({ fields: ["vault", "hallLayout"] });
 
     logger.info(
       `[GuildHall] Klan ${clan.name} membeli furnitur ${item.name} seharga ${item.cost} ⭐.`,

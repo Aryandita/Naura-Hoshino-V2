@@ -86,7 +86,7 @@ async function grantVoteRewards(
         unlocked.push("naura_biggest_fan");
         userAch.unlockedAchievements = unlocked;
         userAch.changed("unlockedAchievements", true);
-        await userAch.save();
+        await userAch.save({ fields: ["unlockedAchievements"] });
         unlockedBiggestFan = true;
 
         // Hadiahkan Starter Plan (7 Hari)

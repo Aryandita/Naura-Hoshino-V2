@@ -44,7 +44,7 @@ async function runRedeem(interaction, profile) {
   voucher.isRedeemed = true;
   voucher.redeemedBy = interaction.user.id;
   voucher.redeemedAt = new Date();
-  await voucher.save();
+  await voucher.save({ fields: ["isRedeemed", "redeemedBy", "redeemedAt"] });
 
   const newExpiry = await store.grantPremium(
     interaction.user.id,

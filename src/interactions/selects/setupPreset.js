@@ -91,7 +91,7 @@ module.exports = [
 
         settings.settings = currentSettings;
         settings.changed("settings", true);
-        await settings.save();
+        await settings.save({ fields: ["settings"] });
 
         // Jangan lupa membersihkan cache
         cacheManager.invalidateGuildSettings(guildId);

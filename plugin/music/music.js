@@ -175,7 +175,7 @@ async function runMusicLogic(
         textChannel: player.textChannel,
       };
       guildData.changed("music", true);
-      await guildData.save();
+      await guildData.save({ fields: ["music"] });
 
       if (!player.isPlaying && !player.isPaused) player.play();
       const connPayload = buildContainerV2({
@@ -1242,7 +1242,7 @@ async function runMusicLogic(
         textChannel: player.is247 ? player.textChannel : null,
       };
       guildData.changed("music", true);
-      await guildData.save();
+      await guildData.save({ fields: ["music"] });
       cacheManager.invalidateGuildSettings(guild.id);
     } catch (e) {}
 

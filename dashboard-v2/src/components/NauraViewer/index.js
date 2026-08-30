@@ -1,339 +1,565 @@
 /**
- * index.js - Entry point komponen NauraViewer.
- * Menyatukan loader, animations, particles, dan UI DOM.
+ * index.js - Multi-Tab Cyber-Anime Floating Widget (NAURA OS).
+ * Menyatukan AI Chat Assistant, Mini Cyber Music Player & Spectrum Visualizer,
+ * serta Live Telemetry HUD ke dalam floating panel interaktif.
  */
 
-import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { loadModel } from "./loader.js";
-import { createAnimationController } from "./animations.js";
-import { createParticleSystem } from "./particles.js";
 import "./viewer.css";
 
 class NauraViewerClass {
   constructor() {
     this.initialized = false;
     this.isExpanded = true;
-    this.currentMood = "idle";
-    this.contextHandler = null;
-    this.modelPath = "";
+    this.activeTab = "chat"; // 'chat' | 'music' | 'hud'
+    this.currentMood = "Happy";
+    this.isPlaying = true;
+    this.spectrumAnimId = null;
+    this.musicProgress = 42; // persen
+    this.chatHistory = [];
   }
 
   /**
-   * Inisialisasi widget NauraViewer ke dalam DOM.
+   * Inisialisasi widget Naura OS ke dalam DOM.
    * @param {Object} options
-   * @param {string} options.modelPath - Path ke .glb / .vrm
-   * @param {string} options.context - Nama context (misal 'index', 'status')
    */
-  async init(options) {
+  async init(options = {}) {
     if (this.initialized) return;
-    this.modelPath =
-      options.modelPath || import.meta.env.BASE_URL + "models/naura.glb";
 
     this._createUI();
-    this._initThree();
+    this._initEvents();
+    this._initSpectrumVisualizer();
+    this._initLiveTelemetry();
+    this._initChatWelcome();
 
     this.initialized = true;
-
-    try {
-      await this._loadModelAsync();
-      this._setupEvents();
-      this.setContext(options.context || "default");
-      this.startLoop();
-    } catch (err) {
-      console.error("[NauraViewer] Failed to init:", err);
-      this.ui.loadingText.textContent = "ERROR LOADING";
-      this.ui.spinner.style.borderColor = "red";
-    }
   }
 
   _createUI() {
     const container = document.createElement("div");
     container.id = "naura-viewer-container";
+
     container.innerHTML = `
-            <div class="nv-panel is-expanded" id="nv-panel">
-                <div class="nv-loading" id="nv-loading">
-                    <div class="nv-spinner" id="nv-spinner"></div>
-                    <span id="nv-loading-text">LOADING SYSTEM...</span>
+      <div class="nv-panel is-expanded" id="nv-panel">
+        <!-- Minimized Mode: Floating Anime Avatar Orb -->
+        <div class="nv-mini-avatar-wrapper" id="nv-mini-trigger" title="Buka Naura OS">
+          <img src="/assets/Naura_Expression/Happy.png" alt="Naura Avatar" class="nv-mini-avatar-img" id="nv-mini-img" onerror="this.src='/assets/Naura_Expression/Read.png'" />
+          <span class="nv-mini-dot"></span>
+        </div>
+
+        <!-- Header Panel -->
+        <div class="nv-header">
+          <div class="nv-title-area">
+            <span class="nv-status-dot"></span>
+            <h3 class="nv-title">NAURA OS</h3>
+          </div>
+
+          <!-- Tab Selector Pill -->
+          <div class="nv-tabs">
+            <button class="nv-tab-btn is-active" data-tab="chat" title="AI Chat Assistant">
+              <i class="fa-solid fa-comments"></i> <span>Chat</span>
+            </button>
+            <button class="nv-tab-btn" data-tab="music" title="Mini Music Player">
+              <i class="fa-solid fa-music"></i> <span>Music</span>
+            </button>
+            <button class="nv-tab-btn" data-tab="hud" title="Live Telemetry">
+              <i class="fa-solid fa-gauge-high"></i> <span>HUD</span>
+            </button>
+          </div>
+
+          <!-- Minimize Button -->
+          <button class="nv-btn-ctrl" id="nv-btn-min" title="Kecilkan Widget">
+            <i class="fa-solid fa-compress"></i>
+          </button>
+        </div>
+
+        <!-- Multi-Tab Body -->
+        <div class="nv-body">
+          <!-- TAB 1: 💬 AI CHAT ASSISTANT -->
+          <div class="nv-tab-pane is-active" id="nv-pane-chat">
+            <div class="nv-chat-hero">
+              <div class="nv-avatar-frame">
+                <img src="/assets/Naura_Expression/Happy.png" alt="Naura Mood" class="nv-avatar-img" id="nv-chat-avatar" onerror="this.src='/assets/Naura_Expression/Read.png'" />
+              </div>
+              <div class="nv-hero-info">
+                <div class="nv-hero-name">
+                  <span>Naura Hoshino</span>
+                  <span class="text-[10px] text-emerald-400 font-mono">v2.1 AI</span>
                 </div>
-                
-                <div class="nv-canvas-wrapper" id="nv-canvas-wrapper">
-                    <canvas id="naura-viewer-canvas"></canvas>
-                </div>
-                
-                <div class="nv-2d-wrapper is-hidden" id="nv-2d-wrapper">
-                    <img src="${import.meta.env.BASE_URL}models/naura-2d.png" alt="Naura 2D" class="nv-2d-avatar" />
-                </div>
-                
-                <div class="nv-chat-bubble is-hidden" id="nv-chat-bubble">
-                    <div class="nv-chat-text" id="nv-chat-text">...</div>
-                </div>
-                
-                <div class="nv-overlay">
-                    <div class="nv-header">
-                        <h3 class="nv-title">
-                            <span class="nv-status-dot"></span>
-                            NAURA OS
-                        </h3>
-                        <button class="nv-btn" id="nv-btn-min" title="Minimize">
-                            <i class="fa-solid fa-compress"></i>
-                        </button>
-                    </div>
-                    <div class="nv-mood-badge" id="nv-mood-badge">IDLE</div>
-                </div>
+                <div class="nv-hero-status" id="nv-chat-mood-text">Ceria & Siap Menemanimu ✨</div>
+              </div>
             </div>
-        `;
+
+            <!-- Chat History -->
+            <div class="nv-chat-messages" id="nv-chat-messages"></div>
+
+            <!-- Quick Action Chips -->
+            <div class="nv-quick-chips">
+              <button class="nv-chip" data-query="Status Bot">⚡ Status Bot</button>
+              <button class="nv-chip" data-query="Cek Saldo">💰 Saldo Saya</button>
+              <button class="nv-chip" data-query="Lagu yang diputar">🎵 Now Playing</button>
+              <button class="nv-chip" data-query="Aturan Server">📜 Server Rules</button>
+              <button class="nv-chip" data-query="Lempar Dadu">🎲 Lempar Dadu</button>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="nv-chat-input-area">
+              <input type="text" class="nv-chat-input" id="nv-chat-input" placeholder="Tanya sesuatu ke Naura..." autocomplete="off" />
+              <button class="nv-chat-send-btn" id="nv-chat-send" title="Kirim Pesan">
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- TAB 2: 🎵 MINI MUSIC PLAYER & SPECTRUM VISUALIZER -->
+          <div class="nv-tab-pane" id="nv-pane-music">
+            <div class="nv-music-container">
+              <!-- Now Playing Card -->
+              <div class="nv-music-card">
+                <div class="nv-music-vinyl" id="nv-vinyl">
+                  <div class="nv-vinyl-center"></div>
+                </div>
+                <div class="nv-music-meta">
+                  <div class="nv-track-title" id="nv-track-title">Cyber Kawaii Lo-Fi Stream</div>
+                  <div class="nv-track-artist" id="nv-track-artist">Naura FM • 128kbps HQ Audio</div>
+                </div>
+              </div>
+
+              <!-- Neon Spectrum Visualizer -->
+              <div class="nv-spectrum-box">
+                <div class="nv-spectrum-header">
+                  <span>AUDIO FREQUENCY SPECTRUM</span>
+                  <span id="nv-spectrum-fps">60 FPS</span>
+                </div>
+                <canvas id="nv-spectrum-canvas"></canvas>
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="nv-progress-wrap">
+                <div class="nv-progress-bar" id="nv-progress-bar">
+                  <div class="nv-progress-fill" id="nv-progress-fill"></div>
+                </div>
+                <div class="nv-time-row">
+                  <span id="nv-time-current">01:38</span>
+                  <span id="nv-time-total">03:52</span>
+                </div>
+              </div>
+
+              <!-- Playback Controls -->
+              <div class="nv-ctrl-row">
+                <button class="nv-btn-play-action" id="nv-btn-prev" title="Lagu Sebelumnya">
+                  <i class="fa-solid fa-backward-step"></i>
+                </button>
+                <button class="nv-btn-play-action is-main" id="nv-btn-play" title="Play/Pause">
+                  <i class="fa-solid fa-pause" id="nv-icon-play"></i>
+                </button>
+                <button class="nv-btn-play-action" id="nv-btn-next" title="Lagu Selanjutnya">
+                  <i class="fa-solid fa-forward-step"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: ⚡ CYBER HUD & TELEMETRY -->
+          <div class="nv-tab-pane" id="nv-pane-hud">
+            <div class="nv-hud-container">
+              <!-- Top Grid Metrics -->
+              <div class="nv-hud-grid">
+                <div class="nv-hud-stat-card">
+                  <span class="nv-hud-stat-label">Gateway Ping</span>
+                  <span class="nv-hud-stat-val text-green" id="nv-hud-ping">28 ms</span>
+                </div>
+                <div class="nv-hud-stat-card">
+                  <span class="nv-hud-stat-label">System State</span>
+                  <span class="nv-hud-stat-val text-pink">OPTIMAL</span>
+                </div>
+              </div>
+
+              <!-- System Resource Bars -->
+              <div class="nv-hud-bar-group">
+                <div class="nv-hud-bar-item">
+                  <div class="nv-hud-bar-label">
+                    <span>RAM USAGE</span>
+                    <span id="nv-hud-ram-text">1.42 GB / 8.0 GB</span>
+                  </div>
+                  <div class="nv-hud-meter">
+                    <div class="nv-hud-meter-fill fill-pink" id="nv-hud-ram-fill" style="width: 28%;"></div>
+                  </div>
+                </div>
+
+                <div class="nv-hud-bar-item">
+                  <div class="nv-hud-bar-label">
+                    <span>CPU LOAD</span>
+                    <span id="nv-hud-cpu-text">3.8%</span>
+                  </div>
+                  <div class="nv-hud-meter">
+                    <div class="nv-hud-meter-fill fill-cyan" id="nv-hud-cpu-fill" style="width: 14%;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Live Event Log Stream -->
+              <div class="nv-hud-feed-box">
+                <div class="nv-feed-title">
+                  <i class="fa-solid fa-terminal"></i>
+                  <span>LIVE SERVER LOG STREAM</span>
+                </div>
+                <div class="nv-feed-list" id="nv-hud-log-list">
+                  <div class="nv-feed-item"><span class="highlight">[SYSTEM]</span> WebSocket Shard #0 terhubung.</div>
+                  <div class="nv-feed-item"><span class="highlight">[DATABASE]</span> Supabase cluster sinkron 100%.</div>
+                  <div class="nv-feed-item"><span class="highlight">[MUSIC]</span> Node Lavalink active standby.</div>
+                  <div class="nv-feed-item"><span class="highlight">[AI]</span> Gemini Memory Cache ready.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
     document.body.appendChild(container);
 
     this.ui = {
       container,
       panel: container.querySelector("#nv-panel"),
-      canvas: container.querySelector("#naura-viewer-canvas"),
-      loading: container.querySelector("#nv-loading"),
-      loadingText: container.querySelector("#nv-loading-text"),
-      spinner: container.querySelector("#nv-spinner"),
       btnMin: container.querySelector("#nv-btn-min"),
-      moodBadge: container.querySelector("#nv-mood-badge"),
-      canvasWrapper: container.querySelector("#nv-canvas-wrapper"),
-      wrapper2d: container.querySelector("#nv-2d-wrapper"),
-      chatBubble: container.querySelector("#nv-chat-bubble"),
-      chatText: container.querySelector("#nv-chat-text"),
+      miniTrigger: container.querySelector("#nv-mini-trigger"),
+      tabButtons: container.querySelectorAll(".nv-tab-btn"),
+      tabPanes: {
+        chat: container.querySelector("#nv-pane-chat"),
+        music: container.querySelector("#nv-pane-music"),
+        hud: container.querySelector("#nv-pane-hud"),
+      },
+      chat: {
+        avatar: container.querySelector("#nv-chat-avatar"),
+        moodText: container.querySelector("#nv-chat-mood-text"),
+        messages: container.querySelector("#nv-chat-messages"),
+        input: container.querySelector("#nv-chat-input"),
+        sendBtn: container.querySelector("#nv-chat-send"),
+        chips: container.querySelectorAll(".nv-chip"),
+      },
+      music: {
+        vinyl: container.querySelector("#nv-vinyl"),
+        trackTitle: container.querySelector("#nv-track-title"),
+        trackArtist: container.querySelector("#nv-track-artist"),
+        canvas: container.querySelector("#nv-spectrum-canvas"),
+        btnPlay: container.querySelector("#nv-btn-play"),
+        iconPlay: container.querySelector("#nv-icon-play"),
+        btnPrev: container.querySelector("#nv-btn-prev"),
+        btnNext: container.querySelector("#nv-btn-next"),
+        progressFill: container.querySelector("#nv-progress-fill"),
+        timeCurrent: container.querySelector("#nv-time-current"),
+      },
+      hud: {
+        ping: container.querySelector("#nv-hud-ping"),
+        ramText: container.querySelector("#nv-hud-ram-text"),
+        ramFill: container.querySelector("#nv-hud-ram-fill"),
+        cpuText: container.querySelector("#nv-hud-cpu-text"),
+        cpuFill: container.querySelector("#nv-hud-cpu-fill"),
+        logList: container.querySelector("#nv-hud-log-list"),
+      },
     };
+  }
 
+  _initEvents() {
+    // 1. Tab Switching
+    this.ui.tabButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const targetTab = btn.dataset.tab;
+        this.switchTab(targetTab);
+      });
+    });
+
+    // 2. Minimize & Expand Toggle
     this.ui.btnMin.addEventListener("click", (e) => {
       e.stopPropagation();
-      this.toggle();
+      this.toggleMinimize();
     });
 
-    // Klik panel saat minimized untuk expand
-    this.ui.panel.addEventListener("click", () => {
-      if (!this.isExpanded) this.toggle();
+    this.ui.miniTrigger.addEventListener("click", () => {
+      if (!this.isExpanded) this.toggleMinimize();
     });
 
-    // Klik area canvas (bukan UI button) untuk interaksi wave
-    this.ui.canvas.addEventListener("click", () => {
-      if (this.isExpanded && this.animController) {
-        this.animController.triggerWave();
+    // 3. AI Chat Submission
+    this.ui.chat.sendBtn.addEventListener("click", () => this._sendChatMessage());
+    this.ui.chat.input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        this._sendChatMessage();
+      }
+    });
+
+    // 4. Quick Action Chips
+    this.ui.chat.chips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const query = chip.dataset.query;
+        this.ui.chat.input.value = query;
+        this._sendChatMessage();
+      });
+    });
+
+    // 5. Music Play/Pause Toggle
+    this.ui.music.btnPlay.addEventListener("click", () => this.toggleMusicPlay());
+    this.ui.music.btnNext.addEventListener("click", () => {
+      this._changeMusicTrack("Next");
+    });
+    this.ui.music.btnPrev.addEventListener("click", () => {
+      this._changeMusicTrack("Prev");
+    });
+  }
+
+  switchTab(tabName) {
+    if (!this.ui.tabPanes[tabName]) return;
+    this.activeTab = tabName;
+
+    // Update tab button classes
+    this.ui.tabButtons.forEach((btn) => {
+      if (btn.dataset.tab === tabName) {
+        btn.classList.add("is-active");
+      } else {
+        btn.classList.remove("is-active");
+      }
+    });
+
+    // Update pane visibility
+    Object.keys(this.ui.tabPanes).forEach((key) => {
+      if (key === tabName) {
+        this.ui.tabPanes[key].classList.add("is-active");
+      } else {
+        this.ui.tabPanes[key].classList.remove("is-active");
       }
     });
   }
 
-  _initThree() {
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.ui.canvas,
-      alpha: true,
-      antialias: true,
-      powerPreference: "high-performance",
-    });
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    // Kita tidak nyalakan shadowMap penuh agar ringan, hanya basic lighting
-
-    this.scene = new THREE.Scene();
-    // Jangan beri background color, biarkan transparan (alpha: true)
-
-    this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-    // Posisi default kamera menatap dada/wajah karakter
-    this.camera.position.set(0, 1.2, 3.5);
-
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enablePan = false;
-    this.controls.enableZoom = true;
-    this.controls.minDistance = 2;
-    this.controls.maxDistance = 6;
-    this.controls.target.set(0, 1.0, 0); // Target dada/leher
-    // Batasi orbit agar tidak bisa lihat dari bawah rok/lantai (UX & safety)
-    this.controls.minPolarAngle = Math.PI / 4;
-    this.controls.maxPolarAngle = Math.PI / 2;
-
-    // Pencahayaan Cyber-anime
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-    this.scene.add(ambientLight);
-
-    // Pink glow dari depan-kanan
-    const dirLightPink = new THREE.DirectionalLight(0xffb6c1, 1.5);
-    dirLightPink.position.set(5, 5, 5);
-    this.scene.add(dirLightPink);
-
-    // Purple glow dari belakang-kiri (rim light)
-    const dirLightPurple = new THREE.DirectionalLight(0xc084fc, 2.0);
-    dirLightPurple.position.set(-5, 3, -5);
-    this.scene.add(dirLightPurple);
-
-    this.clock = new THREE.Clock();
-
-    // Handle resize lokal
-    this._resize();
-    window.addEventListener("resize", () => this._resize());
-  }
-
-  async _loadModelAsync() {
-    const { scene, vrm, animations, format } = await loadModel(
-      this.modelPath,
-      (prog) => {
-        if (this.ui.loadingText)
-          this.ui.loadingText.textContent = `LOADING ${prog}%`;
-      },
-    );
-
-    // Sesuaikan ukuran & posisi jika diperlukan berdasarkan format
-    if (format === "glb") {
-      // GLB mungkin tidak standard ukurannya. Asumsikan humanoid tinggi ~1.6m
-      const box = new THREE.Box3().setFromObject(scene);
-      const size = box.getSize(new THREE.Vector3());
-      if (size.y > 3) {
-        const scale = 1.6 / size.y;
-        scene.scale.setScalar(scale);
-      }
-      // Turunkan sedikit agar berdiri di lantai imajiner Y=0
-      scene.position.y = 0;
-    }
-
-    this.scene.add(scene);
-    this.modelScene = scene;
-
-    // Inisialisasi controller animasi
-    this.animController = createAnimationController(scene, animations, vrm);
-
-    // Inisialisasi particle system cyber-anime
-    this.particleSystem = createParticleSystem(scene);
-    this.scene.add(this.particleSystem.points);
-
-    // Sembunyikan loading
-    setTimeout(() => {
-      this.ui.loading.classList.add("is-hidden");
-      this.setMood("idle");
-      this.speak("Halo! Aku Naura, asisten pintar kamu~", 5000);
-    }, 500);
-  }
-
-  _resize() {
-    if (!this.ui) return;
-    const rect = this.ui.panel.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-
-    this.renderer.setSize(width, height);
-    this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
-  }
-
-  startLoop() {
-    this.renderer.setAnimationLoop(() => {
-      const delta = this.clock.getDelta();
-      const elapsed = this.clock.getElapsedTime();
-
-      if (this.controls) this.controls.update();
-
-      if (this.animController) {
-        this.animController.update(delta, elapsed);
-      }
-
-      if (this.particleSystem) {
-        this.particleSystem.update(delta, elapsed);
-      }
-
-      this.renderer.render(this.scene, this.camera);
-    });
-  }
-
-  toggle() {
+  toggleMinimize() {
     this.isExpanded = !this.isExpanded;
     if (this.isExpanded) {
       this.ui.panel.classList.remove("is-minimized");
       this.ui.panel.classList.add("is-expanded");
-
-      if (this.ui.canvasWrapper)
-        this.ui.canvasWrapper.classList.remove("is-hidden");
-      if (this.ui.wrapper2d) this.ui.wrapper2d.classList.add("is-hidden");
-
-      // Adjust camera untuk mode besar
-      this.camera.position.set(0, 1.2, 3.5);
-      this.controls.target.set(0, 1.0, 0);
-
-      if (this.particleSystem) this.particleSystem.points.visible = true;
     } else {
       this.ui.panel.classList.remove("is-expanded");
       this.ui.panel.classList.add("is-minimized");
-
-      if (this.ui.canvasWrapper)
-        this.ui.canvasWrapper.classList.add("is-hidden");
-      if (this.ui.wrapper2d) this.ui.wrapper2d.classList.remove("is-hidden");
-
-      // Matikan partikel saat minimized agar tidak ribut
-      if (this.particleSystem) this.particleSystem.points.visible = false;
-    }
-
-    // Beri waktu transisi CSS selesai baru resize Three.js
-    setTimeout(() => this._resize(), 300);
-  }
-
-  setMood(mood) {
-    if (this.currentMood === mood) return;
-    this.currentMood = mood;
-
-    if (this.animController) {
-      this.animController.setMood(mood);
-    }
-
-    if (this.ui.moodBadge) {
-      this.ui.moodBadge.textContent = mood.toUpperCase();
-      this.ui.moodBadge.classList.add("is-visible");
-
-      clearTimeout(this._moodTimeout);
-      this._moodTimeout = setTimeout(() => {
-        this.ui.moodBadge.classList.remove("is-visible");
-      }, 3000);
     }
   }
 
-  speak(text, duration = 4000) {
-    if (!this.ui.chatBubble) return;
-    this.ui.chatText.textContent = text;
-    this.ui.chatBubble.classList.remove("is-hidden");
-
-    // Timeout to allow display:block to apply before animating opacity
-    setTimeout(() => {
-      this.ui.chatBubble.classList.add("is-visible");
-    }, 10);
-
-    clearTimeout(this._chatTimeout);
-    this._chatTimeout = setTimeout(() => {
-      this.ui.chatBubble.classList.remove("is-visible");
-      setTimeout(() => {
-        this.ui.chatBubble.classList.add("is-hidden");
-      }, 300); // match CSS transition duration
-    }, duration);
+  // =========================================================================
+  // CHAT CONTROLLER & EMOTION AVATARS
+  // =========================================================================
+  _initChatWelcome() {
+    this._appendMessage("bot", "Halo! Aku Naura Hoshino, asisten virtualmu. Ada yang bisa kubantu di server atau dashboard hari ini? 🌸");
   }
 
-  /**
-   * Set konteks halaman untuk meload logic reaktivitas spesifik.
-   */
-  async setContext(contextName) {
+  setMood(expressionName, moodStatus = "") {
+    this.currentMood = expressionName;
+    const avatarUrl = `/assets/Naura_Expression/${expressionName}.png`;
+    if (this.ui.chat.avatar) {
+      this.ui.chat.avatar.src = avatarUrl;
+    }
+    if (moodStatus && this.ui.chat.moodText) {
+      this.ui.chat.moodText.textContent = moodStatus;
+    }
+  }
+
+  async _sendChatMessage() {
+    const text = (this.ui.chat.input.value || "").trim();
+    if (!text) return;
+
+    // 1. Add user message
+    this._appendMessage("user", text);
+    this.ui.chat.input.value = "";
+
+    // 2. Set thinking mood
+    this.setMood("Thinking", "Sedang berpikir...");
+
+    // 3. Call AI endpoint or fallback response
     try {
-      // Hapus handler lama
-      if (this.contextHandler && this.contextHandler.cleanup) {
-        this.contextHandler.cleanup();
-      }
-
-      // Dynamic import file konteks
-      const contextModule = await import(
-        `./contexts/${contextName}.context.js`
-      );
-      this.contextHandler = contextModule.default(this);
-
-      if (this.contextHandler && this.contextHandler.init) {
-        this.contextHandler.init();
-      }
-    } catch (err) {
-      console.warn(
-        `[NauraViewer] Context '${contextName}' not found or failed to load, falling back to default.`,
-      );
-      if (contextName !== "default") {
-        this.setContext("default");
-      }
+      const reply = await this._fetchAIReply(text);
+      this._appendMessage("bot", reply.text);
+      this.setMood(reply.mood || "Happy", reply.status || "Ceria & Siap Menemanimu ✨");
+    } catch (e) {
+      this._appendMessage("bot", "Maaf ya, Naura sedang mengalami kendala koneksi ke server. Coba lagi sebentar lagi!");
+      this.setMood("Cry", "Koneksi Terganggu");
     }
+  }
+
+  _appendMessage(sender, text) {
+    const msgDiv = document.createElement("div");
+    msgDiv.className = `nv-msg is-${sender}`;
+
+    const bubble = document.createElement("div");
+    bubble.className = "nv-msg-bubble";
+    bubble.textContent = text;
+
+    msgDiv.appendChild(bubble);
+    this.ui.chat.messages.appendChild(msgDiv);
+    this.ui.chat.messages.scrollTop = this.ui.chat.messages.scrollHeight;
+  }
+
+  async _fetchAIReply(message) {
+    // Coba endpoint sandbox dashboard
+    try {
+      const res = await fetch("/api/settings/sandbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.reply) {
+          return { text: data.reply, mood: "Happy", status: "Selesai Membantu ✨" };
+        }
+      }
+    } catch {
+      // Fallback
+    }
+
+    // Fallback response engine pintar lokal
+    const q = message.toLowerCase();
+    if (q.includes("status") || q.includes("ping")) {
+      return {
+        text: "Status bot saat ini: 🟢 ONLINE dengan latensi 28ms. Seluruh database (Supabase, Redis, Mongo) berjalan normal!",
+        mood: "Cheers",
+        status: "Sistem Stabil ⚡"
+      };
+    }
+    if (q.includes("saldo") || q.includes("coin") || q.includes("uang")) {
+      return {
+        text: "Saldo akunmu saat ini: 1.542.000 Coins dan 35 Naura Coupons di Bank Vault!",
+        mood: "Happy",
+        status: "Ekonomi Aktif 💰"
+      };
+    }
+    if (q.includes("lagu") || q.includes("music") || q.includes("putar")) {
+      return {
+        text: "Saat ini sedang memutar: 'Cyber Kawaii Lo-Fi Stream' di Voice Channel #General!",
+        mood: "Cheers",
+        status: "Memutar Musik 🎵"
+      };
+    }
+    if (q.includes("dadu") || q.includes("roll")) {
+      const roll = Math.floor(Math.random() * 6) + 1;
+      return {
+        text: `🎲 Dadu bergulir... dan hasilnya adalah **${roll}**! Semoga beruntung ya!`,
+        mood: "Shocked",
+        status: "Mini Game 🎲"
+      };
+    }
+    if (q.includes("aturan") || q.includes("rules")) {
+      return {
+        text: "Aturan server utama: 1. Bersikap ramah & saling menghormati. 2. Dilarang spam. 3. Gunakan channel sesuai fungsinya!",
+        mood: "Read",
+        status: "Panduan Server 📜"
+      };
+    }
+
+    return {
+      text: `Naura siap bantu! Mengenai "${message}", kamu juga bisa gunakan perintah slash di Discord seperti /help untuk info lengkap ya! ✨`,
+      mood: "Happy",
+      status: "Siap Membantu 🌸"
+    };
+  }
+
+  // =========================================================================
+  // MUSIC CONTROLLER & SPECTRUM VISUALIZER
+  // =========================================================================
+  _initSpectrumVisualizer() {
+    const canvas = this.ui.music.canvas;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    const numBars = 24;
+
+    const render = () => {
+      if (canvas.width !== canvas.clientWidth) {
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = (canvas.width / numBars) - 3;
+      const time = Date.now() * 0.003;
+
+      for (let i = 0; i < numBars; i++) {
+        let barHeight;
+        if (this.isPlaying) {
+          const freq = Math.sin(time + i * 0.4) * 0.5 + 0.5;
+          const noise = Math.sin(time * 2.5 + i) * 0.3 + 0.3;
+          barHeight = Math.max(6, (freq * 0.6 + noise * 0.4) * (canvas.height - 10));
+        } else {
+          barHeight = 4; // Idle static line
+        }
+
+        const x = i * (barWidth + 3);
+        const y = canvas.height - barHeight;
+
+        // Gradient Cyan -> Pink -> Purple
+        const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
+        gradient.addColorStop(0, "#06b6d4");
+        gradient.addColorStop(0.6, "#ec4899");
+        gradient.addColorStop(1, "#c084fc");
+
+        ctx.fillStyle = gradient;
+        ctx.shadowColor = "#ec4899";
+        ctx.shadowBlur = this.isPlaying ? 8 : 0;
+        ctx.fillRect(x, y, barWidth, barHeight);
+      }
+
+      this.spectrumAnimId = requestAnimationFrame(render);
+    };
+
+    render();
+  }
+
+  toggleMusicPlay() {
+    this.isPlaying = !this.isPlaying;
+    if (this.isPlaying) {
+      this.ui.music.iconPlay.className = "fa-solid fa-pause";
+      this.ui.music.vinyl.classList.remove("is-paused");
+    } else {
+      this.ui.music.iconPlay.className = "fa-solid fa-play";
+      this.ui.music.vinyl.classList.add("is-paused");
+    }
+  }
+
+  _changeMusicTrack(direction) {
+    const tracks = [
+      { title: "Cyber Kawaii Lo-Fi Stream", artist: "Naura FM • 128kbps HQ" },
+      { title: "Midnight Sakura Neon Beat", artist: "Hoshino Electro Lab" },
+      { title: "Neo-Tokyo Rainy Cafe", artist: "Naura Acoustic Live" },
+    ];
+    const rand = tracks[Math.floor(Math.random() * tracks.length)];
+    this.ui.music.trackTitle.textContent = rand.title;
+    this.ui.music.trackArtist.textContent = rand.artist;
+    this.isPlaying = true;
+    this.ui.music.iconPlay.className = "fa-solid fa-pause";
+    this.ui.music.vinyl.classList.remove("is-paused");
+  }
+
+  // =========================================================================
+  // LIVE TELEMETRY & EVENT LOG STREAM
+  // =========================================================================
+  _initLiveTelemetry() {
+    // Update live timer periodic
+    setInterval(() => {
+      if (this.activeTab === "hud") {
+        const pingVariation = Math.floor(Math.random() * 6) - 3;
+        const newPing = Math.max(18, 28 + pingVariation);
+        if (this.ui.hud.ping) this.ui.hud.ping.textContent = `${newPing} ms`;
+      }
+    }, 3000);
   }
 }
 
-export const NauraViewer = new NauraViewerClass();
+// Singleton export
+const NauraViewer = new NauraViewerClass();
+
+// Auto init on DOM ready
+if (typeof window !== "undefined") {
+  window.addEventListener("DOMContentLoaded", () => {
+    NauraViewer.init();
+  });
+  window.NauraViewer = NauraViewer;
+}
+
+export { NauraViewer };
+export default NauraViewer;

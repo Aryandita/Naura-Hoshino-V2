@@ -78,7 +78,9 @@ async function applyMaxRomance(userId, survival) {
   target.affection = MAX_AFFECTION;
   target.relationshipLevel = MARRIED_LEVEL;
   target.lastInteraction = new Date();
-  await target.save();
+  await target.save({
+    fields: ["affection", "relationshipLevel", "lastInteraction"],
+  });
 
   const unlocked = stateOf(survival).unlocked_cutscenes || [];
   await writeState(survival, {

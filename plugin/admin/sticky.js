@@ -3,8 +3,7 @@ const {
   PermissionFlagsBits,
   MessageFlags,
 } = require("discord.js");
-const GuildSettings = require("../../src/models/GuildSettings");
-const cacheManager = require("../../src/managers/cacheManager");
+const guildSettingsService = require("../../src/managers/guildSettingsService");
 const ui = require("../../src/config/ui");
 
 module.exports = {
@@ -32,55 +31,33 @@ module.exports = {
   async execute(interaction) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const sub = interaction.options.getSubcommand();
-    const [settings] = await GuildSettings.findOrCreate({
-      where: { guildId: interaction.guild.id },
-    });
-
-    let newSettings;
-    try {
-      newSettings =
-        typeof settings.settings === "string"
-          ? JSON.parse(settings.settings)
-          : settings.settings || {};
-    } catch (e) {
-      newSettings = {};
-    }
-
-    if (!newSettings.stickyMessage)
-      newSettings.stickyMessage = {
-        channelId: null,
-        message: null,
-        lastId: null,
-      };
 
     if (sub === "set") {
       const msg = interaction.options.getString("pesan");
-      newSettings.stickyMessage = {
-        channelId: interaction.channel.id,
-        message: msg,
-        lastId: null,
-      };
-      settings.settings = newSettings;
-      settings.changed("settings", true);
-      await settings.save();
-      await cacheManager
-        .invalidateGuildSettings(interaction.guild.id)
-        .catch(() => {});
+      await guildSettingsService.updateGuildSetting(
+        interaction.guild.id,
+        (settings) => {
+          settings.stickyMessage = {
+            channelId: interaction.channel.id,
+            message: msg,
+            lastId: null,
+          };
+        },
+      );
       return interaction.editReply(
         `${ui.getEmoji("success") || "✅"} Sticky message berhasil dipasang di channel ini!`,
       );
     } else {
-      newSettings.stickyMessage = {
-        channelId: null,
-        message: null,
-        lastId: null,
-      };
-      settings.settings = newSettings;
-      settings.changed("settings", true);
-      await settings.save();
-      await cacheManager
-        .invalidateGuildSettings(interaction.guild.id)
-        .catch(() => {});
+      await guildSettingsService.updateGuildSetting(
+        interaction.guild.id,
+        (settings) => {
+          settings.stickyMessage = {
+            channelId: null,
+            message: null,
+            lastId: null,
+          };
+        },
+      );
       return interaction.editReply(
         `${ui.getEmoji("success") || "✅"} Sticky message berhasil dihapus.`,
       );

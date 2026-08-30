@@ -2,7 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const path = require("node:path");
 const fs = require("node:fs");
 const { logger } = require("../../src/managers/logger");
-const GuildSettings = require("../../src/models/GuildSettings");
+const guildSettingsService = require("../../src/managers/guildSettingsService");
 const VoiceManager = require("../../src/managers/voiceManager");
 const ui = require("../../src/config/ui");
 const {
@@ -96,10 +96,8 @@ module.exports = {
     const subcommand = interaction.options.getSubcommand();
     const guildId = interaction.guildId;
 
-    const cacheManager = require("../../src/managers/cacheManager");
-    const settingsData = await cacheManager.getGuildSettings(guildId);
-    const [settings] = await GuildSettings.findOrCreate({ where: { guildId } });
-    const currentSettings = settingsData?.settings || settings.settings || {};
+    const currentSettings =
+      (await guildSettingsService.getGuildSetting(guildId)) || {};
     if (!currentSettings.soundboards) currentSettings.soundboards = {};
 
     if (subcommand === "add") {
@@ -127,11 +125,10 @@ module.exports = {
         return interaction.editReply(errPayload);
       }
 
-      currentSettings.soundboards[nama] = url;
-      settings.settings = currentSettings;
-      settings.changed("settings", true);
-      await settings.save();
-      cacheManager.invalidateGuildSettings(guildId);
+      await guildSettingsService.updateGuildSetting(guildId, (settings) => {
+        if (!settings.soundboards) settings.soundboards = {};
+        settings.soundboards[nama] = url;
+      });
 
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#22c55e",
@@ -165,11 +162,11 @@ module.exports = {
         return interaction.editReply(errPayload);
       }
 
-      delete currentSettings.soundboards[nama];
-      settings.settings = currentSettings;
-      settings.changed("settings", true);
-      await settings.save();
-      cacheManager.invalidateGuildSettings(guildId);
+      await guildSettingsService.updateGuildSetting(guildId, (settings) => {
+        if (settings.soundboards) {
+          delete settings.soundboards[nama];
+        }
+      });
 
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("error") || "#ef4444",

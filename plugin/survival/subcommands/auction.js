@@ -263,7 +263,7 @@ async function handleBid(interaction) {
 
   if (auction.expiresAt < new Date()) {
     auction.status = "expired";
-    await auction.save();
+    await auction.save({ fields: ["status"] });
     return interaction.editReply(
       hidden(
         buildErrorContainerV2({ description: "Waktu lelang ini sudah habis!" }),
@@ -332,7 +332,7 @@ async function handleBid(interaction) {
   // Update auction
   auction.currentBid = bidPrice;
   auction.highestBidderId = userId;
-  await auction.save();
+  await auction.save({ fields: ["currentBid", "highestBidderId"] });
 
   const currencyEmoji =
     auction.currency === "nsf" ? e("nsf", "⭐") : e("coin", "🪙");
@@ -434,7 +434,7 @@ async function handleClaim(interaction) {
       }
 
       auction.status = "claimed";
-      await auction.save();
+      await auction.save({ fields: ["status"] });
 
       return interaction.editReply(
         buildContainerV2({
@@ -447,15 +447,6 @@ async function handleClaim(interaction) {
       await addItemsAtomic(userId, [
         { id: auction.itemId, amount: auction.amount },
       ]);
-
-      // NOTE: We do NOT set status="claimed" here for the seller side.
-      // Wait, if winner claims it, it sets status="claimed", then seller cannot claim!
-      // This is a flaw. They should claim separately.
-      // We can use flags: "seller_claimed" and "winner_claimed". Or use status="claimed" when both claim.
-      // Let's implement partial claims by using another status or boolean column in the DB,
-      // but since we only have 'status' enum: active, sold, expired, claimed.
-      // Let's change this: We will just auto-give the item and money to both when ONE of them claims,
-      // or we handle it gracefully. Wait, auto-giving to another user is perfectly fine because we have atomic increments!
 
       const tax = Math.floor(auction.currentBid * 0.05);
       const finalEarn = auction.currentBid - tax;
@@ -481,7 +472,7 @@ async function handleClaim(interaction) {
       ]);
 
       auction.status = "claimed";
-      await auction.save();
+      await auction.save({ fields: ["status"] });
 
       return interaction.editReply(
         buildContainerV2({
@@ -499,7 +490,7 @@ async function handleClaim(interaction) {
       ]);
 
       auction.status = "claimed";
-      await auction.save();
+      await auction.save({ fields: ["status"] });
 
       return interaction.editReply(
         buildContainerV2({
