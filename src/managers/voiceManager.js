@@ -33,10 +33,10 @@ class VoiceManager {
     const guildId = voiceChannel.guild.id;
 
     try {
-      // Cek konflik dengan Poru (Lavalink)
+      // Cek konflik dengan Poru (Lavalink) — gunakan client.musicManager.poru yang benar
       const client = member.client;
-      if (client && client.poru && client.poru.players) {
-        const player = client.poru.players.get(guildId);
+      if (client && client.musicManager?.poru?.players) {
+        const player = client.musicManager.poru.players.get(guildId);
         if (player && player.isPlaying) {
           console.log(
             "\x1b[43m\x1b[30m 🔊 TTS INFO \x1b[0m \x1b[33mVoice channel sedang digunakan oleh Poru untuk memutar musik. Membatalkan TTS agar tidak membajak koneksi.\x1b[0m",
@@ -113,8 +113,8 @@ class VoiceManager {
 
     try {
       const client = member.client;
-      if (client && client.poru && client.poru.players) {
-        const player = client.poru.players.get(guildId);
+      if (client && client.musicManager?.poru?.players) {
+        const player = client.musicManager.poru.players.get(guildId);
         if (player && player.isPlaying) {
           return false;
         }
