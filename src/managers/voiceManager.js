@@ -33,15 +33,27 @@ class VoiceManager {
     const guildId = voiceChannel.guild.id;
 
     try {
-      // Cek konflik dengan Poru (Lavalink), gunakan client.musicManager.poru yang benar
+      // Cek konflik dengan Poru (Lavalink).
+      // PENTING: Gunakan _poru (properti internal) bukan .poru (accessor getter),
+      // karena .poru akan memanggil ensurePoru() dan memaksa inisialisasi Poru
+      // bahkan ketika sistem musik belum digunakan sama sekali.
       const client = member.client;
-      if (client && client.musicManager?.poru?.players) {
-        const player = client.musicManager.poru.players.get(guildId);
-        if (player && player.isPlaying) {
-          console.log(
-            "\x1b[43m\x1b[30m 🔊 TTS INFO \x1b[0m \x1b[33mVoice channel sedang digunakan oleh Poru untuk memutar musik. Membatalkan TTS agar tidak membajak koneksi.\x1b[0m",
-          );
-          return;
+      if (client && client.musicManager && client.musicManager._poru) {
+        const poruPlayers = client.musicManager._poru.players;
+        if (poruPlayers) {
+          const existingPlayer = poruPlayers.get(guildId);
+          // Blokir TTS selama ada player Poru aktif di guild ini,
+          // TERLEPAS dari apakah lagu sedang diputar atau tidak.
+          // Kondisi isPlaying=false terjadi saat lagu baru ditemukan dan sedang
+          // di-load/buffer - ini adalah fase paling rentan terhadap konflik WebSocket.
+          if (existingPlayer) {
+            console.log(
+              "\x1b[43m\x1b[30m 🔊 TTS SKIP \x1b[0m \x1b[33mPoru player aktif di guild ini (state: " +
+                (existingPlayer.isPlaying ? "playing" : existingPlayer.isPaused ? "paused" : "loading/connecting") +
+                "). TTS dibatalkan untuk menghindari konflik WebSocket Voice.\x1b[0m",
+            );
+            return;
+          }
         }
       }
 
@@ -113,10 +125,13 @@ class VoiceManager {
 
     try {
       const client = member.client;
-      if (client && client.musicManager?.poru?.players) {
-        const player = client.musicManager.poru.players.get(guildId);
-        if (player && player.isPlaying) {
-          return false;
+      if (client && client.musicManager && client.musicManager._poru) {
+        const poruPlayers = client.musicManager._poru.players;
+        if (poruPlayers) {
+          const existingPlayer = poruPlayers.get(guildId);
+          if (existingPlayer) {
+            return false;
+          }
         }
       }
 
