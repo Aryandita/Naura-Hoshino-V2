@@ -89,7 +89,11 @@ Balas HANYA dengan JSON murni tanpa markdown backtick.`;
     return {
       success: true,
       source: "PROCEDURAL",
-      ...fallbackVerdict,
+      prosecutor: fallbackVerdict.prosecutorArgument,
+      defense: fallbackVerdict.defenseArgument,
+      judge: fallbackVerdict.judgeVerdict,
+      verdictStatus: fallbackVerdict.verdictStatus,
+      penalty: fallbackVerdict.penalty,
     };
   }
 

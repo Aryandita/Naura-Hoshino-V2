@@ -16,6 +16,7 @@ const isExternalDb =
     env.DATABASE_URL ||
     (env.DB_NAME &&
       env.DB_USER &&
+      env.DB_PASS &&
       env.DB_HOST &&
       env.DB_HOST !== "sqlite" &&
       (env.USE_MYSQL ||

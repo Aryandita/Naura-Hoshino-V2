@@ -7,7 +7,7 @@
     "prestart": "npm run dashboard:build && node scripts/migrate.js",
     "start": "node shard.js",
     "start:no-migrate": "node shard.js",
-    "dev": "node --watch shard.js",
+    "dev": "node scripts/ensure-build.js && node --watch shard.js",
     "deploy": "node index.js --deploy",
     "db:migrate": "node scripts/migrate.js",
     "install-start": "npm install && npm start",
@@ -26,8 +26,11 @@
     "test:requires": "node scripts/check-requires.js",
     "assistant": "node assistant/server.js"
   },
+  "workspaces": [
+    "dashboard-v2"
+  ],
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=22.0.0"
   },
   "keywords": [
     "naura",

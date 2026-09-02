@@ -5,7 +5,7 @@ const path = require("path");
 const fs = require("fs");
 
 const app = express();
-const PORT = process.env.PORT || 3070;
+const PORT = parseInt(process.env.DASHBOARD_PORT || process.env.SERVER_PORT) || 3000;
 
 const projectRoot = path.resolve(__dirname, "..");
 const distPath = path.join(projectRoot, "dashboard-v2", "dist");

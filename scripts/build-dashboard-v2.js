@@ -47,8 +47,16 @@ function ensureNodeModulesLink() {
   }
 
   if (!existing && !fs.existsSync(link)) {
-    execFileSync("cmd.exe", ["/d", "/c", "mklink", "/J", link, realTarget]);
-    console.log(`[BUILD-V2] Junction node_modules dibuat.`);
+    if (process.platform === "win32") {
+      execFileSync("cmd.exe", ["/d", "/c", "mklink", "/J", link, realTarget]);
+    } else {
+      try {
+        fs.symlinkSync(realTarget, link);
+      } catch (err) {
+        console.warn(`[BUILD-V2] Symlink failed: ${err.message}`);
+      }
+    }
+    console.log(`[BUILD-V2] Junction/symlink node_modules dibuat.`);
   }
 }
 
@@ -56,6 +64,16 @@ function main() {
   if (!fs.existsSync(dashboardDir)) {
     console.error("[BUILD-V2] Folder dashboard-v2 tidak ditemukan.");
     process.exit(1);
+  }
+
+  // Jika path tidak mengandung spasi, bangun langsung di folder dashboard-v2
+  if (!projectRoot.includes(" ")) {
+    console.log(`[BUILD-V2] Membangun langsung di ${dashboardDir}...`);
+    execSync("npm run build", {
+      cwd: dashboardDir,
+      stdio: "inherit",
+    });
+    return;
   }
 
   // 1. Siapkan area build bersih (node_modules junction dipertahankan).

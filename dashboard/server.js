@@ -100,7 +100,10 @@ module.exports = (client) => {
   webApp.use(
     helmet({
       contentSecurityPolicy: false,
+      frameguard: false,
+      crossOriginResourcePolicy: false,
       crossOriginEmbedderPolicy: false,
+      crossOriginOpenerPolicy: false,
     }),
   );
 
@@ -326,8 +329,7 @@ module.exports = (client) => {
   });
 
   // --- Redirect legacy /v2 ke root dashboard utama ---
-  webApp.get("/v2", (req, res) => res.redirect("/"));
-  webApp.get("/v2/*", (req, res) => res.redirect("/"));
+  webApp.use("/v2", (req, res) => res.redirect("/"));
 
   // --- Halaman Dashboard Utama (Dashboard V2 Modern MPA) ---
   const v2DistPages = path.join(__dirname, "../dashboard-v2/dist/src/pages");

@@ -46,7 +46,7 @@ class AIManager {
     this._genAI = null;
     this._ollama = null;
 
-    this._defaultModel = "gemini-2.5-flash";
+    this._defaultModel = "gemini-3.6-flash";
     this._defaultSystemInstruction =
       "Nama kamu adalah Naura Hoshino, sahabat virtual yang ramah, hangat, suportif, ceria, dan selalu siap menemani aktivitas harian di server Discord maupun Web Dashboard. Kamu diciptakan dan dikelola oleh Aryandita. Kamu suka menyemangati teman-teman, mendengarkan curhat, mabar, dan memberikan apresiasi dengan gaya bahasa yang santai, gaul, akrab, dan penuh kehangatan.";
 
@@ -686,7 +686,7 @@ Jawablah dalam bahasa Indonesia kasual.`;
         });
 
         const geminiResult = await geminiClient.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.6-flash",
           contents,
           config: {
             systemInstruction,

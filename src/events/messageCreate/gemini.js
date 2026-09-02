@@ -8,7 +8,7 @@ const env = require("../../config/env");
  * env.js mendefinisikan GEMINI_API_KEY. Akibatnya klien selalu null dan
  * kegagalannya tertelan diam-diam oleh blok catch di sekitarnya.
  */
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-3.6-flash";
 
 const client = env.GEMINI_API_KEY
   ? new GoogleGenAI({ apiKey: env.GEMINI_API_KEY })
