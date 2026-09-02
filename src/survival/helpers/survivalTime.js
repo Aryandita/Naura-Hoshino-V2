@@ -76,15 +76,15 @@ async function chargeTax(userId, propertyId, rpgState, days) {
   const totalDue = dailyTax * days;
   rpgState.tax_due = (rpgState.tax_due || 0) + totalDue;
 
-  const profile = await cacheManager.getUserProfile(userId);
-  if (!profile) return;
-
   const bill = Math.floor(totalDue * TAX_PENALTY_RATE);
-  const bank = profile.economy_bank || 0;
+  const debitRes = await cacheManager.debitUserProfile(
+    userId,
+    "economy_bank",
+    bill,
+  );
 
-  if (bank >= bill) {
-    rpgState.tax_due -= totalDue;
-    await cacheManager.debitUserProfile(userId, "economy_bank", bill);
+  if (debitRes && debitRes.ok) {
+    rpgState.tax_due = Math.max(0, (rpgState.tax_due || 0) - totalDue);
   } else if (rpgState.tax_due > dailyTax * SEIZE_AFTER_DAYS) {
     rpgState.house_seized = true;
   }

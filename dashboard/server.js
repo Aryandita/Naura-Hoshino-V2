@@ -253,6 +253,13 @@ module.exports = (client) => {
   webApp.use(require("./routes/socialFeed")(client));
   webApp.use("/api", require("./routes/api")(client));
 
+  // --- Prometheus / Grafana Metrics Telemetry Endpoint ---
+  webApp.get("/metrics", (req, res) => {
+    const telemetryMetrics = require("../src/services/telemetryMetrics");
+    res.set("Content-Type", "text/plain; version=0.0.4; charset=utf-8");
+    res.send(telemetryMetrics.generatePrometheusMetrics(client));
+  });
+
   // --- Route Portfolio Member (Sprint 21) ---
   // Static: serve file 3D model langsung dari folder assets
   webApp.use(
@@ -356,6 +363,76 @@ module.exports = (client) => {
   // /portfolio/me/edit, halaman edit portfolio (sama dengan portfolio.html, data diambil via API)
   webApp.get("/portfolio/me/edit", requireLogin, view("portfolio.html"));
   webApp.get("/owner", view("portfolio.html"));
+  webApp.get("/topology", view("topology.html"));
+  webApp.get("/builder", view("builder.html"));
+  webApp.get("/survival-map", view("survival-map.html"));
+
+  // --- API Survival Realtime Map Data (Sprint 23) ---
+  webApp.get("/api/survival/map-data", async (req, res) => {
+    try {
+      const UserSurvival = require("../src/models/UserSurvival");
+      const {
+        getTimeState,
+        getWeather,
+        getSeason,
+      } = require("../src/survival/helpers/survivalTime");
+      const {
+        getActiveEvent,
+      } = require("../src/survival/engines/worldEventEngine");
+
+      const activeEvent = getActiveEvent();
+      const now = new Date();
+      const inGameHour = (now.getUTCHours() * 2) % 24;
+      const inGameDay =
+        Math.floor(now.getTime() / (24 * 60 * 60 * 1000)) % 365 + 1;
+
+      const { fn, col } = require("sequelize");
+      const counts = await UserSurvival.findAll({
+        attributes: [
+          "currentLocation",
+          [fn("COUNT", col("userId")), "count"],
+        ],
+        group: ["currentLocation"],
+        raw: true,
+      });
+
+      const locationCounts = {
+        desa: 0,
+        kota: 0,
+        hutan: 0,
+        tambang: 0,
+        laut: 0,
+        academy: 0,
+      };
+
+      for (const row of counts) {
+        const loc = String(row.currentLocation || "desa").toLowerCase();
+        if (loc === "village") locationCounts.desa += parseInt(row.count, 10) || 0;
+        else if (loc === "city") locationCounts.kota += parseInt(row.count, 10) || 0;
+        else if (locationCounts[loc] !== undefined) {
+          locationCounts[loc] += parseInt(row.count, 10) || 0;
+        }
+      }
+
+      const weather = getWeather(inGameDay, inGameHour);
+      const season = getSeason(inGameDay);
+      const timeState = getTimeState(inGameHour);
+
+      res.json({
+        time: {
+          day: inGameDay,
+          hour: inGameHour,
+          timeState,
+          weather,
+          season,
+        },
+        event: activeEvent,
+        locations: locationCounts,
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
 
   // ==================================================================
   // 4. Realtime

@@ -78,6 +78,16 @@ module.exports = {
 
       let recommendedTracks = [];
       try {
+        // Tunda prefetch selama 1500ms agar sesi WebSocket Voice antara Poru
+        // dan Discord sudah stabil sebelum resolve() kedua dikirim ke node
+        // Lavalink. Tanpa delay ini, dua request ke node yang berdekatan
+        // menyebabkan Discord mengirim kode 4006 (session conflict) dan
+        // men-disconnect bot dari voice channel.
+        await new Promise((res) => setTimeout(res, 1500));
+
+        // Pastikan player masih valid setelah delay (bisa saja user skip/stop)
+        if (!player || player.destroyed) return;
+
         recommendedTracks = await this.handleAutoplayPrefetch(
           manager,
           player,

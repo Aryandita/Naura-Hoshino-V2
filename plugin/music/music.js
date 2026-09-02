@@ -198,6 +198,59 @@ async function runMusicLogic(
     return sendReply(errPayload, true);
   }
 
+  if (subcommand === "dj") {
+    if (!player) {
+      player = poru.createConnection({
+        guildId: guild.id,
+        voiceChannel: memberVoice.id,
+        textChannel: channel.id,
+        deaf: true,
+      });
+    }
+
+    const mode = args.mode || "on";
+    if (mode === "on") {
+      player.aiDjEnabled = true;
+      player.isAutoplay = true;
+
+      if (!player.isPlaying && player.queue.length === 0) {
+        const openingTrackRes = await poru.resolve({ query: "ytsearch:cyberpunk lofi chill beats", requester: user });
+        if (openingTrackRes && openingTrackRes.tracks && openingTrackRes.tracks[0]) {
+          player.queue.add(openingTrackRes.tracks[0]);
+          player.play();
+        }
+      }
+
+      const djPayload = buildContainerV2({
+        accentColorHex: "#93C5FD",
+        title: "🎧 AI Smart DJ: Hoshino FM 104.5",
+        expression: "cheer",
+        description: `🎙️ **Naura AI Smart DJ telah Mengudara!**\n\nNaura kini aktif memandu sesi musik di <#${memberVoice.id}> dengan kurasi pintar otomatis, sinkronisasi mood obrolan, dan transisi lagu dinamis.\n${divider}\n💡 *Ketik \`/music dj off\` untuk mematikan mode DJ cerdas.*`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(djPayload);
+    } else if (mode === "off") {
+      player.aiDjEnabled = false;
+      const offPayload = buildContainerV2({
+        accentColorHex: "#FFB347",
+        title: "🎧 AI Smart DJ Dimatikan",
+        expression: "idle",
+        description: `Mode AI Smart DJ telah dinonaktifkan. Naura kembali ke mode pemutaran antrean normal.\n${divider}`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(offPayload);
+    } else {
+      const statusPayload = buildContainerV2({
+        accentColorHex: "#93C5FD",
+        title: "🎧 Status AI Smart DJ",
+        expression: "smile",
+        description: `Status AI DJ saat ini: **${player.aiDjEnabled ? "🟢 AKTIF" : "🔴 NONAKTIF"}**\nChannel Voice: <#${memberVoice.id}>\nAutoplay Cerdas: **${player.isAutoplay ? "Aktif" : "Mati"}**\n${divider}`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(statusPayload);
+    }
+  }
+
   if (subcommand === "lofi" || subcommand === "radio") {
     if (!player)
       player = poru.createConnection({
@@ -1571,111 +1624,139 @@ module.exports = {
         .setDescription(
           "Buka sesi Listening Party kolaboratif bersama seluruh anggota Voice",
         ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("dj")
+        .setDescription("🎧 Aktifkan atau kelola mode AI Smart DJ Companion (Hoshino FM)")
+        .addStringOption((opt) =>
+          opt
+            .setName("mode")
+            .setDescription("Pilihan mode DJ")
+            .setRequired(false)
+            .addChoices(
+              { name: "Aktifkan AI Smart DJ (On)", value: "on" },
+              { name: "Matikan AI Smart DJ (Off)", value: "off" },
+              { name: "Status AI Smart DJ (Status)", value: "status" },
+            ),
+        ),
     ),
 
   async autocomplete(interaction) {
+    const {
+      getCached,
+      setCache,
+      choice,
+      safeRespond,
+      respondWithFallback,
+      truncateLabel,
+    } = require('../../src/utils/autocompleteHelper');
+
     const focusedValue = interaction.options.getFocused();
+    // Spotify link: tampilkan konfirmasi langsung tanpa ke Lavalink
+    if (focusedValue.match(/^(https?:\/\/)?(open\.)?spotify\.com\//)) {
+      return safeRespond(interaction, [
+        choice('🎧 [Spotify Link] Tekan Enter untuk memutar', focusedValue),
+      ]);
+    }
+
+    // URL langsung (YouTube, SoundCloud, dll)
+    if (focusedValue.match(/^https?:\/\//)) {
+      return safeRespond(interaction, [
+        choice('🔗 [Direct URL] Tekan Enter untuk memutar link', focusedValue),
+      ]);
+    }
+
     if (!focusedValue || focusedValue.trim().length === 0) {
-      return interaction.respond([]).catch(() => {});
+      return respondWithFallback(interaction, '');
     }
 
     const cleanQuery = focusedValue
       .replace(
         /^(sc:|ytm:|yt:|spsearch:|ytsearch:|scsearch:|ytmsearch:|amsearch:)/,
-        "",
+        '',
       )
       .trim();
     const fallbackChoice = {
-      name: `🔎 Cari: ${cleanQuery.length > 90 ? cleanQuery.substring(0, 87) + "..." : cleanQuery}`,
+      name: `🔎 Cari: ${truncateLabel(cleanQuery, 85)}`,
       value:
         (cleanQuery.length > 100 ? cleanQuery.substring(0, 100) : cleanQuery) ||
         focusedValue.substring(0, 100),
     };
 
     try {
-      // Spotify link: langsung tekan Enter
-      if (focusedValue.match(/^(https?:\/\/)?(open\.)?spotify\.com\//)) {
-        return interaction
-          .respond([
-            {
-              name: `🎧 [Spotify Link] Tekan Enter untuk memutar link`,
-              value: focusedValue.substring(0, 100),
-            },
-          ])
-          .catch(() => {});
-      }
-
-      // URL langsung (YouTube, SoundCloud, dll)
-      if (focusedValue.match(/^https?:\/\//)) {
-        return interaction
-          .respond([
-            {
-              name: `🔗 [Direct URL] Tekan Enter untuk memutar link`,
-              value: focusedValue.substring(0, 100),
-            },
-          ])
-          .catch(() => {});
-      }
-
-      if (cleanQuery.length < 2) {
-        return interaction.respond([fallbackChoice]).catch(() => {});
-      }
-
-      // Gunakan _poru langsung tanpa memicu lazy-init jika belum siap
+      // Pastikan Poru tersedia tanpa memicu lazy-init
       const manager = interaction.client.musicManager;
       if (!manager || !manager._poru) {
-        return interaction.respond([fallbackChoice]).catch(() => {});
+        return respondWithFallback(interaction, cleanQuery);
       }
       const poru = manager._poru;
 
+      // Query terlalu pendek: tampilkan lagu aktif di guild + hint prefix
+      if (cleanQuery.length < 2) {
+        const hints = [];
+        const activePlayer = poru.players?.get(interaction.guildId);
+        if (activePlayer && activePlayer.currentTrack) {
+          const ct = activePlayer.currentTrack.info;
+          const nowUri = ct.uri || `ytsearch:${ct.title} ${ct.author}`;
+          hints.push(choice(`\ud83c\udfb5 Sedang diputar: ${ct.title} - ${ct.author}`, nowUri));
+        }
+        hints.push(
+          choice('\ud83d\udd34 Ketik "sc:" untuk SoundCloud', 'sc:'),
+          choice('\ud83c\udfb5 Ketik "ytm:" untuk YouTube Music', 'ytm:'),
+          choice('\ud83d\udd0e Ketik nama lagu atau artis untuk mencari...', ' '),
+        );
+        return safeRespond(interaction, hints.slice(0, 5));
+      }
+
       // Tentukan search engine berdasarkan prefix
-      const searchEngine = focusedValue.startsWith("sc:")
-        ? "scsearch"
-        : focusedValue.startsWith("ytm:")
-          ? "ytmsearch"
-          : "ytsearch";
+      const searchEngine = focusedValue.startsWith('sc:')
+        ? 'scsearch'
+        : focusedValue.startsWith('ytm:')
+          ? 'ytmsearch'
+          : 'ytsearch';
 
-      // Timeout 2000ms untuk mengakomodasi latency 3-node Lavalink
-      const searchPromise = poru.resolve({
-        query: `${searchEngine}:${cleanQuery}`,
-        requester: interaction.user,
-      });
+      // Cek cache: hindari request Lavalink saat user mengetik cepat
+      const cacheKey = `music:ac:${searchEngine}:${cleanQuery}`;
+      const cached = getCached(cacheKey);
+      if (cached) return safeRespond(interaction, cached);
 
+      // Timeout 2200ms - cukup untuk node lambat, masih di bawah batas Discord 3s
       const res = await Promise.race([
-        searchPromise,
-        new Promise((resolve) => setTimeout(() => resolve(null), 2000)),
+        poru.resolve({ query: `${searchEngine}:${cleanQuery}`, requester: interaction.user }),
+        new Promise((resolve) => setTimeout(() => resolve(null), 2200)),
       ]);
 
       if (!res || !res.tracks || res.tracks.length === 0) {
-        return interaction.respond([fallbackChoice]).catch(() => {});
+        return respondWithFallback(interaction, cleanQuery);
       }
 
       const choices = res.tracks.slice(0, 24).map((track) => {
-        const title = track.info.title || "Unknown Track";
-        const author = track.info.author || "Unknown Artist";
+        const title = track.info.title || 'Unknown Track';
+        const author = track.info.author || 'Unknown Artist';
         const duration = formatDuration(track.info.length);
-        let label = `${title} - ${author} (${duration})`;
-        if (label.length > 100) label = label.substring(0, 97) + "...";
+        const label = `${title} - ${author} (${duration})`;
 
-        // Gunakan URI langsung sebagai value - paling reliable untuk playback
-        // Fallback ke ytsearch jika URI tidak tersedia
         const uri = track.info.uri;
         const val =
-          uri && uri.startsWith("http")
+          uri && uri.startsWith('http')
             ? uri.substring(0, 100)
             : `ytsearch:${title} ${author}`.substring(0, 100);
 
-        return { name: label, value: val };
+        return choice(label, val);
       });
 
-      // Tambahkan opsi pencarian manual di posisi terakhir jika ada tempat
+      // Opsi pencarian manual di posisi terakhir sebagai pilihan cadangan
       if (choices.length < 25) {
         choices.push(fallbackChoice);
       }
 
-      return interaction.respond(choices).catch(() => {});
-    } catch (error) {
-      return interaction.respond([fallbackChoice]).catch(() => {});
+      // Simpan ke cache selama 10 detik
+      setCache(cacheKey, choices);
+
+      return safeRespond(interaction, choices);
+    } catch (_error) {
+      return respondWithFallback(interaction, cleanQuery);
     }
   },
 

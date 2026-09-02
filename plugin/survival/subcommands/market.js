@@ -59,13 +59,16 @@ function hidden(payload) {
 
 module.exports = {
   async autocomplete(interaction) {
+    const { choice, safeRespond, fuzzyFilter } = require('../../../src/utils/autocompleteHelper');
     const focusedValue = interaction.options.getFocused().toLowerCase();
     const [survival] = await UserSurvival.findOrCreate({
       where: { userId: interaction.user.id },
     });
 
     if (!VILLAGE_KEYS.includes(survival.currentLocation)) {
-      return interaction.respond([]).catch(() => {});
+      return safeRespond(interaction, [
+        choice('❌ Pasar desa hanya bisa diakses di lokasi desa', 'none'),
+      ]);
     }
 
     const diffConfig = getDifficultyConfig(
@@ -76,17 +79,16 @@ module.exports = {
     for (const cat of Object.keys(market.CATEGORIES)) {
       const pool = market.poolFor(cat, diffConfig);
       pool.forEach((it) => {
-        available.push({
-          name: `${it.name} (${n(it.finalPrice)} NSF)`,
-          value: market.encode(it.id, it.finalPrice, 1),
-        });
+        available.push(
+          choice(
+            `${it.name} (${n(it.finalPrice)} NSF)`,
+            market.encode(it.id, it.finalPrice, 1),
+          ),
+        );
       });
     }
 
-    const filtered = available
-      .filter((it) => it.name.toLowerCase().includes(focusedValue))
-      .slice(0, 25);
-    await interaction.respond(filtered).catch(() => {});
+    return safeRespond(interaction, fuzzyFilter(available, focusedValue, 25));
   },
 
   async execute(interaction) {

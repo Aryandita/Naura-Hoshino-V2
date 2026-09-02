@@ -227,6 +227,82 @@ class TradeEngine {
       amount: caravan.amount,
     };
   }
+
+  /**
+   * Bergabung sebagai pengawal bersenjata (Escort) karavan
+   */
+  async joinEscort(caravanId, userId, combatPower = 150) {
+    try {
+      const CaravanEscort = require("../models/CaravanEscort");
+      const existing = await CaravanEscort.findOne({
+        where: { caravanId, userId },
+      });
+      if (existing) return { success: false, reason: "ALREADY_ESCORTING" };
+
+      const escort = await CaravanEscort.create({
+        caravanId,
+        userId,
+        combatPower,
+        profitSharePercent: 15,
+      });
+
+      return { success: true, escort };
+    } catch (err) {
+      return { success: false, reason: err.message };
+    }
+  }
+
+  /**
+   * Eksekusi serangan penjarahan PvP (Ambush Raid) terhadap karavan di rute berbahaya
+   */
+  async ambushCaravan(caravanId, raiderUserId, raiderPower = 200) {
+    try {
+      const TradeCaravan = require("../models/TradeCaravan");
+      const CaravanEscort = require("../models/CaravanEscort");
+
+      const caravan = await TradeCaravan.findOne({ where: { caravanId } });
+      if (!caravan || caravan.status !== "EN_ROUTE") {
+        return { success: false, reason: "CARAVAN_NOT_AVAILABLE" };
+      }
+
+      const escorts = await CaravanEscort.findAll({ where: { caravanId } });
+      const totalDefensePower = escorts.reduce(
+        (sum, e) => sum + (e.combatPower || 100),
+        100, // modal dasar penjaga
+      );
+
+      const winChance = (raiderPower / (raiderPower + totalDefensePower)) * 100;
+      const roll = Math.random() * 100;
+      const isSuccessful = roll <= winChance;
+
+      if (isSuccessful) {
+        const lootAmount = Math.round(Number(caravan.potentialYield) * 0.4);
+        await caravan.update({ status: "AMBUSHED" });
+        await cacheManager.incrementUserProfile(
+          raiderUserId,
+          "economy_wallet",
+          lootAmount,
+        );
+
+        return {
+          success: true,
+          raided: true,
+          loot: lootAmount,
+          winChance: Math.round(winChance),
+        };
+      } else {
+        return {
+          success: true,
+          raided: false,
+          damageTaken: 50,
+          winChance: Math.round(winChance),
+        };
+      }
+    } catch (err) {
+      return { success: false, reason: err.message };
+    }
+  }
 }
 
 module.exports = new TradeEngine();
+

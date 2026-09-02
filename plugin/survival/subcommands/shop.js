@@ -60,12 +60,13 @@ function portraitOf(npc) {
 
 module.exports = {
   async autocomplete(interaction) {
+    const { choice, safeRespond, fuzzyFilter } = require('../../../src/utils/autocompleteHelper');
     const focusedValue = interaction.options.getFocused().toLowerCase();
     const [survival] = await UserSurvival.findOrCreate({
       where: { userId: interaction.user.id },
     });
     const shop = resolveShop(survival.currentLocation);
-    if (!shop) return interaction.respond([]).catch(() => {});
+    if (!shop) return safeRespond(interaction, []);
 
     const currentDay = survival.inGameDay || 1;
     const currentHour = survival.inGameHour || 6;
@@ -95,28 +96,29 @@ module.exports = {
         const isCons = ["makanan", "minuman"].includes(cat);
         const inflasi = isCons ? 1 + (shopPurchases[it.id] || 0) * 0.1 : 1;
         const finalPrice = Math.floor(base * shopMultiplier * inflasi);
-        available.push({
-          name: `${it.name} (${finalPrice} Koin)`,
-          value: purchase.encodeChoice(it.id, finalPrice, false),
-        });
+        available.push(
+          choice(
+            `${it.name} (${finalPrice} Koin)`,
+            purchase.encodeChoice(it.id, finalPrice, false),
+          ),
+        );
       });
     }
 
     if (coupons.isOpen(currentDay, currentHour)) {
       Object.keys(coupons.CATEGORIES).forEach((cat) => {
         coupons.stockByCategory(cat).forEach((it) => {
-          available.push({
-            name: `${ui.getEmoji("ticket") || "🎟️"} ${it.name} (${it.price} Kupon)`,
-            value: purchase.encodeChoice(it.id, it.price, true),
-          });
+          available.push(
+            choice(
+              `${ui.getEmoji("ticket") || "🎟️"} ${it.name} (${it.price} Kupon)`,
+              purchase.encodeChoice(it.id, it.price, true),
+            ),
+          );
         });
       });
     }
 
-    const filtered = available
-      .filter((it) => it.name.toLowerCase().includes(focusedValue))
-      .slice(0, 25);
-    await interaction.respond(filtered).catch(() => {});
+    return safeRespond(interaction, fuzzyFilter(available, focusedValue, 25));
   },
 
   async execute(interaction) {

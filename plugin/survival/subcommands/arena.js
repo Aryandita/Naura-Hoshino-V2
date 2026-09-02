@@ -19,12 +19,15 @@ module.exports = {
         include: [{ model: UserProfile, attributes: ["userId"] }],
       });
 
+      const seasonEngine = require("../../../src/services/seasonEngine");
+      const seasonName = seasonEngine.CURRENT_SEASON.name;
+
       if (!topPlayers || topPlayers.length === 0) {
         return interaction.editReply(
           buildContainerV2({
             accentColorHex: ui.getColor("warning"),
-            title: `${e("trophy")} Papan Peringkat Arena`,
-            description: "Belum ada petarung yang tercatat di Arena.",
+            title: `${e("trophy")} Papan Peringkat Arena \u2022 ${seasonName}`,
+            description: "Belum ada petarung yang tercatat di Arena musim ini.",
             expression: "Sleepy",
             footerText: ui.getFooter("survival"),
           }),
@@ -43,15 +46,15 @@ module.exports = {
             player.matchesPlayed > 0
               ? ((player.wins / player.matchesPlayed) * 100).toFixed(1)
               : 0;
-          return `${medal} <@${player.userId}>, **${player.mmr} MMR** (WR: ${wr}%)`;
+          return `${medal} <@${player.userId}> \u2022 **${player.mmr} MMR** (WR: ${wr}%)`;
         })
         .join("\n");
 
       return interaction.editReply(
         buildContainerV2({
           accentColorHex: ui.getColor("primary"),
-          title: `${e("trophy")} Papan Peringkat Arena`,
-          description: leaderboardText,
+          title: `${e("trophy")} Papan Peringkat Arena \u2022 ${seasonName}`,
+          description: `Musim kompetisi aktif: **${seasonName}**\n\n${leaderboardText}`,
           expression: "Impressed",
           footerText: ui.getFooter("survival"),
         }),

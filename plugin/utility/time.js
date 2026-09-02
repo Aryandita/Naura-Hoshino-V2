@@ -20,6 +20,7 @@ module.exports = {
           opt
             .setName("durasi")
             .setDescription("Durasi timer (contoh: 15m, 1h, 30s)")
+            .setAutocomplete(true)
             .setRequired(true),
         )
         .addStringOption((opt) =>
@@ -114,4 +115,29 @@ module.exports = {
       }, durationMs);
     }
   },
+
+  async autocomplete(interaction) {
+    const { choice, safeRespond, fuzzyFilter } = require("../../src/utils/autocompleteHelper");
+    const focusedValue = interaction.options.getFocused().toLowerCase();
+
+    const presets = [
+      { name: "🍅 25 Menit (Sesi Fokus Pomodoro)", value: "25m" },
+      { name: "☕ 5 Menit (Istirahat Pendek)", value: "5m" },
+      { name: "🛋️ 15 Menit (Istirahat Panjang)", value: "15m" },
+      { name: "⚡ 1 Menit (Quick Timer)", value: "1m" },
+      { name: "⏱️ 10 Menit", value: "10m" },
+      { name: "⏱️ 30 Menit", value: "30m" },
+      { name: "⏱️ 45 Menit", value: "45m" },
+      { name: "⏰ 1 Jam", value: "1h" },
+      { name: "⏰ 2 Jam", value: "2h" },
+      { name: "⏰ 4 Jam", value: "4h" },
+      { name: "⏰ 8 Jam", value: "8h" },
+      { name: "⏰ 12 Jam", value: "12h" },
+      { name: "⏰ 24 Jam (Maksimal)", value: "24h" },
+    ];
+
+    const choices = presets.map((p) => choice(p.name, p.value));
+    return safeRespond(interaction, fuzzyFilter(choices, focusedValue, 25));
+  },
 };
+

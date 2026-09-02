@@ -398,6 +398,11 @@ module.exports = {
             .incrementQuestProgress(user.id, "collect", 1)
             .catch(() => {});
 
+          const {
+            advanceTime,
+          } = require("../../../src/survival/helpers/survivalTime");
+          await advanceTime(user.id, 2).catch(() => {});
+
           if (catchResult.id === "golden_fish") {
             await achievementHelper.unlockAchievement(
               interaction,

@@ -62,29 +62,32 @@ module.exports = {
       (REGEN_BY_PROPERTY[property] || REGEN_BY_PROPERTY.jalanan) +
       bonusFromDecorations(rpgState.active_decorations || []);
 
-    const maxHp = MAX_STAT + survival.survival_level * 2;
+    const leveling = require("../../../src/survival/engines/survivalLeveling");
+    const cacheManager = require("../../../src/managers/cacheManager");
+    const questGen = require("../../../src/survival/engines/questGenerator");
+
+    const maxHp = leveling.calculateMaxHp(survival);
     const regenHp = Math.round(regenStamina / 2);
 
     const newStamina = Math.min(
       MAX_STAT,
       (survival.stamina || 0) + regenStamina,
     );
-    const newHp = Math.min(maxHp, (survival.hp || MAX_STAT) + regenHp);
+    const newHp = Math.min(maxHp, (survival.hp || maxHp) + regenHp);
     const newHunger = Math.max(0, (survival.hunger || 0) - HUNGER_DRAIN);
     const newThirst = Math.max(0, (survival.thirst || 0) - THIRST_DRAIN);
 
     const timeUpdate = await advanceTime(user.id, SLEEP_HOURS);
     const timeState = getTimeState(timeUpdate.hour);
 
-    await UserSurvival.update(
-      {
-        stamina: newStamina,
-        hp: newHp,
-        hunger: newHunger,
-        thirst: newThirst,
-      },
-      { where: { userId: user.id } },
-    );
+    await cacheManager.updateUserSurvival(user.id, {
+      stamina: newStamina,
+      hp: newHp,
+      hunger: newHunger,
+      thirst: newThirst,
+    });
+
+    await questGen.incrementQuestProgress(user.id, "rest", 1).catch(() => {});
 
     const jam = timeUpdate.hour.toString().padStart(2, "0");
 

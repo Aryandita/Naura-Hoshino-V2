@@ -235,6 +235,30 @@ const MIGRATIONS = [
     pgSql:
       'CREATE TABLE IF NOT EXISTS "season_progress" ("id" SERIAL PRIMARY KEY, "userId" VARCHAR(191) NOT NULL, "seasonId" INTEGER NOT NULL DEFAULT 1, "xp" INTEGER NOT NULL DEFAULT 0, "level" INTEGER NOT NULL DEFAULT 1, "isPremiumPass" SMALLINT NOT NULL DEFAULT 0, "claimedTiersFree" JSON DEFAULT NULL, "claimedTiersPremium" JSON DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL, CONSTRAINT "uk_user_season" UNIQUE ("userId", "seasonId"));',
   },
+  {
+    id: "v37_create_user_greenhouses",
+    description:
+      "Buat tabel user_greenhouses untuk sistem Cyber-Agronomy & Hidroponik",
+    sql: "CREATE TABLE IF NOT EXISTS user_greenhouses (id INT AUTO_INCREMENT PRIMARY KEY, userId VARCHAR(191) NOT NULL UNIQUE, gridLevel INT NOT NULL DEFAULT 1, slots JSON NOT NULL, totalHarvests INT NOT NULL DEFAULT 0, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX idx_user_greenhouses_user (userId)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    pgSql:
+      'CREATE TABLE IF NOT EXISTS "user_greenhouses" ("id" SERIAL PRIMARY KEY, "userId" VARCHAR(191) NOT NULL UNIQUE, "gridLevel" INTEGER NOT NULL DEFAULT 1, "slots" JSON NOT NULL, "totalHarvests" INTEGER NOT NULL DEFAULT 0, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS "idx_user_greenhouses_user" ON "user_greenhouses" ("userId");',
+  },
+  {
+    id: "v38_create_cross_server_caravans",
+    description:
+      "Buat tabel trade_caravans dan caravan_escorts untuk Karavan Dagang Lintas Server & PvP Ambush",
+    sql: "CREATE TABLE IF NOT EXISTS trade_caravans (caravanId VARCHAR(64) NOT NULL PRIMARY KEY, guildId VARCHAR(64) NOT NULL, ownerClanId INT DEFAULT NULL, creatorUserId VARCHAR(191) NOT NULL, routeId VARCHAR(32) NOT NULL, cargo JSON NOT NULL, status VARCHAR(32) NOT NULL DEFAULT 'EN_ROUTE', departureTime DATETIME NOT NULL, estimatedArrival DATETIME NOT NULL, totalInvestment BIGINT NOT NULL DEFAULT 0, potentialYield BIGINT NOT NULL DEFAULT 0, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX idx_trade_caravans_guild (guildId), INDEX idx_trade_caravans_status (status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; CREATE TABLE IF NOT EXISTS caravan_escorts (id INT AUTO_INCREMENT PRIMARY KEY, caravanId VARCHAR(64) NOT NULL, userId VARCHAR(191) NOT NULL, combatPower INT NOT NULL DEFAULT 100, profitSharePercent INT NOT NULL DEFAULT 10, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, UNIQUE KEY uk_caravan_user (caravanId, userId)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    pgSql:
+      'CREATE TABLE IF NOT EXISTS "trade_caravans" ("caravanId" VARCHAR(64) NOT NULL PRIMARY KEY, "guildId" VARCHAR(64) NOT NULL, "ownerClanId" INTEGER DEFAULT NULL, "creatorUserId" VARCHAR(191) NOT NULL, "routeId" VARCHAR(32) NOT NULL, "cargo" JSON NOT NULL, "status" VARCHAR(32) NOT NULL DEFAULT \'EN_ROUTE\', "departureTime" TIMESTAMPTZ NOT NULL, "estimatedArrival" TIMESTAMPTZ NOT NULL, "totalInvestment" BIGINT NOT NULL DEFAULT 0, "potentialYield" BIGINT NOT NULL DEFAULT 0, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS "idx_trade_caravans_guild" ON "trade_caravans" ("guildId"); CREATE INDEX IF NOT EXISTS "idx_trade_caravans_status" ON "trade_caravans" ("status"); CREATE TABLE IF NOT EXISTS "caravan_escorts" ("id" SERIAL PRIMARY KEY, "caravanId" VARCHAR(64) NOT NULL, "userId" VARCHAR(191) NOT NULL, "combatPower" INTEGER NOT NULL DEFAULT 100, "profitSharePercent" INTEGER NOT NULL DEFAULT 10, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL, CONSTRAINT "uk_caravan_user" UNIQUE ("caravanId", "userId"));',
+  },
+  {
+    id: "v39_create_community_dungeons",
+    description:
+      "Buat tabel community_dungeons untuk Custom Community Dungeon Maker & Creator Royalty",
+    sql: "CREATE TABLE IF NOT EXISTS community_dungeons (dungeonId VARCHAR(64) NOT NULL PRIMARY KEY, creatorUserId VARCHAR(191) NOT NULL, guildId VARCHAR(64) NOT NULL, dungeonName VARCHAR(128) NOT NULL, theme VARCHAR(32) NOT NULL DEFAULT 'CYBER_VOID', roomsConfig JSON NOT NULL, entryFee BIGINT NOT NULL DEFAULT 100, vaultBalance BIGINT NOT NULL DEFAULT 0, ratingAverage FLOAT NOT NULL DEFAULT 5.0, totalPlays INT NOT NULL DEFAULT 0, totalClears INT NOT NULL DEFAULT 0, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX idx_comm_dungeons_creator (creatorUserId), INDEX idx_comm_dungeons_guild (guildId)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    pgSql:
+      'CREATE TABLE IF NOT EXISTS "community_dungeons" ("dungeonId" VARCHAR(64) NOT NULL PRIMARY KEY, "creatorUserId" VARCHAR(191) NOT NULL, "guildId" VARCHAR(64) NOT NULL, "dungeonName" VARCHAR(128) NOT NULL, "theme" VARCHAR(32) NOT NULL DEFAULT \'CYBER_VOID\', "roomsConfig" JSON NOT NULL, "entryFee" BIGINT NOT NULL DEFAULT 100, "vaultBalance" BIGINT NOT NULL DEFAULT 0, "ratingAverage" DOUBLE PRECISION NOT NULL DEFAULT 5.0, "totalPlays" INTEGER NOT NULL DEFAULT 0, "totalClears" INTEGER NOT NULL DEFAULT 0, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS "idx_comm_dungeons_creator" ON "community_dungeons" ("creatorUserId"); CREATE INDEX IF NOT EXISTS "idx_comm_dungeons_guild" ON "community_dungeons" ("guildId");',
+  },
 ];
 
 /**

@@ -20,6 +20,21 @@ function addRpgGroup(builder) {
       )
       .addSubcommand((sub) =>
         sub
+          .setName("pass")
+          .setDescription("🏆 Buka antarmuka Naura Wilds Season Battle Pass (30 Tiers)")
+          .addStringOption((opt) =>
+            opt
+              .setName("aksi")
+              .setDescription("Pilihan aksi")
+              .addChoices(
+                { name: "Lihat Status (View)", value: "view" },
+                { name: "Klaim Hadiah (Claim)", value: "claim" },
+                { name: "Beli Premium (Buy)", value: "buy" },
+              ),
+          ),
+      )
+      .addSubcommand((sub) =>
+        sub
           .setName("travel")
           .setDescription("Pindah ke lokasi lain di map")
           .addStringOption((opt) =>
@@ -53,6 +68,13 @@ function addRpgGroup(builder) {
                 { name: "Assassin (Pembunuh)", value: "assassin" },
                 { name: "Ranger (Pemanah)", value: "ranger" },
               ),
+          ),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("skill")
+          .setDescription(
+            "⚡ Kelola Pohon Kemampuan Jiwa & alokasikan Stat Points",
           ),
       )
       .addSubcommand((sub) =>
@@ -298,6 +320,64 @@ function addRpgGroup(builder) {
                 { name: "🚪 Masuki Ruangan 3", value: "room_3" },
                 { name: "🏁 Selesaikan & Klaim Hadiah", value: "leave" },
               )
+              .setRequired(false),
+          ),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("custom-dungeon")
+          .setDescription(
+            "🏰 Custom Community Dungeon Maker & Arena Buatan Pemain",
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("aksi")
+              .setDescription("Pilih aksi dungeon komunitas")
+              .addChoices(
+                { name: "Jelajahi Dungeon (Browse)", value: "browse" },
+                { name: "Buat Dungeon Baru (Create)", value: "create" },
+                { name: "Tantang Dungeon (Play)", value: "play" },
+                { name: "Beri Rating Bintang (Rate)", value: "rate" },
+                { name: "Cairkan Royalti Brankas (Withdraw)", value: "withdraw" },
+              )
+              .setRequired(false),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("nama")
+              .setDescription("Nama dungeon baru (khusus aksi Create)")
+              .setRequired(false),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("dungeon_id")
+              .setDescription("ID Dungeon target (khusus aksi Play, Rate, Withdraw)")
+              .setRequired(false),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("tema")
+              .setDescription("Tema visual arsitektur dungeon")
+              .addChoices(
+                { name: "Cyber Void", value: "CYBER_VOID" },
+                { name: "Volcanic Core", value: "VOLCANIC_CORE" },
+                { name: "Astral Temple", value: "ASTRAL_TEMPLE" },
+                { name: "Neon Crypt", value: "NEON_CRYPT" },
+              )
+              .setRequired(false),
+          )
+          .addIntegerOption((opt) =>
+            opt
+              .setName("tiket")
+              .setDescription("Biaya tiket masuk koin (default: 100)")
+              .setRequired(false),
+          )
+          .addIntegerOption((opt) =>
+            opt
+              .setName("bintang")
+              .setDescription("Rating bintang 1 s/d 5 (khusus aksi Rate)")
+              .setMinValue(1)
+              .setMaxValue(5)
               .setRequired(false),
           ),
       ),

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Naura Wilds • Peta Dunia Interaktif</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/styles/main.css">
+  <style>
+    body {
+      background-color: #0B0C10;
+      color: #E2E8F0;
+      font-family: 'Outfit', sans-serif;
+      overflow-x: hidden;
+    }
+    .orbitron {
+      font-family: 'Orbitron', sans-serif;
+    }
+    .glass-panel {
+      background: rgba(134, 239, 172, 0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(134, 239, 172, 0.2);
+    }
+    .emerald-glow {
+      box-shadow: 0 0 25px -5px rgba(134, 239, 172, 0.25);
+    }
+    .location-node {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+    .location-node:hover {
+      transform: scale(1.05);
+      filter: drop-shadow(0 0 12px #86EFAC);
+    }
+    .pulse-dot {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- Header & Navigation -->
+  <header class="glass-panel sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-emerald-500/20">
+    <div class="flex items-center space-x-4">
+      <a href="/" class="flex items-center space-x-2 text-emerald-400 hover:text-emerald-300 transition">
+        <span class="text-2xl">🌿</span>
+        <span class="orbitron font-black text-xl tracking-wider text-white">NAURA <span class="text-emerald-400">WILDS</span></span>
+      </a>
+      <span class="hidden md:inline-block text-xs uppercase px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+        World Map V2
+      </span>
+    </div>
+
+    <!-- Live Telemetry Status Bar -->
+    <div class="flex items-center space-x-6 text-sm">
+      <div id="clockStatus" class="hidden sm:flex items-center space-x-2">
+        <span id="timeEmoji">☀️</span>
+        <span id="timeText" class="font-medium">Memuat Waktu...</span>
+      </div>
+      <div id="weatherStatus" class="hidden md:flex items-center space-x-2">
+        <span id="weatherEmoji">🌤️</span>
+        <span id="weatherText" class="text-slate-300">Cerah Berawan</span>
+      </div>
+      <a href="/" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 transition">
+        Kembali ke Dashboard
+      </a>
+    </div>
+  </header>
+
+  <!-- Active Event Banner -->
+  <div id="eventBanner" class="hidden mx-6 mt-4 p-3 rounded-xl bg-gradient-to-r from-emerald-500/20 via-pink-500/20 to-purple-500/20 border border-emerald-400/30 flex items-center justify-between text-sm">
+    <div class="flex items-center space-x-3">
+      <span class="text-xl">🎉</span>
+      <div>
+        <span id="eventName" class="font-bold text-white">Event Aktif</span>
+        <p id="eventDesc" class="text-xs text-slate-300">Deskripsi event musiman.</p>
+      </div>
+    </div>
+    <span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
+      BONUS ACTIVE
+    </span>
+  </div>
+
+  <!-- Interactive SVG Map Canvas -->
+  <main class="flex-1 max-w-7xl mx-auto w-full p-6 flex flex-col items-center">
+    <div class="w-full glass-panel rounded-2xl p-6 relative overflow-hidden emerald-glow">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h1 class="orbitron text-2xl font-bold text-white tracking-wide">PETA TERITORI ALAM LIAR</h1>
+          <p class="text-xs text-slate-400 mt-1">Pantau kepadatan petualang dan sumber daya real-time di setiap wilayah.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-dot"></span>
+          <span class="text-xs text-emerald-400 font-medium">LIVE TELEMETRY</span>
+        </div>
+      </div>
+
+      <!-- SVG Map Drawing -->
+      <div class="relative w-full aspect-[16/9] max-h-[580px] bg-slate-950/60 rounded-xl border border-emerald-500/10 overflow-hidden flex items-center justify-center">
+        <svg viewBox="0 0 1000 600" class="w-full h-full select-none">
+          <!-- Pathway Links -->
+          <defs>
+            <linearGradient id="linkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#86EFAC" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#38BDF8" stop-opacity="0.3"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Paths between locations -->
+          <path d="M 500 300 L 250 160" stroke="url(#linkGrad)" stroke-width="3" stroke-dasharray="6,6"/>
+          <path d="M 500 300 L 750 160" stroke="url(#linkGrad)" stroke-width="3" stroke-dasharray="6,6"/>
+          <path d="M 500 300 L 200 440" stroke="url(#linkGrad)" stroke-width="3" stroke-dasharray="6,6"/>
+          <path d="M 500 300 L 800 440" stroke="url(#linkGrad)" stroke-width="3" stroke-dasharray="6,6"/>
+          <path d="M 500 300 L 500 480" stroke="url(#linkGrad)" stroke-width="3" stroke-dasharray="6,6"/>
+
+          <!-- 1. Central: DESA SWALLOWTAIL -->
+          <g class="location-node" onclick="showLocation('desa')">
+            <circle cx="500" cy="300" r="50" fill="#0B0C10" stroke="#86EFAC" stroke-width="3"/>
+            <circle cx="500" cy="300" r="42" fill="#86EFAC" fill-opacity="0.1"/>
+            <text x="500" y="295" text-anchor="middle" font-size="24">🏡</text>
+            <text x="500" y="322" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="700">DESA PEMULA</text>
+            <text id="badge-desa" x="500" y="368" text-anchor="middle" fill="#86EFAC" font-size="12" font-weight="600">0 Petualang</text>
+          </g>
+
+          <!-- 2. Top-Left: HUTAN TERLARANG -->
+          <g class="location-node" onclick="showLocation('hutan')">
+            <circle cx="250" cy="160" r="44" fill="#0B0C10" stroke="#22C55E" stroke-width="2.5"/>
+            <circle cx="250" cy="160" r="36" fill="#22C55E" fill-opacity="0.1"/>
+            <text x="250" y="155" text-anchor="middle" font-size="22">🌲</text>
+            <text x="250" y="180" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="700">HUTAN PINUS</text>
+            <text id="badge-hutan" x="250" y="222" text-anchor="middle" fill="#22C55E" font-size="12" font-weight="600">0 Petualang</text>
+          </g>
+
+          <!-- 3. Top-Right: KOTA NAURA -->
+          <g class="location-node" onclick="showLocation('kota')">
+            <circle cx="750" cy="160" r="46" fill="#0B0C10" stroke="#C084FC" stroke-width="2.5"/>
+            <circle cx="750" cy="160" r="38" fill="#C084FC" fill-opacity="0.1"/>
+            <text x="750" y="155" text-anchor="middle" font-size="22">🏙️</text>
+            <text x="750" y="180" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="700">KOTA NAURA</text>
+            <text id="badge-kota" x="750" y="224" text-anchor="middle" fill="#C084FC" font-size="12" font-weight="600">0 Petualang</text>
+          </g>
+
+          <!-- 4. Bottom-Left: TAMBANG KUNO -->
+          <g class="location-node" onclick="showLocation('tambang')">
+            <circle cx="200" cy="440" r="44" fill="#0B0C10" stroke="#F59E0B" stroke-width="2.5"/>
+            <circle cx="200" cy="440" r="36" fill="#F59E0B" fill-opacity="0.1"/>
+            <text x="200" y="435" text-anchor="middle" font-size="22">⛏️</text>
+            <text x="200" y="460" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="700">TAMBANG KUNO</text>
+            <text id="badge-tambang" x="200" y="502" text-anchor="middle" fill="#F59E0B" font-size="12" font-weight="600">0 Petualang</text>
+          </g>
+
+          <!-- 5. Bottom-Right: PANTAI UTARA & LAUT -->
+          <g class="location-node" onclick="showLocation('laut')">
+            <circle cx="800" cy="440" r="44" fill="#0B0C10" stroke="#38BDF8" stroke-width="2.5"/>
+            <circle cx="800" cy="440" r="36" fill="#38BDF8" fill-opacity="0.1"/>
+            <text x="800" y="435" text-anchor="middle" font-size="22">🌊</text>
+            <text x="800" y="460" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="700">PANTAI SELATAN</text>
+            <text id="badge-laut" x="800" y="502" text-anchor="middle" fill="#38BDF8" font-size="12" font-weight="600">0 Petualang</text>
+          </g>
+
+          <!-- 6. Bottom-Center: NAURA ACADEMY -->
+          <g class="location-node" onclick="showLocation('academy')">
+            <circle cx="500" cy="480" r="42" fill="#0B0C10" stroke="#EC4899" stroke-width="2.5"/>
+            <circle cx="500" cy="480" r="34" fill="#EC4899" fill-opacity="0.1"/>
+            <text x="500" y="475" text-anchor="middle" font-size="20">🎓</text>
+            <text x="500" y="500" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="700">ACADEMY</text>
+            <text id="badge-academy" x="500" y="540" text-anchor="middle" fill="#EC4899" font-size="12" font-weight="600">0 Petualang</text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Quick Info Drawer -->
+      <div id="drawer" class="mt-6 p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-sm">
+        <div>
+          <span id="drawerTitle" class="font-bold text-white text-base">Klik salah satu lokasi pada peta</span>
+          <p id="drawerDesc" class="text-xs text-slate-300 mt-0.5">Informasi sumber daya dan aktivitas yang tersedia akan tampil di sini.</p>
+        </div>
+        <span id="drawerHint" class="text-xs text-emerald-400 font-mono">PILIH LOKASI</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="glass-panel py-4 px-6 text-center text-xs text-slate-400 border-t border-emerald-500/10">
+    <p>Naura Wilds Ecosystem • Terhubung langsung dengan Discord Bot & Database Polyglot • 2026</p>
+  </footer>
+
+  <script>
+    const LOC_INFO = {
+      desa: { title: "🏡 Desa Swallowtail (Pemula)", desc: "Pusat hunian warga damai. Lokasi bertemu Pak Kades, bercocok tanam di greenhouse, dan pasar bibit." },
+      hutan: { title: "🌲 Hutan Pinus Terlarang", desc: "Area pengumpulan kayu, serat alami, dan apel segar. Hati-hati dengan binatang liar saat menjelajah!" },
+      kota: { title: "🏙️ Kota Naura (Metropolis)", desc: "Pusat perkantoran dan bisnis modern. Tempat bekerja kantoran, Bank Pusat, kafe cyber, dan toko mewah." },
+      tambang: { title: "⛏️ Tambang Kuno & Pintu Gua", desc: "Bebatuan purba kaya bijih besi, perak, dan diamond. Gerbang masuk menuju 100 lantai Infinite Dungeon!" },
+      laut: { title: "🌊 Pantai & Dermaga Selatan", desc: "Dermaga nelayan dan samudera luas. Spot terbaik memancing ikan salmon, ikan mas koki, dan kristal laut." },
+      academy: { title: "🎓 Naura Academy & Riset", desc: "Perpustakaan megah dan ruang ujian Prof. Habibie. Belajar menambah INT dan meraih ijazah kehormatan." }
+    };
+
+    function showLocation(locKey) {
+      const info = LOC_INFO[locKey];
+      if (!info) return;
+      document.getElementById('drawerTitle').innerText = info.title;
+      document.getElementById('drawerDesc').innerText = info.desc;
+      document.getElementById('drawerHint').innerText = locKey.toUpperCase();
+    }
+
+    async function fetchMapData() {
+      try {
+        const res = await fetch('/api/survival/map-data');
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Update Waktu & Cuaca
+        if (data.time) {
+          document.getElementById('timeEmoji').innerText = data.time.timeState?.emoji || '☀️';
+          document.getElementById('timeText').innerText = `Hari ke-${data.time.day}, ${String(data.time.hour).padStart(2, '0')}:00`;
+          document.getElementById('weatherEmoji').innerText = data.time.weather?.emoji || '🌤️';
+          document.getElementById('weatherText').innerText = data.time.weather?.name || 'Cerah';
+        }
+
+        // Update Event
+        if (data.event) {
+          const eb = document.getElementById('eventBanner');
+          eb.classList.remove('hidden');
+          document.getElementById('eventName').innerText = data.event.name;
+          document.getElementById('eventDesc').innerText = data.event.description;
+        }
+
+        // Update Badge Kepadatan
+        if (data.locations) {
+          for (const [k, v] of Object.entries(data.locations)) {
+            const el = document.getElementById(`badge-${k}`);
+            if (el) el.textContent = `${v} Petualang`;
+          }
+        }
+      } catch (err) {
+        console.warn("Gagal memuat telemetri peta:", err);
+      }
+    }
+
+    fetchMapData();
+    setInterval(fetchMapData, 10000);
+  </script>
+</body>
+</html>

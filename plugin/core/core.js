@@ -189,9 +189,10 @@ module.exports = {
   aliases: ["ping", "stats", "info", "about", "help"],
 
   async autocomplete(interaction, client) {
+    const { fuzzyFilter } = require('../../src/utils/autocompleteHelper');
     const focusedValue = interaction.options.getFocused().toLowerCase();
     // Hanya autocomplete untuk subcommand help
-    if (interaction.options.getSubcommand() === "help") {
+    if (interaction.options.getSubcommand() === 'help') {
       const commandList = [];
       for (const [cmdName, cmdData] of client.commands.entries()) {
         if (!cmdData.data || !Array.isArray(cmdData.data.options)) {
@@ -222,13 +223,13 @@ module.exports = {
         }
       }
 
-      const filtered = commandList
-        .filter((cmd) => cmd.toLowerCase().includes(focusedValue))
-        .slice(0, 25);
+      // Gunakan fuzzy matching agar salah ketik sedikit tetap dapat hasil relevan
+      const allChoices = commandList.map((cmd) => ({ name: `/${cmd}`, value: cmd }));
+      const filtered = focusedValue
+        ? fuzzyFilter(allChoices, focusedValue, 25)
+        : allChoices.slice(0, 25);
 
-      await interaction
-        .respond(filtered.map((cmd) => ({ name: `/${cmd}`, value: cmd })))
-        .catch(() => {});
+      await interaction.respond(filtered).catch(() => {});
     }
   },
 

@@ -89,6 +89,11 @@ async function gift(i, ctx) {
     fields: ["affection", "dailyGifts", "lastInteraction", "relationshipLevel"],
   });
 
+  const questGen = require("../engines/questGenerator");
+  await questGen
+    .incrementQuestProgress(survival.userId, "gift_npc", 1)
+    .catch(() => {});
+
   return reply(
     i,
     `${e("cheers", "\uD83C\uDF81")} ${t("npc.gift_title")}`,

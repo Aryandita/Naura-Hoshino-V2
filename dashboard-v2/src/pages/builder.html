@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Container V2 Visual Builder | Naura Hoshino</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Outfit:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/vendor/fontawesome.css" />
+    <link rel="stylesheet" href="/vendor/tailwind-built.css" />
+    <style>
+      :root {
+        --color-surface-glass: rgba(255, 255, 255, 0.03);
+        --color-hairline: rgba(255, 255, 255, 0.08);
+        --color-primary: #ffb6c1;
+      }
+      body {
+        font-family: "Outfit", sans-serif;
+        background-color: #0b0c10;
+        color: #ffffff;
+      }
+      .font-cyber {
+        font-family: "Orbitron", sans-serif;
+      }
+      .glass-card {
+        background: var(--color-surface-glass);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--color-hairline);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex flex-col justify-between">
+    <!-- Navbar -->
+    <header class="border-b border-white/10 px-6 py-4 flex items-center justify-between glass-card sticky top-0 z-50">
+      <div class="flex items-center gap-3">
+        <a href="/" class="text-2xl hover:scale-105 transition">🌸</a>
+        <div>
+          <h1 class="font-cyber font-bold text-base tracking-wider text-pink-300">
+            CONTAINER V2 BUILDER
+          </h1>
+          <p class="text-[11px] text-gray-400">Discord 5-Layer Layout Visual Studio</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs rounded-full font-mono">
+          ✓ Discord API v10 Ready
+        </span>
+        <a href="/" class="text-xs px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg transition border border-white/10">
+          <i class="fa-solid fa-arrow-left mr-1"></i> Dashboard
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Left Column: Input Form (5 Layers) -->
+      <section class="lg:col-span-6 space-y-4">
+        <div class="glass-card rounded-2xl p-5 space-y-4">
+          <h2 class="font-cyber text-sm font-bold text-pink-400 flex items-center gap-2">
+            <i class="fa-solid fa-sliders"></i> Konfigurasi 5-Lapisan Container
+          </h2>
+
+          <!-- Layer 1: Header -->
+          <div class="space-y-2 border-b border-white/5 pb-3">
+            <label class="text-xs font-semibold text-gray-300">1. Header (Author & Judul)</label>
+            <input
+              type="text"
+              id="input-author"
+              class="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs focus:border-pink-400 focus:outline-none"
+              placeholder="Author Name (misal: NAURA SYSTEM)"
+              value="NAURA CORE SYSTEM"
+            />
+            <input
+              type="text"
+              id="input-title"
+              class="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs focus:border-pink-400 focus:outline-none"
+              placeholder="Judul Container (misal: 🌸 Laporan Server)"
+              value="🌸 Pusat Notifikasi & Telemetri Server"
+            />
+          </div>
+
+          <!-- Layer 3: Deskripsi & Konten -->
+          <div class="space-y-2 border-b border-white/5 pb-3">
+            <label class="text-xs font-semibold text-gray-300">3. Isi Deskripsi Konten (Markdown)</label>
+            <textarea
+              id="input-desc"
+              rows="4"
+              class="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs focus:border-pink-400 focus:outline-none"
+              placeholder="Tuliskan deskripsi container di sini..."
+            >Halo! Ini adalah contoh pratinjau live Discord Components V2.
+- ⚡ **Latensi Gateway:** `42ms`
+- 🛡️ **Status Sistem:** `Optimal`
+- 💎 **Mata Uang Aktif:** `Star Fragments & Coins`</textarea>
+          </div>
+
+          <!-- Layer 4: Tombol Interaktif -->
+          <div class="space-y-2 border-b border-white/5 pb-3">
+            <label class="text-xs font-semibold text-gray-300">4. Action Row (Tombol)</label>
+            <div class="grid grid-cols-2 gap-2">
+              <input
+                type="text"
+                id="input-btn1-label"
+                class="px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs focus:border-pink-400 focus:outline-none"
+                placeholder="Label Tombol 1"
+                value="Konfirmasi"
+              />
+              <input
+                type="text"
+                id="input-btn2-label"
+                class="px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs focus:border-pink-400 focus:outline-none"
+                placeholder="Label Tombol 2"
+                value="Bantuan"
+              />
+            </div>
+          </div>
+
+          <!-- Layer 5: Footer -->
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-gray-300">5. Footer Terpusat</label>
+            <input
+              type="text"
+              id="input-footer"
+              class="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs focus:border-pink-400 focus:outline-none"
+              placeholder="Footer Text"
+              value="Naura Hoshino • Discord Components V2 System"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Live Visual Discord Preview -->
+      <section class="lg:col-span-6 space-y-4">
+        <div class="glass-card rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="font-cyber text-sm font-bold text-cyan-400 flex items-center gap-2">
+              <i class="fa-brands fa-discord"></i> Pratinjau Discord Components V2
+            </h2>
+            <span id="budget-badge" class="text-[11px] font-mono px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
+              Budget: 100% Aman
+            </span>
+          </div>
+
+          <!-- Discord Message Container Mockup -->
+          <div class="bg-[#18191c] border border-white/10 rounded-xl p-4 space-y-3 font-sans shadow-2xl">
+            <!-- Header Layer -->
+            <div>
+              <div id="preview-author" class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                NAURA CORE SYSTEM
+              </div>
+              <h3 id="preview-title" class="text-sm font-bold text-white mt-0.5">
+                🌸 Pusat Notifikasi & Telemetri Server
+              </h3>
+            </div>
+
+            <!-- Divider 1 -->
+            <div class="border-t border-white/10"></div>
+
+            <!-- Body Layer -->
+            <div id="preview-desc" class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">
+              Halo! Ini adalah contoh pratinjau live Discord Components V2.
+            </div>
+
+            <!-- Divider 2 -->
+            <div class="border-t border-white/5 border-dashed"></div>
+
+            <!-- Buttons Layer -->
+            <div class="flex items-center gap-2 pt-1">
+              <button id="preview-btn1" class="px-4 py-1.5 bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-semibold rounded transition">
+                Konfirmasi
+              </button>
+              <button id="preview-btn2" class="px-4 py-1.5 bg-[#4e5058] hover:bg-[#6d6f78] text-white text-xs font-semibold rounded transition">
+                Bantuan
+              </button>
+            </div>
+
+            <!-- Divider 3 -->
+            <div class="border-t border-white/10"></div>
+
+            <!-- Footer Layer -->
+            <div id="preview-footer" class="text-[10px] text-gray-500">
+              Naura Hoshino • Discord Components V2 System
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center gap-3 pt-2">
+            <button id="copy-json-btn" class="flex-1 py-2.5 bg-pink-500 hover:bg-pink-600 font-bold text-xs rounded-xl uppercase tracking-wider transition">
+              <i class="fa-solid fa-code mr-1.5"></i> Salin JSON Payload
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 py-4 px-6 text-center text-xs text-gray-500 glass-card">
+      Naura Hoshino V2 • Visual WYSIWYG Studio for Discord Components V2
+    </footer>
+
+    <script>
+      function updatePreview() {
+        const author = document.getElementById("input-author").value;
+        const title = document.getElementById("input-title").value;
+        const desc = document.getElementById("input-desc").value;
+        const btn1 = document.getElementById("input-btn1-label").value;
+        const btn2 = document.getElementById("input-btn2-label").value;
+        const footer = document.getElementById("input-footer").value;
+
+        document.getElementById("preview-author").textContent = author || "HEADER AUTHOR";
+        document.getElementById("preview-title").textContent = title || "CONTAINER TITLE";
+        document.getElementById("preview-desc").textContent = desc || "Deskripsi kosong...";
+        document.getElementById("preview-btn1").textContent = btn1 || "Action 1";
+        document.getElementById("preview-btn2").textContent = btn2 || "Action 2";
+        document.getElementById("preview-footer").textContent = footer || "Footer";
+      }
+
+      ["input-author", "input-title", "input-desc", "input-btn1-label", "input-btn2-label", "input-footer"].forEach(id => {
+        document.getElementById(id).addEventListener("input", updatePreview);
+      });
+
+      document.getElementById("copy-json-btn").addEventListener("click", () => {
+        const payload = {
+          flags: 32768, // MessageFlags.IsComponentsV2
+          authorName: document.getElementById("input-author").value,
+          title: document.getElementById("input-title").value,
+          description: document.getElementById("input-desc").value,
+          footerText: document.getElementById("input-footer").value
+        };
+        navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+        alert("Payload JSON berhasil disalin ke clipboard!");
+      });
+
+      updatePreview();
+    </script>
+  </body>
+</html>

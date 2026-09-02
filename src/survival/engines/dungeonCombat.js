@@ -8,6 +8,7 @@
 // dua kali lebih tebal, tetapi jarahan dan hadiahnya juga dua kali lipat.
 
 const helpers = require("../helpers/craftHelpers");
+const { calculateMaxHp } = require("./survivalLeveling");
 
 const CLASS_BONUS = {
   warrior: { maxHp: 50, strength: 5, agility: 0, intelligence: 0, luck: 0 },
@@ -84,11 +85,14 @@ function statsFor(survival, profile) {
   const userClass = rpgState.class || null;
   const bonus = bonusOf(userClass);
 
-  const playerMaxHp = (survival.survival_level || 1) * 20 + 100 + bonus.maxHp;
+  const playerMaxHp = calculateMaxHp(survival, bonus.maxHp);
   const strength = (survival.strength || 1) + bonus.strength;
   const agility = (survival.agility || 1) + bonus.agility;
   const intelligence = (survival.intelligence || 1) + bonus.intelligence;
   const luck = (survival.luck || 1) + bonus.luck;
+
+  const { getPathSynergy } = require("./skillTreeEngine");
+  const synergy = getPathSynergy(survival);
 
   return {
     userClass,
@@ -100,6 +104,7 @@ function statsFor(survival, profile) {
     luck,
     weaponDmg: (profile.weapon_level || 1) * 10 + strength * 3,
     dodgeChance: Math.min(50, agility * 2),
+    synergy,
   };
 }
 
@@ -168,15 +173,22 @@ function resolveAttack({ useSkill, stats, profile }) {
     };
   }
 
+  const synergyMult =
+    stats?.synergy && stats.synergy.hasSynergy ? stats.synergy.multiplier : 1.0;
   const cost = stats.skill.cost;
 
   if (stats.userClass === "warrior") {
-    const damage = Math.floor(base * 1.8 * roll);
+    const damage = Math.floor(base * 1.8 * roll * synergyMult);
+    const tag =
+      synergyMult > 1
+        ? "[Iron Slash \u2022 Berserker Synergy!]"
+        : "[Iron Slash]";
     return {
       damage,
       cost,
       log:
-        "[Iron Slash] Tebasanmu membelah perisai musuh, **" +
+        tag +
+        " Tebasanmu membelah perisai musuh, **" +
         damage +
         "** damage!",
     };
@@ -184,16 +196,21 @@ function resolveAttack({ useSkill, stats, profile }) {
 
   if (stats.userClass === "mage") {
     const magic = (profile.weapon_level || 1) * 8 + stats.intelligence * 4;
-    const damage = Math.floor(magic * 2.2 * roll);
+    const damage = Math.floor(magic * 2.2 * roll * synergyMult);
+    const tag =
+      synergyMult > 1
+        ? "[Fireball \u2022 Arcane Synergy!]"
+        : "[Fireball]";
     return {
       damage,
       cost,
-      log: "[Fireball] Bola api raksasa meledak, **" + damage + "** damage!",
+      log: tag + " Bola api raksasa meledak, **" + damage + "** damage!",
     };
   }
 
   if (stats.userClass === "assassin") {
-    if (Math.random() * 100 >= 70 + stats.agility) {
+    const missThreshold = synergyMult > 1 ? 50 : 70;
+    if (Math.random() * 100 >= missThreshold + stats.agility) {
       return {
         damage: 0,
         cost,
@@ -202,14 +219,20 @@ function resolveAttack({ useSkill, stats, profile }) {
     }
     const isCrit = Math.random() * 100 < 30 + stats.luck * 2;
     const damage = Math.floor(base * (isCrit ? 2.5 : 1.2) * roll);
+    const tag =
+      synergyMult > 1
+        ? "[Shadow Strike \u2022 Phantom Synergy!]"
+        : "[Shadow Strike]";
     return {
       damage,
       cost,
       log: isCrit
-        ? "[Shadow Strike - KRITIS!] Tebasan mematikan dari balik bayangan, **" +
+        ? tag +
+          " [KRITIS!] Tebasan mematikan dari balik bayangan, **" +
           damage +
           "** damage!"
-        : "[Shadow Strike] Tebasan cepat dari balik bayangan, **" +
+        : tag +
+          " Tebasan cepat dari balik bayangan, **" +
           damage +
           "** damage!",
     };

@@ -117,6 +117,22 @@ module.exports = {
       isRoleLeaseCheckRunning = false;
     });
 
+    // 0.75 Survival Periodic Vital Decay - Runs every 30 minutes
+    let isVitalDecayRunning = false;
+    cron.schedule("*/30 * * * *", async () => {
+      if (isVitalDecayRunning) return;
+      isVitalDecayRunning = true;
+      try {
+        const {
+          processVitalDecayCycle,
+        } = require("../survival/helpers/survivalVitalDecay");
+        await processVitalDecayCycle();
+      } catch (err) {
+        logger.error("[Cron] Gagal memproses siklus Vital Decay:", err);
+      }
+      isVitalDecayRunning = false;
+    });
+
     // 0.8 Custom Reminders Check - Runs every minute
     let isReminderCheckRunning = false;
     cron.schedule("* * * * *", async () => {

@@ -79,6 +79,7 @@ function buildFighter(user, profile, survival, activePet = null) {
     weaponDmg:
       (Number(profile.weapon_level) || 1) * 10 + strength * 3 + petBuffs.dmg,
     petBuffs: petBuffs,
+    synergy: require("./skillTreeEngine").getPathSynergy(survival),
   };
 }
 
@@ -135,15 +136,21 @@ function useSkill(active, target) {
 
   active.stamina = Math.max(0, active.stamina - skill.staminaCost);
 
+  const synergyMult =
+    active?.synergy && active.synergy.hasSynergy
+      ? active.synergy.multiplier
+      : 1.0;
+
   let damage;
   if (skill.kind === "magic") {
     damage = variance(
-      active.intelligence * 4.5 + active.weaponDmg * skill.multiplier,
+      (active.intelligence * 4.5 + active.weaponDmg * skill.multiplier) *
+        synergyMult,
       0.25,
     );
   } else {
     damage = variance(
-      active.weaponDmg * skill.multiplier,
+      active.weaponDmg * skill.multiplier * synergyMult,
       skill.kind === "sneak" ? 0.4 : 0.2,
     );
   }

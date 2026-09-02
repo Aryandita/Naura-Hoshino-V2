@@ -23,7 +23,8 @@ module.exports = {
         .addStringOption((opt) =>
           opt
             .setName("ke")
-            .setDescription("Kode bahasa tujuan (contoh: id, en, ja, ko)")
+            .setDescription("Bahasa tujuan (contoh: id, en, ja, ko, ar, de, fr, es)")
+            .setAutocomplete(true)
             .setRequired(true),
         ),
     ),
@@ -95,4 +96,36 @@ module.exports = {
       await interaction.editReply(errPayload);
     }
   },
+
+  async autocomplete(interaction) {
+    const { choice, safeRespond, fuzzyFilter } = require("../../src/utils/autocompleteHelper");
+    const focusedValue = interaction.options.getFocused().toLowerCase();
+
+    const languages = [
+      { name: "🇮🇩 Indonesian (Bahasa Indonesia)", code: "id" },
+      { name: "🇬🇧 English (English)", code: "en" },
+      { name: "🇯🇵 Japanese (日本語)", code: "ja" },
+      { name: "🇰🇷 Korean (한국어)", code: "ko" },
+      { name: "🇸🇦 Arabic (العربية)", code: "ar" },
+      { name: "🇨🇳 Chinese Simplified (简体中文)", code: "zh-CN" },
+      { name: "🇹🇼 Chinese Traditional (繁體中文)", code: "zh-TW" },
+      { name: "🇩🇪 German (Deutsch)", code: "de" },
+      { name: "🇫🇷 French (Français)", code: "fr" },
+      { name: "🇪🇸 Spanish (Español)", code: "es" },
+      { name: "🇷🇺 Russian (Русский)", code: "ru" },
+      { name: "🇮🇹 Italian (Italiano)", code: "it" },
+      { name: "🇵🇹 Portuguese (Português)", code: "pt" },
+      { name: "🇳🇱 Dutch (Nederlands)", code: "nl" },
+      { name: "🇹🇷 Turkish (Türkçe)", code: "tr" },
+      { name: "🇻🇳 Vietnamese (Tiếng Việt)", code: "vi" },
+      { name: "🇹🇭 Thai (ไทย)", code: "th" },
+      { name: "🇵🇭 Tagalog / Filipino", code: "tl" },
+      { name: "🇮🇳 Hindi (हिन्दी)", code: "hi" },
+      { name: "🇲🇾 Malay (Bahasa Melayu)", code: "ms" },
+    ];
+
+    const choices = languages.map((l) => choice(l.name, l.code));
+    return safeRespond(interaction, fuzzyFilter(choices, focusedValue, 25));
+  },
 };
+

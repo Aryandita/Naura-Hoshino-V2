@@ -323,10 +323,76 @@ async function checkNauraBirthdayEncounter(interaction, userId) {
   });
 }
 
+const localBusyMap = new Map();
+
+/**
+ * Pasang status sibuk pemain agar tidak bisa masuk duel/dungeon bersamaan.
+ */
+async function setSurvivalBusy(userId, label, durationSeconds = 120) {
+  if (!userId) return;
+  const data = {
+    label: label || "Aktivitas Ekspedisi",
+    until: Date.now() + durationSeconds * 1000,
+  };
+  localBusyMap.set(userId, data);
+  try {
+    const redisManager = require("../../managers/redisManager");
+    if (redisManager.isReady) {
+      await redisManager.setCache(
+        `survival:busy:${userId}`,
+        data,
+        durationSeconds,
+      );
+    }
+  } catch (_) {}
+}
+
+/**
+ * Hapus status sibuk pemain setelah aksi selesai.
+ */
+async function clearSurvivalBusy(userId) {
+  if (!userId) return;
+  localBusyMap.delete(userId);
+  try {
+    const redisManager = require("../../managers/redisManager");
+    if (redisManager.isReady) {
+      await redisManager.deleteCache(`survival:busy:${userId}`);
+    }
+  } catch (_) {}
+}
+
+/**
+ * Cek apakah pemain sedang dalam sesi sibuk (dungeon, duel, arena).
+ */
+async function isSurvivalBusy(userId) {
+  if (!userId) return { isBusy: false };
+  try {
+    const redisManager = require("../../managers/redisManager");
+    if (redisManager.isReady) {
+      const cached = await redisManager.getCache(`survival:busy:${userId}`);
+      if (cached && (!cached.until || cached.until > Date.now())) {
+        return { isBusy: true, label: cached.label || "Aktivitas Lain" };
+      }
+    }
+  } catch (_) {}
+
+  const local = localBusyMap.get(userId);
+  if (local && local.until > Date.now()) {
+    return { isBusy: true, label: local.label || "Aktivitas Lain" };
+  }
+  if (local) {
+    localBusyMap.delete(userId);
+  }
+  return { isBusy: false };
+}
+
 module.exports = {
   attachAutoDelete,
   createMockInteraction,
   AUTO_DELETE_MS,
   getCurrentSeason,
   checkNauraBirthdayEncounter,
+  setSurvivalBusy,
+  clearSurvivalBusy,
+  isSurvivalBusy,
 };

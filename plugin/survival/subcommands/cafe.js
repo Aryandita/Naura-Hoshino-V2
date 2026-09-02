@@ -150,6 +150,11 @@ module.exports = {
             });
           }
 
+          const questGen = require("../../../src/survival/engines/questGenerator");
+          await questGen
+            .incrementQuestProgress(userId, "cafe_serve", 1)
+            .catch(() => {});
+
           return interaction.followUp({
             ...buildContainerV2({
               accentColorHex: "#38BDF8",
@@ -283,6 +288,11 @@ module.exports = {
           }),
         });
       }
+
+      const questGen = require("../../../src/survival/engines/questGenerator");
+      await questGen
+        .incrementQuestProgress(userId, "cafe_serve", 1)
+        .catch(() => {});
 
       const payload = buildContainerV2({
         accentColorHex: "#38BDF8",

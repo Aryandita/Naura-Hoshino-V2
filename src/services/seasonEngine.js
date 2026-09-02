@@ -230,6 +230,59 @@ class SeasonEngine {
       message: `🎉 Berhasil mengklaim hadiah dari **${newlyClaimedFree.length + newlyClaimedPrem.length} milestone tier**!`,
     };
   }
+
+  /**
+   * Catat hasil pertandingan PvP ranked antara dua pemain dan hitung rating ELO baru.
+   * @param {string} winnerId - ID pemain pemenang
+   * @param {string} loserId - ID pemain kalah
+   * @returns {Promise<{ winnerElo: number, loserElo: number, deltaWinner: number, deltaLoser: number }>}
+   */
+  async recordMatchResult(winnerId, loserId) {
+    const winnerSurvival = await cacheManager.getUserSurvival(winnerId);
+    const loserSurvival = await cacheManager.getUserSurvival(loserId);
+
+    const eloWinner = Number(winnerSurvival?.rpg_state?.pvp_elo || 1200);
+    const eloLoser = Number(loserSurvival?.rpg_state?.pvp_elo || 1200);
+
+    const K = 32;
+    const expectedWinner = 1 / (1 + Math.pow(10, (eloLoser - eloWinner) / 400));
+    const expectedLoser = 1 / (1 + Math.pow(10, (eloWinner - eloLoser) / 400));
+
+    const deltaWinner = Math.max(10, Math.round(K * (1 - expectedWinner)));
+    const deltaLoser = Math.min(-10, Math.round(K * (0 - expectedLoser)));
+
+    const newWinnerElo = eloWinner + deltaWinner;
+    const newLoserElo = Math.max(1000, eloLoser + deltaLoser);
+
+    await cacheManager.mutateUserSurvivalJson(winnerId, "rpg_state", (s) => {
+      const state = s || {};
+      state.pvp_elo = newWinnerElo;
+      state.pvp_wins = (state.pvp_wins || 0) + 1;
+      return state;
+    });
+
+    await cacheManager.mutateUserSurvivalJson(loserId, "rpg_state", (s) => {
+      const state = s || {};
+      state.pvp_elo = newLoserElo;
+      state.pvp_losses = (state.pvp_losses || 0) + 1;
+      return state;
+    });
+
+    // Tambahkan Season Battle Pass XP
+    await this.addSeasonXp(winnerId, 100);
+    await this.addSeasonXp(loserId, 25);
+
+    // Cek achievement
+    const tracker = require("../survival/helpers/achievementTracker");
+    await tracker.checkAndUnlock(winnerId).catch(() => {});
+
+    return {
+      winnerElo: newWinnerElo,
+      loserElo: newLoserElo,
+      deltaWinner,
+      deltaLoser,
+    };
+  }
 }
 
 module.exports = new SeasonEngine();

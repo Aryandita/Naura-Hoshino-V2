@@ -25,11 +25,15 @@ test("survivalLeveling - addPlayerXP logic", async (t) => {
 
   const originalGetUserSurvival = cacheManager.getUserSurvival;
   const originalIncrementUserSurvival = cacheManager.incrementUserSurvival;
+  const originalMutateUserSurvivalJson = cacheManager.mutateUserSurvivalJson;
+  const originalUpdateUserSurvival = cacheManager.updateUserSurvival;
   const originalGetDifficultyConfig = difficultyHelper.getDifficultyConfig;
 
   t.after(() => {
     cacheManager.getUserSurvival = originalGetUserSurvival;
     cacheManager.incrementUserSurvival = originalIncrementUserSurvival;
+    cacheManager.mutateUserSurvivalJson = originalMutateUserSurvivalJson;
+    cacheManager.updateUserSurvival = originalUpdateUserSurvival;
     difficultyHelper.getDifficultyConfig = originalGetDifficultyConfig;
   });
 
@@ -40,6 +44,8 @@ test("survivalLeveling - addPlayerXP logic", async (t) => {
   cacheManager.incrementUserSurvival = async (userId, deltas) => {
     lastIncrementArgs = deltas;
   };
+  cacheManager.mutateUserSurvivalJson = async () => {};
+  cacheManager.updateUserSurvival = async () => true;
 
   await t.test("adds XP without leveling up", async () => {
     cacheManager.getUserSurvival = async () => ({

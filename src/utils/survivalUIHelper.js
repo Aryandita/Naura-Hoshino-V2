@@ -146,12 +146,55 @@ function getFooter() {
  * @param {number|string} value
  * @returns {string}
  */
+/**
+ * Memformat angka stat (HP, damage, saldo fragment) menjadi string lokal id-ID
+ * dengan penjagaan terhadap nilai non-numerik.
+ * @param {number|string} value
+ * @returns {string}
+ */
 function formatStat(value) {
   const num = Number(value);
   if (!Number.isFinite(num)) {
     return "0";
   }
   return num.toLocaleString("id-ID");
+}
+
+/**
+ * Membangun satu blok HUD mini vital untuk disisipkan di atas deskripsi respons survival.
+ * Format: ❤️ HP [▰▰▰▱▱] 80/100 • ⚡ [▰▰▱▱▱] 50/100 • 🍖 [▰▰▰▱▱] 60/100 • 💧 [▰▰▰▰▱] 85/100
+ *
+ * @param {object} survival - Objek data UserSurvival
+ * @param {object} [options]
+ * @param {number} [options.customMaxHp] - Batas maksimal HP
+ * @param {number} [options.barLength=5] - Panjang bar mini
+ * @returns {string} Teks mini HUD
+ */
+function buildSurvivalHUD(survival, { customMaxHp = null, barLength = 5 } = {}) {
+  const maxHp = customMaxHp || 100 + (Number(survival?.survival_level || 1) * 20);
+  const hp = Math.min(maxHp, Number(survival?.hp ?? maxHp));
+  const stamina = Number(survival?.stamina ?? 100);
+  const hunger = Number(survival?.hunger ?? 100);
+  const thirst = Number(survival?.thirst ?? 100);
+
+  const hpBar = buildVitalsBar({ current: hp, target: maxHp, length: barLength }).bar;
+  const staBar = buildVitalsBar({ current: stamina, target: 100, length: barLength }).bar;
+  const hunBar = buildVitalsBar({ current: hunger, target: 100, length: barLength }).bar;
+  const thiBar = buildVitalsBar({ current: thirst, target: 100, length: barLength }).bar;
+
+  return `❤️ HP ${hpBar} \`${hp}/${maxHp}\` \u2022 ⚡ ${staBar} \`${stamina}%\` \u2022 🍖 ${hunBar} \`${hunger}%\` \u2022 💧 ${thiBar} \`${thirst}%\``;
+}
+
+/**
+ * Membangun satu baris indikator waktu, hari, dan lokasi petualang.
+ */
+function buildTimeLocationLine(survival) {
+  const day = survival?.inGameDay || 1;
+  const hour = survival?.inGameHour || 6;
+  const loc = String(survival?.currentLocation || "desa").toUpperCase();
+  const timeEmoji = hour >= 6 && hour < 18 ? "☀️" : "🌙";
+
+  return `${timeEmoji} **Hari ke-${day}**, pukul ${String(hour).padStart(2, "0")}:00 \u2022 📍 **${loc}**`;
 }
 
 module.exports = {
@@ -164,4 +207,6 @@ module.exports = {
   buildVitalsBar,
   getFooter,
   formatStat,
+  buildSurvivalHUD,
+  buildTimeLocationLine,
 };

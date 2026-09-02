@@ -236,6 +236,11 @@ module.exports = {
         .incrementQuestProgress(user.id, "collect", 1)
         .catch(() => {});
 
+      const {
+        advanceTime,
+      } = require("../../../src/survival/helpers/survivalTime");
+      await advanceTime(user.id, 2).catch(() => {});
+
       // Dihitung dari inventory hasil transaksi, bukan dari salinan lama di
       // memori, dan memakai countStack supaya tumpukan ikut terhitung.
       if (

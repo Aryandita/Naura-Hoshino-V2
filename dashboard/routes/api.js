@@ -142,5 +142,109 @@ module.exports = (client) => {
     }
   });
 
+  // --- Endpoint Topology Arsitektur Terdistribusi (Live System Topology) ---
+  router.get("/topology/status", async (req, res) => {
+    try {
+      const dbStatus = getDbStatus();
+      const mongoStatus = mongoManager ? mongoManager.getStatus() : { state: "disabled", readyState: 0, models: [] };
+      const redisStatus = !!(redisManager.client && redisManager.client.isReady);
+
+      // Lavalink Nodes
+      let lavalinkNodesList = [];
+      if (client.poru && client.poru.nodes) {
+        const rawNodes = client.poru.nodes.values
+          ? Array.from(client.poru.nodes.values())
+          : Array.isArray(client.poru.nodes)
+            ? client.poru.nodes
+            : [];
+
+        lavalinkNodesList = rawNodes.map((n) => ({
+          name: n.name || "Lavalink Node",
+          host: n.options?.host || "localhost",
+          port: n.options?.port || 2333,
+          connected: !!n.isConnected,
+          isFallback: !!n.options?.isPrimaryFallback,
+          players: n.players ? (n.players.size || (Array.isArray(n.players) ? n.players.length : 0)) : 0,
+        }));
+      }
+
+      const mem = process.memoryUsage();
+      const env = require("../../src/config/env");
+
+      res.json({
+        success: true,
+        timestamp: Date.now(),
+        gateway: {
+          status: "online",
+          shardsCount: env.TOTAL_SHARDS || 1,
+          currentShardId: env.SHARD_ID || 0,
+          pingMs: client.ws ? client.ws.ping : 0,
+          guildsCount: client.guilds ? client.guilds.cache.size : 0,
+          usersCount: client.guilds ? client.guilds.cache.reduce((acc, g) => acc + (g.memberCount || 0), 0) : 0,
+        },
+        compute: {
+          runtime: `Node.js ${process.version}`,
+          eventLoop: "healthy",
+          workerPool: {
+            service: "Dedicated Canvas Worker Pool",
+            threads: 3,
+            status: "ready",
+          },
+          memory: {
+            heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
+            heapTotalMB: Math.round(mem.heapTotal / 1024 / 1024),
+            rssMB: Math.round(mem.rss / 1024 / 1024),
+          },
+        },
+        persistence: {
+          relational: {
+            engine: "Supabase / PostgreSQL (Sequelize)",
+            status: dbStatus.connected ? "connected" : "disconnected",
+            poolMax: dbStatus.poolMax || 10,
+            poolUsed: dbStatus.poolUsed || 0,
+          },
+          cache: {
+            engine: "Redis In-Memory Cache & Pub/Sub",
+            status: redisStatus ? "connected" : "disconnected",
+            mode: "Cluster Invalidator Active",
+          },
+          document: {
+            engine: "MongoDB Atlas",
+            status: mongoStatus.readyState === 1 ? "connected" : "standby",
+            modelsCount: Array.isArray(mongoStatus.models) ? mongoStatus.models.length : 0,
+          },
+          emergencyFallback: {
+            engine: "SQLite Local Fallback",
+            status: "ready",
+            active: false,
+          },
+        },
+        audioCluster: {
+          manager: "Poru Audio Engine v4",
+          totalNodes: lavalinkNodesList.length,
+          connectedNodes: lavalinkNodesList.filter((n) => n.connected).length,
+          nodes: lavalinkNodesList,
+        },
+        aiOrchestration: {
+          primaryEngine: {
+            name: "Gemini 2.5 Flash",
+            status: env.GEMINI_API_KEY ? "active" : "unconfigured",
+          },
+          failoverEngine: {
+            name: "Groq LLaMA 3.3 Versatile",
+            status: env.GROQ_API_KEY ? "standby_ready" : "unconfigured",
+          },
+          memoryService: {
+            name: "Persistent AI Memory (MongoDB + Redis)",
+            status: "active",
+          },
+        },
+      });
+    } catch (e) {
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
   return router;
 };
+

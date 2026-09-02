@@ -46,6 +46,9 @@ export default defineConfig({
             world: resolve(__dirname, "src/pages/world.html"),
             activity: resolve(__dirname, "src/pages/activity.html"),
             portfolio: resolve(__dirname, "src/pages/portfolio.html"),
+            topology: resolve(__dirname, "src/pages/topology.html"),
+            builder: resolve(__dirname, "src/pages/builder.html"),
+            survivalMap: resolve(__dirname, "src/pages/survival-map.html"),
           },
     },
     // Chunk terpisah agar model Three.js tidak disertakan di halaman yang tidak perlu

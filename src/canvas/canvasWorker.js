@@ -68,6 +68,11 @@ if (parentPort) {
           result = await stockCanvas.renderStockMarket(payload);
           break;
         }
+        case "renderGreenhouse": {
+          const greenhouseCanvas = require("./greenhouseCanvas");
+          result = await greenhouseCanvas.renderGreenhouseCard(payload);
+          break;
+        }
         default:
           throw new Error(`Unknown canvas worker task: ${task}`);
       }

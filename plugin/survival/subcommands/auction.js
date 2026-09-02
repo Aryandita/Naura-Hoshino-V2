@@ -19,8 +19,10 @@ const {
   takeItemsAtomic,
   addItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
-const RateLimiter = require("../../../src/utils/rateLimiter");
-const { Op } = require("sequelize");
+const RateLimiter = require('../../../src/utils/rateLimiter');
+const { Op } = require('sequelize');
+const { choice, safeRespond, fuzzyFilter } = require('../../../src/utils/autocompleteHelper');
+
 
 // Helper random ID generator if nanoId is not available
 function generateAuctionId() {
@@ -42,30 +44,64 @@ function hidden(payload) {
 module.exports = {
   async autocomplete(interaction) {
     const focusedOption = interaction.options.getFocused(true);
-    const action = interaction.options.getString("action");
-    if (!action) return interaction.respond([]).catch(() => {});
+    const action = interaction.options.getString('action');
+    if (!action) return safeRespond(interaction, []);
 
-    if (focusedOption.name === "target") {
+    if (focusedOption.name === 'target') {
       const focusedValue = focusedOption.value.toLowerCase();
-      if (action === "sell") {
+
+      if (action === 'sell') {
+        // Tampilkan item dari inventory user
         const profile = await cacheManager.getUserProfile(interaction.user.id);
         const inventory = safeParseInventory(profile.inventory);
 
-        const available = inventory.map((item) => ({
-          name: `${item.name} (Jumlah: ${item.amount || 1})`,
-          value: item.id,
-        }));
+        const available = inventory.map((item) =>
+          choice(
+            `${item.name} (Jumlah: ${item.amount || 1})`,
+            item.id,
+          )
+        );
 
-        const filtered = available
-          .filter((it) => it.name.toLowerCase().includes(focusedValue))
-          .slice(0, 25);
-        await interaction.respond(filtered).catch(() => {});
-      } else if (action === "bid" || action === "claim") {
-        // You could suggest active auction IDs or user's auctions here.
-        await interaction.respond([]).catch(() => {});
+        return safeRespond(interaction, fuzzyFilter(available, focusedValue, 25));
+
+      } else if (action === 'bid' || action === 'claim') {
+        // Tampilkan active auction IDs agar user bisa pilih langsung
+        try {
+          const auctions = await MarketAuction.findAll({
+            where: { status: 'active', expiresAt: { [Op.gt]: new Date() } },
+            order: [['expiresAt', 'ASC']],
+            limit: 25,
+          });
+
+          if (auctions.length === 0) {
+            return safeRespond(interaction, [
+              choice('❌ Tidak ada lelang aktif saat ini', 'none'),
+            ]);
+          }
+
+          const auctionChoices = auctions.map((auc) => {
+            const timeLeft = Math.max(
+              0,
+              Math.ceil((new Date(auc.expiresAt) - Date.now()) / 60000),
+            );
+            const timeLabel = timeLeft > 60
+              ? `${Math.ceil(timeLeft / 60)}j`
+              : `${timeLeft}m`;
+            const label = `[${auc.auctionId}] ${auc.itemName || auc.itemId} - ` +
+              `${auc.currentBid || auc.startingPrice} ${auc.currency === 'nsf' ? 'NSF' : 'Koin'} (${timeLabel} lagi)`;
+            return choice(label, auc.auctionId);
+          });
+
+          return safeRespond(interaction, fuzzyFilter(auctionChoices, focusedValue, 25));
+        } catch (_e) {
+          return safeRespond(interaction, []);
+        }
       }
     }
+
+    return safeRespond(interaction, []);
   },
+
 
   async execute(interaction) {
     // Survival.js already deferred the reply.

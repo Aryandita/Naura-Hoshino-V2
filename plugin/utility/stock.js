@@ -15,6 +15,8 @@ const ui = require("../../src/config/ui");
 const stockMarketEngine = require("../../src/services/stockMarketEngine");
 const { drawStockMarket } = require("../../src/canvas/stockCanvas");
 const GuildClan = require("../../src/models/GuildClan");
+const UserStockHolding = require("../../src/models/UserStockHolding");
+const { choice, safeRespond, fuzzyFilter } = require("../../src/utils/autocompleteHelper");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -37,6 +39,7 @@ module.exports = {
             .setDescription(
               "Kode Ticker Saham (contoh: HOSHINO_AI, NAURA_COIN, NEO_ENERGY)",
             )
+            .setAutocomplete(true)
             .setRequired(true),
         )
         .addIntegerOption((opt) =>
@@ -56,6 +59,7 @@ module.exports = {
           opt
             .setName("ticker")
             .setDescription("Kode Ticker Saham yang ingin dijual")
+            .setAutocomplete(true)
             .setRequired(true),
         )
         .addIntegerOption((opt) =>
@@ -398,4 +402,50 @@ module.exports = {
       return interaction.editReply(payload);
     }
   },
+
+  async autocomplete(interaction) {
+    const subcommand = interaction.options.getSubcommand();
+    const focusedValue = interaction.options.getFocused().toLowerCase();
+    const userId = interaction.user.id;
+
+    if (subcommand === "buy") {
+      try {
+        const stocks = await stockMarketEngine.getMarketOverview();
+        const choices = stocks.map((s) => {
+          const price = Number(s.currentPrice || 0).toFixed(1);
+          const riskEmoji = s.isHighRisk ? "🔥 " : "";
+          const label = `${riskEmoji}[${s.ticker}] ${s.name} (${price} ⭐)`;
+          return choice(label, s.ticker);
+        });
+        return safeRespond(interaction, fuzzyFilter(choices, focusedValue, 25));
+      } catch (_e) {
+        return safeRespond(interaction, []);
+      }
+    }
+
+    if (subcommand === "sell") {
+      try {
+        const holdings = await UserStockHolding.findAll({
+          where: { userId },
+        });
+        if (holdings.length === 0) {
+          return safeRespond(interaction, [
+            choice("❌ Kamu belum memiliki saham apa pun", "none"),
+          ]);
+        }
+        const choices = holdings
+          .filter((h) => (h.sharesOwned || 0) > 0)
+          .map((h) => {
+            const label = `[${h.ticker}] Dimiliki: ${h.sharesOwned} lembar (Beli: ${Number(h.averageBuyPrice || 0).toFixed(1)} ⭐)`;
+            return choice(label, h.ticker);
+          });
+        return safeRespond(interaction, fuzzyFilter(choices, focusedValue, 25));
+      } catch (_e) {
+        return safeRespond(interaction, []);
+      }
+    }
+
+    return safeRespond(interaction, []);
+  },
 };
+

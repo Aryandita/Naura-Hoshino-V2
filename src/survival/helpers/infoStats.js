@@ -4,6 +4,7 @@
 // tampilannya mudah disunting tanpa menyentuh rumus level, stat, dan saldo.
 
 const ui = require("../../config/ui");
+const survivalUI = require("../../utils/survivalUIHelper");
 const leveling = require("../engines/survivalLeveling");
 const currencyHelper = require("../engines/currency");
 const { getTimeState } = require("./survivalTime");
@@ -148,10 +149,15 @@ async function buildStats({ userId, profile, survival, activePets }) {
   const pet = resolvePet(activePets);
   const gear = resolveGear(inventory);
 
-  const activeStrength = Math.min(survival.strength || 1, lvl.maxStat);
-  const maxHp = 100 + Math.floor(lvl.level / 5) * 10 + activeStrength * 10;
+  const maxHp = leveling.calculateMaxHp(survival, (rpgState.class_bonus?.hp || 0));
   const hp =
     survival.hp !== undefined && survival.hp !== null ? survival.hp : maxHp;
+
+  const hpVital = survivalUI.buildVitalsBar({ current: hp, target: maxHp, length: 8 });
+  const hungerVital = survivalUI.buildVitalsBar({ current: survival.hunger || 0, target: 100, length: 8 });
+  const thirstVital = survivalUI.buildVitalsBar({ current: survival.thirst || 0, target: 100, length: 8 });
+  const staminaVital = survivalUI.buildVitalsBar({ current: survival.stamina || 0, target: 100, length: 8 });
+  const xpVital = survivalUI.buildVitalsBar({ current: lvl.xp, target: lvl.reqXP, length: 8 });
 
   const locationKey = survival.currentLocation || "desa";
   const difficulty = rpgState.difficulty || "Normal";
@@ -161,13 +167,18 @@ async function buildStats({ userId, profile, survival, activePets }) {
     xp: lvl.xp,
     reqXP: lvl.reqXP,
     maxStat: lvl.maxStat,
-    xpBar: ui.createProgressBar(lvl.xp, lvl.reqXP, 8),
+    xpBar: xpVital.bar,
+    xpVital,
     hp,
     maxHp,
-    hpBar: ui.createProgressBar(hp, maxHp, 8),
-    hungerBar: ui.createProgressBar(survival.hunger || 0, 100, 8),
-    thirstBar: ui.createProgressBar(survival.thirst || 0, 100, 8),
-    staminaBar: ui.createProgressBar(survival.stamina || 0, 100, 8),
+    hpBar: hpVital.bar,
+    hpVital,
+    hungerBar: hungerVital.bar,
+    hungerVital,
+    thirstBar: thirstVital.bar,
+    thirstVital,
+    staminaBar: staminaVital.bar,
+    staminaVital,
     pet,
     gear,
     balances: resolveBalances(survival, profile),

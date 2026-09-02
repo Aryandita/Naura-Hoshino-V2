@@ -368,6 +368,11 @@ module.exports = {
             });
           }
 
+          const questGen = require("../../../src/survival/engines/questGenerator");
+          await questGen
+            .incrementQuestProgress(user.id, "craft", 1)
+            .catch(() => {});
+
           const extra = result.cost
             ? "\nBiaya tempa " +
               currency.format(result.kind, result.cost) +

@@ -2,256 +2,345 @@
 
 const {
   ActionRowBuilder,
-  StringSelectMenuBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  AttachmentBuilder,
   MessageFlags,
 } = require("discord.js");
-
-const UserFarm = require("../../../src/models/UserFarm");
-const UserSurvival = require("../../../src/models/UserSurvival");
-const cacheManager = require("../../../src/managers/cacheManager");
-const {
-  safeParseInventory,
-} = require("../../../src/survival/engines/inventoryHelper");
-const ui = require("../../../src/config/ui");
-const itemsConfig = require("../../../src/survival/data/items");
 const {
   buildContainerV2,
+  buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
-
-const COLLECTOR_MS = 120000;
-const MAX_OPTIONS = 25;
-
-// Kapasitas lahan per properti.
-const PLOT_CAPACITY = {
-  kos: 2,
-  prop_kos: 2,
-  rumah: 6,
-  prop_rumah: 6,
-  mansion: 12,
-  prop_mansion: 12,
-};
-
-const GROW_DAYS = { wheat: 1, potato: 2, apple: 3 };
-
-function e(name, fallback) {
-  return ui.getEmoji(name) || fallback;
-}
-
-function ephemeral(content) {
-  return { content, flags: MessageFlags.Ephemeral };
-}
-
-function addItem(inventory, id, name, amount) {
-  const exist = inventory.find((it) => it && it.id === id);
-  if (exist) exist.amount = (exist.amount || 1) + amount;
-  else inventory.push({ id, name, amount, type: "material" });
-}
+const ui = require("../../../src/config/ui");
+const greenhouseEngine = require("../../../src/survival/engines/greenhouseEngine");
+const { CROP_SEEDS, getSeedById } = require("../../../src/survival/data/cropSeeds");
+const { renderGreenhouseCard } = require("../../../src/canvas/greenhouseCanvas");
 
 module.exports = {
+  name: "farm",
+  description:
+    "🌿 Kelola Lahan Hidroponik Greenhouse, tanam benih kosmik, dan panen bahan kafe!",
+
   async execute(interaction) {
-    const user = interaction.user;
-    const [survival] = await UserSurvival.findOrCreate({
-      where: { userId: user.id },
-    });
+    const action = interaction.options.getString("aksi") || "status";
+    const seedId = interaction.options.getString("benih");
+    const slotNumber = interaction.options.getInteger("slot");
+    const userId = interaction.user.id;
+    const displayName =
+      interaction.member?.displayName ||
+      interaction.user.displayName ||
+      interaction.user.username;
 
-    if (survival.currentLocation === "prison")
-      return ui.sendError(interaction, "err_sys_43", true);
+    // 1. LIHAT STATUS GREENHOUSE
+    if (action === "status") {
+      const gh = await greenhouseEngine.getGreenhouse(userId);
+      const files = [];
 
-    // Model menyimpan properti di `propertyId`, bukan `property`, dan hari
-    // in-game ada di `inGameDay`. Nama lama membuat panen tidak pernah siap.
-    const prop = survival.propertyId || "jalanan";
-    const rpgState = survival.rpg_state || {};
-
-    if (rpgState.house_seized)
-      return ui.sendError(interaction, "err_sys_44", true);
-    if (prop === "jalanan")
-      return ui.sendError(interaction, "err_sys_45", true);
-
-    const maxLahan = PLOT_CAPACITY[prop] || 0;
-    if (maxLahan === 0) return ui.sendError(interaction, "err_sys_45", true);
-
-    const currentDay = survival.inGameDay || 1;
-    const [farmData] = await UserFarm.findOrCreate({
-      where: { userId: user.id },
-    });
-    const plots = Array.isArray(farmData.plots) ? [...farmData.plots] : [];
-
-    if (plots.length < maxLahan) {
-      for (let i = plots.length; i < maxLahan; i++) {
-        plots.push({ id: i, seed: null, plantedAtDay: null, harvestDay: null });
+      try {
+        const cardBuffer = await renderGreenhouseCard(gh);
+        files.push(
+          new AttachmentBuilder(cardBuffer, { name: "greenhouse_status.png" }),
+        );
+      } catch (err) {
+        // Fallback jika canvas gagal
       }
-      await UserFarm.update({ plots }, { where: { userId: user.id } });
+
+      const slotSummaries = gh.slots
+        .map((s, idx) => {
+          if (s.isEmpty) {
+            return `• **Pod #${idx + 1}**: ⚪ _Lahan Kosong_ (Siap ditanami)`;
+          }
+          const seed = s.seed || {};
+          const statusText = s.isMature
+            ? "✨ **Siap Dipanen!**"
+            : `⏳ ${s.stage} (\`${s.remainingMinutes} menit lagi\`) [${s.progressPercent}%]`;
+          const fert = s.isFertilized ? "⚡ _Terpupuk (+50% Panen)_" : "";
+          return `• **Pod #${idx + 1}**: ${seed.emoji || "🌱"} **${seed.name || "Tanaman"}** | ${statusText} ${fert}`;
+        })
+        .join("\n");
+
+      const buttonsRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("farm_quick_water")
+          .setLabel("Siram Semua")
+          .setStyle(ButtonStyle.Primary)
+          .setEmoji("💧"),
+        new ButtonBuilder()
+          .setCustomId("farm_quick_harvest")
+          .setLabel("Panen Semua")
+          .setStyle(ButtonStyle.Success)
+          .setEmoji("🌾"),
+        new ButtonBuilder()
+          .setCustomId("farm_open_shop")
+          .setLabel("Toko Benih")
+          .setStyle(ButtonStyle.Secondary)
+          .setEmoji("🛒"),
+      );
+
+      const payload = buildContainerV2({
+        authorName: "CYBER-AGRONOMY GREENHOUSE",
+        title: `🌿 GreenHouse Hidroponik • ${displayName}`,
+        description: [
+          `Selamat datang di fasilitas agrikultur kosmik berteknologi tinggi!`,
+          ``,
+          `📊 **Status Fasilitas:**`,
+          `• **Tingkat Grid:** \`Level ${gh.gridLevel}\` (${gh.maxSlots} Pod Aktif)`,
+          `• **Total Panen:** \`${gh.totalHarvests}\` kali`,
+          ``,
+          `🌱 **Kondisi Pod Tanaman:**`,
+          slotSummaries,
+          ``,
+          `> *Gunakan \`/survival farm plant\` untuk menanam benih atau siram pod secara berkala!*`,
+        ].join("\n"),
+        buttonsRow,
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.reply({
+        ...payload,
+        files,
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
 
-    const lines = [];
-    const options = [];
+    // 2. TOKO BENIH
+    if (action === "shop") {
+      const seedLines = CROP_SEEDS.map((s) => {
+        return `• ${s.emoji} **${s.name}**\n  💰 Harga: \`${s.seedPrice}\` Koin | ⏱️ Waktu Tumbuh: \`${s.growTimeMinutes}m\`\n  📦 Hasil: \`${s.harvestYield.amountMin}-${s.harvestYield.amountMax}x ${s.harvestYield.itemName}\` (+${s.harvestYield.xp} XP)\n  _${s.description}_`;
+      }).join("\n\n");
 
-    plots.slice(0, maxLahan).forEach((plot, index) => {
-      if (!plot || !plot.seed) {
-        lines.push(
-          `${e("read", "\uD83D\uDFEB")} **Lahan ${index + 1}:** kosong dan tanahnya subur`,
-        );
-        options.push({
-          label: `Tanam di Lahan ${index + 1}`,
-          value: `plant_${index}`,
-          description: "Bibit pertama di tasmu yang dipakai",
-        });
-        return;
-      }
-
-      if (currentDay >= (plot.harvestDay || 0)) {
-        lines.push(
-          `${e("cheers", "\uD83C\uDF3B")} **Lahan ${index + 1}:** ${plot.seed} sudah siap dipanen!`,
-        );
-        options.push({
-          label: `Panen Lahan ${index + 1}`,
-          value: `harvest_${index}`,
-          description: String(plot.seed).substring(0, 100),
-        });
-        return;
-      }
-
-      const wait = (plot.harvestDay || 0) - currentDay;
-      lines.push(
-        `${e("sleepy", "\uD83C\uDF31")} **Lahan ${index + 1}:** ${plot.seed}, tunggu **${wait} hari** lagi`,
-      );
-    });
-
-    const header = `**Properti:** ${prop} \u2022 **Kapasitas:** ${maxLahan} lahan \u2022 **Hari ke-${currentDay}**`;
-
-    if (options.length === 0) {
-      const waitPayload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        authorName: "Naura Farming",
-        title: `${e("happy", "\uD83C\uDFE1")} Kebun kamu`,
-        iconURL: user.displayAvatarURL(),
-        expression: "info",
+      const payload = buildContainerV2({
+        authorName: "GREENHOUSE SEED DISPENSARY",
+        title: "🛒 Katalog Benih Kosmik & Bibit Hidroponik",
         description: [
-          header,
-          "",
-          lines.join("\n"),
-          "",
-          "Semua lahanmu sedang ditanami dan belum ada yang siap. Sabar ya, Naura ikut menunggu hari berganti sambil menyiram tanamannya!",
+          `Pilih benih terbaik untuk ditanam di greenhouse hidroponikmu:`,
+          ``,
+          seedLines,
+          ``,
+          `> *Tanam dengan perintah: \`/survival farm aksi:Tanam Benih benih:<pilihan> slot:<nomor>\`*`,
         ].join("\n"),
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.editReply({ ...waitPayload, embeds: [] });
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
 
-    const selectMenu = new StringSelectMenuBuilder()
-      .setCustomId("farm_select")
-      .setPlaceholder("Mau mengelola lahan yang mana?")
-      .addOptions(options.slice(0, MAX_OPTIONS));
+    // 3. MENANAM BENIH
+    if (action === "plant") {
+      if (!seedId) {
+        const payload = buildErrorContainerV2({
+          title: "Benih Belum Dipilih",
+          description:
+            "Silakan tentukan benih yang ingin ditanam melalui opsi `benih`!",
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
+      }
 
-    const row = new ActionRowBuilder().addComponents(selectMenu);
+      const slotIdx = slotNumber ? slotNumber - 1 : 0;
+      const res = await greenhouseEngine.plantSeed(userId, slotIdx, seedId);
 
-    const farmPayload = buildContainerV2({
-      accentColorHex: ui.getColor("success") || "#22c55e",
-      authorName: "Naura Farming",
-      title: `${e("happy", "\uD83C\uDFE1")} Kebun kamu`,
-      iconURL: user.displayAvatarURL(),
-      expression: "info",
-      description: [
-        header,
-        "",
-        lines.join("\n"),
-        "",
-        "Pilih lahannya di bawah ya, Naura bantu catat semuanya.",
-      ].join("\n"),
-      footerText: ui.getFooter("survival"),
-    });
-
-    const response = await interaction.editReply({
-      ...farmPayload,
-      embeds: [],
-      components: [...farmPayload.components, row],
-    });
-
-    const collector = response.createMessageComponentCollector({
-      filter: (i) => i.user.id === user.id,
-      time: COLLECTOR_MS,
-    });
-
-    collector.on("collect", async (i) => {
-      await i.deferUpdate().catch(() => {});
-
-      const [action, rawIdx] = i.values[0].split("_");
-      const plotIdx = Number.parseInt(rawIdx, 10);
-      if (Number.isNaN(plotIdx) || !plots[plotIdx]) return;
-
-      const profile = await cacheManager.getUserProfile(user.id);
-      const inventory = safeParseInventory(profile.inventory);
-
-      if (action === "plant") {
-        const seed = inventory.find(
-          (item) =>
-            item && typeof item.id === "string" && item.id.startsWith("seed_"),
-        );
-
-        if (!seed) {
-          return i
-            .followUp(
-              ephemeral(
-                `${e("shy", "\uD83C\uDF31")} Kamu belum punya bibit di tas. Beli dulu di warung Pak Damar ya, Naura temani!`,
-              ),
-            )
-            .catch(() => {});
+      if (!res.success) {
+        let msg = "Gagal menanam benih.";
+        if (res.reason === "INSUFFICIENT_FUNDS") {
+          msg = `Saldo koinmu tidak cukup untuk membeli benih ini (\`${res.cost}\` Koin)!`;
+        } else if (res.reason === "SLOT_OCCUPIED") {
+          msg = `Pod #${slotIdx + 1} sudah terisi tanaman! Pilih pod lain atau tunggu panen.`;
+        } else if (res.reason === "INVALID_SLOT_INDEX") {
+          msg = `Nomor pod #${slotIdx + 1} tidak valid. Tingkatkan level greenhouse untuk membuka lebih banyak pod!`;
         }
 
-        const cropId = seed.id.replace("seed_", "");
-        const growTime = GROW_DAYS[cropId] || 2;
-
-        plots[plotIdx] = {
-          id: plotIdx,
-          seed: cropId,
-          plantedAtDay: currentDay,
-          harvestDay: currentDay + growTime,
-        };
-
-        if ((seed.amount || 1) > 1) seed.amount -= 1;
-        else inventory.splice(inventory.indexOf(seed), 1);
-
-        await cacheManager.updateUserProfile(user.id, { inventory });
-        await UserFarm.update({ plots }, { where: { userId: user.id } });
-
-        return i
-          .followUp(
-            ephemeral(
-              `${e("cheers", "\uD83C\uDF31")} Bibit **${seed.name || cropId}** sudah Naura tanam di Lahan ${plotIdx + 1}. Panennya **${growTime} hari** lagi, ya!`,
-            ),
-          )
-          .catch(() => {});
+        const payload = buildErrorContainerV2({
+          title: "Gagal Menanam",
+          description: msg,
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
       }
 
-      if (action === "harvest") {
-        const cropId = plots[plotIdx].seed;
-        if (!cropId) return;
+      const seed = res.seed;
+      const payload = buildContainerV2({
+        authorName: "CYBER-AGRONOMY GREENHOUSE",
+        title: "🌱 Benih Berhasil Ditanam!",
+        description: [
+          `Berhasil menanam **${seed.name}** ${seed.emoji} di **Pod #${res.slotIndex + 1}**!`,
+          ``,
+          `⏱️ **Waktu Tumbuh:** \`${seed.growTimeMinutes} menit\``,
+          `💧 **Status Awal:** Kelembaban 100% (Subur)`,
+          `💰 **Modal Benih:** \`${seed.seedPrice}\` Koin`,
+          ``,
+          `> *Gunakan pupuk atau siram secara berkala agar panen lebih melimpah!*`,
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
 
-        const cropObj = itemsConfig.find((it) => it.id === cropId);
-        const cropName = cropObj ? cropObj.name : cropId;
-        const amount = Math.floor(Math.random() * 2) + 2;
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
 
-        addItem(inventory, cropId, cropName, amount);
-        plots[plotIdx] = {
-          id: plotIdx,
-          seed: null,
-          plantedAtDay: null,
-          harvestDay: null,
-        };
+    // 4. MENYIRAM TANAMAN
+    if (action === "water") {
+      const slotIdx = slotNumber ? slotNumber - 1 : 0;
+      const res = await greenhouseEngine.waterSlot(userId, slotIdx);
 
-        // Lewat cacheManager supaya salinan cache tidak jadi basi.
-        await cacheManager.updateUserProfile(user.id, { inventory });
-        await UserFarm.update({ plots }, { where: { userId: user.id } });
-
-        return i
-          .followUp(
-            ephemeral(
-              `${e("impressed", "\uD83C\uDF3E")} Panennya berhasil! Kamu dapat **${amount}x ${cropName}** dari Lahan ${plotIdx + 1}. Naura sudah masukkan ke tasmu.`,
-            ),
-          )
-          .catch(() => {});
+      if (!res.success) {
+        const payload = buildErrorContainerV2({
+          title: "Gagal Menyiram",
+          description: "Pod tersebut kosong atau nomor pod tidak valid!",
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
       }
-    });
+
+      const payload = buildContainerV2({
+        authorName: "CYBER-AGRONOMY GREENHOUSE",
+        title: "💧 Penyiraman Berhasil!",
+        description: `Pod #${res.slotIndex + 1} telah dialiri air nutrisi hidroponik. Kelembaban kembali optimal di 100%!`,
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
+
+    // 5. MEMUPUK TANAMAN
+    if (action === "fertilize") {
+      const slotIdx = slotNumber ? slotNumber - 1 : 0;
+      const res = await greenhouseEngine.fertilizeSlot(userId, slotIdx);
+
+      if (!res.success) {
+        let msg = "Gagal memberikan pupuk.";
+        if (res.reason === "INSUFFICIENT_FUNDS") {
+          msg = `Saldo koinmu tidak cukup untuk membeli pupuk nutrisi (\`${res.cost}\` Koin)!`;
+        } else if (res.reason === "ALREADY_FERTILIZED") {
+          msg = `Pod #${slotIdx + 1} sudah diberi pupuk nutrisi sebelumnya!`;
+        } else if (res.reason === "SLOT_EMPTY") {
+          msg = `Pod #${slotIdx + 1} masih kosong. Tanam benih terlebih dahulu!`;
+        }
+
+        const payload = buildErrorContainerV2({
+          title: "Gagal Memupuk",
+          description: msg,
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
+      }
+
+      const payload = buildContainerV2({
+        authorName: "CYBER-AGRONOMY GREENHOUSE",
+        title: "⚡ Pupuk Nutrisi Diaplikasikan!",
+        description: `Pod #${res.slotIndex + 1} telah diberi pupuk bio-elektrolit! Waktu panen dipercepat 25% dan hasil panen bertambah +50%!`,
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
+
+    // 6. PANEN TANAMAN
+    if (action === "harvest") {
+      const slotIdx = slotNumber ? slotNumber - 1 : 0;
+      const res = await greenhouseEngine.harvestSlot(userId, slotIdx);
+
+      if (!res.success) {
+        let msg = "Gagal memanen tanaman.";
+        if (res.reason === "NOT_MATURE_YET") {
+          msg = `Tanaman di Pod #${slotIdx + 1} belum matang! Harap tunggu sekitar \`${res.remainingMinutes} menit lagi\`.`;
+        } else if (res.reason === "SLOT_EMPTY") {
+          msg = `Pod #${slotIdx + 1} masih kosong!`;
+        }
+
+        const payload = buildErrorContainerV2({
+          title: "Belum Siap Panen",
+          description: msg,
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
+      }
+
+      const questGen = require("../../../src/survival/engines/questGenerator");
+      await questGen
+        .incrementQuestProgress(userId, "farm_harvest", 1)
+        .catch(() => {});
+
+      const payload = buildContainerV2({
+        authorName: "CYBER-AGRONOMY GREENHOUSE",
+        title: "🌾 Panen Berhasil!",
+        description: [
+          `Selamat, **${displayName}**! Kamu berhasil memanen hasil hidroponik dari Pod #${res.slotIndex + 1}:`,
+          ``,
+          `📦 **Hasil Panen:** \`${res.item.amount}x\` **${res.item.name}**`,
+          `⭐ **Bonus XP:** \`+${res.xpYield} XP\``,
+          res.wasFertilized ? `✨ _Bonus Pupuk Bio-Elektrolit Aktif!_` : ``,
+          ``,
+          `> *Bahan mentah ini siap diolah di Kafe (\`/survival cafe cook\`) atau dijual!*`,
+        ].filter(Boolean).join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
+
+    // 7. UPGRADE GRID
+    if (action === "upgrade") {
+      const res = await greenhouseEngine.upgradeGrid(userId);
+      if (!res.success) {
+        let msg = "Gagal meningkatkan level greenhouse.";
+        if (res.reason === "ALREADY_MAX_LEVEL") {
+          msg = "Greenhouse milikmu sudah mencapai tingkat maksimal (Level 4)!";
+        } else if (res.reason === "INSUFFICIENT_FUNDS") {
+          msg = `Saldo koin tidak cukup untuk ekspansi grid (\`${res.cost}\` Koin)!`;
+        }
+
+        const payload = buildErrorContainerV2({
+          title: "Ekspansi Gagal",
+          description: msg,
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
+      }
+
+      const payload = buildContainerV2({
+        authorName: "CYBER-AGRONOMY GREENHOUSE",
+        title: "🚀 Ekspansi Grid Selesai!",
+        description: `Selamat! Fasilitas greenhouse berhasil ditingkatkan ke **Level ${res.newLevel}**! Kamu sekarang memiliki total **${res.newMaxSlots} Pod Hidroponik**!`,
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
   },
 };

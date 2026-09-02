@@ -263,6 +263,7 @@ module.exports = {
       opt
         .setName("kota")
         .setDescription("Nama kota yang ingin dicek cuacanya")
+        .setAutocomplete(true)
         .setRequired(true),
     ),
 
@@ -479,4 +480,41 @@ module.exports = {
       await interaction.editReply(errPayload);
     }
   },
+
+  async autocomplete(interaction) {
+    const { choice, safeRespond, fuzzyFilter } = require("../../src/utils/autocompleteHelper");
+    const focusedValue = interaction.options.getFocused().toLowerCase();
+
+    const popularCities = [
+      { name: "🇮🇩 Jakarta, Indonesia", value: "Jakarta" },
+      { name: "🇮🇩 Surabaya, Jawa Timur", value: "Surabaya" },
+      { name: "🇮🇩 Bandung, Jawa Barat", value: "Bandung" },
+      { name: "🇮🇩 Medan, Sumatera Utara", value: "Medan" },
+      { name: "🇮🇩 Semarang, Jawa Tengah", value: "Semarang" },
+      { name: "🇮🇩 Makassar, Sulawesi Selatan", value: "Makassar" },
+      { name: "🇮🇩 Palembang, Sumatera Selatan", value: "Palembang" },
+      { name: "🇮🇩 Denpasar, Bali", value: "Denpasar" },
+      { name: "🇮🇩 Yogyakarta, D.I. Yogyakarta", value: "Yogyakarta" },
+      { name: "🇮🇩 Malang, Jawa Timur", value: "Malang" },
+      { name: "🇮🇩 Balikpapan, Kalimantan Timur", value: "Balikpapan" },
+      { name: "🇮🇩 Pontianak, Kalimantan Barat", value: "Pontianak" },
+      { name: "🇮🇩 Banjarmasin, Kalimantan Selatan", value: "Banjarmasin" },
+      { name: "🇮🇩 Manado, Sulawesi Utara", value: "Manado" },
+      { name: "🇮🇩 Jayapura, Papua", value: "Jayapura" },
+      { name: "🇯🇵 Tokyo, Jepang", value: "Tokyo" },
+      { name: "🇯🇵 Osaka, Jepang", value: "Osaka" },
+      { name: "🇰🇷 Seoul, Korea Selatan", value: "Seoul" },
+      { name: "🇸🇬 Singapura", value: "Singapore" },
+      { name: "🇲🇾 Kuala Lumpur, Malaysia", value: "Kuala Lumpur" },
+      { name: "🇹🇭 Bangkok, Thailand", value: "Bangkok" },
+      { name: "🇬🇧 London, Inggris", value: "London" },
+      { name: "🇺🇸 New York, Amerika Serikat", value: "New York" },
+      { name: "🇫🇷 Paris, Prancis", value: "Paris" },
+      { name: "🇦🇺 Sydney, Australia", value: "Sydney" },
+    ];
+
+    const choices = popularCities.map((c) => choice(c.name, c.value));
+    return safeRespond(interaction, fuzzyFilter(choices, focusedValue, 25));
+  },
 };
+

@@ -3,7 +3,12 @@
 // Kartu profil petualangan. Perhitungannya ada di plugin/survival/infoStats.js,
 // berkas ini fokus pada cara Naura menceritakan keadaan pemain.
 
-const { AttachmentBuilder } = require("discord.js");
+const {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  AttachmentBuilder,
+} = require("discord.js");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -14,6 +19,8 @@ const UserNPC = require("../../../src/models/UserNPC");
 const UserAchievement = require("../../../src/models/UserAchievement");
 const achievementsPool = require("../../../src/survival/data/achievementsData");
 const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
+const skillTree = require("../../../src/survival/engines/skillTreeEngine");
 const cacheManager = require("../../../src/managers/cacheManager");
 const { buildStats } = require("../../../src/survival/helpers/infoStats");
 
@@ -75,6 +82,13 @@ module.exports = {
         }
       }
 
+      // --- Combat Path Synergy ---
+      const synergy = skillTree.getPathSynergy(survival);
+      let synergyLine = "";
+      if (synergy.hasSynergy) {
+        synergyLine = `\n${e("sparkle", "\u2728")} **Path Synergy Aktif:** ${synergy.label}\n> *${synergy.bonusDescription}*`;
+      }
+
       // --- Perlengkapan ---
       const gear = stats.gear;
       const gearLines = [
@@ -120,12 +134,12 @@ module.exports = {
         const {
           generateSurvivalProfileImage,
         } = require("../../../src/canvas/CanvasUtils");
-        const botAvatar = interaction.client.user?.displayAvatarURL({
+        const botAvatar = interaction.client.user.displayAvatarURL({
           extension: "png",
           size: 128,
         });
         const buffer = await generateSurvivalProfileImage(
-          user,
+          interaction.user,
           profile,
           survival,
           ui,
@@ -145,8 +159,27 @@ module.exports = {
         logger.warn("[SURVIVAL INFO CANVAS]", canvasError.message);
       }
 
+      const buttonsRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("info_cta_skill")
+          .setLabel("⚡ Skill Tree")
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId("info_cta_dungeon")
+          .setLabel("🗡️ Dungeon")
+          .setStyle(ButtonStyle.Danger),
+        new ButtonBuilder()
+          .setCustomId("info_cta_work")
+          .setLabel("💼 Kerja")
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId("info_cta_farm")
+          .setLabel("🌾 Bertani")
+          .setStyle(ButtonStyle.Success),
+      );
+
       const payload = buildContainerV2({
-        accentColorHex: stats.timeState.color || ui.getColor("primary"),
+        accentColorHex: survivalUI.getColor("emerald"),
         authorName: `Catatan Petualangan ${userName} \u2022 ${stats.rebirthCount}x Rebirth`,
         title: `${e("help_survival")} Profil Petualangan: ${userName} [${adaptive.modeBadge}]`,
         iconURL: user.displayAvatarURL(),
@@ -158,7 +191,7 @@ module.exports = {
           timeLine,
           "",
           `${e("lokasi")} **Kamu sedang di:** ${stats.locationName} \u2022 ${e("property")} **Tempat tinggal:** ${stats.propertyName}`,
-          `${stats.difficultyEmoji} **Mode ${stats.difficulty}**${titleBadge}`,
+          `${stats.difficultyEmoji} **Mode ${stats.difficulty}**${titleBadge}${synergyLine}`,
           "",
           `${e("health")} **Keadaan badanmu:**`,
           `${e("health")} **HP:** ${stats.hp}/${stats.maxHp}\n${stats.hpBar}`,
@@ -183,10 +216,10 @@ module.exports = {
           {
             name: `${e("stats")} Statistik RPG (batas ${stats.maxStat})`,
             value: [
-              `> ${e("strength")} STR: **${survival.strength || 1}** (+${stats.pet.bonusStrength}) : kekuatan seranganmu`,
-              `> ${e("agility")} AGI: **${survival.agility || 1}** : peluang menghindar dan kabur`,
-              `> ${e("intelligence")} INT: **${survival.intelligence || 1}** : bonus gaji dan diskon toko`,
-              `> ${e("luck")} LUK: **${survival.luck || 1}** (+${stats.pet.bonusLuck}) : peluang jarahan langka`,
+              `> ${e("strength")} STR: **${survival.strength || 1}** (+${stats.pet.bonusStrength}) : kekuatan serangan & crafting`,
+              `> ${e("agility")} AGI: **${survival.agility || 1}** : peluang menghindar & diskon perjalanan`,
+              `> ${e("intelligence")} INT: **${survival.intelligence || 1}** : bonus gaji & pengalaman belajar`,
+              `> ${e("luck")} LUK: **${survival.luck || 1}** (+${stats.pet.bonusLuck}) : peluang jarahan langka & panen`,
             ].join("\n"),
           },
           {
@@ -194,12 +227,42 @@ module.exports = {
             value: `> **Teman berbulu:** ${stats.pet.display}\n> **Pasangan:** ${partnerDisplay}`,
           },
         ],
+        buttonsRow,
         bannerAttachmentName,
         files,
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.editReply(payload);
+      const message = await interaction.editReply(payload);
+
+      if (!message || typeof message.createMessageComponentCollector !== "function") {
+        return;
+      }
+
+      const collector = message.createMessageComponentCollector({
+        filter: (i) => i.user.id === user.id && i.customId.startsWith("info_cta_"),
+        time: 45000,
+        max: 1,
+      });
+
+      collector.on("collect", async (i) => {
+        if (i.customId === "info_cta_skill") {
+          const skillSub = require("./skill.js");
+          return skillSub.execute(i);
+        }
+        if (i.customId === "info_cta_dungeon") {
+          const dungeonSub = require("./dungeon.js");
+          return dungeonSub.execute(i);
+        }
+        if (i.customId === "info_cta_work") {
+          const workSub = require("./work.js");
+          return workSub.execute(i);
+        }
+        if (i.customId === "info_cta_farm") {
+          const farmSub = require("./farm.js");
+          return farmSub.execute(i);
+        }
+      });
     } catch (error) {
       logger.error("[SURVIVAL INFO ERROR]", error);
       const errPayload = buildErrorContainerV2({

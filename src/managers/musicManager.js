@@ -15,20 +15,17 @@ function loadPoru() {
   return PoruCtor;
 }
 
+// Node publik Serenetia - hanya 1 entry (SSL), tanpa duplikat HTTP.
+// Ditandai isPrimaryFallback:true agar getPreferredNode() di bawah
+// memprioritaskan node private milik kita selagi masih online.
 const PUBLIC_LAVALINK_NODES = [
   {
-    name: "Serenetia Public Node (SSL)",
+    name: "Serenetia Public Node",
     host: "lavalinkv4.serenetia.com",
     port: 443,
     password: "https://seretia.link/discord",
     secure: true,
-  },
-  {
-    name: "Serenetia Public Node (HTTP)",
-    host: "lavalinkv4.serenetia.com",
-    port: 80,
-    password: "https://seretia.link/discord",
-    secure: false,
+    isPrimaryFallback: true,
   },
 ];
 
@@ -262,5 +259,37 @@ class MusicManager {
     } catch (e) {}
   }
 }
+
+/**
+ * Pilih node Lavalink terbaik yang non-fallback.
+ *
+ * Jika semua node private down, kembalikan node publik (Serenetia)
+ * sebagai cadangan terakhir. Fungsi ini dipanggil oleh plugin musik
+ * saat createConnection() agar Poru tidak memilih Serenetia saat ada
+ * node yang lebih stabil.
+ *
+ * @param {Poru} poru - Instance Poru yang sudah terhubung.
+ * @returns {string|undefined} Nama node terpilih, atau undefined (biarkan Poru auto-pilih).
+ */
+MusicManager.getPreferredNode = function (poru) {
+  if (!poru || !poru.nodes) return undefined;
+
+  // Kumpulkan semua node yang connected, pisahkan private dan fallback
+  const connected = [...poru.nodes.values()].filter((n) => n.connected);
+  if (connected.length === 0) return undefined;
+
+  const privateNodes = connected.filter(
+    (n) => !PUBLIC_LAVALINK_NODES.some((pub) => pub.name === n.name),
+  );
+
+  // Pilih private node dengan penalty paling rendah (beban paling ringan)
+  if (privateNodes.length > 0) {
+    privateNodes.sort((a, b) => (a.penalties || 0) - (b.penalties || 0));
+    return privateNodes[0].name;
+  }
+
+  // Semua private node down - izinkan Poru memakai fallback publik
+  return undefined;
+};
 
 module.exports = MusicManager;

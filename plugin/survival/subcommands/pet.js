@@ -70,21 +70,23 @@ function statLines(pet) {
 
 module.exports = {
   async autocomplete(interaction) {
+    const { choice, safeRespond, fuzzyFilter } = require('../../../src/utils/autocompleteHelper');
     const focusedValue = interaction.options.getFocused().toLowerCase();
     const pets = await UserPet.findAll({
       where: { userId: interaction.user.id },
     });
-    if (pets.length === 0) return interaction.respond([]).catch(() => {});
+    if (pets.length === 0) return safeRespond(interaction, [
+      choice('❌ Belum memiliki pet (Ketik /survival rpg pet untuk info)', 'none'),
+    ]);
 
-    const available = pets.map((p) => ({
-      name: `${ui.getEmoji("cat_pet") || "🐾"} ${p.petName || p.petType} (Lv.${p.petLevel || 1})`,
-      value: String(p.id),
-    }));
+    const available = pets.map((p) =>
+      choice(
+        `${ui.getEmoji('cat_pet') || '🐾'} ${p.petName || p.petType} (Lv.${p.petLevel || 1})`,
+        String(p.id),
+      ),
+    );
 
-    const filtered = available
-      .filter((it) => it.name.toLowerCase().includes(focusedValue))
-      .slice(0, 25);
-    await interaction.respond(filtered).catch(() => {});
+    return safeRespond(interaction, fuzzyFilter(available, focusedValue, 25));
   },
 
   async execute(interaction) {
@@ -355,6 +357,11 @@ module.exports = {
           "petType",
         ],
       });
+
+      const questGen = require("../../../src/survival/engines/questGenerator");
+      await questGen
+        .incrementQuestProgress(user.id, "pet_feed", 1)
+        .catch(() => {});
 
       if (evo.evolved) {
         const evoPayload = ephemeral(

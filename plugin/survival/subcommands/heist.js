@@ -113,6 +113,11 @@ module.exports = {
       await currency.reward(currency.COIN, holders, loot);
       await advanceTime(user.id, 4);
 
+      const questGen = require("../../../src/survival/engines/questGenerator");
+      await questGen
+        .incrementQuestProgress(user.id, "heist", 1)
+        .catch(() => {});
+
       const coupon = await rollCouponDrop("heist_success", { survival });
       const couponText = dropLine(coupon);
 
