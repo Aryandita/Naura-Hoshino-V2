@@ -53,6 +53,7 @@ test("buildSearchQueries memprioritaskan ISRC lalu judul", () => {
   });
   assert.deepStrictEqual(withIsrc, [
     'ytsearch:"USEP42058010"',
+    "scsearch:Architects - Animals",
     "ytsearch:Architects - Animals",
     "ytmsearch:Architects Animals",
   ]);
@@ -61,8 +62,8 @@ test("buildSearchQueries memprioritaskan ISRC lalu judul", () => {
     name: "Neon Groove",
     artists: ["DJ Naura"],
   });
-  assert.strictEqual(noIsrc.length, 2);
-  assert.ok(noIsrc[0].startsWith("ytsearch:DJ Naura - Neon Groove"));
+  assert.strictEqual(noIsrc.length, 3);
+  assert.ok(noIsrc[0].startsWith("scsearch:DJ Naura - Neon Groove"));
 });
 
 test("resolveSpotifyQuery passthrough untuk query non-Spotify", async () => {

@@ -122,7 +122,7 @@ module.exports = {
         let searchQuery;
         if (activeTrack.info.originalSource === "spotify") {
           // Spotify fallback: samakan pola query dengan spotifyResolver.
-          searchQuery = `ytsearch:${activeTrack.info.author} - ${activeTrack.info.title}`;
+          searchQuery = `scsearch:${activeTrack.info.author} - ${activeTrack.info.title}`;
         } else {
           // Native YouTube Mix URL
           searchQuery = `https://www.youtube.com/watch?v=${activeTrack.info.identifier}&list=RD${activeTrack.info.identifier}`;
@@ -183,7 +183,7 @@ module.exports = {
         const aiQuery = (aiResult || "").trim();
 
         const searchRes = await manager.poru.resolve({
-          query: `ytsearch:${aiQuery}`,
+          query: `scsearch:${aiQuery}`,
           requester: manager.client.user,
         });
         if (searchRes && searchRes.tracks && searchRes.tracks.length > 0) {

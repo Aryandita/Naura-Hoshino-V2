@@ -147,13 +147,15 @@ const env = {
   STAFF_GUILD: cleanEnv(process.env.STAFF_GUILD_ID),
   MODMAIL_CATEGORY: cleanEnv(process.env.MODMAIL_CATEGORY_ID),
 
-  // LAVALINK
+  // LAVALINK & AUDIO
   LAVA_NODES:
     cleanEnv(process.env.LAVA_NODES) || cleanEnv(process.env.LAVALINK_NODES),
   LAVA_HOST: cleanEnv(process.env.LAVALINK_HOST) || "localhost",
   LAVA_PORT: parseInt(process.env.LAVALINK_PORT) || 2333,
   LAVA_PASS: cleanEnv(process.env.LAVALINK_PASSWORD) || "youshallnotpass",
   LAVA_SECURE: process.env.LAVALINK_SECURE === "true",
+  MUSIC_DEFAULT_SEARCH:
+    cleanEnv(process.env.MUSIC_DEFAULT_SEARCH) || "scsearch",
 
   // SPOTIFY (poru-spotify + LavaSrc node + spotifyResolver fallback)
   SPOTIFY_CLIENT_ID: cleanEnv(process.env.SPOTIFY_CLIENT_ID),

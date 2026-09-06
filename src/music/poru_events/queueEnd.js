@@ -10,6 +10,11 @@ const {
 
 module.exports = {
   async execute(manager, player) {
+    if (!player || player.isRecoveringTrack) {
+      // Sedang dalam proses pemulihan track alternatif oleh trackError
+      return;
+    }
+
     // 1. Bersihkan lirik Karaoke dari panel teks
     if (player.lyricsMessageId) {
       const channel = manager.client.channels.cache.get(player.textChannel);
@@ -112,7 +117,7 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
           const aiQuery = (aiResult || "").trim();
 
           const searchRes = await manager.poru.resolve({
-            query: `ytsearch:${aiQuery}`,
+            query: `scsearch:${aiQuery}`,
             requester: manager.client.user,
           });
           if (searchRes && searchRes.tracks && searchRes.tracks.length > 0) {

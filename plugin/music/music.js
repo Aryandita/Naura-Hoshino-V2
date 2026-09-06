@@ -11,6 +11,7 @@ const ui = require("../../src/config/ui");
 const UserProfile = require("../../src/models/UserProfile");
 const GuildSettings = require("../../src/models/GuildSettings");
 const UserPlaylist = require("../../src/models/UserPlaylist");
+const env = require("../../src/config/env");
 
 const { generateMusicProfileImage } = require("../../src/canvas/canvasHelper");
 const {
@@ -214,7 +215,7 @@ async function runMusicLogic(
       player.isAutoplay = true;
 
       if (!player.isPlaying && player.queue.length === 0) {
-        const openingTrackRes = await poru.resolve({ query: "ytsearch:cyberpunk lofi chill beats", requester: user });
+        const openingTrackRes = await poru.resolve({ query: "scsearch:cyberpunk lofi chill beats", requester: user });
         if (openingTrackRes && openingTrackRes.tracks && openingTrackRes.tracks[0]) {
           player.queue.add(openingTrackRes.tracks[0]);
           player.play();
@@ -262,8 +263,8 @@ async function runMusicLogic(
 
     const isLofi = subcommand === "lofi";
     const searchQuery = isLofi
-      ? "ytsearch:lofi hip hop radio - beats to relax/study to live"
-      : "ytsearch:NoCopyrightSounds 24/7 live stream";
+      ? "scsearch:lofi hip hop chill beats"
+      : "scsearch:NoCopyrightSounds gaming music";
     const stColor = isLofi ? "#9b59b6" : "#f1c40f";
     const stIcon = isLofi ? "☕" : "📻";
 
@@ -331,17 +332,40 @@ async function runMusicLogic(
       return sendReply(errPayload, true);
     }
 
-    let searchSource = "ytsearch";
+    const defaultSearch = env.MUSIC_DEFAULT_SEARCH || "scsearch";
+    let searchSource = defaultSearch;
     let finalQuery = query;
     const isDirectLink = !!query.match(/^(https?:\/\/)/);
 
     if (!isDirectLink) {
-      if (query.startsWith("scsearch:")) searchSource = "scsearch";
-      else if (query.startsWith("spsearch:")) searchSource = "spsearch";
-      else if (query.startsWith("ytsearch:")) searchSource = "ytsearch";
-      else if (query.startsWith("ytmsearch:")) searchSource = "ytmsearch";
-      else if (query.startsWith("amsearch:")) searchSource = "amsearch";
-      else finalQuery = `${searchSource}:${query}`;
+      if (query.startsWith("scsearch:") || query.startsWith("sc:")) {
+        searchSource = "scsearch";
+        finalQuery = query.startsWith("sc:")
+          ? `scsearch:${query.slice(3).trim()}`
+          : query;
+      } else if (query.startsWith("spsearch:") || query.startsWith("sp:")) {
+        searchSource = "spsearch";
+        finalQuery = query.startsWith("sp:")
+          ? `spsearch:${query.slice(3).trim()}`
+          : query;
+      } else if (query.startsWith("ytsearch:") || query.startsWith("yt:")) {
+        searchSource = "ytsearch";
+        finalQuery = query.startsWith("yt:")
+          ? `ytsearch:${query.slice(3).trim()}`
+          : query;
+      } else if (query.startsWith("ytmsearch:") || query.startsWith("ytm:")) {
+        searchSource = "ytmsearch";
+        finalQuery = query.startsWith("ytm:")
+          ? `ytmsearch:${query.slice(4).trim()}`
+          : query;
+      } else if (query.startsWith("amsearch:") || query.startsWith("am:")) {
+        searchSource = "amsearch";
+        finalQuery = query.startsWith("am:")
+          ? `amsearch:${query.slice(3).trim()}`
+          : query;
+      } else {
+        finalQuery = `${searchSource}:${query}`;
+      }
     }
 
     const searchingPayload = buildContainerV2({
@@ -354,7 +378,7 @@ async function runMusicLogic(
 
     // Lewati resolver terpadu: LavaSrc di node menyelesaikan link Spotify
     // secara native, dan bila node tidak punya plugin, spotifyResolver
-    // menerjemahkannya manual (Web API -> ytsearch ISRC/judul).
+    // menerjemahkannya manual (Web API -> search ISRC/judul).
     const res = await resolveSpotifyQuery(poru, finalQuery, user);
 
     if (
@@ -372,20 +396,25 @@ async function runMusicLogic(
       return sendReply(errPayload, true);
     }
 
-    let brandColor = "#FF0000";
-    let brandEmoji = ui.getEmoji("youtube") || "▶️";
+    const firstTrackSource = res.tracks[0]?.info?.sourceName || "";
+    let brandColor = searchSource === "scsearch" ? "#FF7700" : "#FF0000";
+    let brandEmoji =
+      searchSource === "scsearch"
+        ? ui.getEmoji("soundcloud") || "☁️"
+        : ui.getEmoji("youtube") || "▶️";
 
     if (
       query.includes("spotify.com") ||
       searchSource === "spsearch" ||
+      firstTrackSource === "spotify" ||
       res.pluginInfo?.source === "spotify-fallback"
     ) {
       brandColor = "#1DB954";
       brandEmoji = ui.getEmoji("spotify") || "🎵";
-    } else if (searchSource === "scsearch") {
+    } else if (searchSource === "scsearch" || firstTrackSource === "soundcloud") {
       brandColor = "#FF7700";
       brandEmoji = ui.getEmoji("soundcloud") || "☁️";
-    } else if (searchSource === "amsearch") {
+    } else if (searchSource === "amsearch" || firstTrackSource === "applemusic") {
       brandColor = "#FA243C";
       brandEmoji = ui.getEmoji("apple") || "🍎";
     }
@@ -680,11 +709,12 @@ async function runMusicLogic(
     (async () => {
       for (const query of playlist.tracks) {
         try {
+          const defaultSearch = env.MUSIC_DEFAULT_SEARCH || "scsearch";
           const finalQuery = query.match(
             /^(?:https?:\/\/|spsearch:|ytmsearch:|ytsearch:|scsearch:|amsearch:)/,
           )
             ? query
-            : `ytsearch:${query}`;
+            : `${defaultSearch}:${query}`;
           const res = await resolveSpotifyQuery(poru, finalQuery, user);
           if (res && res.tracks && res.tracks.length > 0) {
             res.tracks[0].info.requester = user;
@@ -1692,19 +1722,22 @@ module.exports = {
       }
       const poru = manager._poru;
 
+      const defaultEngine = env.MUSIC_DEFAULT_SEARCH || "scsearch";
+
       // Query terlalu pendek: tampilkan lagu aktif di guild + hint prefix
       if (cleanQuery.length < 2) {
         const hints = [];
         const activePlayer = poru.players?.get(interaction.guildId);
         if (activePlayer && activePlayer.currentTrack) {
           const ct = activePlayer.currentTrack.info;
-          const nowUri = ct.uri || `ytsearch:${ct.title} ${ct.author}`;
-          hints.push(choice(`\ud83c\udfb5 Sedang diputar: ${ct.title} - ${ct.author}`, nowUri));
+          const nowUri = ct.uri || `${defaultEngine}:${ct.title} ${ct.author}`;
+          hints.push(choice(`🎵 Sedang diputar: ${ct.title} - ${ct.author}`, nowUri));
         }
         hints.push(
-          choice('\ud83d\udd34 Ketik "sc:" untuk SoundCloud', 'sc:'),
-          choice('\ud83c\udfb5 Ketik "ytm:" untuk YouTube Music', 'ytm:'),
-          choice('\ud83d\udd0e Ketik nama lagu atau artis untuk mencari...', ' '),
+          choice('☁️ SoundCloud (Stabil & Anti-Block)', 'sc:'),
+          choice('▶️ YouTube', 'yt:'),
+          choice('🎧 YouTube Music', 'ytm:'),
+          choice('🔍 Ketik nama lagu atau artis untuk mencari...', ' '),
         );
         return safeRespond(interaction, hints.slice(0, 5));
       }
@@ -1714,7 +1747,9 @@ module.exports = {
         ? 'scsearch'
         : focusedValue.startsWith('ytm:')
           ? 'ytmsearch'
-          : 'ytsearch';
+          : focusedValue.startsWith('yt:')
+            ? 'ytsearch'
+            : defaultEngine;
 
       // Cek cache: hindari request Lavalink saat user mengetik cepat
       const cacheKey = `music:ac:${searchEngine}:${cleanQuery}`;
@@ -1741,7 +1776,7 @@ module.exports = {
         const val =
           uri && uri.startsWith('http')
             ? uri.substring(0, 100)
-            : `ytsearch:${title} ${author}`.substring(0, 100);
+            : `${searchEngine}:${title} ${author}`.substring(0, 100);
 
         return choice(label, val);
       });

@@ -180,8 +180,10 @@ class MusicManager {
 
     const Poru = loadPoru();
 
+    const env = require("../config/env");
     const options = {
       library: "discord.js",
+      defaultPlatform: env.MUSIC_DEFAULT_SEARCH || "scsearch",
       clientName: "Naura-Hoshino-Music-System/3.1",
       plugins: [],
     };
