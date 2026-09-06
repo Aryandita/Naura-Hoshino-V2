@@ -155,11 +155,13 @@ class MusicManager {
       }
     }
 
-    // Gabungkan configured nodes dengan public nodes tanpa menduplikasi host:port
+    // Gunakan node yang dikonfigurasikan di .env. Jika tidak ada, fallback ke PUBLIC_LAVALINK_NODES.
     const finalNodes = [];
     const seen = new Set();
+    const sourceNodes =
+      configuredNodes.length > 0 ? configuredNodes : PUBLIC_LAVALINK_NODES;
 
-    for (const node of [...configuredNodes, ...PUBLIC_LAVALINK_NODES]) {
+    for (const node of sourceNodes) {
       const key = `${node.host}:${node.port}`.toLowerCase();
       if (!seen.has(key)) {
         seen.add(key);
