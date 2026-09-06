@@ -109,7 +109,10 @@ class MusicManager {
       // 3. Scan numbered environment variables (LAVALINK_HOST_2, LAVALINK_HOST_3, dst.)
       if (env.LAVA_HOST) {
         configuredNodes.push({
-          name: "Naura Node 1",
+          name:
+            process.env.LAVALINK_NAME ||
+            process.env.LAVA_NAME ||
+            "Naura Node 1",
           host: String(env.LAVA_HOST || "localhost").trim(),
           port: parseInt(env.LAVA_PORT, 10) || 2333,
           password: String(env.LAVA_PASS || "youshallnotpass").trim(),
