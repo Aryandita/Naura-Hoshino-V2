@@ -90,16 +90,15 @@ if (isPterodactyl) {
   }
 
   let authedUrl = repoUrl;
-  if (!authedUrl.startsWith("http://") && !authedUrl.startsWith("https://")) {
-    authedUrl = token
-      ? `https://${token}@${authedUrl}`
-      : `https://${authedUrl}`;
-  } else if (token) {
-    if (authedUrl.includes("@")) {
-      authedUrl = authedUrl.replace(/https:\/\/[^@]+@/, `https://${token}@`);
-    } else {
-      authedUrl = authedUrl.replace("https://", `https://${token}@`);
-    }
+  if (token) {
+    // Bersihkan prefix protokol atau kredensial lama bila ada
+    const cleanAddress = repoUrl
+      .replace(/^https?:\/\//, "")
+      .replace(/^[^@]+@/, "");
+    // Format universal GitHub token agar Git tidak memicu terminal prompt username
+    authedUrl = `https://x-access-token:${token}@${cleanAddress}`;
+  } else if (!authedUrl.startsWith("http://") && !authedUrl.startsWith("https://")) {
+    authedUrl = `https://${authedUrl}`;
   }
 
   const branch = process.env.BRANCH || "main";
