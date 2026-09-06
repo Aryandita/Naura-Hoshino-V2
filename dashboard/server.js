@@ -138,6 +138,16 @@ module.exports = (client) => {
   webApp.use(express.static(path.join(__dirname, "public")));
   webApp.use("/assets", express.static(path.join(__dirname, "../assets")));
 
+  // Sajikan berkas model 3D (VRM & GLB) dengan Content-Type model/gltf-binary yang valid
+  const setModelMime = (res, filePath) => {
+    if (/\.(vrm|glb)$/i.test(filePath)) {
+      res.setHeader("Content-Type", "model/gltf-binary");
+    }
+  };
+  webApp.use("/models", express.static(path.join(__dirname, "../dashboard-v2/dist/models"), { setHeaders: setModelMime }));
+  webApp.use("/models", express.static(path.join(__dirname, "../dashboard-v2/public/models"), { setHeaders: setModelMime }));
+  webApp.use("/models", express.static(path.join(__dirname, "../assets/3D Model Naura"), { setHeaders: setModelMime }));
+
   // --- Webhook Routes Mounting ---
   // Pasang rute webhook ke webApp utama agar URL https://domain/api/webhook/* langsung aktif
   if (webhookApp) {

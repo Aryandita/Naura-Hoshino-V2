@@ -121,7 +121,15 @@ function main() {
   fs.cpSync(path.join(buildRoot, "dist"), path.join(dashboardDir, "dist"), {
     recursive: true,
   });
-  console.log(`[BUILD-V2] dist tersalin ke ${path.join(dashboardDir, "dist")}`);
+
+  // 4. Pastikan dist/index.html tersedia untuk root routing di preview dan server statis
+  const distSrcIndex = path.join(dashboardDir, "dist", "src", "pages", "index.html");
+  const distRootIndex = path.join(dashboardDir, "dist", "index.html");
+  if (fs.existsSync(distSrcIndex)) {
+    fs.copyFileSync(distSrcIndex, distRootIndex);
+  }
+
+  console.log(`[BUILD-V2] dist tersalin ke ${path.join(dashboardDir, "dist")} (termasuk root index.html)`);
 }
 
 main();

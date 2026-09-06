@@ -111,8 +111,7 @@
     <script type="module" src="/src/lib/chart-shim.js"></script>
     <script src="/vendor/socket.io.min.js"></script>
     <script src="/vendor/naura-ui.js"></script>
-    <!-- Google Model Viewer (Local Vendor with CDN Fallback) -->
-    <script type="module" src="/vendor/model-viewer.min.js"></script>
+    <!-- Three.js / VRM 3D Engine Native (Replaces model-viewer) -->
   </head>
 
   <body class="flex h-screen overflow-hidden bg-animated" id="mainBody">
@@ -131,7 +130,7 @@
         class="loading-figure"
         src="/assets/Naura_Expression/Thinking.png"
         alt="Naura Thinking"
-        onerror="this.src = '/assets/Naura_Expression/Read.png'"
+        onerror="this.onerror=null; this.src = '/assets/Naura_Expression/Read.png';"
       />
       <div class="loading-text text-glow">NAURA OS</div>
       <div
@@ -549,77 +548,81 @@
                   box-shadow: inset 0 0 25px rgba(255, 182, 193, 0.05), 0 10px 30px rgba(0, 0, 0, 0.5);
                 "
               >
-                <!-- Motion / Emotion Active Badge -->
+                <!-- Motion / Emotion Active Badge & VRM Live Indicator -->
                 <div
                   id="naura3d-motion-status"
-                  class="absolute top-2.5 left-2.5 z-20 px-2.5 py-1 rounded-full text-[10px] font-cyber bg-black/70 backdrop-blur-md border border-pink-400/30 text-pink-200 flex items-center gap-1.5 shadow-md pointer-events-none transition-all"
+                  class="absolute top-2.5 left-2.5 z-20 px-2.5 py-1 rounded-full text-[10px] font-cyber bg-black/75 backdrop-blur-md border border-pink-400/30 text-pink-200 flex items-center gap-1.5 shadow-md pointer-events-none transition-all"
                 >
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></span>
                   <span id="naura3d-status-text">🌸 Idle (Bernafas)</span>
+                  <span class="text-[9px] px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300 font-mono border border-pink-400/30 ml-0.5">VRM 3D</span>
                 </div>
 
-                <model-viewer
-                  id="naura3d-viewer"
-                  src="/models/naura.glb"
-                  alt="Naura Hoshino 3D Character Model"
-                  camera-controls
-                  touch-action="pan-y"
-                  shadow-intensity="1.2"
-                  shadow-softness="0.6"
-                  exposure="1.5"
-                  autoplay
-                  animation-name="Idle"
-                  animation-crossfade-duration="450ms"
-                  interpolation-decay="150"
-                  camera-orbit="180deg 75deg 1.25m"
-                  camera-target="0m 0.12m 0m"
-                  min-camera-orbit="auto auto 40%"
-                  max-camera-orbit="auto auto 250%"
-                  interaction-prompt="none"
-                  loading="eager"
-                  reveal="auto"
-                  style="width: 100%; height: 100%; background: transparent; --poster-color: transparent;"
-                >
-                  <div slot="poster" class="naura3d-loading">
-                    <div class="naura3d-loading-ring"></div>
-                    <span class="text-xs font-cyber text-pink-300 font-semibold tracking-wider" id="naura3d-loading-text">Memuat Model 3D...</span>
-                  </div>
-                  <div slot="error" class="naura3d-error">
-                    <img src="/assets/core/avatar.png" class="w-14 h-14 rounded-full mx-auto mb-2 border-2 border-pink-400/50 opacity-90 shadow-lg shadow-pink-500/20" alt="Naura Avatar" />
-                    <span class="text-[11px] text-gray-400 font-assist">Model 3D Offline</span>
-                  </div>
-                </model-viewer>
+                <!-- 360 Drag & Orbit Controls Hint -->
+                <div class="naura3d-orbit-hint hidden sm:flex">
+                  <i class="fa-solid fa-arrows-spin text-pink-300"></i>
+                  <span>Drag 360° • Scroll Zoom</span>
+                </div>
+
+                <!-- Three.js / Three-VRM Canvas -->
+                <canvas id="naura-hero-3d-canvas" class="naura-hero-canvas"></canvas>
+
+                <!-- Loading State -->
+                <div id="naura3d-loading" class="naura3d-loading">
+                  <div class="naura3d-loading-ring"></div>
+                  <span class="text-xs font-cyber text-pink-300 font-semibold tracking-wider" id="naura3d-loading-text">Memuat Model 3D & VRM...</span>
+                </div>
+
+                <!-- Error Fallback -->
+                <div id="naura3d-error" class="naura3d-error">
+                  <img src="/assets/core/avatar.png" class="w-14 h-14 rounded-full mx-auto mb-2 border-2 border-pink-400/50 opacity-90 shadow-lg shadow-pink-500/20" alt="Naura Avatar" />
+                  <span class="text-[11px] text-gray-400 font-assist">Model 3D Offline</span>
+                </div>
 
                 <!-- Interactive Animation & Mood Toolbar -->
                 <div
                   id="naura3d-anim-controls"
-                  class="absolute bottom-2 left-2 right-2 z-20 flex items-center justify-start gap-1 px-1.5 py-1 rounded-xl bg-black/65 backdrop-blur-md border border-pink-400/25 overflow-x-auto scrollbar-none shadow-lg"
+                  class="absolute bottom-2 left-2 right-2 z-20 flex items-center justify-between gap-1 px-1.5 py-1 rounded-xl bg-black/70 backdrop-blur-md border border-pink-400/25 shadow-lg overflow-x-auto scrollbar-none"
                   title="Pilih Gerakan & Ekspresi Naura"
                 >
-                  <button type="button" data-anim="Idle" data-label="🌸 Idle (Bernafas)" class="naura3d-anim-btn active flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-pink-200 bg-pink-500/30 border border-pink-400/50 hover:bg-pink-500/50 transition cursor-pointer">
-                    🌸 Idle
-                  </button>
-                  <button type="button" data-anim="Wave" data-label="👋 Melambai Hangat" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-gray-300 hover:text-pink-200 hover:bg-pink-500/20 border border-transparent hover:border-pink-500/30 transition cursor-pointer">
-                    👋 Sapa
-                  </button>
-                  <button type="button" data-anim="Thinking" data-label="🤔 Berpikir Kritis" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-gray-300 hover:text-pink-200 hover:bg-pink-500/20 border border-transparent hover:border-pink-500/30 transition cursor-pointer">
-                    🤔 Pikir
-                  </button>
-                  <button type="button" data-anim="Dizzy" data-label="💫 Pusing / Bingung" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-gray-300 hover:text-pink-200 hover:bg-pink-500/20 border border-transparent hover:border-pink-500/30 transition cursor-pointer">
-                    💫 Pusing
-                  </button>
-                  <button type="button" data-anim="Cheers" data-label="🎉 Ceria Bersorak" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-gray-300 hover:text-pink-200 hover:bg-pink-500/20 border border-transparent hover:border-pink-500/30 transition cursor-pointer">
-                    🎉 Ceria
-                  </button>
-                  <button type="button" data-anim="Shy" data-label="😳 Malu-malu" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-gray-300 hover:text-pink-200 hover:bg-pink-500/20 border border-transparent hover:border-pink-500/30 transition cursor-pointer">
-                    😳 Malu
-                  </button>
-                  <button type="button" data-anim="Sleepy" data-label="💤 Mengantuk" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-gray-300 hover:text-pink-200 hover:bg-pink-500/20 border border-transparent hover:border-pink-500/30 transition cursor-pointer">
-                    💤 Ngantuk
-                  </button>
-                  <button type="button" data-anim="BlowKiss" data-label="😘 Tiup Ciuman" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-gray-300 hover:text-pink-200 hover:bg-pink-500/20 border border-transparent hover:border-pink-500/30 transition cursor-pointer">
-                    😘 Kiss
-                  </button>
+                  <div class="flex items-center gap-1 flex-shrink-0">
+                    <button type="button" data-anim="Idle" data-label="🌸 Idle (Bernafas)" class="naura3d-anim-btn active flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-pink-200 bg-pink-500/30 border border-pink-400/50 hover:bg-pink-500/50 transition cursor-pointer">
+                      🌸 Idle
+                    </button>
+                    <button type="button" data-anim="Wave" data-label="👋 Melambai Hangat" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-gray-300 hover:text-pink-200 hover:bg-pink-500/20 border border-transparent hover:border-pink-500/30 transition cursor-pointer">
+                      👋 Sapa
+                    </button>
+                    <button type="button" data-anim="Thinking" data-label="🤔 Berpikir Kritis" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-gray-300 hover:text-pink-200 hover:bg-pink-500/20 border border-transparent hover:border-pink-500/30 transition cursor-pointer">
+                      🤔 Pikir
+                    </button>
+                    <button type="button" data-anim="Dizzy" data-label="💫 Pusing / Bingung" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-gray-300 hover:text-pink-200 hover:bg-pink-500/20 border border-transparent hover:border-pink-500/30 transition cursor-pointer">
+                      💫 Pusing
+                    </button>
+                    <button type="button" data-anim="Cheers" data-label="🎉 Ceria Bersorak" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-gray-300 hover:text-pink-200 hover:bg-pink-500/20 border border-transparent hover:border-pink-500/30 transition cursor-pointer">
+                      🎉 Ceria
+                    </button>
+                    <button type="button" data-anim="Shy" data-label="😳 Malu-malu" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-gray-300 hover:text-pink-200 hover:bg-pink-500/20 border border-transparent hover:border-pink-500/30 transition cursor-pointer">
+                      😳 Malu
+                    </button>
+                    <button type="button" data-anim="Sleepy" data-label="💤 Mengantuk" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-gray-300 hover:text-pink-200 hover:bg-pink-500/20 border border-transparent hover:border-pink-500/30 transition cursor-pointer">
+                      💤 Ngantuk
+                    </button>
+                    <button type="button" data-anim="BlowKiss" data-label="😘 Tiup Ciuman" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-gray-300 hover:text-pink-200 hover:bg-pink-500/20 border border-transparent hover:border-pink-500/30 transition cursor-pointer">
+                      😘 Kiss
+                    </button>
+                  </div>
+
+                  <!-- Utility Actions: Reset Camera & Snapshot -->
+                  <div class="flex items-center gap-1 pl-1.5 border-l border-white/10 flex-shrink-0">
+                    <button type="button" id="naura3d-btn-reset" class="naura3d-util-btn" title="Kembalikan Sudut Kamera Awal">
+                      <i class="fa-solid fa-arrows-rotate text-cyan-300"></i>
+                      <span>Reset</span>
+                    </button>
+                    <button type="button" id="naura3d-btn-snapshot" class="naura3d-util-btn" title="Ambil Foto Pose Naura (PNG)">
+                      <i class="fa-solid fa-camera text-pink-300"></i>
+                      <span>Foto</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3639,7 +3642,7 @@
                       src="/owner_photo.jpeg"
                       alt="Aryandita"
                       class="w-full h-full object-cover object-top"
-                      onerror="this.src = '/assets/dashboard/owner_photo.jpeg'"
+                      onerror="this.onerror=null; this.src = '/assets/dashboard/owner_photo.jpeg';"
                     />
                   </div>
                   <h3 class="text-xl font-bold text-white mb-1 font-cyber">
@@ -8020,111 +8023,99 @@
       NauraViewer.init({ context: "index" });
     </script>
 
-    <!-- 3D Model Viewer Interactive Controller (Hero Card) -->
-    <script>
-      (function () {
-        const viewer = document.getElementById("naura3d-viewer");
-        const wrapper = document.getElementById("naura3d-canvas-wrapper");
-        if (!viewer) return;
+    <!-- 3D & VRM Model Hero Interactive Controller -->
+    <script type="module">
+      import { NauraHero3DViewer } from "../components/NauraHeroViewer/index.js";
 
-        const loadingText = document.getElementById("naura3d-loading-text");
-        const loadingBox = viewer.querySelector(".naura3d-loading");
+      const canvas = document.getElementById("naura-hero-3d-canvas");
+      const wrapper = document.getElementById("naura3d-canvas-wrapper");
+      const loadingBox = document.getElementById("naura3d-loading");
+      const loadingText = document.getElementById("naura3d-loading-text");
+      const errorBox = document.getElementById("naura3d-error");
+      const statusText = document.getElementById("naura3d-status-text");
+      const animButtons = document.querySelectorAll(".naura3d-anim-btn");
+      const btnReset = document.getElementById("naura3d-btn-reset");
+      const btnSnapshot = document.getElementById("naura3d-btn-snapshot");
 
-        // Track download progress
-        viewer.addEventListener("progress", (ev) => {
-          const totalProgress = ev.detail && ev.detail.totalProgress !== undefined ? ev.detail.totalProgress : 0;
-          const pct = Math.round(totalProgress * 100);
-          if (loadingText && pct > 0 && pct < 100) {
-            loadingText.textContent = `Memuat Model 3D... ${pct}%`;
-          }
+      if (canvas) {
+        const heroViewer = new NauraHero3DViewer(canvas, {
+          modelPath: "/models/naura.glb",
+          lookAtCursor: true,
+          onProgress: (pct) => {
+            if (loadingText && pct > 0 && pct < 100) {
+              loadingText.textContent = `Memuat Model 3D & VRM... ${pct}%`;
+            }
+          },
+          onLoad: () => {
+            console.log("✨ [NauraHero3D] Model 3D & VRM Naura Hoshino berhasil dimuat!");
+            if (loadingBox) {
+              loadingBox.style.opacity = "0";
+              setTimeout(() => {
+                loadingBox.style.display = "none";
+              }, 400);
+            }
+            if (wrapper) {
+              wrapper.style.borderColor = "rgba(255, 182, 193, 0.4)";
+              wrapper.style.boxShadow = "inset 0 0 25px rgba(255, 182, 193, 0.1), 0 10px 30px rgba(0, 0, 0, 0.6)";
+            }
+          },
+          onError: (err) => {
+            console.warn("⚠️ [NauraHero3D] Gagal memuat model 3D:", err);
+            if (loadingBox) loadingBox.style.display = "none";
+            if (errorBox) errorBox.style.display = "flex";
+          },
         });
 
-        // When model successfully loads
-        viewer.addEventListener("load", () => {
-          console.log("✨ [Naura3D] Model 3D Naura Hoshino berhasil dimuat!");
-          console.log("✨ [Naura3D] Animasi yang tersedia:", viewer.availableAnimations);
-          if (loadingBox) {
-            loadingBox.style.opacity = "0";
-            setTimeout(() => {
-              loadingBox.style.display = "none";
-            }, 350);
-          }
-          if (wrapper) {
-            wrapper.style.borderColor = "rgba(255, 182, 193, 0.4)";
-            wrapper.style.boxShadow = "inset 0 0 25px rgba(255, 182, 193, 0.1), 0 10px 30px rgba(0, 0, 0, 0.6)";
-          }
-        });
-
-        // Error handling fallback
-        viewer.addEventListener("error", (err) => {
-          console.warn("⚠️ [Naura3D] Gagal memuat model via model-viewer:", err);
-          if (loadingBox) loadingBox.style.display = "none";
-          const errBox = viewer.querySelector(".naura3d-error");
-          if (errBox) errBox.style.display = "flex";
-        });
+        heroViewer.init();
+        window.__heroViewer = heroViewer;
 
         // Interactive Animation & Mood Switcher
-        const animButtons = wrapper.querySelectorAll(".naura3d-anim-btn");
-        const statusText = document.getElementById("naura3d-status-text");
-        let autoResetTimer = null;
-
-        function setMotion(animName, label, isLoop = true) {
-          if (!viewer) return;
-          if (autoResetTimer) {
-            clearTimeout(autoResetTimer);
-            autoResetTimer = null;
-          }
-
-          viewer.animationName = animName;
-          viewer.play();
-
-          if (statusText) {
-            statusText.textContent = label;
-          }
-
-          // Update active button state
-          animButtons.forEach((btn) => {
-            if (btn.dataset.anim === animName) {
-              btn.classList.add("active", "bg-pink-500/30", "border-pink-400/50", "text-pink-200");
-              btn.classList.remove("text-gray-300", "border-transparent");
-            } else {
-              btn.classList.remove("active", "bg-pink-500/30", "border-pink-400/50", "text-pink-200");
-              btn.classList.add("text-gray-300", "border-transparent");
-            }
-          });
-
-          // If one-shot action, revert to Idle after duration
-          if (!isLoop) {
-            const durations = { Wave: 2600, Thinking: 3200, Cheers: 2200, Shy: 3200, BlowKiss: 2800 };
-            const time = durations[animName] || 2500;
-            autoResetTimer = setTimeout(() => {
-              setMotion("Idle", "🌸 Idle (Bernafas)", true);
-            }, time);
-          }
-        }
-
         animButtons.forEach((btn) => {
           btn.addEventListener("click", (e) => {
             e.stopPropagation();
             const anim = btn.dataset.anim;
             const label = btn.dataset.label;
-            // Semua animasi diatur loop saat aktif agar pengguna dapat menikmati gerakan tanpa terpotong
-            setMotion(anim, label, true);
+
+            heroViewer.playAnimation(anim, { loop: true });
+            heroViewer.setMood(anim);
+
+            if (statusText) statusText.textContent = label;
+
+            animButtons.forEach((b) => {
+              if (b === btn) {
+                b.classList.add("active", "bg-pink-500/30", "border-pink-400/50", "text-pink-200");
+                b.classList.remove("text-gray-300", "border-transparent");
+              } else {
+                b.classList.remove("active", "bg-pink-500/30", "border-pink-400/50", "text-pink-200");
+                b.classList.add("text-gray-300", "border-transparent");
+              }
+            });
           });
         });
 
-        // Double click reset camera
-        if (wrapper) {
-          wrapper.addEventListener("dblclick", () => {
-            if (viewer.cameraOrbit) {
-              viewer.cameraOrbit = "180deg 75deg auto";
-              if (typeof viewer.resetTurntableRotation === "function") {
-                viewer.resetTurntableRotation();
-              }
-            }
+        // Reset Camera
+        if (btnReset) {
+          btnReset.addEventListener("click", (e) => {
+            e.stopPropagation();
+            heroViewer.resetCamera();
           });
         }
-      })();
+
+        // Snapshot PNG
+        if (btnSnapshot) {
+          btnSnapshot.addEventListener("click", (e) => {
+            e.stopPropagation();
+            heroViewer.takeSnapshot(`naura-${heroViewer.currentAnimName.toLowerCase()}.png`);
+          });
+        }
+
+        // Double click wrapper reset camera
+        if (wrapper) {
+          wrapper.addEventListener("dblclick", () => {
+            heroViewer.resetCamera();
+          });
+        }
+      }
     </script>
   </body>
 </html>

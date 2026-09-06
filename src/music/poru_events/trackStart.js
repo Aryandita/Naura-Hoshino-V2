@@ -1,6 +1,6 @@
 const { logger } = require("../../managers/logger");
-const cacheManager = require("../../managers/cacheManager");
 const MusicUIManager = require("../MusicUIManager");
+const aiDjManager = require("../../managers/aiDjManager");
 const geminiClient = require("../../ai/geminiClient");
 const {
   rankAutoplayCandidates,
@@ -104,6 +104,11 @@ module.exports = {
           activeTrack,
           recommendedTracks,
         );
+
+        // 🎙️ Jalankan pengumuman AI DJ (non-blocking)
+        aiDjManager.handleTrackStart(manager, player, activeTrack).catch((err) => {
+          logger.warn(`[AI-DJ] Gagal mengeksekusi trackStart announcer: ${err.message}`);
+        });
       } catch (uiErr) {
         logger.error("[MusicUI Render Error]", uiErr);
       }

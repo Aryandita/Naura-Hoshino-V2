@@ -14,7 +14,7 @@ import { Naura3DViewer } from "./viewer3d.js";
 class NauraViewerClass {
     constructor() {
         this.initialized = false;
-        this.isExpanded = true;
+        this.isExpanded = false;
         this.activeTab = "chat"; // 'chat' | 'music' | 'hud'
         this.currentMood = "Happy";
         this.isPlaying = true;
@@ -90,10 +90,10 @@ class NauraViewerClass {
         container.id = "naura-viewer-container";
 
         container.innerHTML = `
-      <div class="nv-panel is-expanded" id="nv-panel">
+      <div class="nv-panel" id="nv-panel">
         <!-- Minimized Mode: Floating Anime Avatar Orb -->
         <div class="nv-mini-avatar-wrapper" id="nv-mini-trigger" title="Buka Naura OS">
-          <img src="/assets/Naura_Expression/Happy.png" alt="Naura Avatar" class="nv-mini-avatar-img" id="nv-mini-img" onerror="this.src='/assets/Naura_Expression/Read.png'" />
+          <img src="/assets/Naura_Expression/Happy.png" alt="Naura Avatar" class="nv-mini-avatar-img" id="nv-mini-img" onerror="this.onerror=null; this.src='/assets/Naura_Expression/Read.png';" />
           <span class="nv-mini-dot"></span>
         </div>
 
@@ -130,7 +130,7 @@ class NauraViewerClass {
             <div class="nv-chat-hero">
               <div class="nv-avatar-frame" id="nv-avatar-frame-3d" title="Klik untuk menyapa Naura 🌸">
                 <canvas class="nv-avatar-3d-canvas" id="nv-chat-3d-canvas"></canvas>
-                <img src="/assets/Naura_Expression/Happy.png" alt="Naura Mood" class="nv-avatar-img" id="nv-chat-avatar" onerror="this.src='/assets/Naura_Expression/Read.png'" style="display:none;" />
+                <img src="/assets/Naura_Expression/Happy.png" alt="Naura Mood" class="nv-avatar-img" id="nv-chat-avatar" onerror="this.onerror=null; this.src='/assets/Naura_Expression/Read.png';" style="display:none;" />
                 <span class="nv-badge-3d">3D LIVE</span>
                 <span class="nv-btn-wave-hint"><i class="fa-solid fa-hand-sparkles"></i> Wave</span>
               </div>

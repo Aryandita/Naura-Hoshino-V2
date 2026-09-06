@@ -195,6 +195,11 @@ const env = {
   FOOOCUS_BASE_URL:
     cleanEnv(process.env.FOOOCUS_BASE_URL) || "http://localhost:7865",
 
+  // FISH AUDIO (TTS & Voice AI Companion / AI DJ)
+  FISH_AUDIO_API_KEY: cleanEnv(process.env.FISH_AUDIO_API_KEY),
+  FISH_AUDIO_VOICE_ID: cleanEnv(process.env.FISH_AUDIO_VOICE_ID),
+  AI_DJ_ENABLED: cleanEnv(process.env.AI_DJ_ENABLED) === "true",
+
   // MEDIA TOOLING
   // Dipakai downloaderCompress.js. Kosongkan saja bila memakai ffmpeg-static
   // bawaan npm; isi hanya kalau host menyediakan binary FFmpeg sendiri.

@@ -57,9 +57,10 @@ export default defineConfig({
 
   server: {
     port: 3001,
-    // Proxy ke server Express utama untuk API & Socket.IO.
-    // Client socket.io sengaja tetap dimuat dari backend (/socket.io)
-    // supaya versinya dijamin cocok dengan server.
+    host: "0.0.0.0",
+    // Proxy ke server Express utama hanya untuk endpoint API & Socket.IO.
+    // DILARANG proxy /assets agar bundler internal Vite (JS, CSS, chunk)
+    // dan asset statis di public/assets tidak terblokir dengan ECONNREFUSED.
     proxy: {
       "/api": apiTarget,
       "/auth": apiTarget,
@@ -67,9 +68,34 @@ export default defineConfig({
         target: apiTarget,
         ws: true,
       },
-      "/assets": apiTarget,
     },
   },
+
+  preview: {
+    port: 4173,
+    host: "0.0.0.0",
+  },
+
+  plugins: [
+    {
+      name: "copy-dist-index",
+      closeBundle() {
+        // Otomatis salin dist/src/pages/index.html ke dist/index.html
+        // agar root URL '/' langsung menyajikan Dashboard Utama
+        try {
+          const fs = require("node:fs");
+          const path = require("node:path");
+          const distDir = resolve(__dirname, "dist");
+          const srcIndex = path.join(distDir, "src", "pages", "index.html");
+          const destIndex = path.join(distDir, "index.html");
+          if (fs.existsSync(srcIndex)) {
+            fs.copyFileSync(srcIndex, destIndex);
+            console.log("[Vite] dist/index.html tersinkronisasi dari src/pages/index.html");
+          }
+        } catch (_) {}
+      },
+    },
+  ],
 
   resolve: {
     alias: {

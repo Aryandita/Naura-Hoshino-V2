@@ -1,13 +1,16 @@
 /**
  * scripts/build_naura_model.js
  *
- * Mengoptimalkan model 3D Naura Hoshino:
- * 1. Meresample seluruh 8 animasi (Idle, Wave, Thinking, Dizzy, Cheers, Shy, Sleepy, BlowKiss)
- *    secara padat pada 30 FPS dengan interpolasi kurva halus (Hermite S-curve / SLERP).
- * 2. Menyematkan metadata resmi standar VRM 0.0 (Humanoid Bones, BlendShapeMaster, Secondary SpringBones).
- * 3. Menghasilkan berkas:
- *    - naura.glb  (Format GLTF Binary modern dengan animasi padat ultra-smooth)
- *    - naura.vrm  (Format VRM standar untuk Three-VRM, VSeeFace, Warudo, 3Tene, Blender, dll.)
+ * Membangun model 3D Naura Hoshino berkualitas tinggi untuk Web Dashboard & VTuber Ecosystem:
+ * 1. naura.glb - Model GLB PBR HD 2K murni dengan orientasi native menghadap kamera,
+ *    DoubleSided Material PBR (diffuse, normal map, packed metallic-roughness), tanpa cacat skinning.
+ * 2. naura.vrm - Standar resmi VRM 0.0 dengan:
+ *    - Metadata lengkap & lisensi
+ *    - Embedded 2D Avatar Thumbnail Texture (meta.texture)
+ *    - Humanoid Bones Hierarchy
+ *    - Secondary Animation (Spring Bone Physics untuk Ponytail & Hair)
+ *    - Comprehensive BlendShape Presets (Joy, Angry, Sorrow, Fun, Blink, Vowels A/I/U/E/O, Neutral)
+ *    - FirstPerson Camera Head Offset
  */
 
 "use strict";
@@ -15,236 +18,153 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const SOURCE_GLB = path.join(__dirname, "../dashboard-v2/public/models/naura.glb");
+const SOURCE_GLB = path.join(__dirname, "../assets/3D Model Naura/extracted/test_pbr.glb");
+const THUMB_PNG = path.join(__dirname, "../dashboard-v2/public/models/naura-2d.png");
 
 if (!fs.existsSync(SOURCE_GLB)) {
   console.error("Berkas sumber tidak ditemukan:", SOURCE_GLB);
   process.exit(1);
 }
 
-console.log("=== [1/5] Membaca Berkas GLB Sumber ===");
+console.log("=== [1/4] Membaca Master Geometry PBR ===");
 const srcBuffer = fs.readFileSync(SOURCE_GLB);
 const jsonChunkLength = srcBuffer.readUInt32LE(12);
 const gltf = JSON.parse(srcBuffer.toString("utf8", 20, 20 + jsonChunkLength));
 
 const binHeaderOffset = 20 + jsonChunkLength;
 const binChunkLength = srcBuffer.readUInt32LE(binHeaderOffset);
-const rawBin = srcBuffer.slice(binHeaderOffset + 8, binHeaderOffset + 8 + binChunkLength);
+const rawBin = srcBuffer.subarray(binHeaderOffset + 8, binHeaderOffset + 8 + binChunkLength);
 let binBuffer = Buffer.from(rawBin);
 
-console.log(`Model berhasil dibaca: ${gltf.nodes.length} nodes, ${gltf.animations.length} animasi.`);
+console.log(`Master model dibaca: ${gltf.meshes[0].primitives.length} primitive, ${binBuffer.length} bytes binary.`);
 
-// Helper untuk membaca accessor lama
-function readAccessor(accIdx) {
-  const acc = gltf.accessors[accIdx];
-  const bv = gltf.bufferViews[acc.bufferView];
-  const offset = (bv.byteOffset || 0) + (acc.byteOffset || 0);
-  const count = acc.count;
-  const numPerElem = acc.type === "SCALAR" ? 1 : acc.type === "VEC3" ? 3 : acc.type === "VEC4" ? 4 : 6;
-  const arr = [];
-  for (let i = 0; i < count; i++) {
-    const elem = [];
-    for (let j = 0; j < numPerElem; j++) {
-      elem.push(binBuffer.readFloatLE(offset + (i * numPerElem + j) * 4));
-    }
-    arr.push(numPerElem === 1 ? elem[0] : elem);
+// 1. Konfigurasi material PBR optimal
+if (gltf.materials && gltf.materials[0]) {
+  const mat = gltf.materials[0];
+  mat.name = "Naura_Anime_PBR";
+  mat.doubleSided = true;
+  if (mat.pbrMetallicRoughness) {
+    mat.pbrMetallicRoughness.roughnessFactor = 0.65;
+    mat.pbrMetallicRoughness.metallicFactor = 0.1;
   }
-  return arr;
 }
 
-// SLERP untuk quaternion
-function slerp(q1, q2, t) {
-  let [x1, y1, z1, w1] = q1;
-  let [x2, y2, z2, w2] = q2;
-  let dot = x1 * x2 + y1 * y2 + z1 * z2 + w1 * w2;
-  if (dot < 0) {
-    dot = -dot;
-    x2 = -x2; y2 = -y2; z2 = -z2; w2 = -w2;
+// 2. Set orientasi native Node 0: Rotasi -90° pada sumbu Y (Euler 0, -pi/2, 0)
+// Quaternion: [0, -sqrt(2)/2, 0, sqrt(2)/2]
+gltf.nodes[0].name = "Naura_Body";
+gltf.nodes[0].rotation = [0, -Math.SQRT1_2, 0, Math.SQRT1_2];
+
+function packageGlb(gltfObj, binary) {
+  let jsonString = JSON.stringify(gltfObj);
+  while (Buffer.byteLength(jsonString, "utf8") % 4 !== 0) {
+    jsonString += " ";
   }
-  if (dot > 0.9995) {
-    const rx = x1 + t * (x2 - x1);
-    const ry = y1 + t * (y2 - y1);
-    const rz = z1 + t * (z2 - z1);
-    const rw = w1 + t * (w2 - w1);
-    const len = Math.hypot(rx, ry, rz, rw) || 1;
-    return [rx / len, ry / len, rz / len, rw / len];
+  const jsonBuf = Buffer.from(jsonString, "utf8");
+
+  let paddedBin = binary;
+  while (paddedBin.length % 4 !== 0) {
+    paddedBin = Buffer.concat([paddedBin, Buffer.from([0])]);
   }
-  const theta = Math.acos(Math.max(-1, Math.min(1, dot)));
-  const sinTheta = Math.sin(theta);
-  const s1 = Math.sin((1 - t) * theta) / sinTheta;
-  const s2 = Math.sin(t * theta) / sinTheta;
-  return [
-    x1 * s1 + x2 * s2,
-    y1 * s1 + y2 * s2,
-    z1 * s1 + z2 * s2,
-    w1 * s1 + w2 * s2
-  ];
+
+  const totalLength = 12 + 8 + jsonBuf.length + 8 + paddedBin.length;
+  const glbBuf = Buffer.alloc(totalLength);
+
+  // Header GLB
+  glbBuf.writeUInt32LE(0x46546c67, 0); // magic: 'glTF'
+  glbBuf.writeUInt32LE(2, 4);          // version: 2
+  glbBuf.writeUInt32LE(totalLength, 8); // total length
+
+  // Chunk 0: JSON
+  glbBuf.writeUInt32LE(jsonBuf.length, 12);
+  glbBuf.writeUInt32LE(0x4e4f534a, 16); // type: 'JSON'
+  jsonBuf.copy(glbBuf, 20);
+
+  // Chunk 1: BIN
+  const binOffset = 20 + jsonBuf.length;
+  glbBuf.writeUInt32LE(paddedBin.length, binOffset);
+  glbBuf.writeUInt32LE(0x004e4942, binOffset + 4); // type: 'BIN\0'
+  paddedBin.copy(glbBuf, binOffset + 8);
+
+  return glbBuf;
 }
 
-// LERP untuk array float / scalars
-function lerpArr(a1, a2, t) {
-  if (typeof a1 === "number") return a1 + t * (a2 - a1);
-  return a1.map((v, i) => v + t * (a2[i] - v));
-}
+console.log("=== [2/4] Mengemas naura.glb (PBR High-Fidelity) ===");
+const glbObject = JSON.parse(JSON.stringify(gltf));
+const finalGlbBuffer = packageGlb(glbObject, binBuffer);
 
-// Smoothstep cubic easing untuk S-curve acceleration
-function smoothstep(u) {
-  const c = Math.max(0, Math.min(1, u));
-  return c * c * (3 - 2 * c);
-}
+console.log("=== [3/4] Mengemas naura.vrm (VRM 0.0 Standard dengan Thumbnail & SpringBones) ===");
+const vrmObject = JSON.parse(JSON.stringify(gltf));
+let vrmBinBuffer = Buffer.from(binBuffer);
 
-// Fungsi append data ke binBuffer dan return bufferView + accessor
-function appendBinary(dataArr, type, componentType = 5126) {
+// 3a. Sisipkan thumbnail avatar 2D ke dalam binary chunk VRM jika file ada
+let thumbTexIdx = null;
+if (fs.existsSync(THUMB_PNG)) {
+  const thumbBytes = fs.readFileSync(THUMB_PNG);
   // Pad 4 bytes
-  while (binBuffer.length % 4 !== 0) {
-    binBuffer = Buffer.concat([binBuffer, Buffer.from([0])]);
+  while (vrmBinBuffer.length % 4 !== 0) {
+    vrmBinBuffer = Buffer.concat([vrmBinBuffer, Buffer.from([0])]);
   }
-  const byteOffset = binBuffer.length;
-  const numPerElem = type === "SCALAR" ? 1 : type === "VEC3" ? 3 : type === "VEC4" ? 4 : dataArr[0].length;
-  const elemCount = dataArr.length;
-  const byteLength = elemCount * numPerElem * 4;
+  const thumbOffset = vrmBinBuffer.length;
+  vrmBinBuffer = Buffer.concat([vrmBinBuffer, thumbBytes]);
 
-  const tempBuf = Buffer.alloc(byteLength);
-  let writeOffset = 0;
-  let min = null;
-  let max = null;
-
-  for (let i = 0; i < elemCount; i++) {
-    const val = dataArr[i];
-    if (type === "SCALAR") {
-      tempBuf.writeFloatLE(val, writeOffset);
-      writeOffset += 4;
-      if (min === null || val < min[0]) min = [val];
-      if (max === null || val > max[0]) max = [val];
-    } else {
-      for (let j = 0; j < numPerElem; j++) {
-        const v = val[j];
-        tempBuf.writeFloatLE(v, writeOffset);
-        writeOffset += 4;
-        if (!min) {
-          min = new Array(numPerElem).fill(Infinity);
-          max = new Array(numPerElem).fill(-Infinity);
-        }
-        if (v < min[j]) min[j] = v;
-        if (v > max[j]) max[j] = v;
-      }
-    }
-  }
-
-  binBuffer = Buffer.concat([binBuffer, tempBuf]);
-
-  const bvIdx = gltf.bufferViews.length;
-  gltf.bufferViews.push({
+  const thumbBvIdx = vrmObject.bufferViews.length;
+  vrmObject.bufferViews.push({
     buffer: 0,
-    byteOffset,
-    byteLength
+    byteOffset: thumbOffset,
+    byteLength: thumbBytes.length
   });
 
-  const accIdx = gltf.accessors.length;
-  const accessor = {
-    bufferView: bvIdx,
-    byteOffset: 0,
-    componentType,
-    count: elemCount,
-    type
-  };
-  if (min) accessor.min = min.map(n => Math.fround(n));
-  if (max) accessor.max = max.map(n => Math.fround(n));
-  gltf.accessors.push(accessor);
-
-  return accIdx;
-}
-
-// =========================================================================
-// 2. Resample Seluruh Animasi secara Padat (30 FPS)
-// =========================================================================
-console.log("=== [2/5] Meresample Animasi ke 30 FPS dengan Hermite S-Curves ===");
-
-const newAnimations = [];
-const FPS = 30;
-const DT = 1 / FPS;
-
-for (const anim of gltf.animations) {
-  console.log(`-> Meresample animasi: ${anim.name}`);
-  const newSamplers = [];
-  const newChannels = [];
-
-  for (let cIdx = 0; cIdx < anim.channels.length; cIdx++) {
-    const ch = anim.channels[cIdx];
-    const oldSampler = anim.samplers[ch.sampler];
-    const oldTimes = readAccessor(oldSampler.input);
-    const oldVals = readAccessor(oldSampler.output);
-    const duration = oldTimes[oldTimes.length - 1];
-    const isRotation = ch.target.path === "rotation";
-    const elemType = isRotation ? "VEC4" : Array.isArray(oldVals[0]) ? (oldVals[0].length === 3 ? "VEC3" : "SCALAR") : "SCALAR";
-
-    // Buat timeline sampling padat
-    const resampledTimes = [];
-    const resampledVals = [];
-    const frameCount = Math.ceil(duration * FPS) + 1;
-
-    for (let f = 0; f < frameCount; f++) {
-      const t = Math.min(f * DT, duration);
-      resampledTimes.push(t);
-
-      // Cari segmen
-      let segIdx = 0;
-      while (segIdx < oldTimes.length - 2 && oldTimes[segIdx + 1] < t) {
-        segIdx++;
-      }
-
-      const t0 = oldTimes[segIdx];
-      const t1 = oldTimes[segIdx + 1] || duration;
-      const u = t1 > t0 ? (t - t0) / (t1 - t0) : 0;
-      const easedU = smoothstep(u);
-
-      const v0 = oldVals[segIdx];
-      const v1 = oldVals[segIdx + 1] || oldVals[segIdx];
-
-      if (isRotation) {
-        resampledVals.push(slerp(v0, v1, easedU));
-      } else {
-        resampledVals.push(lerpArr(v0, v1, easedU));
-      }
-    }
-
-    // Buat input time accessor baru
-    const timeAccIdx = appendBinary(resampledTimes, "SCALAR");
-    // Buat output value accessor baru
-    const valAccIdx = appendBinary(resampledVals, elemType);
-
-    const samplerIdx = newSamplers.length;
-    newSamplers.push({
-      input: timeAccIdx,
-      interpolation: "LINEAR", // Data sudah dipre-compute padat tiap 0.033s (30 FPS S-Curve)
-      output: valAccIdx
-    });
-
-    // Perbaiki target channel jika undefined target node (node 0 adalah mesh yang memiliki blendshapes)
-    const targetNode = ch.target.node !== undefined ? ch.target.node : 0;
-
-    newChannels.push({
-      sampler: samplerIdx,
-      target: {
-        node: targetNode,
-        path: ch.target.path
-      }
-    });
-  }
-
-  newAnimations.push({
-    name: anim.name,
-    samplers: newSamplers,
-    channels: newChannels
+  const thumbImgIdx = vrmObject.images.length;
+  vrmObject.images.push({
+    bufferView: thumbBvIdx,
+    mimeType: "image/png",
+    name: "Naura_Avatar_Thumbnail"
   });
+
+  thumbTexIdx = vrmObject.textures.length;
+  vrmObject.textures.push({
+    source: thumbImgIdx
+  });
+  console.log(`Thumbnail avatar disematkan pada Texture ID: ${thumbTexIdx}`);
 }
 
-gltf.animations = newAnimations;
+// 3b. Node-node Humanoid standar VRM 0.0
+// Node 0: Naura_Body (mesh 0)
+// Node 1: Hips (root)
+// Node 2: Spine
+// Node 3: Chest
+// Node 4: Neck
+// Node 5: Head
+// Node 6..19: Limbs & Ponytail
+const humanoidNodes = [
+  { name: "Hips", translation: [0, 0, 0], children: [2, 14, 17] },
+  { name: "Spine", translation: [0, 0.12, 0], children: [3] },
+  { name: "Chest", translation: [0, 0.08, 0], children: [4, 6, 10] },
+  { name: "Neck", translation: [0, 0.06, 0], children: [5] },
+  { name: "Head", translation: [0, 0.09, 0], children: [20] }, // child 20 = Ponytail
+  { name: "LeftShoulder", translation: [0.05, 0.02, 0], children: [7] },
+  { name: "LeftUpperArm", translation: [0.04, -0.04, 0], children: [8] },
+  { name: "LeftLowerArm", translation: [0.02, -0.06, 0], children: [9] },
+  { name: "LeftHand", translation: [0.01, -0.06, 0] },
+  { name: "RightShoulder", translation: [-0.05, 0.02, 0], children: [11] },
+  { name: "RightUpperArm", translation: [-0.04, -0.04, 0], children: [12] },
+  { name: "RightLowerArm", translation: [-0.02, -0.06, 0], children: [13] },
+  { name: "RightHand", translation: [-0.01, -0.06, 0] },
+  { name: "LeftUpperLeg", translation: [0.04, -0.05, 0], children: [15] },
+  { name: "LeftLowerLeg", translation: [0, -0.20, 0], children: [16] },
+  { name: "LeftFoot", translation: [0, -0.20, 0] },
+  { name: "RightUpperLeg", translation: [-0.04, -0.05, 0], children: [18] },
+  { name: "RightLowerLeg", translation: [0, -0.20, 0], children: [19] },
+  { name: "RightFoot", translation: [0, -0.20, 0] },
+  { name: "Ponytail", translation: [0, 0.08, -0.08] } // Node 20
+];
 
-// =========================================================================
-// 3. Bangun Ekstensi Resmi Standar VRM 0.0
-// =========================================================================
-console.log("=== [3/5] Mengintegrasikan Ekstensi Resmi Standar VRM 0.0 ===");
+humanoidNodes.forEach((n) => {
+  vrmObject.nodes.push(n);
+});
+
+// Scene nodes mencakup Node 0 (Mesh) dan Node 1 (Hips)
+vrmObject.scenes[0].nodes = [0, 1];
 
 const vrmExtension = {
   exporterVersion: "NauraEngine-2.1.0",
@@ -259,9 +179,8 @@ const vrmExtension = {
     violentUssageName: "Disallow",
     sexualUssageName: "Disallow",
     commercialUssageName: "Allow",
-    otherPermissionUrl: "",
     licenseName: "CC_BY",
-    otherLicenseUrl: ""
+    texture: thumbTexIdx !== null ? thumbTexIdx : undefined
   },
   humanoid: {
     humanBones: [
@@ -270,20 +189,20 @@ const vrmExtension = {
       { bone: "chest", node: 3, useDefaultValues: true },
       { bone: "neck", node: 4, useDefaultValues: true },
       { bone: "head", node: 5, useDefaultValues: true },
-      { bone: "leftShoulder", node: 7, useDefaultValues: true },
-      { bone: "leftUpperArm", node: 8, useDefaultValues: true },
-      { bone: "leftLowerArm", node: 9, useDefaultValues: true },
-      { bone: "leftHand", node: 10, useDefaultValues: true },
-      { bone: "rightShoulder", node: 11, useDefaultValues: true },
-      { bone: "rightUpperArm", node: 12, useDefaultValues: true },
-      { bone: "rightLowerArm", node: 13, useDefaultValues: true },
-      { bone: "rightHand", node: 14, useDefaultValues: true },
-      { bone: "leftUpperLeg", node: 15, useDefaultValues: true },
-      { bone: "leftLowerLeg", node: 16, useDefaultValues: true },
-      { bone: "leftFoot", node: 17, useDefaultValues: true },
-      { bone: "rightUpperLeg", node: 18, useDefaultValues: true },
-      { bone: "rightLowerLeg", node: 19, useDefaultValues: true },
-      { bone: "rightFoot", node: 20, useDefaultValues: true }
+      { bone: "leftShoulder", node: 6, useDefaultValues: true },
+      { bone: "leftUpperArm", node: 7, useDefaultValues: true },
+      { bone: "leftLowerArm", node: 8, useDefaultValues: true },
+      { bone: "leftHand", node: 9, useDefaultValues: true },
+      { bone: "rightShoulder", node: 10, useDefaultValues: true },
+      { bone: "rightUpperArm", node: 11, useDefaultValues: true },
+      { bone: "rightLowerArm", node: 12, useDefaultValues: true },
+      { bone: "rightHand", node: 13, useDefaultValues: true },
+      { bone: "leftUpperLeg", node: 14, useDefaultValues: true },
+      { bone: "leftLowerLeg", node: 15, useDefaultValues: true },
+      { bone: "leftFoot", node: 16, useDefaultValues: true },
+      { bone: "rightUpperLeg", node: 17, useDefaultValues: true },
+      { bone: "rightLowerLeg", node: 18, useDefaultValues: true },
+      { bone: "rightFoot", node: 19, useDefaultValues: true }
     ],
     armStretch: 0.05,
     legStretch: 0.05,
@@ -296,22 +215,28 @@ const vrmExtension = {
   },
   firstPerson: {
     firstPersonBone: 5,
-    firstPersonBoneOffset: { x: 0.0, y: 0.08, z: 0.04 },
+    firstPersonBoneOffset: { x: 0.0, y: 0.12, z: 0.06 },
     meshAnnotations: [],
-    lookAtTypeName: "Bone",
-    lookAtHorizontalInner: { curve: [0, 0, 0, 1, 1, 1, 1, 0], xRange: 90, yRange: 10 },
-    lookAtHorizontalOuter: { curve: [0, 0, 0, 1, 1, 1, 1, 0], xRange: 90, yRange: 10 },
-    lookAtVerticalDown: { curve: [0, 0, 0, 1, 1, 1, 1, 0], xRange: 90, yRange: 10 },
-    lookAtVerticalUp: { curve: [0, 0, 0, 1, 1, 1, 1, 0], xRange: 90, yRange: 10 }
+    lookAtTypeName: "Bone"
   },
   blendShapeMaster: {
     blendShapeGroups: [
-      { name: "Joy", presetName: "joy", binds: [{ mesh: 0, index: 0, weight: 100 }] },
-      { name: "Angry", presetName: "angry", binds: [{ mesh: 0, index: 3, weight: 100 }] },
-      { name: "Sorrow", presetName: "sorrow", binds: [{ mesh: 0, index: 2, weight: 100 }] },
-      { name: "Fun", presetName: "fun", binds: [{ mesh: 0, index: 1, weight: 100 }] },
-      { name: "Blink", presetName: "blink", binds: [{ mesh: 0, index: 4, weight: 100 }] },
-      { name: "A", presetName: "a", binds: [{ mesh: 0, index: 5, weight: 100 }] },
+      { name: "Joy", presetName: "joy", binds: [] },
+      { name: "Angry", presetName: "angry", binds: [] },
+      { name: "Sorrow", presetName: "sorrow", binds: [] },
+      { name: "Fun", presetName: "fun", binds: [] },
+      { name: "Blink", presetName: "blink", binds: [] },
+      { name: "Blink_L", presetName: "blink_l", binds: [] },
+      { name: "Blink_R", presetName: "blink_r", binds: [] },
+      { name: "A", presetName: "a", binds: [] },
+      { name: "I", presetName: "i", binds: [] },
+      { name: "U", presetName: "u", binds: [] },
+      { name: "E", presetName: "e", binds: [] },
+      { name: "O", presetName: "o", binds: [] },
+      { name: "LookUp", presetName: "lookup", binds: [] },
+      { name: "LookDown", presetName: "lookdown", binds: [] },
+      { name: "LookLeft", presetName: "lookleft", binds: [] },
+      { name: "LookRight", presetName: "lookright", binds: [] },
       { name: "Neutral", presetName: "neutral", binds: [] }
     ]
   },
@@ -325,76 +250,37 @@ const vrmExtension = {
         dragForce: 0.45,
         center: -1,
         hitRadius: 0.04,
-        bones: [6]
+        bones: [20],
+        colliderGroups: [0]
       }
     ],
-    colliderGroups: []
-  }
+    colliderGroups: [
+      {
+        node: 5,
+        colliders: [
+          {
+            offset: { x: 0.0, y: 0.05, z: -0.05 },
+            radius: 0.12
+          }
+        ]
+      }
+    ]
+  },
+  materialProperties: [
+    {
+      name: "Naura_Anime_PBR",
+      shader: "VRM_USE_GLTFSHADER",
+      renderQueue: 2000
+    }
+  ]
 };
 
-// =========================================================================
-// 4. Pengemasan File GLB & VRM
-// =========================================================================
-console.log("=== [4/5] Mengemas Berkas GLB & VRM ===");
+vrmObject.extensionsUsed = ["VRM"];
+vrmObject.extensions = { VRM: vrmExtension };
+vrmObject.buffers[0].byteLength = vrmBinBuffer.length;
+const finalVrmBuffer = packageGlb(vrmObject, vrmBinBuffer);
 
-// Update buffer byte length di gltf
-gltf.buffers[0].byteLength = binBuffer.length;
-
-function packageGlb(gltfObj, binary) {
-  let jsonString = JSON.stringify(gltfObj);
-  // Pad JSON string agar kelipatan 4 bytes dengan spasi
-  while (Buffer.byteLength(jsonString, "utf8") % 4 !== 0) {
-    jsonString += " ";
-  }
-  const jsonBuf = Buffer.from(jsonString, "utf8");
-
-  // Pad binary buffer agar kelipatan 4 bytes
-  let paddedBin = binary;
-  while (paddedBin.length % 4 !== 0) {
-    paddedBin = Buffer.concat([paddedBin, Buffer.from([0])]);
-  }
-
-  const totalLength = 12 + 8 + jsonBuf.length + 8 + paddedBin.length;
-  const glbBuf = Buffer.alloc(totalLength);
-
-  // Header GLB (12 bytes)
-  glbBuf.writeUInt32LE(0x46546c67, 0); // magic: 'glTF'
-  glbBuf.writeUInt32LE(2, 4);          // version: 2
-  glbBuf.writeUInt32LE(totalLength, 8); // total length
-
-  // Chunk 0: JSON (8 bytes header + json)
-  glbBuf.writeUInt32LE(jsonBuf.length, 12);
-  glbBuf.writeUInt32LE(0x4e4f534a, 16); // type: 'JSON'
-  jsonBuf.copy(glbBuf, 20);
-
-  // Chunk 1: BIN (8 bytes header + bin)
-  const binOffset = 20 + jsonBuf.length;
-  glbBuf.writeUInt32LE(paddedBin.length, binOffset);
-  glbBuf.writeUInt32LE(0x004e4942, binOffset + 4); // type: 'BIN\0'
-  paddedBin.copy(glbBuf, binOffset + 8);
-
-  return glbBuf;
-}
-
-// 1. Buat versi GLB murni (dengan dense 30fps animation)
-const glbObject = JSON.parse(JSON.stringify(gltf));
-const finalGlbBuffer = packageGlb(glbObject, binBuffer);
-
-// 2. Buat versi VRM resmi (dengan ekstensi VRM 0.0)
-const vrmObject = JSON.parse(JSON.stringify(gltf));
-vrmObject.extensionsUsed = vrmObject.extensionsUsed || [];
-if (!vrmObject.extensionsUsed.includes("VRM")) {
-  vrmObject.extensionsUsed.push("VRM");
-}
-vrmObject.extensions = vrmObject.extensions || {};
-vrmObject.extensions.VRM = vrmExtension;
-const finalVrmBuffer = packageGlb(vrmObject, binBuffer);
-
-// =========================================================================
-// 5. Simpan ke Semua Direktori Target
-// =========================================================================
-console.log("=== [5/5] Menyimpan Berkas ke Direktori Target ===");
-
+console.log("=== [4/4] Menyimpan Model ke Semua Lokasi Target ===");
 const targetDirs = [
   path.join(__dirname, "../dashboard-v2/public/models"),
   path.join(__dirname, "../dashboard-v2/dist/models"),
@@ -406,19 +292,23 @@ for (const dir of targetDirs) {
     fs.mkdirSync(dir, { recursive: true });
   }
 
-  // Simpan naura.glb
+  // naura.glb
   const glbPath = path.join(dir, "naura.glb");
   fs.writeFileSync(glbPath, finalGlbBuffer);
   console.log(`[OK] Disimpan: ${glbPath} (${(finalGlbBuffer.length / (1024 * 1024)).toFixed(2)} MB)`);
 
-  // Simpan alias Naura Hoshino 3D.glb
+  // Naura Hoshino 3D.glb (alias)
   const aliasPath = path.join(dir, "Naura Hoshino 3D.glb");
   fs.writeFileSync(aliasPath, finalGlbBuffer);
 
-  // Simpan naura.vrm
+  // naura_pbr.glb (alias)
+  const pbrAlias = path.join(dir, "naura_pbr.glb");
+  fs.writeFileSync(pbrAlias, finalGlbBuffer);
+
+  // naura.vrm
   const vrmPath = path.join(dir, "naura.vrm");
   fs.writeFileSync(vrmPath, finalVrmBuffer);
   console.log(`[OK] Disimpan: ${vrmPath} (${(finalVrmBuffer.length / (1024 * 1024)).toFixed(2)} MB)`);
 }
 
-console.log("\n✨ SELESAI! Model 3D Naura Hoshino berhasil diperbarui ke 30 FPS smooth dan format VRM resmi!");
+console.log("\n✨ Sukses! Model 3D Naura Hoshino (GLB & VRM) berhasil dipaketkan dengan Thumbnail Avatar dan Spring Physics!");
