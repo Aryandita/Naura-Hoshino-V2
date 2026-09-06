@@ -31,8 +31,9 @@ console.log(
 );
 
 let manager;
+const useClustering = Boolean(env.USE_CLUSTERING && ClusterManager);
 
-if (ClusterManager) {
+if (useClustering) {
   manager = new ClusterManager(path.join(__dirname, "index.js"), {
     token: env.TOKEN,
     totalShards: "auto",

@@ -50,5 +50,10 @@ dashboard-v2/dist/
 .roo/mcp.json
 scripts/tmp-*
 
-# Model 3D format berat (melebihi batas GitHub); versi .glb yang dipakai
+# Model 3D format berat (melebihi batas GitHub 100MB); versi .glb yang dipakai
 assets/3D Model Naura/*.obj
+assets/3D Model Naura/**/*.obj
+assets/3D Model Naura/extracted/
+scratch/
+*.glb.bak
+

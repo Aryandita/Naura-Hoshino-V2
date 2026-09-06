@@ -262,7 +262,7 @@ module.exports = {
       return responder.followUp(successPayload);
     }
 
-    const targetItem = interaction.options.getString("item");
+    const targetItem = interaction.options?.getString?.("item") || null;
     if (targetItem) {
       const { isCoupon } = purchase.decodeChoice(targetItem);
       await processBuy(interaction, targetItem, isCoupon);

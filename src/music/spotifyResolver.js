@@ -257,16 +257,51 @@ async function fetchFallbackMetadata(type, id) {
     }
 
     if (type === "album" || type === "playlist") {
-      const data = await scraper.getData(url);
-      const list =
-        type === "album" ? data.trackList || [] : data.trackList || [];
+      let list = [];
+      let playlistName = "Playlist Spotify";
+
+      if (typeof scraper.getTracks === "function") {
+        try {
+          const rawTracks = await scraper.getTracks(url);
+          if (Array.isArray(rawTracks) && rawTracks.length > 0) {
+            list = rawTracks;
+          }
+        } catch (_) {}
+      }
+
+      if (list.length === 0) {
+        const data = await scraper.getData(url);
+        playlistName = data?.name || data?.title || playlistName;
+        list = data?.trackList || [];
+      } else {
+        try {
+          const data = await scraper.getData(url);
+          playlistName = data?.name || data?.title || playlistName;
+        } catch (_) {}
+      }
+
       return {
         type,
-        name: data.name || "Playlist Spotify",
-        items: list.slice(0, env.SPOTIFY_MAX_PLAYLIST_TRACKS).map((t) => ({
-          name: t.title || t.name,
-          artists: [t.artist].filter(Boolean),
-        })),
+        name: playlistName,
+        items: list
+          .slice(0, env.SPOTIFY_MAX_PLAYLIST_TRACKS)
+          .map((t) => {
+            const name = t.name || t.title;
+            const artistName =
+              t.artist ||
+              t.subtitle ||
+              (Array.isArray(t.artists)
+                ? t.artists
+                    .map((a) => (typeof a === "string" ? a : a?.name))
+                    .filter(Boolean)
+                    .join(", ")
+                : null);
+            return {
+              name,
+              artists: [artistName].filter(Boolean),
+            };
+          })
+          .filter((t) => Boolean(t.name)),
       };
     }
   } catch (e) {

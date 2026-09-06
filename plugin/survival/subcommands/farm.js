@@ -22,9 +22,28 @@ module.exports = {
     "🌿 Kelola Lahan Hidroponik Greenhouse, tanam benih kosmik, dan panen bahan kafe!",
 
   async execute(interaction) {
-    const action = interaction.options.getString("aksi") || "status";
-    const seedId = interaction.options.getString("benih");
-    const slotNumber = interaction.options.getInteger("slot");
+    if (
+      typeof interaction.deferUpdate === "function" &&
+      !interaction.deferred &&
+      !interaction.replied
+    ) {
+      await interaction.deferUpdate().catch(() => {});
+    }
+
+    const sendResponse = async (payload, isEphemeral = false) => {
+      const finalFlags =
+        (payload.flags || MessageFlags.IsComponentsV2) |
+        (isEphemeral ? MessageFlags.Ephemeral : 0);
+      const data = { ...payload, flags: finalFlags };
+      if (interaction.deferred || interaction.replied) {
+        return interaction.editReply(data);
+      }
+      return interaction.reply(data);
+    };
+
+    const action = interaction.options?.getString?.("aksi") || "status";
+    const seedId = interaction.options?.getString?.("benih") || null;
+    const slotNumber = interaction.options?.getInteger?.("slot") || null;
     const userId = interaction.user.id;
     const displayName =
       interaction.member?.displayName ||
@@ -96,10 +115,9 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.reply({
+      return sendResponse({
         ...payload,
         files,
-        flags: MessageFlags.IsComponentsV2,
       });
     }
 
@@ -122,10 +140,7 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.reply({
-        ...payload,
-        flags: MessageFlags.IsComponentsV2,
-      });
+      return sendResponse(payload);
     }
 
     // 3. MENANAM BENIH
@@ -137,10 +152,7 @@ module.exports = {
             "Silakan tentukan benih yang ingin ditanam melalui opsi `benih`!",
           footerText: ui.getFooter("survival"),
         });
-        return interaction.reply({
-          ...payload,
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
+        return sendResponse(payload, true);
       }
 
       const slotIdx = slotNumber ? slotNumber - 1 : 0;
@@ -161,10 +173,7 @@ module.exports = {
           description: msg,
           footerText: ui.getFooter("survival"),
         });
-        return interaction.reply({
-          ...payload,
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
+        return sendResponse(payload, true);
       }
 
       const seed = res.seed;
@@ -183,10 +192,7 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.reply({
-        ...payload,
-        flags: MessageFlags.IsComponentsV2,
-      });
+      return sendResponse(payload);
     }
 
     // 4. MENYIRAM TANAMAN
@@ -200,10 +206,7 @@ module.exports = {
           description: "Pod tersebut kosong atau nomor pod tidak valid!",
           footerText: ui.getFooter("survival"),
         });
-        return interaction.reply({
-          ...payload,
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
+        return sendResponse(payload, true);
       }
 
       const payload = buildContainerV2({
@@ -213,10 +216,7 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.reply({
-        ...payload,
-        flags: MessageFlags.IsComponentsV2,
-      });
+      return sendResponse(payload);
     }
 
     // 5. MEMUPUK TANAMAN
@@ -239,10 +239,7 @@ module.exports = {
           description: msg,
           footerText: ui.getFooter("survival"),
         });
-        return interaction.reply({
-          ...payload,
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
+        return sendResponse(payload, true);
       }
 
       const payload = buildContainerV2({
@@ -252,10 +249,7 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.reply({
-        ...payload,
-        flags: MessageFlags.IsComponentsV2,
-      });
+      return sendResponse(payload);
     }
 
     // 6. PANEN TANAMAN
@@ -276,10 +270,7 @@ module.exports = {
           description: msg,
           footerText: ui.getFooter("survival"),
         });
-        return interaction.reply({
-          ...payload,
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
+        return sendResponse(payload, true);
       }
 
       const questGen = require("../../../src/survival/engines/questGenerator");
@@ -302,10 +293,7 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.reply({
-        ...payload,
-        flags: MessageFlags.IsComponentsV2,
-      });
+      return sendResponse(payload);
     }
 
     // 7. UPGRADE GRID
@@ -324,10 +312,7 @@ module.exports = {
           description: msg,
           footerText: ui.getFooter("survival"),
         });
-        return interaction.reply({
-          ...payload,
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
+        return sendResponse(payload, true);
       }
 
       const payload = buildContainerV2({
@@ -337,10 +322,7 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.reply({
-        ...payload,
-        flags: MessageFlags.IsComponentsV2,
-      });
+      return sendResponse(payload);
     }
   },
 };

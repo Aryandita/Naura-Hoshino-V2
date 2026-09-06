@@ -76,7 +76,7 @@ function findBackground(locKey, period) {
 module.exports = {
   async execute(interaction) {
     const user = interaction.user;
-    const tujuan = interaction.options.getString("lokasi");
+    const tujuan = interaction.options?.getString?.("lokasi") || null;
     const [survival] = await UserSurvival.findOrCreate({
       where: { userId: user.id },
     });

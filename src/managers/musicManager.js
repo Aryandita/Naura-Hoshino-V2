@@ -15,17 +15,24 @@ function loadPoru() {
   return PoruCtor;
 }
 
-// Node publik Serenetia - hanya 1 entry (SSL), tanpa duplikat HTTP.
-// Ditandai isPrimaryFallback:true agar getPreferredNode() di bawah
-// memprioritaskan node private milik kita selagi masih online.
+// Node publik terverifikasi: Millohost v4 (SSL + LavaSrc) sebagai primary,
+// dan Serenetia sebagai secondary fallback.
 const PUBLIC_LAVALINK_NODES = [
+  {
+    name: "Millohost Public Node",
+    host: "lava-v4.millohost.my.id",
+    port: 443,
+    password: "https://discord.gg/mjS5J2K3ep",
+    secure: true,
+    isPrimaryFallback: true,
+  },
   {
     name: "Serenetia Public Node",
     host: "lavalinkv4.serenetia.com",
     port: 443,
     password: "https://seretia.link/discord",
     secure: true,
-    isPrimaryFallback: true,
+    isPrimaryFallback: false,
   },
 ];
 

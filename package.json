@@ -4,9 +4,10 @@
   "description": "Naura Hoshino, Bot Discord multifungsi dengan UI Canvas Modern",
   "main": "index.js",
   "scripts": {
-    "prestart": "npm run dashboard:build && node scripts/migrate.js",
+    "prestart": "node scripts/ensure-build.js && node scripts/migrate.js",
     "start": "node shard.js",
     "start:no-migrate": "node shard.js",
+    "start:update": "node scripts/auto-update.js",
     "dev": "node scripts/ensure-build.js && node --watch shard.js",
     "deploy": "node index.js --deploy",
     "db:migrate": "node scripts/migrate.js",

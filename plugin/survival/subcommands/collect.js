@@ -46,8 +46,95 @@ function e(name, fallback) {
 
 module.exports = {
   async execute(interaction) {
+    if (
+      typeof interaction.deferUpdate === "function" &&
+      !interaction.deferred &&
+      !interaction.replied
+    ) {
+      await interaction.deferUpdate().catch(() => {});
+    }
+
     const user = interaction.user;
-    const lokasi = interaction.options.getString("lokasi");
+    const lokasiOption = interaction.options?.getString?.("lokasi") || null;
+
+    if (!lokasiOption) {
+      const selectPayload = buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        authorName: "Naura Resource Gathering",
+        title: `${e("axe", "🪓")} Pusat Pengumpulan Bahan Alam`,
+        description: [
+          `Pilih lokasi alam yang ingin kamu kunjungi untuk mengumpulkan bahan baku petualangan:`,
+          "",
+          `🌲 **Pohon (Hutan)** : Kayu, Serat, Apel liar, Batu`,
+          `⛏️ **Batu (Tambang)** : Bebatuan alam, Bijih Besi, Perak, Berlian`,
+          `🌊 **Air (Laut)** : Ikan Salmon, Ikan Emas, Umpan pancing`,
+          `🌿 **Rerumputan (Desa)** : Dedaunan, Serat herbal, Air mineral`,
+          "",
+          `> *Pastikan staminamu cukup sebelum berangkat mengais sumber daya!*`,
+        ].join("\n"),
+        buttonsRow: new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("gather_loc_hutan")
+            .setLabel("🌲 Hutan")
+            .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId("gather_loc_tambang")
+            .setLabel("⛏️ Tambang")
+            .setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder()
+            .setCustomId("gather_loc_laut")
+            .setLabel("🌊 Laut")
+            .setStyle(ButtonStyle.Primary),
+          new ButtonBuilder()
+            .setCustomId("gather_loc_desa")
+            .setLabel("🌿 Desa")
+            .setStyle(ButtonStyle.Secondary),
+        ),
+        footerText: ui.getFooter("survival"),
+      });
+
+      const replyMsg = await (interaction.deferred || interaction.replied
+        ? interaction.editReply(selectPayload)
+        : interaction.reply(selectPayload));
+
+      if (
+        !replyMsg ||
+        typeof replyMsg.createMessageComponentCollector !== "function"
+      ) {
+        return;
+      }
+
+      const locCollector = replyMsg.createMessageComponentCollector({
+        filter: (i) =>
+          i.user.id === user.id && i.customId.startsWith("gather_loc_"),
+        time: 30000,
+        max: 1,
+      });
+
+      locCollector.on("collect", async (i) => {
+        await i.deferUpdate().catch(() => {});
+        const chosenLoc = i.customId.replace("gather_loc_", "");
+        const mockInteraction = {
+          ...i,
+          user: i.user,
+          member: i.member,
+          client: i.client,
+          options: {
+            getString: (name) => (name === "lokasi" ? chosenLoc : null),
+          },
+          editReply: (p) => i.editReply(p),
+          reply: (p) => i.reply(p),
+          followUp: (p) => i.followUp(p),
+          deferred: true,
+          replied: false,
+        };
+        return module.exports.execute(mockInteraction);
+      });
+
+      return;
+    }
+
+    const lokasi = lokasiOption;
 
     const [survival] = await UserSurvival.findOrCreate({
       where: { userId: user.id },

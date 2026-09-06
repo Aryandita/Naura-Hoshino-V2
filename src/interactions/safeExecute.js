@@ -2,24 +2,21 @@
 
 /**
  * Pembungkus eksekusi tunggal untuk seluruh komponen interaksi.
- *
- * Semua penanganan galat yang sebelumnya ditulis ulang di setiap cabang (dan
- * sering kali tidak ditulis sama sekali) sekarang tinggal di sini.
+ * Mengimplementasikan Law 1 (Guard Clauses), Law 2 (Intent-revealing Names),
+ * dan Law 6 (Make errors useful dengan integrasi DomainError).
  */
 
-const { EmbedBuilder, MessageFlags } = require("discord.js");
+const { MessageFlags } = require("discord.js");
 const { logger } = require("../managers/logger");
+const { buildErrorContainerV2 } = require("../utils/NauraContainerBuilder");
+const { isDomainError } = require("../errors/DomainError");
 
 /**
  * Galat Discord yang tidak berguna untuk dilaporkan:
- *
  *   10062 Unknown interaction  - token interaksi kedaluwarsa (batas 3 detik)
  *   40060 Already acknowledged - interaksi sudah dijawab di tempat lain
  *   10008 Unknown message      - pesan sudah dihapus
  *   50027 Invalid webhook token- token balasan kedaluwarsa (batas 15 menit)
- *
- * Semuanya berarti pengguna sudah tidak bisa menerima balasan apa pun, jadi
- * mencoba membalas hanya menghasilkan galat kedua.
  */
 const IGNORED_CODES = new Set([10062, 40060, 10008, 50027]);
 
@@ -33,8 +30,6 @@ function isIgnorable(error) {
   return Boolean(error && IGNORED_CODES.has(error.code));
 }
 
-const { buildErrorContainerV2 } = require("../utils/NauraContainerBuilder");
-
 /** Kirim pesan galat ke pengguna, apa pun keadaan interaksinya. */
 async function respondError(interaction, message) {
   const containerPayload = buildErrorContainerV2({
@@ -47,17 +42,19 @@ async function respondError(interaction, message) {
     const finalFlags =
       (containerPayload.flags || MessageFlags.IsComponentsV2) |
       MessageFlags.Ephemeral;
+
     if (interaction.deferred || interaction.replied) {
       await interaction.followUp({
         ...containerPayload,
         flags: finalFlags,
       });
-    } else {
-      await interaction.reply({
-        ...containerPayload,
-        flags: finalFlags,
-      });
+      return;
     }
+
+    await interaction.reply({
+      ...containerPayload,
+      flags: finalFlags,
+    });
   } catch (error) {
     if (!isIgnorable(error)) {
       logger.warn(
@@ -68,64 +65,75 @@ async function respondError(interaction, message) {
 }
 
 /**
- * Jalankan satu penangan komponen dengan jaring pengaman.
+ * Jalankan satu penangan komponen dengan jaring pengaman dan guard clauses.
  *
  * @param {import('discord.js').Interaction} interaction
- * @param {Object} entry - entri dari registry
+ * @param {Object} componentEntry - entri dari registry
  * @param {import('discord.js').Client} client
  */
-async function safeExecute(interaction, entry, client) {
-  // Peringatan bila sebuah penangan berisiko melewati batas 3 detik. Sengaja
-  // hanya memperingatkan, bukan defer otomatis: sebagian penangan memanggil
-  // showModal() atau update(), dan keduanya tidak boleh didahului deferReply.
-  const watchdog = setTimeout(() => {
+async function safeExecute(interaction, componentEntry, client) {
+  // Guard Clause: Pastikan entri dan fungsi penangan valid
+  if (!componentEntry || typeof componentEntry.handler !== "function") {
+    logger.warn("[INTERAKSI] Handler komponen tidak valid atau tidak ditemukan.");
+    return;
+  }
+
+  const { label = "unknown", source = "unknown", defer, ephemeral, onError } = componentEntry;
+
+  // Watchdog batas interaksi 3 detik
+  const interactionWatchdog = setTimeout(() => {
     if (!interaction.replied && !interaction.deferred) {
       logger.warn(
-        `[INTERAKSI] "${entry.label}" belum membalas setelah ${ACK_WARNING_MS} ms. ` +
+        `[INTERAKSI] "${label}" belum membalas setelah ${ACK_WARNING_MS} ms. ` +
           "Pertimbangkan menambahkan defer pada entri registry-nya.",
       );
     }
   }, ACK_WARNING_MS);
 
   try {
-    if (
-      entry.defer === "reply" &&
-      !interaction.replied &&
-      !interaction.deferred
-    ) {
-      await interaction.deferReply({ ephemeral: entry.ephemeral !== false });
-    } else if (
-      entry.defer === "update" &&
-      !interaction.replied &&
-      !interaction.deferred
-    ) {
-      await interaction.deferUpdate();
+    // Tangani auto-defer secara datar (flat structure)
+    if (!interaction.replied && !interaction.deferred) {
+      if (defer === "reply") {
+        await interaction.deferReply({ ephemeral: ephemeral !== false });
+      } else if (defer === "update") {
+        await interaction.deferUpdate();
+      }
     }
 
-    // Metrik: Catat penggunaan komponen di Redis Hash
+    // Metrik: Catat penggunaan komponen di Redis Hash tanpa memblokir
     try {
       const metricsManager = require("../managers/metricsManager");
-      metricsManager.logComponent(entry.label || "unknown");
-    } catch (e) {
-      // Abaikan gagal log metrik
+      metricsManager.logComponent(label);
+    } catch {
+      // Abaikan bila modul metrik belum siap
     }
 
-    await entry.handler(interaction, client);
+    await componentEntry.handler(interaction, client);
   } catch (error) {
+    // Guard Clause 1: Abaikan error jaringan/token kedaluwarsa Discord
     if (isIgnorable(error)) {
-      logger.debug?.(
-        `[INTERAKSI] "${entry.label}" diabaikan: ${error.message}`,
-      );
+      logger.debug?.(`[INTERAKSI] "${label}" diabaikan: ${error.message}`);
       return;
     }
 
+    // Guard Clause 2: Tangani DomainError terstruktur (Law 6)
+    if (isDomainError(error)) {
+      logger.warn(
+        `[INTERAKSI] DomainError pada "${label}": [${error.code}] ${error.message}`,
+        error.context,
+      );
+      await respondError(interaction, error.userMessage);
+      return;
+    }
+
+    // Fallback: Error tak terduga
     logger.error(
-      `[INTERAKSI] Galat pada "${entry.label}" (${entry.source}):`,
+      `[INTERAKSI] Galat tak terduga pada "${label}" (${source}):`,
       error,
     );
-    await respondError(interaction, entry.onError || DEFAULT_ERROR);
+    await respondError(interaction, onError || DEFAULT_ERROR);
   } finally {
-    clearTimeout(watchdog);
+    clearTimeout(interactionWatchdog);
   }
 }
 

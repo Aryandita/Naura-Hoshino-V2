@@ -71,8 +71,16 @@ function e(name, fallback) {
 
 module.exports = {
   async execute(interaction) {
+    if (
+      typeof interaction.deferUpdate === "function" &&
+      !interaction.deferred &&
+      !interaction.replied
+    ) {
+      await interaction.deferUpdate().catch(() => {});
+    }
+
     const user = interaction.user;
-    const pekerjaan = interaction.options.getString("pekerjaan");
+    const pekerjaan = interaction.options?.getString?.("pekerjaan") || null;
 
     const survival = await cacheManager.getUserSurvival(user.id);
     const profile = await cacheManager.getUserProfile(user.id);

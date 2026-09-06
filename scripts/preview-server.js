@@ -13,7 +13,38 @@ const assetsPath = path.join(projectRoot, "assets");
 
 app.use(express.json());
 
-// 1. Serve static assets & 3D models
+// 1. Serve static assets & 3D models with robust alias handling
+const handleModel = (req, res) => {
+  const isVrm = req.path.toLowerCase().endsWith(".vrm");
+  const filename = isVrm ? "naura.vrm" : "naura.glb";
+  const candidates = [
+    path.join(distPath, "models", filename),
+    path.join(projectRoot, "dashboard-v2", "public", "models", filename),
+    path.join(assetsPath, "3D Model Naura", filename),
+    path.join(distPath, "models", "naura.glb"),
+    path.join(projectRoot, "dashboard-v2", "public", "models", "naura.glb")
+  ];
+  for (const f of candidates) {
+    if (fs.existsSync(f)) {
+      res.setHeader("Content-Type", "model/gltf-binary");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      return res.sendFile(f);
+    }
+  }
+  res.status(404).send("Model 3D tidak ditemukan");
+};
+
+app.get([
+  "/models/naura.vrm",
+  "/assets/3d/naura.vrm",
+  "/models/naura.glb",
+  "/models/Naura%20Hoshino%203D.glb",
+  "/models/Naura Hoshino 3D.glb",
+  "/assets/3d/naura.glb",
+  "/assets/3d/Naura%20Hoshino%203D.glb",
+  "/assets/3d/Naura Hoshino 3D.glb"
+], handleModel);
+
 app.use("/assets", express.static(assetsPath));
 app.use("/assets/3d", express.static(path.join(assetsPath, "3D Model Naura")));
 app.use("/models", express.static(path.join(distPath, "models")));

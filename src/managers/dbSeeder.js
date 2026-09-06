@@ -49,8 +49,10 @@ const seedInitialData = async () => {
   try {
     const itemCount = await GameItem.count();
     if (itemCount === 0) {
-      const staticItems = require("../survival/data/items_static");
-      const bulkData = staticItems.map((item) => {
+      const {
+        BALANCED_ITEMS_CATALOG,
+      } = require("../survival/data/items_catalog");
+      const bulkData = BALANCED_ITEMS_CATALOG.map((item) => {
         const {
           id,
           name,
@@ -59,6 +61,11 @@ const seedInitialData = async () => {
           sellPrice,
           category,
           rarity,
+          tier,
+          tierColor,
+          image,
+          emoji,
+          iconType,
           ...attributes
         } = item;
         return {
@@ -68,12 +75,19 @@ const seedInitialData = async () => {
           price: price || 0,
           sellPrice: sellPrice || 0,
           category: category || "material",
-          rarity: rarity || "Biasa",
-          attributes: attributes || {},
+          rarity: rarity || "Common",
+          attributes: {
+            tier: tier || 1,
+            tierColor: tierColor || "#9CA3AF",
+            image: image || `/items/${id}.svg`,
+            emoji: emoji || "📦",
+            iconType: iconType || category,
+            ...attributes,
+          },
         };
       });
       await GameItem.bulkCreate(bulkData, { ignoreDuplicates: true });
-      logger.db("Default Game Items seeded.");
+      logger.db("Default 150 Balanced Game Items seeded.");
     }
   } catch (e) {
     logger.error("[DB] Failed to seed Game Items", e);

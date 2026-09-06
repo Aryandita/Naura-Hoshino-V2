@@ -337,8 +337,46 @@ Setiap Container V2 harus mengikuti struktur 5-lapisan berikut:
 
 - **Maksimum 40 komponen** per pesan Components V2, termasuk komponen bersarang.
 - **Total teks aman di bawah sekitar 3.500 karakter.** Batas keras sedikit di atas itu, jadi sisakan margin.
-- Karena struktur 5-lapisan wajib, container panjang seperti `/help`, `/survival inventory`, dan leaderboard paling rentan menembus batas.
 - **`NauraContainerBuilder.js` wajib memvalidasi batas ini sebelum payload dikirim.** Ini sudah berjalan lewat `src/utils/componentBudget.js`, yang memotong isi berlebih beserta catatan dan tidak pernah mengorbankan tombol atau footer. Gagal di builder dengan pesan jelas jauh lebih baik daripada `Invalid Form Body` di produksi.
+
+## 1.13 Standar 7 Coding Laws of Senior Developer (Clean Architecture & Robustness)
+
+> [!IMPORTANT]
+> Seluruh kode baru dan refaktorisasi wajib mematuhi **7 Coding Laws of Senior Developer** (referensi arsitektur: Cloud X Berry) untuk menjamin skalabilitas, keterbacaan, kemudahan pengujian, dan keandalan sistem produksi:
+
+1. **Law 1: Keep the main path easy to follow (Guard Clauses / Flat Control Flow)**
+   - Hindari nested `if/else` bertingkat yang dalam (*arrow anti-pattern*).
+   - Gunakan *Early Return* / *Guard Clauses* di awal fungsi untuk menangani edge case, validasi izin, cooldown, dan kondisi gagal.
+   - Jalur utama (*happy path*) harus tetap berada di tingkat indentasi terluar tanpa bersarang.
+
+2. **Law 2: Name things by meaning (Intent-Revealing Domain Naming)**
+   - Dilarang menggunakan nama variabel generik dan ambigu seperti `data`, `res`, `result`, `obj`, `temp`, `val`, `item2`.
+   - Gunakan nama yang mencerminkan makna domain dan unitnya, contoh: `memberExperiencePoints`, `dailyTransfersCount`, `pendingTradeOffer`, `interactionBoundaryPayload`.
+
+3. **Law 3: Keep external systems behind a boundary (Anti-Corruption Layer & Adapters)**
+   - Dilarang membiarkan format data eksternal (Discord raw interaction, API pihak ketiga seperti Saweria/Spotify/Gemini, raw database row) merembes langsung ke dalam domain logika bisnis.
+   - Bungkus semua sistem luar di balik adapter di folder `src/adapters/` (seperti `interactionBoundaryAdapter.js`, `paymentBoundaryAdapter.js`, `aiBoundaryAdapter.js`). Adapter bertugas memvalidasi, menormalisasi, dan mengubah payload eksternal menjadi objek domain internal yang bersih dan aman.
+
+4. **Law 4: Make invalid states harder to represent (Domain Types & State Enums)**
+   - Dilarang menggunakan status string bebas yang rawan typo (`'complete'`, `'done'`, `'fin'`).
+   - Gunakan enum/object beku terpusat di `src/domain/DomainStates.js` (misal `TicketStatus`, `TradeStatus`, `CurrencyKind`, `PlayerStatus`).
+   - Gunakan *state machine transition validator* (`canTransitionState()`) untuk mencegah lompatan status ilegal (misal tiket berstatus `CLOSED` tidak boleh langsung kembali ke `CLAIMED`).
+
+5. **Law 5: Separate decisions from actions (Pure Decisions Engine vs I/O Side-Effects)**
+   - Pisahkan logika perhitungan murni (*Pure Calculations*) dari operasi I/O dan mutasi state (*Side-Effects*).
+   - Fungsi keputusan di `src/domain/decisions/` (seperti `levelingDecisions.js`, `economyDecisions.js`) harus murni (*deterministic*): menerima parameter eksplisit, tidak mengakses database/Redis/Discord API, dan mengembalikan hasil keputusan tanpa efek samping.
+   - Lapisan handler/manager bertugas mengambil data (I/O), memanggil *decision function* (Pure), lalu mengeksekusi mutasi/komunikasi (I/O).
+
+6. **Law 6: Make errors useful (Structured Domain Errors with Machine Codes & Context)**
+   - Dilarang melempar `new Error('Error!')` biasa tanpa kode terstruktur atau konteks yang jelas.
+   - Gunakan `DomainError` dari `src/errors/DomainError.js` yang menyertakan:
+     - `code`: Machine-readable error code (misal `INSUFFICIENT_FUNDS`, `RATE_LIMITED`, `PERMISSION_DENIED`).
+     - `userMessage`: Pesan ramah pengguna yang siap dirender di UI Discord.
+     - `context`: Data diagnostik terstruktur untuk logger (misal `{ requiredAmount, currentBalance, userId }`).
+
+7. **Law 7: Keep changes focused (Single Responsibility & Cohesive Modules)**
+   - Setiap file, modul, dan PR harus memiliki tanggung jawab tunggal yang fokus.
+   - Hindari membuat modul "sapu jagat" (*god object*) yang mencampur aduk routing, validasi, komputasi bisnis, dan rendering UI.
 
 ---
 
@@ -447,6 +485,18 @@ Naura-Hoshino-V2/
 │   │   ├── canvasWorker.js     #       Worker script eksekutor Canvas
 │   │   ├── cardCanvas.js       #       Shader shimmer & kartu koleksi
 │   │   └── ...
+│   │
+│   ├── errors/                 #    Structured Domain Errors (Law 6)
+│   │   ├── DomainError.js      #       Machine codes, user messages & context
+│   │   └── ...
+│   ├── domain/                 #    Pure Business Decisions & States (Law 4 & 5)
+│   │   ├── DomainStates.js     #       Immutable state enums & transitions
+│   │   ├── decisions/          #       Pure calculation engines (no I/O, no Discord)
+│   │   └── ...
+│   ├── adapters/               #    Anti-Corruption Boundary Adapters (Law 3)
+│   │   ├── interactionBoundaryAdapter.js
+│   │   ├── aiBoundaryAdapter.js
+│   │   └── paymentBoundaryAdapter.js
 │   │
 │   ├── events/                 #    Discord event listeners (routing saja)
 │   ├── interactions/           #    Registry Button, Select Menu, Modal, Autocomplete

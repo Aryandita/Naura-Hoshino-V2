@@ -2616,6 +2616,8 @@ async function generateRankCard(
   return canvas;
 }
 
+const { generateInventoryBackpackImage } = require("./inventoryCanvas");
+
 const CanvasUtils = {
   drawRoundedRect,
   drawRoundedProgressBar,
@@ -2626,6 +2628,7 @@ const CanvasUtils = {
   truncateText,
   formatDur,
   generateSurvivalProfileImage,
+  generateInventoryBackpackImage,
   generateMusicProfileImage,
   generateMusicPanelImage,
   generateWelcomeImage,
@@ -2645,6 +2648,7 @@ module.exports = {
   truncateText,
   formatDur,
   generateSurvivalProfileImage,
+  generateInventoryBackpackImage,
   generateMusicProfileImage,
   generateMusicPanelImage,
   generateWelcomeImage,

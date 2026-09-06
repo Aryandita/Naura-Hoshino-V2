@@ -61,30 +61,56 @@ function createLoader() {
  */
 export async function loadModel(modelPath, onProgress) {
   const loader = createLoader();
-  const format = detectFormat(modelPath);
+  let format = detectFormat(modelPath);
 
-  const gltf = await new Promise((resolve, reject) => {
-    loader.load(
-      modelPath,
-      resolve,
-      (event) => {
-        if (onProgress && event.lengthComputable) {
-          onProgress(Math.round((event.loaded / event.total) * 100));
-        }
-      },
-      reject,
-    );
-  });
+  let gltf;
+  try {
+    gltf = await new Promise((resolve, reject) => {
+      loader.load(
+        modelPath,
+        resolve,
+        (event) => {
+          if (onProgress && event.lengthComputable) {
+            onProgress(Math.round((event.loaded / event.total) * 100));
+          }
+        },
+        reject
+      );
+    });
+  } catch (err) {
+    // Fallback otomatis bila ekstensi .vrm / .glb tidak ditemukan
+    const altPath = modelPath.toLowerCase().endsWith(".vrm")
+      ? modelPath.replace(/\.vrm$/i, ".glb")
+      : modelPath.replace(/\.glb$/i, ".vrm");
 
-  let vrm = null;
-
-  if (format === "vrm") {
-    vrm = gltf.userData.vrm;
-
-    if (vrm) {
-      // Rotasi VRM: koordinat VRM menghadap -Z, Three.js mengharap +Z
-      VRMUtils.rotateVRM0(vrm);
+    if (altPath !== modelPath) {
+      console.warn(`[NauraViewer/loader] Gagal memuat ${modelPath}, mencoba alternatif: ${altPath}`);
+      format = detectFormat(altPath);
+      gltf = await new Promise((resolve, reject) => {
+        loader.load(
+          altPath,
+          resolve,
+          (event) => {
+            if (onProgress && event.lengthComputable) {
+              onProgress(Math.round((event.loaded / event.total) * 100));
+            }
+          },
+          reject
+        );
+      });
+    } else {
+      throw err;
     }
+  }
+
+  let vrm = gltf.userData?.vrm || null;
+
+  if (vrm) {
+    format = "vrm";
+    try {
+      // Rotasi VRM: koordinat VRM 0.0 menghadap -Z, Three.js mengharap +Z
+      VRMUtils.rotateVRM0(vrm);
+    } catch (_) {}
   }
 
   // Optimasi: aktifkan shadow cast/receive pada semua mesh

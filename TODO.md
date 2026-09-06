@@ -4,9 +4,9 @@ Daftar pekerjaan strategis berdasarkan audit arsitektur, kebutuhan sistem, dan r
 Roadmap ini disusun dan diurutkan secara ketat mengikuti **4 Kategori Prioritas**:
 
 1. 🚨 **KRITIS** (Perlu perbaikan langsung/segera: keamanan data, integritas moneter, stabilitas koneksi inti).
-2. 🔥 **TINGGI** (Prioritas kedua setelah Kritis: fitur arsitektur vital, retensi pengguna utama, performa skala besar).
-3. ⚡ **NORMAL** (Prioritas standar: fitur ekspansi reguler, bisa dikerjakan kapan pun tanpa mengganggu operasi bot).
-4. ✨ **OPTIONAL** (Prioritas opsional: kosmetik, eksperimen inovasi lanjutan, tidak berpengaruh jika dilewati).
+2. 🔥 **TINGGI** (Prioritas kedua setelah Kritis: fitur arsitektur vital, retensi pengguna utama, performa skala besar)
+3. ⚡ **NORMAL** (Prioritas standar: fitur ekspansi reguler, bisa dikerjakan kapan pun tanpa mengganggu operasi bot)
+4. ✨ **OPTIONAL** (Prioritas opsional: kosmetik, eksperimen inovasi lanjutan, tidak berpengaruh jika dilewati)
 
 ---
 
@@ -47,6 +47,37 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Evaluasi berkala status failover multi-node Lavalink (`musicManager.getPreferredNode`) agar bot tidak pernah terputus di tengah pemutaran musik.
 - [x] **Polyglot Persistence Reconnection & Failover Watchdog**
   - Memastikan transisi otomatis ke SQLite fallback saat koneksi internet cloud Supabase terputus, dan pemulihan data kembali (*data reconciliation*) saat koneksi pulih tanpa terjadinya duplikasi saldo atau kupon.
+- [ ] **[BUG] Inkonsistensi `engines.node` di `package.json` vs AGENTS.md**
+  - `package.json` menetapkan `"node": ">=22.0.0"` tetapi keputusan arsitektur di `AGENTS.md` dan `TODO.md` menyatakan wajib `>= 24`.
+  - **Perbaikan:** Ubah `package.json` baris 33 dari `">=22.0.0"` menjadi `">=24.0.0"` agar konsisten dengan semua dokumentasi.
+  - File: [`package.json`](package.json) baris 33.
+- [ ] **[BUG] Komentar Bulan Salah di `worldEventEngine.js`**
+  - Event `independence_day` memiliki `month: 7` dengan komentar `// August (0-indexed)`. Komentar benar (Agustus = bulan ke-8, index 7), tetapi event `naura_birthday` dengan `month: 5` berkomenter `// June (0-indexed)` juga sudah benar. Yang perlu diperiksa: apakah tanggal ulang tahun Naura memang 11-13 Juni (bukan bulan lain).
+  - Event `autumn_harvest` dengan `month: 8` berkomenter `// September (0-indexed)` - ini juga benar secara teknis.
+  - **Verifikasi:** Konfirmasi bahwa tanggal ulang tahun Naura Hoshino yang benar adalah 11-13 Juni untuk menghindari event tidak terpicu pada tanggal yang salah.
+  - File: [`src/survival/engines/worldEventEngine.js`](src/survival/engines/worldEventEngine.js).
+- [ ] **[BUG] Akses `process.env` Langsung di `plugin/minigames/akinator.js`**
+  - File plugin `akinator.js` mengakses `process.env` secara langsung, melanggar aturan arsitektur 1.3 poin 4 (semua akses env HARUS melalui `src/config/env.js`).
+  - **Perbaikan:** Ganti akses `process.env.XXX` dengan `require('../../src/config/env').XXX` di file tersebut.
+  - File: [`plugin/minigames/akinator.js`](plugin/minigames/akinator.js).
+- [ ] **[BUG] Akses `process.env` Langsung di `dashboard/middleware/auth.js`**
+  - File middleware dashboard `auth.js` mengakses `process.env` langsung tanpa melalui `env.js`.
+  - **Perbaikan:** Refaktor untuk menggunakan `require('../../src/config/env')` atau pastikan middleware ini memang dikecualikan dari aturan (karena konteks Node.js terpisah dari bot).
+  - File: [`dashboard/middleware/auth.js`](dashboard/middleware/auth.js).
+- [ ] **[BUG] `EmbedBuilder` Masih Dipakai di Beberapa Plugin**
+  - Ditemukan penggunaan `EmbedBuilder` (discord.js) di file-file berikut, yang melanggar standar Components V2:
+    - `plugin/utility/profile.js`
+    - `plugin/utility/minecraft.js`
+    - `plugin/utility/alert.js`
+    - `plugin/minigames/hangman.js`
+    - `plugin/minigames/minesweeper.js`
+  - Penggunaan Embed lama diperbolehkan hanya untuk pesan loading sementara dan error sederhana (sesuai aturan 1.6).
+  - **Perbaikan:** Audit setiap file, migrasi respons utama ke `buildContainerV2()`, dan pertahankan embed hanya untuk kasus yang diizinkan.
+- [ ] **[KEAMANAN] SeasonEngine Tidak Memakai Atomik Debit untuk Upgrade Premium**
+  - `seasonEngine.upgradeToPremium()` memanggil `progress.save()` secara langsung tanpa pola `takeItemsAtomic()` untuk pemotongan Naura Coupon.
+  - Risiko: race condition jika user mengirim dua klik bersamaan dapat mengakibatkan upgrade ganda dengan biaya hanya sekali.
+  - **Perbaikan:** Gunakan `cacheManager.debitUserSurvival(userId, { coupons: 5 })` sebelum `progress.save()` dan tambahkan lock atau idempotency check.
+  - File: [`src/services/seasonEngine.js`](src/services/seasonEngine.js) baris 112+.
 
 ---
 
@@ -72,6 +103,29 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 - [x] **Discord-Hybrid-Sharding 2.0 Multi-Core Cluster Engine**
   - Menggantikan `ShardingManager` bawaan dengan `ClusterManager` (`discord-hybrid-sharding`) berbasis multi-core process/worker threads.
   - Mengurangi pemakaian RAM proses idle hingga 40-50% di panel hosting dan mendukung *zero-downtime rolling restart* saat deploy produksi.
+- [ ] **[PENINGKATAN] Migrasi `dbSeeder.js` Canvas Assets ke URL Lokal/CDN Resmi**
+  - `src/managers/dbSeeder.js` menggunakan URL Imgur hardcode (`https://i.imgur.com/...`) untuk seed data Canvas Assets awal. URL ini tidak stabil dan rentan dihapus pemilik akun Imgur.
+  - **Peningkatan:** Ganti dengan URL CDN terkontrol (misalnya file yang dihost di Supabase Storage atau server bot sendiri) atau gunakan path lokal ke assets yang sudah ada di repositori.
+  - File: [`src/managers/dbSeeder.js`](src/managers/dbSeeder.js).
+- [ ] **[PENINGKATAN] `SeasonEngine` Belum Integrasi Season XP ke Aksi Survival**
+  - Engine `seasonEngine.addSeasonXp()` sudah ada, tetapi tidak ditemukan pemanggilan dari subcommand survival utama (dungeon, collect, craft, dll.).
+  - **Peningkatan:** Integrasikan `seasonEngine.addSeasonXp(userId, jumlah)` di semua aksi yang relevan agar pemain bisa naik tier Season Pass secara organik saat bermain.
+  - Engine: [`src/services/seasonEngine.js`](src/services/seasonEngine.js).
+- [ ] **[PENINGKATAN] `worldBossEngine.js` Cache TTL Terlalu Pendek (30 detik)**
+  - Cache Redis World Boss aktif di-set dengan TTL hanya 30 detik (`redisManager.setCache(BOSS_CACHE_KEY, ..., 30)`). Ini berarti setiap 30 detik ada query database tambahan meski boss tidak berubah.
+  - **Peningkatan:** Naikkan TTL ke 60-120 detik dan gunakan invalidasi cache saat state boss berubah (damage diterima, fase berubah, atau boss mati), bukan TTL murni.
+  - File: [`src/survival/engines/worldBossEngine.js`](src/survival/engines/worldBossEngine.js) baris 31.
+- [ ] **[PENINGKATAN] Tambah `AutomationEngine` Trigger Baru**
+  - `AutomationEngine` saat ini hanya mendukung 4 trigger: `MEMBER_JOIN`, `LEVEL_UP`, `REACTION_ADD`, `TICKET_CREATE`.
+  - **Peningkatan:** Tambahkan trigger `SURVIVAL_LEVEL_UP`, `QUEST_COMPLETE`, `BOSS_KILLED`, dan `SEASON_TIER_UP` agar automasi server bisa bereaksi terhadap event gameplay RPG secara otomatis.
+  - File: [`src/services/automationEngine.js`](src/services/automationEngine.js).
+- [ ] **[BUG] Dua Sistem Notifikasi Tumpang Tindih (Dead Code)**
+  - Terdapat dua implementasi sistem notifikasi yang terpisah dan tidak sinkron:
+    1. **`src/managers/notificationManager.js`** - Dipakai aktif oleh `cronManager.js` untuk notifikasi stamina & reminder. Memiliki fitur `dm_authorized` flow yang lebih matang.
+    2. **`src/services/notificationCenter.js`** - Hanya dipanggil dari `plugin/utility/notifications.js` dan test. Memiliki set template berbeda dan TIDAK terintegrasi dengan cronManager.
+  - **Dampak:** `sendDirectNotification` dari `notificationCenter.js` tidak pernah dieksekusi oleh sistem, membuat template `vote_reminder`, `idle_revenue`, `stock_alert` tidak pernah dikirim oleh cron.
+  - **Perbaikan:** Unifikasi kedua sistem - migrasi semua template `notificationCenter.js` ke dalam `notificationManager.js` dan hapus `notificationCenter.js`, atau sebaliknya. Pilih satu sumber kebenaran saja.
+  - File utama: [`src/managers/notificationManager.js`](src/managers/notificationManager.js), [`src/services/notificationCenter.js`](src/services/notificationCenter.js).
 
 ---
 
@@ -80,42 +134,42 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 > **Kriteria:** Fitur reguler yang memperkaya ekosistem komunitas dan gameplay RPG. Dapat dikerjakan kapan pun tanpa mengganggu operasional bot.
 
 - [x] **Cyber-Agronomy & Hydroponic Greenhouse (`/survival farm`)**
-  - Model Sequelize `UserGreenhouse.js` dengan migrasi `v37_create_user_greenhouses`: `userId`, `gridLevel`, `slots` (JSON: benih, kelembaban, waktu tanam, pupuk), dan `totalHarvests`.
-  - Katalog benih kosmik `src/survival/data/cropSeeds.js` (Astral Strawberry, Cyber Mint, Void Coffee Bean, Neon Melons, Sakura Grain) dengan waktu tumbuh dinamis (1j s.d. 12j).
-  - Layanan `src/survival/engines/greenhouseEngine.js`: konsumsi pupuk hasil crafting, penyiraman air otomatis/manual, dan integrasi pasokan bahan baku Kafe (`/survival life cafe`).
-  - Renderer Canvas `src/canvas/greenhouseCanvas.js` bertenaga Worker Thread untuk visualisasi lahan hidroponik 2.5D.
-  - Subcommand `plugin/survival/subcommands/farm.js` (`plant`, `water`, `harvest`, `status`, `shop`) dan unit test `src/survival/engines/greenhouseEngine.test.js`.
 - [x] **Galactic Trade Caravan & Commodity Exchange (`/survival caravan`)**
-  - Engine bursa komoditas berfluktuasi `src/services/tradeEngine.js` dengan multi-rute ekspedisi antariksa, debit koin modal atomik, dan penyimpanan state perjalanan di Redis (`caravan:active:${userId}`).
-  - Model Sequelize `TradeCaravan.js` dan `CaravanEscort.js` dengan migrasi `v38_create_cross_server_caravans` untuk penugasan pengawal klan bersenjata dan serangan penjarahan PvP (*PvP Ambush Raid*).
-  - Subcommand `plugin/survival/subcommands/caravan.js` (`market`, `dispatch`, `status`, `claim`) berbasis 5-lapisan Container V2 dan proteksi risiko penjarahan (*Ambush Protection*).
 - [x] **Custom Community Dungeon Maker (`/dungeon maker`)**
-  - Model Sequelize `CommunityDungeon.js` dengan migrasi `v39_create_community_dungeons`: `dungeonId`, `creatorUserId`, `guildId`, `dungeonName`, `theme`, `roomsConfig` (JSON layout 5-10 ruangan, teka-teki, monster), `entryFee`, `vaultBalance`, `ratingAverage`.
-  - Engine `src/survival/engines/customDungeonEngine.js` dengan brankas royalti kreator 5%, sistem payout kemenangan 2x tiket, dan rating bintang dinamis.
-  - Subcommand `plugin/survival/subcommands/customDungeon.js` (`create`, `browse`, `play`, `rate`, `withdraw`) dan unit test `customDungeonEngine.test.js`.
 - [x] **AI Virtual Tribunal Court (`/court` / `/tribunal`)**
-  - Sistem persidangan komunitas interaktif berbasis AI Gemini (`src/ai/tribunalEngine.js`) untuk menyelesaikan sengketa antar member secara adil dan menghibur.
-  - Simulasi 3 Juri AI: Hakim Agung Vespera (Netral/Bijaksana), Jaksa Penuntut Cyber-Fang (Keras/Agresif), dan Pembela Lyra (Tsundere).
-  - Evaluasi transkrip bukti perkara, penerbitan vonis interaktif, command `plugin/utility/court.js`, dan unit test `tribunalEngine.test.js`.
 - [x] **Discord Activity Mini-App ("Naura World 2.0")**
-  - Integrasi `@discord/embedded-app-sdk` pada `dashboard-v2` (`src/pages/activity.html`) untuk menjalankan aplikasi web interaktif langsung di jendela Voice/Text Channel Discord.
-  - Antarmuka modular untuk TCG Card Battle Mini-App dan Live Music Controller.
 - [x] **Web Canvas & Container V2 Visual WYSIWYG Builder**
-  - Studio visual drag-and-drop di Web Dashboard (`dashboard-v2/src/pages/builder.html` & `/builder`).
-  - Pembuat layout Discord Components V2 5-layer interaktif dengan kalkulasi budget komponen real-time (`componentBudget.js`) dan salin payload instan.
 - [x] **OpenTelemetry & Prometheus/Grafana Distributed Tracing**
-  - Layanan `src/services/telemetryMetrics.js` untuk memantau performa interaksi Discord, latensi Lavalink, kueri database, dan hit rate cache Redis.
-  - Endpoint `/metrics` standar Prometheus di `dashboard/server.js` untuk integrasi pemantauan server di Grafana dan unit test `telemetryMetrics.test.js`.
 - [x] **Audit & Pembersihan Repositori Menyeluruh (File Duplikat & Dead Code)**
-  - Pemindaian komprehensif ke seluruh direktori repositori: resolusi modul bersih di `scripts/check-requires.js`, 0 pelanggaran em dash di `scripts/check-em-dash.js`, dan kompilasi Vite MPA sinkron.
 - [x] **Rombak Total Sistem Survival Naura Wilds & Dual-Layer RPG (Sprint 23)**
-  - **Dual-Layer Stat System & Path Synergy (`/survival rpg skill`):** Pemisahan jelas antara atribut kehidupan dunia biasa (Life Stats: STR, AGI, INT, LCK, Bonus HP melalui Stat Points level up) dengan spesialisasi pertarungan dungeon/PvP (Combat Paths: Warrior, Mage, Assassin, Ranger) dengan buff resonansi sinergi +15% s.d. +25% efektivitas.
-  - **Otomatisasi Vital Depletion & Penjagaan Offline:** Siklus decay periodik 30-menit di `cronManager.js` dengan jendela pemain aktif 4 jam untuk mencegah penalti pemain offline, serta sentralisasi perhitungan HP tunggal lewat `leveling.calculateMaxHp()`.
-  - **Pelacakan Progres Quest & 15 Achievement Baru:** Pelacakan otomatis `achievementTracker.js` (Penyintas Veteran, Legenda Hidup, Ascended God, Pionir Seabad, Master Barista, Dewa Tempa, Janji Suci Abadi, dll.) serta pengkaitan progres quest ke aksi craft, farm harvest, cafe serve, pet feed, npc gift, heist, dan travel.
-  - **Altar Tempa & Enchantment Permata Kosmik (`/survival life enchant`):** Fitur penyematan permata kosmik (Crimson Blood Gem, Starlight Sapphire, Nebula Emerald, Void Amethyst) ke socket gear dengan pemotongan atomik `takeItemsAtomic()` dan buff permanen di dungeon/PvP.
-  - **World Event Engine Musiman:** Engine otomatis `worldEventEngine.js` untuk festival nasional dan musiman (HUT RI, Ultah Naura, Festival Panen, Badai Salju Frostsnow) dengan pelipatgandaan drop rate dan item eksklusif.
-  - **Peta Dunia Interaktif Web Dashboard V2 (`/survival-map`):** Peta wilayah terdistribusi SVG interaktif 6 simpul dengan telemetri cuaca, waktu dunia in-game, dan sensor kepadatan petualang real-time via `/api/survival/map-data`.
-  - **Standarisasi UI/UX Naura Wilds:** Pembaruan antarmuka `/survival profile info` dengan palet emerald, visualisasi bar vital 3-tingkat warna (*moss/amber/danger*), status Path Synergy, dan tombol navigasi aksi cepat.
+- [ ] **[PENINGKATAN] Notifikasi Survival Cron: Integrasi `vote_reminder`, `idle_revenue`, & `stock_alert`**
+  - `notificationManager.js` (dipakai cron) sudah mengirim notifikasi stamina dan reminder kustom, tetapi 3 tipe notifikasi survival penting lainnya BELUM dikirim oleh cron manapun: `vote_reminder`, `idle_revenue` (claim cafe), dan `stock_alert`.
+  - Template untuk ketiga tipe ini ada di `notificationCenter.js` (yang merupakan dead code terpisah) namun tidak terhubung ke jadwal cron.
+  - **Peningkatan:** Tambahkan job cron di `cronManager.js` untuk ketiga tipe notifikasi ini, atau unifikasi dua sistem notif terlebih dahulu (lihat kategori KRITIS).
+- [ ] **[PENINGKATAN] Sistem Crafting: Validasi Resep Berlapis**
+  - Sistem crafting saat ini memvalidasi bahan mentah, tetapi tidak memvalidasi apakah pemain memiliki level crafting/stat yang cukup untuk menggunakan resep tier tinggi.
+  - **Peningkatan:** Tambahkan field `reqLevel` (level minimum pemain) dan `reqStat` (misalnya INT minimum untuk resep alkimia) ke entri resep di `craftHelpers.js`, dan validasi ini di subcommand craft.
+- [ ] **[PENINGKATAN] Dungeon Quest Tracker Untuk Item-Specific Drop**
+  - Quest "kumpulkan X item dari dungeon" di `questGenerator.js` hanya melacak jumlah run dungeon, bukan jumlah item spesifik yang di-drop.
+  - **Peningkatan:** Tambahkan tipe quest `collect_specific_item` dengan tracking akumulatif dari drop tabel `FLOOR_LOOT` dan `BOSS_LOOT` agar quest terasa lebih bermakna dan tertarget.
+- [ ] **[PENINGKATAN] Dashboard V2: Halaman Survival Map Interaktif (`/survival-map`)**
+  - Endpoint `/api/survival/map-data` dan halaman peta SVG interaktif 6 simpul wilayah sudah direncanakan (Sprint 23) tetapi belum diverifikasi apakah sudah terimplementasi penuh di `dashboard-v2`.
+  - **Verifikasi & Selesaikan:** Pastikan halaman `survival-map.html` terhubung ke data real-time kepadatan petualang dan status world event aktif.
+- [ ] **[PENINGKATAN] Riwayat Transaksi Ekonomi untuk User (`/history`)**
+  - Tidak ada command yang memungkinkan user melihat riwayat `pay`, `deposit`, `invest`, atau drop dungeon mereka sendiri.
+  - **Peningkatan:** Buat command `/history` (atau subcommand `/survival economy history`) yang menampilkan 10 transaksi terakhir dari MongoDB `CommandAuditLog` yang sudah ada.
+- [ ] **[PENINGKATAN] Papan Peringkat World Boss Persisten (Leaderboard All-Time)**
+  - `worldBossEngine.js` hanya mencatat `damageLeaderboard` untuk satu sesi boss saja. Setelah boss mati, data diarsipkan tetapi tidak ada papan leaderboard all-time yang bisa dilihat user.
+  - **Peningkatan:** Simpan kontribusi tertinggi ke kolom `UserSurvival` (atau MongoDB document) setelah boss defeated, dan buat command `/boss leaderboard` untuk menampilkannya.
+- [ ] **[PENINGKATAN] Cooldown Survival: Tambah Sistem "Rush" Berbayar Kupon**
+  - Saat ini, cooldown survival (kerja, kumpul, dll.) bersifat tetap dan hanya bisa dikurangi dengan stat atau item tertentu.
+  - **Peningkatan:** Tambahkan opsi "Rush" di setiap subcommand survival yang memungkinkan pemain membayar 1 Naura Coupon untuk melewati cooldown aktif, dengan konfirmasi UI interaktif.
+- [ ] **[PENINGKATAN] Inventaris Canvas: Integrasi Filter & Sort**
+  - Canvas inventaris (`src/canvas/inventoryCanvas.js`) menampilkan item dalam urutan tetap. Tidak ada cara untuk filter by kategori atau sort by tier/kuantitas.
+  - **Peningkatan:** Tambahkan Select Menu di bawah canvas inventaris dengan opsi filter (`Semua`, `Senjata`, `Armor`, `Konsumabel`, `Material`) dan sort (`Tier Tertinggi`, `Jumlah Terbanyak`).
+- [ ] **[PENINGKATAN] Sistem Guild Hall: Implementasi `hallLayout` dari v33**
+  - Kolom `hallLayout` sudah ditambahkan ke `GuildClans` di migrasi v33, tetapi belum ada subcommand atau UI untuk menggunakannya secara interaktif.
+  - **Peningkatan:** Buat subcommand `/clan hall` (`view`, `upgrade`, `customize`) yang merender tata letak ruangan klan dan memungkinkan pemimpin klan melakukan upgrade fasilitas.
 
 ---
 
@@ -124,7 +178,6 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 > **Kriteria:** Penambahan estetika, kosmetik, dan eksplorasi fitur eksperimental jangka panjang. Tidak berpengaruh pada kestabilan bot jika dilewati.
 
 - [x] **Dynamic Relic Socketing & Gem Enchanting (`/survival forge gem`)**
-  - Layanan `src/services/gemSocketEngine.js` untuk soket permata kosmik (`cosmic_sockets`) pada kartu dan gear RPG di bengkel tempa untuk efek skill pasif kustom (Crimson Blood Gem, Starlight Sapphire, Nebula Emerald, Void Amethyst) dan unit test `gemSocketEngine.test.js`.
 - [ ] **Guild Soundboard Cloud & Live Soundpad**
   - Fitur Soundboard Web Dashboard bertenaga WebSocket (Socket.IO) untuk memicu pemutaran sound effect instan ke Voice Channel bot dengan latensi nol.
 - [ ] **Global Guild Federation Hub & Hall of Fame**
@@ -143,6 +196,13 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Jaringan node Lavalink FLAC/Opus berkualitas tinggi dengan auto-balancing geografis untuk audio tanpa kompresi.
 - [ ] **Zero-Knowledge Privacy Vaults & Community Bounty Board**
   - Enkripsi end-to-end untuk catatan rahasia/tiket sensitif dan papan pengumuman tugas server berbasis hadiah Star Fragments.
+- [ ] **[OPSIONAL] Item Preview Canvas di Shop & Crafting**
+  - Saat ini tampilan item di `/survival shop` dan `/survival craft` berbasis teks saja (nama + emoji + harga).
+  - **Peningkatan:** Tampilkan thumbnail gambar item (dari `assets/items/<id>.png`) sebagai attachment preview kecil di container saat user memilih item di select menu shop/crafting.
+- [ ] **[OPSIONAL] Generator Lagu Tanda Tangan AI (`/music signature`)**
+  - Command `/music signature` yang menganalisis statistik musik user (genre favorit, suasana, track terbanyak diputar) lalu menghasilkan deskripsi "lagu tanda tangan" personal menggunakan Gemini AI.
+- [ ] **[OPSIONAL] Pembuatan Kartu Ucapan Ulang Tahun Otomatis**
+  - Integrasi `cronManager.js` yang sudah memiliki data `UserBirthday` dengan canvas generator kartu ucapan ulang tahun bergaya Naura Wilds yang dikirim via DM pada tanggal ulang tahun user.
 
 ---
 
@@ -206,6 +266,14 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 - [x] Migrasi penuh web dashboard: kompilasi Tailwind v4 + Vite MPA ke `dashboard-v2/dist` dan sinkronisasi seluruh 14 views.
 - [x] Verifikasi akhir: **170/170 unit tests passing (100%)**, 0 error lint, dan 0 pelanggaran em dash.
 
+### 🌿 Sprint 23: Naura Wilds RPG, Visualisasi Inventaris & Audit Repository
+- [x] Penyetaraan matriks 150 item (5 Kategori x 6 Tier x 5 Item) dengan gambar SVG per item di `assets/items/`.
+- [x] Canvas visualisasi inventaris Open Adventurer's Backpack (`src/canvas/inventoryCanvas.js`) dengan grid adaptif dan latar kulit terbuka.
+- [x] Subcommand `/survival inventory` diperbarui: menampilkan gambar item dengan label "Nama x Jumlah" dan tombol paginasi.
+- [x] Rombak total UI survival: bar vital 3-warna (moss/amber/danger), status Path Synergy, World Event banner.
+- [x] World Event Engine Musiman: HUT RI, Ulang Tahun Naura, Festival Panen, Badai Salju Frostsnow.
+- [x] Audit menyeluruh repository dan pembaruan komprehensif TODO.md (Sprint 23 Audit Scan).
+
 </details>
 
 ---
@@ -219,3 +287,6 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 | **Beban komputasi Canvas memblokir Event Loop** | Bot mengalami freeze / chat lag | Seluruh render grafis didelegasikan ke `canvasWorkerPool.js` berbasis Worker Threads. |
 | **Pelanggaran karakter em dash** | Gagal validasi CI / inkonsistensi teks | Diperiksa otomatis oleh script `scripts/check-em-dash.js`. |
 | **Single-point-of-failure node eksternal** | Fitur audio/AI mati saat penyedia pihak ketiga down | Sistem dual failover: Lavalink multi-node fallback dan Gemini auto-failover ke Groq. |
+| **URL asset Imgur tidak stabil di dbSeeder** | Canvas Assets default hilang saat seeder dijalankan ulang | Migrasikan URL ke CDN terkontrol atau Supabase Storage. |
+| **`SeasonEngine.upgradeToPremium` tidak atomik** | Race condition kupon ganda saat klik bersamaan | Implementasi `debitUserSurvival` dengan lock sebelum upgrade. |
+| **Versi Node tidak konsisten** | CI/CD gagal atau bot mati diam-diam di Node 22 | Selaraskan `package.json engines` dengan keputusan arsitektur Node >= 24. |

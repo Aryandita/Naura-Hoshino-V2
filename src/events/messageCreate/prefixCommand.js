@@ -1,85 +1,98 @@
+"use strict";
+
+/**
+ * Penangan perintah berawalan prefix (Hybrid Slash/Prefix execution).
+ * Mengimplementasikan:
+ * - Law 1: Guard Clauses / Flat paths (early return saat bukan prefix / kosong)
+ * - Law 2: Intent-revealing domain naming
+ * - Law 6: Make errors useful (tampilkan pesan DomainError)
+ */
+
 const env = require("../../config/env");
 const { logger } = require("../../managers/logger");
 const { awardXp } = require("../../leveling/levelingEngine");
+const { isDomainError } = require("../../errors/DomainError");
 const {
   buildLoadingContainerV2,
   buildErrorContainerV2,
 } = require("../../utils/NauraContainerBuilder");
 
 // Subcommand yang perlu dibuang dari argumen sebelum dibaca sebagai teks bebas.
-const SUBCOMMAND_WORDS = ["balance", "buy", "ping", "set", "add", "remove"];
+const SUBCOMMAND_WORDS = Object.freeze(["balance", "buy", "ping", "set", "add", "remove"]);
 
 /**
  * Cari command dari nama atau aliasnya.
- *
- * Alias sekarang tinggal di client.aliases, terpisah dari client.commands.
- * Pencarian linear ke cmd.aliases dipertahankan sebagai lapis terakhir supaya
- * command yang mendeklarasikan alias dengan cara tidak biasa tetap terjangkau.
+ * @param {import('discord.js').Client} client
+ * @param {string} commandName
+ * @returns {any|null}
  */
-function resolveCommand(client, name) {
-  const direct = client.commands.get(name);
-  if (direct) return direct;
+function resolveCommand(client, commandName) {
+  const directCommand = client.commands.get(commandName);
+  if (directCommand) return directCommand;
 
-  const canonical = client.aliases?.get(name);
-  if (canonical) {
-    const viaAlias = client.commands.get(canonical);
-    if (viaAlias) return viaAlias;
+  const canonicalName = client.aliases?.get(commandName);
+  if (canonicalName) {
+    const aliasTarget = client.commands.get(canonicalName);
+    if (aliasTarget) return aliasTarget;
   }
 
   return (
     client.commands.find(
-      (cmd) => Array.isArray(cmd.aliases) && cmd.aliases.includes(name),
+      (cmd) => Array.isArray(cmd.aliases) && cmd.aliases.includes(commandName),
     ) || null
   );
 }
 
 function buildLoadingPayload(message, client, commandName) {
+  const authorName = message.author.displayName || message.author.username;
   return buildLoadingContainerV2({
     authorName: "Naura Task Runner",
     title: "Sedang Memproses Perintah...",
-    loadingMessage: `Tunggu sebentar ya, Naura sedang menyiapkan perintah \`${commandName}\` untuk Kak **${message.author.displayName || message.author.username}**! ✨`,
+    loadingMessage: `Tunggu sebentar ya, Naura sedang menyiapkan perintah \`${commandName}\` untuk Kak **${authorName}**! ✨`,
     lang: message.localeLang,
     withBanner: true,
   });
 }
 
-function normalizePayload(payload) {
-  const base =
-    typeof payload === "string"
-      ? { content: payload, embeds: [], components: [], files: [] }
-      : { content: null, embeds: [], components: [], files: [], ...payload };
+function normalizeMessagePayload(rawPayload) {
+  const basePayload =
+    typeof rawPayload === "string"
+      ? { content: rawPayload, embeds: [], components: [], files: [] }
+      : { content: null, embeds: [], components: [], files: [], ...rawPayload };
 
-  delete base.ephemeral;
-  delete base.fetchReply;
-  return base;
+  delete basePayload.ephemeral;
+  delete basePayload.fetchReply;
+  return basePayload;
 }
 
-// Meniru objek interaction agar satu command bisa dipanggil lewat slash maupun prefix.
+/**
+ * Meniru objek Interaction Discord agar Slash Command dapat dipanggil via Prefix
+ */
 function buildMockInteraction(
   message,
   client,
-  command,
+  targetCommand,
   commandName,
-  args,
-  loadingMsg,
+  commandArguments,
+  loadingMessage,
 ) {
   const editOrSend = async (payload) => {
-    const msgPayload = normalizePayload(payload);
-    if (loadingMsg) {
+    const normalizedPayload = normalizeMessagePayload(payload);
+    if (loadingMessage) {
       try {
-        return await loadingMsg.edit(msgPayload);
-      } catch (e) {
-        return await message.channel.send(msgPayload);
+        return await loadingMessage.edit(normalizedPayload);
+      } catch {
+        return await message.channel.send(normalizedPayload);
       }
     }
-    return await message.channel.send(msgPayload);
+    return await message.channel.send(normalizedPayload);
   };
 
   return {
     isChatInputCommand: () => true,
     isButton: () => false,
     isStringSelectMenu: () => false,
-    commandName: command.data?.name || commandName,
+    commandName: targetCommand.data?.name || commandName,
     user: message.author,
     member: message.member,
     guild: message.guild,
@@ -93,42 +106,45 @@ function buildMockInteraction(
     locale: message.localeLang,
 
     options: {
-      getSubcommand: () => args[0]?.toLowerCase() || null,
+      getSubcommand: () => commandArguments[0]?.toLowerCase() || null,
       getString: () => {
-        if (args.length === 0) return null;
-        const rest = [...args];
-        if (SUBCOMMAND_WORDS.includes(rest[0]?.toLowerCase())) rest.shift();
-        return rest.join(" ") || null;
+        if (commandArguments.length === 0) return null;
+        const argumentTokens = [...commandArguments];
+        if (SUBCOMMAND_WORDS.includes(argumentTokens[0]?.toLowerCase())) {
+          argumentTokens.shift();
+        }
+        return argumentTokens.join(" ") || null;
       },
       getUser: () => message.mentions.users.first() || null,
       getInteger: () => {
-        const num = parseInt(
-          args.find((a) => !isNaN(parseInt(a, 10))),
-          10,
-        );
-        return isNaN(num) ? null : num;
+        const found = commandArguments.find((arg) => !isNaN(parseInt(arg, 10)));
+        if (!found) return null;
+        const parsed = parseInt(found, 10);
+        return isNaN(parsed) ? null : parsed;
       },
       getNumber: () => {
-        const num = parseFloat(args.find((a) => !isNaN(parseFloat(a))));
-        return isNaN(num) ? null : num;
+        const found = commandArguments.find((arg) => !isNaN(parseFloat(arg)));
+        if (!found) return null;
+        const parsed = parseFloat(found);
+        return isNaN(parsed) ? null : parsed;
       },
       getBoolean: () => {
         if (
-          args.some((a) => ["true", "yes", "1", "on"].includes(a.toLowerCase()))
-        )
+          commandArguments.some((arg) => ["true", "yes", "1", "on"].includes(arg.toLowerCase()))
+        ) {
           return true;
+        }
         if (
-          args.some((a) =>
-            ["false", "no", "0", "off"].includes(a.toLowerCase()),
-          )
-        )
+          commandArguments.some((arg) => ["false", "no", "0", "off"].includes(arg.toLowerCase()))
+        ) {
           return false;
+        }
         return null;
       },
       getChannel: () => {
         const mention = message.mentions.channels.first();
         if (mention) return mention;
-        const match = args.find((a) => a.match(/^<#(\d+)>$/));
+        const match = commandArguments.find((arg) => arg.match(/^<#(\d+)>$/));
         return match
           ? message.guild?.channels.cache.get(match.replace(/\D/g, "")) || null
           : null;
@@ -136,7 +152,7 @@ function buildMockInteraction(
       getRole: () => {
         const mention = message.mentions.roles.first();
         if (mention) return mention;
-        const match = args.find((a) => a.match(/^<@&(\d+)>$/));
+        const match = commandArguments.find((arg) => arg.match(/^<@&(\d+)>$/));
         return match
           ? message.guild?.roles.cache.get(match.replace(/\D/g, "")) || null
           : null;
@@ -146,29 +162,28 @@ function buildMockInteraction(
     reply: editOrSend,
     editReply: editOrSend,
     followUp: async (payload) => {
-      const msgPayload =
+      const normalizedPayload =
         typeof payload === "string" ? { content: payload } : { ...payload };
-      delete msgPayload.ephemeral;
-      return await message.channel.send(msgPayload);
+      delete normalizedPayload.ephemeral;
+      return await message.channel.send(normalizedPayload);
     },
     deferReply: async () => {},
     deleteReply: async () => {
-      if (loadingMsg) await loadingMsg.delete().catch(() => {});
+      if (loadingMessage) await loadingMessage.delete().catch(() => {});
     },
   };
 }
 
 /**
  * Menjalankan perintah berawalan prefix. Pesan biasa tetap mendapat XP.
- * Selalu mengembalikan true karena ini langkah terakhir dalam rantai.
+ * Selalu mengembalikan true karena ini langkah terakhir dalam rantai messageCreate.
  */
 module.exports = async function handlePrefixCommand(message, client) {
-  const prefix = env.PREFIX || "n!";
+  const configuredPrefix = env.PREFIX || "n!";
 
-  if (!message.content.toLowerCase().startsWith(prefix.toLowerCase())) {
+  // Guard Clause 1: Bukan awalan prefix, jalankan perhitungan XP pesan biasa
+  if (!message.content.toLowerCase().startsWith(configuredPrefix.toLowerCase())) {
     if (message.guild) {
-      // Isi pesan wajib diteruskan. Tanpa argumen keempat, awardXp menolak
-      // memberi XP karena penyaring panjang minimum membaca teks kosong.
       await awardXp(
         message.author,
         message.guild,
@@ -179,15 +194,19 @@ module.exports = async function handlePrefixCommand(message, client) {
     return true;
   }
 
-  const args = message.content.slice(prefix.length).trim().split(/ +/);
-  const commandName = args.shift()?.toLowerCase();
-  if (!commandName) return true;
+  // Ekstraksi nama command dan argumen
+  const commandTokens = message.content.slice(configuredPrefix.length).trim().split(/ +/);
+  const targetCommandName = commandTokens.shift()?.toLowerCase();
 
-  const command = resolveCommand(client, commandName);
-  if (!command) return true;
+  // Guard Clause 2: Awalan prefix tanpa nama command
+  if (!targetCommandName) return true;
 
-  const loadingMsg = await message
-    .reply(buildLoadingPayload(message, client, commandName))
+  const targetCommand = resolveCommand(client, targetCommandName);
+  // Guard Clause 3: Perintah tidak dikenali
+  if (!targetCommand) return true;
+
+  const loadingMessage = await message
+    .reply(buildLoadingPayload(message, client, targetCommandName))
     .catch(() => null);
 
   try {
@@ -195,40 +214,59 @@ module.exports = async function handlePrefixCommand(message, client) {
     try {
       const redis = require("../../managers/redisManager").client;
       if (redis?.isReady) {
-        redis.hincrby("metrics:commands", commandName, 1);
+        redis.hincrby("metrics:commands", targetCommandName, 1);
         redis.hincrby("metrics:commands", "total", 1);
       }
-    } catch (e) {
-      // Abaikan gagal log metrik
+    } catch {
+      // Abaikan bila modul Redis belum siap
     }
 
-    if (typeof command.executePrefix === "function") {
-      if (loadingMsg) await loadingMsg.delete().catch(() => {});
-      await command.executePrefix(message, args, client);
-    } else if (!command.data && typeof command.execute === "function") {
-      if (loadingMsg) await loadingMsg.delete().catch(() => {});
-      await command.execute(client, message, args);
+    if (typeof targetCommand.executePrefix === "function") {
+      if (loadingMessage) await loadingMessage.delete().catch(() => {});
+      await targetCommand.executePrefix(message, commandTokens, client);
+    } else if (!targetCommand.data && typeof targetCommand.execute === "function") {
+      if (loadingMessage) await loadingMessage.delete().catch(() => {});
+      await targetCommand.execute(client, message, commandTokens);
     } else {
-      await command.execute(
+      await targetCommand.execute(
         buildMockInteraction(
           message,
           client,
-          command,
-          commandName,
-          args,
-          loadingMsg,
+          targetCommand,
+          targetCommandName,
+          commandTokens,
+          loadingMessage,
         ),
       );
     }
   } catch (error) {
-    logger.error(`[HYBRID ERROR] Command (${commandName}):`, error);
-    if (loadingMsg) {
-      await loadingMsg
+    const callerName = message.author.displayName || message.author.username;
+    if (isDomainError(error)) {
+      logger.warn(`[PREFIX DOMAIN ERROR] Command (${targetCommandName}): [${error.code}] ${error.message}`, error.context);
+      if (loadingMessage) {
+        await loadingMessage
+          .edit(
+            buildErrorContainerV2({
+              authorName: "Naura Action Guard",
+              title: "Perintah Gagal",
+              errorMessage: error.userMessage,
+              lang: message.localeLang,
+              withBanner: true,
+            }),
+          )
+          .catch(() => {});
+      }
+      return true;
+    }
+
+    logger.error(`[HYBRID ERROR] Command (${targetCommandName}):`, error);
+    if (loadingMessage) {
+      await loadingMessage
         .edit(
           buildErrorContainerV2({
             authorName: "Naura System Guard",
             title: "Perintah Terkendala",
-            errorMessage: `Maaf ya Kak **${message.author.displayName || message.author.username}**, terjadi kendala saat Naura menjalankan perintah \`${commandName}\`. Coba lagi sebentar lagi ya!`,
+            errorMessage: `Maaf ya Kak **${callerName}**, terjadi kendala saat Naura menjalankan perintah \`${targetCommandName}\`. Coba lagi sebentar lagi ya!`,
             lang: message.localeLang,
             withBanner: true,
           }),

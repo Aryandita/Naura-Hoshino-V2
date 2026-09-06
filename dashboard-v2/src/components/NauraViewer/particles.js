@@ -9,56 +9,70 @@ import * as THREE from "three";
 
 /**
  * Buat particle system.
- * @param {THREE.Group} modelScene - Objek model tempat partikel akan mengorbit
- * @returns {{ points: THREE.Points, update: (delta: number, elapsed: number) => void }}
+ * @param {THREE.Scene} scene - Three.js scene tempat partikel ditambahkan
+ * @returns {{ points: THREE.Points, update: (delta: number, elapsed: number) => void, burst: (count: number) => void }}
  */
-export function createParticleSystem(modelScene) {
-  const particleCount = 250;
-  const geometry = new THREE.BufferGeometry();
-  const positions = new Float32Array(particleCount * 3);
-  const colors = new Float32Array(particleCount * 3);
-  const sizes = new Float32Array(particleCount);
-  // Data tambahan untuk animasi individual (fase, orbit speed, radius)
-  const animData = [];
+export function createParticleSystem(scene) {
+    const particleCount = 250;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+    const sizes = new Float32Array(particleCount);
+    // Data tambahan untuk animasi individual (fase, orbit speed, radius)
+    const animData = [];
 
-  const colorPink = new THREE.Color("#FFB6C1");
-  const colorPurple = new THREE.Color("#C084FC");
+    const colorPink = new THREE.Color("#FFB6C1");
+    const colorPurple = new THREE.Color("#C084FC");
 
-  for (let i = 0; i < particleCount; i++) {
-    // Sebar partikel dalam bentuk silinder/bola di sekitar model
-    const theta = Math.random() * Math.PI * 2;
-    const radius = 1.0 + Math.random() * 1.5;
-    const y = (Math.random() - 0.5) * 3.0 + 1.0; // Offset Y agar menutupi seluruh tubuh
+    // Simpan posisi awal untuk burst reset
+    const basePositions = new Float32Array(particleCount * 3);
 
-    positions[i * 3 + 0] = Math.cos(theta) * radius;
-    positions[i * 3 + 1] = y;
-    positions[i * 3 + 2] = Math.sin(theta) * radius;
+    for (let i = 0; i < particleCount; i++) {
+        // Sebar partikel dalam bentuk silinder/bola di sekitar model
+        const theta = Math.random() * Math.PI * 2;
+        const radius = 1.0 + Math.random() * 1.5;
+        const y = (Math.random() - 0.5) * 3.0 + 1.0; // Offset Y agar menutupi seluruh tubuh
 
-    // Gradient acak antara pink dan ungu
-    const mixedColor = colorPink.clone().lerp(colorPurple, Math.random());
-    colors[i * 3 + 0] = mixedColor.r;
-    colors[i * 3 + 1] = mixedColor.g;
-    colors[i * 3 + 2] = mixedColor.b;
+        positions[i * 3 + 0] = Math.cos(theta) * radius;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = Math.sin(theta) * radius;
 
-    sizes[i] = Math.random() * 0.05 + 0.02;
+        // Simpan posisi awal untuk burst reset
+        basePositions[i * 3 + 0] = positions[i * 3 + 0];
+        basePositions[i * 3 + 1] = positions[i * 3 + 1];
+        basePositions[i * 3 + 2] = positions[i * 3 + 2];
 
-    animData.push({
-      phase: Math.random() * Math.PI * 2,
-      speed: (Math.random() - 0.5) * 0.5 + 0.1, // Orbit speed
-      rY: (Math.random() - 0.5) * 0.2, // Vertical drift
-    });
-  }
+        // Gradient acak antara pink dan ungu
+        const mixedColor = colorPink.clone().lerp(colorPurple, Math.random());
+        colors[i * 3 + 0] = mixedColor.r;
+        colors[i * 3 + 1] = mixedColor.g;
+        colors[i * 3 + 2] = mixedColor.b;
 
-  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-  geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+        sizes[i] = Math.random() * 0.05 + 0.02;
 
-  // Shader material kustom sederhana untuk particle glowing
-  const material = new THREE.ShaderMaterial({
-    uniforms: {
-      time: { value: 0 },
-    },
-    vertexShader: `
+        animData.push({
+            phase: Math.random() * Math.PI * 2,
+            speed: (Math.random() - 0.5) * 0.5 + 0.1, // Orbit speed
+            rY: (Math.random() - 0.5) * 0.2, // Vertical drift
+            // State untuk burst efek
+            burstVelX: 0,
+            burstVelY: 0,
+            burstVelZ: 0,
+            isBursting: false,
+            burstDecay: 0,
+        });
+    }
+
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+
+    // Shader material kustom sederhana untuk particle glowing
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            time: { value: 0 },
+        },
+        vertexShader: `
             attribute float size;
             attribute vec3 color;
             varying vec3 vColor;
@@ -73,7 +87,7 @@ export function createParticleSystem(modelScene) {
                 gl_Position = projectionMatrix * mvPosition;
             }
         `,
-    fragmentShader: `
+        fragmentShader: `
             varying vec3 vColor;
             
             void main() {
@@ -87,40 +101,100 @@ export function createParticleSystem(modelScene) {
                 gl_FragColor = vec4(vColor, alpha * 0.8);
             }
         `,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-  });
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+    });
 
-  const points = new THREE.Points(geometry, material);
-  // Masukkan ke dalam scene utama tapi bukan sebagai child langsung dari model
-  // agar orbitnya independen dari rotasi model
-  points.position.copy(modelScene.position);
+    const points = new THREE.Points(geometry, material);
+    // Tambahkan langsung ke scene (bukan sebagai child model agar orbit independen)
+    scene.add(points);
 
-  function update(delta, elapsed) {
-    material.uniforms.time.value = elapsed;
+    /**
+     * Update orbit partikel setiap frame.
+     * @param {number} delta - detik sejak frame sebelumnya
+     * @param {number} elapsed - total detik sejak init
+     */
+    function update(delta, elapsed) {
+        material.uniforms.time.value = elapsed;
 
-    const pos = geometry.attributes.position.array;
+        const pos = geometry.attributes.position.array;
 
-    for (let i = 0; i < particleCount; i++) {
-      const data = animData[i];
+        for (let i = 0; i < particleCount; i++) {
+            const data = animData[i];
 
-      // Orbit manual (karena rotasi Points merotasi semua partikel searah)
-      const x = pos[i * 3 + 0];
-      const z = pos[i * 3 + 2];
+            if (data.isBursting && data.burstDecay > 0) {
+                // Terapkan burst velocity
+                pos[i * 3 + 0] += data.burstVelX * delta;
+                pos[i * 3 + 1] += data.burstVelY * delta;
+                pos[i * 3 + 2] += data.burstVelZ * delta;
 
-      const cosA = Math.cos(data.speed * delta);
-      const sinA = Math.sin(data.speed * delta);
+                data.burstDecay -= delta;
 
-      pos[i * 3 + 0] = x * cosA - z * sinA;
-      pos[i * 3 + 2] = x * sinA + z * cosA;
+                // Bila burst selesai, kembalikan ke orbit normal dengan lerp
+                if (data.burstDecay <= 0) {
+                    data.isBursting = false;
+                }
+            } else {
+                // Orbit manual (karena rotasi Points merotasi semua partikel searah)
+                const x = pos[i * 3 + 0];
+                const z = pos[i * 3 + 2];
 
-      // Vertical drift
-      pos[i * 3 + 1] += Math.sin(elapsed + data.phase) * data.rY * delta;
+                const cosA = Math.cos(data.speed * delta);
+                const sinA = Math.sin(data.speed * delta);
+
+                pos[i * 3 + 0] = x * cosA - z * sinA;
+                pos[i * 3 + 2] = x * sinA + z * cosA;
+
+                // Vertical drift
+                pos[i * 3 + 1] += Math.sin(elapsed + data.phase) * data.rY * delta;
+            }
+        }
+
+        geometry.attributes.position.needsUpdate = true;
     }
 
-    geometry.attributes.position.needsUpdate = true;
-  }
+    /**
+     * Trigger burst efek sparkle (saat klik avatar atau mood berubah).
+     * Partikel meledak ke luar lalu kembali orbit normal.
+     * @param {number} count - jumlah partikel yang di-burst (1-250)
+     */
+    function burst(count) {
+        const numToBurst = Math.min(count || 25, particleCount);
+        const pos = geometry.attributes.position.array;
 
-  return { points, update };
+        for (let i = 0; i < numToBurst; i++) {
+            const idx = Math.floor(Math.random() * particleCount);
+            const data = animData[idx];
+
+            // Velocity acak ke segala arah (ledakan radial)
+            const angle = Math.random() * Math.PI * 2;
+            const elevation = (Math.random() - 0.5) * Math.PI;
+            const speed = 1.5 + Math.random() * 2.5;
+
+            data.burstVelX = Math.cos(angle) * Math.cos(elevation) * speed;
+            data.burstVelY = Math.sin(elevation) * speed * 1.2;
+            data.burstVelZ = Math.sin(angle) * Math.cos(elevation) * speed;
+            data.burstDecay = 0.4 + Math.random() * 0.3; // 0.4-0.7 detik
+            data.isBursting = true;
+
+            // Reset ke dekat pusat model agar burst terlihat dari tengah
+            pos[idx * 3 + 0] = (Math.random() - 0.5) * 0.3;
+            pos[idx * 3 + 1] = 0.8 + Math.random() * 0.8;
+            pos[idx * 3 + 2] = (Math.random() - 0.5) * 0.3;
+        }
+
+        geometry.attributes.position.needsUpdate = true;
+    }
+
+    /**
+     * Bersihkan resource GPU saat viewer dihancurkan.
+     */
+    function dispose() {
+        geometry.dispose();
+        material.dispose();
+        scene.remove(points);
+    }
+
+    return { points, update, burst, dispose };
 }

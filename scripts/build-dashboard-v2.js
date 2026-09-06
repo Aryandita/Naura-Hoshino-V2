@@ -66,13 +66,32 @@ function main() {
     process.exit(1);
   }
 
+  // Di Linux/Unix, pastikan biner di node_modules/.bin memiliki izin eksekusi (+x)
+  if (process.platform !== "win32") {
+    try {
+      execSync("chmod +x node_modules/.bin/* 2>/dev/null || true", {
+        cwd: projectRoot,
+      });
+      execSync("chmod +x node_modules/.bin/* 2>/dev/null || true", {
+        cwd: dashboardDir,
+      });
+    } catch {
+      // Abaikan jika chmod gagal
+    }
+  }
+
   // Jika path tidak mengandung spasi, bangun langsung di folder dashboard-v2
   if (!projectRoot.includes(" ")) {
     console.log(`[BUILD-V2] Membangun langsung di ${dashboardDir}...`);
-    execSync("npm run build", {
-      cwd: dashboardDir,
-      stdio: "inherit",
-    });
+    try {
+      execSync("npm run build", {
+        cwd: dashboardDir,
+        stdio: "inherit",
+      });
+    } catch (err) {
+      console.warn(`[BUILD-V2] Peringatan: Build dashboard gagal (${err.message}).`);
+      console.warn("[BUILD-V2] Melanjutkan startup bot (dashboard akan fallback ke src/pages)...");
+    }
     return;
   }
 

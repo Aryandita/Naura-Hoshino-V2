@@ -7,53 +7,24 @@ const extraItems = require("./items_extra");
 const refinedItems = require("./items_refined");
 const { COUPON_ITEMS } = require("./items_coupon");
 const { DUNGEON_ITEMS } = require("./items_dungeon");
+const {
+  BALANCED_ITEMS_CATALOG,
+  CATALOG_BY_ID,
+} = require("./items_catalog");
 
-// Fallback minimum kalau pengambilan dari database gagal total.
-const staticFallback = [
-  {
-    id: "apple",
-    name: "Apel Segar",
-    description: "Buah manis dari hutan. Mengisi +15 Lapar.",
-    price: 150,
-    category: "consumable",
-    effects: { hunger: 15, stamina: 5 },
-    rarity: "Biasa",
-  },
-  {
-    id: "fishing_rod",
-    name: "Alat Pancing (Lv. 1)",
-    description: "Dibutuhkan untuk memancing ikan di laut.",
-    price: 1500,
-    category: "tools",
-    upgrade_level: 1,
-    base_efficiency: 10,
-    rarity: "Biasa",
-  },
-  {
-    id: "wooden_axe",
-    name: "Kapak Kayu (Lv. 1)",
-    description: "Dibutuhkan untuk mendapatkan kayu di hutan.",
-    price: 800,
-    category: "tools",
-    upgrade_level: 1,
-    base_efficiency: 10,
-    rarity: "Biasa",
-  },
-];
-
-// Item yang hidup di kode dan harus selalu tersedia, bahkan kalau katalog
-// database belum pernah di-seed. Barang kupon ikut di sini supaya bisa dicari
-// lewat `items.find()`, tetapi harganya 0 sehingga tidak muncul di toko biasa.
-const CODE_ONLY_ITEMS = [
+// Item warisan dan khusus yang harus tetap dapat dicari di inventaris pemain lama.
+const LEGACY_ITEMS = [
   ...woodenTools,
   ...extraItems,
   ...refinedItems,
   ...COUPON_ITEMS,
   ...DUNGEON_ITEMS,
+  ...staticItems,
 ];
 
 function flatten(row) {
   const data = row.toJSON();
+  const catalogItem = CATALOG_BY_ID.get(data.id);
   return {
     id: data.id,
     name: data.name,
@@ -62,6 +33,18 @@ function flatten(row) {
     sellPrice: data.sellPrice,
     category: data.category,
     rarity: data.rarity,
+    tier:
+      (data.attributes && data.attributes.tier) ||
+      (catalogItem ? catalogItem.tier : 1),
+    tierColor:
+      (data.attributes && data.attributes.tierColor) ||
+      (catalogItem ? catalogItem.tierColor : "#9CA3AF"),
+    image:
+      (data.attributes && data.attributes.image) ||
+      (catalogItem ? catalogItem.image : `/items/${data.id}.svg`),
+    emoji:
+      (data.attributes && data.attributes.emoji) ||
+      (catalogItem ? catalogItem.emoji : "📦"),
     ...data.attributes,
   };
 }
@@ -71,28 +54,44 @@ async function fetchFromDatabase() {
     const rows = await GameItem.findAll();
     if (rows && rows.length > 0) return rows.map(flatten);
   } catch (err) {
-    // Biarkan kosong, pemanggil akan memakai data statis.
+    // Biarkan kosong, pemanggil akan memakai katalog standar.
   }
   return null;
 }
 
-// Data database selalu menang kalau ID-nya sama, jadi kamu tetap bisa mengubah
-// harga atau deskripsi lewat tabel GameItem tanpa menyentuh berkas ini.
+// Data database selalu menang kalau ID-nya sama, lalu lengkapi dengan item katalog dan warisan.
 function withRequiredItems(list) {
   const merged = [...list];
-  for (const item of CODE_ONLY_ITEMS) {
-    if (!merged.some((existing) => existing && existing.id === item.id))
+  const seenIds = new Set(merged.map((item) => item && item.id));
+
+  // 1. Pastikan seluruh 150 item resmi ada
+  for (const item of BALANCED_ITEMS_CATALOG) {
+    if (!seenIds.has(item.id)) {
       merged.push(item);
+      seenIds.add(item.id);
+    }
   }
+
+  // 2. Pastikan item warisan/kupon/dungeon tetap aman bagi pemain lama
+  for (const item of LEGACY_ITEMS) {
+    if (item && !seenIds.has(item.id)) {
+      const enrichedItem = {
+        ...item,
+        tier: item.tier || 1,
+        tierColor: item.tierColor || "#9CA3AF",
+        image: item.image || `/items/${item.id}.svg`,
+        emoji: item.emoji || "📦",
+      };
+      merged.push(enrichedItem);
+      seenIds.add(item.id);
+    }
+  }
+
   return merged;
 }
 
-// Array ini diekspor apa adanya supaya pemanggil lama tetap bisa menulis
-// `const items = require("./items"); items.find(...)`. Isinya ditukar di tempat
-// begitu data database selesai dimuat.
-const itemsArray = withRequiredItems(
-  staticItems.length > 0 ? staticItems : staticFallback,
-);
+// Array ini diekspor apa adanya dengan 150 item seimbang sebagai fondasi utama.
+const itemsArray = withRequiredItems(BALANCED_ITEMS_CATALOG);
 
 fetchFromDatabase().then((dbItems) => {
   if (!dbItems) return;

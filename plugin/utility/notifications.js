@@ -17,6 +17,7 @@ module.exports = {
     .setDescription(
       "🔔 Atur preferensi notifikasi cerdas Naura ke Direct Message (DM) kamu.",
     ),
+  aliases: ["notification", "notif"],
 
   async execute(interaction) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });

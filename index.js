@@ -41,9 +41,19 @@ const EXIT_CODE_BAD_CONFIG = 78;
 // sebelum panel mengirim SIGKILL dan membuang antrean tulis yang belum selesai.
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
+let Cluster;
+try {
+  Cluster = require("discord-hybrid-sharding");
+} catch (_) {}
+
+const isClusterChild = Boolean(
+  Cluster && typeof Cluster.data?.CLUSTER === "number",
+);
 // Identitas shard. SHARD_ID hanya terisi bila proses ini dijalankan oleh ShardingManager.
 const isShardChild = typeof env.SHARD_ID !== "undefined";
-const isPrimaryShard = !isShardChild || env.SHARD_ID === "0";
+const isPrimaryShard = isClusterChild
+  ? Cluster.data.CLUSTER === 0
+  : !isShardChild || env.SHARD_ID === "0";
 
 // Saat berjalan mandiri (node index.js), validasi tetap berjalan informatif
 if (!env.validateEnv({ fatal: false })) {
@@ -59,7 +69,17 @@ const client = new Client({
   // memori bisa diaudit di satu tempat, bukan tersebar di pemanggilan Client.
   makeCache: clientOptions.makeCache,
   sweepers: clientOptions.sweepers,
+  ...(isClusterChild
+    ? {
+        shards: Cluster.data.SHARD_LIST,
+        shardCount: Cluster.data.TOTAL_SHARDS,
+      }
+    : {}),
 });
+
+if (isClusterChild) {
+  client.cluster = new Cluster.Client(client);
+}
 
 client.commands = new Collection();
 client.musicManager = new MusicManager(client);

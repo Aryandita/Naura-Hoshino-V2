@@ -179,7 +179,12 @@ function addProfileGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("info")
-          .setDescription("Lihat profil survival, status, dan inventory-mu"),
+          .setDescription("Lihat profil survival, status, dan statistikmu"),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("inventory")
+          .setDescription("🎒 Buka ransel petualang dan lihat semua barang bawaanmu"),
       )
       .addSubcommand((sub) =>
         sub

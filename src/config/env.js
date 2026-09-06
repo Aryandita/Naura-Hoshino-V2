@@ -218,6 +218,7 @@ const env = {
   SESSION_SECRET: cleanEnv(process.env.SESSION_SECRET),
   CALLBACK_URL: cleanEnv(process.env.DISCORD_CALLBACK_URL),
   OWNER_EVAL_ENABLED: cleanEnv(process.env.OWNER_EVAL_ENABLED) === "true",
+  USE_CLUSTERING: cleanEnv(process.env.USE_CLUSTERING) === "true",
 };
 
 // Variabel yang wajib ada sebelum bot boleh menyala

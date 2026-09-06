@@ -159,24 +159,37 @@ module.exports = {
         logger.warn("[SURVIVAL INFO CANVAS]", canvasError.message);
       }
 
-      const buttonsRow = new ActionRowBuilder().addComponents(
+      const row1 = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId("info_cta_skill")
-          .setLabel("⚡ Skill Tree")
+          .setCustomId("info_cta_inventory")
+          .setLabel("🎒 Ransel")
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId("info_cta_shop")
+          .setLabel("🛒 Toko")
           .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId("info_cta_gather")
+          .setLabel("🧺 Kumpul Bahan")
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId("info_cta_farm")
+          .setLabel("🌾 Bertani")
+          .setStyle(ButtonStyle.Secondary),
+      );
+
+      const row2 = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("info_cta_dungeon")
           .setLabel("🗡️ Dungeon")
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
-          .setCustomId("info_cta_work")
-          .setLabel("💼 Kerja")
+          .setCustomId("info_cta_skill")
+          .setLabel("⚡ Skill Tree")
           .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId("info_cta_farm")
-          .setLabel("🌾 Bertani")
-          .setStyle(ButtonStyle.Success),
       );
+
+      const buttonsRow = [row1, row2];
 
       const payload = buildContainerV2({
         accentColorHex: survivalUI.getColor("emerald"),
@@ -246,6 +259,19 @@ module.exports = {
       });
 
       collector.on("collect", async (i) => {
+        await i.deferUpdate().catch(() => {});
+        if (i.customId === "info_cta_inventory") {
+          const invSub = require("./inventory.js");
+          return invSub.execute(i);
+        }
+        if (i.customId === "info_cta_shop") {
+          const shopSub = require("./shop.js");
+          return shopSub.execute(i);
+        }
+        if (i.customId === "info_cta_gather") {
+          const collectSub = require("./collect.js");
+          return collectSub.execute(i);
+        }
         if (i.customId === "info_cta_skill") {
           const skillSub = require("./skill.js");
           return skillSub.execute(i);
@@ -254,13 +280,13 @@ module.exports = {
           const dungeonSub = require("./dungeon.js");
           return dungeonSub.execute(i);
         }
-        if (i.customId === "info_cta_work") {
-          const workSub = require("./work.js");
-          return workSub.execute(i);
-        }
         if (i.customId === "info_cta_farm") {
           const farmSub = require("./farm.js");
           return farmSub.execute(i);
+        }
+        if (i.customId === "info_cta_work") {
+          const workSub = require("./work.js");
+          return workSub.execute(i);
         }
       });
     } catch (error) {
