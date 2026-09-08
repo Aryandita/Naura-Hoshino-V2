@@ -259,6 +259,14 @@ const MIGRATIONS = [
     pgSql:
       'CREATE TABLE IF NOT EXISTS "community_dungeons" ("dungeonId" VARCHAR(64) NOT NULL PRIMARY KEY, "creatorUserId" VARCHAR(191) NOT NULL, "guildId" VARCHAR(64) NOT NULL, "dungeonName" VARCHAR(128) NOT NULL, "theme" VARCHAR(32) NOT NULL DEFAULT \'CYBER_VOID\', "roomsConfig" JSON NOT NULL, "entryFee" BIGINT NOT NULL DEFAULT 100, "vaultBalance" BIGINT NOT NULL DEFAULT 0, "ratingAverage" DOUBLE PRECISION NOT NULL DEFAULT 5.0, "totalPlays" INTEGER NOT NULL DEFAULT 0, "totalClears" INTEGER NOT NULL DEFAULT 0, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS "idx_comm_dungeons_creator" ON "community_dungeons" ("creatorUserId"); CREATE INDEX IF NOT EXISTS "idx_comm_dungeons_guild" ON "community_dungeons" ("guildId");',
   },
+  {
+    id: "v40_create_semantic_memories_table",
+    description:
+      "Buat tabel semantic_memories untuk Living AI Semantic Vector Memory & Server RAG",
+    sql: "CREATE TABLE IF NOT EXISTS semantic_memories (id INT AUTO_INCREMENT PRIMARY KEY, userId VARCHAR(191) NOT NULL, guildId VARCHAR(64) DEFAULT NULL, memoryType VARCHAR(32) NOT NULL DEFAULT 'USER_FACT', content TEXT NOT NULL, embedding TEXT DEFAULT NULL, metadata JSON DEFAULT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL, INDEX idx_semantic_memories_user (userId), INDEX idx_semantic_memories_guild (guildId), INDEX idx_semantic_memories_type (memoryType)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    pgSql:
+      'CREATE TABLE IF NOT EXISTS "semantic_memories" ("id" SERIAL PRIMARY KEY, "userId" VARCHAR(191) NOT NULL, "guildId" VARCHAR(64) DEFAULT NULL, "memoryType" VARCHAR(32) NOT NULL DEFAULT \'USER_FACT\', "content" TEXT NOT NULL, "embedding" TEXT DEFAULT NULL, "metadata" JSONB DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS "idx_semantic_memories_user" ON "semantic_memories" ("userId"); CREATE INDEX IF NOT EXISTS "idx_semantic_memories_guild" ON "semantic_memories" ("guildId"); CREATE INDEX IF NOT EXISTS "idx_semantic_memories_type" ON "semantic_memories" ("memoryType");',
+  },
 ];
 
 /**

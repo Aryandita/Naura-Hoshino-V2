@@ -149,15 +149,38 @@ async function buildStats({ userId, profile, survival, activePets }) {
   const pet = resolvePet(activePets);
   const gear = resolveGear(inventory);
 
-  const maxHp = leveling.calculateMaxHp(survival, (rpgState.class_bonus?.hp || 0));
+  const maxHp = leveling.calculateMaxHp(
+    survival,
+    rpgState.class_bonus?.hp || 0,
+  );
   const hp =
     survival.hp !== undefined && survival.hp !== null ? survival.hp : maxHp;
 
-  const hpVital = survivalUI.buildVitalsBar({ current: hp, target: maxHp, length: 8 });
-  const hungerVital = survivalUI.buildVitalsBar({ current: survival.hunger || 0, target: 100, length: 8 });
-  const thirstVital = survivalUI.buildVitalsBar({ current: survival.thirst || 0, target: 100, length: 8 });
-  const staminaVital = survivalUI.buildVitalsBar({ current: survival.stamina || 0, target: 100, length: 8 });
-  const xpVital = survivalUI.buildVitalsBar({ current: lvl.xp, target: lvl.reqXP, length: 8 });
+  const hpVital = survivalUI.buildVitalsBar({
+    current: hp,
+    target: maxHp,
+    length: 8,
+  });
+  const hungerVital = survivalUI.buildVitalsBar({
+    current: survival.hunger || 0,
+    target: 100,
+    length: 8,
+  });
+  const thirstVital = survivalUI.buildVitalsBar({
+    current: survival.thirst || 0,
+    target: 100,
+    length: 8,
+  });
+  const staminaVital = survivalUI.buildVitalsBar({
+    current: survival.stamina || 0,
+    target: 100,
+    length: 8,
+  });
+  const xpVital = survivalUI.buildVitalsBar({
+    current: lvl.xp,
+    target: lvl.reqXP,
+    length: 8,
+  });
 
   const locationKey = survival.currentLocation || "desa";
   const difficulty = rpgState.difficulty || "Normal";

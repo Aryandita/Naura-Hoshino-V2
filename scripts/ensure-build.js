@@ -97,7 +97,10 @@ if (isPterodactyl) {
       .replace(/^[^@]+@/, "");
     // Format universal GitHub token agar Git tidak memicu terminal prompt username
     authedUrl = `https://x-access-token:${token}@${cleanAddress}`;
-  } else if (!authedUrl.startsWith("http://") && !authedUrl.startsWith("https://")) {
+  } else if (
+    !authedUrl.startsWith("http://") &&
+    !authedUrl.startsWith("https://")
+  ) {
     authedUrl = `https://${authedUrl}`;
   }
 

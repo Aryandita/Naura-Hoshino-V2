@@ -1,5 +1,4 @@
 const { EmbedBuilder, AuditLogEvent, ChannelType } = require("discord.js");
-const GuildSettings = require("../models/GuildSettings");
 const cacheManager = require("../managers/cacheManager");
 const ui = require("../config/ui");
 

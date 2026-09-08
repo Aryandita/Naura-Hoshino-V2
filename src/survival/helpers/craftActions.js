@@ -63,6 +63,11 @@ async function assemble({ userId, survival, profile, blueprintId }) {
   await advanceTime(userId, HOURS_ASSEMBLE);
   await bumpQuest(userId);
 
+  try {
+    const seasonEngine = require("../../services/seasonEngine");
+    await seasonEngine.addSeasonXp(userId, 15);
+  } catch (err) {}
+
   return { ok: true, itemId: blueprint.id, name: blueprint.name, amount };
 }
 
@@ -106,6 +111,11 @@ async function smelt({ userId, survival, profile, outputId }) {
   await spendStamina(userId, survival, STAMINA_SMELT);
   await advanceTime(userId, HOURS_SMELT);
   await bumpQuest(userId);
+
+  try {
+    const seasonEngine = require("../../services/seasonEngine");
+    await seasonEngine.addSeasonXp(userId, 20);
+  } catch (err) {}
 
   return {
     ok: true,
@@ -163,6 +173,11 @@ async function upgrade({ userId, survival, profile, fromId }) {
   await spendStamina(userId, survival, STAMINA_UPGRADE);
   await advanceTime(userId, HOURS_UPGRADE);
   await bumpQuest(userId);
+
+  try {
+    const seasonEngine = require("../../services/seasonEngine");
+    await seasonEngine.addSeasonXp(userId, 30);
+  } catch (err) {}
 
   return {
     ok: true,

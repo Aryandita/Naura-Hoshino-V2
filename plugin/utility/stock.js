@@ -16,7 +16,11 @@ const stockMarketEngine = require("../../src/services/stockMarketEngine");
 const { drawStockMarket } = require("../../src/canvas/stockCanvas");
 const GuildClan = require("../../src/models/GuildClan");
 const UserStockHolding = require("../../src/models/UserStockHolding");
-const { choice, safeRespond, fuzzyFilter } = require("../../src/utils/autocompleteHelper");
+const {
+  choice,
+  safeRespond,
+  fuzzyFilter,
+} = require("../../src/utils/autocompleteHelper");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -129,7 +133,6 @@ module.exports = {
       const eRed = ui.getEmoji("redping") || "🔴";
       const eFire = ui.getEmoji("fire") || "🔥";
       const eStar = ui.getEmoji("star") || "⭐";
-      const eBriefcase = ui.getEmoji("briefcase") || "💼";
       const eChart = ui.getEmoji("chart") || "📈";
       const eFlash = ui.getEmoji("stamina") || "⚡";
       const eSparkle = ui.getEmoji("sparkle") || "💡";
@@ -448,4 +451,3 @@ module.exports = {
     return safeRespond(interaction, []);
   },
 };
-

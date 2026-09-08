@@ -58,7 +58,7 @@ test("skillTreeEngine - investPoint with mock cache", async (t) => {
     cacheManager.incrementUserSurvival = originalIncrement;
   });
 
-  let mockSurvival = {
+  const mockSurvival = {
     survival_level: 10,
     strength: 20,
     rpg_state: { unspent_points: 2 },

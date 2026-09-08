@@ -1,4 +1,3 @@
-const { logger } = require("./logger");
 const os = require("os");
 const redisManager = require("./redisManager");
 /**

@@ -140,6 +140,13 @@ async function grantVictory({
   await advanceTime(userId, CLEAR_HOURS);
   await leveling.addPlayerXP(userId, reward.xp);
 
+  try {
+    const seasonEngine = require("../../services/seasonEngine");
+    await seasonEngine.addSeasonXp(userId, isBoss ? 75 : 35);
+  } catch (err) {
+    // Abaikan error SeasonEngine agar tidak membatalkan kemenangan dungeon
+  }
+
   const coupon = await rollCouponDrop(
     isBoss ? "dungeon_boss" : "dungeon_clear",
     { survival },

@@ -5,7 +5,6 @@ const { updateGuildSetting } = require("../../managers/guildSettingsService");
 const {
   buildContainerV2,
   buildSuccessContainerV2,
-  buildErrorContainerV2,
 } = require("../../utils/NauraContainerBuilder");
 const ui = require("../../config/ui");
 

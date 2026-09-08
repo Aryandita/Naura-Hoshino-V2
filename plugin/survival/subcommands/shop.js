@@ -60,7 +60,11 @@ function portraitOf(npc) {
 
 module.exports = {
   async autocomplete(interaction) {
-    const { choice, safeRespond, fuzzyFilter } = require('../../../src/utils/autocompleteHelper');
+    const {
+      choice,
+      safeRespond,
+      fuzzyFilter,
+    } = require("../../../src/utils/autocompleteHelper");
     const focusedValue = interaction.options.getFocused().toLowerCase();
     const [survival] = await UserSurvival.findOrCreate({
       where: { userId: interaction.user.id },
@@ -174,8 +178,12 @@ module.exports = {
     let shopPurchases = survival.shop_purchases || {};
     if (currentDay >= (survival.shop_last_reset_day || 1) + 30) {
       shopPurchases = {};
+      await cacheManager.mutateUserSurvivalJson(
+        user.id,
+        "shop_purchases",
+        () => ({}),
+      );
       await cacheManager.updateUserSurvival(user.id, {
-        shop_purchases: {},
         shop_last_reset_day: currentDay,
       });
     }
@@ -232,9 +240,15 @@ module.exports = {
 
       if (!result.isCoupon) {
         shopPurchases[result.itemId] = (shopPurchases[result.itemId] || 0) + 1;
-        await cacheManager.updateUserSurvival(user.id, {
-          shop_purchases: shopPurchases,
-        });
+        await cacheManager.mutateUserSurvivalJson(
+          user.id,
+          "shop_purchases",
+          (current) => {
+            const map = current && typeof current === "object" ? current : {};
+            map[result.itemId] = (map[result.itemId] || 0) + 1;
+            return map;
+          },
+        );
       }
 
       const boughtLine = isCoupon
@@ -243,7 +257,7 @@ module.exports = {
 
       const successPayload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#22c55e",
-        authorName: `${ctx.person.name} \u2014 ${ctx.person.title || "Penjual"}`,
+        authorName: `${ctx.person.name} - ${ctx.person.title || "Penjual"}`,
         title: `${e("cheers", "\uD83E\uDD42")} Transaksi berhasil!`,
         iconURL: ctx.art.iconURL || user.displayAvatarURL(),
         description: [

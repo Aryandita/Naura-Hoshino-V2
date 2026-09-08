@@ -122,7 +122,11 @@ async function renderGreenhouseCard(greenhouseData) {
         ctx.font = 'bold 14px "MontserratBold", "EmojiFont"';
         ctx.fillStyle = "#FFFFFF";
         ctx.textAlign = "left";
-        ctx.fillText(`${seed.emoji || "🌱"} ${seed.name || "Tanaman"}`, x + 15, y + 52);
+        ctx.fillText(
+          `${seed.emoji || "🌱"} ${seed.name || "Tanaman"}`,
+          x + 15,
+          y + 52,
+        );
 
         // Status / Stage Badge
         ctx.font = '11px "Inter", "EmojiFont"';
@@ -152,7 +156,11 @@ async function renderGreenhouseCard(greenhouseData) {
         // Footer details
         ctx.font = '10px "Inter", "EmojiFont"';
         ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-        ctx.fillText(`💧 Kelembaban: ${slot.moisture || 100}%`, x + 15, y + 125);
+        ctx.fillText(
+          `💧 Kelembaban: ${slot.moisture || 100}%`,
+          x + 15,
+          y + 125,
+        );
 
         if (slot.isFertilized) {
           ctx.fillStyle = "#F59E0B";

@@ -299,13 +299,7 @@ class CardEngine {
 
     mainCard.burnValue = Number(mainCard.burnValue || 100) * 2;
     await mainCard.save({
-      fields: [
-        "isAwakened",
-        "awakeningLevel",
-        "frame",
-        "rarity",
-        "burnValue",
-      ],
+      fields: ["isAwakened", "awakeningLevel", "frame", "rarity", "burnValue"],
     });
 
     logger.info(

@@ -27,11 +27,7 @@ class WorldBossEngine {
     });
 
     if (boss && redisManager.isReady) {
-      await redisManager.setCache(
-        BOSS_CACHE_KEY,
-        JSON.stringify(boss.toJSON()),
-        30,
-      );
+      await redisManager.setCache(BOSS_CACHE_KEY, boss.toJSON(), 60);
     }
 
     return boss ? boss.toJSON() : null;

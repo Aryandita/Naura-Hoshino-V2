@@ -2,13 +2,12 @@
 
 const { MessageFlags } = require("discord.js");
 
-const UserProfile = require("../../../src/models/UserProfile");
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const {
   safeParseInventory,
-  addOrStackItem,
+  addItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
 const {
   buildContainerV2,
@@ -70,18 +69,6 @@ function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
 }
 
-function grantStarterKit(inventory) {
-  return STARTER_KIT.reduce(
-    (inv, item) =>
-      addOrStackItem(inv, {
-        id: item.id,
-        name: item.name,
-        amount: item.amount,
-      }),
-    inventory,
-  );
-}
-
 module.exports = {
   async execute(interaction) {
     const user = interaction.user;
@@ -101,10 +88,7 @@ module.exports = {
       return interaction.reply({ ...payload, flags: MessageFlags.Ephemeral });
     }
 
-    await UserProfile.update(
-      { inventory: grantStarterKit(inventory) },
-      { where: { userId: user.id } },
-    );
+    await addItemsAtomic(user.id, STARTER_KIT);
 
     const userName = ui.ux.resolveUserName(interaction);
     const goalBar = ui.ux.buildGoalGradientBar({

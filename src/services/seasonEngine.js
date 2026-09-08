@@ -141,7 +141,18 @@ class SeasonEngine {
       };
     }
 
-    await cacheManager.debitSurvival(userId, "coupons", COST_COUPONS);
+    const debitResult = await cacheManager.debitUserSurvival(
+      userId,
+      "coupons",
+      COST_COUPONS,
+    );
+    if (!debitResult || !debitResult.ok) {
+      return {
+        success: false,
+        message: `Gagal memotong Kupon (${debitResult?.reason || "saldo_kurang"}). Saldo Kupon tidak mencukupi!`,
+      };
+    }
+
     progress.isPremiumPass = true;
     await progress.save({ fields: ["isPremiumPass"] });
 

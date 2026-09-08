@@ -61,7 +61,7 @@ class AiDjManager {
       `Lagu berikutnya siap bikin harimu makin semangat: ${title} dari ${author}. Naura temani kalian di sini!`,
       `Musik pilihan ${name} nih! Lagu ${title} oleh ${author} mulai mengudara. Happy listening semuanya!`,
       `Hai ${name}! Terima kasih sudah request ${title}. Naura putarkan khusus untuk kamu dan teman-teman!`,
-      `Berikutnya di Naura Radio, ada ${title} karya ${author}. Siapkan telinga kalian ya!`
+      `Berikutnya di Naura Radio, ada ${title} karya ${author}. Siapkan telinga kalian ya!`,
     ];
 
     const idx = Math.floor(Math.random() * templates.length);
@@ -88,7 +88,9 @@ class AiDjManager {
     // Ambil requester
     const requester = track.info.requester;
     const isBotRequester = requester && requester.bot;
-    const requesterName = requester ? (requester.displayName || requester.username || "sobat Naura") : "sobat Naura";
+    const requesterName = requester
+      ? requester.displayName || requester.username || "sobat Naura"
+      : "sobat Naura";
 
     // Lewatkan jika bot autoplay terus menerus (hanya umumkan tiap 3 lagu autoplay)
     if (isBotRequester && count % 3 !== 0) {
@@ -105,20 +107,24 @@ class AiDjManager {
       try {
         const audioBuffer = await fishAudioService.generateSpeech(script, {
           format: "mp3",
-          latency: "balanced"
+          latency: "balanced",
         });
 
         if (audioBuffer && player.textChannel) {
           const channel = manager.client.channels.cache.get(player.textChannel);
           if (channel && typeof channel.send === "function") {
             const { AttachmentBuilder } = require("discord.js");
-            const attachment = new AttachmentBuilder(audioBuffer, { name: "naura_dj_intro.mp3" });
-            
+            const attachment = new AttachmentBuilder(audioBuffer, {
+              name: "naura_dj_intro.mp3",
+            });
+
             // Kirim voice snippet interaktif ke text channel
-            await channel.send({
-              content: `🎙️ **Naura AI DJ:** _"${script}"_`,
-              files: [attachment]
-            }).catch(() => {});
+            await channel
+              .send({
+                content: `🎙️ **Naura AI DJ:** _"${script}"_`,
+                files: [attachment],
+              })
+              .catch(() => {});
           }
         }
       } catch (err) {

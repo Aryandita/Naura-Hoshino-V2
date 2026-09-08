@@ -217,9 +217,7 @@ const env = {
 
   // WEB DASHBOARD & PORTS (Dynamic Pterodactyl Resolution)
   DASHBOARD_PORT:
-    parseInt(
-      process.env.DASHBOARD_PORT || process.env.SERVER_PORT,
-    ) || 3000,
+    parseInt(process.env.DASHBOARD_PORT || process.env.SERVER_PORT) || 3000,
   DASHBOARD_ORIGIN: cleanEnv(process.env.DASHBOARD_ORIGIN) || "",
   WEBHOOK_PORT: parseInt(process.env.WEBHOOK_PORT) || 3071,
   SESSION_SECRET: cleanEnv(process.env.SESSION_SECRET),

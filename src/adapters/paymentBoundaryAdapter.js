@@ -23,7 +23,10 @@ const { ValidationError } = require("../errors/DomainError");
  */
 function normalizePaymentWebhook(provider, rawPayload) {
   if (!rawPayload || typeof rawPayload !== "object") {
-    throw new ValidationError("Payload webhook kosong atau bukan objek valid.", { provider });
+    throw new ValidationError(
+      "Payload webhook kosong atau bukan objek valid.",
+      { provider },
+    );
   }
 
   const normalizedProvider = String(provider || "").toLowerCase();
@@ -37,17 +40,25 @@ function normalizePaymentWebhook(provider, rawPayload) {
   switch (normalizedProvider) {
     case "saweria": {
       transactionId = String(rawPayload.donation_id || rawPayload.id || "");
-      donatorName = String(rawPayload.donator_name || rawPayload.name || "Anonymous").trim();
+      donatorName = String(
+        rawPayload.donator_name || rawPayload.name || "Anonymous",
+      ).trim();
       amount = Number(rawPayload.amount_raw || rawPayload.amount || 0);
       message = String(rawPayload.message || "").trim();
       break;
     }
 
     case "trakteer": {
-      transactionId = String(rawPayload.tr_id || rawPayload.order_id || rawPayload.id || "");
-      donatorName = String(rawPayload.supporter_name || rawPayload.name || "Anonymous").trim();
+      transactionId = String(
+        rawPayload.tr_id || rawPayload.order_id || rawPayload.id || "",
+      );
+      donatorName = String(
+        rawPayload.supporter_name || rawPayload.name || "Anonymous",
+      ).trim();
       amount = Number(rawPayload.amount || rawPayload.total_price || 0);
-      message = String(rawPayload.supporter_message || rawPayload.message || "").trim();
+      message = String(
+        rawPayload.supporter_message || rawPayload.message || "",
+      ).trim();
       break;
     }
 
@@ -61,7 +72,10 @@ function normalizePaymentWebhook(provider, rawPayload) {
     }
 
     default:
-      throw new ValidationError(`Provider webhook '${provider}' tidak dikenal.`, { provider });
+      throw new ValidationError(
+        `Provider webhook '${provider}' tidak dikenal.`,
+        { provider },
+      );
   }
 
   // Ekstraksi ID Discord bila pengguna menyertakan ID di pesan atau donator_name
@@ -73,7 +87,11 @@ function normalizePaymentWebhook(provider, rawPayload) {
   }
 
   if (amount < 0 || Number.isNaN(amount)) {
-    throw new ValidationError("Nominal pembayaran tidak valid.", { provider, amount, rawPayload });
+    throw new ValidationError("Nominal pembayaran tidak valid.", {
+      provider,
+      amount,
+      rawPayload,
+    });
   }
 
   return Object.freeze({

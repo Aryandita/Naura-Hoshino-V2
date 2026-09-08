@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require("discord.js");
-const UserProfile = require("../../src/models/UserProfile");
 const ui = require("../../src/config/ui");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 
@@ -22,7 +21,6 @@ module.exports = {
     const modeSenyap = interaction.options.getBoolean("senyap") || false;
 
     const cacheManager = require("../../src/managers/cacheManager");
-    const profile = await cacheManager.getUserProfile(interaction.user.id);
 
     const updates = {
       afk_reason: alasan,

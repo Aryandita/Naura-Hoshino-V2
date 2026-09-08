@@ -1,7 +1,7 @@
 "use strict";
 
 const UserGreenhouse = require("../../models/UserGreenhouse");
-const { getSeedById, CROP_SEEDS } = require("../data/cropSeeds");
+const { getSeedById } = require("../data/cropSeeds");
 const cacheManager = require("../../managers/cacheManager");
 const { logger } = require("../../managers/logger");
 
@@ -84,7 +84,7 @@ class GreenhouseEngine {
    * Ambil data Greenhouse milik pengguna
    */
   async getGreenhouse(userId) {
-    let [greenhouse] = await UserGreenhouse.findOrCreate({
+    const [greenhouse] = await UserGreenhouse.findOrCreate({
       where: { userId },
       defaults: {
         userId,
@@ -99,7 +99,7 @@ class GreenhouseEngine {
     });
 
     const maxSlots = BASE_SLOTS_PER_LEVEL[greenhouse.gridLevel] || 3;
-    let rawSlots = Array.isArray(greenhouse.slots) ? [...greenhouse.slots] : [];
+    const rawSlots = Array.isArray(greenhouse.slots) ? [...greenhouse.slots] : [];
 
     // Normalisasi jumlah slot jika belum cukup
     while (rawSlots.length < maxSlots) {
@@ -318,6 +318,13 @@ class GreenhouseEngine {
     // Berikan XP leveling jika ada
     await cacheManager.incrementUserProfile(userId, "economy_wallet", xp * 2);
 
+    try {
+      const seasonEngine = require("../../services/seasonEngine");
+      await seasonEngine.addSeasonXp(userId, 15);
+    } catch (err) {
+      // Abaikan error SeasonEngine agar tidak membatalkan panen
+    }
+
     const updatedRawSlots = gh.slots.map((s, idx) => {
       if (idx === slotIndex) {
         return { slotIndex, seedId: null };
@@ -370,7 +377,10 @@ class GreenhouseEngine {
     }
 
     const nextLevel = gh.gridLevel + 1;
-    const newSlots = [...gh.slots, { slotIndex: gh.slots.length, seedId: null }];
+    const newSlots = [
+      ...gh.slots,
+      { slotIndex: gh.slots.length, seedId: null },
+    ];
 
     await UserGreenhouse.update(
       {

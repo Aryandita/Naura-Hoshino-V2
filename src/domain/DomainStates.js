@@ -22,9 +22,19 @@ const TicketStatus = Object.freeze({
  * Peta transisi status tiket yang sah
  */
 const ALLOWED_TICKET_TRANSITIONS = Object.freeze({
-  [TicketStatus.OPEN]: Object.freeze([TicketStatus.CLAIMED, TicketStatus.CLOSED]),
-  [TicketStatus.CLAIMED]: Object.freeze([TicketStatus.RESOLVED, TicketStatus.CLOSED, TicketStatus.OPEN]),
-  [TicketStatus.RESOLVED]: Object.freeze([TicketStatus.CLOSED, TicketStatus.CLAIMED]),
+  [TicketStatus.OPEN]: Object.freeze([
+    TicketStatus.CLAIMED,
+    TicketStatus.CLOSED,
+  ]),
+  [TicketStatus.CLAIMED]: Object.freeze([
+    TicketStatus.RESOLVED,
+    TicketStatus.CLOSED,
+    TicketStatus.OPEN,
+  ]),
+  [TicketStatus.RESOLVED]: Object.freeze([
+    TicketStatus.CLOSED,
+    TicketStatus.CLAIMED,
+  ]),
   [TicketStatus.CLOSED]: Object.freeze([]), // Terminal state
 });
 
@@ -45,8 +55,15 @@ const TradeStatus = Object.freeze({
  * Peta transisi status transaksi barter yang sah
  */
 const ALLOWED_TRADE_TRANSITIONS = Object.freeze({
-  [TradeStatus.PENDING]: Object.freeze([TradeStatus.ACCEPTED, TradeStatus.REJECTED, TradeStatus.CANCELLED]),
-  [TradeStatus.ACCEPTED]: Object.freeze([TradeStatus.COMPLETED, TradeStatus.CANCELLED]),
+  [TradeStatus.PENDING]: Object.freeze([
+    TradeStatus.ACCEPTED,
+    TradeStatus.REJECTED,
+    TradeStatus.CANCELLED,
+  ]),
+  [TradeStatus.ACCEPTED]: Object.freeze([
+    TradeStatus.COMPLETED,
+    TradeStatus.CANCELLED,
+  ]),
   [TradeStatus.REJECTED]: Object.freeze([]),
   [TradeStatus.CANCELLED]: Object.freeze([]),
   [TradeStatus.COMPLETED]: Object.freeze([]),
@@ -80,10 +97,22 @@ const PlayerCombatStatus = Object.freeze({
  * Peta transisi status pertarungan pemain yang sah
  */
 const ALLOWED_COMBAT_TRANSITIONS = Object.freeze({
-  [PlayerCombatStatus.PEACEFUL]: Object.freeze([PlayerCombatStatus.IN_COMBAT, PlayerCombatStatus.RESTING]),
-  [PlayerCombatStatus.RESTING]: Object.freeze([PlayerCombatStatus.PEACEFUL, PlayerCombatStatus.IN_COMBAT]),
-  [PlayerCombatStatus.IN_COMBAT]: Object.freeze([PlayerCombatStatus.PEACEFUL, PlayerCombatStatus.DOWNED]),
-  [PlayerCombatStatus.DOWNED]: Object.freeze([PlayerCombatStatus.PEACEFUL, PlayerCombatStatus.RESTING]),
+  [PlayerCombatStatus.PEACEFUL]: Object.freeze([
+    PlayerCombatStatus.IN_COMBAT,
+    PlayerCombatStatus.RESTING,
+  ]),
+  [PlayerCombatStatus.RESTING]: Object.freeze([
+    PlayerCombatStatus.PEACEFUL,
+    PlayerCombatStatus.IN_COMBAT,
+  ]),
+  [PlayerCombatStatus.IN_COMBAT]: Object.freeze([
+    PlayerCombatStatus.PEACEFUL,
+    PlayerCombatStatus.DOWNED,
+  ]),
+  [PlayerCombatStatus.DOWNED]: Object.freeze([
+    PlayerCombatStatus.PEACEFUL,
+    PlayerCombatStatus.RESTING,
+  ]),
 });
 
 /**
@@ -109,7 +138,12 @@ function canTransitionState(allowedMap, currentStatus, targetStatus) {
  * @param {Record<string, any>} [context={}]
  * @throws {StateTransitionError}
  */
-function assertValidStateTransition(allowedMap, currentStatus, targetStatus, context = {}) {
+function assertValidStateTransition(
+  allowedMap,
+  currentStatus,
+  targetStatus,
+  context = {},
+) {
   const isAllowed = canTransitionState(allowedMap, currentStatus, targetStatus);
   if (!isAllowed) {
     throw new StateTransitionError(
@@ -118,7 +152,7 @@ function assertValidStateTransition(allowedMap, currentStatus, targetStatus, con
         currentStatus,
         targetStatus,
         ...context,
-      }
+      },
     );
   }
 }

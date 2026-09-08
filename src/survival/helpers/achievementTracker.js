@@ -68,7 +68,13 @@ async function checkAndUnlock(userId) {
     // Milestone Rebirth & Pernikahan
     check("elf_evolution", Number(rpgState.rebirth_count || 0) >= 1);
     check("eternal_vow", Boolean(rpgState.married_to));
-    check("gem_master", Boolean(rpgState.enchanted_gear && Object.keys(rpgState.enchanted_gear).length > 0));
+    check(
+      "gem_master",
+      Boolean(
+        rpgState.enchanted_gear &&
+        Object.keys(rpgState.enchanted_gear).length > 0,
+      ),
+    );
 
     if (newlyUnlocked.length > 0) {
       userAch.unlockedAchievements = unlocked;

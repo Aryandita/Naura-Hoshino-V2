@@ -142,9 +142,15 @@ function addLifeGroup(builder) {
                 { name: "Toko Benih Kosmik (Shop)", value: "shop" },
                 { name: "Tanam Benih (Plant)", value: "plant" },
                 { name: "Siram Pod Tanaman (Water)", value: "water" },
-                { name: "Beri Pupuk Bio-Elektrolit (Fertilize)", value: "fertilize" },
+                {
+                  name: "Beri Pupuk Bio-Elektrolit (Fertilize)",
+                  value: "fertilize",
+                },
                 { name: "Panen Tanaman Matang (Harvest)", value: "harvest" },
-                { name: "Tingkatkan Kapasitas Grid (Upgrade)", value: "upgrade" },
+                {
+                  name: "Tingkatkan Kapasitas Grid (Upgrade)",
+                  value: "upgrade",
+                },
               )
               .setRequired(false),
           )
@@ -153,7 +159,10 @@ function addLifeGroup(builder) {
               .setName("benih")
               .setDescription("Pilih jenis benih kosmik yang ingin ditanam")
               .addChoices(
-                { name: "🍓 Astral Strawberry (60m)", value: "astral_strawberry" },
+                {
+                  name: "🍓 Astral Strawberry (60m)",
+                  value: "astral_strawberry",
+                },
                 { name: "🌿 Cyber Mint (120m)", value: "cyber_mint" },
                 { name: "☕ Void Coffee Bean (240m)", value: "void_coffee" },
                 { name: "🍈 Neon Melon (360m)", value: "neon_melon" },
@@ -184,7 +193,9 @@ function addProfileGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("inventory")
-          .setDescription("🎒 Buka ransel petualang dan lihat semua barang bawaanmu"),
+          .setDescription(
+            "🎒 Buka ransel petualang dan lihat semua barang bawaanmu",
+          ),
       )
       .addSubcommand((sub) =>
         sub

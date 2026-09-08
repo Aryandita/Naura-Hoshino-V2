@@ -18,7 +18,14 @@ const {
 } = require("../../utils/NauraContainerBuilder");
 
 // Subcommand yang perlu dibuang dari argumen sebelum dibaca sebagai teks bebas.
-const SUBCOMMAND_WORDS = Object.freeze(["balance", "buy", "ping", "set", "add", "remove"]);
+const SUBCOMMAND_WORDS = Object.freeze([
+  "balance",
+  "buy",
+  "ping",
+  "set",
+  "add",
+  "remove",
+]);
 
 /**
  * Cari command dari nama atau aliasnya.
@@ -130,12 +137,16 @@ function buildMockInteraction(
       },
       getBoolean: () => {
         if (
-          commandArguments.some((arg) => ["true", "yes", "1", "on"].includes(arg.toLowerCase()))
+          commandArguments.some((arg) =>
+            ["true", "yes", "1", "on"].includes(arg.toLowerCase()),
+          )
         ) {
           return true;
         }
         if (
-          commandArguments.some((arg) => ["false", "no", "0", "off"].includes(arg.toLowerCase()))
+          commandArguments.some((arg) =>
+            ["false", "no", "0", "off"].includes(arg.toLowerCase()),
+          )
         ) {
           return false;
         }
@@ -182,7 +193,9 @@ module.exports = async function handlePrefixCommand(message, client) {
   const configuredPrefix = env.PREFIX || "n!";
 
   // Guard Clause 1: Bukan awalan prefix, jalankan perhitungan XP pesan biasa
-  if (!message.content.toLowerCase().startsWith(configuredPrefix.toLowerCase())) {
+  if (
+    !message.content.toLowerCase().startsWith(configuredPrefix.toLowerCase())
+  ) {
     if (message.guild) {
       await awardXp(
         message.author,
@@ -195,7 +208,10 @@ module.exports = async function handlePrefixCommand(message, client) {
   }
 
   // Ekstraksi nama command dan argumen
-  const commandTokens = message.content.slice(configuredPrefix.length).trim().split(/ +/);
+  const commandTokens = message.content
+    .slice(configuredPrefix.length)
+    .trim()
+    .split(/ +/);
   const targetCommandName = commandTokens.shift()?.toLowerCase();
 
   // Guard Clause 2: Awalan prefix tanpa nama command
@@ -224,7 +240,10 @@ module.exports = async function handlePrefixCommand(message, client) {
     if (typeof targetCommand.executePrefix === "function") {
       if (loadingMessage) await loadingMessage.delete().catch(() => {});
       await targetCommand.executePrefix(message, commandTokens, client);
-    } else if (!targetCommand.data && typeof targetCommand.execute === "function") {
+    } else if (
+      !targetCommand.data &&
+      typeof targetCommand.execute === "function"
+    ) {
       if (loadingMessage) await loadingMessage.delete().catch(() => {});
       await targetCommand.execute(client, message, commandTokens);
     } else {
@@ -242,7 +261,10 @@ module.exports = async function handlePrefixCommand(message, client) {
   } catch (error) {
     const callerName = message.author.displayName || message.author.username;
     if (isDomainError(error)) {
-      logger.warn(`[PREFIX DOMAIN ERROR] Command (${targetCommandName}): [${error.code}] ${error.message}`, error.context);
+      logger.warn(
+        `[PREFIX DOMAIN ERROR] Command (${targetCommandName}): [${error.code}] ${error.message}`,
+        error.context,
+      );
       if (loadingMessage) {
         await loadingMessage
           .edit(

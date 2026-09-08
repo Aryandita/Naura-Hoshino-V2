@@ -23,7 +23,9 @@ module.exports = {
         .addStringOption((opt) =>
           opt
             .setName("ke")
-            .setDescription("Bahasa tujuan (contoh: id, en, ja, ko, ar, de, fr, es)")
+            .setDescription(
+              "Bahasa tujuan (contoh: id, en, ja, ko, ar, de, fr, es)",
+            )
             .setAutocomplete(true)
             .setRequired(true),
         ),
@@ -98,7 +100,11 @@ module.exports = {
   },
 
   async autocomplete(interaction) {
-    const { choice, safeRespond, fuzzyFilter } = require("../../src/utils/autocompleteHelper");
+    const {
+      choice,
+      safeRespond,
+      fuzzyFilter,
+    } = require("../../src/utils/autocompleteHelper");
     const focusedValue = interaction.options.getFocused().toLowerCase();
 
     const languages = [
@@ -128,4 +134,3 @@ module.exports = {
     return safeRespond(interaction, fuzzyFilter(choices, focusedValue, 25));
   },
 };
-

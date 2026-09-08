@@ -64,7 +64,8 @@ function getPathSynergy(survival) {
     assassin: {
       requiredStat: "agility",
       label: "Shadow Phantom \uD83D\uDDE1\uFE0F",
-      bonusDescription: "+20% Akurasi Serangan Bayangan (Shadow Strike Tak Meleset)",
+      bonusDescription:
+        "+20% Akurasi Serangan Bayangan (Shadow Strike Tak Meleset)",
       multiplier: 1.2,
     },
     ranger: {
@@ -93,7 +94,8 @@ function getPathSynergy(survival) {
     className: null,
     dominantStat,
     label: "Belum Memilih Path",
-    bonusDescription: "Pilih kelas di /survival class untuk mengaktifkan Path Synergy.",
+    bonusDescription:
+      "Pilih kelas di /survival class untuk mengaktifkan Path Synergy.",
     multiplier: 1.0,
   };
 }
@@ -123,7 +125,9 @@ function getLifeStatBonuses(survival) {
  * @returns {Promise<{ success: boolean, reason?: string, statName?: string, newValue?: number, remainingPoints?: number }>}
  */
 async function investPoint(userId, statName) {
-  const statKey = String(statName || "").toLowerCase().trim();
+  const statKey = String(statName || "")
+    .toLowerCase()
+    .trim();
   if (!VALID_STATS.includes(statKey)) {
     return { success: false, reason: "INVALID_STAT" };
   }

@@ -1,4 +1,3 @@
-/* global rowInvite, rowGame, row, gameStartTime, difficulty */
 const fs = require("node:fs");
 const {
   SlashCommandBuilder,
@@ -776,7 +775,6 @@ async function runMinigameLogic(interaction) {
   };
 
   const executeGame = async () => {
-    let gameStartTime = Date.now();
     // ==========================================
     // ⚔️ SISTEM DUEL MULTIPLAYER REAL-TIME
     // ==========================================

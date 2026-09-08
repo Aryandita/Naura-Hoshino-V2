@@ -12,7 +12,11 @@ const { ValidationError } = require("../errors/DomainError");
  * @returns {Record<string, any>}
  */
 function extractOptionsMap(interaction) {
-  if (!interaction || !interaction.options || !Array.isArray(interaction.options.data)) {
+  if (
+    !interaction ||
+    !interaction.options ||
+    !Array.isArray(interaction.options.data)
+  ) {
     return Object.freeze({});
   }
 
@@ -41,12 +45,19 @@ function extractOptionsMap(interaction) {
  * @returns {Record<string, string>}
  */
 function extractModalFields(interaction) {
-  if (!interaction || !interaction.fields || typeof interaction.fields.getTextInputValue !== "function") {
+  if (
+    !interaction ||
+    !interaction.fields ||
+    typeof interaction.fields.getTextInputValue !== "function"
+  ) {
     return Object.freeze({});
   }
 
   const fieldsData = {};
-  if (interaction.fields.fields && typeof interaction.fields.fields.forEach === "function") {
+  if (
+    interaction.fields.fields &&
+    typeof interaction.fields.fields.forEach === "function"
+  ) {
     interaction.fields.fields.forEach((component, customId) => {
       try {
         fieldsData[customId] = interaction.fields.getTextInputValue(customId);
@@ -86,18 +97,27 @@ function parseCustomId(customId, delimiter = ":") {
  */
 function extractInteractionBoundary(rawInteraction) {
   if (!rawInteraction || typeof rawInteraction !== "object") {
-    throw new ValidationError("Interaction tidak valid atau bernilai null.", { rawInteraction });
+    throw new ValidationError("Interaction tidak valid atau bernilai null.", {
+      rawInteraction,
+    });
   }
 
   const interactionUser = rawInteraction.user || rawInteraction.member?.user;
   const userId = interactionUser?.id || null;
   const username = interactionUser?.username || "UnknownUser";
-  const displayName = rawInteraction.member?.displayName || interactionUser?.globalName || username;
+  const displayName =
+    rawInteraction.member?.displayName ||
+    interactionUser?.globalName ||
+    username;
   const guildId = rawInteraction.guildId || rawInteraction.guild?.id || null;
-  const channelId = rawInteraction.channelId || rawInteraction.channel?.id || null;
+  const channelId =
+    rawInteraction.channelId || rawInteraction.channel?.id || null;
 
   let subcommandName = null;
-  if (rawInteraction.options && typeof rawInteraction.options.getSubcommand === "function") {
+  if (
+    rawInteraction.options &&
+    typeof rawInteraction.options.getSubcommand === "function"
+  ) {
     try {
       subcommandName = rawInteraction.options.getSubcommand(false) || null;
     } catch {
@@ -105,7 +125,9 @@ function extractInteractionBoundary(rawInteraction) {
     }
   }
 
-  const selectedValues = Array.isArray(rawInteraction.values) ? Object.freeze([...rawInteraction.values]) : Object.freeze([]);
+  const selectedValues = Array.isArray(rawInteraction.values)
+    ? Object.freeze([...rawInteraction.values])
+    : Object.freeze([]);
 
   return Object.freeze({
     interactionId: rawInteraction.id,
@@ -132,10 +154,13 @@ function extractInteractionBoundary(rawInteraction) {
  */
 function ensureGuildContext(boundary) {
   if (!boundary || !boundary.isGuildContext) {
-    throw new ValidationError("Perintah ini hanya dapat dijalankan di dalam server Discord.", {
-      interactionId: boundary?.interactionId,
-      userId: boundary?.userId,
-    });
+    throw new ValidationError(
+      "Perintah ini hanya dapat dijalankan di dalam server Discord.",
+      {
+        interactionId: boundary?.interactionId,
+        userId: boundary?.userId,
+      },
+    );
   }
 }
 

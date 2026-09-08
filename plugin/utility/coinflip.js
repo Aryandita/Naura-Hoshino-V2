@@ -19,6 +19,7 @@ module.exports = {
       authorName: `${interaction.user.username} melempar koin...`,
       iconURL: interaction.user.displayAvatarURL(),
       description: `Dan hasilnya adalah... **${result}**!`,
+      bannerAttachmentName: imgUrl,
       footerText: ui.getFooter("core"),
     });
 

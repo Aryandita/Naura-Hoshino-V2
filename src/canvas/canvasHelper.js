@@ -1,20 +1,8 @@
 // Lokasi: src/utils/canvasHelper.js
 const fs = require("fs");
 const canvasRuntime = require("./canvasRuntime");
-const { logger } = require("../managers/logger");
 const axios = require("axios");
-const path = require("path");
 const ui = require("../config/ui");
-
-const UI_COLORS = {
-  background: "#0a0d14",
-  card: "#0c111c",
-  primary: "#00D9FF",
-  secondary: "#1a243d",
-  textMain: "#ffffff",
-  textSub: "#8e98b0",
-  gold: "#FFD700", // Tambahan warna VIP
-};
 
 const formatDur = (ms) => {
   if (!ms || isNaN(ms) || ms === 0) return "0 Menit";
@@ -26,60 +14,6 @@ const formatDur = (ms) => {
 
   if (hours > 0) return `${hours} J ${minutes} M`;
   return `${minutes} Menit`;
-};
-
-const drawCircularImage = (ctx, img, x, y, radius, borderColor) => {
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI * 2, true);
-  ctx.closePath();
-  ctx.clip();
-
-  ctx.fillStyle = UI_COLORS.card;
-  ctx.fill();
-  ctx.drawImage(img, x - radius, y - radius, radius * 2, radius * 2);
-
-  if (borderColor) {
-    ctx.beginPath();
-    ctx.arc(x, y, radius + 2, 0, Math.PI * 2, true);
-    ctx.strokeStyle = borderColor;
-    ctx.lineWidth = 4;
-    ctx.stroke();
-  }
-  ctx.restore();
-};
-
-const drawArcProgressBar = (
-  ctx,
-  x,
-  y,
-  radius,
-  current,
-  total,
-  color,
-  width,
-) => {
-  if (!total || total === 0 || total > 3600000000) return;
-  const percentage = Math.min(1, current / total);
-
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(-Math.PI / 2);
-
-  ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, Math.PI * 2, false);
-  ctx.strokeStyle = UI_COLORS.secondary;
-  ctx.lineWidth = width;
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, Math.PI * 2 * percentage, false);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = width;
-  ctx.lineCap = "round";
-  ctx.stroke();
-
-  ctx.restore();
 };
 
 const wrapText = (ctx, text, x, y, maxWidth, lineHeight, maxLines) => {

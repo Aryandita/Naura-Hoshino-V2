@@ -59,7 +59,10 @@ if (useClustering) {
     });
 
     cluster.on("error", (error) => {
-      logger.error(`[CLUSTERING] Cluster #${cluster.id} encountered an error:`, error);
+      logger.error(
+        `[CLUSTERING] Cluster #${cluster.id} encountered an error:`,
+        error,
+      );
     });
 
     cluster.on("death", (childProcess) => {
@@ -104,7 +107,10 @@ if (useClustering) {
     });
 
     shard.on("error", (error) => {
-      logger.error(`[SHARDING] Shard #${shard.id} encountered an error:`, error);
+      logger.error(
+        `[SHARDING] Shard #${shard.id} encountered an error:`,
+        error,
+      );
     });
 
     shard.on("death", (childProcess) => {

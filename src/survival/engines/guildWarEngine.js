@@ -1,8 +1,6 @@
 "use strict";
 
 const redisManager = require("../../managers/redisManager");
-const cacheManager = require("../../managers/cacheManager");
-const GuildClan = require("../../models/GuildClan");
 const { logger } = require("../../managers/logger");
 
 const WAR_STATE_KEY = "survival:clan_war:state";
@@ -41,6 +39,9 @@ class GuildWarEngine {
     { power = 100 } = {},
   ) {
     const warState = await this.getWarStatus();
+    if (warState.phase !== "ACTIVE") {
+      return { success: false, reason: "WAR_NOT_ACTIVE" };
+    }
     const damage = Math.floor(Math.random() * 50) + power;
 
     logger.info(

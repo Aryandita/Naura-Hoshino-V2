@@ -6,10 +6,14 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const BRAIN_DIR = "C:\\Users\\ACER\\.gemini\\antigravity-ide\\brain\\5776c327-3c05-4e45-a2b5-dd73cb941e91";
+const BRAIN_DIR =
+  "C:\\Users\\ACER\\.gemini\\antigravity-ide\\brain\\5776c327-3c05-4e45-a2b5-dd73cb941e91";
 const ASSETS_ITEMS_DIR = path.join(__dirname, "../assets/items");
 const ASSETS_IMAGES_DIR = path.join(__dirname, "../assets/images");
-const DASHBOARD_PUBLIC_ITEMS = path.join(__dirname, "../dashboard-v2/public/items");
+const DASHBOARD_PUBLIC_ITEMS = path.join(
+  __dirname,
+  "../dashboard-v2/public/items",
+);
 const DASHBOARD_DIST_ITEMS = path.join(__dirname, "../dashboard-v2/dist/items");
 
 const TARGET_DIRS = [
@@ -82,7 +86,7 @@ console.log("=== MENYALIN GAMBAR HASIL GENERATE KE ASSETS ===");
 
 for (const item of fileMap) {
   const matchingFile = brainFiles.find(
-    (f) => f.startsWith(item.prefix) && f.endsWith(".jpg")
+    (f) => f.startsWith(item.prefix) && f.endsWith(".jpg"),
   );
 
   if (matchingFile) {
@@ -91,9 +95,17 @@ for (const item of fileMap) {
     if (item.isItem) {
       // Salin ke assets/items, dashboard public items, dan dist items
       fs.copyFileSync(srcPath, path.join(ASSETS_ITEMS_DIR, item.targetName));
-      fs.copyFileSync(srcPath, path.join(DASHBOARD_PUBLIC_ITEMS, item.targetName));
-      fs.copyFileSync(srcPath, path.join(DASHBOARD_DIST_ITEMS, item.targetName));
-      console.log(`[OK] Disalin: ${item.targetName} -> assets/items/ & dashboard/items/`);
+      fs.copyFileSync(
+        srcPath,
+        path.join(DASHBOARD_PUBLIC_ITEMS, item.targetName),
+      );
+      fs.copyFileSync(
+        srcPath,
+        path.join(DASHBOARD_DIST_ITEMS, item.targetName),
+      );
+      console.log(
+        `[OK] Disalin: ${item.targetName} -> assets/items/ & dashboard/items/`,
+      );
     } else {
       // Salin ke assets/images
       fs.copyFileSync(srcPath, path.join(ASSETS_IMAGES_DIR, item.targetName));

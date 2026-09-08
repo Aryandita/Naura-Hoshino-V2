@@ -33,10 +33,6 @@ const RssManager = require("./src/managers/rssManager");
 const { connectToDatabase } = require("./src/managers/dbManager");
 const { seedInitialData } = require("./src/managers/dbSeeder");
 
-// Kode keluar khusus untuk konfigurasi yang tidak lengkap. shard.js membaca kode
-// ini dan mematikan respawn, sehingga tidak terjadi siklus lahir-mati tanpa henti.
-const EXIT_CODE_BAD_CONFIG = 78;
-
 // Batas waktu shutdown. Bila salah satu koneksi menggantung, proses tetap harus mati
 // sebelum panel mengirim SIGKILL dan membuang antrean tulis yang belum selesai.
 const SHUTDOWN_TIMEOUT_MS = 10_000;

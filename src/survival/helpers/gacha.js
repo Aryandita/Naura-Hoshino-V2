@@ -7,7 +7,7 @@ const {
 } = require("../../utils/NauraContainerBuilder");
 const ui = require("../../config/ui");
 const cacheManager = require("../../managers/cacheManager");
-const { BANNERS, getBannerPool } = require("../data/gachaBanners");
+const { getBannerPool } = require("../data/gachaBanners");
 const { addItemsAtomic } = require("../engines/inventoryHelper");
 
 // Helper function to pick item based on rate

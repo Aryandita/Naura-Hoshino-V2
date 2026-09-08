@@ -1,6 +1,6 @@
 "use strict";
 
-const { createCanvas, loadImage } = require("./canvasRuntime");
+const { createCanvas } = require("./canvasRuntime");
 
 /**
  * Render visual pertempuran kartu anime 900x500

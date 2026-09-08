@@ -14,7 +14,17 @@ const TIERS = Object.freeze({
 });
 
 // Helper pembangun item
-function makeItem({ id, name, description, price, category, tierKey, emoji, iconType, attributes = {} }) {
+function makeItem({
+  id,
+  name,
+  description,
+  price,
+  category,
+  tierKey,
+  emoji,
+  iconType,
+  attributes = {},
+}) {
   const tierInfo = TIERS[tierKey] || TIERS.COMMON;
   const sellPrice = Math.max(1, Math.floor(price * 0.5));
   return Object.freeze({
@@ -86,7 +96,8 @@ const WEAPONS = [
   makeItem({
     id: "copper_spear",
     name: "Tombak Tembaga",
-    description: "Tombak berujung tempaan tembaga untuk tusukan jarak menengah.",
+    description:
+      "Tombak berujung tempaan tembaga untuk tusukan jarak menengah.",
     price: 380,
     category: "weapon",
     tierKey: "COMMON",
@@ -110,7 +121,8 @@ const WEAPONS = [
   makeItem({
     id: "hunter_bow",
     name: "Busur Pemburu Liar",
-    description: "Tali busur elastis bertegangan tinggi untuk berburu monster rimba.",
+    description:
+      "Tali busur elastis bertegangan tinggi untuk berburu monster rimba.",
     price: 1350,
     category: "weapon",
     tierKey: "UNCOMMON",
@@ -156,7 +168,8 @@ const WEAPONS = [
   makeItem({
     id: "silver_rapier",
     name: "Rapier Perak Anggun",
-    description: "Pedang tusuk ramping berhulu perak murni pembasmi iblis malam.",
+    description:
+      "Pedang tusuk ramping berhulu perak murni pembasmi iblis malam.",
     price: 4500,
     category: "weapon",
     tierKey: "RARE",
@@ -178,7 +191,8 @@ const WEAPONS = [
   makeItem({
     id: "assassin_stiletto",
     name: "Stiletto Bayangan",
-    description: "Belati beracun tipis yang menembus celah pelindung zirah musuh.",
+    description:
+      "Belati beracun tipis yang menembus celah pelindung zirah musuh.",
     price: 4200,
     category: "weapon",
     tierKey: "RARE",
@@ -200,7 +214,8 @@ const WEAPONS = [
   makeItem({
     id: "silver_trident",
     name: "Trisula Perak Samudra",
-    description: "Trisula bermata tiga yang dipoles kristal mutiara laut dalam.",
+    description:
+      "Trisula bermata tiga yang dipoles kristal mutiara laut dalam.",
     price: 4900,
     category: "weapon",
     tierKey: "RARE",
@@ -213,7 +228,8 @@ const WEAPONS = [
   makeItem({
     id: "plasma_blade",
     name: "Pedang Sinar Plasma",
-    description: "Bilah energi neon bersuhu ribuan derajat pemotong baja tebal.",
+    description:
+      "Bilah energi neon bersuhu ribuan derajat pemotong baja tebal.",
     price: 15000,
     category: "weapon",
     tierKey: "EPIC",
@@ -224,7 +240,8 @@ const WEAPONS = [
   makeItem({
     id: "phantom_crossbow",
     name: "Crossbow Hantu Phantom",
-    description: "Busur silang berpeluru proyektil bayangan tanpa suara desingan.",
+    description:
+      "Busur silang berpeluru proyektil bayangan tanpa suara desingan.",
     price: 16500,
     category: "weapon",
     tierKey: "EPIC",
@@ -235,7 +252,8 @@ const WEAPONS = [
   makeItem({
     id: "shadow_katana",
     name: "Katana Malam Pekat",
-    description: "Pedang samurai legiun bayangan dengan tebasan membelah angin.",
+    description:
+      "Pedang samurai legiun bayangan dengan tebasan membelah angin.",
     price: 17500,
     category: "weapon",
     tierKey: "EPIC",
@@ -246,7 +264,8 @@ const WEAPONS = [
   makeItem({
     id: "archmage_rod",
     name: "Tongkat Agung Archmage",
-    description: "Pusaka penyihir agung yang memfokuskan resonansi mana kosmik.",
+    description:
+      "Pusaka penyihir agung yang memfokuskan resonansi mana kosmik.",
     price: 18000,
     category: "weapon",
     tierKey: "EPIC",
@@ -257,7 +276,8 @@ const WEAPONS = [
   makeItem({
     id: "thunder_glaive",
     name: "Glaive Badai Petir",
-    description: "Senjata bilah galah yang memercikkan listrik statis bertegangan mega-volt.",
+    description:
+      "Senjata bilah galah yang memercikkan listrik statis bertegangan mega-volt.",
     price: 16800,
     category: "weapon",
     tierKey: "EPIC",
@@ -270,7 +290,8 @@ const WEAPONS = [
   makeItem({
     id: "excalibur_neo",
     name: "Excalibur Neo-Hoshino",
-    description: "Pedang suci legendaris yang bersinar terang membelah kegelapan abadi.",
+    description:
+      "Pedang suci legendaris yang bersinar terang membelah kegelapan abadi.",
     price: 55000,
     category: "weapon",
     tierKey: "LEGENDARY",
@@ -292,7 +313,8 @@ const WEAPONS = [
   makeItem({
     id: "void_edge",
     name: "Belati Singularity Void",
-    description: "Bilah hitam pekat yang menyerap ruang dan waktu di sekitarnya.",
+    description:
+      "Bilah hitam pekat yang menyerap ruang dan waktu di sekitarnya.",
     price: 60000,
     category: "weapon",
     tierKey: "LEGENDARY",
@@ -327,7 +349,8 @@ const WEAPONS = [
   makeItem({
     id: "hoshino_starlight_blade",
     name: "Bilah Bintang Hoshino Astral",
-    description: "Pedang kosmik pamungkas yang ditempa langsung dari debu bintang surga.",
+    description:
+      "Pedang kosmik pamungkas yang ditempa langsung dari debu bintang surga.",
     price: 250000,
     category: "weapon",
     tierKey: "MYTHIC",
@@ -338,7 +361,8 @@ const WEAPONS = [
   makeItem({
     id: "celestial_bow",
     name: "Busur Konstelasi Zenith",
-    description: "Anak panahnya berupa untaian cahaya galaksi yang tak pernah meleset.",
+    description:
+      "Anak panahnya berupa untaian cahaya galaksi yang tak pernah meleset.",
     price: 260000,
     category: "weapon",
     tierKey: "MYTHIC",
@@ -349,7 +373,8 @@ const WEAPONS = [
   makeItem({
     id: "abyssal_reaper",
     name: "Sabit Kematian Neo-Abyss",
-    description: "Sabit penguasa jurang terdalam yang merenggut jiwa musuh dalam sekejap.",
+    description:
+      "Sabit penguasa jurang terdalam yang merenggut jiwa musuh dalam sekejap.",
     price: 275000,
     category: "weapon",
     tierKey: "MYTHIC",
@@ -360,7 +385,8 @@ const WEAPONS = [
   makeItem({
     id: "genesis_staff",
     name: "Tongkat Penciptaan Genesis",
-    description: "Pusaka primordial asal mula alam semesta dengan sihir tanpa batas.",
+    description:
+      "Pusaka primordial asal mula alam semesta dengan sihir tanpa batas.",
     price: 280000,
     category: "weapon",
     tierKey: "MYTHIC",
@@ -389,7 +415,8 @@ const ARMORS = [
   makeItem({
     id: "cloth_tunic",
     name: "Tunika Kain Tipis",
-    description: "Pakaian berbahan serat katun ringan untuk perlindungan dari debu.",
+    description:
+      "Pakaian berbahan serat katun ringan untuk perlindungan dari debu.",
     price: 200,
     category: "armor",
     tierKey: "COMMON",
@@ -400,7 +427,8 @@ const ARMORS = [
   makeItem({
     id: "leather_cap",
     name: "Topi Kulit Sederhana",
-    description: "Penutup kepala dari kulit binatang untuk menahan terik matahari.",
+    description:
+      "Penutup kepala dari kulit binatang untuk menahan terik matahari.",
     price: 180,
     category: "armor",
     tierKey: "COMMON",
@@ -422,7 +450,8 @@ const ARMORS = [
   makeItem({
     id: "wooden_buckler",
     name: "Perisai Kayu Bulat",
-    description: "Perisai kecil dari papan kayu tebal penangkis sabetan cakar liar.",
+    description:
+      "Perisai kecil dari papan kayu tebal penangkis sabetan cakar liar.",
     price: 250,
     category: "armor",
     tierKey: "COMMON",
@@ -433,7 +462,8 @@ const ARMORS = [
   makeItem({
     id: "linen_gloves",
     name: "Sarung Tangan Linen",
-    description: "Sarung tangan pelindung telapak tangan dari gesekan tali dan kayu.",
+    description:
+      "Sarung tangan pelindung telapak tangan dari gesekan tali dan kayu.",
     price: 150,
     category: "armor",
     tierKey: "COMMON",
@@ -446,7 +476,8 @@ const ARMORS = [
   makeItem({
     id: "iron_chestplate",
     name: "Baju Zirah Besi",
-    description: "Pelat besi kokoh penutup dada yang mampu menahan tusukan panah.",
+    description:
+      "Pelat besi kokoh penutup dada yang mampu menahan tusukan panah.",
     price: 1300,
     category: "armor",
     tierKey: "UNCOMMON",
@@ -457,7 +488,8 @@ const ARMORS = [
   makeItem({
     id: "iron_helmet",
     name: "Helm Pelindung Besi",
-    description: "Helm tempaan pandai besi dengan celah penglihatan horizontal.",
+    description:
+      "Helm tempaan pandai besi dengan celah penglihatan horizontal.",
     price: 950,
     category: "armor",
     tierKey: "UNCOMMON",
@@ -490,7 +522,8 @@ const ARMORS = [
   makeItem({
     id: "iron_gauntlets",
     name: "Sarung Tangan Besi Tempa",
-    description: "Pelindung jemari dan pergelangan tangan dari hantaman senjata musuh.",
+    description:
+      "Pelindung jemari dan pergelangan tangan dari hantaman senjata musuh.",
     price: 850,
     category: "armor",
     tierKey: "UNCOMMON",
@@ -514,7 +547,8 @@ const ARMORS = [
   makeItem({
     id: "reinforced_helm",
     name: "Helm Ksatria Bertanduk",
-    description: "Helm zirah baja berornamen tanduk simbol keberanian prajurit.",
+    description:
+      "Helm zirah baja berornamen tanduk simbol keberanian prajurit.",
     price: 3600,
     category: "armor",
     tierKey: "RARE",
@@ -536,7 +570,8 @@ const ARMORS = [
   makeItem({
     id: "tower_shield",
     name: "Perisai Menara Paladin",
-    description: "Perisai setinggi tubuh yang melindungi penggunanya dari hujan panah.",
+    description:
+      "Perisai setinggi tubuh yang melindungi penggunanya dari hujan panah.",
     price: 4200,
     category: "armor",
     tierKey: "RARE",
@@ -547,7 +582,8 @@ const ARMORS = [
   makeItem({
     id: "steel_bracers",
     name: "Bracers Baja Bertatah Batu",
-    description: "Pelindung lengan berukir relief magis peningkat daya cengkeram.",
+    description:
+      "Pelindung lengan berukir relief magis peningkat daya cengkeram.",
     price: 3200,
     category: "armor",
     tierKey: "RARE",
@@ -560,7 +596,8 @@ const ARMORS = [
   makeItem({
     id: "cyber_kinetic_armor",
     name: "Zirah Kinetik Cyber-Mesh",
-    description: "Baju zirah berteknologi serat nano yang menyerap energi kinetik benturan.",
+    description:
+      "Baju zirah berteknologi serat nano yang menyerap energi kinetik benturan.",
     price: 17000,
     category: "armor",
     tierKey: "EPIC",
@@ -571,7 +608,8 @@ const ARMORS = [
   makeItem({
     id: "plasma_visor",
     name: "Visor Taktis Plasma Neon",
-    description: "Helm futuristik dengan HUD cerdas pendeteksi titik lemah musuh.",
+    description:
+      "Helm futuristik dengan HUD cerdas pendeteksi titik lemah musuh.",
     price: 14500,
     category: "armor",
     tierKey: "EPIC",
@@ -582,7 +620,8 @@ const ARMORS = [
   makeItem({
     id: "stealth_treads",
     name: "Sepatu Gravitasi Tanpa Jejak",
-    description: "Sepatu bertenaga medan anti-gravitasi peredam suara langkah kaki.",
+    description:
+      "Sepatu bertenaga medan anti-gravitasi peredam suara langkah kaki.",
     price: 13800,
     category: "armor",
     tierKey: "EPIC",
@@ -593,7 +632,8 @@ const ARMORS = [
   makeItem({
     id: "force_barrier_shield",
     name: "Perisai Medan Pelindung Force",
-    description: "Perisai hologram yang memancarkan dinding gaya pertahanan padat.",
+    description:
+      "Perisai hologram yang memancarkan dinding gaya pertahanan padat.",
     price: 16000,
     category: "armor",
     tierKey: "EPIC",
@@ -604,7 +644,8 @@ const ARMORS = [
   makeItem({
     id: "nano_mesh_gloves",
     name: "Sarung Tangan Serat Nano",
-    description: "Sarung tangan sintetis berdaya regang tinggi pemancar pulsa kejutan.",
+    description:
+      "Sarung tangan sintetis berdaya regang tinggi pemancar pulsa kejutan.",
     price: 13000,
     category: "armor",
     tierKey: "EPIC",
@@ -617,7 +658,8 @@ const ARMORS = [
   makeItem({
     id: "aegis_of_radiance",
     name: "Zirah Emas Kemuliaan Aegis",
-    description: "Baju zirah keemasan yang memancarkan aura suci pelumpuh kegelapan.",
+    description:
+      "Baju zirah keemasan yang memancarkan aura suci pelumpuh kegelapan.",
     price: 65000,
     category: "armor",
     tierKey: "LEGENDARY",
@@ -628,7 +670,8 @@ const ARMORS = [
   makeItem({
     id: "crown_of_valiance",
     name: "Mahkota Keberanian Raja Purba",
-    description: "Mahkota emas permata merah simbol kegigihan pemimpin tanpa gentar.",
+    description:
+      "Mahkota emas permata merah simbol kegigihan pemimpin tanpa gentar.",
     price: 52000,
     category: "armor",
     tierKey: "LEGENDARY",
@@ -639,7 +682,8 @@ const ARMORS = [
   makeItem({
     id: "boots_of_hermes",
     name: "Sepatu Bersayap Hermes",
-    description: "Sepatu magis bersayap emas yang memungkinkan pemakainya melayang di atas bahaya.",
+    description:
+      "Sepatu magis bersayap emas yang memungkinkan pemakainya melayang di atas bahaya.",
     price: 49000,
     category: "armor",
     tierKey: "LEGENDARY",
@@ -650,7 +694,8 @@ const ARMORS = [
   makeItem({
     id: "dragonscale_shield",
     name: "Perisai Sisik Naga Merah",
-    description: "Perisai dari sisik naga legendaris yang kebal terhadap semburan api neraka.",
+    description:
+      "Perisai dari sisik naga legendaris yang kebal terhadap semburan api neraka.",
     price: 58000,
     category: "armor",
     tierKey: "LEGENDARY",
@@ -661,7 +706,8 @@ const ARMORS = [
   makeItem({
     id: "gauntlets_of_might",
     name: "Sarung Tangan Titan Perkasa",
-    description: "Pelindung tangan raksasa yang melipatgandakan kekuatan fisik pemakainya.",
+    description:
+      "Pelindung tangan raksasa yang melipatgandakan kekuatan fisik pemakainya.",
     price: 48000,
     category: "armor",
     tierKey: "LEGENDARY",
@@ -674,18 +720,25 @@ const ARMORS = [
   makeItem({
     id: "hoshino_astral_ward",
     name: "Jubah Astral Pelindung Hoshino",
-    description: "Kain zirah tenunan nebula galaksi yang meregenerasi vitalitas secara instan.",
+    description:
+      "Kain zirah tenunan nebula galaksi yang meregenerasi vitalitas secara instan.",
     price: 260000,
     category: "armor",
     tierKey: "MYTHIC",
     emoji: "🌌",
     iconType: "chest_mythic",
-    attributes: { defense: 280, max_hp: 900, auto_hp_regen: 50, all_resist: 0.4 },
+    attributes: {
+      defense: 280,
+      max_hp: 900,
+      auto_hp_regen: 50,
+      all_resist: 0.4,
+    },
   }),
   makeItem({
     id: "celestial_diadem",
     name: "Diadem Nirwana Celestial",
-    description: "Tiara cahaya abadi yang menganugerahkan kewaskitaan masa depan.",
+    description:
+      "Tiara cahaya abadi yang menganugerahkan kewaskitaan masa depan.",
     price: 240000,
     category: "armor",
     tierKey: "MYTHIC",
@@ -696,7 +749,8 @@ const ARMORS = [
   makeItem({
     id: "void_walker_greaves",
     name: "Greaves Penjelajah Dimensi Void",
-    description: "Pelindung kaki berongga dimensi yang dapat berteleportasi dari serangan fatal.",
+    description:
+      "Pelindung kaki berongga dimensi yang dapat berteleportasi dari serangan fatal.",
     price: 235000,
     category: "armor",
     tierKey: "MYTHIC",
@@ -707,7 +761,8 @@ const ARMORS = [
   makeItem({
     id: "nebula_prism_guard",
     name: "Aegis Prisma Nebula Kosmis",
-    description: "Perisai cermin prisma yang memantulkan 50% damage musuh kembali ke asalnya.",
+    description:
+      "Perisai cermin prisma yang memantulkan 50% damage musuh kembali ke asalnya.",
     price: 270000,
     category: "armor",
     tierKey: "MYTHIC",
@@ -747,7 +802,8 @@ const TOOLS = [
   makeItem({
     id: "wooden_pickaxe",
     name: "Beliung Kayu (Lv. 1)",
-    description: "Beliung sederhana untuk memecah batu kerikil dan batubara permukaan.",
+    description:
+      "Beliung sederhana untuk memecah batu kerikil dan batubara permukaan.",
     price: 800,
     category: "tool",
     tierKey: "COMMON",
@@ -758,7 +814,8 @@ const TOOLS = [
   makeItem({
     id: "fishing_rod",
     name: "Alat Pancing Bambu (Lv. 1)",
-    description: "Pancing bambu ringan untuk menangkap ikan kecil di tepi dermaga.",
+    description:
+      "Pancing bambu ringan untuk menangkap ikan kecil di tepi dermaga.",
     price: 1500,
     category: "tool",
     tierKey: "COMMON",
@@ -815,7 +872,8 @@ const TOOLS = [
   makeItem({
     id: "fiber_fishing_rod",
     name: "Pancing Serat Kuat (Lv. 2)",
-    description: "Pancing dengan senar serat nilon yang sanggup menahan ikan besar.",
+    description:
+      "Pancing dengan senar serat nilon yang sanggup menahan ikan besar.",
     price: 3500,
     category: "tool",
     tierKey: "UNCOMMON",
@@ -837,7 +895,8 @@ const TOOLS = [
   makeItem({
     id: "iron_sickle",
     name: "Sabit Panen Besi",
-    description: "Sabit bergerigi halus untuk melipatgandakan kecepatan panen kebun.",
+    description:
+      "Sabit bergerigi halus untuk melipatgandakan kecepatan panen kebun.",
     price: 1700,
     category: "tool",
     tierKey: "UNCOMMON",
@@ -850,7 +909,8 @@ const TOOLS = [
   makeItem({
     id: "steel_axe",
     name: "Kapak Baja Bertuah (Lv. 3)",
-    description: "Kapak baja tempered dengan bobot seimbang pemotong kayu purba.",
+    description:
+      "Kapak baja tempered dengan bobot seimbang pemotong kayu purba.",
     price: 6500,
     category: "tool",
     tierKey: "RARE",
@@ -872,7 +932,8 @@ const TOOLS = [
   makeItem({
     id: "carbon_fishing_rod",
     name: "Pancing Karbon Presisi (Lv. 3)",
-    description: "Joran berstruktur serat karbon sensitif untuk mendeteksi tarikan ikan langka.",
+    description:
+      "Joran berstruktur serat karbon sensitif untuk mendeteksi tarikan ikan langka.",
     price: 7500,
     category: "tool",
     tierKey: "RARE",
@@ -883,7 +944,8 @@ const TOOLS = [
   makeItem({
     id: "trench_shovel",
     name: "Sekop Parit Taktis",
-    description: "Sekop berdaya gali tinggi yang mampu mengangkat tanah liat keras.",
+    description:
+      "Sekop berdaya gali tinggi yang mampu mengangkat tanah liat keras.",
     price: 5000,
     category: "tool",
     tierKey: "RARE",
@@ -894,7 +956,8 @@ const TOOLS = [
   makeItem({
     id: "harvest_scythe",
     name: "Scythe Pemanen Gandum Emas",
-    description: "Sabit panjang gagang ganda pembersih satu petak ladang dalam satu ayunan.",
+    description:
+      "Sabit panjang gagang ganda pembersih satu petak ladang dalam satu ayunan.",
     price: 5500,
     category: "tool",
     tierKey: "RARE",
@@ -907,7 +970,8 @@ const TOOLS = [
   makeItem({
     id: "laser_cutter_axe",
     name: "Kapak Pemotong Laser Plasma",
-    description: "Alat penebang berenergi termal yang langsung mematangkan serat kayu.",
+    description:
+      "Alat penebang berenergi termal yang langsung mematangkan serat kayu.",
     price: 22000,
     category: "tool",
     tierKey: "EPIC",
@@ -918,7 +982,8 @@ const TOOLS = [
   makeItem({
     id: "sonic_resonator_pickaxe",
     name: "Beliung Resonansi Sonik",
-    description: "Beliung pemancar gelombang frekuensi tinggi peretak urat tambang dalam sekejap.",
+    description:
+      "Beliung pemancar gelombang frekuensi tinggi peretak urat tambang dalam sekejap.",
     price: 22000,
     category: "tool",
     tierKey: "EPIC",
@@ -929,7 +994,8 @@ const TOOLS = [
   makeItem({
     id: "titanium_deep_rod",
     name: "Joran Titanium Palung Laut",
-    description: "Pancing berdaya tahan tekanan tinggi untuk memancing di Midnight Trench.",
+    description:
+      "Pancing berdaya tahan tekanan tinggi untuk memancing di Midnight Trench.",
     price: 24000,
     category: "tool",
     tierKey: "EPIC",
@@ -951,7 +1017,8 @@ const TOOLS = [
   makeItem({
     id: "plasma_reaper",
     name: "Sabit Reaper Energi Panen",
-    description: "Alat panen otomatis pemetik sari tumbuhan tanpa merusak akarnya.",
+    description:
+      "Alat panen otomatis pemetik sari tumbuhan tanpa merusak akarnya.",
     price: 20000,
     category: "tool",
     tierKey: "EPIC",
@@ -964,7 +1031,8 @@ const TOOLS = [
   makeItem({
     id: "volcanic_fire_axe",
     name: "Kapak Magma Vulkanik (Lv. 5)",
-    description: "Kapak berisi inti lava yang mengubah kayu tebangan menjadi arang berkilau.",
+    description:
+      "Kapak berisi inti lava yang mengubah kayu tebangan menjadi arang berkilau.",
     price: 75000,
     category: "tool",
     tierKey: "LEGENDARY",
@@ -975,7 +1043,8 @@ const TOOLS = [
   makeItem({
     id: "meteor_strike_pickaxe",
     name: "Beliung Hantaman Meteorit",
-    description: "Beliung dari pecahan meteor yang mengekstraksi permata tersembunyi.",
+    description:
+      "Beliung dari pecahan meteor yang mengekstraksi permata tersembunyi.",
     price: 75000,
     category: "tool",
     tierKey: "LEGENDARY",
@@ -986,7 +1055,8 @@ const TOOLS = [
   makeItem({
     id: "abyssal_lure_rod",
     name: "Pancing Umpan Lumina Abisal",
-    description: "Joran yang memancarkan pendar bioluminesensi penarik monster laut mitos.",
+    description:
+      "Joran yang memancarkan pendar bioluminesensi penarik monster laut mitos.",
     price: 80000,
     category: "tool",
     tierKey: "LEGENDARY",
@@ -1008,7 +1078,8 @@ const TOOLS = [
   makeItem({
     id: "golden_harvest_blade",
     name: "Sabit Kemakmuran Dewi Ceres",
-    description: "Pusaka panen yang melipatgandakan hasil kebun menjadi 3 kali lipat.",
+    description:
+      "Pusaka panen yang melipatgandakan hasil kebun menjadi 3 kali lipat.",
     price: 72000,
     category: "tool",
     tierKey: "LEGENDARY",
@@ -1021,18 +1092,24 @@ const TOOLS = [
   makeItem({
     id: "hoshino_cosmic_cleaver",
     name: "Kapak Kosmik Hoshino Astral",
-    description: "Pusaka penebang pohon berdaya cipta yang menumbuhkan tunas baru seketika.",
+    description:
+      "Pusaka penebang pohon berdaya cipta yang menumbuhkan tunas baru seketika.",
     price: 280000,
     category: "tool",
     tierKey: "MYTHIC",
     emoji: "🪓",
     iconType: "axe_mythic",
-    attributes: { upgrade_level: 6, base_efficiency: 300, infinite_durability: true },
+    attributes: {
+      upgrade_level: 6,
+      base_efficiency: 300,
+      infinite_durability: true,
+    },
   }),
   makeItem({
     id: "celestial_void_pickaxe",
     name: "Beliung Galaksi Celestial Void",
-    description: "Beliung yang menambang mineral menembus lipatan ruang dimensi.",
+    description:
+      "Beliung yang menambang mineral menembus lipatan ruang dimensi.",
     price: 280000,
     category: "tool",
     tierKey: "MYTHIC",
@@ -1043,18 +1120,24 @@ const TOOLS = [
   makeItem({
     id: "starlight_oceanic_rod",
     name: "Joran Samudra Cahaya Bintang",
-    description: "Pancing suci yang mampu menjaring leviathan kuno dari palung laut terdalam.",
+    description:
+      "Pancing suci yang mampu menjaring leviathan kuno dari palung laut terdalam.",
     price: 290000,
     category: "tool",
     tierKey: "MYTHIC",
     emoji: "✨",
     iconType: "rod_mythic",
-    attributes: { upgrade_level: 6, base_efficiency: 300, mythic_catch_rate: 0.5 },
+    attributes: {
+      upgrade_level: 6,
+      base_efficiency: 300,
+      mythic_catch_rate: 0.5,
+    },
   }),
   makeItem({
     id: "quantum_core_extractor",
     name: "Ekstraktor Partikel Kuantum",
-    description: "Alat pengurai molekul tanah penghasil bahan baku murni seketika.",
+    description:
+      "Alat pengurai molekul tanah penghasil bahan baku murni seketika.",
     price: 270000,
     category: "tool",
     tierKey: "MYTHIC",
@@ -1065,7 +1148,8 @@ const TOOLS = [
   makeItem({
     id: "chrono_harvester",
     name: "Sabit Percepatan Waktu Chrono",
-    description: "Alat panen yang memajukan siklus pertumbuhan tanaman seketika.",
+    description:
+      "Alat panen yang memajukan siklus pertumbuhan tanaman seketika.",
     price: 285000,
     category: "tool",
     tierKey: "MYTHIC",
@@ -1083,7 +1167,8 @@ const CONSUMABLES = [
   makeItem({
     id: "apple",
     name: "Apel Segar Hutan",
-    description: "Buah manis berair dari hutan. Mengisi +15 Lapar dan +5 Stamina.",
+    description:
+      "Buah manis berair dari hutan. Mengisi +15 Lapar dan +5 Stamina.",
     price: 150,
     category: "consumable",
     tierKey: "COMMON",
@@ -1094,7 +1179,8 @@ const CONSUMABLES = [
   makeItem({
     id: "bread",
     name: "Roti Gandum Hangat",
-    description: "Roti padat yang baru matang dari perapian. Mengisi +25 Lapar.",
+    description:
+      "Roti padat yang baru matang dari perapian. Mengisi +25 Lapar.",
     price: 200,
     category: "consumable",
     tierKey: "COMMON",
@@ -1105,7 +1191,8 @@ const CONSUMABLES = [
   makeItem({
     id: "water",
     name: "Air Mata Air Bersih",
-    description: "Air pegunungan dingin penghilang dahaga. Mengisi +20 Stamina.",
+    description:
+      "Air pegunungan dingin penghilang dahaga. Mengisi +20 Stamina.",
     price: 100,
     category: "consumable",
     tierKey: "COMMON",
@@ -1116,7 +1203,8 @@ const CONSUMABLES = [
   makeItem({
     id: "cooked_fish",
     name: "Ikan Bakar Rempah",
-    description: "Ikan segar panggang dengan taburan garam laut. Mengisi +30 Lapar.",
+    description:
+      "Ikan segar panggang dengan taburan garam laut. Mengisi +30 Lapar.",
     price: 350,
     category: "consumable",
     tierKey: "COMMON",
@@ -1127,7 +1215,8 @@ const CONSUMABLES = [
   makeItem({
     id: "berry",
     name: "Buah Liar Liar",
-    description: "Segenggam beri hutan manis asam untuk camilan penambah energi.",
+    description:
+      "Segenggam beri hutan manis asam untuk camilan penambah energi.",
     price: 120,
     category: "consumable",
     tierKey: "COMMON",
@@ -1162,7 +1251,8 @@ const CONSUMABLES = [
   makeItem({
     id: "cyber_ramen",
     name: "Cyber Neon Ramen",
-    description: "Ramen kuah kaldu kental gurih dengan irisan daging tebal. +15% XP Profesi.",
+    description:
+      "Ramen kuah kaldu kental gurih dengan irisan daging tebal. +15% XP Profesi.",
     price: 950,
     category: "consumable",
     tierKey: "UNCOMMON",
@@ -1173,7 +1263,8 @@ const CONSUMABLES = [
   makeItem({
     id: "honey_toast",
     name: "Roti Panggang Madu Liar",
-    description: "Roti renyah dengan lelehan madu lebah hutan. Memulihkan vitalitas.",
+    description:
+      "Roti renyah dengan lelehan madu lebah hutan. Memulihkan vitalitas.",
     price: 850,
     category: "consumable",
     tierKey: "UNCOMMON",
@@ -1208,7 +1299,8 @@ const CONSUMABLES = [
   makeItem({
     id: "vitality_brew",
     name: "Tonik Vitalitas Prima",
-    description: "Ramuan yang menyegarkan kembali seluruh stamina (+120 Stamina).",
+    description:
+      "Ramuan yang menyegarkan kembali seluruh stamina (+120 Stamina).",
     price: 3000,
     category: "consumable",
     tierKey: "RARE",
@@ -1219,18 +1311,22 @@ const CONSUMABLES = [
   makeItem({
     id: "sakura_latte",
     name: "Sakura Blossom Latte",
-    description: "Kopi susu kelopak sakura hutan Neo-Hoshino. +10% Drop Tiket Dungeon.",
+    description:
+      "Kopi susu kelopak sakura hutan Neo-Hoshino. +10% Drop Tiket Dungeon.",
     price: 3500,
     category: "consumable",
     tierKey: "RARE",
     emoji: "🌸",
     iconType: "latte",
-    attributes: { effects: { hunger: 50, stamina: 70, buff: "DUNGEON_PASS_DROP" } },
+    attributes: {
+      effects: { hunger: 50, stamina: 70, buff: "DUNGEON_PASS_DROP" },
+    },
   }),
   makeItem({
     id: "smoked_abyssal_fillet",
     name: "Fillet Ikan Laut Dalam Asap",
-    description: "Olahan ikan Midnight Trench yang memperkuat daya tahan tubuh.",
+    description:
+      "Olahan ikan Midnight Trench yang memperkuat daya tahan tubuh.",
     price: 3800,
     category: "consumable",
     tierKey: "RARE",
@@ -1241,7 +1337,8 @@ const CONSUMABLES = [
   makeItem({
     id: "mana_tonic",
     name: "Tonik Pemurni Mana",
-    description: "Cairan kristal biru yang memulihkan cadangan sihir petualang.",
+    description:
+      "Cairan kristal biru yang memulihkan cadangan sihir petualang.",
     price: 3400,
     category: "consumable",
     tierKey: "RARE",
@@ -1254,7 +1351,8 @@ const CONSUMABLES = [
   makeItem({
     id: "healing_potion_large",
     name: "Ramuan Pemulih Super",
-    description: "Konsentrat sari bunga abadi yang memulihkan +300 HP seketika.",
+    description:
+      "Konsentrat sari bunga abadi yang memulihkan +300 HP seketika.",
     price: 12000,
     category: "consumable",
     tierKey: "EPIC",
@@ -1265,7 +1363,8 @@ const CONSUMABLES = [
   makeItem({
     id: "phoenix_elixir",
     name: "Eliksir Sayap Phoenix",
-    description: "Cairan berkilau bulu phoenix yang menyembuhkan seluruh luka bakar dan racun.",
+    description:
+      "Cairan berkilau bulu phoenix yang menyembuhkan seluruh luka bakar dan racun.",
     price: 14000,
     category: "consumable",
     tierKey: "EPIC",
@@ -1276,18 +1375,22 @@ const CONSUMABLES = [
   makeItem({
     id: "starlight_boba",
     name: "Electric Starlight Boba",
-    description: "Minuman boba bercahaya neon pemulih tenaga penuh. +10% Fragment Yield.",
+    description:
+      "Minuman boba bercahaya neon pemulih tenaga penuh. +10% Fragment Yield.",
     price: 13500,
     category: "consumable",
     tierKey: "EPIC",
     emoji: "🧋",
     iconType: "boba",
-    attributes: { effects: { hunger: 100, stamina: 150, buff: "FRAGMENT_YIELD" } },
+    attributes: {
+      effects: { hunger: 100, stamina: 150, buff: "FRAGMENT_YIELD" },
+    },
   }),
   makeItem({
     id: "abyssal_seafood_platter",
     name: "Hidangan Laut Palung Misterius",
-    description: "Sajian kuliner laut dalam penambah +25% Attack Power di Dungeon.",
+    description:
+      "Sajian kuliner laut dalam penambah +25% Attack Power di Dungeon.",
     price: 15000,
     category: "consumable",
     tierKey: "EPIC",
@@ -1298,7 +1401,8 @@ const CONSUMABLES = [
   makeItem({
     id: "overdrive_serum",
     name: "Serum Stimulan Overdrive",
-    description: "Serum sintetis yang melipatgandakan kecepatan gerak dan serang selama 10 menit.",
+    description:
+      "Serum sintetis yang melipatgandakan kecepatan gerak dan serang selama 10 menit.",
     price: 16000,
     category: "consumable",
     tierKey: "EPIC",
@@ -1311,7 +1415,8 @@ const CONSUMABLES = [
   makeItem({
     id: "ambrosia_nectar",
     name: "Nektar Ambrosia Olympus",
-    description: "Cairan dewa-dewi yang memulihkan HP dan Stamina hingga 100% penuh.",
+    description:
+      "Cairan dewa-dewi yang memulihkan HP dan Stamina hingga 100% penuh.",
     price: 45000,
     category: "consumable",
     tierKey: "LEGENDARY",
@@ -1322,7 +1427,8 @@ const CONSUMABLES = [
   makeItem({
     id: "golden_apple_deluxe",
     name: "Apel Emas Murni Deluxe",
-    description: "Apel berlapis emas murni dengan berkah pertahanan absolut selama 30 menit.",
+    description:
+      "Apel berlapis emas murni dengan berkah pertahanan absolut selama 30 menit.",
     price: 48000,
     category: "consumable",
     tierKey: "LEGENDARY",
@@ -1333,7 +1439,8 @@ const CONSUMABLES = [
   makeItem({
     id: "dragon_blood_elixir",
     name: "Eliksir Darah Naga Kuno",
-    description: "Meminumnya menyulut kobaran api naga di urat nadi (+50% Serangan Tempur).",
+    description:
+      "Meminumnya menyulut kobaran api naga di urat nadi (+50% Serangan Tempur).",
     price: 52000,
     category: "consumable",
     tierKey: "LEGENDARY",
@@ -1344,7 +1451,8 @@ const CONSUMABLES = [
   makeItem({
     id: "celestial_feast",
     name: "Pesta Kuliner Perjamuan Surga",
-    description: "Santapan perjamuan agung yang mencegah kematian 1x (Auto-Revive) saat tumbang.",
+    description:
+      "Santapan perjamuan agung yang mencegah kematian 1x (Auto-Revive) saat tumbang.",
     price: 55000,
     category: "consumable",
     tierKey: "LEGENDARY",
@@ -1355,7 +1463,8 @@ const CONSUMABLES = [
   makeItem({
     id: "time_warp_potion",
     name: "Ramuan Pemutar Waktu Chronos",
-    description: "Memutar kembali cooldown seluruh skill dan aktivitas tanpa jeda.",
+    description:
+      "Memutar kembali cooldown seluruh skill dan aktivitas tanpa jeda.",
     price: 50000,
     category: "consumable",
     tierKey: "LEGENDARY",
@@ -1368,7 +1477,8 @@ const CONSUMABLES = [
   makeItem({
     id: "elixir_of_immortality",
     name: "Eliksir Keabadian Tirta Nirwana",
-    description: "Tetesan ramuan legenda penciptaan yang menganugerahkan daya hidup abadi.",
+    description:
+      "Tetesan ramuan legenda penciptaan yang menganugerahkan daya hidup abadi.",
     price: 240000,
     category: "consumable",
     tierKey: "MYTHIC",
@@ -1379,7 +1489,8 @@ const CONSUMABLES = [
   makeItem({
     id: "hoshino_stardust_confection",
     name: "Manisan Bintang Hoshino",
-    description: "Gula-gula manis bercahaya merah muda yang dibuat langsung oleh Naura. Mengembalikan 100% vitalitas.",
+    description:
+      "Gula-gula manis bercahaya merah muda yang dibuat langsung oleh Naura. Mengembalikan 100% vitalitas.",
     price: 250000,
     category: "consumable",
     tierKey: "MYTHIC",
@@ -1390,7 +1501,8 @@ const CONSUMABLES = [
   makeItem({
     id: "astral_miracle_broth",
     name: "Sup Mukjizat Kosmis Galaksi",
-    description: "Kuah berkilau jutaan konstelasi yang memberikan berkah imunitas status negatif.",
+    description:
+      "Kuah berkilau jutaan konstelasi yang memberikan berkah imunitas status negatif.",
     price: 260000,
     category: "consumable",
     tierKey: "MYTHIC",
@@ -1401,7 +1513,8 @@ const CONSUMABLES = [
   makeItem({
     id: "primordial_dew",
     name: "Embun Purba Pohon Yggdrasil",
-    description: "Satu tetes embun asal kehidupan yang membangkitkan kembali stamina tanpa batas.",
+    description:
+      "Satu tetes embun asal kehidupan yang membangkitkan kembali stamina tanpa batas.",
     price: 245000,
     category: "consumable",
     tierKey: "MYTHIC",
@@ -1412,7 +1525,8 @@ const CONSUMABLES = [
   makeItem({
     id: "chrono_revival_tincture",
     name: "Tinktur Kebangkitan Sang Pengelana",
-    description: "Obat cair misterius yang menjamin keselamatan total saat ekspedisi The Neo-Abyss.",
+    description:
+      "Obat cair misterius yang menjamin keselamatan total saat ekspedisi The Neo-Abyss.",
     price: 255000,
     category: "consumable",
     tierKey: "MYTHIC",
@@ -1430,7 +1544,8 @@ const MATERIALS = [
   makeItem({
     id: "wood",
     name: "Kayu Gelondongan",
-    description: "Kayu mentah dari pohon hutan. Bahan dasar perkakas dan bangunan.",
+    description:
+      "Kayu mentah dari pohon hutan. Bahan dasar perkakas dan bangunan.",
     price: 50,
     category: "material",
     tierKey: "COMMON",
@@ -1450,7 +1565,8 @@ const MATERIALS = [
   makeItem({
     id: "copper_ore",
     name: "Bijih Tembaga",
-    description: "Batuan mineral berkilau kemerahan untuk peleburan ingot dasar.",
+    description:
+      "Batuan mineral berkilau kemerahan untuk peleburan ingot dasar.",
     price: 80,
     category: "material",
     tierKey: "COMMON",
@@ -1460,7 +1576,8 @@ const MATERIALS = [
   makeItem({
     id: "fiber",
     name: "Serat Tumbuhan Liar",
-    description: "Untaian serat alami yang dapat dipilin menjadi tali dan kain.",
+    description:
+      "Untaian serat alami yang dapat dipilin menjadi tali dan kain.",
     price: 40,
     category: "material",
     tierKey: "COMMON",
@@ -1482,7 +1599,8 @@ const MATERIALS = [
   makeItem({
     id: "iron_ore",
     name: "Bijih Besi Murni",
-    description: "Mineral logam hitam pekat bahan baku pembuatan senjata dan zirah.",
+    description:
+      "Mineral logam hitam pekat bahan baku pembuatan senjata dan zirah.",
     price: 200,
     category: "material",
     tierKey: "UNCOMMON",
@@ -1492,7 +1610,8 @@ const MATERIALS = [
   makeItem({
     id: "coal",
     name: "Batubara Padat",
-    description: "Bahan bakar perapian tungku peleburan logam dengan panas stabil.",
+    description:
+      "Bahan bakar perapian tungku peleburan logam dengan panas stabil.",
     price: 150,
     category: "material",
     tierKey: "UNCOMMON",
@@ -1502,7 +1621,8 @@ const MATERIALS = [
   makeItem({
     id: "leather",
     name: "Kulit Hewan Olahan",
-    description: "Kulit samak elastis untuk pelapis pegangan senjata dan baju zirah.",
+    description:
+      "Kulit samak elastis untuk pelapis pegangan senjata dan baju zirah.",
     price: 250,
     category: "material",
     tierKey: "UNCOMMON",
@@ -1512,7 +1632,8 @@ const MATERIALS = [
   makeItem({
     id: "refined_wood",
     name: "Papan Kayu Halus",
-    description: "Kayu olahan yang sudah diserut rapi untuk mebel dan gagang perkakas.",
+    description:
+      "Kayu olahan yang sudah diserut rapi untuk mebel dan gagang perkakas.",
     price: 180,
     category: "material",
     tierKey: "UNCOMMON",
@@ -1534,7 +1655,8 @@ const MATERIALS = [
   makeItem({
     id: "silver_ore",
     name: "Bijih Perak Mengilap",
-    description: "Logam mulia konduktor sihir bahan pembuatan senjata anti-iblis.",
+    description:
+      "Logam mulia konduktor sihir bahan pembuatan senjata anti-iblis.",
     price: 800,
     category: "material",
     tierKey: "RARE",
@@ -1544,7 +1666,8 @@ const MATERIALS = [
   makeItem({
     id: "steel_ingot",
     name: "Batang Baja Berkualitas",
-    description: "Paduan besi dan karbon yang ditempa berulang kali tanpa retak.",
+    description:
+      "Paduan besi dan karbon yang ditempa berulang kali tanpa retak.",
     price: 1100,
     category: "material",
     tierKey: "RARE",
@@ -1554,7 +1677,8 @@ const MATERIALS = [
   makeItem({
     id: "topaz",
     name: "Permata Topaz Kuning",
-    description: "Kristal mineral alami berhawa hangat penyimpan daya listrik alam.",
+    description:
+      "Kristal mineral alami berhawa hangat penyimpan daya listrik alam.",
     price: 1500,
     category: "material",
     tierKey: "RARE",
@@ -1564,7 +1688,8 @@ const MATERIALS = [
   makeItem({
     id: "hardened_leather",
     name: "Kulit Badak Diperkeras",
-    description: "Kulit binatang buas yang direbus minyak khusus hingga sekeras baja.",
+    description:
+      "Kulit binatang buas yang direbus minyak khusus hingga sekeras baja.",
     price: 950,
     category: "material",
     tierKey: "RARE",
@@ -1574,7 +1699,8 @@ const MATERIALS = [
   makeItem({
     id: "obsidian",
     name: "Kaca Vulkanik Obsidian",
-    description: "Batu hitam mengilap hasil pembekuan lava cair yang sangat tajam.",
+    description:
+      "Batu hitam mengilap hasil pembekuan lava cair yang sangat tajam.",
     price: 1300,
     category: "material",
     tierKey: "RARE",
@@ -1586,7 +1712,8 @@ const MATERIALS = [
   makeItem({
     id: "plasma_core",
     name: "Inti Plasma Mikro-Fusi",
-    description: "Kapsul energi bertegangan tinggi untuk menggerakkan mesin senjata canggih.",
+    description:
+      "Kapsul energi bertegangan tinggi untuk menggerakkan mesin senjata canggih.",
     price: 5500,
     category: "material",
     tierKey: "EPIC",
@@ -1596,7 +1723,8 @@ const MATERIALS = [
   makeItem({
     id: "titanium_ore",
     name: "Bijih Titanium Palung Laut",
-    description: "Logam ultraringan berdaya tahan luar biasa dari dasar samudra.",
+    description:
+      "Logam ultraringan berdaya tahan luar biasa dari dasar samudra.",
     price: 4800,
     category: "material",
     tierKey: "EPIC",
@@ -1616,7 +1744,8 @@ const MATERIALS = [
   makeItem({
     id: "abyssal_spores",
     name: "Spora Hayati Neo-Abyss",
-    description: "Partikel biologis bercahaya ungu dari jurang dalam untuk mutasi tanaman.",
+    description:
+      "Partikel biologis bercahaya ungu dari jurang dalam untuk mutasi tanaman.",
     price: 5200,
     category: "material",
     tierKey: "EPIC",
@@ -1626,7 +1755,8 @@ const MATERIALS = [
   makeItem({
     id: "nano_fiber",
     name: "Anyaman Serat Karbon Nano",
-    description: "Kain sintetis buatan lab militer yang tahan peluru dan sayatan pisau.",
+    description:
+      "Kain sintetis buatan lab militer yang tahan peluru dan sayatan pisau.",
     price: 4500,
     category: "material",
     tierKey: "EPIC",
@@ -1638,7 +1768,8 @@ const MATERIALS = [
   makeItem({
     id: "meteor_fragment",
     name: "Serpihan Meteorit Bintang Jatuh",
-    description: "Pecahan batu antariksa yang memancarkan radiasi gravitasi stabil.",
+    description:
+      "Pecahan batu antariksa yang memancarkan radiasi gravitasi stabil.",
     price: 22000,
     category: "material",
     tierKey: "LEGENDARY",
@@ -1648,7 +1779,8 @@ const MATERIALS = [
   makeItem({
     id: "dragon_scale",
     name: "Sisik Naga Zamrud Purba",
-    description: "Sisik naga purba yang tahan terhadap panas magma dan gigitan es beku.",
+    description:
+      "Sisik naga purba yang tahan terhadap panas magma dan gigitan es beku.",
     price: 25000,
     category: "material",
     tierKey: "LEGENDARY",
@@ -1668,7 +1800,8 @@ const MATERIALS = [
   makeItem({
     id: "celestial_essence",
     name: "Esensi Cahaya Nirwana",
-    description: "Cahaya suci yang dipadatkan menjadi embun kristal pembawa kedamaian.",
+    description:
+      "Cahaya suci yang dipadatkan menjadi embun kristal pembawa kedamaian.",
     price: 26000,
     category: "material",
     tierKey: "LEGENDARY",
@@ -1678,7 +1811,8 @@ const MATERIALS = [
   makeItem({
     id: "dark_matter_nugget",
     name: "Gumpalan Materi Gelap",
-    description: "Massa padat misterius pembengkok gravitasi dan garis pandang.",
+    description:
+      "Massa padat misterius pembengkok gravitasi dan garis pandang.",
     price: 24000,
     category: "material",
     tierKey: "LEGENDARY",
@@ -1690,7 +1824,8 @@ const MATERIALS = [
   makeItem({
     id: "hoshino_star_core",
     name: "Inti Bintang Hoshino Asli",
-    description: "Kristal jantung galaksi bercahaya merah muda ciptaan Dewi Naura.",
+    description:
+      "Kristal jantung galaksi bercahaya merah muda ciptaan Dewi Naura.",
     price: 120000,
     category: "material",
     tierKey: "MYTHIC",
@@ -1700,7 +1835,8 @@ const MATERIALS = [
   makeItem({
     id: "void_singularity_pearl",
     name: "Mutiara Singularitas Void",
-    description: "Mutiara hitam pekat berputar abadi yang menampung pusaran lubang hitam.",
+    description:
+      "Mutiara hitam pekat berputar abadi yang menampung pusaran lubang hitam.",
     price: 115000,
     category: "material",
     tierKey: "MYTHIC",
@@ -1710,7 +1846,8 @@ const MATERIALS = [
   makeItem({
     id: "cosmic_ether",
     name: "Eter Kosmis Penenun Galaksi",
-    description: "Substansi tak berwujud pembentuk jalinan ruang dan waktu semesta.",
+    description:
+      "Substansi tak berwujud pembentuk jalinan ruang dan waktu semesta.",
     price: 125000,
     category: "material",
     tierKey: "MYTHIC",
@@ -1720,7 +1857,8 @@ const MATERIALS = [
   makeItem({
     id: "primordial_aetherium",
     name: "Logam Hidup Aetherium Murni",
-    description: "Logam cair bercahaya emas yang berdetak seperti jantung makhluk hidup.",
+    description:
+      "Logam cair bercahaya emas yang berdetak seperti jantung makhluk hidup.",
     price: 130000,
     category: "material",
     tierKey: "MYTHIC",
@@ -1730,7 +1868,8 @@ const MATERIALS = [
   makeItem({
     id: "chronos_crystal",
     name: "Kristal Penghenti Waktu Chronos",
-    description: "Kristal waktu yang membekukan aliran detik dan menit di sekitarnya.",
+    description:
+      "Kristal waktu yang membekukan aliran detik dan menit di sekitarnya.",
     price: 128000,
     category: "material",
     tierKey: "MYTHIC",

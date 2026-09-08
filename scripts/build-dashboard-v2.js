@@ -89,8 +89,12 @@ function main() {
         stdio: "inherit",
       });
     } catch (err) {
-      console.warn(`[BUILD-V2] Peringatan: Build dashboard gagal (${err.message}).`);
-      console.warn("[BUILD-V2] Melanjutkan startup bot (dashboard akan fallback ke src/pages)...");
+      console.warn(
+        `[BUILD-V2] Peringatan: Build dashboard gagal (${err.message}).`,
+      );
+      console.warn(
+        "[BUILD-V2] Melanjutkan startup bot (dashboard akan fallback ke src/pages)...",
+      );
     }
     return;
   }
@@ -123,13 +127,21 @@ function main() {
   });
 
   // 4. Pastikan dist/index.html tersedia untuk root routing di preview dan server statis
-  const distSrcIndex = path.join(dashboardDir, "dist", "src", "pages", "index.html");
+  const distSrcIndex = path.join(
+    dashboardDir,
+    "dist",
+    "src",
+    "pages",
+    "index.html",
+  );
   const distRootIndex = path.join(dashboardDir, "dist", "index.html");
   if (fs.existsSync(distSrcIndex)) {
     fs.copyFileSync(distSrcIndex, distRootIndex);
   }
 
-  console.log(`[BUILD-V2] dist tersalin ke ${path.join(dashboardDir, "dist")} (termasuk root index.html)`);
+  console.log(
+    `[BUILD-V2] dist tersalin ke ${path.join(dashboardDir, "dist")} (termasuk root index.html)`,
+  );
 }
 
 main();

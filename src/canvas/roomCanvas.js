@@ -1,5 +1,5 @@
 const path = require("path");
-const { createCanvas, loadImage, runWithLimit } = require("./canvasRuntime");
+const { createCanvas, loadImage } = require("./canvasRuntime");
 
 function drawRoundedRect(
   ctx,
@@ -216,7 +216,15 @@ async function renderRoomCanvas(roomData, user, pet = null) {
     // Shadow under Naura
     ctx.save();
     ctx.beginPath();
-    ctx.ellipse(nauraX + nauraW / 2, nauraY + nauraH - 6, 26, 10, 0, 0, Math.PI * 2);
+    ctx.ellipse(
+      nauraX + nauraW / 2,
+      nauraY + nauraH - 6,
+      26,
+      10,
+      0,
+      0,
+      Math.PI * 2,
+    );
     ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
     ctx.fill();
     ctx.drawImage(nauraImg, nauraX, nauraY, nauraW, nauraH);

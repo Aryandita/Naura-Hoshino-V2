@@ -9,11 +9,9 @@ const {
   AttachmentBuilder,
   MessageFlags,
 } = require("discord.js");
-const UserProfile = require("../../src/models/UserProfile");
 const UserFriend = require("../../src/models/UserFriend");
 const { Op } = require("sequelize");
 const ui = require("../../src/config/ui");
-const { NauraEmbedBuilder } = require("../../src/utils/NauraEmbedBuilder");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const { createCanvas, loadImage } = require("../../src/canvas/canvasRuntime");
 

@@ -48,7 +48,11 @@ class FishAudioService {
    */
   _getCacheKey(text, voiceId = "", format = "mp3") {
     const raw = `${text.trim()}|${voiceId}|${format}`;
-    const hash = crypto.createHash("sha256").update(raw).digest("hex").slice(0, 32);
+    const hash = crypto
+      .createHash("sha256")
+      .update(raw)
+      .digest("hex")
+      .slice(0, 32);
     return `fish_audio:${hash}`;
   }
 
@@ -63,7 +67,9 @@ class FishAudioService {
    */
   async generateSpeech(text, options = {}) {
     if (!this.isConfigured()) {
-      logger.debug("[FishAudio] API Key belum dikonfigurasi di .env (FISH_AUDIO_API_KEY).");
+      logger.debug(
+        "[FishAudio] API Key belum dikonfigurasi di .env (FISH_AUDIO_API_KEY).",
+      );
       return null;
     }
 
@@ -81,7 +87,9 @@ class FishAudioService {
       if (redisManager.isReady && redisManager.client) {
         const cachedBase64 = await redisManager.client.get(cacheKey);
         if (cachedBase64) {
-          logger.debug(`[FishAudio] Cache hit untuk: "${cleanText.slice(0, 30)}..."`);
+          logger.debug(
+            `[FishAudio] Cache hit untuk: "${cleanText.slice(0, 30)}..."`,
+          );
           return Buffer.from(cachedBase64, "base64");
         }
       }
@@ -94,27 +102,31 @@ class FishAudioService {
       const payload = {
         text: cleanText,
         format: format,
-        latency: options.latency || "balanced"
+        latency: options.latency || "balanced",
       };
 
       if (voiceId) {
         payload.reference_id = voiceId;
       }
 
-      logger.info(`[FishAudio] Membuat speech: "${cleanText.slice(0, 40)}..." (Voice: ${voiceId || "default"})`);
+      logger.info(
+        `[FishAudio] Membuat speech: "${cleanText.slice(0, 40)}..." (Voice: ${voiceId || "default"})`,
+      );
 
       const response = await fetch(`${API_BASE}/v1/tts`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${env.FISH_AUDIO_API_KEY}`,
-          "Content-Type": "application/json"
+          Authorization: `Bearer ${env.FISH_AUDIO_API_KEY}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const errBody = await response.text().catch(() => "");
-        logger.error(`[FishAudio] API Error HTTP ${response.status}: ${errBody}`);
+        logger.error(
+          `[FishAudio] API Error HTTP ${response.status}: ${errBody}`,
+        );
         return null;
       }
 
@@ -123,13 +135,23 @@ class FishAudioService {
 
       // 3. Simpan ke cache Redis
       try {
-        if (redisManager.isReady && redisManager.client && audioBuffer.length > 0) {
-          await redisManager.client.set(cacheKey, audioBuffer.toString("base64"), {
-            EX: CACHE_TTL_SECONDS
-          });
+        if (
+          redisManager.isReady &&
+          redisManager.client &&
+          audioBuffer.length > 0
+        ) {
+          await redisManager.client.set(
+            cacheKey,
+            audioBuffer.toString("base64"),
+            {
+              EX: CACHE_TTL_SECONDS,
+            },
+          );
         }
       } catch (cacheErr) {
-        logger.warn(`[FishAudio] Gagal menyimpan ke cache Redis: ${cacheErr.message}`);
+        logger.warn(
+          `[FishAudio] Gagal menyimpan ke cache Redis: ${cacheErr.message}`,
+        );
       }
 
       return audioBuffer;
@@ -151,11 +173,16 @@ class FishAudioService {
 
     try {
       const ext = options.format || "mp3";
-      const tempPath = path.join(this.tempDir, `tts_${Date.now()}_${crypto.randomBytes(4).toString("hex")}.${ext}`);
+      const tempPath = path.join(
+        this.tempDir,
+        `tts_${Date.now()}_${crypto.randomBytes(4).toString("hex")}.${ext}`,
+      );
       fs.writeFileSync(tempPath, audioBuffer);
       return tempPath;
     } catch (err) {
-      logger.error(`[FishAudio] Gagal menyimpan file sementara: ${err.message}`);
+      logger.error(
+        `[FishAudio] Gagal menyimpan file sementara: ${err.message}`,
+      );
       return null;
     }
   }
@@ -171,7 +198,9 @@ class FishAudioService {
 
     try {
       const formData = new globalThis.FormData();
-      const blob = new globalThis.Blob([audioSampleBuffer], { type: "audio/wav" });
+      const blob = new globalThis.Blob([audioSampleBuffer], {
+        type: "audio/wav",
+      });
       formData.append("type", "tts");
       formData.append("title", title);
       formData.append("visibility", "private");
@@ -180,23 +209,29 @@ class FishAudioService {
       const res = await fetch(`${API_BASE}/model`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${env.FISH_AUDIO_API_KEY}`
+          Authorization: `Bearer ${env.FISH_AUDIO_API_KEY}`,
         },
-        body: formData
+        body: formData,
       });
 
       if (!res.ok) {
         const errText = await res.text();
-        logger.error(`[FishAudio] Gagal membuat voice clone: HTTP ${res.status} - ${errText}`);
+        logger.error(
+          `[FishAudio] Gagal membuat voice clone: HTTP ${res.status} - ${errText}`,
+        );
         return null;
       }
 
       const json = await res.json();
       const modelId = json._id || json.id;
-      logger.info(`✨ [FishAudio] Berhasil membuat Voice Clone model ID: ${modelId}`);
+      logger.info(
+        `✨ [FishAudio] Berhasil membuat Voice Clone model ID: ${modelId}`,
+      );
       return modelId;
     } catch (err) {
-      logger.error(`[FishAudio] Eksepsi saat membuat voice clone: ${err.message}`);
+      logger.error(
+        `[FishAudio] Eksepsi saat membuat voice clone: ${err.message}`,
+      );
       return null;
     }
   }

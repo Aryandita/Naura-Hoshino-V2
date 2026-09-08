@@ -1,11 +1,4 @@
-const {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  ComponentType,
-} = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
 const ui = require("../../src/config/ui");
 
 const words = [

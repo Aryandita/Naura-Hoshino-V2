@@ -368,15 +368,35 @@ module.exports = {
           const codeVal = current.code;
           let biomeBuff;
           if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(codeVal)) {
-            biomeBuff = { name: "🌧️ Efek Biome RPG (Hujan)", value: "• 🎣 Memancing: **+25% Peluang Ikan Langka**\n• ⚡ Konsumsi Stamina: **-10%**" };
+            biomeBuff = {
+              name: "🌧️ Efek Biome RPG (Hujan)",
+              value:
+                "• 🎣 Memancing: **+25% Peluang Ikan Langka**\n• ⚡ Konsumsi Stamina: **-10%**",
+            };
           } else if ([71, 73, 75, 85, 86].includes(codeVal)) {
-            biomeBuff = { name: "❄️ Efek Biome RPG (Salju)", value: "• 🛡️ Defensif Dungeon: **+15% Armor**\n• 🧊 Kecepatan Gerak: -5%" };
+            biomeBuff = {
+              name: "❄️ Efek Biome RPG (Salju)",
+              value:
+                "• 🛡️ Defensif Dungeon: **+15% Armor**\n• 🧊 Kecepatan Gerak: -5%",
+            };
           } else if ([95, 96, 99].includes(codeVal)) {
-            biomeBuff = { name: "⚡ Efek Biome RPG (Badai Petir)", value: "• ⛏️ Tambang: **+30% Rare Ore Drop**\n• ⚔️ Bahaya Monster: **Monster Lebih Agresif (+10% ATK)**" };
+            biomeBuff = {
+              name: "⚡ Efek Biome RPG (Badai Petir)",
+              value:
+                "• ⛏️ Tambang: **+30% Rare Ore Drop**\n• ⚔️ Bahaya Monster: **Monster Lebih Agresif (+10% ATK)**",
+            };
           } else if ([0, 1].includes(codeVal)) {
-            biomeBuff = { name: "☀️ Efek Biome RPG (Cerah)", value: "• 🌾 Panen Ladang: **+20% Hasil Panen**\n• 📜 Quest EXP: **+15% Bonus EXP**" };
+            biomeBuff = {
+              name: "☀️ Efek Biome RPG (Cerah)",
+              value:
+                "• 🌾 Panen Ladang: **+20% Hasil Panen**\n• 📜 Quest EXP: **+15% Bonus EXP**",
+            };
           } else {
-            biomeBuff = { name: "⛅ Efek Biome RPG (Sejuk)", value: "• 🚶 Perjalanan Travel: **Waktu tempuh normal**\n• 💖 Regenerasi HP: **+5 HP / menit**" };
+            biomeBuff = {
+              name: "⛅ Efek Biome RPG (Sejuk)",
+              value:
+                "• 🚶 Perjalanan Travel: **Waktu tempuh normal**\n• 💖 Regenerasi HP: **+5 HP / menit**",
+            };
           }
           fields.push(biomeBuff);
 
@@ -482,7 +502,11 @@ module.exports = {
   },
 
   async autocomplete(interaction) {
-    const { choice, safeRespond, fuzzyFilter } = require("../../src/utils/autocompleteHelper");
+    const {
+      choice,
+      safeRespond,
+      fuzzyFilter,
+    } = require("../../src/utils/autocompleteHelper");
     const focusedValue = interaction.options.getFocused().toLowerCase();
 
     const popularCities = [
@@ -517,4 +541,3 @@ module.exports = {
     return safeRespond(interaction, fuzzyFilter(choices, focusedValue, 25));
   },
 };
-

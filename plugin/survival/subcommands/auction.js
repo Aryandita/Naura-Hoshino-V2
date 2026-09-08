@@ -1,16 +1,10 @@
 "use strict";
 
-const {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  MessageFlags,
-} = require("discord.js");
+const { MessageFlags } = require("discord.js");
 const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
-const UserSurvival = require("../../../src/models/UserSurvival");
 const MarketAuction = require("../../../src/models/MarketAuction");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
@@ -19,10 +13,13 @@ const {
   takeItemsAtomic,
   addItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
-const RateLimiter = require('../../../src/utils/rateLimiter');
-const { Op } = require('sequelize');
-const { choice, safeRespond, fuzzyFilter } = require('../../../src/utils/autocompleteHelper');
-
+const RateLimiter = require("../../../src/utils/rateLimiter");
+const { Op } = require("sequelize");
+const {
+  choice,
+  safeRespond,
+  fuzzyFilter,
+} = require("../../../src/utils/autocompleteHelper");
 
 // Helper random ID generator if nanoId is not available
 function generateAuctionId() {
@@ -44,38 +41,37 @@ function hidden(payload) {
 module.exports = {
   async autocomplete(interaction) {
     const focusedOption = interaction.options.getFocused(true);
-    const action = interaction.options.getString('action');
+    const action = interaction.options.getString("action");
     if (!action) return safeRespond(interaction, []);
 
-    if (focusedOption.name === 'target') {
+    if (focusedOption.name === "target") {
       const focusedValue = focusedOption.value.toLowerCase();
 
-      if (action === 'sell') {
+      if (action === "sell") {
         // Tampilkan item dari inventory user
         const profile = await cacheManager.getUserProfile(interaction.user.id);
         const inventory = safeParseInventory(profile.inventory);
 
         const available = inventory.map((item) =>
-          choice(
-            `${item.name} (Jumlah: ${item.amount || 1})`,
-            item.id,
-          )
+          choice(`${item.name} (Jumlah: ${item.amount || 1})`, item.id),
         );
 
-        return safeRespond(interaction, fuzzyFilter(available, focusedValue, 25));
-
-      } else if (action === 'bid' || action === 'claim') {
+        return safeRespond(
+          interaction,
+          fuzzyFilter(available, focusedValue, 25),
+        );
+      } else if (action === "bid" || action === "claim") {
         // Tampilkan active auction IDs agar user bisa pilih langsung
         try {
           const auctions = await MarketAuction.findAll({
-            where: { status: 'active', expiresAt: { [Op.gt]: new Date() } },
-            order: [['expiresAt', 'ASC']],
+            where: { status: "active", expiresAt: { [Op.gt]: new Date() } },
+            order: [["expiresAt", "ASC"]],
             limit: 25,
           });
 
           if (auctions.length === 0) {
             return safeRespond(interaction, [
-              choice('❌ Tidak ada lelang aktif saat ini', 'none'),
+              choice("❌ Tidak ada lelang aktif saat ini", "none"),
             ]);
           }
 
@@ -84,15 +80,18 @@ module.exports = {
               0,
               Math.ceil((new Date(auc.expiresAt) - Date.now()) / 60000),
             );
-            const timeLabel = timeLeft > 60
-              ? `${Math.ceil(timeLeft / 60)}j`
-              : `${timeLeft}m`;
-            const label = `[${auc.auctionId}] ${auc.itemName || auc.itemId} - ` +
-              `${auc.currentBid || auc.startingPrice} ${auc.currency === 'nsf' ? 'NSF' : 'Koin'} (${timeLabel} lagi)`;
+            const timeLabel =
+              timeLeft > 60 ? `${Math.ceil(timeLeft / 60)}j` : `${timeLeft}m`;
+            const label =
+              `[${auc.auctionId}] ${auc.itemName || auc.itemId} - ` +
+              `${auc.currentBid || auc.startingPrice} ${auc.currency === "nsf" ? "NSF" : "Koin"} (${timeLabel} lagi)`;
             return choice(label, auc.auctionId);
           });
 
-          return safeRespond(interaction, fuzzyFilter(auctionChoices, focusedValue, 25));
+          return safeRespond(
+            interaction,
+            fuzzyFilter(auctionChoices, focusedValue, 25),
+          );
         } catch (_e) {
           return safeRespond(interaction, []);
         }
@@ -101,7 +100,6 @@ module.exports = {
 
     return safeRespond(interaction, []);
   },
-
 
   async execute(interaction) {
     // Survival.js already deferred the reply.
@@ -202,7 +200,6 @@ async function handleSell(interaction) {
   }
 
   // Deduct item safely
-  const profile = await cacheManager.getUserProfile(userId);
   const success = await takeItemsAtomic(userId, [{ id: targetId, amount }]);
 
   if (!success) {
@@ -318,9 +315,6 @@ async function handleBid(interaction) {
       ),
     );
   }
-
-  const currencyField =
-    auction.currency === "nsf" ? "starFragments" : "economy_wallet";
 
   // Deduct from buyer
   let debitSuccess = false;

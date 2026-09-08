@@ -28,7 +28,7 @@ module.exports = async function handleReputation(message, client, ctx) {
       await redisManager.setCache(cooldownKey, true, 60);
 
       const addedTo = [];
-      for (const [id, user] of mentionedUsers) {
+      for (const [id] of mentionedUsers) {
         // Increment reputation
         await cacheManager.incrementUserProfile(id, { reputation: 1 });
         addedTo.push(`<@${id}>`);

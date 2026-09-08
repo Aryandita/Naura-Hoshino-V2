@@ -1,8 +1,6 @@
 "use strict";
 
 const { ChannelType, PermissionFlagsBits } = require("discord.js");
-const GuildSettings = require("../models/GuildSettings");
-const cacheManager = require("../managers/cacheManager");
 const { logger } = require("../managers/logger");
 
 const PRESETS = {

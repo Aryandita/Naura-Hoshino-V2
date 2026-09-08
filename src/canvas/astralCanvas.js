@@ -1,6 +1,6 @@
 "use strict";
 
-const { createCanvas, loadImage } = require("@napi-rs/canvas");
+const { createCanvas, loadImage } = require("./canvasRuntime");
 
 function drawRoundedRect(
   ctx,

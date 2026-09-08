@@ -64,6 +64,7 @@ module.exports = {
         accentColorHex: ui.getColor("primary") || "#ff9ff3",
         title: "🎭 Anime Roleplay",
         description: `**${interaction.user.username}** ${actionText} **${target.username}**!`,
+        bannerAttachmentName: data?.url,
         footerText: ui.getFooter("core"),
       });
 

@@ -5,49 +5,68 @@ const { logger } = require("../managers/logger");
 const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
 const ui = require("../config/ui");
 
+const SNOWFLAKE_REGEX = /^\d{17,20}$/;
+const e = (name, fallback = "") => ui.getEmoji(name) || fallback;
+
 const DEFAULT_PREFS = {
   stamina_full: true,
   daily_streak: true,
   stock_alert: true,
   idle_revenue: true,
   vote_reminder: true,
+  quest_reset: true,
+  event_news: true,
 };
 
 const NOTIFICATION_TEMPLATES = {
   stamina_full: {
-    title: "⚡ Stamina Survival Telah Pulih!",
+    title: `${ui.getEmoji("stamina") || "⚡"} Stamina Survival Telah Pulih!`,
     accentColor: "#38BDF8",
     expression: "cheer",
     renderMessage: (data, displayName) =>
       `Halo Kak **${displayName}**! Stamina energimu saat ini telah pulih penuh (**100/100**). Kamu sudah siap kembali menjelajah Dungeon, Menebang, atau Memancing!`,
   },
   daily_streak: {
-    title: "🔥 Pengingat Daily Streak Naura",
+    title: `${ui.getEmoji("fire") || "🔥"} Pengingat Daily Streak Naura`,
     accentColor: "#F59E0B",
     expression: "wink",
     renderMessage: (data, displayName) =>
       `Halo Kak **${displayName}**! Jangan lupa untuk mengklaim hadiah harianmu hari ini dengan command \`/daily\` agar streak keberuntunganmu tetap terjaga!`,
   },
   stock_alert: {
-    title: "📈 Peringatan Pasar Saham $NRA",
+    title: `${ui.getEmoji("chart") || "📈"} Peringatan Pasar Saham $NRA`,
     accentColor: "#10B981",
     expression: "happy",
     renderMessage: (data, displayName) =>
       `Halo Kak **${displayName}**! Terjadi pergerakan harga signifikan pada pasar saham **${data.symbol || "$NRA"}** (Harga saat ini: **${data.price || "0"} NC**). Cek portofoliomu dengan \`/stock portfolio\`!`,
   },
   idle_revenue: {
-    title: "🎪 Pendapatan Pasif Siap Diklaim!",
+    title: `${ui.getEmoji("cafe") || "🎪"} Pendapatan Pasif Siap Diklaim!`,
     accentColor: "#EC4899",
     expression: "love",
     renderMessage: (data, displayName) =>
       `Halo Kak **${displayName}**! Vivarium Akuarium dan Kafemu telah menghasilkan pendapatan pasif sebesar **+${data.amount || "0"} Naura Coins**. Gunakan \`/survival cafe claim\` untuk mencairkannya!`,
   },
   vote_reminder: {
-    title: "🗳️ Waktunya Vote & Klaim VIP Trial!",
+    title: `${ui.getEmoji("topgg") || "🗳️"} Waktunya Vote & Klaim VIP Trial!`,
     accentColor: "#FFD700",
     expression: "cheer",
     renderMessage: (data, displayName) =>
       `Halo Kak **${displayName}**! Cooldown voting Top.gg kamu telah selesai. Berikan dukunganmu sekarang dengan \`/vote\` dan dapatkan **Trial V.I.P 12 Jam** instan!`,
+  },
+  quest_reset: {
+    title: `${ui.getEmoji("desc") || "📜"} Quest Harian RPG Direset!`,
+    accentColor: "#38BDF8",
+    expression: "happy",
+    renderMessage: (data, displayName) =>
+      `Halo Kak **${displayName}**! Misi Harian (Daily Quest) RPG kamu sudah diperbarui. Yuk cek \`/survival rpg quest\` dan kumpulkan hadiahnya hari ini!`,
+  },
+  event_news: {
+    title: `${ui.getEmoji("star") || "🌟"} Berita Event Spesial Naura`,
+    accentColor: "#A855F7",
+    expression: "cheer",
+    renderMessage: (data, displayName) =>
+      `Halo Kak **${displayName}**! ${data.message || "Ada event spesial baru yang sedang berlangsung di server! Yuk cek sekarang sebelum berakhir~"}`,
   },
 };
 
@@ -84,7 +103,7 @@ async function setUserPreference(userId, key, enabled) {
     userId,
     "notification_prefs",
     (prefs) => {
-      const obj = prefs && typeof prefs === "object" ? prefs : {};
+      const obj = prefs && typeof prefs === "object" ? prefs : { ...DEFAULT_PREFS };
       obj[key] = Boolean(enabled);
       return obj;
     },
@@ -94,49 +113,119 @@ async function setUserPreference(userId, key, enabled) {
 }
 
 /**
- * Kirim notifikasi cerdas via DM ke pengguna.
- * @param {object} client - Discord Client
- * @param {string} userId - ID Pengguna Discord
- * @param {string} type - Tipe notifikasi ('stamina_full' | 'daily_streak' | 'stock_alert' | 'idle_revenue' | 'vote_reminder')
- * @param {object} [data] - Data payload tambahan
+ * Memastikan user sudah autorisasi DM. Jika belum, kirim pesan perkenalan terlebih dahulu.
  */
-async function sendDirectNotification(client, userId, type, data = {}) {
-  const template = NOTIFICATION_TEMPLATES[type];
-  if (!template) {
-    logger.warn(`[NotificationCenter] Template "${type}" tidak dikenali.`);
-    return false;
-  }
+async function ensureDmAuthorized(client, userId, profile) {
+  if (!userId || !SNOWFLAKE_REGEX.test(String(userId))) return false;
+  if (!client || !client.users) return false;
 
-  // Periksa apakah user mengaktifkan notifikasi tipe ini
-  const prefs = await getUserPreferences(userId);
-  if (!prefs[type]) {
-    return false;
-  }
+  const prefs = (profile && profile.notification_prefs) || {
+    dm_authorized: false,
+    ...DEFAULT_PREFS,
+  };
+
+  if (prefs.dm_authorized) return true;
 
   try {
     const user = await client.users.fetch(userId);
     if (!user) return false;
 
-    const displayName = user.displayName || user.username || "Kakak";
-    const description = template.renderMessage(data, displayName);
-
-    const payload = buildContainerV2({
-      accentColorHex: template.accentColor,
-      title: template.title,
-      description: `${description}\n\n-# *Kamu bisa mengatur preferensi notifikasi DM kapan saja dengan command \`/notifications\`.*`,
-      expression: template.expression,
+    const welcomePayload = buildContainerV2({
+      accentColorHex: ui.getColor("primary") || "#FFB6C1",
+      title: `${e("core", "🌸")} Layanan Notifikasi Pintar Naura`,
+      description: [
+        `Halo Kak **${user.displayName || user.username}**! ${e("naura_happy", "✨")}`,
+        "Naura akan mengirimkan pembaruan penting langsung ke DM kamu untuk:",
+        `${e("stamina", "⚡")} **Stamina RPG Penuh** (Jangan sampai energimu terbuang!)`,
+        `${e("desc", "📜")} **Quest Reset** (Misi harian baru setiap jam 00:00 WIB)`,
+        `${e("fire", "🔥")} **Daily Streak** (Pertahankan streak harianmu)`,
+        `${e("chart", "📈")} **Pasar Saham** (Alert pergerakan harga saham)`,
+        `${e("cafe", "🎪")} **Kafe & Vivarium** (Pendapatan pasif yang siap diambil)`,
+        `${e("clock", "⏰")} **Custom Reminder** (Pengingat waktu yang kamu jadwalkan)`,
+        "",
+        `> ${e("info", "ℹ️")} **PENTING:** Jika kamu ingin menonaktifkan notifikasi ini, kamu **TIDAK PERLU** menandai sebagai spam. Cukup atur kapan saja lewat command \`/notifications\` di server.`,
+        "",
+        `Terima kasih sudah berpetualang bersama Naura! ${e("naura_blowkiss", "💖")}`,
+      ].join("\n"),
+      expression: "happy",
       footerText: ui.getFooter("utility"),
     });
 
+    await user.send(welcomePayload);
+
+    await cacheManager.mutateUserProfileJson(
+      userId,
+      "notification_prefs",
+      (cur) => {
+        const obj = cur && typeof cur === "object" ? cur : { ...DEFAULT_PREFS };
+        obj.dm_authorized = true;
+        return obj;
+      },
+    );
+
+    return true;
+  } catch (err) {
+    logger.error(
+      `[NotificationCenter] Gagal mengirim pesan autorisasi ke user ${userId}:`,
+      err.message,
+    );
+    return false;
+  }
+}
+
+/**
+ * Kirim notifikasi cerdas via DM ke pengguna.
+ * @param {object} client - Discord Client
+ * @param {string} userId - ID Pengguna Discord
+ * @param {string} type - Tipe notifikasi
+ * @param {object} [dataOrPayload] - Objek data untuk template ATAU payload siap kirim
+ */
+async function sendDirectNotification(client, userId, type, dataOrPayload = {}) {
+  if (!userId || !SNOWFLAKE_REGEX.test(String(userId))) return false;
+  if (!client || !client.users) return false;
+
+  try {
+    const profile = await cacheManager.getUserProfile(userId);
+    const prefs = await getUserPreferences(userId);
+
+    // Cek apakah user mensubscribe notifikasi tipe ini (selain custom reminder)
+    if (type !== "custom_reminder" && !prefs[type]) return false;
+
+    // Pastikan autorisasi DM
+    const authorized = await ensureDmAuthorized(client, userId, profile);
+    if (!authorized) return false;
+
+    const user = await client.users.fetch(userId);
+    if (!user) return false;
+
+    let payload;
+    if (dataOrPayload.components || dataOrPayload.content || dataOrPayload.embeds) {
+      payload = dataOrPayload;
+    } else {
+      const template = NOTIFICATION_TEMPLATES[type];
+      if (!template) {
+        logger.warn(`[NotificationCenter] Template "${type}" tidak dikenali.`);
+        return false;
+      }
+      const displayName = user.displayName || user.username || "Kakak";
+      const description = template.renderMessage(dataOrPayload, displayName);
+      payload = buildContainerV2({
+        accentColorHex: template.accentColor,
+        title: template.title,
+        description: `${description}\n\n-# *Kamu bisa mengatur preferensi notifikasi DM kapan saja dengan command \`/notifications\`.*`,
+        expression: template.expression,
+        footerText: ui.getFooter("utility"),
+      });
+    }
+
     await user.send(payload);
     logger.info(
-      `[NotificationCenter] DM ${type} berhasil dikirim ke ${user.tag} (${userId}).`,
+      `[NotificationCenter] DM ${type} berhasil dikirim ke ${user.tag || user.username} (${userId}).`,
     );
     return true;
   } catch (err) {
-    // Error jika user mematikan DM dari server/bot
-    logger.debug(
-      `[NotificationCenter] Gagal kirim DM ke ${userId} (${err.message}).`,
+    logger.warn(
+      `[NotificationCenter] Gagal mengirim notifikasi ${type} ke ${userId}: ${err.message}`,
     );
     return false;
   }
@@ -147,5 +236,7 @@ module.exports = {
   NOTIFICATION_TEMPLATES,
   getUserPreferences,
   setUserPreference,
+  ensureDmAuthorized,
   sendDirectNotification,
+  sendNotification: sendDirectNotification,
 };

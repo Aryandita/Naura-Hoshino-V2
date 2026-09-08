@@ -12,7 +12,6 @@ const ui = require("../../../src/config/ui");
 const {
   addItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
-const notificationManager = require("../../../src/managers/notificationManager");
 
 const EXPEDITION_DURATIONS = {
   1: {

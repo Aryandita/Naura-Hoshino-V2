@@ -207,7 +207,11 @@ async function generateWrappedCard(user, stats = {}) {
 
     ctx.font = '12px "Outfit", sans-serif';
     ctx.fillStyle = "#CBD5E1";
-    ctx.fillText(`≈ ${totalMinutes.toLocaleString("id-ID")} Menit Audio Lossless`, 70, 242);
+    ctx.fillText(
+      `≈ ${totalMinutes.toLocaleString("id-ID")} Menit Audio Lossless`,
+      70,
+      242,
+    );
 
     // Metric 2: Total Lagu
     drawRoundedRect(
@@ -252,12 +256,19 @@ async function generateWrappedCard(user, stats = {}) {
     const mainServer = topServers[0] || "Server Komunitas Naura";
     ctx.font = 'bold 15px "Outfit", sans-serif';
     ctx.fillStyle = "#38BDF8";
-    const cleanServ = mainServer.length > 28 ? mainServer.slice(0, 26) + "..." : mainServer;
+    const cleanServ =
+      mainServer.length > 28 ? mainServer.slice(0, 26) + "..." : mainServer;
     ctx.fillText(`🏰 ${cleanServ}`, 70, 465);
 
     ctx.font = '11px "Outfit", sans-serif';
     ctx.fillStyle = "#64748B";
-    ctx.fillText(topServers[1] ? `Runner up: ${topServers[1].slice(0, 26)}` : "Tetap setia mendengarkan musik di sini~", 70, 495);
+    ctx.fillText(
+      topServers[1]
+        ? `Runner up: ${topServers[1].slice(0, 26)}`
+        : "Tetap setia mendengarkan musik di sini~",
+      70,
+      495,
+    );
 
     // 6. Right Panel: Top 5 Lagu Teratas
     const rightX = 430;

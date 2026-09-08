@@ -4,10 +4,8 @@ const express = require("express");
 const { fn, col, literal } = require("sequelize");
 const UserProfile = require("../../src/models/UserProfile");
 const UserSurvival = require("../../src/models/UserSurvival");
-const UserLeveling = require("../../src/models/UserLeveling");
 const UserPet = require("../../src/models/UserPet");
 const redisManager = require("../../src/managers/redisManager");
-const { requireApiLogin } = require("../middleware/auth");
 
 module.exports = (client) => {
   const router = express.Router();

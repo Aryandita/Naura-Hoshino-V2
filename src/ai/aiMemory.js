@@ -13,7 +13,7 @@ class AIMemory {
    * @param {string} userId
    * @returns {Promise<string>}
    */
-  static async getMemoryContext(userId) {
+  static async getMemoryContext(userId, query = "") {
     if (!userId) return "";
 
     let memoryData = null;
@@ -74,30 +74,50 @@ class AIMemory {
       }
     }
 
-    if (!memoryData) return "";
-
-    // 4. Susun konteks memori yang scannable dan informatif
     const lines = [];
-    if (memoryData.nickname) {
-      lines.push(
-        `- Nama panggilan/panggilan akrab user: "${memoryData.nickname}" (panggillah dengan nama ini).`,
-      );
+
+    if (memoryData) {
+      // 4. Susun konteks memori yang scannable dan informatif
+      if (memoryData.nickname) {
+        lines.push(
+          `- Nama panggilan/panggilan akrab user: "${memoryData.nickname}" (panggillah dengan nama ini).`,
+        );
+      }
+      if (
+        Array.isArray(memoryData.musicPrefs) &&
+        memoryData.musicPrefs.length > 0
+      ) {
+        lines.push(
+          `- Preferensi musik favorit user: ${memoryData.musicPrefs.join(", ")}.`,
+        );
+      }
+      if (Array.isArray(memoryData.facts) && memoryData.facts.length > 0) {
+        lines.push(
+          `- Fakta penting tentang user: ${memoryData.facts.join("; ")}.`,
+        );
+      }
+      if (memoryData.summary) {
+        lines.push(`- Riwayat/catatan obrolan sebelumnya: ${memoryData.summary}`);
+      }
     }
-    if (
-      Array.isArray(memoryData.musicPrefs) &&
-      memoryData.musicPrefs.length > 0
-    ) {
-      lines.push(
-        `- Preferensi musik favorit user: ${memoryData.musicPrefs.join(", ")}.`,
-      );
-    }
-    if (Array.isArray(memoryData.facts) && memoryData.facts.length > 0) {
-      lines.push(
-        `- Fakta penting tentang user: ${memoryData.facts.join("; ")}.`,
-      );
-    }
-    if (memoryData.summary) {
-      lines.push(`- Riwayat/catatan obrolan sebelumnya: ${memoryData.summary}`);
+
+    // 5. Tambahkan memori semantik jangka panjang (pgvector / vector search)
+    if (query && typeof query === "string" && query.trim()) {
+      try {
+        const { service } = require("./semanticMemoryService");
+        const semanticHits = await service.searchMemories(query.trim(), {
+          userId,
+          limit: 3,
+          minSimilarity: 0.5,
+        });
+        if (semanticHits.length > 0) {
+          for (const hit of semanticHits) {
+            lines.push(`- (Memori Semantik) ${hit.content}`);
+          }
+        }
+      } catch (err) {
+        // Abaikan error semantic search agar konteks utama tetap jalan
+      }
     }
 
     if (lines.length === 0) return "";
@@ -173,6 +193,20 @@ class AIMemory {
           merged,
           MEMORY_TTL_SECONDS,
         );
+      }
+
+      // 3. Simpan memori semantik jangka panjang jika ada pernyataan personal
+      const personalFactMatch = userMessage.match(
+        /(?:aku|saya|gue|gw)\s+(?:suka|hobi|tinggal di|alergi|pengen|cita-cita|kerja sebagai)\s+([^.!?\n]+)/i,
+      );
+      if (personalFactMatch) {
+        const factContent = `Pengguna ${personalFactMatch[0].trim()}`;
+        try {
+          const { service } = require("./semanticMemoryService");
+          await service.saveMemory(userId, factContent, {
+            memoryType: "USER_FACT",
+          });
+        } catch (_) {}
       }
     } catch (e) {
       logger.warn(

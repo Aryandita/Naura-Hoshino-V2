@@ -25,7 +25,6 @@ async function runMigration() {
     let content = fs.readFileSync(file, "utf8");
     let fileModified = false;
 
-    let match;
     // Gunakan replacer function untuk mengubah isi file
     content = content.replace(
       sendErrorRegex,

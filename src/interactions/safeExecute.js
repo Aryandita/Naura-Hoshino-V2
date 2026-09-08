@@ -74,11 +74,19 @@ async function respondError(interaction, message) {
 async function safeExecute(interaction, componentEntry, client) {
   // Guard Clause: Pastikan entri dan fungsi penangan valid
   if (!componentEntry || typeof componentEntry.handler !== "function") {
-    logger.warn("[INTERAKSI] Handler komponen tidak valid atau tidak ditemukan.");
+    logger.warn(
+      "[INTERAKSI] Handler komponen tidak valid atau tidak ditemukan.",
+    );
     return;
   }
 
-  const { label = "unknown", source = "unknown", defer, ephemeral, onError } = componentEntry;
+  const {
+    label = "unknown",
+    source = "unknown",
+    defer,
+    ephemeral,
+    onError,
+  } = componentEntry;
 
   // Watchdog batas interaksi 3 detik
   const interactionWatchdog = setTimeout(() => {

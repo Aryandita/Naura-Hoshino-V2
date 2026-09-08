@@ -25,7 +25,12 @@ class TribunalEngine {
   /**
    * Menjalankan sidang virtual pengadilan komunitas
    */
-  async conductTrial({ plaintiffName, defendantName, allegation, evidenceText = "Tidak ada bukti tambahan." }) {
+  async conductTrial({
+    plaintiffName,
+    defendantName,
+    allegation,
+    evidenceText = "Tidak ada bukti tambahan.",
+  }) {
     if (!plaintiffName || !defendantName || !allegation) {
       return {
         success: false,
@@ -75,7 +80,8 @@ Balas HANYA dengan JSON murni tanpa markdown backtick.`;
         return {
           success: true,
           source: "GEMINI_AI",
-          prosecutor: parsed.prosecutorArgument || fallbackVerdict.prosecutorArgument,
+          prosecutor:
+            parsed.prosecutorArgument || fallbackVerdict.prosecutorArgument,
           defense: parsed.defenseArgument || fallbackVerdict.defenseArgument,
           judge: parsed.judgeVerdict || fallbackVerdict.judgeVerdict,
           verdictStatus: parsed.verdictStatus || fallbackVerdict.verdictStatus,
@@ -83,7 +89,9 @@ Balas HANYA dengan JSON murni tanpa markdown backtick.`;
         };
       }
     } catch (e) {
-      logger.warn(`[TribunalEngine] AI generation failed: ${e.message}. Using procedural fallback.`);
+      logger.warn(
+        `[TribunalEngine] AI generation failed: ${e.message}. Using procedural fallback.`,
+      );
     }
 
     return {
@@ -120,4 +128,7 @@ Balas HANYA dengan JSON murni tanpa markdown backtick.`;
   }
 }
 
-module.exports = new TribunalEngine();
+const engineInstance = new TribunalEngine();
+engineInstance.JURY_PERSONAS = JURY_PERSONAS;
+
+module.exports = engineInstance;

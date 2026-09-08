@@ -11,7 +11,6 @@ const {
 } = require("../../../src/utils/NauraContainerBuilder");
 
 const MODEL = "gemini-2.5-flash";
-const PROVIDER = "Gemini 2.5 Flash";
 
 function e(name, fallback) {
   return ui.getEmoji(name) || fallback;

@@ -1,4 +1,3 @@
-const { PermissionFlagsBits, EmbedBuilder } = require("discord.js");
 const { logger } = require("../managers/logger");
 const ui = require("../config/ui");
 const backupManager = require("./backupManager");

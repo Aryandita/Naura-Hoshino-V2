@@ -6,7 +6,9 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
-const { BALANCED_ITEMS_CATALOG } = require("../src/survival/data/items_catalog");
+const {
+  BALANCED_ITEMS_CATALOG,
+} = require("../src/survival/data/items_catalog");
 
 // Target direktori aset publik
 const TARGET_DIRS = [
@@ -40,7 +42,12 @@ function getVectorArt(item) {
   const icon = item.iconType || item.category;
 
   // 1. KATEGORI SENJATA (WEAPONS)
-  if (icon.includes("sword") || icon.includes("blade") || icon.includes("rapier") || icon.includes("excalibur")) {
+  if (
+    icon.includes("sword") ||
+    icon.includes("blade") ||
+    icon.includes("rapier") ||
+    icon.includes("excalibur")
+  ) {
     return `
       <!-- Bilah Pedang -->
       <path d="M64 20 L72 32 L70 82 L64 90 L58 82 L56 32 Z" fill="url(#bladeGrad)" stroke="${color}" stroke-width="2" filter="url(#glowFilter)" />
@@ -77,7 +84,11 @@ function getVectorArt(item) {
     `;
   }
 
-  if (icon.includes("staff") || icon.includes("wand") || icon.includes("scepter")) {
+  if (
+    icon.includes("staff") ||
+    icon.includes("wand") ||
+    icon.includes("scepter")
+  ) {
     return `
       <!-- Tongkat Sihir Magis -->
       <rect x="62" y="38" width="4" height="74" rx="2" fill="#2d3748" stroke="#4a5568" stroke-width="1" />
@@ -90,7 +101,13 @@ function getVectorArt(item) {
     `;
   }
 
-  if (icon.includes("spear") || icon.includes("trident") || icon.includes("lance") || icon.includes("polearm") || icon.includes("glaive")) {
+  if (
+    icon.includes("spear") ||
+    icon.includes("trident") ||
+    icon.includes("lance") ||
+    icon.includes("polearm") ||
+    icon.includes("glaive")
+  ) {
     return `
       <!-- Tombak & Trident -->
       <line x1="64" y1="42" x2="64" y2="114" stroke="#4a5568" stroke-width="4" stroke-linecap="round" />
@@ -122,7 +139,12 @@ function getVectorArt(item) {
     `;
   }
 
-  if (icon.includes("helmet") || icon.includes("cap") || icon.includes("crown") || icon.includes("diadem")) {
+  if (
+    icon.includes("helmet") ||
+    icon.includes("cap") ||
+    icon.includes("crown") ||
+    icon.includes("diadem")
+  ) {
     return `
       <!-- Helm Tempur / Mahkota -->
       <path d="M40 50 C40 30, 88 30, 88 50 L86 78 L78 84 L50 84 L42 78 Z" fill="url(#armorGrad)" stroke="${color}" stroke-width="2" filter="url(#glowFilter)" />
@@ -153,7 +175,11 @@ function getVectorArt(item) {
     `;
   }
 
-  if (icon.includes("gloves") || icon.includes("gauntlets") || icon.includes("bracers")) {
+  if (
+    icon.includes("gloves") ||
+    icon.includes("gauntlets") ||
+    icon.includes("bracers")
+  ) {
     return `
       <!-- Sarung Tangan / Gauntlets -->
       <path d="M46 44 C46 38, 82 38, 82 44 L80 84 L48 84 Z" fill="url(#armorGrad)" stroke="${color}" stroke-width="2" filter="url(#glowFilter)" />
@@ -197,7 +223,11 @@ function getVectorArt(item) {
     `;
   }
 
-  if (icon.includes("shovel") || icon.includes("drill") || icon.includes("extractor")) {
+  if (
+    icon.includes("shovel") ||
+    icon.includes("drill") ||
+    icon.includes("extractor")
+  ) {
     return `
       <!-- Sekop / Bor Gali -->
       <line x1="64" y1="36" x2="64" y2="76" stroke="#4a5568" stroke-width="4" stroke-linecap="round" />
@@ -217,7 +247,12 @@ function getVectorArt(item) {
   }
 
   // 4. KATEGORI KONSUMSI (CONSUMABLES)
-  if (icon.includes("potion") || icon.includes("elixir") || icon.includes("tincture") || icon.includes("tonic")) {
+  if (
+    icon.includes("potion") ||
+    icon.includes("elixir") ||
+    icon.includes("tincture") ||
+    icon.includes("tonic")
+  ) {
     return `
       <!-- Botol Ramuan Kaca -->
       <path d="M58 32 L70 32 L70 42 L84 64 C88 74, 84 88, 76 94 C68 98, 60 98, 52 94 C44 88, 40 74, 44 64 L58 42 Z" fill="#1a202c" stroke="${color}" stroke-width="2" filter="url(#glowFilter)" />
@@ -241,7 +276,11 @@ function getVectorArt(item) {
     `;
   }
 
-  if (icon.includes("bread") || icon.includes("toast") || icon.includes("feast")) {
+  if (
+    icon.includes("bread") ||
+    icon.includes("toast") ||
+    icon.includes("feast")
+  ) {
     return `
       <!-- Roti Gandum / Masakan -->
       <ellipse cx="64" cy="64" rx="28" ry="18" fill="url(#potionGrad)" stroke="${color}" stroke-width="2" filter="url(#glowFilter)" />
@@ -252,7 +291,11 @@ function getVectorArt(item) {
     `;
   }
 
-  if (icon.includes("ramen") || icon.includes("soup") || icon.includes("platter")) {
+  if (
+    icon.includes("ramen") ||
+    icon.includes("soup") ||
+    icon.includes("platter")
+  ) {
     return `
       <!-- Mangkuk Ramen / Sup -->
       <path d="M38 56 C38 82, 90 82, 90 56 Z" fill="#2d3748" stroke="${color}" stroke-width="2" filter="url(#glowFilter)" />
@@ -264,7 +307,11 @@ function getVectorArt(item) {
   }
 
   // 5. KATEGORI BAHAN BAKU (MATERIALS)
-  if (icon.includes("ore") || icon.includes("stone") || icon.includes("obsidian")) {
+  if (
+    icon.includes("ore") ||
+    icon.includes("stone") ||
+    icon.includes("obsidian")
+  ) {
     return `
       <!-- Bongkahan Bijih Tambang / Batu -->
       <polygon points="64,28 88,44 82,78 64,96 42,82 40,48" fill="#2d3748" stroke="${color}" stroke-width="2" filter="url(#glowFilter)" />
@@ -285,7 +332,11 @@ function getVectorArt(item) {
     `;
   }
 
-  if (icon.includes("gem") || icon.includes("crystal") || icon.includes("diamond")) {
+  if (
+    icon.includes("gem") ||
+    icon.includes("crystal") ||
+    icon.includes("diamond")
+  ) {
     return `
       <!-- Permata Crystalline -->
       <polygon points="64,24 88,44 64,102 40,44" fill="url(#gemGrad)" stroke="${color}" stroke-width="2" filter="url(#glowFilter)" />
@@ -408,7 +459,9 @@ for (const item of BALANCED_ITEMS_CATALOG) {
   createdCount += 1;
 }
 
-console.log(`Berhasil menghasilkan ${createdCount} berkas SVG berkualitas tinggi ke:`);
+console.log(
+  `Berhasil menghasilkan ${createdCount} berkas SVG berkualitas tinggi ke:`,
+);
 for (const dir of TARGET_DIRS) {
   console.log(` - ${dir}`);
 }

@@ -48,7 +48,7 @@ test("survivalVitals - drainVitals and recoverVitals with mock cache", async (t)
     cacheManager.incrementUserSurvival = originalIncrementUserSurvival;
   });
 
-  let mockSurvival = {
+  const mockSurvival = {
     survival_level: 2,
     hp: 140,
     stamina: 100,

@@ -1,7 +1,6 @@
 const {
   createCanvas,
   loadImage,
-  GlobalFonts,
   runWithLimit,
   getFromRedis,
   cacheToRedis,

@@ -15,7 +15,7 @@ test("achievementTracker - checkAndUnlock milestone detection", async (t) => {
     UserAchievement.findOrCreate = originalFindOrCreate;
   });
 
-  let mockSurvival = {
+  const mockSurvival = {
     survival_level: 25,
     inGameDay: 35,
     strength: 55,
@@ -28,7 +28,7 @@ test("achievementTracker - checkAndUnlock milestone detection", async (t) => {
     },
   };
 
-  let mockUserAch = {
+  const mockUserAch = {
     unlockedAchievements: [],
     activeTitle: null,
     save: async () => {},

@@ -10,7 +10,6 @@
 "use strict";
 
 const redisManager = require("../managers/redisManager");
-const { sequelize } = require("../managers/dbManager");
 const UserLeveling = require("../models/UserLeveling");
 const { logger } = require("../managers/logger");
 

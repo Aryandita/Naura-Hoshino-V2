@@ -7,7 +7,6 @@ const {
   POOL_MAX,
 } = require("../config/database");
 const env = require("../config/env");
-const redisManager = require("./redisManager");
 const supabaseManager = require("./supabaseManager");
 const { logger } = require("../managers/logger");
 
@@ -24,38 +23,40 @@ const UserSurvival = require("../models/UserSurvival");
 const UserPet = require("../models/UserPet");
 const UserNPC = require("../models/UserNPC");
 const UserChild = require("../models/UserChild");
-const GuildSettings = require("../models/GuildSettings");
-const ModMail = require("../models/ModMail");
-const Giveaway = require("../models/Giveaway");
-const StickyRole = require("../models/StickyRole");
 const UserFarm = require("../models/UserFarm");
 const CanvasAsset = require("../models/CanvasAsset");
-const GameItem = require("../models/GameItem");
 const UserCosmetic = require("../models/UserCosmetic");
-const CryptoMarket = require("../models/CryptoMarket");
-const UserCrypto = require("../models/UserCrypto");
-const PremiumVoucher = require("../models/PremiumVoucher");
-const UserReminder = require("../models/UserReminder");
-const UserQuest = require("../models/UserQuest");
-const UserStrike = require("../models/UserStrike");
-const UserTicket = require("../models/UserTicket");
-const MarketAuction = require("../models/MarketAuction");
-const RoleLease = require("../models/RoleLease");
-const UserLeveling = require("../models/UserLeveling");
-const UserWarn = require("../models/UserWarn");
-const UserFriend = require("../models/UserFriend");
-const ClanTerritory = require("../models/ClanTerritory");
-const DuelRecord = require("../models/DuelRecord");
-const GuildClan = require("../models/GuildClan");
-const MinecraftLink = require("../models/MinecraftLink");
-const SocialAlert = require("../models/SocialAlert");
-const StoryProgress = require("../models/StoryProgress");
-const UserAchievement = require("../models/UserAchievement");
-const UserBirthday = require("../models/UserBirthday");
-const UserCard = require("../models/UserCard");
-const UserCardDeck = require("../models/UserCardDeck");
-const UserPlaylist = require("../models/UserPlaylist");
-const WorldBoss = require("../models/WorldBoss");
+const GameItem = require("../models/GameItem");
+
+// Registrasi model Sequelize lainnya
+require("../models/GuildSettings");
+require("../models/ModMail");
+require("../models/Giveaway");
+require("../models/StickyRole");
+require("../models/CryptoMarket");
+require("../models/UserCrypto");
+require("../models/PremiumVoucher");
+require("../models/UserReminder");
+require("../models/UserQuest");
+require("../models/UserStrike");
+require("../models/UserTicket");
+require("../models/MarketAuction");
+require("../models/RoleLease");
+require("../models/UserLeveling");
+require("../models/UserWarn");
+require("../models/UserFriend");
+require("../models/ClanTerritory");
+require("../models/DuelRecord");
+require("../models/GuildClan");
+require("../models/MinecraftLink");
+require("../models/SocialAlert");
+require("../models/StoryProgress");
+require("../models/UserAchievement");
+require("../models/UserBirthday");
+require("../models/UserCard");
+require("../models/UserCardDeck");
+require("../models/UserPlaylist");
+require("../models/WorldBoss");
 
 // ==========================================
 // 4. SETUP RELASI (ASSOCIATIONS)
@@ -280,28 +281,28 @@ const seedInitialData = async () => {
         {
           name: "Abstract Blue",
           type: "background",
-          url: "https://i.imgur.com/7b1YjK3.png",
+          url: "assets/images/canvas/abstract_blue.png",
           price: 100,
           isPremiumOnly: false,
         },
         {
           name: "Neon Cyberpunk",
           type: "background",
-          url: "https://i.imgur.com/k4QYjK3.png",
+          url: "assets/images/canvas/neon_cyberpunk.png",
           price: 500,
           isPremiumOnly: false,
         },
         {
           name: "Gold VIP",
           type: "background",
-          url: "https://i.imgur.com/a4QYjK3.png",
+          url: "assets/images/canvas/gold_vip.png",
           price: 0,
           isPremiumOnly: true,
         },
         {
           name: "Silver Frame",
           type: "border",
-          url: "https://i.imgur.com/c4QYjK3.png",
+          url: "assets/images/canvas/silver_frame.png",
           price: 200,
           isPremiumOnly: false,
         },

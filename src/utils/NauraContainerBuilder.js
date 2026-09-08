@@ -507,8 +507,7 @@ function buildSuccessContainerV2(opts) {
       ? pick(opts, "expression")
       : "success";
 
-  const withBanner = pick(opts, "withBanner");
-  let bannerAttachmentName = pick(opts, "bannerAttachmentName");
+  const bannerAttachmentName = pick(opts, "bannerAttachmentName");
   const files = [...(pick(opts, "files") || [])];
 
   return buildContainerV2({

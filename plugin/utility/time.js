@@ -117,7 +117,11 @@ module.exports = {
   },
 
   async autocomplete(interaction) {
-    const { choice, safeRespond, fuzzyFilter } = require("../../src/utils/autocompleteHelper");
+    const {
+      choice,
+      safeRespond,
+      fuzzyFilter,
+    } = require("../../src/utils/autocompleteHelper");
     const focusedValue = interaction.options.getFocused().toLowerCase();
 
     const presets = [
@@ -140,4 +144,3 @@ module.exports = {
     return safeRespond(interaction, fuzzyFilter(choices, focusedValue, 25));
   },
 };
-

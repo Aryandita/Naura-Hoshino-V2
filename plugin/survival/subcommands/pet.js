@@ -14,7 +14,7 @@ const ui = require("../../../src/config/ui");
 const {
   safeParseInventory,
   findItem,
-  removeItem,
+  takeItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
 const {
   buildContainerV2,
@@ -27,8 +27,6 @@ const { AttachmentBuilder } = require("discord.js");
 
 const COLLECTOR_MS = 60000;
 const BREED_FEE = 5000;
-const BREED_MIN_LEVEL = 10;
-const MUTANT_CHANCE = 0.1;
 const XP_PER_MEAL = 20;
 const XP_PER_LEVEL = 100;
 
@@ -70,18 +68,26 @@ function statLines(pet) {
 
 module.exports = {
   async autocomplete(interaction) {
-    const { choice, safeRespond, fuzzyFilter } = require('../../../src/utils/autocompleteHelper');
+    const {
+      choice,
+      safeRespond,
+      fuzzyFilter,
+    } = require("../../../src/utils/autocompleteHelper");
     const focusedValue = interaction.options.getFocused().toLowerCase();
     const pets = await UserPet.findAll({
       where: { userId: interaction.user.id },
     });
-    if (pets.length === 0) return safeRespond(interaction, [
-      choice('❌ Belum memiliki pet (Ketik /survival rpg pet untuk info)', 'none'),
-    ]);
+    if (pets.length === 0)
+      return safeRespond(interaction, [
+        choice(
+          "❌ Belum memiliki pet (Ketik /survival rpg pet untuk info)",
+          "none",
+        ),
+      ]);
 
     const available = pets.map((p) =>
       choice(
-        `${ui.getEmoji('cat_pet') || '🐾'} ${p.petName || p.petType} (Lv.${p.petLevel || 1})`,
+        `${ui.getEmoji("cat_pet") || "🐾"} ${p.petName || p.petType} (Lv.${p.petLevel || 1})`,
         String(p.id),
       ),
     );
@@ -325,12 +331,15 @@ module.exports = {
           : responder.reply(errPayload);
       }
 
-      // Rule 1.10: profile berasal dari cache (objek JSON tanpa .save()).
-      // Penulisan inventory wajib lewat cacheManager agar tidak crash dan
-      // cache ikut diperbarui.
-      await cacheManager.updateUserProfile(user.id, {
-        inventory: removeItem(inv, food.id, 1),
-      });
+      const taken = await takeItemsAtomic(user.id, [{ id: food.id, amount: 1 }]);
+      if (!taken.ok) {
+        const errPayload = ephemeral(
+          `${e("akward", "\u274C")} Tas kamu belum ada makanan hewan. Coba beli Tulang atau Ikan Kecil dulu yaa!`,
+        );
+        return asFollowUp
+          ? responder.followUp(errPayload)
+          : responder.reply(errPayload);
+      }
 
       pet.hunger = Math.min(100, (pet.hunger || 0) + food.hunger);
       pet.affection = Math.min(100, (pet.affection || 0) + 5);

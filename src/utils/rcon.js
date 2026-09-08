@@ -131,7 +131,7 @@ class Rcon {
       this.socket.destroy();
       this.socket = null;
     }
-    for (const [id, callback] of this.responseCallbacks.entries()) {
+    for (const callback of this.responseCallbacks.values()) {
       callback.reject(new Error("Disconnected"));
     }
     this.responseCallbacks.clear();

@@ -1,5 +1,5 @@
 // Lokasi: plugin/canvas/nowplayingCanvas.js
-const { createCanvas, loadImage, GlobalFonts } = require("./canvasRuntime");
+const { createCanvas, loadImage } = require("./canvasRuntime");
 const path = require("path");
 
 async function drawNowPlayingCard(trackInfo, playbackInfo) {

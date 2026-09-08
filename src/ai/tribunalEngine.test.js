@@ -16,7 +16,9 @@ test("TribunalEngine - Procedural Fallback Verification", async () => {
   assert.ok(trial.prosecutor, "Harus ada argumen jaksa");
   assert.ok(trial.defense, "Harus ada argumen pembela");
   assert.ok(trial.judge, "Harus ada vonis hakim");
-  assert.ok(["GUILTY", "NOT_GUILTY", "SETTLEMENT"].includes(trial.verdictStatus));
+  assert.ok(
+    ["GUILTY", "NOT_GUILTY", "SETTLEMENT"].includes(trial.verdictStatus),
+  );
   assert.ok(trial.penalty, "Harus ada sanksi atau ketetapan");
 });
 

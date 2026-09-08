@@ -17,7 +17,6 @@ const {
 const ui = require("../../src/config/ui");
 const {
   buildContainerV2,
-  buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
 
 const PRESETS = {

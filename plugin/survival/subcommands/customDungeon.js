@@ -1,11 +1,6 @@
 "use strict";
 
-const {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  MessageFlags,
-} = require("discord.js");
+const { MessageFlags } = require("discord.js");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -95,11 +90,31 @@ module.exports = {
 
       // Default 5 ruangan tantangan terstruktur
       const defaultRooms = [
-        { roomNumber: 1, type: "MONSTER", name: "Glitch Sentinel", difficulty: 40 },
-        { roomNumber: 2, type: "PUZZLE", name: "Cyber Gatekeeper Cipher", difficulty: 50 },
-        { roomNumber: 3, type: "MONSTER", name: "Void Stalker", difficulty: 70 },
+        {
+          roomNumber: 1,
+          type: "MONSTER",
+          name: "Glitch Sentinel",
+          difficulty: 40,
+        },
+        {
+          roomNumber: 2,
+          type: "PUZZLE",
+          name: "Cyber Gatekeeper Cipher",
+          difficulty: 50,
+        },
+        {
+          roomNumber: 3,
+          type: "MONSTER",
+          name: "Void Stalker",
+          difficulty: 70,
+        },
         { roomNumber: 4, type: "PUZZLE", name: "Quantum Maze", difficulty: 85 },
-        { roomNumber: 5, type: "BOSS", name: "Cybernetic Chimera", difficulty: 110 },
+        {
+          roomNumber: 5,
+          type: "BOSS",
+          name: "Cybernetic Chimera",
+          difficulty: 110,
+        },
       ];
 
       const res = await customDungeonEngine.createDungeon(user.id, guildId, {
@@ -169,8 +184,10 @@ module.exports = {
 
       if (!res.success) {
         let msg = "Tantangan tidak dapat dimulai.";
-        if (res.reason === "DUNGEON_NOT_FOUND") msg = "Dungeon dengan ID tersebut tidak ditemukan!";
-        if (res.reason === "INSUFFICIENT_FUNDS") msg = `Saldo koinmu tidak cukup untuk membeli tiket (\`${res.fee}\` Koin)!`;
+        if (res.reason === "DUNGEON_NOT_FOUND")
+          msg = "Dungeon dengan ID tersebut tidak ditemukan!";
+        if (res.reason === "INSUFFICIENT_FUNDS")
+          msg = `Saldo koinmu tidak cukup untuk membeli tiket (\`${res.fee}\` Koin)!`;
 
         const payload = buildErrorContainerV2({
           title: "Ekspedisi Dibatalkan",
@@ -273,8 +290,10 @@ module.exports = {
       const res = await customDungeonEngine.withdrawVault(user.id, dungeonId);
       if (!res.success) {
         let msg = "Gagal mencairkan brankas.";
-        if (res.reason === "NOT_CREATOR") msg = "Kamu bukan pemilik kreator dari dungeon ini!";
-        if (res.reason === "EMPTY_VAULT") msg = "Brankas royalti dungeon masih kosong!";
+        if (res.reason === "NOT_CREATOR")
+          msg = "Kamu bukan pemilik kreator dari dungeon ini!";
+        if (res.reason === "EMPTY_VAULT")
+          msg = "Brankas royalti dungeon masih kosong!";
 
         const payload = buildErrorContainerV2({
           title: "Pencairan Gagal",

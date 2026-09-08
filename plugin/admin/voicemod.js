@@ -1,11 +1,14 @@
 const {
   SlashCommandBuilder,
-  EmbedBuilder,
   PermissionsBitField,
   MessageFlags,
 } = require("discord.js");
 const { logger } = require("../../src/managers/logger");
 const ui = require("../../src/config/ui");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../src/utils/NauraContainerBuilder");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -85,49 +88,74 @@ module.exports = {
       .catch(() => null);
 
     if (!member) {
+      const errPayload = buildErrorContainerV2({
+        title: "User Tidak Ditemukan",
+        description: "User tidak ditemukan di server.",
+        footerText: ui.getFooter("core"),
+      });
       return interaction.reply({
-        content: `${ui.getEmoji("error") || "❌"} User tidak ditemukan di server.`,
+        ...errPayload,
         flags: MessageFlags.Ephemeral,
       });
     }
 
     if (!member.voice.channel) {
+      const errPayload = buildErrorContainerV2({
+        title: "Bukan di Voice Channel",
+        description: `**${user.username}** sedang tidak berada di Voice Channel mana pun.`,
+        footerText: ui.getFooter("core"),
+      });
       return interaction.reply({
-        content: `${ui.getEmoji("error") || "❌"} **${user.username}** sedang tidak berada di Voice Channel mana pun.`,
+        ...errPayload,
         flags: MessageFlags.Ephemeral,
       });
     }
 
     try {
+      let actionTitle = "";
+      let actionDesc = "";
+
       if (subcommand === "mute") {
         await member.voice.setMute(true, reason);
-        await interaction.reply(
-          `${ui.getEmoji("success") || "✅"} Berhasil melakukan Server Mute pada **${user.username}**.\n> Alasan: ${reason}`,
-        );
+        actionTitle = "Server Mute Berhasil";
+        actionDesc = `Berhasil melakukan Server Mute pada **${user.username}**.\n> **Alasan:** ${reason}`;
       } else if (subcommand === "unmute") {
         await member.voice.setMute(false, "Di-unmute oleh moderator");
-        await interaction.reply(
-          `${ui.getEmoji("success") || "✅"} Berhasil melepas Server Mute pada **${user.username}**.`,
-        );
+        actionTitle = "Server Unmute Berhasil";
+        actionDesc = `Berhasil melepas Server Mute pada **${user.username}**.`;
       } else if (subcommand === "kick") {
         await member.voice.disconnect(reason);
-        await interaction.reply(
-          `${ui.getEmoji("success") || "✅"} Berhasil menendang **${user.username}** dari Voice Channel.\n> Alasan: ${reason}`,
-        );
+        actionTitle = "Disconnect Voice Berhasil";
+        actionDesc = `Berhasil menendang **${user.username}** dari Voice Channel.\n> **Alasan:** ${reason}`;
       } else if (subcommand === "move") {
         const targetChannel = interaction.options.getChannel("channel");
         await member.voice.setChannel(
           targetChannel,
           "Dipindahkan oleh moderator",
         );
-        await interaction.reply(
-          `${ui.getEmoji("success") || "✅"} Berhasil memindahkan **${user.username}** ke channel **${targetChannel.name}**.`,
-        );
+        actionTitle = "Pindah Voice Berhasil";
+        actionDesc = `Berhasil memindahkan **${user.username}** ke channel **${targetChannel.name}**.`;
       }
+
+      const payload = buildContainerV2({
+        accentColorHex: ui.getColor("success") || "#10B981",
+        authorName: "Naura Voice Moderation",
+        title: `${ui.getEmoji("success") || "✅"} ${actionTitle}`,
+        description: actionDesc,
+        footerText: ui.getFooter("core"),
+      });
+
+      await interaction.reply(payload);
     } catch (error) {
       logger.error("[VoiceMod Error]", error);
+      const errPayload = buildErrorContainerV2({
+        title: "Gagal Moderasi Voice",
+        description:
+          "Gagal melakukan aksi moderasi voice. Pastikan posisiku lebih tinggi dari user tersebut dan aku memiliki izin yang cukup.",
+        footerText: ui.getFooter("core"),
+      });
       await interaction.reply({
-        content: `${ui.getEmoji("error") || "❌"} Gagal melakukan aksi moderasi voice. Pastikan posisiku lebih tinggi dari user tersebut dan aku memiliki izin yang cukup.`,
+        ...errPayload,
         flags: MessageFlags.Ephemeral,
       });
     }

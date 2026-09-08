@@ -16,7 +16,8 @@ const EVENTS = [
     salaryBoost: 1.25,
     exclusiveItem: "bendera_merah_putih",
     exclusiveItemName: "Bendera Merah Putih",
-    description: "Semarak kemerdekaan! Hasil panen & tambang naik 50%, gaji kerja naik 25%!",
+    description:
+      "Semarak kemerdekaan! Hasil panen & tambang naik 50%, gaji kerja naik 25%!",
   },
   {
     id: "naura_birthday",
@@ -40,7 +41,8 @@ const EVENTS = [
     salaryBoost: 1.15,
     exclusiveItem: "golden_grain",
     exclusiveItemName: "Bulir Padi Emas",
-    description: "Musim panen melimpah! Hasil pertanian & gathering meningkat 30%!",
+    description:
+      "Musim panen melimpah! Hasil pertanian & gathering meningkat 30%!",
   },
   {
     id: "frostsnow_winter",
@@ -52,7 +54,8 @@ const EVENTS = [
     salaryBoost: 1.2,
     exclusiveItem: "snow_crystal",
     exclusiveItemName: "Kristal Es Abadi",
-    description: "Musim dingin tiba! Kristal es langka mulai muncul di penjuru dunia!",
+    description:
+      "Musim dingin tiba! Kristal es langka mulai muncul di penjuru dunia!",
   },
 ];
 
@@ -67,7 +70,11 @@ function getActiveEvent(date = new Date()) {
   const currentDay = date.getDate();
 
   for (const ev of EVENTS) {
-    if (ev.month === currentMonth && currentDay >= ev.startDay && currentDay <= ev.endDay) {
+    if (
+      ev.month === currentMonth &&
+      currentDay >= ev.startDay &&
+      currentDay <= ev.endDay
+    ) {
       return { ...ev, isActive: true };
     }
   }
@@ -87,7 +94,8 @@ function applyEventBonuses(baseAmount, event, type = "drop") {
   const base = Math.max(0, Number(baseAmount) || 0);
   if (!event) return base;
 
-  const multiplier = type === "salary" ? (event.salaryBoost || 1.0) : (event.dropBoost || 1.0);
+  const multiplier =
+    type === "salary" ? event.salaryBoost || 1.0 : event.dropBoost || 1.0;
   return Math.max(1, Math.floor(base * multiplier));
 }
 
@@ -103,7 +111,7 @@ function getEventExclusiveDrop(event, luck = 1) {
     return { gotDrop: false, item: null };
   }
 
-  const baseChance = 0.20; // 20% dasar
+  const baseChance = 0.2; // 20% dasar
   const luckBonus = Math.min(0.15, (Number(luck) || 1) * 0.005);
   const roll = Math.random();
 

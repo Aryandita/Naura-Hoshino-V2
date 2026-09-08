@@ -1,7 +1,6 @@
 "use strict";
 
 const redisManager = require("../managers/redisManager");
-const { logger } = require("../managers/logger");
 
 class RadioService {
   /**

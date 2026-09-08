@@ -40,7 +40,8 @@ module.exports = {
     if (!profile || !survival) {
       return interaction.editReply(
         buildErrorContainerV2({
-          errorMessage: "Data petualanganmu belum ditemukan. Mulai dulu dengan /survival start ya!",
+          errorMessage:
+            "Data petualanganmu belum ditemukan. Mulai dulu dengan /survival start ya!",
           footerText: ui.getFooter("survival"),
         }),
       );
@@ -54,7 +55,9 @@ module.exports = {
     const availableGems = gemEngine.getAvailableGems();
     const userGems = [];
     for (const [gemId, gemDef] of Object.entries(availableGems)) {
-      const found = inventory.find((it) => it && (it.id === gemId || it.id === gemId.toLowerCase()));
+      const found = inventory.find(
+        (it) => it && (it.id === gemId || it.id === gemId.toLowerCase()),
+      );
       if (found && (found.amount || 1) > 0) {
         userGems.push({
           id: gemId,
@@ -70,7 +73,9 @@ module.exports = {
       const socketCount = gearData.cosmic_sockets?.length || 0;
       const socketVisual = (gearData.cosmic_sockets || [])
         .map((s) => `[💎 ${s.name}]`)
-        .concat(Array(Math.max(0, g.maxSockets - socketCount)).fill("[⚪ Kosong]"))
+        .concat(
+          Array(Math.max(0, g.maxSockets - socketCount)).fill("[⚪ Kosong]"),
+        )
         .join(" ");
       return `• **${g.name}** (${socketCount}/${g.maxSockets} Socket)\n  ${socketVisual}`;
     }).join("\n\n");
@@ -116,9 +121,10 @@ module.exports = {
       footerText: ui.getFooter("survival"),
     });
 
-    const initialComponents = userGems.length > 0
-      ? [...payload.components, selectGearRow]
-      : payload.components;
+    const initialComponents =
+      userGems.length > 0
+        ? [...payload.components, selectGearRow]
+        : payload.components;
 
     const message = await interaction.editReply({
       ...payload,
@@ -127,7 +133,11 @@ module.exports = {
       flags: MessageFlags.IsComponentsV2,
     });
 
-    if (userGems.length === 0 || !message || typeof message.createMessageComponentCollector !== "function") {
+    if (
+      userGems.length === 0 ||
+      !message ||
+      typeof message.createMessageComponentCollector !== "function"
+    ) {
       return;
     }
 
@@ -144,7 +154,10 @@ module.exports = {
         chosenGearId = i.values[0];
 
         const gearConfig = SOCKETABLE_GEAR.find((g) => g.id === chosenGearId);
-        const gearData = enchantedGear[chosenGearId] || { cosmic_sockets: [], maxSockets: gearConfig.maxSockets };
+        const gearData = enchantedGear[chosenGearId] || {
+          cosmic_sockets: [],
+          maxSockets: gearConfig.maxSockets,
+        };
 
         if ((gearData.cosmic_sockets?.length || 0) >= gearConfig.maxSockets) {
           return i.followUp({
@@ -159,7 +172,9 @@ module.exports = {
         const selectGemRow = new ActionRowBuilder().addComponents(
           new StringSelectMenuBuilder()
             .setCustomId("enchant_select_gem")
-            .setPlaceholder(`Pilih permata untuk disematkan ke ${gearConfig.name}...`)
+            .setPlaceholder(
+              `Pilih permata untuk disematkan ke ${gearConfig.name}...`,
+            )
             .addOptions(
               userGems.map((ug) => ({
                 label: `${ug.name.replace(/[^a-zA-Z0-9 ]/g, "").trim()} (${ug.amount}x)`,
@@ -183,12 +198,15 @@ module.exports = {
         // Ambil data terbaru
         const freshProfile = await cacheManager.getUserProfile(user.id);
         const freshInv = safeParseInventory(freshProfile.inventory);
-        const gemInInv = freshInv.find((it) => it && (it.id === gemId || it.id === gemId.toLowerCase()));
+        const gemInInv = freshInv.find(
+          (it) => it && (it.id === gemId || it.id === gemId.toLowerCase()),
+        );
 
         if (!gemInInv || (gemInInv.amount || 1) < 1) {
           return i.followUp({
             ...buildErrorContainerV2({
-              errorMessage: "Permata tersebut sudah tidak ada lagi di dalam tasmu!",
+              errorMessage:
+                "Permata tersebut sudah tidak ada lagi di dalam tasmu!",
               footerText: ui.getFooter("survival"),
             }),
             flags: MessageFlags.Ephemeral,
@@ -197,21 +215,28 @@ module.exports = {
 
         // Jalankan socketing
         let socketResult = null;
-        await cacheManager.mutateUserSurvivalJson(user.id, "rpg_state", (state) => {
-          const s = state || {};
-          if (!s.enchanted_gear) s.enchanted_gear = {};
-          if (!s.enchanted_gear[chosenGearId]) {
-            s.enchanted_gear[chosenGearId] = {
-              id: chosenGearId,
-              name: gearConfig.name,
-              maxSockets: gearConfig.maxSockets,
-              cosmic_sockets: [],
-            };
-          }
+        await cacheManager.mutateUserSurvivalJson(
+          user.id,
+          "rpg_state",
+          (state) => {
+            const s = state || {};
+            if (!s.enchanted_gear) s.enchanted_gear = {};
+            if (!s.enchanted_gear[chosenGearId]) {
+              s.enchanted_gear[chosenGearId] = {
+                id: chosenGearId,
+                name: gearConfig.name,
+                maxSockets: gearConfig.maxSockets,
+                cosmic_sockets: [],
+              };
+            }
 
-          socketResult = gemEngine.socketGem(s.enchanted_gear[chosenGearId], gemId);
-          return s;
-        });
+            socketResult = gemEngine.socketGem(
+              s.enchanted_gear[chosenGearId],
+              gemId,
+            );
+            return s;
+          },
+        );
 
         if (!socketResult || !socketResult.success) {
           return i.followUp({

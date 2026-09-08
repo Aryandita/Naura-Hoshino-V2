@@ -15,6 +15,7 @@ const UserNPC = require("../../../src/models/UserNPC");
 const cacheManager = require("../../../src/managers/cacheManager");
 const {
   safeParseInventory,
+  takeItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
 const ui = require("../../../src/config/ui");
 const npcConfig = require("../../../src/survival/data/npcs");
@@ -185,10 +186,9 @@ module.exports = {
       // Tiketnya baru dipakai setelah ajakan benar-benar diterima.
       const fresh = await cacheManager.getUserProfile(user.id);
       const bag = safeParseInventory(fresh.inventory);
-      const idx = bag.findIndex((item) => item && TICKET_IDS.includes(item.id));
-      if (idx > -1) {
-        bag.splice(idx, 1);
-        await cacheManager.updateUserProfile(user.id, { inventory: bag });
+      const ticket = bag.find((item) => item && TICKET_IDS.includes(item.id));
+      if (ticket) {
+        await takeItemsAtomic(user.id, [{ id: ticket.id, amount: 1 }]);
       }
 
       npcData.affection = Math.min(

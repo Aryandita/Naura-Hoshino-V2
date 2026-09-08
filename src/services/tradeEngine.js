@@ -95,70 +95,72 @@ class TradeEngine {
     if (!amount || amount < 5)
       return { success: false, reason: "MINIMUM_AMOUNT", min: 5 };
 
-    const existing = await this.getActiveCaravan(userId);
-    if (existing && existing.status === "EN_ROUTE") {
-      return {
-        success: false,
-        reason: "CARAVAN_ALREADY_ACTIVE",
-        caravan: existing,
+    return cacheManager.withLock(`lock:caravan:${userId}`, 5000, async () => {
+      const existing = await this.getActiveCaravan(userId);
+      if (existing && existing.status === "EN_ROUTE") {
+        return {
+          success: false,
+          reason: "CARAVAN_ALREADY_ACTIVE",
+          caravan: existing,
+        };
+      }
+
+      const market = this.getMarketPrices();
+      const unitPrice = market[commodityKey]?.currentPrice || comm.basePrice;
+      const totalCost = unitPrice * amount;
+
+      // Potong koin modal karavan secara atomik
+      const debit = await cacheManager.debitUserProfile(
+        userId,
+        "economy_wallet",
+        totalCost,
+      );
+      if (!debit.ok) {
+        return {
+          success: false,
+          reason: "INSUFFICIENT_FUNDS",
+          requiredCost: totalCost,
+        };
+      }
+
+      const finishTime = Date.now() + route.durationMinutes * 60 * 1000;
+      const potentialProfit = Math.round(
+        totalCost * (1 + route.profitMarginPercent / 100),
+      );
+
+      const caravan = {
+        id: `crv_${Date.now()}`,
+        userId,
+        displayName,
+        route,
+        commodity: comm,
+        amount,
+        investedCost: totalCost,
+        potentialProfit,
+        startTime: new Date().toISOString(),
+        finishTime: new Date(finishTime).toISOString(),
+        status: "EN_ROUTE",
       };
-    }
 
-    const market = this.getMarketPrices();
-    const unitPrice = market[commodityKey]?.currentPrice || comm.basePrice;
-    const totalCost = unitPrice * amount;
+      const key = `caravan:active:${userId}`;
+      if (redisManager.isReady) {
+        try {
+          await redisManager.set(
+            key,
+            JSON.stringify(caravan),
+            route.durationMinutes * 60 + 3600,
+          );
+        } catch (_) {}
+      }
 
-    // Potong koin modal karavan secara atomik
-    const debit = await cacheManager.debitUserProfile(
-      userId,
-      "economy_wallet",
-      totalCost,
-    );
-    if (!debit.ok) {
+      logger.info(
+        `[TradeEngine] User ${displayName} memberangkatkan karavan ${comm.name} (${amount}x) via ${route.name}`,
+      );
       return {
-        success: false,
-        reason: "INSUFFICIENT_FUNDS",
-        requiredCost: totalCost,
+        success: true,
+        caravan,
       };
-    }
-
-    const finishTime = Date.now() + route.durationMinutes * 60 * 1000;
-    const potentialProfit = Math.round(
-      totalCost * (1 + route.profitMarginPercent / 100),
-    );
-
-    const caravan = {
-      id: `crv_${Date.now()}`,
-      userId,
-      displayName,
-      route,
-      commodity: comm,
-      amount,
-      investedCost: totalCost,
-      potentialProfit,
-      startTime: new Date().toISOString(),
-      finishTime: new Date(finishTime).toISOString(),
-      status: "EN_ROUTE",
-    };
-
-    const key = `caravan:active:${userId}`;
-    if (redisManager.isReady) {
-      try {
-        await redisManager.set(
-          key,
-          JSON.stringify(caravan),
-          route.durationMinutes * 60 + 3600,
-        );
-      } catch (_) {}
-    }
-
-    logger.info(
-      `[TradeEngine] User ${displayName} memberangkatkan karavan ${comm.name} (${amount}x) via ${route.name}`,
-    );
-    return {
-      success: true,
-      caravan,
-    };
+    });
   }
 
   /**
@@ -305,4 +307,3 @@ class TradeEngine {
 }
 
 module.exports = new TradeEngine();
-

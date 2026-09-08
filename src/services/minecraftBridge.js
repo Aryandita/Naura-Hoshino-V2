@@ -1,10 +1,8 @@
 "use strict";
 
-const crypto = require("crypto");
 const MinecraftLink = require("../models/MinecraftLink");
 const currency = require("../survival/engines/currency");
 const redisManager = require("../managers/redisManager");
-const { logger } = require("../managers/logger");
 
 class MinecraftBridgeService {
   /**

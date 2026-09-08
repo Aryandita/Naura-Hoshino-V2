@@ -85,7 +85,10 @@ async function handleSlashCommand(interaction, client) {
   } = require("../config/features");
   const featureId = COMMAND_FEATURE_MAP[interaction.commandName];
   if (featureId && interaction.guildId) {
-    const isModuleEnabled = await isFeatureEnabled(interaction.guildId, featureId);
+    const isModuleEnabled = await isFeatureEnabled(
+      interaction.guildId,
+      featureId,
+    );
     if (!isModuleEnabled) {
       return interaction
         .reply({
@@ -195,7 +198,10 @@ module.exports = {
     const componentKind = resolveComponentKind(interaction);
     if (!componentKind) return undefined;
 
-    const registeredComponentHandler = registry.resolve(componentKind, interaction.customId);
+    const registeredComponentHandler = registry.resolve(
+      componentKind,
+      interaction.customId,
+    );
 
     // Guard Clause 5: Komponen dinamis yang dikelola oleh collector lokal (minigame, survival, NPC, dll.)
     const isManagedByLocalCollector =
@@ -231,7 +237,8 @@ module.exports = {
     }
 
     // Guard Clause 7: Rate limit komponen tombol/select/modal
-    const componentRateLimitPolicy = registeredComponentHandler.cooldown || COMPONENT_LIMIT;
+    const componentRateLimitPolicy =
+      registeredComponentHandler.cooldown || COMPONENT_LIMIT;
     const isComponentRateLimited = await rateLimiter.isRateLimited(
       interaction.user.id,
       `component_${registeredComponentHandler.label}`,

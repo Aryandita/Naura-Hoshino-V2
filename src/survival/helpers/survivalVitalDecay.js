@@ -2,7 +2,6 @@
 
 const { Op } = require("sequelize");
 const UserSurvival = require("../../models/UserSurvival");
-const cacheManager = require("../../managers/cacheManager");
 const { drainVitals, recoverVitals } = require("./survivalVitals");
 const { logger } = require("../../managers/logger");
 
@@ -47,11 +46,13 @@ async function processVitalDecayCycle() {
       const isSick = Boolean(rpgState.sick);
 
       const isHome = property === "rumah" || property === "mansion";
-      const isHarshEnvironment = ["hutan", "tambang", "laut"].includes(location);
+      const isHarshEnvironment = ["hutan", "tambang", "laut"].includes(
+        location,
+      );
 
       let hungerDrain = isHarshEnvironment ? 8 : 5;
       let thirstDrain = location === "laut" || location === "tambang" ? 12 : 7;
-      let staminaDrain = isHome ? 0 : 3;
+      const staminaDrain = isHome ? 0 : 3;
 
       if (weather === "badai") {
         hungerDrain = Math.floor(hungerDrain * 1.5);

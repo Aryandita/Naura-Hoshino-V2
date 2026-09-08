@@ -226,6 +226,18 @@ class CafeEngine {
       totalToCollect,
     );
 
+    try {
+      await cacheManager.mutateUserProfileJson(
+        userId,
+        "notification_prefs",
+        (cur) => {
+          const obj = cur && typeof cur === "object" ? cur : {};
+          obj.sent_idle_revenue = false;
+          return obj;
+        },
+      );
+    } catch {}
+
     logger.info(
       `[CafeEngine] User ${userId} mengklaim ${totalToCollect} Star Fragments pendapatan idle.`,
     );

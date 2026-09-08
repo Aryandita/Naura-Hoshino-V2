@@ -21,7 +21,10 @@ const { ValidationError } = require("../errors/DomainError");
  */
 function normalizeAiResponse(provider, rawResponse) {
   if (!rawResponse || typeof rawResponse !== "object") {
-    throw new ValidationError("Payload AI eksternal tidak valid.", { provider, rawResponse });
+    throw new ValidationError("Payload AI eksternal tidak valid.", {
+      provider,
+      rawResponse,
+    });
   }
 
   let content = "";
@@ -75,7 +78,10 @@ function normalizeAiResponse(provider, rawResponse) {
           for (const call of choice.message.tool_calls) {
             let parsedArgs = {};
             try {
-              parsedArgs = typeof call.function?.arguments === "string" ? JSON.parse(call.function.arguments) : (call.function?.arguments || {});
+              parsedArgs =
+                typeof call.function?.arguments === "string"
+                  ? JSON.parse(call.function.arguments)
+                  : call.function?.arguments || {};
             } catch {
               parsedArgs = {};
             }

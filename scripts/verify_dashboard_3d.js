@@ -6,27 +6,30 @@ async function getWsUrl() {
   return new Promise((resolve, reject) => {
     let attempts = 0;
     const check = () => {
-      http.get("http://127.0.0.1:9222/json/list", (res) => {
-        let data = "";
-        res.on("data", chunk => data += chunk);
-        res.on("end", () => {
-          try {
-            const list = JSON.parse(data);
-            const page = list.find(t => t.type === "page");
-            if (page && page.webSocketDebuggerUrl) {
-              resolve(page.webSocketDebuggerUrl);
-            } else {
+      http
+        .get("http://127.0.0.1:9222/json/list", (res) => {
+          let data = "";
+          res.on("data", (chunk) => (data += chunk));
+          res.on("end", () => {
+            try {
+              const list = JSON.parse(data);
+              const page = list.find((t) => t.type === "page");
+              if (page && page.webSocketDebuggerUrl) {
+                resolve(page.webSocketDebuggerUrl);
+              } else {
+                retry();
+              }
+            } catch (e) {
               retry();
             }
-          } catch (e) {
-            retry();
-          }
-        });
-      }).on("error", retry);
+          });
+        })
+        .on("error", retry);
     };
     const retry = () => {
       attempts++;
-      if (attempts > 30) return reject(new Error("Chrome debug port not ready"));
+      if (attempts > 30)
+        return reject(new Error("Chrome debug port not ready"));
       setTimeout(check, 200);
     };
     check();
@@ -34,14 +37,18 @@ async function getWsUrl() {
 }
 
 async function main() {
-  const chromePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+  const chromePath =
+    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
   const chrome = spawn(chromePath, [
     "--headless=new",
     "--remote-debugging-port=9222",
     "--no-first-run",
     "--no-default-browser-check",
-    "--user-data-dir=" + require("os").tmpdir() + "\\chrome_verify_profile_" + Date.now(),
-    "about:blank"
+    "--user-data-dir=" +
+      require("os").tmpdir() +
+      "\\chrome_verify_profile_" +
+      Date.now(),
+    "about:blank",
   ]);
 
   try {
@@ -57,13 +64,13 @@ async function main() {
       return msgId;
     };
 
-    await new Promise(r => ws.onopen = r);
+    await new Promise((r) => (ws.onopen = r));
 
     send("Emulation.setDeviceMetricsOverride", {
       width: 1440,
       height: 900,
       deviceScaleFactor: 1,
-      mobile: false
+      mobile: false,
     });
 
     send("Runtime.enable");
@@ -74,10 +81,19 @@ async function main() {
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.method === "Runtime.consoleAPICalled") {
-        const text = data.params.args.map(a => a.value || a.description || JSON.stringify(a)).join(" ");
-        console.log(`[BROWSER CONSOLE ${data.params.type.toUpperCase()}]`, text);
+        const text = data.params.args
+          .map((a) => a.value || a.description || JSON.stringify(a))
+          .join(" ");
+        console.log(
+          `[BROWSER CONSOLE ${data.params.type.toUpperCase()}]`,
+          text,
+        );
       } else if (data.method === "Runtime.exceptionThrown") {
-        console.error("[BROWSER EXCEPTION]", data.params.exceptionDetails.text, data.params.exceptionDetails.exception?.description || "");
+        console.error(
+          "[BROWSER EXCEPTION]",
+          data.params.exceptionDetails.text,
+          data.params.exceptionDetails.exception?.description || "",
+        );
       }
     };
 
@@ -87,12 +103,13 @@ async function main() {
     console.log("Menunggu model 3D dimuat di dashboard...");
     let isLoaded = false;
     for (let attempt = 0; attempt < 30; attempt++) {
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 1000));
       const checkMsgId = send("Runtime.evaluate", {
-        expression: "Boolean(window.__heroViewer && window.__heroViewer.isLoaded)",
-        returnByValue: true
+        expression:
+          "Boolean(window.__heroViewer && window.__heroViewer.isLoaded)",
+        returnByValue: true,
       });
-      const checkRes = await new Promise(resolve => {
+      const checkRes = await new Promise((resolve) => {
         const handler = (evt) => {
           const d = JSON.parse(evt.data);
           if (d.id === checkMsgId) {
@@ -104,17 +121,21 @@ async function main() {
       });
       if (checkRes) {
         isLoaded = true;
-        console.log(`✨ Model 3D terkonfirmasi isLoaded === true pada detik ke-${attempt + 1}!`);
+        console.log(
+          `✨ Model 3D terkonfirmasi isLoaded === true pada detik ke-${attempt + 1}!`,
+        );
         break;
       }
     }
 
     if (!isLoaded) {
-      console.warn("⚠️ Waktu tunggu pemuatan model habis sebelum isLoaded bernilai true.");
+      console.warn(
+        "⚠️ Waktu tunggu pemuatan model habis sebelum isLoaded bernilai true.",
+      );
     }
 
     // Jeda 2 detik agar frame render berjalan lancar
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 2000));
 
     // Evaluasi status Three.js scene
     const evalMsgId = send("Runtime.evaluate", {
@@ -132,7 +153,7 @@ async function main() {
           cameraPos: hv.camera ? { x: hv.camera.position.x, y: hv.camera.position.y, z: hv.camera.position.z } : null
         };
       })()`,
-      returnByValue: true
+      returnByValue: true,
     });
 
     const evalData = await new Promise((resolve) => {
@@ -162,7 +183,8 @@ async function main() {
     });
 
     if (screenshotData) {
-      const targetPath = "C:\\Users\\ACER\\.gemini\\antigravity-ide\\brain\\adb93312-43ae-418d-97c6-3c25049a0c2c\\verified_3d_render.png";
+      const targetPath =
+        "C:\\Users\\ACER\\.gemini\\antigravity-ide\\brain\\adb93312-43ae-418d-97c6-3c25049a0c2c\\verified_3d_render.png";
       fs.writeFileSync(targetPath, Buffer.from(screenshotData, "base64"));
       console.log("✨ Screenshot final berhasil disimpan ke:", targetPath);
     }

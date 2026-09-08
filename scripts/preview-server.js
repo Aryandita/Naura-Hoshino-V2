@@ -5,7 +5,8 @@ const path = require("path");
 const fs = require("fs");
 
 const app = express();
-const PORT = parseInt(process.env.DASHBOARD_PORT || process.env.SERVER_PORT) || 3000;
+const PORT =
+  parseInt(process.env.DASHBOARD_PORT || process.env.SERVER_PORT) || 3000;
 
 const projectRoot = path.resolve(__dirname, "..");
 const distPath = path.join(projectRoot, "dashboard-v2", "dist");
@@ -22,7 +23,7 @@ const handleModel = (req, res) => {
     path.join(projectRoot, "dashboard-v2", "public", "models", filename),
     path.join(assetsPath, "3D Model Naura", filename),
     path.join(distPath, "models", "naura.glb"),
-    path.join(projectRoot, "dashboard-v2", "public", "models", "naura.glb")
+    path.join(projectRoot, "dashboard-v2", "public", "models", "naura.glb"),
   ];
   for (const f of candidates) {
     if (fs.existsSync(f)) {
@@ -34,16 +35,19 @@ const handleModel = (req, res) => {
   res.status(404).send("Model 3D tidak ditemukan");
 };
 
-app.get([
-  "/models/naura.vrm",
-  "/assets/3d/naura.vrm",
-  "/models/naura.glb",
-  "/models/Naura%20Hoshino%203D.glb",
-  "/models/Naura Hoshino 3D.glb",
-  "/assets/3d/naura.glb",
-  "/assets/3d/Naura%20Hoshino%203D.glb",
-  "/assets/3d/Naura Hoshino 3D.glb"
-], handleModel);
+app.get(
+  [
+    "/models/naura.vrm",
+    "/assets/3d/naura.vrm",
+    "/models/naura.glb",
+    "/models/Naura%20Hoshino%203D.glb",
+    "/models/Naura Hoshino 3D.glb",
+    "/assets/3d/naura.glb",
+    "/assets/3d/Naura%20Hoshino%203D.glb",
+    "/assets/3d/Naura Hoshino 3D.glb",
+  ],
+  handleModel,
+);
 
 app.use("/assets", express.static(assetsPath));
 app.use("/assets/3d", express.static(path.join(assetsPath, "3D Model Naura")));
@@ -66,7 +70,7 @@ app.get("/api/stats", (req, res) => {
     shardId: 0,
     totalShards: 2,
     dbEngine: "SUPABASE (POSTGRESQL)",
-    version: "2.1.0"
+    version: "2.1.0",
   });
 });
 
@@ -86,18 +90,53 @@ app.get("/api/user/me", (req, res) => {
       coupons: 35,
       reputation: 128,
       rank: "Grandmaster",
-      badges: ["VIP", "Early Adopter", "Bug Hunter", "RPG Pioneer"]
-    }
+      badges: ["VIP", "Early Adopter", "Bug Hunter", "RPG Pioneer"],
+    },
   });
 });
 
 app.get("/api/leaderboard", (req, res) => {
   const users = [
-    { rank: 1, username: "Aryandita", level: 42, xp: 18450, balance: 6542000, avatar: "/assets/Naura_Expression/Thinking.png" },
-    { rank: 2, username: "HoshinoFan", level: 39, xp: 15200, balance: 4120000, avatar: "/assets/Naura_Expression/Read.png" },
-    { rank: 3, username: "CyberSamurai", level: 35, xp: 12800, balance: 3500000, avatar: "/assets/Naura_Expression/Surprised.png" },
-    { rank: 4, username: "NeonKitsune", level: 31, xp: 10400, balance: 2900000, avatar: "/assets/Naura_Expression/Angry.png" },
-    { rank: 5, username: "QuantumDev", level: 28, xp: 8900, balance: 2100000, avatar: "/assets/Naura_Expression/Thinking.png" }
+    {
+      rank: 1,
+      username: "Aryandita",
+      level: 42,
+      xp: 18450,
+      balance: 6542000,
+      avatar: "/assets/Naura_Expression/Thinking.png",
+    },
+    {
+      rank: 2,
+      username: "HoshinoFan",
+      level: 39,
+      xp: 15200,
+      balance: 4120000,
+      avatar: "/assets/Naura_Expression/Read.png",
+    },
+    {
+      rank: 3,
+      username: "CyberSamurai",
+      level: 35,
+      xp: 12800,
+      balance: 3500000,
+      avatar: "/assets/Naura_Expression/Surprised.png",
+    },
+    {
+      rank: 4,
+      username: "NeonKitsune",
+      level: 31,
+      xp: 10400,
+      balance: 2900000,
+      avatar: "/assets/Naura_Expression/Angry.png",
+    },
+    {
+      rank: 5,
+      username: "QuantumDev",
+      level: 28,
+      xp: 8900,
+      balance: 2100000,
+      avatar: "/assets/Naura_Expression/Thinking.png",
+    },
   ];
   res.json({ total: 5, page: 1, limit: 10, leaderboard: users });
 });
@@ -107,7 +146,7 @@ app.get("/api/economy/stats", (req, res) => {
     circulationTotal: 485000000,
     dailyTransactions: 1420,
     marketVolume: 85200000,
-    inflationRate: "+1.2%"
+    inflationRate: "+1.2%",
   });
 });
 
@@ -115,18 +154,23 @@ app.post("/api/settings/sandbox", (req, res) => {
   const { message } = req.body || {};
   const q = String(message || "").toLowerCase();
 
-  let reply = "Halo! Naura siap bantu. Ada yang bisa kubantu seputar server Discord atau fitur bot? ✨";
+  let reply =
+    "Halo! Naura siap bantu. Ada yang bisa kubantu seputar server Discord atau fitur bot? ✨";
   if (q.includes("status") || q.includes("ping")) {
-    reply = "Status bot saat ini: 🟢 ONLINE dengan latensi 28ms. Seluruh database (Supabase, Redis, Mongo) berjalan lancar!";
+    reply =
+      "Status bot saat ini: 🟢 ONLINE dengan latensi 28ms. Seluruh database (Supabase, Redis, Mongo) berjalan lancar!";
   } else if (q.includes("saldo") || q.includes("coin") || q.includes("uang")) {
-    reply = "Saldo akunmu saat ini adalah 1.542.000 Coins dan 35 Kupon Naura di Bank Vault!";
+    reply =
+      "Saldo akunmu saat ini adalah 1.542.000 Coins dan 35 Kupon Naura di Bank Vault!";
   } else if (q.includes("lagu") || q.includes("music") || q.includes("putar")) {
-    reply = "Saat ini sedang memutar: 'Cyber Kawaii Lo-Fi Stream' di voice channel #general! 🎵";
+    reply =
+      "Saat ini sedang memutar: 'Cyber Kawaii Lo-Fi Stream' di voice channel #general! 🎵";
   } else if (q.includes("dadu") || q.includes("roll")) {
     const roll = Math.floor(Math.random() * 6) + 1;
     reply = `🎲 Dadu bergulir... dan hasilnya adalah **${roll}**! Semoga harimu menyenangkan!`;
   } else if (q.includes("aturan") || q.includes("rules")) {
-    reply = "Aturan server utama: 1. Saling menghormati sesama member. 2. Dilarang spam atau promosi tanpa izin. 3. Patuhi arahan moderator!";
+    reply =
+      "Aturan server utama: 1. Saling menghormati sesama member. 2. Dilarang spam atau promosi tanpa izin. 3. Patuhi arahan moderator!";
   } else if (message) {
     reply = `Naura mencatat: "${message}". Jika kamu butuh bantuan perintah lengkap, silakan ketik /help di Discord ya! 🌸`;
   }
@@ -136,9 +180,20 @@ app.post("/api/settings/sandbox", (req, res) => {
 
 // 3. Multi-page routes mapping to dist/src/pages
 const pages = [
-  "index", "status", "music", "leaderboard", "economy",
-  "feed", "automations", "karaoke", "settings", "tickets",
-  "welcomer", "world", "activity", "portfolio"
+  "index",
+  "status",
+  "music",
+  "leaderboard",
+  "economy",
+  "feed",
+  "automations",
+  "karaoke",
+  "settings",
+  "tickets",
+  "welcomer",
+  "world",
+  "activity",
+  "portfolio",
 ];
 
 pages.forEach((page) => {
@@ -150,7 +205,7 @@ pages.forEach((page) => {
       res.status(404).send(`Halaman ${page} belum dibangun.`);
     }
   };
-  
+
   if (page === "index") {
     app.get("/", handler);
     app.get("/index", handler);
@@ -161,7 +216,12 @@ pages.forEach((page) => {
 
 // Fallback to index
 app.use((req, res, next) => {
-  const possiblePage = path.join(distPath, "src", "pages", req.path.replace(/^\//, "") + ".html");
+  const possiblePage = path.join(
+    distPath,
+    "src",
+    "pages",
+    req.path.replace(/^\//, "") + ".html",
+  );
   if (fs.existsSync(possiblePage)) {
     return res.sendFile(possiblePage);
   }

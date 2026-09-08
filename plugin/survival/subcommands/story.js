@@ -21,7 +21,8 @@ const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const {
-  safeParseInventory,
+  takeItemsAtomic,
+  addItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
 
 const COLLECTOR_MS = 300000;
@@ -157,22 +158,15 @@ module.exports = {
       if (i.customId !== "story_finish" && i.customId !== "story_challenge")
         return;
 
-      const inventory = safeParseInventory(profile.inventory);
-
       if (i.customId === "story_challenge") {
         const challenge = chapter.challenge || {};
         let passed = false;
 
         if (challenge.type === "item") {
-          const item = inventory.find(
-            (inv) => inv && inv.id === challenge.reqId,
-          );
-          if (item && (item.amount || 1) >= challenge.reqAmount) {
-            item.amount = (item.amount || 1) - challenge.reqAmount;
-            if (item.amount <= 0) inventory.splice(inventory.indexOf(item), 1);
-            await cacheManager.updateUserProfile(user.id, { inventory });
-            passed = true;
-          }
+          const taken = await takeItemsAtomic(user.id, [
+            { id: challenge.reqId, amount: challenge.reqAmount || 1 },
+          ]);
+          passed = taken.ok;
         } else if (challenge.type === "coin") {
           // Kode lama membaca `profile.wallet` yang tidak ada di model,
           // sehingga tantangan berbayar selalu dianggap gagal.
@@ -221,22 +215,15 @@ module.exports = {
       }
 
       if (reward.item) {
-        const bag = safeParseInventory(
-          (await cacheManager.getUserProfile(user.id)).inventory,
-        );
         const amount = reward.amount || 1;
-        const exist = bag.find((inv) => inv && inv.id === reward.item);
-
-        if (exist) exist.amount = (exist.amount || 1) + amount;
-        else
-          bag.push({
+        await addItemsAtomic(user.id, [
+          {
             id: reward.item,
             name: reward.item,
             amount,
             type: "loot",
-          });
-
-        await cacheManager.updateUserProfile(user.id, { inventory: bag });
+          },
+        ]);
         rewardLines.push(
           `> ${e("cheers", "\uD83D\uDCE6")} **${amount}x ${reward.item}**`,
         );

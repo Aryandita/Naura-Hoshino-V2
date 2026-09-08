@@ -323,6 +323,7 @@ module.exports = {
   rollXp,
   getNextLevelXp,
   getRoleBadge,
+  isPremiumUser,
   applyLevelUp,
   checkLevelUp,
   announceLevelUp,

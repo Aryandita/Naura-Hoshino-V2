@@ -1,7 +1,6 @@
 // Lokasi: plugin/canvas/battleCanvas.js
 const { createCanvas, loadImage } = require("./canvasRuntime");
 const fs = require("fs");
-const path = require("path");
 
 async function drawBattle(playerInfo, enemyInfo, roundLog) {
   const canvas = createCanvas(800, 450);

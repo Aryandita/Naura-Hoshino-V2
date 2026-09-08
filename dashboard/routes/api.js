@@ -1,6 +1,7 @@
 "use strict";
 
 const express = require("express");
+const env = require("../../src/config/env");
 const { getDbStatus } = require("../../src/managers/dbManager");
 const redisManager = require("../../src/managers/redisManager");
 const mongoManager = require("../../src/managers/mongoManager");
@@ -146,8 +147,12 @@ module.exports = (client) => {
   router.get("/topology/status", async (req, res) => {
     try {
       const dbStatus = getDbStatus();
-      const mongoStatus = mongoManager ? mongoManager.getStatus() : { state: "disabled", readyState: 0, models: [] };
-      const redisStatus = !!(redisManager.client && redisManager.client.isReady);
+      const mongoStatus = mongoManager
+        ? mongoManager.getStatus()
+        : { state: "disabled", readyState: 0, models: [] };
+      const redisStatus = !!(
+        redisManager.client && redisManager.client.isReady
+      );
 
       // Lavalink Nodes
       let lavalinkNodesList = [];
@@ -164,7 +169,10 @@ module.exports = (client) => {
           port: n.options?.port || 2333,
           connected: !!n.isConnected,
           isFallback: !!n.options?.isPrimaryFallback,
-          players: n.players ? (n.players.size || (Array.isArray(n.players) ? n.players.length : 0)) : 0,
+          players: n.players
+            ? n.players.size ||
+              (Array.isArray(n.players) ? n.players.length : 0)
+            : 0,
         }));
       }
 
@@ -180,7 +188,12 @@ module.exports = (client) => {
           currentShardId: env.SHARD_ID || 0,
           pingMs: client.ws ? client.ws.ping : 0,
           guildsCount: client.guilds ? client.guilds.cache.size : 0,
-          usersCount: client.guilds ? client.guilds.cache.reduce((acc, g) => acc + (g.memberCount || 0), 0) : 0,
+          usersCount: client.guilds
+            ? client.guilds.cache.reduce(
+                (acc, g) => acc + (g.memberCount || 0),
+                0,
+              )
+            : 0,
         },
         compute: {
           runtime: `Node.js ${process.version}`,
@@ -211,7 +224,9 @@ module.exports = (client) => {
           document: {
             engine: "MongoDB Atlas",
             status: mongoStatus.readyState === 1 ? "connected" : "standby",
-            modelsCount: Array.isArray(mongoStatus.models) ? mongoStatus.models.length : 0,
+            modelsCount: Array.isArray(mongoStatus.models)
+              ? mongoStatus.models.length
+              : 0,
           },
           emergencyFallback: {
             engine: "SQLite Local Fallback",
@@ -245,6 +260,60 @@ module.exports = (client) => {
     }
   });
 
+  // Endpoint pertukaran token OAuth2 untuk Discord Embedded App SDK (Activity)
+  router.post("/discord/token", async (req, res) => {
+    try {
+      const { code } = req.body || {};
+      if (!code) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Missing authorization code" });
+      }
+
+      if (!env.CLIENT_ID || !env.CLIENT_SECRET) {
+        return res.status(503).json({
+          success: false,
+          error: "Discord OAuth credentials not configured",
+        });
+      }
+
+      const params = new URLSearchParams({
+        client_id: env.CLIENT_ID,
+        client_secret: env.CLIENT_SECRET,
+        grant_type: "authorization_code",
+        code,
+      });
+
+      const tokenResponse = await globalThis.fetch(
+        "https://discord.com/api/v10/oauth2/token",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: params,
+        },
+      );
+
+      const data = await tokenResponse.json();
+      if (!tokenResponse.ok) {
+        return res.status(tokenResponse.status).json({
+          success: false,
+          error: data.error_description || data.error || "Token exchange failed",
+        });
+      }
+
+      res.json({
+        success: true,
+        access_token: data.access_token,
+        token_type: data.token_type,
+        expires_in: data.expires_in,
+        scope: data.scope,
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   return router;
 };
-

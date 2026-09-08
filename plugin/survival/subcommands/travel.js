@@ -119,9 +119,7 @@ module.exports = {
     await cacheManager.updateUserSurvival(user.id, { currentLocation: tujuan });
 
     const questGen = require("../../../src/survival/engines/questGenerator");
-    await questGen
-      .incrementQuestProgress(user.id, "travel", 1)
-      .catch(() => {});
+    await questGen.incrementQuestProgress(user.id, "travel", 1).catch(() => {});
 
     const timeUpdate = await advanceTime(user.id, Math.ceil(travelTime));
     const timeState = getTimeState(timeUpdate.hour);

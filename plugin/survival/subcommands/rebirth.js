@@ -117,7 +117,6 @@ module.exports = {
       await i.deferUpdate();
       const difficulty = i.values[0];
 
-      const profile = await cacheManager.getUserProfile(user.id);
       const previous = survival.rpg_state || {};
 
       // Hanya hal-hal yang memang hak milik pemain yang diwariskan ke
@@ -168,21 +167,9 @@ module.exports = {
 
       // Dompet kota ikut dikosongkan; sebelumnya hanya tabungan yang direset
       // sehingga pemain bisa membawa seluruh Naura Coin melewati reinkarnasi.
-      // Rule 1.10: penulisan UserProfile wajib lewat cacheManager agar cache
-      // tidak menyimpan nilai lama dan antrean flush tidak tertimpa.
-      await cacheManager.updateUserProfile(user.id, {
-        economy_wallet: 0,
-        economy_bank: 0,
-        inventory: [],
-        tool_pickaxeLevel: 1,
-        tool_pickaxeDurability: 100,
-        tool_axeLevel: 1,
-        tool_axeDurability: 100,
-        tool_fishingRodLevel: 1,
-        tool_fishingRodDurability: 100,
-        weapon_level: 1,
-        dungeon_floor: 1,
-      });
+      // Rule 1.10: reset UserProfile dilakukan lewat cacheManager.resetProfileForRebirth
+      // agar antrean tulis dibersihkan dan cache diperbarui secara aman.
+      await cacheManager.resetProfileForRebirth(user.id);
 
       await UserNPC.destroy({ where: { userId: user.id } });
       await UserFarm.destroy({ where: { userId: user.id } });

@@ -28,7 +28,9 @@ const {
 
 describe("Law 6: DomainError Structure and Behavior", () => {
   it("harus membuat base DomainError dengan kode, userMessage, dan konteks", () => {
-    const error = new DomainError("SAMPLE_CODE", "Pesan sampel", { detail: 123 });
+    const error = new DomainError("SAMPLE_CODE", "Pesan sampel", {
+      detail: 123,
+    });
     assert.strictEqual(error.code, "SAMPLE_CODE");
     assert.strictEqual(error.userMessage, "Pesan sampel");
     assert.strictEqual(error.context.detail, 123);
@@ -41,7 +43,10 @@ describe("Law 6: DomainError Structure and Behavior", () => {
   });
 
   it("InsufficientFundsError harus memiliki kode INSUFFICIENT_FUNDS", () => {
-    const error = new InsufficientFundsError("Saldo kurang!", { balance: 50, required: 100 });
+    const error = new InsufficientFundsError("Saldo kurang!", {
+      balance: 50,
+      required: 100,
+    });
     assert.strictEqual(error.code, "INSUFFICIENT_FUNDS");
     assert.strictEqual(error.userMessage, "Saldo kurang!");
     assert.strictEqual(error.context.balance, 50);
@@ -87,27 +92,68 @@ describe("Law 4: DomainStates and State Machine Validation", () => {
 
   it("canTransitionState memvalidasi transisi tiket dengan benar", () => {
     // OPEN -> CLAIMED sah
-    assert.strictEqual(canTransitionState(ALLOWED_TICKET_TRANSITIONS, TicketStatus.OPEN, TicketStatus.CLAIMED), true);
+    assert.strictEqual(
+      canTransitionState(
+        ALLOWED_TICKET_TRANSITIONS,
+        TicketStatus.OPEN,
+        TicketStatus.CLAIMED,
+      ),
+      true,
+    );
     // OPEN -> CLOSED sah
-    assert.strictEqual(canTransitionState(ALLOWED_TICKET_TRANSITIONS, TicketStatus.OPEN, TicketStatus.CLOSED), true);
+    assert.strictEqual(
+      canTransitionState(
+        ALLOWED_TICKET_TRANSITIONS,
+        TicketStatus.OPEN,
+        TicketStatus.CLOSED,
+      ),
+      true,
+    );
     // CLOSED -> CLAIMED ilegal (sudah tutup)
-    assert.strictEqual(canTransitionState(ALLOWED_TICKET_TRANSITIONS, TicketStatus.CLOSED, TicketStatus.CLAIMED), false);
+    assert.strictEqual(
+      canTransitionState(
+        ALLOWED_TICKET_TRANSITIONS,
+        TicketStatus.CLOSED,
+        TicketStatus.CLAIMED,
+      ),
+      false,
+    );
     // Status sama sah (no-op)
-    assert.strictEqual(canTransitionState(ALLOWED_TICKET_TRANSITIONS, TicketStatus.OPEN, TicketStatus.OPEN), true);
+    assert.strictEqual(
+      canTransitionState(
+        ALLOWED_TICKET_TRANSITIONS,
+        TicketStatus.OPEN,
+        TicketStatus.OPEN,
+      ),
+      true,
+    );
   });
 
   it("assertValidStateTransition melempar StateTransitionError saat transisi ilegal", () => {
     assert.doesNotThrow(() => {
-      assertValidStateTransition(ALLOWED_TRADE_TRANSITIONS, TradeStatus.PENDING, TradeStatus.ACCEPTED);
+      assertValidStateTransition(
+        ALLOWED_TRADE_TRANSITIONS,
+        TradeStatus.PENDING,
+        TradeStatus.ACCEPTED,
+      );
     });
 
     assert.throws(
       () => {
-        assertValidStateTransition(ALLOWED_TRADE_TRANSITIONS, TradeStatus.COMPLETED, TradeStatus.PENDING, { tradeId: "TR-123" });
+        assertValidStateTransition(
+          ALLOWED_TRADE_TRANSITIONS,
+          TradeStatus.COMPLETED,
+          TradeStatus.PENDING,
+          { tradeId: "TR-123" },
+        );
       },
       (err) => {
-        return err instanceof StateTransitionError && err.code === "INVALID_STATE_TRANSITION" && err.context.tradeId === "TR-123";
-      }
+        return (
+          err instanceof StateTransitionError &&
+          err.code === "INVALID_STATE_TRANSITION" &&
+          err.context.tradeId === "TR-123"
+        );
+      },
     );
   });
 });

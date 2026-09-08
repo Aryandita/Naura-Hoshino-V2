@@ -11,7 +11,6 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  MessageFlags,
 } = require("discord.js");
 const nauraSensei = require("../../src/ai/nauraSensei");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");

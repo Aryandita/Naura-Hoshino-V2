@@ -13,8 +13,12 @@ const {
 } = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 const greenhouseEngine = require("../../../src/survival/engines/greenhouseEngine");
-const { CROP_SEEDS, getSeedById } = require("../../../src/survival/data/cropSeeds");
-const { renderGreenhouseCard } = require("../../../src/canvas/greenhouseCanvas");
+const {
+  CROP_SEEDS,
+} = require("../../../src/survival/data/cropSeeds");
+const {
+  renderGreenhouseCard,
+} = require("../../../src/canvas/greenhouseCanvas");
 
 module.exports = {
   name: "farm",
@@ -289,7 +293,9 @@ module.exports = {
           res.wasFertilized ? `✨ _Bonus Pupuk Bio-Elektrolit Aktif!_` : ``,
           ``,
           `> *Bahan mentah ini siap diolah di Kafe (\`/survival cafe cook\`) atau dijual!*`,
-        ].filter(Boolean).join("\n"),
+        ]
+          .filter(Boolean)
+          .join("\n"),
         footerText: ui.getFooter("survival"),
       });
 

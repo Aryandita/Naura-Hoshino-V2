@@ -12,7 +12,6 @@ const {
 } = require("../../src/utils/NauraContainerBuilder");
 const { handleAIReport } = require("../../src/utils/aiAutomodHelper");
 const cacheManager = require("../../src/managers/cacheManager");
-const ui = require("../../src/config/ui");
 
 module.exports = {
   data: new ContextMenuCommandBuilder()

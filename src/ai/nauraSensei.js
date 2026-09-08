@@ -8,7 +8,6 @@
 
 const { logger } = require("../managers/logger");
 const geminiClient = require("./geminiClient");
-const ui = require("../config/ui");
 
 // Basis Pengetahuan Komprehensif Sistem Naura Hoshino V2
 const SYSTEM_KNOWLEDGE_BASE = [

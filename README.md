@@ -25,14 +25,14 @@ Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D
 
 ### 📌 Referensi Dokumen & Sumber Kebenaran
 
-| Item | Nilai / Berkas | Keterangan |
-| --- | :---: | --- |
-| **Versi Bot & Engine** | `2.1.0` | [`package.json`](package.json) |
-| **Runtime Minimum** | Node.js `>= 24.0.0` | `engines` di [`package.json`](package.json) |
-| **Aturan & Konstitusi** | [`RULES.md`](RULES.md) | Aturan hukum, arsitektur, transaksi atomik, dan keamanan wajib |
-| **Panduan AI Agent** | [`AGENTS.md`](AGENTS.md) | Peta navigasi arsitektur, kompetensi skill, dan SOP agen |
-| **Token Visual & UI** | [`DESIGN.md`](DESIGN.md) | Style guide Cyber-Anime Glassmorphism & Naura Wilds |
-| **Roadmap Sprint** | [`TODO.md`](TODO.md) | Prioritas fitur dan backlog pekerjaan |
+| Item                    |      Nilai / Berkas      | Keterangan                                                     |
+| ----------------------- | :----------------------: | -------------------------------------------------------------- |
+| **Versi Bot & Engine**  |         `2.1.0`          | [`package.json`](package.json)                                 |
+| **Runtime Minimum**     |   Node.js `>= 24.0.0`    | `engines` di [`package.json`](package.json)                    |
+| **Aturan & Konstitusi** |  [`RULES.md`](RULES.md)  | Aturan hukum, arsitektur, transaksi atomik, dan keamanan wajib |
+| **Panduan AI Agent**    | [`AGENTS.md`](AGENTS.md) | Peta navigasi arsitektur, kompetensi skill, dan SOP agen       |
+| **Token Visual & UI**   | [`DESIGN.md`](DESIGN.md) | Style guide Cyber-Anime Glassmorphism & Naura Wilds            |
+| **Roadmap Sprint**      |   [`TODO.md`](TODO.md)   | Prioritas fitur dan backlog pekerjaan                          |
 
 ---
 
@@ -89,14 +89,14 @@ Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D
 
 ## 🧩 Kebutuhan Sistem
 
-| Status | Komponen | Versi Minimal | Keterangan |
-| :---: | --- | :---: | --- |
-| 🟢 | **Node.js** | `>= 24.0.0` | Sangat wajib. Menggunakan `process.loadEnvFile()`, global `fetch`, dan test runner bawaan `node:test`. |
-| ⚡ | **Supabase (PG)** | PostgreSQL | Basis data transaksional dan relasional utama. |
-| 🍃 | **MongoDB** | `>= 7.x` | Basis data dokumen untuk audit log, transkrip tiket, dan riwayat chat AI. |
-| 🔴 | **Redis** | *Opsional* | Cache in-memory dan Pub/Sub invalidasi lintas shard. |
-| 🎧 | **Lavalink** | `v4` | Wajib untuk memutar audio musik berkualitas tinggi. |
-| 🎬 | **FFmpeg** | *Terbaru* | Otomatis tersedia melalui paket `ffmpeg-static`. |
+| Status | Komponen          | Versi Minimal | Keterangan                                                                                             |
+| :----: | ----------------- | :-----------: | ------------------------------------------------------------------------------------------------------ |
+|   🟢   | **Node.js**       |  `>= 24.0.0`  | Sangat wajib. Menggunakan `process.loadEnvFile()`, global `fetch`, dan test runner bawaan `node:test`. |
+|   ⚡   | **Supabase (PG)** |  PostgreSQL   | Basis data transaksional dan relasional utama.                                                         |
+|   🍃   | **MongoDB**       |   `>= 7.x`    | Basis data dokumen untuk audit log, transkrip tiket, dan riwayat chat AI.                              |
+|   🔴   | **Redis**         |  _Opsional_   | Cache in-memory dan Pub/Sub invalidasi lintas shard.                                                   |
+|   🎧   | **Lavalink**      |     `v4`      | Wajib untuk memutar audio musik berkualitas tinggi.                                                    |
+|   🎬   | **FFmpeg**        |   _Terbaru_   | Otomatis tersedia melalui paket `ffmpeg-static`.                                                       |
 
 ---
 
@@ -135,26 +135,26 @@ npm start
 
 Untuk deployment di panel game/bot Pterodactyl:
 
-| Kolom Panel | Nilai | Keterangan |
-| --- | --- | --- |
-| `CMD_RUN` | `npm start` | Menjalankan build dashboard, migrasi skema, lalu ShardingManager |
-| Docker Image | Node.js **24** | Wajib menggunakan container image Node 24+ |
-| `AUTO_UPDATE` | `1` | Mengaktifkan auto-pull git commit terbaru saat restart server |
+| Kolom Panel   | Nilai          | Keterangan                                                       |
+| ------------- | -------------- | ---------------------------------------------------------------- |
+| `CMD_RUN`     | `npm start`    | Menjalankan build dashboard, migrasi skema, lalu ShardingManager |
+| Docker Image  | Node.js **24** | Wajib menggunakan container image Node 24+                       |
+| `AUTO_UPDATE` | `1`            | Mengaktifkan auto-pull git commit terbaru saat restart server    |
 
 ---
 
 ## 📜 Script NPM yang Tersedia
 
-| Perintah | Deskripsi Fungsi |
-| --- | --- |
-| 🚀 `npm start` | Menjalankan bot untuk produksi melalui `shard.js` (didahului `prestart` migrasi). |
-| 🔄 `npm run dev` | Menjalankan bot dengan fitur auto-reload menggunakan `node --watch`. |
-| 🗃️ `npm run db:migrate` | Menjalankan migrasi skema database Sequelize secara manual. |
-| 🧪 `npm test` | Menjalankan automated test suite bawaan (`node:test`). |
-| 🔍 `npm run lint` | Melakukan audit standar kode dengan ESLint v10. |
-| 🔧 `npm run lint:fix` | Memperbaiki format kode yang menyimpang secara otomatis. |
-| 🌐 `npm run locales:check:strict` | Memeriksa kelengkapan dan sinkronisasi kamus bahasa ID vs EN. |
-| 🛡️ `npm run test:requires` | Memverifikasi seluruh modul require internal dapat diselesaikan dengan benar. |
+| Perintah                          | Deskripsi Fungsi                                                                  |
+| --------------------------------- | --------------------------------------------------------------------------------- |
+| 🚀 `npm start`                    | Menjalankan bot untuk produksi melalui `shard.js` (didahului `prestart` migrasi). |
+| 🔄 `npm run dev`                  | Menjalankan bot dengan fitur auto-reload menggunakan `node --watch`.              |
+| 🗃️ `npm run db:migrate`           | Menjalankan migrasi skema database Sequelize secara manual.                       |
+| 🧪 `npm test`                     | Menjalankan automated test suite bawaan (`node:test`).                            |
+| 🔍 `npm run lint`                 | Melakukan audit standar kode dengan ESLint v10.                                   |
+| 🔧 `npm run lint:fix`             | Memperbaiki format kode yang menyimpang secara otomatis.                          |
+| 🌐 `npm run locales:check:strict` | Memeriksa kelengkapan dan sinkronisasi kamus bahasa ID vs EN.                     |
+| 🛡️ `npm run test:requires`        | Memverifikasi seluruh modul require internal dapat diselesaikan dengan benar.     |
 
 ---
 
@@ -201,6 +201,7 @@ Naura-Hoshino-V2/
 ## 🤝 Kontribusi & Tata Kelola
 
 Sebelum mengirimkan kontribusi kode atau pull request:
+
 1. Baca panduan aturan wajib di [`RULES.md`](RULES.md).
 2. Jika Anda adalah AI Agent, pahami alur kerja di [`AGENTS.md`](AGENTS.md).
 3. Pastikan seluruh gate pengujian lolos:
@@ -221,6 +222,6 @@ Sebelum mengirimkan kontribusi kode atau pull request:
 **ISC License** © 2026 Aryandita Praftian.  
 Lihat berkas lisensi lengkap di [`LICENSE`](LICENSE).
 
-*Dibuat dengan dedikasi penuh untuk komunitas Discord Indonesia & Global.*
+_Dibuat dengan dedikasi penuh untuk komunitas Discord Indonesia & Global._
 
 </div>

@@ -50,7 +50,10 @@ function evaluateTransferDecision({
 }) {
   const safeSenderBalance = Math.max(0, Math.floor(Number(senderBalance) || 0));
   const safeTransferAmount = Math.floor(Number(transferAmount) || 0);
-  const safeDailyCount = Math.max(0, Math.floor(Number(dailyTransfersCount) || 0));
+  const safeDailyCount = Math.max(
+    0,
+    Math.floor(Number(dailyTransfersCount) || 0),
+  );
 
   // Guard 1: Larangan transfer ke diri sendiri
   if (senderId && receiverId && senderId === receiverId) {

@@ -11,7 +11,9 @@ const tribunalEngine = require("../../src/ai/tribunalEngine");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("court")
-    .setDescription("⚖️ Gelar sidang pengadilan komunitas interaktif bersama 3 Juri AI")
+    .setDescription(
+      "⚖️ Gelar sidang pengadilan komunitas interaktif bersama 3 Juri AI",
+    )
     .addUserOption((opt) =>
       opt
         .setName("terdakwa")
@@ -36,10 +38,13 @@ module.exports = {
     const defendant = interaction.options.getUser("terdakwa");
     const allegation = interaction.options.getString("perkara");
     const evidence =
-      interaction.options.getString("bukti") || "Keterangan saksi mata di server.";
+      interaction.options.getString("bukti") ||
+      "Keterangan saksi mata di server.";
 
     const plaintiffName =
-      interaction.member?.displayName || plaintiff.displayName || plaintiff.username;
+      interaction.member?.displayName ||
+      plaintiff.displayName ||
+      plaintiff.username;
     const defendantName = defendant.displayName || defendant.username;
 
     if (defendant.id === plaintiff.id) {

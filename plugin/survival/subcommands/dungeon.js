@@ -21,10 +21,12 @@ const {
   DUNGEON_PASS_ID,
   DUNGEON_SPECIAL_PASS_ID,
 } = require("../../../src/survival/data/items_dungeon");
+const {
+  evaluateDungeonEntryRequirement,
+} = require("../../../src/domain/decisions/dungeonDecisions");
 
 const COLLECTOR_MS = 90000;
 const CHOICE_MS = 60000;
-const CAVE_LOCATIONS = ["tambang", "desa", "village"];
 const e = helpers.e;
 
 function errorView(message) {
@@ -53,48 +55,6 @@ module.exports = {
     const inventory = safeParseInventory(profile.inventory);
     const passes = rewards.availablePasses(inventory);
 
-    if (passes.normal < 1 && passes.special < 1) {
-      const emptyState = ui.ux.buildEmptyStatePrompt({
-        type: "dungeon",
-        user,
-        lang: "id",
-        actionCmd: "/survival shop",
-        ctaLabel: "🛒 Kunjungi Warung Desa",
-        ctaCustomId: "dungeon_cta_shop",
-      });
-
-      const {
-        buildContainerV2,
-      } = require("../../../src/utils/NauraContainerBuilder");
-      return interaction.editReply(
-        buildContainerV2({
-          accentColorHex: ui.getColor("crafting") || "#228B22",
-          authorName: "Catatan Dungeon Naura",
-          title: emptyState.title,
-          description: emptyState.description,
-          expression: emptyState.expression,
-          buttonsRow: emptyState.buttonsRow,
-          footerText: ui.getFooter("survival"),
-        }),
-      );
-    }
-
-    if (!CAVE_LOCATIONS.includes(survival.currentLocation)) {
-      return interaction.editReply(
-        errorView(
-          "Pintu dungeonnya ada di gua tambang dekat desa, lho. Naura tunggu kamu di sana, ya!",
-        ),
-      );
-    }
-
-    if ((survival.hp || 0) <= 20 || (survival.stamina || 0) <= 20) {
-      return interaction.editReply(
-        errorView(
-          "Badanmu masih lemas begini, Naura tidak izinkan turun ke dungeon. Istirahat dulu, ya?",
-        ),
-      );
-    }
-
     const isPremium = Boolean(
       profile.isPremium &&
       profile.premiumUntil &&
@@ -102,14 +62,45 @@ module.exports = {
     );
     const floor = profile.dungeon_floor || 1;
 
-    if (!isPremium && floor > combat.FREE_FLOOR_LIMIT) {
-      return interaction.editReply(
-        errorView(
-          "Lantai " +
-            combat.FREE_FLOOR_LIMIT +
-            " adalah batas untuk penjelajah biasa. Kalau mau turun lebih dalam bersama Naura, coba lihat /premium, ya!",
-        ),
-      );
+    const entryDecision = evaluateDungeonEntryRequirement({
+      currentLocation: survival.currentLocation,
+      hp: survival.hp,
+      stamina: survival.stamina,
+      floor,
+      isPremium,
+      normalPassCount: passes.normal,
+      specialPassCount: passes.special,
+      freeFloorLimit: combat.FREE_FLOOR_LIMIT,
+    });
+
+    if (!entryDecision.isAllowed) {
+      if (entryDecision.suggestShopCta) {
+        const emptyState = ui.ux.buildEmptyStatePrompt({
+          type: "dungeon",
+          user,
+          lang: "id",
+          actionCmd: "/survival shop",
+          ctaLabel: "🛒 Kunjungi Warung Desa",
+          ctaCustomId: "dungeon_cta_shop",
+        });
+
+        const {
+          buildContainerV2,
+        } = require("../../../src/utils/NauraContainerBuilder");
+        return interaction.editReply(
+          buildContainerV2({
+            accentColorHex: ui.getColor("crafting") || "#228B22",
+            authorName: "Catatan Dungeon Naura",
+            title: emptyState.title,
+            description: emptyState.description,
+            expression: emptyState.expression,
+            buttonsRow: emptyState.buttonsRow,
+            footerText: ui.getFooter("survival"),
+          }),
+        );
+      }
+
+      return interaction.editReply(errorView(entryDecision.errorMessage));
     }
 
     const diffConfig = diffHelper.getDifficultyConfig(

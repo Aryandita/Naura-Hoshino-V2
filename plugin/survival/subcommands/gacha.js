@@ -2,7 +2,6 @@
 
 const {
   buildContainerV2,
-  buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -10,7 +9,6 @@ const {
   addItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
 const {
-  BANNERS,
   getBannerPool,
 } = require("../../../src/survival/data/gachaBanners");
 

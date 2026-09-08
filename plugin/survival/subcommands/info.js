@@ -248,12 +248,16 @@ module.exports = {
 
       const message = await interaction.editReply(payload);
 
-      if (!message || typeof message.createMessageComponentCollector !== "function") {
+      if (
+        !message ||
+        typeof message.createMessageComponentCollector !== "function"
+      ) {
         return;
       }
 
       const collector = message.createMessageComponentCollector({
-        filter: (i) => i.user.id === user.id && i.customId.startsWith("info_cta_"),
+        filter: (i) =>
+          i.user.id === user.id && i.customId.startsWith("info_cta_"),
         time: 45000,
         max: 1,
       });

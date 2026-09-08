@@ -26,7 +26,6 @@ function loadOllama() {
 }
 
 const SESSION_TTL_SECONDS = 3600;
-const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 const QUEUE_DELAY_MS = 1500;
 const CHUNK_LIMIT = 1950;
 const GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
@@ -242,10 +241,6 @@ class AIManager {
       // LOGIKA 1: JIKA ADA GAMBAR -> PAKAI GEMINI
       // ==========================================
       if (attachment) {
-        const sessionData = (await this.getMemory(userId, "gemini")) || {
-          history: [],
-        };
-
         const visionClient = this.getGenAI();
 
         if (!visionClient) {

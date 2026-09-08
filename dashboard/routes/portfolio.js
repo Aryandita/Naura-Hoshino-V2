@@ -29,8 +29,6 @@ const { VALID_THEMES, VALID_BG_TYPES, VALID_SECTIONS } = UserPortfolio;
 
 // Tema yang hanya bisa dipakai pengguna premium.
 const PREMIUM_THEMES = new Set(["sakura", "midnight"]);
-// Field yang hanya boleh diisi pengguna premium.
-const PREMIUM_FIELDS = ["accentColor", "bgValue", "customBadge"];
 
 /** Ambil data agregat satu user dari semua tabel yang relevan. */
 async function aggregateUserData(userId, client) {
@@ -257,7 +255,6 @@ module.exports = (client) => {
         bgValue,
         showcaseSections,
         pinnedCardId,
-        socialLinks,
         customBadge,
       } = req.body;
 

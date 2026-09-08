@@ -1,6 +1,5 @@
 const {
   SlashCommandBuilder,
-  EmbedBuilder,
   AttachmentBuilder,
   PermissionFlagsBits,
 } = require("discord.js");

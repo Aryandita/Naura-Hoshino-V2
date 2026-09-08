@@ -10,6 +10,7 @@ const cacheManager = require("../../../src/managers/cacheManager");
 const itemsConfig = require("../../../src/survival/data/items");
 const {
   safeParseInventory,
+  takeItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
 const ui = require("../../../src/config/ui");
 const leveling = require("../../../src/survival/engines/survivalLeveling");
@@ -163,11 +164,7 @@ module.exports = {
           });
         }
 
-        const idx = inventory.findIndex((inv) => inv && inv.id === selectedId);
-        if (idx > -1) {
-          inventory.splice(idx, 1);
-          await cacheManager.updateUserProfile(user.id, { inventory });
-        }
+        await takeItemsAtomic(user.id, [{ id: selectedId, amount: 1 }]);
 
         const lines = [
           `Kamu memakai **${conf.name}**, dan khasiatnya menempel permanen!`,
@@ -332,11 +329,7 @@ module.exports = {
         stamina: newStamina,
       });
 
-      const idx = inventory.findIndex((inv) => inv && inv.id === selectedId);
-      if (idx > -1) {
-        inventory.splice(idx, 1);
-        await cacheManager.updateUserProfile(user.id, { inventory });
-      }
+      await takeItemsAtomic(user.id, [{ id: selectedId, amount: 1 }]);
 
       await leveling.addPlayerXP(user.id, 1);
 

@@ -240,6 +240,162 @@ module.exports = {
       isStaminaCheckRunning = false;
     });
 
+    // 0.77 Survival Cafe Idle Revenue Notification - Runs every 2 hours
+    let isIdleRevenueCheckRunning = false;
+    cron.schedule("0 */2 * * *", async () => {
+      if (isIdleRevenueCheckRunning) return;
+      isIdleRevenueCheckRunning = true;
+      try {
+        const UserCafe = require("../models/UserCafe");
+        const { sendNotification } = require("./notificationManager");
+        const cacheManager = require("./cacheManager");
+        const { Op } = require("sequelize");
+
+        const readyCafes = await UserCafe.findAll({
+          where: {
+            uncollectedRevenue: { [Op.gte]: 500 },
+          },
+        });
+
+        for (const cafe of readyCafes) {
+          const profile = await cacheManager.getUserProfile(cafe.userId);
+          const prefs = profile?.notification_prefs || {};
+          if (prefs.idle_revenue && !prefs.sent_idle_revenue) {
+            const sent = await sendNotification(
+              client,
+              cafe.userId,
+              "idle_revenue",
+              { amount: cafe.uncollectedRevenue },
+            );
+            if (sent) {
+              await cacheManager.mutateUserProfileJson(
+                cafe.userId,
+                "notification_prefs",
+                (prefsObj) => {
+                  const obj =
+                    prefsObj && typeof prefsObj === "object" ? prefsObj : {};
+                  obj.sent_idle_revenue = true;
+                  return obj;
+                },
+              );
+            }
+          }
+        }
+      } catch (err) {
+        logger.error("[Cron] Gagal memproses Notif Idle Revenue Kafe:", err);
+      }
+      isIdleRevenueCheckRunning = false;
+    });
+
+    // 0.78 Stock Market Price Alert Notification - Runs every 4 hours
+    let isStockAlertCheckRunning = false;
+    cron.schedule("0 */4 * * *", async () => {
+      if (isStockAlertCheckRunning) return;
+      isStockAlertCheckRunning = true;
+      try {
+        const ServerStock = require("../models/ServerStock");
+        const UserStockHolding = require("../models/UserStockHolding");
+        const { sendNotification } = require("./notificationManager");
+        const cacheManager = require("./cacheManager");
+        const { Op } = require("sequelize");
+
+        const stocks = await ServerStock.findAll();
+        for (const stock of stocks) {
+          const prev = Number(stock.previousPrice || 0);
+          const curr = Number(stock.currentPrice || 0);
+          if (prev <= 0) continue;
+          const diffPct = Math.abs((curr - prev) / prev);
+          if (diffPct >= 0.1) {
+            const holders = await UserStockHolding.findAll({
+              where: {
+                ticker: stock.ticker,
+                sharesOwned: { [Op.gt]: 0 },
+              },
+            });
+            for (const holder of holders) {
+              const profile = await cacheManager.getUserProfile(holder.userId);
+              const prefs = profile?.notification_prefs || {};
+              if (prefs.stock_alert && !prefs.sent_stock_alert) {
+                const sent = await sendNotification(
+                  client,
+                  holder.userId,
+                  "stock_alert",
+                  { symbol: stock.name, price: curr },
+                );
+                if (sent) {
+                  await cacheManager.mutateUserProfileJson(
+                    holder.userId,
+                    "notification_prefs",
+                    (prefsObj) => {
+                      const obj =
+                        prefsObj && typeof prefsObj === "object" ? prefsObj : {};
+                      obj.sent_stock_alert = true;
+                      return obj;
+                    },
+                  );
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        logger.error("[Cron] Gagal memproses Notif Stock Alert:", err);
+      }
+      isStockAlertCheckRunning = false;
+    });
+
+    // 0.79 Vote Top.gg Reminder Notification - Runs every 2 hours
+    let isVoteReminderCheckRunning = false;
+    cron.schedule("0 */2 * * *", async () => {
+      if (isVoteReminderCheckRunning) return;
+      isVoteReminderCheckRunning = true;
+      try {
+        const UserSurvival = require("../models/UserSurvival");
+        const { sendNotification } = require("./notificationManager");
+        const cacheManager = require("./cacheManager");
+
+        const survivals = await UserSurvival.findAll({
+          attributes: ["userId", "rpg_state"],
+        });
+        const now = Date.now();
+        const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+
+        for (const survival of survivals) {
+          const state = survival.rpg_state || {};
+          const lastVote = state.last_vote_at
+            ? new Date(state.last_vote_at).getTime()
+            : 0;
+          if (!lastVote || now - lastVote < TWELVE_HOURS_MS) continue;
+
+          const profile = await cacheManager.getUserProfile(survival.userId);
+          const prefs = profile?.notification_prefs || {};
+          if (prefs.vote_reminder && !prefs.sent_vote_reminder) {
+            const sent = await sendNotification(
+              client,
+              survival.userId,
+              "vote_reminder",
+              {},
+            );
+            if (sent) {
+              await cacheManager.mutateUserProfileJson(
+                survival.userId,
+                "notification_prefs",
+                (prefsObj) => {
+                  const obj =
+                    prefsObj && typeof prefsObj === "object" ? prefsObj : {};
+                  obj.sent_vote_reminder = true;
+                  return obj;
+                },
+              );
+            }
+          }
+        }
+      } catch (err) {
+        logger.error("[Cron] Gagal memproses Notif Vote Reminder:", err);
+      }
+      isVoteReminderCheckRunning = false;
+    });
+
     // Reset notif status every day at 00:00 (also Quest reset notif)
     cron.schedule("0 0 * * *", async () => {
       try {
@@ -268,7 +424,12 @@ module.exports = {
             );
           }
 
-          if (prefs.sent_stamina) {
+          if (
+            prefs.sent_stamina ||
+            prefs.sent_idle_revenue ||
+            prefs.sent_stock_alert ||
+            prefs.sent_vote_reminder
+          ) {
             await cacheManager.mutateUserProfileJson(
               profile.userId,
               "notification_prefs",
@@ -276,6 +437,9 @@ module.exports = {
                 const obj =
                   prefsObj && typeof prefsObj === "object" ? prefsObj : {};
                 obj.sent_stamina = false;
+                obj.sent_idle_revenue = false;
+                obj.sent_stock_alert = false;
+                obj.sent_vote_reminder = false;
                 return obj;
               },
             );

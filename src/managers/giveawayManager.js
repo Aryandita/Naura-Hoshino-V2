@@ -1,7 +1,6 @@
 "use strict";
 
 const {
-  EmbedBuilder,
   ButtonBuilder,
   ButtonStyle,
   ActionRowBuilder,
@@ -11,10 +10,7 @@ const fs = require("node:fs");
 const { logger } = require("../managers/logger");
 const Giveaway = require("../models/Giveaway");
 const ui = require("../config/ui");
-const {
-  buildContainerV2,
-  buildErrorContainerV2,
-} = require("../utils/NauraContainerBuilder");
+const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
 
 // Jumlah max pemenang yang di-DM sekaligus sebelum diproses batch
 const DM_BATCH_SIZE = 5;

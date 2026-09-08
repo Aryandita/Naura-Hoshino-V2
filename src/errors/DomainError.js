@@ -48,7 +48,11 @@ class InsufficientFundsError extends DomainError {
    * @param {Record<string, any>} [context={}]
    */
   constructor(userMessage, context = {}) {
-    super("INSUFFICIENT_FUNDS", userMessage || "Saldo Anda tidak mencukupi untuk transaksi ini.", context);
+    super(
+      "INSUFFICIENT_FUNDS",
+      userMessage || "Saldo Anda tidak mencukupi untuk transaksi ini.",
+      context,
+    );
   }
 }
 
@@ -58,7 +62,12 @@ class RateLimitError extends DomainError {
    * @param {Record<string, any>} [context={}]
    */
   constructor(userMessage, context = {}) {
-    super("RATE_LIMITED", userMessage || "Anda melakukan aksi terlalu cepat. Silakan coba sesaat lagi.", context);
+    super(
+      "RATE_LIMITED",
+      userMessage ||
+        "Anda melakukan aksi terlalu cepat. Silakan coba sesaat lagi.",
+      context,
+    );
   }
 }
 
@@ -68,7 +77,11 @@ class PermissionDeniedError extends DomainError {
    * @param {Record<string, any>} [context={}]
    */
   constructor(userMessage, context = {}) {
-    super("PERMISSION_DENIED", userMessage || "Anda tidak memiliki izin untuk melakukan tindakan ini.", context);
+    super(
+      "PERMISSION_DENIED",
+      userMessage || "Anda tidak memiliki izin untuk melakukan tindakan ini.",
+      context,
+    );
   }
 }
 
@@ -78,7 +91,11 @@ class StateTransitionError extends DomainError {
    * @param {Record<string, any>} [context={}]
    */
   constructor(userMessage, context = {}) {
-    super("INVALID_STATE_TRANSITION", userMessage || "Perubahan status tidak diizinkan pada tahap ini.", context);
+    super(
+      "INVALID_STATE_TRANSITION",
+      userMessage || "Perubahan status tidak diizinkan pada tahap ini.",
+      context,
+    );
   }
 }
 
@@ -88,7 +105,11 @@ class EntityNotFoundError extends DomainError {
    * @param {Record<string, any>} [context={}]
    */
   constructor(userMessage, context = {}) {
-    super("ENTITY_NOT_FOUND", userMessage || "Data yang dicari tidak ditemukan.", context);
+    super(
+      "ENTITY_NOT_FOUND",
+      userMessage || "Data yang dicari tidak ditemukan.",
+      context,
+    );
   }
 }
 
@@ -98,7 +119,11 @@ class ValidationError extends DomainError {
    * @param {Record<string, any>} [context={}]
    */
   constructor(userMessage, context = {}) {
-    super("VALIDATION_ERROR", userMessage || "Input yang diberikan tidak valid.", context);
+    super(
+      "VALIDATION_ERROR",
+      userMessage || "Input yang diberikan tidak valid.",
+      context,
+    );
   }
 }
 
@@ -108,7 +133,13 @@ class ValidationError extends DomainError {
  * @returns {boolean}
  */
 function isDomainError(err) {
-  return err instanceof DomainError || (Boolean(err) && typeof err === "object" && err.isOperational === true && typeof err.code === "string");
+  return (
+    err instanceof DomainError ||
+    (Boolean(err) &&
+      typeof err === "object" &&
+      err.isOperational === true &&
+      typeof err.code === "string")
+  );
 }
 
 module.exports = {

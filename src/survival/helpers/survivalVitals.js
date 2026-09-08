@@ -11,7 +11,10 @@ const leveling = require("../engines/survivalLeveling");
  * @param {object} drains - Jumlah penurunan { hunger, thirst, stamina, hp }
  * @returns {Promise<{ hunger: number, thirst: number, stamina: number, hp: number, isExhausted: boolean, isCritical: boolean }>}
  */
-async function drainVitals(userId, { hunger = 0, thirst = 0, stamina = 0, hp = 0 } = {}) {
+async function drainVitals(
+  userId,
+  { hunger = 0, thirst = 0, stamina = 0, hp = 0 } = {},
+) {
   const survival = await cacheManager.getUserSurvival(userId);
   if (!survival) return null;
 
@@ -60,7 +63,11 @@ async function drainVitals(userId, { hunger = 0, thirst = 0, stamina = 0, hp = 0
  * @param {object} gains - Jumlah penambahan { hunger, thirst, stamina, hp }
  * @param {number} [customMaxHp] - Batas maksimum HP jika berbeda dari standar
  */
-async function recoverVitals(userId, { hunger = 0, thirst = 0, stamina = 0, hp = 0 } = {}, customMaxHp = null) {
+async function recoverVitals(
+  userId,
+  { hunger = 0, thirst = 0, stamina = 0, hp = 0 } = {},
+  customMaxHp = null,
+) {
   const survival = await cacheManager.getUserSurvival(userId);
   if (!survival) return null;
 

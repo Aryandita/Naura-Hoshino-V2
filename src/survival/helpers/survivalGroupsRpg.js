@@ -21,7 +21,9 @@ function addRpgGroup(builder) {
       .addSubcommand((sub) =>
         sub
           .setName("pass")
-          .setDescription("🏆 Buka antarmuka Naura Wilds Season Battle Pass (30 Tiers)")
+          .setDescription(
+            "🏆 Buka antarmuka Naura Wilds Season Battle Pass (30 Tiers)",
+          )
           .addStringOption((opt) =>
             opt
               .setName("aksi")
@@ -338,7 +340,10 @@ function addRpgGroup(builder) {
                 { name: "Buat Dungeon Baru (Create)", value: "create" },
                 { name: "Tantang Dungeon (Play)", value: "play" },
                 { name: "Beri Rating Bintang (Rate)", value: "rate" },
-                { name: "Cairkan Royalti Brankas (Withdraw)", value: "withdraw" },
+                {
+                  name: "Cairkan Royalti Brankas (Withdraw)",
+                  value: "withdraw",
+                },
               )
               .setRequired(false),
           )
@@ -351,7 +356,9 @@ function addRpgGroup(builder) {
           .addStringOption((opt) =>
             opt
               .setName("dungeon_id")
-              .setDescription("ID Dungeon target (khusus aksi Play, Rate, Withdraw)")
+              .setDescription(
+                "ID Dungeon target (khusus aksi Play, Rate, Withdraw)",
+              )
               .setRequired(false),
           )
           .addStringOption((opt) =>

@@ -7,10 +7,7 @@ const extraItems = require("./items_extra");
 const refinedItems = require("./items_refined");
 const { COUPON_ITEMS } = require("./items_coupon");
 const { DUNGEON_ITEMS } = require("./items_dungeon");
-const {
-  BALANCED_ITEMS_CATALOG,
-  CATALOG_BY_ID,
-} = require("./items_catalog");
+const { BALANCED_ITEMS_CATALOG, CATALOG_BY_ID } = require("./items_catalog");
 
 // Item warisan dan khusus yang harus tetap dapat dicari di inventaris pemain lama.
 const LEGACY_ITEMS = [

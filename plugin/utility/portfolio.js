@@ -17,7 +17,6 @@ const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const { logger } = require("../../src/managers/logger");
 const env = require("../../src/config/env");
 
-const VALID_THEMES = ["default", "sakura", "cyber", "midnight"];
 const PREMIUM_THEMES = ["sakura", "midnight"];
 
 function getDashboardBase() {

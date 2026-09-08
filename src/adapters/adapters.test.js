@@ -8,7 +8,6 @@ const assert = require("node:assert/strict");
 
 const {
   extractInteractionBoundary,
-  extractOptionsMap,
   parseCustomId,
   ensureGuildContext,
 } = require("./interactionBoundaryAdapter");
@@ -57,10 +56,15 @@ describe("Law 3: Interaction Boundary Adapter", () => {
   });
 
   it("ensureGuildContext melempar ValidationError jika di luar server", () => {
-    const dmBoundary = { isGuildContext: false, interactionId: "dm-1", userId: "u-1" };
+    const dmBoundary = {
+      isGuildContext: false,
+      interactionId: "dm-1",
+      userId: "u-1",
+    };
     assert.throws(
       () => ensureGuildContext(dmBoundary),
-      (err) => err instanceof ValidationError && err.code === "VALIDATION_ERROR"
+      (err) =>
+        err instanceof ValidationError && err.code === "VALIDATION_ERROR",
     );
   });
 });
@@ -144,7 +148,7 @@ describe("Law 3: Payment Boundary Adapter", () => {
   it("menolak webhook dengan nominal negatif", () => {
     assert.throws(
       () => normalizePaymentWebhook("trakteer", { amount: -5000 }),
-      (err) => err instanceof ValidationError
+      (err) => err instanceof ValidationError,
     );
   });
 });

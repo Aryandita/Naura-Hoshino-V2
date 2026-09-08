@@ -1,8 +1,7 @@
 // Lokasi: src/utils/CanvasUtils.js
-const { createCanvas, loadImage, GlobalFonts } = require("./canvasRuntime");
+const { createCanvas, loadImage } = require("./canvasRuntime");
 const { logger } = require("../managers/logger");
 const ui = require("../config/ui");
-const path = require("path");
 const axios = require("axios");
 const leveling = require("../survival/engines/survivalLeveling");
 
@@ -16,49 +15,6 @@ const UI_COLORS = {
   gold: "#FFD700",
 };
 
-// ==========================================
-// ðŸš€ IN-MEMORY IMAGE CACHE (LRU)
-// ==========================================
-const MAX_CACHE_SIZE = 50; // Diturunkan dari 100 agar memori RAM tidak membengkak
-const imageCache = new Map();
-
-// Periodic sweeping setiap 15 menit (Rule 1.8 & Rule 1.3 #6 Memory Safety)
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, item] of imageCache.entries()) {
-    if (item.timestamp && now - item.timestamp > 1800000) {
-      imageCache.delete(key);
-    }
-  }
-}, 900000).unref?.();
-
-async function getCachedImage(url) {
-  if (!url) return null;
-  if (imageCache.has(url)) {
-    const cached = imageCache.get(url);
-    if (Date.now() - cached.timestamp < 1800000) {
-      // Pindahkan ke akhir agar menjadi most recently used
-      imageCache.delete(url);
-      imageCache.set(url, cached);
-      return cached.img;
-    }
-    imageCache.delete(url);
-  }
-
-  try {
-    const img = await loadImage(url);
-    if (imageCache.size >= MAX_CACHE_SIZE) {
-      // Hapus yang paling lama (pertama kali masuk)
-      const firstKey = imageCache.keys().next().value;
-      imageCache.delete(firstKey);
-    }
-    const cacheObj = { img, timestamp: Date.now() };
-    imageCache.set(url, cacheObj);
-    return img;
-  } catch (err) {
-    return null;
-  }
-}
 
 // ==========================================
 // ðŸ› ï¸ HELPER DASAR (GABUNGAN)
@@ -1931,7 +1887,6 @@ async function generateLevel(user, level) {
   const avatarSize = 140;
   const avatarX = 48;
   const avatarY = 60;
-  const accentColor = "#FFB6C1";
 
   // Dual Glowing Ring around Avatar
   ctx.save();

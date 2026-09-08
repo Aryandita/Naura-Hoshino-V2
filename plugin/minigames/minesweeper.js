@@ -1,8 +1,4 @@
-const {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  MessageFlags,
-} = require("discord.js");
+const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const ui = require("../../src/config/ui");
 
 module.exports = {

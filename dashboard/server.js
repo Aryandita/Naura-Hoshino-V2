@@ -39,7 +39,6 @@ const env = require("../src/config/env");
 
 const { logger } = require("../src/managers/logger");
 const { requireLogin, requireApiLogin } = require("./middleware/auth");
-const { createRateLimiter } = require("./utils/httpGuard");
 
 /** Daftar origin yang boleh memanggil dashboard dari domain lain. */
 function parseOrigins() {
@@ -144,9 +143,24 @@ module.exports = (client) => {
       res.setHeader("Content-Type", "model/gltf-binary");
     }
   };
-  webApp.use("/models", express.static(path.join(__dirname, "../dashboard-v2/dist/models"), { setHeaders: setModelMime }));
-  webApp.use("/models", express.static(path.join(__dirname, "../dashboard-v2/public/models"), { setHeaders: setModelMime }));
-  webApp.use("/models", express.static(path.join(__dirname, "../assets/3D Model Naura"), { setHeaders: setModelMime }));
+  webApp.use(
+    "/models",
+    express.static(path.join(__dirname, "../dashboard-v2/dist/models"), {
+      setHeaders: setModelMime,
+    }),
+  );
+  webApp.use(
+    "/models",
+    express.static(path.join(__dirname, "../dashboard-v2/public/models"), {
+      setHeaders: setModelMime,
+    }),
+  );
+  webApp.use(
+    "/models",
+    express.static(path.join(__dirname, "../assets/3D Model Naura"), {
+      setHeaders: setModelMime,
+    }),
+  );
 
   // --- Webhook Routes Mounting ---
   // Pasang rute webhook ke webApp utama agar URL https://domain/api/webhook/* langsung aktif
@@ -396,14 +410,11 @@ module.exports = (client) => {
       const now = new Date();
       const inGameHour = (now.getUTCHours() * 2) % 24;
       const inGameDay =
-        Math.floor(now.getTime() / (24 * 60 * 60 * 1000)) % 365 + 1;
+        (Math.floor(now.getTime() / (24 * 60 * 60 * 1000)) % 365) + 1;
 
       const { fn, col } = require("sequelize");
       const counts = await UserSurvival.findAll({
-        attributes: [
-          "currentLocation",
-          [fn("COUNT", col("userId")), "count"],
-        ],
+        attributes: ["currentLocation", [fn("COUNT", col("userId")), "count"]],
         group: ["currentLocation"],
         raw: true,
       });
@@ -419,8 +430,10 @@ module.exports = (client) => {
 
       for (const row of counts) {
         const loc = String(row.currentLocation || "desa").toLowerCase();
-        if (loc === "village") locationCounts.desa += parseInt(row.count, 10) || 0;
-        else if (loc === "city") locationCounts.kota += parseInt(row.count, 10) || 0;
+        if (loc === "village")
+          locationCounts.desa += parseInt(row.count, 10) || 0;
+        else if (loc === "city")
+          locationCounts.kota += parseInt(row.count, 10) || 0;
         else if (locationCounts[loc] !== undefined) {
           locationCounts[loc] += parseInt(row.count, 10) || 0;
         }

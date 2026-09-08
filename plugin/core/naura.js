@@ -68,7 +68,9 @@ module.exports = {
         ),
     )
     .addSubcommand((sub) =>
-      sub.setName("play").setDescription("Main minigame seru 1v1 bareng Naura!"),
+      sub
+        .setName("play")
+        .setDescription("Main minigame seru 1v1 bareng Naura!"),
     ),
 
   async execute(interaction) {
@@ -221,8 +223,12 @@ module.exports = {
         : "🔒 **Preview Harian:** Langganan `/premium` untuk membuka seluruh koleksi HD & pose eksklusif Naura!";
 
       const payload = buildContainerV2({
-        accentColorHex: isPremium ? "#FFD700" : (ui.getColor("primary") || "#FFB6C1"),
-        authorName: isPremium ? "NAURA VIP PREMIUM ARTBOOK" : "NAURA GALLERY PREVIEW",
+        accentColorHex: isPremium
+          ? "#FFD700"
+          : ui.getColor("primary") || "#FFB6C1",
+        authorName: isPremium
+          ? "NAURA VIP PREMIUM ARTBOOK"
+          : "NAURA GALLERY PREVIEW",
         title: `${e("camera", "\uD83D\uDCF8")} Koleksi Foto Naura (${randomImage})`,
         description: `Ini salah satu foto favorit Naura! Gimana, imut kan? Hihi~ 🌸\n\n${vipBadge}`,
         bannerAttachmentName: randomImage,

@@ -22,6 +22,7 @@ const {
 } = require("../../../src/utils/NauraContainerBuilder");
 const {
   safeParseInventory,
+  addItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
 
 const COLLECTOR_MS = 120000;
@@ -205,13 +206,14 @@ module.exports = {
       const passChance = Math.min(0.9, (survival.intelligence || 1) / 100);
 
       if (Math.random() < passChance) {
-        inventory.push({
-          id: "certificate",
-          name: "Ijazah Kelulusan",
-          amount: 1,
-          type: "special",
-        });
-        await cacheManager.updateUserProfile(user.id, { inventory });
+        await addItemsAtomic(user.id, [
+          {
+            id: "certificate",
+            name: "Ijazah Kelulusan",
+            amount: 1,
+            type: "special",
+          },
+        ]);
         await advanceTime(user.id, EXAM_HOURS);
 
         const passPayload = buildContainerV2({
@@ -233,8 +235,10 @@ module.exports = {
         return i.editReply({ ...passPayload, embeds: [] }).catch(() => {});
       }
 
-      await cacheManager.updateUserSurvival(user.id, {
-        rpg_state: { ...rpgState, test_cd: (survival.inGameDay || 1) + 1 },
+      await cacheManager.mutateUserSurvivalJson(user.id, "rpg_state", (state) => {
+        const nextState = state && typeof state === "object" ? state : {};
+        nextState.test_cd = (survival.inGameDay || 1) + 1;
+        return nextState;
       });
       await advanceTime(user.id, EXAM_HOURS);
 

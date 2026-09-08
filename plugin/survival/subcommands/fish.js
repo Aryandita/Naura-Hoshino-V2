@@ -327,6 +327,13 @@ module.exports = {
           ];
           const stored = await addItemsAtomic(user.id, itemsToStore);
 
+          if (stored.ok) {
+            try {
+              const seasonEngine = require("../../../src/services/seasonEngine");
+              await seasonEngine.addSeasonXp(user.id, 10);
+            } catch (err) {}
+          }
+
           if (!stored.ok) {
             const writeFailPayload = buildContainerV2({
               accentColorHex: ui.getColor("warning") || "#FFB347",

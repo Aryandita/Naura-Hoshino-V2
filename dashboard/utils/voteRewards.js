@@ -141,6 +141,15 @@ async function grantVoteRewards(
     if (typeof cacheManager.invalidateUserSurvival === "function") {
       cacheManager.invalidateUserSurvival(userId);
     }
+    await cacheManager.mutateUserProfileJson(
+      userId,
+      "notification_prefs",
+      (cur) => {
+        const obj = cur && typeof cur === "object" ? cur : {};
+        obj.sent_vote_reminder = false;
+        return obj;
+      },
+    );
   } catch {}
 
   logger.info(

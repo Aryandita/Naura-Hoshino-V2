@@ -15,7 +15,9 @@ const {
 console.log("=== VERIFIKASI MATRIKS 150 ITEM RESMI NAURA WILDS ===");
 
 // 1. Total Count
-console.log(`Total Item Terdaftar: ${BALANCED_ITEMS_CATALOG.length} (Target: 150)`);
+console.log(
+  `Total Item Terdaftar: ${BALANCED_ITEMS_CATALOG.length} (Target: 150)`,
+);
 if (BALANCED_ITEMS_CATALOG.length !== 150) {
   console.error("FAIL: Total item tidak sama dengan 150!");
   process.exit(1);
@@ -35,7 +37,9 @@ console.table(categories);
 
 for (const [cat, count] of Object.entries(categories)) {
   if (count !== 30) {
-    console.error(`FAIL: Kategori ${cat} memiliki ${count} item (harus tepat 30)!`);
+    console.error(
+      `FAIL: Kategori ${cat} memiliki ${count} item (harus tepat 30)!`,
+    );
     process.exit(1);
   }
 }
@@ -70,9 +74,13 @@ console.table(tierCounts);
 
 for (const [tier, count] of Object.entries(tierCounts)) {
   if (count !== 25) {
-    console.error(`FAIL: Tier ${tier} memiliki ${count} item (harus tepat 25)!`);
+    console.error(
+      `FAIL: Tier ${tier} memiliki ${count} item (harus tepat 25)!`,
+    );
     process.exit(1);
   }
 }
 
-console.log("\nSUCCESS: Seluruh 150 item terverifikasi simetris dan seimbang sempurna! 🎉");
+console.log(
+  "\nSUCCESS: Seluruh 150 item terverifikasi simetris dan seimbang sempurna! 🎉",
+);

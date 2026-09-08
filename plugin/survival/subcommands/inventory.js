@@ -18,9 +18,13 @@ const { logger } = require("../../../src/managers/logger");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
-const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
+const {
+  safeParseInventory,
+} = require("../../../src/survival/engines/inventoryHelper");
 const { CATALOG_BY_ID } = require("../../../src/survival/data/items_catalog");
-const { generateInventoryBackpackImage } = require("../../../src/canvas/inventoryCanvas");
+const {
+  generateInventoryBackpackImage,
+} = require("../../../src/canvas/inventoryCanvas");
 
 const IMAGE_NAME = "naura-backpack.png";
 
@@ -60,15 +64,19 @@ module.exports = {
         totalUnits += amount;
 
         const catalogItem = CATALOG_BY_ID.get(id);
-        const cat = catalogItem ? catalogItem.category : (item.category || "other");
+        const cat = catalogItem
+          ? catalogItem.category
+          : item.category || "other";
         if (categoryCounts[cat] !== undefined) {
           categoryCounts[cat] += amount;
         } else {
           categoryCounts.other += amount;
         }
 
-        const sellPrice = catalogItem ? catalogItem.sellPrice : (item.sellPrice || 10);
-        totalSellValue += (sellPrice * amount);
+        const sellPrice = catalogItem
+          ? catalogItem.sellPrice
+          : item.sellPrice || 10;
+        totalSellValue += sellPrice * amount;
 
         if (aggregatedMap.has(id)) {
           aggregatedMap.get(id).amount += amount;
@@ -77,7 +85,7 @@ module.exports = {
             id,
             name: item.name || (catalogItem ? catalogItem.name : id),
             amount,
-            tier: catalogItem ? catalogItem.tier : (item.tier || 1),
+            tier: catalogItem ? catalogItem.tier : item.tier || 1,
             tierColor: catalogItem ? catalogItem.tierColor : "#9CA3AF",
             emoji: item.emoji || (catalogItem ? catalogItem.emoji : "📦"),
           });
@@ -85,15 +93,22 @@ module.exports = {
       }
 
       const uniqueTypesCount = aggregatedMap.size;
-      const displayName = ui.ux ? ui.ux.resolveUserName(interaction) : (user.displayName || user.username);
+      const displayName = ui.ux
+        ? ui.ux.resolveUserName(interaction)
+        : user.displayName || user.username;
 
       // Render Visual Canvas Ransel Petualang
       let files = [];
       let bannerAttachmentName;
       try {
-        const imageBuffer = await generateInventoryBackpackImage(user, rawInventory, profile, {
-          survival,
-        });
+        const imageBuffer = await generateInventoryBackpackImage(
+          user,
+          rawInventory,
+          profile,
+          {
+            survival,
+          },
+        );
         if (imageBuffer) {
           files = [new AttachmentBuilder(imageBuffer, { name: IMAGE_NAME })];
           bannerAttachmentName = IMAGE_NAME;
@@ -167,12 +182,16 @@ module.exports = {
 
       const replyMsg = await interaction.editReply(payload);
 
-      if (!replyMsg || typeof replyMsg.createMessageComponentCollector !== "function") {
+      if (
+        !replyMsg ||
+        typeof replyMsg.createMessageComponentCollector !== "function"
+      ) {
         return;
       }
 
       const collector = replyMsg.createMessageComponentCollector({
-        filter: (i) => i.user.id === user.id && i.customId.startsWith("inv_cta_"),
+        filter: (i) =>
+          i.user.id === user.id && i.customId.startsWith("inv_cta_"),
         time: 60000,
         max: 1,
       });
@@ -199,7 +218,8 @@ module.exports = {
       logger.error("[SURVIVAL INVENTORY ERROR]", err);
       const errPayload = buildErrorContainerV2({
         title: `${e("naura_cry", "😭")} Gagal Membuka Ransel`,
-        description: "Maaf ya, ada kendala saat Naura membukakan ranselmu. Coba ulangi sebentar lagi ya!",
+        description:
+          "Maaf ya, ada kendala saat Naura membukakan ranselmu. Coba ulangi sebentar lagi ya!",
         footerText: ui.getFooter("survival"),
       });
       return interaction.editReply(errPayload);

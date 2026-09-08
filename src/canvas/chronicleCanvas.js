@@ -1,6 +1,6 @@
 "use strict";
 
-const { createCanvas, loadImage } = require("./canvasRuntime");
+const { createCanvas } = require("./canvasRuntime");
 
 /**
  * Render visual koran harian server "THE HOSHINO TIMES" (800x1000)

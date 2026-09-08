@@ -2,7 +2,6 @@
 
 const { logger } = require("../managers/logger");
 const cacheManager = require("../managers/cacheManager");
-const UserSurvival = require("../models/UserSurvival");
 const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
 
 class AutomationEngine {
@@ -21,7 +20,7 @@ class AutomationEngine {
    * @param {object} eventContext - { guild, member, user, channel, metadata }
    */
   async handleTrigger(triggerType, eventContext) {
-    const { guild, member, user } = eventContext;
+    const { guild } = eventContext;
     if (!guild) return;
 
     try {
@@ -47,8 +46,6 @@ class AutomationEngine {
    * Eksekusi satu alur workflow
    */
   async _executeFlow(flow, ctx) {
-    const { member, user, guild, channel } = ctx;
-
     // 1. Condition Check
     if (Array.isArray(flow.conditions) && flow.conditions.length > 0) {
       for (const cond of flow.conditions) {
@@ -73,7 +70,7 @@ class AutomationEngine {
   }
 
   _evaluateCondition(cond, ctx) {
-    const { member, ctxData } = ctx;
+    const { member } = ctx;
     switch (cond.type) {
       case "HAS_ROLE":
         return member?.roles?.cache?.has(cond.roleId);
@@ -89,7 +86,7 @@ class AutomationEngine {
   }
 
   async _executeAction(action, ctx) {
-    const { member, user, guild, channel } = ctx;
+    const { member, user, guild } = ctx;
 
     switch (action.type) {
       case "ADD_ROLE":
@@ -113,10 +110,9 @@ class AutomationEngine {
 
       case "REWARD_CURRENCY":
         if (user && action.amount > 0) {
-          await UserSurvival.increment(
-            { starFragments: action.amount },
-            { where: { userId: user.id } },
-          );
+          await cacheManager.incrementUserSurvival(user.id, {
+            starFragments: action.amount,
+          });
         }
         break;
 

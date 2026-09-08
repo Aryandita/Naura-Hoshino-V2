@@ -1,7 +1,6 @@
 "use strict";
 
 const UserProfile = require("../models/UserProfile");
-const GuildSettings = require("../models/GuildSettings");
 const cacheManager = require("./cacheManager");
 const { sequelize } = require("./dbManager");
 

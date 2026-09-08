@@ -1,16 +1,4 @@
 const fs = require("fs");
-
-// [PATCH] Fix CA certs error if NODE_EXTRA_CA_CERTS points to non-existent file/path
-if (process.env.NODE_EXTRA_CA_CERTS) {
-  try {
-    if (!fs.existsSync(process.env.NODE_EXTRA_CA_CERTS)) {
-      delete process.env.NODE_EXTRA_CA_CERTS;
-    }
-  } catch (e) {
-    delete process.env.NODE_EXTRA_CA_CERTS;
-  }
-}
-
 const {
   SlashCommandBuilder,
   ActionRowBuilder,

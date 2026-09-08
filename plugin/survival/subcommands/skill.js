@@ -125,7 +125,8 @@ module.exports = {
     if (!survival) {
       return interaction.editReply(
         buildErrorContainerV2({
-          errorMessage: "Data petualanganmu belum ditemukan. Mulai dulu dengan /survival start ya!",
+          errorMessage:
+            "Data petualanganmu belum ditemukan. Mulai dulu dengan /survival start ya!",
           footerText: ui.getFooter("survival"),
         }),
       );
@@ -139,7 +140,10 @@ module.exports = {
       flags: MessageFlags.IsComponentsV2,
     });
 
-    if (!message || typeof message.createMessageComponentCollector !== "function") {
+    if (
+      !message ||
+      typeof message.createMessageComponentCollector !== "function"
+    ) {
       return;
     }
 
@@ -166,21 +170,26 @@ module.exports = {
 
       if (!result.success) {
         if (result.reason === "STAT_CAPPED") {
-          await i.followUp({
-            ...buildErrorContainerV2({
-              errorMessage: `Stat tersebut sudah mencapai batas maksimal level ini (${result.cap})! Naikkan levelmu dulu ya~`,
-              footerText: ui.getFooter("survival"),
-            }),
-            flags: MessageFlags.Ephemeral,
-          }).catch(() => {});
+          await i
+            .followUp({
+              ...buildErrorContainerV2({
+                errorMessage: `Stat tersebut sudah mencapai batas maksimal level ini (${result.cap})! Naikkan levelmu dulu ya~`,
+                footerText: ui.getFooter("survival"),
+              }),
+              flags: MessageFlags.Ephemeral,
+            })
+            .catch(() => {});
         } else if (result.reason === "NO_POINTS") {
-          await i.followUp({
-            ...buildErrorContainerV2({
-              errorMessage: "Poin kemampuanmu sudah habis! Dapatkan poin baru dengan menaikkan level.",
-              footerText: ui.getFooter("survival"),
-            }),
-            flags: MessageFlags.Ephemeral,
-          }).catch(() => {});
+          await i
+            .followUp({
+              ...buildErrorContainerV2({
+                errorMessage:
+                  "Poin kemampuanmu sudah habis! Dapatkan poin baru dengan menaikkan level.",
+                footerText: ui.getFooter("survival"),
+              }),
+              flags: MessageFlags.Ephemeral,
+            })
+            .catch(() => {});
         }
         return;
       }
@@ -188,11 +197,13 @@ module.exports = {
       const freshSurvival = await cacheManager.getUserSurvival(user.id);
       const updatedView = buildSkillView(freshSurvival, user);
 
-      await interaction.editReply({
-        ...updatedView.container,
-        embeds: [],
-        flags: MessageFlags.IsComponentsV2,
-      }).catch(() => {});
+      await interaction
+        .editReply({
+          ...updatedView.container,
+          embeds: [],
+          flags: MessageFlags.IsComponentsV2,
+        })
+        .catch(() => {});
     });
   },
 };

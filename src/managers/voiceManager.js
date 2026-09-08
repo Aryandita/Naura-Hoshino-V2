@@ -49,7 +49,11 @@ class VoiceManager {
           if (existingPlayer) {
             console.log(
               "\x1b[43m\x1b[30m 🔊 TTS SKIP \x1b[0m \x1b[33mPoru player aktif di guild ini (state: " +
-                (existingPlayer.isPlaying ? "playing" : existingPlayer.isPaused ? "paused" : "loading/connecting") +
+                (existingPlayer.isPlaying
+                  ? "playing"
+                  : existingPlayer.isPaused
+                    ? "paused"
+                    : "loading/connecting") +
                 "). TTS dibatalkan untuk menghindari konflik WebSocket Voice.\x1b[0m",
             );
             return;

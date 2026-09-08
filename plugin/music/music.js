@@ -29,15 +29,6 @@ const formatDuration = (ms) => {
   return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
 };
 
-const getSourceIcon = (sourceName) => {
-  if (sourceName === "spotify") return ui.getEmoji("spotify") || "🎵";
-  if (sourceName === "youtube" || sourceName === "ytmsearch")
-    return ui.getEmoji("youtube") || "▶️";
-  if (sourceName === "soundcloud") return ui.getEmoji("soundcloud") || "☁️";
-  if (sourceName === "apple") return ui.getEmoji("apple") || "🍎";
-  return ui.getEmoji("nowplaying") || "🎵";
-};
-
 async function runMusicLogic(
   client,
   user,
@@ -215,8 +206,15 @@ async function runMusicLogic(
       player.isAutoplay = true;
 
       if (!player.isPlaying && player.queue.length === 0) {
-        const openingTrackRes = await poru.resolve({ query: "scsearch:cyberpunk lofi chill beats", requester: user });
-        if (openingTrackRes && openingTrackRes.tracks && openingTrackRes.tracks[0]) {
+        const openingTrackRes = await poru.resolve({
+          query: "scsearch:cyberpunk lofi chill beats",
+          requester: user,
+        });
+        if (
+          openingTrackRes &&
+          openingTrackRes.tracks &&
+          openingTrackRes.tracks[0]
+        ) {
           player.queue.add(openingTrackRes.tracks[0]);
           player.play();
         }
@@ -411,10 +409,16 @@ async function runMusicLogic(
     ) {
       brandColor = "#1DB954";
       brandEmoji = ui.getEmoji("spotify") || "🎵";
-    } else if (searchSource === "scsearch" || firstTrackSource === "soundcloud") {
+    } else if (
+      searchSource === "scsearch" ||
+      firstTrackSource === "soundcloud"
+    ) {
       brandColor = "#FF7700";
       brandEmoji = ui.getEmoji("soundcloud") || "☁️";
-    } else if (searchSource === "amsearch" || firstTrackSource === "applemusic") {
+    } else if (
+      searchSource === "amsearch" ||
+      firstTrackSource === "applemusic"
+    ) {
       brandColor = "#FA243C";
       brandEmoji = ui.getEmoji("apple") || "🍎";
     }
@@ -1452,7 +1456,8 @@ async function runMusicLogic(
       accentColorHex: ui.getColor("accent_purple") || "#C084FC",
       authorName: "NAURA LISTENING PARTY LOBBY",
       title: `🎉 Sesi Listening Party: ${guild.name}`,
-      description: `**${hostName}** telah membuka sesi **Listening Party Kolaboratif** di channel **${memberVoice.name}**!\n\n` +
+      description:
+        `**${hostName}** telah membuka sesi **Listening Party Kolaboratif** di channel **${memberVoice.name}**!\n\n` +
         `👥 **Peserta Aktif di Voice:** \`${membersInVc.size} Pendengar\`\n` +
         `🎵 **Sedang Memutar:** \`${currentTrack ? `${currentTrack.title} - ${currentTrack.author}` : "Belum ada lagu (Gunakan tombol request)"}\`\n` +
         `📋 **Antrean Bersama:** \`${player.queue.length} lagu di antrean\`\n\n` +
@@ -1507,7 +1512,9 @@ async function runMusicLogic(
     const isEnabled = aiDjManager.isDjEnabled(guild.id);
     const isVoiceReady = fishAudioService.isConfigured();
     const djPayload = buildContainerV2({
-      accentColorHex: isEnabled ? (ui.getColor("primary") || "#FFB6C1") : "#4B5563",
+      accentColorHex: isEnabled
+        ? ui.getColor("primary") || "#FFB6C1"
+        : "#4B5563",
       authorName: "HOSHINO FM • AI SMART DJ STATUS",
       title: "🎧 Status Sistem AI DJ Radio Host",
       description:
@@ -1714,7 +1721,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("dj")
-        .setDescription("🎧 Aktifkan atau kelola mode AI Smart DJ Companion (Hoshino FM)")
+        .setDescription(
+          "🎧 Aktifkan atau kelola mode AI Smart DJ Companion (Hoshino FM)",
+        )
         .addStringOption((opt) =>
           opt
             .setName("mode")
@@ -1736,31 +1745,31 @@ module.exports = {
       safeRespond,
       respondWithFallback,
       truncateLabel,
-    } = require('../../src/utils/autocompleteHelper');
+    } = require("../../src/utils/autocompleteHelper");
 
     const focusedValue = interaction.options.getFocused();
     // Spotify link: tampilkan konfirmasi langsung tanpa ke Lavalink
     if (focusedValue.match(/^(https?:\/\/)?(open\.)?spotify\.com\//)) {
       return safeRespond(interaction, [
-        choice('🎧 [Spotify Link] Tekan Enter untuk memutar', focusedValue),
+        choice("🎧 [Spotify Link] Tekan Enter untuk memutar", focusedValue),
       ]);
     }
 
     // URL langsung (YouTube, SoundCloud, dll)
     if (focusedValue.match(/^https?:\/\//)) {
       return safeRespond(interaction, [
-        choice('🔗 [Direct URL] Tekan Enter untuk memutar link', focusedValue),
+        choice("🔗 [Direct URL] Tekan Enter untuk memutar link", focusedValue),
       ]);
     }
 
     if (!focusedValue || focusedValue.trim().length === 0) {
-      return respondWithFallback(interaction, '');
+      return respondWithFallback(interaction, "");
     }
 
     const cleanQuery = focusedValue
       .replace(
         /^(sc:|ytm:|yt:|spsearch:|ytsearch:|scsearch:|ytmsearch:|amsearch:)/,
-        '',
+        "",
       )
       .trim();
     const fallbackChoice = {
@@ -1787,24 +1796,26 @@ module.exports = {
         if (activePlayer && activePlayer.currentTrack) {
           const ct = activePlayer.currentTrack.info;
           const nowUri = ct.uri || `${defaultEngine}:${ct.title} ${ct.author}`;
-          hints.push(choice(`🎵 Sedang diputar: ${ct.title} - ${ct.author}`, nowUri));
+          hints.push(
+            choice(`🎵 Sedang diputar: ${ct.title} - ${ct.author}`, nowUri),
+          );
         }
         hints.push(
-          choice('☁️ SoundCloud (Stabil & Anti-Block)', 'sc:'),
-          choice('▶️ YouTube', 'yt:'),
-          choice('🎧 YouTube Music', 'ytm:'),
-          choice('🔍 Ketik nama lagu atau artis untuk mencari...', ' '),
+          choice("☁️ SoundCloud (Stabil & Anti-Block)", "sc:"),
+          choice("▶️ YouTube", "yt:"),
+          choice("🎧 YouTube Music", "ytm:"),
+          choice("🔍 Ketik nama lagu atau artis untuk mencari...", " "),
         );
         return safeRespond(interaction, hints.slice(0, 5));
       }
 
       // Tentukan search engine berdasarkan prefix
-      const searchEngine = focusedValue.startsWith('sc:')
-        ? 'scsearch'
-        : focusedValue.startsWith('ytm:')
-          ? 'ytmsearch'
-          : focusedValue.startsWith('yt:')
-            ? 'ytsearch'
+      const searchEngine = focusedValue.startsWith("sc:")
+        ? "scsearch"
+        : focusedValue.startsWith("ytm:")
+          ? "ytmsearch"
+          : focusedValue.startsWith("yt:")
+            ? "ytsearch"
             : defaultEngine;
 
       // Cek cache: hindari request Lavalink saat user mengetik cepat
@@ -1814,7 +1825,10 @@ module.exports = {
 
       // Timeout 2200ms - cukup untuk node lambat, masih di bawah batas Discord 3s
       const res = await Promise.race([
-        poru.resolve({ query: `${searchEngine}:${cleanQuery}`, requester: interaction.user }),
+        poru.resolve({
+          query: `${searchEngine}:${cleanQuery}`,
+          requester: interaction.user,
+        }),
         new Promise((resolve) => setTimeout(() => resolve(null), 2200)),
       ]);
 
@@ -1823,14 +1837,14 @@ module.exports = {
       }
 
       const choices = res.tracks.slice(0, 24).map((track) => {
-        const title = track.info.title || 'Unknown Track';
-        const author = track.info.author || 'Unknown Artist';
+        const title = track.info.title || "Unknown Track";
+        const author = track.info.author || "Unknown Artist";
         const duration = formatDuration(track.info.length);
         const label = `${title} - ${author} (${duration})`;
 
         const uri = track.info.uri;
         const val =
-          uri && uri.startsWith('http')
+          uri && uri.startsWith("http")
             ? uri.substring(0, 100)
             : `${searchEngine}:${title} ${author}`.substring(0, 100);
 

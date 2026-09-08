@@ -32,7 +32,12 @@ function calculateRequiredXpForNextLevel(level) {
  *   unlockedTitle: string|null
  * }}
  */
-function evaluateExperienceGain({ currentXp, currentLevel, gainedXp, maxLevel = 1000 }) {
+function evaluateExperienceGain({
+  currentXp,
+  currentLevel,
+  gainedXp,
+  maxLevel = 1000,
+}) {
   const safeCurrentXp = Math.max(0, Math.floor(Number(currentXp) || 0));
   let evaluatedLevel = Math.max(1, Math.floor(Number(currentLevel) || 1));
   const safeGainedXp = Math.max(0, Math.floor(Number(gainedXp) || 0));

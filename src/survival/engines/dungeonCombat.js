@@ -187,10 +187,7 @@ function resolveAttack({ useSkill, stats, profile }) {
       damage,
       cost,
       log:
-        tag +
-        " Tebasanmu membelah perisai musuh, **" +
-        damage +
-        "** damage!",
+        tag + " Tebasanmu membelah perisai musuh, **" + damage + "** damage!",
     };
   }
 
@@ -198,9 +195,7 @@ function resolveAttack({ useSkill, stats, profile }) {
     const magic = (profile.weapon_level || 1) * 8 + stats.intelligence * 4;
     const damage = Math.floor(magic * 2.2 * roll * synergyMult);
     const tag =
-      synergyMult > 1
-        ? "[Fireball \u2022 Arcane Synergy!]"
-        : "[Fireball]";
+      synergyMult > 1 ? "[Fireball \u2022 Arcane Synergy!]" : "[Fireball]";
     return {
       damage,
       cost,

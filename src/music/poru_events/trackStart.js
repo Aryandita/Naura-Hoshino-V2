@@ -106,9 +106,13 @@ module.exports = {
         );
 
         // 🎙️ Jalankan pengumuman AI DJ (non-blocking)
-        aiDjManager.handleTrackStart(manager, player, activeTrack).catch((err) => {
-          logger.warn(`[AI-DJ] Gagal mengeksekusi trackStart announcer: ${err.message}`);
-        });
+        aiDjManager
+          .handleTrackStart(manager, player, activeTrack)
+          .catch((err) => {
+            logger.warn(
+              `[AI-DJ] Gagal mengeksekusi trackStart announcer: ${err.message}`,
+            );
+          });
       } catch (uiErr) {
         logger.error("[MusicUI Render Error]", uiErr);
       }

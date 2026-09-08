@@ -242,13 +242,7 @@ class ColiseumEngine {
       else teamRecord.losses += 1;
       teamRecord.lastFoughtAt = new Date();
       await teamRecord.save({
-        fields: [
-          "eloRating",
-          "divisionTier",
-          "wins",
-          "losses",
-          "lastFoughtAt",
-        ],
+        fields: ["eloRating", "divisionTier", "wins", "losses", "lastFoughtAt"],
       });
     }
 

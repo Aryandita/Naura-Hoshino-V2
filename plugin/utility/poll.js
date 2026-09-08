@@ -141,7 +141,7 @@ module.exports = {
       const results = new Array(options.length).fill(0);
       let totalVotes = 0;
 
-      for (const [uid, uVotes] of votes.entries()) {
+      for (const uVotes of votes.values()) {
         for (const idx of uVotes) {
           results[idx]++;
           totalVotes++;
@@ -178,7 +178,7 @@ module.exports = {
       const results = new Array(options.length).fill(0);
       let totalVotes = 0;
 
-      for (const [userId, userVotes] of votes.entries()) {
+      for (const userVotes of votes.values()) {
         for (const idx of userVotes) {
           results[idx]++;
           totalVotes++;

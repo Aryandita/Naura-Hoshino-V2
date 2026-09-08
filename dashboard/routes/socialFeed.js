@@ -2,7 +2,6 @@
 
 const express = require("express");
 const redisManager = require("../../src/managers/redisManager");
-const aiManager = require("../../src/managers/aiManager");
 
 const FEED_CACHE_KEY = "social:feed:posts";
 

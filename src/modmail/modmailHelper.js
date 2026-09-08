@@ -1,6 +1,5 @@
 const {
   ChannelType,
-  PermissionFlagsBits,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
@@ -9,7 +8,6 @@ const {
 } = require("discord.js");
 const { logger } = require("../managers/logger");
 const ModMail = require("../models/ModMail");
-const GuildSettings = require("../models/GuildSettings");
 const ui = require("../config/ui");
 const cacheManager = require("../managers/cacheManager");
 const {
@@ -178,8 +176,6 @@ async function createTicketChannel(message, guildData, client, draft = null) {
     if (!masterChannel)
       throw new Error("Master channel untuk modmail tidak ditemukan.");
 
-    let channel;
-
     // Always create a PrivateThread if possible. If masterChannel is a category, we have a problem.
     // Modmail requires a TextChannel to create a thread. We should fall back to a text channel if a category is provided.
     let targetChannel = masterChannel;
@@ -197,7 +193,7 @@ async function createTicketChannel(message, guildData, client, draft = null) {
       );
     }
 
-    channel = await targetChannel.threads.create({
+    const channel = await targetChannel.threads.create({
       name: `mm-${(message.author || message.user).username.substring(0, 20)}`,
       autoArchiveDuration: 10080,
       type: ChannelType.PrivateThread, // PRIVATE THREAD FOR MODMAIL

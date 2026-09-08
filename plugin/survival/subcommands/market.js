@@ -34,6 +34,9 @@ const {
 const {
   getDifficultyConfig,
 } = require("../../../src/survival/helpers/difficultyHelper");
+const {
+  evaluateMarketAccess,
+} = require("../../../src/domain/decisions/marketDecisions");
 
 const COLLECTOR_MS = 120000;
 const BANNER_NAME = "banner.png";
@@ -59,7 +62,11 @@ function hidden(payload) {
 
 module.exports = {
   async autocomplete(interaction) {
-    const { choice, safeRespond, fuzzyFilter } = require('../../../src/utils/autocompleteHelper');
+    const {
+      choice,
+      safeRespond,
+      fuzzyFilter,
+    } = require("../../../src/utils/autocompleteHelper");
     const focusedValue = interaction.options.getFocused().toLowerCase();
     const [survival] = await UserSurvival.findOrCreate({
       where: { userId: interaction.user.id },
@@ -67,7 +74,7 @@ module.exports = {
 
     if (!VILLAGE_KEYS.includes(survival.currentLocation)) {
       return safeRespond(interaction, [
-        choice('❌ Pasar desa hanya bisa diakses di lokasi desa', 'none'),
+        choice("❌ Pasar desa hanya bisa diakses di lokasi desa", "none"),
       ]);
     }
 
@@ -93,15 +100,16 @@ module.exports = {
 
   async execute(interaction) {
     const user = interaction.user;
-    const profile = await cacheManager.getUserProfile(user.id);
     const [survival] = await UserSurvival.findOrCreate({
       where: { userId: user.id },
     });
 
-    if (survival.currentLocation === "prison")
-      return ui.sendError(interaction, "err_sys_51", true);
-    if (!VILLAGE_KEYS.includes(survival.currentLocation))
-      return ui.sendError(interaction, "err_sys_52", true);
+    const access = evaluateMarketAccess({
+      currentLocation: survival.currentLocation,
+    });
+    if (!access.isAllowed) {
+      return ui.sendError(interaction, access.errorCode, true);
+    }
 
     const vendor = SHOPS.desa;
     const vars = { nama: user.displayName || user.username };
@@ -184,7 +192,7 @@ module.exports = {
     }) {
       const payload = buildContainerV2({
         accentColorHex: vendor.accentColorHex,
-        authorName: `Pasar Tradisional Desa \u2014 ${vendor.shopName}`,
+        authorName: `Pasar Tradisional Desa - ${vendor.shopName}`,
         title,
         iconURL: user.displayAvatarURL(),
         expression,

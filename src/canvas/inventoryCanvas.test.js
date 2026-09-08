@@ -78,7 +78,11 @@ test("generateInventoryBackpackImage menghasilkan buffer PNG valid", async () =>
     coupons: 10,
   };
 
-  const buffer = await generateInventoryBackpackImage(mockUser, mockInventory, mockProfile);
+  const buffer = await generateInventoryBackpackImage(
+    mockUser,
+    mockInventory,
+    mockProfile,
+  );
   assert.ok(Buffer.isBuffer(buffer), "Output harus berupa Buffer");
   assert.ok(buffer.length > 1000, "Ukuran buffer gambar harus lebih dari 1KB");
 
@@ -88,5 +92,9 @@ test("generateInventoryBackpackImage menghasilkan buffer PNG valid", async () =>
     buffer[1] === 0x50 &&
     buffer[2] === 0x4e &&
     buffer[3] === 0x47;
-  assert.strictEqual(isPng, true, "Format gambar yang dihasilkan harus valid PNG");
+  assert.strictEqual(
+    isPng,
+    true,
+    "Format gambar yang dihasilkan harus valid PNG",
+  );
 });

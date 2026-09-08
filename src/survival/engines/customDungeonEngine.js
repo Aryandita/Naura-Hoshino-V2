@@ -8,7 +8,11 @@ class CustomDungeonEngine {
   /**
    * Membuat dungeon kustom baru oleh pemain
    */
-  async createDungeon(creatorUserId, guildId, { dungeonName, theme, rooms, entryFee = 100, initialVault = 500 }) {
+  async createDungeon(
+    creatorUserId,
+    guildId,
+    { dungeonName, theme, rooms, entryFee = 100, initialVault = 500 },
+  ) {
     if (!dungeonName || dungeonName.trim().length < 3) {
       return { success: false, reason: "INVALID_NAME" };
     }
@@ -68,7 +72,10 @@ class CustomDungeonEngine {
     try {
       const dungeons = await CommunityDungeon.findAll({
         where: { guildId },
-        order: [["ratingAverage", "DESC"], ["totalPlays", "DESC"]],
+        order: [
+          ["ratingAverage", "DESC"],
+          ["totalPlays", "DESC"],
+        ],
         limit,
       });
       return dungeons;
@@ -102,9 +109,8 @@ class CustomDungeonEngine {
       return { success: false, reason: "INSUFFICIENT_FUNDS", fee };
     }
 
-    // 5% royalti masuk brankas kreator, 95% masuk pool hadiah tantangan
+    // 5% royalti masuk brankas kreator
     const royalty = Math.round(fee * 0.05);
-    const poolContribution = fee - royalty;
 
     const rooms = Array.isArray(dungeon.roomsConfig) ? dungeon.roomsConfig : [];
     let currentRoom = 0;
@@ -114,7 +120,6 @@ class CustomDungeonEngine {
     for (const room of rooms) {
       currentRoom++;
       const difficulty = room.difficulty || 50;
-      const monsterHp = room.monsterHp || 100;
 
       // Simulasi pertarungan berbasis combat power
       if (playerCombatPower < difficulty * 0.5) {

@@ -36,6 +36,7 @@ module.exports = {
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("success") || "#22c55e",
       title: "🏆 Minecraft Achievement",
+      bannerAttachmentName: url,
       footerText: `Pencapaian dibuka oleh ${interaction.user.username}`,
     });
 

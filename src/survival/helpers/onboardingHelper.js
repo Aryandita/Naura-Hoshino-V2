@@ -4,8 +4,6 @@ const {
   ButtonStyle,
   AttachmentBuilder,
 } = require("discord.js");
-const UserSurvival = require("../../models/UserSurvival");
-const UserProfile = require("../../models/UserProfile");
 const cacheManager = require("../../managers/cacheManager");
 const ui = require("../../config/ui");
 const path = require("path");

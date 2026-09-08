@@ -60,12 +60,12 @@ class AbyssEngine {
       return { success: false, reason: "ALREADY_IN_RUN", run: existing };
     }
 
-    const maxHp = 100 + (userStats.level || 1) * 10;
+    const maxHp = Math.max(300, 100 + (userStats.level || 1) * 10);
     const runData = {
       userId,
       currentFloor: 1,
-      maxHp: 300,
-      currentHp: 300,
+      maxHp,
+      currentHp: maxHp,
       attackPower: 45,
       shield: 0,
       relics: [],

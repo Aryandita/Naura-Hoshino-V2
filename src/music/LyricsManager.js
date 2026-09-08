@@ -10,7 +10,6 @@ const axios = require("axios");
 const lyricsFinder = require("lyrics-finder");
 const ui = require("../config/ui");
 const geminiClient = require("../ai/geminiClient");
-const redisManager = require("../managers/redisManager");
 
 class LyricsManager {
   constructor(client) {

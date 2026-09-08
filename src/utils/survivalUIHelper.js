@@ -170,17 +170,36 @@ function formatStat(value) {
  * @param {number} [options.barLength=5] - Panjang bar mini
  * @returns {string} Teks mini HUD
  */
-function buildSurvivalHUD(survival, { customMaxHp = null, barLength = 5 } = {}) {
-  const maxHp = customMaxHp || 100 + (Number(survival?.survival_level || 1) * 20);
+function buildSurvivalHUD(
+  survival,
+  { customMaxHp = null, barLength = 5 } = {},
+) {
+  const maxHp = customMaxHp || 100 + Number(survival?.survival_level || 1) * 20;
   const hp = Math.min(maxHp, Number(survival?.hp ?? maxHp));
   const stamina = Number(survival?.stamina ?? 100);
   const hunger = Number(survival?.hunger ?? 100);
   const thirst = Number(survival?.thirst ?? 100);
 
-  const hpBar = buildVitalsBar({ current: hp, target: maxHp, length: barLength }).bar;
-  const staBar = buildVitalsBar({ current: stamina, target: 100, length: barLength }).bar;
-  const hunBar = buildVitalsBar({ current: hunger, target: 100, length: barLength }).bar;
-  const thiBar = buildVitalsBar({ current: thirst, target: 100, length: barLength }).bar;
+  const hpBar = buildVitalsBar({
+    current: hp,
+    target: maxHp,
+    length: barLength,
+  }).bar;
+  const staBar = buildVitalsBar({
+    current: stamina,
+    target: 100,
+    length: barLength,
+  }).bar;
+  const hunBar = buildVitalsBar({
+    current: hunger,
+    target: 100,
+    length: barLength,
+  }).bar;
+  const thiBar = buildVitalsBar({
+    current: thirst,
+    target: 100,
+    length: barLength,
+  }).bar;
 
   return `❤️ HP ${hpBar} \`${hp}/${maxHp}\` \u2022 ⚡ ${staBar} \`${stamina}%\` \u2022 🍖 ${hunBar} \`${hunger}%\` \u2022 💧 ${thiBar} \`${thirst}%\``;
 }

@@ -15,7 +15,7 @@ module.exports = {
           (c) => c.type === ChannelType.GuildVoice,
         );
 
-        for (const [id, channel] of voiceChannels) {
+        for (const [, channel] of voiceChannels) {
           const name = channel.name;
           const isTempVoice =
             name.startsWith("🔊 ") ||

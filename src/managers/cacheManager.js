@@ -550,6 +550,45 @@ class CacheManager {
     });
   }
 
+  /**
+   * Mereset profil pemain untuk proses Rebirth secara atomik dan membersihkan cache.
+   * Menghapus antrean penulisan tertunda dan mereset saldo, inventori, dan peralatan.
+   *
+   * @param {string} userId - ID Discord User
+   * @param {Object} [resetOverrides={}] - Field tambahan yang ingin direset
+   * @returns {Promise<boolean>}
+   */
+  async resetProfileForRebirth(userId, resetOverrides = {}) {
+    if (!userId) return false;
+    const cacheKey = `user:profile:${userId}`;
+    this.writeQueue.delete(userId);
+
+    const resetData = {
+      economy_wallet: 0,
+      economy_bank: 0,
+      inventory: [],
+      tool_pickaxeLevel: 1,
+      tool_pickaxeDurability: 100,
+      tool_axeLevel: 1,
+      tool_axeDurability: 100,
+      tool_fishingRodLevel: 1,
+      tool_fishingRodDurability: 100,
+      weapon_level: 1,
+      dungeon_floor: 1,
+      ...resetOverrides,
+    };
+
+    try {
+      const targetModel = UserProfile;
+      await targetModel.update(resetData, { where: { userId } });
+      await redisManager.deleteCache(cacheKey);
+      return true;
+    } catch (error) {
+      logger.error("[CacheManager] Error resetProfileForRebirth:", error.message);
+      return false;
+    }
+  }
+
   // ==========================================
   // 🏠 GUILD SETTINGS CACHE (Rule 1.9)
   // ==========================================
@@ -700,6 +739,18 @@ class CacheManager {
       loader: () => this.getUserSurvival(userId),
       queue: this.survivalQueue,
     });
+  }
+
+  /**
+   * Eksekusi fungsi bisnis dengan perlindungan Distributed Mutex Lock (Redis NX EX).
+   * @param {string} lockKey
+   * @param {number} [ttlMs=5000]
+   * @param {Function} workFn
+   * @param {object} [options]
+   */
+  async withLock(lockKey, ttlMs = 5000, workFn, options) {
+    const { withDistributedLock } = require("../utils/redisLockHelper");
+    return withDistributedLock(lockKey, ttlMs, workFn, options);
   }
 }
 

@@ -25,7 +25,6 @@ test("Crop Seeds Catalog - Data Integrity", () => {
 });
 
 test("Greenhouse Engine - Slot Growth Mathematics", () => {
-  const seed = getSeedById("astral_strawberry");
   const plantedTime = new Date(Date.now() - 30 * 60 * 1000).toISOString(); // 30 menit lalu dari 60 menit
 
   const slotState = greenhouseEngine.computeSlotState({
@@ -44,7 +43,6 @@ test("Greenhouse Engine - Slot Growth Mathematics", () => {
 });
 
 test("Greenhouse Engine - Fertilized Growth Acceleration", () => {
-  const seed = getSeedById("astral_strawberry");
   // 60 menit * 0.75 = 45 menit total
   const plantedTime = new Date(Date.now() - 45 * 60 * 1000).toISOString(); // 45 menit lalu
 

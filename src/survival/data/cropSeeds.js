@@ -79,7 +79,8 @@ const CROP_SEEDS = [
       xp: 250,
       cafeYieldBonus: 80,
     },
-    description: "Bulir gandum sakura legendaris dengan nilai nutrisi maksimal.",
+    description:
+      "Bulir gandum sakura legendaris dengan nilai nutrisi maksimal.",
   },
 ];
 

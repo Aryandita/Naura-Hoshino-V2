@@ -6,11 +6,7 @@
 
 const path = require("path");
 const fs = require("fs");
-const {
-  createCanvas,
-  loadImage,
-  runWithLimit,
-} = require("./canvasRuntime");
+const { createCanvas, loadImage, runWithLimit } = require("./canvasRuntime");
 const { CATALOG_BY_ID } = require("../survival/data/items_catalog");
 
 // Direktori aset item
@@ -93,7 +89,10 @@ function roundRect(ctx, x, y, width, height, radius) {
 function truncateText(ctx, text, maxWidth) {
   if (ctx.measureText(text).width <= maxWidth) return text;
   let truncated = text;
-  while (truncated.length > 1 && ctx.measureText(truncated + "..").width > maxWidth) {
+  while (
+    truncated.length > 1 &&
+    ctx.measureText(truncated + "..").width > maxWidth
+  ) {
     truncated = truncated.slice(0, -1);
   }
   return truncated + "..";
@@ -107,7 +106,12 @@ function truncateText(ctx, text, maxWidth) {
  * @param {object} [options] Opsi tambahan
  * @returns {Promise<Buffer>} Buffer PNG
  */
-async function generateInventoryBackpackImage(user, inventory, profile, options = {}) {
+async function generateInventoryBackpackImage(
+  user,
+  inventory,
+  profile,
+  options = {},
+) {
   return await runWithLimit(async () => {
     const canvasWidth = 900;
     const canvasHeight = 580;
@@ -130,7 +134,7 @@ async function generateInventoryBackpackImage(user, inventory, profile, options 
     for (let y = 15; y < canvasHeight; y += 22) {
       ctx.beginPath();
       ctx.moveTo(0, y);
-      ctx.lineTo(canvasWidth, y + (Math.sin(y * 0.1) * 4));
+      ctx.lineTo(canvasWidth, y + Math.sin(y * 0.1) * 4);
       ctx.stroke();
     }
 
@@ -161,7 +165,12 @@ async function generateInventoryBackpackImage(user, inventory, profile, options 
     ctx.restore();
 
     // Badan luar ransel kulit (Rugged Leather Texture)
-    const leatherGrad = ctx.createLinearGradient(bpX, bpY, bpX + bpW, bpY + bpH);
+    const leatherGrad = ctx.createLinearGradient(
+      bpX,
+      bpY,
+      bpX + bpW,
+      bpY + bpH,
+    );
     leatherGrad.addColorStop(0, "#4a2c1b");
     leatherGrad.addColorStop(0.3, "#3d2315");
     leatherGrad.addColorStop(0.7, "#331c11");
@@ -208,7 +217,12 @@ async function generateInventoryBackpackImage(user, inventory, profile, options 
     const headerH = 52;
 
     // Pelat Lencana Logam Kuningan
-    const badgeGrad = ctx.createLinearGradient(headerX, headerY, headerX, headerY + headerH);
+    const badgeGrad = ctx.createLinearGradient(
+      headerX,
+      headerY,
+      headerX,
+      headerY + headerH,
+    );
     badgeGrad.addColorStop(0, "#2a1c12");
     badgeGrad.addColorStop(0.5, "#1b110a");
     badgeGrad.addColorStop(1, "#140b06");
@@ -252,14 +266,28 @@ async function generateInventoryBackpackImage(user, inventory, profile, options 
     const displayName = user.displayName || user.username || "Petualang";
     ctx.fillStyle = "#fef08a";
     ctx.font = "bold 16px MontserratBold, sans-serif";
-    ctx.fillText(`RANSEL PETUALANG: ${displayName.toUpperCase()}`, headerX + 54, headerY + 24);
+    ctx.fillText(
+      `RANSEL PETUALANG: ${displayName.toUpperCase()}`,
+      headerX + 54,
+      headerY + 24,
+    );
 
     // Koin & Fragmen
-    const coins = (profile?.coins || profile?.balance || 0).toLocaleString("id-ID");
-    const coupons = (profile?.coupons || profile?.userSurvival?.coupons || 0).toLocaleString("id-ID");
+    const coins = (profile?.coins || profile?.balance || 0).toLocaleString(
+      "id-ID",
+    );
+    const coupons = (
+      profile?.coupons ||
+      profile?.userSurvival?.coupons ||
+      0
+    ).toLocaleString("id-ID");
     ctx.fillStyle = "#cbd5e1";
     ctx.font = "12px Inter, sans-serif";
-    ctx.fillText(`COINS: ${coins}  •  COUPONS: ${coupons}  •  NAURA WILDS ADVENTURE BAG`, headerX + 54, headerY + 42);
+    ctx.fillText(
+      `COINS: ${coins}  •  COUPONS: ${coupons}  •  NAURA WILDS ADVENTURE BAG`,
+      headerX + 54,
+      headerY + 42,
+    );
 
     // ============================================================
     // 4. KOMPARTEMEN INTERIOR RANSEL (POCKET INTERIOR)
@@ -270,7 +298,12 @@ async function generateInventoryBackpackImage(user, inventory, profile, options 
     const innerH = bpH - 104; // 416
 
     // Lapisan dalam kain beludru gelap (Soft Canvas Inner Lining)
-    const innerGrad = ctx.createLinearGradient(innerX, innerY, innerX, innerY + innerH);
+    const innerGrad = ctx.createLinearGradient(
+      innerX,
+      innerY,
+      innerX,
+      innerY + innerH,
+    );
     innerGrad.addColorStop(0, "#19100a");
     innerGrad.addColorStop(0.5, "#140c07");
     innerGrad.addColorStop(1, "#0d0704");
@@ -312,10 +345,10 @@ async function generateInventoryBackpackImage(user, inventory, profile, options 
           id,
           name: item.name || (catalogData ? catalogData.name : id),
           amount,
-          tier: (catalogData ? catalogData.tier : 1),
-          tierColor: (catalogData ? catalogData.tierColor : "#9CA3AF"),
+          tier: catalogData ? catalogData.tier : 1,
+          tierColor: catalogData ? catalogData.tierColor : "#9CA3AF",
           emoji: item.emoji || (catalogData ? catalogData.emoji : "📦"),
-          category: (catalogData ? catalogData.category : "item"),
+          category: catalogData ? catalogData.category : "item",
         });
       }
     }
@@ -328,10 +361,18 @@ async function generateInventoryBackpackImage(user, inventory, profile, options 
       ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
       ctx.font = "italic 16px Inter, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("Ranselmu masih kosong melompong...", innerX + (innerW / 2), innerY + (innerH / 2) - 15);
+      ctx.fillText(
+        "Ranselmu masih kosong melompong...",
+        innerX + innerW / 2,
+        innerY + innerH / 2 - 15,
+      );
       ctx.font = "13px Inter, sans-serif";
       ctx.fillStyle = "rgba(255, 182, 193, 0.75)";
-      ctx.fillText("Kumpulkan sumber daya lewat /survival gather collect atau tebang pohon!", innerX + (innerW / 2), innerY + (innerH / 2) + 15);
+      ctx.fillText(
+        "Kumpulkan sumber daya lewat /survival gather collect atau tebang pohon!",
+        innerX + innerW / 2,
+        innerY + innerH / 2 + 15,
+      );
       ctx.textAlign = "left";
       return canvas.toBuffer("image/png");
     }
@@ -345,16 +386,18 @@ async function generateInventoryBackpackImage(user, inventory, profile, options 
     const overflowCount = totalUnique - (layout.maxVisible - 1); // Jumlah sisa item jika ada overflow
 
     // Hitung offset agar grid selalu berada persis di tengah kompartemen ransel
-    const totalGridW = (layout.cols * layout.slotW) + ((layout.cols - 1) * layout.gapX);
-    const totalGridH = (layout.rows * layout.slotH) + ((layout.rows - 1) * layout.gapY);
+    const totalGridW =
+      layout.cols * layout.slotW + (layout.cols - 1) * layout.gapX;
+    const totalGridH =
+      layout.rows * layout.slotH + (layout.rows - 1) * layout.gapY;
     const startX = innerX + Math.floor((innerW - totalGridW) / 2);
     const startY = innerY + Math.floor((innerH - totalGridH) / 2);
 
     for (let i = 0; i < displayCount; i++) {
       const col = i % layout.cols;
       const row = Math.floor(i / layout.cols);
-      const slotX = startX + (col * (layout.slotW + layout.gapX));
-      const slotY = startY + (row * (layout.slotH + layout.gapY));
+      const slotX = startX + col * (layout.slotW + layout.gapX);
+      const slotY = startY + row * (layout.slotH + layout.gapY);
 
       // KASUS A: KOTAK TERAKHIR (OVERFLOW DOTS "... X MORE")
       if (hasOverflow && i === layout.maxVisible - 1) {
@@ -374,12 +417,20 @@ async function generateInventoryBackpackImage(user, inventory, profile, options 
         ctx.textAlign = "center";
         ctx.fillStyle = "#F9A8D4";
         ctx.font = `bold ${Math.round(layout.iconSize * 0.55)}px MontserratBold, sans-serif`;
-        ctx.fillText("•••", slotX + (layout.slotW / 2), slotY + (layout.slotH / 2) - 4);
+        ctx.fillText(
+          "•••",
+          slotX + layout.slotW / 2,
+          slotY + layout.slotH / 2 - 4,
+        );
 
         // Teks `+X more`
         ctx.fillStyle = "#ffffff";
         ctx.font = `bold ${layout.nameFontSize + 2}px MontserratBold, sans-serif`;
-        ctx.fillText(`+${overflowCount} more`, slotX + (layout.slotW / 2), slotY + (layout.slotH / 2) + 20);
+        ctx.fillText(
+          `+${overflowCount} more`,
+          slotX + layout.slotW / 2,
+          slotY + layout.slotH / 2 + 20,
+        );
         ctx.textAlign = "left";
         continue;
       }
@@ -425,13 +476,19 @@ async function generateInventoryBackpackImage(user, inventory, profile, options 
         ctx.save();
         roundRect(ctx, iconX, iconY, layout.iconSize, layout.iconSize, 8);
         ctx.clip();
-        ctx.drawImage(itemImage, iconX, iconY, layout.iconSize, layout.iconSize);
+        ctx.drawImage(
+          itemImage,
+          iconX,
+          iconY,
+          layout.iconSize,
+          layout.iconSize,
+        );
         ctx.restore();
       } else {
         // Fallback visual vektor elegan jika file gambar tidak ditemukan
         ctx.save();
-        const centerX = slotX + (layout.slotW / 2);
-        const centerY = iconY + (layout.iconSize / 2);
+        const centerX = slotX + layout.slotW / 2;
+        const centerY = iconY + layout.iconSize / 2;
         ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
         roundRect(ctx, iconX, iconY, layout.iconSize, layout.iconSize, 8);
         ctx.fill();
@@ -456,7 +513,7 @@ async function generateInventoryBackpackImage(user, inventory, profile, options 
       const maxTextW = layout.slotW - 12;
       const nameText = truncateText(ctx, item.name, maxTextW);
       const nameY = slotY + layout.slotH - (layout.mode === "large" ? 18 : 10);
-      ctx.fillText(nameText, slotX + (layout.slotW / 2), nameY);
+      ctx.fillText(nameText, slotX + layout.slotW / 2, nameY);
       ctx.restore();
 
       // Pill Kuantitas Jumlah Barang (contoh: "x2", "x64")
@@ -480,7 +537,7 @@ async function generateInventoryBackpackImage(user, inventory, profile, options 
       // Teks kuantitas
       ctx.fillStyle = "#ffffff";
       ctx.textAlign = "center";
-      ctx.fillText(qtyText, pillX + (pillW / 2), pillY + pillH - 4);
+      ctx.fillText(qtyText, pillX + pillW / 2, pillY + pillH - 4);
       ctx.restore();
     }
 

@@ -11,7 +11,8 @@ describe("NotificationCenter Service", () => {
     assert.strictEqual(prefs.daily_streak, true);
     assert.strictEqual(prefs.stock_alert, true);
     assert.strictEqual(prefs.idle_revenue, true);
-    assert.strictEqual(prefs.vote_reminder, true);
+    assert.strictEqual(prefs.quest_reset, true);
+    assert.strictEqual(prefs.event_news, true);
   });
 
   it("NOTIFICATION_TEMPLATES correctly formats messages with user displayName", () => {
@@ -26,5 +27,12 @@ describe("NotificationCenter Service", () => {
     await assert.rejects(async () => {
       await notificationCenter.setUserPreference("123", "invalid_key", true);
     }, /tidak valid/);
+  });
+
+  it("notificationManager maintains complete parity with notificationCenter", () => {
+    const notificationManager = require("../managers/notificationManager");
+    assert.strictEqual(typeof notificationManager.sendNotification, "function");
+    assert.strictEqual(typeof notificationManager.ensureDmAuthorized, "function");
+    assert.strictEqual(notificationManager.DEFAULT_PREFS, notificationCenter.DEFAULT_PREFS);
   });
 });

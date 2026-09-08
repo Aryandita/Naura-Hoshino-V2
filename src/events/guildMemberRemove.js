@@ -1,5 +1,4 @@
 const { Events } = require("discord.js");
-const GuildSettings = require("../models/GuildSettings");
 const StickyRole = require("../models/StickyRole");
 const cacheManager = require("../managers/cacheManager");
 const { logger } = require("../managers/logger");
