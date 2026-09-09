@@ -9,7 +9,7 @@ const PORT =
   parseInt(process.env.DASHBOARD_PORT || process.env.SERVER_PORT) || 3000;
 
 const projectRoot = path.resolve(__dirname, "..");
-const distPath = path.join(projectRoot, "dashboard-v2", "dist");
+const distPath = path.join(projectRoot, "dashboard", "dist");
 const assetsPath = path.join(projectRoot, "assets");
 
 app.use(express.json());
@@ -20,10 +20,10 @@ const handleModel = (req, res) => {
   const filename = isVrm ? "naura.vrm" : "naura.glb";
   const candidates = [
     path.join(distPath, "models", filename),
-    path.join(projectRoot, "dashboard-v2", "public", "models", filename),
+    path.join(projectRoot, "dashboard", "public", "models", filename),
     path.join(assetsPath, "3D Model Naura", filename),
     path.join(distPath, "models", "naura.glb"),
-    path.join(projectRoot, "dashboard-v2", "public", "models", "naura.glb"),
+    path.join(projectRoot, "dashboard", "public", "models", "naura.glb"),
   ];
   for (const f of candidates) {
     if (fs.existsSync(f)) {

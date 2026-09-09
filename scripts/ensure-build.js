@@ -5,7 +5,7 @@ const path = require("node:path");
 const { execSync } = require("node:child_process");
 
 const projectRoot = path.resolve(__dirname, "..");
-const distPath = path.join(projectRoot, "dashboard-v2", "dist");
+const distPath = path.join(projectRoot, "dashboard", "dist");
 
 // Sanitizer untuk mencegah token bocor di log console
 function maskToken(str) {
@@ -165,13 +165,13 @@ if (isPterodactyl) {
 
 // ── 2. Bangun Frontend Dashboard bila belum ada ──
 if (!fs.existsSync(distPath)) {
-  console.log("[STARTUP] dashboard-v2/dist belum ada. Membangun frontend...");
+  console.log("[STARTUP] dashboard/dist belum ada. Membangun frontend...");
   try {
-    execSync("node scripts/build-dashboard-v2.js", {
+    execSync("node scripts/build-dashboard.js", {
       cwd: projectRoot,
       stdio: "inherit",
     });
   } catch (err) {
-    console.warn("[STARTUP] Gagal membangun dashboard-v2:", err.message);
+    console.warn("[STARTUP] Gagal membangun dashboard:", err.message);
   }
 }

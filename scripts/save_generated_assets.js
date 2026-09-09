@@ -12,9 +12,9 @@ const ASSETS_ITEMS_DIR = path.join(__dirname, "../assets/items");
 const ASSETS_IMAGES_DIR = path.join(__dirname, "../assets/images");
 const DASHBOARD_PUBLIC_ITEMS = path.join(
   __dirname,
-  "../dashboard-v2/public/items",
+  "../dashboard/public/items",
 );
-const DASHBOARD_DIST_ITEMS = path.join(__dirname, "../dashboard-v2/dist/items");
+const DASHBOARD_DIST_ITEMS = path.join(__dirname, "../dashboard/dist/items");
 
 const TARGET_DIRS = [
   ASSETS_ITEMS_DIR,

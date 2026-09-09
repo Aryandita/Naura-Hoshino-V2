@@ -145,7 +145,7 @@ function requireSelfOrOwner(req, res, next) {
   if (String(targetId) !== String(req.user.id) && !isOwner(req.user.id)) {
     return res.status(403).json({
       success: false,
-      error: "Kamu hanya boleh mengubah datamu sendiri.",
+      error: "Akses ditolak: Kamu hanya boleh melihat atau mengubah datamu sendiri.",
     });
   }
 

@@ -24,7 +24,7 @@ const SOURCE_GLB = path.join(
 );
 const THUMB_PNG = path.join(
   __dirname,
-  "../dashboard-v2/public/models/naura-2d.png",
+  "../dashboard/public/models/naura-2d.png",
 );
 
 if (!fs.existsSync(SOURCE_GLB)) {
@@ -295,8 +295,8 @@ const finalVrmBuffer = packageGlb(vrmObject, vrmBinBuffer);
 
 console.log("=== [4/4] Menyimpan Model ke Semua Lokasi Target ===");
 const targetDirs = [
-  path.join(__dirname, "../dashboard-v2/public/models"),
-  path.join(__dirname, "../dashboard-v2/dist/models"),
+  path.join(__dirname, "../dashboard/public/models"),
+  path.join(__dirname, "../dashboard/dist/models"),
   path.join(__dirname, "../assets/3D Model Naura"),
 ];
 

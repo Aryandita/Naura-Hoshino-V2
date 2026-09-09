@@ -50,8 +50,22 @@ module.exports = {
 
     if (subcommand === "weather") {
       await interaction.deferReply();
+
+      let sampleTexts = [];
+      try {
+        if (interaction.channel && interaction.channel.messages) {
+          const fetched = await interaction.channel.messages.fetch({ limit: 25 });
+          sampleTexts = fetched
+            .filter((m) => !m.author.bot && m.content && m.content.trim().length > 5)
+            .map((m) => m.content.trim());
+        }
+      } catch (_) {
+        // Fallback jika tidak ada izin baca riwayat pesan
+      }
+
       const weather = await astralService.getGuildAstralWeather(
         interaction.guildId,
+        sampleTexts,
       );
       const bannerBuffer = await renderAstralWeatherBanner(weather);
       const attachment = new AttachmentBuilder(bannerBuffer, {
@@ -62,10 +76,14 @@ module.exports = {
         .map(([k, v]) => `• **${k}**: \`+${v}%\``)
         .join("\n");
 
+      const auraSection = weather.isAiEvaluated
+        ? `\n\n**🔮 Suasana Server Hari Ini (Aura Vibe: \`${weather.sentimentScore}%\`):**\n> *"${weather.auraReason}"*`
+        : `\n\n> *"${weather.lore}"*`;
+
       const payload = buildContainerV2({
         authorName: "HOSHINO ASTRAL SANCTUARY",
         title: `${weather.emoji} Cuaca Astral: ${weather.name}`,
-        description: `Halo, **${displayName}**! Berikut adalah kondisi pancaran energi kosmik yang menaungi server hari ini:\n\n${weather.description}\n\n**✨ Efek & Buff Server Aktif:**\n${buffList}\n\n> *"${weather.lore}"*`,
+        description: `Halo, **${displayName}**! Berikut adalah kondisi pancaran energi kosmik yang menaungi server hari ini:\n\n${weather.description}\n\n**✨ Efek & Buff Server Aktif:**\n${buffList}${auraSection}`,
         mediaUrl: "attachment://astral-weather.png",
         footerText: ui.getFooter("utility"),
       });

@@ -1,9 +1,16 @@
 # 📜 NAURA HOSHINO, Repository Governance & Architecture Rules
 
-> **Versi:** 2.1.0 · **Engine:** 2.1.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14
+> **Versi:** 2.1.0 · **Engine:** 2.1.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14  
+> **Pentalogi Dokumentasi:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`DESIGN.md`](DESIGN.md) (Desain) · [`RULES.md`](RULES.md) (Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen AI)
 
 > [!IMPORTANT]
-> **Sumber kebenaran.** `package.json` adalah sumber kebenaran untuk versi dan daftar dependensi. `src/config/env.js` adalah sumber kebenaran untuk variabel environment. GitHub Issues adalah sumber kebenaran untuk pekerjaan yang sedang berjalan. `TODO.md` adalah sumber kebenaran untuk prioritas sprint. Dokumen ini berisi **seluruh aturan wajib dan tata kelola arsitektur** yang mengikat seluruh developer dan agen AI.
+> **Sumber Kebenaran & Ekosistem Tata Kelola:**
+> - [`PRD.md`](PRD.md): Sumber kebenaran untuk visi produk, persona pengguna, dan spesifikasi fungsional 6 pilar (*What & Why*).
+> - [`DESIGN.md`](DESIGN.md): Sumber kebenaran untuk token warna, tema glassmorphism, dan standar antarmuka UI (*Look & Feel*).
+> - [`RULES.md`](RULES.md) (Dokumen ini): Sumber kebenaran untuk arsitektur teknis, hukum rekayasa kode, dan standar keamanan (*How & Governance*).
+> - [`AGENTS.md`](AGENTS.md): Sumber kebenaran untuk navigasi repositori, alur eksekusi, dan SOP agen AI (*Workflow & Navigation*).
+> - [`README.md`](README.md): Sumber kebenaran untuk gambaran umum publik dan panduan instalasi (*Portal & Quickstart*).
+> - `package.json`: Sumber kebenaran versi dan daftar dependensi. `src/config/env.js`: Sumber kebenaran variabel environment. `TODO.md`: Sumber kebenaran prioritas sprint.
 
 ---
 
@@ -83,7 +90,8 @@
 ## 1.4 Panduan UI Discord (Discord Components V2)
 
 > [!IMPORTANT]
-> Semua respons command WAJIB menggunakan **Discord Components V2** via `buildContainerV2()` dari `NauraContainerBuilder.js`. Embed lama (`EmbedBuilder`) hanya diizinkan untuk pesan loading sementara atau error sederhana.
+> Semua respons command WAJIB menggunakan **Discord Components V2** via `buildContainerV2()` dari `NauraContainerBuilder.js`. Embed lama (`EmbedBuilder`) hanya diizinkan untuk pesan loading sementara atau error sederhana.  
+> *(Rujukan visual dan token warna diatur di [`DESIGN.md`](DESIGN.md#discord-components-v2-container-system), rujukan spesifikasi fitur diatur di [`PRD.md`](PRD.md#pilar-1-bot-engine--discord-components-v2))*
 
 ### 1.4.1 Struktur Layout 5-Lapisan Wajib
 
@@ -112,7 +120,8 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 ## 1.5 Panduan Desain Survival RPG (Naura Wilds)
 
 > [!IMPORTANT]
-> Sistem survival mengusung sub-brand **Naura Wilds** dengan gaya visual **Hybrid Nature-Tech**: fondasi Cyber-Anime Glassmorphism dipadukan dengan palet earth-tone.
+> Sistem survival mengusung sub-brand **Naura Wilds** dengan gaya visual **Hybrid Nature-Tech**: fondasi Cyber-Anime Glassmorphism dipadukan dengan palet earth-tone.  
+> *(Rujukan palet visual lengkap di [`DESIGN.md`](DESIGN.md#naura-wilds-survival-sub-brand), rujukan aturan gameplay di [`PRD.md`](PRD.md#pilar-5-survival-rpg-naura-wilds))*
 
 - **Sumber Token**: Semua warna survival (emerald, moss, amber, bark, river, danger) wajib bersumber dari `src/utils/survivalUIHelper.js`.
 - **Panel Khusus**: Panel survival memakai tinted glass hijau (`surface-glass-wilds`) dengan hairline hijau.
@@ -133,7 +142,8 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 ## 1.6 Konsistensi Data Ekonomi & Transaksi Atomik
 
 > [!CAUTION]
-> Kesalahan transaksi ekonomi (race condition, double spend) adalah bug paling merusak. Dilarang melakukan pola read-modify-write!
+> Kesalahan transaksi ekonomi (race condition, double spend) adalah bug paling merusak. Dilarang melakukan pola read-modify-write!  
+> *(Spesifikasi mata uang NSF, NC, dan kupon diatur di [`PRD.md`](PRD.md#pilar-4-polyglot-database--arsitektur-atomik) dan [`PRD.md`](PRD.md#pilar-5-survival-rpg-naura-wilds))*
 
 ### 1.6.1 Nilai Numerik Saldo
 
@@ -277,5 +287,15 @@ Semua penulisan kode baru dan refaktorisasi wajib menerapkan 7 hukum arsitektur 
 
 ---
 
-> [!NOTE]
-> Untuk panduan operasional AI Agent, pemahaman navigasi arsitektur, dan checklist kompetensi teknis, baca [`AGENTS.md`](AGENTS.md).
+## 🔗 Peta Hubungan Dokumen Ekosistem (Pentalogi Dokumentasi)
+
+Seluruh kontributor dan agen AI wajib memahami posisi dokumen ini dalam ekosistem tata kelola repositori:
+
+| Dokumen | Sumber Kebenaran (*Source of Truth*) | Pertanyaan Utama yang Dijawab |
+| :--- | :--- | :--- |
+| [`README.md`](README.md) | **Portal & Instalasi Publik** | "Bagaimana cara memasang, menjalankan, dan memahami arsitektur dasar bot?" |
+| [`PRD.md`](PRD.md) | **Kebutuhan Produk & Personas** | "Fitur apa yang sedang dibangun, mengapa dibuat, untuk siapa, dan prioritasnya apa?" |
+| [`DESIGN.md`](DESIGN.md) | **Bahasa Desain & UI Tokens** | "Bagaimana aturan warna, glassmorphism, 3D avatar viewer, dan Components V2?" |
+| [`RULES.md`](RULES.md) | **Konstitusi & Standar Teknis** | "Bagaimana aturan hukum kode, batas transaksi atomik DB, keamanan, dan anti-crash?" |
+| [`AGENTS.md`](AGENTS.md) | **Navigasi & SOP AI Agent** | "Di mana letak file-nya, bagaimana alur data interaksi ke database, dan apa checklist QA?" |
+| [`TODO.md`](TODO.md) | **Roadmap & Sprint Backlog** | "Pekerjaan apa yang sedang berlangsung dan apa prioritas berikutnya?" |

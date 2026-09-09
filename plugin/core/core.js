@@ -843,6 +843,14 @@ async function handleAbout(interaction, client, lang) {
     fields: [
       { name: `${eStats} TELEMETRI SHARD & SISTEM`, value: sysStatus },
       {
+        name: `📜 KETENTUAN LAYANAN & KEBIJAKAN PRIVASI (TOS & PRIVACY)`,
+        value:
+          "• **Vision AI & Gambar:** Gambar dianalisis secara *ephemeral/in-memory* dan tidak pernah disimpan permanen di disk bot setelah analisis selesai.\n" +
+          "• **Sentimen Cuaca Kosmik:** Analisis suasana obrolan hanya menyampel pesan publik sementara secara anonim untuk skor cuaca server, tanpa profiling pribadi atau penjualan data.\n" +
+          "• **Penyimpanan Data:** Hanya menyimpan data gameplay yang diperlukan (saldo, inventaris, level XP) dan pengaturan server Discord.\n" +
+          "• **Kepatuhan:** 100% mematuhi Discord Developer Terms of Service & Privacy Policy.",
+      },
+      {
         name: `${eDeveloper} DEVELOPER & KONTAK RESMI`,
         value:
           "**Aryandita** (Pencipta & Developer Utama Naura Hoshino)\n" +

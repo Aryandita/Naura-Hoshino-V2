@@ -12,8 +12,8 @@ const {
 
 // Target direktori aset publik
 const TARGET_DIRS = [
-  path.join(__dirname, "../dashboard-v2/public/items"),
-  path.join(__dirname, "../dashboard-v2/dist/items"),
+  path.join(__dirname, "../dashboard/public/items"),
+  path.join(__dirname, "../dashboard/dist/items"),
   path.join(__dirname, "../assets/items"),
 ];
 

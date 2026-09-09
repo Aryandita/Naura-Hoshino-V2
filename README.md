@@ -23,15 +23,16 @@ Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D
 > [!NOTE]
 > Proyek ini beroperasi di atas arsitektur **Polyglot Database** (Supabase PostgreSQL, MongoDB, Redis, dan fallback SQLite darurat). Seluruh milestone pengembangan hingga **Sprint 22** telah rampung, termasuk integrasi model 3D/VRM PBR HD di Web Dashboard V2, Fish Audio TTS AI DJ Companion, dan UI Discord Components V2 terstandarisasi.
 
-### 📌 Referensi Dokumen & Sumber Kebenaran
+### 📌 Referensi Dokumen & Sumber Kebenaran (Pentalogi Dokumentasi)
 
 | Item                    |      Nilai / Berkas      | Keterangan                                                     |
 | ----------------------- | :----------------------: | -------------------------------------------------------------- |
 | **Versi Bot & Engine**  |         `2.1.0`          | [`package.json`](package.json)                                 |
 | **Runtime Minimum**     |   Node.js `>= 24.0.0`    | `engines` di [`package.json`](package.json)                    |
-| **Aturan & Konstitusi** |  [`RULES.md`](RULES.md)  | Aturan hukum, arsitektur, transaksi atomik, dan keamanan wajib |
-| **Panduan AI Agent**    | [`AGENTS.md`](AGENTS.md) | Peta navigasi arsitektur, kompetensi skill, dan SOP agen       |
+| **Kebutuhan & Produk**  |   [`PRD.md`](PRD.md)     | Spesifikasi produk, persona pengguna, dan batasan 6 pilar      |
 | **Token Visual & UI**   | [`DESIGN.md`](DESIGN.md) | Style guide Cyber-Anime Glassmorphism & Naura Wilds            |
+| **Aturan & Konstitusi** |  [`RULES.md`](RULES.md)  | Aturan hukum, arsitektur, transaksi atomik, dan keamanan wajib |
+| **Panduan AI Agent**    | [`AGENTS.md`](AGENTS.md) | Peta navigasi arsitektur, alur data interaksi, dan SOP agen    |
 | **Roadmap Sprint**      |   [`TODO.md`](TODO.md)   | Prioritas fitur dan backlog pekerjaan                          |
 
 ---
@@ -176,12 +177,13 @@ Kredensial disimpan di file `.env` dan diakses melalui [`src/config/env.js`](src
 Naura-Hoshino-V2/
 ├── shard.js                 # ShardingManager entry point
 ├── index.js                 # Bot client instance per-shard
+├── PRD.md                   # Product Requirements Document (kebutuhan produk & personas)
 ├── RULES.md                 # Konstitusi & aturan arsitektur wajib
 ├── AGENTS.md                # Panduan teknis & SOP AI Agent
 ├── DESIGN.md                # Design tokens & visual style guide
 ├── TODO.md                  # Prioritas roadmap & sprint backlog
 ├── assets/                  # Aset grafis, font, 3D model, dan kamus i18n
-├── dashboard-v2/            # Web Dashboard interaktif (Vite MPA + Three.js)
+├── dashboard/               # Web Dashboard interaktif (Express + Vite MPA + Three.js)
 ├── plugin/                  # Slash command router per kategori
 ├── scripts/                 # Utilitas migrasi & verifikasi otomatis
 └── src/                     # Core engine bot
@@ -200,11 +202,13 @@ Naura-Hoshino-V2/
 
 ## 🤝 Kontribusi & Tata Kelola
 
-Sebelum mengirimkan kontribusi kode atau pull request:
+Sebelum mengirimkan kontribusi kode atau pull request, pahami **Pentalogi Dokumentasi**:
 
-1. Baca panduan aturan wajib di [`RULES.md`](RULES.md).
-2. Jika Anda adalah AI Agent, pahami alur kerja di [`AGENTS.md`](AGENTS.md).
-3. Pastikan seluruh gate pengujian lolos:
+1. Pahami visi produk, batasan 6 pilar, dan persona pengguna di [`PRD.md`](PRD.md).
+2. Terapkan standar token visual, estetika glassmorphism, dan komponen UI di [`DESIGN.md`](DESIGN.md).
+3. Patuhi aturan hukum kode, transaksi atomik database, dan keamanan di [`RULES.md`](RULES.md).
+4. Jika Anda adalah AI Agent, ikuti SOP, peta folder, dan alur eksekusi di [`AGENTS.md`](AGENTS.md).
+5. Pastikan seluruh gate pengujian lolos:
    ```bash
    npm run lint
    node scripts/check-em-dash.js

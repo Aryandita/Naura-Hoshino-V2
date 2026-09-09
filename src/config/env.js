@@ -166,8 +166,9 @@ const env = {
   SPOTIFY_MAX_PLAYLIST_TRACKS:
     parseInt(process.env.SPOTIFY_MAX_PLAYLIST_TRACKS) || 100,
 
-  // GEMINI AI
+  // GOOGLE GEMINI AI
   GEMINI_API: cleanEnv(process.env.GEMINI_API_KEY),
+  GEMINI_MODEL: cleanEnv(process.env.GEMINI_MODEL) || "gemini-2.5-flash",
 
   // GROQ CLOUD AI (High-Speed & Failover Fallback)
   GROQ_API_KEY: cleanEnv(process.env.GROQ_API_KEY),

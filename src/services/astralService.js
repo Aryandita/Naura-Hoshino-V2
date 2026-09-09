@@ -175,11 +175,113 @@ const CONSTELLATIONS = [
 
 class AstralService {
   /**
-   * Menghasilkan cuaca astral harian per server (deterministic per hari & guildId)
+   * Mengambil instance AIManager secara lazy untuk menghindari circular dependency saat boot.
+   * @private
+   */
+  _getAiManager() {
+    return require("../managers/aiManager");
+  }
+
+  /**
+   * Menentukan cuaca astral guild berbasis analisis sentimen pesan obrolan publik via Gemini.
    * @param {string} guildId
+   * @param {string[]} sampleTexts Array teks pesan obrolan publik terkini
+   * @returns {Promise<Object>} Data cuaca astral dengan skor sentimen & aura
+   */
+  async evaluateGuildSentiment(guildId, sampleTexts = []) {
+    const today = new Date().toISOString().slice(0, 10);
+    const cacheKey = `cache:astral_weather:${guildId || "global"}:${today}`;
+
+    // Cek cache Redis terlebih dahulu
+    if (redisManager.isReady) {
+      try {
+        const cached = await redisManager.get(cacheKey);
+        if (cached) return JSON.parse(cached);
+      } catch (_) {}
+    }
+
+    let chosenWeather = null;
+    let sentimentScore = 75;
+    let auraReason = "";
+
+    // Jika ada sampel pesan publik dan Gemini aktif, minta analisis sentimen
+    if (Array.isArray(sampleTexts) && sampleTexts.length >= 3) {
+      try {
+        const ai = this._getAiManager();
+        const genAI = ai.getGenAI();
+        if (genAI) {
+          const sampleSnippet = sampleTexts
+            .slice(0, 25)
+            .map((t, idx) => `${idx + 1}. ${t.replace(/\n+/g, " ").slice(0, 150)}`)
+            .join("\n");
+
+          const prompt = `Kamu adalah pengamat cuaca galaksi Naura Hoshino. Analisis suasana/vibe obrolan server Discord ini dari cuplikan teks berikut:\n\n${sampleSnippet}\n\nTentukan cuaca kosmik mana yang paling cocok dari 6 opsi berikut:\n- aurora_fortune (obrolan ramai, antusias, beruntung)\n- cosmic_storm (kompetitif, bermain game, debat intens)\n- starlit_serenity (tenang, santai, malam hari, rileks)\n- eclipse_shadows (iseng, bercanda gelap, misterius)\n- sakura_breeze (hangat, saling menyemangati, ramah)\n- celestial_harmony (seimbang, kolaboratif, diskusi produktif)\n\nJawab HANYA dalam format JSON valid:\n{"weatherId":"aurora_fortune|cosmic_storm|starlit_serenity|eclipse_shadows|sakura_breeze|celestial_harmony","sentimentScore":85,"auraReason":"deskripsi singkat suasana server 1-2 kalimat"}`;
+
+          const response = await genAI.models.generateContent({
+            model: ai._defaultModel || "gemini-2.5-flash",
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            config: { maxOutputTokens: 300, temperature: 0.5 },
+          });
+
+          const rawText = response?.text;
+          const resolved = typeof rawText === "function" ? rawText() : rawText;
+          const jsonMatch = resolved && resolved.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            const match = ASTRAL_WEATHERS.find((w) => w.id === parsed.weatherId);
+            if (match) {
+              chosenWeather = match;
+              sentimentScore = Number(parsed.sentimentScore) || 75;
+              auraReason = parsed.auraReason || "";
+            }
+          }
+        }
+      } catch (e) {
+        // Fallback ke hash jika Gemini gagal/timeout
+      }
+    }
+
+    // Fallback deterministik jika belum ada cuaca terpilih
+    if (!chosenWeather) {
+      let hash = 0;
+      const str = `${guildId || "naura-global"}-${today}`;
+      for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+        hash |= 0;
+      }
+      const index = Math.abs(hash) % ASTRAL_WEATHERS.length;
+      chosenWeather = ASTRAL_WEATHERS[index];
+    }
+
+    const weather = {
+      ...chosenWeather,
+      date: today,
+      guildId: guildId || "global",
+      sentimentScore,
+      auraReason: auraReason || chosenWeather.lore,
+      isAiEvaluated: Boolean(auraReason),
+    };
+
+    if (redisManager.isReady) {
+      try {
+        await redisManager.set(cacheKey, JSON.stringify(weather), 86400);
+      } catch (_) {}
+    }
+
+    return weather;
+  }
+
+  /**
+   * Menghasilkan cuaca astral harian per server (deterministic atau berbasis sentimen)
+   * @param {string} guildId
+   * @param {string[]} [sampleTexts]
    * @returns {Promise<Object>}
    */
-  async getGuildAstralWeather(guildId) {
+  async getGuildAstralWeather(guildId, sampleTexts = null) {
+    if (sampleTexts && sampleTexts.length >= 3) {
+      return this.evaluateGuildSentiment(guildId, sampleTexts);
+    }
+
     const today = new Date().toISOString().slice(0, 10);
     const cacheKey = `cache:astral_weather:${guildId || "global"}:${today}`;
 
@@ -190,27 +292,7 @@ class AstralService {
       } catch (_) {}
     }
 
-    // Hash deterministik hari + guildId
-    let hash = 0;
-    const str = `${guildId || "naura-global"}-${today}`;
-    for (let i = 0; i < str.length; i++) {
-      hash = (hash << 5) - hash + str.charCodeAt(i);
-      hash |= 0;
-    }
-    const index = Math.abs(hash) % ASTRAL_WEATHERS.length;
-    const weather = {
-      ...ASTRAL_WEATHERS[index],
-      date: today,
-      guildId: guildId || "global",
-    };
-
-    if (redisManager.isReady) {
-      try {
-        await redisManager.set(cacheKey, JSON.stringify(weather), 86400);
-      } catch (_) {}
-    }
-
-    return weather;
+    return this.evaluateGuildSentiment(guildId, []);
   }
 
   /**

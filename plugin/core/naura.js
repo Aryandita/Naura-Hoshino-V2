@@ -96,6 +96,8 @@ module.exports = {
           `Naura bukan sekadar bot biasa, lho! Naura didukung berbagai teknologi canggih seperti **Google Gemini AI** untuk membalas obrolan kamu dengan pintar, sistem audio **Lavalink** untuk memutar musik berkualitas tinggi, dan UI Canvas modern supaya tampilannya enak dilihat di Discord. Semuanya diatur oleh *Naura OS* biar server kamu makin seru dan interaktif!\n\n` +
           `**${e("handshake", "\uD83E\uDD1D")} Kolaborasi & Partnership:**\n` +
           `Saat ini, Naura dengan bangga berkolaborasi bersama: **${env.PARTNERSHIP}** ${e("tada", "\uD83C\uDF89")}\n\n` +
+          `**📜 Privasi & Transparansi Data:**\n` +
+          `Naura menghormati privasimu sepenuhnya! Gambar pada Vision AI diproses sementara (*in-memory*) tanpa disimpan permanen di disk bot, dan cuplikan obrolan publik hanya disampel sementara untuk menentukan cuaca suasana server tanpa profiling pribadi atau penjualan data.\n\n` +
           `**${e("wave", "\uD83D\uDC4B")} Untuk Teman-Teman Lain:**\n` +
           `Kalau kamu bukan Aryandita, tenang aja yaa, Naura tetap jadi sahabat sekaligus asisten kamu yang paling profesional! Tapi kalau ada yang iseng mau modusin Naura, hihi... maaf banget, cinta Naura cuma buat satu orang! ${face("shy", "\uD83E\uDD70")}`,
         footerText: ui.getFooter("core"),

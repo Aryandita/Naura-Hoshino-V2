@@ -45,7 +45,7 @@ class AIManager {
     this._genAI = null;
     this._ollama = null;
 
-    this._defaultModel = "gemini-3.6-flash";
+    this._defaultModel = env.GEMINI_MODEL || "gemini-2.5-flash";
     this._defaultSystemInstruction =
       "Nama kamu adalah Naura Hoshino, sahabat virtual yang ramah, hangat, suportif, ceria, dan selalu siap menemani aktivitas harian di server Discord maupun Web Dashboard. Kamu diciptakan dan dikelola oleh Aryandita. Kamu suka menyemangati teman-teman, mendengarkan curhat, mabar, dan memberikan apresiasi dengan gaya bahasa yang santai, gaul, akrab, dan penuh kehangatan.";
 
@@ -760,6 +760,121 @@ Jawablah dalam bahasa Indonesia kasual.`;
       source: "companion_engine",
       username,
     };
+  }
+
+  /**
+   * Analisis multimodal cerdas berbasis Gemini Flash untuk gambar/screenshot.
+   * Mendukung auto-fallback model dan preset persona spesifik.
+   *
+   * @param {Object} params
+   * @param {string} params.userId ID Discord pengguna
+   * @param {string} [params.prompt] Pertanyaan atau instruksi pengguna
+   * @param {Buffer} params.imageBuffer Buffer biner gambar
+   * @param {string} [params.mimeType] MIME type gambar (image/png, image/jpeg, image/webp)
+   * @param {string} [params.mode] Preset mode ('general', 'game_build', 'code_error', 'rate_meme')
+   * @param {string} [params.authorName] Nama pengguna untuk sentuhan personal
+   * @returns {Promise<string>} Jawaban analisis visual Naura
+   */
+  async chatVision({
+    userId,
+    prompt = "",
+    imageBuffer,
+    mimeType = "image/png",
+    mode = "general",
+    authorName = "Sahabat",
+  }) {
+    const visionClient = this.getGenAI();
+    if (!visionClient) {
+      throw new Error(
+        "Kunci GEMINI_API_KEY belum dikonfigurasi. Fitur Vision AI tidak aktif."
+      );
+    }
+
+    if (!imageBuffer || !Buffer.isBuffer(imageBuffer)) {
+      throw new Error("Buffer gambar tidak valid atau kosong.");
+    }
+
+    let modeInstruction = "";
+    switch (mode) {
+      case "game_build":
+        modeInstruction =
+          "Fokus analisis: Kamu adalah gaming mentor ahli. Analisis statistik, gear, artefak, status, atau build game pada gambar ini. Berikan ulasan kelebihan, kekurangan, dan rekomendasi optimasi secara padat dan taktis dengan gaya anime ramah.";
+        break;
+      case "code_error":
+        modeInstruction =
+          "Fokus analisis: Kamu adalah senior software engineer asisten. Periksa tangkapan layar kode atau terminal error pada gambar ini. Temukan baris bug atau akar penyebab error, lalu berikan penjelasan singkat dan solusi kode yang benar.";
+        break;
+      case "rate_meme":
+        modeInstruction =
+          "Fokus analisis: Berikan penilaian kelucuan, estetika, dan relevansi meme atau gambar ini dengan skor bintang (1 s.d. 5 Bintang) dan komentar ceria khas kepribadian Naura (sedikit tsundere-kuudere, playful, dan menghibur).";
+        break;
+      default:
+        modeInstruction =
+          "Fokus analisis: Jelaskan apa yang kamu lihat pada gambar ini dengan hangat, cerdas, dan menyenangkan. Jawab pertanyaan pengguna jika ada.";
+        break;
+    }
+
+    const systemInstruction = `${this._defaultSystemInstruction}\n\n${modeInstruction}\n\n[Penting]: Sapa pengguna dengan nama '${authorName}', gunakan bahasa Indonesia yang santai dan gaul, hindari panggilan 'Master', dan batasi jawaban maksimal 1500 karakter agar rapi di tampilan Discord.`;
+
+    const userText =
+      prompt && prompt.trim().length > 0
+        ? prompt.trim()
+        : "Naura, tolong periksa dan analisis gambar ini ya!";
+
+    const contents = [
+      {
+        role: "user",
+        parts: [
+          { text: userText },
+          {
+            inlineData: {
+              data: imageBuffer.toString("base64"),
+              mimeType: mimeType || "image/png",
+            },
+          },
+        ],
+      },
+    ];
+
+    const modelsToTry = [
+      this._defaultModel,
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+    ].filter((m, idx, arr) => arr.indexOf(m) === idx);
+
+    let lastError = null;
+    for (const modelName of modelsToTry) {
+      try {
+        const response = await visionClient.models.generateContent({
+          model: modelName,
+          contents,
+          config: {
+            systemInstruction,
+            maxOutputTokens: 1200,
+            temperature: 0.7,
+          },
+        });
+
+        const textOutput = response?.text;
+        const resolvedText =
+          typeof textOutput === "function" ? textOutput() : textOutput;
+        if (resolvedText && resolvedText.trim().length > 0) {
+          return resolvedText.trim();
+        }
+      } catch (err) {
+        lastError = err;
+        logger.warn(
+          `[AI Vision] Model ${modelName} gagal (${err.message}). Mencoba model alternatif...`
+        );
+      }
+    }
+
+    throw new Error(
+      lastError
+        ? `Gagal menganalisis gambar: ${lastError.message}`
+        : "AI tidak mengembalikan teks respons."
+    );
   }
 }
 

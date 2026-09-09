@@ -45,9 +45,9 @@ portfolio-site/
 testsprite_tests/tmp/
 testsprite_tests/tmp/config.json
 
-# Dashboard V2: artefak build & konfigurasi lokal berisi secret
-dashboard-v2/dist/
-dashboard-v2/public/assets/
+# Dashboard: artefak build & konfigurasi lokal berisi secret
+dashboard/dist/
+dashboard/public/assets/
 .roo/mcp.json
 scripts/tmp-*
 

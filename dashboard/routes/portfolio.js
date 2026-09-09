@@ -457,32 +457,23 @@ module.exports = (client) => {
     }
 
     const fs = require("fs");
-    const v2DistPage = path.join(
+    const distPage = path.join(
       __dirname,
       "..",
-      "..",
-      "dashboard-v2",
       "dist",
       "src",
       "pages",
       "portfolio.html",
     );
-    const v2SrcPage = path.join(
+    const srcPage = path.join(
       __dirname,
       "..",
-      "..",
-      "dashboard-v2",
       "src",
       "pages",
       "portfolio.html",
     );
-    const fallbackPage = path.join(__dirname, "..", "views", "portfolio.html");
 
-    const filePath = fs.existsSync(v2DistPage)
-      ? v2DistPage
-      : fs.existsSync(v2SrcPage)
-        ? v2SrcPage
-        : fallbackPage;
+    const filePath = fs.existsSync(distPage) ? distPage : srcPage;
 
     try {
       let html = fs.readFileSync(filePath, "utf-8");

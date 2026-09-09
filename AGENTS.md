@@ -1,10 +1,11 @@
 # 🤖 PANDUAN KERJA & ORIENTASI AGENT AI, NAURA HOSHINO V2
 
 > **Target:** AI Coding Assistants (Antigravity, Roo Code, Claude, Copilot, & Developer Manusia)  
-> **Versi Ekosistem:** 2.1.0 · **Engine:** 2.1.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14
+> **Versi Ekosistem:** 2.1.0 · **Engine:** 2.1.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14  
+> **Pentalogi Dokumentasi:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`DESIGN.md`](DESIGN.md) (Desain) · [`RULES.md`](RULES.md) (Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen AI)
 
 > [!IMPORTANT]
-> **Aturan Wajib & Tata Kelola:** Seluruh aturan hukum kode, konvensi penamaan, standar keamanan, layout Components V2, dan ketentuan atomisitas database berada di [`RULES.md`](RULES.md). Dokumen ini berfokus pada **cara agen memahami arsitektur proyek, peta navigasi cepat, kompetensi/skill yang diperlukan, dan prosedur eksekusi tugas**.
+> **Aturan Wajib & Tata Kelola:** Seluruh aturan hukum kode, konvensi penamaan, standar keamanan, layout Components V2, dan ketentuan atomisitas database berada di [`RULES.md`](RULES.md). Spesifikasi fungsional dan kebutuhan pengguna berada di [`PRD.md`](PRD.md), dan standar visual berada di [`DESIGN.md`](DESIGN.md). Dokumen ini berfokus pada **cara agen memahami arsitektur proyek, peta navigasi cepat, kompetensi/skill yang diperlukan, dan prosedur eksekusi tugas**.
 
 ---
 
@@ -46,7 +47,7 @@ Gunakan tabel ini untuk menemukan lokasi kode dan memahami batasan modifikasi:
 | [`src/utils/`](file:///d:/Naura%20Hoshino%20V2/src/utils/)               | Helper murni stateless (`NauraContainerBuilder.js`, `survivalUIHelper.js`, `uxHelper.js`).                              | Dilarang menyimpan state di sini. Helper harus deterministik dan reusable.                |
 | [`src/interactions/`](file:///d:/Naura%20Hoshino%20V2/src/interactions/) | Handler tombol, select menu, modal, autocomplete, dan context menu.                                                     | Wrap selalu dengan `safeExecute` dan tangani interaksi secara defensif.                   |
 | [`plugin/`](file:///d:/Naura%20Hoshino%20V2/plugin/)                     | Subcommand dan router slash command (`core`, `music`, `admin`, `survival`).                                             | **HANYA** untuk validasi input dan pemanggilan service/manager. Dilarang query DB mentah. |
-| [`dashboard-v2/`](file:///d:/Naura%20Hoshino%20V2/dashboard-v2/)         | Frontend web Vite MPA (`src/pages/`, `src/components/`, `public/models/`).                                              | Komponen 3D Three.js berada di `src/components/NauraHeroViewer/` dan `NauraViewer/`.      |
+| [`dashboard/`](file:///d:/Naura%20Hoshino%20V2/dashboard/)               | Web Dashboard terintegrasi (Express backend & Vite MPA frontend).                                                       | Komponen 3D Three.js berada di `src/components/NauraHeroViewer/` dan `NauraViewer/`.      |
 | [`scripts/`](file:///d:/Naura%20Hoshino%20V2/scripts/)                   | Script CLI pemeliharaan (`migrate.js`, `validate-locales.js`, `verify_dashboard_3d.js`).                                | Script uji mandiri & runner migrasi prestart.                                             |
 
 ---
@@ -218,10 +219,17 @@ Saat menambahkan fungsi atau modul baru:
 
 ---
 
-## 🔗 8. Dokumen Pendukung Terkait
+## 🔗 8. Dokumen Pendukung Terkait (Pentalogi Dokumentasi)
 
-- **Konstitusi & Aturan Hukum:** [`RULES.md`](RULES.md)
-- **Panduan Desain & Token Visual:** [`DESIGN.md`](DESIGN.md)
-- **Roadmap & Prioritas Sprint:** [`TODO.md`](TODO.md)
-- **Ringkasan Publik & Instalasi:** [`README.md`](README.md)
-- **Workspace Skill:** [`.agents/skills/naura-dev/SKILL.md`](.agents/skills/naura-dev/SKILL.md)
+Seluruh agen AI dan kontributor wajib merujuk pada pilar dokumentasi yang tepat sesuai dengan ranah tugasnya:
+
+| Dokumen | Sumber Kebenaran (*Source of Truth*) | Kapan Agen Wajib Membacanya? |
+| :--- | :--- | :--- |
+| [`README.md`](README.md) | **Portal & Instalasi Publik** | Saat butuh gambaran arsitektur umum, dependensi runtime, atau langkah setup lokal. |
+| [`PRD.md`](PRD.md) | **Kebutuhan Produk & Personas** | Saat merancang fitur baru, memahami *what & why*, target persona, dan prioritas MoSCoW. |
+| [`DESIGN.md`](DESIGN.md) | **Bahasa Desain & UI Tokens** | Saat membuat tampilan UI bot (Components V2), web dashboard, token warna, atau model 3D. |
+| [`RULES.md`](RULES.md) | **Konstitusi & Standar Teknis** | Sebelum menulis kode: patuhi transaksi atomik DB, larangan em-dash, dan anti-crash. |
+| [`AGENTS.md`](AGENTS.md) | **Navigasi & SOP AI Agent** | Untuk memetakan direktori file, alur eksekusi, dan menjalankan checklist QA sebelum commit. |
+| [`TODO.md`](TODO.md) | **Roadmap & Sprint Backlog** | Untuk melihat status tugas yang sedang dikerjakan dan backlog sprint berikutnya. |
+| [`.agents/skills/naura-dev/SKILL.md`](.agents/skills/naura-dev/SKILL.md) | **Workspace Skill Naura Dev** | Prosedur cepat eksekusi subagent untuk development bot. |
+

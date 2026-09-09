@@ -6,6 +6,8 @@ const { getDbStatus } = require("../../src/managers/dbManager");
 const redisManager = require("../../src/managers/redisManager");
 const mongoManager = require("../../src/managers/mongoManager");
 
+const { requireGuildManager } = require("../middleware/auth");
+
 module.exports = (client) => {
   const router = express.Router();
 
@@ -74,7 +76,7 @@ module.exports = (client) => {
     }
   });
 
-  router.post("/music/control", async (req, res) => {
+  router.post("/music/control", requireGuildManager, async (req, res) => {
     const { guildId, action } = req.body;
     if (!guildId || !action)
       return res.status(400).json({ error: "Missing guildId or action" });

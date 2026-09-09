@@ -552,7 +552,7 @@ def main():
     gltf.set_binary_blob(bytes(blob))
 
     out_dirs = [
-        "dashboard-v2/public/models",
+        "dashboard/public/models",
         "assets/3D Model Naura"
     ]
     for d in out_dirs:

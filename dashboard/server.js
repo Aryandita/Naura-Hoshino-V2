@@ -132,9 +132,16 @@ module.exports = (client) => {
   // Batas ukuran badan permintaan menutup upaya menghabiskan memori proses.
   webApp.use(express.json({ limit: "256kb" }));
   webApp.use(express.urlencoded({ extended: true, limit: "256kb" }));
-  // Static assets: Dashboard V2 dist sebagai prioritas utama, didukung asset publik & bot
-  webApp.use(express.static(path.join(__dirname, "../dashboard-v2/dist")));
-  webApp.use(express.static(path.join(__dirname, "public")));
+  // Static assets: Dashboard dist sebagai prioritas utama, didukung asset publik & bot
+  webApp.use(express.static(path.join(__dirname, "dist")));
+  // Jangan sajikan berkas di folder /transcripts secara statis publik.
+  // Transkrip memuat percakapan privat tiket dan WAJIB melewati router terproteksi di tickets.js.
+  webApp.use((req, res, next) => {
+    if (req.path.startsWith("/transcripts/")) {
+      return next();
+    }
+    return express.static(path.join(__dirname, "public"))(req, res, next);
+  });
   webApp.use("/assets", express.static(path.join(__dirname, "../assets")));
 
   // Sajikan berkas model 3D (VRM & GLB) dengan Content-Type model/gltf-binary yang valid
@@ -145,13 +152,13 @@ module.exports = (client) => {
   };
   webApp.use(
     "/models",
-    express.static(path.join(__dirname, "../dashboard-v2/dist/models"), {
+    express.static(path.join(__dirname, "dist/models"), {
       setHeaders: setModelMime,
     }),
   );
   webApp.use(
     "/models",
-    express.static(path.join(__dirname, "../dashboard-v2/public/models"), {
+    express.static(path.join(__dirname, "public/models"), {
       setHeaders: setModelMime,
     }),
   );
@@ -355,19 +362,19 @@ module.exports = (client) => {
   // --- Redirect legacy /v2 ke root dashboard utama ---
   webApp.use("/v2", (req, res) => res.redirect("/"));
 
-  // --- Halaman Dashboard Utama (Dashboard V2 Modern MPA) ---
-  const v2DistPages = path.join(__dirname, "../dashboard-v2/dist/src/pages");
-  const v2SrcPages = path.join(__dirname, "../dashboard-v2/src/pages");
+  // --- Halaman Dashboard Utama (Dashboard Modern MPA) ---
+  const distPages = path.join(__dirname, "dist/src/pages");
+  const srcPages = path.join(__dirname, "src/pages");
   const view = (name) => (req, res) => {
-    const distFile = path.join(v2DistPages, name);
+    const distFile = path.join(distPages, name);
     if (fs.existsSync(distFile)) {
       return res.sendFile(distFile);
     }
-    const srcFile = path.join(v2SrcPages, name);
+    const srcFile = path.join(srcPages, name);
     if (fs.existsSync(srcFile)) {
       return res.sendFile(srcFile);
     }
-    return res.sendFile(path.join(__dirname, "views", name));
+    return res.status(404).send("Page not found");
   };
 
   webApp.get("/", view("index.html"));

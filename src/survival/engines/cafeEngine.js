@@ -169,7 +169,17 @@ class CafeEngine {
     const pricePerDish = recipe ? recipe.price : 200;
     const totalEarned = pricePerDish * sellQty;
     const tips = Math.floor(Math.random() * 25) + 10;
-    const finalEarnings = totalEarned + tips;
+
+    let weatherBonus = 1;
+    try {
+      const astralService = require("../../services/astralService");
+      const weather = await astralService.getGuildAstralWeather("global");
+      if (weather?.id === "sakura_breeze") {
+        weatherBonus = 1.2; // +20% bonus penjualan saat sakura breeze
+      }
+    } catch (_) {}
+
+    const finalEarnings = Math.floor((totalEarned + tips) * weatherBonus);
 
     cafe.customersServed = Number(cafe.customersServed || 0) + 1;
     await cafe.save({ fields: ["activeDishes", "customersServed"] });

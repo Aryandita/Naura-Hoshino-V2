@@ -247,6 +247,16 @@ components:
     padding: 20px
 ---
 
+# 🎨 NAURA HOSHINO OS, Design System & Visual Guidelines
+
+> **Versi Design System:** 2.1.0-naura-os · **Tema:** Cyber-Anime Glassmorphism & Cosmic Space  
+> **Pentalogi Dokumentasi:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`DESIGN.md`](DESIGN.md) (Desain) · [`RULES.md`](RULES.md) (Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen AI)
+
+> [!NOTE]
+> Dokumen ini adalah **sumber kebenaran visual (*Look & Feel*)** ekosistem Naura Hoshino V2. Kebutuhan fungsional dan sasaran persona produk diatur di [`PRD.md`](PRD.md), aturan tata kelola rekayasa dan pembentukan builder diatur di [`RULES.md`](RULES.md), dan panduan navigasi AI berada di [`AGENTS.md`](AGENTS.md).
+
+---
+
 ## Overview
 
 Permukaan visual Naura Hoshino adalah kanvas gelap intergalaksi (`{colors.canvas}`, #000c10) yang dipadukan dengan gradien radial halus. Berbeda dengan antarmuka solid tradisional, sistem ini sangat bergantung pada **Glassmorphism**, panel-panel semi-transparan yang membiarkan latar belakang tembus pandang dengan efek blur tebal. Identitas _brand_ disampaikan melalui tipografi bercahaya (_text-glow_), indikator status neon, dan batas (_borders_) pastel yang merespons interaksi kursor pengguna.
@@ -395,17 +405,17 @@ Saat navigasi _hamburger_ ditekan pada _mobile_, sistem CSS mengeksekusi kelas u
 
 ---
 
-## Dashboard V2: Arsitektur Aset & Build Mandiri
+## Dashboard: Arsitektur Aset & Build Mandiri
 
-Dashboard V2 (`dashboard-v2/`, frontend Vite MPA yang dilayani Express di subpath `/v2`) kini **mandiri dari dashboard lama**: seluruh CSS, ikon, dan utilitas UI dibundel sendiri, tanpa Tailwind CDN maupun aset statis dari `dashboard/public`.
+Dashboard (`dashboard/`, frontend Vite MPA terintegrasi bersama server Express) kini **mandiri dan terpadu**: seluruh CSS, ikon, dan utilitas UI dibundel sendiri, tanpa Tailwind CDN.
 
 ### Sumber Token & Entry CSS Tunggal
 
-| Berkas                           | Peran                                                                                                                      |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `dashboard-v2/src/css/input.css` | Satu-satunya entry CSS. Urutan import wajib: Google Fonts -> `tailwindcss` -> Font Awesome -> `style.css` -> `tokens.css`. |
-| `src/css/style.css`              | Gaya dasar glassmorphism warisan (salinan mandiri dari dashboard lama).                                                    |
-| `src/css/tokens.css`             | Override warna agar selaras `src/config/ui.js`; muat SETELAH style.css.                                                    |
+| Berkas                        | Peran                                                                                                                      |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `dashboard/src/css/input.css` | Satu-satunya entry CSS. Urutan import wajib: Google Fonts -> `tailwindcss` -> Font Awesome -> `style.css` -> `tokens.css`. |
+| `src/css/style.css`           | Gaya dasar glassmorphism warisan.                                                                                         |
+| `src/css/tokens.css`          | Override warna agar selaras `src/config/ui.js`; muat SETELAH style.css.                                                    |
 
 - **Tailwind v4 via CLI, bukan plugin Vite.** Plugin `@tailwindcss/vite` bertabrakan dengan `<style>` inline di halaman MPA ini; build memakai `@tailwindcss/cli` (`npm run build:css`) menghasilkan `public/vendor/tailwind-built.css`.
 - **Theme token v4** didefinisikan di blok `@theme` input.css: `--font-cyber` (Orbitron), `--font-outfit`, `--color-primary`, `--color-accent-pink/purple/cyan/emerald`, `--color-premium-gold`, `--color-dark-*`. Class yang sah: `font-cyber`, `text-primary`, `border-accent-pink`, `bg-dark-card`, dst.
@@ -416,10 +426,10 @@ Dashboard V2 (`dashboard-v2/`, frontend Vite MPA yang dilayani Express di subpat
 
 ### Aturan Halaman Baru
 
-1. Tambahkan entry HTML baru ke `rollupOptions.input` di `dashboard-v2/vite.config.js`.
+1. Tambahkan entry HTML baru ke `rollupOptions.input` di `dashboard/vite.config.mjs`.
 2. Head minimal: satu `<link rel="stylesheet" href="/vendor/tailwind-built.css">`, `<script src="/vendor/socket.io.min.js">` bila perlu realtime, `<script src="/vendor/naura-ui.js">`, dan minimal satu `<script type="module">`.
 3. Dilarang menyisipkan CDN eksternal baru (Tailwind, Font Awesome, Chart.js); gunakan dependency bundler atau vendor lokal.
-4. Build produksi WAJIB lewat `npm run dashboard:build` (wrapper `scripts/build-dashboard-v2.js`) karena path proyek mengandung spasi dan memicu bug `html-inline-proxy` Vite; wrapper menyalin sumber ke folder build tanpa spasi di `%TEMP%` sebelum menjalankan Vite.
+4. Build produksi WAJIB lewat `npm run dashboard:build` (wrapper `scripts/build-dashboard.js`) karena path proyek mengandung spasi dan memicu bug `html-inline-proxy` Vite; wrapper menyalin sumber ke folder build tanpa spasi di `%TEMP%` sebelum menjalankan Vite.
 
 ---
 
@@ -697,3 +707,19 @@ Sistem antarmuka Naura Hoshino V2 memadukan estetika Cyber-Anime Glassmorphism d
 - **Respons Dinamis & Ramah:** Respon error, cooldown, atau rate-limit disampaikan dengan gaya anime yang ekspresif dan peduli (tsundere/kuudere ceria), bukan teks terminal kaku:
   > _"B-Bukan karena aku cerewet ya, Kak {displayName}... tapi istirahat dulu sebentar sebelum coba lagi! 🌸"_
 - **Penyebutan Nama Personal:** Hindari kata panggilan kaku atau generik seperti "Master". Selalu gunakan `{displayName}` atau `{username}` pengguna agar interaksi terasa dekat, hangat, dan nyata.
+
+---
+
+## 🔗 Peta Hubungan Dokumen Ekosistem (Pentalogi Dokumentasi)
+
+Sistem desain ini bekerja beriringan dengan seluruh pilar dokumentasi lainnya:
+
+| Dokumen | Sumber Kebenaran (*Source of Truth*) | Pertanyaan Utama yang Dijawab |
+| :--- | :--- | :--- |
+| [`README.md`](README.md) | **Portal & Instalasi Publik** | "Bagaimana cara memasang, menjalankan, dan memahami arsitektur dasar bot?" |
+| [`PRD.md`](PRD.md) | **Kebutuhan Produk & Personas** | "Fitur apa yang sedang dibangun, mengapa dibuat, untuk siapa, dan prioritasnya apa?" |
+| [`DESIGN.md`](DESIGN.md) | **Bahasa Desain & UI Tokens** | "Bagaimana aturan warna, glassmorphism, 3D avatar viewer, dan Components V2?" |
+| [`RULES.md`](RULES.md) | **Konstitusi & Standar Teknis** | "Bagaimana aturan hukum kode, batas transaksi atomik DB, keamanan, dan anti-crash?" |
+| [`AGENTS.md`](AGENTS.md) | **Navigasi & SOP AI Agent** | "Di mana letak file-nya, bagaimana alur data interaksi ke database, dan apa checklist QA?" |
+| [`TODO.md`](TODO.md) | **Roadmap & Sprint Backlog** | "Pekerjaan apa yang sedang berlangsung dan apa prioritas berikutnya?" |
+

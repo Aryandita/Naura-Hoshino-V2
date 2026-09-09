@@ -18,8 +18,8 @@ Skill ini merupakan ringkasan pengetahuan operasional, arsitektur, dan cheatshee
    - Sharding & Hybrid Clustering (`shard.js`, `index.js`).
    - Handler modular: `src/interactions/` (buttons, modals, selects, autocomplete).
    - Slash Command router: `plugin/<kategori>/<command>.js`.
-2. **Web Dashboard V2 (Vite MPA + Tailwind v4 + Three.js)**:
-   - Folder: `dashboard-v2/` (build output: `dashboard-v2/dist`).
+2. **Web Dashboard (Vite MPA + Tailwind v4 + Three.js)**:
+   - Folder: `dashboard/` (build output: `dashboard/dist`).
    - 3D Model Viewer untuk Avatar Naura PBR (`portfolio.html`, `world.html`).
    - Socket.IO telemetri real-time.
 3. **Audio & DJ Companion**:

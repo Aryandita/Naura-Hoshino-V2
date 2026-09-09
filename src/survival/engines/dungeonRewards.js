@@ -132,10 +132,20 @@ async function grantVictory({
   await cacheManager.updateUserSurvival(userId, { hp: hpLeft });
   survival.hp = hpLeft;
 
+  let weatherMoneyBonus = 1;
+  try {
+    const astralService = require("../../services/astralService");
+    const weather = await astralService.getGuildAstralWeather("global");
+    if (weather?.id === "cosmic_storm") {
+      weatherMoneyBonus = 1.25; // +25% fragment reward saat badai kosmik
+    }
+  } catch (_) {}
+
+  const finalMoney = Math.floor(reward.money * weatherMoneyBonus);
   const balance = await currency.reward(
     currency.FRAGMENT,
     { survival, profile },
-    reward.money,
+    finalMoney,
   );
   await advanceTime(userId, CLEAR_HOURS);
   await leveling.addPlayerXP(userId, reward.xp);
