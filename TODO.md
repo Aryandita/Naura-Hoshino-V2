@@ -498,6 +498,50 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 ---
 
+## 🌐 5. Tren Terkini Ekosistem Discord (2025 - 2026) & Relevansi Arsitektur Naura
+
+Berdasarkan analisis pasar bot dan platform developer Discord terkini (2025 - 2026), terdapat pergeseran paradigma dari bot berbasis skrip statis menjadi ekosistem aplikasi terintegrasi (*Agentic AI & Embedded Experiences*). Berikut adalah peta tren utama dan arah adopsinya pada Naura Hoshino:
+
+### 1. Discord Embedded App SDK & Discord Activities
+- **Tren Platform:** Pengguna Discord kini lebih menyukai pengalaman *in-client* yang langsung berjalan di dalam voice channel atau text channel (iframe Discord Activities) tanpa harus membuka browser terpisah (seperti *Watch Together*, *Putt Party*, atau *Gartic Phone*).
+- **Adopsi Naura:** Mengintegrasikan `@discord/embedded-app-sdk` agar Web Dashboard dan 3D Mascot Viewer dapat diluncurkan langsung dari command `/activity` sebagai mini-game atau interactive companion di dalam Discord.
+
+### 2. Native Discord Monetization & Entitlements API
+- **Tren Platform:** Standar monetisasi bot beralih dari tautan luar (Patreon/PayPal) ke **Discord Premium App Subscriptions (SKUs & Entitlements API)**. Discord menangani checkout lokal via Stripe, mendistribusikan event gateway `ENTITLEMENT_CREATE` / `ENTITLEMENT_UPDATE`, dan mendukung langganan berbasis Server (*Guild Subscription*) maupun Pengguna (*User Subscription*).
+- **Adopsi Naura:** Menghubungkan paket Star Pass, status VIP/VVIP, dan Coupon Pack ke Discord SKUs resmi dengan validasi entitlement real-time.
+
+### 3. Agentic AI & Duplex Voice Companions (Real-Time Audio)
+- **Tren Platform:** Bot beralih dari interaksi tanya-jawab kaku ke agen AI percakapan yang memiliki memori semantik jangka panjang (vector memory RAG), mampu mengobrol suara dua arah secara langsung (*Duplex Voice Chat via WebRTC + VAD*), dan memiliki kepribadian anime yang kohesif.
+- **Adopsi Naura:** Ekspansi AI Ensemble Router dan Fish Audio TTS menuju sesi voice channel interaktif dua arah (`/naura join-voice`).
+
+### 4. Deep Social Gamification & All-in-One Virtual Economy
+- **Tren Platform:** Komunitas Discord menuntut bot "All-in-One" berkemampuan tinggi (seperti OwO, Dank Memer, Tatsu, VibeBot) yang menggabungkan RPG pet virtual, battle pass musiman, pasar komoditas bebas, dan perang wilayah klan tanpa perlu mengundang belasan bot berbeda.
+- **Adopsi Naura:** Pemantapan ekosistem Naura Wilds, Closed-Loop Currency V2, Battle Pass, Pasar Komoditas Dinamis, dan Guild Federation.
+
+### 5. Komponen UI Modern (Discord Components V2 & Media Attachments)
+- **Tren Platform:** Format embed tradisional mulai ditinggalkan dan digantikan oleh Container modern (Discord Components V2), Section terpisah, Accessory thumbnail, dan tata letak responsif bertingkat.
+- **Adopsi Naura:** Standarisasi 5-lapisan `NauraContainerBuilder` yang sudah diadopsi secara penuh di seluruh modul.
+
+---
+
+### 🔮 Sprint 30: Discord Embedded Activity, Native Entitlements Monetization & Voice AI Agent (Next Milestone)
+
+- [ ] **[FITUR] Discord Embedded Activity Launcher (`@discord/embedded-app-sdk`)**:
+  - Mengonfigurasi manifest Discord Activity dan endpoint `/activity` agar Web Dashboard dan 3D Mascot Naura dapat dimainkan langsung di dalam Voice Channel Discord.
+- [ ] **[MONETISASI] Integrasi Discord Entitlements & Premium Subscriptions API**:
+  - Menangani event gateway `ENTITLEMENT_CREATE`, `ENTITLEMENT_UPDATE`, dan `ENTITLEMENT_DELETE` untuk aktivasi otomatis Star Pass dan Naura Premium Tier tanpa intervensi manual.
+- [ ] **[LIVING AI] Duplex Voice Channel AI Companion (`/naura join-voice`)**:
+  - Integrasi Voice Activity Detection (VAD) Discord Voice Gateway dengan Fish Audio Streaming TTS untuk obrolan suara dua arah langsung bersama Naura di voice channel.
+- [ ] **[RPG & CLAN] Cross-Server Federation War & Territory Siege (`GuildFederationEngine` Phase 2)**:
+  - Event mingguan perebutan menara relik kuno (*Ancient Relic Towers*) antar federasi klan lintas-server berbasis kapling tanah `landEngine.js`.
+- [ ] **[PERFORMA] Hybrid Clustering Migration Evaluation (`discord-hybrid-sharding`)**:
+  - Evaluasi migrasi arsitektur sharding menuju hybrid multi-cluster worker untuk memangkas pemakaian memori RAM hingga 45% di hosting panel Pterodactyl.
+- [ ] **[TEST & QA] Automated Test Suite Expansion & Parity Audit**:
+  - Pembuatan unit test untuk Discord Entitlements Webhook Handler dan Federation War dengan target kelulusan >310 tests 100% hijau.
+
+
+---
+
 ## ⚠️ Risiko yang Harus Terus Dipantau
 
 | Risiko                                            | Dampak                                                    | Mitigasi                                                                                         |
