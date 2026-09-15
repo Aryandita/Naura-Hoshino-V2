@@ -132,14 +132,44 @@ async function handleSlashCommand(interaction, client) {
     await respondError(
       interaction,
       "Terjadi kesalahan sistem saat memproses perintah ini.",
+      "Terjadi kesalahan saat memproses perintah ini.",
     );
   }
 
   return undefined;
 }
 
+/**
+ * Memasang guard auto-deferral defensif 2.2 detik untuk mencegah error 10062 (Interaction Not Acknowledged).
+ * @param {import('discord.js').Interaction} interaction
+ * @param {number} [timeoutMs=2200]
+ * @returns {() => void} Fungsi pembersih timer
+ */
+function attachAutoAcknowledgeGuard(interaction, timeoutMs = 2200) {
+  if (
+    !interaction ||
+    typeof interaction.deferReply !== "function" ||
+    (typeof interaction.isAutocomplete === "function" && interaction.isAutocomplete())
+  ) {
+    return () => {};
+  }
+
+  const timer = setTimeout(async () => {
+    try {
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      }
+    } catch {
+      // Abaikan bila sudah terbalas pada race condition mikrodetik
+    }
+  }, timeoutMs);
+
+  return () => clearTimeout(timer);
+}
+
 module.exports = {
   name: Events.InteractionCreate,
+  attachAutoAcknowledgeGuard,
 
   async execute(interaction, client) {
     // Guard Clause 1: Autocomplete didahulukan tanpa delay (batas keras 3 detik)
@@ -147,49 +177,140 @@ module.exports = {
       return handleAutocomplete(interaction, client);
     }
 
-    // Resolusi bahasa pengguna
-    interaction.localeLang = await languageManager
-      .getUserLanguage(interaction.user.id, interaction.guildId)
-      .catch(() => "id");
+    const cleanupGuard = attachAutoAcknowledgeGuard(interaction);
 
-    // Guard Clause 2: Bot sedang dalam proses shutdown/maintenance
-    if (client.isShuttingDown) {
-      return interaction
-        .reply({
-          ...buildMaintenanceContainerV2({
-            authorName: "Naura System Status",
-            title: "Sedang Restart / Pemeliharaan",
-            maintenanceMessage:
-              "Naura sedang dalam proses pemeliharaan atau restart server. Mohon tunggu beberapa saat ya!",
-            lang: interaction.localeLang,
-            withBanner: true,
-          }),
-          flags: MessageFlags.Ephemeral,
-        })
-        .catch(() => {});
-    }
+    try {
+      // Resolusi bahasa pengguna
+      interaction.localeLang = await languageManager
+        .getUserLanguage(interaction.user.id, interaction.guildId)
+        .catch(() => "id");
 
-    // Guard Clause 3: Delegasi Slash Command
-    if (interaction.isChatInputCommand()) {
-      return handleSlashCommand(interaction, client);
-    }
+      // Guard Clause 2: Bot sedang dalam proses shutdown/maintenance
+      if (client.isShuttingDown) {
+        return interaction
+          .reply({
+            ...buildMaintenanceContainerV2({
+              authorName: "Naura System Status",
+              title: "Sedang Restart / Pemeliharaan",
+              maintenanceMessage:
+                "Naura sedang dalam proses pemeliharaan atau restart server. Mohon tunggu beberapa saat ya!",
+              lang: interaction.localeLang,
+              withBanner: true,
+            }),
+            flags: MessageFlags.Ephemeral,
+          })
+          .catch(() => {});
+      }
 
-    // Guard Clause 4: Delegasi Context Menu Command
-    if (interaction.isContextMenuCommand()) {
-      const isContextRateLimited = await rateLimiter.isRateLimited(
-        interaction.user.id,
-        `ctx_${interaction.commandName}`,
-        4,
-        10,
+      // Guard Clause 3: Delegasi Slash Command
+      if (interaction.isChatInputCommand()) {
+        return await handleSlashCommand(interaction, client);
+      }
+
+      // Guard Clause 4: Delegasi Context Menu Command
+      if (interaction.isContextMenuCommand()) {
+        const isContextRateLimited = await rateLimiter.isRateLimited(
+          interaction.user.id,
+          `ctx_${interaction.commandName}`,
+          4,
+          10,
+        );
+        if (isContextRateLimited) {
+          return interaction
+            .reply({
+              ...buildErrorContainerV2({
+                authorName: "Naura Rate Limit",
+                title: "Slow Down!",
+                errorMessage:
+                  "Kamu menggunakan context menu terlalu cepat. Harap tunggu beberapa detik ya!",
+                lang: interaction.localeLang,
+                expression: "sleepy",
+              }),
+              flags: MessageFlags.Ephemeral,
+            })
+            .catch(() => {});
+        }
+
+        const { resolveContextMenu } = require("../interactions/contextMenus");
+        const contextMenuHandler = resolveContextMenu(interaction.commandName);
+        if (!contextMenuHandler) return undefined;
+
+        try {
+          return await contextMenuHandler.execute(interaction, client);
+        } catch (error) {
+          logger.error(
+            `[CONTEXT MENU ERROR] Galat saat mengeksekusi ${interaction.commandName}:`,
+            error,
+          );
+          return await respondError(
+            interaction,
+            "Terjadi kesalahan saat memproses context menu ini.",
+          );
+        }
+      }
+
+      // Resolusi tipe interaksi komponen (button, modal, select)
+      const componentKind = resolveComponentKind(interaction);
+
+      // Guard Clause 5: Bukan komponen yang didukung
+      if (!componentKind) return undefined;
+
+      const registeredComponentHandler = registry.resolve(
+        componentKind,
+        interaction.customId,
       );
-      if (isContextRateLimited) {
+
+      // Guard Clause 5: Komponen dinamis yang dikelola oleh collector lokal (minigame, survival, NPC, dll.)
+      const isManagedByLocalCollector =
+        /^(mg_|mquiz_|duel_|ttt_|aki_|hangman_|memory_|wordle_|rps_|musicquiz_|trivia_|tod_|btn_|collect_|npc_|date_|roam_|tut_|bank_|dungeon_|gacha_|fish_|mine_|chop_|hunt_|explore_|shop_|casino_|trade_|profile_|pet_|pvp_|quiz_|quest_|story_|craft_|inv_|card_|music_|mm_|naura_)/.test(
+          interaction.customId,
+        );
+      if (!registeredComponentHandler && isManagedByLocalCollector) {
+        return undefined;
+      }
+
+      // Guard Clause 6: Komponen basi dari pesan lama tanpa penangan aktif
+      if (!registeredComponentHandler) {
+        logger.warn(
+          `[INTERAKSI] Tidak ada penangan untuk ${componentKind}:${interaction.customId}`,
+        );
         return interaction
           .reply({
             ...buildErrorContainerV2({
-              authorName: "Naura Rate Limit",
-              title: "Slow Down!",
+              lang: interaction.localeLang,
+              title: translateText(
+                interaction.localeLang,
+                "interaction.stale_component.title",
+              ),
+              errorMessage: translateText(
+                interaction.localeLang,
+                "interaction.stale_component.body",
+              ),
+              expressionImage: false,
+            }),
+            flags: MessageFlags.Ephemeral,
+          })
+          .catch(() => {});
+      }
+
+      // Guard Clause 7: Rate limit komponen tombol/select/modal
+      const componentRateLimitPolicy =
+        registeredComponentHandler.cooldown || COMPONENT_LIMIT;
+      const isComponentRateLimited = await rateLimiter.isRateLimited(
+        interaction.user.id,
+        `component_${registeredComponentHandler.label}`,
+        componentRateLimitPolicy.max,
+        componentRateLimitPolicy.seconds,
+      );
+
+      if (isComponentRateLimited) {
+        return interaction
+          .reply({
+            ...buildErrorContainerV2({
+              authorName: "Naura Action Guard",
+              title: "Pelan-Pelan Ya!",
               errorMessage:
-                "Kamu menggunakan context menu terlalu cepat. Harap tunggu beberapa detik ya!",
+                "Kamu menekan tombol terlalu cepat. Harap berikan jeda sebentar ya!",
               lang: interaction.localeLang,
               expression: "sleepy",
             }),
@@ -198,93 +319,10 @@ module.exports = {
           .catch(() => {});
       }
 
-      const { resolveContextMenu } = require("../interactions/contextMenus");
-      const contextMenuHandler = resolveContextMenu(interaction.commandName);
-      if (!contextMenuHandler) return undefined;
-
-      try {
-        return await contextMenuHandler.execute(interaction, client);
-      } catch (error) {
-        logger.error(
-          `[CONTEXT MENU ERROR] Galat saat mengeksekusi ${interaction.commandName}:`,
-          error,
-        );
-        return await respondError(
-          interaction,
-          "Terjadi kesalahan saat memproses context menu ini.",
-        );
-      }
+      // Jalur Utama (Happy Path): Eksekusi melalui wrapper safeExecute
+      return await safeExecute(interaction, registeredComponentHandler, client);
+    } finally {
+      cleanupGuard();
     }
-
-    // Resolusi tipe interaksi komponen (button, modal, select)
-    const componentKind = resolveComponentKind(interaction);
-    if (!componentKind) return undefined;
-
-    const registeredComponentHandler = registry.resolve(
-      componentKind,
-      interaction.customId,
-    );
-
-    // Guard Clause 5: Komponen dinamis yang dikelola oleh collector lokal (minigame, survival, NPC, dll.)
-    const isManagedByLocalCollector =
-      /^(mg_|mquiz_|duel_|ttt_|aki_|hangman_|memory_|wordle_|rps_|musicquiz_|trivia_|tod_|btn_|collect_|npc_|date_|roam_|tut_|bank_|dungeon_|gacha_|fish_|mine_|chop_|hunt_|explore_|shop_|casino_|trade_|profile_|pet_|pvp_|quiz_|quest_|story_|craft_|inv_|card_|music_|mm_|naura_)/.test(
-        interaction.customId,
-      );
-    if (!registeredComponentHandler && isManagedByLocalCollector) {
-      return undefined;
-    }
-
-    // Guard Clause 6: Komponen basi dari pesan lama tanpa penangan aktif
-    if (!registeredComponentHandler) {
-      logger.warn(
-        `[INTERAKSI] Tidak ada penangan untuk ${componentKind}:${interaction.customId}`,
-      );
-      return interaction
-        .reply({
-          ...buildErrorContainerV2({
-            lang: interaction.localeLang,
-            title: translateText(
-              interaction.localeLang,
-              "interaction.stale_component.title",
-            ),
-            errorMessage: translateText(
-              interaction.localeLang,
-              "interaction.stale_component.body",
-            ),
-            expressionImage: false,
-          }),
-          flags: MessageFlags.Ephemeral,
-        })
-        .catch(() => {});
-    }
-
-    // Guard Clause 7: Rate limit komponen tombol/select/modal
-    const componentRateLimitPolicy =
-      registeredComponentHandler.cooldown || COMPONENT_LIMIT;
-    const isComponentRateLimited = await rateLimiter.isRateLimited(
-      interaction.user.id,
-      `component_${registeredComponentHandler.label}`,
-      componentRateLimitPolicy.max,
-      componentRateLimitPolicy.seconds,
-    );
-
-    if (isComponentRateLimited) {
-      return interaction
-        .reply({
-          ...buildErrorContainerV2({
-            authorName: "Naura Action Guard",
-            title: "Pelan-Pelan Ya!",
-            errorMessage:
-              "Kamu menekan tombol terlalu cepat. Harap berikan jeda sebentar ya!",
-            lang: interaction.localeLang,
-            expression: "sleepy",
-          }),
-          flags: MessageFlags.Ephemeral,
-        })
-        .catch(() => {});
-    }
-
-    // Jalur Utama (Happy Path): Eksekusi melalui wrapper safeExecute
-    return safeExecute(interaction, registeredComponentHandler, client);
   },
 };

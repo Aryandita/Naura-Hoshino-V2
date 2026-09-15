@@ -10,6 +10,7 @@
 
 import "./viewer.css";
 import { Naura3DViewer } from "./viewer3d.js";
+import { WardrobeStudio } from "./wardrobeStudio.js";
 
 class NauraViewerClass {
     constructor() {
@@ -22,6 +23,7 @@ class NauraViewerClass {
         this.musicProgress = 42; // persen
         this.chatHistory = [];
         this.viewer3d = null;
+        this.wardrobe = null;
         this.activeContext = null; // Context reaktivitas per halaman
     }
 
@@ -40,6 +42,15 @@ class NauraViewerClass {
         this._initLiveTelemetry();
         this._initChatWelcome();
         await this._init3DViewer();
+
+        // Inisialisasi Wardrobe Studio & terapkan skin yang tersimpan
+        this.wardrobe = new WardrobeStudio(this.viewer3d);
+        if (this.viewer3d) {
+            const savedSkin = this.wardrobe.getSavedSkin();
+            if (savedSkin && savedSkin !== "cyberpunk") {
+                this.viewer3d.setSkin(savedSkin);
+            }
+        }
 
         // Muat context reaktivitas per halaman bila disediakan
         if (options.context) {

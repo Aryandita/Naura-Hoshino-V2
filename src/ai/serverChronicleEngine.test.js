@@ -2,22 +2,44 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const ServerChronicleEngine = require("./serverChronicleEngine");
+const { synthesizeChronicle } = require("./serverChronicleEngine");
 
-test("Server Chronicle Engine - Format and Structure", async () => {
-  const mockGuild = {
-    id: "guild_test_123",
-    name: "Neo-Hoshino City",
-    ownerId: "owner_123",
-    memberCount: 150,
-    iconURL: () => "https://example.com/icon.png",
-  };
+test("ServerChronicleEngine - menghasilkan edisi damai saat data kosong", () => {
+  const result = synthesizeChronicle({});
+  assert.match(result.editionTitle, /Warta Mingguan/);
+  assert.match(result.headline, /KOTA HOSHINO DAMAI/);
+  assert.ok(result.economySection);
+  assert.ok(result.weatherForecast);
+});
 
-  const data = await ServerChronicleEngine.generateChronicleData(mockGuild);
+test("ServerChronicleEngine - mengangkat pemenang lotre sebagai headline utama", () => {
+  const result = synthesizeChronicle({
+    guildName: "Cyber Knights",
+    lotteryWinners: [{ username: "Aria", prize: 500000 }],
+  });
+  assert.match(result.headline, /Aria/i);
+  assert.match(result.headline, /500\.000/);
+  assert.match(result.leadStory, /Aria/i);
+});
 
-  assert.ok(data, "Chronicle data harus terbentuk");
-  assert.equal(data.guildName, "Neo-Hoshino City");
-  assert.ok(data.date, "Harus memiliki tanggal terbit");
-  assert.ok(data.headline, "Harus memiliki judul headline");
-  assert.ok(data.topUser, "Harus memiliki top user");
+test("ServerChronicleEngine - mengangkat boss kill jika ada dan tidak ada pemenang lotre", () => {
+  const result = synthesizeChronicle({
+    bossKills: [{ bossName: "Void Leviathan" }],
+  });
+  assert.match(result.headline, /Void Leviathan/i);
+});
+
+test("ServerChronicleEngine - menyajikan pergerakan komoditas pasar bullish", () => {
+  const result = synthesizeChronicle({
+    marketItems: [{ name: "Cyber Ruby", trend: "bullish", priceChangePercent: 25 }],
+  });
+  assert.match(result.economySection, /Cyber Ruby/);
+  assert.match(result.economySection, /\+25%/);
+});
+
+test("ServerChronicleEngine - mencantumkan klan teratas dalam kolom klan", () => {
+  const result = synthesizeChronicle({
+    topClans: [{ name: "Shadow Guild" }],
+  });
+  assert.match(result.guildSection, /Shadow Guild/);
 });

@@ -475,6 +475,25 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Script pengujian mandiri headless Chrome CDP `scripts/verify_floating_widget.js`.
   - Lolos seluruh 5 tahap QA Gate: `npm run lint` (0 error, 0 warning), `node scripts/check-em-dash.js` (bersih), `npm run locales:check:strict` (263 kunci sinkron), `npm run test:requires` (semua lokal resolved), `npm test` (**272 passing tests 100%**).
 
+### 🚀 Sprint 29: Next-Gen Autonomous Systems, Dynamic Economy & 3D Interactive Ecosystem (v2.2.0 Milestone)
+
+- [x] **[KRITIS] Auto-Acknowledge Interceptor Guard (`src/events/interactionCreate.js`)**:
+  - Mencegah error timeout Discord API `Interaction Not Acknowledged (10062)` dengan interceptor otomatis 2.2 detik yang mengeksekusi `deferReply` secara defensif bila pemrosesan command/canvas berat belum selesai.
+- [x] **[PERFORMA] Redis Cache Warming Lifecycle Script (`scripts/warmup-cache.js`)**:
+  - Memuat konfigurasi guild aktif dan top 100 leaderboard ke Redis saat pra-mulai bot (`prestart`) sehingga waktu respons awal bot seketika (<10ms).
+- [x] **[FITUR] 3D Wardrobe & Costume Customizer Studio (`dashboard/src/components/NauraViewer/wardrobeStudio.js`)**:
+  - Studio kustomisasi tema shader dan material avatar 3D (Cyberpunk Neon, Gothic Maid, Pastel Casual, Adventurer Emerald) dengan persistensi preferensi user.
+- [x] **[FITUR] Mobile Touch Gestures pada 3D Floating Mascot (`viewer3d.js`)**:
+  - Dukungan interaksi sentuh alami: cubit untuk zoom (*pinch-to-zoom*) dan dua jari untuk rotasi (*two-finger rotation*) pada perangkat mobile dan tablet.
+- [x] **[RPG & EKONOMI] Dynamic Seasonal Battle Pass & Star Path Milestones (`src/survival/engines/seasonPassEngine.js`, `/survival pass`)**:
+  - Progresi level musiman (Tier 1-50, Jalur Gratis & Jalur Premium) dengan klaim hadiah atomik (NSF, Kupon, Blueprints, Aksesoris) via `cacheManager`.
+- [x] **[RPG & EKONOMI] Automated Dynamic Commodity Market Fluctuations (`src/survival/engines/commodityMarketEngine.js`)**:
+  - Algoritma dinamis penawaran-permintaan untuk harga jual/beli ikan laut dalam, mineral langka, dan hasil panen dengan elastisitas harga terkalibrasi.
+- [x] **[LIVING AI] Autonomous Server Chronicle Newspaper Generator (`src/ai/serverChronicleEngine.js`)**:
+  - Engine perangkum mingguan peristiwa server (pemenang undian, klan teratas, duel kartu epik) menjadi narasi koran bergambar yang terbit berkala.
+- [x] **[TEST & QA] Automated Test Suite Expansion & QA Gate**:
+  - Pembuatan automated unit tests untuk Season Pass, Commodity Market, Server Chronicle, dan Auto-Acknowledge Guard dengan hasil **295 tests lulus 100% hijau**, 0 error lint, dan 0 em-dash.
+
 </details>
 
 ---

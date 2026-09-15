@@ -227,6 +227,13 @@ function addProfileGroup(builder) {
           .setDescription(
             "📖 Panduan lengkap cara bermain dan bertahan hidup di Naura Wilds",
           ),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("pass")
+          .setDescription(
+            "⭐ Buka Seasonal Battle Pass dan klaim hadiah starlight musiman",
+          ),
       ),
   );
 }

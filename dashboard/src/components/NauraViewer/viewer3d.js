@@ -97,6 +97,11 @@ export class Naura3DViewer {
         this._onMouseMove = this._onMouseMove.bind(this);
         this._onResize = this._onResize.bind(this);
         this._animate = this._animate.bind(this);
+        this._onTouchStart = this._onTouchStart.bind(this);
+        this._onTouchMove = this._onTouchMove.bind(this);
+        this._onTouchEnd = this._onTouchEnd.bind(this);
+
+        this.touchState = { initialDist: 0, initialZoom: 1.8, isPinching: false };
 
         // ResizeObserver untuk resize yang lebih akurat dibanding window resize
         this._resizeObserver = null;
@@ -240,6 +245,12 @@ export class Naura3DViewer {
             this.mouse.targetX = 0;
             this.mouse.targetY = 0;
         });
+
+        // Mobile Touch Gestures
+        this.canvas.addEventListener("touchstart", this._onTouchStart, { passive: true });
+        this.canvas.addEventListener("touchmove", this._onTouchMove, { passive: false });
+        this.canvas.addEventListener("touchend", this._onTouchEnd, { passive: true });
+        this.canvas.addEventListener("touchcancel", this._onTouchEnd, { passive: true });
     }
 
     async _loadNauraModel() {
@@ -354,6 +365,42 @@ export class Naura3DViewer {
         } else {
             this._onMouseMove(event);
         }
+    }
+
+    _onTouchStart(e) {
+        if (!this.canvas) return;
+        if (e.touches.length === 1) {
+            this.handlePointerMove(e.touches[0]);
+        } else if (e.touches.length === 2) {
+            const dx = e.touches[0].clientX - e.touches[1].clientX;
+            const dy = e.touches[0].clientY - e.touches[1].clientY;
+            this.touchState.initialDist = Math.hypot(dx, dy);
+            this.touchState.initialZoom = this.camera ? this.camera.position.z : 1.8;
+            this.touchState.isPinching = true;
+        }
+    }
+
+    _onTouchMove(e) {
+        if (!this.canvas) return;
+        if (e.touches.length === 1) {
+            this.handlePointerMove(e.touches[0]);
+        } else if (e.touches.length === 2 && this.touchState.isPinching && this.camera) {
+            if (e.cancelable) e.preventDefault();
+            const dx = e.touches[0].clientX - e.touches[1].clientX;
+            const dy = e.touches[0].clientY - e.touches[1].clientY;
+            const currentDist = Math.hypot(dx, dy);
+            if (this.touchState.initialDist > 0) {
+                const scale = currentDist / this.touchState.initialDist;
+                const targetZ = this.touchState.initialZoom / scale;
+                this.camera.position.z = Math.max(1.1, Math.min(3.2, targetZ));
+            }
+        }
+    }
+
+    _onTouchEnd() {
+        this.touchState.isPinching = false;
+        this.mouse.targetX = 0;
+        this.mouse.targetY = 0;
     }
 
     _onResize() {
@@ -719,6 +766,13 @@ export class Naura3DViewer {
             window.removeEventListener("resize", this._onResize);
         }
         window.removeEventListener("mousemove", this._onMouseMove);
+
+        if (this.canvas) {
+            this.canvas.removeEventListener("touchstart", this._onTouchStart);
+            this.canvas.removeEventListener("touchmove", this._onTouchMove);
+            this.canvas.removeEventListener("touchend", this._onTouchEnd);
+            this.canvas.removeEventListener("touchcancel", this._onTouchEnd);
+        }
 
         // Hentikan animasi
         if (this.animController && this.animController.destroy) {
