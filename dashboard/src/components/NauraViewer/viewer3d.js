@@ -15,6 +15,7 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { loadModel } from "./loader.js";
 import { createAnimationController } from "./animations.js";
 import { createParticleSystem } from "./particles.js";
+import { createNauraBrand3D } from "./brand3d.js";
 
 export class Naura3DViewer {
     constructor(canvasElement, options = {}) {
@@ -34,6 +35,7 @@ export class Naura3DViewer {
         this.renderer = null;
         this.animController = null;
         this.particles = null;
+        this.brand3d = null; // Astral Halo & Holographic Pedestal
         this.modelGroup = null;
         this.vrm = null;
         this.pmremGenerator = null;
@@ -43,7 +45,10 @@ export class Naura3DViewer {
         // Referensi ke skinnedMesh primer untuk morph target (yang punya morphTargetDictionary)
         this.primarySkinnedMesh = null;
         this.bones = {};
+        this.boneRestQuats = {};
         this.isLoaded = false;
+        this.isPaused = false;
+        this.audioEnergy = 0;
         this.clock = new THREE.Clock();
         this.animationFrameId = null;
         this.currentMood = "happy";
@@ -176,12 +181,12 @@ export class Naura3DViewer {
         this.scene.add(keyLight);
 
         // 3. Cyber-Anime Rim Light (Neon Pink / Cherry Blossom - dari belakang kiri)
-        const rimLightPink = new THREE.DirectionalLight(0xff77a9, 0.9);
+        const rimLightPink = new THREE.DirectionalLight(0xffb3cb, 0.35);
         rimLightPink.position.set(-1.5, 1.0, -1.0);
         this.scene.add(rimLightPink);
 
         // 4. Cyber Accent Light (Cyan Neon - dari bawah depan kiri)
-        const fillLightCyan = new THREE.PointLight(0x38bdf8, 0.7, 5);
+        const fillLightCyan = new THREE.PointLight(0x38bdf8, 0.4, 5);
         fillLightCyan.position.set(-0.8, -0.2, 1.0);
         this.scene.add(fillLightCyan);
     }
@@ -199,14 +204,29 @@ export class Naura3DViewer {
 
         window.addEventListener("mousemove", this._onMouseMove);
 
-        // Interaksi klik: variasi animasi interaktif ramah (Wave, BlowKiss, Cheers, Thinking, Shy)
-        const clickReactions = ["Wave", "BlowKiss", "Cheers", "Thinking", "Shy"];
+        // Interaksi klik: variasi animasi interaktif ramah dan khas Hoshino
+        const clickReactions = ["Wave", "StarPose", "BlowKiss", "AstralCast", "Cheers", "Thinking", "Shy"];
         let reactionIdx = 0;
         this.canvas.addEventListener("click", () => {
             const chosen = clickReactions[reactionIdx % clickReactions.length];
             reactionIdx++;
             this.playAnimation(chosen);
-            if (this.particles) {
+
+            if (chosen === "AstralCast") {
+                if (this.brand3d) this.brand3d.pulse(1.5);
+                if (this.particles) {
+                    if (typeof this.particles.starShower === "function") {
+                        this.particles.starShower(45);
+                    } else if (typeof this.particles.burst === "function") {
+                        this.particles.burst(35);
+                    }
+                }
+            } else if (chosen === "StarPose") {
+                if (this.brand3d) this.brand3d.pulse(1.2);
+                if (this.particles && typeof this.particles.burst === "function") {
+                    this.particles.burst(30);
+                }
+            } else if (this.particles) {
                 this.particles.burst(25);
             }
         });
@@ -243,10 +263,11 @@ export class Naura3DViewer {
                     this.primarySkinnedMesh = node;
                 }
 
-                // Petakan tulang dari skeleton (hanya perlu sekali, semua mesh berbagi skeleton sama)
+                // Petakan tulang dari skeleton dan simpan orientasi awal (rest pose)
                 if (node.skeleton && node.skeleton.bones && Object.keys(this.bones).length === 0) {
                     node.skeleton.bones.forEach((b) => {
                         this.bones[b.name] = b;
+                        this.boneRestQuats[b.name] = b.quaternion.clone();
                     });
                 }
 
@@ -260,10 +281,12 @@ export class Naura3DViewer {
                 materials.forEach((mat) => {
                     if (mat && mat.isMaterial) {
                         mat.side = THREE.DoubleSide;
-                        mat.metalness = 0.1;
-                        mat.roughness = 0.65;
+                        mat.metalness = 0.0;
+                        mat.roughness = 0.75;
+                        mat.roughnessMap = null;
+                        mat.metalnessMap = null;
                         if ("envMapIntensity" in mat) {
-                            mat.envMapIntensity = 1.35;
+                            mat.envMapIntensity = 0.5;
                         }
                         mat.needsUpdate = true;
                     }
@@ -287,11 +310,22 @@ export class Naura3DViewer {
             { lookAtCursor: this.options.lookAtCursor }
         );
 
-        // Partikel ambient cyber-sparkle di sekitar Naura
+        // Partikel ambient cyber-sparkle & 3D Star Fragments di sekitar Naura
         try {
             this.particles = createParticleSystem(this.scene);
         } catch (_) {
             // Partikel gagal, tidak kritis
+        }
+
+        // Astral Halo of Hoshino & Holographic Pedestal
+        try {
+            this.brand3d = createNauraBrand3D(this.scene, {
+                visible: true,
+                haloY: 0.52,
+                pedestalY: -0.88,
+            });
+        } catch (_) {
+            // Brand 3D opsional, tidak kritis
         }
 
         this.isLoaded = true;
@@ -303,6 +337,23 @@ export class Naura3DViewer {
         // Normalisasi posisi mouse relatif terhadap tengah layar [-1, 1]
         this.mouse.targetX = (event.clientX / window.innerWidth) * 2 - 1;
         this.mouse.targetY = -(event.clientY / window.innerHeight) * 2 + 1;
+    }
+
+    /**
+     * Handler mouse/pointer move terprogram atau interaktif langsung.
+     * @param {MouseEvent|PointerEvent} event
+     * @param {DOMRect} [customRect]
+     */
+    handlePointerMove(event, customRect) {
+        if (!this.options.lookAtCursor) return;
+        if (customRect) {
+            const centerX = customRect.left + customRect.width / 2;
+            const centerY = customRect.top + customRect.height / 2;
+            this.mouse.targetX = Math.max(-1, Math.min(1, (event.clientX - centerX) / (customRect.width * 1.5)));
+            this.mouse.targetY = Math.max(-1, Math.min(1, -(event.clientY - centerY) / (customRect.height * 1.5)));
+        } else {
+            this._onMouseMove(event);
+        }
     }
 
     _onResize() {
@@ -317,6 +368,11 @@ export class Naura3DViewer {
     }
 
     _animate() {
+        if (this.isPaused) {
+            this.animationFrameId = null;
+            return;
+        }
+
         this.animationFrameId = requestAnimationFrame(this._animate);
 
         const elapsed = this.clock.getElapsedTime();
@@ -334,29 +390,36 @@ export class Naura3DViewer {
 
         // 3. Cursor Tracking: Kinematic Chain (untuk model ber-skeleton) atau Procedural Tilt (untuk model mesh)
         if (this.modelGroup && this.options.lookAtCursor) {
-            if (this.bones.Head) {
-                const lookYaw = -this.mouse.x * 0.35;    // menoleh kiri/kanan
-                const lookPitch = this.mouse.y * 0.18;   // menengadah/menunduk
-                const headTilt = -this.mouse.x * 0.08;   // kemiringan kepala alami (Z-roll)
+            const lookYaw = -this.mouse.x * 0.32;    // menoleh kiri/kanan
+            const lookPitch = this.mouse.y * 0.16;   // menengadah/menunduk
+            const headTilt = -this.mouse.x * 0.06;   // kemiringan kepala alami (Z-roll)
 
+            if (this.vrm) {
+                // Pada model VRM, interpolasikan rotasi modelGroup secara halus menghadap depan (-PI/2)
+                const lerpSpeed = 1.0 - Math.exp(-8.0 * delta);
+                const targetRotY = -Math.PI / 2 + (-this.mouse.x * 0.28);
+                const targetRotX = this.mouse.y * 0.14;
+                const targetRotZ = -this.mouse.x * 0.05;
+
+                this.modelGroup.rotation.y += (targetRotY - this.modelGroup.rotation.y) * lerpSpeed;
+                this.modelGroup.rotation.x += (targetRotX - this.modelGroup.rotation.x) * lerpSpeed;
+                this.modelGroup.rotation.z += (targetRotZ - this.modelGroup.rotation.z) * lerpSpeed;
+            } else if (this.bones.Head && this.boneRestQuats.Head) {
                 const headEuler = new THREE.Euler(headTilt * 0.6, lookYaw * 0.50, lookPitch * 0.50, "YXZ");
-                const headOffset = new THREE.Quaternion().setFromEuler(headEuler);
-                this.bones.Head.quaternion.multiply(headOffset);
+                this.bones.Head.quaternion.copy(this.boneRestQuats.Head).multiply(new THREE.Quaternion().setFromEuler(headEuler));
 
-                if (this.bones.Neck) {
+                if (this.bones.Neck && this.boneRestQuats.Neck) {
                     const neckEuler = new THREE.Euler(headTilt * 0.25, lookYaw * 0.35, lookPitch * 0.35, "YXZ");
-                    const neckOffset = new THREE.Quaternion().setFromEuler(neckEuler);
-                    this.bones.Neck.quaternion.multiply(neckOffset);
+                    this.bones.Neck.quaternion.copy(this.boneRestQuats.Neck).multiply(new THREE.Quaternion().setFromEuler(neckEuler));
                 }
 
-                if (this.bones.Chest) {
+                if (this.bones.Chest && this.boneRestQuats.Chest) {
                     const chestEuler = new THREE.Euler(0, lookYaw * 0.15, lookPitch * 0.15, "YXZ");
-                    const chestOffset = new THREE.Quaternion().setFromEuler(chestEuler);
-                    this.bones.Chest.quaternion.multiply(chestOffset);
+                    this.bones.Chest.quaternion.copy(this.boneRestQuats.Chest).multiply(new THREE.Quaternion().setFromEuler(chestEuler));
                 }
 
                 // Fisika sekunder (Spring-Damper) untuk kuncir rambut (Ponytail)
-                if (this.bones.Ponytail) {
+                if (this.bones.Ponytail && this.boneRestQuats.Ponytail) {
                     const targetAngleY = -lookYaw * 0.25 + Math.sin(elapsed * 1.8) * 0.03;
                     const targetAngleZ = -lookPitch * 0.20 + Math.cos(elapsed * 1.2) * 0.02;
 
@@ -377,12 +440,11 @@ export class Naura3DViewer {
                         this.ponytailPhysics.angleZ,
                         "YXZ"
                     );
-                    const ponyOffset = new THREE.Quaternion().setFromEuler(ponyEuler);
-                    this.bones.Ponytail.quaternion.multiply(ponyOffset);
+                    this.bones.Ponytail.quaternion.copy(this.boneRestQuats.Ponytail).multiply(new THREE.Quaternion().setFromEuler(ponyEuler));
                 }
             } else {
                 // Procedural tilt & sway halus yang mengikuti cursor mouse secara real-time
-                const targetRotY = -this.mouse.x * 0.28;
+                const targetRotY = -Math.PI / 2 + (-this.mouse.x * 0.28);
                 const targetRotX = this.mouse.y * 0.14;
                 const targetRotZ = -this.mouse.x * 0.05;
 
@@ -399,9 +461,16 @@ export class Naura3DViewer {
         // 5. Smooth Morph Target Interpolation
         this._updateMorphs(delta, elapsed);
 
-        // 6. Update Partikel
+        // 6. Update Partikel (Cyber sparks & 3D Star Fragments)
         if (this.particles) {
             this.particles.update(delta, elapsed);
+        }
+
+        // 6b. Update Brand 3D (Astral Halo & Holographic Pedestal)
+        if (this.brand3d) {
+            this.brand3d.update(delta, elapsed, {
+                audioEnergy: this.audioEnergy,
+            });
         }
 
         // 7. Render Scene
@@ -562,6 +631,76 @@ export class Naura3DViewer {
     }
 
     /**
+     * Wardrobe & Skin Tint Shader Selector.
+     * Mengubah palet kostum 3D model Naura secara dinamis:
+     * - 'cyberpunk': Neon cyan & magenta rim
+     * - 'maid': Monokromatik klasik elegan
+     * - 'casual': Pastel peach & soft lavender
+     * - 'adventurer': Emerald moss & gold bronze
+     * @param {string} skinName
+     */
+    setSkin(skinName = "cyberpunk") {
+        if (!this.modelGroup) return;
+        const skinPalettes = {
+            cyberpunk: { emissive: 0x38bdf8, emissiveIntensity: 0.25, metalness: 0.3, roughness: 0.4 },
+            maid: { emissive: 0x1f2937, emissiveIntensity: 0.1, metalness: 0.1, roughness: 0.6 },
+            casual: { emissive: 0xf472b6, emissiveIntensity: 0.15, metalness: 0.1, roughness: 0.5 },
+            adventurer: { emissive: 0x10b981, emissiveIntensity: 0.2, metalness: 0.2, roughness: 0.45 },
+        };
+
+        const config = skinPalettes[skinName.toLowerCase()] || skinPalettes.cyberpunk;
+
+        this.modelGroup.traverse((node) => {
+            if (node.isMesh && node.material) {
+                const mats = Array.isArray(node.material) ? node.material : [node.material];
+                mats.forEach((mat) => {
+                    if (mat.isMeshStandardMaterial || mat.isMeshPhysicalMaterial) {
+                        if (config.emissive !== undefined) mat.emissive.setHex(config.emissive);
+                        if (config.emissiveIntensity !== undefined) mat.emissiveIntensity = config.emissiveIntensity;
+                        if (config.metalness !== undefined) mat.metalness = config.metalness;
+                        if (config.roughness !== undefined) mat.roughness = config.roughness;
+                        mat.needsUpdate = true;
+                    }
+                });
+            }
+        });
+
+        if (this.particles) {
+            this.particles.burst(20);
+        }
+    }
+
+    /**
+     * Pause render loop saat floating widget diminimalkan atau tab 3D tidak aktif.
+     * Menghemat 100% konsumsi daya GPU & CPU saat model tidak dilihat.
+     */
+    pause() {
+        this.isPaused = true;
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+    }
+
+    /**
+     * Resume render loop saat floating widget dibuka kembali.
+     */
+    resume() {
+        if (!this.isPaused && this.animationFrameId) return;
+        this.isPaused = false;
+        this.clock.start();
+        this._animate();
+    }
+
+    /**
+     * Set level energi audio untuk sinkronisasi pendaran Astral Halo dengan musik.
+     * @param {number} energy - 0.0 s/d 1.0
+     */
+    setAudioEnergy(energy) {
+        this.audioEnergy = Math.max(0, Math.min(1, Number(energy) || 0));
+    }
+
+    /**
      * Bersihkan resource GPU secara menyeluruh saat widget dihancurkan.
      * Mencegah WebGL context leak dan GPU memory leak.
      */
@@ -635,13 +774,22 @@ export class Naura3DViewer {
             this.vrm = null;
         }
 
+        if (this.particles && this.particles.dispose) {
+            this.particles.dispose();
+            this.particles = null;
+        }
+
+        if (this.brand3d && this.brand3d.dispose) {
+            this.brand3d.dispose();
+            this.brand3d = null;
+        }
+
         this.scene = null;
         this.camera = null;
         this.modelGroup = null;
         this.skinnedMeshes = [];
         this.primarySkinnedMesh = null;
         this.bones = {};
-        this.particles = null;
         this.isLoaded = false;
     }
 }

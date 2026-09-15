@@ -64,8 +64,8 @@ const env = {
     : [],
 
   // VERSION & PARTNERSHIP CONFIG
-  BOT_VERSION: cleanEnv(process.env.BOT_VERSION) || "2.1.0",
-  ENGINE_VERSION: cleanEnv(process.env.ENGINE_VERSION) || "2.1.0",
+  BOT_VERSION: cleanEnv(process.env.BOT_VERSION) || "2.2.0",
+  ENGINE_VERSION: cleanEnv(process.env.ENGINE_VERSION) || "2.2.0",
   PARTNERSHIP: cleanEnv(process.env.PARTNERSHIP) || "Belum ada kolaborasi",
 
   // SUPABASE (Primary Relational Cloud Provider)

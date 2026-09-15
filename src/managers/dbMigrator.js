@@ -267,6 +267,22 @@ const MIGRATIONS = [
     pgSql:
       'CREATE TABLE IF NOT EXISTS "semantic_memories" ("id" SERIAL PRIMARY KEY, "userId" VARCHAR(191) NOT NULL, "guildId" VARCHAR(64) DEFAULT NULL, "memoryType" VARCHAR(32) NOT NULL DEFAULT \'USER_FACT\', "content" TEXT NOT NULL, "embedding" TEXT DEFAULT NULL, "metadata" JSONB DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS "idx_semantic_memories_user" ON "semantic_memories" ("userId"); CREATE INDEX IF NOT EXISTS "idx_semantic_memories_guild" ON "semantic_memories" ("guildId"); CREATE INDEX IF NOT EXISTS "idx_semantic_memories_type" ON "semantic_memories" ("memoryType");',
   },
+  {
+    id: "v41_create_server_treasuries_and_currency_v2",
+    description:
+      "Buat tabel server_treasuries dan tambah kolom lotteryTickets, lastNoviceAidClaimAt di UserSurvivals serta infrastructurePoints di clan_territories",
+    sql: "CREATE TABLE IF NOT EXISTS server_treasuries (id INT AUTO_INCREMENT PRIMARY KEY, lotteryJackpot BIGINT NOT NULL DEFAULT 0, noviceAidPool BIGINT NOT NULL DEFAULT 0, wanderingMerchantPool BIGINT NOT NULL DEFAULT 0, lastLotteryDrawAt DATETIME DEFAULT NULL, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; ALTER TABLE UserSurvivals ADD COLUMN lotteryTickets INT NOT NULL DEFAULT 0, ADD COLUMN lastNoviceAidClaimAt DATETIME DEFAULT NULL; ALTER TABLE clan_territories ADD COLUMN infrastructurePoints INT NOT NULL DEFAULT 0;",
+    pgSql:
+      'CREATE TABLE IF NOT EXISTS "server_treasuries" ("id" SERIAL PRIMARY KEY, "lotteryJackpot" BIGINT NOT NULL DEFAULT 0, "noviceAidPool" BIGINT NOT NULL DEFAULT 0, "wanderingMerchantPool" BIGINT NOT NULL DEFAULT 0, "lastLotteryDrawAt" TIMESTAMPTZ DEFAULT NULL, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "lotteryTickets" INTEGER NOT NULL DEFAULT 0, ADD COLUMN IF NOT EXISTS "lastNoviceAidClaimAt" TIMESTAMPTZ DEFAULT NULL; ALTER TABLE "clan_territories" ADD COLUMN IF NOT EXISTS "infrastructurePoints" INTEGER NOT NULL DEFAULT 0;',
+  },
+  {
+    id: "v42_create_lottery_winners_ledger",
+    description:
+      "Buat tabel lottery_winners untuk mencatat riwayat pemenang undian mingguan Astral Lottery",
+    sql: "CREATE TABLE IF NOT EXISTS lottery_winners (id INT AUTO_INCREMENT PRIMARY KEY, winnerUserId VARCHAR(191) NOT NULL, prizeAmount BIGINT NOT NULL DEFAULT 0, ticketsHeld INT NOT NULL DEFAULT 1, drawnAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, createdAt DATETIME NOT NULL, updatedAt DATETIME NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+    pgSql:
+      'CREATE TABLE IF NOT EXISTS "lottery_winners" ("id" SERIAL PRIMARY KEY, "winnerUserId" VARCHAR(191) NOT NULL, "prizeAmount" BIGINT NOT NULL DEFAULT 0, "ticketsHeld" INTEGER NOT NULL DEFAULT 1, "drawnAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS "idx_lottery_winners_user" ON "lottery_winners" ("winnerUserId"); CREATE INDEX IF NOT EXISTS "idx_lottery_winners_drawn" ON "lottery_winners" ("drawnAt");',
+  },
 ];
 
 /**

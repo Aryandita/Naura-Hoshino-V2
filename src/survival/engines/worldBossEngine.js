@@ -8,6 +8,7 @@ const ui = require("../../config/ui");
 
 const BOSS_CACHE_KEY = "survival:world_boss:active";
 const RAID_CHANNEL = "survival:raid:events";
+const BOSS_CACHE_TTL = 120; // 120 detik (2 menit) cache TTL
 
 class WorldBossEngine {
   /**
@@ -27,7 +28,7 @@ class WorldBossEngine {
     });
 
     if (boss && redisManager.isReady) {
-      await redisManager.setCache(BOSS_CACHE_KEY, boss.toJSON(), 60);
+      await redisManager.setCache(BOSS_CACHE_KEY, boss.toJSON(), BOSS_CACHE_TTL);
     }
 
     return boss ? boss.toJSON() : null;
@@ -75,7 +76,7 @@ class WorldBossEngine {
       await redisManager.setCache(
         BOSS_CACHE_KEY,
         JSON.stringify(newBoss.toJSON()),
-        60,
+        BOSS_CACHE_TTL,
       );
       await redisManager.publish(RAID_CHANNEL, {
         type: "SPAWN",
@@ -290,7 +291,7 @@ class WorldBossEngine {
         await redisManager.setCache(
           BOSS_CACHE_KEY,
           JSON.stringify(dbBoss.toJSON()),
-          30,
+          BOSS_CACHE_TTL,
         );
       }
 
@@ -381,6 +382,24 @@ class WorldBossEngine {
         logger.info(
           `[WorldBoss 2.0 Reward] DPS ${p.userId} (${p.username}) dapat ${rewardFrag} Fragments, ${rewardCoupons} Coupons.`,
         );
+
+        // Catat akumulasi damage all-time ke Redis Sorted Set
+        if (redisManager.isReady && redisManager.client) {
+          try {
+            await redisManager.client.zIncrBy(
+              "survival:boss:leaderboard:alltime",
+              p.totalDamage,
+              p.userId,
+            );
+            if (p.username) {
+              await redisManager.client.hSet(
+                "survival:boss:usernames",
+                p.userId,
+                p.username,
+              );
+            }
+          } catch (_redisErr) {}
+        }
       }
 
       // 2. Payout Tank & Healer & Buffer Support (30% pool)
@@ -410,6 +429,46 @@ class WorldBossEngine {
     } catch (e) {
       logger.error("[WorldBoss 2.0] Gagal membagikan reward raid:", e);
     }
+  }
+
+  /**
+   * Ambil papan peringkat All-Time penakluk World Boss
+   * @param {number} limit
+   * @returns {Promise<Array<{ userId: string, username: string, totalDamage: number }>>}
+   */
+  static async getAllTimeLeaderboard(limit = 10) {
+    if (redisManager.isReady && redisManager.client) {
+      try {
+        const results = await redisManager.client.zRangeWithScores(
+          "survival:boss:leaderboard:alltime",
+          0,
+          limit - 1,
+          { REV: true },
+        );
+        if (results && results.length > 0) {
+          const formatted = [];
+          for (const item of results) {
+            const username =
+              (await redisManager.client.hGet(
+                "survival:boss:usernames",
+                item.value,
+              )) || `Petualang (${item.value.slice(0, 5)})`;
+            formatted.push({
+              userId: item.value,
+              username,
+              totalDamage: Number(item.score) || 0,
+            });
+          }
+          return formatted;
+        }
+      } catch (e) {
+        logger.warn(
+          "[WorldBoss] Gagal mengambil all-time leaderboard dari Redis:",
+          e.message,
+        );
+      }
+    }
+    return [];
   }
 }
 

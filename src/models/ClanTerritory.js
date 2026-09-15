@@ -43,6 +43,11 @@ const ClanTerritory = sequelize.define(
       allowNull: false,
       defaultValue: 1,
     },
+    infrastructurePoints: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
     taxYield: {
       type: DataTypes.INTEGER,
       allowNull: false,

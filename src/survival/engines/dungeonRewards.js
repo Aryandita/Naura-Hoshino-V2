@@ -124,6 +124,18 @@ async function grantVictory({
         `[Dungeon] Gagal menyimpan jarahan untuk ${userId}: ${stored.reason}`,
       );
     }
+
+    try {
+      const { incrementQuestProgress } = require("./questGenerator");
+      for (const item of loot) {
+        await incrementQuestProgress(
+          userId,
+          "collect_specific_item",
+          item.amount || 1,
+          { itemId: item.id },
+        );
+      }
+    } catch (_qErr) {}
   }
 
   await cacheManager.updateUserProfile(userId, { dungeon_floor: floor + 1 });

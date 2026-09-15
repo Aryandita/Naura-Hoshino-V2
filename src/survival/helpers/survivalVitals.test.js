@@ -42,10 +42,12 @@ test("survivalVitals - checkVitalThresholds and buildVitalsSummaryLine", () => {
 test("survivalVitals - drainVitals and recoverVitals with mock cache", async (t) => {
   const originalGetUserSurvival = cacheManager.getUserSurvival;
   const originalIncrementUserSurvival = cacheManager.incrementUserSurvival;
+  const originalGetUserProfile = cacheManager.getUserProfile;
 
   t.after(() => {
     cacheManager.getUserSurvival = originalGetUserSurvival;
     cacheManager.incrementUserSurvival = originalIncrementUserSurvival;
+    cacheManager.getUserProfile = originalGetUserProfile;
   });
 
   const mockSurvival = {
@@ -56,6 +58,7 @@ test("survivalVitals - drainVitals and recoverVitals with mock cache", async (t)
     thirst: 100,
   };
 
+  cacheManager.getUserProfile = async () => ({ isPremium: false, premiumTier: null });
   cacheManager.getUserSurvival = async () => ({ ...mockSurvival });
   cacheManager.incrementUserSurvival = async (userId, deltas) => {
     for (const [k, v] of Object.entries(deltas)) {

@@ -1,12 +1,15 @@
-const { SlashCommandBuilder, MessageFlags } = require("discord.js");
+"use strict";
+
+const { SlashCommandBuilder, MessageFlags, AttachmentBuilder } = require("discord.js");
 const cacheManager = require("../../src/managers/cacheManager");
 const ui = require("../../src/config/ui");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("banner")
-    .setDescription("🖼️ Atur banner kosmetik untuk profil atau Now Playing.")
+    .setDescription("🖼️ Atur banner kosmetik atau generate Dynamic Motion Banner AI.")
     .addSubcommand((sub) =>
       sub
         .setName("set")
@@ -29,15 +32,92 @@ module.exports = {
             )
             .setRequired(true),
         ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("motion")
+        .setDescription("✨ Generate AI Dynamic Motion Banner untuk profil dan kartu kelulusan.")
+        .addStringOption((opt) =>
+          opt
+            .setName("tema")
+            .setDescription("Pilihan tema visual banner")
+            .setRequired(false)
+            .addChoices(
+              { name: "Cyberpunk Neon", value: "cyberpunk" },
+              { name: "Celestial Cosmos", value: "celestial" },
+              { name: "Abyss Deep", value: "abyss" },
+              { name: "Hoshino Aura", value: "hoshino_aura" },
+            ),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("judul")
+            .setDescription("Gelar kehormatan atau judul custom pada banner")
+            .setRequired(false),
+        ),
     ),
+
   async execute(interaction) {
+    const subCmd = interaction.options.getSubcommand();
+    const userId = interaction.user.id;
+
+    if (subCmd === "motion") {
+      await interaction.deferReply();
+      const theme = interaction.options.getString("tema") || "cyberpunk";
+      const customTitle = interaction.options.getString("judul") || "SEASON PASS GRADUATE";
+
+      const survival = await cacheManager.getUserSurvival(userId);
+
+      const avatarUrl = interaction.user.displayAvatarURL({
+        extension: "png",
+        forceStatic: true,
+        size: 256,
+      });
+
+      const bannerBuffer = await canvasWorkerPool.execute("renderDynamicBanner", {
+        username: interaction.user.username,
+        avatarUrl,
+        theme,
+        seasonTier: survival?.seasonTier || 30,
+        title: customTitle,
+        quote: "Echoes of stellar journeys resonate forever in the cosmos.",
+        stats: {
+          level: survival?.level || 1,
+          power: Math.round((survival?.statAttack || 10) * 15 + (survival?.level || 1) * 100),
+          prestige: survival?.starFragments || 500,
+        },
+      });
+
+      const attachment = new AttachmentBuilder(bannerBuffer, {
+        name: `dynamic_banner_${userId}.png`,
+      });
+
+      const payload = buildContainerV2({
+        accentColorHex: theme === "cyberpunk" ? "#00F0FF" : theme === "celestial" ? "#A78BFA" : "#EC4899",
+        authorName: "Naura Motion Studio",
+        title: `✨ Dynamic Motion Banner [${theme.toUpperCase()}]`,
+        description: [
+          `Dynamic Motion Banner untuk **${interaction.user.username}** telah berhasil digenerate!`,
+          "",
+          `> 🎨 **Tema:** \`${theme}\``,
+          `> 🎖️ **Badge:** \`${customTitle}\``,
+          `> ⚡ **Rendering Engine:** Dedicated Canvas Worker Threads (Non-blocking)`,
+        ].join("\n"),
+        footerText: ui.getFooter("utility"),
+      });
+
+      return interaction.editReply({
+        ...payload,
+        files: [attachment],
+      });
+    }
+
+    // --- Subcommand SET ---
     const type = interaction.options.getString("tipe");
     const bannerId = interaction.options.getString("banner_id").toLowerCase();
-    const userId = interaction.user.id;
 
     const profile = await cacheManager.getUserProfile(userId);
 
-    // Fallback if null
     const activeBanners = profile.activeBanners || {
       profile: null,
       music: null,
@@ -46,7 +126,6 @@ module.exports = {
     if (bannerId === "default") {
       activeBanners[type] = null;
     } else {
-      // Cek apakah user punya banner ini di inventory
       const inventory =
         typeof profile.inventory === "string"
           ? JSON.parse(profile.inventory)
@@ -64,7 +143,6 @@ module.exports = {
       activeBanners[type] = bannerId.replace("item_", "");
     }
 
-    // Update profile
     const mutator = await cacheManager.mutateUserProfileJson(userId);
     if (mutator) {
       mutator.activeBanners = activeBanners;

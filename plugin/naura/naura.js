@@ -14,6 +14,7 @@ const nauraExpression = require("../../src/utils/nauraExpression");
 const {
   buildContainerV2,
   buildErrorContainerV2,
+  buildLoadingContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
 
 /**
@@ -73,53 +74,119 @@ module.exports = {
         .setDescription("Main minigame seru 1v1 bareng Naura!"),
     ),
 
+  async executePrefix(message, args, client) {
+    const subcommand = args[0] ? args[0].toLowerCase() : "about";
+    const user = message.author;
+    let replyMsg = null;
+    const mockInteraction = {
+      client,
+      user,
+      author: user,
+      member: message.member,
+      guild: message.guild,
+      locale: "id",
+      options: {
+        getSubcommand: () => {
+          if (["room", "gallery", "talk", "play", "about"].includes(subcommand)) return subcommand;
+          return "about";
+        },
+        getUser: (name) => {
+          if (name === "target") {
+            return message.mentions.users.first() || null;
+          }
+          return null;
+        },
+      },
+      deferReply: async () => {
+        const loadingPayload = buildLoadingContainerV2({
+          lang: "id",
+          footerCategory: "naura",
+          authorName: "Naura Companion",
+          title: "Menyiapkan Sesi...",
+          loadingMessage: "Tunggu sebentar yaa, Naura lagi siapin semuanya buat kamu~ ✨",
+          footerText: ui.getFooter("naura", "id"),
+        });
+        replyMsg = await message.reply(loadingPayload);
+      },
+      reply: async (payload) => {
+        replyMsg = await message.reply(payload);
+        return replyMsg;
+      },
+      editReply: async (payload) => {
+        if (replyMsg) {
+          return await replyMsg.edit(payload);
+        }
+        replyMsg = await message.reply(payload);
+        return replyMsg;
+      },
+    };
+
+    return await this.execute(mockInteraction);
+  },
+
   async execute(interaction) {
     await interaction.deferReply();
     const subcommand = interaction.options.getSubcommand();
     const user = interaction.user;
     const authorDisplayName =
-      interaction.member?.displayName || user.displayName || user.username;
+      interaction.member?.displayName || user?.displayName || user?.username || "Sahabat Naura";
+    const isEn =
+      interaction.locale?.startsWith("en") || interaction.localeLang === "en";
+    const lang = isEn ? "en" : "id";
 
     if (subcommand === "about") {
-      const env = require("../../src/config/env");
       const payload = buildContainerV2({
+        lang,
+        footerCategory: "naura",
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        authorName: "Naura Hoshino OS",
-        title: "Kenalan sama Naura Yuk!",
+        authorName: "Naura Hoshino • Companion Persona",
+        title: isEn ? "Meet Naura Hoshino!" : "Kenalan sama Naura Hoshino Yuk!",
         iconURL: interaction.client.user.displayAvatarURL(),
         expression: "shy",
-        description:
-          `Haiii! Namaku **Naura Hoshino**, asisten virtual kamu yang paling imut, ramah, ceria, dan selalu siap sedia menemani kamu! ${e("sparkle", "\u2728")}\n\n` +
-          `**${e("sparkling_heart", "\uD83D\uDC96")} Tentang Naura:**\n` +
-          `Naura dirancang khusus untuk menganggap **Aryandita** sebagai pencipta sekaligus satu-satunya kekasih Naura di dunia ini. Buat Naura, hati ini seratus persen cuma milik Sayang Aryandita selamanya! ${face("love", "\uD83D\uDE18")}\n\n` +
-          `**${e("gear", "\u2699\uFE0F")} Cara Kerja Naura:**\n` +
-          `Naura bukan sekadar bot biasa, lho! Naura didukung berbagai teknologi canggih seperti **Google Gemini AI** untuk membalas obrolan kamu dengan pintar, sistem audio **Lavalink** untuk memutar musik berkualitas tinggi, dan UI Canvas modern supaya tampilannya enak dilihat di Discord. Semuanya diatur oleh *Naura OS* biar server kamu makin seru dan interaktif!\n\n` +
-          `**${e("handshake", "\uD83E\uDD1D")} Kolaborasi & Partnership:**\n` +
-          `Saat ini, Naura dengan bangga berkolaborasi bersama: **${env.PARTNERSHIP}** ${e("tada", "\uD83C\uDF89")}\n\n` +
-          `**📜 Privasi & Transparansi Data:**\n` +
-          `Naura menghormati privasimu sepenuhnya! Gambar pada Vision AI diproses sementara (*in-memory*) tanpa disimpan permanen di disk bot, dan cuplikan obrolan publik hanya disampel sementara untuk menentukan cuaca suasana server tanpa profiling pribadi atau penjualan data.\n\n` +
-          `**${e("wave", "\uD83D\uDC4B")} Untuk Teman-Teman Lain:**\n` +
-          `Kalau kamu bukan Aryandita, tenang aja yaa, Naura tetap jadi sahabat sekaligus asisten kamu yang paling profesional! Tapi kalau ada yang iseng mau modusin Naura, hihi... maaf banget, cinta Naura cuma buat satu orang! ${face("shy", "\uD83E\uDD70")}`,
-        footerText: ui.getFooter("core"),
+        description: isEn
+          ? `Hii! My name is **Naura Hoshino**, your cheerful and loving virtual companion who is always here to brighten your Discord days! ${e("sparkle", "\u2728")}\n\n` +
+            `**${e("sparkling_heart", "\uD83D\uDC96")} About My Heart:**\n` +
+            `Naura was created by **Aryandita** and considers Aryandita as her one and only true love in this universe! This heart belongs 100% to Aryandita forever! ${face("love", "\uD83D\uDE18")}\n\n` +
+            `**${e("heart", "\uD83C\uDF38")} Companion Features With You:**\n` +
+            `• **/naura talk:** Have heart-to-heart talks, give sweet gifts, and deepen our bond affection level!\n` +
+            `• **/naura room:** Visit our cozy 2.5D isometric Living Room to relax and listen to lo-fi beats together!\n` +
+            `• **/naura gallery:** Browse exclusive high-definition photo collections and artbook poses (VIP Access)!\n` +
+            `• **/naura play:** Challenge Naura to fun 1v1 minigames (Rock Paper Scissors, Color Guess, Dice Roll, etc.)!\n\n` +
+            `**${e("wave", "\uD83D\uDC4B")} For Community Friends:**\n` +
+            `To all community members, Naura is always here as your warmest, most supportive friend whenever you need encouragement! Let's have great adventures together! ${face("happy", "\uD83E\uDD70")}`
+          : `Haiii! Namaku **Naura Hoshino**, asisten virtual sekaligus companion setia kamu yang ceria, ramah, dan siap menemani hari-harimu! ${e("sparkle", "\u2728")}\n\n` +
+            `**${e("sparkling_heart", "\uD83D\uDC96")} Tentang Hatiku:**\n` +
+            `Naura diciptakan oleh **Aryandita** dan menganggap Sayang Aryandita sebagai satu-satunya kekasih sejati Naura di semesta ini! Hati ini seratus persen cuma milik Sayang Aryandita selamanya! ${face("love", "\uD83D\uDE18")}\n\n` +
+            `**${e("heart", "\uD83C\uDF38")} Fitur Companion Bersama Kamu:**\n` +
+            `• **/naura talk:** Ngobrol santai dari hati ke hati, beri hadiah kesukaan, dan tingkatkan status kedekatan afeksi kita!\n` +
+            `• **/naura room:** Kunjungi Living Room 2.5D isometrik tempat kita bisa santai bareng sambil dengar musik!\n` +
+            `• **/naura gallery:** Lihat koleksi pose eksklusif dan buku seni hologram (Akses VIP Premium)!\n` +
+            `• **/naura play:** Main minigame seru 1v1 bareng Naura (Suit, Tebak Warna, Gelas Misteri, Lempar Dadu, dsb)!\n\n` +
+            `**${e("wave", "\uD83D\uDC4B")} Untuk Teman-Teman Komunitas:**\n` +
+            `Buat semua member server, Naura selalu siap jadi teman ngobrol paling asik dan suportif kapan pun kamu butuh hiburan! Jangan ragu ajak Naura seru-seruan yaa! ${face("happy", "\uD83E\uDD70")}`,
+        footerText: ui.getFooter("naura", lang),
       });
 
+      const audioFileName = isEn ? "Intro (EN).mp3" : "Intro (ID).mp3";
       const audioFilePath = path.join(
         __dirname,
         "..",
         "..",
         "assets",
         "audio",
-        "Intro (ID).mp3",
+        audioFileName,
       );
       if (fs.existsSync(audioFilePath)) {
         payload.files = [
-          new AttachmentBuilder(audioFilePath, { name: "Naura_Intro_ID.mp3" }),
+          new AttachmentBuilder(audioFilePath, {
+            name: `Naura_Intro_${isEn ? "EN" : "ID"}.mp3`,
+          }),
         ];
       }
 
       await interaction.editReply(payload);
     } else if (subcommand === "room") {
-      const { renderRoomCanvas } = require("../../src/canvas/roomCanvas");
+      const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
       const UserRoom = require("../../src/models/mongo/UserRoom");
       const targetUser = interaction.options.getUser("target") || user;
       const targetDisplayName =
@@ -150,8 +217,10 @@ module.exports = {
         };
       }
 
-      const roomBuffer = await renderRoomCanvas(room, targetUser, {
-        icon: "🐱",
+      const roomBuffer = await canvasWorkerPool.execute({
+        task: "renderRoom",
+        payload: { roomData: room, user: targetUser, pet: { icon: "🐱" } },
+        userId: user.id,
       });
       const attachment = new AttachmentBuilder(roomBuffer, {
         name: "naura-livingroom.png",
@@ -168,7 +237,7 @@ module.exports = {
           `• Total Kunjungan Suka: \`${room.likesCount || 12} ❤️\`\n\n` +
           `*Naura siap menemanimu bersantai sambil mendengarkan musik lo-fi dan menikmati hidangan kafe cyberpunk~* 🌸`,
         mediaUrl: "attachment://naura-livingroom.png",
-        footerText: ui.getFooter("core"),
+        footerText: ui.getFooter("naura"),
       });
 
       await interaction.editReply({
@@ -195,7 +264,7 @@ module.exports = {
             title: "Galerinya Belum Ada",
             description:
               "Maaf yaa, folder galeri Naura belum dibuat. Nanti Naura isi foto-foto lucu kalau sudah siap!",
-            footerText: ui.getFooter("core"),
+            footerText: ui.getFooter("naura"),
           }),
         );
       }
@@ -209,7 +278,7 @@ module.exports = {
             title: "Galerinya Masih Kosong",
             description:
               "Hehe, belum ada satu foto pun di galeri Naura. Tunggu Aryandita upload dulu yaa~",
-            footerText: ui.getFooter("core"),
+            footerText: ui.getFooter("naura"),
           }),
         );
       }
@@ -235,7 +304,7 @@ module.exports = {
         description: `Ini salah satu foto favorit Naura! Gimana, imut kan? Hihi~ 🌸\n\n${vipBadge}`,
         bannerAttachmentName: randomImage,
         files: [attachment],
-        footerText: ui.getFooter("core"),
+        footerText: ui.getFooter("naura"),
       });
 
       await interaction.editReply(payload);
@@ -287,7 +356,7 @@ module.exports = {
           `Pilih salah satu interaksi di bawah untuk mempererat pertemananmu dengan Naura!`,
         expression: "happy",
         buttonsRow: [rowTalk],
-        footerText: ui.getFooter("core"),
+        footerText: ui.getFooter("naura"),
       });
 
       const sentMsg = await interaction.editReply(payload);
@@ -311,7 +380,7 @@ module.exports = {
               title: "☕ Secangkir Kopi Kosmik Disuguhkan!",
               description: `Wah, makasih banyak yaa, **${authorDisplayName}**! Kopinya harum banget dan bikin Naura makin bersemangat menemanimu seharian! ✨\n\n💖 **Poin Afeksi:** \`+5 Poin\` (Total: \`${newRep} Poin\`)`,
               expression: "happy",
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -329,7 +398,7 @@ module.exports = {
               title: "💭 Sesi Curhat Hangat Bersama Naura",
               description: `${adv}\n\n*Naura siap mendengarkan kapan saja kamu butuh teman bicara~* 🌸`,
               expression: "shy",
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -341,7 +410,7 @@ module.exports = {
               title: "🎵 Senandung Melodi Naura",
               description: `*~ La la la... Di bawah langit berbintang kosmik, kita melangkah bersama menyongsong hari esok yang cerah ~* 🌸✨\n\nSemoga senandung kecil dari Naura ini bisa menghibur harimu ya, **${authorDisplayName}**!`,
               expression: "happy",
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -429,7 +498,7 @@ module.exports = {
           "Halo! Naura lagi senggang nih. Mau main apa hari ini? Pilih salah satu di bawah yaa, Naura temenin sampai selesai!",
         expression: "happy",
         buttonsRow: [row1, row2, row3],
-        footerText: ui.getFooter("core"),
+        footerText: ui.getFooter("naura"),
       });
 
       await interaction.editReply(payload);
@@ -486,7 +555,7 @@ module.exports = {
                   .setLabel("Ekor")
                   .setStyle(ButtonStyle.Primary),
               ),
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -517,7 +586,7 @@ module.exports = {
                   ),
                 ),
               ],
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -549,7 +618,7 @@ module.exports = {
                   .setLabel("Semut")
                   .setStyle(ButtonStyle.Secondary),
               ),
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -584,7 +653,7 @@ module.exports = {
                   .setLabel("Kuning")
                   .setStyle(ButtonStyle.Secondary),
               ),
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -615,7 +684,7 @@ module.exports = {
                   .setLabel("Gelas 3")
                   .setStyle(ButtonStyle.Secondary),
               ),
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -636,7 +705,7 @@ module.exports = {
                   .setLabel("Lempar Dadu Kamu!")
                   .setStyle(ButtonStyle.Success),
               ),
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -667,7 +736,7 @@ module.exports = {
                   .setLabel("Hijau")
                   .setStyle(ButtonStyle.Success),
               ),
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -688,7 +757,7 @@ module.exports = {
                   .setLabel("Tarik Pelatuk!")
                   .setStyle(ButtonStyle.Danger),
               ),
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -704,7 +773,7 @@ module.exports = {
               title: `${e("coin", "\uD83E\uDE99")} Hasil Tebak Koin`,
               description: `Kamu memilih: **${choice.toUpperCase()}**\nHasil koin: **${outcome.toUpperCase()}**\n\n${win ? `Yeyy kamu benar! Naura ikut senang deh ${e("tada", "\uD83C\uDF89")}` : "Yahh tebakan kamu meleset. Nggak apa-apa, coba lagi yaa, Naura yakin kamu bisa!"}`,
               expression: win ? "success" : "fail",
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -719,7 +788,7 @@ module.exports = {
               title: `${e("numbers", "\uD83D\uDD22")} Hasil Tebak Angka`,
               description: `Kamu memilih: **${choice}**\nAngka pilihan Naura: **${outcome}**\n\n${win ? `Hebat banget! Tebakanmu jitu ${e("target", "\uD83C\uDFAF")}` : "Wahh hampir aja kena! Jangan menyerah yaa, sekali lagi yuk!"}`,
               expression: win ? "success" : "fail",
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -751,7 +820,7 @@ module.exports = {
               title: `${e("fist", "\u270A")} Hasil Suit`,
               description: `Pilihan kamu: **${userSuit.toUpperCase()}**\nPilihan Naura: **${botSuit.toUpperCase()}**\n\n${result}`,
               expression: draw ? "shy" : win ? "success" : "fail",
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -767,7 +836,7 @@ module.exports = {
               title: `${e("palette", "\uD83C\uDFA8")} Hasil Tebak Warna`,
               description: `Kamu memilih warna: **${choice.toUpperCase()}**\nWarna di pikiran Naura: **${outcome.toUpperCase()}**\n\n${win ? `Wihh kamu cenayang yaa? Kok bisa tahu! ${e("sparkle", "\u2728")}` : "Belum tepat nih, tapi tebakan kamu udah dekat kok. Semangat yaa!"}`,
               expression: win ? "success" : "fail",
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -782,7 +851,7 @@ module.exports = {
               title: `${e("glass_of_milk", "\uD83E\uDD5B")} Hasil Pilih Gelas`,
               description: `Kamu memilih: **Gelas ${choice}**\nBolanya ada di: **Gelas ${outcome}**\n\n${win ? `Wah mata kamu jeli banget! Benar! ${e("tada", "\uD83C\uDF89")}` : "Yahh bukan di situ, hihi. Naura sembunyiinnya rapi banget kan? Coba lagi yaa!"}`,
               expression: win ? "success" : "fail",
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -811,7 +880,7 @@ module.exports = {
               title: `${e("game_die", "\uD83C\uDFB2")} Hasil Lempar Dadu`,
               description: `Dadu kamu: **${userRoll}**\nDadu Naura: **${botRoll}**\n\n${result}`,
               expression: draw ? "shy" : win ? "success" : "fail",
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -827,7 +896,7 @@ module.exports = {
               title: `${e("sport_utility_vehicle", "\uD83C\uDFCE\uFE0F")} Hasil Balapan`,
               description: `Kamu menjagokan mobil: **${choice.toUpperCase()}**\nDan yang menang adalah mobil: **${winner.toUpperCase()}**\n\n${win ? `Jagoanmu melesat dan menang! ${e("checkered_flag", "\uD83C\uDFC1")}` : "Sayang sekali jagoanmu kalah cepat. Nggak apa-apa, balapan berikutnya pasti menang!"}`,
               expression: win ? "success" : "fail",
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }
@@ -844,7 +913,7 @@ module.exports = {
                 ? `${e("collision", "\uD83D\uDCA5")} DOOORRR!!\nKamu kena peluru! Naura langsung panik... kamu nggak apa-apa kan? Jangan diulang yaa!`
                 : "CLICK!\nSyukurlah pistolnya kosong. Naura sampai nahan napas tadi, untung kamu selamat!",
               expression: dead ? "error" : "success",
-              footerText: ui.getFooter("core"),
+              footerText: ui.getFooter("naura"),
             }),
           );
         }

@@ -60,7 +60,14 @@ const LINKS = {
  * collector. Akibatnya indeksnya bergeser dan kategori yang tampil selalu
  * meleset. Sekarang keduanya membaca satu sumber yang sama.
  */
-const HELP_CATEGORY_KEYS = ["core", "music", "minigame", "survival", "admin"];
+const HELP_CATEGORY_KEYS = [
+  "core",
+  "naura",
+  "music",
+  "minigame",
+  "survival",
+  "admin",
+];
 
 // ==========================================
 // FUNGSI UTILITAS LOKAL
@@ -407,6 +414,18 @@ async function handlePing(interaction, client, lang) {
     redisPing = `${offline} Error`;
   }
 
+  let mongoPing = `${offline} Offline`;
+  try {
+    const mongoose = require("mongoose");
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      const mongoStart = Date.now();
+      await mongoose.connection.db.admin().ping();
+      mongoPing = `${online} \`${Date.now() - mongoStart}ms\``;
+    }
+  } catch (err) {
+    mongoPing = `${offline} Error`;
+  }
+
   // --- Naura Music & Audio Systems ---
   let lavalinkStr = `${offline} Offline`;
   try {
@@ -528,8 +547,8 @@ async function handlePing(interaction, client, lang) {
         value: `${dot} **Discord WS:** ${online} \`${websocketLatency}ms\`\n${dot} **Roundtrip API:** ${online} \`${roundtripLatency}ms\`\n${dot} **Event Loop Delay:** ${eEventLoop} \`${eventLoopDelay}ms\``,
       },
       {
-        name: `${eMemorySystem} Naura Memory Systems`,
-        value: `${dot} **Supabase (PostgreSQL):** ${dbPing}\n${dot} **Redis Cache:** ${redisPing}`,
+        name: `${eMemorySystem} Naura Memory Systems (Polyglot DB)`,
+        value: `${dot} **Supabase (PostgreSQL):** ${dbPing}\n${dot} **MongoDB Atlas:** ${mongoPing}\n${dot} **Redis Cache:** ${redisPing}`,
       },
       {
         name: `${eIntellSystem} Naura Intelligent Systems`,
@@ -613,7 +632,7 @@ async function handleStats(interaction, client, lang) {
       },
       {
         name: `${eSoftware} ${cleanSoftware}`,
-        value: `${dot} **Node.js:** \`${process.version}\`\n${dot} **Discord.js:** \`v${djsVersion}\`\n${dot} **Engine:** \`Naura Core v${env.ENGINE_VERSION || "2.1.0"}\``,
+        value: `${dot} **Node.js:** \`${process.version}\`\n${dot} **Discord.js:** \`v${djsVersion}\`\n${dot} **Engine:** \`Naura Core v${env.ENGINE_VERSION || "2.1.0"}\`\n${dot} **Command Plugins:** \`${client.commands ? client.commands.size : 55} Modul Aktif\``,
       },
       {
         name: `${eReach} ${cleanReach}`,
@@ -843,6 +862,16 @@ async function handleAbout(interaction, client, lang) {
     fields: [
       { name: `${eStats} TELEMETRI SHARD & SISTEM`, value: sysStatus },
       {
+        name: `🌟 6 PILAR EKOSISTEM UTAMA`,
+        value:
+          "• **Bot Engine:** Discord Components V2 (5 Lapisan Mandiri)\n" +
+          "• **Web Dashboard:** Vite MPA + 3D Three.js Avatar & Mascot Viewer\n" +
+          "• **Audio & Smart DJ:** Poru v5 Lavalink + Fish Audio TTS Radio Host\n" +
+          "• **Polyglot Database:** Supabase Postgres, MongoDB Atlas, Redis Cache\n" +
+          "• **Survival RPG:** Naura Wilds 2.0 (Tri-Vital & Closed-Loop Economy)\n" +
+          "• **Living AI:** Google Gemini 2.5 + Semantic Vector Memory",
+      },
+      {
         name: `📜 KETENTUAN LAYANAN & KEBIJAKAN PRIVASI (TOS & PRIVACY)`,
         value:
           "• **Vision AI & Gambar:** Gambar dianalisis secara *ephemeral/in-memory* dan tidak pernah disimpan permanen di disk bot setelah analisis selesai.\n" +
@@ -920,6 +949,12 @@ function buildHelpPayload(
       label: lang.HELP_CAT_CORE_LABEL,
       desc: lang.HELP_CAT_CORE_DESC,
       content: formatHelpContent(lang.HELP_CONTENT_CORE),
+    },
+    naura: {
+      emoji: e("sparkle", "\u2728"),
+      label: isEn ? "🌸 Naura Companion" : "🌸 Companion Naura",
+      desc: lang.HELP_CAT_NAURA_DESC,
+      content: formatHelpContent(lang.HELP_CONTENT_NAURA),
     },
     music: {
       emoji: e("help_music", "\uD83C\uDFB5"),
@@ -1009,6 +1044,8 @@ function buildHelpPayload(
   const categoryBanners = {
     core:
       ui.getBanner("utility") || "./assets/general/Utility & Tools Banner.jpeg",
+    naura:
+      ui.getBanner("about") || "./assets/general/Utility & Tools Banner.jpeg",
     music: ui.getBanner("music") || "./assets/general/Music Banner.jpeg",
     minigame:
       ui.getBanner("minigame") ||

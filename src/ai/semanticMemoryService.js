@@ -213,6 +213,54 @@ class SemanticMemoryService {
     );
     return lines.join("\n");
   }
+
+  /**
+   * Nightly Reflection: Mensintesis riwayat aktivitas & interaksi harian menjadi memori semantik jangka panjang.
+   * Dipicu setiap malam via cronManager untuk memperkaya Living AI Naura.
+   */
+  async synthesizeDailyMemories() {
+    try {
+      const mongoManager = require("../managers/mongoManager");
+      if (!mongoManager.isReady) {
+        logger.info("[SemanticMemory] MongoDB offline, melewatkan sintesis nightly memory.");
+        return { count: 0 };
+      }
+
+      // Ambil 50 log interaksi terbaru 24 jam terakhir
+      const recentLogs = await mongoManager.getCommandAuditLogs({}, 50).catch(() => []);
+      if (!recentLogs || recentLogs.length === 0) {
+        return { count: 0 };
+      }
+
+      // Kelompokkan berdasarkan userId
+      const userLogsMap = new Map();
+      for (const log of recentLogs) {
+        if (!log.userId) continue;
+        if (!userLogsMap.has(log.userId)) userLogsMap.set(log.userId, []);
+        userLogsMap.get(log.userId).push(log.commandName || "command");
+      }
+
+      let synthesizedCount = 0;
+      for (const [userId, commands] of userLogsMap.entries()) {
+        const topCommands = [...new Set(commands)].slice(0, 3).join(", ");
+        const reflectionContent = `Pengguna aktif berinteraksi dengan fitur: ${topCommands}. Menunjukkan ketertarikan tinggi pada aktivitas ekosistem bot.`;
+
+        await this.storeMemory({
+          userId,
+          content: reflectionContent,
+          memoryType: "reflection",
+        }).catch(() => {});
+
+        synthesizedCount++;
+      }
+
+      logger.success(`[SemanticMemory] Berhasil melakukan nightly reflection untuk ${synthesizedCount} petualang aktif.`);
+      return { count: synthesizedCount };
+    } catch (err) {
+      logger.error(`[SemanticMemory] Gagal mengeksekusi nightly reflection: ${err.message}`);
+      return { count: 0, error: err.message };
+    }
+  }
 }
 
 module.exports = {

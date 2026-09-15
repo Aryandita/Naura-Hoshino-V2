@@ -133,6 +133,102 @@ function getMaxPlaylists(tier) {
   }
 }
 
+/**
+ * Mendapatkan persentase diskon aus ketahanan alat (Durability Shield).
+ */
+function getDurabilityDiscount(tier) {
+  switch (tier) {
+    case "vip":
+      return 0.5; // 50% lebih awet
+    case "friends":
+      return 0.4; // 40% lebih awet
+    case "supporter":
+      return 0.3; // 30% lebih awet
+    case "starter":
+      return 0.15; // 15% lebih awet
+    default:
+      return 0.0;
+  }
+}
+
+/**
+ * Mendapatkan persentase potongan pajak pasar / bursa lelang (Tax Haven).
+ */
+function getMarketTaxDiscount(tier) {
+  switch (tier) {
+    case "vip":
+    case "friends":
+    case "supporter":
+      return 0.5; // Diskon 50% pajak pasar
+    case "starter":
+      return 0.25; // Diskon 25% pajak pasar
+    default:
+      return 0.0;
+  }
+}
+
+/**
+ * Mendapatkan persentase pemangkasan cooldown aksi survival.
+ */
+function getCooldownReduction(tier) {
+  switch (tier) {
+    case "vip":
+      return 0.4; // 40% lebih cepat
+    case "friends":
+      return 0.3; // 30% lebih cepat
+    case "supporter":
+      return 0.2; // 20% lebih cepat
+    case "starter":
+      return 0.1; // 10% lebih cepat
+    default:
+      return 0.0;
+  }
+}
+
+/**
+ * Mendapatkan batas maksimal energi karakter (Max Energy Cap).
+ */
+function getMaxEnergy(tier) {
+  switch (tier) {
+    case "vip":
+      return 150;
+    case "friends":
+      return 135;
+    case "supporter":
+      return 125;
+    case "starter":
+      return 115;
+    default:
+      return 100;
+  }
+}
+
+/**
+ * Mendapatkan paket dividen harian anggota premium (/premium claim).
+ */
+function getDailyStipend(tier) {
+  switch (tier) {
+    case "vip":
+      return { coupons: 3, nsf: 2000, mysteryBox: "legendary_relic_box", dungeonKeys: 2 };
+    case "friends":
+      return { coupons: 2, nsf: 800, mysteryBox: "rare_mystery_box", dungeonKeys: 1 };
+    case "supporter":
+      return { coupons: 1, nsf: 350, mysteryBox: "common_mystery_box", dungeonKeys: 0 };
+    case "starter":
+      return { coupons: 0, nsf: 150, mysteryBox: null, dungeonKeys: 0 };
+    default:
+      return null;
+  }
+}
+
+/**
+ * Mengambil persona kustom obrolan AI yang dipilih pengguna.
+ */
+function getCustomPersona(userProfile) {
+  if (!userProfile || !userProfile.isPremium) return "default";
+  return userProfile.customPersona || "default";
+}
+
 module.exports = {
   checkPremiumStatus,
   getUserPremiumTier,
@@ -140,4 +236,10 @@ module.exports = {
   getMinigameMultiplier,
   getWorkWageBonus,
   getMaxPlaylists,
+  getDurabilityDiscount,
+  getMarketTaxDiscount,
+  getCooldownReduction,
+  getMaxEnergy,
+  getDailyStipend,
+  getCustomPersona,
 };

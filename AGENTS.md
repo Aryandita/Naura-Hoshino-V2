@@ -1,7 +1,7 @@
 # 🤖 PANDUAN KERJA & ORIENTASI AGENT AI, NAURA HOSHINO V2
 
 > **Target:** AI Coding Assistants (Antigravity, Roo Code, Claude, Copilot, & Developer Manusia)  
-> **Versi Ekosistem:** 2.1.0 · **Engine:** 2.1.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14  
+> **Versi Ekosistem:** 2.2.0 · **Engine:** 2.2.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14  
 > **Pentalogi Dokumentasi:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`DESIGN.md`](DESIGN.md) (Desain) · [`RULES.md`](RULES.md) (Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen AI)
 
 > [!IMPORTANT]
@@ -9,7 +9,7 @@
 
 ---
 
-## 🧭 1. Mental Model Ekosistem Naura Hoshino V2
+## 🧭 1. Mental Model Ekosistem Naura Hoshino V2 (v2.2.0)
 
 Sebagai agen AI, bayangkan Naura Hoshino V2 sebagai platform terintegrasi dengan **6 Pilar Utama**:
 
@@ -18,14 +18,14 @@ Sebagai agen AI, bayangkan Naura Hoshino V2 sebagai platform terintegrasi dengan
 │                         NAURA HOSHINO V2 ECOSYSTEM                          │
 ├──────────────────────────────┬──────────────────────────────┬───────────────┤
 │ 1. BOT ENGINE (discord.js)   │ 2. WEB DASHBOARD V2 (Vite)   │ 3. AUDIO & DJ │
-│ • Sharding & Event Router    │ • Self-contained MPA         │ • Poru v5     │
-│ • Components V2 (5 Lapisan)  │ • 3D Avatar (Three.js PBR)   │ • Lavalink v4 │
-│ • 55+ Slash Command Plugins  │ • Socket.IO Telemetri        │ • Fish Audio  │
+│ • Sharding & Event Router    │ • Self-contained MPA         │ • Lavalink Cluster Manager    │
+│ • Components V2 (5 Lapisan)  │ • 3D Mascot (Three.js/VRM)   │ • Poru v5 & Failover Nodes    │
+│ • 55+ Slash Command Plugins  │ • Web Soundboard Studio      │ • Fish Audio AI DJ Companion  │
 ├──────────────────────────────┼──────────────────────────────┼───────────────┤
 │ 4. POLYGLOT DATABASE         │ 5. SURVIVAL RPG (Naura Wilds)│ 6. LIVING AI  │
-│ • Supabase PG (Relasional)   │ • Transaksi Atomik Saldo     │ • Gemini 2.0  │
-│ • MongoDB (Dokumen & Log)    │ • Helper Inventory Terkunci  │ • Server RAG  │
-│ • Redis (Cache & Pub/Sub)    │ • Vitals, Dungeon, Gacha     │ • Voice Agent │
+│ • Supabase PG (41 Migrasi)   │ • Currency V2 Closed-Loop    │ • AI Ensemble (Gemini/Groq)   │
+│ • MongoDB (Dokumen & Log)    │ • ServerTreasury & Vitals    │ • Semantic Vector Memory      │
+│ • Redis (Cache, Mutex Lock)  │ • Durability & Town Square   │ • Server RAG & Voice Agent    │
 └──────────────────────────────┴──────────────────────────────┴───────────────┘
 ```
 
@@ -39,16 +39,18 @@ Gunakan tabel ini untuk menemukan lokasi kode dan memahami batasan modifikasi:
 
 | Direktori                                                                | Tanggung Jawab & Isi                                                                                                    | Batasan Agen (_Do's & Don'ts_)                                                            |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [`src/config/`](file:///d:/Naura%20Hoshino%20V2/src/config/)             | Konfigurasi stateless (`env.js`, `ui.js`, `database.js`).                                                               | **HANYA** baca via modul ini. Jangan memanggil `process.env` langsung di tempat lain.     |
-| [`src/managers/`](file:///d:/Naura%20Hoshino%20V2/src/managers/)         | Pengendali inti & stateful (`cacheManager.js`, `dbManager.js`, `redisManager.js`, `musicManager.js`, `aiDjManager.js`). | Modifikasi di sini jika berhubungan dengan state, caching, atau integrasi service luar.   |
-| [`src/models/`](file:///d:/Naura%20Hoshino%20V2/src/models/)             | Skema Sequelize (PostgreSQL) dan Mongoose (`models/mongo/`).                                                            | Tambah model di sini. DILARANG `ALTER TABLE` di sini (wajib di `dbMigrator.js`).          |
-| [`src/services/`](file:///d:/Naura%20Hoshino%20V2/src/services/)         | Engine komputasi latar (`fishAudioService.js`, `automationEngine.js`, `radioService.js`).                               | Tempatkan integrasi API pihak ketiga (TTS, webhook, automation) di folder ini.            |
-| [`src/canvas/`](file:///d:/Naura%20Hoshino%20V2/src/canvas/)             | Generator gambar kartu profil & leveling berbasis worker threads.                                                       | Wajib melalui `canvasWorkerPool.js` agar tidak memblokir event loop Discord.              |
+| [`src/config/`](file:///d:/Naura%20Hoshino%20V2/src/config/)             | Konfigurasi stateless (`env.js`, `ui.js`, `database.js`, `lavalink-fallbacks.json`).                                    | **HANYA** baca via modul ini. Jangan memanggil `process.env` langsung di tempat lain.     |
+| [`src/managers/`](file:///d:/Naura%20Hoshino%20V2/src/managers/)         | Pengendali inti & stateful (`cacheManager.js`, `dbManager.js`, `lavalinkClusterManager.js`, `musicManager.js`).       | Modifikasi di sini jika berhubungan dengan state, caching, atau integrasi service luar.   |
+| [`src/models/`](file:///d:/Naura%20Hoshino%20V2/src/models/)             | Skema Sequelize (`ServerTreasury.js`, `UserProfile.js`) dan Mongoose (`models/mongo/`).                                 | Tambah model di sini. DILARANG `ALTER TABLE` di sini (wajib di `dbMigrator.js`).          |
+| [`src/services/`](file:///d:/Naura%20Hoshino%20V2/src/services/)         | Engine komputasi latar (`soundboardService.js`, `fishAudioService.js`, `economyGuardEngine.js`, `seasonEngine.js`).     | Tempatkan integrasi API pihak ketiga (TTS, webhook, automation) di folder ini.            |
+| [`src/ai/`](file:///d:/Naura%20Hoshino%20V2/src/ai/)                     | Engine kecerdasan AI (`aiEnsembleRouter.js`, `semanticMemoryService.js`, `aiMemory.js`, `tribunalEngine.js`).          | Wajib menyertakan penanganan failover dan circuit breaker rate limit (HTTP 429).          |
+| [`src/survival/`](file:///d:/Naura%20Hoshino%20V2/src/survival/)         | Core logika Naura Wilds (`currency.js`, `recyclingPoolEngine.js`, `durabilityEngine.js`, `townEngine.js`).             | Wajib deterministik dan transaksi saldo terhubung ke `cacheManager` atau `ServerTreasury`.|
+| [`src/canvas/`](file:///d:/Naura%20Hoshino%20V2/src/canvas/)             | Generator gambar kartu profil, item, kartu ulang tahun, & leveling berbasis worker threads.                            | Wajib melalui `canvasWorkerPool.js` agar tidak memblokir event loop Discord.              |
 | [`src/utils/`](file:///d:/Naura%20Hoshino%20V2/src/utils/)               | Helper murni stateless (`NauraContainerBuilder.js`, `survivalUIHelper.js`, `uxHelper.js`).                              | Dilarang menyimpan state di sini. Helper harus deterministik dan reusable.                |
 | [`src/interactions/`](file:///d:/Naura%20Hoshino%20V2/src/interactions/) | Handler tombol, select menu, modal, autocomplete, dan context menu.                                                     | Wrap selalu dengan `safeExecute` dan tangani interaksi secara defensif.                   |
-| [`plugin/`](file:///d:/Naura%20Hoshino%20V2/plugin/)                     | Subcommand dan router slash command (`core`, `music`, `admin`, `survival`).                                             | **HANYA** untuk validasi input dan pemanggilan service/manager. Dilarang query DB mentah. |
-| [`dashboard/`](file:///d:/Naura%20Hoshino%20V2/dashboard/)               | Web Dashboard terintegrasi (Express backend & Vite MPA frontend).                                                       | Komponen 3D Three.js berada di `src/components/NauraHeroViewer/` dan `NauraViewer/`.      |
-| [`scripts/`](file:///d:/Naura%20Hoshino%20V2/scripts/)                   | Script CLI pemeliharaan (`migrate.js`, `validate-locales.js`, `verify_dashboard_3d.js`).                                | Script uji mandiri & runner migrasi prestart.                                             |
+| [`plugin/`](file:///d:/Naura%20Hoshino%20V2/plugin/)                     | Subcommand dan router slash command (`core`, `music`, `admin`, `survival`, `naura`).                                    | **HANYA** untuk validasi input dan pemanggilan service/manager. Dilarang query DB mentah. |
+| [`dashboard/`](file:///d:/Naura%20Hoshino%20V2/dashboard/)               | Web Dashboard terintegrasi (Express backend & Vite MPA frontend).                                                       | Komponen 3D Three.js di `src/components/NauraHeroViewer/` dan `NauraViewer/`.             |
+| [`scripts/`](file:///d:/Naura%20Hoshino%20V2/scripts/)                   | Script CLI pemeliharaan (`migrate.js`, `validate-locales.js`, `verify_dashboard_3d.js`, `check-em-dash.js`).           | Script uji mandiri & runner migrasi prestart.                                             |
 
 ---
 
@@ -98,6 +100,21 @@ Saat menangani kode Naura Hoshino V2, agen AI diharapkan menguasai kemampuan tek
 - Menjaga paritas 100% antara [`assets/language/id.json`](file:///d:/Naura%20Hoshino%20V2/assets/language/id.json) dan [`assets/language/en.json`](file:///d:/Naura%20Hoshino%20V2/assets/language/en.json).
 - Menghindari penggunaan em dash (`\u2014`) pada semua teks dan string kamus.
 
+### 3.7 Tata Kelola Penomoran Versi (X.Y.Z)
+
+Seluruh perubahan versi ekosistem wajib mematuhi skema semantik tiga tingkat:
+- **`X` (Versi Keseluruhan / Generasi Era):** Ditentukan oleh owner proyek (saat ini bernilai `2` untuk era Naura Hoshino V2). Agen AI dilarang mengubah angka X tanpa instruksi eksplisit pengguna.
+- **`Y` (Major Update):** Dinaikkan saat terjadi rilis arsitektur besar, penambahan pilar baru, pembaruan moneter besar (seperti Currency V2 Closed-Loop), integrasi AI Ensemble, atau kluster audio Lavalink.
+- **`Z` (Minor Update):** Dinaikkan saat merilis perbaikan bug (bugfix), optimasi performa, balancing RPG/ekonomi, atau penyesuaian stabilitas berkala.
+
+### 3.8 AI Ensemble Router & Circuit Breaker Logic
+
+- Memahami arsitektur pemetaan tugas cerdas pada `src/ai/aiEnsembleRouter.js`:
+  - `GENERAL_CONVERSATION`, `FAST_RESPONSE`, `VISION_MULTIMODAL` dipetakan ke Gemini 2.5 Flash.
+  - `TACTICAL_REASONING`, `TRIBUNAL_VERDICT` dipetakan ke Groq LLaMA 3.3.
+  - `OFFLINE_FALLBACK` dipetakan ke Ollama lokal.
+- Menguasai penanganan status Circuit Breaker (`CLOSED` -> `OPEN` -> `HALF-OPEN`) saat API pihak ketiga mengalami error kuota 429 atau downtime.
+
 ---
 
 ## 📋 4. Standar Prosedur Operasional (SOP) Agen AI
@@ -114,7 +131,7 @@ Saat menangani kode Naura Hoshino V2, agen AI diharapkan menguasai kemampuan tek
 ### 4.2 Menambah Kolom atau Skema Database Baru
 
 1. Definisikan model di [`src/models/<ModelName>.js`](file:///d:/Naura%20Hoshino%20V2/src/models/).
-2. Buat fungsi migrasi bernomor baru di [`src/managers/dbMigrator.js`](file:///d:/Naura%20Hoshino%20V2/src/managers/dbMigrator.js) (misal: `v19_add_new_feature`).
+2. Buat fungsi migrasi bernomor baru di [`src/managers/dbMigrator.js`](file:///d:/Naura%20Hoshino%20V2/src/managers/dbMigrator.js) (misal: `v42_add_new_feature`).
 3. Catat migrasi di tabel `schema_migrations` agar tidak dieksekusi ganda.
 4. Hubungkan akses baca/tulis ke [`src/managers/cacheManager.js`](file:///d:/Naura%20Hoshino%20V2/src/managers/cacheManager.js).
 
@@ -135,7 +152,7 @@ npm run locales:check:strict
 # 4. Pengecekan integritas resolusi internal require
 npm run test:requires
 
-# 5. Menjalankan automated test suite
+# 5. Menjalankan automated test suite (254 tests wajib 100% hijau)
 npm test
 ```
 

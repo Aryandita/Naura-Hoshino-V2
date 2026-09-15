@@ -32,19 +32,5 @@ module.exports = {
     } catch (e) {
       // Abaikan jika terjadi error kecil saat pembersihan lirik
     }
-
-    // Cek jika ada resumePosition (lagu utama yang di-pause sementara karena soundboard)
-    try {
-      if (track && track.info && track.info.resumePosition) {
-        setTimeout(() => {
-          if (
-            player.currentTrack &&
-            player.currentTrack.info.identifier === track.info.identifier
-          ) {
-            player.seekTo(track.info.resumePosition);
-          }
-        }, 1000);
-      }
-    } catch (e) {}
   },
 };

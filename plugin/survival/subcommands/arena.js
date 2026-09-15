@@ -97,9 +97,7 @@ module.exports = {
     // 3. COLISEUM 3V3 MATCH
     if (menu === "coliseum_match") {
       const coliseumEngine = require("../../../src/survival/engines/coliseumEngine");
-      const {
-        drawColiseumMatch,
-      } = require("../../../src/canvas/coliseumCanvas");
+      const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
       const { AttachmentBuilder } = require("discord.js");
 
       const user = interaction.user;
@@ -110,18 +108,22 @@ module.exports = {
       const files = [];
 
       try {
-        const matchBuf = await drawColiseumMatch({
-          attackerName: user.displayName || user.username,
-          opponentName: battleRes.opponentName,
-          opponentElo: battleRes.opponentElo,
-          isVictory: battleRes.isVictory,
-          score: battleRes.score,
-          eloChange:
-            battleRes.eloChange > 0
-              ? `+${battleRes.eloChange}`
-              : `${battleRes.eloChange}`,
-          elo: battleRes.newElo,
-          division: battleRes.newDivision,
+        const matchBuf = await canvasWorkerPool.execute({
+          task: "renderColiseumMatch",
+          payload: {
+            attackerName: user.displayName || user.username,
+            opponentName: battleRes.opponentName,
+            opponentElo: battleRes.opponentElo,
+            isVictory: battleRes.isVictory,
+            score: battleRes.score,
+            eloChange:
+              battleRes.eloChange > 0
+                ? `+${battleRes.eloChange}`
+                : `${battleRes.eloChange}`,
+            elo: battleRes.newElo,
+            division: battleRes.newDivision,
+          },
+          userId: user.id,
         });
         files.push(
           new AttachmentBuilder(matchBuf, { name: "coliseum_match.png" }),

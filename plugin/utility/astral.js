@@ -6,10 +6,7 @@ const {
   MessageFlags,
 } = require("discord.js");
 const astralService = require("../../src/services/astralService");
-const {
-  renderOmikujiCard,
-  renderAstralWeatherBanner,
-} = require("../../src/canvas/astralCanvas");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const cacheManager = require("../../src/managers/cacheManager");
 const ui = require("../../src/config/ui");
@@ -67,7 +64,11 @@ module.exports = {
         interaction.guildId,
         sampleTexts,
       );
-      const bannerBuffer = await renderAstralWeatherBanner(weather);
+      const bannerBuffer = await canvasWorkerPool.execute({
+        task: "renderAstralWeather",
+        payload: { weather },
+        userId: user.id,
+      });
       const attachment = new AttachmentBuilder(bannerBuffer, {
         name: "astral-weather.png",
       });
@@ -116,7 +117,11 @@ module.exports = {
       }
 
       const omikuji = omikujiResult.result;
-      const cardBuffer = await renderOmikujiCard(omikuji, user);
+      const cardBuffer = await canvasWorkerPool.execute({
+        task: "renderAstralOmikuji",
+        payload: { omikuji, user },
+        userId: user.id,
+      });
       const attachment = new AttachmentBuilder(cardBuffer, {
         name: "tarot-omikuji.png",
       });

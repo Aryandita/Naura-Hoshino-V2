@@ -11,6 +11,10 @@ class AutomationEngine {
       LEVEL_UP: "LEVEL_UP",
       REACTION_ADD: "REACTION_ADD",
       TICKET_CREATE: "TICKET_CREATE",
+      SURVIVAL_LEVEL_UP: "SURVIVAL_LEVEL_UP",
+      QUEST_COMPLETE: "QUEST_COMPLETE",
+      BOSS_KILLED: "BOSS_KILLED",
+      SEASON_TIER_UP: "SEASON_TIER_UP",
     };
   }
 
@@ -75,7 +79,9 @@ class AutomationEngine {
       case "HAS_ROLE":
         return member?.roles?.cache?.has(cond.roleId);
       case "MIN_LEVEL":
-        return (ctx.level || 0) >= cond.value;
+        return (ctx.level || ctx.survivalLevel || 0) >= cond.value;
+      case "MIN_TIER":
+        return (ctx.tier || 0) >= cond.value;
       case "KEYWORD_MATCH":
         return String(ctx.text || "")
           .toLowerCase()
@@ -110,9 +116,11 @@ class AutomationEngine {
 
       case "REWARD_CURRENCY":
         if (user && action.amount > 0) {
-          await cacheManager.incrementUserSurvival(user.id, {
-            starFragments: action.amount,
-          });
+          await cacheManager.incrementUserSurvival(
+            user.id,
+            "starFragments",
+            action.amount,
+          );
         }
         break;
 

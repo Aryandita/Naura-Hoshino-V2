@@ -9,6 +9,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
   AttachmentBuilder,
+  StringSelectMenuBuilder,
 } = require("discord.js");
 const {
   buildContainerV2,
@@ -22,9 +23,7 @@ const {
   safeParseInventory,
 } = require("../../../src/survival/engines/inventoryHelper");
 const { CATALOG_BY_ID } = require("../../../src/survival/data/items_catalog");
-const {
-  generateInventoryBackpackImage,
-} = require("../../../src/canvas/inventoryCanvas");
+const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
 
 const IMAGE_NAME = "naura-backpack.png";
 
@@ -97,17 +96,28 @@ module.exports = {
         ? ui.ux.resolveUserName(interaction)
         : user.displayName || user.username;
 
-      // Render Visual Canvas Ransel Petualang
+      // Render Visual Canvas Ransel Petualang via Worker Thread Pool
       let files = [];
       let bannerAttachmentName;
       try {
-        const imageBuffer = await generateInventoryBackpackImage(
-          user,
-          rawInventory,
-          profile,
+        const imageBuffer = await canvasWorkerPool.execute(
+          "renderInventory",
           {
-            survival,
+            user: {
+              id: user.id,
+              username: user.username,
+              displayName: user.displayName || user.username,
+            },
+            inventory: rawInventory,
+            profile: {
+              coins: profile?.coins || profile?.balance || 0,
+              coupons: profile?.coupons || profile?.userSurvival?.coupons || 0,
+            },
+            options: {
+              survival,
+            },
           },
+          user.id,
         );
         if (imageBuffer) {
           files = [new AttachmentBuilder(imageBuffer, { name: IMAGE_NAME })];
@@ -116,6 +126,23 @@ module.exports = {
       } catch (canvasErr) {
         logger.warn("[SURVIVAL INVENTORY CANVAS ERROR]", canvasErr.message);
       }
+
+      // Filter & Sort Select Menu
+      const filterSelect = new StringSelectMenuBuilder()
+        .setCustomId("inv_filter_select")
+        .setPlaceholder("🔍 Filter Kategori atau Urutkan Barang...")
+        .addOptions(
+          { label: "Semua Kategori (Bawaan)", value: "all", emoji: "🎒" },
+          { label: "Senjata (Weapon)", value: "weapon", emoji: "⚔️" },
+          { label: "Zirah (Armor)", value: "armor", emoji: "🛡️" },
+          { label: "Alat Kerja (Tool)", value: "tool", emoji: "⛏️" },
+          { label: "Konsumsi (Consumable)", value: "consumable", emoji: "🧪" },
+          { label: "Material & Bahan Mentah", value: "material", emoji: "💎" },
+          { label: "Urutkan: Tier Tertinggi", value: "sort_tier", emoji: "⭐" },
+          { label: "Urutkan: Jumlah Terbanyak", value: "sort_amount", emoji: "📊" },
+          { label: "Urutkan: Nilai Jual Tertinggi", value: "sort_price", emoji: "🪙" },
+        );
+      const selectRow = new ActionRowBuilder().addComponents(filterSelect);
 
       // Tombol Aksi Cepat Interaktif
       const buttonsRow = new ActionRowBuilder().addComponents(
@@ -180,7 +207,10 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      const replyMsg = await interaction.editReply(payload);
+      const replyMsg = await interaction.editReply({
+        ...payload,
+        components: [...payload.components, selectRow, buttonsRow],
+      });
 
       if (
         !replyMsg ||
@@ -191,12 +221,64 @@ module.exports = {
 
       const collector = replyMsg.createMessageComponentCollector({
         filter: (i) =>
-          i.user.id === user.id && i.customId.startsWith("inv_cta_"),
-        time: 60000,
-        max: 1,
+          i.user.id === user.id &&
+          (i.customId.startsWith("inv_cta_") || i.customId === "inv_filter_select"),
+        time: 90000,
       });
 
       collector.on("collect", async (i) => {
+        if (i.customId === "inv_filter_select") {
+          const selectedVal = i.values[0];
+          let filteredItems = Array.from(aggregatedMap.values());
+
+          if (selectedVal.startsWith("sort_")) {
+            if (selectedVal === "sort_tier") {
+              filteredItems.sort((a, b) => (b.tier || 1) - (a.tier || 1));
+            } else if (selectedVal === "sort_amount") {
+              filteredItems.sort((a, b) => (b.amount || 1) - (a.amount || 1));
+            } else if (selectedVal === "sort_price") {
+              filteredItems.sort((a, b) => {
+                const pA = CATALOG_BY_ID.get(a.id)?.sellPrice || 10;
+                const pB = CATALOG_BY_ID.get(b.id)?.sellPrice || 10;
+                return pB * (b.amount || 1) - pA * (a.amount || 1);
+              });
+            }
+          } else if (selectedVal !== "all") {
+            filteredItems = filteredItems.filter((item) => {
+              const cat = CATALOG_BY_ID.get(item.id)?.category || item.category;
+              return cat === selectedVal;
+            });
+          }
+
+          const itemListStr =
+            filteredItems.length > 0
+              ? filteredItems
+                  .slice(0, 15)
+                  .map(
+                    (it) =>
+                      `> ${it.emoji} **${it.name}** \`x${it.amount}\` (Tier ${it.tier})`,
+                  )
+                  .join("\n")
+              : "> *Tidak ada barang yang cocok dengan filter ini.*";
+
+          const updatePayload = buildContainerV2({
+            accentColorHex: survivalUI.getColor("emerald") || "#86EFAC",
+            authorName: `Naura Wilds • Sistem Manajemen Ransel Petualang`,
+            title: `🎒 Filter Ransel [${selectedVal.toUpperCase()}]: ${displayName}`,
+            description: [
+              `Menampilkan hasil filter atau pengurutan item:`,
+              "",
+              itemListStr,
+            ].join("\n"),
+            fields: payload.fields,
+            footerText: ui.getFooter("survival"),
+          });
+
+          return i.update({
+            ...updatePayload,
+            components: [selectRow, buttonsRow],
+          });
+        }
         if (i.customId === "inv_cta_consume") {
           const consumeSub = require("./consume.js");
           return consumeSub.execute(i);

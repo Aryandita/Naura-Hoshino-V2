@@ -11,6 +11,7 @@ const { Op } = require("sequelize");
 const { logger } = require("../../managers/logger");
 const redisManager = require("../../managers/redisManager");
 const UserFriend = require("../../models/UserFriend");
+const RateLimiter = require("../../utils/rateLimiter");
 
 const BROADCAST_TOPIC = "naura:globalchat";
 const STREAK_COOLDOWN_MS = 12 * 60 * 60 * 1000;
@@ -191,6 +192,26 @@ module.exports = async function handleGlobalChat(message, client) {
     return false;
 
   try {
+    // Guard Clause: Batasi kecepatan pesan global (1 pesan / 3 detik per user)
+    const isLimited = await RateLimiter.isRateLimited(
+      message.author.id,
+      "global_chat",
+      1,
+      3,
+    );
+    if (isLimited) {
+      await message.delete().catch(() => {});
+      const warningMsg = await message.channel
+        .send({
+          content: `⚠️ <@${message.author.id}>, mohon tunggu 3 detik sebelum mengirim pesan lagi ke Global Chat.`,
+        })
+        .catch(() => null);
+      if (warningMsg) {
+        setTimeout(() => warningMsg.delete().catch(() => {}), 4000);
+      }
+      return true;
+    }
+
     await message.delete().catch(() => {});
 
     const { targetName, targetId } = await resolveReply(message, client);

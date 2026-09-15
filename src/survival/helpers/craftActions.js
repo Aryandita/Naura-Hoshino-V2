@@ -77,6 +77,29 @@ async function smelt({ userId, survival, profile, outputId }) {
   const recipe = getSmeltRecipe(outputId);
   if (!recipe) return { ok: false, reason: "unknown" };
 
+  const currentLevel = survival.survival_level || survival.level || 1;
+  if (recipe.reqLevel && currentLevel < recipe.reqLevel) {
+    return {
+      ok: false,
+      reason: "level",
+      needLevel: recipe.reqLevel,
+      currentLevel,
+    };
+  }
+
+  if (recipe.reqStat) {
+    const userStatVal = survival[recipe.reqStat.stat] || 0;
+    if (userStatVal < recipe.reqStat.value) {
+      return {
+        ok: false,
+        reason: "stat",
+        stat: recipe.reqStat.stat,
+        needValue: recipe.reqStat.value,
+        currentValue: userStatVal,
+      };
+    }
+  }
+
   const inventory = safeParseInventory(profile.inventory);
   const check = helpers.checkMaterials(inventory, recipe.input);
   if (!check.ok) return { ok: false, reason: "materials", check };

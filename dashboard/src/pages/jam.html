@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Naura Jam Room - Collaborative Synthesizer & Drum Machine</title>
+  <link rel="stylesheet" href="/vendor/fontawesome.min.css">
+  <link rel="stylesheet" href="/vendor/tailwind-built.css">
+  <style>
+    :root {
+      --bg-dark: #090a16;
+      --card-bg: rgba(18, 22, 44, 0.75);
+      --accent-neon: #00f0ff;
+      --accent-pink: #ff007f;
+      --accent-purple: #a855f7;
+    }
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(0, 240, 255, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 75%, rgba(255, 0, 127, 0.08) 0%, transparent 40%);
+      color: #f8fafc;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+    }
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+    }
+    .step-btn {
+      width: 32px;
+      height: 48px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+    .step-btn.active {
+      background: var(--accent-neon);
+      box-shadow: 0 0 12px var(--accent-neon);
+      border-color: #fff;
+    }
+    .step-btn.active.snare {
+      background: var(--accent-pink);
+      box-shadow: 0 0 12px var(--accent-pink);
+    }
+    .step-btn.active.hihat {
+      background: #fbbf24;
+      box-shadow: 0 0 12px #fbbf24;
+    }
+    .step-btn.active.clap {
+      background: var(--accent-purple);
+      box-shadow: 0 0 12px var(--accent-purple);
+    }
+    .step-btn.current {
+      border-color: #fff;
+      transform: scale(1.08);
+    }
+    .synth-key {
+      height: 120px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 12px;
+      transition: all 0.1s ease;
+      user-select: none;
+    }
+    .synth-key:active, .synth-key.pressed {
+      background: linear-gradient(180deg, var(--accent-neon) 0%, #0284c7 100%);
+      color: #000;
+      box-shadow: 0 0 16px var(--accent-neon);
+      transform: translateY(2px);
+    }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+      <div>
+        <div class="flex items-center gap-3">
+          <span class="text-3xl">🎹</span>
+          <h1 class="text-2xl md:text-3xl font-extrabold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-amber-300">
+            Naura Jam Room
+          </h1>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+            LIVE SYNC
+          </span>
+        </div>
+        <p class="text-slate-400 text-sm mt-1">
+          Collaborative Lo-Fi & 8-Bit Drum Sequencer & Synthesizer Studio
+        </p>
+      </div>
+
+      <!-- Controls -->
+      <div class="flex items-center gap-4">
+        <button id="playBtn" class="px-6 py-2.5 rounded-xl font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-lg shadow-cyan-500/25 transition flex items-center gap-2">
+          <i class="fas fa-play" id="playIcon"></i>
+          <span id="playText">PLAY</span>
+        </button>
+        <button id="clearBtn" class="px-4 py-2.5 rounded-xl font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+          Clear
+        </button>
+        <div class="flex items-center gap-2 bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-800">
+          <span class="text-xs text-slate-400 font-bold">BPM:</span>
+          <input type="range" id="bpmSlider" min="60" max="180" value="120" class="w-24 accent-cyan-400 cursor-pointer">
+          <span id="bpmValue" class="text-sm font-mono font-bold text-cyan-300 w-8">120</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Drum Sequencer Matrix -->
+    <section class="glass-card rounded-2xl p-6 mb-8">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+          <i class="fas fa-drum text-cyan-400"></i> 16-Step Rhythm Sequencer
+        </h2>
+        <span class="text-xs text-slate-400">Pola tersinkronisasi otomatis ke seluruh anggota room</span>
+      </div>
+
+      <div class="space-y-3 overflow-x-auto pb-2" id="sequencerGrid">
+        <!-- Rows for Kick, Snare, HiHat, Clap -->
+        <div class="flex items-center gap-2" data-inst="kick">
+          <span class="w-16 text-xs font-bold text-slate-400">KICK</span>
+          <div class="flex gap-1.5 flex-1" id="track-kick"></div>
+        </div>
+        <div class="flex items-center gap-2" data-inst="snare">
+          <span class="w-16 text-xs font-bold text-slate-400">SNARE</span>
+          <div class="flex gap-1.5 flex-1" id="track-snare"></div>
+        </div>
+        <div class="flex items-center gap-2" data-inst="hihat">
+          <span class="w-16 text-xs font-bold text-slate-400">HI-HAT</span>
+          <div class="flex gap-1.5 flex-1" id="track-hihat"></div>
+        </div>
+        <div class="flex items-center gap-2" data-inst="clap">
+          <span class="w-16 text-xs font-bold text-slate-400">CLAP</span>
+          <div class="flex gap-1.5 flex-1" id="track-clap"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chiptune / Lo-fi Synthesizer -->
+    <section class="glass-card rounded-2xl p-6 mb-8">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+          <h2 class="text-lg font-bold text-slate-200 flex items-center gap-2">
+            <i class="fas fa-wave-square text-fuchsia-400"></i> Pentatonic Melody Synthesizer
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Mainkan tuts di bawah atau tekan tombol keyboard 1 s.d. 8</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <label class="text-xs text-slate-400 font-bold">Waveform:</label>
+          <select id="waveSelect" class="bg-slate-900 border border-slate-700 text-xs rounded-lg px-3 py-1.5 text-cyan-300 font-semibold focus:outline-none">
+            <option value="sine">Lo-Fi Sine</option>
+            <option value="square" selected>8-Bit Square</option>
+            <option value="triangle">Warm Triangle</option>
+            <option value="sawtooth">Cyber Saw</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Keys -->
+      <div class="grid grid-cols-8 gap-2" id="keyboardContainer">
+        <!-- 8 keys (C4 to E5) -->
+      </div>
+    </section>
+
+    <!-- Room Status & Instructions -->
+    <footer class="glass-card rounded-xl p-4 flex flex-col md:flex-row justify-between items-center text-xs text-slate-400 gap-2">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="roomStatus">Terkoneksi ke Live Audio Engine</span>
+      </div>
+      <div>
+        <span>Gunakan bot slash command </span>
+        <code class="px-1.5 py-0.5 rounded bg-slate-800 text-cyan-300">/music jam</code>
+        <span> untuk mengundang kawan discord-mu!</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Audio Context Setup
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    // Drum Sound Generators
+    function playKick() {
+      const ctx = getAudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.setValueAtTime(140, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+      gain.gain.setValueAtTime(1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.35);
+    }
+
+    function playSnare() {
+      const ctx = getAudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(180, ctx.currentTime);
+      gain.gain.setValueAtTime(0.8, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.2);
+    }
+
+    function playHiHat() {
+      const ctx = getAudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "square";
+      osc.frequency.setValueAtTime(800, ctx.currentTime);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.08);
+    }
+
+    function playClap() {
+      const ctx = getAudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(240, ctx.currentTime);
+      gain.gain.setValueAtTime(0.5, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    }
+
+    // Synth Sound Generator
+    function playSynthNote(freq, wave = "square") {
+      const ctx = getAudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = wave;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.55);
+    }
+
+    // Sequencer State
+    const STEPS = 16;
+    const instruments = ["kick", "snare", "hihat", "clap"];
+    const pattern = {
+      kick: new Array(STEPS).fill(false),
+      snare: new Array(STEPS).fill(false),
+      hihat: new Array(STEPS).fill(false),
+      clap: new Array(STEPS).fill(false),
+    };
+
+    // Default basic groove
+    pattern.kick[0] = true;
+    pattern.kick[8] = true;
+    pattern.snare[4] = true;
+    pattern.snare[12] = true;
+    pattern.hihat[2] = true;
+    pattern.hihat[6] = true;
+    pattern.hihat[10] = true;
+    pattern.hihat[14] = true;
+
+    // Render Sequencer Buttons
+    instruments.forEach((inst) => {
+      const trackEl = document.getElementById("track-" + inst);
+      for (let i = 0; i < STEPS; i++) {
+        const btn = document.createElement("button");
+        btn.className = `step-btn ${pattern[inst][i] ? "active " + inst : ""}`;
+        btn.dataset.inst = inst;
+        btn.dataset.step = i;
+        btn.addEventListener("click", () => {
+          pattern[inst][i] = !pattern[inst][i];
+          btn.classList.toggle("active", pattern[inst][i]);
+          if (pattern[inst][i]) btn.classList.add(inst);
+          else btn.classList.remove(inst);
+
+          // Broadcast to socket
+          if (socket) {
+            socket.emit("jam:step_toggle", { inst, step: i, active: pattern[inst][i] });
+          }
+        });
+        trackEl.appendChild(btn);
+      }
+    });
+
+    // Notes mapping (Pentatonic Scale)
+    const NOTES = [
+      { key: "1", note: "C4", freq: 261.63 },
+      { key: "2", note: "D4", freq: 293.66 },
+      { key: "3", note: "E4", freq: 329.63 },
+      { key: "4", note: "G4", freq: 392.00 },
+      { key: "5", note: "A4", freq: 440.00 },
+      { key: "6", note: "C5", freq: 523.25 },
+      { key: "7", note: "D5", freq: 587.33 },
+      { key: "8", note: "E5", freq: 659.25 },
+    ];
+
+    const keyboardContainer = document.getElementById("keyboardContainer");
+    NOTES.forEach((n) => {
+      const keyBtn = document.createElement("div");
+      keyBtn.className = "synth-key";
+      keyBtn.id = "key-" + n.key;
+      keyBtn.innerHTML = `
+        <span class="text-xs text-slate-500 font-bold mb-1">[${n.key}]</span>
+        <span class="text-sm font-bold text-slate-200">${n.note}</span>
+      `;
+      keyBtn.addEventListener("mousedown", () => triggerNote(n));
+      keyboardContainer.appendChild(keyBtn);
+    });
+
+    function triggerNote(noteObj, fromRemote = false) {
+      const wave = document.getElementById("waveSelect").value;
+      playSynthNote(noteObj.freq, wave);
+
+      const el = document.getElementById("key-" + noteObj.key);
+      if (el) {
+        el.classList.add("pressed");
+        setTimeout(() => el.classList.remove("pressed"), 150);
+      }
+
+      if (!fromRemote && socket) {
+        socket.emit("jam:note_play", { note: noteObj, wave });
+      }
+    }
+
+    // Keyboard bindings
+    window.addEventListener("keydown", (e) => {
+      const found = NOTES.find((n) => n.key === e.key);
+      if (found) triggerNote(found);
+    });
+
+    // Playback loop
+    let isPlaying = false;
+    let currentStep = 0;
+    let timerId = null;
+    let bpm = 120;
+
+    function step() {
+      // Remove current highlight from all
+      document.querySelectorAll(".step-btn.current").forEach((b) => b.classList.remove("current"));
+
+      // Highlight step
+      instruments.forEach((inst) => {
+        const btn = document.querySelector(`.step-btn[data-inst="${inst}"][data-step="${currentStep}"]`);
+        if (btn) btn.classList.add("current");
+
+        if (pattern[inst][currentStep]) {
+          if (inst === "kick") playKick();
+          else if (inst === "snare") playSnare();
+          else if (inst === "hihat") playHiHat();
+          else if (inst === "clap") playClap();
+        }
+      });
+
+      currentStep = (currentStep + 1) % STEPS;
+    }
+
+    document.getElementById("playBtn").addEventListener("click", () => {
+      getAudioContext();
+      isPlaying = !isPlaying;
+      const playText = document.getElementById("playText");
+      const playIcon = document.getElementById("playIcon");
+
+      if (isPlaying) {
+        playText.innerText = "STOP";
+        playIcon.className = "fas fa-stop";
+        const intervalMs = (60 / bpm / 4) * 1000;
+        timerId = setInterval(step, intervalMs);
+      } else {
+        playText.innerText = "PLAY";
+        playIcon.className = "fas fa-play";
+        clearInterval(timerId);
+        document.querySelectorAll(".step-btn.current").forEach((b) => b.classList.remove("current"));
+        currentStep = 0;
+      }
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      instruments.forEach((inst) => {
+        pattern[inst].fill(false);
+      });
+      document.querySelectorAll(".step-btn").forEach((b) => {
+        b.className = "step-btn";
+      });
+      if (socket) socket.emit("jam:clear");
+    });
+
+    const bpmSlider = document.getElementById("bpmSlider");
+    const bpmValue = document.getElementById("bpmValue");
+    bpmSlider.addEventListener("input", (e) => {
+      bpm = parseInt(e.target.value, 10);
+      bpmValue.innerText = bpm;
+      if (isPlaying) {
+        clearInterval(timerId);
+        timerId = setInterval(step, (60 / bpm / 4) * 1000);
+      }
+      if (socket) socket.emit("jam:tempo_change", { bpm });
+    });
+
+    // Socket.IO Collaborative Real-time Client
+    let socket = null;
+    try {
+      socket = io();
+      socket.emit("jam:join", { roomId: "global" });
+
+      socket.on("jam:step_toggle", ({ inst, step, active }) => {
+        if (pattern[inst]) {
+          pattern[inst][step] = active;
+          const btn = document.querySelector(`.step-btn[data-inst="${inst}"][data-step="${step}"]`);
+          if (btn) {
+            btn.classList.toggle("active", active);
+            if (active) btn.classList.add(inst);
+            else btn.classList.remove(inst);
+          }
+        }
+      });
+
+      socket.on("jam:note_play", ({ note, wave }) => {
+        const found = NOTES.find((n) => n.note === note.note);
+        if (found) triggerNote(found, true);
+      });
+
+      socket.on("jam:tempo_change", ({ bpm: newBpm }) => {
+        bpm = newBpm;
+        bpmSlider.value = newBpm;
+        bpmValue.innerText = newBpm;
+        if (isPlaying) {
+          clearInterval(timerId);
+          timerId = setInterval(step, (60 / bpm / 4) * 1000);
+        }
+      });
+
+      socket.on("jam:clear", () => {
+        instruments.forEach((inst) => pattern[inst].fill(false));
+        document.querySelectorAll(".step-btn").forEach((b) => (b.className = "step-btn"));
+      });
+    } catch (_) {}
+  </script>
+</body>
+</html>

@@ -6,13 +6,13 @@ const {
   ButtonBuilder,
   ButtonStyle,
   ComponentType,
+  AttachmentBuilder,
 } = require("discord.js");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
 const redisManager = require("../../src/managers/redisManager");
 const cacheManager = require("../../src/managers/cacheManager");
-const aiManager = require("../../src/managers/aiManager");
-const geminiClient = require("../../src/ai/geminiClient");
+const aiEnsembleRouter = require("../../src/ai/aiEnsembleRouter");
 const { logger } = require("../../src/managers/logger");
 const { buildGoalGradientBar } = require("../../src/utils/uxHelper");
 
@@ -117,36 +117,29 @@ ${
 
   let responseRaw = "";
   try {
-    const aiClient = aiManager.getGenAI();
-    if (aiClient) {
-      session.history.push({
-        role: "user",
-        parts: [
-          { text: actionText || `Memulai petualangan babak ${currentChapter}` },
-        ],
-      });
+    session.history.push({
+      role: "user",
+      parts: [
+        { text: actionText || `Memulai petualangan babak ${currentChapter}` },
+      ],
+    });
 
-      const gemResult = await aiClient.models.generateContent({
-        model: aiManager._defaultModel || "gemini-2.5-flash",
-        contents: session.history.slice(-8),
-        config: {
-          systemInstruction,
-          maxOutputTokens: 1200,
-          temperature: 0.8,
-        },
-      });
+    const aiResult = await aiEnsembleRouter.generate({
+      taskType: aiEnsembleRouter.TASK_TYPES.ROLEPLAY_STORY,
+      prompt: actionText || `Memulai petualangan babak ${currentChapter}`,
+      history: session.history.slice(-8),
+      systemInstruction,
+      config: {
+        maxOutputTokens: 1200,
+        temperature: 0.8,
+      },
+    });
 
-      responseRaw = gemResult.text || "";
-      session.history.push({
-        role: "model",
-        parts: [{ text: responseRaw }],
-      });
-    } else {
-      // Fallback geminiClient tunggal
-      responseRaw = await geminiClient.generate({
-        parts: [{ text: `${systemInstruction}\n\nAksi: ${actionText}` }],
-      });
-    }
+    responseRaw = aiResult.text || String(aiResult);
+    session.history.push({
+      role: "model",
+      parts: [{ text: responseRaw }],
+    });
   } catch (error) {
     logger.error("[Story AI Error]", error);
     responseRaw =
@@ -242,6 +235,28 @@ ${
       ? new ActionRowBuilder().addComponents(buttons.slice(0, 5))
       : null;
 
+  // AI Dynamic Story Scene Visualizer Canvas
+  let fileAttachment = null;
+  try {
+    const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
+    const sceneBuffer = await canvasWorkerPool.execute(
+      "renderStoryScene",
+      {
+        turn: currentChapter,
+        maxTurns: 10,
+        title: isFinale ? "Konklusi Petualangan" : `Petualangan Babak ${currentChapter}`,
+        narrative: narrative.slice(0, 260),
+        location: `Zona Petualangan ${genre}`,
+      },
+      userId,
+    );
+    if (sceneBuffer) {
+      fileAttachment = new AttachmentBuilder(sceneBuffer, { name: "story_scene.png" });
+    }
+  } catch (canvasErr) {
+    logger.warn("[Story Canvas Warn]", canvasErr.message);
+  }
+
   const payload = buildContainerV2({
     accentColorHex: genreColor,
     authorName: `Dungeon Master Naura (${genre})`,
@@ -249,17 +264,23 @@ ${
       ? `👑 Babak Akhir (10/10): Konklusi Petualangan`
       : `📜 Babak ${currentChapter}/10: Petualangan Berlanjut`,
     iconURL: interaction.client.user.displayAvatarURL(),
+    bannerAttachmentName: fileAttachment ? "story_scene.png" : null,
     description: desc,
     buttonsRow,
     footerText: isFinale
-      ? "Kisah selesai dengan gemilang! \u2022 Naura Dungeon Master"
-      : `Babak ${currentChapter}/10 \u2022 Klik tombol di bawah untuk melanjutkan`,
+      ? "Kisah selesai dengan gemilang! - Naura Intelligent System \uD83C\uDF38"
+      : `Babak ${currentChapter}/10 - Naura Intelligent System \uD83C\uDF38`,
   });
+
+  const replyOptions = {
+    ...payload,
+    files: fileAttachment ? [fileAttachment] : [],
+  };
 
   const responseMessage =
     interaction.replied || interaction.deferred
-      ? await interaction.editReply(payload)
-      : await interaction.reply(payload);
+      ? await interaction.editReply(replyOptions)
+      : await interaction.reply(replyOptions);
 
   // Setup Button Collector (3 menit interaktivitas)
   const collector = responseMessage.createMessageComponentCollector({

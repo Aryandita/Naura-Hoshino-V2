@@ -11,8 +11,6 @@ const {
 const crypto = require("crypto");
 const CardEngine = require("../../src/card/cardEngine");
 const CardBattleEngine = require("../../src/card/cardBattleEngine");
-const { drawAnimeCard } = require("../../src/canvas/cardCanvas");
-const { drawCardBattleArena } = require("../../src/canvas/cardBattleCanvas");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -23,6 +21,8 @@ const UserCardDeck = require("../../src/models/UserCardDeck");
 const cacheManager = require("../../src/managers/cacheManager");
 const redisManager = require("../../src/managers/redisManager");
 const currency = require("../../src/survival/engines/currency");
+const { drawAnimeCard } = require("../../src/canvas/cardCanvas");
+const { drawCardBattleArena } = require("../../src/canvas/cardBattleCanvas");
 
 module.exports = {
   data: new SlashCommandBuilder()

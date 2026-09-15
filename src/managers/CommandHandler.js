@@ -140,25 +140,23 @@ class CommandHandler {
             }
 
             if (command.data) {
-              if (cmdName !== "naura") {
-                const json = command.data.toJSON();
-                // Apps Anywhere (User-Installable Apps): Izinkan perintah personal dijalankan di mana saja
-                const USER_INSTALLABLE_COMMANDS = new Set([
-                  "profile",
-                  "ask",
-                  "weather",
-                  "card",
-                  "translate",
-                  "calculator",
-                  "coinflip",
-                  "8ball",
-                ]);
-                if (USER_INSTALLABLE_COMMANDS.has(cmdName)) {
-                  if (!json.integration_types) json.integration_types = [0, 1];
-                  if (!json.contexts) json.contexts = [0, 1, 2];
-                }
-                commandsArray.push(json);
+              const json = command.data.toJSON();
+              // Apps Anywhere (User-Installable Apps): Izinkan perintah personal dijalankan di mana saja
+              const USER_INSTALLABLE_COMMANDS = new Set([
+                "profile",
+                "ask",
+                "weather",
+                "card",
+                "translate",
+                "calculator",
+                "coinflip",
+                "8ball",
+              ]);
+              if (USER_INSTALLABLE_COMMANDS.has(cmdName)) {
+                if (!json.integration_types) json.integration_types = [0, 1];
+                if (!json.contexts) json.contexts = [0, 1, 2];
               }
+              commandsArray.push(json);
             }
           }
         } catch (err) {

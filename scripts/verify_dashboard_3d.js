@@ -37,8 +37,15 @@ async function getWsUrl() {
 }
 
 async function main() {
-  const chromePath =
-    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+  const defaultPaths = [
+    process.env.CHROME_PATH,
+    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+    "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+    "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
+  ].filter(Boolean);
+
+  const chromePath = defaultPaths.find((p) => fs.existsSync(p)) || defaultPaths[0];
   const chrome = spawn(chromePath, [
     "--headless=new",
     "--remote-debugging-port=9222",
@@ -137,6 +144,21 @@ async function main() {
     // Jeda 2 detik agar frame render berjalan lancar
     await new Promise((r) => setTimeout(r, 2000));
 
+    // Memicu animasi khas StarPose dan Star Fragment burst untuk verifikasi visual
+    send("Runtime.evaluate", {
+      expression: `(() => {
+        if (window.__heroViewer) {
+          window.__heroViewer.playAnimation("StarPose");
+          if (window.__heroViewer.particles) {
+            window.__heroViewer.particles.burst(40);
+          }
+        }
+      })()`,
+    });
+
+    // Jeda 1.5 detik saat pose dan bintang memancar
+    await new Promise((r) => setTimeout(r, 1500));
+
     // Evaluasi status Three.js scene
     const evalMsgId = send("Runtime.evaluate", {
       expression: `(() => {
@@ -147,6 +169,9 @@ async function main() {
           hasScene: Boolean(hv.scene),
           hasCamera: Boolean(hv.camera),
           hasModelGroup: Boolean(hv.modelGroup),
+          hasBrand3d: Boolean(hv.brand3d),
+          brandFxVisible: Boolean(hv.brandFxVisible),
+          currentAnim: hv.currentAnimName,
           modelChildren: hv.modelGroup ? hv.modelGroup.children.length : 0,
           renderCalls: hv.renderer ? hv.renderer.info.render.calls : 0,
           renderTriangles: hv.renderer ? hv.renderer.info.render.triangles : 0,
@@ -184,7 +209,8 @@ async function main() {
 
     if (screenshotData) {
       const targetPath =
-        "C:\\Users\\ACER\\.gemini\\antigravity-ide\\brain\\adb93312-43ae-418d-97c6-3c25049a0c2c\\verified_3d_render.png";
+        process.env.SCREENSHOT_OUT_PATH ||
+        require("path").join(__dirname, "../dashboard/public/verified_3d_render.png");
       fs.writeFileSync(targetPath, Buffer.from(screenshotData, "base64"));
       console.log("✨ Screenshot final berhasil disimpan ke:", targetPath);
     }

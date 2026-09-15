@@ -1,5 +1,6 @@
 const redisManager = require("../managers/redisManager");
 const { logger } = require("../managers/logger");
+const RateLimiter = require("../utils/rateLimiter");
 
 const BAD_WORDS = [
   "anjing",
@@ -48,21 +49,17 @@ async function checkRateLimit(userId, isOwner, isPremium) {
 
   const maxRequests = isPremium ? 15 : 5;
   const windowSeconds = 60; // 1 minute
-  const key = `rate_limit_ai_${userId}`;
 
   try {
-    if (!redisManager.client || !redisManager.client.isReady)
-      return { allowed: true };
+    const { limited, retryAfter } = await RateLimiter.consume(
+      userId,
+      "ai",
+      maxRequests,
+      windowSeconds,
+    );
 
-    const currentRequests = await redisManager.client.incr(key);
-
-    if (currentRequests === 1) {
-      await redisManager.client.expire(key, windowSeconds);
-    }
-
-    if (currentRequests > maxRequests) {
-      const ttl = await redisManager.client.ttl(key);
-      return { allowed: false, retryAfter: ttl };
+    if (limited) {
+      return { allowed: false, retryAfter };
     }
 
     return { allowed: true };

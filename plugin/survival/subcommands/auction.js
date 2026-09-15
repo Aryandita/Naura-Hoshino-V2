@@ -14,6 +14,7 @@ const {
   addItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
 const RateLimiter = require("../../../src/utils/rateLimiter");
+const economyGuard = require("../../../src/services/economyGuardEngine");
 const { Op } = require("sequelize");
 const {
   choice,
@@ -316,6 +317,23 @@ async function handleBid(interaction) {
     );
   }
 
+  // Evaluasi integritas penawaran melalui Economy Guard & Circuit Breaker
+  const guardCheck = economyGuard.evaluateTransaction(
+    userId,
+    auction.sellerId,
+    bidPrice,
+    "auction_bid",
+  );
+  if (!guardCheck.allowed) {
+    return interaction.editReply(
+      hidden(
+        buildErrorContainerV2({
+          description: guardCheck.reason,
+        }),
+      ),
+    );
+  }
+
   // Deduct from buyer
   let debitSuccess = false;
   if (auction.currency === "nsf") {
@@ -444,10 +462,12 @@ async function handleClaim(interaction) {
   if (auction.highestBidderId) {
     // Auction sold
     if (isSeller) {
-      // Seller gets money minus 5% tax
+      // Seller gets money minus dynamic tax
       const rawEarn = auction.currentBid;
-      const tax = Math.floor(rawEarn * 0.05);
+      const taxRate = economyGuard.calculateDynamicTax();
+      const tax = Math.floor(rawEarn * taxRate);
       const finalEarn = rawEarn - tax;
+      const taxPercent = (taxRate * 100).toFixed(1);
 
       if (auction.currency === "nsf") {
         await cacheManager.incrementUserSurvival(
@@ -469,7 +489,7 @@ async function handleClaim(interaction) {
       return interaction.editReply(
         buildContainerV2({
           accentColorHex: ui.getColor("success"),
-          description: `Lelang laku! Kamu mendapatkan **${finalEarn}** ${currencyEmoji} (setelah pajak 5% dari ${rawEarn}).`,
+          description: `Lelang laku! Kamu mendapatkan **${finalEarn}** ${currencyEmoji} (setelah pajak pasar ${taxPercent}% sebesar ${tax} dari ${rawEarn}).`,
         }),
       );
     } else if (isWinner) {

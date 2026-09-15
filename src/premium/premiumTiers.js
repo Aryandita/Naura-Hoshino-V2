@@ -1,3 +1,5 @@
+"use strict";
+
 // Katalog tier V.I.P. Satu-satunya sumber kebenaran untuk harga, durasi,
 // dan daftar fitur. Dipisahkan dari premium.js agar mudah disunting.
 const YES = "\u2705";
@@ -9,6 +11,7 @@ const PREMIUM_TIERS = {
     tier: "voter",
     days: 0.5,
     price: "Gratis (Top.gg Vote)",
+    couponPrice: 0,
     emoji: "🗳️",
     description:
       "Paket apresiasi yang aktif otomatis setiap kali kamu memberikan vote di Top.gg.",
@@ -18,9 +21,10 @@ const PREMIUM_TIERS = {
       `${YES} **1.15x Minigame Reward** - bonus perolehan Naura Star Fragments`,
       `${YES} **1-2 Naura Coupon Gratis** - kupon berharga per vote untuk gacha & survival`,
       `${YES} **Voter Badge** - lencana pendukung setia di kartu profil`,
+      `${NO} Gaji Dividen Harian Kupon & Mystery Box`,
+      `${NO} Durability Shield & Diskon Pajak Pasar`,
       `${NO} Musik 24/7 & Filter DSP`,
       `${NO} Autoplay AI Dropdown`,
-      `${NO} Dungeon tanpa batas`,
       `${NO} Gold Card & VIP Badge`,
     ],
   },
@@ -28,7 +32,8 @@ const PREMIUM_TIERS = {
     name: "🌱 Naura Starter",
     tier: "starter",
     days: 7,
-    price: "Rp 10.000",
+    price: "Rp 10.000 / 5 Kupon",
+    couponPrice: 5,
     emoji: "🌱",
     description:
       "Paket hemat untuk kamu yang ingin mencoba sensasi fitur premium Naura.",
@@ -36,6 +41,10 @@ const PREMIUM_TIERS = {
       `${YES} **1.25x Global XP Boost** - percepat progres levelmu`,
       `${YES} **+15% Bonus Gaji Kerja** - penghasilan harian lebih banyak`,
       `${YES} **1.25x Minigame Reward** - bonus perolehan Naura Star Fragments`,
+      `${YES} **Dividen Harian:** +150 NSF / hari via \`/premium claim\``,
+      `${YES} **Durability Shield:** Ketahanan alat aus 15% lebih lambat`,
+      `${YES} **Akselerasi Cooldown:** 10% lebih cepat pada aksi survival`,
+      `${YES} **Max Energy Cap 115:** Kapasitas energi petualang meningkat`,
       `${YES} **Simpan 5 Playlist Musik** - simpan daftar putar favoritmu`,
       `${YES} **Starter Badge** - lencana pemula di kartu profil Canvas`,
       `${NO} Musik 24/7 & Filter DSP`,
@@ -48,7 +57,8 @@ const PREMIUM_TIERS = {
     name: "🌟 Naura Supporter",
     tier: "supporter",
     days: 30,
-    price: "Rp 25.000",
+    price: "Rp 25.000 / 15 Kupon",
+    couponPrice: 15,
     emoji: "🌟",
     description:
       "Paket bulanan favorit untuk menemani perjalananmu bersama Naura.",
@@ -57,6 +67,12 @@ const PREMIUM_TIERS = {
       `${YES} **Banner Profil Custom** - pasang banner sendiri di kartu profil`,
       `${YES} **+25% Bonus Gaji Kerja** - pendapatan kerja survival ekstra`,
       `${YES} **1.25x Minigame Reward** - perbanyak saldo Naura Star Fragments`,
+      `${YES} **Dividen Harian:** +1 Kupon & +350 NSF / hari via \`/premium claim\``,
+      `${YES} **Durability Shield:** Ketahanan alat aus 30% lebih lambat`,
+      `${YES} **Tax Haven:** Diskon 50% pajak pasar lelang & P2P Trade`,
+      `${YES} **Akselerasi Cooldown:** 20% lebih cepat pada aksi survival`,
+      `${YES} **Max Energy Cap 125:** Kapasitas energi petualang meningkat`,
+      `${YES} **Living AI Priority & Persona Tuning:** Bebas atur karakter suara Naura`,
       `${YES} **Simpan 10 Playlist Musik** - kelola antrean musik lebih leluasa`,
       `${YES} **Supporter Badge** - lencana supporter di kartu profil Canvas`,
       `${NO} Musik 24/7 & Filter DSP`,
@@ -69,13 +85,19 @@ const PREMIUM_TIERS = {
     name: "💫 Naura Friends",
     tier: "friends",
     days: 90,
-    price: "Rp 45.000",
+    price: "Rp 45.000 / 35 Kupon",
+    couponPrice: 35,
     emoji: "💫",
     description:
       "Pilihan terbaik untuk penikmat audio premium dan survival antusias.",
     features: [
       `${YES} **Semua fitur Supporter**`,
+      `${YES} **Dividen Harian:** +2 Kupon, +800 NSF, & +1 Mystery Box / hari`,
+      `${YES} **Durability Shield:** Ketahanan alat aus 40% lebih lambat`,
+      `${YES} **Akselerasi Cooldown:** 30% lebih cepat pada aksi survival`,
+      `${YES} **Max Energy Cap 135:** Kapasitas stamina petualang melimpah`,
       `${YES} **Mode Siaga Musik 24/7** - Naura standby di voice channel tanpa henti`,
+      `${YES} **Lossless Hi-Fi Audio:** Akses streaming FLAC 24-bit / 384kbps Opus`,
       `${YES} **Filter Audio DSP** - Nightcore, Vaporwave, 8D Surround, Bassboost, Karaoke`,
       `${YES} **Autoplay AI Dropdown** - rekomendasi lagu otomatis & cerdas di panel musik`,
       `${YES} **Playlist Tanpa Batas** - simpan dan impor playlist sepuasnya`,
@@ -92,12 +114,17 @@ const PREMIUM_TIERS = {
     name: "👑 Naura V.I.P",
     tier: "vip",
     days: 365,
-    price: "Rp 75.000",
+    price: "Rp 75.000 / 80 Kupon",
+    couponPrice: 80,
     emoji: "👑",
     description:
       "Paket terlengkap tahunan. Akses tanpa batas ke seluruh keistimewaan Naura.",
     features: [
       `${YES} **Semua fitur Friends**`,
+      `${YES} **Dividen Harian:** +3 Kupon, +2.000 NSF, +1 Relic Box, & +2 Tiket Dungeon`,
+      `${YES} **Max Energy Cap 150:** Kapasitas energi tertinggi di seluruh ekosistem`,
+      `${YES} **Durability Shield Maksimum:** Ketahanan alat aus 50% lebih lambat`,
+      `${YES} **Akselerasi Cooldown Maksimum:** 40% lebih cepat pada aksi survival`,
       `${YES} **2.0x Global XP Boost** - kecepatan leveling tertinggi di Naura`,
       `${YES} **Dungeon Tanpa Batas** - jelajahi dungeon di atas lantai 50 tanpa batas`,
       `${YES} **+100% Bonus Gaji Kerja** - gaji kerja berlipat ganda`,
@@ -151,7 +178,7 @@ function buildBenefitsDescription() {
   }
 
   lines.push(
-    "-# Gunakan `/premium info` untuk berlangganan, atau `/premium check` untuk melihat status aktifmu.",
+    "-# Gunakan `/premium info` untuk berlangganan, `/premium buy` untuk membeli via kupon in-game, atau `/premium claim` untuk dividen harian.",
   );
   return lines.join("\n");
 }

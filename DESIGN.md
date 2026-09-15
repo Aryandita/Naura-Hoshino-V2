@@ -1,5 +1,5 @@
 ---
-version: 2.0.0-naura-os
+version: 2.2.0-naura-os
 name: Naura Hoshino OS
 description: Antarmuka sistem kontrol Naura OS dengan tema cyber-anime yang ditambatkan pada kanvas gelap pekat bernuansa luar angkasa. Brand ini tidak mengandalkan elemen datar tradisional, energinya berasal dari efek glassmorphism (panel kaca transparan), pendaran neon (neon glows) bernuansa pink dan ungu pastel, serta tipografi futuristik Orbitron untuk data real-time. Antarmuka terasa dinamis, sangat responsif, dan mencerminkan presisi sistem bot Discord modern tanpa kehilangan estetika ramah dari karakter Naura. Sejak versi 1.1.0, brand ini memiliki sub-brand resmi bernama Naura Wilds yang membungkus seluruh antarmuka sistem Survival RPG dengan lapisan palet earth-tone (emerald, amber, moss) di atas fondasi glassmorphism yang sama.
 
@@ -249,7 +249,7 @@ components:
 
 # 🎨 NAURA HOSHINO OS, Design System & Visual Guidelines
 
-> **Versi Design System:** 2.1.0-naura-os · **Tema:** Cyber-Anime Glassmorphism & Cosmic Space  
+> **Versi Design System:** 2.2.0-naura-os · **Tema:** Cyber-Anime Glassmorphism & Cosmic Space  
 > **Pentalogi Dokumentasi:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`DESIGN.md`](DESIGN.md) (Desain) · [`RULES.md`](RULES.md) (Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen AI)
 
 > [!NOTE]
@@ -596,7 +596,7 @@ Setiap modul di Naura Hoshino memiliki aksen warna terstandarisasi untuk memudah
 
 # 🌿 Survival RPG Design System - Naura Wilds
 
-> **Sub-brand:** Naura Wilds · **Versi:** 1.0.0 · **Sumber kebenaran token:** `src/utils/survivalUIHelper.js`
+> **Sub-brand:** Naura Wilds · **Versi:** 2.2.0-wilds · **Sumber kebenaran token:** `src/utils/survivalUIHelper.js`
 
 Naura Wilds adalah sub-brand resmi untuk seluruh antarmuka sistem Survival RPG (`/survival`, `/gacha`, dungeon, coliseum, clan, pet, farming, crafting, cafe, bank, dan modul terkait di `plugin/survival/` serta `src/survival/`). Pendekatannya adalah **Hybrid Nature-Tech**: fondasi visual tetap Cyber-Anime Glassmorphism (kanvas gelap, panel kaca, tipografi Orbitron/Outfit), tetapi lapisan survival diberi identitas earth-tone tersendiri sehingga pemain langsung mengenali bahwa mereka sedang berada di "dunia liar" Naura tanpa merasa pindah aplikasi.
 
@@ -669,44 +669,39 @@ Semua komponen di bawah tetap tunduk pada struktur 5-lapisan Components V2 dan b
 - Jangan menampilkan log pertarungan lebih dari 5 baris; riwayat lengkap diserahkan ke subcommand khusus atau transcript.
 - Jangan menggunakan emoji yang belum terdaftar di `src/config/ui/`.
 
----
+## 🌌 3D Interactive Mascot & Canvas Visual Suite (v2.2.0 Standards)
 
-## 🧠 UX Psychology & Emotional Persona Guidelines
+### 1. 3D Model & VRM Avatar Viewer Standards (`portfolio.html`, `world.html`)
 
-Sistem antarmuka Naura Hoshino V2 memadukan estetika Cyber-Anime Glassmorphism dengan **6 Prinsip Psikologi UX** untuk menciptakan interaksi yang adiktif, intuitif, dan bermakna secara emosional.
+- **Asset Specification**: Avatar resmi Naura Hoshino didistribusikan dalam format biner glTF 2.0 (`Naura Hoshino 3D.glb`) dan format avatar humanoid VRM (`naura.vrm`).
+- **Rendering Pipeline Three.js**:
+  - PBR Workflow: Tone mapping `ACESFilmicToneMapping`, `exposure: 1.05`, dan render target sRGB.
+  - Material DoubleSide: `material.side = THREE.DoubleSide` untuk seluruh mesh kain, rambut, dan aksesori pita.
+  - Dynamic Lighting: Pencahayaan ambient lembut dipadukan dengan dua directional light Cyberpunk (Key Light Pink `#FFB6C1` dan Rim Light Neon Cyan `#7DD3FC`).
+- **Procedural Motion & Physics**:
+  - Loop pernapasan prosedural (`breathing`) dan floating mengambang halus.
+  - Interaksi Mouse Look-At: Kepala dan mata model melacak posisi kursor pengguna dalam radius 25 derajat.
+  - State Animasi: Idle, Wave (menyapa), Thinking (proses berpikir AI), dan Cheers (merayakan kemenangan dungeon/level-up).
+  - SpringBones Physics: Rambut dan pakaian bereaksi terhadap gravitasi dan akselerasi pergerakan kursor.
+- **Automated Verification**: Verifikasi visual tanpa display diverifikasi secara otomatis melalui script headless Chrome CDP (`scripts/verify_dashboard_3d.js`).
 
-### 1. Decision Fatigue & Smart Defaults (Hick's Law)
+### 2. Web Soundboard Studio Interface (`soundboard.html`)
 
-- **Rekomendasi Cerdas:** Setiap kali menyajikan daftar pilihan (menu atau tombol), tandai opsi terbaik dengan lencana `⭐ Rekomendasi Naura` menggunakan gaya Primary Pink Glow.
-- **Progressive Disclosure:** Tampilkan maksimal 3 sampai 4 aksi vital di tampilan utama. Fitur lanjutan atau opsi tambahan disembunyikan dalam sub-menu kontekstual.
+- **Pad Matrix Grid**: Grid tombol responsif 4-kolom (`grid-cols-2 md:grid-cols-4`) dengan estetika glassmorphism elevated (`surface-elevated`).
+- **Aura Pendaran Suara**: Saat efek audio diputar, bingkai pad menyala dengan animasi pendaran neon (`box-shadow: 0 0 15px rgba(255, 182, 193, 0.6)`).
+- **Latency & Socket Telemetri**: Indikator bulat hijau denyut di sudut header menandakan koneksi WebSocket Socket.IO real-time dengan latensi terukur (< 50ms).
 
-### 2. Goal Gradient Effect (Artificial Head Start)
+### 3. Dynamic Canvas Visual Suite (`src/canvas/`)
 
-- **Momentum Awal:** Onboarding, quest pemula, dan level progress tidak pernah dimulai dari 0%. Berikan dorongan awal (misal: Starter Kit langsung terisi 20%).
-- **Kawaii Progress Bar:** Gunakan visual progress `[▰▰▰▱▱▱▱] 40%` yang disertai pesan penyemangat dinamis menyebut nama pengguna:
-  > _"Tinggal 60 XP lagi lho! Semangat ya, Kak {displayName}~ ✨"_
+- **Hologram Item Card Canvas (640x360)**: Visualisasi kartu RPG holografis bertema Naura Wilds untuk `/survival shop inspect`, dilengkapi pill tier rarity, SVG icon resmi, dan stat modifier badge.
+- **AI Music Aura & Signature Personality Card (800x450)**: Visualisasi profil selera musik pengguna bertenaga analisis Gemini AI yang merangkai resonansi kosmik dalam format kanvas glassmorphism 800x450.
+- **Birthday Celebration Card (800x450)**: Kartu ucapan selamat ulang tahun otomatis lengkap dengan kue tart anime, kado kustom, dan ucapan hangat personal yang disiarkan oleh `cronManager.js`.
+- **Adventurer's Open Backpack Canvas**: Tampilan inventaris tas petualang dengan grid dinamis dan visualisasi slot perlengkapan terbuka.
 
-### 3. Reciprocity (The Gift / Value-First Principle)
+### 4. Currency V2 Visual Indicators & Treasury Dashboard
 
-- **Instant Delight:** Berikan kegembiraan atau fungsi instan pada interaksi pertama (rekomendasi lagu, bonus sambutan, ramalan harian) sebelum meminta input atau konfigurasi lanjutan.
-- **Surprise Care Gifts:** Hadiah kejutan kecil secara berkala saat pengguna berinteraksi aktif dengan Naura.
-
-### 4. The IKEA Effect & Endowment Effect (Personalization)
-
-- **Kepemilikan Emosional:** Berikan kebebasan kustomisasi kartu profil (warna aksen, background canvas, gelar kustom, nama virtual pet, dan preferensi persona AI).
-- **Apresiasi Personal:** Naura selalu memberikan apresiasi hangat saat pengguna mengubah tampilan atau menyelesaikan karya:
-  > _"Wah, selera Kak {displayName} bagus banget! Kartu profilmu sekarang jadi makin estetik~ 💕"_
-
-### 5. Anchoring & Contrast Effect (Visual Hierarchy)
-
-- **Hierarki Aksi Kontras:** Maksimal 1 tombol Primary (Pink/Blurple) per baris aksi (`ActionRow`). Tombol sekunder memakai warna netral, dan tombol destruktif memakai merah kontras.
-- **Price Anchoring di Shop:** Tampilkan perbandingan nilai secara transparan, menonjolkan keuntungan bundle hemat (`[HEMAT 25%]`).
-
-### 6. Peak-End Rule & Expressive Persona Feedback
-
-- **Respons Dinamis & Ramah:** Respon error, cooldown, atau rate-limit disampaikan dengan gaya anime yang ekspresif dan peduli (tsundere/kuudere ceria), bukan teks terminal kaku:
-  > _"B-Bukan karena aku cerewet ya, Kak {displayName}... tapi istirahat dulu sebentar sebelum coba lagi! 🌸"_
-- **Penyebutan Nama Personal:** Hindari kata panggilan kaku atau generik seperti "Master". Selalu gunakan `{displayName}` atau `{username}` pengguna agar interaksi terasa dekat, hangat, dan nyata.
+- **Server Treasury Gauges**: Bar persentase 4 alokasi kas server persisten (40% Infrastruktur Klan, 25% Undian Lottery, 20% Subsidi Pemula, 15% Merchant Incentive).
+- **Durability Status Bars**: Bar indikator ketahanan alat tempur (Hijau saat penuh, Amber saat aus < 50%, Merah saat rusak kritis).
 
 ---
 

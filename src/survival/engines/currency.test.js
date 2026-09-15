@@ -19,6 +19,7 @@ const {
   canAfford,
   convert,
   exchange,
+  getDynamicRateAndFee,
 } = require("./currency");
 
 test("tiga mata uang utama terdaftar dengan kolom yang benar", () => {
@@ -48,11 +49,11 @@ test("currencyKindFor memetakan lokasi ke mata uang wilayah", () => {
   assert.equal(currencyKindFor(undefined), FRAGMENT);
 });
 
-test("convert menghitung konversi dua arah dengan lantai", () => {
+test("convert menghitung konversi satu arah dengan lantai", () => {
   assert.equal(convert(1000, FRAGMENT, COIN), 1);
   assert.equal(convert(1500, FRAGMENT, COIN), 1); // sisa 500 tidak hangus di exchange
   assert.equal(convert(999, FRAGMENT, COIN), 0);
-  assert.equal(convert(2, COIN, FRAGMENT), 2000);
+  assert.equal(convert(2, COIN, FRAGMENT), null); // One-Way Bridge: COIN -> FRAGMENT ditolak
   assert.equal(convert(5, FRAGMENT, FRAGMENT), 5);
 });
 
@@ -109,13 +110,19 @@ test("exchange menolak jalur tidak valid sebelum menyentuh database", async () =
     ok: false,
     reason: "coupon_locked",
   });
+  await assert.deepEqual(await exchange(holders, COIN, FRAGMENT, 10), {
+    ok: false,
+    reason: "one_way_restricted",
+  });
   await assert.deepEqual(await exchange(holders, FRAGMENT, COIN, 0), {
     ok: false,
     reason: "invalid_amount",
   });
+  const quote = await getDynamicRateAndFee(999);
+  const minNeeded = Math.ceil(quote.rate / (1 - quote.feePercent));
   await assert.deepEqual(await exchange(holders, FRAGMENT, COIN, 999), {
     ok: false,
     reason: "below_minimum",
-    minimum: FRAGMENT_PER_COIN,
+    minimum: minNeeded,
   });
 });

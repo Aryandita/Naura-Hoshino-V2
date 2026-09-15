@@ -86,6 +86,12 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
         shardStats.set(data.shardId, data);
       }
     });
+
+    redisManager.initPubSub("leaderboard:live", (data) => {
+      if (data) {
+        io.emit("survival_leaderboard_update", data);
+      }
+    });
   }
 
   const statsTimer = setInterval(() => {
@@ -162,6 +168,19 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
     });
 
     socket.on("music_control", async (data) => {
+      // Guard Clause: Rate limiting kontrol pemutar musik (3 aksi / 2 detik per socket)
+      const isLimited = await RateLimiter.isRateLimited(
+        socket.id,
+        "socket_music_ctrl",
+        3,
+        2,
+      );
+      if (isLimited) {
+        return socket.emit("music_error", {
+          message: "Terlalu cepat mengontrol pemutar musik. Tunggu sebentar ya!",
+        });
+      }
+
       const { guildId, action, value } = data || {};
       if (!(await canControlGuild(client, socket, guildId))) {
         return socket.emit("music_error", {
@@ -244,6 +263,73 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
             "Aduh, Naura tersandung kabel sebentar! 🌸 Coba sapa Naura lagi ya, Naura selalu siap nemenin kamu kok! ✨",
         });
       }
+    });
+
+    socket.on("soundboard_play", async (data) => {
+      const { guildId, soundId, voiceChannelId } = data || {};
+      if (!guildId || !soundId) {
+        return socket.emit("soundboard_status", {
+          success: false,
+          message: "Data soundboard tidak lengkap.",
+        });
+      }
+
+      const allowed = await canControlGuild(client, socket, guildId);
+      if (!allowed) {
+        return socket.emit("soundboard_status", {
+          success: false,
+          message:
+            "Kamu harus menjadi anggota server ini untuk memutar soundboard.",
+        });
+      }
+
+      const soundboardService = require("../../src/services/soundboardService");
+      const sessionUser = socket.request?.session?.passport?.user;
+
+      const result = await soundboardService.playSound({
+        client,
+        guildId,
+        soundId,
+        voiceChannelId,
+        requester: sessionUser,
+      });
+
+      socket.emit("soundboard_status", result);
+    });
+
+    socket.on("get_survival_leaderboard", async () => {
+      try {
+        const UserSurvival = require("../../src/models/UserSurvival");
+        const topPlayers = await UserSurvival.findAll({
+          order: [["level", "DESC"], ["xp", "DESC"], ["starFragments", "DESC"]],
+          limit: 10,
+          attributes: ["userId", "level", "xp", "starFragments", "health", "energy"],
+        });
+        socket.emit("survival_leaderboard_data", topPlayers);
+      } catch (err) {
+        logger.warn("[SOCKET LEADERBOARD ERROR]", err.message);
+      }
+    });
+
+    // --- Collaborative Live Jam Room Events ---
+    socket.on("jam:join", ({ roomId = "global" } = {}) => {
+      socket.join(`jam:${roomId}`);
+    });
+
+    socket.on("jam:step_toggle", ({ roomId = "global", inst, step, active } = {}) => {
+      socket.to(`jam:${roomId}`).emit("jam:step_toggle", { inst, step, active });
+    });
+
+    socket.on("jam:note_play", ({ roomId = "global", note, wave } = {}) => {
+      socket.to(`jam:${roomId}`).emit("jam:note_play", { note, wave });
+    });
+
+    socket.on("jam:tempo_change", ({ roomId = "global", bpm } = {}) => {
+      socket.to(`jam:${roomId}`).emit("jam:tempo_change", { bpm });
+    });
+
+    socket.on("jam:clear", ({ roomId = "global" } = {}) => {
+      socket.to(`jam:${roomId}`).emit("jam:clear");
     });
 
     socket.on("disconnect", () => {

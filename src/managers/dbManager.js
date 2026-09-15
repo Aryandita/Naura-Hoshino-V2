@@ -57,6 +57,7 @@ require("../models/UserCard");
 require("../models/UserCardDeck");
 require("../models/UserPlaylist");
 require("../models/WorldBoss");
+require("../models/ServerTreasury");
 
 // ==========================================
 // 4. SETUP RELASI (ASSOCIATIONS)

@@ -5,7 +5,7 @@ const {
   AttachmentBuilder,
   MessageFlags,
 } = require("discord.js");
-const { renderRoomCanvas } = require("../../src/canvas/roomCanvas");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const UserRoom = require("../../src/models/mongo/UserRoom");
 const cacheManager = require("../../src/managers/cacheManager");
@@ -103,8 +103,10 @@ module.exports = {
         };
       }
 
-      const roomBuffer = await renderRoomCanvas(room, targetUser, {
-        icon: "🐱",
+      const roomBuffer = await canvasWorkerPool.execute({
+        task: "renderRoom",
+        payload: { roomData: room, user: targetUser, pet: { icon: "🐱" } },
+        userId: user.id,
       });
       const attachment = new AttachmentBuilder(roomBuffer, {
         name: "cyber-room.png",

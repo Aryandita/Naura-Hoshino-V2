@@ -48,6 +48,21 @@ function warnMissingTitle(author) {
   );
 }
 
+function resolveLanguage(langOrContext) {
+  if (!langOrContext) return languageManager.default;
+  if (typeof langOrContext === "string") return languageManager.normalize(langOrContext);
+  if (typeof langOrContext === "object" && langOrContext !== null) {
+    if (langOrContext.localeLang) return languageManager.normalize(langOrContext.localeLang);
+    if (langOrContext.locale) return languageManager.normalize(langOrContext.locale);
+    const userId = langOrContext.user?.id || langOrContext.author?.id;
+    if (userId) {
+      const cached = languageManager.userCache?.get(userId);
+      if (cached && cached.expiresAt > Date.now()) return cached.lang;
+    }
+  }
+  return languageManager.default;
+}
+
 function t(lang, key, placeholders) {
   return languageManager.translateSync(lang, key, placeholders);
 }
@@ -69,6 +84,9 @@ function resolveMediaUrl(ref) {
 }
 
 function buildContainerV2({
+  lang,
+  interaction,
+  footerCategory = "core",
   accentColorHex,
   authorName,
   title,
@@ -88,6 +106,8 @@ function buildContainerV2({
   buttonsRow,
   footerText,
 }) {
+  const hasExplicitLang = Boolean(lang || interaction);
+  const activeLang = resolveLanguage(lang || interaction);
   const defaultColor = ui.getColor("primary") || "#FFB6C1";
   const accentColor = parseInt(
     (accentColorHex || defaultColor).replace("#", ""),
@@ -102,7 +122,7 @@ function buildContainerV2({
   const cleanAuthor = authorName ? ui.stripCustomEmojis(authorName) : "";
   const cleanFooter = footerText
     ? ui.stripCustomEmojis(footerText)
-    : ui.getFooter("core");
+    : ui.getFooter(footerCategory, hasExplicitLang ? activeLang : null);
 
   const attachedFiles = Array.isArray(files) ? [...files] : [];
   let headerIconURL = iconURL;
@@ -251,9 +271,11 @@ function buildContainerV2({
   // Penjagaan terakhir sebelum payload berangkat. Discord menolak seluruh pesan
   // bila komponen melebihi 40 atau teks melebihi 4000 karakter, dan pesan
   // errornya tidak menunjuk komponen mana yang bersalah.
+  const truncationNotice =
+    t(activeLang, "container.truncation_notice") || TRUNCATION_NOTICE;
   const budget = enforceComponentBudget(containerComponents, {
     droppableIndices,
-    notice: TRUNCATION_NOTICE,
+    notice: truncationNotice,
   });
 
   const log = getLogger();
@@ -318,22 +340,29 @@ function resolveSmartBanner(type) {
 }
 
 function buildErrorContainerV2(opts) {
-  const lang = pick(opts, "lang");
+  const langContext =
+    pick(opts, "lang") || pick(opts, "interaction") || pick(opts, "message");
+  const activeLang = resolveLanguage(langContext);
+  const footerCategory = pick(opts, "footerCategory") || "core";
   const rawError =
     typeof opts === "string"
       ? opts
       : pick(opts, "errorMessage") ||
         pick(opts, "description") ||
-        t(lang, "common.error.reason_fallback");
-  const title = pick(opts, "title") || t(lang, "common.error.title");
-  const authorName = pick(opts, "authorName") || "Naura System Guard";
-  const footerText = pick(opts, "footerText") || ui.getFooter("core");
+        t(activeLang, "common.error.reason_fallback");
+  const title = pick(opts, "title") || t(activeLang, "common.error.title");
+  const authorName =
+    pick(opts, "authorName") ||
+    t(activeLang, "container.authors.system_guard") ||
+    "Naura System Guard";
+  const footerText =
+    pick(opts, "footerText") || ui.getFooter(footerCategory, activeLang);
   const errEmoji =
     nauraExpression.getEmoji("error") || ui.getEmoji("error") || "❌";
   const expression =
     pick(opts, "expression") !== undefined ? pick(opts, "expression") : "error";
   const errorMessage =
-    typeof opts === "string" ? nauraText.error(rawError, lang) : rawError;
+    typeof opts === "string" ? nauraText.error(rawError, activeLang) : rawError;
 
   const withBanner = pick(opts, "withBanner");
   let bannerAttachmentName = pick(opts, "bannerAttachmentName");
@@ -348,6 +377,8 @@ function buildErrorContainerV2(opts) {
   }
 
   return buildContainerV2({
+    lang: activeLang,
+    footerCategory,
     accentColorHex:
       pick(opts, "accentColorHex") ||
       ui.getColor("danger") ||
@@ -375,16 +406,23 @@ function buildErrorContainerV2(opts) {
 }
 
 function buildLoadingContainerV2(opts) {
-  const lang = pick(opts, "lang");
+  const langContext =
+    pick(opts, "lang") || pick(opts, "interaction") || pick(opts, "message");
+  const activeLang = resolveLanguage(langContext);
+  const footerCategory = pick(opts, "footerCategory") || "core";
   const rawLoading =
     typeof opts === "string"
       ? opts
       : pick(opts, "loadingMessage") ||
         pick(opts, "description") ||
-        t(lang, "common.loading.body");
-  const title = pick(opts, "title") || t(lang, "common.loading.title");
-  const authorName = pick(opts, "authorName") || "Naura Task Runner";
-  const footerText = pick(opts, "footerText") || ui.getFooter("core");
+        t(activeLang, "common.loading.body");
+  const title = pick(opts, "title") || t(activeLang, "common.loading.title");
+  const authorName =
+    pick(opts, "authorName") ||
+    t(activeLang, "container.authors.task_runner") ||
+    "Naura Task Runner";
+  const footerText =
+    pick(opts, "footerText") || ui.getFooter(footerCategory, activeLang);
   const loadEmoji =
     nauraExpression.getEmoji("loading") || ui.getEmoji("loading") || "⏳";
   const expression =
@@ -405,6 +443,8 @@ function buildLoadingContainerV2(opts) {
   }
 
   return buildContainerV2({
+    lang: activeLang,
+    footerCategory,
     accentColorHex:
       pick(opts, "accentColorHex") ||
       ui.getColor("accent-blue") ||
@@ -414,7 +454,7 @@ function buildLoadingContainerV2(opts) {
     title: `${loadEmoji} ${title}`,
     description:
       typeof opts === "string"
-        ? nauraText.loading(rawLoading, lang)
+        ? nauraText.loading(rawLoading, activeLang)
         : rawLoading,
     expression,
     expressionImage:
@@ -435,17 +475,21 @@ function buildLoadingContainerV2(opts) {
 }
 
 function buildMaintenanceContainerV2(opts) {
-  const lang = pick(opts, "lang");
+  const langContext =
+    pick(opts, "lang") || pick(opts, "interaction") || pick(opts, "message");
+  const activeLang = resolveLanguage(langContext);
+  const footerCategory = pick(opts, "footerCategory") || "core";
   const rawMaintenance =
     typeof opts === "string"
       ? opts
       : pick(opts, "maintenanceMessage") ||
         pick(opts, "description") ||
-        (lang ? t(lang, "common.maintenance.body") : null) ||
+        (activeLang ? t(activeLang, "common.maintenance.body") : null) ||
         "Sistem sedang dalam proses pemeliharaan atau peningkatan performa server. Mohon tunggu sebentar ya!";
   const title = pick(opts, "title") || "Pemeliharaan Sistem";
   const authorName = pick(opts, "authorName") || "Naura Maintenance Center";
-  const footerText = pick(opts, "footerText") || ui.getFooter("core");
+  const footerText =
+    pick(opts, "footerText") || ui.getFooter(footerCategory, activeLang);
   const warnEmoji =
     nauraExpression.getEmoji("warning") || ui.getEmoji("warning") || "🛠️";
   const expression =
@@ -466,6 +510,8 @@ function buildMaintenanceContainerV2(opts) {
   }
 
   return buildContainerV2({
+    lang: activeLang,
+    footerCategory,
     accentColorHex:
       pick(opts, "accentColorHex") || ui.getColor("warning") || "#F59E0B",
     authorName,
@@ -490,16 +536,23 @@ function buildMaintenanceContainerV2(opts) {
 }
 
 function buildSuccessContainerV2(opts) {
-  const lang = pick(opts, "lang");
+  const langContext =
+    pick(opts, "lang") || pick(opts, "interaction") || pick(opts, "message");
+  const activeLang = resolveLanguage(langContext);
+  const footerCategory = pick(opts, "footerCategory") || "core";
   const rawSuccess =
     typeof opts === "string"
       ? opts
       : pick(opts, "successMessage") ||
         pick(opts, "description") ||
-        t(lang, "common.success.body");
-  const title = pick(opts, "title") || t(lang, "common.success.title");
-  const authorName = pick(opts, "authorName") || "Naura Assistant";
-  const footerText = pick(opts, "footerText") || ui.getFooter("core");
+        t(activeLang, "common.success.body");
+  const title = pick(opts, "title") || t(activeLang, "common.success.title");
+  const authorName =
+    pick(opts, "authorName") ||
+    t(activeLang, "container.authors.companion") ||
+    "Naura Assistant";
+  const footerText =
+    pick(opts, "footerText") || ui.getFooter(footerCategory, activeLang);
   const okEmoji =
     nauraExpression.getEmoji("success") || ui.getEmoji("success") || "✅";
   const expression =
@@ -511,13 +564,15 @@ function buildSuccessContainerV2(opts) {
   const files = [...(pick(opts, "files") || [])];
 
   return buildContainerV2({
+    lang: activeLang,
+    footerCategory,
     accentColorHex:
       pick(opts, "accentColorHex") || ui.getColor("success") || "#22C55E",
     authorName,
     title: `${okEmoji} ${title}`,
     description:
       typeof opts === "string"
-        ? nauraText.success(rawSuccess, lang)
+        ? nauraText.success(rawSuccess, activeLang)
         : rawSuccess,
     expression,
     expressionImage:

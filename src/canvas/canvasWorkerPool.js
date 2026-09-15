@@ -13,6 +13,9 @@ class CanvasWorkerPool {
     this.taskQueue = [];
     this.taskIdCounter = 0;
     this.isInitialized = false;
+    this.maxQueueLength = 25;
+    this.userTaskCounts = new Map(); // userId -> number
+    this.maxUserTasks = 2;
   }
 
   init() {
@@ -33,6 +36,9 @@ class CanvasWorkerPool {
         const pending = this.pendingTasks.get(id);
         if (pending) {
           clearTimeout(pending.timer);
+          if (typeof pending.cleanupUser === "function") {
+            pending.cleanupUser();
+          }
           this.pendingTasks.delete(id);
           if (success) {
             pending.resolve(result);
@@ -105,11 +111,42 @@ class CanvasWorkerPool {
       this.init();
     }
 
+    // 1. Bounded Queue Guard
+    if (this.taskQueue.length >= this.maxQueueLength) {
+      throw new Error(
+        `[CanvasWorkerPool] Antrean render grafis penuh (${this.taskQueue.length}/${this.maxQueueLength}). Silakan coba beberapa saat lagi.`,
+      );
+    }
+
+    // 2. Per-User Concurrency Guard
+    const userId = payload?.userId || payload?.user?.id || null;
+    if (userId) {
+      const activeCount = this.userTaskCounts.get(userId) || 0;
+      if (activeCount >= this.maxUserTasks) {
+        throw new Error(
+          `[CanvasWorkerPool] Anda memiliki terlalu banyak tugas render yang sedang berjalan (maksimal ${this.maxUserTasks}). Tunggu hingga tugas sebelumnya selesai.`,
+        );
+      }
+      this.userTaskCounts.set(userId, activeCount + 1);
+    }
+
+    const cleanupUser = () => {
+      if (userId) {
+        const count = this.userTaskCounts.get(userId) || 1;
+        if (count <= 1) {
+          this.userTaskCounts.delete(userId);
+        } else {
+          this.userTaskCounts.set(userId, count - 1);
+        }
+      }
+    };
+
     const id = ++this.taskIdCounter;
 
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         if (this.pendingTasks.has(id)) {
+          cleanupUser();
           this.pendingTasks.delete(id);
           reject(
             new Error(
@@ -119,7 +156,7 @@ class CanvasWorkerPool {
         }
       }, timeoutMs);
 
-      this.pendingTasks.set(id, { resolve, reject, timer });
+      this.pendingTasks.set(id, { resolve, reject, timer, cleanupUser });
 
       if (this.freeWorkers.length > 0) {
         const worker = this.freeWorkers.pop();

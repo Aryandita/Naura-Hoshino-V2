@@ -31,6 +31,7 @@ const SKIP_DIRS = new Set([
   "build",
   "logs",
   "backups",
+  "scratch",
 ]);
 
 const SKIP_FILES = new Set([

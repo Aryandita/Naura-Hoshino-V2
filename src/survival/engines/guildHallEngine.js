@@ -158,6 +158,72 @@ class GuildHallEngine {
       clanName: clan.name,
     };
   }
+
+  /**
+   * Mengubah tema visual dan suasana Guild Hall
+   */
+  static async customizeTheme(clanId, themeName) {
+    const clan = await GuildClan.findByPk(clanId);
+    if (!clan) return { success: false, reason: "CLAN_NOT_FOUND" };
+
+    const validThemes = [
+      "CYBERPUNK_LOUNGE",
+      "NEO_SHRINE",
+      "ASTRAL_OBSERVATORY",
+      "NATURE_SANCTUARY",
+    ];
+    if (!validThemes.includes(themeName)) {
+      return { success: false, reason: "INVALID_THEME", validThemes };
+    }
+
+    let layout = clan.hallLayout || { furniture: [] };
+    if (typeof layout === "string") layout = JSON.parse(layout);
+
+    layout.theme = themeName;
+    clan.hallLayout = layout;
+    clan.changed("hallLayout", true);
+    await clan.save({ fields: ["hallLayout"] });
+
+    return { success: true, theme: themeName, clanName: clan.name };
+  }
+
+  /**
+   * Meningkatkan level fasilitas Guild Hall klan
+   */
+  static async upgradeFacility(clanId, facilityId = "lounge") {
+    const clan = await GuildClan.findByPk(clanId);
+    if (!clan) return { success: false, reason: "CLAN_NOT_FOUND" };
+
+    let layout = clan.hallLayout || { furniture: [] };
+    if (typeof layout === "string") layout = JSON.parse(layout);
+    if (!layout.facilities) layout.facilities = {};
+
+    const currentLvl = Number(layout.facilities[facilityId] || 1);
+    const upgradeCost = currentLvl * 5000;
+
+    if (Number(clan.vault || 0) < upgradeCost) {
+      return {
+        success: false,
+        reason: "INSUFFICIENT_VAULT",
+        cost: upgradeCost,
+        current: clan.vault,
+      };
+    }
+
+    clan.vault = Number(clan.vault || 0) - upgradeCost;
+    layout.facilities[facilityId] = currentLvl + 1;
+    clan.hallLayout = layout;
+    clan.changed("hallLayout", true);
+    await clan.save({ fields: ["vault", "hallLayout"] });
+
+    return {
+      success: true,
+      facilityId,
+      newLevel: currentLvl + 1,
+      cost: upgradeCost,
+      remainingVault: clan.vault,
+    };
+  }
 }
 
 module.exports = GuildHallEngine;

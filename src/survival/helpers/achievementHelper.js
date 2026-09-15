@@ -4,7 +4,7 @@ const { AttachmentBuilder, MessageFlags } = require("discord.js");
 const UserAchievement = require("../../models/UserAchievement");
 const UserSurvival = require("../../models/UserSurvival");
 const achievementsPool = require("../data/achievementsData");
-const { generateAchievementImage } = require("../../canvas/achievementCanvas");
+const canvasWorkerPool = require("../../canvas/canvasWorkerPool");
 const { logger } = require("../../managers/logger");
 const ui = require("../../config/ui");
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
@@ -95,12 +95,16 @@ async function unlockAchievement(interaction, achievementId) {
     let bannerName;
 
     try {
-      const buffer = await generateAchievementImage(
-        interaction.user,
-        achievement.title,
-        achievement.description,
-        achievement.color,
-      );
+      const buffer = await canvasWorkerPool.execute({
+        task: "renderAchievement",
+        payload: {
+          user: interaction.user,
+          title: achievement.title,
+          subtitle: achievement.description,
+          badgeColor: achievement.color,
+        },
+        userId: interaction.user.id,
+      });
       files.push(new AttachmentBuilder(buffer, { name: IMAGE_NAME }));
       bannerName = IMAGE_NAME;
     } catch (err) {

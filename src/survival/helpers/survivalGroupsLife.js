@@ -39,6 +39,13 @@ function addLifeGroup(builder) {
       )
       .addSubcommand((sub) =>
         sub
+          .setName("town")
+          .setDescription(
+            "🏛️ Kunjungi Alun-Alun Kota (Town Square) & Kehidupan Penduduk Lokal",
+          ),
+      )
+      .addSubcommand((sub) =>
+        sub
           .setName("pet")
           .setDescription("Berinteraksi dengan hewan peliharaanmu")
           .addStringOption((opt) =>
@@ -213,6 +220,13 @@ function addProfileGroup(builder) {
         sub
           .setName("story")
           .setDescription("Lanjutkan cerita utama dunia sihir ini"),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("guide")
+          .setDescription(
+            "📖 Panduan lengkap cara bermain dan bertahan hidup di Naura Wilds",
+          ),
       ),
   );
 }

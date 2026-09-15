@@ -8,9 +8,7 @@ const {
 
 const UserAchievement = require("../../../src/models/UserAchievement");
 const achievementsPool = require("../../../src/survival/data/achievementsData");
-const {
-  generateAchievementImage,
-} = require("../../../src/canvas/achievementCanvas");
+const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
 const ui = require("../../../src/config/ui");
 const {
   buildContainerV2,
@@ -115,12 +113,16 @@ module.exports = {
       let bannerName;
 
       try {
-        const buffer = await generateAchievementImage(
-          user,
-          selected.title,
-          selected.description,
-          selected.color,
-        );
+        const buffer = await canvasWorkerPool.execute({
+          task: "renderAchievement",
+          payload: {
+            user,
+            title: selected.title,
+            subtitle: selected.description,
+            badgeColor: selected.color,
+          },
+          userId: user.id,
+        });
         files.push(new AttachmentBuilder(buffer, { name: IMAGE_NAME }));
         bannerName = IMAGE_NAME;
       } catch (err) {

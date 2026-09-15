@@ -6,7 +6,7 @@ const {
   MessageFlags,
 } = require("discord.js");
 const ServerChronicleEngine = require("../../src/ai/serverChronicleEngine");
-const { drawChronicleNewspaper } = require("../../src/canvas/chronicleCanvas");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -35,7 +35,11 @@ module.exports = {
       const chronicleData = await ServerChronicleEngine.generateChronicleData(
         interaction.guild,
       );
-      const imgBuffer = await drawChronicleNewspaper(chronicleData);
+      const imgBuffer = await canvasWorkerPool.execute({
+        task: "renderChronicle",
+        payload: chronicleData,
+        userId: interaction.user.id,
+      });
       const attachment = new AttachmentBuilder(imgBuffer, {
         name: "hoshino-times.png",
       });

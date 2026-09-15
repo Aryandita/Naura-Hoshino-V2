@@ -16,6 +16,7 @@ const {
   buildLoadingContainerV2,
   buildErrorContainerV2,
 } = require("../../utils/NauraContainerBuilder");
+const RateLimiter = require("../../utils/rateLimiter");
 
 // Subcommand yang perlu dibuang dari argumen sebelum dibaca sebagai teks bebas.
 const SUBCOMMAND_WORDS = Object.freeze([
@@ -220,6 +221,24 @@ module.exports = async function handlePrefixCommand(message, client) {
   const targetCommand = resolveCommand(client, targetCommandName);
   // Guard Clause 3: Perintah tidak dikenali
   if (!targetCommand) return true;
+
+  // Guard Clause 4: Pembatas laju eksekusi prefix command (Anti-Spam Gateway)
+  const isLimited = await RateLimiter.isRateLimited(
+    message.author.id,
+    "prefix_cmd",
+    5,
+    5,
+  );
+  if (isLimited) {
+    const errorPayload = buildErrorContainerV2({
+      title: "Cooldown Aktif",
+      errorMessage:
+        "Kakak terlalu cepat menjalankan perintah! Mohon tunggu sebentar ya... (Batas: 5 perintah / 5 detik).",
+      lang: message.localeLang || "id",
+    });
+    await message.reply(errorPayload).catch(() => {});
+    return true;
+  }
 
   const loadingMessage = await message
     .reply(buildLoadingPayload(message, client, targetCommandName))

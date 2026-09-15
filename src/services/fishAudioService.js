@@ -29,6 +29,43 @@ class FishAudioService {
         fs.mkdirSync(this.tempDir, { recursive: true });
       } catch (_) {}
     }
+    this.activeRequests = 0;
+    this.maxConcurrentRequests = 2;
+    this.requestTimestamps = [];
+    this.maxRequestsPerWindow = 6;
+    this.windowMs = 10_000;
+  }
+
+  /**
+   * Mengamankan slot eksekusi request eksternal (Concurrency & Rate Limiting).
+   * @returns {Promise<boolean>}
+   */
+  async _acquireSlot() {
+    const now = Date.now();
+    this.requestTimestamps = this.requestTimestamps.filter(
+      (ts) => now - ts < this.windowMs,
+    );
+    if (this.requestTimestamps.length >= this.maxRequestsPerWindow) {
+      logger.warn(
+        "[FishAudio] Rate limit TTS tercapai (maks 6 req/10s). Request dibatalkan sementara.",
+      );
+      return false;
+    }
+
+    if (this.activeRequests >= this.maxConcurrentRequests) {
+      logger.warn(
+        "[FishAudio] Concurrency limit tercapai (maks 2 paralel). Menolak request burst.",
+      );
+      return false;
+    }
+
+    this.activeRequests++;
+    this.requestTimestamps.push(now);
+    return true;
+  }
+
+  _releaseSlot() {
+    this.activeRequests = Math.max(0, this.activeRequests - 1);
   }
 
   /**
@@ -97,7 +134,12 @@ class FishAudioService {
       logger.warn(`[FishAudio] Gagal membaca cache Redis: ${err.message}`);
     }
 
-    // 2. Request ke Fish Audio API
+    // 2. Request ke Fish Audio API dengan Concurrency Guard & Rate Limiter
+    const slotAcquired = await this._acquireSlot();
+    if (!slotAcquired) {
+      return null;
+    }
+
     try {
       const payload = {
         text: cleanText,
@@ -158,6 +200,8 @@ class FishAudioService {
     } catch (err) {
       logger.error(`[FishAudio] Eksepsi saat generate speech: ${err.message}`);
       return null;
+    } finally {
+      this._releaseSlot();
     }
   }
 

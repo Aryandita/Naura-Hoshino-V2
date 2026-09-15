@@ -14,6 +14,9 @@ const { sendPremiumDM } = require("../../src/premium/premiumNotify");
 const { runInfo } = require("../../src/premium/premiumInfoView");
 const { runCheck } = require("../../src/premium/premiumCheckView");
 const { runRedeem } = require("../../src/premium/premiumRedeem");
+const { runBuy } = require("../../src/premium/premiumBuyView");
+const { runClaim } = require("../../src/premium/premiumClaimView");
+const { checkPremiumStatus } = require("../../src/premium/premiumHelper");
 const admin = require("../../src/premium/premiumAdmin");
 
 const OWNER_ONLY = ["add", "remove", "generate_voucher", "stats"];
@@ -31,6 +34,46 @@ async function runBenefits(interaction) {
       footerText: ui.getFooter("premium"),
     }),
   );
+}
+
+async function runPersona(interaction) {
+  const userId = interaction.user.id;
+  const isPremium = await checkPremiumStatus(userId);
+  if (!isPremium) {
+    return interaction.editReply(
+      buildErrorContainerV2({
+        title: "Akses Khusus V.I.P",
+        description: "Fitur kustomisasi persona AI Naura hanya tersedia untuk pelanggan V.I.P aktif.",
+        footerText: ui.getFooter("premium"),
+      }),
+    );
+  }
+  const personaChoice = interaction.options.getString("gaya") || "default";
+  await cacheManager.updateUserProfile(userId, { customPersona: personaChoice });
+
+  const personaNames = {
+    default: "Ceria & Hangat (Default Naura)",
+    tsundere: "Tsundere (Jutek tapi Perhatian)",
+    kuudere: "Kuudere (Tenang & Analitis)",
+    gamer: "Gamer Cyberpunk (Penuh Istilah RPG)",
+    butler: "Formal Butler (Sopan & Penuh Hormat)",
+  };
+
+  const payload = buildContainerV2({
+    accentColorHex: ui.getColor("primary") || "#FFB6C1",
+    authorName: "NAURA AI LIVING COMPANION",
+    title: "✨ Persona AI Berhasil Diperbarui",
+    expression: "happy",
+    description: [
+      `Gaya kepribadian Naura saat mengobrol denganmu telah diubah ke:`,
+      "",
+      `> 🎭 **Persona Baru:** \`${personaNames[personaChoice] || personaChoice}\``,
+      "",
+      "Naura akan langsung menyesuaikan nada bicara dan responnya saat kamu mengobrol dengannya!",
+    ].join("\n"),
+    footerText: ui.getFooter("premium"),
+  });
+  return interaction.editReply(payload);
 }
 
 module.exports = {
@@ -64,6 +107,46 @@ module.exports = {
             .setName("kode")
             .setDescription("Masukkan kode voucher")
             .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("buy")
+        .setDescription("Beli atau perpanjang V.I.P menggunakan Naura Coupon.")
+        .addStringOption((opt) =>
+          opt
+            .setName("paket")
+            .setDescription("Pilihan paket langganan V.I.P")
+            .setRequired(true)
+            .addChoices(
+              { name: "🌱 Starter (7 Hari) - 5 Kupon", value: "starter" },
+              { name: "🌟 Supporter (30 Hari) - 15 Kupon", value: "supporter" },
+              { name: "💫 Friends (90 Hari) - 35 Kupon", value: "friends" },
+              { name: "👑 V.I.P (365 Hari) - 80 Kupon", value: "vip" },
+            ),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("claim")
+        .setDescription("Klaim hadiah dividen harian eksklusif anggota V.I.P (Kupon, NSF, Mystery Box)."),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("persona")
+        .setDescription("Atur gaya kepribadian obrolan AI Naura saat mengobrol denganmu.")
+        .addStringOption((opt) =>
+          opt
+            .setName("gaya")
+            .setDescription("Pilihan gaya karakter")
+            .setRequired(true)
+            .addChoices(
+              { name: "🌸 Ceria & Hangat (Default Naura)", value: "default" },
+              { name: "😤 Tsundere (Jutek tapi Perhatian)", value: "tsundere" },
+              { name: "❄️ Kuudere (Tenang & Analitis)", value: "kuudere" },
+              { name: "🎮 Gamer Cyberpunk (Penuh Istilah RPG)", value: "gamer" },
+              { name: "🎩 Formal Butler (Sopan & Penuh Hormat)", value: "butler" },
+            ),
         ),
     )
     .addSubcommand((sub) =>
@@ -146,6 +229,12 @@ module.exports = {
         );
         return runRedeem(interaction, selfProfile);
       }
+      case "buy":
+        return runBuy(interaction);
+      case "claim":
+        return runClaim(interaction);
+      case "persona":
+        return runPersona(interaction);
       case "add":
         return admin.runAdd(interaction, targetUser, profile);
       case "remove":

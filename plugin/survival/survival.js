@@ -38,6 +38,8 @@ const ALIAS_MAP = {
   profile: "info",
   hunt: "dungeon",
   store: "shop",
+  forge: "forge",
+  craft: "craft",
 };
 
 module.exports = {

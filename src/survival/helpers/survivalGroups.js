@@ -83,6 +83,13 @@ function addEconomyGroup(builder) {
       .setDescription("Sistem ekonomi dan keuangan")
       .addSubcommand((sub) =>
         sub
+          .setName("wallet")
+          .setDescription(
+            "💳 Dompet terpadu 3 mata uang, tiket undian, & subsidi petualang",
+          ),
+      )
+      .addSubcommand((sub) =>
+        sub
           .setName("bank")
           .setDescription("Simpan koinmu di Bank (Hanya di Kota)"),
       )
@@ -98,6 +105,16 @@ function addEconomyGroup(builder) {
               .setDescription("Cari nama item untuk beli instan")
               .setRequired(false)
               .setAutocomplete(true),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("aksi")
+              .setDescription("Pilih tindakan (Beli langsung atau Inspeksi Hologram)")
+              .setRequired(false)
+              .addChoices(
+                { name: "🛒 Beli Langsung", value: "buy" },
+                { name: "🔍 Inspeksi Hologram", value: "inspect" },
+              ),
           ),
       )
       .addSubcommand((sub) =>
@@ -200,7 +217,15 @@ function addEconomyGroup(builder) {
                 { name: "Market (Bursa Harga & Rute)", value: "market" },
                 { name: "Dispatch (Berangkatkan)", value: "dispatch" },
                 { name: "Claim (Cairkan Laba)", value: "claim" },
+                { name: "Escort (Gabung Pengawal)", value: "escort" },
+                { name: "Ambush (Penyergapan Karavan PvP)", value: "ambush" },
               ),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("caravan_id")
+              .setDescription("ID Karavan target (khusus aksi Escort & Ambush)")
+              .setRequired(false),
           )
           .addStringOption((opt) =>
             opt
@@ -238,6 +263,13 @@ function addEconomyGroup(builder) {
               .setRequired(false)
               .setMinValue(5)
               .setMaxValue(500),
+          ),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("history")
+          .setDescription(
+            "Lihat 10 riwayat aktivitas & transaksi ekonomi terakhir",
           ),
       ),
   );

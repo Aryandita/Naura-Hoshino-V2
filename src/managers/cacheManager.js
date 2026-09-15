@@ -733,12 +733,33 @@ class CacheManager {
     if (typeof fieldOrDeltas === "string") {
       deltas = { [fieldOrDeltas]: maybeAmount };
     }
-    return this._increment(userId, deltas, {
+    const res = await this._increment(userId, deltas, {
       cacheKey: `user:survival:${userId}`,
       ttl: SURVIVAL_TTL,
       loader: () => this.getUserSurvival(userId),
       queue: this.survivalQueue,
     });
+
+    if (deltas && (deltas.level || deltas.xp || deltas.starFragments)) {
+      this.broadcastSurvivalLeaderboard({ userId, ...deltas }).catch(() => {});
+    }
+
+    return res;
+  }
+
+  /**
+   * Publikasikan mutasi leaderboard survival ke Redis Pub/Sub channel 'leaderboard:live'
+   * @param {object} data
+   */
+  async broadcastSurvivalLeaderboard(data) {
+    const redisManager = require("./redisManager");
+    if (redisManager && redisManager.isReady) {
+      await redisManager.publish("leaderboard:live", {
+        type: "SURVIVAL_LEADERBOARD_UPDATE",
+        payload: data,
+        timestamp: Date.now(),
+      }).catch(() => {});
+    }
   }
 
   /**

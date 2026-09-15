@@ -1,0 +1,29 @@
+[
+  {
+    "name": "Millohost Public Node",
+    "host": "lava-v4.millohost.my.id",
+    "port": 443,
+    "password": "https://discord.gg/mjS5J2K3ep",
+    "secure": true,
+    "tier": 3,
+    "isPrimaryFallback": true
+  },
+  {
+    "name": "Serenetia Public Node",
+    "host": "lavalinkv4.serenetia.com",
+    "port": 443,
+    "password": "https://seretia.link/discord",
+    "secure": true,
+    "tier": 3,
+    "isPrimaryFallback": false
+  },
+  {
+    "name": "Invert Public Node",
+    "host": "lavalink.invert.tech",
+    "port": 443,
+    "password": "youshallnotpass",
+    "secure": true,
+    "tier": 3,
+    "isPrimaryFallback": false
+  }
+]

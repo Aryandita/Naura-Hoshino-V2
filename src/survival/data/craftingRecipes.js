@@ -12,6 +12,7 @@ const SMELT_RECIPES = [
     output: { id: "charcoal", amount: 1 },
     fee: 50,
     currency: FRAGMENT,
+    reqLevel: 1,
   },
   {
     id: "copper_ingot",
@@ -22,6 +23,7 @@ const SMELT_RECIPES = [
     output: { id: "copper_ingot", amount: 1 },
     fee: 120,
     currency: FRAGMENT,
+    reqLevel: 2,
   },
   {
     id: "iron_ingot",
@@ -32,6 +34,7 @@ const SMELT_RECIPES = [
     output: { id: "iron_ingot", amount: 1 },
     fee: 250,
     currency: FRAGMENT,
+    reqLevel: 5,
   },
   {
     id: "steel_ingot",
@@ -42,6 +45,7 @@ const SMELT_RECIPES = [
     output: { id: "steel_ingot", amount: 1 },
     fee: 600,
     currency: FRAGMENT,
+    reqLevel: 8,
   },
   {
     id: "silver_ingot",
@@ -52,6 +56,7 @@ const SMELT_RECIPES = [
     output: { id: "silver_ingot", amount: 1 },
     fee: 900,
     currency: FRAGMENT,
+    reqLevel: 12,
   },
   {
     id: "mythril_ingot",
@@ -62,6 +67,7 @@ const SMELT_RECIPES = [
     output: { id: "mythril_ingot", amount: 1 },
     fee: 2500,
     currency: FRAGMENT,
+    reqLevel: 16,
   },
   {
     id: "titanium_ingot",
@@ -72,6 +78,7 @@ const SMELT_RECIPES = [
     output: { id: "titanium_ingot", amount: 1 },
     fee: 4000,
     currency: FRAGMENT,
+    reqLevel: 20,
   },
   {
     id: "glass_pane",
@@ -82,6 +89,7 @@ const SMELT_RECIPES = [
     output: { id: "glass_pane", amount: 1 },
     fee: 100,
     currency: FRAGMENT,
+    reqLevel: 1,
   },
   {
     id: "tanned_leather",
@@ -92,6 +100,7 @@ const SMELT_RECIPES = [
     output: { id: "tanned_leather", amount: 1 },
     fee: 150,
     currency: FRAGMENT,
+    reqLevel: 3,
   },
   {
     id: "polished_diamond",
@@ -102,6 +111,7 @@ const SMELT_RECIPES = [
     output: { id: "polished_diamond", amount: 1 },
     fee: 5000,
     currency: FRAGMENT,
+    reqLevel: 15,
   },
   {
     id: "refined_naura_shard",
@@ -112,6 +122,8 @@ const SMELT_RECIPES = [
     output: { id: "refined_naura_shard", amount: 1 },
     fee: 7500,
     currency: FRAGMENT,
+    reqLevel: 18,
+    reqStat: { stat: "intelligence", value: 20 },
   },
   {
     id: "wood_log",
@@ -122,6 +134,7 @@ const SMELT_RECIPES = [
     output: { id: "wood_log", amount: 1 },
     fee: 200,
     currency: FRAGMENT,
+    reqLevel: 1,
   },
   {
     id: "stone_slab",
@@ -132,6 +145,7 @@ const SMELT_RECIPES = [
     output: { id: "stone_slab", amount: 1 },
     fee: 350,
     currency: FRAGMENT,
+    reqLevel: 2,
   },
   {
     id: "whetstone",
@@ -139,6 +153,7 @@ const SMELT_RECIPES = [
     output: { id: "whetstone", amount: 1 },
     fee: 80,
     currency: FRAGMENT,
+    reqLevel: 1,
   },
 ];
 

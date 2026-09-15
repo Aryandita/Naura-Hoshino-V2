@@ -3,11 +3,11 @@
 # 🌸 Naura Hoshino V2
 
 **Bot Discord Multifungsi & AI Companion Berbasis `discord.js` v14**  
-Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D (Three.js PBR & VRM), Pemutar Musik Lavalink v4 dengan Fish Audio AI DJ, Ekosistem Survival RPG Naura Wilds, dan Arsitektur Polyglot Database.
+Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D (Three.js PBR & VRM), Pemutar Musik Lavalink v4 dengan Fish Audio AI DJ & Web Soundboard Studio, Ekosistem Survival RPG Naura Wilds (Currency V2 Closed-Loop), dan Arsitektur Polyglot Database.
 
 <br />
 
-[![Versi](https://img.shields.io/badge/Versi-2.1.0-FFB6C1?style=for-the-badge)](package.json)
+[![Versi](https://img.shields.io/badge/Versi-2.2.0-FFB6C1?style=for-the-badge)](package.json)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D%2024.0.0-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.js.org)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
@@ -21,13 +21,14 @@ Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D
 <br />
 
 > [!NOTE]
-> Proyek ini beroperasi di atas arsitektur **Polyglot Database** (Supabase PostgreSQL, MongoDB, Redis, dan fallback SQLite darurat). Seluruh milestone pengembangan hingga **Sprint 22** telah rampung, termasuk integrasi model 3D/VRM PBR HD di Web Dashboard V2, Fish Audio TTS AI DJ Companion, dan UI Discord Components V2 terstandarisasi.
+> Proyek ini beroperasi di atas arsitektur **Polyglot Database** (Supabase PostgreSQL dengan 41 migrasi bernomor, MongoDB Atlas, Redis Distributed Mutex, dan fallback SQLite darurat). Seluruh milestone pengembangan hingga **Sprint 27 (v2.2.0 Milestone)** telah rampung, mencakup Avatar 3D Maskot (Three.js PBR 2K & VRM SpringBones), AI Ensemble Router multi-LLM (Gemini 2.5 Flash, Groq LLaMA 3.3, Ollama), Currency V2 Closed-Loop 4-Channel Recycling Pool (`ServerTreasury`), Web Soundboard Studio, dan Lavalink Cluster Manager bertingkat.
 
 ### 📌 Referensi Dokumen & Sumber Kebenaran (Pentalogi Dokumentasi)
 
 | Item                    |      Nilai / Berkas      | Keterangan                                                     |
 | ----------------------- | :----------------------: | -------------------------------------------------------------- |
-| **Versi Bot & Engine**  |         `2.1.0`          | [`package.json`](package.json)                                 |
+| **Versi Ekosistem**     |         `2.2.0`          | Standar X.Y.Z di [`package.json`](package.json)                |
+| **Format Penomoran**    |         `X.Y.Z`          | X = Generasi Era (2), Y = Major Update, Z = Minor/Bugfix       |
 | **Runtime Minimum**     |   Node.js `>= 24.0.0`    | `engines` di [`package.json`](package.json)                    |
 | **Kebutuhan & Produk**  |   [`PRD.md`](PRD.md)     | Spesifikasi produk, persona pengguna, dan batasan 6 pilar      |
 | **Token Visual & UI**   | [`DESIGN.md`](DESIGN.md) | Style guide Cyber-Anime Glassmorphism & Naura Wilds            |
@@ -43,22 +44,22 @@ Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D
 <table>
   <tr>
     <td width="33%" align="center">
-      <h3>🌸 Living AI Companion</h3>
-      <p>Percakapan interaktif berbasis Gemini 2.0 dengan memori jangka panjang, RAG server knowledge, dan voice agent waifu (<code>/naura</code>).</p>
+      <h3>🌸 AI Ensemble Companion</h3>
+      <p>Router cerdas multi-LLM (Gemini 2.5 Flash, Groq LLaMA 3.3, Ollama) dengan memori vektor semantik, RAG server knowledge, dan voice agent waifu (<code>/naura</code>).</p>
     </td>
     <td width="33%" align="center">
-      <h3>🎵 Poru Music & AI DJ</h3>
-      <p>Audio Lavalink v4 dengan Spotify ISRC resolver, 24/7 filter, serta penyiar radio anime interaktif bertenaga <strong>Fish Audio TTS</strong> (<code>/music dj</code>).</p>
+      <h3>🎵 Poru Cluster & AI DJ</h3>
+      <p>Lavalink v4 multi-node cluster manager bertingkat dengan failover otomatis, Fish Audio TTS radio host, serta Web Soundboard Studio interaktif (<code>/soundboard</code>).</p>
     </td>
     <td width="33%" align="center">
-      <h3>🌐 Web Dashboard & 3D</h3>
-      <p>Dashboard MPA mandiri (Vite + Tailwind) dengan telemetri realtime Socket.IO dan avatar 3D anime interaktif (Three.js PBR 2K & VRM SpringBones).</p>
+      <h3>🌐 Web Dashboard 3D Mascot</h3>
+      <p>Dashboard MPA mandiri (Vite + Tailwind) dengan telemetri realtime Socket.IO dan avatar 3D anime interaktif (Three.js PBR 2K & VRM SpringBones dengan mouse look-at tracking).</p>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <h3>🎮 Naura Wilds Survival</h3>
-      <p>Dunia RPG & ekonomi berlapis dengan transaksi saldo atomik, inventory terkunci, 55+ sistem dungeon, gacha, crafting, dan virtual pet.</p>
+      <h3>🎮 Naura Wilds & Currency V2</h3>
+      <p>Sistem moneter tertutup 4-channel (Infrastruktur, Lotre, Subsidi, Pedagang), One-Way Bridge, ketahanan alat (durability), serta simulasi kota otonom (<code>/survival town</code>).</p>
     </td>
     <td align="center">
       <h3>💬 Discord Components V2</h3>
@@ -72,7 +73,7 @@ Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D
   <tr>
     <td align="center">
       <h3>🗄️ Polyglot Persistence</h3>
-      <p>Pemisahan domain data transaksional (PostgreSQL), audit dokumen (MongoDB), cache cepat (Redis), dan fallback darurat (SQLite).</p>
+      <p>Pemisahan domain transaksional PostgreSQL (41 migrasi terisolasi), audit dokumen MongoDB, lock terdistribusi Redis, dan fallback darurat SQLite.</p>
     </td>
     <td align="center">
       <h3>🌍 Sistem Bilingual</h3>
@@ -80,7 +81,7 @@ Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D
     </td>
     <td align="center">
       <h3>🎨 Dedicated Canvas Worker</h3>
-      <p>Rendering kartu profil, level, dan statistik didelegasikan ke dedicated <code>worker_threads</code> pool agar event loop bot tetap responsif.</p>
+      <p>Rendering kartu profil, hologram item, kartu ulang tahun, dan backpack inventaris didelegasikan ke dedicated <code>worker_threads</code> pool.</p>
     </td>
   </tr>
 </table>

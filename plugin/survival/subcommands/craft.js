@@ -234,6 +234,10 @@ async function detailPayload(mode, id, inventory, holders) {
 }
 
 function failText(result) {
+  if (result.reason === "level")
+    return `Level survival kamu belum cukup untuk resep ini! Butuh Level **${result.needLevel}**, levelmu saat ini: **${result.currentLevel}**.`;
+  if (result.reason === "stat")
+    return `Stat **${String(result.stat).toUpperCase()}** kamu belum cukup! Butuh minimal **${result.needValue}**, punyamu saat ini: **${result.currentValue}**.`;
   if (result.reason === "materials")
     return (
       "Bahannya kurang: " +

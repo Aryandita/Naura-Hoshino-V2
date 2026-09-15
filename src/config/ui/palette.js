@@ -68,16 +68,18 @@ const links = {
 };
 
 const footers = {
-  core: `Naura Hoshino Core v${env.BOT_VERSION || "2.1.0"} • Created by Aryandita ✨`,
-  utility: `Naura Utility Feature v${env.BOT_VERSION || "2.1.0"} • Created by Aryandita ✨`,
-  survival: `Naura RPG Survival Edition v${env.BOT_VERSION || "2.1.0"} • Created by Aryandita ✨`,
-  music: `Naura High-Fidelity Audio System v${env.BOT_VERSION || "2.1.0"} • Created by Aryandita ✨`,
+  core: `Naura Hoshino Core v${env.BOT_VERSION || "2.2.0"} • Created by Aryandita ✨`,
+  naura: `Naura Hoshino Companion 🌸 • v${env.BOT_VERSION || "2.2.0"}`,
+  utility: `Naura Utility Feature v${env.BOT_VERSION || "2.2.0"} • Created by Aryandita ✨`,
+  survival: `Naura RPG Survival Edition v${env.BOT_VERSION || "2.2.0"} • Created by Aryandita ✨`,
+  music: `Naura High-Fidelity Audio System v${env.BOT_VERSION || "2.2.0"} • Created by Aryandita ✨`,
+  ai: `Naura Intelligent System 🌸 • v${env.BOT_VERSION || "2.2.0"}`,
 
   // --- Premium Tier Footers ---
-  premium: `Naura V.I.P Project v${env.BOT_VERSION || "2.1.0"} • Terima kasih telah mendukung Naura! 💎`,
-  premium_supporter: `Naura Supporter Tier v${env.BOT_VERSION || "2.1.0"} • Bersama kita tumbuh ✨`,
-  premium_friends: `Naura Friends Tier v${env.BOT_VERSION || "2.1.0"} • Terima kasih sahabat setia 💫`,
-  premium_vip: `Naura V.I.P Tier v${env.BOT_VERSION || "2.1.0"} • Kamu adalah yang terpilih 👑`,
+  premium: `Naura V.I.P Project v${env.BOT_VERSION || "2.2.0"} • Terima kasih telah mendukung Naura! 💎`,
+  premium_supporter: `Naura Supporter Tier v${env.BOT_VERSION || "2.2.0"} • Bersama kita tumbuh ✨`,
+  premium_friends: `Naura Friends Tier v${env.BOT_VERSION || "2.2.0"} • Terima kasih sahabat setia 💫`,
+  premium_vip: `Naura V.I.P Tier v${env.BOT_VERSION || "2.2.0"} • Kamu adalah yang terpilih 👑`,
 };
 
 module.exports = { colors, monsters, dividers, links, footers };

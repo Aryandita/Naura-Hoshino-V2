@@ -1,6 +1,6 @@
 # 📦 PRODUCT REQUIREMENTS DOCUMENT (PRD), NAURA HOSHINO V2
 
-> **Versi Dokumen:** 2.1.0  
+> **Versi Dokumen:** 2.2.0  
 > **Status:** Active / Production-Ready  
 > **Target Rilis:** Ekosistem Naura Hoshino 2026-2027  
 > **Pentalogi Dokumentasi:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`DESIGN.md`](DESIGN.md) (Desain) · [`RULES.md`](RULES.md) (Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen AI)
@@ -37,6 +37,12 @@
 - **Living Character DNA:** Selalu menyapa anggota server dengan nama personal (`{displayName}` atau `{username}`), menghindari sebutan generik seperti *Master*, serta memiliki memori kontekstual terhadap interaksi lampau.
 - **Glassmorphism Visual Identity:** Antarmuka visual bot di Discord mengadopsi standar Discord Components V2 lima lapisan yang bersih, ramah layar ponsel, serta kartu profil Canvas berstandar 60fps-like tanpa memblokir sistem.
 - **Polyglot Atomic Reliability:** Menjamin zero duplication glitch pada ekonomi dan inventaris pemain melalui arsitektur multi-database terisolasi.
+
+### 1.3 Standar Penomoran Versi Produk (X.Y.Z)
+Untuk memudahkan identifikasi rilis bagi pengguna dan developer, produk menggunakan sistem tiga tingkat terpadu:
+- **`X` (Generasi / Era Naura):** Menandakan era besar produk (`2` untuk era Naura Hoshino V2).
+- **`Y` (Major Update):** Menandakan pembaruan arsitektur besar, peluncuran pilar baru, pembaruan moneter Currency V2, atau integrasi AI Ensemble.
+- **`Z` (Minor Update):** Menandakan peningkatan bertahap, optimasi performa, balance patch, atau perbaikan bug.
 
 ---
 
@@ -154,9 +160,10 @@ Untuk memastikan setiap fitur dibangun dengan fokus yang tajam, produk ini diran
 
 ### Pilar 2: Web Dashboard V2 & 3D Avatar Viewer
 - **FR-2.1 (Vite MPA Frontend):** Dashboard web berbasis Multi-Page Application (MPA) yang terisolasi dari bot client.
-- **FR-2.2 (3D Interactive Avatar):** Menampilkan model 3D Naura Hoshino dengan Three.js berbasis material PBR (*Physically Based Rendering*), pencahayaan realistis, dan dukungan orbit control. *(Spesifikasi visual 3D diatur di [`DESIGN.md`](DESIGN.md#3d-scene--interactive-avatar-standards))*
+- **FR-2.2 (3D Interactive Mascot & VRM):** Menampilkan model 3D Naura Hoshino (`Naura Hoshino 3D.glb` dan `naura.vrm`) dengan Three.js berbasis material PBR (*Physically Based Rendering*), SpringBones physics, pencahayaan Cyberpunk, interaksi mouse look-at tracking, dan verifikasi otomatis via Headless Chrome CDP (`scripts/verify_dashboard_3d.js`).
 - **FR-2.3 (Telemetri Real-Time):** Mengalirkan metrik penggunaan memori, CPU, status shard, dan kontrol guild aktif via Socket.IO.
 - **FR-2.4 (Otentikasi Discord OAuth2):** Login aman admin untuk mengubah pengaturan bot tanpa memasukkan token.
+- **FR-2.5 (Web Soundboard Studio):** Soundboard interaktif bertenaga WebSocket Socket.IO dan Poru audio overlay untuk memicu pemutaran sound effect instan ke Voice Channel bot (`/soundboard`).
 
 ### Pilar 3: Audio & Virtual AI DJ Companion
 - **FR-3.1 (Lavalink v4 & Poru v5):** Menghubungkan client Discord ke node Lavalink v4 dengan dukungan resolusi trek YouTube, SoundCloud, dan Spotify.
@@ -165,12 +172,14 @@ Untuk memastikan setiap fitur dibangun dengan fokus yang tajam, produk ini diran
   - Memberikan komentar singkat yang sesuai dengan genre lagu.
   - Memutarkan trek audio tanpa jeda yang mengganggu (*seamless bridge*).
 - **FR-3.3 (Audio Filters & Presets):** Pilihan filter instan (8D, Bassboost, Nightcore, Vaporwave, Karaoke vocal remover).
+- **FR-3.4 (Lavalink Cluster Manager Multi-Tier):** Pengendali kluster multi-node bertingkat (Tier 1 Primary, Tier 2 Secondary, Tier 3 Fallback) dengan failover otomatis, pemantauan latensi, dan Circuit Breaker karantina node offline.
 
 ### Pilar 4: Polyglot Database & Arsitektur Atomik
 - **FR-4.1 (PostgreSQL / Supabase Relasional):** Tempat penyimpanan data keuangan, saldo dompet/bank, relasi guild, dan profil leveling.
 - **FR-4.2 (Redis Fast Cache & Write-Behind):** Cache in-memory berkecepatan tinggi untuk membaca data profil secara instan dengan flush otomatis ke database setiap 5 detik.
 - **FR-4.3 (MongoDB Atlas Vault):** Penyimpanan dokumen tidak terstruktur untuk transkrip tiket HTML, audit log moderasi, dan riwayat obrolan AI.
 - **FR-4.4 (Transaksi Atomik & Locking):** Setiap mutasi saldo numerik wajib menggunakan method atomik (`incrementUserProfile` / `debitUserProfile`), dan mutasi inventaris JSON wajib melalui transaksi database dengan klausa penguncian baris (`SELECT FOR UPDATE`). *(Ketentuan hukum transaksi diatur di [`RULES.md`](RULES.md#16-aturan-transaksi-saldo--penulisan-data-user))*
+- **FR-4.5 (Ledger 41 Migrasi Skema Terstandarisasi):** Penegakan ledger `schema_migrations` pada 41 migrasi PostgreSQL (`v1` hingga `v41`) yang terisolasi dari proses booting bot.
 
 ### Pilar 5: Survival RPG (Naura Wilds)
 - **FR-5.1 (Sistem Tri-Vital):** Karakter memiliki tiga bar status utama:
@@ -185,13 +194,16 @@ Untuk memastikan setiap fitur dibangun dengan fokus yang tajam, produk ini diran
 - **FR-5.3 (Dungeon Raids & Combat Engine):** Sistem dungeon berbasis instans dengan tingkat kesulitan bertingkat (Normal, Heroic, Celestial) yang mendukung pertarungan bersama anggota server.
 - **FR-5.4 (Inventory Locking Helper):** Penambahan atau pengurangan item wajib melalui `addItemsAtomic` atau `takeItemsAtomic` untuk mencegah duplikasi item saat pemain menekan tombol secara berulang. *(Wajib mematuhi [`RULES.md`](RULES.md#16-aturan-transaksi-saldo--penulisan-data-user))*
 - **FR-5.5 (Dynamic Sentiment Astral Weather):** Cuaca kosmik harian server dievaluasi secara dinamis dari sentimen obrolan publik via Gemini, memicu buff global pada jarahan dungeon (`cosmic_storm`) dan diskon kafe (`sakura_breeze`).
+- **FR-5.6 (Currency V2 & Closed-Loop Recycling Pool):** One-Way Bridge restriction (NSF ke Coin sah, Coin ke NSF dibatasi), dynamic spread transaction fee, alokasi 100% kas server `ServerTreasury` (40% Infra, 25% Undian, 20% Subsidi, 15% Merchant), serta sistem keausan alat (`durabilityEngine.js`).
+- **FR-5.7 (Town Square & Living City NPC Simulation):** Alun-alun kota dinamis dengan jadwal harian NPC (Bagas, Luna, Kuro, Sakura), dialog interaktif berhadiah buff, dan event musiman (`/survival town`).
 
 ### Pilar 6: Living AI & Server Memory Engine
 - **FR-6.1 (Model Gemini 2.0 / 2.5):** Integrasi AI generasi terbaru dengan penanganan konteks panjang dan kemampuan penalaran multimodal.
-- **FR-6.2 (Server RAG & Long-Term Memory):** Menyimpan fakta penting mengenai anggota server (preferensi, hobi, panggilan akrab) di MongoDB sehingga Naura mengingat riwayat percakapan sebelumnya.
+- **FR-6.2 (Server RAG & Semantic Vector Memory):** Menyimpan memori semantik kontekstual pengguna via cosine similarity di PostgreSQL (`semantic_memories`) dan riwayat percakapan di MongoDB Atlas.
 - **FR-6.3 (Function Calling Otomatis):** AI dapat membaca intensi pengguna dan memanggil fungsi bot secara mandiri (misal: "Naura, tolong putarkan lagu lofi" langsung memicu player musik).
 - **FR-6.4 (Etika Panggilan Personal):** Naura wajib menggunakan nama pengguna asli dan dilarang menggunakan sapaan budak/tuan seperti *Master*.
 - **FR-6.5 (Cyber-Eye Multimodal Vision):** Menganalisis tangkapan layar (game gear, kode error, meme) secara *ephemeral/in-memory* dengan model Gemini Flash adaptif tanpa menyimpan berkas di disk bot demi privasi pengguna.
+- **FR-6.6 (Multi-Model AI Ensemble Router):** Router cerdas yang otomatis memilih LLM terbaik (Gemini 2.5 Flash untuk kecepatan/multimodal, Groq LLaMA 3.3 untuk penalaran taktis, Ollama untuk mode darurat) berbasis latensi dan Circuit Breaker otomatis.
 
 ---
 
@@ -217,17 +229,19 @@ Untuk menjamin kualitas dan stabilitas rilis, fitur diklasifikasikan ke dalam 4 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           PRIORITAS FITUR (MoSCoW)                          │
 ├──────────────────────────────────────┬──────────────────────────────────────┤
-│ 🔴 MUST-HAVE (Wajib Ada di v2.1)     │ 🟡 SHOULD-HAVE (Sangat Dianjurkan)   │
-│ • Engine Discord Components V2       │ • AI DJ Voice Radio Intro            │
-│ • Transaksi atomik saldo & item      │ • 3D Avatar PBR Web Dashboard        │
-│ • Tri-vital Naura Wilds (HP/Hunger)  │ • Co-Op Dungeon Raids                │
-│ • Pemutar musik Lavalink v4 Poru     │ • Paritas kamus bilingual 100%       │
-│ • Sharding & Worker Threads Canvas   │ • Moderasi otomatis Anti-Nuke        │
+│ 🔴 MUST-HAVE (Wajib Ada di v2.2/2.3) │ 🟡 SHOULD-HAVE (Sangat Dianjurkan)   │
+│ • Engine Discord Components V2       │ • Web Soundboard Studio              │
+│ • Transaksi atomik saldo & item      │ • Town Square Living City NPC        │
+│ • Currency V2 Closed-Loop Pool       │ • Co-Op The Neo-Abyss Celestial Raid │
+│ • AI Ensemble Router & CircuitBreak  │ • Hologram Item Card & Music Aura    │
+│ • Lavalink Cluster Manager MultiTier │ • Paritas kamus bilingual 100%       │
+│ • 3D Mascot PBR & VRM Three.js       │ • Global Guild Federation Hub        │
+│ • Total Canvas Worker Offloading     │ • Cross-Server Caravan Cartel PvP    │
 ├──────────────────────────────────────┼──────────────────────────────────────┤
-│ 🟢 COULD-HAVE (Penyempurnaan Nanti)  │ ⚪ WON'T-HAVE (Di Luar Cakupan v2.1) │
-│ • Cross-Server Caravan Trade Cartel  │ • Integrasi Blockchain / Web3 / NFT  │
-│ • Chibi 2.5D Room Decorator Canvas   │ • Transaksi uang nyata antar pemain  │
-│ • Server Memory Time-Capsule         │ • Self-hosted LLM on-premise lokal   │
+│ 🟢 COULD-HAVE (Penyempurnaan Nanti)  │ ⚪ WON'T-HAVE (Di Luar Cakupan v2.2) │
+│ • Chibi 2.5D Room Decorator Live Grid│ • Integrasi Blockchain / Web3 / NFT  │
+│ • Galactic Caravan Live Radar Web    │ • Transaksi uang nyata antar pemain  │
+│ • Voice Intermezzo Federation Raid   │ • Self-hosted LLM on-premise lokal   │
 └──────────────────────────────────────┴──────────────────────────────────────┘
 ```
 

@@ -73,6 +73,103 @@ if (parentPort) {
           result = await greenhouseCanvas.renderGreenhouseCard(payload);
           break;
         }
+        case "renderItemCard": {
+          const itemCardCanvas = require("./itemCardCanvas");
+          result = await itemCardCanvas.renderItemCard(payload);
+          break;
+        }
+        case "renderBirthdayCard": {
+          const birthdayCanvas = require("./birthdayCanvas");
+          result = await birthdayCanvas.renderBirthdayCard(payload);
+          break;
+        }
+        case "renderMusicAura": {
+          const musicAuraCanvas = require("./musicAuraCanvas");
+          result = await musicAuraCanvas.renderMusicAura(payload);
+          break;
+        }
+        case "renderInventory": {
+          const inventoryCanvas = require("./inventoryCanvas");
+          result = await inventoryCanvas.generateInventoryBackpackImage(
+            payload.user,
+            payload.inventory,
+            payload.profile,
+            payload.options || {},
+          );
+          break;
+        }
+        case "renderStoryScene": {
+          const storySceneCanvas = require("./storySceneCanvas");
+          result = await storySceneCanvas.renderStoryScene(payload);
+          break;
+        }
+        case "renderDynamicBanner": {
+          const dynamicBannerEngine = require("./dynamicBannerEngine");
+          result = await dynamicBannerEngine.generateDynamicMotionBanner(payload);
+          break;
+        }
+        case "renderRoom": {
+          const roomCanvas = require("./roomCanvas");
+          result = await roomCanvas.renderRoomCanvas(
+            payload.roomData,
+            payload.user,
+            payload.pet,
+          );
+          break;
+        }
+        case "renderChronicle": {
+          const chronicleCanvas = require("./chronicleCanvas");
+          result = await chronicleCanvas.drawChronicleNewspaper(payload);
+          break;
+        }
+        case "renderAstralOmikuji": {
+          const astralCanvas = require("./astralCanvas");
+          result = await astralCanvas.renderOmikujiCard(
+            payload.omikuji,
+            payload.user,
+          );
+          break;
+        }
+        case "renderAstralWeather": {
+          const astralCanvas = require("./astralCanvas");
+          result = await astralCanvas.renderAstralWeatherBanner(
+            payload.weather,
+          );
+          break;
+        }
+        case "renderDuel": {
+          const duelCanvas = require("./duelCanvas");
+          result = await duelCanvas.drawDuel(
+            payload.p1,
+            payload.p2,
+            payload.roundLog,
+            payload.round,
+          );
+          break;
+        }
+        case "renderAchievement": {
+          const achievementCanvas = require("./achievementCanvas");
+          result = await achievementCanvas.generateAchievementImage(
+            payload.user,
+            payload.title,
+            payload.subtitle,
+            payload.badgeColor,
+          );
+          break;
+        }
+        case "renderWrapped": {
+          const wrappedCanvas = require("./wrappedCanvas");
+          result = await wrappedCanvas.generateWrappedCard(
+            payload.user,
+            payload.stats,
+          );
+          break;
+        }
+        case "renderCardBattle": {
+          const cardBattleCanvas = require("./cardBattleCanvas");
+          result = await cardBattleCanvas.drawCardBattleArena(payload);
+          break;
+        }
         default:
           throw new Error(`Unknown canvas worker task: ${task}`);
       }

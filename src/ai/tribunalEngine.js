@@ -1,6 +1,6 @@
 "use strict";
 
-const geminiClient = require("./geminiClient");
+const aiEnsembleRouter = require("./aiEnsembleRouter");
 const { logger } = require("../managers/logger");
 
 const JURY_PERSONAS = {
@@ -44,7 +44,12 @@ class TribunalEngine {
       allegation,
     );
 
-    if (!geminiClient.isAvailable()) {
+    const hasConfiguredProvider =
+      aiEnsembleRouter.isProviderConfigured("groq") ||
+      aiEnsembleRouter.isProviderConfigured("gemini") ||
+      aiEnsembleRouter.isProviderConfigured("ollama");
+
+    if (!hasConfiguredProvider) {
       return {
         success: true,
         source: "PROCEDURAL",
@@ -70,16 +75,18 @@ Simulasikan 3 babak persidangan dalam format JSON murni:
 }
 Balas HANYA dengan JSON murni tanpa markdown backtick.`;
 
-      const aiResponse = await geminiClient.generate({
-        parts: [{ text: prompt }],
+      const aiResponse = await aiEnsembleRouter.generate({
+        taskType: aiEnsembleRouter.TASK_TYPES.TACTICAL_REASONING,
+        prompt,
       });
 
-      if (aiResponse) {
-        const cleaned = aiResponse.replace(/```json|```/g, "").trim();
+      const responseText = aiResponse.text || String(aiResponse);
+      if (responseText) {
+        const cleaned = responseText.replace(/```json|```/g, "").trim();
         const parsed = JSON.parse(cleaned);
         return {
           success: true,
-          source: "GEMINI_AI",
+          source: (aiResponse.provider || "AI").toUpperCase(),
           prosecutor:
             parsed.prosecutorArgument || fallbackVerdict.prosecutorArgument,
           defense: parsed.defenseArgument || fallbackVerdict.defenseArgument,

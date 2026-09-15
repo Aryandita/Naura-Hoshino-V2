@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Naura Cyber Mini-World | 2D Pixel Realm</title>
+    <title>Naura Cyber Mini-World | 2D Pixel Realm & 3D Wardrobe</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,6 +49,7 @@
             box-shadow: 0 0 15px rgba(255, 182, 193, 0.2);
         }
     </style>
+</head>
 <body class="relative select-none">
     <!-- Loading Screen (Cyber-Anime Naura Floating Thinking Expression) -->
     <div id="loadingScreen" class="loading-screen">
@@ -83,17 +84,25 @@
         </div>
     </div>
 
-    <!-- Bottom Controls HUD -->
-    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 hud-interactive glass-panel-interactive p-4 rounded-2xl flex items-center gap-4 border border-pink-400/20 shadow-2xl">
+    <!-- Bottom Controls HUD & Wardrobe Selector -->
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 hud-interactive glass-panel-interactive p-4 rounded-2xl flex items-center gap-3 border border-pink-400/20 shadow-2xl">
         <button id="spawnPetBtn" class="btn-cyber-primary text-xs">
-            🐾 Panggil Pet (Kirin/Bahamut)
+            🐾 Panggil Pet
         </button>
-        <button id="cheerBtn" class="glass-panel-interactive px-4 py-2 rounded-lg text-xs font-bold text-pink-300 hover:bg-pink-400/10 transition-all">
-            ✨ Beri Semangat (Particle Burst)
+        <button id="cheerBtn" class="glass-panel-interactive px-3 py-2 rounded-lg text-xs font-bold text-pink-300 hover:bg-pink-400/10 transition-all">
+            ✨ Partikel
         </button>
         <div class="h-6 w-px bg-white/10"></div>
+        <div class="flex items-center gap-1.5">
+            <span class="text-[11px] text-gray-400 font-cyber mr-1">👗 Wardrobe:</span>
+            <button onclick="if(window.NauraViewer)window.NauraViewer.setSkin('cyberpunk')" class="px-2 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-300 text-[10px] font-bold border border-cyan-500/30">Neon</button>
+            <button onclick="if(window.NauraViewer)window.NauraViewer.setSkin('maid')" class="px-2 py-1 rounded bg-gray-500/20 hover:bg-gray-500/40 text-gray-200 text-[10px] font-bold border border-gray-500/30">Maid</button>
+            <button onclick="if(window.NauraViewer)window.NauraViewer.setSkin('casual')" class="px-2 py-1 rounded bg-pink-500/20 hover:bg-pink-500/40 text-pink-300 text-[10px] font-bold border border-pink-500/30">Casual</button>
+            <button onclick="if(window.NauraViewer)window.NauraViewer.setSkin('adventurer')" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">Wilds</button>
+        </div>
+        <div class="h-6 w-px bg-white/10"></div>
         <div class="text-[11px] text-gray-400 font-cyber">
-            Pet Aktif: <span id="petCount" class="text-pink-300 font-bold">1</span> | Partikel: <span id="particleCount" class="text-green-300 font-bold">0</span>
+            Pet: <span id="petCount" class="text-pink-300 font-bold">2</span> | Partikel: <span id="particleCount" class="text-green-300 font-bold">0</span>
         </div>
     </div>
 
@@ -160,74 +169,66 @@
             ctx.lineWidth = 3;
             ctx.stroke();
 
-            // Neon Grid lines on island surface
-            ctx.strokeStyle = "rgba(255, 182, 193, 0.12)";
+            // Island Grid Lines
+            ctx.strokeStyle = "rgba(255, 182, 193, 0.08)";
             ctx.lineWidth = 1;
-            for (let i = -240; i <= 240; i += 40) {
+            for (let x = -280; x <= 280; x += 40) {
                 ctx.beginPath();
-                ctx.moveTo(centerX + i, centerY - 80);
-                ctx.lineTo(centerX + i * 1.2, centerY + 80);
+                ctx.moveTo(centerX + x, centerY - 60);
+                ctx.lineTo(centerX + x * 1.1, centerY + 60);
                 ctx.stroke();
             }
 
-            // Crystal Core in Center
-            const time = Date.now() * 0.003;
-            const crystalY = centerY - 60 + Math.sin(time) * 10;
+            // Floating Cyber Shrine Centerpiece
             ctx.save();
-            ctx.translate(centerX, crystalY);
-            ctx.rotate(time * 0.5);
-            ctx.beginPath();
-            ctx.moveTo(0, -20);
-            ctx.lineTo(15, 0);
-            ctx.lineTo(0, 20);
-            ctx.lineTo(-15, 0);
-            ctx.closePath();
-            ctx.fillStyle = "#FFB6C1";
             ctx.shadowColor = "#FFB6C1";
             ctx.shadowBlur = 20;
+            ctx.fillStyle = "#FFB6C1";
+            ctx.beginPath();
+            ctx.arc(centerX, centerY - 20, 12, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
         }
 
-        // Animation Loop
+        // Game Loop
         function loop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             drawIsland();
 
-            // Update & Render Pets
-            pets.forEach((pet) => {
+            // Update & Draw Pets
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2 + 50;
+
+            for (const pet of pets) {
                 pet.x += pet.vx;
                 pet.y += pet.vy;
 
-                // Island boundary constraint
-                const centerX = canvas.width / 2;
-                const centerY = canvas.height / 2 + 50;
+                // Elliptical Island boundary
                 const dx = (pet.x - centerX) / 260;
                 const dy = (pet.y - centerY) / 100;
-                if (dx * dx + dy * dy > 0.8) {
+                if (dx * dx + dy * dy > 0.85) {
                     pet.vx *= -1;
                     pet.vy *= -1;
                 }
 
-                // Draw Pet Glow Body
                 ctx.save();
+                ctx.shadowColor = pet.color;
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = pet.color;
                 ctx.beginPath();
                 ctx.arc(pet.x, pet.y, pet.radius, 0, Math.PI * 2);
-                ctx.fillStyle = pet.color;
-                ctx.shadowColor = pet.color;
-                ctx.shadowBlur = 18;
                 ctx.fill();
 
-                // Draw Pet Label
-                ctx.font = 'bold 11px "Orbitron", sans-serif';
-                ctx.fillStyle = "#ffffff";
+                // Pet Label
+                ctx.fillStyle = "#FFFFFF";
+                ctx.font = "10px Orbitron";
                 ctx.textAlign = "center";
-                ctx.fillText(pet.name, pet.x, pet.y - pet.radius - 8);
+                ctx.fillText(pet.name, pet.x, pet.y - pet.radius - 6);
                 ctx.restore();
-            });
+            }
 
-            // Update & Render Particles
+            // Update & Draw Particles
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
                 p.x += p.vx;
@@ -295,4 +296,3 @@
 </script>
 </body>
 </html>
-

@@ -26,6 +26,15 @@ const UserSurvival = sequelize.define(
       allowNull: false,
       defaultValue: 0,
     },
+    lotteryTickets: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    lastNoviceAidClaimAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     hunger: {
       type: DataTypes.INTEGER,
       defaultValue: 100,

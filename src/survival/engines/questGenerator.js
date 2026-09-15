@@ -58,6 +58,15 @@ const QUEST_POOL = [
     reqDungeonPass: true,
   },
   {
+    id: "collect_specific_item",
+    title: "Mengumpulkan Kristal Sihir di Dungeon",
+    action: "collect_specific_item",
+    baseTarget: 2,
+    baseReward: 750,
+    targetItemId: "mana_crystal",
+    reqDungeonPass: true,
+  },
+  {
     id: "study",
     title: "Belajar di Kampus",
     action: "study",
@@ -219,22 +228,25 @@ function generateClanQuestsForClan(clan) {
   };
 }
 
-async function incrementQuestProgress(userId, action, amount = 1) {
+async function incrementQuestProgress(userId, action, amount = 1, metadata = {}) {
   try {
-    const quest = await UserQuest.findOne({ where: { userId } });
-    if (!quest || !quest.questsState) return;
+    const today = new Date().toISOString().split("T")[0];
+    const [quest] = await UserQuest.findOrCreate({
+      where: { userId },
+      defaults: { lastReset: today },
+    });
 
-    const state =
+    let state =
       typeof quest.questsState === "string"
         ? JSON.parse(quest.questsState)
         : quest.questsState;
     let changed = false;
 
-    const today = new Date().toISOString().split("T")[0];
     const currentWeek = getWeeklyResetString();
 
-    // Lazy evaluation: Jika expired, generate ulang sebelum menambah progress
+    // Lazy evaluation: generate jika belum ada
     if (
+      !state ||
       state.lastDailyReset !== today ||
       state.lastWeeklyReset !== currentWeek
     ) {
@@ -242,7 +254,7 @@ async function incrementQuestProgress(userId, action, amount = 1) {
       const profile = await cacheManager.getUserProfile(userId);
       const survival = await cacheManager.getUserSurvival(userId);
       const newQuests = generateQuestsForUser(profile, survival);
-
+      if (!state) state = newQuests;
       if (state.lastDailyReset !== today) {
         state.daily = newQuests.daily;
         state.lastDailyReset = today;
@@ -254,10 +266,18 @@ async function incrementQuestProgress(userId, action, amount = 1) {
       changed = true;
     }
 
+    const matchesQuest = (q) => {
+      if (q.action !== action) return false;
+      if (q.targetItemId && metadata.itemId && q.targetItemId !== metadata.itemId) {
+        return false;
+      }
+      return true;
+    };
+
     // Update daily quests
     if (state.daily) {
       state.daily.forEach((q) => {
-        if (q.action === action && q.current < q.target) {
+        if (matchesQuest(q) && q.current < q.target) {
           q.current = Math.min(q.target, q.current + amount);
           changed = true;
         }
@@ -267,7 +287,7 @@ async function incrementQuestProgress(userId, action, amount = 1) {
     // Update weekly quests
     if (state.weekly) {
       state.weekly.forEach((q) => {
-        if (q.action === action && q.current < q.target) {
+        if (matchesQuest(q) && q.current < q.target) {
           q.current = Math.min(q.target, q.current + amount);
           changed = true;
         }

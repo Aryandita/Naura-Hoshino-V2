@@ -58,9 +58,16 @@ module.exports = {
   // SMART SYSTEM GETTERS (ANTI-CRASH)
   // ==========================================
 
-  getFooter(category = "core") {
+  getFooter(category = "core", lang = null) {
     const env = require("./env");
-    const ver = env.BOT_VERSION || "2.1.0";
+    const ver = env.BOT_VERSION || "2.2.0";
+    if (lang) {
+      const languageManager = require("../managers/languageManager");
+      const key = `container.footers.${category}`;
+      if (languageManager.has(lang, key)) {
+        return languageManager.translateSync(lang, key, { version: ver });
+      }
+    }
     const template = this.footers[category] || this.footers.core;
     if (typeof template === "string") {
       return template.replace(/v\d+\.\d+\.\d+/g, `v${ver}`);

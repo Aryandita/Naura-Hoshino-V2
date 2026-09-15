@@ -261,21 +261,56 @@ async function reward(currency, holders = {}, amount) {
   return next;
 }
 
-// Konversi nominal antar mata uang biasa. Naura Coupon sengaja tidak bisa
-// ditukar supaya kelangkaannya terjaga.
+// Konversi nominal antar mata uang biasa.
+// Aturan One-Way Bridge: Hanya mengizinkan FRAGMENT -> COIN.
+// Konversi COIN -> FRAGMENT ditolak untuk menjaga integritas survival.
 function convert(amount, fromKind, toKind) {
   const value = Math.max(0, Math.floor(Number(amount) || 0));
   if (fromKind === toKind) return value;
   if (fromKind === COUPON || toKind === COUPON) return null;
+  if (fromKind === COIN && toKind === FRAGMENT) return null;
   if (fromKind === FRAGMENT && toKind === COIN)
     return Math.floor(value / FRAGMENT_PER_COIN);
-  if (fromKind === COIN && toKind === FRAGMENT)
-    return value * FRAGMENT_PER_COIN;
   return null;
 }
 
-// Tukar uang di penukaran resmi. Sisa NSF yang tidak cukup jadi 1 Coin
-// dikembalikan lewat `remainder` supaya tidak hangus.
+/**
+ * Menghitung kurs dinamis dan persentase biaya admin progresif
+ * @param {number} nsfAmount
+ * @returns {Promise<{rate: number, feePercent: number, dailyVolume: number}>}
+ */
+async function getDynamicRateAndFee(nsfAmount = 0) {
+  let dailyVolume = 0;
+  try {
+    const redisManager = require("../../managers/redisManager");
+    if (redisManager.client && redisManager.client.isReady) {
+      dailyVolume = Number((await redisManager.client.get("economy:volume:nsf:daily")) || 0);
+    }
+  } catch (err) {
+    dailyVolume = 0;
+  }
+
+  // Setiap 1.000.000 NSF yang dicairkan hari ini, kurs melemah +50 NSF per 1 NC (maksimal 1.500 NSF = 1 NC)
+  const volStep = Math.min(10, Math.floor(dailyVolume / 1000000));
+  const rate = Math.min(1500, 1000 + volStep * 50);
+
+  // Biaya administrasi progresif: 5% (standar), 10% (>50.000), 15% (>200.000)
+  const val = Number(nsfAmount) || 0;
+  let feePercent = 0.05;
+  if (val > 200000) {
+    feePercent = 0.15;
+  } else if (val > 50000) {
+    feePercent = 0.10;
+  }
+
+  return {
+    rate,
+    feePercent,
+    dailyVolume,
+  };
+}
+
+// Tukar uang di penukaran resmi dengan aturan One-Way Bridge dan Dynamic Spread.
 async function exchange(holders, fromKind, toKind, amount) {
   const from = byKind(fromKind);
   const to = byKind(toKind);
@@ -284,16 +319,21 @@ async function exchange(holders, fromKind, toKind, amount) {
   if (from.kind === to.kind) return { ok: false, reason: "same_currency" };
   if (from.kind === COUPON || to.kind === COUPON)
     return { ok: false, reason: "coupon_locked" };
+  if (from.kind === COIN && to.kind === FRAGMENT)
+    return { ok: false, reason: "one_way_restricted" };
   if (value <= 0) return { ok: false, reason: "invalid_amount" };
 
-  const received = convert(value, from.kind, to.kind);
-  if (received === null) return { ok: false, reason: "unsupported_pair" };
-  if (received <= 0)
-    return { ok: false, reason: "below_minimum", minimum: FRAGMENT_PER_COIN };
+  const { rate, feePercent, dailyVolume } = await getDynamicRateAndFee(value);
+  const feeNsf = Math.floor(value * feePercent);
+  const netNsf = value - feeNsf;
+  const received = Math.floor(netNsf / rate);
 
-  // Hanya nominal yang benar-benar terpakai yang dipotong. Pemotongan selalu
-  // lebih dulu; bila gagal, tidak ada uang baru yang terlanjur diterbitkan.
-  const spent = to.kind === COIN ? received * FRAGMENT_PER_COIN : value;
+  if (received <= 0) {
+    const minNeeded = Math.ceil(rate / (1 - feePercent));
+    return { ok: false, reason: "below_minimum", minimum: minNeeded };
+  }
+
+  const spent = value;
   const remaining = await charge(from, holders, spent);
   if (remaining === null) {
     return {
@@ -305,13 +345,38 @@ async function exchange(holders, fromKind, toKind, amount) {
   }
 
   await reward(to, holders, received);
+
+  // Alirkan biaya admin ke sistem daur ulang 4 saluran & berikan tiket undian
+  const recyclingPoolEngine = require("./recyclingPoolEngine");
+  await recyclingPoolEngine.allocateSinkFunds(feeNsf);
+  const userId = userIdOf(holders);
+  let tickets = 0;
+  if (userId) {
+    tickets = await recyclingPoolEngine.awardLotteryTickets(userId, feeNsf);
+  }
+
+  // Akumulasikan volume harian di Redis
+  try {
+    const redisManager = require("../../managers/redisManager");
+    if (redisManager.client && redisManager.client.isReady) {
+      await redisManager.client.incrBy("economy:volume:nsf:daily", spent);
+    }
+  } catch (err) {
+    // Abaikan jika Redis offline
+  }
+
   return {
     ok: true,
     from: from.kind,
     to: to.kind,
     spent,
     received,
-    remainder: value - spent,
+    feeNsf,
+    rate,
+    feePercent,
+    dailyVolume,
+    ticketsAwarded: tickets,
+    remainder: 0,
     balanceFrom: remaining,
     balanceTo: balanceOf(to, holders),
   };
@@ -338,4 +403,5 @@ module.exports = {
   reward,
   convert,
   exchange,
+  getDynamicRateAndFee,
 };

@@ -35,6 +35,7 @@ class NauraViewerClass {
 
         this._createUI();
         this._initEvents();
+        this._initDraggable();
         this._initSpectrumVisualizer();
         this._initLiveTelemetry();
         this._initChatWelcome();
@@ -90,7 +91,7 @@ class NauraViewerClass {
         container.id = "naura-viewer-container";
 
         container.innerHTML = `
-      <div class="nv-panel" id="nv-panel">
+      <div class="nv-panel is-minimized" id="nv-panel">
         <!-- Minimized Mode: Floating Anime Avatar Orb -->
         <div class="nv-mini-avatar-wrapper" id="nv-mini-trigger" title="Buka Naura OS">
           <img src="/assets/Naura_Expression/Happy.png" alt="Naura Avatar" class="nv-mini-avatar-img" id="nv-mini-img" onerror="this.onerror=null; this.src='/assets/Naura_Expression/Read.png';" />
@@ -149,6 +150,8 @@ class NauraViewerClass {
             <!-- Quick Action Chips -->
             <div class="nv-quick-chips">
               <button class="nv-chip" data-action="wave">👋 Sapa Naura</button>
+              <button class="nv-chip" data-action="astral">✨ Sihir Bintang</button>
+              <button class="nv-chip" data-action="idol">⭐ Pose Idol</button>
               <button class="nv-chip" data-query="Status Bot">⚡ Status Bot</button>
               <button class="nv-chip" data-query="Cek Saldo">💰 Saldo Saya</button>
               <button class="nv-chip" data-query="Lagu yang diputar">🎵 Now Playing</button>
@@ -353,6 +356,16 @@ class NauraViewerClass {
                     this.setMood("Happy", "Halo! Senang bertemu denganmu! 🌸");
                     return;
                 }
+                if (chip.dataset.action === "astral") {
+                    if (this.viewer3d) this.viewer3d.playAnimation("AstralCast");
+                    this.setMood("Happy", "Sihir Bintang Hoshino! ✨");
+                    return;
+                }
+                if (chip.dataset.action === "idol") {
+                    if (this.viewer3d) this.viewer3d.playAnimation("StarPose");
+                    this.setMood("Happy", "Pose Idol Ceria! ⭐");
+                    return;
+                }
                 const query = chip.dataset.query;
                 this.ui.chat.input.value = query;
                 this._sendChatMessage();
@@ -368,12 +381,105 @@ class NauraViewerClass {
             this._changeMusicTrack("Prev");
         });
 
-        // 6. 3D Avatar Click Interaction (Wave greeting)
+        // 6. 3D Avatar Click Interaction (Cycle through signature animations)
         if (this.ui.chat.avatar3dFrame) {
+            const avatarActions = [
+                { anim: "Wave", mood: "Happy", status: "Halo! Senang bertemu denganmu! 🌸" },
+                { anim: "StarPose", mood: "Happy", status: "Pose Idol Hoshino! ⭐" },
+                { anim: "BlowKiss", mood: "Happy", status: "Tiup Ciuman Sayang! 😘" },
+                { anim: "AstralCast", mood: "Happy", status: "Sihir Bintang Hoshino! ✨" },
+                { anim: "Cheers", mood: "Happy", status: "Semangat Selalu Bersamamu! 🎉" },
+                { anim: "Thinking", mood: "Thinking", status: "Sedang merenungkan sesuatu... 🤔" },
+                { anim: "Shy", mood: "Happy", status: "Malu-malu kucing... 😳" },
+            ];
+            let avatarIdx = 0;
             this.ui.chat.avatar3dFrame.addEventListener("click", () => {
-                this.triggerWave();
-                this.setMood("Happy", "Halo! Senang bertemu denganmu! 🌸");
+                const act = avatarActions[avatarIdx % avatarActions.length];
+                avatarIdx++;
+                if (this.viewer3d) {
+                    this.viewer3d.playAnimation(act.anim);
+                }
+                this.setMood(act.mood, act.status);
             });
+        }
+    }
+
+    /**
+     * Memungkinkan jendela mengambang dan avatar orb dapat digeser (drag & reposition)
+     * dengan aman dan terkontrol di dalam viewport pengguna.
+     */
+    _initDraggable() {
+        const container = this.ui.container;
+        const header = this.ui.panel.querySelector(".nv-header");
+        const miniTrigger = this.ui.miniTrigger;
+        if (!container) return;
+
+        let isDragging = false;
+        let startPointerX = 0;
+        let startPointerY = 0;
+        let initialTranslateX = 0;
+        let initialTranslateY = 0;
+        let currentTranslateX = 0;
+        let currentTranslateY = 0;
+        let moved = false;
+
+        const onPointerDown = (e) => {
+            if (e.target.closest("button") || e.target.closest(".nv-tabs")) return;
+            isDragging = true;
+            moved = false;
+            startPointerX = e.clientX;
+            startPointerY = e.clientY;
+            initialTranslateX = currentTranslateX;
+            initialTranslateY = currentTranslateY;
+
+            if (e.target.setPointerCapture) {
+                try { e.target.setPointerCapture(e.pointerId); } catch (_) {}
+            }
+        };
+
+        const onPointerMove = (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startPointerX;
+            const dy = e.clientY - startPointerY;
+            if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+                moved = true;
+            }
+
+            const nextX = initialTranslateX + dx;
+            const nextY = initialTranslateY + dy;
+
+            // Clamping sederhana
+            currentTranslateX = Math.max(-window.innerWidth + 100, Math.min(10, nextX));
+            currentTranslateY = Math.max(-window.innerHeight + 100, Math.min(10, nextY));
+            container.style.transform = `translate(${currentTranslateX}px, ${currentTranslateY}px)`;
+        };
+
+        const onPointerUp = (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+
+            if (e.target.releasePointerCapture) {
+                try { e.target.releasePointerCapture(e.pointerId); } catch (_) {}
+            }
+        };
+
+        if (header) {
+            header.addEventListener("pointerdown", onPointerDown);
+            header.addEventListener("pointermove", onPointerMove);
+            header.addEventListener("pointerup", onPointerUp);
+            header.addEventListener("pointercancel", onPointerUp);
+        }
+
+        if (miniTrigger) {
+            miniTrigger.addEventListener("pointerdown", onPointerDown);
+            miniTrigger.addEventListener("pointermove", onPointerMove);
+            miniTrigger.addEventListener("pointerup", (e) => {
+                onPointerUp(e);
+                if (!moved && !this.isExpanded) {
+                    this.toggleMinimize();
+                }
+            });
+            miniTrigger.addEventListener("pointercancel", onPointerUp);
         }
     }
 
@@ -400,6 +506,11 @@ class NauraViewerClass {
                     ? this.ui.chat.avatar3dFrame.querySelector(".nv-badge-3d")
                     : null;
                 if (badge) badge.style.display = "block";
+
+                // Bila awal dimuat dalam keadaan minimized, pause render loop untuk hemat daya
+                if (!this.isExpanded) {
+                    this.viewer3d.pause();
+                }
             } else {
                 this._fallbackTo2D();
             }
@@ -449,6 +560,22 @@ class NauraViewerClass {
                 this.ui.tabPanes[key].classList.remove("is-active");
             }
         });
+
+        // Power saving: toggle 3D viewer & spectrum animations berdasarkan tab aktif
+        if (this.isExpanded && tabName === "chat") {
+            if (this.viewer3d) {
+                this.viewer3d.resume();
+                this.viewer3d._onResize();
+            }
+        } else if (this.viewer3d) {
+            this.viewer3d.pause();
+        }
+
+        if (this.isExpanded && tabName === "music") {
+            this._startSpectrum();
+        } else {
+            this._stopSpectrum();
+        }
     }
 
     toggleMinimize() {
@@ -456,9 +583,25 @@ class NauraViewerClass {
         if (this.isExpanded) {
             this.ui.panel.classList.remove("is-minimized");
             this.ui.panel.classList.add("is-expanded");
+
+            // Resume rendering bila tab aktif
+            if (this.activeTab === "chat" && this.viewer3d) {
+                this.viewer3d.resume();
+                setTimeout(() => {
+                    if (this.viewer3d) this.viewer3d._onResize();
+                }, 100);
+            } else if (this.activeTab === "music") {
+                this._startSpectrum();
+            }
         } else {
             this.ui.panel.classList.remove("is-expanded");
             this.ui.panel.classList.add("is-minimized");
+
+            // Pause semua render loop saat diminimalkan untuk hemat daya total
+            if (this.viewer3d) {
+                this.viewer3d.pause();
+            }
+            this._stopSpectrum();
         }
     }
 
@@ -589,13 +732,26 @@ class NauraViewerClass {
     // MUSIC CONTROLLER & SPECTRUM VISUALIZER
     // =========================================================================
     _initSpectrumVisualizer() {
-        const canvas = this.ui.music.canvas;
+        // Render loop akan dipicu on-demand saat tab music aktif via _startSpectrum()
+        if (this.isExpanded && this.activeTab === "music") {
+            this._startSpectrum();
+        }
+    }
+
+    _startSpectrum() {
+        if (this.spectrumAnimId) return;
+        const canvas = this.ui.music?.canvas;
         if (!canvas) return;
 
         const ctx = canvas.getContext("2d");
         const numBars = 24;
 
         const render = () => {
+            if (!this.isExpanded || this.activeTab !== "music") {
+                this._stopSpectrum();
+                return;
+            }
+
             if (canvas.width !== canvas.clientWidth) {
                 canvas.width = canvas.clientWidth;
                 canvas.height = canvas.clientHeight;
@@ -605,6 +761,7 @@ class NauraViewerClass {
 
             const barWidth = (canvas.width / numBars) - 3;
             const time = Date.now() * 0.003;
+            let totalEnergy = 0;
 
             for (let i = 0; i < numBars; i++) {
                 let barHeight;
@@ -612,6 +769,7 @@ class NauraViewerClass {
                     const freq = Math.sin(time + i * 0.4) * 0.5 + 0.5;
                     const noise = Math.sin(time * 2.5 + i) * 0.3 + 0.3;
                     barHeight = Math.max(6, (freq * 0.6 + noise * 0.4) * (canvas.height - 10));
+                    totalEnergy += barHeight / canvas.height;
                 } else {
                     barHeight = 4; // Idle static line
                 }
@@ -631,10 +789,22 @@ class NauraViewerClass {
                 ctx.fillRect(x, y, barWidth, barHeight);
             }
 
+            // Teruskan energi musik rata-rata ke 3D mascot agar Astral Halo berdenyut
+            if (this.viewer3d && this.isPlaying) {
+                this.viewer3d.setAudioEnergy(totalEnergy / numBars);
+            }
+
             this.spectrumAnimId = requestAnimationFrame(render);
         };
 
-        render();
+        this.spectrumAnimId = requestAnimationFrame(render);
+    }
+
+    _stopSpectrum() {
+        if (this.spectrumAnimId) {
+            cancelAnimationFrame(this.spectrumAnimId);
+            this.spectrumAnimId = null;
+        }
     }
 
     toggleMusicPlay() {
@@ -674,6 +844,16 @@ class NauraViewerClass {
                 if (this.ui.hud.ping) this.ui.hud.ping.textContent = `${newPing} ms`;
             }
         }, 3000);
+    }
+
+    /**
+     * Mengganti skin/wardrobe kostum 3D model Naura
+     * @param {string} skinName - 'cyberpunk' | 'maid' | 'casual' | 'adventurer'
+     */
+    setSkin(skinName) {
+        if (this.viewer3d && typeof this.viewer3d.setSkin === "function") {
+            this.viewer3d.setSkin(skinName);
+        }
     }
 }
 

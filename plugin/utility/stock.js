@@ -13,7 +13,6 @@ const {
 } = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
 const stockMarketEngine = require("../../src/services/stockMarketEngine");
-const { drawStockMarket } = require("../../src/canvas/stockCanvas");
 const GuildClan = require("../../src/models/GuildClan");
 const UserStockHolding = require("../../src/models/UserStockHolding");
 const {
@@ -21,6 +20,8 @@ const {
   safeRespond,
   fuzzyFilter,
 } = require("../../src/utils/autocompleteHelper");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
+const { drawStockMarket } = require("../../src/canvas/stockCanvas");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -121,7 +122,13 @@ module.exports = {
       const files = [];
 
       try {
-        const stockBuf = await drawStockMarket(stocks);
+        const stockBuf = await canvasWorkerPool
+          .execute({
+            task: "renderStockMarket",
+            payload: stocks,
+            userId,
+          })
+          .catch(() => drawStockMarket(stocks));
         files.push(
           new AttachmentBuilder(stockBuf, { name: "stock_market.png" }),
         );

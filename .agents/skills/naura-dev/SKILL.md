@@ -103,6 +103,13 @@ await interaction.reply(payload);
 - Versi Node.js wajib `>= 24.0.0`.
 - Karakter em dash (`\u2014`) dilarang keras di seluruh berkas dan file bahasa JSON. Gunakan tanda minus `-` biasa.
 
+### 2.4 Standarisasi Penomoran Versi (X.Y.Z)
+
+Seluruh ekosistem, package.json, dan suite dokumentasi wajib mematuhi standar tiga tingkat:
+- **`X` (Versi Keseluruhan / Era Naura):** Generasi platform Naura (saat ini bernilai `2` untuk era Naura Hoshino V2).
+- **`Y` (Major Update):** Pembaruan arsitektur besar, penambahan pilar baru, sistem moneter baru (seperti Currency V2 Closed-Loop), integrasi AI Ensemble, atau kluster audio Lavalink.
+- **`Z` (Minor Update):** Peningkatan berkala, optimasi, balancing RPG/ekonomi, atau perbaikan bug (bugfix).
+
 ---
 
 ## 🛠️ 3. Panduan Perintah CLI di Windows
@@ -117,7 +124,7 @@ Karena sistem operasi menggunakan Windows PowerShell dengan pembatasan skrip:
   ```
 - **Menjalankan Unit Test**:
   ```powershell
-  node --test
+  node --test "src/**/*.test.js"
   node --test src/services/seasonEngine.test.js
   ```
 - **Checklist QA Gate Sebelum Commit**:
@@ -135,8 +142,8 @@ Karena sistem operasi menggunakan Windows PowerShell dengan pembatasan skrip:
   # 4. Resolusi internal require
   node scripts/check-requires.js
 
-  # 5. Automated test suite
-  node --test
+  # 5. Automated test suite (254 tests wajib 100% lulus)
+  node --test "src/**/*.test.js"
   ```
 
   Semua 5 pengujian di atas wajib berstatus hijau (0 error).
@@ -145,14 +152,20 @@ Karena sistem operasi menggunakan Windows PowerShell dengan pembatasan skrip:
 
 ## 🔍 4. Peta Cepat Pencarian Kode
 
-| Ingin Mengubah Apa?                   | Buka Berkas Mana?                                                                    |
-| ------------------------------------- | ------------------------------------------------------------------------------------ |
-| Drop rate, loot monster, item catalog | `src/survival/data/items_catalog.js`, `items.js`, `monsters.js`                      |
-| Formula XP, stamina, vitals           | `src/survival/helpers/survivalVitals.js`, `src/survival/engines/survivalLeveling.js` |
-| Aturan pasar saham & dynamic tax      | `src/services/stockMarketEngine.js`, `src/services/economyGuardEngine.js`            |
-| Battle Pass Season Rewards            | `src/services/seasonEngine.js`                                                       |
-| World Boss multi-fase & rewards       | `src/survival/engines/worldBossEngine.js`                                            |
-| Skema database PostgreSQL             | `src/models/*.js` & migrasi di `src/managers/dbMigrator.js`                          |
-| Lavalink & Musik                      | `src/managers/musicManager.js`, `src/music/poru_events/`                             |
-| Token warna & styling Discord         | `src/config/ui.js`, `src/utils/survivalUIHelper.js`                                  |
-| Terjemahan bahasa bot                 | `assets/language/id.json` dan `en.json` (wajib sinkron)                              |
+| Ingin Mengubah Apa?                             | Buka Berkas Mana?                                                                                                 |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Drop rate, loot monster, item catalog           | `src/survival/data/items_catalog.js`, `items.js`, `monsters.js`                                                   |
+| Formula XP, stamina, vitals                     | `src/survival/helpers/survivalVitals.js`, `src/survival/engines/survivalLeveling.js`                              |
+| Currency V2, Recycling Pool & Server Treasury   | `src/survival/engines/currency.js`, `src/survival/engines/recyclingPoolEngine.js`, `src/models/ServerTreasury.js` |
+| Durability & Repair Surcharge                   | `src/survival/engines/durabilityEngine.js`                                                                        |
+| Aturan pasar saham & dynamic tax                | `src/services/stockMarketEngine.js`, `src/services/economyGuardEngine.js`                                         |
+| AI Multi-Model Ensemble Router & LLM Failover   | `src/ai/aiEnsembleRouter.js`, `src/ai/aiHelper.js`                                                                |
+| Living AI Semantic Vector Memory & Server RAG   | `src/ai/semanticMemoryService.js`, `src/ai/aiMemory.js`, `src/models/SemanticMemory.js`                          |
+| Lavalink Cluster Manager & Multi-Node Failover  | `src/managers/lavalinkClusterManager.js`, `src/managers/musicManager.js`                                          |
+| Web Soundboard Studio & WebSocket Realtime      | `src/services/soundboardService.js`, `dashboard/src/pages/soundboard.html`                                        |
+| Battle Pass Season Rewards                      | `src/services/seasonEngine.js`                                                                                    |
+| World Boss multi-fase & rewards                 | `src/survival/engines/worldBossEngine.js`                                                                         |
+| Living City NPC & Town Square Simulation        | `src/survival/engines/townEngine.js`, `plugin/survival/subcommands/town.js`                                       |
+| Skema database PostgreSQL & 41 Migrasi          | `src/models/*.js` & migrasi di `src/managers/dbMigrator.js`                                                       |
+| Token warna & styling Discord                   | `src/config/ui.js`, `src/utils/survivalUIHelper.js`                                                               |
+| Terjemahan bahasa bot                           | `assets/language/id.json` dan `en.json` (wajib sinkron)                                                           |

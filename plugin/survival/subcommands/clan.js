@@ -244,6 +244,38 @@ module.exports = {
       return interaction.editReply({ ...payload, files, embeds: [] });
     }
 
+    // 2.5 FEDERASI ALIANSI GLOBAL
+    if (action === "federation") {
+      const userClan = survival.clanId
+        ? await GuildClan.findByPk(survival.clanId)
+        : null;
+      if (!userClan)
+        return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
+
+      const guildFederationEngine = require("../../../src/survival/engines/guildFederationEngine");
+      const hall = await guildFederationEngine.getHallOfFame(5);
+      const topFedLines = hall
+        .map(
+          (f, i) =>
+            `${i === 0 ? "🥇" : "🥈"} **[${f.tag}] ${f.name}** (Prestise: \`${f.prestige}\`, Anggota: \`${f.memberClans?.length || 1} Klan\`)`,
+        )
+        .join("\n");
+
+      return card(interaction, {
+        color: "#38BDF8",
+        title: "🌐 Aliansi Federasi Antar-Server",
+        expression: "info",
+        description: [
+          `Klan **${userClan.name}** dapat membentuk atau bergabung dengan Aliansi Federasi Lintas-Server!`,
+          "",
+          "🏆 **Top Aliansi Global:**",
+          topFedLines,
+          "",
+          "> Gunakan `/survival federation` untuk mengakses menu lengkap Aliansi & Alliance Raid Boss.",
+        ].join("\n"),
+      });
+    }
+
     // 3. MINUM KOPI LOUNGE (+25 ENERGY)
     if (action === "coffee") {
       const userClan = survival.clanId
@@ -312,6 +344,81 @@ module.exports = {
         color: "#86EFAC",
         title: "🎉 Furnitur Baru Terpasang!",
         description: `Klan **${userClan.name}** berhasil membeli **${buyRes.item.emoji} ${buyRes.item.name}** seharga **${buyRes.item.cost.toLocaleString("id-ID")} ⭐**! Sisa kas: **${buyRes.remainingVault.toLocaleString("id-ID")} ⭐**.`,
+      });
+    }
+
+    // 5. UBAH TEMA VISUAL GUILD HALL
+    if (action === "theme") {
+      const userClan = survival.clanId
+        ? await GuildClan.findByPk(survival.clanId)
+        : null;
+      if (!userClan)
+        return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
+
+      if (userClan.leaderId !== user.id) {
+        return fail(
+          interaction,
+          "Hanya pemimpin klan yang berhak mengubah tema visual Guild Hall!",
+        );
+      }
+
+      const guildHallEngine = require("../../../src/survival/engines/guildHallEngine");
+      const themeInput = (clanNameInput || "CYBERPUNK_LOUNGE").toUpperCase();
+      const themeRes = await guildHallEngine.customizeTheme(
+        userClan.id,
+        themeInput,
+      );
+
+      if (!themeRes.success) {
+        return fail(
+          interaction,
+          "Tema tidak valid! Pilihan tema yang tersedia: `CYBERPUNK_LOUNGE`, `NEO_SHRINE`, `ASTRAL_OBSERVATORY`, `NATURE_SANCTUARY`.",
+        );
+      }
+
+      return card(interaction, {
+        color: "#A78BFA",
+        title: "🎨 Suasana Guild Hall Diperbarui!",
+        description: `Tema visual Guild Hall klan **${userClan.name}** berhasil diubah menjadi **${themeInput}**!`,
+      });
+    }
+
+    // 6. UPGRADE FASILITAS GUILD HALL
+    if (action === "upgrade") {
+      const userClan = survival.clanId
+        ? await GuildClan.findByPk(survival.clanId)
+        : null;
+      if (!userClan)
+        return fail(interaction, "Kamu belum bergabung dengan klan mana pun.");
+
+      if (userClan.leaderId !== user.id) {
+        return fail(
+          interaction,
+          "Hanya pemimpin klan yang berhak meng-upgrade fasilitas klan!",
+        );
+      }
+
+      const guildHallEngine = require("../../../src/survival/engines/guildHallEngine");
+      const facilityId = clanNameInput || "lounge";
+      const upgRes = await guildHallEngine.upgradeFacility(
+        userClan.id,
+        facilityId,
+      );
+
+      if (!upgRes.success) {
+        if (upgRes.reason === "INSUFFICIENT_VAULT") {
+          return fail(
+            interaction,
+            `Kas klan tidak cukup! Butuh ${upgRes.cost.toLocaleString("id-ID")} ⭐, saldo saat ini: ${upgRes.current.toLocaleString("id-ID")} ⭐.`,
+          );
+        }
+        return fail(interaction, "Gagal meng-upgrade fasilitas klan.");
+      }
+
+      return card(interaction, {
+        color: "#FBBF24",
+        title: "⭐ Fasilitas Berhasil Di-Upgrade!",
+        description: `Fasilitas **${facilityId}** klan **${userClan.name}** berhasil ditingkatkan ke **Level ${upgRes.newLevel}** seharga **${upgRes.cost.toLocaleString("id-ID")} ⭐**! Sisa kas: **${upgRes.remainingVault.toLocaleString("id-ID")} ⭐**.`,
       });
     }
 

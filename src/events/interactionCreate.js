@@ -176,6 +176,28 @@ module.exports = {
 
     // Guard Clause 4: Delegasi Context Menu Command
     if (interaction.isContextMenuCommand()) {
+      const isContextRateLimited = await rateLimiter.isRateLimited(
+        interaction.user.id,
+        `ctx_${interaction.commandName}`,
+        4,
+        10,
+      );
+      if (isContextRateLimited) {
+        return interaction
+          .reply({
+            ...buildErrorContainerV2({
+              authorName: "Naura Rate Limit",
+              title: "Slow Down!",
+              errorMessage:
+                "Kamu menggunakan context menu terlalu cepat. Harap tunggu beberapa detik ya!",
+              lang: interaction.localeLang,
+              expression: "sleepy",
+            }),
+            flags: MessageFlags.Ephemeral,
+          })
+          .catch(() => {});
+      }
+
       const { resolveContextMenu } = require("../interactions/contextMenus");
       const contextMenuHandler = resolveContextMenu(interaction.commandName);
       if (!contextMenuHandler) return undefined;

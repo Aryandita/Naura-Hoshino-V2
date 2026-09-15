@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
-import { resolve } from "path";
+import fs from "node:fs";
+import path, { resolve } from "node:path";
 import { fileURLToPath } from "url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -52,6 +53,8 @@ export default defineConfig({
             topology: resolve(__dirname, "src/pages/topology.html"),
             builder: resolve(__dirname, "src/pages/builder.html"),
             survivalMap: resolve(__dirname, "src/pages/survival-map.html"),
+            soundboard: resolve(__dirname, "src/pages/soundboard.html"),
+            jam: resolve(__dirname, "src/pages/jam.html"),
           },
     },
     // Chunk terpisah agar model Three.js tidak disertakan di halaman yang tidak perlu
@@ -86,8 +89,6 @@ export default defineConfig({
         // Otomatis salin dist/src/pages/index.html ke dist/index.html
         // agar root URL '/' langsung menyajikan Dashboard Utama
         try {
-          const fs = require("node:fs");
-          const path = require("node:path");
           const distDir = resolve(__dirname, "dist");
           const srcIndex = path.join(distDir, "src", "pages", "index.html");
           const destIndex = path.join(distDir, "index.html");

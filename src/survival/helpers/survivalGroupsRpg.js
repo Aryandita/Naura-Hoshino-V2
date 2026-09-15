@@ -183,9 +183,12 @@ function addRpgGroup(builder) {
               .setRequired(true)
               .addChoices(
                 { name: "🏰 Dashboard & Info Klan", value: "info" },
+                { name: "🌐 Aliansi Federasi Global", value: "federation" },
                 { name: "🏡 2.5D Guild Hall Lounge", value: "hall" },
                 { name: "☕ Seduh Kopi Lounge (+25 Energy)", value: "coffee" },
                 { name: "🛋️ Beli Furnitur Lounge", value: "furniture" },
+                { name: "🎨 Ubah Tema Hall", value: "theme" },
+                { name: "⭐ Upgrade Fasilitas", value: "upgrade" },
                 { name: "Buat Klan Baru", value: "create" },
                 { name: "Gabung Klan", value: "join" },
                 { name: "Sumbang Vault", value: "deposit" },
@@ -385,6 +388,46 @@ function addRpgGroup(builder) {
               .setDescription("Rating bintang 1 s/d 5 (khusus aksi Rate)")
               .setMinValue(1)
               .setMaxValue(5)
+              .setRequired(false),
+          ),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("federation")
+          .setDescription(
+            "🌐 Hub Aliansi Federasi Klan Lintas-Server & Global Hall of Fame",
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("aksi")
+              .setDescription("Pilih aksi federasi aliansi")
+              .addChoices(
+                { name: "🏰 Status Aliansi Klan", value: "status" },
+                { name: "🏆 Global Hall of Fame", value: "halloffame" },
+                { name: "🐉 Status Alliance Raid Boss", value: "boss" },
+                { name: "👑 Dirikan Federasi (Ketua Klan)", value: "create" },
+                { name: "🤝 Gabung Aliansi Federasi", value: "join" },
+              )
+              .setRequired(false),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("nama")
+              .setDescription("Nama aliansi federasi baru (khusus aksi Create)")
+              .setRequired(false),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("tag")
+              .setDescription(
+                "Tag aliansi klan maks 5 karakter (khusus aksi Create)",
+              )
+              .setRequired(false),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("federation_id")
+              .setDescription("ID Aliansi Federasi target (khusus aksi Join)")
               .setRequired(false),
           ),
       ),

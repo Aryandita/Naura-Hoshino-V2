@@ -245,7 +245,7 @@ module.exports = (client) => {
         aiOrchestration: {
           primaryEngine: {
             name: "Gemini 2.5 Flash",
-            status: env.GEMINI_API_KEY ? "active" : "unconfigured",
+            status: env.GEMINI_API ? "active" : "unconfigured",
           },
           failoverEngine: {
             name: "Groq LLaMA 3.3 Versatile",
@@ -255,6 +255,7 @@ module.exports = (client) => {
             name: "Persistent AI Memory (MongoDB + Redis)",
             status: "active",
           },
+          ensemble: require("../../src/ai/aiEnsembleRouter").getTelemetry(),
         },
       });
     } catch (e) {
@@ -312,6 +313,73 @@ module.exports = (client) => {
         expires_in: data.expires_in,
         scope: data.scope,
       });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // --- Soundboard API Endpoints ---
+  router.get("/soundboard/sounds", async (req, res) => {
+    try {
+      const soundboardService = require("../../src/services/soundboardService");
+      const guildId = req.query.guildId || null;
+      const sounds = await soundboardService.getAvailableSounds(guildId);
+      res.json({ success: true, sounds });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  router.post("/soundboard/play", async (req, res) => {
+    try {
+      const { guildId, soundId, voiceChannelId } = req.body || {};
+      if (!guildId || !soundId) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Missing guildId or soundId" });
+      }
+
+      const RateLimiter = require("../../src/utils/rateLimiter");
+      const clientIp = req.ip || req.headers["x-forwarded-for"] || "ip_anon";
+      const rateLimitKey = req.user?.id ? `user_${req.user.id}` : `ip_${clientIp}`;
+      const isLimited = await RateLimiter.isRateLimited(
+        rateLimitKey,
+        "api_soundboard_play",
+        5,
+        10,
+      );
+      if (isLimited) {
+        return res.status(429).json({
+          success: false,
+          error: "Terlalu banyak permintaan pemutaran soundboard. Mohon tunggu sebentar.",
+        });
+      }
+
+      // Validasi keberadaan bot di server tujuan
+      const targetGuild = client.guilds?.cache?.get(guildId);
+      if (!targetGuild) {
+        return res.status(404).json({
+          success: false,
+          error: "Bot tidak berada di server tujuan.",
+        });
+      }
+
+      const soundboardService = require("../../src/services/soundboardService");
+      const user = req.user || null;
+
+      const result = await soundboardService.playSound({
+        client,
+        guildId,
+        soundId,
+        voiceChannelId,
+        requester: user,
+      });
+
+      if (!result.success) {
+        return res.status(400).json(result);
+      }
+
+      res.json(result);
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
     }

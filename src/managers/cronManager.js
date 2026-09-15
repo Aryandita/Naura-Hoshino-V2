@@ -1,9 +1,13 @@
 const cron = require("node-cron");
+const { AttachmentBuilder } = require("discord.js");
 const { logger } = require("../managers/logger");
 const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
 const ui = require("../config/ui");
 const GuildSettings = require("../models/GuildSettings");
 const UserBirthday = require("../models/UserBirthday");
+const canvasWorkerPool = require("../canvas/canvasWorkerPool");
+const cacheManager = require("./cacheManager");
+const { addItemsAtomic } = require("../survival/engines/inventoryHelper");
 
 const clusterManager = require("./clusterManager");
 
@@ -27,6 +31,17 @@ module.exports = {
       logger.info("[Cron] Running Auto Backup Database...");
       const backupManager = require("./backupManager");
       await backupManager.runBackup();
+    });
+
+    // 0.1 Nightly AI Memory Reflection & Synthesis Engine - Runs every day at 03:00 AM
+    cron.schedule("0 3 * * *", async () => {
+      logger.info("[Cron] Running Nightly AI Memory Reflection & Synthesis...");
+      try {
+        const { service } = require("../ai/semanticMemoryService");
+        await service.synthesizeDailyMemories();
+      } catch (err) {
+        logger.error("[Cron] Gagal menjalankan Nightly AI Memory Reflection:", err.message);
+      }
     });
 
     // 0.5 Tempban Expiration Check - Runs every minute
@@ -578,7 +593,7 @@ module.exports = {
       }
     });
 
-    // 2. Birthday Announcer - Runs at 00:00 every day
+    // 2. Birthday Announcer & Celebration Engine - Runs at 00:00 every day
     cron.schedule("0 0 * * *", async () => {
       logger.info("[Cron] Checking for birthdays...");
       const today = new Date();
@@ -594,6 +609,87 @@ module.exports = {
         // Kumpulkan semua userId birthday hari ini untuk batch fetch
         const birthdayUserIds = birthdaysToday.map((b) => b.userId);
 
+        // Pre-render birthday card & serahkan birthday gift box via DM personal untuk setiap user
+        const userCardMap = new Map();
+        for (const bday of birthdaysToday) {
+          try {
+            const user = await client.users.fetch(bday.userId).catch(() => null);
+            if (!user) continue;
+
+            let age = null;
+            if (bday.year) {
+              age = today.getFullYear() - bday.year;
+            }
+
+            // 1. Render kartu ucapan selamat ulang tahun kosmik
+            const cardBuffer = await canvasWorkerPool
+              .runTask("renderBirthdayCard", {
+                username: user.username,
+                avatarUrl: user.displayAvatarURL({ extension: "png", size: 256 }),
+                age: age || undefined,
+                customMessage: bday.customMessage || undefined,
+              })
+              .catch((err) => {
+                logger.error(
+                  `[Cron Birthday] Gagal render kartu untuk ${bday.userId}: ${err.message}`,
+                );
+                return null;
+              });
+
+            if (cardBuffer) {
+              userCardMap.set(bday.userId, cardBuffer);
+            }
+
+            // 2. Kado Ulang Tahun Atomik (1.000 NSF, 3 Kupon, 1 Kue Tart)
+            await cacheManager
+              .incrementUserSurvival(bday.userId, {
+                starFragments: 1000,
+                coupons: 3,
+              })
+              .catch(() => {});
+            await addItemsAtomic(bday.userId, [
+              { id: "birthday_cake", amount: 1 },
+            ]).catch(() => {});
+
+            // 3. Kirim ucapan personal & kartu via DM
+            const dmFiles = cardBuffer
+              ? [new AttachmentBuilder(cardBuffer, { name: "birthday_card.png" })]
+              : [];
+            const dmPayload = buildContainerV2({
+              accentColorHex: "#FF69B4",
+              authorName: "Naura Birthday Celebration",
+              title: `🎂 Selamat Ulang Tahun, ${user.username}!`,
+              bannerAttachmentName: cardBuffer ? "birthday_card.png" : undefined,
+              description: [
+                `Hai **${user.username}**! Hari ini adalah hari spesialmu! 🎉✨`,
+                age
+                  ? `Selamat menginjak usia yang ke-**${age}** tahun! Semoga panjang umur, sehat selalu, dan petualanganmu di dunia Naura semakin luar biasa.`
+                  : "Semoga panjang umur, sehat selalu, dan petualanganmu di dunia Naura semakin luar biasa!",
+                "",
+                "🎁 **Spesial Birthday Gift Box dari Naura:**",
+                "• **+1.000** Star Fragments (NSF)",
+                "• **+3** Naura Coupons",
+                "• **1x** Kue Ulang Tahun (Kue manis pemulih vital)",
+                "",
+                "*Kado spesial telah otomatis dimasukkan ke dalam ransel survival kamu! Nikmati hari istimewamu ya!*",
+              ].join("\n"),
+              files: dmFiles,
+              footerText: ui.getFooter("survival"),
+            });
+
+            await user.send(dmPayload).catch(() => {
+              logger.info(
+                `[Cron Birthday] DM ditutup oleh pengguna ${bday.userId}`,
+              );
+            });
+          } catch (userErr) {
+            logger.error(
+              `[Cron Birthday] Error memproses perayaan user ${bday.userId}: ${userErr.message}`,
+            );
+          }
+        }
+
+        // 4. Siarkan ucapan dan kartu ke Announcement Channel di server-server yang mengaktifkannya
         const allSettings = await GuildSettings.findAll({
           attributes: ["guildId", "settings"],
         });
@@ -610,7 +706,7 @@ module.exports = {
           );
           if (!channel) continue;
 
-          // ✅ FIX N+1: Batch fetch semua member sekaligus per guild
+          // Batch fetch member
           let fetchedMembers;
           try {
             fetchedMembers = await guild.members.fetch({
@@ -621,6 +717,7 @@ module.exports = {
           }
 
           let bdayMsg = "";
+          const guildFiles = [];
           for (const bday of birthdaysToday) {
             const member = fetchedMembers.get(bday.userId);
             if (member) {
@@ -630,6 +727,14 @@ module.exports = {
                 ageText = ` yang ke-${age}`;
               }
               bdayMsg += `🎉 Selamat Ulang Tahun${ageText} kepada <@${member.id}>!\n`;
+              const cardBuf = userCardMap.get(bday.userId);
+              if (cardBuf && guildFiles.length === 0) {
+                guildFiles.push(
+                  new AttachmentBuilder(cardBuf, {
+                    name: "birthday_server_card.png",
+                  }),
+                );
+              }
             }
           }
 
@@ -637,8 +742,13 @@ module.exports = {
             const bdayPayload = buildContainerV2({
               accentColorHex: "#ff9ff3",
               authorName: "Naura Birthday Reminder",
-              title: "🎂 Hari Ulang Tahun!",
-              description: bdayMsg,
+              title: "🎂 Hari Ulang Tahun Anggota Server!",
+              bannerAttachmentName:
+                guildFiles.length > 0 ? "birthday_server_card.png" : undefined,
+              description:
+                bdayMsg +
+                "\nMari berikan ucapan selamat dan doa terbaik kita di hari spesial ini! 🎈🥳",
+              files: guildFiles,
               footerText: ui.getFooter("core"),
             });
             await channel.send(bdayPayload).catch(() => {});
@@ -1032,6 +1142,62 @@ module.exports = {
         logger.debug("[Cron Notification] Autonomous notification cycle tick.");
       } catch (err) {
         logger.error("[Cron Notification Center Error]", err);
+      }
+    });
+
+    // 14. Daily Central Bank Exchange Volume Reset (00:00 UTC)
+    cron.schedule("0 0 * * *", async () => {
+      try {
+        const redisManager = require("./redisManager");
+        if (redisManager.client && redisManager.client.isReady) {
+          await redisManager.client.set("economy:volume:nsf:daily", 0);
+          logger.info("[Cron Bank] Daily Central Bank exchange volume has been reset to 0.");
+        }
+      } catch (err) {
+        logger.error("[Cron Bank Volume Reset Error]", err);
+      }
+    });
+
+    // 15. Weekly Astral Lottery Jackpot Draw (Sunday at 20:00 WIB / 13:00 UTC)
+    cron.schedule("0 13 * * 0", async () => {
+      try {
+        const recyclingPoolEngine = require("../survival/engines/recyclingPoolEngine");
+        logger.info("[Cron Lottery] Executing weekly Astral Lottery jackpot draw...");
+        const result = await recyclingPoolEngine.runWeeklyLottery();
+        if (result.ok) {
+          logger.info(
+            `[Cron Lottery] Jackpot drawn! Winner: ${result.winnerUserId} received ${result.prizeAmount} NSF.`,
+          );
+          // Siarkan notifikasi penghargaan ke pemenang undian
+          try {
+            const winnerUser = await client.users
+              .fetch(result.winnerUserId)
+              .catch(() => null);
+            if (winnerUser) {
+              const notifPayload = buildContainerV2({
+                accentColorHex: "#F59E0B",
+                authorName: "Naura Wilds • Astral Lottery",
+                title: "🏆 Selamat! Kamu Memenangkan Astral Lottery!",
+                description: [
+                  `Halo <@${result.winnerUserId}>!`,
+                  "",
+                  `Tiket undianmu terpilih sebagai pemenang jackpot mingguan!`,
+                  `Kamu telah menerima hadiah sebesar **${Number(result.prizeAmount).toLocaleString("id-ID")} NSF** langsung ke dompet survivalmu.`,
+                  "",
+                  "-# 🎟️ *Terima kasih telah aktif berpartisipasi dan berkontribusi pada ekonomi sirkular Naura Wilds.*",
+                ].join("\n"),
+                footerText: "Naura Hoshino Ecosystem • Astral Lottery",
+              });
+              await winnerUser.send(notifPayload).catch(() => {});
+            }
+          } catch (notifErr) {
+            logger.warn(
+              `[Cron Lottery] Gagal mengirim notifikasi pemenang: ${notifErr.message}`,
+            );
+          }
+        }
+      } catch (err) {
+        logger.error("[Cron Astral Lottery Error]", err);
       }
     });
   },

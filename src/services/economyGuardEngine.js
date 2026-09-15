@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 /**
  * Lokasi: src/services/economyGuardEngine.js
@@ -59,7 +59,7 @@ class EconomyGuardEngine {
    * @param {number} totalMoneySupply - Total koin beredar di server/ekosistem.
    * @returns {number} Tarif pajak dalam desimal (misal 0.05 = 5%).
    */
-  calculateDynamicTax(totalMoneySupply = 0) {
+  calculateDynamicTax(totalMoneySupply = 0, premiumTier = "none") {
     const supply = Math.max(0, Number(totalMoneySupply) || 0);
     const {
       minTaxRate,
@@ -69,25 +69,35 @@ class EconomyGuardEngine {
       inflationThresholdTier2,
     } = this.config;
 
-    if (supply <= 0) return baseTaxRate;
-    if (supply < inflationThresholdTier1) {
+    let calculatedRate = baseTaxRate;
+    if (supply <= 0) {
+      calculatedRate = baseTaxRate;
+    } else if (supply < inflationThresholdTier1) {
       // Suplai rendah: beri insentif transaksi (3% - 5%)
       const ratio = supply / inflationThresholdTier1;
-      return Number(
+      calculatedRate = Number(
         (minTaxRate + (baseTaxRate - minTaxRate) * ratio).toFixed(4),
       );
+    } else if (supply >= inflationThresholdTier2) {
+      calculatedRate = maxTaxRate;
+    } else {
+      // Di antara Tier 1 dan Tier 2: interpolasi naik menuju maxTaxRate
+      const ratio =
+        (supply - inflationThresholdTier1) /
+        (inflationThresholdTier2 - inflationThresholdTier1);
+      calculatedRate = Number((baseTaxRate + (maxTaxRate - baseTaxRate) * ratio).toFixed(4));
     }
 
-    if (supply >= inflationThresholdTier2) {
-      return maxTaxRate;
+    // Terapkan Diskon Tax Haven untuk Anggota V.I.P
+    if (premiumTier && premiumTier !== "none") {
+      const { getMarketTaxDiscount } = require("../premium/premiumHelper");
+      const discount = getMarketTaxDiscount(premiumTier);
+      if (discount > 0) {
+        calculatedRate = Number((calculatedRate * (1 - discount)).toFixed(4));
+      }
     }
 
-    // Di antara Tier 1 dan Tier 2: interpolasi naik menuju maxTaxRate
-    const ratio =
-      (supply - inflationThresholdTier1) /
-      (inflationThresholdTier2 - inflationThresholdTier1);
-    const rate = baseTaxRate + (maxTaxRate - baseTaxRate) * ratio;
-    return Number(rate.toFixed(4));
+    return calculatedRate;
   }
 
   /**

@@ -106,27 +106,28 @@ function exchangeView(snap) {
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("bank_ex_to_coin")
-      .setLabel(`${FRAGMENT.short} \u2192 ${COIN.short}`)
+      .setLabel(`${FRAGMENT.short} \u2192 ${COIN.short} (Tukar ke Kota)`)
       .setStyle(ButtonStyle.Success),
     new ButtonBuilder()
       .setCustomId("bank_ex_to_nsf")
-      .setLabel(`${COIN.short} \u2192 ${FRAGMENT.short}`)
-      .setStyle(ButtonStyle.Primary),
+      .setLabel(`${COIN.short} \u2192 ${FRAGMENT.short} (Terkunci)`)
+      .setStyle(ButtonStyle.Secondary),
     backButton(),
   );
 
   return buildContainerV2({
     accentColorHex: ui.getColor("economy") || "#FFD700",
-    authorName: "Naura Central Bank • Loket Penukaran",
-    title: `${currencyHelper.emojiOf(COIN)} Tukar Mata Uang`,
+    authorName: "Naura Central Bank \u2022 Loket Penukaran",
+    title: `${currencyHelper.emojiOf(COIN)} Tukar Mata Uang (One-Way Bridge)`,
     expression: "Cheers",
     description: [
-      `Kurs hari ini tetap: **${n(MIN_EXCHANGE_NSF)} ${FRAGMENT.short} = 1 ${COIN.short}**.`,
-      `Kalau nominalmu tidak pas, sisanya Naura kembalikan ke dompet, tidak ada yang hangus.`,
+      `Loket melayani penjualan hasil panen/alam **${FRAGMENT.short}** ke mata uang kota **${COIN.short}**.`,
+      `${e("info")} Kurs dinamis bergerak sesuai volume pasar harian (Dasar: 1.000 NSF = 1 Coin).`,
+      `${e("sparkle")} Biaya admin (5% - 15%) didaur ulang 100% untuk fasilitas umum & tiket undian!`,
       "",
       balanceBlock(snap),
       "",
-      `${e("warning")} Naura Coupon tidak dilayani di loket ini ya, kupon hanya bisa didapat dari petualangan.`,
+      `${e("warning")} Penukaran kembali dari Coin ke NSF dikunci demi menjaga tantangan survival.`,
     ].join("\n"),
     buttonsRow: row,
     footerText: ui.getFooter("survival"),

@@ -9,11 +9,11 @@ const {
 } = require("discord.js");
 const redisManager = require("../../managers/redisManager");
 const CardBattleEngine = require("../../card/cardBattleEngine");
-const { drawCardBattleArena } = require("../../canvas/cardBattleCanvas");
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
 const UserCardDeck = require("../../models/UserCardDeck");
 const currency = require("../../survival/engines/currency");
 const ui = require("../../config/ui");
+const { drawCardBattleArena } = require("../../canvas/cardBattleCanvas");
 
 module.exports = [
   {

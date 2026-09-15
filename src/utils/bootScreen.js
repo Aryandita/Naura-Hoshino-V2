@@ -174,7 +174,7 @@ const bannerRow = (bannerStr, bannerVis, rightStr, rightVis) => {
  */
 const displayBootScreen = (client, sysStatus) => {
   // ── Data runtime ──────────────────────────────────────────────────────
-  const botVer = env.BOT_VERSION || "2.1.0";
+  const botVer = env.BOT_VERSION || "2.2.0";
   const botTag = client.user ? client.user.tag : "Naura Hoshino#0000";
   const nodeVer = process.version;
   const cpuRaw = os.cpus()[0].model.trim().replace(/\s+/g, " ");

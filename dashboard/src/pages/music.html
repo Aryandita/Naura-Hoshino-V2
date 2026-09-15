@@ -193,8 +193,13 @@
                     <span id="timeCurrent">00:00</span>
                     <span id="timeTotal">00:00</span>
                   </div>
-                  <div class="progress-bar-bg mb-6">
+                  <div class="progress-bar-bg mb-4">
                     <div id="progressBar" class="progress-bar-fill"></div>
+                  </div>
+
+                  <!-- Live Audio Spectrogram & Equalizer Waveform -->
+                  <div class="mb-4">
+                    <canvas id="musicWaveformCanvas" width="480" height="32" class="w-full h-8 rounded-lg bg-black/40 border border-pink-400/20"></canvas>
                   </div>
                 </div>
               </div>
@@ -459,6 +464,30 @@
       // Auto connect if saved
       if (currentGuildId) {
         setTimeout(connectToGuild, 500);
+      }
+
+      // Live Audio Spectrogram Waveform
+      const musicCanvas = document.getElementById("musicWaveformCanvas");
+      if (musicCanvas) {
+        const mCtx = musicCanvas.getContext("2d");
+        let mTick = 0;
+        function renderMusicWave() {
+          mCtx.clearRect(0, 0, musicCanvas.width, musicCanvas.height);
+          const numBars = 32;
+          const barW = (musicCanvas.width / numBars) - 2;
+          mTick += 0.04;
+          for (let i = 0; i < numBars; i++) {
+            const h = isPlaying ? Math.sin(mTick + i * 0.3) * 8 + 12 : 3;
+            const grad = mCtx.createLinearGradient(0, musicCanvas.height, 0, 0);
+            grad.addColorStop(0, "#06b6d4");
+            grad.addColorStop(0.5, "#ec4899");
+            grad.addColorStop(1, "#c084fc");
+            mCtx.fillStyle = grad;
+            mCtx.fillRect(i * (barW + 2), musicCanvas.height - h, barW, h);
+          }
+          requestAnimationFrame(renderMusicWave);
+        }
+        renderMusicWave();
       }
     </script>
 

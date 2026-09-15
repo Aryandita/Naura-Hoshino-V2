@@ -31,6 +31,8 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
+const { CATALOG_BY_ID } = require("../../../src/survival/data/items_catalog");
 
 const COLLECTOR_MS = 120000;
 const PORTRAIT_NAME = "shopkeeper.png";
@@ -277,7 +279,51 @@ module.exports = {
     }
 
     const targetItem = interaction.options?.getString?.("item") || null;
+    const targetAksi = interaction.options?.getString?.("aksi") || "buy";
+
     if (targetItem) {
+      if (targetAksi === "inspect") {
+        const decoded = purchase.decodeChoice(targetItem);
+        const itemId = decoded.itemId || targetItem;
+        const itemData =
+          CATALOG_BY_ID.get(itemId) ||
+          items.find((it) => it && it.id === itemId);
+
+        if (itemData) {
+          try {
+            const cardBuffer = await canvasWorkerPool.runTask(
+              "renderItemCard",
+              itemData,
+            );
+            const file = new AttachmentBuilder(cardBuffer, {
+              name: "item_card.png",
+            });
+            const inspectPayload = buildContainerV2({
+              accentColorHex: itemData.tierColor || "#38BDF8",
+              authorName: `${npc.name} - Inspeksi Item`,
+              title: `🔍 Hologram: ${itemData.name}`,
+              bannerAttachmentName: "item_card.png",
+              description: [
+                `> *"${itemData.description || "Tidak ada deskripsi."}"*`,
+                "",
+                `• **Kategori:** ${String(itemData.category).toUpperCase()}`,
+                `• **Tier:** T${itemData.tier || 1} (${itemData.rarity || "Common"})`,
+                `• **Harga Beli:** ${(itemData.price || 0).toLocaleString("id-ID")} NSF`,
+                `• **Harga Jual:** ${(itemData.sellPrice || 0).toLocaleString("id-ID")} NSF`,
+              ].join("\n"),
+              files: [file],
+              footerText: ui.getFooter("survival"),
+            });
+            return interaction.editReply({
+              ...inspectPayload,
+              components: [categoryRow()],
+            });
+          } catch (err) {
+            // Jika canvas gagal, lanjutkan ke alur pembelian biasa
+          }
+        }
+      }
+
       const { isCoupon } = purchase.decodeChoice(targetItem);
       await processBuy(interaction, targetItem, isCoupon);
 

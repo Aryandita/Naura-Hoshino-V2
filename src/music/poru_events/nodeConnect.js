@@ -1,5 +1,8 @@
 // Lokasi: src/events/poru/nodeConnect.js
 const GuildSettings = require("../../models/GuildSettings");
+const {
+  lavalinkClusterManager,
+} = require("../../managers/lavalinkClusterManager");
 
 module.exports = {
   async execute(manager, node) {
@@ -7,6 +10,10 @@ module.exports = {
     console.log(
       `\x1b[42m\x1b[30m ✨ SUCCESS \x1b[0m \x1b[32mKoneksi Audio Node [${node.name}] Berhasil & Stabil.\x1b[0m`,
     );
+
+    // Reset circuit breaker dan periksa kapabilitas server secara otomatis
+    lavalinkClusterManager.recordNodeSuccess(node.name);
+    lavalinkClusterManager.probeNodeCapabilities(node).catch(() => {});
 
     setTimeout(async () => {
       try {

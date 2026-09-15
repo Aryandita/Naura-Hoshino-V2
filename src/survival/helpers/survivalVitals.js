@@ -77,9 +77,18 @@ async function recoverVitals(
   const currentStamina = Number(survival.stamina ?? 100);
   const currentHp = Number(survival.hp ?? maxHp);
 
+  let maxStamina = 100;
+  try {
+    const profile = await cacheManager.getUserProfile(userId);
+    const { getUserPremiumTier, getMaxEnergy } = require("../../premium/premiumHelper");
+    maxStamina = getMaxEnergy(getUserPremiumTier(profile));
+  } catch (_) {
+    maxStamina = 100;
+  }
+
   const hungerAdd = Math.max(0, Math.min(100 - currentHunger, hunger));
   const thirstAdd = Math.max(0, Math.min(100 - currentThirst, thirst));
-  const staminaAdd = Math.max(0, Math.min(100 - currentStamina, stamina));
+  const staminaAdd = Math.max(0, Math.min(maxStamina - currentStamina, stamina));
   const hpAdd = Math.max(0, Math.min(maxHp - currentHp, hp));
 
   const deltas = {};

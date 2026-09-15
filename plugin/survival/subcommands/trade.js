@@ -15,6 +15,7 @@ const {
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const currency = require("../../../src/survival/engines/currency");
+const economyGuard = require("../../../src/services/economyGuardEngine");
 
 const COLLECTOR_MS = 120000;
 const MIN_AMOUNT = 1;
@@ -71,6 +72,17 @@ module.exports = {
         interaction,
         `Duh, saldomu belum cukup. Sekarang kamu punya ${currency.format(currency.FRAGMENT, senderBalance)}, sedangkan yang mau dikirim ${amount.toLocaleString("id-ID")}.`,
       );
+    }
+
+    // Evaluasi integritas transaksi dan periksa Circuit Breaker
+    const guardCheck = economyGuard.evaluateTransaction(
+      sender.id,
+      targetUser.id,
+      amount,
+      "trade",
+    );
+    if (!guardCheck.allowed) {
+      return reject(interaction, guardCheck.reason);
     }
 
     const confirmRow = new ActionRowBuilder().addComponents(
@@ -147,9 +159,26 @@ module.exports = {
         return i.update({ ...rejectPayload, embeds: [] }).catch(() => {});
       }
 
-      // Saldo diperiksa ulang tepat sebelum dipindahkan.
+      // Saldo dan status Circuit Breaker diperiksa ulang tepat sebelum dipindahkan.
       await senderSurvival.reload().catch(() => {});
       await targetSurvival.reload().catch(() => {});
+
+      const guardRecheck = economyGuard.evaluateTransaction(
+        sender.id,
+        targetUser.id,
+        amount,
+        "trade",
+      );
+      if (!guardRecheck.allowed) {
+        const guardFailPayload = buildErrorContainerV2({
+          title: `${e("cry", "\u274C")} Transaksi Diblokir`,
+          errorMessage: guardRecheck.reason,
+          footerText: ui.getFooter("survival"),
+        });
+        return i
+          .update({ ...guardFailPayload, embeds: [], components: [] })
+          .catch(() => {});
+      }
 
       const remaining = await currency.charge(
         currency.FRAGMENT,

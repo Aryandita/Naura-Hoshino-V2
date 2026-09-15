@@ -555,15 +555,15 @@
                 >
                   <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></span>
                   <span id="naura3d-status-text">🌸 Idle (Bernafas)</span>
-                  <span id="naura3d-format-badge" class="text-[9px] px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300 font-mono border border-pink-400/30 ml-0.5">GLB PBR</span>
+                  <span id="naura3d-format-badge" class="text-[9px] px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-300 font-mono border border-pink-400/30 ml-0.5">VRM 3D</span>
                 </div>
 
                 <!-- Model Format Selector (GLB vs VRM) -->
                 <div id="naura3d-model-selector" class="naura3d-model-selector" title="Ganti Format Model 3D">
-                  <button type="button" id="btn-model-glb" data-model="/models/naura.glb" class="naura3d-model-btn active" title="Model 3D PBR Geometry">
+                  <button type="button" id="btn-model-glb" data-model="/models/naura.glb" class="naura3d-model-btn" title="Model 3D PBR Geometry">
                     <i class="fa-solid fa-cube text-[8px]"></i> GLB
                   </button>
-                  <button type="button" id="btn-model-vrm" data-model="/models/naura.vrm" class="naura3d-model-btn" title="Model Avatar VRM Humanoid">
+                  <button type="button" id="btn-model-vrm" data-model="/models/naura.vrm" class="naura3d-model-btn active" title="Model Avatar VRM Humanoid">
                     <i class="fa-solid fa-person text-[8px]"></i> VRM
                   </button>
                 </div>
@@ -614,10 +614,20 @@
                     <button type="button" data-anim="BlowKiss" data-label="😘 Tiup Ciuman" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-gray-300 hover:text-pink-200 hover:bg-pink-500/20 border border-transparent hover:border-pink-500/30 transition cursor-pointer">
                       😘 Kiss
                     </button>
+                    <button type="button" data-anim="AstralCast" data-label="✨ Sihir Bintang Hoshino" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-amber-200 bg-amber-500/15 border border-amber-400/40 hover:bg-amber-500/30 hover:border-amber-400/70 transition cursor-pointer" title="Sihir Bintang Hoshino">
+                      ✨ Astral
+                    </button>
+                    <button type="button" data-anim="StarPose" data-label="⭐ Pose Idol Hoshino" class="naura3d-anim-btn flex-shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-cyber font-medium text-pink-200 bg-pink-500/15 border border-pink-400/40 hover:bg-pink-500/30 hover:border-pink-400/70 transition cursor-pointer" title="Pose Idol Bintang">
+                      ⭐ Idol
+                    </button>
                   </div>
 
-                  <!-- Utility Actions: Reset Camera & Snapshot -->
+                  <!-- Utility Actions: Reset Camera, Halo FX & Snapshot -->
                   <div class="flex items-center gap-1 pl-1.5 border-l border-white/10 flex-shrink-0">
+                    <button type="button" id="naura3d-btn-halo" class="naura3d-util-btn" title="Toggle Astral Halo & Cyber Pedestal 3D">
+                      <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
+                      <span>Halo</span>
+                    </button>
                     <button type="button" id="naura3d-btn-reset" class="naura3d-util-btn" title="Kembalikan Sudut Kamera Awal">
                       <i class="fa-solid fa-arrows-rotate text-cyan-300"></i>
                       <span>Reset</span>
@@ -8040,13 +8050,14 @@
       const animButtons = document.querySelectorAll(".naura3d-anim-btn");
       const btnReset = document.getElementById("naura3d-btn-reset");
       const btnSnapshot = document.getElementById("naura3d-btn-snapshot");
+      const btnHalo = document.getElementById("naura3d-btn-halo");
 
       const formatBadge = document.getElementById("naura3d-format-badge");
       const modelButtons = document.querySelectorAll(".naura3d-model-btn");
 
       if (canvas) {
         const heroViewer = new NauraHero3DViewer(canvas, {
-          modelPath: "/models/naura.glb",
+          modelPath: "/models/naura.vrm",
           lookAtCursor: true,
           onProgress: (pct) => {
             if (loadingText && pct > 0 && pct < 100) {
@@ -8060,6 +8071,9 @@
               setTimeout(() => {
                 loadingBox.style.display = "none";
               }, 350);
+            }
+            if (errorBox) {
+              errorBox.style.display = "none";
             }
             if (wrapper) {
               wrapper.style.borderColor = "rgba(255, 182, 193, 0.4)";
@@ -8087,6 +8101,9 @@
             if (loadingBox) {
               loadingBox.style.display = "flex";
               loadingBox.style.opacity = "1";
+            }
+            if (errorBox) {
+              errorBox.style.display = "none";
             }
             if (loadingText) {
               loadingText.textContent = `Memuat ${isVrm ? "VRM Avatar" : "GLB Model"}...`;
@@ -8156,6 +8173,17 @@
           btnSnapshot.addEventListener("click", (e) => {
             e.stopPropagation();
             heroViewer.takeSnapshot(`naura-${heroViewer.currentAnimName.toLowerCase()}.png`);
+          });
+        }
+
+        // Toggle Astral Halo & Holographic Pedestal 3D
+        if (btnHalo) {
+          btnHalo.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const active = heroViewer.toggleBrandFx();
+            btnHalo.style.borderColor = active ? "rgba(255, 215, 0, 0.6)" : "rgba(255, 255, 255, 0.15)";
+            btnHalo.style.backgroundColor = active ? "rgba(255, 215, 0, 0.2)" : "rgba(255, 255, 255, 0.06)";
+            heroViewer.pulseBrandFx(1.5);
           });
         }
 

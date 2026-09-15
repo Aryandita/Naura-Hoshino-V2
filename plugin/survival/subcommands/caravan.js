@@ -160,6 +160,121 @@ module.exports = {
       });
     }
 
+    if (action === "escort") {
+      const caravanId = interaction.options.getString("caravan_id");
+      if (!caravanId) {
+        const payload = buildErrorContainerV2({
+          title: "ID Karavan Diperlukan",
+          description:
+            "Silakan masukkan `caravan_id` target yang ingin kamu kawal!",
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
+
+      const res = await tradeEngine.joinEscort(caravanId, user.id, 150);
+      if (!res.success) {
+        let msg = "Gagal bergabung sebagai pengawal.";
+        if (res.reason === "ALREADY_ESCORTING") {
+          msg = "Kamu sudah terdaftar sebagai pengawal pada karavan ini!";
+        }
+        const payload = buildErrorContainerV2({
+          title: "Pendaftaran Pengawal Gagal",
+          description: msg,
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
+
+      const payload = buildContainerV2({
+        accentColorHex: "#38BDF8",
+        authorName: "GALACTIC MERCHANT CARTEL",
+        title: "🛡️ Terdaftar Sebagai Pengawal Bersenjata!",
+        description: [
+          `Petualang **${displayName}** resmi dikontrak sebagai pengawal keamanan karavan \`${caravanId}\`!`,
+          "",
+          "⚔️ **Kekuatan Pertahanan Disumbang:** `+150 Combat Power`",
+          "💰 **Bagi Hasil Keuntungan:** `15%` saat karavan berhasil mendarat selamat.",
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
+
+    if (action === "ambush") {
+      const caravanId = interaction.options.getString("caravan_id");
+      if (!caravanId) {
+        const payload = buildErrorContainerV2({
+          title: "ID Karavan Diperlukan",
+          description:
+            "Silakan masukkan `caravan_id` target yang ingin kamu sergap!",
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
+
+      const res = await tradeEngine.ambushCaravan(caravanId, user.id, 200);
+      if (!res.success) {
+        let msg = "Penyergapan gagal dilakukan.";
+        if (res.reason === "CARAVAN_NOT_AVAILABLE") {
+          msg = "Karavan tidak ditemukan atau sudah selesai melintas rute.";
+        }
+        if (res.reason === "CANNOT_AMBUSH_OWN_CARAVAN") {
+          msg = "Kamu tidak dapat menyergap karavan dagang milikmu sendiri!";
+        }
+        const payload = buildErrorContainerV2({
+          title: "Operasi Sergapan Gagal",
+          description: msg,
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
+
+      if (res.raided) {
+        const payload = buildContainerV2({
+          accentColorHex: "#F43F5E",
+          authorName: "PVP CARAVAN AMBUSH",
+          title: "🏴‍☠️ Serangan Berhasil! Karavan Berhasil Dijarah!",
+          description: [
+            `Sergapan kilat **${displayName}** menembus pertahanan pengawal karavan (Peluang Menang: \`${res.winChance}%\`)!`,
+            "",
+            `💰 **Hasil Jarahan Muatan:** \`+${res.loot.toLocaleString("id-ID")}\` Koin masuk ke dompetmu!`,
+          ].join("\n"),
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2,
+        });
+      } else {
+        const payload = buildErrorContainerV2({
+          title: "🏴‍☠️ Serangan Dipukul Mundur!",
+          description: `Pengawal karavan terlalu tangguh! Seranganmu dipukul mundur (Peluang Menang: \`${res.winChance}%\`) dan kamu terkena serangan balik.`,
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
+    }
+
     // Default action: "status"
     const active = await tradeEngine.getActiveCaravan(user.id);
     if (!active) {

@@ -27,6 +27,43 @@ module.exports = {
     const action = interaction.options.getString("aksi") || "status";
     const userId = interaction.user.id;
 
+    if (action === "leaderboard") {
+      const topSurvivors = await worldBossEngine.getAllTimeLeaderboard(10);
+      if (topSurvivors.length === 0) {
+        const emptyPayload = buildContainerV2({
+          accentColorHex: ui.getColor("info") || "#38BDF8",
+          authorName: "World Boss All-Time Hall of Fame",
+          title: "🏆 Papan Peringkat Penakluk Boss",
+          description:
+            "Belum ada catatan penakluk World Boss yang terdata. Jadilah yang pertama menumbangkan sang monster samudra!",
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.editReply({ ...emptyPayload, embeds: [] });
+      }
+
+      const rows = topSurvivors.map((s, idx) => {
+        const medal =
+          idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `**#${idx + 1}**`;
+        return `${medal} **${s.username}** • \`${s.totalDamage.toLocaleString("id-ID")} Damage\``;
+      });
+
+      const lbPayload = buildContainerV2({
+        accentColorHex: "#F59E0B",
+        authorName: "World Boss All-Time Hall of Fame",
+        title: "🏆 10 Penakluk World Boss Tertinggi",
+        description: [
+          "Berikut adalah petualang dengan total kontribusi serangan tertinggi sepanjang sejarah:",
+          "",
+          rows.join("\n"),
+          "",
+          "-# ⚔️ *Terus serang World Boss aktif untuk menaikkan peringkatmu di Hall of Fame!*",
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.editReply({ ...lbPayload, embeds: [] });
+    }
+
     if (action === "status") {
       let boss = await worldBossEngine.getActiveBoss();
 

@@ -399,6 +399,8 @@ module.exports = (client) => {
   webApp.get("/topology", view("topology.html"));
   webApp.get("/builder", view("builder.html"));
   webApp.get("/survival-map", view("survival-map.html"));
+  webApp.get("/soundboard", view("soundboard.html"));
+  webApp.get("/jam", view("jam.html"));
 
   // --- API Survival Realtime Map Data (Sprint 23) ---
   webApp.get("/api/survival/map-data", async (req, res) => {

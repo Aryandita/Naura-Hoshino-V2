@@ -17,7 +17,6 @@ const views = require("../../../src/survival/helpers/bankViews");
 const {
   COLLECTOR_MS,
   ANSWER_MS,
-  MIN_EXCHANGE_NSF,
   MIN_DEPOSIT_COIN,
   MIN_INVEST_COIN,
   assetOf,
@@ -40,6 +39,8 @@ const FAIL_MESSAGE = {
   no_profile: "Naura belum bisa membaca datamu. Coba beberapa saat lagi.",
   unknown_term: "Pilihan jangka waktunya tidak Naura kenali.",
   unknown_asset: "Portofolio itu tidak Naura kenali.",
+  one_way_restricted:
+    "Kebijakan Moneter Central Bank: Penukaran Coin ke Star Fragments (NSF) dikunci satu arah untuk menjaga integritas tantangan survival di alam liar.",
 };
 
 function e(name, fallback) {
@@ -204,22 +205,26 @@ module.exports = {
         }
 
         // --- Penukaran mata uang ---
-        if (id === "bank_ex_to_coin" || id === "bank_ex_to_nsf") {
+        if (id === "bank_ex_to_nsf") {
+          return i.reply({
+            content: `${e("warning")} **Kebijakan One-Way Bridge:**\nNaura Central Bank tidak melayani penukaran Naura Coin kembali ke Star Fragments (NSF) untuk menjaga keadilan ekosistem bertahan hidup di alam liar Naura Wilds~`,
+            flags: MessageFlags.Ephemeral,
+          });
+        }
+
+        if (id === "bank_ex_to_coin") {
           const snap = await snapshotNow();
-          const toCoin = id === "bank_ex_to_coin";
-          const fromKind = toCoin
-            ? currencyHelper.FRAGMENT
-            : currencyHelper.COIN;
-          const toKind = toCoin ? currencyHelper.COIN : currencyHelper.FRAGMENT;
+          const fromKind = currencyHelper.FRAGMENT;
+          const toKind = currencyHelper.COIN;
           const fromCurrency = currencyHelper.byKind(fromKind);
           const toCurrency = currencyHelper.byKind(toKind);
-          const availableBalance = toCoin ? snap.fragment : snap.coin;
+          const availableBalance = snap.fragment;
+
+          const quote = await currencyHelper.getDynamicRateAndFee(availableBalance);
 
           return askAmount(i, {
             title: `Tukar ${fromCurrency.short} ke ${toCurrency.short}`,
-            description: toCoin
-              ? `Tulis jumlah **${fromCurrency.name}** yang mau ditukar. Minimal **${views.n(MIN_EXCHANGE_NSF)} ${fromCurrency.short}** untuk dapat 1 ${toCurrency.short}.`
-              : `Tulis jumlah **${fromCurrency.name}** yang mau dipecah. Setiap 1 ${fromCurrency.short} jadi **${views.n(MIN_EXCHANGE_NSF)} ${toCurrency.short}**.`,
+            description: `Tulis jumlah **${fromCurrency.name}** yang mau ditukar.\n${e("info")} Kurs dinamis hari ini: **${views.n(quote.rate)} ${fromCurrency.short} = 1 ${toCurrency.short}** (Biaya admin progresif 5% - 15% didaur ulang ke komunitas).`,
             balance: availableBalance,
             unit: fromCurrency.short,
             run: async (raw) => {
@@ -231,9 +236,13 @@ module.exports = {
               );
               if (!result.ok) return result;
 
-              const sisa =
-                result.remainder > 0
-                  ? `\n${e("info")} Sisa **${views.n(result.remainder)} ${fromCurrency.short}** Naura kembalikan ke dompetmu, tidak hangus.`
+              const feeText =
+                result.feeNsf > 0
+                  ? `\n💼 **Biaya Admin (${result.feePercent * 100}%):** ${views.n(result.feeNsf)} NSF didaur ulang ke fasilitas komunitas.`
+                  : "";
+              const ticketText =
+                result.ticketsAwarded > 0
+                  ? `\n🎟️ **Bonus Undian:** Kamu mendapatkan **+${result.ticketsAwarded} Tiket Astral Lottery**!`
                   : "";
 
               return {
@@ -241,7 +250,8 @@ module.exports = {
                 title: "Penukaran berhasil!",
                 description: [
                   `Kamu menukar **${views.n(result.spent)} ${fromCurrency.short}** menjadi ${currencyHelper.format(toCurrency, result.received)}.`,
-                  sisa,
+                  feeText,
+                  ticketText,
                   "",
                   `${currencyHelper.emojiOf(fromCurrency)} Sisa ${fromCurrency.short}: \`${views.n(result.balanceFrom)}\``,
                   `${currencyHelper.emojiOf(toCurrency)} ${toCurrency.short} sekarang: \`${views.n(result.balanceTo)}\``,

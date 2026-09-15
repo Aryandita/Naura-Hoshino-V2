@@ -85,7 +85,14 @@ class TradeEngine {
   /**
    * Berangkatkan karavan dagang baru
    */
-  async dispatchCaravan(userId, displayName, routeId, commodityKey, amount) {
+  async dispatchCaravan(
+    userId,
+    displayName,
+    routeId,
+    commodityKey,
+    amount,
+    guildId = "global",
+  ) {
     const route = TRADE_ROUTES[routeId];
     if (!route) return { success: false, reason: "INVALID_ROUTE" };
 
@@ -153,6 +160,27 @@ class TradeEngine {
         } catch (_) {}
       }
 
+      // Simpan ke PostgreSQL TradeCaravan
+      try {
+        const TradeCaravan = require("../models/TradeCaravan");
+        await TradeCaravan.create({
+          caravanId: caravan.id,
+          guildId: guildId || "global",
+          creatorUserId: userId,
+          routeId: route.id,
+          cargo: { commodityKey, amount, commodityName: comm.name },
+          status: "EN_ROUTE",
+          departureTime: new Date(caravan.startTime),
+          estimatedArrival: new Date(finishTime),
+          totalInvestment: totalCost,
+          potentialYield: potentialProfit,
+        });
+      } catch (err) {
+        logger.warn(
+          `[TradeEngine] Gagal menyimpan TradeCaravan ke DB: ${err.message}`,
+        );
+      }
+
       logger.info(
         `[TradeEngine] User ${displayName} memberangkatkan karavan ${comm.name} (${amount}x) via ${route.name}`,
       );
@@ -217,6 +245,15 @@ class TradeEngine {
       } catch (_) {}
     }
 
+    // Update TradeCaravan di database bila ada
+    try {
+      const TradeCaravan = require("../models/TradeCaravan");
+      await TradeCaravan.update(
+        { status: wasAmbushed ? "AMBUSHED" : "CLAIMED" },
+        { where: { caravanId: caravan.id } },
+      );
+    } catch (_) {}
+
     logger.info(
       `[TradeEngine] User ${displayName} mengklaim laba karavan: +${actualProfit} koin (Ambushed: ${wasAmbushed})`,
     );
@@ -258,51 +295,75 @@ class TradeEngine {
    * Eksekusi serangan penjarahan PvP (Ambush Raid) terhadap karavan di rute berbahaya
    */
   async ambushCaravan(caravanId, raiderUserId, raiderPower = 200) {
-    try {
-      const TradeCaravan = require("../models/TradeCaravan");
-      const CaravanEscort = require("../models/CaravanEscort");
+    return cacheManager.withLock(
+      `lock:caravan:ambush:${caravanId}`,
+      5000,
+      async () => {
+        try {
+          const TradeCaravan = require("../models/TradeCaravan");
+          const CaravanEscort = require("../models/CaravanEscort");
 
-      const caravan = await TradeCaravan.findOne({ where: { caravanId } });
-      if (!caravan || caravan.status !== "EN_ROUTE") {
-        return { success: false, reason: "CARAVAN_NOT_AVAILABLE" };
-      }
+          const caravan = await TradeCaravan.findOne({ where: { caravanId } });
+          if (!caravan || caravan.status !== "EN_ROUTE") {
+            return { success: false, reason: "CARAVAN_NOT_AVAILABLE" };
+          }
 
-      const escorts = await CaravanEscort.findAll({ where: { caravanId } });
-      const totalDefensePower = escorts.reduce(
-        (sum, e) => sum + (e.combatPower || 100),
-        100, // modal dasar penjaga
-      );
+          if (caravan.creatorUserId === raiderUserId) {
+            return { success: false, reason: "CANNOT_AMBUSH_OWN_CARAVAN" };
+          }
 
-      const winChance = (raiderPower / (raiderPower + totalDefensePower)) * 100;
-      const roll = Math.random() * 100;
-      const isSuccessful = roll <= winChance;
+          const escorts = await CaravanEscort.findAll({ where: { caravanId } });
+          const totalDefensePower = escorts.reduce(
+            (sum, e) => sum + (e.combatPower || 100),
+            100, // modal dasar penjaga
+          );
 
-      if (isSuccessful) {
-        const lootAmount = Math.round(Number(caravan.potentialYield) * 0.4);
-        await caravan.update({ status: "AMBUSHED" });
-        await cacheManager.incrementUserProfile(
-          raiderUserId,
-          "economy_wallet",
-          lootAmount,
-        );
+          const winChance =
+            (raiderPower / (raiderPower + totalDefensePower)) * 100;
+          const roll = Math.random() * 100;
+          const isSuccessful = roll <= winChance;
 
-        return {
-          success: true,
-          raided: true,
-          loot: lootAmount,
-          winChance: Math.round(winChance),
-        };
-      } else {
-        return {
-          success: true,
-          raided: false,
-          damageTaken: 50,
-          winChance: Math.round(winChance),
-        };
-      }
-    } catch (err) {
-      return { success: false, reason: err.message };
-    }
+          if (isSuccessful) {
+            const lootAmount = Math.round(Number(caravan.potentialYield) * 0.4);
+            await caravan.update({ status: "AMBUSHED" });
+            await cacheManager.incrementUserProfile(
+              raiderUserId,
+              "economy_wallet",
+              lootAmount,
+            );
+
+            // Update cache aktif jika ada
+            const key = `caravan:active:${caravan.creatorUserId}`;
+            if (redisManager.isReady) {
+              try {
+                const raw = await redisManager.get(key);
+                if (raw) {
+                  const c = JSON.parse(raw);
+                  c.status = "AMBUSHED";
+                  await redisManager.set(key, JSON.stringify(c), 3600);
+                }
+              } catch (_) {}
+            }
+
+            return {
+              success: true,
+              raided: true,
+              loot: lootAmount,
+              winChance: Math.round(winChance),
+            };
+          } else {
+            return {
+              success: true,
+              raided: false,
+              damageTaken: 50,
+              winChance: Math.round(winChance),
+            };
+          }
+        } catch (err) {
+          return { success: false, reason: err.message };
+        }
+      },
+    );
   }
 }
 

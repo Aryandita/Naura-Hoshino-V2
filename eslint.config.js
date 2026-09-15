@@ -37,6 +37,7 @@ module.exports = [
       // Aset statis, hasil build Vite dan vendor pihak ketiga tidak perlu dilint
       "dashboard/dist/**",
       "dashboard/public/**",
+      "scratch/**",
     ],
   },
   {

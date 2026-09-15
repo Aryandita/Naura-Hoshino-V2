@@ -76,6 +76,34 @@ module.exports = {
       }
       beginPlaybackTransition(player, activeTrack, player.baseVolume);
 
+      // Pemulihan posisi lagu jika sebelumnya diinterupsi oleh efek soundboard
+      if (
+        activeTrack.info &&
+        typeof activeTrack.info.resumePosition === "number" &&
+        activeTrack.info.resumePosition > 0
+      ) {
+        const resumeMs = activeTrack.info.resumePosition;
+        delete activeTrack.info.resumePosition;
+        setTimeout(() => {
+          try {
+            if (
+              player &&
+              !player.destroyed &&
+              player.currentTrack === activeTrack
+            ) {
+              if (typeof player.seekTo === "function") {
+                player.seekTo(resumeMs);
+                logger.info(
+                  `[Poru] Berhasil memulihkan posisi lagu "${activeTrack.info.title}" ke ${Math.floor(resumeMs / 1000)}s.`,
+                );
+              }
+            }
+          } catch (seekErr) {
+            logger.warn(`[Poru] Gagal memulihkan posisi lagu: ${seekErr.message}`);
+          }
+        }, 500);
+      }
+
       let recommendedTracks = [];
       try {
         // Tunda prefetch selama 1500ms agar sesi WebSocket Voice antara Poru

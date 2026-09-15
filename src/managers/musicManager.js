@@ -5,6 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const { Collection } = require("discord.js");
 const ui = require("../config/ui");
+const { lavalinkClusterManager } = require("./lavalinkClusterManager");
 
 let PoruCtor = null;
 
@@ -14,27 +15,6 @@ function loadPoru() {
   }
   return PoruCtor;
 }
-
-// Node publik terverifikasi: Millohost v4 (SSL + LavaSrc) sebagai primary,
-// dan Serenetia sebagai secondary fallback.
-const PUBLIC_LAVALINK_NODES = [
-  {
-    name: "Millohost Public Node",
-    host: "lava-v4.millohost.my.id",
-    port: 443,
-    password: "https://discord.gg/mjS5J2K3ep",
-    secure: true,
-    isPrimaryFallback: true,
-  },
-  {
-    name: "Serenetia Public Node",
-    host: "lavalinkv4.serenetia.com",
-    port: 443,
-    password: "https://seretia.link/discord",
-    secure: true,
-    isPrimaryFallback: false,
-  },
-];
 
 class MusicManager {
   constructor(client) {
@@ -158,21 +138,8 @@ class MusicManager {
       }
     }
 
-    // Gunakan node yang dikonfigurasikan di .env. Jika tidak ada, fallback ke PUBLIC_LAVALINK_NODES.
-    const finalNodes = [];
-    const seen = new Set();
-    const sourceNodes =
-      configuredNodes.length > 0 ? configuredNodes : PUBLIC_LAVALINK_NODES;
-
-    for (const node of sourceNodes) {
-      const key = `${node.host}:${node.port}`.toLowerCase();
-      if (!seen.has(key)) {
-        seen.add(key);
-        finalNodes.push(node);
-      }
-    }
-
-    return finalNodes.length > 0 ? finalNodes : [...PUBLIC_LAVALINK_NODES];
+    // Bangun daftar node bertingkat (Tier 1: Private, Tier 2: Sekunder, Tier 3: Public Fallback Pool)
+    return lavalinkClusterManager.buildTieredNodeList(configuredNodes);
   }
 
   ensurePoru() {
@@ -285,25 +252,8 @@ class MusicManager {
  * @param {Poru} poru - Instance Poru yang sudah terhubung.
  * @returns {string|undefined} Nama node terpilih, atau undefined (biarkan Poru auto-pilih).
  */
-MusicManager.getPreferredNode = function (poru) {
-  if (!poru || !poru.nodes) return undefined;
-
-  // Kumpulkan semua node yang connected, pisahkan private dan fallback
-  const connected = [...poru.nodes.values()].filter((n) => n.connected);
-  if (connected.length === 0) return undefined;
-
-  const privateNodes = connected.filter(
-    (n) => !PUBLIC_LAVALINK_NODES.some((pub) => pub.name === n.name),
-  );
-
-  // Pilih private node dengan penalty paling rendah (beban paling ringan)
-  if (privateNodes.length > 0) {
-    privateNodes.sort((a, b) => (a.penalties || 0) - (b.penalties || 0));
-    return privateNodes[0].name;
-  }
-
-  // Semua private node down - izinkan Poru memakai fallback publik
-  return undefined;
+MusicManager.getPreferredNode = function (poru, options = {}) {
+  return lavalinkClusterManager.getPreferredNode(poru, options);
 };
 
 module.exports = MusicManager;

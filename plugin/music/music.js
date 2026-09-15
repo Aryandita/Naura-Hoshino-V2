@@ -108,6 +108,82 @@ async function runMusicLogic(
     }
   }
 
+  if (subcommand === "aura") {
+    let target = user;
+    if (isSlash && args.target) target = args.target;
+    if (target.bot) {
+      const errPayload = buildErrorContainerV2({
+        title: "Akses Ditolak",
+        description: `${eError} | Bot tidak memiliki Music Aura!`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+    try {
+      const cacheManager = require("../../src/managers/cacheManager");
+      const musicAuraService = require("../../src/services/musicAuraService");
+      const profile = await cacheManager.getUserProfile(target.id);
+
+      // Ekstraksi riwayat trek musik
+      let tracks = [];
+      if (profile && profile.music_history) {
+        try {
+          const hist =
+            typeof profile.music_history === "string"
+              ? JSON.parse(profile.music_history)
+              : profile.music_history;
+          if (hist.history) {
+            tracks = Object.keys(hist.history).slice(0, 10);
+          }
+        } catch (_) {}
+      }
+
+      // Fallback: cek lagu yang sedang aktif diputar
+      if (tracks.length === 0 && poru && guild) {
+        const player = poru.players?.get(guild.id);
+        if (player && player.currentTrack) {
+          tracks.push(player.currentTrack.info.title);
+        }
+      }
+
+      const avatarUrl = target.displayAvatarURL({ extension: "png", size: 256 });
+      const { auraData, cardBuffer } = await musicAuraService.generateMusicAura({
+        username: target.username,
+        avatarUrl,
+        tracks,
+        guildName: guild?.name || "Server Naura",
+      });
+
+      const file = new AttachmentBuilder(cardBuffer, {
+        name: "music_aura.png",
+      });
+      const auraPayload = buildContainerV2({
+        accentColorHex: auraData.primaryColor || "#38BDF8",
+        authorName: `${target.username} - Resonansi Musik`,
+        title: `🔮 AI Music Aura: ${auraData.auraName}`,
+        bannerAttachmentName: "music_aura.png",
+        description: [
+          `> *"${auraData.description}"*`,
+          "",
+          `• **Signature Track:** 🎵 ${auraData.signatureTrack}`,
+          `• **Dominant Genres:** ${Array.isArray(auraData.genres) ? auraData.genres.join(", ") : "Lo-Fi, Synthwave"}`,
+          `• **Vibe Energy:** ⚡ ${auraData.energy}% | **Tempo:** 🎚️ ${auraData.tempo} BPM`,
+        ].join("\n"),
+        files: [file],
+        footerText: ui.getFooter("music"),
+      });
+
+      return sendReply(auraPayload);
+    } catch (err) {
+      const errPayload = buildErrorContainerV2({
+        title: "Gagal Menganalisis Aura",
+        description: `${eError} | Terjadi kesalahan saat membaca resonansi aura musik: ${err.message}`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+  }
+
   if (subcommand === "wrapped") {
     let target = user;
     if (isSlash && args.target) target = args.target;
@@ -121,7 +197,7 @@ async function runMusicLogic(
     }
     try {
       const cacheManager = require("../../src/managers/cacheManager");
-      const { generateWrappedCard } = require("../../src/canvas/wrappedCanvas");
+      const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
       const profile = await cacheManager.getUserProfile(target.id);
       const calculateTop5 = (jsonInput) => {
         if (!jsonInput) return [];
@@ -148,7 +224,11 @@ async function runMusicLogic(
         isPremium: profile?.isPremium && profile?.premiumUntil > new Date(),
       };
 
-      const imageBuffer = await generateWrappedCard(target, stats);
+      const imageBuffer = await canvasWorkerPool.execute({
+        task: "renderWrapped",
+        payload: { user: target, stats },
+        userId: target.id,
+      });
       const attachment = new AttachmentBuilder(imageBuffer, {
         name: "naura-wrapped.png",
       });
@@ -1528,6 +1608,86 @@ async function runMusicLogic(
     return sendReply(djPayload);
   }
 
+  if (subcommand === "quality") {
+    const { lavalinkClusterManager } = require("../../src/managers/lavalinkClusterManager");
+    const mode = args.mode ? args.mode.toLowerCase() : null;
+
+    if (mode) {
+      lavalinkClusterManager.setGuildAudioQuality(guild.id, mode);
+      const qualityMap = {
+        standard: "Standard Quality (128kbps AAC/Opus)",
+        hd: "HD Audio (256kbps Ultra Clear)",
+        lossless: "Lossless Hi-Fi Studio (FLAC 24-bit / 384kbps Opus)",
+      };
+
+      const payload = buildContainerV2({
+        accentColorHex: mode === "lossless" ? "#F59E0B" : mode === "hd" ? "#06B6D4" : "#94A3B8",
+        authorName: "NAURA HI-FI AUDIO ENGINE",
+        title: "🎚️ Mode Kualitas Audio Diperbarui",
+        description: [
+          `Format streaming audio server **${guild.name}** telah diubah ke:`,
+          "",
+          `> 💎 **Kualitas:** \`${qualityMap[mode] || mode}\``,
+          `> 🌐 **Federasi Node:** Lossless Hi-Fi Lavalink Federation aktif.`,
+          "",
+          "-# *Kualitas Lossless memerlukan bandwidth suara server Discord yang mendukung bitrate tinggi.*",
+        ].join("\n"),
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(payload);
+    }
+
+    const currentQ = lavalinkClusterManager.getGuildAudioQuality(guild.id);
+    const payload = buildContainerV2({
+      accentColorHex: "#06B6D4",
+      authorName: "NAURA HI-FI AUDIO ENGINE",
+      title: "🎚️ Status Kualitas Audio Server",
+      description: [
+        `Kualitas audio aktif saat ini untuk server **${guild.name}**: \`${currentQ.toUpperCase()}\``,
+        "",
+        "> • `standard` : 128kbps hemat bandwidth",
+        "> • `hd` : 256kbps audio jernih standar studio",
+        "> • `lossless` : 384kbps FLAC / Opus Hi-Fi tanpa kompresi",
+        "",
+        "Gunakan `/music quality mode:lossless` untuk mengubah mode.",
+      ].join("\n"),
+      footerText: ui.getFooter("music"),
+    });
+    return sendReply(payload);
+  }
+
+  if (subcommand === "cluster") {
+    const { lavalinkClusterManager } = require("../../src/managers/lavalinkClusterManager");
+    const fedStatus = lavalinkClusterManager.getFederationStatus(poru);
+
+    const hiFiList =
+      fedStatus.hiFiNodes.length > 0
+        ? fedStatus.hiFiNodes
+            .map(
+              (n) =>
+                `• **${n.name}** [${n.region.toUpperCase()}] : \`${n.connected ? "🟢 ONLINE" : "🔴 OFFLINE"}\` (${n.codec}, max ${Math.round(n.maxBitrate / 1000)}kbps)`,
+            )
+            .join("\n")
+        : "*Belum ada dedicated Hi-Fi node eksternal yang didaftarkan. Menggunakan primary cluster.*";
+
+    const payload = buildContainerV2({
+      accentColorHex: "#3B82F6",
+      authorName: "LAVALINK CLUSTER & HI-FI FEDERATION",
+      title: "🌐 Status Kluster Audio & Federasi Node",
+      description: [
+        `📊 **Total Node Kluster:** \`${fedStatus.totalNodes} Nodes\` (\`${fedStatus.connectedNodes} Connected\`)`,
+        `💎 **Dukungan Codec:** \`${fedStatus.supportedCodecs.join(" • ")}\``,
+        "",
+        "**📡 Daftar Node Lossless Hi-Fi Federation:**",
+        hiFiList,
+        "",
+        "-# *Auto-balancing geografis otomatis mengarahkan koneksi ke node dengan latensi terendah.*",
+      ].join("\n"),
+      footerText: ui.getFooter("music"),
+    });
+    return sendReply(payload);
+  }
+
   const errPayload = buildErrorContainerV2({
     title: "Perintah Salah",
     description: `${eError} | Perintah tidak dikenali.`,
@@ -1735,6 +1895,40 @@ module.exports = {
               { name: "Status AI Smart DJ (Status)", value: "status" },
             ),
         ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("aura")
+        .setDescription(
+          "🔮 Analisis AI Music Aura & Kartu Resonansi Kepribadian Musik Kamu",
+        )
+        .addUserOption((opt) =>
+          opt
+            .setName("target")
+            .setDescription("User yang ingin dianalisis Music Aura-nya")
+            .setRequired(false),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("quality")
+        .setDescription("🎚️ Atur kualitas format audio (Standard, HD, Lossless Hi-Fi)")
+        .addStringOption((opt) =>
+          opt
+            .setName("mode")
+            .setDescription("Tingkat kualitas audio")
+            .setRequired(false)
+            .addChoices(
+              { name: "Standard (128kbps)", value: "standard" },
+              { name: "HD Audio (256kbps)", value: "hd" },
+              { name: "Lossless Hi-Fi (384kbps FLAC/Opus)", value: "lossless" },
+            ),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("cluster")
+        .setDescription("🌐 Lihat status kluster Lavalink dan Lossless Hi-Fi Federation"),
     ),
 
   async autocomplete(interaction) {

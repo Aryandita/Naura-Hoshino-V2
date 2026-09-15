@@ -150,11 +150,56 @@ function smoothFade(
 }
 
 /**
+ * Heuristik estimasi BPM (Beats Per Minute) berdasarkan pola genre & judul lagu.
+ * Digunakan untuk smart beatmatching crossfade antar trek musik.
+ */
+function estimateTrackBpm(title = "") {
+  const t = title.toLowerCase();
+  if (/speed\s*up|dnb|drum\s*and\s*bass|nightcore|hardstyle/i.test(t)) return 165;
+  if (/edm|house|dance|club|remix|electronic/i.test(t)) return 128;
+  if (/hip\s*hop|trap|rap|r&b|groove/i.test(t)) return 95;
+  if (/lo-?fi|chill|relax|study|sleep|ambient/i.test(t)) return 80;
+  if (/ballad|acoustic|slow|piano/i.test(t)) return 75;
+  if (/rock|metal|punk/i.test(t)) return 135;
+  return 110; // Default pop standard tempo
+}
+
+/**
+ * Menghitung durasi crossfade adaptif 3 s.d. 5 detik dan rasio kecocokan tempo
+ * antar dua lagu berurutan.
+ */
+function calculateBeatmatchedCrossfade(currentTrack, nextTrack) {
+  const currentTitle = currentTrack?.info?.title || "";
+  const nextTitle = nextTrack?.info?.title || "";
+
+  const bpmA = estimateTrackBpm(currentTitle);
+  const bpmB = estimateTrackBpm(nextTitle);
+
+  // Hitung perbedaan tempo relatif
+  const diffRatio = Math.abs(bpmA - bpmB) / Math.max(bpmA, bpmB);
+
+  // Jika tempo mirip (selisih <= 15%), gunakan crossfade lebih panjang (4500-5000ms) untuk beatmatch mulus
+  let crossfadeMs = 4000;
+  if (diffRatio <= 0.15) {
+    crossfadeMs = 5000;
+  } else if (diffRatio >= 0.40) {
+    crossfadeMs = 3000; // Tempo sangat beda: transisi lebih cepat agar tidak bentrok ritme
+  }
+
+  return {
+    crossfadeMs,
+    bpmCurrent: bpmA,
+    bpmNext: bpmB,
+    diffRatio,
+  };
+}
+
+/**
  * Memantau posisi lagu yang sedang berjalan, lalu otomatis memicu fade-out
  * beberapa detik sebelum lagu berakhir -- supaya perpindahan ke lagu berikutnya
  * (yang akan fade-in di trackStart) terasa seperti transisi DJ, bukan lompatan tiba-tiba.
  */
-function startFadeOutWatcher(player, track, baseVolume, fadeOutMs = 6000) {
+function startFadeOutWatcher(player, track, baseVolume, fadeOutMs = 4000) {
   if (!player || !track?.info?.length) return;
   if (player._endWatcher) {
     clearInterval(player._endWatcher);
@@ -190,17 +235,27 @@ function startFadeOutWatcher(player, track, baseVolume, fadeOutMs = 6000) {
 
 /**
  * Fade-in lagu yang baru mulai, dipanggil dari trackStart setelah playback benar-benar berjalan.
+ * Mengintegrasikan smart beatmatching jika ada lagu berikutnya dalam antrean.
  */
 function beginPlaybackTransition(
   player,
   track,
   baseVolume,
-  { fadeInMs = 3000, fadeOutMs = 6000 } = {},
+  { fadeInMs = 3000, fadeOutMs = 4000 } = {},
 ) {
   if (!player || typeof player.setVolume !== "function") return;
   const startVolume = Math.max(5, Math.floor(baseVolume * 0.15));
   smoothFade(player, startVolume, baseVolume, fadeInMs);
-  startFadeOutWatcher(player, track, baseVolume, fadeOutMs);
+
+  // Jika ada lagu di antrean berikutnya, hitung beatmatching transisi crossfade adaptif
+  let targetFadeOutMs = fadeOutMs;
+  if (player.queue && player.queue.length > 0) {
+    const nextTrack = player.queue[0];
+    const match = calculateBeatmatchedCrossfade(track, nextTrack);
+    targetFadeOutMs = match.crossfadeMs;
+  }
+
+  startFadeOutWatcher(player, track, baseVolume, targetFadeOutMs);
 }
 
 function clearTransitionTimers(player) {
@@ -218,6 +273,8 @@ function clearTransitionTimers(player) {
 module.exports = {
   rankAutoplayCandidates,
   smoothFade,
+  estimateTrackBpm,
+  calculateBeatmatchedCrossfade,
   startFadeOutWatcher,
   beginPlaybackTransition,
   clearTransitionTimers,

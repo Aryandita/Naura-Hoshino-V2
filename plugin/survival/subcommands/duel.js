@@ -43,8 +43,12 @@ function isRegistered(profile) {
 /** Gambar arena bersifat pemanis, jadi kegagalannya tidak boleh mematikan duel. */
 async function arenaImage(p1, p2, log) {
   try {
-    const { drawDuel } = require("../../../src/canvas/duelCanvas");
-    const buffer = await drawDuel(p1, p2, log);
+    const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
+    const buffer = await canvasWorkerPool.execute({
+      task: "renderDuel",
+      payload: { p1, p2, roundLog: log },
+      userId: p1?.userId || p1?.id || "duel",
+    });
     if (!buffer) return null;
     return new AttachmentBuilder(buffer, { name: "duel.png" });
   } catch (err) {
