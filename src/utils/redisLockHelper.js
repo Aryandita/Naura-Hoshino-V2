@@ -141,9 +141,29 @@ async function withDistributedLock(lockKey, ttlMs, workFn, options = {}) {
     }
 }
 
+// Pembersihan berkala kunci memori yang telah kadaluwarsa (setiap 60 detik)
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, val] of inMemoryLocks.entries()) {
+        if (val && val.expiresAt <= now) {
+            inMemoryLocks.delete(key);
+        }
+    }
+}, 60000).unref();
+
+/**
+ * Mengambil ringkasan status in-memory locks
+ */
+function getLockStats() {
+    return {
+        activeInMemoryLocks: inMemoryLocks.size,
+    };
+}
+
 module.exports = {
     acquireLock,
     releaseLock,
     withDistributedLock,
     inMemoryLocks,
+    getLockStats,
 };

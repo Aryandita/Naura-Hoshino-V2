@@ -318,6 +318,47 @@ module.exports = (client) => {
     }
   });
 
+  // Endpoint Manifest untuk Discord Activity Launcher
+  router.get("/activity/manifest", (req, res) => {
+    try {
+      const manifest = require("../../src/config/discordActivityManifest.json");
+      res.json(manifest);
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Webhook handler untuk Discord Entitlements & Subscriptions
+  router.post("/discord/entitlements/webhook", async (req, res) => {
+    try {
+      const entitlementService = require("../../src/services/entitlementService");
+      const signature = req.headers["x-signature-ed25519"];
+      const timestamp = req.headers["x-signature-timestamp"];
+      const rawBody = req.rawBody || JSON.stringify(req.body);
+
+      // Verifikasi signature jika header tersedia
+      if (signature && timestamp) {
+        const isValid = entitlementService.verifySignature(signature, timestamp, rawBody);
+        if (!isValid) {
+          return res.status(401).json({ error: "Invalid signature" });
+        }
+      }
+
+      const { type, data } = req.body || {};
+      if (type === "ENTITLEMENT_CREATE") {
+        await entitlementService.handleEntitlementCreate(data);
+      } else if (type === "ENTITLEMENT_UPDATE") {
+        await entitlementService.handleEntitlementUpdate(data);
+      } else if (type === "ENTITLEMENT_DELETE") {
+        await entitlementService.handleEntitlementDelete(data);
+      }
+
+      res.json({ success: true, received: true });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // --- Soundboard API Endpoints ---
   router.get("/soundboard/sounds", async (req, res) => {
     try {
@@ -380,6 +421,29 @@ module.exports = (client) => {
       }
 
       res.json(result);
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // --- Live Galactic Caravan Radar API ---
+  router.get("/caravans/active", async (req, res) => {
+    try {
+      const tradeEngine = require("../../src/services/tradeEngine");
+      const caravans = await tradeEngine.getActiveCaravans(10);
+      res.json({ success: true, caravans });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // --- Federation Hall of Fame API ---
+  router.get("/federations/hall-of-fame", async (req, res) => {
+    try {
+      const guildFederationEngine = require("../../src/survival/engines/guildFederationEngine");
+      const limit = Math.min(20, Math.max(1, parseInt(req.query.limit, 10) || 10));
+      const rankings = await guildFederationEngine.getHallOfFame(limit);
+      res.json({ success: true, federations: rankings });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
     }

@@ -14,13 +14,15 @@ class RedisManager {
       url: redisUrl,
       socket: {
         reconnectStrategy: (retries) => {
-          if (retries > 10) {
+          // Exponential backoff dengan jitter, batas maksimal 15 detik
+          const jitter = Math.floor(Math.random() * 200);
+          const delay = Math.min(retries * 500 + jitter, 15000);
+          if (retries % 5 === 0) {
             logger.warn(
-              "[Redis] Melebihi batas maksimal percobaan reconnect (10 kali).",
+              `[Redis] Percobaan reconnect #${retries} (${delay}ms)... Fallback in-memory tetap aktif.`,
             );
-            return new Error("[Redis] Max reconnect attempts reached");
           }
-          return Math.min(retries * 500, 5000);
+          return delay;
         },
         connectTimeout: 10000,
         keepAlive: 30000,
@@ -41,6 +43,18 @@ class RedisManager {
   /** Satu-satunya sumber kebenaran untuk mengecek kesiapan Redis. */
   get isReady() {
     return Boolean(this.client && this.client.isReady);
+  }
+
+  /**
+   * Mengembalikan status koneksi dan mode operasional Redis.
+   * @returns {{connected: boolean, configured: boolean, mode: string}}
+   */
+  getStatus() {
+    return {
+      connected: this.isReady,
+      configured: Boolean(this.client),
+      mode: this.isReady ? "redis_cluster" : "in_memory_fallback",
+    };
   }
 
   async ping() {

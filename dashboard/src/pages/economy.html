@@ -113,6 +113,50 @@
         </div>
       </div>
 
+      <!-- Live Galactic Caravan Radar -->
+      <div class="mb-10">
+        <div class="flex items-center justify-between mb-4">
+          <h2
+            class="text-xl font-bold font-cyber text-white flex items-center gap-2"
+          >
+            <i class="fa-solid fa-satellite-dish text-cyan-400 animate-pulse"></i>
+            GALACTIC CARAVAN RADAR
+          </h2>
+          <span
+            class="px-3 py-1 bg-cyan-950/60 border border-cyan-500/40 rounded-full text-[10px] text-cyan-300 font-cyber"
+          >
+            ● LIVE DEEP-SPACE TELEMETRY
+          </span>
+        </div>
+        <div id="caravan-radar-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="telemetry-card text-center py-6 text-gray-400 text-xs font-cyber">
+            Memindai frekuensi orbit antariksa...
+          </div>
+        </div>
+      </div>
+
+      <!-- Global Federation Hall of Fame -->
+      <div class="mb-10">
+        <div class="flex items-center justify-between mb-4">
+          <h2
+            class="text-xl font-bold font-cyber text-white flex items-center gap-2"
+          >
+            <i class="fa-solid fa-shield-halved text-purple-400"></i>
+            FEDERATION HALL OF FAME
+          </h2>
+          <span
+            class="px-3 py-1 bg-purple-950/60 border border-purple-500/40 rounded-full text-[10px] text-purple-300 font-cyber"
+          >
+            ALLIANCE PRESTIGE RANKINGS
+          </span>
+        </div>
+        <div id="federation-hof-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="telemetry-card text-center py-6 text-gray-400 text-xs font-cyber col-span-full">
+            Memuat daftar prestise aliansi...
+          </div>
+        </div>
+      </div>
+
       <h2
         class="text-xl font-bold font-cyber text-white mb-4 flex items-center gap-2"
       >
@@ -307,7 +351,104 @@
           }
         }
 
+        async function loadCaravans() {
+          var container = document.getElementById("caravan-radar-grid");
+          try {
+            var res = await fetch("/api/caravans/active");
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            var data = await res.json();
+            var caravans = data.caravans || [];
+
+            if (caravans.length === 0) {
+              container.innerHTML =
+                '<div class="telemetry-card text-center py-6 text-gray-400 text-xs font-cyber col-span-full">' +
+                'Tidak ada karavan dagang yang sedang meluncur saat ini.' +
+                '</div>';
+              return;
+            }
+
+            container.innerHTML = caravans
+              .map(function (c) {
+                var cargoName = c.cargo?.commodityName || "Komoditas Antariksa";
+                var cargoAmt = c.cargo?.amount || 0;
+                var escorts = c.escortsCount || 0;
+
+                return (
+                  '<div class="telemetry-card p-4 rounded-2xl border border-cyan-500/20 bg-black/40 flex flex-col justify-between relative overflow-hidden">' +
+                  '<div class="flex items-center justify-between mb-2">' +
+                  '<span class="text-xs font-bold font-cyber text-cyan-400 flex items-center gap-1.5">' +
+                  '<i class="fa-solid fa-shuttle-space"></i> ' + (c.routeName || "Rute Antariksa") +
+                  '</span>' +
+                  '<span class="px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/30 rounded text-[9px] text-cyan-300 font-cyber font-bold">' +
+                  'EN ROUTE' +
+                  '</span>' +
+                  '</div>' +
+                  '<div class="text-xs text-gray-300 mb-2">' +
+                  'Kargo: <strong class="text-white">' + cargoName + ' (' + cargoAmt + 'x)</strong>' +
+                  '</div>' +
+                  '<div class="flex items-center justify-between text-[10px] text-gray-400 pt-2 border-t border-white/5 font-cyber">' +
+                  '<span>🛡️ Pengawal: <strong class="text-cyan-300">' + escorts + ' Guard</strong></span>' +
+                  '<span>Modal: <strong class="text-yellow-400">⭐ ' + num(c.totalInvestment) + '</strong></span>' +
+                  '<span>Hasil: <strong class="text-green-400">⭐ ' + num(c.potentialYield) + '</strong></span>' +
+                  '</div>' +
+                  '</div>'
+                );
+              })
+              .join("");
+          } catch (e) {
+            console.error("[Caravan Radar]", e);
+          }
+        }
+
+        async function loadFederationHallOfFame() {
+          var container = document.getElementById("federation-hof-grid");
+          try {
+            var res = await fetch("/api/federations/hall-of-fame?limit=6");
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            var data = await res.json();
+            var federations = data.federations || [];
+
+            if (federations.length === 0) {
+              container.innerHTML =
+                '<div class="telemetry-card text-center py-6 text-gray-400 text-xs font-cyber col-span-full">' +
+                'Belum ada aliansi federasi yang terdaftar.' +
+                '</div>';
+              return;
+            }
+
+            container.innerHTML = federations
+              .map(function (fed, idx) {
+                var rankColors = ["text-yellow-400", "text-gray-300", "text-orange-400"];
+                var medalIcon = idx < 3 ? '<i class="fa-solid fa-trophy ' + rankColors[idx] + ' mr-1"></i>' : '#' + (idx + 1) + ' ';
+
+                return (
+                  '<div class="telemetry-card p-4 rounded-2xl border border-purple-500/20 bg-black/40 flex flex-col justify-between">' +
+                  '<div class="flex items-center justify-between mb-2">' +
+                  '<div class="font-cyber font-bold text-sm text-white flex items-center">' +
+                  medalIcon + fed.name +
+                  '</div>' +
+                  '<span class="px-2 py-0.5 bg-purple-500/10 border border-purple-500/30 rounded text-[9px] text-purple-300 font-cyber font-bold">[' +
+                  (fed.tag || "FED") +
+                  ']</span>' +
+                  '</div>' +
+                  '<div class="grid grid-cols-2 gap-2 text-[10px] text-gray-400 my-2">' +
+                  '<div>Prestise: <strong class="text-purple-300 font-cyber">' + num(fed.prestige) + '</strong></div>' +
+                  '<div>Raid Boss: <strong class="text-yellow-400 font-cyber">' + (fed.bossVictories || 0) + ' Win</strong></div>' +
+                  '<div>Anggota: <strong class="text-cyan-300 font-cyber">' + (fed.memberClans?.length || 0) + ' Klan</strong></div>' +
+                  '<div>Level: <strong class="text-pink-300 font-cyber">Lv.' + (fed.level || 1) + '</strong></div>' +
+                  '</div>' +
+                  '</div>'
+                );
+              })
+              .join("");
+          } catch (e) {
+            console.error("[Federation HOF]", e);
+          }
+        }
+
         loadStats();
+        loadCaravans();
+        loadFederationHallOfFame();
         renderLeaderboard();
       })();
     </script>

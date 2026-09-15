@@ -3,6 +3,7 @@
 const redisManager = require("../managers/redisManager");
 const cacheManager = require("../managers/cacheManager");
 const { logger } = require("../managers/logger");
+const worldEventEngine = require("../survival/engines/worldEventEngine");
 
 const COMMODITIES = {
   GOLDEN_WOOD: {
@@ -57,19 +58,27 @@ const TRADE_ROUTES = {
 
 class TradeEngine {
   /**
-   * Ambil fluktuasi harga pasar bursa komoditas
+   * Ambil fluktuasi harga pasar bursa komoditas dengan guncangan makro event
+   * @param {Date} [date=new Date()]
    */
-  getMarketPrices() {
-    const hourSeed = Math.floor(Date.now() / (1000 * 60 * 60));
+  getMarketPrices(date = new Date()) {
+    const hourSeed = Math.floor(date.getTime() / (1000 * 60 * 60));
+    const macroModifiers = worldEventEngine.getCommodityModifiers(date);
     const result = {};
 
     for (const [k, v] of Object.entries(COMMODITIES)) {
-      const fluctuation = ((hourSeed * 17 + k.length * 13) % 40) - 20; // -20% s/d +20%
-      const currentPrice = Math.round(v.basePrice * (1 + fluctuation / 100));
+      const baseFluctuation = ((hourSeed * 17 + k.length * 13) % 40) - 20; // -20% s/d +20%
+      const shock = macroModifiers[k];
+      const macroMultiplier = shock ? shock.multiplier : 1.0;
+
+      const currentPrice = Math.round(v.basePrice * (1 + baseFluctuation / 100) * macroMultiplier);
+      const netPct = Math.round(((currentPrice - v.basePrice) / v.basePrice) * 100);
+
       result[k] = {
         ...v,
         currentPrice,
-        trend: fluctuation >= 0 ? `+${fluctuation}% 📈` : `${fluctuation}% 📉`,
+        trend: netPct >= 0 ? `+${netPct}% 📈` : `${netPct}% 📉`,
+        macroShock: shock ? shock.reason : null,
       };
     }
     return result;
@@ -203,6 +212,68 @@ class TradeEngine {
       } catch (_) {}
     }
     return null;
+  }
+
+  /**
+   * Mengambil daftar seluruh karavan yang sedang aktif meluncur (Galactic Caravan Radar)
+   * @param {number} [limit=10]
+   * @returns {Promise<Array<object>>}
+   */
+  async getActiveCaravans(limit = 10) {
+    try {
+      const TradeCaravan = require("../models/TradeCaravan");
+      const rows = await TradeCaravan.findAll({
+        where: { status: "EN_ROUTE" },
+        order: [["departureTime", "DESC"]],
+        limit,
+      });
+
+      if (rows && rows.length > 0) {
+        return rows.map((c) => ({
+          id: c.caravanId,
+          userId: c.creatorUserId,
+          routeId: c.routeId,
+          routeName: TRADE_ROUTES[c.routeId]?.name || c.routeId,
+          cargo: c.cargo,
+          status: c.status,
+          departureTime: c.departureTime,
+          estimatedArrival: c.estimatedArrival,
+          totalInvestment: c.totalInvestment,
+          potentialYield: c.potentialYield,
+          escortsCount: c.escortsCount || 0,
+        }));
+      }
+    } catch (_) {}
+
+    // Fallback radar simulated data jika belum ada karavan yang meluncur
+    return [
+      {
+        id: "crv_neo_tokyo_01",
+        userId: "pilot_starlight",
+        routeId: "tokyo",
+        routeName: "Rute Badung ➔ Neo Tokyo Orbit 🚀",
+        cargo: { commodityName: "Kayu Jati Emas 🪵", amount: 25 },
+        status: "EN_ROUTE",
+        departureTime: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
+        estimatedArrival: new Date(Date.now() + 18 * 60 * 1000).toISOString(),
+        totalInvestment: 3000,
+        potentialYield: 4050,
+        escortsCount: 2,
+      },
+      {
+        id: "crv_nexus_core_02",
+        userId: "astral_merchant",
+        routeId: "nexus",
+        routeName: "Rute Badung ➔ Galactic Core Nexus 🪐",
+        cargo: { commodityName: "Bijih Kristal Kosmik 💎", amount: 15 },
+        status: "EN_ROUTE",
+        departureTime: new Date(Date.now() - 40 * 60 * 1000).toISOString(),
+        estimatedArrival: new Date(Date.now() + 80 * 60 * 1000).toISOString(),
+        totalInvestment: 5700,
+        potentialYield: 14250,
+        escortsCount: 4,
+      },
+    ];
   }
 
   /**

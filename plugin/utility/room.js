@@ -36,6 +36,35 @@ module.exports = {
     )
     .addSubcommand((sub) =>
       sub
+        .setName("preview")
+        .setDescription(
+          "Pratinjau visual penataan furnitur kamar 2.5D sebelum disimpan",
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("nama")
+            .setDescription("Nama item furnitur (contoh: Neon Desk, Cyber Bed)")
+            .setRequired(true),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName("x")
+            .setDescription("Koordinat X grid kamar (0 s/d 5)")
+            .setRequired(true)
+            .setMinValue(0)
+            .setMaxValue(5),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName("y")
+            .setDescription("Koordinat Y grid kamar (0 s/d 5)")
+            .setRequired(true)
+            .setMinValue(0)
+            .setMaxValue(5),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
         .setName("guestbook")
         .setDescription("Tinggalkan pesan hologram di buku tamu kamar teman")
         .addUserOption((opt) =>
@@ -228,6 +257,105 @@ module.exports = {
       });
       return interaction.editReply({
         ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
+
+    if (subcommand === "preview") {
+      await interaction.deferReply();
+      const itemName = interaction.options.getString("nama");
+      const px = interaction.options.getInteger("x");
+      const py = interaction.options.getInteger("y");
+
+      let room = null;
+      try {
+        room = await UserRoom.findOne({ userId: user.id });
+      } catch (_) {}
+
+      if (!room) {
+        room = {
+          userId: user.id,
+          displayName: authorDisplayName,
+          level: 1,
+          comfortScore: 120,
+          furniture: [
+            { name: "Cyber Bed", icon: "🛏️", x: 1, y: 1 },
+            { name: "Synthesizer Desk", icon: "🎹", x: 4, y: 1 },
+            { name: "Kotatsu Table", icon: "🍵", x: 2, y: 3 },
+            { name: "Neon Bonsai", icon: "🪴", x: 4, y: 4 },
+          ],
+          holoCardName: "Hoshino Spark",
+          likesCount: 0,
+        };
+      } else {
+        room = room.toObject ? room.toObject() : room;
+      }
+
+      // Tentukan ikon furnitur
+      let itemIcon = "🛋️";
+      const lowerName = itemName.toLowerCase();
+      if (lowerName.includes("bed") || lowerName.includes("kasur")) itemIcon = "🛏️";
+      else if (lowerName.includes("desk") || lowerName.includes("meja kerja") || lowerName.includes("komputer")) itemIcon = "🖥️";
+      else if (lowerName.includes("table") || lowerName.includes("meja")) itemIcon = "🍵";
+      else if (lowerName.includes("plant") || lowerName.includes("bonsai") || lowerName.includes("tanaman")) itemIcon = "🪴";
+      else if (lowerName.includes("synth") || lowerName.includes("piano") || lowerName.includes("musik")) itemIcon = "🎹";
+      else if (lowerName.includes("sofa") || lowerName.includes("kursi")) itemIcon = "🛋️";
+      else itemIcon = "📦";
+
+      let buffer;
+      try {
+        buffer = await canvasWorkerPool.execute("renderRoom", {
+          roomData: room,
+          user: { displayName: authorDisplayName, id: user.id },
+          pet: null,
+          options: {
+            previewPlacement: {
+              x: px,
+              y: py,
+              name: itemName,
+              icon: itemIcon,
+            },
+          },
+        });
+      } catch (err) {
+        const roomCanvas = require("../../src/canvas/roomCanvas");
+        buffer = await roomCanvas.renderRoomCanvas(
+          room,
+          { displayName: authorDisplayName, id: user.id },
+          null,
+          {
+            previewPlacement: {
+              x: px,
+              y: py,
+              name: itemName,
+              icon: itemIcon,
+            },
+          },
+        );
+      }
+
+      const attachment = new AttachmentBuilder(buffer, {
+        name: "room-preview.png",
+      });
+
+      const payload = buildContainerV2({
+        authorName: "NAURA LIVING ROOM 2.5D",
+        title: "📐 Pratinjau Penataan Furnitur (Live Grid Placement)",
+        description: [
+          `Halo, **${authorDisplayName}**! Berikut adalah visualisasi pratinjau penataan furnitur pada grid kamar 2.5D:`,
+          "",
+          `• **Furnitur:** \`${itemName}\` (${itemIcon})`,
+          `• **Koordinat Target:** Grid \`(${px}, ${py})\``,
+          `• **Estimasi Kenyamanan:** \`+25 Comfort Score\` ✨`,
+          "",
+          "> *Jika tata letak sudah pas, simpan pengaturan dekorasi kamarmu melalui Web Dashboard atau menu `/room decorate`.*",
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.editReply({
+        ...payload,
+        files: [attachment],
         flags: MessageFlags.IsComponentsV2,
       });
     }

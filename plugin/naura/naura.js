@@ -72,6 +72,16 @@ module.exports = {
       sub
         .setName("play")
         .setDescription("Main minigame seru 1v1 bareng Naura!"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("join-voice")
+        .setDescription("🎙️ Ajak Naura bergabung ke Voice Channel untuk sesi obrolan suara dua arah"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("leave-voice")
+        .setDescription("👋 Minta Naura pamit dan keluar dari Voice Channel"),
     ),
 
   async executePrefix(message, args, client) {
@@ -133,6 +143,64 @@ module.exports = {
     const isEn =
       interaction.locale?.startsWith("en") || interaction.localeLang === "en";
     const lang = isEn ? "en" : "id";
+
+    if (subcommand === "join-voice") {
+      const voiceChannel = interaction.member?.voice?.channel;
+      if (!voiceChannel) {
+        const errPayload = buildErrorContainerV2({
+          authorName: "Naura Voice Companion",
+          message: isEn
+            ? "You must be inside a Voice Channel to invite Naura!"
+            : "Kamu harus berada di dalam Voice Channel terlebih dahulu untuk mengajak Naura!",
+          footerText: ui.getFooter("naura", lang),
+        });
+        return interaction.editReply(errPayload);
+      }
+
+      const voiceCompanionService = require("../../src/services/voiceCompanionService");
+      await voiceCompanionService.joinVoice({
+        client: interaction.client,
+        guildId: interaction.guild?.id,
+        channelId: voiceChannel.id,
+        textChannelId: interaction.channelId,
+        inviterName: authorDisplayName,
+      });
+
+      const payload = buildContainerV2({
+        lang,
+        footerCategory: "naura",
+        accentColorHex: "#38BDF8",
+        authorName: "Naura Voice Companion",
+        title: isEn ? "🎙️ Duplex Voice Session Active!" : "🎙️ Sesi Suara Duplex Aktif!",
+        expression: "happy",
+        description: isEn
+          ? `Yay! Naura has joined <#${voiceChannel.id}>! Feel free to talk in voice or chat with Naura!`
+          : `Yayy! Naura sudah hadir di <#${voiceChannel.id}>! Ajak Naura ngobrol langsung lewat suara atau ketik pesan kapan saja!`,
+        footerText: ui.getFooter("naura", lang),
+      });
+
+      return interaction.editReply(payload);
+    }
+
+    if (subcommand === "leave-voice") {
+      const voiceCompanionService = require("../../src/services/voiceCompanionService");
+      const leaveResult = await voiceCompanionService.leaveVoice(interaction.guild?.id);
+
+      const payload = buildContainerV2({
+        lang,
+        footerCategory: "naura",
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        authorName: "Naura Voice Companion",
+        title: isEn ? "👋 See You Soon!" : "👋 Sampai Jumpa Lagi!",
+        expression: "shy",
+        description: isEn
+          ? "Naura has left the Voice Channel. Thank you for hanging out together!"
+          : leaveResult.message,
+        footerText: ui.getFooter("naura", lang),
+      });
+
+      return interaction.editReply(payload);
+    }
 
     if (subcommand === "about") {
       const payload = buildContainerV2({

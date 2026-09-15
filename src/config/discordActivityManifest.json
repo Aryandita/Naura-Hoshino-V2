@@ -1,0 +1,26 @@
+{
+  "$schema": "https://discord.com/developers/docs/activities/manifest-schema.json",
+  "name": "Naura World Activity",
+  "description": "Embedded interactive companion and anime RPG activity for Discord voice channels",
+  "version": "2.2.0",
+  "supported_platforms": ["web", "desktop", "mobile"],
+  "orientation": "landscape",
+  "default_size": {
+    "width": 1280,
+    "height": 720
+  },
+  "client_id": "123456789012345678",
+  "entrypoint": "/pages/activity.html",
+  "capabilities": [
+    "voice_state",
+    "rpc",
+    "media_session",
+    "user_identity"
+  ],
+  "scopes": [
+    "identify",
+    "guilds",
+    "rpc.activities.write",
+    "voice"
+  ]
+}

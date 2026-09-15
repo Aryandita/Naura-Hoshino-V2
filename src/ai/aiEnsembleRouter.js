@@ -18,18 +18,26 @@ const geminiClient = require("./geminiClient");
 
 const TASK_TYPES = Object.freeze({
   GENERAL_CHAT: "GENERAL_CHAT",
+  GENERAL_CONVERSATION: "GENERAL_CONVERSATION",
+  FAST_RESPONSE: "FAST_RESPONSE",
   TACTICAL_REASONING: "TACTICAL_REASONING",
+  TRIBUNAL_VERDICT: "TRIBUNAL_VERDICT",
   ROLEPLAY_STORY: "ROLEPLAY_STORY",
   CODE_LOGIC: "CODE_LOGIC",
   VISION_MULTIMODAL: "VISION_MULTIMODAL",
+  OFFLINE_FALLBACK: "OFFLINE_FALLBACK",
 });
 
 const DEFAULT_ROUTING_MAP = {
   [TASK_TYPES.GENERAL_CHAT]: ["gemini", "groq", "ollama"],
+  [TASK_TYPES.GENERAL_CONVERSATION]: ["gemini", "groq", "ollama"],
+  [TASK_TYPES.FAST_RESPONSE]: ["gemini", "groq", "ollama"],
   [TASK_TYPES.TACTICAL_REASONING]: ["groq", "gemini", "ollama"],
+  [TASK_TYPES.TRIBUNAL_VERDICT]: ["groq", "gemini", "ollama"],
   [TASK_TYPES.ROLEPLAY_STORY]: ["groq", "gemini", "ollama"],
   [TASK_TYPES.CODE_LOGIC]: ["groq", "gemini", "ollama"],
   [TASK_TYPES.VISION_MULTIMODAL]: ["gemini"],
+  [TASK_TYPES.OFFLINE_FALLBACK]: ["ollama", "groq", "gemini"],
 };
 
 class CircuitBreaker {
@@ -144,6 +152,37 @@ class AiEnsembleRouter {
       default:
         return false;
     }
+  }
+
+  /**
+   * Wrapper cerdas untuk pemanggilan tugas AI yang fleksibel
+   * Mendukung pemanggilan routeTask(taskType, payload) dan routeTask(options)
+   * @param {string|Object} taskTypeOrOptions
+   * @param {Object} [payload]
+   * @returns {Promise<{ text: string, provider: string, latencyMs: number, model: string, usage?: Object }>}
+   */
+  async routeTask(taskTypeOrOptions, payload = {}) {
+    let options = {};
+    if (typeof taskTypeOrOptions === "string") {
+      options = {
+        taskType: taskTypeOrOptions,
+        ...payload,
+      };
+      if (!options.prompt && typeof payload.message === "string") {
+        options.prompt = payload.message;
+      }
+    } else if (typeof taskTypeOrOptions === "object" && taskTypeOrOptions !== null) {
+      options = { ...taskTypeOrOptions };
+      if (!options.prompt && typeof options.message === "string") {
+        options.prompt = options.message;
+      }
+    }
+
+    if (!this.routingMap[options.taskType]) {
+      options.taskType = TASK_TYPES.GENERAL_CHAT;
+    }
+
+    return this.generate(options);
   }
 
   /**

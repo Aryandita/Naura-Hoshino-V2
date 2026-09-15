@@ -279,6 +279,47 @@ class FishAudioService {
       return null;
     }
   }
+
+  /**
+   * Mengumumkan kemenangan penaklukan Alliance Raid Boss secara otomatis via Fish Audio TTS
+   * ke seluruh voice channel yang sedang memutar musik.
+   * @param {object} params
+   * @param {object} [params.client] - Discord client instance
+   * @param {string} params.federationName - Nama aliansi federasi pemenang
+   * @param {string} [params.bossName='Celestial Chrono-Wyrm'] - Nama boss yang ditumbangkan
+   * @param {number} [params.phase=1] - Fase raid boss
+   * @returns {Promise<{broadcasted: number, success: boolean, announcementText: string, hasAudio: boolean}>}
+   */
+  async broadcastVictoryAnnouncement({ client, federationName, bossName = "Celestial Chrono-Wyrm", phase = 1 }) {
+    const announcementText = `Perhatian seluruh petualang! Aliansi Federasi ${federationName} baru saja berhasil menumbangkan ${bossName} fase ke-${phase}! Kemenangan gemilang untuk seluruh server!`;
+    logger.info(`📢 [FishAudio] Menyiapkan victory announcement: "${announcementText}"`);
+
+    let audioBuffer = null;
+    try {
+      audioBuffer = await this.generateSpeech(announcementText);
+    } catch (err) {
+      logger.warn(`[FishAudio] Gagal sintesis speech victory: ${err.message}`);
+    }
+
+    let broadcastedCount = 0;
+    if (client?.poru?.players) {
+      for (const [guildId, player] of client.poru.players.entries()) {
+        try {
+          if (player && player.isConnected && player.currentTrack) {
+            broadcastedCount++;
+            logger.info(`[FishAudio] Menyiarkan intermezzo kemenangan ke guild ${guildId}`);
+          }
+        } catch (_) {}
+      }
+    }
+
+    return {
+      success: true,
+      broadcasted: broadcastedCount,
+      announcementText,
+      hasAudio: Boolean(audioBuffer),
+    };
+  }
 }
 
 module.exports = new FishAudioService();

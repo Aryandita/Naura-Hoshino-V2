@@ -28,6 +28,46 @@ const memoryAllianceBoss = {
   contributors: {},
 };
 
+const ANCIENT_RELIC_TOWERS = [
+  {
+    id: "chrono_siphon",
+    name: "Chrono Siphon Tower ⏳",
+    zone: "Sector Alpha Orbit",
+    defenseHp: 12000,
+    maxHp: 12000,
+    controllerFedId: "fed_celestial",
+    controllerFedTag: "DOM",
+    buff: "xp_boost_25",
+    buffDescription: "+25% XP Boost aliansi",
+  },
+  {
+    id: "nebula_bastion",
+    name: "Nebula Bastion Tower 🛡️",
+    zone: "Starlight Outpost Edge",
+    defenseHp: 18000,
+    maxHp: 18000,
+    controllerFedId: "fed_astral",
+    controllerFedTag: "ASTRA",
+    buff: "vault_dividend_30",
+    buffDescription: "+30% Dividen Brankas Kas Klan mingguan",
+  },
+  {
+    id: "void_citadel",
+    name: "Void Citadel Tower 🌌",
+    zone: "Galactic Core Ridge",
+    defenseHp: 25000,
+    maxHp: 25000,
+    controllerFedId: null,
+    controllerFedTag: "UNCLAIMED",
+    buff: "drop_rate_20",
+    buffDescription: "+20% Drop Rate Relik Kosmik",
+  },
+];
+
+const memoryRelicTowers = new Map(
+  ANCIENT_RELIC_TOWERS.map((t) => [t.id, { ...t }]),
+);
+
 class GuildFederationEngine {
   /**
    * Mengambil data federasi berdasarkan ID.
@@ -215,10 +255,11 @@ class GuildFederationEngine {
    * @param {string} params.federationId
    * @param {string} params.clanId
    * @param {string} params.userId
-   * @param {number} params.damage
+   * @param {number} [params.damage]
+   * @param {object} [params.client]
    * @returns {Promise<object>}
    */
-  async attackAllianceBoss({ federationId, clanId, userId, damage = 150 }) {
+  async attackAllianceBoss({ federationId, clanId, userId, damage = 150, client = null }) {
     const fed = await this.getFederation(federationId);
     const boss = memoryAllianceBoss;
 
@@ -256,6 +297,17 @@ class GuildFederationEngine {
             await clanRow.save({ fields: ["vault"] }).catch(() => {});
           }
         }
+
+        // Siarkan intermezzo kemenangan via AI DJ Fish Audio TTS
+        try {
+          const fishAudioService = require("../../services/fishAudioService");
+          fishAudioService.broadcastVictoryAnnouncement({
+            client: client || null,
+            federationName: fed ? fed.name : "Aliansi Petualang",
+            bossName: "Celestial Chrono-Wyrm",
+            phase: boss.phase - 1,
+          }).catch(() => {});
+        } catch (_) {}
       }
 
       // Reset kontributor untuk fase berikutnya
@@ -269,6 +321,121 @@ class GuildFederationEngine {
       phase: boss.phase,
       isDefeated,
       rewardVaultPerClan,
+    };
+  }
+
+  /**
+   * Mengambil daftar Menara Relik Kuno (Ancient Relic Towers) dan status kontrolnya
+   * @returns {Array<object>}
+   */
+  getRelicTowers() {
+    return Array.from(memoryRelicTowers.values()).map((t) => ({
+      ...t,
+      controlPercent: Math.round(((t.maxHp - t.defenseHp) / t.maxHp) * 100),
+    }));
+  }
+
+  /**
+   * Pengepungan Menara Relik Kuno oleh Aliansi Federasi
+   * @param {object} params
+   * @param {string} params.federationId
+   * @param {string} params.clanId
+   * @param {string} params.towerId
+   * @param {number} [params.siegePower=250]
+   * @returns {Promise<object>}
+   */
+  async siegeRelicTower({ federationId, clanId, towerId, siegePower = 250 }) {
+    const tower = memoryRelicTowers.get(towerId);
+    if (!tower) {
+      return { success: false, error: "Menara Relik tidak ditemukan." };
+    }
+
+    const fed = await this.getFederation(federationId);
+    if (!fed) {
+      return { success: false, error: "Federasi aliansi tidak valid." };
+    }
+
+    // Jika aliansi sendiri yang sudah mengontrol
+    if (tower.controllerFedId === federationId) {
+      tower.defenseHp = Math.min(tower.maxHp, tower.defenseHp + siegePower);
+      return {
+        success: true,
+        action: "REINFORCE",
+        towerId,
+        towerName: tower.name,
+        remainingHp: tower.defenseHp,
+        maxHp: tower.maxHp,
+        controllerFedId: tower.controllerFedId,
+      };
+    }
+
+    // Serangan pengepungan
+    const damage = Math.min(tower.defenseHp, Math.max(50, siegePower));
+    tower.defenseHp -= damage;
+
+    let conquered = false;
+    if (tower.defenseHp <= 0) {
+      conquered = true;
+      tower.controllerFedId = federationId;
+      tower.controllerFedTag = fed.tag;
+      tower.defenseHp = tower.maxHp;
+
+      fed.prestige = (fed.prestige || 0) + 300;
+      await this.saveFederation(fed);
+      logger.info(`⚔️ [FederationWar] Aliansi "${fed.name}" berhasil menaklukkan ${tower.name}!`);
+    }
+
+    return {
+      success: true,
+      action: "SIEGE",
+      towerId,
+      towerName: tower.name,
+      damage,
+      remainingHp: tower.defenseHp,
+      maxHp: tower.maxHp,
+      conquered,
+      controllerFedId: tower.controllerFedId,
+      controllerFedTag: tower.controllerFedTag,
+    };
+  }
+
+  /**
+   * Klaim dividen wilayah dan buff Menara Relik untuk federasi pengontrol
+   * @param {object} params
+   * @param {string} params.federationId
+   * @param {string} params.towerId
+   * @returns {Promise<object>}
+   */
+  async claimTowerDividends({ federationId, towerId }) {
+    const tower = memoryRelicTowers.get(towerId);
+    if (!tower) {
+      return { success: false, error: "Menara Relik tidak ditemukan." };
+    }
+
+    if (tower.controllerFedId !== federationId) {
+      return { success: false, error: "Aliansi kamu tidak menguasai Menara Relik ini." };
+    }
+
+    const fed = await this.getFederation(federationId);
+    if (!fed) {
+      return { success: false, error: "Federasi tidak valid." };
+    }
+
+    const dividendPerClan = 3500;
+    for (const member of fed.memberClans || []) {
+      const clanRow = await GuildClan.findByPk(member.clanId).catch(() => null);
+      if (clanRow) {
+        clanRow.vault = (clanRow.vault || 0) + dividendPerClan;
+        await clanRow.save({ fields: ["vault"] }).catch(() => {});
+      }
+    }
+
+    return {
+      success: true,
+      towerName: tower.name,
+      buff: tower.buff,
+      buffDescription: tower.buffDescription,
+      dividendPerClan,
     };
   }
 }

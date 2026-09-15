@@ -104,6 +104,88 @@ module.exports = {
       });
     }
 
+    // 2b. STATUS FEDERATION WAR: ANCIENT RELIC TOWERS
+    if (action === "war") {
+      const towers = guildFederationEngine.getRelicTowers();
+      const lines = towers.map((t) => {
+        const controller = t.controllerFedTag ? `[${t.controllerFedTag}]` : "UNCLAIMED";
+        const hpBar = `HP: \`${t.defenseHp.toLocaleString("id-ID")} / ${t.maxHp.toLocaleString("id-ID")}\``;
+        return `🗼 **${t.name}** (${t.zone})\n   👑 Pengontrol: \`${controller}\` | ${hpBar}\n   ✨ Buff Wilayah: *${t.buffDescription}*`;
+      });
+
+      const payload = buildContainerV2({
+        accentColorHex: "#8B5CF6",
+        authorName: "CROSS-SERVER FEDERATION WAR",
+        title: "⚔️ Menara Relik Kuno & Peta Pengepungan",
+        description: [
+          `Event mingguan perebutan Menara Relik Kuno antar federasi aliansi galaksi Naura Wilds:\n`,
+          lines.join("\n\n"),
+          `\n> *Gunakan \`/survival federation aksi:siege tower_id:<chrono_siphon|nebula_bastion|void_citadel>\` untuk mengerahkan pasukan pengepungan!*`,
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
+
+    // 2c. FEDERATION WAR: SIEGE TOWER
+    if (action === "siege") {
+      const towerId = interaction.options.getString("tower_id") || "chrono_siphon";
+      const fedId = userClan.federationId || "fed_celestial";
+
+      const siegeResult = await guildFederationEngine.siegeRelicTower({
+        federationId: fedId,
+        clanId: userClan.id,
+        towerId,
+        siegePower: 350,
+      });
+
+      if (!siegeResult.success) {
+        const payload = buildErrorContainerV2({
+          title: "Pengepungan Gagal",
+          description: siegeResult.error || "Gagal meluncurkan pengepungan ke menara relik.",
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
+
+      const isConquered = siegeResult.conquered;
+      const payload = buildContainerV2({
+        accentColorHex: isConquered ? "#10B981" : "#F59E0B",
+        authorName: "CROSS-SERVER FEDERATION SIEGE",
+        title: isConquered
+          ? `🏆 Menara Ditaklukkan: ${siegeResult.towerName}!`
+          : `💥 Serangan Pengepungan ke ${siegeResult.towerName}`,
+        description: isConquered
+          ? [
+              `Luar biasa! Serangan aliansi berhasil meruntuhkan pertahanan lawan dan merebut kendali penuh **${siegeResult.towerName}**!`,
+              "",
+              `• **Aliansi Pengontrol Baru:** \`[${siegeResult.controllerFedTag}]\``,
+              `• **Bonus Prestise Aliansi:** \`+300 Poin\``,
+              `• **Hadiah Wilayah:** Dividen brankas klan mingguan aktif!`,
+            ].join("\n")
+          : [
+              `Pasukan klan **${userClan.name}** berhasil menembus barikade pertahanan **${siegeResult.towerName}**!`,
+              "",
+              `• **Kerusakan Diberikan:** \`-${siegeResult.damage} Defense HP\``,
+              `• **Sisa Ketahanan Menara:** \`${siegeResult.remainingHp.toLocaleString("id-ID")} / ${siegeResult.maxHp.toLocaleString("id-ID")}\``,
+              `• **Pengontrol Saat Ini:** \`[${siegeResult.controllerFedTag || "UNKNOWN"}]\``,
+            ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
+
     // 3. CREATE FEDERATION (Hanya Pemimpin Klan)
     if (action === "create") {
       if (userClan.leaderId !== user.id) {

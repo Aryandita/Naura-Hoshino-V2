@@ -138,10 +138,78 @@ function buildEventBanner(event) {
   return `🎉 **[EVENT: ${event.name}]** ${event.description}`;
 }
 
+/**
+ * Mengambil efek guncangan ekonomi komoditas (Macro Shocks) berdasarkan event aktif.
+ *
+ * @param {Date} [date=new Date()]
+ * @returns {Record<string, { multiplier: number, reason: string }>}
+ */
+function getCommodityModifiers(date = new Date()) {
+  const event = getActiveEvent(date);
+  const modifiers = {};
+
+  if (!event) {
+    const daySeed = date.getDate();
+    if (daySeed % 7 === 0) {
+      modifiers.COSMIC_ORE = {
+        multiplier: 1.4,
+        reason: "Badai Radiasi Kosmik (+40%) ⚡",
+      };
+    }
+    return modifiers;
+  }
+
+  switch (event.id) {
+    case "autumn_harvest":
+      modifiers.GOLDEN_WOOD = {
+        multiplier: 0.85,
+        reason: "Surplus Panen Raya (-15%) 🌾",
+      };
+      modifiers.MYTHIC_FISH = {
+        multiplier: 1.25,
+        reason: "Permintaan Pesta Panen (+25%) 🐟",
+      };
+      break;
+    case "frostsnow_winter":
+      modifiers.COSMIC_ORE = {
+        multiplier: 1.35,
+        reason: "Kristalisasi Badai Frostsnow (+35%) ❄️",
+      };
+      modifiers.ASTRAL_SILK = {
+        multiplier: 1.3,
+        reason: "Permintaan Busana Musim Dingin (+30%) 👘",
+      };
+      break;
+    case "independence_day":
+      modifiers.GOLDEN_WOOD = {
+        multiplier: 1.2,
+        reason: "Konstruksi Panggung Kemerdekaan (+20%) 🪵",
+      };
+      modifiers.ASTRAL_SILK = {
+        multiplier: 1.25,
+        reason: "Permintaan Kain Bendera (+25%) 👘",
+      };
+      break;
+    case "naura_birthday":
+      modifiers.MYTHIC_FISH = {
+        multiplier: 1.5,
+        reason: "Jamuan Ulang Tahun Naura (+50%) 🎂",
+      };
+      modifiers.COSMIC_ORE = {
+        multiplier: 1.3,
+        reason: "Kembang Api Kristal Bintang (+30%) 🎆",
+      };
+      break;
+  }
+
+  return modifiers;
+}
+
 module.exports = {
   EVENTS,
   getActiveEvent,
   applyEventBonuses,
   getEventExclusiveDrop,
   buildEventBanner,
+  getCommodityModifiers,
 };

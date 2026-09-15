@@ -114,6 +114,7 @@ if (parentPort) {
             payload.roomData,
             payload.user,
             payload.pet,
+            payload.options || {},
           );
           break;
         }

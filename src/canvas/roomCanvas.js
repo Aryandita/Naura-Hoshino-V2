@@ -36,7 +36,7 @@ function drawRoundedRect(
  * @param {Object} pet
  * @returns {Promise<Buffer>}
  */
-async function renderRoomCanvas(roomData, user, pet = null) {
+async function renderRoomCanvas(roomData, user, pet = null, options = {}) {
   const W = 960;
   const H = 560;
   const canvas = createCanvas(W, H);
@@ -87,14 +87,27 @@ async function renderRoomCanvas(roomData, user, pet = null) {
       ctx.lineTo(isoX - tileW / 2, isoY + tileH / 2);
       ctx.closePath();
 
-      const isEven = (gx + gy) % 2 === 0;
-      ctx.fillStyle = isEven
-        ? "rgba(18, 24, 38, 0.85)"
-        : "rgba(13, 17, 28, 0.85)";
-      ctx.fill();
-      ctx.strokeStyle = "rgba(6, 182, 212, 0.2)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
+      const isPreviewTile =
+        options.previewPlacement &&
+        Number(options.previewPlacement.x) === gx &&
+        Number(options.previewPlacement.y) === gy;
+
+      if (isPreviewTile) {
+        ctx.fillStyle = "rgba(6, 182, 212, 0.45)";
+        ctx.fill();
+        ctx.strokeStyle = "#38BDF8";
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+      } else {
+        const isEven = (gx + gy) % 2 === 0;
+        ctx.fillStyle = isEven
+          ? "rgba(18, 24, 38, 0.85)"
+          : "rgba(13, 17, 28, 0.85)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(6, 182, 212, 0.2)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
     }
   }
   ctx.restore();
@@ -198,6 +211,56 @@ async function renderRoomCanvas(roomData, user, pet = null) {
     ctx.shadowColor = "rgba(6, 182, 212, 0.6)";
     ctx.shadowBlur = 10;
     ctx.fillText(item.icon || "🛋️", itemX, itemY + 8);
+    ctx.restore();
+  }
+
+  // 5b. Live Placement Preview Hologram Indicator
+  if (options.previewPlacement) {
+    const px = Math.max(
+      0,
+      Math.min(gridSize - 1, Number(options.previewPlacement.x) || 0),
+    );
+    const py = Math.max(
+      0,
+      Math.min(gridSize - 1, Number(options.previewPlacement.y) || 0),
+    );
+    const prevX = originX + (px - py) * (tileW / 2);
+    const prevY = originY + (px + py) * (tileH / 2) - 100;
+
+    ctx.save();
+    // Holographic pulsing ground target
+    ctx.beginPath();
+    ctx.ellipse(prevX, prevY + tileH / 2, 24, 12, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(56, 189, 248, 0.25)";
+    ctx.fill();
+    ctx.strokeStyle = "#38BDF8";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+    ctx.stroke();
+
+    // Preview Item Icon
+    ctx.font = "32px sans-serif";
+    ctx.textAlign = "center";
+    ctx.shadowColor = "#38BDF8";
+    ctx.shadowBlur = 15;
+    ctx.fillText(options.previewPlacement.icon || "✨", prevX, prevY + 6);
+
+    // Floating Placement Badge
+    drawRoundedRect(
+      ctx,
+      prevX - 55,
+      prevY - 36,
+      110,
+      22,
+      6,
+      "rgba(14, 165, 233, 0.85)",
+      "#E0F2FE",
+      1,
+    );
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = 'bold 9px "JetBrains Mono", monospace';
+    ctx.shadowBlur = 0;
+    ctx.fillText(`PREVIEW (${px}, ${py})`, prevX, prevY - 22);
     ctx.restore();
   }
 

@@ -38,6 +38,11 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 > **Kriteria:** Mempengaruhi integritas data, keamanan saldo/ekonomi, stabilitas koneksi WebSocket, dan pencegahan eksploitasi sistem.
 
+- [ ] **[VOICE WEBRTC] Full-Duplex Audio Pipeline with Barge-In Capability (`VoiceCompanionService` Phase 2)**
+  - Menggantikan alur sekuensial push-and-wait dengan pipeline WebRTC real-time berlatensi rendah (<300ms) pada Discord Voice Gateway.
+  - Mengimplementasikan Voice Activity Detection (VAD) dan *barge-in capability* di mana bot langsung menghentikan pemutaran audio Fish Audio saat pengguna menyela pembicaraan di voice channel.
+  - File: [`src/services/voiceCompanionService.js`](src/services/voiceCompanionService.js), [`src/services/fishAudioService.js`](src/services/fishAudioService.js), [`src/config/env.js`](src/config/env.js).
+
 - [x] **[PERFORMA] Total Canvas Worker Offloading (Zero Event-Loop Blocking)**
   - Mendaftarkan seluruh sisa renderer Canvas (`renderRoomCanvas`, `drawChronicleNewspaper`, `drawAstralOmikuji`, `drawAstralAtmosphereCard`, `drawDuel`, `drawAchievementCard`, `generateWrappedCard`, `drawCardBattleArena`, `drawStockMarket`) ke `src/canvas/canvasWorker.js`.
   - Mengalihkan eksekusi di plugin terkait ke `canvasWorkerPool.execute()` agar event loop bot 100% non-blocking saat merender visual grafis berat.
@@ -94,6 +99,15 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 ## 🔥 2. KATEGORI: TINGGI (Prioritas Kedua setelah Kritis)
 
 > **Kriteria:** Fitur arsitektur inti, pengalaman pengguna utama, visualisasi sistem, dan retensi musiman.
+
+- [ ] **[AGENTIC AI] Voice Function Calling & Autonomous In-Game Action Dispatcher**
+  - Menghubungkan giliran obrolan suara di Voice Channel langsung ke `functionDispatcher.js` dan model AI Ensemble Router (Gemini 2.5 Flash / Groq).
+  - Memungkinkan pengguna menjalankan aksi in-game dan administrasi server via suara langsung (memutar lagu, mengecek saldo, panen hidroponik, cek omikuji, atau info pasar saham).
+  - File: [`src/services/voiceCompanionService.js`](src/services/voiceCompanionService.js), [`src/ai/functionDispatcher.js`](src/ai/functionDispatcher.js), [`src/ai/aiEnsembleRouter.js`](src/ai/aiEnsembleRouter.js).
+- [ ] **[DISCORD ACTIVITY] Social SDK Friends Radar & Co-Op Party Matchmaking (`relationships.read`)**
+  - Mengintegrasikan scope Discord Social SDK `relationships.read` via API `getRelationships()` pada Embedded Activity Web Dashboard.
+  - Menyediakan fitur Friends Radar dan pembentukan party co-op dungeon instan (The Neo-Abyss) bersama teman satu server dalam 1 klik tanpa input ID manual.
+  - File: [`dashboard/src/pages/activity.html`](dashboard/src/pages/activity.html), [`dashboard/routes/api.js`](dashboard/routes/api.js), [`src/config/discordActivityManifest.json`](src/config/discordActivityManifest.json).
 
 - [x] **[FITUR UTAMA] Global Guild Federation Hub (`/clan federation` & `/federation`)**
   - Mengintegrasikan mesin aliansi klan `src/survival/engines/guildFederationEngine.js` ke antarmuka Discord Components V2 lima lapisan.
@@ -188,13 +202,25 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 > **Kriteria:** Fitur reguler yang memperkaya ekosistem komunitas dan gameplay RPG. Dapat dikerjakan kapan pun tanpa mengganggu operasional bot.
 
-- [ ] **[DASHBOARD V2] Live Galactic Caravan Radar & Federation Hall of Fame Integration**
+- [ ] **[AUDIO CLUSTER] Multi-Region Dynamic Latency Ping Routing (Lavalink Geo-Federation)**
+  - Menambahkan probe ping periodik (setiap 30 detik) di `lavalinkClusterManager.js` untuk mengukur RTT (Round-Trip Time) ke masing-masing node Lavalink.
+  - Secara otomatis merutekan koneksi voice channel guild ke node audio dengan latensi terendah sesuai region geografis server Discord.
+  - File: [`src/managers/lavalinkClusterManager.js`](src/managers/lavalinkClusterManager.js), [`src/managers/musicManager.js`](src/managers/musicManager.js).
+- [ ] **[CANVAS & MEDIA] High-Fidelity 2K Canvas Visuals & Multiline Slash Command Interactions**
+  - Mengoptimalkan renderer Canvas (`itemCardCanvas.js`, `roomCanvas.js`, `inventoryCanvas.js`) untuk memanfaatkan batas upload baru Discord 20 MiB dengan opsi rendering resolusi ultra-tajam (2K / WebP lossless).
+  - Memperbarui modal dan command builder (`/story`, `/dungeon maker`, `/chronicle`) dengan multiline string options.
+  - File: [`src/canvas/roomCanvas.js`](src/canvas/roomCanvas.js), [`src/canvas/itemCardCanvas.js`](src/canvas/itemCardCanvas.js), [`plugin/ai/story-mode.js`](plugin/ai/story-mode.js), [`plugin/utility/dungeonMaker.js`](plugin/utility/dungeonMaker.js).
+- [ ] **[METAVERSE & RPG] Spatial Voice Proximity for Metaverse Land (`/land` & Activity)**
+  - Fitur audio spasial 3D berbasis koordinat grid tanah virtual (8x8) di `landEngine.js` saat diakses via Discord Activity Webview, sehingga volume suara pemain ter-attenuate secara alami berdasarkan jarak ubin avatar.
+  - File: [`src/survival/engines/landEngine.js`](src/survival/engines/landEngine.js), [`dashboard/src/pages/activity.html`](dashboard/src/pages/activity.html).
+
+- [x] **[DASHBOARD V2] Live Galactic Caravan Radar & Federation Hall of Fame Integration**
   - Menambahkan panel visual pemantauan karavan antariksa aktif yang sedang meluncur dan papan peringkat aliansi federasi pada Web Dashboard.
   - File: [`dashboard/src/pages/economy.html`](dashboard/src/pages/economy.html), [`dashboard/routes/api.js`](dashboard/routes/api.js).
-- [ ] **[OPTIMISASI] Redis Auto-Reconnection & Resilient Memory Lock Watchdog**
+- [x] **[OPTIMISASI] Redis Auto-Reconnection & Resilient Memory Lock Watchdog**
   - Penguatan penanganan koneksi Redis dengan exponential backoff dan otomatis fallback ke in-memory token bucket/mutex tanpa unhandled rejection saat network hiccup.
   - File: [`src/managers/redisManager.js`](src/managers/redisManager.js), [`src/survival/helpers/redisLockHelper.js`](src/survival/helpers/redisLockHelper.js).
-- [ ] **[GAMEPLAY BALANCE] Dynamic Commodity Market Events (Supply/Demand Macro Shocks)**
+- [x] **[GAMEPLAY BALANCE] Dynamic Commodity Market Events (Supply/Demand Macro Shocks)**
   - Pemicu fluktuasi harga pasar komoditas otomatis berdasarkan event dunia aktif (misal: Badai Kosmik menaikkan harga Kristal Kosmik +40%, Festival Panen memicu surplus Kayu Jati Emas).
   - File: [`src/services/tradeEngine.js`](src/services/tradeEngine.js), [`src/survival/engines/worldEventEngine.js`](src/survival/engines/worldEventEngine.js).
 
@@ -271,10 +297,21 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 > **Kriteria:** Penambahan estetika, kosmetik, dan eksplorasi fitur eksperimental jangka panjang. Tidak berpengaruh pada kestabilan bot jika dilewati.
 
-- [ ] **[VISUAL] Chibi 2.5D Room Decorator Live Placement Canvas Preview**
+- [ ] **[AI COMPANION] Expressive 3D Mascot Lip-Sync & Viseme Synchronization**
+  - Sinkronisasi bentuk mulut (viseme morph targets A, I, U, E, O) pada avatar 3D Three.js Naura di Web Dashboard dan Discord Activity saat memutar ucapan suara Fish Audio TTS.
+  - File: [`dashboard/src/components/NauraViewer/viewer3d.js`](dashboard/src/components/NauraViewer/viewer3d.js), [`dashboard/src/components/NauraViewer/animations.js`](dashboard/src/components/NauraViewer/animations.js).
+- [ ] **[CROSS-PLATFORM] Real-Time WebSocket Caravan Ambush Alerts via Web Push**
+  - Notifikasi Web Push API di browser dashboard saat karavan dagang antariksa pemain sedang disergap oleh klan rival di galaksi.
+  - File: [`dashboard/server.js`](dashboard/server.js), [`dashboard/routes/api.js`](dashboard/routes/api.js), [`src/services/tradeEngine.js`](src/services/tradeEngine.js).
+- [ ] **[DEVOPS & WORKFLOW] Automated Git Commit & Push on Every Task Update (Zero-Lag GitHub Sync)**
+  - Menyusun SOP baku dan script otomasi (`scripts/git-sync.js` / `npm run sync:github`) yang secara instan mengeksekusi `git add`, `git commit` dengan pesan semantik rapi (*Conventional Commits*), dan `git push origin main` setiap kali ada pembaruan kode yang telah lulus seluruh 5 gerbang QA Gate.
+  - Memastikan seluruh progress tercatat rapi di repositori GitHub secara seketika tanpa ada pekerjaan yang tertinggal di staging lokal.
+  - File: [`scripts/git-sync.js`](scripts/git-sync.js), [`package.json`](package.json), [`AGENTS.md`](AGENTS.md), [`TODO.md`](TODO.md).
+
+- [x] **[VISUAL] Chibi 2.5D Room Decorator Live Placement Canvas Preview**
   - Pratinjau visual penataan furnitur kamar cyber-pod 2.5D secara dinamis dengan grid penempatan sebelum disimpan ke MongoDB `UserRoom`.
   - File: [`src/canvas/roomCanvas.js`](src/canvas/roomCanvas.js), [`plugin/utility/room.js`](plugin/utility/room.js).
-- [ ] **[AI AUDIO] AI DJ Intermezzo Broadcast for Federation Raid Victories**
+- [x] **[AI AUDIO] AI DJ Intermezzo Broadcast for Federation Raid Victories**
   - Pengumuman suara otomatis Fish Audio TTS saat aliansi federasi berhasil menumbangkan Celestial Chrono-Wyrm, disiarkan ke seluruh voice channel yang sedang memutar musik.
   - File: [`src/services/fishAudioService.js`](src/services/fishAudioService.js), [`src/survival/engines/guildFederationEngine.js`](src/survival/engines/guildFederationEngine.js).
 
@@ -522,22 +559,61 @@ Berdasarkan analisis pasar bot dan platform developer Discord terkini (2025 - 20
 - **Tren Platform:** Format embed tradisional mulai ditinggalkan dan digantikan oleh Container modern (Discord Components V2), Section terpisah, Accessory thumbnail, dan tata letak responsif bertingkat.
 - **Adopsi Naura:** Standarisasi 5-lapisan `NauraContainerBuilder` yang sudah diadopsi secara penuh di seluruh modul.
 
+### 6. Full-Duplex WebRTC Voice Agent & Sub-300ms Pipelines (2026)
+- **Tren Platform:** Transisi dari bot push-to-talk sekuensial menuju agen suara full-duplex berbasis WebRTC dengan latensi ultra-rendah (<300ms) dan kapabilitas *barge-in* (interupsi alami saat user memotong ucapan bot).
+- **Adopsi Naura:** Mengintegrasikan Voice Activity Detection (VAD) Discord Voice Gateway dengan kontrol interupsi instan pada pemutaran Fish Audio TTS di `voiceCompanionService.js`.
+
+### 7. Discord Social SDK & Direct Relationship Access (`relationships.read`)
+- **Tren Platform:** Discord Social SDK membuka akses scope `relationships.read` untuk Embedded Activities tanpa perlu approval individual, memungkinkan aplikasi mengambil koneksi pertemanan pengguna secara langsung via `getRelationships()`.
+- **Adopsi Naura:** Menghubungkan Friends Radar dan pembentukan party co-op dungeon instan (The Neo-Abyss) pada Activity Webview.
+
+### 8. Plafon Ukuran Media 20 MiB & Multiline Slash Command Inputs
+- **Tren Platform:** Discord menaikkan batas upload file default menjadi 20 MiB serta mendukung input multiline string pada command dan modal.
+- **Adopsi Naura:** Peningkatan resolusi kartu Canvas inventaris dan RPG ke kualitas 2K tajam (WebP lossless) serta pengalaman formulir pembuatan dungeon/cerita yang lebih leluasa.
+
+### 9. Zero-Lag Automated Continuous Git Sync & GitHub Version Control
+- **Tren Platform:** Siklus rilis micro-updates pada platform bot modern membutuhkan sinkronisasi berkelanjutan ke GitHub tanpa jeda, memastikan integritas repositori remote selalu sejalan dengan status staging lokal.
+- **Adopsi Naura:** Skrip otomasi `scripts/git-sync.js` (`npm run sync:github`) yang memvalidasi QA gate dan mengeksekusi commit semantik serta push ke remote GitHub seketika.
+
 ---
 
-### 🔮 Sprint 30: Discord Embedded Activity, Native Entitlements Monetization & Voice AI Agent (Next Milestone)
+### 📜 Sprint 30: Discord Embedded Activity, Native Entitlements Monetization & Voice AI Agent (v2.2.0 Milestone Selesai)
 
-- [ ] **[FITUR] Discord Embedded Activity Launcher (`@discord/embedded-app-sdk`)**:
+- [x] **[FITUR] Discord Embedded Activity Launcher (`@discord/embedded-app-sdk`)**:
   - Mengonfigurasi manifest Discord Activity dan endpoint `/activity` agar Web Dashboard dan 3D Mascot Naura dapat dimainkan langsung di dalam Voice Channel Discord.
-- [ ] **[MONETISASI] Integrasi Discord Entitlements & Premium Subscriptions API**:
+- [x] **[MONETISASI] Integrasi Discord Entitlements & Premium Subscriptions API**:
   - Menangani event gateway `ENTITLEMENT_CREATE`, `ENTITLEMENT_UPDATE`, dan `ENTITLEMENT_DELETE` untuk aktivasi otomatis Star Pass dan Naura Premium Tier tanpa intervensi manual.
-- [ ] **[LIVING AI] Duplex Voice Channel AI Companion (`/naura join-voice`)**:
+- [x] **[LIVING AI] Duplex Voice Channel AI Companion (`/naura join-voice`)**:
   - Integrasi Voice Activity Detection (VAD) Discord Voice Gateway dengan Fish Audio Streaming TTS untuk obrolan suara dua arah langsung bersama Naura di voice channel.
-- [ ] **[RPG & CLAN] Cross-Server Federation War & Territory Siege (`GuildFederationEngine` Phase 2)**:
+- [x] **[RPG & CLAN] Cross-Server Federation War & Territory Siege (`GuildFederationEngine` Phase 2)**:
   - Event mingguan perebutan menara relik kuno (*Ancient Relic Towers*) antar federasi klan lintas-server berbasis kapling tanah `landEngine.js`.
-- [ ] **[PERFORMA] Hybrid Clustering Migration Evaluation (`discord-hybrid-sharding`)**:
+- [x] **[PERFORMA] Hybrid Clustering Migration Evaluation (`discord-hybrid-sharding`)**:
   - Evaluasi migrasi arsitektur sharding menuju hybrid multi-cluster worker untuk memangkas pemakaian memori RAM hingga 45% di hosting panel Pterodactyl.
-- [ ] **[TEST & QA] Automated Test Suite Expansion & Parity Audit**:
+- [x] **[TEST & QA] Automated Test Suite Expansion & Parity Audit**:
   - Pembuatan unit test untuk Discord Entitlements Webhook Handler dan Federation War dengan target kelulusan >310 tests 100% hijau.
+
+---
+
+### 🔮 Sprint 31: Next-Gen Full-Duplex Voice WebRTC, Social SDK Activities, Autonomous Agentic Actions & Zero-Lag GitHub CI/CD (Milestone Aktif)
+
+- [ ] **[VOICE WEBRTC] Full-Duplex Audio Pipeline with Barge-In Capability (`VoiceCompanionService` Phase 2)**:
+  - Menggantikan alur sekuensial push-and-wait dengan pipeline WebRTC real-time berlatensi rendah (<300ms) pada Discord Voice Gateway, lengkap dengan Voice Activity Detection (VAD) dan interupsi suara alami (barge-in).
+- [ ] **[AGENTIC AI] Voice Function Calling & Autonomous In-Game Action Dispatcher**:
+  - Menghubungkan Voice Turn di Voice Channel ke `functionDispatcher.js` dan model AI Ensemble Router untuk eksekusi perintah suara in-game dan server admin secara mandiri.
+- [ ] **[DISCORD ACTIVITY] Social SDK Friends Radar & Co-Op Party Matchmaking (`relationships.read`)**:
+  - Mengintegrasikan scope Discord Social SDK `relationships.read` via API `getRelationships()` pada Embedded Activity Web Dashboard untuk radar pertemanan dan party dungeon 1-klik.
+- [ ] **[AUDIO CLUSTER] Multi-Region Dynamic Latency Ping Routing (Lavalink Geo-Federation)**:
+  - Probe ping periodik pada `lavalinkClusterManager.js` untuk merutekan voice connection guild ke node audio dengan latensi terendah sesuai region geografis server.
+- [ ] **[CANVAS & MEDIA] High-Fidelity 2K Canvas Visuals & Multiline Slash Command Interactions**:
+  - Peningkatan kualitas kartu inventaris dan kamar ke resolusi 2K ultra-tajam memanfaatkan batas upload 20 MiB serta input multiline string pada command/modal.
+- [ ] **[METAVERSE & RPG] Spatial Voice Proximity for Metaverse Land (`/land` & Activity)**:
+  - Audio spasial 3D berbasis koordinat kapling tanah virtual di `landEngine.js` saat diakses via Discord Activity Webview.
+- [ ] **[AI COMPANION] Expressive 3D Mascot Lip-Sync & Viseme Morph Target Synchronization**:
+  - Sinkronisasi bentuk mulut viseme morph targets (A, I, U, E, O) avatar 3D Three.js Naura dengan audio stream Fish Audio TTS.
+- [ ] **[CROSS-PLATFORM] Real-Time WebSocket Caravan Ambush Alerts via Web Push**:
+  - Pengiriman notifikasi Web Push API di browser dashboard saat karavan dagang antariksa pemain sedang disergap oleh klan lawan di galaksi.
+- [ ] **[DEVOPS & WORKFLOW] Automated Git Commit & Push on Every Task Update (Zero-Lag GitHub Sync)**:
+  - Otomasi sinkronisasi commit Git dan push langsung ke branch remote GitHub (`origin/main`) setiap kali tugas diperbarui dan lulus 5 gerbang QA Gate.
 
 
 ---

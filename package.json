@@ -26,6 +26,7 @@
     "locales:check": "node scripts/validate-locales.js",
     "locales:check:strict": "node scripts/validate-locales.js --strict",
     "test:requires": "node scripts/check-requires.js",
+    "sync:github": "node scripts/git-sync.js",
     "assistant": "node assistant/server.js"
   },
   "engines": {
