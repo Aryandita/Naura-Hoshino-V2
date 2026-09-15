@@ -9,7 +9,7 @@
 const os = require("node:os");
 
 function evaluateClustering() {
-  console.log("=== EVALUASI HYBRID CLUSTERING NAURA HOSHINO (v2.2.0) ===\n");
+  console.log("=== EVALUASI HYBRID CLUSTERING NAURA HOSHINO (v2.3.0) ===\n");
 
   const totalCores = os.cpus().length;
   const totalRamMb = Math.round(os.totalmem() / 1024 / 1024);

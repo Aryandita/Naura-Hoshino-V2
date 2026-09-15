@@ -1,6 +1,6 @@
 # 📜 NAURA HOSHINO, Repository Governance & Architecture Rules
 
-> **Versi:** 2.2.0 · **Engine:** 2.2.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14  
+> **Versi:** 2.3.0 · **Engine:** 2.3.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14  
 > **Pentalogi Dokumentasi:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`DESIGN.md`](DESIGN.md) (Desain) · [`RULES.md`](RULES.md) (Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen AI)
 
 > [!IMPORTANT]

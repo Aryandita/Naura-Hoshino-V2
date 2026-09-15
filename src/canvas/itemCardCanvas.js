@@ -32,14 +32,20 @@ function wrapText(ctx, text, maxWidth) {
 /**
  * Render visual kartu inspeksi item RPG holografis (640x360)
  * @param {object} item
+ * @param {object} [options]
  * @returns {Promise<Buffer>}
  */
-async function renderItemCard(item) {
+async function renderItemCard(item, options = {}) {
   return await runWithLimit(async () => {
+    const is2K = options.resolution === "2k" || options.highFidelity || false;
+    const scale = is2K ? 2 : 1;
     const width = 640;
     const height = 360;
-    const canvas = createCanvas(width, height);
+    const canvas = createCanvas(width * scale, height * scale);
     const ctx = canvas.getContext("2d");
+    if (scale !== 1) {
+      ctx.scale(scale, scale);
+    }
 
     const tierColor = item.tierColor || "#9CA3AF";
     const tier = Math.max(1, Math.min(6, item.tier || 1));
@@ -286,9 +292,8 @@ async function renderItemCard(item) {
     ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
     ctx.font = "9px 'Montserrat', sans-serif";
     ctx.textAlign = "right";
-    ctx.fillText("NAURA WILDS • HOLO-DB", width - 46, econY + 16);
-
-    return canvas.toBuffer("image/png");
+    const mimeType = options.format === "webp" ? "image/webp" : "image/png";
+    return canvas.toBuffer(mimeType);
   });
 }
 

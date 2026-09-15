@@ -1,7 +1,7 @@
 # 🤖 PANDUAN KERJA & ORIENTASI AGENT AI, NAURA HOSHINO V2
 
 > **Target:** AI Coding Assistants (Antigravity, Roo Code, Claude, Copilot, & Developer Manusia)  
-> **Versi Ekosistem:** 2.2.0 · **Engine:** 2.2.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14  
+> **Versi Ekosistem:** 2.3.0 · **Engine:** 2.3.0 · **Runtime:** Node.js ≥ 24 · **Framework:** discord.js v14  
 > **Pentalogi Dokumentasi:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`DESIGN.md`](DESIGN.md) (Desain) · [`RULES.md`](RULES.md) (Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen AI)
 
 > [!IMPORTANT]
@@ -9,7 +9,7 @@
 
 ---
 
-## 🧭 1. Mental Model Ekosistem Naura Hoshino V2 (v2.2.0)
+## 🧭 1. Mental Model Ekosistem Naura Hoshino V2 (v2.3.0)
 
 Sebagai agen AI, bayangkan Naura Hoshino V2 sebagai platform terintegrasi dengan **6 Pilar Utama**:
 

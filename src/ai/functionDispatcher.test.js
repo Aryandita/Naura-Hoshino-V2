@@ -8,7 +8,7 @@ const redisManager = require("../managers/redisManager");
 const UserReminder = require("../models/UserReminder");
 
 test("functionDispatcher - tools declaration schema", () => {
-  assert.equal(tools.length, 8);
+  assert.equal(tools.length, 11);
   const toolNames = tools.map((t) => t.name);
 
   assert.ok(toolNames.includes("check_balance"));
@@ -19,6 +19,10 @@ test("functionDispatcher - tools declaration schema", () => {
   assert.ok(toolNames.includes("get_server_stats"));
   assert.ok(toolNames.includes("create_reminder"));
   assert.ok(toolNames.includes("give_daily"));
+  assert.ok(toolNames.includes("harvest_greenhouse"));
+  assert.ok(toolNames.includes("check_omikuji"));
+  assert.ok(toolNames.includes("check_stock_market"));
+
 
   for (const tool of tools) {
     assert.equal(tool.parameters.type, "OBJECT");

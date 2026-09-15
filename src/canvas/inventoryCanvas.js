@@ -113,10 +113,15 @@ async function generateInventoryBackpackImage(
   options = {},
 ) {
   return await runWithLimit(async () => {
+    const is2K = options.resolution === "2k" || options.highFidelity || false;
+    const scale = is2K ? 2 : 1;
     const canvasWidth = 900;
     const canvasHeight = 580;
-    const canvas = createCanvas(canvasWidth, canvasHeight);
+    const canvas = createCanvas(canvasWidth * scale, canvasHeight * scale);
     const ctx = canvas.getContext("2d");
+    if (scale !== 1) {
+      ctx.scale(scale, scale);
+    }
 
     // ============================================================
     // 1. LATAR BELAKANG MEJA KEMAH PETUALANG DENGAN AMBIENT WARMTH
@@ -541,7 +546,8 @@ async function generateInventoryBackpackImage(
       ctx.restore();
     }
 
-    return canvas.toBuffer("image/png");
+    const mimeType = options.format === "webp" ? "image/webp" : "image/png";
+    return canvas.toBuffer(mimeType);
   });
 }
 

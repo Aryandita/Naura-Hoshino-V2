@@ -208,3 +208,35 @@ test("LavalinkClusterManager - Lossless Hi-Fi Node Federation & Auto-Balancing",
   assert.equal(status.hiFiNodes.length, 2);
   assert.ok(status.supportedCodecs.includes("FLAC 24-bit"));
 });
+
+test("LavalinkClusterManager - Multi-Region Dynamic Latency Ping Routing", async () => {
+  const manager = new LavalinkClusterManager();
+
+  manager.nodeTiers.set("Node-Fast-Asia", 1);
+  manager.nodeTiers.set("Node-Slow-Asia", 1);
+  manager.registerHiFiNode("Node-Fast-Asia", { region: "singapore" });
+  manager.registerHiFiNode("Node-Slow-Asia", { region: "singapore" });
+
+  // Simulasikan RTT latency
+  manager.nodeLatencies.set("Node-Fast-Asia", { latencyMs: 18, timestamp: Date.now() });
+  manager.nodeLatencies.set("Node-Slow-Asia", { latencyMs: 180, timestamp: Date.now() });
+
+  assert.equal(manager.getNodeLatency("Node-Fast-Asia"), 18);
+  assert.equal(manager.getNodeLatency("Node-Slow-Asia"), 180);
+
+  const mockPoru = {
+    nodes: new Map([
+      ["Node-Fast-Asia", { name: "Node-Fast-Asia", connected: true, penalties: 0 }],
+      ["Node-Slow-Asia", { name: "Node-Slow-Asia", connected: true, penalties: 0 }],
+    ]),
+  };
+
+  const selected = manager.getPreferredNode(mockPoru, { region: "singapore" });
+  assert.equal(selected, "Node-Fast-Asia", "Harus memprioritaskan node dengan RTT latency terendah");
+
+  // Uji start dan stop ping prober
+  manager.startPingProber(mockPoru, 60000);
+  assert.ok(manager.pingInterval);
+  manager.stopPingProber();
+  assert.equal(manager.pingInterval, null);
+});

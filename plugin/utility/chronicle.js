@@ -18,6 +18,14 @@ module.exports = {
     .setName("chronicle")
     .setDescription(
       "📰 Baca Koran Harian & Ramalan Server 'The Hoshino Times'",
+    )
+    .addStringOption((opt) =>
+      opt
+        .setName("topik")
+        .setDescription(
+          "Sorotan topik atau headline khusus yang ingin diangkat (opsional)",
+        )
+        .setRequired(false),
     ),
 
   async execute(interaction) {
@@ -35,6 +43,11 @@ module.exports = {
       const chronicleData = await ServerChronicleEngine.generateChronicleData(
         interaction.guild,
       );
+      const customTopic = interaction.options.getString("topik");
+      if (customTopic) {
+        chronicleData.headline = customTopic.substring(0, 120);
+      }
+
       const imgBuffer = await canvasWorkerPool.execute({
         task: "renderChronicle",
         payload: chronicleData,

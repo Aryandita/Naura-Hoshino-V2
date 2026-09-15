@@ -4336,9 +4336,38 @@ export function createAnimationController(modelScene, clips = [], vrm = null, op
         triggerWave,
         playClip,
         setMood,
+        syncVisemes: (phoneme, intensity = 1.0) => syncVisemes(vrm, phoneme, intensity),
         destroy,
         getMixer: () => mixer,
         getActiveAnim: () => state.activeAnim,
         getHumanoidBones: () => humanoidBones,
     };
 }
+
+/**
+ * Sinkronisasi viseme morph target (A, I, U, E, O) pada avatar VRM
+ * @param {object} vrm - VRM instance
+ * @param {'A'|'I'|'U'|'E'|'O'} phoneme - Vowel phoneme
+ * @param {number} [intensity=1.0] - Bobot bukaan mulut (0.0 s/d 1.0)
+ */
+export function syncVisemes(vrm, phoneme, intensity = 1.0) {
+    if (!vrm) return;
+    const v = String(phoneme || "").toUpperCase();
+    const clamped = Math.max(0, Math.min(1, intensity));
+
+    if (vrm.blendShapeProxy) {
+        for (const k of ["A", "I", "U", "E", "O"]) {
+            try {
+                vrm.blendShapeProxy.setValue(k, k === v ? clamped : 0);
+            } catch (_) {}
+        }
+    } else if (vrm.expressionManager) {
+        const vrm1Map = { A: "aa", I: "ih", U: "ou", E: "ee", O: "oh" };
+        for (const [k, expr] of Object.entries(vrm1Map)) {
+            try {
+                vrm.expressionManager.setValue(expr, k === v ? clamped : 0);
+            } catch (_) {}
+        }
+    }
+}
+

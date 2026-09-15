@@ -416,6 +416,15 @@ class TradeEngine {
               } catch (_) {}
             }
 
+            // Broadcast ambush alert via WebSocket & Web Push
+            this.broadcastAmbushAlert({
+              caravanId,
+              ownerUserId: caravan.creatorUserId,
+              routeName: TRADE_ROUTES[caravan.routeId]?.name || caravan.routeId,
+              raiderName: `Raider_${raiderUserId}`,
+              lootAmount,
+            });
+
             return {
               success: true,
               raided: true,
@@ -436,6 +445,27 @@ class TradeEngine {
       },
     );
   }
+
+  /**
+   * Mengirimkan notifikasi penyergapan karavan secara real-time ke Web Push & WebSocket
+   * @param {object} alertData
+   */
+  async broadcastAmbushAlert(alertData) {
+    try {
+      logger.warn(
+        `🚨 [TradeEngine Ambush Alert] Karavan ${alertData.caravanId} disergap! Korban: ${alertData.ownerUserId}, Loot: ${alertData.lootAmount}`,
+      );
+      const axios = require("axios");
+      const env = require("../config/env");
+      const port = env.DASHBOARD_PORT || 3000;
+      await axios
+        .post(`http://127.0.0.1:${port}/api/caravan/ambush-alert`, alertData, {
+          timeout: 1500,
+        })
+        .catch(() => {});
+    } catch (_) {}
+  }
 }
 
 module.exports = new TradeEngine();
+

@@ -79,7 +79,7 @@ const sendErrorLog = async (err, type, client) => {
         const ui = require("../config/ui");
         const errEmbed = new EmbedBuilder()
           .setColor("#00FFFF")
-          .setTitle(`⚠️ Naura Versi ${env.BOT_VERSION || "2.2.0"} - ${type}`)
+          .setTitle(`⚠️ Naura Versi ${env.BOT_VERSION || "2.3.0"} - ${type}`)
           .setDescription(
             `\`\`\`js\n${String(err?.stack || err).substring(0, 4000)}\n\`\`\``,
           )

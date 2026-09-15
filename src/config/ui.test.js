@@ -8,7 +8,7 @@ const { NauraEmbedBuilder } = require("../utils/NauraEmbedBuilder");
 const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
 
 test("UI Footer Configuration - Resolves version dynamically from env.BOT_VERSION", () => {
-  const currentVersion = env.BOT_VERSION || "2.2.0";
+  const currentVersion = env.BOT_VERSION || "2.3.0";
 
   const coreFooter = ui.getFooter("core");
   assert.ok(

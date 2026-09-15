@@ -5,7 +5,7 @@
  * @type: Command
  * @copyright 2026 Aryandita Praftian
  * @assistant Naura Hoshino
- * @version 2.2.0
+ * @version 2.3.0
  * @description Omni-Search & Interactive Command Palette (/search / /quick)
  */
 

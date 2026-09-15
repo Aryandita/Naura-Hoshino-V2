@@ -234,7 +234,125 @@ class LandEngine {
       activeBuffs,
     };
   }
+
+  /**
+   * Memperbarui posisi koordinat avatar pemain di metaverse land (grid 1..8, 1..8)
+   * @param {string} guildId
+   * @param {string} userId
+   * @param {{x: number, y: number, username?: string}} pos
+   * @returns {Promise<object>}
+   */
+  async updatePlayerPosition(guildId, userId, { x, y, username }) {
+    const clampedX = Math.max(1, Math.min(8, Math.round(Number(x) || 1)));
+    const clampedY = Math.max(1, Math.min(8, Math.round(Number(y) || 1)));
+    const posData = {
+      x: clampedX,
+      y: clampedY,
+      username: username || "Player",
+      updatedAt: Date.now(),
+    };
+
+    const key = `land:pos:${guildId}:${userId}`;
+    if (redisManager.isReady) {
+      try {
+        await redisManager.set(key, JSON.stringify(posData), 3600);
+      } catch (_) {}
+    }
+    if (!this.playerPositions) this.playerPositions = new Map();
+    this.playerPositions.set(`${guildId}:${userId}`, posData);
+    return posData;
+  }
+
+  /**
+   * Mengambil posisi avatar pemain di metaverse land
+   * @param {string} guildId
+   * @param {string} userId
+   * @returns {Promise<{x: number, y: number, username?: string}|null>}
+   */
+  async getPlayerPosition(guildId, userId) {
+    const key = `land:pos:${guildId}:${userId}`;
+    if (redisManager.isReady) {
+      try {
+        const raw = await redisManager.get(key);
+        if (raw) return typeof raw === "string" ? JSON.parse(raw) : raw;
+      } catch (_) {}
+    }
+    if (!this.playerPositions) this.playerPositions = new Map();
+    return this.playerPositions.get(`${guildId}:${userId}`) || null;
+  }
+
+  /**
+   * Menghitung atenuasi volume suara spasial 3D berdasarkan jarak ubin avatar (8x8 grid)
+   * Menggunakan model inverse distance linear roll-off
+   * @param {{x: number, y: number}} posA - Posisi pendengar (listener)
+   * @param {{x: number, y: number}} posB - Posisi pembicara (speaker)
+   * @param {object} [options]
+   * @param {number} [options.maxDistance=4.5] - Jarak maksimal terdengar dalam satuan ubin
+   * @param {number} [options.innerRadius=1.0] - Radius volume 100%
+   * @returns {{distance: number, volume: number, pan: number, audible: boolean}}
+   */
+  calculateSpatialProximity(posA, posB, options = {}) {
+    if (!posA || !posB) {
+      return { distance: 99, volume: 0, pan: 0, audible: false };
+    }
+    const maxDist = options.maxDistance || 4.5;
+    const innerRadius = options.innerRadius || 1.0;
+
+    const dx = (posB.x || 1) - (posA.x || 1);
+    const dy = (posB.y || 1) - (posA.y || 1);
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    let volume = 0;
+    if (distance <= innerRadius) {
+      volume = 1.0;
+    } else if (distance < maxDist) {
+      // Linear attenuation dari innerRadius ke maxDist
+      volume = Math.max(0, 1.0 - (distance - innerRadius) / (maxDist - innerRadius));
+      volume = Math.round(volume * 100) / 100;
+    }
+
+    // Pan stereo: -1.0 (kiri penuh) sampai +1.0 (kanan penuh)
+    const pan = Math.max(-1.0, Math.min(1.0, Math.round((dx / (maxDist || 1)) * 100) / 100));
+
+    return {
+      distance: Math.round(distance * 100) / 100,
+      volume,
+      pan,
+      audible: volume > 0.01,
+    };
+  }
+
+  /**
+   * Mengambil peta audio spasial untuk pendengar dari semua pemain yang berada di guild
+   * @param {string} guildId
+   * @param {string} listenerUserId
+   * @param {Array<{userId: string, x: number, y: number, username?: string}>} [knownPlayers]
+   * @returns {Promise<Array<object>>}
+   */
+  async getProximityAudioMap(guildId, listenerUserId, knownPlayers = []) {
+    let listenerPos = await this.getPlayerPosition(guildId, listenerUserId);
+    if (!listenerPos) {
+      listenerPos = { x: 4, y: 4, username: "Listener" };
+    }
+
+    const proximityMap = [];
+    for (const player of knownPlayers) {
+      if (player.userId === listenerUserId) continue;
+      const proximity = this.calculateSpatialProximity(listenerPos, player);
+      proximityMap.push({
+        userId: player.userId,
+        username: player.username || `User_${player.userId}`,
+        distance: proximity.distance,
+        volume: proximity.volume,
+        pan: proximity.pan,
+        audible: proximity.audible,
+      });
+    }
+
+    return proximityMap.sort((a, b) => a.distance - b.distance);
+  }
 }
 
 module.exports = new LandEngine();
 module.exports.STRUCTURES = STRUCTURES;
+

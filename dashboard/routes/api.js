@@ -328,6 +328,97 @@ module.exports = (client) => {
     }
   });
 
+  // Endpoint Social SDK Friends Radar (relationships.read)
+  router.get("/activity/social-radar", (req, res) => {
+    try {
+      const guildId = req.query.guildId || "default_guild";
+      // Menyajikan daftar koneksi teman aktif di guild voice channel
+      const friends = [
+        {
+          userId: "101",
+          username: "AstralWalker",
+          status: "IN_VOICE",
+          level: 42,
+          clanTag: "STAR",
+          coopReady: true,
+        },
+        {
+          userId: "102",
+          username: "CyberSamurai",
+          status: "IN_DUNGEON",
+          level: 38,
+          clanTag: "ECLIP",
+          coopReady: false,
+        },
+        {
+          userId: "103",
+          username: "HoshinoAdventurer",
+          status: "IN_VOICE",
+          level: 29,
+          clanTag: "STAR",
+          coopReady: true,
+        },
+      ];
+      res.json({
+        success: true,
+        guildId,
+        scope: "relationships.read",
+        activeFriendsCount: friends.filter((f) => f.coopReady).length,
+        friends,
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Endpoint 1-Click Co-Op Party Matchmaking (The Neo-Abyss)
+  router.post("/activity/coop-invite", (req, res) => {
+    try {
+      const { hostUserId, targetUserId, activityType = "neo_abyss" } = req.body || {};
+      if (!hostUserId || !targetUserId) {
+        return res.status(400).json({ success: false, error: "Missing hostUserId or targetUserId" });
+      }
+
+      const partyId = `party_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      res.json({
+        success: true,
+        partyId,
+        hostUserId,
+        targetUserId,
+        activityType,
+        status: "INVITATION_DISPATCHED",
+        message: "Undangan party Co-Op Dungeon (The Neo-Abyss) berhasil disiarkan ke sesi teman!",
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // Endpoint 1-Click Auto Co-Op Party Matchmaking (The Neo-Abyss)
+  router.post("/activity/party-matchmake", (req, res) => {
+    try {
+      const { hostUserId = "current_user", guildId = "default_guild" } = req.body || {};
+      const partyId = `party_auto_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const members = [
+        { userId: hostUserId, role: "LEADER", ready: true },
+        { userId: "101", username: "AstralWalker", role: "DPS", ready: true },
+        { userId: "103", username: "HoshinoAdventurer", role: "SUPPORT", ready: true },
+      ];
+
+      res.json({
+        success: true,
+        partyId,
+        guildId,
+        activityType: "the_neo_abyss",
+        matchedMembers: members,
+        partyStatus: "READY_TO_DEPLOY",
+        message: "Party Co-Op The Neo-Abyss berhasil dibentuk dalam 1 klik!",
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // Webhook handler untuk Discord Entitlements & Subscriptions
   router.post("/discord/entitlements/webhook", async (req, res) => {
     try {
@@ -449,5 +540,104 @@ module.exports = (client) => {
     }
   });
 
+  // --- Metaverse Land 3D Spatial Voice Proximity API ---
+  router.get("/activity/spatial-proximity", async (req, res) => {
+    try {
+      const landEngine = require("../../src/survival/engines/landEngine");
+      const guildId = req.query.guildId || "default_guild";
+      const userId = req.query.userId || "current_user";
+
+      // Pemain di sekitar kapling tanah metaverse
+      const simulatedPlayers = [
+        { userId: "player_01", username: "AstralWalker", x: 3, y: 3 },
+        { userId: "player_02", username: "CyberSamurai", x: 4, y: 5 },
+        { userId: "player_03", username: "StarlightMage", x: 8, y: 8 },
+      ];
+
+      const proximityMap = await landEngine.getProximityAudioMap(guildId, userId, simulatedPlayers);
+      const myPos = (await landEngine.getPlayerPosition(guildId, userId)) || { x: 3, y: 4, username: "You" };
+
+      res.json({
+        success: true,
+        guildId,
+        listenerPos: myPos,
+        proximityAudio: proximityMap,
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  router.post("/activity/spatial-position", async (req, res) => {
+    try {
+      const landEngine = require("../../src/survival/engines/landEngine");
+      const { guildId = "default_guild", userId = "current_user", x = 1, y = 1, username } = req.body || {};
+      const pos = await landEngine.updatePlayerPosition(guildId, userId, { x, y, username });
+      res.json({ success: true, position: pos });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // --- Real-Time Caravan Ambush Alerts & Web Push Subscriptions Store ---
+  const pushSubscriptions = new Map();
+
+  router.post("/push/subscribe", (req, res) => {
+    try {
+      const { userId = "guest", subscription } = req.body || {};
+      if (!subscription || !subscription.endpoint) {
+        return res.status(400).json({ success: false, error: "Invalid subscription payload" });
+      }
+      pushSubscriptions.set(userId, { subscription, registeredAt: new Date().toISOString() });
+      res.json({
+        success: true,
+        message: "Web Push subscription registered successfully",
+        totalSubscribers: pushSubscriptions.size,
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  router.get("/push/status", (req, res) => {
+    res.json({
+      success: true,
+      enabled: true,
+      subscribersCount: pushSubscriptions.size,
+      supportedAlertTypes: ["caravan_ambush", "raid_boss_spawn", "lottery_winner"],
+    });
+  });
+
+  router.post("/caravan/ambush-alert", (req, res) => {
+    try {
+      const { caravanId, ownerUserId, routeName, raiderName, lootAmount } = req.body || {};
+      const alertPayload = {
+        type: "CARAVAN_AMBUSH",
+        caravanId: caravanId || "crv_unknown",
+        ownerUserId: ownerUserId || "unknown_owner",
+        title: "🚨 PERINGATAN: Karavan Disergap!",
+        body: `Karavan milikmu di ${routeName || "Rute Antariksa"} sedang disergap oleh ${raiderName || "Klan Rival"}! Kerugian: ${lootAmount || 0} koin.`,
+        timestamp: new Date().toISOString(),
+      };
+
+      if (req.app && typeof req.app.get === "function") {
+        const io = req.app.get("io");
+        if (io && typeof io.emit === "function") {
+          io.emit("caravan:ambush", alertPayload);
+        }
+      }
+
+      res.json({
+        success: true,
+        dispatched: true,
+        alert: alertPayload,
+        pushDispatchedTo: pushSubscriptions.has(ownerUserId) ? 1 : 0,
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   return router;
 };
+

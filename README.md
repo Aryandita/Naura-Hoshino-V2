@@ -7,7 +7,7 @@ Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D
 
 <br />
 
-[![Versi](https://img.shields.io/badge/Versi-2.2.0-FFB6C1?style=for-the-badge)](package.json)
+[![Versi](https://img.shields.io/badge/Versi-2.3.0-FFB6C1?style=for-the-badge)](package.json)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D%2024.0.0-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org)
 [![discord.js](https://img.shields.io/badge/discord.js-v14-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.js.org)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
@@ -21,13 +21,13 @@ Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D
 <br />
 
 > [!NOTE]
-> Proyek ini beroperasi di atas arsitektur **Polyglot Database** (Supabase PostgreSQL dengan 41 migrasi bernomor, MongoDB Atlas, Redis Distributed Mutex, dan fallback SQLite darurat). Seluruh milestone pengembangan hingga **Sprint 27 (v2.2.0 Milestone)** telah rampung, mencakup Avatar 3D Maskot (Three.js PBR 2K & VRM SpringBones), AI Ensemble Router multi-LLM (Gemini 2.5 Flash, Groq LLaMA 3.3, Ollama), Currency V2 Closed-Loop 4-Channel Recycling Pool (`ServerTreasury`), Web Soundboard Studio, dan Lavalink Cluster Manager bertingkat.
+> Proyek ini beroperasi di atas arsitektur **Polyglot Database** (Supabase PostgreSQL dengan 41 migrasi bernomor, MongoDB Atlas, Redis Distributed Mutex, dan fallback SQLite darurat). Seluruh milestone pengembangan hingga **Sprint 31 (v2.3.0 Milestone)** telah rampung, mencakup WebRTC Full-Duplex Voice dengan AI Barge-In, Social SDK Activities & Matchmaking, Autonomous Agentic Action Dispatcher, Geo-Federated Lavalink Ping Routing, 2K Canvas, Spatial Audio Proximity, 3D Mascot Lip-Sync, dan Caravan Ambush Web Push Alerts.
 
 ### 📌 Referensi Dokumen & Sumber Kebenaran (Pentalogi Dokumentasi)
 
 | Item                    |      Nilai / Berkas      | Keterangan                                                     |
 | ----------------------- | :----------------------: | -------------------------------------------------------------- |
-| **Versi Ekosistem**     |         `2.2.0`          | Standar X.Y.Z di [`package.json`](package.json)                |
+| **Versi Ekosistem**     |         `2.3.0`          | Standar X.Y.Z di [`package.json`](package.json)                |
 | **Format Penomoran**    |         `X.Y.Z`          | X = Generasi Era (2), Y = Major Update, Z = Minor/Bugfix       |
 | **Runtime Minimum**     |   Node.js `>= 24.0.0`    | `engines` di [`package.json`](package.json)                    |
 | **Kebutuhan & Produk**  |   [`PRD.md`](PRD.md)     | Spesifikasi produk, persona pengguna, dan batasan 6 pilar      |

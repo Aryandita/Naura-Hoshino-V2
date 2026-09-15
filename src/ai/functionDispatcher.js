@@ -137,6 +137,33 @@ const tools = [
       properties: {},
     },
   },
+  {
+    name: "harvest_greenhouse",
+    description:
+      "Panen seluruh tanaman hidroponik yang telah matang di greenhouse kebun pemain.",
+    parameters: {
+      type: "OBJECT",
+      properties: {},
+    },
+  },
+  {
+    name: "check_omikuji",
+    description:
+      "Tarik ramalan bintang Omikuji harian untuk melihat peruntungan dan berkah kosmik pemain.",
+    parameters: {
+      type: "OBJECT",
+      properties: {},
+    },
+  },
+  {
+    name: "check_stock_market",
+    description:
+      "Lihat ringkasan indeks harga saham dan bursa komoditas Hoshino saat ini.",
+    parameters: {
+      type: "OBJECT",
+      properties: {},
+    },
+  },
 ];
 
 async function dispatchFunction(name, args = {}, message = {}) {
@@ -480,6 +507,72 @@ async function dispatchFunction(name, args = {}, message = {}) {
         rewardXp,
         rewardCoupons,
         message: `Hadiah harian berhasil diklaim: +${rewardFragments} Star Fragments ⭐, +${rewardXp} XP 🌟${rewardCoupons > 0 ? `, +${rewardCoupons} Coupon 🎟️` : ""}!`,
+      };
+    }
+
+    // 9. HARVEST GREENHOUSE
+    if (name === "harvest_greenhouse") {
+      const greenhouseEngine = require("../survival/engines/greenhouseEngine");
+      const gh = await greenhouseEngine.getGreenhouse(userId);
+      const matureSlots = gh.slots.filter((s) => !s.isEmpty && s.isMature);
+
+      if (matureSlots.length === 0) {
+        return {
+          status: "empty",
+          harvestedCount: 0,
+          message: "Belum ada tanaman yang siap dipanen di kebun hidroponikmu saat ini.",
+        };
+      }
+
+      let totalHarvested = 0;
+      const harvestedItems = [];
+      for (const slot of matureSlots) {
+        const res = await greenhouseEngine.harvestSlot(userId, slot.slotIndex);
+        if (res && res.success) {
+          totalHarvested++;
+          harvestedItems.push(`${res.harvestItem?.name || "Hasil Panen"} x${res.harvestItem?.amount || 1}`);
+        }
+      }
+
+      return {
+        status: "success",
+        harvestedCount: totalHarvested,
+        items: harvestedItems,
+        message: `Berhasil memanen ${totalHarvested} slot tanaman hidroponik: ${harvestedItems.join(", ")}!`,
+      };
+    }
+
+    // 10. CHECK OMIKUJI
+    if (name === "check_omikuji") {
+      const astralService = require("../services/astralService");
+      const result = await astralService.drawDailyOmikuji(userId, author.username || "Pengelana");
+
+      return {
+        status: "success",
+        tierId: result.tier?.id || "KICHI",
+        tierName: result.tier?.name || "Keberuntungan Baik",
+        message: result.message || "Ramalan Omikuji berhasil ditarik.",
+        blessing: result.buffDescription || "Meningkatkan aura keberuntungan.",
+        fortuneScore: result.tier?.luckScore || 75,
+      };
+    }
+
+    // 11. CHECK STOCK MARKET
+    if (name === "check_stock_market") {
+      const StockMarketEngine = require("../services/stockMarketEngine");
+      const overview = await StockMarketEngine.getMarketOverview();
+      const topStocks = (overview || []).slice(0, 4).map((s) => ({
+        ticker: s.ticker,
+        name: s.name,
+        price: s.currentPrice,
+        dividendYield: `${Math.round((s.dividendYield || 0.05) * 100)}%`,
+      }));
+
+      return {
+        status: "success",
+        totalStocks: overview ? overview.length : 0,
+        stocks: topStocks,
+        message: "Ringkasan bursa pasar saham Hoshino berhasil diperbarui.",
       };
     }
   } catch (e) {

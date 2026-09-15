@@ -16,7 +16,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 | Topik                    | Keputusan                                                                                                                                   |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Format Versi**         | Standar X.Y.Z: X = Era Keseluruhan (2), Y = Major Update (2), Z = Minor Update (0). Rilis aktif saat ini: **v2.2.0**.                        |
+| **Format Versi**         | Standar X.Y.Z: X = Era Keseluruhan (2), Y = Major Update (3), Z = Minor Update (0). Rilis aktif saat ini: **v2.3.0**.                        |
 | **Versi Node**           | `>= 24` di `engines`, README, `AGENTS.md`, dan CI. Seragam, tanpa pengecualian.                                                             |
 | **Penyimpanan Bahasa**   | **Per user**, bukan per guild. `GuildSettings.language` hanya menjadi bahasa default saat user belum punya preferensi.                      |
 | **Strategi Sharding**    | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering.                                          |
@@ -38,7 +38,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 > **Kriteria:** Mempengaruhi integritas data, keamanan saldo/ekonomi, stabilitas koneksi WebSocket, dan pencegahan eksploitasi sistem.
 
-- [ ] **[VOICE WEBRTC] Full-Duplex Audio Pipeline with Barge-In Capability (`VoiceCompanionService` Phase 2)**
+- [x] **[VOICE WEBRTC] Full-Duplex Audio Pipeline with Barge-In Capability (`VoiceCompanionService` Phase 2)**
   - Menggantikan alur sekuensial push-and-wait dengan pipeline WebRTC real-time berlatensi rendah (<300ms) pada Discord Voice Gateway.
   - Mengimplementasikan Voice Activity Detection (VAD) dan *barge-in capability* di mana bot langsung menghentikan pemutaran audio Fish Audio saat pengguna menyela pembicaraan di voice channel.
   - File: [`src/services/voiceCompanionService.js`](src/services/voiceCompanionService.js), [`src/services/fishAudioService.js`](src/services/fishAudioService.js), [`src/config/env.js`](src/config/env.js).
@@ -100,11 +100,11 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 > **Kriteria:** Fitur arsitektur inti, pengalaman pengguna utama, visualisasi sistem, dan retensi musiman.
 
-- [ ] **[AGENTIC AI] Voice Function Calling & Autonomous In-Game Action Dispatcher**
+- [x] **[AGENTIC AI] Voice Function Calling & Autonomous In-Game Action Dispatcher**
   - Menghubungkan giliran obrolan suara di Voice Channel langsung ke `functionDispatcher.js` dan model AI Ensemble Router (Gemini 2.5 Flash / Groq).
   - Memungkinkan pengguna menjalankan aksi in-game dan administrasi server via suara langsung (memutar lagu, mengecek saldo, panen hidroponik, cek omikuji, atau info pasar saham).
   - File: [`src/services/voiceCompanionService.js`](src/services/voiceCompanionService.js), [`src/ai/functionDispatcher.js`](src/ai/functionDispatcher.js), [`src/ai/aiEnsembleRouter.js`](src/ai/aiEnsembleRouter.js).
-- [ ] **[DISCORD ACTIVITY] Social SDK Friends Radar & Co-Op Party Matchmaking (`relationships.read`)**
+- [x] **[DISCORD ACTIVITY] Social SDK Friends Radar & Co-Op Party Matchmaking (`relationships.read`)**
   - Mengintegrasikan scope Discord Social SDK `relationships.read` via API `getRelationships()` pada Embedded Activity Web Dashboard.
   - Menyediakan fitur Friends Radar dan pembentukan party co-op dungeon instan (The Neo-Abyss) bersama teman satu server dalam 1 klik tanpa input ID manual.
   - File: [`dashboard/src/pages/activity.html`](dashboard/src/pages/activity.html), [`dashboard/routes/api.js`](dashboard/routes/api.js), [`src/config/discordActivityManifest.json`](src/config/discordActivityManifest.json).
@@ -202,15 +202,15 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 > **Kriteria:** Fitur reguler yang memperkaya ekosistem komunitas dan gameplay RPG. Dapat dikerjakan kapan pun tanpa mengganggu operasional bot.
 
-- [ ] **[AUDIO CLUSTER] Multi-Region Dynamic Latency Ping Routing (Lavalink Geo-Federation)**
+- [x] **[AUDIO CLUSTER] Multi-Region Dynamic Latency Ping Routing (Lavalink Geo-Federation)**
   - Menambahkan probe ping periodik (setiap 30 detik) di `lavalinkClusterManager.js` untuk mengukur RTT (Round-Trip Time) ke masing-masing node Lavalink.
   - Secara otomatis merutekan koneksi voice channel guild ke node audio dengan latensi terendah sesuai region geografis server Discord.
   - File: [`src/managers/lavalinkClusterManager.js`](src/managers/lavalinkClusterManager.js), [`src/managers/musicManager.js`](src/managers/musicManager.js).
-- [ ] **[CANVAS & MEDIA] High-Fidelity 2K Canvas Visuals & Multiline Slash Command Interactions**
+- [x] **[CANVAS & MEDIA] High-Fidelity 2K Canvas Visuals & Multiline Slash Command Interactions**
   - Mengoptimalkan renderer Canvas (`itemCardCanvas.js`, `roomCanvas.js`, `inventoryCanvas.js`) untuk memanfaatkan batas upload baru Discord 20 MiB dengan opsi rendering resolusi ultra-tajam (2K / WebP lossless).
   - Memperbarui modal dan command builder (`/story`, `/dungeon maker`, `/chronicle`) dengan multiline string options.
   - File: [`src/canvas/roomCanvas.js`](src/canvas/roomCanvas.js), [`src/canvas/itemCardCanvas.js`](src/canvas/itemCardCanvas.js), [`plugin/ai/story-mode.js`](plugin/ai/story-mode.js), [`plugin/utility/dungeonMaker.js`](plugin/utility/dungeonMaker.js).
-- [ ] **[METAVERSE & RPG] Spatial Voice Proximity for Metaverse Land (`/land` & Activity)**
+- [x] **[METAVERSE & RPG] Spatial Voice Proximity for Metaverse Land (`/land` & Activity)**
   - Fitur audio spasial 3D berbasis koordinat grid tanah virtual (8x8) di `landEngine.js` saat diakses via Discord Activity Webview, sehingga volume suara pemain ter-attenuate secara alami berdasarkan jarak ubin avatar.
   - File: [`src/survival/engines/landEngine.js`](src/survival/engines/landEngine.js), [`dashboard/src/pages/activity.html`](dashboard/src/pages/activity.html).
 
@@ -297,13 +297,13 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 > **Kriteria:** Penambahan estetika, kosmetik, dan eksplorasi fitur eksperimental jangka panjang. Tidak berpengaruh pada kestabilan bot jika dilewati.
 
-- [ ] **[AI COMPANION] Expressive 3D Mascot Lip-Sync & Viseme Synchronization**
+- [x] **[AI COMPANION] Expressive 3D Mascot Lip-Sync & Viseme Synchronization**
   - Sinkronisasi bentuk mulut (viseme morph targets A, I, U, E, O) pada avatar 3D Three.js Naura di Web Dashboard dan Discord Activity saat memutar ucapan suara Fish Audio TTS.
   - File: [`dashboard/src/components/NauraViewer/viewer3d.js`](dashboard/src/components/NauraViewer/viewer3d.js), [`dashboard/src/components/NauraViewer/animations.js`](dashboard/src/components/NauraViewer/animations.js).
-- [ ] **[CROSS-PLATFORM] Real-Time WebSocket Caravan Ambush Alerts via Web Push**
+- [x] **[CROSS-PLATFORM] Real-Time WebSocket Caravan Ambush Alerts via Web Push**
   - Notifikasi Web Push API di browser dashboard saat karavan dagang antariksa pemain sedang disergap oleh klan rival di galaksi.
   - File: [`dashboard/server.js`](dashboard/server.js), [`dashboard/routes/api.js`](dashboard/routes/api.js), [`src/services/tradeEngine.js`](src/services/tradeEngine.js).
-- [ ] **[DEVOPS & WORKFLOW] Automated Git Commit & Push on Every Task Update (Zero-Lag GitHub Sync)**
+- [x] **[DEVOPS & WORKFLOW] Automated Git Commit & Push on Every Task Update (Zero-Lag GitHub Sync)**
   - Menyusun SOP baku dan script otomasi (`scripts/git-sync.js` / `npm run sync:github`) yang secara instan mengeksekusi `git add`, `git commit` dengan pesan semantik rapi (*Conventional Commits*), dan `git push origin main` setiap kali ada pembaruan kode yang telah lulus seluruh 5 gerbang QA Gate.
   - Memastikan seluruh progress tercatat rapi di repositori GitHub secara seketika tanpa ada pekerjaan yang tertinggal di staging lokal.
   - File: [`scripts/git-sync.js`](scripts/git-sync.js), [`package.json`](package.json), [`AGENTS.md`](AGENTS.md), [`TODO.md`](TODO.md).
@@ -594,25 +594,25 @@ Berdasarkan analisis pasar bot dan platform developer Discord terkini (2025 - 20
 
 ---
 
-### 🔮 Sprint 31: Next-Gen Full-Duplex Voice WebRTC, Social SDK Activities, Autonomous Agentic Actions & Zero-Lag GitHub CI/CD (Milestone Aktif)
+### 📜 Sprint 31: Next-Gen Full-Duplex Voice WebRTC, Social SDK Activities, Autonomous Agentic Actions & Zero-Lag GitHub CI/CD (v2.3.0 Milestone Selesai)
 
-- [ ] **[VOICE WEBRTC] Full-Duplex Audio Pipeline with Barge-In Capability (`VoiceCompanionService` Phase 2)**:
+- [x] **[VOICE WEBRTC] Full-Duplex Audio Pipeline with Barge-In Capability (`VoiceCompanionService` Phase 2)**:
   - Menggantikan alur sekuensial push-and-wait dengan pipeline WebRTC real-time berlatensi rendah (<300ms) pada Discord Voice Gateway, lengkap dengan Voice Activity Detection (VAD) dan interupsi suara alami (barge-in).
-- [ ] **[AGENTIC AI] Voice Function Calling & Autonomous In-Game Action Dispatcher**:
+- [x] **[AGENTIC AI] Voice Function Calling & Autonomous In-Game Action Dispatcher**:
   - Menghubungkan Voice Turn di Voice Channel ke `functionDispatcher.js` dan model AI Ensemble Router untuk eksekusi perintah suara in-game dan server admin secara mandiri.
-- [ ] **[DISCORD ACTIVITY] Social SDK Friends Radar & Co-Op Party Matchmaking (`relationships.read`)**:
+- [x] **[DISCORD ACTIVITY] Social SDK Friends Radar & Co-Op Party Matchmaking (`relationships.read`)**:
   - Mengintegrasikan scope Discord Social SDK `relationships.read` via API `getRelationships()` pada Embedded Activity Web Dashboard untuk radar pertemanan dan party dungeon 1-klik.
-- [ ] **[AUDIO CLUSTER] Multi-Region Dynamic Latency Ping Routing (Lavalink Geo-Federation)**:
+- [x] **[AUDIO CLUSTER] Multi-Region Dynamic Latency Ping Routing (Lavalink Geo-Federation)**:
   - Probe ping periodik pada `lavalinkClusterManager.js` untuk merutekan voice connection guild ke node audio dengan latensi terendah sesuai region geografis server.
-- [ ] **[CANVAS & MEDIA] High-Fidelity 2K Canvas Visuals & Multiline Slash Command Interactions**:
+- [x] **[CANVAS & MEDIA] High-Fidelity 2K Canvas Visuals & Multiline Slash Command Interactions**:
   - Peningkatan kualitas kartu inventaris dan kamar ke resolusi 2K ultra-tajam memanfaatkan batas upload 20 MiB serta input multiline string pada command/modal.
-- [ ] **[METAVERSE & RPG] Spatial Voice Proximity for Metaverse Land (`/land` & Activity)**:
+- [x] **[METAVERSE & RPG] Spatial Voice Proximity for Metaverse Land (`/land` & Activity)**:
   - Audio spasial 3D berbasis koordinat kapling tanah virtual di `landEngine.js` saat diakses via Discord Activity Webview.
-- [ ] **[AI COMPANION] Expressive 3D Mascot Lip-Sync & Viseme Morph Target Synchronization**:
+- [x] **[AI COMPANION] Expressive 3D Mascot Lip-Sync & Viseme Morph Target Synchronization**:
   - Sinkronisasi bentuk mulut viseme morph targets (A, I, U, E, O) avatar 3D Three.js Naura dengan audio stream Fish Audio TTS.
-- [ ] **[CROSS-PLATFORM] Real-Time WebSocket Caravan Ambush Alerts via Web Push**:
+- [x] **[CROSS-PLATFORM] Real-Time WebSocket Caravan Ambush Alerts via Web Push**:
   - Pengiriman notifikasi Web Push API di browser dashboard saat karavan dagang antariksa pemain sedang disergap oleh klan lawan di galaksi.
-- [ ] **[DEVOPS & WORKFLOW] Automated Git Commit & Push on Every Task Update (Zero-Lag GitHub Sync)**:
+- [x] **[DEVOPS & WORKFLOW] Automated Git Commit & Push on Every Task Update (Zero-Lag GitHub Sync)**:
   - Otomasi sinkronisasi commit Git dan push langsung ke branch remote GitHub (`origin/main`) setiap kali tugas diperbarui dan lulus 5 gerbang QA Gate.
 
 

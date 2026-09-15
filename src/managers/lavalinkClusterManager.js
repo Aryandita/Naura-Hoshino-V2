@@ -39,6 +39,8 @@ class LavalinkClusterManager {
     this.migrationLocks = new Set(); // guildId set untuk mencegah duplikasi migrasi
     this.hiFiNodes = new Map(); // nodeName -> { region, lossless, maxBitrate, codec }
     this.guildAudioQualities = new Map(); // guildId -> "standard" | "hd" | "lossless"
+    this.nodeLatencies = new Map(); // nodeName -> { latencyMs, timestamp }
+    this.pingInterval = null; // Periodic RTT prober timer
   }
 
   /**
@@ -301,7 +303,7 @@ class LavalinkClusterManager {
   getPreferredNode(poru, options = {}) {
     if (!poru || !poru.nodes) return undefined;
 
-    const { excludeNode = null, requireLavaSrc = false } = options;
+    const { excludeNode = null, requireLavaSrc = false, region = null } = options;
 
     // Kumpulkan node yang terkoneksi dan tidak sedang di-karantina
     const connected = [...poru.nodes.values()].filter(
@@ -331,8 +333,8 @@ class LavalinkClusterManager {
       else tier3.push(node);
     }
 
-    // Sort helper: urutkan berdasarkan penalti beban terendah
-    const sortByPenalty = (list) => {
+    // Sort helper: urutkan berdasarkan penalti beban, latensi ping RTT, dan kesesuaian wilayah
+    const sortByLatencyAndPenalty = (list) => {
       list.sort((a, b) => {
         // Bila membutuhkan LavaSrc, utamakan yang memiliki LavaSrc
         if (requireLavaSrc) {
@@ -340,23 +342,35 @@ class LavalinkClusterManager {
           const capB = this.nodeCapabilities.get(b.name)?.hasLavaSrc ? 1 : 0;
           if (capA !== capB) return capB - capA;
         }
-        return (a.penalties || 0) - (b.penalties || 0);
+
+        const latA = this.getNodeLatency(a.name);
+        const latB = this.getNodeLatency(b.name);
+
+        const hiFiA = this.hiFiNodes.get(a.name);
+        const hiFiB = this.hiFiNodes.get(b.name);
+        const regionMatchA = region && hiFiA?.region === String(region).toLowerCase() ? -40 : 0;
+        const regionMatchB = region && hiFiB?.region === String(region).toLowerCase() ? -40 : 0;
+
+        const scoreA = (a.penalties || 0) + latA + regionMatchA;
+        const scoreB = (b.penalties || 0) + latB + regionMatchB;
+
+        return scoreA - scoreB;
       });
       return list[0]?.name;
     };
 
     // Prioritaskan Tier 1 (Private Utama)
-    if (tier1.length > 0) return sortByPenalty(tier1);
+    if (tier1.length > 0) return sortByLatencyAndPenalty(tier1);
 
     // Jika Tier 1 down, gunakan Tier 2 (Private Sekunder)
-    if (tier2.length > 0) return sortByPenalty(tier2);
+    if (tier2.length > 0) return sortByLatencyAndPenalty(tier2);
 
     // Jika semua private down, gunakan Tier 3 (Public Fallback Pool)
     if (tier3.length > 0) {
       logger.warn(
         "[LavalinkClusterManager] Semua private node offline! Mengalihkan ke Public Fallback Node.",
       );
-      return sortByPenalty(tier3);
+      return sortByLatencyAndPenalty(tier3);
     }
 
     return undefined;
@@ -541,6 +555,103 @@ class LavalinkClusterManager {
 
     // Fallback terakhir: Preferred standard node
     return this.getPreferredNode(poru);
+  }
+
+  /**
+   * Mengukur Round-Trip Time (RTT latency) ke node Lavalink
+   * @param {object} node
+   * @returns {Promise<number>}
+   */
+  async measureNodeLatency(node) {
+    if (!node || !node.host) return 999;
+    const protocol = node.secure ? https : http;
+    const startTime = Date.now();
+    return new Promise((resolve) => {
+      const req = protocol.request(
+        {
+          hostname: node.host,
+          port: node.port || (node.secure ? 443 : 2333),
+          path: "/version",
+          method: "GET",
+          headers: {
+            Authorization: node.password || "youshallnotpass",
+          },
+          timeout: 3000,
+        },
+        (res) => {
+          res.resume();
+          const latency = Math.max(1, Date.now() - startTime);
+          this.nodeLatencies.set(node.name, { latencyMs: latency, timestamp: Date.now() });
+          resolve(latency);
+        },
+      );
+      req.on("error", () => {
+        const fallbackLat = 999;
+        this.nodeLatencies.set(node.name, { latencyMs: fallbackLat, timestamp: Date.now() });
+        resolve(fallbackLat);
+      });
+      req.on("timeout", () => {
+        req.destroy();
+        const fallbackLat = 999;
+        this.nodeLatencies.set(node.name, { latencyMs: fallbackLat, timestamp: Date.now() });
+        resolve(fallbackLat);
+      });
+      req.end();
+    });
+  }
+
+  /**
+   * Mengambil estimasi latensi ping untuk node tertentu
+   * @param {string} nodeName
+   * @returns {number}
+   */
+  getNodeLatency(nodeName) {
+    if (!nodeName) return 50;
+    const record = this.nodeLatencies.get(nodeName);
+    return record?.latencyMs || 50;
+  }
+
+  /**
+   * Menjalankan pengukuran latensi ke seluruh node aktif
+   * @param {object} poru
+   * @returns {Promise<Map<string, number>>}
+   */
+  async probeNodeLatencies(poru) {
+    const results = new Map();
+    if (!poru || !poru.nodes) return results;
+
+    const probePromises = [...poru.nodes.values()].map(async (node) => {
+      if (!node.connected) return;
+      const lat = await this.measureNodeLatency(node);
+      results.set(node.name, lat);
+    });
+
+    await Promise.allSettled(probePromises);
+    return results;
+  }
+
+  /**
+   * Memulai probe ping periodik setiap 30 detik (Multi-Region Geo-Federation)
+   * @param {object} poru
+   * @param {number} [intervalMs=30000]
+   */
+  startPingProber(poru, intervalMs = 30000) {
+    if (this.pingInterval) return;
+    this.probeNodeLatencies(poru).catch(() => {});
+    this.pingInterval = setInterval(() => {
+      this.probeNodeLatencies(poru).catch(() => {});
+    }, intervalMs);
+    if (this.pingInterval.unref) this.pingInterval.unref();
+  }
+
+  /**
+   * Menghentikan probe ping periodik
+   */
+  stopPingProber() {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
   }
 
   /**

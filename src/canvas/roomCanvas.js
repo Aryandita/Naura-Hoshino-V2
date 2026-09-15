@@ -37,10 +37,15 @@ function drawRoundedRect(
  * @returns {Promise<Buffer>}
  */
 async function renderRoomCanvas(roomData, user, pet = null, options = {}) {
+  const is2K = options.resolution === "2k" || options.highFidelity || false;
+  const scale = is2K ? 2 : 1;
   const W = 960;
   const H = 560;
-  const canvas = createCanvas(W, H);
+  const canvas = createCanvas(W * scale, H * scale);
   const ctx = canvas.getContext("2d");
+  if (scale !== 1) {
+    ctx.scale(scale, scale);
+  }
 
   const displayName =
     roomData.displayName || user?.displayName || user?.username || "Pengelana";
@@ -391,7 +396,8 @@ async function renderRoomCanvas(roomData, user, pet = null, options = {}) {
     1.5,
   );
 
-  return canvas.toBuffer("image/png");
+  const mimeType = options.format === "webp" ? "image/webp" : "image/png";
+  return canvas.toBuffer(mimeType);
 }
 
 module.exports = {

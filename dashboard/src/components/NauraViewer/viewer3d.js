@@ -86,6 +86,12 @@ export class Naura3DViewer {
             Talk: 0.0,
         };
 
+        // Sistem sinkronisasi ucapan suara (Lip-Sync & Viseme Morph Targets: A, I, U, E, O)
+        this.visemeWeights = { A: 0.0, I: 0.0, U: 0.0, E: 0.0, O: 0.0 };
+        this.targetVisemeWeights = { A: 0.0, I: 0.0, U: 0.0, E: 0.0, O: 0.0 };
+        this.lipSyncTimer = null;
+        this.isLipSyncing = false;
+
         // Fisika sekunder (Spring-Damper) untuk kuncir rambut
         this.ponytailPhysics = {
             angleY: 0,
@@ -583,6 +589,12 @@ export class Naura3DViewer {
             this.morphWeights[key] += (target - this.morphWeights[key]) * morphDecay;
         }
 
+        // Interpolasi bobot viseme halus
+        for (const vKey of ["A", "I", "U", "E", "O"]) {
+            const vTarget = this.targetVisemeWeights[vKey] || 0;
+            this.visemeWeights[vKey] += (vTarget - this.visemeWeights[vKey]) * morphDecay;
+        }
+
         // Terapkan kedipan aditif
         const activeBlink = Math.max(this.morphWeights.Blink, this.blinkState.currentWeight || 0);
 
@@ -601,6 +613,17 @@ export class Naura3DViewer {
                     this.vrm.expressionManager.setValue(exprName, Math.max(0, Math.min(1, w)));
                 } catch (_) {}
             }
+
+            // Terapkan viseme mulut (A, I, U, E, O)
+            const visemeVrmMap = { A: "aa", I: "ih", U: "ou", E: "ee", O: "oh" };
+            for (const [vKey, exprName] of Object.entries(visemeVrmMap)) {
+                const vw = this.visemeWeights[vKey] || 0;
+                if (vw > 0.01) {
+                    try {
+                        this.vrm.expressionManager.setValue(exprName, Math.max(0, Math.min(1, vw)));
+                    } catch (_) {}
+                }
+            }
         } else if (this.primarySkinnedMesh && this.primarySkinnedMesh.morphTargetDictionary) {
             const dict = this.primarySkinnedMesh.morphTargetDictionary;
             const influences = this.primarySkinnedMesh.morphTargetInfluences;
@@ -611,6 +634,68 @@ export class Naura3DViewer {
                     influences[idx] = Math.max(0, Math.min(1, finalVal));
                 }
             }
+            for (const [vKey, vw] of Object.entries(this.visemeWeights)) {
+                if (vw > 0.01) {
+                    const idx = dict[vKey] !== undefined ? dict[vKey] : dict[vKey.toLowerCase()];
+                    if (idx !== undefined) {
+                        influences[idx] = Math.max(0, Math.min(1, vw));
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Mengatur bobot viseme bentuk mulut tertentu (A, I, U, E, O)
+     * @param {'A'|'I'|'U'|'E'|'O'} viseme
+     * @param {number} [weight=1.0]
+     */
+    setViseme(viseme, weight = 1.0) {
+        const v = String(viseme || "").toUpperCase();
+        if (this.targetVisemeWeights[v] !== undefined) {
+            this.targetVisemeWeights[v] = Math.max(0, Math.min(1, weight));
+        }
+    }
+
+    /**
+     * Memulai animasi sinkronisasi bibir otomatis dari transkrip teks kalimat
+     * Menghasilkan timing viseme (A, I, U, E, O) yang disinkronkan dengan durasi ucapan
+     * @param {string} text - Kalimat yang diucapkan Fish Audio TTS
+     * @param {number} [durationMs=2500] - Total durasi audio ucapan dalam ms
+     */
+    syncLipFromText(text, durationMs = 2500) {
+        this.stopLipSync();
+        if (!text || typeof text !== "string") return;
+
+        this.isLipSyncing = true;
+        const vowels = text.match(/[aiueo]/gi) || ["a", "i", "u", "e", "o"];
+        const stepMs = Math.max(80, Math.floor(durationMs / (vowels.length || 1)));
+
+        let index = 0;
+        this.lipSyncTimer = setInterval(() => {
+            if (!this.isLipSyncing || index >= vowels.length) {
+                this.stopLipSync();
+                return;
+            }
+            const currentVowel = vowels[index].toUpperCase();
+            for (const k of ["A", "I", "U", "E", "O"]) {
+                this.targetVisemeWeights[k] = k === currentVowel ? 0.85 : 0.0;
+            }
+            index++;
+        }, stepMs);
+    }
+
+    /**
+     * Menghentikan lip-sync dan mengembalikan bentuk mulut ke posisi netral
+     */
+    stopLipSync() {
+        this.isLipSyncing = false;
+        if (this.lipSyncTimer) {
+            clearInterval(this.lipSyncTimer);
+            this.lipSyncTimer = null;
+        }
+        for (const k of ["A", "I", "U", "E", "O"]) {
+            this.targetVisemeWeights[k] = 0.0;
         }
     }
 

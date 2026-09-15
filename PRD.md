@@ -1,6 +1,6 @@
 # 📦 PRODUCT REQUIREMENTS DOCUMENT (PRD), NAURA HOSHINO V2
 
-> **Versi Dokumen:** 2.2.0  
+> **Versi Dokumen:** 2.3.0  
 > **Status:** Active / Production-Ready  
 > **Target Rilis:** Ekosistem Naura Hoshino 2026-2027  
 > **Pentalogi Dokumentasi:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`DESIGN.md`](DESIGN.md) (Desain) · [`RULES.md`](RULES.md) (Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen AI)

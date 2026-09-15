@@ -64,8 +64,8 @@ const env = {
     : [],
 
   // VERSION & PARTNERSHIP CONFIG
-  BOT_VERSION: cleanEnv(process.env.BOT_VERSION) || "2.2.0",
-  ENGINE_VERSION: cleanEnv(process.env.ENGINE_VERSION) || "2.2.0",
+  BOT_VERSION: cleanEnv(process.env.BOT_VERSION) || "2.3.0",
+  ENGINE_VERSION: cleanEnv(process.env.ENGINE_VERSION) || "2.3.0",
   PARTNERSHIP: cleanEnv(process.env.PARTNERSHIP) || "Belum ada kolaborasi",
 
   // SUPABASE (Primary Relational Cloud Provider)
@@ -200,6 +200,8 @@ const env = {
   FISH_AUDIO_API_KEY: cleanEnv(process.env.FISH_AUDIO_API_KEY),
   FISH_AUDIO_VOICE_ID: cleanEnv(process.env.FISH_AUDIO_VOICE_ID),
   AI_DJ_ENABLED: cleanEnv(process.env.AI_DJ_ENABLED) === "true",
+  VOICE_GATEWAY_VAD: cleanEnv(process.env.VOICE_GATEWAY_VAD) || "enabled",
+  VOICE_MAX_LATENCY_MS: parseInt(process.env.VOICE_MAX_LATENCY_MS, 10) || 300,
 
   // MEDIA TOOLING
   // Dipakai downloaderCompress.js. Kosongkan saja bila memakai ffmpeg-static
