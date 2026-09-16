@@ -96,7 +96,7 @@
     "spotify-url-info": "^3.3.0",
     "sqlite3": "^5.1.7",
     "tailwindcss": "^4.3.3",
-    "three": "^0.177.0"
+    "three": "^0.186.0"
   },
   "devDependencies": {
     "@vitejs/plugin-legacy": "^6.1.1",
