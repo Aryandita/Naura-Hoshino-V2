@@ -31,15 +31,33 @@ module.exports = {
         .setName("bukti")
         .setDescription("Bukti atau keterangan tambahan (opsional)")
         .setRequired(false),
+    )
+    .addAttachmentOption((opt) =>
+      opt
+        .setName("berkas_bukti")
+        .setDescription("Lampiran berkas bukti (PDF, DOCX, TXT, CSV log) untuk disidangkan")
+        .setRequired(false),
     ),
 
   async execute(interaction) {
     const plaintiff = interaction.user;
     const defendant = interaction.options.getUser("terdakwa");
     const allegation = interaction.options.getString("perkara");
-    const evidence =
+    let evidence =
       interaction.options.getString("bukti") ||
       "Keterangan saksi mata di server.";
+
+    const attachment = interaction.options.getAttachment("berkas_bukti");
+    if (attachment) {
+      try {
+        const { parseDocument } = require("../../src/ai/documentParser");
+        const parsed = await parseDocument(attachment.url, { fileName: attachment.name });
+        const snippet = parsed.text ? parsed.text.slice(0, 1500) : "";
+        evidence += `\n\n[Lampiran Dokumen Bukti: ${attachment.name}]\n${snippet}`;
+      } catch (err) {
+        evidence += `\n\n[Lampiran Berkas: ${attachment.name} (Gagal diekstrak: ${err.message})]`;
+      }
+    }
 
     const plaintiffName =
       interaction.member?.displayName ||

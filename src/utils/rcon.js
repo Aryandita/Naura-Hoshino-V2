@@ -138,4 +138,26 @@ class Rcon {
   }
 }
 
+/**
+ * Kirim satu perintah RCON ke server Minecraft dan kembalikan responsnya secara otomatis.
+ * @param {string} host
+ * @param {number|string} port
+ * @param {string} password
+ * @param {string} command
+ * @param {number} [timeout=5000]
+ * @returns {Promise<string>}
+ */
+async function sendRconCommand(host, port, password, command, timeout = 5000) {
+  const rcon = new Rcon(host, port, password, timeout);
+  try {
+    await rcon.connect();
+    return await rcon.execute(command);
+  } finally {
+    rcon.disconnect();
+  }
+}
+
+Rcon.Rcon = Rcon;
+Rcon.sendRconCommand = sendRconCommand;
+
 module.exports = Rcon;

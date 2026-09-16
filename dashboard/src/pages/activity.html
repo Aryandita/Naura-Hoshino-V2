@@ -3,257 +3,467 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Naura World Activity | Discord Embedded App</title>
+    <title>Activity & Mini-Games Hub | Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Outfit:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
-    <link rel="stylesheet" href="/vendor/fontawesome.css" />
-    <link rel="stylesheet" href="/vendor/tailwind-built.css" />
-  </head>
-  <body
-    class="min-h-screen bg-[#0B0C10] text-white font-cyber p-4 flex flex-col items-center justify-between"
-  >
-    <!-- Header -->
-    <div
-      class="w-full flex items-center justify-between border-b border-[var(--color-hairline)] pb-3"
-    >
-      <div class="flex items-center gap-3">
-        <span class="text-2xl">🌸</span>
-        <div>
-          <h1 class="text-lg font-black text-pink-400">NAURA WORLD ACTIVITY</h1>
-          <p class="text-[9px] text-gray-400">Embedded App SDK v1.2</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <span
-          class="px-2 py-1 bg-green-900/50 border border-green-500/30 rounded text-[10px] text-green-400"
-          >● LIVE DISCORD SESSION</span
-        >
-      </div>
-    </div>
-
-    <!-- Main Game Board / Controller -->
-    <div class="w-full max-w-2xl my-auto grid grid-cols-1 md:grid-cols-2 gap-4">
-      <!-- Interactive Card Battle Mini App -->
-      <div
-        class="p-4 bg-[var(--color-surface-glass)] border border-[var(--color-hairline)] rounded-xl flex flex-col items-center text-center"
-      >
-        <i class="fa-solid fa-gamepad text-3xl text-pink-400 mb-2"></i>
-        <h3 class="text-sm font-bold text-white mb-1">TCG Card Battle Arena</h3>
-        <p class="text-[10px] text-gray-400 mb-4">
-          Mainkan pertarungan kartu anime langsung di voice channel bersama
-          teman!
-        </p>
-        <button
-          class="w-full py-2 bg-pink-500 hover:bg-pink-600 rounded text-xs font-bold uppercase transition"
-        >
-          Buka Arena
-        </button>
-      </div>
-
-      <!-- Embedded Music Controller -->
-      <div
-        class="p-4 bg-[var(--color-surface-glass)] border border-[var(--color-hairline)] rounded-xl flex flex-col items-center text-center"
-      >
-        <i class="fa-solid fa-music text-3xl text-cyan-400 mb-2"></i>
-        <h3 class="text-sm font-bold text-white mb-1">Live Music Controller</h3>
-        <p class="text-[10px] text-gray-400 mb-4">
-          Kendali pemutaran musik real-time dan lirik lagu langsung di panel
-          Discord.
-        </p>
-        <button
-          class="w-full py-2 bg-cyan-500 hover:bg-cyan-600 rounded text-xs font-bold uppercase transition"
-        >
-          Kontrol Musik
-        </button>
-      </div>
-
-      <!-- Social SDK Friends Radar & Co-Op Matchmaking -->
-      <div
-        class="col-span-1 md:col-span-2 p-4 bg-[var(--color-surface-glass)] border border-[var(--color-hairline)] rounded-xl flex flex-col"
-      >
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <i class="fa-solid fa-users-viewfinder text-xl text-emerald-400"></i>
-            <div>
-              <h3 class="text-sm font-bold text-white">Social SDK Friends Radar</h3>
-              <p class="text-[10px] text-gray-400">relationships.read • Co-Op Dungeon Matchmaking</p>
-            </div>
-          </div>
-          <span id="friendsCountBadge" class="px-2 py-0.5 bg-emerald-950 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold rounded">
-            Memuat radar...
-          </span>
-        </div>
-        <div id="friendsRadarList" class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
-          <!-- Friends dynamically rendered here -->
-        </div>
-        <div class="flex items-center justify-between pt-2 border-t border-[var(--color-hairline)]">
-          <span class="text-[10px] text-gray-400">Target Aktivitas: The Neo-Abyss Celestial Raid</span>
-          <button
-            id="btnQuickParty"
-            class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded text-xs font-bold transition flex items-center gap-1.5"
-          >
-            <i class="fa-solid fa-dungeon"></i> Bentuk Party Co-Op
-          </button>
-        </div>
-      </div>
-
-      <!-- Spatial Voice Proximity Audio Radar (/land & Metaverse) -->
-      <div
-        class="col-span-1 md:col-span-2 p-4 bg-[var(--color-surface-glass)] border border-[var(--color-hairline)] rounded-xl flex flex-col"
-      >
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <i class="fa-solid fa-broadcast-tower text-xl text-cyan-400"></i>
-            <div>
-              <h3 class="text-sm font-bold text-white">Metaverse Land Spatial Voice Proximity</h3>
-              <p class="text-[10px] text-gray-400">Audio 3D spasial • Atenuasi volume berbasis ubin (8x8 Grid)</p>
-            </div>
-          </div>
-          <span id="spatialStatusBadge" class="px-2 py-0.5 bg-cyan-950 border border-cyan-500/40 text-cyan-400 text-[10px] font-bold rounded">
-            Aktif (Ubin: [3, 4])
-          </span>
-        </div>
-        <div id="spatialProximityList" class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <!-- Proximity audio entries dynamically rendered -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div
-      class="w-full text-center text-[10px] text-gray-500 border-t border-[var(--color-hairline)] pt-3"
-    >
-      Naura Hoshino • Discord Activities & Embedded Webview Integration
-    </div>
-
-    <script type="module">
-      import { NauraViewer } from "../components/NauraViewer/index.js";
-      NauraViewer.init({ context: "activity" });
-
-      // Load Social SDK Friends Radar
-      async function loadFriendsRadar() {
-        try {
-          const res = await fetch("/api/activity/social-radar");
-          const data = await res.json();
-          if (data.success && Array.isArray(data.friends)) {
-            const badge = document.getElementById("friendsCountBadge");
-            if (badge) badge.innerText = `${data.activeFriendsCount} Teman Siap Co-Op`;
-
-            const list = document.getElementById("friendsRadarList");
-            if (list) {
-              list.innerHTML = data.friends
-                .map(
-                  (f) => `
-                  <div class="p-2 bg-black/40 border border-white/5 rounded flex items-center justify-between">
-                    <div>
-                      <div class="text-xs font-bold text-white">[${f.clanTag}] ${f.username}</div>
-                      <div class="text-[9px] text-gray-400">Lv. ${f.level} • ${f.status}</div>
-                    </div>
-                    <button class="px-2 py-1 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold rounded invite-btn" data-id="${f.userId}">
-                      Undang
-                    </button>
-                  </div>
-                `,
-                )
-                .join("");
-
-              document.querySelectorAll(".invite-btn").forEach((btn) => {
-                btn.addEventListener("click", async (e) => {
-                  const targetId = e.target.getAttribute("data-id");
-                  await fetch("/api/activity/coop-invite", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ hostUserId: "current_user", targetUserId: targetId }),
-                  });
-                  e.target.innerText = "Terkirim!";
-                  e.target.disabled = true;
-                });
-              });
-            }
-          }
-        } catch (_) {}
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <style>
+      .activity-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
       }
-
-      // Load Spatial Voice Proximity
-      async function loadSpatialVoiceProximity() {
-        try {
-          const res = await fetch("/api/activity/spatial-proximity");
-          const data = await res.json();
-          if (data.success && Array.isArray(data.proximityAudio)) {
-            const list = document.getElementById("spatialProximityList");
-            if (list) {
-              list.innerHTML = data.proximityAudio
-                .map(
-                  (p) => `
-                  <div class="p-2 bg-black/40 border border-cyan-500/20 rounded flex flex-col justify-between">
-                    <div class="flex items-center justify-between mb-1">
-                      <span class="text-xs font-bold text-white">${p.username}</span>
-                      <span class="text-[9px] ${p.audible ? 'text-cyan-400' : 'text-gray-500'} font-bold">
-                        ${p.audible ? Math.round(p.volume * 100) + '% Vol' : 'Hening'}
-                      </span>
-                    </div>
-                    <div class="text-[9px] text-gray-400 mb-1">Jarak: ${p.distance} ubin • Pan: ${p.pan > 0 ? 'Kanan +' + p.pan : p.pan < 0 ? 'Kiri ' + p.pan : 'Tengah'}</div>
-                    <div class="w-full bg-gray-800 h-1 rounded overflow-hidden">
-                      <div class="bg-cyan-400 h-full" style="width: ${Math.round(p.volume * 100)}%"></div>
-                    </div>
-                  </div>
-                `,
-                )
-                .join("");
-            }
-          }
-        } catch (_) {}
-      }
-
-      loadFriendsRadar();
-      loadSpatialVoiceProximity();
-
-
-      const btnQuickParty = document.getElementById("btnQuickParty");
-      if (btnQuickParty) {
-        btnQuickParty.addEventListener("click", async () => {
-          btnQuickParty.disabled = true;
-          btnQuickParty.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mencari Party...';
-          try {
-            const res = await fetch("/api/activity/party-matchmake", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ hostUserId: "current_user", guildId: "default_guild" }),
-            });
-            const data = await res.json();
-            if (data.success) {
-              btnQuickParty.className = "px-3 py-1.5 bg-green-600 text-white rounded text-xs font-bold transition flex items-center gap-1.5";
-              btnQuickParty.innerHTML = '<i class="fa-solid fa-check"></i> Party Terbentuk! (3/3)';
-            } else {
-              btnQuickParty.disabled = false;
-              btnQuickParty.innerHTML = '<i class="fa-solid fa-dungeon"></i> Coba Lagi';
-            }
-          } catch (_) {
-            btnQuickParty.disabled = false;
-            btnQuickParty.innerHTML = '<i class="fa-solid fa-dungeon"></i> Bentuk Party Co-Op';
-          }
-        });
-      }
-
-      // Discord Embedded App SDK Handshake Bridge
-      window.addEventListener("message", (event) => {
-        if (event.data && event.data.type === "DISCORD_HANDSHAKE") {
-          console.log("[Activity SDK] Discord handshake received");
-          if (window.parent) {
-            window.parent.postMessage(
-              { type: "DISCORD_HANDSHAKE_ACK", status: "ready", version: "2.2.0" },
-              "*",
-            );
-          }
+      @media (max-width: 1000px) {
+        .activity-grid {
+          grid-template-columns: 1fr;
         }
+      }
+
+      /* Gacha Simulator Card */
+      .gacha-card {
+        background: radial-gradient(circle at 80% 20%, rgba(244, 114, 182, 0.12), transparent 60%),
+                    linear-gradient(180deg, #10162a 0%, #080c18 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        padding: 24px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .gacha-banner-art {
+        height: 180px;
+        border-radius: var(--r-lg);
+        background: linear-gradient(135deg, #3b0825 0%, #170d2c 50%, #0a1b2a 100%);
+        border: 1px solid var(--border-primary);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 18px;
+        position: relative;
+        margin-bottom: 18px;
+        box-shadow: 0 10px 30px rgba(244, 114, 182, 0.15);
+      }
+
+      .gacha-result-row {
+        display: flex;
+        gap: 10px;
+        min-height: 80px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-md);
+        padding: 10px;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+        overflow-x: auto;
+      }
+      .gacha-item-pill {
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        animation: cardPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes cardPop {
+        from { transform: scale(0.5); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+      .item-ssr { background: rgba(245, 158, 11, 0.2); border: 1.5px solid #f59e0b; color: #f59e0b; box-shadow: 0 0 12px rgba(245, 158, 11, 0.4); }
+      .item-sr  { background: rgba(167, 139, 250, 0.2); border: 1.5px solid #a78bfa; color: #a78bfa; }
+      .item-r   { background: rgba(34, 211, 238, 0.2); border: 1.5px solid #22d3ee; color: #22d3ee; }
+
+      /* Slot Machine Card */
+      .slot-card {
+        background: radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.12), transparent 60%),
+                    linear-gradient(180deg, #0d1527 0%, #080c16 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        padding: 24px;
+      }
+
+      .slot-reels {
+        display: flex;
+        justify-content: center;
+        gap: 14px;
+        margin: 24px 0;
+      }
+      .slot-reel {
+        width: 80px;
+        height: 100px;
+        background: #05070f;
+        border: 2px solid var(--accent-cyan);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 0 14px rgba(34, 211, 238, 0.25);
+        user-select: none;
+      }
+      .slot-reel.spinning {
+        animation: reelSpin 0.1s linear infinite;
+      }
+      @keyframes reelSpin {
+        0% { transform: translateY(-4px); }
+        50% { transform: translateY(4px); }
+        100% { transform: translateY(0); }
+      }
+    </style>
+  </head>
+  <body>
+    
+
+    <div class="app-shell">
+      <!-- Mobile Sidebar Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <aside class="sidebar " id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
+          <div class="sidebar-brand-text"><div class="sidebar-brand-name">Naura Hoshino</div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button><div class="sidebar-brand-sub">v2.3.0 · Online</div></div>
+        </div>
+                <!-- Navigation -->
+                <!-- Navigation -->
+        <nav class="sidebar-nav" role="navigation">
+
+          <!-- Overview -->
+          <div class="nav-group">
+            <div class="nav-group-label">Overview</div>
+            <a href="/" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span>Dashboard</span>
+            </a>
+            <a href="/status" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
+              <span>Live Status</span>
+              <span class="nav-badge">Live</span>
+            </a>
+            <a href="/feed" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
+              <span>Activity Feed</span>
+            </a>
+          </div>
+
+          <!-- Community -->
+          <div class="nav-group">
+            <div class="nav-group-label">Community</div>
+            <a href="/leaderboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
+              <span>Leaderboard</span>
+            </a>
+            <a href="/economy" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
+              <span>Economy</span>
+            </a>
+            <a href="/topology" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span>Guild Topology</span>
+            </a>
+          </div>
+
+          <!-- Media & Audio -->
+          <div class="nav-group">
+            <div class="nav-group-label">Media & Audio</div>
+            <a href="/music" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
+              <span>Music Hub</span>
+            </a>
+            <a href="/soundboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
+              <span>Soundboard</span>
+            </a>
+            <a href="/jam" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
+              <span>Jam Session</span>
+            </a>
+            <a href="/karaoke" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span>Karaoke</span>
+            </a>
+          </div>
+
+          <!-- Naura Wilds RPG -->
+          <div class="nav-group">
+            <div class="nav-group-label">Naura Wilds RPG</div>
+            <a href="/world" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span>World Map</span>
+            </a>
+            <a href="/survival-map" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
+              <span>Survival Map</span>
+            </a>
+            <a href="/activity" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
+              <span>Activity Hub</span>
+            </a>
+          </div>
+
+          <!-- Configuration -->
+          <div class="nav-group">
+            <div class="nav-group-label">Configuration</div>
+            <a href="/settings" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
+              <span>Settings</span>
+            </a>
+            <a href="/welcomer" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
+              <span>Welcomer Card</span>
+            </a>
+            <a href="/builder" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span>Embed Builder</span>
+            </a>
+            <a href="/automations" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
+              <span>Automations</span>
+            </a>
+            <a href="/tickets" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
+              <span>Tickets</span>
+            </a>
+          </div>
+
+          <!-- More -->
+          <div class="nav-group">
+            <div class="nav-group-label">More</div>
+            <a href="/portfolio" class="nav-item">
+              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
+              <span style="color:var(--accent-green)">Creator Portfolio</span>
+            </a>
+          </div>
+
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user" onclick="window.location.href='/'">
+            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+            <div class="sidebar-user-info"><div class="sidebar-user-name">Gamer Guest</div><div class="sidebar-user-role">Casino Player</div></div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="main-content">
+        <header class="top-header">
+          <div class="header-left">
+            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <div>
+              <div class="page-title">Activity & Mini-Games Hub</div>
+              <div class="breadcrumb"><span>Naura Wilds RPG</span><span class="breadcrumb-sep">/</span><span>Entertainment Center</span></div>
+            </div>
+          </div>
+          <div class="header-right">
+            <div class="badge badge-primary">
+              <i class="fa-solid fa-star"></i> <span id="playerFragments">1,450 NSF</span>
+            </div>
+          </div>
+        </header>
+
+        <main class="page-content">
+          <div class="page-header-bar animate-in">
+            <div>
+              <h1 class="page-heading">
+                <span class="page-heading-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);">
+                  <i class="fa-solid fa-gamepad" style="color:var(--primary);"></i>
+                </span>
+                Activity Hub & Kasino Hiburan
+              </h1>
+              <p class="page-sub">Uji keberuntungan di Banner Gacha Luna, putar Mesin Slot Cyberpunk, dan tinjau akuarium Vivarium laut dalam.</p>
+            </div>
+          </div>
+
+          <div class="activity-grid animate-in delay-1">
+            <!-- 1. Gacha Simulator -->
+            <div class="gacha-card">
+              <div class="gacha-banner-art">
+                <div class="badge badge-primary" style="align-self:flex-start;margin-bottom:8px;">BANNER KHUSUS LUNA</div>
+                <div style="font-family:var(--font-heading);font-size:20px;font-weight:700;color:#fff;">
+                  🌸 Putri Sakura Aetheria (SSR Rate Up)
+                </div>
+                <div style="font-size:12px;color:#fbcfe8;">Jaminan SSR dalam 90 tarikan · Rate SSR: 2.5%</div>
+              </div>
+
+              <div class="gacha-result-row" id="gachaResultRow">
+                <span style="font-size:12px;color:var(--text-muted);">Hasil tarikan kartu akan muncul di sini...</span>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <button class="btn btn-secondary" id="btnGacha1">
+                  <i class="fa-solid fa-dice-one"></i> Tarik 1x (100 NSF)
+                </button>
+                <button class="btn btn-primary" id="btnGacha10">
+                  <i class="fa-solid fa-dice"></i> Tarik 10x (900 NSF)
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. Cyberpunk Slot Machine -->
+            <div class="slot-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div style="font-family:var(--font-heading);font-size:18px;font-weight:700;color:#fff;">
+                  🎰 Neon Cyberpunk Slots
+                </div>
+                <span class="badge" style="background:rgba(34,211,238,0.15);color:#22d3ee;border:1px solid rgba(34,211,238,0.3);">
+                  JACKPOT: 25,000 NC
+                </span>
+              </div>
+
+              <div class="slot-reels">
+                <div class="slot-reel" id="reel1">🌸</div>
+                <div class="slot-reel" id="reel2">💎</div>
+                <div class="slot-reel" id="reel3">🌸</div>
+              </div>
+
+              <div style="text-align:center;font-size:13px;font-family:var(--font-heading);font-weight:600;min-height:22px;margin-bottom:16px;" id="slotStatus">
+                Cocokkan 3 simbol untuk memenangkan jackpot!
+              </div>
+
+              <button class="btn btn-primary" id="btnSpinSlot" style="width:100%;padding:14px;font-size:14px;">
+                <i class="fa-solid fa-rotate"></i> Putar Mesin Slot (50 NC)
+              </button>
+            </div>
+          </div>
+
+          <!-- 3. Vivarium Deep-Sea Aquarium & Daily Quests -->
+          <div class="activity-grid animate-in delay-2">
+            <!-- Aquarium Vivarium -->
+            <div class="card card-p">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div style="font-family:var(--font-heading);font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;">
+                  <i class="fa-solid fa-fish" style="color:#3b82f6;"></i> Akuarium Vivarium Laut Dalam
+                </div>
+                <span class="badge badge-success">Pendapatan: +450 NSF/hari</span>
+              </div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+                <div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);padding:10px 14px;border-radius:10px;font-size:12px;color:#e0f2fe;">
+                  🐠 <b>Golden Koi</b> (Level 3 · Langka)
+                </div>
+                <div style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);padding:10px 14px;border-radius:10px;font-size:12px;color:#e0f2fe;">
+                  🦑 <b>Deep Sea Angler</b> (Level 5 · Epik)
+                </div>
+                <div style="background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.25);padding:10px 14px;border-radius:10px;font-size:12px;color:#e0f2fe;">
+                  🦀 <b>Giant Coral Crab</b> (Level 2 · Umum)
+                </div>
+              </div>
+              <button class="btn btn-secondary btn-sm" style="width:100%;" onclick="alert('Tiket pengunjung kas Vivarium berhasil dikumpulkan (+450 NSF)!')">
+                <i class="fa-solid fa-coins"></i> Ambil Hasil Tiket Pengunjung
+              </button>
+            </div>
+
+            <!-- Daily Quests -->
+            <div class="card card-p">
+              <div style="font-family:var(--font-heading);font-size:16px;font-weight:700;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+                <i class="fa-solid fa-clipboard-check" style="color:var(--accent-green);"></i> Misi Harian Petualang
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.02);padding:10px 12px;border-radius:8px;border:1px solid var(--border-subtle);">
+                  <div>
+                    <div style="font-size:12px;font-weight:600;color:#fff;">Tebang 20 Kayu di Hutan Pinus</div>
+                    <div style="font-size:11px;color:var(--text-muted);">Hadiah: 150 NSF + 200 EXP</div>
+                  </div>
+                  <button class="btn btn-primary btn-sm" style="font-size:10px;" onclick="this.textContent='Selesai';this.disabled=true;">Klaim</button>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.02);padding:10px 12px;border-radius:8px;border:1px solid var(--border-subtle);">
+                  <div>
+                    <div style="font-size:12px;font-weight:600;color:#fff;">Sapa Barista Chloe di Kafe Naura</div>
+                    <div style="font-size:11px;color:var(--text-muted);">Hadiah: 100 NSF + Kopi Aether</div>
+                  </div>
+                  <button class="btn btn-primary btn-sm" style="font-size:10px;" onclick="this.textContent='Selesai';this.disabled=true;">Klaim</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <nav class="mobile-nav">
+      <div class="mobile-nav-inner">
+        <a href="/" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Home</span></a>
+        <a href="/music" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-music"></i></span><span class="mn-label">Music</span></a>
+        <a href="/activity" class="mobile-nav-item active"><span class="mn-icon"><i class="fa-solid fa-gamepad"></i></span><span class="mn-label">Activity</span></a>
+        <a href="/economy" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-coins"></i></span><span class="mn-label">Economy</span></a>
+        <a href="/settings" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+      </div>
+    </nav>
+
+    <script src="/src/js/shared-nav.js"></script>
+    <script>
+      // Gacha Pool
+      const GACHA_POOL = [
+        { name: 'Putri Sakura Naura', tier: 'ssr', icon: '🌸' },
+        { name: 'Pedang Katana Aether', tier: 'sr', icon: '⚔️' },
+        { name: 'Cincin Void Abadi', tier: 'sr', icon: '💍' },
+        { name: 'Batu Kristal Murni', tier: 'r', icon: '💎' },
+        { name: 'Ramuan Stamina Super', tier: 'r', icon: '🧪' },
+        { name: 'Kapak Besi Tempaan', tier: 'r', icon: '🪓' }
+      ];
+
+      function pullGacha(count) {
+        const row = document.getElementById('gachaResultRow');
+        row.innerHTML = '';
+        for (let i = 0; i < count; i++) {
+          const rand = Math.random();
+          let item;
+          if (rand < 0.08) item = GACHA_POOL[0]; // SSR
+          else if (rand < 0.35) item = GACHA_POOL[Math.floor(Math.random() * 2) + 1]; // SR
+          else item = GACHA_POOL[Math.floor(Math.random() * 3) + 3]; // R
+
+          const span = document.createElement('span');
+          span.className = `gacha-item-pill item-${item.tier}`;
+          span.innerHTML = `<span>${item.icon}</span> <span>${item.name}</span> <small>[${item.tier.toUpperCase()}]</small>`;
+          row.appendChild(span);
+        }
+      }
+
+      document.getElementById('btnGacha1').addEventListener('click', () => pullGacha(1));
+      document.getElementById('btnGacha10').addEventListener('click', () => pullGacha(10));
+
+      // Slot Machine
+      const SLOT_SYMBOLS = ['🌸', '💎', '⭐', '🪙', '👑', '🍒'];
+      const reel1 = document.getElementById('reel1');
+      const reel2 = document.getElementById('reel2');
+      const reel3 = document.getElementById('reel3');
+      const slotStatus = document.getElementById('slotStatus');
+      const btnSpin = document.getElementById('btnSpinSlot');
+
+      btnSpin.addEventListener('click', () => {
+        btnSpin.disabled = true;
+        reel1.classList.add('spinning');
+        reel2.classList.add('spinning');
+        reel3.classList.add('spinning');
+        slotStatus.textContent = 'Memutar gulungan...';
+
+        setTimeout(() => {
+          reel1.classList.remove('spinning');
+          reel1.textContent = SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)];
+        }, 600);
+
+        setTimeout(() => {
+          reel2.classList.remove('spinning');
+          reel2.textContent = SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)];
+        }, 900);
+
+        setTimeout(() => {
+          reel3.classList.remove('spinning');
+          reel3.textContent = SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)];
+          btnSpin.disabled = false;
+
+          if (reel1.textContent === reel2.textContent && reel2.textContent === reel3.textContent) {
+            slotStatus.innerHTML = '<span style="color:#f59e0b;">🎉 JACKPOT! TIGA SIMBOL COCOK (+5,000 NC)!</span>';
+          } else if (reel1.textContent === reel2.textContent || reel2.textContent === reel3.textContent) {
+            slotStatus.innerHTML = '<span style="color:#34d399;">✨ Bagus! Dua simbol cocok (+100 NC).</span>';
+          } else {
+            slotStatus.textContent = 'Coba lagi! Belum beruntung putaran ini.';
+          }
+        }, 1200);
       });
     </script>
   </body>

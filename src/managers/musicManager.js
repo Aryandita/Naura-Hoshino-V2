@@ -86,56 +86,8 @@ class MusicManager {
     }
 
     if (configuredNodes.length === 0) {
-      // 3. Scan numbered environment variables (LAVALINK_HOST_2, LAVALINK_HOST_3, dst.)
-      if (env.LAVA_HOST) {
-        configuredNodes.push({
-          name:
-            process.env.LAVALINK_NAME ||
-            process.env.LAVA_NAME ||
-            "Naura Node 1",
-          host: String(env.LAVA_HOST || "localhost").trim(),
-          port: parseInt(env.LAVA_PORT, 10) || 2333,
-          password: String(env.LAVA_PASS || "youshallnotpass").trim(),
-          secure: env.LAVA_SECURE || false,
-        });
-      }
-
-      let nodeIndex = 2;
-      while (
-        process.env[`LAVALINK_HOST_${nodeIndex}`] ||
-        process.env[`LAVA_HOST_${nodeIndex}`]
-      ) {
-        const host =
-          process.env[`LAVALINK_HOST_${nodeIndex}`] ||
-          process.env[`LAVA_HOST_${nodeIndex}`];
-        const port =
-          parseInt(
-            process.env[`LAVALINK_PORT_${nodeIndex}`] ||
-              process.env[`LAVA_PORT_${nodeIndex}`],
-            10,
-          ) || 2333;
-        const password =
-          process.env[`LAVALINK_PASSWORD_${nodeIndex}`] ||
-          process.env[`LAVA_PASS_${nodeIndex}`] ||
-          "youshallnotpass";
-        const secure =
-          process.env[`LAVALINK_SECURE_${nodeIndex}`] === "true" ||
-          process.env[`LAVA_SECURE_${nodeIndex}`] === "true" ||
-          port === 443;
-        const name =
-          process.env[`LAVALINK_NAME_${nodeIndex}`] ||
-          process.env[`LAVA_NAME_${nodeIndex}`] ||
-          `Naura Node ${nodeIndex}`;
-
-        configuredNodes.push({
-          name,
-          host: String(host).trim(),
-          port,
-          password: String(password).trim(),
-          secure,
-        });
-        nodeIndex++;
-      }
+      // 3. Scan numbered environment variables via centralized env manager
+      configuredNodes = env.getLavalinkNumberedNodes();
     }
 
     // Bangun daftar node bertingkat (Tier 1: Private, Tier 2: Sekunder, Tier 3: Public Fallback Pool)

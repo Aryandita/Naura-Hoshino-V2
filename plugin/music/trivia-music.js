@@ -118,7 +118,7 @@ module.exports = {
           where: { userId: winner.id, guildId },
         });
         userLevel.mannersPoint += 100;
-        await userLevel.save();
+        await userLevel.save({ fields: ["mannersPoint"] });
 
         endPayload = buildContainerV2({
           accentColorHex: "#22c55e",

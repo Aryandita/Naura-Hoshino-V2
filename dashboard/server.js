@@ -143,6 +143,10 @@ module.exports = (client) => {
     return express.static(path.join(__dirname, "public"))(req, res, next);
   });
   webApp.use("/assets", express.static(path.join(__dirname, "../assets")));
+  webApp.use("/src", express.static(path.join(__dirname, "src")));
+  webApp.use("/vendor", express.static(path.join(__dirname, "public/vendor")));
+  webApp.use("/node_modules", express.static(path.join(__dirname, "../node_modules")));
+  webApp.get("/health", (req, res) => res.redirect("/api/health"));
 
   // Sajikan berkas model 3D (VRM & GLB) dengan Content-Type model/gltf-binary yang valid
   const setModelMime = (res, filePath) => {

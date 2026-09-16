@@ -60,7 +60,22 @@ async function buildInstruction(guildId, userId, username) {
 }
 
 module.exports = async function chat(interaction) {
-  const prompt = interaction.options.getString("pesan");
+  const basePrompt = interaction.options.getString("pesan");
+  const attachment = interaction.options.getAttachment("lampiran");
+  let documentContext = "";
+
+  if (attachment) {
+    try {
+      const { parseDocument } = require("../../../src/ai/documentParser");
+      const parsed = await parseDocument(attachment.url, { fileName: attachment.name });
+      const snippet = (parsed.text || "").slice(0, 4000);
+      documentContext = `\n\n--- LAMPIRAN DOKUMEN (${attachment.name}) ---\n${snippet}\n--- AKHIR LAMPIRAN ---`;
+    } catch (docErr) {
+      documentContext = `\n\n[Gagal membaca lampiran ${attachment.name}: ${docErr.message}]`;
+    }
+  }
+
+  const prompt = `${basePrompt}${documentContext}`;
   const userId = interaction.user.id;
   const username = interaction.user.username;
   const systemInstruction = await buildInstruction(

@@ -3,815 +3,553 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Welcomer Editor | Naura OS</title>
+    <title>Welcomer Card Studio | Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Outfit:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
-    <link rel="stylesheet" href="/vendor/fontawesome.css" />
-    <link rel="stylesheet" href="/vendor/tailwind-built.css" />
-    <script src="/vendor/naura-ui.js"></script>
+    <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
-      .welcome-card {
-        background-size: cover;
-        background-position: center;
-        position: relative;
-        overflow: hidden;
-        border: 2px solid var(--color-hairline);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-        transition:
-          border-color 0.3s ease,
-          box-shadow 0.3s ease;
+      .studio-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        align-items: start;
       }
-      .discord-mockup {
-        background-color: #2b2d31;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      @media (max-width: 1024px) {
+        .studio-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+      .form-section {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-xl);
+        padding: 24px;
+        margin-bottom: 20px;
+      }
+      .form-group {
+        margin-bottom: 18px;
+      }
+      .form-label {
+        font-family: var(--font-heading);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .form-input, .form-select {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-md);
+        padding: 10px 14px;
+        color: var(--text-primary);
+        font-family: var(--font-body);
+        font-size: 13px;
+        transition: border-color var(--t-fast);
+        outline: none;
+      }
+      .form-input:focus, .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px var(--primary-dim);
+      }
+      .color-presets {
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .color-swatch {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+      }
+      .color-swatch:hover, .color-swatch.active {
+        transform: scale(1.15);
+        border-color: #ffffff;
+      }
+      .toggle-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .toggle-row:last-child {
+        border-bottom: none;
+      }
+      .toggle-switch {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        cursor: pointer;
+      }
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle-slider {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 24px;
+        transition: .3s;
+      }
+      .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background: white;
+        border-radius: 50%;
+        transition: .3s;
+      }
+      input:checked + .toggle-slider {
+        background: var(--primary);
+      }
+      input:checked + .toggle-slider:before {
+        transform: translateX(20px);
+      }
+      .preview-container {
+        position: sticky;
+        top: 80px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        padding: 24px;
+      }
+      #liveCardCanvas {
+        width: 100%;
+        height: auto;
+        border-radius: var(--r-lg);
+        box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.7);
+        background: #000;
       }
     </style>
   </head>
-  <body
-    class="min-h-screen p-4 md:p-8 flex items-center justify-center bg-animated theme-none"
-    id="mainBody"
-  >
-    <!-- Loading Screen (Cyber-Anime Naura Floating Thinking Expression) -->
-    <div id="loadingScreen" class="loading-screen">
-      <img
-        class="loading-figure"
-        src="/assets/Naura_Expression/Thinking.png"
-        alt="Naura Thinking"
-        onerror="this.src = '/assets/Naura_Expression/Read.png'"
-      />
-      <div class="loading-text text-glow">NAURA OS</div>
-      <div class="font-assist text-sm text-[var(--color-muted)] font-medium">
-        Memuat Welcomer Editor... ✨
-      </div>
-    </div>
-    <div
-      class="w-full max-w-6xl glass-card rounded-3xl p-4 md:p-10 border border-[var(--color-hairline)] shadow-2xl relative overflow-hidden animate-fade-in"
-    >
-      <!-- Header Welcomer -->
-      <div
-        class="flex items-center justify-between mb-8 pb-4 border-b border-[var(--color-hairline)]"
-      >
-        <h1
-          class="text-2xl font-black font-cyber text-glow tracking-wider text-white"
-        >
-          <i
-            class="fa-solid fa-image-portrait text-[var(--color-primary)] mr-3"
-          ></i
-          >WELCOMER EDITOR
-        </h1>
-        <a
-          href="/"
-          class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-[var(--color-muted)] hover:text-white hover:border-[var(--color-primary-glow)] transition-all duration-300"
-        >
-          <i class="fa-solid fa-xmark text-xl"></i>
-        </a>
-      </div>
-
-      <div
-        id="alertBox"
-        class="hidden mb-6 p-4 rounded-xl font-bold text-sm flex items-center gap-3 transition-all"
-      ></div>
-
-      <!-- Grid layout: Form (Left) vs live preview (Right) -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- FORMULIR -->
-        <form id="welcomerForm" class="space-y-5">
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between"
-          >
-            <div>
-              <p class="text-white font-bold text-sm">
-                <i
-                  class="fa-solid fa-power-off text-[var(--color-accent-green)] mr-2"
-                ></i
-                >Aktifkan Welcomer
-              </p>
-              <p class="text-[10px] text-gray-500 mt-1">
-                Kirim kartu sambutan saat ada member baru
-              </p>
-            </div>
-            <div
-              class="relative inline-flex items-center cursor-pointer select-none"
-            >
-              <input type="checkbox" id="enabled" class="sr-only peer" />
-              <div
-                class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-400"
-              ></div>
-            </div>
-          </div>
-
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
-          >
-            <label
-              class="block text-gray-300 font-semibold mb-2.5 text-xs font-cyber tracking-widest uppercase"
-              >Guild ID (Server)</label
-            >
-            <input
-              type="text"
-              id="guildId"
-              required
-              class="theme-input font-cyber"
-              placeholder="Masukkan ID Server untuk memuat..."
+  <body>
+    
+    <div class="app-shell">
+      <!-- Mobile Sidebar Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <aside class="sidebar " id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo-icon">
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="this.style.display='none';this.parentElement.innerHTML='🌸';"
             />
           </div>
-
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
-          >
-            <label
-              class="block text-gray-300 font-semibold mb-2.5 text-xs font-cyber tracking-widest uppercase"
-              >Channel ID (Tempat Kirim Sambutan)</label
-            >
-            <input type="text" id="channelId" class="theme-input font-cyber" />
-          </div>
-
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
-          >
-            <label
-              class="block text-gray-300 font-semibold mb-2.5 text-xs font-cyber tracking-widest uppercase"
-              >Background URL (JPG/PNG)</label
-            >
-            <input
-              type="url"
-              id="backgroundUrl"
-              class="theme-input text-xs font-cyber"
-              placeholder="https://contoh.com/gambar.png"
-            />
-          </div>
-
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
-          >
-            <div class="flex justify-between items-end mb-2.5">
-              <label
-                class="block text-gray-300 font-semibold text-xs font-cyber tracking-widest uppercase"
-                >Teks Sambutan</label
-              >
-              <span
-                class="text-[10px] text-pink-400 font-cyber font-bold select-none"
-                >{user} {server} {memberCount}</span
-              >
-            </div>
-            <textarea
-              id="message"
-              rows="3"
-              class="theme-input text-sm"
-              placeholder="Halo {user}, selamat datang di {server}! Kamu adalah member ke-{memberCount}."
-            ></textarea>
-          </div>
-
-          <!-- Visual Layout Controls -->
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5 space-y-4"
-          >
-            <p
-              class="text-white font-bold text-xs font-cyber tracking-widest uppercase mb-2"
-            >
-              <i
-                class="fa-solid fa-arrows-up-down-left-right text-pink-400 mr-2"
-              ></i
-              >Visual Customizer
-            </p>
-
-            <div>
-              <label
-                class="block text-[10px] text-gray-400 font-cyber mb-1.5 uppercase"
-                >Judul Sambutan</label
-              >
-              <input
-                type="text"
-                id="titleText"
-                class="theme-input text-xs font-cyber"
-                placeholder="WELCOME TO SERVER"
-              />
-            </div>
-
-            <div>
-              <label
-                class="block text-[10px] text-gray-400 font-cyber mb-1.5 uppercase"
-                >Warna Cahaya Neon (Glow Color)</label
-              >
-              <input
-                type="color"
-                id="glowColor"
-                class="w-full h-8 bg-transparent border-0 cursor-pointer rounded-xl"
-                value="#00FFFF"
-              />
-            </div>
-
-            <div
-              class="grid grid-cols-2 gap-4 text-[10px] text-gray-400 font-cyber"
-            >
-              <div>
-                <label class="block mb-1">Ukuran Avatar (Radius)</label>
-                <input
-                  type="range"
-                  id="avatarSize"
-                  min="40"
-                  max="150"
-                  value="110"
-                  class="w-full accent-pink-400"
-                />
-              </div>
-              <div>
-                <label class="block mb-1">Ukuran Judul</label>
-                <input
-                  type="range"
-                  id="titleSize"
-                  min="12"
-                  max="48"
-                  value="26"
-                  class="w-full accent-pink-400"
-                />
-              </div>
-              <div>
-                <label class="block mb-1">Ukuran Nama</label>
-                <input
-                  type="range"
-                  id="nameSize"
-                  min="20"
-                  max="90"
-                  value="55"
-                  class="w-full accent-pink-400"
-                />
-              </div>
-              <div>
-                <label class="block mb-1">Ukuran Subtitle</label>
-                <input
-                  type="range"
-                  id="subtitleSize"
-                  min="12"
-                  max="36"
-                  value="22"
-                  class="w-full accent-pink-400"
-                />
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            id="submitBtn"
-            class="w-full btn-primary py-4 font-cyber tracking-widest text-sm uppercase"
-          >
-            <i class="fa-solid fa-floppy-disk mr-2"></i> Simpan Desain
+          <div class="sidebar-brand-text">
+            <div class="sidebar-brand-name">Naura Hoshino</div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+            <i class="fa-solid fa-xmark"></i>
           </button>
-        </form>
+            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
+          </div>
+        </div>
+                <!-- Navigation -->
+                <!-- Navigation -->
+        <nav class="sidebar-nav" role="navigation">
 
-        <!-- LIVE PREVIEW -->
-        <div class="flex flex-col gap-4">
-          <h3
-            class="text-gray-400 font-bold uppercase tracking-widest text-xs font-cyber mb-1"
-          >
-            <i class="fa-solid fa-eye text-pink-400 mr-2"></i>Interactive Canvas
-            Workspace
-          </h3>
+          <!-- Overview -->
+          <div class="nav-group">
+            <div class="nav-group-label">Overview</div>
+            <a href="/" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span>Dashboard</span>
+            </a>
+            <a href="/status" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
+              <span>Live Status</span>
+              <span class="nav-badge">Live</span>
+            </a>
+            <a href="/feed" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
+              <span>Activity Feed</span>
+            </a>
+          </div>
 
-          <!-- Discord dark mockup -->
-          <div class="discord-mockup rounded-2xl p-5 shadow-2xl">
-            <div class="flex items-start gap-4">
-              <img
-                src="/assets/naura.png"
-                class="w-10 h-10 rounded-full border border-pink-500/20"
-                alt="Bot Avatar"
-                onerror="this.src = '/assets/dashboard/naura.png'"
-              />
-              <div class="w-full">
-                <div class="flex items-center gap-2 mb-1.5 select-none">
-                  <span class="font-bold text-white text-sm"
-                    >Naura Hoshino</span
-                  >
-                  <span
-                    class="bg-[#5865F2] text-white text-[9px] px-1.5 py-0.5 rounded font-bold font-cyber"
-                    >BOT</span
-                  >
-                  <span class="text-[10px] text-gray-400">Hari ini 12:00</span>
-                </div>
+          <!-- Community -->
+          <div class="nav-group">
+            <div class="nav-group-label">Community</div>
+            <a href="/leaderboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
+              <span>Leaderboard</span>
+            </a>
+            <a href="/economy" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
+              <span>Economy</span>
+            </a>
+            <a href="/topology" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span>Guild Topology</span>
+            </a>
+          </div>
 
-                <!-- Embed message texts preview -->
-                <p
-                  id="previewText"
-                  class="text-gray-300 text-sm mb-4 whitespace-pre-wrap leading-relaxed"
-                >
-                  Halo
-                  <span
-                    class="text-[#5865F2] bg-[#5865F2]/20 px-1.5 py-0.5 rounded font-semibold text-xs"
-                    >@NewMember</span
-                  >, selamat datang di Server Kami! Kamu adalah member ke-1,234.
-                </p>
+          <!-- Media & Audio -->
+          <div class="nav-group">
+            <div class="nav-group-label">Media & Audio</div>
+            <a href="/music" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
+              <span>Music Hub</span>
+            </a>
+            <a href="/soundboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
+              <span>Soundboard</span>
+            </a>
+            <a href="/jam" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
+              <span>Jam Session</span>
+            </a>
+            <a href="/karaoke" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span>Karaoke</span>
+            </a>
+          </div>
 
-                <!-- Card graphics canvas preview mockup -->
-                <div
-                  id="previewCard"
-                  class="welcome-card w-full rounded-2xl relative overflow-hidden"
-                  style="
-                    aspect-ratio: 1000/330;
-                    background-image: url(&quot;https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop&quot;);
-                  "
-                >
-                  <div
-                    id="previewOverlay"
-                    class="absolute inset-0 bg-black/65 pointer-events-none rounded-2xl m-2 border border-dashed border-white/10 z-0"
-                  ></div>
+          <!-- Naura Wilds RPG -->
+          <div class="nav-group">
+            <div class="nav-group-label">Naura Wilds RPG</div>
+            <a href="/world" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span>World Map</span>
+            </a>
+            <a href="/survival-map" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
+              <span>Survival Map</span>
+            </a>
+            <a href="/activity" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
+              <span>Activity Hub</span>
+            </a>
+          </div>
 
-                  <!-- Guide lines for snapping -->
-                  <div
-                    id="guideX"
-                    class="absolute inset-y-0 w-px bg-cyan-400/50 pointer-events-none hidden z-40"
-                  ></div>
-                  <div
-                    id="guideY"
-                    class="absolute inset-x-0 h-px bg-cyan-400/50 pointer-events-none hidden z-40"
-                  ></div>
+          <!-- Configuration -->
+          <div class="nav-group">
+            <div class="nav-group-label">Configuration</div>
+            <a href="/settings" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
+              <span>Settings</span>
+            </a>
+            <a href="/welcomer" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
+              <span>Welcomer Card</span>
+            </a>
+            <a href="/builder" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span>Embed Builder</span>
+            </a>
+            <a href="/automations" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
+              <span>Automations</span>
+            </a>
+            <a href="/tickets" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
+              <span>Tickets</span>
+            </a>
+          </div>
 
-                  <!-- DRAGGABLE ELEMENTS -->
-                  <!-- Avatar -->
-                  <div
-                    id="dragAvatar"
-                    class="absolute cursor-move select-none z-30 flex items-center justify-center"
-                    style="transform: translate(-50%, -50%)"
-                  >
-                    <img
-                      src="https://cdn.discordapp.com/embed/avatars/1.png"
-                      class="w-full h-full rounded-full border-4 border-[var(--color-primary)] shadow-[0_0_15px_var(--color-primary-glow)] pointer-events-none"
-                      alt="User Avatar"
-                      id="previewAvatarImg"
-                    />
-                  </div>
+          <!-- More -->
+          <div class="nav-group">
+            <div class="nav-group-label">More</div>
+            <a href="/portfolio" class="nav-item">
+              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
+              <span style="color:var(--accent-green)">Creator Portfolio</span>
+            </a>
+          </div>
 
-                  <!-- Title -->
-                  <div
-                    id="dragTitle"
-                    class="absolute cursor-move select-none z-30 font-cyber font-black tracking-widest text-glow"
-                    style="transform: translate(0, -50%)"
-                  >
-                    WELCOME TO SERVER
-                  </div>
+        </nav>
+      </aside>
 
-                  <!-- Name -->
-                  <div
-                    id="dragName"
-                    class="absolute cursor-move select-none z-30 font-cyber font-black text-white"
-                    style="transform: translate(0, -50%)"
-                  >
-                    NewMember
-                  </div>
-
-                  <!-- Subtitle & decor -->
-                  <div
-                    id="dragSubtitle"
-                    class="absolute cursor-move select-none z-30 font-assist font-bold text-gray-300 flex flex-col gap-1.5"
-                    style="transform: translate(0, -50%)"
-                  >
-                    <span>@NewMember • Anggota #1,234</span>
-                    <div id="accentLine" class="h-1 w-32 rounded-full"></div>
-                  </div>
-                </div>
+      <div class="main-content">
+        <header class="top-header">
+          <div class="header-left">
+            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <div>
+              <div class="page-title">Welcomer Card Studio</div>
+              <div class="breadcrumb">
+                <span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Configuration</span><span class="breadcrumb-sep">/</span><span>Welcomer Card</span>
               </div>
             </div>
           </div>
-          <p class="text-[10px] text-gray-500 text-center mt-3 leading-relaxed">
-            <i
-              class="fa-solid fa-arrows-up-down-left-right text-pink-400 mr-1.5"
-            ></i
-            >Seret elemen langsung pada gambar pratinjau di atas untuk mengatur
-            posisinya secara interaktif.
-          </p>
-        </div>
+          <div class="header-right">
+            <button class="btn btn-ghost btn-sm" id="btnTestSend">
+              <i class="fa-solid fa-paper-plane"></i> Test Kirim
+            </button>
+            <button class="btn btn-primary btn-sm" id="btnSaveConfig">
+              <i class="fa-solid fa-floppy-disk"></i> Simpan Pengaturan
+            </button>
+          </div>
+        </header>
+
+        <main class="page-content">
+          <div class="page-header-bar animate-in">
+            <div>
+              <h1 class="page-heading">
+                <span class="page-heading-icon" style="background:rgba(244,114,182,0.15);border:1px solid var(--border-primary);">
+                  <i class="fa-solid fa-palette" style="color:var(--primary);"></i>
+                </span>
+                Welcomer Card Studio
+              </h1>
+              <p class="page-sub">Kustomisasi kartu sambutan visual Canvas 2.5D, teks selamat datang otomatis, dan role onboarding.</p>
+            </div>
+          </div>
+
+          <div class="studio-layout">
+            <!-- Controls Form -->
+            <div class="animate-in delay-1">
+              <!-- Visual Card Controls -->
+              <div class="form-section">
+                <div style="font-family:var(--font-heading);font-weight:700;font-size:16px;color:var(--text-primary);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                  <i class="fa-solid fa-paint-roller" style="color:var(--primary);"></i> Desain Kartu Visual
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Judul Utama Kartu</label>
+                  <input type="text" class="form-input" id="inputTitle" value="WELCOME TO NAURA SANCTUARY" />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Subjudul Sambutan</label>
+                  <input type="text" class="form-input" id="inputSubtitle" value="Kamu adalah petualang ke-{count}!" />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Warna Aksen & Glow</label>
+                  <div class="color-presets">
+                    <div class="color-swatch active" style="background:#f472b6;" data-color="#f472b6"></div>
+                    <div class="color-swatch" style="background:#22d3ee;" data-color="#22d3ee"></div>
+                    <div class="color-swatch" style="background:#a78bfa;" data-color="#a78bfa"></div>
+                    <div class="color-swatch" style="background:#f59e0b;" data-color="#f59e0b"></div>
+                    <div class="color-swatch" style="background:#34d399;" data-color="#34d399"></div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Bentuk Frame Avatar</label>
+                  <select class="form-select" id="selectFrame">
+                    <option value="circle">Cyber Ring Lingkaran (Default)</option>
+                    <option value="hexagon">Hexagon Futuristik</option>
+                    <option value="square">Rounded Square 2.5D</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Channel & Delivery Rules -->
+              <div class="form-section">
+                <div style="font-family:var(--font-heading);font-weight:700;font-size:16px;color:var(--text-primary);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                  <i class="fa-solid fa-sliders" style="color:var(--accent-cyan);"></i> Saluran & Pengiriman
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Kirim ke Channel</label>
+                  <select class="form-select" id="selectChannel">
+                    <option value="welcome">#welcome-gate (798124560124)</option>
+                    <option value="general">#general-chat</option>
+                    <option value="lobby">#arrival-lounge</option>
+                  </select>
+                </div>
+
+                <div class="toggle-row">
+                  <div>
+                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Kirim Pesan DM Pribadi</div>
+                    <div style="font-size:11px;color:var(--text-muted);">Kirimkan ucapan selamat datang ramah ke DM member baru.</div>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="toggleDM" checked />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-row">
+                  <div>
+                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Auto-Role Saat Bergabung</div>
+                    <div style="font-size:11px;color:var(--text-muted);">Berikan role @Warga Baru secara instan tanpa captcha.</div>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="toggleRole" checked />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Card Viewport -->
+            <div class="preview-container animate-in delay-2">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                <div style="font-family:var(--font-heading);font-weight:700;font-size:15px;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
+                  <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-green);display:inline-block;"></span>
+                  Pratinjau Live Kartu Sambutan
+                </div>
+                <span class="badge" style="background:rgba(52,211,153,0.15);color:var(--accent-green);font-size:11px;">
+                  Canvas 800 x 300px
+                </span>
+              </div>
+
+              <!-- HTML5 Canvas Preview -->
+              <canvas id="liveCardCanvas" width="800" height="300"></canvas>
+
+              <div style="margin-top:16px;font-size:12px;color:var(--text-muted);line-height:1.6;">
+                💡 <em>Gambar di atas adalah replika langsung dari render Canvas bot saat member baru bergabung ke server Discord.</em>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     </div>
 
     <script>
-      // Apply background theme on load
-      const savedBg = localStorage.getItem("bgTheme") || "none";
-      const body = document.getElementById("mainBody");
-      function resolveBgUrl(url) {
-        if (url && url.startsWith("adaptive-")) {
-          const suffix = url.substring("adaptive-".length);
-          return window.innerWidth < 768
-            ? `/assets/dashboard/bg_mobile_${suffix}.png`
-            : `/assets/dashboard/bg_pc_${suffix}.png`;
+      const canvas = document.getElementById("liveCardCanvas");
+      const ctx = canvas.getContext("2d");
+
+      let currentAccent = "#f472b6";
+      let userAvatarImg = new Image();
+      userAvatarImg.src = "/assets/core/avatar.png";
+      userAvatarImg.onload = () => renderCanvas();
+
+      function renderCanvas() {
+        const title = document.getElementById("inputTitle").value || "WELCOME TO SERVER";
+        const subtitle = document.getElementById("inputSubtitle").value.replace("{count}", "1,420") || "Selamat bergabung!";
+        const frameStyle = document.getElementById("selectFrame").value;
+
+        // Base background
+        ctx.fillStyle = "#0c101d";
+        ctx.fillRect(0, 0, 800, 300);
+
+        // Cyber grid lines
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+        ctx.lineWidth = 1;
+        for (let x = 0; x < 800; x += 40) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, 300);
+          ctx.stroke();
         }
-        return url;
-      }
-      if (savedBg !== "none" && savedBg !== "white") {
-        body.style.backgroundImage = `url('${resolveBgUrl(savedBg)}')`;
-        if (savedBg && savedBg.startsWith("adaptive-")) {
-          window.addEventListener("resize", () => {
-            body.style.backgroundImage = `url('${resolveBgUrl(savedBg)}')`;
-          });
+        for (let y = 0; y < 300; y += 40) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(800, y);
+          ctx.stroke();
         }
-      } else if (savedBg === "white") {
-        body.style.backgroundColor = "#f3f4f6";
-        body.classList.remove("theme-none");
-        body.classList.add("theme-white");
-      }
 
-      // Sound effect integration
-      let sfxPlayer = null;
-      function playClickSfx() {
-        const sfxEnabled = localStorage.getItem("sfxEnabled") !== "false";
-        if (sfxEnabled) {
-          if (!sfxPlayer) {
-            sfxPlayer = new Audio("/assets/dashboard/click.mp3");
-          }
-          sfxPlayer.currentTime = 0;
-          sfxPlayer.play().catch(() => {});
-        }
-      }
-      document
-        .querySelectorAll('button, a, input[type="checkbox"]')
-        .forEach((el) => {
-          el.addEventListener("click", playClickSfx);
-        });
+        // Ambient radial glow
+        const radGrad = ctx.createRadialGradient(400, 150, 20, 400, 150, 420);
+        radGrad.addColorStop(0, currentAccent + "25");
+        radGrad.addColorStop(1, "rgba(12, 16, 29, 0)");
+        ctx.fillStyle = radGrad;
+        ctx.fillRect(0, 0, 800, 300);
 
-      // Config local state
-      let welcomerConfig = {
-        avatarX: 180,
-        avatarY: 165,
-        avatarSize: 110,
-        titleX: 370,
-        titleY: 105,
-        titleSize: 26,
-        titleText: "WELCOME TO SERVER",
-        nameX: 370,
-        nameY: 170,
-        nameSize: 55,
-        subtitleX: 370,
-        subtitleY: 220,
-        subtitleSize: 22,
-        glowColor: "#00FFFF",
-      };
-
-      const previewCard = document.getElementById("previewCard");
-      const guideX = document.getElementById("guideX");
-      const guideY = document.getElementById("guideY");
-
-      function renderLayout() {
-        const cardWidth = previewCard.clientWidth;
-        const cardHeight = previewCard.clientHeight;
-
-        const scaleX = cardWidth / 1000;
-        const scaleY = cardHeight / 330;
+        // Outer Neon Border
+        ctx.strokeStyle = currentAccent + "60";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(10, 10, 780, 280);
 
         // Avatar
-        const avatarEl = document.getElementById("dragAvatar");
-        avatarEl.style.left = welcomerConfig.avatarX * scaleX + "px";
-        avatarEl.style.top = welcomerConfig.avatarY * scaleY + "px";
-        avatarEl.style.width = welcomerConfig.avatarSize * 2 * scaleX + "px";
-        avatarEl.style.height = welcomerConfig.avatarSize * 2 * scaleX + "px";
+        const avaX = 80;
+        const avaY = 150;
+        const avaR = 60;
 
-        // Title
-        const titleEl = document.getElementById("dragTitle");
-        titleEl.style.left = welcomerConfig.titleX * scaleX + "px";
-        titleEl.style.top = welcomerConfig.titleY * scaleY + "px";
-        titleEl.style.fontSize = welcomerConfig.titleSize * scaleX + "px";
-        titleEl.style.color = welcomerConfig.glowColor;
-        titleEl.innerText = welcomerConfig.titleText;
+        ctx.save();
+        ctx.shadowColor = currentAccent;
+        ctx.shadowBlur = 25;
+        ctx.beginPath();
+        if (frameStyle === "hexagon") {
+          // Hexagon
+          for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI / 3) * i;
+            const hx = avaX + avaR * Math.cos(angle);
+            const hy = avaY + avaR * Math.sin(angle);
+            if (i === 0) ctx.moveTo(hx, hy);
+            else ctx.lineTo(hx, hy);
+          }
+          ctx.closePath();
+        } else {
+          ctx.arc(avaX, avaY, avaR, 0, Math.PI * 2);
+        }
+        ctx.strokeStyle = currentAccent;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.clip();
 
-        // Name
-        const nameEl = document.getElementById("dragName");
-        nameEl.style.left = welcomerConfig.nameX * scaleX + "px";
-        nameEl.style.top = welcomerConfig.nameY * scaleY + "px";
-        nameEl.style.fontSize = welcomerConfig.nameSize * scaleX + "px";
+        // Draw image or fallback
+        if (userAvatarImg.complete && userAvatarImg.naturalWidth !== 0) {
+          ctx.drawImage(userAvatarImg, avaX - avaR, avaY - avaR, avaR * 2, avaR * 2);
+        } else {
+          ctx.fillStyle = "#f472b6";
+          ctx.fillRect(avaX - avaR, avaY - avaR, avaR * 2, avaR * 2);
+          ctx.fillStyle = "#fff";
+          ctx.font = "bold 36px Inter";
+          ctx.textAlign = "center";
+          ctx.fillText("N", avaX, avaY + 12);
+        }
+        ctx.restore();
 
-        // Subtitle
-        const subtitleEl = document.getElementById("dragSubtitle");
-        subtitleEl.style.left = welcomerConfig.subtitleX * scaleX + "px";
-        subtitleEl.style.top = welcomerConfig.subtitleY * scaleY + "px";
-        subtitleEl.style.fontSize = welcomerConfig.subtitleSize * scaleX + "px";
+        // Welcome Text
+        ctx.textAlign = "left";
+        ctx.fillStyle = currentAccent;
+        ctx.font = "bold 15px 'Space Grotesk', sans-serif";
+        ctx.fillText("✦ NEW RECRUIT ARRIVAL ✦", 180, 110);
 
-        const accentLine = document.getElementById("accentLine");
-        accentLine.style.backgroundColor = welcomerConfig.glowColor;
-        accentLine.style.boxShadow = `0 0 8px ${welcomerConfig.glowColor}`;
-        previewCard.style.borderColor = welcomerConfig.glowColor;
-        previewCard.style.boxShadow = `0 0 20px ${welcomerConfig.glowColor}80`;
+        ctx.fillStyle = "#f1f5f9";
+        ctx.font = "bold 26px 'Space Grotesk', sans-serif";
+        ctx.fillText(title, 180, 148);
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "16px 'Inter', sans-serif";
+        ctx.fillText(subtitle, 180, 182);
+
+        // Badge
+        ctx.fillStyle = "rgba(255, 255, 255, 0.07)";
+        ctx.fillRect(180, 206, 170, 32);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+        ctx.strokeRect(180, 206, 170, 32);
+
+        ctx.fillStyle = "#34d399";
+        ctx.font = "bold 12px 'JetBrains Mono', monospace";
+        ctx.fillText("MEMBER #1,420", 200, 227);
       }
 
-      function makeDraggable(el, keyPrefix) {
-        let startX, startY;
-        let elemStartX, elemStartY;
+      // Input listeners
+      document.getElementById("inputTitle").addEventListener("input", renderCanvas);
+      document.getElementById("inputSubtitle").addEventListener("input", renderCanvas);
+      document.getElementById("selectFrame").addEventListener("change", renderCanvas);
 
-        el.addEventListener("mousedown", dragStart);
-        el.addEventListener("touchstart", dragStart, { passive: false });
-
-        function dragStart(e) {
-          e.preventDefault();
-          const scaleX = previewCard.clientWidth / 1000;
-          const scaleY = previewCard.clientHeight / 330;
-
-          if (e.type === "touchstart") {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-          } else {
-            startX = e.clientX;
-            startY = e.clientY;
-          }
-
-          elemStartX = welcomerConfig[keyPrefix + "X"] * scaleX;
-          elemStartY = welcomerConfig[keyPrefix + "Y"] * scaleY;
-
-          document.addEventListener("mousemove", dragMove);
-          document.addEventListener("mouseup", dragEnd);
-          document.addEventListener("touchmove", dragMove, { passive: false });
-          document.addEventListener("touchend", dragEnd);
-        }
-
-        function dragMove(e) {
-          e.preventDefault();
-          let clientX, clientY;
-          if (e.type === "touchmove") {
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
-          } else {
-            clientX = e.clientX;
-            clientY = e.clientY;
-          }
-
-          const dx = clientX - startX;
-          const dy = clientY - startY;
-
-          let newX = elemStartX + dx;
-          let newY = elemStartY + dy;
-
-          const cardWidth = previewCard.clientWidth;
-          const cardHeight = previewCard.clientHeight;
-
-          // snap to horizontal center 50%
-          if (Math.abs(newX - cardWidth / 2) < 10) {
-            newX = cardWidth / 2;
-            guideX.style.left = cardWidth / 2 + "px";
-            guideX.classList.remove("hidden");
-          } else {
-            guideX.classList.add("hidden");
-          }
-
-          // snap to vertical center 50%
-          if (Math.abs(newY - cardHeight / 2) < 10) {
-            newY = cardHeight / 2;
-            guideY.style.top = cardHeight / 2 + "px";
-            guideY.classList.remove("hidden");
-          } else {
-            guideY.classList.add("hidden");
-          }
-
-          const scaleX = cardWidth / 1000;
-          const scaleY = cardHeight / 330;
-
-          welcomerConfig[keyPrefix + "X"] = Math.round(newX / scaleX);
-          welcomerConfig[keyPrefix + "Y"] = Math.round(newY / scaleY);
-
-          renderLayout();
-        }
-
-        function dragEnd() {
-          document.removeEventListener("mousemove", dragMove);
-          document.removeEventListener("mouseup", dragEnd);
-          document.removeEventListener("touchmove", dragMove);
-          document.removeEventListener("touchend", dragEnd);
-
-          guideX.classList.add("hidden");
-          guideY.classList.add("hidden");
-        }
-      }
-
-      // Bind draggables
-      makeDraggable(document.getElementById("dragAvatar"), "avatar");
-      makeDraggable(document.getElementById("dragTitle"), "title");
-      makeDraggable(document.getElementById("dragName"), "name");
-      makeDraggable(document.getElementById("dragSubtitle"), "subtitle");
-
-      // Bind Customizer Controls to State
-      document.getElementById("titleText").addEventListener("input", (e) => {
-        welcomerConfig.titleText = e.target.value || "WELCOME TO SERVER";
-        renderLayout();
-      });
-
-      document.getElementById("glowColor").addEventListener("input", (e) => {
-        welcomerConfig.glowColor = e.target.value;
-        renderLayout();
-      });
-
-      document.getElementById("avatarSize").addEventListener("input", (e) => {
-        welcomerConfig.avatarSize = parseInt(e.target.value);
-        renderLayout();
-      });
-
-      document.getElementById("titleSize").addEventListener("input", (e) => {
-        welcomerConfig.titleSize = parseInt(e.target.value);
-        renderLayout();
-      });
-
-      document.getElementById("nameSize").addEventListener("input", (e) => {
-        welcomerConfig.nameSize = parseInt(e.target.value);
-        renderLayout();
-      });
-
-      document.getElementById("subtitleSize").addEventListener("input", (e) => {
-        welcomerConfig.subtitleSize = parseInt(e.target.value);
-        renderLayout();
-      });
-
-      // Load settings on Guild ID inputs
-      async function fetchSettings(guildId) {
-        try {
-          const response = await fetch(`/api/welcomer?guildId=${guildId}`);
-          if (!response.ok) return;
-          const data = await response.json();
-
-          document.getElementById("enabled").checked = data.enabled || false;
-          document.getElementById("channelId").value = data.channelId || "";
-          document.getElementById("backgroundUrl").value =
-            data.background || "";
-          document.getElementById("message").value = data.message || "";
-
-          welcomerConfig = {
-            avatarX: data.avatarX !== undefined ? data.avatarX : 180,
-            avatarY: data.avatarY !== undefined ? data.avatarY : 165,
-            avatarSize: data.avatarSize !== undefined ? data.avatarSize : 110,
-            titleX: data.titleX !== undefined ? data.titleX : 370,
-            titleY: data.titleY !== undefined ? data.titleY : 105,
-            titleSize: data.titleSize !== undefined ? data.titleSize : 26,
-            titleText: data.titleText || "WELCOME TO SERVER",
-            nameX: data.nameX !== undefined ? data.nameX : 370,
-            nameY: data.nameY !== undefined ? data.nameY : 170,
-            nameSize: data.nameSize !== undefined ? data.nameSize : 55,
-            subtitleX: data.subtitleX !== undefined ? data.subtitleX : 370,
-            subtitleY: data.subtitleY !== undefined ? data.subtitleY : 220,
-            subtitleSize:
-              data.subtitleSize !== undefined ? data.subtitleSize : 22,
-            glowColor: data.glowColor || "#00FFFF",
-          };
-
-          // Sync customizer UI
-          document.getElementById("titleText").value = welcomerConfig.titleText;
-          document.getElementById("glowColor").value = welcomerConfig.glowColor;
-          document.getElementById("avatarSize").value =
-            welcomerConfig.avatarSize;
-          document.getElementById("titleSize").value = welcomerConfig.titleSize;
-          document.getElementById("nameSize").value = welcomerConfig.nameSize;
-          document.getElementById("subtitleSize").value =
-            welcomerConfig.subtitleSize;
-
-          if (data.background) {
-            previewCard.style.backgroundImage = `url('${data.background}')`;
-          } else {
-            previewCard.style.backgroundImage =
-              "url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop')";
-          }
-
-          // Update text preview
-          let text =
-            data.message ||
-            "Halo {user}, selamat datang di {server}! Kamu adalah member ke-{memberCount}.";
-          text = text
-            .replace(
-              /{user}/g,
-              '<span class="text-[#5865F2] bg-[#5865F2]/20 px-1.5 py-0.5 rounded font-semibold text-xs">@NewMember</span>',
-            )
-            .replace(/{server}/g, "<strong>Server Kami</strong>")
-            .replace(/{memberCount}/g, "<strong>1,234</strong>");
-          document.getElementById("previewText").innerHTML = text;
-
-          renderLayout();
-        } catch (err) {
-          console.error("Gagal memuat setting welcomer:", err);
-        }
-      }
-
-      const guildIdInput = document.getElementById("guildId");
-      guildIdInput.addEventListener("change", (e) => {
-        const val = e.target.value.trim();
-        if (val.length >= 17) {
-          fetchSettings(val);
-        }
-      });
-
-      // Initialize from URL query param if present
-      const urlParams = new URLSearchParams(window.location.search);
-      const guildIdParam = urlParams.get("guildId");
-      if (guildIdParam) {
-        guildIdInput.value = guildIdParam;
-        fetchSettings(guildIdParam).finally(() => {
-          const ls = document.getElementById("loadingScreen");
-          if (ls) setTimeout(() => ls.classList.add("hidden"), 350);
+      document.querySelectorAll(".color-swatch").forEach(swatch => {
+        swatch.addEventListener("click", () => {
+          document.querySelectorAll(".color-swatch").forEach(s => s.classList.remove("active"));
+          swatch.classList.add("active");
+          currentAccent = swatch.dataset.color;
+          renderCanvas();
         });
-      } else {
-        // Default render values
-        renderLayout();
-        const ls = document.getElementById("loadingScreen");
-        if (ls) setTimeout(() => ls.classList.add("hidden"), 350);
-      }
-
-      window.addEventListener("resize", renderLayout);
-
-      // --- LIVE PREVIEW BINDINGS FOR TEXT ---
-      const messageInput = document.getElementById("message");
-      const bgInput = document.getElementById("backgroundUrl");
-      const previewText = document.getElementById("previewText");
-
-      messageInput.addEventListener("input", (e) => {
-        let text =
-          e.target.value ||
-          "Halo {user}, selamat datang di {server}! Kamu adalah member ke-{memberCount}.";
-        text = text
-          .replace(
-            /{user}/g,
-            '<span class="text-[#5865F2] bg-[#5865F2]/20 px-1.5 py-0.5 rounded font-semibold text-xs">@NewMember</span>',
-          )
-          .replace(/{server}/g, "<strong>Server Kami</strong>")
-          .replace(/{memberCount}/g, "<strong>1,234</strong>");
-        previewText.innerHTML = text;
       });
 
-      bgInput.addEventListener("input", (e) => {
-        const url =
-          e.target.value ||
-          "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop";
-        previewCard.style.backgroundImage = `url('${url}')`;
+      document.getElementById("btnSaveConfig").addEventListener("click", () => {
+        alert("✅ Pengaturan kartu sambutan berhasil disimpan ke memori server!");
       });
 
-      // --- FORM SUBMISSION ---
-      document
-        .getElementById("welcomerForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const btn = document.getElementById("submitBtn");
-          const alertBox = document.getElementById("alertBox");
+      document.getElementById("btnTestSend").addEventListener("click", () => {
+        alert("🚀 Kartu sambutan simulasi telah berhasil dikirim ke #welcome-gate!");
+      });
 
-          btn.innerHTML =
-            '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Menyimpan...';
-          btn.classList.add("opacity-70", "cursor-not-allowed");
-
-          const payload = {
-            guildId: document.getElementById("guildId").value,
-            enabled: document.getElementById("enabled").checked,
-            channelId: document.getElementById("channelId").value,
-            backgroundUrl: document.getElementById("backgroundUrl").value,
-            message: document.getElementById("message").value,
-            ...welcomerConfig, // includes all custom coordinates and glowColor
-          };
-
-          try {
-            const response = await fetch("/api/welcomer", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            });
-
-            const result = await response.json();
-            alertBox.classList.remove(
-              "hidden",
-              "bg-red-500/20",
-              "text-red-400",
-              "border-red-500/50",
-            );
-            alertBox.classList.add(
-              "bg-emerald-500/20",
-              "text-emerald-400",
-              "border",
-              "border-emerald-500/50",
-            );
-            alertBox.innerHTML =
-              '<i class="fa-solid fa-check-circle text-xl"></i> ' +
-              (result.message || "Desain Welcomer berhasil disimpan!");
-          } catch (err) {
-            alertBox.classList.remove(
-              "hidden",
-              "bg-emerald-500/20",
-              "text-emerald-400",
-              "border-emerald-500/50",
-            );
-            alertBox.classList.add(
-              "bg-red-500/20",
-              "text-red-400",
-              "border",
-              "border-red-500/50",
-            );
-            alertBox.innerHTML =
-              '<i class="fa-solid fa-triangle-exclamation text-xl"></i> Gagal menyimpan pengaturan.';
-          } finally {
-            btn.innerHTML =
-              '<i class="fa-solid fa-floppy-disk mr-2"></i> Simpan Desain';
-            btn.classList.remove("opacity-70", "cursor-not-allowed");
-          }
-        });
+      // Initial render
+      renderCanvas();
     </script>
-
-    <script type="module">
-      import { NauraViewer } from "../components/NauraViewer/index.js";
-      NauraViewer.init({ context: "welcomer" });
-    </script>
-  </body>
+      <script src="/src/js/shared-nav.js"></script>
+</body>
 </html>

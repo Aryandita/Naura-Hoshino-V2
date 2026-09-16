@@ -163,7 +163,9 @@ async function talkToTownNpc(npcId, userId, hour) {
     else if (userNpc.affection >= 50) newLevel = 1;
 
     userNpc.relationshipLevel = newLevel;
-    await userNpc.save();
+    await userNpc.save({
+      fields: ["affection", "lastInteraction", "relationshipLevel"],
+    });
 
     const LEVEL_TITLES = ["Kenalan", "Teman", "Sahabat", "Sahabat Dekat"];
     if (newLevel > oldLevel) {

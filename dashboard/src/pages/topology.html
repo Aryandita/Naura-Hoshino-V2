@@ -3,750 +3,661 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Live System Topology & Architecture | Naura OS</title>
+    <title>Guild & Cluster Topology | Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Outfit:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
-    <link rel="stylesheet" href="/vendor/fontawesome.css" />
-    <link rel="stylesheet" href="/vendor/tailwind-built.css" />
-    <script src="/vendor/socket.io.min.js"></script>
-    <script src="/vendor/naura-ui.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
-      body {
-        font-family: "Outfit", sans-serif;
-        background-color: #0b0c10;
-        color: #f3f4f6;
-        overflow-x: hidden;
+      .topology-layout {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 24px;
+        align-items: start;
       }
-      .font-orbitron {
-        font-family: "Orbitron", monospace;
+      @media (max-width: 1200px) {
+        .topology-layout {
+          grid-template-columns: 1fr;
+        }
       }
-      .font-cyber {
-        font-family: "Orbitron", sans-serif;
-      }
-      .glass-panel {
-        background: rgba(15, 12, 41, 0.65);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 1.25rem;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      .glass-panel:hover {
-        border-color: rgba(255, 182, 193, 0.3);
-        box-shadow: 0 12px 40px 0 rgba(255, 182, 193, 0.15);
-      }
-      .node-card {
-        cursor: pointer;
+
+      /* Graph Viewport Card */
+      .graph-viewport-card {
+        background: radial-gradient(circle at center, #091024 0%, #050814 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        overflow: hidden;
         position: relative;
-        background: rgba(20, 24, 38, 0.85);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 1rem;
-        padding: 1.25rem;
-        transition: all 0.3s ease;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
       }
-      .node-card:hover {
-        transform: translateY(-4px);
-        border-color: #ffb6c1;
-        box-shadow: 0 10px 25px -5px rgba(255, 182, 193, 0.25);
+
+      .graph-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        background: rgba(10, 14, 28, 0.75);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border-subtle);
       }
-      .node-card.active-selected {
-        border-color: #ffb6c1;
-        box-shadow: 0 0 20px rgba(255, 182, 193, 0.4);
+
+      .graph-canvas-wrap {
+        height: 540px;
+        position: relative;
+        background-color: #040714;
+        background-image: 
+          /* Center core pink/violet nebula */
+          radial-gradient(ellipse 55% 50% at 50% 48%, rgba(244, 114, 182, 0.18) 0%, rgba(139, 92, 246, 0.12) 40%, transparent 75%),
+          /* Top-Left Shard/Gateway cyan nebula */
+          radial-gradient(ellipse 45% 45% at 20% 25%, rgba(34, 211, 238, 0.16) 0%, transparent 65%),
+          /* Bottom-Left Worker/Ingress cyan nebula */
+          radial-gradient(ellipse 45% 45% at 20% 75%, rgba(34, 211, 238, 0.14) 0%, transparent 65%),
+          /* Top-Right Database emerald nebula */
+          radial-gradient(ellipse 45% 45% at 80% 25%, rgba(52, 211, 153, 0.15) 0%, transparent 65%),
+          /* Right-Center Redis red aura */
+          radial-gradient(ellipse 40% 40% at 82% 48%, rgba(239, 68, 68, 0.14) 0%, transparent 60%),
+          /* Bottom-Right Audio Cluster violet nebula */
+          radial-gradient(ellipse 45% 45% at 80% 75%, rgba(168, 85, 247, 0.16) 0%, transparent 65%),
+          /* Crisp Sci-Fi Cyber Grid Lines */
+          linear-gradient(to right, rgba(34, 211, 238, 0.07) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(34, 211, 238, 0.07) 1px, transparent 1px),
+          /* Cyan Grid Intersection Nodes */
+          radial-gradient(circle, rgba(34, 211, 238, 0.35) 1.5px, transparent 1.5px);
+        background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px, 80px 80px;
+        background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0;
       }
-      .node-card.failed-sim {
-        border-color: #ef4444 !important;
-        background: rgba(239, 68, 68, 0.15) !important;
-        box-shadow: 0 0 25px rgba(239, 68, 68, 0.5) !important;
-        animation: pulseFail 1.5s infinite;
+
+      svg.topology-svg {
+        width: 100%;
+        height: 100%;
+        user-select: none;
       }
-      .node-card.failover-active {
-        border-color: #10b981 !important;
-        background: rgba(16, 185, 129, 0.15) !important;
-        box-shadow: 0 0 25px rgba(16, 185, 129, 0.4) !important;
+
+      /* Stable, jitter-free node scaling: scales only circle with zero shaking */
+      .topo-node {
+        cursor: pointer;
       }
-      @keyframes pulseFail {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.6; }
+      .topo-node circle.node-bg {
+        transform-box: fill-box;
+        transform-origin: center center;
+        transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), stroke-width 0.22s ease, filter 0.22s ease;
       }
-      .pulse-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        display: inline-block;
+      .topo-node:hover circle.node-bg {
+        transform: scale(1.16);
+        stroke-width: 3.5;
+        filter: drop-shadow(0 0 20px var(--accent-cyan));
       }
-      .pulse-online {
-        background-color: #10b981;
-        box-shadow: 0 0 8px #10b981;
+      .topo-node.selected circle.node-bg {
+        stroke: #fff;
+        stroke-width: 3.5;
+        filter: drop-shadow(0 0 22px var(--primary));
       }
-      .pulse-standby {
-        background-color: #f59e0b;
-        box-shadow: 0 0 8px #f59e0b;
+      .topo-node text {
+        pointer-events: none;
+        user-select: none;
       }
-      .pulse-danger {
-        background-color: #ef4444;
-        box-shadow: 0 0 8px #ef4444;
+      .topo-node text.node-icon {
+        transform-box: fill-box;
+        transform-origin: center center;
+        transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
       }
-      .drawer {
-        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      .topo-node:hover text.node-icon {
+        transform: scale(1.15);
       }
-      .drawer.closed {
-        transform: translateX(110%);
+      .topo-node text.node-label {
+        transition: fill 0.22s ease;
+      }
+      .topo-node:hover text.node-label {
+        fill: #ffffff;
+      }
+
+      /* Radar Rings & Sci-Fi Background Elements */
+      .radar-ring {
+        fill: none;
+        stroke: rgba(34, 211, 238, 0.12);
+        stroke-dasharray: 4 6;
+      }
+      .radar-axis {
+        stroke: rgba(255, 255, 255, 0.07);
+        stroke-dasharray: 2 4;
+      }
+      .radar-pulse-ring {
+        fill: none;
+        stroke: rgba(34, 211, 238, 0.25);
+        stroke-width: 1.5;
+        animation: radarPulse 5s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+        transform-origin: 400px 240px;
+      }
+      @keyframes radarPulse {
+        0% { r: 50px; opacity: 0.8; }
+        70% { r: 350px; opacity: 0.15; }
+        100% { r: 390px; opacity: 0; }
+      }
+
+      .topo-line {
+        stroke: rgba(255, 255, 255, 0.15);
+        stroke-dasharray: 4 4;
+        animation: dashFlow 12s linear infinite;
+      }
+      .topo-line.active-line {
+        stroke: var(--accent-cyan);
+        stroke-dasharray: 6 4;
+        filter: drop-shadow(0 0 6px var(--accent-cyan));
+      }
+      @keyframes dashFlow {
+        to { stroke-dashoffset: -100; }
+      }
+
+      /* Detail Drawer */
+      .topo-intel-card {
+        background: linear-gradient(180deg, rgba(20, 26, 46, 0.7) 0%, rgba(10, 14, 26, 0.85) 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        padding: 24px;
+        backdrop-filter: blur(16px);
       }
     </style>
   </head>
-  <body class="min-h-screen flex flex-col selection:bg-pink-500/30 selection:text-pink-200">
-    <!-- Background Glow Elements -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-      <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-pink-500/10 rounded-full blur-[140px]"></div>
-      <div class="absolute bottom-10 right-10 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[130px]"></div>
-      <div class="absolute top-10 left-10 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[120px]"></div>
+  <body>
+    
+
+    <div class="app-shell">
+      <!-- Mobile Sidebar Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <aside class="sidebar " id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
+          <div class="sidebar-brand-text"><div class="sidebar-brand-name">Naura Hoshino</div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button><div class="sidebar-brand-sub">v2.3.0 · Online</div></div>
+        </div>
+                <!-- Navigation -->
+                <!-- Navigation -->
+        <nav class="sidebar-nav" role="navigation">
+
+          <!-- Overview -->
+          <div class="nav-group">
+            <div class="nav-group-label">Overview</div>
+            <a href="/" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span>Dashboard</span>
+            </a>
+            <a href="/status" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
+              <span>Live Status</span>
+              <span class="nav-badge">Live</span>
+            </a>
+            <a href="/feed" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
+              <span>Activity Feed</span>
+            </a>
+          </div>
+
+          <!-- Community -->
+          <div class="nav-group">
+            <div class="nav-group-label">Community</div>
+            <a href="/leaderboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
+              <span>Leaderboard</span>
+            </a>
+            <a href="/economy" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
+              <span>Economy</span>
+            </a>
+            <a href="/topology" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span>Guild Topology</span>
+            </a>
+          </div>
+
+          <!-- Media & Audio -->
+          <div class="nav-group">
+            <div class="nav-group-label">Media & Audio</div>
+            <a href="/music" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
+              <span>Music Hub</span>
+            </a>
+            <a href="/soundboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
+              <span>Soundboard</span>
+            </a>
+            <a href="/jam" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
+              <span>Jam Session</span>
+            </a>
+            <a href="/karaoke" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span>Karaoke</span>
+            </a>
+          </div>
+
+          <!-- Naura Wilds RPG -->
+          <div class="nav-group">
+            <div class="nav-group-label">Naura Wilds RPG</div>
+            <a href="/world" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span>World Map</span>
+            </a>
+            <a href="/survival-map" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
+              <span>Survival Map</span>
+            </a>
+            <a href="/activity" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
+              <span>Activity Hub</span>
+            </a>
+          </div>
+
+          <!-- Configuration -->
+          <div class="nav-group">
+            <div class="nav-group-label">Configuration</div>
+            <a href="/settings" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
+              <span>Settings</span>
+            </a>
+            <a href="/welcomer" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
+              <span>Welcomer Card</span>
+            </a>
+            <a href="/builder" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span>Embed Builder</span>
+            </a>
+            <a href="/automations" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
+              <span>Automations</span>
+            </a>
+            <a href="/tickets" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
+              <span>Tickets</span>
+            </a>
+          </div>
+
+          <!-- More -->
+          <div class="nav-group">
+            <div class="nav-group-label">More</div>
+            <a href="/portfolio" class="nav-item">
+              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
+              <span style="color:var(--accent-green)">Creator Portfolio</span>
+            </a>
+          </div>
+
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user" onclick="window.location.href='/'">
+            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+            <div class="sidebar-user-info"><div class="sidebar-user-name">SysOps Admin</div><div class="sidebar-user-role">Network Overseer</div></div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="main-content">
+        <header class="top-header">
+          <div class="header-left">
+            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <div>
+              <div class="page-title">Guild & Cluster Topology</div>
+              <div class="breadcrumb"><span>Community</span><span class="breadcrumb-sep">/</span><span>Distributed Architecture Graph</span></div>
+            </div>
+          </div>
+          <div class="header-right">
+            <button class="btn btn-primary btn-sm" id="btnPingSweep"><i class="fa-solid fa-bolt"></i> Uji Latensi Kluster</button>
+          </div>
+        </header>
+
+        <main class="page-content">
+          <div class="page-header-bar animate-in">
+            <div>
+              <h1 class="page-heading">
+                <span class="page-heading-icon" style="background:var(--cyan-dim);border:1px solid var(--border-cyan);">
+                  <i class="fa-solid fa-network-wired" style="color:var(--accent-cyan);"></i>
+                </span>
+                Arsitektur Jaringan Kluster (Naura OS)
+              </h1>
+              <p class="page-sub">Visualisasi interaktif relasi antara Shard Gateway, Kluster Audio Lavalink, Master Database Supabase, dan Redis Mutex.</p>
+            </div>
+          </div>
+
+          <div class="topology-layout animate-in delay-1">
+            <!-- Left: Interactive Topology SVG -->
+            <div class="graph-viewport-card">
+              <div class="graph-topbar">
+                <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-secondary);">
+                  <i class="fa-solid fa-circle-nodes" style="color:var(--accent-cyan);"></i> TOPOLOGY VIEW: <b>7 NODES ACTIVE</b>
+                </div>
+                <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">
+                  TOTAL GUILDS: <b style="color:#fff;" data-realtime="guilds">80</b>
+                </div>
+              </div>
+
+              <div class="graph-canvas-wrap">
+                <svg class="topology-svg" viewBox="0 0 800 500" id="topoSvg">
+                  <defs>
+                    <!-- Cyber Hexagonal Background Texture Pattern -->
+                    <pattern id="topoHexGrid" width="36" height="36" patternUnits="userSpaceOnUse">
+                      <path d="M 18 0 L 36 9 L 36 27 L 18 36 L 0 27 L 0 9 Z" fill="none" stroke="rgba(34,211,238,0.03)" stroke-width="0.8" />
+                      <circle cx="18" cy="18" r="0.8" fill="rgba(34,211,238,0.12)" />
+                    </pattern>
+                  </defs>
+
+                  <!-- Full Canvas Cyber Texture Layer -->
+                  <rect width="800" height="500" fill="url(#topoHexGrid)" />
+
+                  <!-- Sci-Fi Radar Telemetry Background Layer -->
+                  <g class="radar-bg-layer">
+                    <!-- Concentric Range Rings -->
+                    <circle cx="400" cy="240" r="95" class="radar-ring" stroke="rgba(244,114,182,0.18)" />
+                    <circle cx="400" cy="240" r="185" class="radar-ring" stroke="rgba(34,211,238,0.14)" />
+                    <circle cx="400" cy="240" r="280" class="radar-ring" stroke="rgba(244,114,182,0.10)" />
+                    <circle cx="400" cy="240" r="375" class="radar-ring" stroke="rgba(34,211,238,0.08)" />
+                    <circle cx="400" cy="240" r="440" class="radar-ring" stroke="rgba(244,114,182,0.05)" stroke-dasharray="10 10" />
+
+                    <!-- Expanding Living Radar Pulse Ring -->
+                    <circle cx="400" cy="240" r="50" class="radar-pulse-ring" />
+
+                    <!-- Center Crosshair Coordinate Axes -->
+                    <line x1="40" y1="240" x2="760" y2="240" class="radar-axis" stroke-width="1" />
+                    <line x1="400" y1="25" x2="400" y2="475" class="radar-axis" stroke-width="1" />
+
+                    <!-- Diagonal Orbital Range Rays -->
+                    <line x1="120" y1="70" x2="680" y2="410" stroke="rgba(255,255,255,0.05)" stroke-dasharray="3 6" stroke-width="1" />
+                    <line x1="120" y1="410" x2="680" y2="70" stroke="rgba(255,255,255,0.05)" stroke-dasharray="3 6" stroke-width="1" />
+
+                    <!-- Coordinate Axis Tick Marks -->
+                    <line x1="200" y1="235" x2="200" y2="245" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+                    <line x1="300" y1="237" x2="300" y2="243" stroke="rgba(255,255,255,0.12)" stroke-width="1" />
+                    <line x1="500" y1="237" x2="500" y2="243" stroke="rgba(255,255,255,0.12)" stroke-width="1" />
+                    <line x1="600" y1="235" x2="600" y2="245" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+                    <line x1="395" y1="140" x2="405" y2="140" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+                    <line x1="397" y1="190" x2="403" y2="190" stroke="rgba(255,255,255,0.12)" stroke-width="1" />
+                    <line x1="397" y1="290" x2="403" y2="290" stroke="rgba(255,255,255,0.12)" stroke-width="1" />
+                    <line x1="395" y1="340" x2="405" y2="340" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+
+                    <!-- Sector & Degree HUD Indicators -->
+                    <text x="400" y="52" text-anchor="middle" fill="rgba(34,211,238,0.65)" font-size="8.5" font-family="'JetBrains Mono'">[000° AI INFERENCE // COGNITIVE]</text>
+                    <text x="735" y="244" text-anchor="end" fill="rgba(244,114,182,0.65)" font-size="8.5" font-family="'JetBrains Mono'">[090° STORAGE &amp; CACHE]</text>
+                    <text x="400" y="440" text-anchor="middle" fill="rgba(167,139,250,0.65)" font-size="8.5" font-family="'JetBrains Mono'">[180° AUDIO FEDERATION // PORU v5]</text>
+                    <text x="65" y="244" text-anchor="start" fill="rgba(34,211,238,0.65)" font-size="8.5" font-family="'JetBrains Mono'">[270° GATEWAY SHARDS]</text>
+
+                    <!-- Corner Sci-Fi Telemetry Brackets -->
+                    <!-- Top-Left -->
+                    <path d="M 25 45 L 25 25 L 55 25" stroke="rgba(34,211,238,0.55)" fill="none" stroke-width="1.5" />
+                    <text x="32" y="38" fill="rgba(34,211,238,0.8)" font-size="9" font-family="'JetBrains Mono'" font-weight="600">SYS.LOC: AP-SOUTHEAST-1 // SEC-01</text>
+                    
+                    <!-- Top-Right -->
+                    <path d="M 775 45 L 775 25 L 745 25" stroke="rgba(34,211,238,0.55)" fill="none" stroke-width="1.5" />
+                    <text x="768" y="38" text-anchor="end" fill="rgba(34,211,238,0.8)" font-size="9" font-family="'JetBrains Mono'" font-weight="600">CLUSTER TOPOLOGY: 7 NODES SYNCHRONIZED</text>
+
+                    <!-- Bottom-Left -->
+                    <path d="M 25 455 L 25 475 L 55 475" stroke="rgba(244,114,182,0.55)" fill="none" stroke-width="1.5" />
+                    <text x="32" y="470" fill="rgba(244,114,182,0.8)" font-size="9" font-family="'JetBrains Mono'" font-weight="600">RTT BUS: 0.05ms TELEMETRY TICK</text>
+
+                    <!-- Bottom-Right -->
+                    <path d="M 775 455 L 775 475 L 745 475" stroke="rgba(244,114,182,0.55)" fill="none" stroke-width="1.5" />
+                    <text x="768" y="470" text-anchor="end" fill="rgba(244,114,182,0.8)" font-size="9" font-family="'JetBrains Mono'" font-weight="600">PROTOCOL: WS GATEWAY v10</text>
+
+                    <!-- Outer Quadrant Satellite Relays & Fiber Interconnects (Fills empty background) -->
+                    <!-- Top-Left Relay 01 -->
+                    <path d="M 85 95 L 125 95 L 160 130 L 200 140" stroke="rgba(34,211,238,0.22)" stroke-width="1.2" stroke-dasharray="3 3" fill="none" />
+                    <g transform="translate(85, 95)">
+                      <circle r="12" fill="#041829" stroke="rgba(34,211,238,0.5)" stroke-width="1.2" />
+                      <circle r="4" fill="#22d3ee" />
+                      <text x="0" y="22" text-anchor="middle" fill="rgba(34,211,238,0.7)" font-size="7.5" font-family="'JetBrains Mono'" font-weight="700">GATEWAY-EDGE-01</text>
+                      <text x="0" y="31" text-anchor="middle" fill="rgba(34,211,238,0.45)" font-size="6.5" font-family="'JetBrains Mono'">[INGRESS 99.9%]</text>
+                    </g>
+
+                    <!-- Bottom-Left Relay 02 -->
+                    <path d="M 85 385 L 125 385 L 160 350 L 200 340" stroke="rgba(34,211,238,0.22)" stroke-width="1.2" stroke-dasharray="3 3" fill="none" />
+                    <g transform="translate(85, 385)">
+                      <circle r="12" fill="#041829" stroke="rgba(34,211,238,0.5)" stroke-width="1.2" />
+                      <circle r="4" fill="#22d3ee" />
+                      <text x="0" y="22" text-anchor="middle" fill="rgba(34,211,238,0.7)" font-size="7.5" font-family="'JetBrains Mono'" font-weight="700">WORKER-INGRESS-02</text>
+                      <text x="0" y="31" text-anchor="middle" fill="rgba(34,211,238,0.45)" font-size="6.5" font-family="'JetBrains Mono'">[TELEMETRY BUS]</text>
+                    </g>
+
+                    <!-- Top-Right Read-Replica Relay -->
+                    <path d="M 725 105 L 685 105 L 655 125 L 620 130" stroke="rgba(52,211,153,0.22)" stroke-width="1.2" stroke-dasharray="3 3" fill="none" />
+                    <g transform="translate(725, 105)">
+                      <circle r="12" fill="#021c12" stroke="rgba(52,211,153,0.5)" stroke-width="1.2" />
+                      <circle r="4" fill="#34d399" />
+                      <text x="0" y="22" text-anchor="middle" fill="rgba(52,211,153,0.7)" font-size="7.5" font-family="'JetBrains Mono'" font-weight="700">READ-REPLICA-SG</text>
+                      <text x="0" y="31" text-anchor="middle" fill="rgba(52,211,153,0.45)" font-size="6.5" font-family="'JetBrains Mono'">[REPLICATION 0.1ms]</text>
+                    </g>
+
+                    <!-- Bottom-Right Voice-Edge Relay -->
+                    <path d="M 725 375 L 685 375 L 655 360 L 620 350" stroke="rgba(168,85,247,0.22)" stroke-width="1.2" stroke-dasharray="3 3" fill="none" />
+                    <g transform="translate(725, 375)">
+                      <circle r="12" fill="#1d0c2e" stroke="rgba(168,85,247,0.5)" stroke-width="1.2" />
+                      <circle r="4" fill="#a855f7" />
+                      <text x="0" y="22" text-anchor="middle" fill="rgba(168,85,247,0.7)" font-size="7.5" font-family="'JetBrains Mono'" font-weight="700">VOICE-EDGE-CDN</text>
+                      <text x="0" y="31" text-anchor="middle" fill="rgba(168,85,247,0.45)" font-size="6.5" font-family="'JetBrains Mono'">[OPUS 320 KBPS]</text>
+                    </g>
+
+                    <!-- Ambient Telemetry Micro-Data Markers Across Free Spaces -->
+                    <text x="135" y="195" fill="rgba(34,211,238,0.3)" font-size="7.5" font-family="'JetBrains Mono'">// PACKET ROUTING: ACTIVE</text>
+                    <text x="135" y="285" fill="rgba(34,211,238,0.3)" font-size="7.5" font-family="'JetBrains Mono'">// HEARTBEAT ACK: 14ms</text>
+                    <text x="665" y="195" text-anchor="end" fill="rgba(52,211,153,0.3)" font-size="7.5" font-family="'JetBrains Mono'">// WAL STREAMING: SYNC</text>
+                    <text x="665" y="285" text-anchor="end" fill="rgba(239,68,68,0.3)" font-size="7.5" font-family="'JetBrains Mono'">// REDIS OPS: 48.2K/S</text>
+                    <text x="400" y="130" text-anchor="middle" fill="rgba(245,158,11,0.35)" font-size="7.5" font-family="'JetBrains Mono'">// LLM LATENCY: 210ms</text>
+                  </g>
+
+                  <!-- Connection Lines -->
+                  <!-- Core Router to Shard 0 & 1 -->
+                  <line x1="400" y1="240" x2="200" y2="140" class="topo-line active-line" stroke-width="2" />
+                  <line x1="400" y1="240" x2="200" y2="340" class="topo-line active-line" stroke-width="2" />
+                  <!-- Core Router to Supabase -->
+                  <line x1="400" y1="240" x2="620" y2="130" class="topo-line active-line" stroke-width="2.5" stroke="#34d399" />
+                  <!-- Core Router to Redis -->
+                  <line x1="400" y1="240" x2="630" y2="240" class="topo-line" stroke-width="2" />
+                  <!-- Core Router to Lavalink SG -->
+                  <line x1="400" y1="240" x2="620" y2="350" class="topo-line active-line" stroke-width="2" />
+                  <!-- Core Router to AI Ensemble -->
+                  <line x1="400" y1="240" x2="400" y2="80" class="topo-line" stroke-width="1.5" />
+
+                  <!-- NODE: CORE ROUTER (CENTER) -->
+                  <g class="topo-node selected" id="node-core" data-node="core" transform="translate(400, 240)">
+                    <circle r="34" class="node-bg" fill="#1b0e2b" stroke="#f472b6" stroke-width="2.5" />
+                    <text class="node-icon" text-anchor="middle" dy="7" fill="#f472b6" font-size="20" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf233;</text>
+                    <text class="node-label" text-anchor="middle" y="50" fill="#fff" font-size="12" font-weight="700" font-family="'Space Grotesk'">Naura Core Router</text>
+                  </g>
+
+                  <!-- NODE: SHARD 0 -->
+                  <g class="topo-node" id="node-shard0" data-node="shard0" transform="translate(200, 140)">
+                    <circle r="26" class="node-bg" fill="#082236" stroke="#22d3ee" stroke-width="2" />
+                    <text class="node-icon" text-anchor="middle" dy="6" fill="#22d3ee" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf57d;</text>
+                    <text class="node-label" text-anchor="middle" y="42" fill="#e0f2fe" font-size="11" font-weight="600" font-family="'Space Grotesk'">Shard 0 (Primary)</text>
+                  </g>
+
+                  <!-- NODE: SHARD 1 -->
+                  <g class="topo-node" id="node-shard1" data-node="shard1" transform="translate(200, 340)">
+                    <circle r="26" class="node-bg" fill="#082236" stroke="#22d3ee" stroke-width="2" />
+                    <text class="node-icon" text-anchor="middle" dy="6" fill="#22d3ee" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf57d;</text>
+                    <text class="node-label" text-anchor="middle" y="42" fill="#e0f2fe" font-size="11" font-weight="600" font-family="'Space Grotesk'">Shard 1 (Worker)</text>
+                  </g>
+
+                  <!-- NODE: SUPABASE CLOUD (POSTGRES) -->
+                  <g class="topo-node" id="node-supabase" data-node="supabase" transform="translate(620, 130)">
+                    <circle r="28" class="node-bg" fill="#062e20" stroke="#34d399" stroke-width="2.5" />
+                    <text class="node-icon" text-anchor="middle" dy="7" fill="#34d399" font-size="18" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf1c0;</text>
+                    <text class="node-label" text-anchor="middle" y="44" fill="#ecfdf5" font-size="11" font-weight="700" font-family="'Space Grotesk'">Supabase PG Master</text>
+                  </g>
+
+                  <!-- NODE: REDIS CACHE -->
+                  <g class="topo-node" id="node-redis" data-node="redis" transform="translate(630, 240)">
+                    <circle r="24" class="node-bg" fill="#360a14" stroke="#ef4444" stroke-width="2" />
+                    <text class="node-icon" text-anchor="middle" dy="6" fill="#ef4444" font-size="15" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf0e7;</text>
+                    <text class="node-label" text-anchor="middle" y="38" fill="#fee2e2" font-size="11" font-weight="600" font-family="'Space Grotesk'">Redis Write-Behind</text>
+                  </g>
+
+                  <!-- NODE: LAVALINK CLUSTER -->
+                  <g class="topo-node" id="node-lavalink" data-node="lavalink" transform="translate(620, 350)">
+                    <circle r="26" class="node-bg" fill="#28113b" stroke="#a78bfa" stroke-width="2" />
+                    <text class="node-icon" text-anchor="middle" dy="6" fill="#a78bfa" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf001;</text>
+                    <text class="node-label" text-anchor="middle" y="42" fill="#f3e8ff" font-size="11" font-weight="600" font-family="'Space Grotesk'">Lavalink Cluster</text>
+                  </g>
+
+                  <!-- NODE: AI ENSEMBLE ROUTER -->
+                  <g class="topo-node" id="node-ai" data-node="ai" transform="translate(400, 80)">
+                    <circle r="22" class="node-bg" fill="#301802" stroke="#f59e0b" stroke-width="2" />
+                    <text class="node-icon" text-anchor="middle" dy="5" fill="#f59e0b" font-size="14" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf544;</text>
+                    <text class="node-label" text-anchor="middle" y="36" fill="#fef3c7" font-size="11" font-weight="600" font-family="'Space Grotesk'">AI Ensemble</text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Right: Node Intel Panel -->
+            <div class="topo-intel-card animate-in delay-2">
+              <div style="font-size:11px;font-weight:700;color:var(--accent-cyan);text-transform:uppercase;margin-bottom:6px;" id="intelNodeType">
+                NODE TELEMETRY SPECIFICATION
+              </div>
+              <div style="font-family:var(--font-heading);font-size:20px;font-weight:700;color:#fff;margin-bottom:8px;" id="intelNodeTitle">
+                Naura Core Router
+              </div>
+              <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px;" id="intelNodeDesc">
+                Pusat Sharding & Event Router discord.js yang mengoordinasikan interaksi, slash command plugins, dan mutasi saldo atomik.
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);padding:10px 14px;border-radius:10px;display:flex;justify-content:space-between;font-size:12px;">
+                  <span style="color:var(--text-muted);">Status Node:</span>
+                  <span style="color:#34d399;font-weight:700;font-family:var(--font-mono);" id="intelStatus">ONLINE · HEALTHY</span>
+                </div>
+                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);padding:10px 14px;border-radius:10px;display:flex;justify-content:space-between;font-size:12px;">
+                  <span style="color:var(--text-muted);">Round-Trip Latency:</span>
+                  <span style="color:var(--accent-cyan);font-weight:700;font-family:var(--font-mono);" id="intelPing">14 ms</span>
+                </div>
+                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);padding:10px 14px;border-radius:10px;display:flex;justify-content:space-between;font-size:12px;">
+                  <span style="color:var(--text-muted);">Konsumsi Memori:</span>
+                  <span style="color:#fff;font-family:var(--font-mono);" id="intelRam">142 MB / 512 MB</span>
+                </div>
+              </div>
+
+              <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);line-height:1.6;" id="intelExtra">
+                • Protocol: WebSocket Gateway v10<br>
+                • Sharding Model: discord-hybrid-sharding<br>
+                • Circuit Breaker: CLOSED (Ready)
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
 
-    <!-- Header / Navbar -->
-    <header class="sticky top-0 z-40 glass-panel !rounded-none border-b border-white/10 px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <a href="/" class="flex items-center gap-3 group">
-          <img src="/assets/dashboard/naura.png" alt="Naura" class="w-10 h-10 rounded-full border border-pink-400/30 group-hover:scale-105 transition-transform" />
-          <div>
-            <h1 class="font-orbitron font-bold text-lg text-white tracking-wider flex items-center gap-2">
-              NAURA <span class="text-pink-400">TOPOLOGY</span>
-            </h1>
-            <p class="text-xs text-gray-400">KodeKloud System Architecture Engine 2026</p>
-          </div>
-        </a>
+    <nav class="mobile-nav">
+      <div class="mobile-nav-inner">
+        <a href="/" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Home</span></a>
+        <a href="/music" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-music"></i></span><span class="mn-label">Music</span></a>
+        <a href="/topology" class="mobile-nav-item active"><span class="mn-icon"><i class="fa-solid fa-network-wired"></i></span><span class="mn-label">Topology</span></a>
+        <a href="/economy" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-coins"></i></span><span class="mn-label">Economy</span></a>
+        <a href="/settings" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
       </div>
+    </nav>
 
-      <nav class="hidden md:flex items-center gap-6 text-sm font-medium">
-        <a href="/" class="text-gray-400 hover:text-pink-300 transition-colors">Overview</a>
-        <a href="/leaderboard" class="text-gray-400 hover:text-pink-300 transition-colors">Leaderboard</a>
-        <a href="/economy" class="text-gray-400 hover:text-pink-300 transition-colors">Economy</a>
-        <a href="/status" class="text-gray-400 hover:text-pink-300 transition-colors">Status</a>
-        <a href="/topology" class="text-pink-400 font-semibold border-b-2 border-pink-400 pb-1">Topology</a>
-      </nav>
-
-      <div class="flex items-center gap-3">
-        <div class="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full text-xs">
-          <span class="pulse-dot pulse-online" id="global-pulse"></span>
-          <span class="text-gray-300 font-mono" id="global-status-text">LIVE TOPOLOGY ACTIVE</span>
-        </div>
-        <button id="refresh-btn" class="bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/40 text-pink-300 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all">
-          <i class="fa-solid fa-rotate text-xs" id="refresh-icon"></i>
-          <span>Refresh</span>
-        </button>
-      </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
-      <!-- Top Interactive Controls & Simulation Toolbar -->
-      <section class="glass-panel p-6 mb-8">
-        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-          <div>
-            <span class="text-xs font-orbitron font-semibold text-pink-400 uppercase tracking-widest flex items-center gap-2">
-              <i class="fa-solid fa-microchip"></i> KodeKloud Lab Simulator
-            </span>
-            <h2 class="text-2xl font-bold font-orbitron text-white mt-1">Interactive Architecture Visualizer</h2>
-            <p class="text-sm text-gray-400 mt-1">Klik pada node mana saja untuk inspeksi telemetri, atau uji ketahanan failover multi-database dan multi-node secara langsung.</p>
-          </div>
-
-          <!-- Simulation Scenario Buttons -->
-          <div class="flex flex-wrap items-center gap-2">
-            <button id="sim-db-fail" class="bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5">
-              <i class="fa-solid fa-triangle-exclamation"></i> Simulasikan DB Outage
-            </button>
-            <button id="sim-lava-fail" class="bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 text-xs px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5">
-              <i class="fa-solid fa-satellite-dish"></i> Simulasikan Audio Failover
-            </button>
-            <button id="sim-ai-spike" class="bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-xs px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5">
-              <i class="fa-solid fa-brain"></i> Simulasikan Lonjakan AI
-            </button>
-            <button id="sim-reset" class="bg-gray-800 hover:bg-gray-700 border border-white/20 text-gray-300 text-xs px-3 py-2 rounded-lg font-medium transition-all flex items-center gap-1.5">
-              <i class="fa-solid fa-arrow-rotate-left"></i> Reset Lab
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Multi-Tier Visual Architecture Grid -->
-      <div class="relative min-h-[720px]" id="topology-container">
-
-        <div class="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          
-          <!-- TIER 1: Ingress & Client Gateway -->
-          <div class="flex flex-col gap-4">
-            <div class="text-xs font-orbitron font-semibold text-pink-400 flex items-center gap-2 border-b border-white/10 pb-2">
-              <i class="fa-solid fa-network-wired"></i> 1. INGRESS & GATEWAY
-            </div>
-
-            <!-- Node: Discord Client Users -->
-            <div class="node-card" id="node-discord" onclick="inspectNode('discord')">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
-                    <i class="fa-brands fa-discord text-xl"></i>
-                  </div>
-                  <div>
-                    <h3 class="font-bold text-sm text-white">Discord Gateway</h3>
-                    <p class="text-xs text-gray-400">Shard ShardingManager</p>
-                  </div>
-                </div>
-                <span class="pulse-dot pulse-online" id="dot-discord"></span>
-              </div>
-              <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono text-gray-400">
-                <span>Latency: <strong class="text-white" id="stat-ping">-- ms</strong></span>
-                <span>Guilds: <strong class="text-white" id="stat-guilds">--</strong></span>
-              </div>
-            </div>
-
-            <!-- Node: Web Dashboard Ingress -->
-            <div class="node-card" id="node-express" onclick="inspectNode('express')">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-                    <i class="fa-solid fa-globe text-xl"></i>
-                  </div>
-                  <div>
-                    <h3 class="font-bold text-sm text-white">Express Reverse Proxy</h3>
-                    <p class="text-xs text-gray-400">REST API & Socket.IO</p>
-                  </div>
-                </div>
-                <span class="pulse-dot pulse-online" id="dot-express"></span>
-              </div>
-              <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono text-gray-400">
-                <span>Port: <strong class="text-white">3000</strong></span>
-                <span>RateLimit: <strong class="text-emerald-400">Active</strong></span>
-              </div>
-            </div>
-          </div>
-
-          <!-- TIER 2: Compute & Event Processing -->
-          <div class="flex flex-col gap-4">
-            <div class="text-xs font-orbitron font-semibold text-purple-400 flex items-center gap-2 border-b border-white/10 pb-2">
-              <i class="fa-solid fa-microchip"></i> 2. COMPUTE & RUNTIME
-            </div>
-
-            <!-- Node: Node.js Core Event Loop -->
-            <div class="node-card" id="node-eventloop" onclick="inspectNode('eventloop')">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-green-500/20 border border-green-500/40 flex items-center justify-center text-green-400">
-                    <i class="fa-brands fa-node-js text-xl"></i>
-                  </div>
-                  <div>
-                    <h3 class="font-bold text-sm text-white">Node.js Engine</h3>
-                    <p class="text-xs text-gray-400" id="stat-nodever">Runtime v24</p>
-                  </div>
-                </div>
-                <span class="pulse-dot pulse-online" id="dot-eventloop"></span>
-              </div>
-              <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono text-gray-400">
-                <span>Heap: <strong class="text-white" id="stat-heap">-- MB</strong></span>
-                <span>Loop: <strong class="text-emerald-400">Non-blocking</strong></span>
-              </div>
-            </div>
-
-            <!-- Node: Canvas Worker Pool -->
-            <div class="node-card" id="node-workerpool" onclick="inspectNode('workerpool')">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
-                    <i class="fa-solid fa-palette text-xl"></i>
-                  </div>
-                  <div>
-                    <h3 class="font-bold text-sm text-white">Canvas Worker Pool</h3>
-                    <p class="text-xs text-gray-400">worker_threads GPU/CPU</p>
-                  </div>
-                </div>
-                <span class="pulse-dot pulse-online" id="dot-workerpool"></span>
-              </div>
-              <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono text-gray-400">
-                <span>Threads: <strong class="text-white">3 Workers</strong></span>
-                <span>State: <strong class="text-emerald-400">Offloaded</strong></span>
-              </div>
-            </div>
-          </div>
-
-          <!-- TIER 3: Polyglot Persistence & Caching -->
-          <div class="flex flex-col gap-4">
-            <div class="text-xs font-orbitron font-semibold text-cyan-400 flex items-center gap-2 border-b border-white/10 pb-2">
-              <i class="fa-solid fa-database"></i> 3. PERSISTENCE & CACHE
-            </div>
-
-            <!-- Node: Supabase PostgreSQL (Relational) -->
-            <div class="node-card" id="node-supabase" onclick="inspectNode('supabase')">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
-                    <i class="fa-solid fa-bolt text-xl"></i>
-                  </div>
-                  <div>
-                    <h3 class="font-bold text-sm text-white">Supabase / PG</h3>
-                    <p class="text-xs text-gray-400">Transactional Layer</p>
-                  </div>
-                </div>
-                <span class="pulse-dot pulse-online" id="dot-supabase"></span>
-              </div>
-              <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono text-gray-400">
-                <span>Pool: <strong class="text-white" id="stat-dbpool">--</strong></span>
-                <span>Locking: <strong class="text-cyan-400">Atomic</strong></span>
-              </div>
-            </div>
-
-            <!-- Node: Redis In-Memory Cache -->
-            <div class="node-card" id="node-redis" onclick="inspectNode('redis')">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400">
-                    <i class="fa-solid fa-cubes-stacked text-xl"></i>
-                  </div>
-                  <div>
-                    <h3 class="font-bold text-sm text-white">Redis Cache & PubSub</h3>
-                    <p class="text-xs text-gray-400">In-Memory Invalidator</p>
-                  </div>
-                </div>
-                <span class="pulse-dot pulse-online" id="dot-redis"></span>
-              </div>
-              <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono text-gray-400">
-                <span>Pub/Sub: <strong class="text-emerald-400">Active</strong></span>
-                <span>Invalidation: <strong class="text-white">&lt; 1ms</strong></span>
-              </div>
-            </div>
-
-            <!-- Node: MongoDB Atlas (Document & Audit) -->
-            <div class="node-card" id="node-mongo" onclick="inspectNode('mongo')">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-                    <i class="fa-solid fa-leaf text-xl"></i>
-                  </div>
-                  <div>
-                    <h3 class="font-bold text-sm text-white">MongoDB Atlas</h3>
-                    <p class="text-xs text-gray-400">AI Logs & Transcripts</p>
-                  </div>
-                </div>
-                <span class="pulse-dot pulse-online" id="dot-mongo"></span>
-              </div>
-              <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono text-gray-400">
-                <span>Models: <strong class="text-white" id="stat-mongomodels">6</strong></span>
-                <span>Status: <strong class="text-emerald-400" id="stat-mongostatus">Connected</strong></span>
-              </div>
-            </div>
-
-            <!-- Node: SQLite Fallback (Emergency) -->
-            <div class="node-card opacity-70 hover:opacity-100" id="node-sqlite" onclick="inspectNode('sqlite')">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-gray-500/20 border border-gray-500/40 flex items-center justify-center text-gray-400">
-                    <i class="fa-solid fa-shield-heart text-xl"></i>
-                  </div>
-                  <div>
-                    <h3 class="font-bold text-sm text-white">SQLite Fallback</h3>
-                    <p class="text-xs text-gray-400">Local Emergency Node</p>
-                  </div>
-                </div>
-                <span class="pulse-dot pulse-standby" id="dot-sqlite"></span>
-              </div>
-              <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono text-gray-400">
-                <span>Mode: <strong class="text-amber-400" id="stat-sqlitemode">Standby Ready</strong></span>
-                <span>Zero Data Loss</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- TIER 4: Audio Cluster & AI Intelligence -->
-          <div class="flex flex-col gap-4">
-            <div class="text-xs font-orbitron font-semibold text-amber-400 flex items-center gap-2 border-b border-white/10 pb-2">
-              <i class="fa-solid fa-headphones"></i> 4. AUDIO & AI ENGINES
-            </div>
-
-            <!-- Node: Primary Lavalink -->
-            <div class="node-card" id="node-lavalink" onclick="inspectNode('lavalink')">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-pink-500/20 border border-pink-500/40 flex items-center justify-center text-pink-400">
-                    <i class="fa-solid fa-music text-xl"></i>
-                  </div>
-                  <div>
-                    <h3 class="font-bold text-sm text-white">Lavalink Cluster</h3>
-                    <p class="text-xs text-gray-400">Poru Audio DSP v4</p>
-                  </div>
-                </div>
-                <span class="pulse-dot pulse-online" id="dot-lavalink"></span>
-              </div>
-              <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono text-gray-400">
-                <span>Nodes: <strong class="text-white" id="stat-lavanodes">--</strong></span>
-                <span>Active: <strong class="text-emerald-400" id="stat-lavaplayers">0 Players</strong></span>
-              </div>
-            </div>
-
-            <!-- Node: Fallback Audio (Serenetia) -->
-            <div class="node-card opacity-70 hover:opacity-100" id="node-serenetia" onclick="inspectNode('serenetia')">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400">
-                    <i class="fa-solid fa-tower-broadcast text-xl"></i>
-                  </div>
-                  <div>
-                    <h3 class="font-bold text-sm text-white">Serenetia Audio</h3>
-                    <p class="text-xs text-gray-400">Public SSL Fallback</p>
-                  </div>
-                </div>
-                <span class="pulse-dot pulse-standby" id="dot-serenetia"></span>
-              </div>
-              <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono text-gray-400">
-                <span>Type: <strong class="text-purple-300">Failover Guard</strong></span>
-                <span>SSL: <strong class="text-emerald-400">443</strong></span>
-              </div>
-            </div>
-
-            <!-- Node: AI Core (Gemini 2.5) -->
-            <div class="node-card" id="node-gemini" onclick="inspectNode('gemini')">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
-                    <i class="fa-solid fa-brain text-xl"></i>
-                  </div>
-                  <div>
-                    <h3 class="font-bold text-sm text-white">Gemini 2.5 Flash</h3>
-                    <p class="text-xs text-gray-400">AI Function Calling</p>
-                  </div>
-                </div>
-                <span class="pulse-dot pulse-online" id="dot-gemini"></span>
-              </div>
-              <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono text-gray-400">
-                <span>Tools: <strong class="text-cyan-400">8 Core Tools</strong></span>
-                <span>Loop: <strong class="text-white">3 Rounds</strong></span>
-              </div>
-            </div>
-
-            <!-- Node: AI Failover (Groq LLaMA 3.3) -->
-            <div class="node-card opacity-70 hover:opacity-100" id="node-groq" onclick="inspectNode('groq')">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
-                    <i class="fa-solid fa-microchip text-xl"></i>
-                  </div>
-                  <div>
-                    <h3 class="font-bold text-sm text-white">Groq LLaMA 3.3</h3>
-                    <p class="text-xs text-gray-400">Ultra-Fast Failover</p>
-                  </div>
-                </div>
-                <span class="pulse-dot pulse-standby" id="dot-groq"></span>
-              </div>
-              <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between text-xs font-mono text-gray-400">
-                <span>Latency: <strong class="text-amber-400">&lt; 300ms</strong></span>
-                <span>Standby Ready</span>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </div>
-    </main>
-
-    <!-- Side Inspector Drawer -->
-    <aside id="inspector-drawer" class="drawer closed fixed top-0 right-0 bottom-0 w-full sm:w-[420px] bg-[#0f121d] border-l border-white/10 z-50 p-6 flex flex-col shadow-2xl overflow-y-auto">
-      <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
-        <div class="flex items-center gap-3">
-          <div id="drawer-icon-box" class="w-10 h-10 rounded-lg bg-pink-500/20 border border-pink-500/40 flex items-center justify-center text-pink-400">
-            <i class="fa-solid fa-circle-info text-lg" id="drawer-icon"></i>
-          </div>
-          <div>
-            <h3 class="font-orbitron font-bold text-base text-white" id="drawer-title">Node Inspector</h3>
-            <p class="text-xs text-gray-400" id="drawer-subtitle">System Component</p>
-          </div>
-        </div>
-        <button onclick="closeDrawer()" class="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-white/5">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <!-- Drawer Content Dynamic -->
-      <div class="flex-1 flex flex-col gap-4 text-sm" id="drawer-content">
-        <div class="bg-white/5 border border-white/10 rounded-xl p-4">
-          <span class="text-xs text-gray-400 uppercase font-semibold">Status Operasional</span>
-          <div class="flex items-center justify-between mt-2">
-            <span class="font-bold text-white" id="drawer-status">ONLINE</span>
-            <span class="pulse-dot pulse-online" id="drawer-dot"></span>
-          </div>
-        </div>
-
-        <div class="bg-white/5 border border-white/10 rounded-xl p-4">
-          <span class="text-xs text-gray-400 uppercase font-semibold">Deskripsi Arsitektur</span>
-          <p class="text-gray-300 text-xs mt-2 leading-relaxed" id="drawer-desc">
-            Komponen arsitektur Naura Hoshino.
-          </p>
-        </div>
-
-        <div class="bg-white/5 border border-white/10 rounded-xl p-4">
-          <span class="text-xs text-gray-400 uppercase font-semibold">Spesifikasi & Metrik</span>
-          <div class="flex flex-col gap-2 mt-3 text-xs font-mono" id="drawer-metrics">
-            <div class="flex justify-between border-b border-white/5 pb-1">
-              <span class="text-gray-400">Protocol</span>
-              <span class="text-white font-bold" id="drawer-m1">TCP / WSS</span>
-            </div>
-            <div class="flex justify-between border-b border-white/5 pb-1">
-              <span class="text-gray-400">Throughput</span>
-              <span class="text-white font-bold" id="drawer-m2">Optimal</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Footer -->
-    <footer class="mt-auto border-t border-white/10 py-6 text-center text-xs text-gray-400">
-      <p>Naura Hoshino Distributed Ecosystem 2026 - Powered by KodeKloud Architecture Engine</p>
-    </footer>
-
-    <!-- Logic Script -->
+    <script src="/src/js/shared-nav.js"></script>
     <script>
-      let topologyData = null;
-      let activeNodeKey = null;
-      let isSimulatingDbFail = false;
-      let isSimulatingLavaFail = false;
-      let isSimulatingAiSpike = false;
-
-      const nodeMetadata = {
-        discord: {
-          title: "Discord Gateway Shards",
-          subtitle: "Ingress & Client Handshake",
-          icon: "fa-brands fa-discord",
-          color: "indigo",
-          desc: "Menangani koneksi WebSocket berkesinambungan (Heartbeat 41.25s) dengan Discord API. Mendistribusikan beban event discord.js secara asinkron ke command handler.",
+      const NODE_INTEL = {
+        core: {
+          type: 'PUSAT SHARDING & EVENT ROUTER',
+          title: 'Naura Core Router',
+          desc: 'Pusat Sharding & Event Router discord.js yang mengoordinasikan interaksi, slash command plugins, dan mutasi saldo atomik.',
+          status: 'ONLINE · HEALTHY',
+          ping: '14 ms',
+          ram: '142 MB / 512 MB',
+          extra: '• Protocol: WebSocket Gateway v10<br>• Sharding: discord-hybrid-sharding<br>• Circuit Breaker: CLOSED'
         },
-        express: {
-          title: "Express Reverse Proxy",
-          subtitle: "Web Dashboard & Socket.IO",
-          icon: "fa-solid fa-globe",
-          color: "emerald",
-          desc: "Menyajikan antarmuka Dashboard Modern MPA, endpoint REST API berkeamanan tinggi (Helmet, Rate Limiter 300 req/m), dan telemetri Socket.IO real-time.",
+        shard0: {
+          type: 'DISCORD GATEWAY PROCESS',
+          title: 'Shard 0 (Primary)',
+          desc: 'Menangani guild kluster 1-42, deploy slash commands, dan routing interaction.',
+          status: 'ONLINE · ACTIVE',
+          ping: '14 ms',
+          ram: '124 MB',
+          extra: '• Guilds Assigned: 42<br>• Heartbeat: 41.2s interval<br>• Event Loop Lag: 1.2ms'
         },
-        eventloop: {
-          title: "Node.js 24 Event Loop",
-          subtitle: "Asynchronous Core Processing",
-          icon: "fa-brands fa-node-js",
-          color: "green",
-          desc: "Runtime inti single-threaded non-blocking yang mengeksekusi I/O logic, interaksi slash command, routing plugin, dan state orchestration.",
-        },
-        workerpool: {
-          title: "Dedicated Canvas Worker Pool",
-          subtitle: "worker_threads Offloading",
-          icon: "fa-solid fa-palette",
-          color: "purple",
-          desc: "Pool background thread independen (@napi-rs/canvas) yang mengeksekusi komputasi kartu grafis profil & rank secara terisolasi tanpa memblokir event loop bot.",
+        shard1: {
+          type: 'DISCORD GATEWAY WORKER',
+          title: 'Shard 1 (Worker)',
+          desc: 'Menangani guild kluster 43-80, background tasks, dan level up listener.',
+          status: 'ONLINE · ACTIVE',
+          ping: '18 ms',
+          ram: '118 MB',
+          extra: '• Guilds Assigned: 38<br>• Heartbeat: 41.2s interval<br>• Event Loop Lag: 0.9ms'
         },
         supabase: {
-          title: "Supabase PostgreSQL (Sequelize)",
-          subtitle: "Primary Relational Persistence",
-          icon: "fa-solid fa-bolt",
-          color: "cyan",
-          desc: "Penyimpanan transaksi inti (Saldo, Inventory, Kupon, GuildSettings) yang diamankan dengan penguncian baris eksplisit (SELECT ... FOR UPDATE) dan pooling koneksi otomatis.",
+          type: 'CLOUD RELATIONAL DATABASE',
+          title: 'Supabase PostgreSQL Master',
+          desc: 'Penyimpan primer profil ekonomi, tiket pengguna, relik survival, dan registri server.',
+          status: 'CONNECTED · SYNCED',
+          ping: '24 ms',
+          ram: 'Postgres 15 Engine',
+          extra: '• Project ID: ceqkjzvrxyifxzgxtkig<br>• SSL Mode: Require<br>• Realtime Transport: SSE + WS'
         },
         redis: {
-          title: "Redis Cache & Pub/Sub",
-          subtitle: "Write-Behind & Multi-Shard Invalidation",
-          icon: "fa-solid fa-cubes-stacked",
-          color: "red",
-          desc: "Lapisan in-memory berkecepatan mikro-detik untuk menyangga mutasi XP, menginvalisir cache GuildSettings lintas shard via kanal Pub/Sub, dan rate limiting.",
-        },
-        mongo: {
-          title: "MongoDB Atlas",
-          subtitle: "Big Data & Audit Trail",
-          icon: "fa-solid fa-leaf",
-          color: "emerald",
-          desc: "Basis data dokumen tidak terstruktur bervolume tinggi untuk menyimpan riwayat transkrip HTML tiket, audit log transaksi mencurigakan, dan memori AI jangka panjang.",
-        },
-        sqlite: {
-          title: "SQLite Emergency Node",
-          subtitle: "Zero-Downtime Fallback",
-          icon: "fa-solid fa-shield-heart",
-          color: "gray",
-          desc: "Basis data relasional lokal embedded yang secara otomatis mengambil alih transaksi saat koneksi Supabase cloud terputus dan melakukan rekonsiliasi data saat pulih.",
+          type: 'IN-MEMORY CACHE & MUTEX',
+          title: 'Redis Write-Behind Buffer',
+          desc: 'Mengamankan mutasi saldo ekonomi dari race conditions (SELECT FOR UPDATE) dan distributed lock.',
+          status: 'ONLINE · IN-MEMORY',
+          ping: '2 ms',
+          ram: '18.4 MB Cached',
+          extra: '• Flush Interval: 5 Detik<br>• Mutex Lock Timeout: 8000ms<br>• Key Eviction: volatile-lru'
         },
         lavalink: {
-          title: "Poru Lavalink Cluster",
-          subtitle: "Audio Streaming & DSP Engine",
-          icon: "fa-solid fa-music",
-          color: "pink",
-          desc: "Server streaming audio berkecepatan tinggi dengan buffer aman 1500ms, filter DSP audio (Bassboost, Nightcore, 8D), dan manajemen queue lossless.",
+          type: 'AUDIO STREAM CLUSTER',
+          title: 'Lavalink Cluster Manager',
+          desc: 'Node streaming audio berkinerja tinggi berbasis Poru v5 dengan failover otomatis.',
+          status: 'ONLINE · 2/3 ACTIVE',
+          ping: '12 ms',
+          ram: 'JVM 312 MB',
+          extra: '• Node 1 (SG): Online (6 Players)<br>• Node 2 (JKT): Online (4 Players)<br>• Node 3 (US): Standby'
         },
-        serenetia: {
-          title: "Serenetia Public Node",
-          subtitle: "Primary Audio Fallback Guard",
-          icon: "fa-solid fa-tower-broadcast",
-          color: "purple",
-          desc: "Node audio SSL cadangan yang otomatis dihubungi jika node privat utama mengalami downtime atau packet drop.",
-        },
-        gemini: {
-          title: "Google Gemini 2.5 Flash",
-          subtitle: "Multimodal AI Intelligence",
-          icon: "fa-solid fa-brain",
-          color: "blue",
-          desc: "Mesin inferensi utama untuk percakapan pintar, Function Calling hingga 3 putaran eksekusi aksi, analisis sentimen, dan AI Dungeon Master V2.",
-        },
-        groq: {
-          title: "Groq LLaMA 3.3 Versatile",
-          subtitle: "Ultra-Fast Failover Router",
-          icon: "fa-solid fa-microchip",
-          color: "amber",
-          desc: "Mesin LPU ultra-cepat dengan latensi di bawah 300ms yang otomatis aktif jika kuota Gemini habis atau API Google mengalami gangguan.",
-        },
+        ai: {
+          type: 'INTELLIGENCE ENSEMBLE',
+          title: 'AI Ensemble Router',
+          desc: 'Router cerdas yang memetakan tugas ke Gemini 2.5 Flash, Groq LLaMA 3.3, dan Fish Audio TTS.',
+          status: 'ACTIVE · CIR-CLOSED',
+          ping: '180 ms',
+          ram: 'Stateless API',
+          extra: '• General Chat: Gemini 2.5 Flash<br>• Tribunal Court: Groq LLaMA 3.3<br>• Audio DJ: Fish Audio TTS'
+        }
       };
 
-      async function fetchTopology() {
-        const refreshIcon = document.getElementById("refresh-icon");
-        if (refreshIcon) refreshIcon.classList.add("fa-spin");
-        try {
-          const res = await fetch("/api/topology/status");
-          if (res.ok) {
-            topologyData = await res.json();
-            updateUI();
-          }
-        } catch (e) {
-          console.error("Gagal memuat telemetri topologi:", e);
-        } finally {
-          if (refreshIcon) setTimeout(() => refreshIcon.classList.remove("fa-spin"), 600);
-        }
-      }
+      document.querySelectorAll('.topo-node').forEach(node => {
+        node.addEventListener('click', () => {
+          document.querySelectorAll('.topo-node').forEach(n => n.classList.remove('selected'));
+          node.classList.add('selected');
+          const key = node.getAttribute('data-node');
+          const data = NODE_INTEL[key];
+          if (!data) return;
 
-      function updateUI() {
-        if (!topologyData) return;
-
-        // Ingress
-        const pingEl = document.getElementById("stat-ping");
-        if (pingEl) pingEl.textContent = `${topologyData.gateway?.pingMs || 0} ms`;
-        const guildsEl = document.getElementById("stat-guilds");
-        if (guildsEl) guildsEl.textContent = topologyData.gateway?.guildsCount || 0;
-
-        // Compute
-        const nodeverEl = document.getElementById("stat-nodever");
-        if (nodeverEl) nodeverEl.textContent = topologyData.compute?.runtime || "Node.js";
-        const heapEl = document.getElementById("stat-heap");
-        if (heapEl) heapEl.textContent = `${topologyData.compute?.memory?.heapUsedMB || 0} MB`;
-
-        // Persistence
-        const poolEl = document.getElementById("stat-dbpool");
-        if (poolEl) poolEl.textContent = `${topologyData.persistence?.relational?.poolUsed || 0}/${topologyData.persistence?.relational?.poolMax || 10} Conns`;
-        const mongoModelsEl = document.getElementById("stat-mongomodels");
-        if (mongoModelsEl) mongoModelsEl.textContent = `${topologyData.persistence?.document?.modelsCount || 0} Models`;
-        const mongoStatusEl = document.getElementById("stat-mongostatus");
-        if (mongoStatusEl) mongoStatusEl.textContent = topologyData.persistence?.document?.status === "connected" ? "Connected" : "Standby";
-
-        // Audio
-        const lavaNodesEl = document.getElementById("stat-lavanodes");
-        if (lavaNodesEl) lavaNodesEl.textContent = `${topologyData.audioCluster?.connectedNodes || 0}/${topologyData.audioCluster?.totalNodes || 0} Nodes`;
-      }
-
-      function inspectNode(key) {
-        activeNodeKey = key;
-        const meta = nodeMetadata[key];
-        if (!meta) return;
-
-        document.querySelectorAll(".node-card").forEach((card) => card.classList.remove("active-selected"));
-        const el = document.getElementById(`node-${key}`);
-        if (el) el.classList.add("active-selected");
-
-        const drawer = document.getElementById("inspector-drawer");
-        document.getElementById("drawer-title").textContent = meta.title;
-        document.getElementById("drawer-subtitle").textContent = meta.subtitle;
-        document.getElementById("drawer-icon").className = `fa-solid ${meta.icon} text-lg`;
-        document.getElementById("drawer-desc").textContent = meta.desc;
-
-        drawer.classList.remove("closed");
-      }
-
-      function closeDrawer() {
-        document.getElementById("inspector-drawer").classList.add("closed");
-        document.querySelectorAll(".node-card").forEach((card) => card.classList.remove("active-selected"));
-      }
-
-      // KodeKloud Chaos Failure Simulators
-      document.getElementById("sim-db-fail").addEventListener("click", () => {
-        isSimulatingDbFail = !isSimulatingDbFail;
-        const btn = document.getElementById("sim-db-fail");
-        const nodeSupa = document.getElementById("node-supabase");
-        const nodeSqlite = document.getElementById("node-sqlite");
-
-        if (isSimulatingDbFail) {
-          btn.classList.add("bg-red-500/30", "border-red-500");
-          nodeSupa.classList.add("failed-sim");
-          nodeSqlite.classList.add("failover-active");
-          document.getElementById("stat-sqlitemode").textContent = "EMERGENCY ACTIVE";
-          document.getElementById("stat-sqlitemode").className = "text-emerald-400 font-bold";
-        } else {
-          btn.classList.remove("bg-red-500/30", "border-red-500");
-          nodeSupa.classList.remove("failed-sim");
-          nodeSqlite.classList.remove("failover-active");
-          document.getElementById("stat-sqlitemode").textContent = "Standby Ready";
-          document.getElementById("stat-sqlitemode").className = "text-amber-400";
-        }
-      });
-
-      document.getElementById("sim-lava-fail").addEventListener("click", () => {
-        isSimulatingLavaFail = !isSimulatingLavaFail;
-        const btn = document.getElementById("sim-lava-fail");
-        const nodeLava = document.getElementById("node-lavalink");
-        const nodeSere = document.getElementById("node-serenetia");
-
-        if (isSimulatingLavaFail) {
-          btn.classList.add("bg-red-500/30", "border-red-500");
-          nodeLava.classList.add("failed-sim");
-          nodeSere.classList.add("failover-active");
-        } else {
-          btn.classList.remove("bg-red-500/30", "border-red-500");
-          nodeLava.classList.remove("failed-sim");
-          nodeSere.classList.remove("failover-active");
-        }
-      });
-
-      document.getElementById("sim-ai-spike").addEventListener("click", () => {
-        isSimulatingAiSpike = !isSimulatingAiSpike;
-        const btn = document.getElementById("sim-ai-spike");
-        const nodeGemini = document.getElementById("node-gemini");
-        const nodeGroq = document.getElementById("node-groq");
-
-        if (isSimulatingAiSpike) {
-          btn.classList.add("bg-red-500/30", "border-red-500");
-          nodeGemini.classList.add("failed-sim");
-          nodeGroq.classList.add("failover-active");
-        } else {
-          btn.classList.remove("bg-red-500/30", "border-red-500");
-          nodeGemini.classList.remove("failed-sim");
-          nodeGroq.classList.remove("failover-active");
-        }
-      });
-
-      document.getElementById("sim-reset").addEventListener("click", () => {
-        isSimulatingDbFail = false;
-        isSimulatingLavaFail = false;
-        isSimulatingAiSpike = false;
-
-        document.querySelectorAll(".node-card").forEach((c) => {
-          c.classList.remove("failed-sim", "failover-active");
+          document.getElementById('intelNodeType').textContent = data.type;
+          document.getElementById('intelNodeTitle').textContent = data.title;
+          document.getElementById('intelNodeDesc').textContent = data.desc;
+          document.getElementById('intelStatus').textContent = data.status;
+          document.getElementById('intelPing').textContent = data.ping;
+          document.getElementById('intelRam').textContent = data.ram;
+          document.getElementById('intelExtra').innerHTML = data.extra;
         });
-        document.querySelectorAll("[id^='sim-']").forEach((btn) => {
-          btn.classList.remove("bg-red-500/30", "border-red-500");
-        });
-        document.getElementById("stat-sqlitemode").textContent = "Standby Ready";
-        document.getElementById("stat-sqlitemode").className = "text-amber-400";
       });
 
-      document.getElementById("refresh-btn").addEventListener("click", fetchTopology);
-
-      // Inisialisasi awal & polling berkala 10 detik
-      fetchTopology();
-      setInterval(fetchTopology, 10000);
+      document.getElementById('btnPingSweep').addEventListener('click', () => {
+        const btn = document.getElementById('btnPingSweep');
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memindai Kluster...';
+        document.querySelectorAll('.topo-line').forEach(l => {
+          l.style.stroke = '#34d399';
+          l.style.strokeWidth = '3';
+        });
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> Kluster 100% Sehat!';
+          document.querySelectorAll('.topo-line').forEach(l => {
+            l.style.stroke = '';
+            l.style.strokeWidth = '';
+          });
+          setTimeout(() => btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Uji Latensi Kluster', 2500);
+        }, 1200);
+      });
     </script>
   </body>
 </html>

@@ -287,6 +287,65 @@ function validateEnv({ fatal = false } = {}) {
   return true;
 }
 
+/**
+ * Scan numbered environment variables for multi-node Lavalink cluster fallback.
+ * @returns {Array<{name: string, host: string, port: number, password: string, secure: boolean}>}
+ */
+function getLavalinkNumberedNodes() {
+  const nodes = [];
+  if (env.LAVA_HOST) {
+    nodes.push({
+      name:
+        cleanEnv(process.env.LAVALINK_NAME) ||
+        cleanEnv(process.env.LAVA_NAME) ||
+        "Naura Node 1",
+      host: String(env.LAVA_HOST || "localhost").trim(),
+      port: parseInt(env.LAVA_PORT, 10) || 2333,
+      password: String(env.LAVA_PASS || "youshallnotpass").trim(),
+      secure: env.LAVA_SECURE || false,
+    });
+  }
+
+  let nodeIndex = 2;
+  while (
+    process.env[`LAVALINK_HOST_${nodeIndex}`] ||
+    process.env[`LAVA_HOST_${nodeIndex}`]
+  ) {
+    const host =
+      process.env[`LAVALINK_HOST_${nodeIndex}`] ||
+      process.env[`LAVA_HOST_${nodeIndex}`];
+    const port =
+      parseInt(
+        process.env[`LAVALINK_PORT_${nodeIndex}`] ||
+          process.env[`LAVA_PORT_${nodeIndex}`],
+        10,
+      ) || 2333;
+    const password =
+      process.env[`LAVALINK_PASSWORD_${nodeIndex}`] ||
+      process.env[`LAVA_PASS_${nodeIndex}`] ||
+      "youshallnotpass";
+    const secure =
+      process.env[`LAVALINK_SECURE_${nodeIndex}`] === "true" ||
+      process.env[`LAVA_SECURE_${nodeIndex}`] === "true" ||
+      port === 443;
+    const name =
+      process.env[`LAVALINK_NAME_${nodeIndex}`] ||
+      process.env[`LAVA_NAME_${nodeIndex}`] ||
+      `Naura Node ${nodeIndex}`;
+
+    nodes.push({
+      name,
+      host: String(host).trim(),
+      port,
+      password: String(password).trim(),
+      secure,
+    });
+    nodeIndex++;
+  }
+
+  return nodes;
+}
+
 // Dipasang non-enumerable agar tidak ikut terbaca saat env di-iterasi/di-serialize.
 Object.defineProperty(env, "validateEnv", {
   value: validateEnv,
@@ -294,6 +353,10 @@ Object.defineProperty(env, "validateEnv", {
 });
 Object.defineProperty(env, "getMissingEnvKeys", {
   value: getMissingEnvKeys,
+  enumerable: false,
+});
+Object.defineProperty(env, "getLavalinkNumberedNodes", {
+  value: getLavalinkNumberedNodes,
   enumerable: false,
 });
 

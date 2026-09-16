@@ -146,7 +146,7 @@ module.exports = {
     const mutator = await cacheManager.mutateUserProfileJson(userId);
     if (mutator) {
       mutator.activeBanners = activeBanners;
-      await mutator.save();
+      await mutator.save({ fields: ["activeBanners"] });
     }
 
     const payload = buildContainerV2({

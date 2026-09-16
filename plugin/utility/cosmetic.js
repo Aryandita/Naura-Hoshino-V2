@@ -252,12 +252,12 @@ async function handleEquip(interaction, userId) {
       for (const stc of sameTypeCosmetics) {
         if (stc.isActive) {
           stc.isActive = false;
-          await stc.save();
+          await stc.save({ fields: ["isActive"] });
         }
       }
 
       selectedCosmetic.isActive = true;
-      await selectedCosmetic.save();
+      await selectedCosmetic.save({ fields: ["isActive"] });
 
       await i.reply({
         content: `✅ Kosmetik **${selectedCosmetic.asset.name}** berhasil dipakai! Cek profilmu dengan \`/profile\`.`,

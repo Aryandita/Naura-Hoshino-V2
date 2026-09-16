@@ -36,6 +36,12 @@ module.exports = {
             .setName("pesan")
             .setDescription("Apa yang ingin kamu tanyakan ke Naura?")
             .setRequired(true),
+        )
+        .addAttachmentOption((opt) =>
+          opt
+            .setName("lampiran")
+            .setDescription("Berkas dokumen (PDF, Word, Excel, CSV, TXT) untuk dianalisis Naura")
+            .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>

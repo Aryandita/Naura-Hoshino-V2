@@ -382,7 +382,7 @@ module.exports = {
           card2Code.trim(),
           card3Code.trim(),
         ];
-        await userDeck.save();
+        await userDeck.save({ fields: ["activeDeck"] });
 
         const payload = buildContainerV2({
           accentColorHex: "#86EFAC",
@@ -814,7 +814,7 @@ module.exports = {
       }
 
       card.dyeColor = hex;
-      await card.save();
+      await card.save({ fields: ["dyeColor"] });
 
       const payload = buildContainerV2({
         accentColorHex: hex,

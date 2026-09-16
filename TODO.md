@@ -529,7 +529,33 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 - [x] **[LIVING AI] Autonomous Server Chronicle Newspaper Generator (`src/ai/serverChronicleEngine.js`)**:
   - Engine perangkum mingguan peristiwa server (pemenang undian, klan teratas, duel kartu epik) menjadi narasi koran bergambar yang terbit berkala.
 - [x] **[TEST & QA] Automated Test Suite Expansion & QA Gate**:
-  - Pembuatan automated unit tests untuk Season Pass, Commodity Market, Server Chronicle, dan Auto-Acknowledge Guard dengan hasil **295 tests lulus 100% hijau**, 0 error lint, dan 0 em-dash.
+### 🚀 Sprint 30: Modular 3D Kinematics Subsystems & Unified Stellar Dashboard V2 (v2.3.0 Milestone)
+
+- [x] **[3D KINEMATICS] Modular Sub-Sistem Direktori Animasi Independen (`dashboard/src/components/NauraViewer/animations/`)**:
+  - Pemecahan arsitektur file raksasa `animations.js` (118KB) menjadi modul direktori terstruktur dengan pembagian organ tubuh mandiri:
+    - `parts/eyes.js`: Pengendali arah pandang bola mata, VRM lookAt, micro-saccades, dan blendshapes pupil.
+    - `parts/blink.js`: Pengendali kelopak mata, siklus kedipan alami single/double blink, dan interval acak.
+    - `parts/hair.js`: Fisika pegas kuncir kuda (ponytail spring-damper) dengan isolasi dan koordinasi VRM SpringBoneManager.
+    - `parts/head.js`: Kinematika rotasi kepala dan leher dengan batas fisiologis aman dan pelacakan kursor.
+    - `parts/face.js`: Morfologi ekspresi emosi (Joy, Fun, Sorrow, Angry, Surprised) dan viseme bukaan mulut (A, I, U, E, O).
+    - `parts/spine.js`: Artikulasi pinggul, tulang belakang, dada, dan siklus pernapasan otonom (~0.35 Hz).
+    - `parts/arms.js`: Kinematika sendi bahu dan lengan kiri-kanan independen.
+    - `parts/hands.js`: Artikulasi pergelangan tangan dan osilasi gelombang harmonik lambaian (Wave, Cheers).
+    - `parts/legs.js`: Artikulasi paha, tungkai kaki, telapak, dan lonjakan riang.
+  - Setiap sub-modul memiliki blok pelindung `try/catch` tersendiri sehingga kesalahan pada satu sendi tidak menghentikan bagian tubuh lain atau memutus render loop WebGL.
+  - Pemisahan 10 sequence keyframe ke dalam folder `sequences/` (`idle.js`, `wave.js`, `thinking.js`, `dizzy.js`, `cheers.js`, `shy.js`, `sleepy.js`, `blowkiss.js`, `astralcast.js`, `starpose.js`).
+  - Re-export modular di `dashboard/src/components/NauraViewer/animations.js` untuk paritas dan kompatibilitas 100% mundur.
+- [x] **[DASHBOARD V2] Penetapan Desain `dashboard-preview` Sebagai Dashboard Utama**:
+  - Sinkronisasi penuh 19 halaman HTML dari `dashboard-preview/src/pages/` ke `dashboard/src/pages/` dengan layout modern Stellar Glass OS.
+  - Pemasangan sistem desain `stellar.css`, skrip helper (`shared-nav.js`, `auth-manager.js`), dan aset publik (soundboard audio & radar maps).
+  - Penambahan rute Express statis `/src`, `/vendor`, `/node_modules`, dan redirect `/health` ke `/api/health` di `dashboard/server.js`.
+  - Integrasi telemetri live status di `status.html` yang membaca `/api/health` dan data Socket.IO secara real-time.
+- [x] **[QA & INTEGRITY] Verifikasi 0-Error dan Kepatuhan Aturan Ekosistem**:
+  - `npm run lint`: 0 error, 0 warning (bersih).
+  - `node scripts/check-em-dash.js`: 0 em dash di seluruh repositori.
+  - `node scripts/validate-locales.js --strict`: 100% sinkron (263 kunci).
+  - `node scripts/check-requires.js`: Semua require internal sukses.
+  - `npm test`: **340 tests lulus 100% hijau** (0 gagal, 0 diskip).
 
 </details>
 

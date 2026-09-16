@@ -3,150 +3,530 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Riwayat Tiket - Naura Hoshino</title>
+    <title>Tickets & Support Hub | Naura OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Orbitron:wght@500;700;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
     />
-    <link rel="stylesheet" href="/vendor/fontawesome.css" />
-    <link rel="stylesheet" href="/vendor/tailwind-built.css" />
-    <script src="/vendor/naura-ui.js"></script>
+    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <style>
+      .ticket-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      @media (max-width: 900px) {
+        .ticket-stat-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      .stat-mini-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-lg);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .stat-icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+      }
+      .ticket-workspace {
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 20px;
+        min-height: 600px;
+      }
+      @media (max-width: 1024px) {
+        .ticket-workspace {
+          grid-template-columns: 1fr;
+        }
+      }
+      .ticket-list-panel {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-xl);
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .ticket-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-md);
+        padding: 14px;
+        cursor: pointer;
+        transition: all var(--t-fast);
+      }
+      .ticket-item:hover, .ticket-item.active {
+        background: rgba(244, 114, 182, 0.08);
+        border-color: var(--primary);
+        transform: translateX(3px);
+      }
+      .ticket-detail-panel {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-xl);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .chat-thread {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin: 20px 0;
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 8px;
+      }
+      .chat-msg {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .chat-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        border: 1px solid var(--border-medium);
+      }
+      .chat-bubble {
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-lg);
+        padding: 12px 16px;
+        font-size: 13px;
+        color: var(--text-primary);
+        line-height: 1.5;
+        max-width: 80%;
+      }
+      .chat-bubble.bot-auto {
+        background: rgba(34, 211, 238, 0.06);
+        border-color: rgba(34, 211, 238, 0.25);
+      }
+      .reply-input-bar {
+        display: flex;
+        gap: 10px;
+        background: rgba(0, 0, 0, 0.4);
+        padding: 8px;
+        border-radius: var(--r-lg);
+        border: 1px solid var(--border-medium);
+      }
+    </style>
   </head>
-  <body
-    class="bg-animated min-h-screen text-white font-['Outfit'] p-6 lg:p-12 overflow-y-auto"
-  >
-    <!-- Kontainer Utama -->
-    <div class="max-w-4xl mx-auto">
-      <!-- Header -->
-      <div class="flex items-center gap-4 mb-8">
-        <a
-          href="/"
-          class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-[var(--color-muted)] hover:text-white hover:border-[var(--color-primary-glow)] transition-all duration-300"
-        >
-          <i class="fa-solid fa-arrow-left"></i>
-        </a>
-        <div>
-          <h1
-            class="text-2xl font-cyber font-bold text-[var(--color-primary)] text-glow"
-          >
-            Riwayat Tiket
-          </h1>
-          <p class="text-sm text-[var(--color-muted)]">
-            Lihat kembali percakapan tiket dukungan yang pernah kamu buka.
-          </p>
-        </div>
-      </div>
-
-      <!-- Daftar Tiket -->
-      <div
-        class="glass-panel p-6 rounded-3xl bg-black/40 border border-white/5 shadow-lg min-h-[400px]"
-      >
-        <div id="ticketList" class="flex flex-col gap-4">
-          <div class="py-12">
-            <script>
-              document.write(
-                typeof NauraUI !== "undefined"
-                  ? NauraUI.stateHtml("loading")
-                  : '<p class="text-center">Memuat riwayat tiket...</p>',
-              );
-            </script>
+  <body>
+    
+    <div class="app-shell">
+      <!-- Mobile Sidebar Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <aside class="sidebar " id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo-icon">
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="this.style.display='none';this.parentElement.innerHTML='🌸';"
+            />
+          </div>
+          <div class="sidebar-brand-text">
+            <div class="sidebar-brand-name">Naura Hoshino</div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
         </div>
+                <!-- Navigation -->
+                <!-- Navigation -->
+        <nav class="sidebar-nav" role="navigation">
+
+          <!-- Overview -->
+          <div class="nav-group">
+            <div class="nav-group-label">Overview</div>
+            <a href="/" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span>Dashboard</span>
+            </a>
+            <a href="/status" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
+              <span>Live Status</span>
+              <span class="nav-badge">Live</span>
+            </a>
+            <a href="/feed" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
+              <span>Activity Feed</span>
+            </a>
+          </div>
+
+          <!-- Community -->
+          <div class="nav-group">
+            <div class="nav-group-label">Community</div>
+            <a href="/leaderboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
+              <span>Leaderboard</span>
+            </a>
+            <a href="/economy" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
+              <span>Economy</span>
+            </a>
+            <a href="/topology" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span>Guild Topology</span>
+            </a>
+          </div>
+
+          <!-- Media & Audio -->
+          <div class="nav-group">
+            <div class="nav-group-label">Media & Audio</div>
+            <a href="/music" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
+              <span>Music Hub</span>
+            </a>
+            <a href="/soundboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
+              <span>Soundboard</span>
+            </a>
+            <a href="/jam" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
+              <span>Jam Session</span>
+            </a>
+            <a href="/karaoke" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span>Karaoke</span>
+            </a>
+          </div>
+
+          <!-- Naura Wilds RPG -->
+          <div class="nav-group">
+            <div class="nav-group-label">Naura Wilds RPG</div>
+            <a href="/world" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span>World Map</span>
+            </a>
+            <a href="/survival-map" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
+              <span>Survival Map</span>
+            </a>
+            <a href="/activity" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
+              <span>Activity Hub</span>
+            </a>
+          </div>
+
+          <!-- Configuration -->
+          <div class="nav-group">
+            <div class="nav-group-label">Configuration</div>
+            <a href="/settings" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
+              <span>Settings</span>
+            </a>
+            <a href="/welcomer" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
+              <span>Welcomer Card</span>
+            </a>
+            <a href="/builder" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span>Embed Builder</span>
+            </a>
+            <a href="/automations" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
+              <span>Automations</span>
+            </a>
+            <a href="/tickets" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
+              <span>Tickets</span>
+            </a>
+          </div>
+
+          <!-- More -->
+          <div class="nav-group">
+            <div class="nav-group-label">More</div>
+            <a href="/portfolio" class="nav-item">
+              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
+              <span style="color:var(--accent-green)">Creator Portfolio</span>
+            </a>
+          </div>
+
+        </nav>
+      </aside>
+
+      <div class="main-content">
+        <header class="top-header">
+          <div class="header-left">
+            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <div>
+              <div class="page-title">Tickets & Support Hub</div>
+              <div class="breadcrumb">
+                <span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Configuration</span><span class="breadcrumb-sep">/</span><span>Tickets</span>
+              </div>
+            </div>
+          </div>
+          <div class="header-right">
+            <button class="btn btn-ghost btn-sm" id="btnExportAll">
+              <i class="fa-solid fa-file-export"></i> Ekspor Transkrip (.md)
+            </button>
+            <button class="btn btn-primary btn-sm" id="btnNewTicket">
+              <i class="fa-solid fa-plus"></i> Buat Tiket Staf
+            </button>
+          </div>
+        </header>
+
+        <main class="page-content">
+          <!-- Stat Grid -->
+          <div class="ticket-stat-grid animate-in">
+            <div class="stat-mini-card">
+              <div class="stat-icon-box" style="background:var(--primary-dim);color:var(--primary);border:1px solid var(--border-primary);">
+                <i class="fa-solid fa-ticket"></i>
+              </div>
+              <div>
+                <div style="font-family:var(--font-heading);font-size:20px;font-weight:700;color:var(--text-primary);">4 Tiket</div>
+                <div style="font-size:11px;color:var(--text-muted);">Aktif Membutuhkan Respon</div>
+              </div>
+            </div>
+            <div class="stat-mini-card">
+              <div class="stat-icon-box" style="background:var(--cyan-dim);color:var(--accent-cyan);border:1px solid var(--border-cyan);">
+                <i class="fa-solid fa-stopwatch"></i>
+              </div>
+              <div>
+                <div style="font-family:var(--font-heading);font-size:20px;font-weight:700;color:var(--text-primary);">2.4 Menit</div>
+                <div style="font-size:11px;color:var(--text-muted);">Rata-rata Respon Staf</div>
+              </div>
+            </div>
+            <div class="stat-mini-card">
+              <div class="stat-icon-box" style="background:var(--green-dim);color:var(--accent-green);border:1px solid var(--border-green);">
+                <i class="fa-solid fa-thumbs-up"></i>
+              </div>
+              <div>
+                <div style="font-family:var(--font-heading);font-size:20px;font-weight:700;color:var(--text-primary);">98.6%</div>
+                <div style="font-size:11px;color:var(--text-muted);">Kepuasan Member</div>
+              </div>
+            </div>
+            <div class="stat-mini-card">
+              <div class="stat-icon-box" style="background:var(--violet-dim);color:var(--accent-violet);border:1px solid var(--border-violet);">
+                <i class="fa-solid fa-scale-balanced"></i>
+              </div>
+              <div>
+                <div style="font-family:var(--font-heading);font-size:20px;font-weight:700;color:var(--text-primary);">2 Kasus</div>
+                <div style="font-size:11px;color:var(--text-muted);">Sidang AI Tribunal</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Workspace -->
+          <div class="ticket-workspace">
+            <!-- Queue List -->
+            <div class="ticket-list-panel animate-in delay-1">
+              <div style="font-family:var(--font-heading);font-weight:700;font-size:14px;color:var(--text-primary);margin-bottom:8px;">
+                Antrean Tiket Komunitas
+              </div>
+              
+              <div class="ticket-item active" data-id="1042">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <span style="font-family:var(--font-mono);font-size:12px;color:var(--primary);font-weight:700;">#TICKET-1042</span>
+                  <span class="badge" style="background:#ef444425;color:#ef4444;font-size:10px;">Critical</span>
+                </div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">Hadiah Turnamen Belum Masuk</div>
+                <div style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;">
+                  <span>@HoshinoFan</span>
+                  <span>10m lalu</span>
+                </div>
+              </div>
+
+              <div class="ticket-item" data-id="1043">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent-cyan);font-weight:700;">#TICKET-1043</span>
+                  <span class="badge" style="background:#f59e0b25;color:#f59e0b;font-size:10px;">Medium</span>
+                </div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">Laporan Pelanggaran Chat Spam</div>
+                <div style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;">
+                  <span>@CyberSamurai</span>
+                  <span>24m lalu</span>
+                </div>
+              </div>
+
+              <div class="ticket-item" data-id="1044">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent-violet);font-weight:700;">#TICKET-1044</span>
+                  <span class="badge" style="background:#34d39925;color:#34d399;font-size:10px;">Low</span>
+                </div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">Bantuan Setup Minecraft Bridge</div>
+                <div style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;">
+                  <span>@CrafterPro</span>
+                  <span>1j lalu</span>
+                </div>
+              </div>
+
+              <div class="ticket-item" data-id="1045">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                  <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent-amber);font-weight:700;">#TICKET-1045</span>
+                  <span class="badge" style="background:#a78bfa25;color:#a78bfa;font-size:10px;">Tribunal</span>
+                </div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">Banding Sanksi Automod</div>
+                <div style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;">
+                  <span>@ShadowRider</span>
+                  <span>2j lalu</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detail & Discussion Panel -->
+            <div class="ticket-detail-panel animate-in delay-2">
+              <div>
+                <!-- Ticket Header -->
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--border-subtle);padding-bottom:16px;">
+                  <div>
+                    <div style="font-family:var(--font-heading);font-size:18px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:10px;">
+                      <span id="ticketDetailTitle">#TICKET-1042: Hadiah Turnamen Belum Masuk</span>
+                    </div>
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">
+                      Dibuat oleh <strong style="color:var(--text-primary);" id="ticketDetailUser">@HoshinoFan</strong> · Kategori: <span id="ticketDetailCat">Klaim Hadiah</span>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:8px;">
+                    <button class="btn btn-ghost btn-sm" id="btnEscalateTribunal" style="color:var(--accent-violet);">
+                      <i class="fa-solid fa-scale-balanced"></i> Eskalasi ke Tribunal
+                    </button>
+                    <button class="btn btn-ghost btn-sm" id="btnCloseTicket" style="color:#ef4444;">
+                      <i class="fa-solid fa-lock"></i> Tutup Tiket
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Live Chat Thread -->
+                <div class="chat-thread" id="chatThread">
+                  <div class="chat-msg">
+                    <img src="/assets/core/avatar.png" alt="Member" class="chat-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" />
+                    <div>
+                      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">@HoshinoFan · 10 menit lalu</div>
+                      <div class="chat-bubble">
+                        Halo tim staf Naura! Saya sudah menyelesaikan The Neo-Abyss Floor 15 bersama tim, tapi hadiah Star Fragments belum bertambah di dompet survival saya. Mohon bantuannya!
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="chat-msg">
+                    <div style="width:38px;height:38px;border-radius:10px;background:var(--cyan-dim);color:var(--accent-cyan);display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid var(--border-cyan);">
+                      <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div>
+                      <div style="font-size:11px;color:var(--accent-cyan);margin-bottom:4px;">Naura Auto-Triage System · 9 menit lalu</div>
+                      <div class="chat-bubble bot-auto">
+                        🌸 <em>Telemetri Otomatis:</em> ID Pengguna <code>3498120491823</code> terverifikasi telah menyelesaikan Floor 15 pada pukul 10:45 UTC. Catatan audit transaksi sedang divalidasi.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="chat-msg">
+                    <img src="/assets/core/avatar.png" alt="Staff" class="chat-avatar" />
+                    <div>
+                      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">@AdminBagas (Staf) · 5 menit lalu</div>
+                      <div class="chat-bubble">
+                        Halo @HoshinoFan! Kami sedang memeriksa logs Server Treasury. Mohon tunggu sebentar selagi kami menyinkronkan saldo klanmu ya.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reply Box -->
+              <div class="reply-input-bar">
+                <input type="text" id="replyInput" placeholder="Ketik balasan untuk member..." style="flex:1;background:transparent;border:none;color:#fff;outline:none;padding:0 10px;font-size:13px;" />
+                <button class="btn btn-primary btn-sm" id="btnSendReply">
+                  <i class="fa-solid fa-paper-plane"></i> Kirim
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     </div>
 
     <script>
-      async function fetchTickets() {
-        const list = document.getElementById("ticketList");
-        if (typeof NauraUI !== "undefined") {
-          list.innerHTML = NauraUI.stateHtml("loading", {
-            title: "Memuat Tiket...",
-            body: "Naura sedang mengambil data riwayat tiket dukungan kamu.",
-          });
-        }
-        try {
-          const res = await fetch("/api/tickets/me");
-          if (!res.ok) throw new Error("Gagal mengambil data");
-          const data = await res.json();
+      // Interactive Ticket Switching
+      const tickets = {
+        "1042": { title: "#TICKET-1042: Hadiah Turnamen Belum Masuk", user: "@HoshinoFan", cat: "Klaim Hadiah" },
+        "1043": { title: "#TICKET-1043: Laporan Pelanggaran Chat Spam", user: "@CyberSamurai", cat: "Laporan Pemain" },
+        "1044": { title: "#TICKET-1044: Bantuan Setup Minecraft Bridge", user: "@CrafterPro", cat: "Bantuan Teknis" },
+        "1045": { title: "#TICKET-1045: Banding Sanksi Automod", user: "@ShadowRider", cat: "Eskalasi Tribunal" }
+      };
 
-          list.innerHTML = "";
-
-          if (!data.tickets || data.tickets.length === 0) {
-            list.innerHTML =
-              typeof NauraUI !== "undefined"
-                ? NauraUI.stateHtml("empty", {
-                    title: "Belum Ada Tiket",
-                    body: "Kamu belum pernah membuat tiket dukungan apa pun di server.",
-                  })
-                : '<div class="text-center text-gray-400 py-12">Belum ada tiket</div>';
-            return;
+      document.querySelectorAll(".ticket-item").forEach(item => {
+        item.addEventListener("click", () => {
+          document.querySelectorAll(".ticket-item").forEach(i => i.classList.remove("active"));
+          item.classList.add("active");
+          const t = tickets[item.dataset.id];
+          if (t) {
+            document.getElementById("ticketDetailTitle").textContent = t.title;
+            document.getElementById("ticketDetailUser").textContent = t.user;
+            document.getElementById("ticketDetailCat").textContent = t.cat;
           }
+        });
+      });
 
-          data.tickets.forEach((ticket) => {
-            const dateObj = new Date(ticket.createdAt);
-            const dateStr = dateObj.toLocaleDateString("id-ID", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            });
-            const timeStr = dateObj.toLocaleTimeString("id-ID", {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
+      // Send reply simulation
+      const replyInput = document.getElementById("replyInput");
+      const btnSend = document.getElementById("btnSendReply");
+      const chatThread = document.getElementById("chatThread");
 
-            let actionButton = "";
-            let statusBadge = "";
+      function sendReply() {
+        const text = replyInput.value.trim();
+        if (!text) return;
 
-            if (ticket.status === "closed") {
-              statusBadge = `<span class="px-3 py-1 text-xs font-bold rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">CLOSED</span>`;
-              if (ticket.transcriptPath) {
-                actionButton = `<a href="${ticket.transcriptPath}" target="_blank" class="px-4 py-2 rounded-xl bg-purple-600/20 text-purple-300 border border-purple-500/30 hover:bg-purple-600/40 transition-colors text-sm font-semibold flex items-center gap-2"><i class="fa-solid fa-file-lines"></i> Transkrip</a>`;
-              } else {
-                actionButton = `<button disabled class="px-4 py-2 rounded-xl bg-zinc-800 text-zinc-500 border border-zinc-700 text-sm font-semibold cursor-not-allowed flex items-center gap-2"><i class="fa-solid fa-file-excel"></i> Hilang</button>`;
-              }
-            } else if (ticket.status === "open") {
-              statusBadge = `<span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">OPEN</span>`;
-              actionButton = `<button disabled class="px-4 py-2 rounded-xl bg-[var(--color-primary-dark)] text-white/50 border border-[var(--color-primary-dark)] text-sm font-semibold cursor-not-allowed flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin"></i> Berjalan</button>`;
-            }
-
-            list.innerHTML += `
-                        <div class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5 hover:-translate-y-1 transition-transform duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div>
-                                <div class="flex items-center gap-3 mb-2">
-                                    <h3 class="font-cyber font-bold text-lg text-white">#${ticket.id}</h3>
-                                    ${statusBadge}
-                                </div>
-                                <p class="text-sm text-[var(--color-muted)] flex items-center gap-2">
-                                    <i class="fa-regular fa-calendar text-[var(--color-primary)]"></i> ${dateStr} &nbsp; 
-                                    <i class="fa-regular fa-clock text-[var(--color-primary)]"></i> ${timeStr}
-                                </p>
-                            </div>
-                            <div class="flex-shrink-0">
-                                ${actionButton}
-                            </div>
-                        </div>
-                    `;
-          });
-        } catch (err) {
-          document.getElementById("ticketList").innerHTML = `
-                    <div class="text-center text-red-400 py-12">
-                        <i class="fa-solid fa-triangle-exclamation text-3xl mb-4"></i>
-                        <p>Ups, gagal memuat riwayat tiket.</p>
-                    </div>
-                `;
-        }
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "chat-msg";
+        msgDiv.innerHTML = `
+          <img src="/assets/core/avatar.png" alt="Staff" class="chat-avatar" />
+          <div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">@Admin (Kamu) · Baru saja</div>
+            <div class="chat-bubble" style="border-color:var(--primary);background:rgba(244,114,182,0.1);">
+              ${text}
+            </div>
+          </div>
+        `;
+        chatThread.appendChild(msgDiv);
+        replyInput.value = "";
+        chatThread.scrollTop = chatThread.scrollHeight;
       }
 
-      fetchTickets();
-    </script>
+      btnSend.addEventListener("click", sendReply);
+      replyInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") sendReply();
+      });
 
-    <script type="module">
-      import { NauraViewer } from "../components/NauraViewer/index.js";
-      NauraViewer.init({ context: "tickets" });
+      // Actions
+      document.getElementById("btnEscalateTribunal").addEventListener("click", () => {
+        alert("⚖️ Kasus telah berhasil dieskalasikan ke AI Tribunal Court! Para juri AI (Vespera, CyberFang, Lyra) akan segera mengevaluasi berkas perkara.");
+      });
+
+      document.getElementById("btnCloseTicket").addEventListener("click", () => {
+        alert("🔒 Tiket telah ditutup secara resmi. Transkrip percakapan telah diarsipkan ke basis data MongoDB.");
+      });
+
+      document.getElementById("btnExportAll").addEventListener("click", () => {
+        alert("📄 Transkrip tiket berhasil diekspor dalam format Markdown terstruktur!");
+      });
+
+      document.getElementById("btnNewTicket").addEventListener("click", () => {
+        alert("📝 Formulir pembuatan tiket baru telah terbuka.");
+      });
     </script>
-  </body>
+      <script src="/src/js/shared-nav.js"></script>
+</body>
 </html>

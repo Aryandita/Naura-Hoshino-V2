@@ -560,7 +560,7 @@ module.exports = {
 
       settingsModel.settings = currentSettings;
       settingsModel.changed("settings", true);
-      await settingsModel.save();
+      await settingsModel.save({ fields: ["settings"] });
       cacheManager.invalidateGuildSettings(interaction.guild.id);
 
       const statusEmoji = mc.bridgeEnabled

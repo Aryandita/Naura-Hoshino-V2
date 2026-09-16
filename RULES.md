@@ -221,9 +221,26 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
   - `main`: Branch produksi, wajib selalu stabil dan hijau.
   - `dev`: Branch integrasi pengembangan.
   - `feature/<nama>`: Branch fitur atau sprint baru.
-- **Format Pesan Commit**: `<emoji> <tipe>: <deskripsi singkat>`
-  - Contoh: `✨ feat: integrate Fish Audio AI DJ companion`
-  - Tipe resmi: `feat`, `fix`, `refactor`, `docs`, `style`, `perf`, `chore`, `test`, `ci`.
+- **Format Pesan Commit 3-Tingkat (Wajib)**:
+  Setiap pesan commit wajib memiliki judul ringkas dengan emoji kontekstual, diikuti oleh 3 bagian pembaruan terstruktur:
+  1. ⚙️ **[System Update]** : Fondasi arsitektur, konfigurasi engine bot, skema database, routing, infrastruktur, atau dependensi.
+  2. 🚀 **[Major Update]** : Fitur utama baru, perombakan modul/pilar besar, implementasi halaman/UI baru, atau sistem game/ekonomi baru.
+  3. 🔧 **[Minor Update]** : Perbaikan bug (bugfix), optimasi performa, refactoring, penyesuaian teks/styling, dan pembersihan file.
+
+  **Struktur Format Baku Pesan Commit:**
+  ```text
+  <emoji> <tipe>: <ringkasan judul commit>
+
+  ⚙️ [System Update]
+  - <rincian perubahan level sistem / arsitektur>
+
+  🚀 [Major Update]
+  - <rincian fitur besar / modul baru>
+
+  🔧 [Minor Update]
+  - <rincian perbaikan bug / styling / pembersihan>
+  ```
+  *(Catatan: Pilih emoji pada judul dan setiap butir pembaruan yang selaras dengan isi perubahannya, misal 🛡️ untuk keamanan, 🎨 untuk visual/desain, 📦 untuk modul/dependensi, ⚡ untuk performa, 🩹 untuk bugfix).*
 - **Satu PR Per Sprint**: Seluruh commit dikumpulkan dan direview dalam satu PR sprint sebelum digabung ke `main`.
 - **CI Wajib Hijau**: Linting, pengecekan em dash, paritas bahasa, dan test suite wajib 100% lulus sebelum merge.
 

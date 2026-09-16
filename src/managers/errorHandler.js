@@ -26,10 +26,10 @@ if (cleanupTimer.unref) cleanupTimer.unref();
  * @param {import('discord.js').Client} client - The Discord client
  */
 const sendErrorLog = async (err, type, client) => {
-  logger.error(
-    `\n\x1b[41m\x1b[37m 💥 ANTI-CRASH \x1b[0m \x1b[31m${type}\x1b[0m`,
-  );
-  console.error(err);
+  logger.error(`[Anti-Crash] ${type}`, err, {
+    type,
+    clientTag: client?.user?.tag,
+  });
 
   // Integrasi Sentry
   if (env.SENTRY_DSN) {
@@ -90,7 +90,7 @@ const sendErrorLog = async (err, type, client) => {
       }
     } catch (e) {
       logger.error(
-        "\x1b[41m\x1b[37m 💥 ERROR \x1b[0m \x1b[31mGagal mengirim log error ke DM Developer.\x1b[0m",
+        "Gagal mengirim log error ke DM Developer.",
         e,
       );
     }

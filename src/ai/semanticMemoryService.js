@@ -261,6 +261,129 @@ class SemanticMemoryService {
       return { count: 0, error: err.message };
     }
   }
+
+  /**
+   * Ingest dokumen hasil parsing ke dalam memori semantik (Server RAG)
+   * @param {string} guildId - ID server discord
+   * @param {string} uploaderId - ID user pengunggah
+   * @param {object} parsedDocument - Hasil dari documentParser.parseDocument
+   * @param {string} [memoryType="SERVER_RULE"]
+   * @returns {Promise<{ success: boolean, fileName: string, chunksIngested: number, totalChunks: number }>}
+   */
+  async ingestDocument(guildId, uploaderId, parsedDocument, memoryType = "SERVER_RULE") {
+    if (!guildId || !parsedDocument || !Array.isArray(parsedDocument.chunks)) {
+      return { success: false, reason: "INVALID_DOCUMENT" };
+    }
+
+    const chunks = parsedDocument.chunks;
+    let ingested = 0;
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const record = await this.saveMemory(uploaderId, chunk, {
+        guildId,
+        memoryType,
+        metadata: {
+          fileName: parsedDocument.fileName,
+          fileType: parsedDocument.fileType,
+          chunkIndex: i,
+          totalChunks: chunks.length,
+        },
+      });
+
+      if (record) ingested++;
+    }
+
+    logger.success(
+      `[SemanticMemory] Berhasil meng-ingest dokumen ${parsedDocument.fileName} (${ingested}/${chunks.length} chunks) untuk guild ${guildId}.`,
+    );
+
+    return {
+      success: true,
+      fileName: parsedDocument.fileName,
+      chunksIngested: ingested,
+      totalChunks: chunks.length,
+    };
+  }
+
+  /**
+   * Dapatkan daftar berkas dokumen pengetahuan yang terdaftar di guild
+   * @param {string} guildId
+   * @returns {Promise<Array<{ fileName: string, fileType: string, chunkCount: number, updatedAt: Date }>>}
+   */
+  async listDocuments(guildId) {
+    if (!guildId) return [];
+
+    try {
+      const records = await SemanticMemory.findAll({
+        where: { guildId },
+        attributes: ["metadata", "updatedAt"],
+      });
+
+      const docMap = new Map();
+      for (const rec of records) {
+        const meta =
+          typeof rec.metadata === "string"
+            ? JSON.parse(rec.metadata)
+            : rec.metadata || {};
+        const fn = meta.fileName;
+        if (!fn) continue;
+
+        if (!docMap.has(fn)) {
+          docMap.set(fn, {
+            fileName: fn,
+            fileType: meta.fileType || "doc",
+            chunkCount: 0,
+            updatedAt: rec.updatedAt,
+          });
+        }
+        const item = docMap.get(fn);
+        item.chunkCount++;
+        if (rec.updatedAt > item.updatedAt) item.updatedAt = rec.updatedAt;
+      }
+
+      return Array.from(docMap.values());
+    } catch (err) {
+      logger.error(`[SemanticMemory] Gagal membaca daftar dokumen: ${err.message}`);
+      return [];
+    }
+  }
+
+  /**
+   * Hapus seluruh memori semantik yang berasal dari berkas dokumen tertentu
+   * @param {string} guildId
+   * @param {string} fileName
+   * @returns {Promise<{ success: boolean, deletedCount: number }>}
+   */
+  async purgeDocument(guildId, fileName) {
+    if (!guildId || !fileName) return { success: false, deletedCount: 0 };
+
+    try {
+      const allGuildRecords = await SemanticMemory.findAll({
+        where: { guildId },
+      });
+
+      let deleted = 0;
+      for (const rec of allGuildRecords) {
+        const meta =
+          typeof rec.metadata === "string"
+            ? JSON.parse(rec.metadata)
+            : rec.metadata || {};
+        if (meta.fileName === fileName) {
+          await rec.destroy();
+          deleted++;
+        }
+      }
+
+      logger.info(
+        `[SemanticMemory] Berhasil menghapus ${deleted} memori untuk dokumen ${fileName} di guild ${guildId}.`,
+      );
+      return { success: true, deletedCount: deleted };
+    } catch (err) {
+      logger.error(`[SemanticMemory] Gagal menghapus memori dokumen: ${err.message}`);
+      return { success: false, deletedCount: 0, error: err.message };
+    }
+  }
 }
 
 module.exports = {

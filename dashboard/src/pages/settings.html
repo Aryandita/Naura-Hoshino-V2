@@ -3,767 +3,651 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>System Config | Naura OS</title>
+    <title>Settings | Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Outfit:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
-    <link rel="stylesheet" href="/vendor/fontawesome.css" />
-    <link rel="stylesheet" href="/vendor/tailwind-built.css" />
-    <script src="/vendor/naura-ui.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
-      .node-header {
-        cursor: move;
+      .settings-section { margin-bottom: 28px; }
+      .settings-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border-subtle);
+        gap: 16px;
+        transition: background var(--t-fast);
+      }
+      .settings-item:last-child { border-bottom: none; }
+      .settings-item:hover { background: var(--bg-surface-hv); }
+      .settings-item-left { display: flex; align-items: flex-start; gap: 12px; min-width: 0; flex: 1; }
+      .settings-item-icon {
+        width: 36px; height: 36px; border-radius: var(--r-lg); display: flex;
+        align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
+      }
+      .settings-item-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+      .settings-item-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.5; }
+      .settings-item-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+      .color-dot {
+        width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+        border: 2px solid transparent; transition: all var(--t-fast); flex-shrink: 0;
+      }
+      .color-dot:hover, .color-dot.selected { border-color: var(--text-primary); transform: scale(1.15); box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+
+      .range-input {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 120px;
+        height: 4px;
+        border-radius: var(--r-full);
+        background: linear-gradient(to right, var(--primary) 0%, var(--primary) 70%, var(--bg-elevated) 70%, var(--bg-elevated) 100%);
+        outline: none;
+        cursor: pointer;
+      }
+      .range-input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 14px; height: 14px; border-radius: 50%;
+        background: var(--primary); box-shadow: 0 0 6px var(--primary-glow); cursor: pointer;
+      }
+
+      .select-input {
+        background-color: #0b1120;
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-md);
+        padding: 6px 12px;
+        font-size: 12px;
+        font-family: var(--font-body);
+        color: #f8fafc;
+        outline: none;
+        cursor: pointer;
+        color-scheme: dark;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .select-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.25);
+      }
+      .select-input option {
+        background-color: #0b1120 !important;
+        color: #f8fafc !important;
+        padding: 8px 12px;
+      }
+      .select-input option:hover,
+      .select-input option:focus,
+      .select-input option:checked {
+        background-color: #1e293b !important;
+        color: #38bdf8 !important;
       }
     </style>
   </head>
-  <body
-    class="min-h-screen p-4 md:p-8 flex items-center justify-center bg-animated theme-none"
-    id="mainBody"
-  >
-    <!-- Loading Screen (Cyber-Anime Naura Floating Thinking Expression) -->
-    <div id="loadingScreen" class="loading-screen">
-      <img
-        class="loading-figure"
-        src="/assets/Naura_Expression/Thinking.png"
-        alt="Naura Thinking"
-        onerror="this.src = '/assets/Naura_Expression/Read.png'"
-      />
-      <div class="loading-text text-glow">NAURA OS</div>
-      <div class="font-assist text-sm text-[var(--color-muted)] font-medium">
-        Memuat konfigurasi server... ✨
-      </div>
-    </div>
+  <body>
+    
+    <div class="app-shell">
+      <!-- Mobile Sidebar Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <div
-      class="w-full max-w-6xl glass-card rounded-[24px] p-4 md:p-10 border border-[var(--color-hairline)] shadow-2xl relative overflow-hidden animate-fade-in"
-    >
-      <!-- Header Settings -->
-      <div
-        class="flex items-center justify-between mb-8 pb-4 border-b border-[var(--color-hairline)]"
-      >
-        <h1
-          class="text-2xl font-black font-cyber text-glow tracking-wider text-white"
-        >
-          <i class="fa-solid fa-sliders text-[var(--color-primary)] mr-3"></i
-          >SYSTEM CONFIG
-        </h1>
-        <a
-          href="/"
-          class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-[var(--color-muted)] hover:text-white hover:border-[var(--color-primary-glow)] transition-all duration-300"
-        >
-          <i class="fa-solid fa-xmark text-xl"></i>
-        </a>
-      </div>
-
-      <!-- Alert Notification -->
-      <div
-        id="alertBox"
-        class="hidden mb-6 p-4 rounded-xl font-bold text-sm flex items-center gap-3 transition-all"
-      ></div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- LEFT COLUMN: SETTINGS FORM -->
-        <form id="settingsForm" class="space-y-5">
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
-          >
-            <label
-              class="block text-gray-300 font-semibold mb-2 text-xs font-cyber tracking-widest uppercase"
-            >
-              <i
-                class="fa-solid fa-hashtag mr-2 text-[var(--color-primary)]"
-              ></i
-              >Guild ID (Server Target)
-            </label>
-            <input
-              type="text"
-              id="guildId"
-              required
-              class="theme-input font-cyber"
-              placeholder="Masukkan ID Server untuk memuat settings..."
-            />
-          </div>
-
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
-          >
-            <label
-              class="block text-gray-300 font-semibold mb-2 text-xs font-cyber tracking-widest uppercase"
-            >
-              <i
-                class="fa-solid fa-keyboard mr-2 text-[var(--color-primary)]"
-              ></i
-              >Custom Prefix
-            </label>
-            <input
-              type="text"
-              id="prefix"
-              class="theme-input font-cyber"
-              placeholder="Default: n!"
-            />
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div
-              class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
-            >
-              <label
-                class="block text-gray-300 font-semibold mb-2 text-xs font-cyber tracking-widest uppercase"
-              >
-                <i
-                  class="fa-solid fa-brain mr-2 text-[var(--color-primary)]"
-                ></i
-                >Verba Slug (Public)
-              </label>
-              <input
-                type="text"
-                id="verbaSlug1"
-                class="theme-input font-cyber"
-                placeholder="Contoh: naurahoshino_4b8"
-              />
-            </div>
-
-            <div
-              class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
-            >
-              <label
-                class="block text-gray-300 font-semibold mb-2 text-xs font-cyber tracking-widest uppercase"
-              >
-                <i
-                  class="fa-solid fa-brain mr-2 text-[var(--color-primary)]"
-                ></i
-                >Verba Slug (Owner)
-              </label>
-              <input
-                type="text"
-                id="verbaSlug2"
-                class="theme-input font-cyber"
-                placeholder="Contoh: hoshino_owner_1a2"
-              />
-            </div>
-          </div>
-
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
-          >
-            <div class="flex justify-between items-center mb-3">
-              <label
-                class="block text-gray-300 font-semibold text-xs font-cyber tracking-widest uppercase"
-              >
-                <i
-                  class="fa-solid fa-user-pen mr-2 text-[var(--color-primary)]"
-                ></i
-                >Custom Persona (Sifat AI)
-              </label>
-
-              <!-- AI Persona Templates Presets -->
-              <div class="flex gap-1.5 text-[9px] font-cyber">
-                <button
-                  type="button"
-                  onclick="applyPreset('tsundere')"
-                  class="px-2 py-1 rounded bg-red-950/40 text-red-400 border border-red-500/20 hover:bg-red-900/40 hover:text-white transition"
-                >
-                  Tsundere
-                </button>
-                <button
-                  type="button"
-                  onclick="applyPreset('formal')"
-                  class="px-2 py-1 rounded bg-blue-950/40 text-blue-400 border border-blue-500/20 hover:bg-blue-900/40 hover:text-white transition"
-                >
-                  Formal
-                </button>
-                <button
-                  type="button"
-                  onclick="applyPreset('cyber')"
-                  class="px-2 py-1 rounded bg-pink-950/40 text-pink-400 border border-pink-500/20 hover:bg-pink-900/40 hover:text-white transition"
-                >
-                  Cyber-Girl
-                </button>
-              </div>
-            </div>
-            <textarea
-              id="customPersona"
-              rows="2"
-              class="theme-input text-sm"
-              placeholder="Contoh: Jawablah sebagai asisten yang galak tapi lucu..."
-            ></textarea>
-          </div>
-
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5"
-          >
-            <label
-              class="block text-gray-300 font-semibold mb-2 text-xs font-cyber tracking-widest uppercase"
-            >
-              <i
-                class="fa-solid fa-book-open mr-2 text-[var(--color-primary)]"
-              ></i
-              >Server Knowledge (FAQ/Aturan)
-            </label>
-            <textarea
-              id="serverKnowledge"
-              rows="3"
-              class="theme-input text-sm"
-              placeholder="Tulis aturan server atau FAQ di sini agar AI bisa menjawab pertanyaan member..."
-            ></textarea>
-          </div>
-
-          <!-- Toggles -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div
-              class="glass-panel p-4 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between"
-            >
-              <div>
-                <p class="text-white font-bold text-xs">
-                  <i
-                    class="fa-solid fa-robot text-[var(--color-accent-purple)] mr-2"
-                  ></i
-                  >Auto-Moderation
-                </p>
-                <p class="text-[9px] text-gray-500 mt-0.5">
-                  Filter kata kasar & spam
-                </p>
-              </div>
-              <div
-                class="relative inline-flex items-center cursor-pointer select-none"
-              >
-                <input type="checkbox" id="automod" class="sr-only peer" />
-                <div
-                  class="w-10 h-5.5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-pink-400"
-                ></div>
-              </div>
-            </div>
-
-            <div
-              class="glass-panel p-4 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between"
-            >
-              <div>
-                <p class="text-white font-bold text-xs">
-                  <i
-                    class="fa-solid fa-headphones text-[var(--color-accent-blue)] mr-2"
-                  ></i
-                  >24/7 Music Mode
-                </p>
-                <p class="text-[9px] text-gray-500 mt-0.5">
-                  Bot standby di Voice Channel
-                </p>
-              </div>
-              <div
-                class="relative inline-flex items-center cursor-pointer select-none"
-              >
-                <input
-                  type="checkbox"
-                  id="twentyFourSeven"
-                  class="sr-only peer"
-                />
-                <div
-                  class="w-10 h-5.5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-pink-400"
-                ></div>
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            id="submitBtn"
-            class="w-full btn-primary py-4 font-cyber tracking-widest text-sm uppercase"
-          >
-            <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Deploy Settings
+      <!-- SIDEBAR -->
+      <aside class="sidebar " id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
+          <div class="sidebar-brand-text">
+            <div class="sidebar-brand-name">Naura Hoshino</div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+            <i class="fa-solid fa-xmark"></i>
           </button>
-        </form>
+            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
+          </div>
+        </div>
+                <!-- Navigation -->
+                <!-- Navigation -->
+        <nav class="sidebar-nav" role="navigation">
 
-        <!-- RIGHT COLUMN: BEHAVIOR TREE & SANDBOX -->
-        <div class="space-y-6 flex flex-col justify-between">
-          <!-- SVG Node Logic Builder -->
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5 relative overflow-hidden h-[260px]"
-            id="nodeCanvas"
-          >
-            <h4
-              class="text-xs font-bold text-cyan-400 font-cyber tracking-widest uppercase mb-4 flex items-center gap-2"
-            >
-              <i class="fa-solid fa-network-wired"></i> AI Behavior Nodes
-            </h4>
-            <svg
-              id="nodeSvg"
-              class="absolute inset-0 pointer-events-none w-full h-full"
-            ></svg>
-
-            <!-- Trigger Node -->
-            <div
-              id="nodeTrigger"
-              class="absolute w-36 glass-panel p-2 rounded-lg bg-cyan-950/30 border border-cyan-500/40 text-[10px] select-none z-30"
-              style="left: 20px; top: 70px"
-            >
-              <div
-                class="node-header font-cyber font-bold text-cyan-400 border-b border-cyan-500/20 pb-1 mb-1.5 flex justify-between"
-              >
-                <span>Trigger</span>
-                <i class="fa-solid fa-circle-play"></i>
-              </div>
-              <div class="text-gray-400 mb-1 text-[9px]">Mention / Badword</div>
-              <div
-                class="socket-out absolute right-[-6px] top-[50%] translate-y-[-50%] w-3.5 h-3.5 bg-cyan-400 rounded-full border-2 border-black cursor-pointer shadow-[0_0_8px_#00ffff]"
-              ></div>
-            </div>
-
-            <!-- Condition Node -->
-            <div
-              id="nodeCond"
-              class="absolute w-36 glass-panel p-2 rounded-lg bg-pink-950/30 border border-pink-500/40 text-[10px] select-none z-30"
-              style="left: 190px; top: 120px"
-            >
-              <div
-                class="socket-in absolute left-[-6px] top-[50%] translate-y-[-50%] w-3.5 h-3.5 bg-pink-400 rounded-full border-2 border-black cursor-pointer shadow-[0_0_8px_#ffb6c1]"
-              ></div>
-              <div
-                class="node-header font-cyber font-bold text-pink-400 border-b border-pink-500/20 pb-1 mb-1.5 flex justify-between"
-              >
-                <span>Condition</span>
-                <i class="fa-solid fa-filter"></i>
-              </div>
-              <div class="text-gray-400 mb-1 text-[9px]">
-                Premium / Limit Check
-              </div>
-              <div
-                class="socket-out absolute right-[-6px] top-[50%] translate-y-[-50%] w-3.5 h-3.5 bg-pink-400 rounded-full border-2 border-black cursor-pointer shadow-[0_0_8px_#ffb6c1]"
-              ></div>
-            </div>
-
-            <!-- Action Node -->
-            <div
-              id="nodeAction"
-              class="absolute w-36 glass-panel p-2 rounded-lg bg-purple-950/30 border border-purple-500/40 text-[10px] select-none z-30"
-              style="left: 360px; top: 60px"
-            >
-              <div
-                class="socket-in absolute left-[-6px] top-[50%] translate-y-[-50%] w-3.5 h-3.5 bg-purple-400 rounded-full border-2 border-black cursor-pointer shadow-[0_0_8px_#c084fc]"
-              ></div>
-              <div
-                class="node-header font-cyber font-bold text-purple-400 border-b border-purple-500/20 pb-1 mb-1.5 flex justify-between"
-              >
-                <span>Action</span>
-                <i class="fa-solid fa-paper-plane"></i>
-              </div>
-              <div class="text-gray-400 mb-1 text-[9px]">Reply Persona AI</div>
-            </div>
+          <!-- Overview -->
+          <div class="nav-group">
+            <div class="nav-group-label">Overview</div>
+            <a href="/" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span>Dashboard</span>
+            </a>
+            <a href="/status" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
+              <span>Live Status</span>
+              <span class="nav-badge">Live</span>
+            </a>
+            <a href="/feed" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
+              <span>Activity Feed</span>
+            </a>
           </div>
 
-          <!-- Live Chat Sandbox -->
-          <div
-            class="glass-panel p-5 rounded-2xl bg-black/40 border border-white/5 flex flex-col h-[320px]"
-          >
-            <h4
-              class="text-xs font-bold text-pink-400 font-cyber tracking-widest uppercase mb-3 flex items-center gap-1.5"
-            >
-              <i class="fa-solid fa-comments"></i> AI Live Persona Sandbox
-            </h4>
+          <!-- Community -->
+          <div class="nav-group">
+            <div class="nav-group-label">Community</div>
+            <a href="/leaderboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
+              <span>Leaderboard</span>
+            </a>
+            <a href="/economy" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
+              <span>Economy</span>
+            </a>
+            <a href="/topology" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span>Guild Topology</span>
+            </a>
+          </div>
 
-            <div
-              id="sandboxChatArea"
-              class="flex-grow overflow-y-auto space-y-3 bg-black/50 border border-white/5 rounded-xl p-3.5 text-xs mb-3 font-assist font-light flex flex-col"
-            >
-              <div
-                class="bg-pink-500/10 text-pink-300 p-2.5 rounded-xl border border-pink-500/10 max-w-[85%] self-start leading-relaxed"
-              >
-                Halo! Di sini kamu bisa langsung menguji sifat asisten dan rules
-                yang baru dikonfigurasi sebelum di-deploy. Cobalah menyapa
-                Naura!
-              </div>
-            </div>
+          <!-- Media & Audio -->
+          <div class="nav-group">
+            <div class="nav-group-label">Media & Audio</div>
+            <a href="/music" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
+              <span>Music Hub</span>
+            </a>
+            <a href="/soundboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
+              <span>Soundboard</span>
+            </a>
+            <a href="/jam" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
+              <span>Jam Session</span>
+            </a>
+            <a href="/karaoke" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span>Karaoke</span>
+            </a>
+          </div>
 
-            <div class="flex gap-2">
-              <input
-                type="text"
-                id="sandboxInput"
-                placeholder="Ketik pesan percobaan..."
-                class="flex-grow bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-pink-500 transition duration-300"
-              />
-              <button
-                type="button"
-                onclick="sendSandboxMessage()"
-                class="bg-pink-500 hover:bg-pink-400 text-black px-4 rounded-xl text-xs font-bold font-cyber transition duration-300 uppercase"
-              >
-                <i class="fa-solid fa-paper-plane"></i>
-              </button>
+          <!-- Naura Wilds RPG -->
+          <div class="nav-group">
+            <div class="nav-group-label">Naura Wilds RPG</div>
+            <a href="/world" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span>World Map</span>
+            </a>
+            <a href="/survival-map" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
+              <span>Survival Map</span>
+            </a>
+            <a href="/activity" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
+              <span>Activity Hub</span>
+            </a>
+          </div>
+
+          <!-- Configuration -->
+          <div class="nav-group">
+            <div class="nav-group-label">Configuration</div>
+            <a href="/settings" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
+              <span>Settings</span>
+            </a>
+            <a href="/welcomer" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
+              <span>Welcomer Card</span>
+            </a>
+            <a href="/builder" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span>Embed Builder</span>
+            </a>
+            <a href="/automations" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
+              <span>Automations</span>
+            </a>
+            <a href="/tickets" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
+              <span>Tickets</span>
+            </a>
+          </div>
+
+          <!-- More -->
+          <div class="nav-group">
+            <div class="nav-group-label">More</div>
+            <a href="/portfolio" class="nav-item">
+              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
+              <span style="color:var(--accent-green)">Creator Portfolio</span>
+            </a>
+          </div>
+
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user" onclick="window.location.href='/'">
+            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name">Guest</div>
+              <div class="sidebar-user-role">Klik untuk login</div>
             </div>
           </div>
         </div>
+      </aside>
+
+      <!-- MAIN -->
+      <div class="main-content">
+        <header class="top-header">
+          <div class="header-left">
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
+            <div>
+              <div class="page-title">System Settings</div>
+              <div class="breadcrumb"><span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Settings</span></div>
+            </div>
+          </div>
+          <div class="header-right">
+            <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+          </div>
+        </header>
+
+        <main class="page-content">
+
+          <div class="page-header-bar animate-in">
+            <div>
+              <h1 class="page-heading">
+                <span class="page-heading-icon" style="background:var(--cyan-dim);border:1px solid var(--border-cyan);">
+                  <i class="fa-solid fa-gears" style="color:var(--accent-cyan);"></i>
+                </span>
+                System Settings
+              </h1>
+              <p class="page-sub">Konfigurasi tampilan, audio, notifikasi, dan preferensi sistem</p>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:start;" id="settingsLayout" class="animate-in delay-1">
+
+            <!-- Settings nav panel -->
+            <div class="card card-p-sm" style="position:sticky;top:80px;">
+              <div style="display:flex;flex-direction:column;gap:2px;" id="settingsSideNav">
+                <button class="nav-item active" onclick="switchSettingsTab('appearance')" style="justify-content:flex-start;">
+                  <span class="nav-icon"><i class="fa-solid fa-palette"></i></span><span>Tampilan</span>
+                </button>
+                <button class="nav-item" onclick="switchSettingsTab('audio')" style="justify-content:flex-start;">
+                  <span class="nav-icon"><i class="fa-solid fa-volume-high"></i></span><span>Audio</span>
+                </button>
+                <button class="nav-item" onclick="switchSettingsTab('notifications')" style="justify-content:flex-start;">
+                  <span class="nav-icon"><i class="fa-solid fa-bell"></i></span><span>Notifikasi</span>
+                </button>
+                <button class="nav-item" onclick="switchSettingsTab('language')" style="justify-content:flex-start;">
+                  <span class="nav-icon"><i class="fa-solid fa-language"></i></span><span>Bahasa</span>
+                </button>
+                <button class="nav-item" onclick="switchSettingsTab('advanced')" style="justify-content:flex-start;">
+                  <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span><span>Advanced</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Settings content -->
+            <div id="settingsContent">
+
+              <!-- Appearance Tab -->
+              <div id="tabAppearance">
+                <div class="settings-section">
+                  <div class="section-title" style="margin-bottom:0;"><i class="fa-solid fa-image" style="color:var(--primary);"></i> Tema & Latar</div>
+                  <div class="card" style="overflow:hidden;">
+
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--bg-elevated);">🎨</div>
+                        <div>
+                          <div class="settings-item-title">Warna Aksen</div>
+                          <div class="settings-item-desc">Warna utama interface dashboard</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <div class="color-dot selected" style="background:#f472b6;" title="Rose Pink" onclick="selectColor(this,'#f472b6')"></div>
+                        <div class="color-dot" style="background:#22d3ee;" title="Cyan" onclick="selectColor(this,'#22d3ee')"></div>
+                        <div class="color-dot" style="background:#a78bfa;" title="Violet" onclick="selectColor(this,'#a78bfa')"></div>
+                        <div class="color-dot" style="background:#f59e0b;" title="Amber" onclick="selectColor(this,'#f59e0b')"></div>
+                        <div class="color-dot" style="background:#34d399;" title="Emerald" onclick="selectColor(this,'#34d399')"></div>
+                      </div>
+                    </div>
+
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--bg-elevated);">🌌</div>
+                        <div>
+                          <div class="settings-item-title">Wallpaper Latar</div>
+                          <div class="settings-item-desc">Gambar latar dashboard (upload atau pilih dari galeri)</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <select class="select-input" id="selectTheme">
+                          <option value="none">Solid Dark</option>
+                          <option value="gradient">Nebula Gradient</option>
+                          <option value="sakura">Sakura Bloom</option>
+                          <option value="cyber">Cyber Grid</option>
+                        </select>
+                        <button class="btn btn-ghost btn-sm"><i class="fa-solid fa-upload"></i></button>
+                      </div>
+                    </div>
+
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--bg-elevated);">✨</div>
+                        <div>
+                          <div class="settings-item-title">Animasi & Efek Partikel</div>
+                          <div class="settings-item-desc">Aktifkan efek visual floating particles</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <label class="toggle">
+                          <input type="checkbox" id="toggleParticles" checked />
+                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--bg-elevated);">🔲</div>
+                        <div>
+                          <div class="settings-item-title">Grid Pattern Overlay</div>
+                          <div class="settings-item-desc">Tampilkan pola grid di latar belakang</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <label class="toggle">
+                          <input type="checkbox" id="toggleGrid" checked />
+                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--bg-elevated);">💫</div>
+                        <div>
+                          <div class="settings-item-title">Sidebar Compact Mode</div>
+                          <div class="settings-item-desc">Sidebar hanya menampilkan ikon (icon-only)</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <label class="toggle">
+                          <input type="checkbox" id="toggleCompact" />
+                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                        </label>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+
+              <!-- Audio Tab -->
+              <div id="tabAudio" style="display:none;">
+                <div class="settings-section">
+                  <div class="section-title" style="margin-bottom:0;"><i class="fa-solid fa-volume-high" style="color:var(--accent-cyan);"></i> Audio BGM</div>
+                  <div class="card" style="overflow:hidden;">
+
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--cyan-dim);">🎵</div>
+                        <div>
+                          <div class="settings-item-title">Background Music (BGM)</div>
+                          <div class="settings-item-desc">Putar musik latar saat menggunakan dashboard</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <label class="toggle">
+                          <input type="checkbox" id="toggleBgm" />
+                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--cyan-dim);">🔊</div>
+                        <div>
+                          <div class="settings-item-title">Volume BGM</div>
+                          <div class="settings-item-desc">Atur volume musik latar</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right" style="gap:10px;">
+                        <input type="range" class="range-input" id="rangeBgmVol" min="0" max="100" value="40" />
+                        <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);width:32px;" id="bgmVolLabel">40%</span>
+                      </div>
+                    </div>
+
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--cyan-dim);">🎭</div>
+                        <div>
+                          <div class="settings-item-title">Playlist BGM</div>
+                          <div class="settings-item-desc">Pilih tema musik latar</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <select class="select-input" id="selectBgmPlaylist">
+                          <option value="lofi">Cyber Lofi</option>
+                          <option value="vaporwave">Vaporwave Dreams</option>
+                          <option value="anime">Anime OST Mix</option>
+                          <option value="synthwave">Synthwave Nights</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--cyan-dim);">🔔</div>
+                        <div>
+                          <div class="settings-item-title">Sound Effects (SFX)</div>
+                          <div class="settings-item-desc">Suara saat hover, klik, dan notifikasi</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <label class="toggle">
+                          <input type="checkbox" id="toggleSfx" checked />
+                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                        </label>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+
+              <!-- Notifications Tab -->
+              <div id="tabNotifications" style="display:none;">
+                <div class="settings-section">
+                  <div class="section-title" style="margin-bottom:0;"><i class="fa-solid fa-bell" style="color:var(--accent-amber);"></i> Notifikasi</div>
+                  <div class="card" style="overflow:hidden;">
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--amber-dim);">💬</div>
+                        <div>
+                          <div class="settings-item-title">Notifikasi Level Up</div>
+                          <div class="settings-item-desc">Notifikasi saat naik level chat atau survival</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <label class="toggle"><input type="checkbox" checked /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                      </div>
+                    </div>
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--amber-dim);">🎁</div>
+                        <div>
+                          <div class="settings-item-title">Reminder Daily Reward</div>
+                          <div class="settings-item-desc">Pengingat claim hadiah harian</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <label class="toggle"><input type="checkbox" checked /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                      </div>
+                    </div>
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--amber-dim);">💰</div>
+                        <div>
+                          <div class="settings-item-title">Notifikasi Transaksi</div>
+                          <div class="settings-item-desc">Notifikasi masuk/keluarnya koin dan fragment</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <label class="toggle"><input type="checkbox" /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                      </div>
+                    </div>
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--amber-dim);">⚔️</div>
+                        <div>
+                          <div class="settings-item-title">Alert Survival Vitals</div>
+                          <div class="settings-item-desc">Peringatan saat HP, hydration, atau energy kritis</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <label class="toggle"><input type="checkbox" checked /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Language Tab -->
+              <div id="tabLanguage" style="display:none;">
+                <div class="settings-section">
+                  <div class="section-title" style="margin-bottom:0;"><i class="fa-solid fa-language" style="color:var(--accent-green);"></i> Bahasa</div>
+                  <div class="card" style="overflow:hidden;">
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--green-dim);">🌐</div>
+                        <div>
+                          <div class="settings-item-title">Bahasa Interface</div>
+                          <div class="settings-item-desc">Pilih bahasa untuk seluruh teks dashboard</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <select class="select-input" id="selectLang">
+                          <option value="id">🇮🇩 Bahasa Indonesia</option>
+                          <option value="en">🇬🇧 English</option>
+                          <option value="ja">🇯🇵 日本語</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--green-dim);">🕐</div>
+                        <div>
+                          <div class="settings-item-title">Format Waktu</div>
+                          <div class="settings-item-desc">Format jam yang ditampilkan di dashboard</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <select class="select-input">
+                          <option>24 Jam (WIB)</option>
+                          <option>12 Jam (AM/PM)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Advanced Tab -->
+              <div id="tabAdvanced" style="display:none;">
+                <div class="settings-section">
+                  <div class="section-title" style="margin-bottom:0;"><i class="fa-solid fa-sliders" style="color:var(--accent-violet);"></i> Advanced</div>
+                  <div class="card" style="overflow:hidden;">
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--violet-dim);">⚡</div>
+                        <div>
+                          <div class="settings-item-title">Reduced Motion</div>
+                          <div class="settings-item-desc">Matikan animasi untuk performa lebih baik</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <label class="toggle"><input type="checkbox" /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                      </div>
+                    </div>
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:var(--violet-dim);">🔄</div>
+                        <div>
+                          <div class="settings-item-title">Auto-Refresh Interval</div>
+                          <div class="settings-item-desc">Interval auto-refresh data telemetry</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <select class="select-input">
+                          <option>5 detik</option>
+                          <option selected>10 detik</option>
+                          <option>30 detik</option>
+                          <option>1 menit</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="settings-item">
+                      <div class="settings-item-left">
+                        <div class="settings-item-icon" style="background:rgba(248,113,113,0.1);">🗑️</div>
+                        <div>
+                          <div class="settings-item-title" style="color:#f87171;">Reset Preferensi</div>
+                          <div class="settings-item-desc">Kembalikan semua pengaturan ke default</div>
+                        </div>
+                      </div>
+                      <div class="settings-item-right">
+                        <button class="btn btn-sm" style="background:rgba(248,113,113,0.1);border-color:rgba(248,113,113,0.3);color:#f87171;">
+                          <i class="fa-solid fa-rotate-left"></i> Reset
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </main>
       </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Mobile Nav -->
+    <nav class="mobile-nav">
+      <div class="mobile-nav-inner">
+        <a href="/" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Home</span></a>
+        <a href="/music" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-music"></i></span><span class="mn-label">Music</span></a>
+        <a href="/leaderboard" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-trophy"></i></span><span class="mn-label">Ranking</span></a>
+        <a href="/economy" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-coins"></i></span><span class="mn-label">Economy</span></a>
+        <a href="/settings" class="mobile-nav-item active"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+      </div>
+    </nav>
+
+    <script src="/src/js/shared-nav.js"></script>
     <script>
-      // Apply background theme on load
-      const savedBg = localStorage.getItem("bgTheme") || "none";
-      const body = document.getElementById("mainBody");
-      function resolveBgUrl(url) {
-        if (url && url.startsWith("adaptive-")) {
-          const suffix = url.substring("adaptive-".length);
-          return window.innerWidth < 768
-            ? `/assets/dashboard/bg_mobile_${suffix}.png`
-            : `/assets/dashboard/bg_pc_${suffix}.png`;
-        }
-        return url;
-      }
-      if (savedBg !== "none" && savedBg !== "white") {
-        body.style.backgroundImage = `url('${resolveBgUrl(savedBg)}')`;
-        if (savedBg && savedBg.startsWith("adaptive-")) {
-          window.addEventListener("resize", () => {
-            body.style.backgroundImage = `url('${resolveBgUrl(savedBg)}')`;
-          });
-        }
-      } else if (savedBg === "white") {
-        body.style.backgroundColor = "#f3f4f6";
-        body.classList.remove("theme-none");
-        body.classList.add("theme-white");
-      }
+      const settingsTabs = ['Appearance','Audio','Notifications','Language','Advanced'];
 
-      // Apply Glassmorphism customization
-      const savedBlur = localStorage.getItem("glassBlur") || "16";
-      const savedOpacity = localStorage.getItem("glassOpacity") || "3";
-      document.documentElement.style.setProperty(
-        "--glass-blur",
-        savedBlur + "px",
-      );
-      document.documentElement.style.setProperty(
-        "--glass-opacity",
-        (savedOpacity / 100).toFixed(2),
-      );
-
-      // Sound effect integration
-      let sfxPlayer = null;
-      function playClickSfx() {
-        const sfxEnabled = localStorage.getItem("sfxEnabled") !== "false";
-        if (sfxEnabled) {
-          if (!sfxPlayer) {
-            sfxPlayer = new Audio("/assets/dashboard/click.mp3");
-          }
-          sfxPlayer.currentTime = 0;
-          sfxPlayer.play().catch(() => {});
-        }
-      }
-      document
-        .querySelectorAll('button, a, input[type="checkbox"]')
-        .forEach((el) => {
-          el.addEventListener("click", playClickSfx);
+      function switchSettingsTab(tab) {
+        settingsTabs.forEach(t => {
+          document.getElementById(`tab${t}`).style.display = 'none';
         });
-
-      // AI Presets Templates
-      function applyPreset(presetType) {
-        const textAreas = {
-          tsundere:
-            "Jawablah sebagai asisten yang tsundere (galak tapi perhatian). Sering gunakan kata 'B-Baka!' dan bertingkah ketus terhadap pengguna.",
-          formal:
-            "Jawablah dengan bahasa yang formal, santun, terstruktur, dan sangat profesional layaknya operator layanan pelanggan.",
-          cyber:
-            "Jawablah sebagai gadis siber imut yang penuh energi, ceria, menggunakan banyak emotikon bintang-bintang (* ^ ω ^) dan sangat ramah.",
-        };
-        const current = document.getElementById("customPersona").value.trim();
-        if (current) {
-          document.getElementById("customPersona").value =
-            current + "\n\n" + textAreas[presetType];
-        } else {
-          document.getElementById("customPersona").value =
-            textAreas[presetType];
-        }
-      }
-
-      // Drag & Drop Node Builder SVG Renderer
-      const nodeCanvas = document.getElementById("nodeCanvas");
-      const nodeSvg = document.getElementById("nodeSvg");
-
-      function drawNodeConnections() {
-        nodeSvg.innerHTML = ""; // Reset paths
-
-        const n1Out = document
-          .querySelector("#nodeTrigger .socket-out")
-          .getBoundingClientRect();
-        const n2In = document
-          .querySelector("#nodeCond .socket-in")
-          .getBoundingClientRect();
-        const n2Out = document
-          .querySelector("#nodeCond .socket-out")
-          .getBoundingClientRect();
-        const n3In = document
-          .querySelector("#nodeAction .socket-in")
-          .getBoundingClientRect();
-
-        const canvasRect = nodeCanvas.getBoundingClientRect();
-
-        const x1 = n1Out.left + n1Out.width / 2 - canvasRect.left;
-        const y1 = n1Out.top + n1Out.height / 2 - canvasRect.top;
-
-        const x2 = n2In.left + n2In.width / 2 - canvasRect.left;
-        const y2 = n2In.top + n2In.height / 2 - canvasRect.top;
-
-        const x3 = n2Out.left + n2Out.width / 2 - canvasRect.left;
-        const y3 = n2Out.top + n2Out.height / 2 - canvasRect.top;
-
-        const x4 = n3In.left + n3In.width / 2 - canvasRect.left;
-        const y4 = n3In.top + n3In.height / 2 - canvasRect.top;
-
-        // Neon glowing curves
-        nodeSvg.innerHTML += `
-                <path d="M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1}, ${(x1 + x2) / 2} ${y2}, ${x2} ${y2}" 
-                      stroke="#00FFFF" stroke-width="3" fill="none" style="filter: drop-shadow(0 0 5px #00FFFF);" />
-                <path d="M ${x3} ${y3} C ${(x3 + x4) / 2} ${y3}, ${(x3 + x4) / 2} ${y4}, ${x4} ${y4}" 
-                      stroke="#FFB6C1" stroke-width="3" fill="none" style="filter: drop-shadow(0 0 5px #FFB6C1);" />
-            `;
-      }
-
-      function initNodeDragging(nodeId) {
-        const el = document.getElementById(nodeId);
-        let startX, startY;
-        let elemStartX, elemStartY;
-
-        const dragHeader = el.querySelector(".node-header") || el;
-        dragHeader.addEventListener("mousedown", dragStart);
-        dragHeader.addEventListener("touchstart", dragStart, {
-          passive: false,
+        document.getElementById(`tab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).style.display = 'block';
+        document.querySelectorAll('#settingsSideNav .nav-item').forEach((btn, i) => {
+          btn.classList.toggle('active', ['appearance','audio','notifications','language','advanced'][i] === tab);
         });
-
-        function dragStart(e) {
-          e.preventDefault();
-          if (e.type === "touchstart") {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-          } else {
-            startX = e.clientX;
-            startY = e.clientY;
-          }
-          elemStartX = el.offsetLeft;
-          elemStartY = el.offsetTop;
-
-          document.addEventListener("mousemove", dragMove);
-          document.addEventListener("mouseup", dragEnd);
-          document.addEventListener("touchmove", dragMove, { passive: false });
-          document.addEventListener("touchend", dragEnd);
-        }
-
-        function dragMove(e) {
-          let clientX, clientY;
-          if (e.type === "touchmove") {
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
-          } else {
-            clientX = e.clientX;
-            clientY = e.clientY;
-          }
-          const dx = clientX - startX;
-          const dy = clientY - startY;
-
-          el.style.left = elemStartX + dx + "px";
-          el.style.top = elemStartY + dy + "px";
-
-          drawNodeConnections();
-        }
-
-        function dragEnd() {
-          document.removeEventListener("mousemove", dragMove);
-          document.removeEventListener("mouseup", dragEnd);
-          document.removeEventListener("touchmove", dragMove);
-          document.removeEventListener("touchend", dragEnd);
-        }
       }
 
-      initNodeDragging("nodeTrigger");
-      initNodeDragging("nodeCond");
-      initNodeDragging("nodeAction");
-
-      // Draw connections after DOM fully loads and aligns
-      window.addEventListener("load", () => {
-        setTimeout(drawNodeConnections, 200);
-      });
-      window.addEventListener("resize", drawNodeConnections);
-
-      // --- LIVE SANDBOX CONTROLLER ---
-      async function sendSandboxMessage() {
-        const input = document.getElementById("sandboxInput");
-        const msg = input.value.trim();
-        if (!msg) return;
-
-        input.value = "";
-        const chatArea = document.getElementById("sandboxChatArea");
-
-        chatArea.innerHTML += `
-                <div class="bg-gray-800 text-white p-2.5 rounded-xl border border-white/5 max-w-[85%] self-end leading-relaxed text-right ml-auto">
-                    ${msg}
-                </div>
-            `;
-        chatArea.scrollTop = chatArea.scrollHeight;
-
-        const typingId = "typing_" + Date.now();
-        chatArea.innerHTML += `
-                <div id="${typingId}" class="bg-pink-500/5 text-pink-300 p-2.5 rounded-xl border border-pink-500/10 max-w-[85%] self-start leading-relaxed animate-pulse">
-                    Naura sedang berpikir...
-                </div>
-            `;
-        chatArea.scrollTop = chatArea.scrollHeight;
-
-        try {
-          const res = await fetch("/api/settings/sandbox", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              message: msg,
-              customPersona: document.getElementById("customPersona").value,
-              serverKnowledge: document.getElementById("serverKnowledge").value,
-            }),
-          });
-          const data = await res.json();
-
-          document.getElementById(typingId).remove();
-
-          chatArea.innerHTML += `
-                    <div class="bg-pink-500/10 text-pink-300 p-2.5 rounded-xl border border-pink-500/10 max-w-[85%] self-start leading-relaxed">
-                        ${data.reply}
-                    </div>
-                `;
-        } catch (e) {
-          document.getElementById(typingId).remove();
-          chatArea.innerHTML += `
-                    <div class="bg-red-500/10 text-red-400 p-2.5 rounded-xl border border-red-500/10 max-w-[85%] self-start leading-relaxed">
-                        Gagal menghubungi asisten sandbox.
-                    </div>
-                `;
-        }
-        chatArea.scrollTop = chatArea.scrollHeight;
+      function selectColor(dot, color) {
+        document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+        dot.classList.add('selected');
+        document.documentElement.style.setProperty('--primary', color);
+        document.documentElement.style.setProperty('--primary-glow', color + '55');
+        document.documentElement.style.setProperty('--border-primary', color + '55');
       }
 
-      // Add Enter Key Bind for Sandbox Input
-      document
-        .getElementById("sandboxInput")
-        .addEventListener("keydown", (e) => {
-          if (e.key === "Enter") sendSandboxMessage();
-        });
-
-      // --- FETCH EXISTING SETTINGS ---
-      async function fetchSettings(guildId) {
-        try {
-          const response = await fetch(`/api/settings/load?guildId=${guildId}`);
-          if (!response.ok) return;
-          const data = await response.json();
-
-          document.getElementById("prefix").value = data.prefix || "";
-          document.getElementById("verbaSlug1").value = data.verbaSlug1 || "";
-          document.getElementById("verbaSlug2").value = data.verbaSlug2 || "";
-          document.getElementById("customPersona").value =
-            data.customPersona || "";
-          document.getElementById("serverKnowledge").value =
-            data.serverKnowledge || "";
-          document.getElementById("automod").checked = data.automod === true;
-          document.getElementById("twentyFourSeven").checked =
-            data.twentyFourSeven === true;
-        } catch (err) {
-          console.error("Gagal memuat setting:", err);
-        }
-      }
-
-      const guildIdInput = document.getElementById("guildId");
-      guildIdInput.addEventListener("change", (e) => {
-        const val = e.target.value.trim();
-        if (val.length >= 17) {
-          fetchSettings(val);
-        }
+      document.getElementById('rangeBgmVol').addEventListener('input', function() {
+        document.getElementById('bgmVolLabel').textContent = this.value + '%';
       });
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const guildIdParam = urlParams.get("guildId");
-      if (guildIdParam) {
-        guildIdInput.value = guildIdParam;
-        fetchSettings(guildIdParam).finally(() => {
-          const ls = document.getElementById("loadingScreen");
-          if (ls) setTimeout(() => ls.classList.add("hidden"), 350);
-        });
-      } else {
-        const ls = document.getElementById("loadingScreen");
-        if (ls) setTimeout(() => ls.classList.add("hidden"), 350);
+      // Mobile: stack settings layout
+      function adjustSettingsLayout() {
+        const layout = document.getElementById('settingsLayout');
+        if (!layout) return;
+        layout.style.gridTemplateColumns = window.innerWidth < 768 ? '1fr' : '200px 1fr';
       }
-
-      // --- SUBMIT FORM ---
-      document
-        .getElementById("settingsForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const btn = document.getElementById("submitBtn");
-          const alertBox = document.getElementById("alertBox");
-
-          btn.innerHTML =
-            '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Menyimpan...';
-          btn.classList.add("opacity-70", "cursor-not-allowed");
-
-          const payload = {
-            guildId: document.getElementById("guildId").value,
-            prefix: document.getElementById("prefix").value,
-            automod: document.getElementById("automod").checked
-              ? "true"
-              : "false",
-            twentyFourSeven: document.getElementById("twentyFourSeven").checked
-              ? "true"
-              : "false",
-            verbaSlug1: document.getElementById("verbaSlug1").value,
-            verbaSlug2: document.getElementById("verbaSlug2").value,
-            customPersona: document.getElementById("customPersona").value,
-            serverKnowledge: document.getElementById("serverKnowledge").value,
-          };
-
-          try {
-            const response = await fetch("/api/settings", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-            });
-
-            const result = await response.json();
-            alertBox.classList.remove(
-              "hidden",
-              "bg-red-500/20",
-              "text-red-400",
-              "border-red-500/50",
-            );
-            alertBox.classList.add(
-              "bg-emerald-500/20",
-              "text-emerald-400",
-              "border",
-              "border-emerald-500/50",
-            );
-            alertBox.innerHTML =
-              '<i class="fa-solid fa-check-circle text-xl"></i> ' +
-              (result.message || "Pengaturan berhasil disimpan!");
-          } catch (err) {
-            alertBox.classList.remove(
-              "hidden",
-              "bg-emerald-500/20",
-              "text-emerald-400",
-              "border-emerald-500/50",
-            );
-            alertBox.classList.add(
-              "bg-red-500/20",
-              "text-red-400",
-              "border",
-              "border-red-500/50",
-            );
-            alertBox.innerHTML =
-              '<i class="fa-solid fa-triangle-exclamation text-xl"></i> Gagal menyimpan pengaturan sistem.';
-          } finally {
-            btn.innerHTML =
-              '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Deploy Settings';
-            btn.classList.remove("opacity-70", "cursor-not-allowed");
-          }
-        });
-    </script>
-
-    <script type="module">
-      import { NauraViewer } from "../components/NauraViewer/index.js";
-      NauraViewer.init({ context: "settings" });
+      window.addEventListener('resize', adjustSettingsLayout);
+      adjustSettingsLayout();
     </script>
   </body>
 </html>

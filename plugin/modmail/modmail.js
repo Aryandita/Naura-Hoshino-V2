@@ -134,7 +134,7 @@ module.exports = {
 
     // Status basis data didahulukan supaya tetap benar walau pengarsipan gagal.
     ticket.closed = true;
-    await ticket.save();
+    await ticket.save({ fields: ["closed"] });
 
     let transcriptFile = null;
     try {

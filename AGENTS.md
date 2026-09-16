@@ -158,6 +158,25 @@ npm test
 
 Semua 5 tahapan di atas WAJIB berstatus hijau (0 error).
 
+### 4.4 Prosedur Format Pesan Commit GitHub (3-Tingkat Terstruktur)
+
+Ketika seluruh QA Gate telah berstatus hijau dan agen atau kontributor siap melakukan commit ke repositori GitHub, pesan commit WAJIB diformat menjadi 3 bagian terstruktur dengan emoji yang disesuaikan:
+
+```text
+<emoji> <tipe>: <ringkasan judul commit>
+
+⚙️ [System Update]
+- <perubahan arsitektur, konfigurasi server, skema database, routing, atau dependensi>
+
+🚀 [Major Update]
+- <fitur besar baru, perombakan modul utama, halaman/UI baru, atau sistem game/ekonomi baru>
+
+🔧 [Minor Update]
+- <perbaikan bug, optimasi performa, refactoring, penyesuaian styling, dan pembersihan file>
+```
+
+Pilihlah emoji pada judul dan setiap butir pembaruan yang selaras dengan isi perubahannya (misal 🛡️ untuk keamanan, 🎨 untuk visual/desain, 📦 untuk dependensi/modul, ⚡ untuk performa, 🩹 untuk bugfix).
+
 ---
 
 ## ⚠️ 5. Jebakan Kritis (_Fatal Gotchas_) yang Sering Terjadi

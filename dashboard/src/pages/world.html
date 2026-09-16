@@ -1,298 +1,1118 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Naura Cyber Mini-World | 2D Pixel Realm & 3D Wardrobe</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
-    <link rel="stylesheet" href="/vendor/fontawesome.css" />
-    <link rel="stylesheet" href="/vendor/tailwind-built.css">
-    <script src="/vendor/socket.io.min.js"></script>
-    <script src="/vendor/naura-ui.js"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>World Map Explorer | Naura OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
-        body {
-            background-color: #0b0c10;
-            color: #ffffff;
-            font-family: 'Outfit', sans-serif;
-            margin: 0;
-            overflow: hidden;
+      .world-layout {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 24px;
+        align-items: start;
+      }
+      @media (max-width: 1200px) {
+        .world-layout {
+          grid-template-columns: 1fr;
         }
-        #worldCanvas {
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-            background: radial-gradient(circle at center, #1a0b2e 0%, #0b0c10 100%);
-            width: 100vw;
-            height: 100vh;
-            display: block;
+      }
+
+      /* Map Viewport Container */
+      .map-viewport-card {
+        background: radial-gradient(circle at 50% 30%, rgba(34, 211, 238, 0.05), transparent 70%),
+                    linear-gradient(180deg, #090d1a 0%, #05070e 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+      }
+
+      .map-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        background: rgba(10, 14, 26, 0.7);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border-subtle);
+        z-index: 10;
+        position: relative;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .filter-pills {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .filter-pill {
+        padding: 6px 14px;
+        border-radius: var(--r-full);
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-subtle);
+        transition: all var(--t-fast);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .filter-pill:hover {
+        background: rgba(255, 255, 255, 0.09);
+        color: var(--text-primary);
+      }
+      .filter-pill.active {
+        background: var(--primary-dim);
+        color: var(--primary);
+        border-color: var(--border-primary);
+        box-shadow: 0 0 12px rgba(244, 114, 182, 0.2);
+      }
+
+      /* SVG Map Graphic */
+      .map-canvas-wrap {
+        width: 100%;
+        height: 540px;
+        position: relative;
+        background-color: #060913;
+        background-image: 
+          radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+          radial-gradient(rgba(34, 211, 238, 0.06) 1px, transparent 1px);
+        background-size: 28px 28px, 56px 56px;
+        background-position: 0 0, 14px 14px;
+        overflow: hidden;
+        cursor: grab;
+      }
+      .map-canvas-wrap:active {
+        cursor: grabbing;
+      }
+
+      svg.world-svg {
+        width: 100%;
+        height: 100%;
+        user-select: none;
+      }
+
+      /* SVG Nodes & Paths */
+      .map-trail {
+        stroke: rgba(255, 255, 255, 0.15);
+        stroke-dasharray: 6 6;
+        animation: dashMove 20s linear infinite;
+      }
+      .map-trail.active-trail {
+        stroke: var(--accent-cyan);
+        stroke-width: 2.5;
+        stroke-dasharray: 8 6;
+        filter: drop-shadow(0 0 6px var(--accent-cyan));
+      }
+      @keyframes dashMove {
+        to {
+          stroke-dashoffset: -200;
         }
-        .hud-overlay {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            pointer-events: none;
-        }
-        .hud-interactive {
-            pointer-events: auto;
-        }
-        .pixel-badge {
-            font-family: 'Orbitron', sans-serif;
-            background: rgba(255, 182, 193, 0.1);
-            border: 1px solid rgba(255, 182, 193, 0.3);
-            box-shadow: 0 0 15px rgba(255, 182, 193, 0.2);
-        }
+      }
+
+      .map-region-group {
+        cursor: pointer;
+        transition: transform var(--t-fast);
+      }
+      .map-region-group:hover {
+        filter: brightness(1.25);
+      }
+      .map-region-group.selected circle.zone-core {
+        stroke: #fff;
+        stroke-width: 3.5;
+        filter: drop-shadow(0 0 16px var(--primary));
+      }
+
+      .pulse-ring {
+        animation: pulseRing 2.2s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+        transform-origin: center;
+      }
+      @keyframes pulseRing {
+        0% { r: 16; opacity: 0.8; }
+        100% { r: 40; opacity: 0; }
+      }
+
+      /* Map overlay HUD indicators */
+      .map-hud-overlay {
+        position: absolute;
+        bottom: 16px;
+        left: 16px;
+        background: rgba(6, 9, 19, 0.8);
+        backdrop-filter: blur(10px);
+        padding: 10px 16px;
+        border-radius: var(--r-lg);
+        border: 1px solid var(--border-subtle);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-secondary);
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        z-index: 5;
+        pointer-events: none;
+      }
+      .map-hud-overlay span b {
+        color: var(--accent-cyan);
+      }
+
+      .map-zoom-controls {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        z-index: 5;
+      }
+      .map-zoom-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: var(--r-md);
+        background: rgba(10, 14, 26, 0.85);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-primary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--t-fast);
+      }
+      .map-zoom-btn:hover {
+        background: var(--bg-elevated);
+        border-color: var(--border-primary);
+        color: var(--primary);
+      }
+
+      /* Intel Panel Right */
+      .intel-card {
+        background: linear-gradient(180deg, rgba(20, 24, 40, 0.7) 0%, rgba(10, 12, 22, 0.85) 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        overflow: hidden;
+        backdrop-filter: blur(16px);
+      }
+      .intel-header {
+        padding: 24px 20px 20px;
+        border-bottom: 1px solid var(--border-subtle);
+        position: relative;
+        background: radial-gradient(circle at top right, var(--zone-glow, rgba(244, 114, 182, 0.15)), transparent 70%);
+      }
+      .intel-category {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--zone-accent, var(--primary));
+        margin-bottom: 8px;
+      }
+      .intel-title {
+        font-family: var(--font-heading);
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+      }
+      .intel-sub {
+        font-size: 12px;
+        color: var(--text-muted);
+        line-height: 1.5;
+      }
+
+      .intel-body {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .stat-grid-compact {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .stat-box-sm {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-md);
+        padding: 10px 12px;
+      }
+      .stat-box-lbl {
+        font-size: 10px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 2px;
+      }
+      .stat-box-val {
+        font-family: var(--font-heading);
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .resource-bar-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        font-size: 12px;
+      }
+      .resource-progress {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .resource-fill {
+        height: 100%;
+        border-radius: 999px;
+        transition: width 0.4s ease;
+      }
+
+      .npc-badge-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .npc-badge-item {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-subtle);
+        padding: 6px 10px;
+        border-radius: var(--r-md);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+      }
+      .npc-badge-emoji {
+        font-size: 15px;
+      }
+
+      .warp-action-box {
+        padding: 18px 20px;
+        background: rgba(255, 255, 255, 0.02);
+        border-top: 1px solid var(--border-subtle);
+      }
+      .warp-btn {
+        width: 100%;
+        padding: 12px;
+        border-radius: var(--r-lg);
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: none;
+        cursor: pointer;
+        transition: all var(--t-fast);
+      }
+
+      /* Warp Flash Animation */
+      .warp-flash {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle, rgba(34, 211, 238, 0.6) 0%, rgba(244, 114, 182, 0.4) 50%, transparent 100%);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 999;
+        transition: opacity 0.35s ease;
+      }
+      .warp-flash.active {
+        opacity: 1;
+      }
     </style>
-</head>
-<body class="relative select-none">
-    <!-- Loading Screen (Cyber-Anime Naura Floating Thinking Expression) -->
-    <div id="loadingScreen" class="loading-screen">
-        <img class="loading-figure" src="/assets/Naura_Expression/Thinking.png" alt="Naura Thinking" onerror="this.src='/assets/Naura_Expression/Read.png'">
-        <div class="loading-text text-glow">NAURA PIXEL REALM</div>
-        <div class="font-assist text-sm text-[var(--color-muted)] font-medium">Menyiapkan dunia mini 2D... ✨</div>
-    </div>
-
-    <!-- 2D Pixel World Canvas -->
-    <canvas id="worldCanvas"></canvas>
-
-    <!-- Top HUD Navigation -->
-    <div class="hud-overlay flex justify-between items-start">
-        <div class="hud-interactive glass-panel-interactive px-6 py-4 rounded-2xl flex items-center gap-4">
-            <div class="w-10 h-10 rounded-full bg-pink-400/20 border border-pink-400 flex items-center justify-center text-pink-300 font-black font-cyber text-lg shadow-[0_0_12px_rgba(255,182,193,0.5)]">
-                🌸
-            </div>
-            <div>
-                <h1 class="text-xl font-bold font-cyber text-glow text-white tracking-wider">NAURA PIXEL REALM</h1>
-                <p class="text-xs text-gray-400">Cyber-Fantasy Interactive Island • Real-time Realm</p>
-            </div>
+  </head>
+  <body>
+    
+    <div class="warp-flash" id="warpFlash"></div>
+    
+    <div class="app-shell">
+      <!-- Mobile Sidebar Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <aside class="sidebar " id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
+          <div class="sidebar-brand-text"><div class="sidebar-brand-name">Naura Hoshino</div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button><div class="sidebar-brand-sub">v2.3.0 · Online</div></div>
         </div>
+                <!-- Navigation -->
+                <!-- Navigation -->
+        <nav class="sidebar-nav" role="navigation">
 
-        <div class="hud-interactive flex items-center gap-3">
-            <div class="glass-panel-interactive px-4 py-2 rounded-xl flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse"></span>
-                <span id="realmStatus" class="text-xs font-cyber font-bold text-gray-200">WORLD ONLINE</span>
-            </div>
-            <a href="/" class="glass-panel-interactive px-4 py-2 rounded-xl text-xs font-bold text-pink-300 hover:text-white transition-all">
-                ← Kembali ke Dashboard
+          <!-- Overview -->
+          <div class="nav-group">
+            <div class="nav-group-label">Overview</div>
+            <a href="/" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span>Dashboard</span>
             </a>
+            <a href="/status" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
+              <span>Live Status</span>
+              <span class="nav-badge">Live</span>
+            </a>
+            <a href="/feed" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
+              <span>Activity Feed</span>
+            </a>
+          </div>
+
+          <!-- Community -->
+          <div class="nav-group">
+            <div class="nav-group-label">Community</div>
+            <a href="/leaderboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
+              <span>Leaderboard</span>
+            </a>
+            <a href="/economy" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
+              <span>Economy</span>
+            </a>
+            <a href="/topology" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span>Guild Topology</span>
+            </a>
+          </div>
+
+          <!-- Media & Audio -->
+          <div class="nav-group">
+            <div class="nav-group-label">Media & Audio</div>
+            <a href="/music" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
+              <span>Music Hub</span>
+            </a>
+            <a href="/soundboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
+              <span>Soundboard</span>
+            </a>
+            <a href="/jam" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
+              <span>Jam Session</span>
+            </a>
+            <a href="/karaoke" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span>Karaoke</span>
+            </a>
+          </div>
+
+          <!-- Naura Wilds RPG -->
+          <div class="nav-group">
+            <div class="nav-group-label">Naura Wilds RPG</div>
+            <a href="/world" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span>World Map</span>
+            </a>
+            <a href="/survival-map" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
+              <span>Survival Map</span>
+            </a>
+            <a href="/activity" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
+              <span>Activity Hub</span>
+            </a>
+          </div>
+
+          <!-- Configuration -->
+          <div class="nav-group">
+            <div class="nav-group-label">Configuration</div>
+            <a href="/settings" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
+              <span>Settings</span>
+            </a>
+            <a href="/welcomer" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
+              <span>Welcomer Card</span>
+            </a>
+            <a href="/builder" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span>Embed Builder</span>
+            </a>
+            <a href="/automations" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
+              <span>Automations</span>
+            </a>
+            <a href="/tickets" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
+              <span>Tickets</span>
+            </a>
+          </div>
+
+          <!-- More -->
+          <div class="nav-group">
+            <div class="nav-group-label">More</div>
+            <a href="/portfolio" class="nav-item">
+              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
+              <span style="color:var(--accent-green)">Creator Portfolio</span>
+            </a>
+          </div>
+
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user" onclick="window.location.href='/'">
+            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+            <div class="sidebar-user-info"><div class="sidebar-user-name">Guest Explorer</div><div class="sidebar-user-role">Lv. 18 Adventurer</div></div>
+          </div>
         </div>
+      </aside>
+
+      <div class="main-content">
+        <header class="top-header">
+          <div class="header-left">
+            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <div>
+              <div class="page-title">World Map Explorer</div>
+              <div class="breadcrumb"><span>Naura Wilds RPG</span><span class="breadcrumb-sep">/</span><span>Territory Atlas</span></div>
+            </div>
+          </div>
+          <div class="header-right">
+            <button class="btn btn-ghost btn-sm" id="btnWeatherToggle">
+              <i class="fa-solid fa-cloud-sun-rain" style="color:var(--accent-cyan);"></i> <span id="weatherLbl">Hujan Sakura (+20% EXP)</span>
+            </button>
+            <div class="badge badge-primary" id="playerNsfBadge">
+              <i class="fa-solid fa-star"></i> <span>1,450 NSF</span>
+            </div>
+          </div>
+        </header>
+
+        <main class="page-content">
+          <div class="page-header-bar animate-in">
+            <div>
+              <h1 class="page-heading">
+                <span class="page-heading-icon" style="background:var(--cyan-dim);border:1px solid var(--border-cyan);">
+                  <i class="fa-solid fa-earth-asia" style="color:var(--accent-cyan);"></i>
+                </span>
+                Benua Aetheria: Naura Wilds
+              </h1>
+              <p class="page-sub">Eksplorasi wilayah, periksa sumber daya alam, temui NPC lokal, dan lakukan Fast Travel antar teritori.</p>
+            </div>
+          </div>
+
+          <div class="world-layout">
+            <!-- Left: Interactive Map -->
+            <div class="map-viewport-card animate-in delay-1">
+              <div class="map-topbar">
+                <div class="filter-pills" id="filterContainer">
+                  <button class="filter-pill active" data-filter="all"><i class="fa-solid fa-globe"></i> Semua Teritori</button>
+                  <button class="filter-pill" data-filter="safe"><i class="fa-solid fa-shield-halved"></i> Kota & Desa</button>
+                  <button class="filter-pill" data-filter="gather"><i class="fa-solid fa-tree"></i> Area Gathering</button>
+                  <button class="filter-pill" data-filter="danger"><i class="fa-solid fa-skull"></i> High-Level Raid</button>
+                </div>
+                <div style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+                  <i class="fa-regular fa-compass"></i> Sumbu Galaktik: <span style="color:var(--accent-cyan);font-family:var(--font-mono);" id="coordDisplay">X: 420 · Y: 310</span>
+                </div>
+              </div>
+
+              <div class="map-canvas-wrap" id="mapWrap">
+                <svg class="world-svg" viewBox="0 0 960 600" id="worldSvg">
+                  <defs>
+                    <!-- Linear and Radial Gradients for Biomes -->
+                    <radialGradient id="swallowtailGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#34d399" stop-opacity="0.35" />
+                      <stop offset="100%" stop-color="#34d399" stop-opacity="0" />
+                    </radialGradient>
+                    <radialGradient id="cityGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#f472b6" stop-opacity="0.35" />
+                      <stop offset="100%" stop-color="#f472b6" stop-opacity="0" />
+                    </radialGradient>
+                    <radialGradient id="forestGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#10b981" stop-opacity="0.35" />
+                      <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+                    </radialGradient>
+                    <radialGradient id="cavernsGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.4" />
+                      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0" />
+                    </radialGradient>
+                    <radialGradient id="oceanGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.35" />
+                      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0" />
+                    </radialGradient>
+                    <radialGradient id="abyssGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.45" />
+                      <stop offset="100%" stop-color="#ef4444" stop-opacity="0" />
+                    </radialGradient>
+                  </defs>
+
+                  <!-- High-Fantasy Continental Map Artwork Background -->
+                  <image href="/assets/maps/world_map_art.jpg" x="0" y="0" width="960" height="600" preserveAspectRatio="xMidYMid slice" opacity="0.92" />
+
+                  <!-- Biome Ambient Glow Circles -->
+                  <circle cx="210" cy="420" r="140" fill="url(#swallowtailGlow)" />
+                  <circle cx="510" cy="270" r="150" fill="url(#cityGlow)" />
+                  <circle cx="270" cy="160" r="130" fill="url(#forestGlow)" />
+                  <circle cx="710" cy="150" r="140" fill="url(#cavernsGlow)" />
+                  <circle cx="490" cy="470" r="130" fill="url(#oceanGlow)" />
+                  <circle cx="770" cy="420" r="150" fill="url(#abyssGlow)" />
+
+                  <!-- Connecting Trails -->
+                  <!-- Desa -> Kota -->
+                  <path d="M 210 420 Q 340 380 510 270" class="map-trail active-trail" stroke-width="2.5" fill="none" />
+                  <!-- Desa -> Hutan -->
+                  <path d="M 210 420 Q 200 280 270 160" class="map-trail" stroke-width="2" fill="none" />
+                  <!-- Hutan -> Kota -->
+                  <path d="M 270 160 Q 380 190 510 270" class="map-trail" stroke-width="2" fill="none" />
+                  <!-- Kota -> Gua Kristal -->
+                  <path d="M 510 270 Q 610 210 710 150" class="map-trail" stroke-width="2" fill="none" />
+                  <!-- Kota -> Laut Selatan -->
+                  <path d="M 510 270 Q 480 370 490 470" class="map-trail" stroke-width="2" fill="none" />
+                  <!-- Gua Kristal -> Neo Abyss -->
+                  <path d="M 710 150 Q 770 280 770 420" class="map-trail" stroke-width="2" fill="none" />
+                  <!-- Laut Selatan -> Neo Abyss -->
+                  <path d="M 490 470 Q 640 470 770 420" class="map-trail" stroke-width="2" fill="none" />
+
+                  <!-- ZONE 1: Desa Swallowtail (Lv. 1-5, Safe) -->
+                  <g class="map-region-group" id="node-des" data-zone="desa" transform="translate(210, 420)">
+                    <circle class="pulse-ring" fill="none" stroke="#34d399" stroke-width="1.5" />
+                    <circle class="zone-core" r="22" fill="#062e20" stroke="#34d399" stroke-width="2" />
+                    <text text-anchor="middle" dy="6" fill="#34d399" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf015;</text>
+                    <rect x="-60" y="32" width="120" height="24" rx="12" fill="rgba(6, 46, 32, 0.9)" stroke="rgba(52, 211, 153, 0.4)" stroke-width="1" />
+                    <text text-anchor="middle" y="48" fill="#ecfdf5" font-size="11" font-weight="600" font-family="'Space Grotesk', sans-serif">Desa Swallowtail</text>
+                  </g>
+
+                  <!-- ZONE 2: Hutan Pinus Mistis (Lv. 5-15, Gather) -->
+                  <g class="map-region-group" id="node-forest" data-zone="hutan" transform="translate(270, 160)">
+                    <circle class="pulse-ring" fill="none" stroke="#10b981" stroke-width="1.5" />
+                    <circle class="zone-core" r="22" fill="#063826" stroke="#10b981" stroke-width="2" />
+                    <text text-anchor="middle" dy="6" fill="#10b981" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf1bb;</text>
+                    <rect x="-65" y="32" width="130" height="24" rx="12" fill="rgba(6, 56, 38, 0.9)" stroke="rgba(16, 185, 129, 0.4)" stroke-width="1" />
+                    <text text-anchor="middle" y="48" fill="#ecfdf5" font-size="11" font-weight="600" font-family="'Space Grotesk', sans-serif">Hutan Mistis Pinus</text>
+                  </g>
+
+                  <!-- ZONE 3: Kota Metropolitan Naura (Lv. 5-15, Safe) -->
+                  <g class="map-region-group selected" id="node-city" data-zone="kota" transform="translate(510, 270)">
+                    <circle class="pulse-ring" fill="none" stroke="#f472b6" stroke-width="2" />
+                    <circle class="zone-core" r="26" fill="#3b0825" stroke="#f472b6" stroke-width="2.5" />
+                    <text text-anchor="middle" dy="7" fill="#f472b6" font-size="18" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf1ad;</text>
+                    <!-- Current Position Badge -->
+                    <rect x="-35" y="-46" width="70" height="18" rx="9" fill="#f472b6" />
+                    <text text-anchor="middle" y="-33" fill="#000" font-size="9" font-weight="700" font-family="'JetBrains Mono', monospace">KAMU DISINI</text>
+                    <rect x="-65" y="36" width="130" height="24" rx="12" fill="rgba(59, 8, 37, 0.9)" stroke="rgba(244, 114, 182, 0.5)" stroke-width="1" />
+                    <text text-anchor="middle" y="52" fill="#fff" font-size="11" font-weight="700" font-family="'Space Grotesk', sans-serif">Metropolis Naura</text>
+                  </g>
+
+                  <!-- ZONE 4: Gua Kristal Aether (Lv. 15-25, Gather) -->
+                  <g class="map-region-group" id="node-caverns" data-zone="tambang" transform="translate(710, 150)">
+                    <circle class="pulse-ring" fill="none" stroke="#22d3ee" stroke-width="1.5" />
+                    <circle class="zone-core" r="22" fill="#082b3d" stroke="#22d3ee" stroke-width="2" />
+                    <text text-anchor="middle" dy="6" fill="#22d3ee" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf3a5;</text>
+                    <rect x="-65" y="32" width="130" height="24" rx="12" fill="rgba(8, 43, 61, 0.9)" stroke="rgba(34, 211, 238, 0.4)" stroke-width="1" />
+                    <text text-anchor="middle" y="48" fill="#e0f2fe" font-size="11" font-weight="600" font-family="'Space Grotesk', sans-serif">Gua Kristal Aether</text>
+                  </g>
+
+                  <!-- ZONE 5: Laut & Dermaga Selatan (Lv. 20-35, Gather) -->
+                  <g class="map-region-group" id="node-ocean" data-zone="laut" transform="translate(490, 470)">
+                    <circle class="pulse-ring" fill="none" stroke="#3b82f6" stroke-width="1.5" />
+                    <circle class="zone-core" r="22" fill="#081e3d" stroke="#3b82f6" stroke-width="2" />
+                    <text text-anchor="middle" dy="6" fill="#3b82f6" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf578;</text>
+                    <rect x="-70" y="32" width="140" height="24" rx="12" fill="rgba(8, 30, 61, 0.9)" stroke="rgba(59, 130, 246, 0.4)" stroke-width="1" />
+                    <text text-anchor="middle" y="48" fill="#eff6ff" font-size="11" font-weight="600" font-family="'Space Grotesk', sans-serif">Dermaga Laut Selatan</text>
+                  </g>
+
+                  <!-- ZONE 6: The Neo-Abyss (Lv. 40+, Danger) -->
+                  <g class="map-region-group" id="node-abyss" data-zone="abyss" transform="translate(770, 420)">
+                    <circle class="pulse-ring" fill="none" stroke="#ef4444" stroke-width="2" />
+                    <circle class="zone-core" r="24" fill="#360a14" stroke="#ef4444" stroke-width="2" />
+                    <text text-anchor="middle" dy="7" fill="#ef4444" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf714;</text>
+                    <rect x="-65" y="34" width="130" height="24" rx="12" fill="rgba(54, 10, 20, 0.95)" stroke="rgba(239, 68, 68, 0.5)" stroke-width="1" />
+                    <text text-anchor="middle" y="50" fill="#fecaca" font-size="11" font-weight="700" font-family="'Space Grotesk', sans-serif">The Neo-Abyss</text>
+                  </g>
+                </svg>
+
+                <div class="map-hud-overlay">
+                  <span>STATUS: <b>TERKONEKSI KE SATELIT AETHER</b></span>
+                  <span>LATENCY: <b>14ms</b></span>
+                  <span>ZOOM: <b>100%</b></span>
+                </div>
+
+                <div class="map-zoom-controls">
+                  <button class="map-zoom-btn" id="btnZoomIn" title="Perbesar"><i class="fa-solid fa-plus"></i></button>
+                  <button class="map-zoom-btn" id="btnZoomOut" title="Perkecil"><i class="fa-solid fa-minus"></i></button>
+                  <button class="map-zoom-btn" id="btnResetView" title="Pusatkan Lokasi"><i class="fa-solid fa-crosshairs"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Zone Intel Drawer -->
+            <div class="intel-card animate-in delay-2" id="intelDrawer">
+              <div class="intel-header" id="intelHeader">
+                <div class="intel-category" id="intelCategory">
+                  <i class="fa-solid fa-shield-halved"></i> <span>ZONA AMAN (SAFE HAVEN)</span>
+                </div>
+                <div class="intel-title" id="intelTitle">Metropolis Naura</div>
+                <div class="intel-sub" id="intelSub">
+                  Pusat peradaban dan ekonomi Aetheria. Tempat bursa saham, Bank Central, Kafe Naura, dan Hall of Fame berkumpul.
+                </div>
+              </div>
+
+              <div class="intel-body">
+                <div class="stat-grid-compact">
+                  <div class="stat-box-sm">
+                    <div class="stat-box-lbl">Rekomendasi Level</div>
+                    <div class="stat-box-val" id="intelLevel"><i class="fa-solid fa-ranking-star" style="color:var(--primary);"></i> Lv. 5 - 15</div>
+                  </div>
+                  <div class="stat-box-sm">
+                    <div class="stat-box-lbl">Tingkat Bahaya</div>
+                    <div class="stat-box-val" id="intelDanger"><span style="color:#34d399;">★☆☆☆☆</span> Aman</div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em;">
+                    Ketersediaan Sumber Daya
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:8px;">
+                    <div>
+                      <div class="resource-bar-row">
+                        <span style="color:var(--text-secondary);"><i class="fa-solid fa-tree" style="color:#10b981;"></i> Kayu & Kayu Aether</span>
+                        <span id="resWoodVal" style="font-family:var(--font-mono);font-size:11px;">35%</span>
+                      </div>
+                      <div class="resource-progress"><div class="resource-fill" id="resWoodBar" style="width:35%;background:#10b981;"></div></div>
+                    </div>
+                    <div>
+                      <div class="resource-bar-row">
+                        <span style="color:var(--text-secondary);"><i class="fa-solid fa-gem" style="color:#22d3ee;"></i> Mineral & Kristal</span>
+                        <span id="resOreVal" style="font-family:var(--font-mono);font-size:11px;">15%</span>
+                      </div>
+                      <div class="resource-progress"><div class="resource-fill" id="resOreBar" style="width:15%;background:#22d3ee;"></div></div>
+                    </div>
+                    <div>
+                      <div class="resource-bar-row">
+                        <span style="color:var(--text-secondary);"><i class="fa-solid fa-fish" style="color:#3b82f6;"></i> Sumber Pangan / Ikan</span>
+                        <span id="resFishVal" style="font-family:var(--font-mono);font-size:11px;">80%</span>
+                      </div>
+                      <div class="resource-progress"><div class="resource-fill" id="resFishBar" style="width:80%;background:#3b82f6;"></div></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
+                    Tokoh & NPC Lokal
+                  </div>
+                  <div class="npc-badge-list" id="intelNpcList">
+                    <div class="npc-badge-item"><span class="npc-badge-emoji">🌸</span> Chloe (Barista)</div>
+                    <div class="npc-badge-item"><span class="npc-badge-emoji">💎</span> Valerie (Bursa)</div>
+                    <div class="npc-badge-item"><span class="npc-badge-emoji">🏦</span> Evelyn (Bankir)</div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
+                    Monster & Ancaman
+                  </div>
+                  <div style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:8px;" id="intelMonsters">
+                    <i class="fa-solid fa-shield-cat" style="color:#34d399;"></i> Tidak ada monster. Zona dilindungi oleh Pasukan Penjaga Kota.
+                  </div>
+                </div>
+              </div>
+
+              <div class="warp-action-box">
+                <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:10px;">
+                  <span>Biaya Fast Travel:</span>
+                  <span style="color:var(--accent-amber);font-weight:600;font-family:var(--font-mono);" id="warpCost">0 NSF (Lokasi Saat Ini)</span>
+                </div>
+                <button class="warp-btn btn-primary" id="btnFastTravel">
+                  <i class="fa-solid fa-bolt"></i> <span id="warpBtnText">Kamu Sedang Berada Disini</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
 
-    <!-- Bottom Controls HUD & Wardrobe Selector -->
-    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 hud-interactive glass-panel-interactive p-4 rounded-2xl flex items-center gap-3 border border-pink-400/20 shadow-2xl">
-        <button id="spawnPetBtn" class="btn-cyber-primary text-xs">
-            🐾 Panggil Pet
-        </button>
-        <button id="cheerBtn" class="glass-panel-interactive px-3 py-2 rounded-lg text-xs font-bold text-pink-300 hover:bg-pink-400/10 transition-all">
-            ✨ Partikel
-        </button>
-        <div class="h-6 w-px bg-white/10"></div>
-        <div class="flex items-center gap-1.5">
-            <span class="text-[11px] text-gray-400 font-cyber mr-1">👗 Wardrobe:</span>
-            <button onclick="if(window.NauraViewer)window.NauraViewer.setSkin('cyberpunk')" class="px-2 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-300 text-[10px] font-bold border border-cyan-500/30">Neon</button>
-            <button onclick="if(window.NauraViewer)window.NauraViewer.setSkin('maid')" class="px-2 py-1 rounded bg-gray-500/20 hover:bg-gray-500/40 text-gray-200 text-[10px] font-bold border border-gray-500/30">Maid</button>
-            <button onclick="if(window.NauraViewer)window.NauraViewer.setSkin('casual')" class="px-2 py-1 rounded bg-pink-500/20 hover:bg-pink-500/40 text-pink-300 text-[10px] font-bold border border-pink-500/30">Casual</button>
-            <button onclick="if(window.NauraViewer)window.NauraViewer.setSkin('adventurer')" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">Wilds</button>
-        </div>
-        <div class="h-6 w-px bg-white/10"></div>
-        <div class="text-[11px] text-gray-400 font-cyber">
-            Pet: <span id="petCount" class="text-pink-300 font-bold">2</span> | Partikel: <span id="particleCount" class="text-green-300 font-bold">0</span>
-        </div>
-    </div>
+    <nav class="mobile-nav">
+      <div class="mobile-nav-inner">
+        <a href="/" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Home</span></a>
+        <a href="/music" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-music"></i></span><span class="mn-label">Music</span></a>
+        <a href="/world" class="mobile-nav-item active"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">World</span></a>
+        <a href="/economy" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-coins"></i></span><span class="mn-label">Economy</span></a>
+        <a href="/settings" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+      </div>
+    </nav>
 
+    <script src="/src/js/shared-nav.js"></script>
     <script>
-        const canvas = document.getElementById("worldCanvas");
-        const ctx = canvas.getContext("2d");
-        const petCountEl = document.getElementById("petCount");
-        const particleCountEl = document.getElementById("particleCount");
+      // Audio Synth for Teleport & UI Interaction
+      let audioCtx = null;
+      function playTone(freq, type = 'sine', duration = 0.15, vol = 0.2) {
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+        } catch (_) {}
+      }
 
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+      function playWarpSfx() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.35);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(now + 0.45);
+      }
+
+      // Zone Data Catalog
+      const ZONE_DATA = {
+        desa: {
+          id: 'desa',
+          name: 'Desa Swallowtail',
+          tag: 'ZONA AMAN (STARTER HAVEN)',
+          category: 'safe',
+          color: '#34d399',
+          glow: 'rgba(52, 211, 153, 0.2)',
+          desc: 'Lembah damai tempat petualang terbangun pertama kali. Penuh dengan kebun organik, bengkel pandai besi Bagas, dan klinik ramah Bidan Sari.',
+          reqLevel: 'Lv. 1 - 5',
+          danger: '★☆☆☆☆ Aman',
+          dangerColor: '#34d399',
+          wood: 70,
+          ore: 25,
+          fish: 60,
+          npcs: [
+            { emoji: '👴', name: 'Pak Kades Tirto' },
+            { emoji: '🎲', name: 'Luna (Gacha Toko)' },
+            { emoji: '🔨', name: 'Bagas (Pandai Besi)' },
+            { emoji: '🌾', name: 'Ningsih (Petani)' },
+            { emoji: '💉', name: 'Bidan Sari (Klinik)' }
+          ],
+          monsters: '<i class="fa-solid fa-shield-cat" style="color:#34d399;"></i> Aman terlindung. Hama kebun level rendah (Kelinci Liar, Tikus Sawah).',
+          coords: 'X: 210 · Y: 380',
+          travelCost: 15
+        },
+        hutan: {
+          id: 'hutan',
+          name: 'Hutan Mistis Pinus',
+          tag: 'GATHERING AREA (WILDERNESS)',
+          category: 'gather',
+          color: '#10b981',
+          glow: 'rgba(16, 185, 129, 0.2)',
+          desc: 'Hutan lebat berkabut dengan pepohonan pinus aether berusia ratusan tahun. Lokasi utama mencari kayu berkualitas tinggi dan herba obat penyembuh.',
+          reqLevel: 'Lv. 5 - 15',
+          danger: '★★☆☆☆ Waspada',
+          dangerColor: '#10b981',
+          wood: 95,
+          ore: 30,
+          fish: 40,
+          npcs: [
+            { emoji: '🏹', name: 'Ranger Jack' },
+            { emoji: '🌿', name: 'Nenek Jamu Marni' }
+          ],
+          monsters: '<i class="fa-solid fa-paw" style="color:#f59e0b;"></i> Babi Hutan Aether (Lv. 6), Serigala Bayangan (Lv. 11).',
+          coords: 'X: 280 · Y: 180',
+          travelCost: 25
+        },
+        kota: {
+          id: 'kota',
+          name: 'Metropolis Naura',
+          tag: 'PUSAT IBU KOTA (SAFE HUB)',
+          category: 'safe',
+          color: '#f472b6',
+          glow: 'rgba(244, 114, 182, 0.25)',
+          desc: 'Pusat peradaban dan ekonomi Aetheria. Tempat bursa saham, Bank Central, Kafe Naura, dan Hall of Fame berkumpul.',
+          reqLevel: 'Lv. 5 - 15',
+          danger: '★☆☆☆☆ Aman',
+          dangerColor: '#34d399',
+          wood: 35,
+          ore: 15,
+          fish: 80,
+          npcs: [
+            { emoji: '🌸', name: 'Chloe (Barista Kafe)' },
+            { emoji: '💎', name: 'Valerie (Bursa Pasar)' },
+            { emoji: '🏦', name: 'Evelyn (Bankir)' },
+            { emoji: '⚖️', name: 'Hakim Sean (Tribunal)' }
+          ],
+          monsters: '<i class="fa-solid fa-shield-cat" style="color:#34d399;"></i> Tidak ada monster. Zona dilindungi oleh Pasukan Penjaga Kota.',
+          coords: 'X: 480 · Y: 300',
+          travelCost: 0
+        },
+        tambang: {
+          id: 'tambang',
+          name: 'Gua Kristal Aether',
+          tag: 'AREA PERTAMBANGAN (DUNGEON)',
+          category: 'gather',
+          color: '#22d3ee',
+          glow: 'rgba(34, 211, 238, 0.25)',
+          desc: 'Labirin gua bawah tanah dengan kristal biru berpendar. Tempat menambang bijih besi, emas murni, dan pecahan Star Fragments langka.',
+          reqLevel: 'Lv. 15 - 28',
+          danger: '★★★☆☆ Berbahaya',
+          dangerColor: '#f59e0b',
+          wood: 10,
+          ore: 95,
+          fish: 10,
+          npcs: [
+            { emoji: '⛏️', name: 'Mandor Guntur' },
+            { emoji: '🔬', name: 'Dr. Aris (Geolog)' }
+          ],
+          monsters: '<i class="fa-solid fa-gem" style="color:#22d3ee;"></i> Golem Kristal (Lv. 18), Kelelawar Aether (Lv. 22).',
+          coords: 'X: 720 · Y: 200',
+          travelCost: 45
+        },
+        laut: {
+          id: 'laut',
+          name: 'Dermaga Laut Selatan',
+          tag: 'PESISIR & PERIKANAN',
+          category: 'gather',
+          color: '#3b82f6',
+          glow: 'rgba(59, 130, 246, 0.25)',
+          desc: 'Pelabuhan maritim luas tempat para nelayan mengarungi samudera dalam. Simpanan berbagai ikan langka seperti Golden Koi dan Deep Sea Angler.',
+          reqLevel: 'Lv. 20 - 35',
+          danger: '★★★☆☆ Berbahaya',
+          dangerColor: '#f59e0b',
+          wood: 20,
+          ore: 40,
+          fish: 100,
+          npcs: [
+            { emoji: '🤿', name: 'Tari (Penyelam)' },
+            { emoji: '⚓', name: 'Kapten Baruna' }
+          ],
+          monsters: '<i class="fa-solid fa-water" style="color:#3b82f6;"></i> Kepiting Karang Raksasa (Lv. 25), Serpent Laut (Lv. 32).',
+          coords: 'X: 490 · Y: 490',
+          travelCost: 50
+        },
+        abyss: {
+          id: 'abyss',
+          name: 'The Neo-Abyss',
+          tag: 'HIGH-LEVEL RAID (CELESTIAL VOID)',
+          category: 'danger',
+          color: '#ef4444',
+          glow: 'rgba(239, 68, 68, 0.35)',
+          desc: 'Retakan dimensi anomali ruang dan waktu. Lokasi jatuhnya meteor purba berisikan monster celestial dan senjata divine tier SS.',
+          reqLevel: 'Lv. 40+ (End-game)',
+          danger: '★★★★★ EKSTREM',
+          dangerColor: '#ef4444',
+          wood: 5,
+          ore: 80,
+          fish: 0,
+          npcs: [
+            { emoji: '🔮', name: 'Bayangan Astral' },
+            { emoji: '📜', name: 'Pustakawan Abadi' }
+          ],
+          monsters: '<i class="fa-solid fa-skull" style="color:#ef4444;"></i> [WORLD BOSS] Astral Warden V2 (Lv. 55 Raid Boss).',
+          coords: 'X: 780 · Y: 420',
+          travelCost: 120
         }
-        window.addEventListener("resize", resize);
-        resize();
+      };
 
-        // Game Entities
-        const particles = [];
-        const pets = [
-            { x: window.innerWidth / 2, y: window.innerHeight / 2, vx: 1.2, vy: 0.8, type: "kirin", name: "Celestial Kirin", color: "#FFD700", radius: 18 },
-            { x: window.innerWidth / 2 + 80, y: window.innerHeight / 2 - 40, vx: -1.0, vy: 0.6, type: "leviathan", name: "Abyssal Leviathan", color: "#00FFFF", radius: 22 }
-        ];
+      let currentZone = 'kota';
+      let selectedZone = 'kota';
+      let playerNsf = 1450;
 
-        function createParticleBurst(x, y, color = "#FFB6C1") {
-            for (let i = 0; i < 25; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 4 + 1;
-                particles.push({
-                    x, y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    life: 1.0,
-                    decay: Math.random() * 0.02 + 0.015,
-                    color
-                });
-            }
+      const intelCategory = document.getElementById('intelCategory');
+      const intelTitle = document.getElementById('intelTitle');
+      const intelSub = document.getElementById('intelSub');
+      const intelLevel = document.getElementById('intelLevel');
+      const intelDanger = document.getElementById('intelDanger');
+      const intelNpcList = document.getElementById('intelNpcList');
+      const intelMonsters = document.getElementById('intelMonsters');
+      const coordDisplay = document.getElementById('coordDisplay');
+      const warpCost = document.getElementById('warpCost');
+      const btnFastTravel = document.getElementById('btnFastTravel');
+      const warpBtnText = document.getElementById('warpBtnText');
+      const playerNsfBadge = document.getElementById('playerNsfBadge');
+      const warpFlash = document.getElementById('warpFlash');
+
+      function updateZoneIntel(zoneKey) {
+        selectedZone = zoneKey;
+        const data = ZONE_DATA[zoneKey];
+        if (!data) return;
+
+        playTone(600, 'sine', 0.08, 0.15);
+
+        // Update Intel Box UI
+        document.documentElement.style.setProperty('--zone-glow', data.glow);
+        document.documentElement.style.setProperty('--zone-accent', data.color);
+
+        intelCategory.innerHTML = `<i class="fa-solid fa-map-pin"></i> <span>${data.tag}</span>`;
+        intelCategory.style.color = data.color;
+        intelTitle.textContent = data.name;
+        intelSub.textContent = data.desc;
+        intelLevel.innerHTML = `<i class="fa-solid fa-ranking-star" style="color:${data.color};"></i> ${data.reqLevel}`;
+        intelDanger.innerHTML = `<span style="color:${data.dangerColor};">${data.danger}</span>`;
+
+        // Update Resources
+        document.getElementById('resWoodVal').textContent = `${data.wood}%`;
+        document.getElementById('resWoodBar').style.width = `${data.wood}%`;
+        document.getElementById('resOreVal').textContent = `${data.ore}%`;
+        document.getElementById('resOreBar').style.width = `${data.ore}%`;
+        document.getElementById('resFishVal').textContent = `${data.fish}%`;
+        document.getElementById('resFishBar').style.width = `${data.fish}%`;
+
+        // Update NPCs
+        intelNpcList.innerHTML = data.npcs.map(npc => `
+          <div class="npc-badge-item">
+            <span class="npc-badge-emoji">${npc.emoji}</span>
+            <span>${npc.name}</span>
+          </div>
+        `).join('');
+
+        // Update Monsters
+        intelMonsters.innerHTML = data.monsters;
+
+        // Coordinates
+        coordDisplay.textContent = data.coords;
+
+        // Button State
+        if (selectedZone === currentZone) {
+          warpCost.textContent = '0 NSF (Lokasi Saat Ini)';
+          warpCost.style.color = 'var(--text-muted)';
+          warpBtnText.textContent = 'Kamu Sedang Berada Disini';
+          btnFastTravel.disabled = true;
+          btnFastTravel.style.opacity = '0.5';
+          btnFastTravel.style.cursor = 'default';
+        } else {
+          warpCost.textContent = `${data.travelCost} NSF`;
+          warpCost.style.color = 'var(--accent-amber)';
+          warpBtnText.textContent = `Fast Travel ke ${data.name}`;
+          btnFastTravel.disabled = false;
+          btnFastTravel.style.opacity = '1';
+          btnFastTravel.style.cursor = 'pointer';
         }
 
-        // Draw Floating Cyber Island
-        function drawIsland() {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2 + 50;
-
-            // Island Shadow & Glow
-            ctx.save();
-            ctx.beginPath();
-            ctx.ellipse(centerX, centerY + 80, 260, 60, 0, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(255, 182, 193, 0.08)";
-            ctx.shadowColor = "rgba(255, 182, 193, 0.4)";
-            ctx.shadowBlur = 40;
-            ctx.fill();
-            ctx.restore();
-
-            // Main Island Base
-            ctx.beginPath();
-            ctx.ellipse(centerX, centerY, 320, 140, 0, 0, Math.PI * 2);
-            const islandGrad = ctx.createLinearGradient(centerX - 320, centerY - 140, centerX + 320, centerY + 140);
-            islandGrad.addColorStop(0, "#1f1738");
-            islandGrad.addColorStop(0.5, "#2a1b4e");
-            islandGrad.addColorStop(1, "#120e24");
-            ctx.fillStyle = islandGrad;
-            ctx.fill();
-            ctx.strokeStyle = "rgba(255, 182, 193, 0.3)";
-            ctx.lineWidth = 3;
-            ctx.stroke();
-
-            // Island Grid Lines
-            ctx.strokeStyle = "rgba(255, 182, 193, 0.08)";
-            ctx.lineWidth = 1;
-            for (let x = -280; x <= 280; x += 40) {
-                ctx.beginPath();
-                ctx.moveTo(centerX + x, centerY - 60);
-                ctx.lineTo(centerX + x * 1.1, centerY + 60);
-                ctx.stroke();
-            }
-
-            // Floating Cyber Shrine Centerpiece
-            ctx.save();
-            ctx.shadowColor = "#FFB6C1";
-            ctx.shadowBlur = 20;
-            ctx.fillStyle = "#FFB6C1";
-            ctx.beginPath();
-            ctx.arc(centerX, centerY - 20, 12, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-        }
-
-        // Game Loop
-        function loop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            drawIsland();
-
-            // Update & Draw Pets
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2 + 50;
-
-            for (const pet of pets) {
-                pet.x += pet.vx;
-                pet.y += pet.vy;
-
-                // Elliptical Island boundary
-                const dx = (pet.x - centerX) / 260;
-                const dy = (pet.y - centerY) / 100;
-                if (dx * dx + dy * dy > 0.85) {
-                    pet.vx *= -1;
-                    pet.vy *= -1;
-                }
-
-                ctx.save();
-                ctx.shadowColor = pet.color;
-                ctx.shadowBlur = 15;
-                ctx.fillStyle = pet.color;
-                ctx.beginPath();
-                ctx.arc(pet.x, pet.y, pet.radius, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Pet Label
-                ctx.fillStyle = "#FFFFFF";
-                ctx.font = "10px Orbitron";
-                ctx.textAlign = "center";
-                ctx.fillText(pet.name, pet.x, pet.y - pet.radius - 6);
-                ctx.restore();
-            }
-
-            // Update & Draw Particles
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life -= p.decay;
-
-                if (p.life <= 0) {
-                    particles.splice(i, 1);
-                    continue;
-                }
-
-                ctx.save();
-                ctx.globalAlpha = p.life;
-                ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-
-            petCountEl.textContent = pets.length;
-            particleCountEl.textContent = particles.length;
-
-            requestAnimationFrame(loop);
-        }
-        loop();
-
-        // Interactions
-        document.getElementById("cheerBtn").addEventListener("click", () => {
-            createParticleBurst(canvas.width / 2, canvas.height / 2, "#F9A8D4");
+        // Highlight SVG node
+        document.querySelectorAll('.map-region-group').forEach(el => {
+          el.classList.toggle('selected', el.getAttribute('data-zone') === zoneKey);
         });
+      }
 
-        document.getElementById("spawnPetBtn").addEventListener("click", () => {
-            const types = [
-                { type: "bahamut", name: "Dread Bahamut", color: "#FF4444", radius: 24 },
-                { type: "garuda", name: "Solar Garuda", color: "#FFAA00", radius: 19 },
-                { type: "kitsune", name: "Spirit Kitsune", color: "#FF88DD", radius: 17 }
-            ];
-            const chosen = types[Math.floor(Math.random() * types.length)];
-            pets.push({
-                x: canvas.width / 2 + (Math.random() * 80 - 40),
-                y: canvas.height / 2 + (Math.random() * 40 - 20),
-                vx: (Math.random() - 0.5) * 2,
-                vy: (Math.random() - 0.5) * 1.5,
-                ...chosen
-            });
-            createParticleBurst(canvas.width / 2, canvas.height / 2, chosen.color);
+      // Click event for each map pin node
+      document.querySelectorAll('.map-region-group').forEach(node => {
+        node.addEventListener('click', () => {
+          const zoneKey = node.getAttribute('data-zone');
+          updateZoneIntel(zoneKey);
         });
+      });
 
-        // Click on Canvas creates burst
-        canvas.addEventListener("click", (e) => {
-            createParticleBurst(e.clientX, e.clientY, "#00FFFF");
+      // Filter pills
+      document.querySelectorAll('.filter-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          const filter = pill.getAttribute('data-filter');
+
+          playTone(480, 'triangle', 0.05, 0.1);
+
+          document.querySelectorAll('.map-region-group').forEach(node => {
+            const zKey = node.getAttribute('data-zone');
+            const data = ZONE_DATA[zKey];
+            if (filter === 'all' || data.category === filter) {
+              node.style.display = 'block';
+              node.style.opacity = '1';
+            } else {
+              node.style.opacity = '0.2';
+            }
+          });
         });
+      });
 
-        // Hide loading screen once canvas is mounted
+      // Fast travel teleportation action
+      btnFastTravel.addEventListener('click', () => {
+        if (selectedZone === currentZone) return;
+        const target = ZONE_DATA[selectedZone];
+        if (playerNsf < target.travelCost) {
+          alert('NSF tidak mencukupi untuk teleportasi!');
+          return;
+        }
+
+        playWarpSfx();
+
+        // Warp flash effect
+        warpFlash.classList.add('active');
         setTimeout(() => {
-            const ls = document.getElementById("loadingScreen");
-            if (ls) ls.classList.add("hidden");
+          warpFlash.classList.remove('active');
         }, 400);
-    </script>
 
-<script type="module">
-    import { NauraViewer } from '../components/NauraViewer/index.js';
-    NauraViewer.init({ context: 'world' });
-</script>
-</body>
+        playerNsf -= target.travelCost;
+        playerNsfBadge.innerHTML = `<i class="fa-solid fa-star"></i> <span>${playerNsf.toLocaleString()} NSF</span>`;
+
+        currentZone = selectedZone;
+
+        // Move "KAMU DISINI" badge to new node in SVG
+        const badgeOld = document.querySelector('.map-region-group text[font-size="9"]')?.parentElement;
+        if (badgeOld) {
+          // Remove old badge
+          const rect = badgeOld.querySelector('rect[fill="#f472b6"]');
+          const txt = badgeOld.querySelector('text[font-size="9"]');
+          if (rect) rect.remove();
+          if (txt) txt.remove();
+        }
+
+        const newTargetGroup = document.querySelector(`.map-region-group[data-zone="${currentZone}"]`);
+        if (newTargetGroup) {
+          const newRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          newRect.setAttribute('x', '-35');
+          newRect.setAttribute('y', '-46');
+          newRect.setAttribute('width', '70');
+          newRect.setAttribute('height', '18');
+          newRect.setAttribute('rx', '9');
+          newRect.setAttribute('fill', '#f472b6');
+
+          const newTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          newTxt.setAttribute('text-anchor', 'middle');
+          newTxt.setAttribute('y', '-33');
+          newTxt.setAttribute('fill', '#000');
+          newTxt.setAttribute('font-size', '9');
+          newTxt.setAttribute('font-weight', '700');
+          newTxt.setAttribute('font-family', "'JetBrains Mono', monospace");
+          newTxt.textContent = 'KAMU DISINI';
+
+          newTargetGroup.appendChild(newRect);
+          newTargetGroup.appendChild(newTxt);
+        }
+
+        updateZoneIntel(currentZone);
+      });
+
+      // Weather Toggle
+      const weathers = [
+        { name: 'Hujan Sakura (+20% EXP)', icon: 'fa-cloud-sun-rain', color: 'var(--primary)' },
+        { name: 'Badai Aether (+30% Drop Kristal)', icon: 'fa-bolt-lightning', color: 'var(--accent-cyan)' },
+        { name: 'Matahari Terik (+15% Panen)', icon: 'fa-sun', color: 'var(--accent-amber)' },
+        { name: 'Gerhana Void (+50% Mob EXP)', icon: 'fa-moon', color: 'var(--accent-violet)' }
+      ];
+      let weatherIdx = 0;
+      document.getElementById('btnWeatherToggle').addEventListener('click', () => {
+        weatherIdx = (weatherIdx + 1) % weathers.length;
+        const w = weathers[weatherIdx];
+        document.getElementById('weatherLbl').textContent = w.name;
+        document.getElementById('btnWeatherToggle').querySelector('i').className = `fa-solid ${w.icon}`;
+        document.getElementById('btnWeatherToggle').querySelector('i').style.color = w.color;
+        playTone(720, 'sine', 0.1, 0.15);
+      });
+
+      // Initial load
+      updateZoneIntel('kota');
+    </script>
+  </body>
 </html>

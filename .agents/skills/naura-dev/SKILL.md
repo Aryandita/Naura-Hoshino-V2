@@ -110,6 +110,31 @@ Seluruh ekosistem, package.json, dan suite dokumentasi wajib mematuhi standar ti
 - **`Y` (Major Update):** Pembaruan arsitektur besar, penambahan pilar baru, sistem moneter baru (seperti Currency V2 Closed-Loop), integrasi AI Ensemble, atau kluster audio Lavalink.
 - **`Z` (Minor Update):** Peningkatan berkala, optimasi, balancing RPG/ekonomi, atau perbaikan bug (bugfix).
 
+### 2.5 Web Dashboard & 3D Avatar Kinematics (Modular Subsystems)
+
+- **Arsitektur Animasi Modular 3D (`dashboard/src/components/NauraViewer/animations/`)**:
+  - Sub-modul organ tubuh dipisahkan secara independen di `parts/`:
+    - `eyes.js`: Arah pandang bola mata, VRM lookAt, micro-saccades, pupil morphs.
+    - `blink.js`: Siklus kedipan otonom (single/double), interval acak, eyelid blendshapes.
+    - `hair.js`: Fisika pegas kuncir (ponytail spring-damper) & koordinasi dengan VRM SpringBoneManager.
+    - `head.js`: Kinematika rotasi kepala dan leher dengan batas fisiologis aman.
+    - `face.js`: Blendshape ekspresi emosi (Joy, Fun, Sorrow, dll.) dan sinkronisasi fonem viseme (A, I, U, E, O).
+    - `spine.js`: Artikulasi pinggul, tulang belakang, dada, dan siklus pernapasan sinusoidal.
+    - `arms.js`: Kinematika sendi bahu, lengan atas, dan siku secara independen.
+    - `hands.js`: Artikulasi pergelangan tangan dan osilasi harmonik lambaian (Wave, Cheers).
+    - `legs.js`: Paha, tungkai bawah, telapak kaki, dan lonjakan riang.
+  - Seluruh sub-modul dibungkus dalam blok `try/catch` mandiri agar galat sendi terisolasi tanpa memutus render loop WebGL.
+  - Sequence keyframe dipecah menjadi file mandiri di `sequences/*.js`.
+- **Render Loop & Fisika VRM**:
+  - `vrm.update(delta)` WAJIB dipanggil di render loop animasi agar VRM SpringBones dan LookAt bekerja.
+  - Hindari simulasi fisika ganda pada rambut kuncir jika model VRM memiliki `vrm.springBoneManager` bawaan.
+- **Audio Lifecycle Soundboard**:
+  - DILARANG menggunakan `setTimeout` statis untuk status pemutaran audio. Selalu dengarkan event native `HTMLMediaElement` (`ended`, `pause`, `play`).
+- **Live Status & Telemetri**:
+  - Data status layanan di `status.html` disuplai oleh endpoint nyata `GET /api/health` dan siaran Socket.IO `stats_update` setiap 3 detik.
+- **Paritas Dashboard Utama**:
+  - Struktur UI dan file halaman MPA di `dashboard/src/pages/` dan `dashboard-preview/src/pages/` dijaga sinkron dan menggunakan Stellar Glass Design System (`stellar.css`).
+
 ---
 
 ## 🛠️ 3. Panduan Perintah CLI di Windows
@@ -147,6 +172,21 @@ Karena sistem operasi menggunakan Windows PowerShell dengan pembatasan skrip:
   ```
 
   Semua 5 pengujian di atas wajib berstatus hijau (0 error).
+
+- **Standar Pesan Commit GitHub (3-Tingkat Terstruktur)**:
+  Format pesan commit wajib terdiri dari 3 bagian dengan emoji kontekstual:
+  ```text
+  <emoji> <tipe>: <ringkasan judul commit>
+
+  ⚙️ [System Update]
+  - <perubahan arsitektur, konfigurasi server, skema database, routing, dependensi>
+
+  🚀 [Major Update]
+  - <fitur besar baru, perombakan modul utama, halaman/UI baru, sistem game/ekonomi>
+
+  🔧 [Minor Update]
+  - <perbaikan bug, optimasi performa, refactoring, styling, pembersihan file>
+  ```
 
 ---
 

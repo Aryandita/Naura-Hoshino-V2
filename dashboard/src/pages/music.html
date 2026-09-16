@@ -1,499 +1,725 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Naura Hoshino - Music Control Panel</title>
-    <!-- Fonts -->
+    <title>Music Hub | Naura OS</title>
+    <meta name="description" content="Kontrol pemutar musik Lavalink v4 dengan Fish Audio AI DJ dan antrian real-time." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Orbitron:wght@500;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
-    <link rel="stylesheet" href="/vendor/fontawesome.css" />
-    <link rel="stylesheet" href="/vendor/tailwind-built.css" />
-    <script src="/vendor/socket.io.min.js"></script>
-    <script src="/vendor/naura-ui.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
-      :root {
-        --primary: #ffb6c1;
-        --canvas: #0b0c10;
-        --accent-pink: #f9a8d4;
-        --surface-glass: rgba(255, 255, 255, 0.03);
-        --surface-border: rgba(255, 182, 193, 0.2);
-      }
-      body {
-        background-color: var(--canvas);
-        color: #ffffff;
-        font-family: "Outfit", sans-serif;
-        margin: 0;
-        padding: 0;
-        background-image:
-          radial-gradient(
-            circle at top right,
-            rgba(255, 182, 193, 0.1),
-            transparent 40%
-          ),
-          radial-gradient(
-            circle at bottom left,
-            rgba(249, 168, 212, 0.05),
-            transparent 40%
-          );
-        min-height: 100vh;
-      }
-      .glass-panel {
-        background: var(--surface-glass);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid var(--surface-border);
-        border-radius: 16px;
-      }
-      .metric-font {
-        font-family: "Orbitron", sans-serif;
-      }
-      .progress-bar-bg {
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 9999px;
-        height: 8px;
-        width: 100%;
-        overflow: hidden;
+      /* ── Vinyl/Artwork rotation ── */
+      .artwork-disc {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
         position: relative;
+        flex-shrink: 0;
       }
-      .progress-bar-fill {
-        background: linear-gradient(90deg, var(--primary), var(--accent-pink));
+
+      .artwork-disc-inner {
+        width: 100%;
         height: 100%;
-        width: 0%;
-        transition: width 0.5s linear;
+        border-radius: 50%;
+        background: conic-gradient(
+          from 0deg,
+          rgba(244,114,182,0.7) 0%,
+          rgba(167,139,250,0.6) 20%,
+          rgba(34,211,238,0.5) 40%,
+          rgba(245,158,11,0.6) 60%,
+          rgba(244,114,182,0.7) 80%,
+          rgba(167,139,250,0.6) 100%
+        );
+        border: 4px solid var(--border-primary);
+        box-shadow:
+          0 0 30px var(--primary-glow),
+          0 0 60px rgba(244,114,182,0.1),
+          inset 0 0 20px rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: disc-spin 8s linear infinite paused;
       }
-      .btn-control {
-        background: var(--surface-glass);
-        border: 1px solid var(--surface-border);
-        color: var(--primary);
-        transition: all 0.2s ease;
+
+      .artwork-disc-inner.playing {
+        animation-play-state: running;
       }
-      .btn-control:hover {
-        background: rgba(255, 182, 193, 0.1);
-        transform: scale(1.05);
+
+      @keyframes disc-spin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
       }
-      .btn-control:active {
-        transform: scale(0.95);
+
+      .artwork-disc-center {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--bg-deep);
+        border: 3px solid var(--border-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        box-shadow: 0 0 12px var(--primary-glow);
+        z-index: 2;
       }
+
+      /* ── Equalizer visualizer ── */
+      .eq-bar {
+        width: 4px;
+        border-radius: var(--r-full);
+        background: var(--primary);
+        box-shadow: 0 0 6px var(--primary-glow);
+        transition: height 0.15s ease;
+        min-height: 4px;
+      }
+
+      .eq-bars {
+        display: flex;
+        align-items: flex-end;
+        gap: 3px;
+        height: 40px;
+      }
+
+      @keyframes eq-anim-1 { 0%,100%{height:8px} 50%{height:32px} }
+      @keyframes eq-anim-2 { 0%,100%{height:24px} 50%{height:10px} }
+      @keyframes eq-anim-3 { 0%,100%{height:16px} 50%{height:36px} }
+      @keyframes eq-anim-4 { 0%,100%{height:28px} 50%{height:6px} }
+      @keyframes eq-anim-5 { 0%,100%{height:12px} 50%{height:30px} }
+      @keyframes eq-anim-6 { 0%,100%{height:34px} 50%{height:14px} }
+      @keyframes eq-anim-7 { 0%,100%{height:8px} 50%{height:24px} }
+
+      .eq-playing .eq-bar:nth-child(1) { animation: eq-anim-1 0.7s ease-in-out infinite; }
+      .eq-playing .eq-bar:nth-child(2) { animation: eq-anim-2 0.9s ease-in-out infinite; }
+      .eq-playing .eq-bar:nth-child(3) { animation: eq-anim-3 0.6s ease-in-out infinite; }
+      .eq-playing .eq-bar:nth-child(4) { animation: eq-anim-4 0.8s ease-in-out infinite; }
+      .eq-playing .eq-bar:nth-child(5) { animation: eq-anim-5 0.7s ease-in-out infinite; }
+      .eq-playing .eq-bar:nth-child(6) { animation: eq-anim-6 0.85s ease-in-out infinite; }
+      .eq-playing .eq-bar:nth-child(7) { animation: eq-anim-7 0.65s ease-in-out infinite; }
+
+      /* ── Queue item ── */
       .queue-item {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: var(--r-lg);
+        transition: all var(--t-base);
+        border: 1px solid transparent;
+        cursor: pointer;
       }
+
       .queue-item:hover {
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--bg-surface-hv);
+        border-color: var(--border-subtle);
       }
-      .queue-item:last-child {
-        border-bottom: none;
+
+      .queue-item.current {
+        background: var(--primary-dim);
+        border-color: var(--border-primary);
+      }
+
+      .queue-num {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-muted);
+        width: 20px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+
+      .queue-item.current .queue-num { color: var(--primary); }
+
+      .queue-thumb {
+        width: 38px;
+        height: 38px;
+        border-radius: var(--r-md);
+        background: var(--bg-elevated);
+        border: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+
+      .queue-item.current .queue-thumb {
+        background: var(--primary-dim);
+        border-color: var(--border-primary);
+        animation: glow-pulse 2s ease-in-out infinite;
+      }
+
+      /* ── Volume slider ── */
+      input[type=range].vol-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 4px;
+        border-radius: var(--r-full);
+        background: linear-gradient(to right, var(--primary) 0%, var(--primary) var(--val, 70%), var(--bg-elevated) var(--val, 70%), var(--bg-elevated) 100%);
+        outline: none;
+        cursor: pointer;
+      }
+
+      input[type=range].vol-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--primary);
+        box-shadow: 0 0 8px var(--primary-glow);
+        cursor: pointer;
+        transition: all var(--t-fast);
+      }
+
+      input[type=range].vol-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.3);
+        box-shadow: 0 0 14px var(--primary-glow);
+      }
+
+      /* ── Lavalink node status ── */
+      .node-card {
+        padding: 12px 14px;
+        border-radius: var(--r-xl);
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        transition: all var(--t-base);
+      }
+
+      .node-card:hover {
+        border-color: var(--border-medium);
+        background: var(--bg-surface-hv);
+      }
+
+      .node-card.active {
+        border-color: var(--border-cyan);
+        background: var(--cyan-dim);
       }
     </style>
   </head>
-  <body class="p-6">
-    <div class="max-w-5xl mx-auto">
-      <header
-        class="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
-      >
-        <div>
-          <h1 class="text-3xl font-bold text-[#FFB6C1] metric-font">
-            Naura Music
-          </h1>
-          <p class="text-gray-400 mt-1">Control Panel Real-Time</p>
-        </div>
-        <div
-          class="glass-panel px-4 py-2 flex items-center gap-3 w-full md:w-auto"
-        >
-          <span class="text-sm text-gray-300 whitespace-nowrap"
-            >Server ID:</span
-          >
-          <input
-            type="text"
-            id="guildIdInput"
-            placeholder="Masukkan ID Server"
-            class="bg-transparent border-b border-gray-600 focus:border-[#FFB6C1] outline-none text-white px-2 py-1 text-sm metric-font w-full md:w-48"
-          />
-          <button
-            id="connectBtn"
-            class="btn-control px-4 py-1 rounded-lg text-sm font-semibold"
-          >
-            Connect
+  <body>
+    <!-- Sidebar Overlay -->
+    
+
+    <div class="app-shell">
+      <!-- Mobile Sidebar Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <!-- ════ SIDEBAR ════ -->
+      <aside class="sidebar " id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo-icon">
+            <img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" />
+          </div>
+          <div class="sidebar-brand-text">
+            <div class="sidebar-brand-name">Naura Hoshino</div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+            <i class="fa-solid fa-xmark"></i>
           </button>
+            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
+          </div>
         </div>
-      </header>
+                <!-- Navigation -->
+                <!-- Navigation -->
+        <nav class="sidebar-nav" role="navigation">
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Now Playing Section -->
-        <div class="lg:col-span-2 space-y-6">
-          <div class="glass-panel p-6">
-            <h2 class="text-xl font-semibold mb-4 text-[#F9A8D4]">
-              Now Playing
-            </h2>
+          <!-- Overview -->
+          <div class="nav-group">
+            <div class="nav-group-label">Overview</div>
+            <a href="/" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span>Dashboard</span>
+            </a>
+            <a href="/status" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
+              <span>Live Status</span>
+              <span class="nav-badge">Live</span>
+            </a>
+            <a href="/feed" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
+              <span>Activity Feed</span>
+            </a>
+          </div>
 
-            <div id="noMusicState">
-              <script>
-                document.write(
-                  typeof NauraUI !== "undefined"
-                    ? NauraUI.stateHtml("empty", {
-                        title: "Belum Ada Lagu",
-                        body: "Tidak ada lagu yang sedang diputar di server ini. Putar lagu yuk!",
-                      })
-                    : '<p class="text-center text-gray-500 py-8">Tidak ada lagu yang diputar.</p>',
-                );
-              </script>
+          <!-- Community -->
+          <div class="nav-group">
+            <div class="nav-group-label">Community</div>
+            <a href="/leaderboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
+              <span>Leaderboard</span>
+            </a>
+            <a href="/economy" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
+              <span>Economy</span>
+            </a>
+            <a href="/topology" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span>Guild Topology</span>
+            </a>
+          </div>
+
+          <!-- Media & Audio -->
+          <div class="nav-group">
+            <div class="nav-group-label">Media & Audio</div>
+            <a href="/music" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
+              <span>Music Hub</span>
+            </a>
+            <a href="/soundboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
+              <span>Soundboard</span>
+            </a>
+            <a href="/jam" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
+              <span>Jam Session</span>
+            </a>
+            <a href="/karaoke" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span>Karaoke</span>
+            </a>
+          </div>
+
+          <!-- Naura Wilds RPG -->
+          <div class="nav-group">
+            <div class="nav-group-label">Naura Wilds RPG</div>
+            <a href="/world" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span>World Map</span>
+            </a>
+            <a href="/survival-map" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
+              <span>Survival Map</span>
+            </a>
+            <a href="/activity" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
+              <span>Activity Hub</span>
+            </a>
+          </div>
+
+          <!-- Configuration -->
+          <div class="nav-group">
+            <div class="nav-group-label">Configuration</div>
+            <a href="/settings" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
+              <span>Settings</span>
+            </a>
+            <a href="/welcomer" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
+              <span>Welcomer Card</span>
+            </a>
+            <a href="/builder" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span>Embed Builder</span>
+            </a>
+            <a href="/automations" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
+              <span>Automations</span>
+            </a>
+            <a href="/tickets" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
+              <span>Tickets</span>
+            </a>
+          </div>
+
+          <!-- More -->
+          <div class="nav-group">
+            <div class="nav-group-label">More</div>
+            <a href="/portfolio" class="nav-item">
+              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
+              <span style="color:var(--accent-green)">Creator Portfolio</span>
+            </a>
+          </div>
+
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user" onclick="window.location.href='/'">
+            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name">Guest</div>
+              <div class="sidebar-user-role">Klik untuk login</div>
             </div>
+          </div>
+        </div>
+      </aside>
 
-            <div id="playingState" class="hidden">
-              <div
-                class="flex flex-col md:flex-row gap-6 items-center md:items-start mb-6"
-              >
-                <div
-                  class="w-32 h-32 rounded-xl bg-gray-800 flex-shrink-0 border border-[#FFB6C1]/30 flex items-center justify-center overflow-hidden relative shadow-[0_0_15px_rgba(255,182,193,0.2)]"
-                >
-                  <img
-                    id="trackImage"
-                    src=""
-                    alt="Thumbnail"
-                    class="w-full h-full object-cover hidden"
-                  />
-                  <svg
-                    id="trackIcon"
-                    class="w-12 h-12 text-[#FFB6C1]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-                    ></path>
-                  </svg>
+      <!-- ════ MAIN CONTENT ════ -->
+      <div class="main-content">
+
+        <!-- Header -->
+        <header class="top-header">
+          <div class="header-left">
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
+            <div>
+              <div class="page-title">Music Hub</div>
+              <div class="breadcrumb"><span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Music</span></div>
+            </div>
+          </div>
+          <div class="header-right">
+            <div class="status-pill" title="Lavalink Node Status">
+              <span class="status-dot online"></span>
+              <span style="color:var(--accent-cyan);font-family:var(--font-mono);">Lavalink</span>
+            </div>
+            <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+          </div>
+        </header>
+
+        <!-- Page Content -->
+        <main class="page-content">
+
+          <div class="page-header-bar animate-in">
+            <div>
+              <h1 class="page-heading">
+                <span class="page-heading-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);">
+                  <i class="fa-solid fa-music" style="color:var(--primary);"></i>
+                </span>
+                Music Hub
+              </h1>
+              <p class="page-sub">Lavalink v4 Cluster · Fish Audio AI DJ · Real-Time Queue Management</p>
+            </div>
+            <div class="tab-group">
+              <button class="tab-btn active" onclick="switchMusicTab('player')"><i class="fa-solid fa-circle-play"></i> Player</button>
+              <button class="tab-btn" onclick="switchMusicTab('queue')"><i class="fa-solid fa-list"></i> Queue</button>
+              <button class="tab-btn" onclick="switchMusicTab('nodes')"><i class="fa-solid fa-server"></i> Nodes</button>
+            </div>
+          </div>
+
+          <!-- Player Tab -->
+          <div id="musicTabPlayer" class="animate-in delay-1">
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;" id="musicMainGrid">
+
+              <!-- Now Playing Card -->
+              <div class="card card-glow-primary card-p" style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+                <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--primary);margin-bottom:20px;font-family:var(--font-heading);">Now Playing</div>
+
+                <!-- Vinyl disc -->
+                <div class="artwork-disc" style="margin-bottom:24px;">
+                  <div class="artwork-disc-inner" id="artworkDisc">
+                    <div class="artwork-disc-center">🎵</div>
+                  </div>
                 </div>
-                <div class="flex-1 text-center md:text-left min-w-0 w-full">
-                  <h3
-                    id="trackTitle"
-                    class="text-2xl font-bold truncate mb-2 text-white"
-                    title=""
-                  >
-                    -
-                  </h3>
-                  <p id="trackAuthor" class="text-gray-400 mb-4 truncate">-</p>
 
-                  <!-- Progress Bar -->
-                  <div
-                    class="mb-2 flex justify-between text-xs text-gray-400 metric-font"
-                  >
-                    <span id="timeCurrent">00:00</span>
-                    <span id="timeTotal">00:00</span>
-                  </div>
-                  <div class="progress-bar-bg mb-4">
-                    <div id="progressBar" class="progress-bar-fill"></div>
-                  </div>
+                <!-- Equalizer -->
+                <div class="eq-bars" id="eqBars" style="margin-bottom:16px;">
+                  <div class="eq-bar" style="height:8px;background:var(--primary);"></div>
+                  <div class="eq-bar" style="height:24px;background:var(--accent-violet);"></div>
+                  <div class="eq-bar" style="height:16px;background:var(--accent-cyan);"></div>
+                  <div class="eq-bar" style="height:28px;background:var(--primary);"></div>
+                  <div class="eq-bar" style="height:12px;background:var(--accent-violet);"></div>
+                  <div class="eq-bar" style="height:34px;background:var(--accent-cyan);"></div>
+                  <div class="eq-bar" style="height:8px;background:var(--primary);"></div>
+                </div>
 
-                  <!-- Live Audio Spectrogram & Equalizer Waveform -->
-                  <div class="mb-4">
-                    <canvas id="musicWaveformCanvas" width="480" height="32" class="w-full h-8 rounded-lg bg-black/40 border border-pink-400/20"></canvas>
+                <!-- Track info -->
+                <div id="nowPlayingTitle" style="font-family:var(--font-heading);font-size:18px;font-weight:700;color:var(--text-primary);margin-bottom:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Idle, Tidak Ada Lagu</div>
+                <div id="nowPlayingArtist" style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">Queue kosong · Masukkan lagu lewat bot</div>
+
+                <!-- Progress bar -->
+                <div style="width:100%;margin-bottom:8px;">
+                  <div class="progress-track" style="height:5px;">
+                    <div class="progress-fill" id="musicProgress" style="width:0%;transition:width 1s linear;"></div>
                   </div>
+                </div>
+                <div style="display:flex;justify-content:space-between;width:100%;font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-bottom:20px;">
+                  <span id="musicCurrentTime">0:00</span>
+                  <span id="musicDuration">0:00</span>
+                </div>
+
+                <!-- Controls -->
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                  <button id="btnShuffle" title="Shuffle" style="width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:13px;">
+                    <i class="fa-solid fa-shuffle"></i>
+                  </button>
+                  <button id="btnPrev" title="Previous" style="width:40px;height:40px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:15px;">
+                    <i class="fa-solid fa-backward-step"></i>
+                  </button>
+                  <button id="btnPlayPause" title="Play / Pause" style="width:56px;height:56px;border-radius:50%;background:var(--primary-dim);border:2px solid var(--border-primary);color:var(--primary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-spring);font-size:20px;box-shadow:0 0 20px var(--primary-glow);" onclick="togglePlay()">
+                    <i class="fa-solid fa-play" id="playIcon"></i>
+                  </button>
+                  <button id="btnNext" title="Next" style="width:40px;height:40px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:15px;">
+                    <i class="fa-solid fa-forward-step"></i>
+                  </button>
+                  <button id="btnRepeat" title="Repeat" style="width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:13px;">
+                    <i class="fa-solid fa-repeat"></i>
+                  </button>
+                </div>
+
+                <!-- Volume -->
+                <div style="display:flex;align-items:center;gap:10px;width:100%;">
+                  <i class="fa-solid fa-volume-low" style="color:var(--text-muted);font-size:12px;flex-shrink:0;"></i>
+                  <input type="range" class="vol-slider" id="volumeSlider" min="0" max="100" value="70" style="--val:70%" oninput="this.style.setProperty('--val', this.value+'%')">
+                  <i class="fa-solid fa-volume-high" style="color:var(--text-muted);font-size:12px;flex-shrink:0;"></i>
+                  <span id="volumeLabel" style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);width:28px;text-align:right;flex-shrink:0;">70%</span>
                 </div>
               </div>
 
-              <!-- Controls -->
-              <div class="flex justify-center gap-4">
-                <button
-                  onclick="controlPlayer('previous')"
-                  class="btn-control w-12 h-12 rounded-full flex items-center justify-center"
-                  title="Previous (Not available for streaming)"
-                >
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"
-                    />
-                  </svg>
-                </button>
-                <button
-                  onclick="controlPlayer('pause')"
-                  id="playPauseBtn"
-                  class="btn-control w-14 h-14 rounded-full flex items-center justify-center text-white bg-gradient-to-r from-[#FFB6C1] to-[#F9A8D4] border-none shadow-[0_0_15px_rgba(255,182,193,0.4)]"
-                >
-                  <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fill-rule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                </button>
-                <button
-                  onclick="controlPlayer('skip')"
-                  class="btn-control w-12 h-12 rounded-full flex items-center justify-center"
-                  title="Skip"
-                >
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      d="M11.555 14.832A1 1 0 0013 14V6a1 1 0 00-1.555-.832L6 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z"
-                    />
-                  </svg>
-                </button>
+              <!-- Right Column: Search + AI DJ -->
+              <div style="display:flex;flex-direction:column;gap:16px;">
+
+                <!-- Search -->
+                <div class="card card-p-sm">
+                  <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-search" style="color:var(--primary);"></i> Tambah Lagu</div>
+                  <div style="display:flex;gap:8px;">
+                    <input type="text" class="input" id="searchQuery" placeholder="Cari lagu, YouTube URL, Spotify..." style="flex:1;" />
+                    <button onclick="addSong()" class="btn btn-primary" style="flex-shrink:0;">
+                      <i class="fa-solid fa-plus"></i> Tambah
+                    </button>
+                  </div>
+                  <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+                    <button class="btn btn-ghost btn-sm" onclick="setFilter('youtube')"><i class="fa-brands fa-youtube" style="color:#ff4444;"></i> YouTube</button>
+                    <button class="btn btn-ghost btn-sm" onclick="setFilter('spotify')"><i class="fa-brands fa-spotify" style="color:#1db954;"></i> Spotify</button>
+                    <button class="btn btn-ghost btn-sm" onclick="setFilter('soundcloud')"><i class="fa-brands fa-soundcloud" style="color:#ff5500;"></i> SoundCloud</button>
+                  </div>
+                </div>
+
+                <!-- AI DJ -->
+                <div class="card card-p-sm" style="background:linear-gradient(135deg, rgba(167,139,250,0.08), rgba(244,114,182,0.06));border-color:var(--border-violet);">
+                  <div class="section-title" style="margin-bottom:12px;color:var(--accent-violet);"><i class="fa-solid fa-robot"></i> Fish Audio AI DJ</div>
+                  <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">AI DJ Naura akan memberikan narasi suara di antara lagu menggunakan Fish Audio TTS, menciptakan pengalaman radio yang imersif.</p>
+                  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+                    <label class="toggle" title="Toggle AI DJ">
+                      <input type="checkbox" id="aiDjToggle" />
+                      <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                    </label>
+                    <span style="font-size:13px;color:var(--text-secondary);font-weight:500;">AI DJ Mode</span>
+                    <span class="badge badge-violet" id="aiDjStatus">Offline</span>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <button class="btn btn-ghost btn-sm" id="btnDjAnnounce"><i class="fa-solid fa-microphone-lines"></i> Announce</button>
+                    <button class="btn btn-ghost btn-sm" id="btnDjRadio"><i class="fa-solid fa-radio"></i> Radio Mode</button>
+                  </div>
+                </div>
+
+                <!-- Filters / Effects -->
+                <div class="card card-p-sm">
+                  <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--accent-amber);"></i> Audio Filters</div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;" id="audioFilters">
+                    <button class="btn btn-ghost btn-sm" id="filterNone" onclick="setAudioFilter('none')" style="font-size:11px;">✨ Normal</button>
+                    <button class="btn btn-ghost btn-sm" id="filterNightcore" onclick="setAudioFilter('nightcore')" style="font-size:11px;">🌙 Nightcore</button>
+                    <button class="btn btn-ghost btn-sm" id="filterVaporwave" onclick="setAudioFilter('vaporwave')" style="font-size:11px;">🌊 Vaporwave</button>
+                    <button class="btn btn-ghost btn-sm" id="filterBass" onclick="setAudioFilter('bassboost')" style="font-size:11px;">🔊 Bass Boost</button>
+                    <button class="btn btn-ghost btn-sm" id="filterLofi" onclick="setAudioFilter('lofi')" style="font-size:11px;">☕ Lofi</button>
+                    <button class="btn btn-ghost btn-sm" id="filter8d" onclick="setAudioFilter('8d')" style="font-size:11px;">🎧 8D Audio</button>
+                  </div>
+                </div>
+
+                <!-- Now in Voice -->
+                <div class="card card-p-sm">
+                  <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-headphones" style="color:var(--accent-green);"></i> Voice Channel</div>
+                  <div id="voiceChannelInfo" style="display:flex;flex-direction:column;gap:8px;">
+                    <div class="status-item">
+                      <span style="font-size:12px;color:var(--text-secondary);">Status</span>
+                      <span class="badge badge-muted" id="vcStatus">Not Connected</span>
+                    </div>
+                    <div class="status-item">
+                      <span style="font-size:12px;color:var(--text-secondary);">Channel</span>
+                      <span style="font-size:12px;font-weight:600;color:var(--text-primary);font-family:var(--font-mono);" id="vcName">-</span>
+                    </div>
+                    <div class="status-item">
+                      <span style="font-size:12px;color:var(--text-secondary);">Listeners</span>
+                      <span style="font-size:12px;font-weight:700;color:var(--accent-cyan);font-family:var(--font-mono);" id="vcListeners">0</span>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
 
-          <!-- Voice Channel Members -->
-          <div class="glass-panel p-6">
-            <h2 class="text-xl font-semibold mb-4 text-[#93C5FD]">
-              Pendengar Aktif
-            </h2>
-            <div id="membersList" class="flex flex-wrap gap-3">
-              <div class="text-gray-500 text-sm">
-                Belum terhubung ke server.
+          <!-- Queue Tab (hidden initially) -->
+          <div id="musicTabQueue" style="display:none;" class="animate-in">
+            <div class="card card-p animate-in delay-1">
+              <div class="card-header">
+                <div class="card-title"><i class="fa-solid fa-list" style="color:var(--primary);"></i> Antrian Lagu</div>
+                <div style="display:flex;gap:8px;">
+                  <button class="btn btn-ghost btn-sm" id="btnClearQueue" onclick="clearQueue()"><i class="fa-solid fa-trash"></i> Clear</button>
+                  <button class="btn btn-ghost btn-sm" id="btnShuffleQueue" onclick="shuffleQueue()"><i class="fa-solid fa-shuffle"></i> Shuffle</button>
+                </div>
+              </div>
+              <div id="queueList" style="display:flex;flex-direction:column;gap:4px;">
+                <div class="queue-item current">
+                  <div class="queue-num">▶</div>
+                  <div class="queue-thumb">🎵</div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:600;color:var(--primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Idle, Tidak ada lagu yang diputar</div>
+                    <div style="font-size:11px;color:var(--text-muted);">0:00 · Masukkan lagu lewat bot</div>
+                  </div>
+                </div>
+                <div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">
+                  <div style="font-size:32px;margin-bottom:12px;animation:float 3s ease-in-out infinite;">🎶</div>
+                  <div>Queue kosong. Gunakan <code style="background:var(--bg-elevated);padding:2px 6px;border-radius:4px;color:var(--primary);">/play</code> di Discord untuk menambahkan lagu.</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Queue Section -->
-        <div class="glass-panel p-6 lg:h-[calc(100vh-120px)] flex flex-col">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-semibold text-[#86EFAC]">Antrean</h2>
-            <span
-              id="queueCount"
-              class="text-sm bg-[#FFB6C1]/20 text-[#FFB6C1] px-2 py-1 rounded-full metric-font"
-              >0 lagu</span
-            >
-          </div>
+          <!-- Nodes Tab (hidden initially) -->
+          <div id="musicTabNodes" style="display:none;" class="animate-in">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;" id="lavalinkNodes">
 
-          <div id="queueList" class="flex-1 overflow-y-auto pr-2 space-y-1">
-            <div class="text-center py-8 text-gray-500 text-sm">
-              Antrean kosong.
+              <div class="node-card active">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                  <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--accent-cyan);">NODE-01</div>
+                  <span class="badge badge-green">Primary</span>
+                </div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-mono);">localhost:2333</div>
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                  <div style="display:flex;justify-content:space-between;font-size:11px;">
+                    <span style="color:var(--text-muted);">RTT</span>
+                    <span style="color:var(--accent-cyan);font-family:var(--font-mono);">12ms</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;">
+                    <span style="color:var(--text-muted);">Players</span>
+                    <span style="color:var(--text-primary);font-family:var(--font-mono);">3</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;">
+                    <span style="color:var(--text-muted);">Region</span>
+                    <span style="color:var(--text-primary);">Asia / SGP</span>
+                  </div>
+                </div>
+                <div class="progress-track" style="margin-top:10px;">
+                  <div class="progress-fill cyan" style="width:30%;"></div>
+                </div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:4px;text-align:right;font-family:var(--font-mono);">CPU 30%</div>
+              </div>
+
+              <div class="node-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                  <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text-secondary);">NODE-02</div>
+                  <span class="badge badge-muted">Standby</span>
+                </div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-mono);">node2.example.com:2333</div>
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                  <div style="display:flex;justify-content:space-between;font-size:11px;">
+                    <span style="color:var(--text-muted);">RTT</span>
+                    <span style="color:var(--text-secondary);font-family:var(--font-mono);">89ms</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;">
+                    <span style="color:var(--text-muted);">Players</span>
+                    <span style="color:var(--text-primary);font-family:var(--font-mono);">0</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;">
+                    <span style="color:var(--text-muted);">Region</span>
+                    <span style="color:var(--text-primary);">Asia / TKY</span>
+                  </div>
+                </div>
+                <div class="progress-track" style="margin-top:10px;">
+                  <div class="progress-fill" style="width:0%;"></div>
+                </div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:4px;text-align:right;font-family:var(--font-mono);">CPU 0%</div>
+              </div>
+
+              <div class="node-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                  <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text-secondary);">NODE-03</div>
+                  <span class="badge badge-muted">Standby</span>
+                </div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-mono);">node3.example.com:2333</div>
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                  <div style="display:flex;justify-content:space-between;font-size:11px;">
+                    <span style="color:var(--text-muted);">RTT</span>
+                    <span style="color:var(--text-secondary);font-family:var(--font-mono);">142ms</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;">
+                    <span style="color:var(--text-muted);">Players</span>
+                    <span style="color:var(--text-primary);font-family:var(--font-mono);">0</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;">
+                    <span style="color:var(--text-muted);">Region</span>
+                    <span style="color:var(--text-primary);">EU / FRA</span>
+                  </div>
+                </div>
+                <div class="progress-track" style="margin-top:10px;">
+                  <div class="progress-fill" style="width:0%;"></div>
+                </div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:4px;text-align:right;font-family:var(--font-mono);">CPU 0%</div>
+              </div>
+
             </div>
           </div>
-        </div>
+
+        </main>
       </div>
     </div>
 
+    <!-- Mobile Nav -->
+    <nav class="mobile-nav">
+      <div class="mobile-nav-inner">
+        <a href="/" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Home</span></a>
+        <a href="/music" class="mobile-nav-item active"><span class="mn-icon"><i class="fa-solid fa-music"></i></span><span class="mn-label">Music</span></a>
+        <a href="/leaderboard" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-trophy"></i></span><span class="mn-label">Ranking</span></a>
+        <a href="/economy" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-coins"></i></span><span class="mn-label">Economy</span></a>
+        <a href="/settings" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+      </div>
+    </nav>
+
+    <script src="/src/js/shared-nav.js"></script>
     <script>
-      const socket = io();
-      const urlParams = new URLSearchParams(window.location.search);
-      let currentGuildId =
-        urlParams.get("guild") ||
-        localStorage.getItem("naura_music_guild") ||
-        "";
-
-      const guildInput = document.getElementById("guildIdInput");
-      const connectBtn = document.getElementById("connectBtn");
-
-      if (currentGuildId) {
-        guildInput.value = currentGuildId;
+      // Tab switch
+      function switchMusicTab(tab) {
+        ['player','queue','nodes'].forEach(t => {
+          document.getElementById(`musicTab${t.charAt(0).toUpperCase()+t.slice(1)}`).style.display = 'none';
+        });
+        document.getElementById(`musicTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).style.display = 'block';
+        document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+          btn.classList.toggle('active', ['player','queue','nodes'][i] === tab);
+        });
       }
 
-      // Format MS to MM:SS
-      function formatTime(ms) {
-        if (!ms || ms < 0) return "00:00";
-        const totalSeconds = Math.floor(ms / 1000);
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+      let isPlaying = false;
+
+      function togglePlay() {
+        isPlaying = !isPlaying;
+        const icon = document.getElementById('playIcon');
+        icon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+        document.getElementById('artworkDisc').classList.toggle('playing', isPlaying);
+        document.getElementById('eqBars').classList.toggle('eq-playing', isPlaying);
       }
 
-      // Generate thumbnail
-      function getThumbnail(uri) {
-        if (uri && uri.includes("youtube.com/watch?v=")) {
-          const id = uri.split("v=")[1]?.split("&")[0];
-          if (id) return `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
-        } else if (uri && uri.includes("youtu.be/")) {
-          const id = uri.split("youtu.be/")[1]?.split("?")[0];
-          if (id) return `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
-        }
-        return null;
-      }
-
-      // Connect to Guild Room
-      function connectToGuild() {
-        const guildId = guildInput.value.trim();
-        if (!guildId) return alert("Masukkan ID Server!");
-
-        // Unsubscribe from previous if any
-        socket.emit("leave_guild_music", currentGuildId);
-        socket.emit("join_guild_music", guildId);
-
-        currentGuildId = guildId;
-        localStorage.setItem("naura_music_guild", currentGuildId);
-
-        // Update URL parameters
-        const newUrl = new URL(window.location);
-        newUrl.searchParams.set("guild", currentGuildId);
-        window.history.pushState({}, "", newUrl);
-
-        connectBtn.textContent = "Terhubung";
-        connectBtn.classList.add("border-green-500", "text-green-500");
-        setTimeout(() => {
-          connectBtn.textContent = "Connect";
-          connectBtn.classList.remove("border-green-500", "text-green-500");
-        }, 2000);
-      }
-
-      connectBtn.addEventListener("click", connectToGuild);
-
-      // Receive Music State
-      socket.on("music_state", (state) => {
-        if (!state) return;
-
-        const { currentTrack, queue, members } = state;
-
-        // Members
-        const membersList = document.getElementById("membersList");
-        if (members && members.length > 0) {
-          membersList.innerHTML = members
-            .map(
-              (m) => `
-                    <div class="flex items-center gap-2 bg-white/5 rounded-full pl-1 pr-3 py-1 border border-white/10" title="${m.username}">
-                        <img src="${m.avatar}" class="w-6 h-6 rounded-full" alt="avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
-                        <span class="text-xs truncate max-w-[100px]">${m.username}</span>
-                    </div>
-                `,
-            )
-            .join("");
-        } else {
-          membersList.innerHTML =
-            '<div class="text-gray-500 text-sm">Tidak ada orang di Voice Channel.</div>';
-        }
-
-        // Now Playing
-        const noMusic = document.getElementById("noMusicState");
-        const playing = document.getElementById("playingState");
-        const trackImage = document.getElementById("trackImage");
-        const trackIcon = document.getElementById("trackIcon");
-
-        if (currentTrack) {
-          noMusic.classList.add("hidden");
-          playing.classList.remove("hidden");
-
-          document.getElementById("trackTitle").textContent =
-            currentTrack.title;
-          document.getElementById("trackTitle").title = currentTrack.title;
-          document.getElementById("trackAuthor").textContent =
-            currentTrack.author || "Lavalink Audio";
-
-          document.getElementById("timeCurrent").textContent = formatTime(
-            currentTrack.position,
-          );
-          document.getElementById("timeTotal").textContent = formatTime(
-            currentTrack.duration,
-          );
-
-          let percent = 0;
-          if (currentTrack.duration > 0) {
-            percent = Math.min(
-              100,
-              (currentTrack.position / currentTrack.duration) * 100,
-            );
-          }
-          document.getElementById("progressBar").style.width = `${percent}%`;
-
-          // Set Thumbnail
-          const thumbnail = getThumbnail(currentTrack.uri);
-          if (thumbnail) {
-            trackImage.src = thumbnail;
-            trackImage.classList.remove("hidden");
-            trackIcon.classList.add("hidden");
-          } else {
-            trackImage.classList.add("hidden");
-            trackIcon.classList.remove("hidden");
-          }
-
-          // Play/Pause button state
-          const btn = document.getElementById("playPauseBtn");
-          if (currentTrack.isPaused) {
-            // Play icon
-            btn.innerHTML = `<svg class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>`;
-          } else {
-            // Pause icon
-            btn.innerHTML = `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>`;
-          }
-        } else {
-          noMusic.classList.remove("hidden");
-          playing.classList.add("hidden");
-        }
-
-        // Queue
-        const queueList = document.getElementById("queueList");
-        document.getElementById("queueCount").textContent =
-          `${queue ? queue.length : 0} lagu`;
-
-        if (queue && queue.length > 0) {
-          queueList.innerHTML = queue
-            .map(
-              (track, i) => `
-                    <div class="queue-item p-3 flex justify-between items-center rounded-lg">
-                        <div class="min-w-0 pr-4">
-                            <div class="text-sm font-medium text-white truncate">${i + 1}. ${track.title}</div>
-                            <div class="text-xs text-gray-400 mt-1">Oleh: ${track.requester}</div>
-                        </div>
-                        <div class="text-xs text-gray-400 metric-font flex-shrink-0">
-                            ${formatTime(track.duration)}
-                        </div>
-                    </div>
-                `,
-            )
-            .join("");
-        } else {
-          queueList.innerHTML =
-            '<div class="text-center py-8 text-gray-500 text-sm">Antrean kosong.</div>';
-        }
+      // Volume slider label update
+      document.getElementById('volumeSlider').addEventListener('input', function() {
+        document.getElementById('volumeLabel').textContent = this.value + '%';
       });
 
-      socket.on("music_error", (data) => {
-        alert(data.message);
+      // Audio filter highlight
+      function setAudioFilter(filter) {
+        document.querySelectorAll('#audioFilters .btn').forEach(btn => {
+          btn.classList.remove('btn-primary');
+          btn.classList.add('btn-ghost');
+        });
+        const target = document.getElementById(`filter${filter.charAt(0).toUpperCase()+filter.slice(1)}`);
+        if (target) { target.classList.add('btn-primary'); target.classList.remove('btn-ghost'); }
+      }
+
+      setAudioFilter('none');
+
+      // AI DJ toggle
+      document.getElementById('aiDjToggle').addEventListener('change', function() {
+        document.getElementById('aiDjStatus').textContent = this.checked ? 'Active' : 'Offline';
+        document.getElementById('aiDjStatus').className = this.checked ? 'badge badge-violet' : 'badge badge-muted';
       });
 
-      // Control functions
-      function controlPlayer(action) {
-        if (!currentGuildId)
-          return alert("Silakan Connect ke server terlebih dahulu!");
-        // Socket emit map from previous music.html
-        socket.emit("music_control", { guildId: currentGuildId, action });
+      // Mobile grid
+      function adjustMusicGrid() {
+        const g = document.getElementById('musicMainGrid');
+        if (!g) return;
+        g.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : '1fr 1fr';
       }
+      window.addEventListener('resize', adjustMusicGrid);
+      adjustMusicGrid();
 
-      // Auto connect if saved
-      if (currentGuildId) {
-        setTimeout(connectToGuild, 500);
+      // Node grid
+      function adjustNodeGrid() {
+        const g = document.getElementById('lavalinkNodes');
+        if (!g) return;
+        g.style.gridTemplateColumns = window.innerWidth < 768 ? '1fr' : window.innerWidth < 1024 ? '1fr 1fr' : 'repeat(3,1fr)';
       }
-
-      // Live Audio Spectrogram Waveform
-      const musicCanvas = document.getElementById("musicWaveformCanvas");
-      if (musicCanvas) {
-        const mCtx = musicCanvas.getContext("2d");
-        let mTick = 0;
-        function renderMusicWave() {
-          mCtx.clearRect(0, 0, musicCanvas.width, musicCanvas.height);
-          const numBars = 32;
-          const barW = (musicCanvas.width / numBars) - 2;
-          mTick += 0.04;
-          for (let i = 0; i < numBars; i++) {
-            const h = isPlaying ? Math.sin(mTick + i * 0.3) * 8 + 12 : 3;
-            const grad = mCtx.createLinearGradient(0, musicCanvas.height, 0, 0);
-            grad.addColorStop(0, "#06b6d4");
-            grad.addColorStop(0.5, "#ec4899");
-            grad.addColorStop(1, "#c084fc");
-            mCtx.fillStyle = grad;
-            mCtx.fillRect(i * (barW + 2), musicCanvas.height - h, barW, h);
-          }
-          requestAnimationFrame(renderMusicWave);
-        }
-        renderMusicWave();
-      }
-    </script>
-
-    <script type="module">
-      import { NauraViewer } from "../components/NauraViewer/index.js";
-      NauraViewer.init({ context: "music" });
+      window.addEventListener('resize', adjustNodeGrid);
+      adjustNodeGrid();
     </script>
   </body>
 </html>

@@ -48,6 +48,7 @@ testsprite_tests/tmp/config.json
 # Dashboard: artefak build & konfigurasi lokal berisi secret
 dashboard/dist/
 dashboard/public/assets/
+dashboard-preview/
 .roo/mcp.json
 scripts/tmp-*
 

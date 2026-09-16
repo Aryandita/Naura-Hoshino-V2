@@ -97,22 +97,45 @@ module.exports = {
 
     if (subcommand === "ask") {
       const query = interaction.options.getString("pertanyaan");
+      const { service: semanticMemoryService } = require("../../src/ai/semanticMemoryService");
+
+      const relevantMemories = await semanticMemoryService.searchMemories(
+        query,
+        { guildId, limit: 3, minSimilarity: 0.35 },
+      );
+
+      const contextPieces = [];
+      if (serverFaqs.length > 0) {
+        contextPieces.push(
+          serverFaqs
+            .map(
+              (f, i) =>
+                `[FAQ ${i + 1}]: Pertanyaan: ${f.question}\nJawaban/Panduan: ${f.answer}`,
+            )
+            .join("\n\n"),
+        );
+      }
+      if (relevantMemories.length > 0) {
+        contextPieces.push(
+          relevantMemories
+            .map((m, i) => {
+              const meta = m.metadata || {};
+              const src = meta.fileName ? ` (Sumber: ${meta.fileName})` : "";
+              return `[Kutipan Dokumen ${i + 1}${src}]:\n${m.content}`;
+            })
+            .join("\n\n"),
+        );
+      }
 
       let prompt;
-      if (serverFaqs.length > 0) {
-        const faqContext = serverFaqs
-          .map(
-            (f, i) =>
-              `[Topik ${i + 1}]: Pertanyaan: ${f.question}\nJawaban/Panduan: ${f.answer}`,
-          )
-          .join("\n\n");
-
+      if (contextPieces.length > 0) {
+        const fullContext = contextPieces.join("\n\n");
         prompt = [
           "Kamu adalah Naura Hoshino, asisten virtual anime yang cerdas, imut, hangat, dan ramah di Discord.",
           `Kamu sedang membantu member di server '${interaction.guild.name}'.`,
-          "Berikut adalah basis pengetahuan dan aturan resmi server:",
+          "Berikut adalah basis pengetahuan, FAQ, dan dokumen resmi server:",
           "--- DOKUMEN SERVER ---",
-          faqContext,
+          fullContext,
           "--- AKHIR DOKUMEN ---",
           `Pertanyaan Member (${interaction.user.username}): "${query}"`,
           "Instruksi Jawaban:",

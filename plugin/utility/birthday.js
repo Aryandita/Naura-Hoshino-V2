@@ -93,7 +93,7 @@ module.exports = {
         bday.day = day;
         bday.month = month;
         bday.year = year;
-        await bday.save();
+        await bday.save({ fields: ["day", "month", "year"] });
       }
 
       const monthNames = [

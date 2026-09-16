@@ -2573,6 +2573,14 @@ async function generateRankCard(
 
 const { generateInventoryBackpackImage } = require("./inventoryCanvas");
 
+function getPlatformIcon(sourceName = "") {
+  const s = String(sourceName || "").toLowerCase();
+  if (s.includes("spotify")) return ui.getEmoji("spotify") || "🟢";
+  if (s.includes("youtube") || s.includes("yt")) return ui.getEmoji("youtube") || "🔴";
+  if (s.includes("soundcloud")) return ui.getEmoji("soundcloud") || "🟠";
+  return ui.getEmoji("normal") || "🎵";
+}
+
 const CanvasUtils = {
   drawRoundedRect,
   drawRoundedProgressBar,
@@ -2582,6 +2590,7 @@ const CanvasUtils = {
   wrapText,
   truncateText,
   formatDur,
+  getPlatformIcon,
   generateSurvivalProfileImage,
   generateInventoryBackpackImage,
   generateMusicProfileImage,
@@ -2602,6 +2611,7 @@ module.exports = {
   wrapText,
   truncateText,
   formatDur,
+  getPlatformIcon,
   generateSurvivalProfileImage,
   generateInventoryBackpackImage,
   generateMusicProfileImage,

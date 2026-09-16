@@ -406,10 +406,21 @@ function isUpgradable(itemId) {
   return Boolean(UPGRADE_PATHS[itemId]);
 }
 
+/** Koleksi resep tempa/workbench berbasis jalur upgrade alat */
+const WORKBENCH_RECIPES = Object.entries(UPGRADE_PATHS).map(([from, plan]) => ({
+  id: `${from}_to_${plan.to}`,
+  from,
+  to: plan.to,
+  cost: plan.cost,
+  currency: plan.currency,
+  material: plan.material,
+}));
+
 module.exports = {
   SMELT_RECIPES,
   UPGRADE_PATHS,
   MATERIAL_CORE,
+  WORKBENCH_RECIPES,
   getSmeltRecipe,
   getUpgradePlan,
   isUpgradable,

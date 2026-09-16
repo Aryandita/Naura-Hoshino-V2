@@ -29,8 +29,8 @@ export class NauraHero3DViewer {
         this.options = {
             modelPath: options.modelPath || "/models/naura.vrm",
             cameraFov: options.cameraFov || 34,
-            cameraZ: options.cameraZ || 1.35,
-            cameraY: options.cameraY || 0.26,
+            cameraZ: options.cameraZ || 1.25,
+            cameraY: options.cameraY || 0.22,
             lookAtCursor: options.lookAtCursor ?? true,
             brandFxVisible: options.brandFxVisible ?? true,
             onProgress: options.onProgress || null,
@@ -71,7 +71,7 @@ export class NauraHero3DViewer {
 
         // Posisi default kamera untuk reset
         this.defaultCameraPos = new THREE.Vector3(0, this.options.cameraY, this.options.cameraZ);
-        this.defaultTargetPos = new THREE.Vector3(0, 0.22, 0);
+        this.defaultTargetPos = new THREE.Vector3(0, 0.18, 0);
 
         // Kursor ternormalisasi (-1 s/d 1)
         this.mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
@@ -330,7 +330,7 @@ export class NauraHero3DViewer {
                 }
             });
 
-            this.modelGroup.position.set(0, 0, 0);
+            this.modelGroup.position.set(0, -0.02, 0);
             this.modelGroup.rotation.y = -Math.PI / 2;
             if (this.modelRoot) {
                 this.modelRoot.add(this.modelGroup);
@@ -359,7 +359,7 @@ export class NauraHero3DViewer {
                     this.brand3d = createNauraBrand3D(this.scene, {
                         visible: this.brandFxVisible,
                         haloY: 0.52,
-                        pedestalY: -0.88,
+                        pedestalY: -0.55,
                     });
                 } catch (err) {
                     console.warn("[NauraHero3D] Gagal inisialisasi brand3d:", err);
@@ -566,8 +566,8 @@ export class NauraHero3DViewer {
                 this.modelRoot.rotation.z += (targetRotZ - this.modelRoot.rotation.z) * lerpSpeed;
             }
 
-            // Spring-damper untuk Ponytail
-            if (this.bones.Ponytail) {
+            // Spring-damper untuk Ponytail (hanya jika VRM tidak mengelola springBoneManager sendiri)
+            if (this.bones.Ponytail && !this.vrm?.springBoneManager) {
                 const targetAngleY = -lookYaw * 0.25 + Math.sin(elapsed * 1.8) * 0.03;
                 const targetAngleZ = -lookPitch * 0.20 + Math.cos(elapsed * 1.2) * 0.02;
 

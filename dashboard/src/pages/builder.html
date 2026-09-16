@@ -3,241 +3,969 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Container V2 Visual Builder | Naura Hoshino</title>
+    <title>Components V2 & Embed Builder | Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Outfit:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
-    <link rel="stylesheet" href="/vendor/fontawesome.css" />
-    <link rel="stylesheet" href="/vendor/tailwind-built.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
-      :root {
-        --color-surface-glass: rgba(255, 255, 255, 0.03);
-        --color-hairline: rgba(255, 255, 255, 0.08);
-        --color-primary: #ffb6c1;
+      .builder-grid {
+        display: grid;
+        grid-template-columns: 480px 1fr;
+        gap: 24px;
+        align-items: start;
       }
-      body {
-        font-family: "Outfit", sans-serif;
-        background-color: #0b0c10;
-        color: #ffffff;
+      @media (max-width: 1100px) {
+        .builder-grid {
+          grid-template-columns: 1fr;
+        }
       }
-      .font-cyber {
-        font-family: "Orbitron", sans-serif;
-      }
-      .glass-card {
-        background: var(--color-surface-glass);
+
+      /* Form controls styling */
+      .builder-panel {
+        background: linear-gradient(180deg, rgba(16, 21, 38, 0.7) 0%, rgba(10, 13, 24, 0.85) 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        padding: 24px;
         backdrop-filter: blur(16px);
-        border: 1px solid var(--color-hairline);
+      }
+
+      .form-section {
+        margin-bottom: 20px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .form-section:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+      }
+
+      .section-label {
+        font-family: var(--font-heading);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .input-group {
+        margin-bottom: 12px;
+      }
+      .input-group:last-child {
+        margin-bottom: 0;
+      }
+      .input-label {
+        display: block;
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+        font-weight: 500;
+      }
+
+      .text-field {
+        width: 100%;
+        padding: 9px 12px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-md);
+        color: var(--text-primary);
+        font-family: var(--font-body);
+        font-size: 13px;
+        transition: all var(--t-fast);
+      }
+      .text-field:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: rgba(255, 255, 255, 0.07);
+        box-shadow: 0 0 12px var(--primary-glow);
+      }
+
+      textarea.text-field {
+        resize: vertical;
+        min-height: 80px;
+        line-height: 1.5;
+      }
+
+      /* Color Presets */
+      .color-swatches {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .color-swatch {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all var(--t-fast);
+      }
+      .color-swatch:hover {
+        transform: scale(1.15);
+      }
+      .color-swatch.active {
+        border-color: #fff;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      }
+
+      /* Preset Templates buttons */
+      .template-pills {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .tmpl-btn {
+        padding: 5px 10px;
+        border-radius: var(--r-md);
+        font-size: 11px;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all var(--t-fast);
+      }
+      .tmpl-btn:hover {
+        background: var(--primary-dim);
+        color: var(--primary);
+        border-color: var(--border-primary);
+      }
+
+      /* Field Items Dynamic List */
+      .field-row-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-md);
+        padding: 10px;
+        margin-bottom: 8px;
+        position: relative;
+      }
+      .field-row-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      /* Button items */
+      .btn-row-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-md);
+        padding: 10px;
+        margin-bottom: 8px;
+      }
+
+      /* ================= DISCORD LIVE PREVIEW CONTAINER ================= */
+      .discord-viewport {
+        background: #313338;
+        border-radius: var(--r-xl);
+        border: 1px solid var(--border-subtle);
+        padding: 24px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+        font-family: 'Inter', system-ui, sans-serif;
+      }
+
+      .discord-msg-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .discord-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+      .discord-bot-name {
+        font-weight: 600;
+        color: #f2f3f5;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .discord-badge {
+        background: #5865f2;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 4px;
+        text-transform: uppercase;
+      }
+      .discord-timestamp {
+        font-size: 12px;
+        color: #949ba4;
+      }
+
+      /* 5-LAYER CONTAINER V2 */
+      .discord-container-v2 {
+        background: #2b2d31;
+        border-radius: 8px;
+        border-left: 4px solid var(--preview-accent, #f472b6);
+        max-width: 540px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Layer 1: Header */
+      .d-header {
+        padding: 14px 16px 10px;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .d-author-icon {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        margin-top: 1px;
+      }
+      .d-author-text {
+        font-size: 12px;
+        font-weight: 600;
+        color: #dbdee1;
+      }
+      .d-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #f2f3f5;
+        margin-top: 2px;
+        line-height: 1.3;
+      }
+
+      /* Layer 2: Separator Line */
+      .d-separator {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+        margin: 0 16px;
+      }
+
+      /* Layer 3: Content Body & Fields */
+      .d-body {
+        padding: 12px 16px;
+      }
+      .d-description {
+        font-size: 13px;
+        line-height: 1.5;
+        color: #dbdee1;
+        margin-bottom: 12px;
+        white-space: pre-wrap;
+      }
+
+      .d-fields-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 8px;
+      }
+      .d-field-full {
+        grid-column: span 2;
+      }
+      .d-field-name {
+        font-size: 11px;
+        font-weight: 700;
+        color: #949ba4;
+        text-transform: uppercase;
+        margin-bottom: 3px;
+        letter-spacing: 0.03em;
+      }
+      .d-field-val {
+        font-size: 13px;
+        color: #f2f3f5;
+        line-height: 1.4;
+      }
+
+      /* Layer 4: Interactive Buttons Row */
+      .d-buttons-row {
+        padding: 8px 16px 14px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .d-btn {
+        padding: 8px 14px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: filter 0.15s ease;
+      }
+      .d-btn:hover {
+        filter: brightness(1.15);
+      }
+      .d-btn-primary { background: #5865f2; color: #fff; }
+      .d-btn-secondary { background: #4e5058; color: #fff; }
+      .d-btn-success { background: #23a55a; color: #fff; }
+      .d-btn-danger { background: #da373c; color: #fff; }
+      .d-btn-link { background: #4e5058; color: #fff; text-decoration: none; }
+
+      /* Layer 5: Footer */
+      .d-footer {
+        padding: 8px 16px 12px;
+        font-size: 11px;
+        color: #949ba4;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      /* Toast */
+      .builder-toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: #10b981;
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: var(--r-lg);
+        font-weight: 600;
+        font-size: 13px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        opacity: 0;
+        transform: translateY(12px);
+        transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        pointer-events: none;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .builder-toast.show {
+        opacity: 1;
+        transform: translateY(0);
       }
     </style>
   </head>
-  <body class="min-h-screen flex flex-col justify-between">
-    <!-- Navbar -->
-    <header class="border-b border-white/10 px-6 py-4 flex items-center justify-between glass-card sticky top-0 z-50">
-      <div class="flex items-center gap-3">
-        <a href="/" class="text-2xl hover:scale-105 transition">🌸</a>
-        <div>
-          <h1 class="font-cyber font-bold text-base tracking-wider text-pink-300">
-            CONTAINER V2 BUILDER
-          </h1>
-          <p class="text-[11px] text-gray-400">Discord 5-Layer Layout Visual Studio</p>
+  <body>
+    
+    <div class="builder-toast" id="builderToast"><i class="fa-solid fa-circle-check"></i> <span>JSON Payload Berhasil Disalin!</span></div>
+
+    <div class="app-shell">
+      <!-- Mobile Sidebar Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <aside class="sidebar " id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
+          <div class="sidebar-brand-text"><div class="sidebar-brand-name">Naura Hoshino</div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button><div class="sidebar-brand-sub">v2.3.0 · Online</div></div>
         </div>
-      </div>
-      <div class="flex items-center gap-3">
-        <span class="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs rounded-full font-mono">
-          ✓ Discord API v10 Ready
-        </span>
-        <a href="/" class="text-xs px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg transition border border-white/10">
-          <i class="fa-solid fa-arrow-left mr-1"></i> Dashboard
-        </a>
-      </div>
-    </header>
+                <!-- Navigation -->
+                <!-- Navigation -->
+        <nav class="sidebar-nav" role="navigation">
 
-    <!-- Main Workspace -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <!-- Left Column: Input Form (5 Layers) -->
-      <section class="lg:col-span-6 space-y-4">
-        <div class="glass-card rounded-2xl p-5 space-y-4">
-          <h2 class="font-cyber text-sm font-bold text-pink-400 flex items-center gap-2">
-            <i class="fa-solid fa-sliders"></i> Konfigurasi 5-Lapisan Container
-          </h2>
-
-          <!-- Layer 1: Header -->
-          <div class="space-y-2 border-b border-white/5 pb-3">
-            <label class="text-xs font-semibold text-gray-300">1. Header (Author & Judul)</label>
-            <input
-              type="text"
-              id="input-author"
-              class="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs focus:border-pink-400 focus:outline-none"
-              placeholder="Author Name (misal: NAURA SYSTEM)"
-              value="NAURA CORE SYSTEM"
-            />
-            <input
-              type="text"
-              id="input-title"
-              class="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs focus:border-pink-400 focus:outline-none"
-              placeholder="Judul Container (misal: 🌸 Laporan Server)"
-              value="🌸 Pusat Notifikasi & Telemetri Server"
-            />
+          <!-- Overview -->
+          <div class="nav-group">
+            <div class="nav-group-label">Overview</div>
+            <a href="/" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span>Dashboard</span>
+            </a>
+            <a href="/status" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
+              <span>Live Status</span>
+              <span class="nav-badge">Live</span>
+            </a>
+            <a href="/feed" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
+              <span>Activity Feed</span>
+            </a>
           </div>
 
-          <!-- Layer 3: Deskripsi & Konten -->
-          <div class="space-y-2 border-b border-white/5 pb-3">
-            <label class="text-xs font-semibold text-gray-300">3. Isi Deskripsi Konten (Markdown)</label>
-            <textarea
-              id="input-desc"
-              rows="4"
-              class="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs focus:border-pink-400 focus:outline-none"
-              placeholder="Tuliskan deskripsi container di sini..."
-            >Halo! Ini adalah contoh pratinjau live Discord Components V2.
-- ⚡ **Latensi Gateway:** `42ms`
-- 🛡️ **Status Sistem:** `Optimal`
-- 💎 **Mata Uang Aktif:** `Star Fragments & Coins`</textarea>
+          <!-- Community -->
+          <div class="nav-group">
+            <div class="nav-group-label">Community</div>
+            <a href="/leaderboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
+              <span>Leaderboard</span>
+            </a>
+            <a href="/economy" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
+              <span>Economy</span>
+            </a>
+            <a href="/topology" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span>Guild Topology</span>
+            </a>
           </div>
 
-          <!-- Layer 4: Tombol Interaktif -->
-          <div class="space-y-2 border-b border-white/5 pb-3">
-            <label class="text-xs font-semibold text-gray-300">4. Action Row (Tombol)</label>
-            <div class="grid grid-cols-2 gap-2">
-              <input
-                type="text"
-                id="input-btn1-label"
-                class="px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs focus:border-pink-400 focus:outline-none"
-                placeholder="Label Tombol 1"
-                value="Konfirmasi"
-              />
-              <input
-                type="text"
-                id="input-btn2-label"
-                class="px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs focus:border-pink-400 focus:outline-none"
-                placeholder="Label Tombol 2"
-                value="Bantuan"
-              />
-            </div>
+          <!-- Media & Audio -->
+          <div class="nav-group">
+            <div class="nav-group-label">Media & Audio</div>
+            <a href="/music" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
+              <span>Music Hub</span>
+            </a>
+            <a href="/soundboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
+              <span>Soundboard</span>
+            </a>
+            <a href="/jam" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
+              <span>Jam Session</span>
+            </a>
+            <a href="/karaoke" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span>Karaoke</span>
+            </a>
           </div>
 
-          <!-- Layer 5: Footer -->
-          <div class="space-y-2">
-            <label class="text-xs font-semibold text-gray-300">5. Footer Terpusat</label>
-            <input
-              type="text"
-              id="input-footer"
-              class="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs focus:border-pink-400 focus:outline-none"
-              placeholder="Footer Text"
-              value="Naura Hoshino • Discord Components V2 System"
-            />
+          <!-- Naura Wilds RPG -->
+          <div class="nav-group">
+            <div class="nav-group-label">Naura Wilds RPG</div>
+            <a href="/world" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span>World Map</span>
+            </a>
+            <a href="/survival-map" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
+              <span>Survival Map</span>
+            </a>
+            <a href="/activity" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
+              <span>Activity Hub</span>
+            </a>
+          </div>
+
+          <!-- Configuration -->
+          <div class="nav-group">
+            <div class="nav-group-label">Configuration</div>
+            <a href="/settings" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
+              <span>Settings</span>
+            </a>
+            <a href="/welcomer" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
+              <span>Welcomer Card</span>
+            </a>
+            <a href="/builder" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span>Embed Builder</span>
+            </a>
+            <a href="/automations" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
+              <span>Automations</span>
+            </a>
+            <a href="/tickets" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
+              <span>Tickets</span>
+            </a>
+          </div>
+
+          <!-- More -->
+          <div class="nav-group">
+            <div class="nav-group-label">More</div>
+            <a href="/portfolio" class="nav-item">
+              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
+              <span style="color:var(--accent-green)">Creator Portfolio</span>
+            </a>
+          </div>
+
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user" onclick="window.location.href='/'">
+            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+            <div class="sidebar-user-info"><div class="sidebar-user-name">Guest Admin</div><div class="sidebar-user-role">UI Designer</div></div>
           </div>
         </div>
-      </section>
+      </aside>
 
-      <!-- Right Column: Live Visual Discord Preview -->
-      <section class="lg:col-span-6 space-y-4">
-        <div class="glass-card rounded-2xl p-5 space-y-4">
-          <div class="flex items-center justify-between">
-            <h2 class="font-cyber text-sm font-bold text-cyan-400 flex items-center gap-2">
-              <i class="fa-brands fa-discord"></i> Pratinjau Discord Components V2
-            </h2>
-            <span id="budget-badge" class="text-[11px] font-mono px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
-              Budget: 100% Aman
-            </span>
-          </div>
-
-          <!-- Discord Message Container Mockup -->
-          <div class="bg-[#18191c] border border-white/10 rounded-xl p-4 space-y-3 font-sans shadow-2xl">
-            <!-- Header Layer -->
+      <div class="main-content">
+        <header class="top-header">
+          <div class="header-left">
+            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
             <div>
-              <div id="preview-author" class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                NAURA CORE SYSTEM
+              <div class="page-title">Components V2 Builder</div>
+              <div class="breadcrumb"><span>Configuration</span><span class="breadcrumb-sep">/</span><span>Visual Layout Engine</span></div>
+            </div>
+          </div>
+          <div class="header-right">
+            <button class="btn btn-secondary btn-sm" id="btnCopyJson"><i class="fa-solid fa-code"></i> Salin JSON</button>
+            <button class="btn btn-primary btn-sm" id="btnCopyCode"><i class="fa-solid fa-copy"></i> Salin Snippet JS</button>
+          </div>
+        </header>
+
+        <main class="page-content">
+          <div class="page-header-bar animate-in">
+            <div>
+              <h1 class="page-heading">
+                <span class="page-heading-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);">
+                  <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--primary);"></i>
+                </span>
+                Discord Components V2 Builder
+              </h1>
+              <p class="page-sub">Rancang pesan Discord interaktif menggunakan arsitektur 5-lapisan NauraContainerBuilder dengan pratinjau langsung.</p>
+            </div>
+          </div>
+
+          <!-- Template Presets -->
+          <div class="template-pills animate-in delay-1">
+            <span style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;margin-right:6px;">Template:</span>
+            <button class="tmpl-btn" data-preset="announce"><i class="fa-solid fa-bullhorn"></i> Pengumuman Event</button>
+            <button class="tmpl-btn" data-preset="economy"><i class="fa-solid fa-coins"></i> Transfer Ekonomi</button>
+            <button class="tmpl-btn" data-preset="raid"><i class="fa-solid fa-skull-crossbones"></i> Kemenangan Raid</button>
+            <button class="tmpl-btn" data-preset="ticket"><i class="fa-solid fa-ticket"></i> Support Ticket</button>
+          </div>
+
+          <div class="builder-grid animate-in delay-2">
+            <!-- Left: Controls Form -->
+            <div class="builder-panel">
+              <!-- Header Section -->
+              <div class="form-section">
+                <div class="section-label"><i class="fa-solid fa-heading" style="color:var(--accent-cyan);"></i> Lapisan 1: Header & Judul</div>
+                <div class="input-group">
+                  <label class="input-label">Teks Author (Nama Pengirim / Modul)</label>
+                  <input type="text" class="text-field" id="inputAuthor" value="Naura Hoshino • Event Aetheria" />
+                </div>
+                <div class="input-group">
+                  <label class="input-label">Judul Utama</label>
+                  <input type="text" class="text-field" id="inputTitle" value="🌸 Festival Musim Semi Bunga Sakura Dimulai!" />
+                </div>
               </div>
-              <h3 id="preview-title" class="text-sm font-bold text-white mt-0.5">
-                🌸 Pusat Notifikasi & Telemetri Server
-              </h3>
+
+              <!-- Accent Color Section -->
+              <div class="form-section">
+                <div class="section-label"><i class="fa-solid fa-palette" style="color:var(--primary);"></i> Garis Aksen & Tema</div>
+                <div class="color-swatches" id="swatchList">
+                  <div class="color-swatch active" style="background:#f472b6;" data-color="#f472b6" title="Sakura Pink"></div>
+                  <div class="color-swatch" style="background:#22d3ee;" data-color="#22d3ee" title="Aether Cyan"></div>
+                  <div class="color-swatch" style="background:#a78bfa;" data-color="#a78bfa" title="Celestial Violet"></div>
+                  <div class="color-swatch" style="background:#34d399;" data-color="#34d399" title="Wilds Emerald"></div>
+                  <div class="color-swatch" style="background:#f59e0b;" data-color="#f59e0b" title="Amber Gold"></div>
+                  <div class="color-swatch" style="background:#ef4444;" data-color="#ef4444" title="Danger Crimson"></div>
+                  <input type="color" id="inputCustomColor" value="#f472b6" style="width:30px;height:30px;border-radius:50%;cursor:pointer;border:none;background:transparent;" title="Warna Kustom" />
+                </div>
+              </div>
+
+              <!-- Content Section -->
+              <div class="form-section">
+                <div class="section-label"><i class="fa-solid fa-paragraph" style="color:var(--accent-violet);"></i> Lapisan 3: Deskripsi & Field</div>
+                <div class="input-group">
+                  <label class="input-label">Deskripsi Markdown</label>
+                  <textarea class="text-field" id="inputDesc">Selamat datang di Festival Musim Semi! Dapatkan buff bonus **+35% EXP** dan peluang drop gacha 2x lipat selama periode festival berlangsung.
+
+Kunjungi booth Pak Kades Tirto dan Luna di Desa Swallowtail untuk mengambil hadiah harian gratis!</textarea>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;margin-bottom:8px;">
+                  <span style="font-size:12px;font-weight:600;color:var(--text-secondary);">Fields Kustom</span>
+                  <button class="btn btn-ghost btn-sm" id="btnAddField" style="font-size:11px;"><i class="fa-solid fa-plus"></i> Tambah Field</button>
+                </div>
+                <div id="fieldsContainer">
+                  <div class="field-row-item">
+                    <div class="field-row-head">
+                      <span style="font-size:11px;color:var(--text-muted);font-weight:600;">Field 1</span>
+                      <button class="btn-del-field" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <input type="text" class="text-field field-name" value="⏰ Periode Waktu" style="margin-bottom:6px;font-size:12px;" />
+                    <input type="text" class="text-field field-val" value="16 - 23 September 2026" style="font-size:12px;" />
+                  </div>
+                  <div class="field-row-item">
+                    <div class="field-row-head">
+                      <span style="font-size:11px;color:var(--text-muted);font-weight:600;">Field 2</span>
+                      <button class="btn-del-field" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <input type="text" class="text-field field-name" value="🎁 Hadiah Spesial" style="margin-bottom:6px;font-size:12px;" />
+                    <input type="text" class="text-field field-val" value="Title: [Penunggang Sakura] + 500 NSF" style="font-size:12px;" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Buttons Row Section -->
+              <div class="form-section">
+                <div class="section-label"><i class="fa-solid fa-square-check" style="color:var(--accent-green);"></i> Lapisan 4: Tombol Interaktif</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <span style="font-size:12px;color:var(--text-muted);">Action Row (Maks 5 Tombol)</span>
+                  <button class="btn btn-ghost btn-sm" id="btnAddBtn" style="font-size:11px;"><i class="fa-solid fa-plus"></i> Tambah Tombol</button>
+                </div>
+                <div id="buttonsContainer">
+                  <div class="btn-row-item">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                      <span style="font-size:11px;color:var(--text-muted);">Tombol 1</span>
+                      <button class="btn-del-action" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;">
+                      <input type="text" class="text-field btn-label" value="🎁 Klaim Hadiah Harian" style="font-size:12px;" />
+                      <select class="text-field btn-style" style="font-size:12px;">
+                        <option value="primary" selected>Primary</option>
+                        <option value="success">Success</option>
+                        <option value="danger">Danger</option>
+                        <option value="secondary">Secondary</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="btn-row-item">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                      <span style="font-size:11px;color:var(--text-muted);">Tombol 2</span>
+                      <button class="btn-del-action" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;">
+                      <input type="text" class="text-field btn-label" value="📖 Panduan Lengkap" style="font-size:12px;" />
+                      <select class="text-field btn-style" style="font-size:12px;">
+                        <option value="secondary" selected>Secondary</option>
+                        <option value="primary">Primary</option>
+                        <option value="success">Success</option>
+                        <option value="danger">Danger</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Footer Section -->
+              <div class="form-section">
+                <div class="section-label"><i class="fa-solid fa-shoe-prints" style="color:var(--accent-amber);"></i> Lapisan 5: Footer & Branding</div>
+                <div class="input-group">
+                  <label class="input-label">Teks Footer</label>
+                  <input type="text" class="text-field" id="inputFooter" value="Naura Hoshino Ecosystem • Server ID: 10429188" />
+                </div>
+              </div>
             </div>
 
-            <!-- Divider 1 -->
-            <div class="border-t border-white/10"></div>
+            <!-- Right: Discord Live Visual Preview -->
+            <div class="discord-viewport">
+              <div class="discord-msg-header">
+                <img src="/assets/core/avatar.png" class="discord-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" alt="Naura" />
+                <div>
+                  <div class="discord-bot-name">
+                    <span>Naura Hoshino</span>
+                    <span class="discord-badge">APP</span>
+                  </div>
+                  <div class="discord-timestamp">Hari ini pukul 14:30</div>
+                </div>
+              </div>
 
-            <!-- Body Layer -->
-            <div id="preview-desc" class="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">
-              Halo! Ini adalah contoh pratinjau live Discord Components V2.
-            </div>
+              <!-- 5-LAYER CONTAINER V2 PREVIEW -->
+              <div class="discord-container-v2" id="previewContainer">
+                <!-- Layer 1: Header -->
+                <div class="d-header">
+                  <img src="/assets/core/avatar.png" class="d-author-icon" onerror="this.style.display='none'" alt="Author" />
+                  <div>
+                    <div class="d-author-text" id="prevAuthor">Naura Hoshino • Event Aetheria</div>
+                    <div class="d-title" id="prevTitle">🌸 Festival Musim Semi Bunga Sakura Dimulai!</div>
+                  </div>
+                </div>
 
-            <!-- Divider 2 -->
-            <div class="border-t border-white/5 border-dashed"></div>
+                <!-- Layer 2: Separator Line -->
+                <div class="d-separator"></div>
 
-            <!-- Buttons Layer -->
-            <div class="flex items-center gap-2 pt-1">
-              <button id="preview-btn1" class="px-4 py-1.5 bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-semibold rounded transition">
-                Konfirmasi
-              </button>
-              <button id="preview-btn2" class="px-4 py-1.5 bg-[#4e5058] hover:bg-[#6d6f78] text-white text-xs font-semibold rounded transition">
-                Bantuan
-              </button>
-            </div>
+                <!-- Layer 3: Body & Fields -->
+                <div class="d-body">
+                  <div class="d-description" id="prevDesc">Selamat datang di Festival Musim Semi! Dapatkan buff bonus **+35% EXP** dan peluang drop gacha 2x lipat selama periode festival berlangsung.
 
-            <!-- Divider 3 -->
-            <div class="border-t border-white/10"></div>
+Kunjungi booth Pak Kades Tirto dan Luna di Desa Swallowtail untuk mengambil hadiah harian gratis!</div>
 
-            <!-- Footer Layer -->
-            <div id="preview-footer" class="text-[10px] text-gray-500">
-              Naura Hoshino • Discord Components V2 System
+                  <div class="d-fields-grid" id="prevFieldsGrid">
+                    <div>
+                      <div class="d-field-name">⏰ Periode Waktu</div>
+                      <div class="d-field-val">16 - 23 September 2026</div>
+                    </div>
+                    <div>
+                      <div class="d-field-name">🎁 Hadiah Spesial</div>
+                      <div class="d-field-val">Title: [Penunggang Sakura] + 500 NSF</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Layer 4: Interactive Buttons Row -->
+                <div class="d-buttons-row" id="prevButtonsRow">
+                  <button class="d-btn d-btn-primary">🎁 Klaim Hadiah Harian</button>
+                  <button class="d-btn d-btn-secondary">📖 Panduan Lengkap</button>
+                </div>
+
+                <!-- Layer 5: Footer -->
+                <div class="d-footer" id="prevFooter">
+                  <i class="fa-solid fa-circle-info" style="font-size:10px;"></i>
+                  <span id="prevFooterText">Naura Hoshino Ecosystem • Server ID: 10429188</span>
+                </div>
+              </div>
             </div>
           </div>
+        </main>
+      </div>
+    </div>
 
-          <!-- Action Buttons -->
-          <div class="flex items-center gap-3 pt-2">
-            <button id="copy-json-btn" class="flex-1 py-2.5 bg-pink-500 hover:bg-pink-600 font-bold text-xs rounded-xl uppercase tracking-wider transition">
-              <i class="fa-solid fa-code mr-1.5"></i> Salin JSON Payload
-            </button>
-          </div>
-        </div>
-      </section>
-    </main>
+    <nav class="mobile-nav">
+      <div class="mobile-nav-inner">
+        <a href="/" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Home</span></a>
+        <a href="/music" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-music"></i></span><span class="mn-label">Music</span></a>
+        <a href="/builder" class="mobile-nav-item active"><span class="mn-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span><span class="mn-label">Builder</span></a>
+        <a href="/economy" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-coins"></i></span><span class="mn-label">Economy</span></a>
+        <a href="/settings" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+      </div>
+    </nav>
 
-    <!-- Footer -->
-    <footer class="border-t border-white/10 py-4 px-6 text-center text-xs text-gray-500 glass-card">
-      Naura Hoshino V2 • Visual WYSIWYG Studio for Discord Components V2
-    </footer>
-
+    <script src="/src/js/shared-nav.js"></script>
     <script>
-      function updatePreview() {
-        const author = document.getElementById("input-author").value;
-        const title = document.getElementById("input-title").value;
-        const desc = document.getElementById("input-desc").value;
-        const btn1 = document.getElementById("input-btn1-label").value;
-        const btn2 = document.getElementById("input-btn2-label").value;
-        const footer = document.getElementById("input-footer").value;
+      let currentColor = '#f472b6';
 
-        document.getElementById("preview-author").textContent = author || "HEADER AUTHOR";
-        document.getElementById("preview-title").textContent = title || "CONTAINER TITLE";
-        document.getElementById("preview-desc").textContent = desc || "Deskripsi kosong...";
-        document.getElementById("preview-btn1").textContent = btn1 || "Action 1";
-        document.getElementById("preview-btn2").textContent = btn2 || "Action 2";
-        document.getElementById("preview-footer").textContent = footer || "Footer";
+      const inputAuthor = document.getElementById('inputAuthor');
+      const inputTitle = document.getElementById('inputTitle');
+      const inputDesc = document.getElementById('inputDesc');
+      const inputFooter = document.getElementById('inputFooter');
+      const previewContainer = document.getElementById('previewContainer');
+      const prevAuthor = document.getElementById('prevAuthor');
+      const prevTitle = document.getElementById('prevTitle');
+      const prevDesc = document.getElementById('prevDesc');
+      const prevFooterText = document.getElementById('prevFooterText');
+      const prevFieldsGrid = document.getElementById('prevFieldsGrid');
+      const prevButtonsRow = document.getElementById('prevButtonsRow');
+      const fieldsContainer = document.getElementById('fieldsContainer');
+      const buttonsContainer = document.getElementById('buttonsContainer');
+      const builderToast = document.getElementById('builderToast');
+
+      function updatePreview() {
+        prevAuthor.textContent = inputAuthor.value || 'Naura Hoshino';
+        prevTitle.textContent = inputTitle.value || 'Pemberitahuan Sistem';
+        prevDesc.textContent = inputDesc.value || '';
+        prevFooterText.textContent = inputFooter.value || 'Naura Hoshino Ecosystem';
+        previewContainer.style.setProperty('--preview-accent', currentColor);
+
+        // Render Fields
+        const fieldItems = fieldsContainer.querySelectorAll('.field-row-item');
+        prevFieldsGrid.innerHTML = '';
+        fieldItems.forEach(item => {
+          const name = item.querySelector('.field-name').value;
+          const val = item.querySelector('.field-val').value;
+          if (name || val) {
+            const div = document.createElement('div');
+            div.innerHTML = `
+              <div class="d-field-name">${name || 'FIELD'}</div>
+              <div class="d-field-val">${val || '-'}</div>
+            `;
+            prevFieldsGrid.appendChild(div);
+          }
+        });
+
+        // Render Buttons
+        const btnItems = buttonsContainer.querySelectorAll('.btn-row-item');
+        prevButtonsRow.innerHTML = '';
+        btnItems.forEach(item => {
+          const label = item.querySelector('.btn-label').value;
+          const style = item.querySelector('.btn-style').value;
+          if (label) {
+            const btn = document.createElement('button');
+            btn.className = `d-btn d-btn-${style}`;
+            btn.textContent = label;
+            btn.onclick = () => {
+              showToast(`Tombol "${label}" diklik! (Simulasi Interaksi)`);
+            };
+            prevButtonsRow.appendChild(btn);
+          }
+        });
       }
 
-      ["input-author", "input-title", "input-desc", "input-btn1-label", "input-btn2-label", "input-footer"].forEach(id => {
-        document.getElementById(id).addEventListener("input", updatePreview);
+      // Input change listeners
+      [inputAuthor, inputTitle, inputDesc, inputFooter].forEach(el => {
+        el.addEventListener('input', updatePreview);
       });
 
-      document.getElementById("copy-json-btn").addEventListener("click", () => {
+      // Color Swatches
+      document.querySelectorAll('.color-swatch').forEach(swatch => {
+        swatch.addEventListener('click', () => {
+          document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+          swatch.classList.add('active');
+          currentColor = swatch.getAttribute('data-color');
+          updatePreview();
+        });
+      });
+      document.getElementById('inputCustomColor').addEventListener('input', (e) => {
+        currentColor = e.target.value;
+        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+        updatePreview();
+      });
+
+      // Add Field
+      document.getElementById('btnAddField').addEventListener('click', () => {
+        const count = fieldsContainer.querySelectorAll('.field-row-item').length + 1;
+        const row = document.createElement('div');
+        row.className = 'field-row-item';
+        row.innerHTML = `
+          <div class="field-row-head">
+            <span style="font-size:11px;color:var(--text-muted);font-weight:600;">Field ${count}</span>
+            <button class="btn-del-field" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;"><i class="fa-solid fa-trash"></i></button>
+          </div>
+          <input type="text" class="text-field field-name" placeholder="Nama Field" value="Status" style="margin-bottom:6px;font-size:12px;" />
+          <input type="text" class="text-field field-val" placeholder="Isi Nilai" value="Aktif" style="font-size:12px;" />
+        `;
+        fieldsContainer.appendChild(row);
+        bindFieldEvents();
+        updatePreview();
+      });
+
+      function bindFieldEvents() {
+        fieldsContainer.querySelectorAll('.btn-del-field').forEach(btn => {
+          btn.onclick = (e) => {
+            e.target.closest('.field-row-item').remove();
+            updatePreview();
+          };
+        });
+        fieldsContainer.querySelectorAll('.field-name, .field-val').forEach(input => {
+          input.oninput = updatePreview;
+        });
+      }
+      bindFieldEvents();
+
+      // Add Button
+      document.getElementById('btnAddBtn').addEventListener('click', () => {
+        const count = buttonsContainer.querySelectorAll('.btn-row-item').length + 1;
+        if (count > 5) {
+          alert('Discord membatasi maksimal 5 tombol per Action Row!');
+          return;
+        }
+        const row = document.createElement('div');
+        row.className = 'btn-row-item';
+        row.innerHTML = `
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:11px;color:var(--text-muted);">Tombol ${count}</span>
+            <button class="btn-del-action" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;"><i class="fa-solid fa-trash"></i></button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;">
+            <input type="text" class="text-field btn-label" value="⚡ Aksi Baru" style="font-size:12px;" />
+            <select class="text-field btn-style" style="font-size:12px;">
+              <option value="primary">Primary</option>
+              <option value="secondary" selected>Secondary</option>
+              <option value="success">Success</option>
+              <option value="danger">Danger</option>
+            </select>
+          </div>
+        `;
+        buttonsContainer.appendChild(row);
+        bindBtnEvents();
+        updatePreview();
+      });
+
+      function bindBtnEvents() {
+        buttonsContainer.querySelectorAll('.btn-del-action').forEach(btn => {
+          btn.onclick = (e) => {
+            e.target.closest('.btn-row-item').remove();
+            updatePreview();
+          };
+        });
+        buttonsContainer.querySelectorAll('.btn-label, .btn-style').forEach(input => {
+          input.oninput = updatePreview;
+          input.onchange = updatePreview;
+        });
+      }
+      bindBtnEvents();
+
+      // Toast feedback
+      function showToast(msg) {
+        builderToast.querySelector('span').textContent = msg;
+        builderToast.classList.add('show');
+        setTimeout(() => builderToast.classList.remove('show'), 3000);
+      }
+
+      // Copy JSON
+      document.getElementById('btnCopyJson').addEventListener('click', () => {
         const payload = {
-          flags: 32768, // MessageFlags.IsComponentsV2
-          authorName: document.getElementById("input-author").value,
-          title: document.getElementById("input-title").value,
-          description: document.getElementById("input-desc").value,
-          footerText: document.getElementById("input-footer").value
+          author: inputAuthor.value,
+          title: inputTitle.value,
+          accentColorHex: currentColor,
+          description: inputDesc.value,
+          fields: Array.from(fieldsContainer.querySelectorAll('.field-row-item')).map(item => ({
+            name: item.querySelector('.field-name').value,
+            value: item.querySelector('.field-val').value,
+            inline: true
+          })),
+          footer: inputFooter.value
         };
-        navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
-        alert("Payload JSON berhasil disalin ke clipboard!");
+        navigator.clipboard.writeText(JSON.stringify(payload, null, 2)).then(() => {
+          showToast('JSON Container V2 Berhasil Disalin!');
+        });
       });
 
+      // Copy Code
+      document.getElementById('btnCopyCode').addEventListener('click', () => {
+        const codeSnippet = `const { buildContainerV2 } = require('../utils/NauraContainerBuilder');
+
+const container = buildContainerV2({
+  author: ${JSON.stringify(inputAuthor.value)},
+  title: ${JSON.stringify(inputTitle.value)},
+  accentColorHex: '${currentColor}',
+  description: ${JSON.stringify(inputDesc.value)},
+  fields: ${JSON.stringify(Array.from(fieldsContainer.querySelectorAll('.field-row-item')).map(item => ({
+    name: item.querySelector('.field-name').value,
+    value: item.querySelector('.field-val').value,
+    inline: true
+  })), null, 2)},
+  footerText: ${JSON.stringify(inputFooter.value)}
+});
+
+await interaction.reply(container);`;
+        navigator.clipboard.writeText(codeSnippet).then(() => {
+          showToast('Kode JS NauraContainerBuilder Disalin!');
+        });
+      });
+
+      // Preset Templates
+      const PRESETS = {
+        announce: {
+          author: 'Naura Hoshino • Event Aetheria',
+          title: '🌸 Festival Musim Semi Bunga Sakura Dimulai!',
+          color: '#f472b6',
+          desc: 'Selamat datang di Festival Musim Semi! Dapatkan buff bonus **+35% EXP** dan peluang drop gacha 2x lipat selama periode festival berlangsung.',
+          footer: 'Naura Hoshino Ecosystem • Server ID: 10429188'
+        },
+        economy: {
+          author: 'Bank Central Naura • Sistem Transaksi',
+          title: '🪙 Transfer Saldo Berhasil',
+          color: '#f59e0b',
+          desc: 'Transaksi pengiriman dana antar pemain telah selesai diverifikasi oleh protokol atomik blockchain Naura.',
+          footer: 'Biaya admin 0.5% dialirkan ke ServerTreasury'
+        },
+        raid: {
+          author: 'The Neo-Abyss • Celestial Victory',
+          title: '⚔️ Astral Warden Telah Ditaklukkan!',
+          color: '#a78bfa',
+          desc: 'Party petualang berhasil menjatuhkan World Boss Astral Warden dalam 4 Menit 12 Detik. Seluruh anggota party menerima 1x [Cincin Astral Abadi].',
+          footer: 'Respawn berikutnya: 6 Jam dari sekarang'
+        },
+        ticket: {
+          author: 'Support Portal • Tiket Pelayanan #0492',
+          title: '🎟️ Laporan Pemain Telah Direspons',
+          color: '#22d3ee',
+          desc: 'Moderator bertugas telah meninjau keluhan transaksi Anda. Status tiket telah dialihkan ke [SELESAI]. Silakan beri rating pelayanan di bawah ini.',
+          footer: 'Naura Support Desk • Tribunal Court Integrated'
+        }
+      };
+
+      document.querySelectorAll('.tmpl-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const p = PRESETS[btn.getAttribute('data-preset')];
+          if (!p) return;
+          inputAuthor.value = p.author;
+          inputTitle.value = p.title;
+          inputDesc.value = p.desc;
+          inputFooter.value = p.footer;
+          currentColor = p.color;
+          document.querySelectorAll('.color-swatch').forEach(s => {
+            s.classList.toggle('active', s.getAttribute('data-color') === p.color);
+          });
+          updatePreview();
+          showToast(`Template "${btn.textContent.trim()}" Dimuat!`);
+        });
+      });
+
+      // Init
       updatePreview();
     </script>
   </body>

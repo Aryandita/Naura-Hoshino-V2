@@ -1,251 +1,832 @@
-<!DOCTYPE html>
-<html lang="id" class="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Naura Wilds • Peta Dunia Interaktif</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/src/styles/main.css">
-  <style>
-    body {
-      background-color: #0B0C10;
-      color: #E2E8F0;
-      font-family: 'Outfit', sans-serif;
-      overflow-x: hidden;
-    }
-    .orbitron {
-      font-family: 'Orbitron', sans-serif;
-    }
-    .glass-panel {
-      background: rgba(134, 239, 172, 0.04);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(134, 239, 172, 0.2);
-    }
-    .emerald-glow {
-      box-shadow: 0 0 25px -5px rgba(134, 239, 172, 0.25);
-    }
-    .location-node {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      cursor: pointer;
-    }
-    .location-node:hover {
-      transform: scale(1.05);
-      filter: drop-shadow(0 0 12px #86EFAC);
-    }
-    .pulse-dot {
-      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(1.2); }
-    }
-  </style>
-</head>
-<body class="min-h-screen flex flex-col justify-between">
-
-  <!-- Header & Navigation -->
-  <header class="glass-panel sticky top-0 z-50 px-6 py-4 flex items-center justify-between border-b border-emerald-500/20">
-    <div class="flex items-center space-x-4">
-      <a href="/" class="flex items-center space-x-2 text-emerald-400 hover:text-emerald-300 transition">
-        <span class="text-2xl">🌿</span>
-        <span class="orbitron font-black text-xl tracking-wider text-white">NAURA <span class="text-emerald-400">WILDS</span></span>
-      </a>
-      <span class="hidden md:inline-block text-xs uppercase px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
-        World Map V2
-      </span>
-    </div>
-
-    <!-- Live Telemetry Status Bar -->
-    <div class="flex items-center space-x-6 text-sm">
-      <div id="clockStatus" class="hidden sm:flex items-center space-x-2">
-        <span id="timeEmoji">☀️</span>
-        <span id="timeText" class="font-medium">Memuat Waktu...</span>
-      </div>
-      <div id="weatherStatus" class="hidden md:flex items-center space-x-2">
-        <span id="weatherEmoji">🌤️</span>
-        <span id="weatherText" class="text-slate-300">Cerah Berawan</span>
-      </div>
-      <a href="/" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 transition">
-        Kembali ke Dashboard
-      </a>
-    </div>
-  </header>
-
-  <!-- Active Event Banner -->
-  <div id="eventBanner" class="hidden mx-6 mt-4 p-3 rounded-xl bg-gradient-to-r from-emerald-500/20 via-pink-500/20 to-purple-500/20 border border-emerald-400/30 flex items-center justify-between text-sm">
-    <div class="flex items-center space-x-3">
-      <span class="text-xl">🎉</span>
-      <div>
-        <span id="eventName" class="font-bold text-white">Event Aktif</span>
-        <p id="eventDesc" class="text-xs text-slate-300">Deskripsi event musiman.</p>
-      </div>
-    </div>
-    <span class="px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-400/20 text-emerald-300 border border-emerald-400/30">
-      BONUS ACTIVE
-    </span>
-  </div>
-
-  <!-- Interactive SVG Map Canvas -->
-  <main class="flex-1 max-w-7xl mx-auto w-full p-6 flex flex-col items-center">
-    <div class="w-full glass-panel rounded-2xl p-6 relative overflow-hidden emerald-glow">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h1 class="orbitron text-2xl font-bold text-white tracking-wide">PETA TERITORI ALAM LIAR</h1>
-          <p class="text-xs text-slate-400 mt-1">Pantau kepadatan petualang dan sumber daya real-time di setiap wilayah.</p>
-        </div>
-        <div class="flex items-center space-x-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-dot"></span>
-          <span class="text-xs text-emerald-400 font-medium">LIVE TELEMETRY</span>
-        </div>
-      </div>
-
-      <!-- SVG Map Drawing -->
-      <div class="relative w-full aspect-[16/9] max-h-[580px] bg-slate-950/60 rounded-xl border border-emerald-500/10 overflow-hidden flex items-center justify-center">
-        <svg viewBox="0 0 1000 600" class="w-full h-full select-none">
-          <!-- Pathway Links -->
-          <defs>
-            <linearGradient id="linkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#86EFAC" stop-opacity="0.3"/>
-              <stop offset="100%" stop-color="#38BDF8" stop-opacity="0.3"/>
-            </linearGradient>
-          </defs>
-
-          <!-- Paths between locations -->
-          <path d="M 500 300 L 250 160" stroke="url(#linkGrad)" stroke-width="3" stroke-dasharray="6,6"/>
-          <path d="M 500 300 L 750 160" stroke="url(#linkGrad)" stroke-width="3" stroke-dasharray="6,6"/>
-          <path d="M 500 300 L 200 440" stroke="url(#linkGrad)" stroke-width="3" stroke-dasharray="6,6"/>
-          <path d="M 500 300 L 800 440" stroke="url(#linkGrad)" stroke-width="3" stroke-dasharray="6,6"/>
-          <path d="M 500 300 L 500 480" stroke="url(#linkGrad)" stroke-width="3" stroke-dasharray="6,6"/>
-
-          <!-- 1. Central: DESA SWALLOWTAIL -->
-          <g class="location-node" onclick="showLocation('desa')">
-            <circle cx="500" cy="300" r="50" fill="#0B0C10" stroke="#86EFAC" stroke-width="3"/>
-            <circle cx="500" cy="300" r="42" fill="#86EFAC" fill-opacity="0.1"/>
-            <text x="500" y="295" text-anchor="middle" font-size="24">🏡</text>
-            <text x="500" y="322" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="700">DESA PEMULA</text>
-            <text id="badge-desa" x="500" y="368" text-anchor="middle" fill="#86EFAC" font-size="12" font-weight="600">0 Petualang</text>
-          </g>
-
-          <!-- 2. Top-Left: HUTAN TERLARANG -->
-          <g class="location-node" onclick="showLocation('hutan')">
-            <circle cx="250" cy="160" r="44" fill="#0B0C10" stroke="#22C55E" stroke-width="2.5"/>
-            <circle cx="250" cy="160" r="36" fill="#22C55E" fill-opacity="0.1"/>
-            <text x="250" y="155" text-anchor="middle" font-size="22">🌲</text>
-            <text x="250" y="180" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="700">HUTAN PINUS</text>
-            <text id="badge-hutan" x="250" y="222" text-anchor="middle" fill="#22C55E" font-size="12" font-weight="600">0 Petualang</text>
-          </g>
-
-          <!-- 3. Top-Right: KOTA NAURA -->
-          <g class="location-node" onclick="showLocation('kota')">
-            <circle cx="750" cy="160" r="46" fill="#0B0C10" stroke="#C084FC" stroke-width="2.5"/>
-            <circle cx="750" cy="160" r="38" fill="#C084FC" fill-opacity="0.1"/>
-            <text x="750" y="155" text-anchor="middle" font-size="22">🏙️</text>
-            <text x="750" y="180" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="700">KOTA NAURA</text>
-            <text id="badge-kota" x="750" y="224" text-anchor="middle" fill="#C084FC" font-size="12" font-weight="600">0 Petualang</text>
-          </g>
-
-          <!-- 4. Bottom-Left: TAMBANG KUNO -->
-          <g class="location-node" onclick="showLocation('tambang')">
-            <circle cx="200" cy="440" r="44" fill="#0B0C10" stroke="#F59E0B" stroke-width="2.5"/>
-            <circle cx="200" cy="440" r="36" fill="#F59E0B" fill-opacity="0.1"/>
-            <text x="200" y="435" text-anchor="middle" font-size="22">⛏️</text>
-            <text x="200" y="460" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="700">TAMBANG KUNO</text>
-            <text id="badge-tambang" x="200" y="502" text-anchor="middle" fill="#F59E0B" font-size="12" font-weight="600">0 Petualang</text>
-          </g>
-
-          <!-- 5. Bottom-Right: PANTAI UTARA & LAUT -->
-          <g class="location-node" onclick="showLocation('laut')">
-            <circle cx="800" cy="440" r="44" fill="#0B0C10" stroke="#38BDF8" stroke-width="2.5"/>
-            <circle cx="800" cy="440" r="36" fill="#38BDF8" fill-opacity="0.1"/>
-            <text x="800" y="435" text-anchor="middle" font-size="22">🌊</text>
-            <text x="800" y="460" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="700">PANTAI SELATAN</text>
-            <text id="badge-laut" x="800" y="502" text-anchor="middle" fill="#38BDF8" font-size="12" font-weight="600">0 Petualang</text>
-          </g>
-
-          <!-- 6. Bottom-Center: NAURA ACADEMY -->
-          <g class="location-node" onclick="showLocation('academy')">
-            <circle cx="500" cy="480" r="42" fill="#0B0C10" stroke="#EC4899" stroke-width="2.5"/>
-            <circle cx="500" cy="480" r="34" fill="#EC4899" fill-opacity="0.1"/>
-            <text x="500" y="475" text-anchor="middle" font-size="20">🎓</text>
-            <text x="500" y="500" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="700">ACADEMY</text>
-            <text id="badge-academy" x="500" y="540" text-anchor="middle" fill="#EC4899" font-size="12" font-weight="600">0 Petualang</text>
-          </g>
-        </svg>
-      </div>
-
-      <!-- Quick Info Drawer -->
-      <div id="drawer" class="mt-6 p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-sm">
-        <div>
-          <span id="drawerTitle" class="font-bold text-white text-base">Klik salah satu lokasi pada peta</span>
-          <p id="drawerDesc" class="text-xs text-slate-300 mt-0.5">Informasi sumber daya dan aktivitas yang tersedia akan tampil di sini.</p>
-        </div>
-        <span id="drawerHint" class="text-xs text-emerald-400 font-mono">PILIH LOKASI</span>
-      </div>
-    </div>
-  </main>
-
-  <!-- Footer -->
-  <footer class="glass-panel py-4 px-6 text-center text-xs text-slate-400 border-t border-emerald-500/10">
-    <p>Naura Wilds Ecosystem • Terhubung langsung dengan Discord Bot & Database Polyglot • 2026</p>
-  </footer>
-
-  <script>
-    const LOC_INFO = {
-      desa: { title: "🏡 Desa Swallowtail (Pemula)", desc: "Pusat hunian warga damai. Lokasi bertemu Pak Kades, bercocok tanam di greenhouse, dan pasar bibit." },
-      hutan: { title: "🌲 Hutan Pinus Terlarang", desc: "Area pengumpulan kayu, serat alami, dan apel segar. Hati-hati dengan binatang liar saat menjelajah!" },
-      kota: { title: "🏙️ Kota Naura (Metropolis)", desc: "Pusat perkantoran dan bisnis modern. Tempat bekerja kantoran, Bank Pusat, kafe cyber, dan toko mewah." },
-      tambang: { title: "⛏️ Tambang Kuno & Pintu Gua", desc: "Bebatuan purba kaya bijih besi, perak, dan diamond. Gerbang masuk menuju 100 lantai Infinite Dungeon!" },
-      laut: { title: "🌊 Pantai & Dermaga Selatan", desc: "Dermaga nelayan dan samudera luas. Spot terbaik memancing ikan salmon, ikan mas koki, dan kristal laut." },
-      academy: { title: "🎓 Naura Academy & Riset", desc: "Perpustakaan megah dan ruang ujian Prof. Habibie. Belajar menambah INT dan meraih ijazah kehormatan." }
-    };
-
-    function showLocation(locKey) {
-      const info = LOC_INFO[locKey];
-      if (!info) return;
-      document.getElementById('drawerTitle').innerText = info.title;
-      document.getElementById('drawerDesc').innerText = info.desc;
-      document.getElementById('drawerHint').innerText = locKey.toUpperCase();
-    }
-
-    async function fetchMapData() {
-      try {
-        const res = await fetch('/api/survival/map-data');
-        if (!res.ok) return;
-        const data = await res.json();
-
-        // Update Waktu & Cuaca
-        if (data.time) {
-          document.getElementById('timeEmoji').innerText = data.time.timeState?.emoji || '☀️';
-          document.getElementById('timeText').innerText = `Hari ke-${data.time.day}, ${String(data.time.hour).padStart(2, '0')}:00`;
-          document.getElementById('weatherEmoji').innerText = data.time.weather?.emoji || '🌤️';
-          document.getElementById('weatherText').innerText = data.time.weather?.name || 'Cerah';
-        }
-
-        // Update Event
-        if (data.event) {
-          const eb = document.getElementById('eventBanner');
-          eb.classList.remove('hidden');
-          document.getElementById('eventName').innerText = data.event.name;
-          document.getElementById('eventDesc').innerText = data.event.description;
-        }
-
-        // Update Badge Kepadatan
-        if (data.locations) {
-          for (const [k, v] of Object.entries(data.locations)) {
-            const el = document.getElementById(`badge-${k}`);
-            if (el) el.textContent = `${v} Petualang`;
-          }
-        }
-      } catch (err) {
-        console.warn("Gagal memuat telemetri peta:", err);
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tactical Survival Radar | Naura OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <style>
+      .survival-grid-layout {
+        display: grid;
+        grid-template-columns: 1fr 390px;
+        gap: 24px;
+        align-items: start;
       }
-    }
+      @media (max-width: 1200px) {
+        .survival-grid-layout {
+          grid-template-columns: 1fr;
+        }
+      }
 
-    fetchMapData();
-    setInterval(fetchMapData, 10000);
-  </script>
-</body>
+      /* Radar Display Canvas Card */
+      .radar-card {
+        background: linear-gradient(180deg, #070c17 0%, #04070e 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      }
+
+      .radar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        background: rgba(11, 17, 33, 0.75);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--border-subtle);
+        z-index: 10;
+        position: relative;
+      }
+
+      .radar-scope-container {
+        height: 540px;
+        width: 100%;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: 
+          radial-gradient(circle at center, rgba(11, 21, 43, 0.35) 0%, rgba(5, 8, 19, 0.8) 85%),
+          url('/assets/maps/survival_radar_art.jpg') center / cover no-repeat;
+        overflow: hidden;
+      }
+
+      /* Grid Lines Background */
+      .radar-scope-container::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: 
+          linear-gradient(rgba(34, 211, 238, 0.07) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(34, 211, 238, 0.07) 1px, transparent 1px);
+        background-size: 32px 32px;
+        pointer-events: none;
+      }
+
+      /* Radar Circles */
+      .radar-rings {
+        position: absolute;
+        width: 460px;
+        height: 460px;
+        border-radius: 50%;
+        border: 1px solid rgba(34, 211, 238, 0.25);
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .radar-rings::before {
+        content: '';
+        position: absolute;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        border: 1px dashed rgba(34, 211, 238, 0.2);
+      }
+      .radar-rings::after {
+        content: '';
+        position: absolute;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        border: 1px solid rgba(34, 211, 238, 0.25);
+      }
+
+      /* Crosshairs */
+      .radar-crosshair-h {
+        position: absolute;
+        width: 100%;
+        height: 1px;
+        background: rgba(34, 211, 238, 0.2);
+        pointer-events: none;
+      }
+      .radar-crosshair-v {
+        position: absolute;
+        height: 100%;
+        width: 1px;
+        background: rgba(34, 211, 238, 0.2);
+        pointer-events: none;
+      }
+
+      /* Conic Sweep Line */
+      .radar-sweep {
+        position: absolute;
+        width: 460px;
+        height: 460px;
+        border-radius: 50%;
+        background: conic-gradient(from 0deg, rgba(34, 211, 238, 0.35) 0deg, rgba(34, 211, 238, 0) 65deg, transparent 70deg);
+        animation: radarRotate 5s linear infinite;
+        pointer-events: none;
+      }
+      @keyframes radarRotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      /* Player Center Icon */
+      .radar-player-center {
+        position: absolute;
+        z-index: 8;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--primary);
+        box-shadow: 0 0 16px var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #000;
+        font-size: 13px;
+        border: 2px solid #fff;
+      }
+
+      /* Interactive Blips */
+      .blip {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 6;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+      }
+      .blip:hover {
+        transform: translate(-50%, -50%) scale(1.35);
+        z-index: 9;
+      }
+      .blip-wood { background: rgba(16, 185, 129, 0.3); border: 1.5px solid #10b981; color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+      .blip-ore  { background: rgba(34, 211, 238, 0.3); border: 1.5px solid #22d3ee; color: #22d3ee; box-shadow: 0 0 10px rgba(34, 211, 238, 0.5); }
+      .blip-water { background: rgba(59, 130, 246, 0.3); border: 1.5px solid #3b82f6; color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+      .blip-beast { background: rgba(239, 68, 68, 0.3); border: 1.5px solid #ef4444; color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
+      .blip-chest { background: rgba(245, 158, 11, 0.3); border: 1.5px solid #f59e0b; color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.6); }
+
+      .blip-tooltip {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(8, 12, 24, 0.95);
+        border: 1px solid var(--border-medium);
+        padding: 5px 10px;
+        border-radius: var(--r-md);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+      }
+      .blip:hover .blip-tooltip {
+        opacity: 1;
+      }
+
+      /* Vitals Bar Panel */
+      .vitals-box {
+        background: rgba(14, 20, 36, 0.65);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      .vital-row {
+        margin-bottom: 14px;
+      }
+      .vital-row:last-child {
+        margin-bottom: 0;
+      }
+      .vital-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        margin-bottom: 5px;
+      }
+      .vital-bar {
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+      }
+      .vital-fill {
+        height: 100%;
+        border-radius: 999px;
+        transition: width 0.3s ease;
+      }
+
+      /* Ping Scanner Action Button */
+      .scan-btn {
+        width: 100%;
+        padding: 14px;
+        border-radius: var(--r-lg);
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        color: #fff;
+        font-weight: 600;
+        font-size: 14px;
+        border: 1px solid rgba(34, 211, 238, 0.4);
+        box-shadow: 0 0 16px rgba(2, 132, 199, 0.3);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all var(--t-fast);
+      }
+      .scan-btn:hover {
+        background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+        box-shadow: 0 0 24px rgba(34, 211, 238, 0.5);
+      }
+      .scan-btn:active {
+        transform: scale(0.98);
+      }
+
+      /* Sonar wave animation on scan */
+      .sonar-pulse {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 2px solid var(--accent-cyan);
+        box-shadow: 0 0 16px var(--accent-cyan);
+        pointer-events: none;
+        animation: sonarExpand 1.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+      }
+      @keyframes sonarExpand {
+        0% { width: 10px; height: 10px; opacity: 1; }
+        100% { width: 650px; height: 650px; opacity: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    
+
+    <div class="app-shell">
+      <!-- Mobile Sidebar Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <aside class="sidebar " id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
+          <div class="sidebar-brand-text"><div class="sidebar-brand-name">Naura Hoshino</div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button><div class="sidebar-brand-sub">v2.3.0 · Online</div></div>
+        </div>
+                <!-- Navigation -->
+                <!-- Navigation -->
+        <nav class="sidebar-nav" role="navigation">
+
+          <!-- Overview -->
+          <div class="nav-group">
+            <div class="nav-group-label">Overview</div>
+            <a href="/" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span>Dashboard</span>
+            </a>
+            <a href="/status" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
+              <span>Live Status</span>
+              <span class="nav-badge">Live</span>
+            </a>
+            <a href="/feed" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
+              <span>Activity Feed</span>
+            </a>
+          </div>
+
+          <!-- Community -->
+          <div class="nav-group">
+            <div class="nav-group-label">Community</div>
+            <a href="/leaderboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
+              <span>Leaderboard</span>
+            </a>
+            <a href="/economy" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
+              <span>Economy</span>
+            </a>
+            <a href="/topology" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span>Guild Topology</span>
+            </a>
+          </div>
+
+          <!-- Media & Audio -->
+          <div class="nav-group">
+            <div class="nav-group-label">Media & Audio</div>
+            <a href="/music" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
+              <span>Music Hub</span>
+            </a>
+            <a href="/soundboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
+              <span>Soundboard</span>
+            </a>
+            <a href="/jam" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
+              <span>Jam Session</span>
+            </a>
+            <a href="/karaoke" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span>Karaoke</span>
+            </a>
+          </div>
+
+          <!-- Naura Wilds RPG -->
+          <div class="nav-group">
+            <div class="nav-group-label">Naura Wilds RPG</div>
+            <a href="/world" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span>World Map</span>
+            </a>
+            <a href="/survival-map" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
+              <span>Survival Map</span>
+            </a>
+            <a href="/activity" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
+              <span>Activity Hub</span>
+            </a>
+          </div>
+
+          <!-- Configuration -->
+          <div class="nav-group">
+            <div class="nav-group-label">Configuration</div>
+            <a href="/settings" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
+              <span>Settings</span>
+            </a>
+            <a href="/welcomer" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
+              <span>Welcomer Card</span>
+            </a>
+            <a href="/builder" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span>Embed Builder</span>
+            </a>
+            <a href="/automations" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
+              <span>Automations</span>
+            </a>
+            <a href="/tickets" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
+              <span>Tickets</span>
+            </a>
+          </div>
+
+          <!-- More -->
+          <div class="nav-group">
+            <div class="nav-group-label">More</div>
+            <a href="/portfolio" class="nav-item">
+              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
+              <span style="color:var(--accent-green)">Creator Portfolio</span>
+            </a>
+          </div>
+
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user" onclick="window.location.href='/'">
+            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+            <div class="sidebar-user-info"><div class="sidebar-user-name">Guest Explorer</div><div class="sidebar-user-role">Sektor 07-B Radar</div></div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="main-content">
+        <header class="top-header">
+          <div class="header-left">
+            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <div>
+              <div class="page-title">Tactical Survival Radar</div>
+              <div class="breadcrumb"><span>Naura Wilds RPG</span><span class="breadcrumb-sep">/</span><span>Territory Grid</span></div>
+            </div>
+          </div>
+          <div class="header-right">
+            <div class="badge badge-success" id="radarStatusBadge">
+              <i class="fa-solid fa-radar fa-spin" style="--fa-animation-duration: 4s;"></i> SONAR ACTIVE
+            </div>
+          </div>
+        </header>
+
+        <main class="page-content">
+          <div class="page-header-bar animate-in">
+            <div>
+              <h1 class="page-heading">
+                <span class="page-heading-icon" style="background:rgba(16, 185, 129, 0.15);border:1px solid rgba(16, 185, 129, 0.3);">
+                  <i class="fa-solid fa-crosshairs" style="color:#10b981;"></i>
+                </span>
+                Tactical Territory Radar (Naura Wilds)
+              </h1>
+              <p class="page-sub">Pantau titik sumber daya hutan, pergerakan hewan buas, tingkat vitalitas tubuh, dan peti harta karun tertimbun.</p>
+            </div>
+          </div>
+
+          <div class="survival-grid-layout">
+            <!-- Left: Radar Display -->
+            <div class="radar-card animate-in delay-1">
+              <div class="radar-header">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="color:#22d3ee;font-family:var(--font-mono);font-size:13px;font-weight:700;">
+                    <i class="fa-solid fa-satellite-dish"></i> GRID SEKTOR: 07-B [LEMBAH PINUS MISTIS]
+                  </span>
+                </div>
+                <div style="display:flex;gap:8px;">
+                  <button class="btn btn-ghost btn-sm" id="btnFilterWood" title="Filter Kayu" style="color:#10b981;"><i class="fa-solid fa-tree"></i></button>
+                  <button class="btn btn-ghost btn-sm" id="btnFilterOre" title="Filter Tambang" style="color:#22d3ee;"><i class="fa-solid fa-gem"></i></button>
+                  <button class="btn btn-ghost btn-sm" id="btnFilterWater" title="Filter Air" style="color:#3b82f6;"><i class="fa-solid fa-droplet"></i></button>
+                  <button class="btn btn-ghost btn-sm" id="btnFilterBeast" title="Filter Hewan Buas" style="color:#ef4444;"><i class="fa-solid fa-paw"></i></button>
+                </div>
+              </div>
+
+              <div class="radar-scope-container" id="radarScope">
+                <!-- Circular Rings -->
+                <div class="radar-rings"></div>
+                <!-- Crosshairs -->
+                <div class="radar-crosshair-h"></div>
+                <div class="radar-crosshair-v"></div>
+                <!-- Conic Sweep -->
+                <div class="radar-sweep"></div>
+                <!-- Player Icon -->
+                <div class="radar-player-center" title="Posisi Kamu"><i class="fa-solid fa-person-hiking"></i></div>
+
+                <!-- Detected Blips -->
+                <div class="blip blip-wood" style="top: 28%; left: 34%;" data-type="wood" data-name="Pohon Pinus Tua (x12 Kayu)" data-dist="42m">
+                  <i class="fa-solid fa-tree" style="font-size: 11px;"></i>
+                  <div class="blip-tooltip">Pohon Pinus Tua · 42m Barat Laut</div>
+                </div>
+
+                <div class="blip blip-wood" style="top: 22%; left: 45%;" data-type="wood" data-name="Kayu Kering Bergetah" data-dist="78m">
+                  <i class="fa-solid fa-tree" style="font-size: 11px;"></i>
+                  <div class="blip-tooltip">Kayu Kering Bergetah · 78m Utara</div>
+                </div>
+
+                <div class="blip blip-ore" style="top: 66%; left: 70%;" data-type="ore" data-name="Urat Besi Murni (Lv. 2 Mining)" data-dist="60m">
+                  <i class="fa-solid fa-gem" style="font-size: 11px;"></i>
+                  <div class="blip-tooltip">Urat Besi Murni · 60m Tenggara</div>
+                </div>
+
+                <div class="blip blip-ore" style="top: 78%; left: 60%;" data-type="ore" data-name="Kristal Aether Pecahan" data-dist="85m">
+                  <i class="fa-solid fa-gem" style="font-size: 11px;"></i>
+                  <div class="blip-tooltip">Kristal Aether Pecahan · 85m Selatan</div>
+                </div>
+
+                <div class="blip blip-water" style="top: 36%; left: 74%;" data-type="water" data-name="Mata Air Pegunungan (Air Segar)" data-dist="68m">
+                  <i class="fa-solid fa-droplet" style="font-size: 11px;"></i>
+                  <div class="blip-tooltip">Mata Air Pegunungan · 68m Timur Laut</div>
+                </div>
+
+                <div class="blip blip-beast" style="top: 50%; left: 24%;" data-type="beast" data-name="Babi Hutan Aether (Lv. 8 - Agresif)" data-dist="92m">
+                  <i class="fa-solid fa-paw" style="font-size: 11px;"></i>
+                  <div class="blip-tooltip">⚠️ Babi Hutan Aether (Lv. 8) · 92m Barat</div>
+                </div>
+
+                <div class="blip blip-chest" style="top: 40%; left: 54%;" data-type="chest" data-name="Peti Perunggu Kuno" data-dist="35m">
+                  <i class="fa-solid fa-box" style="font-size: 11px;"></i>
+                  <div class="blip-tooltip">🎁 Peti Perunggu Kuno · 35m Timur Laut</div>
+                </div>
+              </div>
+
+              <div style="padding: 14px 20px; background: rgba(8, 13, 26, 0.85); border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+                <span style="color:var(--text-muted);font-family:var(--font-mono);">Jarak Pindai: Radius 120 Meter</span>
+                <span style="color:var(--accent-cyan);font-family:var(--font-mono);font-weight:600;" id="scanFoundText">7 Objek Terdeteksi di Sekitar</span>
+              </div>
+            </div>
+
+            <!-- Right: Vitals & Base Outpost Controls -->
+            <div class="animate-in delay-2">
+              <!-- Vitals Standard Card (RULES.md Compliant) -->
+              <div class="vitals-box">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                  <div style="font-family:var(--font-heading);font-size:16px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
+                    <i class="fa-solid fa-heart-pulse" style="color:#ef4444;"></i> Vitalitas Petualang
+                  </div>
+                  <span class="badge badge-success" style="font-size:10px;">PRIMA</span>
+                </div>
+
+                <!-- HP Bar -->
+                <div class="vital-row">
+                  <div class="vital-meta">
+                    <span style="color:var(--text-secondary);"><i class="fa-solid fa-heart" style="color:#ef4444;"></i> Kesehatan (HP)</span>
+                    <span style="font-family:var(--font-mono);color:#fff;font-weight:600;">480 / 500</span>
+                  </div>
+                  <div class="vital-bar"><div class="vital-fill" style="width: 96%; background: #10b981;"></div></div>
+                </div>
+
+                <!-- Stamina Bar -->
+                <div class="vital-row">
+                  <div class="vital-meta">
+                    <span style="color:var(--text-secondary);"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Stamina Energi</span>
+                    <span style="font-family:var(--font-mono);color:#fff;font-weight:600;">85 / 100</span>
+                  </div>
+                  <div class="vital-bar"><div class="vital-fill" style="width: 85%; background: #f59e0b;"></div></div>
+                </div>
+
+                <!-- Hunger Bar -->
+                <div class="vital-row">
+                  <div class="vital-meta">
+                    <span style="color:var(--text-secondary);"><i class="fa-solid fa-drumstick-bite" style="color:#f472b6;"></i> Kenyang (Lapar)</span>
+                    <span style="font-family:var(--font-mono);color:#fff;font-weight:600;">72 / 100</span>
+                  </div>
+                  <div class="vital-bar"><div class="vital-fill" style="width: 72%; background: #34d399;"></div></div>
+                </div>
+
+                <!-- Thirst Bar -->
+                <div class="vital-row">
+                  <div class="vital-meta">
+                    <span style="color:var(--text-secondary);"><i class="fa-solid fa-glass-water" style="color:#3b82f6;"></i> Hidrasi (Haus)</span>
+                    <span style="font-family:var(--font-mono);color:#fff;font-weight:600;">64 / 100</span>
+                  </div>
+                  <div class="vital-bar"><div class="vital-fill" style="width: 64%; background: #3b82f6;"></div></div>
+                </div>
+
+                <!-- Tool Durability -->
+                <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border-subtle);display:flex;justify-content:space-between;font-size:12px;">
+                  <span style="color:var(--text-muted);"><i class="fa-solid fa-hammer"></i> Kapak Besi: <b style="color:#10b981;">82%</b></span>
+                  <span style="color:var(--text-muted);"><i class="fa-solid fa-pickaxe"></i> Beliung Baja: <b style="color:#f59e0b;">54%</b></span>
+                </div>
+              </div>
+
+              <!-- Outpost / Base Status -->
+              <div class="card card-p" style="margin-bottom:20px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                  <div style="font-family:var(--font-heading);font-size:15px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
+                    <i class="fa-solid fa-campground" style="color:#a78bfa;"></i> Outpost Pos Aju Sektor 7
+                  </div>
+                  <span class="badge" style="background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3);font-size:10px;">TIER 2</span>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                  <div style="background:rgba(255,255,255,0.03);padding:10px;border-radius:var(--r-md);border:1px solid var(--border-subtle);">
+                    <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Shield Generator</div>
+                    <div style="font-family:var(--font-mono);font-weight:600;font-size:13px;color:#34d399;">100% AKTIF</div>
+                  </div>
+                  <div style="background:rgba(255,255,255,0.03);padding:10px;border-radius:var(--r-md);border:1px solid var(--border-subtle);">
+                    <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Daur Ulang Pool</div>
+                    <div style="font-family:var(--font-mono);font-weight:600;font-size:13px;color:var(--accent-amber);">3,200 NSF</div>
+                  </div>
+                </div>
+
+                <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:14px;">
+                  Pos ini memberikan tempat perlindungan aman, tungku peleburan otomatis, dan kotak inventori bersama.
+                </div>
+
+                <button class="scan-btn" id="btnDeployScan">
+                  <i class="fa-solid fa-satellite"></i> <span>Kirim Ping Sonar Scan</span>
+                </button>
+              </div>
+
+              <!-- Selected Blip Intel Card -->
+              <div class="card card-p" id="blipDetailCard" style="display:none;background:radial-gradient(circle at top right, rgba(34,211,238,0.1), transparent 70%);">
+                <div style="font-size:11px;color:var(--accent-cyan);text-transform:uppercase;font-weight:600;margin-bottom:4px;" id="blipDetailSub">TARGET TERKUNCI</div>
+                <div style="font-family:var(--font-heading);font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;" id="blipDetailTitle">Pohon Pinus Tua</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;" id="blipDetailDist">Jarak: 42m Barat Laut · Estimasi Waktu Berjalan: 12 Detik</div>
+                <button class="btn btn-primary btn-sm" id="btnNavigateBlip" style="width:100%;">
+                  <i class="fa-solid fa-person-running"></i> Navigasi Menuju Lokasi
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <nav class="mobile-nav">
+      <div class="mobile-nav-inner">
+        <a href="/" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Home</span></a>
+        <a href="/music" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-music"></i></span><span class="mn-label">Music</span></a>
+        <a href="/survival-map" class="mobile-nav-item active"><span class="mn-icon"><i class="fa-solid fa-map"></i></span><span class="mn-label">Survival</span></a>
+        <a href="/economy" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-coins"></i></span><span class="mn-label">Economy</span></a>
+        <a href="/settings" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+      </div>
+    </nav>
+
+    <script src="/src/js/shared-nav.js"></script>
+    <script>
+      let audioCtx = null;
+      function playTone(freq, type = 'sine', duration = 0.12, vol = 0.2) {
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+        } catch (_) {}
+      }
+
+      function playSonarPing() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(440, now + 0.6);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(now + 0.6);
+      }
+
+      // Blip Selection
+      const blips = document.querySelectorAll('.blip');
+      const blipDetailCard = document.getElementById('blipDetailCard');
+      const blipDetailTitle = document.getElementById('blipDetailTitle');
+      const blipDetailDist = document.getElementById('blipDetailDist');
+
+      blips.forEach(blip => {
+        blip.addEventListener('click', () => {
+          const name = blip.getAttribute('data-name');
+          const dist = blip.getAttribute('data-dist');
+          playTone(550, 'sine', 0.08, 0.2);
+
+          blipDetailTitle.textContent = name;
+          blipDetailDist.textContent = `Jarak: ${dist} · Estimasi Waktu Berjalan: 15 Detik`;
+          blipDetailCard.style.display = 'block';
+        });
+      });
+
+      // Filter Toggles
+      const filterToggles = [
+        { btn: document.getElementById('btnFilterWood'), type: 'wood' },
+        { btn: document.getElementById('btnFilterOre'), type: 'ore' },
+        { btn: document.getElementById('btnFilterWater'), type: 'water' },
+        { btn: document.getElementById('btnFilterBeast'), type: 'beast' }
+      ];
+
+      filterToggles.forEach(({ btn, type }) => {
+        let active = true;
+        btn.addEventListener('click', () => {
+          active = !active;
+          btn.style.opacity = active ? '1' : '0.3';
+          document.querySelectorAll(`.blip[data-type="${type}"]`).forEach(el => {
+            el.style.display = active ? 'flex' : 'none';
+          });
+          playTone(400, 'square', 0.05, 0.1);
+        });
+      });
+
+      // Ping Scan Button
+      const btnDeployScan = document.getElementById('btnDeployScan');
+      const radarScope = document.getElementById('radarScope');
+      btnDeployScan.addEventListener('click', () => {
+        playSonarPing();
+
+        // Spawn visual ripple wave
+        const wave = document.createElement('div');
+        wave.className = 'sonar-pulse';
+        radarScope.appendChild(wave);
+        setTimeout(() => wave.remove(), 1600);
+
+        // Blip animation
+        blips.forEach((b, idx) => {
+          setTimeout(() => {
+            b.style.transform = 'translate(-50%, -50%) scale(1.6)';
+            setTimeout(() => {
+              b.style.transform = 'translate(-50%, -50%) scale(1)';
+            }, 300);
+          }, 300 + idx * 120);
+        });
+      });
+
+      document.getElementById('btnNavigateBlip').addEventListener('click', () => {
+        playTone(700, 'triangle', 0.1, 0.2);
+        alert('Navigasi waypoint GPS telah dikirimkan ke HUD Survival kompas Anda!');
+      });
+
+      // Load live survival data from API
+      (async () => {
+        try {
+          const res = await fetch('/api/realtime/survival');
+          const json = await res.json();
+          if (!json.success || !json.data?.length) return;
+
+          const survivor = json.data[0]; // Tampilkan data survivor pertama
+          const stats = survivor.stats;
+          const attrs = survivor.attributes;
+          const world = survivor.world;
+
+          // Update vital bars
+          const vitals = [
+            { selector: '.vital-fill[style*="#10b981"]', value: stats.hp, max: 100 },
+            { selector: '.vital-fill[style*="#f59e0b"]', value: stats.stamina, max: 100 },
+            { selector: '.vital-fill[style*="#34d399"]', value: stats.hunger, max: 100 },
+            { selector: '.vital-fill[style*="#3b82f6"]', value: stats.thirst, max: 100 },
+          ];
+
+          const vitalMetas = document.querySelectorAll('.vital-meta span:last-child');
+          const vitalFills = document.querySelectorAll('.vital-fill');
+          const vitalData = [
+            { value: stats.hp, max: 100, color: '#10b981' },
+            { value: stats.stamina, max: 100, color: '#f59e0b' },
+            { value: stats.hunger, max: 100, color: '#34d399' },
+            { value: stats.thirst, max: 100, color: '#3b82f6' }
+          ];
+
+          vitalData.forEach((v, i) => {
+            if (vitalFills[i]) {
+              const pct = Math.max(0, Math.min(100, v.value));
+              vitalFills[i].style.width = pct + '%';
+              vitalFills[i].style.background = pct > 50 ? v.color : pct > 20 ? '#f59e0b' : '#ef4444';
+            }
+            if (vitalMetas[i]) {
+              vitalMetas[i].textContent = `${v.value} / ${v.max}`;
+            }
+          });
+
+          // Update name & location in radar header
+          const radarHeader = document.querySelector('.radar-header');
+          if (radarHeader) {
+            const nameDisplay = radarHeader.querySelector('[id="radarPlayerName"]') ||
+              radarHeader.querySelector('span:first-child');
+            if (nameDisplay) nameDisplay.textContent = survivor.name;
+          }
+
+          // Update outpost NSF
+          const nsfEl = document.querySelector('[style*="3,200 NSF"]');
+          if (nsfEl) nsfEl.textContent = `${survivor.starFragments.toLocaleString('id-ID')} NSF`;
+
+          // Update location display
+          const locEls = document.querySelectorAll('[id="scanFoundText"]');
+          locEls.forEach(el => {
+            el.textContent = `1 Survivor, ${world.location}, Hari ${world.day}`;
+          });
+
+          // Update stat badge
+          const vitStatusBadge = document.querySelector('.badge-success');
+          if (vitStatusBadge && stats.hp > 0) {
+            vitStatusBadge.textContent = 'AKTIF';
+            vitStatusBadge.className = 'badge badge-success';
+          } else if (vitStatusBadge) {
+            vitStatusBadge.textContent = 'OFFLINE';
+            vitStatusBadge.style.background = 'rgba(100,100,100,0.2)';
+            vitStatusBadge.style.color = '#94a3b8';
+          }
+
+          // Add live player blip to radar
+          const radarScope = document.getElementById('radarScope');
+          if (radarScope) {
+            const existingPlayerBlip = document.getElementById('playerBlip');
+            if (existingPlayerBlip) existingPlayerBlip.remove();
+
+            const locationToPos = {
+              'hutan': { top: '55%', left: '45%' },
+              'kota': { top: '40%', left: '52%' },
+              'gurun': { top: '65%', left: '65%' },
+              'pantai': { top: '30%', left: '70%' },
+              'pegunungan': { top: '25%', left: '35%' },
+              'jalanan': { top: '50%', left: '50%' }
+            };
+            const pos = locationToPos[world.location] || { top: '50%', left: '50%' };
+
+            const playerBlip = document.createElement('div');
+            playerBlip.id = 'playerBlip';
+            playerBlip.className = 'blip';
+            playerBlip.style.cssText = `
+              top: ${pos.top}; left: ${pos.left};
+              background: var(--primary);
+              border: 2px solid rgba(244,114,182,0.8);
+              box-shadow: 0 0 12px var(--pink-glow), 0 0 4px rgba(244,114,182,0.6);
+              z-index: 10;
+            `;
+            playerBlip.setAttribute('data-name', `${survivor.name} (Kamu)`);
+            playerBlip.setAttribute('data-dist', `0m, Posisi Kamu`);
+            playerBlip.setAttribute('data-type', 'player');
+            playerBlip.innerHTML = '<i class="fa-solid fa-person" style="font-size:9px;"></i>';
+
+            playerBlip.addEventListener('click', () => {
+              playTone(550, 'sine', 0.08, 0.2);
+              const detailCard = document.getElementById('blipDetailCard');
+              const detailTitle = document.getElementById('blipDetailTitle');
+              const detailDist = document.getElementById('blipDetailDist');
+              if (detailTitle) detailTitle.textContent = `${survivor.name} (Posisi Anda)`;
+              if (detailDist) detailDist.textContent = `Lv.${survivor.progress.level} · ⭐ ${survivor.starFragments.toLocaleString()} NSF · ${world.location}`;
+              if (detailCard) detailCard.style.display = 'block';
+            });
+
+            radarScope.appendChild(playerBlip);
+          }
+
+        } catch(e) {
+          console.warn('[SurvivalMap] Fetch error:', e.message);
+        }
+      })();
+    </script>
+  </body>
 </html>

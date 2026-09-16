@@ -4,389 +4,867 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Leaderboard | Naura OS</title>
+    <meta name="description" content="Hall of Fame, papan peringkat server untuk kekayaan, level chat, survival, dan trivia." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Outfit:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
-    <link rel="stylesheet" href="/vendor/fontawesome.css" />
-    <link rel="stylesheet" href="/vendor/tailwind-built.css" />
-    <script src="/vendor/naura-ui.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <style>
+      /* Podium Card Rich Grand Stage Background */
+      #podiumSection {
+        position: relative;
+        margin-bottom: 24px;
+        overflow: hidden;
+        border-radius: var(--r-2xl);
+        background-color: #080b18;
+        background-image:
+          /* Center Golden Champion Spotlight */
+          radial-gradient(ellipse 65% 60% at 50% -5%, rgba(245, 158, 11, 0.24) 0%, rgba(245, 158, 11, 0.06) 45%, transparent 80%),
+          /* Left Cyan Rimlight for Rank 2 */
+          radial-gradient(ellipse 45% 55% at 22% 42%, rgba(34, 211, 238, 0.14) 0%, transparent 65%),
+          /* Right Violet Rimlight for Rank 3 */
+          radial-gradient(ellipse 45% 55% at 78% 46%, rgba(168, 85, 247, 0.14) 0%, transparent 65%),
+          /* Perspective Floor Grid */
+          linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+        border: 1px solid rgba(245, 158, 11, 0.25);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(245, 158, 11, 0.25);
+      }
+
+      .podium-stage-svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .podium-header-bar {
+        position: relative;
+        z-index: 2;
+        padding: 20px 24px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .podium-wrapper {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 20px;
+        padding: 20px 0 0;
+      }
+
+      .podium-place {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        width: 120px;
+      }
+
+      .podium-avatar-wrap {
+        position: relative;
+      }
+
+      .podium-avatar {
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .podium-rank-badge {
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 18px;
+      }
+
+      .podium-name {
+        font-family: var(--font-heading);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-primary);
+        text-align: center;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .podium-coins {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .podium-bar {
+        width: 80px;
+        border-radius: var(--r-lg) var(--r-lg) 0 0;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 10px;
+        font-family: var(--font-heading);
+        font-size: 18px;
+        font-weight: 900;
+      }
+
+      .podium-1 .podium-bar {
+        height: 100px;
+        background: linear-gradient(to bottom, rgba(245,158,11,0.35), rgba(245,158,11,0.1));
+        border: 1px solid var(--border-amber);
+        box-shadow: 0 -8px 30px var(--amber-glow);
+        color: var(--accent-amber);
+      }
+
+      .podium-2 .podium-bar {
+        height: 75px;
+        background: linear-gradient(to bottom, rgba(34,211,238,0.25), rgba(34,211,238,0.06));
+        border: 1px solid rgba(34,211,238,0.3);
+        box-shadow: 0 -4px 20px rgba(34,211,238,0.15);
+        color: var(--accent-cyan);
+      }
+
+      .podium-3 .podium-bar {
+        height: 55px;
+        background: linear-gradient(to bottom, rgba(168,85,247,0.25), rgba(168,85,247,0.06));
+        border: 1px solid rgba(168,85,247,0.3);
+        box-shadow: 0 -4px 20px rgba(168,85,247,0.15);
+        color: var(--accent-violet);
+      }
+
+      /* Rank table rows */
+      .lb-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 16px;
+        border-radius: var(--r-xl);
+        border: 1px solid transparent;
+        transition: all var(--t-base);
+        cursor: default;
+      }
+
+      .lb-row:hover {
+        background: var(--bg-surface-hv);
+        border-color: var(--border-subtle);
+        transform: translateX(4px);
+      }
+
+      .lb-row:nth-child(even) {
+        background: var(--bg-surface);
+      }
+
+      .lb-rank-num {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        width: 32px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+
+      .lb-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border-subtle);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+        color: var(--text-secondary);
+        overflow: hidden;
+      }
+
+      .lb-row:hover .lb-avatar {
+        border-color: var(--border-primary);
+        box-shadow: 0 0 8px var(--primary-glow);
+      }
+
+      .lb-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .lb-username {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .lb-sub {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+
+      .lb-value {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        font-weight: 700;
+        text-align: right;
+        flex-shrink: 0;
+      }
+
+      .lb-value-sub {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-muted);
+        text-align: right;
+        margin-top: 2px;
+      }
+
+      /* XP bar */
+      .xp-bar-mini {
+        height: 3px;
+        background: var(--bg-elevated);
+        border-radius: var(--r-full);
+        overflow: hidden;
+        margin-top: 4px;
+      }
+
+      .xp-bar-fill {
+        height: 100%;
+        border-radius: var(--r-full);
+        background: linear-gradient(90deg, var(--primary), var(--accent-violet));
+        box-shadow: 0 0 6px var(--primary-glow);
+      }
+    </style>
   </head>
-  <body
-    class="min-h-screen p-4 md:p-8 flex flex-col items-center bg-animated theme-none"
-    id="mainBody"
-  >
-    <div class="w-full max-w-5xl animate-fade-in">
-      <!-- Header -->
-      <div
-        class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-4 border-b border-[var(--color-hairline)] gap-4"
-      >
-        <div>
-          <h1
-            class="text-3xl font-black font-cyber text-glow tracking-wider text-white flex items-center gap-3"
-          >
-            <i class="fa-solid fa-trophy text-yellow-400 animate-pulse"></i>
-            HALL OF FAME
-          </h1>
-          <p
-            class="text-[10px] text-gray-400 uppercase tracking-widest font-cyber mt-1"
-            data-i18n="lb.title"
-          >
-            Papan Peringkat
-          </p>
-        </div>
-        <div class="flex items-center gap-2">
-          <button
-            id="langToggle"
-            title="Bahasa / Language"
-            class="btn-discord px-4 py-2.5 text-xs font-cyber tracking-widest uppercase bg-transparent border border-[var(--color-hairline)] text-gray-300 hover:text-white hover:border-[var(--color-primary-glow)] hover:bg-[var(--color-surface-glass)]"
-          >
-            <i class="fa-solid fa-language mr-2"></i
-            ><span id="langLabel">ID</span>
+  <body>
+    
+
+    <div class="app-shell">
+      <!-- Mobile Sidebar Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar " id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo-icon">
+            <img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" />
+          </div>
+          <div class="sidebar-brand-text">
+            <div class="sidebar-brand-name">Naura Hoshino</div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+            <i class="fa-solid fa-xmark"></i>
           </button>
-          <a
-            href="/"
-            class="btn-discord px-5 py-2.5 text-xs font-cyber tracking-widest uppercase bg-transparent border border-[var(--color-hairline)] text-gray-300 hover:text-white hover:border-[var(--color-primary-glow)] hover:bg-[var(--color-surface-glass)]"
-          >
-            <i class="fa-solid fa-arrow-left mr-2"></i
-            ><span data-i18n="nav.home">Beranda</span>
-          </a>
+            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
+          </div>
         </div>
-      </div>
+                <!-- Navigation -->
+                <!-- Navigation -->
+        <nav class="sidebar-nav" role="navigation">
 
-      <!-- Tab kategori -->
-      <div
-        class="flex flex-wrap items-center gap-2.5 mb-6 p-2 rounded-2xl glass-panel bg-black/40 border-white/5"
-      >
-        <button data-cat="wealth" id="btnTabWealth" class="tab-btn">
-          <i class="fa-solid fa-vault text-yellow-400"></i>
-          <span data-i18n="lb.wealth">Terkaya</span> 🪙
-        </button>
-        <button data-cat="chat_level" id="btnTabChatLevel" class="tab-btn">
-          <i class="fa-solid fa-comments text-cyan-400"></i>
-          <span data-i18n="lb.chat_level">Level Obrolan</span> 💬
-        </button>
-        <button data-cat="rpg_level" id="btnTabRpgLevel" class="tab-btn">
-          <i class="fa-solid fa-shield-halved text-purple-400"></i>
-          <span data-i18n="lb.rpg_level">Level Survival</span> ⚔️
-        </button>
-        <button data-cat="trivia" id="btnTabTrivia" class="tab-btn">
-          <i class="fa-solid fa-gamepad text-emerald-400"></i>
-          <span data-i18n="lb.trivia">Trivia</span> 🎮
-        </button>
-        <button data-cat="music" id="btnTabMusic" class="tab-btn">
-          <i class="fa-solid fa-music text-pink-400"></i>
-          <span data-i18n="lb.music">Musik</span> 🎵
-        </button>
-      </div>
+          <!-- Overview -->
+          <div class="nav-group">
+            <div class="nav-group-label">Overview</div>
+            <a href="/" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span>Dashboard</span>
+            </a>
+            <a href="/status" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
+              <span>Live Status</span>
+              <span class="nav-badge">Live</span>
+            </a>
+            <a href="/feed" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
+              <span>Activity Feed</span>
+            </a>
+          </div>
 
-      <!-- Tabel -->
-      <div
-        class="glass-panel rounded-3xl overflow-hidden shadow-2xl border border-[var(--color-hairline)] bg-black/45"
-      >
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead
-              class="bg-black/60 border-b border-[var(--color-hairline-strong)] text-xs tracking-wider text-[var(--color-muted)] font-cyber"
-            >
-              <tr>
-                <th
-                  class="px-3 md:px-6 py-5 text-center w-16 md:w-20"
-                  data-i18n="lb.rank"
-                >
-                  Peringkat
-                </th>
-                <th class="px-3 md:px-6 py-5" data-i18n="lb.player">Pemain</th>
-                <th class="px-3 md:px-6 py-5 text-center">Level</th>
-                <th class="px-3 md:px-6 py-5 text-right" data-i18n="lb.score">
-                  Nilai
-                </th>
-                <th class="px-3 md:px-6 py-5 text-center w-28 md:w-36">Tier</th>
-              </tr>
-            </thead>
-            <tbody id="leaderboard-body" class="text-sm bg-black/20"></tbody>
-          </table>
+          <!-- Community -->
+          <div class="nav-group">
+            <div class="nav-group-label">Community</div>
+            <a href="/leaderboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
+              <span>Leaderboard</span>
+            </a>
+            <a href="/economy" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
+              <span>Economy</span>
+            </a>
+            <a href="/topology" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span>Guild Topology</span>
+            </a>
+          </div>
+
+          <!-- Media & Audio -->
+          <div class="nav-group">
+            <div class="nav-group-label">Media & Audio</div>
+            <a href="/music" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
+              <span>Music Hub</span>
+            </a>
+            <a href="/soundboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
+              <span>Soundboard</span>
+            </a>
+            <a href="/jam" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
+              <span>Jam Session</span>
+            </a>
+            <a href="/karaoke" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span>Karaoke</span>
+            </a>
+          </div>
+
+          <!-- Naura Wilds RPG -->
+          <div class="nav-group">
+            <div class="nav-group-label">Naura Wilds RPG</div>
+            <a href="/world" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span>World Map</span>
+            </a>
+            <a href="/survival-map" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
+              <span>Survival Map</span>
+            </a>
+            <a href="/activity" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
+              <span>Activity Hub</span>
+            </a>
+          </div>
+
+          <!-- Configuration -->
+          <div class="nav-group">
+            <div class="nav-group-label">Configuration</div>
+            <a href="/settings" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
+              <span>Settings</span>
+            </a>
+            <a href="/welcomer" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
+              <span>Welcomer Card</span>
+            </a>
+            <a href="/builder" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span>Embed Builder</span>
+            </a>
+            <a href="/automations" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
+              <span>Automations</span>
+            </a>
+            <a href="/tickets" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
+              <span>Tickets</span>
+            </a>
+          </div>
+
+          <!-- More -->
+          <div class="nav-group">
+            <div class="nav-group-label">More</div>
+            <a href="/portfolio" class="nav-item">
+              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
+              <span style="color:var(--accent-green)">Creator Portfolio</span>
+            </a>
+          </div>
+
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user" onclick="window.location.href='/'">
+            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name">Guest</div>
+              <div class="sidebar-user-role">Klik untuk login</div>
+            </div>
+          </div>
         </div>
+      </aside>
+
+      <!-- MAIN -->
+      <div class="main-content">
+        <header class="top-header">
+          <div class="header-left">
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
+            <div>
+              <div class="page-title">Hall of Fame</div>
+              <div class="breadcrumb"><span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Leaderboard</span></div>
+            </div>
+          </div>
+          <div class="header-right">
+            <div style="display:flex;gap:8px;">
+              <button id="langToggle" class="btn btn-ghost btn-sm" title="Bahasa / Language">
+                <i class="fa-solid fa-language"></i> <span id="langLabel">ID</span>
+              </button>
+              <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            </div>
+          </div>
+        </header>
+
+        <main class="page-content">
+
+          <div class="page-header-bar animate-in">
+            <div>
+              <h1 class="page-heading">
+                <span class="page-heading-icon" style="background:var(--amber-dim);border:1px solid var(--border-amber);">
+                  <i class="fa-solid fa-trophy" style="color:var(--accent-amber);"></i>
+                </span>
+                Hall of Fame
+              </h1>
+              <p class="page-sub">Papan peringkat server · Diperbarui real-time</p>
+            </div>
+
+            <!-- Category Tabs -->
+            <div class="tab-group" id="lbTabGroup">
+              <button class="tab-btn active" data-cat="wealth" id="btnTabWealth" onclick="switchLbTab('wealth')">
+                <i class="fa-solid fa-vault" style="color:var(--accent-amber);"></i> Terkaya 🪙
+              </button>
+              <button class="tab-btn" data-cat="chat_level" id="btnTabChatLevel" onclick="switchLbTab('chat_level')">
+                <i class="fa-solid fa-comments" style="color:var(--accent-cyan);"></i> Level Chat 💬
+              </button>
+              <button class="tab-btn" data-cat="rpg_level" id="btnTabRpgLevel" onclick="switchLbTab('rpg_level')">
+                <i class="fa-solid fa-shield-halved" style="color:var(--accent-violet);"></i> Survival ⚔️
+              </button>
+              <button class="tab-btn" data-cat="trivia" id="btnTabTrivia" onclick="switchLbTab('trivia')">
+                <i class="fa-solid fa-gamepad" style="color:var(--accent-green);"></i> Trivia 🧠
+              </button>
+            </div>
+          </div>
+
+          <!-- Server selector -->
+          <div class="card card-p-sm animate-in delay-1" style="margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <span style="font-size:12px;color:var(--text-muted);font-weight:600;font-family:var(--font-heading);">Server:</span>
+            <select class="input" id="guildSelector" style="max-width:280px;cursor:pointer;">
+              <option value="">- Pilih Server -</option>
+            </select>
+            <span class="badge badge-muted" id="lbTotalCount">0 pemain</span>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+              <input type="text" class="input" id="lbSearch" placeholder="Cari pemain..." style="max-width:200px;" />
+            </div>
+          </div>
+
+          <!-- Podium -->
+          <div class="card animate-in delay-1" id="podiumSection">
+            <!-- Atmospheric Stage Background SVG -->
+            <svg class="podium-stage-svg" viewBox="0 0 900 320" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="stadiumBeam" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.32" />
+                  <stop offset="45%" stop-color="#f59e0b" stop-opacity="0.10" />
+                  <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
+                </linearGradient>
+                <linearGradient id="podiumHorizonGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#22d3ee" stop-opacity="0" />
+                  <stop offset="25%" stop-color="#22d3ee" stop-opacity="0.45" />
+                  <stop offset="50%" stop-color="#f59e0b" stop-opacity="0.85" />
+                  <stop offset="75%" stop-color="#a855f7" stop-opacity="0.45" />
+                  <stop offset="100%" stop-color="#a855f7" stop-opacity="0" />
+                </linearGradient>
+                <radialGradient id="goldAura" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.25" />
+                  <stop offset="70%" stop-color="#f59e0b" stop-opacity="0.05" />
+                  <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
+                </radialGradient>
+              </defs>
+
+              <!-- Central Grand Stadium Spotlight Cone -->
+              <polygon points="450,-10 240,320 660,320" fill="url(#stadiumBeam)" />
+              
+              <!-- Ambient Side Spotlights -->
+              <polygon points="200,-20 80,320 320,320" fill="#22d3ee" opacity="0.05" />
+              <polygon points="700,-20 580,320 820,320" fill="#a855f7" opacity="0.05" />
+
+              <!-- Cyber Arena Floor Horizon Baseline with Glow -->
+              <line x1="40" y1="265" x2="860" y2="265" stroke="url(#podiumHorizonGrad)" stroke-width="2" />
+              <line x1="160" y1="265" x2="740" y2="265" stroke="#f59e0b" stroke-width="3.5" opacity="0.4" />
+
+              <!-- Concentric Arena Target Rings behind 1st Place -->
+              <circle cx="450" cy="120" r="85" stroke="rgba(245,158,11,0.22)" stroke-width="1.5" stroke-dasharray="4 6" fill="url(#goldAura)" />
+              <circle cx="450" cy="120" r="125" stroke="rgba(245,158,11,0.12)" stroke-width="1" stroke-dasharray="8 8" fill="none" />
+              
+              <!-- Halo Rings behind 2nd and 3rd Place -->
+              <circle cx="310" cy="140" r="55" stroke="rgba(34,211,238,0.18)" stroke-width="1" stroke-dasharray="3 5" fill="none" />
+              <circle cx="590" cy="155" r="50" stroke="rgba(168,85,247,0.18)" stroke-width="1" stroke-dasharray="3 5" fill="none" />
+
+              <!-- Championship Laurel Watermark (Subtle Golden Crest) -->
+              <g transform="translate(450, 75)" opacity="0.15" stroke="#f59e0b" fill="none" stroke-width="2">
+                <path d="M-60,40 C-80,0 -60,-40 0,-50 C60,-40 80,0 60,40" />
+                <path d="M-45,35 C-60,5 -45,-25 0,-35 C45,-25 60,5 45,35" />
+                <circle cx="0" cy="-60" r="5" fill="#f59e0b" />
+              </g>
+
+              <!-- Floating Celebration Starbursts & Shimmer Particles -->
+              <text x="365" y="65" fill="rgba(245,158,11,0.7)" font-size="15">✦</text>
+              <text x="530" y="75" fill="rgba(245,158,11,0.7)" font-size="14">✦</text>
+              <text x="210" y="115" fill="rgba(34,211,238,0.6)" font-size="13">✦</text>
+              <text x="690" y="125" fill="rgba(168,85,247,0.6)" font-size="13">✦</text>
+              <text x="415" y="35" fill="rgba(245,158,11,0.4)" font-size="10">★</text>
+              <text x="485" y="42" fill="rgba(245,158,11,0.4)" font-size="10">★</text>
+              <text x="140" y="180" fill="rgba(34,211,238,0.35)" font-size="9">✦</text>
+              <text x="760" y="190" fill="rgba(168,85,247,0.35)" font-size="9">✦</text>
+
+              <!-- Stage Base Pedestal Ellipse Underglows -->
+              <ellipse cx="450" cy="270" rx="70" ry="14" fill="rgba(245,158,11,0.3)" />
+              <ellipse cx="310" cy="270" rx="55" ry="11" fill="rgba(34,211,238,0.2)" />
+              <ellipse cx="590" cy="270" rx="52" ry="10" fill="rgba(168,85,247,0.2)" />
+            </svg>
+
+            <div class="podium-header-bar">
+              <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-cyan);opacity:0.85;">
+                <i class="fa-solid fa-trophy" style="margin-right:6px;"></i> SEASON 02 // ARENA
+              </span>
+              <div style="font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-amber);font-family:var(--font-heading);text-shadow:0 0 12px var(--amber-glow);">
+                🏆 Top 3 Champions
+              </div>
+              <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-violet);opacity:0.85;">
+                GLOBAL TIER: ELITE <i class="fa-solid fa-crown" style="margin-left:6px;"></i>
+              </span>
+            </div>
+
+            <div class="podium-wrapper" id="podiumWrapper">
+
+              <!-- 2nd Place -->
+              <div class="podium-place podium-2">
+                <div class="podium-avatar-wrap">
+                  <div class="podium-avatar" style="width:64px;height:64px;background:var(--cyan-dim);border:2px solid var(--border-cyan);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--accent-cyan);box-shadow:0 0 16px rgba(34,211,238,0.3);">N</div>
+                  <span class="podium-rank-badge">🥈</span>
+                </div>
+                <div class="podium-name">Naura</div>
+                <div class="podium-coins" style="color:var(--accent-amber);">🪙 850K</div>
+                <div class="podium-bar">2</div>
+              </div>
+
+              <!-- 1st Place -->
+              <div class="podium-place podium-1" style="margin-bottom:-16px;">
+                <div class="podium-avatar-wrap animate-float">
+                  <div class="podium-avatar" style="width:80px;height:80px;background:var(--amber-dim);border:3px solid var(--border-amber);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:var(--accent-amber);box-shadow:0 0 28px var(--amber-glow);">A</div>
+                  <span class="podium-rank-badge" style="font-size:22px;">👑</span>
+                </div>
+                <div class="podium-name" style="font-size:14px;">Aryandita</div>
+                <div class="podium-coins" style="color:var(--accent-amber);font-size:13px;">🪙 1.25M</div>
+                <div class="podium-bar">1</div>
+              </div>
+
+              <!-- 3rd Place -->
+              <div class="podium-place podium-3">
+                <div class="podium-avatar-wrap">
+                  <div class="podium-avatar" style="width:56px;height:56px;background:var(--violet-dim);border:2px solid var(--border-violet);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--accent-violet);box-shadow:0 0 16px rgba(168,85,247,0.3);">K</div>
+                  <span class="podium-rank-badge" style="font-size:16px;">🥉</span>
+                </div>
+                <div class="podium-name">Kagami</div>
+                <div class="podium-coins" style="color:var(--accent-amber);">🪙 620K</div>
+                <div class="podium-bar">3</div>
+              </div>
+
+            </div>
+            <!-- Podium base -->
+            <div style="height:24px;background:linear-gradient(to bottom, rgba(8,11,24,0.4), rgba(5,8,20,0.9));margin-top:-1px;border-top:1px solid rgba(245,158,11,0.2);"></div>
+          </div>
+
+          <!-- Rankings List -->
+          <div class="card card-p animate-in delay-2">
+            <div class="card-header">
+              <div class="card-title" id="lbCategoryLabel" style="color:var(--accent-amber);">
+                <i class="fa-solid fa-vault"></i> Peringkat Kekayaan (NC)
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">Last sync: just now</span>
+                <button id="btnRefreshLb" class="btn btn-ghost btn-sm" title="Refresh">
+                  <i class="fa-solid fa-rotate"></i>
+                </button>
+              </div>
+            </div>
+
+            <div id="leaderboardList" style="display:flex;flex-direction:column;gap:6px;">
+
+              <!-- Rank 1 -->
+              <div class="lb-row" id="lb-row-1">
+                <div class="lb-rank-num" style="color:var(--accent-amber);">🥇</div>
+                <div class="lb-avatar" style="background:var(--amber-dim);border-color:var(--border-amber);color:var(--accent-amber);">A</div>
+                <div class="lb-info">
+                  <div class="lb-username">Aryandita <span class="badge badge-amber">OWNER VIP</span></div>
+                  <div class="lb-sub">Level 99 · Master Adventurer</div>
+                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:98%;"></div></div>
+                </div>
+                <div>
+                  <div class="lb-value" style="color:var(--accent-amber);">🪙 1,250,000</div>
+                  <div class="lb-value-sub">9,850 XP</div>
+                </div>
+              </div>
+
+              <!-- Rank 2 -->
+              <div class="lb-row" id="lb-row-2">
+                <div class="lb-rank-num" style="color:#94a3b8;">🥈</div>
+                <div class="lb-avatar" style="background:var(--cyan-dim);border-color:var(--border-cyan);color:var(--accent-cyan);">N</div>
+                <div class="lb-info">
+                  <div class="lb-username">Naura Hoshino <span class="badge badge-primary">BOT AI</span></div>
+                  <div class="lb-sub">Level 85 · Cyber Companion</div>
+                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:85%;"></div></div>
+                </div>
+                <div>
+                  <div class="lb-value" style="color:var(--accent-amber);">🪙 850,000</div>
+                  <div class="lb-value-sub">7,420 XP</div>
+                </div>
+              </div>
+
+              <!-- Rank 3 -->
+              <div class="lb-row" id="lb-row-3">
+                <div class="lb-rank-num" style="color:#b4783c;">🥉</div>
+                <div class="lb-avatar" style="background:var(--violet-dim);border-color:var(--border-violet);color:var(--accent-violet);">K</div>
+                <div class="lb-info">
+                  <div class="lb-username">Kagami</div>
+                  <div class="lb-sub">Level 72 · Star Hunter</div>
+                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:72%;background:linear-gradient(90deg,var(--accent-violet),#c4b5fd);"></div></div>
+                </div>
+                <div>
+                  <div class="lb-value" style="color:var(--accent-amber);">🪙 620,000</div>
+                  <div class="lb-value-sub">5,230 XP</div>
+                </div>
+              </div>
+
+              <!-- Rank 4 -->
+              <div class="lb-row" id="lb-row-4">
+                <div class="lb-rank-num" style="color:var(--text-muted);">4</div>
+                <div class="lb-avatar">H</div>
+                <div class="lb-info">
+                  <div class="lb-username">Hanako</div>
+                  <div class="lb-sub">Level 60 · Novice Explorer</div>
+                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:60%;background:linear-gradient(90deg,var(--accent-cyan),#67e8f9);box-shadow:0 0 6px var(--cyan-glow);"></div></div>
+                </div>
+                <div>
+                  <div class="lb-value" style="color:var(--accent-amber);">🪙 410,000</div>
+                  <div class="lb-value-sub">3,800 XP</div>
+                </div>
+              </div>
+
+              <!-- Rank 5 -->
+              <div class="lb-row" id="lb-row-5">
+                <div class="lb-rank-num" style="color:var(--text-muted);">5</div>
+                <div class="lb-avatar">R</div>
+                <div class="lb-info">
+                  <div class="lb-username">Ryusei</div>
+                  <div class="lb-sub">Level 55 · Cyber Ranger</div>
+                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:55%;"></div></div>
+                </div>
+                <div>
+                  <div class="lb-value" style="color:var(--accent-amber);">🪙 290,000</div>
+                  <div class="lb-value-sub">2,950 XP</div>
+                </div>
+              </div>
+
+              <!-- Rank 6 -->
+              <div class="lb-row" id="lb-row-6">
+                <div class="lb-rank-num" style="color:var(--text-muted);">6</div>
+                <div class="lb-avatar">M</div>
+                <div class="lb-info">
+                  <div class="lb-username">Mizuki</div>
+                  <div class="lb-sub">Level 48 · Wanderer</div>
+                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:48%;"></div></div>
+                </div>
+                <div>
+                  <div class="lb-value" style="color:var(--accent-amber);">🪙 185,000</div>
+                  <div class="lb-value-sub">2,100 XP</div>
+                </div>
+              </div>
+
+              <!-- Rank 7 -->
+              <div class="lb-row" id="lb-row-7">
+                <div class="lb-rank-num" style="color:var(--text-muted);">7</div>
+                <div class="lb-avatar">S</div>
+                <div class="lb-info">
+                  <div class="lb-username">Sora</div>
+                  <div class="lb-sub">Level 40 · Apprentice</div>
+                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:40%;"></div></div>
+                </div>
+                <div>
+                  <div class="lb-value" style="color:var(--accent-amber);">🪙 92,000</div>
+                  <div class="lb-value-sub">1,500 XP</div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Load more -->
+            <div style="text-align:center;margin-top:16px;">
+              <button class="btn btn-ghost" id="btnLoadMore">Muat Lebih Banyak <i class="fa-solid fa-chevron-down"></i></button>
+            </div>
+          </div>
+
+        </main>
       </div>
     </div>
 
-    <style>
-      .tab-btn {
-        padding: 0.625rem 1rem;
-        border-radius: 0.75rem;
-        font-family: "Orbitron", sans-serif;
-        font-size: 0.75rem;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.2s ease;
-        background: rgba(0, 0, 0, 0.4);
-        color: #9ca3af;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-      }
-      .tab-btn:hover {
-        color: #fff;
-      }
-      .tab-btn[aria-selected="true"] {
-        background: var(--color-primary-glow);
-        color: #fff;
-        border-color: var(--color-primary);
-        box-shadow: 0 0 16px var(--color-primary-glow);
-      }
-    </style>
+    <!-- Mobile Nav -->
+    <nav class="mobile-nav">
+      <div class="mobile-nav-inner">
+        <a href="/" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Home</span></a>
+        <a href="/music" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-music"></i></span><span class="mn-label">Music</span></a>
+        <a href="/leaderboard" class="mobile-nav-item active"><span class="mn-icon"><i class="fa-solid fa-trophy"></i></span><span class="mn-label">Ranking</span></a>
+        <a href="/economy" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-coins"></i></span><span class="mn-label">Economy</span></a>
+        <a href="/settings" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+      </div>
+    </nav>
 
+    <script src="/src/js/shared-nav.js"></script>
     <script>
-      (function () {
-        "use strict";
+      const lbCategoryLabels = {
+        wealth:    { icon: 'fa-vault',        color: 'var(--accent-amber)',  label: 'Peringkat Kekayaan (NC)' },
+        chat_level:{ icon: 'fa-comments',     color: 'var(--accent-cyan)',   label: 'Peringkat Level Chat' },
+        rpg_level: { icon: 'fa-shield-halved',color: 'var(--accent-violet)', label: 'Peringkat Level Survival' },
+        trivia:    { icon: 'fa-gamepad',      color: 'var(--accent-green)',  label: 'Peringkat Trivia Score' },
+      };
 
-        var currentType = "wealth";
-        var body = document.getElementById("mainBody");
-        var tbody = document.getElementById("leaderboard-body");
+      let lbData = { economy: [], leveling: [], survival: [] };
+      let currentTab = 'wealth';
 
-        /* --- Latar belakang ---
-         * resolveBgUrl dulu ditulis ulang di sini, padahal app.js sudah
-         * punya versinya sendiri. Sekarang keduanya memakai NauraUI. */
-        var savedBg = localStorage.getItem("bgTheme") || "none";
-        function paintBackground() {
-          body.style.backgroundImage =
-            "url('" + NauraUI.resolveBgUrl(savedBg) + "')";
-        }
-        if (savedBg !== "none" && savedBg !== "white") {
-          paintBackground();
-          if (savedBg.indexOf("adaptive-") === 0) {
-            window.addEventListener("resize", paintBackground);
+      // Fetch real data from API
+      async function fetchLeaderboard() {
+        try {
+          const res = await fetch('/api/realtime/leaderboard');
+          const json = await res.json();
+          if (json.success) {
+            lbData = json.data;
+            renderLeaderboard(currentTab);
           }
-        } else if (savedBg === "white") {
-          body.style.backgroundColor = "#f3f4f6";
-          body.classList.remove("theme-none");
-          body.classList.add("theme-white");
+        } catch(e) {
+          console.warn('Leaderboard fetch error:', e);
+        }
+      }
+
+      function getRankColor(rank) {
+        if (rank === 1) return '#f59e0b';
+        if (rank === 2) return '#94a3b8';
+        if (rank === 3) return '#b4783c';
+        return 'var(--text-muted)';
+      }
+      function getRankEmoji(rank) {
+        if (rank === 1) return '🥇';
+        if (rank === 2) return '🥈';
+        if (rank === 3) return '🥉';
+        return rank;
+      }
+
+      function renderLeaderboard(tab) {
+        currentTab = tab;
+        let rows = [];
+        let valueKey = '', valueLabel = '', subFn = null;
+
+        if (tab === 'wealth') {
+          rows = lbData.economy || [];
+          valueKey = 'total';
+          valueLabel = '🪙';
+          subFn = r => `Level ${r.level} · ${r.xp} XP`;
+        } else if (tab === 'chat_level') {
+          rows = lbData.leveling || [];
+          valueKey = 'xp';
+          valueLabel = '✨';
+          subFn = r => `Level ${r.level} · ${r.messageCount} pesan`;
+        } else if (tab === 'rpg_level') {
+          rows = lbData.survival || [];
+          valueKey = 'starFragments';
+          valueLabel = '⭐';
+          subFn = r => `Lv.${r.survivalLevel} Survival · ${r.currentLocation}`;
+        } else if (tab === 'trivia') {
+          rows = lbData.leveling || [];
+          valueKey = 'voiceMinutes';
+          valueLabel = '🎤';
+          subFn = r => `${r.voiceMinutes} mnt suara · ${r.messageCount} pesan`;
         }
 
-        /* --- Bunyi klik --- */
-        document.addEventListener("click", function (event) {
-          if (
-            event.target &&
-            typeof event.target.closest === "function" &&
-            event.target.closest("button, a, tbody tr")
-          )
-            NauraUI.playClickSfx();
+        const container = document.getElementById('lbList');
+        if (!container) return;
+        if (rows.length === 0) {
+          container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:48px 0;"><i class="fa-solid fa-ghost" style="font-size:36px;margin-bottom:12px;display:block;opacity:0.4;"></i>Belum ada data di server ini.</div>';
+          // Update podium too
+          updatePodium([]);
+          return;
+        }
+
+        container.innerHTML = rows.map((r, i) => {
+          const maxVal = rows[0]?.[valueKey] || 1;
+          const pct = Math.round((r[valueKey] / maxVal) * 100);
+          const barColor = i === 0 ? 'linear-gradient(90deg,#f59e0b,#fde68a)' :
+                           i === 1 ? 'linear-gradient(90deg,#94a3b8,#e2e8f0)' :
+                           i === 2 ? 'linear-gradient(90deg,#b4783c,#d4a574)' :
+                           'linear-gradient(90deg,var(--accent-cyan),#67e8f9)';
+          return `
+          <div class="lb-row" id="lb-row-${r.rank}" style="animation-delay:${i * 0.05}s">
+            <div class="lb-rank-num" style="color:${getRankColor(r.rank)};font-size:${r.rank <= 3 ? '22px':'14px'};">${getRankEmoji(r.rank)}</div>
+            <img class="lb-avatar" src="${r.avatar}" alt="${r.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid ${getRankColor(r.rank)}30;" onerror="this.style.display='none'">
+            <div class="lb-info">
+              <div class="lb-username">${r.name}</div>
+              <div class="lb-sub">${subFn(r)}</div>
+              <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
+            </div>
+            <div>
+              <div class="lb-value" style="color:var(--accent-amber);">${valueLabel} ${(r[valueKey] || 0).toLocaleString('id-ID')}</div>
+              <div class="lb-value-sub">${r.isPremium ? '⭐ Premium' : 'Member'}</div>
+            </div>
+          </div>`;
+        }).join('');
+
+        updatePodium(rows.slice(0, 3));
+      }
+
+      function updatePodium(top3) {
+        const podiumEl = document.querySelector('.podium-wrapper');
+        if (!podiumEl || top3.length < 2) return;
+
+        const order = [top3[1], top3[0], top3[2]].filter(Boolean);
+        const podiums = podiumEl.querySelectorAll('.podium-place');
+
+        order.forEach((r, i) => {
+          if (!r || !podiums[i]) return;
+          const nameEl = podiums[i].querySelector('.podium-name');
+          const coinsEl = podiums[i].querySelector('.podium-coins');
+          const avatarEl = podiums[i].querySelector('.podium-avatar');
+          if (nameEl) nameEl.textContent = r.name;
+          if (coinsEl) coinsEl.textContent = `#${r.rank}`;
+          if (avatarEl) {
+            avatarEl.src = r.avatar;
+            avatarEl.onerror = () => { avatarEl.style.display = 'none'; };
+          }
         });
+      }
 
-        /* --- Pengalih bahasa --- */
-        var langToggle = document.getElementById("langToggle");
-        var langLabel = document.getElementById("langLabel");
-
-        function syncLangLabel() {
-          langLabel.textContent = NauraUI.lang.toUpperCase();
+      function switchLbTab(cat) {
+        document.querySelectorAll('#lbTabGroup .tab-btn').forEach(btn => btn.classList.remove('active'));
+        const btnId = `btnTab${cat.split('_').map(w => w.charAt(0).toUpperCase()+w.slice(1)).join('')}`;
+        const btnEl = document.getElementById(btnId);
+        if (btnEl) btnEl.classList.add('active');
+        const meta = lbCategoryLabels[cat] || lbCategoryLabels.wealth;
+        const lbl = document.getElementById('lbCategoryLabel');
+        if (lbl) {
+          lbl.style.color = meta.color;
+          lbl.innerHTML = `<i class="fa-solid ${meta.icon}"></i> ${meta.label}`;
         }
+        renderLeaderboard(cat);
+      }
 
-        langToggle.addEventListener("click", async function () {
-          await NauraUI.setLanguage(NauraUI.lang === "id" ? "en" : "id");
-          syncLangLabel();
-          render(currentType);
+      // Refresh button
+      document.getElementById('btnRefreshLb')?.addEventListener('click', function() {
+        const icon = this.querySelector('i');
+        if (icon) icon.style.animation = 'spin 0.6s linear';
+        fetchLeaderboard().finally(() => {
+          setTimeout(() => { if (icon) icon.style.animation = ''; }, 700);
         });
+      });
 
-        /* --- State satu baris penuh, dihiasi ekspresi Naura --- */
-        function fullRowState(kind, options) {
-          tbody.innerHTML =
-            '<tr><td colspan="5">' +
-            NauraUI.stateHtml(kind, options) +
-            "</td></tr>";
-        }
+      // Initial load
+      fetchLeaderboard();
+      // Auto-refresh every 30 seconds
+      setInterval(fetchLeaderboard, 30000);
 
-        /* --- Tab --- */
-        var TABS = {
-          wealth: "btnTabWealth",
-          chat_level: "btnTabChatLevel",
-          rpg_level: "btnTabRpgLevel",
-          trivia: "btnTabTrivia",
-          music: "btnTabMusic",
-        };
-
-        Object.keys(TABS).forEach(function (type) {
-          document
-            .getElementById(TABS[type])
-            .addEventListener("click", function () {
-              setCategory(type);
-            });
-        });
-
-        function setCategory(type) {
-          currentType = type;
-          Object.keys(TABS).forEach(function (key) {
-            document
-              .getElementById(TABS[key])
-              .setAttribute("aria-selected", key === type ? "true" : "false");
-          });
-          render(type);
-        }
-
-        /* --- Angka mengikuti bahasa aktif --- */
-        function num(value) {
-          return Number(value || 0).toLocaleString(
-            NauraUI.lang === "en" ? "en-US" : "id-ID",
-          );
-        }
-
-        function medal(index) {
-          var colors = ["text-yellow-400", "text-gray-300", "text-orange-500"];
-          if (index > 2) {
-            return (
-              '<span class="text-gray-500 font-bold font-cyber text-base">#' +
-              (index + 1) +
-              "</span>"
-            );
-          }
-          return (
-            '<i class="fa-solid fa-medal ' + colors[index] + ' text-3xl"></i>'
-          );
-        }
-
-        function badge(user) {
-          if (user.isOwner) {
-            return '<span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs px-3 py-1 rounded-full font-bold font-cyber"><i class="fa-solid fa-crown mr-1"></i>OWNER</span>';
-          }
-          if (user.isPremium) {
-            return '<span class="bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 text-xs px-3 py-1 rounded-full font-bold font-cyber"><i class="fa-solid fa-star mr-1"></i>VIP</span>';
-          }
-          return '<span class="text-gray-500 bg-black/40 border border-white/5 px-3 py-1 rounded-full text-xs font-semibold">Member</span>';
-        }
-
-        function value(type, u) {
-          if (type === "chat_level") {
-            return (
-              '<div class="text-cyan-400 font-bold font-cyber">Lv. ' +
-              u.chatLevel +
-              '</div><div class="text-[9px] text-gray-500">' +
-              num(u.chatXp) +
-              " XP</div>"
-            );
-          }
-          if (type === "rpg_level") {
-            return (
-              '<div class="text-purple-400 font-bold font-cyber">Lv. ' +
-              u.rpgLevel +
-              '</div><div class="text-[9px] text-gray-500">' +
-              num(u.rpgXp) +
-              " XP</div>"
-            );
-          }
-          if (type === "trivia") {
-            return (
-              '<div class="text-emerald-400 font-bold font-cyber">🎮 ' +
-              num(u.points) +
-              "</div>"
-            );
-          }
-          if (type === "music") {
-            return (
-              '<div class="text-pink-400 font-bold font-cyber">🎵 ' +
-              num(u.tracks) +
-              "</div>"
-            );
-          }
-          return (
-            '<div class="text-yellow-400 font-bold font-cyber">⭐ ' +
-            num(u.starFragments) +
-            "</div>"
-          );
-        }
-
-        async function render(type) {
-          fullRowState("loading");
-
-          var users;
-          try {
-            var res = await fetch(
-              "/api/leaderboard?type=" + type + "&limit=20",
-            );
-            if (!res.ok) throw new Error("HTTP " + res.status);
-            users = await res.json();
-          } catch (err) {
-            console.error("[Leaderboard]", err);
-            return fullRowState("error");
-          }
-
-          if (!Array.isArray(users) || users.length === 0)
-            return fullRowState("empty");
-
-          /* Avatar cadangan dulu menunjuk /assets/dashboard/naura.png yang
-           * ternyata tidak ada di repo, jadi barisnya menampilkan ikon
-           * gambar rusak. Sekarang jatuh ke ekspresi Naura. */
-          var fallbackAvatar = NauraUI.expressionUrl("shy");
-
-          tbody.innerHTML = users
-            .map(function (u, index) {
-              var rowStyle =
-                index < 3
-                  ? [
-                      "bg-yellow-500/5 border-l-4 border-yellow-400",
-                      "bg-gray-400/5 border-l-4 border-gray-300",
-                      "bg-orange-500/5 border-l-4 border-orange-500",
-                    ][index]
-                  : "border-b border-[var(--color-hairline)] hover:bg-[var(--color-surface-glass-hover)] border-l-4 border-transparent";
-
-              return (
-                '<tr class="' +
-                rowStyle +
-                ' transition duration-300">' +
-                '<td class="px-3 md:px-6 py-4 text-center">' +
-                medal(index) +
-                "</td>" +
-                '<td class="px-3 md:px-6 py-4 font-assist text-white">' +
-                '<div class="flex items-center gap-3">' +
-                '<img src="' +
-                (u.avatar || fallbackAvatar) +
-                '" loading="lazy" class="w-10 h-10 rounded-full border border-pink-400/40 object-cover" onerror="this.onerror=null;this.src=\'' +
-                fallbackAvatar +
-                "'\">" +
-                '<div class="flex flex-col min-w-0">' +
-                '<span class="font-bold text-sm leading-tight text-white truncate">' +
-                u.name +
-                "</span>" +
-                '<span class="text-[9px] text-gray-400 font-cyber tracking-wider">' +
-                u.userId +
-                "</span>" +
-                "</div></div></td>" +
-                '<td class="px-3 md:px-6 py-4 text-center font-cyber">' +
-                '<div class="flex items-center justify-center gap-2">' +
-                '<span class="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-bold border border-cyan-500/20">Lv.' +
-                u.chatLevel +
-                "</span>" +
-                '<span class="px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 text-[10px] font-bold border border-purple-500/20">Lv.' +
-                u.rpgLevel +
-                "</span>" +
-                "</div></td>" +
-                '<td class="px-3 md:px-6 py-4 text-right font-cyber">' +
-                value(type, u) +
-                "</td>" +
-                '<td class="px-3 md:px-6 py-4 text-center">' +
-                badge(u) +
-                "</td>" +
-                "</tr>"
-              );
-            })
-            .join("");
-        }
-
-        /* Tunggu bahasa siap dulu supaya teksnya tidak sempat berkedip. */
-        NauraUI.loadLanguage().then(function () {
-          syncLangLabel();
-          setCategory("wealth");
-        });
-      })();
-    </script>
-
-    <script type="module">
-      import { NauraViewer } from "../components/NauraViewer/index.js";
-      NauraViewer.init({ context: "leaderboard" });
     </script>
   </body>
 </html>

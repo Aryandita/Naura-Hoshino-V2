@@ -3,216 +3,403 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Naura Synced Karaoke & Audio Spectrum</title>
-    <!-- Google Fonts -->
+    <title>Karaoke Stage & Live Lyrics | Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Outfit:wght@300;400;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
-    <link rel="stylesheet" href="/vendor/fontawesome.css" />
-    <link rel="stylesheet" href="/vendor/tailwind-built.css" />
-    <script src="/vendor/socket.io.min.js"></script>
-    <script src="/vendor/naura-ui.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
-      body {
-        background-color: #0b0c10;
-        color: #ffffff;
-        font-family: "Outfit", sans-serif;
-        margin: 0;
+      .karaoke-layout {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 24px;
+        align-items: start;
+      }
+      @media (max-width: 1100px) {
+        .karaoke-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Stage Card */
+      .stage-card {
+        background: radial-gradient(circle at 50% 10%, rgba(244, 114, 182, 0.15), transparent 70%),
+                    linear-gradient(180deg, #10162c 0%, #060914 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-2xl);
+        padding: 28px;
+        position: relative;
         overflow: hidden;
       }
-      .karaoke-line {
-        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        opacity: 0.35;
-        transform: scale(0.92);
+
+      .lyrics-viewport {
+        height: 260px;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-xl);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        margin-bottom: 24px;
+        position: relative;
       }
-      .karaoke-line.active {
-        opacity: 1;
-        transform: scale(1.1);
-        color: #ffb6c1;
-        text-shadow:
-          0 0 20px rgba(255, 182, 193, 0.8),
-          0 0 40px rgba(255, 182, 193, 0.4);
+
+      .lyric-line-prev {
+        font-size: 15px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+      }
+      .lyric-line-active {
+        font-family: var(--font-heading);
+        font-size: 24px;
         font-weight: 700;
+        color: var(--primary);
+        text-shadow: 0 0 16px var(--primary-glow);
+        margin-bottom: 8px;
+        line-height: 1.4;
+      }
+      .lyric-line-next {
+        font-size: 15px;
+        color: var(--text-muted);
+      }
+
+      /* Pitch Curve Bar */
+      .pitch-monitor {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-lg);
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+      }
+
+      /* Audience soundboard buttons */
+      .cheer-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+      .btn-cheer {
+        padding: 12px;
+        border-radius: var(--r-lg);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-primary);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        transition: all var(--t-fast);
+      }
+      .btn-cheer:hover {
+        background: rgba(255, 255, 255, 0.09);
+        border-color: var(--border-primary);
+        transform: translateY(-2px);
       }
     </style>
   </head>
-  <body
-    class="relative h-screen flex flex-col items-center justify-between p-8 select-none"
-  >
-    <!-- Loading Screen (Cyber-Anime Naura Floating Thinking Expression) -->
-    <div id="loadingScreen" class="loading-screen">
-      <img
-        class="loading-figure"
-        src="/assets/Naura_Expression/Thinking.png"
-        alt="Naura Thinking"
-        onerror="this.src = '/assets/Naura_Expression/Read.png'"
-      />
-      <div class="loading-text text-glow">KARAOKE STUDIO</div>
-      <div class="font-assist text-sm text-[var(--color-muted)] font-medium">
-        Menyiapkan panggung audio spectrum... ✨
+  <body>
+    
+
+    <div class="app-shell">
+      <!-- Mobile Sidebar Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <aside class="sidebar " id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
+          <div class="sidebar-brand-text"><div class="sidebar-brand-name">Naura Hoshino</div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button><div class="sidebar-brand-sub">v2.3.0 · Online</div></div>
+        </div>
+                <!-- Navigation -->
+                <!-- Navigation -->
+        <nav class="sidebar-nav" role="navigation">
+
+          <!-- Overview -->
+          <div class="nav-group">
+            <div class="nav-group-label">Overview</div>
+            <a href="/" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span>Dashboard</span>
+            </a>
+            <a href="/status" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
+              <span>Live Status</span>
+              <span class="nav-badge">Live</span>
+            </a>
+            <a href="/feed" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
+              <span>Activity Feed</span>
+            </a>
+          </div>
+
+          <!-- Community -->
+          <div class="nav-group">
+            <div class="nav-group-label">Community</div>
+            <a href="/leaderboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-trophy"></i></span>
+              <span>Leaderboard</span>
+            </a>
+            <a href="/economy" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
+              <span>Economy</span>
+            </a>
+            <a href="/topology" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span>Guild Topology</span>
+            </a>
+          </div>
+
+          <!-- Media & Audio -->
+          <div class="nav-group">
+            <div class="nav-group-label">Media & Audio</div>
+            <a href="/music" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
+              <span>Music Hub</span>
+            </a>
+            <a href="/soundboard" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
+              <span>Soundboard</span>
+            </a>
+            <a href="/jam" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
+              <span>Jam Session</span>
+            </a>
+            <a href="/karaoke" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span>Karaoke</span>
+            </a>
+          </div>
+
+          <!-- Naura Wilds RPG -->
+          <div class="nav-group">
+            <div class="nav-group-label">Naura Wilds RPG</div>
+            <a href="/world" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span>World Map</span>
+            </a>
+            <a href="/survival-map" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
+              <span>Survival Map</span>
+            </a>
+            <a href="/activity" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
+              <span>Activity Hub</span>
+            </a>
+          </div>
+
+          <!-- Configuration -->
+          <div class="nav-group">
+            <div class="nav-group-label">Configuration</div>
+            <a href="/settings" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
+              <span>Settings</span>
+            </a>
+            <a href="/welcomer" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
+              <span>Welcomer Card</span>
+            </a>
+            <a href="/builder" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span>Embed Builder</span>
+            </a>
+            <a href="/automations" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
+              <span>Automations</span>
+            </a>
+            <a href="/tickets" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
+              <span>Tickets</span>
+            </a>
+          </div>
+
+          <!-- More -->
+          <div class="nav-group">
+            <div class="nav-group-label">More</div>
+            <a href="/portfolio" class="nav-item">
+              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
+              <span style="color:var(--accent-green)">Creator Portfolio</span>
+            </a>
+          </div>
+
+        </nav>
+        <div class="sidebar-footer">
+          <div class="sidebar-user" onclick="window.location.href='/'">
+            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+            <div class="sidebar-user-info"><div class="sidebar-user-name">Guest Singer</div><div class="sidebar-user-role">Panggung Karaoke</div></div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="main-content">
+        <header class="top-header">
+          <div class="header-left">
+            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <div>
+              <div class="page-title">Karaoke Stage & Live Lyrics</div>
+              <div class="breadcrumb"><span>Media & Audio</span><span class="breadcrumb-sep">/</span><span>Synchronized Vocal Stage</span></div>
+            </div>
+          </div>
+          <div class="header-right">
+            <div class="badge badge-primary">
+              <i class="fa-solid fa-microphone-lines"></i> MIC ON
+            </div>
+          </div>
+        </header>
+
+        <main class="page-content">
+          <div class="page-header-bar animate-in">
+            <div>
+              <h1 class="page-heading">
+                <span class="page-heading-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);">
+                  <i class="fa-solid fa-microphone" style="color:var(--primary);"></i>
+                </span>
+                Panggung Karaoke & Visualizer Lirik
+              </h1>
+              <p class="page-sub">Bernyanyi bersama dengan teks lirik berjalan tersinkronisasi, evaluasi kecocokan nada pitch, dan sorakan penonton.</p>
+            </div>
+          </div>
+
+          <div class="karaoke-layout animate-in delay-1">
+            <!-- Left: Stage & Lyrics -->
+            <div class="stage-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <div>
+                  <span class="badge badge-success" style="font-size:10px;">SEDANG BERLANGSUNG</span>
+                  <div style="font-family:var(--font-heading);font-size:18px;font-weight:700;color:#fff;margin-top:4px;" id="currentSongTitle">
+                    Sparkle (スパークル) - RADWIMPS
+                  </div>
+                </div>
+                <div style="font-family:var(--font-mono);font-size:13px;color:var(--accent-cyan);font-weight:700;" id="timerDisplay">
+                  01:42 / 04:18
+                </div>
+              </div>
+
+              <!-- Scrolling Lyrics Box -->
+              <div class="lyrics-viewport">
+                <div class="lyric-line-prev" id="lyricPrev">Mada kono sekai wa boku wo kainarashitetai mitai da</div>
+                <div class="lyric-line-active" id="lyricActive">Nozomi toori darou? Utsukushiku mogaku yo</div>
+                <div class="lyric-line-next" id="lyricNext">Tagai no sunadokei nagamenagara kisu wo shiyou yo</div>
+              </div>
+
+              <!-- Pitch Monitor -->
+              <div class="pitch-monitor">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="font-size:20px;">🎤</span>
+                  <div>
+                    <div style="font-size:12px;font-weight:700;color:#fff;">Akurasi Nada (Pitch Match)</div>
+                    <div style="font-size:11px;color:#34d399;" id="pitchAccuracyText">Sempurna! Combo x14</div>
+                  </div>
+                </div>
+                <div style="font-family:var(--font-heading);font-size:22px;font-weight:700;color:var(--accent-amber);" id="scoreDisplay">
+                  96 <small style="font-size:12px;color:var(--text-muted);">/ 100</small>
+                </div>
+              </div>
+
+              <!-- Audience Cheer Action -->
+              <div>
+                <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:10px;text-transform:uppercase;">
+                  Reaksi Sorakan Penonton
+                </div>
+                <div class="cheer-grid">
+                  <button class="btn-cheer" id="cheerClap"><span>👏</span> <span>Tepuk Tangan</span></button>
+                  <button class="btn-cheer" id="cheerCheer"><span>🎉</span> <span>Sorak Hore</span></button>
+                  <button class="btn-cheer" id="cheerSakura"><span>🌸</span> <span>Hujan Bunga</span></button>
+                  <button class="btn-cheer" id="cheerLight"><span>🌟</span> <span>Lightstick</span></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Song Selection List -->
+            <div class="card card-p animate-in delay-2">
+              <div style="font-family:var(--font-heading);font-size:16px;font-weight:700;color:#fff;margin-bottom:14px;">
+                Pilihan Lagu Karaoke
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="background:rgba(244,114,182,0.1);border:1px solid var(--border-primary);padding:12px;border-radius:10px;cursor:pointer;">
+                  <div style="font-size:13px;font-weight:600;color:#fff;">Sparkle - RADWIMPS</div>
+                  <div style="font-size:11px;color:var(--primary);">Kimi no Na wa OST · Sedang Diputar</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);padding:12px;border-radius:10px;cursor:pointer;">
+                  <div style="font-size:13px;font-weight:600;color:#fff;">Idol (アイドル) - YOASOBI</div>
+                  <div style="font-size:11px;color:var(--text-muted);">Oshi no Ko OST · BPM: 166</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);padding:12px;border-radius:10px;cursor:pointer;">
+                  <div style="font-size:13px;font-weight:600;color:#fff;">Lemon - Kenshi Yonezu</div>
+                  <div style="font-size:11px;color:var(--text-muted);">Unnatural OST · BPM: 87</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     </div>
 
-    <!-- Spectrum Particle Canvas -->
-    <canvas
-      id="spectrumCanvas"
-      class="absolute inset-0 w-full h-full -z-10"
-    ></canvas>
-
-    <!-- Top Header -->
-    <header class="w-full max-w-5xl flex justify-between items-center z-10">
-      <div
-        class="glass-panel-interactive px-6 py-3 rounded-2xl flex items-center gap-3"
-      >
-        <div class="audio-equalizer">
-          <div class="eq-bar"></div>
-          <div class="eq-bar"></div>
-          <div class="eq-bar"></div>
-          <div class="eq-bar"></div>
-          <div class="eq-bar"></div>
-        </div>
-        <div>
-          <h1 class="text-lg font-bold font-cyber text-glow text-white">
-            NAURA KARAOKE STUDIO
-          </h1>
-          <p class="text-[11px] text-gray-400">
-            Live Synced Visualizer • Ultra-Fidelity
-          </p>
-        </div>
+    <nav class="mobile-nav">
+      <div class="mobile-nav-inner">
+        <a href="/" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Home</span></a>
+        <a href="/music" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-music"></i></span><span class="mn-label">Music</span></a>
+        <a href="/karaoke" class="mobile-nav-item active"><span class="mn-icon"><i class="fa-solid fa-microphone"></i></span><span class="mn-label">Karaoke</span></a>
+        <a href="/economy" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-coins"></i></span><span class="mn-label">Economy</span></a>
+        <a href="/settings" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
       </div>
+    </nav>
 
-      <a
-        href="/music"
-        class="glass-panel-interactive px-4 py-2 rounded-xl text-xs font-bold text-pink-300 hover:text-white transition-all"
-      >
-        ← Control Panel Musik
-      </a>
-    </header>
-
-    <!-- Center Synced Lyrics Stage -->
-    <main class="w-full max-w-3xl text-center space-y-6 z-10 my-auto">
-      <div id="trackInfo" class="space-y-1">
-        <h2
-          id="songTitle"
-          class="text-2xl md:text-3xl font-bold font-cyber text-white"
-        >
-          Menunggu Transmisi Audio...
-        </h2>
-        <p id="songArtist" class="text-sm text-pink-300 font-cyber">
-          Pilih lagu di Discord atau Control Panel
-        </p>
-      </div>
-
-      <div
-        id="lyricsContainer"
-        class="py-8 space-y-4 max-h-[300px] overflow-hidden flex flex-col items-center justify-center"
-      >
-        <p class="karaoke-line text-lg text-gray-400">
-          ♫ Menghubungkan ke Voice Channel ♫
-        </p>
-        <p class="karaoke-line active text-2xl md:text-3xl">
-          Naura siap bernyanyi bersamamu!
-        </p>
-        <p class="karaoke-line text-lg text-gray-400">
-          Putar lagu apa saja untuk memulai lirik otomatis.
-        </p>
-      </div>
-    </main>
-
-    <!-- Bottom Audio Progress Bar -->
-    <footer
-      class="w-full max-w-2xl glass-panel-interactive p-4 rounded-2xl z-10 flex flex-col gap-2"
-    >
-      <div class="flex justify-between text-xs font-cyber text-gray-400">
-        <span id="currentTime">0:00</span>
-        <span id="totalDuration">0:00</span>
-      </div>
-      <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-        <div
-          id="progressBar"
-          class="h-full bg-gradient-to-r from-pink-400 to-purple-400 w-0 transition-all duration-300"
-        ></div>
-      </div>
-    </footer>
-
+    <script src="/src/js/shared-nav.js"></script>
     <script>
-      // Spectrum Visualizer
-      const canvas = document.getElementById("spectrumCanvas");
-      const ctx = canvas.getContext("2d");
-      function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+      let audioCtx = null;
+      function playSynthTone(freq, duration = 0.1) {
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+        } catch (_) {}
       }
-      window.addEventListener("resize", resize);
-      resize();
 
-      let phase = 0;
-      function drawSpectrum() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        phase += 0.03;
-
-        const bars = 64;
-        const barWidth = canvas.width / bars;
-
-        for (let i = 0; i < bars; i++) {
-          const height =
-            Math.sin(phase + i * 0.15) * 60 +
-            Math.cos(phase * 0.8 + i * 0.2) * 40 +
-            80;
-          const x = i * barWidth;
-          const y = canvas.height - height;
-
-          const grad = ctx.createLinearGradient(0, y, 0, canvas.height);
-          grad.addColorStop(0, "rgba(255, 182, 193, 0.4)");
-          grad.addColorStop(1, "rgba(192, 132, 252, 0.05)");
-
-          ctx.fillStyle = grad;
-          ctx.fillRect(x, y, barWidth - 3, height);
-        }
-        requestAnimationFrame(drawSpectrum);
-      }
-      drawSpectrum();
-
-      // Socket.IO Integration
-      const socket = io();
-      socket.on("connect", () => {
-        console.log("Karaoke Studio terhubung ke WebSocket!");
+      document.getElementById('cheerClap').addEventListener('click', () => {
+        [400, 450, 500].forEach((f, i) => setTimeout(() => playSynthTone(f, 0.08), i * 70));
+      });
+      document.getElementById('cheerCheer').addEventListener('click', () => {
+        [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => playSynthTone(f, 0.15), i * 90));
+      });
+      document.getElementById('cheerSakura').addEventListener('click', () => {
+        [880, 1100, 1320].forEach((f, i) => setTimeout(() => playSynthTone(f, 0.12), i * 80));
+      });
+      document.getElementById('cheerLight').addEventListener('click', () => {
+        [600, 750, 900].forEach((f, i) => setTimeout(() => playSynthTone(f, 0.1), i * 100));
       });
 
-      socket.on("music_state", (state) => {
-        if (state && state.currentTrack) {
-          document.getElementById("songTitle").textContent =
-            state.currentTrack.title;
-          const dur = Math.floor(state.currentTrack.duration / 1000);
-          const pos = Math.floor((state.currentTrack.position || 0) / 1000);
-
-          const fmt = (s) =>
-            `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
-          document.getElementById("currentTime").textContent = fmt(pos);
-          document.getElementById("totalDuration").textContent = fmt(dur);
-
-          const percent = Math.min(100, (pos / (dur || 1)) * 100);
-          document.getElementById("progressBar").style.width = `${percent}%`;
-        }
-      });
-
-      // Hide loading screen once studio is ready
-      setTimeout(() => {
-        const ls = document.getElementById("loadingScreen");
-        if (ls) ls.classList.add("hidden");
-      }, 400);
-    </script>
-
-    <script type="module">
-      import { NauraViewer } from "../components/NauraViewer/index.js";
-      NauraViewer.init({ context: "karaoke" });
+      // Synchronized Lyrics simulation
+      const LYRICS = [
+        { prev: 'Mada kono sekai wa boku wo kainarashitetai mitai da', active: 'Nozomi toori darou? Utsukushiku mogaku yo', next: 'Tagai no sunadokei nagamenagara kisu wo shiyou yo' },
+        { prev: 'Nozomi toori darou? Utsukushiku mogaku yo', active: 'Tagai no sunadokei nagamenagara kisu wo shiyou yo', next: 'Sayonara kara ichiban tooi basho de machiawaseyou' },
+        { prev: 'Tagai no sunadokei nagamenagara kisu wo shiyou yo', active: 'Sayonara kara ichiban tooi basho de machiawaseyou', next: 'Tsui ni toki wa kita kinou made wa joshou no joshou de' }
+      ];
+      let lIdx = 0;
+      setInterval(() => {
+        lIdx = (lIdx + 1) % LYRICS.length;
+        const l = LYRICS[lIdx];
+        document.getElementById('lyricPrev').textContent = l.prev;
+        document.getElementById('lyricActive').textContent = l.active;
+        document.getElementById('lyricNext').textContent = l.next;
+      }, 5000);
     </script>
   </body>
 </html>
