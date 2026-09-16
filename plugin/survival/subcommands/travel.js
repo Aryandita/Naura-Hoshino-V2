@@ -34,17 +34,36 @@ const BACKGROUND_DIR = path.join(
 );
 
 // Data NPC memakai `desa`, sedangkan pilihan perintah memakai `village`.
-const LOCATION_ALIAS = { village: "desa", city: "kota" };
+const LOCATION_ALIAS = {
+  village: "desa_sukamaju",
+  desa: "desa_sukamaju",
+  desa_sukamaju: "desa_sukamaju",
+  city: "kota_pratama",
+  kota: "kota_pratama",
+  kota_pratama: "kota_pratama",
+  khulkhas: "desa_khulkhas",
+  desa_khulkhas: "desa_khulkhas",
+  draken: "istana_draken",
+  istana_draken: "istana_draken",
+};
 
 const LOCATION_NAMES = {
-  village: "Desa Pemula",
-  desa: "Desa Pemula",
-  kota: "Naura City",
+  village: "Desa Sukamaju",
+  desa: "Desa Sukamaju",
+  desa_sukamaju: "Desa Sukamaju",
+  kota: "Kota Pratama",
+  city: "Kota Pratama",
+  kota_pratama: "Kota Pratama",
+  desa_khulkhas: "Desa Khul'Khas",
+  khulkhas: "Desa Khul'Khas",
+  istana_draken: "Istana Draken",
+  draken: "Istana Draken",
   academy: "Naura Academy",
-  hutan: "Hutan Terlarang",
-  tambang: "Gua Penambang",
-  laut: "Pantai & Dermaga",
+  hutan: "Hutan Desa Sukamaju",
+  tambang: "Tambang Desa Sukamaju",
+  laut: "Pesisir Sukamaju",
 };
+
 
 function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
@@ -125,8 +144,10 @@ module.exports = {
     const timeState = getTimeState(timeUpdate.hour);
 
     let encounterText = "";
+    const npcPerksEngine = require("../../../src/survival/engines/npcPerksEngine");
+    const effectiveBanditChance = await npcPerksEngine.applyPassiveBonus(user.id, "bandit_chance", BANDIT_CHANCE);
 
-    if (!timeUpdate.passedOut && Math.random() < BANDIT_CHANCE) {
+    if (!timeUpdate.passedOut && Math.random() < effectiveBanditChance) {
       if (Math.random() < 0.5) {
         // Dulu saldonya hanya diubah di memori setelah save, jadi
         // penaltinya tidak pernah benar-benar tercatat.
@@ -157,6 +178,9 @@ module.exports = {
     const currentHour = timeUpdate.hour || survival.inGameHour || 6;
     const crowd = encounter.npcsAt(normalizedTarget, currentHour);
 
+    const worldMapData = require("../../../src/survival/data/worldMapData");
+    const destPois = worldMapData.getPoisForRegion(normalizedTarget);
+
     const lines = [
       `Kamu berangkat ke **${LOCATION_NAMES[normalizedTarget] || tujuan}** dengan **${vehName}**. Hati-hati di jalan ya!`,
       "",
@@ -164,6 +188,14 @@ module.exports = {
       `> ${timeState.emoji} Sekarang **hari ke-${timeUpdate.day}, jam ${String(timeUpdate.hour).padStart(2, "0")}:00** (${timeState.label})`,
       `> ${e("npc_group", "\uD83D\uDC65")} Ada **${crowd.length} penduduk** yang sedang berkegiatan di sekitar sini.`,
     ];
+
+    if (destPois && destPois.length > 0) {
+      lines.push(
+        "",
+        "📍 **Gedung & Fasilitas di Wilayah Tujuan:**",
+        ...destPois.slice(0, 4).map((p) => `• ${p.emoji} **${p.name}**`),
+      );
+    }
 
     if (encounterText) lines.push(encounterText);
 
@@ -174,6 +206,7 @@ module.exports = {
         `Kamu kelelahan atau melanggar jam malam, lalu dilarikan ke **${timeUpdate.clinic}** dan dipulangkan ke desa. Biaya medisnya ${currency.format(currency.FRAGMENT, timeUpdate.penalty)}. Naura sedih lihat kamu begini, tolong jaga kesehatanmu.`,
       );
     }
+
 
     const background = findBackground(
       normalizedTarget === "academy" ? "kota" : normalizedTarget,

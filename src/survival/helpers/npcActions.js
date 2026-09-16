@@ -54,9 +54,9 @@ async function greet(i, ctx) {
   );
 }
 
-/** Memberi hadiah. Jatahnya harian dan menguras serpihan bintang. */
+/** Memberi hadiah ke NPC dengan evaluasi skala Relationship Points (RP) */
 async function gift(i, ctx) {
-  const { npc, npcData, survival, t, coin, now } = ctx;
+  const { npc, npcData, survival, profile, t, coin, now } = ctx;
 
   const giftsToday = isSameDay(npcData.lastInteraction, now)
     ? npcData.dailyGifts || 0
@@ -69,19 +69,55 @@ async function gift(i, ctx) {
     );
   }
 
-  // Rule 1.8: potong saldo lewat debit atomik (UPDATE bersyarat), bukan
-  // baca-ubah-tulis. Kegagalan berarti saldo tidak cukup dan bukan error.
-  const debit = await cacheManager.debitUserSurvival(
-    survival.userId,
-    "starFragments",
-    GIFT_COST,
-  );
-  if (!debit.ok) {
-    return fail(i, t("npc.gift_poor", { cost: `${GIFT_COST} ${coin}` }), t);
+  const npcGiftPreferences = require("../data/npcGiftPreferences");
+  const inventory = safeParseInventory(profile.inventory);
+
+  // Cari apakah pemain memiliki item di inventaris yang cocok untuk dijadikan hadiah
+  let chosenItem = null;
+  const preferredList = [
+    ...(npcGiftPreferences.PREFERENCES[npc.id]?.loved || []),
+    ...(npcGiftPreferences.PREFERENCES[npc.id]?.special || []),
+    ...(npcGiftPreferences.PREFERENCES[npc.id]?.simple || []),
+    ...npcGiftPreferences.GLOBAL_MYTHIC_ITEMS,
+  ];
+
+  for (const it of inventory) {
+    if (it && preferredList.includes(it.id)) {
+      chosenItem = it;
+      break;
+    }
   }
 
-  const bonus = Math.floor(Math.random() * 5) + 3;
-  npcData.affection = Math.min(100, npcData.affection + bonus);
+  let deltaRp = 5;
+  let quote = "Terima kasih atas pemberianmu!";
+  let giftDetail = "";
+
+  if (chosenItem) {
+    const taken = await takeItemsAtomic(profile.userId, [
+      { id: chosenItem.id, amount: 1 },
+    ]);
+    if (taken.ok) {
+      const evalResult = npcGiftPreferences.evaluateGift(npc.id, chosenItem.id);
+      deltaRp = evalResult.rp;
+      quote = evalResult.quote;
+      giftDetail = `Kamu memberikan **${chosenItem.name || chosenItem.id}** (${evalResult.label}, ${deltaRp > 0 ? "+" + deltaRp : deltaRp} RP)!`;
+    }
+  }
+
+  if (!giftDetail) {
+    // Fallback potong koin bintang jika tidak ada item spesifik
+    const debit = await cacheManager.debitUserSurvival(
+      survival.userId,
+      "starFragments",
+      GIFT_COST,
+    );
+    if (!debit.ok) {
+      return fail(i, t("npc.gift_poor", { cost: `${GIFT_COST} ${coin}` }), t);
+    }
+    giftDetail = `Kamu memberikan bingkisan koin bintang seharga \`${GIFT_COST} ${coin}\` (+5 RP)!`;
+  }
+
+  npcData.affection = Math.max(0, (npcData.affection || 0) + deltaRp);
   npcData.dailyGifts = giftsToday + 1;
   npcData.lastInteraction = now;
   refreshRelationship(npcData, npc);
@@ -94,60 +130,69 @@ async function gift(i, ctx) {
     .incrementQuestProgress(survival.userId, "gift_npc", 1)
     .catch(() => {});
 
+  const bodyText = [
+    giftDetail,
+    "",
+    `💬 **${npc.name}:** "${quote}"`,
+    `💖 Total Affection: **${npcData.affection} RP**`,
+  ].join("\n");
+
   return reply(
     i,
     `${e("cheers", "\uD83C\uDF81")} ${t("npc.gift_title")}`,
-    t("npc.gift_body", { name: npc.name, cost: `${GIFT_COST} ${coin}`, bonus }),
-    "success",
+    bodyText,
+    deltaRp >= 0 ? "success" : "warning",
     npc,
   );
 }
 
-/** Melamar. Hanya untuk NPC romansa, butuh cincin dan afeksi penuh. */
+/** Melamar. Hanya untuk NPC romansa, aturan ketat monogami (1 pasangan), butuh cincin dan afeksi. */
 async function marry(i, ctx) {
-  const { npc, npcData, survival, profile, t, now } = ctx;
+  const { npc, npcData, survival, profile, t } = ctx;
+  const familyEngine = require("../engines/familyEngine");
 
-  // Penjaga yang sebelumnya tidak ada: NPC berjenis teman tidak boleh dilamar.
+  // Penjaga: NPC berjenis teman tidak boleh dilamar
   if (npc.type !== "romansa") {
     return fail(i, t("npc.marry_wrong_type", { name: npc.name }), t);
   }
 
-  const inventory = safeParseInventory(profile.inventory);
-  const ringIndex = inventory.findIndex(
-    (item) => item && item.id === "wedding_ring",
-  );
-  if (ringIndex === -1) {
-    return fail(i, t("npc.marry_no_ring"), t);
+  // ATURAN KETAT MONOGAMI: Pemain tidak boleh menikahi lebih dari 1 wanita
+  const marriageStatus = await familyEngine.getMarriageStatus(survival.userId, survival);
+  if (marriageStatus.isMarried) {
+    return fail(
+      i,
+      `Kamu sudah menikah dengan **${marriageStatus.spouseName}**! Di Naura Wilds, janji suci pernikahan hanya untuk satu orang pendamping hidup.`,
+      t,
+    );
   }
 
-  if (npcData.affection < 100) {
+  const inventory = safeParseInventory(profile.inventory);
+  const ringIndex = inventory.findIndex(
+    (item) => item && (item.id === "wedding_ring" || item.id === "diamond_ring"),
+  );
+  if (ringIndex === -1) {
+    return fail(
+      i,
+      "Kamu membutuhkan Cincin Berlian (Diamond Ring / Wedding Ring) di inventaris untuk melamar pujaan hatimu.",
+      t,
+    );
+  }
+
+  if (npcData.affection < 100 && (npcData.relationshipLevel || 0) < 3) {
     return fail(i, t("npc.marry_not_ready", { name: npc.name }), t);
   }
 
-  // Rule 1.8: ambil cincin lewat helper atomik (SELECT ... FOR UPDATE),
-  // bukan splice manual pada salinan cache. Bila pengambilan gagal karena
-  // cincin sudah terpakai di sesi lain, lamaran dibatalkan tanpa efek samping.
+  const ringItem = inventory[ringIndex];
   const taken = await takeItemsAtomic(profile.userId, [
-    { id: "wedding_ring", amount: 1 },
+    { id: ringItem.id, amount: 1 },
   ]);
   if (!taken.ok) {
     return fail(i, t("npc.marry_no_ring"), t);
   }
 
-  npcData.relationshipLevel = 4;
-  npcData.lastInteraction = now;
-  await npcData.save({ fields: ["relationshipLevel", "lastInteraction"] });
-
-  let extraMsg = "";
-  const rpgState = survival.rpg_state || {};
-  if (!Array.isArray(rpgState.unlocked_cutscenes))
-    rpgState.unlocked_cutscenes = [];
-  if (!rpgState.unlocked_cutscenes.includes("wedding")) {
-    rpgState.unlocked_cutscenes.push("wedding");
-    survival.rpg_state = rpgState;
-    survival.changed("rpg_state", true);
-    await survival.save({ fields: ["rpg_state"] });
-    extraMsg = t("npc.cutscene_unlocked");
+  const marryResult = await familyEngine.marryNpc(survival.userId, survival, npc.id);
+  if (!marryResult.ok) {
+    return fail(i, "Prosesi pernikahan gagal disahkan: " + marryResult.reason, t);
   }
 
   const files = [];
@@ -160,8 +205,15 @@ async function marry(i, ctx) {
 
   const payload = buildContainerV2({
     accentColorHex: ui.getColor("success") || "#22c55e",
-    title: `${e("blowkiss", "\uD83D\uDC8D")} ${t("npc.marry_title")}`,
-    description: `${t("npc.marry_body", { name: npc.name })}${extraMsg}`,
+    title: `${e("blowkiss", "\uD83D\uDC8D")} Janji Suci Pernikahan Bersama ${npc.name}`,
+    description: [
+      `Di hadapan saksi dan semesta Naura Wilds, kamu dan **${npc.name}** resmi menjadi pasangan suami istri!`,
+      "",
+      `💍 **Janji Suci ${npc.name}:**`,
+      `*"${marryResult.vow}"*`,
+      "",
+      `📸 **Visual Wedding CG Telah Dibuka!** Foto momen pernikahan kalian telah diabadikan di \`/survival gallery\`!`,
+    ].join("\n"),
     bannerAttachmentName,
     files,
     footerText: ui.getFooter("survival"),
@@ -169,6 +221,7 @@ async function marry(i, ctx) {
 
   return i.followUp(payload);
 }
+
 
 /** Bagas memperbaiki seluruh alat sekaligus. */
 async function repair(i, ctx) {

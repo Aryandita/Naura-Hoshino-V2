@@ -59,10 +59,10 @@ module.exports = {
         lang: "id",
       });
 
-      const partnerName = marriedNPCs.length > 0 ? marriedNPCs[0].npcId : null;
+      const partnerName = stats.spouseInfo?.spouseName || (marriedNPCs.length > 0 ? marriedNPCs[0].npcId : null);
       const partnerDisplay = partnerName
         ? `${e("wedding_ring")} **${partnerName}** : Naura ikut senang lihat kalian bahagia!`
-        : "Masih sendiri, dan itu sama sekali nggak apa-apa~";
+        : "Masih sendiri, dan itu sama sekali tidak apa-apa~";
 
       // --- Gelar dan pencapaian ---
       let titleBadge = "";
@@ -104,8 +104,10 @@ module.exports = {
 
       const vehicleLine = `${e("vehicle")} **Kendaraan:** ${survival.vehicle && survival.vehicle !== "none" ? survival.vehicle : "masih jalan kaki, semangat ya!"}`;
 
-      let questLine = `${e("quest")} **Petunjuk Naura:** ${stats.isRegistered ? "Belum ada quest baru, santai dulu sebentar." : "Daftar dulu ke Pak Kades lewat `/survival start` ya!"}`;
-      if (stats.isRegistered && !gear.axe && !gear.pickaxe) {
+      let questLine = stats.mainObjective
+        ? `${e("quest", "🎯")} **Objektif Utama:** Arc ${stats.mainObjective.arc}: ${stats.mainObjective.arcName} - Bab ${stats.mainObjective.chapter}: *${stats.mainObjective.title}*\n> Target: ${stats.mainObjective.challengeLabel} (Buka \`/survival story\`)`
+        : `${e("quest")} **Petunjuk Naura:** ${stats.isRegistered ? "Belum ada quest baru, santai dulu sebentar." : "Daftar dulu ke Pak Kades lewat `/survival start` ya!"}`;
+      if (stats.isRegistered && !stats.mainObjective && !gear.axe && !gear.pickaxe) {
         questLine = `${e("quest")} **Petunjuk Naura:** Kumpulkan bahan dengan tangan kosong lewat \`/survival collect\`, lalu tempa alat pertamamu!`;
       }
 
@@ -127,6 +129,11 @@ module.exports = {
         perkNames.length > 0
           ? `> ${e("sparkle")} Berkah aktif: **${perkNames.length}** (${perkNames.slice(0, 4).join(", ")})`
           : `> ${e("sparkle")} Belum ada berkah khusus. Kumpulkan Naura Coupon dulu, yuk!`;
+
+      const friendshipLines = stats.friendshipBuffs && stats.friendshipBuffs.length > 0
+        ? `\n💖 **Buff Persahabatan Penduduk:**\n` + stats.friendshipBuffs.slice(0, 3).map((b) => `> ${b.emoji} **${b.npcName}** (${b.levelTitle}): *${b.perkDesc}*`).join("\n")
+        : "";
+
 
       let files = [];
       let bannerAttachmentName;
@@ -237,7 +244,7 @@ module.exports = {
           },
           {
             name: `${e("favorite")} Orang-orang di sekitarmu`,
-            value: `> **Teman berbulu:** ${stats.pet.display}\n> **Pasangan:** ${partnerDisplay}`,
+            value: `> **Teman berbulu:** ${stats.pet.display}\n> **Pasangan:** ${partnerDisplay}${friendshipLines}`,
           },
         ],
         buttonsRow,

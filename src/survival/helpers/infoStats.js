@@ -10,18 +10,31 @@ const currencyHelper = require("../engines/currency");
 const { getTimeState } = require("./survivalTime");
 const { safeParseInventory } = require("../engines/inventoryHelper");
 const { perksOf } = require("./specialEffects");
+const StoryProgress = require("../../models/StoryProgress");
+const storyData = require("../data/storyData");
+const npcPerksEngine = require("../engines/npcPerksEngine");
+const familyEngine = require("../engines/familyEngine");
+
 
 const LOCATION_NAMES = {
-  desa: "Desa Pemula",
-  village: "Desa Pemula",
+  desa: "Desa Sukamaju",
+  village: "Desa Sukamaju",
+  desa_sukamaju: "Desa Sukamaju",
+  sukamaju: "Desa Sukamaju",
   jalanan: "Pinggir Jalan",
-  kota: "Kota Naura",
-  city: "Kota Naura",
-  hutan: "Hutan Pinus",
-  laut: "Pantai Selatan",
-  pantai: "Pantai Selatan",
-  sawah: "Sawah Desa",
-  tambang: "Tambang Kuno",
+  kota: "Kota Pratama",
+  city: "Kota Pratama",
+  kota_pratama: "Kota Pratama",
+  pratama: "Kota Pratama",
+  hutan: "Hutan Desa Sukamaju",
+  laut: "Pesisir Sukamaju",
+  pantai: "Pesisir Sukamaju",
+  sawah: "Sawah Sukamaju",
+  tambang: "Tambang Sukamaju",
+  khulkhas: "Desa Khul'Khas",
+  desa_khulkhas: "Desa Khul'Khas",
+  draken: "Istana Draken",
+  istana_draken: "Istana Draken",
   academy: "Naura Academy",
   park: "Amusement Park",
   prison: "Penjara Kota",
@@ -34,6 +47,7 @@ const PROPERTY_NAMES = {
   rumah: "Rumah Nyaman",
   mansion: "Mansion Mewah",
 };
+
 
 const DIFF_BADGE = {
   Mudah: "diff_easy",
@@ -185,6 +199,35 @@ async function buildStats({ userId, profile, survival, activePets }) {
   const locationKey = survival.currentLocation || "desa";
   const difficulty = rpgState.difficulty || "Normal";
 
+  let mainObjective = null;
+  try {
+    const storyProgress = await StoryProgress.findOne({ where: { userId } });
+    const currentArc = storyProgress ? storyProgress.currentArc : 1;
+    const currentChapter = storyProgress ? storyProgress.currentChapter : 1;
+
+    if (currentArc !== -1) {
+      const arc = storyData.find((a) => a.arc === currentArc);
+      const chapter = arc?.chapters?.find((c) => c.chapter === currentChapter);
+      if (arc && chapter) {
+        mainObjective = {
+          arc: arc.arc,
+          arcName: arc.arcName,
+          chapter: chapter.chapter,
+          title: chapter.title,
+          targetNpc: chapter.speakerNpcId,
+          challengeLabel: chapter.challenge?.btnLabel || "Selesaikan bab ini",
+        };
+      }
+    }
+  } catch (_) {}
+
+  const friendshipBuffs = await npcPerksEngine.getUserActivePerksSummary(userId).catch(() => []);
+  const spouseInfo = await familyEngine.getMarriageStatus(userId, survival).catch(() => ({
+    isMarried: false,
+    spouseId: null,
+    spouseName: null,
+  }));
+
   return {
     level: lvl.level,
     xp: lvl.xp,
@@ -217,7 +260,11 @@ async function buildStats({ userId, profile, survival, activePets }) {
     weather: resolveWeather(rpgState),
     isSick: Boolean(rpgState.sick),
     isRegistered: inventory.some((it) => it && it.id === "survival_started"),
+    mainObjective,
+    friendshipBuffs,
+    spouseInfo,
   };
 }
+
 
 module.exports = { buildStats, LOCATION_NAMES, PROPERTY_NAMES, PET_BONUS };

@@ -719,6 +719,62 @@ module.exports = (client) => {
     }
   });
 
+  // --- Endpoint World POIs & Regional Map ---
+  router.get("/survival/world-pois", (req, res) => {
+    try {
+      const { REGIONS } = require("../../src/survival/data/worldMapData");
+      const { NPCS } = require("../../src/survival/data/npcs");
+      res.json({
+        success: true,
+        regions: REGIONS,
+        npcs: NPCS,
+        timestamp: Date.now(),
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // --- Endpoint Realtime Survival Status ---
+  router.get("/realtime/survival", async (req, res) => {
+    try {
+      const UserSurvival = require("../../src/models/UserSurvival");
+      const survivors = await UserSurvival.findAll({
+        limit: 10,
+        order: [["updatedAt", "DESC"]],
+      });
+      const data = survivors.map((s) => ({
+        id: s.userId,
+        name: `Survivor #${s.userId.slice(-4)}`,
+        starFragments: s.starFragments || 0,
+        coupons: s.coupons || 0,
+        stats: {
+          hp: s.hp || 100,
+          stamina: s.stamina || 100,
+          hunger: s.hunger || 100,
+          thirst: s.thirst || 100,
+        },
+        attributes: {
+          strength: s.strength || 1,
+          agility: s.agility || 1,
+          intelligence: s.intelligence || 1,
+          luck: s.luck || 1,
+        },
+        progress: {
+          level: s.survival_level || 1,
+          xp: s.survival_xp || 0,
+        },
+        world: {
+          location: s.currentLocation || "desa_sukamaju",
+          day: s.day || 1,
+        },
+      }));
+      res.json({ success: true, data });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message, data: [] });
+    }
+  });
+
   return router;
 };
 

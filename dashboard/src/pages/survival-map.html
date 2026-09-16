@@ -265,6 +265,68 @@
         0% { width: 10px; height: 10px; opacity: 1; }
         100% { width: 650px; height: 650px; opacity: 0; }
       }
+
+      /* Region Navigation Tabs */
+      .region-tabs-bar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      .region-tab {
+        background: rgba(14, 20, 36, 0.7);
+        border: 1px solid var(--border-medium);
+        padding: 9px 16px;
+        border-radius: var(--r-lg);
+        color: var(--text-secondary);
+        font-family: var(--font-heading);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all var(--t-fast);
+      }
+      .region-tab:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+      .region-tab.active {
+        background: rgba(34, 211, 238, 0.12);
+        border-color: #22d3ee;
+        color: #22d3ee;
+        box-shadow: 0 0 16px rgba(34, 211, 238, 0.25);
+      }
+      .blip-poi {
+        background: rgba(99, 102, 241, 0.4);
+        border: 1.5px solid #818cf8;
+        color: #fff;
+        box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+      }
+      .blip-poi.active {
+        transform: translate(-50%, -50%) scale(1.4);
+        border-color: #22d3ee;
+        box-shadow: 0 0 20px rgba(34, 211, 238, 0.9);
+      }
+      .resident-npc-chip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-md);
+        margin-top: 6px;
+      }
+      .resident-npc-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1.5px solid var(--accent-cyan);
+      }
     </style>
   </head>
   <body>
@@ -426,8 +488,32 @@
                 </span>
                 Tactical Territory Radar (Naura Wilds)
               </h1>
-              <p class="page-sub">Pantau titik sumber daya hutan, pergerakan hewan buas, tingkat vitalitas tubuh, dan peti harta karun tertimbun.</p>
+              <p class="page-sub">Pantau titik sumber daya hutan, pergerakan hewan buas, pemukiman warga, dan distrik 4 wilayah dunia.</p>
             </div>
+          </div>
+
+          <!-- Region Navigation Tabs -->
+          <div class="region-tabs-bar animate-in delay-1">
+            <button class="region-tab active" data-region="desa_sukamaju" id="tabSukamaju">
+              <i class="fa-solid fa-tree" style="color:#10b981;"></i>
+              <span>Desa Sukamaju</span>
+              <span class="badge" style="background:rgba(16, 185, 129, 0.2);color:#10b981;font-size:10px;padding:2px 6px;">Mata Uang: NSF</span>
+            </button>
+            <button class="region-tab" data-region="kota_pratama" id="tabPratama">
+              <i class="fa-solid fa-city" style="color:#3b82f6;"></i>
+              <span>Kota Pratama</span>
+              <span class="badge" style="background:rgba(59, 130, 246, 0.2);color:#3b82f6;font-size:10px;padding:2px 6px;">Mata Uang: NC</span>
+            </button>
+            <button class="region-tab" data-region="desa_khulkhas" id="tabKhulkhas">
+              <i class="fa-solid fa-sun" style="color:#f59e0b;"></i>
+              <span>Desa Khul'Khas</span>
+              <span class="badge" style="background:rgba(245, 158, 11, 0.2);color:#f59e0b;font-size:10px;padding:2px 6px;">Mistik Gurun</span>
+            </button>
+            <button class="region-tab" data-region="istana_draken" id="tabDraken">
+              <i class="fa-solid fa-dungeon" style="color:#ef4444;"></i>
+              <span>Istana Draken</span>
+              <span class="badge" style="background:rgba(239, 68, 68, 0.2);color:#ef4444;font-size:10px;padding:2px 6px;">Dungeon Lv.50+</span>
+            </button>
           </div>
 
           <div class="survival-grid-layout">
@@ -503,6 +589,26 @@
 
             <!-- Right: Vitals & Base Outpost Controls -->
             <div class="animate-in delay-2">
+              <!-- Active Main Campaign Objective Card -->
+              <div class="card card-p" style="margin-bottom: 20px; border-left: 3px solid #22d3ee; background: radial-gradient(circle at top left, rgba(34, 211, 238, 0.08), transparent 75%);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <div style="font-size:11px;color:var(--accent-cyan);font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">
+                    <i class="fa-solid fa-compass"></i> MAIN CAMPAIGN OBJECTIVE
+                  </div>
+                  <span class="badge" id="campaignObjectiveBadge" style="background:rgba(34, 211, 238, 0.15);color:#22d3ee;border:1px solid rgba(34, 211, 238, 0.3);font-size:10px;">AKTIF</span>
+                </div>
+                <div style="font-family:var(--font-heading);font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px;" id="campaignObjectiveTitle">
+                  Bab 1: Awal Kedatangan di Sukamaju
+                </div>
+                <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:12px;" id="campaignObjectiveDesc">
+                  Kunjungi Balai Desa dan temui Kepala Desa Tirto untuk mendapatkan bimbingan awal bertahan hidup di alam liar.
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border-subtle);padding-top:8px;">
+                  <span id="campaignObjectiveLoc"><i class="fa-solid fa-location-dot" style="color:#10b981;"></i> Desa Sukamaju</span>
+                  <span style="font-family:var(--font-mono);color:var(--accent-cyan);" id="campaignObjectiveReward">Reward: 500 NSF + EXP</span>
+                </div>
+              </div>
+
               <!-- Vitals Standard Card (RULES.md Compliant) -->
               <div class="vitals-box">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -586,11 +692,16 @@
 
               <!-- Selected Blip Intel Card -->
               <div class="card card-p" id="blipDetailCard" style="display:none;background:radial-gradient(circle at top right, rgba(34,211,238,0.1), transparent 70%);">
-                <div style="font-size:11px;color:var(--accent-cyan);text-transform:uppercase;font-weight:600;margin-bottom:4px;" id="blipDetailSub">TARGET TERKUNCI</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                  <div style="font-size:11px;color:var(--accent-cyan);text-transform:uppercase;font-weight:600;" id="blipDetailSub">TARGET TERKUNCI</div>
+                  <span class="badge badge-info" id="blipDetailBadge" style="font-size:10px;">LOKASI POI</span>
+                </div>
                 <div style="font-family:var(--font-heading);font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;" id="blipDetailTitle">Pohon Pinus Tua</div>
-                <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;" id="blipDetailDist">Jarak: 42m Barat Laut · Estimasi Waktu Berjalan: 12 Detik</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;" id="blipDetailDist">Jarak: 42m Barat Laut · Estimasi Waktu Berjalan: 12 Detik</div>
+                <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:10px;" id="blipDetailDesc"></div>
+                <div id="blipResidentNpcs" style="margin-bottom:12px;"></div>
                 <button class="btn btn-primary btn-sm" id="btnNavigateBlip" style="width:100%;">
-                  <i class="fa-solid fa-person-running"></i> Navigasi Menuju Lokasi
+                  <i class="fa-solid fa-person-running"></i> Kunjungi Lokasi (/survival town)
                 </button>
               </div>
             </div>
@@ -644,23 +755,35 @@
         osc.stop(now + 0.6);
       }
 
-      // Blip Selection
-      const blips = document.querySelectorAll('.blip');
+      // Blip Selection & Detail Card Elements
       const blipDetailCard = document.getElementById('blipDetailCard');
       const blipDetailTitle = document.getElementById('blipDetailTitle');
       const blipDetailDist = document.getElementById('blipDetailDist');
+      const blipDetailSub = document.getElementById('blipDetailSub');
+      const blipDetailBadge = document.getElementById('blipDetailBadge');
+      const blipDetailDesc = document.getElementById('blipDetailDesc');
+      const blipResidentNpcs = document.getElementById('blipResidentNpcs');
+      const radarScope = document.getElementById('radarScope');
 
-      blips.forEach(blip => {
-        blip.addEventListener('click', () => {
-          const name = blip.getAttribute('data-name');
-          const dist = blip.getAttribute('data-dist');
-          playTone(550, 'sine', 0.08, 0.2);
+      function setupStaticBlips() {
+        const blips = document.querySelectorAll('.blip:not(.blip-poi):not(#playerBlip)');
+        blips.forEach(blip => {
+          blip.addEventListener('click', () => {
+            const name = blip.getAttribute('data-name');
+            const dist = blip.getAttribute('data-dist');
+            playTone(550, 'sine', 0.08, 0.2);
 
-          blipDetailTitle.textContent = name;
-          blipDetailDist.textContent = `Jarak: ${dist} · Estimasi Waktu Berjalan: 15 Detik`;
-          blipDetailCard.style.display = 'block';
+            if (blipDetailSub) blipDetailSub.textContent = 'SUMBER ALAM TERDETEKSI';
+            if (blipDetailBadge) blipDetailBadge.textContent = 'RESOURCE';
+            if (blipDetailTitle) blipDetailTitle.textContent = name;
+            if (blipDetailDist) blipDetailDist.textContent = `Jarak: ${dist} - Estimasi Berjalan: 15 Detik`;
+            if (blipDetailDesc) blipDetailDesc.textContent = 'Sumber daya alam liar. Kumpulkan menggunakan perlengkapan /survival gather.';
+            if (blipResidentNpcs) blipResidentNpcs.innerHTML = '';
+            if (blipDetailCard) blipDetailCard.style.display = 'block';
+          });
         });
-      });
+      }
+      setupStaticBlips();
 
       // Filter Toggles
       const filterToggles = [
@@ -684,7 +807,6 @@
 
       // Ping Scan Button
       const btnDeployScan = document.getElementById('btnDeployScan');
-      const radarScope = document.getElementById('radarScope');
       btnDeployScan.addEventListener('click', () => {
         playSonarPing();
 
@@ -695,41 +817,164 @@
         setTimeout(() => wave.remove(), 1600);
 
         // Blip animation
-        blips.forEach((b, idx) => {
+        document.querySelectorAll('.blip').forEach((b, idx) => {
           setTimeout(() => {
             b.style.transform = 'translate(-50%, -50%) scale(1.6)';
             setTimeout(() => {
               b.style.transform = 'translate(-50%, -50%) scale(1)';
             }, 300);
-          }, 300 + idx * 120);
+          }, 200 + (idx % 8) * 90);
         });
       });
 
       document.getElementById('btnNavigateBlip').addEventListener('click', () => {
         playTone(700, 'triangle', 0.1, 0.2);
-        alert('Navigasi waypoint GPS telah dikirimkan ke HUD Survival kompas Anda!');
+        alert('Navigasi waypoint GPS telah dikirimkan ke HUD Survival kompas Anda! Buka Discord dan ketik /survival town untuk berinteraksi di lokasi ini.');
       });
 
-      // Load live survival data from API
+      // World Map Data & Regional POIs
+      let currentRegionId = 'desa_sukamaju';
+      let worldRegions = null;
+      let allNpcs = null;
+
+      function renderRegion(regionId) {
+        currentRegionId = regionId;
+
+        // Update active tab styles
+        document.querySelectorAll('.region-tab').forEach(tab => {
+          if (tab.getAttribute('data-region') === regionId) {
+            tab.classList.add('active');
+          } else {
+            tab.classList.remove('active');
+          }
+        });
+
+        if (!worldRegions || !worldRegions[regionId]) return;
+        const region = worldRegions[regionId];
+
+        // Update Radar Header Title
+        const headerTitle = document.querySelector('.radar-header span');
+        if (headerTitle) {
+          headerTitle.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> GRID WILAYAH: [${region.name.toUpperCase()}] · ${region.climate.toUpperCase()}`;
+        }
+
+        // Remove old POI blips
+        document.querySelectorAll('.blip-poi').forEach(el => el.remove());
+
+        // Render new POI blips
+        if (Array.isArray(region.pois)) {
+          region.pois.forEach((poi) => {
+            const el = document.createElement('div');
+            el.className = 'blip blip-poi';
+            el.style.top = `${poi.coordinates.y}%`;
+            el.style.left = `${poi.coordinates.x}%`;
+            el.setAttribute('data-poi-id', poi.id);
+
+            let iconClass = 'fa-location-dot';
+            if (poi.category === 'government') iconClass = 'fa-landmark';
+            else if (poi.category === 'commerce') iconClass = 'fa-shop';
+            else if (poi.category === 'education') iconClass = 'fa-graduation-cap';
+            else if (poi.category === 'medical') iconClass = 'fa-heart-pulse';
+            else if (poi.category === 'residential') iconClass = 'fa-house-chimney';
+            else if (poi.category === 'finance') iconClass = 'fa-building-columns';
+            else if (poi.category === 'dungeon') iconClass = 'fa-skull';
+            else if (poi.category === 'gathering') iconClass = 'fa-tree';
+
+            el.innerHTML = `
+              <i class="fa-solid ${iconClass}" style="font-size:11px;"></i>
+              <div class="blip-tooltip">${poi.symbol || '📍'} ${poi.name}</div>
+            `;
+
+            el.addEventListener('click', () => {
+              playTone(600, 'triangle', 0.1, 0.25);
+              document.querySelectorAll('.blip-poi').forEach(b => b.classList.remove('active'));
+              el.classList.add('active');
+              showPoiDetails(poi);
+            });
+
+            radarScope.appendChild(el);
+          });
+        }
+      }
+
+      function showPoiDetails(poi) {
+        if (!poi) return;
+        if (blipDetailSub) blipDetailSub.textContent = `POI [${poi.category.toUpperCase()}]`;
+        if (blipDetailBadge) blipDetailBadge.textContent = poi.symbol || 'LOKASI';
+        if (blipDetailTitle) blipDetailTitle.textContent = poi.name;
+        if (blipDetailDist) {
+          blipDetailDist.textContent = `Operasional: ${poi.hours?.open || '00:00'} - ${poi.hours?.close || '24:00'} (${poi.hours?.days || 'Setiap Hari'})`;
+        }
+        if (blipDetailDesc) {
+          blipDetailDesc.textContent = poi.description;
+        }
+
+        if (blipResidentNpcs) {
+          blipResidentNpcs.innerHTML = '';
+          if (Array.isArray(poi.residentNpcs) && poi.residentNpcs.length > 0) {
+            const label = document.createElement('div');
+            label.style.fontSize = '11px';
+            label.style.color = 'var(--text-muted)';
+            label.style.marginBottom = '4px';
+            label.textContent = 'Warga / NPC Menetap:';
+            blipResidentNpcs.appendChild(label);
+
+            poi.residentNpcs.forEach(npcId => {
+              const npc = allNpcs ? allNpcs[npcId] : null;
+              if (npc) {
+                const chip = document.createElement('div');
+                chip.className = 'resident-npc-chip';
+                chip.innerHTML = `
+                  <img src="${npc.avatar || '/assets/core/avatar.png'}" class="resident-npc-avatar" onerror="this.src='/assets/core/avatar.png'" />
+                  <div style="flex:1;">
+                    <div style="font-size:12px;font-weight:600;color:var(--text-primary);">${npc.name}</div>
+                    <div style="font-size:11px;color:var(--text-muted);">${npc.role}</div>
+                  </div>
+                  ${npc.type === 'romansa' ? '<span class="badge" style="background:rgba(244,114,182,0.15);color:#f472b6;font-size:10px;">Romansa</span>' : ''}
+                `;
+                blipResidentNpcs.appendChild(chip);
+              }
+            });
+          }
+        }
+
+        if (blipDetailCard) blipDetailCard.style.display = 'block';
+      }
+
+      // Region Tabs Event Listeners
+      document.querySelectorAll('.region-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const regionId = tab.getAttribute('data-region');
+          playTone(480, 'sine', 0.08, 0.2);
+          renderRegion(regionId);
+        });
+      });
+
+      // Fetch World POIs and Live Survival
       (async () => {
+        try {
+          const res = await fetch('/api/survival/world-pois');
+          const json = await res.json();
+          if (json.success) {
+            worldRegions = json.regions;
+            allNpcs = json.npcs;
+            renderRegion(currentRegionId);
+          }
+        } catch (e) {
+          console.warn('[SurvivalMap] POI Fetch error:', e.message);
+        }
+
         try {
           const res = await fetch('/api/realtime/survival');
           const json = await res.json();
           if (!json.success || !json.data?.length) return;
 
-          const survivor = json.data[0]; // Tampilkan data survivor pertama
+          const survivor = json.data[0];
           const stats = survivor.stats;
           const attrs = survivor.attributes;
           const world = survivor.world;
 
           // Update vital bars
-          const vitals = [
-            { selector: '.vital-fill[style*="#10b981"]', value: stats.hp, max: 100 },
-            { selector: '.vital-fill[style*="#f59e0b"]', value: stats.stamina, max: 100 },
-            { selector: '.vital-fill[style*="#34d399"]', value: stats.hunger, max: 100 },
-            { selector: '.vital-fill[style*="#3b82f6"]', value: stats.thirst, max: 100 },
-          ];
-
           const vitalMetas = document.querySelectorAll('.vital-meta span:last-child');
           const vitalFills = document.querySelectorAll('.vital-fill');
           const vitalData = [
@@ -755,7 +1000,7 @@
           if (radarHeader) {
             const nameDisplay = radarHeader.querySelector('[id="radarPlayerName"]') ||
               radarHeader.querySelector('span:first-child');
-            if (nameDisplay) nameDisplay.textContent = survivor.name;
+            if (nameDisplay && !worldRegions) nameDisplay.textContent = survivor.name;
           }
 
           // Update outpost NSF
@@ -765,7 +1010,7 @@
           // Update location display
           const locEls = document.querySelectorAll('[id="scanFoundText"]');
           locEls.forEach(el => {
-            el.textContent = `1 Survivor, ${world.location}, Hari ${world.day}`;
+            el.textContent = `1 Survivor Aktif, Wilayah: ${world.location}, Hari ${world.day}`;
           });
 
           // Update stat badge
@@ -780,48 +1025,48 @@
           }
 
           // Add live player blip to radar
-          const radarScope = document.getElementById('radarScope');
-          if (radarScope) {
-            const existingPlayerBlip = document.getElementById('playerBlip');
-            if (existingPlayerBlip) existingPlayerBlip.remove();
+          const existingPlayerBlip = document.getElementById('playerBlip');
+          if (existingPlayerBlip) existingPlayerBlip.remove();
 
-            const locationToPos = {
-              'hutan': { top: '55%', left: '45%' },
-              'kota': { top: '40%', left: '52%' },
-              'gurun': { top: '65%', left: '65%' },
-              'pantai': { top: '30%', left: '70%' },
-              'pegunungan': { top: '25%', left: '35%' },
-              'jalanan': { top: '50%', left: '50%' }
-            };
-            const pos = locationToPos[world.location] || { top: '50%', left: '50%' };
+          const locationToPos = {
+            'desa_sukamaju': { top: '50%', left: '48%' },
+            'kota_pratama': { top: '42%', left: '55%' },
+            'desa_khulkhas': { top: '65%', left: '60%' },
+            'istana_draken': { top: '30%', left: '35%' },
+            'hutan': { top: '55%', left: '45%' },
+            'kota': { top: '40%', left: '52%' },
+            'gurun': { top: '65%', left: '65%' },
+            'pantai': { top: '30%', left: '70%' },
+            'pegunungan': { top: '25%', left: '35%' },
+            'jalanan': { top: '50%', left: '50%' }
+          };
+          const pos = locationToPos[world.location] || { top: '50%', left: '50%' };
 
-            const playerBlip = document.createElement('div');
-            playerBlip.id = 'playerBlip';
-            playerBlip.className = 'blip';
-            playerBlip.style.cssText = `
-              top: ${pos.top}; left: ${pos.left};
-              background: var(--primary);
-              border: 2px solid rgba(244,114,182,0.8);
-              box-shadow: 0 0 12px var(--pink-glow), 0 0 4px rgba(244,114,182,0.6);
-              z-index: 10;
-            `;
-            playerBlip.setAttribute('data-name', `${survivor.name} (Kamu)`);
-            playerBlip.setAttribute('data-dist', `0m, Posisi Kamu`);
-            playerBlip.setAttribute('data-type', 'player');
-            playerBlip.innerHTML = '<i class="fa-solid fa-person" style="font-size:9px;"></i>';
+          const playerBlip = document.createElement('div');
+          playerBlip.id = 'playerBlip';
+          playerBlip.className = 'blip';
+          playerBlip.style.cssText = `
+            top: ${pos.top}; left: ${pos.left};
+            background: var(--primary);
+            border: 2px solid rgba(244,114,182,0.8);
+            box-shadow: 0 0 12px var(--pink-glow), 0 0 4px rgba(244,114,182,0.6);
+            z-index: 10;
+          `;
+          playerBlip.setAttribute('data-name', `${survivor.name} (Kamu)`);
+          playerBlip.setAttribute('data-dist', `0m, Posisi Kamu`);
+          playerBlip.setAttribute('data-type', 'player');
+          playerBlip.innerHTML = '<i class="fa-solid fa-person" style="font-size:9px;"></i>';
 
-            playerBlip.addEventListener('click', () => {
-              playTone(550, 'sine', 0.08, 0.2);
-              const detailCard = document.getElementById('blipDetailCard');
-              const detailTitle = document.getElementById('blipDetailTitle');
-              const detailDist = document.getElementById('blipDetailDist');
-              if (detailTitle) detailTitle.textContent = `${survivor.name} (Posisi Anda)`;
-              if (detailDist) detailDist.textContent = `Lv.${survivor.progress.level} · ⭐ ${survivor.starFragments.toLocaleString()} NSF · ${world.location}`;
-              if (detailCard) detailCard.style.display = 'block';
-            });
+          playerBlip.addEventListener('click', () => {
+            playTone(550, 'sine', 0.08, 0.2);
+            if (blipDetailTitle) blipDetailTitle.textContent = `${survivor.name} (Posisi Anda)`;
+            if (blipDetailDist) blipDetailDist.textContent = `Lv.${survivor.progress.level} · ⭐ ${survivor.starFragments.toLocaleString()} NSF · ${world.location}`;
+            if (blipDetailDesc) blipDetailDesc.textContent = 'Posisi petualang kamu saat ini di dunia Naura Wilds.';
+            if (blipResidentNpcs) blipResidentNpcs.innerHTML = '';
+            if (blipDetailCard) blipDetailCard.style.display = 'block';
+          });
 
-            radarScope.appendChild(playerBlip);
-          }
+          radarScope.appendChild(playerBlip);
 
         } catch(e) {
           console.warn('[SurvivalMap] Fetch error:', e.message);

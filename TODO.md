@@ -641,6 +641,35 @@ Berdasarkan analisis pasar bot dan platform developer Discord terkini (2025 - 20
 - [x] **[DEVOPS & WORKFLOW] Automated Git Commit & Push on Every Task Update (Zero-Lag GitHub Sync)**:
   - Otomasi sinkronisasi commit Git dan push langsung ke branch remote GitHub (`origin/main`) setiap kali tugas diperbarui dan lulus 5 gerbang QA Gate.
 
+---
+
+### 📜 Sprint 32: Unified Storyline Campaign, 4 Official Regions World Map, Tangible NPC Perks & Romance Family Engine (v2.3.0 Milestone Selesai)
+
+- [x] **[SURVIVAL & STORYLINE] Unified Main Campaign Objective Saga (4 Acts, 16 Chapters)**:
+  - Mengintegrasikan jalan cerita epik langsung ke dalam siklus petualangan utama Naura Wilds (`/survival story`), menghubungkan narasi dengan objektif nyata pemain (Desa Sukamaju, Kota Pratama, Desa Khul'Khas, hingga Istana Draken).
+  - Menampilkan Main Campaign Objective aktif langsung di profil petualang (`/survival info`).
+- [x] **[WORLD MAP EXPANSION] 4 Official World Regions & Sub-Zone POIs**:
+  - Merealisasikan 4 Wilayah Resmi di `src/survival/data/worldMapData.js`:
+    1. **Desa Sukamaju:** Distrik awal terpadu menyatukan pemukiman warga, ladang kebun Ningsih, pesisir dermaga nelayan Mang Ujang & Tari, hutan rimba satwa, dan gua pertambangan bijih. Mata uang: Naura Star Fragments (NSF).
+    2. **Kota Pratama:** Megapolitan modern pusat ekonomi, bursa kerja, RS Pratama, balai lelang, dan Bank Sentral Pratama untuk penukaran 500 NSF -> 500 NC (Naura Coin).
+    3. **Desa Khul'Khas:** Wilayah tersembunyi beriklim gurun pasir dan kuil mistik kuno yang menuntut penjelajahan mandiri (self-exploration).
+    4. **Istana Draken:** Benteng kegelapan multi-floor dungeon (Lantai 1-50+) dengan drop artefak Mythic dan penjaga gerbang Gargoyle Malakor.
+  - Subcommand `/survival town` dan `/survival travel` diperbarui untuk navigasi antar 4 wilayah dan inspeksi titik fasilitas POI.
+- [x] **[NPC ENGAGEMENT & PERKS] Tangible Friendship Perks & Gift Preference Scale**:
+  - Setiap NPC memiliki keuntungan nyata bagi gameplay: diskon belanja 10% s.d. 25% (Mbak Siti), pengurangan keausan alat -25% (Bagas), bonus hasil tambang +20% (Kang Deden & Jajang), peluang ikan langka +25% (Tari), efisiensi stamina -20% (Laras), bonus EXP +25% (Wulan & Bu Ratna), dan pengurangan sergapan bandit -70% (Mayor Lucy).
+  - Matriks preferensi hadiah 5-tingkat di `src/survival/data/npcGiftPreferences.js`: Disliked (-5 RP), Simple (+5 RP), Special (+10 RP), Loved (+15 RP), dan Mythic (+25 RP) dengan dialog reaksi personal.
+- [x] **[ROMANCE & FAMILY] Strict Monogamy Marriage System & Parenthood Event**:
+  - Membuka peluang pernikahan resmi di Level 4 untuk seluruh 10 NPC wanita romansa (`ningsih`, `bidan_sari`, `bu_ratna`, `tari`, `mbak_siti`, `laras`, `wulan`, `suster_maya`, `mbak_rini`, `shino_hoshino`).
+  - **Aturan Ketat Monogami:** Pemain hanya dapat menikahi 1 wanita dalam alur cerita hidupnya; percobaan poligami ditolak otomatis dengan pesan penjelasan.
+  - Rutinitas keluarga: sarapan buatan istri yang memulihkan HP/stamina setiap pagi (`claimDailySpouseBreakfast`) dan kelahiran momongan (`triggerParenthood`).
+- [x] **[VISUAL CG & ALBUM] Strict Access-Controlled Gallery (`/survival gallery`)**:
+  - Ilustrasi Visual CG untuk kencan romantis (`/survival date`), upacara pernikahan suci (`wedding_[npcId]`), dan kehangatan keluarga bersama anak (`family_[npcId]`).
+  - Proteksi privasi album: pemain hanya dapat mengakses gambar CG yang sudah pernah dibuka dan didapatkan secara sah.
+- [x] **[WEB DASHBOARD] Tactical Territory Radar 4-Region Switcher & Dynamic POI Inspector**:
+  - Web Dashboard (`survival-map.html`) kini dilengkapi navigasi tab 4 Wilayah Dunia, rendering blip fasilitas POI interaktif dari endpoint API `/api/survival/world-pois`, kartu detail POI dengan potret avatar warga menetap, serta widget Active Main Campaign Objective.
+- [x] **[TEST SUITE] Automated Unit Tests & 100% QA Gate Green**:
+  - Penambahan 23 unit test baru (`npcGiftPreferences.test.js`, `familyEngine.test.js`, `npcPerksEngine.test.js`, `worldMapPoi.test.js`), menjadikan total 364 automated tests lulus 100% hijau.
+
 
 ---
 

@@ -325,4 +325,38 @@ module.exports = {
     personality: "Manis, ramah, medok Jawa, menjual jamu penambah stamina.",
     image: "mbak_siti.png",
   },
+  kang_deden: {
+    id: "kang_deden",
+    name: "Kang Deden",
+    title: "Penambang Senior",
+    getLocation: () => "desa",
+    location: "desa",
+    type: "teman",
+    personality:
+      "Berpengalaman, bijak soal batuan mineral, selalu membawa palu godam andalannya.",
+    image: "penambang2.jpeg",
+  },
+  syeikh_malik: {
+    id: "syeikh_malik",
+    name: "Syeikh Malik",
+    title: "Tetua Nomad Khul'Khas",
+    getLocation: () => "khulkhas",
+    location: "khulkhas",
+    type: "teman",
+    personality:
+      "Misterius, tenang bagai malam gurun, penjaga sejarah Altar Astral Kuno.",
+    image: "ki_ageng_joyo.png",
+  },
+  gargoyle_malakor: {
+    id: "gargoyle_malakor",
+    name: "Gargoyle Malakor",
+    title: "Iblis Penjaga Gerbang Draken",
+    getLocation: () => "draken",
+    location: "draken",
+    type: "teman",
+    personality:
+      "Tegas, menggelegar, hanya menghormati petualang berjiwa baja yang berani menantang kegelapan.",
+    image: "gatot.jpeg",
+  },
 };
+

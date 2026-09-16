@@ -24,17 +24,17 @@ const MAX_OPTIONS = 25;
 
 const RELATIONSHIP_NAMES = ["Kenalan", "Teman", "Sahabat", "Pacar", "Menikah"];
 const RELATIONSHIP_EMOJI = [
-  "\uD83E\uDD1D",
-  "\uD83D\uDE0A",
-  "\u2728",
-  "\uD83D\uDC96",
-  "\uD83D\uDC8D",
+  "🤝",
+  "😊",
+  "✨",
+  "💖",
+  "💍",
 ];
 
 const CAPTIONS = [
   "Lihat deh, senyum kalian di foto ini manis banget! Naura ikut senang lihatnya.",
-  "Naura simpan foto ini rapi-rapi buat kamu. Kenangan kayak gini nggak boleh hilang, ya!",
-  "Ihh, kalian akrab banget di sini. Naura sampai iri sedikit, hehe.",
+  "Naura simpan foto ini rapi-rapi buat kamu. Kenangan kayak gini tidak boleh hilang, ya!",
+  "Ihh, kalian akrab banget di sini. Naura sampai terharu melihatnya.",
   "Momen ini spesial banget. Kapan pun kamu kangen, tinggal buka album ini lagi ya!",
   "Naura suka banget foto yang ini. Kelihatan hangat dan tulus.",
 ];
@@ -72,23 +72,25 @@ module.exports = {
     });
 
     const bonds = await UserNPC.findAll({ where: { userId: user.id } });
+    // ATURAN KETAT: Hanya tampilkan NPC yang sudah pernah ditemui (afeksi > 0 atau lastInteraction != null)
     const met = (bonds || [])
-      .filter((b) => npcs[b.npcId])
+      .filter((b) => npcs[b.npcId] && ((b.affection || 0) > 0 || b.lastInteraction))
       .sort((a, b) => (b.affection || 0) - (a.affection || 0));
 
     const state = survival.rpg_state || {};
     const album = Array.isArray(state.gallery_album) ? state.gallery_album : [];
+    const unlockedCgs = Array.isArray(state.unlocked_cgs) ? state.unlocked_cgs : [];
 
-    if (met.length === 0) {
+    if (met.length === 0 && unlockedCgs.length === 0) {
       const emptyPayload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFC0CB",
         authorName: "Album Kenangan Naura",
-        title: `${e("gallery", "\uD83D\uDCF8")} Albummu masih kosong`,
+        title: `${e("gallery", "📸")} Albummu masih kosong`,
         iconURL: client.user.displayAvatarURL(),
         description: [
           '> *"Belum ada satu pun foto di sini, lho. Yuk temui warga desa dan kota dulu!"*',
           "",
-          `Pakai ${"`/survival npc`"} untuk menyapa mereka. Begitu kamu berkenalan, fotonya otomatis masuk ke album ini.`,
+          `Pakai ${"`/survival npc`"} untuk menyapa mereka. Begitu kamu berkenalan, fotonya otomatis terbuka di album ini.`,
         ].join("\n"),
         footerText: ui.getFooter("survival"),
       });
@@ -100,39 +102,43 @@ module.exports = {
       return buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFC0CB",
         authorName: "Album Kenangan Naura",
-        title: `${e("gallery", "\uD83D\uDCF8")} Album ${user.displayName || user.username}`,
+        title: `${e("gallery", "📸")} Album ${user.displayName || user.username}`,
         iconURL: user.displayAvatarURL(),
         description: [
           `> *"${pick(CAPTIONS)}"*`,
           "",
-          `${e("naura", "\uD83D\uDC96")} Foto terkumpul: **${met.length}** \u2022 ditandai favorit: **${saved}**`,
-          "Pilih salah satu nama di bawah untuk membuka fotonya. Kamu bisa menandainya favorit atau mengunduh gambarnya.",
+          `${e("naura", "💖")} Foto warga terbuka: **${met.length}** • Favorit: **${saved}**`,
+          `🖼️ Visual Romance CG terbuka: **${unlockedCgs.length}** foto momen spesial`,
+          "",
+          "Pilih salah satu foto yang sudah kamu buka di bawah untuk melihat kenangannya!",
         ].join("\n"),
         footerText: ui.getFooter("survival"),
       });
     };
 
-    const selectRow = () =>
-      new ActionRowBuilder().addComponents(
+    const selectRow = () => {
+      const options = met.slice(0, MAX_OPTIONS).map((bond) => {
+        const npc = npcs[bond.npcId];
+        const mark = album.includes(bond.npcId) ? "⭐ " : "";
+        return {
+          label: `${mark}${npc.name}`.substring(0, 100),
+          value: bond.npcId,
+          description:
+            `${RELATIONSHIP_NAMES[Math.min(4, bond.relationshipLevel || 0)]} • afeksi ${bond.affection || 0} RP`.substring(
+              0,
+              100,
+            ),
+          emoji: "📸",
+        };
+      });
+
+      return new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId("gallery_pick")
-          .setPlaceholder("Buka foto bersama...")
-          .addOptions(
-            met.slice(0, MAX_OPTIONS).map((bond) => {
-              const npc = npcs[bond.npcId];
-              const mark = album.includes(bond.npcId) ? "\u2B50 " : "";
-              return {
-                label: `${mark}${npc.name}`.substring(0, 100),
-                value: bond.npcId,
-                description:
-                  `${RELATIONSHIP_NAMES[Math.min(4, bond.relationshipLevel || 0)]} \u2022 afeksi ${bond.affection || 0}`.substring(
-                    0,
-                    100,
-                  ),
-              };
-            }),
-          ),
+          .setPlaceholder("Buka foto kenangan yang sudah kamu dapatkan...")
+          .addOptions(options),
       );
+    };
 
     const indexPayload = buildIndex();
     const response = await interaction.reply({
@@ -160,19 +166,26 @@ module.exports = {
       }
 
       const isFavorite = album.includes(bond.npcId);
+      const hasWeddingCg = unlockedCgs.includes(`wedding_${bond.npcId}`);
+      const hasFamilyCg = unlockedCgs.includes(`family_${bond.npcId}`);
+
+      const extraCgStatus = [];
+      if (hasWeddingCg) extraCgStatus.push("💍 Foto Pernikahan: Terbuka");
+      if (hasFamilyCg) extraCgStatus.push("👶 Potret Keluarga: Terbuka");
 
       return buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFC0CB",
-        authorName: `${npc.name} \u2014 ${npc.title || "Warga"}`,
-        title: `${isFavorite ? "\u2B50" : e("gallery", "\uD83D\uDCF8")} Kenangan bersama ${npc.name}`,
+        authorName: `${npc.name} - ${npc.title || "Warga"}`,
+        title: `${isFavorite ? "⭐" : e("gallery", "📸")} Kenangan bersama ${npc.name}`,
         iconURL: user.displayAvatarURL(),
         description: [
           `> *"${pick(CAPTIONS)}"*`,
           "",
           `**Hubungan:** ${relationshipLabel(bond.relationshipLevel)}`,
-          `**Afeksi:** ${bond.affection || 0}`,
+          `**Afeksi:** ${bond.affection || 0} RP`,
           `**Terakhir bertemu:** ${formatDate(bond.lastInteraction)}`,
-          npc.location ? `**Biasa ditemui di:** ${npc.location}` : "",
+          npc.location ? `**Wilayah:** ${npc.location}` : "",
+          extraCgStatus.length > 0 ? `\n**Momen Spesial:**\n${extraCgStatus.join("\n")}` : "",
         ]
           .filter(Boolean)
           .join("\n"),
@@ -211,7 +224,12 @@ module.exports = {
 
       if (i.customId === "gallery_pick") {
         opened = met.find((b) => b.npcId === i.values[0]) || null;
-        if (!opened) return;
+        if (!opened) {
+          return i.followUp({
+            content: "🔒 Foto ini belum berhasil kamu dapatkan di petualanganmu.",
+            flags: MessageFlags.Ephemeral,
+          });
+        }
         const payload = photoPayload(opened);
         return i.editReply({
           ...payload,
@@ -237,7 +255,6 @@ module.exports = {
           gallery_album: album,
         };
         survival.changed("rpg_state", true);
-        // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
         await survival.save({ fields: ["rpg_state"] });
 
         const payload = photoPayload(opened);
@@ -252,13 +269,12 @@ module.exports = {
         const portrait = findPortrait(npc);
         if (!portrait) {
           return i.followUp({
-            content: `${e("cry", "\uD83D\uDE22")} Aduh, berkas fotonya nggak ketemu. Naura minta maaf, ya.`,
+            content: `${e("cry", "😢")} Aduh, berkas fotonya tidak ketemu. Naura minta maaf, ya.`,
             flags: MessageFlags.Ephemeral,
           });
         }
-        // Dikirim sebagai lampiran biasa supaya bisa disimpan langsung ke perangkat.
         return i.followUp({
-          content: `${e("cheers", "\uD83E\uDD42")} Ini fotomu bersama **${npc.name}**. Simpan baik-baik ya!`,
+          content: `${e("cheers", "🥂")} Ini fotomu bersama **${npc.name}**. Simpan baik-baik ya!`,
           files: [
             new AttachmentBuilder(portrait, {
               name: `naura-${npc.id}${path.extname(portrait)}`,
@@ -271,7 +287,6 @@ module.exports = {
 
     collector.on("end", async () => {
       const closing = buildIndex();
-      // Pesan Components V2 tidak boleh dikosongkan komponennya.
       await interaction.editReply(closing).catch(() => {});
     });
   },

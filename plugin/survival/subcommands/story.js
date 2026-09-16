@@ -7,13 +7,14 @@ const {
   AttachmentBuilder,
   MessageFlags,
 } = require("discord.js");
-
+const path = require("path");
 const fs = require("fs");
 
 const UserSurvival = require("../../../src/models/UserSurvival");
 const StoryProgress = require("../../../src/models/StoryProgress");
 const cacheManager = require("../../../src/managers/cacheManager");
 const storyData = require("../../../src/survival/data/storyData");
+const npcs = require("../../../src/survival/data/npcs");
 const ui = require("../../../src/config/ui");
 const leveling = require("../../../src/survival/engines/survivalLeveling");
 const currency = require("../../../src/survival/engines/currency");
@@ -26,6 +27,7 @@ const {
 } = require("../../../src/survival/engines/inventoryHelper");
 
 const COLLECTOR_MS = 300000;
+const CHARACTER_DIR = path.join(process.cwd(), "assets", "survival", "characters");
 
 function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
@@ -33,6 +35,20 @@ function e(name, fallback) {
 
 function fill(text, username) {
   return String(text || "").replace(/{player}/g, username);
+}
+
+function findNpcPortrait(npcId) {
+  if (!npcId) return null;
+  const npc = npcs[npcId];
+  const candidates = [];
+  if (npc?.image) candidates.push(npc.image);
+  candidates.push(`${npcId}.png`, `${npcId}.jpeg`, `${npcId}.jpg`);
+
+  for (const name of candidates) {
+    const full = path.join(CHARACTER_DIR, name);
+    if (fs.existsSync(full)) return { full, name };
+  }
+  return null;
 }
 
 module.exports = {
@@ -48,8 +64,13 @@ module.exports = {
     });
 
     const currentArcId = storyProgress.currentArc;
-    if (currentArcId === -1)
-      return ui.sendError(interaction, "err_sys_60", true);
+    if (currentArcId === -1) {
+      return ui.sendError(
+        interaction,
+        "✨ Selamat! Kamu telah menuntaskan seluruh 4-Act Saga Naura Wilds: Resonansi Inti Astral!",
+        true,
+      );
+    }
 
     const arc = storyData.find((a) => a.arc === currentArcId);
     if (!arc) return ui.sendError(interaction, "err_sys_61", true);
@@ -91,11 +112,18 @@ module.exports = {
         );
       }
 
+      // NPC Avatar icon di pojok bila berbicara dengan NPC tertentu
+      const iconURL = user.displayAvatarURL();
+      const speakerPortrait = findNpcPortrait(chapter.speakerNpcId);
+      if (speakerPortrait && line.speaker !== user.username && line.speaker !== "{player}") {
+        // Bisa disematkan bila dibutuhkan
+      }
+
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        authorName: "Naura Story",
-        title: `${e("read", "\uD83D\uDCD6")} Arc ${arc.arc}: ${arc.arcName} \u2014 Bab ${chapter.chapter}`,
-        iconURL: user.displayAvatarURL(),
+        authorName: `Naura Wilds Saga - Arc ${arc.arc}: ${arc.arcName}`,
+        title: `${e("read", "📖")} Bab ${chapter.chapter}: ${chapter.title}`,
+        iconURL,
         expression: "info",
         description: [
           `*${fill(chapter.narrative, user.username)}*`,
@@ -155,8 +183,9 @@ module.exports = {
         return i.editReply(buildFrame()).catch(() => {});
       }
 
-      if (i.customId !== "story_finish" && i.customId !== "story_challenge")
+      if (i.customId !== "story_finish" && i.customId !== "story_challenge") {
         return;
+      }
 
       if (i.customId === "story_challenge") {
         const challenge = chapter.challenge || {};
@@ -168,8 +197,6 @@ module.exports = {
           ]);
           passed = taken.ok;
         } else if (challenge.type === "coin") {
-          // Kode lama membaca `profile.wallet` yang tidak ada di model,
-          // sehingga tantangan berbayar selalu dianggap gagal.
           const paid = await currency.charge(
             currency.COIN,
             { survival, profile },
@@ -182,7 +209,7 @@ module.exports = {
           const failPayload = buildContainerV2({
             accentColorHex: ui.getColor("error") || "#ef4444",
             authorName: "Naura Story",
-            title: `${e("shy", "\uD83D\uDE45")} Syaratnya belum terpenuhi`,
+            title: `${e("shy", "🙅")} Syaratnya belum terpenuhi`,
             iconURL: user.displayAvatarURL(),
             expression: "fail",
             description: fill(
@@ -210,7 +237,7 @@ module.exports = {
       if (reward.exp) {
         await leveling.addPlayerXP(user.id, reward.exp);
         rewardLines.push(
-          `> ${e("impressed", "\uD83C\uDF1F")} **+${reward.exp} XP**`,
+          `> ${e("impressed", "🌟")} **+${reward.exp} XP**`,
         );
       }
 
@@ -225,26 +252,52 @@ module.exports = {
           },
         ]);
         rewardLines.push(
-          `> ${e("cheers", "\uD83D\uDCE6")} **${amount}x ${reward.item}**`,
+          `> ${e("cheers", "📦")} **${amount}x ${reward.item}**`,
+        );
+      }
+
+      if (reward.starFragments) {
+        await cacheManager.incrementUserSurvival(user.id, {
+          starFragments: reward.starFragments,
+        });
+        rewardLines.push(
+          `> ⭐ **+${reward.starFragments.toLocaleString("id-ID")} Naura Star Fragments**`,
+        );
+      }
+
+      if (reward.nauraCoins) {
+        await cacheManager.incrementUserProfile(user.id, {
+          economy_wallet: reward.nauraCoins,
+        });
+        rewardLines.push(
+          `> 🪙 **+${reward.nauraCoins.toLocaleString("id-ID")} Naura Coins**`,
+        );
+      }
+
+      if (reward.coupons) {
+        await cacheManager.incrementUserSurvival(user.id, {
+          coupons: reward.coupons,
+        });
+        rewardLines.push(
+          `> 🎟️ **+${reward.coupons} Naura Coupons**`,
         );
       }
 
       storyProgress.currentArc = chapter.nextArc;
       storyProgress.currentChapter = chapter.nextChapter;
-      // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
       await storyProgress.save({ fields: ["currentArc", "currentChapter"] });
 
       const successPayload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#22c55e",
         authorName: "Naura Story",
-        title: `${e("cheers", "\uD83C\uDF89")} Babnya selesai!`,
+        title: `${e("cheers", "🎉")} Bab Selesai!`,
         iconURL: user.displayAvatarURL(),
         expression: "achievement",
         description: [
           `Kamu menuntaskan **${chapter.title}**. Naura ikut terharu membacanya bareng kamu.`,
           "",
           rewardLines.length > 0
-            ? "**Hadiahmu**"
+            ? "**Hadiahmu:**"
             : "Bab ini belum berhadiah, tapi ceritanya makin seru!",
           ...rewardLines,
           "",
@@ -253,8 +306,6 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      // Pesan Components V2 tidak boleh dikosongkan komponennya, jadi
-      // kartunya diganti utuh tanpa baris tombol.
       await i.editReply({ ...successPayload, embeds: [] }).catch(() => {});
     });
   },

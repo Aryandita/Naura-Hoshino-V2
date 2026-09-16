@@ -206,6 +206,9 @@ module.exports = {
         fields: ["affection", "relationshipLevel", "lastInteraction"],
       });
 
+      const familyEngine = require("../../../src/survival/engines/familyEngine");
+      await familyEngine.unlockCg(survival, `date_${selectedNPC.id}`);
+
       const portrait = findPortrait(selectedNPC);
       const files = [];
       let bannerAttachmentName;
@@ -228,17 +231,18 @@ module.exports = {
         iconURL: user.displayAvatarURL(),
         expression: "love",
         description: [
-          `Kamu naik bianglala bareng **${selectedNPC.name}**, dan senyumnya nggak hilang sepanjang jalan. Naura ikut senang lihat kalian!`,
+          `Kamu menikmati momen indah bareng **${selectedNPC.name}**, dan senyumnya tidak hilang sepanjang jalan. Naura ikut senang melihat kalian!`,
           "",
           `> ${e("impressed", "\uD83D\uDC97")} Afeksi bertambah **+${BONUS_AFFECTION}** menjadi **${npcData.affection}/100**`,
           `> ${e("read", "\uD83D\uDCD6")} Status hubungan: **${levelName}**`,
           "",
-          "Fotonya Naura simpan di galeri, biar bisa kamu lihat kapan saja lewat `/survival gallery`.",
+          `📸 **Visual Dating CG Terbuka!** Foto kenangan kencan ini resmi tersimpan di album \`/survival gallery\`!`,
         ].join("\n"),
         bannerAttachmentName,
         files,
         footerText: ui.getFooter("survival"),
       });
+
 
       handled = true;
       await i.editReply({ ...successPayload, embeds: [] }).catch(() => {});
