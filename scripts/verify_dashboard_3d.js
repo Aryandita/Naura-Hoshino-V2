@@ -104,8 +104,9 @@ async function main() {
       }
     };
 
-    console.log("Navigating to http://localhost:4173/ ...");
-    send("Page.navigate", { url: "http://localhost:4173/" });
+    const targetUrl = process.env.DASHBOARD_URL || "http://localhost:19130/";
+    console.log(`Navigating to ${targetUrl} ...`);
+    send("Page.navigate", { url: targetUrl });
 
     console.log("Menunggu model 3D dimuat di dashboard...");
     let isLoaded = false;

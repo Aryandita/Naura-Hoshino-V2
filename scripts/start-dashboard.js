@@ -49,7 +49,8 @@ async function main() {
     players: new Map(),
   };
 
-  initDashboard(mockClient, mockPoru);
+  mockClient.poru = mockPoru;
+  initDashboard(mockClient);
 
   const port = env.DASHBOARD_PORT || 3000;
   console.log(`\n✨ ===================================================`);

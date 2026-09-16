@@ -76,7 +76,9 @@ export function initHeroViewer(targetCanvas = null, customOptions = {}) {
     });
 
     viewerInstance.init();
-    window.__heroViewer = viewerInstance;
+    if (typeof window !== 'undefined') {
+        window.__heroViewer = viewerInstance;
+    }
 
     // --- 1. Binding Pergantian Model (GLB vs VRM) ---
     const updateModelButtonsState = (isVrmActive) => {
