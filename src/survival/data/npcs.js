@@ -347,6 +347,161 @@ module.exports = {
       "Misterius, tenang bagai malam gurun, penjaga sejarah Altar Astral Kuno.",
     image: "ki_ageng_joyo.png",
   },
+  elsa_frost: {
+    id: "elsa_frost",
+    name: "Elsa Frost",
+    title: "Pawang Kristal Es",
+    location: "khulkhas",
+    type: "romansa",
+    personality:
+      "Anggun, tenang, memiliki mata sebiru gletser purba dan ahli menenun kristal es abadi.",
+    image: "ningsih.jpeg",
+  },
+  boris_es: {
+    id: "boris_es",
+    name: "Boris",
+    title: "Pemburu Beruang Salju",
+    location: "khulkhas",
+    type: "teman",
+    personality:
+      "Berbadan tegap, berjaket bulu tebal, tangguh menghadapi badai salju dan ahli melacak jejak hewan kutub.",
+    image: "penambang2.jpeg",
+  },
+  fatimah_salju: {
+    id: "fatimah_salju",
+    name: "Fatimah",
+    title: "Penyeduh Teh Hangat Gletser",
+    location: "khulkhas",
+    type: "romansa",
+    personality:
+      "Ramah, murah senyum, putri Syeikh Malik yang mengelola kedai perapian hangat bagi para pengelana.",
+    image: "laras.jpeg",
+  },
+  pandai_es_tarek: {
+    id: "pandai_es_tarek",
+    name: "Tarek",
+    title: "Pandai Besi Kristal Dingin",
+    location: "khulkhas",
+    type: "teman",
+    personality:
+      "Fokus, pendiam, memiliki teknik rahasia menempa senjata dari bijih es beku tanpa melelehkannya.",
+    image: "bagas.jpeg",
+  },
+  lama_norbu: {
+    id: "lama_norbu",
+    name: "Lama Norbu",
+    title: "Biksu Puncak Es Abadi",
+    location: "khulkhas",
+    type: "teman",
+    personality:
+      "Bijaksana, berbicara perlahan penuh perenungan, memahami siklus badai es dan aliran energi gunung.",
+    image: "ki_prawiro.jpeg",
+  },
+
+  // === HUTAN DHA MHAI (Barat Laut) ===
+  dara_rimba: {
+    id: "dara_rimba",
+    name: "Dara Rimba",
+    title: "Penjaga Hutan Purba",
+    location: "dha_mhai",
+    type: "romansa",
+    personality:
+      "Lincah, waspada, menyatu dengan alam kanopi dan mahir membidik sasaran dengan busur akar kayu.",
+    image: "tari.jpeg",
+  },
+  pak_wojo: {
+    id: "pak_wojo",
+    name: "Pak Wojo",
+    title: "Pemburu Rimba Veteran",
+    location: "dha_mhai",
+    type: "teman",
+    personality:
+      "Berpengalaman puluhan tahun, mengenali setiap suara dahan ranting dan bau jejak monster di Hutan Dha Mhai.",
+    image: "mang_ujang.jpeg",
+  },
+  kakek_danu: {
+    id: "kakek_danu",
+    name: "Kakek Danu",
+    title: "Penyadap Getah Damar",
+    location: "dha_mhai",
+    type: "teman",
+    personality:
+      "Pekerja ulet yang sabar, hafal lokasi pohon-pohon tertua penghasil resin damar purba bernilai tinggi.",
+    image: "ki_ageng_joyo.png",
+  },
+  embun_puri: {
+    id: "embun_puri",
+    name: "Embun Puri",
+    title: "Alkimis Herbal Hutan",
+    location: "dha_mhai",
+    type: "romansa",
+    personality:
+      "Lembut, penuh rasa ingin tahu, menghabiskan hari meneliti jamur spora ungu dan khasiat tanaman langka.",
+    image: "bidan_sari.jpeg",
+  },
+  raden_bram: {
+    id: "raden_bram",
+    name: "Raden Bram",
+    title: "Ksatria Pengelana Rimba",
+    location: "dha_mhai",
+    type: "teman",
+    personality:
+      "Ksatria bertapa yang melindungi peziarah dari ancaman monster buas di jalur hutan barat laut.",
+    image: "gatot.jpeg",
+  },
+
+  // === DESA LAUH THAN (Pesisir Selatan & Dermaga Bawah Laut) ===
+  kapten_reza: {
+    id: "kapten_reza",
+    name: "Kapten Reza",
+    title: "Nahkoda Dermaga Lauh Than",
+    location: "lauh_than",
+    type: "teman",
+    personality:
+      "Tegas, berwibawa, navigator ulung yang memimpin armada kapal layar dan perintis ekspedisi bawah laut.",
+    image: "mang_ujang.jpeg",
+  },
+  nyai_bahari: {
+    id: "nyai_bahari",
+    name: "Nyai Bahari",
+    title: "Tetua Adat Laut Selatan",
+    location: "lauh_than",
+    type: "romansa",
+    personality:
+      "Anggun berkharisma, penjaga kearifan maritim, ahli membuat jimat kerang penolak amukan ombak samudra.",
+    image: "bu_ratna.jpeg",
+  },
+  doro_penyelam: {
+    id: "doro_penyelam",
+    name: "Doro",
+    title: "Penyelam Palung Bebas",
+    location: "lauh_than",
+    type: "teman",
+    personality:
+      "Pemberani, bernapas panjang di dalam air, suka menyelam ke gua karang mencari mutiara palung hitam.",
+    image: "budi.jpeg",
+  },
+  mbok_darmi: {
+    id: "mbok_darmi",
+    name: "Mbok Darmi",
+    title: "Penjual Ikan Bakar Rempah",
+    location: "lauh_than",
+    type: "teman",
+    personality:
+      "Ceria, suka mengobrol dengan nelayan, mengolah hasil tangkapan laut menjadi kuliner pemulih tenaga terlezat.",
+    image: "mbak_siti.png",
+  },
+  laksamana_bayu: {
+    id: "laksamana_bayu",
+    name: "Laksamana Bayu",
+    title: "Punggawa Patroli Samudra",
+    location: "lauh_than",
+    type: "teman",
+    personality:
+      "Disiplin, siaga menjaga dermaga dari serangan monster laut dalam dan menjaga ketertiban perdagangan.",
+    image: "bripka_agus.jpeg",
+  },
+
   gargoyle_malakor: {
     id: "gargoyle_malakor",
     name: "Gargoyle Malakor",

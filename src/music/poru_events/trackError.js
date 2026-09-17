@@ -3,6 +3,8 @@
 const { logger } = require("../../managers/logger");
 const ui = require("../../config/ui");
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
+const { cleanSongTitle } = require("../../canvas/artworkResolver");
+const { lavalinkClusterManager } = require("../../managers/lavalinkClusterManager");
 
 module.exports = {
   async execute(manager, player, track, error) {
@@ -17,6 +19,11 @@ module.exports = {
       `\x1b[41m\x1b[37m ⚠️ TRACK ERROR \x1b[0m Gagal memutar [${trackTitle}]: ${errorMessage}`,
     );
 
+    // Catat kegagalan ke circuit breaker node Lavalink aktif
+    if (player?.node?.name && lavalinkClusterManager?.recordFailure) {
+      lavalinkClusterManager.recordFailure(player.node.name);
+    }
+
     if (!player || !player.textChannel) return;
 
     // Coba pemulihan otomatis via SoundCloud bila lagu gagal diputar (misal limitasi YouTube)
@@ -25,37 +32,62 @@ module.exports = {
       player.isRecoveringTrack = true;
 
       try {
-        const queryTerm = track.info?.author
-          ? `${track.info.author} ${track.info.title}`
-          : track.info?.title;
+        const rawTitle = track.info?.title || "";
+        const rawAuthor = String(track.info?.author || "")
+          .replace(/ - Topic$/i, "")
+          .replace(/VEVO$/i, "")
+          .trim();
+        const cleanedTitle = cleanSongTitle(rawTitle);
 
-        if (queryTerm) {
-          logger.info(
-            `[trackError] Mengupayakan pemulihan otomatis via SoundCloud untuk [${trackTitle}]...`,
-          );
+        // Susun query pencarian bersih agar SoundCloud menemukan lagunya
+        let queryTerm = cleanedTitle;
+        if (
+          rawAuthor &&
+          !cleanedTitle.toLowerCase().includes(rawAuthor.toLowerCase())
+        ) {
+          queryTerm = `${rawAuthor} ${cleanedTitle}`.trim();
+        }
+        if (!queryTerm) {
+          queryTerm = rawTitle;
+        }
 
-          const fallbackRes = await manager.poru.resolve({
-            query: `scsearch:${queryTerm}`,
+        logger.info(
+          `[trackError] Mengupayakan pemulihan otomatis via SoundCloud untuk [${trackTitle}] (query: "${queryTerm}")...`,
+        );
+
+        let fallbackRes = await manager.poru.resolve({
+          query: `scsearch:${queryTerm}`,
+          requester: track.info?.requester || manager.client.user,
+        });
+
+        // Fallback kedua: coba cari dengan judul aslinya jika query bersih tidak membuahkan hasil
+        if (
+          (!fallbackRes || !fallbackRes.tracks || fallbackRes.tracks.length === 0) &&
+          queryTerm !== rawTitle
+        ) {
+          fallbackRes = await manager.poru.resolve({
+            query: `scsearch:${rawTitle}`,
             requester: track.info?.requester || manager.client.user,
           });
+        }
 
-          if (
-            fallbackRes &&
-            Array.isArray(fallbackRes.tracks) &&
-            fallbackRes.tracks.length > 0
-          ) {
-            const fallbackTrack = fallbackRes.tracks[0];
-            fallbackTrack._fallbackAttempted = true;
-            fallbackTrack.info.originalSource = "soundcloud";
-            fallbackTrack.info.requester =
-              track.info?.requester || manager.client.user;
+        if (
+          fallbackRes &&
+          Array.isArray(fallbackRes.tracks) &&
+          fallbackRes.tracks.length > 0
+        ) {
+          const fallbackTrack = fallbackRes.tracks[0];
+          fallbackTrack._fallbackAttempted = true;
+          fallbackTrack.info.originalSource = "soundcloud";
+          fallbackTrack.info.requester =
+            track.info?.requester || manager.client.user;
 
-            player.queue.unshift(fallbackTrack);
-            player.isRecoveringTrack = false;
+          player.queue.unshift(fallbackTrack);
+          player.isRecoveringTrack = false;
 
-            if (!player.isPlaying) {
-              await player.play();
-            }
+          if (!player.isPlaying) {
+            await player.play();
+          }
 
             const channel = manager.client.channels.cache.get(
               player.textChannel,
@@ -76,7 +108,6 @@ module.exports = {
             }
             return;
           }
-        }
       } catch (recoveryErr) {
         logger.warn(
           `[trackError] Pemulihan otomatis SoundCloud gagal: ${recoveryErr.message}`,

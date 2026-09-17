@@ -55,6 +55,8 @@ export default defineConfig({
             survivalMap: resolve(__dirname, "src/pages/survival-map.html"),
             soundboard: resolve(__dirname, "src/pages/soundboard.html"),
             jam: resolve(__dirname, "src/pages/jam.html"),
+            lounge: resolve(__dirname, "src/pages/lounge.html"),
+            warRoom: resolve(__dirname, "src/pages/war-room.html"),
           },
     },
     // Chunk terpisah agar model Three.js tidak disertakan di halaman yang tidak perlu

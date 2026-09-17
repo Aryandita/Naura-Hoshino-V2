@@ -101,18 +101,26 @@ function canManageGuild(user, guildId) {
  * Browser tidak pernah dipercaya.
  */
 function requireGuildManager(req, res, next) {
+  const guildId =
+    req.params?.guildId || req.body?.guildId || req.query?.guildId;
+  if (!guildId) {
+    return res
+      .status(400)
+      .json({ success: false, error: "Guild ID belum dikirim." });
+  }
+
+  // Dukungan Hybrid Mode: Sandbox / Demo Server dapat diakses tanpa login
+  if (guildId === "sandbox" || guildId === "demo") {
+    req.guildId = "sandbox";
+    req.isSandbox = true;
+    return next();
+  }
+
   if (!isLoggedIn(req)) {
     return res.status(401).json({
       success: false,
       error: "Kamu belum login ya. Masuk dulu lewat Discord.",
     });
-  }
-
-  const guildId = req.body?.guildId || req.query?.guildId;
-  if (!guildId) {
-    return res
-      .status(400)
-      .json({ success: false, error: "Guild ID belum dikirim." });
   }
 
   if (!canManageGuild(req.user, guildId)) {
@@ -123,6 +131,7 @@ function requireGuildManager(req, res, next) {
   }
 
   req.guildId = String(guildId);
+  req.isSandbox = false;
   return next();
 }
 

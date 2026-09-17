@@ -100,6 +100,8 @@
         width: 100%;
         height: 100%;
         user-select: none;
+        transform-origin: center center;
+        will-change: transform;
       }
 
       /* SVG Nodes & Paths */
@@ -324,6 +326,25 @@
         font-size: 11px;
       }
 
+      .item-badge-chip {
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid var(--border-subtle);
+        padding: 5px 10px;
+        border-radius: var(--r-md);
+        font-size: 11px;
+        color: var(--text-secondary);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all var(--t-fast);
+      }
+      .item-badge-chip:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--border-medium);
+        color: var(--text-primary);
+        transform: translateY(-1px);
+      }
+
       .warp-action-box {
         padding: 18px 20px;
         background: rgba(255, 255, 255, 0.02);
@@ -344,35 +365,158 @@
         transition: all var(--t-fast);
       }
 
-      /* Warp Flash Animation */
-      .warp-flash {
-        position: fixed;
-        inset: 0;
-        background: radial-gradient(circle, rgba(34, 211, 238, 0.6) 0%, rgba(244, 114, 182, 0.4) 50%, transparent 100%);
-        opacity: 0;
-        pointer-events: none;
-        z-index: 999;
-        transition: opacity 0.35s ease;
+
+      /* ─── Mobile Intel Bottom Sheet ─── */
+      .intel-close-btn {
+        display: none;
       }
-      .warp-flash.active {
-        opacity: 1;
+
+      @media (max-width: 1200px) {
+        .intel-card {
+          position: fixed !important;
+          bottom: 60px !important; /* above mobile-nav */
+          left: 0 !important;
+          right: 0 !important;
+          z-index: 55 !important;
+          border-radius: var(--r-2xl) var(--r-2xl) 0 0 !important;
+          max-height: 48vh !important; /* Half sheet so map is always visible on top half! */
+          overflow-y: auto !important;
+          transform: translateY(110%);
+          transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          border-top: 1px solid var(--border-primary) !important;
+          box-shadow: 0 -8px 32px rgba(0,0,0,0.85) !important;
+          background: rgba(12, 16, 28, 0.96) !important;
+          backdrop-filter: blur(20px) !important;
+        }
+        .intel-card.sheet-open {
+          transform: translateY(0) !important;
+        }
+        /* Drag handle visual */
+        .intel-card::before {
+          content: '';
+          display: block;
+          width: 40px;
+          height: 4px;
+          background: var(--border-medium);
+          border-radius: 2px;
+          margin: 10px auto 0;
+        }
+        /* Sheet dim overlay behind intel card: subtle and no heavy blur so map stays visible! */
+        .intel-sheet-overlay {
+          display: block !important;
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.25);
+          backdrop-filter: none !important;
+          z-index: 54;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.3s ease;
+        }
+        .intel-sheet-overlay.active {
+          opacity: 1;
+          pointer-events: auto;
+        }
+        /* Map stays full-width in single col */
+        .map-viewport-card {
+          position: relative;
+          z-index: 1;
+        }
+
+        .intel-close-btn {
+          display: flex;
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          width: 32px;
+          height: 32px;
+          border-radius: var(--r-full);
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid var(--border-medium);
+          color: var(--text-secondary);
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          font-size: 14px;
+          transition: all var(--t-fast);
+          z-index: 2;
+        }
+        .intel-close-btn:hover {
+          background: rgba(239, 68, 68, 0.2);
+          border-color: rgba(239, 68, 68, 0.4);
+          color: #f87171;
+        }
+      }
+
+      /* Intel Toggle Button (mobile only) */
+      .intel-toggle-btn {
+        display: none;
+      }
+      @media (max-width: 1200px) {
+        .intel-toggle-btn {
+          display: flex !important;
+          position: fixed !important;
+          bottom: 74px !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          z-index: 56 !important;
+          gap: 8px;
+          align-items: center;
+          padding: 10px 20px;
+          border-radius: var(--r-full);
+          background: rgba(10, 14, 26, 0.92);
+          backdrop-filter: blur(12px);
+          border: 1px solid var(--border-primary);
+          color: var(--primary);
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.6), 0 0 20px rgba(244,114,182,0.2);
+          transition: all var(--t-fast);
+          white-space: nowrap;
+        }
+        .intel-toggle-btn:hover {
+          background: var(--primary-dim);
+          box-shadow: 0 4px 24px rgba(244,114,182,0.3);
+        }
+        /* Hide toggle button completely when sheet is open to prevent overlapping */
+        .intel-toggle-btn.sheet-open {
+          display: none !important;
+        }
+      }
+
+      /* Item Pagination Bar compact style */
+      #itemPaginationBar {
+        border-top: 1px solid var(--border-subtle);
+        padding-top: 10px;
+        margin-top: 8px;
       }
     </style>
   </head>
+
   <body>
-    
-    <div class="warp-flash" id="warpFlash"></div>
-    
+    <!-- Warp Flash Overlay -->
+    <div class="warp-flash" id="warpFlash" style="position:fixed;inset:0;background:radial-gradient(circle, rgba(34,211,238,0.6) 0%, rgba(244,114,182,0.4) 50%, transparent 100%);opacity:0;pointer-events:none;z-index:999;transition:opacity 0.35s ease;"></div>
+    <!-- Mobile Intel Sheet Overlay -->
+    <div class="intel-sheet-overlay" id="intelSheetOverlay" style="display:none;"></div>
+    <!-- Mobile Intel Toggle Button -->
+    <button class="intel-toggle-btn" id="btnIntelToggle" aria-label="Lihat Info Wilayah">
+      <i class="fa-solid fa-map-location-dot"></i> Info Wilayah
+    </button>
+
     <div class="app-shell">
       <!-- Mobile Sidebar Overlay -->
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
       <aside class="sidebar " id="sidebar">
         <div class="sidebar-brand">
           <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
-          <div class="sidebar-brand-text"><div class="sidebar-brand-name">Naura Hoshino</div>
+          <div class="sidebar-brand-text">
+            <div class="sidebar-brand-name">Naura Hoshino</div>
+            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
+          </div>
           <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
             <i class="fa-solid fa-xmark"></i>
-          </button><div class="sidebar-brand-sub">v2.3.0 · Online</div></div>
+          </button>
         </div>
                 <!-- Navigation -->
                 <!-- Navigation -->
@@ -533,7 +677,9 @@
                 <div class="filter-pills" id="filterContainer">
                   <button class="filter-pill active" data-filter="all"><i class="fa-solid fa-globe"></i> Semua Wilayah</button>
                   <button class="filter-pill" data-filter="desa_sukamaju"><i class="fa-solid fa-house-chimney-window" style="color:#10b981;"></i> Desa Sukamaju</button>
+                  <button class="filter-pill" data-filter="hutan_dha_mhai"><i class="fa-solid fa-tree" style="color:#8b5cf6;"></i> Hutan Dha Mhai</button>
                   <button class="filter-pill" data-filter="kota_pratama"><i class="fa-solid fa-city" style="color:#38bdf8;"></i> Kota Pratama</button>
+                  <button class="filter-pill" data-filter="desa_lauh_than"><i class="fa-solid fa-anchor" style="color:#0ea5e9;"></i> Desa Lauh Than</button>
                   <button class="filter-pill" data-filter="desa_khulkhas"><i class="fa-solid fa-snowflake" style="color:#38bdf8;"></i> Desa Khul'Khas (Salju)</button>
                   <button class="filter-pill" data-filter="istana_draken"><i class="fa-solid fa-dungeon" style="color:#ef4444;"></i> Istana Draken (Abyss)</button>
                 </div>
@@ -553,7 +699,7 @@
               <div class="map-canvas-wrap" id="mapWrap">
                 <svg class="world-svg" viewBox="0 0 960 600" id="worldSvg">
                   <defs>
-                    <!-- Linear and Radial Gradients for 4 Biomes -->
+                    <!-- Linear and Radial Gradients for 6 Biomes -->
                     <radialGradient id="sukamajuGlow" cx="50%" cy="50%" r="50%">
                       <stop offset="0%" stop-color="#10b981" stop-opacity="0.4" />
                       <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
@@ -570,6 +716,14 @@
                       <stop offset="0%" stop-color="#ef4444" stop-opacity="0.55" />
                       <stop offset="100%" stop-color="#ef4444" stop-opacity="0" />
                     </radialGradient>
+                    <radialGradient id="dhaMhaiGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.45" />
+                      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0" />
+                    </radialGradient>
+                    <radialGradient id="lauhThanGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.45" />
+                      <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0" />
+                    </radialGradient>
                   </defs>
 
                   <!-- High-Fantasy Continental Map Artwork Background -->
@@ -580,6 +734,8 @@
                   <circle cx="480" cy="270" r="150" fill="url(#pratamaGlow)" />
                   <circle cx="720" cy="160" r="140" fill="url(#khulkhasGlow)" />
                   <circle cx="740" cy="420" r="140" fill="url(#drakenGlow)" />
+                  <circle cx="240" cy="190" r="130" fill="url(#dhaMhaiGlow)" />
+                  <circle cx="520" cy="510" r="130" fill="url(#lauhThanGlow)" />
 
                   <!-- Connecting Trails -->
                   <!-- Sukamaju <-> Pratama -->
@@ -590,6 +746,14 @@
                   <path d="M 480 270 Q 610 360 740 420" class="map-trail" stroke-width="2" fill="none" />
                   <!-- Khul'Khas Salju <-> Draken Magma -->
                   <path d="M 720 160 Q 770 290 740 420" class="map-trail" stroke-width="2" fill="none" />
+                  <!-- Sukamaju <-> Dha Mhai Rimba -->
+                  <path d="M 220 420 Q 180 300 240 190" class="map-trail" stroke-width="2" fill="none" />
+                  <!-- Dha Mhai <-> Pratama -->
+                  <path d="M 240 190 Q 360 210 480 270" class="map-trail" stroke-width="2" fill="none" />
+                  <!-- Sukamaju <-> Lauh Than Pesisir -->
+                  <path d="M 220 420 Q 370 510 520 510" class="map-trail" stroke-width="2" fill="none" />
+                  <!-- Pratama <-> Lauh Than Pesisir -->
+                  <path d="M 480 270 Q 510 390 520 510" class="map-trail" stroke-width="2" fill="none" />
 
                   <!-- REGION 1: Desa Sukamaju (Lv. 1-10, Safe) -->
                   <g class="map-region-group" id="node-sukamaju" data-zone="desa_sukamaju" transform="translate(220, 420)">
@@ -626,6 +790,24 @@
                     <rect x="-70" y="34" width="140" height="24" rx="12" fill="rgba(54, 10, 20, 0.95)" stroke="rgba(239, 68, 68, 0.5)" stroke-width="1" />
                     <text text-anchor="middle" y="50" fill="#fee2e2" font-size="11" font-weight="700" font-family="'Space Grotesk', sans-serif">Istana Draken (Abyss)</text>
                   </g>
+
+                  <!-- REGION 5: Hutan Dha Mhai (Lv. 15-30, Rimba Purba Barat Laut) -->
+                  <g class="map-region-group" id="node-dhamhai" data-zone="hutan_dha_mhai" transform="translate(240, 190)">
+                    <circle class="pulse-ring" fill="none" stroke="#8b5cf6" stroke-width="2" />
+                    <circle class="zone-core" r="24" fill="#23123d" stroke="#8b5cf6" stroke-width="2" />
+                    <text text-anchor="middle" dy="6" fill="#8b5cf6" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf1bb;</text>
+                    <rect x="-70" y="34" width="140" height="24" rx="12" fill="rgba(35, 18, 61, 0.95)" stroke="rgba(139, 92, 246, 0.5)" stroke-width="1" />
+                    <text text-anchor="middle" y="50" fill="#ede9fe" font-size="11" font-weight="600" font-family="'Space Grotesk', sans-serif">Hutan Dha Mhai</text>
+                  </g>
+
+                  <!-- REGION 6: Desa Lauh Than (Lv. 20-35, Dermaga Samudra Selatan) -->
+                  <g class="map-region-group" id="node-lauhthan" data-zone="desa_lauh_than" transform="translate(520, 510)">
+                    <circle class="pulse-ring" fill="none" stroke="#0ea5e9" stroke-width="2" />
+                    <circle class="zone-core" r="24" fill="#0c283f" stroke="#0ea5e9" stroke-width="2" />
+                    <text text-anchor="middle" dy="6" fill="#0ea5e9" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf13d;</text>
+                    <rect x="-70" y="34" width="140" height="24" rx="12" fill="rgba(12, 40, 63, 0.95)" stroke="rgba(14, 165, 233, 0.5)" stroke-width="1" />
+                    <text text-anchor="middle" y="50" fill="#e0f2fe" font-size="11" font-weight="600" font-family="'Space Grotesk', sans-serif">Desa Lauh Than</text>
+                  </g>
                 </svg>
 
                 <div class="map-hud-overlay">
@@ -645,6 +827,9 @@
             <!-- Right: Zone Intel Drawer -->
             <div class="intel-card animate-in delay-2" id="intelDrawer">
               <div class="intel-header" id="intelHeader">
+                <button class="intel-close-btn" id="intelCloseBtn" aria-label="Tutup Info Wilayah" title="Tutup Detail">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
                 <div class="intel-category" id="intelCategory">
                   <i class="fa-solid fa-shield-halved"></i> <span>ZONA AWAL & GATHERING</span>
                 </div>
@@ -732,6 +917,26 @@
                     <i class="fa-solid fa-shield-cat" style="color:#34d399;"></i> Aman terlindung.
                   </div>
                 </div>
+
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;display:flex;justify-content:space-between;align-items:center;">
+                    <span>Komoditas &amp; Item Khas Wilayah</span>
+                    <span style="font-size:10px;color:var(--accent-amber);font-family:var(--font-mono);" id="intelItemBadge">10 Item</span>
+                  </div>
+                  <div class="item-badge-list" id="intelItemList" style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <!-- Populated dynamically -->
+                  </div>
+                  <!-- Item Pagination Controls -->
+                  <div id="itemPaginationBar" style="display:none;margin-top:10px;display:flex;gap:8px;justify-content:space-between;align-items:center;">
+                    <button id="btnItemPrev" class="btn btn-ghost btn-sm" style="font-size:11px;padding:5px 10px;opacity:0.5;" disabled>
+                      <i class="fa-solid fa-chevron-left"></i> Kembali
+                    </button>
+                    <span id="itemPageLabel" style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">1 - 5 dari 10</span>
+                    <button id="btnItemNext" class="btn btn-ghost btn-sm" style="font-size:11px;padding:5px 10px;">
+                      5 Lainnya <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div class="warp-action-box">
@@ -749,13 +954,13 @@
       </div>
     </div>
 
-    <nav class="mobile-nav">
+    <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Home</span></a>
-        <a href="/music" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-music"></i></span><span class="mn-label">Music</span></a>
-        <a href="/world" class="mobile-nav-item active"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">World</span></a>
-        <a href="/economy" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-coins"></i></span><span class="mn-label">Economy</span></a>
-        <a href="/settings" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
+        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
+        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
+        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
+        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
       </div>
     </nav>
 
@@ -804,21 +1009,30 @@
         hutan: 'desa_sukamaju',
         tambang: 'desa_sukamaju',
         laut: 'desa_sukamaju',
+        hutan_dha_mhai: 'hutan_dha_mhai',
+        dha_mhai: 'hutan_dha_mhai',
+        rimba: 'hutan_dha_mhai',
+        hutan_kuno: 'hutan_dha_mhai',
         kota_pratama: 'kota_pratama',
         kota: 'kota_pratama',
         city: 'kota_pratama',
         pratama: 'kota_pratama',
         academy: 'kota_pratama',
+        desa_lauh_than: 'desa_lauh_than',
+        lauh_than: 'desa_lauh_than',
+        dermaga: 'desa_lauh_than',
+        pelabuhan: 'desa_lauh_than',
         desa_khulkhas: 'desa_khulkhas',
         khulkhas: 'desa_khulkhas',
         gurun: 'desa_khulkhas',
+        salju: 'desa_khulkhas',
         istana_draken: 'istana_draken',
         draken: 'istana_draken',
         dungeon: 'istana_draken',
         abyss: 'istana_draken'
       };
 
-      // Fallback Data 4 Wilayah Resmi jika API belum terhubung
+      // Fallback Data 6 Wilayah Resmi beserta NPC & 10 Komoditas Item Khas
       const FALLBACK_REGIONS = {
         desa_sukamaju: {
           id: 'desa_sukamaju',
@@ -844,6 +1058,55 @@
             { name: 'Klinik Bidan Sari', icon: 'fa-heart-pulse' },
             { name: 'Warung Makan Mbak Siti', icon: 'fa-utensils' },
             { name: 'Dermaga Mang Ujang', icon: 'fa-anchor' }
+          ],
+          items: [
+            { name: 'Kayu Pinus Sukamaju', emoji: '🌲', rarity: 'Biasa' },
+            { name: 'Bijih Tembaga Mentah', emoji: '⛏️', rarity: 'Biasa' },
+            { name: 'Ikan Mas Telaga', emoji: '🐟', rarity: 'Biasa' },
+            { name: 'Beras Pandan Wangi', emoji: '🌾', rarity: 'Biasa' },
+            { name: 'Sayur Bayam Segar', emoji: '🌿', rarity: 'Biasa' },
+            { name: 'Jamu Beras Kencur', emoji: '🍵', rarity: 'Tidak Biasa' },
+            { name: 'Cangkul Besi Tempa', emoji: '⛏️', rarity: 'Tidak Biasa' },
+            { name: 'Pancing Bambu Ujang', emoji: '🎣', rarity: 'Tidak Biasa' },
+            { name: 'Salep Binahong Sari', emoji: '🧪', rarity: 'Langka' },
+            { name: 'Surat Rekomendasi Kades', emoji: '📜', rarity: 'Langka' }
+          ]
+        },
+        hutan_dha_mhai: {
+          id: 'hutan_dha_mhai',
+          name: 'Hutan Dha Mhai',
+          tag: 'KANOPY PURBA & SANCTUARY RIMBA (MYSTIC FOREST)',
+          category: 'forest',
+          themeColor: '#8B5CF6',
+          climate: 'Lembab Mistik & Spora Berpendar',
+          desc: 'Hutan belantara purba di barat laut yang diselimuti kanopi raksasa dan kabut ungu mistik. Tempat bersemayam flora spora berpendar, sarang ratu lebah rimba, dan petapa penjaga alam.',
+          primaryCurrency: 'NSF & Resin Damar Mistik',
+          reqLevel: 'Lv. 15 - 30',
+          danger: '★★★☆☆ Berbahaya',
+          dangerColor: '#8b5cf6',
+          resources: { wood: 95, ore: 40, fish: 50 },
+          coords: 'X: 240 · Y: 190',
+          fastTravelCost: 35,
+          monsters: 'Lebah Rimba Raksasa (Lv. 18), Babi Hutan Purba (Lv. 22), Treant Kanopi Gelap (Lv. 28).',
+          residentNpcIds: ['dara_rimba', 'pak_wojo', 'kakek_danu', 'embun_puri', 'raden_bram'],
+          pois: [
+            { name: 'Gerbang Akar Purba Dha Mhai', icon: 'fa-tree' },
+            { name: 'Sarang Ratu Lebah Raksasa', icon: 'fa-bugs' },
+            { name: 'Pondok Damar Kakek Danu', icon: 'fa-campground' },
+            { name: 'Laboratorium Herbal & Rumah Kaca Embun', icon: 'fa-flask' },
+            { name: 'Altar Sumpah Penjaga Rimba', icon: 'fa-shield-heart' }
+          ],
+          items: [
+            { name: 'Resin Damar Purba Dha Mhai', emoji: '🧪', rarity: 'Epik' },
+            { name: 'Madu Ratu Lebah Rimba', emoji: '🍯', rarity: 'Langka' },
+            { name: 'Kayu Akar Gelap Dha Mhai', emoji: '🌲', rarity: 'Tidak Biasa' },
+            { name: 'Jamur Spora Violet', emoji: '🍄', rarity: 'Biasa' },
+            { name: 'Taring Babi Hutan Purba', emoji: '🐗', rarity: 'Tidak Biasa' },
+            { name: 'Busur Akar Penjaga Rimba', emoji: '🏹', rarity: 'Langka' },
+            { name: 'Jubah Daun Rimba', emoji: '🍃', rarity: 'Langka' },
+            { name: 'Eliksir Embun Purba', emoji: '🧪', rarity: 'Epik' },
+            { name: 'Kristal Spora Aether', emoji: '💎', rarity: 'Epik' },
+            { name: 'Resep Teh Herbal Rimba Dha Mhai', emoji: '📜', rarity: 'Langka' }
           ]
         },
         kota_pratama: {
@@ -870,6 +1133,55 @@
             { name: 'Cyber Kafe Laras', icon: 'fa-mug-hot' },
             { name: 'RS Sentral Pratama', icon: 'fa-hospital' },
             { name: 'Arsip Pustaka Wulan', icon: 'fa-book-open' }
+          ],
+          items: [
+            { name: 'Kopi Espresso Neon Laras', emoji: '☕', rarity: 'Tidak Biasa' },
+            { name: 'Microchip Aether Modern', emoji: '💾', rarity: 'Langka' },
+            { name: 'Buku Teori Astral Wulan', emoji: '📚', rarity: 'Langka' },
+            { name: 'Vaksin Imunitas Dokter Wira', emoji: '💉', rarity: 'Epik' },
+            { name: 'Tiket Lelang Gelap Mbak Rini', emoji: '🎟️', rarity: 'Epik' },
+            { name: 'Kacamata Cyber Shino', emoji: '👓', rarity: 'Langka' },
+            { name: 'Obligasi Pasar Modal NC', emoji: '📊', rarity: 'Epik' },
+            { name: 'Baterai Sel Energi Bersih', emoji: '🔋', rarity: 'Tidak Biasa' },
+            { name: 'Kartu Akses Menara Karir', emoji: '💳', rarity: 'Tidak Biasa' },
+            { name: 'Drone Pengintai Miniatur', emoji: '🛸', rarity: 'Legendaris' }
+          ]
+        },
+        desa_lauh_than: {
+          id: 'desa_lauh_than',
+          name: 'Desa Lauh Than',
+          tag: 'PESISIR MARITIM & GERBANG BAWAH LAUT (OCEAN PORT)',
+          category: 'coastal',
+          themeColor: '#0EA5E9',
+          climate: 'Tropis Bahari & Semilir Ombak',
+          desc: 'Desa maritim tropis di pesisir selatan benua Aetheria dengan jajaran dermaga perahu kayu bercadik, pasar ikan asap rempah, dan gerbang menuju ekspedisi palung bawah laut.',
+          primaryCurrency: 'NSF & Koin Nelayan Laut Dalam',
+          reqLevel: 'Lv. 20 - 35',
+          danger: '★★★☆☆ Waspada Laut Dalam',
+          dangerColor: '#0ea5e9',
+          resources: { wood: 45, ore: 55, fish: 98 },
+          coords: 'X: 520 · Y: 510',
+          fastTravelCost: 40,
+          monsters: 'Predator Karang Gigi Gergaji (Lv. 24), Hiu Purba Bertanduk (Lv. 29), Kraken Pesisir (Lv. 35).',
+          residentNpcIds: ['kapten_reza', 'nyai_bahari', 'doro_penyelam', 'mbok_darmi', 'laksamana_bayu'],
+          pois: [
+            { name: 'Dermaga Agung Lauh Than', icon: 'fa-anchor' },
+            { name: 'Balai Adat Samudra Nyai Bahari', icon: 'fa-hands-holding-circle' },
+            { name: 'Pasar Ikan Asap & Kedai Mbok Darmi', icon: 'fa-utensils' },
+            { name: 'Pos Patroli Keamanan Samudra', icon: 'fa-shield' },
+            { name: 'Gerbang Palung Bawah Laut (Zone Portal)', icon: 'fa-water' }
+          ],
+          items: [
+            { name: 'Mutiara Palung Hitam', emoji: '💎', rarity: 'Legendaris' },
+            { name: 'Ikan Naga Abyssal', emoji: '🐟', rarity: 'Epik' },
+            { name: 'Jangkar Tempa Laut Selatan', emoji: '⚓', rarity: 'Langka' },
+            { name: 'Rumput Laut Emas Pesisir', emoji: '🌿', rarity: 'Biasa' },
+            { name: 'Sisik Predator Karang', emoji: '🛡️', rarity: 'Tidak Biasa' },
+            { name: 'Trisula Karang Lauh Than', emoji: '🔱', rarity: 'Langka' },
+            { name: 'Jimat Penolak Ombak', emoji: '🧿', rarity: 'Epik' },
+            { name: 'Ikan Bakar Rempah Pesisir', emoji: '🍲', rarity: 'Tidak Biasa' },
+            { name: 'Tabung Selam Aether Portabel', emoji: '⚓', rarity: 'Epik' },
+            { name: 'Peta Rute Palung Bawah Laut', emoji: '🗺️', rarity: 'Langka' }
           ]
         },
         desa_khulkhas: {
@@ -888,12 +1200,24 @@
           coords: 'X: 720 · Y: 160',
           fastTravelCost: 50,
           monsters: 'Beruang Salju Purba (Lv. 28), Serigala Es Gletser (Lv. 32), Golem Es Abadi (Lv. 38).',
-          residentNpcIds: ['syeikh_malik'],
+          residentNpcIds: ['syeikh_malik', 'elsa_frost', 'boris_es', 'fatimah_salju', 'pandai_es_tarek', 'lama_norbu'],
           pois: [
             { name: 'Altar Kristal Es Khul\'Khas', icon: 'fa-snowflake' },
-            { name: 'Pondok Hangat Syeikh Malik', icon: 'fa-campground' },
+            { name: 'Pondok Hangat & Pasar Salju Khul\'Khas', icon: 'fa-campground' },
             { name: 'Mata Air Hangat Lembah Salju', icon: 'fa-droplet' },
-            { name: 'Pondok Alkimia Salju & Es Kristal', icon: 'fa-flask-vial' }
+            { name: 'Pondok Alkimia Es & Bengkel Tempa Dingin', icon: 'fa-flask-vial' }
+          ],
+          items: [
+            { name: 'Kristal Es Abadi Khul\'Khas', emoji: '❄️', rarity: 'Legendaris' },
+            { name: 'Mantel Bulu Serigala Salju', emoji: '🧥', rarity: 'Langka' },
+            { name: 'Dendeng Beruang Kutub', emoji: '🍖', rarity: 'Langka' },
+            { name: 'Tetesan Air Mata Gletser', emoji: '💧', rarity: 'Epik' },
+            { name: 'Teh Hangat Rempah Salju', emoji: '☕', rarity: 'Tidak Biasa' },
+            { name: 'Belati Beku Gletser', emoji: '🗡️', rarity: 'Langka' },
+            { name: 'Batu Api Magma Portabel', emoji: '🔥', rarity: 'Biasa' },
+            { name: 'Taring Serigala Gletser', emoji: '🗡️', rarity: 'Tidak Biasa' },
+            { name: 'Salep Minyak Lemak Kutub', emoji: '🧪', rarity: 'Tidak Biasa' },
+            { name: 'Buku Resep Sup Hangat Malik', emoji: '📜', rarity: 'Langka' }
           ]
         },
         istana_draken: {
@@ -918,8 +1242,56 @@
             { name: 'Labirin Bawah Tanah (Lt. 1-50)', icon: 'fa-stairs' },
             { name: 'Singgasana Penguasa Draken', icon: 'fa-crown' },
             { name: 'Khazanah Terkutuk Mythic', icon: 'fa-gem' }
+          ],
+          items: [
+            { name: 'Permata Terkutuk Draken', emoji: '💎', rarity: 'Mythic' },
+            { name: 'Tanduk Iblis Malakor', emoji: '👿', rarity: 'Epik' },
+            { name: 'Batu Lahar Vulkanik', emoji: '🌋', rarity: 'Langka' },
+            { name: 'Pedang Api Kawah Hitam', emoji: '🗡️', rarity: 'Legendaris' },
+            { name: 'Mahkota Abu Abyss', emoji: '👑', rarity: 'Mythic' },
+            { name: 'Eliksir Darah Monster Kawah', emoji: '🧪', rarity: 'Epik' },
+            { name: 'Rantai Besi Jiwa Gelap', emoji: '⛓️', rarity: 'Langka' },
+            { name: 'Pecahan Jiwa Draken Purba', emoji: '🔮', rarity: 'Mythic' },
+            { name: 'Tameng Tulang Gargoyle', emoji: '🛡️', rarity: 'Legendaris' },
+            { name: 'Gulungan Sihir Kiamat Abyss', emoji: '📜', rarity: 'Mythic' }
           ]
         }
+      };
+
+      const FALLBACK_NPCS = {
+        kades_tirto: { name: 'Pak Kades Tirto', role: 'Kepala Desa', avatar: '/assets/survival/characters/kades_tirto.jpeg' },
+        bagas: { name: 'Bagas', role: 'Pandai Besi', avatar: '/assets/survival/characters/bagas.jpeg' },
+        ningsih: { name: 'Ningsih', role: 'Ahli Botani', avatar: '/assets/survival/characters/ningsih.jpeg' },
+        bidan_sari: { name: 'Bidan Sari', role: 'Perawat Klinik', avatar: '/assets/survival/characters/bidan_sari.jpeg' },
+        bu_ratna: { name: 'Bu Ratna', role: 'Guru SD', avatar: '/assets/survival/characters/bu_ratna.jpeg' },
+        mang_ujang: { name: 'Mang Ujang', role: 'Nelayan', avatar: '/assets/survival/characters/mang_ujang.jpeg' },
+        tari: { name: 'Tari', role: 'Penyelam', avatar: '/assets/survival/characters/tari.jpeg' },
+        mbak_siti: { name: 'Mbak Siti', role: 'Penjual Jamu', avatar: '/assets/survival/characters/mbak_siti.png' },
+        bupati_rahmat: { name: 'Bupati Rahmat', role: 'Kepala Daerah', avatar: '/assets/survival/characters/bupati_rahmat.jpeg' },
+        pak_damar: { name: 'Pak Damar', role: 'Pedagang Keliling', avatar: '/assets/survival/characters/pak_damar.jpeg' },
+        laras: { name: 'Laras', role: 'Pemilik Kafe', avatar: '/assets/survival/characters/laras.jpeg' },
+        wulan: { name: 'Wulan', role: 'Pustakawati', avatar: '/assets/survival/characters/wulan.jpeg' },
+        dokter_wira: { name: 'Dokter Wira', role: 'Dokter Spesialis', avatar: '/assets/survival/characters/dokter_wira.jpeg' },
+        suster_maya: { name: 'Suster Maya', role: 'Perawat RS', avatar: '/assets/survival/characters/suster_maya.jpeg' },
+        mbak_rini: { name: 'Mbak Rini', role: 'Bandar Lelang', avatar: '/assets/survival/characters/mbak_rini.jpeg' },
+        shino_hoshino: { name: 'Shino Hoshino', role: 'Cyber Companion', avatar: '/assets/survival/characters/shino_hoshino.png' },
+        syeikh_malik: { name: 'Syeikh Malik', role: 'Tetua Nomad Khul\'Khas', avatar: '/assets/survival/characters/ki_prawiro.jpeg' },
+        elsa_frost: { name: 'Elsa Frost', role: 'Pawang Kristal Es', avatar: '/assets/survival/characters/luna_gacha.jpeg' },
+        boris_es: { name: 'Boris', role: 'Pemburu Beruang Salju', avatar: '/assets/survival/characters/gaston.png' },
+        fatimah_salju: { name: 'Fatimah', role: 'Penyeduh Teh Gletser', avatar: '/assets/survival/characters/siti.jpeg' },
+        pandai_es_tarek: { name: 'Tarek', role: 'Pandai Besi Dingin', avatar: '/assets/survival/characters/gatot.jpeg' },
+        lama_norbu: { name: 'Lama Norbu', role: 'Biksu Puncak Es', avatar: '/assets/survival/characters/ki_ageng_joyo.png' },
+        dara_rimba: { name: 'Dara Rimba', role: 'Penjaga Rimba Purba', avatar: '/assets/survival/characters/ningsih.jpeg' },
+        pak_wojo: { name: 'Pak Wojo', role: 'Pemburu Rimba Veteran', avatar: '/assets/survival/characters/pak_anif.jpeg' },
+        kakek_danu: { name: 'Kakek Danu', role: 'Penyadap Getah Damar', avatar: '/assets/survival/characters/pak_yanto.jpeg' },
+        embun_puri: { name: 'Embun Puri', role: 'Alkimis Herbal Hutan', avatar: '/assets/survival/characters/bu_ratna.jpeg' },
+        raden_bram: { name: 'Raden Bram', role: 'Ksatria Pengelana Rimba', avatar: '/assets/survival/characters/bripka_agus.jpeg' },
+        kapten_reza: { name: 'Kapten Reza', role: 'Nahkoda Dermaga', avatar: '/assets/survival/characters/mang_ujang.jpeg' },
+        nyai_bahari: { name: 'Nyai Bahari', role: 'Tetua Adat Laut Selatan', avatar: '/assets/survival/characters/bidan_sari.jpeg' },
+        doro_penyelam: { name: 'Doro', role: 'Penyelam Palung Bebas', avatar: '/assets/survival/characters/tari.jpeg' },
+        mbok_darmi: { name: 'Mbok Darmi', role: 'Penjual Ikan Bakar', avatar: '/assets/survival/characters/mbak_siti.png' },
+        laksamana_bayu: { name: 'Laksamana Bayu', role: 'Punggawa Patroli Samudra', avatar: '/assets/survival/characters/bupati_rahmat.jpeg' },
+        gargoyle_malakor: { name: 'Gargoyle Malakor', role: 'Penjaga Gerbang Draken', avatar: '/assets/survival/characters/penambang2.jpeg' },
       };
 
       let currentZone = 'desa_sukamaju';
@@ -927,7 +1299,7 @@
       let playerNsf = 0;
       let currentSurvivorName = 'Petualang';
       let worldRegions = FALLBACK_REGIONS;
-      let allNpcs = {};
+      let allNpcs = { ...FALLBACK_NPCS };
 
       const intelCategory = document.getElementById('intelCategory');
       const intelTitle = document.getElementById('intelTitle');
@@ -1091,6 +1463,88 @@
           intelMonsters.innerHTML = data.monsters || '<i class="fa-solid fa-shield-cat" style="color:#34d399;"></i> Wilayah aman.';
         }
 
+        // Komoditas & Item Khas Wilayah (10 Item, paginated 5 per page)
+        const intelItemList = document.getElementById('intelItemList');
+        const intelItemBadge = document.getElementById('intelItemBadge');
+        const itemPaginationBar = document.getElementById('itemPaginationBar');
+        const btnItemPrev = document.getElementById('btnItemPrev');
+        const btnItemNext = document.getElementById('btnItemNext');
+        const itemPageLabel = document.getElementById('itemPageLabel');
+
+        const items = Array.isArray(data.items) ? data.items : [];
+        let currentItemPage = 0;
+        const ITEMS_PER_PAGE = 5;
+
+        /**
+         * Merender item khas wilayah dengan sistem pagination 5 per halaman.
+         * @param {number} page - Nomor halaman saat ini (0-indexed)
+         */
+        function renderItemPage(page) {
+          if (!intelItemList) return;
+          intelItemList.innerHTML = '';
+          const start = page * ITEMS_PER_PAGE;
+          const end = Math.min(start + ITEMS_PER_PAGE, items.length);
+          const pageItems = items.slice(start, end);
+
+          if (pageItems.length === 0) {
+            intelItemList.innerHTML = '<div style="font-size:11px;color:var(--text-muted);">Belum ada komoditas item tercatat.</div>';
+          } else {
+            pageItems.forEach(it => {
+              const chip = document.createElement('div');
+              chip.className = 'item-badge-chip';
+              chip.innerHTML = `<span>${it.emoji || '📦'}</span> <span>${it.name}</span> <span style="font-size:9.5px;color:var(--text-muted);font-family:var(--font-mono);">${it.rarity || 'Biasa'}</span>`;
+              intelItemList.appendChild(chip);
+            });
+          }
+
+          // Update pagination controls
+          const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+          if (itemPaginationBar) {
+            itemPaginationBar.style.display = items.length > ITEMS_PER_PAGE ? 'flex' : 'none';
+          }
+          if (itemPageLabel) {
+            itemPageLabel.textContent = `${start + 1}–${end} dari ${items.length} item`;
+          }
+          if (btnItemPrev) {
+            btnItemPrev.disabled = page === 0;
+            btnItemPrev.style.opacity = page === 0 ? '0.4' : '1';
+            btnItemPrev.style.pointerEvents = page === 0 ? 'none' : 'auto';
+          }
+          if (btnItemNext) {
+            const isLast = page >= totalPages - 1;
+            btnItemNext.disabled = isLast;
+            btnItemNext.style.opacity = isLast ? '0.4' : '1';
+            btnItemNext.style.pointerEvents = isLast ? 'none' : 'auto';
+            btnItemNext.innerHTML = isLast
+              ? '<i class="fa-solid fa-check"></i> Halaman Terakhir'
+              : `${Math.min(ITEMS_PER_PAGE, items.length - end)} Item Lainnya <i class="fa-solid fa-chevron-right"></i>`;
+          }
+        }
+
+        if (intelItemBadge) intelItemBadge.textContent = `${items.length} Item Khas`;
+        renderItemPage(0);
+
+        // Pasang click handler pagination
+        if (btnItemPrev) {
+          btnItemPrev.onclick = () => {
+            if (currentItemPage > 0) {
+              currentItemPage--;
+              renderItemPage(currentItemPage);
+              playTone(450, 'sine', 0.05, 0.1);
+            }
+          };
+        }
+        if (btnItemNext) {
+          btnItemNext.onclick = () => {
+            const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+            if (currentItemPage < totalPages - 1) {
+              currentItemPage++;
+              renderItemPage(currentItemPage);
+              playTone(550, 'sine', 0.05, 0.1);
+            }
+          };
+        }
+
         // Coordinates
         if (coordDisplay) {
           coordDisplay.textContent = data.coords || 'X: 0 · Y: 0';
@@ -1130,11 +1584,14 @@
         });
       }
 
-      // Click event for SVG map pins
+      // Click event for SVG map pins (hanya terpicu jika tidak sedang menggeser peta)
       document.querySelectorAll('.map-region-group').forEach(node => {
         node.addEventListener('click', () => {
+          if (hasDragged) return;
           const zoneKey = node.getAttribute('data-zone');
           updateZoneIntel(zoneKey);
+          // Auto-buka intel sheet di mobile saat klik wilayah peta
+          if (window.innerWidth <= 1200) setIntelSheet(true);
         });
       });
 
@@ -1159,6 +1616,8 @@
 
           if (filter !== 'all' && worldRegions[filter]) {
             updateZoneIntel(filter);
+            // Auto-buka intel sheet di mobile saat filter pill diklik
+            if (window.innerWidth <= 1200) setIntelSheet(true);
           }
         });
       });
@@ -1203,44 +1662,183 @@
         });
       }
 
-      // Zoom Controls
+      // ==========================================
+      // Kontrol Zoom & Navigasi Pan/Drag Peta Dunia
+      // ==========================================
       let currentZoom = 1;
+      let panX = 0;
+      let panY = 0;
+      let isDragging = false;
+      let hasDragged = false;
+      let dragStartX = 0;
+      let dragStartY = 0;
+
+      const mapWrap = document.getElementById('mapWrap');
       const worldSvg = document.getElementById('worldSvg');
       const btnZoomIn = document.getElementById('btnZoomIn');
       const btnZoomOut = document.getElementById('btnZoomOut');
       const btnResetView = document.getElementById('btnResetView');
 
+      /**
+       * Menerapkan transformasi posisi dan skala ke elemen SVG peta dunia
+       * @param {boolean} smooth - Gunakan transisi animasi halus jika bernilai true
+       */
+      function applyMapTransform(smooth = false) {
+        if (!worldSvg) return;
+        worldSvg.style.transition = smooth ? 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)' : 'none';
+        worldSvg.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
+      }
+
+      // Handler Mouse Drag (Desktop)
+      if (mapWrap) {
+        mapWrap.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return; // Hanya klik kiri
+          isDragging = true;
+          hasDragged = false;
+          dragStartX = e.clientX - panX;
+          dragStartY = e.clientY - panY;
+          mapWrap.style.cursor = 'grabbing';
+          e.preventDefault();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+          const newPanX = e.clientX - dragStartX;
+          const newPanY = e.clientY - dragStartY;
+          if (Math.abs(newPanX - panX) > 3 || Math.abs(newPanY - panY) > 3) {
+            hasDragged = true;
+          }
+          panX = newPanX;
+          panY = newPanY;
+          applyMapTransform(false);
+        });
+
+        window.addEventListener('mouseup', () => {
+          if (isDragging) {
+            isDragging = false;
+            if (mapWrap) mapWrap.style.cursor = 'grab';
+          }
+        });
+
+        // Handler Touch Drag (Mobile / Tablet)
+        mapWrap.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 1) {
+            isDragging = true;
+            hasDragged = false;
+            const touch = e.touches[0];
+            dragStartX = touch.clientX - panX;
+            dragStartY = touch.clientY - panY;
+          }
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+          if (!isDragging || e.touches.length !== 1) return;
+          const touch = e.touches[0];
+          const newPanX = touch.clientX - dragStartX;
+          const newPanY = touch.clientY - dragStartY;
+          if (Math.abs(newPanX - panX) > 4 || Math.abs(newPanY - panY) > 4) {
+            hasDragged = true;
+          }
+          panX = newPanX;
+          panY = newPanY;
+          applyMapTransform(false);
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+          isDragging = false;
+        });
+
+        // Zoom Roda Mouse
+        mapWrap.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          const delta = e.deltaY < 0 ? 0.12 : -0.12;
+          const targetZoom = Math.max(0.6, Math.min(2.5, currentZoom + delta));
+          if (targetZoom !== currentZoom) {
+            currentZoom = targetZoom;
+            applyMapTransform(true);
+          }
+        }, { passive: false });
+      }
+
       if (btnZoomIn) {
         btnZoomIn.addEventListener('click', () => {
-          currentZoom = Math.min(1.8, currentZoom + 0.15);
-          if (worldSvg) worldSvg.style.transform = `scale(${currentZoom})`;
+          currentZoom = Math.min(2.5, currentZoom + 0.2);
+          applyMapTransform(true);
           playTone(600, 'sine', 0.05, 0.1);
         });
       }
       if (btnZoomOut) {
         btnZoomOut.addEventListener('click', () => {
-          currentZoom = Math.max(0.8, currentZoom - 0.15);
-          if (worldSvg) worldSvg.style.transform = `scale(${currentZoom})`;
+          currentZoom = Math.max(0.6, currentZoom - 0.2);
+          applyMapTransform(true);
           playTone(450, 'sine', 0.05, 0.1);
         });
       }
       if (btnResetView) {
         btnResetView.addEventListener('click', () => {
           currentZoom = 1;
-          if (worldSvg) worldSvg.style.transform = `scale(1)`;
+          panX = 0;
+          panY = 0;
+          applyMapTransform(true);
           updateZoneIntel(currentZone);
           playTone(550, 'sine', 0.08, 0.15);
         });
       }
 
-      // Fetch Realtime POIs & Player Location
+      // ── Mobile Intel Drawer Toggle ──
+      const intelDrawer = document.getElementById('intelDrawer');
+      const btnIntelToggle = document.getElementById('btnIntelToggle');
+      const intelSheetOverlay = document.getElementById('intelSheetOverlay');
+      let intelSheetOpen = false;
+
+      /**
+       * Membuka atau menutup intel drawer sebagai bottom sheet di mobile.
+       * @param {boolean} open - true untuk membuka, false untuk menutup
+       */
+      function setIntelSheet(open) {
+        intelSheetOpen = open;
+        if (intelDrawer) intelDrawer.classList.toggle('sheet-open', open);
+        if (intelSheetOverlay) {
+          intelSheetOverlay.style.display = open ? 'block' : 'none';
+          requestAnimationFrame(() => intelSheetOverlay.classList.toggle('active', open));
+        }
+        if (btnIntelToggle) {
+          btnIntelToggle.classList.toggle('sheet-open', open);
+          btnIntelToggle.innerHTML = open
+            ? '<i class="fa-solid fa-xmark"></i> Tutup Info'
+            : '<i class="fa-solid fa-map-location-dot"></i> Info Wilayah';
+        }
+      }
+
+      if (btnIntelToggle) {
+        btnIntelToggle.addEventListener('click', () => setIntelSheet(!intelSheetOpen));
+      }
+      if (intelSheetOverlay) {
+        intelSheetOverlay.addEventListener('click', () => setIntelSheet(false));
+      }
+      const intelCloseBtn = document.getElementById('intelCloseBtn');
+      if (intelCloseBtn) {
+        intelCloseBtn.addEventListener('click', () => setIntelSheet(false));
+      }
+
+      // Otomatis buka sheet saat user klik wilayah di peta (mobile) - placeholder
+      // Note: setIntelSheet sudah dipasang pada event listener di atas
+
       (async () => {
         try {
           const res = await fetch('/api/survival/world-pois');
           const json = await res.json();
           if (json.success && json.regions) {
-            worldRegions = { ...FALLBACK_REGIONS, ...json.regions };
-            if (json.npcs) allNpcs = json.npcs;
+            const merged = { ...FALLBACK_REGIONS };
+            for (const [k, v] of Object.entries(json.regions)) {
+              merged[k] = {
+                ...(FALLBACK_REGIONS[k] || {}),
+                ...v,
+                items: FALLBACK_REGIONS[k]?.items || v.items || []
+              };
+            }
+            worldRegions = merged;
+            if (json.npcs) allNpcs = { ...FALLBACK_NPCS, ...json.npcs };
           }
         } catch (e) {
           console.warn('[WorldMap] Fetch POIs error:', e.message);

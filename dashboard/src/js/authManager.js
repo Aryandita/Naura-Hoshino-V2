@@ -13,14 +13,21 @@
 
     const STORAGE_KEY = 'naura_auth_session';
 
+    // Ikon avatar SVG generik berbasis peran (tanpa foto orang nyata)
+    const ROLE_AVATARS = {
+        admin: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236366f1'/%3E%3Cstop offset='100%25' stop-color='%23a855f7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' rx='40' fill='url(%23g1)'/%3E%3Cpath d='M40 18 L60 26 V44 C60 56 40 64 40 64 C40 64 20 56 20 44 V26 Z' fill='%23ffffff' fill-opacity='0.25' stroke='%23ffffff' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M34 40 L38 44 L47 34' fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
+        vip: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g2' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23f59e0b'/%3E%3Cstop offset='100%25' stop-color='%23d97706'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' rx='40' fill='url(%23g2)'/%3E%3Cpolygon points='40,20 45,33 59,34 48,43 52,57 40,49 28,57 32,43 21,34 35,33' fill='%23ffffff'/%3E%3C/svg%3E",
+        adventurer: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g3' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2306b6d4'/%3E%3Cstop offset='100%25' stop-color='%230891b2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' rx='40' fill='url(%23g3)'/%3E%3Ccircle cx='40' cy='40' r='22' fill='none' stroke='%23ffffff' stroke-width='3'/%3E%3Cpolygon points='40,24 46,38 40,35 34,38' fill='%23ef4444'/%3E%3Cpolygon points='40,56 46,42 40,45 34,42' fill='%23ffffff'/%3E%3Ccircle cx='40' cy='40' r='3' fill='%23ffffff'/%3E%3C/svg%3E",
+    };
+
     // Konfigurasi profil peran untuk simulasi instan dan pengujian antarmuka
     const PROFILES = {
         owner: {
-            id: 'owner_001',
-            username: 'Aryandita',
+            id: 'admin_001',
+            username: 'Admin',
             tag: '#0001',
-            avatar: '/assets/core/avatar.png',
-            role: 'Owner & Lead Dev',
+            avatar: ROLE_AVATARS.admin,
+            role: 'Administrator Sistem',
             badgeClass: 'badge-primary',
             nc: 999999,
             nsf: 50000,
@@ -29,9 +36,9 @@
         },
         vip: {
             id: 'vip_042',
-            username: 'HoshinoStar',
+            username: 'VIP Member',
             tag: '#7777',
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80',
+            avatar: ROLE_AVATARS.vip,
             role: 'VIP Server Booster',
             badgeClass: 'badge-amber',
             nc: 45200,
@@ -41,10 +48,10 @@
         },
         adventurer: {
             id: 'adv_108',
-            username: 'CyberExplorer',
+            username: 'Petualang',
             tag: '#2049',
-            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80',
-            role: 'Lv. 28 Adventurer',
+            avatar: ROLE_AVATARS.adventurer,
+            role: 'Petualang Naura Wilds',
             badgeClass: 'badge-cyan',
             nc: 12450,
             nsf: 3200,
@@ -63,7 +70,9 @@
 
         loadSession() {
             try {
-                const storedRaw = localStorage.getItem(STORAGE_KEY);
+                // Pastikan membersihkan residu localStorage lama untuk sandbox mode murni
+                localStorage.removeItem(STORAGE_KEY);
+                const storedRaw = sessionStorage.getItem(STORAGE_KEY);
                 if (storedRaw) return JSON.parse(storedRaw);
             } catch (_) {}
             return null;
@@ -72,9 +81,9 @@
         saveSession(activeSession) {
             this.session = activeSession;
             if (activeSession) {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(activeSession));
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(activeSession));
             } else {
-                localStorage.removeItem(STORAGE_KEY);
+                sessionStorage.removeItem(STORAGE_KEY);
             }
             this.syncUI();
         }
@@ -221,11 +230,14 @@
                                 🌸
                             </div>
                             <div>
-                                <div style="font-family:var(--font-heading);font-weight:700;font-size:18px;color:var(--text-primary);">
-                                    Masuk ke Naura Hoshino OS
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <span style="font-family:var(--font-heading);font-weight:700;font-size:18px;color:var(--text-primary);">
+                                        Masuk ke Naura Hoshino OS
+                                    </span>
+                                    <span class="badge" style="background:rgba(245,158,11,0.15);color:var(--accent-amber);border:1px solid rgba(245,158,11,0.3);font-size:9.5px;font-family:var(--font-mono);font-weight:700;">SANDBOX</span>
                                 </div>
                                 <div style="font-size:12px;color:var(--text-muted);">
-                                    Akses fitur ekosistem penuh, sinkronisasi cloud, dan peran bot
+                                    Simulasi akses peran & otentikasi (Sesi transien, tidak tersimpan ke database)
                                 </div>
                             </div>
                         </div>
@@ -240,33 +252,36 @@
 
                     <!-- Tab 1: Quick Developer Profiles -->
                     <div class="auth-tab-pane active" id="paneQuick">
+                        <div style="font-size:11px;color:var(--accent-amber);background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:var(--r-md);padding:8px 12px;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+                            <i class="fa-solid fa-flask"></i> <span>Mode Sandbox: Seluruh konfigurasi profil bersifat sementara di tab ini dan tidak tersimpan ke database.</span>
+                        </div>
                         <div style="font-size:12px;color:var(--text-secondary);margin-bottom:14px;line-height:1.6;">
                             Pilih salah satu profil akun simulasi untuk langsung merasakan fungsionalitas admin, booster, atau petualang tanpa setup OAuth:
                         </div>
                         <div style="display:flex;flex-direction:column;gap:10px;">
                             <div class="quick-profile-card" data-profile="owner">
-                                <img src="/assets/core/avatar.png" class="qp-avatar" alt="Aryandita" />
+                                <img src="${PROFILES.owner.avatar}" class="qp-avatar" alt="Admin" />
                                 <div style="flex:1;">
-                                    <div style="font-weight:700;font-size:14px;color:var(--text-primary);">Aryandita</div>
-                                    <div style="font-size:11px;color:var(--primary);">🌟 Owner & Lead Developer</div>
+                                    <div style="font-weight:700;font-size:14px;color:var(--text-primary);">Admin</div>
+                                    <div style="font-size:11px;color:var(--primary);">🛡️ Administrator Utama</div>
                                 </div>
-                                <span class="badge badge-primary">Admin Penuh</span>
+                                <span class="badge badge-primary">Akses Penuh</span>
                             </div>
 
                             <div class="quick-profile-card" data-profile="vip">
-                                <img src="${PROFILES.vip.avatar}" class="qp-avatar" alt="HoshinoStar" />
+                                <img src="${PROFILES.vip.avatar}" class="qp-avatar" alt="VIP Member" />
                                 <div style="flex:1;">
-                                    <div style="font-weight:700;font-size:14px;color:var(--text-primary);">HoshinoStar</div>
+                                    <div style="font-weight:700;font-size:14px;color:var(--text-primary);">VIP Member</div>
                                     <div style="font-size:11px;color:var(--accent-amber);">👑 VIP Server Booster</div>
                                 </div>
                                 <span class="badge badge-amber">45.2K NC</span>
                             </div>
 
                             <div class="quick-profile-card" data-profile="adventurer">
-                                <img src="${PROFILES.adventurer.avatar}" class="qp-avatar" alt="CyberExplorer" />
+                                <img src="${PROFILES.adventurer.avatar}" class="qp-avatar" alt="Petualang" />
                                 <div style="flex:1;">
-                                    <div style="font-weight:700;font-size:14px;color:var(--text-primary);">CyberExplorer</div>
-                                    <div style="font-size:11px;color:var(--accent-cyan);">⚔️ Lv. 28 Adventurer</div>
+                                    <div style="font-weight:700;font-size:14px;color:var(--text-primary);">Petualang</div>
+                                    <div style="font-size:11px;color:var(--accent-cyan);">⚔️ Petualang Naura Wilds</div>
                                 </div>
                                 <span class="badge badge-cyan">3.2K NSF</span>
                             </div>
@@ -292,7 +307,7 @@
                         <form id="supabaseLoginForm" style="display:flex;flex-direction:column;gap:12px;padding:10px 0;">
                             <div>
                                 <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:6px;font-family:var(--font-mono);">EMAIL SUPABASE</label>
-                                <input type="email" id="sbEmail" placeholder="developer@naura-hoshino.bot" value="aryandita@naura.local" style="width:100%;padding:10px 14px;border-radius:var(--r-md);background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-primary);font-size:13px;box-sizing:border-box;" required />
+                                <input type="email" id="sbEmail" placeholder="developer@naura-hoshino.bot" value="admin@naura.local" style="width:100%;padding:10px 14px;border-radius:var(--r-md);background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-primary);font-size:13px;box-sizing:border-box;" required />
                             </div>
                             <div>
                                 <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:6px;font-family:var(--font-mono);">PASSWORD / ACCESS TOKEN</label>

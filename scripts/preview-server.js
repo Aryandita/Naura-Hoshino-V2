@@ -51,10 +51,63 @@ app.get(
 
 app.use("/assets", express.static(assetsPath));
 app.use("/assets/3d", express.static(path.join(assetsPath, "3D Model Naura")));
-app.use("/models", express.static(path.join(distPath, "models")));
+app.use("/src", express.static(path.join(projectRoot, "dashboard", "src")));
+app.use("/public", express.static(path.join(projectRoot, "dashboard", "public")));
+app.use("/vendor", express.static(path.join(projectRoot, "dashboard", "public", "vendor")));
 app.use("/vendor", express.static(path.join(distPath, "vendor")));
+app.use("/models", express.static(path.join(distPath, "models")));
+app.use("/models", express.static(path.join(projectRoot, "dashboard", "public", "models")));
+app.use("/node_modules", express.static(path.join(projectRoot, "node_modules")));
 app.use("/v2", express.static(distPath));
 app.use(express.static(distPath));
+app.use(express.static(path.join(projectRoot, "dashboard", "public")));
+
+// Mock client untuk API dashboard
+const mockClient = {
+  uptime: 3600000,
+  ws: { ping: 28 },
+  isReady: () => true,
+  guilds: { cache: { size: 142, get: () => null } },
+  users: { cache: new Map(), fetch: async () => null },
+  channels: { cache: new Map() },
+  user: {
+    id: "1483665745727721543",
+    username: "Naura Hoshino",
+    displayAvatarURL: () => "/assets/core/avatar.png",
+  },
+  poru: {
+    nodes: new Map([["Lavalink-Primary", { isConnected: true }]]),
+    players: new Map(),
+  },
+};
+
+try {
+  const apiRouter = require(path.join(projectRoot, "dashboard", "routes", "api"))(mockClient);
+  app.use("/api", apiRouter);
+} catch (apiErr) {
+  console.warn("[PreviewServer] Gagal memuat dashboard/routes/api:", apiErr.message);
+}
+
+try {
+  const guildRouter = require(path.join(projectRoot, "dashboard", "routes", "guild"))(mockClient);
+  app.use(guildRouter);
+} catch (guildErr) {
+  console.warn("[PreviewServer] Gagal memuat dashboard/routes/guild:", guildErr.message);
+}
+
+try {
+  const aiRouter = require(path.join(projectRoot, "dashboard", "routes", "ai"))(mockClient);
+  app.use("/api/ai", aiRouter);
+} catch (aiErr) {
+  console.warn("[PreviewServer] Gagal memuat dashboard/routes/ai:", aiErr.message);
+}
+
+try {
+  const survivalRouter = require(path.join(projectRoot, "dashboard", "routes", "survival"))(mockClient);
+  app.use("/api/survival", survivalRouter);
+} catch (survErr) {
+  console.warn("[PreviewServer] Gagal memuat dashboard/routes/survival:", survErr.message);
+}
 
 // 2. Mock API endpoints for realistic preview
 app.get("/api/stats", (req, res) => {
@@ -79,7 +132,7 @@ app.get("/api/user/me", (req, res) => {
     authenticated: true,
     user: {
       id: "123456789012345678",
-      username: "Aryandita",
+      username: "Admin",
       discriminator: "0",
       avatar: "https://cdn.discordapp.com/embed/avatars/0.png",
       level: 42,
@@ -178,7 +231,7 @@ app.post("/api/settings/sandbox", (req, res) => {
   res.json({ reply });
 });
 
-// 3. Multi-page routes mapping to dist/src/pages
+// 3. Multi-page routes mapping to dist/src/pages and src/pages
 const pages = [
   "index",
   "status",
@@ -194,36 +247,52 @@ const pages = [
   "world",
   "activity",
   "portfolio",
+  "topology",
+  "builder",
+  "survival-map",
+  "soundboard",
+  "jam",
+  "lounge",
+  "war-room",
 ];
 
+const srcPagesPath = path.join(projectRoot, "dashboard", "src", "pages");
+
 pages.forEach((page) => {
-  const htmlPath = path.join(distPath, "src", "pages", `${page}.html`);
   const handler = (req, res) => {
-    if (fs.existsSync(htmlPath)) {
-      res.sendFile(htmlPath);
-    } else {
-      res.status(404).send(`Halaman ${page} belum dibangun.`);
+    const srcFile = path.join(srcPagesPath, `${page}.html`);
+    if (fs.existsSync(srcFile)) {
+      return res.sendFile(srcFile);
     }
+    const distFile = path.join(distPath, "src", "pages", `${page}.html`);
+    if (fs.existsSync(distFile)) {
+      return res.sendFile(distFile);
+    }
+    res.status(404).send(`Halaman ${page} belum dibangun.`);
   };
 
   if (page === "index") {
     app.get("/", handler);
     app.get("/index", handler);
+    app.get("/index.html", handler);
   }
   app.get(`/${page}`, handler);
+  app.get(`/${page}.html`, handler);
   app.get(`/v2/${page}`, handler);
+  app.get(`/v2/${page}.html`, handler);
+  app.get(`/src/pages/${page}.html`, handler);
 });
 
-// Fallback to index
+// Fallback to static matching in dist/src/pages or src/pages
 app.use((req, res, next) => {
-  const possiblePage = path.join(
-    distPath,
-    "src",
-    "pages",
-    req.path.replace(/^\//, "") + ".html",
-  );
-  if (fs.existsSync(possiblePage)) {
-    return res.sendFile(possiblePage);
+  const cleanPath = req.path.replace(/^\//, "").replace(/\.html$/, "");
+  const distCandidate = path.join(distPath, "src", "pages", `${cleanPath}.html`);
+  if (fs.existsSync(distCandidate)) {
+    return res.sendFile(distCandidate);
+  }
+  const srcCandidate = path.join(srcPagesPath, `${cleanPath}.html`);
+  if (fs.existsSync(srcCandidate)) {
+    return res.sendFile(srcCandidate);
   }
   next();
 });

@@ -157,11 +157,11 @@
           </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
+            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
+          </div>
           <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
             <i class="fa-solid fa-xmark"></i>
           </button>
-            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
-          </div>
         </div>
                 <!-- Navigation -->
                 <!-- Navigation -->
@@ -551,5 +551,15 @@
       renderCanvas();
     </script>
       <script src="/src/js/sharedNav.js"></script>
+
+    <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
+      <div class="mobile-nav-inner">
+        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
+        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
+        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
+        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
+        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+      </div>
+    </nav>
 </body>
 </html>

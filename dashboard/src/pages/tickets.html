@@ -147,11 +147,11 @@
           </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
+            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
+          </div>
           <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
             <i class="fa-solid fa-xmark"></i>
           </button>
-            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
-          </div>
         </div>
                 <!-- Navigation -->
                 <!-- Navigation -->
@@ -480,6 +480,56 @@
         });
       });
 
+      // Live Backend Tickets Integration
+      async function loadRealTickets() {
+        try {
+          const res = await fetch('/api/tickets/me');
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json.success && Array.isArray(json.tickets) && json.tickets.length > 0) {
+            const listEl = document.querySelector('.ticket-list-panel');
+            if (listEl) {
+              listEl.innerHTML = '';
+              json.tickets.forEach((t, i) => {
+                const key = String(t.ticketId || t.id);
+                tickets[key] = {
+                  title: `#TICKET-${t.ticketId || t.id}: ${t.topic || 'Bantuan'}`,
+                  user: `@Member (${t.guildName})`,
+                  cat: t.status === 'closed' ? 'Tiket Ditutup' : 'Tiket Aktif'
+                };
+                const item = document.createElement('div');
+                item.className = `ticket-item ${i === 0 ? 'active' : ''}`;
+                item.dataset.id = key;
+                item.innerHTML = `
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <span style="font-size:12px;font-weight:700;color:#fff;">#TICKET-${t.ticketId || t.id}</span>
+                    <span class="badge ${t.status === 'closed' ? 'badge-muted' : 'badge-primary'}" style="font-size:9px;">${t.status || 'OPEN'}</span>
+                  </div>
+                  <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">${t.topic || 'Tiket Dukungan'}</div>
+                  <div style="font-size:10px;color:var(--text-muted);">${t.guildName || 'Server'} · ${new Date(t.createdAt).toLocaleDateString('id-ID')}</div>
+                `;
+                item.addEventListener('click', () => {
+                  document.querySelectorAll('.ticket-item').forEach(x => x.classList.remove('active'));
+                  item.classList.add('active');
+                  const dt = tickets[item.dataset.id];
+                  if (dt) {
+                    document.getElementById('ticketDetailTitle').textContent = dt.title;
+                    document.getElementById('ticketDetailUser').textContent = dt.user;
+                    document.getElementById('ticketDetailCat').textContent = dt.cat;
+                  }
+                });
+                listEl.appendChild(item);
+              });
+              const first = json.tickets[0];
+              document.getElementById('ticketDetailTitle').textContent = `#TICKET-${first.ticketId || first.id}: ${first.topic}`;
+              document.getElementById('ticketDetailUser').textContent = `@Member (${first.guildName})`;
+              document.getElementById('ticketDetailCat').textContent = first.status || 'OPEN';
+            }
+          }
+        } catch (_) {}
+      }
+      loadRealTickets();
+
       // Send reply simulation
       const replyInput = document.getElementById("replyInput");
       const btnSend = document.getElementById("btnSendReply");
@@ -528,5 +578,15 @@
       });
     </script>
       <script src="/src/js/sharedNav.js"></script>
+
+    <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
+      <div class="mobile-nav-inner">
+        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
+        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
+        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
+        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
+        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+      </div>
+    </nav>
 </body>
 </html>

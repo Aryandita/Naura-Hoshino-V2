@@ -7,7 +7,6 @@ const {
 } = require("../utils/NauraContainerBuilder");
 const ui = require("../config/ui");
 const UserProfile = require("../models/UserProfile");
-const GuildSettings = require("../models/GuildSettings");
 const LyricsManager = require("../music/LyricsManager"); // 👈 Memanggil mesin lirik baru
 
 const DEFAULT_EMOJIS = {
@@ -281,12 +280,7 @@ module.exports = async (interaction, client) => {
         !profile.premiumUntil ||
         profile.premiumUntil <= new Date()
       ) {
-        return ui.sendError(
-          interaction,
-          "err_sys_18",
-          `Gunakan /premium untuk berlangganan!`,
-          true,
-        );
+        return ui.sendError(interaction, "err_sys_18", true);
       }
 
       if (!player.currentTrack || !player.currentTrack.info) {
@@ -314,11 +308,7 @@ module.exports = async (interaction, client) => {
         !profile.premiumUntil ||
         profile.premiumUntil <= new Date()
       ) {
-        return ui.sendError(
-          interaction,
-          "err_sys_20",
-          `Gunakan /premium untuk berlangganan!`,
-        );
+        return ui.sendError(interaction, "err_sys_20", true);
       }
       player.isAutoplayMode = !player.isAutoplayMode;
       if (player.isAutoplayMode) player.setLoop("NONE");
@@ -359,11 +349,14 @@ module.exports = async (interaction, client) => {
       );
 
     case "music_247": {
-      const cacheManager = require("../managers/cacheManager");
-      const profile = await cacheManager.getUserProfile(interaction.user.id);
-      const guildSettings = await cacheManager.getGuildSettings(
-        interaction.guildId,
-      );
+      const UserProfile = require("../models/UserProfile");
+      const GuildSettings = require("../models/GuildSettings");
+      const [profile] = await UserProfile.findOrCreate({
+        where: { userId: interaction.user.id },
+      });
+      const guildSettings = await GuildSettings.findOne({
+        where: { guildId: interaction.guildId },
+      });
 
       const isUserVip =
         profile?.isPremium &&
@@ -375,11 +368,7 @@ module.exports = async (interaction, client) => {
       const isOwner = env.OWNER_IDS.includes(interaction.user.id);
 
       if (!isUserVip && !isGuildVip && !isOwner) {
-        return ui.sendError(
-          interaction,
-          "err_sys_21",
-          `Fitur Mode 24/7 khusus untuk VIP Premium / Owner. Gunakan /premium untuk berlangganan!`,
-        );
+        return ui.sendError(interaction, "err_sys_21", true);
       }
 
       player.is247 = !player.is247;

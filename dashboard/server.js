@@ -289,6 +289,8 @@ module.exports = (client) => {
   webApp.use(require("./routes/tickets")(client));
   webApp.use("/api/analytics", require("./routes/analytics")(client));
   webApp.use(require("./routes/socialFeed")(client));
+  webApp.use("/api/ai", require("./routes/ai")(client));
+  webApp.use("/api/survival", require("./routes/survival")(client));
   webApp.use("/api", require("./routes/api")(client));
 
   // --- Prometheus / Grafana Metrics Telemetry Endpoint ---
@@ -405,6 +407,8 @@ module.exports = (client) => {
   webApp.get("/survival-map", view("survival-map.html"));
   webApp.get("/soundboard", view("soundboard.html"));
   webApp.get("/jam", view("jam.html"));
+  webApp.get("/lounge", view("lounge.html"));
+  webApp.get("/war-room", view("war-room.html"));
 
   // --- API Survival Realtime Map Data (Sprint 23) ---
   webApp.get("/api/survival/map-data", async (req, res) => {

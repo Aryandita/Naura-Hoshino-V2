@@ -15,7 +15,11 @@ const { EmbedBuilder } = require("discord.js");
 const { logger } = require("../../src/managers/logger");
 const ui = require("../../src/config/ui");
 const guildSettingsService = require("../../src/managers/guildSettingsService");
-const { requireGuildManager } = require("../middleware/auth");
+const {
+  requireGuildManager,
+  isOwner,
+  MANAGE_GUILD,
+} = require("../middleware/auth");
 
 /** Nilai bawaan tata letak kartu welcomer. */
 const WELCOME_DEFAULTS = {
@@ -59,8 +63,416 @@ function toBool(value) {
   return value === true || value === "true";
 }
 
+/** Konfigurasi bawaan untuk Sandbox Demo Server */
+const SANDBOX_DEFAULTS = {
+  guildId: "sandbox",
+  guildName: "Aethelgard High Citadel",
+  isSandbox: true,
+  prefix: "n!",
+  features: {
+    music: true,
+    economy: true,
+    survival: true,
+    leveling: true,
+    aiPersona: true,
+    automod: true,
+  },
+  music: {
+    defaultVolume: 85,
+    twentyFourSeven: true,
+    djRoleId: "109283746592837465",
+  },
+  economy: {
+    taxPercent: 0.5,
+    allowStockMarket: true,
+  },
+  survival: {
+    vitalDrainRate: "normal",
+    wildernessPvp: true,
+  },
+  aiPersona: {
+    autoReply: true,
+    provider: "gemini",
+    customPersona:
+      "Naura adalah asisten pintar, ceria, dan ramah yang siap menemani seluruh petualang server.",
+  },
+  leveling: {
+    xpMultiplier: 1.5,
+    notifyMode: "channel",
+  },
+  automod: {
+    antiSpam: true,
+    antiInvite: true,
+    antiCaps: false,
+    massMention: 5,
+  },
+};
+
+let currentSandboxConfig = JSON.parse(JSON.stringify(SANDBOX_DEFAULTS));
+
 module.exports = (client) => {
   const router = express.Router();
+
+  // ------------------------------------------------------------------
+  // 1. Daftar Server yang Dapat Dikelola (Hybrid Live OAuth + Sandbox)
+  // ------------------------------------------------------------------
+  router.get("/api/guilds/manageable", (req, res) => {
+    try {
+      const sandboxEntry = {
+        id: "sandbox",
+        name: "🏰 Aethelgard High Citadel (Sandbox Demo)",
+        icon: "/assets/core/avatar.png",
+        acronym: "AHC",
+        isSandbox: true,
+        memberCount: 1420,
+        owner: true,
+        botPresent: true,
+      };
+
+      const userGuilds = Array.isArray(req.user?.guilds) ? req.user.guilds : [];
+      const botGuilds = client.guilds?.cache || new Map();
+
+      const manageable = userGuilds
+        .filter((g) => {
+          if (req.user && isOwner(req.user.id)) return true;
+          if (g.owner === true) return true;
+          try {
+            const perms = BigInt(g.permissions ?? g.permissions_new ?? 0);
+            return (perms & MANAGE_GUILD) === MANAGE_GUILD;
+          } catch {
+            return false;
+          }
+        })
+        .map((g) => {
+          const inBot =
+            typeof botGuilds.get === "function" ? botGuilds.get(g.id) : null;
+          const isGif = typeof g.icon === "string" && g.icon.startsWith("a_");
+          const iconUrl = g.icon
+            ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.${isGif ? "gif" : "png"}?size=128`
+            : null;
+          const acronym =
+            String(g.name || "")
+              .replace(/'s/g, "")
+              .replace(/\w+/g, (e) => e[0])
+              .replace(/\s+/g, "")
+              .slice(0, 3)
+              .toUpperCase() || "DC";
+
+          return {
+            id: String(g.id),
+            name: g.name,
+            icon: iconUrl,
+            acronym,
+            isGif,
+            isSandbox: false,
+            memberCount: inBot?.memberCount || 0,
+            owner: g.owner === true,
+            botPresent: !!inBot,
+          };
+        });
+
+      return res.json({
+        success: true,
+        guilds: [sandboxEntry, ...manageable],
+        activeGuildId: req.query?.selected || "sandbox",
+      });
+    } catch (e) {
+      logger.error("[API GUILDS MANAGEABLE] Error:", e);
+      return res.json({
+        success: true,
+        guilds: [
+          {
+            id: "sandbox",
+            name: "🏰 Aethelgard High Citadel (Sandbox Demo)",
+            icon: "/assets/core/avatar.png",
+            acronym: "AHC",
+            isSandbox: true,
+            memberCount: 1420,
+            owner: true,
+            botPresent: true,
+          },
+        ],
+      });
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // 2. Baca Konfigurasi Server Terpadu
+  // ------------------------------------------------------------------
+  router.get(
+    "/api/guilds/:guildId/config",
+    requireGuildManager,
+    async (req, res) => {
+      try {
+        if (req.isSandbox || req.guildId === "sandbox") {
+          return res.json({
+            success: true,
+            isSandbox: true,
+            config: currentSandboxConfig,
+          });
+        }
+
+        const guildId = req.guildId;
+        const settings =
+          (await guildSettingsService.getGuildSetting(guildId)) || {};
+        const guild =
+          typeof client.guilds?.cache?.get === "function"
+            ? client.guilds.cache.get(guildId)
+            : null;
+
+        const rawSettings = settings.settings || {};
+        const features = rawSettings.features || {};
+        const music = settings.music || {};
+        const automod = rawSettings.automod || {};
+        const aiPersona = rawSettings.aiPersona || {};
+
+        const config = {
+          guildId,
+          guildName: guild?.name || `Guild #${guildId}`,
+          isSandbox: false,
+          prefix: settings.system?.prefix || settings.prefix || "n!",
+          features: {
+            music: features.music !== false,
+            economy: features.economy !== false,
+            survival: features.survival !== false,
+            leveling: features.leveling !== false,
+            aiPersona: features.aiPersona !== false,
+            automod: automod.enabled !== false,
+          },
+          music: {
+            defaultVolume: Number(music.defaultVolume) || 80,
+            twentyFourSeven: toBool(music.twentyFourSeven),
+            djRoleId: music.djRoleId || "",
+          },
+          economy: {
+            taxPercent: Number(rawSettings.economy?.taxPercent) || 0.5,
+            allowStockMarket: rawSettings.economy?.allowStockMarket !== false,
+          },
+          survival: {
+            vitalDrainRate: rawSettings.survival?.vitalDrainRate || "normal",
+            wildernessPvp: rawSettings.survival?.wildernessPvp !== false,
+          },
+          aiPersona: {
+            autoReply: aiPersona.autoReply !== false,
+            provider: aiPersona.provider || "gemini",
+            customPersona:
+              aiPersona.customPersona || aiPersona.systemPrompt || "",
+          },
+          leveling: {
+            xpMultiplier: Number(rawSettings.leveling?.xpMultiplier) || 1.0,
+            notifyMode: rawSettings.leveling?.notifyMode || "channel",
+          },
+          automod: {
+            antiSpam: automod.antiSpam !== false,
+            antiInvite: toBool(automod.antiInvite),
+            antiCaps: toBool(automod.antiCaps),
+            massMention: Number(automod.massMention) || 5,
+          },
+        };
+
+        return res.json({ success: true, isSandbox: false, config });
+      } catch (e) {
+        logger.error("[API GUILD CONFIG GET] Error:", e);
+        return res
+          .status(500)
+          .json({ success: false, error: "Gagal memuat konfigurasi server." });
+      }
+    },
+  );
+
+  // ------------------------------------------------------------------
+  // 3. Simpan Konfigurasi Server (PG + Redis sync)
+  // ------------------------------------------------------------------
+  router.post(
+    "/api/guilds/:guildId/config",
+    requireGuildManager,
+    async (req, res) => {
+      try {
+        const updates = req.body || {};
+
+        if (req.isSandbox || req.guildId === "sandbox") {
+          if (updates.features)
+            currentSandboxConfig.features = {
+              ...currentSandboxConfig.features,
+              ...updates.features,
+            };
+          if (updates.music)
+            currentSandboxConfig.music = {
+              ...currentSandboxConfig.music,
+              ...updates.music,
+            };
+          if (updates.economy)
+            currentSandboxConfig.economy = {
+              ...currentSandboxConfig.economy,
+              ...updates.economy,
+            };
+          if (updates.survival)
+            currentSandboxConfig.survival = {
+              ...currentSandboxConfig.survival,
+              ...updates.survival,
+            };
+          if (updates.aiPersona)
+            currentSandboxConfig.aiPersona = {
+              ...currentSandboxConfig.aiPersona,
+              ...updates.aiPersona,
+            };
+          if (updates.leveling)
+            currentSandboxConfig.leveling = {
+              ...currentSandboxConfig.leveling,
+              ...updates.leveling,
+            };
+          if (updates.automod)
+            currentSandboxConfig.automod = {
+              ...currentSandboxConfig.automod,
+              ...updates.automod,
+            };
+          if (updates.prefix)
+            currentSandboxConfig.prefix = String(updates.prefix).slice(0, 8);
+
+          return res.json({
+            success: true,
+            isSandbox: true,
+            message: "Pengaturan Sandbox Demo Server berhasil disimpan!",
+            config: currentSandboxConfig,
+          });
+        }
+
+        const guildId = req.guildId;
+        await guildSettingsService.updateGuildSetting(guildId, (settings) => {
+          if (!settings.settings) settings.settings = {};
+          if (!settings.settings.features) settings.settings.features = {};
+          if (!settings.music) settings.music = {};
+
+          if (updates.prefix) {
+            if (!settings.system) settings.system = {};
+            settings.system.prefix = String(updates.prefix).slice(0, 8);
+            settings.prefix = String(updates.prefix).slice(0, 8);
+          }
+
+          if (updates.features) {
+            settings.settings.features = {
+              ...settings.settings.features,
+              ...updates.features,
+            };
+          }
+
+          if (updates.music) {
+            settings.music = {
+              ...settings.music,
+              defaultVolume:
+                updates.music.defaultVolume !== undefined
+                  ? Math.max(
+                      0,
+                      Math.min(100, Number(updates.music.defaultVolume)),
+                    )
+                  : settings.music.defaultVolume,
+              twentyFourSeven:
+                updates.music.twentyFourSeven !== undefined
+                  ? toBool(updates.music.twentyFourSeven)
+                  : settings.music.twentyFourSeven,
+              djRoleId:
+                updates.music.djRoleId !== undefined
+                  ? String(updates.music.djRoleId || "")
+                  : settings.music.djRoleId,
+            };
+          }
+
+          if (updates.economy) {
+            if (!settings.settings.economy) settings.settings.economy = {};
+            settings.settings.economy = {
+              ...settings.settings.economy,
+              ...updates.economy,
+            };
+          }
+
+          if (updates.survival) {
+            if (!settings.settings.survival) settings.settings.survival = {};
+            settings.settings.survival = {
+              ...settings.settings.survival,
+              ...updates.survival,
+            };
+          }
+
+          if (updates.aiPersona) {
+            if (!settings.settings.aiPersona) settings.settings.aiPersona = {};
+            settings.settings.aiPersona = {
+              ...settings.settings.aiPersona,
+              ...updates.aiPersona,
+            };
+          }
+
+          if (updates.leveling) {
+            if (!settings.settings.leveling) settings.settings.leveling = {};
+            settings.settings.leveling = {
+              ...settings.settings.leveling,
+              ...updates.leveling,
+            };
+          }
+
+          if (updates.automod) {
+            if (!settings.settings.automod) settings.settings.automod = {};
+            settings.settings.automod = {
+              ...settings.settings.automod,
+              ...updates.automod,
+            };
+          }
+        });
+
+        return res.json({
+          success: true,
+          isSandbox: false,
+          message:
+            "Pengaturan server berhasil disimpan ke database PostgreSQL & cache Redis telah disegarkan!",
+        });
+      } catch (e) {
+        logger.error("[API GUILD CONFIG POST] Error:", e);
+        return res
+          .status(500)
+          .json({ success: false, error: "Gagal menyimpan konfigurasi server." });
+      }
+    },
+  );
+
+  // ------------------------------------------------------------------
+  // 4. Reset Konfigurasi Server ke Default
+  // ------------------------------------------------------------------
+  router.post(
+    "/api/guilds/:guildId/reset",
+    requireGuildManager,
+    async (req, res) => {
+      try {
+        if (req.isSandbox || req.guildId === "sandbox") {
+          currentSandboxConfig = JSON.parse(JSON.stringify(SANDBOX_DEFAULTS));
+          return res.json({
+            success: true,
+            isSandbox: true,
+            message: "Pengaturan Sandbox telah dikembalikan ke bawaan pabrik!",
+            config: currentSandboxConfig,
+          });
+        }
+
+        await guildSettingsService.updateGuildSetting(req.guildId, (settings) => {
+          settings.settings = {};
+          settings.music = {
+            twentyFourSeven: false,
+            defaultVolume: 100,
+            djRoleId: null,
+          };
+        });
+
+        return res.json({
+          success: true,
+          isSandbox: false,
+          message: "Pengaturan server telah direset ke bawaan pabrik.",
+        });
+      } catch (e) {
+        logger.error("[API GUILD CONFIG RESET] Error:", e);
+        return res
+          .status(500)
+          .json({ success: false, error: "Gagal me-reset pengaturan server." });
+      }
+    },
+  );
 
   // ------------------------------------------------------------------
   // Pengaturan umum server

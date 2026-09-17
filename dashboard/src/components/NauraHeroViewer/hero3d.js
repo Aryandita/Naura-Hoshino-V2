@@ -57,6 +57,7 @@ export class NauraHero3DViewer {
         this.skinnedMeshes = [];
         this.primarySkinnedMesh = null;
         this.bones = {};
+        this.skirtBones = [];
         this.boneRestQuats = {};
         this.isLoaded = false;
         this.isLoadingModel = false;
@@ -287,9 +288,15 @@ export class NauraHero3DViewer {
             this.skinnedMeshes = [];
             this.primarySkinnedMesh = null;
             this.bones = {};
+            this.skirtBones = [];
             this.boneRestQuats = {};
 
             this.modelGroup.traverse((node) => {
+                if (node.isBone && /skirt|dress|cloth/i.test(node.name)) {
+                    this.skirtBones.push(node);
+                    this.boneRestQuats[node.name] = node.quaternion.clone();
+                }
+
                 if (node.isMesh || node.isSkinnedMesh) {
                     if (node.isSkinnedMesh) {
                         this.skinnedMeshes.push(node);
@@ -302,7 +309,12 @@ export class NauraHero3DViewer {
                     if (node.skeleton && node.skeleton.bones && Object.keys(this.bones).length === 0) {
                         node.skeleton.bones.forEach((b) => {
                             this.bones[b.name] = b;
-                            this.boneRestQuats[b.name] = b.quaternion.clone();
+                            if (!this.boneRestQuats[b.name]) {
+                                this.boneRestQuats[b.name] = b.quaternion.clone();
+                            }
+                            if (/skirt|dress|cloth/i.test(b.name) && !this.skirtBones.includes(b)) {
+                                this.skirtBones.push(b);
+                            }
                         });
                     }
 
@@ -431,6 +443,7 @@ export class NauraHero3DViewer {
             this.skinnedMeshes = [];
             this.primarySkinnedMesh = null;
             this.bones = {};
+            this.skirtBones = [];
             this.boneRestQuats = {};
             this.modelGroup = null;
             this.isLoaded = false;
@@ -518,6 +531,17 @@ export class NauraHero3DViewer {
         // 3. Update AnimationMixer & procedural kinematic engine (which updates vrm physics then sets humanoid bones)
         if (this.animController) {
             this.animController.update(delta, elapsed);
+        }
+
+        // Penstabil tulang rok (Skirt Bone Stabilizer) untuk menjaga tekstur rok tetap stabil ke bawah
+        if (this.skirtBones && this.skirtBones.length > 0) {
+            for (let i = 0; i < this.skirtBones.length; i++) {
+                const b = this.skirtBones[i];
+                const restQuat = this.boneRestQuats[b.name];
+                if (restQuat) {
+                    b.quaternion.slerp(restQuat, 0.45);
+                }
+            }
         }
 
         // 4. Mouse dampening

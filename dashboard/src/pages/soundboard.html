@@ -172,6 +172,25 @@
         transform: translateY(0);
         opacity: 1;
       }
+      .pad-broadcast-btn {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        background: rgba(34, 211, 238, 0.15);
+        border: 1px solid rgba(34, 211, 238, 0.35);
+        color: var(--accent-cyan);
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .pad-broadcast-btn:hover {
+        background: var(--accent-cyan);
+        color: #0b1120;
+        transform: scale(1.1);
+      }
     </style>
   </head>
   <body>
@@ -190,11 +209,11 @@
           </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
+            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
+          </div>
           <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
             <i class="fa-solid fa-xmark"></i>
           </button>
-            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
-          </div>
         </div>
                 <!-- Navigation -->
                 <!-- Navigation -->
@@ -391,6 +410,52 @@
       </div>
     </div>
 
+    <!-- Modal Upload SFX Kustom -->
+    <div id="customSfxModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);z-index:99999;align-items:center;justify-content:center;padding:20px;">
+      <div style="background:#0f172a;border:1px solid var(--border-medium);border-radius:var(--r-xl);max-width:480px;width:100%;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,0.6);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h3 style="font-family:var(--font-heading);font-size:17px;font-weight:700;color:var(--text-primary);">
+            <i class="fa-solid fa-upload" style="color:var(--primary);margin-right:8px;"></i> Tambah SFX Kustom
+          </h3>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="closeUploadModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div id="dropzone" style="border:2px dashed var(--border-medium);border-radius:var(--r-lg);padding:30px 20px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:all 0.2s;">
+          <i class="fa-solid fa-cloud-arrow-up" style="font-size:32px;color:var(--primary);margin-bottom:10px;"></i>
+          <div style="font-size:13px;font-weight:600;color:var(--text-primary);" id="dropzoneText">Pilih atau Seret File Audio ke Sini</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Mendukung MP3, WAV, OGG (Maks. 5 MB)</div>
+          <input type="file" id="customAudioFile" accept="audio/*" style="display:none;" />
+        </div>
+
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <label style="font-size:12px;font-weight:600;color:var(--text-secondary);">Nama Efek Suara</label>
+            <input type="text" class="text-input-field" id="inputSfxName" placeholder="Contoh: Anime Wow / Kemenangan" style="margin-top:4px;" />
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);">Kategori</label>
+              <select class="select-input" id="selectSfxCategory" style="width:100%;margin-top:4px;">
+                <option value="memes">📢 Memes</option>
+                <option value="reaction">🎉 Reaction</option>
+                <option value="gaming">🎮 Gaming</option>
+                <option value="voice">🌸 Voice</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);">Shortcut Tombol</label>
+              <input type="text" class="text-input-field" id="inputSfxKey" maxlength="1" placeholder="Misal: T" style="margin-top:4px;text-transform:uppercase;" />
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:10px;">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="closeUploadModal()">Batal</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btnSaveCustomSfx"><i class="fa-solid fa-check"></i> Pasang ke Pad</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Alert Element -->
     <div class="toast-alert" id="toastAlert">
       <i class="fa-solid fa-circle-check" style="color:var(--accent-green);font-size:18px;"></i>
@@ -440,7 +505,12 @@
               <div class="pad-icon" style="background:${sound.color}15;color:${sound.color};border:1px solid ${sound.color}35;">
                 <i class="fa-solid ${sound.icon}"></i>
               </div>
-              <span class="pad-key">${sound.key}</span>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <button type="button" class="pad-broadcast-btn" title="Siarkan langsung ke Voice Channel Discord" onclick="event.stopPropagation(); broadcastToDiscord('${sound.id}', '${sound.name}')">
+                  <i class="fa-solid fa-tower-broadcast"></i>
+                </button>
+                <span class="pad-key">${sound.key}</span>
+              </div>
             </div>
             <div>
               <div class="pad-name">${sound.name}</div>
@@ -671,9 +741,121 @@
       }
       drawViz();
 
+      // Broadcast to Discord Voice Channel
+      async function broadcastToDiscord(soundId, soundName) {
+        showToast("Menyiarkan ke Discord...", `Mengirim sound "${soundName}" ke Poru Lavalink`);
+        try {
+          const res = await fetch("/api/soundboard/play", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ guildId: "sandbox", soundId }),
+          });
+          const data = await res.json();
+          if (data && data.success) {
+            showToast("Disiarkan ke Discord!", data.message || `"${soundName}" sedang diputar di voice channel.`);
+          } else {
+            showToast("Info Voice Discord", data?.message || data?.error || `Sound disiarkan ke bot channel.`);
+          }
+        } catch (_) {
+          showToast("Mode Pratinjau", `Disimulasikan ke Voice Channel #General.`);
+        }
+      }
+
+      // Modal Upload SFX Logic
+      const modal = document.getElementById("customSfxModal");
+      const dropzone = document.getElementById("dropzone");
+      const fileInput = document.getElementById("customAudioFile");
+      let selectedCustomFile = null;
+
+      window.openUploadModal = () => {
+        if (modal) modal.style.display = "flex";
+      };
+      window.closeUploadModal = () => {
+        if (modal) modal.style.display = "none";
+        selectedCustomFile = null;
+        document.getElementById("dropzoneText").textContent = "Pilih atau Seret File Audio ke Sini";
+        document.getElementById("inputSfxName").value = "";
+      };
+
+      document.getElementById("btnUploadModal")?.addEventListener("click", window.openUploadModal);
+
+      dropzone?.addEventListener("click", () => fileInput?.click());
+      dropzone?.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = "var(--primary)";
+      });
+      dropzone?.addEventListener("dragleave", () => {
+        dropzone.style.borderColor = "var(--border-medium)";
+      });
+      dropzone?.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = "var(--border-medium)";
+        if (e.dataTransfer.files?.length > 0) {
+          handleFileSelection(e.dataTransfer.files[0]);
+        }
+      });
+
+      fileInput?.addEventListener("change", (e) => {
+        if (e.target.files?.length > 0) {
+          handleFileSelection(e.target.files[0]);
+        }
+      });
+
+      function handleFileSelection(file) {
+        if (!file.type.includes("audio")) {
+          alert("Mohon pilih file audio berformat MP3, WAV, atau OGG.");
+          return;
+        }
+        selectedCustomFile = file;
+        document.getElementById("dropzoneText").innerHTML = `<span style="color:#34d399;">✓ ${file.name}</span> (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        const nameInput = document.getElementById("inputSfxName");
+        if (nameInput && !nameInput.value) {
+          nameInput.value = file.name.replace(/\.[^/.]+$/, "");
+        }
+      }
+
+      document.getElementById("btnSaveCustomSfx")?.addEventListener("click", () => {
+        const name = document.getElementById("inputSfxName")?.value?.trim();
+        const category = document.getElementById("selectSfxCategory")?.value || "memes";
+        const key = (document.getElementById("inputSfxKey")?.value?.trim() || "K").toUpperCase();
+
+        if (!selectedCustomFile && !name) {
+          alert("Mohon pilih file audio dan isi nama SFX.");
+          return;
+        }
+
+        const customUrl = selectedCustomFile ? URL.createObjectURL(selectedCustomFile) : "/assets/audio/soundboard/applause.mp3";
+        const newSound = {
+          id: `custom_${Date.now()}`,
+          name: name || "Custom Sound",
+          category,
+          key,
+          duration: "Custom",
+          icon: "fa-music",
+          color: "#00ffff",
+          src: customUrl,
+          desc: "SFX Kustom Unggahan Lokal",
+        };
+
+        SOUNDS.unshift(newSound);
+        renderPads();
+        closeUploadModal();
+        showToast("SFX Kustom Ditambahkan", `"${newSound.name}" siap diputar di soundboard!`);
+      });
+
       // Initial pad render
       renderPads();
     </script>
       <script src="/src/js/sharedNav.js"></script>
+
+    <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
+      <div class="mobile-nav-inner">
+        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
+        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
+        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
+        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
+        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+      </div>
+    </nav>
 </body>
 </html>

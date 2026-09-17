@@ -132,8 +132,15 @@ function main() {
     fs.copyFileSync(distSrcIndex, distRootIndex);
   }
 
+  // 5. Pastikan dist/src/js disalin untuk mendukung skrip modular runtime
+  const distSrcJs = path.join(dashboardDir, "dist", "src", "js");
+  const origSrcJs = path.join(dashboardDir, "src", "js");
+  if (fs.existsSync(origSrcJs)) {
+    fs.cpSync(origSrcJs, distSrcJs, { recursive: true });
+  }
+
   console.log(
-    `[BUILD] dist tersalin ke ${path.join(dashboardDir, "dist")} (termasuk root index.html)`,
+    `[BUILD] dist tersalin ke ${path.join(dashboardDir, "dist")} (termasuk root index.html dan src/js)`,
   );
 }
 

@@ -132,8 +132,12 @@ Seluruh ekosistem, package.json, dan suite dokumentasi wajib mematuhi standar ti
   - DILARANG menggunakan `setTimeout` statis untuk status pemutaran audio. Selalu dengarkan event native `HTMLMediaElement` (`ended`, `pause`, `play`).
 - **Live Status & Telemetri**:
   - Data status layanan di `status.html` disuplai oleh endpoint nyata `GET /api/health` dan siaran Socket.IO `stats_update` setiap 3 detik.
-- **Paritas Dashboard Utama**:
-  - Struktur UI dan file halaman MPA di `dashboard/src/pages/` dan `dashboard-preview/src/pages/` dijaga sinkron dan menggunakan Stellar Glass Design System (`stellar.css`).
+- **Standar Tunggal UI Web Dashboard (Stellar Glass OS MPA)**:
+  - Kelompok antarmuka resmi Web Dashboard Naura Hoshino V2 adalah **Stellar Glass OS (Dashboard B)** berbasis token CSS di `dashboard/src/css/stellar.css` dengan tipografi `Space Grotesk`, `Inter`, dan `JetBrains Mono`.
+  - Sumber kebenaran tunggal (*single source of truth*) seluruh halaman web adalah direktori `dashboard/src/pages/*.html` (Multi-Page Architecture: `index.html`, `world.html`, `survival-map.html`, `status.html`, `music.html`, `leaderboard.html`, `economy.html`, dll.).
+  - Seluruh layout monolitik usang (Dashboard A dengan mobile dock bottom nav lawas `#120e16` tanpa kategori modular) telah dihapus dan dilarang digunakan kembali.
+  - Folder `dashboard/dist/` adalah artefak kompilasi build murni dari `npm run dashboard:build`. Dilarang menempatkan atau menyunting berkas manual di dalam `dist/`.
+  - Root URL `/` menyajikan `dashboard/src/pages/index.html` (di-bundle ke `dashboard/dist/index.html`) yang memuat integrasi 3D Companion (`NauraHeroViewer`), telemetry real-time, status layanan, dan menu lengkap Naura Wilds RPG (*World Map* dan *Survival Map*).
 
 ---
 

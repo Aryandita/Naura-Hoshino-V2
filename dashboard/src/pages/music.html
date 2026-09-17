@@ -217,11 +217,11 @@
           </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
+            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
+          </div>
           <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
             <i class="fa-solid fa-xmark"></i>
           </button>
-            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
-          </div>
         </div>
                 <!-- Navigation -->
                 <!-- Navigation -->
@@ -647,13 +647,13 @@
     </div>
 
     <!-- Mobile Nav -->
-    <nav class="mobile-nav">
+    <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Home</span></a>
-        <a href="/music" class="mobile-nav-item active"><span class="mn-icon"><i class="fa-solid fa-music"></i></span><span class="mn-label">Music</span></a>
-        <a href="/leaderboard" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-trophy"></i></span><span class="mn-label">Ranking</span></a>
-        <a href="/economy" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-coins"></i></span><span class="mn-label">Economy</span></a>
-        <a href="/settings" class="mobile-nav-item"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
+        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
+        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
+        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
+        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
       </div>
     </nav>
 
@@ -670,18 +670,88 @@
         });
       }
 
+      // Live Music State & Controls
       let isPlaying = false;
 
-      function togglePlay() {
-        isPlaying = !isPlaying;
-        const icon = document.getElementById('playIcon');
-        icon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
-        document.getElementById('artworkDisc').classList.toggle('playing', isPlaying);
-        document.getElementById('eqBars').classList.toggle('eq-playing', isPlaying);
+      function formatTime(ms) {
+        const totalSec = Math.floor(Number(ms || 0) / 1000);
+        const m = Math.floor(totalSec / 60);
+        const s = totalSec % 60;
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
       }
 
+      async function fetchMusicState() {
+        try {
+          const res = await fetch('/api/music/state');
+          if (!res.ok) return;
+          const data = await res.json();
+          if (!data.success) return;
+
+          isPlaying = data.isPlaying && !data.isPaused;
+          const playIcon = document.getElementById('playIcon');
+          if (playIcon) playIcon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+
+          const disc = document.getElementById('artworkDisc');
+          if (disc) disc.classList.toggle('playing', isPlaying);
+          const eq = document.getElementById('eqBars');
+          if (eq) eq.classList.toggle('eq-playing', isPlaying);
+
+          const titleEl = document.getElementById('nowPlayingTitle');
+          if (titleEl && data.currentTrack?.title) titleEl.textContent = data.currentTrack.title;
+
+          const artistEl = document.getElementById('nowPlayingArtist');
+          if (artistEl && data.currentTrack?.author) artistEl.textContent = data.currentTrack.author;
+
+          const dur = data.currentTrack?.duration || 0;
+          const pos = data.currentTrack?.position || 0;
+          const durEl = document.getElementById('musicDuration');
+          if (durEl) durEl.textContent = formatTime(dur);
+          const curEl = document.getElementById('musicCurrentTime');
+          if (curEl) curEl.textContent = formatTime(pos);
+
+          const progressEl = document.getElementById('musicProgress');
+          if (progressEl && dur > 0) {
+            progressEl.style.width = `${Math.min(100, Math.round((pos / dur) * 100))}%`;
+          }
+
+          if (data.volume !== undefined) {
+            const volSlider = document.getElementById('volumeSlider');
+            const volLabel = document.getElementById('volumeLabel');
+            if (volSlider && document.activeElement !== volSlider) volSlider.value = data.volume;
+            if (volLabel) volLabel.textContent = `${data.volume}%`;
+          }
+        } catch (_) {}
+      }
+
+      async function togglePlay() {
+        isPlaying = !isPlaying;
+        const icon = document.getElementById('playIcon');
+        if (icon) icon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+        document.getElementById('artworkDisc')?.classList.toggle('playing', isPlaying);
+        document.getElementById('eqBars')?.classList.toggle('eq-playing', isPlaying);
+
+        try {
+          await fetch('/api/music/control', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ guildId: 'current', action: 'playpause' }),
+          });
+        } catch (_) {}
+      }
+
+      document.getElementById('btnNext')?.addEventListener('click', async () => {
+        try {
+          await fetch('/api/music/control', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ guildId: 'current', action: 'skip' }),
+          });
+          setTimeout(fetchMusicState, 300);
+        } catch (_) {}
+      });
+
       // Volume slider label update
-      document.getElementById('volumeSlider').addEventListener('input', function() {
+      document.getElementById('volumeSlider')?.addEventListener('input', function() {
         document.getElementById('volumeLabel').textContent = this.value + '%';
       });
 
@@ -698,9 +768,14 @@
       setAudioFilter('none');
 
       // AI DJ toggle
-      document.getElementById('aiDjToggle').addEventListener('change', function() {
+      document.getElementById('aiDjToggle')?.addEventListener('change', function() {
         document.getElementById('aiDjStatus').textContent = this.checked ? 'Active' : 'Offline';
         document.getElementById('aiDjStatus').className = this.checked ? 'badge badge-violet' : 'badge badge-muted';
+      });
+
+      window.addEventListener('load', () => {
+        fetchMusicState();
+        setInterval(fetchMusicState, 3000);
       });
 
       // Mobile grid

@@ -144,10 +144,12 @@ async function main() {
     send("Runtime.enable");
     send("Page.enable");
 
+    const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
+
     // 1. Dashboard Utama (Tunggu 3D Hero Avatar selesai termuat)
     const mainDashPath = path.join(ARTIFACT_DIR, "main_dashboard_preview.png");
     console.log("[CDP] Mengambil pratinjau Dashboard Utama...");
-    send("Page.navigate", { url: "http://localhost:19130/" });
+    send("Page.navigate", { url: `${BASE_URL}/` });
     await new Promise((r) => setTimeout(r, 2000));
     await waitForHeroViewer(ws, send, 25000);
     const shotMsgId1 = send("Page.captureScreenshot", { format: "png" });
@@ -166,13 +168,17 @@ async function main() {
       console.log(`[CDP] Dashboard utama tersimpan: ${mainDashPath}`);
     }
 
+    // 1b. Server Management & Live Configurator (Settings)
+    const settingsPath = path.join(ARTIFACT_DIR, "settings_server_preview.png");
+    await captureUrl(ws, send, `${BASE_URL}/settings`, settingsPath, 3000);
+
     // 2. World Map (Desa Khul'Khas Salju di puncak es kanan atas & Istana Draken di kawah magma kanan bawah)
     const worldImgPath = path.join(ARTIFACT_DIR, "world_map_preview.png");
-    await captureUrl(ws, send, "http://localhost:19130/world", worldImgPath, 3500);
+    await captureUrl(ws, send, `${BASE_URL}/world`, worldImgPath, 3500);
 
     // 3. World Map dengan Intel Drawer (klik Desa Khul'Khas Salju)
     const intelImgPath = path.join(ARTIFACT_DIR, "world_intel_drawer_preview.png");
-    await captureUrl(ws, send, "http://localhost:19130/world", intelImgPath, 2500, async () => {
+    await captureUrl(ws, send, `${BASE_URL}/world`, intelImgPath, 2500, async () => {
       send("Runtime.evaluate", {
         expression: `(() => {
           const khulkhasNode = document.getElementById('node-khulkhas') || document.querySelector('[data-zone="desa_khulkhas"]');
@@ -184,11 +190,11 @@ async function main() {
 
     // 4. Survival Radar: Desa Sukamaju (Lembah Pinus & Tambang)
     const radarSukamajuPath = path.join(ARTIFACT_DIR, "survival_radar_sukamaju.png");
-    await captureUrl(ws, send, "http://localhost:19130/survival-map", radarSukamajuPath, 3000);
+    await captureUrl(ws, send, `${BASE_URL}/survival-map`, radarSukamajuPath, 3000);
 
     // 5. Survival Radar: Kota Pratama (Cyberpunk Metropolitan HUD)
     const radarPratamaPath = path.join(ARTIFACT_DIR, "survival_radar_pratama.png");
-    await captureUrl(ws, send, "http://localhost:19130/survival-map", radarPratamaPath, 2000, async () => {
+    await captureUrl(ws, send, `${BASE_URL}/survival-map`, radarPratamaPath, 2000, async () => {
       send("Runtime.evaluate", {
         expression: `(() => {
           const tabPratama = document.getElementById('tabPratama');
@@ -200,7 +206,7 @@ async function main() {
 
     // 6. Survival Radar: Desa Khul'Khas (Tundra Pegunungan Salju Es)
     const radarKhulkhasPath = path.join(ARTIFACT_DIR, "survival_radar_khulkhas.png");
-    await captureUrl(ws, send, "http://localhost:19130/survival-map", radarKhulkhasPath, 2000, async () => {
+    await captureUrl(ws, send, `${BASE_URL}/survival-map`, radarKhulkhasPath, 2000, async () => {
       send("Runtime.evaluate", {
         expression: `(() => {
           const tabKhulkhas = document.getElementById('tabKhulkhas');
@@ -212,7 +218,7 @@ async function main() {
 
     // 7. Survival Radar: Istana Draken (Magma Abyss Dungeon)
     const radarDrakenPath = path.join(ARTIFACT_DIR, "survival_radar_draken.png");
-    await captureUrl(ws, send, "http://localhost:19130/survival-map", radarDrakenPath, 2000, async () => {
+    await captureUrl(ws, send, `${BASE_URL}/survival-map`, radarDrakenPath, 2000, async () => {
       send("Runtime.evaluate", {
         expression: `(() => {
           const tabDraken = document.getElementById('tabDraken');
@@ -221,6 +227,10 @@ async function main() {
       });
       await new Promise((r) => setTimeout(r, 1500));
     });
+
+    // 8. Music Player (Cover foto memenuhi frame)
+    const musicPagePath = path.join(ARTIFACT_DIR, "music_page_preview.png");
+    await captureUrl(ws, send, `${BASE_URL}/music`, musicPagePath, 3000);
 
     ws.close();
     console.log("Semua tangkapan layar preview berhasil dihasilkan!");

@@ -19,7 +19,7 @@ export const waveSequence = {
             {
                 "t": 0.097,
                 "val": [
-                    1.112,
+                    0.92,
                     -0.03,
                     0.152
                 ]
@@ -27,7 +27,7 @@ export const waveSequence = {
             {
                 "t": 0.194,
                 "val": [
-                    1.5,
+                    1.05,
                     0,
                     0.2
                 ]
@@ -35,7 +35,7 @@ export const waveSequence = {
             {
                 "t": 0.292,
                 "val": [
-                    1.5,
+                    1.05,
                     0,
                     0.2
                 ]
@@ -43,7 +43,7 @@ export const waveSequence = {
             {
                 "t": 0.389,
                 "val": [
-                    1.5,
+                    1.05,
                     0,
                     0.2
                 ]
@@ -51,7 +51,7 @@ export const waveSequence = {
             {
                 "t": 0.486,
                 "val": [
-                    1.5,
+                    1.05,
                     0,
                     0.2
                 ]
@@ -59,7 +59,7 @@ export const waveSequence = {
             {
                 "t": 0.583,
                 "val": [
-                    1.5,
+                    1.05,
                     0,
                     0.2
                 ]
@@ -67,7 +67,7 @@ export const waveSequence = {
             {
                 "t": 0.681,
                 "val": [
-                    1.5,
+                    1.05,
                     0,
                     0.2
                 ]
@@ -75,7 +75,7 @@ export const waveSequence = {
             {
                 "t": 0.778,
                 "val": [
-                    1.373,
+                    0.98,
                     -0.012,
                     0.186
                 ]

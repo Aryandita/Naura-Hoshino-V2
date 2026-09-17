@@ -52,6 +52,11 @@ export class ArmController {
                 current[1] += (base[1] - current[1]) * lerpSpeed;
                 current[2] += (base[2] - current[2]) * lerpSpeed;
 
+                // Mitigasi pelindung deformasi tekstur rok (anti-glitch skinning pada kedua sisi tubuh)
+                if (key === "rightUpperArm" || key === "leftUpperArm") {
+                    current[0] = Math.max(-0.6, Math.min(1.12, current[0]));
+                }
+
                 slerpBone(bone, base, current, 1.0);
             } catch (err) {
                 console.warn(`[NauraAnimation:Arms] Error updating ${key}:`, err.message);

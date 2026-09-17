@@ -344,12 +344,24 @@ function buildErrorContainerV2(opts) {
     pick(opts, "lang") || pick(opts, "interaction") || pick(opts, "message");
   const activeLang = resolveLanguage(langContext);
   const footerCategory = pick(opts, "footerCategory") || "core";
-  const rawError =
+  let rawError =
     typeof opts === "string"
       ? opts
       : pick(opts, "errorMessage") ||
         pick(opts, "description") ||
         t(activeLang, "common.error.reason_fallback");
+
+  // Terjemahkan otomatis jika rawError berupa kunci kamus (misal err_sys_XX)
+  if (typeof rawError === "string" && rawError.trim()) {
+    const trimmed = rawError.trim();
+    if (trimmed.startsWith("err_sys_") || /^[a-z0-9_.-]+$/i.test(trimmed)) {
+      const translated = t(activeLang, trimmed);
+      if (translated && translated !== trimmed) {
+        rawError = translated;
+      }
+    }
+  }
+
   const title = pick(opts, "title") || t(activeLang, "common.error.title");
   const authorName =
     pick(opts, "authorName") ||
