@@ -25,7 +25,8 @@
 | **UI Discord**          | Wajib Components V2 via `buildContainerV2()` struktur 5-lapisan, flags `32768`            | Bagian 1.4         |
 | **Desain Survival**     | Sub-brand Naura Wilds, token warna dari `src/utils/survivalUIHelper.js`                   | Bagian 1.5         |
 | **Tulis Data User**     | HANYA via `cacheManager` (increment/debit/mutateJson), bukan model langsung               | Bagian 1.6         |
-| **Currency V2 Moneter** | One-Way Bridge (Coin ke NSF dilarang), Dynamic Spread, 4-Channel Closed-Loop Pool         | Bagian 1.6.3       |
+| **Currency V2 Moneter** | Controlled Bridge (1000 NSF = 1 NC, Spread Fee 5-25%), 4-Channel Closed-Loop Pool       | Bagian 1.6.3 & 1.6.4 |
+| **Diskon & Modifier NPC** | Single Modifier tertinggi, Hard Cap 50%, Pengecualian Mythic/Bursa, Floor Price 1       | Bagian 1.6.5         |
 | **Tulis GuildSettings** | HANYA via `guildSettingsService.updateGuildSetting()`                                     | Bagian 1.8         |
 | **Render Canvas**       | HANYA via `src/canvas/canvasRuntime.js` -> `canvasWorkerPool.js` (Worker Threads)         | Bagian 1.9         |
 | **AI Ensemble Router**  | Multi-LLM (Gemini 2.5 -> Groq LLaMA 3.3 -> Ollama) dengan Circuit Breaker otomatis       | Bagian 1.11        |
@@ -167,14 +168,33 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 
 ### 1.6.3 Sistem Moneter Currency V2 & Closed-Loop Recycling Pool
 
-- **One-Way Bridge Restriction**: Penukaran Naura Star Fragments (NSF) ke Naura Coins (NC) diizinkan secara resmi, namun konversi balik dari NC ke NSF dibatasi ketat (`one_way_restricted`) untuk mencegah dumping saldo ekonomi server global ke ekosistem survival.
-- **Dynamic Spread & Transaction Fee**: Biaya penukaran mata uang bersifat dinamis dan progresif berdasarkan volume transaksi.
-- **Closed-Loop 4-Channel Recycling Pool (`ServerTreasury`)**: Seluruh pajak lelang, denda, dan fee transaksi pasar dialirkan 100% secara tertutup ke dalam 4 alokasi kas server persisten:
+- **Closed-Loop 4-Channel Recycling Pool (`ServerTreasury`)**: Seluruh pajak lelang, denda, spread fee penukaran mata uang, dan biaya transaksi pasar dialirkan 100% secara tertutup ke dalam 4 alokasi kas server persisten:
   1. *40% Kas Infrastruktur:* Upgrade fasilitas teritori klan dan maintenance node.
   2. *25% Pool Undian (Lottery):* Jackpot berkala bagi pemain pemegang tiket lotre survival.
-  3. *20% Subsidi Pemula (Novice Aid):* Bantuan darurat pemain baru atau pemain yang bangkrut.
+  3. *20% Subsidi Pemula (Novice Aid):* Bantuan darurat pemain baru atau pemain yang bangkrut di Desa Sukamaju.
   4. *15% Insentif Pedagang (Merchant Pool):* Bonus karavan dagang dan penjamin likuiditas pasar.
 - **Durability & Wear/Tear Surcharge**: Setiap alat dan senjata tempur memiliki poin ketahanan (`durability`). Biaya perbaikan wajib dihitung via `durabilityEngine.js` dengan penambahan biaya keausan progresif.
+
+### 1.6.4 Tata Kelola Multi-Mata Uang Regional & Bank Sentral Pratama
+
+- **Pemisahan Sirkulasi Regional**:
+  - *Naura Star Fragments (NSF)*: Mata uang sirkulasi primer wilayah Desa Sukamaju untuk kebutuhan vital dasar (makanan warung, penginapan, perkakas dasar, bibit pertanian).
+  - *Naura Coins (NC)*: Mata uang ekonomi makro Kota Pratama untuk transaksi bernilai tinggi (bursa karir, layanan medis rumah sakit, balai lelang, pasar saham server).
+- **Kurs Resmi Baku**: Kurs penukaran dasar ditetapkan secara absolut: **1.000 NSF = 1 NC**.
+- **Jembatan Dua Arah Terkendali (*Controlled Two-Way Bridge*)**:
+  - *Penukaran Maju (NSF -> NC)*: Pemain dapat menukarkan 1.000 NSF menjadi 1 NC di Bank Sentral Pratama secara bebas sesuai kecukupan saldo grinding mereka.
+  - *Arus Balik Terkendali (NC -> NSF)*: Penukaran kembali NC ke NSF dibuka tanpa kuota harian kaku, namun diatur ketat dengan **Spread Fee Progresif Eksponensial (5% hingga 25%)** berdasarkan total volume transaksi penukaran harian server guna mencegah inflasi liar atau eksploitasi dumping saldo global server ke ekosistem survival.
+  - *Alokasi Biaya*: 100% dari biaya spread fee penukaran mata uang wajib disalurkan langsung ke kas `ServerTreasury` (skema 4 alokasi pool).
+
+### 1.6.5 Batas Pengubah Harga Ekonomi & Diskon Relasi NPC
+
+- **Aturan Single Modifier Tertinggi**: Jika terdapat beberapa sumber diskon (tingkat persahabatan NPC, perk klan, atau event server), sistem HANYA menerapkan satu nilai diskon tunggal tertinggi. Dilarang melakukan penumpukan diskon aditif atau multiplikatif ganda yang tidak terkontrol.
+- **Batas Maksimal Diskon (*Hard Cap 50%*)**: Total potongan diskon harga pada transaksi belanja apapun tidak boleh melampaui 50% dari harga dasar katalog.
+- **Pengecualian Komoditas (*Exemptions*)**: Diskon ekonomi dilarang berlaku untuk:
+  1. Layanan konversi mata uang di Bank Sentral Pratama.
+  2. Transaksi bursa saham klan, pasar prediksi, dan balai lelang pemain.
+  3. Pembelian item langka berkategori Mythic, Artifact, atau Relik Kuno.
+- **Batas Lantai Harga (*Floor Price*)**: Harga akhir setelah pemotongan diskon wajib bernilai minimal **1 unit** mata uang (1 NSF atau 1 NC). Nilai transaksi dilarang bernilai nol (gratis) atau negatif akibat kalkulasi diskon.
 
 ## 1.7 Arsitektur Polyglot Database
 

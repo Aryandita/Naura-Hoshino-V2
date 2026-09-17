@@ -127,7 +127,7 @@ module.exports = {
           new ActionRowBuilder().addComponents(
             new ButtonBuilder()
               .setCustomId("town_exchange_nsf")
-              .setLabel("Tukar 500 NSF -> 500 NC (Bank Pratama)")
+              .setLabel("Tukar 1000 NSF -> 1 NC (Bank Pratama)")
               .setEmoji("🏦")
               .setStyle(ButtonStyle.Success),
           ),
@@ -205,21 +205,21 @@ module.exports = {
         await i.editReply(updatedPayload).catch(() => {});
       } else if (i.customId === "town_exchange_nsf") {
         await i.deferUpdate().catch(() => {});
-        // Kurs: 500 NSF -> 500 NC di Bank Kota Pratama
+        // Kurs resmi: 1000 NSF -> 1 NC di Bank Kota Pratama
         const currentNsf = currency.balanceOf(currency.FRAGMENT, { survival, profile });
-        if (currentNsf < 500) {
-          const errPayload = buildPayload("⚠️ **Bank Pratama:** Saldo Naura Star Fragments (NSF) milikmu kurang dari 500 NSF.");
+        if (currentNsf < 1000) {
+          const errPayload = buildPayload("⚠️ **Bank Pratama:** Saldo Naura Star Fragments (NSF) milikmu kurang dari 1.000 NSF.");
           return i.editReply(errPayload).catch(() => {});
         }
 
-        const debit = await currency.charge(currency.FRAGMENT, { survival, profile }, 500);
+        const debit = await currency.charge(currency.FRAGMENT, { survival, profile }, 1000);
         if (!debit) {
           const errPayload = buildPayload("⚠️ **Bank Pratama:** Gagal memotong saldo NSF.");
           return i.editReply(errPayload).catch(() => {});
         }
 
-        await cacheManager.incrementUserProfile(user.id, { economy_wallet: 500 });
-        const successSnippet = "🏦 **Transaksi Sukses:** Kamu menukarkan **500 NSF** menjadi **500 Naura Coin (NC)** di Bank Sentral Pratama!";
+        await cacheManager.incrementUserProfile(user.id, { economy_wallet: 1 });
+        const successSnippet = "🏦 **Transaksi Sukses:** Kamu menukarkan **1.000 NSF** menjadi **1 Naura Coin (NC)** di Bank Sentral Pratama!";
         const updatedPayload = buildPayload(successSnippet);
         await i.editReply(updatedPayload).catch(() => {});
       }

@@ -651,7 +651,7 @@ Berdasarkan analisis pasar bot dan platform developer Discord terkini (2025 - 20
 - [x] **[WORLD MAP EXPANSION] 4 Official World Regions & Sub-Zone POIs**:
   - Merealisasikan 4 Wilayah Resmi di `src/survival/data/worldMapData.js`:
     1. **Desa Sukamaju:** Distrik awal terpadu menyatukan pemukiman warga, ladang kebun Ningsih, pesisir dermaga nelayan Mang Ujang & Tari, hutan rimba satwa, dan gua pertambangan bijih. Mata uang: Naura Star Fragments (NSF).
-    2. **Kota Pratama:** Megapolitan modern pusat ekonomi, bursa kerja, RS Pratama, balai lelang, dan Bank Sentral Pratama untuk penukaran 500 NSF -> 500 NC (Naura Coin).
+    2. **Kota Pratama:** Megapolitan modern pusat ekonomi, bursa kerja, RS Pratama, balai lelang, dan Bank Sentral Pratama untuk penukaran 1.000 NSF -> 1 NC (Naura Coin).
     3. **Desa Khul'Khas:** Wilayah tersembunyi beriklim gurun pasir dan kuil mistik kuno yang menuntut penjelajahan mandiri (self-exploration).
     4. **Istana Draken:** Benteng kegelapan multi-floor dungeon (Lantai 1-50+) dengan drop artefak Mythic dan penjaga gerbang Gargoyle Malakor.
   - Subcommand `/survival town` dan `/survival travel` diperbarui untuk navigasi antar 4 wilayah dan inspeksi titik fasilitas POI.
