@@ -598,47 +598,42 @@ async function generateMusicPanelImage(track, currentPos, clientAvatar) {
   ctx.fill();
   ctx.restore();
 
-  // Load thumbnail
-  let trackImageUrl = track?.info?.image;
-  if (!trackImageUrl && source.includes("youtube")) {
-    trackImageUrl = `https://img.youtube.com/vi/${track.info.identifier}/mqdefault.jpg`;
-  }
-  if (
-    !trackImageUrl ||
-    typeof trackImageUrl !== "string" ||
-    !trackImageUrl.startsWith("http")
-  ) {
-    trackImageUrl = clientAvatar;
-  }
+  // Load high-resolution square cover art
+  const {
+    resolveHighResArtwork,
+    drawImageCover,
+  } = require("./artworkResolver");
+
+  const trackImageUrl = await resolveHighResArtwork(track, clientAvatar);
 
   let thumbImg = null;
-  try {
-    const resp = await axios.get(trackImageUrl, {
-      responseType: "arraybuffer",
-      timeout: 5000,
-    });
-    thumbImg = await canvasRuntime.loadImage(Buffer.from(resp.data));
-  } catch (_) {
+  if (
+    trackImageUrl &&
+    typeof trackImageUrl === "string" &&
+    trackImageUrl.startsWith("http")
+  ) {
     try {
-      if (clientAvatar && clientAvatar.startsWith("http")) {
-        const resp = await axios.get(clientAvatar, {
-          responseType: "arraybuffer",
-          timeout: 5000,
-        });
-        thumbImg = await canvasRuntime.loadImage(Buffer.from(resp.data));
-      }
-    } catch (_2) {}
+      const resp = await axios.get(trackImageUrl, {
+        responseType: "arraybuffer",
+        timeout: 5000,
+      });
+      thumbImg = await canvasRuntime.loadImage(Buffer.from(resp.data));
+    } catch (_) {
+      try {
+        if (clientAvatar && clientAvatar.startsWith("http")) {
+          const resp = await axios.get(clientAvatar, {
+            responseType: "arraybuffer",
+            timeout: 5000,
+          });
+          thumbImg = await canvasRuntime.loadImage(Buffer.from(resp.data));
+        }
+      } catch (_2) {}
+    }
   }
 
-  // Draw art with clip
-  ctx.save();
-  ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(ART_X, ART_Y, ART_W, ART_H, ART_R);
-  else ctx.rect(ART_X, ART_Y, ART_W, ART_H);
-  ctx.clip();
-
+  // Draw art with object-fit: cover
   if (thumbImg) {
-    ctx.drawImage(thumbImg, ART_X, ART_Y, ART_W, ART_H);
+    drawImageCover(ctx, thumbImg, ART_X, ART_Y, ART_W, ART_H, ART_R);
   } else {
     // Fallback vinyl-like placeholder
     const fbGrad = ctx.createLinearGradient(

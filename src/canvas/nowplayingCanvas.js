@@ -74,9 +74,25 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
   ctx.stroke();
 
   // 2. Load and draw Thumbnail (Album Art)
-  let albumArt;
+  const {
+    resolveHighResArtwork,
+    drawImageCover,
+  } = require("./artworkResolver");
+
+  let albumArt = null;
   let artLoaded = false;
-  const thumbnailUri = trackInfo.image || trackInfo.thumbnail;
+  const targetTrack = {
+    info: {
+      title: trackInfo.title,
+      author: trackInfo.author,
+      image: trackInfo.image || trackInfo.thumbnail,
+      identifier: trackInfo.identifier,
+      originalSource: trackInfo.originalSource || trackInfo.sourceName,
+      sourceName: trackInfo.sourceName,
+    },
+  };
+
+  const thumbnailUri = await resolveHighResArtwork(targetTrack, null);
 
   if (thumbnailUri) {
     try {
@@ -98,14 +114,13 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
     ? "rgba(255, 215, 0, 0.4)"
     : "rgba(255, 182, 193, 0.35)";
 
-  // Round clipping for Album Art
-  ctx.beginPath();
-  ctx.roundRect(40, 45, 200, 200, 16);
-  ctx.clip();
-
   if (artLoaded && albumArt) {
-    ctx.drawImage(albumArt, 40, 45, 200, 200);
+    drawImageCover(ctx, albumArt, 40, 45, 200, 200, 16);
   } else {
+    // Round clipping for Fallback Album Art
+    ctx.beginPath();
+    ctx.roundRect(40, 45, 200, 200, 16);
+    ctx.clip();
     // Fallback: CD/Vinyl visualizer
     ctx.fillStyle = "#1e1e24";
     ctx.fillRect(40, 45, 200, 200);
