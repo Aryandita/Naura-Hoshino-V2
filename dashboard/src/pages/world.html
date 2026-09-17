@@ -303,6 +303,27 @@
         font-size: 15px;
       }
 
+      .poi-facility-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .poi-facility-chip {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-subtle);
+        padding: 5px 10px;
+        border-radius: var(--r-md);
+        font-size: 11px;
+        color: var(--text-secondary);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .poi-facility-chip i {
+        color: var(--accent-cyan);
+        font-size: 11px;
+      }
+
       .warp-action-box {
         padding: 18px 20px;
         background: rgba(255, 255, 255, 0.02);
@@ -510,42 +531,43 @@
             <div class="map-viewport-card animate-in delay-1">
               <div class="map-topbar">
                 <div class="filter-pills" id="filterContainer">
-                  <button class="filter-pill active" data-filter="all"><i class="fa-solid fa-globe"></i> Semua Teritori</button>
-                  <button class="filter-pill" data-filter="safe"><i class="fa-solid fa-shield-halved"></i> Kota & Desa</button>
-                  <button class="filter-pill" data-filter="gather"><i class="fa-solid fa-tree"></i> Area Gathering</button>
-                  <button class="filter-pill" data-filter="danger"><i class="fa-solid fa-skull"></i> High-Level Raid</button>
+                  <button class="filter-pill active" data-filter="all"><i class="fa-solid fa-globe"></i> Semua Wilayah</button>
+                  <button class="filter-pill" data-filter="desa_sukamaju"><i class="fa-solid fa-house-chimney-window" style="color:#10b981;"></i> Desa Sukamaju</button>
+                  <button class="filter-pill" data-filter="kota_pratama"><i class="fa-solid fa-city" style="color:#38bdf8;"></i> Kota Pratama</button>
+                  <button class="filter-pill" data-filter="desa_khulkhas"><i class="fa-solid fa-sun" style="color:#f59e0b;"></i> Desa Khul'Khas</button>
+                  <button class="filter-pill" data-filter="istana_draken"><i class="fa-solid fa-skull" style="color:#ef4444;"></i> Istana Draken</button>
                 </div>
-                <div style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
-                  <i class="fa-regular fa-compass"></i> Sumbu Galaktik: <span style="color:var(--accent-cyan);font-family:var(--font-mono);" id="coordDisplay">X: 420 · Y: 310</span>
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                  <div class="hud-pill" id="playerLocationPill" style="font-size:12px;color:var(--accent-cyan);display:flex;align-items:center;gap:6px;background:rgba(6,182,212,0.1);padding:5px 12px;border-radius:16px;border:1px solid rgba(6,182,212,0.3);">
+                    <i class="fa-solid fa-location-crosshairs"></i> Posisi: <b id="hudPlayerLocationText">Mendeteksi...</b>
+                  </div>
+                  <div class="hud-pill" id="playerNsfBadge" style="font-size:12px;color:var(--accent-amber);display:flex;align-items:center;gap:6px;background:rgba(245,158,11,0.1);padding:5px 12px;border-radius:16px;border:1px solid rgba(245,158,11,0.3);font-family:var(--font-mono);">
+                    <i class="fa-solid fa-star"></i> <span id="hudPlayerNsfText">0 NSF</span>
+                  </div>
+                  <div style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+                    <i class="fa-regular fa-compass"></i> Sumbu: <span style="color:var(--accent-cyan);font-family:var(--font-mono);" id="coordDisplay">X: 220 · Y: 430</span>
+                  </div>
                 </div>
               </div>
 
               <div class="map-canvas-wrap" id="mapWrap">
                 <svg class="world-svg" viewBox="0 0 960 600" id="worldSvg">
                   <defs>
-                    <!-- Linear and Radial Gradients for Biomes -->
-                    <radialGradient id="swallowtailGlow" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stop-color="#34d399" stop-opacity="0.35" />
-                      <stop offset="100%" stop-color="#34d399" stop-opacity="0" />
-                    </radialGradient>
-                    <radialGradient id="cityGlow" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stop-color="#f472b6" stop-opacity="0.35" />
-                      <stop offset="100%" stop-color="#f472b6" stop-opacity="0" />
-                    </radialGradient>
-                    <radialGradient id="forestGlow" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stop-color="#10b981" stop-opacity="0.35" />
+                    <!-- Linear and Radial Gradients for 4 Biomes -->
+                    <radialGradient id="sukamajuGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#10b981" stop-opacity="0.4" />
                       <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
                     </radialGradient>
-                    <radialGradient id="cavernsGlow" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.4" />
-                      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0" />
+                    <radialGradient id="pratamaGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.45" />
+                      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0" />
                     </radialGradient>
-                    <radialGradient id="oceanGlow" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.35" />
-                      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0" />
+                    <radialGradient id="khulkhasGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.4" />
+                      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
                     </radialGradient>
-                    <radialGradient id="abyssGlow" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.45" />
+                    <radialGradient id="drakenGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#ef4444" stop-opacity="0.45" />
                       <stop offset="100%" stop-color="#ef4444" stop-opacity="0" />
                     </radialGradient>
                   </defs>
@@ -554,91 +576,62 @@
                   <image href="/assets/maps/world_map_art.jpg" x="0" y="0" width="960" height="600" preserveAspectRatio="xMidYMid slice" opacity="0.92" />
 
                   <!-- Biome Ambient Glow Circles -->
-                  <circle cx="210" cy="420" r="140" fill="url(#swallowtailGlow)" />
-                  <circle cx="510" cy="270" r="150" fill="url(#cityGlow)" />
-                  <circle cx="270" cy="160" r="130" fill="url(#forestGlow)" />
-                  <circle cx="710" cy="150" r="140" fill="url(#cavernsGlow)" />
-                  <circle cx="490" cy="470" r="130" fill="url(#oceanGlow)" />
-                  <circle cx="770" cy="420" r="150" fill="url(#abyssGlow)" />
+                  <circle cx="220" cy="420" r="140" fill="url(#sukamajuGlow)" />
+                  <circle cx="480" cy="270" r="150" fill="url(#pratamaGlow)" />
+                  <circle cx="740" cy="420" r="140" fill="url(#khulkhasGlow)" />
+                  <circle cx="720" cy="160" r="140" fill="url(#drakenGlow)" />
 
                   <!-- Connecting Trails -->
-                  <!-- Desa -> Kota -->
-                  <path d="M 210 420 Q 340 380 510 270" class="map-trail active-trail" stroke-width="2.5" fill="none" />
-                  <!-- Desa -> Hutan -->
-                  <path d="M 210 420 Q 200 280 270 160" class="map-trail" stroke-width="2" fill="none" />
-                  <!-- Hutan -> Kota -->
-                  <path d="M 270 160 Q 380 190 510 270" class="map-trail" stroke-width="2" fill="none" />
-                  <!-- Kota -> Gua Kristal -->
-                  <path d="M 510 270 Q 610 210 710 150" class="map-trail" stroke-width="2" fill="none" />
-                  <!-- Kota -> Laut Selatan -->
-                  <path d="M 510 270 Q 480 370 490 470" class="map-trail" stroke-width="2" fill="none" />
-                  <!-- Gua Kristal -> Neo Abyss -->
-                  <path d="M 710 150 Q 770 280 770 420" class="map-trail" stroke-width="2" fill="none" />
-                  <!-- Laut Selatan -> Neo Abyss -->
-                  <path d="M 490 470 Q 640 470 770 420" class="map-trail" stroke-width="2" fill="none" />
+                  <!-- Sukamaju <-> Pratama -->
+                  <path d="M 220 420 Q 350 360 480 270" class="map-trail active-trail" stroke-width="2.5" fill="none" />
+                  <!-- Pratama <-> Khul'Khas -->
+                  <path d="M 480 270 Q 600 370 740 420" class="map-trail" stroke-width="2" fill="none" />
+                  <!-- Pratama <-> Draken -->
+                  <path d="M 480 270 Q 580 190 720 160" class="map-trail" stroke-width="2" fill="none" />
+                  <!-- Khul'Khas <-> Draken -->
+                  <path d="M 740 420 Q 770 290 720 160" class="map-trail" stroke-width="2" fill="none" />
 
-                  <!-- ZONE 1: Desa Swallowtail (Lv. 1-5, Safe) -->
-                  <g class="map-region-group" id="node-des" data-zone="desa" transform="translate(210, 420)">
-                    <circle class="pulse-ring" fill="none" stroke="#34d399" stroke-width="1.5" />
-                    <circle class="zone-core" r="22" fill="#062e20" stroke="#34d399" stroke-width="2" />
-                    <text text-anchor="middle" dy="6" fill="#34d399" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf015;</text>
-                    <rect x="-60" y="32" width="120" height="24" rx="12" fill="rgba(6, 46, 32, 0.9)" stroke="rgba(52, 211, 153, 0.4)" stroke-width="1" />
-                    <text text-anchor="middle" y="48" fill="#ecfdf5" font-size="11" font-weight="600" font-family="'Space Grotesk', sans-serif">Desa Swallowtail</text>
-                  </g>
-
-                  <!-- ZONE 2: Hutan Pinus Mistis (Lv. 5-15, Gather) -->
-                  <g class="map-region-group" id="node-forest" data-zone="hutan" transform="translate(270, 160)">
+                  <!-- REGION 1: Desa Sukamaju (Lv. 1-10, Safe) -->
+                  <g class="map-region-group" id="node-sukamaju" data-zone="desa_sukamaju" transform="translate(220, 420)">
                     <circle class="pulse-ring" fill="none" stroke="#10b981" stroke-width="1.5" />
-                    <circle class="zone-core" r="22" fill="#063826" stroke="#10b981" stroke-width="2" />
-                    <text text-anchor="middle" dy="6" fill="#10b981" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf1bb;</text>
-                    <rect x="-65" y="32" width="130" height="24" rx="12" fill="rgba(6, 56, 38, 0.9)" stroke="rgba(16, 185, 129, 0.4)" stroke-width="1" />
-                    <text text-anchor="middle" y="48" fill="#ecfdf5" font-size="11" font-weight="600" font-family="'Space Grotesk', sans-serif">Hutan Mistis Pinus</text>
+                    <circle class="zone-core" r="24" fill="#062e20" stroke="#10b981" stroke-width="2" />
+                    <text text-anchor="middle" dy="6" fill="#10b981" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf015;</text>
+                    <rect x="-65" y="34" width="130" height="24" rx="12" fill="rgba(6, 46, 32, 0.95)" stroke="rgba(16, 185, 129, 0.4)" stroke-width="1" />
+                    <text text-anchor="middle" y="50" fill="#ecfdf5" font-size="11" font-weight="600" font-family="'Space Grotesk', sans-serif">Desa Sukamaju</text>
                   </g>
 
-                  <!-- ZONE 3: Kota Metropolitan Naura (Lv. 5-15, Safe) -->
-                  <g class="map-region-group selected" id="node-city" data-zone="kota" transform="translate(510, 270)">
-                    <circle class="pulse-ring" fill="none" stroke="#f472b6" stroke-width="2" />
-                    <circle class="zone-core" r="26" fill="#3b0825" stroke="#f472b6" stroke-width="2.5" />
-                    <text text-anchor="middle" dy="7" fill="#f472b6" font-size="18" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf1ad;</text>
-                    <!-- Current Position Badge -->
-                    <rect x="-35" y="-46" width="70" height="18" rx="9" fill="#f472b6" />
-                    <text text-anchor="middle" y="-33" fill="#000" font-size="9" font-weight="700" font-family="'JetBrains Mono', monospace">KAMU DISINI</text>
-                    <rect x="-65" y="36" width="130" height="24" rx="12" fill="rgba(59, 8, 37, 0.9)" stroke="rgba(244, 114, 182, 0.5)" stroke-width="1" />
-                    <text text-anchor="middle" y="52" fill="#fff" font-size="11" font-weight="700" font-family="'Space Grotesk', sans-serif">Metropolis Naura</text>
+                  <!-- REGION 2: Kota Pratama (Lv. 10-25, Safe Hub) -->
+                  <g class="map-region-group" id="node-pratama" data-zone="kota_pratama" transform="translate(480, 270)">
+                    <circle class="pulse-ring" fill="none" stroke="#38bdf8" stroke-width="2" />
+                    <circle class="zone-core" r="26" fill="#0c2340" stroke="#38bdf8" stroke-width="2.5" />
+                    <text text-anchor="middle" dy="7" fill="#38bdf8" font-size="18" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf1ad;</text>
+                    <rect x="-65" y="36" width="130" height="24" rx="12" fill="rgba(12, 35, 64, 0.95)" stroke="rgba(56, 189, 248, 0.5)" stroke-width="1" />
+                    <text text-anchor="middle" y="52" fill="#e0f2fe" font-size="11" font-weight="700" font-family="'Space Grotesk', sans-serif">Kota Pratama</text>
                   </g>
 
-                  <!-- ZONE 4: Gua Kristal Aether (Lv. 15-25, Gather) -->
-                  <g class="map-region-group" id="node-caverns" data-zone="tambang" transform="translate(710, 150)">
-                    <circle class="pulse-ring" fill="none" stroke="#22d3ee" stroke-width="1.5" />
-                    <circle class="zone-core" r="22" fill="#082b3d" stroke="#22d3ee" stroke-width="2" />
-                    <text text-anchor="middle" dy="6" fill="#22d3ee" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf3a5;</text>
-                    <rect x="-65" y="32" width="130" height="24" rx="12" fill="rgba(8, 43, 61, 0.9)" stroke="rgba(34, 211, 238, 0.4)" stroke-width="1" />
-                    <text text-anchor="middle" y="48" fill="#e0f2fe" font-size="11" font-weight="600" font-family="'Space Grotesk', sans-serif">Gua Kristal Aether</text>
+                  <!-- REGION 3: Desa Khul'Khas (Lv. 25-40, Exploration) -->
+                  <g class="map-region-group" id="node-khulkhas" data-zone="desa_khulkhas" transform="translate(740, 420)">
+                    <circle class="pulse-ring" fill="none" stroke="#f59e0b" stroke-width="1.5" />
+                    <circle class="zone-core" r="24" fill="#3b2005" stroke="#f59e0b" stroke-width="2" />
+                    <text text-anchor="middle" dy="6" fill="#f59e0b" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf185;</text>
+                    <rect x="-65" y="34" width="130" height="24" rx="12" fill="rgba(59, 32, 5, 0.95)" stroke="rgba(245, 158, 11, 0.4)" stroke-width="1" />
+                    <text text-anchor="middle" y="50" fill="#fef3c7" font-size="11" font-weight="600" font-family="'Space Grotesk', sans-serif">Desa Khul'Khas</text>
                   </g>
 
-                  <!-- ZONE 5: Laut & Dermaga Selatan (Lv. 20-35, Gather) -->
-                  <g class="map-region-group" id="node-ocean" data-zone="laut" transform="translate(490, 470)">
-                    <circle class="pulse-ring" fill="none" stroke="#3b82f6" stroke-width="1.5" />
-                    <circle class="zone-core" r="22" fill="#081e3d" stroke="#3b82f6" stroke-width="2" />
-                    <text text-anchor="middle" dy="6" fill="#3b82f6" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf578;</text>
-                    <rect x="-70" y="32" width="140" height="24" rx="12" fill="rgba(8, 30, 61, 0.9)" stroke="rgba(59, 130, 246, 0.4)" stroke-width="1" />
-                    <text text-anchor="middle" y="48" fill="#eff6ff" font-size="11" font-weight="600" font-family="'Space Grotesk', sans-serif">Dermaga Laut Selatan</text>
-                  </g>
-
-                  <!-- ZONE 6: The Neo-Abyss (Lv. 40+, Danger) -->
-                  <g class="map-region-group" id="node-abyss" data-zone="abyss" transform="translate(770, 420)">
+                  <!-- REGION 4: Istana Draken (Lv. 40+, High-Level Raid) -->
+                  <g class="map-region-group" id="node-draken" data-zone="istana_draken" transform="translate(720, 160)">
                     <circle class="pulse-ring" fill="none" stroke="#ef4444" stroke-width="2" />
-                    <circle class="zone-core" r="24" fill="#360a14" stroke="#ef4444" stroke-width="2" />
-                    <text text-anchor="middle" dy="7" fill="#ef4444" font-size="16" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf714;</text>
+                    <circle class="zone-core" r="26" fill="#360a14" stroke="#ef4444" stroke-width="2" />
+                    <text text-anchor="middle" dy="7" fill="#ef4444" font-size="17" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf714;</text>
                     <rect x="-65" y="34" width="130" height="24" rx="12" fill="rgba(54, 10, 20, 0.95)" stroke="rgba(239, 68, 68, 0.5)" stroke-width="1" />
-                    <text text-anchor="middle" y="50" fill="#fecaca" font-size="11" font-weight="700" font-family="'Space Grotesk', sans-serif">The Neo-Abyss</text>
+                    <text text-anchor="middle" y="50" fill="#fee2e2" font-size="11" font-weight="700" font-family="'Space Grotesk', sans-serif">Istana Draken</text>
                   </g>
                 </svg>
 
                 <div class="map-hud-overlay">
-                  <span>STATUS: <b>TERKONEKSI KE SATELIT AETHER</b></span>
-                  <span>LATENCY: <b>14ms</b></span>
-                  <span>ZOOM: <b>100%</b></span>
+                  <span>STATUS: <b style="color:var(--accent-emerald);">SATELIT AETHER TERHUBUNG</b></span>
+                  <span>LOKASI ANDA: <b id="hudOverlayLocation" style="color:var(--primary);">MEMUAT...</b></span>
+                  <span>SURVIVOR: <b id="hudOverlaySurvivor" style="color:var(--accent-cyan);">GUEST</b></span>
                 </div>
 
                 <div class="map-zoom-controls">
@@ -653,11 +646,11 @@
             <div class="intel-card animate-in delay-2" id="intelDrawer">
               <div class="intel-header" id="intelHeader">
                 <div class="intel-category" id="intelCategory">
-                  <i class="fa-solid fa-shield-halved"></i> <span>ZONA AMAN (SAFE HAVEN)</span>
+                  <i class="fa-solid fa-shield-halved"></i> <span>ZONA AWAL & GATHERING</span>
                 </div>
-                <div class="intel-title" id="intelTitle">Metropolis Naura</div>
+                <div class="intel-title" id="intelTitle">Desa Sukamaju</div>
                 <div class="intel-sub" id="intelSub">
-                  Pusat peradaban dan ekonomi Aetheria. Tempat bursa saham, Bank Central, Kafe Naura, dan Hall of Fame berkumpul.
+                  Desa asri yang menyatukan kawasan pemukiman warga, ladang kebun, pesisir pantai nelayan, hutan pinus pedalaman, dan gua pertambangan bijih.
                 </div>
               </div>
 
@@ -665,11 +658,22 @@
                 <div class="stat-grid-compact">
                   <div class="stat-box-sm">
                     <div class="stat-box-lbl">Rekomendasi Level</div>
-                    <div class="stat-box-val" id="intelLevel"><i class="fa-solid fa-ranking-star" style="color:var(--primary);"></i> Lv. 5 - 15</div>
+                    <div class="stat-box-val" id="intelLevel"><i class="fa-solid fa-ranking-star" style="color:var(--primary);"></i> Lv. 1 - 10</div>
                   </div>
                   <div class="stat-box-sm">
                     <div class="stat-box-lbl">Tingkat Bahaya</div>
                     <div class="stat-box-val" id="intelDanger"><span style="color:#34d399;">★☆☆☆☆</span> Aman</div>
+                  </div>
+                </div>
+
+                <div class="stat-grid-compact">
+                  <div class="stat-box-sm">
+                    <div class="stat-box-lbl">Mata Uang Primer</div>
+                    <div class="stat-box-val" id="intelCurrency" style="font-size:12px;color:var(--accent-amber);">NSF (Naura Star Fragments)</div>
+                  </div>
+                  <div class="stat-box-sm">
+                    <div class="stat-box-lbl">Kondisi Iklim</div>
+                    <div class="stat-box-val" id="intelClimate" style="font-size:12px;color:var(--accent-cyan);">Tropis Lembab</div>
                   </div>
                 </div>
 
@@ -680,36 +684,43 @@
                   <div style="display:flex;flex-direction:column;gap:8px;">
                     <div>
                       <div class="resource-bar-row">
-                        <span style="color:var(--text-secondary);"><i class="fa-solid fa-tree" style="color:#10b981;"></i> Kayu & Kayu Aether</span>
-                        <span id="resWoodVal" style="font-family:var(--font-mono);font-size:11px;">35%</span>
+                        <span style="color:var(--text-secondary);"><i class="fa-solid fa-tree" style="color:#10b981;"></i> Kayu & Hasil Hutan</span>
+                        <span id="resWoodVal" style="font-family:var(--font-mono);font-size:11px;">85%</span>
                       </div>
-                      <div class="resource-progress"><div class="resource-fill" id="resWoodBar" style="width:35%;background:#10b981;"></div></div>
+                      <div class="resource-progress"><div class="resource-fill" id="resWoodBar" style="width:85%;background:#10b981;"></div></div>
                     </div>
                     <div>
                       <div class="resource-bar-row">
-                        <span style="color:var(--text-secondary);"><i class="fa-solid fa-gem" style="color:#22d3ee;"></i> Mineral & Kristal</span>
-                        <span id="resOreVal" style="font-family:var(--font-mono);font-size:11px;">15%</span>
+                        <span style="color:var(--text-secondary);"><i class="fa-solid fa-gem" style="color:#22d3ee;"></i> Mineral Tambang & Bijih</span>
+                        <span id="resOreVal" style="font-family:var(--font-mono);font-size:11px;">65%</span>
                       </div>
-                      <div class="resource-progress"><div class="resource-fill" id="resOreBar" style="width:15%;background:#22d3ee;"></div></div>
+                      <div class="resource-progress"><div class="resource-fill" id="resOreBar" style="width:65%;background:#22d3ee;"></div></div>
                     </div>
                     <div>
                       <div class="resource-bar-row">
                         <span style="color:var(--text-secondary);"><i class="fa-solid fa-fish" style="color:#3b82f6;"></i> Sumber Pangan / Ikan</span>
-                        <span id="resFishVal" style="font-family:var(--font-mono);font-size:11px;">80%</span>
+                        <span id="resFishVal" style="font-family:var(--font-mono);font-size:11px;">90%</span>
                       </div>
-                      <div class="resource-progress"><div class="resource-fill" id="resFishBar" style="width:80%;background:#3b82f6;"></div></div>
+                      <div class="resource-progress"><div class="resource-fill" id="resFishBar" style="width:90%;background:#3b82f6;"></div></div>
                     </div>
                   </div>
                 </div>
 
                 <div>
                   <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
-                    Tokoh & NPC Lokal
+                    Titik Fasilitas (POIs) Terdaftar
+                  </div>
+                  <div class="poi-facility-list" id="intelPoiList">
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">
+                    Tokoh & NPC Menetap
                   </div>
                   <div class="npc-badge-list" id="intelNpcList">
-                    <div class="npc-badge-item"><span class="npc-badge-emoji">🌸</span> Chloe (Barista)</div>
-                    <div class="npc-badge-item"><span class="npc-badge-emoji">💎</span> Valerie (Bursa)</div>
-                    <div class="npc-badge-item"><span class="npc-badge-emoji">🏦</span> Evelyn (Bankir)</div>
+                    <!-- Populated dynamically -->
                   </div>
                 </div>
 
@@ -718,7 +729,7 @@
                     Monster & Ancaman
                   </div>
                   <div style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:8px;" id="intelMonsters">
-                    <i class="fa-solid fa-shield-cat" style="color:#34d399;"></i> Tidak ada monster. Zona dilindungi oleh Pasukan Penjaga Kota.
+                    <i class="fa-solid fa-shield-cat" style="color:#34d399;"></i> Aman terlindung.
                   </div>
                 </div>
               </div>
@@ -784,220 +795,333 @@
         osc.stop(now + 0.45);
       }
 
-      // Zone Data Catalog
-      const ZONE_DATA = {
-        desa: {
-          id: 'desa',
-          name: 'Desa Swallowtail',
-          tag: 'ZONA AMAN (STARTER HAVEN)',
+      // Data Wilayah & Normalisasi Lokasi
+      const CANONICAL_REGIONS = {
+        desa_sukamaju: 'desa_sukamaju',
+        desa: 'desa_sukamaju',
+        village: 'desa_sukamaju',
+        sukamaju: 'desa_sukamaju',
+        hutan: 'desa_sukamaju',
+        tambang: 'desa_sukamaju',
+        laut: 'desa_sukamaju',
+        kota_pratama: 'kota_pratama',
+        kota: 'kota_pratama',
+        city: 'kota_pratama',
+        pratama: 'kota_pratama',
+        academy: 'kota_pratama',
+        desa_khulkhas: 'desa_khulkhas',
+        khulkhas: 'desa_khulkhas',
+        gurun: 'desa_khulkhas',
+        istana_draken: 'istana_draken',
+        draken: 'istana_draken',
+        dungeon: 'istana_draken',
+        abyss: 'istana_draken'
+      };
+
+      // Fallback Data 4 Wilayah Resmi jika API belum terhubung
+      const FALLBACK_REGIONS = {
+        desa_sukamaju: {
+          id: 'desa_sukamaju',
+          name: 'Desa Sukamaju',
+          tag: 'ZONA AWAL & GATHERING (STARTER HAVEN)',
           category: 'safe',
-          color: '#34d399',
-          glow: 'rgba(52, 211, 153, 0.2)',
-          desc: 'Lembah damai tempat petualang terbangun pertama kali. Penuh dengan kebun organik, bengkel pandai besi Bagas, dan klinik ramah Bidan Sari.',
-          reqLevel: 'Lv. 1 - 5',
+          themeColor: '#10B981',
+          climate: 'Tropis Lembab & Asri',
+          desc: 'Desa asri yang menyatukan kawasan pemukiman warga, ladang kebun Ningsih, pesisir nelayan Mang Ujang, hutan pinus, dan pertambangan bijih.',
+          primaryCurrency: 'NSF (Naura Star Fragments)',
+          reqLevel: 'Lv. 1 - 10',
           danger: '★☆☆☆☆ Aman',
           dangerColor: '#34d399',
-          wood: 70,
-          ore: 25,
-          fish: 60,
-          npcs: [
-            { emoji: '👴', name: 'Pak Kades Tirto' },
-            { emoji: '🎲', name: 'Luna (Gacha Toko)' },
-            { emoji: '🔨', name: 'Bagas (Pandai Besi)' },
-            { emoji: '🌾', name: 'Ningsih (Petani)' },
-            { emoji: '💉', name: 'Bidan Sari (Klinik)' }
-          ],
-          monsters: '<i class="fa-solid fa-shield-cat" style="color:#34d399;"></i> Aman terlindung. Hama kebun level rendah (Kelinci Liar, Tikus Sawah).',
-          coords: 'X: 210 · Y: 380',
-          travelCost: 15
+          resources: { wood: 85, ore: 65, fish: 90 },
+          coords: 'X: 220 · Y: 430',
+          fastTravelCost: 10,
+          monsters: 'Aman terlindung. Hama kebun level rendah (Kelinci Liar, Tikus Sawah, Babi Hutan Pinus).',
+          residentNpcIds: ['kades_tirto', 'bagas', 'ningsih', 'bidan_sari', 'bu_ratna', 'mang_ujang', 'tari', 'mbak_siti'],
+          pois: [
+            { name: 'Balai Desa Sukamaju', icon: 'fa-landmark' },
+            { name: 'Bengkel Tempa Bagas', icon: 'fa-hammer' },
+            { name: 'Kebun Botani Ningsih', icon: 'fa-seedling' },
+            { name: 'Klinik Bidan Sari', icon: 'fa-heart-pulse' },
+            { name: 'Warung Makan Mbak Siti', icon: 'fa-utensils' },
+            { name: 'Dermaga Mang Ujang', icon: 'fa-anchor' }
+          ]
         },
-        hutan: {
-          id: 'hutan',
-          name: 'Hutan Mistis Pinus',
-          tag: 'GATHERING AREA (WILDERNESS)',
-          category: 'gather',
-          color: '#10b981',
-          glow: 'rgba(16, 185, 129, 0.2)',
-          desc: 'Hutan lebat berkabut dengan pepohonan pinus aether berusia ratusan tahun. Lokasi utama mencari kayu berkualitas tinggi dan herba obat penyembuh.',
-          reqLevel: 'Lv. 5 - 15',
-          danger: '★★☆☆☆ Waspada',
-          dangerColor: '#10b981',
-          wood: 95,
-          ore: 30,
-          fish: 40,
-          npcs: [
-            { emoji: '🏹', name: 'Ranger Jack' },
-            { emoji: '🌿', name: 'Nenek Jamu Marni' }
-          ],
-          monsters: '<i class="fa-solid fa-paw" style="color:#f59e0b;"></i> Babi Hutan Aether (Lv. 6), Serigala Bayangan (Lv. 11).',
-          coords: 'X: 280 · Y: 180',
-          travelCost: 25
+        kota_pratama: {
+          id: 'kota_pratama',
+          name: 'Kota Pratama',
+          tag: 'PUSAT METROPOLIS & EKONOMI NC (SAFE HUB)',
+          category: 'commerce',
+          themeColor: '#38BDF8',
+          climate: 'Modern Sejuk & Gemerlap Neon',
+          desc: 'Pusat metropolitan modern dengan gedung pencakar langit, Balai Lelang, Cyber Cafe, RS Pratama, dan Bank Sentral penukaran 1.000 NSF = 1 NC.',
+          primaryCurrency: 'NC (Naura Coin) & Konversi NSF',
+          reqLevel: 'Lv. 10 - 25',
+          danger: '★☆☆☆☆ Aman Terlindung',
+          dangerColor: '#38bdf8',
+          resources: { wood: 20, ore: 30, fish: 40 },
+          coords: 'X: 480 · Y: 270',
+          fastTravelCost: 25,
+          monsters: 'Tidak ada monster. Wilayah metropolitan dilindungi Pasukan Penjaga Kota dan Walikota Lucy.',
+          residentNpcIds: ['bupati_rahmat', 'pak_damar', 'laras', 'wulan', 'dokter_wira', 'suster_maya', 'mbak_rini', 'shino_hoshino'],
+          pois: [
+            { name: 'Bank Sentral Pratama', icon: 'fa-vault' },
+            { name: 'Balai Kota Pratama', icon: 'fa-building-columns' },
+            { name: 'Menara Bursa Karir', icon: 'fa-briefcase' },
+            { name: 'Cyber Kafe Laras', icon: 'fa-mug-hot' },
+            { name: 'RS Sentral Pratama', icon: 'fa-hospital' },
+            { name: 'Arsip Pustaka Wulan', icon: 'fa-book-open' }
+          ]
         },
-        kota: {
-          id: 'kota',
-          name: 'Metropolis Naura',
-          tag: 'PUSAT IBU KOTA (SAFE HUB)',
-          category: 'safe',
-          color: '#f472b6',
-          glow: 'rgba(244, 114, 182, 0.25)',
-          desc: 'Pusat peradaban dan ekonomi Aetheria. Tempat bursa saham, Bank Central, Kafe Naura, dan Hall of Fame berkumpul.',
-          reqLevel: 'Lv. 5 - 15',
-          danger: '★☆☆☆☆ Aman',
-          dangerColor: '#34d399',
-          wood: 35,
-          ore: 15,
-          fish: 80,
-          npcs: [
-            { emoji: '🌸', name: 'Chloe (Barista Kafe)' },
-            { emoji: '💎', name: 'Valerie (Bursa Pasar)' },
-            { emoji: '🏦', name: 'Evelyn (Bankir)' },
-            { emoji: '⚖️', name: 'Hakim Sean (Tribunal)' }
-          ],
-          monsters: '<i class="fa-solid fa-shield-cat" style="color:#34d399;"></i> Tidak ada monster. Zona dilindungi oleh Pasukan Penjaga Kota.',
-          coords: 'X: 480 · Y: 300',
-          travelCost: 0
-        },
-        tambang: {
-          id: 'tambang',
-          name: 'Gua Kristal Aether',
-          tag: 'AREA PERTAMBANGAN (DUNGEON)',
-          category: 'gather',
-          color: '#22d3ee',
-          glow: 'rgba(34, 211, 238, 0.25)',
-          desc: 'Labirin gua bawah tanah dengan kristal biru berpendar. Tempat menambang bijih besi, emas murni, dan pecahan Star Fragments langka.',
-          reqLevel: 'Lv. 15 - 28',
+        desa_khulkhas: {
+          id: 'desa_khulkhas',
+          name: "Desa Khul'Khas",
+          tag: 'WILAYAH MISTIK & GURUN KUNO (EXPLORATION)',
+          category: 'mystery',
+          themeColor: '#F59E0B',
+          climate: 'Gurun Pasir Panas & Kabut Mistis Malam',
+          desc: 'Kawasan tersembunyi yang menuntut penjelajahan mandiri. Menyingkap rahasia peradaban kuno, Altar Relik Astral, dan mata air suci penyembuh kutukan.',
+          primaryCurrency: 'Barter Artefak & NSF Langka',
+          reqLevel: 'Lv. 25 - 40',
           danger: '★★★☆☆ Berbahaya',
           dangerColor: '#f59e0b',
-          wood: 10,
-          ore: 95,
-          fish: 10,
-          npcs: [
-            { emoji: '⛏️', name: 'Mandor Guntur' },
-            { emoji: '🔬', name: 'Dr. Aris (Geolog)' }
-          ],
-          monsters: '<i class="fa-solid fa-gem" style="color:#22d3ee;"></i> Golem Kristal (Lv. 18), Kelelawar Aether (Lv. 22).',
-          coords: 'X: 720 · Y: 200',
-          travelCost: 45
+          resources: { wood: 10, ore: 80, fish: 15 },
+          coords: 'X: 740 · Y: 420',
+          fastTravelCost: 50,
+          monsters: 'Kala Jengking Raksasa (Lv. 28), Ular Pasir Purba (Lv. 34), Roh Bayangan Nomad.',
+          residentNpcIds: ['syeikh_malik'],
+          pois: [
+            { name: 'Altar Relik Astral', icon: 'fa-star-of-david' },
+            { name: 'Bazaar Nomad Gelap', icon: 'fa-campground' },
+            { name: 'Mata Air Kabut Abadi', icon: 'fa-droplet' },
+            { name: 'Pondok Alkimia Gurun', icon: 'fa-flask-vial' }
+          ]
         },
-        laut: {
-          id: 'laut',
-          name: 'Dermaga Laut Selatan',
-          tag: 'PESISIR & PERIKANAN',
-          category: 'gather',
-          color: '#3b82f6',
-          glow: 'rgba(59, 130, 246, 0.25)',
-          desc: 'Pelabuhan maritim luas tempat para nelayan mengarungi samudera dalam. Simpanan berbagai ikan langka seperti Golden Koi dan Deep Sea Angler.',
-          reqLevel: 'Lv. 20 - 35',
-          danger: '★★★☆☆ Berbahaya',
-          dangerColor: '#f59e0b',
-          wood: 20,
-          ore: 40,
-          fish: 100,
-          npcs: [
-            { emoji: '🤿', name: 'Tari (Penyelam)' },
-            { emoji: '⚓', name: 'Kapten Baruna' }
-          ],
-          monsters: '<i class="fa-solid fa-water" style="color:#3b82f6;"></i> Kepiting Karang Raksasa (Lv. 25), Serpent Laut (Lv. 32).',
-          coords: 'X: 490 · Y: 490',
-          travelCost: 50
-        },
-        abyss: {
-          id: 'abyss',
-          name: 'The Neo-Abyss',
-          tag: 'HIGH-LEVEL RAID (CELESTIAL VOID)',
-          category: 'danger',
-          color: '#ef4444',
-          glow: 'rgba(239, 68, 68, 0.35)',
-          desc: 'Retakan dimensi anomali ruang dan waktu. Lokasi jatuhnya meteor purba berisikan monster celestial dan senjata divine tier SS.',
-          reqLevel: 'Lv. 40+ (End-game)',
-          danger: '★★★★★ EKSTREM',
+        istana_draken: {
+          id: 'istana_draken',
+          name: 'Istana Draken',
+          tag: 'DUNGEON BERTINGKAT & WORLD BOSS (HIGH DANGER)',
+          category: 'dungeon',
+          themeColor: '#EF4444',
+          climate: 'Hawa Neraka & Kabut Kegelapan Abyss',
+          desc: 'Benteng kastil purba yang diselimuti kabut The Neo-Abyss. Menampung labirin dungeon bertingkat tinggi (Lantai 1-50+) dengan hadiah kelas Mythic.',
+          primaryCurrency: 'Permata Terkutuk & Hadiah Mythic',
+          reqLevel: 'Lv. 40+ (End-Game Raid)',
+          danger: '★★★★★ EKSTREM / MAUT',
           dangerColor: '#ef4444',
-          wood: 5,
-          ore: 80,
-          fish: 0,
-          npcs: [
-            { emoji: '🔮', name: 'Bayangan Astral' },
-            { emoji: '📜', name: 'Pustakawan Abadi' }
-          ],
-          monsters: '<i class="fa-solid fa-skull" style="color:#ef4444;"></i> [WORLD BOSS] Astral Warden V2 (Lv. 55 Raid Boss).',
-          coords: 'X: 780 · Y: 420',
-          travelCost: 120
+          resources: { wood: 5, ore: 95, fish: 0 },
+          coords: 'X: 720 · Y: 160',
+          fastTravelCost: 100,
+          monsters: 'Gargoyle Malakor (Lv. 45 Gatekeeper), Iblis Bayangan (Lv. 48), Penguasa Draken (Lantai 50 Boss).',
+          residentNpcIds: ['gargoyle_malakor'],
+          pois: [
+            { name: 'Gerbang Neraka Draken', icon: 'fa-skull' },
+            { name: 'Labirin Bawah Tanah (Lt. 1-50)', icon: 'fa-stairs' },
+            { name: 'Singgasana Penguasa Draken', icon: 'fa-crown' },
+            { name: 'Khazanah Terkutuk Mythic', icon: 'fa-gem' }
+          ]
         }
       };
 
-      let currentZone = 'kota';
-      let selectedZone = 'kota';
-      let playerNsf = 1450;
+      let currentZone = 'desa_sukamaju';
+      let selectedZone = 'desa_sukamaju';
+      let playerNsf = 0;
+      let currentSurvivorName = 'Petualang';
+      let worldRegions = FALLBACK_REGIONS;
+      let allNpcs = {};
 
       const intelCategory = document.getElementById('intelCategory');
       const intelTitle = document.getElementById('intelTitle');
       const intelSub = document.getElementById('intelSub');
       const intelLevel = document.getElementById('intelLevel');
       const intelDanger = document.getElementById('intelDanger');
+      const intelCurrency = document.getElementById('intelCurrency');
+      const intelClimate = document.getElementById('intelClimate');
+      const intelPoiList = document.getElementById('intelPoiList');
       const intelNpcList = document.getElementById('intelNpcList');
       const intelMonsters = document.getElementById('intelMonsters');
       const coordDisplay = document.getElementById('coordDisplay');
       const warpCost = document.getElementById('warpCost');
       const btnFastTravel = document.getElementById('btnFastTravel');
       const warpBtnText = document.getElementById('warpBtnText');
-      const playerNsfBadge = document.getElementById('playerNsfBadge');
       const warpFlash = document.getElementById('warpFlash');
+      const hudPlayerLocationText = document.getElementById('hudPlayerLocationText');
+      const hudPlayerNsfText = document.getElementById('hudPlayerNsfText');
+      const hudOverlayLocation = document.getElementById('hudOverlayLocation');
+      const hudOverlaySurvivor = document.getElementById('hudOverlaySurvivor');
+
+      function renderPlayerPositionBadge(locKey) {
+        document.querySelectorAll('.player-here-badge, .player-here-ring').forEach(el => el.remove());
+        const targetGroup = document.querySelector(`.map-region-group[data-zone="${locKey}"]`);
+        if (!targetGroup) return;
+
+        const pulseCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        pulseCircle.setAttribute('class', 'player-here-ring');
+        pulseCircle.setAttribute('r', '32');
+        pulseCircle.setAttribute('fill', 'none');
+        pulseCircle.setAttribute('stroke', '#f472b6');
+        pulseCircle.setAttribute('stroke-width', '2.5');
+        pulseCircle.style.animation = 'pulseRing 1.8s cubic-bezier(0.2, 0.8, 0.4, 1) infinite';
+
+        const badgeG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        badgeG.setAttribute('class', 'player-here-badge');
+
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', '-42');
+        rect.setAttribute('y', '-52');
+        rect.setAttribute('width', '84');
+        rect.setAttribute('height', '20');
+        rect.setAttribute('rx', '10');
+        rect.setAttribute('fill', '#f472b6');
+        rect.setAttribute('stroke', '#ffffff');
+        rect.setAttribute('stroke-width', '1.5');
+        rect.style.filter = 'drop-shadow(0 0 8px rgba(244,114,182,0.8))';
+
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('text-anchor', 'middle');
+        txt.setAttribute('y', '-38');
+        txt.setAttribute('fill', '#000000');
+        txt.setAttribute('font-size', '9.5');
+        txt.setAttribute('font-weight', '800');
+        txt.setAttribute('font-family', "'JetBrains Mono', monospace");
+        txt.textContent = 'KAMU DISINI';
+
+        badgeG.appendChild(rect);
+        badgeG.appendChild(txt);
+
+        targetGroup.appendChild(pulseCircle);
+        targetGroup.appendChild(badgeG);
+
+        const currentReg = worldRegions[locKey];
+        const regName = currentReg ? currentReg.name : locKey;
+        if (hudPlayerLocationText) hudPlayerLocationText.textContent = regName;
+        if (hudOverlayLocation) hudOverlayLocation.textContent = regName.toUpperCase();
+      }
 
       function updateZoneIntel(zoneKey) {
         selectedZone = zoneKey;
-        const data = ZONE_DATA[zoneKey];
+        const data = worldRegions[zoneKey];
         if (!data) return;
 
         playTone(600, 'sine', 0.08, 0.15);
 
-        // Update Intel Box UI
-        document.documentElement.style.setProperty('--zone-glow', data.glow);
-        document.documentElement.style.setProperty('--zone-accent', data.color);
+        const themeColor = data.themeColor || '#10b981';
+        document.documentElement.style.setProperty('--zone-glow', `rgba(34, 211, 238, 0.2)`);
+        document.documentElement.style.setProperty('--zone-accent', themeColor);
 
-        intelCategory.innerHTML = `<i class="fa-solid fa-map-pin"></i> <span>${data.tag}</span>`;
-        intelCategory.style.color = data.color;
-        intelTitle.textContent = data.name;
-        intelSub.textContent = data.desc;
-        intelLevel.innerHTML = `<i class="fa-solid fa-ranking-star" style="color:${data.color};"></i> ${data.reqLevel}`;
-        intelDanger.innerHTML = `<span style="color:${data.dangerColor};">${data.danger}</span>`;
+        if (intelCategory) {
+          intelCategory.innerHTML = `<i class="fa-solid fa-map-pin"></i> <span>${data.tag || 'WILAYAH RESMI'}</span>`;
+          intelCategory.style.color = themeColor;
+        }
+        if (intelTitle) intelTitle.textContent = data.name;
+        if (intelSub) intelSub.textContent = data.description || data.desc;
+        if (intelLevel) intelLevel.innerHTML = `<i class="fa-solid fa-ranking-star" style="color:${themeColor};"></i> ${data.reqLevel || 'Lv. 1+'}`;
+        if (intelDanger) intelDanger.innerHTML = `<span style="color:${data.dangerColor || '#34d399'};">${data.danger || 'Aman'}</span>`;
+        if (intelCurrency) intelCurrency.textContent = data.primaryCurrency || 'NSF';
+        if (intelClimate) intelClimate.textContent = data.climate || 'Normal';
 
-        // Update Resources
-        document.getElementById('resWoodVal').textContent = `${data.wood}%`;
-        document.getElementById('resWoodBar').style.width = `${data.wood}%`;
-        document.getElementById('resOreVal').textContent = `${data.ore}%`;
-        document.getElementById('resOreBar').style.width = `${data.ore}%`;
-        document.getElementById('resFishVal').textContent = `${data.fish}%`;
-        document.getElementById('resFishBar').style.width = `${data.fish}%`;
+        // Resources
+        const res = data.resources || { wood: 50, ore: 50, fish: 50 };
+        const resWoodVal = document.getElementById('resWoodVal');
+        const resWoodBar = document.getElementById('resWoodBar');
+        const resOreVal = document.getElementById('resOreVal');
+        const resOreBar = document.getElementById('resOreBar');
+        const resFishVal = document.getElementById('resFishVal');
+        const resFishBar = document.getElementById('resFishBar');
 
-        // Update NPCs
-        intelNpcList.innerHTML = data.npcs.map(npc => `
-          <div class="npc-badge-item">
-            <span class="npc-badge-emoji">${npc.emoji}</span>
-            <span>${npc.name}</span>
-          </div>
-        `).join('');
+        if (resWoodVal && resWoodBar) {
+          resWoodVal.textContent = `${res.wood || 0}%`;
+          resWoodBar.style.width = `${res.wood || 0}%`;
+        }
+        if (resOreVal && resOreBar) {
+          resOreVal.textContent = `${res.ore || 0}%`;
+          resOreBar.style.width = `${res.ore || 0}%`;
+        }
+        if (resFishVal && resFishBar) {
+          resFishVal.textContent = `${res.fish || 0}%`;
+          resFishBar.style.width = `${res.fish || 0}%`;
+        }
 
-        // Update Monsters
-        intelMonsters.innerHTML = data.monsters;
+        // POI Facilities
+        if (intelPoiList) {
+          intelPoiList.innerHTML = '';
+          const pois = Array.isArray(data.pois) ? data.pois : [];
+          if (pois.length === 0) {
+            intelPoiList.innerHTML = '<span style="font-size:11px;color:var(--text-muted);">Belum ada fasilitas terdaftar.</span>';
+          } else {
+            pois.forEach(poi => {
+              const chip = document.createElement('div');
+              chip.className = 'poi-facility-chip';
+              chip.innerHTML = `<i class="${poi.icon || 'fa-solid fa-location-dot'}"></i> <span>${poi.name}</span>`;
+              intelPoiList.appendChild(chip);
+            });
+          }
+        }
+
+        // Resident NPCs
+        if (intelNpcList) {
+          intelNpcList.innerHTML = '';
+          const npcIds = Array.isArray(data.residentNpcIds)
+            ? data.residentNpcIds
+            : Array.isArray(data.pois)
+              ? [...new Set(data.pois.flatMap(p => p.residentNpcIds || []))]
+              : [];
+
+          if (npcIds.length === 0) {
+            intelNpcList.innerHTML = '<div style="font-size:11px;color:var(--text-muted);">Tidak ada penduduk tetap yang bertugas di sini.</div>';
+          } else {
+            npcIds.forEach(id => {
+              const npc = allNpcs[id];
+              const chip = document.createElement('div');
+              chip.className = 'npc-badge-item';
+              if (npc) {
+                chip.innerHTML = `
+                  <img src="${npc.avatar || '/assets/core/avatar.png'}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;" onerror="this.src='/assets/core/avatar.png'" />
+                  <span>${npc.name} (${npc.role || 'Warga'})</span>
+                `;
+              } else {
+                chip.innerHTML = `<span class="npc-badge-emoji">👤</span> <span>${id.replace(/_/g, ' ')}</span>`;
+              }
+              intelNpcList.appendChild(chip);
+            });
+          }
+        }
+
+        // Monsters
+        if (intelMonsters) {
+          intelMonsters.innerHTML = data.monsters || '<i class="fa-solid fa-shield-cat" style="color:#34d399;"></i> Wilayah aman.';
+        }
 
         // Coordinates
-        coordDisplay.textContent = data.coords;
+        if (coordDisplay) {
+          coordDisplay.textContent = data.coords || 'X: 0 · Y: 0';
+        }
 
-        // Button State
+        // Fast travel button state
         if (selectedZone === currentZone) {
-          warpCost.textContent = '0 NSF (Lokasi Saat Ini)';
-          warpCost.style.color = 'var(--text-muted)';
-          warpBtnText.textContent = 'Kamu Sedang Berada Disini';
-          btnFastTravel.disabled = true;
-          btnFastTravel.style.opacity = '0.5';
-          btnFastTravel.style.cursor = 'default';
+          if (warpCost) {
+            warpCost.textContent = '0 NSF (Lokasi Saat Ini)';
+            warpCost.style.color = 'var(--text-muted)';
+          }
+          if (warpBtnText) warpBtnText.textContent = 'Kamu Sedang Berada Disini';
+          if (btnFastTravel) {
+            btnFastTravel.disabled = true;
+            btnFastTravel.style.opacity = '0.6';
+            btnFastTravel.style.cursor = 'default';
+            btnFastTravel.style.border = '1px solid var(--accent-cyan)';
+          }
         } else {
-          warpCost.textContent = `${data.travelCost} NSF`;
-          warpCost.style.color = 'var(--accent-amber)';
-          warpBtnText.textContent = `Fast Travel ke ${data.name}`;
-          btnFastTravel.disabled = false;
-          btnFastTravel.style.opacity = '1';
-          btnFastTravel.style.cursor = 'pointer';
+          const cost = data.fastTravelCost || 25;
+          if (warpCost) {
+            warpCost.textContent = `${cost} NSF (Jalur Kendaraan)`;
+            warpCost.style.color = 'var(--accent-amber)';
+          }
+          if (warpBtnText) warpBtnText.textContent = `Fast Travel (/survival travel ${data.id})`;
+          if (btnFastTravel) {
+            btnFastTravel.disabled = false;
+            btnFastTravel.style.opacity = '1';
+            btnFastTravel.style.cursor = 'pointer';
+            btnFastTravel.style.border = 'none';
+          }
         }
 
         // Highlight SVG node
@@ -1006,7 +1130,7 @@
         });
       }
 
-      // Click event for each map pin node
+      // Click event for SVG map pins
       document.querySelectorAll('.map-region-group').forEach(node => {
         node.addEventListener('click', () => {
           const zoneKey = node.getAttribute('data-zone');
@@ -1014,7 +1138,7 @@
         });
       });
 
-      // Filter pills
+      // Filter pills event listeners
       document.querySelectorAll('.filter-pill').forEach(pill => {
         pill.addEventListener('click', () => {
           document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
@@ -1025,94 +1149,126 @@
 
           document.querySelectorAll('.map-region-group').forEach(node => {
             const zKey = node.getAttribute('data-zone');
-            const data = ZONE_DATA[zKey];
-            if (filter === 'all' || data.category === filter) {
+            if (filter === 'all' || zKey === filter) {
               node.style.display = 'block';
               node.style.opacity = '1';
             } else {
               node.style.opacity = '0.2';
             }
           });
+
+          if (filter !== 'all' && worldRegions[filter]) {
+            updateZoneIntel(filter);
+          }
         });
       });
 
-      // Fast travel teleportation action
-      btnFastTravel.addEventListener('click', () => {
-        if (selectedZone === currentZone) return;
-        const target = ZONE_DATA[selectedZone];
-        if (playerNsf < target.travelCost) {
-          alert('NSF tidak mencukupi untuk teleportasi!');
-          return;
-        }
+      // Fast travel button action
+      if (btnFastTravel) {
+        btnFastTravel.addEventListener('click', () => {
+          if (selectedZone === currentZone) return;
+          const target = worldRegions[selectedZone];
+          playWarpSfx();
 
-        playWarpSfx();
+          if (warpFlash) {
+            warpFlash.classList.add('active');
+            setTimeout(() => warpFlash.classList.remove('active'), 400);
+          }
 
-        // Warp flash effect
-        warpFlash.classList.add('active');
-        setTimeout(() => {
-          warpFlash.classList.remove('active');
-        }, 400);
-
-        playerNsf -= target.travelCost;
-        playerNsfBadge.innerHTML = `<i class="fa-solid fa-star"></i> <span>${playerNsf.toLocaleString()} NSF</span>`;
-
-        currentZone = selectedZone;
-
-        // Move "KAMU DISINI" badge to new node in SVG
-        const badgeOld = document.querySelector('.map-region-group text[font-size="9"]')?.parentElement;
-        if (badgeOld) {
-          // Remove old badge
-          const rect = badgeOld.querySelector('rect[fill="#f472b6"]');
-          const txt = badgeOld.querySelector('text[font-size="9"]');
-          if (rect) rect.remove();
-          if (txt) txt.remove();
-        }
-
-        const newTargetGroup = document.querySelector(`.map-region-group[data-zone="${currentZone}"]`);
-        if (newTargetGroup) {
-          const newRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-          newRect.setAttribute('x', '-35');
-          newRect.setAttribute('y', '-46');
-          newRect.setAttribute('width', '70');
-          newRect.setAttribute('height', '18');
-          newRect.setAttribute('rx', '9');
-          newRect.setAttribute('fill', '#f472b6');
-
-          const newTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-          newTxt.setAttribute('text-anchor', 'middle');
-          newTxt.setAttribute('y', '-33');
-          newTxt.setAttribute('fill', '#000');
-          newTxt.setAttribute('font-size', '9');
-          newTxt.setAttribute('font-weight', '700');
-          newTxt.setAttribute('font-family', "'JetBrains Mono', monospace");
-          newTxt.textContent = 'KAMU DISINI';
-
-          newTargetGroup.appendChild(newRect);
-          newTargetGroup.appendChild(newTxt);
-        }
-
-        updateZoneIntel(currentZone);
-      });
+          alert(`Panduan Fast Travel: Buka Discord dan jalankan perintah:\n/survival travel lokasi:${target.name}\nPastikan kamu memiliki kendaraan atau properti yang memadai.`);
+        });
+      }
 
       // Weather Toggle
       const weathers = [
-        { name: 'Hujan Sakura (+20% EXP)', icon: 'fa-cloud-sun-rain', color: 'var(--primary)' },
-        { name: 'Badai Aether (+30% Drop Kristal)', icon: 'fa-bolt-lightning', color: 'var(--accent-cyan)' },
-        { name: 'Matahari Terik (+15% Panen)', icon: 'fa-sun', color: 'var(--accent-amber)' },
-        { name: 'Gerhana Void (+50% Mob EXP)', icon: 'fa-moon', color: 'var(--accent-violet)' }
+        { name: 'Tropis Sejuk (+10% Stamina)', icon: 'fa-sun', color: 'var(--accent-amber)' },
+        { name: 'Hujan Berkah (+20% Hasil Kebun)', icon: 'fa-cloud-showers-heavy', color: 'var(--accent-cyan)' },
+        { name: 'Kabut Purba (+25% Drop Mistik)', icon: 'fa-smog', color: 'var(--accent-violet)' },
+        { name: 'Badai Aether (+30% Drop Kristal)', icon: 'fa-bolt-lightning', color: '#f43f5e' }
       ];
       let weatherIdx = 0;
-      document.getElementById('btnWeatherToggle').addEventListener('click', () => {
-        weatherIdx = (weatherIdx + 1) % weathers.length;
-        const w = weathers[weatherIdx];
-        document.getElementById('weatherLbl').textContent = w.name;
-        document.getElementById('btnWeatherToggle').querySelector('i').className = `fa-solid ${w.icon}`;
-        document.getElementById('btnWeatherToggle').querySelector('i').style.color = w.color;
-        playTone(720, 'sine', 0.1, 0.15);
-      });
+      const btnWeatherToggle = document.getElementById('btnWeatherToggle');
+      if (btnWeatherToggle) {
+        btnWeatherToggle.addEventListener('click', () => {
+          weatherIdx = (weatherIdx + 1) % weathers.length;
+          const w = weathers[weatherIdx];
+          const weatherLbl = document.getElementById('weatherLbl');
+          if (weatherLbl) weatherLbl.textContent = w.name;
+          const icon = btnWeatherToggle.querySelector('i');
+          if (icon) {
+            icon.className = `fa-solid ${w.icon}`;
+            icon.style.color = w.color;
+          }
+          playTone(720, 'sine', 0.1, 0.15);
+        });
+      }
 
-      // Initial load
-      updateZoneIntel('kota');
+      // Zoom Controls
+      let currentZoom = 1;
+      const worldSvg = document.getElementById('worldSvg');
+      const btnZoomIn = document.getElementById('btnZoomIn');
+      const btnZoomOut = document.getElementById('btnZoomOut');
+      const btnResetView = document.getElementById('btnResetView');
+
+      if (btnZoomIn) {
+        btnZoomIn.addEventListener('click', () => {
+          currentZoom = Math.min(1.8, currentZoom + 0.15);
+          if (worldSvg) worldSvg.style.transform = `scale(${currentZoom})`;
+          playTone(600, 'sine', 0.05, 0.1);
+        });
+      }
+      if (btnZoomOut) {
+        btnZoomOut.addEventListener('click', () => {
+          currentZoom = Math.max(0.8, currentZoom - 0.15);
+          if (worldSvg) worldSvg.style.transform = `scale(${currentZoom})`;
+          playTone(450, 'sine', 0.05, 0.1);
+        });
+      }
+      if (btnResetView) {
+        btnResetView.addEventListener('click', () => {
+          currentZoom = 1;
+          if (worldSvg) worldSvg.style.transform = `scale(1)`;
+          updateZoneIntel(currentZone);
+          playTone(550, 'sine', 0.08, 0.15);
+        });
+      }
+
+      // Fetch Realtime POIs & Player Location
+      (async () => {
+        try {
+          const res = await fetch('/api/survival/world-pois');
+          const json = await res.json();
+          if (json.success && json.regions) {
+            worldRegions = { ...FALLBACK_REGIONS, ...json.regions };
+            if (json.npcs) allNpcs = json.npcs;
+          }
+        } catch (e) {
+          console.warn('[WorldMap] Fetch POIs error:', e.message);
+        }
+
+        try {
+          const res = await fetch('/api/realtime/survival');
+          const json = await res.json();
+          if (json.success) {
+            const player = json.currentUser || (json.data && json.data[0]);
+            if (player) {
+              currentSurvivorName = player.name || 'Petualang';
+              playerNsf = player.starFragments || 0;
+              const rawLoc = player.world?.location || 'desa_sukamaju';
+              currentZone = CANONICAL_REGIONS[rawLoc] || 'desa_sukamaju';
+
+              if (hudPlayerNsfText) hudPlayerNsfText.textContent = `${playerNsf.toLocaleString('id-ID')} NSF`;
+              if (hudOverlaySurvivor) hudOverlaySurvivor.textContent = currentSurvivorName.toUpperCase();
+            }
+          }
+        } catch (e) {
+          console.warn('[WorldMap] Fetch Survivor error:', e.message);
+        }
+
+        // Render player marker and open player's current region
+        renderPlayerPositionBadge(currentZone);
+        updateZoneIntel(currentZone);
+      })();
     </script>
   </body>
 </html>

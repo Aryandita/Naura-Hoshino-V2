@@ -836,6 +836,130 @@
       let currentRegionId = 'desa_sukamaju';
       let worldRegions = null;
       let allNpcs = null;
+      let activePlayer = null;
+      let playerCanonicalRegion = 'desa_sukamaju';
+
+      const CANONICAL_REGIONS = {
+        'desa_sukamaju': 'desa_sukamaju',
+        'desa': 'desa_sukamaju',
+        'village': 'desa_sukamaju',
+        'sukamaju': 'desa_sukamaju',
+        'hutan': 'desa_sukamaju',
+        'tambang': 'desa_sukamaju',
+        'pantai': 'desa_sukamaju',
+        'laut': 'desa_sukamaju',
+        'kota_pratama': 'kota_pratama',
+        'kota': 'kota_pratama',
+        'city': 'kota_pratama',
+        'pratama': 'kota_pratama',
+        'academy': 'kota_pratama',
+        'desa_khulkhas': 'desa_khulkhas',
+        'khulkhas': 'desa_khulkhas',
+        'gurun': 'desa_khulkhas',
+        'istana_draken': 'istana_draken',
+        'draken': 'istana_draken',
+        'dungeon': 'istana_draken',
+        'abyss': 'istana_draken'
+      };
+
+      function updateCampaignObjective(regionKey) {
+        const objTitle = document.getElementById('campaignObjectiveTitle');
+        const objDesc = document.getElementById('campaignObjectiveDesc');
+        const objLoc = document.getElementById('campaignObjectiveLoc');
+        const objReward = document.getElementById('campaignObjectiveReward');
+
+        const campaigns = {
+          desa_sukamaju: {
+            title: 'Bab 1: Awal Kedatangan di Sukamaju',
+            desc: 'Kunjungi Balai Desa dan temui Kepala Desa Tirto untuk mendapatkan bimbingan awal bertahan hidup di alam liar serta mengumpulkan Naura Star Fragments (NSF).',
+            loc: '<i class="fa-solid fa-location-dot" style="color:#10b981;"></i> Desa Sukamaju',
+            reward: 'Reward: 500 NSF + 150 EXP'
+          },
+          kota_pratama: {
+            title: 'Bab 2: Denyut Metropolitan Kota Pratama',
+            desc: 'Kunjungi Balai Kota Pratama dan Bank Sentral untuk menukarkan NSF menjadi Naura Coins (NC) serta mencari lisensi kerja di gedung korporasi.',
+            loc: '<i class="fa-solid fa-location-dot" style="color:#3b82f6;"></i> Kota Pratama',
+            reward: 'Reward: 2,500 NC + Akses Pasar Bebas'
+          },
+          desa_khulkhas: {
+            title: 'Bab 3: Misteri Badai Mistik Khul\'Khas',
+            desc: 'Jelajahi perkemahan nomaden suku Khul\'Khas dan gali rahasia reruntuhan kuil pasir penjaga gerbang jurang.',
+            loc: '<i class="fa-solid fa-location-dot" style="color:#f59e0b;"></i> Desa Khul\'Khas',
+            reward: 'Reward: Artefak Kuno Gurun + EXP'
+          },
+          istana_draken: {
+            title: 'Bab 4: Penaklukan Istana Abyss Draken',
+            desc: 'Hadapi sang Raja Naga Draken di kedalaman dungeon terdalam demi menyelamatkan masa depan Naura Wilds.',
+            loc: '<i class="fa-solid fa-location-dot" style="color:#ef4444;"></i> Istana Draken',
+            reward: 'Reward: Mahkota Draken + 10,000 NC'
+          }
+        };
+
+        const target = campaigns[regionKey] || campaigns['desa_sukamaju'];
+        if (objTitle) objTitle.textContent = target.title;
+        if (objDesc) objDesc.textContent = target.desc;
+        if (objLoc) objLoc.innerHTML = target.loc;
+        if (objReward) objReward.textContent = target.reward;
+      }
+
+      function updatePlayerBlip() {
+        const existingPlayerBlip = document.getElementById('playerBlip');
+        if (existingPlayerBlip) existingPlayerBlip.remove();
+
+        const centerPlayerIcon = document.querySelector('.radar-player-center');
+
+        if (!activePlayer) return;
+
+        const isHere = (currentRegionId === playerCanonicalRegion);
+
+        if (centerPlayerIcon) {
+          if (isHere) {
+            centerPlayerIcon.style.opacity = '1';
+            centerPlayerIcon.innerHTML = '<i class="fa-solid fa-person-hiking"></i>';
+            centerPlayerIcon.title = `Posisi Anda: ${activePlayer.name}`;
+          } else {
+            centerPlayerIcon.style.opacity = '0.35';
+            centerPlayerIcon.innerHTML = '<i class="fa-solid fa-satellite"></i>';
+            centerPlayerIcon.title = `Surveilans Satelit: Anda sedang berada di ${worldRegions?.[playerCanonicalRegion]?.name || playerCanonicalRegion}`;
+          }
+        }
+
+        if (isHere) {
+          const playerBlip = document.createElement('div');
+          playerBlip.id = 'playerBlip';
+          playerBlip.className = 'blip';
+          playerBlip.style.cssText = `
+            top: 50%; left: 50%;
+            background: var(--primary);
+            border: 2px solid rgba(244,114,182,0.9);
+            box-shadow: 0 0 16px var(--pink-glow), 0 0 6px rgba(244,114,182,0.8);
+            z-index: 12;
+            transform: translate(-50%, -50%);
+            animation: pulse 1.8s infinite;
+          `;
+          playerBlip.setAttribute('data-name', `${activePlayer.name} (Posisi Anda)`);
+          playerBlip.setAttribute('data-dist', '0m (Koordinat Saat Ini)');
+          playerBlip.setAttribute('data-type', 'player');
+          playerBlip.innerHTML = '<i class="fa-solid fa-person" style="font-size:10px;color:#fff;"></i>';
+
+          playerBlip.addEventListener('click', () => {
+            playTone(550, 'sine', 0.08, 0.2);
+            if (blipDetailSub) blipDetailSub.textContent = 'TELEMETRI SURVIVOR';
+            if (blipDetailBadge) blipDetailBadge.textContent = 'POSISI ANDA';
+            if (blipDetailTitle) blipDetailTitle.textContent = `${activePlayer.name} (Petualang)`;
+            if (blipDetailDist) {
+              blipDetailDist.textContent = `Level ${activePlayer.progress?.level || 1} · ⭐ ${(activePlayer.starFragments || 0).toLocaleString('id-ID')} NSF · Wilayah: ${worldRegions?.[playerCanonicalRegion]?.name || playerCanonicalRegion}`;
+            }
+            if (blipDetailDesc) {
+              blipDetailDesc.textContent = 'Posisi fisik petualang Anda saat ini di dunia Naura Wilds. Semua interaksi langsung berlangsung di wilayah ini.';
+            }
+            if (blipResidentNpcs) blipResidentNpcs.innerHTML = '';
+            if (blipDetailCard) blipDetailCard.style.display = 'block';
+          });
+
+          radarScope.appendChild(playerBlip);
+        }
+      }
 
       function renderRegion(regionId) {
         currentRegionId = regionId;
@@ -851,11 +975,41 @@
 
         if (!worldRegions || !worldRegions[regionId]) return;
         const region = worldRegions[regionId];
+        const isHere = (regionId === playerCanonicalRegion);
 
         // Update Radar Header Title
         const headerTitle = document.querySelector('.radar-header span');
         if (headerTitle) {
-          headerTitle.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> GRID WILAYAH: [${region.name.toUpperCase()}] · ${region.climate.toUpperCase()}`;
+          const statusTag = isHere
+            ? '<span class="badge" style="background:rgba(16,185,129,0.2);color:#10b981;border:1px solid rgba(16,185,129,0.4);font-size:10px;margin-left:8px;"><i class="fa-solid fa-location-dot"></i> POSISI ANDA</span>'
+            : `<span class="badge" style="background:rgba(59,130,246,0.2);color:#3b82f6;border:1px solid rgba(59,130,246,0.4);font-size:10px;margin-left:8px;"><i class="fa-solid fa-satellite"></i> TELEMETRI SATELIT</span>`;
+          headerTitle.innerHTML = `<i class="fa-solid fa-satellite-dish"></i> GRID WILAYAH: [${region.name.toUpperCase()}] · ${region.climate.toUpperCase()} ${statusTag}`;
+        }
+
+        // Update Outpost Card Title
+        const outpostCardHeader = document.querySelector('.card-p [class*="fa-campground"]')?.parentElement;
+        if (outpostCardHeader) {
+          const outpostNames = {
+            desa_sukamaju: 'Pos Aju Lembah Sukamaju (Sektor 01)',
+            kota_pratama: 'Markas Komando Distrik Pratama (Sektor 02)',
+            desa_khulkhas: 'Pos Kemah Badai Gurun Khul\'Khas (Sektor 03)',
+            istana_draken: 'Pos Pengintaian Gerbang Draken (Sektor 04)'
+          };
+          outpostCardHeader.innerHTML = `<i class="fa-solid fa-campground" style="color:#a78bfa;"></i> ${outpostNames[regionId] || 'Pos Outpost Wilayah ' + region.name}`;
+        }
+
+        // Update scan description text
+        const locEls = document.querySelectorAll('[id="scanFoundText"]');
+        if (activePlayer) {
+          if (isHere) {
+            locEls.forEach(el => {
+              el.textContent = `📍 Sinyal Lokal Aktif: ${activePlayer.name} di ${region.name} (Hari ${activePlayer.world?.day || 1})`;
+            });
+          } else {
+            locEls.forEach(el => {
+              el.textContent = `📡 Surveilans Satelit Jarak Jauh · Posisi fisik Anda di ${worldRegions[playerCanonicalRegion]?.name || playerCanonicalRegion}`;
+            });
+          }
         }
 
         // Remove old POI blips
@@ -895,6 +1049,9 @@
             radarScope.appendChild(el);
           });
         }
+
+        updatePlayerBlip();
+        updateCampaignObjective(isHere ? playerCanonicalRegion : regionId);
       }
 
       function showPoiDetails(poi) {
@@ -958,7 +1115,6 @@
           if (json.success) {
             worldRegions = json.regions;
             allNpcs = json.npcs;
-            renderRegion(currentRegionId);
           }
         } catch (e) {
           console.warn('[SurvivalMap] POI Fetch error:', e.message);
@@ -967,109 +1123,78 @@
         try {
           const res = await fetch('/api/realtime/survival');
           const json = await res.json();
-          if (!json.success || !json.data?.length) return;
+          if (json.success && (json.currentUser || json.data?.length)) {
+            const survivor = json.currentUser || json.data[0];
+            activePlayer = survivor;
 
-          const survivor = json.data[0];
-          const stats = survivor.stats;
-          const attrs = survivor.attributes;
-          const world = survivor.world;
+            const stats = survivor.stats;
+            const attrs = survivor.attributes;
+            const world = survivor.world;
 
-          // Update vital bars
-          const vitalMetas = document.querySelectorAll('.vital-meta span:last-child');
-          const vitalFills = document.querySelectorAll('.vital-fill');
-          const vitalData = [
-            { value: stats.hp, max: 100, color: '#10b981' },
-            { value: stats.stamina, max: 100, color: '#f59e0b' },
-            { value: stats.hunger, max: 100, color: '#34d399' },
-            { value: stats.thirst, max: 100, color: '#3b82f6' }
-          ];
+            // Resolve canonical region
+            const rawLoc = (world?.location || 'desa_sukamaju').toLowerCase().trim();
+            playerCanonicalRegion = CANONICAL_REGIONS[rawLoc] || 'desa_sukamaju';
 
-          vitalData.forEach((v, i) => {
-            if (vitalFills[i]) {
-              const pct = Math.max(0, Math.min(100, v.value));
-              vitalFills[i].style.width = pct + '%';
-              vitalFills[i].style.background = pct > 50 ? v.color : pct > 20 ? '#f59e0b' : '#ef4444';
+            // Mark player location badge on tabs
+            document.querySelectorAll('.region-tab').forEach(tab => {
+              const reg = tab.getAttribute('data-region');
+              const existingUserBadge = tab.querySelector('.user-location-badge');
+              if (existingUserBadge) existingUserBadge.remove();
+              if (reg === playerCanonicalRegion) {
+                const badge = document.createElement('span');
+                badge.className = 'badge user-location-badge';
+                badge.style.cssText = 'background:rgba(244,114,182,0.25);color:#f472b6;border:1px solid rgba(244,114,182,0.5);font-size:9px;padding:2px 6px;margin-left:6px;';
+                badge.innerHTML = '<i class="fa-solid fa-location-dot"></i> ANDA DI SINI';
+                tab.appendChild(badge);
+              }
+            });
+
+            // Update vital bars
+            const vitalMetas = document.querySelectorAll('.vital-meta span:last-child');
+            const vitalFills = document.querySelectorAll('.vital-fill');
+            const vitalData = [
+              { value: stats?.hp ?? 100, max: 100, color: '#10b981' },
+              { value: stats?.stamina ?? 100, max: 100, color: '#f59e0b' },
+              { value: stats?.hunger ?? 100, max: 100, color: '#34d399' },
+              { value: stats?.thirst ?? 100, max: 100, color: '#3b82f6' }
+            ];
+
+            vitalData.forEach((v, i) => {
+              if (vitalFills[i]) {
+                const pct = Math.max(0, Math.min(100, v.value));
+                vitalFills[i].style.width = pct + '%';
+                vitalFills[i].style.background = pct > 50 ? v.color : pct > 20 ? '#f59e0b' : '#ef4444';
+              }
+              if (vitalMetas[i]) {
+                vitalMetas[i].textContent = `${v.value} / ${v.max}`;
+              }
+            });
+
+            // Update outpost NSF
+            const nsfEl = document.querySelector('[style*="3,200 NSF"]');
+            if (nsfEl) nsfEl.textContent = `${(survivor.starFragments || 0).toLocaleString('id-ID')} NSF`;
+
+            // Update stat badge
+            const vitStatusBadge = document.querySelector('.badge-success');
+            if (vitStatusBadge && stats?.hp > 0) {
+              vitStatusBadge.textContent = 'PRIMA';
+              vitStatusBadge.className = 'badge badge-success';
+            } else if (vitStatusBadge) {
+              vitStatusBadge.textContent = 'OFFLINE';
+              vitStatusBadge.style.background = 'rgba(100,100,100,0.2)';
+              vitStatusBadge.style.color = '#94a3b8';
             }
-            if (vitalMetas[i]) {
-              vitalMetas[i].textContent = `${v.value} / ${v.max}`;
-            }
-          });
 
-          // Update name & location in radar header
-          const radarHeader = document.querySelector('.radar-header');
-          if (radarHeader) {
-            const nameDisplay = radarHeader.querySelector('[id="radarPlayerName"]') ||
-              radarHeader.querySelector('span:first-child');
-            if (nameDisplay && !worldRegions) nameDisplay.textContent = survivor.name;
+            // Auto-focus to player's current region
+            currentRegionId = playerCanonicalRegion;
           }
-
-          // Update outpost NSF
-          const nsfEl = document.querySelector('[style*="3,200 NSF"]');
-          if (nsfEl) nsfEl.textContent = `${survivor.starFragments.toLocaleString('id-ID')} NSF`;
-
-          // Update location display
-          const locEls = document.querySelectorAll('[id="scanFoundText"]');
-          locEls.forEach(el => {
-            el.textContent = `1 Survivor Aktif, Wilayah: ${world.location}, Hari ${world.day}`;
-          });
-
-          // Update stat badge
-          const vitStatusBadge = document.querySelector('.badge-success');
-          if (vitStatusBadge && stats.hp > 0) {
-            vitStatusBadge.textContent = 'AKTIF';
-            vitStatusBadge.className = 'badge badge-success';
-          } else if (vitStatusBadge) {
-            vitStatusBadge.textContent = 'OFFLINE';
-            vitStatusBadge.style.background = 'rgba(100,100,100,0.2)';
-            vitStatusBadge.style.color = '#94a3b8';
-          }
-
-          // Add live player blip to radar
-          const existingPlayerBlip = document.getElementById('playerBlip');
-          if (existingPlayerBlip) existingPlayerBlip.remove();
-
-          const locationToPos = {
-            'desa_sukamaju': { top: '50%', left: '48%' },
-            'kota_pratama': { top: '42%', left: '55%' },
-            'desa_khulkhas': { top: '65%', left: '60%' },
-            'istana_draken': { top: '30%', left: '35%' },
-            'hutan': { top: '55%', left: '45%' },
-            'kota': { top: '40%', left: '52%' },
-            'gurun': { top: '65%', left: '65%' },
-            'pantai': { top: '30%', left: '70%' },
-            'pegunungan': { top: '25%', left: '35%' },
-            'jalanan': { top: '50%', left: '50%' }
-          };
-          const pos = locationToPos[world.location] || { top: '50%', left: '50%' };
-
-          const playerBlip = document.createElement('div');
-          playerBlip.id = 'playerBlip';
-          playerBlip.className = 'blip';
-          playerBlip.style.cssText = `
-            top: ${pos.top}; left: ${pos.left};
-            background: var(--primary);
-            border: 2px solid rgba(244,114,182,0.8);
-            box-shadow: 0 0 12px var(--pink-glow), 0 0 4px rgba(244,114,182,0.6);
-            z-index: 10;
-          `;
-          playerBlip.setAttribute('data-name', `${survivor.name} (Kamu)`);
-          playerBlip.setAttribute('data-dist', `0m, Posisi Kamu`);
-          playerBlip.setAttribute('data-type', 'player');
-          playerBlip.innerHTML = '<i class="fa-solid fa-person" style="font-size:9px;"></i>';
-
-          playerBlip.addEventListener('click', () => {
-            playTone(550, 'sine', 0.08, 0.2);
-            if (blipDetailTitle) blipDetailTitle.textContent = `${survivor.name} (Posisi Anda)`;
-            if (blipDetailDist) blipDetailDist.textContent = `Lv.${survivor.progress.level} · ⭐ ${survivor.starFragments.toLocaleString()} NSF · ${world.location}`;
-            if (blipDetailDesc) blipDetailDesc.textContent = 'Posisi petualang kamu saat ini di dunia Naura Wilds.';
-            if (blipResidentNpcs) blipResidentNpcs.innerHTML = '';
-            if (blipDetailCard) blipDetailCard.style.display = 'block';
-          });
-
-          radarScope.appendChild(playerBlip);
-
         } catch(e) {
-          console.warn('[SurvivalMap] Fetch error:', e.message);
+          console.warn('[SurvivalMap] Survival Fetch error:', e.message);
+        }
+
+        // Render current region
+        if (worldRegions) {
+          renderRegion(currentRegionId);
         }
       })();
     </script>

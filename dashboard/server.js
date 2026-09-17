@@ -433,6 +433,11 @@ module.exports = (client) => {
       });
 
       const locationCounts = {
+        desa_sukamaju: 0,
+        kota_pratama: 0,
+        desa_khulkhas: 0,
+        istana_draken: 0,
+        // Legacy keys untuk kompatibilitas mundur
         desa: 0,
         kota: 0,
         hutan: 0,
@@ -443,12 +448,31 @@ module.exports = (client) => {
 
       for (const row of counts) {
         const loc = String(row.currentLocation || "desa").toLowerCase();
-        if (loc === "village")
-          locationCounts.desa += parseInt(row.count, 10) || 0;
-        else if (loc === "city")
-          locationCounts.kota += parseInt(row.count, 10) || 0;
-        else if (locationCounts[loc] !== undefined) {
-          locationCounts[loc] += parseInt(row.count, 10) || 0;
+        const countVal = parseInt(row.count, 10) || 0;
+        if (["desa", "village", "desa_sukamaju", "hutan", "tambang", "laut"].includes(loc)) {
+          locationCounts.desa_sukamaju += countVal;
+          locationCounts.desa += countVal;
+        } else if (["kota", "city", "kota_pratama", "academy"].includes(loc)) {
+          locationCounts.kota_pratama += countVal;
+          locationCounts.kota += countVal;
+        } else if (["khulkhas", "desa_khulkhas", "gurun"].includes(loc)) {
+          locationCounts.desa_khulkhas += countVal;
+        } else if (["draken", "istana_draken", "dungeon", "abyss"].includes(loc)) {
+          locationCounts.istana_draken += countVal;
+        } else if (locationCounts[loc] !== undefined) {
+          locationCounts[loc] += countVal;
+        }
+      }
+
+      let userCurrentLocation = null;
+      const targetUserId = req.query.userId || req.user?.id || null;
+      if (targetUserId) {
+        const userSurv = await UserSurvival.findOne({
+          where: { userId: targetUserId },
+          attributes: ["currentLocation"],
+        });
+        if (userSurv) {
+          userCurrentLocation = userSurv.currentLocation || "desa_sukamaju";
         }
       }
 
@@ -466,6 +490,7 @@ module.exports = (client) => {
         },
         event: activeEvent,
         locations: locationCounts,
+        userLocation: userCurrentLocation,
       });
     } catch (err) {
       res.status(500).json({ error: err.message });

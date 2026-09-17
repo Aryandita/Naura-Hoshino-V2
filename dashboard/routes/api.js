@@ -724,9 +724,70 @@ module.exports = (client) => {
     try {
       const { REGIONS } = require("../../src/survival/data/worldMapData");
       const { NPCS } = require("../../src/survival/data/npcs");
+
+      // Menambahkan metadata display wilayah untuk World Map & Radar
+      const REGION_METAS = {
+        desa_sukamaju: {
+          tag: "ZONA AWAL & GATHERING (STARTER HAVEN)",
+          category: "safe",
+          climate: "Tropis Lembab & Asri",
+          reqLevel: "Lv. 1 - 10",
+          danger: "★☆☆☆☆ Aman",
+          dangerColor: "#34d399",
+          resources: { wood: 85, ore: 65, fish: 90, herb: 75 },
+          coords: "X: 220 · Y: 430",
+          fastTravelCost: 10,
+          monsters: "Aman terlindung. Hama kebun level rendah (Kelinci Liar, Tikus Sawah, Babi Hutan Hutan Pinus).",
+        },
+        kota_pratama: {
+          tag: "PUSAT METROPOLIS & EKONOMI NC (SAFE HUB)",
+          category: "commerce",
+          climate: "Modern Sejuk & Gemerlap Neon",
+          reqLevel: "Lv. 10 - 25",
+          danger: "★☆☆☆☆ Aman Terlindung",
+          dangerColor: "#38bdf8",
+          resources: { wood: 20, ore: 30, fish: 40, tech: 95 },
+          coords: "X: 480 · Y: 270",
+          fastTravelCost: 25,
+          monsters: "Tidak ada monster. Zona dilindungi oleh Pasukan Penjaga Kota dan Walikota Lucy.",
+        },
+        desa_khulkhas: {
+          tag: "WILAYAH MISTIK & GURUN KUNO (EXPLORATION)",
+          category: "mystery",
+          climate: "Gurun Pasir Panas & Kabut Mistis Malam",
+          reqLevel: "Lv. 25 - 40",
+          danger: "★★★☆☆ Berbahaya",
+          dangerColor: "#f59e0b",
+          resources: { wood: 10, ore: 80, fish: 15, relic: 90 },
+          coords: "X: 740 · Y: 430",
+          fastTravelCost: 50,
+          monsters: "Kala Jengking Raksasa (Lv. 28), Ular Pasir Purba (Lv. 34), Roh Bayangan Nomad.",
+        },
+        istana_draken: {
+          tag: "DUNGEON BERTINGKAT & WORLD BOSS (HIGH DANGER)",
+          category: "dungeon",
+          climate: "Hawa Neraka & Kabut Kegelapan Abyss",
+          reqLevel: "Lv. 40+ (End-Game Raid)",
+          danger: "★★★★★ EKSTREM / MAUT",
+          dangerColor: "#ef4444",
+          resources: { wood: 5, ore: 95, fish: 0, mythic: 100 },
+          coords: "X: 720 · Y: 150",
+          fastTravelCost: 100,
+          monsters: "Gargoyle Malakor (Lv. 45 Gatekeeper), Iblis Bayangan (Lv. 48), Penguasa Draken (Lantai 50 Boss).",
+        },
+      };
+
+      const enrichedRegions = {};
+      for (const [key, reg] of Object.entries(REGIONS)) {
+        enrichedRegions[key] = {
+          ...reg,
+          ...(REGION_METAS[key] || {}),
+        };
+      }
+
       res.json({
         success: true,
-        regions: REGIONS,
+        regions: enrichedRegions,
         npcs: NPCS,
         timestamp: Date.now(),
       });
@@ -739,13 +800,58 @@ module.exports = (client) => {
   router.get("/realtime/survival", async (req, res) => {
     try {
       const UserSurvival = require("../../src/models/UserSurvival");
+      const currentUserId = req.query.userId || req.user?.id || null;
+      let currentUserData = null;
+
+      if (currentUserId) {
+        const s = await UserSurvival.findOne({ where: { userId: currentUserId } });
+        if (s) {
+          currentUserData = {
+            id: s.userId,
+            name: req.user?.username || `Survivor #${s.userId.slice(-4)}`,
+            avatar: req.user?.avatar
+              ? `https://cdn.discordapp.com/avatars/${req.user.id}/${req.user.avatar}.png`
+              : null,
+            starFragments: s.starFragments || 0,
+            coupons: s.coupons || 0,
+            stats: {
+              hp: s.hp || 100,
+              stamina: s.stamina || 100,
+              hunger: s.hunger || 100,
+              thirst: s.thirst || 100,
+            },
+            attributes: {
+              strength: s.strength || 1,
+              agility: s.agility || 1,
+              intelligence: s.intelligence || 1,
+              luck: s.luck || 1,
+            },
+            progress: {
+              level: s.survival_level || 1,
+              xp: s.survival_xp || 0,
+            },
+            world: {
+              location: s.currentLocation || "desa_sukamaju",
+              day: s.day || 1,
+            },
+          };
+        }
+      }
+
       const survivors = await UserSurvival.findAll({
         limit: 10,
         order: [["updatedAt", "DESC"]],
       });
       const data = survivors.map((s) => ({
         id: s.userId,
-        name: `Survivor #${s.userId.slice(-4)}`,
+        name:
+          s.userId === currentUserId && req.user?.username
+            ? req.user.username
+            : `Survivor #${s.userId.slice(-4)}`,
+        avatar:
+          s.userId === currentUserId && req.user?.avatar
+            ? `https://cdn.discordapp.com/avatars/${req.user.id}/${req.user.avatar}.png`
+            : null,
         starFragments: s.starFragments || 0,
         coupons: s.coupons || 0,
         stats: {
@@ -769,7 +875,12 @@ module.exports = (client) => {
           day: s.day || 1,
         },
       }));
-      res.json({ success: true, data });
+
+      if (currentUserData && !data.some((p) => p.id === currentUserData.id)) {
+        data.unshift(currentUserData);
+      }
+
+      res.json({ success: true, currentUser: currentUserData, data });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message, data: [] });
     }
