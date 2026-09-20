@@ -215,7 +215,6 @@ module.exports = {
           }),
         );
       }
-      return;
     }
   },
 };

@@ -182,7 +182,6 @@ async function startBot() {
         logger.info(
           `[DASHBOARD] Shard #${env.SHARD_ID} melewati Web Dashboard (dijalankan shard utama).`,
         );
-        return;
       }
     });
 

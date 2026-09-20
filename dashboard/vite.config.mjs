@@ -98,7 +98,9 @@ export default defineConfig({
             fs.copyFileSync(srcIndex, destIndex);
             console.log("[Vite] dist/index.html tersinkronisasi dari src/pages/index.html");
           }
-        } catch (_) {}
+        } catch {
+          // Abaikan kesalahan bila folder dist belum tersedia saat build parsial
+        }
       },
     },
   ],

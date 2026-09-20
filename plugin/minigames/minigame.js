@@ -947,8 +947,6 @@ async function runMinigameLogic(interaction) {
             .catch(() => {});
         }
       });
-
-      return; // Selesaikan eksekusi agar tidak masuk ke logika lain
     }
 
     // ==========================================

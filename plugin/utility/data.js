@@ -149,7 +149,6 @@ module.exports = {
           interaction.editReply({ components: [] }).catch(() => {});
         }
       });
-      return;
     }
   },
 };
