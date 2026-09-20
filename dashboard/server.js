@@ -282,6 +282,7 @@ module.exports = (client) => {
   });
 
   // --- Rute API ---
+  webApp.use(require("./routes/auth")(client));
   webApp.use(require("./routes/public")(client));
   webApp.use(require("./routes/user")(client));
   webApp.use(require("./routes/guild")(client));
@@ -516,6 +517,10 @@ module.exports = (client) => {
   global.client = client;
 
   require("./sockets")(client, io, { sessionMiddleware });
+
+  webServer.on("error", (err) => {
+    logger.error(`[DASHBOARD] Server error pada port ${webPort}: ${err.message}`);
+  });
 
   webServer.listen(webPort, "0.0.0.0", () => {
     // Tampilkan URL yang benar-benar bisa diakses:

@@ -176,6 +176,10 @@ if (parentPort) {
       }
 
       parentPort.postMessage({ id, success: true, result });
+      result = null;
+      if (global.gc) {
+        global.gc();
+      }
     } catch (err) {
       parentPort.postMessage({
         id,

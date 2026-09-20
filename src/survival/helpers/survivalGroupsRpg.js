@@ -184,6 +184,8 @@ function addRpgGroup(builder) {
               .addChoices(
                 { name: "🏰 Dashboard & Info Klan", value: "info" },
                 { name: "🌐 Aliansi Federasi Global", value: "federation" },
+                { name: "⚔️ Pengepungan Menara Relik (Siege)", value: "siege" },
+                { name: "🐫 Papan Pengawalan Karavan (Caravan)", value: "caravan" },
                 { name: "🏡 2.5D Guild Hall Lounge", value: "hall" },
                 { name: "☕ Seduh Kopi Lounge (+25 Energy)", value: "coffee" },
                 { name: "🛋️ Beli Furnitur Lounge", value: "furniture" },
@@ -206,6 +208,42 @@ function addRpgGroup(builder) {
               .setName("jumlah")
               .setDescription("Jumlah Star Fragments")
               .setRequired(false),
+          ),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("siege")
+          .setDescription("Perang wilayah GvG & pengepungan Menara Relik Kuno")
+          .addStringOption((opt) =>
+            opt
+              .setName("aksi")
+              .setDescription("Aksi pengepungan")
+              .setRequired(false)
+              .addChoices(
+                { name: "Lihat Status Menara", value: "status" },
+                { name: "Serang Menara (Attack)", value: "attack" },
+                { name: "Klaim Dividen (Dividends)", value: "dividends" },
+              ),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("tower_id")
+              .setDescription("Pilih menara target")
+              .setRequired(false)
+              .addChoices(
+                {
+                  name: "Chrono Siphon (Menara Waktu)",
+                  value: "chrono_siphon",
+                },
+                {
+                  name: "Nebula Bastion (Benteng Nebula)",
+                  value: "nebula_bastion",
+                },
+                {
+                  name: "Void Citadel (Benteng Kehampaan)",
+                  value: "void_citadel",
+                },
+              ),
           ),
       )
       .addSubcommand((sub) =>

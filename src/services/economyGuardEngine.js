@@ -259,6 +259,103 @@ class EconomyGuardEngine {
     } catch (_e) {
       // Abaikan kegagalan log jika Mongo tidak aktif
     }
+
+    // Kirim webhook peringatan ke staf discord
+    await this.sendSecurityStaffAlert(payload).catch(() => {});
+  }
+
+  /**
+   * Kirim notifikasi webhook keamanan staf otomatis saat terjadi lonjakan perputaran uang (velocity spike).
+   * @param {object} alertData
+   */
+  async sendSecurityStaffAlert(alertData) {
+    try {
+      const { env } = require("../config/env");
+      const webhookUrl = env.SECURITY_WEBHOOK_URL || env.ERROR_WEBHOOK_URL;
+      if (!webhookUrl) return;
+
+      const payload = {
+        username: "Naura Economy Guard",
+        embeds: [
+          {
+            title: "🚨 Peringatan Keamanan Ekonomi (Velocity Anomaly)",
+            color: 0xef4444,
+            fields: [
+              { name: "Jenis Anomali", value: alertData.alertType || "VELOCITY_SPIKE", inline: true },
+              { name: "Pengirim", value: `<@${alertData.senderId}> (${alertData.senderId})`, inline: true },
+              { name: "Penerima", value: alertData.receiverId ? `<@${alertData.receiverId}> (${alertData.receiverId})` : "N/A", inline: true },
+              { name: "Nominal", value: `${Number(alertData.amount).toLocaleString("id-ID")}`, inline: true },
+            ],
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      };
+
+      await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).catch(() => {});
+    } catch (_err) {}
+  }
+
+  /**
+   * Menghitung rekomendasi harga wajar suatu item berdasarkan rerata penjualan sukses 7 hari terakhir.
+   * @param {string} itemId
+   * @param {string} currency
+   * @returns {Promise<{ averagePrice: number, recommendedMin: number, recommendedMax: number, sampleSize: number }>}
+   */
+  async getRecommendedPrice(itemId, currency = "nsf") {
+    try {
+      const MarketAuction = require("../models/MarketAuction");
+      const { Op } = require("sequelize");
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      const pastSales = await MarketAuction.findAll({
+        where: {
+          itemId,
+          currency,
+          status: { [Op.in]: ["sold", "claimed"] },
+          currentBid: { [Op.gt]: 0 },
+          updatedAt: { [Op.gte]: sevenDaysAgo },
+        },
+        attributes: ["currentBid", "amount"],
+        limit: 50,
+      });
+
+      if (!pastSales || pastSales.length === 0) {
+        return {
+          averagePrice: 100,
+          recommendedMin: 80,
+          recommendedMax: 150,
+          sampleSize: 0,
+        };
+      }
+
+      let totalValue = 0;
+      let totalAmount = 0;
+      for (const sale of pastSales) {
+        const amt = Math.max(1, Number(sale.amount) || 1);
+        const unitPrice = Math.floor(Number(sale.currentBid) / amt);
+        totalValue += unitPrice;
+        totalAmount++;
+      }
+
+      const avg = Math.max(10, Math.round(totalValue / totalAmount));
+      return {
+        averagePrice: avg,
+        recommendedMin: Math.max(1, Math.round(avg * 0.8)),
+        recommendedMax: Math.round(avg * 1.5),
+        sampleSize: totalAmount,
+      };
+    } catch (_err) {
+      return {
+        averagePrice: 100,
+        recommendedMin: 80,
+        recommendedMax: 150,
+        sampleSize: 0,
+      };
+    }
   }
 
   /**

@@ -528,9 +528,25 @@ export class NauraHero3DViewer {
             this._updateCameraGlide(delta);
         }
 
-        // 3. Update AnimationMixer & procedural kinematic engine (which updates vrm physics then sets humanoid bones)
+        // 3. Mouse dampening
+        const mouseDecay = 1.0 - Math.exp(-12.0 * delta);
+        this.mouse.x += (this.mouse.targetX - this.mouse.x) * mouseDecay;
+        this.mouse.y += (this.mouse.targetY - this.mouse.y) * mouseDecay;
+
+        const lookYaw = this.options.lookAtCursor && !this.isInteracting ? -this.mouse.x * 0.30 : 0;
+        const lookPitch = this.options.lookAtCursor && !this.isInteracting ? this.mouse.y * 0.16 : 0;
+        const headTilt = this.options.lookAtCursor && !this.isInteracting ? -this.mouse.x * 0.05 : 0;
+
+        // 4. Update AnimationMixer & procedural kinematic engine (which updates vrm physics then sets humanoid bones)
         if (this.animController) {
-            this.animController.update(delta, elapsed);
+            this.animController.update(delta, elapsed, { lookYaw, lookPitch, headTilt });
+            // Sinkronkan cursor ke EyeController
+            if (this.animController.getPart) {
+                const eyes = this.animController.getPart("eyes");
+                if (eyes && typeof eyes.setCursor === "function") {
+                    eyes.setCursor(this.mouse.x, this.mouse.y);
+                }
+            }
         }
 
         // Penstabil tulang rok (Skirt Bone Stabilizer) untuk menjaga tekstur rok tetap stabil ke bawah
@@ -544,26 +560,21 @@ export class NauraHero3DViewer {
             }
         }
 
-        // 4. Mouse dampening
-        const mouseDecay = 1.0 - Math.exp(-12.0 * delta);
-        this.mouse.x += (this.mouse.targetX - this.mouse.x) * mouseDecay;
-        this.mouse.y += (this.mouse.targetY - this.mouse.y) * mouseDecay;
-
         // 5. Cursor Tracking: Terisolasi pada outer pivot container atau tulang leher/kepala
         // Hanya aktif saat pengguna TIDAK sedang melakukan drag orbit
         if (this.options.lookAtCursor && !this.isInteracting) {
-            const lookYaw = -this.mouse.x * 0.30;
-            const lookPitch = this.mouse.y * 0.16;
-            const headTilt = -this.mouse.x * 0.05;
 
             if (this.vrm) {
-                // Pada model VRM, rotasikan modelRoot secara halus agar seluruh tubuh Naura
-                // merespons posisi kursor tanpa merusak artikulasi anatomis animasi kepala/leher
-                const lerpSpeed = 1.0 - Math.exp(-8.0 * delta);
+                // Pada model VRM, head/neck tracking sudah ditangani sepenuhnya oleh
+                // HeadController dan NeckController melalui animController.update().
+                // modelRoot hanya mendapat rotasi body-tilt yang SANGAT ringan (bukan tracking penuh)
+                // agar tidak double-apply cursor tracking pada kepala VRM.
+                const lerpSpeed = 1.0 - Math.exp(-5.0 * delta);
                 if (this.modelRoot) {
-                    this.modelRoot.rotation.y += (lookYaw * 0.45 - this.modelRoot.rotation.y) * lerpSpeed;
-                    this.modelRoot.rotation.x += (lookPitch * 0.45 - this.modelRoot.rotation.x) * lerpSpeed;
-                    this.modelRoot.rotation.z += (headTilt * 0.45 - this.modelRoot.rotation.z) * lerpSpeed;
+                    // Hanya body tilt ringan (bukan full lookYaw) - kepala sudah diatur controller
+                    this.modelRoot.rotation.y += (-this.mouse.x * 0.06 - this.modelRoot.rotation.y) * lerpSpeed;
+                    this.modelRoot.rotation.x += (this.mouse.y * 0.04 - this.modelRoot.rotation.x) * lerpSpeed;
+                    this.modelRoot.rotation.z += (-this.mouse.x * 0.02 - this.modelRoot.rotation.z) * lerpSpeed;
                 }
             } else if (this.bones.Head && this.boneRestQuats.Head) {
                 const headEuler = new THREE.Euler(headTilt * 0.6, lookYaw * 0.50, lookPitch * 0.50, "YXZ");
@@ -789,7 +800,7 @@ export class NauraHero3DViewer {
                 Wave: "👋 Melambai Hangat",
                 Thinking: "🤔 Berpikir Kritis",
                 Dizzy: "💫 Pusing / Bingung",
-                Cheers: "🎉 Ceria Bersorak",
+                Cheers: "🎉 Ceria",
                 Shy: "😳 Malu-malu",
                 Sleepy: "💤 Mengantuk",
                 BlowKiss: "😘 Tiup Ciuman",
@@ -818,6 +829,13 @@ export class NauraHero3DViewer {
 
         // Synchronize facial mood
         this.setMood(resolvedName);
+
+        // Pastikan render loop aktif saat animasi diputar
+        if (!this.animationFrameId) {
+            this.isVisible = true;
+            this.clock.start();
+            this._animate();
+        }
 
         if (this.animController && this.animController.playClip) {
             const isLoop = options.loop ?? (resolvedName === "Idle" || resolvedName === "Dizzy" || resolvedName === "Sleepy" || resolvedName === "Thinking" || resolvedName === "Shy");

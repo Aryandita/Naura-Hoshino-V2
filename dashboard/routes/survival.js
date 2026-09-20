@@ -105,7 +105,33 @@ module.exports = () => {
         liveData = await landEngine.getGuildLand(guildId);
       }
 
-      const mergedPlots = { ...DEFAULT_PLOTS, ...(liveData.plots || {}) };
+      const dbPlots = {};
+      try {
+        const ClanTerritory = require("../../src/models/ClanTerritory");
+        const territories = await ClanTerritory.findAll();
+        if (territories && territories.length > 0) {
+          territories.forEach((t, i) => {
+            const x = (i % 6) + 2;
+            const y = Math.floor(i / 6) + 2;
+            const key = `${x},${y}`;
+            dbPlots[key] = {
+              x,
+              y,
+              clanId: t.clanId ? `clan_${t.clanId}` : "neutral",
+              clanName: t.clanName || "Klan Teritorial",
+              clanTag: (t.clanName || "TERR").slice(0, 4).toUpperCase(),
+              color: "#38bdf8",
+              terrain: t.name || "Sektor Strategis",
+              structure: { type: "castle", tier: t.defenseLevel || 1, name: t.name },
+              defensePower: t.controlPoints || 500,
+              buffs: [t.buffEffect || "+10% Sektor Yield"],
+              claimedAt: t.updatedAt ? new Date(t.updatedAt).getTime() : Date.now(),
+            };
+          });
+        }
+      } catch (_) {}
+
+      const mergedPlots = { ...DEFAULT_PLOTS, ...dbPlots, ...(liveData.plots || {}) };
       const grid = [];
 
       for (let y = 1; y <= 8; y++) {
@@ -240,13 +266,23 @@ module.exports = () => {
           const maxShieldHp = boss.maxShieldHp || (boss.maxHp ? Math.floor(boss.maxHp * 0.25) : 1);
           const shieldHp = boss.shieldHp || 0;
           const shieldPercent = Math.max(0, Math.min(100, Math.round((shieldHp / maxShieldHp) * 100)));
-          const remainingMinutes = boss.expiresAt
-            ? Math.max(0, Math.round((new Date(boss.expiresAt).getTime() - Date.now()) / 60000))
+          const expiryTime = boss.endTime || boss.expiresAt;
+          const remainingMinutes = expiryTime
+            ? Math.max(0, Math.round((new Date(expiryTime).getTime() - Date.now()) / 60000))
             : 42;
+          const elemColors = {
+            WATER: "#38bdf8",
+            FIRE: "#ef4444",
+            DARK: "#a855f7",
+            HOLY: "#f59e0b",
+            LIGHTNING: "#eab308",
+          };
           return res.json({
             success: true,
             boss: {
               ...boss,
+              title: boss.title || "Ancient Calamity",
+              elementColor: elemColors[boss.element] || "#38bdf8",
               maxShieldHp,
               shieldHp,
               hpPercent,

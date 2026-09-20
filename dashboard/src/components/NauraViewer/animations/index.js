@@ -19,6 +19,8 @@ export {
     lerpEuler,
     lerpScalar,
     slerpBone,
+    slerpBoneDirect,
+    softClampAngle,
     evaluateTrack,
 } from "./core/interpolation.js";
 
@@ -28,7 +30,17 @@ export { BlinkController } from "./parts/blink.js";
 export { HairController } from "./parts/hair.js";
 export { HeadController } from "./parts/head.js";
 export { FaceController } from "./parts/face.js";
+export { HipsController } from "./parts/hips.js";
 export { SpineController } from "./parts/spine.js";
+export { ChestController } from "./parts/chest.js";
+export { UpperChestController } from "./parts/upperChest.js";
+export { NeckController } from "./parts/neck.js";
+export { LeftArmController } from "./parts/leftArm.js";
+export { RightArmController } from "./parts/rightArm.js";
+export { LeftHandController } from "./parts/leftHand.js";
+export { RightHandController } from "./parts/rightHand.js";
+export { LeftLegController } from "./parts/leftLeg.js";
+export { RightLegController } from "./parts/rightLeg.js";
 export { ArmController } from "./parts/arms.js";
 export { HandController } from "./parts/hands.js";
 export { LegController } from "./parts/legs.js";

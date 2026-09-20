@@ -20,6 +20,7 @@
     "test": "node --test \"src/**/*.test.js\"",
     "build": "npm run dashboard:build",
     "build:css": "tailwindcss -i dashboard/src/css/input.css -o dashboard/public/vendor/tailwind-built.css --minify",
+    "dashboard": "node scripts/start-dashboard.js",
     "dashboard:dev": "npm run build:css && vite --config dashboard/vite.config.mjs dashboard",
     "dashboard:build": "node scripts/build-dashboard.js",
     "dashboard:preview": "vite preview --config dashboard/vite.config.mjs dashboard",

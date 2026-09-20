@@ -48,4 +48,42 @@ describe("SemanticMemoryService & Cosine Similarity Math", () => {
     assert.ok(formatted.includes("Suka makan ramen pedas"));
     assert.ok(formatted.includes("Dilarang spam di chat umum"));
   });
+
+  it("pruneDuplicateMemories berjalan lancar dan mengembalikan ringkasan", async () => {
+    const SemanticMemory = require("../models/SemanticMemory");
+    const origFindAll = SemanticMemory.findAll;
+
+    SemanticMemory.findAll = async () => [
+      {
+        id: "mem1",
+        userId: "u1",
+        memoryType: "USER_FACT",
+        content: "Suka kopi hitam",
+        importanceScore: 3,
+        embedding: [1, 0, 0],
+        save: async () => {},
+        destroy: async () => {},
+      },
+      {
+        id: "mem2",
+        userId: "u1",
+        memoryType: "USER_FACT",
+        content: "Suka kopi hitam nikmat",
+        importanceScore: 2,
+        embedding: [1, 0.01, 0],
+        save: async () => {},
+        destroy: async () => {},
+      },
+    ];
+
+    try {
+      const service = new SemanticMemoryService();
+      const result = await service.pruneDuplicateMemories(0.92, 90);
+      assert.ok(typeof result.prunedCount === "number");
+      assert.ok(typeof result.duplicatesMerged === "number");
+      assert.strictEqual(result.duplicatesMerged, 1);
+    } finally {
+      SemanticMemory.findAll = origFindAll;
+    }
+  });
 });

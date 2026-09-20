@@ -39,7 +39,7 @@ export class LegController {
 
     update(delta, elapsed, context = {}) {
         const targetBones = context.targetBones || {};
-        const lerpSpeed = 1.0 - Math.exp(-14.0 * delta);
+        const lerpSpeed = 1.0 - Math.exp(-8.0 * delta);
 
         for (const key of LEG_KEYS) {
             try {
@@ -48,12 +48,13 @@ export class LegController {
 
                 const base = targetBones[key] || [0, 0, 0];
                 const current = this.currentRotations[key];
+                const target = [base[0], base[1], base[2]];
 
-                current[0] += (base[0] - current[0]) * lerpSpeed;
-                current[1] += (base[1] - current[1]) * lerpSpeed;
-                current[2] += (base[2] - current[2]) * lerpSpeed;
+                slerpBone(bone, current, target, lerpSpeed);
 
-                slerpBone(bone, base, current, 1.0);
+                current[0] += (target[0] - current[0]) * lerpSpeed;
+                current[1] += (target[1] - current[1]) * lerpSpeed;
+                current[2] += (target[2] - current[2]) * lerpSpeed;
             } catch (err) {
                 console.warn(`[NauraAnimation:Legs] Error updating ${key}:`, err.message);
             }

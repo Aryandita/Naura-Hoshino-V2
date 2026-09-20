@@ -141,6 +141,44 @@ async function withDistributedLock(lockKey, ttlMs, workFn, options = {}) {
     }
 }
 
+/**
+ * Jalankan pekerjaan dengan multi-kunci terdistribusi (Anti-Deadlock Canonical Ordering)
+ * @param {string[]} lockKeys - Array kunci lock unik
+ * @param {Function} workFn - Callback asynchronous
+ * @param {number} [ttlMs=5000]
+ * @returns {Promise<*>}
+ */
+async function withMultiLock(lockKeys, workFn, ttlMs = 5000) {
+    if (!Array.isArray(lockKeys) || lockKeys.length === 0) {
+        return workFn();
+    }
+
+    // Urutkan kunci secara leksikografis (canonical sorting) untuk mencegah deadlock
+    const sortedKeys = [...new Set(lockKeys.filter(Boolean))].sort();
+    const acquired = [];
+
+    try {
+        for (const key of sortedKeys) {
+            const token = await acquireLock(key, ttlMs);
+            if (!token) {
+                throw new DomainError(
+                    "RESOURCE_LOCKED",
+                    "Salah satu resource transaksi sedang diproses di tempat lain. Silakan coba sesaat lagi.",
+                    { key, sortedKeys }
+                );
+            }
+            acquired.push({ key, token });
+        }
+
+        return await workFn();
+    } finally {
+        // Lepas seluruh lock secara terbalik
+        for (let i = acquired.length - 1; i >= 0; i--) {
+            await releaseLock(acquired[i].key, acquired[i].token).catch(() => {});
+        }
+    }
+}
+
 // Pembersihan berkala kunci memori yang telah kadaluwarsa (setiap 60 detik)
 setInterval(() => {
     const now = Date.now();
@@ -164,6 +202,8 @@ module.exports = {
     acquireLock,
     releaseLock,
     withDistributedLock,
+    withMultiLock,
+    withDistributedMultiLock: withMultiLock,
     inMemoryLocks,
     getLockStats,
 };

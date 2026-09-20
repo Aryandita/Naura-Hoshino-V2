@@ -16,3 +16,44 @@ test("PetHabitatEngine - Available Toys and Structure", () => {
   assert.ok(boba, "Harus ada catnip circuit");
   assert.equal(boba.moodBoost, "ascended");
 });
+
+test("PetHabitatEngine - breedPets validasi afeksi dan perkawinan silang", async () => {
+  const PetHabitatEngine = require("./petHabitatEngine");
+  const UserPet = require("../../models/UserPet");
+  const origFindOne = UserPet.findOne;
+  const origCreate = UserPet.create;
+
+  // Mock pet dengan afeksi rendah (< 100)
+  UserPet.findOne = async ({ where }) => {
+    if (where.id === 1) return { id: 1, petType: "wolf", affection: 50, save: async () => {} };
+    if (where.id === 2) return { id: 2, petType: "cat", affection: 80, save: async () => {} };
+    return null;
+  };
+
+  try {
+    const lowAffectionRes = await PetHabitatEngine.breedPets("u1", 1, 2);
+    assert.equal(lowAffectionRes.success, false);
+    assert.equal(lowAffectionRes.reason, "AFFECTION_TOO_LOW");
+
+    // Mock pet dengan afeksi maksimal (100)
+    UserPet.findOne = async ({ where }) => {
+      if (where.id === 1) return { id: 1, petType: "wolf", affection: 100, save: async () => {} };
+      if (where.id === 2) return { id: 2, petType: "cat", affection: 100, save: async () => {} };
+      return null;
+    };
+
+    UserPet.create = async (payload) => ({
+      id: 99,
+      ...payload,
+      toJSON: () => ({ id: 99, ...payload }),
+    });
+
+    const successRes = await PetHabitatEngine.breedPets("u1", 1, 2);
+    assert.equal(successRes.success, true);
+    assert.equal(successRes.offspring.petType, "hybrid_wolf_cat");
+    assert.equal(successRes.offspring.isTamed, true);
+  } finally {
+    UserPet.findOne = origFindOne;
+    UserPet.create = origCreate;
+  }
+});

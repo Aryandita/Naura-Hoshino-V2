@@ -16,6 +16,8 @@ class CanvasWorkerPool {
     this.maxQueueLength = 25;
     this.userTaskCounts = new Map(); // userId -> number
     this.maxUserTasks = 2;
+    this.workerTaskCounts = new Map(); // worker -> count
+    this.maxWorkerTasks = 500;
   }
 
   init() {
@@ -45,6 +47,16 @@ class CanvasWorkerPool {
           } else {
             pending.reject(new Error(error || "Worker error"));
           }
+        }
+        const count = (this.workerTaskCounts.get(worker) || 0) + 1;
+        this.workerTaskCounts.set(worker, count);
+        if (count >= this.maxWorkerTasks) {
+          logger.info(
+            `[CanvasWorkerPool] Worker #${index} didaur ulang setelah ${count} tugas rendering untuk kestabilan memori.`,
+          );
+          this.workerTaskCounts.delete(worker);
+          this._replaceWorker(worker, scriptPath, index);
+          return;
         }
         this._returnWorker(worker);
       });

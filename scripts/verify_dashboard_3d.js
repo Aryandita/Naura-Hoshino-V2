@@ -96,10 +96,12 @@ async function main() {
           text,
         );
       } else if (data.method === "Runtime.exceptionThrown") {
+        const det = data.params.exceptionDetails;
         console.error(
           "[BROWSER EXCEPTION]",
-          data.params.exceptionDetails.text,
-          data.params.exceptionDetails.exception?.description || "",
+          det.text,
+          det.exception?.description || "",
+          `at ${det.url}:${det.lineNumber}:${det.columnNumber}`
         );
       }
     };
@@ -145,11 +147,11 @@ async function main() {
     // Jeda 2 detik agar frame render berjalan lancar
     await new Promise((r) => setTimeout(r, 2000));
 
-    // Memicu animasi khas StarPose dan Star Fragment burst untuk verifikasi visual
+    // Memicu animasi Ceria (Cheers) untuk verifikasi visual gerakan kedua lengan & proteksi rok
     send("Runtime.evaluate", {
       expression: `(() => {
         if (window.__heroViewer) {
-          window.__heroViewer.playAnimation("StarPose");
+          window.__heroViewer.playAnimation("Cheers");
           if (window.__heroViewer.particles) {
             window.__heroViewer.particles.burst(40);
           }

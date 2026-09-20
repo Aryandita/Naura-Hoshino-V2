@@ -199,6 +199,12 @@ function addEconomyGroup(builder) {
                 { name: "Star Fragment (NSF)", value: "nsf" },
                 { name: "Naura Coin", value: "coin" },
               ),
+          )
+          .addIntegerOption((opt) =>
+            opt
+              .setName("buyout")
+              .setDescription("Harga beli instan (opsional, hanya saat sell)")
+              .setRequired(false),
           ),
       )
       .addSubcommand((sub) =>

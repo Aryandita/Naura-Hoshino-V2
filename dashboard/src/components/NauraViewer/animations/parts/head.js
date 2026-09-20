@@ -1,38 +1,48 @@
 /**
- * parts/head.js - Pengendali Sendi Kepala & Leher (Head & Neck Kinematics).
+ * parts/head.js - Pengendali Tengkorak Kepala (Head Kinematics).
  *
- * Mengendalikan:
- * 1. Rotasi tulang leher (neck) dan kepala (head).
- * 2. Respons halus terhadap pergerakan kursor mouse (look yaw/pitch/tilt).
- * 3. Batas sudut fisiologis anatomis (mencegah patah leher tidak wajar).
- * 4. Harmonic micro-tilt saat idle dan aksi geleng/angguk kepala.
+ * Mengendalikan secara eksklusif sendi head (cranium):
+ * 1. Rotasi kepala terhadap pergerakan kursor mouse (look yaw/pitch/tilt).
+ * 2. Gestur anggukan dan kemiringan imut kepala saat animasi.
+ * 3. Batas sudut fisiologis kepala (mencegah rotasi tidak wajar).
+ *
+ * Catatan arsitektur modular:
+ * - Sendi neck kini dikendalikan secara eksklusif oleh parts/neck.js (NeckController).
+ * - Tracking kursor dihitung dalam sumbu VRM (x = pitch, y = yaw, z = roll) lalu dikonversi
+ *   ke sumbu rig GLB (x = roll, y = yaw, z = pitch) lewat vrmToRig().
+ * Isolasi penuh: error di sini TIDAK mempengaruhi leher, spine, atau sendi lain.
  */
 
 import * as THREE from "three";
-import { slerpBone } from "../core/interpolation.js";
+import { slerpBoneDirect } from "../core/interpolation.js";
+import { vrmToRig, RIG_LIMITS, clampToLimits } from "../core/rigProfile.js";
 
 export class HeadController {
     constructor(options = {}) {
         this.options = options;
-        this.neckBone = null;
         this.headBone = null;
-        this.restRotations = {
-            neck: [0, 0, 0],
-            head: [0, 0, 0],
-        };
-        this.currentRotations = {
-            neck: [0, 0, 0],
-            head: [0, 0, 0],
-        };
+        this.restRotation = [0, 0, 0];
+        this.currentRotation = [0, 0, 0];
     }
 
+    /**
+     * Inisialisasi referensi bone dari peta humanoidBones.
+     * @param {Record<string, THREE.Object3D>} humanoidBones
+     */
     init(humanoidBones = {}) {
-        this.neckBone = humanoidBones.neck || null;
         this.headBone = humanoidBones.head || null;
         this.reset();
     }
 
+    /**
+     * Update loop per frame: lerp rotasi kepala menuju target + tracking kursor.
+     * @param {number} delta
+     * @param {number} elapsed
+     * @param {{ targetBones: Record<string,number[]>, lookYaw: number, lookPitch: number, headTilt: number, enableTracking: boolean }} context
+     */
     update(delta, elapsed, context = {}) {
+        if (!this.headBone) return;
+
         try {
             const targetBones = context.targetBones || {};
             const lookYaw = context.lookYaw || 0;
@@ -40,58 +50,43 @@ export class HeadController {
             const headTilt = context.headTilt || 0;
             const enableTracking = context.enableTracking ?? true;
 
-            const lerpSpeed = 1.0 - Math.exp(-14.0 * delta);
+            // Kepala bergerak lebih ekspresif dari leher (40-45% dari tracking total)
+            const lerpSpeed = 1.0 - Math.exp(-8.5 * delta);
 
-            // 1. Hitung rotasi kepala dari keyframe + cursor tracking offset
-            if (this.headBone) {
-                const baseRot = targetBones.head || this.restRotations.head;
-                const trackingX = enableTracking ? THREE.MathUtils.clamp(lookPitch * 0.40, -0.4, 0.4) : 0;
-                const trackingY = enableTracking ? THREE.MathUtils.clamp(lookYaw * 0.45, -0.6, 0.6) : 0;
-                const trackingZ = enableTracking ? THREE.MathUtils.clamp(headTilt * 0.35, -0.3, 0.3) : 0;
+            const baseRot = targetBones.head || this.restRotation;
 
-                const targetX = baseRot[0] + trackingX;
-                const targetY = baseRot[1] + trackingY;
-                const targetZ = baseRot[2] + trackingZ;
+            const trackingPitch = enableTracking ? THREE.MathUtils.clamp(lookPitch * 0.40, -0.40, 0.40) : 0;
+            const trackingYaw = enableTracking ? THREE.MathUtils.clamp(lookYaw * 0.45, -0.60, 0.60) : 0;
+            // Kemiringan imut kepala (anime cute head-tilt)
+            const trackingRoll = enableTracking ? THREE.MathUtils.clamp(headTilt * 0.35, -0.30, 0.30) : 0;
 
-                this.currentRotations.head[0] += (targetX - this.currentRotations.head[0]) * lerpSpeed;
-                this.currentRotations.head[1] += (targetY - this.currentRotations.head[1]) * lerpSpeed;
-                this.currentRotations.head[2] += (targetZ - this.currentRotations.head[2]) * lerpSpeed;
+            // Sumbu VRM [pitch, yaw, roll] -> sumbu rig [roll, yaw, pitch]
+            const tracking = vrmToRig([trackingPitch, trackingYaw, trackingRoll]);
 
-                slerpBone(this.headBone, baseRot, this.currentRotations.head, 1.0);
-            }
+            // Batas fisiologis kepala: roll 0.40 rad, yaw & pitch 45 derajat (~0.78 rad)
+            const target = clampToLimits([
+                baseRot[0] + tracking[0],
+                baseRot[1] + tracking[1],
+                baseRot[2] + tracking[2],
+            ], RIG_LIMITS.head);
 
-            // 2. Hitung rotasi leher
-            if (this.neckBone) {
-                const baseRot = targetBones.neck || this.restRotations.neck;
-                const trackingX = enableTracking ? THREE.MathUtils.clamp(lookPitch * 0.20, -0.2, 0.2) : 0;
-                const trackingY = enableTracking ? THREE.MathUtils.clamp(lookYaw * 0.25, -0.35, 0.35) : 0;
-                const trackingZ = enableTracking ? THREE.MathUtils.clamp(headTilt * 0.15, -0.15, 0.15) : 0;
+            slerpBoneDirect(this.headBone, target, lerpSpeed);
 
-                const targetX = baseRot[0] + trackingX;
-                const targetY = baseRot[1] + trackingY;
-                const targetZ = baseRot[2] + trackingZ;
-
-                this.currentRotations.neck[0] += (targetX - this.currentRotations.neck[0]) * lerpSpeed;
-                this.currentRotations.neck[1] += (targetY - this.currentRotations.neck[1]) * lerpSpeed;
-                this.currentRotations.neck[2] += (targetZ - this.currentRotations.neck[2]) * lerpSpeed;
-
-                slerpBone(this.neckBone, baseRot, this.currentRotations.neck, 1.0);
-            }
+            this.currentRotation[0] += (target[0] - this.currentRotation[0]) * lerpSpeed;
+            this.currentRotation[1] += (target[1] - this.currentRotation[1]) * lerpSpeed;
+            this.currentRotation[2] += (target[2] - this.currentRotation[2]) * lerpSpeed;
         } catch (err) {
-            console.warn("[NauraAnimation:Head] Error updating head/neck kinematics:", err.message);
+            console.warn("[NauraAnimation:Head] Error updating head kinematics:", err.message);
         }
     }
 
     reset() {
-        this.currentRotations.neck = [0, 0, 0];
-        this.currentRotations.head = [0, 0, 0];
+        this.currentRotation = [0, 0, 0];
         if (this.headBone) this.headBone.rotation.set(0, 0, 0);
-        if (this.neckBone) this.neckBone.rotation.set(0, 0, 0);
     }
 
     destroy() {
         this.reset();
-        this.neckBone = null;
         this.headBone = null;
     }
 }

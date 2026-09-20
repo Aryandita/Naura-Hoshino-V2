@@ -283,6 +283,14 @@ const MIGRATIONS = [
     pgSql:
       'CREATE TABLE IF NOT EXISTS "lottery_winners" ("id" SERIAL PRIMARY KEY, "winnerUserId" VARCHAR(191) NOT NULL, "prizeAmount" BIGINT NOT NULL DEFAULT 0, "ticketsHeld" INTEGER NOT NULL DEFAULT 1, "drawnAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP, "createdAt" TIMESTAMPTZ NOT NULL, "updatedAt" TIMESTAMPTZ NOT NULL); CREATE INDEX IF NOT EXISTS "idx_lottery_winners_user" ON "lottery_winners" ("winnerUserId"); CREATE INDEX IF NOT EXISTS "idx_lottery_winners_drawn" ON "lottery_winners" ("drawnAt");',
   },
+  {
+    id: "v43_add_buyout_to_market_auctions",
+    description:
+      "Tambah kolom buyoutPrice ke market_auctions untuk fitur beli instan",
+    sql: "ALTER TABLE market_auctions ADD COLUMN buyoutPrice INT DEFAULT NULL;",
+    pgSql:
+      'ALTER TABLE "market_auctions" ADD COLUMN IF NOT EXISTS "buyoutPrice" INTEGER DEFAULT NULL;',
+  },
 ];
 
 /**

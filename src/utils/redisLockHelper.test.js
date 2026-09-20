@@ -80,4 +80,30 @@ describe("redisLockHelper (Distributed & In-Memory Locks)", () => {
         assert.ok(nextToken, "Lock harus tetap dilepas meski error terjadi");
         await releaseLock(lockKey, nextToken);
     });
+
+    it("withMultiLock mengunci multiple keys secara berurutan dan melepas seluruhnya", async () => {
+        const { withMultiLock } = require("./redisLockHelper");
+        const keys = ["lock:multi:b", "lock:multi:a", "lock:multi:c"];
+        let ran = false;
+
+        const val = await withMultiLock(keys, async () => {
+            ran = true;
+            // Saat di dalam lock, semua 3 key harus terkunci
+            for (const k of keys) {
+                const retry = await acquireLock(k, 1000, 1, 10);
+                assert.strictEqual(retry, null, `Key ${k} harus sedang terkunci`);
+            }
+            return "ok_multi";
+        }, 3000);
+
+        assert.strictEqual(ran, true);
+        assert.strictEqual(val, "ok_multi");
+
+        // Setelah selesai, semua 3 key harus sudah bebas
+        for (const k of keys) {
+            const token = await acquireLock(k, 1000, 1, 10);
+            assert.ok(token, `Key ${k} harus sudah dilepas`);
+            await releaseLock(k, token);
+        }
+    });
 });

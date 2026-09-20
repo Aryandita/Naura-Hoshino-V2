@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script type="importmap">
       {
         "imports": {
@@ -88,6 +89,19 @@
         flex-shrink: 0;
       }
 
+      /* Quick Actions grid - 6 kartu simetris */
+      .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 10px;
+      }
+      @media (max-width: 900px) {
+        .quick-actions-grid { grid-template-columns: repeat(3, 1fr); }
+      }
+      @media (max-width: 500px) {
+        .quick-actions-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+
       /* Quick action button */
       .quick-action {
         display: flex;
@@ -95,7 +109,7 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
-        padding: 20px 14px;
+        padding: 18px 10px;
         border-radius: var(--r-xl);
         background: var(--bg-surface);
         border: 1px solid var(--border-subtle);
@@ -114,13 +128,13 @@
       }
 
       .quick-action-icon {
-        width: 44px;
-        height: 44px;
+        width: 40px;
+        height: 40px;
         border-radius: var(--r-xl);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
+        font-size: 17px;
         transition: all var(--t-base);
       }
 
@@ -129,9 +143,10 @@
       }
 
       .quick-action-label {
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
         color: var(--text-secondary);
+        white-space: nowrap;
       }
 
       .quick-action:hover .quick-action-label {
@@ -614,10 +629,10 @@
                 </div>
               </div>
 
-              <!-- Quick Actions -->
+              <!-- Quick Actions (6 kartu simetris) -->
               <div>
                 <div class="section-title">Quick Actions</div>
-                <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;">
+                <div class="quick-actions-grid">
                   <a href="/music" class="quick-action">
                     <div class="quick-action-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);">
                       <i class="fa-solid fa-music" style="color:var(--primary);"></i>
@@ -648,6 +663,12 @@
                     </div>
                     <span class="quick-action-label">Status</span>
                   </a>
+                  <a href="/world" class="quick-action">
+                    <div class="quick-action-icon" style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.28);">
+                      <i class="fa-solid fa-earth-asia" style="color:var(--accent-cyan);"></i>
+                    </div>
+                    <span class="quick-action-label">Naura Wilds</span>
+                  </a>
                 </div>
               </div>
 
@@ -659,16 +680,17 @@
                 <div class="hero-3d-overlay"></div>
 
                 <!-- Status Badge -->
-                <div id="naura3d-motion-status" style="position:absolute;top:12px;left:12px;z-index:10;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:var(--r-full);background:rgba(6,8,16,0.8);backdrop-filter:blur(8px);border:1px solid var(--border-primary);font-size:10px;color:var(--text-secondary);pointer-events:none;font-family:var(--font-mono);">
-                  <span style="width:6px;height:6px;border-radius:50%;background:var(--accent-green);box-shadow:0 0 6px var(--green-glow);animation:dot-pulse 2s infinite;display:block;"></span>
+                <div id="naura3d-motion-status" style="position:absolute;top:12px;left:12px;z-index:10;display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:var(--r-full);background:rgba(6,8,16,0.85);backdrop-filter:blur(8px);border:1px solid var(--border-primary);font-size:9px;color:var(--text-secondary);pointer-events:none;font-family:var(--font-mono);">
+                  <span style="width:5px;height:5px;border-radius:50%;background:var(--accent-green);box-shadow:0 0 6px var(--green-glow);animation:dot-pulse 2s infinite;display:block;"></span>
                   <span id="naura3d-status-text">🌸 Idle</span>
-                  <span id="naura3d-format-badge" class="badge badge-primary" style="margin-left:2px;">VRM</span>
+                  <span id="naura3d-format-badge" class="badge badge-primary" style="margin-left:2px;font-size:8px;padding:1px 5px;">NEW VRM</span>
                 </div>
 
                 <!-- Model selector -->
-                <div id="naura3d-model-selector" style="position:absolute;top:12px;right:12px;z-index:10;display:flex;gap:4px;">
-                  <button type="button" id="btn-model-glb" data-model="/models/naura.glb" style="padding:4px 8px;border-radius:var(--r-md);font-size:9px;font-weight:700;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);cursor:pointer;font-family:var(--font-mono);">GLB</button>
-                  <button type="button" id="btn-model-vrm" data-model="/models/naura.vrm" style="padding:4px 8px;border-radius:var(--r-md);font-size:9px;font-weight:700;background:var(--primary-dim);border:1px solid var(--border-primary);color:var(--primary);cursor:pointer;font-family:var(--font-mono);">VRM</button>
+                <div id="naura3d-model-selector" style="position:absolute;top:12px;right:12px;z-index:10;display:flex;gap:3px;background:rgba(6,8,16,0.8);backdrop-filter:blur(8px);padding:2px 3px;border-radius:var(--r-md);border:1px solid var(--border-subtle);">
+                  <button type="button" id="btn-model-new" data-model="/models/naura NEW.vrm" style="padding:2px 6px;border-radius:calc(var(--r-md) - 2px);font-size:8px;font-weight:700;background:var(--primary-dim);border:1px solid var(--border-primary);color:var(--primary);cursor:pointer;font-family:var(--font-mono);">⭐ NEW</button>
+                  <button type="button" id="btn-model-vrm" data-model="/models/naura.vrm" style="padding:2px 6px;border-radius:calc(var(--r-md) - 2px);font-size:8px;font-weight:600;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);cursor:pointer;font-family:var(--font-mono);">VRM</button>
+                  <button type="button" id="btn-model-glb" data-model="/models/naura NEW.glb" style="padding:2px 6px;border-radius:calc(var(--r-md) - 2px);font-size:8px;font-weight:600;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);cursor:pointer;font-family:var(--font-mono);">GLB</button>
                 </div>
 
                 <!-- Canvas -->
@@ -800,91 +822,111 @@
 
           </div>
 
-          <!-- ── Bottom Row: Leaderboard + Music Player + Vitals ── -->
+          <!-- ── Bottom Row: Leaderboard + Feed + Music Player + Vitals ── -->
           <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:24px;" class="animate-in delay-4">
 
-            <!-- Top 5 Leaderboard -->
-            <div class="card card-glow-amber card-p">
-              <div class="card-header">
-                <div class="card-title" style="color:var(--accent-amber);">
-                  <i class="fa-solid fa-trophy"></i> Top 5 Hall of Fame
-                </div>
-                <button onclick="window.location.href='/leaderboard'" class="btn btn-ghost btn-sm">
-                  Lihat Semua <i class="fa-solid fa-arrow-right"></i>
-                </button>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:8px;" id="homeTopLeaderboard">
+            <!-- Left Column: Leaderboard & Live Activity Feed -->
+            <div style="display:flex;flex-direction:column;gap:20px;">
 
-                <div class="rank-item rank-1">
-                  <span class="rank-number" style="color:var(--accent-amber);">🥇</span>
-                  <div style="width:36px;height:36px;border-radius:50%;background:var(--amber-dim);border:1px solid var(--border-amber);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent-amber);">A</div>
-                  <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);display:flex;align-items:center;gap:6px;">
-                      Aryandita <span class="badge badge-amber">Owner VIP</span>
+              <!-- Top 5 Leaderboard -->
+              <div class="card card-glow-amber card-p">
+                <div class="card-header">
+                  <div class="card-title" style="color:var(--accent-amber);">
+                    <i class="fa-solid fa-trophy"></i> Top 5 Hall of Fame
+                  </div>
+                  <button onclick="window.location.href='/leaderboard'" class="btn btn-ghost btn-sm">
+                    Lihat Semua <i class="fa-solid fa-arrow-right"></i>
+                  </button>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;" id="homeTopLeaderboard">
+
+                  <div class="rank-item rank-1">
+                    <span class="rank-number" style="color:var(--accent-amber);">🥇</span>
+                    <div style="width:36px;height:36px;border-radius:50%;background:var(--amber-dim);border:1px solid var(--border-amber);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent-amber);">A</div>
+                    <div style="flex:1;">
+                      <div style="font-size:13px;font-weight:600;color:var(--text-primary);display:flex;align-items:center;gap:6px;">
+                        Aryandita <span class="badge badge-amber">Owner VIP</span>
+                      </div>
+                      <div style="font-size:11px;color:var(--text-muted);">Level 99 · Master Adventurer</div>
                     </div>
-                    <div style="font-size:11px;color:var(--text-muted);">Level 99 · Master Adventurer</div>
-                  </div>
-                  <div style="text-align:right;">
-                    <div style="font-size:12px;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">🪙 1,250,000</div>
-                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">9,850 XP</div>
-                  </div>
-                </div>
-
-                <div class="rank-item rank-2">
-                  <span class="rank-number" style="color:#94a3b8;">🥈</span>
-                  <div style="width:36px;height:36px;border-radius:50%;background:var(--cyan-dim);border:1px solid var(--border-cyan);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent-cyan);">N</div>
-                  <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);display:flex;align-items:center;gap:6px;">
-                      Naura Hoshino <span class="badge badge-primary">Bot AI</span>
+                    <div style="text-align:right;">
+                      <div style="font-size:12px;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">🪙 1,250,000</div>
+                      <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">9,850 XP</div>
                     </div>
-                    <div style="font-size:11px;color:var(--text-muted);">Level 85 · Cyber Companion</div>
                   </div>
-                  <div style="text-align:right;">
-                    <div style="font-size:12px;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">🪙 850,000</div>
-                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">7,420 XP</div>
-                  </div>
-                </div>
 
-                <div class="rank-item rank-3">
-                  <span class="rank-number" style="color:#b4783c;">🥉</span>
-                  <div style="width:36px;height:36px;border-radius:50%;background:var(--violet-dim);border:1px solid var(--border-violet);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent-violet);">K</div>
-                  <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Kagami</div>
-                    <div style="font-size:11px;color:var(--text-muted);">Level 72 · Star Hunter</div>
+                  <div class="rank-item rank-2">
+                    <span class="rank-number" style="color:#94a3b8;">🥈</span>
+                    <div style="width:36px;height:36px;border-radius:50%;background:var(--cyan-dim);border:1px solid var(--border-cyan);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent-cyan);">N</div>
+                    <div style="flex:1;">
+                      <div style="font-size:13px;font-weight:600;color:var(--text-primary);display:flex;align-items:center;gap:6px;">
+                        Naura Hoshino <span class="badge badge-primary">Bot AI</span>
+                      </div>
+                      <div style="font-size:11px;color:var(--text-muted);">Level 85 · Cyber Companion</div>
+                    </div>
+                    <div style="text-align:right;">
+                      <div style="font-size:12px;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">🪙 850,000</div>
+                      <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">7,420 XP</div>
+                    </div>
                   </div>
-                  <div style="text-align:right;">
-                    <div style="font-size:12px;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">🪙 620,000</div>
-                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">5,230 XP</div>
-                  </div>
-                </div>
 
-                <div class="rank-item">
-                  <span class="rank-number" style="color:var(--text-muted);">4</span>
-                  <div style="width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--text-muted);">H</div>
-                  <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Hanako</div>
-                    <div style="font-size:11px;color:var(--text-muted);">Level 60 · Novice Explorer</div>
+                  <div class="rank-item rank-3">
+                    <span class="rank-number" style="color:#b4783c;">🥉</span>
+                    <div style="width:36px;height:36px;border-radius:50%;background:var(--violet-dim);border:1px solid var(--border-violet);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent-violet);">K</div>
+                    <div style="flex:1;">
+                      <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Kagami</div>
+                      <div style="font-size:11px;color:var(--text-muted);">Level 72 · Star Hunter</div>
+                    </div>
+                    <div style="text-align:right;">
+                      <div style="font-size:12px;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">🪙 620,000</div>
+                      <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">5,230 XP</div>
+                    </div>
                   </div>
-                  <div style="text-align:right;">
-                    <div style="font-size:12px;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">🪙 410,000</div>
-                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">3,800 XP</div>
-                  </div>
-                </div>
 
-                <div class="rank-item">
-                  <span class="rank-number" style="color:var(--text-muted);">5</span>
-                  <div style="width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--text-muted);">R</div>
-                  <div style="flex:1;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Ryusei</div>
-                    <div style="font-size:11px;color:var(--text-muted);">Level 55 · Cyber Ranger</div>
+                  <div class="rank-item">
+                    <span class="rank-number" style="color:var(--text-muted);">4</span>
+                    <div style="width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--text-muted);">H</div>
+                    <div style="flex:1;">
+                      <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Hanako</div>
+                      <div style="font-size:11px;color:var(--text-muted);">Level 60 · Novice Explorer</div>
+                    </div>
+                    <div style="text-align:right;">
+                      <div style="font-size:12px;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">🪙 410,000</div>
+                      <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">3,800 XP</div>
+                    </div>
                   </div>
-                  <div style="text-align:right;">
-                    <div style="font-size:12px;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">🪙 290,000</div>
-                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">2,950 XP</div>
-                  </div>
-                </div>
 
+                  <div class="rank-item">
+                    <span class="rank-number" style="color:var(--text-muted);">5</span>
+                    <div style="width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--text-muted);">R</div>
+                    <div style="flex:1;">
+                      <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Ryusei</div>
+                      <div style="font-size:11px;color:var(--text-muted);">Level 55 · Cyber Ranger</div>
+                    </div>
+                    <div style="text-align:right;">
+                      <div style="font-size:12px;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">🪙 290,000</div>
+                      <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">2,950 XP</div>
+                    </div>
+                  </div>
+
+                </div>
               </div>
+
+              <!-- Live Activity Feed -->
+              <div class="card card-glow-cyan card-p">
+                <div class="card-header">
+                  <div class="card-title" style="color:var(--accent-cyan);">
+                    <i class="fa-solid fa-bolt"></i> Live Activity Feed
+                  </div>
+                  <a href="/feed" class="btn btn-ghost btn-sm">
+                    Lihat Semua <i class="fa-solid fa-arrow-right"></i>
+                  </a>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px;" id="homeFeedList">
+                  <!-- Feed items injected dynamically via API / Socket -->
+                </div>
+              </div>
+
             </div>
 
             <!-- Right Column: Music + Vitals -->
@@ -1028,7 +1070,7 @@
         const pingData = labels.map(() => Math.floor(Math.random() * 30 + 15));
         const ramData = labels.map(() => Math.floor(Math.random() * 20 + 45));
 
-        new Chart(ctx, {
+        window.telemetryChartInstance = new Chart(ctx, {
           type: 'line',
           data: {
             labels,
@@ -1157,6 +1199,9 @@
       window.addEventListener('load', () => {
         // Fetch real overview data from API
         (async () => {
+          if (window.showSkeleton) {
+            window.showSkeleton('#homeFeedList', { count: 4, type: 'feed' });
+          }
           try {
             const [overviewRes, feedRes, statusRes] = await Promise.all([
               fetch('/api/realtime/overview'),
@@ -1202,8 +1247,8 @@
             }
 
             // Render feed
+            const feedContainer = document.getElementById('homeFeedList');
             if (feed.success && feed.data?.length) {
-              const feedContainer = document.getElementById('homeFeedList');
               if (feedContainer) {
                 const feedTypeIcon = {
                   leveling: { icon: 'fa-arrow-up', color: 'var(--accent-cyan)', bg: 'var(--cyan-dim)' },
@@ -1228,13 +1273,21 @@
                   </div>`;
                 }).join('');
               }
+            } else if (feedContainer) {
+              if (window.renderEmptyState) {
+                window.renderEmptyState(feedContainer, {
+                  title: 'Belum Ada Aktivitas',
+                  message: 'Belum ada transaksi atau aktivitas command baru.'
+                });
+              }
             }
 
             // Status dot
-            if (status.success) {
+            if (status.success && status.supabase) {
               const dotEl = document.getElementById('dbStatusDot');
               if (dotEl) {
-                dotEl.style.background = status.supabase.connected ? '#22c55e' : '#ef4444';
+                const isSbConnected = status.supabase.connected || status.supabase.status === 'connected';
+                dotEl.style.background = isSbConnected ? '#22c55e' : '#ef4444';
               }
               const latencyEl = document.getElementById('dbLatencyDisplay');
               if (latencyEl) {
@@ -1245,6 +1298,14 @@
           } catch(e) {
             // Graceful fallback, counters remain at 0
             console.warn('[Dashboard] Overview fetch error:', e.message);
+            const feedContainer = document.getElementById('homeFeedList');
+            if (feedContainer && window.renderErrorState) {
+              window.renderErrorState(feedContainer, {
+                title: 'Gagal Memuat Feed',
+                message: 'Tidak dapat mengambil log aktivitas terbaru.',
+                onRetry: () => location.reload()
+              });
+            }
             setTimeout(() => {
               animateCounter(document.getElementById('statPing'), 28, '');
               animateCounter(document.getElementById('statUsers'), 4);
@@ -1254,6 +1315,156 @@
             }, 800);
           }
         })();
+
+        // ── Real-Time Socket.IO Telemetry & Feed Connection ──
+        if (typeof io === 'function') {
+          try {
+            const socket = io();
+            socket.emit('join_room', 'home');
+
+            socket.on('stats_update', (data) => {
+              if (!data) return;
+
+              // Update Live Latency
+              const pingEl = document.getElementById('statPing');
+              if (pingEl && data.ping !== undefined) {
+                pingEl.textContent = data.ping;
+              }
+
+              // Update Users
+              const usersEl = document.getElementById('statUsers');
+              if (usersEl && data.users !== undefined) {
+                usersEl.textContent = Number(data.users).toLocaleString();
+              }
+
+              // Update Guilds
+              const serversEl = document.getElementById('statServers');
+              if (serversEl && data.guilds !== undefined) {
+                serversEl.textContent = Number(data.guilds).toLocaleString();
+              }
+
+              // Update Uptime
+              const uptimeEl = document.getElementById('statUptime');
+              if (uptimeEl && data.uptimeFormatted) {
+                uptimeEl.textContent = data.uptimeFormatted;
+              }
+
+              // Update Shard Indicator Badge
+              const shardBadge = document.getElementById('archShardBadge');
+              if (shardBadge) {
+                shardBadge.textContent = `#0 Online (${data.ping || 28}ms)`;
+                shardBadge.className = 'badge badge-green';
+              }
+
+              // Push data point into Telemetry Chart live
+              if (window.telemetryChartInstance && data.ping !== undefined && data.ramUsed !== undefined) {
+                const chart = window.telemetryChartInstance;
+                const nowTime = new Date().toLocaleTimeString('id-ID', { hour12: false, minute: '2-digit', second: '2-digit' });
+                chart.data.labels.push(nowTime);
+                chart.data.labels.shift();
+
+                chart.data.datasets[0].data.push(Number(data.ping));
+                chart.data.datasets[0].data.shift();
+
+                const ramTotal = parseFloat(data.ramTotal) || 16000;
+                const ramPercent = Math.min(100, Math.round((Number(data.ramUsed) / ramTotal) * 100)) || 52;
+                chart.data.datasets[1].data.push(ramPercent);
+                chart.data.datasets[1].data.shift();
+
+                chart.update('none');
+              }
+            });
+
+            // Activity Feed Real-Time push
+            socket.on('activity:new', (item) => {
+              const feedContainer = document.getElementById('homeFeedList');
+              if (!feedContainer || !item) return;
+
+              const feedTypeIcon = {
+                leveling: { icon: 'fa-arrow-up', color: 'var(--accent-cyan)', bg: 'var(--cyan-dim)' },
+                economy: { icon: 'fa-coins', color: 'var(--accent-amber)', bg: 'var(--amber-dim)' },
+                survival: { icon: 'fa-leaf', color: 'var(--accent-green)', bg: 'var(--green-dim)' },
+                system: { icon: 'fa-circle-check', color: 'var(--accent-violet)', bg: 'var(--violet-dim)' },
+                default: { icon: 'fa-bolt', color: 'var(--primary)', bg: 'var(--primary-dim)' }
+              };
+              const t = feedTypeIcon[item.type] || feedTypeIcon.default;
+
+              const feedElem = document.createElement('div');
+              feedElem.className = 'feed-item';
+              feedElem.innerHTML = `
+                <div class="feed-icon" style="background:${t.bg};color:${t.color};">
+                  <i class="fa-solid ${t.icon}"></i>
+                </div>
+                <div class="feed-content">
+                  <div class="feed-title">${item.title}</div>
+                  <div class="feed-desc">${item.desc}</div>
+                  <div class="feed-time">${item.time || 'Baru saja'}</div>
+                </div>
+                <span class="badge" style="font-size:9px;padding:3px 6px;background:${t.bg};color:${t.color};">${item.badge || 'LIVE'}</span>
+              `;
+              feedContainer.insertBefore(feedElem, feedContainer.firstChild);
+              if (feedContainer.children.length > 5) feedContainer.lastElementChild.remove();
+            });
+
+            // Mini Music Player Live Sync
+            socket.on('music_state', (data) => {
+              if (!data || !data.currentTrack) return;
+              const track = data.currentTrack;
+              const titleEl = document.getElementById('nowPlayingTitle');
+              const artistEl = document.getElementById('nowPlayingArtist');
+              const progressEl = document.getElementById('nowPlayingProgress');
+              const playBtn = document.getElementById('btnMusicPlay');
+
+              if (titleEl) titleEl.textContent = track.title || 'Idle';
+              if (artistEl) artistEl.textContent = track.author || 'Queue kosong';
+              if (progressEl && track.duration > 0) {
+                const pct = Math.min(100, Math.round((track.position / track.duration) * 100));
+                progressEl.style.width = `${pct}%`;
+              }
+              if (playBtn) {
+                playBtn.innerHTML = track.isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
+              }
+            });
+          } catch (sockErr) {
+            console.warn('[Dashboard] Socket connection error:', sockErr);
+          }
+        }
+
+        // ── EventSource SSE Fallback Stream ──
+        try {
+          const sse = new EventSource('/api/activity/stream');
+          sse.addEventListener('activity', (ev) => {
+            try {
+              const item = JSON.parse(ev.data);
+              const feedContainer = document.getElementById('homeFeedList');
+              if (feedContainer && item) {
+                const feedTypeIcon = {
+                  leveling: { icon: 'fa-arrow-up', color: 'var(--accent-cyan)', bg: 'var(--cyan-dim)' },
+                  economy: { icon: 'fa-coins', color: 'var(--accent-amber)', bg: 'var(--amber-dim)' },
+                  survival: { icon: 'fa-leaf', color: 'var(--accent-green)', bg: 'var(--green-dim)' },
+                  system: { icon: 'fa-circle-check', color: 'var(--accent-violet)', bg: 'var(--violet-dim)' },
+                  default: { icon: 'fa-bolt', color: 'var(--primary)', bg: 'var(--primary-dim)' }
+                };
+                const t = feedTypeIcon[item.type] || feedTypeIcon.default;
+                const feedElem = document.createElement('div');
+                feedElem.className = 'feed-item';
+                feedElem.innerHTML = `
+                  <div class="feed-icon" style="background:${t.bg};color:${t.color};">
+                    <i class="fa-solid ${t.icon}"></i>
+                  </div>
+                  <div class="feed-content">
+                    <div class="feed-title">${item.title}</div>
+                    <div class="feed-desc">${item.desc}</div>
+                    <div class="feed-time">${item.time}</div>
+                  </div>
+                  <span class="badge" style="font-size:9px;padding:3px 6px;background:${t.bg};color:${t.color};">${item.badge}</span>
+                `;
+                feedContainer.insertBefore(feedElem, feedContainer.firstChild);
+                if (feedContainer.children.length > 5) feedContainer.lastElementChild.remove();
+              }
+            } catch (_) {}
+          });
+        } catch (_) {}
       });
 
       // ── Demo: BGM controls (stub) ────────────────────────────────────
@@ -1331,13 +1542,8 @@
       }
 
       function adjustQuickActionsGrid() {
-        const qa = document.querySelector('[style*="grid-template-columns:repeat(5,1fr)"]');
-        if (!qa) return;
-        if (window.innerWidth < 480) {
-          qa.style.gridTemplateColumns = 'repeat(3, 1fr)';
-        } else {
-          qa.style.gridTemplateColumns = 'repeat(5, 1fr)';
-        }
+        // Grid kini menggunakan kelas .quick-actions-grid dengan media query CSS.
+        // Fungsi ini dipertahankan untuk backward-compat resize handling.
       }
 
       window.addEventListener('resize', () => {
@@ -1355,5 +1561,12 @@
       adjustQuickActionsGrid();
     </script>
     <script type="module" src="/src/components/NauraHeroViewer/heroController.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
   </body>
 </html>

@@ -384,6 +384,93 @@ class SemanticMemoryService {
       return { success: false, deletedCount: 0, error: err.message };
     }
   }
+
+  /**
+   * Pemangkasan memori vektor berkala: de-duplikasi memori dengan cosine similarity > similarityThreshold
+   * dan pembersihan entri usang agar pencarian RAG tetap berada di bawah 5ms.
+   * @param {number} [similarityThreshold=0.92]
+   * @param {number} [maxAgeDays=90]
+   * @returns {Promise<{ prunedCount: number, duplicatesMerged: number }>}
+   */
+  async pruneDuplicateMemories(similarityThreshold = 0.92, maxAgeDays = 90) {
+    try {
+      const allMemories = await SemanticMemory.findAll();
+      if (!allMemories || allMemories.length === 0) {
+        return { prunedCount: 0, duplicatesMerged: 0 };
+      }
+
+      const now = Date.now();
+      const maxAgeMs = maxAgeDays * 24 * 60 * 60 * 1000;
+      let prunedCount = 0;
+      let duplicatesMerged = 0;
+
+      const userGroup = new Map();
+      for (const mem of allMemories) {
+        const age = now - new Date(mem.updatedAt || mem.createdAt).getTime();
+        if (age > maxAgeMs && (mem.importanceScore || 0) < 5) {
+          await mem.destroy().catch(() => {});
+          prunedCount++;
+          continue;
+        }
+
+        const key = `${mem.userId || "global"}_${mem.memoryType}`;
+        if (!userGroup.has(key)) userGroup.set(key, []);
+        userGroup.get(key).push(mem);
+      }
+
+      for (const [, list] of userGroup) {
+        for (let i = 0; i < list.length; i++) {
+          const itemA = list[i];
+          if (!itemA || !itemA.embedding) continue;
+          const vecA =
+            typeof itemA.embedding === "string"
+              ? JSON.parse(itemA.embedding)
+              : itemA.embedding;
+
+          for (let j = i + 1; j < list.length; j++) {
+            const itemB = list[j];
+            if (!itemB || !itemB.embedding) continue;
+            const vecB =
+              typeof itemB.embedding === "string"
+                ? JSON.parse(itemB.embedding)
+                : itemB.embedding;
+
+            const sim = cosineSimilarity(vecA, vecB);
+            if (sim >= similarityThreshold) {
+              const toKeep =
+                (itemA.importanceScore || 0) >= (itemB.importanceScore || 0)
+                  ? itemA
+                  : itemB;
+              const toRemove = toKeep === itemA ? itemB : itemA;
+
+              toKeep.importanceScore = Math.min(
+                10,
+                (toKeep.importanceScore || 1) + 1,
+              );
+              await toKeep
+                .save({ fields: ["importanceScore"] })
+                .catch(() => {});
+              await toRemove.destroy().catch(() => {});
+
+              duplicatesMerged++;
+              list.splice(j, 1);
+              j--;
+            }
+          }
+        }
+      }
+
+      logger.info(
+        `[SemanticMemory] Pruning selesai: ${duplicatesMerged} duplikat digabung, ${prunedCount} entri usang dibersihkan.`,
+      );
+      return { prunedCount, duplicatesMerged };
+    } catch (err) {
+      logger.error(
+        `[SemanticMemory] Gagal melakukan memory pruning: ${err.message}`,
+      );
+      return { prunedCount: 0, duplicatesMerged: 0, error: err.message };
+    }
+  }
 }
 
 module.exports = {

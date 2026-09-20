@@ -160,6 +160,73 @@ class PetHabitatEngine {
       passiveSkill: pet1.passiveSkill,
     };
   }
+
+  /**
+   * Perkawinan silang 2 pet afeksi maksimal (Affection >= 100) untuk menghasilkan keturunan hibrida
+   * @param {string} userId
+   * @param {number} petId1
+   * @param {number} petId2
+   * @returns {Promise<{ success: boolean, reason?: string, offspring?: object }>}
+   */
+  static async breedPets(userId, petId1, petId2) {
+    if (Number(petId1) === Number(petId2)) {
+      return { success: false, reason: "SAME_PET_SELECTED" };
+    }
+
+    const pet1 = await UserPet.findOne({ where: { id: petId1, userId } });
+    const pet2 = await UserPet.findOne({ where: { id: petId2, userId } });
+
+    if (!pet1 || !pet2) {
+      return { success: false, reason: "PETS_NOT_FOUND" };
+    }
+
+    if (Number(pet1.affection || 0) < 100 || Number(pet2.affection || 0) < 100) {
+      return {
+        success: false,
+        reason: "AFFECTION_TOO_LOW",
+        pet1Affection: pet1.affection,
+        pet2Affection: pet2.affection,
+      };
+    }
+
+    const hybridType =
+      pet1.petType === pet2.petType
+        ? pet1.petType
+        : `hybrid_${pet1.petType}_${pet2.petType}`;
+
+    const hasCosmic = Boolean(pet1.cosmicAura || pet2.cosmicAura);
+    const baby = await UserPet.create({
+      userId,
+      petType: hybridType,
+      petName: `${pet1.petName || pet1.petType} Jr.`,
+      isTamed: true,
+      tamingProgress: 100,
+      hunger: 100,
+      affection: 40,
+      isActive: false,
+      petLevel: 1,
+      petExp: 0,
+      mood: "happy",
+      evolutionStage: 1,
+      passiveSkill: "HYBRID_VITALITY",
+      cosmicAura: hasCosmic,
+    });
+
+    // Reset afeksi kedua indukan pasca melahirkan
+    pet1.affection = 50;
+    pet2.affection = 50;
+    await pet1.save({ fields: ["affection"] }).catch(() => {});
+    await pet2.save({ fields: ["affection"] }).catch(() => {});
+
+    logger.info(
+      `[PetHabitat] User ${userId} berhasil breeding ${pet1.petType} + ${pet2.petType} -> ${baby.petType} (#${baby.id})`,
+    );
+
+    return {
+      success: true,
+      offspring: baby.toJSON(),
+    };
+  }
 }
 
 module.exports = PetHabitatEngine;

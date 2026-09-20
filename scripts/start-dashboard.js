@@ -60,8 +60,17 @@ async function main() {
   console.log(
     `   🔗 3D Model Asset:    http://localhost:${port}/assets/3d/Naura%20Hoshino%203D.glb`,
   );
-  console.log(`✨ ===================================================\n`);
+  // Jaga proses tetap berjalan aktif tanpa batas waktu (keepalive)
+  setInterval(() => {}, 1000 * 60 * 60);
 }
+
+process.on("unhandledRejection", (err) => {
+  console.error("[start-dashboard] Unhandled Rejection:", err);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("[start-dashboard] Uncaught Exception:", err);
+});
 
 main().catch((err) => {
   console.error("Fatal error starting dashboard:", err);

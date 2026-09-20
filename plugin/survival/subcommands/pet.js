@@ -212,6 +212,63 @@ module.exports = {
       return interaction.editReply(payload);
     }
 
+    // 2b. PERKAWINAN SILANG (BREED)
+    if (action === "breed") {
+      const petHabitatEngine = require("../../../src/survival/engines/petHabitatEngine");
+      if (!targetPetIdOption) {
+        return interaction.editReply({
+          ...buildErrorContainerV2({
+            title: "Pasangan Pet Diperlukan",
+            description:
+              "Tentukan ID Pet kedua sebagai pasangan perkawinan silang menggunakan opsi `target_pet_id`!",
+            footerText: ui.getFooter("survival"),
+          }),
+        });
+      }
+
+      const breedRes = await petHabitatEngine.breedPets(
+        user.id,
+        pet.id,
+        targetPetIdOption,
+      );
+      if (!breedRes.success) {
+        let msg = "Gagal melakukan perkawinan silang.";
+        if (breedRes.reason === "SAME_PET_SELECTED")
+          msg = "Kamu tidak bisa mengawinkan pet dengan dirinya sendiri!";
+        if (breedRes.reason === "PETS_NOT_FOUND")
+          msg = "Salah satu pet tidak ditemukan di kandangmu!";
+        if (breedRes.reason === "AFFECTION_TOO_LOW")
+          msg =
+            "Kedua pet harus memiliki kasih sayang maksimal (Affection >= 100) untuk dikawinkan!";
+        return interaction.editReply({
+          ...buildErrorContainerV2({
+            title: "Perkawinan Silang Gagal",
+            description: msg,
+            footerText: ui.getFooter("survival"),
+          }),
+        });
+      }
+
+      const baby = breedRes.offspring;
+      const payload = buildContainerV2({
+        accentColorHex: "#EC4899",
+        authorName: "PET BREEDING & GENETICS SANCTUARY",
+        title: "🧬 Kelahiran Pet Hibrida Berhasil!",
+        description: [
+          `Selamat! Dari perkawinan silang penuh kasih sayang, lahir bayi pet baru: **${baby.petName || baby.petType}**!`,
+          "",
+          `🐾 **Spesies Hibrida:** \`${baby.petType.toUpperCase()}\``,
+          `⭐ **Bakat Pasif Terwaris:** \`${baby.passiveSkill || "HYBRID_VITALITY"}\``,
+          `💖 **Status Awal:** Kasih Sayang \`${baby.affection}%\` | Mood \`${String(baby.mood || "happy").toUpperCase()}\``,
+          "",
+          `-# 💡 *Rawat buah hati peliharaan barumu di Pet Habitat dengan mainan dan makanan lezat!*`,
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return interaction.editReply(payload);
+    }
+
     // Handle Image attachment
     const getPetImage = (petType) => {
       const imgPath = path.join(

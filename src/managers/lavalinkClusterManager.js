@@ -40,6 +40,7 @@ class LavalinkClusterManager {
     this.hiFiNodes = new Map(); // nodeName -> { region, lossless, maxBitrate, codec }
     this.guildAudioQualities = new Map(); // guildId -> "standard" | "hd" | "lossless"
     this.nodeLatencies = new Map(); // nodeName -> { latencyMs, timestamp }
+    this.heartbeatFailures = new Map(); // nodeName -> consecutive timeout count
     this.pingInterval = null; // Periodic RTT prober timer
   }
 
@@ -624,6 +625,26 @@ class LavalinkClusterManager {
       if (!node.connected) return;
       const lat = await this.measureNodeLatency(node);
       results.set(node.name, lat);
+
+      if (lat >= 990) {
+        const fails = (this.heartbeatFailures.get(node.name) || 0) + 1;
+        this.heartbeatFailures.set(node.name, fails);
+        if (fails >= 3) {
+          logger.warn(
+            `[LavalinkClusterManager] Node "${node.name}" mengalami 3x heartbeat timeout berturut-turut. Mengaktifkan auto-recover failover...`,
+          );
+          this.recordFailure(node.name, new Error("Heartbeat timeout (Socket Unresponsive)"));
+          if (poru.players) {
+            for (const player of poru.players.values()) {
+              if (player && player.node && player.node.name === node.name) {
+                this.migratePlayer(player, poru).catch(() => {});
+              }
+            }
+          }
+        }
+      } else {
+        this.heartbeatFailures.set(node.name, 0);
+      }
     });
 
     await Promise.allSettled(probePromises);

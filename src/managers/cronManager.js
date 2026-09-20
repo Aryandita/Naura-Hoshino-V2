@@ -39,6 +39,7 @@ module.exports = {
       try {
         const { service } = require("../ai/semanticMemoryService");
         await service.synthesizeDailyMemories();
+        await service.pruneDuplicateMemories();
       } catch (err) {
         logger.error("[Cron] Gagal menjalankan Nightly AI Memory Reflection:", err.message);
       }

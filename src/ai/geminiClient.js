@@ -16,7 +16,7 @@
 const env = require("../config/env");
 const { logger } = require("../managers/logger");
 
-const DEFAULT_MODEL = "gemini-3.6-flash";
+const DEFAULT_MODEL = env.GEMINI_MODEL || "gemini-2.5-flash";
 
 let cachedClient = null;
 let clientResolved = false;

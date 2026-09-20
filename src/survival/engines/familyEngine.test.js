@@ -10,6 +10,10 @@ const {
   getMarriageStatus,
   marryNpc,
   triggerParenthood,
+  getChildStage,
+  feedChild,
+  teachChild,
+  claimApprenticePerk,
   isCgUnlocked,
   unlockCg,
 } = require("./familyEngine");
@@ -143,4 +147,35 @@ test("KEAMANAN GALERI CG: isCgUnlocked dan unlockCg menjaga privasi album kenang
   // Membuka CG baru
   await unlockCg(survival, "family_ningsih");
   assert.equal(isCgUnlocked(survival, "family_ningsih"), true);
+});
+
+test("getChildStage menentukan tahapan pertumbuhan anak secara tepat", () => {
+  assert.equal(getChildStage(1), "Toddler");
+  assert.equal(getChildStage(3), "Toddler");
+  assert.equal(getChildStage(4), "Kid");
+  assert.equal(getChildStage(7), "Kid");
+  assert.equal(getChildStage(8), "Apprentice");
+  assert.equal(getChildStage(10), "Apprentice");
+});
+
+test("feedChild dan teachChild menolak aksi jika anak belum lahir", async () => {
+  const UserChild = require("../../models/UserChild");
+  const origFindOne = UserChild.findOne;
+  UserChild.findOne = async () => null;
+
+  try {
+    const feedRes = await feedChild("no_child_user");
+    assert.equal(feedRes.ok, false);
+    assert.equal(feedRes.reason, "no_child");
+
+    const teachRes = await teachChild("no_child_user");
+    assert.equal(teachRes.ok, false);
+    assert.equal(teachRes.reason, "no_child");
+
+    const perkRes = await claimApprenticePerk("no_child_user");
+    assert.equal(perkRes.ok, false);
+    assert.equal(perkRes.reason, "no_child");
+  } finally {
+    UserChild.findOne = origFindOne;
+  }
 });

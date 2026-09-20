@@ -6,9 +6,13 @@
  * 2. Lengan atas kiri & kanan (leftUpperArm, rightUpperArm).
  * 3. Lengan bawah / siku kiri & kanan (leftLowerArm, rightLowerArm).
  * 4. Isolasi sendi independen: error pada satu sisi lengan tidak mempengaruhi sisi lainnya.
+ *
+ * Catatan rig GLB: nilai keyframe memakai sumbu lokal rig (X = samping, Y = twist, Z = maju),
+ * sehingga batas sudut diambil dari RIG_LIMITS (rigProfile.js), bukan batas pitch VRM lama.
  */
 
 import { slerpBone } from "../core/interpolation.js";
+import { RIG_LIMITS, clampToLimits } from "../core/rigProfile.js";
 
 const ARM_KEYS = [
     "leftShoulder",
@@ -38,7 +42,8 @@ export class ArmController {
 
     update(delta, elapsed, context = {}) {
         const targetBones = context.targetBones || {};
-        const lerpSpeed = 1.0 - Math.exp(-14.0 * delta);
+        // Gaya gerak realistis berbasis fisika (smooth exponential decay)
+        const lerpSpeed = 1.0 - Math.exp(-8.0 * delta);
 
         for (const key of ARM_KEYS) {
             try {
@@ -47,17 +52,22 @@ export class ArmController {
 
                 const base = targetBones[key] || [0, 0, 0];
                 const current = this.currentRotations[key];
+                const target = [base[0], base[1], base[2]];
 
-                current[0] += (base[0] - current[0]) * lerpSpeed;
-                current[1] += (base[1] - current[1]) * lerpSpeed;
-                current[2] += (base[2] - current[2]) * lerpSpeed;
-
-                // Mitigasi pelindung deformasi tekstur rok (anti-glitch skinning pada kedua sisi tubuh)
+                // Batas keselamatan lebar: cukup untuk pose lengan terangkat (Cheers / AstralCast),
+                // tetapi tetap mencegah nilai liar yang membalik tulang.
                 if (key === "rightUpperArm" || key === "leftUpperArm") {
-                    current[0] = Math.max(-0.6, Math.min(1.12, current[0]));
+                    clampToLimits(target, RIG_LIMITS.upperArm);
+                } else if (key === "rightLowerArm" || key === "leftLowerArm") {
+                    clampToLimits(target, RIG_LIMITS.lowerArm);
                 }
 
-                slerpBone(bone, base, current, 1.0);
+                // SLERP bertahap dari rotasi saat ini menuju target keyframe yang telah disanitasi
+                slerpBone(bone, current, target, lerpSpeed);
+
+                current[0] += (target[0] - current[0]) * lerpSpeed;
+                current[1] += (target[1] - current[1]) * lerpSpeed;
+                current[2] += (target[2] - current[2]) * lerpSpeed;
             } catch (err) {
                 console.warn(`[NauraAnimation:Arms] Error updating ${key}:`, err.message);
             }

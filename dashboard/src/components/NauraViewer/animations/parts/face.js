@@ -10,6 +10,8 @@
 
 const VRM1_EXPR_MAP = {
     Joy: "happy",
+    Happy: "happy",
+    Talk: "aa",          // mulut terbuka: sequence memakai 'Talk', preset VRM-nya 'aa'
     Fun: "relaxed",
     Sorrow: "sad",
     Angry: "angry",
@@ -66,13 +68,18 @@ export class FaceController {
                 targets[this.activeViseme] = Math.max(targets[this.activeViseme] || 0, this.visemeIntensity);
             }
 
-            // Terapkan ke VRM
-            for (const [name, targetVal] of Object.entries(targets)) {
+            // Terapkan ke model. Ekspresi yang sudah tidak ada di target ikut dipulihkan ke 0
+            // (sebelumnya nilai terakhirnya "menempel" setelah animasi selesai).
+            const names = new Set([...Object.keys(targets), ...Object.keys(this.currentWeights)]);
+            for (const name of names) {
+                const targetVal = targets[name] || 0;
                 const current = this.currentWeights[name] || 0;
-                const next = current + (targetVal - current) * lerpSpeed;
+                let next = current + (targetVal - current) * lerpSpeed;
+                if (targetVal === 0 && next < 0.001) next = 0;
                 this.currentWeights[name] = next;
 
                 this._applyMorphValue(name, next);
+                if (next === 0 && !(name in targets)) delete this.currentWeights[name];
             }
         } catch (err) {
             console.warn("[NauraAnimation:Face] Error updating facial morphs:", err.message);

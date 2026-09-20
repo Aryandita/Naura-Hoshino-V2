@@ -298,9 +298,11 @@ class AiEnsembleRouter {
       finalParts.unshift({ text: `[System Instruction]\n${systemInstruction}\n\n` });
     }
 
+    const selectedModel = env.GEMINI_MODEL || "gemini-2.5-flash";
     const text = await geminiClient.generate({
       parts: finalParts,
       history,
+      model: selectedModel,
       config,
       message,
     });
@@ -308,7 +310,7 @@ class AiEnsembleRouter {
     return {
       text: text.trim(),
       provider: "gemini",
-      model: env.GEMINI_MODEL || "gemini-2.5-flash",
+      model: selectedModel,
     };
   }
 
@@ -356,30 +358,48 @@ class AiEnsembleRouter {
       });
     };
 
-    let modelName = env.GROQ_MODEL || "llama-3.3-70b-versatile";
-    let res = await executeRequest(modelName);
+    const candidateModels = [
+      env.GROQ_MODEL || "llama-3.3-70b-versatile",
+      "llama-3.1-8b-instant",
+      "llama-3.2-3b-preview",
+      "llama-3.2-1b-preview",
+    ];
 
-    // Bila model 70B tidak tersedia di tier akun pengguna, coba model 8B instant
-    if (res.status === 404 && modelName !== "llama-3.1-8b-instant") {
-      logger.info(
-        `[AiEnsembleRouter] Model Groq ${modelName} tidak ditemukan (404). Mencoba fallback ke llama-3.1-8b-instant...`,
+    let lastGroqStatus = null;
+    let lastGroqErr = "";
+    let rawJson = null;
+    let successfulModel = null;
+
+    for (const targetModel of candidateModels) {
+      const res = await executeRequest(targetModel);
+      if (res.ok) {
+        rawJson = await res.json();
+        successfulModel = targetModel;
+        break;
+      }
+      lastGroqStatus = res.status;
+      lastGroqErr = await res.text().catch(() => "");
+      if (res.status === 404) {
+        logger.info(
+          `[AiEnsembleRouter] Model Groq ${targetModel} tidak tersedia (404), mencoba model cadangan berikutnya...`,
+        );
+        continue;
+      }
+      throw new Error(`Groq HTTP ${res.status}: ${lastGroqErr.slice(0, 200)}`);
+    }
+
+    if (!rawJson) {
+      throw new Error(
+        `Groq HTTP ${lastGroqStatus || 500}: ${lastGroqErr.slice(0, 200) || "Semua model Groq kandidat tidak ditemukan"}`,
       );
-      modelName = "llama-3.1-8b-instant";
-      res = await executeRequest(modelName);
     }
 
-    if (!res.ok) {
-      const errText = await res.text().catch(() => "");
-      throw new Error(`Groq HTTP ${res.status}: ${errText.slice(0, 200)}`);
-    }
-
-    const rawJson = await res.json();
     const normalized = normalizeAiResponse("groq", rawJson);
 
     return {
       text: normalized.content.trim(),
       provider: "groq",
-      model: modelName,
+      model: successfulModel || candidateModels[0],
       usage: normalized.tokenUsage,
     };
   }

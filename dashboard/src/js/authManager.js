@@ -63,9 +63,116 @@
     class AuthManager {
         constructor() {
             this.session = this.loadSession();
+            this.setupFetchInterceptor();
+            this.setupAutoReconnect();
             this.initModal();
             this.bindUI();
             this.syncUI();
+        }
+
+        setupFetchInterceptor() {
+            if (window._nauraFetchInterceptorInstalled) return;
+            window._nauraFetchInterceptorInstalled = true;
+
+            const originalFetch = window.fetch.bind(window);
+            let isRefreshing = false;
+            let pendingRequests = [];
+
+            const processQueue = (error, success = false) => {
+                pendingRequests.forEach((prom) => {
+                    if (error) {
+                        prom.reject(error);
+                    } else {
+                        prom.resolve();
+                    }
+                });
+                pendingRequests = [];
+            };
+
+            window.fetch = async (...args) => {
+                const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+
+                try {
+                    let response = await originalFetch(...args);
+
+                    // Tangani status HTTP 401 (Unauthorized / Session Expired) pada request API
+                    if (response.status === 401 && !url.includes('/auth/refresh') && !url.includes('/auth/logout')) {
+                        if (isRefreshing) {
+                            await new Promise((resolve, reject) => {
+                                pendingRequests.push({ resolve, reject });
+                            });
+                            return originalFetch(...args);
+                        }
+
+                        isRefreshing = true;
+                        try {
+                            const refreshRes = await originalFetch('/auth/refresh', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                            });
+
+                            if (refreshRes.ok) {
+                                const refreshData = await refreshRes.json();
+                                if (refreshData.success) {
+                                    if (refreshData.user) {
+                                        this.saveSession({
+                                            ...this.getUser(),
+                                            ...refreshData.user,
+                                        });
+                                    }
+                                    processQueue(null, true);
+                                    response = await originalFetch(...args);
+                                    return response;
+                                }
+                            }
+                            throw new Error('Refresh failed');
+                        } catch (refreshErr) {
+                            processQueue(refreshErr, false);
+                            if (typeof window.showToast === 'function') {
+                                window.showToast('Sesi login telah kedaluwarsa. Silakan simpan formulir atau login kembali.', 'warning');
+                            }
+                        } finally {
+                            isRefreshing = false;
+                        }
+                    }
+
+                    return response;
+                } catch (err) {
+                    throw err;
+                }
+            };
+        }
+
+        setupAutoReconnect() {
+            window.addEventListener('online', async () => {
+                try {
+                    const res = await fetch('/auth/reconnect', { method: 'POST', credentials: 'include' });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.authenticated && data.user) {
+                            this.saveSession({ ...this.getUser(), ...data.user });
+                        }
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('Koneksi berhasil dipulihkan secara otomatis.', 'success');
+                        }
+                    }
+                } catch (_) {}
+            });
+
+            document.addEventListener('visibilitychange', async () => {
+                if (document.visibilityState === 'visible' && this.isLoggedIn()) {
+                    try {
+                        const res = await fetch('/auth/refresh', { method: 'POST', credentials: 'include' });
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data.success && data.user) {
+                                this.saveSession({ ...this.getUser(), ...data.user });
+                            }
+                        }
+                    } catch (_) {}
+                }
+            });
         }
 
         loadSession() {

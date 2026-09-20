@@ -147,6 +147,9 @@ async function handleList(interaction) {
     desc += `**ID: ${auc.id}** | Penjual: <@${auc.sellerId}>\n`;
     desc += `📦 Item: **${auc.itemId}** (Jumlah: ${auc.amount})\n`;
     desc += `💰 Harga Saat Ini: **${price}** ${currencyEmoji}\n`;
+    if (auc.buyoutPrice) {
+      desc += `⚡ Beli Instan (Buyout): **${auc.buyoutPrice}** ${currencyEmoji}\n`;
+    }
     desc += `⏳ Berakhir: <t:${Math.floor(auc.expiresAt.getTime() / 1000)}:R>\n\n`;
   }
 
@@ -165,6 +168,7 @@ async function handleList(interaction) {
 async function handleSell(interaction) {
   const targetId = interaction.options.getString("target");
   const price = interaction.options.getInteger("price") || 100;
+  const buyout = interaction.options.getInteger("buyout");
   const amount = interaction.options.getInteger("amount") || 1;
   const currency = interaction.options.getString("currency") || "nsf";
   const userId = interaction.user.id;
@@ -175,6 +179,16 @@ async function handleSell(interaction) {
         buildErrorContainerV2({
           description:
             "Mohon isi parameter **target**, **price**, dan **amount** dengan benar saat menjual barang.",
+        }),
+      ),
+    );
+  }
+
+  if (buyout && buyout <= price) {
+    return interaction.editReply(
+      hidden(
+        buildErrorContainerV2({
+          description: `Harga beli instan (buyout) harus lebih tinggi dari harga awal lelang (**${price}**).`,
         }),
       ),
     );
@@ -200,6 +214,9 @@ async function handleSell(interaction) {
     );
   }
 
+  // Hitung kisaran harga rekomendasi 7 hari terakhir
+  const priceRec = await economyGuard.getRecommendedPrice(targetId, currency);
+
   // Deduct item safely
   const success = await takeItemsAtomic(userId, [{ id: targetId, amount }]);
 
@@ -223,6 +240,7 @@ async function handleSell(interaction) {
     itemId: targetId,
     amount: amount,
     startingPrice: price,
+    buyoutPrice: buyout || null,
     currency: currency,
     currentBid: 0,
     expiresAt: expiresAt,
@@ -231,12 +249,21 @@ async function handleSell(interaction) {
 
   const currencyEmoji = currency === "nsf" ? e("nsf", "⭐") : e("coin", "🪙");
 
+  let desc = `Kamu telah melelang **${amount}x ${targetId}** dengan harga awal **${price}** ${currencyEmoji}`;
+  if (buyout) {
+    desc += ` (Beli Instan: **${buyout}** ${currencyEmoji})`;
+  }
+  desc += `.\n\n📊 **Rekomendasi Pasar (7 Hari Terakhir):**\n`;
+  desc += `• Kisaran Wajar: **${priceRec.recommendedMin} - ${priceRec.recommendedMax}** ${currencyEmoji}\n`;
+  desc += `• Rerata Transaksi: **${priceRec.averagePrice}** ${currencyEmoji} (${priceRec.sampleSize} data transaksi)\n\n`;
+  desc += `Lelang ID: **${auctionId}**`;
+
   return interaction.editReply(
     buildContainerV2({
       accentColorHex: ui.getColor("success"),
       authorName: "Market Auction",
       title: "Barang Berhasil Dilelang!",
-      description: `Kamu telah melelang **${amount}x ${targetId}** dengan harga awal **${price}** ${currencyEmoji}.\n\nLelang ID: **${auctionId}**`,
+      description: desc,
       footerText: ui.getFooter("survival"),
     }),
   );
@@ -317,12 +344,15 @@ async function handleBid(interaction) {
     );
   }
 
+  const isBuyout = Boolean(auction.buyoutPrice && bidPrice >= auction.buyoutPrice);
+  const actualCost = isBuyout ? auction.buyoutPrice : bidPrice;
+
   // Evaluasi integritas penawaran melalui Economy Guard & Circuit Breaker
   const guardCheck = economyGuard.evaluateTransaction(
     userId,
     auction.sellerId,
-    bidPrice,
-    "auction_bid",
+    actualCost,
+    isBuyout ? "auction_buyout" : "auction_bid",
   );
   if (!guardCheck.allowed) {
     return interaction.editReply(
@@ -340,13 +370,13 @@ async function handleBid(interaction) {
     debitSuccess = await cacheManager.debitUserSurvival(
       userId,
       "starFragments",
-      bidPrice,
+      actualCost,
     );
   } else {
     debitSuccess = await cacheManager.debitUserProfile(
       userId,
       "economy_wallet",
-      bidPrice,
+      actualCost,
     );
   }
 
@@ -354,7 +384,7 @@ async function handleBid(interaction) {
     return interaction.editReply(
       hidden(
         buildErrorContainerV2({
-          description: `Uang kamu tidak cukup untuk melakukan bid sebesar **${bidPrice}**.`,
+          description: `Uang kamu tidak cukup untuk membayar sebesar **${actualCost}**.`,
         }),
       ),
     );
@@ -377,13 +407,54 @@ async function handleBid(interaction) {
     }
   }
 
+  const currencyEmoji =
+    auction.currency === "nsf" ? e("nsf", "⭐") : e("coin", "🪙");
+
+  if (isBuyout) {
+    // Selesaikan langsung lelang (instant buyout)
+    auction.currentBid = actualCost;
+    auction.highestBidderId = userId;
+    auction.status = "sold";
+    await auction.save({ fields: ["currentBid", "highestBidderId", "status"] });
+
+    // Kirim barang ke pembeli
+    await addItemsAtomic(userId, [
+      { id: auction.itemId, amount: auction.amount },
+    ]);
+
+    // Beri hasil penjualan ke penjual setelah dipotong pajak
+    const taxRate = economyGuard.calculateDynamicTax();
+    const tax = Math.floor(actualCost * taxRate);
+    const finalEarn = actualCost - tax;
+    if (auction.currency === "nsf") {
+      await cacheManager.incrementUserSurvival(
+        auction.sellerId,
+        "starFragments",
+        finalEarn,
+      );
+    } else {
+      await cacheManager.incrementUserProfile(
+        auction.sellerId,
+        "economy_wallet",
+        finalEarn,
+      );
+    }
+
+    return interaction.editReply(
+      buildContainerV2({
+        accentColorHex: ui.getColor("success"),
+        authorName: "Market Auction",
+        title: "Beli Instan Berhasil!",
+        description: `Kamu berhasil membeli instan (buyout) **${auction.amount}x ${auction.itemId}** seharga **${actualCost}** ${currencyEmoji}!\n\nBarang telah dikirim langsung ke tasmu. Penjual telah menerima pembayarannya.`,
+        footerText: ui.getFooter("survival"),
+      }),
+    );
+  }
+
   // Update auction
   auction.currentBid = bidPrice;
   auction.highestBidderId = userId;
   await auction.save({ fields: ["currentBid", "highestBidderId"] });
-
-  const currencyEmoji =
-    auction.currency === "nsf" ? e("nsf", "⭐") : e("coin", "🪙");
 
   return interaction.editReply(
     buildContainerV2({

@@ -1,6 +1,7 @@
 "use strict";
 
 const UserNPC = require("../../models/UserNPC");
+const UserChild = require("../../models/UserChild");
 const npcs = require("../data/npcs");
 
 const ROMANCEABLE_FEMALES = [
@@ -257,11 +258,184 @@ async function triggerParenthood(userId, survival, childName = "Cahaya Hoshino")
   };
 
   if (typeof survival.changed === "function") survival.changed("rpg_state", true);
+  if (typeof survival.changed === "function") survival.changed("rpg_state", true);
   if (typeof survival.save === "function") {
     await survival.save({ fields: ["rpg_state"] });
   }
 
+  // Buat atau inisialisasi data UserChild di database
+  await UserChild.findOrCreate({
+    where: { userId },
+    defaults: {
+      motherNpcId: status.spouseId,
+      name: childName,
+      happiness: 60,
+      hunger: 60,
+      level: 1,
+      xp: 0,
+    },
+  }).catch(() => {});
+
   return { ok: true, cgId: familyCgId };
+}
+
+/**
+ * Mendapatkan tahapan pertumbuhan anak berdasarkan level
+ * @param {number} level
+ * @returns {string} 'Toddler' | 'Kid' | 'Apprentice'
+ */
+function getChildStage(level) {
+  if (level >= 8) return "Apprentice";
+  if (level >= 4) return "Kid";
+  return "Toddler";
+}
+
+/**
+ * Mengambil data profil dan status anak pemain
+ * @param {string} userId
+ * @returns {Promise<object|null>}
+ */
+async function getChild(userId) {
+  const child = await UserChild.findOne({ where: { userId } });
+  if (!child) return null;
+
+  const stage = getChildStage(child.level);
+  const mother = npcs[child.motherNpcId] || { name: child.motherNpcId };
+
+  return {
+    id: child.id,
+    name: child.name,
+    motherNpcId: child.motherNpcId,
+    motherName: mother.name,
+    happiness: child.happiness,
+    hunger: child.hunger,
+    level: child.level,
+    xp: child.xp,
+    stage,
+    nextLevelXp: child.level * 100,
+  };
+}
+
+/**
+ * Memberikan makanan bernutrisi kepada anak untuk memulihkan lapar & kebahagiaan
+ * @param {string} userId
+ * @returns {Promise<{ ok: boolean, reason?: string, child?: object, leveledUp?: boolean }>}
+ */
+async function feedChild(userId) {
+  const child = await UserChild.findOne({ where: { userId } });
+  if (!child) return { ok: false, reason: "no_child" };
+
+  child.hunger = Math.min(100, (child.hunger || 0) + 30);
+  child.happiness = Math.min(100, (child.happiness || 0) + 15);
+  child.xp = (child.xp || 0) + 25;
+
+  let leveledUp = false;
+  const reqXp = child.level * 100;
+  if (child.xp >= reqXp && child.level < 10) {
+    child.level += 1;
+    child.xp -= reqXp;
+    leveledUp = true;
+  }
+
+  await child.save();
+  return {
+    ok: true,
+    child: {
+      name: child.name,
+      level: child.level,
+      hunger: child.hunger,
+      happiness: child.happiness,
+      xp: child.xp,
+      stage: getChildStage(child.level),
+    },
+    leveledUp,
+  };
+}
+
+/**
+ * Membimbing anak belajar dan mengasah bakat
+ * @param {string} userId
+ * @returns {Promise<{ ok: boolean, reason?: string, child?: object, leveledUp?: boolean }>}
+ */
+async function teachChild(userId) {
+  const child = await UserChild.findOne({ where: { userId } });
+  if (!child) return { ok: false, reason: "no_child" };
+
+  child.happiness = Math.min(100, (child.happiness || 0) + 10);
+  child.xp = (child.xp || 0) + 40;
+
+  let leveledUp = false;
+  const reqXp = child.level * 100;
+  if (child.xp >= reqXp && child.level < 10) {
+    child.level += 1;
+    child.xp -= reqXp;
+    leveledUp = true;
+  }
+
+  await child.save();
+  return {
+    ok: true,
+    child: {
+      name: child.name,
+      level: child.level,
+      hunger: child.hunger,
+      happiness: child.happiness,
+      xp: child.xp,
+      stage: getChildStage(child.level),
+    },
+    leveledUp,
+  };
+}
+
+/**
+ * Mengklaim bonus bantuan magang harian dari anak yang sudah beranjak dewasa/magang (Level >= 8)
+ * @param {string} userId
+ * @returns {Promise<{ ok: boolean, reason?: string, perkName?: string, rewardDesc?: string, fragments?: number, coupons?: number }>}
+ */
+async function claimApprenticePerk(userId) {
+  const child = await UserChild.findOne({ where: { userId } });
+  if (!child) return { ok: false, reason: "no_child" };
+  if (child.level < 8) return { ok: false, reason: "level_too_low", currentLevel: child.level };
+
+  const cacheManager = require("../../managers/cacheManager");
+  const motherId = String(child.motherNpcId || "").toLowerCase();
+
+  let fragments = 500;
+  let coupons = 1;
+  let perkName = "Bantuan Anak Berbakti";
+  let rewardDesc = "500 Naura Star Fragments & 1 Naura Coupon";
+
+  if (motherId === "ningsih") {
+    fragments = 600;
+    perkName = "Panen Bunga Magang Ningsih";
+    rewardDesc = "600 NSF & Paket Bibit Bunga Segar";
+  } else if (motherId === "tari") {
+    fragments = 650;
+    perkName = "Selam Mutiara Magang Tari";
+    rewardDesc = "650 NSF & Tangkapan Mutiara Pesisir";
+  } else if (motherId === "bagas") {
+    fragments = 550;
+    perkName = "Servis Tempa Magang Bagas";
+    rewardDesc = "550 NSF & Kit Perbaikan Alat Gratis";
+  } else if (motherId === "bidan_sari") {
+    fragments = 500;
+    coupons = 2;
+    perkName = "Herbal Sehat Magang Sari";
+    rewardDesc = "500 NSF & 2 Naura Coupon";
+  }
+
+  await cacheManager.incrementUserSurvival(userId, "starFragments", fragments);
+  if (coupons > 0) {
+    await cacheManager.incrementUserSurvival(userId, "coupons", coupons);
+  }
+
+  return {
+    ok: true,
+    perkName,
+    rewardDesc,
+    fragments,
+    coupons,
+  };
 }
 
 /**
@@ -287,7 +461,7 @@ async function unlockCg(survival, cgId) {
   const state = survival.rpg_state || {};
   const list = Array.isArray(state.unlocked_cgs) ? [...state.unlocked_cgs] : [];
 
-  if (list.includes(cgId)) return true; // Sudah terbuka sebelumnya
+  if (list.includes(cgId)) return true;
 
   list.push(cgId);
   survival.rpg_state = { ...state, unlocked_cgs: list };
@@ -305,6 +479,11 @@ module.exports = {
   getMarriageStatus,
   marryNpc,
   triggerParenthood,
+  getChildStage,
+  getChild,
+  feedChild,
+  teachChild,
+  claimApprenticePerk,
   isCgUnlocked,
   unlockCg,
 };

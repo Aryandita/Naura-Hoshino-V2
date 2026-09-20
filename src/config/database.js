@@ -67,6 +67,8 @@ const getDialectOptions = () => {
   if (dialect === "postgres") {
     return {
       connectTimeout: 120000,
+      keepAlive: true,
+      statement_timeout: 30000,
       ...(needsSsl
         ? {
             ssl: {
@@ -92,10 +94,25 @@ const createSequelizeInstance = () => {
 
   const poolConfig = {
     max: POOL_MAX,
-    min: 2,
+    min: 0,
     acquire: 120000,
-    idle: 15000,
-    evict: 5000,
+    idle: 10000,
+    evict: 10000,
+  };
+
+  const retryConfig = {
+    max: 3,
+    match: [
+      /SequelizeConnectionError/,
+      /SequelizeConnectionRefusedError/,
+      /SequelizeHostNotFoundError/,
+      /SequelizeHostNotReachableError/,
+      /SequelizeInvalidConnectionError/,
+      /SequelizeConnectionTimedOutError/,
+      /ConnectionResetError/,
+      /read ECONNRESET/,
+      /ETIMEDOUT/,
+    ],
   };
 
   const dialectOptions = getDialectOptions();
@@ -106,6 +123,7 @@ const createSequelizeInstance = () => {
       logging: false,
       dialectOptions,
       pool: poolConfig,
+      retry: retryConfig,
     });
   }
 
@@ -117,6 +135,7 @@ const createSequelizeInstance = () => {
     logging: false,
     dialectOptions,
     pool: poolConfig,
+    retry: retryConfig,
   });
 };
 

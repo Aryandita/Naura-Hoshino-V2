@@ -330,13 +330,13 @@
 
       <div class="naura-card-chat" id="nauraChatBox">
         <div class="naura-msg is-bot">
-          <div class="naura-bubble">
+          <div class="naura-bubble" id="nauraInitialBubble">
             Halo! Aku Naura Hoshino, asisten ceria dan kawan petualanganmu. Ada yang bisa kubantu di server atau dashboard hari ini? 🌸✨
           </div>
         </div>
       </div>
 
-      <div class="naura-card-chips">
+      <div class="naura-card-chips" id="nauraCardChips">
         <button type="button" class="naura-chip" data-msg="👋 Halo Naura!">👋 Sapa Naura</button>
         <button type="button" class="naura-chip" data-msg="⚡ Cek status bot dan sistem">⚡ Status Bot</button>
         <button type="button" class="naura-chip" data-msg="🎵 Rekomendasi lagu hari ini">🎵 Musik Santai</button>
@@ -354,6 +354,58 @@
   `;
   document.body.appendChild(root);
 
+  // Konfigurasi Konteks Halaman Cerdas
+  const PAGE_CONTEXT_CONFIG = {
+    '/economy': {
+      greeting: 'Selamat datang di Bank & Pasar NC! Mau cek kurs saham atau strategi cuan hari ini? 📈🌸',
+      chips: [
+        { label: '📈 Prediksi Saham NC', msg: 'Bagaimana tren pasar saham dan bursa valuta hari ini?' },
+        { label: '💰 Kas Server', msg: 'Berapa total kas dan perputaran ekonomi saat ini?' },
+        { label: '💎 Tips Investasi', msg: 'Berikan tips investasi cerdas di Naura Economy' },
+        { label: '🎲 Dadu Hoki', msg: 'Lempar dadu hoki dong!' }
+      ]
+    },
+    '/music': {
+      greeting: 'Halo penikmat musik! Lavalink node siap memutarkan track favoritmu. Mau request lagu apa? 🎵✨',
+      chips: [
+        { label: '🎵 Rekomendasi Lagu', msg: 'Rekomendasikan lagu anime atau lofi yang enak didengar' },
+        { label: '⚡ Cek Audio Node', msg: 'Bagaimana status cluster pemutar musik Poru saat ini?' },
+        { label: '📻 Info AI DJ', msg: 'Apa saja fitur Fish Audio AI DJ Companion?' }
+      ]
+    },
+    '/status': {
+      greeting: 'Monitoring telemetri dan kesehatan sistem aktif. Semua shard dan gateway terpantau aman! ⚡🛡️',
+      chips: [
+        { label: '⚡ Latency Shard', msg: 'Berapa rata-rata ping gateway dan shard Discord saat ini?' },
+        { label: '💾 Pemakaian RAM', msg: 'Apakah penggunaan memori heap node.js dalam batas aman?' },
+        { label: '🛡️ Uptime Service', msg: 'Sudah berapa lama server bot aktif tanpa restart?' }
+      ]
+    },
+    '/world': {
+      greeting: 'Wilayah Aetheria terbentang luas! Mau eksplorasi POI atau cek cuaca benua hari ini? 🗺️⚔️',
+      chips: [
+        { label: '🗺️ Panduan POI', msg: 'Ceritakan tentang wilayah dan titik penting di peta Aetheria' },
+        { label: '⚔️ Zona Rawan', msg: 'Di mana lokasi monster langka atau pertempuran klan?' },
+        { label: '🎒 Bar Vitalitas', msg: 'Bagaimana cara menjaga stamina dan HP di Naura Wilds?' }
+      ]
+    },
+    '/survival-map': {
+      greeting: 'Radar survival aktif mendeteksi sumber daya dan pemain di sekitarmu! Waspada selalu ya! 🌲⚡',
+      chips: [
+        { label: '📍 Sumber Daya', msg: 'Di mana lokasi terbaik mencari kayu dan kristal energi?' },
+        { label: '🛡️ Pos Terdepan', msg: 'Bagaimana cara mendirikan outpost perlindungan?' }
+      ]
+    },
+    '/settings': {
+      greeting: 'Di sini kamu bisa mengatur preferensi bot, kartu sambutan, dan izin role. Mau dibantu setel apa? ⚙️✨',
+      chips: [
+        { label: '🎨 Welcomer Card', msg: 'Bagaimana cara mengubah latar belakang kartu sambutan?' },
+        { label: '🔒 Keamanan Role', msg: 'Jelaskan izin bot yang dibutuhkan untuk proteksi server' },
+        { label: '⚙️ Personalisasi', msg: 'Bagaimana cara mengubah persona AI Naura?' }
+      ]
+    }
+  };
+
   // State
   let isOpen = false;
   let voiceEnabled = true;
@@ -370,16 +422,52 @@
   const chatBox = document.getElementById('nauraChatBox');
   const chatInput = document.getElementById('nauraChatInput');
   const btnSend = document.getElementById('nauraBtnSend');
+  const cardChips = document.getElementById('nauraCardChips');
+  const initialBubble = document.getElementById('nauraInitialBubble');
+
+  function updatePageContext() {
+    const path = window.location.pathname.replace(/\/$/, '') || '/';
+    const cfg = PAGE_CONTEXT_CONFIG[path];
+    if (cfg) {
+      if (initialBubble && chatHistory.length === 0) {
+        initialBubble.textContent = cfg.greeting;
+      }
+      if (cardChips) {
+        let chipsHtml = '';
+        cfg.chips.forEach(c => {
+          chipsHtml += `<button type="button" class="naura-chip" data-msg="${c.msg}">${c.label}</button>`;
+        });
+        chipsHtml += `<a href="/lounge" class="naura-chip" style="text-decoration:none;">🎭 Buka 3D Lounge</a>`;
+        cardChips.innerHTML = chipsHtml;
+        bindChipEvents();
+      }
+    }
+  }
+
+  function bindChipEvents() {
+    if (!cardChips) return;
+    cardChips.querySelectorAll('.naura-chip[data-msg]').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const msg = chip.getAttribute('data-msg');
+        if (msg) handleSend(msg);
+      });
+    });
+  }
+
 
   function toggleCard() {
     isOpen = !isOpen;
     if (isOpen) {
+      updatePageContext();
       card.classList.add('is-open');
       chatInput.focus();
     } else {
       card.classList.remove('is-open');
     }
   }
+
+  // Inisialisasi konteks saat awal
+  updatePageContext();
 
   orb.addEventListener('click', toggleCard);
   btnClose.addEventListener('click', () => {
@@ -475,13 +563,20 @@
       const res = await fetch('/api/ai/companion/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, history: chatHistory.slice(-6) }),
+        body: JSON.stringify({
+          message: text,
+          history: chatHistory.slice(-6),
+          context: { path: window.location.pathname }
+        }),
       });
       const data = await res.json();
       if (data && data.success) {
         setMascotMood(data.mood || 'Happy', data.status || 'Aktif Menemani ✨');
         appendMsg('bot', data.reply, voiceEnabled);
         chatHistory.push({ role: 'model', content: data.reply });
+        if (window.soundManager && typeof window.soundManager.playPop === 'function') {
+          window.soundManager.playPop();
+        }
         playVoice(data.reply);
       } else {
         setMascotMood('Shy', 'Sedikit bingung');

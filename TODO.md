@@ -38,6 +38,25 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 > **Kriteria:** Mempengaruhi integritas data, keamanan saldo/ekonomi, stabilitas koneksi WebSocket, dan pencegahan eksploitasi sistem.
 
+- [x] **[3D KINEMATICS] Integrasi RigProfile & GLTF Humanoid Bone/Morph Adapter (`naura_animasi_fix.zip`)**
+  - Mengintegrasikan modul jembatan `core/rigProfile.js` (`buildHumanoidBones`, `GlbExpressionRig`) untuk memetakan nama bone GLB (`RightArm`, `LeftArm`) ke format humanoid, mengonversi morph targets (`Happy`, `Thinking`, `Sad`, `Angry`, `Blink`, `Talk`), serta menyelaraskan sumbu rotasi rig (+X facing).
+  - Memperbarui 10 sequence keyframe gerak agar pose lengan, kepala, dan ekspresi terkonvergensi mulus pada model `Naura_Hoshino_3D_NEW.glb`.
+  - File: [`dashboard/src/components/NauraViewer/animations/core/rigProfile.js`](dashboard/src/components/NauraViewer/animations/core/rigProfile.js), [`dashboard/src/components/NauraViewer/animations/parts/`](dashboard/src/components/NauraViewer/animations/parts/), [`dashboard/src/components/NauraViewer/animations/sequences/`](dashboard/src/components/NauraViewer/animations/sequences/), [`dashboard/src/components/NauraHeroViewer/hero3d.js`](dashboard/src/components/NauraHeroViewer/hero3d.js).
+- [x] **[BUG] Perbaikan Logika Validasi Alur Perjalanan ke Desa Asal (`plugin/survival/subcommands/travel.js`)**
+  - Memperbaiki kondisi pembatasan perjalanan di mana `normalizedTarget` yang bernilai `"desa_sukamaju"` selalu lolos dari evaluasi `normalizedTarget !== "desa"`, sehingga petualang pemula tanpa rumah/kendaraan tidak sengaja terblokir saat hendak pulang ke desa pemula (`err_sys_67`).
+  - Menyelaraskan evaluasi menjadi `normalizedTarget !== "desa_sukamaju" && normalizedTarget !== "desa"`.
+  - File: [`plugin/survival/subcommands/travel.js`](plugin/survival/subcommands/travel.js).
+- [x] **[AI RUNTIME] Sinkronisasi Default Model & Dynamic Model Fallback Chain (`geminiClient.js` & `aiEnsembleRouter.js`)**
+  - Menyelaraskan `DEFAULT_MODEL` pada `geminiClient.js` agar membaca `env.GEMINI_MODEL || "gemini-2.5-flash"` dan tidak lagi mengabaikan konfigurasi environment.
+  - Memperluas rantai fallback Groq pada `_callGroq` dengan array model aktif (`GROQ_FALLBACK_MODELS = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "llama-3.2-3b-preview"]`) guna mencegah error HTTP 404 saat model lama dipensiunkan oleh provider.
+  - File: [`src/ai/geminiClient.js`](src/ai/geminiClient.js), [`src/ai/aiEnsembleRouter.js`](src/ai/aiEnsembleRouter.js), [`src/config/env.js`](src/config/env.js).
+- [x] **[AUDIO CLUSTER] Auto-Recover Stalled Lavalink WebSocket Sessions via Heartbeat Ping Watchdog (`lavalinkClusterManager.js`)**
+  - Menerapkan active heartbeat probe (interval 15 detik) dengan toleransi 3 kali timeout untuk mendeteksi silent freeze koneksi WebSocket Lavalink ke Discord Gateway dan memicu migrasi player otomatis ke node cadangan tanpa menunggu error disconnect fatal.
+  - File: [`src/managers/lavalinkClusterManager.js`](src/managers/lavalinkClusterManager.js), [`src/music/poru_events/nodeError.js`](src/music/poru_events/nodeError.js).
+- [x] **[KEAMANAN & MUTEX] Multi-Key Distributed Lock Helper Anti-Deadlock (`cacheManager.withMultiLock`)**
+  - Menyediakan utilitas penguncian Redis multi-kunci dengan pengurutan leksikografis kunci sebelum akuisisi lock untuk menjamin transaksi barter kartu (`/card trade`), taruhan duel PvP, dan transfer brankas lelang bebas dari risiko deadlock terdistribusi.
+  - File: [`src/managers/cacheManager.js`](src/managers/cacheManager.js), [`src/survival/helpers/redisLockHelper.js`](src/survival/helpers/redisLockHelper.js).
+
 - [x] **[VOICE WEBRTC] Full-Duplex Audio Pipeline with Barge-In Capability (`VoiceCompanionService` Phase 2)**
   - Menggantikan alur sekuensial push-and-wait dengan pipeline WebRTC real-time berlatensi rendah (<300ms) pada Discord Voice Gateway.
   - Mengimplementasikan Voice Activity Detection (VAD) dan *barge-in capability* di mana bot langsung menghentikan pemutaran audio Fish Audio saat pengguna menyela pembicaraan di voice channel.
@@ -99,6 +118,30 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 ## 🔥 2. KATEGORI: TINGGI (Prioritas Kedua setelah Kritis)
 
 > **Kriteria:** Fitur arsitektur inti, pengalaman pengguna utama, visualisasi sistem, dan retensi musiman.
+
+- [x] **[FITUR BARU] Interactive Family Parenting & Apprentice System (`UserChild.js` & `/survival family`)**
+  - Menghubungkan model Sequelize `UserChild.js` pasca Parenthood Event: status vital anak (`happiness`, `hunger`, `level`, `xp`), interaksi harian memberi makan (`feed`), membimbing belajar (`teach`), dan tahapan pertumbuhan (Toddler -> Anak -> Murid Magang).
+  - Menerapkan *Family Trade Apprentice Perks* di mana anak yang beranjak remaja dapat membantu mata pencaharian pemain sesuai bakat sang ibu (panen sayur otomatis bersama Ningsih, bonus mutiara laut bersama Tari, reparasi diskon bersama Bagas, dan racikan jamu bersama Bidan Sari).
+  - File: [`src/survival/engines/familyEngine.js`](src/survival/engines/familyEngine.js), [`src/models/UserChild.js`](src/models/UserChild.js), [`plugin/survival/subcommands/family.js`](plugin/survival/subcommands/family.js) (NEW).
+- [x] **[FITUR BARU] Ancient Relic Tower Sieges & Dynamic Territory Control (`territoryWarEngine.js` Phase 2 / `/clan siege`)**
+  - Mengembangkan sistem perebutan Menara Relik Kuno (*Ancient Relic Towers*) antar federasi klan menjadi perang wilayah GvG terjadwal mingguan.
+  - Aliansi pengontrol menara berhak mengklaim dividen kas aliansi harian dan mengaktifkan status buff regional pasif untuk seluruh anggota klan (Tower of Vitality: +15% HP, Tower of Greed: +10% NSF yield). Dilengkapi visual perang di Web Dashboard war room.
+  - File: [`src/survival/engines/territoryWarEngine.js`](src/survival/engines/territoryWarEngine.js), [`src/survival/engines/guildFederationEngine.js`](src/survival/engines/guildFederationEngine.js), [`plugin/survival/subcommands/siege.js`](plugin/survival/subcommands/siege.js) (NEW), [`dashboard/src/pages/war-room.html`](dashboard/src/pages/war-room.html).
+- [x] **[PERFORMA] WebP Streaming Compression & Memory Pooling on Canvas Worker (`canvasWorkerPool.js`)**
+  - Mengonversi keluaran renderer grafis berat (ransel inventaris, koran chronicle mingguan, kamar cyber-pod) dari format PNG mentah ke WebP kompresi adaptif (kualitas 90% lossless).
+  - Memangkas ukuran buffer gambar hingga 40-60%, menghemat kuota payload gateway, dan mempercepat respons interaksi Discord.
+  - File: [`src/canvas/canvasWorker.js`](src/canvas/canvasWorker.js), [`src/canvas/canvasWorkerPool.js`](src/canvas/canvasWorkerPool.js), [`src/canvas/inventoryCanvas.js`](src/canvas/inventoryCanvas.js).
+- [x] **[AGENTIC AI] Structured Output & Strict JSON Schema Enforcement pada AI Function Dispatcher (`functionDispatcher.js`)**
+  - Mengintegrasikan deklarasi function calling resmi berbasis JSON Schema (@google/genai structured outputs) pada AI Ensemble dan Voice Companion.
+  - Menghilangkan halusinasi parameter numerik atau nama item pada giliran perintah suara dan chat bebas.
+  - File: [`src/ai/functionDispatcher.js`](src/ai/functionDispatcher.js), [`src/ai/geminiClient.js`](src/ai/geminiClient.js), [`src/services/voiceCompanionService.js`](src/services/voiceCompanionService.js).
+- [x] **[3D KINEMATICS] Eliminasi Duplikasi Kontroler Ekstremitas Tubuh (`arms.js` vs `leftArm`/`rightArm`)**
+  - Menyelesaikan ambiguitas registrasi kontroler ekstremitas di mana `arms.js` dan `leftArm.js`/`rightArm.js` berpotensi memperebutkan transformasi bone yang sama pada render loop Three.js.
+  - Menstandarisasi hierarki kontroler independen per sisi tubuh dengan delegasi fallback aman.
+  - File: [`dashboard/src/components/NauraViewer/animations/parts/`](dashboard/src/components/NauraViewer/animations/parts/), [`dashboard/src/components/NauraViewer/animations/core/controller.js`](dashboard/src/components/NauraViewer/animations/core/controller.js).
+- [x] **[LIVING AI] Semantic Memory Auto-Pruning & Vector De-duplication (`semanticMemoryService.js`)**
+  - Menerapkan pemangkasan memori vektor berkala: menggabungkan memori semantik dengan cosine similarity > 0.92 dan menghapus entri usang agar pencarian RAG tetap berada di bawah 5ms serta tabel `semantic_memories` tetap ramping.
+  - File: [`src/ai/semanticMemoryService.js`](src/ai/semanticMemoryService.js), [`src/managers/cronManager.js`](src/managers/cronManager.js).
 
 - [x] **[AGENTIC AI] Voice Function Calling & Autonomous In-Game Action Dispatcher**
   - Menghubungkan giliran obrolan suara di Voice Channel langsung ke `functionDispatcher.js` dan model AI Ensemble Router (Gemini 2.5 Flash / Groq).
@@ -202,6 +245,31 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 > **Kriteria:** Fitur reguler yang memperkaya ekosistem komunitas dan gameplay RPG. Dapat dikerjakan kapan pun tanpa mengganggu operasional bot.
 
+- [x] **[FITUR BARU] Dynamic World Weather & Seasonal Natural Hazards (`worldWeatherEngine.js` & `/survival status`)**
+  - Menambahkan siklus cuaca dunia yang berotasi setiap 6 jam: Hujan Lebat (bonus panen kebun +30%, konsumsi stamina hutan +20%), Badai Petir (resiko sambaran di tambang terbuka, keausan alat +25%), Kabut Pasir Gurun Khul'Khas (peluang menemukan reruntuhan langka x2), dan Terik Matahari (kehausan berkurang 2x lebih cepat).
+  - Menampilkan status cuaca aktif pada kartu profil petualang `/survival status`, visual canvas banner cuaca, dan telemetri Web Dashboard.
+  - File: [`src/survival/engines/worldWeatherEngine.js`](src/survival/engines/worldWeatherEngine.js) (NEW), [`src/survival/data/worldMapData.js`](src/survival/data/worldMapData.js), [`plugin/survival/subcommands/info.js`](plugin/survival/subcommands/info.js), [`dashboard/routes/api.js`](dashboard/routes/api.js).
+- [x] **[FITUR BARU] Guild Caravan Raids & Clan Escort Contracts Hub (`/clan caravan` & `/caravan escort`)**
+  - Membuka papan bursa kontrak pengawalan berbayar (*Mercenary Escort Board*) di mana petualang independen dapat disewa oleh klan untuk mengawal konvoi dagang antariksa dengan dana jaminan escrow aman.
+  - Menambahkan opsi pembentukan konvoi dagang gabungan multi-pemain dengan pooling modal dan pembagian dividen laba bersama.
+  - File: [`src/services/tradeEngine.js`](src/services/tradeEngine.js), [`plugin/survival/subcommands/caravan.js`](plugin/survival/subcommands/caravan.js), [`plugin/survival/subcommands/clan.js`](plugin/survival/subcommands/clan.js).
+- [x] **[FITUR BARU] Pet Breeding, Evolution & Cosmic Fusion Engine (`UserPet.js` & `/survival pet breed`)**
+  - Mengaktifkan fitur perkawinan silang peliharaan di Pet Habitat: dua pet afeksi maksimal (Affection >= 100) dapat dikawinkan untuk mewariskan bakat pasif hibrida.
+  - Menambahkan mekanisme evolusi bertingkat hingga Tahap 3 (Cosmic Celestial Companion) dengan aura kosmik berpendar (`cosmicAura: true`) pada kartu identitas profil Canvas.
+  - File: [`src/survival/engines/petHabitatEngine.js`](src/survival/engines/petHabitatEngine.js), [`src/models/UserPet.js`](src/models/UserPet.js), [`plugin/survival/subcommands/pet.js`](plugin/survival/subcommands/pet.js), [`src/canvas/petHabitatCanvas.js`](src/canvas/petHabitatCanvas.js).
+- [x] **[RPG & FORGE] Durability Repair Batching & Auto-Salvage All Damaged Tools (`/survival forge salvage all`)**
+  - Menambahkan opsi pembongkaran massal perlengkapan rusak (durabilitas 0) menjadi Kristal Kosmik dan batangan logam mentah dalam satu kali klik / interaksi atomik.
+  - File: [`src/survival/engines/durabilityEngine.js`](src/survival/engines/durabilityEngine.js), [`plugin/survival/subcommands/forge.js`](plugin/survival/subcommands/forge.js).
+- [x] **[DASHBOARD V2] Web Dashboard Token Refresh & Auto-Reconnection Interceptor (`auth-manager.js`)**
+  - Memasang handler fetch terpadu di sisi browser dashboard untuk menangani respons HTTP 401, merefresh token Discord OAuth di latar belakang, dan mencegah hilangnya formulir pengaturan saat sesi login berakhir.
+  - File: [`dashboard/public/js/auth-manager.js`](dashboard/public/js/auth-manager.js), [`dashboard/routes/auth.js`](dashboard/routes/auth.js).
+- [x] **[EKONOMI] Dynamic Auction House Buyout & Real-Time Price Recommendation (`auction.js`)**
+  - Menghitung kisaran harga wajar secara otomatis saat petualang menjual barang di `/survival auction create` berdasarkan rerata transaksi sukses 7 hari terakhir, serta mendukung fitur harga beli instan (*buyout price*).
+  - File: [`src/models/MarketAuction.js`](src/models/MarketAuction.js), [`plugin/survival/subcommands/auction.js`](plugin/survival/subcommands/auction.js), [`src/services/economyGuardEngine.js`](src/services/economyGuardEngine.js).
+- [x] **[PERFORMA] Canvas Worker Memory Leak Guard & Context Recycle Loop (`canvasWorkerPool.js`)**
+  - Memasang siklus daur ulang otomatis worker thread setelah menyelesaikan 500 tugas rendering, serta pelepasan referensi konteks kanvas (`ctx = null`) untuk kestabilan memori proses bot pada server 24/7.
+  - File: [`src/canvas/canvasWorkerPool.js`](src/canvas/canvasWorkerPool.js), [`src/canvas/canvasWorker.js`](src/canvas/canvasWorker.js).
+
 - [x] **[AUDIO CLUSTER] Multi-Region Dynamic Latency Ping Routing (Lavalink Geo-Federation)**
   - Menambahkan probe ping periodik (setiap 30 detik) di `lavalinkClusterManager.js` untuk mengukur RTT (Round-Trip Time) ke masing-masing node Lavalink.
   - Secara otomatis merutekan koneksi voice channel guild ke node audio dengan latensi terendah sesuai region geografis server Discord.
@@ -296,6 +364,19 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 ## ✨ 4. KATEGORI: OPTIONAL (Prioritas Opsional)
 
 > **Kriteria:** Penambahan estetika, kosmetik, dan eksplorasi fitur eksperimental jangka panjang. Tidak berpengaruh pada kestabilan bot jika dilewati.
+
+- [x] **[FITUR BARU] AI Dynamic Radio Host & Voice Track Announcements (`aiDjManager.js` / `/music radio`)**
+  - Menghidupkan kepribadian penyiar radio cerdas pada AI Smart DJ: Naura menyapa nama pendengar di voice channel, menceritakan trivia musisi lagu berikutnya, dan meredupkan volume musik (*audio ducking* ke 15%) saat berbicara sebelum menaikkan kembali ke 100%.
+  - File: [`src/services/fishAudioService.js`](src/services/fishAudioService.js), [`src/managers/musicManager.js`](src/managers/musicManager.js), [`plugin/music/music.js`](plugin/music/music.js).
+- [x] **[AUDIO] Smart Duplicate Track Detection in Guild Queues (`/music duplicates on/off`)**
+  - Menambahkan filter pencegahan duplikasi lagu dalam rentang 5 antrean terakhir pemutaran untuk menjaga variasi musik di channel suara server.
+  - File: [`src/managers/musicManager.js`](src/managers/musicManager.js), [`plugin/music/music.js`](plugin/music/music.js).
+- [x] **[DASHBOARD] Service Worker PWA Caching untuk Dashboard Assets (`dashboard/public/sw.js`)**
+  - Menerapkan Service Worker Cache-First untuk file 3D avatar berukuran besar (`.glb`/`.vrm`) dan efek audio soundboard agar kecepatan muat halaman Web Dashboard instan (<1 detik).
+  - File: [`dashboard/public/sw.js`](dashboard/public/sw.js) (NEW), [`dashboard/src/pages/index.html`](dashboard/src/pages/index.html).
+- [x] **[MONITORING] Automated Staff Security Webhook for Velocity of Money Spikes (`economyGuardEngine.js`)**
+  - Pengiriman notifikasi darurat langsung via webhook Discord ke ruang staf admin saat terdeteksi anomali perputaran mata uang (*Velocity of Money*) yang mengindikasikan eksploitasi transfer alt account.
+  - File: [`src/services/economyGuardEngine.js`](src/services/economyGuardEngine.js), [`src/services/webhookDispatcher.js`](src/services/webhookDispatcher.js).
 
 - [x] **[AI COMPANION] Expressive 3D Mascot Lip-Sync & Viseme Synchronization**
   - Sinkronisasi bentuk mulut (viseme morph targets A, I, U, E, O) pada avatar 3D Three.js Naura di Web Dashboard dan Discord Activity saat memutar ucapan suara Fish Audio TTS.
@@ -670,6 +751,40 @@ Berdasarkan analisis pasar bot dan platform developer Discord terkini (2025 - 20
 - [x] **[TEST SUITE] Automated Unit Tests & 100% QA Gate Green**:
   - Penambahan 23 unit test baru (`npcGiftPreferences.test.js`, `familyEngine.test.js`, `npcPerksEngine.test.js`, `worldMapPoi.test.js`), menjadikan total 364 automated tests lulus 100% hijau.
 
+---
+
+### 🚀 Sprint 33: Interactive Family Parenting, 3D Kinematics RigProfile, Dynamic Weather & GvG Territory Siege (v2.3.0 Milestone Berjalan)
+
+- [x] **[3D KINEMATICS] Integrasi RigProfile & GLTF Humanoid Bone/Morph Adapter (`naura_animasi_fix.zip`)**:
+  - Mengintegrasikan modul `core/rigProfile.js` (`buildHumanoidBones`, `GlbExpressionRig`) dan 10 sequence hasil kalibrasi ke dalam `dashboard/src/components/NauraViewer/animations/` sehingga seluruh animasi procedural 3D berjalan presisi pada model GLB/VRM.
+- [x] **[BUG] Perbaikan Logika Validasi Alur Perjalanan ke Desa Asal (`travel.js`)**:
+  - Memperbaiki kondisi pembatasan perjalanan di `travel.js` agar petualang pemula tanpa rumah/kendaraan dapat kembali ke desa awal (`desa_sukamaju`) tanpa terhalang `err_sys_67`.
+- [x] **[AI RUNTIME] Sinkronisasi Default Model & Dynamic Model Fallback Chain (`geminiClient.js` & `aiEnsembleRouter.js`)**:
+  - Menyelaraskan default model ke `env.GEMINI_MODEL` dan memperluas rantai fallback Groq dengan array model dinamis untuk mencegah HTTP 404 saat rotasi model API.
+- [x] **[AUDIO CLUSTER] Auto-Recover Stalled Lavalink WebSocket Sessions via Heartbeat Ping Watchdog (`lavalinkClusterManager.js`)**:
+  - Heartbeat ping berkala 15 detik dengan timeout recovery otomatis pada sesi player Lavalink yang mengalami silent freeze.
+- [x] **[KEAMANAN & MUTEX] Multi-Key Distributed Lock Helper Anti-Deadlock (`cacheManager.withMultiLock`)**:
+  - Pengurutan leksikografis kunci Redis terdistribusi sebelum penguncian multi-user untuk mencegah deadlock pada transaksi barter dan duel.
+- [x] **[FITUR BARU] Interactive Family Parenting & Apprentice System (`UserChild.js` & `/survival family`)**:
+  - Sistem pengasuhan anak interaktif (status, makan, belajar, magang bakat ibu) terintegrasi penuh ke model `UserChild.js` dan antarmuka Components V2.
+- [x] **[FITUR BARU] Ancient Relic Tower Sieges & Dynamic Territory Control (`territoryWarEngine.js` Phase 2 / `/clan siege`)**:
+  - Pertempuran mingguan perebutan Menara Relik Kuno antar aliansi klan dengan dividen harian dan status buff pasif regional.
+- [x] **[FITUR BARU] Dynamic World Weather & Seasonal Natural Hazards (`worldWeatherEngine.js` & `/survival status`)**:
+  - Sistem cuaca dunia prosedural 6-jam dengan dampak gameplay nyata terhadap efisiensi bertani, menambang, dan menjelajah.
+- [x] **[FITUR BARU] Guild Caravan Raids & Clan Escort Contracts Hub (`/clan caravan` & `/caravan escort`)**:
+  - Papan kontrak pengawalan karavan dagang berbayar dan konvoi antar pemain dengan brankas escrow terjamin.
+- [x] **[FITUR BARU] Pet Breeding, Evolution & Cosmic Fusion Engine (`UserPet.js` & `/survival pet breed`)**:
+  - Perkawinan silang peliharaan untuk pewarisan sifat pasif dan jalur evolusi hingga Tahap 3 Cosmic Celestial Companion.
+- [x] **[FITUR BARU] AI Dynamic Radio Host & Voice Track Announcements (`aiDjManager.js` / `/music radio`)**:
+  - Fitur radio DJ interaktif bertenaga Fish Audio TTS dengan audio ducking otomatis saat Naura menyapa pendengar voice channel.
+- [x] **[PERFORMA] WebP Streaming Compression & Memory Pooling on Canvas Worker (`canvasWorkerPool.js`)**:
+  - Konversi hasil render Canvas berat ke WebP adaptif untuk kompresi ukuran file hingga 40-60% dan percepatan response gateway Discord.
+- [x] **[PERFORMA] Canvas Worker Memory Leak Guard & Context Recycle Loop (`canvasWorkerPool.js`)**:
+  - Daur ulang worker thread berkala setiap 500 tugas untuk stabilitas konsumsi RAM jangka panjang.
+- [x] **[DASHBOARD V2] Web Dashboard Token Refresh & Auto-Reconnection Interceptor (`auth-manager.js`)**:
+  - Auto-refresh token sesi OAuth Discord pada Web Dashboard tanpa memutus sesi input pengguna.
+- [x] **[LIVING AI] Semantic Memory Auto-Pruning & Vector De-duplication (`semanticMemoryService.js`)**:
+  - Pengelompokan dan de-duplikasi memori vektor berjarak dekat (>0.92 cosine similarity) untuk menjaga kecepatan query RAG <5ms.
 
 ---
 

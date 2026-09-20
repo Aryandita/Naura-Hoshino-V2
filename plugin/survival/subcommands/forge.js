@@ -91,6 +91,11 @@ module.exports = {
             .setLabel("Buka Meja Tempa & Rakit")
             .setStyle(ButtonStyle.Primary)
             .setEmoji("🔨"),
+          new ButtonBuilder()
+            .setCustomId("forge_salvage_all")
+            .setLabel("Bongkar Semua Alat Rusak (0%)")
+            .setStyle(ButtonStyle.Danger)
+            .setEmoji("♻️"),
         ),
       );
 
@@ -122,6 +127,28 @@ module.exports = {
         const craftSubcommand = require("./craft.js");
         collector.stop();
         return craftSubcommand.execute(interaction);
+      }
+
+      if (i.customId === "forge_salvage_all") {
+        await i.deferUpdate().catch(() => {});
+        const allRes = await DurabilityEngine.salvageAllDamagedItems(user.id);
+        let snippet = "";
+        if (allRes.ok) {
+          const matLines = allRes.materials
+            .map((m) => `• \`${m.name}\` x${m.amount}`)
+            .join("\n");
+          snippet = [
+            `♻️ **Daur Ulang Massal Berhasil!**`,
+            `Kamu membongkar **${allRes.count}** peralatan rusak menjadi:`,
+            matLines,
+            `💰 Total Hasil Kas Daur Ulang: \`+${allRes.nsfAwarded} NSF\``,
+          ].join("\n");
+        } else {
+          snippet = `⚠️ **Daur Ulang Massal:** ${allRes.message || "Tidak ada barang yang dibongkar."}`;
+        }
+        const updated = buildPayload(snippet);
+        await i.editReply(updated).catch(() => {});
+        return;
       }
 
       if (i.customId === "forge_salvage_select") {

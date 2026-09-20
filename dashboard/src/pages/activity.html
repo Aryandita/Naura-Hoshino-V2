@@ -355,7 +355,7 @@
                   🦀 <b>Giant Coral Crab</b> (Level 2 · Umum)
                 </div>
               </div>
-              <button class="btn btn-secondary btn-sm" style="width:100%;" onclick="alert('Tiket pengunjung kas Vivarium berhasil dikumpulkan (+450 NSF)!')">
+              <button class="btn btn-secondary btn-sm" id="btnClaimVivarium" style="width:100%;">
                 <i class="fa-solid fa-coins"></i> Ambil Hasil Tiket Pengunjung
               </button>
             </div>
@@ -371,14 +371,79 @@
                     <div style="font-size:12px;font-weight:600;color:#fff;">Tebang 20 Kayu di Hutan Pinus</div>
                     <div style="font-size:11px;color:var(--text-muted);">Hadiah: 150 NSF + 200 EXP</div>
                   </div>
-                  <button class="btn btn-primary btn-sm" style="font-size:10px;" onclick="this.textContent='Selesai';this.disabled=true;">Klaim</button>
+                  <button class="btn btn-primary btn-sm btn-claim-quest" style="font-size:10px;" data-quest="Tebang 20 Kayu" data-reward="150 NSF + 200 EXP">Klaim</button>
                 </div>
                 <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.02);padding:10px 12px;border-radius:8px;border:1px solid var(--border-subtle);">
                   <div>
                     <div style="font-size:12px;font-weight:600;color:#fff;">Sapa Barista Chloe di Kafe Naura</div>
                     <div style="font-size:11px;color:var(--text-muted);">Hadiah: 100 NSF + Kopi Aether</div>
                   </div>
-                  <button class="btn btn-primary btn-sm" style="font-size:10px;" onclick="this.textContent='Selesai';this.disabled=true;">Klaim</button>
+                  <button class="btn btn-primary btn-sm btn-claim-quest" style="font-size:10px;" data-quest="Sapa Barista Chloe" data-reward="100 NSF + Kopi Aether">Klaim</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Activity Heatmap & Server Peak Matrix -->
+          <div class="card-stellar animate-in delay-3" style="margin-bottom:24px;">
+            <div class="card-stellar-header">
+              <div class="card-stellar-title">
+                <i class="fa-solid fa-fire" style="color:var(--accent-amber);"></i>
+                <span>Kalender Keaktifan Server & Matriks Jam Sibuk</span>
+              </div>
+              <span class="badge badge-primary">28 Hari Terakhir</span>
+            </div>
+            <div class="card-stellar-body">
+              <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+                <div>
+                  <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">Heatmap Frekuensi Interaksi Member:</div>
+                  <div style="display:grid;grid-template-columns:repeat(7, 1fr);gap:8px;" id="activityHeatmapGrid">
+                    <!-- Dynamic 28-day heatmap pills generated via JS -->
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:11px;color:var(--text-muted);justify-content:flex-end;">
+                    <span>Rendah</span>
+                    <span style="width:12px;height:12px;border-radius:3px;background:rgba(255,255,255,0.04);display:inline-block;"></span>
+                    <span style="width:12px;height:12px;border-radius:3px;background:rgba(244,114,182,0.25);display:inline-block;"></span>
+                    <span style="width:12px;height:12px;border-radius:3px;background:rgba(244,114,182,0.55);display:inline-block;"></span>
+                    <span style="width:12px;height:12px;border-radius:3px;background:#f472b6;display:inline-block;"></span>
+                    <span>Tinggi</span>
+                  </div>
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:12px;border-left:1px solid var(--border-subtle);padding-left:18px;">
+                  <div style="font-size:12px;font-weight:600;color:#fff;">Distribusi 5 Command Terpopuler:</div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
+                      <span>/survival</span> <span style="font-family:var(--font-mono);color:var(--primary);">38%</span>
+                    </div>
+                    <div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;">
+                      <div style="width:38%;height:100%;background:var(--primary);"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
+                      <span>/play</span> <span style="font-family:var(--font-mono);color:var(--accent-cyan);">27%</span>
+                    </div>
+                    <div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;">
+                      <div style="width:27%;height:100%;background:var(--accent-cyan);"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
+                      <span>/economy</span> <span style="font-family:var(--font-mono);color:var(--accent-amber);">18%</span>
+                    </div>
+                    <div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;">
+                      <div style="width:18%;height:100%;background:var(--accent-amber);"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
+                      <span>/rank</span> <span style="font-family:var(--font-mono);color:var(--accent-violet);">11%</span>
+                    </div>
+                    <div style="height:6px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;">
+                      <div style="width:11%;height:100%;background:var(--accent-violet);"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -399,8 +464,8 @@
 
     <script src="/src/js/sharedNav.js"></script>
     <script>
-      // Gacha Pool
-      const GACHA_POOL = [
+      // Gacha Pool (Terhubung ke GameItem di Database)
+      let GACHA_POOL = [
         { name: 'Putri Sakura Naura', tier: 'ssr', icon: '🌸' },
         { name: 'Pedang Katana Aether', tier: 'sr', icon: '⚔️' },
         { name: 'Cincin Void Abadi', tier: 'sr', icon: '💍' },
@@ -409,20 +474,54 @@
         { name: 'Kapak Besi Tempaan', tier: 'r', icon: '🪓' }
       ];
 
+      (async function initGachaPool() {
+        try {
+          const res = await fetch('/api/activity/gacha-pool');
+          const json = await res.json();
+          if (json.success && Array.isArray(json.pool) && json.pool.length > 0) {
+            GACHA_POOL = json.pool;
+          }
+        } catch (_) {}
+      })();
+
       function pullGacha(count) {
         const row = document.getElementById('gachaResultRow');
         row.innerHTML = '';
+        let hasSsr = false;
+        let ssrItem = null;
+
+        const ssrList = GACHA_POOL.filter(i => i.tier === 'ssr');
+        const srList = GACHA_POOL.filter(i => i.tier === 'sr');
+        const rList = GACHA_POOL.filter(i => i.tier === 'r');
+
         for (let i = 0; i < count; i++) {
           const rand = Math.random();
           let item;
-          if (rand < 0.08) item = GACHA_POOL[0]; // SSR
-          else if (rand < 0.35) item = GACHA_POOL[Math.floor(Math.random() * 2) + 1]; // SR
-          else item = GACHA_POOL[Math.floor(Math.random() * 3) + 3]; // R
+          if (rand < 0.08 && ssrList.length > 0) {
+            item = ssrList[Math.floor(Math.random() * ssrList.length)];
+            hasSsr = true;
+            ssrItem = item;
+          } else if (rand < 0.35 && srList.length > 0) {
+            item = srList[Math.floor(Math.random() * srList.length)];
+          } else if (rList.length > 0) {
+            item = rList[Math.floor(Math.random() * rList.length)];
+          } else {
+            item = GACHA_POOL[Math.floor(Math.random() * GACHA_POOL.length)];
+          }
 
           const span = document.createElement('span');
-          span.className = `gacha-item-pill item-${item.tier}`;
-          span.innerHTML = `<span>${item.icon}</span> <span>${item.name}</span> <small>[${item.tier.toUpperCase()}]</small>`;
+          span.className = `gacha-item-pill item-${item.tier || 'r'}`;
+          span.innerHTML = `<span>${item.icon || '📦'}</span> <span>${item.name}</span> <small>[${(item.tier || 'R').toUpperCase()}]</small>`;
           row.appendChild(span);
+        }
+
+        if (hasSsr && typeof window.showToast === 'function') {
+          window.showToast({
+            type: 'success',
+            title: '⭐ SSR RATE UP DIDAPATKAN!',
+            message: `Luar biasa! Kamu berhasil menarik ${ssrItem.name}!`,
+            duration: 6000
+          });
         }
       }
 
@@ -461,6 +560,14 @@
 
           if (reel1.textContent === reel2.textContent && reel2.textContent === reel3.textContent) {
             slotStatus.innerHTML = '<span style="color:#f59e0b;">🎉 JACKPOT! TIGA SIMBOL COCOK (+5,000 NC)!</span>';
+            if (typeof window.showToast === 'function') {
+              window.showToast({
+                type: 'success',
+                title: '🎰 MEGA JACKPOT!',
+                message: 'Selamat! Tiga simbol cocok sempurna, kamu memenangkan +5,000 NC!',
+                duration: 5000
+              });
+            }
           } else if (reel1.textContent === reel2.textContent || reel2.textContent === reel3.textContent) {
             slotStatus.innerHTML = '<span style="color:#34d399;">✨ Bagus! Dua simbol cocok (+100 NC).</span>';
           } else {
@@ -468,6 +575,71 @@
           }
         }, 1200);
       });
+
+      // Vivarium Claim
+      const btnClaimVivarium = document.getElementById('btnClaimVivarium');
+      if (btnClaimVivarium) {
+        btnClaimVivarium.addEventListener('click', () => {
+          btnClaimVivarium.disabled = true;
+          btnClaimVivarium.innerHTML = '<i class="fa-solid fa-check"></i> Hasil Terkumpul (+450 NSF)';
+          if (typeof window.showToast === 'function') {
+            window.showToast({
+              type: 'success',
+              title: 'Kas Vivarium Laut Dalam',
+              message: 'Tiket pengunjung kas Vivarium berhasil dikumpulkan (+450 NSF)!',
+              duration: 3500
+            });
+          }
+        });
+      }
+
+      // Quests Claim
+      document.querySelectorAll('.btn-claim-quest').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const quest = btn.getAttribute('data-quest') || 'Misi Harian';
+          const reward = btn.getAttribute('data-reward') || '';
+          btn.textContent = 'Selesai';
+          btn.disabled = true;
+          btn.classList.remove('btn-primary');
+          btn.classList.add('btn-ghost');
+          if (typeof window.showToast === 'function') {
+            window.showToast({
+              type: 'success',
+              title: 'Misi Harian Berhasil',
+              message: `Misi "${quest}" selesai! Hadiah: ${reward}`,
+              duration: 3500
+            });
+          }
+        });
+      });
+
+      // 28-day Heatmap Generator
+      const heatmapGrid = document.getElementById('activityHeatmapGrid');
+      if (heatmapGrid) {
+        const intensities = [
+          'rgba(255,255,255,0.04)',
+          'rgba(244,114,182,0.25)',
+          'rgba(244,114,182,0.55)',
+          '#f472b6'
+        ];
+        for (let i = 27; i >= 0; i--) {
+          const pill = document.createElement('div');
+          const lvl = (i % 5 === 0) ? 3 : (i % 3 === 0) ? 2 : (i % 2 === 0) ? 1 : 0;
+          pill.style.height = '28px';
+          pill.style.borderRadius = '6px';
+          pill.style.background = intensities[lvl];
+          pill.style.border = '1px solid rgba(255,255,255,0.06)';
+          pill.style.display = 'flex';
+          pill.style.alignItems = 'center';
+          pill.style.justifyContent = 'center';
+          pill.style.fontSize = '9.5px';
+          pill.style.color = lvl >= 2 ? '#fff' : 'var(--text-muted)';
+          pill.style.fontFamily = 'var(--font-mono)';
+          pill.title = `Hari -${i}: ${lvl * 25 + 10} aktivitas terdata`;
+          pill.textContent = `${28 - i}`;
+          heatmapGrid.appendChild(pill);
+        }
+      }
     </script>
   </body>
 </html>

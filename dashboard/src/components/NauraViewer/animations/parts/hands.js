@@ -34,7 +34,7 @@ export class HandController {
         const harmonics = context.harmonics || null;
         const dur = context.duration || 3.0;
         const tNorm = context.tNorm || 0;
-        const lerpSpeed = 1.0 - Math.exp(-14.0 * delta);
+        const lerpSpeed = 1.0 - Math.exp(-9.0 * delta);
 
         // 1. Tangan Kanan
         try {
@@ -48,15 +48,17 @@ export class HandController {
                     wristOffsetZ = Math.sin(oscTime * harmonics.freq - 0.4) * harmonics.rightHandZ;
                 }
 
-                const targetX = base[0];
-                const targetY = base[1];
-                const targetZ = base[2] + wristOffsetZ;
+                const target = [
+                    base[0],
+                    base[1],
+                    base[2] + wristOffsetZ,
+                ];
 
-                this.currentRotations.rightHand[0] += (targetX - this.currentRotations.rightHand[0]) * lerpSpeed;
-                this.currentRotations.rightHand[1] += (targetY - this.currentRotations.rightHand[1]) * lerpSpeed;
-                this.currentRotations.rightHand[2] += (targetZ - this.currentRotations.rightHand[2]) * lerpSpeed;
+                slerpBone(this.bones.rightHand, this.currentRotations.rightHand, target, lerpSpeed);
 
-                slerpBone(this.bones.rightHand, base, this.currentRotations.rightHand, 1.0);
+                this.currentRotations.rightHand[0] += (target[0] - this.currentRotations.rightHand[0]) * lerpSpeed;
+                this.currentRotations.rightHand[1] += (target[1] - this.currentRotations.rightHand[1]) * lerpSpeed;
+                this.currentRotations.rightHand[2] += (target[2] - this.currentRotations.rightHand[2]) * lerpSpeed;
             }
         } catch (err) {
             console.warn("[NauraAnimation:Hands] Error updating right hand:", err.message);
@@ -66,15 +68,13 @@ export class HandController {
         try {
             if (this.bones.leftHand) {
                 const base = targetBones.leftHand || [0, 0, 0];
-                const targetX = base[0];
-                const targetY = base[1];
-                const targetZ = base[2];
+                const target = [base[0], base[1], base[2]];
 
-                this.currentRotations.leftHand[0] += (targetX - this.currentRotations.leftHand[0]) * lerpSpeed;
-                this.currentRotations.leftHand[1] += (targetY - this.currentRotations.leftHand[1]) * lerpSpeed;
-                this.currentRotations.leftHand[2] += (targetZ - this.currentRotations.leftHand[2]) * lerpSpeed;
+                slerpBone(this.bones.leftHand, this.currentRotations.leftHand, target, lerpSpeed);
 
-                slerpBone(this.bones.leftHand, base, this.currentRotations.leftHand, 1.0);
+                this.currentRotations.leftHand[0] += (target[0] - this.currentRotations.leftHand[0]) * lerpSpeed;
+                this.currentRotations.leftHand[1] += (target[1] - this.currentRotations.leftHand[1]) * lerpSpeed;
+                this.currentRotations.leftHand[2] += (target[2] - this.currentRotations.leftHand[2]) * lerpSpeed;
             }
         } catch (err) {
             console.warn("[NauraAnimation:Hands] Error updating left hand:", err.message);

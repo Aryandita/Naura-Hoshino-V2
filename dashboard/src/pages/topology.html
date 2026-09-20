@@ -645,7 +645,7 @@
 
           if (json.persistence?.relational) {
             const rel = json.persistence.relational;
-            NODE_INTEL.supabase.status = rel.status === 'connected' ? 'CONNECTED · SYNCED' : 'OFFLINE';
+            NODE_INTEL.supabase.status = (rel.status === 'connected' || rel.online || rel.status === 'ready') ? 'CONNECTED · SYNCED' : 'OFFLINE';
             NODE_INTEL.supabase.extra = `• Engine: ${rel.engine}<br>• Pool Capacity: ${rel.poolMax || 10}<br>• Pool Active: ${rel.poolUsed || 0}`;
           }
 

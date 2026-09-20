@@ -157,6 +157,9 @@ function getDbStatus() {
   return {
     dialect: sequelize.options.dialect,
     online: isDbOnline,
+    connected: isDbOnline,
+    state: isDbOnline ? "ready" : "disconnected",
+    ready: isDbOnline,
     poolMax: POOL_MAX,
     shardCount: SHARD_COUNT,
   };
@@ -395,7 +398,7 @@ const healthCheckTimer = setInterval(async () => {
       isReconnecting = false;
     }
   }
-}, 60000 * 15);
+}, 30000);
 
 // Tanpa unref(), interval ini menahan event loop tetap hidup. Akibatnya script
 // singkat seperti `npm run db:migrate` dan test tidak pernah berakhir sendiri.

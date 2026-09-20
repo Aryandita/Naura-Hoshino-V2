@@ -85,4 +85,47 @@ test("Currency V2: Durability & Wear & Tear Surcharge", async (t) => {
       "Biaya kerusakan parah (<20%) harus lebih mahal karena surcharge",
     );
   });
+
+  await t.test("salvageAllDamagedItems() mendaur ulang seluruh item dengan durabilitas 0", async () => {
+    const cacheManager = require("../../managers/cacheManager");
+    const origGetProfile = cacheManager.getUserProfile;
+    const origMutate = cacheManager.mutateUserProfileJson;
+    const origGetSurvival = cacheManager.getUserSurvival;
+    const origIncSurvival = cacheManager.incrementUserSurvival;
+
+    let savedInv = null;
+    const initialInv = [
+      { id: "pickaxe_1", name: "Beliung Rusak", durability: 0, tier: 1 },
+      { id: "axe_1", name: "Kapak Rusak", durability: 0, tier: 2 },
+      { id: "sword_fine", name: "Pedang Bagus", durability: 100, tier: 2 },
+    ];
+    cacheManager.getUserProfile = async () => ({
+      inventory: JSON.stringify(initialInv),
+    });
+    cacheManager.getUserSurvival = async () => ({
+      userId: "user_salvage_test",
+      starFragments: 500,
+    });
+    cacheManager.incrementUserSurvival = async () => true;
+    cacheManager.mutateUserProfileJson = async (uid, field, updater) => {
+      savedInv = updater(initialInv);
+      return { ok: true, value: savedInv };
+    };
+
+    try {
+      const res = await durabilityEngine.salvageAllDamagedItems("user_salvage_test");
+      assert.strictEqual(res.ok, true);
+      assert.strictEqual(res.count, 2);
+      assert.ok(res.nsfAwarded > 0);
+      assert.strictEqual(savedInv.some((it) => it.id === "sword_fine"), true);
+      assert.strictEqual(savedInv.some((it) => it.id === "pickaxe_1"), false);
+      assert.strictEqual(savedInv.some((it) => it.id === "axe_1"), false);
+      assert.strictEqual(savedInv.some((it) => it.id === "copper_ingot"), true);
+    } finally {
+      cacheManager.getUserProfile = origGetProfile;
+      cacheManager.mutateUserProfileJson = origMutate;
+      cacheManager.getUserSurvival = origGetSurvival;
+      cacheManager.incrementUserSurvival = origIncSurvival;
+    }
+  });
 });

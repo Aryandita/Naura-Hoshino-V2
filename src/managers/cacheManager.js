@@ -773,6 +773,17 @@ class CacheManager {
     const { withDistributedLock } = require("../utils/redisLockHelper");
     return withDistributedLock(lockKey, ttlMs, workFn, options);
   }
+
+  /**
+   * Eksekusi fungsi bisnis dengan perlindungan Multi-Key Distributed Mutex Lock (Anti-Deadlock).
+   * @param {string[]} lockKeys
+   * @param {number} [ttlMs=5000]
+   * @param {Function} workFn
+   */
+  async withMultiLock(lockKeys, ttlMs = 5000, workFn) {
+    const { withMultiLock } = require("../utils/redisLockHelper");
+    return withMultiLock(lockKeys, workFn, ttlMs);
+  }
 }
 
 module.exports = new CacheManager();

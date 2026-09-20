@@ -23,6 +23,8 @@ class MusicManager {
     this.uiCache = new Collection();
     this._poru = null;
     this._eventsLoaded = false;
+    this.duplicateFilterStates = new Map();
+    this.trackHistories = new Map();
   }
 
   get poru() {
@@ -190,6 +192,73 @@ class MusicManager {
       const payload = await cached.generatePayload(player.position || 0, true);
       await msg.edit(payload).catch(() => {});
     } catch (e) {}
+  }
+
+  /**
+   * Cek apakah filter deteksi lagu duplikat aktif di guild tertentu.
+   * @param {string} guildId
+   * @returns {boolean}
+   */
+  isDuplicateFilterEnabled(guildId) {
+    if (!guildId) return true;
+    if (this.duplicateFilterStates.has(guildId)) {
+      return this.duplicateFilterStates.get(guildId);
+    }
+    return true; // Default aktif demi menjaga keragaman musik
+  }
+
+  /**
+   * Atur status filter deteksi lagu duplikat untuk guild tertentu.
+   * @param {string} guildId
+   * @param {boolean} enabled
+   */
+  setDuplicateFilterEnabled(guildId, enabled) {
+    if (!guildId) return;
+    this.duplicateFilterStates.set(guildId, Boolean(enabled));
+  }
+
+  /**
+   * Catat lagu yang baru saja dimainkan ke dalam riwayat 10 lagu terakhir guild.
+   * @param {string} guildId
+   * @param {object} track
+   */
+  recordPlayedTrack(guildId, track) {
+    if (!guildId || !track || !track.info) return;
+    const history = this.trackHistories.get(guildId) || [];
+    const info = track.info;
+    history.unshift({
+      title: String(info.title || "").toLowerCase().trim(),
+      author: String(info.author || "").toLowerCase().trim(),
+      uri: String(info.uri || ""),
+      identifier: String(info.identifier || ""),
+      timestamp: Date.now(),
+    });
+    if (history.length > 10) history.pop();
+    this.trackHistories.set(guildId, history);
+  }
+
+  /**
+   * Cek apakah lagu ini pernah diputar dalam 5 lagu terakhir di guild ini.
+   * @param {string} guildId
+   * @param {object} track
+   * @returns {boolean}
+   */
+  isRecentDuplicate(guildId, track) {
+    if (!guildId || !track || !track.info) return false;
+    const history = this.trackHistories.get(guildId);
+    if (!history || history.length === 0) return false;
+
+    const recent = history.slice(0, 5);
+    const newTitle = String(track.info.title || "").toLowerCase().trim();
+    const newUri = String(track.info.uri || "");
+    const newId = String(track.info.identifier || "");
+
+    return recent.some((past) => {
+      if (newId && past.identifier && newId === past.identifier) return true;
+      if (newUri && past.uri && newUri === past.uri) return true;
+      if (newTitle && past.title && newTitle === past.title) return true;
+      return false;
+    });
   }
 }
 

@@ -465,6 +465,48 @@ class TradeEngine {
         .catch(() => {});
     } catch (_) {}
   }
+
+  /**
+   * Mengambil daftar karavan aktif yang membuka kontrak pengawalan (Mercenary Escort Board)
+   * @returns {Promise<Array<object>>}
+   */
+  async getEscortBoard() {
+    try {
+      const TradeCaravan = require("../models/TradeCaravan");
+      const CaravanEscort = require("../models/CaravanEscort");
+      const caravans = await TradeCaravan.findAll({
+        where: { status: "TRAVELING" },
+        limit: 10,
+        order: [["createdAt", "DESC"]],
+      });
+
+      const board = [];
+      for (const crv of caravans) {
+        const escortCount = await CaravanEscort.count({
+          where: { caravanId: crv.id },
+        }).catch(() => 0);
+
+        board.push({
+          caravanId: crv.id,
+          ownerName: crv.ownerDisplayName || "Pedagang Galaksi",
+          routeId: crv.routeId,
+          commodityId: crv.commodityId,
+          potentialProfit: crv.potentialProfit,
+          escortReward: Math.round((crv.potentialProfit || 1000) * 0.15),
+          escortCount,
+          maxEscorts: 4,
+          finishTime: crv.finishTime,
+        });
+      }
+      return board;
+    } catch (err) {
+      logger.error(
+        "[TradeEngine] Gagal mengambil papan kontrak pengawalan:",
+        err.message,
+      );
+      return [];
+    }
+  }
 }
 
 module.exports = new TradeEngine();

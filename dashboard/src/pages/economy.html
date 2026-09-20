@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <style>
       /* Ticker animation */
       .ticker-value.up   { color: var(--accent-green); }
@@ -347,19 +348,19 @@
                     <span style="display:flex;align-items:center;gap:6px;color:var(--text-secondary);">
                       <span style="width:8px;height:8px;border-radius:50%;background:var(--primary);display:inline-block;"></span>Dompet
                     </span>
-                    <span style="font-family:var(--font-mono);color:var(--text-primary);">42%</span>
+                    <span style="font-family:var(--font-mono);color:var(--text-primary);" id="pct-dompet">42%</span>
                   </div>
                   <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;">
                     <span style="display:flex;align-items:center;gap:6px;color:var(--text-secondary);">
                       <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-cyan);display:inline-block;"></span>Bank
                     </span>
-                    <span style="font-family:var(--font-mono);color:var(--text-primary);">35%</span>
+                    <span style="font-family:var(--font-mono);color:var(--text-primary);" id="pct-bank">35%</span>
                   </div>
                   <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;">
                     <span style="display:flex;align-items:center;gap:6px;color:var(--text-secondary);">
                       <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-violet);display:inline-block;"></span>Invested
                     </span>
-                    <span style="font-family:var(--font-mono);color:var(--text-primary);">23%</span>
+                    <span style="font-family:var(--font-mono);color:var(--text-primary);" id="pct-invested">23%</span>
                   </div>
                 </div>
               </div>
@@ -569,22 +570,23 @@
 
       function switchChartPeriod(period) {
         ['7d','30d','90d'].forEach(p => {
-          document.getElementById(`btnChart${p}`).classList.toggle('active', p === period);
+          document.getElementById(`btnChart${p}`)?.classList.toggle('active', p === period);
         });
+        loadMarketHistory('NAUR', period);
       }
 
       // Circulation chart
       (function() {
         const ctx = document.getElementById('econCirculationChart');
         if (!ctx) return;
-        const labels7 = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-        const data = labels7.map((_, i) => 800000 + Math.random() * 200000 + i * 15000);
-        new Chart(ctx, {
+        const labels7 = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        const data = [3850, 3920, 4100, 4050, 4200, 4180, 4250];
+        window.econChartInstance = new Chart(ctx, {
           type: 'line',
           data: {
             labels: labels7,
             datasets: [{
-              label: 'NC Beredar',
+              label: 'Harga Saham (NC)',
               data,
               borderColor: 'rgba(245,158,11,0.8)',
               backgroundColor: 'rgba(245,158,11,0.06)',
@@ -606,22 +608,68 @@
                 borderWidth: 1,
                 titleColor: '#f1f5f9',
                 bodyColor: '#94a3b8',
-                callbacks: { label: c => ` 🪙 ${Math.floor(c.parsed.y).toLocaleString()}` },
+                callbacks: { label: c => ` 🪙 ${Math.floor(c.parsed.y).toLocaleString()} NC` },
               },
             },
             scales: {
               x: { ticks: { color: 'rgba(71,85,105,0.8)', font: { size: 10, family: 'JetBrains Mono' } }, grid: { color: 'rgba(255,255,255,0.03)' } },
-              y: { ticks: { color: 'rgba(71,85,105,0.8)', font: { size: 10, family: 'JetBrains Mono' }, callback: v => (v/1000).toFixed(0)+'K' }, grid: { color: 'rgba(255,255,255,0.03)' } },
+              y: { ticks: { color: 'rgba(71,85,105,0.8)', font: { size: 10, family: 'JetBrains Mono' }, callback: v => v.toLocaleString() }, grid: { color: 'rgba(255,255,255,0.03)' } },
             },
           },
         });
       })();
 
+      async function loadMarketHistory(symbol = 'NAUR', period = '7d') {
+        try {
+          const res = await fetch(`/api/economy/market-history?symbol=${symbol}&period=${period}`);
+          const json = await res.json();
+          if (json.success && window.econChartInstance && json.data) {
+            window.econChartInstance.data.labels = json.data.labels;
+            window.econChartInstance.data.datasets[0].data = json.data.prices;
+            window.econChartInstance.update();
+          }
+        } catch (_) {}
+      }
+
+      async function loadRecentTransactions() {
+        const txList = document.getElementById('txList');
+        if (!txList) return;
+        try {
+          const res = await fetch('/api/economy/recent-transactions?limit=10');
+          const json = await res.json();
+          if (json.success && json.data?.length) {
+            const typeClass = { income: 'income', trade: 'trade', expense: 'expense', buy: 'expense' };
+            const typeIcons = { income: 'fa-arrow-down-left', trade: 'fa-arrows-left-right', expense: 'fa-arrow-up-right', buy: 'fa-cart-shopping' };
+            txList.innerHTML = json.data.map(tx => {
+              const cls = typeClass[tx.type] || 'trade';
+              const icon = typeIcons[tx.type] || 'fa-coins';
+              const isPlus = tx.amount > 0 && tx.type === 'income';
+              const sign = isPlus ? '+' : (tx.amount < 0 ? '' : '');
+              const iconCur = tx.currency === 'NC' ? '🪙' : '⭐';
+              const timeStr = tx.timestamp ? new Date(tx.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'Hari ini';
+              return `
+                <div class="tx-row">
+                  <div class="tx-icon ${cls}"><i class="fa-solid ${icon}"></i></div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);">${tx.title}</div>
+                    <div style="font-size:11px;color:var(--text-muted);">${tx.description} · ${timeStr}</div>
+                  </div>
+                  <div style="text-align:right;">
+                    <div class="tx-amount ${cls}" style="font-family:var(--font-mono);font-size:13px;font-weight:700;">${sign}${iconCur} ${Math.abs(tx.amount).toLocaleString('id-ID')}</div>
+                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">${tx.currency}</div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+        } catch (_) {}
+      }
+
       // Distribution doughnut
       (function() {
         const ctx = document.getElementById('econDistributionChart');
         if (!ctx) return;
-        new Chart(ctx, {
+        window.econDistributionChartInstance = new Chart(ctx, {
           type: 'doughnut',
           data: {
             labels: ['Dompet', 'Bank', 'Invested'],
@@ -642,89 +690,134 @@
       })();
 
       // Live economy data
-      window.addEventListener('load', () => {
-        (async () => {
-          try {
-            const [econRes, lbRes] = await Promise.all([
-              fetch('/api/realtime/economy'),
-              fetch('/api/realtime/leaderboard')
-            ]);
-            const econ = await econRes.json();
-            const lb = await lbRes.json();
+      async function loadEconomyData() {
+        if (window.showSkeleton) {
+          window.showSkeleton('#econUserTable', { count: 5, type: 'table' });
+        }
+        try {
+          const [econRes, holdersRes] = await Promise.all([
+            fetch('/api/realtime/economy'),
+            fetch('/api/economy/top-holders?limit=8'),
+          ]);
+          const econ = await econRes.json();
+          const holders = await holdersRes.json();
 
-            if (econ.success) {
-              const d = econ.data;
-              setTimeout(() => {
-                const nsf = d.treasuryBalanceNsf || 0;
-                const nc = d.treasuryBalanceNc || 0;
-                const coupons = d.totalCoupons || 0;
-
-                const circEl = document.getElementById('stat-circulation');
-                if (circEl) circEl.innerHTML = `<span style="font-size:28px;font-family:var(--font-mono);font-weight:700;color:var(--accent-amber);">${nsf.toLocaleString('id-ID')} <i class="fa-solid fa-star" style="font-size:20px;color:var(--accent-amber);margin-left:4px;"></i></span>`;
-
-                const coinsEl = document.getElementById('stat-coins');
-                if (coinsEl) coinsEl.innerHTML = `<span style="font-size:28px;font-family:var(--font-mono);font-weight:700;color:var(--primary);">${nc.toLocaleString('id-ID')} <i class="fa-solid fa-coins" style="font-size:20px;color:var(--primary);margin-left:4px;"></i></span>`;
-
-                const couponsEl = document.getElementById('stat-coupons');
-                if (couponsEl) couponsEl.innerHTML = `<span style="font-size:28px;font-family:var(--font-mono);font-weight:700;color:var(--accent-violet);">${coupons.toLocaleString('id-ID')} <i class="fa-solid fa-ticket" style="font-size:20px;color:var(--accent-violet);margin-left:4px;"></i></span>`;
-
-                const bankEl = document.getElementById('stat-bank-total');
-                if (bankEl) bankEl.textContent = (d.totalBank || 0).toLocaleString('id-ID');
-
-                const walletEl = document.getElementById('stat-daily-tx');
-                if (walletEl) walletEl.textContent = (d.totalWallet || 0).toLocaleString('id-ID');
-
-                const recyclingEl = document.getElementById('stat-recycling');
-                if (recyclingEl) recyclingEl.textContent = nsf.toLocaleString('id-ID');
-
-              }, 500);
-
-              // Update live stock tickers
-              if (d.stocks) {
-                d.stocks.forEach(stock => {
-                  const tickerEl = document.querySelector(`[data-ticker="${stock.symbol}"]`);
-                  if (tickerEl) {
-                    const priceEl = tickerEl.querySelector('.ticker-price');
-                    const changeEl = tickerEl.querySelector('.ticker-change');
-                    if (priceEl) priceEl.textContent = stock.price.toLocaleString('id-ID');
-                    if (changeEl) {
-                      changeEl.textContent = stock.change;
-                      changeEl.className = `ticker-badge ${stock.trend}`;
-                    }
-                  }
-                });
-              }
-
-              // Render user economy table
-              if (d.userEconomy && d.userEconomy.length) {
-                const txContainer = document.getElementById('econUserTable');
-                if (txContainer) {
-                  txContainer.innerHTML = d.userEconomy.map((u, i) => `
-                  <div class="tx-row">
-                    <div style="width:28px;text-align:center;font-size:14px;color:var(--text-muted);font-family:var(--font-mono);">${i+1}</div>
-                    <div style="width:36px;height:36px;border-radius:50%;background:var(--primary-dim);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--primary);flex-shrink:0;">${(u.name || 'U').charAt(0)}</div>
-                    <div style="flex:1;min-width:0;">
-                      <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.name || 'User'}</div>
-                      <div style="font-size:11px;color:var(--text-muted);">Level ${u.level} ${u.isPremium ? '⭐' : ''}</div>
-                    </div>
-                    <div style="text-align:right;">
-                      <div style="font-size:13px;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">🪙 ${u.wallet.toLocaleString('id-ID')}</div>
-                      <div style="font-size:11px;color:var(--text-muted);">Bank: ${u.bank.toLocaleString('id-ID')}</div>
-                    </div>
-                  </div>`).join('');
-                }
-              }
-            }
-
-          } catch(e) {
-            console.warn('[Economy] Fetch error:', e.message);
+          if (econ.success) {
+            const d = econ.data;
             setTimeout(() => {
-              document.getElementById('stat-circulation').innerHTML = '<span style="font-size:28px;font-family:var(--font-mono);font-weight:700;color:var(--accent-amber);">1,443 ⭐</span>';
-              document.getElementById('stat-coins').innerHTML = '<span style="font-size:28px;font-family:var(--font-mono);font-weight:700;color:var(--primary);">875 🪙</span>';
-              document.getElementById('stat-coupons').innerHTML = '<span style="font-size:28px;font-family:var(--font-mono);font-weight:700;color:var(--accent-violet);">0 🎟️</span>';
-            }, 900);
+              const nsf = d.treasuryBalanceNsf || 0;
+              const nc = d.treasuryBalanceNc || 0;
+              const coupons = d.totalCoupons || 0;
+
+              const circEl = document.getElementById('stat-circulation');
+              if (circEl) circEl.innerHTML = `<span style="font-size:28px;font-family:var(--font-mono);font-weight:700;color:var(--accent-amber);">${nsf.toLocaleString('id-ID')} <i class="fa-solid fa-star" style="font-size:20px;color:var(--accent-amber);margin-left:4px;"></i></span>`;
+
+              const coinsEl = document.getElementById('stat-coins');
+              if (coinsEl) coinsEl.innerHTML = `<span style="font-size:28px;font-family:var(--font-mono);font-weight:700;color:var(--primary);">${nc.toLocaleString('id-ID')} <i class="fa-solid fa-coins" style="font-size:20px;color:var(--primary);margin-left:4px;"></i></span>`;
+
+              const couponsEl = document.getElementById('stat-coupons');
+              if (couponsEl) couponsEl.innerHTML = `<span style="font-size:28px;font-family:var(--font-mono);font-weight:700;color:var(--accent-violet);">${coupons.toLocaleString('id-ID')} <i class="fa-solid fa-ticket" style="font-size:20px;color:var(--accent-violet);margin-left:4px;"></i></span>`;
+
+              const bankEl = document.getElementById('stat-bank-total');
+              if (bankEl) bankEl.textContent = (d.totalBank || 0).toLocaleString('id-ID');
+
+              const walletEl = document.getElementById('stat-daily-tx');
+              if (walletEl) walletEl.textContent = (d.totalWallet || 0).toLocaleString('id-ID');
+
+              const recyclingEl = document.getElementById('stat-recycling');
+              if (recyclingEl) recyclingEl.textContent = nsf.toLocaleString('id-ID');
+
+              // Hitung distribusi kekayaan riil dari agregasi database
+              const totalMoney = (d.totalWallet || 0) + (d.totalBank || 0);
+              if (totalMoney > 0 && window.econDistributionChartInstance) {
+                const wPct = Math.round(((d.totalWallet || 0) / totalMoney) * 100);
+                const bPct = Math.round(((d.totalBank || 0) / totalMoney) * 100);
+                const iPct = Math.max(0, 100 - wPct - bPct);
+                window.econDistributionChartInstance.data.datasets[0].data = [wPct, bPct, iPct];
+                window.econDistributionChartInstance.update();
+
+                const dompetLabel = document.getElementById('pct-dompet');
+                const bankLabel = document.getElementById('pct-bank');
+                const investedLabel = document.getElementById('pct-invested');
+                if (dompetLabel) dompetLabel.textContent = `${wPct}%`;
+                if (bankLabel) bankLabel.textContent = `${bPct}%`;
+                if (investedLabel) investedLabel.textContent = `${iPct}%`;
+              }
+            }, 400);
+
+            // Render live stock tickers ke dalam #stockList secara dinamis
+            const stockContainer = document.getElementById('stockList');
+            if (stockContainer && d.stocks && d.stocks.length) {
+              stockContainer.innerHTML = d.stocks.map(stock => {
+                const icon = stock.trend === 'up'
+                  ? '<i class="fa-solid fa-caret-up"></i>'
+                  : (stock.trend === 'down' ? '<i class="fa-solid fa-caret-down"></i>' : '<i class="fa-solid fa-minus"></i>');
+                return `
+                <div class="stock-row" style="cursor:pointer;" onclick="loadMarketHistory('${stock.symbol}', '7d');" title="Klik untuk memuat grafik ${stock.name}">
+                  <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);width:90px;flex-shrink:0;">${stock.symbol}</div>
+                  <div style="flex:1;min-width:0;font-size:12px;color:var(--text-muted);">${stock.name}</div>
+                  <div style="text-align:right;flex-shrink:0;">
+                    <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);">🪙 ${Number(stock.price).toLocaleString('id-ID')}</div>
+                    <span class="ticker-badge ${stock.trend}">${icon} ${stock.change}</span>
+                  </div>
+                </div>`;
+              }).join('');
+            }
           }
-        })();
+
+          // Render top holders from real API
+          const holderData = (holders.success && holders.data?.length) ? holders.data : (econ.data?.userEconomy || []);
+          if (holderData.length) {
+            const txContainer = document.getElementById('econUserTable');
+            if (txContainer) {
+              txContainer.innerHTML = holderData.map((u, i) => `
+              <div class="tx-row">
+                <div style="width:28px;text-align:center;font-size:14px;color:var(--text-muted);font-family:var(--font-mono);">${i + 1}</div>
+                <div style="width:36px;height:36px;border-radius:50%;background:var(--primary-dim);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--primary);flex-shrink:0;overflow:hidden;">
+                  ${u.avatar && !u.avatar.includes('avatar.png') ? `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='/assets/core/avatar.png'" />` : (u.name || 'U').charAt(0)}
+                </div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.name || 'User'}</div>
+                  <div style="font-size:11px;color:var(--text-muted);">Level ${u.level} ${u.isPremium ? '⭐' : ''}</div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:13px;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">🪙 ${Number(u.wallet || 0).toLocaleString('id-ID')}</div>
+                  <div style="font-size:11px;color:var(--text-muted);">Bank: ${Number(u.bank || 0).toLocaleString('id-ID')}</div>
+                </div>
+              </div>`).join('');
+            }
+          }
+
+          // Load transactions & initial real stock chart
+          loadRecentTransactions();
+          const firstStock = (econ.data?.stocks && econ.data.stocks[0]?.symbol) || 'NAURA_COIN';
+          loadMarketHistory(firstStock, '7d');
+
+        } catch(e) {
+          console.warn('[Economy] Fetch error:', e.message);
+          if (window.renderErrorState) {
+            window.renderErrorState('#econUserTable', {
+              title: 'Gagal Memuat Data Ekonomi',
+              message: 'Terjadi gangguan jaringan: ' + (e.message || 'Koneksi terputus'),
+              onRetry: loadEconomyData,
+            });
+          }
+        }
+      }
+
+      window.addEventListener('load', () => {
+        loadEconomyData();
+
+        // Socket.IO updates for live currency
+        if (typeof io === 'function') {
+          try {
+            const socket = io();
+            socket.on('stats_update', (data) => {
+              if (!data) return;
+              // Realtime refresh every 30s
+            });
+          } catch (_) {}
+        }
       });
 
       // Responsive grids

@@ -59,6 +59,7 @@ function addLifeGroup(builder) {
                 { name: "Beri Makan", value: "feed" },
                 { name: "🏡 Kunjungi Pet Habitat", value: "habitat" },
                 { name: "⚡ Cosmic Ascension Fusion", value: "fuse" },
+                { name: "🧬 Perkawinan Silang (Breed)", value: "breed" },
               ),
           )
           .addStringOption((opt) =>
@@ -71,8 +72,25 @@ function addLifeGroup(builder) {
           .addIntegerOption((opt) =>
             opt
               .setName("target_pet_id")
-              .setDescription("ID Pet bahan untuk Cosmic Fusion")
+              .setDescription("ID Pet bahan untuk Cosmic Fusion / Pasangan Breed")
               .setRequired(false),
+          ),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("family")
+          .setDescription("Asuh anak dan kelola magang keluarga")
+          .addStringOption((opt) =>
+            opt
+              .setName("aksi")
+              .setDescription("Aksi pengasuhan")
+              .setRequired(false)
+              .addChoices(
+                { name: "Lihat Status Anak", value: "status" },
+                { name: "Beri Makan (Feed)", value: "feed" },
+                { name: "Ajari & Bimbing (Teach)", value: "teach" },
+                { name: "Bakat Magang Ibu (Apprentice)", value: "apprentice" },
+              ),
           ),
       )
       .addSubcommand((sub) =>

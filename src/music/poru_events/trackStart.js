@@ -133,6 +133,11 @@ module.exports = {
           recommendedTracks,
         );
 
+        // Catat riwayat lagu untuk filter anti-duplikasi
+        if (typeof manager.recordPlayedTrack === "function") {
+          manager.recordPlayedTrack(player.guildId, activeTrack);
+        }
+
         // 🎙️ Jalankan pengumuman AI DJ (non-blocking)
         aiDjManager
           .handleTrackStart(manager, player, activeTrack)

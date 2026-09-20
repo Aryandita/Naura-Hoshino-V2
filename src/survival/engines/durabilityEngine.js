@@ -151,6 +151,126 @@ class DurabilityEngine {
       nsfAwarded: scrapNsf,
     };
   }
+
+  /**
+   * Mendaur ulang (salvage massal) seluruh perlengkapan rusak (durabilitas 0) di inventaris pemain secara atomik
+   * @param {string} userId
+   * @returns {Promise<object>}
+   */
+  static async salvageAllDamagedItems(userId) {
+    if (!userId) return { ok: false, reason: "INVALID_PARAMS" };
+
+    const { safeParseInventory, addOrStackItem } = require("./inventoryHelper");
+
+    let salvagedItems = [];
+    let totalNsf = 0;
+    let gatheredMaterials = [];
+
+    const mutateRes = await cacheManager.mutateUserProfileJson(
+      userId,
+      "inventory",
+      (raw) => {
+        let inv = safeParseInventory(raw);
+        const damagedIndices = [];
+        for (let i = 0; i < inv.length; i++) {
+          const it = inv[i];
+          if (it && it.durability !== undefined && Number(it.durability) <= 0) {
+            damagedIndices.push(i);
+          }
+        }
+
+        if (damagedIndices.length === 0) {
+          return inv;
+        }
+
+        salvagedItems = [];
+        totalNsf = 0;
+        const materialMap = new Map();
+
+        for (let i = damagedIndices.length - 1; i >= 0; i--) {
+          const idx = damagedIndices[i];
+          const item = inv[idx];
+          inv.splice(idx, 1);
+          salvagedItems.push(item);
+
+          const idStr = String(item.id || item.name || "").toLowerCase();
+          let mainMatId = "copper_ingot";
+          let mainMatName = "Batangan Tembaga";
+          let mainMatAmount = 1;
+
+          if (
+            item.tier >= 4 ||
+            idStr.includes("diamond") ||
+            idStr.includes("mythic") ||
+            idStr.includes("celestial")
+          ) {
+            mainMatId = "steel_ingot";
+            mainMatName = "Batangan Baja Tempa";
+            mainMatAmount = 2;
+          } else if (
+            item.tier >= 2 ||
+            idStr.includes("iron") ||
+            idStr.includes("steel")
+          ) {
+            mainMatId = "iron_ingot";
+            mainMatName = "Batangan Besi";
+            mainMatAmount = 1;
+          }
+
+          materialMap.set(mainMatId, {
+            id: mainMatId,
+            name: mainMatName,
+            amount: (materialMap.get(mainMatId)?.amount || 0) + mainMatAmount,
+          });
+
+          materialMap.set("herb", {
+            id: "herb",
+            name: "Serbuk Kristal Kosmik",
+            amount: (materialMap.get("herb")?.amount || 0) + 1,
+          });
+
+          totalNsf += Math.max(25, Math.floor(Number(item.price || 200) * 0.25));
+        }
+
+        gatheredMaterials = Array.from(materialMap.values());
+        for (const mat of gatheredMaterials) {
+          inv = addOrStackItem(inv, mat);
+        }
+
+        return inv;
+      },
+    );
+
+    if (!mutateRes || !mutateRes.ok) {
+      return { ok: false, reason: mutateRes?.reason || "MUTATION_FAILED" };
+    }
+
+    if (salvagedItems.length === 0) {
+      return {
+        ok: false,
+        reason: "NO_DAMAGED_ITEMS",
+        message: "Tidak ada perlengkapan rusak (durabilitas 0%) di dalam tasmu.",
+      };
+    }
+
+    if (totalNsf > 0) {
+      await cacheManager
+        .incrementUserSurvival(userId, { starFragments: totalNsf })
+        .catch(() => {});
+    }
+
+    logger.info(
+      `[DurabilityEngine] User ${userId} mendaur ulang massal ${salvagedItems.length} alat rusak (+${totalNsf} NSF)`,
+    );
+
+    return {
+      ok: true,
+      count: salvagedItems.length,
+      salvagedItems,
+      materials: gatheredMaterials,
+      nsfAwarded: totalNsf,
+    };
+  }
 }
 
 module.exports = DurabilityEngine;

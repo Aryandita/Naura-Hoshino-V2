@@ -2,7 +2,11 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { tools, dispatchFunction } = require("./functionDispatcher");
+const {
+  tools,
+  dispatchFunction,
+  validateFunctionArgs,
+} = require("./functionDispatcher");
 const cacheManager = require("../managers/cacheManager");
 const redisManager = require("../managers/redisManager");
 const UserReminder = require("../models/UserReminder");
@@ -184,4 +188,20 @@ test("functionDispatcher - dispatch give_daily", async () => {
   cacheManager.getUserProfile = originalGetProfile;
   redisManager.getCache = originalGetCache;
   redisManager.setCache = originalSetCache;
+});
+
+test("functionDispatcher - strict JSON schema validation", () => {
+  const missingRequired = validateFunctionArgs("create_reminder", {});
+  assert.equal(missingRequired.valid, false);
+  assert.ok(missingRequired.error.includes("Parameter wajib"));
+
+  const validArgs = validateFunctionArgs("create_reminder", {
+    duration: "10m",
+    message: "Meeting tim",
+  });
+  assert.equal(validArgs.valid, true);
+  assert.equal(validArgs.sanitizedArgs.duration, "10m");
+
+  const invalidFunc = validateFunctionArgs("invalid_function_call", {});
+  assert.equal(invalidFunc.valid, false);
 });

@@ -711,12 +711,10 @@
                       </div>
                       <div class="settings-item-right">
                         <select class="select-input" id="selectTheme">
-                          <option value="none">Solid Dark</option>
-                          <option value="gradient">Nebula Gradient</option>
-                          <option value="sakura">Sakura Bloom</option>
-                          <option value="cyber">Cyber Grid</option>
+                          <option value="midnight">Midnight Stellar (Bawaan)</option>
+                          <option value="sakura">Sakura Blossom Pink</option>
+                          <option value="oled">OLED Pitch Black</option>
                         </select>
-                        <button class="btn btn-ghost btn-sm"><i class="fa-solid fa-upload"></i></button>
                       </div>
                     </div>
 
@@ -1046,6 +1044,23 @@
       if (rangeBgmEl) {
         rangeBgmEl.addEventListener('input', function() {
           document.getElementById('bgmVolLabel').textContent = this.value + '%';
+        });
+      }
+
+      const selectTheme = document.getElementById('selectTheme');
+      if (selectTheme) {
+        selectTheme.value = localStorage.getItem('naura_theme') || 'midnight';
+        selectTheme.addEventListener('change', () => {
+          if (typeof window.setDashboardTheme === 'function') {
+            window.setDashboardTheme(selectTheme.value);
+            if (typeof window.showToast === 'function') {
+              window.showToast({
+                type: 'info',
+                title: 'Tema Dashboard',
+                message: `Tema dialihkan ke ${selectTheme.options[selectTheme.selectedIndex].text}`
+              });
+            }
+          }
         });
       }
 

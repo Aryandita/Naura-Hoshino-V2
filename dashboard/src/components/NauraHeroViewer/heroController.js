@@ -25,6 +25,7 @@ export function initHeroViewer(targetCanvas = null, customOptions = {}) {
     const errorBox = document.getElementById('naura3d-error');
     const statusText = document.getElementById('naura3d-status-text');
     const formatBadge = document.getElementById('naura3d-format-badge');
+    const buttonModelNew = document.getElementById('btn-model-new');
     const buttonModelGlb = document.getElementById('btn-model-glb');
     const buttonModelVrm = document.getElementById('btn-model-vrm');
     const buttonHalo = document.getElementById('naura3d-btn-halo');
@@ -32,7 +33,7 @@ export function initHeroViewer(targetCanvas = null, customOptions = {}) {
     const buttonSnapshot = document.getElementById('naura3d-btn-snapshot');
     const animationButtons = document.querySelectorAll('.naura3d-anim-btn');
 
-    let currentActiveModel = '/models/naura.vrm';
+    let currentActiveModel = '/models/naura NEW.vrm';
 
     const viewerInstance = new NauraHero3DViewer(canvasElement, {
         modelPath: currentActiveModel,
@@ -56,8 +57,11 @@ export function initHeroViewer(targetCanvas = null, customOptions = {}) {
                 statusText.textContent = '🌸 Idle';
             }
             if (formatBadge) {
-                const isVrm = currentActiveModel.endsWith('.vrm');
-                formatBadge.textContent = isVrm ? 'VRM' : 'GLB';
+                if (currentActiveModel.includes('NEW')) {
+                    formatBadge.textContent = currentActiveModel.endsWith('.vrm') ? 'NEW VRM' : 'NEW GLB';
+                } else {
+                    formatBadge.textContent = currentActiveModel.endsWith('.vrm') ? 'VRM' : 'GLB';
+                }
             }
             if (wrapperElement) {
                 wrapperElement.style.borderColor = 'rgba(244, 114, 182, 0.35)';
@@ -80,20 +84,30 @@ export function initHeroViewer(targetCanvas = null, customOptions = {}) {
         window.__heroViewer = viewerInstance;
     }
 
-    // --- 1. Binding Pergantian Model (GLB vs VRM) ---
-    const updateModelButtonsState = (isVrmActive) => {
-        if (buttonModelGlb) {
-            buttonModelGlb.style.background = isVrmActive ? 'var(--bg-elevated)' : 'var(--primary-dim)';
-            buttonModelGlb.style.color = isVrmActive ? 'var(--text-muted)' : 'var(--primary)';
-            buttonModelGlb.style.borderColor = isVrmActive ? 'var(--border-subtle)' : 'var(--border-primary)';
-        }
-        if (buttonModelVrm) {
-            buttonModelVrm.style.background = isVrmActive ? 'var(--primary-dim)' : 'var(--bg-elevated)';
-            buttonModelVrm.style.color = isVrmActive ? 'var(--primary)' : 'var(--text-muted)';
-            buttonModelVrm.style.borderColor = isVrmActive ? 'var(--border-primary)' : 'var(--border-subtle)';
-        }
+    // --- 1. Binding Pergantian Model (NEW vs VRM vs GLB) ---
+    const updateModelButtonsState = (activeModelPath) => {
+        const isNewActive = activeModelPath.includes('NEW.vrm');
+        const isVrmOldActive = !activeModelPath.includes('NEW') && activeModelPath.endsWith('.vrm');
+        const isGlbActive = activeModelPath.endsWith('.glb');
+
+        const setBtnStyle = (btn, isActive) => {
+            if (!btn) return;
+            btn.style.background = isActive ? 'var(--primary-dim)' : 'var(--bg-elevated)';
+            btn.style.color = isActive ? 'var(--primary)' : 'var(--text-muted)';
+            btn.style.borderColor = isActive ? 'var(--border-primary)' : 'var(--border-subtle)';
+            btn.style.fontWeight = isActive ? '700' : '600';
+        };
+
+        setBtnStyle(buttonModelNew, isNewActive);
+        setBtnStyle(buttonModelVrm, isVrmOldActive);
+        setBtnStyle(buttonModelGlb, isGlbActive);
+
         if (formatBadge) {
-            formatBadge.textContent = isVrmActive ? 'VRM' : 'GLB';
+            if (activeModelPath.includes('NEW')) {
+                formatBadge.textContent = activeModelPath.endsWith('.vrm') ? 'NEW VRM' : 'NEW GLB';
+            } else {
+                formatBadge.textContent = activeModelPath.endsWith('.vrm') ? 'VRM' : 'GLB';
+            }
         }
     };
 
@@ -101,24 +115,30 @@ export function initHeroViewer(targetCanvas = null, customOptions = {}) {
         if (!modelPath || modelPath === currentActiveModel) return;
 
         currentActiveModel = modelPath;
-        const isVrm = modelPath.endsWith('.vrm');
-        updateModelButtonsState(isVrm);
+        updateModelButtonsState(modelPath);
 
         if (loadingBox) {
             loadingBox.style.display = 'flex';
             loadingBox.style.opacity = '1';
         }
         if (loadingText) {
-            loadingText.textContent = `Memuat ${isVrm ? 'VRM Avatar' : 'GLB Model'}...`;
+            loadingText.textContent = `Memuat Avatar 3D...`;
         }
 
         await viewerInstance.switchModel(modelPath);
     };
 
+    if (buttonModelNew) {
+        buttonModelNew.addEventListener('click', (event) => {
+            event.stopPropagation();
+            handleModelSwitch(buttonModelNew.dataset.model || '/models/naura NEW.vrm');
+        });
+    }
+
     if (buttonModelGlb) {
         buttonModelGlb.addEventListener('click', (event) => {
             event.stopPropagation();
-            handleModelSwitch(buttonModelGlb.dataset.model || '/models/naura.glb');
+            handleModelSwitch(buttonModelGlb.dataset.model || '/models/naura NEW.glb');
         });
     }
 
@@ -147,10 +167,22 @@ export function initHeroViewer(targetCanvas = null, customOptions = {}) {
             button.style.background = 'var(--primary-dim)';
             button.style.color = 'var(--primary)';
             button.style.borderColor = 'var(--border-primary)';
-            button.style.fontWeight = '700';
+            const isIdleAction = animationName.toLowerCase() === 'idle';
 
             viewerInstance.playAnimation(animationName, {
-                loop: animationName === 'Idle',
+                loop: isIdleAction,
+                onFinish: () => {
+                    if (statusText) {
+                        statusText.textContent = '🌸 Idle';
+                    }
+                    animationButtons.forEach((btn) => {
+                        const isIdleBtn = (btn.dataset.anim || '').toLowerCase() === 'idle';
+                        btn.style.background = isIdleBtn ? 'var(--primary-dim)' : 'transparent';
+                        btn.style.color = isIdleBtn ? 'var(--primary)' : 'var(--text-muted)';
+                        btn.style.borderColor = isIdleBtn ? 'var(--border-primary)' : 'var(--border-subtle)';
+                        btn.style.fontWeight = isIdleBtn ? '700' : '600';
+                    });
+                },
             });
 
             if (statusText) {

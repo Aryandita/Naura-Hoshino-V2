@@ -41,6 +41,27 @@
   --color-state-warning: var(--naura-warning);
   --color-state-info: var(--naura-info);
 
+  --color-danger: #ef4444;
+  --color-danger-glow: rgba(239, 68, 68, 0.25);
+  --color-success: #22c55e;
+  --color-success-glow: rgba(34, 197, 94, 0.25);
+  --color-warn: #f59e0b;
+  --color-warn-glow: rgba(245, 158, 11, 0.25);
+  --color-info: #06b6d4;
+  --color-info-glow: rgba(6, 182, 212, 0.25);
+
+  /* --- Token Status Service Realtime --- */
+  --status-online: #22c55e;
+  --status-warn: #f59e0b;
+  --status-offline: #ef4444;
+  --status-maintenance: #a855f7;
+
+  /* --- Token Breakpoint Tata Letak Responsif --- */
+  --bp-mobile: 480px;
+  --bp-tablet: 768px;
+  --bp-desktop: 1024px;
+  --bp-wide: 1280px;
+
   /* --- Ekspresi Naura --- */
   --naura-expression-size: 160px;
   --naura-expression-size-sm: 96px;
@@ -194,3 +215,50 @@ select option:hover, select option:checked {
   background-color: #1e293b !important;
   color: #38bdf8 !important;
 }
+
+/* =====================================================================
+ * Dashboard Multi-Theme Engine
+ * Variasi: Midnight (default), Sakura Blossom, OLED True Black
+ * ===================================================================== */
+
+[data-theme="sakura"] {
+  --color-canvas: #160f18;
+  --bg-primary: #160f18;
+  --bg-surface: rgba(255, 220, 235, 0.05);
+  --bg-surface-elevated: rgba(45, 22, 40, 0.85);
+  --color-surface-glass: rgba(255, 192, 215, 0.05);
+  --color-surface-elevated: rgba(40, 18, 35, 0.9);
+  --color-hairline: rgba(255, 182, 193, 0.22);
+  --border-subtle: rgba(255, 182, 193, 0.16);
+  --border-medium: rgba(255, 182, 193, 0.32);
+  --naura-primary: #ff9ebb;
+  --color-primary: #ff9ebb;
+  --primary: #ff9ebb;
+  --primary-glow: rgba(255, 158, 187, 0.45);
+  --color-ink: #fff5f8;
+  --text-primary: #fff5f8;
+  --text-secondary: #e2b8cb;
+  --color-body: #d8b4c4;
+  --naura-accent: #f472b6;
+}
+
+[data-theme="oled"] {
+  --color-canvas: #000000;
+  --bg-primary: #000000;
+  --bg-surface: #0a0a0d;
+  --bg-surface-elevated: #111116;
+  --color-surface-glass: rgba(255, 255, 255, 0.03);
+  --color-surface-elevated: #0e0e14;
+  --color-hairline: rgba(255, 255, 255, 0.12);
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-medium: rgba(255, 255, 255, 0.22);
+  --naura-primary: #ff5c8a;
+  --color-primary: #ff5c8a;
+  --primary: #ff5c8a;
+  --color-ink: #ffffff;
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --color-body: #a1a1aa;
+  --naura-accent: #38bdf8;
+}
+

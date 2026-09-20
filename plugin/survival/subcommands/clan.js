@@ -201,6 +201,18 @@ module.exports = {
       return interaction.editReply({ ...payload, embeds: [] });
     }
 
+    // 1b. GVG TERRITORY SIEGE
+    if (action === "siege") {
+      const siegeSubcmd = require("./siege");
+      return siegeSubcmd.execute(interaction, client);
+    }
+
+    // 1c. CLAN CARAVAN & MERCENARY ESCORTS
+    if (action === "caravan") {
+      const caravanSubcmd = require("./caravan");
+      return caravanSubcmd.execute(interaction, client);
+    }
+
     // 2. 2.5D GUILD HALL LOUNGE
     if (action === "hall") {
       const userClan = survival.clanId

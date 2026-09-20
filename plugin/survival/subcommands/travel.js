@@ -119,7 +119,11 @@ module.exports = {
     const hasNoHouse =
       !survival.propertyId || survival.propertyId === "jalanan";
 
-    if (normalizedTarget !== "desa" && (hasNoVehicle || hasNoHouse)) {
+    if (
+      normalizedTarget !== "desa_sukamaju" &&
+      normalizedTarget !== "desa" &&
+      (hasNoVehicle || hasNoHouse)
+    ) {
       return ui.sendError(interaction, "err_sys_67", true);
     }
 

@@ -1633,8 +1633,20 @@
             warpFlash.classList.add('active');
             setTimeout(() => warpFlash.classList.remove('active'), 400);
           }
-
-          alert(`Panduan Fast Travel: Buka Discord dan jalankan perintah:\n/survival travel lokasi:${target.name}\nPastikan kamu memiliki kendaraan atau properti yang memadai.`);
+          const cmd = `/survival travel lokasi:${target.name}`;
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(cmd).catch(() => {});
+          }
+          if (typeof window.showToast === 'function') {
+            window.showToast({
+              type: 'info',
+              title: `Fast Travel Menuju ${target.name}`,
+              message: `Perintah "${cmd}" telah disalin ke clipboard! Jalankan di Discord untuk teleportasi.`,
+              duration: 5000
+            });
+          } else {
+            alert(`Panduan Fast Travel: Buka Discord dan jalankan perintah:\n${cmd}\nPastikan kamu memiliki kendaraan atau properti yang memadai.`);
+          }
         });
       }
 

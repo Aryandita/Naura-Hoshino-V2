@@ -730,14 +730,32 @@
       // Fetch real data from API
       async function fetchLeaderboard() {
         try {
+          if (window.showSkeleton) {
+            window.showSkeleton('#leaderboardList', { count: 7, type: 'table' });
+          }
           const res = await fetch('/api/realtime/leaderboard');
           const json = await res.json();
           if (json.success) {
             lbData = json.data;
             renderLeaderboard(currentTab);
+          } else {
+            if (window.renderErrorState) {
+              window.renderErrorState('#leaderboardList', {
+                title: 'Peringkat Belum Tersedia',
+                message: 'Data leaderboard belum berhasil disinkronkan dari server database.',
+                onRetry: fetchLeaderboard
+              });
+            }
           }
         } catch(e) {
           console.warn('Leaderboard fetch error:', e);
+          if (window.renderErrorState) {
+            window.renderErrorState('#leaderboardList', {
+              title: 'Gagal Menghubungi Server',
+              message: 'Terjadi kegagalan jaringan saat mengambil data peringkat: ' + (e.message || 'Timeout'),
+              onRetry: fetchLeaderboard
+            });
+          }
         }
       }
 
@@ -754,6 +772,8 @@
         return rank;
       }
 
+      let searchQuery = '';
+
       function renderLeaderboard(tab) {
         currentTab = tab;
         let rows = [];
@@ -763,46 +783,65 @@
           rows = lbData.economy || [];
           valueKey = 'total';
           valueLabel = '🪙';
-          subFn = r => `Level ${r.level} · ${r.xp} XP`;
+          subFn = r => `Level ${r.level} · ${r.xp || 0} XP`;
         } else if (tab === 'chat_level') {
           rows = lbData.leveling || [];
           valueKey = 'xp';
           valueLabel = '✨';
-          subFn = r => `Level ${r.level} · ${r.messageCount} pesan`;
+          subFn = r => `Level ${r.level} · ${r.messageCount || 0} pesan`;
         } else if (tab === 'rpg_level') {
           rows = lbData.survival || [];
           valueKey = 'starFragments';
           valueLabel = '⭐';
-          subFn = r => `Lv.${r.survivalLevel} Survival · ${r.currentLocation}`;
+          subFn = r => `Lv.${r.survivalLevel || 1} Survival · ${r.currentLocation || 'Town Square'}`;
         } else if (tab === 'trivia') {
           rows = lbData.leveling || [];
           valueKey = 'voiceMinutes';
           valueLabel = '🎤';
-          subFn = r => `${r.voiceMinutes} mnt suara · ${r.messageCount} pesan`;
+          subFn = r => `${r.voiceMinutes || 0} mnt suara · ${r.messageCount || 0} pesan`;
+        }
+
+        const totalEl = document.getElementById('lbTotalCount');
+        if (totalEl) totalEl.textContent = `${rows.length} pemain`;
+
+        // Apply real-time search query
+        let displayRows = rows;
+        if (searchQuery) {
+          displayRows = rows.filter(r =>
+            (r.name || '').toLowerCase().includes(searchQuery) ||
+            String(r.rank) === searchQuery
+          );
         }
 
         const container = document.getElementById('lbList');
         if (!container) return;
-        if (rows.length === 0) {
-          container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:48px 0;"><i class="fa-solid fa-ghost" style="font-size:36px;margin-bottom:12px;display:block;opacity:0.4;"></i>Belum ada data di server ini.</div>';
-          // Update podium too
-          updatePodium([]);
+        if (displayRows.length === 0) {
+          container.innerHTML = searchQuery
+            ? `<div style="text-align:center;color:var(--text-muted);padding:48px 0;"><i class="fa-solid fa-magnifying-glass" style="font-size:36px;margin-bottom:12px;display:block;opacity:0.4;"></i>Tidak ditemukan pemain dengan nama "<strong>${searchQuery}</strong>".</div>`
+            : '<div style="text-align:center;color:var(--text-muted);padding:48px 0;"><i class="fa-solid fa-ghost" style="font-size:36px;margin-bottom:12px;display:block;opacity:0.4;"></i>Belum ada data di server ini.</div>';
+          if (!searchQuery) updatePodium([]);
           return;
         }
 
-        container.innerHTML = rows.map((r, i) => {
+        container.innerHTML = displayRows.map((r, i) => {
           const maxVal = rows[0]?.[valueKey] || 1;
-          const pct = Math.round((r[valueKey] / maxVal) * 100);
-          const barColor = i === 0 ? 'linear-gradient(90deg,#f59e0b,#fde68a)' :
-                           i === 1 ? 'linear-gradient(90deg,#94a3b8,#e2e8f0)' :
-                           i === 2 ? 'linear-gradient(90deg,#b4783c,#d4a574)' :
+          const pct = Math.min(100, Math.round(((r[valueKey] || 0) / maxVal) * 100));
+          const barColor = r.rank === 1 ? 'linear-gradient(90deg,#f59e0b,#fde68a)' :
+                           r.rank === 2 ? 'linear-gradient(90deg,#94a3b8,#e2e8f0)' :
+                           r.rank === 3 ? 'linear-gradient(90deg,#b4783c,#d4a574)' :
                            'linear-gradient(90deg,var(--accent-cyan),#67e8f9)';
+          const deltaHtml = r.delta > 0
+            ? `<span style="color:var(--accent-green);font-size:10px;margin-left:6px;"><i class="fa-solid fa-caret-up"></i> +${r.delta}</span>`
+            : r.delta < 0
+              ? `<span style="color:#f87171;font-size:10px;margin-left:6px;"><i class="fa-solid fa-caret-down"></i> ${r.delta}</span>`
+              : `<span style="color:var(--text-muted);font-size:10px;margin-left:6px;">•</span>`;
+
           return `
           <div class="lb-row" id="lb-row-${r.rank}" style="animation-delay:${i * 0.05}s">
             <div class="lb-rank-num" style="color:${getRankColor(r.rank)};font-size:${r.rank <= 3 ? '22px':'14px'};">${getRankEmoji(r.rank)}</div>
-            <img class="lb-avatar" src="${r.avatar}" alt="${r.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid ${getRankColor(r.rank)}30;" onerror="this.style.display='none'">
+            <img class="lb-avatar" src="${r.avatar || '/assets/core/avatar.png'}" alt="${r.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid ${getRankColor(r.rank)}30;" onerror="this.style.display='none'">
             <div class="lb-info">
-              <div class="lb-username">${r.name}</div>
+              <div class="lb-username">${r.name} ${deltaHtml}</div>
               <div class="lb-sub">${subFn(r)}</div>
               <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
             </div>
@@ -813,7 +852,9 @@
           </div>`;
         }).join('');
 
-        updatePodium(rows.slice(0, 3));
+        if (!searchQuery) {
+          updatePodium(rows.slice(0, 3));
+        }
       }
 
       function updatePodium(top3) {
@@ -831,7 +872,7 @@
           if (nameEl) nameEl.textContent = r.name;
           if (coinsEl) coinsEl.textContent = `#${r.rank}`;
           if (avatarEl) {
-            avatarEl.src = r.avatar;
+            avatarEl.src = r.avatar || '/assets/core/avatar.png';
             avatarEl.onerror = () => { avatarEl.style.display = 'none'; };
           }
         });
@@ -851,6 +892,34 @@
         renderLeaderboard(cat);
       }
 
+      // Search input listener
+      const searchInput = document.getElementById('lbSearch');
+      if (searchInput) {
+        searchInput.addEventListener('input', function() {
+          searchQuery = this.value.trim().toLowerCase();
+          renderLeaderboard(currentTab);
+        });
+      }
+
+      // Populate server selector
+      async function loadGuilds() {
+        const sel = document.getElementById('guildSelector');
+        if (!sel) return;
+        try {
+          const res = await fetch('/api/guilds');
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data.success && Array.isArray(data.guilds)) {
+            data.guilds.forEach(g => {
+              const opt = document.createElement('option');
+              opt.value = g.id;
+              opt.textContent = g.name;
+              sel.appendChild(opt);
+            });
+          }
+        } catch (_) {}
+      }
+
       // Refresh button
       document.getElementById('btnRefreshLb')?.addEventListener('click', function() {
         const icon = this.querySelector('i');
@@ -861,6 +930,7 @@
       });
 
       // Initial load
+      loadGuilds();
       fetchLeaderboard();
       // Auto-refresh every 30 seconds
       setInterval(fetchLeaderboard, 30000);

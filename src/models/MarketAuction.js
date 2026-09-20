@@ -41,6 +41,11 @@ const MarketAuction = sequelize.define(
       type: DataTypes.STRING(32),
       allowNull: true,
     },
+    buyoutPrice: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+    },
     expiresAt: {
       type: DataTypes.DATE,
       allowNull: false,

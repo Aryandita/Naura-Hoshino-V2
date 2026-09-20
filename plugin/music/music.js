@@ -41,6 +41,7 @@ async function runMusicLogic(
   isSlash,
 ) {
   const poru = client.musicManager.poru;
+  const musicManager = client.musicManager;
   const memberVoice = member?.voice?.channel;
   const eError = ui.getEmoji("error") || "❌";
   const divider = `-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
@@ -524,6 +525,26 @@ async function runMusicLogic(
 
     const track = res.tracks[0];
     track.info.requester = user;
+
+    if (
+      musicManager.isDuplicateFilterEnabled(guild.id) &&
+      musicManager.isRecentDuplicate(guild.id, track)
+    ) {
+      const dupPayload = buildContainerV2({
+        accentColorHex: ui.getColor("warning") || "#f59e0b",
+        authorName: "HOSHINO MUSIC • SMART QUEUE",
+        title: "⚠️ Lagu Terdeteksi Duplikat",
+        iconURL: track.info.image || client.user.displayAvatarURL(),
+        description:
+          `Lagu **${track.info.title}** oleh **${track.info.author}** sudah diputar baru-baru ini dalam 5 lagu terakhir di server ini!\n\n` +
+          `Demi menjaga keragaman musik di channel suara, lagu tidak ditambahkan ke antrean.\n` +
+          `💡 *Gunakan \`/music duplicates mode:off\` jika ingin mengizinkan pemutaran lagu berulang.*`,
+        expression: "thinking",
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(dupPayload, true);
+    }
+
     player.queue.add(track);
     if (!player.isPlaying && !player.isPaused) player.play();
 
@@ -1550,7 +1571,7 @@ async function runMusicLogic(
     return sendReply(partyPayload);
   }
 
-  if (subcommand === "dj") {
+  if (subcommand === "dj" || subcommand === "radio") {
     const aiDjManager = require("../../src/managers/aiDjManager");
     const fishAudioService = require("../../src/services/fishAudioService");
     const mode = (args.mode || "status").toLowerCase();
@@ -1606,6 +1627,51 @@ async function runMusicLogic(
       footerText: ui.getFooter("music"),
     });
     return sendReply(djPayload);
+  }
+
+  if (subcommand === "duplicates") {
+    const mode = (args.mode || "status").toLowerCase();
+
+    if (mode === "on") {
+      musicManager.setDuplicateFilterEnabled(guild.id, true);
+      const payload = buildContainerV2({
+        accentColorHex: ui.getColor("success") || "#10B981",
+        authorName: "HOSHINO MUSIC • SMART QUEUE",
+        title: "🛡️ Filter Anti-Duplikasi Aktif",
+        description:
+          "Sistem anti-duplikasi telah diaktifkan untuk server ini. Lagu yang sama tidak dapat diputar berulang kali dalam 5 lagu terakhir demi menjaga variasi musik.",
+        expression: "happy",
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(payload);
+    }
+
+    if (mode === "off") {
+      musicManager.setDuplicateFilterEnabled(guild.id, false);
+      const payload = buildContainerV2({
+        accentColorHex: ui.getColor("warning") || "#F59E0B",
+        authorName: "HOSHINO MUSIC • SMART QUEUE",
+        title: "⚠️ Filter Anti-Duplikasi Dinonaktifkan",
+        description:
+          "Sistem anti-duplikasi telah dimatikan. Anggota voice channel sekarang bebas memutar lagu yang sama secara berulang tanpa pembatasan.",
+        expression: "neutral",
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(payload);
+    }
+
+    const isEnabled = musicManager.isDuplicateFilterEnabled(guild.id);
+    const payload = buildContainerV2({
+      accentColorHex: isEnabled ? "#10B981" : "#6B7280",
+      authorName: "HOSHINO MUSIC • SMART QUEUE STATUS",
+      title: "🛡️ Status Filter Anti-Duplikasi Lagu",
+      description:
+        `Status saat ini: **${isEnabled ? "🟢 AKTIF (5 Lagu Terakhir Dilindungi)" : "🔴 NONAKTIF (Bebas Duplikat)"}**\n\n` +
+        `Gunakan \`/music duplicates mode:on\` untuk mengaktifkan atau \`/music duplicates mode:off\` untuk mematikan.`,
+      expression: isEnabled ? "happy" : "neutral",
+      footerText: ui.getFooter("music"),
+    });
+    return sendReply(payload);
   }
 
   if (subcommand === "quality") {
@@ -1893,6 +1959,42 @@ module.exports = {
               { name: "Aktifkan AI Smart DJ (On)", value: "on" },
               { name: "Matikan AI Smart DJ (Off)", value: "off" },
               { name: "Status AI Smart DJ (Status)", value: "status" },
+            ),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("radio")
+        .setDescription(
+          "🎙️ AI Dynamic Radio Host & Voice Announcements (Hoshino FM)",
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("mode")
+            .setDescription("Pilihan mode Radio Host")
+            .setRequired(false)
+            .addChoices(
+              { name: "Aktifkan Radio Host (On)", value: "on" },
+              { name: "Matikan Radio Host (Off)", value: "off" },
+              { name: "Status Radio Host (Status)", value: "status" },
+            ),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("duplicates")
+        .setDescription(
+          "🛡️ Smart Duplicate Track Detection di antrean lagu guild (5 lagu terakhir)",
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("mode")
+            .setDescription("Pilihan mode anti-duplikasi")
+            .setRequired(false)
+            .addChoices(
+              { name: "Aktifkan Anti-Duplikasi (On)", value: "on" },
+              { name: "Matikan Anti-Duplikasi (Off)", value: "off" },
+              { name: "Status Anti-Duplikasi (Status)", value: "status" },
             ),
         ),
     )

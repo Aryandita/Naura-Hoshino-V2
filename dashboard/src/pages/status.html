@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="/src/css/stellar.css" />
+    <script src="/socket.io/socket.io.js"></script>
     <style>
       .service-card {
         display: flex; align-items: center; gap: 14px; padding: 16px 18px;
@@ -253,14 +254,19 @@
 
           <!-- Services Header Bar & Legend -->
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:12px;" class="animate-in delay-2">
-            <div class="section-title" style="margin-bottom:0;">Core Services Status (20 Jam Terakhir)</div>
-            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div class="section-title" id="coreServicesTitle" style="margin-bottom:0;">Core Services Status (20 Jam Terakhir)</div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
               <!-- Status Legend -->
               <div class="status-legend" style="display:flex;align-items:center;gap:12px;font-size:11px;font-family:var(--font-mono);background:rgba(255,255,255,0.03);padding:6px 14px;border-radius:20px;border:1px solid var(--border-subtle);">
                 <span style="display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:2px;background:#10b981;"></span><span style="color:#10b981;">Normal</span></span>
                 <span style="display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:2px;background:#f59e0b;"></span><span style="color:#f59e0b;">Latensi / Degraded</span></span>
                 <span style="display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:2px;background:#ef4444;box-shadow:0 0 6px #ef4444;"></span><span style="color:#ef4444;font-weight:700;">Mati / Error</span></span>
               </div>
+              <!-- Resolution Switcher Button -->
+              <button class="btn btn-ghost btn-sm" id="btnToggleTickRange" style="font-size:12px;display:inline-flex;align-items:center;gap:6px;">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span id="tickRangeLabel">20 Ticks</span>
+              </button>
               <!-- Outage Demo Toggle Button -->
               <button class="btn btn-secondary btn-sm" id="btnSimulateOutage" style="font-size:12px;display:inline-flex;align-items:center;gap:6px;">
                 <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i>
@@ -276,7 +282,7 @@
 
           <!-- Performance Metrics -->
           <div class="section-title animate-in delay-3">Performance Metrics</div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;" class="animate-in delay-3" id="perfMetrics">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;" class="animate-in delay-3" id="perfMetrics">
 
             <div class="card card-p-sm">
               <div class="metric-label">CPU Usage</div>
@@ -306,6 +312,19 @@
               <div style="font-size:11px;color:var(--accent-green);margin-top:4px;">Excellent</div>
             </div>
 
+          </div>
+
+          <!-- Incident & Failover History -->
+          <div class="animate-in delay-3" style="margin-bottom:24px;">
+            <div class="card card-p">
+              <div class="card-header" style="margin-bottom:16px;">
+                <div class="card-title"><i class="fa-solid fa-clipboard-list" style="color:var(--accent-cyan);"></i> Riwayat Insiden & Failover (30 Hari Terakhir)</div>
+                <span class="badge badge-muted" id="incidentCountBadge">0 Insiden</span>
+              </div>
+              <div id="incidentList" style="display:flex;flex-direction:column;gap:12px;">
+                <!-- Populated by JS -->
+              </div>
+            </div>
           </div>
 
         </main>
@@ -436,6 +455,7 @@
       ];
 
       let isSimulatedOutageActive = false;
+      let tickResolution = 20;
 
       function renderServices() {
         const grid = document.getElementById("servicesGrid");
@@ -467,7 +487,7 @@
                 ${svc.status === 'offline' ? '<span style="font-size:10px;font-family:var(--font-mono);color:#ef4444;font-weight:700;animation:glow-pulse 1s infinite;">[OUTAGE]</span>' : ''}
               </div>
               <div style="font-size:11px;color:var(--text-muted);">${svc.desc}</div>
-              <div class="uptime-bar" id="bar_${svc.id}" style="margin-top:7px;"></div>
+              <div class="uptime-bar" id="bar_${svc.id}" style="margin-top:7px;${tickResolution === 90 ? 'gap:2px;' : 'gap:3px;'}"></div>
             </div>
             <div style="text-align:right;flex-shrink:0;">
               ${badgeHtml}
@@ -482,35 +502,45 @@
             if (svc.status === 'online') {
               svc.status = 'offline';
               svc.rtt = 'ERR: TIMEOUT 504';
-              svc.history[19] = 'offline';
-              svc.history[18] = 'offline';
+              const lastIdx = svc.history.length - 1;
+              if (lastIdx >= 0) svc.history[lastIdx] = 'offline';
+              if (lastIdx - 1 >= 0) svc.history[lastIdx - 1] = 'offline';
             } else {
               svc.status = 'online';
               svc.rtt = svc.id === 'bot' ? '12h 47m uptime' : (svc.id === 'ai' ? 'Active' : '4ms RTT');
-              svc.history[19] = 'operational';
-              svc.history[18] = 'operational';
+              const lastIdx = svc.history.length - 1;
+              if (lastIdx >= 0) svc.history[lastIdx] = 'operational';
+              if (lastIdx - 1 >= 0) svc.history[lastIdx - 1] = 'operational';
             }
             renderServices();
           });
 
           grid.appendChild(card);
 
-          // Populate the 20 uptime ticks
+          // Populate uptime ticks based on tickResolution
           const barElem = card.querySelector(".uptime-bar");
-          svc.history.forEach((tickStatus, idx) => {
+          const ticksToRender = (svc.history || []).slice(-tickResolution);
+          const totalTicks = ticksToRender.length;
+
+          ticksToRender.forEach((tickStatus, idx) => {
             const tick = document.createElement("div");
             tick.className = `uptime-tick ${tickStatus}`;
-            
+            if (tickResolution === 90) {
+              tick.style.minWidth = '2px';
+              tick.style.flex = '1';
+              tick.style.height = '20px';
+            }
+
             // If offline currently, animate latest ticks
-            if (svc.status === 'offline' && (idx === 18 || idx === 19)) {
+            if (svc.status === 'offline' && idx >= totalTicks - 2) {
               tick.classList.add("pulse-dead");
             }
 
-            const hoursAgo = 20 - idx;
-            let tickTitle = `T-${hoursAgo}h: `;
+            const stepAgo = totalTicks - idx;
+            let tickTitle = tickResolution === 90 ? `T-${stepAgo * 5}m: ` : `T-${stepAgo}h: `;
             if (tickStatus === 'operational') tickTitle += "100% Operasional Normal";
             else if (tickStatus === 'degraded') tickTitle += "Degraded / Latensi Tinggi";
-            else tickTitle += "🔴 GANGGUAN / SERVER MATI (" + svc.incidentDesc + ")";
+            else tickTitle += "🔴 GANGGUAN / SERVER MATI (" + (svc.incidentDesc || 'Outage') + ")";
 
             tick.title = tickTitle;
             barElem.appendChild(tick);
@@ -528,6 +558,8 @@
         const bannerSub = document.getElementById("systemBannerSub");
         const globalStatusPill = document.getElementById("globalStatusPill");
 
+        if (!banner || !bannerIcon || !bannerTitle || !bannerSub) return;
+
         if (hasOutage) {
           const downSvc = SERVICES.find(s => s.status === 'offline');
           banner.style.background = "linear-gradient(135deg, rgba(239, 68, 68, 0.14), rgba(20, 10, 16, 0.95))";
@@ -536,7 +568,7 @@
           bannerIcon.style.background = "rgba(239, 68, 68, 0.2)";
           bannerIcon.style.borderColor = "rgba(239, 68, 68, 0.5)";
           bannerIcon.style.boxShadow = "0 0 20px rgba(239, 68, 68, 0.4)";
-          bannerTitle.textContent = `⚠️ Gangguan Terdeteksi: Layanan ${downSvc.name} Mengalami Outage / Mati`;
+          bannerTitle.textContent = `⚠️ Gangguan Terdeteksi: Layanan ${downSvc ? downSvc.name : 'Sistem'} Mengalami Outage / Mati`;
           bannerTitle.style.color = "#f87171";
           bannerSub.textContent = `Server tidak merespons request. Bar merah menandakan periode waktu downtime & insiden aktif.`;
 
@@ -560,38 +592,132 @@
         }
       }
 
+      // Resolution Switcher (20 ticks vs 90 ticks)
+      const btnTickRange = document.getElementById("btnToggleTickRange");
+      const tickRangeLabel = document.getElementById("tickRangeLabel");
+      const coreServicesTitle = document.getElementById("coreServicesTitle");
+      if (btnTickRange) {
+        btnTickRange.addEventListener("click", () => {
+          if (tickResolution === 20) {
+            tickResolution = 90;
+            if (tickRangeLabel) tickRangeLabel.textContent = "90 Ticks";
+            if (coreServicesTitle) coreServicesTitle.textContent = "Core Services Status (90 Ticks / Resolusi Tinggi)";
+            btnTickRange.classList.remove("btn-ghost");
+            btnTickRange.classList.add("btn-primary");
+          } else {
+            tickResolution = 20;
+            if (tickRangeLabel) tickRangeLabel.textContent = "20 Ticks";
+            if (coreServicesTitle) coreServicesTitle.textContent = "Core Services Status (20 Jam Terakhir)";
+            btnTickRange.classList.remove("btn-primary");
+            btnTickRange.classList.add("btn-ghost");
+          }
+          renderServices();
+        });
+      }
+
       // Outage Simulator Button handler
       const btnOutage = document.getElementById("btnSimulateOutage");
       const btnOutageText = document.getElementById("btnOutageText");
-      btnOutage.addEventListener("click", () => {
-        isSimulatedOutageActive = !isSimulatedOutageActive;
-        const redisSvc = SERVICES.find(s => s.id === "redis");
-        if (isSimulatedOutageActive) {
-          redisSvc.status = "offline";
-          redisSvc.rtt = "ERR 504 GATEWAY DEAD";
-          redisSvc.history[19] = "offline";
-          redisSvc.history[18] = "offline";
-          redisSvc.history[17] = "offline";
-          btnOutageText.textContent = "Pulihkan Server Normal";
-          btnOutage.className = "btn btn-primary btn-sm";
-          btnOutage.style.background = "#ef4444";
-          btnOutage.style.borderColor = "#ef4444";
-        } else {
-          redisSvc.status = "online";
-          redisSvc.rtt = "2ms RTT";
-          redisSvc.history[19] = "operational";
-          redisSvc.history[18] = "operational";
-          redisSvc.history[17] = "operational";
-          btnOutageText.textContent = "Simulasi Server Mati";
-          btnOutage.className = "btn btn-secondary btn-sm";
-          btnOutage.style.background = "";
-          btnOutage.style.borderColor = "";
-        }
-        renderServices();
-      });
+      if (btnOutage && btnOutageText) {
+        btnOutage.addEventListener("click", () => {
+          isSimulatedOutageActive = !isSimulatedOutageActive;
+          const redisSvc = SERVICES.find(s => s.id === "redis");
+          if (isSimulatedOutageActive && redisSvc) {
+            redisSvc.status = "offline";
+            redisSvc.rtt = "ERR 504 GATEWAY DEAD";
+            const len = redisSvc.history.length;
+            if (len > 0) redisSvc.history[len - 1] = "offline";
+            if (len > 1) redisSvc.history[len - 2] = "offline";
+            if (len > 2) redisSvc.history[len - 3] = "offline";
+            btnOutageText.textContent = "Pulihkan Server Normal";
+            btnOutage.className = "btn btn-primary btn-sm";
+            btnOutage.style.background = "#ef4444";
+            btnOutage.style.borderColor = "#ef4444";
+          } else if (redisSvc) {
+            redisSvc.status = "online";
+            redisSvc.rtt = "2ms RTT";
+            const len = redisSvc.history.length;
+            if (len > 0) redisSvc.history[len - 1] = "operational";
+            if (len > 1) redisSvc.history[len - 2] = "operational";
+            if (len > 2) redisSvc.history[len - 3] = "operational";
+            btnOutageText.textContent = "Simulasi Server Mati";
+            btnOutage.className = "btn btn-secondary btn-sm";
+            btnOutage.style.background = "";
+            btnOutage.style.borderColor = "";
+          }
+          renderServices();
+        });
+      }
 
-      // Initial Render
-      renderServices();
+      // Render Incidents List
+      function renderIncidents(incidents) {
+        const container = document.getElementById('incidentList');
+        const countBadge = document.getElementById('incidentCountBadge');
+        if (!container) return;
+
+        if (countBadge) {
+          countBadge.textContent = `${incidents.length} Insiden`;
+          countBadge.className = incidents.length > 0 ? 'badge badge-amber' : 'badge badge-green';
+        }
+
+        if (!incidents || incidents.length === 0) {
+          container.innerHTML = `
+            <div style="padding:28px 16px;text-align:center;">
+              <div style="font-size:32px;margin-bottom:8px;">✅</div>
+              <div style="font-size:14px;font-weight:700;color:var(--text-primary);">Semua Layanan Stabil</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Tidak ada insiden tercatat dalam 30 hari terakhir. Semua koneksi dan node berfungsi normal.</div>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = incidents.map(inc => {
+          const isResolved = inc.status === 'resolved';
+          const statusBadge = isResolved
+            ? '<span class="badge badge-green"><i class="fa-solid fa-check"></i> Selesai</span>'
+            : '<span class="badge badge-amber"><i class="fa-solid fa-triangle-exclamation"></i> Investigasi</span>';
+          const timeFormatted = new Date(inc.timestamp).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+
+          return `
+            <div style="padding:14px 16px;background:var(--bg-surface);border:1px solid var(--border-subtle);border-left:3px solid ${isResolved ? 'var(--accent-green)' : 'var(--accent-amber)'};border-radius:var(--r-lg);">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-weight:700;font-size:13px;color:var(--text-primary);">${inc.title}</span>
+                  ${statusBadge}
+                  <span class="badge badge-muted" style="font-size:10px;">${inc.service}</span>
+                </div>
+                <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);">
+                  ${timeFormatted} · Durasi: ${inc.durationMinutes} menit
+                </div>
+              </div>
+              <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;">${inc.description}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Fetch Real Telemetry History from /api/status/history
+      async function fetchStatusHistory() {
+        try {
+          const res = await fetch('/api/status/history');
+          if (!res.ok) return;
+          const json = await res.json();
+          if (!json.success || !json.data) return;
+          const { history, incidents } = json.data;
+
+          SERVICES.forEach(svc => {
+            const historyKey = svc.id === 'postgres' ? 'postgres' : svc.id;
+            if (history && history[historyKey] && Array.isArray(history[historyKey])) {
+              svc.history = history[historyKey];
+            }
+          });
+
+          renderServices();
+          renderIncidents(incidents || []);
+        } catch (err) {
+          console.warn("Status history fetch error:", err);
+        }
+      }
 
       // Real Backend Health Fetch
       async function fetchRealHealth() {
@@ -608,16 +734,16 @@
               botSvc.rtt = `${upH}h ${upM}m uptime`;
               botSvc.desc = `discord.js v14 · Shard 0/1 · Ping: ${data.bot.ping}ms`;
             }
-            const dbSvc = SERVICES.find(s => s.id === 'db');
+            const dbSvc = SERVICES.find(s => s.id === 'postgres' || s.id === 'database' || s.id === 'db');
             if (dbSvc && data.services?.database) {
-              const isOk = data.services.database.state === 'ready' || data.services.database.ready;
+              const db = data.services.database;
+              const isOk = db.state === 'ready' || db.ready || db.online || db.connected;
               dbSvc.status = isOk ? 'online' : 'offline';
               dbSvc.rtt = isOk ? '8ms RTT' : 'ERR: POOL';
             }
             const redisSvc = SERVICES.find(s => s.id === 'redis');
             if (redisSvc && data.services?.redis) {
               const isCluster = data.services.redis.connected;
-              // Mode fallback in-memory cache beroperasi normal dan sehat
               redisSvc.status = 'online';
               redisSvc.rtt = isCluster ? '2ms RTT' : 'In-Memory (Aktif)';
               redisSvc.desc = isCluster
@@ -653,10 +779,53 @@
         }
       }
 
+      // Socket.IO live listener
+      if (typeof io !== 'undefined') {
+        try {
+          const socket = io();
+          socket.on('connect', () => {
+            socket.emit('join_room', 'dashboard:home');
+          });
+          socket.on('stats_update', (data) => {
+            if (!data) return;
+            const pingEl = document.getElementById('globalPing');
+            if (pingEl && data.ping !== undefined) {
+              pingEl.textContent = `${data.ping}ms`;
+            }
+            const cpuEl = document.getElementById('cpuUsage');
+            if (cpuEl && data.cpuPercent !== undefined) {
+              cpuEl.textContent = `${data.cpuPercent}%`;
+              const fill = cpuEl.parentElement?.querySelector('.progress-fill');
+              if (fill) fill.style.width = `${Math.min(100, data.cpuPercent)}%`;
+            }
+            const ramEl = document.getElementById('ramUsage');
+            if (ramEl && data.ramUsageMB !== undefined) {
+              ramEl.textContent = `${data.ramUsageMB}MB`;
+              const fill = ramEl.parentElement?.querySelector('.progress-fill');
+              if (fill) fill.style.width = `${Math.min(100, Math.round((data.ramUsageMB / 2048) * 100))}%`;
+            }
+            const shardEl = document.getElementById('shardId');
+            if (shardEl && data.shards) {
+              shardEl.textContent = `#${data.shards.current ?? 0}`;
+            }
+            const botSvc = SERVICES.find(s => s.id === 'bot');
+            if (botSvc && data.uptimeFormatted) {
+              botSvc.rtt = `${data.uptimeFormatted} uptime`;
+            }
+            updateTime();
+            renderServices();
+          });
+        } catch (_) {}
+      }
+
+      // Initial Render & Fetches
+      renderServices();
+      fetchStatusHistory();
       fetchRealHealth();
       setInterval(fetchRealHealth, 8000);
+      setInterval(fetchStatusHistory, 30000);
 
-      // Live ping simulation
+      // Live time update
       function updateTime() {
         const lastEl = document.getElementById('lastUpdate');
         if (lastEl) lastEl.textContent = new Date().toLocaleTimeString('id-ID');

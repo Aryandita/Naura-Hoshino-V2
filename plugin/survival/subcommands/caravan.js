@@ -211,6 +211,52 @@ module.exports = {
       });
     }
 
+    if (action === "board") {
+      const board = await tradeEngine.getEscortBoard();
+
+      if (!board || board.length === 0) {
+        const payload = buildContainerV2({
+          authorName: "MERCENARY ESCORT BOARD",
+          title: "📋 Papan Kontrak Pengawalan Karavan",
+          description: [
+            `Halo, **${displayName}**! Saat ini belum ada karavan dagang yang membuka lowongan pengawal.`,
+            "",
+            "> *Klan dan pedagang dapat membuka kontrak pengawalan saat memberangkatkan ekspedisi antariksa!*",
+          ].join("\n"),
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
+
+      const lines = board.map((c) => {
+        const finishTs = Math.floor(new Date(c.finishTime).getTime() / 1000);
+        return [
+          `🐫 **ID:** \`${c.caravanId}\` (Pemilik: **${c.ownerName}**)`,
+          `   📦 Muatan: \`${c.commodityId}\` | 🎯 Estimasi Tiba: <t:${finishTs}:R>`,
+          `   🛡️ Pengawal: \`${c.escortCount}/${c.maxEscorts}\` | 💰 Hadiah: \`+${c.escortReward.toLocaleString("id-ID")}\` Koin`,
+          `   👉 *Kawal dengan \`/survival caravan aksi:escort caravan_id:${c.caravanId}\`*`,
+        ].join("\n");
+      });
+
+      const payload = buildContainerV2({
+        accentColorHex: "#38BDF8",
+        authorName: "MERCENARY ESCORT BOARD",
+        title: "📋 Papan Bursa Kontrak Pengawalan Karavan",
+        description: [
+          `Daftar karavan aktif yang membutuhkan pengawalan tempur:\n`,
+          lines.join("\n\n"),
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
+
     if (action === "ambush") {
       const caravanId = interaction.options.getString("caravan_id");
       if (!caravanId) {

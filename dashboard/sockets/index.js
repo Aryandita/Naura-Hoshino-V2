@@ -127,18 +127,33 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       if (pingCount > 0) avgPing = Math.round(pingSum / pingCount);
     }
 
-    io.emit("stats_update", {
+    const uptimeSec = client.uptime ? Math.floor(client.uptime / 1000) : 0;
+    const uptimeHours = Math.floor(uptimeSec / 3600);
+    const uptimeMins = Math.floor((uptimeSec % 3600) / 60);
+    const activeVoice = client.poru?.players ? client.poru.players.size : 0;
+
+    const statsPayload = {
       ramUsed: (totalRamUsed / 1024 / 1024).toFixed(2),
       ramTotal: ramTotalStr,
       ping: avgPing,
       guilds: totalGuilds,
       users: totalUsers,
+      activeVoice,
+      uptimeSeconds: uptimeSec,
+      uptimeFormatted: `${uptimeHours}j ${uptimeMins}m`,
+      shards: [
+        { id: 0, status: "online", ping: avgPing }
+      ],
       dbStatus: getDbStatus(),
       mongoStatus: mongoManager ? mongoManager.getStatus() : null,
       redisStatus: !!(redisManager.client && redisManager.client.isReady),
       botVersion: env.BOT_VERSION,
       engineVersion: env.ENGINE_VERSION,
-    });
+      timestamp: Date.now(),
+    };
+
+    io.emit("stats_update", statsPayload);
+    io.to("dashboard:home").emit("stats_update", statsPayload);
   }, STATS_INTERVAL_MS);
 
   // --- Siaran keadaan pemutar musik ---
@@ -158,6 +173,13 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
 
   io.on("connection", (socket) => {
     logger.info(`[SOCKET] Ada yang terhubung ke dashboard: ${socket.id}`);
+
+    socket.on("join_room", (room) => {
+      if (typeof room === "string" && (room.startsWith("dashboard:") || room === "home" || room === "status")) {
+        const canonicalRoom = room.startsWith("dashboard:") ? room : `dashboard:${room}`;
+        socket.join(canonicalRoom);
+      }
+    });
 
     socket.on("join_guild_music", async (guildId) => {
       if (!(await canControlGuild(client, socket, guildId))) return;

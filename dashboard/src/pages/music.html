@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="/src/css/stellar.css" />
+    <script src="/socket.io/socket.io.js"></script>
     <style>
       /* ── Vinyl/Artwork rotation ── */
       .artwork-disc {
@@ -662,12 +663,20 @@
       // Tab switch
       function switchMusicTab(tab) {
         ['player','queue','nodes'].forEach(t => {
-          document.getElementById(`musicTab${t.charAt(0).toUpperCase()+t.slice(1)}`).style.display = 'none';
+          const el = document.getElementById(`musicTab${t.charAt(0).toUpperCase()+t.slice(1)}`);
+          if (el) el.style.display = 'none';
         });
-        document.getElementById(`musicTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).style.display = 'block';
+        const target = document.getElementById(`musicTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`);
+        if (target) target.style.display = 'block';
         document.querySelectorAll('.tab-btn').forEach((btn, i) => {
           btn.classList.toggle('active', ['player','queue','nodes'][i] === tab);
         });
+
+        if (tab === 'queue') {
+          fetchMusicQueue();
+        } else if (tab === 'nodes') {
+          fetchMusicState();
+        }
       }
 
       // Live Music State & Controls
@@ -680,46 +689,116 @@
         return `${m}:${s < 10 ? '0' : ''}${s}`;
       }
 
+      function updatePlayerUI(data) {
+        if (!data) return;
+        isPlaying = !!data.isPlaying && !data.isPaused;
+        const playIcon = document.getElementById('playIcon');
+        if (playIcon) playIcon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+
+        const disc = document.getElementById('artworkDisc');
+        if (disc) disc.classList.toggle('playing', isPlaying);
+        const eq = document.getElementById('eqBars');
+        if (eq) eq.classList.toggle('eq-playing', isPlaying);
+
+        const titleEl = document.getElementById('nowPlayingTitle');
+        if (titleEl && data.currentTrack?.title) titleEl.textContent = data.currentTrack.title;
+
+        const artistEl = document.getElementById('nowPlayingArtist');
+        if (artistEl && data.currentTrack?.author) artistEl.textContent = data.currentTrack.author;
+
+        const dur = data.currentTrack?.duration || 0;
+        const pos = data.currentTrack?.position || 0;
+        const durEl = document.getElementById('musicDuration');
+        if (durEl) durEl.textContent = formatTime(dur);
+        const curEl = document.getElementById('musicCurrentTime');
+        if (curEl) curEl.textContent = formatTime(pos);
+
+        const progressEl = document.getElementById('musicProgress');
+        if (progressEl && dur > 0) {
+          progressEl.style.width = `${Math.min(100, Math.round((pos / dur) * 100))}%`;
+        }
+
+        if (data.volume !== undefined) {
+          const volSlider = document.getElementById('volumeSlider');
+          const volLabel = document.getElementById('volumeLabel');
+          if (volSlider && document.activeElement !== volSlider) volSlider.value = data.volume;
+          if (volLabel) volLabel.textContent = `${data.volume}%`;
+        }
+      }
+
       async function fetchMusicState() {
         try {
-          const res = await fetch('/api/music/state');
+          const res = await fetch('/api/music/now-playing');
           if (!res.ok) return;
           const data = await res.json();
           if (!data.success) return;
+          updatePlayerUI(data);
+        } catch (_) {}
+      }
 
-          isPlaying = data.isPlaying && !data.isPaused;
-          const playIcon = document.getElementById('playIcon');
-          if (playIcon) playIcon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+      // Fetch and Render Real Music Queue
+      async function fetchMusicQueue() {
+        try {
+          const res = await fetch('/api/music/queue');
+          if (!res.ok) return;
+          const data = await res.json();
+          if (!data.success) return;
+          renderQueue(data.queue || []);
+        } catch (err) {
+          console.warn("Queue fetch error:", err);
+        }
+      }
 
-          const disc = document.getElementById('artworkDisc');
-          if (disc) disc.classList.toggle('playing', isPlaying);
-          const eq = document.getElementById('eqBars');
-          if (eq) eq.classList.toggle('eq-playing', isPlaying);
+      function renderQueue(queue) {
+        const listEl = document.getElementById('queueList');
+        if (!listEl) return;
 
-          const titleEl = document.getElementById('nowPlayingTitle');
-          if (titleEl && data.currentTrack?.title) titleEl.textContent = data.currentTrack.title;
+        if (!queue || queue.length === 0) {
+          listEl.innerHTML = `
+            <div style="text-align:center;padding:36px;color:var(--text-muted);font-size:13px;">
+              <div style="font-size:32px;margin-bottom:12px;animation:float 3s ease-in-out infinite;">🎶</div>
+              <div style="font-weight:600;color:var(--text-primary);margin-bottom:4px;">Antrian Kosong</div>
+              <div>Gunakan perintah <code style="background:var(--bg-elevated);padding:2px 6px;border-radius:4px;color:var(--primary);">/play</code> di Discord untuk memutar musik.</div>
+            </div>
+          `;
+          return;
+        }
 
-          const artistEl = document.getElementById('nowPlayingArtist');
-          if (artistEl && data.currentTrack?.author) artistEl.textContent = data.currentTrack.author;
+        listEl.innerHTML = queue.map((track, i) => `
+          <div class="queue-item ${i === 0 ? 'current' : ''}">
+            <div class="queue-num">${i === 0 ? '▶' : i + 1}</div>
+            <div class="queue-thumb">${i === 0 ? '🎵' : '💿'}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;color:${i === 0 ? 'var(--primary)' : 'var(--text-primary)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${track.title || 'Unknown Title'}
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);">
+                ${track.author || 'Artis'} · ${formatTime(track.duration)}
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
 
-          const dur = data.currentTrack?.duration || 0;
-          const pos = data.currentTrack?.position || 0;
-          const durEl = document.getElementById('musicDuration');
-          if (durEl) durEl.textContent = formatTime(dur);
-          const curEl = document.getElementById('musicCurrentTime');
-          if (curEl) curEl.textContent = formatTime(pos);
+      async function clearQueue() {
+        try {
+          await fetch('/api/music/control', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ guildId: 'current', action: 'clear' }),
+          });
+          renderQueue([]);
+        } catch (_) {}
+      }
 
-          const progressEl = document.getElementById('musicProgress');
-          if (progressEl && dur > 0) {
-            progressEl.style.width = `${Math.min(100, Math.round((pos / dur) * 100))}%`;
-          }
-
-          if (data.volume !== undefined) {
-            const volSlider = document.getElementById('volumeSlider');
-            const volLabel = document.getElementById('volumeLabel');
-            if (volSlider && document.activeElement !== volSlider) volSlider.value = data.volume;
-            if (volLabel) volLabel.textContent = `${data.volume}%`;
-          }
+      async function shuffleQueue() {
+        try {
+          await fetch('/api/music/control', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ guildId: 'current', action: 'shuffle' }),
+          });
+          setTimeout(fetchMusicQueue, 400);
         } catch (_) {}
       }
 
@@ -736,6 +815,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ guildId: 'current', action: 'playpause' }),
           });
+          setTimeout(fetchMusicState, 300);
         } catch (_) {}
       }
 
@@ -747,13 +827,28 @@
             body: JSON.stringify({ guildId: 'current', action: 'skip' }),
           });
           setTimeout(fetchMusicState, 300);
+          setTimeout(fetchMusicQueue, 500);
         } catch (_) {}
       });
 
-      // Volume slider label update
-      document.getElementById('volumeSlider')?.addEventListener('input', function() {
-        document.getElementById('volumeLabel').textContent = this.value + '%';
-      });
+      // Volume slider label update & control send
+      const volSlider = document.getElementById('volumeSlider');
+      if (volSlider) {
+        volSlider.addEventListener('input', function() {
+          const lbl = document.getElementById('volumeLabel');
+          if (lbl) lbl.textContent = this.value + '%';
+        });
+        volSlider.addEventListener('change', async function() {
+          const vol = parseInt(this.value, 10) || 70;
+          try {
+            await fetch('/api/music/control', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ guildId: 'current', action: 'volume', value: vol }),
+            });
+          } catch (_) {}
+        });
+      }
 
       // Audio filter highlight
       function setAudioFilter(filter) {
@@ -773,9 +868,26 @@
         document.getElementById('aiDjStatus').className = this.checked ? 'badge badge-violet' : 'badge badge-muted';
       });
 
+      // Socket.IO live integration
+      if (typeof io !== 'undefined') {
+        try {
+          const socket = io();
+          socket.on('connect', () => {
+            socket.emit('join_room', 'dashboard:home');
+          });
+          socket.on('music_state', (data) => {
+            updatePlayerUI(data);
+          });
+          socket.on('music_queue', (queueData) => {
+            renderQueue(queueData.queue || queueData);
+          });
+        } catch (_) {}
+      }
+
       window.addEventListener('load', () => {
         fetchMusicState();
-        setInterval(fetchMusicState, 3000);
+        fetchMusicQueue();
+        setInterval(fetchMusicState, 4000);
       });
 
       // Mobile grid

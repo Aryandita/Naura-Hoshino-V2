@@ -166,12 +166,67 @@ const tools = [
   },
 ];
 
-async function dispatchFunction(name, args = {}, message = {}) {
+/**
+ * Validasi ketat argumen function calling terhadap JSON Schema deklarasi
+ * @param {string} name
+ * @param {object} args
+ * @returns {{ valid: boolean, sanitizedArgs?: object, error?: string }}
+ */
+function validateFunctionArgs(name, args = {}) {
+  const tool = tools.find((t) => t.name === name);
+  if (!tool) return { valid: false, error: `Function "${name}" tidak ditemukan dalam deklarasi tools.` };
+
+  const schema = tool.parameters;
+  if (!schema) return { valid: true, sanitizedArgs: args };
+
+  const required = schema.required || [];
+  for (const field of required) {
+    if (args[field] === undefined || args[field] === null || args[field] === "") {
+      return {
+        valid: false,
+        error: `Parameter wajib '${field}' hilang untuk fungsi '${name}'.`,
+      };
+    }
+  }
+
+  const sanitized = { ...args };
+  const props = schema.properties || {};
+
+  for (const [key, prop] of Object.entries(props)) {
+    if (sanitized[key] !== undefined && sanitized[key] !== null) {
+      if (prop.type === "STRING") {
+        sanitized[key] = String(sanitized[key]).trim();
+        if (prop.enum && !prop.enum.includes(sanitized[key].toLowerCase())) {
+          sanitized[key] = prop.enum[0];
+        }
+      } else if (prop.type === "NUMBER" || prop.type === "INTEGER") {
+        const num = Number(sanitized[key]);
+        if (Number.isNaN(num)) {
+          return {
+            valid: false,
+            error: `Parameter '${key}' harus berupa angka valid.`,
+          };
+        }
+        sanitized[key] = num;
+      }
+    }
+  }
+
+  return { valid: true, sanitizedArgs: sanitized };
+}
+
+async function dispatchFunction(name, rawArgs, message) {
   const author = message.author || message.user || {};
   const userId = author.id;
   if (!userId) {
     return { error: "User ID tidak terdeteksi dari konteks pesan." };
   }
+
+  const validation = validateFunctionArgs(name, rawArgs);
+  if (!validation.valid) {
+    return { error: validation.error };
+  }
+  const args = validation.sanitizedArgs || rawArgs || {};
 
   try {
     // 1. CHECK BALANCE
@@ -588,4 +643,5 @@ async function dispatchFunction(name, args = {}, message = {}) {
 module.exports = {
   tools,
   dispatchFunction,
+  validateFunctionArgs,
 };
