@@ -34,7 +34,7 @@ export class HandController {
         const harmonics = context.harmonics || null;
         const dur = context.duration || 3.0;
         const tNorm = context.tNorm || 0;
-        const lerpSpeed = 1.0 - Math.exp(-9.0 * delta);
+        const lerpSpeed = 1.0 - Math.exp(-14.0 * delta);
 
         // 1. Tangan Kanan
         try {

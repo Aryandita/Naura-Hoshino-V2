@@ -1,0 +1,16 @@
+### Naura Hoshino V2 - Soundboard & Audio REST API Collection
+### Kompatibel dengan VS Code / Antigravity REST Client & Bruno
+
+@baseUrl = http://localhost:3000
+
+### 1. Daftar Kategori Soundboard
+GET {{baseUrl}}/api/soundboard/categories
+Accept: application/json
+
+### 2. Daftar Efek Suara SFX
+GET {{baseUrl}}/api/soundboard/sfx
+Accept: application/json
+
+### 3. AI Ensemble Status Telemetri
+GET {{baseUrl}}/api/ai/telemetry
+Accept: application/json

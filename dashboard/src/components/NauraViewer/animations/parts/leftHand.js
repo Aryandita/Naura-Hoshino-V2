@@ -38,7 +38,8 @@ export class LeftHandController {
 
         try {
             const targetBones = context.targetBones || {};
-            const lerpSpeed = 1.0 - Math.exp(-9.0 * delta);
+            // pergelangan dibuat lebih responsif (14/dtk) agar ayunan tangan terlihat jelas
+            const lerpSpeed = 1.0 - Math.exp(-14.0 * delta);
 
             const base = targetBones.leftHand || [0, 0, 0];
             const target = [

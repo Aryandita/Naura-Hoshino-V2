@@ -1,10 +1,10 @@
 /**
  * tools/apply_skin_fix.js - Memperbaiki skinning model Naura (GLB / VRM)
- * agar rok tidak ikut tertarik saat lengan diangkat.
+ * agar rok tidak ikut tertarik saat lengan diangkat dan re-rig sendi lengan ke tengah mesh.
  *
  * Versi Node.js murni (100% kompatibel tanpa dependensi Python/NumPy).
  *
- * Pemakaian: node tools/apply_skin_fix.js <model_asli.vrm> <model_baru.vrm>
+ * Pemakaian: node tools/apply_skin_fix.js <model_asli.vrm> <model_baru.vrm> [fixed_glb]
  */
 
 const fs = require("fs");
@@ -61,7 +61,7 @@ function writeGlb(filePath, chunks) {
 }
 
 function patchSkinningFromFixedGlb(vrmSrc, vrmDst, glbFixedPath) {
-    console.log(`[SkinFix] Membaca model VRM: ${vrmSrc}`);
+    console.log(`[SkinFix] Membaca model target: ${vrmSrc}`);
     const vrmChunks = readGlb(vrmSrc);
     const glbChunks = readGlb(glbFixedPath);
 
@@ -76,7 +76,7 @@ function patchSkinningFromFixedGlb(vrmSrc, vrmDst, glbFixedPath) {
     const vrmPrim = vrmJs.meshes[0].primitives[0];
     const glbPrim = glbJs.meshes[0].primitives[0];
 
-    // Salin buffer indices (bv 4), joints (bv 8), dan weights (bv 9)
+    // Salin buffer indices (bv 4), joints (bv 8), weights (bv 9), dan IBM (bv 7)
     const indAccVrm = vrmJs.accessors[vrmPrim.indices];
     const indBvVrm = vrmJs.bufferViews[indAccVrm.bufferView];
 
@@ -86,8 +86,10 @@ function patchSkinningFromFixedGlb(vrmSrc, vrmDst, glbFixedPath) {
     const weightsAccVrm = vrmJs.accessors[vrmPrim.attributes.WEIGHTS_0];
     const weightsBvVrm = vrmJs.bufferViews[weightsAccVrm.bufferView];
 
-    // Salin byte data dari GLB yang sudah diperbaiki ke VRM
-    console.log("[SkinFix] Menyalin data buffer Indices, JOINTS_0, dan WEIGHTS_0 yang telah diperbaiki...");
+    const ibmAccVrm = vrmJs.accessors[vrmJs.skins[0].inverseBindMatrices];
+    const ibmBvVrm = vrmJs.bufferViews[ibmAccVrm.bufferView];
+
+    console.log("[SkinFix] Menyalin data buffer Indices (bv4), JOINTS_0 (bv8), WEIGHTS_0 (bv9), dan IBM (bv7)...");
     glbBinChunk.data.copy(
         vrmBinChunk.data,
         indBvVrm.byteOffset,
@@ -106,25 +108,59 @@ function patchSkinningFromFixedGlb(vrmSrc, vrmDst, glbFixedPath) {
         weightsBvVrm.byteOffset,
         weightsBvVrm.byteOffset + weightsBvVrm.byteLength
     );
+    glbBinChunk.data.copy(
+        vrmBinChunk.data,
+        ibmBvVrm.byteOffset,
+        ibmBvVrm.byteOffset,
+        ibmBvVrm.byteOffset + ibmBvVrm.byteLength
+    );
 
-    // Update metadata accessor indices VRM
+    // Update metadata accessor indices
     const indAccGlb = glbJs.accessors[glbPrim.indices];
     indAccVrm.count = indAccGlb.count;
     indAccVrm.min = indAccGlb.min;
     indAccVrm.max = indAccGlb.max;
 
-    // Perbarui JSON chunk VRM
+    // Update translasi sendi lengan
+    const armNodeNames = ["RightArm", "RightForeArm", "RightHand", "LeftArm", "LeftForeArm", "LeftHand"];
+    const glbNodesByName = {};
+    for (const n of glbJs.nodes) {
+        if (n.name) glbNodesByName[n.name] = n;
+    }
+
+    let updatedNodesCount = 0;
+    for (const n of vrmJs.nodes) {
+        if (n.name && armNodeNames.includes(n.name)) {
+            const glbNode = glbNodesByName[n.name];
+            if (glbNode && glbNode.translation) {
+                n.translation = [...glbNode.translation];
+                updatedNodesCount++;
+            }
+        }
+    }
+    console.log(`[SkinFix] Memperbarui translasi node sendi lengan (${updatedNodesCount} sendi)...`);
+
+    // Tambahkan penanda naura_fix
+    if (!vrmJs.asset) vrmJs.asset = {};
+    if (!vrmJs.asset.extras) vrmJs.asset.extras = {};
+    vrmJs.asset.extras.naura_fix = "skin-weights+arm-joints v2";
+
+    // Perbarui JSON chunk
     vrmJsChunk.data = Buffer.from(JSON.stringify(vrmJs));
 
-    // Tulis file VRM hasil perbaikan
-    console.log(`[SkinFix] Menulis file VRM hasil perbaikan ke: ${vrmDst}`);
+    // Tulis file hasil perbaikan
+    console.log(`[SkinFix] Menulis file hasil perbaikan ke: ${vrmDst}`);
     writeGlb(vrmDst, vrmChunks);
-    console.log(`✨ [SkinFix] Sukses! VRM telah ditambal dengan 424 segitiga jahitan dibuang dan bobot vertex diperbaiki.`);
+    console.log(`✨ [SkinFix] Sukses! Model telah ditambal dengan sendi lengan baru dan bobot vertex diperbaiki.`);
 }
 
-const args = process.argv.slice(2);
-const src = args[0] || "dashboard/public/models/naura NEW.vrm";
-const dst = args[1] || "dashboard/public/models/naura NEW.vrm";
-const fixedGlb = args[2] || path.join(__dirname, "../naura_NEW_fixed.glb");
+if (require.main === module) {
+    const args = process.argv.slice(2);
+    const src = args[0] || "dashboard/public/models/naura NEW.vrm";
+    const dst = args[1] || src;
+    const fixedGlb = args[2] || path.join(__dirname, "../naura_NEW_fixed.glb");
 
-patchSkinningFromFixedGlb(src, dst, fixedGlb);
+    patchSkinningFromFixedGlb(src, dst, fixedGlb);
+}
+
+module.exports = { patchSkinningFromFixedGlb };

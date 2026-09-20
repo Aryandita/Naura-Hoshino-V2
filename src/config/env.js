@@ -187,9 +187,9 @@ const env = {
   // MONGODB
   MONGODB_URI: cleanEnv(process.env.MONGODB_URI || process.env.MONGO_URI),
 
-  // OLLAMA (Local AI Fallback)
-  OLLAMA_BASE_URL:
-    cleanEnv(process.env.OLLAMA_BASE_URL) || "http://localhost:11434",
+  // OLLAMA (Local AI Fallback - Dinonaktifkan default untuk lingkungan Web Hosting)
+  OLLAMA_ENABLED: cleanEnv(process.env.OLLAMA_ENABLED) === "true",
+  OLLAMA_BASE_URL: cleanEnv(process.env.OLLAMA_BASE_URL) || "",
   OLLAMA_MODEL: cleanEnv(process.env.OLLAMA_MODEL) || "llama3.1",
 
   // FOOOCUS (Local Image Generation)

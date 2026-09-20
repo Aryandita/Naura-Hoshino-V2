@@ -148,7 +148,7 @@ class AiEnsembleRouter {
       case "groq":
         return Boolean(env.GROQ_API_KEY);
       case "ollama":
-        return Boolean(env.OLLAMA_BASE_URL);
+        return Boolean(env.OLLAMA_ENABLED && env.OLLAMA_BASE_URL);
       default:
         return false;
     }
@@ -361,8 +361,8 @@ class AiEnsembleRouter {
     const candidateModels = [
       env.GROQ_MODEL || "llama-3.3-70b-versatile",
       "llama-3.1-8b-instant",
-      "llama-3.2-3b-preview",
-      "llama-3.2-1b-preview",
+      "mixtral-8x7b-32768",
+      "gemma2-9b-it",
     ];
 
     let lastGroqStatus = null;
@@ -379,9 +379,12 @@ class AiEnsembleRouter {
       }
       lastGroqStatus = res.status;
       lastGroqErr = await res.text().catch(() => "");
-      if (res.status === 404) {
+      const isDecommissioned =
+        lastGroqErr.includes("decommissioned") ||
+        lastGroqErr.includes("no longer supported");
+      if (res.status === 404 || (res.status === 400 && isDecommissioned)) {
         logger.info(
-          `[AiEnsembleRouter] Model Groq ${targetModel} tidak tersedia (404), mencoba model cadangan berikutnya...`,
+          `[AiEnsembleRouter] Model Groq ${targetModel} tidak tersedia (${res.status}), mencoba model cadangan berikutnya...`,
         );
         continue;
       }

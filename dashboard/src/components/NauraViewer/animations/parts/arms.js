@@ -43,12 +43,15 @@ export class ArmController {
     update(delta, elapsed, context = {}) {
         const targetBones = context.targetBones || {};
         // Gaya gerak realistis berbasis fisika (smooth exponential decay)
-        const lerpSpeed = 1.0 - Math.exp(-8.0 * delta);
+        const baseLerp = 8.0;   // lengan atas & bahu: halus
+        const elbowLerp = 13.0; // siku lebih responsif agar ayunan lambaian tidak teredam
 
         for (const key of ARM_KEYS) {
             try {
                 const bone = this.bones[key];
                 if (!bone) continue;
+
+                const lerpSpeed = 1.0 - Math.exp(-(key.endsWith("LowerArm") ? elbowLerp : baseLerp) * delta);
 
                 const base = targetBones[key] || [0, 0, 0];
                 const current = this.currentRotations[key];

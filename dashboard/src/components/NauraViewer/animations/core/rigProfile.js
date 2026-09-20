@@ -216,14 +216,14 @@ export const vrmToRig = (v) => [v[2], v[1], -v[0]];
 
 /**
  * Batas sudut aman per sendi dalam sumbu rig: { x: [min, max], y: [...], z: [...] }.
- * Lengan sengaja sangat lebar: dalam Euler YXZ, pose lengan terangkat (Cheers / AstralCast)
- * bernilai hingga ~3.1 rad pada satu sumbu.
+ * Lengan sengaja sangat lebar (+/-7 rad): dalam Euler YXZ, rotasi mendekati 180 derajat (lengan lurus ke atas,
+ * putaran telapak saat lengan turun) bisa bernilai hingga ~2*pi pada satu sumbu, padahal rotasinya tetap wajar.
  */
 export const RIG_LIMITS = {
     head: { x: [-0.40, 0.40], y: [-0.78, 0.78], z: [-0.78, 0.78] },
     neck: { x: [-0.35, 0.35], y: [-0.61, 0.61], z: [-0.61, 0.61] },
-    upperArm: { x: [-3.6, 3.6], y: [-3.6, 3.6], z: [-3.6, 3.6] },
-    lowerArm: { x: [-3.0, 3.0], y: [-3.0, 3.0], z: [-2.2, 3.0] },
+    upperArm: { x: [-7.0, 7.0], y: [-7.0, 7.0], z: [-7.0, 7.0] },
+    lowerArm: { x: [-7.0, 7.0], y: [-7.0, 7.0], z: [-7.0, 7.0] },
 };
 
 /** Clamp vektor [x, y, z] (in-place) sesuai batas { x, y, z }. */

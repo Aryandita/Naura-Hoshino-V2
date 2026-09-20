@@ -1,0 +1,24 @@
+### Naura Hoshino V2 - Dashboard & Core REST API Collection
+### Kompatibel dengan VS Code / Antigravity REST Client & Bruno
+
+@baseUrl = http://localhost:3000
+
+### 1. Health Check Endpoint
+GET {{baseUrl}}/api/health
+Accept: application/json
+
+### 2. Telemetry & Bot Realtime Stats
+GET {{baseUrl}}/api/stats
+Accept: application/json
+
+### 3. User Session Info (Dashboard Auth Profile)
+GET {{baseUrl}}/api/user/me
+Accept: application/json
+
+### 4. Guilds List (Memerlukan sesi login Discord)
+GET {{baseUrl}}/api/guilds
+Accept: application/json
+
+### 5. Leaderboard Economy & Survival Top 30
+GET {{baseUrl}}/api/leaderboard
+Accept: application/json

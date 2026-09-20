@@ -27,6 +27,10 @@
     "locales:check": "node scripts/validate-locales.js",
     "locales:check:strict": "node scripts/validate-locales.js --strict",
     "test:requires": "node scripts/check-requires.js",
+    "qa": "node scripts/qa-gate.js",
+    "db:inspect": "node scripts/inspect-db.js",
+    "test:services": "node scripts/test-services.js",
+    "preview:3d": "node scripts/preview-3d.js",
     "sync:github": "node scripts/git-sync.js",
     "assistant": "node assistant/server.js"
   },

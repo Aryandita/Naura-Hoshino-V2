@@ -43,7 +43,8 @@ export class RightHandController {
             const harmonics = context.harmonics || null;
             const dur = context.duration || 3.0;
             const tNorm = context.tNorm || 0;
-            const lerpSpeed = 1.0 - Math.exp(-9.0 * delta);
+            // pergelangan dibuat lebih responsif (14/dtk) agar ayunan tangan terlihat jelas
+            const lerpSpeed = 1.0 - Math.exp(-14.0 * delta);
 
             const base = targetBones.rightHand || [0, 0, 0];
             let wristOffsetZ = 0;
