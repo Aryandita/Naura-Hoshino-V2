@@ -31,12 +31,15 @@ jobs:
           pip install strix-agent || echo "Strix pip package installed"
 
       - name: Run Strix Security Audit
-        if: ${{ secrets.STRIX_LLM_KEY != '' || secrets.OPENAI_API_KEY != '' }}
+        if: ${{ secrets.GROQ_API_KEY != '' || secrets.GEMINI_API_KEY != '' || secrets.OPENAI_API_KEY != '' || secrets.STRIX_LLM_KEY != '' }}
         env:
-          LLM_API_KEY: ${{ secrets.STRIX_LLM_KEY || secrets.OPENAI_API_KEY }}
-          STRIX_LLM: ${{ secrets.STRIX_LLM_MODEL || 'openai/gpt-4o' }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LLM_API_KEY: ${{ secrets.STRIX_LLM_KEY || secrets.GROQ_API_KEY || secrets.OPENAI_API_KEY || secrets.GEMINI_API_KEY }}
+          STRIX_LLM: ${{ secrets.STRIX_LLM_MODEL || (secrets.GROQ_API_KEY != '' && 'groq/openai/gpt-oss-120b') || (secrets.GEMINI_API_KEY != '' && 'gemini/gemini-2.5-flash') || 'openai/gpt-4o' }}
         run: |
-          echo "Starting Strix autonomous security validation..."
+          echo "Starting Strix autonomous security validation with $STRIX_LLM..."
           strix --target . --output ./strix-report || true
 
       - name: Upload Security Report
@@ -48,5 +51,5 @@ jobs:
           if-no-files-found: ignore
 
       - name: Skip Notification
-        if: ${{ secrets.STRIX_LLM_KEY == '' && secrets.OPENAI_API_KEY == '' }}
-        run: echo "No LLM API key secret found for Strix (set STRIX_LLM_KEY or OPENAI_API_KEY in repository Secrets). Skipping scan."
+        if: ${{ secrets.GROQ_API_KEY == '' && secrets.GEMINI_API_KEY == '' && secrets.OPENAI_API_KEY == '' && secrets.STRIX_LLM_KEY == '' }}
+        run: echo "No LLM API key secret found (set GROQ_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY in repository Secrets). Skipping scan."
