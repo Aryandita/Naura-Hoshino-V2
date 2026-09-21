@@ -1,6 +1,7 @@
 name: OpenCodeReview PR Review
 
 on:
+  workflow_dispatch:
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -35,7 +36,11 @@ jobs:
           ocr config set llm.url "$OCR_LLM_URL"
           ocr config set llm.auth_token "$OCR_LLM_TOKEN"
           ocr config set llm.model "$OCR_LLM_MODEL"
-          ocr review --audience agent --background "Naura Hoshino V2: Discord bot and Web Dashboard ecosystem. Ensure clean code, high security, atomic DB transactions, no em-dashes, and strict syntax integrity."
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ocr scan --path src,plugin,dashboard/server.js --audience agent
+          else
+            ocr review --audience agent --background "Naura Hoshino V2: Discord bot and Web Dashboard ecosystem. Ensure clean code, high security, atomic DB transactions, no em-dashes, and strict syntax integrity."
+          fi
 
       - name: Skip Notification
         if: ${{ secrets.OCR_LLM_TOKEN == '' }}
