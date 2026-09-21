@@ -269,3 +269,13 @@ Seluruh agen AI dan kontributor wajib merujuk pada pilar dokumentasi yang tepat 
 | [`TODO.md`](TODO.md) | **Roadmap & Sprint Backlog** | Untuk melihat status tugas yang sedang dikerjakan dan backlog sprint berikutnya. |
 | [`.agents/skills/naura-dev/SKILL.md`](.agents/skills/naura-dev/SKILL.md) | **Workspace Skill Naura Dev** | Prosedur cepat eksekusi subagent untuk development bot. |
 
+<!-- antislop:start -->
+## 🛡️ Anti-Slop (Filter Desain & Copy AI)
+Untuk pembuatan/perombakan UI, penulisan copy, evaluasi aksesibilitas, responsive layout, atau komentar kode, rujuk `antislop.md` (core filter) dan skill terkait:
+- UI & Visual: `.agents/skills/antislop-ui/SKILL.md`
+- Copy & Teks: `.agents/skills/antislop-copywriting/SKILL.md`
+- Aksesibilitas & Kontras: `.agents/skills/antislop-human/SKILL.md`
+- Tata Letak Mobile & Responsif: `.agents/skills/antislop-layoutmobile/SKILL.md`
+- Komentar Kode Bersih: `.agents/skills/antislop-code/SKILL.md`
+Sebelum memulai pekerjaan UI, tanyakan kepada pengguna mode kerja antislop yang diinginkan: DURING (saat proses kerja) atau AFTER (audit setelah selesai).
+<!-- antislop:end -->

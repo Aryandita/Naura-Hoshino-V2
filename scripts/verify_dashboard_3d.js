@@ -112,7 +112,7 @@ async function main() {
 
     console.log("Menunggu model 3D dimuat di dashboard...");
     let isLoaded = false;
-    for (let attempt = 0; attempt < 30; attempt++) {
+    for (let attempt = 0; attempt < 75; attempt++) {
       await new Promise((r) => setTimeout(r, 1000));
       const checkMsgId = send("Runtime.evaluate", {
         expression:

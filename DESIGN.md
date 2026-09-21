@@ -703,6 +703,14 @@ Semua komponen di bawah tetap tunduk pada struktur 5-lapisan Components V2 dan b
 - **Server Treasury Gauges**: Bar persentase 4 alokasi kas server persisten (40% Infrastruktur Klan, 25% Undian Lottery, 20% Subsidi Pemula, 15% Merchant Incentive).
 - **Durability Status Bars**: Bar indikator ketahanan alat tempur (Hijau saat penuh, Amber saat aus < 50%, Merah saat rusak kritis).
 
+### 5. Integrasi Filter Anti-Slop (Pencegah AI Slop pada UI & Desain)
+
+Seluruh implementasi antarmuka pada Web Dashboard, Discord Components V2, dan visual Canvas wajib disaring melalui aturan **Anti-Slop** ([`antislop.md`](antislop.md) dan [`RULES.md`](RULES.md#143-standar-filter-anti-slop-web-dashboard--antarmuka-ui)):
+- **Dosis Glassmorphism Tertakar (R-10)**: Efek blur/glassmorphism dibatasi maksimal 1-2 elemen struktural per tampilan (stage kanvas 3D `#naura3d-canvas-wrapper` dan top navigation bar). Kartu data lainnya menggunakan permukaan solid matte (`var(--bg-layer)`) dengan hairline border 1px presisi.
+- **Bebas Partikel Tak Berfungsi (R-07)**: Dilarang menempatkan pulsating dots, blurred radial orbs, atau partikel mengambang tanpa fungsi interaktif atau representasi data nyata.
+- **Skala Radius Terarah (R-11)**: Kartu metrik menggunakan sudut tegas 8-12px (`var(--r-md)` / `var(--r-lg)`), tombol aksi proporsional, dan badge status ringkas (tidak menyeragamkan seluruh elemen menjadi bentuk pil/kapsul).
+- **Kejujuran Data & Telemetri Real-Time (R-02, R-03, R-36)**: Metrik angka diambil dari Gateway WebSocket Discord, memori Node.js, status DB Supabase/Redis, dan data shard cluster #0 nyata.
+
 ---
 
 ## 🔗 Peta Hubungan Dokumen Ekosistem (Pentalogi Dokumentasi)
@@ -717,4 +725,5 @@ Sistem desain ini bekerja beriringan dengan seluruh pilar dokumentasi lainnya:
 | [`RULES.md`](RULES.md) | **Konstitusi & Standar Teknis** | "Bagaimana aturan hukum kode, batas transaksi atomik DB, keamanan, dan anti-crash?" |
 | [`AGENTS.md`](AGENTS.md) | **Navigasi & SOP AI Agent** | "Di mana letak file-nya, bagaimana alur data interaksi ke database, dan apa checklist QA?" |
 | [`TODO.md`](TODO.md) | **Roadmap & Sprint Backlog** | "Pekerjaan apa yang sedang berlangsung dan apa prioritas berikutnya?" |
+
 

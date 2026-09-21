@@ -23,6 +23,7 @@
 | **Commit & Branch**     | `<emoji> <tipe>: <deskripsi singkat>`, branch `main` (prod), `dev`, `feature/*`           | Bagian 1.2         |
 | **Keamanan**            | Jangan pernah commit `.env`, timingSafeEqual untuk webhook, batasi eval                   | Bagian 1.3         |
 | **UI Discord**          | Wajib Components V2 via `buildContainerV2()` struktur 5-lapisan, flags `32768`            | Bagian 1.4         |
+| **Standar Anti-Slop**   | Filter desain & copy AI (R-01 s/d R-38), data jujur, tanpa gradien/orb generik, Delivery Gate | Bagian 1.4.3 |
 | **Desain Survival**     | Sub-brand Naura Wilds, token warna dari `src/utils/survivalUIHelper.js`                   | Bagian 1.5         |
 | **Tulis Data User**     | HANYA via `cacheManager` (increment/debit/mutateJson), bukan model langsung               | Bagian 1.6         |
 | **Currency V2 Moneter** | Controlled Bridge (1000 NSF = 1 NC, Spread Fee 5-25%), 4-Channel Closed-Loop Pool       | Bagian 1.6.3 & 1.6.4 |
@@ -121,6 +122,26 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 - **Sanitasi Emoji di Header & Footer**: Custom emoji Discord (`<:name:id>`) TIDAK didukung pada `authorName` dan `footerText`. Gunakan `ui.stripCustomEmojis()` sebelum mengisinya.
 - **Tombol dengan Custom Emoji**: Parsing emoji tombol via `ui.parseEmoji(ui.getEmoji('nama'))` untuk menghasilkan objek `{ id, name, animated }` yang valid.
 - **Batas Payload**: Maksimal 40 komponen per pesan dan total teks aman di bawah 3.500 karakter. `src/utils/componentBudget.js` memotong isi berlebih secara otomatis tanpa mengorbankan tombol atau footer.
+
+### 1.4.3 Standar Filter Anti-Slop (Web Dashboard & Antarmuka UI)
+
+> [!IMPORTANT]
+> Seluruh pembuatan atau modifikasi antarmuka UI (Web Dashboard, Canvas, dan Embed/Container Discord) serta penulisan copy WAJIB mematuhi sistem **Anti-Slop** ([`antislop.md`](antislop.md) dan `.agents/skills/antislop-*/`). Anti-Slop berfungsi sebagai **filter pencegah output AI murahan**, sedangkan [`DESIGN.md`](DESIGN.md) adalah sumber arah gaya dan jiwa visual proyek.
+
+- **Modus Eksekusi Wajib**: Sebelum memulai tugas perancangan atau perubahan UI/copy, agen WAJIB mengonfirmasi mode kerja kepada pengguna:
+  1. *DURING*: Diterapkan secara langsung saat penulisan kode berlangsung (mencegah slop sejak awal + penutupan dengan Delivery Gate).
+  2. *AFTER*: Dilakukan melalui audit menyeluruh terhadap kode/tampilan yang sudah ada dengan daftar temuan bernomor (*findings list*) dan prioritas.
+- **Larangan Gradien Default & Orb Buram (R-01, R-07)**: Dilarang menggunakan gradien ungu-biru/pelangi generik atau lingkaran cahaya buram (*blurred radial orbs*) di latar belakang tanpa fungsi struktural nyata.
+- **Kejujuran Data & Telemetri Nyata (R-02, R-03, R-36)**: Seluruh angka, persentase, latensi, dan metrik server WAJIB diambil dari data nyata (Gateway WebSocket, memori Node.js, status PostgreSQL/MongoDB, cluster shard). Dilarang mengarang metrik vanity ("99.999% satisfaction", "10,000% synergy") atau widget terminal palsu dengan output buatan.
+- **Copywriting Lugas Tanpa Buzzword AI (R-04)**: Dilarang menggunakan frasa klise AI seperti *"Unlock the power of..."*, *"Next-Gen 2.0 AI"*, atau *"Revolutionize your server"*. Gunakan teks bahasa manusia yang padat, jelas, dan berorientasi manfaat nyata.
+- **Batas Dosis Glassmorphism (R-10)**: Efek blur/glassmorphism dibatasi maksimal 1-2 elemen utama per halaman (misalnya stage kanvas maskot 3D atau navbar utama). Kontainer data lainnya harus berupa permukaan solid matte dengan border 1px presisi.
+- **Skala Radius Terarah (R-11)**: Dilarang menyeragamkan seluruh elemen menjadi bentuk pil (*pill-shaped*). Kartu data memakai sudut tegas (8-12px), tombol interaktif proporsional, dan badge status ringkas.
+- **Pembatasan Palet Aktif (R-29)**: Maksimal 2-3 warna inti netral/gelap + 1 aksen terarah ([`DESIGN.md`](DESIGN.md): Naura Rose `#F472B6` / `#FF7E95` dan Cyan `#22D3EE` untuk indikator koneksi aktif).
+- **Liveliness Dials (Part 3)**: Desain antarmuka baru wajib menetapkan skala:
+  - *ENERGY (1-3)*: Tingkat fokus fungsional dan karakter.
+  - *RHYTHM (1-3)*: Variasi ukuran dan tata letak hierarki visual.
+  - *MOTION (1-3)*: Responsivitas interaksi (klik maskot, micro-lift tombol, tanpa animasi berulang tak bermakna).
+- **Delivery Gate Mandatori (R-38)**: Setiap pekerjaan UI sebelum dinyatakan selesai WAJIB melewati evaluasi 4 blok: *Honesty*, *Purpose*, *Liveliness*, dan *Accessibility* (WCAG AA/AAA).
 
 ## 1.5 Panduan Desain Survival RPG (Naura Wilds)
 
