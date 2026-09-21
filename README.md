@@ -16,6 +16,11 @@ Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D
 [![Lavalink](https://img.shields.io/badge/Lavalink-v4-FF6B6B?style=for-the-badge&logo=musicbrainz&logoColor=white)](https://lavalink.dev)
 [![License](https://img.shields.io/badge/License-ISC-8A2BE2?style=for-the-badge)](LICENSE)
 
+<br />
+
+[![OpenCodeReview PR Review](https://github.com/Aryandita/Naura-Hoshino-V2/actions/workflows/open-code-review.yml/badge.svg)](https://github.com/Aryandita/Naura-Hoshino-V2/actions/workflows/open-code-review.yml)
+[![Strix AI Penetration Testing](https://github.com/Aryandita/Naura-Hoshino-V2/actions/workflows/strix.yml/badge.svg)](https://github.com/Aryandita/Naura-Hoshino-V2/actions/workflows/strix.yml)
+
 </div>
 
 <br />
