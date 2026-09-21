@@ -31,15 +31,32 @@ jobs:
           pip install strix-agent || echo "Strix pip package installed"
 
       - name: Run Strix Security Audit
-        if: ${{ secrets.GROQ_API_KEY != '' || secrets.GEMINI_API_KEY != '' || secrets.OPENAI_API_KEY != '' || secrets.STRIX_LLM_KEY != '' }}
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          LLM_API_KEY: ${{ secrets.STRIX_LLM_KEY || secrets.GROQ_API_KEY || secrets.OPENAI_API_KEY || secrets.GEMINI_API_KEY }}
-          STRIX_LLM: ${{ secrets.STRIX_LLM_MODEL || (secrets.GROQ_API_KEY != '' && 'groq/openai/gpt-oss-120b') || (secrets.GEMINI_API_KEY != '' && 'gemini/gemini-2.5-flash') || 'openai/gpt-4o' }}
+          STRIX_LLM_KEY: ${{ secrets.STRIX_LLM_KEY }}
+          STRIX_LLM_MODEL: ${{ secrets.STRIX_LLM_MODEL }}
         run: |
-          echo "Starting Strix autonomous security validation with $STRIX_LLM..."
+          LLM_KEY="${STRIX_LLM_KEY:-${GROQ_API_KEY:-${OPENAI_API_KEY:-${GEMINI_API_KEY}}}}"
+          if [ -z "$LLM_KEY" ]; then
+            echo "No LLM API key secret found. Please set GROQ_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY in repository Secrets."
+            exit 0
+          fi
+
+          if [ -n "$STRIX_LLM_MODEL" ]; then
+            MODEL="$STRIX_LLM_MODEL"
+          elif [ -n "$GROQ_API_KEY" ]; then
+            MODEL="groq/openai/gpt-oss-120b"
+          elif [ -n "$GEMINI_API_KEY" ]; then
+            MODEL="gemini/gemini-2.5-flash"
+          else
+            MODEL="openai/gpt-4o"
+          fi
+
+          echo "Starting Strix autonomous security validation with $MODEL..."
+          export LLM_API_KEY="$LLM_KEY"
+          export STRIX_LLM="$MODEL"
           strix --target . --output ./strix-report || true
 
       - name: Upload Security Report
@@ -49,7 +66,3 @@ jobs:
           name: strix-security-report
           path: ./strix_runs/
           if-no-files-found: ignore
-
-      - name: Skip Notification
-        if: ${{ secrets.GROQ_API_KEY == '' && secrets.GEMINI_API_KEY == '' && secrets.OPENAI_API_KEY == '' && secrets.STRIX_LLM_KEY == '' }}
-        run: echo "No LLM API key secret found (set GROQ_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY in repository Secrets). Skipping scan."
