@@ -11,6 +11,7 @@
 
 import * as THREE from "three";
 import { slerpBoneDirect } from "../core/interpolation.js";
+import { DEFAULT_REST_BONES } from "../core/constants.js";
 
 export class RightHandController {
     constructor(options = {}) {
@@ -46,7 +47,7 @@ export class RightHandController {
             // pergelangan dibuat lebih responsif (14/dtk) agar ayunan tangan terlihat jelas
             const lerpSpeed = 1.0 - Math.exp(-14.0 * delta);
 
-            const base = targetBones.rightHand || [0, 0, 0];
+            const base = targetBones.rightHand || DEFAULT_REST_BONES.rightHand || [0, 0, 0];
             let wristOffsetZ = 0;
 
             // Osilasi telapak tangan saat lambaian (harmonic wave)

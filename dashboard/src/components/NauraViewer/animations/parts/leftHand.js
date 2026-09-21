@@ -9,6 +9,7 @@
  */
 
 import { slerpBoneDirect } from "../core/interpolation.js";
+import { DEFAULT_REST_BONES } from "../core/constants.js";
 import * as THREE from "three";
 
 export class LeftHandController {
@@ -41,7 +42,7 @@ export class LeftHandController {
             // pergelangan dibuat lebih responsif (14/dtk) agar ayunan tangan terlihat jelas
             const lerpSpeed = 1.0 - Math.exp(-14.0 * delta);
 
-            const base = targetBones.leftHand || [0, 0, 0];
+            const base = targetBones.leftHand || DEFAULT_REST_BONES.leftHand || [0, 0, 0];
             const target = [
                 THREE.MathUtils.clamp(base[0], -0.60, 0.60),
                 THREE.MathUtils.clamp(base[1], -0.50, 0.50),

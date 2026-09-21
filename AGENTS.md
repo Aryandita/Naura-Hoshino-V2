@@ -268,6 +268,8 @@ Seluruh agen AI dan kontributor wajib merujuk pada pilar dokumentasi yang tepat 
 | [`AGENTS.md`](AGENTS.md) | **Navigasi & SOP AI Agent** | Untuk memetakan direktori file, alur eksekusi, dan menjalankan checklist QA sebelum commit. |
 | [`TODO.md`](TODO.md) | **Roadmap & Sprint Backlog** | Untuk melihat status tugas yang sedang dikerjakan dan backlog sprint berikutnya. |
 | [`.agents/skills/naura-dev/SKILL.md`](.agents/skills/naura-dev/SKILL.md) | **Workspace Skill Naura Dev** | Prosedur cepat eksekusi subagent untuk development bot. |
+| [`.agents/skills/i-have-adhd/SKILL.md`](.agents/skills/i-have-adhd/SKILL.md) | **ADHD-Friendly Output Skill** | Panduan format respon AI coding: action-first, bernomor, tanpa basa-basi. |
+| [`.agents/skills/strix/SKILL.md`](.agents/skills/strix/SKILL.md) | **Strix Security Audit Skill** | Triase kerentanan AI, validasi PoC, dan eliminasi false positive. |
 
 <!-- antislop:start -->
 ## 🛡️ Anti-Slop (Filter Desain & Copy AI)
@@ -277,5 +279,7 @@ Untuk pembuatan/perombakan UI, penulisan copy, evaluasi aksesibilitas, responsiv
 - Aksesibilitas & Kontras: `.agents/skills/antislop-human/SKILL.md`
 - Tata Letak Mobile & Responsif: `.agents/skills/antislop-layoutmobile/SKILL.md`
 - Komentar Kode Bersih: `.agents/skills/antislop-code/SKILL.md`
+- Gaya Respon Efisien: `.agents/skills/i-have-adhd/SKILL.md`
 Sebelum memulai pekerjaan UI, tanyakan kepada pengguna mode kerja antislop yang diinginkan: DURING (saat proses kerja) atau AFTER (audit setelah selesai).
 <!-- antislop:end -->
+

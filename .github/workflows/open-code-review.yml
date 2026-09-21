@@ -1,0 +1,42 @@
+name: OpenCodeReview PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  review:
+    name: AI Automated Code Review
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install OpenCodeReview
+        run: npm install -g @alibaba-group/open-code-review
+
+      - name: Run Code Review
+        if: ${{ secrets.OCR_LLM_TOKEN != '' }}
+        env:
+          OCR_LLM_TOKEN: ${{ secrets.OCR_LLM_TOKEN }}
+          OCR_LLM_URL: ${{ secrets.OCR_LLM_URL || 'https://api.openai.com/v1' }}
+          OCR_LLM_MODEL: ${{ secrets.OCR_LLM_MODEL || 'gpt-4o' }}
+        run: |
+          ocr config set llm.url "$OCR_LLM_URL"
+          ocr config set llm.auth_token "$OCR_LLM_TOKEN"
+          ocr config set llm.model "$OCR_LLM_MODEL"
+          ocr review --audience agent --background "Naura Hoshino V2: Discord bot and Web Dashboard ecosystem. Ensure clean code, high security, atomic DB transactions, no em-dashes, and strict syntax integrity."
+
+      - name: Skip Notification
+        if: ${{ secrets.OCR_LLM_TOKEN == '' }}
+        run: echo "OCR_LLM_TOKEN secret is not configured. Skipping automated PR review."

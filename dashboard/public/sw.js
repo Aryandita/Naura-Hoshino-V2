@@ -6,7 +6,7 @@
  * efek audio soundboard, dan webfonts agar pemuatan halaman instan (<1 detik).
  */
 
-const CACHE_NAME = "naura-dashboard-v2.3.0";
+const CACHE_NAME = "naura-dashboard-v2.3.1-v7";
 const ASSETS_TO_PRECACHE = [
   "/",
   "/src/css/variables.css",

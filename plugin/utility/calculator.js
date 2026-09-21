@@ -130,6 +130,12 @@ module.exports = {
       time: 300000,
     });
 
+    const ALLOWED_CALC_TOKENS = new Set([
+      "clear", "del", "=", "(", ")", "/", "*", "-", "+", ".",
+      "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+    ]);
+    const SAFE_EXPRESSION_REGEX = /^[0-9+\-*/(). ]+$/;
+
     collector.on("collect", async (i) => {
       if (i.user.id !== interaction.user.id) {
         return i.reply({
@@ -140,6 +146,9 @@ module.exports = {
       }
 
       const val = i.customId.split("_")[1];
+      if (!ALLOWED_CALC_TOKENS.has(val)) {
+        return;
+      }
 
       if (val === "clear") {
         expression = "";
@@ -147,9 +156,11 @@ module.exports = {
         expression = expression.slice(0, -1);
       } else if (val === "=") {
         try {
-          if (expression.length > 0) {
+          if (expression.length > 0 && SAFE_EXPRESSION_REGEX.test(expression)) {
             const result = new Function(`return ${expression}`)();
-            expression = String(result);
+            expression = Number.isFinite(result) ? String(result) : "Error";
+          } else {
+            expression = "Error";
           }
         } catch (e) {
           expression = "Error";
