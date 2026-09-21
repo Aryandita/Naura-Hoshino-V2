@@ -75,7 +75,7 @@ async function main() {
 
     send("Emulation.setDeviceMetricsOverride", {
       width: 1440,
-      height: 900,
+      height: 2500,
       deviceScaleFactor: 1,
       mobile: false,
     });
