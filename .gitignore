@@ -58,6 +58,7 @@ assets/3D Model Naura/**/*.obj
 assets/3D Model Naura/extracted/
 scratch/
 *.glb.bak
+naura_NEW_fixed*.glb
 *.bak
 *.tmp
 

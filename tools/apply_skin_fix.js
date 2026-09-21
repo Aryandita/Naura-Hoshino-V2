@@ -136,14 +136,19 @@ function patchSkinningFromFixedGlb(vrmSrc, vrmDst, glbFixedPath) {
                 n.translation = [...glbNode.translation];
                 updatedNodesCount++;
             }
+            if (glbNode && glbNode.scale) {
+                n.scale = [...glbNode.scale];
+            } else if (n.name === "RightHand" || n.name === "LeftHand") {
+                n.scale = [1.25, 1.25, 1.25];
+            }
         }
     }
-    console.log(`[SkinFix] Memperbarui translasi node sendi lengan (${updatedNodesCount} sendi)...`);
+    console.log(`[SkinFix] Memperbarui translasi dan skala node sendi lengan (${updatedNodesCount} sendi)...`);
 
     // Tambahkan penanda naura_fix
     if (!vrmJs.asset) vrmJs.asset = {};
     if (!vrmJs.asset.extras) vrmJs.asset.extras = {};
-    vrmJs.asset.extras.naura_fix = "skin-weights+arm-joints v2";
+    vrmJs.asset.extras.naura_fix = glbJs.asset?.extras?.naura_fix || "naura-fix v4 (bobot+ketiak+lengan-mulus+sendi+tangan1.25)";
 
     // Perbarui JSON chunk
     vrmJsChunk.data = Buffer.from(JSON.stringify(vrmJs));
@@ -158,7 +163,9 @@ if (require.main === module) {
     const args = process.argv.slice(2);
     const src = args[0] || "dashboard/public/models/naura NEW.vrm";
     const dst = args[1] || src;
-    const fixedGlb = args[2] || path.join(__dirname, "../naura_NEW_fixed.glb");
+    const fixedGlb = args[2] || (fs.existsSync(path.join(__dirname, "../naura_NEW_fixed.glb"))
+        ? path.join(__dirname, "../naura_NEW_fixed.glb")
+        : path.join(__dirname, "../dashboard/public/models/naura NEW.glb"));
 
     patchSkinningFromFixedGlb(src, dst, fixedGlb);
 }
