@@ -175,7 +175,11 @@ if (parentPort) {
           throw new Error(`Unknown canvas worker task: ${task}`);
       }
 
-      parentPort.postMessage({ id, success: true, result });
+      // Memeriksa memory heap limit (1.5GB soft limit)
+      const mem = process.memoryUsage();
+      const memoryWarning = mem.heapUsed > 1536 * 1024 * 1024; // > 1.5GB
+
+      parentPort.postMessage({ id, success: true, result, memoryWarning });
       result = null;
       if (global.gc) {
         global.gc();
