@@ -119,7 +119,7 @@ module.exports = {
 
       const worldWeatherEngine = require("../../../src/survival/engines/worldWeatherEngine");
       const currentWorldWeather = worldWeatherEngine.getCurrentWeather(survival.currentLocation || "desa_sukamaju");
-      const worldWeatherLine = `> ${currentWorldWeather.icon} **Siklus Cuaca:** \`${currentWorldWeather.name}\` (${currentWorldWeather.timeRemainingFormatted} tersisa)\n> *${currentWorldWeather.description}*`;
+      const worldWeatherLine = `> ${currentWorldWeather.icon} **Cuaca Area:** \`${currentWorldWeather.name}\` ⏱️ \`${currentWorldWeather.timeRemainingFormatted}\``;
 
       const balanceLines = stats.balances
         .map(
@@ -202,6 +202,20 @@ module.exports = {
 
       const buttonsRow = [row1, row2];
 
+      const weatherSelectMenu = new ActionRowBuilder().addComponents(
+          new (require("discord.js").StringSelectMenuBuilder)()
+            .setCustomId(`weather_detail_${interaction.user.id}`)
+            .setPlaceholder("☁️ Lihat Detail Laporan Cuaca Dunia")
+            .addOptions([
+              {
+                label: currentWorldWeather.name,
+                description: currentWorldWeather.description.substring(0, 100),
+                value: "current_weather_info",
+                emoji: currentWorldWeather.icon
+              }
+            ])
+        );
+
       const payload = buildContainerV2({
         accentColorHex: survivalUI.getColor("emerald"),
         authorName: `Catatan Petualangan ${userName} \u2022 ${stats.rebirthCount}x Rebirth`,
@@ -252,7 +266,7 @@ module.exports = {
             value: `> **Teman berbulu:** ${stats.pet.display}\n> **Pasangan:** ${partnerDisplay}${friendshipLines}`,
           },
         ],
-        buttonsRow,
+        buttonsRow: [weatherSelectMenu, ...buttonsRow],
         bannerAttachmentName,
         files,
         footerText: ui.getFooter("survival"),
