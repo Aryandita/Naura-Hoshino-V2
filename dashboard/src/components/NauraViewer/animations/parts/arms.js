@@ -15,79 +15,84 @@ import { slerpBone } from "../core/interpolation.js";
 import { RIG_LIMITS, clampToLimits } from "../core/rigProfile.js";
 
 const ARM_KEYS = [
-    "leftShoulder",
-    "rightShoulder",
-    "leftUpperArm",
-    "rightUpperArm",
-    "leftLowerArm",
-    "rightLowerArm",
+  "leftShoulder",
+  "rightShoulder",
+  "leftUpperArm",
+  "rightUpperArm",
+  "leftLowerArm",
+  "rightLowerArm",
 ];
 
 export class ArmController {
-    constructor(options = {}) {
-        this.options = options;
-        this.bones = {};
-        this.currentRotations = {};
-        for (const k of ARM_KEYS) {
-            this.currentRotations[k] = [0, 0, 0];
+  constructor(options = {}) {
+    this.options = options;
+    this.bones = {};
+    this.currentRotations = {};
+    for (const k of ARM_KEYS) {
+      this.currentRotations[k] = [0, 0, 0];
+    }
+  }
+
+  init(humanoidBones = {}) {
+    for (const k of ARM_KEYS) {
+      this.bones[k] = humanoidBones[k] || null;
+      this.currentRotations[k] = [0, 0, 0];
+    }
+  }
+
+  update(delta, elapsed, context = {}) {
+    const targetBones = context.targetBones || {};
+    // Gaya gerak realistis berbasis fisika (smooth exponential decay)
+    const baseLerp = 8.0; // lengan atas & bahu: halus
+    const elbowLerp = 13.0; // siku lebih responsif agar ayunan lambaian tidak teredam
+
+    for (const key of ARM_KEYS) {
+      try {
+        const bone = this.bones[key];
+        if (!bone) continue;
+
+        const lerpSpeed =
+          1.0 -
+          Math.exp(-(key.endsWith("LowerArm") ? elbowLerp : baseLerp) * delta);
+
+        const base = targetBones[key] || [0, 0, 0];
+        const current = this.currentRotations[key];
+        const target = [base[0], base[1], base[2]];
+
+        // Batas keselamatan lebar: cukup untuk pose lengan terangkat (Cheers / AstralCast),
+        // tetapi tetap mencegah nilai liar yang membalik tulang.
+        if (key === "rightUpperArm" || key === "leftUpperArm") {
+          clampToLimits(target, RIG_LIMITS.upperArm);
+        } else if (key === "rightLowerArm" || key === "leftLowerArm") {
+          clampToLimits(target, RIG_LIMITS.lowerArm);
         }
+
+        // SLERP bertahap dari rotasi saat ini menuju target keyframe yang telah disanitasi
+        slerpBone(bone, current, target, lerpSpeed);
+
+        current[0] += (target[0] - current[0]) * lerpSpeed;
+        current[1] += (target[1] - current[1]) * lerpSpeed;
+        current[2] += (target[2] - current[2]) * lerpSpeed;
+      } catch (err) {
+        console.warn(
+          `[NauraAnimation:Arms] Error updating ${key}:`,
+          err.message,
+        );
+      }
     }
+  }
 
-    init(humanoidBones = {}) {
-        for (const k of ARM_KEYS) {
-            this.bones[k] = humanoidBones[k] || null;
-            this.currentRotations[k] = [0, 0, 0];
-        }
+  reset() {
+    for (const k of ARM_KEYS) {
+      this.currentRotations[k] = [0, 0, 0];
+      if (this.bones[k]) {
+        this.bones[k].rotation.set(0, 0, 0);
+      }
     }
+  }
 
-    update(delta, elapsed, context = {}) {
-        const targetBones = context.targetBones || {};
-        // Gaya gerak realistis berbasis fisika (smooth exponential decay)
-        const baseLerp = 8.0;   // lengan atas & bahu: halus
-        const elbowLerp = 13.0; // siku lebih responsif agar ayunan lambaian tidak teredam
-
-        for (const key of ARM_KEYS) {
-            try {
-                const bone = this.bones[key];
-                if (!bone) continue;
-
-                const lerpSpeed = 1.0 - Math.exp(-(key.endsWith("LowerArm") ? elbowLerp : baseLerp) * delta);
-
-                const base = targetBones[key] || [0, 0, 0];
-                const current = this.currentRotations[key];
-                const target = [base[0], base[1], base[2]];
-
-                // Batas keselamatan lebar: cukup untuk pose lengan terangkat (Cheers / AstralCast),
-                // tetapi tetap mencegah nilai liar yang membalik tulang.
-                if (key === "rightUpperArm" || key === "leftUpperArm") {
-                    clampToLimits(target, RIG_LIMITS.upperArm);
-                } else if (key === "rightLowerArm" || key === "leftLowerArm") {
-                    clampToLimits(target, RIG_LIMITS.lowerArm);
-                }
-
-                // SLERP bertahap dari rotasi saat ini menuju target keyframe yang telah disanitasi
-                slerpBone(bone, current, target, lerpSpeed);
-
-                current[0] += (target[0] - current[0]) * lerpSpeed;
-                current[1] += (target[1] - current[1]) * lerpSpeed;
-                current[2] += (target[2] - current[2]) * lerpSpeed;
-            } catch (err) {
-                console.warn(`[NauraAnimation:Arms] Error updating ${key}:`, err.message);
-            }
-        }
-    }
-
-    reset() {
-        for (const k of ARM_KEYS) {
-            this.currentRotations[k] = [0, 0, 0];
-            if (this.bones[k]) {
-                this.bones[k].rotation.set(0, 0, 0);
-            }
-        }
-    }
-
-    destroy() {
-        this.reset();
-        this.bones = {};
-    }
+  destroy() {
+    this.reset();
+    this.bones = {};
+  }
 }

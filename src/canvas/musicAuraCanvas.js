@@ -47,9 +47,10 @@ async function renderMusicAura(data) {
     const description =
       data.description ||
       "Jiwa musikmu memancarkan resonansi frekuensi kosmik yang tenang, memadukan ketukan ritmis dengan harmoni melankolis nan indah.";
-    const genres = Array.isArray(data.genres) && data.genres.length > 0
-      ? data.genres.slice(0, 3)
-      : ["Lo-Fi", "Electronic", "Anime"];
+    const genres =
+      Array.isArray(data.genres) && data.genres.length > 0
+        ? data.genres.slice(0, 3)
+        : ["Lo-Fi", "Electronic", "Anime"];
 
     // 1. Dark Cyber Ambient Background
     const bgGrad = ctx.createLinearGradient(0, 0, width, height);
@@ -135,7 +136,11 @@ async function renderMusicAura(data) {
       ctx.fillStyle = primaryColor;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(username.charAt(0).toUpperCase(), avatarCenterX, avatarCenterY);
+      ctx.fillText(
+        username.charAt(0).toUpperCase(),
+        avatarCenterX,
+        avatarCenterY,
+      );
     }
 
     // Username under Avatar
@@ -143,7 +148,8 @@ async function renderMusicAura(data) {
     ctx.fillStyle = "#F8FAFC";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    const displayUser = username.length > 15 ? username.substring(0, 14) + "..." : username;
+    const displayUser =
+      username.length > 15 ? username.substring(0, 14) + "..." : username;
     ctx.fillText(displayUser, avatarCenterX, avatarCenterY + avatarRadius + 14);
 
     // Pill: Genre Badges
@@ -182,7 +188,12 @@ async function renderMusicAura(data) {
 
     // Grand Aura Title
     currY += 20;
-    const titleGrad = ctx.createLinearGradient(contentX, currY, contentX + 400, currY);
+    const titleGrad = ctx.createLinearGradient(
+      contentX,
+      currY,
+      contentX + 400,
+      currY,
+    );
     titleGrad.addColorStop(0, primaryColor);
     titleGrad.addColorStop(1, secondaryColor);
     ctx.fillStyle = titleGrad;

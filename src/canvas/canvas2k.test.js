@@ -14,7 +14,8 @@ describe("High-Fidelity 2K Canvas Visuals & Multi-Format Rendering", () => {
     tier: 5,
     tierColor: "#EC4899",
     rarity: "Mythic",
-    description: "Pedang tempaan inti galaksi dengan radiasi energi kosmik murni.",
+    description:
+      "Pedang tempaan inti galaksi dengan radiasi energi kosmik murni.",
     price: 3500,
     sellPrice: 2800,
     stats: { ATK: 250, CRIT: 35 },
@@ -41,7 +42,10 @@ describe("High-Fidelity 2K Canvas Visuals & Multi-Format Rendering", () => {
     assert.ok(pngBuf.length > 1000);
 
     // 2. 2K Resolution WebP
-    const webpBuf = await renderItemCard(mockItem, { resolution: "2k", format: "webp" });
+    const webpBuf = await renderItemCard(mockItem, {
+      resolution: "2k",
+      format: "webp",
+    });
     assert.ok(Buffer.isBuffer(webpBuf));
     assert.ok(webpBuf.length > 1000);
   });
@@ -65,10 +69,15 @@ describe("High-Fidelity 2K Canvas Visuals & Multi-Format Rendering", () => {
       economy_wallet: 15000,
     };
 
-    const inv2k = await generateInventoryBackpackImage(mockUser, mockInventory, mockProfile, {
-      resolution: "2k",
-      format: "webp",
-    });
+    const inv2k = await generateInventoryBackpackImage(
+      mockUser,
+      mockInventory,
+      mockProfile,
+      {
+        resolution: "2k",
+        format: "webp",
+      },
+    );
     assert.ok(Buffer.isBuffer(inv2k));
     assert.ok(inv2k.length > 1000);
   });

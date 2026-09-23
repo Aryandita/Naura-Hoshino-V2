@@ -86,7 +86,11 @@ async function getAvailableSounds(guildId) {
 
   try {
     const settings = await guildSettingsService.getGuildSetting(guildId);
-    if (settings && settings.soundboards && typeof settings.soundboards === "object") {
+    if (
+      settings &&
+      settings.soundboards &&
+      typeof settings.soundboards === "object"
+    ) {
       for (const [key, url] of Object.entries(settings.soundboards)) {
         result.push({
           id: key,
@@ -100,7 +104,9 @@ async function getAvailableSounds(guildId) {
       }
     }
   } catch (err) {
-    logger.warn(`[SoundboardService] Gagal memuat custom soundboard guild ${guildId}: ${err.message}`);
+    logger.warn(
+      `[SoundboardService] Gagal memuat custom soundboard guild ${guildId}: ${err.message}`,
+    );
   }
 
   return result;
@@ -116,9 +122,18 @@ async function getAvailableSounds(guildId) {
  * @param {object} [params.requester] - Discord user yang meminta pemutaran
  * @returns {Promise<{ success: boolean, message: string, sound?: object }>}
  */
-async function playSound({ client, guildId, soundId, voiceChannelId, requester }) {
+async function playSound({
+  client,
+  guildId,
+  soundId,
+  voiceChannelId,
+  requester,
+}) {
   if (!guildId || !soundId) {
-    return { success: false, message: "Guild ID dan Sound ID wajib disertakan." };
+    return {
+      success: false,
+      message: "Guild ID dan Sound ID wajib disertakan.",
+    };
   }
 
   // Cooldown check
@@ -135,9 +150,14 @@ async function playSound({ client, guildId, soundId, voiceChannelId, requester }
   }
 
   const allSounds = await getAvailableSounds(guildId);
-  const targetSound = allSounds.find((s) => s.id.toLowerCase() === soundId.toLowerCase());
+  const targetSound = allSounds.find(
+    (s) => s.id.toLowerCase() === soundId.toLowerCase(),
+  );
   if (!targetSound) {
-    return { success: false, message: `Soundboard "${soundId}" tidak ditemukan.` };
+    return {
+      success: false,
+      message: `Soundboard "${soundId}" tidak ditemukan.`,
+    };
   }
 
   const musicManager = client.musicManager;
@@ -153,7 +173,8 @@ async function playSound({ client, guildId, soundId, voiceChannelId, requester }
     if (!voiceChannelId) {
       return {
         success: false,
-        message: "Bot tidak berada di Voice Channel. Sambungkan bot terlebih dahulu atau tentukan voice channel.",
+        message:
+          "Bot tidak berada di Voice Channel. Sambungkan bot terlebih dahulu atau tentukan voice channel.",
       };
     }
     try {
@@ -163,8 +184,13 @@ async function playSound({ client, guildId, soundId, voiceChannelId, requester }
         deaf: true,
       });
     } catch (connErr) {
-      logger.error(`[SoundboardService] Gagal createConnection di guild ${guildId}: ${connErr.message}`);
-      return { success: false, message: "Gagal menghubungkan bot ke Voice Channel." };
+      logger.error(
+        `[SoundboardService] Gagal createConnection di guild ${guildId}: ${connErr.message}`,
+      );
+      return {
+        success: false,
+        message: "Gagal menghubungkan bot ke Voice Channel.",
+      };
     }
   }
 
@@ -174,8 +200,15 @@ async function playSound({ client, guildId, soundId, voiceChannelId, requester }
       requester: requester || client.user,
     });
 
-    if (!resolveResult || !resolveResult.tracks || resolveResult.tracks.length === 0) {
-      return { success: false, message: "Gagal memuat track audio soundboard." };
+    if (
+      !resolveResult ||
+      !resolveResult.tracks ||
+      resolveResult.tracks.length === 0
+    ) {
+      return {
+        success: false,
+        message: "Gagal memuat track audio soundboard.",
+      };
     }
 
     const sbTrack = resolveResult.tracks[0];
@@ -198,7 +231,9 @@ async function playSound({ client, guildId, soundId, voiceChannelId, requester }
     if (client.dashboardIo) {
       client.dashboardIo.to(String(guildId)).emit("soundboard_played", {
         sound: targetSound,
-        requester: requester ? { id: requester.id, username: requester.username } : null,
+        requester: requester
+          ? { id: requester.id, username: requester.username }
+          : null,
         timestamp: Date.now(),
       });
     }
@@ -209,8 +244,13 @@ async function playSound({ client, guildId, soundId, voiceChannelId, requester }
       sound: targetSound,
     };
   } catch (err) {
-    logger.error(`[SoundboardService] Gagal memutar soundboard di guild ${guildId}: ${err.message}`);
-    return { success: false, message: "Terjadi kesalahan internal saat memutar soundboard." };
+    logger.error(
+      `[SoundboardService] Gagal memutar soundboard di guild ${guildId}: ${err.message}`,
+    );
+    return {
+      success: false,
+      message: "Terjadi kesalahan internal saat memutar soundboard.",
+    };
   }
 }
 

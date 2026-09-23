@@ -10,7 +10,9 @@ module.exports = {
     try {
       await entitlementService.handleEntitlementUpdate(entitlement);
     } catch (err) {
-      logger.error(`[Events:entitlementUpdate] Error processing entitlement: ${err.message}`);
+      logger.error(
+        `[Events:entitlementUpdate] Error processing entitlement: ${err.message}`,
+      );
     }
   },
 };

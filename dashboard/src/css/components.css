@@ -14,7 +14,10 @@
   -webkit-backdrop-filter: var(--blur-md, blur(16px));
   position: relative;
   overflow: hidden;
-  transition: transform var(--t-base, 200ms ease), border-color var(--t-base, 200ms ease), box-shadow var(--t-base, 200ms ease);
+  transition:
+    transform var(--t-base, 200ms ease),
+    border-color var(--t-base, 200ms ease),
+    box-shadow var(--t-base, 200ms ease);
 }
 
 .card-stellar:hover {
@@ -32,7 +35,7 @@
 }
 
 .card-stellar-title {
-  font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+  font-family: var(--font-heading, "Space Grotesk", sans-serif);
   font-size: 16px;
   font-weight: 600;
   color: var(--text-primary, #f1f5f9);
@@ -110,7 +113,7 @@
 }
 
 .stat-card-value {
-  font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+  font-family: var(--font-heading, "Space Grotesk", sans-serif);
   font-size: 28px;
   font-weight: 700;
   color: var(--text-primary, #f1f5f9);
@@ -221,7 +224,9 @@
   border-radius: 2px;
   background: var(--color-success, #22c55e);
   opacity: 0.85;
-  transition: opacity var(--t-fast, 150ms ease), transform var(--t-fast, 150ms ease);
+  transition:
+    opacity var(--t-fast, 150ms ease),
+    transform var(--t-fast, 150ms ease);
   cursor: pointer;
   position: relative;
 }
@@ -343,7 +348,7 @@
 }
 
 .error-state-title {
-  font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+  font-family: var(--font-heading, "Space Grotesk", sans-serif);
   font-size: 16px;
   font-weight: 600;
   color: var(--text-primary, #f1f5f9);
@@ -434,7 +439,11 @@
 
 /* ─── 8. Feed Item Komponen ─── */
 .feed-item {
-  background: linear-gradient(180deg, rgba(20, 26, 46, 0.6) 0%, rgba(10, 14, 26, 0.75) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(20, 26, 46, 0.6) 0%,
+    rgba(10, 14, 26, 0.75) 100%
+  );
   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
   border-radius: var(--r-lg, 14px);
   padding: 12px 16px;
@@ -443,7 +452,9 @@
   gap: 14px;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  transition: transform var(--t-fast, 150ms ease), border-color var(--t-fast, 150ms ease);
+  transition:
+    transform var(--t-fast, 150ms ease),
+    border-color var(--t-fast, 150ms ease);
 }
 
 .feed-item:hover {
@@ -468,7 +479,7 @@
 }
 
 .feed-title {
-  font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+  font-family: var(--font-heading, "Space Grotesk", sans-serif);
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary, #f1f5f9);
@@ -522,7 +533,9 @@
   gap: 12px;
   transform: translateX(120%);
   opacity: 0;
-  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease;
+  transition:
+    transform 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 300ms ease;
   position: relative;
   overflow: hidden;
 }
@@ -577,7 +590,7 @@
 }
 
 .naura-toast-title {
-  font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+  font-family: var(--font-heading, "Space Grotesk", sans-serif);
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary, #f1f5f9);
@@ -632,7 +645,9 @@
   background: var(--bg-surface-elevated, rgba(15, 23, 42, 0.95));
   border: 1px solid var(--border-medium, rgba(255, 255, 255, 0.15));
   border-radius: var(--r-xl, 20px);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--primary-dim, rgba(244, 114, 182, 0.1));
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.6),
+    0 0 0 1px var(--primary-dim, rgba(244, 114, 182, 0.1));
   overflow: hidden;
   transform: translateY(-16px) scale(0.98);
   transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -664,7 +679,7 @@
   border: none;
   outline: none;
   color: var(--text-primary, #f1f5f9);
-  font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+  font-family: var(--font-heading, "Space Grotesk", sans-serif);
   font-size: 15px;
 }
 
@@ -803,4 +818,3 @@
   color: var(--primary, #f472b6);
   font-size: 13px;
 }
-

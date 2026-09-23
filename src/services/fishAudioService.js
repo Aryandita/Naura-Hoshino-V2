@@ -290,9 +290,16 @@ class FishAudioService {
    * @param {number} [params.phase=1] - Fase raid boss
    * @returns {Promise<{broadcasted: number, success: boolean, announcementText: string, hasAudio: boolean}>}
    */
-  async broadcastVictoryAnnouncement({ client, federationName, bossName = "Celestial Chrono-Wyrm", phase = 1 }) {
+  async broadcastVictoryAnnouncement({
+    client,
+    federationName,
+    bossName = "Celestial Chrono-Wyrm",
+    phase = 1,
+  }) {
     const announcementText = `Perhatian seluruh petualang! Aliansi Federasi ${federationName} baru saja berhasil menumbangkan ${bossName} fase ke-${phase}! Kemenangan gemilang untuk seluruh server!`;
-    logger.info(`📢 [FishAudio] Menyiapkan victory announcement: "${announcementText}"`);
+    logger.info(
+      `📢 [FishAudio] Menyiapkan victory announcement: "${announcementText}"`,
+    );
 
     let audioBuffer = null;
     try {
@@ -307,7 +314,9 @@ class FishAudioService {
         try {
           if (player && player.isConnected && player.currentTrack) {
             broadcastedCount++;
-            logger.info(`[FishAudio] Menyiarkan intermezzo kemenangan ke guild ${guildId}`);
+            logger.info(
+              `[FishAudio] Menyiarkan intermezzo kemenangan ke guild ${guildId}`,
+            );
           }
         } catch (_) {}
       }

@@ -31,7 +31,11 @@
       }
       .stage-card {
         position: relative;
-        background: radial-gradient(circle at center, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.8) 100%);
+        background: radial-gradient(
+          circle at center,
+          rgba(30, 41, 59, 0.4) 0%,
+          rgba(15, 23, 42, 0.8) 100%
+        );
         border: 1px solid var(--border-medium);
         border-radius: var(--r-xl);
         overflow: hidden;
@@ -211,13 +215,21 @@
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
           <div class="sidebar-logo-icon">
-            <img src="/assets/core/avatar.png" alt="Naura" onerror="this.src='/assets/core/avatar.png'" />
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="this.src = '/assets/core/avatar.png'"
+            />
           </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
             <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+          <button
+            class="sidebar-close-btn"
+            id="sidebarCloseBtn"
+            aria-label="Tutup menu"
+          >
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
@@ -227,13 +239,27 @@
           <div class="nav-group">
             <div class="nav-group-label">Overview</div>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-gauge-high"></i
+              ></span>
               <span>Dashboard</span>
             </a>
             <a href="/lounge" class="nav-item active">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--primary);"></i></span>
+              <span class="nav-icon"
+                ><i
+                  class="fa-solid fa-wand-magic-sparkles"
+                  style="color: var(--primary)"
+                ></i
+              ></span>
               <span>3D AI Lounge</span>
-              <span class="nav-badge" style="background:rgba(244,114,182,0.2);color:var(--primary);">3D</span>
+              <span
+                class="nav-badge"
+                style="
+                  background: rgba(244, 114, 182, 0.2);
+                  color: var(--primary);
+                "
+                >3D</span
+              >
             </a>
             <a href="/status" class="nav-item">
               <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
@@ -258,7 +284,9 @@
               <span>Economy</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-network-wired"></i
+              ></span>
               <span>Guild Topology</span>
             </a>
           </div>
@@ -271,7 +299,9 @@
               <span>Music Hub</span>
             </a>
             <a href="/soundboard" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-volume-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-volume-high"></i
+              ></span>
               <span>Soundboard</span>
             </a>
             <a href="/jam" class="nav-item">
@@ -279,7 +309,9 @@
               <span>Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-microphone"></i
+              ></span>
               <span>Karaoke</span>
             </a>
           </div>
@@ -288,11 +320,15 @@
           <div class="nav-group">
             <div class="nav-group-label">Naura Wilds RPG</div>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-americas"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-earth-americas"></i
+              ></span>
               <span>World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-map-location-dot"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-map-location-dot"></i
+              ></span>
               <span>Survival Map</span>
             </a>
             <a href="/activity" class="nav-item">
@@ -313,7 +349,9 @@
               <span>Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-wand-magic"></i
+              ></span>
               <span>Embed Builder</span>
             </a>
           </div>
@@ -321,7 +359,11 @@
 
         <div class="sidebar-user-panel">
           <div class="sidebar-user-card">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" />
+            <img
+              src="/assets/core/avatar.png"
+              alt="User"
+              class="sidebar-user-avatar"
+            />
             <div class="sidebar-user-info">
               <div class="sidebar-user-name">Guest Sensei</div>
               <div class="sidebar-user-role">3D Lounge VIP</div>
@@ -334,19 +376,29 @@
       <div class="main-content">
         <header class="top-header">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
+            <button
+              class="hamburger-btn"
+              id="hamburgerBtn"
+              aria-label="Toggle menu"
+            >
               <i class="fa-solid fa-bars"></i>
             </button>
             <div>
               <div class="page-title">3D AI Lounge & Mascot Stage</div>
               <div class="breadcrumb">
-                <span>Naura OS</span><span class="breadcrumb-sep">/</span><span>3D Lounge</span>
+                <span>Naura OS</span><span class="breadcrumb-sep">/</span
+                ><span>3D Lounge</span>
               </div>
             </div>
           </div>
           <div class="header-right">
-            <span class="badge badge-success"><i class="fa-solid fa-circle" style="font-size:8px;"></i> THREE.JS VRM LIVE</span>
-            <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <span class="badge badge-success"
+              ><i class="fa-solid fa-circle" style="font-size: 8px"></i>
+              THREE.JS VRM LIVE</span
+            >
+            <a href="/" class="btn btn-ghost btn-sm"
+              ><i class="fa-solid fa-arrow-left"></i> Dashboard</a
+            >
           </div>
         </header>
 
@@ -356,13 +408,32 @@
             <div class="stage-card">
               <!-- Controls Overlay -->
               <div class="stage-controls-overlay">
-                <button type="button" class="btn btn-ghost btn-sm" id="btnResetCamera" title="Reset Sudut Kamera">
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-sm"
+                  id="btnResetCamera"
+                  title="Reset Sudut Kamera"
+                >
                   <i class="fa-solid fa-arrows-rotate"></i> Reset Kamera
                 </button>
-                <button type="button" class="btn btn-ghost btn-sm" id="btnBurstParticles" title="Ledakan Partikel Bintang">
-                  <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--primary);"></i> Sparkles
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-sm"
+                  id="btnBurstParticles"
+                  title="Ledakan Partikel Bintang"
+                >
+                  <i
+                    class="fa-solid fa-wand-magic-sparkles"
+                    style="color: var(--primary)"
+                  ></i>
+                  Sparkles
                 </button>
-                <button type="button" class="btn btn-ghost btn-sm" id="btnSnapshot" title="Ambil Foto Pose 3D">
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-sm"
+                  id="btnSnapshot"
+                  title="Ambil Foto Pose 3D"
+                >
                   <i class="fa-solid fa-camera"></i> Foto Pose
                 </button>
               </div>
@@ -379,12 +450,39 @@
 
               <!-- Bottom Stage Overlay -->
               <div class="stage-bottom-overlay">
-                <div style="font-size:11px;color:var(--text-muted);background:rgba(15,23,42,0.7);padding:6px 12px;border-radius:var(--r-md);border:1px solid rgba(255,255,255,0.08);">
-                  <i class="fa-solid fa-hand-pointer" style="color:var(--accent-cyan);margin-right:4px;"></i> Putar 360° dengan Drag Mouse · Scroll untuk Zoom
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--text-muted);
+                    background: rgba(15, 23, 42, 0.7);
+                    padding: 6px 12px;
+                    border-radius: var(--r-md);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                  "
+                >
+                  <i
+                    class="fa-solid fa-hand-pointer"
+                    style="color: var(--accent-cyan); margin-right: 4px"
+                  ></i>
+                  Putar 360° dengan Drag Mouse · Scroll untuk Zoom
                 </div>
-                <div style="display:flex;gap:6px;">
-                  <button type="button" class="btn btn-ghost btn-sm" onclick="setStudioLight('kawaii')" title="Pencahayaan Studio Kawaii">🌸 Studio</button>
-                  <button type="button" class="btn btn-ghost btn-sm" onclick="setStudioLight('cyber')" title="Pencahayaan Cyberpunk Neon">⚡ Cyber</button>
+                <div style="display: flex; gap: 6px">
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-sm"
+                    onclick="setStudioLight('kawaii')"
+                    title="Pencahayaan Studio Kawaii"
+                  >
+                    🌸 Studio
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-sm"
+                    onclick="setStudioLight('cyber')"
+                    title="Pencahayaan Cyberpunk Neon"
+                  >
+                    ⚡ Cyber
+                  </button>
                 </div>
               </div>
             </div>
@@ -392,13 +490,28 @@
             <!-- Interactive Companion Control Deck -->
             <div class="deck-card">
               <div class="deck-nav">
-                <button type="button" class="deck-nav-btn active" id="tabBtnChat" onclick="switchDeckTab('chat')">
+                <button
+                  type="button"
+                  class="deck-nav-btn active"
+                  id="tabBtnChat"
+                  onclick="switchDeckTab('chat')"
+                >
                   <i class="fa-solid fa-comments"></i> Dialog AI
                 </button>
-                <button type="button" class="deck-nav-btn" id="tabBtnPose" onclick="switchDeckTab('pose')">
+                <button
+                  type="button"
+                  class="deck-nav-btn"
+                  id="tabBtnPose"
+                  onclick="switchDeckTab('pose')"
+                >
                   <i class="fa-solid fa-person-walking"></i> Pose 3D
                 </button>
-                <button type="button" class="deck-nav-btn" id="tabBtnPersona" onclick="switchDeckTab('persona')">
+                <button
+                  type="button"
+                  class="deck-nav-btn"
+                  id="tabBtnPersona"
+                  onclick="switchDeckTab('persona')"
+                >
                   <i class="fa-solid fa-sliders"></i> Persona
                 </button>
               </div>
@@ -407,12 +520,29 @@
               <div class="deck-content" id="deckPaneChat">
                 <!-- Audio Waveform Visualizer -->
                 <div class="wave-visualizer-box">
-                  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);flex-shrink:0;">
-                    <i class="fa-solid fa-waveform-lines" style="color:var(--primary);"></i>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      gap: 6px;
+                      font-size: 11px;
+                      color: var(--text-muted);
+                      flex-shrink: 0;
+                    "
+                  >
+                    <i
+                      class="fa-solid fa-waveform-lines"
+                      style="color: var(--primary)"
+                    ></i>
                     <span id="voiceStatusLabel">Suara Siap</span>
                   </div>
                   <canvas id="audioWaveCanvas" class="wave-canvas"></canvas>
-                  <button type="button" class="btn btn-ghost btn-sm" id="btnToggleVoice" title="Aktifkan/Matikan Suara">
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-sm"
+                    id="btnToggleVoice"
+                    title="Aktifkan/Matikan Suara"
+                  >
                     <i class="fa-solid fa-volume-high" id="voiceIcon"></i>
                   </button>
                 </div>
@@ -420,100 +550,322 @@
                 <!-- Chat Stream -->
                 <div class="chat-stream" id="loungeChatStream">
                   <div class="chat-bubble-bot">
-                    Halo Sensei! Selamat datang di 3D AI Lounge. Di sini kita bisa mengobrol santai, mendengarkan suaraku via Fish Audio, dan mencoba berbagai pose 3D interaktif! Ada yang ingin kamu bicarakan hari ini? 🌸✨
+                    Halo Sensei! Selamat datang di 3D AI Lounge. Di sini kita
+                    bisa mengobrol santai, mendengarkan suaraku via Fish Audio,
+                    dan mencoba berbagai pose 3D interaktif! Ada yang ingin kamu
+                    bicarakan hari ini? 🌸✨
                   </div>
                 </div>
 
                 <!-- Quick Prompt Chips -->
-                <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">
-                  <button type="button" class="badge badge-amber" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('👋 Halo Naura!')">👋 Sapa</button>
-                  <button type="button" class="badge badge-cyan" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('Ceritakan tentang Naura Wilds dong!')">🌲 Naura Wilds</button>
-                  <button type="button" class="badge badge-purple" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('Bagikan tips bertahan hidup terbaik!')">⚔️ Tips RPG</button>
-                  <button type="button" class="badge badge-success" style="cursor:pointer;white-space:nowrap;" onclick="sendQuickPrompt('Beri aku ramalan hoki hari ini!')">✨ Ramalan</button>
+                <div
+                  style="
+                    display: flex;
+                    gap: 6px;
+                    overflow-x: auto;
+                    padding-bottom: 4px;
+                    scrollbar-width: none;
+                  "
+                >
+                  <button
+                    type="button"
+                    class="badge badge-amber"
+                    style="cursor: pointer; white-space: nowrap"
+                    onclick="sendQuickPrompt('👋 Halo Naura!')"
+                  >
+                    👋 Sapa
+                  </button>
+                  <button
+                    type="button"
+                    class="badge badge-cyan"
+                    style="cursor: pointer; white-space: nowrap"
+                    onclick="
+                      sendQuickPrompt('Ceritakan tentang Naura Wilds dong!')
+                    "
+                  >
+                    🌲 Naura Wilds
+                  </button>
+                  <button
+                    type="button"
+                    class="badge badge-purple"
+                    style="cursor: pointer; white-space: nowrap"
+                    onclick="
+                      sendQuickPrompt('Bagikan tips bertahan hidup terbaik!')
+                    "
+                  >
+                    ⚔️ Tips RPG
+                  </button>
+                  <button
+                    type="button"
+                    class="badge badge-success"
+                    style="cursor: pointer; white-space: nowrap"
+                    onclick="sendQuickPrompt('Beri aku ramalan hoki hari ini!')"
+                  >
+                    ✨ Ramalan
+                  </button>
                 </div>
 
                 <!-- Input Field -->
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input type="text" class="text-input-field" id="loungeChatInput" placeholder="Ketik pesan untuk Naura..." autocomplete="off" />
-                  <button type="button" class="btn btn-primary btn-sm" id="btnSendLoungeChat" style="padding:8px 14px;">
+                <div style="display: flex; gap: 8px; align-items: center">
+                  <input
+                    type="text"
+                    class="text-input-field"
+                    id="loungeChatInput"
+                    placeholder="Ketik pesan untuk Naura..."
+                    autocomplete="off"
+                  />
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    id="btnSendLoungeChat"
+                    style="padding: 8px 14px"
+                  >
                     <i class="fa-solid fa-paper-plane"></i>
                   </button>
                 </div>
               </div>
 
               <!-- TAB 2: ANIMATION MATRIX & POSE STUDIO -->
-              <div class="deck-content" id="deckPanePose" style="display:none;">
-                <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">
-                  Pilih animasi untuk digerakkan oleh model 3D Naura secara langsung:
+              <div class="deck-content" id="deckPanePose" style="display: none">
+                <div
+                  style="
+                    font-size: 12px;
+                    color: var(--text-muted);
+                    margin-bottom: 6px;
+                  "
+                >
+                  Pilih animasi untuk digerakkan oleh model 3D Naura secara
+                  langsung:
                 </div>
                 <div class="anim-matrix-grid">
-                  <button type="button" class="anim-btn active" onclick="playMascotPose('Idle')">
-                    <i class="fa-solid fa-child-reaching" style="color:#f472b6;"></i> Pose Santai (Idle)
+                  <button
+                    type="button"
+                    class="anim-btn active"
+                    onclick="playMascotPose('Idle')"
+                  >
+                    <i
+                      class="fa-solid fa-child-reaching"
+                      style="color: #f472b6"
+                    ></i>
+                    Pose Santai (Idle)
                   </button>
-                  <button type="button" class="anim-btn" onclick="playMascotPose('Wave')">
-                    <i class="fa-solid fa-hand" style="color:#38bdf8;"></i> Lambaikan Tangan
+                  <button
+                    type="button"
+                    class="anim-btn"
+                    onclick="playMascotPose('Wave')"
+                  >
+                    <i class="fa-solid fa-hand" style="color: #38bdf8"></i>
+                    Lambaikan Tangan
                   </button>
-                  <button type="button" class="anim-btn" onclick="playMascotPose('StarPose')">
-                    <i class="fa-solid fa-star" style="color:#fbbf24;"></i> Pose Idol Bintang
+                  <button
+                    type="button"
+                    class="anim-btn"
+                    onclick="playMascotPose('StarPose')"
+                  >
+                    <i class="fa-solid fa-star" style="color: #fbbf24"></i> Pose
+                    Idol Bintang
                   </button>
-                  <button type="button" class="anim-btn" onclick="playMascotPose('Cheers')">
-                    <i class="fa-solid fa-champagne-glasses" style="color:#34d399;"></i> Bersorak Gembira
+                  <button
+                    type="button"
+                    class="anim-btn"
+                    onclick="playMascotPose('Cheers')"
+                  >
+                    <i
+                      class="fa-solid fa-champagne-glasses"
+                      style="color: #34d399"
+                    ></i>
+                    Bersorak Gembira
                   </button>
-                  <button type="button" class="anim-btn" onclick="playMascotPose('BlowKiss')">
-                    <i class="fa-solid fa-heart" style="color:#ec4899;"></i> Tiupan Sayang
+                  <button
+                    type="button"
+                    class="anim-btn"
+                    onclick="playMascotPose('BlowKiss')"
+                  >
+                    <i class="fa-solid fa-heart" style="color: #ec4899"></i>
+                    Tiupan Sayang
                   </button>
-                  <button type="button" class="anim-btn" onclick="playMascotPose('AstralCast')">
-                    <i class="fa-solid fa-wand-magic" style="color:#a855f7;"></i> Sihir Astral Halo
+                  <button
+                    type="button"
+                    class="anim-btn"
+                    onclick="playMascotPose('AstralCast')"
+                  >
+                    <i
+                      class="fa-solid fa-wand-magic"
+                      style="color: #a855f7"
+                    ></i>
+                    Sihir Astral Halo
                   </button>
-                  <button type="button" class="anim-btn" onclick="playMascotPose('Thinking')">
-                    <i class="fa-solid fa-brain" style="color:#818cf8;"></i> Pose Merenung
+                  <button
+                    type="button"
+                    class="anim-btn"
+                    onclick="playMascotPose('Thinking')"
+                  >
+                    <i class="fa-solid fa-brain" style="color: #818cf8"></i>
+                    Pose Merenung
                   </button>
-                  <button type="button" class="anim-btn" onclick="playMascotPose('Shy')">
-                    <i class="fa-solid fa-face-flushed" style="color:#fb7185;"></i> Tersipu Malu
+                  <button
+                    type="button"
+                    class="anim-btn"
+                    onclick="playMascotPose('Shy')"
+                  >
+                    <i
+                      class="fa-solid fa-face-flushed"
+                      style="color: #fb7185"
+                    ></i>
+                    Tersipu Malu
                   </button>
                 </div>
 
-                <div style="margin-top:16px;border-top:1px solid var(--border-subtle);padding-top:14px;">
-                  <div style="font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">
+                <div
+                  style="
+                    margin-top: 16px;
+                    border-top: 1px solid var(--border-subtle);
+                    padding-top: 14px;
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--text-primary);
+                      margin-bottom: 8px;
+                    "
+                  >
                     Uji Ekspresi Wajah (Blendshape):
                   </div>
-                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Happy')">😊 Senyum</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Cheers')">😄 Tertawa</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Thinking')">🤔 Berpikir</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Shy')">😳 Malu</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="setBlendshapeMood('Sleepy')">😴 Mengantuk</button>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap">
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm"
+                      onclick="setBlendshapeMood('Happy')"
+                    >
+                      😊 Senyum
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm"
+                      onclick="setBlendshapeMood('Cheers')"
+                    >
+                      😄 Tertawa
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm"
+                      onclick="setBlendshapeMood('Thinking')"
+                    >
+                      🤔 Berpikir
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm"
+                      onclick="setBlendshapeMood('Shy')"
+                    >
+                      😳 Malu
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-sm"
+                      onclick="setBlendshapeMood('Sleepy')"
+                    >
+                      😴 Mengantuk
+                    </button>
                   </div>
                 </div>
               </div>
 
               <!-- TAB 3: PERSONA & PENGATURAN -->
-              <div class="deck-content" id="deckPanePersona" style="display:none;">
+              <div
+                class="deck-content"
+                id="deckPanePersona"
+                style="display: none"
+              >
                 <div>
-                  <label style="font-size:12px;font-weight:600;color:var(--text-primary);">Sifat & Persona Percakapan</label>
-                  <select class="select-input" id="selectLoungePersona" style="width:100%;margin-top:6px;">
-                    <option value="cheerful" selected>🌸 Cheerful Idol Companion (Bawaan)</option>
-                    <option value="cyberpunk">⚡ Cyberpunk Tactical Operator</option>
+                  <label
+                    style="
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--text-primary);
+                    "
+                    >Sifat & Persona Percakapan</label
+                  >
+                  <select
+                    class="select-input"
+                    id="selectLoungePersona"
+                    style="width: 100%; margin-top: 6px"
+                  >
+                    <option value="cheerful" selected>
+                      🌸 Cheerful Idol Companion (Bawaan)
+                    </option>
+                    <option value="cyberpunk">
+                      ⚡ Cyberpunk Tactical Operator
+                    </option>
                     <option value="maid">🍵 Faithful Maid Protocol</option>
-                    <option value="tactical">🌲 Wilds Survival Commander</option>
+                    <option value="tactical">
+                      🌲 Wilds Survival Commander
+                    </option>
                   </select>
                 </div>
 
-                <div style="margin-top:10px;">
-                  <label style="font-size:12px;font-weight:600;color:var(--text-primary);">Mesin AI Ensemble</label>
-                  <select class="select-input" id="selectLoungeAiEngine" style="width:100%;margin-top:6px;">
-                    <option value="gemini" selected>Google Gemini 2.5 Flash (Cepat & Konteks Lebar)</option>
-                    <option value="groq">Groq LLaMA 3.3 70B (Taktis 250 tps)</option>
+                <div style="margin-top: 10px">
+                  <label
+                    style="
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--text-primary);
+                    "
+                    >Mesin AI Ensemble</label
+                  >
+                  <select
+                    class="select-input"
+                    id="selectLoungeAiEngine"
+                    style="width: 100%; margin-top: 6px"
+                  >
+                    <option value="gemini" selected>
+                      Google Gemini 2.5 Flash (Cepat & Konteks Lebar)
+                    </option>
+                    <option value="groq">
+                      Groq LLaMA 3.3 70B (Taktis 250 tps)
+                    </option>
                   </select>
                 </div>
 
-                <div style="margin-top:14px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:12px;">
-                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                    <span style="font-size:12px;font-weight:600;color:var(--text-primary);">Circuit Breaker Telemetry</span>
+                <div
+                  style="
+                    margin-top: 14px;
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid var(--border-subtle);
+                    border-radius: var(--r-md);
+                    padding: 12px;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    <span
+                      style="
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: var(--text-primary);
+                      "
+                      >Circuit Breaker Telemetry</span
+                    >
                     <span class="badge badge-success">HEALTHY</span>
                   </div>
-                  <div style="font-size:11px;color:var(--text-muted);line-height:1.5;">
-                    Sistem failover otomatis aktif. Jika kuota API habis, query akan dialihkan secara instan ke fallback engine tanpa gangguan.
+                  <div
+                    style="
+                      font-size: 11px;
+                      color: var(--text-muted);
+                      line-height: 1.5;
+                    "
+                  >
+                    Sistem failover otomatis aktif. Jika kuota API habis, query
+                    akan dialihkan secara instan ke fallback engine tanpa
+                    gangguan.
                   </div>
                 </div>
               </div>
@@ -573,15 +925,24 @@
       }
 
       // Tombol Kontrol Panggung
-      document.getElementById("btnResetCamera")?.addEventListener("click", () => {
-        if (viewer && typeof viewer.resetCamera === "function") viewer.resetCamera();
-      });
+      document
+        .getElementById("btnResetCamera")
+        ?.addEventListener("click", () => {
+          if (viewer && typeof viewer.resetCamera === "function")
+            viewer.resetCamera();
+        });
 
-      document.getElementById("btnBurstParticles")?.addEventListener("click", () => {
-        if (viewer && viewer.particles && typeof viewer.particles.burst === "function") {
-          viewer.particles.burst(40);
-        }
-      });
+      document
+        .getElementById("btnBurstParticles")
+        ?.addEventListener("click", () => {
+          if (
+            viewer &&
+            viewer.particles &&
+            typeof viewer.particles.burst === "function"
+          ) {
+            viewer.particles.burst(40);
+          }
+        });
 
       document.getElementById("btnSnapshot")?.addEventListener("click", () => {
         if (viewer && typeof viewer.takeSnapshot === "function") {
@@ -599,7 +960,9 @@
 
       // Animasi Matrix & Pose
       window.playMascotPose = function (animName) {
-        document.querySelectorAll(".anim-btn").forEach((b) => b.classList.remove("active"));
+        document
+          .querySelectorAll(".anim-btn")
+          .forEach((b) => b.classList.remove("active"));
         event?.currentTarget?.classList?.add("active");
         if (viewer && typeof viewer.playAnimation === "function") {
           viewer.playAnimation(animName);
@@ -626,13 +989,21 @@
 
       // Tab Switcher
       window.switchDeckTab = function (tab) {
-        document.querySelectorAll(".deck-nav-btn").forEach((b) => b.classList.remove("active"));
-        document.getElementById("deckPaneChat").style.display = tab === "chat" ? "flex" : "none";
-        document.getElementById("deckPanePose").style.display = tab === "pose" ? "flex" : "none";
-        document.getElementById("deckPanePersona").style.display = tab === "persona" ? "flex" : "none";
-        if (tab === "chat") document.getElementById("tabBtnChat")?.classList.add("active");
-        if (tab === "pose") document.getElementById("tabBtnPose")?.classList.add("active");
-        if (tab === "persona") document.getElementById("tabBtnPersona")?.classList.add("active");
+        document
+          .querySelectorAll(".deck-nav-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById("deckPaneChat").style.display =
+          tab === "chat" ? "flex" : "none";
+        document.getElementById("deckPanePose").style.display =
+          tab === "pose" ? "flex" : "none";
+        document.getElementById("deckPanePersona").style.display =
+          tab === "persona" ? "flex" : "none";
+        if (tab === "chat")
+          document.getElementById("tabBtnChat")?.classList.add("active");
+        if (tab === "pose")
+          document.getElementById("tabBtnPose")?.classList.add("active");
+        if (tab === "persona")
+          document.getElementById("tabBtnPersona")?.classList.add("active");
       };
 
       // Voice Audio Waveform Visualizer
@@ -655,7 +1026,12 @@
               ? Math.sin(Date.now() * 0.008 + i * 0.4) * 12 + 14
               : 3;
             ctx.fillStyle = isSpeaking ? "#f472b6" : "rgba(244, 114, 182, 0.3)";
-            ctx.fillRect(i * (barWidth + spacing) + 4, (canvas.height - h) / 2, barWidth, h);
+            ctx.fillRect(
+              i * (barWidth + spacing) + 4,
+              (canvas.height - h) / 2,
+              barWidth,
+              h,
+            );
           }
         }
         drawWave();
@@ -679,7 +1055,8 @@
         window.setBlendshapeMood("Thinking");
 
         try {
-          const persona = document.getElementById("selectLoungePersona")?.value || "cheerful";
+          const persona =
+            document.getElementById("selectLoungePersona")?.value || "cheerful";
           const res = await fetch("/api/ai/companion/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -704,7 +1081,8 @@
         } catch (_) {
           const errDiv = document.createElement("div");
           errDiv.className = "chat-bubble-bot";
-          errDiv.textContent = "Koneksi AI sedang beristirahat. Coba tanyakan hal lain ya Sensei! 🌸";
+          errDiv.textContent =
+            "Koneksi AI sedang beristirahat. Coba tanyakan hal lain ya Sensei! 🌸";
           stream.appendChild(errDiv);
         }
       }
@@ -731,7 +1109,8 @@
             currentAudio = new Audio(URL.createObjectURL(blob));
             currentAudio.onended = () => {
               if (statusLabel) statusLabel.textContent = "Suara Siap";
-              if (viewer && typeof viewer.stopLipSync === "function") viewer.stopLipSync();
+              if (viewer && typeof viewer.stopLipSync === "function")
+                viewer.stopLipSync();
             };
             currentAudio.play();
             return;
@@ -740,14 +1119,18 @@
           // Fallback browser SpeechSynthesis
           if ("speechSynthesis" in window) {
             window.speechSynthesis.cancel();
-            const clean = text.replace(/[^\w\s\u00C0-\u024F\u1E00-\u1EFF.,!?]/g, "");
+            const clean = text.replace(
+              /[^\w\s\u00C0-\u024F\u1E00-\u1EFF.,!?]/g,
+              "",
+            );
             const ut = new SpeechSynthesisUtterance(clean);
             ut.lang = "id-ID";
             ut.rate = 1.05;
             ut.pitch = 1.25;
             ut.onend = () => {
               if (statusLabel) statusLabel.textContent = "Suara Siap";
-              if (viewer && typeof viewer.stopLipSync === "function") viewer.stopLipSync();
+              if (viewer && typeof viewer.stopLipSync === "function")
+                viewer.stopLipSync();
             };
             window.speechSynthesis.speak(ut);
           }
@@ -758,26 +1141,37 @@
 
       window.sendQuickPrompt = (txt) => sendChatMessage(txt);
 
-      document.getElementById("btnSendLoungeChat")?.addEventListener("click", () => sendChatMessage());
-      document.getElementById("loungeChatInput")?.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") sendChatMessage();
-      });
+      document
+        .getElementById("btnSendLoungeChat")
+        ?.addEventListener("click", () => sendChatMessage());
+      document
+        .getElementById("loungeChatInput")
+        ?.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") sendChatMessage();
+        });
 
-      document.getElementById("btnToggleVoice")?.addEventListener("click", () => {
-        isVoiceActive = !isVoiceActive;
-        const icon = document.getElementById("voiceIcon");
-        if (icon) {
-          icon.className = isVoiceActive ? "fa-solid fa-volume-high" : "fa-solid fa-volume-xmark";
-          icon.style.color = isVoiceActive ? "inherit" : "#ef4444";
-        }
-      });
+      document
+        .getElementById("btnToggleVoice")
+        ?.addEventListener("click", () => {
+          isVoiceActive = !isVoiceActive;
+          const icon = document.getElementById("voiceIcon");
+          if (icon) {
+            icon.className = isVoiceActive
+              ? "fa-solid fa-volume-high"
+              : "fa-solid fa-volume-xmark";
+            icon.style.color = isVoiceActive ? "inherit" : "#ef4444";
+          }
+        });
 
       // Init on load
       document.addEventListener("DOMContentLoaded", () => {
         initLounge3D();
         initAudioWave();
       });
-      if (document.readyState === "complete" || document.readyState === "interactive") {
+      if (
+        document.readyState === "complete" ||
+        document.readyState === "interactive"
+      ) {
         initLounge3D();
         initAudioWave();
       }
@@ -785,11 +1179,26 @@
 
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"
+          ><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span
+          ><span class="mn-label">Dashboard</span></a
+        >
+        <a href="/world" class="mobile-nav-item" data-group="map"
+          ><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span
+          ><span class="mn-label">Map</span></a
+        >
+        <a href="/automations" class="mobile-nav-item" data-group="config"
+          ><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span
+          ><span class="mn-label">Config</span></a
+        >
+        <a href="/music" class="mobile-nav-item" data-group="system"
+          ><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span
+          ><span class="mn-label">System</span></a
+        >
+        <a href="/settings" class="mobile-nav-item" data-group="settings"
+          ><span class="mn-icon"><i class="fa-solid fa-gears"></i></span
+          ><span class="mn-label">Settings</span></a
+        >
       </div>
     </nav>
 

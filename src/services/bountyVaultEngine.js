@@ -119,7 +119,9 @@ class BountyVaultEngine {
           ttlSeconds,
         );
       } catch (err) {
-        logger.warn(`[BountyVaultEngine] Redis vault set error: ${err.message}`);
+        logger.warn(
+          `[BountyVaultEngine] Redis vault set error: ${err.message}`,
+        );
       }
     }
 
@@ -137,22 +139,32 @@ class BountyVaultEngine {
 
     if (!record && redisManager.isReady) {
       try {
-        const raw = await redisManager.getCache(`${VAULT_KEY_PREFIX}${vaultId}`);
+        const raw = await redisManager.getCache(
+          `${VAULT_KEY_PREFIX}${vaultId}`,
+        );
         if (raw) record = typeof raw === "string" ? JSON.parse(raw) : raw;
       } catch (err) {
-        logger.warn(`[BountyVaultEngine] Redis vault get error: ${err.message}`);
+        logger.warn(
+          `[BountyVaultEngine] Redis vault get error: ${err.message}`,
+        );
       }
     }
 
     if (!record) {
-      return { success: false, error: "Catatan rahasia tidak ditemukan atau sudah kadaluarsa." };
+      return {
+        success: false,
+        error: "Catatan rahasia tidak ditemukan atau sudah kadaluarsa.",
+      };
     }
 
     try {
       const plaintext = this.decryptData(record, passphrase);
       return { success: true, plaintext };
     } catch (_) {
-      return { success: false, error: "Passphrase salah atau data telah dimanipulasi." };
+      return {
+        success: false,
+        error: "Passphrase salah atau data telah dimanipulasi.",
+      };
     }
   }
 
@@ -172,11 +184,18 @@ class BountyVaultEngine {
    */
   async createBounty({ guildId, creatorId, title, description, rewardNsf }) {
     if (!guildId || !creatorId || !title || rewardNsf <= 0) {
-      return { success: false, error: "Data sayembara tidak lengkap atau imbalan tidak valid." };
+      return {
+        success: false,
+        error: "Data sayembara tidak lengkap atau imbalan tidak valid.",
+      };
     }
 
     // Debit reward dari saldo pembuat secara atomik
-    const debitOk = await cacheManager.debitUserSurvival(creatorId, "starFragments", rewardNsf);
+    const debitOk = await cacheManager.debitUserSurvival(
+      creatorId,
+      "starFragments",
+      rewardNsf,
+    );
     if (!debitOk) {
       return {
         success: false,
@@ -210,11 +229,15 @@ class BountyVaultEngine {
           86400 * 14,
         );
       } catch (err) {
-        logger.warn(`[BountyVaultEngine] Redis bounty set error: ${err.message}`);
+        logger.warn(
+          `[BountyVaultEngine] Redis bounty set error: ${err.message}`,
+        );
       }
     }
 
-    logger.info(`[BountyVaultEngine] Sayembara baru "${title}" (${rewardNsf} NSF) dibuat oleh ${creatorId}.`);
+    logger.info(
+      `[BountyVaultEngine] Sayembara baru "${title}" (${rewardNsf} NSF) dibuat oleh ${creatorId}.`,
+    );
     return { success: true, bounty };
   }
 
@@ -232,7 +255,9 @@ class BountyVaultEngine {
         const raw = await redisManager.getCache(`${BOUNTY_LIST_KEY}${guildId}`);
         if (raw) list = typeof raw === "string" ? JSON.parse(raw) : raw;
       } catch (err) {
-        logger.warn(`[BountyVaultEngine] Redis bounty list error: ${err.message}`);
+        logger.warn(
+          `[BountyVaultEngine] Redis bounty list error: ${err.message}`,
+        );
       }
     }
 
@@ -256,8 +281,13 @@ class BountyVaultEngine {
     const bounty = list.find((b) => b.bountyId === bountyId);
 
     if (!bounty) return { success: false, error: "Sayembara tidak ditemukan." };
-    if (bounty.status !== "open") return { success: false, error: "Sayembara ini sudah tidak terbuka." };
-    if (bounty.creatorId === claimantId) return { success: false, error: "Kamu tidak bisa mengklaim sayembara buatan sendiri." };
+    if (bounty.status !== "open")
+      return { success: false, error: "Sayembara ini sudah tidak terbuka." };
+    if (bounty.creatorId === claimantId)
+      return {
+        success: false,
+        error: "Kamu tidak bisa mengklaim sayembara buatan sendiri.",
+      };
 
     bounty.status = "submitted";
     bounty.claimantId = claimantId;
@@ -265,7 +295,13 @@ class BountyVaultEngine {
 
     memoryBounties.set(guildId, list);
     if (redisManager.isReady) {
-      await redisManager.setCache(`${BOUNTY_LIST_KEY}${guildId}`, JSON.stringify(list), 86400 * 14).catch(() => {});
+      await redisManager
+        .setCache(
+          `${BOUNTY_LIST_KEY}${guildId}`,
+          JSON.stringify(list),
+          86400 * 14,
+        )
+        .catch(() => {});
     }
 
     return { success: true, bounty };
@@ -283,21 +319,41 @@ class BountyVaultEngine {
     const bounty = list.find((b) => b.bountyId === bountyId);
 
     if (!bounty) return { success: false, error: "Sayembara tidak ditemukan." };
-    if (bounty.status !== "submitted") return { success: false, error: "Belum ada klaim yang diajukan untuk sayembara ini." };
-    if (bounty.creatorId !== approverId) return { success: false, error: "Hanya pembuat sayembara yang berhak menyetujui klaim." };
+    if (bounty.status !== "submitted")
+      return {
+        success: false,
+        error: "Belum ada klaim yang diajukan untuk sayembara ini.",
+      };
+    if (bounty.creatorId !== approverId)
+      return {
+        success: false,
+        error: "Hanya pembuat sayembara yang berhak menyetujui klaim.",
+      };
 
     // Cairkan escrow ke claimant secara atomik
-    await cacheManager.incrementUserSurvival(bounty.claimantId, "starFragments", bounty.rewardNsf);
+    await cacheManager.incrementUserSurvival(
+      bounty.claimantId,
+      "starFragments",
+      bounty.rewardNsf,
+    );
 
     bounty.status = "completed";
     bounty.completedAt = new Date().toISOString();
 
     memoryBounties.set(guildId, list);
     if (redisManager.isReady) {
-      await redisManager.setCache(`${BOUNTY_LIST_KEY}${guildId}`, JSON.stringify(list), 86400 * 14).catch(() => {});
+      await redisManager
+        .setCache(
+          `${BOUNTY_LIST_KEY}${guildId}`,
+          JSON.stringify(list),
+          86400 * 14,
+        )
+        .catch(() => {});
     }
 
-    logger.info(`[BountyVaultEngine] Sayembara ${bountyId} selesai. ${bounty.rewardNsf} NSF dicairkan ke ${bounty.claimantId}.`);
+    logger.info(
+      `[BountyVaultEngine] Sayembara ${bountyId} selesai. ${bounty.rewardNsf} NSF dicairkan ke ${bounty.claimantId}.`,
+    );
     return { success: true, rewardNsf: bounty.rewardNsf };
   }
 
@@ -313,17 +369,35 @@ class BountyVaultEngine {
     const bounty = list.find((b) => b.bountyId === bountyId);
 
     if (!bounty) return { success: false, error: "Sayembara tidak ditemukan." };
-    if (bounty.status !== "open") return { success: false, error: "Hanya sayembara berstatus terbuka yang dapat dibatalkan." };
-    if (bounty.creatorId !== requesterId) return { success: false, error: "Hanya pembuat sayembara yang dapat membatalkan sayembara." };
+    if (bounty.status !== "open")
+      return {
+        success: false,
+        error: "Hanya sayembara berstatus terbuka yang dapat dibatalkan.",
+      };
+    if (bounty.creatorId !== requesterId)
+      return {
+        success: false,
+        error: "Hanya pembuat sayembara yang dapat membatalkan sayembara.",
+      };
 
     // Kembalikan dana escrow secara atomik
-    await cacheManager.incrementUserSurvival(bounty.creatorId, "starFragments", bounty.rewardNsf);
+    await cacheManager.incrementUserSurvival(
+      bounty.creatorId,
+      "starFragments",
+      bounty.rewardNsf,
+    );
 
     bounty.status = "cancelled";
 
     memoryBounties.set(guildId, list);
     if (redisManager.isReady) {
-      await redisManager.setCache(`${BOUNTY_LIST_KEY}${guildId}`, JSON.stringify(list), 86400 * 14).catch(() => {});
+      await redisManager
+        .setCache(
+          `${BOUNTY_LIST_KEY}${guildId}`,
+          JSON.stringify(list),
+          86400 * 14,
+        )
+        .catch(() => {});
     }
 
     return { success: true, refundNsf: bounty.rewardNsf };

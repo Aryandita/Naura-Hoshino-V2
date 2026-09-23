@@ -16,9 +16,7 @@ const ui = require("../../src/config/ui");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("chronicle")
-    .setDescription(
-      "📰 Baca Koran Harian & Ramalan Server 'The Hoshino Times'",
-    )
+    .setDescription("📰 Baca Koran Harian & Ramalan Server 'The Hoshino Times'")
     .addStringOption((opt) =>
       opt
         .setName("topik")

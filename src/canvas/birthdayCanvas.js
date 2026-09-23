@@ -132,7 +132,11 @@ async function renderBirthdayCard(data) {
       ctx.fillStyle = "#FCD34D";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(username.charAt(0).toUpperCase(), avatarCenterX, avatarCenterY);
+      ctx.fillText(
+        username.charAt(0).toUpperCase(),
+        avatarCenterX,
+        avatarCenterY,
+      );
     }
 
     // Birthday Crown Icon on top of Avatar
@@ -146,26 +150,43 @@ async function renderBirthdayCard(data) {
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    const displayUser = username.length > 14 ? username.substring(0, 13) + "..." : username;
+    const displayUser =
+      username.length > 14 ? username.substring(0, 13) + "..." : username;
     ctx.fillText(displayUser, avatarCenterX, avatarCenterY + avatarRadius + 14);
 
     // Special Day Pill Badge
     ctx.fillStyle = "rgba(244, 63, 94, 0.25)";
     ctx.beginPath();
-    ctx.roundRect(avatarCenterX - 65, avatarCenterY + avatarRadius + 44, 130, 26, 13);
+    ctx.roundRect(
+      avatarCenterX - 65,
+      avatarCenterY + avatarRadius + 44,
+      130,
+      26,
+      13,
+    );
     ctx.fill();
 
     ctx.strokeStyle = "#F43F5E";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.roundRect(avatarCenterX - 65, avatarCenterY + avatarRadius + 44, 130, 26, 13);
+    ctx.roundRect(
+      avatarCenterX - 65,
+      avatarCenterY + avatarRadius + 44,
+      130,
+      26,
+      13,
+    );
     ctx.stroke();
 
     ctx.font = "bold 11px 'Montserrat', sans-serif";
     ctx.fillStyle = "#FDA4AF";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("HARI SPESIAL", avatarCenterX, avatarCenterY + avatarRadius + 57);
+    ctx.fillText(
+      "HARI SPESIAL",
+      avatarCenterX,
+      avatarCenterY + avatarRadius + 57,
+    );
 
     // 6. Right Column: Birthday Greetings & Gifts
     const contentX = 250;
@@ -180,7 +201,12 @@ async function renderBirthdayCard(data) {
 
     // Main Header: SELAMAT ULANG TAHUN!
     currY += 24;
-    const textGrad = ctx.createLinearGradient(contentX, currY, contentX + 350, currY);
+    const textGrad = ctx.createLinearGradient(
+      contentX,
+      currY,
+      contentX + 350,
+      currY,
+    );
     textGrad.addColorStop(0, "#FCD34D");
     textGrad.addColorStop(0.5, "#F472B6");
     textGrad.addColorStop(1, "#60A5FA");
@@ -193,15 +219,27 @@ async function renderBirthdayCard(data) {
     ctx.fillStyle = "#E2E8F0";
     ctx.font = "15px 'Montserrat', sans-serif";
     if (age) {
-      ctx.fillText(`Selamat merayakan ulang tahun yang ke-${age}! 🎂`, contentX, currY);
+      ctx.fillText(
+        `Selamat merayakan ulang tahun yang ke-${age}! 🎂`,
+        contentX,
+        currY,
+      );
     } else {
-      ctx.fillText("Semoga hari ini penuh kebahagiaan dan berkah! 🎂", contentX, currY);
+      ctx.fillText(
+        "Semoga hari ini penuh kebahagiaan dan berkah! 🎂",
+        contentX,
+        currY,
+      );
     }
 
     currY += 24;
     ctx.fillStyle = "#94A3B8";
     ctx.font = "13px 'Montserrat', sans-serif";
-    ctx.fillText("Bintang-bintang di semesta Naura Wilds bersinar terang untukmu.", contentX, currY);
+    ctx.fillText(
+      "Bintang-bintang di semesta Naura Wilds bersinar terang untukmu.",
+      contentX,
+      currY,
+    );
 
     // 7. Special Gift Box Container
     currY += 36;
@@ -219,7 +257,11 @@ async function renderBirthdayCard(data) {
     // Gift Header
     ctx.font = "bold 12px 'Montserrat', sans-serif";
     ctx.fillStyle = "#FCD34D";
-    ctx.fillText("🎁 KADO SPESIAL DARI NAURA HOSHINO:", contentX + 16, currY + 14);
+    ctx.fillText(
+      "🎁 KADO SPESIAL DARI NAURA HOSHINO:",
+      contentX + 16,
+      currY + 14,
+    );
 
     // Three Reward Badges
     const rewardPills = [

@@ -15,7 +15,8 @@ module.exports = (_client) => {
    * Endpoint status otentikasi sesi saat ini
    */
   router.get("/auth/status", (req, res) => {
-    const isAuth = typeof req.isAuthenticated === "function" && req.isAuthenticated();
+    const isAuth =
+      typeof req.isAuthenticated === "function" && req.isAuthenticated();
     return res.json({
       authenticated: Boolean(isAuth),
       user: isAuth ? req.user : null,
@@ -28,7 +29,8 @@ module.exports = (_client) => {
    * Memperpanjang masa aktif cookie sesi tanpa mereset status formulir pengguna
    */
   const handleRefresh = (req, res) => {
-    const isAuth = typeof req.isAuthenticated === "function" && req.isAuthenticated();
+    const isAuth =
+      typeof req.isAuthenticated === "function" && req.isAuthenticated();
     if (!isAuth || !req.user) {
       return res.status(401).json({
         success: false,
@@ -66,7 +68,8 @@ module.exports = (_client) => {
    * Endpoint auto-reconnect untuk validasi sambungan ulang setelah koneksi pulih
    */
   router.post("/auth/reconnect", (req, res) => {
-    const isAuth = typeof req.isAuthenticated === "function" && req.isAuthenticated();
+    const isAuth =
+      typeof req.isAuthenticated === "function" && req.isAuthenticated();
     return res.json({
       success: true,
       reconnected: true,

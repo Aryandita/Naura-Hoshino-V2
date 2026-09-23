@@ -96,7 +96,9 @@ export default defineConfig({
           const destIndex = path.join(distDir, "index.html");
           if (fs.existsSync(srcIndex)) {
             fs.copyFileSync(srcIndex, destIndex);
-            console.log("[Vite] dist/index.html tersinkronisasi dari src/pages/index.html");
+            console.log(
+              "[Vite] dist/index.html tersinkronisasi dari src/pages/index.html",
+            );
           }
         } catch {
           // Abaikan kesalahan bila folder dist belum tersedia saat build parsial

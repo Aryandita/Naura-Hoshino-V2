@@ -64,7 +64,6 @@ const LOCATION_NAMES = {
   laut: "Pesisir Sukamaju",
 };
 
-
 function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
 }
@@ -149,7 +148,11 @@ module.exports = {
 
     let encounterText = "";
     const npcPerksEngine = require("../../../src/survival/engines/npcPerksEngine");
-    const effectiveBanditChance = await npcPerksEngine.applyPassiveBonus(user.id, "bandit_chance", BANDIT_CHANCE);
+    const effectiveBanditChance = await npcPerksEngine.applyPassiveBonus(
+      user.id,
+      "bandit_chance",
+      BANDIT_CHANCE,
+    );
 
     if (!timeUpdate.passedOut && Math.random() < effectiveBanditChance) {
       if (Math.random() < 0.5) {
@@ -210,7 +213,6 @@ module.exports = {
         `Kamu kelelahan atau melanggar jam malam, lalu dilarikan ke **${timeUpdate.clinic}** dan dipulangkan ke desa. Biaya medisnya ${currency.format(currency.FRAGMENT, timeUpdate.penalty)}. Naura sedih lihat kamu begini, tolong jaga kesehatanmu.`,
       );
     }
-
 
     const background = findBackground(
       normalizedTarget === "academy" ? "kota" : normalizedTarget,

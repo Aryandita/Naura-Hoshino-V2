@@ -1,7 +1,7 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-const outDir = path.join(__dirname, '..', 'assets', 'audio', 'soundboard');
+const outDir = path.join(__dirname, "..", "assets", "audio", "soundboard");
 fs.mkdirSync(outDir, { recursive: true });
 
 const SAMPLE_RATE = 44100;
@@ -11,27 +11,30 @@ function createWavBuffer(samples) {
   const buffer = Buffer.alloc(44 + numSamples * 2);
 
   // RIFF identifier
-  buffer.write('RIFF', 0);
+  buffer.write("RIFF", 0);
   buffer.writeUInt32LE(36 + numSamples * 2, 4);
-  buffer.write('WAVE', 8);
+  buffer.write("WAVE", 8);
 
   // format chunk identifier
-  buffer.write('fmt ', 12);
+  buffer.write("fmt ", 12);
   buffer.writeUInt32LE(16, 16); // format chunk length
-  buffer.writeUInt16LE(1, 20);  // sample format (1 is PCM)
-  buffer.writeUInt16LE(1, 22);  // channel count (1 is mono)
+  buffer.writeUInt16LE(1, 20); // sample format (1 is PCM)
+  buffer.writeUInt16LE(1, 22); // channel count (1 is mono)
   buffer.writeUInt32LE(SAMPLE_RATE, 24); // sample rate
   buffer.writeUInt32LE(SAMPLE_RATE * 2, 28); // byte rate
-  buffer.writeUInt16LE(2, 32);  // block align
+  buffer.writeUInt16LE(2, 32); // block align
   buffer.writeUInt16LE(16, 34); // bits per sample
 
   // data chunk identifier
-  buffer.write('data', 36);
+  buffer.write("data", 36);
   buffer.writeUInt32LE(numSamples * 2, 40);
 
   for (let i = 0; i < numSamples; i++) {
     const s = Math.max(-1, Math.min(1, samples[i]));
-    buffer.writeInt16LE(Math.floor(s < 0 ? s * 0x8000 : s * 0x7FFF), 44 + i * 2);
+    buffer.writeInt16LE(
+      Math.floor(s < 0 ? s * 0x8000 : s * 0x7fff),
+      44 + i * 2,
+    );
   }
 
   return buffer;
@@ -51,14 +54,16 @@ function genAirhorn() {
     else if (t < 0.18) env = 0.05;
     else if (t < 0.32) env = Math.sin(((t - 0.18) / 0.14) * Math.PI);
     else if (t < 0.36) env = 0.05;
-    else if (t < 0.50) env = Math.sin(((t - 0.36) / 0.14) * Math.PI);
+    else if (t < 0.5) env = Math.sin(((t - 0.36) / 0.14) * Math.PI);
     else {
       const sustainT = (t - 0.5) / 0.8;
       env = Math.max(0, 1 - sustainT * sustainT);
     }
     let val = 0;
-    freqs.forEach(f => {
-      val += (Math.sin(2 * Math.PI * f * t) + 0.3 * Math.sin(4 * Math.PI * f * t)) * 0.25;
+    freqs.forEach((f) => {
+      val +=
+        (Math.sin(2 * Math.PI * f * t) + 0.3 * Math.sin(4 * Math.PI * f * t)) *
+        0.25;
     });
     samples[i] = val * env * 0.85;
   }
@@ -90,21 +95,25 @@ function genVictory() {
   const numSamples = Math.floor(SAMPLE_RATE * dur);
   const samples = new Float32Array(numSamples);
   const notes = [
-    { f: 523.25, start: 0.0, len: 0.22 },  // C5
+    { f: 523.25, start: 0.0, len: 0.22 }, // C5
     { f: 523.25, start: 0.24, len: 0.22 }, // C5
     { f: 523.25, start: 0.48, len: 0.22 }, // C5
     { f: 659.25, start: 0.72, len: 0.35 }, // E5
-    { f: 587.33, start: 1.10, len: 0.20 }, // D5
-    { f: 783.99, start: 1.32, len: 0.85 }  // G5 triumph sustain
+    { f: 587.33, start: 1.1, len: 0.2 }, // D5
+    { f: 783.99, start: 1.32, len: 0.85 }, // G5 triumph sustain
   ];
   for (let i = 0; i < numSamples; i++) {
     const t = i / SAMPLE_RATE;
     let s = 0;
-    notes.forEach(n => {
+    notes.forEach((n) => {
       if (t >= n.start && t < n.start + n.len) {
         const nt = t - n.start;
         const env = Math.sin((nt / n.len) * Math.PI);
-        s += (Math.sin(2 * Math.PI * n.f * t) + 0.35 * Math.sin(4 * Math.PI * n.f * t)) * env * 0.4;
+        s +=
+          (Math.sin(2 * Math.PI * n.f * t) +
+            0.35 * Math.sin(4 * Math.PI * n.f * t)) *
+          env *
+          0.4;
       }
     });
     samples[i] = s;
@@ -118,15 +127,15 @@ function genGameOver() {
   const numSamples = Math.floor(SAMPLE_RATE * dur);
   const samples = new Float32Array(numSamples);
   const notes = [
-    { f: 493.88, start: 0.0, len: 0.28 },  // B4
-    { f: 466.16, start: 0.30, len: 0.28 }, // Bb4
-    { f: 440.00, start: 0.60, len: 0.28 }, // A4
-    { f: 415.30, start: 0.90, len: 0.85 }  // Ab4 sad drop
+    { f: 493.88, start: 0.0, len: 0.28 }, // B4
+    { f: 466.16, start: 0.3, len: 0.28 }, // Bb4
+    { f: 440.0, start: 0.6, len: 0.28 }, // A4
+    { f: 415.3, start: 0.9, len: 0.85 }, // Ab4 sad drop
   ];
   for (let i = 0; i < numSamples; i++) {
     const t = i / SAMPLE_RATE;
     let s = 0;
-    notes.forEach(n => {
+    notes.forEach((n) => {
       if (t >= n.start && t < n.start + n.len) {
         const nt = t - n.start;
         const env = Math.max(0, 1 - nt / n.len);
@@ -171,7 +180,7 @@ function genDrumroll() {
     const t = i / SAMPLE_RATE;
     if (t < 1.8) {
       // Snare roll build
-      const build = (t / 1.8);
+      const build = t / 1.8;
       const rate = 22 + build * 10;
       const hit = Math.sin(2 * Math.PI * rate * t) > 0 ? 1 : 0;
       const noise = (Math.random() * 2 - 1) * 0.4;
@@ -224,17 +233,17 @@ function genCoin() {
 }
 
 const generators = {
-  'airhorn.wav': genAirhorn,
-  'bruh.wav': genBruh,
-  'victory.wav': genVictory,
-  'gameover.wav': genGameOver,
-  'magic.wav': genMagic,
-  'drumroll.wav': genDrumroll,
-  'bonk.wav': genBonk,
-  'coin.wav': genCoin
+  "airhorn.wav": genAirhorn,
+  "bruh.wav": genBruh,
+  "victory.wav": genVictory,
+  "gameover.wav": genGameOver,
+  "magic.wav": genMagic,
+  "drumroll.wav": genDrumroll,
+  "bonk.wav": genBonk,
+  "coin.wav": genCoin,
 };
 
-console.log('Generating authentic soundboard SFX WAV files...');
+console.log("Generating authentic soundboard SFX WAV files...");
 for (const [filename, gen] of Object.entries(generators)) {
   const samples = gen();
   const wavBuf = createWavBuffer(samples);

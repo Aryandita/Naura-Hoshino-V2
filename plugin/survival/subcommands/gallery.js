@@ -23,13 +23,7 @@ const COLLECTOR_MS = 180000;
 const MAX_OPTIONS = 25;
 
 const RELATIONSHIP_NAMES = ["Kenalan", "Teman", "Sahabat", "Pacar", "Menikah"];
-const RELATIONSHIP_EMOJI = [
-  "🤝",
-  "😊",
-  "✨",
-  "💖",
-  "💍",
-];
+const RELATIONSHIP_EMOJI = ["🤝", "😊", "✨", "💖", "💍"];
 
 const CAPTIONS = [
   "Lihat deh, senyum kalian di foto ini manis banget! Naura ikut senang lihatnya.",
@@ -74,12 +68,16 @@ module.exports = {
     const bonds = await UserNPC.findAll({ where: { userId: user.id } });
     // ATURAN KETAT: Hanya tampilkan NPC yang sudah pernah ditemui (afeksi > 0 atau lastInteraction != null)
     const met = (bonds || [])
-      .filter((b) => npcs[b.npcId] && ((b.affection || 0) > 0 || b.lastInteraction))
+      .filter(
+        (b) => npcs[b.npcId] && ((b.affection || 0) > 0 || b.lastInteraction),
+      )
       .sort((a, b) => (b.affection || 0) - (a.affection || 0));
 
     const state = survival.rpg_state || {};
     const album = Array.isArray(state.gallery_album) ? state.gallery_album : [];
-    const unlockedCgs = Array.isArray(state.unlocked_cgs) ? state.unlocked_cgs : [];
+    const unlockedCgs = Array.isArray(state.unlocked_cgs)
+      ? state.unlocked_cgs
+      : [];
 
     if (met.length === 0 && unlockedCgs.length === 0) {
       const emptyPayload = buildContainerV2({
@@ -185,7 +183,9 @@ module.exports = {
           `**Afeksi:** ${bond.affection || 0} RP`,
           `**Terakhir bertemu:** ${formatDate(bond.lastInteraction)}`,
           npc.location ? `**Wilayah:** ${npc.location}` : "",
-          extraCgStatus.length > 0 ? `\n**Momen Spesial:**\n${extraCgStatus.join("\n")}` : "",
+          extraCgStatus.length > 0
+            ? `\n**Momen Spesial:**\n${extraCgStatus.join("\n")}`
+            : "",
         ]
           .filter(Boolean)
           .join("\n"),
@@ -226,7 +226,8 @@ module.exports = {
         opened = met.find((b) => b.npcId === i.values[0]) || null;
         if (!opened) {
           return i.followUp({
-            content: "🔒 Foto ini belum berhasil kamu dapatkan di petualanganmu.",
+            content:
+              "🔒 Foto ini belum berhasil kamu dapatkan di petualanganmu.",
             flags: MessageFlags.Ephemeral,
           });
         }

@@ -80,18 +80,32 @@ class EconomyBatchService {
     for (const row of validRows) {
       try {
         if (row.normalizedCurrency === "starFragments") {
-          await cacheManager.incrementUserSurvival(row.userId, "starFragments", row.amount);
+          await cacheManager.incrementUserSurvival(
+            row.userId,
+            "starFragments",
+            row.amount,
+          );
           totals.starFragments += row.amount;
         } else if (row.normalizedCurrency === "coins") {
-          await cacheManager.incrementUserProfile(row.userId, "economy_wallet", row.amount);
+          await cacheManager.incrementUserProfile(
+            row.userId,
+            "economy_wallet",
+            row.amount,
+          );
           totals.coins += row.amount;
         } else if (row.normalizedCurrency === "coupons") {
-          await cacheManager.incrementUserSurvival(row.userId, "coupons", row.amount);
+          await cacheManager.incrementUserSurvival(
+            row.userId,
+            "coupons",
+            row.amount,
+          );
           totals.coupons += row.amount;
         }
         processed++;
       } catch (err) {
-        logger.error(`[EconomyBatch] Gagal menambahkan saldo ke user ${row.userId}: ${err.message}`);
+        logger.error(
+          `[EconomyBatch] Gagal menambahkan saldo ke user ${row.userId}: ${err.message}`,
+        );
         failedUsers.push(row.userId);
       }
     }

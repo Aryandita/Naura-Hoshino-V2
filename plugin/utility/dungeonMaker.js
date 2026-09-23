@@ -12,7 +12,9 @@ const customDungeonEngine = require("../../src/survival/engines/customDungeonEng
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("dungeon-maker")
-    .setDescription("🏰 Bangun, rancang, dan jelajahi Dungeon buatan komunitas server!")
+    .setDescription(
+      "🏰 Bangun, rancang, dan jelajahi Dungeon buatan komunitas server!",
+    )
     .addSubcommand((sub) =>
       sub
         .setName("create")
@@ -26,7 +28,9 @@ module.exports = {
         .addStringOption((opt) =>
           opt
             .setName("deskripsi")
-            .setDescription("Latar belakang cerita, narasi lore, dan jebakan dungeon (multiline)")
+            .setDescription(
+              "Latar belakang cerita, narasi lore, dan jebakan dungeon (multiline)",
+            )
             .setRequired(true),
         )
         .addStringOption((opt) =>
@@ -43,13 +47,17 @@ module.exports = {
         .addIntegerOption((opt) =>
           opt
             .setName("tiket")
-            .setDescription("Harga tiket masuk penantang dalam koin (default: 100)"),
+            .setDescription(
+              "Harga tiket masuk penantang dalam koin (default: 100)",
+            ),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("browse")
-        .setDescription("Lihat daftar dungeon komunitas terpopuler di server ini"),
+        .setDescription(
+          "Lihat daftar dungeon komunitas terpopuler di server ini",
+        ),
     )
     .addSubcommand((sub) =>
       sub
@@ -89,11 +97,31 @@ module.exports = {
       const entryFee = interaction.options.getInteger("tiket") || 100;
 
       const defaultRooms = [
-        { roomNumber: 1, type: "MONSTER", name: "Glitch Sentinel", difficulty: 40 },
-        { roomNumber: 2, type: "PUZZLE", name: "Cyber Gatekeeper Cipher", difficulty: 50 },
-        { roomNumber: 3, type: "MONSTER", name: "Void Stalker", difficulty: 70 },
+        {
+          roomNumber: 1,
+          type: "MONSTER",
+          name: "Glitch Sentinel",
+          difficulty: 40,
+        },
+        {
+          roomNumber: 2,
+          type: "PUZZLE",
+          name: "Cyber Gatekeeper Cipher",
+          difficulty: 50,
+        },
+        {
+          roomNumber: 3,
+          type: "MONSTER",
+          name: "Void Stalker",
+          difficulty: 70,
+        },
         { roomNumber: 4, type: "PUZZLE", name: "Quantum Maze", difficulty: 85 },
-        { roomNumber: 5, type: "BOSS", name: "Cybernetic Chimera", difficulty: 110 },
+        {
+          roomNumber: 5,
+          type: "BOSS",
+          name: "Cybernetic Chimera",
+          difficulty: 110,
+        },
       ];
 
       const res = await customDungeonEngine.createDungeon(user.id, guildId, {
@@ -171,7 +199,8 @@ module.exports = {
         return interaction.editReply(
           buildErrorContainerV2({
             title: "Gagal Menantang Dungeon",
-            description: res.message || `Tidak dapat memainkan dungeon ${dungeonId}.`,
+            description:
+              res.message || `Tidak dapat memainkan dungeon ${dungeonId}.`,
             footerText: ui.getFooter("survival"),
           }),
         );
@@ -180,7 +209,9 @@ module.exports = {
       return interaction.editReply(
         buildContainerV2({
           accentColorHex: res.cleared ? "#10B981" : "#EF4444",
-          title: res.cleared ? "🏆 Dungeon Berhasil Ditaklukkan!" : "💀 Tereliminasi di Dalam Dungeon",
+          title: res.cleared
+            ? "🏆 Dungeon Berhasil Ditaklukkan!"
+            : "💀 Tereliminasi di Dalam Dungeon",
           description: [
             res.cleared
               ? `Hebat! Kamu berhasil menuntaskan seluruh ruangan dan mengklaim hadiah \`${res.reward}\` Koin!`
@@ -200,7 +231,9 @@ module.exports = {
         return interaction.editReply(
           buildErrorContainerV2({
             title: "Gagal Mencairkan Brankas",
-            description: res.message || "Saldo brankas kosong atau kamu bukan pemilik sah dungeon ini.",
+            description:
+              res.message ||
+              "Saldo brankas kosong atau kamu bukan pemilik sah dungeon ini.",
             footerText: ui.getFooter("survival"),
           }),
         );

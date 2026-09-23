@@ -109,7 +109,9 @@ function addEconomyGroup(builder) {
           .addStringOption((opt) =>
             opt
               .setName("aksi")
-              .setDescription("Pilih tindakan (Beli langsung atau Inspeksi Hologram)")
+              .setDescription(
+                "Pilih tindakan (Beli langsung atau Inspeksi Hologram)",
+              )
               .setRequired(false)
               .addChoices(
                 { name: "🛒 Beli Langsung", value: "buy" },

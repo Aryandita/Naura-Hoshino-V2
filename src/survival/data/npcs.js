@@ -514,4 +514,3 @@ module.exports = {
     image: "gatot.jpeg",
   },
 };
-

@@ -4,19 +4,34 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Economy | Naura OS</title>
-    <meta name="description" content="Statistik ekonomi server, Naura Coins, Star Fragments, pasar saham, dan riwayat transaksi." />
+    <meta
+      name="description"
+      content="Statistik ekonomi server, Naura Coins, Star Fragments, pasar saham, dan riwayat transaksi."
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <style>
       /* Ticker animation */
-      .ticker-value.up   { color: var(--accent-green); }
-      .ticker-value.down { color: #f87171; }
-      .ticker-value.flat { color: var(--text-secondary); }
+      .ticker-value.up {
+        color: var(--accent-green);
+      }
+      .ticker-value.down {
+        color: #f87171;
+      }
+      .ticker-value.flat {
+        color: var(--text-secondary);
+      }
 
       .ticker-badge {
         display: inline-flex;
@@ -29,9 +44,21 @@
         border-radius: var(--r-full);
       }
 
-      .ticker-badge.up   { background: var(--green-dim); color: var(--accent-green); border: 1px solid rgba(52,211,153,0.3); }
-      .ticker-badge.down { background: rgba(248,113,113,0.1); color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
-      .ticker-badge.flat { background: var(--bg-elevated); color: var(--text-muted); border: 1px solid var(--border-subtle); }
+      .ticker-badge.up {
+        background: var(--green-dim);
+        color: var(--accent-green);
+        border: 1px solid rgba(52, 211, 153, 0.3);
+      }
+      .ticker-badge.down {
+        background: rgba(248, 113, 113, 0.1);
+        color: #f87171;
+        border: 1px solid rgba(248, 113, 113, 0.3);
+      }
+      .ticker-badge.flat {
+        background: var(--bg-elevated);
+        color: var(--text-muted);
+        border: 1px solid var(--border-subtle);
+      }
 
       /* Transaction row */
       .tx-row {
@@ -60,14 +87,36 @@
         flex-shrink: 0;
       }
 
-      .tx-icon.income  { background: var(--green-dim); color: var(--accent-green); border: 1px solid rgba(52,211,153,0.25); }
-      .tx-icon.expense { background: rgba(248,113,113,0.1); color: #f87171; border: 1px solid rgba(248,113,113,0.25); }
-      .tx-icon.trade   { background: var(--amber-dim); color: var(--accent-amber); border: 1px solid var(--border-amber); }
-      .tx-icon.system  { background: var(--violet-dim); color: var(--accent-violet); border: 1px solid var(--border-violet); }
+      .tx-icon.income {
+        background: var(--green-dim);
+        color: var(--accent-green);
+        border: 1px solid rgba(52, 211, 153, 0.25);
+      }
+      .tx-icon.expense {
+        background: rgba(248, 113, 113, 0.1);
+        color: #f87171;
+        border: 1px solid rgba(248, 113, 113, 0.25);
+      }
+      .tx-icon.trade {
+        background: var(--amber-dim);
+        color: var(--accent-amber);
+        border: 1px solid var(--border-amber);
+      }
+      .tx-icon.system {
+        background: var(--violet-dim);
+        color: var(--accent-violet);
+        border: 1px solid var(--border-violet);
+      }
 
-      .tx-amount.income  { color: var(--accent-green); }
-      .tx-amount.expense { color: #f87171; }
-      .tx-amount.trade   { color: var(--accent-amber); }
+      .tx-amount.income {
+        color: var(--accent-green);
+      }
+      .tx-amount.expense {
+        color: #f87171;
+      }
+      .tx-amount.trade {
+        color: var(--accent-amber);
+      }
 
       /* Stock item */
       .stock-row {
@@ -95,35 +144,45 @@
     </style>
   </head>
   <body>
-    
-
     <div class="app-shell">
       <!-- Mobile Sidebar Overlay -->
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
       <!-- SIDEBAR -->
-      <aside class="sidebar " id="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
           <div class="sidebar-logo-icon">
-            <img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" />
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="
+                this.style.display = 'none';
+                this.parentElement.innerHTML = '🌸';
+              "
+            />
           </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
             <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+          <button
+            class="sidebar-close-btn"
+            id="sidebarCloseBtn"
+            aria-label="Tutup menu"
+          >
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
+        <!-- Navigation -->
+        <!-- Navigation -->
         <nav class="sidebar-nav" role="navigation">
-
           <!-- Overview -->
           <div class="nav-group">
             <div class="nav-group-label">Overview</div>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-gauge-high"></i
+              ></span>
               <span>Dashboard</span>
             </a>
             <a href="/status" class="nav-item">
@@ -149,7 +208,9 @@
               <span>Economy</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-network-wired"></i
+              ></span>
               <span>Guild Topology</span>
             </a>
           </div>
@@ -170,7 +231,9 @@
               <span>Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-microphone"></i
+              ></span>
               <span>Karaoke</span>
             </a>
           </div>
@@ -179,7 +242,9 @@
           <div class="nav-group">
             <div class="nav-group-label">Naura Wilds RPG</div>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-earth-asia"></i
+              ></span>
               <span>World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
@@ -204,7 +269,9 @@
               <span>Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-wand-magic-sparkles"></i
+              ></span>
               <span>Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
@@ -221,15 +288,24 @@
           <div class="nav-group">
             <div class="nav-group-label">More</div>
             <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+              <span class="nav-icon" style="color: var(--accent-green)"
+                ><i class="fa-solid fa-id-badge"></i
+              ></span>
+              <span style="color: var(--accent-green)">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
         <div class="sidebar-footer">
-          <div class="sidebar-user" onclick="window.location.href='/'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+          <div class="sidebar-user" onclick="window.location.href = '/'">
+            <img
+              src="/assets/core/avatar.png"
+              alt="User"
+              class="sidebar-user-avatar"
+              onerror="
+                this.src =
+                  'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'
+              "
+            />
             <div class="sidebar-user-info">
               <div class="sidebar-user-name">Guest</div>
               <div class="sidebar-user-role">Klik untuk login</div>
@@ -242,227 +318,685 @@
       <div class="main-content">
         <header class="top-header">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
+            <button
+              class="hamburger-btn"
+              id="hamburgerBtn"
+              aria-label="Toggle menu"
+            >
+              <i class="fa-solid fa-bars"></i>
+            </button>
             <div>
               <div class="page-title">Economy Dashboard</div>
-              <div class="breadcrumb"><span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Economy</span></div>
+              <div class="breadcrumb">
+                <span>Naura OS</span><span class="breadcrumb-sep">/</span
+                ><span>Economy</span>
+              </div>
             </div>
           </div>
           <div class="header-right">
-            <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <a href="/" class="btn btn-ghost btn-sm"
+              ><i class="fa-solid fa-arrow-left"></i> Dashboard</a
+            >
           </div>
         </header>
 
         <main class="page-content">
-
           <div class="page-header-bar animate-in">
             <div>
               <h1 class="page-heading">
-                <span class="page-heading-icon" style="background:var(--amber-dim);border:1px solid var(--border-amber);">
-                  <i class="fa-solid fa-chart-line" style="color:var(--accent-amber);"></i>
+                <span
+                  class="page-heading-icon"
+                  style="
+                    background: var(--amber-dim);
+                    border: 1px solid var(--border-amber);
+                  "
+                >
+                  <i
+                    class="fa-solid fa-chart-line"
+                    style="color: var(--accent-amber)"
+                  ></i>
                 </span>
                 Economy Dashboard
               </h1>
-              <p class="page-sub">Statistik ekonomi server · Currency V2 Closed-Loop System</p>
+              <p class="page-sub">
+                Statistik ekonomi server · Currency V2 Closed-Loop System
+              </p>
             </div>
             <div class="tab-group">
-              <button class="tab-btn active" onclick="switchEconTab('overview')"><i class="fa-solid fa-chart-area"></i> Overview</button>
-              <button class="tab-btn" onclick="switchEconTab('market')"><i class="fa-solid fa-building-columns"></i> Market</button>
-              <button class="tab-btn" onclick="switchEconTab('history')"><i class="fa-solid fa-clock-rotate-left"></i> History</button>
+              <button
+                class="tab-btn active"
+                onclick="switchEconTab('overview')"
+              >
+                <i class="fa-solid fa-chart-area"></i> Overview
+              </button>
+              <button class="tab-btn" onclick="switchEconTab('market')">
+                <i class="fa-solid fa-building-columns"></i> Market
+              </button>
+              <button class="tab-btn" onclick="switchEconTab('history')">
+                <i class="fa-solid fa-clock-rotate-left"></i> History
+              </button>
             </div>
           </div>
 
           <!-- Overview Tab -->
           <div id="econTabOverview">
-
             <!-- Stat Cards -->
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;" class="animate-in delay-1" id="econStatGrid">
-
-              <div class="card card-p-sm metric-card" style="border-color:rgba(245,158,11,0.25);background:rgba(245,158,11,0.04);">
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 16px;
+                margin-bottom: 24px;
+              "
+              class="animate-in delay-1"
+              id="econStatGrid"
+            >
+              <div
+                class="card card-p-sm metric-card"
+                style="
+                  border-color: rgba(245, 158, 11, 0.25);
+                  background: rgba(245, 158, 11, 0.04);
+                "
+              >
                 <div class="metric-label">Star Fragments (NSF)</div>
-                <div class="metric-value glow-amber" style="font-size:28px;color:var(--accent-amber);" id="stat-circulation">
-                  <div class="skeleton" style="height:32px;width:120px;border-radius:6px;"></div>
+                <div
+                  class="metric-value glow-amber"
+                  style="font-size: 28px; color: var(--accent-amber)"
+                  id="stat-circulation"
+                >
+                  <div
+                    class="skeleton"
+                    style="height: 32px; width: 120px; border-radius: 6px"
+                  ></div>
                 </div>
                 <div class="metric-sub">Total beredar di server</div>
-                <div class="metric-icon-bg" style="color:var(--accent-amber);">
+                <div class="metric-icon-bg" style="color: var(--accent-amber)">
                   <i class="fa-solid fa-star"></i>
                 </div>
               </div>
 
-              <div class="card card-p-sm metric-card" style="border-color:var(--border-primary);background:var(--primary-deep);">
+              <div
+                class="card card-p-sm metric-card"
+                style="
+                  border-color: var(--border-primary);
+                  background: var(--primary-deep);
+                "
+              >
                 <div class="metric-label">Naura Coins (NC), Beredar</div>
-                <div class="metric-value glow-primary" style="font-size:28px;color:var(--primary);" id="stat-coins">
-                  <div class="skeleton" style="height:32px;width:140px;border-radius:6px;"></div>
+                <div
+                  class="metric-value glow-primary"
+                  style="font-size: 28px; color: var(--primary)"
+                  id="stat-coins"
+                >
+                  <div
+                    class="skeleton"
+                    style="height: 32px; width: 140px; border-radius: 6px"
+                  ></div>
                 </div>
                 <div class="metric-sub">Total NC di dompet + bank</div>
-                <div class="metric-icon-bg" style="color:var(--primary);">
+                <div class="metric-icon-bg" style="color: var(--primary)">
                   <i class="fa-solid fa-coins"></i>
                 </div>
               </div>
 
-              <div class="card card-p-sm metric-card" style="border-color:var(--border-violet);background:var(--violet-dim);">
+              <div
+                class="card card-p-sm metric-card"
+                style="
+                  border-color: var(--border-violet);
+                  background: var(--violet-dim);
+                "
+              >
                 <div class="metric-label">Naura Coupons Aktif</div>
-                <div class="metric-value glow-violet" style="font-size:28px;color:var(--accent-violet);" id="stat-coupons">
-                  <div class="skeleton" style="height:32px;width:80px;border-radius:6px;"></div>
+                <div
+                  class="metric-value glow-violet"
+                  style="font-size: 28px; color: var(--accent-violet)"
+                  id="stat-coupons"
+                >
+                  <div
+                    class="skeleton"
+                    style="height: 32px; width: 80px; border-radius: 6px"
+                  ></div>
                 </div>
                 <div class="metric-sub">Kupon premium di sirkulasi</div>
-                <div class="metric-icon-bg" style="color:var(--accent-violet);">
+                <div class="metric-icon-bg" style="color: var(--accent-violet)">
                   <i class="fa-solid fa-ticket"></i>
                 </div>
               </div>
-
             </div>
 
             <!-- Economy Chart -->
-            <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:24px;" class="animate-in delay-2" id="econChartGrid">
-
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 2fr 1fr;
+                gap: 20px;
+                margin-bottom: 24px;
+              "
+              class="animate-in delay-2"
+              id="econChartGrid"
+            >
               <!-- NC Circulation chart -->
               <div class="card card-glow-amber card-p">
                 <div class="card-header">
-                  <div class="card-title" style="color:var(--accent-amber);">
+                  <div class="card-title" style="color: var(--accent-amber)">
                     <i class="fa-solid fa-chart-area"></i> NC Circulation Trend
                   </div>
-                  <div class="tab-group" style="padding:2px;gap:2px;">
-                    <button class="tab-btn active" id="btnChart7d" onclick="switchChartPeriod('7d')" style="padding:4px 8px;font-size:10px;">7D</button>
-                    <button class="tab-btn" id="btnChart30d" onclick="switchChartPeriod('30d')" style="padding:4px 8px;font-size:10px;">30D</button>
-                    <button class="tab-btn" id="btnChart90d" onclick="switchChartPeriod('90d')" style="padding:4px 8px;font-size:10px;">90D</button>
+                  <div class="tab-group" style="padding: 2px; gap: 2px">
+                    <button
+                      class="tab-btn active"
+                      id="btnChart7d"
+                      onclick="switchChartPeriod('7d')"
+                      style="padding: 4px 8px; font-size: 10px"
+                    >
+                      7D
+                    </button>
+                    <button
+                      class="tab-btn"
+                      id="btnChart30d"
+                      onclick="switchChartPeriod('30d')"
+                      style="padding: 4px 8px; font-size: 10px"
+                    >
+                      30D
+                    </button>
+                    <button
+                      class="tab-btn"
+                      id="btnChart90d"
+                      onclick="switchChartPeriod('90d')"
+                      style="padding: 4px 8px; font-size: 10px"
+                    >
+                      90D
+                    </button>
                   </div>
                 </div>
-                <div style="height:200px;position:relative;">
+                <div style="height: 200px; position: relative">
                   <canvas id="econCirculationChart"></canvas>
                 </div>
               </div>
 
               <!-- Currency distribution doughnut -->
-              <div class="card card-glow-primary card-p" style="display:flex;flex-direction:column;">
-                <div class="card-header" style="margin-bottom:12px;">
-                  <div class="card-title" style="color:var(--primary);">
+              <div
+                class="card card-glow-primary card-p"
+                style="display: flex; flex-direction: column"
+              >
+                <div class="card-header" style="margin-bottom: 12px">
+                  <div class="card-title" style="color: var(--primary)">
                     <i class="fa-solid fa-chart-pie"></i> Distribusi
                   </div>
                 </div>
-                <div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:140px;">
+                <div
+                  style="
+                    flex: 1;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 140px;
+                  "
+                >
                   <canvas id="econDistributionChart"></canvas>
                 </div>
-                <div style="display:flex;flex-direction:column;gap:5px;margin-top:12px;">
-                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;">
-                    <span style="display:flex;align-items:center;gap:6px;color:var(--text-secondary);">
-                      <span style="width:8px;height:8px;border-radius:50%;background:var(--primary);display:inline-block;"></span>Dompet
+                <div
+                  style="
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                    margin-top: 12px;
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      font-size: 11px;
+                    "
+                  >
+                    <span
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        color: var(--text-secondary);
+                      "
+                    >
+                      <span
+                        style="
+                          width: 8px;
+                          height: 8px;
+                          border-radius: 50%;
+                          background: var(--primary);
+                          display: inline-block;
+                        "
+                      ></span
+                      >Dompet
                     </span>
-                    <span style="font-family:var(--font-mono);color:var(--text-primary);" id="pct-dompet">42%</span>
+                    <span
+                      style="
+                        font-family: var(--font-mono);
+                        color: var(--text-primary);
+                      "
+                      id="pct-dompet"
+                      >42%</span
+                    >
                   </div>
-                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;">
-                    <span style="display:flex;align-items:center;gap:6px;color:var(--text-secondary);">
-                      <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-cyan);display:inline-block;"></span>Bank
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      font-size: 11px;
+                    "
+                  >
+                    <span
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        color: var(--text-secondary);
+                      "
+                    >
+                      <span
+                        style="
+                          width: 8px;
+                          height: 8px;
+                          border-radius: 50%;
+                          background: var(--accent-cyan);
+                          display: inline-block;
+                        "
+                      ></span
+                      >Bank
                     </span>
-                    <span style="font-family:var(--font-mono);color:var(--text-primary);" id="pct-bank">35%</span>
+                    <span
+                      style="
+                        font-family: var(--font-mono);
+                        color: var(--text-primary);
+                      "
+                      id="pct-bank"
+                      >35%</span
+                    >
                   </div>
-                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;">
-                    <span style="display:flex;align-items:center;gap:6px;color:var(--text-secondary);">
-                      <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-violet);display:inline-block;"></span>Invested
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      font-size: 11px;
+                    "
+                  >
+                    <span
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        color: var(--text-secondary);
+                      "
+                    >
+                      <span
+                        style="
+                          width: 8px;
+                          height: 8px;
+                          border-radius: 50%;
+                          background: var(--accent-violet);
+                          display: inline-block;
+                        "
+                      ></span
+                      >Invested
                     </span>
-                    <span style="font-family:var(--font-mono);color:var(--text-primary);" id="pct-invested">23%</span>
+                    <span
+                      style="
+                        font-family: var(--font-mono);
+                        color: var(--text-primary);
+                      "
+                      id="pct-invested"
+                      >23%</span
+                    >
                   </div>
                 </div>
               </div>
-
             </div>
 
             <!-- Economy Metrics -->
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;" class="animate-in delay-3" id="econMetricsGrid">
-
-              <div class="card card-p-sm" style="text-align:center;">
-                <div style="font-size:24px;margin-bottom:6px;">💸</div>
-                <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--text-primary);" id="stat-daily-tx">-</div>
-                <div style="font-size:10px;color:var(--text-muted);margin-top:3px;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font-heading);">Transaksi/Hari</div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 12px;
+                margin-bottom: 24px;
+              "
+              class="animate-in delay-3"
+              id="econMetricsGrid"
+            >
+              <div class="card card-p-sm" style="text-align: center">
+                <div style="font-size: 24px; margin-bottom: 6px">💸</div>
+                <div
+                  style="
+                    font-family: var(--font-mono);
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                  "
+                  id="stat-daily-tx"
+                >
+                  -
+                </div>
+                <div
+                  style="
+                    font-size: 10px;
+                    color: var(--text-muted);
+                    margin-top: 3px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.08em;
+                    font-family: var(--font-heading);
+                  "
+                >
+                  Transaksi/Hari
+                </div>
               </div>
 
-              <div class="card card-p-sm" style="text-align:center;">
-                <div style="font-size:24px;margin-bottom:6px;">🏦</div>
-                <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--text-primary);" id="stat-bank-total">-</div>
-                <div style="font-size:10px;color:var(--text-muted);margin-top:3px;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font-heading);">Total di Bank</div>
+              <div class="card card-p-sm" style="text-align: center">
+                <div style="font-size: 24px; margin-bottom: 6px">🏦</div>
+                <div
+                  style="
+                    font-family: var(--font-mono);
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                  "
+                  id="stat-bank-total"
+                >
+                  -
+                </div>
+                <div
+                  style="
+                    font-size: 10px;
+                    color: var(--text-muted);
+                    margin-top: 3px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.08em;
+                    font-family: var(--font-heading);
+                  "
+                >
+                  Total di Bank
+                </div>
               </div>
 
-              <div class="card card-p-sm" style="text-align:center;">
-                <div style="font-size:24px;margin-bottom:6px;">🌊</div>
-                <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--text-primary);" id="stat-recycling">-</div>
-                <div style="font-size:10px;color:var(--text-muted);margin-top:3px;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font-heading);">Recycling Pool</div>
+              <div class="card card-p-sm" style="text-align: center">
+                <div style="font-size: 24px; margin-bottom: 6px">🌊</div>
+                <div
+                  style="
+                    font-family: var(--font-mono);
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                  "
+                  id="stat-recycling"
+                >
+                  -
+                </div>
+                <div
+                  style="
+                    font-size: 10px;
+                    color: var(--text-muted);
+                    margin-top: 3px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.08em;
+                    font-family: var(--font-heading);
+                  "
+                >
+                  Recycling Pool
+                </div>
               </div>
 
-              <div class="card card-p-sm" style="text-align:center;">
-                <div style="font-size:24px;margin-bottom:6px;">📈</div>
-                <div style="font-family:var(--font-mono);font-size:16px;font-weight:700;color:var(--accent-green);" id="stat-inflation">+2.4%</div>
-                <div style="font-size:10px;color:var(--text-muted);margin-top:3px;text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font-heading);">Inflation Rate</div>
+              <div class="card card-p-sm" style="text-align: center">
+                <div style="font-size: 24px; margin-bottom: 6px">📈</div>
+                <div
+                  style="
+                    font-family: var(--font-mono);
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: var(--accent-green);
+                  "
+                  id="stat-inflation"
+                >
+                  +2.4%
+                </div>
+                <div
+                  style="
+                    font-size: 10px;
+                    color: var(--text-muted);
+                    margin-top: 3px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.08em;
+                    font-family: var(--font-heading);
+                  "
+                >
+                  Inflation Rate
+                </div>
               </div>
-
             </div>
-
           </div>
 
           <!-- Market Tab -->
-          <div id="econTabMarket" style="display:none;" class="animate-in">
-            <div class="section-title" style="margin-bottom:16px;"><i class="fa-solid fa-building-columns" style="color:var(--accent-amber);"></i> Naura Stock Market</div>
+          <div id="econTabMarket" style="display: none" class="animate-in">
+            <div class="section-title" style="margin-bottom: 16px">
+              <i
+                class="fa-solid fa-building-columns"
+                style="color: var(--accent-amber)"
+              ></i>
+              Naura Stock Market
+            </div>
             <div class="card card-p animate-in delay-1">
               <div class="card-header">
-                <div class="card-title" style="color:var(--accent-amber);"><i class="fa-solid fa-chart-line"></i> Live Stock Tickers</div>
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <span class="status-dot online" style="width:7px;height:7px;"></span>
-                  <span style="font-size:11px;color:var(--accent-green);font-family:var(--font-mono);">Market Open</span>
+                <div class="card-title" style="color: var(--accent-amber)">
+                  <i class="fa-solid fa-chart-line"></i> Live Stock Tickers
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px">
+                  <span
+                    class="status-dot online"
+                    style="width: 7px; height: 7px"
+                  ></span>
+                  <span
+                    style="
+                      font-size: 11px;
+                      color: var(--accent-green);
+                      font-family: var(--font-mono);
+                    "
+                    >Market Open</span
+                  >
                 </div>
               </div>
-              <div id="stockList" style="display:flex;flex-direction:column;gap:4px;">
-
+              <div
+                id="stockList"
+                style="display: flex; flex-direction: column; gap: 4px"
+              >
                 <div class="stock-row">
-                  <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);width:50px;flex-shrink:0;">NAURA</div>
-                  <div style="flex:1;min-width:0;font-size:12px;color:var(--text-muted);">Naura Hoshino Corp.</div>
+                  <div
+                    style="
+                      font-family: var(--font-mono);
+                      font-size: 13px;
+                      font-weight: 700;
+                      color: var(--text-primary);
+                      width: 50px;
+                      flex-shrink: 0;
+                    "
+                  >
+                    NAURA
+                  </div>
+                  <div
+                    style="
+                      flex: 1;
+                      min-width: 0;
+                      font-size: 12px;
+                      color: var(--text-muted);
+                    "
+                  >
+                    Naura Hoshino Corp.
+                  </div>
                   <canvas class="sparkline" id="spark-naura"></canvas>
-                  <div style="text-align:right;flex-shrink:0;">
-                    <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);">🪙 4,250</div>
-                    <span class="ticker-badge up"><i class="fa-solid fa-caret-up"></i> +3.2%</span>
+                  <div style="text-align: right; flex-shrink: 0">
+                    <div
+                      style="
+                        font-family: var(--font-mono);
+                        font-size: 13px;
+                        font-weight: 700;
+                        color: var(--text-primary);
+                      "
+                    >
+                      🪙 4,250
+                    </div>
+                    <span class="ticker-badge up"
+                      ><i class="fa-solid fa-caret-up"></i> +3.2%</span
+                    >
                   </div>
                 </div>
 
                 <div class="stock-row">
-                  <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);width:50px;flex-shrink:0;">HOSHI</div>
-                  <div style="flex:1;min-width:0;font-size:12px;color:var(--text-muted);">Hoshino Star Fund</div>
+                  <div
+                    style="
+                      font-family: var(--font-mono);
+                      font-size: 13px;
+                      font-weight: 700;
+                      color: var(--text-primary);
+                      width: 50px;
+                      flex-shrink: 0;
+                    "
+                  >
+                    HOSHI
+                  </div>
+                  <div
+                    style="
+                      flex: 1;
+                      min-width: 0;
+                      font-size: 12px;
+                      color: var(--text-muted);
+                    "
+                  >
+                    Hoshino Star Fund
+                  </div>
                   <canvas class="sparkline" id="spark-hoshi"></canvas>
-                  <div style="text-align:right;flex-shrink:0;">
-                    <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);">🪙 2,800</div>
-                    <span class="ticker-badge down"><i class="fa-solid fa-caret-down"></i> -1.5%</span>
+                  <div style="text-align: right; flex-shrink: 0">
+                    <div
+                      style="
+                        font-family: var(--font-mono);
+                        font-size: 13px;
+                        font-weight: 700;
+                        color: var(--text-primary);
+                      "
+                    >
+                      🪙 2,800
+                    </div>
+                    <span class="ticker-badge down"
+                      ><i class="fa-solid fa-caret-down"></i> -1.5%</span
+                    >
                   </div>
                 </div>
 
                 <div class="stock-row">
-                  <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);width:50px;flex-shrink:0;">WILDS</div>
-                  <div style="flex:1;min-width:0;font-size:12px;color:var(--text-muted);">Naura Wilds Ecosystem</div>
+                  <div
+                    style="
+                      font-family: var(--font-mono);
+                      font-size: 13px;
+                      font-weight: 700;
+                      color: var(--text-primary);
+                      width: 50px;
+                      flex-shrink: 0;
+                    "
+                  >
+                    WILDS
+                  </div>
+                  <div
+                    style="
+                      flex: 1;
+                      min-width: 0;
+                      font-size: 12px;
+                      color: var(--text-muted);
+                    "
+                  >
+                    Naura Wilds Ecosystem
+                  </div>
                   <canvas class="sparkline" id="spark-wilds"></canvas>
-                  <div style="text-align:right;flex-shrink:0;">
-                    <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);">🪙 1,550</div>
-                    <span class="ticker-badge up"><i class="fa-solid fa-caret-up"></i> +7.8%</span>
+                  <div style="text-align: right; flex-shrink: 0">
+                    <div
+                      style="
+                        font-family: var(--font-mono);
+                        font-size: 13px;
+                        font-weight: 700;
+                        color: var(--text-primary);
+                      "
+                    >
+                      🪙 1,550
+                    </div>
+                    <span class="ticker-badge up"
+                      ><i class="fa-solid fa-caret-up"></i> +7.8%</span
+                    >
                   </div>
                 </div>
 
                 <div class="stock-row">
-                  <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);width:50px;flex-shrink:0;">DISC</div>
-                  <div style="flex:1;min-width:0;font-size:12px;color:var(--text-muted);">Discord Premium Fund</div>
+                  <div
+                    style="
+                      font-family: var(--font-mono);
+                      font-size: 13px;
+                      font-weight: 700;
+                      color: var(--text-primary);
+                      width: 50px;
+                      flex-shrink: 0;
+                    "
+                  >
+                    DISC
+                  </div>
+                  <div
+                    style="
+                      flex: 1;
+                      min-width: 0;
+                      font-size: 12px;
+                      color: var(--text-muted);
+                    "
+                  >
+                    Discord Premium Fund
+                  </div>
                   <canvas class="sparkline" id="spark-disc"></canvas>
-                  <div style="text-align:right;flex-shrink:0;">
-                    <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);">🪙 3,100</div>
-                    <span class="ticker-badge flat"><i class="fa-solid fa-minus"></i> 0.0%</span>
+                  <div style="text-align: right; flex-shrink: 0">
+                    <div
+                      style="
+                        font-family: var(--font-mono);
+                        font-size: 13px;
+                        font-weight: 700;
+                        color: var(--text-primary);
+                      "
+                    >
+                      🪙 3,100
+                    </div>
+                    <span class="ticker-badge flat"
+                      ><i class="fa-solid fa-minus"></i> 0.0%</span
+                    >
                   </div>
                 </div>
-
               </div>
             </div>
           </div>
 
           <!-- History Tab -->
-          <div id="econTabHistory" style="display:none;" class="animate-in">
+          <div id="econTabHistory" style="display: none" class="animate-in">
             <div class="card card-p animate-in delay-1">
               <div class="card-header">
-                <div class="card-title"><i class="fa-solid fa-clock-rotate-left" style="color:var(--accent-cyan);"></i> Riwayat Transaksi</div>
-                <div style="display:flex;gap:8px;">
-                  <input type="text" class="input" placeholder="Cari transaksi..." style="max-width:180px;font-size:12px;" />
-                  <select class="input" style="max-width:140px;font-size:12px;cursor:pointer;">
+                <div class="card-title">
+                  <i
+                    class="fa-solid fa-clock-rotate-left"
+                    style="color: var(--accent-cyan)"
+                  ></i>
+                  Riwayat Transaksi
+                </div>
+                <div style="display: flex; gap: 8px">
+                  <input
+                    type="text"
+                    class="input"
+                    placeholder="Cari transaksi..."
+                    style="max-width: 180px; font-size: 12px"
+                  />
+                  <select
+                    class="input"
+                    style="max-width: 140px; font-size: 12px; cursor: pointer"
+                  >
                     <option>Semua Tipe</option>
                     <option>Income</option>
                     <option>Expense</option>
@@ -471,76 +1005,223 @@
                   </select>
                 </div>
               </div>
-              <div id="txList" style="display:flex;flex-direction:column;gap:2px;">
-
+              <div
+                id="txList"
+                style="display: flex; flex-direction: column; gap: 2px"
+              >
                 <div class="tx-row">
-                  <div class="tx-icon income"><i class="fa-solid fa-arrow-down-left"></i></div>
-                  <div style="flex:1;min-width:0;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Daily Reward Claim</div>
-                    <div style="font-size:11px;color:var(--text-muted);">Dari: System · 5 menit lalu</div>
+                  <div class="tx-icon income">
+                    <i class="fa-solid fa-arrow-down-left"></i>
                   </div>
-                  <div style="text-align:right;">
-                    <div class="tx-amount income" style="font-family:var(--font-mono);font-size:13px;font-weight:700;">+🪙 5,000</div>
-                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">NC</div>
+                  <div style="flex: 1; min-width: 0">
+                    <div
+                      style="
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: var(--text-primary);
+                      "
+                    >
+                      Daily Reward Claim
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted)">
+                      Dari: System · 5 menit lalu
+                    </div>
+                  </div>
+                  <div style="text-align: right">
+                    <div
+                      class="tx-amount income"
+                      style="
+                        font-family: var(--font-mono);
+                        font-size: 13px;
+                        font-weight: 700;
+                      "
+                    >
+                      +🪙 5,000
+                    </div>
+                    <div
+                      style="
+                        font-size: 10px;
+                        color: var(--text-muted);
+                        font-family: var(--font-mono);
+                      "
+                    >
+                      NC
+                    </div>
                   </div>
                 </div>
 
                 <div class="tx-row">
-                  <div class="tx-icon expense"><i class="fa-solid fa-arrow-up-right"></i></div>
-                  <div style="flex:1;min-width:0;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Beli Item Toko (Cyber Sword)</div>
-                    <div style="font-size:11px;color:var(--text-muted);">Shop · 23 menit lalu</div>
+                  <div class="tx-icon expense">
+                    <i class="fa-solid fa-arrow-up-right"></i>
                   </div>
-                  <div style="text-align:right;">
-                    <div class="tx-amount expense" style="font-family:var(--font-mono);font-size:13px;font-weight:700;">-⭐ 2,500</div>
-                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">NSF</div>
+                  <div style="flex: 1; min-width: 0">
+                    <div
+                      style="
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: var(--text-primary);
+                      "
+                    >
+                      Beli Item Toko (Cyber Sword)
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted)">
+                      Shop · 23 menit lalu
+                    </div>
+                  </div>
+                  <div style="text-align: right">
+                    <div
+                      class="tx-amount expense"
+                      style="
+                        font-family: var(--font-mono);
+                        font-size: 13px;
+                        font-weight: 700;
+                      "
+                    >
+                      -⭐ 2,500
+                    </div>
+                    <div
+                      style="
+                        font-size: 10px;
+                        color: var(--text-muted);
+                        font-family: var(--font-mono);
+                      "
+                    >
+                      NSF
+                    </div>
                   </div>
                 </div>
 
                 <div class="tx-row">
-                  <div class="tx-icon trade"><i class="fa-solid fa-arrows-left-right"></i></div>
-                  <div style="flex:1;min-width:0;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Transfer ke Hanako</div>
-                    <div style="font-size:11px;color:var(--text-muted);">Transfer · 1 jam lalu</div>
+                  <div class="tx-icon trade">
+                    <i class="fa-solid fa-arrows-left-right"></i>
                   </div>
-                  <div style="text-align:right;">
-                    <div class="tx-amount trade" style="font-family:var(--font-mono);font-size:13px;font-weight:700;">-🪙 10,000</div>
-                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">NC</div>
+                  <div style="flex: 1; min-width: 0">
+                    <div
+                      style="
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: var(--text-primary);
+                      "
+                    >
+                      Transfer ke Hanako
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted)">
+                      Transfer · 1 jam lalu
+                    </div>
+                  </div>
+                  <div style="text-align: right">
+                    <div
+                      class="tx-amount trade"
+                      style="
+                        font-family: var(--font-mono);
+                        font-size: 13px;
+                        font-weight: 700;
+                      "
+                    >
+                      -🪙 10,000
+                    </div>
+                    <div
+                      style="
+                        font-size: 10px;
+                        color: var(--text-muted);
+                        font-family: var(--font-mono);
+                      "
+                    >
+                      NC
+                    </div>
                   </div>
                 </div>
 
                 <div class="tx-row">
-                  <div class="tx-icon income"><i class="fa-solid fa-arrow-down-left"></i></div>
-                  <div style="flex:1;min-width:0;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);">XP Level Up Reward</div>
-                    <div style="font-size:11px;color:var(--text-muted);">System · 3 jam lalu</div>
+                  <div class="tx-icon income">
+                    <i class="fa-solid fa-arrow-down-left"></i>
                   </div>
-                  <div style="text-align:right;">
-                    <div class="tx-amount income" style="font-family:var(--font-mono);font-size:13px;font-weight:700;">+⭐ 1,200</div>
-                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">NSF</div>
+                  <div style="flex: 1; min-width: 0">
+                    <div
+                      style="
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: var(--text-primary);
+                      "
+                    >
+                      XP Level Up Reward
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted)">
+                      System · 3 jam lalu
+                    </div>
+                  </div>
+                  <div style="text-align: right">
+                    <div
+                      class="tx-amount income"
+                      style="
+                        font-family: var(--font-mono);
+                        font-size: 13px;
+                        font-weight: 700;
+                      "
+                    >
+                      +⭐ 1,200
+                    </div>
+                    <div
+                      style="
+                        font-size: 10px;
+                        color: var(--text-muted);
+                        font-family: var(--font-mono);
+                      "
+                    >
+                      NSF
+                    </div>
                   </div>
                 </div>
 
                 <div class="tx-row">
-                  <div class="tx-icon system"><i class="fa-solid fa-robot"></i></div>
-                  <div style="flex:1;min-width:0;">
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Gacha Pull (Epic)</div>
-                    <div style="font-size:11px;color:var(--text-muted);">Gacha · 5 jam lalu</div>
+                  <div class="tx-icon system">
+                    <i class="fa-solid fa-robot"></i>
                   </div>
-                  <div style="text-align:right;">
-                    <div class="tx-amount trade" style="font-family:var(--font-mono);font-size:13px;font-weight:700;">-🎟️ 1</div>
-                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">Coupon</div>
+                  <div style="flex: 1; min-width: 0">
+                    <div
+                      style="
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: var(--text-primary);
+                      "
+                    >
+                      Gacha Pull (Epic)
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted)">
+                      Gacha · 5 jam lalu
+                    </div>
+                  </div>
+                  <div style="text-align: right">
+                    <div
+                      class="tx-amount trade"
+                      style="
+                        font-family: var(--font-mono);
+                        font-size: 13px;
+                        font-weight: 700;
+                      "
+                    >
+                      -🎟️ 1
+                    </div>
+                    <div
+                      style="
+                        font-size: 10px;
+                        color: var(--text-muted);
+                        font-family: var(--font-mono);
+                      "
+                    >
+                      Coupon
+                    </div>
                   </div>
                 </div>
-
               </div>
 
-              <div style="text-align:center;margin-top:16px;">
-                <button class="btn btn-ghost">Muat Lebih <i class="fa-solid fa-chevron-down"></i></button>
+              <div style="text-align: center; margin-top: 16px">
+                <button class="btn btn-ghost">
+                  Muat Lebih <i class="fa-solid fa-chevron-down"></i>
+                </button>
               </div>
             </div>
           </div>
-
         </main>
       </div>
     </div>
@@ -548,54 +1229,78 @@
     <!-- Mobile Nav -->
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"
+          ><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span
+          ><span class="mn-label">Dashboard</span></a
+        >
+        <a href="/world" class="mobile-nav-item" data-group="map"
+          ><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span
+          ><span class="mn-label">Map</span></a
+        >
+        <a href="/automations" class="mobile-nav-item" data-group="config"
+          ><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span
+          ><span class="mn-label">Config</span></a
+        >
+        <a href="/music" class="mobile-nav-item" data-group="system"
+          ><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span
+          ><span class="mn-label">System</span></a
+        >
+        <a href="/settings" class="mobile-nav-item" data-group="settings"
+          ><span class="mn-icon"><i class="fa-solid fa-gears"></i></span
+          ><span class="mn-label">Settings</span></a
+        >
       </div>
     </nav>
 
     <script src="/src/js/sharedNav.js"></script>
     <script>
       function switchEconTab(tab) {
-        ['Overview','Market','History'].forEach(t => {
-          document.getElementById(`econTab${t}`).style.display = 'none';
+        ["Overview", "Market", "History"].forEach((t) => {
+          document.getElementById(`econTab${t}`).style.display = "none";
         });
-        document.getElementById(`econTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).style.display = 'block';
-        document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-          btn.classList.toggle('active', ['overview','market','history'][i] === tab);
+        document.getElementById(
+          `econTab${tab.charAt(0).toUpperCase() + tab.slice(1)}`,
+        ).style.display = "block";
+        document.querySelectorAll(".tab-btn").forEach((btn, i) => {
+          btn.classList.toggle(
+            "active",
+            ["overview", "market", "history"][i] === tab,
+          );
         });
       }
 
       function switchChartPeriod(period) {
-        ['7d','30d','90d'].forEach(p => {
-          document.getElementById(`btnChart${p}`)?.classList.toggle('active', p === period);
+        ["7d", "30d", "90d"].forEach((p) => {
+          document
+            .getElementById(`btnChart${p}`)
+            ?.classList.toggle("active", p === period);
         });
-        loadMarketHistory('NAUR', period);
+        loadMarketHistory("NAUR", period);
       }
 
       // Circulation chart
-      (function() {
-        const ctx = document.getElementById('econCirculationChart');
+      (function () {
+        const ctx = document.getElementById("econCirculationChart");
         if (!ctx) return;
-        const labels7 = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        const labels7 = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
         const data = [3850, 3920, 4100, 4050, 4200, 4180, 4250];
         window.econChartInstance = new Chart(ctx, {
-          type: 'line',
+          type: "line",
           data: {
             labels: labels7,
-            datasets: [{
-              label: 'Harga Saham (NC)',
-              data,
-              borderColor: 'rgba(245,158,11,0.8)',
-              backgroundColor: 'rgba(245,158,11,0.06)',
-              fill: true,
-              tension: 0.4,
-              pointRadius: 3,
-              pointBackgroundColor: 'rgba(245,158,11,0.8)',
-              borderWidth: 2,
-            }],
+            datasets: [
+              {
+                label: "Harga Saham (NC)",
+                data,
+                borderColor: "rgba(245,158,11,0.8)",
+                backgroundColor: "rgba(245,158,11,0.06)",
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointBackgroundColor: "rgba(245,158,11,0.8)",
+                borderWidth: 2,
+              },
+            ],
           },
           options: {
             responsive: true,
@@ -603,25 +1308,43 @@
             plugins: {
               legend: { display: false },
               tooltip: {
-                backgroundColor: 'rgba(10,13,24,0.9)',
-                borderColor: 'rgba(255,255,255,0.08)',
+                backgroundColor: "rgba(10,13,24,0.9)",
+                borderColor: "rgba(255,255,255,0.08)",
                 borderWidth: 1,
-                titleColor: '#f1f5f9',
-                bodyColor: '#94a3b8',
-                callbacks: { label: c => ` 🪙 ${Math.floor(c.parsed.y).toLocaleString()} NC` },
+                titleColor: "#f1f5f9",
+                bodyColor: "#94a3b8",
+                callbacks: {
+                  label: (c) =>
+                    ` 🪙 ${Math.floor(c.parsed.y).toLocaleString()} NC`,
+                },
               },
             },
             scales: {
-              x: { ticks: { color: 'rgba(71,85,105,0.8)', font: { size: 10, family: 'JetBrains Mono' } }, grid: { color: 'rgba(255,255,255,0.03)' } },
-              y: { ticks: { color: 'rgba(71,85,105,0.8)', font: { size: 10, family: 'JetBrains Mono' }, callback: v => v.toLocaleString() }, grid: { color: 'rgba(255,255,255,0.03)' } },
+              x: {
+                ticks: {
+                  color: "rgba(71,85,105,0.8)",
+                  font: { size: 10, family: "JetBrains Mono" },
+                },
+                grid: { color: "rgba(255,255,255,0.03)" },
+              },
+              y: {
+                ticks: {
+                  color: "rgba(71,85,105,0.8)",
+                  font: { size: 10, family: "JetBrains Mono" },
+                  callback: (v) => v.toLocaleString(),
+                },
+                grid: { color: "rgba(255,255,255,0.03)" },
+              },
             },
           },
         });
       })();
 
-      async function loadMarketHistory(symbol = 'NAUR', period = '7d') {
+      async function loadMarketHistory(symbol = "NAUR", period = "7d") {
         try {
-          const res = await fetch(`/api/economy/market-history?symbol=${symbol}&period=${period}`);
+          const res = await fetch(
+            `/api/economy/market-history?symbol=${symbol}&period=${period}`,
+          );
           const json = await res.json();
           if (json.success && window.econChartInstance && json.data) {
             window.econChartInstance.data.labels = json.data.labels;
@@ -632,22 +1355,38 @@
       }
 
       async function loadRecentTransactions() {
-        const txList = document.getElementById('txList');
+        const txList = document.getElementById("txList");
         if (!txList) return;
         try {
-          const res = await fetch('/api/economy/recent-transactions?limit=10');
+          const res = await fetch("/api/economy/recent-transactions?limit=10");
           const json = await res.json();
           if (json.success && json.data?.length) {
-            const typeClass = { income: 'income', trade: 'trade', expense: 'expense', buy: 'expense' };
-            const typeIcons = { income: 'fa-arrow-down-left', trade: 'fa-arrows-left-right', expense: 'fa-arrow-up-right', buy: 'fa-cart-shopping' };
-            txList.innerHTML = json.data.map(tx => {
-              const cls = typeClass[tx.type] || 'trade';
-              const icon = typeIcons[tx.type] || 'fa-coins';
-              const isPlus = tx.amount > 0 && tx.type === 'income';
-              const sign = isPlus ? '+' : (tx.amount < 0 ? '' : '');
-              const iconCur = tx.currency === 'NC' ? '🪙' : '⭐';
-              const timeStr = tx.timestamp ? new Date(tx.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'Hari ini';
-              return `
+            const typeClass = {
+              income: "income",
+              trade: "trade",
+              expense: "expense",
+              buy: "expense",
+            };
+            const typeIcons = {
+              income: "fa-arrow-down-left",
+              trade: "fa-arrows-left-right",
+              expense: "fa-arrow-up-right",
+              buy: "fa-cart-shopping",
+            };
+            txList.innerHTML = json.data
+              .map((tx) => {
+                const cls = typeClass[tx.type] || "trade";
+                const icon = typeIcons[tx.type] || "fa-coins";
+                const isPlus = tx.amount > 0 && tx.type === "income";
+                const sign = isPlus ? "+" : tx.amount < 0 ? "" : "";
+                const iconCur = tx.currency === "NC" ? "🪙" : "⭐";
+                const timeStr = tx.timestamp
+                  ? new Date(tx.timestamp).toLocaleTimeString("id-ID", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "Hari ini";
+                return `
                 <div class="tx-row">
                   <div class="tx-icon ${cls}"><i class="fa-solid ${icon}"></i></div>
                   <div style="flex:1;min-width:0;">
@@ -655,36 +1394,54 @@
                     <div style="font-size:11px;color:var(--text-muted);">${tx.description} · ${timeStr}</div>
                   </div>
                   <div style="text-align:right;">
-                    <div class="tx-amount ${cls}" style="font-family:var(--font-mono);font-size:13px;font-weight:700;">${sign}${iconCur} ${Math.abs(tx.amount).toLocaleString('id-ID')}</div>
+                    <div class="tx-amount ${cls}" style="font-family:var(--font-mono);font-size:13px;font-weight:700;">${sign}${iconCur} ${Math.abs(tx.amount).toLocaleString("id-ID")}</div>
                     <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">${tx.currency}</div>
                   </div>
                 </div>
               `;
-            }).join('');
+              })
+              .join("");
           }
         } catch (_) {}
       }
 
       // Distribution doughnut
-      (function() {
-        const ctx = document.getElementById('econDistributionChart');
+      (function () {
+        const ctx = document.getElementById("econDistributionChart");
         if (!ctx) return;
         window.econDistributionChartInstance = new Chart(ctx, {
-          type: 'doughnut',
+          type: "doughnut",
           data: {
-            labels: ['Dompet', 'Bank', 'Invested'],
-            datasets: [{
-              data: [42, 35, 23],
-              backgroundColor: ['rgba(244,114,182,0.6)', 'rgba(34,211,238,0.6)', 'rgba(167,139,250,0.6)'],
-              borderColor: ['rgba(244,114,182,0.3)', 'rgba(34,211,238,0.3)', 'rgba(167,139,250,0.3)'],
-              borderWidth: 1,
-            }],
+            labels: ["Dompet", "Bank", "Invested"],
+            datasets: [
+              {
+                data: [42, 35, 23],
+                backgroundColor: [
+                  "rgba(244,114,182,0.6)",
+                  "rgba(34,211,238,0.6)",
+                  "rgba(167,139,250,0.6)",
+                ],
+                borderColor: [
+                  "rgba(244,114,182,0.3)",
+                  "rgba(34,211,238,0.3)",
+                  "rgba(167,139,250,0.3)",
+                ],
+                borderWidth: 1,
+              },
+            ],
           },
           options: {
-            cutout: '75%',
+            cutout: "75%",
             responsive: true,
             maintainAspectRatio: true,
-            plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10,13,24,0.9)', borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1 } },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: "rgba(10,13,24,0.9)",
+                borderColor: "rgba(255,255,255,0.08)",
+                borderWidth: 1,
+              },
+            },
           },
         });
       })();
@@ -692,12 +1449,12 @@
       // Live economy data
       async function loadEconomyData() {
         if (window.showSkeleton) {
-          window.showSkeleton('#econUserTable', { count: 5, type: 'table' });
+          window.showSkeleton("#econUserTable", { count: 5, type: "table" });
         }
         try {
           const [econRes, holdersRes] = await Promise.all([
-            fetch('/api/realtime/economy'),
-            fetch('/api/economy/top-holders?limit=8'),
+            fetch("/api/realtime/economy"),
+            fetch("/api/economy/top-holders?limit=8"),
           ]);
           const econ = await econRes.json();
           const holders = await holdersRes.json();
@@ -709,36 +1466,52 @@
               const nc = d.treasuryBalanceNc || 0;
               const coupons = d.totalCoupons || 0;
 
-              const circEl = document.getElementById('stat-circulation');
-              if (circEl) circEl.innerHTML = `<span style="font-size:28px;font-family:var(--font-mono);font-weight:700;color:var(--accent-amber);">${nsf.toLocaleString('id-ID')} <i class="fa-solid fa-star" style="font-size:20px;color:var(--accent-amber);margin-left:4px;"></i></span>`;
+              const circEl = document.getElementById("stat-circulation");
+              if (circEl)
+                circEl.innerHTML = `<span style="font-size:28px;font-family:var(--font-mono);font-weight:700;color:var(--accent-amber);">${nsf.toLocaleString("id-ID")} <i class="fa-solid fa-star" style="font-size:20px;color:var(--accent-amber);margin-left:4px;"></i></span>`;
 
-              const coinsEl = document.getElementById('stat-coins');
-              if (coinsEl) coinsEl.innerHTML = `<span style="font-size:28px;font-family:var(--font-mono);font-weight:700;color:var(--primary);">${nc.toLocaleString('id-ID')} <i class="fa-solid fa-coins" style="font-size:20px;color:var(--primary);margin-left:4px;"></i></span>`;
+              const coinsEl = document.getElementById("stat-coins");
+              if (coinsEl)
+                coinsEl.innerHTML = `<span style="font-size:28px;font-family:var(--font-mono);font-weight:700;color:var(--primary);">${nc.toLocaleString("id-ID")} <i class="fa-solid fa-coins" style="font-size:20px;color:var(--primary);margin-left:4px;"></i></span>`;
 
-              const couponsEl = document.getElementById('stat-coupons');
-              if (couponsEl) couponsEl.innerHTML = `<span style="font-size:28px;font-family:var(--font-mono);font-weight:700;color:var(--accent-violet);">${coupons.toLocaleString('id-ID')} <i class="fa-solid fa-ticket" style="font-size:20px;color:var(--accent-violet);margin-left:4px;"></i></span>`;
+              const couponsEl = document.getElementById("stat-coupons");
+              if (couponsEl)
+                couponsEl.innerHTML = `<span style="font-size:28px;font-family:var(--font-mono);font-weight:700;color:var(--accent-violet);">${coupons.toLocaleString("id-ID")} <i class="fa-solid fa-ticket" style="font-size:20px;color:var(--accent-violet);margin-left:4px;"></i></span>`;
 
-              const bankEl = document.getElementById('stat-bank-total');
-              if (bankEl) bankEl.textContent = (d.totalBank || 0).toLocaleString('id-ID');
+              const bankEl = document.getElementById("stat-bank-total");
+              if (bankEl)
+                bankEl.textContent = (d.totalBank || 0).toLocaleString("id-ID");
 
-              const walletEl = document.getElementById('stat-daily-tx');
-              if (walletEl) walletEl.textContent = (d.totalWallet || 0).toLocaleString('id-ID');
+              const walletEl = document.getElementById("stat-daily-tx");
+              if (walletEl)
+                walletEl.textContent = (d.totalWallet || 0).toLocaleString(
+                  "id-ID",
+                );
 
-              const recyclingEl = document.getElementById('stat-recycling');
-              if (recyclingEl) recyclingEl.textContent = nsf.toLocaleString('id-ID');
+              const recyclingEl = document.getElementById("stat-recycling");
+              if (recyclingEl)
+                recyclingEl.textContent = nsf.toLocaleString("id-ID");
 
               // Hitung distribusi kekayaan riil dari agregasi database
               const totalMoney = (d.totalWallet || 0) + (d.totalBank || 0);
               if (totalMoney > 0 && window.econDistributionChartInstance) {
-                const wPct = Math.round(((d.totalWallet || 0) / totalMoney) * 100);
-                const bPct = Math.round(((d.totalBank || 0) / totalMoney) * 100);
+                const wPct = Math.round(
+                  ((d.totalWallet || 0) / totalMoney) * 100,
+                );
+                const bPct = Math.round(
+                  ((d.totalBank || 0) / totalMoney) * 100,
+                );
                 const iPct = Math.max(0, 100 - wPct - bPct);
-                window.econDistributionChartInstance.data.datasets[0].data = [wPct, bPct, iPct];
+                window.econDistributionChartInstance.data.datasets[0].data = [
+                  wPct,
+                  bPct,
+                  iPct,
+                ];
                 window.econDistributionChartInstance.update();
 
-                const dompetLabel = document.getElementById('pct-dompet');
-                const bankLabel = document.getElementById('pct-bank');
-                const investedLabel = document.getElementById('pct-invested');
+                const dompetLabel = document.getElementById("pct-dompet");
+                const bankLabel = document.getElementById("pct-bank");
+                const investedLabel = document.getElementById("pct-invested");
                 if (dompetLabel) dompetLabel.textContent = `${wPct}%`;
                 if (bankLabel) bankLabel.textContent = `${bPct}%`;
                 if (investedLabel) investedLabel.textContent = `${iPct}%`;
@@ -746,73 +1519,87 @@
             }, 400);
 
             // Render live stock tickers ke dalam #stockList secara dinamis
-            const stockContainer = document.getElementById('stockList');
+            const stockContainer = document.getElementById("stockList");
             if (stockContainer && d.stocks && d.stocks.length) {
-              stockContainer.innerHTML = d.stocks.map(stock => {
-                const icon = stock.trend === 'up'
-                  ? '<i class="fa-solid fa-caret-up"></i>'
-                  : (stock.trend === 'down' ? '<i class="fa-solid fa-caret-down"></i>' : '<i class="fa-solid fa-minus"></i>');
-                return `
+              stockContainer.innerHTML = d.stocks
+                .map((stock) => {
+                  const icon =
+                    stock.trend === "up"
+                      ? '<i class="fa-solid fa-caret-up"></i>'
+                      : stock.trend === "down"
+                        ? '<i class="fa-solid fa-caret-down"></i>'
+                        : '<i class="fa-solid fa-minus"></i>';
+                  return `
                 <div class="stock-row" style="cursor:pointer;" onclick="loadMarketHistory('${stock.symbol}', '7d');" title="Klik untuk memuat grafik ${stock.name}">
                   <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);width:90px;flex-shrink:0;">${stock.symbol}</div>
                   <div style="flex:1;min-width:0;font-size:12px;color:var(--text-muted);">${stock.name}</div>
                   <div style="text-align:right;flex-shrink:0;">
-                    <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);">🪙 ${Number(stock.price).toLocaleString('id-ID')}</div>
+                    <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text-primary);">🪙 ${Number(stock.price).toLocaleString("id-ID")}</div>
                     <span class="ticker-badge ${stock.trend}">${icon} ${stock.change}</span>
                   </div>
                 </div>`;
-              }).join('');
+                })
+                .join("");
             }
           }
 
           // Render top holders from real API
-          const holderData = (holders.success && holders.data?.length) ? holders.data : (econ.data?.userEconomy || []);
+          const holderData =
+            holders.success && holders.data?.length
+              ? holders.data
+              : econ.data?.userEconomy || [];
           if (holderData.length) {
-            const txContainer = document.getElementById('econUserTable');
+            const txContainer = document.getElementById("econUserTable");
             if (txContainer) {
-              txContainer.innerHTML = holderData.map((u, i) => `
+              txContainer.innerHTML = holderData
+                .map(
+                  (u, i) => `
               <div class="tx-row">
                 <div style="width:28px;text-align:center;font-size:14px;color:var(--text-muted);font-family:var(--font-mono);">${i + 1}</div>
                 <div style="width:36px;height:36px;border-radius:50%;background:var(--primary-dim);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--primary);flex-shrink:0;overflow:hidden;">
-                  ${u.avatar && !u.avatar.includes('avatar.png') ? `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='/assets/core/avatar.png'" />` : (u.name || 'U').charAt(0)}
+                  ${u.avatar && !u.avatar.includes("avatar.png") ? `<img src="${u.avatar}" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='/assets/core/avatar.png'" />` : (u.name || "U").charAt(0)}
                 </div>
                 <div style="flex:1;min-width:0;">
-                  <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.name || 'User'}</div>
-                  <div style="font-size:11px;color:var(--text-muted);">Level ${u.level} ${u.isPremium ? '⭐' : ''}</div>
+                  <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${u.name || "User"}</div>
+                  <div style="font-size:11px;color:var(--text-muted);">Level ${u.level} ${u.isPremium ? "⭐" : ""}</div>
                 </div>
                 <div style="text-align:right;">
-                  <div style="font-size:13px;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">🪙 ${Number(u.wallet || 0).toLocaleString('id-ID')}</div>
-                  <div style="font-size:11px;color:var(--text-muted);">Bank: ${Number(u.bank || 0).toLocaleString('id-ID')}</div>
+                  <div style="font-size:13px;font-weight:700;color:var(--accent-amber);font-family:var(--font-mono);">🪙 ${Number(u.wallet || 0).toLocaleString("id-ID")}</div>
+                  <div style="font-size:11px;color:var(--text-muted);">Bank: ${Number(u.bank || 0).toLocaleString("id-ID")}</div>
                 </div>
-              </div>`).join('');
+              </div>`,
+                )
+                .join("");
             }
           }
 
           // Load transactions & initial real stock chart
           loadRecentTransactions();
-          const firstStock = (econ.data?.stocks && econ.data.stocks[0]?.symbol) || 'NAURA_COIN';
-          loadMarketHistory(firstStock, '7d');
-
-        } catch(e) {
-          console.warn('[Economy] Fetch error:', e.message);
+          const firstStock =
+            (econ.data?.stocks && econ.data.stocks[0]?.symbol) || "NAURA_COIN";
+          loadMarketHistory(firstStock, "7d");
+        } catch (e) {
+          console.warn("[Economy] Fetch error:", e.message);
           if (window.renderErrorState) {
-            window.renderErrorState('#econUserTable', {
-              title: 'Gagal Memuat Data Ekonomi',
-              message: 'Terjadi gangguan jaringan: ' + (e.message || 'Koneksi terputus'),
+            window.renderErrorState("#econUserTable", {
+              title: "Gagal Memuat Data Ekonomi",
+              message:
+                "Terjadi gangguan jaringan: " +
+                (e.message || "Koneksi terputus"),
               onRetry: loadEconomyData,
             });
           }
         }
       }
 
-      window.addEventListener('load', () => {
+      window.addEventListener("load", () => {
         loadEconomyData();
 
         // Socket.IO updates for live currency
-        if (typeof io === 'function') {
+        if (typeof io === "function") {
           try {
             const socket = io();
-            socket.on('stats_update', (data) => {
+            socket.on("stats_update", (data) => {
               if (!data) return;
               // Realtime refresh every 30s
             });
@@ -822,14 +1609,20 @@
 
       // Responsive grids
       function adjustEconGrids() {
-        const g1 = document.getElementById('econStatGrid');
-        const g2 = document.getElementById('econChartGrid');
-        const g3 = document.getElementById('econMetricsGrid');
-        if (g1) g1.style.gridTemplateColumns = window.innerWidth < 768 ? '1fr' : 'repeat(3,1fr)';
-        if (g2) g2.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : '2fr 1fr';
-        if (g3) g3.style.gridTemplateColumns = window.innerWidth < 768 ? 'repeat(2,1fr)' : 'repeat(4,1fr)';
+        const g1 = document.getElementById("econStatGrid");
+        const g2 = document.getElementById("econChartGrid");
+        const g3 = document.getElementById("econMetricsGrid");
+        if (g1)
+          g1.style.gridTemplateColumns =
+            window.innerWidth < 768 ? "1fr" : "repeat(3,1fr)";
+        if (g2)
+          g2.style.gridTemplateColumns =
+            window.innerWidth < 900 ? "1fr" : "2fr 1fr";
+        if (g3)
+          g3.style.gridTemplateColumns =
+            window.innerWidth < 768 ? "repeat(2,1fr)" : "repeat(4,1fr)";
       }
-      window.addEventListener('resize', adjustEconGrids);
+      window.addEventListener("resize", adjustEconGrids);
       adjustEconGrids();
     </script>
   </body>

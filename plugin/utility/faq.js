@@ -97,7 +97,9 @@ module.exports = {
 
     if (subcommand === "ask") {
       const query = interaction.options.getString("pertanyaan");
-      const { service: semanticMemoryService } = require("../../src/ai/semanticMemoryService");
+      const {
+        service: semanticMemoryService,
+      } = require("../../src/ai/semanticMemoryService");
 
       const relevantMemories = await semanticMemoryService.searchMemories(
         query,

@@ -6,7 +6,9 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
-const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+} = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -29,7 +31,8 @@ module.exports = {
     const inGameHour = (now.getUTCHours() * 2) % 24;
 
     const locKey = survival.currentLocation || "desa_sukamaju";
-    const region = worldMapData.getRegion(locKey) || worldMapData.REGIONS.desa_sukamaju;
+    const region =
+      worldMapData.getRegion(locKey) || worldMapData.REGIONS.desa_sukamaju;
 
     const activePois = poiEngine.getActivePois(region.id, inGameHour);
     const townState = townEngine.getTownSquareState(inGameHour);
@@ -65,7 +68,8 @@ module.exports = {
         "📍 **Gedung & Titik Kunjungan (POIs) di Wilayah Ini:**",
         ...activePois.map((p) => {
           const statusTag = p.isOpen ? "🟢 Buka" : "🔴 Tutup";
-          const npcNames = p.residents.map((r) => r.name).join(", ") || "Penjaga Otomatis";
+          const npcNames =
+            p.residents.map((r) => r.name).join(", ") || "Penjaga Otomatis";
           return `• **${p.emoji} ${p.name}** [${statusTag}]\n  > Pengelola: *${npcNames}*`;
         }),
       );
@@ -77,7 +81,11 @@ module.exports = {
       // 1. Select menu untuk mengunjungi POI
       const poiOptions = activePois.slice(0, 25).map((p) => ({
         label: p.name.substring(0, 100),
-        description: `${p.isOpen ? "Buka" : "Tutup"} - Pengelola: ${p.residents.map((r) => r.name).join(", ") || "Umum"}`.substring(0, 100),
+        description:
+          `${p.isOpen ? "Buka" : "Tutup"} - Pengelola: ${p.residents.map((r) => r.name).join(", ") || "Umum"}`.substring(
+            0,
+            100,
+          ),
         value: p.id,
         emoji: p.emoji || "📍",
       }));
@@ -105,7 +113,9 @@ module.exports = {
           new ActionRowBuilder().addComponents(
             new StringSelectMenuBuilder()
               .setCustomId("town_select_poi")
-              .setPlaceholder("Pilih gedung / titik kunjungan untuk diinspeksi...")
+              .setPlaceholder(
+                "Pilih gedung / titik kunjungan untuk diinspeksi...",
+              )
               .addOptions(poiOptions),
           ),
         );
@@ -159,15 +169,24 @@ module.exports = {
       if (i.customId === "town_select_poi") {
         await i.deferUpdate().catch(() => {});
         selectedPoiId = i.values[0];
-        const detail = await poiEngine.getPoiDetail(selectedPoiId, inGameHour, user.id);
+        const detail = await poiEngine.getPoiDetail(
+          selectedPoiId,
+          inGameHour,
+          user.id,
+        );
 
         if (!detail) {
-          const payload = buildPayload("⚠️ Tempat yang kamu tuju sedang tidak dapat diakses.");
+          const payload = buildPayload(
+            "⚠️ Tempat yang kamu tuju sedang tidak dapat diakses.",
+          );
           return i.editReply(payload).catch(() => {});
         }
 
         const residentLines = detail.residents.map((r) => {
-          const discountInfo = r.discountPercent > 0 ? ` (Diskon Relasi: ${r.discountPercent}%)` : "";
+          const discountInfo =
+            r.discountPercent > 0
+              ? ` (Diskon Relasi: ${r.discountPercent}%)`
+              : "";
           return `• **${r.name}** [${r.relationshipTitle} - ${r.affection} RP]${discountInfo}\n  > *"${r.personality}"*`;
         });
 
@@ -176,7 +195,9 @@ module.exports = {
           `> *"${detail.atmosphere}"*`,
           "",
           "👥 **Penghuni / Pengelola yang Ditemui:**",
-          residentLines.length > 0 ? residentLines.join("\n") : "• Tidak ada pengelola tetap di lokasi ini.",
+          residentLines.length > 0
+            ? residentLines.join("\n")
+            : "• Tidak ada pengelola tetap di lokasi ini.",
           "",
           `🛠️ **Fasilitas Tersedia:** ${detail.facilities.join(", ")}`,
         ].join("\n");
@@ -186,7 +207,11 @@ module.exports = {
       } else if (i.customId === "town_greet_npc") {
         await i.deferUpdate().catch(() => {});
         const selectedNpcId = i.values[0];
-        const result = await townEngine.talkToTownNpc(selectedNpcId, user.id, inGameHour);
+        const result = await townEngine.talkToTownNpc(
+          selectedNpcId,
+          user.id,
+          inGameHour,
+        );
 
         const targetNpc = activePois
           .flatMap((p) => p.residents)
@@ -206,20 +231,32 @@ module.exports = {
       } else if (i.customId === "town_exchange_nsf") {
         await i.deferUpdate().catch(() => {});
         // Kurs resmi: 1000 NSF -> 1 NC di Bank Kota Pratama
-        const currentNsf = currency.balanceOf(currency.FRAGMENT, { survival, profile });
+        const currentNsf = currency.balanceOf(currency.FRAGMENT, {
+          survival,
+          profile,
+        });
         if (currentNsf < 1000) {
-          const errPayload = buildPayload("⚠️ **Bank Pratama:** Saldo Naura Star Fragments (NSF) milikmu kurang dari 1.000 NSF.");
+          const errPayload = buildPayload(
+            "⚠️ **Bank Pratama:** Saldo Naura Star Fragments (NSF) milikmu kurang dari 1.000 NSF.",
+          );
           return i.editReply(errPayload).catch(() => {});
         }
 
-        const debit = await currency.charge(currency.FRAGMENT, { survival, profile }, 1000);
+        const debit = await currency.charge(
+          currency.FRAGMENT,
+          { survival, profile },
+          1000,
+        );
         if (!debit) {
-          const errPayload = buildPayload("⚠️ **Bank Pratama:** Gagal memotong saldo NSF.");
+          const errPayload = buildPayload(
+            "⚠️ **Bank Pratama:** Gagal memotong saldo NSF.",
+          );
           return i.editReply(errPayload).catch(() => {});
         }
 
         await cacheManager.incrementUserProfile(user.id, { economy_wallet: 1 });
-        const successSnippet = "🏦 **Transaksi Sukses:** Kamu menukarkan **1.000 NSF** menjadi **1 Naura Coin (NC)** di Bank Sentral Pratama!";
+        const successSnippet =
+          "🏦 **Transaksi Sukses:** Kamu menukarkan **1.000 NSF** menjadi **1 Naura Coin (NC)** di Bank Sentral Pratama!";
         const updatedPayload = buildPayload(successSnippet);
         await i.editReply(updatedPayload).catch(() => {});
       }

@@ -244,14 +244,18 @@ ${
       {
         turn: currentChapter,
         maxTurns: 10,
-        title: isFinale ? "Konklusi Petualangan" : `Petualangan Babak ${currentChapter}`,
+        title: isFinale
+          ? "Konklusi Petualangan"
+          : `Petualangan Babak ${currentChapter}`,
         narrative: narrative.slice(0, 260),
         location: `Zona Petualangan ${genre}`,
       },
       userId,
     );
     if (sceneBuffer) {
-      fileAttachment = new AttachmentBuilder(sceneBuffer, { name: "story_scene.png" });
+      fileAttachment = new AttachmentBuilder(sceneBuffer, {
+        name: "story_scene.png",
+      });
     }
   } catch (canvasErr) {
     logger.warn("[Story Canvas Warn]", canvasErr.message);

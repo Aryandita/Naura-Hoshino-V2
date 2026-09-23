@@ -44,7 +44,8 @@ class CooldownRushHelper {
     if (!debitOk) {
       return {
         success: false,
-        message: "Gagal memotong Naura Coupon. Saldo tidak mencukupi atau transaksi bentrok.",
+        message:
+          "Gagal memotong Naura Coupon. Saldo tidak mencukupi atau transaksi bentrok.",
         remainingCoupons: coupons,
       };
     }
@@ -57,12 +58,16 @@ class CooldownRushHelper {
 
     // Bersihkan cooldown di rpg_state bila ada
     try {
-      await cacheManager.mutateUserSurvivalJson(userId, "rpg_state", (state) => {
-        const s = state || {};
-        if (s[`${cooldownKey}_cd`]) s[`${cooldownKey}_cd`] = 0;
-        if (s.test_cd && cooldownKey === "study") s.test_cd = 0;
-        return s;
-      });
+      await cacheManager.mutateUserSurvivalJson(
+        userId,
+        "rpg_state",
+        (state) => {
+          const s = state || {};
+          if (s[`${cooldownKey}_cd`]) s[`${cooldownKey}_cd`] = 0;
+          if (s.test_cd && cooldownKey === "study") s.test_cd = 0;
+          return s;
+        },
+      );
     } catch (_err) {}
 
     const updatedSurvival = await cacheManager.getUserSurvival(userId);
@@ -92,7 +97,12 @@ class CooldownRushHelper {
    * @param {object} params
    * @returns {object} Discord Components V2 container payload
    */
-  static buildCooldownPrompt({ title, activityName, cooldownKey, remainingSeconds }) {
+  static buildCooldownPrompt({
+    title,
+    activityName,
+    cooldownKey,
+    remainingSeconds,
+  }) {
     const minutes = Math.ceil(remainingSeconds / 60);
     const rushBtn = this.buildRushButton(cooldownKey);
 

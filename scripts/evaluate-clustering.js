@@ -30,7 +30,9 @@ function evaluateClustering() {
 
   console.log(`[STATUS DEPENDENSI]`);
   console.log(`- Library: discord-hybrid-sharding`);
-  console.log(`- Terpasang: ${clusterPackageAvailable ? "YA (" + clusterVersion + ")" : "TIDAK"}\n`);
+  console.log(
+    `- Terpasang: ${clusterPackageAvailable ? "YA (" + clusterVersion + ")" : "TIDAK"}\n`,
+  );
 
   // Simulasi Komparasi Memori
   const shardCount = 8;
@@ -39,27 +41,44 @@ function evaluateClustering() {
   const sharedClusterWorkerSavings = 0.42; // Penghematan memori 42% via shared cluster pooling
 
   const totalStandardShardingRamMb = shardCount * memPerStandardShardMb;
-  const recommendedClusters = Math.min(totalCores, Math.max(2, Math.ceil(shardCount / 2)));
+  const recommendedClusters = Math.min(
+    totalCores,
+    Math.max(2, Math.ceil(shardCount / 2)),
+  );
   const shardsPerCluster = Math.ceil(shardCount / recommendedClusters);
   const totalHybridClusteringRamMb = Math.round(
-    recommendedClusters * (baseClusterProcessOverheadMb + (shardsPerCluster * memPerStandardShardMb * (1 - sharedClusterWorkerSavings)))
+    recommendedClusters *
+      (baseClusterProcessOverheadMb +
+        shardsPerCluster *
+          memPerStandardShardMb *
+          (1 - sharedClusterWorkerSavings)),
   );
 
   const ramSavedMb = totalStandardShardingRamMb - totalHybridClusteringRamMb;
-  const efficiencyPercent = Math.round((ramSavedMb / totalStandardShardingRamMb) * 100);
+  const efficiencyPercent = Math.round(
+    (ramSavedMb / totalStandardShardingRamMb) * 100,
+  );
 
   console.log(`[HASIL BENCHMARK PROFILING MEMORI (${shardCount} SHARD)]`);
   console.log(`1. Mode Tradisional (ShardingManager):`);
   console.log(`   - Estimasi Pemakaian RAM: ~${totalStandardShardingRamMb} MB`);
   console.log(`   - Model Proses: 1 Proses Independen per Shard`);
   console.log(`\n2. Mode Hybrid Clustering (discord-hybrid-sharding):`);
-  console.log(`   - Jumlah Cluster Optimal: ${recommendedClusters} Cluster (${shardsPerCluster} Shard per Cluster)`);
+  console.log(
+    `   - Jumlah Cluster Optimal: ${recommendedClusters} Cluster (${shardsPerCluster} Shard per Cluster)`,
+  );
   console.log(`   - Estimasi Pemakaian RAM: ~${totalHybridClusteringRamMb} MB`);
-  console.log(`   - Penghematan Memori   : ~${ramSavedMb} MB (${efficiencyPercent}% lebih hemat)\n`);
+  console.log(
+    `   - Penghematan Memori   : ~${ramSavedMb} MB (${efficiencyPercent}% lebih hemat)\n`,
+  );
 
   console.log(`[REKOMENDASI DEPLOYMENT PANEL PTERODACTYL]`);
-  console.log(`1. Untuk container 1GB RAM: Gunakan USE_CLUSTERING=true dengan shardsPerClusters=2.`);
-  console.log(`2. Keuntungan Tambahan: Zero-downtime rolling restart (cluster reload berurutan tanpa mematikan bot secara total).`);
+  console.log(
+    `1. Untuk container 1GB RAM: Gunakan USE_CLUSTERING=true dengan shardsPerClusters=2.`,
+  );
+  console.log(
+    `2. Keuntungan Tambahan: Zero-downtime rolling restart (cluster reload berurutan tanpa mematikan bot secara total).`,
+  );
   console.log(`3. Status Evaluasi: SIAP PRODUKSI (100% Valid).\n`);
 }
 

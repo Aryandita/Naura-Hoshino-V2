@@ -4,7 +4,11 @@ const express = require("express");
 const router = express.Router();
 const fs = require("fs");
 const path = require("path");
-const { requireApiLogin, canManageGuild, isOwner } = require("../middleware/auth");
+const {
+  requireApiLogin,
+  canManageGuild,
+  isOwner,
+} = require("../middleware/auth");
 const UserTicket = require("../../src/models/UserTicket");
 
 module.exports = (client) => {
@@ -51,11 +55,21 @@ module.exports = (client) => {
     }
 
     // Wajib login sesi Discord
-    if (typeof req.isAuthenticated !== "function" || !req.isAuthenticated() || !req.user) {
+    if (
+      typeof req.isAuthenticated !== "function" ||
+      !req.isAuthenticated() ||
+      !req.user
+    ) {
       if (req.accepts("html")) {
-        return res.redirect(`/auth/discord?returnTo=${encodeURIComponent(req.originalUrl)}`);
+        return res.redirect(
+          `/auth/discord?returnTo=${encodeURIComponent(req.originalUrl)}`,
+        );
       }
-      return res.status(401).json({ error: "Silakan login terlebih dahulu untuk melihat transkrip." });
+      return res
+        .status(401)
+        .json({
+          error: "Silakan login terlebih dahulu untuk melihat transkrip.",
+        });
     }
 
     try {
@@ -82,15 +96,32 @@ module.exports = (client) => {
       if (!isTicketOwner && !isGuildManager && !isBotOwner) {
         const { logger } = require("../../src/managers/logger");
         logger.warn?.(
-          `[SECURITY AUDIT] Akses transkrip tidak sah ditolak: User ${req.user.id} mencoba mengakses transkrip milik User ${ticket.userId} (${filename})`
+          `[SECURITY AUDIT] Akses transkrip tidak sah ditolak: User ${req.user.id} mencoba mengakses transkrip milik User ${ticket.userId} (${filename})`,
         );
-        return res.status(403).send("Akses Ditolak: Kamu tidak memiliki izin untuk melihat transkrip tiket ini.");
+        return res
+          .status(403)
+          .send(
+            "Akses Ditolak: Kamu tidak memiliki izin untuk melihat transkrip tiket ini.",
+          );
       }
 
       // Cari file fisik di direktori server
       const candidatePaths = [
-        path.join(process.cwd(), "dashboard", "public", "transcripts", filename),
-        path.join(process.cwd(), "src", "dashboard", "public", "transcripts", filename),
+        path.join(
+          process.cwd(),
+          "dashboard",
+          "public",
+          "transcripts",
+          filename,
+        ),
+        path.join(
+          process.cwd(),
+          "src",
+          "dashboard",
+          "public",
+          "transcripts",
+          filename,
+        ),
         path.join(__dirname, "../public", "transcripts", filename),
       ];
 
@@ -99,7 +130,7 @@ module.exports = (client) => {
           res.setHeader("Content-Type", "text/html; charset=utf-8");
           res.setHeader(
             "Content-Security-Policy",
-            "default-src 'self' 'unsafe-inline' https://cdn.discordapp.com;"
+            "default-src 'self' 'unsafe-inline' https://cdn.discordapp.com;",
           );
           return res.sendFile(filePath);
         }

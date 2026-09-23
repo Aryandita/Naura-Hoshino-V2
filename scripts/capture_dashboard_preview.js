@@ -5,7 +5,8 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const ARTIFACT_DIR = "C:\\Users\\ACER\\.gemini\\antigravity-ide\\brain\\a7fbca15-64b7-46e8-b4db-16990c191e6b";
+const ARTIFACT_DIR =
+  "C:\\Users\\ACER\\.gemini\\antigravity-ide\\brain\\a7fbca15-64b7-46e8-b4db-16990c191e6b";
 
 async function getWsUrl() {
   return new Promise((resolve, reject) => {
@@ -33,14 +34,22 @@ async function getWsUrl() {
     };
     const retry = () => {
       attempts++;
-      if (attempts > 30) return reject(new Error("Chrome debug port not ready"));
+      if (attempts > 30)
+        return reject(new Error("Chrome debug port not ready"));
       setTimeout(check, 200);
     };
     check();
   });
 }
 
-async function captureUrl(ws, send, url, outPath, waitMs = 3000, actionFn = null) {
+async function captureUrl(
+  ws,
+  send,
+  url,
+  outPath,
+  waitMs = 3000,
+  actionFn = null,
+) {
   console.log(`[CDP] Navigasi ke ${url} ...`);
   send("Page.navigate", { url });
   await new Promise((r) => setTimeout(r, waitMs));
@@ -72,7 +81,8 @@ async function waitForHeroViewer(ws, send, maxWaitMs = 25000) {
   console.log("[CDP] Menunggu model 3D Hero Viewer selesai dimuat...");
   while (Date.now() - start < maxWaitMs) {
     const evalId = send("Runtime.evaluate", {
-      expression: "Boolean(window.__heroViewer && window.__heroViewer.isLoaded)",
+      expression:
+        "Boolean(window.__heroViewer && window.__heroViewer.isLoaded)",
       returnByValue: true,
     });
     const res = await new Promise((resolve) => {
@@ -86,7 +96,9 @@ async function waitForHeroViewer(ws, send, maxWaitMs = 25000) {
       ws.addEventListener("message", handler);
     });
     if (res === true) {
-      console.log(`[CDP] Model 3D Hero Viewer termuat dalam ${Date.now() - start}ms!`);
+      console.log(
+        `[CDP] Model 3D Hero Viewer termuat dalam ${Date.now() - start}ms!`,
+      );
       await new Promise((r) => setTimeout(r, 1500));
       return true;
     }
@@ -105,7 +117,8 @@ async function main() {
     "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
   ].filter(Boolean);
 
-  const chromePath = defaultPaths.find((p) => fs.existsSync(p)) || defaultPaths[0];
+  const chromePath =
+    defaultPaths.find((p) => fs.existsSync(p)) || defaultPaths[0];
   console.log("[CDP] Menggunakan browser:", chromePath);
 
   const chrome = spawn(chromePath, [
@@ -177,56 +190,105 @@ async function main() {
     await captureUrl(ws, send, `${BASE_URL}/world`, worldImgPath, 3500);
 
     // 3. World Map dengan Intel Drawer (klik Desa Khul'Khas Salju)
-    const intelImgPath = path.join(ARTIFACT_DIR, "world_intel_drawer_preview.png");
-    await captureUrl(ws, send, `${BASE_URL}/world`, intelImgPath, 2500, async () => {
-      send("Runtime.evaluate", {
-        expression: `(() => {
+    const intelImgPath = path.join(
+      ARTIFACT_DIR,
+      "world_intel_drawer_preview.png",
+    );
+    await captureUrl(
+      ws,
+      send,
+      `${BASE_URL}/world`,
+      intelImgPath,
+      2500,
+      async () => {
+        send("Runtime.evaluate", {
+          expression: `(() => {
           const khulkhasNode = document.getElementById('node-khulkhas') || document.querySelector('[data-zone="desa_khulkhas"]');
           if (khulkhasNode) khulkhasNode.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         })()`,
-      });
-      await new Promise((r) => setTimeout(r, 1200));
-    });
+        });
+        await new Promise((r) => setTimeout(r, 1200));
+      },
+    );
 
     // 4. Survival Radar: Desa Sukamaju (Lembah Pinus & Tambang)
-    const radarSukamajuPath = path.join(ARTIFACT_DIR, "survival_radar_sukamaju.png");
-    await captureUrl(ws, send, `${BASE_URL}/survival-map`, radarSukamajuPath, 3000);
+    const radarSukamajuPath = path.join(
+      ARTIFACT_DIR,
+      "survival_radar_sukamaju.png",
+    );
+    await captureUrl(
+      ws,
+      send,
+      `${BASE_URL}/survival-map`,
+      radarSukamajuPath,
+      3000,
+    );
 
     // 5. Survival Radar: Kota Pratama (Cyberpunk Metropolitan HUD)
-    const radarPratamaPath = path.join(ARTIFACT_DIR, "survival_radar_pratama.png");
-    await captureUrl(ws, send, `${BASE_URL}/survival-map`, radarPratamaPath, 2000, async () => {
-      send("Runtime.evaluate", {
-        expression: `(() => {
+    const radarPratamaPath = path.join(
+      ARTIFACT_DIR,
+      "survival_radar_pratama.png",
+    );
+    await captureUrl(
+      ws,
+      send,
+      `${BASE_URL}/survival-map`,
+      radarPratamaPath,
+      2000,
+      async () => {
+        send("Runtime.evaluate", {
+          expression: `(() => {
           const tabPratama = document.getElementById('tabPratama');
           if (tabPratama) tabPratama.click();
         })()`,
-      });
-      await new Promise((r) => setTimeout(r, 1500));
-    });
+        });
+        await new Promise((r) => setTimeout(r, 1500));
+      },
+    );
 
     // 6. Survival Radar: Desa Khul'Khas (Tundra Pegunungan Salju Es)
-    const radarKhulkhasPath = path.join(ARTIFACT_DIR, "survival_radar_khulkhas.png");
-    await captureUrl(ws, send, `${BASE_URL}/survival-map`, radarKhulkhasPath, 2000, async () => {
-      send("Runtime.evaluate", {
-        expression: `(() => {
+    const radarKhulkhasPath = path.join(
+      ARTIFACT_DIR,
+      "survival_radar_khulkhas.png",
+    );
+    await captureUrl(
+      ws,
+      send,
+      `${BASE_URL}/survival-map`,
+      radarKhulkhasPath,
+      2000,
+      async () => {
+        send("Runtime.evaluate", {
+          expression: `(() => {
           const tabKhulkhas = document.getElementById('tabKhulkhas');
           if (tabKhulkhas) tabKhulkhas.click();
         })()`,
-      });
-      await new Promise((r) => setTimeout(r, 1500));
-    });
+        });
+        await new Promise((r) => setTimeout(r, 1500));
+      },
+    );
 
     // 7. Survival Radar: Istana Draken (Magma Abyss Dungeon)
-    const radarDrakenPath = path.join(ARTIFACT_DIR, "survival_radar_draken.png");
-    await captureUrl(ws, send, `${BASE_URL}/survival-map`, radarDrakenPath, 2000, async () => {
-      send("Runtime.evaluate", {
-        expression: `(() => {
+    const radarDrakenPath = path.join(
+      ARTIFACT_DIR,
+      "survival_radar_draken.png",
+    );
+    await captureUrl(
+      ws,
+      send,
+      `${BASE_URL}/survival-map`,
+      radarDrakenPath,
+      2000,
+      async () => {
+        send("Runtime.evaluate", {
+          expression: `(() => {
           const tabDraken = document.getElementById('tabDraken');
           if (tabDraken) tabDraken.click();
         })()`,
-      });
-      await new Promise((r) => setTimeout(r, 1500));
-    });
+        });
+        await new Promise((r) => setTimeout(r, 1500));
+      },
+    );
 
     // 8. Music Player (Cover foto memenuhi frame)
     const musicPagePath = path.join(ARTIFACT_DIR, "music_page_preview.png");

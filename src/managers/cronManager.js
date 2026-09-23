@@ -41,7 +41,10 @@ module.exports = {
         await service.synthesizeDailyMemories();
         await service.pruneDuplicateMemories();
       } catch (err) {
-        logger.error("[Cron] Gagal menjalankan Nightly AI Memory Reflection:", err.message);
+        logger.error(
+          "[Cron] Gagal menjalankan Nightly AI Memory Reflection:",
+          err.message,
+        );
       }
     });
 
@@ -344,7 +347,9 @@ module.exports = {
                     "notification_prefs",
                     (prefsObj) => {
                       const obj =
-                        prefsObj && typeof prefsObj === "object" ? prefsObj : {};
+                        prefsObj && typeof prefsObj === "object"
+                          ? prefsObj
+                          : {};
                       obj.sent_stock_alert = true;
                       return obj;
                     },
@@ -614,7 +619,9 @@ module.exports = {
         const userCardMap = new Map();
         for (const bday of birthdaysToday) {
           try {
-            const user = await client.users.fetch(bday.userId).catch(() => null);
+            const user = await client.users
+              .fetch(bday.userId)
+              .catch(() => null);
             if (!user) continue;
 
             let age = null;
@@ -626,7 +633,10 @@ module.exports = {
             const cardBuffer = await canvasWorkerPool
               .runTask("renderBirthdayCard", {
                 username: user.username,
-                avatarUrl: user.displayAvatarURL({ extension: "png", size: 256 }),
+                avatarUrl: user.displayAvatarURL({
+                  extension: "png",
+                  size: 256,
+                }),
                 age: age || undefined,
                 customMessage: bday.customMessage || undefined,
               })
@@ -654,13 +664,19 @@ module.exports = {
 
             // 3. Kirim ucapan personal & kartu via DM
             const dmFiles = cardBuffer
-              ? [new AttachmentBuilder(cardBuffer, { name: "birthday_card.png" })]
+              ? [
+                  new AttachmentBuilder(cardBuffer, {
+                    name: "birthday_card.png",
+                  }),
+                ]
               : [];
             const dmPayload = buildContainerV2({
               accentColorHex: "#FF69B4",
               authorName: "Naura Birthday Celebration",
               title: `🎂 Selamat Ulang Tahun, ${user.username}!`,
-              bannerAttachmentName: cardBuffer ? "birthday_card.png" : undefined,
+              bannerAttachmentName: cardBuffer
+                ? "birthday_card.png"
+                : undefined,
               description: [
                 `Hai **${user.username}**! Hari ini adalah hari spesialmu! 🎉✨`,
                 age
@@ -1152,7 +1168,9 @@ module.exports = {
         const redisManager = require("./redisManager");
         if (redisManager.client && redisManager.client.isReady) {
           await redisManager.client.set("economy:volume:nsf:daily", 0);
-          logger.info("[Cron Bank] Daily Central Bank exchange volume has been reset to 0.");
+          logger.info(
+            "[Cron Bank] Daily Central Bank exchange volume has been reset to 0.",
+          );
         }
       } catch (err) {
         logger.error("[Cron Bank Volume Reset Error]", err);
@@ -1163,7 +1181,9 @@ module.exports = {
     cron.schedule("0 13 * * 0", async () => {
       try {
         const recyclingPoolEngine = require("../survival/engines/recyclingPoolEngine");
-        logger.info("[Cron Lottery] Executing weekly Astral Lottery jackpot draw...");
+        logger.info(
+          "[Cron Lottery] Executing weekly Astral Lottery jackpot draw...",
+        );
         const result = await recyclingPoolEngine.runWeeklyLottery();
         if (result.ok) {
           logger.info(

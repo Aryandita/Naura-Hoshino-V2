@@ -20,7 +20,8 @@ const path = require("node:path");
 const projectRoot = path.resolve(__dirname, "..");
 const dashboardDir = path.join(projectRoot, "dashboard");
 const buildRoot =
-  process.env.NAURA_BUILD_DIR || path.join(os.tmpdir(), "naura-dashboard-build");
+  process.env.NAURA_BUILD_DIR ||
+  path.join(os.tmpdir(), "naura-dashboard-build");
 
 const COPY_FILES = ["vite.config.mjs"];
 const COPY_DIRS = ["src", "public"];
@@ -80,8 +81,12 @@ function main() {
         stdio: "inherit",
       });
     } catch (err) {
-      console.warn(`[BUILD] Peringatan: Build dashboard gagal (${err.message}).`);
-      console.warn("[BUILD] Melanjutkan startup bot (dashboard akan fallback ke src/pages)...");
+      console.warn(
+        `[BUILD] Peringatan: Build dashboard gagal (${err.message}).`,
+      );
+      console.warn(
+        "[BUILD] Melanjutkan startup bot (dashboard akan fallback ke src/pages)...",
+      );
     }
     return;
   }

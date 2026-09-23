@@ -155,8 +155,19 @@ function generateSilverFrame() {
 }
 
 console.log("Generating canvas asset files...");
-fs.writeFileSync(path.join(outputDir, "abstract_blue.png"), generateAbstractBlue());
-fs.writeFileSync(path.join(outputDir, "neon_cyberpunk.png"), generateNeonCyberpunk());
+fs.writeFileSync(
+  path.join(outputDir, "abstract_blue.png"),
+  generateAbstractBlue(),
+);
+fs.writeFileSync(
+  path.join(outputDir, "neon_cyberpunk.png"),
+  generateNeonCyberpunk(),
+);
 fs.writeFileSync(path.join(outputDir, "gold_vip.png"), generateGoldVip());
-fs.writeFileSync(path.join(outputDir, "silver_frame.png"), generateSilverFrame());
-console.log("Successfully generated all 4 default canvas assets in assets/images/canvas!");
+fs.writeFileSync(
+  path.join(outputDir, "silver_frame.png"),
+  generateSilverFrame(),
+);
+console.log(
+  "Successfully generated all 4 default canvas assets in assets/images/canvas!",
+);

@@ -4,11 +4,7 @@ const { test } = require("node:test");
 const assert = require("node:assert/strict");
 
 const { REGIONS, getPoiById } = require("../data/worldMapData");
-const {
-  isPoiOpen,
-  getActivePois,
-  getPoiDetail,
-} = require("./poiEngine");
+const { isPoiOpen, getActivePois, getPoiDetail } = require("./poiEngine");
 
 test("Peta Dunia memiliki 4 Wilayah Resmi dengan struktur lengkap", () => {
   assert.ok(REGIONS.desa_sukamaju);

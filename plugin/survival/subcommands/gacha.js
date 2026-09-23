@@ -8,9 +8,7 @@ const cacheManager = require("../../../src/managers/cacheManager");
 const {
   addItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
-const {
-  getBannerPool,
-} = require("../../../src/survival/data/gachaBanners");
+const { getBannerPool } = require("../../../src/survival/data/gachaBanners");
 
 module.exports = {
   async execute(interaction) {

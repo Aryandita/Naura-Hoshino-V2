@@ -174,14 +174,22 @@ const tools = [
  */
 function validateFunctionArgs(name, args = {}) {
   const tool = tools.find((t) => t.name === name);
-  if (!tool) return { valid: false, error: `Function "${name}" tidak ditemukan dalam deklarasi tools.` };
+  if (!tool)
+    return {
+      valid: false,
+      error: `Function "${name}" tidak ditemukan dalam deklarasi tools.`,
+    };
 
   const schema = tool.parameters;
   if (!schema) return { valid: true, sanitizedArgs: args };
 
   const required = schema.required || [];
   for (const field of required) {
-    if (args[field] === undefined || args[field] === null || args[field] === "") {
+    if (
+      args[field] === undefined ||
+      args[field] === null ||
+      args[field] === ""
+    ) {
       return {
         valid: false,
         error: `Parameter wajib '${field}' hilang untuk fungsi '${name}'.`,
@@ -575,7 +583,8 @@ async function dispatchFunction(name, rawArgs, message) {
         return {
           status: "empty",
           harvestedCount: 0,
-          message: "Belum ada tanaman yang siap dipanen di kebun hidroponikmu saat ini.",
+          message:
+            "Belum ada tanaman yang siap dipanen di kebun hidroponikmu saat ini.",
         };
       }
 
@@ -585,7 +594,9 @@ async function dispatchFunction(name, rawArgs, message) {
         const res = await greenhouseEngine.harvestSlot(userId, slot.slotIndex);
         if (res && res.success) {
           totalHarvested++;
-          harvestedItems.push(`${res.harvestItem?.name || "Hasil Panen"} x${res.harvestItem?.amount || 1}`);
+          harvestedItems.push(
+            `${res.harvestItem?.name || "Hasil Panen"} x${res.harvestItem?.amount || 1}`,
+          );
         }
       }
 
@@ -600,7 +611,10 @@ async function dispatchFunction(name, rawArgs, message) {
     // 10. CHECK OMIKUJI
     if (name === "check_omikuji") {
       const astralService = require("../services/astralService");
-      const result = await astralService.drawDailyOmikuji(userId, author.username || "Pengelana");
+      const result = await astralService.drawDailyOmikuji(
+        userId,
+        author.username || "Pengelana",
+      );
 
       return {
         status: "success",

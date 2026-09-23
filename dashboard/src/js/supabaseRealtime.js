@@ -6,17 +6,19 @@
  */
 
 (function () {
-    'use strict';
+  "use strict";
 
-    // ── 1. Pemasangan Status Pill pada Header Atas ────────────────────
-    function mountHeaderPill() {
-        const headerRightElement = document.querySelector('.top-header .header-right');
-        if (!headerRightElement || document.getElementById('supabasePill')) return;
+  // ── 1. Pemasangan Status Pill pada Header Atas ────────────────────
+  function mountHeaderPill() {
+    const headerRightElement = document.querySelector(
+      ".top-header .header-right",
+    );
+    if (!headerRightElement || document.getElementById("supabasePill")) return;
 
-        const pillElement = document.createElement('div');
-        pillElement.id = 'supabasePill';
-        pillElement.className = 'badge';
-        pillElement.style.cssText = `
+    const pillElement = document.createElement("div");
+    pillElement.id = "supabasePill";
+    pillElement.className = "badge";
+    pillElement.style.cssText = `
             background: rgba(16, 185, 129, 0.12);
             border: 1px solid rgba(16, 185, 129, 0.35);
             color: #34d399;
@@ -30,31 +32,31 @@
             gap: 6px;
             transition: all 0.2s ease;
         `;
-        pillElement.innerHTML = `
+    pillElement.innerHTML = `
             <span style="width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399;animation:pulse 2s infinite;"></span>
             <span id="supabaseStatusText">Supabase Live</span>
             <span id="supabasePingText" style="opacity:0.75;font-size:10px;">(24ms)</span>
         `;
 
-        pillElement.addEventListener('mouseenter', () => {
-            pillElement.style.transform = 'scale(1.04)';
-            pillElement.style.borderColor = 'var(--accent-green, #34d399)';
-        });
-        pillElement.addEventListener('mouseleave', () => {
-            pillElement.style.transform = 'scale(1)';
-        });
-        pillElement.addEventListener('click', showSupabaseModal);
+    pillElement.addEventListener("mouseenter", () => {
+      pillElement.style.transform = "scale(1.04)";
+      pillElement.style.borderColor = "var(--accent-green, #34d399)";
+    });
+    pillElement.addEventListener("mouseleave", () => {
+      pillElement.style.transform = "scale(1)";
+    });
+    pillElement.addEventListener("click", showSupabaseModal);
 
-        headerRightElement.prepend(pillElement);
-    }
+    headerRightElement.prepend(pillElement);
+  }
 
-    // ── 2. Modal Informasi & Uji Latensi Koneksi ───────────────────────
-    function showSupabaseModal() {
-        let modalElement = document.getElementById('supabaseModal');
-        if (!modalElement) {
-            modalElement = document.createElement('div');
-            modalElement.id = 'supabaseModal';
-            modalElement.style.cssText = `
+  // ── 2. Modal Informasi & Uji Latensi Koneksi ───────────────────────
+  function showSupabaseModal() {
+    let modalElement = document.getElementById("supabaseModal");
+    if (!modalElement) {
+      modalElement = document.createElement("div");
+      modalElement.id = "supabaseModal";
+      modalElement.style.cssText = `
                 position: fixed;
                 inset: 0;
                 background: rgba(4, 6, 14, 0.85);
@@ -67,7 +69,7 @@
                 pointer-events: none;
                 transition: opacity 0.25s ease;
             `;
-            modalElement.innerHTML = `
+      modalElement.innerHTML = `
                 <div style="background: linear-gradient(180deg, #10162a 0%, #080c18 100%); border: 1px solid var(--border-medium, rgba(255,255,255,0.15)); border-radius: 20px; width: 440px; max-width: 90vw; padding: 26px; box-shadow: 0 20px 50px rgba(0,0,0,0.7);">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
                         <div style="display:flex;align-items:center;gap:10px;">
@@ -102,142 +104,149 @@
                     </button>
                 </div>
             `;
-            document.body.appendChild(modalElement);
+      document.body.appendChild(modalElement);
 
-            modalElement.querySelector('#closeSbModal').onclick = () => {
-                modalElement.style.opacity = '0';
-                modalElement.style.pointerEvents = 'none';
-            };
-            modalElement.onclick = (clickEvent) => {
-                if (clickEvent.target === modalElement) {
-                    modalElement.style.opacity = '0';
-                    modalElement.style.pointerEvents = 'none';
-                }
-            };
-            modalElement.querySelector('#btnSbPingTest').onclick = async () => {
-                const buttonPingTest = modalElement.querySelector('#btnSbPingTest');
-                buttonPingTest.textContent = 'Menguji latensi...';
-                try {
-                    const response = await fetch('/api/supabase/status');
-                    const statusPayload = await response.json();
-                    const latencyValue = statusPayload?.supabase?.latencyMs ?? 20;
-                    modalElement.querySelector('#modalLatency').textContent = `${latencyValue} ms`;
-                    buttonPingTest.textContent = `Selesai! Ping: ${latencyValue}ms`;
-                    setTimeout(() => {
-                        buttonPingTest.textContent = 'Uji Ping Database Sekarang';
-                    }, 2000);
-                } catch (_) {
-                    buttonPingTest.textContent = 'Uji Selesai (Cache Terhubung)';
-                    setTimeout(() => {
-                        buttonPingTest.textContent = 'Uji Ping Database Sekarang';
-                    }, 2000);
-                }
-            };
+      modalElement.querySelector("#closeSbModal").onclick = () => {
+        modalElement.style.opacity = "0";
+        modalElement.style.pointerEvents = "none";
+      };
+      modalElement.onclick = (clickEvent) => {
+        if (clickEvent.target === modalElement) {
+          modalElement.style.opacity = "0";
+          modalElement.style.pointerEvents = "none";
         }
-
-        modalElement.style.opacity = '1';
-        modalElement.style.pointerEvents = 'auto';
-    }
-
-    // ── 3. Koneksi Server-Sent Events (SSE) ────────────────────────────
-    function initSSE() {
-        if (!window.EventSource) return;
-
+      };
+      modalElement.querySelector("#btnSbPingTest").onclick = async () => {
+        const buttonPingTest = modalElement.querySelector("#btnSbPingTest");
+        buttonPingTest.textContent = "Menguji latensi...";
         try {
-            const eventSourceStream = new EventSource('/api/realtime/stream');
+          const response = await fetch("/api/supabase/status");
+          const statusPayload = await response.json();
+          const latencyValue = statusPayload?.supabase?.latencyMs ?? 20;
+          modalElement.querySelector("#modalLatency").textContent =
+            `${latencyValue} ms`;
+          buttonPingTest.textContent = `Selesai! Ping: ${latencyValue}ms`;
+          setTimeout(() => {
+            buttonPingTest.textContent = "Uji Ping Database Sekarang";
+          }, 2000);
+        } catch (_) {
+          buttonPingTest.textContent = "Uji Selesai (Cache Terhubung)";
+          setTimeout(() => {
+            buttonPingTest.textContent = "Uji Ping Database Sekarang";
+          }, 2000);
+        }
+      };
+    }
 
-            eventSourceStream.addEventListener('snapshot', (event) => {
-                try {
-                    const parsedPayload = JSON.parse(event.data);
-                    updateDOMWithRealtimeData(parsedPayload);
-                    window.dispatchEvent(new CustomEvent('supabase:snapshot', { detail: parsedPayload }));
-                } catch (_) {}
-            });
+    modalElement.style.opacity = "1";
+    modalElement.style.pointerEvents = "auto";
+  }
 
-            eventSourceStream.onerror = () => {
-                const statusElement = document.getElementById('supabaseStatusText');
-                const pingElement = document.getElementById('supabasePingText');
-                if (statusElement) statusElement.textContent = 'Supabase Synced';
-                if (pingElement) pingElement.textContent = '(Live)';
-            };
+  // ── 3. Koneksi Server-Sent Events (SSE) ────────────────────────────
+  function initSSE() {
+    if (!window.EventSource) return;
+
+    try {
+      const eventSourceStream = new EventSource("/api/realtime/stream");
+
+      eventSourceStream.addEventListener("snapshot", (event) => {
+        try {
+          const parsedPayload = JSON.parse(event.data);
+          updateDOMWithRealtimeData(parsedPayload);
+          window.dispatchEvent(
+            new CustomEvent("supabase:snapshot", { detail: parsedPayload }),
+          );
         } catch (_) {}
+      });
+
+      eventSourceStream.onerror = () => {
+        const statusElement = document.getElementById("supabaseStatusText");
+        const pingElement = document.getElementById("supabasePingText");
+        if (statusElement) statusElement.textContent = "Supabase Synced";
+        if (pingElement) pingElement.textContent = "(Live)";
+      };
+    } catch (_) {}
+  }
+
+  // ── 4. Sinkronisasi Data Realtime ke Elemen Halaman ────────────────
+  function updateDOMWithRealtimeData(telemetryPayload) {
+    if (!telemetryPayload) return;
+
+    // Perbarui teks status pada header pill
+    const pingElement = document.getElementById("supabasePingText");
+    if (pingElement && telemetryPayload.supabase?.latencyMs) {
+      pingElement.textContent = `(${telemetryPayload.supabase.latencyMs}ms)`;
     }
 
-    // ── 4. Sinkronisasi Data Realtime ke Elemen Halaman ────────────────
-    function updateDOMWithRealtimeData(telemetryPayload) {
-        if (!telemetryPayload) return;
-
-        // Perbarui teks status pada header pill
-        const pingElement = document.getElementById('supabasePingText');
-        if (pingElement && telemetryPayload.supabase?.latencyMs) {
-            pingElement.textContent = `(${telemetryPayload.supabase.latencyMs}ms)`;
-        }
-
-        // Perbarui angka ping pada dashboard beranda
-        if (telemetryPayload.supabase?.latencyMs) {
-            const statPingElement = document.getElementById('statPing');
-            if (statPingElement) {
-                statPingElement.textContent = telemetryPayload.supabase.latencyMs;
-            }
-        }
-
-        if (telemetryPayload.overview) {
-            const overview = telemetryPayload.overview;
-            const usersElement = document.getElementById('statUsers');
-            if (usersElement && overview.registeredUsers !== undefined) {
-                usersElement.textContent = overview.registeredUsers.toLocaleString('id-ID');
-            }
-
-            const serversElement = document.getElementById('statServers');
-            if (serversElement && overview.activeGuilds !== undefined) {
-                serversElement.textContent = overview.activeGuilds.toLocaleString('id-ID');
-            }
-
-            const walletElement = document.getElementById('walletAmount');
-            if (walletElement && overview.treasuryPoolNc !== undefined) {
-                walletElement.textContent = overview.treasuryPoolNc.toLocaleString('id-ID');
-            }
-
-            // Bindings berbasis atribut data-realtime
-            document.querySelectorAll('[data-realtime="users"]').forEach((el) => {
-                if (overview.registeredUsers !== undefined) {
-                    el.textContent = overview.registeredUsers.toLocaleString('id-ID');
-                }
-            });
-            document.querySelectorAll('[data-realtime="survival"]').forEach((el) => {
-                if (overview.activeSurvivalPlayers !== undefined) {
-                    el.textContent = overview.activeSurvivalPlayers.toLocaleString('id-ID');
-                }
-            });
-            document.querySelectorAll('[data-realtime="nsf"]').forEach((el) => {
-                if (overview.treasuryPoolNsf !== undefined) {
-                    el.textContent = `${overview.treasuryPoolNsf.toLocaleString('id-ID')} NSF`;
-                }
-            });
-            document.querySelectorAll('[data-realtime="nc"]').forEach((el) => {
-                if (overview.treasuryPoolNc !== undefined) {
-                    el.textContent = `${overview.treasuryPoolNc.toLocaleString('id-ID')} NC`;
-                }
-            });
-            document.querySelectorAll('[data-realtime="tickets"]').forEach((el) => {
-                if (overview.openTickets !== undefined) {
-                    el.textContent = overview.openTickets.toLocaleString('id-ID');
-                }
-            });
-            document.querySelectorAll('[data-realtime="latency"]').forEach((el) => {
-                el.textContent = telemetryPayload.supabase?.latencyMs || 24;
-            });
-        }
+    // Perbarui angka ping pada dashboard beranda
+    if (telemetryPayload.supabase?.latencyMs) {
+      const statPingElement = document.getElementById("statPing");
+      if (statPingElement) {
+        statPingElement.textContent = telemetryPayload.supabase.latencyMs;
+      }
     }
 
-    // Inisialisasi saat DOM siap
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            mountHeaderPill();
-            initSSE();
-        });
-    } else {
-        mountHeaderPill();
-        initSSE();
+    if (telemetryPayload.overview) {
+      const overview = telemetryPayload.overview;
+      const usersElement = document.getElementById("statUsers");
+      if (usersElement && overview.registeredUsers !== undefined) {
+        usersElement.textContent =
+          overview.registeredUsers.toLocaleString("id-ID");
+      }
+
+      const serversElement = document.getElementById("statServers");
+      if (serversElement && overview.activeGuilds !== undefined) {
+        serversElement.textContent =
+          overview.activeGuilds.toLocaleString("id-ID");
+      }
+
+      const walletElement = document.getElementById("walletAmount");
+      if (walletElement && overview.treasuryPoolNc !== undefined) {
+        walletElement.textContent =
+          overview.treasuryPoolNc.toLocaleString("id-ID");
+      }
+
+      // Bindings berbasis atribut data-realtime
+      document.querySelectorAll('[data-realtime="users"]').forEach((el) => {
+        if (overview.registeredUsers !== undefined) {
+          el.textContent = overview.registeredUsers.toLocaleString("id-ID");
+        }
+      });
+      document.querySelectorAll('[data-realtime="survival"]').forEach((el) => {
+        if (overview.activeSurvivalPlayers !== undefined) {
+          el.textContent =
+            overview.activeSurvivalPlayers.toLocaleString("id-ID");
+        }
+      });
+      document.querySelectorAll('[data-realtime="nsf"]').forEach((el) => {
+        if (overview.treasuryPoolNsf !== undefined) {
+          el.textContent = `${overview.treasuryPoolNsf.toLocaleString("id-ID")} NSF`;
+        }
+      });
+      document.querySelectorAll('[data-realtime="nc"]').forEach((el) => {
+        if (overview.treasuryPoolNc !== undefined) {
+          el.textContent = `${overview.treasuryPoolNc.toLocaleString("id-ID")} NC`;
+        }
+      });
+      document.querySelectorAll('[data-realtime="tickets"]').forEach((el) => {
+        if (overview.openTickets !== undefined) {
+          el.textContent = overview.openTickets.toLocaleString("id-ID");
+        }
+      });
+      document.querySelectorAll('[data-realtime="latency"]').forEach((el) => {
+        el.textContent = telemetryPayload.supabase?.latencyMs || 24;
+      });
     }
+  }
+
+  // Inisialisasi saat DOM siap
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      mountHeaderPill();
+      initSSE();
+    });
+  } else {
+    mountHeaderPill();
+    initSSE();
+  }
 })();

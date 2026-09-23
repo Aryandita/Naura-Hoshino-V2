@@ -22,9 +22,27 @@ const STRUCTURES = {
   castle: {
     name: "Istana Klan (Guild Castle)",
     tiers: [
-      { level: 1, name: "Frontier Outpost", cost: 1500, maxMembersBonus: 5, vaultBonus: 5000 },
-      { level: 2, name: "Iron Fortress", cost: 3500, maxMembersBonus: 10, vaultBonus: 15000 },
-      { level: 3, name: "Cyber Citadel", cost: 8000, maxMembersBonus: 20, vaultBonus: 50000 },
+      {
+        level: 1,
+        name: "Frontier Outpost",
+        cost: 1500,
+        maxMembersBonus: 5,
+        vaultBonus: 5000,
+      },
+      {
+        level: 2,
+        name: "Iron Fortress",
+        cost: 3500,
+        maxMembersBonus: 10,
+        vaultBonus: 15000,
+      },
+      {
+        level: 3,
+        name: "Cyber Citadel",
+        cost: 8000,
+        maxMembersBonus: 20,
+        vaultBonus: 50000,
+      },
     ],
   },
   defense_tower: {
@@ -37,9 +55,24 @@ const STRUCTURES = {
   research_lab: {
     name: "Fasilitas Riset (Tech Lab)",
     tiers: [
-      { level: 1, name: "Cyber Greenhouse Tech", cost: 1200, buff: "farm_yield_15" },
-      { level: 2, name: "Quantum Smelter Tech", cost: 2500, buff: "craft_speed_20" },
-      { level: 3, name: "Astral Observatory Tech", cost: 5000, buff: "omikuji_luck_25" },
+      {
+        level: 1,
+        name: "Cyber Greenhouse Tech",
+        cost: 1200,
+        buff: "farm_yield_15",
+      },
+      {
+        level: 2,
+        name: "Quantum Smelter Tech",
+        cost: 2500,
+        buff: "craft_speed_20",
+      },
+      {
+        level: 3,
+        name: "Astral Observatory Tech",
+        cost: 5000,
+        buff: "omikuji_luck_25",
+      },
     ],
   },
 };
@@ -74,7 +107,11 @@ class LandEngine {
     memoryLands.set(guildId, landData);
     try {
       if (redisManager.isReady) {
-        await redisManager.setCache(`${LAND_PREFIX}${guildId}`, JSON.stringify(landData), 86400 * 30);
+        await redisManager.setCache(
+          `${LAND_PREFIX}${guildId}`,
+          JSON.stringify(landData),
+          86400 * 30,
+        );
       }
     } catch (err) {
       logger.warn(`[LandEngine] Redis save error: ${err.message}`);
@@ -92,14 +129,20 @@ class LandEngine {
    */
   async claimPlot({ guildId, clanId, x, y }) {
     if (x < 1 || x > 8 || y < 1 || y > 8) {
-      return { success: false, error: "Koordinat harus berada dalam rentang grid 1..8." };
+      return {
+        success: false,
+        error: "Koordinat harus berada dalam rentang grid 1..8.",
+      };
     }
 
     const land = await this.getGuildLand(guildId);
     const coordKey = `${x},${y}`;
 
     if (land.plots[coordKey]) {
-      return { success: false, error: `Kapling di koordinat (${x}, ${y}) sudah dimiliki.` };
+      return {
+        success: false,
+        error: `Kapling di koordinat (${x}, ${y}) sudah dimiliki.`,
+      };
     }
 
     // Periksa dan potong saldo kas klan
@@ -129,7 +172,9 @@ class LandEngine {
     land.plots[coordKey] = newPlot;
     await this.saveGuildLand(guildId, land);
 
-    logger.info(`[LandEngine] Klan ${clan.name} mengklaim tanah di (${x}, ${y}) pada guild ${guildId}.`);
+    logger.info(
+      `[LandEngine] Klan ${clan.name} mengklaim tanah di (${x}, ${y}) pada guild ${guildId}.`,
+    );
     return { success: true, plot: newPlot };
   }
 
@@ -161,7 +206,10 @@ class LandEngine {
     const nextTier = structDef.tiers.find((t) => t.level === currentLevel + 1);
 
     if (!nextTier) {
-      return { success: false, error: "Bangunan ini sudah mencapai level maksimum." };
+      return {
+        success: false,
+        error: "Bangunan ini sudah mencapai level maksimum.",
+      };
     }
 
     const clan = await GuildClan.findByPk(clanId);
@@ -208,18 +256,24 @@ class LandEngine {
         const towerLevel = plot.structures.defense_tower || 0;
         const labLevel = plot.structures.research_lab || 0;
 
-        const cTier = STRUCTURES.castle.tiers.find((t) => t.level === castleLevel);
+        const cTier = STRUCTURES.castle.tiers.find(
+          (t) => t.level === castleLevel,
+        );
         if (cTier) {
           totalVaultBonus += cTier.vaultBonus;
           maxMembersBonus += cTier.maxMembersBonus;
         }
 
-        const tTier = STRUCTURES.defense_tower.tiers.find((t) => t.level === towerLevel);
+        const tTier = STRUCTURES.defense_tower.tiers.find(
+          (t) => t.level === towerLevel,
+        );
         if (tTier) {
           totalDefense += tTier.defenseBonus;
         }
 
-        const lTier = STRUCTURES.research_lab.tiers.find((t) => t.level === labLevel);
+        const lTier = STRUCTURES.research_lab.tiers.find(
+          (t) => t.level === labLevel,
+        );
         if (lTier) {
           activeBuffs.push(lTier.buff);
         }
@@ -307,12 +361,18 @@ class LandEngine {
       volume = 1.0;
     } else if (distance < maxDist) {
       // Linear attenuation dari innerRadius ke maxDist
-      volume = Math.max(0, 1.0 - (distance - innerRadius) / (maxDist - innerRadius));
+      volume = Math.max(
+        0,
+        1.0 - (distance - innerRadius) / (maxDist - innerRadius),
+      );
       volume = Math.round(volume * 100) / 100;
     }
 
     // Pan stereo: -1.0 (kiri penuh) sampai +1.0 (kanan penuh)
-    const pan = Math.max(-1.0, Math.min(1.0, Math.round((dx / (maxDist || 1)) * 100) / 100));
+    const pan = Math.max(
+      -1.0,
+      Math.min(1.0, Math.round((dx / (maxDist || 1)) * 100) / 100),
+    );
 
     return {
       distance: Math.round(distance * 100) / 100,
@@ -355,4 +415,3 @@ class LandEngine {
 
 module.exports = new LandEngine();
 module.exports.STRUCTURES = STRUCTURES;
-

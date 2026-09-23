@@ -5,7 +5,8 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const artifactDir = "C:\\Users\\ACER\\.gemini\\antigravity-ide\\brain\\ae11202e-a99d-4260-baea-3403be8972cd";
+const artifactDir =
+  "C:\\Users\\ACER\\.gemini\\antigravity-ide\\brain\\ae11202e-a99d-4260-baea-3403be8972cd";
 
 function waitForHttp(url, timeoutMs = 15000) {
   return new Promise((resolve, reject) => {
@@ -82,8 +83,12 @@ async function main() {
   console.log("Preview server siap!");
 
   // 2. Jalankan Headless Chrome
-  const chromePath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-  const profileDir = path.join(require("os").tmpdir(), `chrome_test_3d_${Date.now()}`);
+  const chromePath =
+    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+  const profileDir = path.join(
+    require("os").tmpdir(),
+    `chrome_test_3d_${Date.now()}`,
+  );
   const chrome = spawn(chromePath, [
     "--headless=new",
     "--remote-debugging-port=9222",
@@ -144,7 +149,7 @@ async function main() {
         console.error(
           "[BROWSER EXCEPTION]",
           data.params.exceptionDetails.text,
-          data.params.exceptionDetails.exception?.description || ""
+          data.params.exceptionDetails.exception?.description || "",
         );
       }
     };
@@ -158,7 +163,8 @@ async function main() {
     for (let i = 0; i < 40; i++) {
       await new Promise((r) => setTimeout(r, 1000));
       const res = await callCdp("Runtime.evaluate", {
-        expression: "Boolean(window.__heroViewer && window.__heroViewer.isLoaded)",
+        expression:
+          "Boolean(window.__heroViewer && window.__heroViewer.isLoaded)",
         returnByValue: true,
       });
       if (res?.result?.value) {
@@ -253,7 +259,8 @@ async function main() {
     for (let i = 0; i < 35; i++) {
       await new Promise((r) => setTimeout(r, 1000));
       const res = await callCdp("Runtime.evaluate", {
-        expression: "Boolean(window.__heroViewer && window.__heroViewer.isLoaded && window.__heroViewer.vrm)",
+        expression:
+          "Boolean(window.__heroViewer && window.__heroViewer.isLoaded && window.__heroViewer.vrm)",
         returnByValue: true,
       });
       if (res?.result?.value) {
@@ -265,7 +272,8 @@ async function main() {
 
     if (!isVrmLoaded) {
       const checkGen = await callCdp("Runtime.evaluate", {
-        expression: "Boolean(window.__heroViewer && window.__heroViewer.isLoaded)",
+        expression:
+          "Boolean(window.__heroViewer && window.__heroViewer.isLoaded)",
         returnByValue: true,
       });
       console.log("General isLoaded status:", checkGen?.result?.value);

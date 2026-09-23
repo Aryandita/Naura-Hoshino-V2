@@ -19,7 +19,10 @@ const TIER_XP_INCREMENT = 150;
  * @returns {number}
  */
 function getXpForTier(tier) {
-  const safeTier = Math.max(1, Math.min(MAX_PASS_TIER, Math.floor(Number(tier) || 1)));
+  const safeTier = Math.max(
+    1,
+    Math.min(MAX_PASS_TIER, Math.floor(Number(tier) || 1)),
+  );
   return BASE_TIER_XP + (safeTier - 1) * TIER_XP_INCREMENT;
 }
 
@@ -29,7 +32,10 @@ function getXpForTier(tier) {
  * @returns {number}
  */
 function getTotalXpForTier(targetTier) {
-  const safeTier = Math.max(1, Math.min(MAX_PASS_TIER, Math.floor(Number(targetTier) || 1)));
+  const safeTier = Math.max(
+    1,
+    Math.min(MAX_PASS_TIER, Math.floor(Number(targetTier) || 1)),
+  );
   let total = 0;
   for (let t = 1; t < safeTier; t++) {
     total += getXpForTier(t);
@@ -79,16 +85,28 @@ function calculatePassProgress(totalXp) {
  * @returns {{ free: Array<{ type: string, amount: number, label: string }>, premium: Array<{ type: string, amount: number, label: string }> }}
  */
 function getTierRewards(tier) {
-  const safeTier = Math.max(1, Math.min(MAX_PASS_TIER, Math.floor(Number(tier) || 1)));
+  const safeTier = Math.max(
+    1,
+    Math.min(MAX_PASS_TIER, Math.floor(Number(tier) || 1)),
+  );
 
   // 1. Hadiah Jalur Gratis
   const free = [];
   const baseFragments = 150 + safeTier * 25;
-  free.push({ type: "fragments", amount: baseFragments, label: `${baseFragments.toLocaleString("id-ID")} NSF` });
+  free.push({
+    type: "fragments",
+    amount: baseFragments,
+    label: `${baseFragments.toLocaleString("id-ID")} NSF`,
+  });
 
   if (safeTier % 5 === 0) {
     // Tiap kelipatan 5: Rations / Repair Kits
-    free.push({ type: "item", id: "survival_rations", amount: 2, label: "2x Survival Rations" });
+    free.push({
+      type: "item",
+      id: "survival_rations",
+      amount: 2,
+      label: "2x Survival Rations",
+    });
   }
   if (safeTier % 10 === 0) {
     // Tiap kelipatan 10: Naura Coupon gratis
@@ -98,16 +116,30 @@ function getTierRewards(tier) {
   // 2. Hadiah Jalur Premium
   const premium = [];
   const premFragments = 300 + safeTier * 50;
-  premium.push({ type: "fragments", amount: premFragments, label: `${premFragments.toLocaleString("id-ID")} NSF` });
+  premium.push({
+    type: "fragments",
+    amount: premFragments,
+    label: `${premFragments.toLocaleString("id-ID")} NSF`,
+  });
 
   if (safeTier % 2 === 0) {
     premium.push({ type: "coupons", amount: 1, label: "1x Naura Coupon" });
   }
   if (safeTier % 5 === 0) {
-    premium.push({ type: "item", id: "starlight_crystal", amount: 1, label: "1x Starlight Crystal" });
+    premium.push({
+      type: "item",
+      id: "starlight_crystal",
+      amount: 1,
+      label: "1x Starlight Crystal",
+    });
   }
   if (safeTier === MAX_PASS_TIER) {
-    premium.push({ type: "title", id: "astral_pioneer", amount: 1, label: "Gelar Eksklusif: [Astral Pioneer]" });
+    premium.push({
+      type: "title",
+      id: "astral_pioneer",
+      amount: 1,
+      label: "Gelar Eksklusif: [Astral Pioneer]",
+    });
   }
 
   return { free, premium };
@@ -130,7 +162,10 @@ function evaluateTierClaim({
   hasPremiumPass = false,
   claimedTiers = [],
 }) {
-  const safeTier = Math.max(1, Math.min(MAX_PASS_TIER, Math.floor(Number(targetTier) || 1)));
+  const safeTier = Math.max(
+    1,
+    Math.min(MAX_PASS_TIER, Math.floor(Number(targetTier) || 1)),
+  );
   const safeTrack = track === "premium" ? "premium" : "free";
 
   // Guard Clause 1: Verifikasi apakah tier sudah tercapai
@@ -146,7 +181,8 @@ function evaluateTierClaim({
   if (safeTrack === "premium" && !hasPremiumPass) {
     return {
       ok: false,
-      error: "Jalur Premium terkunci. Aktifkan Star Pass untuk mengklaim hadiah ini.",
+      error:
+        "Jalur Premium terkunci. Aktifkan Star Pass untuk mengklaim hadiah ini.",
     };
   }
 
@@ -162,7 +198,8 @@ function evaluateTierClaim({
 
   // Jalur Utama (Happy Path): Berikan hadiah dan tambahkan ke daftar klaim
   const allRewards = getTierRewards(safeTier);
-  const rewardsToGrant = safeTrack === "premium" ? allRewards.premium : allRewards.free;
+  const rewardsToGrant =
+    safeTrack === "premium" ? allRewards.premium : allRewards.free;
 
   claimSet.add(claimKey);
 

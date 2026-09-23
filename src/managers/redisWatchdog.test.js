@@ -8,9 +8,18 @@ const utilsRedisLock = require("../utils/redisLockHelper");
 
 describe("Redis Watchdog & Resilient Memory Lock", () => {
   it("survival/helpers/redisLockHelper re-ekspor fungsi utils/redisLockHelper secara identik", () => {
-    assert.strictEqual(survivalRedisLock.acquireLock, utilsRedisLock.acquireLock);
-    assert.strictEqual(survivalRedisLock.releaseLock, utilsRedisLock.releaseLock);
-    assert.strictEqual(survivalRedisLock.withDistributedLock, utilsRedisLock.withDistributedLock);
+    assert.strictEqual(
+      survivalRedisLock.acquireLock,
+      utilsRedisLock.acquireLock,
+    );
+    assert.strictEqual(
+      survivalRedisLock.releaseLock,
+      utilsRedisLock.releaseLock,
+    );
+    assert.strictEqual(
+      survivalRedisLock.withDistributedLock,
+      utilsRedisLock.withDistributedLock,
+    );
   });
 
   it("getLockStats melaporkan jumlah lock in-memory secara akurat", async () => {
@@ -27,7 +36,9 @@ describe("Redis Watchdog & Resilient Memory Lock", () => {
   it("getStatus pada redisManager mengembalikan mode fallback yang aman saat offline", () => {
     if (typeof redisManager.getStatus === "function") {
       const status = redisManager.getStatus();
-      assert.ok(status.mode === "redis_cluster" || status.mode === "in_memory_fallback");
+      assert.ok(
+        status.mode === "redis_cluster" || status.mode === "in_memory_fallback",
+      );
     }
   });
 });

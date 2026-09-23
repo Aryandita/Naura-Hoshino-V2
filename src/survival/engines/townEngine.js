@@ -82,7 +82,10 @@ function getTownSquareState(hour) {
 async function talkToTownNpc(npcId, userId, hour) {
   const npc = npcs[npcId];
   if (!npc) {
-    return { reply: "Penduduk yang kamu cari sedang tidak terlihat di sekitar alun-alun." };
+    return {
+      reply:
+        "Penduduk yang kamu cari sedang tidak terlihat di sekitar alun-alun.",
+    };
   }
 
   let greeting = "";
@@ -114,14 +117,19 @@ async function talkToTownNpc(npcId, userId, hour) {
   const aiEnsembleRouter = require("../../ai/aiEnsembleRouter");
   let generativeReply = null;
   try {
-    const aiPromise = aiEnsembleRouter.routeTask(aiEnsembleRouter.TASK_TYPES.GENERAL_CHAT, {
-      message: `Pemain menyapamu di alun-alun kota pada jam ${hour}:00.`,
-      systemInstruction: `Kamu adalah NPC "${npc.name}" (${npc.title}) di game Naura Wilds dengan kepribadian: ${npc.personality}. Jam in-game sekarang adalah jam ${hour}:00. Berikan sapaan 1-2 kalimat pendek dan ramah dalam bahasa Indonesia. Dilarang memakai karakter em-dash.`,
-      config: { maxOutputTokens: 60, temperature: 0.7 },
-    });
+    const aiPromise = aiEnsembleRouter.routeTask(
+      aiEnsembleRouter.TASK_TYPES.GENERAL_CHAT,
+      {
+        message: `Pemain menyapamu di alun-alun kota pada jam ${hour}:00.`,
+        systemInstruction: `Kamu adalah NPC "${npc.name}" (${npc.title}) di game Naura Wilds dengan kepribadian: ${npc.personality}. Jam in-game sekarang adalah jam ${hour}:00. Berikan sapaan 1-2 kalimat pendek dan ramah dalam bahasa Indonesia. Dilarang memakai karakter em-dash.`,
+        config: { maxOutputTokens: 60, temperature: 0.7 },
+      },
+    );
 
     // Timeout 1800ms agar interaksi Discord tetap cepat
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("AI_TIMEOUT")), 1800));
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("AI_TIMEOUT")), 1800),
+    );
     const aiResult = await Promise.race([aiPromise, timeoutPromise]);
     if (aiResult && aiResult.text) {
       generativeReply = aiResult.text.replace(/[\u2014\u2013]/g, "-").trim();
@@ -136,10 +144,14 @@ async function talkToTownNpc(npcId, userId, hour) {
   let bonusText = null;
   const cooldownKey = `town:greet_bonus:${userId}`;
   const redisManager = require("../../managers/redisManager");
-  const hasRecentBonus = await redisManager.getCache(cooldownKey).catch(() => null);
+  const hasRecentBonus = await redisManager
+    .getCache(cooldownKey)
+    .catch(() => null);
 
   if (!hasRecentBonus && Math.random() < 0.35) {
-    await cacheManager.incrementUserSurvival(userId, { starFragments: 20 }).catch(() => {});
+    await cacheManager
+      .incrementUserSurvival(userId, { starFragments: 20 })
+      .catch(() => {});
     await redisManager.setCache(cooldownKey, "1", 1800).catch(() => {}); // 30 menit cooldown
     bonusText = "✨ Kamu menerima traktiran kopi hangat (+20 Star Fragments)!";
   }
@@ -188,7 +200,8 @@ const WANDERING_MERCHANT_RELICS = [
   {
     id: "astral_compass",
     name: "Kompas Astral Kuno",
-    description: "Relik penunjuk jalan ruang angkasa kuno. Menambah tingkat keberhasilan ekspedisi raid.",
+    description:
+      "Relik penunjuk jalan ruang angkasa kuno. Menambah tingkat keberhasilan ekspedisi raid.",
     price: 1200,
     category: "relic",
     emoji: "🧭",
@@ -249,12 +262,20 @@ async function buyFromWanderingMerchant(userId, itemId) {
 
   const merchant = await getWanderingMerchant();
   if (!merchant.isPresent) {
-    return { ok: false, reason: "not_present", message: "Pedagang Pengembara sedang mengembara ke dimensi lain." };
+    return {
+      ok: false,
+      reason: "not_present",
+      message: "Pedagang Pengembara sedang mengembara ke dimensi lain.",
+    };
   }
 
   const item = merchant.items.find((it) => it.id === itemId);
   if (!item) {
-    return { ok: false, reason: "item_not_found", message: "Barang tidak ditemukan di lapak pengembara." };
+    return {
+      ok: false,
+      reason: "item_not_found",
+      message: "Barang tidak ditemukan di lapak pengembara.",
+    };
   }
 
   const profile = await cacheManager.getUserSurvival(userId);
@@ -269,25 +290,49 @@ async function buyFromWanderingMerchant(userId, itemId) {
   }
 
   // Potong saldo secara atomik
-  const debitRes = await cacheManager.debitUserSurvival(userId, "starFragments", item.price);
+  const debitRes = await cacheManager.debitUserSurvival(
+    userId,
+    "starFragments",
+    item.price,
+  );
   if (!debitRes) {
-    return { ok: false, reason: "debit_failed", message: "Gagal memproses transaksi saldo." };
+    return {
+      ok: false,
+      reason: "debit_failed",
+      message: "Gagal memproses transaksi saldo.",
+    };
   }
 
   // Tambahkan item ke inventaris pemain
-  const addRes = await addItemsAtomic(userId, [{ id: item.id, name: item.name, amount: 1 }]);
+  const addRes = await addItemsAtomic(userId, [
+    { id: item.id, name: item.name, amount: 1 },
+  ]);
   if (!addRes.ok) {
     // Rollback saldo jika penambahan item gagal
-    await cacheManager.incrementUserSurvival(userId, { starFragments: item.price }).catch(() => {});
-    return { ok: false, reason: "inventory_failed", message: "Gagal memasukkan barang ke inventaris." };
+    await cacheManager
+      .incrementUserSurvival(userId, { starFragments: item.price })
+      .catch(() => {});
+    return {
+      ok: false,
+      reason: "inventory_failed",
+      message: "Gagal memasukkan barang ke inventaris.",
+    };
   }
 
   // Serap subsidi dari kas daur ulang pedagang (15% dari harga beli)
   const treasury = await RecyclingPoolEngine.getTreasury().catch(() => null);
   if (treasury && Number(treasury.wanderingMerchantPool || 0) > 0) {
-    const deduction = Math.min(Number(treasury.wanderingMerchantPool), Math.floor(item.price * 0.15));
-    treasury.wanderingMerchantPool = Math.max(0, Number(treasury.wanderingMerchantPool) - deduction);
-    await treasury.save({ fields: ["wanderingMerchantPool", "updatedAt"] }).catch(() => {});
+    const deduction = Math.min(
+      Number(treasury.wanderingMerchantPool),
+      Math.floor(item.price * 0.15),
+    );
+    treasury.wanderingMerchantPool = Math.max(
+      0,
+      Number(treasury.wanderingMerchantPool) - deduction,
+    );
+    await treasury
+      .save({ fields: ["wanderingMerchantPool", "updatedAt"] })
+      .catch(() => {});
   }
 
   return {

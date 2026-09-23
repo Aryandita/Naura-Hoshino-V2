@@ -51,9 +51,13 @@ module.exports = {
       let sampleTexts = [];
       try {
         if (interaction.channel && interaction.channel.messages) {
-          const fetched = await interaction.channel.messages.fetch({ limit: 25 });
+          const fetched = await interaction.channel.messages.fetch({
+            limit: 25,
+          });
           sampleTexts = fetched
-            .filter((m) => !m.author.bot && m.content && m.content.trim().length > 5)
+            .filter(
+              (m) => !m.author.bot && m.content && m.content.trim().length > 5,
+            )
             .map((m) => m.content.trim());
         }
       } catch (_) {

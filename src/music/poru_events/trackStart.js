@@ -99,7 +99,9 @@ module.exports = {
               }
             }
           } catch (seekErr) {
-            logger.warn(`[Poru] Gagal memulihkan posisi lagu: ${seekErr.message}`);
+            logger.warn(
+              `[Poru] Gagal memulihkan posisi lagu: ${seekErr.message}`,
+            );
           }
         }, 500);
       }

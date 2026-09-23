@@ -10,17 +10,23 @@ const aiManager = require("../../src/managers/aiManager");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("vision")
-    .setDescription("Analisis gambar, screenshot game, error koding, atau meme bertenaga Gemini Flash.")
+    .setDescription(
+      "Analisis gambar, screenshot game, error koding, atau meme bertenaga Gemini Flash.",
+    )
     .addAttachmentOption((opt) =>
       opt
         .setName("image")
-        .setDescription("Unggah gambar atau tangkapan layar yang ingin dianalisis")
+        .setDescription(
+          "Unggah gambar atau tangkapan layar yang ingin dianalisis",
+        )
         .setRequired(true),
     )
     .addStringOption((opt) =>
       opt
         .setName("prompt")
-        .setDescription("Pertanyaan spesifik atau hal yang ingin kamu ketahui dari gambar ini")
+        .setDescription(
+          "Pertanyaan spesifik atau hal yang ingin kamu ketahui dari gambar ini",
+        )
         .setRequired(false),
     )
     .addStringOption((opt) =>
@@ -30,9 +36,18 @@ module.exports = {
         .setRequired(false)
         .addChoices(
           { name: "🔍 Umum (Penjelasan Lengkap)", value: "general" },
-          { name: "🎮 Gaming Mentor (Analisis Build & Gear)", value: "game_build" },
-          { name: "💻 Code Debugger (Bantu Analisis Error Koding)", value: "code_error" },
-          { name: "🎭 Meme & Vibe Rater (Nilai Estetika / Kelucuan)", value: "rate_meme" },
+          {
+            name: "🎮 Gaming Mentor (Analisis Build & Gear)",
+            value: "game_build",
+          },
+          {
+            name: "💻 Code Debugger (Bantu Analisis Error Koding)",
+            value: "code_error",
+          },
+          {
+            name: "🎭 Meme & Vibe Rater (Nilai Estetika / Kelucuan)",
+            value: "rate_meme",
+          },
         ),
     ),
 
@@ -41,7 +56,11 @@ module.exports = {
     const userPrompt = interaction.options.getString("prompt") || "";
     const mode = interaction.options.getString("mode") || "general";
 
-    if (!attachment || !attachment.contentType || !attachment.contentType.startsWith("image/")) {
+    if (
+      !attachment ||
+      !attachment.contentType ||
+      !attachment.contentType.startsWith("image/")
+    ) {
       return interaction.reply({
         ...buildErrorContainerV2({
           title: "Format Berkas Tidak Didukung",
@@ -58,7 +77,9 @@ module.exports = {
     try {
       const response = await fetch(attachment.url);
       if (!response.ok) {
-        throw new Error(`Gagal mengunduh berkas gambar (HTTP ${response.status}).`);
+        throw new Error(
+          `Gagal mengunduh berkas gambar (HTTP ${response.status}).`,
+        );
       }
 
       const arrayBuffer = await response.arrayBuffer();

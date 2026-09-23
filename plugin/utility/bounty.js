@@ -11,16 +11,22 @@ const {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("bounty")
-    .setDescription("📜 Papan Sayembara Komunitas & Brankas Rahasia Zero-Knowledge.")
+    .setDescription(
+      "📜 Papan Sayembara Komunitas & Brankas Rahasia Zero-Knowledge.",
+    )
     .addSubcommand((sub) =>
       sub
         .setName("list")
-        .setDescription("Lihat daftar sayembara tugas komunitas yang sedang dibuka di server."),
+        .setDescription(
+          "Lihat daftar sayembara tugas komunitas yang sedang dibuka di server.",
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("create")
-        .setDescription("Buat sayembara baru dengan hadiah Star Fragments dari saldomu.")
+        .setDescription(
+          "Buat sayembara baru dengan hadiah Star Fragments dari saldomu.",
+        )
         .addStringOption((opt) =>
           opt
             .setName("judul")
@@ -44,7 +50,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("claim")
-        .setDescription("Ajukan bukti penyelesaian sayembara yang kamu kerjakan.")
+        .setDescription(
+          "Ajukan bukti penyelesaian sayembara yang kamu kerjakan.",
+        )
         .addStringOption((opt) =>
           opt
             .setName("bounty_id")
@@ -61,7 +69,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("approve")
-        .setDescription("Setujui penyelesaian sayembara buatanmu dan cairkan hadiah ke pekerja.")
+        .setDescription(
+          "Setujui penyelesaian sayembara buatanmu dan cairkan hadiah ke pekerja.",
+        )
         .addStringOption((opt) =>
           opt
             .setName("bounty_id")
@@ -72,7 +82,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("vault_store")
-        .setDescription("🔒 Simpan teks rahasia ke Zero-Knowledge Vault terenkripsi AES-256-GCM.")
+        .setDescription(
+          "🔒 Simpan teks rahasia ke Zero-Knowledge Vault terenkripsi AES-256-GCM.",
+        )
         .addStringOption((opt) =>
           opt
             .setName("teks")
@@ -89,7 +101,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("vault_read")
-        .setDescription("🔓 Buka catatan rahasia dari Zero-Knowledge Vault dengan passphrasemu.")
+        .setDescription(
+          "🔓 Buka catatan rahasia dari Zero-Knowledge Vault dengan passphrasemu.",
+        )
         .addStringOption((opt) =>
           opt
             .setName("vault_id")
@@ -175,7 +189,9 @@ module.exports = {
 
     if (subCmd === "list") {
       const bounties = await bountyVaultEngine.listBounties(guildId);
-      const openBounties = bounties.filter((b) => b.status === "open" || b.status === "submitted");
+      const openBounties = bounties.filter(
+        (b) => b.status === "open" || b.status === "submitted",
+      );
 
       const bountyLines =
         openBounties.length > 0
@@ -249,7 +265,12 @@ module.exports = {
       const bountyId = interaction.options.getString("bounty_id");
       const proof = interaction.options.getString("bukti");
 
-      const res = await bountyVaultEngine.claimBounty(guildId, bountyId, userId, proof);
+      const res = await bountyVaultEngine.claimBounty(
+        guildId,
+        bountyId,
+        userId,
+        proof,
+      );
 
       if (!res.success) {
         const err = buildErrorContainerV2({
@@ -281,7 +302,11 @@ module.exports = {
     if (subCmd === "approve") {
       const bountyId = interaction.options.getString("bounty_id");
 
-      const res = await bountyVaultEngine.approveBounty(guildId, bountyId, userId);
+      const res = await bountyVaultEngine.approveBounty(
+        guildId,
+        bountyId,
+        userId,
+      );
 
       if (!res.success) {
         const err = buildErrorContainerV2({

@@ -388,7 +388,9 @@ module.exports = {
           : responder.reply(errPayload);
       }
 
-      const taken = await takeItemsAtomic(user.id, [{ id: food.id, amount: 1 }]);
+      const taken = await takeItemsAtomic(user.id, [
+        { id: food.id, amount: 1 },
+      ]);
       if (!taken.ok) {
         const errPayload = ephemeral(
           `${e("akward", "\u274C")} Tas kamu belum ada makanan hewan. Coba beli Tulang atau Ikan Kecil dulu yaa!`,

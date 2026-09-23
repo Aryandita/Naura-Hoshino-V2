@@ -85,7 +85,9 @@ class EconomyGuardEngine {
       const ratio =
         (supply - inflationThresholdTier1) /
         (inflationThresholdTier2 - inflationThresholdTier1);
-      calculatedRate = Number((baseTaxRate + (maxTaxRate - baseTaxRate) * ratio).toFixed(4));
+      calculatedRate = Number(
+        (baseTaxRate + (maxTaxRate - baseTaxRate) * ratio).toFixed(4),
+      );
     }
 
     // Terapkan Diskon Tax Haven untuk Anggota V.I.P
@@ -281,10 +283,28 @@ class EconomyGuardEngine {
             title: "🚨 Peringatan Keamanan Ekonomi (Velocity Anomaly)",
             color: 0xef4444,
             fields: [
-              { name: "Jenis Anomali", value: alertData.alertType || "VELOCITY_SPIKE", inline: true },
-              { name: "Pengirim", value: `<@${alertData.senderId}> (${alertData.senderId})`, inline: true },
-              { name: "Penerima", value: alertData.receiverId ? `<@${alertData.receiverId}> (${alertData.receiverId})` : "N/A", inline: true },
-              { name: "Nominal", value: `${Number(alertData.amount).toLocaleString("id-ID")}`, inline: true },
+              {
+                name: "Jenis Anomali",
+                value: alertData.alertType || "VELOCITY_SPIKE",
+                inline: true,
+              },
+              {
+                name: "Pengirim",
+                value: `<@${alertData.senderId}> (${alertData.senderId})`,
+                inline: true,
+              },
+              {
+                name: "Penerima",
+                value: alertData.receiverId
+                  ? `<@${alertData.receiverId}> (${alertData.receiverId})`
+                  : "N/A",
+                inline: true,
+              },
+              {
+                name: "Nominal",
+                value: `${Number(alertData.amount).toLocaleString("id-ID")}`,
+                inline: true,
+              },
             ],
             timestamp: new Date().toISOString(),
           },

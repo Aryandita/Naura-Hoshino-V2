@@ -38,7 +38,8 @@ async function getWsUrl() {
 }
 
 async function main() {
-  const artifactDir = "C:\\Users\\ACER\\.gemini\\antigravity-ide\\brain\\0501f77c-c2c7-4aaf-a33b-e607a43d809e";
+  const artifactDir =
+    "C:\\Users\\ACER\\.gemini\\antigravity-ide\\brain\\0501f77c-c2c7-4aaf-a33b-e607a43d809e";
   const defaultPaths = [
     process.env.CHROME_PATH,
     "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
@@ -47,7 +48,8 @@ async function main() {
     "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
   ].filter(Boolean);
 
-  const chromePath = defaultPaths.find((p) => fs.existsSync(p)) || defaultPaths[0];
+  const chromePath =
+    defaultPaths.find((p) => fs.existsSync(p)) || defaultPaths[0];
   const chrome = spawn(chromePath, [
     "--headless=new",
     "--remote-debugging-port=9222",
@@ -106,12 +108,15 @@ async function main() {
         const text = data.params.args
           .map((a) => a.value || a.description || JSON.stringify(a))
           .join(" ");
-        console.log(`[BROWSER CONSOLE ${data.params.type.toUpperCase()}]`, text);
+        console.log(
+          `[BROWSER CONSOLE ${data.params.type.toUpperCase()}]`,
+          text,
+        );
       } else if (data.method === "Runtime.exceptionThrown") {
         console.error(
           "[BROWSER EXCEPTION]",
           data.params.exceptionDetails.text,
-          data.params.exceptionDetails.exception?.description || ""
+          data.params.exceptionDetails.exception?.description || "",
         );
       }
     };
@@ -125,7 +130,8 @@ async function main() {
     for (let i = 0; i < 20; i++) {
       await new Promise((r) => setTimeout(r, 1000));
       const res = await callCdp("Runtime.evaluate", {
-        expression: "Boolean(window.NauraViewer && window.NauraViewer.initialized)",
+        expression:
+          "Boolean(window.NauraViewer && window.NauraViewer.initialized)",
         returnByValue: true,
       });
       if (res?.result?.value) {
@@ -160,7 +166,8 @@ async function main() {
     for (let i = 0; i < 25; i++) {
       await new Promise((r) => setTimeout(r, 1000));
       const res = await callCdp("Runtime.evaluate", {
-        expression: "Boolean(window.NauraViewer.viewer3d && window.NauraViewer.viewer3d.isLoaded)",
+        expression:
+          "Boolean(window.NauraViewer.viewer3d && window.NauraViewer.viewer3d.isLoaded)",
         returnByValue: true,
       });
       if (res?.result?.value) {
@@ -188,7 +195,10 @@ async function main() {
     // Capture Expanded Chat Screenshot
     const expShot = await callCdp("Page.captureScreenshot", { format: "png" });
     if (expShot?.data) {
-      const expPath = path.join(artifactDir, "preview_floating_expanded_chat.png");
+      const expPath = path.join(
+        artifactDir,
+        "preview_floating_expanded_chat.png",
+      );
       fs.writeFileSync(expPath, Buffer.from(expShot.data, "base64"));
       console.log("Saved expanded chat screenshot to:", expPath);
     }
@@ -213,7 +223,10 @@ async function main() {
       })()`,
       returnByValue: true,
     });
-    console.log("Mouse movement test results:", mouseRes?.result?.value || mouseRes);
+    console.log(
+      "Mouse movement test results:",
+      mouseRes?.result?.value || mouseRes,
+    );
 
     // Switch to Music Tab (test render loop pause & spectrum activation)
     console.log("Switching to Music Tab...");
@@ -234,9 +247,14 @@ async function main() {
     });
     console.log("Music Tab state:", musicStateRes?.result?.value);
 
-    const musicShot = await callCdp("Page.captureScreenshot", { format: "png" });
+    const musicShot = await callCdp("Page.captureScreenshot", {
+      format: "png",
+    });
     if (musicShot?.data) {
-      const musicPath = path.join(artifactDir, "preview_floating_music_tab.png");
+      const musicPath = path.join(
+        artifactDir,
+        "preview_floating_music_tab.png",
+      );
       fs.writeFileSync(musicPath, Buffer.from(musicShot.data, "base64"));
       console.log("Saved music tab screenshot to:", musicPath);
     }
@@ -271,7 +289,10 @@ async function main() {
       })()`,
       returnByValue: true,
     });
-    console.log("Draggability test results:", dragRes?.result?.value || dragRes);
+    console.log(
+      "Draggability test results:",
+      dragRes?.result?.value || dragRes,
+    );
 
     // Switch back to Chat tab to verify resume
     console.log("Switching back to Chat Tab...");

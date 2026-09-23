@@ -12,7 +12,8 @@ const ui = require("../../../src/config/ui");
 
 module.exports = {
   name: "federation",
-  description: "🌐 Hub Federasi Aliansi Klan Lintas-Server & Global Hall of Fame",
+  description:
+    "🌐 Hub Federasi Aliansi Klan Lintas-Server & Global Hall of Fame",
 
   async execute(interaction) {
     const action = interaction.options.getString("aksi") || "status";
@@ -29,7 +30,8 @@ module.exports = {
     if (action === "halloffame") {
       const hall = await guildFederationEngine.getHallOfFame(10);
       const lines = hall.map((fed, idx) => {
-        const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "🎖️";
+        const medal =
+          idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "🎖️";
         const memberCount = fed.memberClans?.length || 1;
         return `${medal} **#${idx + 1} [${fed.tag}] ${fed.name}**\n   ⭐ Prestise: \`${fed.prestige}\` | 🐉 Kemenangan Boss: \`${fed.bossVictories || 0}\` | 🏰 \`${memberCount} Klan Tergabung\``;
       });
@@ -108,7 +110,9 @@ module.exports = {
     if (action === "war") {
       const towers = guildFederationEngine.getRelicTowers();
       const lines = towers.map((t) => {
-        const controller = t.controllerFedTag ? `[${t.controllerFedTag}]` : "UNCLAIMED";
+        const controller = t.controllerFedTag
+          ? `[${t.controllerFedTag}]`
+          : "UNCLAIMED";
         const hpBar = `HP: \`${t.defenseHp.toLocaleString("id-ID")} / ${t.maxHp.toLocaleString("id-ID")}\``;
         return `🗼 **${t.name}** (${t.zone})\n   👑 Pengontrol: \`${controller}\` | ${hpBar}\n   ✨ Buff Wilayah: *${t.buffDescription}*`;
       });
@@ -133,7 +137,8 @@ module.exports = {
 
     // 2c. FEDERATION WAR: SIEGE TOWER
     if (action === "siege") {
-      const towerId = interaction.options.getString("tower_id") || "chrono_siphon";
+      const towerId =
+        interaction.options.getString("tower_id") || "chrono_siphon";
       const fedId = userClan.federationId || "fed_celestial";
 
       const siegeResult = await guildFederationEngine.siegeRelicTower({
@@ -146,7 +151,9 @@ module.exports = {
       if (!siegeResult.success) {
         const payload = buildErrorContainerV2({
           title: "Pengepungan Gagal",
-          description: siegeResult.error || "Gagal meluncurkan pengepungan ke menara relik.",
+          description:
+            siegeResult.error ||
+            "Gagal meluncurkan pengepungan ke menara relik.",
           footerText: ui.getFooter("survival"),
         });
         return interaction.reply({
@@ -191,7 +198,8 @@ module.exports = {
       if (userClan.leaderId !== user.id) {
         const payload = buildErrorContainerV2({
           title: "Izin Ditolak",
-          description: "Hanya Ketua Pemimpin Klan yang memiliki wewenang untuk mendirikan Aliansi Federasi baru!",
+          description:
+            "Hanya Ketua Pemimpin Klan yang memiliki wewenang untuk mendirikan Aliansi Federasi baru!",
           footerText: ui.getFooter("survival"),
         });
         return interaction.reply({
@@ -206,7 +214,8 @@ module.exports = {
       if (!fedName || !fedTag) {
         const payload = buildErrorContainerV2({
           title: "Input Belum Lengkap",
-          description: "Silakan masukkan parameter `nama` dan `tag` (maksimal 5 karakter) untuk aliansi federasi barumu!",
+          description:
+            "Silakan masukkan parameter `nama` dan `tag` (maksimal 5 karakter) untuk aliansi federasi barumu!",
           footerText: ui.getFooter("survival"),
         });
         return interaction.reply({
@@ -225,7 +234,8 @@ module.exports = {
       if (!createRes.success) {
         const payload = buildErrorContainerV2({
           title: "Gagal Mendirikan Aliansi",
-          description: createRes.error || "Terjadi kesalahan saat mendirikan federasi.",
+          description:
+            createRes.error || "Terjadi kesalahan saat mendirikan federasi.",
           footerText: ui.getFooter("survival"),
         });
         return interaction.reply({
@@ -262,7 +272,8 @@ module.exports = {
       if (userClan.leaderId !== user.id) {
         const payload = buildErrorContainerV2({
           title: "Izin Ditolak",
-          description: "Hanya Pemimpin Klan yang dapat mendaftarkan klan ke dalam aliansi federasi!",
+          description:
+            "Hanya Pemimpin Klan yang dapat mendaftarkan klan ke dalam aliansi federasi!",
           footerText: ui.getFooter("survival"),
         });
         return interaction.reply({
@@ -275,7 +286,8 @@ module.exports = {
       if (!fedId) {
         const payload = buildErrorContainerV2({
           title: "ID Federasi Diperlukan",
-          description: "Silakan masukkan `federation_id` aliansi yang ingin kamu ikuti!",
+          description:
+            "Silakan masukkan `federation_id` aliansi yang ingin kamu ikuti!",
           footerText: ui.getFooter("survival"),
         });
         return interaction.reply({
@@ -293,7 +305,8 @@ module.exports = {
       if (!joinRes.success) {
         const payload = buildErrorContainerV2({
           title: "Gagal Bergabung ke Aliansi",
-          description: joinRes.error || "Federasi tidak ditemukan atau sudah penuh.",
+          description:
+            joinRes.error || "Federasi tidak ditemukan atau sudah penuh.",
           footerText: ui.getFooter("survival"),
         });
         return interaction.reply({

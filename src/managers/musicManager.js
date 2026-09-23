@@ -227,8 +227,12 @@ class MusicManager {
     const history = this.trackHistories.get(guildId) || [];
     const info = track.info;
     history.unshift({
-      title: String(info.title || "").toLowerCase().trim(),
-      author: String(info.author || "").toLowerCase().trim(),
+      title: String(info.title || "")
+        .toLowerCase()
+        .trim(),
+      author: String(info.author || "")
+        .toLowerCase()
+        .trim(),
       uri: String(info.uri || ""),
       identifier: String(info.identifier || ""),
       timestamp: Date.now(),
@@ -249,7 +253,9 @@ class MusicManager {
     if (!history || history.length === 0) return false;
 
     const recent = history.slice(0, 5);
-    const newTitle = String(track.info.title || "").toLowerCase().trim();
+    const newTitle = String(track.info.title || "")
+      .toLowerCase()
+      .trim();
     const newUri = String(track.info.uri || "");
     const newId = String(track.info.identifier || "");
 

@@ -284,7 +284,9 @@ async function getDynamicRateAndFee(nsfAmount = 0) {
   try {
     const redisManager = require("../../managers/redisManager");
     if (redisManager.client && redisManager.client.isReady) {
-      dailyVolume = Number((await redisManager.client.get("economy:volume:nsf:daily")) || 0);
+      dailyVolume = Number(
+        (await redisManager.client.get("economy:volume:nsf:daily")) || 0,
+      );
     }
   } catch (err) {
     dailyVolume = 0;
@@ -300,7 +302,7 @@ async function getDynamicRateAndFee(nsfAmount = 0) {
   if (val > 200000) {
     feePercent = 0.15;
   } else if (val > 50000) {
-    feePercent = 0.10;
+    feePercent = 0.1;
   }
 
   return {

@@ -6,8 +6,14 @@
     <title>Components V2 & Embed Builder | Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
       .builder-grid {
@@ -24,7 +30,11 @@
 
       /* Form controls styling */
       .builder-panel {
-        background: linear-gradient(180deg, rgba(16, 21, 38, 0.7) 0%, rgba(10, 13, 24, 0.85) 100%);
+        background: linear-gradient(
+          180deg,
+          rgba(16, 21, 38, 0.7) 0%,
+          rgba(10, 13, 24, 0.85) 100%
+        );
         border: 1px solid var(--border-medium);
         border-radius: var(--r-xl);
         padding: 24px;
@@ -172,7 +182,7 @@
         border: 1px solid var(--border-subtle);
         padding: 24px;
         box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
-        font-family: 'Inter', system-ui, sans-serif;
+        font-family: "Inter", system-ui, sans-serif;
       }
 
       .discord-msg-header {
@@ -309,11 +319,27 @@
       .d-btn:hover {
         filter: brightness(1.15);
       }
-      .d-btn-primary { background: #5865f2; color: #fff; }
-      .d-btn-secondary { background: #4e5058; color: #fff; }
-      .d-btn-success { background: #23a55a; color: #fff; }
-      .d-btn-danger { background: #da373c; color: #fff; }
-      .d-btn-link { background: #4e5058; color: #fff; text-decoration: none; }
+      .d-btn-primary {
+        background: #5865f2;
+        color: #fff;
+      }
+      .d-btn-secondary {
+        background: #4e5058;
+        color: #fff;
+      }
+      .d-btn-success {
+        background: #23a55a;
+        color: #fff;
+      }
+      .d-btn-danger {
+        background: #da373c;
+        color: #fff;
+      }
+      .d-btn-link {
+        background: #4e5058;
+        color: #fff;
+        text-decoration: none;
+      }
 
       /* Layer 5: Footer */
       .d-footer {
@@ -354,32 +380,48 @@
     </style>
   </head>
   <body>
-    
-    <div class="builder-toast" id="builderToast"><i class="fa-solid fa-circle-check"></i> <span>JSON Payload Berhasil Disalin!</span></div>
+    <div class="builder-toast" id="builderToast">
+      <i class="fa-solid fa-circle-check"></i>
+      <span>JSON Payload Berhasil Disalin!</span>
+    </div>
 
     <div class="app-shell">
       <!-- Mobile Sidebar Overlay -->
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
-      <aside class="sidebar " id="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
+          <div class="sidebar-logo-icon">
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="
+                this.style.display = 'none';
+                this.parentElement.innerHTML = '🌸';
+              "
+            />
+          </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
             <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+          <button
+            class="sidebar-close-btn"
+            id="sidebarCloseBtn"
+            aria-label="Tutup menu"
+          >
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
+        <!-- Navigation -->
+        <!-- Navigation -->
         <nav class="sidebar-nav" role="navigation">
-
           <!-- Overview -->
           <div class="nav-group">
             <div class="nav-group-label">Overview</div>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-gauge-high"></i
+              ></span>
               <span>Dashboard</span>
             </a>
             <a href="/status" class="nav-item">
@@ -405,7 +447,9 @@
               <span>Economy</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-network-wired"></i
+              ></span>
               <span>Guild Topology</span>
             </a>
           </div>
@@ -426,7 +470,9 @@
               <span>Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-microphone"></i
+              ></span>
               <span>Karaoke</span>
             </a>
           </div>
@@ -435,7 +481,9 @@
           <div class="nav-group">
             <div class="nav-group-label">Naura Wilds RPG</div>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-earth-asia"></i
+              ></span>
               <span>World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
@@ -460,7 +508,9 @@
               <span>Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-wand-magic-sparkles"></i
+              ></span>
               <span>Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
@@ -477,16 +527,28 @@
           <div class="nav-group">
             <div class="nav-group-label">More</div>
             <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+              <span class="nav-icon" style="color: var(--accent-green)"
+                ><i class="fa-solid fa-id-badge"></i
+              ></span>
+              <span style="color: var(--accent-green)">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
         <div class="sidebar-footer">
-          <div class="sidebar-user" onclick="window.location.href='/'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
-            <div class="sidebar-user-info"><div class="sidebar-user-name">Guest Admin</div><div class="sidebar-user-role">UI Designer</div></div>
+          <div class="sidebar-user" onclick="window.location.href = '/'">
+            <img
+              src="/assets/core/avatar.png"
+              alt="User"
+              class="sidebar-user-avatar"
+              onerror="
+                this.src =
+                  'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'
+              "
+            />
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name">Guest Admin</div>
+              <div class="sidebar-user-role">UI Designer</div>
+            </div>
           </div>
         </div>
       </aside>
@@ -494,15 +556,24 @@
       <div class="main-content">
         <header class="top-header">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <button class="hamburger-btn" id="hamburgerBtn">
+              <i class="fa-solid fa-bars"></i>
+            </button>
             <div>
               <div class="page-title">Components V2 Builder</div>
-              <div class="breadcrumb"><span>Configuration</span><span class="breadcrumb-sep">/</span><span>Visual Layout Engine</span></div>
+              <div class="breadcrumb">
+                <span>Configuration</span><span class="breadcrumb-sep">/</span
+                ><span>Visual Layout Engine</span>
+              </div>
             </div>
           </div>
           <div class="header-right">
-            <button class="btn btn-secondary btn-sm" id="btnCopyJson"><i class="fa-solid fa-code"></i> Salin JSON</button>
-            <button class="btn btn-primary btn-sm" id="btnCopyCode"><i class="fa-solid fa-copy"></i> Salin Snippet JS</button>
+            <button class="btn btn-secondary btn-sm" id="btnCopyJson">
+              <i class="fa-solid fa-code"></i> Salin JSON
+            </button>
+            <button class="btn btn-primary btn-sm" id="btnCopyCode">
+              <i class="fa-solid fa-copy"></i> Salin Snippet JS
+            </button>
           </div>
         </header>
 
@@ -510,22 +581,51 @@
           <div class="page-header-bar animate-in">
             <div>
               <h1 class="page-heading">
-                <span class="page-heading-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);">
-                  <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--primary);"></i>
+                <span
+                  class="page-heading-icon"
+                  style="
+                    background: var(--primary-dim);
+                    border: 1px solid var(--border-primary);
+                  "
+                >
+                  <i
+                    class="fa-solid fa-wand-magic-sparkles"
+                    style="color: var(--primary)"
+                  ></i>
                 </span>
                 Discord Components V2 Builder
               </h1>
-              <p class="page-sub">Rancang pesan Discord interaktif menggunakan arsitektur 5-lapisan NauraContainerBuilder dengan pratinjau langsung.</p>
+              <p class="page-sub">
+                Rancang pesan Discord interaktif menggunakan arsitektur
+                5-lapisan NauraContainerBuilder dengan pratinjau langsung.
+              </p>
             </div>
           </div>
 
           <!-- Template Presets -->
           <div class="template-pills animate-in delay-1">
-            <span style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;margin-right:6px;">Template:</span>
-            <button class="tmpl-btn" data-preset="announce"><i class="fa-solid fa-bullhorn"></i> Pengumuman Event</button>
-            <button class="tmpl-btn" data-preset="economy"><i class="fa-solid fa-coins"></i> Transfer Ekonomi</button>
-            <button class="tmpl-btn" data-preset="raid"><i class="fa-solid fa-skull-crossbones"></i> Kemenangan Raid</button>
-            <button class="tmpl-btn" data-preset="ticket"><i class="fa-solid fa-ticket"></i> Support Ticket</button>
+            <span
+              style="
+                font-size: 12px;
+                color: var(--text-muted);
+                display: flex;
+                align-items: center;
+                margin-right: 6px;
+              "
+              >Template:</span
+            >
+            <button class="tmpl-btn" data-preset="announce">
+              <i class="fa-solid fa-bullhorn"></i> Pengumuman Event
+            </button>
+            <button class="tmpl-btn" data-preset="economy">
+              <i class="fa-solid fa-coins"></i> Transfer Ekonomi
+            </button>
+            <button class="tmpl-btn" data-preset="raid">
+              <i class="fa-solid fa-skull-crossbones"></i> Kemenangan Raid
+            </button>
+            <button class="tmpl-btn" data-preset="ticket">
+              <i class="fa-solid fa-ticket"></i> Support Ticket
+            </button>
           </div>
 
           <div class="builder-grid animate-in delay-2">
@@ -533,81 +633,287 @@
             <div class="builder-panel">
               <!-- Header Section -->
               <div class="form-section">
-                <div class="section-label"><i class="fa-solid fa-heading" style="color:var(--accent-cyan);"></i> Lapisan 1: Header & Judul</div>
+                <div class="section-label">
+                  <i
+                    class="fa-solid fa-heading"
+                    style="color: var(--accent-cyan)"
+                  ></i>
+                  Lapisan 1: Header & Judul
+                </div>
                 <div class="input-group">
-                  <label class="input-label">Teks Author (Nama Pengirim / Modul)</label>
-                  <input type="text" class="text-field" id="inputAuthor" value="Naura Hoshino • Event Aetheria" />
+                  <label class="input-label"
+                    >Teks Author (Nama Pengirim / Modul)</label
+                  >
+                  <input
+                    type="text"
+                    class="text-field"
+                    id="inputAuthor"
+                    value="Naura Hoshino • Event Aetheria"
+                  />
                 </div>
                 <div class="input-group">
                   <label class="input-label">Judul Utama</label>
-                  <input type="text" class="text-field" id="inputTitle" value="🌸 Festival Musim Semi Bunga Sakura Dimulai!" />
+                  <input
+                    type="text"
+                    class="text-field"
+                    id="inputTitle"
+                    value="🌸 Festival Musim Semi Bunga Sakura Dimulai!"
+                  />
                 </div>
               </div>
 
               <!-- Accent Color Section -->
               <div class="form-section">
-                <div class="section-label"><i class="fa-solid fa-palette" style="color:var(--primary);"></i> Garis Aksen & Tema</div>
+                <div class="section-label">
+                  <i
+                    class="fa-solid fa-palette"
+                    style="color: var(--primary)"
+                  ></i>
+                  Garis Aksen & Tema
+                </div>
                 <div class="color-swatches" id="swatchList">
-                  <div class="color-swatch active" style="background:#f472b6;" data-color="#f472b6" title="Sakura Pink"></div>
-                  <div class="color-swatch" style="background:#22d3ee;" data-color="#22d3ee" title="Aether Cyan"></div>
-                  <div class="color-swatch" style="background:#a78bfa;" data-color="#a78bfa" title="Celestial Violet"></div>
-                  <div class="color-swatch" style="background:#34d399;" data-color="#34d399" title="Wilds Emerald"></div>
-                  <div class="color-swatch" style="background:#f59e0b;" data-color="#f59e0b" title="Amber Gold"></div>
-                  <div class="color-swatch" style="background:#ef4444;" data-color="#ef4444" title="Danger Crimson"></div>
-                  <input type="color" id="inputCustomColor" value="#f472b6" style="width:30px;height:30px;border-radius:50%;cursor:pointer;border:none;background:transparent;" title="Warna Kustom" />
+                  <div
+                    class="color-swatch active"
+                    style="background: #f472b6"
+                    data-color="#f472b6"
+                    title="Sakura Pink"
+                  ></div>
+                  <div
+                    class="color-swatch"
+                    style="background: #22d3ee"
+                    data-color="#22d3ee"
+                    title="Aether Cyan"
+                  ></div>
+                  <div
+                    class="color-swatch"
+                    style="background: #a78bfa"
+                    data-color="#a78bfa"
+                    title="Celestial Violet"
+                  ></div>
+                  <div
+                    class="color-swatch"
+                    style="background: #34d399"
+                    data-color="#34d399"
+                    title="Wilds Emerald"
+                  ></div>
+                  <div
+                    class="color-swatch"
+                    style="background: #f59e0b"
+                    data-color="#f59e0b"
+                    title="Amber Gold"
+                  ></div>
+                  <div
+                    class="color-swatch"
+                    style="background: #ef4444"
+                    data-color="#ef4444"
+                    title="Danger Crimson"
+                  ></div>
+                  <input
+                    type="color"
+                    id="inputCustomColor"
+                    value="#f472b6"
+                    style="
+                      width: 30px;
+                      height: 30px;
+                      border-radius: 50%;
+                      cursor: pointer;
+                      border: none;
+                      background: transparent;
+                    "
+                    title="Warna Kustom"
+                  />
                 </div>
               </div>
 
               <!-- Content Section -->
               <div class="form-section">
-                <div class="section-label"><i class="fa-solid fa-paragraph" style="color:var(--accent-violet);"></i> Lapisan 3: Deskripsi & Field</div>
+                <div class="section-label">
+                  <i
+                    class="fa-solid fa-paragraph"
+                    style="color: var(--accent-violet)"
+                  ></i>
+                  Lapisan 3: Deskripsi & Field
+                </div>
                 <div class="input-group">
                   <label class="input-label">Deskripsi Markdown</label>
-                  <textarea class="text-field" id="inputDesc">Selamat datang di Festival Musim Semi! Dapatkan buff bonus **+35% EXP** dan peluang drop gacha 2x lipat selama periode festival berlangsung.
+                  <textarea class="text-field" id="inputDesc">
+Selamat datang di Festival Musim Semi! Dapatkan buff bonus **+35% EXP** dan peluang drop gacha 2x lipat selama periode festival berlangsung.
 
-Kunjungi booth Pak Kades Tirto dan Luna di Desa Swallowtail untuk mengambil hadiah harian gratis!</textarea>
+Kunjungi booth Pak Kades Tirto dan Luna di Desa Swallowtail untuk mengambil hadiah harian gratis!</textarea
+                  >
                 </div>
 
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;margin-bottom:8px;">
-                  <span style="font-size:12px;font-weight:600;color:var(--text-secondary);">Fields Kustom</span>
-                  <button class="btn btn-ghost btn-sm" id="btnAddField" style="font-size:11px;"><i class="fa-solid fa-plus"></i> Tambah Field</button>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-top: 14px;
+                    margin-bottom: 8px;
+                  "
+                >
+                  <span
+                    style="
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--text-secondary);
+                    "
+                    >Fields Kustom</span
+                  >
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    id="btnAddField"
+                    style="font-size: 11px"
+                  >
+                    <i class="fa-solid fa-plus"></i> Tambah Field
+                  </button>
                 </div>
                 <div id="fieldsContainer">
                   <div class="field-row-item">
                     <div class="field-row-head">
-                      <span style="font-size:11px;color:var(--text-muted);font-weight:600;">Field 1</span>
-                      <button class="btn-del-field" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;"><i class="fa-solid fa-trash"></i></button>
+                      <span
+                        style="
+                          font-size: 11px;
+                          color: var(--text-muted);
+                          font-weight: 600;
+                        "
+                        >Field 1</span
+                      >
+                      <button
+                        class="btn-del-field"
+                        style="
+                          background: none;
+                          border: none;
+                          color: #ef4444;
+                          cursor: pointer;
+                          font-size: 12px;
+                        "
+                      >
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
                     </div>
-                    <input type="text" class="text-field field-name" value="⏰ Periode Waktu" style="margin-bottom:6px;font-size:12px;" />
-                    <input type="text" class="text-field field-val" value="16 - 23 September 2026" style="font-size:12px;" />
+                    <input
+                      type="text"
+                      class="text-field field-name"
+                      value="⏰ Periode Waktu"
+                      style="margin-bottom: 6px; font-size: 12px"
+                    />
+                    <input
+                      type="text"
+                      class="text-field field-val"
+                      value="16 - 23 September 2026"
+                      style="font-size: 12px"
+                    />
                   </div>
                   <div class="field-row-item">
                     <div class="field-row-head">
-                      <span style="font-size:11px;color:var(--text-muted);font-weight:600;">Field 2</span>
-                      <button class="btn-del-field" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;"><i class="fa-solid fa-trash"></i></button>
+                      <span
+                        style="
+                          font-size: 11px;
+                          color: var(--text-muted);
+                          font-weight: 600;
+                        "
+                        >Field 2</span
+                      >
+                      <button
+                        class="btn-del-field"
+                        style="
+                          background: none;
+                          border: none;
+                          color: #ef4444;
+                          cursor: pointer;
+                          font-size: 12px;
+                        "
+                      >
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
                     </div>
-                    <input type="text" class="text-field field-name" value="🎁 Hadiah Spesial" style="margin-bottom:6px;font-size:12px;" />
-                    <input type="text" class="text-field field-val" value="Title: [Penunggang Sakura] + 500 NSF" style="font-size:12px;" />
+                    <input
+                      type="text"
+                      class="text-field field-name"
+                      value="🎁 Hadiah Spesial"
+                      style="margin-bottom: 6px; font-size: 12px"
+                    />
+                    <input
+                      type="text"
+                      class="text-field field-val"
+                      value="Title: [Penunggang Sakura] + 500 NSF"
+                      style="font-size: 12px"
+                    />
                   </div>
                 </div>
               </div>
 
               <!-- Buttons Row Section -->
               <div class="form-section">
-                <div class="section-label"><i class="fa-solid fa-square-check" style="color:var(--accent-green);"></i> Lapisan 4: Tombol Interaktif</div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                  <span style="font-size:12px;color:var(--text-muted);">Action Row (Maks 5 Tombol)</span>
-                  <button class="btn btn-ghost btn-sm" id="btnAddBtn" style="font-size:11px;"><i class="fa-solid fa-plus"></i> Tambah Tombol</button>
+                <div class="section-label">
+                  <i
+                    class="fa-solid fa-square-check"
+                    style="color: var(--accent-green)"
+                  ></i>
+                  Lapisan 4: Tombol Interaktif
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 8px;
+                  "
+                >
+                  <span style="font-size: 12px; color: var(--text-muted)"
+                    >Action Row (Maks 5 Tombol)</span
+                  >
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    id="btnAddBtn"
+                    style="font-size: 11px"
+                  >
+                    <i class="fa-solid fa-plus"></i> Tambah Tombol
+                  </button>
                 </div>
                 <div id="buttonsContainer">
                   <div class="btn-row-item">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-                      <span style="font-size:11px;color:var(--text-muted);">Tombol 1</span>
-                      <button class="btn-del-action" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;"><i class="fa-solid fa-trash"></i></button>
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 6px;
+                      "
+                    >
+                      <span style="font-size: 11px; color: var(--text-muted)"
+                        >Tombol 1</span
+                      >
+                      <button
+                        class="btn-del-action"
+                        style="
+                          background: none;
+                          border: none;
+                          color: #ef4444;
+                          cursor: pointer;
+                          font-size: 12px;
+                        "
+                      >
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;">
-                      <input type="text" class="text-field btn-label" value="🎁 Klaim Hadiah Harian" style="font-size:12px;" />
-                      <select class="text-field btn-style" style="font-size:12px;">
+                    <div
+                      style="
+                        display: grid;
+                        grid-template-columns: 1fr 120px;
+                        gap: 8px;
+                      "
+                    >
+                      <input
+                        type="text"
+                        class="text-field btn-label"
+                        value="🎁 Klaim Hadiah Harian"
+                        style="font-size: 12px"
+                      />
+                      <select
+                        class="text-field btn-style"
+                        style="font-size: 12px"
+                      >
                         <option value="primary" selected>Primary</option>
                         <option value="success">Success</option>
                         <option value="danger">Danger</option>
@@ -616,13 +922,46 @@ Kunjungi booth Pak Kades Tirto dan Luna di Desa Swallowtail untuk mengambil hadi
                     </div>
                   </div>
                   <div class="btn-row-item">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-                      <span style="font-size:11px;color:var(--text-muted);">Tombol 2</span>
-                      <button class="btn-del-action" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:12px;"><i class="fa-solid fa-trash"></i></button>
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 6px;
+                      "
+                    >
+                      <span style="font-size: 11px; color: var(--text-muted)"
+                        >Tombol 2</span
+                      >
+                      <button
+                        class="btn-del-action"
+                        style="
+                          background: none;
+                          border: none;
+                          color: #ef4444;
+                          cursor: pointer;
+                          font-size: 12px;
+                        "
+                      >
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;">
-                      <input type="text" class="text-field btn-label" value="📖 Panduan Lengkap" style="font-size:12px;" />
-                      <select class="text-field btn-style" style="font-size:12px;">
+                    <div
+                      style="
+                        display: grid;
+                        grid-template-columns: 1fr 120px;
+                        gap: 8px;
+                      "
+                    >
+                      <input
+                        type="text"
+                        class="text-field btn-label"
+                        value="📖 Panduan Lengkap"
+                        style="font-size: 12px"
+                      />
+                      <select
+                        class="text-field btn-style"
+                        style="font-size: 12px"
+                      >
                         <option value="secondary" selected>Secondary</option>
                         <option value="primary">Primary</option>
                         <option value="success">Success</option>
@@ -635,10 +974,21 @@ Kunjungi booth Pak Kades Tirto dan Luna di Desa Swallowtail untuk mengambil hadi
 
               <!-- Footer Section -->
               <div class="form-section">
-                <div class="section-label"><i class="fa-solid fa-shoe-prints" style="color:var(--accent-amber);"></i> Lapisan 5: Footer & Branding</div>
+                <div class="section-label">
+                  <i
+                    class="fa-solid fa-shoe-prints"
+                    style="color: var(--accent-amber)"
+                  ></i>
+                  Lapisan 5: Footer & Branding
+                </div>
                 <div class="input-group">
                   <label class="input-label">Teks Footer</label>
-                  <input type="text" class="text-field" id="inputFooter" value="Naura Hoshino Ecosystem • Server ID: 10429188" />
+                  <input
+                    type="text"
+                    class="text-field"
+                    id="inputFooter"
+                    value="Naura Hoshino Ecosystem • Server ID: 10429188"
+                  />
                 </div>
               </div>
             </div>
@@ -646,7 +996,15 @@ Kunjungi booth Pak Kades Tirto dan Luna di Desa Swallowtail untuk mengambil hadi
             <!-- Right: Discord Live Visual Preview -->
             <div class="discord-viewport">
               <div class="discord-msg-header">
-                <img src="/assets/core/avatar.png" class="discord-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" alt="Naura" />
+                <img
+                  src="/assets/core/avatar.png"
+                  class="discord-avatar"
+                  onerror="
+                    this.src =
+                      'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'
+                  "
+                  alt="Naura"
+                />
                 <div>
                   <div class="discord-bot-name">
                     <span>Naura Hoshino</span>
@@ -660,10 +1018,19 @@ Kunjungi booth Pak Kades Tirto dan Luna di Desa Swallowtail untuk mengambil hadi
               <div class="discord-container-v2" id="previewContainer">
                 <!-- Layer 1: Header -->
                 <div class="d-header">
-                  <img src="/assets/core/avatar.png" class="d-author-icon" onerror="this.style.display='none'" alt="Author" />
+                  <img
+                    src="/assets/core/avatar.png"
+                    class="d-author-icon"
+                    onerror="this.style.display = 'none'"
+                    alt="Author"
+                  />
                   <div>
-                    <div class="d-author-text" id="prevAuthor">Naura Hoshino • Event Aetheria</div>
-                    <div class="d-title" id="prevTitle">🌸 Festival Musim Semi Bunga Sakura Dimulai!</div>
+                    <div class="d-author-text" id="prevAuthor">
+                      Naura Hoshino • Event Aetheria
+                    </div>
+                    <div class="d-title" id="prevTitle">
+                      🌸 Festival Musim Semi Bunga Sakura Dimulai!
+                    </div>
                   </div>
                 </div>
 
@@ -672,9 +1039,13 @@ Kunjungi booth Pak Kades Tirto dan Luna di Desa Swallowtail untuk mengambil hadi
 
                 <!-- Layer 3: Body & Fields -->
                 <div class="d-body">
-                  <div class="d-description" id="prevDesc">Selamat datang di Festival Musim Semi! Dapatkan buff bonus **+35% EXP** dan peluang drop gacha 2x lipat selama periode festival berlangsung.
-
-Kunjungi booth Pak Kades Tirto dan Luna di Desa Swallowtail untuk mengambil hadiah harian gratis!</div>
+                  <div class="d-description" id="prevDesc">
+                    Selamat datang di Festival Musim Semi! Dapatkan buff bonus
+                    **+35% EXP** dan peluang drop gacha 2x lipat selama periode
+                    festival berlangsung. Kunjungi booth Pak Kades Tirto dan
+                    Luna di Desa Swallowtail untuk mengambil hadiah harian
+                    gratis!
+                  </div>
 
                   <div class="d-fields-grid" id="prevFieldsGrid">
                     <div>
@@ -683,21 +1054,32 @@ Kunjungi booth Pak Kades Tirto dan Luna di Desa Swallowtail untuk mengambil hadi
                     </div>
                     <div>
                       <div class="d-field-name">🎁 Hadiah Spesial</div>
-                      <div class="d-field-val">Title: [Penunggang Sakura] + 500 NSF</div>
+                      <div class="d-field-val">
+                        Title: [Penunggang Sakura] + 500 NSF
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <!-- Layer 4: Interactive Buttons Row -->
                 <div class="d-buttons-row" id="prevButtonsRow">
-                  <button class="d-btn d-btn-primary">🎁 Klaim Hadiah Harian</button>
-                  <button class="d-btn d-btn-secondary">📖 Panduan Lengkap</button>
+                  <button class="d-btn d-btn-primary">
+                    🎁 Klaim Hadiah Harian
+                  </button>
+                  <button class="d-btn d-btn-secondary">
+                    📖 Panduan Lengkap
+                  </button>
                 </div>
 
                 <!-- Layer 5: Footer -->
                 <div class="d-footer" id="prevFooter">
-                  <i class="fa-solid fa-circle-info" style="font-size:10px;"></i>
-                  <span id="prevFooterText">Naura Hoshino Ecosystem • Server ID: 10429188</span>
+                  <i
+                    class="fa-solid fa-circle-info"
+                    style="font-size: 10px"
+                  ></i>
+                  <span id="prevFooterText"
+                    >Naura Hoshino Ecosystem • Server ID: 10429188</span
+                  >
                 </div>
               </div>
             </div>
@@ -708,64 +1090,80 @@ Kunjungi booth Pak Kades Tirto dan Luna di Desa Swallowtail untuk mengambil hadi
 
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"
+          ><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span
+          ><span class="mn-label">Dashboard</span></a
+        >
+        <a href="/world" class="mobile-nav-item" data-group="map"
+          ><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span
+          ><span class="mn-label">Map</span></a
+        >
+        <a href="/automations" class="mobile-nav-item" data-group="config"
+          ><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span
+          ><span class="mn-label">Config</span></a
+        >
+        <a href="/music" class="mobile-nav-item" data-group="system"
+          ><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span
+          ><span class="mn-label">System</span></a
+        >
+        <a href="/settings" class="mobile-nav-item" data-group="settings"
+          ><span class="mn-icon"><i class="fa-solid fa-gears"></i></span
+          ><span class="mn-label">Settings</span></a
+        >
       </div>
     </nav>
 
     <script src="/src/js/sharedNav.js"></script>
     <script>
-      let currentColor = '#f472b6';
+      let currentColor = "#f472b6";
 
-      const inputAuthor = document.getElementById('inputAuthor');
-      const inputTitle = document.getElementById('inputTitle');
-      const inputDesc = document.getElementById('inputDesc');
-      const inputFooter = document.getElementById('inputFooter');
-      const previewContainer = document.getElementById('previewContainer');
-      const prevAuthor = document.getElementById('prevAuthor');
-      const prevTitle = document.getElementById('prevTitle');
-      const prevDesc = document.getElementById('prevDesc');
-      const prevFooterText = document.getElementById('prevFooterText');
-      const prevFieldsGrid = document.getElementById('prevFieldsGrid');
-      const prevButtonsRow = document.getElementById('prevButtonsRow');
-      const fieldsContainer = document.getElementById('fieldsContainer');
-      const buttonsContainer = document.getElementById('buttonsContainer');
-      const builderToast = document.getElementById('builderToast');
+      const inputAuthor = document.getElementById("inputAuthor");
+      const inputTitle = document.getElementById("inputTitle");
+      const inputDesc = document.getElementById("inputDesc");
+      const inputFooter = document.getElementById("inputFooter");
+      const previewContainer = document.getElementById("previewContainer");
+      const prevAuthor = document.getElementById("prevAuthor");
+      const prevTitle = document.getElementById("prevTitle");
+      const prevDesc = document.getElementById("prevDesc");
+      const prevFooterText = document.getElementById("prevFooterText");
+      const prevFieldsGrid = document.getElementById("prevFieldsGrid");
+      const prevButtonsRow = document.getElementById("prevButtonsRow");
+      const fieldsContainer = document.getElementById("fieldsContainer");
+      const buttonsContainer = document.getElementById("buttonsContainer");
+      const builderToast = document.getElementById("builderToast");
 
       function updatePreview() {
-        prevAuthor.textContent = inputAuthor.value || 'Naura Hoshino';
-        prevTitle.textContent = inputTitle.value || 'Pemberitahuan Sistem';
-        prevDesc.textContent = inputDesc.value || '';
-        prevFooterText.textContent = inputFooter.value || 'Naura Hoshino Ecosystem';
-        previewContainer.style.setProperty('--preview-accent', currentColor);
+        prevAuthor.textContent = inputAuthor.value || "Naura Hoshino";
+        prevTitle.textContent = inputTitle.value || "Pemberitahuan Sistem";
+        prevDesc.textContent = inputDesc.value || "";
+        prevFooterText.textContent =
+          inputFooter.value || "Naura Hoshino Ecosystem";
+        previewContainer.style.setProperty("--preview-accent", currentColor);
 
         // Render Fields
-        const fieldItems = fieldsContainer.querySelectorAll('.field-row-item');
-        prevFieldsGrid.innerHTML = '';
-        fieldItems.forEach(item => {
-          const name = item.querySelector('.field-name').value;
-          const val = item.querySelector('.field-val').value;
+        const fieldItems = fieldsContainer.querySelectorAll(".field-row-item");
+        prevFieldsGrid.innerHTML = "";
+        fieldItems.forEach((item) => {
+          const name = item.querySelector(".field-name").value;
+          const val = item.querySelector(".field-val").value;
           if (name || val) {
-            const div = document.createElement('div');
+            const div = document.createElement("div");
             div.innerHTML = `
-              <div class="d-field-name">${name || 'FIELD'}</div>
-              <div class="d-field-val">${val || '-'}</div>
+              <div class="d-field-name">${name || "FIELD"}</div>
+              <div class="d-field-val">${val || "-"}</div>
             `;
             prevFieldsGrid.appendChild(div);
           }
         });
 
         // Render Buttons
-        const btnItems = buttonsContainer.querySelectorAll('.btn-row-item');
-        prevButtonsRow.innerHTML = '';
-        btnItems.forEach(item => {
-          const label = item.querySelector('.btn-label').value;
-          const style = item.querySelector('.btn-style').value;
+        const btnItems = buttonsContainer.querySelectorAll(".btn-row-item");
+        prevButtonsRow.innerHTML = "";
+        btnItems.forEach((item) => {
+          const label = item.querySelector(".btn-label").value;
+          const style = item.querySelector(".btn-style").value;
           if (label) {
-            const btn = document.createElement('button');
+            const btn = document.createElement("button");
             btn.className = `d-btn d-btn-${style}`;
             btn.textContent = label;
             btn.onclick = () => {
@@ -777,30 +1175,37 @@ Kunjungi booth Pak Kades Tirto dan Luna di Desa Swallowtail untuk mengambil hadi
       }
 
       // Input change listeners
-      [inputAuthor, inputTitle, inputDesc, inputFooter].forEach(el => {
-        el.addEventListener('input', updatePreview);
+      [inputAuthor, inputTitle, inputDesc, inputFooter].forEach((el) => {
+        el.addEventListener("input", updatePreview);
       });
 
       // Color Swatches
-      document.querySelectorAll('.color-swatch').forEach(swatch => {
-        swatch.addEventListener('click', () => {
-          document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-          swatch.classList.add('active');
-          currentColor = swatch.getAttribute('data-color');
+      document.querySelectorAll(".color-swatch").forEach((swatch) => {
+        swatch.addEventListener("click", () => {
+          document
+            .querySelectorAll(".color-swatch")
+            .forEach((s) => s.classList.remove("active"));
+          swatch.classList.add("active");
+          currentColor = swatch.getAttribute("data-color");
           updatePreview();
         });
       });
-      document.getElementById('inputCustomColor').addEventListener('input', (e) => {
-        currentColor = e.target.value;
-        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-        updatePreview();
-      });
+      document
+        .getElementById("inputCustomColor")
+        .addEventListener("input", (e) => {
+          currentColor = e.target.value;
+          document
+            .querySelectorAll(".color-swatch")
+            .forEach((s) => s.classList.remove("active"));
+          updatePreview();
+        });
 
       // Add Field
-      document.getElementById('btnAddField').addEventListener('click', () => {
-        const count = fieldsContainer.querySelectorAll('.field-row-item').length + 1;
-        const row = document.createElement('div');
-        row.className = 'field-row-item';
+      document.getElementById("btnAddField").addEventListener("click", () => {
+        const count =
+          fieldsContainer.querySelectorAll(".field-row-item").length + 1;
+        const row = document.createElement("div");
+        row.className = "field-row-item";
         row.innerHTML = `
           <div class="field-row-head">
             <span style="font-size:11px;color:var(--text-muted);font-weight:600;">Field ${count}</span>
@@ -815,27 +1220,30 @@ Kunjungi booth Pak Kades Tirto dan Luna di Desa Swallowtail untuk mengambil hadi
       });
 
       function bindFieldEvents() {
-        fieldsContainer.querySelectorAll('.btn-del-field').forEach(btn => {
+        fieldsContainer.querySelectorAll(".btn-del-field").forEach((btn) => {
           btn.onclick = (e) => {
-            e.target.closest('.field-row-item').remove();
+            e.target.closest(".field-row-item").remove();
             updatePreview();
           };
         });
-        fieldsContainer.querySelectorAll('.field-name, .field-val').forEach(input => {
-          input.oninput = updatePreview;
-        });
+        fieldsContainer
+          .querySelectorAll(".field-name, .field-val")
+          .forEach((input) => {
+            input.oninput = updatePreview;
+          });
       }
       bindFieldEvents();
 
       // Add Button
-      document.getElementById('btnAddBtn').addEventListener('click', () => {
-        const count = buttonsContainer.querySelectorAll('.btn-row-item').length + 1;
+      document.getElementById("btnAddBtn").addEventListener("click", () => {
+        const count =
+          buttonsContainer.querySelectorAll(".btn-row-item").length + 1;
         if (count > 5) {
-          alert('Discord membatasi maksimal 5 tombol per Action Row!');
+          alert("Discord membatasi maksimal 5 tombol per Action Row!");
           return;
         }
-        const row = document.createElement('div');
-        row.className = 'btn-row-item';
+        const row = document.createElement("div");
+        row.className = "btn-row-item";
         row.innerHTML = `
           <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
             <span style="font-size:11px;color:var(--text-muted);">Tombol ${count}</span>
@@ -857,47 +1265,53 @@ Kunjungi booth Pak Kades Tirto dan Luna di Desa Swallowtail untuk mengambil hadi
       });
 
       function bindBtnEvents() {
-        buttonsContainer.querySelectorAll('.btn-del-action').forEach(btn => {
+        buttonsContainer.querySelectorAll(".btn-del-action").forEach((btn) => {
           btn.onclick = (e) => {
-            e.target.closest('.btn-row-item').remove();
+            e.target.closest(".btn-row-item").remove();
             updatePreview();
           };
         });
-        buttonsContainer.querySelectorAll('.btn-label, .btn-style').forEach(input => {
-          input.oninput = updatePreview;
-          input.onchange = updatePreview;
-        });
+        buttonsContainer
+          .querySelectorAll(".btn-label, .btn-style")
+          .forEach((input) => {
+            input.oninput = updatePreview;
+            input.onchange = updatePreview;
+          });
       }
       bindBtnEvents();
 
       // Toast feedback
       function showToast(msg) {
-        builderToast.querySelector('span').textContent = msg;
-        builderToast.classList.add('show');
-        setTimeout(() => builderToast.classList.remove('show'), 3000);
+        builderToast.querySelector("span").textContent = msg;
+        builderToast.classList.add("show");
+        setTimeout(() => builderToast.classList.remove("show"), 3000);
       }
 
       // Copy JSON
-      document.getElementById('btnCopyJson').addEventListener('click', () => {
+      document.getElementById("btnCopyJson").addEventListener("click", () => {
         const payload = {
           author: inputAuthor.value,
           title: inputTitle.value,
           accentColorHex: currentColor,
           description: inputDesc.value,
-          fields: Array.from(fieldsContainer.querySelectorAll('.field-row-item')).map(item => ({
-            name: item.querySelector('.field-name').value,
-            value: item.querySelector('.field-val').value,
-            inline: true
+          fields: Array.from(
+            fieldsContainer.querySelectorAll(".field-row-item"),
+          ).map((item) => ({
+            name: item.querySelector(".field-name").value,
+            value: item.querySelector(".field-val").value,
+            inline: true,
           })),
-          footer: inputFooter.value
+          footer: inputFooter.value,
         };
-        navigator.clipboard.writeText(JSON.stringify(payload, null, 2)).then(() => {
-          showToast('JSON Container V2 Berhasil Disalin!');
-        });
+        navigator.clipboard
+          .writeText(JSON.stringify(payload, null, 2))
+          .then(() => {
+            showToast("JSON Container V2 Berhasil Disalin!");
+          });
       });
 
       // Copy Code
-      document.getElementById('btnCopyCode').addEventListener('click', () => {
+      document.getElementById("btnCopyCode").addEventListener("click", () => {
         const codeSnippet = `const { buildContainerV2 } = require('../utils/NauraContainerBuilder');
 
 const container = buildContainerV2({
@@ -905,63 +1319,72 @@ const container = buildContainerV2({
   title: ${JSON.stringify(inputTitle.value)},
   accentColorHex: '${currentColor}',
   description: ${JSON.stringify(inputDesc.value)},
-  fields: ${JSON.stringify(Array.from(fieldsContainer.querySelectorAll('.field-row-item')).map(item => ({
-    name: item.querySelector('.field-name').value,
-    value: item.querySelector('.field-val').value,
-    inline: true
-  })), null, 2)},
+  fields: ${JSON.stringify(
+    Array.from(fieldsContainer.querySelectorAll(".field-row-item")).map(
+      (item) => ({
+        name: item.querySelector(".field-name").value,
+        value: item.querySelector(".field-val").value,
+        inline: true,
+      }),
+    ),
+    null,
+    2,
+  )},
   footerText: ${JSON.stringify(inputFooter.value)}
 });
 
 await interaction.reply(container);`;
         navigator.clipboard.writeText(codeSnippet).then(() => {
-          showToast('Kode JS NauraContainerBuilder Disalin!');
+          showToast("Kode JS NauraContainerBuilder Disalin!");
         });
       });
 
       // Preset Templates
       const PRESETS = {
         announce: {
-          author: 'Naura Hoshino • Event Aetheria',
-          title: '🌸 Festival Musim Semi Bunga Sakura Dimulai!',
-          color: '#f472b6',
-          desc: 'Selamat datang di Festival Musim Semi! Dapatkan buff bonus **+35% EXP** dan peluang drop gacha 2x lipat selama periode festival berlangsung.',
-          footer: 'Naura Hoshino Ecosystem • Server ID: 10429188'
+          author: "Naura Hoshino • Event Aetheria",
+          title: "🌸 Festival Musim Semi Bunga Sakura Dimulai!",
+          color: "#f472b6",
+          desc: "Selamat datang di Festival Musim Semi! Dapatkan buff bonus **+35% EXP** dan peluang drop gacha 2x lipat selama periode festival berlangsung.",
+          footer: "Naura Hoshino Ecosystem • Server ID: 10429188",
         },
         economy: {
-          author: 'Bank Central Naura • Sistem Transaksi',
-          title: '🪙 Transfer Saldo Berhasil',
-          color: '#f59e0b',
-          desc: 'Transaksi pengiriman dana antar pemain telah selesai diverifikasi oleh protokol atomik blockchain Naura.',
-          footer: 'Biaya admin 0.5% dialirkan ke ServerTreasury'
+          author: "Bank Central Naura • Sistem Transaksi",
+          title: "🪙 Transfer Saldo Berhasil",
+          color: "#f59e0b",
+          desc: "Transaksi pengiriman dana antar pemain telah selesai diverifikasi oleh protokol atomik blockchain Naura.",
+          footer: "Biaya admin 0.5% dialirkan ke ServerTreasury",
         },
         raid: {
-          author: 'The Neo-Abyss • Celestial Victory',
-          title: '⚔️ Astral Warden Telah Ditaklukkan!',
-          color: '#a78bfa',
-          desc: 'Party petualang berhasil menjatuhkan World Boss Astral Warden dalam 4 Menit 12 Detik. Seluruh anggota party menerima 1x [Cincin Astral Abadi].',
-          footer: 'Respawn berikutnya: 6 Jam dari sekarang'
+          author: "The Neo-Abyss • Celestial Victory",
+          title: "⚔️ Astral Warden Telah Ditaklukkan!",
+          color: "#a78bfa",
+          desc: "Party petualang berhasil menjatuhkan World Boss Astral Warden dalam 4 Menit 12 Detik. Seluruh anggota party menerima 1x [Cincin Astral Abadi].",
+          footer: "Respawn berikutnya: 6 Jam dari sekarang",
         },
         ticket: {
-          author: 'Support Portal • Tiket Pelayanan #0492',
-          title: '🎟️ Laporan Pemain Telah Direspons',
-          color: '#22d3ee',
-          desc: 'Moderator bertugas telah meninjau keluhan transaksi Anda. Status tiket telah dialihkan ke [SELESAI]. Silakan beri rating pelayanan di bawah ini.',
-          footer: 'Naura Support Desk • Tribunal Court Integrated'
-        }
+          author: "Support Portal • Tiket Pelayanan #0492",
+          title: "🎟️ Laporan Pemain Telah Direspons",
+          color: "#22d3ee",
+          desc: "Moderator bertugas telah meninjau keluhan transaksi Anda. Status tiket telah dialihkan ke [SELESAI]. Silakan beri rating pelayanan di bawah ini.",
+          footer: "Naura Support Desk • Tribunal Court Integrated",
+        },
       };
 
-      document.querySelectorAll('.tmpl-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const p = PRESETS[btn.getAttribute('data-preset')];
+      document.querySelectorAll(".tmpl-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const p = PRESETS[btn.getAttribute("data-preset")];
           if (!p) return;
           inputAuthor.value = p.author;
           inputTitle.value = p.title;
           inputDesc.value = p.desc;
           inputFooter.value = p.footer;
           currentColor = p.color;
-          document.querySelectorAll('.color-swatch').forEach(s => {
-            s.classList.toggle('active', s.getAttribute('data-color') === p.color);
+          document.querySelectorAll(".color-swatch").forEach((s) => {
+            s.classList.toggle(
+              "active",
+              s.getAttribute("data-color") === p.color,
+            );
           });
           updatePreview();
           showToast(`Template "${btn.textContent.trim()}" Dimuat!`);

@@ -209,11 +209,26 @@ function getMaxEnergy(tier) {
 function getDailyStipend(tier) {
   switch (tier) {
     case "vip":
-      return { coupons: 3, nsf: 2000, mysteryBox: "legendary_relic_box", dungeonKeys: 2 };
+      return {
+        coupons: 3,
+        nsf: 2000,
+        mysteryBox: "legendary_relic_box",
+        dungeonKeys: 2,
+      };
     case "friends":
-      return { coupons: 2, nsf: 800, mysteryBox: "rare_mystery_box", dungeonKeys: 1 };
+      return {
+        coupons: 2,
+        nsf: 800,
+        mysteryBox: "rare_mystery_box",
+        dungeonKeys: 1,
+      };
     case "supporter":
-      return { coupons: 1, nsf: 350, mysteryBox: "common_mystery_box", dungeonKeys: 0 };
+      return {
+        coupons: 1,
+        nsf: 350,
+        mysteryBox: "common_mystery_box",
+        dungeonKeys: 0,
+      };
     case "starter":
       return { coupons: 0, nsf: 150, mysteryBox: null, dungeonKeys: 0 };
     default:

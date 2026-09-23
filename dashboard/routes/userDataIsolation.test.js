@@ -25,7 +25,8 @@ function createMockReqRes(options = {}) {
     params: options.params || {},
     path: options.path || "/",
     originalUrl: options.originalUrl || options.path || "/",
-    accepts: (type) => (options.accepts ? options.accepts.includes(type) : false),
+    accepts: (type) =>
+      options.accepts ? options.accepts.includes(type) : false,
     ...options.reqOverrides,
   };
 
@@ -78,7 +79,11 @@ test("Security: requireSelfOrOwner menolak request yang belum login dengan HTTP 
     nextCalled = true;
   });
 
-  assert.equal(nextCalled, false, "next() tidak boleh dipanggil saat unauthenticated");
+  assert.equal(
+    nextCalled,
+    false,
+    "next() tidak boleh dipanggil saat unauthenticated",
+  );
   assert.equal(getStatus(), 401);
   assert.equal(getJson()?.success, false);
 });
@@ -97,7 +102,11 @@ test("Security: requireSelfOrOwner menolak Pengguna A yang mencoba melihat/mengu
     nextCalled = true;
   });
 
-  assert.equal(nextCalled, false, "next() tidak boleh dipanggil saat mengakses data user lain");
+  assert.equal(
+    nextCalled,
+    false,
+    "next() tidak boleh dipanggil saat mengakses data user lain",
+  );
   assert.equal(getStatus(), 403, "Harus mengembalikan HTTP 403 Forbidden");
   assert.equal(getJson()?.success, false);
   assert.match(getJson()?.error, /Akses ditolak/i);
@@ -116,7 +125,11 @@ test("Security: requireSelfOrOwner mengizinkan Pengguna A melihat/mengubah datan
     nextCalled = true;
   });
 
-  assert.equal(nextCalled, true, "next() harus dipanggil saat user mengakses datanya sendiri");
+  assert.equal(
+    nextCalled,
+    true,
+    "next() harus dipanggil saat user mengakses datanya sendiri",
+  );
   assert.equal(getStatus(), 200);
   assert.equal(req.targetUserId, "111111111111111111");
 });
@@ -170,9 +183,7 @@ test("Security: requireGuildManager menolak request tanpa parameter guildId (HTT
 test("Security: requireGuildManager menolak pengguna yang tidak memiliki izin MANAGE_GUILD pada server target (HTTP 403)", () => {
   const user = {
     id: "123",
-    guilds: [
-      { id: "999888777", permissions: "0", owner: false },
-    ],
+    guilds: [{ id: "999888777", permissions: "0", owner: false }],
   };
 
   const { req, res, getStatus, getJson } = createMockReqRes({

@@ -37,20 +37,20 @@ Setiap pilar memiliki batas tanggung jawab (_boundary_) yang jelas. Modul UI tid
 
 Gunakan tabel ini untuk menemukan lokasi kode dan memahami batasan modifikasi:
 
-| Direktori                                                                | Tanggung Jawab & Isi                                                                                                    | Batasan Agen (_Do's & Don'ts_)                                                            |
-| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| [`src/config/`](file:///d:/Naura%20Hoshino%20V2/src/config/)             | Konfigurasi stateless (`env.js`, `ui.js`, `database.js`, `lavalink-fallbacks.json`).                                    | **HANYA** baca via modul ini. Jangan memanggil `process.env` langsung di tempat lain.     |
-| [`src/managers/`](file:///d:/Naura%20Hoshino%20V2/src/managers/)         | Pengendali inti & stateful (`cacheManager.js`, `dbManager.js`, `lavalinkClusterManager.js`, `musicManager.js`).       | Modifikasi di sini jika berhubungan dengan state, caching, atau integrasi service luar.   |
-| [`src/models/`](file:///d:/Naura%20Hoshino%20V2/src/models/)             | Skema Sequelize (`ServerTreasury.js`, `UserProfile.js`) dan Mongoose (`models/mongo/`).                                 | Tambah model di sini. DILARANG `ALTER TABLE` di sini (wajib di `dbMigrator.js`).          |
-| [`src/services/`](file:///d:/Naura%20Hoshino%20V2/src/services/)         | Engine komputasi latar (`soundboardService.js`, `fishAudioService.js`, `economyGuardEngine.js`, `seasonEngine.js`).     | Tempatkan integrasi API pihak ketiga (TTS, webhook, automation) di folder ini.            |
-| [`src/ai/`](file:///d:/Naura%20Hoshino%20V2/src/ai/)                     | Engine kecerdasan AI (`aiEnsembleRouter.js`, `semanticMemoryService.js`, `aiMemory.js`, `tribunalEngine.js`).          | Wajib menyertakan penanganan failover dan circuit breaker rate limit (HTTP 429).          |
-| [`src/survival/`](file:///d:/Naura%20Hoshino%20V2/src/survival/)         | Core logika Naura Wilds (`currency.js`, `recyclingPoolEngine.js`, `durabilityEngine.js`, `townEngine.js`).             | Wajib deterministik dan transaksi saldo terhubung ke `cacheManager` atau `ServerTreasury`.|
-| [`src/canvas/`](file:///d:/Naura%20Hoshino%20V2/src/canvas/)             | Generator gambar kartu profil, item, kartu ulang tahun, & leveling berbasis worker threads.                            | Wajib melalui `canvasWorkerPool.js` agar tidak memblokir event loop Discord.              |
-| [`src/utils/`](file:///d:/Naura%20Hoshino%20V2/src/utils/)               | Helper murni stateless (`NauraContainerBuilder.js`, `survivalUIHelper.js`, `uxHelper.js`).                              | Dilarang menyimpan state di sini. Helper harus deterministik dan reusable.                |
-| [`src/interactions/`](file:///d:/Naura%20Hoshino%20V2/src/interactions/) | Handler tombol, select menu, modal, autocomplete, dan context menu.                                                     | Wrap selalu dengan `safeExecute` dan tangani interaksi secara defensif.                   |
-| [`plugin/`](file:///d:/Naura%20Hoshino%20V2/plugin/)                     | Subcommand dan router slash command (`core`, `music`, `admin`, `survival`, `naura`).                                    | **HANYA** untuk validasi input dan pemanggilan service/manager. Dilarang query DB mentah. |
-| [`dashboard/`](file:///d:/Naura%20Hoshino%20V2/dashboard/)               | Web Dashboard terintegrasi (Express backend & Vite MPA frontend).                                                       | Komponen 3D Three.js di `src/components/NauraHeroViewer/` dan `NauraViewer/`.             |
-| [`scripts/`](file:///d:/Naura%20Hoshino%20V2/scripts/)                   | Script CLI pemeliharaan (`migrate.js`, `validate-locales.js`, `verify_dashboard_3d.js`, `check-em-dash.js`).           | Script uji mandiri & runner migrasi prestart.                                             |
+| Direktori                                                                | Tanggung Jawab & Isi                                                                                                | Batasan Agen (_Do's & Don'ts_)                                                             |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [`src/config/`](file:///d:/Naura%20Hoshino%20V2/src/config/)             | Konfigurasi stateless (`env.js`, `ui.js`, `database.js`, `lavalink-fallbacks.json`).                                | **HANYA** baca via modul ini. Jangan memanggil `process.env` langsung di tempat lain.      |
+| [`src/managers/`](file:///d:/Naura%20Hoshino%20V2/src/managers/)         | Pengendali inti & stateful (`cacheManager.js`, `dbManager.js`, `lavalinkClusterManager.js`, `musicManager.js`).     | Modifikasi di sini jika berhubungan dengan state, caching, atau integrasi service luar.    |
+| [`src/models/`](file:///d:/Naura%20Hoshino%20V2/src/models/)             | Skema Sequelize (`ServerTreasury.js`, `UserProfile.js`) dan Mongoose (`models/mongo/`).                             | Tambah model di sini. DILARANG `ALTER TABLE` di sini (wajib di `dbMigrator.js`).           |
+| [`src/services/`](file:///d:/Naura%20Hoshino%20V2/src/services/)         | Engine komputasi latar (`soundboardService.js`, `fishAudioService.js`, `economyGuardEngine.js`, `seasonEngine.js`). | Tempatkan integrasi API pihak ketiga (TTS, webhook, automation) di folder ini.             |
+| [`src/ai/`](file:///d:/Naura%20Hoshino%20V2/src/ai/)                     | Engine kecerdasan AI (`aiEnsembleRouter.js`, `semanticMemoryService.js`, `aiMemory.js`, `tribunalEngine.js`).       | Wajib menyertakan penanganan failover dan circuit breaker rate limit (HTTP 429).           |
+| [`src/survival/`](file:///d:/Naura%20Hoshino%20V2/src/survival/)         | Core logika Naura Wilds (`currency.js`, `recyclingPoolEngine.js`, `durabilityEngine.js`, `townEngine.js`).          | Wajib deterministik dan transaksi saldo terhubung ke `cacheManager` atau `ServerTreasury`. |
+| [`src/canvas/`](file:///d:/Naura%20Hoshino%20V2/src/canvas/)             | Generator gambar kartu profil, item, kartu ulang tahun, & leveling berbasis worker threads.                         | Wajib melalui `canvasWorkerPool.js` agar tidak memblokir event loop Discord.               |
+| [`src/utils/`](file:///d:/Naura%20Hoshino%20V2/src/utils/)               | Helper murni stateless (`NauraContainerBuilder.js`, `survivalUIHelper.js`, `uxHelper.js`).                          | Dilarang menyimpan state di sini. Helper harus deterministik dan reusable.                 |
+| [`src/interactions/`](file:///d:/Naura%20Hoshino%20V2/src/interactions/) | Handler tombol, select menu, modal, autocomplete, dan context menu.                                                 | Wrap selalu dengan `safeExecute` dan tangani interaksi secara defensif.                    |
+| [`plugin/`](file:///d:/Naura%20Hoshino%20V2/plugin/)                     | Subcommand dan router slash command (`core`, `music`, `admin`, `survival`, `naura`).                                | **HANYA** untuk validasi input dan pemanggilan service/manager. Dilarang query DB mentah.  |
+| [`dashboard/`](file:///d:/Naura%20Hoshino%20V2/dashboard/)               | Web Dashboard terintegrasi (Express backend & Vite MPA frontend).                                                   | Komponen 3D Three.js di `src/components/NauraHeroViewer/` dan `NauraViewer/`.              |
+| [`scripts/`](file:///d:/Naura%20Hoshino%20V2/scripts/)                   | Script CLI pemeliharaan (`migrate.js`, `validate-locales.js`, `verify_dashboard_3d.js`, `check-em-dash.js`).        | Script uji mandiri & runner migrasi prestart.                                              |
 
 ---
 
@@ -103,6 +103,7 @@ Saat menangani kode Naura Hoshino V2, agen AI diharapkan menguasai kemampuan tek
 ### 3.7 Tata Kelola Penomoran Versi (X.Y.Z)
 
 Seluruh perubahan versi ekosistem wajib mematuhi skema semantik tiga tingkat:
+
 - **`X` (Versi Keseluruhan / Generasi Era):** Ditentukan oleh owner proyek (saat ini bernilai `2` untuk era Naura Hoshino V2). Agen AI dilarang mengubah angka X tanpa instruksi eksplisit pengguna.
 - **`Y` (Major Update):** Dinaikkan saat terjadi rilis arsitektur besar, penambahan pilar baru, pembaruan moneter besar (seperti Currency V2 Closed-Loop), integrasi AI Ensemble, atau kluster audio Lavalink.
 - **`Z` (Minor Update):** Dinaikkan saat merilis perbaikan bug (bugfix), optimasi performa, balancing RPG/ekonomi, atau penyesuaian stabilitas berkala.
@@ -259,21 +260,24 @@ Saat menambahkan fungsi atau modul baru:
 
 Seluruh agen AI dan kontributor wajib merujuk pada pilar dokumentasi yang tepat sesuai dengan ranah tugasnya:
 
-| Dokumen | Sumber Kebenaran (*Source of Truth*) | Kapan Agen Wajib Membacanya? |
-| :--- | :--- | :--- |
-| [`README.md`](README.md) | **Portal & Instalasi Publik** | Saat butuh gambaran arsitektur umum, dependensi runtime, atau langkah setup lokal. |
-| [`PRD.md`](PRD.md) | **Kebutuhan Produk & Personas** | Saat merancang fitur baru, memahami *what & why*, target persona, dan prioritas MoSCoW. |
-| [`DESIGN.md`](DESIGN.md) | **Bahasa Desain & UI Tokens** | Saat membuat tampilan UI bot (Components V2), web dashboard, token warna, atau model 3D. |
-| [`RULES.md`](RULES.md) | **Konstitusi & Standar Teknis** | Sebelum menulis kode: patuhi transaksi atomik DB, larangan em-dash, dan anti-crash. |
-| [`AGENTS.md`](AGENTS.md) | **Navigasi & SOP AI Agent** | Untuk memetakan direktori file, alur eksekusi, dan menjalankan checklist QA sebelum commit. |
-| [`TODO.md`](TODO.md) | **Roadmap & Sprint Backlog** | Untuk melihat status tugas yang sedang dikerjakan dan backlog sprint berikutnya. |
-| [`.agents/skills/naura-dev/SKILL.md`](.agents/skills/naura-dev/SKILL.md) | **Workspace Skill Naura Dev** | Prosedur cepat eksekusi subagent untuk development bot. |
-| [`.agents/skills/i-have-adhd/SKILL.md`](.agents/skills/i-have-adhd/SKILL.md) | **ADHD-Friendly Output Skill** | Panduan format respon AI coding: action-first, bernomor, tanpa basa-basi. |
-| [`.agents/skills/strix/SKILL.md`](.agents/skills/strix/SKILL.md) | **Strix Security Audit Skill** | Triase kerentanan AI, validasi PoC, dan eliminasi false positive. |
+| Dokumen                                                                      | Sumber Kebenaran (_Source of Truth_) | Kapan Agen Wajib Membacanya?                                                                |
+| :--------------------------------------------------------------------------- | :----------------------------------- | :------------------------------------------------------------------------------------------ |
+| [`README.md`](README.md)                                                     | **Portal & Instalasi Publik**        | Saat butuh gambaran arsitektur umum, dependensi runtime, atau langkah setup lokal.          |
+| [`PRD.md`](PRD.md)                                                           | **Kebutuhan Produk & Personas**      | Saat merancang fitur baru, memahami _what & why_, target persona, dan prioritas MoSCoW.     |
+| [`DESIGN.md`](DESIGN.md)                                                     | **Bahasa Desain & UI Tokens**        | Saat membuat tampilan UI bot (Components V2), web dashboard, token warna, atau model 3D.    |
+| [`RULES.md`](RULES.md)                                                       | **Konstitusi & Standar Teknis**      | Sebelum menulis kode: patuhi transaksi atomik DB, larangan em-dash, dan anti-crash.         |
+| [`AGENTS.md`](AGENTS.md)                                                     | **Navigasi & SOP AI Agent**          | Untuk memetakan direktori file, alur eksekusi, dan menjalankan checklist QA sebelum commit. |
+| [`TODO.md`](TODO.md)                                                         | **Roadmap & Sprint Backlog**         | Untuk melihat status tugas yang sedang dikerjakan dan backlog sprint berikutnya.            |
+| [`.agents/skills/naura-dev/SKILL.md`](.agents/skills/naura-dev/SKILL.md)     | **Workspace Skill Naura Dev**        | Prosedur cepat eksekusi subagent untuk development bot.                                     |
+| [`.agents/skills/i-have-adhd/SKILL.md`](.agents/skills/i-have-adhd/SKILL.md) | **ADHD-Friendly Output Skill**       | Panduan format respon AI coding: action-first, bernomor, tanpa basa-basi.                   |
+| [`.agents/skills/strix/SKILL.md`](.agents/skills/strix/SKILL.md)             | **Strix Security Audit Skill**       | Triase kerentanan AI, validasi PoC, dan eliminasi false positive.                           |
 
 <!-- antislop:start -->
+
 ## 🛡️ Anti-Slop (Filter Desain & Copy AI)
+
 Untuk pembuatan/perombakan UI, penulisan copy, evaluasi aksesibilitas, responsive layout, atau komentar kode, rujuk `antislop.md` (core filter) dan skill terkait:
+
 - UI & Visual: `.agents/skills/antislop-ui/SKILL.md`
 - Copy & Teks: `.agents/skills/antislop-copywriting/SKILL.md`
 - Aksesibilitas & Kontras: `.agents/skills/antislop-human/SKILL.md`
@@ -282,4 +286,3 @@ Untuk pembuatan/perombakan UI, penulisan copy, evaluasi aksesibilitas, responsiv
 - Gaya Respon Efisien: `.agents/skills/i-have-adhd/SKILL.md`
 Sebelum memulai pekerjaan UI, tanyakan kepada pengguna mode kerja antislop yang diinginkan: DURING (saat proses kerja) atau AFTER (audit setelah selesai).
 <!-- antislop:end -->
-

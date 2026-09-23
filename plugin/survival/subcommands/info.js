@@ -59,7 +59,9 @@ module.exports = {
         lang: "id",
       });
 
-      const partnerName = stats.spouseInfo?.spouseName || (marriedNPCs.length > 0 ? marriedNPCs[0].npcId : null);
+      const partnerName =
+        stats.spouseInfo?.spouseName ||
+        (marriedNPCs.length > 0 ? marriedNPCs[0].npcId : null);
       const partnerDisplay = partnerName
         ? `${e("wedding_ring")} **${partnerName}** : Naura ikut senang lihat kalian bahagia!`
         : "Masih sendiri, dan itu sama sekali tidak apa-apa~";
@@ -107,7 +109,12 @@ module.exports = {
       let questLine = stats.mainObjective
         ? `${e("quest", "🎯")} **Objektif Utama:** Arc ${stats.mainObjective.arc}: ${stats.mainObjective.arcName} - Bab ${stats.mainObjective.chapter}: *${stats.mainObjective.title}*\n> Target: ${stats.mainObjective.challengeLabel} (Buka \`/survival story\`)`
         : `${e("quest")} **Petunjuk Naura:** ${stats.isRegistered ? "Belum ada quest baru, santai dulu sebentar." : "Daftar dulu ke Pak Kades lewat `/survival start` ya!"}`;
-      if (stats.isRegistered && !stats.mainObjective && !gear.axe && !gear.pickaxe) {
+      if (
+        stats.isRegistered &&
+        !stats.mainObjective &&
+        !gear.axe &&
+        !gear.pickaxe
+      ) {
         questLine = `${e("quest")} **Petunjuk Naura:** Kumpulkan bahan dengan tangan kosong lewat \`/survival collect\`, lalu tempa alat pertamamu!`;
       }
 
@@ -118,7 +125,9 @@ module.exports = {
       const timeLine = `${stats.timeState.emoji} **Hari ke-${survival.inGameDay || 1}** \u2022 pukul ${(survival.inGameHour || 6).toString().padStart(2, "0")}:00 (${stats.timeState.label}) \u2022 cuaca ${stats.weather.emoji} **${stats.weather.name}**${sickLine}`;
 
       const worldWeatherEngine = require("../../../src/survival/engines/worldWeatherEngine");
-      const currentWorldWeather = worldWeatherEngine.getCurrentWeather(survival.currentLocation || "desa_sukamaju");
+      const currentWorldWeather = worldWeatherEngine.getCurrentWeather(
+        survival.currentLocation || "desa_sukamaju",
+      );
       const worldWeatherLine = `> ${currentWorldWeather.icon} **Siklus Cuaca:** \`${currentWorldWeather.name}\` (${currentWorldWeather.timeRemainingFormatted} tersisa)\n> *${currentWorldWeather.description}*`;
 
       const balanceLines = stats.balances
@@ -134,10 +143,17 @@ module.exports = {
           ? `> ${e("sparkle")} Berkah aktif: **${perkNames.length}** (${perkNames.slice(0, 4).join(", ")})`
           : `> ${e("sparkle")} Belum ada berkah khusus. Kumpulkan Naura Coupon dulu, yuk!`;
 
-      const friendshipLines = stats.friendshipBuffs && stats.friendshipBuffs.length > 0
-        ? `\n💖 **Buff Persahabatan Penduduk:**\n` + stats.friendshipBuffs.slice(0, 3).map((b) => `> ${b.emoji} **${b.npcName}** (${b.levelTitle}): *${b.perkDesc}*`).join("\n")
-        : "";
-
+      const friendshipLines =
+        stats.friendshipBuffs && stats.friendshipBuffs.length > 0
+          ? `\n💖 **Buff Persahabatan Penduduk:**\n` +
+            stats.friendshipBuffs
+              .slice(0, 3)
+              .map(
+                (b) =>
+                  `> ${b.emoji} **${b.npcName}** (${b.levelTitle}): *${b.perkDesc}*`,
+              )
+              .join("\n")
+          : "";
 
       let files = [];
       let bannerAttachmentName;

@@ -201,17 +201,20 @@
 :root {
   color-scheme: dark;
 }
-select, .select-input {
+select,
+.select-input {
   color-scheme: dark !important;
   background-color: #0b1120 !important;
   color: #f8fafc !important;
 }
-select option, .select-input option {
+select option,
+.select-input option {
   background-color: #0b1120 !important;
   color: #f8fafc !important;
   padding: 8px 12px;
 }
-select option:hover, select option:checked {
+select option:hover,
+select option:checked {
   background-color: #1e293b !important;
   color: #38bdf8 !important;
 }
@@ -261,4 +264,3 @@ select option:hover, select option:checked {
   --color-body: #a1a1aa;
   --naura-accent: #38bdf8;
 }
-

@@ -26,7 +26,8 @@ const SPOUSAL_DATA = {
     restoreThirst: 50,
     restoreStamina: 40,
     perkName: "Kehangatan Kebun Bunga",
-    perkDesc: "Panen kebun 20% lebih cepat & sarapan sayur segar gratis setiap pagi.",
+    perkDesc:
+      "Panen kebun 20% lebih cepat & sarapan sayur segar gratis setiap pagi.",
   },
   bidan_sari: {
     vow: "Dalam suka maupun duka, sehat maupun sakit, tanganku akan selalu ada untuk membalut lukamu dan merawat jiwamu.",
@@ -36,7 +37,8 @@ const SPOUSAL_DATA = {
     restoreThirst: 40,
     restoreStamina: 50,
     perkName: "Blessing of Sari",
-    perkDesc: "Auto-Revive 1x per hari saat HP menyentuh 0 di dungeon & pengobatan gratis.",
+    perkDesc:
+      "Auto-Revive 1x per hari saat HP menyentuh 0 di dungeon & pengobatan gratis.",
   },
   bu_ratna: {
     vow: "Cinta adalah pelajaran terindah yang tak pernah usai. Aku berjanji mendampingi setiap langkah petualangan hidupmu.",
@@ -46,7 +48,8 @@ const SPOUSAL_DATA = {
     restoreThirst: 45,
     restoreStamina: 40,
     perkName: "Pendidikan Teladan",
-    perkDesc: "Bonus +20% Survival EXP permanen untuk seluruh kegiatan leveling.",
+    perkDesc:
+      "Bonus +20% Survival EXP permanen untuk seluruh kegiatan leveling.",
   },
   tari: {
     vow: "Sebagaimana ombak yang selalu kembali memeluk pantai, hatiku akan selalu berlabuh pada dirimu seorang.",
@@ -66,7 +69,8 @@ const SPOUSAL_DATA = {
     restoreThirst: 40,
     restoreStamina: 60,
     perkName: "Kebugaran Jamu Tradisional",
-    perkDesc: "Kekebalan dari penyakit ringan & tambahan +60 stamina instan tiap pagi.",
+    perkDesc:
+      "Kekebalan dari penyakit ringan & tambahan +60 stamina instan tiap pagi.",
   },
   laras: {
     vow: "Di setiap tegukan cangkir kopi dan irama senja, kafe ini dan seluruh hidupku seutuhnya adalah milikmu.",
@@ -86,7 +90,8 @@ const SPOUSAL_DATA = {
     restoreThirst: 45,
     restoreStamina: 50,
     perkName: "Arsip Hikmah Wulan",
-    perkDesc: "Bonus +25% Survival EXP untuk seluruh kegiatan riset dan membaca buku.",
+    perkDesc:
+      "Bonus +25% Survival EXP untuk seluruh kegiatan riset dan membaca buku.",
   },
   suster_maya: {
     vow: "B-Bukan berarti aku manja ya! Tapi... jangan pernah berani terluka lagi, karena sekarang kamu adalah tanggung jawab hatiku.",
@@ -96,7 +101,8 @@ const SPOUSAL_DATA = {
     restoreThirst: 50,
     restoreStamina: 40,
     perkName: "Perawatan Intensif Maya",
-    perkDesc: "Detoksifikasi racun otomatis & diskon perawatan medis rumah sakit 100%.",
+    perkDesc:
+      "Detoksifikasi racun otomatis & diskon perawatan medis rumah sakit 100%.",
   },
   mbak_rini: {
     vow: "Investasi paling berharga dalam hidupku bukanlah emas atau permata balai lelang, melainkan mempercayakan hatiku padamu.",
@@ -106,7 +112,8 @@ const SPOUSAL_DATA = {
     restoreThirst: 50,
     restoreStamina: 50,
     perkName: "Dividen Cinta Rini",
-    perkDesc: "Bebas pajak penanganan lelang & dividen keuntungan pasar modal harian.",
+    perkDesc:
+      "Bebas pajak penanganan lelang & dividen keuntungan pasar modal harian.",
   },
   shino_hoshino: {
     vow: "Yaaay! Mulai hari ini kita resmi jadi pasangan paling kompak sedunia! Ayo kita jelajahi seluruh galaksi bersama!",
@@ -116,7 +123,8 @@ const SPOUSAL_DATA = {
     restoreThirst: 50,
     restoreStamina: 50,
     perkName: "Sinergi Kosmik Shino",
-    perkDesc: "Peningkatan perolehan Naura Coupon dan akses fitur gadget futuristik.",
+    perkDesc:
+      "Peningkatan perolehan Naura Coupon dan akses fitur gadget futuristik.",
   },
 };
 
@@ -194,7 +202,9 @@ async function marryNpc(userId, survival, targetNpcId) {
   });
 
   const state = (survival && survival.rpg_state) || {};
-  const unlockedCgs = Array.isArray(state.unlocked_cgs) ? [...state.unlocked_cgs] : [];
+  const unlockedCgs = Array.isArray(state.unlocked_cgs)
+    ? [...state.unlocked_cgs]
+    : [];
   const weddingCgId = `wedding_${normNpcId}`;
 
   if (!unlockedCgs.includes(weddingCgId)) {
@@ -209,7 +219,8 @@ async function marryNpc(userId, survival, targetNpcId) {
   };
 
   survival.rpg_state = updatedState;
-  if (typeof survival.changed === "function") survival.changed("rpg_state", true);
+  if (typeof survival.changed === "function")
+    survival.changed("rpg_state", true);
   if (typeof survival.save === "function") {
     await survival.save({ fields: ["rpg_state"] });
   }
@@ -220,7 +231,9 @@ async function marryNpc(userId, survival, targetNpcId) {
   return {
     ok: true,
     spouseName: npc ? npc.name : normNpcId,
-    vow: spouseInfo.vow || "Aku berjanji akan selalu setia mendampingi setiap petualanganmu.",
+    vow:
+      spouseInfo.vow ||
+      "Aku berjanji akan selalu setia mendampingi setiap petualanganmu.",
     cgId: weddingCgId,
   };
 }
@@ -232,7 +245,11 @@ async function marryNpc(userId, survival, targetNpcId) {
  * @param {string} childName
  * @returns {Promise<{ ok: boolean, reason?: string, cgId?: string }>}
  */
-async function triggerParenthood(userId, survival, childName = "Cahaya Hoshino") {
+async function triggerParenthood(
+  userId,
+  survival,
+  childName = "Cahaya Hoshino",
+) {
   const status = await getMarriageStatus(userId, survival);
   if (!status.isMarried) {
     return { ok: false, reason: "not_married" };
@@ -243,7 +260,9 @@ async function triggerParenthood(userId, survival, childName = "Cahaya Hoshino")
     return { ok: false, reason: "already_has_child" };
   }
 
-  const unlockedCgs = Array.isArray(state.unlocked_cgs) ? [...state.unlocked_cgs] : [];
+  const unlockedCgs = Array.isArray(state.unlocked_cgs)
+    ? [...state.unlocked_cgs]
+    : [];
   const familyCgId = `family_${status.spouseId}`;
   if (!unlockedCgs.includes(familyCgId)) {
     unlockedCgs.push(familyCgId);
@@ -257,8 +276,10 @@ async function triggerParenthood(userId, survival, childName = "Cahaya Hoshino")
     unlocked_cgs: unlockedCgs,
   };
 
-  if (typeof survival.changed === "function") survival.changed("rpg_state", true);
-  if (typeof survival.changed === "function") survival.changed("rpg_state", true);
+  if (typeof survival.changed === "function")
+    survival.changed("rpg_state", true);
+  if (typeof survival.changed === "function")
+    survival.changed("rpg_state", true);
   if (typeof survival.save === "function") {
     await survival.save({ fields: ["rpg_state"] });
   }
@@ -395,7 +416,8 @@ async function teachChild(userId) {
 async function claimApprenticePerk(userId) {
   const child = await UserChild.findOne({ where: { userId } });
   if (!child) return { ok: false, reason: "no_child" };
-  if (child.level < 8) return { ok: false, reason: "level_too_low", currentLevel: child.level };
+  if (child.level < 8)
+    return { ok: false, reason: "level_too_low", currentLevel: child.level };
 
   const cacheManager = require("../../managers/cacheManager");
   const motherId = String(child.motherNpcId || "").toLowerCase();
@@ -466,7 +488,8 @@ async function unlockCg(survival, cgId) {
   list.push(cgId);
   survival.rpg_state = { ...state, unlocked_cgs: list };
 
-  if (typeof survival.changed === "function") survival.changed("rpg_state", true);
+  if (typeof survival.changed === "function")
+    survival.changed("rpg_state", true);
   if (typeof survival.save === "function") {
     await survival.save({ fields: ["rpg_state"] });
   }

@@ -13,7 +13,9 @@ const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("jam")
-    .setDescription("🎹 Buka Collaborative Live Jam Room (Synthesizer & 16-Step Drum Sequencer).")
+    .setDescription(
+      "🎹 Buka Collaborative Live Jam Room (Synthesizer & 16-Step Drum Sequencer).",
+    )
     .addStringOption((opt) =>
       opt
         .setName("room")

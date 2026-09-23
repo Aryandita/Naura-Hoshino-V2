@@ -21,7 +21,12 @@ async function getNpcRelationship(userId, npcId) {
   try {
     const bond = await UserNPC.findOne({ where: { userId, npcId } });
     if (!bond) {
-      return { affection: 0, level: 0, title: RELATIONSHIP_TITLES[0], isMarried: false };
+      return {
+        affection: 0,
+        level: 0,
+        title: RELATIONSHIP_TITLES[0],
+        isMarried: false,
+      };
     }
     const level = Math.max(0, Math.min(4, bond.relationshipLevel || 0));
     return {
@@ -31,7 +36,12 @@ async function getNpcRelationship(userId, npcId) {
       isMarried: level === 4,
     };
   } catch (_) {
-    return { affection: 0, level: 0, title: RELATIONSHIP_TITLES[0], isMarried: false };
+    return {
+      affection: 0,
+      level: 0,
+      title: RELATIONSHIP_TITLES[0],
+      isMarried: false,
+    };
   }
 }
 
@@ -75,7 +85,9 @@ async function applyPassiveBonus(userId, bonusType, currentValue) {
     const bonds = await UserNPC.findAll({ where: { userId } });
     if (!bonds || bonds.length === 0) return val;
 
-    const bondMap = new Map(bonds.map((b) => [b.npcId, b.relationshipLevel || 0]));
+    const bondMap = new Map(
+      bonds.map((b) => [b.npcId, b.relationshipLevel || 0]),
+    );
 
     switch (bonusType) {
       case "durability_loss": {
@@ -163,22 +175,40 @@ async function getUserActivePerksSummary(userId) {
       let emoji = "🤝";
 
       if (bond.npcId === "bagas") {
-        perkDesc = level >= 3 ? "Durability Guard (-25% aus) & Diskon Tempa 20%" : "Diskon Tempa 10%";
+        perkDesc =
+          level >= 3
+            ? "Durability Guard (-25% aus) & Diskon Tempa 20%"
+            : "Diskon Tempa 10%";
         emoji = "🔨";
       } else if (bond.npcId === "ningsih") {
-        perkDesc = level >= 4 ? "Bekal Salad Sehat & Panen Kebun Cepat" : "Diskon Bibit & Panen Bonus";
+        perkDesc =
+          level >= 4
+            ? "Bekal Salad Sehat & Panen Kebun Cepat"
+            : "Diskon Bibit & Panen Bonus";
         emoji = "🌱";
       } else if (bond.npcId === "bidan_sari") {
-        perkDesc = level >= 4 ? "Blessing of Sari (Auto-Revive 1x/hari) & Obat Gratis" : "Diskon Biaya Medis 50%";
+        perkDesc =
+          level >= 4
+            ? "Blessing of Sari (Auto-Revive 1x/hari) & Obat Gratis"
+            : "Diskon Biaya Medis 50%";
         emoji = "💊";
       } else if (bond.npcId === "wulan") {
-        perkDesc = level >= 4 ? "Arsip Hikmah (+25% EXP Riset) & Teh Fokus" : "Bonus +15% EXP Belajar";
+        perkDesc =
+          level >= 4
+            ? "Arsip Hikmah (+25% EXP Riset) & Teh Fokus"
+            : "Bonus +15% EXP Belajar";
         emoji = "📚";
       } else if (bond.npcId === "laras") {
-        perkDesc = level >= 4 ? "Kopi Cinta (-20% Konsumsi Stamina)" : "Diskon Kafe & Stamina Booster";
+        perkDesc =
+          level >= 4
+            ? "Kopi Cinta (-20% Konsumsi Stamina)"
+            : "Diskon Kafe & Stamina Booster";
         emoji = "☕";
       } else if (bond.npcId === "tari") {
-        perkDesc = level >= 4 ? "Bonus 2x Mutiara Laut & Selam Bebas Biaya" : "+20% Peluang Ikan Langka";
+        perkDesc =
+          level >= 4
+            ? "Bonus 2x Mutiara Laut & Selam Bebas Biaya"
+            : "+20% Peluang Ikan Langka";
         emoji = "🌊";
       } else if (bond.npcId === "kang_jajang" || bond.npcId === "kang_deden") {
         perkDesc = "+15% Hasil Ekskavasi Bijih Tambang";

@@ -294,12 +294,30 @@ module.exports = {
       // Tentukan ikon furnitur
       let itemIcon = "🛋️";
       const lowerName = itemName.toLowerCase();
-      if (lowerName.includes("bed") || lowerName.includes("kasur")) itemIcon = "🛏️";
-      else if (lowerName.includes("desk") || lowerName.includes("meja kerja") || lowerName.includes("komputer")) itemIcon = "🖥️";
-      else if (lowerName.includes("table") || lowerName.includes("meja")) itemIcon = "🍵";
-      else if (lowerName.includes("plant") || lowerName.includes("bonsai") || lowerName.includes("tanaman")) itemIcon = "🪴";
-      else if (lowerName.includes("synth") || lowerName.includes("piano") || lowerName.includes("musik")) itemIcon = "🎹";
-      else if (lowerName.includes("sofa") || lowerName.includes("kursi")) itemIcon = "🛋️";
+      if (lowerName.includes("bed") || lowerName.includes("kasur"))
+        itemIcon = "🛏️";
+      else if (
+        lowerName.includes("desk") ||
+        lowerName.includes("meja kerja") ||
+        lowerName.includes("komputer")
+      )
+        itemIcon = "🖥️";
+      else if (lowerName.includes("table") || lowerName.includes("meja"))
+        itemIcon = "🍵";
+      else if (
+        lowerName.includes("plant") ||
+        lowerName.includes("bonsai") ||
+        lowerName.includes("tanaman")
+      )
+        itemIcon = "🪴";
+      else if (
+        lowerName.includes("synth") ||
+        lowerName.includes("piano") ||
+        lowerName.includes("musik")
+      )
+        itemIcon = "🎹";
+      else if (lowerName.includes("sofa") || lowerName.includes("kursi"))
+        itemIcon = "🛋️";
       else itemIcon = "📦";
 
       let buffer;

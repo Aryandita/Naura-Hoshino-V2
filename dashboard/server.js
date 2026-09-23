@@ -145,7 +145,10 @@ module.exports = (client) => {
   webApp.use("/assets", express.static(path.join(__dirname, "../assets")));
   webApp.use("/src", express.static(path.join(__dirname, "src")));
   webApp.use("/vendor", express.static(path.join(__dirname, "public/vendor")));
-  webApp.use("/node_modules", express.static(path.join(__dirname, "../node_modules")));
+  webApp.use(
+    "/node_modules",
+    express.static(path.join(__dirname, "../node_modules")),
+  );
   webApp.get("/health", (req, res) => res.redirect("/api/health"));
 
   // Sajikan berkas model 3D (VRM & GLB) dengan Content-Type model/gltf-binary yang valid
@@ -454,7 +457,16 @@ module.exports = (client) => {
       for (const row of counts) {
         const loc = String(row.currentLocation || "desa").toLowerCase();
         const countVal = parseInt(row.count, 10) || 0;
-        if (["desa", "village", "desa_sukamaju", "hutan", "tambang", "laut"].includes(loc)) {
+        if (
+          [
+            "desa",
+            "village",
+            "desa_sukamaju",
+            "hutan",
+            "tambang",
+            "laut",
+          ].includes(loc)
+        ) {
           locationCounts.desa_sukamaju += countVal;
           locationCounts.desa += countVal;
         } else if (["kota", "city", "kota_pratama", "academy"].includes(loc)) {
@@ -462,7 +474,9 @@ module.exports = (client) => {
           locationCounts.kota += countVal;
         } else if (["khulkhas", "desa_khulkhas", "gurun"].includes(loc)) {
           locationCounts.desa_khulkhas += countVal;
-        } else if (["draken", "istana_draken", "dungeon", "abyss"].includes(loc)) {
+        } else if (
+          ["draken", "istana_draken", "dungeon", "abyss"].includes(loc)
+        ) {
           locationCounts.istana_draken += countVal;
         } else if (locationCounts[loc] !== undefined) {
           locationCounts[loc] += countVal;
@@ -519,7 +533,9 @@ module.exports = (client) => {
   require("./sockets")(client, io, { sessionMiddleware });
 
   webServer.on("error", (err) => {
-    logger.error(`[DASHBOARD] Server error pada port ${webPort}: ${err.message}`);
+    logger.error(
+      `[DASHBOARD] Server error pada port ${webPort}: ${err.message}`,
+    );
   });
 
   webServer.listen(webPort, "0.0.0.0", () => {

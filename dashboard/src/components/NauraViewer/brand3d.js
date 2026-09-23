@@ -107,13 +107,20 @@ export function createNauraBrand3D(scene, options = {}) {
 
   for (let i = 0; i < 4; i++) {
     const isGold = i % 2 === 0;
-    const starMesh = new THREE.Mesh(starGeo, isGold ? starMatGold : starMatPink);
+    const starMesh = new THREE.Mesh(
+      starGeo,
+      isGold ? starMatGold : starMatPink,
+    );
     const starPivot = new THREE.Group();
     starPivot.rotation.z = (Math.PI / 2) * i;
     starMesh.position.x = 0.24; // Bertengger di cincin luar
     starPivot.add(starMesh);
     haloGroup.add(starPivot);
-    starDiamonds.push({ pivot: starPivot, mesh: starMesh, baseAngle: (Math.PI / 2) * i });
+    starDiamonds.push({
+      pivot: starPivot,
+      mesh: starMesh,
+      baseAngle: (Math.PI / 2) * i,
+    });
   }
 
   // -------------------------------------------------------------
@@ -195,12 +202,17 @@ export function createNauraBrand3D(scene, options = {}) {
   });
 
   for (let i = 0; i < rayCount; i++) {
-    const angle = (Math.PI * 2 / rayCount) * i;
+    const angle = ((Math.PI * 2) / rayCount) * i;
     const r = 0.42;
     const rayMesh = new THREE.Mesh(rayGeo, rayMat);
     rayMesh.position.set(Math.cos(angle) * r, 0.25, Math.sin(angle) * r);
     raysGroup.add(rayMesh);
-    rayMeshes.push({ mesh: rayMesh, angle, baseHeight: 0.25, phase: Math.random() * Math.PI * 2 });
+    rayMeshes.push({
+      mesh: rayMesh,
+      angle,
+      baseHeight: 0.25,
+      phase: Math.random() * Math.PI * 2,
+    });
   }
 
   // -------------------------------------------------------------
@@ -236,7 +248,8 @@ export function createNauraBrand3D(scene, options = {}) {
     haloGroup.position.y = haloBaseY + haloBob + combinedBoost * 0.04;
 
     // Skala denyut dinamis pada Halo
-    const haloScale = 1.0 + Math.sin(elapsed * 2.5) * 0.03 + combinedBoost * 0.15;
+    const haloScale =
+      1.0 + Math.sin(elapsed * 2.5) * 0.03 + combinedBoost * 0.15;
     haloGroup.scale.set(haloScale, haloScale, haloScale);
 
     // Animasi 4 Star Diamonds (rotasi individual dan orbit)
@@ -244,7 +257,8 @@ export function createNauraBrand3D(scene, options = {}) {
       sd.pivot.rotation.z = sd.baseAngle + outerRingMesh.rotation.z * 1.4;
       sd.mesh.rotation.x += delta * 2.2;
       sd.mesh.rotation.y += delta * 3.1;
-      const starPulse = 1.0 + Math.sin(elapsed * 3.5 + idx) * 0.15 + combinedBoost * 0.35;
+      const starPulse =
+        1.0 + Math.sin(elapsed * 3.5 + idx) * 0.15 + combinedBoost * 0.35;
       sd.mesh.scale.set(starPulse, starPulse, starPulse);
     });
 
@@ -256,14 +270,16 @@ export function createNauraBrand3D(scene, options = {}) {
     starlightRingMesh.rotation.z += delta * (0.5 + combinedBoost * 1.0);
 
     // Denyut skala pedestal
-    const pedestalScale = 1.0 + Math.sin(elapsed * 1.8) * 0.025 + combinedBoost * 0.08;
+    const pedestalScale =
+      1.0 + Math.sin(elapsed * 1.8) * 0.025 + combinedBoost * 0.08;
     pedestalGroup.scale.set(pedestalScale, pedestalScale, 1.0);
 
     // C. Animasi Vertical Starlight Rays:
     rayMeshes.forEach((rm) => {
       const rayBob = Math.sin(elapsed * 2.8 + rm.phase) * 0.08;
       rm.mesh.position.y = rm.baseHeight + rayBob;
-      const rayScaleY = 1.0 + Math.sin(elapsed * 3.0 + rm.phase) * 0.3 + combinedBoost * 0.6;
+      const rayScaleY =
+        1.0 + Math.sin(elapsed * 3.0 + rm.phase) * 0.3 + combinedBoost * 0.6;
       rm.mesh.scale.set(1.0, rayScaleY, 1.0);
     });
 

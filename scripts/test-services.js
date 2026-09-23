@@ -25,7 +25,11 @@ const C = {
   gray: "\x1b[90m",
 };
 
-function withTimeout(promise, ms = 8000, errorMsg = "Batas waktu koneksi terlampaui") {
+function withTimeout(
+  promise,
+  ms = 8000,
+  errorMsg = "Batas waktu koneksi terlampaui",
+) {
   return Promise.race([
     promise,
     new Promise((_, reject) =>
@@ -60,7 +64,7 @@ async function testGemini() {
       latency,
       details: {
         "Provider Terpilih": res.provider,
-        "Model": res.model,
+        Model: res.model,
         "Latensi Respon": `${latency}ms`,
         "Cuplikan Output": `"${res.text.slice(0, 80).replace(/\n/g, " ")}..."`,
       },
@@ -100,7 +104,7 @@ async function testGroq() {
       latency,
       details: {
         "Provider Terpilih": res.provider,
-        "Model": res.model,
+        Model: res.model,
         "Latensi Respon": `${latency}ms`,
         "Cuplikan Output": `"${res.text.slice(0, 80).replace(/\n/g, " ")}"`,
       },
@@ -138,9 +142,9 @@ async function testLavalink() {
         ok: true,
         latency,
         details: {
-          "Endpoint": `${host}:${port}`,
+          Endpoint: `${host}:${port}`,
           "Lavalink Version": version.trim(),
-          "Latensi": `${latency}ms`,
+          Latensi: `${latency}ms`,
         },
       };
     }
@@ -163,7 +167,8 @@ function testFishAudio() {
     return {
       ok: false,
       skipped: true,
-      reason: "FISH_AUDIO_API_KEY tidak dikonfigurasi (AI Voice Companion opsional).",
+      reason:
+        "FISH_AUDIO_API_KEY tidak dikonfigurasi (AI Voice Companion opsional).",
     };
   }
 
@@ -194,9 +199,9 @@ async function testDashboard() {
       return {
         ok: true,
         details: {
-          "URL": url,
+          URL: url,
           "Status API": "Online & Menjawab",
-          "Versi": data.version || env.BOT_VERSION,
+          Versi: data.version || env.BOT_VERSION,
         },
       };
     }
@@ -215,10 +220,18 @@ async function testDashboard() {
 }
 
 async function run() {
-  console.log(`\n${C.bold}${C.cyan}====================================================${C.reset}`);
-  console.log(`${C.bold}${C.cyan}  NAURA HOSHINO V2 - EXTERNAL SERVICES DIAGNOSTICS   ${C.reset}`);
-  console.log(`${C.bold}${C.cyan}  (Mode Cloud API & Web Hosting - Tanpa Ollama)      ${C.reset}`);
-  console.log(`${C.bold}${C.cyan}====================================================${C.reset}\n`);
+  console.log(
+    `\n${C.bold}${C.cyan}====================================================${C.reset}`,
+  );
+  console.log(
+    `${C.bold}${C.cyan}  NAURA HOSHINO V2 - EXTERNAL SERVICES DIAGNOSTICS   ${C.reset}`,
+  );
+  console.log(
+    `${C.bold}${C.cyan}  (Mode Cloud API & Web Hosting - Tanpa Ollama)      ${C.reset}`,
+  );
+  console.log(
+    `${C.bold}${C.cyan}====================================================${C.reset}\n`,
+  );
 
   console.log(`${C.gray}[1/6] Memeriksa Google Gemini AI...${C.reset}`);
   const geminiRes = await testGemini();
@@ -226,15 +239,20 @@ async function run() {
   console.log(`${C.gray}[2/6] Memeriksa Groq Cloud AI...${C.reset}`);
   const groqRes = await testGroq();
 
-  console.log(`${C.gray}[3/6] Memeriksa Status Ollama (Bypass / Non-Aktif)...${C.reset}`);
+  console.log(
+    `${C.gray}[3/6] Memeriksa Status Ollama (Bypass / Non-Aktif)...${C.reset}`,
+  );
   // Ollama sengaja dilewati sesuai instruksi web hosting
   const ollamaRes = {
     ok: true,
     skipped: true,
-    reason: "Dinonaktifkan (Kompatibilitas Web Hosting tanpa lokal runtime Ollama).",
+    reason:
+      "Dinonaktifkan (Kompatibilitas Web Hosting tanpa lokal runtime Ollama).",
   };
 
-  console.log(`${C.gray}[4/6] Memeriksa Audio Companion (Fish Audio)...${C.reset}`);
+  console.log(
+    `${C.gray}[4/6] Memeriksa Audio Companion (Fish Audio)...${C.reset}`,
+  );
   const fishAudioRes = testFishAudio();
 
   console.log(`${C.gray}[5/6] Memeriksa Lavalink Audio Engine...${C.reset}`);
@@ -247,26 +265,36 @@ async function run() {
 
   // 1. Gemini
   if (geminiRes.ok) {
-    console.log(`  ${C.green}[OK]${C.reset} ${C.bold}Google Gemini AI${C.reset} (${geminiRes.latency}ms)`);
+    console.log(
+      `  ${C.green}[OK]${C.reset} ${C.bold}Google Gemini AI${C.reset} (${geminiRes.latency}ms)`,
+    );
     for (const [k, v] of Object.entries(geminiRes.details)) {
       console.log(`       - ${k}: ${C.cyan}${v}${C.reset}`);
     }
   } else if (geminiRes.skipped) {
-    console.log(`  ${C.yellow}[LEWATI]${C.reset} ${C.bold}Google Gemini AI${C.reset}: ${geminiRes.reason}`);
+    console.log(
+      `  ${C.yellow}[LEWATI]${C.reset} ${C.bold}Google Gemini AI${C.reset}: ${geminiRes.reason}`,
+    );
   } else {
-    console.log(`  ${C.red}[FAIL]${C.reset} ${C.bold}Google Gemini AI${C.reset}`);
+    console.log(
+      `  ${C.red}[FAIL]${C.reset} ${C.bold}Google Gemini AI${C.reset}`,
+    );
     console.log(`       - Error: ${C.red}${geminiRes.error}${C.reset}`);
   }
   console.log("");
 
   // 2. Groq
   if (groqRes.ok) {
-    console.log(`  ${C.green}[OK]${C.reset} ${C.bold}Groq Cloud AI (High-Speed LLM)${C.reset} (${groqRes.latency}ms)`);
+    console.log(
+      `  ${C.green}[OK]${C.reset} ${C.bold}Groq Cloud AI (High-Speed LLM)${C.reset} (${groqRes.latency}ms)`,
+    );
     for (const [k, v] of Object.entries(groqRes.details)) {
       console.log(`       - ${k}: ${C.cyan}${v}${C.reset}`);
     }
   } else if (groqRes.skipped) {
-    console.log(`  ${C.yellow}[LEWATI]${C.reset} ${C.bold}Groq Cloud AI${C.reset}: ${groqRes.reason}`);
+    console.log(
+      `  ${C.yellow}[LEWATI]${C.reset} ${C.bold}Groq Cloud AI${C.reset}: ${groqRes.reason}`,
+    );
   } else {
     console.log(`  ${C.red}[FAIL]${C.reset} ${C.bold}Groq Cloud AI${C.reset}`);
     console.log(`       - Error: ${C.red}${groqRes.error}${C.reset}`);
@@ -274,42 +302,58 @@ async function run() {
   console.log("");
 
   // 3. Ollama (Skipped / Disabled)
-  console.log(`  ${C.blue}[BYPASS]${C.reset} ${C.bold}Ollama Local Engine${C.reset}`);
+  console.log(
+    `  ${C.blue}[BYPASS]${C.reset} ${C.bold}Ollama Local Engine${C.reset}`,
+  );
   console.log(`       - Catatan: ${C.gray}${ollamaRes.reason}${C.reset}\n`);
 
   // 4. Fish Audio
   if (fishAudioRes.ok) {
-    console.log(`  ${C.green}[OK]${C.reset} ${C.bold}Fish Audio TTS Streaming${C.reset}`);
+    console.log(
+      `  ${C.green}[OK]${C.reset} ${C.bold}Fish Audio TTS Streaming${C.reset}`,
+    );
     for (const [k, v] of Object.entries(fishAudioRes.details)) {
       console.log(`       - ${k}: ${C.cyan}${v}${C.reset}`);
     }
   } else {
-    console.log(`  ${C.yellow}[LEWATI]${C.reset} ${C.bold}Fish Audio TTS${C.reset}: ${fishAudioRes.reason}`);
+    console.log(
+      `  ${C.yellow}[LEWATI]${C.reset} ${C.bold}Fish Audio TTS${C.reset}: ${fishAudioRes.reason}`,
+    );
   }
   console.log("");
 
   // 5. Lavalink
   if (lavalinkRes.ok) {
-    console.log(`  ${C.green}[OK]${C.reset} ${C.bold}Lavalink Audio Node${C.reset} (${lavalinkRes.latency}ms)`);
+    console.log(
+      `  ${C.green}[OK]${C.reset} ${C.bold}Lavalink Audio Node${C.reset} (${lavalinkRes.latency}ms)`,
+    );
     for (const [k, v] of Object.entries(lavalinkRes.details)) {
       console.log(`       - ${k}: ${C.cyan}${v}${C.reset}`);
     }
   } else {
-    console.log(`  ${C.yellow}[LEWATI]${C.reset} ${C.bold}Lavalink Audio Node${C.reset}: ${lavalinkRes.reason || lavalinkRes.error}`);
+    console.log(
+      `  ${C.yellow}[LEWATI]${C.reset} ${C.bold}Lavalink Audio Node${C.reset}: ${lavalinkRes.reason || lavalinkRes.error}`,
+    );
   }
   console.log("");
 
   // 6. Web Dashboard
   if (dashboardRes.ok) {
-    console.log(`  ${C.green}[OK]${C.reset} ${C.bold}Express Web Dashboard${C.reset}`);
+    console.log(
+      `  ${C.green}[OK]${C.reset} ${C.bold}Express Web Dashboard${C.reset}`,
+    );
     for (const [k, v] of Object.entries(dashboardRes.details)) {
       console.log(`       - ${k}: ${C.cyan}${v}${C.reset}`);
     }
   } else {
-    console.log(`  ${C.yellow}[LEWATI]${C.reset} ${C.bold}Express Web Dashboard${C.reset}: ${dashboardRes.reason}`);
+    console.log(
+      `  ${C.yellow}[LEWATI]${C.reset} ${C.bold}Express Web Dashboard${C.reset}: ${dashboardRes.reason}`,
+    );
   }
 
-  console.log(`\n${C.bold}${C.cyan}====================================================${C.reset}\n`);
+  console.log(
+    `\n${C.bold}${C.cyan}====================================================${C.reset}\n`,
+  );
   process.exit(0);
 }
 

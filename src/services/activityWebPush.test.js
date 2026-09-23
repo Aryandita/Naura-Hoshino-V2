@@ -37,7 +37,10 @@ describe("Discord Activity, Web Push & Caravan Ambush System", () => {
     const listener = { x: 1, y: 1 };
     const farSpeaker = { x: 8, y: 8 };
 
-    const proximity = landEngine.calculateSpatialProximity(listener, farSpeaker);
+    const proximity = landEngine.calculateSpatialProximity(
+      listener,
+      farSpeaker,
+    );
     assert.strictEqual(proximity.audible, false);
     assert.strictEqual(proximity.volume, 0);
   });

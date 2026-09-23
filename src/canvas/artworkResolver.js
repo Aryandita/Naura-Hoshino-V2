@@ -98,7 +98,11 @@ async function resolveHighResArtwork(track, clientAvatar = null) {
         timeout: 2200,
       });
 
-      if (resp.data && Array.isArray(resp.data.results) && resp.data.results.length > 0) {
+      if (
+        resp.data &&
+        Array.isArray(resp.data.results) &&
+        resp.data.results.length > 0
+      ) {
         const item = resp.data.results[0];
         if (item.artworkUrl100) {
           // Ganti resolusi dari 100x100 menjadi 600x600 HD 1:1

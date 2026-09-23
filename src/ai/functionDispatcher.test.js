@@ -27,7 +27,6 @@ test("functionDispatcher - tools declaration schema", () => {
   assert.ok(toolNames.includes("check_omikuji"));
   assert.ok(toolNames.includes("check_stock_market"));
 
-
   for (const tool of tools) {
     assert.equal(tool.parameters.type, "OBJECT");
     assert.ok(tool.description.length > 10);

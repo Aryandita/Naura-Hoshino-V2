@@ -183,7 +183,8 @@ module.exports = {
 
     const payload = buildErrorContainerV2({
       title: "Aksi Tidak Dikenal",
-      description: "Pilihlah aksi yang valid: `status`, `attack`, atau `dividends`.",
+      description:
+        "Pilihlah aksi yang valid: `status`, `attack`, atau `dividends`.",
       footerText: ui.getFooter("survival"),
     });
     return interaction.reply({

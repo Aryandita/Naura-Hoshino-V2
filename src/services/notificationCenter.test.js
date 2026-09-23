@@ -32,7 +32,13 @@ describe("NotificationCenter Service", () => {
   it("notificationManager maintains complete parity with notificationCenter", () => {
     const notificationManager = require("../managers/notificationManager");
     assert.strictEqual(typeof notificationManager.sendNotification, "function");
-    assert.strictEqual(typeof notificationManager.ensureDmAuthorized, "function");
-    assert.strictEqual(notificationManager.DEFAULT_PREFS, notificationCenter.DEFAULT_PREFS);
+    assert.strictEqual(
+      typeof notificationManager.ensureDmAuthorized,
+      "function",
+    );
+    assert.strictEqual(
+      notificationManager.DEFAULT_PREFS,
+      notificationCenter.DEFAULT_PREFS,
+    );
   });
 });

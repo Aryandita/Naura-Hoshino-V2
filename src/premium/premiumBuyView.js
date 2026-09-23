@@ -12,7 +12,10 @@
 
 const cacheManager = require("../managers/cacheManager");
 const ui = require("../config/ui");
-const { buildContainerV2, buildErrorContainerV2 } = require("../utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../utils/NauraContainerBuilder");
 const { tierByKey } = require("./premiumTiers");
 const { sendPremiumDM } = require("./premiumNotify");
 
@@ -25,7 +28,8 @@ async function runBuy(interaction) {
     return interaction.editReply(
       buildErrorContainerV2({
         title: "Paket Tidak Valid",
-        description: "Pilihlah salah satu dari paket Starter, Supporter, Friends, atau V.I.P.",
+        description:
+          "Pilihlah salah satu dari paket Starter, Supporter, Friends, atau V.I.P.",
         footerText: ui.getFooter("premium"),
       }),
     );
@@ -53,7 +57,11 @@ async function runBuy(interaction) {
   }
 
   // Pemotongan Saldo Kupon Secara Atomik
-  const debitSuccess = await cacheManager.debitUserSurvival(userId, "coupons", cost);
+  const debitSuccess = await cacheManager.debitUserSurvival(
+    userId,
+    "coupons",
+    cost,
+  );
   if (!debitSuccess) {
     return interaction.editReply(
       buildErrorContainerV2({
@@ -85,7 +93,9 @@ async function runBuy(interaction) {
   });
 
   // Notifikasi personal DM
-  sendPremiumDM(interaction.client, userId, tierInfo.days, newUntil).catch(() => {});
+  sendPremiumDM(interaction.client, userId, tierInfo.days, newUntil).catch(
+    () => {},
+  );
 
   const untilFormatted = newUntil.toLocaleDateString("id-ID", {
     weekday: "long",

@@ -185,7 +185,10 @@ function addRpgGroup(builder) {
                 { name: "🏰 Dashboard & Info Klan", value: "info" },
                 { name: "🌐 Aliansi Federasi Global", value: "federation" },
                 { name: "⚔️ Pengepungan Menara Relik (Siege)", value: "siege" },
-                { name: "🐫 Papan Pengawalan Karavan (Caravan)", value: "caravan" },
+                {
+                  name: "🐫 Papan Pengawalan Karavan (Caravan)",
+                  value: "caravan",
+                },
                 { name: "🏡 2.5D Guild Hall Lounge", value: "hall" },
                 { name: "☕ Seduh Kopi Lounge (+25 Energy)", value: "coffee" },
                 { name: "🛋️ Beli Furnitur Lounge", value: "furniture" },

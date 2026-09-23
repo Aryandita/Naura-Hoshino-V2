@@ -17,11 +17,23 @@ const COMMODITY_CATALOG = Object.freeze({
   // 2. Mineral Tambang (Ores & Gems)
   starlight_ore: { name: "Starlight Ore", category: "mineral", basePrice: 320 },
   cyber_ruby: { name: "Cyber Ruby", category: "mineral", basePrice: 650 },
-  mythic_emerald: { name: "Mythic Emerald", category: "mineral", basePrice: 900 },
-  void_amethyst: { name: "Void Amethyst", category: "mineral", basePrice: 1200 },
+  mythic_emerald: {
+    name: "Mythic Emerald",
+    category: "mineral",
+    basePrice: 900,
+  },
+  void_amethyst: {
+    name: "Void Amethyst",
+    category: "mineral",
+    basePrice: 1200,
+  },
 
   // 3. Hasil Panen Greenhouse (Crops)
-  astral_strawberry: { name: "Astral Strawberry", category: "crop", basePrice: 180 },
+  astral_strawberry: {
+    name: "Astral Strawberry",
+    category: "crop",
+    basePrice: 180,
+  },
   cyber_mint: { name: "Cyber Mint", category: "crop", basePrice: 240 },
   void_coffee: { name: "Void Coffee Bean", category: "crop", basePrice: 380 },
   neon_melon: { name: "Neon Melon", category: "crop", basePrice: 520 },
@@ -30,8 +42,8 @@ const COMMODITY_CATALOG = Object.freeze({
 
 // Batas fluktuasi harga komoditas demi kestabilan ekonomi
 const MIN_PRICE_MULTIPLIER = 0.65; // Diskon maksimal -35% saat oversupply
-const MAX_PRICE_MULTIPLIER = 1.50; // Inflasi maksimal +50% saat scarcity
-const DECAY_RATE_PER_HOUR = 0.08;  // Regresi 8% per jam menuju baseline
+const MAX_PRICE_MULTIPLIER = 1.5; // Inflasi maksimal +50% saat scarcity
+const DECAY_RATE_PER_HOUR = 0.08; // Regresi 8% per jam menuju baseline
 
 /**
  * Menghitung harga aktual komoditas berdasarkan volume perdagangan dan jeda waktu.
@@ -42,7 +54,11 @@ const DECAY_RATE_PER_HOUR = 0.08;  // Regresi 8% per jam menuju baseline
  * @param {number} [timeDecayHours=0] - Jam berlalu sejak siklus perdagangan terakhir
  * @returns {{ id: string, name: string, category: string, basePrice: number, currentPrice: number, multiplier: number, priceChangePercent: number, trend: 'bullish'|'bearish'|'stable' }}
  */
-function calculateCommodityPrice(commodityId, volume = { sold: 0, bought: 0 }, timeDecayHours = 0) {
+function calculateCommodityPrice(
+  commodityId,
+  volume = { sold: 0, bought: 0 },
+  timeDecayHours = 0,
+) {
   const item = COMMODITY_CATALOG[commodityId];
   if (!item) {
     throw new Error(`Komoditas tidak dikenal: ${commodityId}`);
@@ -62,9 +78,15 @@ function calculateCommodityPrice(commodityId, volume = { sold: 0, bought: 0 }, t
 
   // Clamp multiplier ke rentang aman [0.65, 1.50]
   const rawMultiplier = 1.0 + effectivePressure;
-  const clampedMultiplier = Math.max(MIN_PRICE_MULTIPLIER, Math.min(MAX_PRICE_MULTIPLIER, rawMultiplier));
+  const clampedMultiplier = Math.max(
+    MIN_PRICE_MULTIPLIER,
+    Math.min(MAX_PRICE_MULTIPLIER, rawMultiplier),
+  );
 
-  const currentPrice = Math.max(1, Math.round(item.basePrice * clampedMultiplier));
+  const currentPrice = Math.max(
+    1,
+    Math.round(item.basePrice * clampedMultiplier),
+  );
   const priceChangePercent = Math.round((clampedMultiplier - 1.0) * 100);
 
   let trend = "stable";

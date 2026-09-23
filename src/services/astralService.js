@@ -212,7 +212,9 @@ class AstralService {
         if (genAI) {
           const sampleSnippet = sampleTexts
             .slice(0, 25)
-            .map((t, idx) => `${idx + 1}. ${t.replace(/\n+/g, " ").slice(0, 150)}`)
+            .map(
+              (t, idx) => `${idx + 1}. ${t.replace(/\n+/g, " ").slice(0, 150)}`,
+            )
             .join("\n");
 
           const prompt = `Kamu adalah pengamat cuaca galaksi Naura Hoshino. Analisis suasana/vibe obrolan server Discord ini dari cuplikan teks berikut:\n\n${sampleSnippet}\n\nTentukan cuaca kosmik mana yang paling cocok dari 6 opsi berikut:\n- aurora_fortune (obrolan ramai, antusias, beruntung)\n- cosmic_storm (kompetitif, bermain game, debat intens)\n- starlit_serenity (tenang, santai, malam hari, rileks)\n- eclipse_shadows (iseng, bercanda gelap, misterius)\n- sakura_breeze (hangat, saling menyemangati, ramah)\n- celestial_harmony (seimbang, kolaboratif, diskusi produktif)\n\nJawab HANYA dalam format JSON valid:\n{"weatherId":"aurora_fortune|cosmic_storm|starlit_serenity|eclipse_shadows|sakura_breeze|celestial_harmony","sentimentScore":85,"auraReason":"deskripsi singkat suasana server 1-2 kalimat"}`;
@@ -228,7 +230,9 @@ class AstralService {
           const jsonMatch = resolved && resolved.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0]);
-            const match = ASTRAL_WEATHERS.find((w) => w.id === parsed.weatherId);
+            const match = ASTRAL_WEATHERS.find(
+              (w) => w.id === parsed.weatherId,
+            );
             if (match) {
               chosenWeather = match;
               sentimentScore = Number(parsed.sentimentScore) || 75;

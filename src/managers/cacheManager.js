@@ -584,7 +584,10 @@ class CacheManager {
       await redisManager.deleteCache(cacheKey);
       return true;
     } catch (error) {
-      logger.error("[CacheManager] Error resetProfileForRebirth:", error.message);
+      logger.error(
+        "[CacheManager] Error resetProfileForRebirth:",
+        error.message,
+      );
       return false;
     }
   }
@@ -754,11 +757,13 @@ class CacheManager {
   async broadcastSurvivalLeaderboard(data) {
     const redisManager = require("./redisManager");
     if (redisManager && redisManager.isReady) {
-      await redisManager.publish("leaderboard:live", {
-        type: "SURVIVAL_LEADERBOARD_UPDATE",
-        payload: data,
-        timestamp: Date.now(),
-      }).catch(() => {});
+      await redisManager
+        .publish("leaderboard:live", {
+          type: "SURVIVAL_LEADERBOARD_UPDATE",
+          payload: data,
+          timestamp: Date.now(),
+        })
+        .catch(() => {});
     }
   }
 

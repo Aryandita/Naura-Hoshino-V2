@@ -11,7 +11,9 @@ const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
 const currencyHelper = require("../../../src/survival/engines/currency");
 const recyclingPoolEngine = require("../../../src/survival/engines/recyclingPoolEngine");
-const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+} = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 
 function n(num) {
@@ -51,7 +53,8 @@ module.exports = {
           last.getUTCDate() === now.getUTCDate();
       }
       if (alreadyClaimed) {
-        noviceStatus = "✅ Sudah Diklaim Hari Ini (Kembali besok jam 00:00 UTC)";
+        noviceStatus =
+          "✅ Sudah Diklaim Hari Ini (Kembali besok jam 00:00 UTC)";
       } else {
         noviceStatus = "🎁 **Tersedia untuk Diklaim!** (Bantuan 250 NSF)";
         canClaimNovice = true;
@@ -86,7 +89,11 @@ module.exports = {
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("wallet_claim_novice")
-          .setLabel(isNoviceClaimable ? "Klaim Subsidi Pemula" : "Subsidi Telah Diklaim")
+          .setLabel(
+            isNoviceClaimable
+              ? "Klaim Subsidi Pemula"
+              : "Subsidi Telah Diklaim",
+          )
           .setStyle(ButtonStyle.Success)
           .setDisabled(!isNoviceClaimable)
           .setEmoji("🔰"),
@@ -124,32 +131,39 @@ module.exports = {
         if (res.ok) {
           currentNsf += res.amount;
           isNoviceClaimable = false;
-          currentNoviceStatus = "✅ Sudah Diklaim Hari Ini (Kembali besok jam 00:00 UTC)";
+          currentNoviceStatus =
+            "✅ Sudah Diklaim Hari Ini (Kembali besok jam 00:00 UTC)";
 
           const updatedPayload = buildWalletPayload();
           await interaction.editReply(updatedPayload).catch(() => {});
 
-          await i.followUp({
-            content: `🎉 **Berhasil!** Kamu telah menerima subsidi harian sebesar **${n(res.amount)} NSF** dari Dana Bantuan Petualang Pemula!`,
-            flags: MessageFlags.Ephemeral,
-          }).catch(() => {});
+          await i
+            .followUp({
+              content: `🎉 **Berhasil!** Kamu telah menerima subsidi harian sebesar **${n(res.amount)} NSF** dari Dana Bantuan Petualang Pemula!`,
+              flags: MessageFlags.Ephemeral,
+            })
+            .catch(() => {});
         } else {
-          await i.followUp({
-            content: `❌ Gagal mengklaim subsidi: ${res.reason}`,
-            flags: MessageFlags.Ephemeral,
-          }).catch(() => {});
+          await i
+            .followUp({
+              content: `❌ Gagal mengklaim subsidi: ${res.reason}`,
+              flags: MessageFlags.Ephemeral,
+            })
+            .catch(() => {});
         }
       } else if (i.customId === "wallet_lottery_info") {
-        await i.reply({
-          content: [
-            `🎟️ **Informasi Astral Lottery Mingguan:**`,
-            `• **Total Jackpot Saat Ini:** \`${n(treasury.lotteryJackpot)}\` NSF`,
-            `• **Tiket Anda:** \`${n(tickets)}\` Tiket Aktif`,
-            `• **Jadwal Pengundian:** Setiap hari Minggu pukul 20:00 WIB`,
-            `• **Cara Mendapatkan Tiket:** Dapatkan 1 Tiket gratis secara otomatis setiap membelanjakan/membayar 250 NSF untuk biaya perbaikan alat atau administrasi bank!`,
-          ].join("\n"),
-          flags: MessageFlags.Ephemeral,
-        }).catch(() => {});
+        await i
+          .reply({
+            content: [
+              `🎟️ **Informasi Astral Lottery Mingguan:**`,
+              `• **Total Jackpot Saat Ini:** \`${n(treasury.lotteryJackpot)}\` NSF`,
+              `• **Tiket Anda:** \`${n(tickets)}\` Tiket Aktif`,
+              `• **Jadwal Pengundian:** Setiap hari Minggu pukul 20:00 WIB`,
+              `• **Cara Mendapatkan Tiket:** Dapatkan 1 Tiket gratis secara otomatis setiap membelanjakan/membayar 250 NSF untuk biaya perbaikan alat atau administrasi bank!`,
+            ].join("\n"),
+            flags: MessageFlags.Ephemeral,
+          })
+          .catch(() => {});
       }
     });
   },

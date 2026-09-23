@@ -15,7 +15,9 @@ const {
   MessageFlags,
 } = require("discord.js");
 const { parseDocument } = require("../../src/ai/documentParser");
-const { service: semanticMemoryService } = require("../../src/ai/semanticMemoryService");
+const {
+  service: semanticMemoryService,
+} = require("../../src/ai/semanticMemoryService");
 const geminiClient = require("../../src/ai/geminiClient");
 const ui = require("../../src/config/ui");
 const {
@@ -27,11 +29,15 @@ const {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("knowledge")
-    .setDescription("Pusat basis pengetahuan Server RAG Naura (baca PDF, DOCX, XLSX, & Aturan Server)")
+    .setDescription(
+      "Pusat basis pengetahuan Server RAG Naura (baca PDF, DOCX, XLSX, & Aturan Server)",
+    )
     .addSubcommand((sub) =>
       sub
         .setName("upload")
-        .setDescription("Unggah berkas dokumen (PDF, Word, Excel, CSV, TXT) untuk dipelajari Naura")
+        .setDescription(
+          "Unggah berkas dokumen (PDF, Word, Excel, CSV, TXT) untuk dipelajari Naura",
+        )
         .addAttachmentOption((opt) =>
           opt
             .setName("berkas")
@@ -53,7 +59,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("list")
-        .setDescription("Lihat daftar dokumen pengetahuan yang tersimpan di server ini"),
+        .setDescription(
+          "Lihat daftar dokumen pengetahuan yang tersimpan di server ini",
+        ),
     )
     .addSubcommand((sub) =>
       sub
@@ -62,18 +70,24 @@ module.exports = {
         .addStringOption((opt) =>
           opt
             .setName("nama_berkas")
-            .setDescription("Nama berkas yang ingin dihapus (contoh: aturan_server.pdf)")
+            .setDescription(
+              "Nama berkas yang ingin dihapus (contoh: aturan_server.pdf)",
+            )
             .setRequired(true),
         ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("ask")
-        .setDescription("Tanyakan apa pun tentang isi dokumen dan panduan server kepada Naura")
+        .setDescription(
+          "Tanyakan apa pun tentang isi dokumen dan panduan server kepada Naura",
+        )
         .addStringOption((opt) =>
           opt
             .setName("pertanyaan")
-            .setDescription("Pertanyaan yang ingin kamu cari jawabannya dari dokumen server")
+            .setDescription(
+              "Pertanyaan yang ingin kamu cari jawabannya dari dokumen server",
+            )
             .setRequired(true),
         ),
     ),
@@ -313,7 +327,9 @@ module.exports = {
 
         const citationText =
           citedFiles.size > 0
-            ? `\n\n📌 *Sumber rujukan:* ${Array.from(citedFiles).map((f) => `\`${f}\``).join(", ")}`
+            ? `\n\n📌 *Sumber rujukan:* ${Array.from(citedFiles)
+                .map((f) => `\`${f}\``)
+                .join(", ")}`
             : "";
 
         const payload = buildContainerV2({

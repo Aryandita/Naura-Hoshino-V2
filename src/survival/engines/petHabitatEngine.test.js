@@ -25,8 +25,10 @@ test("PetHabitatEngine - breedPets validasi afeksi dan perkawinan silang", async
 
   // Mock pet dengan afeksi rendah (< 100)
   UserPet.findOne = async ({ where }) => {
-    if (where.id === 1) return { id: 1, petType: "wolf", affection: 50, save: async () => {} };
-    if (where.id === 2) return { id: 2, petType: "cat", affection: 80, save: async () => {} };
+    if (where.id === 1)
+      return { id: 1, petType: "wolf", affection: 50, save: async () => {} };
+    if (where.id === 2)
+      return { id: 2, petType: "cat", affection: 80, save: async () => {} };
     return null;
   };
 
@@ -37,8 +39,10 @@ test("PetHabitatEngine - breedPets validasi afeksi dan perkawinan silang", async
 
     // Mock pet dengan afeksi maksimal (100)
     UserPet.findOne = async ({ where }) => {
-      if (where.id === 1) return { id: 1, petType: "wolf", affection: 100, save: async () => {} };
-      if (where.id === 2) return { id: 2, petType: "cat", affection: 100, save: async () => {} };
+      if (where.id === 1)
+        return { id: 1, petType: "wolf", affection: 100, save: async () => {} };
+      if (where.id === 2)
+        return { id: 2, petType: "cat", affection: 100, save: async () => {} };
       return null;
     };
 

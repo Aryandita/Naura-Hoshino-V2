@@ -35,11 +35,18 @@ const C = {
 /**
  * Bungkus promise dengan batas waktu maksimal
  */
-function withTimeout(promise, timeoutMs = 5000, errorMsg = "Batas waktu koneksi terlampaui (Timeout)") {
+function withTimeout(
+  promise,
+  timeoutMs = 5000,
+  errorMsg = "Batas waktu koneksi terlampaui (Timeout)",
+) {
   return Promise.race([
     promise,
     new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`${errorMsg} (${timeoutMs / 1000}s)`)), timeoutMs),
+      setTimeout(
+        () => reject(new Error(`${errorMsg} (${timeoutMs / 1000}s)`)),
+        timeoutMs,
+      ),
     ),
   ]);
 }
@@ -47,7 +54,11 @@ function withTimeout(promise, timeoutMs = 5000, errorMsg = "Batas waktu koneksi 
 async function inspectPostgres() {
   const start = Date.now();
   try {
-    await withTimeout(sequelize.authenticate(), 5000, "Koneksi PostgreSQL/Supabase timeout");
+    await withTimeout(
+      sequelize.authenticate(),
+      5000,
+      "Koneksi PostgreSQL/Supabase timeout",
+    );
     const latency = Date.now() - start;
 
     const [userCount, survivalCount, treasuryCount] = await Promise.all([
@@ -117,7 +128,11 @@ async function inspectRedis() {
     }
 
     const client = redisManager.client;
-    const pingRes = await withTimeout(client.ping(), 2000, "Ping Redis timeout");
+    const pingRes = await withTimeout(
+      client.ping(),
+      2000,
+      "Ping Redis timeout",
+    );
     const latency = Date.now() - start;
 
     let dbSize = 0;
@@ -158,7 +173,11 @@ async function inspectMongo() {
     }
 
     if (!mongoManager.isReady) {
-      await withTimeout(mongoManager.connect(), 4000, "Koneksi MongoDB timeout");
+      await withTimeout(
+        mongoManager.connect(),
+        4000,
+        "Koneksi MongoDB timeout",
+      );
     }
 
     const latency = Date.now() - start;
@@ -172,9 +191,13 @@ async function inspectMongo() {
       latency,
       details: {
         "Status Koneksi": "Terhubung ke Cloud Atlas",
-        "Latensi": `${latency}ms`,
+        Latensi: `${latency}ms`,
         "Total Koleksi": collections.length,
-        "Nama Koleksi": collections.map((c) => c.name).slice(0, 5).join(", ") || "(Kosong)",
+        "Nama Koleksi":
+          collections
+            .map((c) => c.name)
+            .slice(0, 5)
+            .join(", ") || "(Kosong)",
       },
     };
   } catch (err) {
@@ -196,24 +219,32 @@ function inspectSqlite() {
       details: {
         "Lokasi File": "database.sqlite",
         "Ukuran File": `${sizeKb} KB`,
-        "Status": "Tersedia sebagai fallback offline",
+        Status: "Tersedia sebagai fallback offline",
       },
     };
   }
   return {
     ok: true,
     details: {
-      "Status": "Tidak aktif (Menggunakan PostgreSQL/Supabase Cloud utama)",
+      Status: "Tidak aktif (Menggunakan PostgreSQL/Supabase Cloud utama)",
     },
   };
 }
 
 async function run() {
-  console.log(`\n${C.bold}${C.cyan}====================================================${C.reset}`);
-  console.log(`${C.bold}${C.cyan}  NAURA HOSHINO V2 - POLYGLOT DATABASE INSPECTOR    ${C.reset}`);
-  console.log(`${C.bold}${C.cyan}====================================================${C.reset}\n`);
+  console.log(
+    `\n${C.bold}${C.cyan}====================================================${C.reset}`,
+  );
+  console.log(
+    `${C.bold}${C.cyan}  NAURA HOSHINO V2 - POLYGLOT DATABASE INSPECTOR    ${C.reset}`,
+  );
+  console.log(
+    `${C.bold}${C.cyan}====================================================${C.reset}\n`,
+  );
 
-  console.log(`${C.gray}[1/4] Memeriksa Relational Database (PostgreSQL / Supabase)...${C.reset}`);
+  console.log(
+    `${C.gray}[1/4] Memeriksa Relational Database (PostgreSQL / Supabase)...${C.reset}`,
+  );
   const pgResult = await inspectPostgres();
 
   console.log(`${C.gray}[2/4] Memeriksa In-Memory Cache (Redis)...${C.reset}`);
@@ -229,24 +260,32 @@ async function run() {
 
   // 1. PostgreSQL / Supabase
   if (pgResult.ok) {
-    console.log(`  ${C.green}[OK]${C.reset} ${C.bold}PostgreSQL / Supabase Cloud${C.reset} (${pgResult.latency}ms)`);
+    console.log(
+      `  ${C.green}[OK]${C.reset} ${C.bold}PostgreSQL / Supabase Cloud${C.reset} (${pgResult.latency}ms)`,
+    );
     for (const [k, v] of Object.entries(pgResult.details)) {
       console.log(`       - ${k}: ${C.cyan}${v}${C.reset}`);
     }
   } else {
-    console.log(`  ${C.red}[FAIL]${C.reset} ${C.bold}PostgreSQL / Supabase Cloud${C.reset}`);
+    console.log(
+      `  ${C.red}[FAIL]${C.reset} ${C.bold}PostgreSQL / Supabase Cloud${C.reset}`,
+    );
     console.log(`       - Error: ${C.red}${pgResult.error}${C.reset}`);
   }
   console.log("");
 
   // 2. Redis
   if (redisResult.ok) {
-    console.log(`  ${C.green}[OK]${C.reset} ${C.bold}Redis Cache & Distributed Mutex${C.reset} (${redisResult.latency}ms)`);
+    console.log(
+      `  ${C.green}[OK]${C.reset} ${C.bold}Redis Cache & Distributed Mutex${C.reset} (${redisResult.latency}ms)`,
+    );
     for (const [k, v] of Object.entries(redisResult.details)) {
       console.log(`       - ${k}: ${C.cyan}${v}${C.reset}`);
     }
   } else if (redisResult.skipped) {
-    console.log(`  ${C.yellow}[LEWATI]${C.reset} ${C.bold}Redis Cache${C.reset}: ${redisResult.reason}`);
+    console.log(
+      `  ${C.yellow}[LEWATI]${C.reset} ${C.bold}Redis Cache${C.reset}: ${redisResult.reason}`,
+    );
   } else {
     console.log(`  ${C.red}[FAIL]${C.reset} ${C.bold}Redis Cache${C.reset}`);
     console.log(`       - Error: ${C.red}${redisResult.error}${C.reset}`);
@@ -255,12 +294,16 @@ async function run() {
 
   // 3. MongoDB
   if (mongoResult.ok) {
-    console.log(`  ${C.green}[OK]${C.reset} ${C.bold}MongoDB Audit & Chat Logs${C.reset} (${mongoResult.latency}ms)`);
+    console.log(
+      `  ${C.green}[OK]${C.reset} ${C.bold}MongoDB Audit & Chat Logs${C.reset} (${mongoResult.latency}ms)`,
+    );
     for (const [k, v] of Object.entries(mongoResult.details)) {
       console.log(`       - ${k}: ${C.cyan}${v}${C.reset}`);
     }
   } else if (mongoResult.skipped) {
-    console.log(`  ${C.yellow}[LEWATI]${C.reset} ${C.bold}MongoDB${C.reset}: ${mongoResult.reason}`);
+    console.log(
+      `  ${C.yellow}[LEWATI]${C.reset} ${C.bold}MongoDB${C.reset}: ${mongoResult.reason}`,
+    );
   } else {
     console.log(`  ${C.red}[FAIL]${C.reset} ${C.bold}MongoDB${C.reset}`);
     console.log(`       - Error: ${C.red}${mongoResult.error}${C.reset}`);
@@ -268,12 +311,16 @@ async function run() {
   console.log("");
 
   // 4. SQLite
-  console.log(`  ${C.green}[OK]${C.reset} ${C.bold}SQLite Local Fallback${C.reset}`);
+  console.log(
+    `  ${C.green}[OK]${C.reset} ${C.bold}SQLite Local Fallback${C.reset}`,
+  );
   for (const [k, v] of Object.entries(sqliteResult.details)) {
     console.log(`       - ${k}: ${C.cyan}${v}${C.reset}`);
   }
 
-  console.log(`\n${C.bold}${C.cyan}====================================================${C.reset}\n`);
+  console.log(
+    `\n${C.bold}${C.cyan}====================================================${C.reset}\n`,
+  );
 
   // Bersihkan koneksi
   try {

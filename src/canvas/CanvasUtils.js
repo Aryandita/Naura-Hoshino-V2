@@ -15,7 +15,6 @@ const UI_COLORS = {
   gold: "#FFD700",
 };
 
-
 // ==========================================
 // ðŸ› ï¸ HELPER DASAR (GABUNGAN)
 // ==========================================
@@ -2571,7 +2570,8 @@ const { generateInventoryBackpackImage } = require("./inventoryCanvas");
 function getPlatformIcon(sourceName = "") {
   const s = String(sourceName || "").toLowerCase();
   if (s.includes("spotify")) return ui.getEmoji("spotify") || "🟢";
-  if (s.includes("youtube") || s.includes("yt")) return ui.getEmoji("youtube") || "🔴";
+  if (s.includes("youtube") || s.includes("yt"))
+    return ui.getEmoji("youtube") || "🔴";
   if (s.includes("soundcloud")) return ui.getEmoji("soundcloud") || "🟠";
   return ui.getEmoji("normal") || "🎵";
 }

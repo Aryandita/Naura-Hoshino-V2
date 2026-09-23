@@ -22,8 +22,14 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const MASTER_GLB = path.join(__dirname, "../assets/3D Model Naura/naura_master.glb");
-const THUMB_PNG = path.join(__dirname, "../dashboard/public/models/naura-2d.png");
+const MASTER_GLB = path.join(
+  __dirname,
+  "../assets/3D Model Naura/naura_master.glb",
+);
+const THUMB_PNG = path.join(
+  __dirname,
+  "../dashboard/public/models/naura-2d.png",
+);
 
 if (!fs.existsSync(MASTER_GLB)) {
   console.error("Berkas master GLB tidak ditemukan:", MASTER_GLB);
@@ -43,7 +49,9 @@ const rawBin = srcBuffer.subarray(
 );
 const binBuffer = Buffer.from(rawBin);
 
-console.log(`Master dibaca: ${gltf.meshes[0].primitives.length} primitive, ${binBuffer.length} bytes binary.`);
+console.log(
+  `Master dibaca: ${gltf.meshes[0].primitives.length} primitive, ${binBuffer.length} bytes binary.`,
+);
 
 // 1. Ambil posisi vertex dari Accessor POSITION
 const prim = gltf.meshes[0].primitives[0];
@@ -57,7 +65,9 @@ console.log(`Total vertex yang akan di-rigging ulang: ${numVerts}`);
 // =========================================================================
 // 2. Algoritma Capsule-Based Precision Skinning
 // =========================================================================
-console.log("=== [2/5] Menghitung Pembobotan Presisi Kapsul Bebas Deformasi Rok ===");
+console.log(
+  "=== [2/5] Menghitung Pembobotan Presisi Kapsul Bebas Deformasi Rok ===",
+);
 
 // Peta Joint Index ke Nama & Koordinat Dunia Tulang:
 // Sumbu koordinat model: Z = Lateral (Kiri positif, Kanan negatif), Y = Vertikal, X = Kedalaman (Depan positif, Belakang negatif)
@@ -69,12 +79,12 @@ const JOINTS = {
   HEAD: 4,
   PONYTAIL: 5,
   LEFT_SHOULDER: 6,
-  LEFT_ARM: 7,       // UpperArm
-  LEFT_FOREARM: 8,   // LowerArm
+  LEFT_ARM: 7, // UpperArm
+  LEFT_FOREARM: 8, // LowerArm
   LEFT_HAND: 9,
   RIGHT_SHOULDER: 10,
-  RIGHT_ARM: 11,      // UpperArm
-  RIGHT_FOREARM: 12,  // LowerArm
+  RIGHT_ARM: 11, // UpperArm
+  RIGHT_FOREARM: 12, // LowerArm
   RIGHT_HAND: 13,
   LEFT_UP_LEG: 14,
   LEFT_LEG: 15,
@@ -85,7 +95,7 @@ const JOINTS = {
 };
 
 // Array output untuk JOINTS_0 (uint16) dan WEIGHTS_0 (float32)
-const jointsBuf = Buffer.alloc(numVerts * 4 * 2);  // 4 * uint16
+const jointsBuf = Buffer.alloc(numVerts * 4 * 2); // 4 * uint16
 const weightsBuf = Buffer.alloc(numVerts * 4 * 4); // 4 * float32
 
 let skirtProtectedCount = 0;
@@ -105,16 +115,16 @@ for (let i = 0; i < numVerts; i++) {
       // Ponytail (Kuncir Kuda yang bergerak dengan fisika sekunder SpringBone)
       const ponyBlend = Math.min(1.0, Math.max(0.0, (y - 0.31) / 0.12));
       j = [JOINTS.PONYTAIL, JOINTS.HEAD, JOINTS.NECK, 0];
-      w = [0.65 + ponyBlend * 0.25, 0.30 - ponyBlend * 0.20, 0.05, 0.0];
+      w = [0.65 + ponyBlend * 0.25, 0.3 - ponyBlend * 0.2, 0.05, 0.0];
     } else if (y > 0.36) {
       // Puncak kepala & rambut atas
       j = [JOINTS.HEAD, JOINTS.NECK, JOINTS.PONYTAIL, 0];
-      w = [0.90, 0.08, 0.02, 0.0];
+      w = [0.9, 0.08, 0.02, 0.0];
     } else {
       // Wajah / dagu
       const headBlend = Math.min(1.0, Math.max(0.0, (y - 0.28) / 0.08));
       j = [JOINTS.HEAD, JOINTS.NECK, 0, 0];
-      w = [0.70 + headBlend * 0.25, 0.30 - headBlend * 0.25, 0.0, 0.0];
+      w = [0.7 + headBlend * 0.25, 0.3 - headBlend * 0.25, 0.0, 0.0];
     }
   }
 
@@ -122,7 +132,7 @@ for (let i = 0; i < numVerts; i++) {
   else if (y >= 0.21 && Math.abs(z) <= 0.048) {
     const neckBlend = Math.min(1.0, Math.max(0.0, (y - 0.21) / 0.07));
     j = [JOINTS.NECK, JOINTS.CHEST, JOINTS.HEAD, 0];
-    w = [0.60, 0.25 * (1.0 - neckBlend), 0.15 + neckBlend * 0.15, 0.0];
+    w = [0.6, 0.25 * (1.0 - neckBlend), 0.15 + neckBlend * 0.15, 0.0];
   }
 
   // --- ZONA 3: LENGAN KIRI (Eksklusif pada Z > 0.052 dan Y > -0.12) ---
@@ -132,20 +142,20 @@ for (let i = 0; i < numVerts; i++) {
       // Bahu kiri & klavikula atas
       const shBlend = Math.min(1.0, Math.max(0.0, (y - 0.18) / 0.08));
       j = [JOINTS.LEFT_SHOULDER, JOINTS.LEFT_ARM, JOINTS.CHEST, 0];
-      w = [0.55 + shBlend * 0.25, 0.35 - shBlend * 0.15, 0.10, 0.0];
+      w = [0.55 + shBlend * 0.25, 0.35 - shBlend * 0.15, 0.1, 0.0];
     } else if (y > 0.11) {
       // Lengan atas kiri (Upper Arm) & transisi siku atas
       const armBlend = Math.min(1.0, Math.max(0.0, (y - 0.11) / 0.07));
       j = [JOINTS.LEFT_ARM, JOINTS.LEFT_FOREARM, JOINTS.LEFT_SHOULDER, 0];
-      w = [0.60 + armBlend * 0.30, 0.30 - armBlend * 0.20, 0.10, 0.0];
+      w = [0.6 + armBlend * 0.3, 0.3 - armBlend * 0.2, 0.1, 0.0];
     } else if (y > 0.02) {
       // Lengan bawah kiri (Forearm / Siku)
       const elbowBlend = Math.min(1.0, Math.max(0.0, (y - 0.02) / 0.09));
       j = [JOINTS.LEFT_FOREARM, JOINTS.LEFT_ARM, JOINTS.LEFT_HAND, 0];
-      w = [0.60, 0.25 * elbowBlend, 0.15 + 0.15 * (1.0 - elbowBlend), 0.0];
+      w = [0.6, 0.25 * elbowBlend, 0.15 + 0.15 * (1.0 - elbowBlend), 0.0];
     } else {
       // Telapak & pergelangan tangan kiri
-      const handBlend = Math.min(1.0, Math.max(0.0, (y - (-0.12)) / 0.14));
+      const handBlend = Math.min(1.0, Math.max(0.0, (y - -0.12) / 0.14));
       j = [JOINTS.LEFT_HAND, JOINTS.LEFT_FOREARM, 0, 0];
       w = [0.85 - handBlend * 0.15, 0.15 + handBlend * 0.15, 0.0, 0.0];
     }
@@ -158,20 +168,20 @@ for (let i = 0; i < numVerts; i++) {
       // Bahu kanan & klavikula atas
       const shBlend = Math.min(1.0, Math.max(0.0, (y - 0.18) / 0.08));
       j = [JOINTS.RIGHT_SHOULDER, JOINTS.RIGHT_ARM, JOINTS.CHEST, 0];
-      w = [0.55 + shBlend * 0.25, 0.35 - shBlend * 0.15, 0.10, 0.0];
+      w = [0.55 + shBlend * 0.25, 0.35 - shBlend * 0.15, 0.1, 0.0];
     } else if (y > 0.11) {
       // Lengan atas kanan (Upper Arm) & transisi siku atas
       const armBlend = Math.min(1.0, Math.max(0.0, (y - 0.11) / 0.07));
       j = [JOINTS.RIGHT_ARM, JOINTS.RIGHT_FOREARM, JOINTS.RIGHT_SHOULDER, 0];
-      w = [0.60 + armBlend * 0.30, 0.30 - armBlend * 0.20, 0.10, 0.0];
+      w = [0.6 + armBlend * 0.3, 0.3 - armBlend * 0.2, 0.1, 0.0];
     } else if (y > 0.02) {
       // Lengan bawah kanan (Forearm / Siku)
       const elbowBlend = Math.min(1.0, Math.max(0.0, (y - 0.02) / 0.09));
       j = [JOINTS.RIGHT_FOREARM, JOINTS.RIGHT_ARM, JOINTS.RIGHT_HAND, 0];
-      w = [0.60, 0.25 * elbowBlend, 0.15 + 0.15 * (1.0 - elbowBlend), 0.0];
+      w = [0.6, 0.25 * elbowBlend, 0.15 + 0.15 * (1.0 - elbowBlend), 0.0];
     } else {
       // Telapak & pergelangan tangan kanan
-      const handBlend = Math.min(1.0, Math.max(0.0, (y - (-0.12)) / 0.14));
+      const handBlend = Math.min(1.0, Math.max(0.0, (y - -0.12) / 0.14));
       j = [JOINTS.RIGHT_HAND, JOINTS.RIGHT_FOREARM, 0, 0];
       w = [0.85 - handBlend * 0.15, 0.15 + handBlend * 0.15, 0.0, 0.0];
     }
@@ -181,27 +191,42 @@ for (let i = 0; i < numVerts; i++) {
   else if (y >= 0.13) {
     const chestBlend = Math.min(1.0, Math.max(0.0, (y - 0.13) / 0.09));
     j = [JOINTS.CHEST, JOINTS.SPINE, JOINTS.NECK, 0];
-    w = [0.65 + chestBlend * 0.15, 0.25 * (1.0 - chestBlend), 0.10 * chestBlend, 0.0];
+    w = [
+      0.65 + chestBlend * 0.15,
+      0.25 * (1.0 - chestBlend),
+      0.1 * chestBlend,
+      0.0,
+    ];
   }
 
   // --- ZONA 6: PINGGANG / SPINE (0.02 <= Y < 0.13, |Z| <= 0.052) ---
   else if (y >= 0.02) {
     const spineBlend = Math.min(1.0, Math.max(0.0, (y - 0.02) / 0.11));
     j = [JOINTS.SPINE, JOINTS.HIPS, JOINTS.CHEST, 0];
-    w = [0.65, 0.25 * (1.0 - spineBlend), 0.10 * spineBlend, 0.0];
+    w = [0.65, 0.25 * (1.0 - spineBlend), 0.1 * spineBlend, 0.0];
   }
 
   // --- ZONA 7: PINGGUL & ROK LIPIT (-0.14 <= Y < 0.02, |Z| <= 0.052) ---
   // ATURAN MUTLAK: 0% bobot ke lengan atau tangan! Skirt 100% aman!
   else if (y >= -0.14) {
     skirtProtectedCount++;
-    const hipBlend = Math.min(1.0, Math.max(0.0, (y - (-0.14)) / 0.16));
+    const hipBlend = Math.min(1.0, Math.max(0.0, (y - -0.14) / 0.16));
     if (z >= 0) {
       j = [JOINTS.HIPS, JOINTS.SPINE, JOINTS.LEFT_UP_LEG, 0];
-      w = [0.75 + hipBlend * 0.15, 0.20 * hipBlend, 0.05 * (1.0 - hipBlend), 0.0];
+      w = [
+        0.75 + hipBlend * 0.15,
+        0.2 * hipBlend,
+        0.05 * (1.0 - hipBlend),
+        0.0,
+      ];
     } else {
       j = [JOINTS.HIPS, JOINTS.SPINE, JOINTS.RIGHT_UP_LEG, 0];
-      w = [0.75 + hipBlend * 0.15, 0.20 * hipBlend, 0.05 * (1.0 - hipBlend), 0.0];
+      w = [
+        0.75 + hipBlend * 0.15,
+        0.2 * hipBlend,
+        0.05 * (1.0 - hipBlend),
+        0.0,
+      ];
     }
   }
 
@@ -209,14 +234,14 @@ for (let i = 0; i < numVerts; i++) {
   else if (z >= 0) {
     if (y > -0.27) {
       // Paha atas kiri
-      const legBlend = Math.min(1.0, Math.max(0.0, (y - (-0.27)) / 0.13));
+      const legBlend = Math.min(1.0, Math.max(0.0, (y - -0.27) / 0.13));
       j = [JOINTS.LEFT_UP_LEG, JOINTS.HIPS, JOINTS.LEFT_LEG, 0];
-      w = [0.75, 0.20 * legBlend, 0.05 * (1.0 - legBlend), 0.0];
+      w = [0.75, 0.2 * legBlend, 0.05 * (1.0 - legBlend), 0.0];
     } else if (y > -0.42) {
       // Lutut & betis kiri
-      const kneeBlend = Math.min(1.0, Math.max(0.0, (y - (-0.42)) / 0.15));
+      const kneeBlend = Math.min(1.0, Math.max(0.0, (y - -0.42) / 0.15));
       j = [JOINTS.LEFT_LEG, JOINTS.LEFT_UP_LEG, JOINTS.LEFT_FOOT, 0];
-      w = [0.70, 0.20 * kneeBlend, 0.10 * (1.0 - kneeBlend), 0.0];
+      w = [0.7, 0.2 * kneeBlend, 0.1 * (1.0 - kneeBlend), 0.0];
     } else {
       // Kaki & sepatu kiri
       j = [JOINTS.LEFT_FOOT, JOINTS.LEFT_LEG, 0, 0];
@@ -228,14 +253,14 @@ for (let i = 0; i < numVerts; i++) {
   else {
     if (y > -0.27) {
       // Paha atas kanan
-      const legBlend = Math.min(1.0, Math.max(0.0, (y - (-0.27)) / 0.13));
+      const legBlend = Math.min(1.0, Math.max(0.0, (y - -0.27) / 0.13));
       j = [JOINTS.RIGHT_UP_LEG, JOINTS.HIPS, JOINTS.RIGHT_LEG, 0];
-      w = [0.75, 0.20 * legBlend, 0.05 * (1.0 - legBlend), 0.0];
+      w = [0.75, 0.2 * legBlend, 0.05 * (1.0 - legBlend), 0.0];
     } else if (y > -0.42) {
       // Lutut & betis kanan
-      const kneeBlend = Math.min(1.0, Math.max(0.0, (y - (-0.42)) / 0.15));
+      const kneeBlend = Math.min(1.0, Math.max(0.0, (y - -0.42) / 0.15));
       j = [JOINTS.RIGHT_LEG, JOINTS.RIGHT_UP_LEG, JOINTS.RIGHT_FOOT, 0];
-      w = [0.70, 0.20 * kneeBlend, 0.10 * (1.0 - kneeBlend), 0.0];
+      w = [0.7, 0.2 * kneeBlend, 0.1 * (1.0 - kneeBlend), 0.0];
     } else {
       // Kaki & sepatu kanan
       j = [JOINTS.RIGHT_FOOT, JOINTS.RIGHT_LEG, 0, 0];
@@ -266,8 +291,12 @@ for (let i = 0; i < numVerts; i++) {
   weightsBuf.writeFloatLE(w[3], i * 16 + 12);
 }
 
-console.log(`-> Vertex rok & pinggul yang diamankan: ${skirtProtectedCount} vertex (0% bound to arms!).`);
-console.log(`-> Vertex lengan & tangan yang di-rig presisi: ${armVerticesCount} vertex.`);
+console.log(
+  `-> Vertex rok & pinggul yang diamankan: ${skirtProtectedCount} vertex (0% bound to arms!).`,
+);
+console.log(
+  `-> Vertex lengan & tangan yang di-rig presisi: ${armVerticesCount} vertex.`,
+);
 
 // Ganti binary segment JOINTS_0 dan WEIGHTS_0 di binBuffer
 const jAcc = gltf.accessors[prim.attributes.JOINTS_0];
@@ -283,7 +312,9 @@ weightsBuf.copy(binBuffer, wOffset);
 // =========================================================================
 // 3. Konfigurasi Material Anime PBR Berkualitas Tinggi
 // =========================================================================
-console.log("=== [3/5] Mengonfigurasi Anime PBR Shading & DoubleSided Rendering ===");
+console.log(
+  "=== [3/5] Mengonfigurasi Anime PBR Shading & DoubleSided Rendering ===",
+);
 if (gltf.materials && gltf.materials[0]) {
   const mat = gltf.materials[0];
   mat.name = "Naura_Anime_HD_PBR";
@@ -312,7 +343,7 @@ function packageGlb(gltfObj, binary) {
 
   // Header GLB
   glbBuf.writeUInt32LE(0x46546c67, 0); // 'glTF'
-  glbBuf.writeUInt32LE(2, 4);          // version: 2
+  glbBuf.writeUInt32LE(2, 4); // version: 2
   glbBuf.writeUInt32LE(totalLength, 8);
 
   // Chunk 0: JSON
@@ -332,7 +363,9 @@ function packageGlb(gltfObj, binary) {
 // =========================================================================
 // 4. Bangun Format VRM 0.0 Standar (SpringBones & Thumbnail)
 // =========================================================================
-console.log("=== [4/5] Membangun naura NEW.vrm (SpringBones & Morph Targets) ===");
+console.log(
+  "=== [4/5] Membangun naura NEW.vrm (SpringBones & Morph Targets) ===",
+);
 
 const vrmObject = JSON.parse(JSON.stringify(gltf));
 let vrmBinBuffer = Buffer.from(binBuffer);
@@ -448,7 +481,7 @@ const vrmExtension = {
         stiffiness: 0.82,
         gravityPower: 0.06,
         gravityDir: { x: 0.0, y: -1.0, z: 0.0 },
-        dragForce: 0.40,
+        dragForce: 0.4,
         center: -1,
         hitRadius: 0.04,
         bones: [6], // Node 6 = Ponytail
@@ -514,9 +547,17 @@ for (const dir of targetDirs) {
   fs.writeFileSync(vrmPath, finalVrmBuffer);
 
   console.log(`[OK] Disimpan di ${dir}:`);
-  console.log(`     - naura NEW.glb (${(finalGlbBuffer.length / (1024 * 1024)).toFixed(2)} MB)`);
-  console.log(`     - Naura Hoshino 3D NEW.glb (${(finalGlbBuffer.length / (1024 * 1024)).toFixed(2)} MB)`);
-  console.log(`     - naura NEW.vrm (${(finalVrmBuffer.length / (1024 * 1024)).toFixed(2)} MB)`);
+  console.log(
+    `     - naura NEW.glb (${(finalGlbBuffer.length / (1024 * 1024)).toFixed(2)} MB)`,
+  );
+  console.log(
+    `     - Naura Hoshino 3D NEW.glb (${(finalGlbBuffer.length / (1024 * 1024)).toFixed(2)} MB)`,
+  );
+  console.log(
+    `     - naura NEW.vrm (${(finalVrmBuffer.length / (1024 * 1024)).toFixed(2)} MB)`,
+  );
 }
 
-console.log("\n✨ SUKSES! Seluruh Model 3D NEW (GLB & VRM) berhasil diproduksi dengan zero-skirt-deformation!");
+console.log(
+  "\n✨ SUKSES! Seluruh Model 3D NEW (GLB & VRM) berhasil diproduksi dengan zero-skirt-deformation!",
+);

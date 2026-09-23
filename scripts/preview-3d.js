@@ -41,7 +41,14 @@ const handleModel = (req, res) => {
   res.status(404).send("Berkas model 3D tidak ditemukan");
 };
 
-app.get(["/models/naura.vrm", "/models/naura.glb", "/models/Naura%20Hoshino%203D.glb"], handleModel);
+app.get(
+  [
+    "/models/naura.vrm",
+    "/models/naura.glb",
+    "/models/Naura%20Hoshino%203D.glb",
+  ],
+  handleModel,
+);
 
 // 2. Halaman Studio HTML Standalone
 app.get("/", (req, res) => {

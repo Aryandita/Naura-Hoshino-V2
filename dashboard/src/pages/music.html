@@ -4,11 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Music Hub | Naura OS</title>
-    <meta name="description" content="Kontrol pemutar musik Lavalink v4 dengan Fish Audio AI DJ dan antrian real-time." />
+    <meta
+      name="description"
+      content="Kontrol pemutar musik Lavalink v4 dengan Fish Audio AI DJ dan antrian real-time."
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <script src="/socket.io/socket.io.js"></script>
     <style>
@@ -27,18 +36,18 @@
         border-radius: 50%;
         background: conic-gradient(
           from 0deg,
-          rgba(244,114,182,0.7) 0%,
-          rgba(167,139,250,0.6) 20%,
-          rgba(34,211,238,0.5) 40%,
-          rgba(245,158,11,0.6) 60%,
-          rgba(244,114,182,0.7) 80%,
-          rgba(167,139,250,0.6) 100%
+          rgba(244, 114, 182, 0.7) 0%,
+          rgba(167, 139, 250, 0.6) 20%,
+          rgba(34, 211, 238, 0.5) 40%,
+          rgba(245, 158, 11, 0.6) 60%,
+          rgba(244, 114, 182, 0.7) 80%,
+          rgba(167, 139, 250, 0.6) 100%
         );
         border: 4px solid var(--border-primary);
         box-shadow:
           0 0 30px var(--primary-glow),
-          0 0 60px rgba(244,114,182,0.1),
-          inset 0 0 20px rgba(0,0,0,0.5);
+          0 0 60px rgba(244, 114, 182, 0.1),
+          inset 0 0 20px rgba(0, 0, 0, 0.5);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -50,8 +59,12 @@
       }
 
       @keyframes disc-spin {
-        from { transform: rotate(0deg); }
-        to   { transform: rotate(360deg); }
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
       }
 
       .artwork-disc-center {
@@ -85,21 +98,91 @@
         height: 40px;
       }
 
-      @keyframes eq-anim-1 { 0%,100%{height:8px} 50%{height:32px} }
-      @keyframes eq-anim-2 { 0%,100%{height:24px} 50%{height:10px} }
-      @keyframes eq-anim-3 { 0%,100%{height:16px} 50%{height:36px} }
-      @keyframes eq-anim-4 { 0%,100%{height:28px} 50%{height:6px} }
-      @keyframes eq-anim-5 { 0%,100%{height:12px} 50%{height:30px} }
-      @keyframes eq-anim-6 { 0%,100%{height:34px} 50%{height:14px} }
-      @keyframes eq-anim-7 { 0%,100%{height:8px} 50%{height:24px} }
+      @keyframes eq-anim-1 {
+        0%,
+        100% {
+          height: 8px;
+        }
+        50% {
+          height: 32px;
+        }
+      }
+      @keyframes eq-anim-2 {
+        0%,
+        100% {
+          height: 24px;
+        }
+        50% {
+          height: 10px;
+        }
+      }
+      @keyframes eq-anim-3 {
+        0%,
+        100% {
+          height: 16px;
+        }
+        50% {
+          height: 36px;
+        }
+      }
+      @keyframes eq-anim-4 {
+        0%,
+        100% {
+          height: 28px;
+        }
+        50% {
+          height: 6px;
+        }
+      }
+      @keyframes eq-anim-5 {
+        0%,
+        100% {
+          height: 12px;
+        }
+        50% {
+          height: 30px;
+        }
+      }
+      @keyframes eq-anim-6 {
+        0%,
+        100% {
+          height: 34px;
+        }
+        50% {
+          height: 14px;
+        }
+      }
+      @keyframes eq-anim-7 {
+        0%,
+        100% {
+          height: 8px;
+        }
+        50% {
+          height: 24px;
+        }
+      }
 
-      .eq-playing .eq-bar:nth-child(1) { animation: eq-anim-1 0.7s ease-in-out infinite; }
-      .eq-playing .eq-bar:nth-child(2) { animation: eq-anim-2 0.9s ease-in-out infinite; }
-      .eq-playing .eq-bar:nth-child(3) { animation: eq-anim-3 0.6s ease-in-out infinite; }
-      .eq-playing .eq-bar:nth-child(4) { animation: eq-anim-4 0.8s ease-in-out infinite; }
-      .eq-playing .eq-bar:nth-child(5) { animation: eq-anim-5 0.7s ease-in-out infinite; }
-      .eq-playing .eq-bar:nth-child(6) { animation: eq-anim-6 0.85s ease-in-out infinite; }
-      .eq-playing .eq-bar:nth-child(7) { animation: eq-anim-7 0.65s ease-in-out infinite; }
+      .eq-playing .eq-bar:nth-child(1) {
+        animation: eq-anim-1 0.7s ease-in-out infinite;
+      }
+      .eq-playing .eq-bar:nth-child(2) {
+        animation: eq-anim-2 0.9s ease-in-out infinite;
+      }
+      .eq-playing .eq-bar:nth-child(3) {
+        animation: eq-anim-3 0.6s ease-in-out infinite;
+      }
+      .eq-playing .eq-bar:nth-child(4) {
+        animation: eq-anim-4 0.8s ease-in-out infinite;
+      }
+      .eq-playing .eq-bar:nth-child(5) {
+        animation: eq-anim-5 0.7s ease-in-out infinite;
+      }
+      .eq-playing .eq-bar:nth-child(6) {
+        animation: eq-anim-6 0.85s ease-in-out infinite;
+      }
+      .eq-playing .eq-bar:nth-child(7) {
+        animation: eq-anim-7 0.65s ease-in-out infinite;
+      }
 
       /* ── Queue item ── */
       .queue-item {
@@ -132,7 +215,9 @@
         flex-shrink: 0;
       }
 
-      .queue-item.current .queue-num { color: var(--primary); }
+      .queue-item.current .queue-num {
+        color: var(--primary);
+      }
 
       .queue-thumb {
         width: 38px;
@@ -154,18 +239,24 @@
       }
 
       /* ── Volume slider ── */
-      input[type=range].vol-slider {
+      input[type="range"].vol-slider {
         -webkit-appearance: none;
         appearance: none;
         width: 100%;
         height: 4px;
         border-radius: var(--r-full);
-        background: linear-gradient(to right, var(--primary) 0%, var(--primary) var(--val, 70%), var(--bg-elevated) var(--val, 70%), var(--bg-elevated) 100%);
+        background: linear-gradient(
+          to right,
+          var(--primary) 0%,
+          var(--primary) var(--val, 70%),
+          var(--bg-elevated) var(--val, 70%),
+          var(--bg-elevated) 100%
+        );
         outline: none;
         cursor: pointer;
       }
 
-      input[type=range].vol-slider::-webkit-slider-thumb {
+      input[type="range"].vol-slider::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
         width: 14px;
@@ -177,7 +268,7 @@
         transition: all var(--t-fast);
       }
 
-      input[type=range].vol-slider::-webkit-slider-thumb:hover {
+      input[type="range"].vol-slider::-webkit-slider-thumb:hover {
         transform: scale(1.3);
         box-shadow: 0 0 14px var(--primary-glow);
       }
@@ -204,35 +295,46 @@
   </head>
   <body>
     <!-- Sidebar Overlay -->
-    
 
     <div class="app-shell">
       <!-- Mobile Sidebar Overlay -->
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
       <!-- ════ SIDEBAR ════ -->
-      <aside class="sidebar " id="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
           <div class="sidebar-logo-icon">
-            <img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" />
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="
+                this.style.display = 'none';
+                this.parentElement.innerHTML = '🌸';
+              "
+            />
           </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
             <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+          <button
+            class="sidebar-close-btn"
+            id="sidebarCloseBtn"
+            aria-label="Tutup menu"
+          >
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
+        <!-- Navigation -->
+        <!-- Navigation -->
         <nav class="sidebar-nav" role="navigation">
-
           <!-- Overview -->
           <div class="nav-group">
             <div class="nav-group-label">Overview</div>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-gauge-high"></i
+              ></span>
               <span>Dashboard</span>
             </a>
             <a href="/status" class="nav-item">
@@ -258,7 +360,9 @@
               <span>Economy</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-network-wired"></i
+              ></span>
               <span>Guild Topology</span>
             </a>
           </div>
@@ -279,7 +383,9 @@
               <span>Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-microphone"></i
+              ></span>
               <span>Karaoke</span>
             </a>
           </div>
@@ -288,7 +394,9 @@
           <div class="nav-group">
             <div class="nav-group-label">Naura Wilds RPG</div>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-earth-asia"></i
+              ></span>
               <span>World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
@@ -313,7 +421,9 @@
               <span>Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-wand-magic-sparkles"></i
+              ></span>
               <span>Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
@@ -330,15 +440,24 @@
           <div class="nav-group">
             <div class="nav-group-label">More</div>
             <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+              <span class="nav-icon" style="color: var(--accent-green)"
+                ><i class="fa-solid fa-id-badge"></i
+              ></span>
+              <span style="color: var(--accent-green)">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
         <div class="sidebar-footer">
-          <div class="sidebar-user" onclick="window.location.href='/'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+          <div class="sidebar-user" onclick="window.location.href = '/'">
+            <img
+              src="/assets/core/avatar.png"
+              alt="User"
+              class="sidebar-user-avatar"
+              onerror="
+                this.src =
+                  'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'
+              "
+            />
             <div class="sidebar-user-info">
               <div class="sidebar-user-name">Guest</div>
               <div class="sidebar-user-role">Klik untuk login</div>
@@ -349,300 +468,1002 @@
 
       <!-- ════ MAIN CONTENT ════ -->
       <div class="main-content">
-
         <!-- Header -->
         <header class="top-header">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
+            <button
+              class="hamburger-btn"
+              id="hamburgerBtn"
+              aria-label="Toggle menu"
+            >
+              <i class="fa-solid fa-bars"></i>
+            </button>
             <div>
               <div class="page-title">Music Hub</div>
-              <div class="breadcrumb"><span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Music</span></div>
+              <div class="breadcrumb">
+                <span>Naura OS</span><span class="breadcrumb-sep">/</span
+                ><span>Music</span>
+              </div>
             </div>
           </div>
           <div class="header-right">
             <div class="status-pill" title="Lavalink Node Status">
               <span class="status-dot online"></span>
-              <span style="color:var(--accent-cyan);font-family:var(--font-mono);">Lavalink</span>
+              <span
+                style="color: var(--accent-cyan); font-family: var(--font-mono)"
+                >Lavalink</span
+              >
             </div>
-            <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <a href="/" class="btn btn-ghost btn-sm"
+              ><i class="fa-solid fa-arrow-left"></i> Dashboard</a
+            >
           </div>
         </header>
 
         <!-- Page Content -->
         <main class="page-content">
-
           <div class="page-header-bar animate-in">
             <div>
               <h1 class="page-heading">
-                <span class="page-heading-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);">
-                  <i class="fa-solid fa-music" style="color:var(--primary);"></i>
+                <span
+                  class="page-heading-icon"
+                  style="
+                    background: var(--primary-dim);
+                    border: 1px solid var(--border-primary);
+                  "
+                >
+                  <i
+                    class="fa-solid fa-music"
+                    style="color: var(--primary)"
+                  ></i>
                 </span>
                 Music Hub
               </h1>
-              <p class="page-sub">Lavalink v4 Cluster · Fish Audio AI DJ · Real-Time Queue Management</p>
+              <p class="page-sub">
+                Lavalink v4 Cluster · Fish Audio AI DJ · Real-Time Queue
+                Management
+              </p>
             </div>
             <div class="tab-group">
-              <button class="tab-btn active" onclick="switchMusicTab('player')"><i class="fa-solid fa-circle-play"></i> Player</button>
-              <button class="tab-btn" onclick="switchMusicTab('queue')"><i class="fa-solid fa-list"></i> Queue</button>
-              <button class="tab-btn" onclick="switchMusicTab('nodes')"><i class="fa-solid fa-server"></i> Nodes</button>
+              <button class="tab-btn active" onclick="switchMusicTab('player')">
+                <i class="fa-solid fa-circle-play"></i> Player
+              </button>
+              <button class="tab-btn" onclick="switchMusicTab('queue')">
+                <i class="fa-solid fa-list"></i> Queue
+              </button>
+              <button class="tab-btn" onclick="switchMusicTab('nodes')">
+                <i class="fa-solid fa-server"></i> Nodes
+              </button>
             </div>
           </div>
 
           <!-- Player Tab -->
           <div id="musicTabPlayer" class="animate-in delay-1">
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;" id="musicMainGrid">
-
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 24px;
+                margin-bottom: 24px;
+              "
+              id="musicMainGrid"
+            >
               <!-- Now Playing Card -->
-              <div class="card card-glow-primary card-p" style="display:flex;flex-direction:column;align-items:center;text-align:center;">
-                <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--primary);margin-bottom:20px;font-family:var(--font-heading);">Now Playing</div>
+              <div
+                class="card card-glow-primary card-p"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  text-align: center;
+                "
+              >
+                <div
+                  style="
+                    font-size: 10px;
+                    font-weight: 700;
+                    letter-spacing: 0.12em;
+                    text-transform: uppercase;
+                    color: var(--primary);
+                    margin-bottom: 20px;
+                    font-family: var(--font-heading);
+                  "
+                >
+                  Now Playing
+                </div>
 
                 <!-- Vinyl disc -->
-                <div class="artwork-disc" style="margin-bottom:24px;">
+                <div class="artwork-disc" style="margin-bottom: 24px">
                   <div class="artwork-disc-inner" id="artworkDisc">
                     <div class="artwork-disc-center">🎵</div>
                   </div>
                 </div>
 
                 <!-- Equalizer -->
-                <div class="eq-bars" id="eqBars" style="margin-bottom:16px;">
-                  <div class="eq-bar" style="height:8px;background:var(--primary);"></div>
-                  <div class="eq-bar" style="height:24px;background:var(--accent-violet);"></div>
-                  <div class="eq-bar" style="height:16px;background:var(--accent-cyan);"></div>
-                  <div class="eq-bar" style="height:28px;background:var(--primary);"></div>
-                  <div class="eq-bar" style="height:12px;background:var(--accent-violet);"></div>
-                  <div class="eq-bar" style="height:34px;background:var(--accent-cyan);"></div>
-                  <div class="eq-bar" style="height:8px;background:var(--primary);"></div>
+                <div class="eq-bars" id="eqBars" style="margin-bottom: 16px">
+                  <div
+                    class="eq-bar"
+                    style="height: 8px; background: var(--primary)"
+                  ></div>
+                  <div
+                    class="eq-bar"
+                    style="height: 24px; background: var(--accent-violet)"
+                  ></div>
+                  <div
+                    class="eq-bar"
+                    style="height: 16px; background: var(--accent-cyan)"
+                  ></div>
+                  <div
+                    class="eq-bar"
+                    style="height: 28px; background: var(--primary)"
+                  ></div>
+                  <div
+                    class="eq-bar"
+                    style="height: 12px; background: var(--accent-violet)"
+                  ></div>
+                  <div
+                    class="eq-bar"
+                    style="height: 34px; background: var(--accent-cyan)"
+                  ></div>
+                  <div
+                    class="eq-bar"
+                    style="height: 8px; background: var(--primary)"
+                  ></div>
                 </div>
 
                 <!-- Track info -->
-                <div id="nowPlayingTitle" style="font-family:var(--font-heading);font-size:18px;font-weight:700;color:var(--text-primary);margin-bottom:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Idle, Tidak Ada Lagu</div>
-                <div id="nowPlayingArtist" style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">Queue kosong · Masukkan lagu lewat bot</div>
+                <div
+                  id="nowPlayingTitle"
+                  style="
+                    font-family: var(--font-heading);
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                    margin-bottom: 4px;
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                  "
+                >
+                  Idle, Tidak Ada Lagu
+                </div>
+                <div
+                  id="nowPlayingArtist"
+                  style="
+                    font-size: 13px;
+                    color: var(--text-muted);
+                    margin-bottom: 20px;
+                  "
+                >
+                  Queue kosong · Masukkan lagu lewat bot
+                </div>
 
                 <!-- Progress bar -->
-                <div style="width:100%;margin-bottom:8px;">
-                  <div class="progress-track" style="height:5px;">
-                    <div class="progress-fill" id="musicProgress" style="width:0%;transition:width 1s linear;"></div>
+                <div style="width: 100%; margin-bottom: 8px">
+                  <div class="progress-track" style="height: 5px">
+                    <div
+                      class="progress-fill"
+                      id="musicProgress"
+                      style="width: 0%; transition: width 1s linear"
+                    ></div>
                   </div>
                 </div>
-                <div style="display:flex;justify-content:space-between;width:100%;font-family:var(--font-mono);font-size:10px;color:var(--text-muted);margin-bottom:20px;">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    width: 100%;
+                    font-family: var(--font-mono);
+                    font-size: 10px;
+                    color: var(--text-muted);
+                    margin-bottom: 20px;
+                  "
+                >
                   <span id="musicCurrentTime">0:00</span>
                   <span id="musicDuration">0:00</span>
                 </div>
 
                 <!-- Controls -->
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-                  <button id="btnShuffle" title="Shuffle" style="width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:13px;">
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    margin-bottom: 20px;
+                  "
+                >
+                  <button
+                    id="btnShuffle"
+                    title="Shuffle"
+                    style="
+                      width: 36px;
+                      height: 36px;
+                      border-radius: 50%;
+                      background: var(--bg-elevated);
+                      border: 1px solid var(--border-subtle);
+                      color: var(--text-muted);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      cursor: pointer;
+                      transition: all var(--t-base);
+                      font-size: 13px;
+                    "
+                  >
                     <i class="fa-solid fa-shuffle"></i>
                   </button>
-                  <button id="btnPrev" title="Previous" style="width:40px;height:40px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:15px;">
+                  <button
+                    id="btnPrev"
+                    title="Previous"
+                    style="
+                      width: 40px;
+                      height: 40px;
+                      border-radius: 50%;
+                      background: var(--bg-elevated);
+                      border: 1px solid var(--border-subtle);
+                      color: var(--text-secondary);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      cursor: pointer;
+                      transition: all var(--t-base);
+                      font-size: 15px;
+                    "
+                  >
                     <i class="fa-solid fa-backward-step"></i>
                   </button>
-                  <button id="btnPlayPause" title="Play / Pause" style="width:56px;height:56px;border-radius:50%;background:var(--primary-dim);border:2px solid var(--border-primary);color:var(--primary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-spring);font-size:20px;box-shadow:0 0 20px var(--primary-glow);" onclick="togglePlay()">
+                  <button
+                    id="btnPlayPause"
+                    title="Play / Pause"
+                    style="
+                      width: 56px;
+                      height: 56px;
+                      border-radius: 50%;
+                      background: var(--primary-dim);
+                      border: 2px solid var(--border-primary);
+                      color: var(--primary);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      cursor: pointer;
+                      transition: all var(--t-spring);
+                      font-size: 20px;
+                      box-shadow: 0 0 20px var(--primary-glow);
+                    "
+                    onclick="togglePlay()"
+                  >
                     <i class="fa-solid fa-play" id="playIcon"></i>
                   </button>
-                  <button id="btnNext" title="Next" style="width:40px;height:40px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:15px;">
+                  <button
+                    id="btnNext"
+                    title="Next"
+                    style="
+                      width: 40px;
+                      height: 40px;
+                      border-radius: 50%;
+                      background: var(--bg-elevated);
+                      border: 1px solid var(--border-subtle);
+                      color: var(--text-secondary);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      cursor: pointer;
+                      transition: all var(--t-base);
+                      font-size: 15px;
+                    "
+                  >
                     <i class="fa-solid fa-forward-step"></i>
                   </button>
-                  <button id="btnRepeat" title="Repeat" style="width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:13px;">
+                  <button
+                    id="btnRepeat"
+                    title="Repeat"
+                    style="
+                      width: 36px;
+                      height: 36px;
+                      border-radius: 50%;
+                      background: var(--bg-elevated);
+                      border: 1px solid var(--border-subtle);
+                      color: var(--text-muted);
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      cursor: pointer;
+                      transition: all var(--t-base);
+                      font-size: 13px;
+                    "
+                  >
                     <i class="fa-solid fa-repeat"></i>
                   </button>
                 </div>
 
                 <!-- Volume -->
-                <div style="display:flex;align-items:center;gap:10px;width:100%;">
-                  <i class="fa-solid fa-volume-low" style="color:var(--text-muted);font-size:12px;flex-shrink:0;"></i>
-                  <input type="range" class="vol-slider" id="volumeSlider" min="0" max="100" value="70" style="--val:70%" oninput="this.style.setProperty('--val', this.value+'%')">
-                  <i class="fa-solid fa-volume-high" style="color:var(--text-muted);font-size:12px;flex-shrink:0;"></i>
-                  <span id="volumeLabel" style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);width:28px;text-align:right;flex-shrink:0;">70%</span>
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    width: 100%;
+                  "
+                >
+                  <i
+                    class="fa-solid fa-volume-low"
+                    style="
+                      color: var(--text-muted);
+                      font-size: 12px;
+                      flex-shrink: 0;
+                    "
+                  ></i>
+                  <input
+                    type="range"
+                    class="vol-slider"
+                    id="volumeSlider"
+                    min="0"
+                    max="100"
+                    value="70"
+                    style="--val: 70%"
+                    oninput="this.style.setProperty('--val', this.value + '%')"
+                  />
+                  <i
+                    class="fa-solid fa-volume-high"
+                    style="
+                      color: var(--text-muted);
+                      font-size: 12px;
+                      flex-shrink: 0;
+                    "
+                  ></i>
+                  <span
+                    id="volumeLabel"
+                    style="
+                      font-family: var(--font-mono);
+                      font-size: 11px;
+                      color: var(--text-muted);
+                      width: 28px;
+                      text-align: right;
+                      flex-shrink: 0;
+                    "
+                    >70%</span
+                  >
                 </div>
               </div>
 
               <!-- Right Column: Search + AI DJ -->
-              <div style="display:flex;flex-direction:column;gap:16px;">
-
+              <div style="display: flex; flex-direction: column; gap: 16px">
                 <!-- Search -->
                 <div class="card card-p-sm">
-                  <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-search" style="color:var(--primary);"></i> Tambah Lagu</div>
-                  <div style="display:flex;gap:8px;">
-                    <input type="text" class="input" id="searchQuery" placeholder="Cari lagu, YouTube URL, Spotify..." style="flex:1;" />
-                    <button onclick="addSong()" class="btn btn-primary" style="flex-shrink:0;">
+                  <div class="section-title" style="margin-bottom: 12px">
+                    <i
+                      class="fa-solid fa-search"
+                      style="color: var(--primary)"
+                    ></i>
+                    Tambah Lagu
+                  </div>
+                  <div style="display: flex; gap: 8px">
+                    <input
+                      type="text"
+                      class="input"
+                      id="searchQuery"
+                      placeholder="Cari lagu, YouTube URL, Spotify..."
+                      style="flex: 1"
+                    />
+                    <button
+                      onclick="addSong()"
+                      class="btn btn-primary"
+                      style="flex-shrink: 0"
+                    >
                       <i class="fa-solid fa-plus"></i> Tambah
                     </button>
                   </div>
-                  <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
-                    <button class="btn btn-ghost btn-sm" onclick="setFilter('youtube')"><i class="fa-brands fa-youtube" style="color:#ff4444;"></i> YouTube</button>
-                    <button class="btn btn-ghost btn-sm" onclick="setFilter('spotify')"><i class="fa-brands fa-spotify" style="color:#1db954;"></i> Spotify</button>
-                    <button class="btn btn-ghost btn-sm" onclick="setFilter('soundcloud')"><i class="fa-brands fa-soundcloud" style="color:#ff5500;"></i> SoundCloud</button>
+                  <div
+                    style="
+                      display: flex;
+                      gap: 6px;
+                      margin-top: 10px;
+                      flex-wrap: wrap;
+                    "
+                  >
+                    <button
+                      class="btn btn-ghost btn-sm"
+                      onclick="setFilter('youtube')"
+                    >
+                      <i
+                        class="fa-brands fa-youtube"
+                        style="color: #ff4444"
+                      ></i>
+                      YouTube
+                    </button>
+                    <button
+                      class="btn btn-ghost btn-sm"
+                      onclick="setFilter('spotify')"
+                    >
+                      <i
+                        class="fa-brands fa-spotify"
+                        style="color: #1db954"
+                      ></i>
+                      Spotify
+                    </button>
+                    <button
+                      class="btn btn-ghost btn-sm"
+                      onclick="setFilter('soundcloud')"
+                    >
+                      <i
+                        class="fa-brands fa-soundcloud"
+                        style="color: #ff5500"
+                      ></i>
+                      SoundCloud
+                    </button>
                   </div>
                 </div>
 
                 <!-- AI DJ -->
-                <div class="card card-p-sm" style="background:linear-gradient(135deg, rgba(167,139,250,0.08), rgba(244,114,182,0.06));border-color:var(--border-violet);">
-                  <div class="section-title" style="margin-bottom:12px;color:var(--accent-violet);"><i class="fa-solid fa-robot"></i> Fish Audio AI DJ</div>
-                  <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.6;">AI DJ Naura akan memberikan narasi suara di antara lagu menggunakan Fish Audio TTS, menciptakan pengalaman radio yang imersif.</p>
-                  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+                <div
+                  class="card card-p-sm"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      rgba(167, 139, 250, 0.08),
+                      rgba(244, 114, 182, 0.06)
+                    );
+                    border-color: var(--border-violet);
+                  "
+                >
+                  <div
+                    class="section-title"
+                    style="margin-bottom: 12px; color: var(--accent-violet)"
+                  >
+                    <i class="fa-solid fa-robot"></i> Fish Audio AI DJ
+                  </div>
+                  <p
+                    style="
+                      font-size: 12px;
+                      color: var(--text-muted);
+                      margin-bottom: 12px;
+                      line-height: 1.6;
+                    "
+                  >
+                    AI DJ Naura akan memberikan narasi suara di antara lagu
+                    menggunakan Fish Audio TTS, menciptakan pengalaman radio
+                    yang imersif.
+                  </p>
+                  <div
+                    style="
+                      display: flex;
+                      gap: 8px;
+                      margin-bottom: 12px;
+                      flex-wrap: wrap;
+                    "
+                  >
                     <label class="toggle" title="Toggle AI DJ">
                       <input type="checkbox" id="aiDjToggle" />
-                      <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                      <div class="toggle-track">
+                        <div class="toggle-thumb"></div>
+                      </div>
                     </label>
-                    <span style="font-size:13px;color:var(--text-secondary);font-weight:500;">AI DJ Mode</span>
-                    <span class="badge badge-violet" id="aiDjStatus">Offline</span>
+                    <span
+                      style="
+                        font-size: 13px;
+                        color: var(--text-secondary);
+                        font-weight: 500;
+                      "
+                      >AI DJ Mode</span
+                    >
+                    <span class="badge badge-violet" id="aiDjStatus"
+                      >Offline</span
+                    >
                   </div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                    <button class="btn btn-ghost btn-sm" id="btnDjAnnounce"><i class="fa-solid fa-microphone-lines"></i> Announce</button>
-                    <button class="btn btn-ghost btn-sm" id="btnDjRadio"><i class="fa-solid fa-radio"></i> Radio Mode</button>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 1fr 1fr;
+                      gap: 8px;
+                    "
+                  >
+                    <button class="btn btn-ghost btn-sm" id="btnDjAnnounce">
+                      <i class="fa-solid fa-microphone-lines"></i> Announce
+                    </button>
+                    <button class="btn btn-ghost btn-sm" id="btnDjRadio">
+                      <i class="fa-solid fa-radio"></i> Radio Mode
+                    </button>
                   </div>
                 </div>
 
                 <!-- Filters / Effects -->
                 <div class="card card-p-sm">
-                  <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--accent-amber);"></i> Audio Filters</div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;" id="audioFilters">
-                    <button class="btn btn-ghost btn-sm" id="filterNone" onclick="setAudioFilter('none')" style="font-size:11px;">✨ Normal</button>
-                    <button class="btn btn-ghost btn-sm" id="filterNightcore" onclick="setAudioFilter('nightcore')" style="font-size:11px;">🌙 Nightcore</button>
-                    <button class="btn btn-ghost btn-sm" id="filterVaporwave" onclick="setAudioFilter('vaporwave')" style="font-size:11px;">🌊 Vaporwave</button>
-                    <button class="btn btn-ghost btn-sm" id="filterBass" onclick="setAudioFilter('bassboost')" style="font-size:11px;">🔊 Bass Boost</button>
-                    <button class="btn btn-ghost btn-sm" id="filterLofi" onclick="setAudioFilter('lofi')" style="font-size:11px;">☕ Lofi</button>
-                    <button class="btn btn-ghost btn-sm" id="filter8d" onclick="setAudioFilter('8d')" style="font-size:11px;">🎧 8D Audio</button>
+                  <div class="section-title" style="margin-bottom: 12px">
+                    <i
+                      class="fa-solid fa-wand-magic-sparkles"
+                      style="color: var(--accent-amber)"
+                    ></i>
+                    Audio Filters
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: repeat(3, 1fr);
+                      gap: 6px;
+                    "
+                    id="audioFilters"
+                  >
+                    <button
+                      class="btn btn-ghost btn-sm"
+                      id="filterNone"
+                      onclick="setAudioFilter('none')"
+                      style="font-size: 11px"
+                    >
+                      ✨ Normal
+                    </button>
+                    <button
+                      class="btn btn-ghost btn-sm"
+                      id="filterNightcore"
+                      onclick="setAudioFilter('nightcore')"
+                      style="font-size: 11px"
+                    >
+                      🌙 Nightcore
+                    </button>
+                    <button
+                      class="btn btn-ghost btn-sm"
+                      id="filterVaporwave"
+                      onclick="setAudioFilter('vaporwave')"
+                      style="font-size: 11px"
+                    >
+                      🌊 Vaporwave
+                    </button>
+                    <button
+                      class="btn btn-ghost btn-sm"
+                      id="filterBass"
+                      onclick="setAudioFilter('bassboost')"
+                      style="font-size: 11px"
+                    >
+                      🔊 Bass Boost
+                    </button>
+                    <button
+                      class="btn btn-ghost btn-sm"
+                      id="filterLofi"
+                      onclick="setAudioFilter('lofi')"
+                      style="font-size: 11px"
+                    >
+                      ☕ Lofi
+                    </button>
+                    <button
+                      class="btn btn-ghost btn-sm"
+                      id="filter8d"
+                      onclick="setAudioFilter('8d')"
+                      style="font-size: 11px"
+                    >
+                      🎧 8D Audio
+                    </button>
                   </div>
                 </div>
 
                 <!-- Now in Voice -->
                 <div class="card card-p-sm">
-                  <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-headphones" style="color:var(--accent-green);"></i> Voice Channel</div>
-                  <div id="voiceChannelInfo" style="display:flex;flex-direction:column;gap:8px;">
+                  <div class="section-title" style="margin-bottom: 12px">
+                    <i
+                      class="fa-solid fa-headphones"
+                      style="color: var(--accent-green)"
+                    ></i>
+                    Voice Channel
+                  </div>
+                  <div
+                    id="voiceChannelInfo"
+                    style="display: flex; flex-direction: column; gap: 8px"
+                  >
                     <div class="status-item">
-                      <span style="font-size:12px;color:var(--text-secondary);">Status</span>
-                      <span class="badge badge-muted" id="vcStatus">Not Connected</span>
+                      <span
+                        style="font-size: 12px; color: var(--text-secondary)"
+                        >Status</span
+                      >
+                      <span class="badge badge-muted" id="vcStatus"
+                        >Not Connected</span
+                      >
                     </div>
                     <div class="status-item">
-                      <span style="font-size:12px;color:var(--text-secondary);">Channel</span>
-                      <span style="font-size:12px;font-weight:600;color:var(--text-primary);font-family:var(--font-mono);" id="vcName">-</span>
+                      <span
+                        style="font-size: 12px; color: var(--text-secondary)"
+                        >Channel</span
+                      >
+                      <span
+                        style="
+                          font-size: 12px;
+                          font-weight: 600;
+                          color: var(--text-primary);
+                          font-family: var(--font-mono);
+                        "
+                        id="vcName"
+                        >-</span
+                      >
                     </div>
                     <div class="status-item">
-                      <span style="font-size:12px;color:var(--text-secondary);">Listeners</span>
-                      <span style="font-size:12px;font-weight:700;color:var(--accent-cyan);font-family:var(--font-mono);" id="vcListeners">0</span>
+                      <span
+                        style="font-size: 12px; color: var(--text-secondary)"
+                        >Listeners</span
+                      >
+                      <span
+                        style="
+                          font-size: 12px;
+                          font-weight: 700;
+                          color: var(--accent-cyan);
+                          font-family: var(--font-mono);
+                        "
+                        id="vcListeners"
+                        >0</span
+                      >
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
           </div>
 
           <!-- Queue Tab (hidden initially) -->
-          <div id="musicTabQueue" style="display:none;" class="animate-in">
+          <div id="musicTabQueue" style="display: none" class="animate-in">
             <div class="card card-p animate-in delay-1">
               <div class="card-header">
-                <div class="card-title"><i class="fa-solid fa-list" style="color:var(--primary);"></i> Antrian Lagu</div>
-                <div style="display:flex;gap:8px;">
-                  <button class="btn btn-ghost btn-sm" id="btnClearQueue" onclick="clearQueue()"><i class="fa-solid fa-trash"></i> Clear</button>
-                  <button class="btn btn-ghost btn-sm" id="btnShuffleQueue" onclick="shuffleQueue()"><i class="fa-solid fa-shuffle"></i> Shuffle</button>
+                <div class="card-title">
+                  <i class="fa-solid fa-list" style="color: var(--primary)"></i>
+                  Antrian Lagu
+                </div>
+                <div style="display: flex; gap: 8px">
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    id="btnClearQueue"
+                    onclick="clearQueue()"
+                  >
+                    <i class="fa-solid fa-trash"></i> Clear
+                  </button>
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    id="btnShuffleQueue"
+                    onclick="shuffleQueue()"
+                  >
+                    <i class="fa-solid fa-shuffle"></i> Shuffle
+                  </button>
                 </div>
               </div>
-              <div id="queueList" style="display:flex;flex-direction:column;gap:4px;">
+              <div
+                id="queueList"
+                style="display: flex; flex-direction: column; gap: 4px"
+              >
                 <div class="queue-item current">
                   <div class="queue-num">▶</div>
                   <div class="queue-thumb">🎵</div>
-                  <div style="flex:1;min-width:0;">
-                    <div style="font-size:13px;font-weight:600;color:var(--primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Idle, Tidak ada lagu yang diputar</div>
-                    <div style="font-size:11px;color:var(--text-muted);">0:00 · Masukkan lagu lewat bot</div>
+                  <div style="flex: 1; min-width: 0">
+                    <div
+                      style="
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: var(--primary);
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                      "
+                    >
+                      Idle, Tidak ada lagu yang diputar
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted)">
+                      0:00 · Masukkan lagu lewat bot
+                    </div>
                   </div>
                 </div>
-                <div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">
-                  <div style="font-size:32px;margin-bottom:12px;animation:float 3s ease-in-out infinite;">🎶</div>
-                  <div>Queue kosong. Gunakan <code style="background:var(--bg-elevated);padding:2px 6px;border-radius:4px;color:var(--primary);">/play</code> di Discord untuk menambahkan lagu.</div>
+                <div
+                  style="
+                    text-align: center;
+                    padding: 32px;
+                    color: var(--text-muted);
+                    font-size: 13px;
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 32px;
+                      margin-bottom: 12px;
+                      animation: float 3s ease-in-out infinite;
+                    "
+                  >
+                    🎶
+                  </div>
+                  <div>
+                    Queue kosong. Gunakan
+                    <code
+                      style="
+                        background: var(--bg-elevated);
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        color: var(--primary);
+                      "
+                      >/play</code
+                    >
+                    di Discord untuk menambahkan lagu.
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Nodes Tab (hidden initially) -->
-          <div id="musicTabNodes" style="display:none;" class="animate-in">
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;" id="lavalinkNodes">
-
+          <div id="musicTabNodes" style="display: none" class="animate-in">
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 16px;
+              "
+              id="lavalinkNodes"
+            >
               <div class="node-card active">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                  <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--accent-cyan);">NODE-01</div>
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 10px;
+                  "
+                >
+                  <div
+                    style="
+                      font-family: var(--font-mono);
+                      font-size: 12px;
+                      font-weight: 700;
+                      color: var(--accent-cyan);
+                    "
+                  >
+                    NODE-01
+                  </div>
                   <span class="badge badge-green">Primary</span>
                 </div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-mono);">localhost:2333</div>
-                <div style="display:flex;flex-direction:column;gap:5px;">
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">RTT</span>
-                    <span style="color:var(--accent-cyan);font-family:var(--font-mono);">12ms</span>
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--text-muted);
+                    margin-bottom: 8px;
+                    font-family: var(--font-mono);
+                  "
+                >
+                  localhost:2333
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 5px">
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      font-size: 11px;
+                    "
+                  >
+                    <span style="color: var(--text-muted)">RTT</span>
+                    <span
+                      style="
+                        color: var(--accent-cyan);
+                        font-family: var(--font-mono);
+                      "
+                      >12ms</span
+                    >
                   </div>
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">Players</span>
-                    <span style="color:var(--text-primary);font-family:var(--font-mono);">3</span>
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      font-size: 11px;
+                    "
+                  >
+                    <span style="color: var(--text-muted)">Players</span>
+                    <span
+                      style="
+                        color: var(--text-primary);
+                        font-family: var(--font-mono);
+                      "
+                      >3</span
+                    >
                   </div>
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">Region</span>
-                    <span style="color:var(--text-primary);">Asia / SGP</span>
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      font-size: 11px;
+                    "
+                  >
+                    <span style="color: var(--text-muted)">Region</span>
+                    <span style="color: var(--text-primary)">Asia / SGP</span>
                   </div>
                 </div>
-                <div class="progress-track" style="margin-top:10px;">
-                  <div class="progress-fill cyan" style="width:30%;"></div>
+                <div class="progress-track" style="margin-top: 10px">
+                  <div class="progress-fill cyan" style="width: 30%"></div>
                 </div>
-                <div style="font-size:10px;color:var(--text-muted);margin-top:4px;text-align:right;font-family:var(--font-mono);">CPU 30%</div>
+                <div
+                  style="
+                    font-size: 10px;
+                    color: var(--text-muted);
+                    margin-top: 4px;
+                    text-align: right;
+                    font-family: var(--font-mono);
+                  "
+                >
+                  CPU 30%
+                </div>
               </div>
 
               <div class="node-card">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                  <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text-secondary);">NODE-02</div>
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 10px;
+                  "
+                >
+                  <div
+                    style="
+                      font-family: var(--font-mono);
+                      font-size: 12px;
+                      font-weight: 700;
+                      color: var(--text-secondary);
+                    "
+                  >
+                    NODE-02
+                  </div>
                   <span class="badge badge-muted">Standby</span>
                 </div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-mono);">node2.example.com:2333</div>
-                <div style="display:flex;flex-direction:column;gap:5px;">
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">RTT</span>
-                    <span style="color:var(--text-secondary);font-family:var(--font-mono);">89ms</span>
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--text-muted);
+                    margin-bottom: 8px;
+                    font-family: var(--font-mono);
+                  "
+                >
+                  node2.example.com:2333
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 5px">
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      font-size: 11px;
+                    "
+                  >
+                    <span style="color: var(--text-muted)">RTT</span>
+                    <span
+                      style="
+                        color: var(--text-secondary);
+                        font-family: var(--font-mono);
+                      "
+                      >89ms</span
+                    >
                   </div>
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">Players</span>
-                    <span style="color:var(--text-primary);font-family:var(--font-mono);">0</span>
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      font-size: 11px;
+                    "
+                  >
+                    <span style="color: var(--text-muted)">Players</span>
+                    <span
+                      style="
+                        color: var(--text-primary);
+                        font-family: var(--font-mono);
+                      "
+                      >0</span
+                    >
                   </div>
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">Region</span>
-                    <span style="color:var(--text-primary);">Asia / TKY</span>
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      font-size: 11px;
+                    "
+                  >
+                    <span style="color: var(--text-muted)">Region</span>
+                    <span style="color: var(--text-primary)">Asia / TKY</span>
                   </div>
                 </div>
-                <div class="progress-track" style="margin-top:10px;">
-                  <div class="progress-fill" style="width:0%;"></div>
+                <div class="progress-track" style="margin-top: 10px">
+                  <div class="progress-fill" style="width: 0%"></div>
                 </div>
-                <div style="font-size:10px;color:var(--text-muted);margin-top:4px;text-align:right;font-family:var(--font-mono);">CPU 0%</div>
+                <div
+                  style="
+                    font-size: 10px;
+                    color: var(--text-muted);
+                    margin-top: 4px;
+                    text-align: right;
+                    font-family: var(--font-mono);
+                  "
+                >
+                  CPU 0%
+                </div>
               </div>
 
               <div class="node-card">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                  <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text-secondary);">NODE-03</div>
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 10px;
+                  "
+                >
+                  <div
+                    style="
+                      font-family: var(--font-mono);
+                      font-size: 12px;
+                      font-weight: 700;
+                      color: var(--text-secondary);
+                    "
+                  >
+                    NODE-03
+                  </div>
                   <span class="badge badge-muted">Standby</span>
                 </div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-mono);">node3.example.com:2333</div>
-                <div style="display:flex;flex-direction:column;gap:5px;">
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">RTT</span>
-                    <span style="color:var(--text-secondary);font-family:var(--font-mono);">142ms</span>
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--text-muted);
+                    margin-bottom: 8px;
+                    font-family: var(--font-mono);
+                  "
+                >
+                  node3.example.com:2333
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 5px">
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      font-size: 11px;
+                    "
+                  >
+                    <span style="color: var(--text-muted)">RTT</span>
+                    <span
+                      style="
+                        color: var(--text-secondary);
+                        font-family: var(--font-mono);
+                      "
+                      >142ms</span
+                    >
                   </div>
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">Players</span>
-                    <span style="color:var(--text-primary);font-family:var(--font-mono);">0</span>
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      font-size: 11px;
+                    "
+                  >
+                    <span style="color: var(--text-muted)">Players</span>
+                    <span
+                      style="
+                        color: var(--text-primary);
+                        font-family: var(--font-mono);
+                      "
+                      >0</span
+                    >
                   </div>
-                  <div style="display:flex;justify-content:space-between;font-size:11px;">
-                    <span style="color:var(--text-muted);">Region</span>
-                    <span style="color:var(--text-primary);">EU / FRA</span>
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      font-size: 11px;
+                    "
+                  >
+                    <span style="color: var(--text-muted)">Region</span>
+                    <span style="color: var(--text-primary)">EU / FRA</span>
                   </div>
                 </div>
-                <div class="progress-track" style="margin-top:10px;">
-                  <div class="progress-fill" style="width:0%;"></div>
+                <div class="progress-track" style="margin-top: 10px">
+                  <div class="progress-fill" style="width: 0%"></div>
                 </div>
-                <div style="font-size:10px;color:var(--text-muted);margin-top:4px;text-align:right;font-family:var(--font-mono);">CPU 0%</div>
+                <div
+                  style="
+                    font-size: 10px;
+                    color: var(--text-muted);
+                    margin-top: 4px;
+                    text-align: right;
+                    font-family: var(--font-mono);
+                  "
+                >
+                  CPU 0%
+                </div>
               </div>
-
             </div>
           </div>
-
         </main>
       </div>
     </div>
@@ -650,11 +1471,26 @@
     <!-- Mobile Nav -->
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"
+          ><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span
+          ><span class="mn-label">Dashboard</span></a
+        >
+        <a href="/world" class="mobile-nav-item" data-group="map"
+          ><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span
+          ><span class="mn-label">Map</span></a
+        >
+        <a href="/automations" class="mobile-nav-item" data-group="config"
+          ><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span
+          ><span class="mn-label">Config</span></a
+        >
+        <a href="/music" class="mobile-nav-item" data-group="system"
+          ><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span
+          ><span class="mn-label">System</span></a
+        >
+        <a href="/settings" class="mobile-nav-item" data-group="settings"
+          ><span class="mn-icon"><i class="fa-solid fa-gears"></i></span
+          ><span class="mn-label">Settings</span></a
+        >
       </div>
     </nav>
 
@@ -662,19 +1498,26 @@
     <script>
       // Tab switch
       function switchMusicTab(tab) {
-        ['player','queue','nodes'].forEach(t => {
-          const el = document.getElementById(`musicTab${t.charAt(0).toUpperCase()+t.slice(1)}`);
-          if (el) el.style.display = 'none';
+        ["player", "queue", "nodes"].forEach((t) => {
+          const el = document.getElementById(
+            `musicTab${t.charAt(0).toUpperCase() + t.slice(1)}`,
+          );
+          if (el) el.style.display = "none";
         });
-        const target = document.getElementById(`musicTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`);
-        if (target) target.style.display = 'block';
-        document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-          btn.classList.toggle('active', ['player','queue','nodes'][i] === tab);
+        const target = document.getElementById(
+          `musicTab${tab.charAt(0).toUpperCase() + tab.slice(1)}`,
+        );
+        if (target) target.style.display = "block";
+        document.querySelectorAll(".tab-btn").forEach((btn, i) => {
+          btn.classList.toggle(
+            "active",
+            ["player", "queue", "nodes"][i] === tab,
+          );
         });
 
-        if (tab === 'queue') {
+        if (tab === "queue") {
           fetchMusicQueue();
-        } else if (tab === 'nodes') {
+        } else if (tab === "nodes") {
           fetchMusicState();
         }
       }
@@ -686,49 +1529,55 @@
         const totalSec = Math.floor(Number(ms || 0) / 1000);
         const m = Math.floor(totalSec / 60);
         const s = totalSec % 60;
-        return `${m}:${s < 10 ? '0' : ''}${s}`;
+        return `${m}:${s < 10 ? "0" : ""}${s}`;
       }
 
       function updatePlayerUI(data) {
         if (!data) return;
         isPlaying = !!data.isPlaying && !data.isPaused;
-        const playIcon = document.getElementById('playIcon');
-        if (playIcon) playIcon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+        const playIcon = document.getElementById("playIcon");
+        if (playIcon)
+          playIcon.className = isPlaying
+            ? "fa-solid fa-pause"
+            : "fa-solid fa-play";
 
-        const disc = document.getElementById('artworkDisc');
-        if (disc) disc.classList.toggle('playing', isPlaying);
-        const eq = document.getElementById('eqBars');
-        if (eq) eq.classList.toggle('eq-playing', isPlaying);
+        const disc = document.getElementById("artworkDisc");
+        if (disc) disc.classList.toggle("playing", isPlaying);
+        const eq = document.getElementById("eqBars");
+        if (eq) eq.classList.toggle("eq-playing", isPlaying);
 
-        const titleEl = document.getElementById('nowPlayingTitle');
-        if (titleEl && data.currentTrack?.title) titleEl.textContent = data.currentTrack.title;
+        const titleEl = document.getElementById("nowPlayingTitle");
+        if (titleEl && data.currentTrack?.title)
+          titleEl.textContent = data.currentTrack.title;
 
-        const artistEl = document.getElementById('nowPlayingArtist');
-        if (artistEl && data.currentTrack?.author) artistEl.textContent = data.currentTrack.author;
+        const artistEl = document.getElementById("nowPlayingArtist");
+        if (artistEl && data.currentTrack?.author)
+          artistEl.textContent = data.currentTrack.author;
 
         const dur = data.currentTrack?.duration || 0;
         const pos = data.currentTrack?.position || 0;
-        const durEl = document.getElementById('musicDuration');
+        const durEl = document.getElementById("musicDuration");
         if (durEl) durEl.textContent = formatTime(dur);
-        const curEl = document.getElementById('musicCurrentTime');
+        const curEl = document.getElementById("musicCurrentTime");
         if (curEl) curEl.textContent = formatTime(pos);
 
-        const progressEl = document.getElementById('musicProgress');
+        const progressEl = document.getElementById("musicProgress");
         if (progressEl && dur > 0) {
           progressEl.style.width = `${Math.min(100, Math.round((pos / dur) * 100))}%`;
         }
 
         if (data.volume !== undefined) {
-          const volSlider = document.getElementById('volumeSlider');
-          const volLabel = document.getElementById('volumeLabel');
-          if (volSlider && document.activeElement !== volSlider) volSlider.value = data.volume;
+          const volSlider = document.getElementById("volumeSlider");
+          const volLabel = document.getElementById("volumeLabel");
+          if (volSlider && document.activeElement !== volSlider)
+            volSlider.value = data.volume;
           if (volLabel) volLabel.textContent = `${data.volume}%`;
         }
       }
 
       async function fetchMusicState() {
         try {
-          const res = await fetch('/api/music/now-playing');
+          const res = await fetch("/api/music/now-playing");
           if (!res.ok) return;
           const data = await res.json();
           if (!data.success) return;
@@ -739,7 +1588,7 @@
       // Fetch and Render Real Music Queue
       async function fetchMusicQueue() {
         try {
-          const res = await fetch('/api/music/queue');
+          const res = await fetch("/api/music/queue");
           if (!res.ok) return;
           const data = await res.json();
           if (!data.success) return;
@@ -750,7 +1599,7 @@
       }
 
       function renderQueue(queue) {
-        const listEl = document.getElementById('queueList');
+        const listEl = document.getElementById("queueList");
         if (!listEl) return;
 
         if (!queue || queue.length === 0) {
@@ -764,28 +1613,32 @@
           return;
         }
 
-        listEl.innerHTML = queue.map((track, i) => `
-          <div class="queue-item ${i === 0 ? 'current' : ''}">
-            <div class="queue-num">${i === 0 ? '▶' : i + 1}</div>
-            <div class="queue-thumb">${i === 0 ? '🎵' : '💿'}</div>
+        listEl.innerHTML = queue
+          .map(
+            (track, i) => `
+          <div class="queue-item ${i === 0 ? "current" : ""}">
+            <div class="queue-num">${i === 0 ? "▶" : i + 1}</div>
+            <div class="queue-thumb">${i === 0 ? "🎵" : "💿"}</div>
             <div style="flex:1;min-width:0;">
-              <div style="font-size:13px;font-weight:600;color:${i === 0 ? 'var(--primary)' : 'var(--text-primary)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                ${track.title || 'Unknown Title'}
+              <div style="font-size:13px;font-weight:600;color:${i === 0 ? "var(--primary)" : "var(--text-primary)"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${track.title || "Unknown Title"}
               </div>
               <div style="font-size:11px;color:var(--text-muted);">
-                ${track.author || 'Artis'} · ${formatTime(track.duration)}
+                ${track.author || "Artis"} · ${formatTime(track.duration)}
               </div>
             </div>
           </div>
-        `).join('');
+        `,
+          )
+          .join("");
       }
 
       async function clearQueue() {
         try {
-          await fetch('/api/music/control', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guildId: 'current', action: 'clear' }),
+          await fetch("/api/music/control", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ guildId: "current", action: "clear" }),
           });
           renderQueue([]);
         } catch (_) {}
@@ -793,10 +1646,10 @@
 
       async function shuffleQueue() {
         try {
-          await fetch('/api/music/control', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guildId: 'current', action: 'shuffle' }),
+          await fetch("/api/music/control", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ guildId: "current", action: "shuffle" }),
           });
           setTimeout(fetchMusicQueue, 400);
         } catch (_) {}
@@ -804,47 +1657,58 @@
 
       async function togglePlay() {
         isPlaying = !isPlaying;
-        const icon = document.getElementById('playIcon');
-        if (icon) icon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
-        document.getElementById('artworkDisc')?.classList.toggle('playing', isPlaying);
-        document.getElementById('eqBars')?.classList.toggle('eq-playing', isPlaying);
+        const icon = document.getElementById("playIcon");
+        if (icon)
+          icon.className = isPlaying ? "fa-solid fa-pause" : "fa-solid fa-play";
+        document
+          .getElementById("artworkDisc")
+          ?.classList.toggle("playing", isPlaying);
+        document
+          .getElementById("eqBars")
+          ?.classList.toggle("eq-playing", isPlaying);
 
         try {
-          await fetch('/api/music/control', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guildId: 'current', action: 'playpause' }),
+          await fetch("/api/music/control", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ guildId: "current", action: "playpause" }),
           });
           setTimeout(fetchMusicState, 300);
         } catch (_) {}
       }
 
-      document.getElementById('btnNext')?.addEventListener('click', async () => {
-        try {
-          await fetch('/api/music/control', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ guildId: 'current', action: 'skip' }),
-          });
-          setTimeout(fetchMusicState, 300);
-          setTimeout(fetchMusicQueue, 500);
-        } catch (_) {}
-      });
+      document
+        .getElementById("btnNext")
+        ?.addEventListener("click", async () => {
+          try {
+            await fetch("/api/music/control", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ guildId: "current", action: "skip" }),
+            });
+            setTimeout(fetchMusicState, 300);
+            setTimeout(fetchMusicQueue, 500);
+          } catch (_) {}
+        });
 
       // Volume slider label update & control send
-      const volSlider = document.getElementById('volumeSlider');
+      const volSlider = document.getElementById("volumeSlider");
       if (volSlider) {
-        volSlider.addEventListener('input', function() {
-          const lbl = document.getElementById('volumeLabel');
-          if (lbl) lbl.textContent = this.value + '%';
+        volSlider.addEventListener("input", function () {
+          const lbl = document.getElementById("volumeLabel");
+          if (lbl) lbl.textContent = this.value + "%";
         });
-        volSlider.addEventListener('change', async function() {
+        volSlider.addEventListener("change", async function () {
           const vol = parseInt(this.value, 10) || 70;
           try {
-            await fetch('/api/music/control', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ guildId: 'current', action: 'volume', value: vol }),
+            await fetch("/api/music/control", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                guildId: "current",
+                action: "volume",
+                value: vol,
+              }),
             });
           } catch (_) {}
         });
@@ -852,39 +1716,50 @@
 
       // Audio filter highlight
       function setAudioFilter(filter) {
-        document.querySelectorAll('#audioFilters .btn').forEach(btn => {
-          btn.classList.remove('btn-primary');
-          btn.classList.add('btn-ghost');
+        document.querySelectorAll("#audioFilters .btn").forEach((btn) => {
+          btn.classList.remove("btn-primary");
+          btn.classList.add("btn-ghost");
         });
-        const target = document.getElementById(`filter${filter.charAt(0).toUpperCase()+filter.slice(1)}`);
-        if (target) { target.classList.add('btn-primary'); target.classList.remove('btn-ghost'); }
+        const target = document.getElementById(
+          `filter${filter.charAt(0).toUpperCase() + filter.slice(1)}`,
+        );
+        if (target) {
+          target.classList.add("btn-primary");
+          target.classList.remove("btn-ghost");
+        }
       }
 
-      setAudioFilter('none');
+      setAudioFilter("none");
 
       // AI DJ toggle
-      document.getElementById('aiDjToggle')?.addEventListener('change', function() {
-        document.getElementById('aiDjStatus').textContent = this.checked ? 'Active' : 'Offline';
-        document.getElementById('aiDjStatus').className = this.checked ? 'badge badge-violet' : 'badge badge-muted';
-      });
+      document
+        .getElementById("aiDjToggle")
+        ?.addEventListener("change", function () {
+          document.getElementById("aiDjStatus").textContent = this.checked
+            ? "Active"
+            : "Offline";
+          document.getElementById("aiDjStatus").className = this.checked
+            ? "badge badge-violet"
+            : "badge badge-muted";
+        });
 
       // Socket.IO live integration
-      if (typeof io !== 'undefined') {
+      if (typeof io !== "undefined") {
         try {
           const socket = io();
-          socket.on('connect', () => {
-            socket.emit('join_room', 'dashboard:home');
+          socket.on("connect", () => {
+            socket.emit("join_room", "dashboard:home");
           });
-          socket.on('music_state', (data) => {
+          socket.on("music_state", (data) => {
             updatePlayerUI(data);
           });
-          socket.on('music_queue', (queueData) => {
+          socket.on("music_queue", (queueData) => {
             renderQueue(queueData.queue || queueData);
           });
         } catch (_) {}
       }
 
-      window.addEventListener('load', () => {
+      window.addEventListener("load", () => {
         fetchMusicState();
         fetchMusicQueue();
         setInterval(fetchMusicState, 4000);
@@ -892,20 +1767,26 @@
 
       // Mobile grid
       function adjustMusicGrid() {
-        const g = document.getElementById('musicMainGrid');
+        const g = document.getElementById("musicMainGrid");
         if (!g) return;
-        g.style.gridTemplateColumns = window.innerWidth < 900 ? '1fr' : '1fr 1fr';
+        g.style.gridTemplateColumns =
+          window.innerWidth < 900 ? "1fr" : "1fr 1fr";
       }
-      window.addEventListener('resize', adjustMusicGrid);
+      window.addEventListener("resize", adjustMusicGrid);
       adjustMusicGrid();
 
       // Node grid
       function adjustNodeGrid() {
-        const g = document.getElementById('lavalinkNodes');
+        const g = document.getElementById("lavalinkNodes");
         if (!g) return;
-        g.style.gridTemplateColumns = window.innerWidth < 768 ? '1fr' : window.innerWidth < 1024 ? '1fr 1fr' : 'repeat(3,1fr)';
+        g.style.gridTemplateColumns =
+          window.innerWidth < 768
+            ? "1fr"
+            : window.innerWidth < 1024
+              ? "1fr 1fr"
+              : "repeat(3,1fr)";
       }
-      window.addEventListener('resize', adjustNodeGrid);
+      window.addEventListener("resize", adjustNodeGrid);
       adjustNodeGrid();
     </script>
   </body>

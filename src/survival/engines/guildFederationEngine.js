@@ -78,7 +78,9 @@ class GuildFederationEngine {
     if (!federationId) return null;
     try {
       if (redisManager.isReady) {
-        const raw = await redisManager.getCache(`${FEDERATION_PREFIX}${federationId}`);
+        const raw = await redisManager.getCache(
+          `${FEDERATION_PREFIX}${federationId}`,
+        );
         if (raw) return typeof raw === "string" ? JSON.parse(raw) : raw;
       }
     } catch (err) {
@@ -102,7 +104,9 @@ class GuildFederationEngine {
           86400 * 30, // 30 hari
         );
         // Tambahkan ID ke set federasi aktif
-        await redisManager.redis.sadd(FEDERATION_LIST_KEY, fed.id).catch(() => {});
+        await redisManager.redis
+          .sadd(FEDERATION_LIST_KEY, fed.id)
+          .catch(() => {});
       }
     } catch (err) {
       logger.warn(`[GuildFederationEngine] Redis save error: ${err.message}`);
@@ -120,7 +124,10 @@ class GuildFederationEngine {
    */
   async createFederation({ name, tag, leaderClanId, guildId }) {
     if (!name || !tag || !leaderClanId) {
-      return { success: false, error: "Parameter nama, tag, dan klan tidak lengkap." };
+      return {
+        success: false,
+        error: "Parameter nama, tag, dan klan tidak lengkap.",
+      };
     }
 
     const cleanTag = tag.toUpperCase().slice(0, 5);
@@ -148,7 +155,9 @@ class GuildFederationEngine {
     };
 
     await this.saveFederation(newFed);
-    logger.info(`[GuildFederationEngine] Federasi baru "${name}" [${cleanTag}] didirikan.`);
+    logger.info(
+      `[GuildFederationEngine] Federasi baru "${name}" [${cleanTag}] didirikan.`,
+    );
     return { success: true, federation: newFed };
   }
 
@@ -167,11 +176,17 @@ class GuildFederationEngine {
 
     const isMember = fed.memberClans.some((m) => m.clanId === clanId);
     if (isMember) {
-      return { success: false, error: "Klan kamu sudah tergabung dalam aliansi ini." };
+      return {
+        success: false,
+        error: "Klan kamu sudah tergabung dalam aliansi ini.",
+      };
     }
 
     if (fed.memberClans.length >= 10) {
-      return { success: false, error: "Aliansi ini sudah mencapai batas maksimum 10 klan." };
+      return {
+        success: false,
+        error: "Aliansi ini sudah mencapai batas maksimum 10 klan.",
+      };
     }
 
     fed.memberClans.push({
@@ -195,14 +210,18 @@ class GuildFederationEngine {
     const list = [];
     try {
       if (redisManager.isReady) {
-        const ids = await redisManager.redis.smembers(FEDERATION_LIST_KEY).catch(() => []);
+        const ids = await redisManager.redis
+          .smembers(FEDERATION_LIST_KEY)
+          .catch(() => []);
         for (const id of ids) {
           const fed = await this.getFederation(id);
           if (fed) list.push(fed);
         }
       }
     } catch (err) {
-      logger.warn(`[GuildFederationEngine] Hall of fame fetch error: ${err.message}`);
+      logger.warn(
+        `[GuildFederationEngine] Hall of fame fetch error: ${err.message}`,
+      );
     }
 
     // Gabungkan dengan data memory
@@ -237,7 +256,10 @@ class GuildFederationEngine {
     }
 
     // Urutkan berdasarkan prestise dan kemenangan boss
-    list.sort((a, b) => (b.prestige + b.bossVictories * 50) - (a.prestige + a.bossVictories * 50));
+    list.sort(
+      (a, b) =>
+        b.prestige + b.bossVictories * 50 - (a.prestige + a.bossVictories * 50),
+    );
     return list.slice(0, limit);
   }
 
@@ -259,7 +281,13 @@ class GuildFederationEngine {
    * @param {object} [params.client]
    * @returns {Promise<object>}
    */
-  async attackAllianceBoss({ federationId, clanId, userId, damage = 150, client = null }) {
+  async attackAllianceBoss({
+    federationId,
+    clanId,
+    userId,
+    damage = 150,
+    client = null,
+  }) {
     const fed = await this.getFederation(federationId);
     const boss = memoryAllianceBoss;
 
@@ -291,7 +319,9 @@ class GuildFederationEngine {
 
         // Tambahkan hadiah brankas klan ke seluruh klan anggota secara atomik
         for (const member of fed.memberClans) {
-          const clanRow = await GuildClan.findByPk(member.clanId).catch(() => null);
+          const clanRow = await GuildClan.findByPk(member.clanId).catch(
+            () => null,
+          );
           if (clanRow) {
             clanRow.vault = (clanRow.vault || 0) + rewardVaultPerClan;
             await clanRow.save({ fields: ["vault"] }).catch(() => {});
@@ -301,12 +331,14 @@ class GuildFederationEngine {
         // Siarkan intermezzo kemenangan via AI DJ Fish Audio TTS
         try {
           const fishAudioService = require("../../services/fishAudioService");
-          fishAudioService.broadcastVictoryAnnouncement({
-            client: client || null,
-            federationName: fed ? fed.name : "Aliansi Petualang",
-            bossName: "Celestial Chrono-Wyrm",
-            phase: boss.phase - 1,
-          }).catch(() => {});
+          fishAudioService
+            .broadcastVictoryAnnouncement({
+              client: client || null,
+              federationName: fed ? fed.name : "Aliansi Petualang",
+              bossName: "Celestial Chrono-Wyrm",
+              phase: boss.phase - 1,
+            })
+            .catch(() => {});
         } catch (_) {}
       }
 
@@ -382,7 +414,9 @@ class GuildFederationEngine {
 
       fed.prestige = (fed.prestige || 0) + 300;
       await this.saveFederation(fed);
-      logger.info(`⚔️ [FederationWar] Aliansi "${fed.name}" berhasil menaklukkan ${tower.name}!`);
+      logger.info(
+        `⚔️ [FederationWar] Aliansi "${fed.name}" berhasil menaklukkan ${tower.name}!`,
+      );
     }
 
     return {
@@ -413,7 +447,10 @@ class GuildFederationEngine {
     }
 
     if (tower.controllerFedId !== federationId) {
-      return { success: false, error: "Aliansi kamu tidak menguasai Menara Relik ini." };
+      return {
+        success: false,
+        error: "Aliansi kamu tidak menguasai Menara Relik ini.",
+      };
     }
 
     const fed = await this.getFederation(federationId);

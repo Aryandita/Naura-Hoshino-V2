@@ -69,7 +69,8 @@ function evaluateDungeonEntryRequirement({
     return Object.freeze({
       isAllowed: false,
       reasonCode: "VITALS_TOO_LOW",
-      errorMessage: "Kondisi fisikmu terlalu lemah (HP atau Stamina <= 20). Istirahatlah terlebih dahulu.",
+      errorMessage:
+        "Kondisi fisikmu terlalu lemah (HP atau Stamina <= 20). Istirahatlah terlebih dahulu.",
       suggestShopCta: false,
     });
   }

@@ -58,8 +58,14 @@ test("SPOUSAL_DATA mendefinisikan janji suci dan sarapan untuk semua wanita roma
   for (const femaleId of ROMANCEABLE_FEMALES) {
     const data = SPOUSAL_DATA[femaleId];
     assert.ok(data, `Data spousal untuk ${femaleId} harus ada`);
-    assert.ok(data.vow.length > 0, `Janji pernikahan ${femaleId} tidak boleh kosong`);
-    assert.ok(data.breakfast.length > 0, `Menu sarapan ${femaleId} tidak boleh kosong`);
+    assert.ok(
+      data.vow.length > 0,
+      `Janji pernikahan ${femaleId} tidak boleh kosong`,
+    );
+    assert.ok(
+      data.breakfast.length > 0,
+      `Menu sarapan ${femaleId} tidak boleh kosong`,
+    );
     assert.ok(data.restoreHp > 0);
   }
 });
@@ -121,7 +127,11 @@ test("triggerParenthood berhasil memicu kelahiran anak dan membuka Family CG bil
     },
   };
 
-  const result = await triggerParenthood("dummy_user_6", survival, "Bintang Hoshino");
+  const result = await triggerParenthood(
+    "dummy_user_6",
+    survival,
+    "Bintang Hoshino",
+  );
   assert.equal(result.ok, true);
   assert.equal(result.cgId, "family_ningsih");
   assert.equal(survival.rpg_state.has_child, true);

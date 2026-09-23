@@ -243,7 +243,6 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-
       handled = true;
       await i.editReply({ ...successPayload, embeds: [] }).catch(() => {});
     });

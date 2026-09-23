@@ -141,9 +141,7 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       activeVoice,
       uptimeSeconds: uptimeSec,
       uptimeFormatted: `${uptimeHours}j ${uptimeMins}m`,
-      shards: [
-        { id: 0, status: "online", ping: avgPing }
-      ],
+      shards: [{ id: 0, status: "online", ping: avgPing }],
       dbStatus: getDbStatus(),
       mongoStatus: mongoManager ? mongoManager.getStatus() : null,
       redisStatus: !!(redisManager.client && redisManager.client.isReady),
@@ -175,8 +173,13 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
     logger.info(`[SOCKET] Ada yang terhubung ke dashboard: ${socket.id}`);
 
     socket.on("join_room", (room) => {
-      if (typeof room === "string" && (room.startsWith("dashboard:") || room === "home" || room === "status")) {
-        const canonicalRoom = room.startsWith("dashboard:") ? room : `dashboard:${room}`;
+      if (
+        typeof room === "string" &&
+        (room.startsWith("dashboard:") || room === "home" || room === "status")
+      ) {
+        const canonicalRoom = room.startsWith("dashboard:")
+          ? room
+          : `dashboard:${room}`;
         socket.join(canonicalRoom);
       }
     });
@@ -199,7 +202,8 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       );
       if (isLimited) {
         return socket.emit("music_error", {
-          message: "Terlalu cepat mengontrol pemutar musik. Tunggu sebentar ya!",
+          message:
+            "Terlalu cepat mengontrol pemutar musik. Tunggu sebentar ya!",
         });
       }
 
@@ -323,9 +327,20 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       try {
         const UserSurvival = require("../../src/models/UserSurvival");
         const topPlayers = await UserSurvival.findAll({
-          order: [["level", "DESC"], ["xp", "DESC"], ["starFragments", "DESC"]],
+          order: [
+            ["level", "DESC"],
+            ["xp", "DESC"],
+            ["starFragments", "DESC"],
+          ],
           limit: 10,
-          attributes: ["userId", "level", "xp", "starFragments", "health", "energy"],
+          attributes: [
+            "userId",
+            "level",
+            "xp",
+            "starFragments",
+            "health",
+            "energy",
+          ],
         });
         socket.emit("survival_leaderboard_data", topPlayers);
       } catch (err) {
@@ -338,9 +353,14 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       socket.join(`jam:${roomId}`);
     });
 
-    socket.on("jam:step_toggle", ({ roomId = "global", inst, step, active } = {}) => {
-      socket.to(`jam:${roomId}`).emit("jam:step_toggle", { inst, step, active });
-    });
+    socket.on(
+      "jam:step_toggle",
+      ({ roomId = "global", inst, step, active } = {}) => {
+        socket
+          .to(`jam:${roomId}`)
+          .emit("jam:step_toggle", { inst, step, active });
+      },
+    );
 
     socket.on("jam:note_play", ({ roomId = "global", note, wave } = {}) => {
       socket.to(`jam:${roomId}`).emit("jam:note_play", { note, wave });

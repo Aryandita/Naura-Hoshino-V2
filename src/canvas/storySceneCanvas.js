@@ -48,7 +48,9 @@ async function renderStoryScene(data = {}) {
     const turn = Number(data.turn) || 1;
     const maxTurns = Number(data.maxTurns) || 5;
     const title = (data.title || "Ekspedisi Gerbang Neo-Hoshino").toUpperCase();
-    const narrative = data.narrative || "Langkah kakimu bergema menembus kabut lembah astral. Udara dingin berdesir lembut di antara reruntuhan kristal kuno.";
+    const narrative =
+      data.narrative ||
+      "Langkah kakimu bergema menembus kabut lembah astral. Udara dingin berdesir lembut di antara reruntuhan kristal kuno.";
     const location = data.location || "Reruntuhan Lembah Astral";
 
     // 1. Background Gradient Cyber-Fantasy
@@ -79,13 +81,27 @@ async function renderStoryScene(data = {}) {
 
     // 3. Neon Nebula Ambient Glow (Top Right Cyan, Bottom Left Pink)
     ctx.save();
-    const glow1 = ctx.createRadialGradient(width - 100, 80, 20, width - 100, 80, 240);
+    const glow1 = ctx.createRadialGradient(
+      width - 100,
+      80,
+      20,
+      width - 100,
+      80,
+      240,
+    );
     glow1.addColorStop(0, "rgba(56, 189, 248, 0.22)");
     glow1.addColorStop(1, "rgba(56, 189, 248, 0)");
     ctx.fillStyle = glow1;
     ctx.fillRect(0, 0, width, height);
 
-    const glow2 = ctx.createRadialGradient(120, height - 80, 20, 120, height - 80, 260);
+    const glow2 = ctx.createRadialGradient(
+      120,
+      height - 80,
+      20,
+      120,
+      height - 80,
+      260,
+    );
     glow2.addColorStop(0, "rgba(244, 114, 182, 0.2)");
     glow2.addColorStop(1, "rgba(244, 114, 182, 0)");
     ctx.fillStyle = glow2;
@@ -155,11 +171,19 @@ async function renderStoryScene(data = {}) {
     ctx.save();
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "#94A3B8";
-    ctx.fillText("✨ AI Dungeon Master • Naura Hoshino V2", pad + 20, height - pad - 18);
+    ctx.fillText(
+      "✨ AI Dungeon Master • Naura Hoshino V2",
+      pad + 20,
+      height - pad - 18,
+    );
 
     ctx.textAlign = "right";
     ctx.fillStyle = "#F472B6";
-    ctx.fillText("PILIH TINDAKANMU DI BAWAH ⚔️", width - pad - 20, height - pad - 18);
+    ctx.fillText(
+      "PILIH TINDAKANMU DI BAWAH ⚔️",
+      width - pad - 20,
+      height - pad - 18,
+    );
     ctx.restore();
 
     return canvas.toBuffer("image/png");
