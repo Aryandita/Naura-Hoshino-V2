@@ -6,8 +6,14 @@
     <title>Server Automations & Workflows | Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
       .automations-grid {
@@ -18,13 +24,19 @@
       }
 
       .auto-card {
-        background: linear-gradient(180deg, rgba(20, 26, 46, 0.65) 0%, rgba(10, 14, 26, 0.8) 100%);
+        background: linear-gradient(
+          180deg,
+          rgba(20, 26, 46, 0.65) 0%,
+          rgba(10, 14, 26, 0.8) 100%
+        );
         border: 1px solid var(--border-medium);
         border-radius: var(--r-xl);
         padding: 22px;
         position: relative;
         backdrop-filter: blur(14px);
-        transition: transform var(--t-fast), border-color var(--t-fast);
+        transition:
+          transform var(--t-fast),
+          border-color var(--t-fast);
       }
       .auto-card:hover {
         transform: translateY(-3px);
@@ -89,7 +101,7 @@
         cursor: pointer;
         inset: 0;
         background-color: rgba(255, 255, 255, 0.15);
-        transition: .3s;
+        transition: 0.3s;
         border-radius: 24px;
         border: 1px solid var(--border-subtle);
       }
@@ -101,7 +113,7 @@
         left: 3px;
         bottom: 3px;
         background-color: white;
-        transition: .3s;
+        transition: 0.3s;
         border-radius: 50%;
       }
       input:checked + .slider {
@@ -138,31 +150,43 @@
     </style>
   </head>
   <body>
-    
-
     <div class="app-shell">
       <!-- Mobile Sidebar Overlay -->
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
-      <aside class="sidebar " id="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
+          <div class="sidebar-logo-icon">
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="
+                this.style.display = 'none';
+                this.parentElement.innerHTML = '🌸';
+              "
+            />
+          </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
             <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+          <button
+            class="sidebar-close-btn"
+            id="sidebarCloseBtn"
+            aria-label="Tutup menu"
+          >
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
+        <!-- Navigation -->
+        <!-- Navigation -->
         <nav class="sidebar-nav" role="navigation">
-
           <!-- Overview -->
           <div class="nav-group">
             <div class="nav-group-label">Overview</div>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-gauge-high"></i
+              ></span>
               <span>Dashboard</span>
             </a>
             <a href="/status" class="nav-item">
@@ -188,7 +212,9 @@
               <span>Economy</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-network-wired"></i
+              ></span>
               <span>Guild Topology</span>
             </a>
           </div>
@@ -209,7 +235,9 @@
               <span>Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-microphone"></i
+              ></span>
               <span>Karaoke</span>
             </a>
           </div>
@@ -218,7 +246,9 @@
           <div class="nav-group">
             <div class="nav-group-label">Naura Wilds RPG</div>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-earth-asia"></i
+              ></span>
               <span>World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
@@ -243,7 +273,9 @@
               <span>Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-wand-magic-sparkles"></i
+              ></span>
               <span>Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
@@ -260,16 +292,28 @@
           <div class="nav-group">
             <div class="nav-group-label">More</div>
             <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+              <span class="nav-icon" style="color: var(--accent-green)"
+                ><i class="fa-solid fa-id-badge"></i
+              ></span>
+              <span style="color: var(--accent-green)">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
         <div class="sidebar-footer">
-          <div class="sidebar-user" onclick="window.location.href='/'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
-            <div class="sidebar-user-info"><div class="sidebar-user-name">Guest Admin</div><div class="sidebar-user-role">Sistem Otomasi</div></div>
+          <div class="sidebar-user" onclick="window.location.href = '/'">
+            <img
+              src="/assets/core/avatar.png"
+              alt="User"
+              class="sidebar-user-avatar"
+              onerror="
+                this.src =
+                  'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'
+              "
+            />
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name">Guest Admin</div>
+              <div class="sidebar-user-role">Sistem Otomasi</div>
+            </div>
           </div>
         </div>
       </aside>
@@ -277,10 +321,15 @@
       <div class="main-content">
         <header class="top-header">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <button class="hamburger-btn" id="hamburgerBtn">
+              <i class="fa-solid fa-bars"></i>
+            </button>
             <div>
               <div class="page-title">Automations & Workflows</div>
-              <div class="breadcrumb"><span>Configuration</span><span class="breadcrumb-sep">/</span><span>Server Pipelines</span></div>
+              <div class="breadcrumb">
+                <span>Configuration</span><span class="breadcrumb-sep">/</span
+                ><span>Server Pipelines</span>
+              </div>
             </div>
           </div>
           <div class="header-right">
@@ -294,12 +343,24 @@
           <div class="page-header-bar animate-in">
             <div>
               <h1 class="page-heading">
-                <span class="page-heading-icon" style="background:var(--cyan-dim);border:1px solid var(--border-cyan);">
-                  <i class="fa-solid fa-robot" style="color:var(--accent-cyan);"></i>
+                <span
+                  class="page-heading-icon"
+                  style="
+                    background: var(--cyan-dim);
+                    border: 1px solid var(--border-cyan);
+                  "
+                >
+                  <i
+                    class="fa-solid fa-robot"
+                    style="color: var(--accent-cyan)"
+                  ></i>
                 </span>
                 Server Automations & Cron Pipelines
               </h1>
-              <p class="page-sub">Kelola aturan otomatis, penanganan raid, penyelarasan cache database latar belakang, dan sinkronisasi ekonomi.</p>
+              <p class="page-sub">
+                Kelola aturan otomatis, penanganan raid, penyelarasan cache
+                database latar belakang, dan sinkronisasi ekonomi.
+              </p>
             </div>
           </div>
 
@@ -307,7 +368,14 @@
             <!-- Pipeline 1 -->
             <div class="auto-card">
               <div class="auto-card-top">
-                <div class="auto-icon-wrap" style="background:rgba(239, 68, 68, 0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);">
+                <div
+                  class="auto-icon-wrap"
+                  style="
+                    background: rgba(239, 68, 68, 0.15);
+                    color: #ef4444;
+                    border: 1px solid rgba(239, 68, 68, 0.3);
+                  "
+                >
                   <i class="fa-solid fa-shield-virus"></i>
                 </div>
                 <label class="switch">
@@ -317,18 +385,27 @@
               </div>
               <div class="auto-title">Anti-Raid Sentinel Guard</div>
               <div class="auto-desc">
-                Mendeteksi lonjakan anggota masuk (>5 akun per detik). Otomatis mengkarantina pendatang baru ke sandbox dan menyalakan mode verifikasi captcha.
+                Mendeteksi lonjakan anggota masuk (>5 akun per detik). Otomatis
+                mengkarantina pendatang baru ke sandbox dan menyalakan mode
+                verifikasi captcha.
               </div>
               <div class="auto-meta-bar">
                 <span><i class="fa-solid fa-clock"></i> Reaksi: &lt; 15ms</span>
-                <span style="color:#34d399;">STATUS: AKTIF</span>
+                <span style="color: #34d399">STATUS: AKTIF</span>
               </div>
             </div>
 
             <!-- Pipeline 2 -->
             <div class="auto-card">
               <div class="auto-card-top">
-                <div class="auto-icon-wrap" style="background:rgba(167, 139, 250, 0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3);">
+                <div
+                  class="auto-icon-wrap"
+                  style="
+                    background: rgba(167, 139, 250, 0.15);
+                    color: #a78bfa;
+                    border: 1px solid rgba(167, 139, 250, 0.3);
+                  "
+                >
                   <i class="fa-solid fa-brain"></i>
                 </div>
                 <label class="switch">
@@ -338,18 +415,29 @@
               </div>
               <div class="auto-title">AI Auto-Triage (Groq LLaMA)</div>
               <div class="auto-desc">
-                Menganalisis tiket pengaduan masuk secara instan, merangkum keluhan pengguna, dan memberikan estimasi solusi sebelum staf moderator membuka tiket.
+                Menganalisis tiket pengaduan masuk secara instan, merangkum
+                keluhan pengguna, dan memberikan estimasi solusi sebelum staf
+                moderator membuka tiket.
               </div>
               <div class="auto-meta-bar">
-                <span><i class="fa-solid fa-bolt"></i> Model: LLaMA 3.3 70B</span>
-                <span style="color:#34d399;">STATUS: AKTIF</span>
+                <span
+                  ><i class="fa-solid fa-bolt"></i> Model: LLaMA 3.3 70B</span
+                >
+                <span style="color: #34d399">STATUS: AKTIF</span>
               </div>
             </div>
 
             <!-- Pipeline 3 -->
             <div class="auto-card">
               <div class="auto-card-top">
-                <div class="auto-icon-wrap" style="background:rgba(245, 158, 11, 0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">
+                <div
+                  class="auto-icon-wrap"
+                  style="
+                    background: rgba(245, 158, 11, 0.15);
+                    color: #f59e0b;
+                    border: 1px solid rgba(245, 158, 11, 0.3);
+                  "
+                >
                   <i class="fa-solid fa-vault"></i>
                 </div>
                 <label class="switch">
@@ -359,18 +447,29 @@
               </div>
               <div class="auto-title">Daily Treasury Settlement</div>
               <div class="auto-desc">
-                Menghitung dan memotong pajak sirkulasi ekonomi 0.5% setiap jam 00:00 WIB, kemudian mendistribusikannya ke kas ServerTreasury untuk hadiah event.
+                Menghitung dan memotong pajak sirkulasi ekonomi 0.5% setiap jam
+                00:00 WIB, kemudian mendistribusikannya ke kas ServerTreasury
+                untuk hadiah event.
               </div>
               <div class="auto-meta-bar">
-                <span><i class="fa-solid fa-calendar"></i> Jadwal: 00:00 WIB</span>
-                <span style="color:#34d399;">STATUS: AKTIF</span>
+                <span
+                  ><i class="fa-solid fa-calendar"></i> Jadwal: 00:00 WIB</span
+                >
+                <span style="color: #34d399">STATUS: AKTIF</span>
               </div>
             </div>
 
             <!-- Pipeline 4 -->
             <div class="auto-card">
               <div class="auto-card-top">
-                <div class="auto-icon-wrap" style="background:rgba(34, 211, 238, 0.15);color:#22d3ee;border:1px solid rgba(34,211,238,0.3);">
+                <div
+                  class="auto-icon-wrap"
+                  style="
+                    background: rgba(34, 211, 238, 0.15);
+                    color: #22d3ee;
+                    border: 1px solid rgba(34, 211, 238, 0.3);
+                  "
+                >
                   <i class="fa-solid fa-rotate"></i>
                 </div>
                 <label class="switch">
@@ -380,18 +479,30 @@
               </div>
               <div class="auto-title">Write-Behind Cache Flusher</div>
               <div class="auto-desc">
-                Menyinkronkan akumulasi mutasi saldo dan inventori dari Redis buffer ke Supabase PostgreSQL secara bertahap setiap 5 detik tanpa membebani IOPS.
+                Menyinkronkan akumulasi mutasi saldo dan inventori dari Redis
+                buffer ke Supabase PostgreSQL secara bertahap setiap 5 detik
+                tanpa membebani IOPS.
               </div>
               <div class="auto-meta-bar">
-                <span><i class="fa-solid fa-arrows-rotate"></i> Interval: 5 Detik</span>
-                <span style="color:#34d399;">STATUS: AKTIF</span>
+                <span
+                  ><i class="fa-solid fa-arrows-rotate"></i> Interval: 5
+                  Detik</span
+                >
+                <span style="color: #34d399">STATUS: AKTIF</span>
               </div>
             </div>
 
             <!-- Pipeline 5 -->
             <div class="auto-card">
               <div class="auto-card-top">
-                <div class="auto-icon-wrap" style="background:rgba(244, 114, 182, 0.15);color:#f472b6;border:1px solid rgba(244,114,182,0.3);">
+                <div
+                  class="auto-icon-wrap"
+                  style="
+                    background: rgba(244, 114, 182, 0.15);
+                    color: #f472b6;
+                    border: 1px solid rgba(244, 114, 182, 0.3);
+                  "
+                >
                   <i class="fa-solid fa-music"></i>
                 </div>
                 <label class="switch">
@@ -401,18 +512,29 @@
               </div>
               <div class="auto-title">Idle Voice Channel Eviction</div>
               <div class="auto-desc">
-                Otomatis memutuskan sambungan player Lavalink dari voice channel jika tidak ada audio yang dimainkan dalam waktu 3 menit untuk menghemat bandwidth.
+                Otomatis memutuskan sambungan player Lavalink dari voice channel
+                jika tidak ada audio yang dimainkan dalam waktu 3 menit untuk
+                menghemat bandwidth.
               </div>
               <div class="auto-meta-bar">
-                <span><i class="fa-solid fa-hourglass-end"></i> Timeout: 180s</span>
-                <span style="color:#34d399;">STATUS: AKTIF</span>
+                <span
+                  ><i class="fa-solid fa-hourglass-end"></i> Timeout: 180s</span
+                >
+                <span style="color: #34d399">STATUS: AKTIF</span>
               </div>
             </div>
 
             <!-- Pipeline 6 -->
             <div class="auto-card">
               <div class="auto-card-top">
-                <div class="auto-icon-wrap" style="background:rgba(52, 211, 153, 0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3);">
+                <div
+                  class="auto-icon-wrap"
+                  style="
+                    background: rgba(52, 211, 153, 0.15);
+                    color: #34d399;
+                    border: 1px solid rgba(52, 211, 153, 0.3);
+                  "
+                >
                   <i class="fa-solid fa-id-card-clip"></i>
                 </div>
                 <label class="switch">
@@ -422,35 +544,64 @@
               </div>
               <div class="auto-title">Auto-Role Leveling Sync</div>
               <div class="auto-desc">
-                Memberikan role Discord baru (misal @Veteran Adventurer) otomatis ketika profil survival pemain menyentuh milestone level 10, 25, dan 50.
+                Memberikan role Discord baru (misal @Veteran Adventurer)
+                otomatis ketika profil survival pemain menyentuh milestone level
+                10, 25, dan 50.
               </div>
               <div class="auto-meta-bar">
-                <span><i class="fa-solid fa-medal"></i> Milestone: Lv. 10/25/50</span>
-                <span style="color:var(--text-muted);">STATUS: NONAKTIF</span>
+                <span
+                  ><i class="fa-solid fa-medal"></i> Milestone: Lv.
+                  10/25/50</span
+                >
+                <span style="color: var(--text-muted)">STATUS: NONAKTIF</span>
               </div>
             </div>
           </div>
 
           <!-- Live Execution Log Ticker -->
           <div class="log-card animate-in delay-2">
-            <div style="font-family:var(--font-heading);font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
-              <i class="fa-solid fa-terminal" style="color:var(--accent-cyan);"></i> Eksekusi Log Otomasi Terkini
+            <div
+              style="
+                font-family: var(--font-heading);
+                font-size: 14px;
+                font-weight: 700;
+                color: var(--text-primary);
+                margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              "
+            >
+              <i
+                class="fa-solid fa-terminal"
+                style="color: var(--accent-cyan)"
+              ></i>
+              Eksekusi Log Otomasi Terkini
             </div>
             <div id="logTicker">
               <div class="log-item">
                 <span class="log-time">[11:28:14]</span>
-                <span style="color:#34d399;">SUCCESS</span>
-                <span style="color:var(--text-secondary);">WriteBehindCache: 14 baris mutasi berhasil di-flush ke Postgres (0 error, durasi: 12ms)</span>
+                <span style="color: #34d399">SUCCESS</span>
+                <span style="color: var(--text-secondary)"
+                  >WriteBehindCache: 14 baris mutasi berhasil di-flush ke
+                  Postgres (0 error, durasi: 12ms)</span
+                >
               </div>
               <div class="log-item">
                 <span class="log-time">[11:25:00]</span>
-                <span style="color:#22d3ee;">INFO</span>
-                <span style="color:var(--text-secondary);">LavalinkClusterManager: Heartbeat 3 node aktif (Latency: Singapore 18ms, Jakarta 12ms)</span>
+                <span style="color: #22d3ee">INFO</span>
+                <span style="color: var(--text-secondary)"
+                  >LavalinkClusterManager: Heartbeat 3 node aktif (Latency:
+                  Singapore 18ms, Jakarta 12ms)</span
+                >
               </div>
               <div class="log-item">
                 <span class="log-time">[11:20:45]</span>
-                <span style="color:#a78bfa;">AI_TRIAGE</span>
-                <span style="color:var(--text-secondary);">Ticket #0492: Teridentifikasi komplain transaksi (Sentimen: Netral-Cemas, skor urgensi: 7/10)</span>
+                <span style="color: #a78bfa">AI_TRIAGE</span>
+                <span style="color: var(--text-secondary)"
+                  >Ticket #0492: Teridentifikasi komplain transaksi (Sentimen:
+                  Netral-Cemas, skor urgensi: 7/10)</span
+                >
               </div>
             </div>
           </div>
@@ -460,34 +611,53 @@
 
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"
+          ><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span
+          ><span class="mn-label">Dashboard</span></a
+        >
+        <a href="/world" class="mobile-nav-item" data-group="map"
+          ><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span
+          ><span class="mn-label">Map</span></a
+        >
+        <a href="/automations" class="mobile-nav-item" data-group="config"
+          ><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span
+          ><span class="mn-label">Config</span></a
+        >
+        <a href="/music" class="mobile-nav-item" data-group="system"
+          ><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span
+          ><span class="mn-label">System</span></a
+        >
+        <a href="/settings" class="mobile-nav-item" data-group="settings"
+          ><span class="mn-icon"><i class="fa-solid fa-gears"></i></span
+          ><span class="mn-label">Settings</span></a
+        >
       </div>
     </nav>
 
     <script src="/src/js/sharedNav.js"></script>
     <script>
-      const toggles = document.querySelectorAll('.pipeline-toggle');
-      const badge = document.getElementById('activePipelinesBadge');
+      const toggles = document.querySelectorAll(".pipeline-toggle");
+      const badge = document.getElementById("activePipelinesBadge");
 
       function updateActiveBadge() {
-        const activeCount = document.querySelectorAll('.pipeline-toggle:checked').length;
+        const activeCount = document.querySelectorAll(
+          ".pipeline-toggle:checked",
+        ).length;
         badge.innerHTML = `<i class="fa-solid fa-check"></i> ${activeCount} PIPELINE AKTIF`;
       }
 
-      toggles.forEach(t => {
-        t.addEventListener('change', (e) => {
-          const card = e.target.closest('.auto-card');
-          const statusText = card.querySelector('.auto-meta-bar span:last-child');
+      toggles.forEach((t) => {
+        t.addEventListener("change", (e) => {
+          const card = e.target.closest(".auto-card");
+          const statusText = card.querySelector(
+            ".auto-meta-bar span:last-child",
+          );
           if (e.target.checked) {
-            statusText.textContent = 'STATUS: AKTIF';
-            statusText.style.color = '#34d399';
+            statusText.textContent = "STATUS: AKTIF";
+            statusText.style.color = "#34d399";
           } else {
-            statusText.textContent = 'STATUS: NONAKTIF';
-            statusText.style.color = 'var(--text-muted)';
+            statusText.textContent = "STATUS: NONAKTIF";
+            statusText.style.color = "var(--text-muted)";
           }
           updateActiveBadge();
         });

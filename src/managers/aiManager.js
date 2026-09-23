@@ -786,7 +786,7 @@ Jawablah dalam bahasa Indonesia kasual.`;
     const visionClient = this.getGenAI();
     if (!visionClient) {
       throw new Error(
-        "Kunci GEMINI_API_KEY belum dikonfigurasi. Fitur Vision AI tidak aktif."
+        "Kunci GEMINI_API_KEY belum dikonfigurasi. Fitur Vision AI tidak aktif.",
       );
     }
 
@@ -865,7 +865,7 @@ Jawablah dalam bahasa Indonesia kasual.`;
       } catch (err) {
         lastError = err;
         logger.warn(
-          `[AI Vision] Model ${modelName} gagal (${err.message}). Mencoba model alternatif...`
+          `[AI Vision] Model ${modelName} gagal (${err.message}). Mencoba model alternatif...`,
         );
       }
     }
@@ -873,7 +873,7 @@ Jawablah dalam bahasa Indonesia kasual.`;
     throw new Error(
       lastError
         ? `Gagal menganalisis gambar: ${lastError.message}`
-        : "AI tidak mengembalikan teks respons."
+        : "AI tidak mengembalikan teks respons.",
     );
   }
 }

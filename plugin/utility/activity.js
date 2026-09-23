@@ -19,16 +19,22 @@ const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("activity")
-    .setDescription("🎮 Luncurkan Discord Activity Mini-App Naura World di Voice Channel.")
+    .setDescription(
+      "🎮 Luncurkan Discord Activity Mini-App Naura World di Voice Channel.",
+    )
     .addSubcommand((sub) =>
       sub
         .setName("launch")
-        .setDescription("🚀 Buka mini-app Naura World bersama teman di voice channel."),
+        .setDescription(
+          "🚀 Buka mini-app Naura World bersama teman di voice channel.",
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("info")
-        .setDescription("ℹ️ Informasi seputar integrasi Discord Embedded App SDK."),
+        .setDescription(
+          "ℹ️ Informasi seputar integrasi Discord Embedded App SDK.",
+        ),
     ),
   aliases: ["miniapp", "app"],
 
@@ -37,8 +43,7 @@ module.exports = {
     const displayName = ui.ux.resolveUserName(interaction);
 
     const dashboardOrigin =
-      env.DASHBOARD_ORIGIN ||
-      `http://localhost:${env.DASHBOARD_PORT || 3000}`;
+      env.DASHBOARD_ORIGIN || `http://localhost:${env.DASHBOARD_PORT || 3000}`;
     const activityUrl = `${dashboardOrigin}/pages/activity.html`;
 
     const eGamepad = ui.getEmoji("gamepad") || "🎮";

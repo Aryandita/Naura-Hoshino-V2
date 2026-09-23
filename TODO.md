@@ -14,19 +14,19 @@ Roadmap ini disusun dan diurutkan secara ketat mengikuti **4 Kategori Prioritas*
 
 Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya.
 
-| Topik                    | Keputusan                                                                                                                                   |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Format Versi**         | Standar X.Y.Z: X = Era Keseluruhan (2), Y = Major Update (3), Z = Minor Update (0). Rilis aktif saat ini: **v2.3.0**.                        |
-| **Versi Node**           | `>= 24` di `engines`, README, `AGENTS.md`, dan CI. Seragam, tanpa pengecualian.                                                             |
-| **Penyimpanan Bahasa**   | **Per user**, bukan per guild. `GuildSettings.language` hanya menjadi bahasa default saat user belum punya preferensi.                      |
-| **Strategi Sharding**    | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering.                                          |
-| **Polyglot Persistence** | Supabase (PostgreSQL 41 migrasi), Redis untuk cache & Pub/Sub, MongoDB untuk audit log/transkrip, SQLite untuk fallback darurat.            |
-| **Worker Threads**       | Dedicated Canvas Worker Pool (`worker_threads`) untuk rendering grafis agar event loop bot tetap non-blocking.                              |
-| **Sumber Kebenaran**     | `package.json` untuk dependensi dan versi. GitHub Issues untuk pekerjaan. `AGENTS.md` untuk aturan governance.                              |
-| **Alur PR**              | Satu PR per sprint. Sprint berikutnya baru dimulai setelah PR sebelumnya di-review dan di-merge.                                            |
-| **Target Deploy**        | Panel Pterodactyl dengan perintah `npm start`; urutan migrasi dijamin oleh lifecycle `prestart`.                                            |
-| **Mata Uang Langka**     | Naura Coupon disimpan di kolom `UserSurvival.coupons` (bukan JSON) agar dapat didebit secara atomik.                                        |
-| **Komponen UI Discord**  | Respons command wajib Discord Components V2 (`buildContainerV2()`) dengan struktur 5-lapisan.                                               |
+| Topik                    | Keputusan                                                                                                                        |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| **Format Versi**         | Standar X.Y.Z: X = Era Keseluruhan (2), Y = Major Update (3), Z = Minor Update (0). Rilis aktif saat ini: **v2.3.0**.            |
+| **Versi Node**           | `>= 24` di `engines`, README, `AGENTS.md`, dan CI. Seragam, tanpa pengecualian.                                                  |
+| **Penyimpanan Bahasa**   | **Per user**, bukan per guild. `GuildSettings.language` hanya menjadi bahasa default saat user belum punya preferensi.           |
+| **Strategi Sharding**    | Tetap `ShardingManager` untuk sekarang, tetapi seluruh kode baru wajib siap migrasi ke clustering.                               |
+| **Polyglot Persistence** | Supabase (PostgreSQL 41 migrasi), Redis untuk cache & Pub/Sub, MongoDB untuk audit log/transkrip, SQLite untuk fallback darurat. |
+| **Worker Threads**       | Dedicated Canvas Worker Pool (`worker_threads`) untuk rendering grafis agar event loop bot tetap non-blocking.                   |
+| **Sumber Kebenaran**     | `package.json` untuk dependensi dan versi. GitHub Issues untuk pekerjaan. `AGENTS.md` untuk aturan governance.                   |
+| **Alur PR**              | Satu PR per sprint. Sprint berikutnya baru dimulai setelah PR sebelumnya di-review dan di-merge.                                 |
+| **Target Deploy**        | Panel Pterodactyl dengan perintah `npm start`; urutan migrasi dijamin oleh lifecycle `prestart`.                                 |
+| **Mata Uang Langka**     | Naura Coupon disimpan di kolom `UserSurvival.coupons` (bukan JSON) agar dapat didebit secara atomik.                             |
+| **Komponen UI Discord**  | Respons command wajib Discord Components V2 (`buildContainerV2()`) dengan struktur 5-lapisan.                                    |
 
 ---
 
@@ -59,7 +59,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 - [x] **[VOICE WEBRTC] Full-Duplex Audio Pipeline with Barge-In Capability (`VoiceCompanionService` Phase 2)**
   - Menggantikan alur sekuensial push-and-wait dengan pipeline WebRTC real-time berlatensi rendah (<300ms) pada Discord Voice Gateway.
-  - Mengimplementasikan Voice Activity Detection (VAD) dan *barge-in capability* di mana bot langsung menghentikan pemutaran audio Fish Audio saat pengguna menyela pembicaraan di voice channel.
+  - Mengimplementasikan Voice Activity Detection (VAD) dan _barge-in capability_ di mana bot langsung menghentikan pemutaran audio Fish Audio saat pengguna menyela pembicaraan di voice channel.
   - File: [`src/services/voiceCompanionService.js`](src/services/voiceCompanionService.js), [`src/services/fishAudioService.js`](src/services/fishAudioService.js), [`src/config/env.js`](src/config/env.js).
 
 - [x] **[PERFORMA] Total Canvas Worker Offloading (Zero Event-Loop Blocking)**
@@ -67,16 +67,16 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Mengalihkan eksekusi di plugin terkait ke `canvasWorkerPool.execute()` agar event loop bot 100% non-blocking saat merender visual grafis berat.
   - File: [`src/canvas/canvasWorker.js`](src/canvas/canvasWorker.js), [`src/canvas/canvasWorkerPool.js`](src/canvas/canvasWorkerPool.js), [`plugin/utility/room.js`](plugin/utility/room.js), [`plugin/naura/naura.js`](plugin/naura/naura.js), [`plugin/utility/stock.js`](plugin/utility/stock.js).
 - [x] **[KEAMANAN & INTEGRITAS] Trade Caravan Escort & Ambush Atomic Mutex**
-  - Mengamankan transaksi pendaftaran pengawal (*escort*) dan penyergapan (*ambush*) karavan dagang menggunakan Redis Distributed Mutex (`cacheManager.withLock`) dan Sequelize transaction row locking (`SELECT FOR UPDATE`) untuk mencegah race condition atau double payout.
+  - Mengamankan transaksi pendaftaran pengawal (_escort_) dan penyergapan (_ambush_) karavan dagang menggunakan Redis Distributed Mutex (`cacheManager.withLock`) dan Sequelize transaction row locking (`SELECT FOR UPDATE`) untuk mencegah race condition atau double payout.
   - File: [`src/services/tradeEngine.js`](src/services/tradeEngine.js), [`src/models/TradeCaravan.js`](src/models/TradeCaravan.js), [`src/models/CaravanEscort.js`](src/models/CaravanEscort.js).
 
 - [x] **[BUG] Inkonsistensi Fallback String Versi (`v2.1.0` vs `v2.2.0`)**
   - Standarisasi fallback string `BOT_VERSION` dan `ENGINE_VERSION` di `src/config/env.js`, `src/config/ui.js`, `src/config/ui/palette.js`, `src/utils/bootScreen.js`, `src/managers/errorHandler.js`, dan `src/config/ui.test.js` menjadi `"2.2.0"`.
   - File: [`src/config/env.js`](src/config/env.js), [`src/config/ui.js`](src/config/ui.js), [`src/config/ui/palette.js`](src/config/ui/palette.js).
 - [x] **[KEAMANAN] Pengamanan Endpoint Soundboard API (`POST /api/soundboard/play`)**
-  - Menambahkan validasi autentikasi / keanggotaan guild dan rate limiter pada endpoint API soundboard di `dashboard/routes/api.js` untuk mencegah eksekusi tanpa izin (*soundboard bombing*).
+  - Menambahkan validasi autentikasi / keanggotaan guild dan rate limiter pada endpoint API soundboard di `dashboard/routes/api.js` untuk mencegah eksekusi tanpa izin (_soundboard bombing_).
   - File: [`dashboard/routes/api.js`](dashboard/routes/api.js).
-- [x] **[BUG] Pemulihan Lagu Pasca Soundboard (*Audio Resume Position Lost*)**
+- [x] **[BUG] Pemulihan Lagu Pasca Soundboard (_Audio Resume Position Lost_)**
   - Perbaikan pada `src/music/poru_events/trackStart.js` dan `trackEnd.js` agar `player.seekTo(resumePosition)` dieksekusi dengan benar pada trek lagu utama yang diinterupsi oleh pemutaran efek suara soundboard.
   - File: [`src/music/poru_events/trackStart.js`](src/music/poru_events/trackStart.js), [`src/music/poru_events/trackEnd.js`](src/music/poru_events/trackEnd.js), [`src/services/soundboardService.js`](src/services/soundboardService.js).
 - [x] **Algorithmic Anti-Inflation Circuit Breaker & Economy Guard**
@@ -121,10 +121,10 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 - [x] **[FITUR BARU] Interactive Family Parenting & Apprentice System (`UserChild.js` & `/survival family`)**
   - Menghubungkan model Sequelize `UserChild.js` pasca Parenthood Event: status vital anak (`happiness`, `hunger`, `level`, `xp`), interaksi harian memberi makan (`feed`), membimbing belajar (`teach`), dan tahapan pertumbuhan (Toddler -> Anak -> Murid Magang).
-  - Menerapkan *Family Trade Apprentice Perks* di mana anak yang beranjak remaja dapat membantu mata pencaharian pemain sesuai bakat sang ibu (panen sayur otomatis bersama Ningsih, bonus mutiara laut bersama Tari, reparasi diskon bersama Bagas, dan racikan jamu bersama Bidan Sari).
+  - Menerapkan _Family Trade Apprentice Perks_ di mana anak yang beranjak remaja dapat membantu mata pencaharian pemain sesuai bakat sang ibu (panen sayur otomatis bersama Ningsih, bonus mutiara laut bersama Tari, reparasi diskon bersama Bagas, dan racikan jamu bersama Bidan Sari).
   - File: [`src/survival/engines/familyEngine.js`](src/survival/engines/familyEngine.js), [`src/models/UserChild.js`](src/models/UserChild.js), [`plugin/survival/subcommands/family.js`](plugin/survival/subcommands/family.js) (NEW).
 - [x] **[FITUR BARU] Ancient Relic Tower Sieges & Dynamic Territory Control (`territoryWarEngine.js` Phase 2 / `/clan siege`)**
-  - Mengembangkan sistem perebutan Menara Relik Kuno (*Ancient Relic Towers*) antar federasi klan menjadi perang wilayah GvG terjadwal mingguan.
+  - Mengembangkan sistem perebutan Menara Relik Kuno (_Ancient Relic Towers_) antar federasi klan menjadi perang wilayah GvG terjadwal mingguan.
   - Aliansi pengontrol menara berhak mengklaim dividen kas aliansi harian dan mengaktifkan status buff regional pasif untuk seluruh anggota klan (Tower of Vitality: +15% HP, Tower of Greed: +10% NSF yield). Dilengkapi visual perang di Web Dashboard war room.
   - File: [`src/survival/engines/territoryWarEngine.js`](src/survival/engines/territoryWarEngine.js), [`src/survival/engines/guildFederationEngine.js`](src/survival/engines/guildFederationEngine.js), [`plugin/survival/subcommands/siege.js`](plugin/survival/subcommands/siege.js) (NEW), [`dashboard/src/pages/war-room.html`](dashboard/src/pages/war-room.html).
 - [x] **[PERFORMA] WebP Streaming Compression & Memory Pooling on Canvas Worker (`canvasWorkerPool.js`)**
@@ -158,7 +158,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - File: [`src/survival/engines/guildFederationEngine.js`](src/survival/engines/guildFederationEngine.js), [`plugin/survival/subcommands/federation.js`](plugin/survival/subcommands/federation.js), [`plugin/survival/subcommands/clan.js`](plugin/survival/subcommands/clan.js).
 - [x] **[FITUR UTAMA] Cross-Server Caravan Trade Cartel & PvP Intercept (`/survival caravan`)**
   - Mengintegrasikan tabel PostgreSQL `trade_caravans` dan `caravan_escorts` (migrasi v38).
-  - Mengizinkan petualang merekrut anggota klan sebagai pengawal berbayar untuk meminimalkan risiko perjalanan, serta fitur penyergapan (*PvP caravan ambush*) oleh klan rival di rute antariksa.
+  - Mengizinkan petualang merekrut anggota klan sebagai pengawal berbayar untuk meminimalkan risiko perjalanan, serta fitur penyergapan (_PvP caravan ambush_) oleh klan rival di rute antariksa.
   - File: [`src/services/tradeEngine.js`](src/services/tradeEngine.js), [`plugin/survival/subcommands/caravan.js`](plugin/survival/subcommands/caravan.js).
 - [x] **[GAMEPLAY & AI] Living Town Square NPC Affinity & Friendship Progression (`UserNPC.js`)**
   - Menghubungkan dialog sapaan harian di `src/survival/engines/townEngine.js` dengan model Sequelize `UserNPC`.
@@ -169,7 +169,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Mendaftarkan task `renderInventory` di `src/canvas/canvasWorker.js` dan mengalihkan pemanggilan `generateInventoryBackpackImage` di `plugin/survival/subcommands/inventory.js` ke `canvasWorkerPool.execute()` agar rendering grafis inventaris tidak memblokir event loop Discord Gateway.
   - File: [`src/canvas/canvasWorker.js`](src/canvas/canvasWorker.js), [`plugin/survival/subcommands/inventory.js`](plugin/survival/subcommands/inventory.js).
 - [x] **[LOGIKA & UX] Sinkronisasi State Interaksi Tombol Subsidi Pemula di Dompet**
-  - Memperbarui payload kontainer di `plugin/survival/subcommands/wallet.js` saat tombol `wallet_claim_novice` ditekan agar status tombol langsung dinonaktifkan (*disabled: true*) dan angka saldo diperbarui secara instan tanpa memicu error double claim.
+  - Memperbarui payload kontainer di `plugin/survival/subcommands/wallet.js` saat tombol `wallet_claim_novice` ditekan agar status tombol langsung dinonaktifkan (_disabled: true_) dan angka saldo diperbarui secara instan tanpa memicu error double claim.
   - File: [`plugin/survival/subcommands/wallet.js`](plugin/survival/subcommands/wallet.js).
 - [x] **[ANTI-EXPLOIT] Cooldown Proteksi Sapaan Warga Alun-Alun Kota (`townEngine.js`)**
   - Menerapkan batasan per-user atau cooldown di Redis (`town:greet:${userId}`) pada `talkToTownNpc` di `src/survival/engines/townEngine.js` untuk mencegah eksploitasi perolehan Star Fragments berulang dalam durasi menu aktif.
@@ -250,7 +250,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Menampilkan status cuaca aktif pada kartu profil petualang `/survival status`, visual canvas banner cuaca, dan telemetri Web Dashboard.
   - File: [`src/survival/engines/worldWeatherEngine.js`](src/survival/engines/worldWeatherEngine.js) (NEW), [`src/survival/data/worldMapData.js`](src/survival/data/worldMapData.js), [`plugin/survival/subcommands/info.js`](plugin/survival/subcommands/info.js), [`dashboard/routes/api.js`](dashboard/routes/api.js).
 - [x] **[FITUR BARU] Guild Caravan Raids & Clan Escort Contracts Hub (`/clan caravan` & `/caravan escort`)**
-  - Membuka papan bursa kontrak pengawalan berbayar (*Mercenary Escort Board*) di mana petualang independen dapat disewa oleh klan untuk mengawal konvoi dagang antariksa dengan dana jaminan escrow aman.
+  - Membuka papan bursa kontrak pengawalan berbayar (_Mercenary Escort Board_) di mana petualang independen dapat disewa oleh klan untuk mengawal konvoi dagang antariksa dengan dana jaminan escrow aman.
   - Menambahkan opsi pembentukan konvoi dagang gabungan multi-pemain dengan pooling modal dan pembagian dividen laba bersama.
   - File: [`src/services/tradeEngine.js`](src/services/tradeEngine.js), [`plugin/survival/subcommands/caravan.js`](plugin/survival/subcommands/caravan.js), [`plugin/survival/subcommands/clan.js`](plugin/survival/subcommands/clan.js).
 - [x] **[FITUR BARU] Pet Breeding, Evolution & Cosmic Fusion Engine (`UserPet.js` & `/survival pet breed`)**
@@ -264,7 +264,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Memasang handler fetch terpadu di sisi browser dashboard untuk menangani respons HTTP 401, merefresh token Discord OAuth di latar belakang, dan mencegah hilangnya formulir pengaturan saat sesi login berakhir.
   - File: [`dashboard/public/js/auth-manager.js`](dashboard/public/js/auth-manager.js), [`dashboard/routes/auth.js`](dashboard/routes/auth.js).
 - [x] **[EKONOMI] Dynamic Auction House Buyout & Real-Time Price Recommendation (`auction.js`)**
-  - Menghitung kisaran harga wajar secara otomatis saat petualang menjual barang di `/survival auction create` berdasarkan rerata transaksi sukses 7 hari terakhir, serta mendukung fitur harga beli instan (*buyout price*).
+  - Menghitung kisaran harga wajar secara otomatis saat petualang menjual barang di `/survival auction create` berdasarkan rerata transaksi sukses 7 hari terakhir, serta mendukung fitur harga beli instan (_buyout price_).
   - File: [`src/models/MarketAuction.js`](src/models/MarketAuction.js), [`plugin/survival/subcommands/auction.js`](plugin/survival/subcommands/auction.js), [`src/services/economyGuardEngine.js`](src/services/economyGuardEngine.js).
 - [x] **[PERFORMA] Canvas Worker Memory Leak Guard & Context Recycle Loop (`canvasWorkerPool.js`)**
   - Memasang siklus daur ulang otomatis worker thread setelah menyelesaikan 500 tugas rendering, serta pelepasan referensi konteks kanvas (`ctx = null`) untuk kestabilan memori proses bot pada server 24/7.
@@ -366,7 +366,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 > **Kriteria:** Penambahan estetika, kosmetik, dan eksplorasi fitur eksperimental jangka panjang. Tidak berpengaruh pada kestabilan bot jika dilewati.
 
 - [x] **[FITUR BARU] AI Dynamic Radio Host & Voice Track Announcements (`aiDjManager.js` / `/music radio`)**
-  - Menghidupkan kepribadian penyiar radio cerdas pada AI Smart DJ: Naura menyapa nama pendengar di voice channel, menceritakan trivia musisi lagu berikutnya, dan meredupkan volume musik (*audio ducking* ke 15%) saat berbicara sebelum menaikkan kembali ke 100%.
+  - Menghidupkan kepribadian penyiar radio cerdas pada AI Smart DJ: Naura menyapa nama pendengar di voice channel, menceritakan trivia musisi lagu berikutnya, dan meredupkan volume musik (_audio ducking_ ke 15%) saat berbicara sebelum menaikkan kembali ke 100%.
   - File: [`src/services/fishAudioService.js`](src/services/fishAudioService.js), [`src/managers/musicManager.js`](src/managers/musicManager.js), [`plugin/music/music.js`](plugin/music/music.js).
 - [x] **[AUDIO] Smart Duplicate Track Detection in Guild Queues (`/music duplicates on/off`)**
   - Menambahkan filter pencegahan duplikasi lagu dalam rentang 5 antrean terakhir pemutaran untuk menjaga variasi musik di channel suara server.
@@ -375,7 +375,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Menerapkan Service Worker Cache-First untuk file 3D avatar berukuran besar (`.glb`/`.vrm`) dan efek audio soundboard agar kecepatan muat halaman Web Dashboard instan (<1 detik).
   - File: [`dashboard/public/sw.js`](dashboard/public/sw.js) (NEW), [`dashboard/src/pages/index.html`](dashboard/src/pages/index.html).
 - [x] **[MONITORING] Automated Staff Security Webhook for Velocity of Money Spikes (`economyGuardEngine.js`)**
-  - Pengiriman notifikasi darurat langsung via webhook Discord ke ruang staf admin saat terdeteksi anomali perputaran mata uang (*Velocity of Money*) yang mengindikasikan eksploitasi transfer alt account.
+  - Pengiriman notifikasi darurat langsung via webhook Discord ke ruang staf admin saat terdeteksi anomali perputaran mata uang (_Velocity of Money_) yang mengindikasikan eksploitasi transfer alt account.
   - File: [`src/services/economyGuardEngine.js`](src/services/economyGuardEngine.js), [`src/services/webhookDispatcher.js`](src/services/webhookDispatcher.js).
 
 - [x] **[AI COMPANION] Expressive 3D Mascot Lip-Sync & Viseme Synchronization**
@@ -385,7 +385,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Notifikasi Web Push API di browser dashboard saat karavan dagang antariksa pemain sedang disergap oleh klan rival di galaksi.
   - File: [`dashboard/server.js`](dashboard/server.js), [`dashboard/routes/api.js`](dashboard/routes/api.js), [`src/services/tradeEngine.js`](src/services/tradeEngine.js).
 - [x] **[DEVOPS & WORKFLOW] Automated Git Commit & Push on Every Task Update (Zero-Lag GitHub Sync)**
-  - Menyusun SOP baku dan script otomasi (`scripts/git-sync.js` / `npm run sync:github`) yang secara instan mengeksekusi `git add`, `git commit` dengan pesan semantik rapi (*Conventional Commits*), dan `git push origin main` setiap kali ada pembaruan kode yang telah lulus seluruh 5 gerbang QA Gate.
+  - Menyusun SOP baku dan script otomasi (`scripts/git-sync.js` / `npm run sync:github`) yang secara instan mengeksekusi `git add`, `git commit` dengan pesan semantik rapi (_Conventional Commits_), dan `git push origin main` setiap kali ada pembaruan kode yang telah lulus seluruh 5 gerbang QA Gate.
   - Memastikan seluruh progress tercatat rapi di repositori GitHub secara seketika tanpa ada pekerjaan yang tertinggal di staging lokal.
   - File: [`scripts/git-sync.js`](scripts/git-sync.js), [`package.json`](package.json), [`AGENTS.md`](AGENTS.md), [`TODO.md`](TODO.md).
 
@@ -583,12 +583,12 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 - [x] **Sistem Partikel Kustom GPU (`particles.js`)**: 3 jenis partikel kustom (Celestial Orb, 4-Point Star Fragment, Cyber Sakura Petal) berbasis custom GLSL shader dengan efek semburan `starShower` dan `burst`.
 - [x] **Perbaikan Bug Switch Mode GLB (`hero3d.js`, `animations.js`)**: Destrukturisasi opsi parameter `playClip` dan auto-mapping skeletal GLTF humanoid, menghilangkan error `loop is not defined` dan kotak status "Model 3D Offline".
 - [x] **Optimalisasi Jendela Mengambang (NAURA OS Floating Widget)**:
-  - Eliminasi bug akumulasi rotasi leher/tulang (*compounding quaternion multiplication*) dengan rest-quaternion caching.
+  - Eliminasi bug akumulasi rotasi leher/tulang (_compounding quaternion multiplication_) dengan rest-quaternion caching.
   - Penghematan daya baterai & GPU: Three.js dan Audio Spectrum Visualizer di-pause saat diminimalkan atau saat membuka tab selain 3D.
   - Floating orb bobbing animation `@keyframes nv-floating-bob` dan kurva transisi fisika pegas `cubic-bezier(0.34, 1.56, 0.64, 1)`.
-  - Header & mini trigger dapat digeser (*draggable*) via Pointer Events dengan pembatasan batas layar (*viewport clamping*).
+  - Header & mini trigger dapat digeser (_draggable_) via Pointer Events dengan pembatasan batas layar (_viewport clamping_).
   - Sinkronisasi energi spektrum audio real-time langsung ke pendaran Astral Halo Three.js.
-  - Siklus interaksi klik avatar 3D interaktif (*Wave, StarPose, BlowKiss, AstralCast, Cheers, Thinking, Shy*) dengan pendaran partikel dan status mood.
+  - Siklus interaksi klik avatar 3D interaktif (_Wave, StarPose, BlowKiss, AstralCast, Cheers, Thinking, Shy_) dengan pendaran partikel dan status mood.
 - [x] **Verifikasi Otomatis & QA Gate 100% Hijau**:
   - Script pengujian mandiri headless Chrome CDP `scripts/verify_floating_widget.js`.
   - Lolos seluruh 5 tahap QA Gate: `npm run lint` (0 error, 0 warning), `node scripts/check-em-dash.js` (bersih), `npm run locales:check:strict` (263 kunci sinkron), `npm run test:requires` (semua lokal resolved), `npm test` (**272 passing tests 100%**).
@@ -602,7 +602,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 - [x] **[FITUR] 3D Wardrobe & Costume Customizer Studio (`dashboard/src/components/NauraViewer/wardrobeStudio.js`)**:
   - Studio kustomisasi tema shader dan material avatar 3D (Cyberpunk Neon, Gothic Maid, Pastel Casual, Adventurer Emerald) dengan persistensi preferensi user.
 - [x] **[FITUR] Mobile Touch Gestures pada 3D Floating Mascot (`viewer3d.js`)**:
-  - Dukungan interaksi sentuh alami: cubit untuk zoom (*pinch-to-zoom*) dan dua jari untuk rotasi (*two-finger rotation*) pada perangkat mobile dan tablet.
+  - Dukungan interaksi sentuh alami: cubit untuk zoom (_pinch-to-zoom_) dan dua jari untuk rotasi (_two-finger rotation_) pada perangkat mobile dan tablet.
 - [x] **[RPG & EKONOMI] Dynamic Seasonal Battle Pass & Star Path Milestones (`src/survival/engines/seasonPassEngine.js`, `/survival pass`)**:
   - Progresi level musiman (Tier 1-50, Jalur Gratis & Jalur Premium) dengan klaim hadiah atomik (NSF, Kupon, Blueprints, Aksesoris) via `cacheManager`.
 - [x] **[RPG & EKONOMI] Automated Dynamic Commodity Market Fluctuations (`src/survival/engines/commodityMarketEngine.js`)**:
@@ -610,6 +610,7 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 - [x] **[LIVING AI] Autonomous Server Chronicle Newspaper Generator (`src/ai/serverChronicleEngine.js`)**:
   - Engine perangkum mingguan peristiwa server (pemenang undian, klan teratas, duel kartu epik) menjadi narasi koran bergambar yang terbit berkala.
 - [x] **[TEST & QA] Automated Test Suite Expansion & QA Gate**:
+
 ### 🚀 Sprint 30: Modular 3D Kinematics Subsystems & Unified Stellar Dashboard V2 (v2.3.0 Milestone)
 
 - [x] **[3D KINEMATICS] Modular Sub-Sistem Direktori Animasi Independen (`dashboard/src/components/NauraViewer/animations/`)**:
@@ -644,41 +645,50 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 ## 🌐 5. Tren Terkini Ekosistem Discord (2025 - 2026) & Relevansi Arsitektur Naura
 
-Berdasarkan analisis pasar bot dan platform developer Discord terkini (2025 - 2026), terdapat pergeseran paradigma dari bot berbasis skrip statis menjadi ekosistem aplikasi terintegrasi (*Agentic AI & Embedded Experiences*). Berikut adalah peta tren utama dan arah adopsinya pada Naura Hoshino:
+Berdasarkan analisis pasar bot dan platform developer Discord terkini (2025 - 2026), terdapat pergeseran paradigma dari bot berbasis skrip statis menjadi ekosistem aplikasi terintegrasi (_Agentic AI & Embedded Experiences_). Berikut adalah peta tren utama dan arah adopsinya pada Naura Hoshino:
 
 ### 1. Discord Embedded App SDK & Discord Activities
-- **Tren Platform:** Pengguna Discord kini lebih menyukai pengalaman *in-client* yang langsung berjalan di dalam voice channel atau text channel (iframe Discord Activities) tanpa harus membuka browser terpisah (seperti *Watch Together*, *Putt Party*, atau *Gartic Phone*).
+
+- **Tren Platform:** Pengguna Discord kini lebih menyukai pengalaman _in-client_ yang langsung berjalan di dalam voice channel atau text channel (iframe Discord Activities) tanpa harus membuka browser terpisah (seperti _Watch Together_, _Putt Party_, atau _Gartic Phone_).
 - **Adopsi Naura:** Mengintegrasikan `@discord/embedded-app-sdk` agar Web Dashboard dan 3D Mascot Viewer dapat diluncurkan langsung dari command `/activity` sebagai mini-game atau interactive companion di dalam Discord.
 
 ### 2. Native Discord Monetization & Entitlements API
-- **Tren Platform:** Standar monetisasi bot beralih dari tautan luar (Patreon/PayPal) ke **Discord Premium App Subscriptions (SKUs & Entitlements API)**. Discord menangani checkout lokal via Stripe, mendistribusikan event gateway `ENTITLEMENT_CREATE` / `ENTITLEMENT_UPDATE`, dan mendukung langganan berbasis Server (*Guild Subscription*) maupun Pengguna (*User Subscription*).
+
+- **Tren Platform:** Standar monetisasi bot beralih dari tautan luar (Patreon/PayPal) ke **Discord Premium App Subscriptions (SKUs & Entitlements API)**. Discord menangani checkout lokal via Stripe, mendistribusikan event gateway `ENTITLEMENT_CREATE` / `ENTITLEMENT_UPDATE`, dan mendukung langganan berbasis Server (_Guild Subscription_) maupun Pengguna (_User Subscription_).
 - **Adopsi Naura:** Menghubungkan paket Star Pass, status VIP/VVIP, dan Coupon Pack ke Discord SKUs resmi dengan validasi entitlement real-time.
 
 ### 3. Agentic AI & Duplex Voice Companions (Real-Time Audio)
-- **Tren Platform:** Bot beralih dari interaksi tanya-jawab kaku ke agen AI percakapan yang memiliki memori semantik jangka panjang (vector memory RAG), mampu mengobrol suara dua arah secara langsung (*Duplex Voice Chat via WebRTC + VAD*), dan memiliki kepribadian anime yang kohesif.
+
+- **Tren Platform:** Bot beralih dari interaksi tanya-jawab kaku ke agen AI percakapan yang memiliki memori semantik jangka panjang (vector memory RAG), mampu mengobrol suara dua arah secara langsung (_Duplex Voice Chat via WebRTC + VAD_), dan memiliki kepribadian anime yang kohesif.
 - **Adopsi Naura:** Ekspansi AI Ensemble Router dan Fish Audio TTS menuju sesi voice channel interaktif dua arah (`/naura join-voice`).
 
 ### 4. Deep Social Gamification & All-in-One Virtual Economy
+
 - **Tren Platform:** Komunitas Discord menuntut bot "All-in-One" berkemampuan tinggi (seperti OwO, Dank Memer, Tatsu, VibeBot) yang menggabungkan RPG pet virtual, battle pass musiman, pasar komoditas bebas, dan perang wilayah klan tanpa perlu mengundang belasan bot berbeda.
 - **Adopsi Naura:** Pemantapan ekosistem Naura Wilds, Closed-Loop Currency V2, Battle Pass, Pasar Komoditas Dinamis, dan Guild Federation.
 
 ### 5. Komponen UI Modern (Discord Components V2 & Media Attachments)
+
 - **Tren Platform:** Format embed tradisional mulai ditinggalkan dan digantikan oleh Container modern (Discord Components V2), Section terpisah, Accessory thumbnail, dan tata letak responsif bertingkat.
 - **Adopsi Naura:** Standarisasi 5-lapisan `NauraContainerBuilder` yang sudah diadopsi secara penuh di seluruh modul.
 
 ### 6. Full-Duplex WebRTC Voice Agent & Sub-300ms Pipelines (2026)
-- **Tren Platform:** Transisi dari bot push-to-talk sekuensial menuju agen suara full-duplex berbasis WebRTC dengan latensi ultra-rendah (<300ms) dan kapabilitas *barge-in* (interupsi alami saat user memotong ucapan bot).
+
+- **Tren Platform:** Transisi dari bot push-to-talk sekuensial menuju agen suara full-duplex berbasis WebRTC dengan latensi ultra-rendah (<300ms) dan kapabilitas _barge-in_ (interupsi alami saat user memotong ucapan bot).
 - **Adopsi Naura:** Mengintegrasikan Voice Activity Detection (VAD) Discord Voice Gateway dengan kontrol interupsi instan pada pemutaran Fish Audio TTS di `voiceCompanionService.js`.
 
 ### 7. Discord Social SDK & Direct Relationship Access (`relationships.read`)
+
 - **Tren Platform:** Discord Social SDK membuka akses scope `relationships.read` untuk Embedded Activities tanpa perlu approval individual, memungkinkan aplikasi mengambil koneksi pertemanan pengguna secara langsung via `getRelationships()`.
 - **Adopsi Naura:** Menghubungkan Friends Radar dan pembentukan party co-op dungeon instan (The Neo-Abyss) pada Activity Webview.
 
 ### 8. Plafon Ukuran Media 20 MiB & Multiline Slash Command Inputs
+
 - **Tren Platform:** Discord menaikkan batas upload file default menjadi 20 MiB serta mendukung input multiline string pada command dan modal.
 - **Adopsi Naura:** Peningkatan resolusi kartu Canvas inventaris dan RPG ke kualitas 2K tajam (WebP lossless) serta pengalaman formulir pembuatan dungeon/cerita yang lebih leluasa.
 
 ### 9. Zero-Lag Automated Continuous Git Sync & GitHub Version Control
+
 - **Tren Platform:** Siklus rilis micro-updates pada platform bot modern membutuhkan sinkronisasi berkelanjutan ke GitHub tanpa jeda, memastikan integritas repositori remote selalu sejalan dengan status staging lokal.
 - **Adopsi Naura:** Skrip otomasi `scripts/git-sync.js` (`npm run sync:github`) yang memvalidasi QA gate dan mengeksekusi commit semantik serta push ke remote GitHub seketika.
 
@@ -693,7 +703,7 @@ Berdasarkan analisis pasar bot dan platform developer Discord terkini (2025 - 20
 - [x] **[LIVING AI] Duplex Voice Channel AI Companion (`/naura join-voice`)**:
   - Integrasi Voice Activity Detection (VAD) Discord Voice Gateway dengan Fish Audio Streaming TTS untuk obrolan suara dua arah langsung bersama Naura di voice channel.
 - [x] **[RPG & CLAN] Cross-Server Federation War & Territory Siege (`GuildFederationEngine` Phase 2)**:
-  - Event mingguan perebutan menara relik kuno (*Ancient Relic Towers*) antar federasi klan lintas-server berbasis kapling tanah `landEngine.js`.
+  - Event mingguan perebutan menara relik kuno (_Ancient Relic Towers_) antar federasi klan lintas-server berbasis kapling tanah `landEngine.js`.
 - [x] **[PERFORMA] Hybrid Clustering Migration Evaluation (`discord-hybrid-sharding`)**:
   - Evaluasi migrasi arsitektur sharding menuju hybrid multi-cluster worker untuk memangkas pemakaian memori RAM hingga 45% di hosting panel Pterodactyl.
 - [x] **[TEST & QA] Automated Test Suite Expansion & Parity Audit**:
@@ -790,13 +800,13 @@ Berdasarkan analisis pasar bot dan platform developer Discord terkini (2025 - 20
 
 ## ⚠️ Risiko yang Harus Terus Dipantau
 
-| Risiko                                            | Dampak                                                    | Mitigasi                                                                                         |
-| ------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| **Ekonomi tanpa penulisan atomik**                | Inflasi tak terkendali, duplikasi saldo/barang            | Pola `debit*` / `increment*` bersyarat dan transaksi `SELECT FOR UPDATE` pada kolom JSON.        |
-| **Race condition transaksi multi-node**           | Duplikasi dispatch caravan atau mutasi state paralel      | Redis Distributed Mutex (`cacheManager.withLock` / `redisLockHelper.js`) dengan lease TTL.       |
-| **Race condition WebSocket saat audio buffering** | Bot terputus dari voice channel (error 4006)              | Delay prefetch 1500ms di `trackStart.js` dan proteksi `VoiceManager` terhadap Poru player aktif. |
-| **Beban komputasi Canvas memblokir Event Loop**   | Bot mengalami freeze / chat lag                           | Seluruh render grafis didelegasikan ke `canvasWorkerPool.js` berbasis Worker Threads.            |
-| **Pelanggaran karakter em dash**                  | Gagal validasi CI / inkonsistensi teks                    | Diperiksa otomatis oleh script `scripts/check-em-dash.js`.                                       |
-| **Single-point-of-failure node eksternal**        | Fitur audio/AI mati saat penyedia pihak ketiga down       | Sistem dual failover: Lavalink multi-node fallback dan Gemini auto-failover ke Groq.             |
-| **Ketergantungan aset luar pada dbSeeder**        | Canvas Assets default hilang jika host luar mati          | Menggunakan aset gambar lokal mandiri di `assets/images/canvas/` (100% tuntas).                  |
-| **Versi Node tidak konsisten**                    | CI/CD gagal atau bot mati diam-diam di Node 22            | Selaraskan `package.json engines` dengan keputusan arsitektur Node >= 24.                        |
+| Risiko                                            | Dampak                                               | Mitigasi                                                                                         |
+| ------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Ekonomi tanpa penulisan atomik**                | Inflasi tak terkendali, duplikasi saldo/barang       | Pola `debit*` / `increment*` bersyarat dan transaksi `SELECT FOR UPDATE` pada kolom JSON.        |
+| **Race condition transaksi multi-node**           | Duplikasi dispatch caravan atau mutasi state paralel | Redis Distributed Mutex (`cacheManager.withLock` / `redisLockHelper.js`) dengan lease TTL.       |
+| **Race condition WebSocket saat audio buffering** | Bot terputus dari voice channel (error 4006)         | Delay prefetch 1500ms di `trackStart.js` dan proteksi `VoiceManager` terhadap Poru player aktif. |
+| **Beban komputasi Canvas memblokir Event Loop**   | Bot mengalami freeze / chat lag                      | Seluruh render grafis didelegasikan ke `canvasWorkerPool.js` berbasis Worker Threads.            |
+| **Pelanggaran karakter em dash**                  | Gagal validasi CI / inkonsistensi teks               | Diperiksa otomatis oleh script `scripts/check-em-dash.js`.                                       |
+| **Single-point-of-failure node eksternal**        | Fitur audio/AI mati saat penyedia pihak ketiga down  | Sistem dual failover: Lavalink multi-node fallback dan Gemini auto-failover ke Groq.             |
+| **Ketergantungan aset luar pada dbSeeder**        | Canvas Assets default hilang jika host luar mati     | Menggunakan aset gambar lokal mandiri di `assets/images/canvas/` (100% tuntas).                  |
+| **Versi Node tidak konsisten**                    | CI/CD gagal atau bot mati diam-diam di Node 22       | Selaraskan `package.json engines` dengan keputusan arsitektur Node >= 24.                        |

@@ -149,7 +149,8 @@ function attachAutoAcknowledgeGuard(interaction, timeoutMs = 2200) {
   if (
     !interaction ||
     typeof interaction.deferReply !== "function" ||
-    (typeof interaction.isAutocomplete === "function" && interaction.isAutocomplete())
+    (typeof interaction.isAutocomplete === "function" &&
+      interaction.isAutocomplete())
   ) {
     return () => {};
   }

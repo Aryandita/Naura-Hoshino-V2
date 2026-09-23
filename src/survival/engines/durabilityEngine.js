@@ -12,14 +12,25 @@ class DurabilityEngine {
    */
   static calculateRepairCost(item) {
     if (!item) return 0;
-    const baseValue = Number(item.price || item.value || (item.tier ? item.tier * 200 : 300));
-    const currentDurability = Math.max(0, Math.min(100, Number(item.durability !== undefined ? item.durability : 100)));
+    const baseValue = Number(
+      item.price || item.value || (item.tier ? item.tier * 200 : 300),
+    );
+    const currentDurability = Math.max(
+      0,
+      Math.min(
+        100,
+        Number(item.durability !== undefined ? item.durability : 100),
+      ),
+    );
 
     if (currentDurability >= 100) return 0;
 
     // Persentase kerusakan (0.0 sampai 1.0)
     const damagePercent = (100 - currentDurability) / 100;
-    const baseRepairCost = Math.max(10, Math.floor(baseValue * 0.05 * damagePercent));
+    const baseRepairCost = Math.max(
+      10,
+      Math.floor(baseValue * 0.05 * damagePercent),
+    );
 
     // Wear & Tear Surcharge: +10% surcharge jika durabilitas di bawah 20%
     let surcharge = 1.0;
@@ -49,7 +60,11 @@ class DurabilityEngine {
     const { safeParseInventory } = require("./inventoryHelper");
     const inv = safeParseInventory(profile.inventory);
     const itemIndex = inv.findIndex(
-      (it) => it && (it.id === itemInstanceId || it.instanceId === itemInstanceId || it.name === itemInstanceId),
+      (it) =>
+        it &&
+        (it.id === itemInstanceId ||
+          it.instanceId === itemInstanceId ||
+          it.name === itemInstanceId),
     );
 
     if (itemIndex === -1) {
@@ -63,7 +78,11 @@ class DurabilityEngine {
     }
 
     // Pemotongan NSF secara atomik
-    const debit = await cacheManager.debitUserSurvival(userId, "starFragments", cost);
+    const debit = await cacheManager.debitUserSurvival(
+      userId,
+      "starFragments",
+      cost,
+    );
     if (!debit.ok) {
       return { ok: false, reason: "INSUFFICIENT_FUNDS", cost };
     }
@@ -76,7 +95,10 @@ class DurabilityEngine {
 
     // Alirkan dana penarikan ke sistem daur ulang 4 saluran
     await recyclingPoolEngine.allocateSinkFunds(cost);
-    const ticketsAwarded = await recyclingPoolEngine.awardLotteryTickets(userId, cost);
+    const ticketsAwarded = await recyclingPoolEngine.awardLotteryTickets(
+      userId,
+      cost,
+    );
 
     logger.info(
       `[DurabilityEngine] User ${userId} memperbaiki item ${item.name || item.id} seharga ${cost} NSF (+${ticketsAwarded} tiket undian)`,
@@ -107,15 +129,25 @@ class DurabilityEngine {
     const { safeParseInventory, addItemsAtomic } = require("./inventoryHelper");
     const inv = safeParseInventory(profile.inventory);
     const itemIndex = inv.findIndex(
-      (it) => it && (it.id === itemInstanceId || it.instanceId === itemInstanceId || it.name === itemInstanceId),
+      (it) =>
+        it &&
+        (it.id === itemInstanceId ||
+          it.instanceId === itemInstanceId ||
+          it.name === itemInstanceId),
     );
 
     if (itemIndex === -1) {
-      return { ok: false, reason: "ITEM_NOT_FOUND", message: "Barang tidak ditemukan di tas petualang." };
+      return {
+        ok: false,
+        reason: "ITEM_NOT_FOUND",
+        message: "Barang tidak ditemukan di tas petualang.",
+      };
     }
 
     const item = inv[itemIndex];
-    const currentDurability = Number(item.durability !== undefined ? item.durability : 100);
+    const currentDurability = Number(
+      item.durability !== undefined ? item.durability : 100,
+    );
 
     // Hapus 1 unit barang dari inventaris
     inv.splice(itemIndex, 1);
@@ -123,14 +155,35 @@ class DurabilityEngine {
 
     // Tentukan material mentah hasil bongkaran
     const idStr = String(item.id || item.name || "").toLowerCase();
-    let mainMaterial = { id: "copper_ingot", name: "Batangan Tembaga", amount: 1 };
-    if (item.tier >= 4 || idStr.includes("diamond") || idStr.includes("mythic") || idStr.includes("celestial")) {
-      mainMaterial = { id: "steel_ingot", name: "Batangan Baja Tempa", amount: 2 };
-    } else if (item.tier >= 2 || idStr.includes("iron") || idStr.includes("steel")) {
+    let mainMaterial = {
+      id: "copper_ingot",
+      name: "Batangan Tembaga",
+      amount: 1,
+    };
+    if (
+      item.tier >= 4 ||
+      idStr.includes("diamond") ||
+      idStr.includes("mythic") ||
+      idStr.includes("celestial")
+    ) {
+      mainMaterial = {
+        id: "steel_ingot",
+        name: "Batangan Baja Tempa",
+        amount: 2,
+      };
+    } else if (
+      item.tier >= 2 ||
+      idStr.includes("iron") ||
+      idStr.includes("steel")
+    ) {
       mainMaterial = { id: "iron_ingot", name: "Batangan Besi", amount: 1 };
     }
 
-    const crystalBonus = { id: "herb", name: "Serbuk Kristal Kosmik", amount: 1 };
+    const crystalBonus = {
+      id: "herb",
+      name: "Serbuk Kristal Kosmik",
+      amount: 1,
+    };
     const salvagedList = [mainMaterial, crystalBonus];
 
     // Masukkan material ke tas
@@ -138,7 +191,9 @@ class DurabilityEngine {
 
     // Bonus Star Fragments dari nilai sisa daur ulang
     const scrapNsf = Math.max(25, Math.floor(Number(item.price || 200) * 0.25));
-    await cacheManager.incrementUserSurvival(userId, { starFragments: scrapNsf }).catch(() => {});
+    await cacheManager
+      .incrementUserSurvival(userId, { starFragments: scrapNsf })
+      .catch(() => {});
 
     logger.info(
       `[DurabilityEngine] User ${userId} berhasil mendaur ulang item ${item.name || item.id} (durability: ${currentDurability}%) menjadi material mentah & +${scrapNsf} NSF`,
@@ -229,7 +284,10 @@ class DurabilityEngine {
             amount: (materialMap.get("herb")?.amount || 0) + 1,
           });
 
-          totalNsf += Math.max(25, Math.floor(Number(item.price || 200) * 0.25));
+          totalNsf += Math.max(
+            25,
+            Math.floor(Number(item.price || 200) * 0.25),
+          );
         }
 
         gatheredMaterials = Array.from(materialMap.values());
@@ -249,7 +307,8 @@ class DurabilityEngine {
       return {
         ok: false,
         reason: "NO_DAMAGED_ITEMS",
-        message: "Tidak ada perlengkapan rusak (durabilitas 0%) di dalam tasmu.",
+        message:
+          "Tidak ada perlengkapan rusak (durabilitas 0%) di dalam tasmu.",
       };
     }
 

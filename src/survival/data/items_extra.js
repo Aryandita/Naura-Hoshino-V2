@@ -463,7 +463,8 @@ module.exports = [
   {
     id: "kristal_es_abadi",
     name: "Kristal Es Abadi Khul'Khas",
-    description: "Kristal es murni dari gletser purba Khul'Khas yang tidak pernah meleleh di suhu panas sekalipun.",
+    description:
+      "Kristal es murni dari gletser purba Khul'Khas yang tidak pernah meleleh di suhu panas sekalipun.",
     price: 12000,
     sellPrice: 6000,
     category: "material",
@@ -473,7 +474,8 @@ module.exports = [
   {
     id: "bulu_serigala_gletser",
     name: "Mantel Bulu Serigala Salju",
-    description: "Mantel bulu tebal penghangat tubuh penangkal efek hipotermia dan hawa dingin beku gletser.",
+    description:
+      "Mantel bulu tebal penghangat tubuh penangkal efek hipotermia dan hawa dingin beku gletser.",
     price: 4500,
     sellPrice: 2250,
     category: "armor",
@@ -483,7 +485,8 @@ module.exports = [
   {
     id: "daging_beruang_salju",
     name: "Dendeng Beruang Kutub",
-    description: "Daging berlemak gurih hasil buruan Boris, memulihkan 150 HP dan menahan rasa lapar selama berjam-jam.",
+    description:
+      "Daging berlemak gurih hasil buruan Boris, memulihkan 150 HP dan menahan rasa lapar selama berjam-jam.",
     price: 800,
     sellPrice: 400,
     category: "consumable",
@@ -493,7 +496,8 @@ module.exports = [
   {
     id: "air_mata_gletser",
     name: "Tetesan Air Mata Gletser",
-    description: "Esensi embun salju beku yang mencair lambat, bahan utama eliksir pertahanan magis tingkat tinggi.",
+    description:
+      "Esensi embun salju beku yang mencair lambat, bahan utama eliksir pertahanan magis tingkat tinggi.",
     price: 6500,
     sellPrice: 3250,
     category: "material",
@@ -503,7 +507,8 @@ module.exports = [
   {
     id: "teh_hangat_kayu_manis_khulkhas",
     name: "Teh Hangat Rempah Salju",
-    description: "Seduhan teh perapian racikan Fatimah yang menghangatkan tubuh seketika (+50 Stamina).",
+    description:
+      "Seduhan teh perapian racikan Fatimah yang menghangatkan tubuh seketika (+50 Stamina).",
     price: 350,
     sellPrice: 175,
     category: "consumable",
@@ -513,7 +518,8 @@ module.exports = [
   {
     id: "belati_kristal_es",
     name: "Belati Beku Gletser",
-    description: "Belati runcing tempaan Tarek dengan efek serangan memperlambat gerakan musuh.",
+    description:
+      "Belati runcing tempaan Tarek dengan efek serangan memperlambat gerakan musuh.",
     price: 5200,
     sellPrice: 2600,
     category: "weapon",
@@ -523,7 +529,8 @@ module.exports = [
   {
     id: "batu_api_perapian",
     name: "Batu Api Magma Portabel",
-    description: "Batu pemantik hangat portabel untuk bertahan hidup di tengah badai salju Khul'Khas.",
+    description:
+      "Batu pemantik hangat portabel untuk bertahan hidup di tengah badai salju Khul'Khas.",
     price: 400,
     sellPrice: 200,
     category: "tool",
@@ -533,7 +540,8 @@ module.exports = [
   {
     id: "taring_serigala_salju",
     name: "Taring Serigala Gletser",
-    description: "Taring tajam predator es puncak gunung, bahan kerajinan kalung pemburu nomad.",
+    description:
+      "Taring tajam predator es puncak gunung, bahan kerajinan kalung pemburu nomad.",
     price: 600,
     sellPrice: 300,
     category: "material",
@@ -543,7 +551,8 @@ module.exports = [
   {
     id: "salep_anti_radang_dingin",
     name: "Salep Minyak Lemak Kutub",
-    description: "Salep pelindung kulit dari radang dingin dan luka beku saat menjelajahi lembah es.",
+    description:
+      "Salep pelindung kulit dari radang dingin dan luka beku saat menjelajahi lembah es.",
     price: 450,
     sellPrice: 225,
     category: "consumable",
@@ -553,7 +562,8 @@ module.exports = [
   {
     id: "resep_sup_hangat_khulkhas",
     name: "Buku Resep Sup Hangat Malik",
-    description: "Resep sup daging berkuah kaldu rempah rahasia para pengelana nomad padang salju.",
+    description:
+      "Resep sup daging berkuah kaldu rempah rahasia para pengelana nomad padang salju.",
     price: 1200,
     sellPrice: 600,
     category: "consumable",
@@ -565,7 +575,8 @@ module.exports = [
   {
     id: "resin_dha_mhai",
     name: "Resin Damar Purba Dha Mhai",
-    description: "Getah damar wangi mengkristal dari pohon kanopi tertua Hutan Dha Mhai, bahan crafting premium.",
+    description:
+      "Getah damar wangi mengkristal dari pohon kanopi tertua Hutan Dha Mhai, bahan crafting premium.",
     price: 5800,
     sellPrice: 2900,
     category: "material",
@@ -575,7 +586,8 @@ module.exports = [
   {
     id: "madu_lebah_raksasa",
     name: "Madu Ratu Lebah Rimba",
-    description: "Madu kental berkhasiat tinggi yang memulihkan 120 HP dan 80 Stamina secara instan.",
+    description:
+      "Madu kental berkhasiat tinggi yang memulihkan 120 HP dan 80 Stamina secara instan.",
     price: 950,
     sellPrice: 475,
     category: "consumable",
@@ -585,7 +597,8 @@ module.exports = [
   {
     id: "kayu_akar_gelap",
     name: "Kayu Akar Gelap Dha Mhai",
-    description: "Batang kayu keras berserat ungu gelap untuk tiang bangunan dan gagang senjata bermutu tinggi.",
+    description:
+      "Batang kayu keras berserat ungu gelap untuk tiang bangunan dan gagang senjata bermutu tinggi.",
     price: 650,
     sellPrice: 325,
     category: "material",
@@ -595,7 +608,8 @@ module.exports = [
   {
     id: "jamur_spora_ungu",
     name: "Jamur Spora Violet",
-    description: "Jamur berkhasiat obat yang berpendar di lantai hutan lembab, bahan dasar ramuan penawar racun.",
+    description:
+      "Jamur berkhasiat obat yang berpendar di lantai hutan lembab, bahan dasar ramuan penawar racun.",
     price: 250,
     sellPrice: 125,
     category: "material",
@@ -605,7 +619,8 @@ module.exports = [
   {
     id: "taring_babi_hutan_purba",
     name: "Taring Babi Hutan Purba",
-    description: "Taring kokoh dan bergerigi dari monster taring rimba Dha Mhai, bahan mata panah tajam.",
+    description:
+      "Taring kokoh dan bergerigi dari monster taring rimba Dha Mhai, bahan mata panah tajam.",
     price: 700,
     sellPrice: 350,
     category: "material",
@@ -615,7 +630,8 @@ module.exports = [
   {
     id: "busur_akar_dha_mhai",
     name: "Busur Akar Penjaga Rimba",
-    description: "Busur fleksibel berdaya pegas tinggi berselimut sulur tanaman rambat purba karya Dara Rimba.",
+    description:
+      "Busur fleksibel berdaya pegas tinggi berselimut sulur tanaman rambat purba karya Dara Rimba.",
     price: 4800,
     sellPrice: 2400,
     category: "weapon",
@@ -625,7 +641,8 @@ module.exports = [
   {
     id: "jubah_kamuflase_dha_mhai",
     name: "Jubah Daun Rimba",
-    description: "Jubah tipis berkamuflase alami, meningkatkan kelincahan dan menurunkan deteksi monster sebesar 15%.",
+    description:
+      "Jubah tipis berkamuflase alami, meningkatkan kelincahan dan menurunkan deteksi monster sebesar 15%.",
     price: 4200,
     sellPrice: 2100,
     category: "armor",
@@ -635,7 +652,8 @@ module.exports = [
   {
     id: "eliksir_embun_rimba",
     name: "Eliksir Embun Purba",
-    description: "Ramuan racikan Embun Puri yang menyembuhkan racun dan meningkatkan regenerasi vitalitas 20 menit.",
+    description:
+      "Ramuan racikan Embun Puri yang menyembuhkan racun dan meningkatkan regenerasi vitalitas 20 menit.",
     price: 2400,
     sellPrice: 1200,
     category: "consumable",
@@ -645,7 +663,8 @@ module.exports = [
   {
     id: "kristal_akar_bioluminesen",
     name: "Kristal Spora Aether",
-    description: "Esensi kristal spora alam yang memancarkan aura magis penolak monster buas.",
+    description:
+      "Esensi kristal spora alam yang memancarkan aura magis penolak monster buas.",
     price: 6200,
     sellPrice: 3100,
     category: "material",
@@ -655,7 +674,8 @@ module.exports = [
   {
     id: "resep_teh_akar_rimba",
     name: "Resep Teh Herbal Rimba Dha Mhai",
-    description: "Buku panduan seduhan teh herbal penenang pikiran penambah +25% perolehan EXP gathering.",
+    description:
+      "Buku panduan seduhan teh herbal penenang pikiran penambah +25% perolehan EXP gathering.",
     price: 1100,
     sellPrice: 550,
     category: "consumable",
@@ -667,7 +687,8 @@ module.exports = [
   {
     id: "mutiara_palung_hitam",
     name: "Mutiara Palung Hitam",
-    description: "Mutiara langka berkilau gelap yang diambil Doro dari kedalaman palung karang 200 meter.",
+    description:
+      "Mutiara langka berkilau gelap yang diambil Doro dari kedalaman palung karang 200 meter.",
     price: 15000,
     sellPrice: 7500,
     category: "material",
@@ -677,7 +698,8 @@ module.exports = [
   {
     id: "ikan_naga_abyssal",
     name: "Ikan Naga Abyssal",
-    description: "Ikan laut dalam bersisik perak yang meningkatkan daya serang ATK +20% selama 15 menit.",
+    description:
+      "Ikan laut dalam bersisik perak yang meningkatkan daya serang ATK +20% selama 15 menit.",
     price: 2800,
     sellPrice: 1400,
     category: "consumable",
@@ -687,7 +709,8 @@ module.exports = [
   {
     id: "jangkar_besi_lauh_than",
     name: "Jangkar Tempa Laut Selatan",
-    description: "Alat tambat kapal kokoh dan senjata tumpul berkekuatan hantaman tinggi karya bengkel pesisir.",
+    description:
+      "Alat tambat kapal kokoh dan senjata tumpul berkekuatan hantaman tinggi karya bengkel pesisir.",
     price: 3600,
     sellPrice: 1800,
     category: "tool",
@@ -697,7 +720,8 @@ module.exports = [
   {
     id: "rumput_laut_emas",
     name: "Rumput Laut Emas Pesisir",
-    description: "Alga laut tropis bernutrisi tinggi untuk bahan konsumsi harian dan pakan budidaya ikan.",
+    description:
+      "Alga laut tropis bernutrisi tinggi untuk bahan konsumsi harian dan pakan budidaya ikan.",
     price: 220,
     sellPrice: 110,
     category: "material",
@@ -707,7 +731,8 @@ module.exports = [
   {
     id: "sisik_monster_karang",
     name: "Sisik Predator Karang",
-    description: "Sisik tajam tahan korosi air laut pekat untuk pelapis baju zirah penyelam dan pelindung perahu.",
+    description:
+      "Sisik tajam tahan korosi air laut pekat untuk pelapis baju zirah penyelam dan pelindung perahu.",
     price: 750,
     sellPrice: 375,
     category: "material",
@@ -717,7 +742,8 @@ module.exports = [
   {
     id: "tombak_trisula_nelayan",
     name: "Trisula Karang Lauh Than",
-    description: "Tombak bergigi tiga untuk perburuan ikan monster raksasa dan pertahanan patroli samudra.",
+    description:
+      "Tombak bergigi tiga untuk perburuan ikan monster raksasa dan pertahanan patroli samudra.",
     price: 5400,
     sellPrice: 2700,
     category: "weapon",
@@ -727,7 +753,8 @@ module.exports = [
   {
     id: "jimat_ombak_nyai_bahari",
     name: "Jimat Penolak Ombak",
-    description: "Jimat kerang berkah Nyai Bahari yang meredam guncangan kapal dan menangkal kutukan badai samudra.",
+    description:
+      "Jimat kerang berkah Nyai Bahari yang meredam guncangan kapal dan menangkal kutukan badai samudra.",
     price: 7000,
     sellPrice: 3500,
     category: "accessory",
@@ -737,7 +764,8 @@ module.exports = [
   {
     id: "ikan_bakar_rempah_mbok_darmi",
     name: "Ikan Bakar Rempah Pesisir",
-    description: "Hidangan lezat olahan Mbok Darmi pemulih 100 HP dan memulihkan rasa kenyang secara penuh.",
+    description:
+      "Hidangan lezat olahan Mbok Darmi pemulih 100 HP dan memulihkan rasa kenyang secara penuh.",
     price: 480,
     sellPrice: 240,
     category: "consumable",
@@ -747,7 +775,8 @@ module.exports = [
   {
     id: "tabung_oksigen_penyelam",
     name: "Tabung Selam Aether Portabel",
-    description: "Tabung portabel penyedia napas aether untuk eksplorasi penyelaman bawah laut selama 30 menit.",
+    description:
+      "Tabung portabel penyedia napas aether untuk eksplorasi penyelaman bawah laut selama 30 menit.",
     price: 8500,
     sellPrice: 4250,
     category: "tool",
@@ -757,7 +786,8 @@ module.exports = [
   {
     id: "peta_palung_bawah_laut",
     name: "Peta Rute Palung Bawah Laut",
-    description: "Peta navigasi rahasia Kapten Reza menuju gerbang reruntuhan bawah laut purba di selatan benua.",
+    description:
+      "Peta navigasi rahasia Kapten Reza menuju gerbang reruntuhan bawah laut purba di selatan benua.",
     price: 3200,
     sellPrice: 1600,
     category: "special",

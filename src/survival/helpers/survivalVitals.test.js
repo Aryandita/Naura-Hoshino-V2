@@ -58,7 +58,10 @@ test("survivalVitals - drainVitals and recoverVitals with mock cache", async (t)
     thirst: 100,
   };
 
-  cacheManager.getUserProfile = async () => ({ isPremium: false, premiumTier: null });
+  cacheManager.getUserProfile = async () => ({
+    isPremium: false,
+    premiumTier: null,
+  });
   cacheManager.getUserSurvival = async () => ({ ...mockSurvival });
   cacheManager.incrementUserSurvival = async (userId, deltas) => {
     for (const [k, v] of Object.entries(deltas)) {

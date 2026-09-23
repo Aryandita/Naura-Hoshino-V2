@@ -69,7 +69,8 @@ class AiDjManager {
     let listenerGreeting = "";
     const otherListeners = listenerNames.filter((n) => n && n !== name);
     if (otherListeners.length > 0) {
-      const luckyListener = otherListeners[Math.floor(Math.random() * otherListeners.length)];
+      const luckyListener =
+        otherListeners[Math.floor(Math.random() * otherListeners.length)];
       listenerGreeting = ` Sapaan hangat juga untuk Kak ${luckyListener} dan kawan-kawan yang standby di voice!`;
     }
 
@@ -116,7 +117,9 @@ class AiDjManager {
     // Dapatkan daftar nama pendengar di voice channel
     let listenerNames = [];
     try {
-      const voiceChannel = manager.client.channels.cache.get(player.voiceChannel);
+      const voiceChannel = manager.client.channels.cache.get(
+        player.voiceChannel,
+      );
       if (voiceChannel && voiceChannel.members) {
         listenerNames = voiceChannel.members
           .filter((m) => !m.user.bot)
@@ -124,7 +127,11 @@ class AiDjManager {
       }
     } catch (_) {}
 
-    const script = this.generateDjScript(track.info, requesterName, listenerNames);
+    const script = this.generateDjScript(
+      track.info,
+      requesterName,
+      listenerNames,
+    );
 
     // Simpan script di player agar MusicUIManager bisa menampilkannya di banner UI
     player.currentDjSpeech = script;

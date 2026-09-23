@@ -60,7 +60,11 @@ class SemanticMemoryService {
         contents: text.trim(),
       });
 
-      if (response && response.embedding && Array.isArray(response.embedding.values)) {
+      if (
+        response &&
+        response.embedding &&
+        Array.isArray(response.embedding.values)
+      ) {
         return response.embedding.values;
       }
       return null;
@@ -189,7 +193,9 @@ class SemanticMemoryService {
         createdAt: r.createdAt,
       }));
     } catch (err) {
-      logger.error(`[SemanticMemory] Gagal mencari memori semantik: ${err.message}`);
+      logger.error(
+        `[SemanticMemory] Gagal mencari memori semantik: ${err.message}`,
+      );
       return [];
     }
   }
@@ -222,12 +228,16 @@ class SemanticMemoryService {
     try {
       const mongoManager = require("../managers/mongoManager");
       if (!mongoManager.isReady) {
-        logger.info("[SemanticMemory] MongoDB offline, melewatkan sintesis nightly memory.");
+        logger.info(
+          "[SemanticMemory] MongoDB offline, melewatkan sintesis nightly memory.",
+        );
         return { count: 0 };
       }
 
       // Ambil 50 log interaksi terbaru 24 jam terakhir
-      const recentLogs = await mongoManager.getCommandAuditLogs({}, 50).catch(() => []);
+      const recentLogs = await mongoManager
+        .getCommandAuditLogs({}, 50)
+        .catch(() => []);
       if (!recentLogs || recentLogs.length === 0) {
         return { count: 0 };
       }
@@ -254,10 +264,14 @@ class SemanticMemoryService {
         synthesizedCount++;
       }
 
-      logger.success(`[SemanticMemory] Berhasil melakukan nightly reflection untuk ${synthesizedCount} petualang aktif.`);
+      logger.success(
+        `[SemanticMemory] Berhasil melakukan nightly reflection untuk ${synthesizedCount} petualang aktif.`,
+      );
       return { count: synthesizedCount };
     } catch (err) {
-      logger.error(`[SemanticMemory] Gagal mengeksekusi nightly reflection: ${err.message}`);
+      logger.error(
+        `[SemanticMemory] Gagal mengeksekusi nightly reflection: ${err.message}`,
+      );
       return { count: 0, error: err.message };
     }
   }
@@ -270,7 +284,12 @@ class SemanticMemoryService {
    * @param {string} [memoryType="SERVER_RULE"]
    * @returns {Promise<{ success: boolean, fileName: string, chunksIngested: number, totalChunks: number }>}
    */
-  async ingestDocument(guildId, uploaderId, parsedDocument, memoryType = "SERVER_RULE") {
+  async ingestDocument(
+    guildId,
+    uploaderId,
+    parsedDocument,
+    memoryType = "SERVER_RULE",
+  ) {
     if (!guildId || !parsedDocument || !Array.isArray(parsedDocument.chunks)) {
       return { success: false, reason: "INVALID_DOCUMENT" };
     }
@@ -344,7 +363,9 @@ class SemanticMemoryService {
 
       return Array.from(docMap.values());
     } catch (err) {
-      logger.error(`[SemanticMemory] Gagal membaca daftar dokumen: ${err.message}`);
+      logger.error(
+        `[SemanticMemory] Gagal membaca daftar dokumen: ${err.message}`,
+      );
       return [];
     }
   }
@@ -380,7 +401,9 @@ class SemanticMemoryService {
       );
       return { success: true, deletedCount: deleted };
     } catch (err) {
-      logger.error(`[SemanticMemory] Gagal menghapus memori dokumen: ${err.message}`);
+      logger.error(
+        `[SemanticMemory] Gagal menghapus memori dokumen: ${err.message}`,
+      );
       return { success: false, deletedCount: 0, error: err.message };
     }
   }

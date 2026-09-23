@@ -103,7 +103,8 @@ async function setUserPreference(userId, key, enabled) {
     userId,
     "notification_prefs",
     (prefs) => {
-      const obj = prefs && typeof prefs === "object" ? prefs : { ...DEFAULT_PREFS };
+      const obj =
+        prefs && typeof prefs === "object" ? prefs : { ...DEFAULT_PREFS };
       obj[key] = Boolean(enabled);
       return obj;
     },
@@ -180,7 +181,12 @@ async function ensureDmAuthorized(client, userId, profile) {
  * @param {string} type - Tipe notifikasi
  * @param {object} [dataOrPayload] - Objek data untuk template ATAU payload siap kirim
  */
-async function sendDirectNotification(client, userId, type, dataOrPayload = {}) {
+async function sendDirectNotification(
+  client,
+  userId,
+  type,
+  dataOrPayload = {},
+) {
   if (!userId || !SNOWFLAKE_REGEX.test(String(userId))) return false;
   if (!client || !client.users) return false;
 
@@ -199,7 +205,11 @@ async function sendDirectNotification(client, userId, type, dataOrPayload = {}) 
     if (!user) return false;
 
     let payload;
-    if (dataOrPayload.components || dataOrPayload.content || dataOrPayload.embeds) {
+    if (
+      dataOrPayload.components ||
+      dataOrPayload.content ||
+      dataOrPayload.embeds
+    ) {
       payload = dataOrPayload;
     } else {
       const template = NOTIFICATION_TEMPLATES[type];

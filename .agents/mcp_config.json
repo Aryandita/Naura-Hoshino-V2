@@ -2,12 +2,7 @@
   "mcpServers": {
     "agent-reach": {
       "command": "python",
-      "args": [
-        "-m",
-        "agent_reach.cli",
-        "mcp",
-        "serve"
-      ]
+      "args": ["-m", "agent_reach.cli", "mcp", "serve"]
     }
   }
 }

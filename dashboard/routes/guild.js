@@ -428,7 +428,10 @@ module.exports = (client) => {
         logger.error("[API GUILD CONFIG POST] Error:", e);
         return res
           .status(500)
-          .json({ success: false, error: "Gagal menyimpan konfigurasi server." });
+          .json({
+            success: false,
+            error: "Gagal menyimpan konfigurasi server.",
+          });
       }
     },
   );
@@ -451,14 +454,17 @@ module.exports = (client) => {
           });
         }
 
-        await guildSettingsService.updateGuildSetting(req.guildId, (settings) => {
-          settings.settings = {};
-          settings.music = {
-            twentyFourSeven: false,
-            defaultVolume: 100,
-            djRoleId: null,
-          };
-        });
+        await guildSettingsService.updateGuildSetting(
+          req.guildId,
+          (settings) => {
+            settings.settings = {};
+            settings.music = {
+              twentyFourSeven: false,
+              defaultVolume: 100,
+              djRoleId: null,
+            };
+          },
+        );
 
         return res.json({
           success: true,

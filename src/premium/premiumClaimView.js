@@ -12,7 +12,10 @@
 const cacheManager = require("../managers/cacheManager");
 const redisManager = require("../managers/redisManager");
 const ui = require("../config/ui");
-const { buildContainerV2, buildErrorContainerV2 } = require("../utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../utils/NauraContainerBuilder");
 const {
   checkPremiumStatus,
   getUserPremiumTier,
@@ -50,7 +53,8 @@ async function runClaim(interaction) {
     return interaction.editReply(
       buildErrorContainerV2({
         title: "Paket Tidak Memiliki Dividen",
-        description: "Tier Voter tidak memiliki dividen harian. Upgrade ke Starter, Supporter, Friends, atau V.I.P!",
+        description:
+          "Tier Voter tidak memiliki dividen harian. Upgrade ke Starter, Supporter, Friends, atau V.I.P!",
         footerText: ui.getFooter("premium"),
       }),
     );
@@ -64,7 +68,9 @@ async function runClaim(interaction) {
       const remainingMs = parseInt(lastClaim, 10) - Date.now();
       if (remainingMs > 0) {
         const hours = Math.floor(remainingMs / (1000 * 60 * 60));
-        const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+        const minutes = Math.floor(
+          (remainingMs % (1000 * 60 * 60)) / (1000 * 60),
+        );
         return interaction.editReply(
           buildErrorContainerV2({
             title: "Dividen Sudah Diklaim Hari Ini",
@@ -79,26 +85,45 @@ async function runClaim(interaction) {
   // Set Cooldown 24 Jam
   const nextClaimTime = Date.now() + 24 * 60 * 60 * 1000;
   if (redisManager.isReady) {
-    await redisManager.setCache(redisKey, String(nextClaimTime), 86400).catch(() => {});
+    await redisManager
+      .setCache(redisKey, String(nextClaimTime), 86400)
+      .catch(() => {});
   }
 
   // Penyerahan Hadiah Secara Atomik
   const rewardLines = [];
 
   if (stipend.coupons > 0) {
-    await cacheManager.incrementUserSurvival(userId, "coupons", stipend.coupons);
-    rewardLines.push(`• 🎫 **+${stipend.coupons} Naura Coupon** (Mata uang langka)`);
+    await cacheManager.incrementUserSurvival(
+      userId,
+      "coupons",
+      stipend.coupons,
+    );
+    rewardLines.push(
+      `• 🎫 **+${stipend.coupons} Naura Coupon** (Mata uang langka)`,
+    );
   }
 
   if (stipend.nsf > 0) {
-    await cacheManager.incrementUserSurvival(userId, "starFragments", stipend.nsf);
-    rewardLines.push(`• 💰 **+${stipend.nsf.toLocaleString("id-ID")} Star Fragments**`);
+    await cacheManager.incrementUserSurvival(
+      userId,
+      "starFragments",
+      stipend.nsf,
+    );
+    rewardLines.push(
+      `• 💰 **+${stipend.nsf.toLocaleString("id-ID")} Star Fragments**`,
+    );
   }
 
   if (stipend.mysteryBox) {
     const boxItem = {
       id: stipend.mysteryBox,
-      name: stipend.mysteryBox === "legendary_relic_box" ? "Legendary Relic Box" : stipend.mysteryBox === "rare_mystery_box" ? "Rare Mystery Box" : "Common Mystery Box",
+      name:
+        stipend.mysteryBox === "legendary_relic_box"
+          ? "Legendary Relic Box"
+          : stipend.mysteryBox === "rare_mystery_box"
+            ? "Rare Mystery Box"
+            : "Common Mystery Box",
       type: "consumable",
       tier: tier === "vip" ? 5 : tier === "friends" ? 4 : 3,
       amount: 1,

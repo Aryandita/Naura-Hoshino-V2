@@ -35,7 +35,7 @@ Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D
 | **Versi Ekosistem**     |         `2.3.0`          | Standar X.Y.Z di [`package.json`](package.json)                |
 | **Format Penomoran**    |         `X.Y.Z`          | X = Generasi Era (2), Y = Major Update, Z = Minor/Bugfix       |
 | **Runtime Minimum**     |   Node.js `>= 24.0.0`    | `engines` di [`package.json`](package.json)                    |
-| **Kebutuhan & Produk**  |   [`PRD.md`](PRD.md)     | Spesifikasi produk, persona pengguna, dan batasan 6 pilar      |
+| **Kebutuhan & Produk**  |    [`PRD.md`](PRD.md)    | Spesifikasi produk, persona pengguna, dan batasan 6 pilar      |
 | **Token Visual & UI**   | [`DESIGN.md`](DESIGN.md) | Style guide Cyber-Anime Glassmorphism & Naura Wilds            |
 | **Aturan & Konstitusi** |  [`RULES.md`](RULES.md)  | Aturan hukum, arsitektur, transaksi atomik, dan keamanan wajib |
 | **Panduan AI Agent**    | [`AGENTS.md`](AGENTS.md) | Peta navigasi arsitektur, alur data interaksi, dan SOP agen    |

@@ -2,20 +2,37 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { LavalinkClusterManager } = require("../managers/lavalinkClusterManager");
+const {
+  LavalinkClusterManager,
+} = require("../managers/lavalinkClusterManager");
 
 test("LavalinkClusterManager - buildTieredNodeList", () => {
   const manager = new LavalinkClusterManager();
 
   const privateNodes = [
-    { name: "My VPS Node", host: "127.0.0.1", port: 2333, password: "pass1", secure: false },
-    { name: "Backup Node", host: "127.0.0.2", port: 2333, password: "pass2", secure: false },
+    {
+      name: "My VPS Node",
+      host: "127.0.0.1",
+      port: 2333,
+      password: "pass1",
+      secure: false,
+    },
+    {
+      name: "Backup Node",
+      host: "127.0.0.2",
+      port: 2333,
+      password: "pass2",
+      secure: false,
+    },
   ];
 
   const list = manager.buildTieredNodeList(privateNodes);
 
   // Harus memuat kedua private node plus node publik
-  assert.ok(list.length >= 3, "Harus memuat private nodes dan public fallback nodes");
+  assert.ok(
+    list.length >= 3,
+    "Harus memuat private nodes dan public fallback nodes",
+  );
 
   // Private node pertama harus Tier 1
   const node1 = list.find((n) => n.name === "My VPS Node");
@@ -45,7 +62,10 @@ test("LavalinkClusterManager - getPreferredNode Tier Priority & Penalties", () =
     nodes: new Map([
       ["Private-1", { name: "Private-1", connected: true, penalties: 100 }],
       ["Private-2", { name: "Private-2", connected: true, penalties: 10 }],
-      ["Public-Fallback", { name: "Public-Fallback", connected: true, penalties: 0 }],
+      [
+        "Public-Fallback",
+        { name: "Public-Fallback", connected: true, penalties: 0 },
+      ],
     ]),
   };
 
@@ -61,7 +81,11 @@ test("LavalinkClusterManager - getPreferredNode Tier Priority & Penalties", () =
   // 3. Jika semua private down, harus fallback ke Public Tier 3
   mockPoru.nodes.get("Private-2").connected = false;
   const selected3 = manager.getPreferredNode(mockPoru);
-  assert.equal(selected3, "Public-Fallback", "Wajib memilih Public Tier 3 saat private down");
+  assert.equal(
+    selected3,
+    "Public-Fallback",
+    "Wajib memilih Public Tier 3 saat private down",
+  );
 });
 
 test("LavalinkClusterManager - Circuit Breaker Quarantine", () => {
@@ -80,23 +104,38 @@ test("LavalinkClusterManager - Circuit Breaker Quarantine", () => {
 
   manager.recordNodeError(nodeName, new Error("Socket Closed Unexpectedly"));
   // Sekarang harus di-karantina (OPEN)
-  assert.equal(manager.isNodeQuarantined(nodeName), true, "Node wajib di-karantina setelah 3 error");
+  assert.equal(
+    manager.isNodeQuarantined(nodeName),
+    true,
+    "Node wajib di-karantina setelah 3 error",
+  );
 
   // getPreferredNode harus mengabaikan node yang di-karantina bila ada alternatif
   manager.nodeTiers.set("Healthy-Node", 3);
   const mockPoru = {
     nodes: new Map([
       [nodeName, { name: nodeName, connected: true, penalties: 0 }],
-      ["Healthy-Node", { name: "Healthy-Node", connected: true, penalties: 50 }],
+      [
+        "Healthy-Node",
+        { name: "Healthy-Node", connected: true, penalties: 50 },
+      ],
     ]),
   };
 
   const selected = manager.getPreferredNode(mockPoru);
-  assert.equal(selected, "Healthy-Node", "Harus memilih node sehat dan mengabaikan node yang di-karantina");
+  assert.equal(
+    selected,
+    "Healthy-Node",
+    "Harus memilih node sehat dan mengabaikan node yang di-karantina",
+  );
 
   // Reset keberhasilan
   manager.recordNodeSuccess(nodeName);
-  assert.equal(manager.isNodeQuarantined(nodeName), false, "Harus bebas dari karantina setelah recordNodeSuccess");
+  assert.equal(
+    manager.isNodeQuarantined(nodeName),
+    false,
+    "Harus bebas dari karantina setelah recordNodeSuccess",
+  );
 });
 
 test("LavalinkClusterManager - Seamless Player Migration", async () => {
@@ -158,9 +197,17 @@ test("LavalinkClusterManager - Seamless Player Migration", async () => {
   );
 
   assert.equal(migrated, true, "Migrasi player harus berhasil");
-  assert.equal(connectionCreatedWith.node, "Node-B", "Koneksi baru harus diarahkan ke Node-B");
+  assert.equal(
+    connectionCreatedWith.node,
+    "Node-B",
+    "Koneksi baru harus diarahkan ke Node-B",
+  );
   assert.equal(connectionCreatedWith.voiceChannel, "vc-456");
-  assert.equal(playCalledWith.startTime, 45200, "Pemutaran harus dilanjutkan dari offset milidetik terakhir");
+  assert.equal(
+    playCalledWith.startTime,
+    45200,
+    "Pemutaran harus dilanjutkan dari offset milidetik terakhir",
+  );
   assert.equal(mockNewPlayer.volume, 85, "Volume player harus dipertahankan");
 });
 
@@ -190,14 +237,26 @@ test("LavalinkClusterManager - Lossless Hi-Fi Node Federation & Auto-Balancing",
 
   // 1. Pilih node Hi-Fi terbaik untuk region tokyo
   const optimalJp = manager.getOptimalHiFiNode(mockPoru, "tokyo");
-  assert.equal(optimalJp, "HiFi-JP", "Harus memilih node HiFi-JP untuk wilayah tokyo");
+  assert.equal(
+    optimalJp,
+    "HiFi-JP",
+    "Harus memilih node HiFi-JP untuk wilayah tokyo",
+  );
 
   // 2. Pilih node Hi-Fi terbaik untuk region singapore
   const optimalSg = manager.getOptimalHiFiNode(mockPoru, "singapore");
-  assert.equal(optimalSg, "HiFi-SG", "Harus memilih node HiFi-SG untuk wilayah singapore");
+  assert.equal(
+    optimalSg,
+    "HiFi-SG",
+    "Harus memilih node HiFi-SG untuk wilayah singapore",
+  );
 
   // 3. Audio quality getter/setter per guild
-  assert.equal(manager.getGuildAudioQuality("g-1"), "hd", "Default audio quality harus hd");
+  assert.equal(
+    manager.getGuildAudioQuality("g-1"),
+    "hd",
+    "Default audio quality harus hd",
+  );
   manager.setGuildAudioQuality("g-1", "lossless");
   assert.equal(manager.getGuildAudioQuality("g-1"), "lossless");
 
@@ -218,21 +277,37 @@ test("LavalinkClusterManager - Multi-Region Dynamic Latency Ping Routing", async
   manager.registerHiFiNode("Node-Slow-Asia", { region: "singapore" });
 
   // Simulasikan RTT latency
-  manager.nodeLatencies.set("Node-Fast-Asia", { latencyMs: 18, timestamp: Date.now() });
-  manager.nodeLatencies.set("Node-Slow-Asia", { latencyMs: 180, timestamp: Date.now() });
+  manager.nodeLatencies.set("Node-Fast-Asia", {
+    latencyMs: 18,
+    timestamp: Date.now(),
+  });
+  manager.nodeLatencies.set("Node-Slow-Asia", {
+    latencyMs: 180,
+    timestamp: Date.now(),
+  });
 
   assert.equal(manager.getNodeLatency("Node-Fast-Asia"), 18);
   assert.equal(manager.getNodeLatency("Node-Slow-Asia"), 180);
 
   const mockPoru = {
     nodes: new Map([
-      ["Node-Fast-Asia", { name: "Node-Fast-Asia", connected: true, penalties: 0 }],
-      ["Node-Slow-Asia", { name: "Node-Slow-Asia", connected: true, penalties: 0 }],
+      [
+        "Node-Fast-Asia",
+        { name: "Node-Fast-Asia", connected: true, penalties: 0 },
+      ],
+      [
+        "Node-Slow-Asia",
+        { name: "Node-Slow-Asia", connected: true, penalties: 0 },
+      ],
     ]),
   };
 
   const selected = manager.getPreferredNode(mockPoru, { region: "singapore" });
-  assert.equal(selected, "Node-Fast-Asia", "Harus memprioritaskan node dengan RTT latency terendah");
+  assert.equal(
+    selected,
+    "Node-Fast-Asia",
+    "Harus memprioritaskan node dengan RTT latency terendah",
+  );
 
   // Uji start dan stop ping prober
   manager.startPingProber(mockPoru, 60000);

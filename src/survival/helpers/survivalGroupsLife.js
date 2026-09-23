@@ -72,7 +72,9 @@ function addLifeGroup(builder) {
           .addIntegerOption((opt) =>
             opt
               .setName("target_pet_id")
-              .setDescription("ID Pet bahan untuk Cosmic Fusion / Pasangan Breed")
+              .setDescription(
+                "ID Pet bahan untuk Cosmic Fusion / Pasangan Breed",
+              )
               .setRequired(false),
           ),
       )

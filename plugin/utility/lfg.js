@@ -15,9 +15,7 @@ const {
   ComponentType,
 } = require("discord.js");
 const ui = require("../../src/config/ui");
-const {
-  buildContainerV2,
-} = require("../../src/utils/NauraContainerBuilder");
+const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 
 const PRESETS = {
   valorant: {

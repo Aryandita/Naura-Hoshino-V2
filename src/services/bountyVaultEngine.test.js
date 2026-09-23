@@ -19,12 +19,18 @@ test("BountyVaultEngine - Zero-Knowledge Encryption & Decryption", async () => {
   assert.ok(stored.vaultId);
 
   // Dekripsi dengan passphrase benar
-  const decrypted = await bountyVaultEngine.retrieveSecret(stored.vaultId, passphrase);
+  const decrypted = await bountyVaultEngine.retrieveSecret(
+    stored.vaultId,
+    passphrase,
+  );
   assert.equal(decrypted.success, true);
   assert.equal(decrypted.plaintext, secret);
 
   // Dekripsi dengan passphrase salah
-  const failed = await bountyVaultEngine.retrieveSecret(stored.vaultId, "PassphraseSalah!");
+  const failed = await bountyVaultEngine.retrieveSecret(
+    stored.vaultId,
+    "PassphraseSalah!",
+  );
   assert.equal(failed.success, false);
   assert.match(failed.error, /Passphrase salah/);
 });

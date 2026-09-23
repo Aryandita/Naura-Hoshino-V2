@@ -89,10 +89,7 @@ const sendErrorLog = async (err, type, client) => {
         await owner.send({ embeds: [errEmbed] }).catch(() => {});
       }
     } catch (e) {
-      logger.error(
-        "Gagal mengirim log error ke DM Developer.",
-        e,
-      );
+      logger.error("Gagal mengirim log error ke DM Developer.", e);
     }
   }
 };

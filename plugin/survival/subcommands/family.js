@@ -39,8 +39,12 @@ module.exports = {
 
     // 1. STATUS ANAK
     if (action === "status") {
-      const hungerBar = "🟩".repeat(Math.round(child.hunger / 10)) + "⬜".repeat(10 - Math.round(child.hunger / 10));
-      const happyBar = "🟨".repeat(Math.round(child.happiness / 10)) + "⬜".repeat(10 - Math.round(child.happiness / 10));
+      const hungerBar =
+        "🟩".repeat(Math.round(child.hunger / 10)) +
+        "⬜".repeat(10 - Math.round(child.hunger / 10));
+      const happyBar =
+        "🟨".repeat(Math.round(child.happiness / 10)) +
+        "⬜".repeat(10 - Math.round(child.happiness / 10));
 
       const stageLabels = {
         Toddler: "🍼 Balita (Toddler)",
@@ -82,7 +86,10 @@ module.exports = {
           description: "Terjadi kendala saat menyuapi buah hati.",
           footerText: ui.getFooter("survival"),
         });
-        return interaction.reply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2,
+        });
       }
 
       const desc = [
@@ -95,7 +102,10 @@ module.exports = {
       ];
 
       if (feedRes.leveledUp) {
-        desc.push("", `🎉 **Selamat! ${child.name} naik ke Level ${feedRes.child.level} (${feedRes.child.stage})!**`);
+        desc.push(
+          "",
+          `🎉 **Selamat! ${child.name} naik ke Level ${feedRes.child.level} (${feedRes.child.stage})!**`,
+        );
       }
 
       const payload = buildSuccessContainerV2({
@@ -119,7 +129,10 @@ module.exports = {
           description: "Terjadi kendala saat membimbing buah hati.",
           footerText: ui.getFooter("survival"),
         });
-        return interaction.reply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2,
+        });
       }
 
       const desc = [
@@ -131,7 +144,10 @@ module.exports = {
       ];
 
       if (teachRes.leveledUp) {
-        desc.push("", `🎉 **Selamat! ${child.name} naik ke Level ${teachRes.child.level} (${teachRes.child.stage})!**`);
+        desc.push(
+          "",
+          `🎉 **Selamat! ${child.name} naik ke Level ${teachRes.child.level} (${teachRes.child.stage})!**`,
+        );
       }
 
       const payload = buildSuccessContainerV2({
@@ -160,7 +176,10 @@ module.exports = {
           ].join("\n"),
           footerText: ui.getFooter("survival"),
         });
-        return interaction.reply({ ...payload, flags: MessageFlags.IsComponentsV2 });
+        return interaction.reply({
+          ...payload,
+          flags: MessageFlags.IsComponentsV2,
+        });
       }
 
       const payload = buildSuccessContainerV2({

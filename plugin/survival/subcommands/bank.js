@@ -220,7 +220,8 @@ module.exports = {
           const toCurrency = currencyHelper.byKind(toKind);
           const availableBalance = snap.fragment;
 
-          const quote = await currencyHelper.getDynamicRateAndFee(availableBalance);
+          const quote =
+            await currencyHelper.getDynamicRateAndFee(availableBalance);
 
           return askAmount(i, {
             title: `Tukar ${fromCurrency.short} ke ${toCurrency.short}`,

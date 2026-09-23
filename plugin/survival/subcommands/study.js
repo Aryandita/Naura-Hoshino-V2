@@ -235,11 +235,15 @@ module.exports = {
         return i.editReply({ ...passPayload, embeds: [] }).catch(() => {});
       }
 
-      await cacheManager.mutateUserSurvivalJson(user.id, "rpg_state", (state) => {
-        const nextState = state && typeof state === "object" ? state : {};
-        nextState.test_cd = (survival.inGameDay || 1) + 1;
-        return nextState;
-      });
+      await cacheManager.mutateUserSurvivalJson(
+        user.id,
+        "rpg_state",
+        (state) => {
+          const nextState = state && typeof state === "object" ? state : {};
+          nextState.test_cd = (survival.inGameDay || 1) + 1;
+          return nextState;
+        },
+      );
       await advanceTime(user.id, EXAM_HOURS);
 
       const failPayload = buildContainerV2({

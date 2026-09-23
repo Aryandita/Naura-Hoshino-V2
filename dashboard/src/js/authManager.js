@@ -9,327 +9,367 @@
  */
 
 (function () {
-    'use strict';
+  "use strict";
 
-    const STORAGE_KEY = 'naura_auth_session';
+  const STORAGE_KEY = "naura_auth_session";
 
-    // Ikon avatar SVG generik berbasis peran (tanpa foto orang nyata)
-    const ROLE_AVATARS = {
-        admin: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236366f1'/%3E%3Cstop offset='100%25' stop-color='%23a855f7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' rx='40' fill='url(%23g1)'/%3E%3Cpath d='M40 18 L60 26 V44 C60 56 40 64 40 64 C40 64 20 56 20 44 V26 Z' fill='%23ffffff' fill-opacity='0.25' stroke='%23ffffff' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M34 40 L38 44 L47 34' fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
-        vip: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g2' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23f59e0b'/%3E%3Cstop offset='100%25' stop-color='%23d97706'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' rx='40' fill='url(%23g2)'/%3E%3Cpolygon points='40,20 45,33 59,34 48,43 52,57 40,49 28,57 32,43 21,34 35,33' fill='%23ffffff'/%3E%3C/svg%3E",
-        adventurer: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g3' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2306b6d4'/%3E%3Cstop offset='100%25' stop-color='%230891b2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' rx='40' fill='url(%23g3)'/%3E%3Ccircle cx='40' cy='40' r='22' fill='none' stroke='%23ffffff' stroke-width='3'/%3E%3Cpolygon points='40,24 46,38 40,35 34,38' fill='%23ef4444'/%3E%3Cpolygon points='40,56 46,42 40,45 34,42' fill='%23ffffff'/%3E%3Ccircle cx='40' cy='40' r='3' fill='%23ffffff'/%3E%3C/svg%3E",
-    };
+  // Ikon avatar SVG generik berbasis peran (tanpa foto orang nyata)
+  const ROLE_AVATARS = {
+    admin:
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236366f1'/%3E%3Cstop offset='100%25' stop-color='%23a855f7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' rx='40' fill='url(%23g1)'/%3E%3Cpath d='M40 18 L60 26 V44 C60 56 40 64 40 64 C40 64 20 56 20 44 V26 Z' fill='%23ffffff' fill-opacity='0.25' stroke='%23ffffff' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M34 40 L38 44 L47 34' fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
+    vip: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g2' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23f59e0b'/%3E%3Cstop offset='100%25' stop-color='%23d97706'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' rx='40' fill='url(%23g2)'/%3E%3Cpolygon points='40,20 45,33 59,34 48,43 52,57 40,49 28,57 32,43 21,34 35,33' fill='%23ffffff'/%3E%3C/svg%3E",
+    adventurer:
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cdefs%3E%3ClinearGradient id='g3' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2306b6d4'/%3E%3Cstop offset='100%25' stop-color='%230891b2'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='80' height='80' rx='40' fill='url(%23g3)'/%3E%3Ccircle cx='40' cy='40' r='22' fill='none' stroke='%23ffffff' stroke-width='3'/%3E%3Cpolygon points='40,24 46,38 40,35 34,38' fill='%23ef4444'/%3E%3Cpolygon points='40,56 46,42 40,45 34,42' fill='%23ffffff'/%3E%3Ccircle cx='40' cy='40' r='3' fill='%23ffffff'/%3E%3C/svg%3E",
+  };
 
-    // Konfigurasi profil peran untuk simulasi instan dan pengujian antarmuka
-    const PROFILES = {
-        owner: {
-            id: 'admin_001',
-            username: 'Admin',
-            tag: '#0001',
-            avatar: ROLE_AVATARS.admin,
-            role: 'Administrator Sistem',
-            badgeClass: 'badge-primary',
-            nc: 999999,
-            nsf: 50000,
-            coupons: 120,
-            provider: 'discord',
-        },
-        vip: {
-            id: 'vip_042',
-            username: 'VIP Member',
-            tag: '#7777',
-            avatar: ROLE_AVATARS.vip,
-            role: 'VIP Server Booster',
-            badgeClass: 'badge-amber',
-            nc: 45200,
-            nsf: 8400,
-            coupons: 15,
-            provider: 'supabase',
-        },
-        adventurer: {
-            id: 'adv_108',
-            username: 'Petualang',
-            tag: '#2049',
-            avatar: ROLE_AVATARS.adventurer,
-            role: 'Petualang Naura Wilds',
-            badgeClass: 'badge-cyan',
-            nc: 12450,
-            nsf: 3200,
-            coupons: 4,
-            provider: 'supabase',
-        },
-    };
+  // Konfigurasi profil peran untuk simulasi instan dan pengujian antarmuka
+  const PROFILES = {
+    owner: {
+      id: "admin_001",
+      username: "Admin",
+      tag: "#0001",
+      avatar: ROLE_AVATARS.admin,
+      role: "Administrator Sistem",
+      badgeClass: "badge-primary",
+      nc: 999999,
+      nsf: 50000,
+      coupons: 120,
+      provider: "discord",
+    },
+    vip: {
+      id: "vip_042",
+      username: "VIP Member",
+      tag: "#7777",
+      avatar: ROLE_AVATARS.vip,
+      role: "VIP Server Booster",
+      badgeClass: "badge-amber",
+      nc: 45200,
+      nsf: 8400,
+      coupons: 15,
+      provider: "supabase",
+    },
+    adventurer: {
+      id: "adv_108",
+      username: "Petualang",
+      tag: "#2049",
+      avatar: ROLE_AVATARS.adventurer,
+      role: "Petualang Naura Wilds",
+      badgeClass: "badge-cyan",
+      nc: 12450,
+      nsf: 3200,
+      coupons: 4,
+      provider: "supabase",
+    },
+  };
 
-    class AuthManager {
-        constructor() {
-            this.session = this.loadSession();
-            this.setupFetchInterceptor();
-            this.setupAutoReconnect();
-            this.initModal();
-            this.bindUI();
-            this.syncUI();
-        }
+  class AuthManager {
+    constructor() {
+      this.session = this.loadSession();
+      this.setupFetchInterceptor();
+      this.setupAutoReconnect();
+      this.initModal();
+      this.bindUI();
+      this.syncUI();
+    }
 
-        setupFetchInterceptor() {
-            if (window._nauraFetchInterceptorInstalled) return;
-            window._nauraFetchInterceptorInstalled = true;
+    setupFetchInterceptor() {
+      if (window._nauraFetchInterceptorInstalled) return;
+      window._nauraFetchInterceptorInstalled = true;
 
-            const originalFetch = window.fetch.bind(window);
-            let isRefreshing = false;
-            let pendingRequests = [];
+      const originalFetch = window.fetch.bind(window);
+      let isRefreshing = false;
+      let pendingRequests = [];
 
-            const processQueue = (error, success = false) => {
-                pendingRequests.forEach((prom) => {
-                    if (error) {
-                        prom.reject(error);
-                    } else {
-                        prom.resolve();
-                    }
-                });
-                pendingRequests = [];
-            };
+      const processQueue = (error, success = false) => {
+        pendingRequests.forEach((prom) => {
+          if (error) {
+            prom.reject(error);
+          } else {
+            prom.resolve();
+          }
+        });
+        pendingRequests = [];
+      };
 
-            window.fetch = async (...args) => {
-                const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+      window.fetch = async (...args) => {
+        const url = typeof args[0] === "string" ? args[0] : args[0]?.url || "";
 
-                try {
-                    let response = await originalFetch(...args);
+        try {
+          let response = await originalFetch(...args);
 
-                    // Tangani status HTTP 401 (Unauthorized / Session Expired) pada request API
-                    if (response.status === 401 && !url.includes('/auth/refresh') && !url.includes('/auth/logout')) {
-                        if (isRefreshing) {
-                            await new Promise((resolve, reject) => {
-                                pendingRequests.push({ resolve, reject });
-                            });
-                            return originalFetch(...args);
-                        }
+          // Tangani status HTTP 401 (Unauthorized / Session Expired) pada request API
+          if (
+            response.status === 401 &&
+            !url.includes("/auth/refresh") &&
+            !url.includes("/auth/logout")
+          ) {
+            if (isRefreshing) {
+              await new Promise((resolve, reject) => {
+                pendingRequests.push({ resolve, reject });
+              });
+              return originalFetch(...args);
+            }
 
-                        isRefreshing = true;
-                        try {
-                            const refreshRes = await originalFetch('/auth/refresh', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                credentials: 'include',
-                            });
-
-                            if (refreshRes.ok) {
-                                const refreshData = await refreshRes.json();
-                                if (refreshData.success) {
-                                    if (refreshData.user) {
-                                        this.saveSession({
-                                            ...this.getUser(),
-                                            ...refreshData.user,
-                                        });
-                                    }
-                                    processQueue(null, true);
-                                    response = await originalFetch(...args);
-                                    return response;
-                                }
-                            }
-                            throw new Error('Refresh failed');
-                        } catch (refreshErr) {
-                            processQueue(refreshErr, false);
-                            if (typeof window.showToast === 'function') {
-                                window.showToast('Sesi login telah kedaluwarsa. Silakan simpan formulir atau login kembali.', 'warning');
-                            }
-                        } finally {
-                            isRefreshing = false;
-                        }
-                    }
-
-                    return response;
-                } catch (err) {
-                    throw err;
-                }
-            };
-        }
-
-        setupAutoReconnect() {
-            window.addEventListener('online', async () => {
-                try {
-                    const res = await fetch('/auth/reconnect', { method: 'POST', credentials: 'include' });
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.authenticated && data.user) {
-                            this.saveSession({ ...this.getUser(), ...data.user });
-                        }
-                        if (typeof window.showToast === 'function') {
-                            window.showToast('Koneksi berhasil dipulihkan secara otomatis.', 'success');
-                        }
-                    }
-                } catch (_) {}
-            });
-
-            document.addEventListener('visibilitychange', async () => {
-                if (document.visibilityState === 'visible' && this.isLoggedIn()) {
-                    try {
-                        const res = await fetch('/auth/refresh', { method: 'POST', credentials: 'include' });
-                        if (res.ok) {
-                            const data = await res.json();
-                            if (data.success && data.user) {
-                                this.saveSession({ ...this.getUser(), ...data.user });
-                            }
-                        }
-                    } catch (_) {}
-                }
-            });
-        }
-
-        loadSession() {
+            isRefreshing = true;
             try {
-                // Pastikan membersihkan residu localStorage lama untuk sandbox mode murni
-                localStorage.removeItem(STORAGE_KEY);
-                const storedRaw = sessionStorage.getItem(STORAGE_KEY);
-                if (storedRaw) return JSON.parse(storedRaw);
-            } catch (_) {}
-            return null;
-        }
+              const refreshRes = await originalFetch("/auth/refresh", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+              });
 
-        saveSession(activeSession) {
-            this.session = activeSession;
-            if (activeSession) {
-                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(activeSession));
-            } else {
-                sessionStorage.removeItem(STORAGE_KEY);
-            }
-            this.syncUI();
-        }
-
-        loginAs(profileIdentifier) {
-            const targetProfile = PROFILES[profileIdentifier] || PROFILES.owner;
-            this.saveSession({
-                ...targetProfile,
-                loggedInAt: Date.now(),
-            });
-            this.closeModal();
-            if (typeof window.showToast === 'function') {
-                window.showToast(`Selamat datang kembali, ${targetProfile.username}! (${targetProfile.role})`, 'success');
-            }
-        }
-
-        logout() {
-            const currentUsername = this.session?.username || 'User';
-            this.saveSession(null);
-            if (typeof window.showToast === 'function') {
-                window.showToast(`Berhasil logout dari akun ${currentUsername}. Mode Tamu aktif.`, 'info');
-            }
-        }
-
-        isLoggedIn() {
-            return Boolean(this.session);
-        }
-
-        getUser() {
-            return this.session || {
-                username: 'Guest',
-                role: 'Tamu / Visitor',
-                avatar: '/assets/core/avatar.png',
-                nc: 0,
-                nsf: 0,
-                coupons: 0,
-            };
-        }
-
-        syncUI() {
-            const currentUser = this.getUser();
-            const isAuthenticated = this.isLoggedIn();
-
-            // 1. Teks sapaan header
-            const welcomeElement = document.getElementById('welcomeUser');
-            if (welcomeElement) {
-                welcomeElement.textContent = isAuthenticated ? currentUser.username : 'Guest';
-            }
-
-            // 2. Saldo dompet header
-            const walletElement = document.getElementById('walletAmount');
-            if (walletElement) {
-                walletElement.textContent = Number(currentUser.nc).toLocaleString('id-ID');
-            }
-
-            // 3. Tombol otentikasi header
-            const headerAuthButton = document.getElementById('headerAuthBtn');
-            if (headerAuthButton) {
-                if (isAuthenticated) {
-                    headerAuthButton.className = 'btn btn-ghost btn-sm';
-                    headerAuthButton.style.color = 'var(--accent-green)';
-                    headerAuthButton.style.borderColor = 'rgba(52,211,153,0.3)';
-                    headerAuthButton.href = '#';
-                    headerAuthButton.title = `Akun: ${currentUser.username} (${currentUser.role}), Klik untuk opsi`;
-                    headerAuthButton.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${currentUser.username}</span>`;
-                    headerAuthButton.onclick = (clickEvent) => {
-                        clickEvent.preventDefault();
-                        this.openProfileMenu();
-                    };
-                } else {
-                    headerAuthButton.className = 'btn btn-discord btn-sm';
-                    headerAuthButton.style.color = '';
-                    headerAuthButton.style.borderColor = '';
-                    headerAuthButton.href = '#';
-                    headerAuthButton.title = 'Login ke Naura OS';
-                    headerAuthButton.innerHTML = `<i class="fa-brands fa-discord"></i> <span id="headerAuthLabel">Login</span>`;
-                    headerAuthButton.onclick = (clickEvent) => {
-                        clickEvent.preventDefault();
-                        this.openModal();
-                    };
+              if (refreshRes.ok) {
+                const refreshData = await refreshRes.json();
+                if (refreshData.success) {
+                  if (refreshData.user) {
+                    this.saveSession({
+                      ...this.getUser(),
+                      ...refreshData.user,
+                    });
+                  }
+                  processQueue(null, true);
+                  response = await originalFetch(...args);
+                  return response;
                 }
+              }
+              throw new Error("Refresh failed");
+            } catch (refreshErr) {
+              processQueue(refreshErr, false);
+              if (typeof window.showToast === "function") {
+                window.showToast(
+                  "Sesi login telah kedaluwarsa. Silakan simpan formulir atau login kembali.",
+                  "warning",
+                );
+              }
+            } finally {
+              isRefreshing = false;
             }
+          }
 
-            // 4. Avatar profil header
-            const headerAvatarElement = document.getElementById('headerAvatar');
-            if (headerAvatarElement) {
-                headerAvatarElement.src = currentUser.avatar;
-                headerAvatarElement.style.border = isAuthenticated ? '2px solid var(--accent-green)' : '1px solid var(--border-subtle)';
-                headerAvatarElement.onclick = (clickEvent) => {
-                    clickEvent.preventDefault();
-                    if (isAuthenticated) {
-                        this.openProfileMenu();
-                    } else {
-                        this.openModal();
-                    }
-                };
-            }
-
-            // 5. Kartu pengguna pada sidebar
-            const sidebarNameElements = document.querySelectorAll('.sidebar-user-name');
-            const sidebarRoleElements = document.querySelectorAll('.sidebar-user-role');
-            const sidebarAvatarElements = document.querySelectorAll('.sidebar-user-avatar');
-            const sidebarUserCards = document.querySelectorAll('.sidebar-user');
-
-            sidebarNameElements.forEach((el) => {
-                el.textContent = isAuthenticated ? currentUser.username : 'Guest';
-            });
-            sidebarRoleElements.forEach((el) => {
-                el.textContent = isAuthenticated ? currentUser.role : 'Klik untuk login';
-            });
-            sidebarAvatarElements.forEach((el) => {
-                el.src = currentUser.avatar;
-                el.style.border = isAuthenticated ? '2px solid var(--accent-green)' : '1px solid var(--border-subtle)';
-            });
-            sidebarUserCards.forEach((card) => {
-                card.onclick = (clickEvent) => {
-                    clickEvent.preventDefault();
-                    if (isAuthenticated) {
-                        this.openProfileMenu();
-                    } else {
-                        this.openModal();
-                    }
-                };
-            });
-
-            // 6. Lencana saldo NSF petualang
-            const nsfBadgeElement = document.getElementById('playerNsfBadge');
-            if (nsfBadgeElement) {
-                nsfBadgeElement.innerHTML = `<i class="fa-solid fa-star"></i> <span>${Number(currentUser.nsf).toLocaleString('id-ID')} NSF</span>`;
-            }
+          return response;
+        } catch (err) {
+          throw err;
         }
+      };
+    }
 
-        initModal() {
-            if (document.getElementById('nauraAuthModal')) return;
+    setupAutoReconnect() {
+      window.addEventListener("online", async () => {
+        try {
+          const res = await fetch("/auth/reconnect", {
+            method: "POST",
+            credentials: "include",
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.authenticated && data.user) {
+              this.saveSession({ ...this.getUser(), ...data.user });
+            }
+            if (typeof window.showToast === "function") {
+              window.showToast(
+                "Koneksi berhasil dipulihkan secara otomatis.",
+                "success",
+              );
+            }
+          }
+        } catch (_) {}
+      });
 
-            const modalContainer = document.createElement('div');
-            modalContainer.id = 'nauraAuthModal';
-            modalContainer.className = 'auth-modal-backdrop';
-            modalContainer.innerHTML = `
+      document.addEventListener("visibilitychange", async () => {
+        if (document.visibilityState === "visible" && this.isLoggedIn()) {
+          try {
+            const res = await fetch("/auth/refresh", {
+              method: "POST",
+              credentials: "include",
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.success && data.user) {
+                this.saveSession({ ...this.getUser(), ...data.user });
+              }
+            }
+          } catch (_) {}
+        }
+      });
+    }
+
+    loadSession() {
+      try {
+        // Pastikan membersihkan residu localStorage lama untuk sandbox mode murni
+        localStorage.removeItem(STORAGE_KEY);
+        const storedRaw = sessionStorage.getItem(STORAGE_KEY);
+        if (storedRaw) return JSON.parse(storedRaw);
+      } catch (_) {}
+      return null;
+    }
+
+    saveSession(activeSession) {
+      this.session = activeSession;
+      if (activeSession) {
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(activeSession));
+      } else {
+        sessionStorage.removeItem(STORAGE_KEY);
+      }
+      this.syncUI();
+    }
+
+    loginAs(profileIdentifier) {
+      const targetProfile = PROFILES[profileIdentifier] || PROFILES.owner;
+      this.saveSession({
+        ...targetProfile,
+        loggedInAt: Date.now(),
+      });
+      this.closeModal();
+      if (typeof window.showToast === "function") {
+        window.showToast(
+          `Selamat datang kembali, ${targetProfile.username}! (${targetProfile.role})`,
+          "success",
+        );
+      }
+    }
+
+    logout() {
+      const currentUsername = this.session?.username || "User";
+      this.saveSession(null);
+      if (typeof window.showToast === "function") {
+        window.showToast(
+          `Berhasil logout dari akun ${currentUsername}. Mode Tamu aktif.`,
+          "info",
+        );
+      }
+    }
+
+    isLoggedIn() {
+      return Boolean(this.session);
+    }
+
+    getUser() {
+      return (
+        this.session || {
+          username: "Guest",
+          role: "Tamu / Visitor",
+          avatar: "/assets/core/avatar.png",
+          nc: 0,
+          nsf: 0,
+          coupons: 0,
+        }
+      );
+    }
+
+    syncUI() {
+      const currentUser = this.getUser();
+      const isAuthenticated = this.isLoggedIn();
+
+      // 1. Teks sapaan header
+      const welcomeElement = document.getElementById("welcomeUser");
+      if (welcomeElement) {
+        welcomeElement.textContent = isAuthenticated
+          ? currentUser.username
+          : "Guest";
+      }
+
+      // 2. Saldo dompet header
+      const walletElement = document.getElementById("walletAmount");
+      if (walletElement) {
+        walletElement.textContent = Number(currentUser.nc).toLocaleString(
+          "id-ID",
+        );
+      }
+
+      // 3. Tombol otentikasi header
+      const headerAuthButton = document.getElementById("headerAuthBtn");
+      if (headerAuthButton) {
+        if (isAuthenticated) {
+          headerAuthButton.className = "btn btn-ghost btn-sm";
+          headerAuthButton.style.color = "var(--accent-green)";
+          headerAuthButton.style.borderColor = "rgba(52,211,153,0.3)";
+          headerAuthButton.href = "#";
+          headerAuthButton.title = `Akun: ${currentUser.username} (${currentUser.role}), Klik untuk opsi`;
+          headerAuthButton.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${currentUser.username}</span>`;
+          headerAuthButton.onclick = (clickEvent) => {
+            clickEvent.preventDefault();
+            this.openProfileMenu();
+          };
+        } else {
+          headerAuthButton.className = "btn btn-discord btn-sm";
+          headerAuthButton.style.color = "";
+          headerAuthButton.style.borderColor = "";
+          headerAuthButton.href = "#";
+          headerAuthButton.title = "Login ke Naura OS";
+          headerAuthButton.innerHTML = `<i class="fa-brands fa-discord"></i> <span id="headerAuthLabel">Login</span>`;
+          headerAuthButton.onclick = (clickEvent) => {
+            clickEvent.preventDefault();
+            this.openModal();
+          };
+        }
+      }
+
+      // 4. Avatar profil header
+      const headerAvatarElement = document.getElementById("headerAvatar");
+      if (headerAvatarElement) {
+        headerAvatarElement.src = currentUser.avatar;
+        headerAvatarElement.style.border = isAuthenticated
+          ? "2px solid var(--accent-green)"
+          : "1px solid var(--border-subtle)";
+        headerAvatarElement.onclick = (clickEvent) => {
+          clickEvent.preventDefault();
+          if (isAuthenticated) {
+            this.openProfileMenu();
+          } else {
+            this.openModal();
+          }
+        };
+      }
+
+      // 5. Kartu pengguna pada sidebar
+      const sidebarNameElements =
+        document.querySelectorAll(".sidebar-user-name");
+      const sidebarRoleElements =
+        document.querySelectorAll(".sidebar-user-role");
+      const sidebarAvatarElements = document.querySelectorAll(
+        ".sidebar-user-avatar",
+      );
+      const sidebarUserCards = document.querySelectorAll(".sidebar-user");
+
+      sidebarNameElements.forEach((el) => {
+        el.textContent = isAuthenticated ? currentUser.username : "Guest";
+      });
+      sidebarRoleElements.forEach((el) => {
+        el.textContent = isAuthenticated
+          ? currentUser.role
+          : "Klik untuk login";
+      });
+      sidebarAvatarElements.forEach((el) => {
+        el.src = currentUser.avatar;
+        el.style.border = isAuthenticated
+          ? "2px solid var(--accent-green)"
+          : "1px solid var(--border-subtle)";
+      });
+      sidebarUserCards.forEach((card) => {
+        card.onclick = (clickEvent) => {
+          clickEvent.preventDefault();
+          if (isAuthenticated) {
+            this.openProfileMenu();
+          } else {
+            this.openModal();
+          }
+        };
+      });
+
+      // 6. Lencana saldo NSF petualang
+      const nsfBadgeElement = document.getElementById("playerNsfBadge");
+      if (nsfBadgeElement) {
+        nsfBadgeElement.innerHTML = `<i class="fa-solid fa-star"></i> <span>${Number(currentUser.nsf).toLocaleString("id-ID")} NSF</span>`;
+      }
+    }
+
+    initModal() {
+      if (document.getElementById("nauraAuthModal")) return;
+
+      const modalContainer = document.createElement("div");
+      modalContainer.id = "nauraAuthModal";
+      modalContainer.className = "auth-modal-backdrop";
+      modalContainer.innerHTML = `
                 <div class="auth-modal-card animate-scale">
                     <div class="auth-modal-header">
                         <div style="display:flex;align-items:center;gap:12px;">
@@ -428,8 +468,8 @@
                 </div>
             `;
 
-            const styleSheet = document.createElement('style');
-            styleSheet.textContent = `
+      const styleSheet = document.createElement("style");
+      styleSheet.textContent = `
                 .auth-modal-backdrop {
                     position: fixed;
                     inset: 0;
@@ -523,74 +563,90 @@
                 }
             `;
 
-            document.head.appendChild(styleSheet);
-            document.body.appendChild(modalContainer);
+      document.head.appendChild(styleSheet);
+      document.body.appendChild(modalContainer);
 
-            document.getElementById('authModalCloseBtn')?.addEventListener('click', () => this.closeModal());
-            modalContainer.addEventListener('click', (clickEvent) => {
-                if (clickEvent.target === modalContainer) this.closeModal();
-            });
+      document
+        .getElementById("authModalCloseBtn")
+        ?.addEventListener("click", () => this.closeModal());
+      modalContainer.addEventListener("click", (clickEvent) => {
+        if (clickEvent.target === modalContainer) this.closeModal();
+      });
 
-            // Pengalih Tab
-            const tabQuick = document.getElementById('authTabQuick');
-            const tabDiscord = document.getElementById('authTabDiscord');
-            const tabSupabase = document.getElementById('authTabSupabase');
-            const paneQuick = document.getElementById('paneQuick');
-            const paneDiscord = document.getElementById('paneDiscord');
-            const paneSupabase = document.getElementById('paneSupabase');
+      // Pengalih Tab
+      const tabQuick = document.getElementById("authTabQuick");
+      const tabDiscord = document.getElementById("authTabDiscord");
+      const tabSupabase = document.getElementById("authTabSupabase");
+      const paneQuick = document.getElementById("paneQuick");
+      const paneDiscord = document.getElementById("paneDiscord");
+      const paneSupabase = document.getElementById("paneSupabase");
 
-            const switchActiveTab = (activeTabButton, activePaneElement) => {
-                [tabQuick, tabDiscord, tabSupabase].forEach((btn) => btn?.classList.remove('active'));
-                [paneQuick, paneDiscord, paneSupabase].forEach((pane) => {
-                    if (pane) pane.style.display = 'none';
-                });
-                activeTabButton?.classList.add('active');
-                if (activePaneElement) activePaneElement.style.display = 'block';
-            };
+      const switchActiveTab = (activeTabButton, activePaneElement) => {
+        [tabQuick, tabDiscord, tabSupabase].forEach((btn) =>
+          btn?.classList.remove("active"),
+        );
+        [paneQuick, paneDiscord, paneSupabase].forEach((pane) => {
+          if (pane) pane.style.display = "none";
+        });
+        activeTabButton?.classList.add("active");
+        if (activePaneElement) activePaneElement.style.display = "block";
+      };
 
-            tabQuick?.addEventListener('click', () => switchActiveTab(tabQuick, paneQuick));
-            tabDiscord?.addEventListener('click', () => switchActiveTab(tabDiscord, paneDiscord));
-            tabSupabase?.addEventListener('click', () => switchActiveTab(tabSupabase, paneSupabase));
+      tabQuick?.addEventListener("click", () =>
+        switchActiveTab(tabQuick, paneQuick),
+      );
+      tabDiscord?.addEventListener("click", () =>
+        switchActiveTab(tabDiscord, paneDiscord),
+      );
+      tabSupabase?.addEventListener("click", () =>
+        switchActiveTab(tabSupabase, paneSupabase),
+      );
 
-            // Pemilihan profil cepat
-            document.querySelectorAll('.quick-profile-card').forEach((cardElement) => {
-                cardElement.addEventListener('click', () => {
-                    const profileKey = cardElement.dataset.profile;
-                    this.loginAs(profileKey);
-                });
-            });
+      // Pemilihan profil cepat
+      document
+        .querySelectorAll(".quick-profile-card")
+        .forEach((cardElement) => {
+          cardElement.addEventListener("click", () => {
+            const profileKey = cardElement.dataset.profile;
+            this.loginAs(profileKey);
+          });
+        });
 
-            document.getElementById('btnDiscordDirect')?.addEventListener('click', () => {
-                this.loginAs('owner');
-            });
+      document
+        .getElementById("btnDiscordDirect")
+        ?.addEventListener("click", () => {
+          this.loginAs("owner");
+        });
 
-            document.getElementById('supabaseLoginForm')?.addEventListener('submit', (formEvent) => {
-                formEvent.preventDefault();
-                this.loginAs('adventurer');
-            });
-        }
+      document
+        .getElementById("supabaseLoginForm")
+        ?.addEventListener("submit", (formEvent) => {
+          formEvent.preventDefault();
+          this.loginAs("adventurer");
+        });
+    }
 
-        openModal() {
-            const modalElement = document.getElementById('nauraAuthModal');
-            if (modalElement) modalElement.classList.add('open');
-        }
+    openModal() {
+      const modalElement = document.getElementById("nauraAuthModal");
+      if (modalElement) modalElement.classList.add("open");
+    }
 
-        closeModal() {
-            const modalElement = document.getElementById('nauraAuthModal');
-            if (modalElement) modalElement.classList.remove('open');
-        }
+    closeModal() {
+      const modalElement = document.getElementById("nauraAuthModal");
+      if (modalElement) modalElement.classList.remove("open");
+    }
 
-        openProfileMenu() {
-            const currentUser = this.getUser();
-            const existingMenu = document.getElementById('profileDropdownMenu');
-            if (existingMenu) {
-                existingMenu.remove();
-                return;
-            }
+    openProfileMenu() {
+      const currentUser = this.getUser();
+      const existingMenu = document.getElementById("profileDropdownMenu");
+      if (existingMenu) {
+        existingMenu.remove();
+        return;
+      }
 
-            const dropdownMenu = document.createElement('div');
-            dropdownMenu.id = 'profileDropdownMenu';
-            dropdownMenu.style.cssText = `
+      const dropdownMenu = document.createElement("div");
+      dropdownMenu.id = "profileDropdownMenu";
+      dropdownMenu.style.cssText = `
                 position: fixed;
                 top: 68px;
                 right: 24px;
@@ -606,7 +662,7 @@
                 gap: 12px;
             `;
 
-            dropdownMenu.innerHTML = `
+      dropdownMenu.innerHTML = `
                 <div style="display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border-subtle);padding-bottom:12px;">
                     <img src="${currentUser.avatar}" style="width:40px;height:40px;border-radius:50%;border:2px solid var(--accent-green);" />
                     <div>
@@ -616,11 +672,11 @@
                 </div>
                 <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between;">
                     <span>Dompet NC:</span>
-                    <b style="color:var(--accent-amber);">${Number(currentUser.nc).toLocaleString('id-ID')} NC</b>
+                    <b style="color:var(--accent-amber);">${Number(currentUser.nc).toLocaleString("id-ID")} NC</b>
                 </div>
                 <div style="font-size:12px;color:var(--text-secondary);display:flex;justify-content:space-between;">
                     <span>Survival NSF:</span>
-                    <b style="color:var(--accent-cyan);">${Number(currentUser.nsf).toLocaleString('id-ID')} NSF</b>
+                    <b style="color:var(--accent-cyan);">${Number(currentUser.nsf).toLocaleString("id-ID")} NSF</b>
                 </div>
                 <div style="display:flex;gap:8px;margin-top:6px;">
                     <button type="button" id="pmenuSwitchBtn" class="btn btn-ghost btn-sm" style="flex:1;font-size:11px;justify-content:center;">Ganti Akun</button>
@@ -628,41 +684,54 @@
                 </div>
             `;
 
-            document.body.appendChild(dropdownMenu);
+      document.body.appendChild(dropdownMenu);
 
-            document.getElementById('pmenuSwitchBtn')?.addEventListener('click', () => {
-                dropdownMenu.remove();
-                this.openModal();
-            });
+      document
+        .getElementById("pmenuSwitchBtn")
+        ?.addEventListener("click", () => {
+          dropdownMenu.remove();
+          this.openModal();
+        });
 
-            document.getElementById('pmenuLogoutBtn')?.addEventListener('click', () => {
-                dropdownMenu.remove();
-                this.logout();
-            });
+      document
+        .getElementById("pmenuLogoutBtn")
+        ?.addEventListener("click", () => {
+          dropdownMenu.remove();
+          this.logout();
+        });
 
-            const outsideClickListener = (clickEvent) => {
-                if (!dropdownMenu.contains(clickEvent.target) && clickEvent.target.id !== 'headerAuthBtn' && clickEvent.target.id !== 'headerAvatar') {
-                    dropdownMenu.remove();
-                    document.removeEventListener('click', outsideClickListener);
-                }
-            };
-            setTimeout(() => document.addEventListener('click', outsideClickListener), 100);
+      const outsideClickListener = (clickEvent) => {
+        if (
+          !dropdownMenu.contains(clickEvent.target) &&
+          clickEvent.target.id !== "headerAuthBtn" &&
+          clickEvent.target.id !== "headerAvatar"
+        ) {
+          dropdownMenu.remove();
+          document.removeEventListener("click", outsideClickListener);
         }
-
-        bindUI() {
-            document.querySelectorAll('#headerAuthBtn, #sidebarLoginBtn').forEach((buttonElement) => {
-                buttonElement.addEventListener('click', (clickEvent) => {
-                    clickEvent.preventDefault();
-                    if (this.isLoggedIn()) {
-                        this.openProfileMenu();
-                    } else {
-                        this.openModal();
-                    }
-                });
-            });
-        }
+      };
+      setTimeout(
+        () => document.addEventListener("click", outsideClickListener),
+        100,
+      );
     }
 
-    // Inisialisasi ke namespace global window
-    window.NauraAuth = new AuthManager();
+    bindUI() {
+      document
+        .querySelectorAll("#headerAuthBtn, #sidebarLoginBtn")
+        .forEach((buttonElement) => {
+          buttonElement.addEventListener("click", (clickEvent) => {
+            clickEvent.preventDefault();
+            if (this.isLoggedIn()) {
+              this.openProfileMenu();
+            } else {
+              this.openModal();
+            }
+          });
+        });
+    }
+  }
+
+  // Inisialisasi ke namespace global window
+  window.NauraAuth = new AuthManager();
 })();

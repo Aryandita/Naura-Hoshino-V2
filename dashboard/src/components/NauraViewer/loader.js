@@ -43,7 +43,10 @@ function createLoader(enableVrm = true) {
           }),
       );
     } catch (e) {
-      console.warn("[NauraViewer/loader] Gagal mendaftarkan VRMLoaderPlugin, fallback ke GLTF biasa:", e);
+      console.warn(
+        "[NauraViewer/loader] Gagal mendaftarkan VRMLoaderPlugin, fallback ke GLTF biasa:",
+        e,
+      );
     }
   }
 
@@ -65,7 +68,9 @@ async function fetchModelBuffer(url, onProgress) {
   const promise = (async () => {
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status} ${response.statusText} saat mengambil ${url}`);
+      throw new Error(
+        `HTTP ${response.status} ${response.statusText} saat mengambil ${url}`,
+      );
     }
 
     const contentLength = response.headers.get("content-length");
@@ -112,7 +117,10 @@ async function fetchModelBuffer(url, onProgress) {
  * @param {function(number): void} [onProgress] - Callback progress 0–100
  * @returns {Promise<{ scene: THREE.Group, vrm: import('@pixiv/three-vrm').VRM | null, animations: THREE.AnimationClip[], format: string }>}
  */
-export async function loadModel(modelPath = "/models/naura.glb", onProgress = null) {
+export async function loadModel(
+  modelPath = "/models/naura.glb",
+  onProgress = null,
+) {
   // Susun daftar kandidat URL fallback
   const isVrm = String(modelPath).toLowerCase().endsWith(".vrm");
   const candidates = [
@@ -120,9 +128,11 @@ export async function loadModel(modelPath = "/models/naura.glb", onProgress = nu
     "/models/naura.glb",
     "/models/naura.vrm",
     "/models/naura_pbr.glb",
-    isVrm ? modelPath.replace(/\.vrm$/i, ".glb") : modelPath.replace(/\.glb$/i, ".vrm"),
+    isVrm
+      ? modelPath.replace(/\.vrm$/i, ".glb")
+      : modelPath.replace(/\.glb$/i, ".vrm"),
     "/assets/3d/naura.glb",
-    "/assets/3d/Naura Hoshino 3D.glb"
+    "/assets/3d/Naura Hoshino 3D.glb",
   ];
 
   // Hapus duplikat
@@ -132,7 +142,9 @@ export async function loadModel(modelPath = "/models/naura.glb", onProgress = nu
 
   for (const candidateUrl of uniqueCandidates) {
     try {
-      console.info(`[NauraViewer/loader] Mencoba memuat model 3D: ${candidateUrl}`);
+      console.info(
+        `[NauraViewer/loader] Mencoba memuat model 3D: ${candidateUrl}`,
+      );
       const arrayBuffer = await fetchModelBuffer(candidateUrl, onProgress);
 
       // Coba parse dengan VRMLoaderPlugin terlebih dahulu
@@ -144,7 +156,10 @@ export async function loadModel(modelPath = "/models/naura.glb", onProgress = nu
           loaderWithVrm.parse(arrayBuffer, "", resolve, reject);
         });
       } catch (err) {
-        console.warn(`[NauraViewer/loader] Gagal parse dengan ekstensi VRM di ${candidateUrl}, mencoba parse GLTF murni:`, err.message);
+        console.warn(
+          `[NauraViewer/loader] Gagal parse dengan ekstensi VRM di ${candidateUrl}, mencoba parse GLTF murni:`,
+          err.message,
+        );
       }
 
       // Jika parsing VRM gagal, fallback ke GLTFLoader murni tanpa plugin VRM
@@ -179,7 +194,9 @@ export async function loadModel(modelPath = "/models/naura.glb", onProgress = nu
           }
         });
 
-        console.info(`✨ [NauraViewer/loader] Sukses memuat model 3D (${format.toUpperCase()}) dari ${candidateUrl}!`);
+        console.info(
+          `✨ [NauraViewer/loader] Sukses memuat model 3D (${format.toUpperCase()}) dari ${candidateUrl}!`,
+        );
         return {
           scene: gltf.scene,
           vrm,
@@ -189,9 +206,15 @@ export async function loadModel(modelPath = "/models/naura.glb", onProgress = nu
       }
     } catch (err) {
       lastError = err;
-      console.warn(`[NauraViewer/loader] Gagal memuat dari ${candidateUrl}:`, err.message);
+      console.warn(
+        `[NauraViewer/loader] Gagal memuat dari ${candidateUrl}:`,
+        err.message,
+      );
     }
   }
 
-  throw lastError || new Error(`Semua kandidat model 3D gagal dimuat (${modelPath})`);
+  throw (
+    lastError ||
+    new Error(`Semua kandidat model 3D gagal dimuat (${modelPath})`)
+  );
 }

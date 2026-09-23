@@ -6,8 +6,14 @@
     <title>Tactical Survival Radar | Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
       .survival-grid-layout {
@@ -51,18 +57,22 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: 
-          radial-gradient(circle at center, rgba(11, 21, 43, 0.35) 0%, rgba(5, 8, 19, 0.8) 85%),
-          url('/assets/maps/survival_radar_art.jpg') center / cover no-repeat;
+        background:
+          radial-gradient(
+            circle at center,
+            rgba(11, 21, 43, 0.35) 0%,
+            rgba(5, 8, 19, 0.8) 85%
+          ),
+          url("/assets/maps/survival_radar_art.jpg") center / cover no-repeat;
         overflow: hidden;
       }
 
       /* Grid Lines Background */
       .radar-scope-container::before {
-        content: '';
+        content: "";
         position: absolute;
         inset: 0;
-        background-image: 
+        background-image:
           linear-gradient(rgba(34, 211, 238, 0.07) 1px, transparent 1px),
           linear-gradient(90deg, rgba(34, 211, 238, 0.07) 1px, transparent 1px);
         background-size: 32px 32px;
@@ -82,7 +92,7 @@
         justify-content: center;
       }
       .radar-rings::before {
-        content: '';
+        content: "";
         position: absolute;
         width: 320px;
         height: 320px;
@@ -90,7 +100,7 @@
         border: 1px dashed rgba(34, 211, 238, 0.2);
       }
       .radar-rings::after {
-        content: '';
+        content: "";
         position: absolute;
         width: 180px;
         height: 180px;
@@ -120,13 +130,22 @@
         width: 460px;
         height: 460px;
         border-radius: 50%;
-        background: conic-gradient(from 0deg, rgba(34, 211, 238, 0.35) 0deg, rgba(34, 211, 238, 0) 65deg, transparent 70deg);
+        background: conic-gradient(
+          from 0deg,
+          rgba(34, 211, 238, 0.35) 0deg,
+          rgba(34, 211, 238, 0) 65deg,
+          transparent 70deg
+        );
         animation: radarRotate 5s linear infinite;
         pointer-events: none;
       }
       @keyframes radarRotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
       }
 
       /* Player Center Icon */
@@ -158,17 +177,44 @@
         justify-content: center;
         cursor: pointer;
         z-index: 6;
-        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+        transition:
+          transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+          box-shadow 0.2s ease;
       }
       .blip:hover {
         transform: translate(-50%, -50%) scale(1.35);
         z-index: 9;
       }
-      .blip-wood { background: rgba(16, 185, 129, 0.3); border: 1.5px solid #10b981; color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
-      .blip-ore  { background: rgba(34, 211, 238, 0.3); border: 1.5px solid #22d3ee; color: #22d3ee; box-shadow: 0 0 10px rgba(34, 211, 238, 0.5); }
-      .blip-water { background: rgba(59, 130, 246, 0.3); border: 1.5px solid #3b82f6; color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
-      .blip-beast { background: rgba(239, 68, 68, 0.3); border: 1.5px solid #ef4444; color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
-      .blip-chest { background: rgba(245, 158, 11, 0.3); border: 1.5px solid #f59e0b; color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.6); }
+      .blip-wood {
+        background: rgba(16, 185, 129, 0.3);
+        border: 1.5px solid #10b981;
+        color: #10b981;
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+      }
+      .blip-ore {
+        background: rgba(34, 211, 238, 0.3);
+        border: 1.5px solid #22d3ee;
+        color: #22d3ee;
+        box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+      }
+      .blip-water {
+        background: rgba(59, 130, 246, 0.3);
+        border: 1.5px solid #3b82f6;
+        color: #3b82f6;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+      }
+      .blip-beast {
+        background: rgba(239, 68, 68, 0.3);
+        border: 1.5px solid #ef4444;
+        color: #ef4444;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+      }
+      .blip-chest {
+        background: rgba(245, 158, 11, 0.3);
+        border: 1.5px solid #f59e0b;
+        color: #f59e0b;
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+      }
 
       .blip-tooltip {
         position: absolute;
@@ -262,8 +308,16 @@
         animation: sonarExpand 1.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
       }
       @keyframes sonarExpand {
-        0% { width: 10px; height: 10px; opacity: 1; }
-        100% { width: 650px; height: 650px; opacity: 0; }
+        0% {
+          width: 10px;
+          height: 10px;
+          opacity: 1;
+        }
+        100% {
+          width: 650px;
+          height: 650px;
+          opacity: 0;
+        }
       }
 
       /* Region Navigation Tabs */
@@ -330,31 +384,43 @@
     </style>
   </head>
   <body>
-    
-
     <div class="app-shell">
       <!-- Mobile Sidebar Overlay -->
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
-      <aside class="sidebar " id="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
+          <div class="sidebar-logo-icon">
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="
+                this.style.display = 'none';
+                this.parentElement.innerHTML = '🌸';
+              "
+            />
+          </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
             <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+          <button
+            class="sidebar-close-btn"
+            id="sidebarCloseBtn"
+            aria-label="Tutup menu"
+          >
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
+        <!-- Navigation -->
+        <!-- Navigation -->
         <nav class="sidebar-nav" role="navigation">
-
           <!-- Overview -->
           <div class="nav-group">
             <div class="nav-group-label">Overview</div>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-gauge-high"></i
+              ></span>
               <span>Dashboard</span>
             </a>
             <a href="/status" class="nav-item">
@@ -380,7 +446,9 @@
               <span>Economy</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-network-wired"></i
+              ></span>
               <span>Guild Topology</span>
             </a>
           </div>
@@ -401,7 +469,9 @@
               <span>Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-microphone"></i
+              ></span>
               <span>Karaoke</span>
             </a>
           </div>
@@ -410,7 +480,9 @@
           <div class="nav-group">
             <div class="nav-group-label">Naura Wilds RPG</div>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-earth-asia"></i
+              ></span>
               <span>World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
@@ -435,7 +507,9 @@
               <span>Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-wand-magic-sparkles"></i
+              ></span>
               <span>Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
@@ -452,16 +526,28 @@
           <div class="nav-group">
             <div class="nav-group-label">More</div>
             <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+              <span class="nav-icon" style="color: var(--accent-green)"
+                ><i class="fa-solid fa-id-badge"></i
+              ></span>
+              <span style="color: var(--accent-green)">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
         <div class="sidebar-footer">
-          <div class="sidebar-user" onclick="window.location.href='/'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
-            <div class="sidebar-user-info"><div class="sidebar-user-name">Guest Explorer</div><div class="sidebar-user-role">Sektor 07-B Radar</div></div>
+          <div class="sidebar-user" onclick="window.location.href = '/'">
+            <img
+              src="/assets/core/avatar.png"
+              alt="User"
+              class="sidebar-user-avatar"
+              onerror="
+                this.src =
+                  'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'
+              "
+            />
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name">Guest Explorer</div>
+              <div class="sidebar-user-role">Sektor 07-B Radar</div>
+            </div>
           </div>
         </div>
       </aside>
@@ -469,15 +555,24 @@
       <div class="main-content">
         <header class="top-header">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <button class="hamburger-btn" id="hamburgerBtn">
+              <i class="fa-solid fa-bars"></i>
+            </button>
             <div>
               <div class="page-title">Tactical Survival Radar</div>
-              <div class="breadcrumb"><span>Naura Wilds RPG</span><span class="breadcrumb-sep">/</span><span>Territory Grid</span></div>
+              <div class="breadcrumb">
+                <span>Naura Wilds RPG</span><span class="breadcrumb-sep">/</span
+                ><span>Territory Grid</span>
+              </div>
             </div>
           </div>
           <div class="header-right">
             <div class="badge badge-success" id="radarStatusBadge">
-              <i class="fa-solid fa-radar fa-spin" style="--fa-animation-duration: 4s;"></i> SONAR ACTIVE
+              <i
+                class="fa-solid fa-radar fa-spin"
+                style="--fa-animation-duration: 4s"
+              ></i>
+              SONAR ACTIVE
             </div>
           </div>
         </header>
@@ -486,36 +581,97 @@
           <div class="page-header-bar animate-in">
             <div>
               <h1 class="page-heading">
-                <span class="page-heading-icon" style="background:rgba(16, 185, 129, 0.15);border:1px solid rgba(16, 185, 129, 0.3);">
-                  <i class="fa-solid fa-crosshairs" style="color:#10b981;"></i>
+                <span
+                  class="page-heading-icon"
+                  style="
+                    background: rgba(16, 185, 129, 0.15);
+                    border: 1px solid rgba(16, 185, 129, 0.3);
+                  "
+                >
+                  <i class="fa-solid fa-crosshairs" style="color: #10b981"></i>
                 </span>
                 Tactical Territory Radar (Naura Wilds)
               </h1>
-              <p class="page-sub">Pantau titik sumber daya hutan, pergerakan hewan buas, pemukiman warga, dan distrik 4 wilayah dunia.</p>
+              <p class="page-sub">
+                Pantau titik sumber daya hutan, pergerakan hewan buas, pemukiman
+                warga, dan distrik 4 wilayah dunia.
+              </p>
             </div>
           </div>
 
           <!-- Region Navigation Tabs -->
           <div class="region-tabs-bar animate-in delay-1">
-            <button class="region-tab active" data-region="desa_sukamaju" id="tabSukamaju">
-              <i class="fa-solid fa-tree" style="color:#10b981;"></i>
+            <button
+              class="region-tab active"
+              data-region="desa_sukamaju"
+              id="tabSukamaju"
+            >
+              <i class="fa-solid fa-tree" style="color: #10b981"></i>
               <span>Desa Sukamaju</span>
-              <span class="badge" style="background:rgba(16, 185, 129, 0.2);color:#10b981;font-size:10px;padding:2px 6px;">Mata Uang: NSF</span>
+              <span
+                class="badge"
+                style="
+                  background: rgba(16, 185, 129, 0.2);
+                  color: #10b981;
+                  font-size: 10px;
+                  padding: 2px 6px;
+                "
+                >Mata Uang: NSF</span
+              >
             </button>
-            <button class="region-tab" data-region="kota_pratama" id="tabPratama">
-              <i class="fa-solid fa-city" style="color:#3b82f6;"></i>
+            <button
+              class="region-tab"
+              data-region="kota_pratama"
+              id="tabPratama"
+            >
+              <i class="fa-solid fa-city" style="color: #3b82f6"></i>
               <span>Kota Pratama</span>
-              <span class="badge" style="background:rgba(59, 130, 246, 0.2);color:#3b82f6;font-size:10px;padding:2px 6px;">Mata Uang: NC</span>
+              <span
+                class="badge"
+                style="
+                  background: rgba(59, 130, 246, 0.2);
+                  color: #3b82f6;
+                  font-size: 10px;
+                  padding: 2px 6px;
+                "
+                >Mata Uang: NC</span
+              >
             </button>
-            <button class="region-tab" data-region="desa_khulkhas" id="tabKhulkhas">
-              <i class="fa-solid fa-snowflake" style="color:#38bdf8;"></i>
+            <button
+              class="region-tab"
+              data-region="desa_khulkhas"
+              id="tabKhulkhas"
+            >
+              <i class="fa-solid fa-snowflake" style="color: #38bdf8"></i>
               <span>Desa Khul'Khas</span>
-              <span class="badge" style="background:rgba(56, 189, 248, 0.2);color:#38bdf8;font-size:10px;padding:2px 6px;">Wilayah Salju</span>
+              <span
+                class="badge"
+                style="
+                  background: rgba(56, 189, 248, 0.2);
+                  color: #38bdf8;
+                  font-size: 10px;
+                  padding: 2px 6px;
+                "
+                >Wilayah Salju</span
+              >
             </button>
-            <button class="region-tab" data-region="istana_draken" id="tabDraken">
-              <i class="fa-solid fa-dungeon" style="color:#ef4444;"></i>
+            <button
+              class="region-tab"
+              data-region="istana_draken"
+              id="tabDraken"
+            >
+              <i class="fa-solid fa-dungeon" style="color: #ef4444"></i>
               <span>Istana Draken</span>
-              <span class="badge" style="background:rgba(239, 68, 68, 0.2);color:#ef4444;font-size:10px;padding:2px 6px;">Dungeon Lv.50+</span>
+              <span
+                class="badge"
+                style="
+                  background: rgba(239, 68, 68, 0.2);
+                  color: #ef4444;
+                  font-size: 10px;
+                  padding: 2px 6px;
+                "
+                >Dungeon Lv.50+</span
+              >
             </button>
           </div>
 
@@ -523,16 +679,52 @@
             <!-- Left: Radar Display -->
             <div class="radar-card animate-in delay-1">
               <div class="radar-header">
-                <div style="display:flex;align-items:center;gap:10px;">
-                  <span style="color:#22d3ee;font-family:var(--font-mono);font-size:13px;font-weight:700;">
-                    <i class="fa-solid fa-satellite-dish"></i> GRID SEKTOR: 07-B [LEMBAH PINUS MISTIS]
+                <div style="display: flex; align-items: center; gap: 10px">
+                  <span
+                    style="
+                      color: #22d3ee;
+                      font-family: var(--font-mono);
+                      font-size: 13px;
+                      font-weight: 700;
+                    "
+                  >
+                    <i class="fa-solid fa-satellite-dish"></i> GRID SEKTOR: 07-B
+                    [LEMBAH PINUS MISTIS]
                   </span>
                 </div>
-                <div style="display:flex;gap:8px;">
-                  <button class="btn btn-ghost btn-sm" id="btnFilterWood" title="Filter Kayu" style="color:#10b981;"><i class="fa-solid fa-tree"></i></button>
-                  <button class="btn btn-ghost btn-sm" id="btnFilterOre" title="Filter Tambang" style="color:#22d3ee;"><i class="fa-solid fa-gem"></i></button>
-                  <button class="btn btn-ghost btn-sm" id="btnFilterWater" title="Filter Air" style="color:#3b82f6;"><i class="fa-solid fa-droplet"></i></button>
-                  <button class="btn btn-ghost btn-sm" id="btnFilterBeast" title="Filter Hewan Buas" style="color:#ef4444;"><i class="fa-solid fa-paw"></i></button>
+                <div style="display: flex; gap: 8px">
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    id="btnFilterWood"
+                    title="Filter Kayu"
+                    style="color: #10b981"
+                  >
+                    <i class="fa-solid fa-tree"></i>
+                  </button>
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    id="btnFilterOre"
+                    title="Filter Tambang"
+                    style="color: #22d3ee"
+                  >
+                    <i class="fa-solid fa-gem"></i>
+                  </button>
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    id="btnFilterWater"
+                    title="Filter Air"
+                    style="color: #3b82f6"
+                  >
+                    <i class="fa-solid fa-droplet"></i>
+                  </button>
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    id="btnFilterBeast"
+                    title="Filter Hewan Buas"
+                    style="color: #ef4444"
+                  >
+                    <i class="fa-solid fa-paw"></i>
+                  </button>
                 </div>
               </div>
 
@@ -545,166 +737,587 @@
                 <!-- Conic Sweep -->
                 <div class="radar-sweep"></div>
                 <!-- Player Icon -->
-                <div class="radar-player-center" title="Posisi Kamu"><i class="fa-solid fa-person-hiking"></i></div>
+                <div class="radar-player-center" title="Posisi Kamu">
+                  <i class="fa-solid fa-person-hiking"></i>
+                </div>
 
                 <!-- Detected Blips -->
-                <div class="blip blip-wood" style="top: 28%; left: 34%;" data-type="wood" data-name="Pohon Pinus Tua (x12 Kayu)" data-dist="42m">
-                  <i class="fa-solid fa-tree" style="font-size: 11px;"></i>
-                  <div class="blip-tooltip">Pohon Pinus Tua · 42m Barat Laut</div>
+                <div
+                  class="blip blip-wood"
+                  style="top: 28%; left: 34%"
+                  data-type="wood"
+                  data-name="Pohon Pinus Tua (x12 Kayu)"
+                  data-dist="42m"
+                >
+                  <i class="fa-solid fa-tree" style="font-size: 11px"></i>
+                  <div class="blip-tooltip">
+                    Pohon Pinus Tua · 42m Barat Laut
+                  </div>
                 </div>
 
-                <div class="blip blip-wood" style="top: 22%; left: 45%;" data-type="wood" data-name="Kayu Kering Bergetah" data-dist="78m">
-                  <i class="fa-solid fa-tree" style="font-size: 11px;"></i>
-                  <div class="blip-tooltip">Kayu Kering Bergetah · 78m Utara</div>
+                <div
+                  class="blip blip-wood"
+                  style="top: 22%; left: 45%"
+                  data-type="wood"
+                  data-name="Kayu Kering Bergetah"
+                  data-dist="78m"
+                >
+                  <i class="fa-solid fa-tree" style="font-size: 11px"></i>
+                  <div class="blip-tooltip">
+                    Kayu Kering Bergetah · 78m Utara
+                  </div>
                 </div>
 
-                <div class="blip blip-ore" style="top: 66%; left: 70%;" data-type="ore" data-name="Urat Besi Murni (Lv. 2 Mining)" data-dist="60m">
-                  <i class="fa-solid fa-gem" style="font-size: 11px;"></i>
+                <div
+                  class="blip blip-ore"
+                  style="top: 66%; left: 70%"
+                  data-type="ore"
+                  data-name="Urat Besi Murni (Lv. 2 Mining)"
+                  data-dist="60m"
+                >
+                  <i class="fa-solid fa-gem" style="font-size: 11px"></i>
                   <div class="blip-tooltip">Urat Besi Murni · 60m Tenggara</div>
                 </div>
 
-                <div class="blip blip-ore" style="top: 78%; left: 60%;" data-type="ore" data-name="Kristal Aether Pecahan" data-dist="85m">
-                  <i class="fa-solid fa-gem" style="font-size: 11px;"></i>
-                  <div class="blip-tooltip">Kristal Aether Pecahan · 85m Selatan</div>
+                <div
+                  class="blip blip-ore"
+                  style="top: 78%; left: 60%"
+                  data-type="ore"
+                  data-name="Kristal Aether Pecahan"
+                  data-dist="85m"
+                >
+                  <i class="fa-solid fa-gem" style="font-size: 11px"></i>
+                  <div class="blip-tooltip">
+                    Kristal Aether Pecahan · 85m Selatan
+                  </div>
                 </div>
 
-                <div class="blip blip-water" style="top: 36%; left: 74%;" data-type="water" data-name="Mata Air Pegunungan (Air Segar)" data-dist="68m">
-                  <i class="fa-solid fa-droplet" style="font-size: 11px;"></i>
-                  <div class="blip-tooltip">Mata Air Pegunungan · 68m Timur Laut</div>
+                <div
+                  class="blip blip-water"
+                  style="top: 36%; left: 74%"
+                  data-type="water"
+                  data-name="Mata Air Pegunungan (Air Segar)"
+                  data-dist="68m"
+                >
+                  <i class="fa-solid fa-droplet" style="font-size: 11px"></i>
+                  <div class="blip-tooltip">
+                    Mata Air Pegunungan · 68m Timur Laut
+                  </div>
                 </div>
 
-                <div class="blip blip-beast" style="top: 50%; left: 24%;" data-type="beast" data-name="Babi Hutan Aether (Lv. 8 - Agresif)" data-dist="92m">
-                  <i class="fa-solid fa-paw" style="font-size: 11px;"></i>
-                  <div class="blip-tooltip">⚠️ Babi Hutan Aether (Lv. 8) · 92m Barat</div>
+                <div
+                  class="blip blip-beast"
+                  style="top: 50%; left: 24%"
+                  data-type="beast"
+                  data-name="Babi Hutan Aether (Lv. 8 - Agresif)"
+                  data-dist="92m"
+                >
+                  <i class="fa-solid fa-paw" style="font-size: 11px"></i>
+                  <div class="blip-tooltip">
+                    ⚠️ Babi Hutan Aether (Lv. 8) · 92m Barat
+                  </div>
                 </div>
 
-                <div class="blip blip-chest" style="top: 40%; left: 54%;" data-type="chest" data-name="Peti Perunggu Kuno" data-dist="35m">
-                  <i class="fa-solid fa-box" style="font-size: 11px;"></i>
-                  <div class="blip-tooltip">🎁 Peti Perunggu Kuno · 35m Timur Laut</div>
+                <div
+                  class="blip blip-chest"
+                  style="top: 40%; left: 54%"
+                  data-type="chest"
+                  data-name="Peti Perunggu Kuno"
+                  data-dist="35m"
+                >
+                  <i class="fa-solid fa-box" style="font-size: 11px"></i>
+                  <div class="blip-tooltip">
+                    🎁 Peti Perunggu Kuno · 35m Timur Laut
+                  </div>
                 </div>
               </div>
 
-              <div style="padding: 14px 20px; background: rgba(8, 13, 26, 0.85); border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-                <span style="color:var(--text-muted);font-family:var(--font-mono);">Jarak Pindai: Radius 120 Meter</span>
-                <span style="color:var(--accent-cyan);font-family:var(--font-mono);font-weight:600;" id="scanFoundText">7 Objek Terdeteksi di Sekitar</span>
+              <div
+                style="
+                  padding: 14px 20px;
+                  background: rgba(8, 13, 26, 0.85);
+                  border-top: 1px solid var(--border-subtle);
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  font-size: 12px;
+                "
+              >
+                <span
+                  style="
+                    color: var(--text-muted);
+                    font-family: var(--font-mono);
+                  "
+                  >Jarak Pindai: Radius 120 Meter</span
+                >
+                <span
+                  style="
+                    color: var(--accent-cyan);
+                    font-family: var(--font-mono);
+                    font-weight: 600;
+                  "
+                  id="scanFoundText"
+                  >7 Objek Terdeteksi di Sekitar</span
+                >
               </div>
             </div>
 
             <!-- Right: Vitals & Base Outpost Controls -->
             <div class="animate-in delay-2">
               <!-- Active Main Campaign Objective Card -->
-              <div class="card card-p" style="margin-bottom: 20px; border-left: 3px solid #22d3ee; background: radial-gradient(circle at top left, rgba(34, 211, 238, 0.08), transparent 75%);">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                  <div style="font-size:11px;color:var(--accent-cyan);font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">
+              <div
+                class="card card-p"
+                style="
+                  margin-bottom: 20px;
+                  border-left: 3px solid #22d3ee;
+                  background: radial-gradient(
+                    circle at top left,
+                    rgba(34, 211, 238, 0.08),
+                    transparent 75%
+                  );
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 8px;
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 11px;
+                      color: var(--accent-cyan);
+                      font-weight: 700;
+                      letter-spacing: 0.5px;
+                      text-transform: uppercase;
+                    "
+                  >
                     <i class="fa-solid fa-compass"></i> MAIN CAMPAIGN OBJECTIVE
                   </div>
-                  <span class="badge" id="campaignObjectiveBadge" style="background:rgba(34, 211, 238, 0.15);color:#22d3ee;border:1px solid rgba(34, 211, 238, 0.3);font-size:10px;">AKTIF</span>
+                  <span
+                    class="badge"
+                    id="campaignObjectiveBadge"
+                    style="
+                      background: rgba(34, 211, 238, 0.15);
+                      color: #22d3ee;
+                      border: 1px solid rgba(34, 211, 238, 0.3);
+                      font-size: 10px;
+                    "
+                    >AKTIF</span
+                  >
                 </div>
-                <div style="font-family:var(--font-heading);font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px;" id="campaignObjectiveTitle">
+                <div
+                  style="
+                    font-family: var(--font-heading);
+                    font-size: 15px;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                    margin-bottom: 6px;
+                  "
+                  id="campaignObjectiveTitle"
+                >
                   Bab 1: Awal Kedatangan di Sukamaju
                 </div>
-                <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:12px;" id="campaignObjectiveDesc">
-                  Kunjungi Balai Desa dan temui Kepala Desa Tirto untuk mendapatkan bimbingan awal bertahan hidup di alam liar.
+                <div
+                  style="
+                    font-size: 12px;
+                    color: var(--text-secondary);
+                    line-height: 1.5;
+                    margin-bottom: 12px;
+                  "
+                  id="campaignObjectiveDesc"
+                >
+                  Kunjungi Balai Desa dan temui Kepala Desa Tirto untuk
+                  mendapatkan bimbingan awal bertahan hidup di alam liar.
                 </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-muted);border-top:1px solid var(--border-subtle);padding-top:8px;">
-                  <span id="campaignObjectiveLoc"><i class="fa-solid fa-location-dot" style="color:#10b981;"></i> Desa Sukamaju</span>
-                  <span style="font-family:var(--font-mono);color:var(--accent-cyan);" id="campaignObjectiveReward">Reward: 500 NSF + EXP</span>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-size: 11px;
+                    color: var(--text-muted);
+                    border-top: 1px solid var(--border-subtle);
+                    padding-top: 8px;
+                  "
+                >
+                  <span id="campaignObjectiveLoc"
+                    ><i
+                      class="fa-solid fa-location-dot"
+                      style="color: #10b981"
+                    ></i>
+                    Desa Sukamaju</span
+                  >
+                  <span
+                    style="
+                      font-family: var(--font-mono);
+                      color: var(--accent-cyan);
+                    "
+                    id="campaignObjectiveReward"
+                    >Reward: 500 NSF + EXP</span
+                  >
                 </div>
               </div>
 
               <!-- Vitals Standard Card (RULES.md Compliant) -->
               <div class="vitals-box">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                  <div style="font-family:var(--font-heading);font-size:16px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
-                    <i class="fa-solid fa-heart-pulse" style="color:#ef4444;"></i> Vitalitas Petualang
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 16px;
+                  "
+                >
+                  <div
+                    style="
+                      font-family: var(--font-heading);
+                      font-size: 16px;
+                      font-weight: 700;
+                      color: var(--text-primary);
+                      display: flex;
+                      align-items: center;
+                      gap: 8px;
+                    "
+                  >
+                    <i
+                      class="fa-solid fa-heart-pulse"
+                      style="color: #ef4444"
+                    ></i>
+                    Vitalitas Petualang
                   </div>
-                  <span class="badge badge-success" style="font-size:10px;">PRIMA</span>
+                  <span class="badge badge-success" style="font-size: 10px"
+                    >PRIMA</span
+                  >
                 </div>
 
                 <!-- HP Bar -->
                 <div class="vital-row">
                   <div class="vital-meta">
-                    <span style="color:var(--text-secondary);"><i class="fa-solid fa-heart" style="color:#ef4444;"></i> Kesehatan (HP)</span>
-                    <span style="font-family:var(--font-mono);color:#fff;font-weight:600;">480 / 500</span>
+                    <span style="color: var(--text-secondary)"
+                      ><i class="fa-solid fa-heart" style="color: #ef4444"></i>
+                      Kesehatan (HP)</span
+                    >
+                    <span
+                      style="
+                        font-family: var(--font-mono);
+                        color: #fff;
+                        font-weight: 600;
+                      "
+                      >480 / 500</span
+                    >
                   </div>
-                  <div class="vital-bar"><div class="vital-fill" style="width: 96%; background: #10b981;"></div></div>
+                  <div class="vital-bar">
+                    <div
+                      class="vital-fill"
+                      style="width: 96%; background: #10b981"
+                    ></div>
+                  </div>
                 </div>
 
                 <!-- Stamina Bar -->
                 <div class="vital-row">
                   <div class="vital-meta">
-                    <span style="color:var(--text-secondary);"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Stamina Energi</span>
-                    <span style="font-family:var(--font-mono);color:#fff;font-weight:600;">85 / 100</span>
+                    <span style="color: var(--text-secondary)"
+                      ><i class="fa-solid fa-bolt" style="color: #f59e0b"></i>
+                      Stamina Energi</span
+                    >
+                    <span
+                      style="
+                        font-family: var(--font-mono);
+                        color: #fff;
+                        font-weight: 600;
+                      "
+                      >85 / 100</span
+                    >
                   </div>
-                  <div class="vital-bar"><div class="vital-fill" style="width: 85%; background: #f59e0b;"></div></div>
+                  <div class="vital-bar">
+                    <div
+                      class="vital-fill"
+                      style="width: 85%; background: #f59e0b"
+                    ></div>
+                  </div>
                 </div>
 
                 <!-- Hunger Bar -->
                 <div class="vital-row">
                   <div class="vital-meta">
-                    <span style="color:var(--text-secondary);"><i class="fa-solid fa-drumstick-bite" style="color:#f472b6;"></i> Kenyang (Lapar)</span>
-                    <span style="font-family:var(--font-mono);color:#fff;font-weight:600;">72 / 100</span>
+                    <span style="color: var(--text-secondary)"
+                      ><i
+                        class="fa-solid fa-drumstick-bite"
+                        style="color: #f472b6"
+                      ></i>
+                      Kenyang (Lapar)</span
+                    >
+                    <span
+                      style="
+                        font-family: var(--font-mono);
+                        color: #fff;
+                        font-weight: 600;
+                      "
+                      >72 / 100</span
+                    >
                   </div>
-                  <div class="vital-bar"><div class="vital-fill" style="width: 72%; background: #34d399;"></div></div>
+                  <div class="vital-bar">
+                    <div
+                      class="vital-fill"
+                      style="width: 72%; background: #34d399"
+                    ></div>
+                  </div>
                 </div>
 
                 <!-- Thirst Bar -->
                 <div class="vital-row">
                   <div class="vital-meta">
-                    <span style="color:var(--text-secondary);"><i class="fa-solid fa-glass-water" style="color:#3b82f6;"></i> Hidrasi (Haus)</span>
-                    <span style="font-family:var(--font-mono);color:#fff;font-weight:600;">64 / 100</span>
+                    <span style="color: var(--text-secondary)"
+                      ><i
+                        class="fa-solid fa-glass-water"
+                        style="color: #3b82f6"
+                      ></i>
+                      Hidrasi (Haus)</span
+                    >
+                    <span
+                      style="
+                        font-family: var(--font-mono);
+                        color: #fff;
+                        font-weight: 600;
+                      "
+                      >64 / 100</span
+                    >
                   </div>
-                  <div class="vital-bar"><div class="vital-fill" style="width: 64%; background: #3b82f6;"></div></div>
+                  <div class="vital-bar">
+                    <div
+                      class="vital-fill"
+                      style="width: 64%; background: #3b82f6"
+                    ></div>
+                  </div>
                 </div>
 
                 <!-- Tool Durability -->
-                <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border-subtle);display:flex;justify-content:space-between;font-size:12px;">
-                  <span style="color:var(--text-muted);"><i class="fa-solid fa-hammer"></i> Kapak Besi: <b style="color:#10b981;">82%</b></span>
-                  <span style="color:var(--text-muted);"><i class="fa-solid fa-pickaxe"></i> Beliung Baja: <b style="color:#f59e0b;">54%</b></span>
+                <div
+                  style="
+                    margin-top: 16px;
+                    padding-top: 14px;
+                    border-top: 1px solid var(--border-subtle);
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 12px;
+                  "
+                >
+                  <span style="color: var(--text-muted)"
+                    ><i class="fa-solid fa-hammer"></i> Kapak Besi:
+                    <b style="color: #10b981">82%</b></span
+                  >
+                  <span style="color: var(--text-muted)"
+                    ><i class="fa-solid fa-pickaxe"></i> Beliung Baja:
+                    <b style="color: #f59e0b">54%</b></span
+                  >
                 </div>
               </div>
 
               <!-- Outpost / Base Status -->
-              <div class="card card-p" style="margin-bottom:20px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-                  <div style="font-family:var(--font-heading);font-size:15px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
-                    <i class="fa-solid fa-campground" style="color:#a78bfa;"></i> Outpost Pos Aju Sektor 7
+              <div class="card card-p" style="margin-bottom: 20px">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 14px;
+                  "
+                >
+                  <div
+                    style="
+                      font-family: var(--font-heading);
+                      font-size: 15px;
+                      font-weight: 700;
+                      color: var(--text-primary);
+                      display: flex;
+                      align-items: center;
+                      gap: 8px;
+                    "
+                  >
+                    <i
+                      class="fa-solid fa-campground"
+                      style="color: #a78bfa"
+                    ></i>
+                    Outpost Pos Aju Sektor 7
                   </div>
-                  <span class="badge" style="background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3);font-size:10px;">TIER 2</span>
+                  <span
+                    class="badge"
+                    style="
+                      background: rgba(167, 139, 250, 0.15);
+                      color: #a78bfa;
+                      border: 1px solid rgba(167, 139, 250, 0.3);
+                      font-size: 10px;
+                    "
+                    >TIER 2</span
+                  >
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-                  <div style="background:rgba(255,255,255,0.03);padding:10px;border-radius:var(--r-md);border:1px solid var(--border-subtle);">
-                    <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Shield Generator</div>
-                    <div style="font-family:var(--font-mono);font-weight:600;font-size:13px;color:#34d399;">100% AKTIF</div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 10px;
+                    margin-bottom: 14px;
+                  "
+                >
+                  <div
+                    style="
+                      background: rgba(255, 255, 255, 0.03);
+                      padding: 10px;
+                      border-radius: var(--r-md);
+                      border: 1px solid var(--border-subtle);
+                    "
+                  >
+                    <div
+                      style="
+                        font-size: 10px;
+                        color: var(--text-muted);
+                        text-transform: uppercase;
+                      "
+                    >
+                      Shield Generator
+                    </div>
+                    <div
+                      style="
+                        font-family: var(--font-mono);
+                        font-weight: 600;
+                        font-size: 13px;
+                        color: #34d399;
+                      "
+                    >
+                      100% AKTIF
+                    </div>
                   </div>
-                  <div style="background:rgba(255,255,255,0.03);padding:10px;border-radius:var(--r-md);border:1px solid var(--border-subtle);">
-                    <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;">Daur Ulang Pool</div>
-                    <div style="font-family:var(--font-mono);font-weight:600;font-size:13px;color:var(--accent-amber);">3,200 NSF</div>
+                  <div
+                    style="
+                      background: rgba(255, 255, 255, 0.03);
+                      padding: 10px;
+                      border-radius: var(--r-md);
+                      border: 1px solid var(--border-subtle);
+                    "
+                  >
+                    <div
+                      style="
+                        font-size: 10px;
+                        color: var(--text-muted);
+                        text-transform: uppercase;
+                      "
+                    >
+                      Daur Ulang Pool
+                    </div>
+                    <div
+                      style="
+                        font-family: var(--font-mono);
+                        font-weight: 600;
+                        font-size: 13px;
+                        color: var(--accent-amber);
+                      "
+                    >
+                      3,200 NSF
+                    </div>
                   </div>
                 </div>
 
-                <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-bottom:14px;">
-                  Pos ini memberikan tempat perlindungan aman, tungku peleburan otomatis, dan kotak inventori bersama.
+                <div
+                  style="
+                    font-size: 12px;
+                    color: var(--text-secondary);
+                    line-height: 1.6;
+                    margin-bottom: 14px;
+                  "
+                >
+                  Pos ini memberikan tempat perlindungan aman, tungku peleburan
+                  otomatis, dan kotak inventori bersama.
                 </div>
 
                 <button class="scan-btn" id="btnDeployScan">
-                  <i class="fa-solid fa-satellite"></i> <span>Kirim Ping Sonar Scan</span>
+                  <i class="fa-solid fa-satellite"></i>
+                  <span>Kirim Ping Sonar Scan</span>
                 </button>
               </div>
 
               <!-- Selected Blip Intel Card -->
-              <div class="card card-p" id="blipDetailCard" style="display:none;background:radial-gradient(circle at top right, rgba(34,211,238,0.1), transparent 70%);">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                  <div style="font-size:11px;color:var(--accent-cyan);text-transform:uppercase;font-weight:600;" id="blipDetailSub">TARGET TERKUNCI</div>
-                  <span class="badge badge-info" id="blipDetailBadge" style="font-size:10px;">LOKASI POI</span>
+              <div
+                class="card card-p"
+                id="blipDetailCard"
+                style="
+                  display: none;
+                  background: radial-gradient(
+                    circle at top right,
+                    rgba(34, 211, 238, 0.1),
+                    transparent 70%
+                  );
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 4px;
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 11px;
+                      color: var(--accent-cyan);
+                      text-transform: uppercase;
+                      font-weight: 600;
+                    "
+                    id="blipDetailSub"
+                  >
+                    TARGET TERKUNCI
+                  </div>
+                  <span
+                    class="badge badge-info"
+                    id="blipDetailBadge"
+                    style="font-size: 10px"
+                    >LOKASI POI</span
+                  >
                 </div>
-                <div style="font-family:var(--font-heading);font-size:16px;font-weight:700;color:var(--text-primary);margin-bottom:6px;" id="blipDetailTitle">Pohon Pinus Tua</div>
-                <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;" id="blipDetailDist">Jarak: 42m Barat Laut · Estimasi Waktu Berjalan: 12 Detik</div>
-                <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:10px;" id="blipDetailDesc"></div>
-                <div id="blipResidentNpcs" style="margin-bottom:12px;"></div>
-                <button class="btn btn-primary btn-sm" id="btnNavigateBlip" style="width:100%;">
-                  <i class="fa-solid fa-person-running"></i> Kunjungi Lokasi (/survival town)
+                <div
+                  style="
+                    font-family: var(--font-heading);
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                    margin-bottom: 6px;
+                  "
+                  id="blipDetailTitle"
+                >
+                  Pohon Pinus Tua
+                </div>
+                <div
+                  style="
+                    font-size: 12px;
+                    color: var(--text-muted);
+                    margin-bottom: 8px;
+                  "
+                  id="blipDetailDist"
+                >
+                  Jarak: 42m Barat Laut · Estimasi Waktu Berjalan: 12 Detik
+                </div>
+                <div
+                  style="
+                    font-size: 12px;
+                    color: var(--text-secondary);
+                    line-height: 1.5;
+                    margin-bottom: 10px;
+                  "
+                  id="blipDetailDesc"
+                ></div>
+                <div id="blipResidentNpcs" style="margin-bottom: 12px"></div>
+                <button
+                  class="btn btn-primary btn-sm"
+                  id="btnNavigateBlip"
+                  style="width: 100%"
+                >
+                  <i class="fa-solid fa-person-running"></i> Kunjungi Lokasi
+                  (/survival town)
                 </button>
               </div>
             </div>
@@ -715,26 +1328,45 @@
 
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"
+          ><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span
+          ><span class="mn-label">Dashboard</span></a
+        >
+        <a href="/world" class="mobile-nav-item" data-group="map"
+          ><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span
+          ><span class="mn-label">Map</span></a
+        >
+        <a href="/automations" class="mobile-nav-item" data-group="config"
+          ><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span
+          ><span class="mn-label">Config</span></a
+        >
+        <a href="/music" class="mobile-nav-item" data-group="system"
+          ><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span
+          ><span class="mn-label">System</span></a
+        >
+        <a href="/settings" class="mobile-nav-item" data-group="settings"
+          ><span class="mn-icon"><i class="fa-solid fa-gears"></i></span
+          ><span class="mn-label">Settings</span></a
+        >
       </div>
     </nav>
 
     <script src="/src/js/sharedNav.js"></script>
     <script>
       let audioCtx = null;
-      function playTone(freq, type = 'sine', duration = 0.12, vol = 0.2) {
+      function playTone(freq, type = "sine", duration = 0.12, vol = 0.2) {
         try {
-          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (!audioCtx)
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = type;
           osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
           gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+          gain.gain.exponentialRampToValueAtTime(
+            0.0001,
+            audioCtx.currentTime + duration,
+          );
           osc.connect(gain);
           gain.connect(audioCtx.destination);
           osc.start();
@@ -743,11 +1375,12 @@
       }
 
       function playSonarPing() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (!audioCtx)
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = 'sine';
+        osc.type = "sine";
         osc.frequency.setValueAtTime(880, now);
         osc.frequency.exponentialRampToValueAtTime(440, now + 0.6);
         gain.gain.setValueAtTime(0.35, now);
@@ -759,30 +1392,36 @@
       }
 
       // Blip Selection & Detail Card Elements
-      const blipDetailCard = document.getElementById('blipDetailCard');
-      const blipDetailTitle = document.getElementById('blipDetailTitle');
-      const blipDetailDist = document.getElementById('blipDetailDist');
-      const blipDetailSub = document.getElementById('blipDetailSub');
-      const blipDetailBadge = document.getElementById('blipDetailBadge');
-      const blipDetailDesc = document.getElementById('blipDetailDesc');
-      const blipResidentNpcs = document.getElementById('blipResidentNpcs');
-      const radarScope = document.getElementById('radarScope');
+      const blipDetailCard = document.getElementById("blipDetailCard");
+      const blipDetailTitle = document.getElementById("blipDetailTitle");
+      const blipDetailDist = document.getElementById("blipDetailDist");
+      const blipDetailSub = document.getElementById("blipDetailSub");
+      const blipDetailBadge = document.getElementById("blipDetailBadge");
+      const blipDetailDesc = document.getElementById("blipDetailDesc");
+      const blipResidentNpcs = document.getElementById("blipResidentNpcs");
+      const radarScope = document.getElementById("radarScope");
 
       function setupStaticBlips() {
-        const blips = document.querySelectorAll('.blip:not(.blip-poi):not(#playerBlip)');
-        blips.forEach(blip => {
-          blip.addEventListener('click', () => {
-            const name = blip.getAttribute('data-name');
-            const dist = blip.getAttribute('data-dist');
-            playTone(550, 'sine', 0.08, 0.2);
+        const blips = document.querySelectorAll(
+          ".blip:not(.blip-poi):not(#playerBlip)",
+        );
+        blips.forEach((blip) => {
+          blip.addEventListener("click", () => {
+            const name = blip.getAttribute("data-name");
+            const dist = blip.getAttribute("data-dist");
+            playTone(550, "sine", 0.08, 0.2);
 
-            if (blipDetailSub) blipDetailSub.textContent = 'SUMBER ALAM TERDETEKSI';
-            if (blipDetailBadge) blipDetailBadge.textContent = 'RESOURCE';
+            if (blipDetailSub)
+              blipDetailSub.textContent = "SUMBER ALAM TERDETEKSI";
+            if (blipDetailBadge) blipDetailBadge.textContent = "RESOURCE";
             if (blipDetailTitle) blipDetailTitle.textContent = name;
-            if (blipDetailDist) blipDetailDist.textContent = `Jarak: ${dist} - Estimasi Berjalan: 15 Detik`;
-            if (blipDetailDesc) blipDetailDesc.textContent = 'Sumber daya alam liar. Kumpulkan menggunakan perlengkapan /survival gather.';
-            if (blipResidentNpcs) blipResidentNpcs.innerHTML = '';
-            if (blipDetailCard) blipDetailCard.style.display = 'block';
+            if (blipDetailDist)
+              blipDetailDist.textContent = `Jarak: ${dist} - Estimasi Berjalan: 15 Detik`;
+            if (blipDetailDesc)
+              blipDetailDesc.textContent =
+                "Sumber daya alam liar. Kumpulkan menggunakan perlengkapan /survival gather.";
+            if (blipResidentNpcs) blipResidentNpcs.innerHTML = "";
+            if (blipDetailCard) blipDetailCard.style.display = "block";
           });
         });
       }
@@ -790,115 +1429,124 @@
 
       // Filter Toggles
       const filterToggles = [
-        { btn: document.getElementById('btnFilterWood'), type: 'wood' },
-        { btn: document.getElementById('btnFilterOre'), type: 'ore' },
-        { btn: document.getElementById('btnFilterWater'), type: 'water' },
-        { btn: document.getElementById('btnFilterBeast'), type: 'beast' }
+        { btn: document.getElementById("btnFilterWood"), type: "wood" },
+        { btn: document.getElementById("btnFilterOre"), type: "ore" },
+        { btn: document.getElementById("btnFilterWater"), type: "water" },
+        { btn: document.getElementById("btnFilterBeast"), type: "beast" },
       ];
 
       filterToggles.forEach(({ btn, type }) => {
         let active = true;
-        btn.addEventListener('click', () => {
+        btn.addEventListener("click", () => {
           active = !active;
-          btn.style.opacity = active ? '1' : '0.3';
-          document.querySelectorAll(`.blip[data-type="${type}"]`).forEach(el => {
-            el.style.display = active ? 'flex' : 'none';
-          });
-          playTone(400, 'square', 0.05, 0.1);
+          btn.style.opacity = active ? "1" : "0.3";
+          document
+            .querySelectorAll(`.blip[data-type="${type}"]`)
+            .forEach((el) => {
+              el.style.display = active ? "flex" : "none";
+            });
+          playTone(400, "square", 0.05, 0.1);
         });
       });
 
       // Ping Scan Button
-      const btnDeployScan = document.getElementById('btnDeployScan');
-      btnDeployScan.addEventListener('click', () => {
+      const btnDeployScan = document.getElementById("btnDeployScan");
+      btnDeployScan.addEventListener("click", () => {
         playSonarPing();
 
         // Spawn visual ripple wave
-        const wave = document.createElement('div');
-        wave.className = 'sonar-pulse';
+        const wave = document.createElement("div");
+        wave.className = "sonar-pulse";
         radarScope.appendChild(wave);
         setTimeout(() => wave.remove(), 1600);
 
         // Blip animation
-        document.querySelectorAll('.blip').forEach((b, idx) => {
-          setTimeout(() => {
-            b.style.transform = 'translate(-50%, -50%) scale(1.6)';
-            setTimeout(() => {
-              b.style.transform = 'translate(-50%, -50%) scale(1)';
-            }, 300);
-          }, 200 + (idx % 8) * 90);
+        document.querySelectorAll(".blip").forEach((b, idx) => {
+          setTimeout(
+            () => {
+              b.style.transform = "translate(-50%, -50%) scale(1.6)";
+              setTimeout(() => {
+                b.style.transform = "translate(-50%, -50%) scale(1)";
+              }, 300);
+            },
+            200 + (idx % 8) * 90,
+          );
         });
       });
 
-      document.getElementById('btnNavigateBlip').addEventListener('click', () => {
-        playTone(700, 'triangle', 0.1, 0.2);
-        alert('Navigasi waypoint GPS telah dikirimkan ke HUD Survival kompas Anda! Buka Discord dan ketik /survival town untuk berinteraksi di lokasi ini.');
-      });
+      document
+        .getElementById("btnNavigateBlip")
+        .addEventListener("click", () => {
+          playTone(700, "triangle", 0.1, 0.2);
+          alert(
+            "Navigasi waypoint GPS telah dikirimkan ke HUD Survival kompas Anda! Buka Discord dan ketik /survival town untuk berinteraksi di lokasi ini.",
+          );
+        });
 
       // World Map Data & Regional POIs
-      let currentRegionId = 'desa_sukamaju';
+      let currentRegionId = "desa_sukamaju";
       let worldRegions = null;
       let allNpcs = null;
       let activePlayer = null;
-      let playerCanonicalRegion = 'desa_sukamaju';
+      let playerCanonicalRegion = "desa_sukamaju";
 
       const CANONICAL_REGIONS = {
-        'desa_sukamaju': 'desa_sukamaju',
-        'desa': 'desa_sukamaju',
-        'village': 'desa_sukamaju',
-        'sukamaju': 'desa_sukamaju',
-        'hutan': 'desa_sukamaju',
-        'tambang': 'desa_sukamaju',
-        'pantai': 'desa_sukamaju',
-        'laut': 'desa_sukamaju',
-        'kota_pratama': 'kota_pratama',
-        'kota': 'kota_pratama',
-        'city': 'kota_pratama',
-        'pratama': 'kota_pratama',
-        'academy': 'kota_pratama',
-        'desa_khulkhas': 'desa_khulkhas',
-        'khulkhas': 'desa_khulkhas',
-        'gurun': 'desa_khulkhas',
-        'istana_draken': 'istana_draken',
-        'draken': 'istana_draken',
-        'dungeon': 'istana_draken',
-        'abyss': 'istana_draken'
+        desa_sukamaju: "desa_sukamaju",
+        desa: "desa_sukamaju",
+        village: "desa_sukamaju",
+        sukamaju: "desa_sukamaju",
+        hutan: "desa_sukamaju",
+        tambang: "desa_sukamaju",
+        pantai: "desa_sukamaju",
+        laut: "desa_sukamaju",
+        kota_pratama: "kota_pratama",
+        kota: "kota_pratama",
+        city: "kota_pratama",
+        pratama: "kota_pratama",
+        academy: "kota_pratama",
+        desa_khulkhas: "desa_khulkhas",
+        khulkhas: "desa_khulkhas",
+        gurun: "desa_khulkhas",
+        istana_draken: "istana_draken",
+        draken: "istana_draken",
+        dungeon: "istana_draken",
+        abyss: "istana_draken",
       };
 
       function updateCampaignObjective(regionKey) {
-        const objTitle = document.getElementById('campaignObjectiveTitle');
-        const objDesc = document.getElementById('campaignObjectiveDesc');
-        const objLoc = document.getElementById('campaignObjectiveLoc');
-        const objReward = document.getElementById('campaignObjectiveReward');
+        const objTitle = document.getElementById("campaignObjectiveTitle");
+        const objDesc = document.getElementById("campaignObjectiveDesc");
+        const objLoc = document.getElementById("campaignObjectiveLoc");
+        const objReward = document.getElementById("campaignObjectiveReward");
 
         const campaigns = {
           desa_sukamaju: {
-            title: 'Bab 1: Awal Kedatangan di Sukamaju',
-            desc: 'Kunjungi Balai Desa dan temui Kepala Desa Tirto untuk mendapatkan bimbingan awal bertahan hidup di alam liar serta mengumpulkan Naura Star Fragments (NSF).',
+            title: "Bab 1: Awal Kedatangan di Sukamaju",
+            desc: "Kunjungi Balai Desa dan temui Kepala Desa Tirto untuk mendapatkan bimbingan awal bertahan hidup di alam liar serta mengumpulkan Naura Star Fragments (NSF).",
             loc: '<i class="fa-solid fa-location-dot" style="color:#10b981;"></i> Desa Sukamaju',
-            reward: 'Reward: 500 NSF + 150 EXP'
+            reward: "Reward: 500 NSF + 150 EXP",
           },
           kota_pratama: {
-            title: 'Bab 2: Denyut Metropolitan Kota Pratama',
-            desc: 'Kunjungi Balai Kota Pratama dan Bank Sentral untuk menukarkan NSF menjadi Naura Coins (NC) serta mencari lisensi kerja di gedung korporasi.',
+            title: "Bab 2: Denyut Metropolitan Kota Pratama",
+            desc: "Kunjungi Balai Kota Pratama dan Bank Sentral untuk menukarkan NSF menjadi Naura Coins (NC) serta mencari lisensi kerja di gedung korporasi.",
             loc: '<i class="fa-solid fa-location-dot" style="color:#3b82f6;"></i> Kota Pratama',
-            reward: 'Reward: 2,500 NC + Akses Pasar Bebas'
+            reward: "Reward: 2,500 NC + Akses Pasar Bebas",
           },
           desa_khulkhas: {
-            title: 'Bab 3: Rahasia Kuil Kristal Salju Khul\'Khas',
-            desc: 'Terobos badai salju pegunungan Khul\'Khas dan temui Syeikh Malik di pondok hangat untuk mengungkap rahasia relik kristal es pemecah kutukan naga.',
+            title: "Bab 3: Rahasia Kuil Kristal Salju Khul'Khas",
+            desc: "Terobos badai salju pegunungan Khul'Khas dan temui Syeikh Malik di pondok hangat untuk mengungkap rahasia relik kristal es pemecah kutukan naga.",
             loc: '<i class="fa-solid fa-snowflake" style="color:#38bdf8;"></i> Desa Khul\'Khas (Salju)',
-            reward: 'Reward: Relik Kristal Es + 2,000 EXP'
+            reward: "Reward: Relik Kristal Es + 2,000 EXP",
           },
           istana_draken: {
-            title: 'Bab 4: Penaklukan Istana Abyss Draken',
-            desc: 'Hadapi sang Raja Naga Draken di kedalaman dungeon terdalam demi menyelamatkan masa depan Naura Wilds.',
+            title: "Bab 4: Penaklukan Istana Abyss Draken",
+            desc: "Hadapi sang Raja Naga Draken di kedalaman dungeon terdalam demi menyelamatkan masa depan Naura Wilds.",
             loc: '<i class="fa-solid fa-dungeon" style="color:#ef4444;"></i> Istana Draken (Abyss)',
-            reward: 'Reward: Mahkota Draken + 10,000 NC'
-          }
+            reward: "Reward: Mahkota Draken + 10,000 NC",
+          },
         };
 
-        const target = campaigns[regionKey] || campaigns['desa_sukamaju'];
+        const target = campaigns[regionKey] || campaigns["desa_sukamaju"];
         if (objTitle) objTitle.textContent = target.title;
         if (objDesc) objDesc.textContent = target.desc;
         if (objLoc) objLoc.innerHTML = target.loc;
@@ -906,31 +1554,33 @@
       }
 
       function updatePlayerBlip() {
-        const existingPlayerBlip = document.getElementById('playerBlip');
+        const existingPlayerBlip = document.getElementById("playerBlip");
         if (existingPlayerBlip) existingPlayerBlip.remove();
 
-        const centerPlayerIcon = document.querySelector('.radar-player-center');
+        const centerPlayerIcon = document.querySelector(".radar-player-center");
 
         if (!activePlayer) return;
 
-        const isHere = (currentRegionId === playerCanonicalRegion);
+        const isHere = currentRegionId === playerCanonicalRegion;
 
         if (centerPlayerIcon) {
           if (isHere) {
-            centerPlayerIcon.style.opacity = '1';
-            centerPlayerIcon.innerHTML = '<i class="fa-solid fa-person-hiking"></i>';
+            centerPlayerIcon.style.opacity = "1";
+            centerPlayerIcon.innerHTML =
+              '<i class="fa-solid fa-person-hiking"></i>';
             centerPlayerIcon.title = `Posisi Anda: ${activePlayer.name}`;
           } else {
-            centerPlayerIcon.style.opacity = '0.35';
-            centerPlayerIcon.innerHTML = '<i class="fa-solid fa-satellite"></i>';
+            centerPlayerIcon.style.opacity = "0.35";
+            centerPlayerIcon.innerHTML =
+              '<i class="fa-solid fa-satellite"></i>';
             centerPlayerIcon.title = `Surveilans Satelit: Anda sedang berada di ${worldRegions?.[playerCanonicalRegion]?.name || playerCanonicalRegion}`;
           }
         }
 
         if (isHere) {
-          const playerBlip = document.createElement('div');
-          playerBlip.id = 'playerBlip';
-          playerBlip.className = 'blip';
+          const playerBlip = document.createElement("div");
+          playerBlip.id = "playerBlip";
+          playerBlip.className = "blip";
           playerBlip.style.cssText = `
             top: 50%; left: 50%;
             background: var(--primary);
@@ -940,24 +1590,30 @@
             transform: translate(-50%, -50%);
             animation: pulse 1.8s infinite;
           `;
-          playerBlip.setAttribute('data-name', `${activePlayer.name} (Posisi Anda)`);
-          playerBlip.setAttribute('data-dist', '0m (Koordinat Saat Ini)');
-          playerBlip.setAttribute('data-type', 'player');
-          playerBlip.innerHTML = '<i class="fa-solid fa-person" style="font-size:10px;color:#fff;"></i>';
+          playerBlip.setAttribute(
+            "data-name",
+            `${activePlayer.name} (Posisi Anda)`,
+          );
+          playerBlip.setAttribute("data-dist", "0m (Koordinat Saat Ini)");
+          playerBlip.setAttribute("data-type", "player");
+          playerBlip.innerHTML =
+            '<i class="fa-solid fa-person" style="font-size:10px;color:#fff;"></i>';
 
-          playerBlip.addEventListener('click', () => {
-            playTone(550, 'sine', 0.08, 0.2);
-            if (blipDetailSub) blipDetailSub.textContent = 'TELEMETRI SURVIVOR';
-            if (blipDetailBadge) blipDetailBadge.textContent = 'POSISI ANDA';
-            if (blipDetailTitle) blipDetailTitle.textContent = `${activePlayer.name} (Petualang)`;
+          playerBlip.addEventListener("click", () => {
+            playTone(550, "sine", 0.08, 0.2);
+            if (blipDetailSub) blipDetailSub.textContent = "TELEMETRI SURVIVOR";
+            if (blipDetailBadge) blipDetailBadge.textContent = "POSISI ANDA";
+            if (blipDetailTitle)
+              blipDetailTitle.textContent = `${activePlayer.name} (Petualang)`;
             if (blipDetailDist) {
-              blipDetailDist.textContent = `Level ${activePlayer.progress?.level || 1} · ⭐ ${(activePlayer.starFragments || 0).toLocaleString('id-ID')} NSF · Wilayah: ${worldRegions?.[playerCanonicalRegion]?.name || playerCanonicalRegion}`;
+              blipDetailDist.textContent = `Level ${activePlayer.progress?.level || 1} · ⭐ ${(activePlayer.starFragments || 0).toLocaleString("id-ID")} NSF · Wilayah: ${worldRegions?.[playerCanonicalRegion]?.name || playerCanonicalRegion}`;
             }
             if (blipDetailDesc) {
-              blipDetailDesc.textContent = 'Posisi fisik petualang Anda saat ini di dunia Naura Wilds. Semua interaksi langsung berlangsung di wilayah ini.';
+              blipDetailDesc.textContent =
+                "Posisi fisik petualang Anda saat ini di dunia Naura Wilds. Semua interaksi langsung berlangsung di wilayah ini.";
             }
-            if (blipResidentNpcs) blipResidentNpcs.innerHTML = '';
-            if (blipDetailCard) blipDetailCard.style.display = 'block';
+            if (blipResidentNpcs) blipResidentNpcs.innerHTML = "";
+            if (blipDetailCard) blipDetailCard.style.display = "block";
           });
 
           radarScope.appendChild(playerBlip);
@@ -968,63 +1624,72 @@
         currentRegionId = regionId;
 
         // Update active tab styles
-        document.querySelectorAll('.region-tab').forEach(tab => {
-          if (tab.getAttribute('data-region') === regionId) {
-            tab.classList.add('active');
+        document.querySelectorAll(".region-tab").forEach((tab) => {
+          if (tab.getAttribute("data-region") === regionId) {
+            tab.classList.add("active");
           } else {
-            tab.classList.remove('active');
+            tab.classList.remove("active");
           }
         });
 
         if (!worldRegions || !worldRegions[regionId]) return;
         const region = worldRegions[regionId];
-        const isHere = (regionId === playerCanonicalRegion);
+        const isHere = regionId === playerCanonicalRegion;
 
         // Dynamic Radar Background and Color Palette per Region
         const REGION_RADAR_CONFIGS = {
           desa_sukamaju: {
-            bg: '/assets/maps/survival_radar_art.jpg',
-            gradient: 'radial-gradient(circle at center, rgba(6, 46, 32, 0.35) 0%, rgba(5, 8, 19, 0.82) 85%)',
-            accent: '#10b981',
-            sweepGradient: 'conic-gradient(from 0deg, rgba(16, 185, 129, 0.35) 0deg, rgba(16, 185, 129, 0) 65deg, transparent 70deg)'
+            bg: "/assets/maps/survival_radar_art.jpg",
+            gradient:
+              "radial-gradient(circle at center, rgba(6, 46, 32, 0.35) 0%, rgba(5, 8, 19, 0.82) 85%)",
+            accent: "#10b981",
+            sweepGradient:
+              "conic-gradient(from 0deg, rgba(16, 185, 129, 0.35) 0deg, rgba(16, 185, 129, 0) 65deg, transparent 70deg)",
           },
           kota_pratama: {
-            bg: '/assets/maps/radar_pratama_art.jpg',
-            gradient: 'radial-gradient(circle at center, rgba(12, 35, 64, 0.35) 0%, rgba(5, 8, 19, 0.82) 85%)',
-            accent: '#38bdf8',
-            sweepGradient: 'conic-gradient(from 0deg, rgba(56, 189, 248, 0.4) 0deg, rgba(56, 189, 248, 0) 65deg, transparent 70deg)'
+            bg: "/assets/maps/radar_pratama_art.jpg",
+            gradient:
+              "radial-gradient(circle at center, rgba(12, 35, 64, 0.35) 0%, rgba(5, 8, 19, 0.82) 85%)",
+            accent: "#38bdf8",
+            sweepGradient:
+              "conic-gradient(from 0deg, rgba(56, 189, 248, 0.4) 0deg, rgba(56, 189, 248, 0) 65deg, transparent 70deg)",
           },
           desa_khulkhas: {
-            bg: '/assets/maps/radar_khulkhas_art.jpg',
-            gradient: 'radial-gradient(circle at center, rgba(8, 47, 73, 0.38) 0%, rgba(5, 8, 19, 0.82) 85%)',
-            accent: '#7dd3fc',
-            sweepGradient: 'conic-gradient(from 0deg, rgba(125, 211, 252, 0.45) 0deg, rgba(125, 211, 252, 0) 65deg, transparent 70deg)'
+            bg: "/assets/maps/radar_khulkhas_art.jpg",
+            gradient:
+              "radial-gradient(circle at center, rgba(8, 47, 73, 0.38) 0%, rgba(5, 8, 19, 0.82) 85%)",
+            accent: "#7dd3fc",
+            sweepGradient:
+              "conic-gradient(from 0deg, rgba(125, 211, 252, 0.45) 0deg, rgba(125, 211, 252, 0) 65deg, transparent 70deg)",
           },
           istana_draken: {
-            bg: '/assets/maps/radar_draken_art.jpg',
-            gradient: 'radial-gradient(circle at center, rgba(54, 10, 20, 0.45) 0%, rgba(5, 8, 19, 0.85) 85%)',
-            accent: '#ef4444',
-            sweepGradient: 'conic-gradient(from 0deg, rgba(239, 68, 68, 0.45) 0deg, rgba(239, 68, 68, 0) 65deg, transparent 70deg)'
-          }
+            bg: "/assets/maps/radar_draken_art.jpg",
+            gradient:
+              "radial-gradient(circle at center, rgba(54, 10, 20, 0.45) 0%, rgba(5, 8, 19, 0.85) 85%)",
+            accent: "#ef4444",
+            sweepGradient:
+              "conic-gradient(from 0deg, rgba(239, 68, 68, 0.45) 0deg, rgba(239, 68, 68, 0) 65deg, transparent 70deg)",
+          },
         };
 
-        const radarCfg = REGION_RADAR_CONFIGS[regionId] || REGION_RADAR_CONFIGS.desa_sukamaju;
+        const radarCfg =
+          REGION_RADAR_CONFIGS[regionId] || REGION_RADAR_CONFIGS.desa_sukamaju;
         if (radarScope) {
           radarScope.style.background = `${radarCfg.gradient}, url('${radarCfg.bg}') center / cover no-repeat`;
-          radarScope.style.transition = 'background 0.4s ease';
+          radarScope.style.transition = "background 0.4s ease";
         }
 
-        const sweepEl = document.querySelector('.radar-sweep');
+        const sweepEl = document.querySelector(".radar-sweep");
         if (sweepEl) {
           sweepEl.style.background = radarCfg.sweepGradient;
         }
-        const ringsEl = document.querySelector('.radar-rings');
+        const ringsEl = document.querySelector(".radar-rings");
         if (ringsEl) {
           ringsEl.style.borderColor = `${radarCfg.accent}45`;
         }
 
         // Update Radar Header Title
-        const headerTitle = document.querySelector('.radar-header span');
+        const headerTitle = document.querySelector(".radar-header span");
         if (headerTitle) {
           const statusTag = isHere
             ? '<span class="badge" style="background:rgba(16,185,129,0.2);color:#10b981;border:1px solid rgba(16,185,129,0.4);font-size:10px;margin-left:8px;"><i class="fa-solid fa-location-dot"></i> POSISI ANDA</span>'
@@ -1033,62 +1698,69 @@
         }
 
         // Update Outpost Card Title
-        const outpostCardHeader = document.querySelector('.card-p [class*="fa-campground"]')?.parentElement;
+        const outpostCardHeader = document.querySelector(
+          '.card-p [class*="fa-campground"]',
+        )?.parentElement;
         if (outpostCardHeader) {
           const outpostNames = {
-            desa_sukamaju: 'Pos Aju Lembah Sukamaju (Sektor 01)',
-            kota_pratama: 'Markas Komando Distrik Pratama (Sektor 02)',
-            desa_khulkhas: 'Pos Kemah Badai Salju Khul\'Khas (Sektor 03)',
-            istana_draken: 'Pos Pengintaian Gerbang Draken (Sektor 04)'
+            desa_sukamaju: "Pos Aju Lembah Sukamaju (Sektor 01)",
+            kota_pratama: "Markas Komando Distrik Pratama (Sektor 02)",
+            desa_khulkhas: "Pos Kemah Badai Salju Khul'Khas (Sektor 03)",
+            istana_draken: "Pos Pengintaian Gerbang Draken (Sektor 04)",
           };
-          outpostCardHeader.innerHTML = `<i class="fa-solid fa-campground" style="color:#a78bfa;"></i> ${outpostNames[regionId] || 'Pos Outpost Wilayah ' + region.name}`;
+          outpostCardHeader.innerHTML = `<i class="fa-solid fa-campground" style="color:#a78bfa;"></i> ${outpostNames[regionId] || "Pos Outpost Wilayah " + region.name}`;
         }
 
         // Update scan description text
         const locEls = document.querySelectorAll('[id="scanFoundText"]');
         if (activePlayer) {
           if (isHere) {
-            locEls.forEach(el => {
+            locEls.forEach((el) => {
               el.textContent = `📍 Sinyal Lokal Aktif: ${activePlayer.name} di ${region.name} (Hari ${activePlayer.world?.day || 1})`;
             });
           } else {
-            locEls.forEach(el => {
+            locEls.forEach((el) => {
               el.textContent = `📡 Surveilans Satelit Jarak Jauh · Posisi fisik Anda di ${worldRegions[playerCanonicalRegion]?.name || playerCanonicalRegion}`;
             });
           }
         }
 
         // Remove old POI blips
-        document.querySelectorAll('.blip-poi').forEach(el => el.remove());
+        document.querySelectorAll(".blip-poi").forEach((el) => el.remove());
 
         // Render new POI blips
         if (Array.isArray(region.pois)) {
           region.pois.forEach((poi) => {
-            const el = document.createElement('div');
-            el.className = 'blip blip-poi';
+            const el = document.createElement("div");
+            el.className = "blip blip-poi";
             el.style.top = `${poi.coordinates.y}%`;
             el.style.left = `${poi.coordinates.x}%`;
-            el.setAttribute('data-poi-id', poi.id);
+            el.setAttribute("data-poi-id", poi.id);
 
-            let iconClass = 'fa-location-dot';
-            if (poi.category === 'government') iconClass = 'fa-landmark';
-            else if (poi.category === 'commerce') iconClass = 'fa-shop';
-            else if (poi.category === 'education') iconClass = 'fa-graduation-cap';
-            else if (poi.category === 'medical') iconClass = 'fa-heart-pulse';
-            else if (poi.category === 'residential') iconClass = 'fa-house-chimney';
-            else if (poi.category === 'finance') iconClass = 'fa-building-columns';
-            else if (poi.category === 'dungeon') iconClass = 'fa-skull';
-            else if (poi.category === 'gathering') iconClass = 'fa-tree';
+            let iconClass = "fa-location-dot";
+            if (poi.category === "government") iconClass = "fa-landmark";
+            else if (poi.category === "commerce") iconClass = "fa-shop";
+            else if (poi.category === "education")
+              iconClass = "fa-graduation-cap";
+            else if (poi.category === "medical") iconClass = "fa-heart-pulse";
+            else if (poi.category === "residential")
+              iconClass = "fa-house-chimney";
+            else if (poi.category === "finance")
+              iconClass = "fa-building-columns";
+            else if (poi.category === "dungeon") iconClass = "fa-skull";
+            else if (poi.category === "gathering") iconClass = "fa-tree";
 
             el.innerHTML = `
               <i class="fa-solid ${iconClass}" style="font-size:11px;"></i>
-              <div class="blip-tooltip">${poi.symbol || '📍'} ${poi.name}</div>
+              <div class="blip-tooltip">${poi.symbol || "📍"} ${poi.name}</div>
             `;
 
-            el.addEventListener('click', () => {
-              playTone(600, 'triangle', 0.1, 0.25);
-              document.querySelectorAll('.blip-poi').forEach(b => b.classList.remove('active'));
-              el.classList.add('active');
+            el.addEventListener("click", () => {
+              playTone(600, "triangle", 0.1, 0.25);
+              document
+                .querySelectorAll(".blip-poi")
+                .forEach((b) => b.classList.remove("active"));
+              el.classList.add("active");
               showPoiDetails(poi);
             });
 
@@ -1102,38 +1774,40 @@
 
       function showPoiDetails(poi) {
         if (!poi) return;
-        if (blipDetailSub) blipDetailSub.textContent = `POI [${poi.category.toUpperCase()}]`;
-        if (blipDetailBadge) blipDetailBadge.textContent = poi.symbol || 'LOKASI';
+        if (blipDetailSub)
+          blipDetailSub.textContent = `POI [${poi.category.toUpperCase()}]`;
+        if (blipDetailBadge)
+          blipDetailBadge.textContent = poi.symbol || "LOKASI";
         if (blipDetailTitle) blipDetailTitle.textContent = poi.name;
         if (blipDetailDist) {
-          blipDetailDist.textContent = `Operasional: ${poi.hours?.open || '00:00'} - ${poi.hours?.close || '24:00'} (${poi.hours?.days || 'Setiap Hari'})`;
+          blipDetailDist.textContent = `Operasional: ${poi.hours?.open || "00:00"} - ${poi.hours?.close || "24:00"} (${poi.hours?.days || "Setiap Hari"})`;
         }
         if (blipDetailDesc) {
           blipDetailDesc.textContent = poi.description;
         }
 
         if (blipResidentNpcs) {
-          blipResidentNpcs.innerHTML = '';
+          blipResidentNpcs.innerHTML = "";
           if (Array.isArray(poi.residentNpcs) && poi.residentNpcs.length > 0) {
-            const label = document.createElement('div');
-            label.style.fontSize = '11px';
-            label.style.color = 'var(--text-muted)';
-            label.style.marginBottom = '4px';
-            label.textContent = 'Warga / NPC Menetap:';
+            const label = document.createElement("div");
+            label.style.fontSize = "11px";
+            label.style.color = "var(--text-muted)";
+            label.style.marginBottom = "4px";
+            label.textContent = "Warga / NPC Menetap:";
             blipResidentNpcs.appendChild(label);
 
-            poi.residentNpcs.forEach(npcId => {
+            poi.residentNpcs.forEach((npcId) => {
               const npc = allNpcs ? allNpcs[npcId] : null;
               if (npc) {
-                const chip = document.createElement('div');
-                chip.className = 'resident-npc-chip';
+                const chip = document.createElement("div");
+                chip.className = "resident-npc-chip";
                 chip.innerHTML = `
-                  <img src="${npc.avatar || '/assets/core/avatar.png'}" class="resident-npc-avatar" onerror="this.src='/assets/core/avatar.png'" />
+                  <img src="${npc.avatar || "/assets/core/avatar.png"}" class="resident-npc-avatar" onerror="this.src='/assets/core/avatar.png'" />
                   <div style="flex:1;">
                     <div style="font-size:12px;font-weight:600;color:var(--text-primary);">${npc.name}</div>
                     <div style="font-size:11px;color:var(--text-muted);">${npc.role}</div>
                   </div>
-                  ${npc.type === 'romansa' ? '<span class="badge" style="background:rgba(244,114,182,0.15);color:#f472b6;font-size:10px;">Romansa</span>' : ''}
+                  ${npc.type === "romansa" ? '<span class="badge" style="background:rgba(244,114,182,0.15);color:#f472b6;font-size:10px;">Romansa</span>' : ""}
                 `;
                 blipResidentNpcs.appendChild(chip);
               }
@@ -1141,14 +1815,14 @@
           }
         }
 
-        if (blipDetailCard) blipDetailCard.style.display = 'block';
+        if (blipDetailCard) blipDetailCard.style.display = "block";
       }
 
       // Region Tabs Event Listeners
-      document.querySelectorAll('.region-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-          const regionId = tab.getAttribute('data-region');
-          playTone(480, 'sine', 0.08, 0.2);
+      document.querySelectorAll(".region-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          const regionId = tab.getAttribute("data-region");
+          playTone(480, "sine", 0.08, 0.2);
           renderRegion(regionId);
         });
       });
@@ -1156,18 +1830,18 @@
       // Fetch World POIs and Live Survival
       (async () => {
         try {
-          const res = await fetch('/api/survival/world-pois');
+          const res = await fetch("/api/survival/world-pois");
           const json = await res.json();
           if (json.success) {
             worldRegions = json.regions;
             allNpcs = json.npcs;
           }
         } catch (e) {
-          console.warn('[SurvivalMap] POI Fetch error:', e.message);
+          console.warn("[SurvivalMap] POI Fetch error:", e.message);
         }
 
         try {
-          const res = await fetch('/api/realtime/survival');
+          const res = await fetch("/api/realtime/survival");
           const json = await res.json();
           if (json.success && (json.currentUser || json.data?.length)) {
             const survivor = json.currentUser || json.data[0];
@@ -1178,38 +1852,48 @@
             const world = survivor.world;
 
             // Resolve canonical region
-            const rawLoc = (world?.location || 'desa_sukamaju').toLowerCase().trim();
-            playerCanonicalRegion = CANONICAL_REGIONS[rawLoc] || 'desa_sukamaju';
+            const rawLoc = (world?.location || "desa_sukamaju")
+              .toLowerCase()
+              .trim();
+            playerCanonicalRegion =
+              CANONICAL_REGIONS[rawLoc] || "desa_sukamaju";
 
             // Mark player location badge on tabs
-            document.querySelectorAll('.region-tab').forEach(tab => {
-              const reg = tab.getAttribute('data-region');
-              const existingUserBadge = tab.querySelector('.user-location-badge');
+            document.querySelectorAll(".region-tab").forEach((tab) => {
+              const reg = tab.getAttribute("data-region");
+              const existingUserBadge = tab.querySelector(
+                ".user-location-badge",
+              );
               if (existingUserBadge) existingUserBadge.remove();
               if (reg === playerCanonicalRegion) {
-                const badge = document.createElement('span');
-                badge.className = 'badge user-location-badge';
-                badge.style.cssText = 'background:rgba(244,114,182,0.25);color:#f472b6;border:1px solid rgba(244,114,182,0.5);font-size:9px;padding:2px 6px;margin-left:6px;';
-                badge.innerHTML = '<i class="fa-solid fa-location-dot"></i> ANDA DI SINI';
+                const badge = document.createElement("span");
+                badge.className = "badge user-location-badge";
+                badge.style.cssText =
+                  "background:rgba(244,114,182,0.25);color:#f472b6;border:1px solid rgba(244,114,182,0.5);font-size:9px;padding:2px 6px;margin-left:6px;";
+                badge.innerHTML =
+                  '<i class="fa-solid fa-location-dot"></i> ANDA DI SINI';
                 tab.appendChild(badge);
               }
             });
 
             // Update vital bars
-            const vitalMetas = document.querySelectorAll('.vital-meta span:last-child');
-            const vitalFills = document.querySelectorAll('.vital-fill');
+            const vitalMetas = document.querySelectorAll(
+              ".vital-meta span:last-child",
+            );
+            const vitalFills = document.querySelectorAll(".vital-fill");
             const vitalData = [
-              { value: stats?.hp ?? 100, max: 100, color: '#10b981' },
-              { value: stats?.stamina ?? 100, max: 100, color: '#f59e0b' },
-              { value: stats?.hunger ?? 100, max: 100, color: '#34d399' },
-              { value: stats?.thirst ?? 100, max: 100, color: '#3b82f6' }
+              { value: stats?.hp ?? 100, max: 100, color: "#10b981" },
+              { value: stats?.stamina ?? 100, max: 100, color: "#f59e0b" },
+              { value: stats?.hunger ?? 100, max: 100, color: "#34d399" },
+              { value: stats?.thirst ?? 100, max: 100, color: "#3b82f6" },
             ];
 
             vitalData.forEach((v, i) => {
               if (vitalFills[i]) {
                 const pct = Math.max(0, Math.min(100, v.value));
-                vitalFills[i].style.width = pct + '%';
-                vitalFills[i].style.background = pct > 50 ? v.color : pct > 20 ? '#f59e0b' : '#ef4444';
+                vitalFills[i].style.width = pct + "%";
+                vitalFills[i].style.background =
+                  pct > 50 ? v.color : pct > 20 ? "#f59e0b" : "#ef4444";
               }
               if (vitalMetas[i]) {
                 vitalMetas[i].textContent = `${v.value} / ${v.max}`;
@@ -1218,24 +1902,25 @@
 
             // Update outpost NSF
             const nsfEl = document.querySelector('[style*="3,200 NSF"]');
-            if (nsfEl) nsfEl.textContent = `${(survivor.starFragments || 0).toLocaleString('id-ID')} NSF`;
+            if (nsfEl)
+              nsfEl.textContent = `${(survivor.starFragments || 0).toLocaleString("id-ID")} NSF`;
 
             // Update stat badge
-            const vitStatusBadge = document.querySelector('.badge-success');
+            const vitStatusBadge = document.querySelector(".badge-success");
             if (vitStatusBadge && stats?.hp > 0) {
-              vitStatusBadge.textContent = 'PRIMA';
-              vitStatusBadge.className = 'badge badge-success';
+              vitStatusBadge.textContent = "PRIMA";
+              vitStatusBadge.className = "badge badge-success";
             } else if (vitStatusBadge) {
-              vitStatusBadge.textContent = 'OFFLINE';
-              vitStatusBadge.style.background = 'rgba(100,100,100,0.2)';
-              vitStatusBadge.style.color = '#94a3b8';
+              vitStatusBadge.textContent = "OFFLINE";
+              vitStatusBadge.style.background = "rgba(100,100,100,0.2)";
+              vitStatusBadge.style.color = "#94a3b8";
             }
 
             // Auto-focus to player's current region
             currentRegionId = playerCanonicalRegion;
           }
-        } catch(e) {
-          console.warn('[SurvivalMap] Survival Fetch error:', e.message);
+        } catch (e) {
+          console.warn("[SurvivalMap] Survival Fetch error:", e.message);
         }
 
         // Render current region

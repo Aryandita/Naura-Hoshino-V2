@@ -49,7 +49,10 @@ class LavalinkClusterManager {
    * @returns {Array<object>}
    */
   loadPublicFallbackNodes() {
-    const configPath = path.join(__dirname, "../config/lavalink-fallbacks.json");
+    const configPath = path.join(
+      __dirname,
+      "../config/lavalink-fallbacks.json",
+    );
     if (fs.existsSync(configPath)) {
       try {
         const content = fs.readFileSync(configPath, "utf8");
@@ -304,7 +307,11 @@ class LavalinkClusterManager {
   getPreferredNode(poru, options = {}) {
     if (!poru || !poru.nodes) return undefined;
 
-    const { excludeNode = null, requireLavaSrc = false, region = null } = options;
+    const {
+      excludeNode = null,
+      requireLavaSrc = false,
+      region = null,
+    } = options;
 
     // Kumpulkan node yang terkoneksi dan tidak sedang di-karantina
     const connected = [...poru.nodes.values()].filter(
@@ -349,8 +356,10 @@ class LavalinkClusterManager {
 
         const hiFiA = this.hiFiNodes.get(a.name);
         const hiFiB = this.hiFiNodes.get(b.name);
-        const regionMatchA = region && hiFiA?.region === String(region).toLowerCase() ? -40 : 0;
-        const regionMatchB = region && hiFiB?.region === String(region).toLowerCase() ? -40 : 0;
+        const regionMatchA =
+          region && hiFiA?.region === String(region).toLowerCase() ? -40 : 0;
+        const regionMatchB =
+          region && hiFiB?.region === String(region).toLowerCase() ? -40 : 0;
 
         const scoreA = (a.penalties || 0) + latA + regionMatchA;
         const scoreB = (b.penalties || 0) + latB + regionMatchB;
@@ -582,19 +591,28 @@ class LavalinkClusterManager {
         (res) => {
           res.resume();
           const latency = Math.max(1, Date.now() - startTime);
-          this.nodeLatencies.set(node.name, { latencyMs: latency, timestamp: Date.now() });
+          this.nodeLatencies.set(node.name, {
+            latencyMs: latency,
+            timestamp: Date.now(),
+          });
           resolve(latency);
         },
       );
       req.on("error", () => {
         const fallbackLat = 999;
-        this.nodeLatencies.set(node.name, { latencyMs: fallbackLat, timestamp: Date.now() });
+        this.nodeLatencies.set(node.name, {
+          latencyMs: fallbackLat,
+          timestamp: Date.now(),
+        });
         resolve(fallbackLat);
       });
       req.on("timeout", () => {
         req.destroy();
         const fallbackLat = 999;
-        this.nodeLatencies.set(node.name, { latencyMs: fallbackLat, timestamp: Date.now() });
+        this.nodeLatencies.set(node.name, {
+          latencyMs: fallbackLat,
+          timestamp: Date.now(),
+        });
         resolve(fallbackLat);
       });
       req.end();
@@ -633,7 +651,10 @@ class LavalinkClusterManager {
           logger.warn(
             `[LavalinkClusterManager] Node "${node.name}" mengalami 3x heartbeat timeout berturut-turut. Mengaktifkan auto-recover failover...`,
           );
-          this.recordFailure(node.name, new Error("Heartbeat timeout (Socket Unresponsive)"));
+          this.recordFailure(
+            node.name,
+            new Error("Heartbeat timeout (Socket Unresponsive)"),
+          );
           if (poru.players) {
             for (const player of poru.players.values()) {
               if (player && player.node && player.node.name === node.name) {

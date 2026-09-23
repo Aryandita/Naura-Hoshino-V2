@@ -139,8 +139,16 @@ module.exports = {
           { label: "Konsumsi (Consumable)", value: "consumable", emoji: "🧪" },
           { label: "Material & Bahan Mentah", value: "material", emoji: "💎" },
           { label: "Urutkan: Tier Tertinggi", value: "sort_tier", emoji: "⭐" },
-          { label: "Urutkan: Jumlah Terbanyak", value: "sort_amount", emoji: "📊" },
-          { label: "Urutkan: Nilai Jual Tertinggi", value: "sort_price", emoji: "🪙" },
+          {
+            label: "Urutkan: Jumlah Terbanyak",
+            value: "sort_amount",
+            emoji: "📊",
+          },
+          {
+            label: "Urutkan: Nilai Jual Tertinggi",
+            value: "sort_price",
+            emoji: "🪙",
+          },
         );
       const selectRow = new ActionRowBuilder().addComponents(filterSelect);
 
@@ -222,7 +230,8 @@ module.exports = {
       const collector = replyMsg.createMessageComponentCollector({
         filter: (i) =>
           i.user.id === user.id &&
-          (i.customId.startsWith("inv_cta_") || i.customId === "inv_filter_select"),
+          (i.customId.startsWith("inv_cta_") ||
+            i.customId === "inv_filter_select"),
         time: 90000,
       });
 

@@ -13,9 +13,7 @@ const {
 } = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 const greenhouseEngine = require("../../../src/survival/engines/greenhouseEngine");
-const {
-  CROP_SEEDS,
-} = require("../../../src/survival/data/cropSeeds");
+const { CROP_SEEDS } = require("../../../src/survival/data/cropSeeds");
 const {
   renderGreenhouseCard,
 } = require("../../../src/canvas/greenhouseCanvas");

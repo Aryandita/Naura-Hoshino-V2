@@ -20,7 +20,9 @@ let guildFederationEngine = null;
 try {
   guildFederationEngine = require("../../src/survival/engines/guildFederationEngine");
 } catch (e) {
-  logger.warn(`[Survival Route] guildFederationEngine gagal dimuat: ${e.message}`);
+  logger.warn(
+    `[Survival Route] guildFederationEngine gagal dimuat: ${e.message}`,
+  );
 }
 
 let worldBossEngine = null;
@@ -31,12 +33,20 @@ try {
 }
 
 // Simulasi data kapling default 8x8
-const TERRAIN_TYPES = ["Plains", "Forest", "Mountain", "Crystal Mine", "Ruins", "Lake Coast"];
+const TERRAIN_TYPES = [
+  "Plains",
+  "Forest",
+  "Mountain",
+  "Crystal Mine",
+  "Ruins",
+  "Lake Coast",
+];
 const DEFAULT_PLOTS = {};
 
 // Inisialisasi beberapa kapling yang dikuasai klan terkenal untuk demonstrasi
 DEFAULT_PLOTS["3,3"] = {
-  x: 3, y: 3,
+  x: 3,
+  y: 3,
   clanId: "clan_cyber_knights",
   clanName: "Cyber Knights",
   clanTag: "CYBER",
@@ -48,7 +58,8 @@ DEFAULT_PLOTS["3,3"] = {
   claimedAt: Date.now() - 86400000 * 3,
 };
 DEFAULT_PLOTS["4,4"] = {
-  x: 4, y: 4,
+  x: 4,
+  y: 4,
   clanId: "clan_hoshino_vanguard",
   clanName: "Hoshino Vanguard",
   clanTag: "STAR",
@@ -60,7 +71,8 @@ DEFAULT_PLOTS["4,4"] = {
   claimedAt: Date.now() - 86400000 * 5,
 };
 DEFAULT_PLOTS["5,3"] = {
-  x: 5, y: 3,
+  x: 5,
+  y: 3,
   clanId: "clan_abyssal_legion",
   clanName: "Abyssal Legion",
   clanTag: "VOID",
@@ -72,7 +84,8 @@ DEFAULT_PLOTS["5,3"] = {
   claimedAt: Date.now() - 86400000 * 2,
 };
 DEFAULT_PLOTS["6,5"] = {
-  x: 6, y: 5,
+  x: 6,
+  y: 5,
   clanId: "clan_emerald_dawn",
   clanName: "Emerald Dawn",
   clanTag: "MOSS",
@@ -85,10 +98,30 @@ DEFAULT_PLOTS["6,5"] = {
 };
 
 const COMBAT_LOGS = [
-  { id: 1, text: "⚔️ Klan Cyber Knights berhasil memperkuat Menara Pertahanan di Sektor (3,3).", time: "5 menit lalu", type: "defense" },
-  { id: 2, text: "🏰 Hoshino Vanguard membuka riset Astral Observatory di Kapling Pusat (4,4).", time: "18 menit lalu", type: "upgrade" },
-  { id: 3, text: "🚨 Aliansi Starfall melancarkan serangan ke Menara Relik Kuno Barat!", time: "42 menit lalu", type: "war" },
-  { id: 4, text: "🌲 Klan Emerald Dawn berhasil mengklaim kapling subur di Sektor Hutan (6,5).", time: "2 jam lalu", type: "claim" },
+  {
+    id: 1,
+    text: "⚔️ Klan Cyber Knights berhasil memperkuat Menara Pertahanan di Sektor (3,3).",
+    time: "5 menit lalu",
+    type: "defense",
+  },
+  {
+    id: 2,
+    text: "🏰 Hoshino Vanguard membuka riset Astral Observatory di Kapling Pusat (4,4).",
+    time: "18 menit lalu",
+    type: "upgrade",
+  },
+  {
+    id: 3,
+    text: "🚨 Aliansi Starfall melancarkan serangan ke Menara Relik Kuno Barat!",
+    time: "42 menit lalu",
+    type: "war",
+  },
+  {
+    id: 4,
+    text: "🌲 Klan Emerald Dawn berhasil mengklaim kapling subur di Sektor Hutan (6,5).",
+    time: "2 jam lalu",
+    type: "claim",
+  },
 ];
 
 module.exports = () => {
@@ -122,16 +155,26 @@ module.exports = () => {
               clanTag: (t.clanName || "TERR").slice(0, 4).toUpperCase(),
               color: "#38bdf8",
               terrain: t.name || "Sektor Strategis",
-              structure: { type: "castle", tier: t.defenseLevel || 1, name: t.name },
+              structure: {
+                type: "castle",
+                tier: t.defenseLevel || 1,
+                name: t.name,
+              },
               defensePower: t.controlPoints || 500,
               buffs: [t.buffEffect || "+10% Sektor Yield"],
-              claimedAt: t.updatedAt ? new Date(t.updatedAt).getTime() : Date.now(),
+              claimedAt: t.updatedAt
+                ? new Date(t.updatedAt).getTime()
+                : Date.now(),
             };
           });
         }
       } catch (_) {}
 
-      const mergedPlots = { ...DEFAULT_PLOTS, ...dbPlots, ...(liveData.plots || {}) };
+      const mergedPlots = {
+        ...DEFAULT_PLOTS,
+        ...dbPlots,
+        ...(liveData.plots || {}),
+      };
       const grid = [];
 
       for (let y = 1; y <= 8; y++) {
@@ -141,14 +184,16 @@ module.exports = () => {
           const existing = mergedPlots[key];
           if (existing) {
             row.push({
-              x, y,
+              x,
+              y,
               isClaimed: true,
               ...existing,
             });
           } else {
             const terrainIdx = (x * 3 + y * 7) % TERRAIN_TYPES.length;
             row.push({
-              x, y,
+              x,
+              y,
               isClaimed: false,
               terrain: TERRAIN_TYPES[terrainIdx],
               claimCost: 1000,
@@ -167,7 +212,9 @@ module.exports = () => {
         grid,
       });
     } catch (err) {
-      logger.warn(`[Survival Route] Gagal memuat territory grid: ${err.message}`);
+      logger.warn(
+        `[Survival Route] Gagal memuat territory grid: ${err.message}`,
+      );
       return res.status(500).json({ success: false, error: err.message });
     }
   });
@@ -177,17 +224,27 @@ module.exports = () => {
   // ------------------------------------------------------------------
   router.get("/territory/towers", (req, res) => {
     try {
-      if (guildFederationEngine && typeof guildFederationEngine.getRelicTowers === "function") {
+      if (
+        guildFederationEngine &&
+        typeof guildFederationEngine.getRelicTowers === "function"
+      ) {
         const rawTowers = guildFederationEngine.getRelicTowers();
         if (Array.isArray(rawTowers) && rawTowers.length > 0) {
           const enrichedTowers = rawTowers.map((t) => {
-            const defensePercent = Math.round(((t.defenseHp || 0) / (t.maxHp || 1)) * 100);
-            const isClaimed = !!t.controllerFedId && t.controllerFedTag !== "UNCLAIMED";
+            const defensePercent = Math.round(
+              ((t.defenseHp || 0) / (t.maxHp || 1)) * 100,
+            );
+            const isClaimed =
+              !!t.controllerFedId && t.controllerFedTag !== "UNCLAIMED";
             return {
               ...t,
               region: t.zone || t.region || "Sukamaju Highlands",
-              controllerFedName: isClaimed ? `Aliansi [${t.controllerFedTag}]` : "Diperebutkan (Netral)",
-              controlPercent: isClaimed ? Math.max(35, defensePercent) : Math.max(15, 100 - defensePercent),
+              controllerFedName: isClaimed
+                ? `Aliansi [${t.controllerFedTag}]`
+                : "Diperebutkan (Netral)",
+              controlPercent: isClaimed
+                ? Math.max(35, defensePercent)
+                : Math.max(15, 100 - defensePercent),
               weeklyDividends: t.weeklyDividends || "15.000 NSF & 50 Kupon",
               buff: t.buffDescription || t.buff || "+20% Territory Bonus",
             };
@@ -259,16 +316,35 @@ module.exports = () => {
   // ------------------------------------------------------------------
   router.get("/world-boss/active", async (req, res) => {
     try {
-      if (worldBossEngine && typeof worldBossEngine.getActiveBoss === "function") {
+      if (
+        worldBossEngine &&
+        typeof worldBossEngine.getActiveBoss === "function"
+      ) {
         const boss = await worldBossEngine.getActiveBoss();
         if (boss) {
-          const hpPercent = Math.max(0, Math.min(100, Math.round(((boss.currentHp || 0) / (boss.maxHp || 1)) * 100)));
-          const maxShieldHp = boss.maxShieldHp || (boss.maxHp ? Math.floor(boss.maxHp * 0.25) : 1);
+          const hpPercent = Math.max(
+            0,
+            Math.min(
+              100,
+              Math.round(((boss.currentHp || 0) / (boss.maxHp || 1)) * 100),
+            ),
+          );
+          const maxShieldHp =
+            boss.maxShieldHp ||
+            (boss.maxHp ? Math.floor(boss.maxHp * 0.25) : 1);
           const shieldHp = boss.shieldHp || 0;
-          const shieldPercent = Math.max(0, Math.min(100, Math.round((shieldHp / maxShieldHp) * 100)));
+          const shieldPercent = Math.max(
+            0,
+            Math.min(100, Math.round((shieldHp / maxShieldHp) * 100)),
+          );
           const expiryTime = boss.endTime || boss.expiresAt;
           const remainingMinutes = expiryTime
-            ? Math.max(0, Math.round((new Date(expiryTime).getTime() - Date.now()) / 60000))
+            ? Math.max(
+                0,
+                Math.round(
+                  (new Date(expiryTime).getTime() - Date.now()) / 60000,
+                ),
+              )
             : 42;
           const elemColors = {
             WATER: "#38bdf8",
@@ -319,11 +395,41 @@ module.exports = () => {
       },
       participantsCount: 38,
       topContributors: [
-        { rank: 1, name: "Sensei_Kivotos", damage: 184500, percent: 18.4, role: "DPS Utama" },
-        { rank: 2, name: "Arona_Tactics", damage: 142300, percent: 14.2, role: "Burst Mage" },
-        { rank: 3, name: "Hoshino_Shield", damage: 105800, percent: 10.5, role: "Tank / Breaker" },
-        { rank: 4, name: "Draken_Ranger", damage: 88400, percent: 8.8, role: "DPS" },
-        { rank: 5, name: "Cyber_Sniper", damage: 71200, percent: 7.1, role: "Support Buff" },
+        {
+          rank: 1,
+          name: "Sensei_Kivotos",
+          damage: 184500,
+          percent: 18.4,
+          role: "DPS Utama",
+        },
+        {
+          rank: 2,
+          name: "Arona_Tactics",
+          damage: 142300,
+          percent: 14.2,
+          role: "Burst Mage",
+        },
+        {
+          rank: 3,
+          name: "Hoshino_Shield",
+          damage: 105800,
+          percent: 10.5,
+          role: "Tank / Breaker",
+        },
+        {
+          rank: 4,
+          name: "Draken_Ranger",
+          damage: 88400,
+          percent: 8.8,
+          role: "DPS",
+        },
+        {
+          rank: 5,
+          name: "Cyber_Sniper",
+          damage: 71200,
+          percent: 7.1,
+          role: "Support Buff",
+        },
       ],
     };
 
@@ -345,13 +451,30 @@ module.exports = () => {
     const parsedX = parseInt(x, 10);
     const parsedY = parseInt(y, 10);
 
-    if (!parsedX || !parsedY || parsedX < 1 || parsedX > 8 || parsedY < 1 || parsedY > 8) {
-      return res.status(400).json({ success: false, error: "Koordinat kapling harus berada dalam rentang 1 s/d 8." });
+    if (
+      !parsedX ||
+      !parsedY ||
+      parsedX < 1 ||
+      parsedX > 8 ||
+      parsedY < 1 ||
+      parsedY > 8
+    ) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error: "Koordinat kapling harus berada dalam rentang 1 s/d 8.",
+        });
     }
 
     const key = `${parsedX},${parsedY}`;
     if (DEFAULT_PLOTS[key]) {
-      return res.status(400).json({ success: false, error: `Kapling (${parsedX}, ${parsedY}) sudah dikuasai oleh ${DEFAULT_PLOTS[key].clanName}.` });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error: `Kapling (${parsedX}, ${parsedY}) sudah dikuasai oleh ${DEFAULT_PLOTS[key].clanName}.`,
+        });
     }
 
     const newPlot = {

@@ -76,7 +76,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("join-voice")
-        .setDescription("🎙️ Ajak Naura bergabung ke Voice Channel untuk sesi obrolan suara dua arah"),
+        .setDescription(
+          "🎙️ Ajak Naura bergabung ke Voice Channel untuk sesi obrolan suara dua arah",
+        ),
     )
     .addSubcommand((sub) =>
       sub
@@ -97,7 +99,8 @@ module.exports = {
       locale: "id",
       options: {
         getSubcommand: () => {
-          if (["room", "gallery", "talk", "play", "about"].includes(subcommand)) return subcommand;
+          if (["room", "gallery", "talk", "play", "about"].includes(subcommand))
+            return subcommand;
           return "about";
         },
         getUser: (name) => {
@@ -113,7 +116,8 @@ module.exports = {
           footerCategory: "naura",
           authorName: "Naura Companion",
           title: "Menyiapkan Sesi...",
-          loadingMessage: "Tunggu sebentar yaa, Naura lagi siapin semuanya buat kamu~ ✨",
+          loadingMessage:
+            "Tunggu sebentar yaa, Naura lagi siapin semuanya buat kamu~ ✨",
           footerText: ui.getFooter("naura", "id"),
         });
         replyMsg = await message.reply(loadingPayload);
@@ -139,7 +143,10 @@ module.exports = {
     const subcommand = interaction.options.getSubcommand();
     const user = interaction.user;
     const authorDisplayName =
-      interaction.member?.displayName || user?.displayName || user?.username || "Sahabat Naura";
+      interaction.member?.displayName ||
+      user?.displayName ||
+      user?.username ||
+      "Sahabat Naura";
     const isEn =
       interaction.locale?.startsWith("en") || interaction.localeLang === "en";
     const lang = isEn ? "en" : "id";
@@ -171,7 +178,9 @@ module.exports = {
         footerCategory: "naura",
         accentColorHex: "#38BDF8",
         authorName: "Naura Voice Companion",
-        title: isEn ? "🎙️ Duplex Voice Session Active!" : "🎙️ Sesi Suara Duplex Aktif!",
+        title: isEn
+          ? "🎙️ Duplex Voice Session Active!"
+          : "🎙️ Sesi Suara Duplex Aktif!",
         expression: "happy",
         description: isEn
           ? `Yay! Naura has joined <#${voiceChannel.id}>! Feel free to talk in voice or chat with Naura!`
@@ -184,7 +193,9 @@ module.exports = {
 
     if (subcommand === "leave-voice") {
       const voiceCompanionService = require("../../src/services/voiceCompanionService");
-      const leaveResult = await voiceCompanionService.leaveVoice(interaction.guild?.id);
+      const leaveResult = await voiceCompanionService.leaveVoice(
+        interaction.guild?.id,
+      );
 
       const payload = buildContainerV2({
         lang,

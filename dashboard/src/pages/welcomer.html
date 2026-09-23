@@ -46,7 +46,8 @@
         display: flex;
         justify-content: space-between;
       }
-      .form-input, .form-select {
+      .form-input,
+      .form-select {
         width: 100%;
         background: rgba(0, 0, 0, 0.35);
         border: 1px solid var(--border-medium);
@@ -58,7 +59,8 @@
         transition: border-color var(--t-fast);
         outline: none;
       }
-      .form-input:focus, .form-select:focus {
+      .form-input:focus,
+      .form-select:focus {
         border-color: var(--primary);
         box-shadow: 0 0 0 2px var(--primary-dim);
       }
@@ -73,9 +75,12 @@
         border-radius: 8px;
         cursor: pointer;
         border: 2px solid transparent;
-        transition: transform 0.2s ease, border-color 0.2s ease;
+        transition:
+          transform 0.2s ease,
+          border-color 0.2s ease;
       }
-      .color-swatch:hover, .color-swatch.active {
+      .color-swatch:hover,
+      .color-swatch.active {
         transform: scale(1.15);
         border-color: #ffffff;
       }
@@ -102,10 +107,13 @@
       }
       .toggle-slider {
         position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         background: rgba(255, 255, 255, 0.12);
         border-radius: 24px;
-        transition: .3s;
+        transition: 0.3s;
       }
       .toggle-slider:before {
         position: absolute;
@@ -116,7 +124,7 @@
         bottom: 3px;
         background: white;
         border-radius: 50%;
-        transition: .3s;
+        transition: 0.3s;
       }
       input:checked + .toggle-slider {
         background: var(--primary);
@@ -142,36 +150,43 @@
     </style>
   </head>
   <body>
-    
     <div class="app-shell">
       <!-- Mobile Sidebar Overlay -->
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
-      <aside class="sidebar " id="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
           <div class="sidebar-logo-icon">
             <img
               src="/assets/core/avatar.png"
               alt="Naura"
-              onerror="this.style.display='none';this.parentElement.innerHTML='🌸';"
+              onerror="
+                this.style.display = 'none';
+                this.parentElement.innerHTML = '🌸';
+              "
             />
           </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
             <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+          <button
+            class="sidebar-close-btn"
+            id="sidebarCloseBtn"
+            aria-label="Tutup menu"
+          >
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
+        <!-- Navigation -->
+        <!-- Navigation -->
         <nav class="sidebar-nav" role="navigation">
-
           <!-- Overview -->
           <div class="nav-group">
             <div class="nav-group-label">Overview</div>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-gauge-high"></i
+              ></span>
               <span>Dashboard</span>
             </a>
             <a href="/status" class="nav-item">
@@ -197,7 +212,9 @@
               <span>Economy</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-network-wired"></i
+              ></span>
               <span>Guild Topology</span>
             </a>
           </div>
@@ -218,7 +235,9 @@
               <span>Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-microphone"></i
+              ></span>
               <span>Karaoke</span>
             </a>
           </div>
@@ -227,7 +246,9 @@
           <div class="nav-group">
             <div class="nav-group-label">Naura Wilds RPG</div>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-earth-asia"></i
+              ></span>
               <span>World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
@@ -252,7 +273,9 @@
               <span>Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-wand-magic-sparkles"></i
+              ></span>
               <span>Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
@@ -269,22 +292,27 @@
           <div class="nav-group">
             <div class="nav-group-label">More</div>
             <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+              <span class="nav-icon" style="color: var(--accent-green)"
+                ><i class="fa-solid fa-id-badge"></i
+              ></span>
+              <span style="color: var(--accent-green)">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
       </aside>
 
       <div class="main-content">
         <header class="top-header">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <button class="hamburger-btn" id="hamburgerBtn">
+              <i class="fa-solid fa-bars"></i>
+            </button>
             <div>
               <div class="page-title">Welcomer Card Studio</div>
               <div class="breadcrumb">
-                <span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Configuration</span><span class="breadcrumb-sep">/</span><span>Welcomer Card</span>
+                <span>Naura OS</span><span class="breadcrumb-sep">/</span
+                ><span>Configuration</span><span class="breadcrumb-sep">/</span
+                ><span>Welcomer Card</span>
               </div>
             </div>
           </div>
@@ -302,12 +330,24 @@
           <div class="page-header-bar animate-in">
             <div>
               <h1 class="page-heading">
-                <span class="page-heading-icon" style="background:rgba(244,114,182,0.15);border:1px solid var(--border-primary);">
-                  <i class="fa-solid fa-palette" style="color:var(--primary);"></i>
+                <span
+                  class="page-heading-icon"
+                  style="
+                    background: rgba(244, 114, 182, 0.15);
+                    border: 1px solid var(--border-primary);
+                  "
+                >
+                  <i
+                    class="fa-solid fa-palette"
+                    style="color: var(--primary)"
+                  ></i>
                 </span>
                 Welcomer Card Studio
               </h1>
-              <p class="page-sub">Kustomisasi kartu sambutan visual Canvas 2.5D, teks selamat datang otomatis, dan role onboarding.</p>
+              <p class="page-sub">
+                Kustomisasi kartu sambutan visual Canvas 2.5D, teks selamat
+                datang otomatis, dan role onboarding.
+              </p>
             </div>
           </div>
 
@@ -316,35 +356,82 @@
             <div class="animate-in delay-1">
               <!-- Visual Card Controls -->
               <div class="form-section">
-                <div style="font-family:var(--font-heading);font-weight:700;font-size:16px;color:var(--text-primary);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-                  <i class="fa-solid fa-paint-roller" style="color:var(--primary);"></i> Desain Kartu Visual
+                <div
+                  style="
+                    font-family: var(--font-heading);
+                    font-weight: 700;
+                    font-size: 16px;
+                    color: var(--text-primary);
+                    margin-bottom: 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                  "
+                >
+                  <i
+                    class="fa-solid fa-paint-roller"
+                    style="color: var(--primary)"
+                  ></i>
+                  Desain Kartu Visual
                 </div>
 
                 <div class="form-group">
                   <label class="form-label">Judul Utama Kartu</label>
-                  <input type="text" class="form-input" id="inputTitle" value="WELCOME TO NAURA SANCTUARY" />
+                  <input
+                    type="text"
+                    class="form-input"
+                    id="inputTitle"
+                    value="WELCOME TO NAURA SANCTUARY"
+                  />
                 </div>
 
                 <div class="form-group">
                   <label class="form-label">Subjudul Sambutan</label>
-                  <input type="text" class="form-input" id="inputSubtitle" value="Kamu adalah petualang ke-{count}!" />
+                  <input
+                    type="text"
+                    class="form-input"
+                    id="inputSubtitle"
+                    value="Kamu adalah petualang ke-{count}!"
+                  />
                 </div>
 
                 <div class="form-group">
                   <label class="form-label">Warna Aksen & Glow</label>
                   <div class="color-presets">
-                    <div class="color-swatch active" style="background:#f472b6;" data-color="#f472b6"></div>
-                    <div class="color-swatch" style="background:#22d3ee;" data-color="#22d3ee"></div>
-                    <div class="color-swatch" style="background:#a78bfa;" data-color="#a78bfa"></div>
-                    <div class="color-swatch" style="background:#f59e0b;" data-color="#f59e0b"></div>
-                    <div class="color-swatch" style="background:#34d399;" data-color="#34d399"></div>
+                    <div
+                      class="color-swatch active"
+                      style="background: #f472b6"
+                      data-color="#f472b6"
+                    ></div>
+                    <div
+                      class="color-swatch"
+                      style="background: #22d3ee"
+                      data-color="#22d3ee"
+                    ></div>
+                    <div
+                      class="color-swatch"
+                      style="background: #a78bfa"
+                      data-color="#a78bfa"
+                    ></div>
+                    <div
+                      class="color-swatch"
+                      style="background: #f59e0b"
+                      data-color="#f59e0b"
+                    ></div>
+                    <div
+                      class="color-swatch"
+                      style="background: #34d399"
+                      data-color="#34d399"
+                    ></div>
                   </div>
                 </div>
 
                 <div class="form-group">
                   <label class="form-label">Bentuk Frame Avatar</label>
                   <select class="form-select" id="selectFrame">
-                    <option value="circle">Cyber Ring Lingkaran (Default)</option>
+                    <option value="circle">
+                      Cyber Ring Lingkaran (Default)
+                    </option>
                     <option value="hexagon">Hexagon Futuristik</option>
                     <option value="square">Rounded Square 2.5D</option>
                   </select>
@@ -353,14 +440,31 @@
 
               <!-- Channel & Delivery Rules -->
               <div class="form-section">
-                <div style="font-family:var(--font-heading);font-weight:700;font-size:16px;color:var(--text-primary);margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-                  <i class="fa-solid fa-sliders" style="color:var(--accent-cyan);"></i> Saluran & Pengiriman
+                <div
+                  style="
+                    font-family: var(--font-heading);
+                    font-weight: 700;
+                    font-size: 16px;
+                    color: var(--text-primary);
+                    margin-bottom: 16px;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                  "
+                >
+                  <i
+                    class="fa-solid fa-sliders"
+                    style="color: var(--accent-cyan)"
+                  ></i>
+                  Saluran & Pengiriman
                 </div>
 
                 <div class="form-group">
                   <label class="form-label">Kirim ke Channel</label>
                   <select class="form-select" id="selectChannel">
-                    <option value="welcome">#welcome-gate (798124560124)</option>
+                    <option value="welcome">
+                      #welcome-gate (798124560124)
+                    </option>
                     <option value="general">#general-chat</option>
                     <option value="lobby">#arrival-lounge</option>
                   </select>
@@ -368,8 +472,18 @@
 
                 <div class="toggle-row">
                   <div>
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Kirim Pesan DM Pribadi</div>
-                    <div style="font-size:11px;color:var(--text-muted);">Kirimkan ucapan selamat datang ramah ke DM member baru.</div>
+                    <div
+                      style="
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: var(--text-primary);
+                      "
+                    >
+                      Kirim Pesan DM Pribadi
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted)">
+                      Kirimkan ucapan selamat datang ramah ke DM member baru.
+                    </div>
                   </div>
                   <label class="toggle-switch">
                     <input type="checkbox" id="toggleDM" checked />
@@ -379,8 +493,18 @@
 
                 <div class="toggle-row">
                   <div>
-                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Auto-Role Saat Bergabung</div>
-                    <div style="font-size:11px;color:var(--text-muted);">Berikan role @Warga Baru secara instan tanpa captcha.</div>
+                    <div
+                      style="
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: var(--text-primary);
+                      "
+                    >
+                      Auto-Role Saat Bergabung
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted)">
+                      Berikan role @Warga Baru secara instan tanpa captcha.
+                    </div>
                   </div>
                   <label class="toggle-switch">
                     <input type="checkbox" id="toggleRole" checked />
@@ -392,12 +516,44 @@
 
             <!-- Live Card Viewport -->
             <div class="preview-container animate-in delay-2">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-                <div style="font-family:var(--font-heading);font-weight:700;font-size:15px;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
-                  <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-green);display:inline-block;"></span>
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 14px;
+                "
+              >
+                <div
+                  style="
+                    font-family: var(--font-heading);
+                    font-weight: 700;
+                    font-size: 15px;
+                    color: var(--text-primary);
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                  "
+                >
+                  <span
+                    style="
+                      width: 8px;
+                      height: 8px;
+                      border-radius: 50%;
+                      background: var(--accent-green);
+                      display: inline-block;
+                    "
+                  ></span>
                   Pratinjau Live Kartu Sambutan
                 </div>
-                <span class="badge" style="background:rgba(52,211,153,0.15);color:var(--accent-green);font-size:11px;">
+                <span
+                  class="badge"
+                  style="
+                    background: rgba(52, 211, 153, 0.15);
+                    color: var(--accent-green);
+                    font-size: 11px;
+                  "
+                >
                   Canvas 800 x 300px
                 </span>
               </div>
@@ -405,8 +561,19 @@
               <!-- HTML5 Canvas Preview -->
               <canvas id="liveCardCanvas" width="800" height="300"></canvas>
 
-              <div style="margin-top:16px;font-size:12px;color:var(--text-muted);line-height:1.6;">
-                💡 <em>Gambar di atas adalah replika langsung dari render Canvas bot saat member baru bergabung ke server Discord.</em>
+              <div
+                style="
+                  margin-top: 16px;
+                  font-size: 12px;
+                  color: var(--text-muted);
+                  line-height: 1.6;
+                "
+              >
+                💡
+                <em
+                  >Gambar di atas adalah replika langsung dari render Canvas bot
+                  saat member baru bergabung ke server Discord.</em
+                >
               </div>
             </div>
           </div>
@@ -424,8 +591,12 @@
       userAvatarImg.onload = () => renderCanvas();
 
       function renderCanvas() {
-        const title = document.getElementById("inputTitle").value || "WELCOME TO SERVER";
-        const subtitle = document.getElementById("inputSubtitle").value.replace("{count}", "1,420") || "Selamat bergabung!";
+        const title =
+          document.getElementById("inputTitle").value || "WELCOME TO SERVER";
+        const subtitle =
+          document
+            .getElementById("inputSubtitle")
+            .value.replace("{count}", "1,420") || "Selamat bergabung!";
         const frameStyle = document.getElementById("selectFrame").value;
 
         // Base background
@@ -489,7 +660,13 @@
 
         // Draw image or fallback
         if (userAvatarImg.complete && userAvatarImg.naturalWidth !== 0) {
-          ctx.drawImage(userAvatarImg, avaX - avaR, avaY - avaR, avaR * 2, avaR * 2);
+          ctx.drawImage(
+            userAvatarImg,
+            avaX - avaR,
+            avaY - avaR,
+            avaR * 2,
+            avaR * 2,
+          );
         } else {
           ctx.fillStyle = "#f472b6";
           ctx.fillRect(avaX - avaR, avaY - avaR, avaR * 2, avaR * 2);
@@ -526,13 +703,21 @@
       }
 
       // Input listeners
-      document.getElementById("inputTitle").addEventListener("input", renderCanvas);
-      document.getElementById("inputSubtitle").addEventListener("input", renderCanvas);
-      document.getElementById("selectFrame").addEventListener("change", renderCanvas);
+      document
+        .getElementById("inputTitle")
+        .addEventListener("input", renderCanvas);
+      document
+        .getElementById("inputSubtitle")
+        .addEventListener("input", renderCanvas);
+      document
+        .getElementById("selectFrame")
+        .addEventListener("change", renderCanvas);
 
-      document.querySelectorAll(".color-swatch").forEach(swatch => {
+      document.querySelectorAll(".color-swatch").forEach((swatch) => {
         swatch.addEventListener("click", () => {
-          document.querySelectorAll(".color-swatch").forEach(s => s.classList.remove("active"));
+          document
+            .querySelectorAll(".color-swatch")
+            .forEach((s) => s.classList.remove("active"));
           swatch.classList.add("active");
           currentAccent = swatch.dataset.color;
           renderCanvas();
@@ -540,26 +725,45 @@
       });
 
       document.getElementById("btnSaveConfig").addEventListener("click", () => {
-        alert("✅ Pengaturan kartu sambutan berhasil disimpan ke memori server!");
+        alert(
+          "✅ Pengaturan kartu sambutan berhasil disimpan ke memori server!",
+        );
       });
 
       document.getElementById("btnTestSend").addEventListener("click", () => {
-        alert("🚀 Kartu sambutan simulasi telah berhasil dikirim ke #welcome-gate!");
+        alert(
+          "🚀 Kartu sambutan simulasi telah berhasil dikirim ke #welcome-gate!",
+        );
       });
 
       // Initial render
       renderCanvas();
     </script>
-      <script src="/src/js/sharedNav.js"></script>
+    <script src="/src/js/sharedNav.js"></script>
 
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"
+          ><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span
+          ><span class="mn-label">Dashboard</span></a
+        >
+        <a href="/world" class="mobile-nav-item" data-group="map"
+          ><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span
+          ><span class="mn-label">Map</span></a
+        >
+        <a href="/automations" class="mobile-nav-item" data-group="config"
+          ><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span
+          ><span class="mn-label">Config</span></a
+        >
+        <a href="/music" class="mobile-nav-item" data-group="system"
+          ><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span
+          ><span class="mn-label">System</span></a
+        >
+        <a href="/settings" class="mobile-nav-item" data-group="settings"
+          ><span class="mn-icon"><i class="fa-solid fa-gears"></i></span
+          ><span class="mn-label">Settings</span></a
+        >
       </div>
     </nav>
-</body>
+  </body>
 </html>

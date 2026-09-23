@@ -105,7 +105,8 @@ if (parentPort) {
         }
         case "renderDynamicBanner": {
           const dynamicBannerEngine = require("./dynamicBannerEngine");
-          result = await dynamicBannerEngine.generateDynamicMotionBanner(payload);
+          result =
+            await dynamicBannerEngine.generateDynamicMotionBanner(payload);
           break;
         }
         case "renderRoom": {

@@ -22,9 +22,7 @@ test("AiEnsembleRouter - Task Types & Routing Map", () => {
     "gemini",
     "ollama",
   ]);
-  assert.deepEqual(router.routingMap[TASK_TYPES.VISION_MULTIMODAL], [
-    "gemini",
-  ]);
+  assert.deepEqual(router.routingMap[TASK_TYPES.VISION_MULTIMODAL], ["gemini"]);
 });
 
 test("CircuitBreaker - State Transitions & Failure Threshold", () => {
@@ -111,15 +109,12 @@ test("AiEnsembleRouter - Throws Error When All Providers Fail", async () => {
     throw new Error("Quota exceeded 429");
   };
 
-  await assert.rejects(
-    async () => {
-      await router.generate({
-        taskType: TASK_TYPES.VISION_MULTIMODAL,
-        prompt: "Jelaskan gambar ini",
-      });
-    },
-    /Semua provider AI/,
-  );
+  await assert.rejects(async () => {
+    await router.generate({
+      taskType: TASK_TYPES.VISION_MULTIMODAL,
+      prompt: "Jelaskan gambar ini",
+    });
+  }, /Semua provider AI/);
 });
 
 test("AiEnsembleRouter - Telemetry Structure", () => {

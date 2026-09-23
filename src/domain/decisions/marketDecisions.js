@@ -69,7 +69,9 @@ function calculateMarketItemPrice({
   const safeDemand = Math.max(0, Math.floor(Number(demandCount) || 0));
 
   const demandFactor = 1 + safeDemand * 0.1;
-  let finalPrice = Math.floor(safeBase * safeWeather * safeSeason * demandFactor);
+  let finalPrice = Math.floor(
+    safeBase * safeWeather * safeSeason * demandFactor,
+  );
 
   if (isExtreme) {
     finalPrice = Math.floor(finalPrice * 1.5);
@@ -132,11 +134,7 @@ function evaluatePurchaseDecision({ userBalance, itemPrice, quantity = 1 }) {
  *   totalEarned: number
  * }>}
  */
-function calculateSellYield({
-  unitPrice,
-  quantity = 1,
-  bonusMultiplier = 1,
-}) {
+function calculateSellYield({ unitPrice, quantity = 1, bonusMultiplier = 1 }) {
   const safePrice = Math.max(0, Math.floor(Number(unitPrice) || 0));
   const safeQty = Math.max(1, Math.floor(Number(quantity) || 1));
   const safeMultiplier = Math.max(1, Number(bonusMultiplier) || 1);

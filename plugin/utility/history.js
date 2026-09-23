@@ -24,10 +24,7 @@ module.exports = {
     try {
       let logs = [];
       if (mongoManager.isReady) {
-        logs = await mongoManager.getCommandAuditLogs(
-          { userId: user.id },
-          10,
-        );
+        logs = await mongoManager.getCommandAuditLogs({ userId: user.id }, 10);
       }
 
       if (!logs || logs.length === 0) {

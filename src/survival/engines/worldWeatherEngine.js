@@ -11,7 +11,8 @@ const WEATHER_TYPES = {
     id: "CLEAR_SKY",
     name: "Langit Cerah Berawan",
     icon: "☀️",
-    description: "Kondisi atmosfer stabil dan nyaman untuk seluruh aktivitas petualangan.",
+    description:
+      "Kondisi atmosfer stabil dan nyaman untuk seluruh aktivitas petualangan.",
     harvestBonus: 0,
     staminaMultiplier: 1.0,
     durabilityWearMultiplier: 1.0,
@@ -22,7 +23,8 @@ const WEATHER_TYPES = {
     id: "HEAVY_RAIN",
     name: "Hujan Lebat Tropis",
     icon: "🌧️",
-    description: "Hujan deras mengguyur tanah subur. Panen kebun +30%, konsumsi stamina hutan +20%.",
+    description:
+      "Hujan deras mengguyur tanah subur. Panen kebun +30%, konsumsi stamina hutan +20%.",
     harvestBonus: 0.3,
     staminaMultiplier: 1.2,
     durabilityWearMultiplier: 1.0,
@@ -33,7 +35,8 @@ const WEATHER_TYPES = {
     id: "THUNDERSTORM",
     name: "Badai Petir Kosmik",
     icon: "⚡",
-    description: "Kilatan petir menyambar area terbuka. Keausan peralatan kerja meningkat +25%.",
+    description:
+      "Kilatan petir menyambar area terbuka. Keausan peralatan kerja meningkat +25%.",
     harvestBonus: 0,
     staminaMultiplier: 1.1,
     durabilityWearMultiplier: 1.25,
@@ -44,7 +47,8 @@ const WEATHER_TYPES = {
     id: "SANDSTORM",
     name: "Kabut Pasir Gurun Khul'Khas",
     icon: "🌪️",
-    description: "Angin gurun menyingkap reruntuhan kuno. Peluang menemukan artefak langka x2.",
+    description:
+      "Angin gurun menyingkap reruntuhan kuno. Peluang menemukan artefak langka x2.",
     harvestBonus: -0.1,
     staminaMultiplier: 1.15,
     durabilityWearMultiplier: 1.1,
@@ -55,7 +59,8 @@ const WEATHER_TYPES = {
     id: "SCORCHING_SUN",
     name: "Terik Matahari Ekstrem",
     icon: "🔥",
-    description: "Suhu udara melonjak panas. Tingkat kehausan berkurang 2x lebih cepat.",
+    description:
+      "Suhu udara melonjak panas. Tingkat kehausan berkurang 2x lebih cepat.",
     harvestBonus: 0.1,
     staminaMultiplier: 1.25,
     durabilityWearMultiplier: 1.0,
@@ -90,7 +95,8 @@ function getCycleIndex(timestamp = Date.now()) {
  * @returns {number}
  */
 function getTimeUntilNextWeather(timestamp = Date.now()) {
-  const currentCycleStart = Math.floor(timestamp / CYCLE_DURATION_MS) * CYCLE_DURATION_MS;
+  const currentCycleStart =
+    Math.floor(timestamp / CYCLE_DURATION_MS) * CYCLE_DURATION_MS;
   const nextCycleStart = currentCycleStart + CYCLE_DURATION_MS;
   return Math.max(0, nextCycleStart - timestamp);
 }

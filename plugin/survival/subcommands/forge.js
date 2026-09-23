@@ -15,10 +15,15 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
-const { buildContainerV2, buildErrorContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 const cacheManager = require("../../../src/managers/cacheManager");
-const { safeParseInventory } = require("../../../src/survival/engines/inventoryHelper");
+const {
+  safeParseInventory,
+} = require("../../../src/survival/engines/inventoryHelper");
 const DurabilityEngine = require("../../../src/survival/engines/durabilityEngine");
 
 const COLLECTOR_MS = 60000;
@@ -32,7 +37,8 @@ module.exports = {
       return interaction.editReply(
         buildErrorContainerV2({
           title: "Profil Belum Terdaftar",
-          errorMessage: "Kamu belum memulai perjalanan survival. Ketik `/survival start` terlebih dahulu ya!",
+          errorMessage:
+            "Kamu belum memulai perjalanan survival. Ketik `/survival start` terlebih dahulu ya!",
         }),
       );
     }
@@ -44,14 +50,24 @@ module.exports = {
       if (!item) return false;
       const cat = (item.category || "").toLowerCase();
       const id = (item.id || "").toLowerCase();
-      return cat === "weapon" || cat === "tool" || cat === "armor" || id.includes("pickaxe") || id.includes("axe") || id.includes("sword");
+      return (
+        cat === "weapon" ||
+        cat === "tool" ||
+        cat === "armor" ||
+        id.includes("pickaxe") ||
+        id.includes("axe") ||
+        id.includes("sword")
+      );
     });
 
     const salvageOptions = salvageableItems.slice(0, 25).map((it, idx) => {
       const dur = it.durability !== undefined ? it.durability : 100;
       return {
         label: `Bongkar ${it.name || it.id} (Durability: ${dur}%)`,
-        description: `Daur ulang menjadi batangan logam & bonus NSF`.substring(0, 100),
+        description: `Daur ulang menjadi batangan logam & bonus NSF`.substring(
+          0,
+          100,
+        ),
         value: `${it.id || it.name}_${idx}`,
         emoji: "♻️",
       };
@@ -156,13 +172,16 @@ module.exports = {
         const chosenVal = i.values[0];
         // Ambil itemId dari value
         const lastUnder = chosenVal.lastIndexOf("_");
-        const itemId = lastUnder !== -1 ? chosenVal.substring(0, lastUnder) : chosenVal;
+        const itemId =
+          lastUnder !== -1 ? chosenVal.substring(0, lastUnder) : chosenVal;
 
         const salvageRes = await DurabilityEngine.salvageItem(user.id, itemId);
 
         let snippet = "";
         if (salvageRes.ok) {
-          const matLines = salvageRes.materials.map((m) => `• \`${m.name}\` x${m.amount}`).join("\n");
+          const matLines = salvageRes.materials
+            .map((m) => `• \`${m.name}\` x${m.amount}`)
+            .join("\n");
           snippet = [
             `♻️ **Dekonstruksi Berhasil!**`,
             `Kamu membongkar **${salvageRes.salvagedItem.name || itemId}** dan memperoleh:`,

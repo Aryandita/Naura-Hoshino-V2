@@ -73,7 +73,8 @@ class EntitlementService {
    * @returns {Promise<{success: boolean, activatedPlan?: string, userId: string}>}
    */
   async handleEntitlementCreate(entitlement) {
-    if (!entitlement) return { success: false, error: "Entitlement data empty" };
+    if (!entitlement)
+      return { success: false, error: "Entitlement data empty" };
 
     const userId = entitlement.userId || entitlement.user_id;
     const skuId = entitlement.skuId || entitlement.sku_id;
@@ -83,11 +84,15 @@ class EntitlementService {
     }
 
     const plan = this.resolveSku(skuId);
-    logger.info(`💎 [Entitlement] Aktivasi SKU "${plan.name}" untuk User ${userId}`);
+    logger.info(
+      `💎 [Entitlement] Aktivasi SKU "${plan.name}" untuk User ${userId}`,
+    );
 
     try {
       // 1. Aktivasi status premium dan masa aktif di UserProfile
-      const expiryDate = new Date(Date.now() + plan.durationDays * 86400 * 1000);
+      const expiryDate = new Date(
+        Date.now() + plan.durationDays * 86400 * 1000,
+      );
       await cacheManager.mutateUserProfileJson(userId, "rpg_state", (state) => {
         state = state || {};
         state.entitlements = state.entitlements || {};
@@ -102,10 +107,18 @@ class EntitlementService {
 
       // 2. Tambahkan reward kupon dan Star Fragments secara atomik
       if (plan.rewardCoupons > 0) {
-        await cacheManager.incrementUserSurvival(userId, "coupons", plan.rewardCoupons);
+        await cacheManager.incrementUserSurvival(
+          userId,
+          "coupons",
+          plan.rewardCoupons,
+        );
       }
       if (plan.rewardStarFragments > 0) {
-        await cacheManager.incrementUserSurvival(userId, "starFragments", plan.rewardStarFragments);
+        await cacheManager.incrementUserSurvival(
+          userId,
+          "starFragments",
+          plan.rewardStarFragments,
+        );
       }
 
       return {
@@ -131,11 +144,15 @@ class EntitlementService {
     const skuId = entitlement.skuId || entitlement.sku_id;
     const plan = this.resolveSku(skuId);
 
-    logger.info(`🔄 [Entitlement] Pembaruan SKU "${plan.name}" untuk User ${userId}`);
+    logger.info(
+      `🔄 [Entitlement] Pembaruan SKU "${plan.name}" untuk User ${userId}`,
+    );
 
     try {
       const endsAt = entitlement.endsAt || entitlement.ends_at;
-      const expiryDate = endsAt ? new Date(endsAt) : new Date(Date.now() + plan.durationDays * 86400 * 1000);
+      const expiryDate = endsAt
+        ? new Date(endsAt)
+        : new Date(Date.now() + plan.durationDays * 86400 * 1000);
 
       await cacheManager.mutateUserProfileJson(userId, "rpg_state", (state) => {
         state = state || {};
@@ -151,7 +168,9 @@ class EntitlementService {
 
       return { success: true, userId, expiresAt: expiryDate };
     } catch (err) {
-      logger.error(`[Entitlement] Gagal memperbarui entitlement: ${err.message}`);
+      logger.error(
+        `[Entitlement] Gagal memperbarui entitlement: ${err.message}`,
+      );
       return { success: false, error: err.message, userId };
     }
   }
@@ -167,7 +186,9 @@ class EntitlementService {
     const skuId = entitlement.skuId || entitlement.sku_id;
     const plan = this.resolveSku(skuId);
 
-    logger.warn(`⚠️ [Entitlement] Pencabutan SKU "${plan.name}" untuk User ${userId}`);
+    logger.warn(
+      `⚠️ [Entitlement] Pencabutan SKU "${plan.name}" untuk User ${userId}`,
+    );
 
     try {
       await cacheManager.mutateUserProfileJson(userId, "rpg_state", (state) => {
@@ -194,7 +215,12 @@ class EntitlementService {
    * @param {string} [publicKey]
    * @returns {boolean}
    */
-  verifySignature(signature, timestamp, rawBody, publicKey = env.DISCORD_PUBLIC_KEY) {
+  verifySignature(
+    signature,
+    timestamp,
+    rawBody,
+    publicKey = env.DISCORD_PUBLIC_KEY,
+  ) {
     if (!signature || !timestamp || !rawBody) return false;
     if (!publicKey) return true; // Fallback jika belum di-set di dev
 

@@ -317,4 +317,3 @@ describe("Law 5: Market Decision Engine (Pure Functions)", () => {
     assert.strictEqual(withMidas.bonusEarned, 50);
   });
 });
-

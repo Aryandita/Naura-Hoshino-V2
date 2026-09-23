@@ -10,7 +10,9 @@ module.exports = {
     try {
       await entitlementService.handleEntitlementDelete(entitlement);
     } catch (err) {
-      logger.error(`[Events:entitlementDelete] Error processing entitlement deletion: ${err.message}`);
+      logger.error(
+        `[Events:entitlementDelete] Error processing entitlement deletion: ${err.message}`,
+      );
     }
   },
 };

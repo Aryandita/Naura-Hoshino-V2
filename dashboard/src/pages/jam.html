@@ -6,8 +6,14 @@
     <title>Jam Session & Collaborative DJ | Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
       /* Jam Session Layout - Compact Header */
@@ -35,8 +41,13 @@
 
       /* DJ Deck Card */
       .dj-deck-card {
-        background: radial-gradient(circle at 50% 20%, rgba(244, 114, 182, 0.1), transparent 70%),
-                    linear-gradient(180deg, #12182e 0%, #080c16 100%);
+        background:
+          radial-gradient(
+            circle at 50% 20%,
+            rgba(244, 114, 182, 0.1),
+            transparent 70%
+          ),
+          linear-gradient(180deg, #12182e 0%, #080c16 100%);
         border: 1px solid var(--border-medium);
         border-radius: var(--r-2xl);
         padding: 28px;
@@ -67,7 +78,9 @@
         border-radius: 50%;
         background: radial-gradient(circle, #2d3748 10%, #1a202c 30%, #000 70%);
         border: 4px solid var(--border-subtle);
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.1);
+        box-shadow:
+          0 0 20px rgba(0, 0, 0, 0.8),
+          inset 0 0 15px rgba(255, 255, 255, 0.1);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -79,8 +92,12 @@
         animation: spinVinyl 4s linear infinite;
       }
       @keyframes spinVinyl {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
       }
       .vinyl-center {
         width: clamp(45px, 7vw, 60px);
@@ -144,7 +161,11 @@
 
       /* Multi-user Lobby */
       .lobby-card {
-        background: linear-gradient(180deg, rgba(20, 26, 46, 0.7) 0%, rgba(10, 14, 26, 0.85) 100%);
+        background: linear-gradient(
+          180deg,
+          rgba(20, 26, 46, 0.7) 0%,
+          rgba(10, 14, 26, 0.85) 100%
+        );
         border: 1px solid var(--border-medium);
         border-radius: var(--r-xl);
         padding: 24px;
@@ -169,31 +190,43 @@
     </style>
   </head>
   <body>
-    
-
     <div class="app-shell">
       <!-- Mobile Sidebar Overlay -->
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
-      <aside class="sidebar " id="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
+          <div class="sidebar-logo-icon">
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="
+                this.style.display = 'none';
+                this.parentElement.innerHTML = '🌸';
+              "
+            />
+          </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
             <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+          <button
+            class="sidebar-close-btn"
+            id="sidebarCloseBtn"
+            aria-label="Tutup menu"
+          >
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
+        <!-- Navigation -->
+        <!-- Navigation -->
         <nav class="sidebar-nav" role="navigation">
-
           <!-- Overview -->
           <div class="nav-group">
             <div class="nav-group-label">Overview</div>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-gauge-high"></i
+              ></span>
               <span>Dashboard</span>
             </a>
             <a href="/status" class="nav-item">
@@ -219,7 +252,9 @@
               <span>Economy</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-network-wired"></i
+              ></span>
               <span>Guild Topology</span>
             </a>
           </div>
@@ -240,7 +275,9 @@
               <span>Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-microphone"></i
+              ></span>
               <span>Karaoke</span>
             </a>
           </div>
@@ -249,7 +286,9 @@
           <div class="nav-group">
             <div class="nav-group-label">Naura Wilds RPG</div>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-earth-asia"></i
+              ></span>
               <span>World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
@@ -274,7 +313,9 @@
               <span>Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-wand-magic-sparkles"></i
+              ></span>
               <span>Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
@@ -291,16 +332,28 @@
           <div class="nav-group">
             <div class="nav-group-label">More</div>
             <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+              <span class="nav-icon" style="color: var(--accent-green)"
+                ><i class="fa-solid fa-id-badge"></i
+              ></span>
+              <span style="color: var(--accent-green)">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
         <div class="sidebar-footer">
-          <div class="sidebar-user" onclick="window.location.href='/'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
-            <div class="sidebar-user-info"><div class="sidebar-user-name">Guest DJ</div><div class="sidebar-user-role">Live Jam Session</div></div>
+          <div class="sidebar-user" onclick="window.location.href = '/'">
+            <img
+              src="/assets/core/avatar.png"
+              alt="User"
+              class="sidebar-user-avatar"
+              onerror="
+                this.src =
+                  'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'
+              "
+            />
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name">Guest DJ</div>
+              <div class="sidebar-user-role">Live Jam Session</div>
+            </div>
           </div>
         </div>
       </aside>
@@ -308,10 +361,15 @@
       <div class="main-content">
         <header class="top-header">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <button class="hamburger-btn" id="hamburgerBtn">
+              <i class="fa-solid fa-bars"></i>
+            </button>
             <div>
               <div class="page-title">Collaborative Jam Session</div>
-              <div class="breadcrumb"><span>Media & Audio</span><span class="breadcrumb-sep">/</span><span>Multiplayer DJ Studio</span></div>
+              <div class="breadcrumb">
+                <span>Media & Audio</span><span class="breadcrumb-sep">/</span
+                ><span>Multiplayer DJ Studio</span>
+              </div>
             </div>
           </div>
           <div class="header-right">
@@ -325,12 +383,24 @@
           <div class="page-header-bar animate-in">
             <div>
               <h1 class="page-heading">
-                <span class="page-heading-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);">
-                  <i class="fa-solid fa-guitar" style="color:var(--primary);"></i>
+                <span
+                  class="page-heading-icon"
+                  style="
+                    background: var(--primary-dim);
+                    border: 1px solid var(--border-primary);
+                  "
+                >
+                  <i
+                    class="fa-solid fa-guitar"
+                    style="color: var(--primary)"
+                  ></i>
                 </span>
                 Live Collaborative DJ Studio
               </h1>
-              <p class="page-sub">Putar piringan hitam bersama teman server, atur mixer tempo & bass, dan streaming antrean musik bersama.</p>
+              <p class="page-sub">
+                Putar piringan hitam bersama teman server, atur mixer tempo &
+                bass, dan streaming antrean musik bersama.
+              </p>
             </div>
           </div>
 
@@ -343,17 +413,58 @@
                   <div class="turntable spinning" id="deckA">
                     <div class="vinyl-center">DECK A</div>
                   </div>
-                  <div style="font-family:var(--font-heading);font-weight:700;font-size:14px;color:#fff;margin-top:12px;" id="deckATrackTitle">
+                  <div
+                    style="
+                      font-family: var(--font-heading);
+                      font-weight: 700;
+                      font-size: 14px;
+                      color: #fff;
+                      margin-top: 12px;
+                    "
+                    id="deckATrackTitle"
+                  >
                     Stay with Me - Miki M.
                   </div>
-                  <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">BPM: 106 · Playing</div>
+                  <div
+                    style="
+                      font-size: 11px;
+                      color: var(--text-muted);
+                      font-family: var(--font-mono);
+                    "
+                  >
+                    BPM: 106 · Playing
+                  </div>
                 </div>
 
                 <!-- Crossfader Mid -->
                 <div class="crossfader-col">
-                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-mono);">CROSSFADER</div>
-                  <input type="range" class="slider-vertical" min="0" max="100" value="50" id="crossFader" />
-                  <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted);margin-top:4px;">
+                  <div
+                    style="
+                      font-size: 11px;
+                      color: var(--text-muted);
+                      margin-bottom: 8px;
+                      font-family: var(--font-mono);
+                    "
+                  >
+                    CROSSFADER
+                  </div>
+                  <input
+                    type="range"
+                    class="slider-vertical"
+                    min="0"
+                    max="100"
+                    value="50"
+                    id="crossFader"
+                  />
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      font-size: 9px;
+                      color: var(--text-muted);
+                      margin-top: 4px;
+                    "
+                  >
                     <span>A</span><span>50/50</span><span>B</span>
                   </div>
                 </div>
@@ -361,12 +472,33 @@
                 <!-- Deck B -->
                 <div class="turntable-deck">
                   <div class="turntable" id="deckB">
-                    <div class="vinyl-center" style="background:var(--accent-cyan);">DECK B</div>
+                    <div
+                      class="vinyl-center"
+                      style="background: var(--accent-cyan)"
+                    >
+                      DECK B
+                    </div>
                   </div>
-                  <div style="font-family:var(--font-heading);font-weight:700;font-size:14px;color:#fff;margin-top:12px;">
+                  <div
+                    style="
+                      font-family: var(--font-heading);
+                      font-weight: 700;
+                      font-size: 14px;
+                      color: #fff;
+                      margin-top: 12px;
+                    "
+                  >
                     Sparkle - RADWIMPS
                   </div>
-                  <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">BPM: 124 · Ready</div>
+                  <div
+                    style="
+                      font-size: 11px;
+                      color: var(--text-muted);
+                      font-family: var(--font-mono);
+                    "
+                  >
+                    BPM: 124 · Ready
+                  </div>
                 </div>
               </div>
 
@@ -374,67 +506,189 @@
               <div class="mixer-board">
                 <div>
                   <div class="mixer-knob-lbl">Volume (Gain)</div>
-                  <input type="range" class="slider-vertical" min="0" max="100" value="80" />
+                  <input
+                    type="range"
+                    class="slider-vertical"
+                    min="0"
+                    max="100"
+                    value="80"
+                  />
                 </div>
                 <div>
                   <div class="mixer-knob-lbl">Bass Boost</div>
-                  <input type="range" class="slider-vertical" min="0" max="100" value="45" />
+                  <input
+                    type="range"
+                    class="slider-vertical"
+                    min="0"
+                    max="100"
+                    value="45"
+                  />
                 </div>
                 <div>
                   <div class="mixer-knob-lbl">Treble Filter</div>
-                  <input type="range" class="slider-vertical" min="0" max="100" value="60" />
+                  <input
+                    type="range"
+                    class="slider-vertical"
+                    min="0"
+                    max="100"
+                    value="60"
+                  />
                 </div>
                 <div>
                   <div class="mixer-knob-lbl">Tempo (BPM)</div>
-                  <input type="range" class="slider-vertical" min="80" max="160" value="120" />
+                  <input
+                    type="range"
+                    class="slider-vertical"
+                    min="80"
+                    max="160"
+                    value="120"
+                  />
                 </div>
               </div>
 
               <!-- Action Bar -->
-              <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-                <button class="btn btn-secondary" id="btnScratchSfx"><i class="fa-solid fa-compact-disc"></i> Scratch SFX</button>
-                <button class="btn btn-secondary" id="btnAirhornSfx"><i class="fa-solid fa-bullhorn"></i> Airhorn</button>
-                <button class="btn btn-primary" id="btnVoteSkip"><i class="fa-solid fa-forward"></i> Vote Skip (1/3)</button>
+              <div
+                style="
+                  display: flex;
+                  gap: 10px;
+                  justify-content: center;
+                  flex-wrap: wrap;
+                "
+              >
+                <button class="btn btn-secondary" id="btnScratchSfx">
+                  <i class="fa-solid fa-compact-disc"></i> Scratch SFX
+                </button>
+                <button class="btn btn-secondary" id="btnAirhornSfx">
+                  <i class="fa-solid fa-bullhorn"></i> Airhorn
+                </button>
+                <button class="btn btn-primary" id="btnVoteSkip">
+                  <i class="fa-solid fa-forward"></i> Vote Skip (1/3)
+                </button>
               </div>
             </div>
 
             <!-- Right: Listener Lobby & Queue -->
             <div class="lobby-card animate-in delay-2">
-              <div style="font-family:var(--font-heading);font-size:16px;font-weight:700;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-                <i class="fa-solid fa-users" style="color:var(--primary);"></i> Ruang Pendengar
+              <div
+                style="
+                  font-family: var(--font-heading);
+                  font-size: 16px;
+                  font-weight: 700;
+                  color: #fff;
+                  margin-bottom: 14px;
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                "
+              >
+                <i class="fa-solid fa-users" style="color: var(--primary)"></i>
+                Ruang Pendengar
               </div>
 
               <div class="listener-row">
-                <img src="/assets/core/avatar.png" class="listener-avatar" alt="DJ" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
-                <div style="flex:1;">
-                  <div style="font-size:12px;font-weight:600;color:#fff;">Naura Hoshino</div>
-                  <div style="font-size:10px;color:var(--accent-cyan);">HOST DJ</div>
+                <img
+                  src="/assets/core/avatar.png"
+                  class="listener-avatar"
+                  alt="DJ"
+                  onerror="
+                    this.src =
+                      'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'
+                  "
+                />
+                <div style="flex: 1">
+                  <div style="font-size: 12px; font-weight: 600; color: #fff">
+                    Naura Hoshino
+                  </div>
+                  <div style="font-size: 10px; color: var(--accent-cyan)">
+                    HOST DJ
+                  </div>
                 </div>
-                <span style="font-size:12px;">🎧</span>
+                <span style="font-size: 12px">🎧</span>
               </div>
 
               <div class="listener-row">
-                <div style="width:32px;height:32px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;">A</div>
-                <div style="flex:1;">
-                  <div style="font-size:12px;font-weight:600;color:#fff;">Admin</div>
-                  <div style="font-size:10px;color:var(--accent-green);">ADMINISTRATOR</div>
+                <div
+                  style="
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    background: var(--primary);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #fff;
+                    font-weight: 700;
+                    font-size: 13px;
+                  "
+                >
+                  A
                 </div>
-                <span style="font-size:12px;">🎵</span>
+                <div style="flex: 1">
+                  <div style="font-size: 12px; font-weight: 600; color: #fff">
+                    Admin
+                  </div>
+                  <div style="font-size: 10px; color: var(--accent-green)">
+                    ADMINISTRATOR
+                  </div>
+                </div>
+                <span style="font-size: 12px">🎵</span>
               </div>
 
               <div class="listener-row">
-                <div style="width:32px;height:32px;border-radius:50%;background:#a855f7;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;">M</div>
-                <div style="flex:1;">
-                  <div style="font-size:12px;font-weight:600;color:#fff;">Member Server</div>
-                  <div style="font-size:10px;color:var(--text-muted);">PENDENGAR</div>
+                <div
+                  style="
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    background: #a855f7;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #fff;
+                    font-weight: 700;
+                    font-size: 13px;
+                  "
+                >
+                  M
                 </div>
-                <span style="font-size:12px;">☕</span>
+                <div style="flex: 1">
+                  <div style="font-size: 12px; font-weight: 600; color: #fff">
+                    Member Server
+                  </div>
+                  <div style="font-size: 10px; color: var(--text-muted)">
+                    PENDENGAR
+                  </div>
+                </div>
+                <span style="font-size: 12px">☕</span>
               </div>
 
-              <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border-subtle);">
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-family:var(--font-mono);text-transform:uppercase;">Antrean Selanjutnya:</div>
-                <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;" id="jamQueueList">
-                  1. Idol - YOASOBI (3:33)<br>
+              <div
+                style="
+                  margin-top: 20px;
+                  padding-top: 16px;
+                  border-top: 1px solid var(--border-subtle);
+                "
+              >
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--text-muted);
+                    margin-bottom: 8px;
+                    font-family: var(--font-mono);
+                    text-transform: uppercase;
+                  "
+                >
+                  Antrean Selanjutnya:
+                </div>
+                <div
+                  style="
+                    font-size: 12px;
+                    color: var(--text-secondary);
+                    line-height: 1.6;
+                  "
+                  id="jamQueueList"
+                >
+                  1. Idol - YOASOBI (3:33)<br />
                   2. Blue Bird - Ikimonogakari (3:36)
                 </div>
               </div>
@@ -446,26 +700,45 @@
 
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"
+          ><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span
+          ><span class="mn-label">Dashboard</span></a
+        >
+        <a href="/world" class="mobile-nav-item" data-group="map"
+          ><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span
+          ><span class="mn-label">Map</span></a
+        >
+        <a href="/automations" class="mobile-nav-item" data-group="config"
+          ><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span
+          ><span class="mn-label">Config</span></a
+        >
+        <a href="/music" class="mobile-nav-item" data-group="system"
+          ><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span
+          ><span class="mn-label">System</span></a
+        >
+        <a href="/settings" class="mobile-nav-item" data-group="settings"
+          ><span class="mn-icon"><i class="fa-solid fa-gears"></i></span
+          ><span class="mn-label">Settings</span></a
+        >
       </div>
     </nav>
 
     <script src="/src/js/sharedNav.js"></script>
     <script>
       let audioCtx = null;
-      function playTone(freq, type = 'sine', duration = 0.1, vol = 0.2) {
+      function playTone(freq, type = "sine", duration = 0.1, vol = 0.2) {
         try {
-          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (!audioCtx)
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.type = type;
           osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
           gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+          gain.gain.exponentialRampToValueAtTime(
+            0.0001,
+            audioCtx.currentTime + duration,
+          );
           osc.connect(gain);
           gain.connect(audioCtx.destination);
           osc.start();
@@ -473,48 +746,54 @@
         } catch (_) {}
       }
 
-      document.getElementById('btnScratchSfx').addEventListener('click', () => {
-        playTone(320, 'sawtooth', 0.15, 0.3);
-        const deck = document.getElementById('deckA');
-        deck.style.transform = 'rotate(-30deg)';
-        setTimeout(() => deck.style.transform = '', 200);
+      document.getElementById("btnScratchSfx").addEventListener("click", () => {
+        playTone(320, "sawtooth", 0.15, 0.3);
+        const deck = document.getElementById("deckA");
+        deck.style.transform = "rotate(-30deg)";
+        setTimeout(() => (deck.style.transform = ""), 200);
       });
 
-      document.getElementById('btnAirhornSfx').addEventListener('click', () => {
+      document.getElementById("btnAirhornSfx").addEventListener("click", () => {
         [600, 600, 600, 800].forEach((f, i) => {
-          setTimeout(() => playTone(f, 'square', 0.15, 0.25), i * 140);
+          setTimeout(() => playTone(f, "square", 0.15, 0.25), i * 140);
         });
       });
 
       let votes = 1;
-      document.getElementById('btnVoteSkip').addEventListener('click', () => {
+      document.getElementById("btnVoteSkip").addEventListener("click", () => {
         votes++;
         if (votes >= 3) {
-          alert('Vote skip berhasil! Mengalihkan ke lagu berikutnya.');
+          alert("Vote skip berhasil! Mengalihkan ke lagu berikutnya.");
           votes = 0;
         }
-        document.getElementById('btnVoteSkip').innerHTML = `<i class="fa-solid fa-forward"></i> Vote Skip (${votes}/3)`;
+        document.getElementById("btnVoteSkip").innerHTML =
+          `<i class="fa-solid fa-forward"></i> Vote Skip (${votes}/3)`;
       });
 
       // Live Music Sync from /api/music/state
       async function syncJamState() {
         try {
-          const res = await fetch('/api/music/state');
+          const res = await fetch("/api/music/state");
           if (!res.ok) return;
           const json = await res.json();
           if (json.success && json.currentTrack) {
-            const titleEl = document.getElementById('deckATrackTitle');
+            const titleEl = document.getElementById("deckATrackTitle");
             if (titleEl) {
               titleEl.textContent = `${json.currentTrack.title} - ${json.currentTrack.author}`;
             }
             if (Array.isArray(json.queue) && json.queue.length > 0) {
-              const queueEl = document.getElementById('jamQueueList');
+              const queueEl = document.getElementById("jamQueueList");
               if (queueEl) {
-                queueEl.innerHTML = json.queue.slice(0, 3).map((t, idx) => {
-                  const mins = Math.floor((t.duration || 180000) / 60000);
-                  const secs = String(Math.floor(((t.duration || 180000) % 60000) / 1000)).padStart(2, '0');
-                  return `${idx + 1}. ${t.title} - ${t.author} (${mins}:${secs})`;
-                }).join('<br>');
+                queueEl.innerHTML = json.queue
+                  .slice(0, 3)
+                  .map((t, idx) => {
+                    const mins = Math.floor((t.duration || 180000) / 60000);
+                    const secs = String(
+                      Math.floor(((t.duration || 180000) % 60000) / 1000),
+                    ).padStart(2, "0");
+                    return `${idx + 1}. ${t.title} - ${t.author} (${mins}:${secs})`;
+                  })
+                  .join("<br>");
               }
             }
           }

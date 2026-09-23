@@ -67,7 +67,9 @@ module.exports = async function chat(interaction) {
   if (attachment) {
     try {
       const { parseDocument } = require("../../../src/ai/documentParser");
-      const parsed = await parseDocument(attachment.url, { fileName: attachment.name });
+      const parsed = await parseDocument(attachment.url, {
+        fileName: attachment.name,
+      });
       const snippet = (parsed.text || "").slice(0, 4000);
       documentContext = `\n\n--- LAMPIRAN DOKUMEN (${attachment.name}) ---\n${snippet}\n--- AKHIR LAMPIRAN ---`;
     } catch (docErr) {

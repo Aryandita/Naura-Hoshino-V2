@@ -31,7 +31,9 @@ test("ServerChronicleEngine - mengangkat boss kill jika ada dan tidak ada pemena
 
 test("ServerChronicleEngine - menyajikan pergerakan komoditas pasar bullish", () => {
   const result = synthesizeChronicle({
-    marketItems: [{ name: "Cyber Ruby", trend: "bullish", priceChangePercent: 25 }],
+    marketItems: [
+      { name: "Cyber Ruby", trend: "bullish", priceChangePercent: 25 },
+    ],
   });
   assert.match(result.economySection, /Cyber Ruby/);
   assert.match(result.economySection, /\+25%/);

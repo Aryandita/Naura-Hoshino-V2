@@ -106,6 +106,7 @@ await interaction.reply(payload);
 ### 2.4 Standarisasi Penomoran Versi (X.Y.Z)
 
 Seluruh ekosistem, package.json, dan suite dokumentasi wajib mematuhi standar tiga tingkat:
+
 - **`X` (Versi Keseluruhan / Era Naura):** Generasi platform Naura (saat ini bernilai `2` untuk era Naura Hoshino V2).
 - **`Y` (Major Update):** Pembaruan arsitektur besar, penambahan pilar baru, sistem moneter baru (seperti Currency V2 Closed-Loop), integrasi AI Ensemble, atau kluster audio Lavalink.
 - **`Z` (Minor Update):** Peningkatan berkala, optimasi, balancing RPG/ekonomi, atau perbaikan bug (bugfix).
@@ -134,10 +135,10 @@ Seluruh ekosistem, package.json, dan suite dokumentasi wajib mematuhi standar ti
   - Data status layanan di `status.html` disuplai oleh endpoint nyata `GET /api/health` dan siaran Socket.IO `stats_update` setiap 3 detik.
 - **Standar Tunggal UI Web Dashboard (Stellar Glass OS MPA)**:
   - Kelompok antarmuka resmi Web Dashboard Naura Hoshino V2 adalah **Stellar Glass OS (Dashboard B)** berbasis token CSS di `dashboard/src/css/stellar.css` dengan tipografi `Space Grotesk`, `Inter`, dan `JetBrains Mono`.
-  - Sumber kebenaran tunggal (*single source of truth*) seluruh halaman web adalah direktori `dashboard/src/pages/*.html` (Multi-Page Architecture: `index.html`, `world.html`, `survival-map.html`, `status.html`, `music.html`, `leaderboard.html`, `economy.html`, dll.).
+  - Sumber kebenaran tunggal (_single source of truth_) seluruh halaman web adalah direktori `dashboard/src/pages/*.html` (Multi-Page Architecture: `index.html`, `world.html`, `survival-map.html`, `status.html`, `music.html`, `leaderboard.html`, `economy.html`, dll.).
   - Seluruh layout monolitik usang (Dashboard A dengan mobile dock bottom nav lawas `#120e16` tanpa kategori modular) telah dihapus dan dilarang digunakan kembali.
   - Folder `dashboard/dist/` adalah artefak kompilasi build murni dari `npm run dashboard:build`. Dilarang menempatkan atau menyunting berkas manual di dalam `dist/`.
-  - Root URL `/` menyajikan `dashboard/src/pages/index.html` (di-bundle ke `dashboard/dist/index.html`) yang memuat integrasi 3D Companion (`NauraHeroViewer`), telemetry real-time, status layanan, dan menu lengkap Naura Wilds RPG (*World Map* dan *Survival Map*).
+  - Root URL `/` menyajikan `dashboard/src/pages/index.html` (di-bundle ke `dashboard/dist/index.html`) yang memuat integrasi 3D Companion (`NauraHeroViewer`), telemetry real-time, status layanan, dan menu lengkap Naura Wilds RPG (_World Map_ dan _Survival Map_).
 
 ---
 
@@ -179,6 +180,7 @@ Karena sistem operasi menggunakan Windows PowerShell dengan pembatasan skrip:
 
 - **Standar Pesan Commit GitHub (3-Tingkat Terstruktur)**:
   Format pesan commit wajib terdiri dari 3 bagian dengan emoji kontekstual:
+
   ```text
   <emoji> <tipe>: <ringkasan judul commit>
 
@@ -196,20 +198,20 @@ Karena sistem operasi menggunakan Windows PowerShell dengan pembatasan skrip:
 
 ## 🔍 4. Peta Cepat Pencarian Kode
 
-| Ingin Mengubah Apa?                             | Buka Berkas Mana?                                                                                                 |
-| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Drop rate, loot monster, item catalog           | `src/survival/data/items_catalog.js`, `items.js`, `monsters.js`                                                   |
-| Formula XP, stamina, vitals                     | `src/survival/helpers/survivalVitals.js`, `src/survival/engines/survivalLeveling.js`                              |
-| Currency V2, Recycling Pool & Server Treasury   | `src/survival/engines/currency.js`, `src/survival/engines/recyclingPoolEngine.js`, `src/models/ServerTreasury.js` |
-| Durability & Repair Surcharge                   | `src/survival/engines/durabilityEngine.js`                                                                        |
-| Aturan pasar saham & dynamic tax                | `src/services/stockMarketEngine.js`, `src/services/economyGuardEngine.js`                                         |
-| AI Multi-Model Ensemble Router & LLM Failover   | `src/ai/aiEnsembleRouter.js`, `src/ai/aiHelper.js`                                                                |
-| Living AI Semantic Vector Memory & Server RAG   | `src/ai/semanticMemoryService.js`, `src/ai/aiMemory.js`, `src/models/SemanticMemory.js`                          |
-| Lavalink Cluster Manager & Multi-Node Failover  | `src/managers/lavalinkClusterManager.js`, `src/managers/musicManager.js`                                          |
-| Web Soundboard Studio & WebSocket Realtime      | `src/services/soundboardService.js`, `dashboard/src/pages/soundboard.html`                                        |
-| Battle Pass Season Rewards                      | `src/services/seasonEngine.js`                                                                                    |
-| World Boss multi-fase & rewards                 | `src/survival/engines/worldBossEngine.js`                                                                         |
-| Living City NPC & Town Square Simulation        | `src/survival/engines/townEngine.js`, `plugin/survival/subcommands/town.js`                                       |
-| Skema database PostgreSQL & 41 Migrasi          | `src/models/*.js` & migrasi di `src/managers/dbMigrator.js`                                                       |
-| Token warna & styling Discord                   | `src/config/ui.js`, `src/utils/survivalUIHelper.js`                                                               |
-| Terjemahan bahasa bot                           | `assets/language/id.json` dan `en.json` (wajib sinkron)                                                           |
+| Ingin Mengubah Apa?                            | Buka Berkas Mana?                                                                                                 |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Drop rate, loot monster, item catalog          | `src/survival/data/items_catalog.js`, `items.js`, `monsters.js`                                                   |
+| Formula XP, stamina, vitals                    | `src/survival/helpers/survivalVitals.js`, `src/survival/engines/survivalLeveling.js`                              |
+| Currency V2, Recycling Pool & Server Treasury  | `src/survival/engines/currency.js`, `src/survival/engines/recyclingPoolEngine.js`, `src/models/ServerTreasury.js` |
+| Durability & Repair Surcharge                  | `src/survival/engines/durabilityEngine.js`                                                                        |
+| Aturan pasar saham & dynamic tax               | `src/services/stockMarketEngine.js`, `src/services/economyGuardEngine.js`                                         |
+| AI Multi-Model Ensemble Router & LLM Failover  | `src/ai/aiEnsembleRouter.js`, `src/ai/aiHelper.js`                                                                |
+| Living AI Semantic Vector Memory & Server RAG  | `src/ai/semanticMemoryService.js`, `src/ai/aiMemory.js`, `src/models/SemanticMemory.js`                           |
+| Lavalink Cluster Manager & Multi-Node Failover | `src/managers/lavalinkClusterManager.js`, `src/managers/musicManager.js`                                          |
+| Web Soundboard Studio & WebSocket Realtime     | `src/services/soundboardService.js`, `dashboard/src/pages/soundboard.html`                                        |
+| Battle Pass Season Rewards                     | `src/services/seasonEngine.js`                                                                                    |
+| World Boss multi-fase & rewards                | `src/survival/engines/worldBossEngine.js`                                                                         |
+| Living City NPC & Town Square Simulation       | `src/survival/engines/townEngine.js`, `plugin/survival/subcommands/town.js`                                       |
+| Skema database PostgreSQL & 41 Migrasi         | `src/models/*.js` & migrasi di `src/managers/dbMigrator.js`                                                       |
+| Token warna & styling Discord                  | `src/config/ui.js`, `src/utils/survivalUIHelper.js`                                                               |
+| Terjemahan bahasa bot                          | `assets/language/id.json` dan `en.json` (wajib sinkron)                                                           |

@@ -11,9 +11,7 @@ const { SlashCommandBuilder } = require("discord.js");
 const cacheManager = require("../../src/managers/cacheManager");
 const geminiClient = require("../../src/ai/geminiClient");
 const ui = require("../../src/config/ui");
-const {
-  buildContainerV2,
-} = require("../../src/utils/NauraContainerBuilder");
+const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 
 const FORTUNE_TIERS = [
   {

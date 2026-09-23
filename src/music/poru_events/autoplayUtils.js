@@ -155,7 +155,8 @@ function smoothFade(
  */
 function estimateTrackBpm(title = "") {
   const t = title.toLowerCase();
-  if (/speed\s*up|dnb|drum\s*and\s*bass|nightcore|hardstyle/i.test(t)) return 165;
+  if (/speed\s*up|dnb|drum\s*and\s*bass|nightcore|hardstyle/i.test(t))
+    return 165;
   if (/edm|house|dance|club|remix|electronic/i.test(t)) return 128;
   if (/hip\s*hop|trap|rap|r&b|groove/i.test(t)) return 95;
   if (/lo-?fi|chill|relax|study|sleep|ambient/i.test(t)) return 80;
@@ -182,7 +183,7 @@ function calculateBeatmatchedCrossfade(currentTrack, nextTrack) {
   let crossfadeMs = 4000;
   if (diffRatio <= 0.15) {
     crossfadeMs = 5000;
-  } else if (diffRatio >= 0.40) {
+  } else if (diffRatio >= 0.4) {
     crossfadeMs = 3000; // Tempo sangat beda: transisi lebih cepat agar tidak bentrok ritme
   }
 

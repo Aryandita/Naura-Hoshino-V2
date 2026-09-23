@@ -16,13 +16,19 @@ describe("AstralService - Hoshino Astral Sanctuary", () => {
   });
 
   test("evaluateGuildSentiment returns valid weather object with sentimentScore", async () => {
-    const weather = await astralService.evaluateGuildSentiment("guild_test_sentiment", [
-      "Pagi semua! Semangat kerjanya hari ini ya!",
-      "Halo Naura, yuk mabar nanti sore!",
-      "Asik banget server ini makin rame!",
-    ]);
+    const weather = await astralService.evaluateGuildSentiment(
+      "guild_test_sentiment",
+      [
+        "Pagi semua! Semangat kerjanya hari ini ya!",
+        "Halo Naura, yuk mabar nanti sore!",
+        "Asik banget server ini makin rame!",
+      ],
+    );
     assert.ok(weather.id, "Weather should have an id");
-    assert.ok(weather.sentimentScore >= 0, "Sentiment score should be non-negative");
+    assert.ok(
+      weather.sentimentScore >= 0,
+      "Sentiment score should be non-negative",
+    );
     assert.ok(weather.auraReason, "Weather should have aura reason or lore");
   });
 

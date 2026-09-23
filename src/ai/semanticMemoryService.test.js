@@ -44,7 +44,9 @@ describe("SemanticMemoryService & Cosine Similarity Math", () => {
       { memoryType: "SERVER_RULE", content: "Dilarang spam di chat umum" },
     ];
     const formatted = service.formatMemoriesForContext(memories);
-    assert.ok(formatted.includes("[MEMORI & FAKTA PENGGUNA TERSIMPAN DI DATABASE]"));
+    assert.ok(
+      formatted.includes("[MEMORI & FAKTA PENGGUNA TERSIMPAN DI DATABASE]"),
+    );
     assert.ok(formatted.includes("Suka makan ramen pedas"));
     assert.ok(formatted.includes("Dilarang spam di chat umum"));
   });

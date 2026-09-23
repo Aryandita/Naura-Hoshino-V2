@@ -22,13 +22,28 @@ test("documentParser: chunkText handles small texts and large texts with overlap
   assert.equal(shortChunks[0], shortText);
 
   // Buat teks panjang 3 paragraf
-  const para1 = "Paragraf pertama memuat penjelasan mengenai tata tertib server. ".repeat(10);
-  const para2 = "Paragraf kedua menjelaskan sanksi bagi pelanggar aturan komunitas. ".repeat(10);
-  const para3 = "Paragraf ketiga menjelaskan prosedur pengajuan banding ke AI Tribunal. ".repeat(10);
+  const para1 =
+    "Paragraf pertama memuat penjelasan mengenai tata tertib server. ".repeat(
+      10,
+    );
+  const para2 =
+    "Paragraf kedua menjelaskan sanksi bagi pelanggar aturan komunitas. ".repeat(
+      10,
+    );
+  const para3 =
+    "Paragraf ketiga menjelaskan prosedur pengajuan banding ke AI Tribunal. ".repeat(
+      10,
+    );
   const longText = `${para1}\n\n${para2}\n\n${para3}`;
 
-  const longChunks = chunkText(longText, { maxChunkSize: 400, chunkOverlap: 50 });
-  assert.ok(longChunks.length > 1, "Teks panjang harus dipecah menjadi beberapa chunk");
+  const longChunks = chunkText(longText, {
+    maxChunkSize: 400,
+    chunkOverlap: 50,
+  });
+  assert.ok(
+    longChunks.length > 1,
+    "Teks panjang harus dipecah menjadi beberapa chunk",
+  );
   for (const chunk of longChunks) {
     assert.ok(chunk.length > 0, "Setiap chunk tidak boleh kosong");
   }
@@ -74,7 +89,9 @@ test("documentParser: parseDocument processes markdown and text buffers", async 
 });
 
 test("documentParser: parseDocument processes CSV buffer via officeparser", async () => {
-  const csvBuffer = Buffer.from("Nama,Role,Level\nNaura,Mascot,100\nBagas,Pandai Besi,50");
+  const csvBuffer = Buffer.from(
+    "Nama,Role,Level\nNaura,Mascot,100\nBagas,Pandai Besi,50",
+  );
 
   const res = await parseDocument(csvBuffer, {
     fileName: "roster.csv",
@@ -88,13 +105,10 @@ test("documentParser: parseDocument processes CSV buffer via officeparser", asyn
 });
 
 test("documentParser: rejects unsupported extensions gracefully", async () => {
-  await assert.rejects(
-    async () => {
-      await parseDocument(Buffer.from("dummy"), {
-        fileName: "malicious.exe",
-        fileType: "exe",
-      });
-    },
-    /tidak didukung/i,
-  );
+  await assert.rejects(async () => {
+    await parseDocument(Buffer.from("dummy"), {
+      fileName: "malicious.exe",
+      fileType: "exe",
+    });
+  }, /tidak didukung/i);
 });

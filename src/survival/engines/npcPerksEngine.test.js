@@ -55,7 +55,11 @@ test("calculateDiscount menghitung harga diskon berdasarkan level hubungan", asy
     relationshipLevel: 2,
     affection: 350,
   });
-  const sahabatDiscount = await calculateDiscount("dummy_user_0", "mbak_siti", 1000);
+  const sahabatDiscount = await calculateDiscount(
+    "dummy_user_0",
+    "mbak_siti",
+    1000,
+  );
   assert.equal(sahabatDiscount.discountPercent, 15);
   assert.equal(sahabatDiscount.discountedPrice, 850);
   assert.equal(sahabatDiscount.savedAmount, 150);
@@ -65,7 +69,11 @@ test("calculateDiscount menghitung harga diskon berdasarkan level hubungan", asy
     relationshipLevel: 4,
     affection: 500,
   });
-  const spouseDiscount = await calculateDiscount("dummy_user_0", "mbak_siti", 1000);
+  const spouseDiscount = await calculateDiscount(
+    "dummy_user_0",
+    "mbak_siti",
+    1000,
+  );
   assert.equal(spouseDiscount.discountPercent, 25);
   assert.equal(spouseDiscount.discountedPrice, 750);
   assert.equal(spouseDiscount.savedAmount, 250);
@@ -78,7 +86,11 @@ test("applyPassiveBonus menerapkan bonus pasif relasi secara tepat", async () =>
     { npcId: "kang_deden", relationshipLevel: 2 },
   ];
 
-  const durability = await applyPassiveBonus("dummy_user_0", "durability_loss", 100);
+  const durability = await applyPassiveBonus(
+    "dummy_user_0",
+    "durability_loss",
+    100,
+  );
   assert.equal(durability, 75); // 100 * 0.75 = 75
 
   const mining = await applyPassiveBonus("dummy_user_0", "mining_ore", 10);

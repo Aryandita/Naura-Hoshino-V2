@@ -35,7 +35,9 @@ module.exports = {
     .addAttachmentOption((opt) =>
       opt
         .setName("berkas_bukti")
-        .setDescription("Lampiran berkas bukti (PDF, DOCX, TXT, CSV log) untuk disidangkan")
+        .setDescription(
+          "Lampiran berkas bukti (PDF, DOCX, TXT, CSV log) untuk disidangkan",
+        )
         .setRequired(false),
     ),
 
@@ -51,7 +53,9 @@ module.exports = {
     if (attachment) {
       try {
         const { parseDocument } = require("../../src/ai/documentParser");
-        const parsed = await parseDocument(attachment.url, { fileName: attachment.name });
+        const parsed = await parseDocument(attachment.url, {
+          fileName: attachment.name,
+        });
         const snippet = parsed.text ? parsed.text.slice(0, 1500) : "";
         evidence += `\n\n[Lampiran Dokumen Bukti: ${attachment.name}]\n${snippet}`;
       } catch (err) {

@@ -13,16 +13,22 @@ const {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("land")
-    .setDescription("🏰 Kelola Metaverse Land, Istana Klan, & Fasilitas Riset Teknologi.")
+    .setDescription(
+      "🏰 Kelola Metaverse Land, Istana Klan, & Fasilitas Riset Teknologi.",
+    )
     .addSubcommand((sub) =>
       sub
         .setName("status")
-        .setDescription("Lihat status kapling tanah dan struktur klan di server."),
+        .setDescription(
+          "Lihat status kapling tanah dan struktur klan di server.",
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("claim")
-        .setDescription("Klaim kapling tanah virtual baru pada grid koordinat (1..8).")
+        .setDescription(
+          "Klaim kapling tanah virtual baru pada grid koordinat (1..8).",
+        )
         .addIntegerOption((opt) =>
           opt
             .setName("x")
@@ -67,7 +73,10 @@ module.exports = {
             .setRequired(true)
             .addChoices(
               { name: "Istana Klan (Guild Castle)", value: "castle" },
-              { name: "Menara Pertahanan (Defense Tower)", value: "defense_tower" },
+              {
+                name: "Menara Pertahanan (Defense Tower)",
+                value: "defense_tower",
+              },
               { name: "Fasilitas Riset (Tech Lab)", value: "research_lab" },
             ),
         ),
@@ -75,7 +84,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("tech")
-        .setDescription("Lihat daftar bonus riset teknologi bersama yang aktif."),
+        .setDescription(
+          "Lihat daftar bonus riset teknologi bersama yang aktif.",
+        ),
     ),
 
   async execute(interaction) {
@@ -88,7 +99,8 @@ module.exports = {
     if (!survival || !survival.clanId) {
       const err = buildErrorContainerV2({
         title: "🏰 Akses Tanah Ditolak",
-        description: "Kamu harus menjadi anggota klan terlebih dahulu untuk mengelola kapling tanah Metaverse!",
+        description:
+          "Kamu harus menjadi anggota klan terlebih dahulu untuk mengelola kapling tanah Metaverse!",
         footerText: ui.getFooter("survival"),
       });
       return interaction.editReply(err);

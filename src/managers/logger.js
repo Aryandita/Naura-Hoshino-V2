@@ -25,7 +25,8 @@ function ensureLogsDir() {
  * @returns {string} Format: "rel/path/file.js:line:col (functionName)"
  */
 function parseErrorOrigin(err) {
-  const stack = (err instanceof Error && err.stack) ? err.stack : (new Error()).stack;
+  const stack =
+    err instanceof Error && err.stack ? err.stack : new Error().stack;
   if (!stack) return "unknown:0:0";
 
   const lines = stack.split("\n");
@@ -39,7 +40,9 @@ function parseErrorOrigin(err) {
 
     // Pattern 1: at functionName (path/to/file.js:12:34)
     // Pattern 2: at path/to/file.js:12:34
-    const match = line.match(/(?:at\s+(?:async\s+)?([^\s(]+)\s+\((.+):(\d+):(\d+)\)|at\s+(.+):(\d+):(\d+))/);
+    const match = line.match(
+      /(?:at\s+(?:async\s+)?([^\s(]+)\s+\((.+):(\d+):(\d+)\)|at\s+(.+):(\d+):(\d+))/,
+    );
     if (match) {
       const fnName = match[1] || "";
       const filePath = match[2] || match[5];
@@ -51,7 +54,9 @@ function parseErrorOrigin(err) {
         relPath = path.basename(filePath);
       }
 
-      return fnName ? `${relPath}:${lineNo}:${colNo} (${fnName})` : `${relPath}:${lineNo}:${colNo}`;
+      return fnName
+        ? `${relPath}:${lineNo}:${colNo} (${fnName})`
+        : `${relPath}:${lineNo}:${colNo}`;
     }
   }
 
@@ -72,7 +77,8 @@ function writeErrorToFile({ message, err, context, origin }) {
 
     const timeIso = now.toISOString();
     const localTime = now.toLocaleTimeString("id-ID");
-    const stack = (err instanceof Error ? err.stack : err) || "No stack trace provided";
+    const stack =
+      (err instanceof Error ? err.stack : err) || "No stack trace provided";
 
     let entry = `================================================================================\n`;
     entry += `TIMESTAMP : ${timeIso} [${localTime}]\n`;
@@ -195,7 +201,10 @@ function logError(type, error, context = null) {
 // Global Promise Rejection & Uncaught Exception fallbacks
 process.on("unhandledRejection", (reason) => {
   if (process.listenerCount("unhandledRejection") <= 1) {
-    logger.error("[Unhandled_Rejection] " + (reason?.message || reason), reason);
+    logger.error(
+      "[Unhandled_Rejection] " + (reason?.message || reason),
+      reason,
+    );
   }
 });
 process.on("uncaughtException", (error) => {

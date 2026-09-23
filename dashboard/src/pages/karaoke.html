@@ -6,8 +6,14 @@
     <title>Karaoke Stage & Live Lyrics | Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
       .karaoke-layout {
@@ -24,8 +30,13 @@
 
       /* Stage Card */
       .stage-card {
-        background: radial-gradient(circle at 50% 10%, rgba(244, 114, 182, 0.15), transparent 70%),
-                    linear-gradient(180deg, #10162c 0%, #060914 100%);
+        background:
+          radial-gradient(
+            circle at 50% 10%,
+            rgba(244, 114, 182, 0.15),
+            transparent 70%
+          ),
+          linear-gradient(180deg, #10162c 0%, #060914 100%);
         border: 1px solid var(--border-medium);
         border-radius: var(--r-2xl);
         padding: 28px;
@@ -108,31 +119,43 @@
     </style>
   </head>
   <body>
-    
-
     <div class="app-shell">
       <!-- Mobile Sidebar Overlay -->
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
-      <aside class="sidebar " id="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
+          <div class="sidebar-logo-icon">
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="
+                this.style.display = 'none';
+                this.parentElement.innerHTML = '🌸';
+              "
+            />
+          </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
             <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+          <button
+            class="sidebar-close-btn"
+            id="sidebarCloseBtn"
+            aria-label="Tutup menu"
+          >
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
+        <!-- Navigation -->
+        <!-- Navigation -->
         <nav class="sidebar-nav" role="navigation">
-
           <!-- Overview -->
           <div class="nav-group">
             <div class="nav-group-label">Overview</div>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-gauge-high"></i
+              ></span>
               <span>Dashboard</span>
             </a>
             <a href="/status" class="nav-item">
@@ -158,7 +181,9 @@
               <span>Economy</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-network-wired"></i
+              ></span>
               <span>Guild Topology</span>
             </a>
           </div>
@@ -179,7 +204,9 @@
               <span>Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-microphone"></i
+              ></span>
               <span>Karaoke</span>
             </a>
           </div>
@@ -188,7 +215,9 @@
           <div class="nav-group">
             <div class="nav-group-label">Naura Wilds RPG</div>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-earth-asia"></i
+              ></span>
               <span>World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
@@ -213,7 +242,9 @@
               <span>Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-wand-magic-sparkles"></i
+              ></span>
               <span>Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
@@ -230,16 +261,28 @@
           <div class="nav-group">
             <div class="nav-group-label">More</div>
             <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+              <span class="nav-icon" style="color: var(--accent-green)"
+                ><i class="fa-solid fa-id-badge"></i
+              ></span>
+              <span style="color: var(--accent-green)">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
         <div class="sidebar-footer">
-          <div class="sidebar-user" onclick="window.location.href='/'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
-            <div class="sidebar-user-info"><div class="sidebar-user-name">Guest Singer</div><div class="sidebar-user-role">Panggung Karaoke</div></div>
+          <div class="sidebar-user" onclick="window.location.href = '/'">
+            <img
+              src="/assets/core/avatar.png"
+              alt="User"
+              class="sidebar-user-avatar"
+              onerror="
+                this.src =
+                  'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'
+              "
+            />
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name">Guest Singer</div>
+              <div class="sidebar-user-role">Panggung Karaoke</div>
+            </div>
           </div>
         </div>
       </aside>
@@ -247,10 +290,15 @@
       <div class="main-content">
         <header class="top-header">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <button class="hamburger-btn" id="hamburgerBtn">
+              <i class="fa-solid fa-bars"></i>
+            </button>
             <div>
               <div class="page-title">Karaoke Stage & Live Lyrics</div>
-              <div class="breadcrumb"><span>Media & Audio</span><span class="breadcrumb-sep">/</span><span>Synchronized Vocal Stage</span></div>
+              <div class="breadcrumb">
+                <span>Media & Audio</span><span class="breadcrumb-sep">/</span
+                ><span>Synchronized Vocal Stage</span>
+              </div>
             </div>
           </div>
           <div class="header-right">
@@ -264,82 +312,204 @@
           <div class="page-header-bar animate-in">
             <div>
               <h1 class="page-heading">
-                <span class="page-heading-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);">
-                  <i class="fa-solid fa-microphone" style="color:var(--primary);"></i>
+                <span
+                  class="page-heading-icon"
+                  style="
+                    background: var(--primary-dim);
+                    border: 1px solid var(--border-primary);
+                  "
+                >
+                  <i
+                    class="fa-solid fa-microphone"
+                    style="color: var(--primary)"
+                  ></i>
                 </span>
                 Panggung Karaoke & Visualizer Lirik
               </h1>
-              <p class="page-sub">Bernyanyi bersama dengan teks lirik berjalan tersinkronisasi, evaluasi kecocokan nada pitch, dan sorakan penonton.</p>
+              <p class="page-sub">
+                Bernyanyi bersama dengan teks lirik berjalan tersinkronisasi,
+                evaluasi kecocokan nada pitch, dan sorakan penonton.
+              </p>
             </div>
           </div>
 
           <div class="karaoke-layout animate-in delay-1">
             <!-- Left: Stage & Lyrics -->
             <div class="stage-card">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 16px;
+                "
+              >
                 <div>
-                  <span class="badge badge-success" style="font-size:10px;">SEDANG BERLANGSUNG</span>
-                  <div style="font-family:var(--font-heading);font-size:18px;font-weight:700;color:#fff;margin-top:4px;" id="currentSongTitle">
+                  <span class="badge badge-success" style="font-size: 10px"
+                    >SEDANG BERLANGSUNG</span
+                  >
+                  <div
+                    style="
+                      font-family: var(--font-heading);
+                      font-size: 18px;
+                      font-weight: 700;
+                      color: #fff;
+                      margin-top: 4px;
+                    "
+                    id="currentSongTitle"
+                  >
                     Sparkle (スパークル) - RADWIMPS
                   </div>
                 </div>
-                <div style="font-family:var(--font-mono);font-size:13px;color:var(--accent-cyan);font-weight:700;" id="timerDisplay">
+                <div
+                  style="
+                    font-family: var(--font-mono);
+                    font-size: 13px;
+                    color: var(--accent-cyan);
+                    font-weight: 700;
+                  "
+                  id="timerDisplay"
+                >
                   01:42 / 04:18
                 </div>
               </div>
 
               <!-- Scrolling Lyrics Box -->
               <div class="lyrics-viewport">
-                <div class="lyric-line-prev" id="lyricPrev">Mada kono sekai wa boku wo kainarashitetai mitai da</div>
-                <div class="lyric-line-active" id="lyricActive">Nozomi toori darou? Utsukushiku mogaku yo</div>
-                <div class="lyric-line-next" id="lyricNext">Tagai no sunadokei nagamenagara kisu wo shiyou yo</div>
+                <div class="lyric-line-prev" id="lyricPrev">
+                  Mada kono sekai wa boku wo kainarashitetai mitai da
+                </div>
+                <div class="lyric-line-active" id="lyricActive">
+                  Nozomi toori darou? Utsukushiku mogaku yo
+                </div>
+                <div class="lyric-line-next" id="lyricNext">
+                  Tagai no sunadokei nagamenagara kisu wo shiyou yo
+                </div>
               </div>
 
               <!-- Pitch Monitor -->
               <div class="pitch-monitor">
-                <div style="display:flex;align-items:center;gap:10px;">
-                  <span style="font-size:20px;">🎤</span>
+                <div style="display: flex; align-items: center; gap: 10px">
+                  <span style="font-size: 20px">🎤</span>
                   <div>
-                    <div style="font-size:12px;font-weight:700;color:#fff;">Akurasi Nada (Pitch Match)</div>
-                    <div style="font-size:11px;color:#34d399;" id="pitchAccuracyText">Sempurna! Combo x14</div>
+                    <div style="font-size: 12px; font-weight: 700; color: #fff">
+                      Akurasi Nada (Pitch Match)
+                    </div>
+                    <div
+                      style="font-size: 11px; color: #34d399"
+                      id="pitchAccuracyText"
+                    >
+                      Sempurna! Combo x14
+                    </div>
                   </div>
                 </div>
-                <div style="font-family:var(--font-heading);font-size:22px;font-weight:700;color:var(--accent-amber);" id="scoreDisplay">
-                  96 <small style="font-size:12px;color:var(--text-muted);">/ 100</small>
+                <div
+                  style="
+                    font-family: var(--font-heading);
+                    font-size: 22px;
+                    font-weight: 700;
+                    color: var(--accent-amber);
+                  "
+                  id="scoreDisplay"
+                >
+                  96
+                  <small style="font-size: 12px; color: var(--text-muted)"
+                    >/ 100</small
+                  >
                 </div>
               </div>
 
               <!-- Audience Cheer Action -->
               <div>
-                <div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:10px;text-transform:uppercase;">
+                <div
+                  style="
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: var(--text-secondary);
+                    margin-bottom: 10px;
+                    text-transform: uppercase;
+                  "
+                >
                   Reaksi Sorakan Penonton
                 </div>
                 <div class="cheer-grid">
-                  <button class="btn-cheer" id="cheerClap"><span>👏</span> <span>Tepuk Tangan</span></button>
-                  <button class="btn-cheer" id="cheerCheer"><span>🎉</span> <span>Sorak Hore</span></button>
-                  <button class="btn-cheer" id="cheerSakura"><span>🌸</span> <span>Hujan Bunga</span></button>
-                  <button class="btn-cheer" id="cheerLight"><span>🌟</span> <span>Lightstick</span></button>
+                  <button class="btn-cheer" id="cheerClap">
+                    <span>👏</span> <span>Tepuk Tangan</span>
+                  </button>
+                  <button class="btn-cheer" id="cheerCheer">
+                    <span>🎉</span> <span>Sorak Hore</span>
+                  </button>
+                  <button class="btn-cheer" id="cheerSakura">
+                    <span>🌸</span> <span>Hujan Bunga</span>
+                  </button>
+                  <button class="btn-cheer" id="cheerLight">
+                    <span>🌟</span> <span>Lightstick</span>
+                  </button>
                 </div>
               </div>
             </div>
 
             <!-- Right: Song Selection List -->
             <div class="card card-p animate-in delay-2">
-              <div style="font-family:var(--font-heading);font-size:16px;font-weight:700;color:#fff;margin-bottom:14px;">
+              <div
+                style="
+                  font-family: var(--font-heading);
+                  font-size: 16px;
+                  font-weight: 700;
+                  color: #fff;
+                  margin-bottom: 14px;
+                "
+              >
                 Pilihan Lagu Karaoke
               </div>
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <div style="background:rgba(244,114,182,0.1);border:1px solid var(--border-primary);padding:12px;border-radius:10px;cursor:pointer;">
-                  <div style="font-size:13px;font-weight:600;color:#fff;">Sparkle - RADWIMPS</div>
-                  <div style="font-size:11px;color:var(--primary);">Kimi no Na wa OST · Sedang Diputar</div>
+              <div style="display: flex; flex-direction: column; gap: 8px">
+                <div
+                  style="
+                    background: rgba(244, 114, 182, 0.1);
+                    border: 1px solid var(--border-primary);
+                    padding: 12px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                  "
+                >
+                  <div style="font-size: 13px; font-weight: 600; color: #fff">
+                    Sparkle - RADWIMPS
+                  </div>
+                  <div style="font-size: 11px; color: var(--primary)">
+                    Kimi no Na wa OST · Sedang Diputar
+                  </div>
                 </div>
-                <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);padding:12px;border-radius:10px;cursor:pointer;">
-                  <div style="font-size:13px;font-weight:600;color:#fff;">Idol (アイドル) - YOASOBI</div>
-                  <div style="font-size:11px;color:var(--text-muted);">Oshi no Ko OST · BPM: 166</div>
+                <div
+                  style="
+                    background: rgba(255, 255, 255, 0.02);
+                    border: 1px solid var(--border-subtle);
+                    padding: 12px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                  "
+                >
+                  <div style="font-size: 13px; font-weight: 600; color: #fff">
+                    Idol (アイドル) - YOASOBI
+                  </div>
+                  <div style="font-size: 11px; color: var(--text-muted)">
+                    Oshi no Ko OST · BPM: 166
+                  </div>
                 </div>
-                <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);padding:12px;border-radius:10px;cursor:pointer;">
-                  <div style="font-size:13px;font-weight:600;color:#fff;">Lemon - Kenshi Yonezu</div>
-                  <div style="font-size:11px;color:var(--text-muted);">Unnatural OST · BPM: 87</div>
+                <div
+                  style="
+                    background: rgba(255, 255, 255, 0.02);
+                    border: 1px solid var(--border-subtle);
+                    padding: 12px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                  "
+                >
+                  <div style="font-size: 13px; font-weight: 600; color: #fff">
+                    Lemon - Kenshi Yonezu
+                  </div>
+                  <div style="font-size: 11px; color: var(--text-muted)">
+                    Unnatural OST · BPM: 87
+                  </div>
                 </div>
               </div>
             </div>
@@ -350,11 +520,26 @@
 
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"
+          ><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span
+          ><span class="mn-label">Dashboard</span></a
+        >
+        <a href="/world" class="mobile-nav-item" data-group="map"
+          ><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span
+          ><span class="mn-label">Map</span></a
+        >
+        <a href="/automations" class="mobile-nav-item" data-group="config"
+          ><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span
+          ><span class="mn-label">Config</span></a
+        >
+        <a href="/music" class="mobile-nav-item" data-group="system"
+          ><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span
+          ><span class="mn-label">System</span></a
+        >
+        <a href="/settings" class="mobile-nav-item" data-group="settings"
+          ><span class="mn-icon"><i class="fa-solid fa-gears"></i></span
+          ><span class="mn-label">Settings</span></a
+        >
       </div>
     </nav>
 
@@ -363,12 +548,16 @@
       let audioCtx = null;
       function playSynthTone(freq, duration = 0.1) {
         try {
-          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (!audioCtx)
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
           gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+          gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioCtx.currentTime + duration,
+          );
           osc.connect(gain);
           gain.connect(audioCtx.destination);
           osc.start();
@@ -376,42 +565,62 @@
         } catch (_) {}
       }
 
-      document.getElementById('cheerClap').addEventListener('click', () => {
-        [400, 450, 500].forEach((f, i) => setTimeout(() => playSynthTone(f, 0.08), i * 70));
+      document.getElementById("cheerClap").addEventListener("click", () => {
+        [400, 450, 500].forEach((f, i) =>
+          setTimeout(() => playSynthTone(f, 0.08), i * 70),
+        );
       });
-      document.getElementById('cheerCheer').addEventListener('click', () => {
-        [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => playSynthTone(f, 0.15), i * 90));
+      document.getElementById("cheerCheer").addEventListener("click", () => {
+        [523, 659, 784, 1046].forEach((f, i) =>
+          setTimeout(() => playSynthTone(f, 0.15), i * 90),
+        );
       });
-      document.getElementById('cheerSakura').addEventListener('click', () => {
-        [880, 1100, 1320].forEach((f, i) => setTimeout(() => playSynthTone(f, 0.12), i * 80));
+      document.getElementById("cheerSakura").addEventListener("click", () => {
+        [880, 1100, 1320].forEach((f, i) =>
+          setTimeout(() => playSynthTone(f, 0.12), i * 80),
+        );
       });
-      document.getElementById('cheerLight').addEventListener('click', () => {
-        [600, 750, 900].forEach((f, i) => setTimeout(() => playSynthTone(f, 0.1), i * 100));
+      document.getElementById("cheerLight").addEventListener("click", () => {
+        [600, 750, 900].forEach((f, i) =>
+          setTimeout(() => playSynthTone(f, 0.1), i * 100),
+        );
       });
 
       // Synchronized Lyrics simulation
       const LYRICS = [
-        { prev: 'Mada kono sekai wa boku wo kainarashitetai mitai da', active: 'Nozomi toori darou? Utsukushiku mogaku yo', next: 'Tagai no sunadokei nagamenagara kisu wo shiyou yo' },
-        { prev: 'Nozomi toori darou? Utsukushiku mogaku yo', active: 'Tagai no sunadokei nagamenagara kisu wo shiyou yo', next: 'Sayonara kara ichiban tooi basho de machiawaseyou' },
-        { prev: 'Tagai no sunadokei nagamenagara kisu wo shiyou yo', active: 'Sayonara kara ichiban tooi basho de machiawaseyou', next: 'Tsui ni toki wa kita kinou made wa joshou no joshou de' }
+        {
+          prev: "Mada kono sekai wa boku wo kainarashitetai mitai da",
+          active: "Nozomi toori darou? Utsukushiku mogaku yo",
+          next: "Tagai no sunadokei nagamenagara kisu wo shiyou yo",
+        },
+        {
+          prev: "Nozomi toori darou? Utsukushiku mogaku yo",
+          active: "Tagai no sunadokei nagamenagara kisu wo shiyou yo",
+          next: "Sayonara kara ichiban tooi basho de machiawaseyou",
+        },
+        {
+          prev: "Tagai no sunadokei nagamenagara kisu wo shiyou yo",
+          active: "Sayonara kara ichiban tooi basho de machiawaseyou",
+          next: "Tsui ni toki wa kita kinou made wa joshou no joshou de",
+        },
       ];
       let lIdx = 0;
       setInterval(() => {
         lIdx = (lIdx + 1) % LYRICS.length;
         const l = LYRICS[lIdx];
-        document.getElementById('lyricPrev').textContent = l.prev;
-        document.getElementById('lyricActive').textContent = l.active;
-        document.getElementById('lyricNext').textContent = l.next;
+        document.getElementById("lyricPrev").textContent = l.prev;
+        document.getElementById("lyricActive").textContent = l.active;
+        document.getElementById("lyricNext").textContent = l.next;
       }, 5000);
 
       // Live Music Sync from /api/music/state
       async function syncKaraokeState() {
         try {
-          const res = await fetch('/api/music/state');
+          const res = await fetch("/api/music/state");
           if (!res.ok) return;
           const json = await res.json();
           if (json.success && json.currentTrack) {
-            const titleEl = document.getElementById('currentSongTitle');
+            const titleEl = document.getElementById("currentSongTitle");
             if (titleEl) {
               titleEl.textContent = `${json.currentTrack.title} - ${json.currentTrack.author}`;
             }

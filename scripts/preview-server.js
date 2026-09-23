@@ -52,12 +52,24 @@ app.get(
 app.use("/assets", express.static(assetsPath));
 app.use("/assets/3d", express.static(path.join(assetsPath, "3D Model Naura")));
 app.use("/src", express.static(path.join(projectRoot, "dashboard", "src")));
-app.use("/public", express.static(path.join(projectRoot, "dashboard", "public")));
-app.use("/vendor", express.static(path.join(projectRoot, "dashboard", "public", "vendor")));
+app.use(
+  "/public",
+  express.static(path.join(projectRoot, "dashboard", "public")),
+);
+app.use(
+  "/vendor",
+  express.static(path.join(projectRoot, "dashboard", "public", "vendor")),
+);
 app.use("/vendor", express.static(path.join(distPath, "vendor")));
 app.use("/models", express.static(path.join(distPath, "models")));
-app.use("/models", express.static(path.join(projectRoot, "dashboard", "public", "models")));
-app.use("/node_modules", express.static(path.join(projectRoot, "node_modules")));
+app.use(
+  "/models",
+  express.static(path.join(projectRoot, "dashboard", "public", "models")),
+);
+app.use(
+  "/node_modules",
+  express.static(path.join(projectRoot, "node_modules")),
+);
 app.use("/v2", express.static(distPath));
 app.use(express.static(distPath));
 app.use(express.static(path.join(projectRoot, "dashboard", "public")));
@@ -82,31 +94,51 @@ const mockClient = {
 };
 
 try {
-  const apiRouter = require(path.join(projectRoot, "dashboard", "routes", "api"))(mockClient);
+  const apiRouter = require(
+    path.join(projectRoot, "dashboard", "routes", "api"),
+  )(mockClient);
   app.use("/api", apiRouter);
 } catch (apiErr) {
-  console.warn("[PreviewServer] Gagal memuat dashboard/routes/api:", apiErr.message);
+  console.warn(
+    "[PreviewServer] Gagal memuat dashboard/routes/api:",
+    apiErr.message,
+  );
 }
 
 try {
-  const guildRouter = require(path.join(projectRoot, "dashboard", "routes", "guild"))(mockClient);
+  const guildRouter = require(
+    path.join(projectRoot, "dashboard", "routes", "guild"),
+  )(mockClient);
   app.use(guildRouter);
 } catch (guildErr) {
-  console.warn("[PreviewServer] Gagal memuat dashboard/routes/guild:", guildErr.message);
+  console.warn(
+    "[PreviewServer] Gagal memuat dashboard/routes/guild:",
+    guildErr.message,
+  );
 }
 
 try {
-  const aiRouter = require(path.join(projectRoot, "dashboard", "routes", "ai"))(mockClient);
+  const aiRouter = require(path.join(projectRoot, "dashboard", "routes", "ai"))(
+    mockClient,
+  );
   app.use("/api/ai", aiRouter);
 } catch (aiErr) {
-  console.warn("[PreviewServer] Gagal memuat dashboard/routes/ai:", aiErr.message);
+  console.warn(
+    "[PreviewServer] Gagal memuat dashboard/routes/ai:",
+    aiErr.message,
+  );
 }
 
 try {
-  const survivalRouter = require(path.join(projectRoot, "dashboard", "routes", "survival"))(mockClient);
+  const survivalRouter = require(
+    path.join(projectRoot, "dashboard", "routes", "survival"),
+  )(mockClient);
   app.use("/api/survival", survivalRouter);
 } catch (survErr) {
-  console.warn("[PreviewServer] Gagal memuat dashboard/routes/survival:", survErr.message);
+  console.warn(
+    "[PreviewServer] Gagal memuat dashboard/routes/survival:",
+    survErr.message,
+  );
 }
 
 // 2. Mock API endpoints for realistic preview
@@ -286,7 +318,12 @@ pages.forEach((page) => {
 // Fallback to static matching in dist/src/pages or src/pages
 app.use((req, res, next) => {
   const cleanPath = req.path.replace(/^\//, "").replace(/\.html$/, "");
-  const distCandidate = path.join(distPath, "src", "pages", `${cleanPath}.html`);
+  const distCandidate = path.join(
+    distPath,
+    "src",
+    "pages",
+    `${cleanPath}.html`,
+  );
   if (fs.existsSync(distCandidate)) {
     return res.sendFile(distCandidate);
   }

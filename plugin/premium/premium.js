@@ -43,13 +43,16 @@ async function runPersona(interaction) {
     return interaction.editReply(
       buildErrorContainerV2({
         title: "Akses Khusus V.I.P",
-        description: "Fitur kustomisasi persona AI Naura hanya tersedia untuk pelanggan V.I.P aktif.",
+        description:
+          "Fitur kustomisasi persona AI Naura hanya tersedia untuk pelanggan V.I.P aktif.",
         footerText: ui.getFooter("premium"),
       }),
     );
   }
   const personaChoice = interaction.options.getString("gaya") || "default";
-  await cacheManager.updateUserProfile(userId, { customPersona: personaChoice });
+  await cacheManager.updateUserProfile(userId, {
+    customPersona: personaChoice,
+  });
 
   const personaNames = {
     default: "Ceria & Hangat (Default Naura)",
@@ -129,12 +132,16 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("claim")
-        .setDescription("Klaim hadiah dividen harian eksklusif anggota V.I.P (Kupon, NSF, Mystery Box)."),
+        .setDescription(
+          "Klaim hadiah dividen harian eksklusif anggota V.I.P (Kupon, NSF, Mystery Box).",
+        ),
     )
     .addSubcommand((sub) =>
       sub
         .setName("persona")
-        .setDescription("Atur gaya kepribadian obrolan AI Naura saat mengobrol denganmu.")
+        .setDescription(
+          "Atur gaya kepribadian obrolan AI Naura saat mengobrol denganmu.",
+        )
         .addStringOption((opt) =>
           opt
             .setName("gaya")
@@ -144,8 +151,14 @@ module.exports = {
               { name: "🌸 Ceria & Hangat (Default Naura)", value: "default" },
               { name: "😤 Tsundere (Jutek tapi Perhatian)", value: "tsundere" },
               { name: "❄️ Kuudere (Tenang & Analitis)", value: "kuudere" },
-              { name: "🎮 Gamer Cyberpunk (Penuh Istilah RPG)", value: "gamer" },
-              { name: "🎩 Formal Butler (Sopan & Penuh Hormat)", value: "butler" },
+              {
+                name: "🎮 Gamer Cyberpunk (Penuh Istilah RPG)",
+                value: "gamer",
+              },
+              {
+                name: "🎩 Formal Butler (Sopan & Penuh Hormat)",
+                value: "butler",
+              },
             ),
         ),
     )

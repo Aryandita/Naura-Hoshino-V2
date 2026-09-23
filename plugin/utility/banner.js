@@ -1,6 +1,10 @@
 "use strict";
 
-const { SlashCommandBuilder, MessageFlags, AttachmentBuilder } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  MessageFlags,
+  AttachmentBuilder,
+} = require("discord.js");
 const cacheManager = require("../../src/managers/cacheManager");
 const ui = require("../../src/config/ui");
 const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
@@ -9,7 +13,9 @@ const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("banner")
-    .setDescription("🖼️ Atur banner kosmetik atau generate Dynamic Motion Banner AI.")
+    .setDescription(
+      "🖼️ Atur banner kosmetik atau generate Dynamic Motion Banner AI.",
+    )
     .addSubcommand((sub) =>
       sub
         .setName("set")
@@ -36,7 +42,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("motion")
-        .setDescription("✨ Generate AI Dynamic Motion Banner untuk profil dan kartu kelulusan.")
+        .setDescription(
+          "✨ Generate AI Dynamic Motion Banner untuk profil dan kartu kelulusan.",
+        )
         .addStringOption((opt) =>
           opt
             .setName("tema")
@@ -64,7 +72,8 @@ module.exports = {
     if (subCmd === "motion") {
       await interaction.deferReply();
       const theme = interaction.options.getString("tema") || "cyberpunk";
-      const customTitle = interaction.options.getString("judul") || "SEASON PASS GRADUATE";
+      const customTitle =
+        interaction.options.getString("judul") || "SEASON PASS GRADUATE";
 
       const survival = await cacheManager.getUserSurvival(userId);
 
@@ -74,26 +83,36 @@ module.exports = {
         size: 256,
       });
 
-      const bannerBuffer = await canvasWorkerPool.execute("renderDynamicBanner", {
-        username: interaction.user.username,
-        avatarUrl,
-        theme,
-        seasonTier: survival?.seasonTier || 30,
-        title: customTitle,
-        quote: "Echoes of stellar journeys resonate forever in the cosmos.",
-        stats: {
-          level: survival?.level || 1,
-          power: Math.round((survival?.statAttack || 10) * 15 + (survival?.level || 1) * 100),
-          prestige: survival?.starFragments || 500,
+      const bannerBuffer = await canvasWorkerPool.execute(
+        "renderDynamicBanner",
+        {
+          username: interaction.user.username,
+          avatarUrl,
+          theme,
+          seasonTier: survival?.seasonTier || 30,
+          title: customTitle,
+          quote: "Echoes of stellar journeys resonate forever in the cosmos.",
+          stats: {
+            level: survival?.level || 1,
+            power: Math.round(
+              (survival?.statAttack || 10) * 15 + (survival?.level || 1) * 100,
+            ),
+            prestige: survival?.starFragments || 500,
+          },
         },
-      });
+      );
 
       const attachment = new AttachmentBuilder(bannerBuffer, {
         name: `dynamic_banner_${userId}.png`,
       });
 
       const payload = buildContainerV2({
-        accentColorHex: theme === "cyberpunk" ? "#00F0FF" : theme === "celestial" ? "#A78BFA" : "#EC4899",
+        accentColorHex:
+          theme === "cyberpunk"
+            ? "#00F0FF"
+            : theme === "celestial"
+              ? "#A78BFA"
+              : "#EC4899",
         authorName: "Naura Motion Studio",
         title: `✨ Dynamic Motion Banner [${theme.toUpperCase()}]`,
         description: [

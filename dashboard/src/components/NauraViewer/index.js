@@ -13,95 +13,104 @@ import { Naura3DViewer } from "./viewer3d.js";
 import { WardrobeStudio } from "./wardrobeStudio.js";
 
 class NauraViewerClass {
-    constructor() {
-        this.initialized = false;
-        this.isExpanded = false;
-        this.activeTab = "chat"; // 'chat' | 'music' | 'hud'
-        this.currentMood = "Happy";
-        this.isPlaying = true;
-        this.spectrumAnimId = null;
-        this.musicProgress = 42; // persen
-        this.chatHistory = [];
-        this.viewer3d = null;
-        this.wardrobe = null;
-        this.activeContext = null; // Context reaktivitas per halaman
+  constructor() {
+    this.initialized = false;
+    this.isExpanded = false;
+    this.activeTab = "chat"; // 'chat' | 'music' | 'hud'
+    this.currentMood = "Happy";
+    this.isPlaying = true;
+    this.spectrumAnimId = null;
+    this.musicProgress = 42; // persen
+    this.chatHistory = [];
+    this.viewer3d = null;
+    this.wardrobe = null;
+    this.activeContext = null; // Context reaktivitas per halaman
+  }
+
+  /**
+   * Inisialisasi widget Naura OS ke dalam DOM.
+   * @param {Object} options
+   * @param {string} [options.context] - Nama context halaman: 'index' | 'status' | 'music' | 'portfolio' | dll.
+   */
+  async init(options = {}) {
+    if (this.initialized) return;
+
+    this._createUI();
+    this._initEvents();
+    this._initDraggable();
+    this._initSpectrumVisualizer();
+    this._initLiveTelemetry();
+    this._initChatWelcome();
+    await this._init3DViewer();
+
+    // Inisialisasi Wardrobe Studio & terapkan skin yang tersimpan
+    this.wardrobe = new WardrobeStudio(this.viewer3d);
+    if (this.viewer3d) {
+      const savedSkin = this.wardrobe.getSavedSkin();
+      if (savedSkin && savedSkin !== "cyberpunk") {
+        this.viewer3d.setSkin(savedSkin);
+      }
     }
 
-    /**
-     * Inisialisasi widget Naura OS ke dalam DOM.
-     * @param {Object} options
-     * @param {string} [options.context] - Nama context halaman: 'index' | 'status' | 'music' | 'portfolio' | dll.
-     */
-    async init(options = {}) {
-        if (this.initialized) return;
-
-        this._createUI();
-        this._initEvents();
-        this._initDraggable();
-        this._initSpectrumVisualizer();
-        this._initLiveTelemetry();
-        this._initChatWelcome();
-        await this._init3DViewer();
-
-        // Inisialisasi Wardrobe Studio & terapkan skin yang tersimpan
-        this.wardrobe = new WardrobeStudio(this.viewer3d);
-        if (this.viewer3d) {
-            const savedSkin = this.wardrobe.getSavedSkin();
-            if (savedSkin && savedSkin !== "cyberpunk") {
-                this.viewer3d.setSkin(savedSkin);
-            }
-        }
-
-        // Muat context reaktivitas per halaman bila disediakan
-        if (options.context) {
-            await this._loadContext(options.context);
-        }
-
-        this.initialized = true;
+    // Muat context reaktivitas per halaman bila disediakan
+    if (options.context) {
+      await this._loadContext(options.context);
     }
 
-    /**
-     * Muat dan inisialisasi context plugin per halaman secara dinamis.
-     * Context mengatur reaktivitas mood Naura berdasarkan event Socket.IO halaman.
-     * @param {string} contextName - Nama context ('index', 'status', 'music', dll.)
-     */
-    async _loadContext(contextName) {
-        try {
-            // Coba load context spesifik untuk halaman ini
-            const contextModule = await import(`./contexts/${contextName}.context.js`).catch(
-                () => import("./contexts/default.context.js")
-            );
+    this.initialized = true;
+  }
 
-            const contextFactory = contextModule.default;
-            if (typeof contextFactory === "function") {
-                // Context menerima referensi ke viewer ini sebagai interface
-                const viewerInterface = {
-                    setMood: (mood, status) => this.setMood(mood, status),
-                    triggerWave: () => this.triggerWave(),
-                    isLoaded: () => this.viewer3d !== null,
-                };
+  /**
+   * Muat dan inisialisasi context plugin per halaman secara dinamis.
+   * Context mengatur reaktivitas mood Naura berdasarkan event Socket.IO halaman.
+   * @param {string} contextName - Nama context ('index', 'status', 'music', dll.)
+   */
+  async _loadContext(contextName) {
+    try {
+      // Coba load context spesifik untuk halaman ini
+      const contextModule = await import(
+        `./contexts/${contextName}.context.js`
+      ).catch(() => import("./contexts/default.context.js"));
 
-                this.activeContext = contextFactory(viewerInterface);
-                if (this.activeContext && typeof this.activeContext.init === "function") {
-                    // Tunggu DOM fully ready sebelum context mulai listen socket
-                    if (document.readyState === "complete") {
-                        this.activeContext.init();
-                    } else {
-                        window.addEventListener("load", () => this.activeContext.init(), { once: true });
-                    }
-                }
-            }
-        } catch (err) {
-            // Context gagal dimuat, tidak kritis, widget tetap berjalan tanpa reaktivitas
-            console.warn("[NauraViewer] Context plugin tidak ditemukan:", contextName, err.message);
+      const contextFactory = contextModule.default;
+      if (typeof contextFactory === "function") {
+        // Context menerima referensi ke viewer ini sebagai interface
+        const viewerInterface = {
+          setMood: (mood, status) => this.setMood(mood, status),
+          triggerWave: () => this.triggerWave(),
+          isLoaded: () => this.viewer3d !== null,
+        };
+
+        this.activeContext = contextFactory(viewerInterface);
+        if (
+          this.activeContext &&
+          typeof this.activeContext.init === "function"
+        ) {
+          // Tunggu DOM fully ready sebelum context mulai listen socket
+          if (document.readyState === "complete") {
+            this.activeContext.init();
+          } else {
+            window.addEventListener("load", () => this.activeContext.init(), {
+              once: true,
+            });
+          }
         }
+      }
+    } catch (err) {
+      // Context gagal dimuat, tidak kritis, widget tetap berjalan tanpa reaktivitas
+      console.warn(
+        "[NauraViewer] Context plugin tidak ditemukan:",
+        contextName,
+        err.message,
+      );
     }
+  }
 
-    _createUI() {
-        const container = document.createElement("div");
-        container.id = "naura-viewer-container";
+  _createUI() {
+    const container = document.createElement("div");
+    container.id = "naura-viewer-container";
 
-        container.innerHTML = `
+    container.innerHTML = `
       <div class="nv-panel is-minimized" id="nv-panel">
         <!-- Minimized Mode: Floating Anime Avatar Orb -->
         <div class="nv-mini-avatar-wrapper" id="nv-mini-trigger" title="Buka Naura OS">
@@ -285,587 +294,633 @@ class NauraViewerClass {
       </div>
     `;
 
-        document.body.appendChild(container);
+    document.body.appendChild(container);
 
-        this.ui = {
-            container,
-            panel: container.querySelector("#nv-panel"),
-            btnMin: container.querySelector("#nv-btn-min"),
-            miniTrigger: container.querySelector("#nv-mini-trigger"),
-            tabButtons: container.querySelectorAll(".nv-tab-btn"),
-            tabPanes: {
-                chat: container.querySelector("#nv-pane-chat"),
-                music: container.querySelector("#nv-pane-music"),
-                hud: container.querySelector("#nv-pane-hud"),
-            },
-            chat: {
-                avatar: container.querySelector("#nv-chat-avatar"),
-                avatar3dFrame: container.querySelector("#nv-avatar-frame-3d"),
-                canvas3d: container.querySelector("#nv-chat-3d-canvas"),
-                moodText: container.querySelector("#nv-chat-mood-text"),
-                messages: container.querySelector("#nv-chat-messages"),
-                input: container.querySelector("#nv-chat-input"),
-                sendBtn: container.querySelector("#nv-chat-send"),
-                chips: container.querySelectorAll(".nv-chip"),
-            },
-            music: {
-                vinyl: container.querySelector("#nv-vinyl"),
-                trackTitle: container.querySelector("#nv-track-title"),
-                trackArtist: container.querySelector("#nv-track-artist"),
-                canvas: container.querySelector("#nv-spectrum-canvas"),
-                btnPlay: container.querySelector("#nv-btn-play"),
-                iconPlay: container.querySelector("#nv-icon-play"),
-                btnPrev: container.querySelector("#nv-btn-prev"),
-                btnNext: container.querySelector("#nv-btn-next"),
-                progressFill: container.querySelector("#nv-progress-fill"),
-                timeCurrent: container.querySelector("#nv-time-current"),
-            },
-            hud: {
-                ping: container.querySelector("#nv-hud-ping"),
-                ramText: container.querySelector("#nv-hud-ram-text"),
-                ramFill: container.querySelector("#nv-hud-ram-fill"),
-                cpuText: container.querySelector("#nv-hud-cpu-text"),
-                cpuFill: container.querySelector("#nv-hud-cpu-fill"),
-                logList: container.querySelector("#nv-hud-log-list"),
-            },
-        };
-    }
+    this.ui = {
+      container,
+      panel: container.querySelector("#nv-panel"),
+      btnMin: container.querySelector("#nv-btn-min"),
+      miniTrigger: container.querySelector("#nv-mini-trigger"),
+      tabButtons: container.querySelectorAll(".nv-tab-btn"),
+      tabPanes: {
+        chat: container.querySelector("#nv-pane-chat"),
+        music: container.querySelector("#nv-pane-music"),
+        hud: container.querySelector("#nv-pane-hud"),
+      },
+      chat: {
+        avatar: container.querySelector("#nv-chat-avatar"),
+        avatar3dFrame: container.querySelector("#nv-avatar-frame-3d"),
+        canvas3d: container.querySelector("#nv-chat-3d-canvas"),
+        moodText: container.querySelector("#nv-chat-mood-text"),
+        messages: container.querySelector("#nv-chat-messages"),
+        input: container.querySelector("#nv-chat-input"),
+        sendBtn: container.querySelector("#nv-chat-send"),
+        chips: container.querySelectorAll(".nv-chip"),
+      },
+      music: {
+        vinyl: container.querySelector("#nv-vinyl"),
+        trackTitle: container.querySelector("#nv-track-title"),
+        trackArtist: container.querySelector("#nv-track-artist"),
+        canvas: container.querySelector("#nv-spectrum-canvas"),
+        btnPlay: container.querySelector("#nv-btn-play"),
+        iconPlay: container.querySelector("#nv-icon-play"),
+        btnPrev: container.querySelector("#nv-btn-prev"),
+        btnNext: container.querySelector("#nv-btn-next"),
+        progressFill: container.querySelector("#nv-progress-fill"),
+        timeCurrent: container.querySelector("#nv-time-current"),
+      },
+      hud: {
+        ping: container.querySelector("#nv-hud-ping"),
+        ramText: container.querySelector("#nv-hud-ram-text"),
+        ramFill: container.querySelector("#nv-hud-ram-fill"),
+        cpuText: container.querySelector("#nv-hud-cpu-text"),
+        cpuFill: container.querySelector("#nv-hud-cpu-fill"),
+        logList: container.querySelector("#nv-hud-log-list"),
+      },
+    };
+  }
 
-    _initEvents() {
-        // 1. Tab Switching
-        this.ui.tabButtons.forEach((btn) => {
-            btn.addEventListener("click", () => {
-                const targetTab = btn.dataset.tab;
-                this.switchTab(targetTab);
-            });
-        });
+  _initEvents() {
+    // 1. Tab Switching
+    this.ui.tabButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const targetTab = btn.dataset.tab;
+        this.switchTab(targetTab);
+      });
+    });
 
-        // 2. Minimize & Expand Toggle
-        this.ui.btnMin.addEventListener("click", (e) => {
-            e.stopPropagation();
-            this.toggleMinimize();
-        });
+    // 2. Minimize & Expand Toggle
+    this.ui.btnMin.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.toggleMinimize();
+    });
 
-        this.ui.miniTrigger.addEventListener("click", () => {
-            if (!this.isExpanded) this.toggleMinimize();
-        });
+    this.ui.miniTrigger.addEventListener("click", () => {
+      if (!this.isExpanded) this.toggleMinimize();
+    });
 
-        // 3. AI Chat Submission
-        this.ui.chat.sendBtn.addEventListener("click", () => this._sendChatMessage());
-        this.ui.chat.input.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                this._sendChatMessage();
-            }
-        });
+    // 3. AI Chat Submission
+    this.ui.chat.sendBtn.addEventListener("click", () =>
+      this._sendChatMessage(),
+    );
+    this.ui.chat.input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        this._sendChatMessage();
+      }
+    });
 
-        // 4. Quick Action Chips
-        this.ui.chat.chips.forEach((chip) => {
-            chip.addEventListener("click", () => {
-                if (chip.dataset.action === "wave") {
-                    this.triggerWave();
-                    this.setMood("Happy", "Halo! Senang bertemu denganmu! 🌸");
-                    return;
-                }
-                if (chip.dataset.action === "astral") {
-                    if (this.viewer3d) this.viewer3d.playAnimation("AstralCast");
-                    this.setMood("Happy", "Sihir Bintang Hoshino! ✨");
-                    return;
-                }
-                if (chip.dataset.action === "idol") {
-                    if (this.viewer3d) this.viewer3d.playAnimation("StarPose");
-                    this.setMood("Happy", "Pose Idol Ceria! ⭐");
-                    return;
-                }
-                const query = chip.dataset.query;
-                this.ui.chat.input.value = query;
-                this._sendChatMessage();
-            });
-        });
-
-        // 5. Music Play/Pause Toggle
-        this.ui.music.btnPlay.addEventListener("click", () => this.toggleMusicPlay());
-        this.ui.music.btnNext.addEventListener("click", () => {
-            this._changeMusicTrack("Next");
-        });
-        this.ui.music.btnPrev.addEventListener("click", () => {
-            this._changeMusicTrack("Prev");
-        });
-
-        // 6. 3D Avatar Click Interaction (Cycle through signature animations)
-        if (this.ui.chat.avatar3dFrame) {
-            const avatarActions = [
-                { anim: "Wave", mood: "Happy", status: "Halo! Senang bertemu denganmu! 🌸" },
-                { anim: "StarPose", mood: "Happy", status: "Pose Idol Hoshino! ⭐" },
-                { anim: "BlowKiss", mood: "Happy", status: "Tiup Ciuman Sayang! 😘" },
-                { anim: "AstralCast", mood: "Happy", status: "Sihir Bintang Hoshino! ✨" },
-                { anim: "Cheers", mood: "Happy", status: "Semangat Selalu Bersamamu! 🎉" },
-                { anim: "Thinking", mood: "Thinking", status: "Sedang merenungkan sesuatu... 🤔" },
-                { anim: "Shy", mood: "Happy", status: "Malu-malu kucing... 😳" },
-            ];
-            let avatarIdx = 0;
-            this.ui.chat.avatar3dFrame.addEventListener("click", () => {
-                const act = avatarActions[avatarIdx % avatarActions.length];
-                avatarIdx++;
-                if (this.viewer3d) {
-                    this.viewer3d.playAnimation(act.anim);
-                }
-                this.setMood(act.mood, act.status);
-            });
+    // 4. Quick Action Chips
+    this.ui.chat.chips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        if (chip.dataset.action === "wave") {
+          this.triggerWave();
+          this.setMood("Happy", "Halo! Senang bertemu denganmu! 🌸");
+          return;
         }
-    }
-
-    /**
-     * Memungkinkan jendela mengambang dan avatar orb dapat digeser (drag & reposition)
-     * dengan aman dan terkontrol di dalam viewport pengguna.
-     */
-    _initDraggable() {
-        const container = this.ui.container;
-        const header = this.ui.panel.querySelector(".nv-header");
-        const miniTrigger = this.ui.miniTrigger;
-        if (!container) return;
-
-        let isDragging = false;
-        let startPointerX = 0;
-        let startPointerY = 0;
-        let initialTranslateX = 0;
-        let initialTranslateY = 0;
-        let currentTranslateX = 0;
-        let currentTranslateY = 0;
-        let moved = false;
-
-        const onPointerDown = (e) => {
-            if (e.target.closest("button") || e.target.closest(".nv-tabs")) return;
-            isDragging = true;
-            moved = false;
-            startPointerX = e.clientX;
-            startPointerY = e.clientY;
-            initialTranslateX = currentTranslateX;
-            initialTranslateY = currentTranslateY;
-
-            if (e.target.setPointerCapture) {
-                try { e.target.setPointerCapture(e.pointerId); } catch (_) {}
-            }
-        };
-
-        const onPointerMove = (e) => {
-            if (!isDragging) return;
-            const dx = e.clientX - startPointerX;
-            const dy = e.clientY - startPointerY;
-            if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
-                moved = true;
-            }
-
-            const nextX = initialTranslateX + dx;
-            const nextY = initialTranslateY + dy;
-
-            // Clamping sederhana
-            currentTranslateX = Math.max(-window.innerWidth + 100, Math.min(10, nextX));
-            currentTranslateY = Math.max(-window.innerHeight + 100, Math.min(10, nextY));
-            container.style.transform = `translate(${currentTranslateX}px, ${currentTranslateY}px)`;
-        };
-
-        const onPointerUp = (e) => {
-            if (!isDragging) return;
-            isDragging = false;
-
-            if (e.target.releasePointerCapture) {
-                try { e.target.releasePointerCapture(e.pointerId); } catch (_) {}
-            }
-        };
-
-        if (header) {
-            header.addEventListener("pointerdown", onPointerDown);
-            header.addEventListener("pointermove", onPointerMove);
-            header.addEventListener("pointerup", onPointerUp);
-            header.addEventListener("pointercancel", onPointerUp);
+        if (chip.dataset.action === "astral") {
+          if (this.viewer3d) this.viewer3d.playAnimation("AstralCast");
+          this.setMood("Happy", "Sihir Bintang Hoshino! ✨");
+          return;
         }
-
-        if (miniTrigger) {
-            miniTrigger.addEventListener("pointerdown", onPointerDown);
-            miniTrigger.addEventListener("pointermove", onPointerMove);
-            miniTrigger.addEventListener("pointerup", (e) => {
-                onPointerUp(e);
-                if (!moved && !this.isExpanded) {
-                    this.toggleMinimize();
-                }
-            });
-            miniTrigger.addEventListener("pointercancel", onPointerUp);
+        if (chip.dataset.action === "idol") {
+          if (this.viewer3d) this.viewer3d.playAnimation("StarPose");
+          this.setMood("Happy", "Pose Idol Ceria! ⭐");
+          return;
         }
+        const query = chip.dataset.query;
+        this.ui.chat.input.value = query;
+        this._sendChatMessage();
+      });
+    });
+
+    // 5. Music Play/Pause Toggle
+    this.ui.music.btnPlay.addEventListener("click", () =>
+      this.toggleMusicPlay(),
+    );
+    this.ui.music.btnNext.addEventListener("click", () => {
+      this._changeMusicTrack("Next");
+    });
+    this.ui.music.btnPrev.addEventListener("click", () => {
+      this._changeMusicTrack("Prev");
+    });
+
+    // 6. 3D Avatar Click Interaction (Cycle through signature animations)
+    if (this.ui.chat.avatar3dFrame) {
+      const avatarActions = [
+        {
+          anim: "Wave",
+          mood: "Happy",
+          status: "Halo! Senang bertemu denganmu! 🌸",
+        },
+        { anim: "StarPose", mood: "Happy", status: "Pose Idol Hoshino! ⭐" },
+        { anim: "BlowKiss", mood: "Happy", status: "Tiup Ciuman Sayang! 😘" },
+        {
+          anim: "AstralCast",
+          mood: "Happy",
+          status: "Sihir Bintang Hoshino! ✨",
+        },
+        {
+          anim: "Cheers",
+          mood: "Happy",
+          status: "Semangat Selalu Bersamamu! 🎉",
+        },
+        {
+          anim: "Thinking",
+          mood: "Thinking",
+          status: "Sedang merenungkan sesuatu... 🤔",
+        },
+        { anim: "Shy", mood: "Happy", status: "Malu-malu kucing... 😳" },
+      ];
+      let avatarIdx = 0;
+      this.ui.chat.avatar3dFrame.addEventListener("click", () => {
+        const act = avatarActions[avatarIdx % avatarActions.length];
+        avatarIdx++;
+        if (this.viewer3d) {
+          this.viewer3d.playAnimation(act.anim);
+        }
+        this.setMood(act.mood, act.status);
+      });
     }
+  }
 
-    async _init3DViewer() {
-        if (!this.ui.chat.canvas3d) return;
+  /**
+   * Memungkinkan jendela mengambang dan avatar orb dapat digeser (drag & reposition)
+   * dengan aman dan terkontrol di dalam viewport pengguna.
+   */
+  _initDraggable() {
+    const container = this.ui.container;
+    const header = this.ui.panel.querySelector(".nv-header");
+    const miniTrigger = this.ui.miniTrigger;
+    if (!container) return;
 
+    let isDragging = false;
+    let startPointerX = 0;
+    let startPointerY = 0;
+    let initialTranslateX = 0;
+    let initialTranslateY = 0;
+    let currentTranslateX = 0;
+    let currentTranslateY = 0;
+    let moved = false;
+
+    const onPointerDown = (e) => {
+      if (e.target.closest("button") || e.target.closest(".nv-tabs")) return;
+      isDragging = true;
+      moved = false;
+      startPointerX = e.clientX;
+      startPointerY = e.clientY;
+      initialTranslateX = currentTranslateX;
+      initialTranslateY = currentTranslateY;
+
+      if (e.target.setPointerCapture) {
         try {
-            this.viewer3d = new Naura3DViewer(this.ui.chat.canvas3d, {
-                modelPath: "/models/naura.vrm",
-                lookAtCursor: true,
-                cameraFov: 36,
-                cameraY: 0.32,
-                cameraZ: 1.05,
-            });
+          e.target.setPointerCapture(e.pointerId);
+        } catch (_) {}
+      }
+    };
 
-            const loaded = await this.viewer3d.init();
-            if (loaded) {
-                this.ui.chat.canvas3d.style.display = "block";
-                if (this.ui.chat.avatar) {
-                    this.ui.chat.avatar.style.display = "none";
-                }
-                // Tandai badge 3D LIVE terlihat
-                const badge = this.ui.chat.avatar3dFrame
-                    ? this.ui.chat.avatar3dFrame.querySelector(".nv-badge-3d")
-                    : null;
-                if (badge) badge.style.display = "block";
+    const onPointerMove = (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - startPointerX;
+      const dy = e.clientY - startPointerY;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+        moved = true;
+      }
 
-                // Bila awal dimuat dalam keadaan minimized, pause render loop untuk hemat daya
-                if (!this.isExpanded) {
-                    this.viewer3d.pause();
-                }
-            } else {
-                this._fallbackTo2D();
-            }
-        } catch (err) {
-            console.warn("[NauraViewer] 3D Viewer fallback to 2D:", err);
-            this._fallbackTo2D();
-        }
+      const nextX = initialTranslateX + dx;
+      const nextY = initialTranslateY + dy;
+
+      // Clamping sederhana
+      currentTranslateX = Math.max(
+        -window.innerWidth + 100,
+        Math.min(10, nextX),
+      );
+      currentTranslateY = Math.max(
+        -window.innerHeight + 100,
+        Math.min(10, nextY),
+      );
+      container.style.transform = `translate(${currentTranslateX}px, ${currentTranslateY}px)`;
+    };
+
+    const onPointerUp = (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+
+      if (e.target.releasePointerCapture) {
+        try {
+          e.target.releasePointerCapture(e.pointerId);
+        } catch (_) {}
+      }
+    };
+
+    if (header) {
+      header.addEventListener("pointerdown", onPointerDown);
+      header.addEventListener("pointermove", onPointerMove);
+      header.addEventListener("pointerup", onPointerUp);
+      header.addEventListener("pointercancel", onPointerUp);
     }
 
-    /**
-     * Tampilkan avatar 2D sebagai fallback bila WebGL gagal.
-     */
-    _fallbackTo2D() {
-        if (this.ui.chat.canvas3d) this.ui.chat.canvas3d.style.display = "none";
-        if (this.ui.chat.avatar) this.ui.chat.avatar.style.display = "block";
-        // Sembunyikan badge 3D LIVE
-        const badge = this.ui.chat.avatar3dFrame
-            ? this.ui.chat.avatar3dFrame.querySelector(".nv-badge-3d")
-            : null;
-        if (badge) badge.style.display = "none";
-    }
-
-    triggerWave() {
-        if (this.viewer3d) {
-            this.viewer3d.triggerWave();
+    if (miniTrigger) {
+      miniTrigger.addEventListener("pointerdown", onPointerDown);
+      miniTrigger.addEventListener("pointermove", onPointerMove);
+      miniTrigger.addEventListener("pointerup", (e) => {
+        onPointerUp(e);
+        if (!moved && !this.isExpanded) {
+          this.toggleMinimize();
         }
+      });
+      miniTrigger.addEventListener("pointercancel", onPointerUp);
     }
+  }
 
-    switchTab(tabName) {
-        if (!this.ui.tabPanes[tabName]) return;
-        this.activeTab = tabName;
+  async _init3DViewer() {
+    if (!this.ui.chat.canvas3d) return;
 
-        // Update tab button classes
-        this.ui.tabButtons.forEach((btn) => {
-            if (btn.dataset.tab === tabName) {
-                btn.classList.add("is-active");
-            } else {
-                btn.classList.remove("is-active");
-            }
-        });
+    try {
+      this.viewer3d = new Naura3DViewer(this.ui.chat.canvas3d, {
+        modelPath: "/models/naura.vrm",
+        lookAtCursor: true,
+        cameraFov: 36,
+        cameraY: 0.32,
+        cameraZ: 1.05,
+      });
 
-        // Update pane visibility
-        Object.keys(this.ui.tabPanes).forEach((key) => {
-            if (key === tabName) {
-                this.ui.tabPanes[key].classList.add("is-active");
-            } else {
-                this.ui.tabPanes[key].classList.remove("is-active");
-            }
-        });
-
-        // Power saving: toggle 3D viewer & spectrum animations berdasarkan tab aktif
-        if (this.isExpanded && tabName === "chat") {
-            if (this.viewer3d) {
-                this.viewer3d.resume();
-                this.viewer3d._onResize();
-            }
-        } else if (this.viewer3d) {
-            this.viewer3d.pause();
-        }
-
-        if (this.isExpanded && tabName === "music") {
-            this._startSpectrum();
-        } else {
-            this._stopSpectrum();
-        }
-    }
-
-    toggleMinimize() {
-        this.isExpanded = !this.isExpanded;
-        if (this.isExpanded) {
-            this.ui.panel.classList.remove("is-minimized");
-            this.ui.panel.classList.add("is-expanded");
-
-            // Resume rendering bila tab aktif
-            if (this.activeTab === "chat" && this.viewer3d) {
-                this.viewer3d.resume();
-                setTimeout(() => {
-                    if (this.viewer3d) this.viewer3d._onResize();
-                }, 100);
-            } else if (this.activeTab === "music") {
-                this._startSpectrum();
-            }
-        } else {
-            this.ui.panel.classList.remove("is-expanded");
-            this.ui.panel.classList.add("is-minimized");
-
-            // Pause semua render loop saat diminimalkan untuk hemat daya total
-            if (this.viewer3d) {
-                this.viewer3d.pause();
-            }
-            this._stopSpectrum();
-        }
-    }
-
-    // =========================================================================
-    // CHAT CONTROLLER & EMOTION AVATARS
-    // =========================================================================
-    _initChatWelcome() {
-        this._appendMessage("bot", "Halo! Aku Naura Hoshino, asisten virtualmu. Ada yang bisa kubantu di server atau dashboard hari ini? 🌸");
-    }
-
-    setMood(expressionName, moodStatus = "") {
-        this.currentMood = expressionName;
-        if (this.viewer3d) {
-            this.viewer3d.setMood(expressionName);
-        }
-        const avatarUrl = `/assets/Naura_Expression/${expressionName}.png`;
+      const loaded = await this.viewer3d.init();
+      if (loaded) {
+        this.ui.chat.canvas3d.style.display = "block";
         if (this.ui.chat.avatar) {
-            this.ui.chat.avatar.src = avatarUrl;
+          this.ui.chat.avatar.style.display = "none";
         }
-        if (moodStatus && this.ui.chat.moodText) {
-            this.ui.chat.moodText.textContent = moodStatus;
+        // Tandai badge 3D LIVE terlihat
+        const badge = this.ui.chat.avatar3dFrame
+          ? this.ui.chat.avatar3dFrame.querySelector(".nv-badge-3d")
+          : null;
+        if (badge) badge.style.display = "block";
+
+        // Bila awal dimuat dalam keadaan minimized, pause render loop untuk hemat daya
+        if (!this.isExpanded) {
+          this.viewer3d.pause();
         }
+      } else {
+        this._fallbackTo2D();
+      }
+    } catch (err) {
+      console.warn("[NauraViewer] 3D Viewer fallback to 2D:", err);
+      this._fallbackTo2D();
+    }
+  }
+
+  /**
+   * Tampilkan avatar 2D sebagai fallback bila WebGL gagal.
+   */
+  _fallbackTo2D() {
+    if (this.ui.chat.canvas3d) this.ui.chat.canvas3d.style.display = "none";
+    if (this.ui.chat.avatar) this.ui.chat.avatar.style.display = "block";
+    // Sembunyikan badge 3D LIVE
+    const badge = this.ui.chat.avatar3dFrame
+      ? this.ui.chat.avatar3dFrame.querySelector(".nv-badge-3d")
+      : null;
+    if (badge) badge.style.display = "none";
+  }
+
+  triggerWave() {
+    if (this.viewer3d) {
+      this.viewer3d.triggerWave();
+    }
+  }
+
+  switchTab(tabName) {
+    if (!this.ui.tabPanes[tabName]) return;
+    this.activeTab = tabName;
+
+    // Update tab button classes
+    this.ui.tabButtons.forEach((btn) => {
+      if (btn.dataset.tab === tabName) {
+        btn.classList.add("is-active");
+      } else {
+        btn.classList.remove("is-active");
+      }
+    });
+
+    // Update pane visibility
+    Object.keys(this.ui.tabPanes).forEach((key) => {
+      if (key === tabName) {
+        this.ui.tabPanes[key].classList.add("is-active");
+      } else {
+        this.ui.tabPanes[key].classList.remove("is-active");
+      }
+    });
+
+    // Power saving: toggle 3D viewer & spectrum animations berdasarkan tab aktif
+    if (this.isExpanded && tabName === "chat") {
+      if (this.viewer3d) {
+        this.viewer3d.resume();
+        this.viewer3d._onResize();
+      }
+    } else if (this.viewer3d) {
+      this.viewer3d.pause();
     }
 
-    async _sendChatMessage() {
-        const text = (this.ui.chat.input.value || "").trim();
-        if (!text) return;
-
-        // 1. Add user message
-        this._appendMessage("user", text);
-        this.ui.chat.input.value = "";
-
-        // 2. Set thinking mood
-        this.setMood("Thinking", "Sedang berpikir...");
-
-        // 3. Call AI endpoint or fallback response
-        try {
-            const reply = await this._fetchAIReply(text);
-            this._appendMessage("bot", reply.text);
-            this.setMood("Talk", "Naura menjawab...");
-            setTimeout(() => {
-                this.setMood(reply.mood || "Happy", reply.status || "Ceria & Siap Menemanimu ✨");
-            }, 1500);
-        } catch (e) {
-            this._appendMessage("bot", "Maaf ya, Naura sedang mengalami kendala koneksi ke server. Coba lagi sebentar lagi!");
-            this.setMood("Cry", "Koneksi Terganggu");
-        }
+    if (this.isExpanded && tabName === "music") {
+      this._startSpectrum();
+    } else {
+      this._stopSpectrum();
     }
+  }
 
-    _appendMessage(sender, text) {
-        const msgDiv = document.createElement("div");
-        msgDiv.className = `nv-msg is-${sender}`;
+  toggleMinimize() {
+    this.isExpanded = !this.isExpanded;
+    if (this.isExpanded) {
+      this.ui.panel.classList.remove("is-minimized");
+      this.ui.panel.classList.add("is-expanded");
 
-        const bubble = document.createElement("div");
-        bubble.className = "nv-msg-bubble";
-        bubble.textContent = text;
+      // Resume rendering bila tab aktif
+      if (this.activeTab === "chat" && this.viewer3d) {
+        this.viewer3d.resume();
+        setTimeout(() => {
+          if (this.viewer3d) this.viewer3d._onResize();
+        }, 100);
+      } else if (this.activeTab === "music") {
+        this._startSpectrum();
+      }
+    } else {
+      this.ui.panel.classList.remove("is-expanded");
+      this.ui.panel.classList.add("is-minimized");
 
-        msgDiv.appendChild(bubble);
-        this.ui.chat.messages.appendChild(msgDiv);
-        this.ui.chat.messages.scrollTop = this.ui.chat.messages.scrollHeight;
+      // Pause semua render loop saat diminimalkan untuk hemat daya total
+      if (this.viewer3d) {
+        this.viewer3d.pause();
+      }
+      this._stopSpectrum();
     }
+  }
 
-    async _fetchAIReply(message) {
-        // Coba endpoint sandbox dashboard
-        try {
-            const res = await fetch("/api/settings/sandbox", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message }),
-            });
-            if (res.ok) {
-                const data = await res.json();
-                if (data.reply) {
-                    return { text: data.reply, mood: "Happy", status: "Selesai Membantu ✨" };
-                }
-            }
-        } catch {
-            // Fallback
-        }
+  // =========================================================================
+  // CHAT CONTROLLER & EMOTION AVATARS
+  // =========================================================================
+  _initChatWelcome() {
+    this._appendMessage(
+      "bot",
+      "Halo! Aku Naura Hoshino, asisten virtualmu. Ada yang bisa kubantu di server atau dashboard hari ini? 🌸",
+    );
+  }
 
-        // Fallback response engine pintar lokal
-        const q = message.toLowerCase();
-        if (q.includes("status") || q.includes("ping")) {
-            return {
-                text: "Status bot saat ini: 🟢 ONLINE dengan latensi 28ms. Seluruh database (Supabase, Redis, Mongo) berjalan normal!",
-                mood: "Cheers",
-                status: "Sistem Stabil ⚡"
-            };
-        }
-        if (q.includes("saldo") || q.includes("coin") || q.includes("uang")) {
-            return {
-                text: "Saldo akunmu saat ini: 1.542.000 Coins dan 35 Naura Coupons di Bank Vault!",
-                mood: "Happy",
-                status: "Ekonomi Aktif 💰"
-            };
-        }
-        if (q.includes("lagu") || q.includes("music") || q.includes("putar")) {
-            return {
-                text: "Saat ini sedang memutar: 'Cyber Kawaii Lo-Fi Stream' di Voice Channel #General!",
-                mood: "Cheers",
-                status: "Memutar Musik 🎵"
-            };
-        }
-        if (q.includes("dadu") || q.includes("roll")) {
-            const roll = Math.floor(Math.random() * 6) + 1;
-            return {
-                text: `🎲 Dadu bergulir... dan hasilnya adalah **${roll}**! Semoga beruntung ya!`,
-                mood: "Shocked",
-                status: "Mini Game 🎲"
-            };
-        }
-        if (q.includes("aturan") || q.includes("rules")) {
-            return {
-                text: "Aturan server utama: 1. Bersikap ramah & saling menghormati. 2. Dilarang spam. 3. Gunakan channel sesuai fungsinya!",
-                mood: "Read",
-                status: "Panduan Server 📜"
-            };
-        }
+  setMood(expressionName, moodStatus = "") {
+    this.currentMood = expressionName;
+    if (this.viewer3d) {
+      this.viewer3d.setMood(expressionName);
+    }
+    const avatarUrl = `/assets/Naura_Expression/${expressionName}.png`;
+    if (this.ui.chat.avatar) {
+      this.ui.chat.avatar.src = avatarUrl;
+    }
+    if (moodStatus && this.ui.chat.moodText) {
+      this.ui.chat.moodText.textContent = moodStatus;
+    }
+  }
 
-        return {
-            text: `Naura siap bantu! Mengenai "${message}", kamu juga bisa gunakan perintah slash di Discord seperti /help untuk info lengkap ya! ✨`,
+  async _sendChatMessage() {
+    const text = (this.ui.chat.input.value || "").trim();
+    if (!text) return;
+
+    // 1. Add user message
+    this._appendMessage("user", text);
+    this.ui.chat.input.value = "";
+
+    // 2. Set thinking mood
+    this.setMood("Thinking", "Sedang berpikir...");
+
+    // 3. Call AI endpoint or fallback response
+    try {
+      const reply = await this._fetchAIReply(text);
+      this._appendMessage("bot", reply.text);
+      this.setMood("Talk", "Naura menjawab...");
+      setTimeout(() => {
+        this.setMood(
+          reply.mood || "Happy",
+          reply.status || "Ceria & Siap Menemanimu ✨",
+        );
+      }, 1500);
+    } catch (e) {
+      this._appendMessage(
+        "bot",
+        "Maaf ya, Naura sedang mengalami kendala koneksi ke server. Coba lagi sebentar lagi!",
+      );
+      this.setMood("Cry", "Koneksi Terganggu");
+    }
+  }
+
+  _appendMessage(sender, text) {
+    const msgDiv = document.createElement("div");
+    msgDiv.className = `nv-msg is-${sender}`;
+
+    const bubble = document.createElement("div");
+    bubble.className = "nv-msg-bubble";
+    bubble.textContent = text;
+
+    msgDiv.appendChild(bubble);
+    this.ui.chat.messages.appendChild(msgDiv);
+    this.ui.chat.messages.scrollTop = this.ui.chat.messages.scrollHeight;
+  }
+
+  async _fetchAIReply(message) {
+    // Coba endpoint sandbox dashboard
+    try {
+      const res = await fetch("/api/settings/sandbox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.reply) {
+          return {
+            text: data.reply,
             mood: "Happy",
-            status: "Siap Membantu 🌸"
-        };
-    }
-
-    // =========================================================================
-    // MUSIC CONTROLLER & SPECTRUM VISUALIZER
-    // =========================================================================
-    _initSpectrumVisualizer() {
-        // Render loop akan dipicu on-demand saat tab music aktif via _startSpectrum()
-        if (this.isExpanded && this.activeTab === "music") {
-            this._startSpectrum();
+            status: "Selesai Membantu ✨",
+          };
         }
+      }
+    } catch {
+      // Fallback
     }
 
-    _startSpectrum() {
-        if (this.spectrumAnimId) return;
-        const canvas = this.ui.music?.canvas;
-        if (!canvas) return;
-
-        const ctx = canvas.getContext("2d");
-        const numBars = 24;
-
-        const render = () => {
-            if (!this.isExpanded || this.activeTab !== "music") {
-                this._stopSpectrum();
-                return;
-            }
-
-            if (canvas.width !== canvas.clientWidth) {
-                canvas.width = canvas.clientWidth;
-                canvas.height = canvas.clientHeight;
-            }
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            const barWidth = (canvas.width / numBars) - 3;
-            const time = Date.now() * 0.003;
-            let totalEnergy = 0;
-
-            for (let i = 0; i < numBars; i++) {
-                let barHeight;
-                if (this.isPlaying) {
-                    const freq = Math.sin(time + i * 0.4) * 0.5 + 0.5;
-                    const noise = Math.sin(time * 2.5 + i) * 0.3 + 0.3;
-                    barHeight = Math.max(6, (freq * 0.6 + noise * 0.4) * (canvas.height - 10));
-                    totalEnergy += barHeight / canvas.height;
-                } else {
-                    barHeight = 4; // Idle static line
-                }
-
-                const x = i * (barWidth + 3);
-                const y = canvas.height - barHeight;
-
-                // Gradient Cyan -> Pink -> Purple
-                const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
-                gradient.addColorStop(0, "#06b6d4");
-                gradient.addColorStop(0.6, "#ec4899");
-                gradient.addColorStop(1, "#c084fc");
-
-                ctx.fillStyle = gradient;
-                ctx.shadowColor = "#ec4899";
-                ctx.shadowBlur = this.isPlaying ? 8 : 0;
-                ctx.fillRect(x, y, barWidth, barHeight);
-            }
-
-            // Teruskan energi musik rata-rata ke 3D mascot agar Astral Halo berdenyut
-            if (this.viewer3d && this.isPlaying) {
-                this.viewer3d.setAudioEnergy(totalEnergy / numBars);
-            }
-
-            this.spectrumAnimId = requestAnimationFrame(render);
-        };
-
-        this.spectrumAnimId = requestAnimationFrame(render);
+    // Fallback response engine pintar lokal
+    const q = message.toLowerCase();
+    if (q.includes("status") || q.includes("ping")) {
+      return {
+        text: "Status bot saat ini: 🟢 ONLINE dengan latensi 28ms. Seluruh database (Supabase, Redis, Mongo) berjalan normal!",
+        mood: "Cheers",
+        status: "Sistem Stabil ⚡",
+      };
+    }
+    if (q.includes("saldo") || q.includes("coin") || q.includes("uang")) {
+      return {
+        text: "Saldo akunmu saat ini: 1.542.000 Coins dan 35 Naura Coupons di Bank Vault!",
+        mood: "Happy",
+        status: "Ekonomi Aktif 💰",
+      };
+    }
+    if (q.includes("lagu") || q.includes("music") || q.includes("putar")) {
+      return {
+        text: "Saat ini sedang memutar: 'Cyber Kawaii Lo-Fi Stream' di Voice Channel #General!",
+        mood: "Cheers",
+        status: "Memutar Musik 🎵",
+      };
+    }
+    if (q.includes("dadu") || q.includes("roll")) {
+      const roll = Math.floor(Math.random() * 6) + 1;
+      return {
+        text: `🎲 Dadu bergulir... dan hasilnya adalah **${roll}**! Semoga beruntung ya!`,
+        mood: "Shocked",
+        status: "Mini Game 🎲",
+      };
+    }
+    if (q.includes("aturan") || q.includes("rules")) {
+      return {
+        text: "Aturan server utama: 1. Bersikap ramah & saling menghormati. 2. Dilarang spam. 3. Gunakan channel sesuai fungsinya!",
+        mood: "Read",
+        status: "Panduan Server 📜",
+      };
     }
 
-    _stopSpectrum() {
-        if (this.spectrumAnimId) {
-            cancelAnimationFrame(this.spectrumAnimId);
-            this.spectrumAnimId = null;
-        }
-    }
+    return {
+      text: `Naura siap bantu! Mengenai "${message}", kamu juga bisa gunakan perintah slash di Discord seperti /help untuk info lengkap ya! ✨`,
+      mood: "Happy",
+      status: "Siap Membantu 🌸",
+    };
+  }
 
-    toggleMusicPlay() {
-        this.isPlaying = !this.isPlaying;
+  // =========================================================================
+  // MUSIC CONTROLLER & SPECTRUM VISUALIZER
+  // =========================================================================
+  _initSpectrumVisualizer() {
+    // Render loop akan dipicu on-demand saat tab music aktif via _startSpectrum()
+    if (this.isExpanded && this.activeTab === "music") {
+      this._startSpectrum();
+    }
+  }
+
+  _startSpectrum() {
+    if (this.spectrumAnimId) return;
+    const canvas = this.ui.music?.canvas;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    const numBars = 24;
+
+    const render = () => {
+      if (!this.isExpanded || this.activeTab !== "music") {
+        this._stopSpectrum();
+        return;
+      }
+
+      if (canvas.width !== canvas.clientWidth) {
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = canvas.width / numBars - 3;
+      const time = Date.now() * 0.003;
+      let totalEnergy = 0;
+
+      for (let i = 0; i < numBars; i++) {
+        let barHeight;
         if (this.isPlaying) {
-            this.ui.music.iconPlay.className = "fa-solid fa-pause";
-            this.ui.music.vinyl.classList.remove("is-paused");
+          const freq = Math.sin(time + i * 0.4) * 0.5 + 0.5;
+          const noise = Math.sin(time * 2.5 + i) * 0.3 + 0.3;
+          barHeight = Math.max(
+            6,
+            (freq * 0.6 + noise * 0.4) * (canvas.height - 10),
+          );
+          totalEnergy += barHeight / canvas.height;
         } else {
-            this.ui.music.iconPlay.className = "fa-solid fa-play";
-            this.ui.music.vinyl.classList.add("is-paused");
+          barHeight = 4; // Idle static line
         }
-    }
 
-    _changeMusicTrack(direction) {
-        const tracks = [
-            { title: "Cyber Kawaii Lo-Fi Stream", artist: "Naura FM • 128kbps HQ" },
-            { title: "Midnight Sakura Neon Beat", artist: "Hoshino Electro Lab" },
-            { title: "Neo-Tokyo Rainy Cafe", artist: "Naura Acoustic Live" },
-        ];
-        const rand = tracks[Math.floor(Math.random() * tracks.length)];
-        this.ui.music.trackTitle.textContent = rand.title;
-        this.ui.music.trackArtist.textContent = rand.artist;
-        this.isPlaying = true;
-        this.ui.music.iconPlay.className = "fa-solid fa-pause";
-        this.ui.music.vinyl.classList.remove("is-paused");
-    }
+        const x = i * (barWidth + 3);
+        const y = canvas.height - barHeight;
 
-    // =========================================================================
-    // LIVE TELEMETRY & EVENT LOG STREAM
-    // =========================================================================
-    _initLiveTelemetry() {
-        // Update live timer periodic
-        setInterval(() => {
-            if (this.activeTab === "hud") {
-                const pingVariation = Math.floor(Math.random() * 6) - 3;
-                const newPing = Math.max(18, 28 + pingVariation);
-                if (this.ui.hud.ping) this.ui.hud.ping.textContent = `${newPing} ms`;
-            }
-        }, 3000);
-    }
+        // Gradient Cyan -> Pink -> Purple
+        const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
+        gradient.addColorStop(0, "#06b6d4");
+        gradient.addColorStop(0.6, "#ec4899");
+        gradient.addColorStop(1, "#c084fc");
 
-    /**
-     * Mengganti skin/wardrobe kostum 3D model Naura
-     * @param {string} skinName - 'cyberpunk' | 'maid' | 'casual' | 'adventurer'
-     */
-    setSkin(skinName) {
-        if (this.viewer3d && typeof this.viewer3d.setSkin === "function") {
-            this.viewer3d.setSkin(skinName);
-        }
+        ctx.fillStyle = gradient;
+        ctx.shadowColor = "#ec4899";
+        ctx.shadowBlur = this.isPlaying ? 8 : 0;
+        ctx.fillRect(x, y, barWidth, barHeight);
+      }
+
+      // Teruskan energi musik rata-rata ke 3D mascot agar Astral Halo berdenyut
+      if (this.viewer3d && this.isPlaying) {
+        this.viewer3d.setAudioEnergy(totalEnergy / numBars);
+      }
+
+      this.spectrumAnimId = requestAnimationFrame(render);
+    };
+
+    this.spectrumAnimId = requestAnimationFrame(render);
+  }
+
+  _stopSpectrum() {
+    if (this.spectrumAnimId) {
+      cancelAnimationFrame(this.spectrumAnimId);
+      this.spectrumAnimId = null;
     }
+  }
+
+  toggleMusicPlay() {
+    this.isPlaying = !this.isPlaying;
+    if (this.isPlaying) {
+      this.ui.music.iconPlay.className = "fa-solid fa-pause";
+      this.ui.music.vinyl.classList.remove("is-paused");
+    } else {
+      this.ui.music.iconPlay.className = "fa-solid fa-play";
+      this.ui.music.vinyl.classList.add("is-paused");
+    }
+  }
+
+  _changeMusicTrack(direction) {
+    const tracks = [
+      { title: "Cyber Kawaii Lo-Fi Stream", artist: "Naura FM • 128kbps HQ" },
+      { title: "Midnight Sakura Neon Beat", artist: "Hoshino Electro Lab" },
+      { title: "Neo-Tokyo Rainy Cafe", artist: "Naura Acoustic Live" },
+    ];
+    const rand = tracks[Math.floor(Math.random() * tracks.length)];
+    this.ui.music.trackTitle.textContent = rand.title;
+    this.ui.music.trackArtist.textContent = rand.artist;
+    this.isPlaying = true;
+    this.ui.music.iconPlay.className = "fa-solid fa-pause";
+    this.ui.music.vinyl.classList.remove("is-paused");
+  }
+
+  // =========================================================================
+  // LIVE TELEMETRY & EVENT LOG STREAM
+  // =========================================================================
+  _initLiveTelemetry() {
+    // Update live timer periodic
+    setInterval(() => {
+      if (this.activeTab === "hud") {
+        const pingVariation = Math.floor(Math.random() * 6) - 3;
+        const newPing = Math.max(18, 28 + pingVariation);
+        if (this.ui.hud.ping) this.ui.hud.ping.textContent = `${newPing} ms`;
+      }
+    }, 3000);
+  }
+
+  /**
+   * Mengganti skin/wardrobe kostum 3D model Naura
+   * @param {string} skinName - 'cyberpunk' | 'maid' | 'casual' | 'adventurer'
+   */
+  setSkin(skinName) {
+    if (this.viewer3d && typeof this.viewer3d.setSkin === "function") {
+      this.viewer3d.setSkin(skinName);
+    }
+  }
 }
 
 // Singleton export, TIDAK auto-init di DOMContentLoaded
@@ -874,7 +929,7 @@ const NauraViewer = new NauraViewerClass();
 
 // Expose ke window untuk debugging (opsional)
 if (typeof window !== "undefined") {
-    window.NauraViewer = NauraViewer;
+  window.NauraViewer = NauraViewer;
 }
 
 export { NauraViewer };

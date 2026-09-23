@@ -50,10 +50,13 @@ function warnMissingTitle(author) {
 
 function resolveLanguage(langOrContext) {
   if (!langOrContext) return languageManager.default;
-  if (typeof langOrContext === "string") return languageManager.normalize(langOrContext);
+  if (typeof langOrContext === "string")
+    return languageManager.normalize(langOrContext);
   if (typeof langOrContext === "object" && langOrContext !== null) {
-    if (langOrContext.localeLang) return languageManager.normalize(langOrContext.localeLang);
-    if (langOrContext.locale) return languageManager.normalize(langOrContext.locale);
+    if (langOrContext.localeLang)
+      return languageManager.normalize(langOrContext.localeLang);
+    if (langOrContext.locale)
+      return languageManager.normalize(langOrContext.locale);
     const userId = langOrContext.user?.id || langOrContext.author?.id;
     if (userId) {
       const cached = languageManager.userCache?.get(userId);

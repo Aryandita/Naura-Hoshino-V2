@@ -4,7 +4,9 @@ const { logger } = require("../../managers/logger");
 const ui = require("../../config/ui");
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
 const { cleanSongTitle } = require("../../canvas/artworkResolver");
-const { lavalinkClusterManager } = require("../../managers/lavalinkClusterManager");
+const {
+  lavalinkClusterManager,
+} = require("../../managers/lavalinkClusterManager");
 
 module.exports = {
   async execute(manager, player, track, error) {
@@ -62,7 +64,9 @@ module.exports = {
 
         // Fallback kedua: coba cari dengan judul aslinya jika query bersih tidak membuahkan hasil
         if (
-          (!fallbackRes || !fallbackRes.tracks || fallbackRes.tracks.length === 0) &&
+          (!fallbackRes ||
+            !fallbackRes.tracks ||
+            fallbackRes.tracks.length === 0) &&
           queryTerm !== rawTitle
         ) {
           fallbackRes = await manager.poru.resolve({
@@ -89,25 +93,23 @@ module.exports = {
             await player.play();
           }
 
-            const channel = manager.client.channels.cache.get(
-              player.textChannel,
-            );
-            if (channel) {
-              const noticePayload = buildContainerV2({
-                accentColorHex: "#FF7700",
-                authorName: "Naura Music Guard",
-                title: "🔄 Pengalihan Sumber Audio Otomatis",
-                description: `Sumber audio utama untuk **${trackTitle}** mengalami kendala koneksi.\nNaura otomatis mengalihkan aliran musik ke **SoundCloud** agar lagumu tetap berputar tanpa henti!`,
-                footerText: ui.getFooter("music"),
-              });
+          const channel = manager.client.channels.cache.get(player.textChannel);
+          if (channel) {
+            const noticePayload = buildContainerV2({
+              accentColorHex: "#FF7700",
+              authorName: "Naura Music Guard",
+              title: "🔄 Pengalihan Sumber Audio Otomatis",
+              description: `Sumber audio utama untuk **${trackTitle}** mengalami kendala koneksi.\nNaura otomatis mengalihkan aliran musik ke **SoundCloud** agar lagumu tetap berputar tanpa henti!`,
+              footerText: ui.getFooter("music"),
+            });
 
-              const msg = await channel.send(noticePayload).catch(() => null);
-              if (msg) {
-                setTimeout(() => msg.delete().catch(() => {}), 12000);
-              }
+            const msg = await channel.send(noticePayload).catch(() => null);
+            if (msg) {
+              setTimeout(() => msg.delete().catch(() => {}), 12000);
             }
-            return;
           }
+          return;
+        }
       } catch (recoveryErr) {
         logger.warn(
           `[trackError] Pemulihan otomatis SoundCloud gagal: ${recoveryErr.message}`,

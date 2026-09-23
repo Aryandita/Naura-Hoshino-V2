@@ -85,7 +85,9 @@ class RecyclingPoolEngine {
         wanderingMerchant,
       };
     } catch (err) {
-      logger.error(`[RecyclingPool] Gagal mengalokasikan sink funds: ${err.message}`);
+      logger.error(
+        `[RecyclingPool] Gagal mengalokasikan sink funds: ${err.message}`,
+      );
       return { ok: false, error: err.message };
     }
   }
@@ -104,12 +106,15 @@ class RecyclingPoolEngine {
     try {
       const survival = await UserSurvival.findOne({ where: { userId } });
       if (survival) {
-        survival.lotteryTickets = Number(survival.lotteryTickets || 0) + tickets;
+        survival.lotteryTickets =
+          Number(survival.lotteryTickets || 0) + tickets;
         await survival.save({ fields: ["lotteryTickets"] });
         return tickets;
       }
     } catch (err) {
-      logger.error(`[RecyclingPool] Gagal menambah tiket undian: ${err.message}`);
+      logger.error(
+        `[RecyclingPool] Gagal menambah tiket undian: ${err.message}`,
+      );
     }
     return 0;
   }
@@ -127,7 +132,12 @@ class RecyclingPoolEngine {
 
     const level = Number(survival.survival_level || 1);
     if (level > NOVICE_MAX_LEVEL) {
-      return { ok: false, reason: "LEVEL_EXCEEDED", currentLevel: level, maxLevel: NOVICE_MAX_LEVEL };
+      return {
+        ok: false,
+        reason: "LEVEL_EXCEEDED",
+        currentLevel: level,
+        maxLevel: NOVICE_MAX_LEVEL,
+      };
     }
 
     const now = new Date();
@@ -153,11 +163,15 @@ class RecyclingPoolEngine {
       await treasury.save({ fields: ["noviceAidPool", "updatedAt"] });
     }
 
-    await cacheManager.incrementUserSurvival(userId, { starFragments: grantAmount });
+    await cacheManager.incrementUserSurvival(userId, {
+      starFragments: grantAmount,
+    });
     survival.lastNoviceAidClaimAt = now;
     await survival.save({ fields: ["lastNoviceAidClaimAt"] });
 
-    logger.info(`[RecyclingPool] Pemain ${userId} mengklaim subsidi pemula sebesar ${grantAmount} NSF`);
+    logger.info(
+      `[RecyclingPool] Pemain ${userId} mengklaim subsidi pemula sebesar ${grantAmount} NSF`,
+    );
 
     return {
       ok: true,
@@ -183,7 +197,9 @@ class RecyclingPoolEngine {
       });
 
       if (participants.length === 0 || currentJackpot <= 0) {
-        logger.info("[RecyclingPool] Tidak ada peserta undian atau jackpot kosong minggu ini.");
+        logger.info(
+          "[RecyclingPool] Tidak ada peserta undian atau jackpot kosong minggu ini.",
+        );
         return { ok: false, reason: "NO_PARTICIPANTS_OR_EMPTY_JACKPOT" };
       }
 
@@ -201,14 +217,22 @@ class RecyclingPoolEngine {
       const winnerUserId = rafflePool[winnerIndex];
 
       const prizeAmount = Math.floor(currentJackpot * 0.8); // 80% jackpot untuk pemenang, 20% sisa jadi bibit jackpot berikutnya
-      await cacheManager.incrementUserSurvival(winnerUserId, { starFragments: prizeAmount });
+      await cacheManager.incrementUserSurvival(winnerUserId, {
+        starFragments: prizeAmount,
+      });
 
       treasury.lotteryJackpot = currentJackpot - prizeAmount;
       treasury.lastLotteryDrawAt = new Date();
-      await treasury.save({ fields: ["lotteryJackpot", "lastLotteryDrawAt", "updatedAt"] });
+      await treasury.save({
+        fields: ["lotteryJackpot", "lastLotteryDrawAt", "updatedAt"],
+      });
 
-      const winnerParticipant = participants.find((p) => p.userId === winnerUserId);
-      const ticketsHeld = winnerParticipant ? Number(winnerParticipant.lotteryTickets || 1) : 1;
+      const winnerParticipant = participants.find(
+        (p) => p.userId === winnerUserId,
+      );
+      const ticketsHeld = winnerParticipant
+        ? Number(winnerParticipant.lotteryTickets || 1)
+        : 1;
 
       // Catat ke ledger riwayat pemenang (Migration v42)
       try {
@@ -220,7 +244,9 @@ class RecyclingPoolEngine {
           drawnAt: treasury.lastLotteryDrawAt,
         });
       } catch (logErr) {
-        logger.warn(`[RecyclingPool] Gagal mencatat LotteryWinner: ${logErr.message}`);
+        logger.warn(
+          `[RecyclingPool] Gagal mencatat LotteryWinner: ${logErr.message}`,
+        );
       }
 
       // Reset seluruh tiket undian partisipan dan bersihkan cache
@@ -242,7 +268,9 @@ class RecyclingPoolEngine {
         totalTickets: rafflePool.length,
       };
     } catch (err) {
-      logger.error(`[RecyclingPool] Gagal mengeksekusi Astral Lottery: ${err.message}`);
+      logger.error(
+        `[RecyclingPool] Gagal mengeksekusi Astral Lottery: ${err.message}`,
+      );
       return { ok: false, error: err.message };
     }
   }
@@ -253,7 +281,7 @@ class RecyclingPoolEngine {
    */
   static async getOverview() {
     const treasury = await this.getTreasury();
-    const activeTickets = await UserSurvival.sum("lotteryTickets") || 0;
+    const activeTickets = (await UserSurvival.sum("lotteryTickets")) || 0;
 
     return {
       lotteryJackpot: Number(treasury.lotteryJackpot || 0),

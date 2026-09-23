@@ -71,8 +71,12 @@ class TradeEngine {
       const shock = macroModifiers[k];
       const macroMultiplier = shock ? shock.multiplier : 1.0;
 
-      const currentPrice = Math.round(v.basePrice * (1 + baseFluctuation / 100) * macroMultiplier);
-      const netPct = Math.round(((currentPrice - v.basePrice) / v.basePrice) * 100);
+      const currentPrice = Math.round(
+        v.basePrice * (1 + baseFluctuation / 100) * macroMultiplier,
+      );
+      const netPct = Math.round(
+        ((currentPrice - v.basePrice) / v.basePrice) * 100,
+      );
 
       result[k] = {
         ...v,
@@ -510,4 +514,3 @@ class TradeEngine {
 }
 
 module.exports = new TradeEngine();
-

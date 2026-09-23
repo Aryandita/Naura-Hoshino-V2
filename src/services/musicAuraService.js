@@ -72,7 +72,12 @@ const FALLBACK_AURAS = [
  * @param {string} [params.guildName] - Nama Server Discord
  * @returns {Promise<{ auraData: object, cardBuffer: Buffer }>}
  */
-async function generateMusicAura({ username, avatarUrl, tracks = [], guildName = "" }) {
+async function generateMusicAura({
+  username,
+  avatarUrl,
+  tracks = [],
+  guildName = "",
+}) {
   let auraData = null;
 
   // 1. Upayakan ekstraksi aura dari Gemini AI
@@ -100,7 +105,10 @@ Balas HANYA dalam format JSON valid tanpa markdown tambahan dengan struktur beri
       });
 
       const rawText = aiResponse.text ? aiResponse.text.trim() : "";
-      const cleanedJson = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+      const cleanedJson = rawText
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
       auraData = JSON.parse(cleanedJson);
     }
   } catch (aiErr) {
@@ -127,7 +135,10 @@ Balas HANYA dalam format JSON valid tanpa markdown tambahan dengan struktur beri
   auraData.avatarUrl = avatarUrl;
 
   // 3. Render kartu kanvas melalui worker thread
-  const cardBuffer = await canvasWorkerPool.runTask("renderMusicAura", auraData);
+  const cardBuffer = await canvasWorkerPool.runTask(
+    "renderMusicAura",
+    auraData,
+  );
 
   return {
     auraData,

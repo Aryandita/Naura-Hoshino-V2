@@ -40,7 +40,9 @@ module.exports = {
         .addAttachmentOption((opt) =>
           opt
             .setName("lampiran")
-            .setDescription("Berkas dokumen (PDF, Word, Excel, CSV, TXT) untuk dianalisis Naura")
+            .setDescription(
+              "Berkas dokumen (PDF, Word, Excel, CSV, TXT) untuk dianalisis Naura",
+            )
             .setRequired(false),
         ),
     )

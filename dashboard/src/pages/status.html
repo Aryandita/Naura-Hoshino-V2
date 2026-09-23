@@ -6,50 +6,94 @@
     <title>Live Status | Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <script src="/socket.io/socket.io.js"></script>
     <style>
       .service-card {
-        display: flex; align-items: center; gap: 14px; padding: 16px 18px;
-        border-radius: var(--r-xl); border: 1px solid var(--border-subtle);
-        background: var(--bg-surface); transition: all var(--t-base);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 18px;
+        border-radius: var(--r-xl);
+        border: 1px solid var(--border-subtle);
+        background: var(--bg-surface);
+        transition: all var(--t-base);
         cursor: pointer;
         position: relative;
       }
-      .service-card:hover { background: var(--bg-surface-hv); border-color: var(--border-medium); }
-      .service-card.online  { border-left: 3px solid var(--accent-green); }
-      .service-card.warn    { 
+      .service-card:hover {
+        background: var(--bg-surface-hv);
+        border-color: var(--border-medium);
+      }
+      .service-card.online {
+        border-left: 3px solid var(--accent-green);
+      }
+      .service-card.warn {
         border-left: 3px solid var(--accent-amber) !important;
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(10, 14, 26, 0.95) 100%) !important;
+        background: linear-gradient(
+          135deg,
+          rgba(245, 158, 11, 0.08) 0%,
+          rgba(10, 14, 26, 0.95) 100%
+        ) !important;
         border-color: rgba(245, 158, 11, 0.35) !important;
       }
-      .service-card.offline { 
-        border-left: 3px solid #ef4444 !important; 
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(15, 8, 16, 0.95) 100%) !important;
+      .service-card.offline {
+        border-left: 3px solid #ef4444 !important;
+        background: linear-gradient(
+          135deg,
+          rgba(239, 68, 68, 0.12) 0%,
+          rgba(15, 8, 16, 0.95) 100%
+        ) !important;
         box-shadow: 0 0 24px rgba(239, 68, 68, 0.25) !important;
         border-color: rgba(239, 68, 68, 0.45) !important;
       }
-      .uptime-bar { display: flex; gap: 3px; }
-      .uptime-tick { 
-        width: 6px; height: 24px; border-radius: 2px; flex-shrink: 0; 
-        transition: transform 0.2s ease, opacity 0.2s ease;
+      .uptime-bar {
+        display: flex;
+        gap: 3px;
       }
-      .uptime-tick.operational { background: #10b981; }
-      .uptime-tick.degraded    { background: #f59e0b; box-shadow: 0 0 6px rgba(245, 158, 11, 0.5); }
-      .uptime-tick.offline     { 
-        background: #ef4444 !important; 
-        box-shadow: 0 0 8px rgba(239, 68, 68, 0.9) !important; 
+      .uptime-tick {
+        width: 6px;
+        height: 24px;
+        border-radius: 2px;
+        flex-shrink: 0;
+        transition:
+          transform 0.2s ease,
+          opacity 0.2s ease;
       }
-      .uptime-tick.pulse-dead  {
+      .uptime-tick.operational {
+        background: #10b981;
+      }
+      .uptime-tick.degraded {
+        background: #f59e0b;
+        box-shadow: 0 0 6px rgba(245, 158, 11, 0.5);
+      }
+      .uptime-tick.offline {
+        background: #ef4444 !important;
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.9) !important;
+      }
+      .uptime-tick.pulse-dead {
         background: #ef4444 !important;
         box-shadow: 0 0 12px #ef4444 !important;
         animation: pulseDeadTick 1.4s infinite ease-in-out;
       }
       @keyframes pulseDeadTick {
-        0%, 100% { opacity: 1; transform: scaleY(1.15); }
-        50% { opacity: 0.35; transform: scaleY(0.9); }
+        0%,
+        100% {
+          opacity: 1;
+          transform: scaleY(1.15);
+        }
+        50% {
+          opacity: 0.35;
+          transform: scaleY(0.9);
+        }
       }
 
       .badge-red {
@@ -68,33 +112,45 @@
     </style>
   </head>
   <body>
-    
-
     <div class="app-shell">
       <!-- Mobile Sidebar Overlay -->
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
       <!-- SIDEBAR (same as other pages) -->
-      <aside class="sidebar " id="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
+          <div class="sidebar-logo-icon">
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="
+                this.style.display = 'none';
+                this.parentElement.innerHTML = '🌸';
+              "
+            />
+          </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
             <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+          <button
+            class="sidebar-close-btn"
+            id="sidebarCloseBtn"
+            aria-label="Tutup menu"
+          >
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
+        <!-- Navigation -->
+        <!-- Navigation -->
         <nav class="sidebar-nav" role="navigation">
-
           <!-- Overview -->
           <div class="nav-group">
             <div class="nav-group-label">Overview</div>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-gauge-high"></i
+              ></span>
               <span>Dashboard</span>
             </a>
             <a href="/status" class="nav-item">
@@ -120,7 +176,9 @@
               <span>Economy</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-network-wired"></i
+              ></span>
               <span>Guild Topology</span>
             </a>
           </div>
@@ -141,7 +199,9 @@
               <span>Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-microphone"></i
+              ></span>
               <span>Karaoke</span>
             </a>
           </div>
@@ -150,7 +210,9 @@
           <div class="nav-group">
             <div class="nav-group-label">Naura Wilds RPG</div>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-earth-asia"></i
+              ></span>
               <span>World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
@@ -175,7 +237,9 @@
               <span>Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-wand-magic-sparkles"></i
+              ></span>
               <span>Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
@@ -192,16 +256,28 @@
           <div class="nav-group">
             <div class="nav-group-label">More</div>
             <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+              <span class="nav-icon" style="color: var(--accent-green)"
+                ><i class="fa-solid fa-id-badge"></i
+              ></span>
+              <span style="color: var(--accent-green)">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
         <div class="sidebar-footer">
-          <div class="sidebar-user" onclick="window.location.href='/'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
-            <div class="sidebar-user-info"><div class="sidebar-user-name">Guest</div><div class="sidebar-user-role">Klik untuk login</div></div>
+          <div class="sidebar-user" onclick="window.location.href = '/'">
+            <img
+              src="/assets/core/avatar.png"
+              alt="User"
+              class="sidebar-user-avatar"
+              onerror="
+                this.src =
+                  'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'
+              "
+            />
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name">Guest</div>
+              <div class="sidebar-user-role">Klik untuk login</div>
+            </div>
           </div>
         </div>
       </aside>
@@ -209,124 +285,388 @@
       <div class="main-content">
         <header class="top-header">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <button class="hamburger-btn" id="hamburgerBtn">
+              <i class="fa-solid fa-bars"></i>
+            </button>
             <div>
               <div class="page-title">Live Telemetry Status</div>
-              <div class="breadcrumb"><span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Status</span></div>
+              <div class="breadcrumb">
+                <span>Naura OS</span><span class="breadcrumb-sep">/</span
+                ><span>Status</span>
+              </div>
             </div>
           </div>
           <div class="header-right">
-            <div class="status-pill" id="globalStatusPill"><span class="status-dot online"></span><span style="color:var(--accent-green);" id="globalStatusText">All Systems Online</span></div>
-            <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <div class="status-pill" id="globalStatusPill">
+              <span class="status-dot online"></span
+              ><span style="color: var(--accent-green)" id="globalStatusText"
+                >All Systems Online</span
+              >
+            </div>
+            <a href="/" class="btn btn-ghost btn-sm"
+              ><i class="fa-solid fa-arrow-left"></i> Dashboard</a
+            >
           </div>
         </header>
 
         <main class="page-content">
-
           <div class="page-header-bar animate-in">
             <div>
               <h1 class="page-heading">
-                <span class="page-heading-icon" style="background:var(--green-dim);border:1px solid rgba(52,211,153,0.3);">
-                  <i class="fa-solid fa-signal" style="color:var(--accent-green);"></i>
+                <span
+                  class="page-heading-icon"
+                  style="
+                    background: var(--green-dim);
+                    border: 1px solid rgba(52, 211, 153, 0.3);
+                  "
+                >
+                  <i
+                    class="fa-solid fa-signal"
+                    style="color: var(--accent-green)"
+                  ></i>
                 </span>
                 Live Telemetry
               </h1>
-              <p class="page-sub">Monitoring real-time seluruh komponen sistem Naura Hoshino v2.3.0</p>
+              <p class="page-sub">
+                Monitoring real-time seluruh komponen sistem Naura Hoshino
+                v2.3.0
+              </p>
             </div>
-            <div style="text-align:right;">
-              <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;font-family:var(--font-heading);">Last Updated</div>
-              <div id="lastUpdate" style="font-family:var(--font-mono);font-size:13px;color:var(--text-primary);font-weight:700;">just now</div>
+            <div style="text-align: right">
+              <div
+                style="
+                  font-size: 10px;
+                  color: var(--text-muted);
+                  text-transform: uppercase;
+                  letter-spacing: 0.08em;
+                  font-family: var(--font-heading);
+                "
+              >
+                Last Updated
+              </div>
+              <div
+                id="lastUpdate"
+                style="
+                  font-family: var(--font-mono);
+                  font-size: 13px;
+                  color: var(--text-primary);
+                  font-weight: 700;
+                "
+              >
+                just now
+              </div>
             </div>
           </div>
 
           <!-- Overall status banner -->
-          <div class="card animate-in delay-1" id="systemBanner" style="margin-bottom:20px;padding:16px 20px;background:linear-gradient(135deg, rgba(52,211,153,0.08), rgba(34,211,238,0.05));border-color:rgba(52,211,153,0.3);display:flex;align-items:center;gap:16px;">
-            <div id="systemBannerIcon" style="width:48px;height:48px;border-radius:50%;background:var(--green-dim);border:1px solid rgba(52,211,153,0.3);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 20px var(--green-glow);">✅</div>
-            <div style="flex:1;">
-              <div style="font-family:var(--font-heading);font-size:15px;font-weight:700;color:var(--text-primary);" id="systemBannerTitle">Semua Sistem Beroperasi Normal</div>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:2px;" id="systemBannerSub">Tidak ada insiden aktif · Uptime 99.98% (30 hari terakhir)</div>
+          <div
+            class="card animate-in delay-1"
+            id="systemBanner"
+            style="
+              margin-bottom: 20px;
+              padding: 16px 20px;
+              background: linear-gradient(
+                135deg,
+                rgba(52, 211, 153, 0.08),
+                rgba(34, 211, 238, 0.05)
+              );
+              border-color: rgba(52, 211, 153, 0.3);
+              display: flex;
+              align-items: center;
+              gap: 16px;
+            "
+          >
+            <div
+              id="systemBannerIcon"
+              style="
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                background: var(--green-dim);
+                border: 1px solid rgba(52, 211, 153, 0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                box-shadow: 0 0 20px var(--green-glow);
+              "
+            >
+              ✅
             </div>
-            <div style="text-align:right;">
-              <div style="font-family:var(--font-mono);font-size:22px;font-weight:700;color:var(--accent-green);" id="globalPing">28ms</div>
-              <div style="font-size:10px;color:var(--text-muted);">Gateway RTT</div>
+            <div style="flex: 1">
+              <div
+                style="
+                  font-family: var(--font-heading);
+                  font-size: 15px;
+                  font-weight: 700;
+                  color: var(--text-primary);
+                "
+                id="systemBannerTitle"
+              >
+                Semua Sistem Beroperasi Normal
+              </div>
+              <div
+                style="
+                  font-size: 12px;
+                  color: var(--text-muted);
+                  margin-top: 2px;
+                "
+                id="systemBannerSub"
+              >
+                Tidak ada insiden aktif · Uptime 99.98% (30 hari terakhir)
+              </div>
+            </div>
+            <div style="text-align: right">
+              <div
+                style="
+                  font-family: var(--font-mono);
+                  font-size: 22px;
+                  font-weight: 700;
+                  color: var(--accent-green);
+                "
+                id="globalPing"
+              >
+                28ms
+              </div>
+              <div style="font-size: 10px; color: var(--text-muted)">
+                Gateway RTT
+              </div>
             </div>
           </div>
 
           <!-- Services Header Bar & Legend -->
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:12px;" class="animate-in delay-2">
-            <div class="section-title" id="coreServicesTitle" style="margin-bottom:0;">Core Services Status (20 Jam Terakhir)</div>
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 14px;
+              flex-wrap: wrap;
+              gap: 12px;
+            "
+            class="animate-in delay-2"
+          >
+            <div
+              class="section-title"
+              id="coreServicesTitle"
+              style="margin-bottom: 0"
+            >
+              Core Services Status (20 Jam Terakhir)
+            </div>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+              "
+            >
               <!-- Status Legend -->
-              <div class="status-legend" style="display:flex;align-items:center;gap:12px;font-size:11px;font-family:var(--font-mono);background:rgba(255,255,255,0.03);padding:6px 14px;border-radius:20px;border:1px solid var(--border-subtle);">
-                <span style="display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:2px;background:#10b981;"></span><span style="color:#10b981;">Normal</span></span>
-                <span style="display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:2px;background:#f59e0b;"></span><span style="color:#f59e0b;">Latensi / Degraded</span></span>
-                <span style="display:flex;align-items:center;gap:6px;"><span style="width:8px;height:8px;border-radius:2px;background:#ef4444;box-shadow:0 0 6px #ef4444;"></span><span style="color:#ef4444;font-weight:700;">Mati / Error</span></span>
+              <div
+                class="status-legend"
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 12px;
+                  font-size: 11px;
+                  font-family: var(--font-mono);
+                  background: rgba(255, 255, 255, 0.03);
+                  padding: 6px 14px;
+                  border-radius: 20px;
+                  border: 1px solid var(--border-subtle);
+                "
+              >
+                <span style="display: flex; align-items: center; gap: 6px"
+                  ><span
+                    style="
+                      width: 8px;
+                      height: 8px;
+                      border-radius: 2px;
+                      background: #10b981;
+                    "
+                  ></span
+                  ><span style="color: #10b981">Normal</span></span
+                >
+                <span style="display: flex; align-items: center; gap: 6px"
+                  ><span
+                    style="
+                      width: 8px;
+                      height: 8px;
+                      border-radius: 2px;
+                      background: #f59e0b;
+                    "
+                  ></span
+                  ><span style="color: #f59e0b">Latensi / Degraded</span></span
+                >
+                <span style="display: flex; align-items: center; gap: 6px"
+                  ><span
+                    style="
+                      width: 8px;
+                      height: 8px;
+                      border-radius: 2px;
+                      background: #ef4444;
+                      box-shadow: 0 0 6px #ef4444;
+                    "
+                  ></span
+                  ><span style="color: #ef4444; font-weight: 700"
+                    >Mati / Error</span
+                  ></span
+                >
               </div>
               <!-- Resolution Switcher Button -->
-              <button class="btn btn-ghost btn-sm" id="btnToggleTickRange" style="font-size:12px;display:inline-flex;align-items:center;gap:6px;">
+              <button
+                class="btn btn-ghost btn-sm"
+                id="btnToggleTickRange"
+                style="
+                  font-size: 12px;
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                "
+              >
                 <i class="fa-solid fa-clock-rotate-left"></i>
                 <span id="tickRangeLabel">20 Ticks</span>
               </button>
               <!-- Outage Demo Toggle Button -->
-              <button class="btn btn-secondary btn-sm" id="btnSimulateOutage" style="font-size:12px;display:inline-flex;align-items:center;gap:6px;">
-                <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;"></i>
+              <button
+                class="btn btn-secondary btn-sm"
+                id="btnSimulateOutage"
+                style="
+                  font-size: 12px;
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                "
+              >
+                <i
+                  class="fa-solid fa-triangle-exclamation"
+                  style="color: #ef4444"
+                ></i>
                 <span id="btnOutageText">Simulasi Server Mati</span>
               </button>
             </div>
           </div>
 
           <!-- Services Grid (Dynamically Populated) -->
-          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px;" class="animate-in delay-2" id="servicesGrid">
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 12px;
+              margin-bottom: 24px;
+            "
+            class="animate-in delay-2"
+            id="servicesGrid"
+          >
             <!-- Rendered by JS -->
           </div>
 
           <!-- Performance Metrics -->
-          <div class="section-title animate-in delay-3">Performance Metrics</div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;" class="animate-in delay-3" id="perfMetrics">
-
+          <div class="section-title animate-in delay-3">
+            Performance Metrics
+          </div>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 12px;
+              margin-bottom: 24px;
+            "
+            class="animate-in delay-3"
+            id="perfMetrics"
+          >
             <div class="card card-p-sm">
               <div class="metric-label">CPU Usage</div>
-              <div class="metric-value" style="font-size:28px;color:var(--accent-green);" id="cpuUsage">18%</div>
-              <div class="progress-track" style="margin-top:8px;">
-                <div class="progress-fill green" style="width:18%;"></div>
+              <div
+                class="metric-value"
+                style="font-size: 28px; color: var(--accent-green)"
+                id="cpuUsage"
+              >
+                18%
+              </div>
+              <div class="progress-track" style="margin-top: 8px">
+                <div class="progress-fill green" style="width: 18%"></div>
               </div>
             </div>
 
             <div class="card card-p-sm">
               <div class="metric-label">RAM Usage</div>
-              <div class="metric-value" style="font-size:28px;color:var(--accent-amber);" id="ramUsage">512MB</div>
-              <div class="progress-track" style="margin-top:8px;">
-                <div class="progress-fill amber" style="width:50%;"></div>
+              <div
+                class="metric-value"
+                style="font-size: 28px; color: var(--accent-amber)"
+                id="ramUsage"
+              >
+                512MB
+              </div>
+              <div class="progress-track" style="margin-top: 8px">
+                <div class="progress-fill amber" style="width: 50%"></div>
               </div>
             </div>
 
             <div class="card card-p-sm">
               <div class="metric-label">Active Shard</div>
-              <div class="metric-value" style="font-size:28px;color:var(--accent-cyan);" id="shardId">#0</div>
-              <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">of 1 total shards</div>
+              <div
+                class="metric-value"
+                style="font-size: 28px; color: var(--accent-cyan)"
+                id="shardId"
+              >
+                #0
+              </div>
+              <div
+                style="
+                  font-size: 11px;
+                  color: var(--text-muted);
+                  margin-top: 4px;
+                "
+              >
+                of 1 total shards
+              </div>
             </div>
 
             <div class="card card-p-sm">
               <div class="metric-label">Event Loop Lag</div>
-              <div class="metric-value" style="font-size:28px;color:var(--accent-green);" id="eventLoopLag">2ms</div>
-              <div style="font-size:11px;color:var(--accent-green);margin-top:4px;">Excellent</div>
+              <div
+                class="metric-value"
+                style="font-size: 28px; color: var(--accent-green)"
+                id="eventLoopLag"
+              >
+                2ms
+              </div>
+              <div
+                style="
+                  font-size: 11px;
+                  color: var(--accent-green);
+                  margin-top: 4px;
+                "
+              >
+                Excellent
+              </div>
             </div>
-
           </div>
 
           <!-- Incident & Failover History -->
-          <div class="animate-in delay-3" style="margin-bottom:24px;">
+          <div class="animate-in delay-3" style="margin-bottom: 24px">
             <div class="card card-p">
-              <div class="card-header" style="margin-bottom:16px;">
-                <div class="card-title"><i class="fa-solid fa-clipboard-list" style="color:var(--accent-cyan);"></i> Riwayat Insiden & Failover (30 Hari Terakhir)</div>
-                <span class="badge badge-muted" id="incidentCountBadge">0 Insiden</span>
+              <div class="card-header" style="margin-bottom: 16px">
+                <div class="card-title">
+                  <i
+                    class="fa-solid fa-clipboard-list"
+                    style="color: var(--accent-cyan)"
+                  ></i>
+                  Riwayat Insiden & Failover (30 Hari Terakhir)
+                </div>
+                <span class="badge badge-muted" id="incidentCountBadge"
+                  >0 Insiden</span
+                >
               </div>
-              <div id="incidentList" style="display:flex;flex-direction:column;gap:12px;">
+              <div
+                id="incidentList"
+                style="display: flex; flex-direction: column; gap: 12px"
+              >
                 <!-- Populated by JS -->
               </div>
             </div>
           </div>
-
         </main>
       </div>
     </div>
@@ -334,11 +674,26 @@
     <!-- Mobile Nav -->
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"
+          ><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span
+          ><span class="mn-label">Dashboard</span></a
+        >
+        <a href="/world" class="mobile-nav-item" data-group="map"
+          ><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span
+          ><span class="mn-label">Map</span></a
+        >
+        <a href="/automations" class="mobile-nav-item" data-group="config"
+          ><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span
+          ><span class="mn-label">Config</span></a
+        >
+        <a href="/music" class="mobile-nav-item" data-group="system"
+          ><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span
+          ><span class="mn-label">System</span></a
+        >
+        <a href="/settings" class="mobile-nav-item" data-group="settings"
+          ><span class="mn-icon"><i class="fa-solid fa-gears"></i></span
+          ><span class="mn-label">Settings</span></a
+        >
       </div>
     </nav>
 
@@ -356,12 +711,28 @@
           status: "online",
           rtt: "12h 47m uptime",
           history: [
-            'operational','operational','operational','operational','operational',
-            'operational','operational','operational','operational','operational',
-            'operational','operational','operational','operational','operational',
-            'operational','operational','operational','operational','operational'
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
           ],
-          incidentDesc: "Semua shard aktif tanpa hambatan."
+          incidentDesc: "Semua shard aktif tanpa hambatan.",
         },
         {
           id: "postgres",
@@ -373,12 +744,28 @@
           status: "online",
           rtt: "8ms RTT",
           history: [
-            'operational','operational','operational','operational','operational',
-            'operational','operational','operational','operational','operational',
-            'operational','operational','operational','operational','operational',
-            'operational','operational','operational','operational','operational'
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
           ],
-          incidentDesc: "Koneksi pool master sehat."
+          incidentDesc: "Koneksi pool master sehat.",
         },
         {
           id: "redis",
@@ -390,12 +777,28 @@
           status: "online",
           rtt: "2ms RTT",
           history: [
-            'operational','operational','operational','operational','operational',
-            'operational','operational','operational','operational','operational',
-            'operational','operational','operational','operational','operational',
-            'operational','operational','operational','operational','operational'
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
           ],
-          incidentDesc: "Penyimpanan in-memory normal."
+          incidentDesc: "Penyimpanan in-memory normal.",
         },
         {
           id: "mongodb",
@@ -407,12 +810,28 @@
           status: "online",
           rtt: "24ms RTT",
           history: [
-            'operational','operational','operational','operational','operational',
-            'operational','operational','operational','operational','operational',
-            'operational','operational','operational','operational','operational',
-            'operational','operational','operational','operational','operational'
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
           ],
-          incidentDesc: "Cluster logging event berjalan normal."
+          incidentDesc: "Cluster logging event berjalan normal.",
         },
         {
           id: "lavalink",
@@ -424,14 +843,29 @@
           status: "online",
           rtt: "12ms RTT",
           history: [
-            'operational','operational','operational','operational','operational',
-            'operational','operational','operational','operational','operational',
-            'offline','offline', // Red bars at T-9h & T-8h showing failover incident!
-            'degraded',
-            'operational','operational','operational','operational','operational',
-            'operational','operational'
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "offline",
+            "offline", // Red bars at T-9h & T-8h showing failover incident!
+            "degraded",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
           ],
-          incidentDesc: "T-8h: Lavalink Node-2 Down (Auto-Failover ke Node SG). Saat ini beroperasi normal."
+          incidentDesc:
+            "T-8h: Lavalink Node-2 Down (Auto-Failover ke Node SG). Saat ini beroperasi normal.",
         },
         {
           id: "ai",
@@ -443,15 +877,30 @@
           status: "online",
           rtt: "Active",
           history: [
-            'operational','operational','operational','operational','operational',
-            'offline', // Red bar at T-14h showing HTTP 429 quota trip
-            'degraded',
-            'operational','operational','operational','operational','operational',
-            'operational','operational','operational','operational','operational',
-            'operational','operational','operational'
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "offline", // Red bar at T-14h showing HTTP 429 quota trip
+            "degraded",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
+            "operational",
           ],
-          incidentDesc: "T-14h: HTTP 429 Rate Limit Terlampaui (Circuit Breaker OPEN, beralih ke Groq). Saat ini pulih."
-        }
+          incidentDesc:
+            "T-14h: HTTP 429 Rate Limit Terlampaui (Circuit Breaker OPEN, beralih ke Groq). Saat ini pulih.",
+        },
       ];
 
       let isSimulatedOutageActive = false;
@@ -462,16 +911,16 @@
         if (!grid) return;
         grid.innerHTML = "";
 
-        SERVICES.forEach(svc => {
+        SERVICES.forEach((svc) => {
           const card = document.createElement("div");
           card.className = `service-card ${svc.status}`;
           card.id = `svcCard_${svc.id}`;
           card.title = "Klik untuk toggle status & melihat detail insiden";
 
-          let badgeHtml = '';
-          if (svc.status === 'online') {
+          let badgeHtml = "";
+          if (svc.status === "online") {
             badgeHtml = `<span class="badge badge-green">Online</span>`;
-          } else if (svc.status === 'warn') {
+          } else if (svc.status === "warn") {
             badgeHtml = `<span class="badge badge-amber"><i class="fa-solid fa-triangle-exclamation"></i> Degraded</span>`;
           } else {
             badgeHtml = `<span class="badge badge-red"><i class="fa-solid fa-circle-xmark"></i> Server Mati</span>`;
@@ -484,14 +933,14 @@
             <div style="flex:1;min-width:0;">
               <div style="display:flex;align-items:center;gap:8px;">
                 <div style="font-size:13px;font-weight:700;color:var(--text-primary);">${svc.name}</div>
-                ${svc.status === 'offline' ? '<span style="font-size:10px;font-family:var(--font-mono);color:#ef4444;font-weight:700;animation:glow-pulse 1s infinite;">[OUTAGE]</span>' : ''}
+                ${svc.status === "offline" ? '<span style="font-size:10px;font-family:var(--font-mono);color:#ef4444;font-weight:700;animation:glow-pulse 1s infinite;">[OUTAGE]</span>' : ""}
               </div>
               <div style="font-size:11px;color:var(--text-muted);">${svc.desc}</div>
-              <div class="uptime-bar" id="bar_${svc.id}" style="margin-top:7px;${tickResolution === 90 ? 'gap:2px;' : 'gap:3px;'}"></div>
+              <div class="uptime-bar" id="bar_${svc.id}" style="margin-top:7px;${tickResolution === 90 ? "gap:2px;" : "gap:3px;"}"></div>
             </div>
             <div style="text-align:right;flex-shrink:0;">
               ${badgeHtml}
-              <div style="font-family:var(--font-mono);font-size:11px;color:${svc.status === 'offline' ? '#ef4444' : 'var(--text-muted)'};margin-top:4px;font-weight:${svc.status === 'offline' ? '700' : '400'};">
+              <div style="font-family:var(--font-mono);font-size:11px;color:${svc.status === "offline" ? "#ef4444" : "var(--text-muted)"};margin-top:4px;font-weight:${svc.status === "offline" ? "700" : "400"};">
                 ${svc.rtt}
               </div>
             </div>
@@ -499,18 +948,23 @@
 
           card.addEventListener("click", () => {
             // Interactive toggle on individual service card
-            if (svc.status === 'online') {
-              svc.status = 'offline';
-              svc.rtt = 'ERR: TIMEOUT 504';
+            if (svc.status === "online") {
+              svc.status = "offline";
+              svc.rtt = "ERR: TIMEOUT 504";
               const lastIdx = svc.history.length - 1;
-              if (lastIdx >= 0) svc.history[lastIdx] = 'offline';
-              if (lastIdx - 1 >= 0) svc.history[lastIdx - 1] = 'offline';
+              if (lastIdx >= 0) svc.history[lastIdx] = "offline";
+              if (lastIdx - 1 >= 0) svc.history[lastIdx - 1] = "offline";
             } else {
-              svc.status = 'online';
-              svc.rtt = svc.id === 'bot' ? '12h 47m uptime' : (svc.id === 'ai' ? 'Active' : '4ms RTT');
+              svc.status = "online";
+              svc.rtt =
+                svc.id === "bot"
+                  ? "12h 47m uptime"
+                  : svc.id === "ai"
+                    ? "Active"
+                    : "4ms RTT";
               const lastIdx = svc.history.length - 1;
-              if (lastIdx >= 0) svc.history[lastIdx] = 'operational';
-              if (lastIdx - 1 >= 0) svc.history[lastIdx - 1] = 'operational';
+              if (lastIdx >= 0) svc.history[lastIdx] = "operational";
+              if (lastIdx - 1 >= 0) svc.history[lastIdx - 1] = "operational";
             }
             renderServices();
           });
@@ -526,21 +980,28 @@
             const tick = document.createElement("div");
             tick.className = `uptime-tick ${tickStatus}`;
             if (tickResolution === 90) {
-              tick.style.minWidth = '2px';
-              tick.style.flex = '1';
-              tick.style.height = '20px';
+              tick.style.minWidth = "2px";
+              tick.style.flex = "1";
+              tick.style.height = "20px";
             }
 
             // If offline currently, animate latest ticks
-            if (svc.status === 'offline' && idx >= totalTicks - 2) {
+            if (svc.status === "offline" && idx >= totalTicks - 2) {
               tick.classList.add("pulse-dead");
             }
 
             const stepAgo = totalTicks - idx;
-            let tickTitle = tickResolution === 90 ? `T-${stepAgo * 5}m: ` : `T-${stepAgo}h: `;
-            if (tickStatus === 'operational') tickTitle += "100% Operasional Normal";
-            else if (tickStatus === 'degraded') tickTitle += "Degraded / Latensi Tinggi";
-            else tickTitle += "🔴 GANGGUAN / SERVER MATI (" + (svc.incidentDesc || 'Outage') + ")";
+            let tickTitle =
+              tickResolution === 90 ? `T-${stepAgo * 5}m: ` : `T-${stepAgo}h: `;
+            if (tickStatus === "operational")
+              tickTitle += "100% Operasional Normal";
+            else if (tickStatus === "degraded")
+              tickTitle += "Degraded / Latensi Tinggi";
+            else
+              tickTitle +=
+                "🔴 GANGGUAN / SERVER MATI (" +
+                (svc.incidentDesc || "Outage") +
+                ")";
 
             tick.title = tickTitle;
             barElem.appendChild(tick);
@@ -551,7 +1012,7 @@
       }
 
       function updateBannerStatus() {
-        const hasOutage = SERVICES.some(s => s.status === 'offline');
+        const hasOutage = SERVICES.some((s) => s.status === "offline");
         const banner = document.getElementById("systemBanner");
         const bannerIcon = document.getElementById("systemBannerIcon");
         const bannerTitle = document.getElementById("systemBannerTitle");
@@ -561,14 +1022,15 @@
         if (!banner || !bannerIcon || !bannerTitle || !bannerSub) return;
 
         if (hasOutage) {
-          const downSvc = SERVICES.find(s => s.status === 'offline');
-          banner.style.background = "linear-gradient(135deg, rgba(239, 68, 68, 0.14), rgba(20, 10, 16, 0.95))";
+          const downSvc = SERVICES.find((s) => s.status === "offline");
+          banner.style.background =
+            "linear-gradient(135deg, rgba(239, 68, 68, 0.14), rgba(20, 10, 16, 0.95))";
           banner.style.borderColor = "rgba(239, 68, 68, 0.5)";
           bannerIcon.textContent = "❌";
           bannerIcon.style.background = "rgba(239, 68, 68, 0.2)";
           bannerIcon.style.borderColor = "rgba(239, 68, 68, 0.5)";
           bannerIcon.style.boxShadow = "0 0 20px rgba(239, 68, 68, 0.4)";
-          bannerTitle.textContent = `⚠️ Gangguan Terdeteksi: Layanan ${downSvc ? downSvc.name : 'Sistem'} Mengalami Outage / Mati`;
+          bannerTitle.textContent = `⚠️ Gangguan Terdeteksi: Layanan ${downSvc ? downSvc.name : "Sistem"} Mengalami Outage / Mati`;
           bannerTitle.style.color = "#f87171";
           bannerSub.textContent = `Server tidak merespons request. Bar merah menandakan periode waktu downtime & insiden aktif.`;
 
@@ -576,7 +1038,8 @@
             globalStatusPill.innerHTML = `<span class="status-dot offline" style="background:#ef4444;box-shadow:0 0 8px #ef4444;"></span><span style="color:#f87171;font-weight:700;">1 Outage Active</span>`;
           }
         } else {
-          banner.style.background = "linear-gradient(135deg, rgba(52,211,153,0.08), rgba(34,211,238,0.05))";
+          banner.style.background =
+            "linear-gradient(135deg, rgba(52,211,153,0.08), rgba(34,211,238,0.05))";
           banner.style.borderColor = "rgba(52,211,153,0.3)";
           bannerIcon.textContent = "✅";
           bannerIcon.style.background = "var(--green-dim)";
@@ -584,7 +1047,8 @@
           bannerIcon.style.boxShadow = "0 0 20px var(--green-glow)";
           bannerTitle.textContent = "Semua Sistem Beroperasi Normal";
           bannerTitle.style.color = "var(--text-primary)";
-          bannerSub.textContent = "Tidak ada insiden aktif · Uptime 99.98% (30 hari terakhir)";
+          bannerSub.textContent =
+            "Tidak ada insiden aktif · Uptime 99.98% (30 hari terakhir)";
 
           if (globalStatusPill) {
             globalStatusPill.innerHTML = `<span class="status-dot online"></span><span style="color:var(--accent-green);">All Systems Online</span>`;
@@ -601,13 +1065,17 @@
           if (tickResolution === 20) {
             tickResolution = 90;
             if (tickRangeLabel) tickRangeLabel.textContent = "90 Ticks";
-            if (coreServicesTitle) coreServicesTitle.textContent = "Core Services Status (90 Ticks / Resolusi Tinggi)";
+            if (coreServicesTitle)
+              coreServicesTitle.textContent =
+                "Core Services Status (90 Ticks / Resolusi Tinggi)";
             btnTickRange.classList.remove("btn-ghost");
             btnTickRange.classList.add("btn-primary");
           } else {
             tickResolution = 20;
             if (tickRangeLabel) tickRangeLabel.textContent = "20 Ticks";
-            if (coreServicesTitle) coreServicesTitle.textContent = "Core Services Status (20 Jam Terakhir)";
+            if (coreServicesTitle)
+              coreServicesTitle.textContent =
+                "Core Services Status (20 Jam Terakhir)";
             btnTickRange.classList.remove("btn-primary");
             btnTickRange.classList.add("btn-ghost");
           }
@@ -621,7 +1089,7 @@
       if (btnOutage && btnOutageText) {
         btnOutage.addEventListener("click", () => {
           isSimulatedOutageActive = !isSimulatedOutageActive;
-          const redisSvc = SERVICES.find(s => s.id === "redis");
+          const redisSvc = SERVICES.find((s) => s.id === "redis");
           if (isSimulatedOutageActive && redisSvc) {
             redisSvc.status = "offline";
             redisSvc.rtt = "ERR 504 GATEWAY DEAD";
@@ -651,13 +1119,14 @@
 
       // Render Incidents List
       function renderIncidents(incidents) {
-        const container = document.getElementById('incidentList');
-        const countBadge = document.getElementById('incidentCountBadge');
+        const container = document.getElementById("incidentList");
+        const countBadge = document.getElementById("incidentCountBadge");
         if (!container) return;
 
         if (countBadge) {
           countBadge.textContent = `${incidents.length} Insiden`;
-          countBadge.className = incidents.length > 0 ? 'badge badge-amber' : 'badge badge-green';
+          countBadge.className =
+            incidents.length > 0 ? "badge badge-amber" : "badge badge-green";
         }
 
         if (!incidents || incidents.length === 0) {
@@ -671,15 +1140,19 @@
           return;
         }
 
-        container.innerHTML = incidents.map(inc => {
-          const isResolved = inc.status === 'resolved';
-          const statusBadge = isResolved
-            ? '<span class="badge badge-green"><i class="fa-solid fa-check"></i> Selesai</span>'
-            : '<span class="badge badge-amber"><i class="fa-solid fa-triangle-exclamation"></i> Investigasi</span>';
-          const timeFormatted = new Date(inc.timestamp).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+        container.innerHTML = incidents
+          .map((inc) => {
+            const isResolved = inc.status === "resolved";
+            const statusBadge = isResolved
+              ? '<span class="badge badge-green"><i class="fa-solid fa-check"></i> Selesai</span>'
+              : '<span class="badge badge-amber"><i class="fa-solid fa-triangle-exclamation"></i> Investigasi</span>';
+            const timeFormatted = new Date(inc.timestamp).toLocaleString(
+              "id-ID",
+              { dateStyle: "medium", timeStyle: "short" },
+            );
 
-          return `
-            <div style="padding:14px 16px;background:var(--bg-surface);border:1px solid var(--border-subtle);border-left:3px solid ${isResolved ? 'var(--accent-green)' : 'var(--accent-amber)'};border-radius:var(--r-lg);">
+            return `
+            <div style="padding:14px 16px;background:var(--bg-surface);border:1px solid var(--border-subtle);border-left:3px solid ${isResolved ? "var(--accent-green)" : "var(--accent-amber)"};border-radius:var(--r-lg);">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px;">
                 <div style="display:flex;align-items:center;gap:8px;">
                   <span style="font-weight:700;font-size:13px;color:var(--text-primary);">${inc.title}</span>
@@ -693,21 +1166,26 @@
               <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;">${inc.description}</div>
             </div>
           `;
-        }).join('');
+          })
+          .join("");
       }
 
       // Fetch Real Telemetry History from /api/status/history
       async function fetchStatusHistory() {
         try {
-          const res = await fetch('/api/status/history');
+          const res = await fetch("/api/status/history");
           if (!res.ok) return;
           const json = await res.json();
           if (!json.success || !json.data) return;
           const { history, incidents } = json.data;
 
-          SERVICES.forEach(svc => {
-            const historyKey = svc.id === 'postgres' ? 'postgres' : svc.id;
-            if (history && history[historyKey] && Array.isArray(history[historyKey])) {
+          SERVICES.forEach((svc) => {
+            const historyKey = svc.id === "postgres" ? "postgres" : svc.id;
+            if (
+              history &&
+              history[historyKey] &&
+              Array.isArray(history[historyKey])
+            ) {
               svc.history = history[historyKey];
             }
           });
@@ -722,52 +1200,58 @@
       // Real Backend Health Fetch
       async function fetchRealHealth() {
         try {
-          const res = await fetch('/api/health');
+          const res = await fetch("/api/health");
           if (!res.ok) return;
           const data = await res.json();
-          if (data.status === 'ok') {
-            const botSvc = SERVICES.find(s => s.id === 'bot');
+          if (data.status === "ok") {
+            const botSvc = SERVICES.find((s) => s.id === "bot");
             if (botSvc && data.bot) {
-              botSvc.status = 'online';
+              botSvc.status = "online";
               const upH = Math.floor(data.bot.uptimeSeconds / 3600);
               const upM = Math.floor((data.bot.uptimeSeconds % 3600) / 60);
               botSvc.rtt = `${upH}h ${upM}m uptime`;
               botSvc.desc = `discord.js v14 · Shard 0/1 · Ping: ${data.bot.ping}ms`;
             }
-            const dbSvc = SERVICES.find(s => s.id === 'postgres' || s.id === 'database' || s.id === 'db');
+            const dbSvc = SERVICES.find(
+              (s) =>
+                s.id === "postgres" || s.id === "database" || s.id === "db",
+            );
             if (dbSvc && data.services?.database) {
               const db = data.services.database;
-              const isOk = db.state === 'ready' || db.ready || db.online || db.connected;
-              dbSvc.status = isOk ? 'online' : 'offline';
-              dbSvc.rtt = isOk ? '8ms RTT' : 'ERR: POOL';
+              const isOk =
+                db.state === "ready" || db.ready || db.online || db.connected;
+              dbSvc.status = isOk ? "online" : "offline";
+              dbSvc.rtt = isOk ? "8ms RTT" : "ERR: POOL";
             }
-            const redisSvc = SERVICES.find(s => s.id === 'redis');
+            const redisSvc = SERVICES.find((s) => s.id === "redis");
             if (redisSvc && data.services?.redis) {
               const isCluster = data.services.redis.connected;
-              redisSvc.status = 'online';
-              redisSvc.rtt = isCluster ? '2ms RTT' : 'In-Memory (Aktif)';
+              redisSvc.status = "online";
+              redisSvc.rtt = isCluster ? "2ms RTT" : "In-Memory (Aktif)";
               redisSvc.desc = isCluster
-                ? 'Redis Cloud Cache Cluster · High Performance'
-                : 'In-Memory Cache Fallback · Write-Behind Sync Aktif';
+                ? "Redis Cloud Cache Cluster · High Performance"
+                : "In-Memory Cache Fallback · Write-Behind Sync Aktif";
             }
-            const mongoSvc = SERVICES.find(s => s.id === 'mongodb');
+            const mongoSvc = SERVICES.find((s) => s.id === "mongodb");
             if (mongoSvc && data.services?.mongodb) {
-              const isOk = data.services.mongodb.state === 'connected' || data.services.mongodb.readyState === 1;
-              mongoSvc.status = isOk ? 'online' : 'online';
-              mongoSvc.rtt = isOk ? '24ms RTT' : 'In-Memory Log';
+              const isOk =
+                data.services.mongodb.state === "connected" ||
+                data.services.mongodb.readyState === 1;
+              mongoSvc.status = isOk ? "online" : "online";
+              mongoSvc.rtt = isOk ? "24ms RTT" : "In-Memory Log";
               mongoSvc.desc = isOk
-                ? 'MongoDB Atlas Cloud · Document Store'
-                : 'In-Memory Audit Log · Secondary Fallback';
+                ? "MongoDB Atlas Cloud · Document Store"
+                : "In-Memory Audit Log · Secondary Fallback";
             }
-            const lavaSvc = SERVICES.find(s => s.id === 'lavalink');
+            const lavaSvc = SERVICES.find((s) => s.id === "lavalink");
             if (lavaSvc && data.services?.lavalink) {
               const count = data.services.lavalink.connected;
               const total = data.services.lavalink.nodes;
-              lavaSvc.status = count > 0 ? 'online' : 'offline';
+              lavaSvc.status = count > 0 ? "online" : "offline";
               lavaSvc.rtt = `${count}/${total} Nodes`;
             }
 
-            const pingEl = document.getElementById('globalPing');
+            const pingEl = document.getElementById("globalPing");
             if (pingEl && data.bot?.ping !== undefined && data.bot.ping >= 0) {
               pingEl.textContent = `${data.bot.ping}ms`;
             }
@@ -780,35 +1264,36 @@
       }
 
       // Socket.IO live listener
-      if (typeof io !== 'undefined') {
+      if (typeof io !== "undefined") {
         try {
           const socket = io();
-          socket.on('connect', () => {
-            socket.emit('join_room', 'dashboard:home');
+          socket.on("connect", () => {
+            socket.emit("join_room", "dashboard:home");
           });
-          socket.on('stats_update', (data) => {
+          socket.on("stats_update", (data) => {
             if (!data) return;
-            const pingEl = document.getElementById('globalPing');
+            const pingEl = document.getElementById("globalPing");
             if (pingEl && data.ping !== undefined) {
               pingEl.textContent = `${data.ping}ms`;
             }
-            const cpuEl = document.getElementById('cpuUsage');
+            const cpuEl = document.getElementById("cpuUsage");
             if (cpuEl && data.cpuPercent !== undefined) {
               cpuEl.textContent = `${data.cpuPercent}%`;
-              const fill = cpuEl.parentElement?.querySelector('.progress-fill');
+              const fill = cpuEl.parentElement?.querySelector(".progress-fill");
               if (fill) fill.style.width = `${Math.min(100, data.cpuPercent)}%`;
             }
-            const ramEl = document.getElementById('ramUsage');
+            const ramEl = document.getElementById("ramUsage");
             if (ramEl && data.ramUsageMB !== undefined) {
               ramEl.textContent = `${data.ramUsageMB}MB`;
-              const fill = ramEl.parentElement?.querySelector('.progress-fill');
-              if (fill) fill.style.width = `${Math.min(100, Math.round((data.ramUsageMB / 2048) * 100))}%`;
+              const fill = ramEl.parentElement?.querySelector(".progress-fill");
+              if (fill)
+                fill.style.width = `${Math.min(100, Math.round((data.ramUsageMB / 2048) * 100))}%`;
             }
-            const shardEl = document.getElementById('shardId');
+            const shardEl = document.getElementById("shardId");
             if (shardEl && data.shards) {
               shardEl.textContent = `#${data.shards.current ?? 0}`;
             }
-            const botSvc = SERVICES.find(s => s.id === 'bot');
+            const botSvc = SERVICES.find((s) => s.id === "bot");
             if (botSvc && data.uptimeFormatted) {
               botSvc.rtt = `${data.uptimeFormatted} uptime`;
             }
@@ -827,18 +1312,22 @@
 
       // Live time update
       function updateTime() {
-        const lastEl = document.getElementById('lastUpdate');
-        if (lastEl) lastEl.textContent = new Date().toLocaleTimeString('id-ID');
+        const lastEl = document.getElementById("lastUpdate");
+        if (lastEl) lastEl.textContent = new Date().toLocaleTimeString("id-ID");
       }
       setInterval(updateTime, 3000);
 
       function adjustGrids() {
-        const sg = document.getElementById('servicesGrid');
-        const pm = document.getElementById('perfMetrics');
-        if (sg) sg.style.gridTemplateColumns = window.innerWidth < 768 ? '1fr' : 'repeat(2,1fr)';
-        if (pm) pm.style.gridTemplateColumns = window.innerWidth < 768 ? 'repeat(2,1fr)' : 'repeat(4,1fr)';
+        const sg = document.getElementById("servicesGrid");
+        const pm = document.getElementById("perfMetrics");
+        if (sg)
+          sg.style.gridTemplateColumns =
+            window.innerWidth < 768 ? "1fr" : "repeat(2,1fr)";
+        if (pm)
+          pm.style.gridTemplateColumns =
+            window.innerWidth < 768 ? "repeat(2,1fr)" : "repeat(4,1fr)";
       }
-      window.addEventListener('resize', adjustGrids);
+      window.addEventListener("resize", adjustGrids);
       adjustGrids();
     </script>
   </body>

@@ -82,5 +82,4 @@ const footers = {
   premium_vip: `Naura V.I.P Tier v${env.BOT_VERSION || "2.3.0"} • Kamu adalah yang terpilih 👑`,
 };
 
-
 module.exports = { colors, monsters, dividers, links, footers };

@@ -228,7 +228,12 @@ function generateClanQuestsForClan(clan) {
   };
 }
 
-async function incrementQuestProgress(userId, action, amount = 1, metadata = {}) {
+async function incrementQuestProgress(
+  userId,
+  action,
+  amount = 1,
+  metadata = {},
+) {
   try {
     const today = new Date().toISOString().split("T")[0];
     const [quest] = await UserQuest.findOrCreate({
@@ -268,7 +273,11 @@ async function incrementQuestProgress(userId, action, amount = 1, metadata = {})
 
     const matchesQuest = (q) => {
       if (q.action !== action) return false;
-      if (q.targetItemId && metadata.itemId && q.targetItemId !== metadata.itemId) {
+      if (
+        q.targetItemId &&
+        metadata.itemId &&
+        q.targetItemId !== metadata.itemId
+      ) {
         return false;
       }
       return true;

@@ -11,13 +11,22 @@ describe("Dynamic Commodity Market Events & Macro Shocks", () => {
     const harvestDate = new Date(2026, 8, 15);
     const harvestMods = worldEventEngine.getCommodityModifiers(harvestDate);
     assert.ok(harvestMods.GOLDEN_WOOD, "Harus ada shock untuk GOLDEN_WOOD");
-    assert.ok(harvestMods.GOLDEN_WOOD.multiplier < 1.0, "Surplus harus menurunkan harga");
-    assert.ok(harvestMods.MYTHIC_FISH.multiplier > 1.0, "Permintaan pesta panen harus menaikkan harga ikan");
+    assert.ok(
+      harvestMods.GOLDEN_WOOD.multiplier < 1.0,
+      "Surplus harus menurunkan harga",
+    );
+    assert.ok(
+      harvestMods.MYTHIC_FISH.multiplier > 1.0,
+      "Permintaan pesta panen harus menaikkan harga ikan",
+    );
 
     // December: Frostsnow Winter (month 11, 20)
     const winterDate = new Date(2026, 11, 20);
     const winterMods = worldEventEngine.getCommodityModifiers(winterDate);
-    assert.ok(winterMods.COSMIC_ORE, "Harus ada shock untuk COSMIC_ORE di musim dingin");
+    assert.ok(
+      winterMods.COSMIC_ORE,
+      "Harus ada shock untuk COSMIC_ORE di musim dingin",
+    );
     assert.ok(winterMods.COSMIC_ORE.multiplier > 1.0);
   });
 

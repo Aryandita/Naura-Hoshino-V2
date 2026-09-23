@@ -58,9 +58,12 @@ export function createParticleSystem(scene) {
 
     if (randType < 0.45) {
       pType = 1.0; // 4-Point Star Fragment
-      mixedColor = Math.random() < 0.65 ? COLOR_GOLD.clone() : COLOR_PINK.clone().lerp(COLOR_CYAN, 0.4);
+      mixedColor =
+        Math.random() < 0.65
+          ? COLOR_GOLD.clone()
+          : COLOR_PINK.clone().lerp(COLOR_CYAN, 0.4);
       sizes[i] = Math.random() * 0.08 + 0.04;
-    } else if (randType < 0.80) {
+    } else if (randType < 0.8) {
       pType = 0.0; // Soft Glowing Orb
       mixedColor = COLOR_PINK.clone().lerp(COLOR_PURPLE, Math.random());
       sizes[i] = Math.random() * 0.04 + 0.02;

@@ -99,7 +99,9 @@ class GreenhouseEngine {
     });
 
     const maxSlots = BASE_SLOTS_PER_LEVEL[greenhouse.gridLevel] || 3;
-    const rawSlots = Array.isArray(greenhouse.slots) ? [...greenhouse.slots] : [];
+    const rawSlots = Array.isArray(greenhouse.slots)
+      ? [...greenhouse.slots]
+      : [];
 
     // Normalisasi jumlah slot jika belum cukup
     while (rawSlots.length < maxSlots) {

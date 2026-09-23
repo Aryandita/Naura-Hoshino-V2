@@ -15,7 +15,14 @@ const {
   getCustomPersona,
 } = require("./premiumHelper");
 
-function activeDescription(targetUser, tierData, tierEmoji, expiry, daysLeft, profile) {
+function activeDescription(
+  targetUser,
+  tierData,
+  tierEmoji,
+  expiry,
+  daysLeft,
+  profile,
+) {
   const stamp = Math.floor(expiry.getTime() / 1000);
   const tier = tierData.tier;
 
@@ -105,7 +112,14 @@ async function runCheck(interaction, targetUser, profile) {
     expression: isPremium ? "celebrate" : "info",
     description:
       isPremium && expiry
-        ? activeDescription(targetUser, tierData, tierEmoji, expiry, daysLeft, profile)
+        ? activeDescription(
+            targetUser,
+            tierData,
+            tierEmoji,
+            expiry,
+            daysLeft,
+            profile,
+          )
         : regularDescription(targetUser),
     bannerAttachmentName: attachment ? "premium-status.png" : null,
     footerText: ui.getFooter(isPremium ? `premium_${tierKey}` : "premium"),

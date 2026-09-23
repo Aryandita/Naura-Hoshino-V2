@@ -233,13 +233,28 @@ async function renderItemCard(item, options = {}) {
     currY += Math.min(descLines.length, 3) * 18 + 14;
 
     const stats = [];
-    if (item.attack) stats.push({ label: "ATK", value: `+${item.attack}`, color: "#F43F5E" });
-    if (item.defense) stats.push({ label: "DEF", value: `+${item.defense}`, color: "#38BDF8" });
-    if (item.durability) stats.push({ label: "DUR", value: `${item.durability}`, color: "#A855F7" });
-    if (item.heal) stats.push({ label: "HEAL", value: `+${item.heal}`, color: "#10B981" });
-    if (item.energy) stats.push({ label: "ENRG", value: `+${item.energy}`, color: "#F59E0B" });
-    if (item.speed) stats.push({ label: "SPD", value: `+${item.speed}`, color: "#EC4899" });
-    if (item.critRate) stats.push({ label: "CRIT", value: `${item.critRate}%`, color: "#EAB308" });
+    if (item.attack)
+      stats.push({ label: "ATK", value: `+${item.attack}`, color: "#F43F5E" });
+    if (item.defense)
+      stats.push({ label: "DEF", value: `+${item.defense}`, color: "#38BDF8" });
+    if (item.durability)
+      stats.push({
+        label: "DUR",
+        value: `${item.durability}`,
+        color: "#A855F7",
+      });
+    if (item.heal)
+      stats.push({ label: "HEAL", value: `+${item.heal}`, color: "#10B981" });
+    if (item.energy)
+      stats.push({ label: "ENRG", value: `+${item.energy}`, color: "#F59E0B" });
+    if (item.speed)
+      stats.push({ label: "SPD", value: `+${item.speed}`, color: "#EC4899" });
+    if (item.critRate)
+      stats.push({
+        label: "CRIT",
+        value: `${item.critRate}%`,
+        color: "#EAB308",
+      });
 
     if (stats.length > 0) {
       let statX = rightX;

@@ -6,11 +6,19 @@
     <title>Settings | Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
-      .settings-section { margin-bottom: 28px; }
+      .settings-section {
+        margin-bottom: 28px;
+      }
       .settings-item {
         display: flex;
         align-items: center;
@@ -20,22 +28,62 @@
         gap: 16px;
         transition: background var(--t-fast);
       }
-      .settings-item:last-child { border-bottom: none; }
-      .settings-item:hover { background: var(--bg-surface-hv); }
-      .settings-item-left { display: flex; align-items: flex-start; gap: 12px; min-width: 0; flex: 1; }
-      .settings-item-icon {
-        width: 36px; height: 36px; border-radius: var(--r-lg); display: flex;
-        align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
+      .settings-item:last-child {
+        border-bottom: none;
       }
-      .settings-item-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-      .settings-item-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.5; }
-      .settings-item-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+      .settings-item:hover {
+        background: var(--bg-surface-hv);
+      }
+      .settings-item-left {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        min-width: 0;
+        flex: 1;
+      }
+      .settings-item-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--r-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+      .settings-item-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      .settings-item-desc {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 2px;
+        line-height: 1.5;
+      }
+      .settings-item-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+      }
 
       .color-dot {
-        width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
-        border: 2px solid transparent; transition: all var(--t-fast); flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: all var(--t-fast);
+        flex-shrink: 0;
       }
-      .color-dot:hover, .color-dot.selected { border-color: var(--text-primary); transform: scale(1.15); box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+      .color-dot:hover,
+      .color-dot.selected {
+        border-color: var(--text-primary);
+        transform: scale(1.15);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+      }
 
       .range-input {
         -webkit-appearance: none;
@@ -43,14 +91,24 @@
         width: 120px;
         height: 4px;
         border-radius: var(--r-full);
-        background: linear-gradient(to right, var(--primary) 0%, var(--primary) 70%, var(--bg-elevated) 70%, var(--bg-elevated) 100%);
+        background: linear-gradient(
+          to right,
+          var(--primary) 0%,
+          var(--primary) 70%,
+          var(--bg-elevated) 70%,
+          var(--bg-elevated) 100%
+        );
         outline: none;
         cursor: pointer;
       }
       .range-input::-webkit-slider-thumb {
         -webkit-appearance: none;
-        width: 14px; height: 14px; border-radius: 50%;
-        background: var(--primary); box-shadow: 0 0 6px var(--primary-glow); cursor: pointer;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--primary);
+        box-shadow: 0 0 6px var(--primary-glow);
+        cursor: pointer;
       }
 
       .select-input {
@@ -64,7 +122,9 @@
         outline: none;
         cursor: pointer;
         color-scheme: dark;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        transition:
+          border-color 0.2s ease,
+          box-shadow 0.2s ease;
       }
       .select-input:focus {
         border-color: var(--primary);
@@ -95,7 +155,9 @@
         border-radius: var(--r-xl);
         padding: 20px;
         backdrop-filter: blur(16px);
-        transition: transform var(--t-fast), border-color var(--t-fast);
+        transition:
+          transform var(--t-fast),
+          border-color var(--t-fast);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -122,7 +184,9 @@
         flex-shrink: 0;
         background: rgba(255, 255, 255, 0.04);
         border: 1px solid var(--border-medium);
-        transition: transform var(--t-fast), box-shadow var(--t-fast);
+        transition:
+          transform var(--t-fast),
+          box-shadow var(--t-fast);
       }
       .module-card:hover .module-card-icon {
         transform: scale(1.08);
@@ -176,32 +240,45 @@
     </style>
   </head>
   <body>
-    
     <div class="app-shell">
       <!-- Mobile Sidebar Overlay -->
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
       <!-- SIDEBAR -->
-      <aside class="sidebar " id="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
+          <div class="sidebar-logo-icon">
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="
+                this.style.display = 'none';
+                this.parentElement.innerHTML = '🌸';
+              "
+            />
+          </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
             <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+          <button
+            class="sidebar-close-btn"
+            id="sidebarCloseBtn"
+            aria-label="Tutup menu"
+          >
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
+        <!-- Navigation -->
+        <!-- Navigation -->
         <nav class="sidebar-nav" role="navigation">
-
           <!-- Overview -->
           <div class="nav-group">
             <div class="nav-group-label">Overview</div>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-gauge-high"></i
+              ></span>
               <span>Dashboard</span>
             </a>
             <a href="/status" class="nav-item">
@@ -227,7 +304,9 @@
               <span>Economy</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-network-wired"></i
+              ></span>
               <span>Guild Topology</span>
             </a>
           </div>
@@ -248,7 +327,9 @@
               <span>Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-microphone"></i
+              ></span>
               <span>Karaoke</span>
             </a>
           </div>
@@ -257,7 +338,9 @@
           <div class="nav-group">
             <div class="nav-group-label">Naura Wilds RPG</div>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-earth-asia"></i
+              ></span>
               <span>World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
@@ -282,7 +365,9 @@
               <span>Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-wand-magic-sparkles"></i
+              ></span>
               <span>Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
@@ -299,15 +384,24 @@
           <div class="nav-group">
             <div class="nav-group-label">More</div>
             <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+              <span class="nav-icon" style="color: var(--accent-green)"
+                ><i class="fa-solid fa-id-badge"></i
+              ></span>
+              <span style="color: var(--accent-green)">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
         <div class="sidebar-footer">
-          <div class="sidebar-user" onclick="window.location.href='/'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+          <div class="sidebar-user" onclick="window.location.href = '/'">
+            <img
+              src="/assets/core/avatar.png"
+              alt="User"
+              class="sidebar-user-avatar"
+              onerror="
+                this.src =
+                  'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'
+              "
+            />
             <div class="sidebar-user-info">
               <div class="sidebar-user-name">Guest</div>
               <div class="sidebar-user-role">Klik untuk login</div>
@@ -320,130 +414,382 @@
       <div class="main-content">
         <header class="top-header">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
+            <button
+              class="hamburger-btn"
+              id="hamburgerBtn"
+              aria-label="Toggle menu"
+            >
+              <i class="fa-solid fa-bars"></i>
+            </button>
             <div>
               <div class="page-title">System Settings</div>
-              <div class="breadcrumb"><span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Settings</span></div>
+              <div class="breadcrumb">
+                <span>Naura OS</span><span class="breadcrumb-sep">/</span
+                ><span>Settings</span>
+              </div>
             </div>
           </div>
           <div class="header-right">
-            <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <a href="/" class="btn btn-ghost btn-sm"
+              ><i class="fa-solid fa-arrow-left"></i> Dashboard</a
+            >
           </div>
         </header>
 
         <main class="page-content">
-
           <div class="page-header-bar animate-in">
             <div>
               <h1 class="page-heading">
-                <span class="page-heading-icon" style="background:var(--cyan-dim);border:1px solid var(--border-cyan);">
-                  <i class="fa-solid fa-gears" style="color:var(--accent-cyan);"></i>
+                <span
+                  class="page-heading-icon"
+                  style="
+                    background: var(--cyan-dim);
+                    border: 1px solid var(--border-cyan);
+                  "
+                >
+                  <i
+                    class="fa-solid fa-gears"
+                    style="color: var(--accent-cyan)"
+                  ></i>
                 </span>
                 System Settings
               </h1>
-              <p class="page-sub">Konfigurasi tampilan, audio, notifikasi, dan preferensi sistem</p>
+              <p class="page-sub">
+                Konfigurasi tampilan, audio, notifikasi, dan preferensi sistem
+              </p>
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:start;" id="settingsLayout" class="animate-in delay-1">
-
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 200px 1fr;
+              gap: 20px;
+              align-items: start;
+            "
+            id="settingsLayout"
+            class="animate-in delay-1"
+          >
             <!-- Settings nav panel -->
             <div class="card card-p-sm settings-nav-card" id="settingsNavPanel">
-              <div style="display:flex;flex-direction:column;gap:2px;" id="settingsSideNav">
-                <button class="nav-item active" onclick="switchSettingsTab('server')" style="justify-content:flex-start;">
-                  <span class="nav-icon"><i class="fa-solid fa-server" style="color:var(--accent-cyan);"></i></span><span>Server & Bot</span>
+              <div
+                style="display: flex; flex-direction: column; gap: 2px"
+                id="settingsSideNav"
+              >
+                <button
+                  class="nav-item active"
+                  onclick="switchSettingsTab('server')"
+                  style="justify-content: flex-start"
+                >
+                  <span class="nav-icon"
+                    ><i
+                      class="fa-solid fa-server"
+                      style="color: var(--accent-cyan)"
+                    ></i></span
+                  ><span>Server & Bot</span>
                 </button>
-                <button class="nav-item" onclick="switchSettingsTab('appearance')" style="justify-content:flex-start;">
-                  <span class="nav-icon"><i class="fa-solid fa-palette"></i></span><span>Tampilan</span>
+                <button
+                  class="nav-item"
+                  onclick="switchSettingsTab('appearance')"
+                  style="justify-content: flex-start"
+                >
+                  <span class="nav-icon"
+                    ><i class="fa-solid fa-palette"></i></span
+                  ><span>Tampilan</span>
                 </button>
-                <button class="nav-item" onclick="switchSettingsTab('audio')" style="justify-content:flex-start;">
-                  <span class="nav-icon"><i class="fa-solid fa-volume-high"></i></span><span>Audio</span>
+                <button
+                  class="nav-item"
+                  onclick="switchSettingsTab('audio')"
+                  style="justify-content: flex-start"
+                >
+                  <span class="nav-icon"
+                    ><i class="fa-solid fa-volume-high"></i></span
+                  ><span>Audio</span>
                 </button>
-                <button class="nav-item" onclick="switchSettingsTab('notifications')" style="justify-content:flex-start;">
-                  <span class="nav-icon"><i class="fa-solid fa-bell"></i></span><span>Notifikasi</span>
+                <button
+                  class="nav-item"
+                  onclick="switchSettingsTab('notifications')"
+                  style="justify-content: flex-start"
+                >
+                  <span class="nav-icon"><i class="fa-solid fa-bell"></i></span
+                  ><span>Notifikasi</span>
                 </button>
-                <button class="nav-item" onclick="switchSettingsTab('language')" style="justify-content:flex-start;">
-                  <span class="nav-icon"><i class="fa-solid fa-language"></i></span><span>Bahasa</span>
+                <button
+                  class="nav-item"
+                  onclick="switchSettingsTab('language')"
+                  style="justify-content: flex-start"
+                >
+                  <span class="nav-icon"
+                    ><i class="fa-solid fa-language"></i></span
+                  ><span>Bahasa</span>
                 </button>
-                <button class="nav-item" onclick="switchSettingsTab('advanced')" style="justify-content:flex-start;">
-                  <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span><span>Advanced</span>
+                <button
+                  class="nav-item"
+                  onclick="switchSettingsTab('advanced')"
+                  style="justify-content: flex-start"
+                >
+                  <span class="nav-icon"
+                    ><i class="fa-solid fa-sliders"></i></span
+                  ><span>Advanced</span>
                 </button>
               </div>
             </div>
 
             <!-- Settings content -->
             <div id="settingsContent">
-
               <!-- Server & Bot Modules Tab (Star Feature) -->
               <div id="tabServer">
                 <!-- Server Selector & Mode Header Card -->
-                <div class="card card-p-md" style="margin-bottom:20px;background:linear-gradient(135deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.9) 100%);border:1px solid var(--border-medium);">
-                  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
-                    <div style="display:flex;align-items:center;gap:16px;">
+                <div
+                  class="card card-p-md"
+                  style="
+                    margin-bottom: 20px;
+                    background: linear-gradient(
+                      135deg,
+                      rgba(30, 41, 59, 0.8) 0%,
+                      rgba(15, 23, 42, 0.9) 100%
+                    );
+                    border: 1px solid var(--border-medium);
+                  "
+                >
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      flex-wrap: wrap;
+                      gap: 16px;
+                    "
+                  >
+                    <div style="display: flex; align-items: center; gap: 16px">
                       <!-- Dynamic Discord Server Photo / GIF Avatar -->
-                      <div style="position:relative;width:52px;height:52px;flex-shrink:0;">
-                        <img id="selectedGuildAvatar" src="/assets/core/avatar.png" alt="Server Icon" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);box-shadow:0 0 14px var(--primary-glow);display:block;transition:all 0.3s ease;" onerror="handleGuildAvatarError()" />
-                        <div id="selectedGuildAcronym" style="display:none;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg, #6366f1 0%, #a855f7 100%);color:#ffffff;font-family:var(--font-heading);font-weight:700;font-size:17px;letter-spacing:1px;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.25);box-shadow:0 0 14px rgba(168,85,247,0.4);">AHC</div>
-                        <div style="position:absolute;bottom:-1px;right:-1px;width:15px;height:15px;border-radius:50%;background:#34d399;border:2px solid #0b1120;box-shadow:0 0 6px #34d399;" title="Status: Online & Terhubung"></div>
+                      <div
+                        style="
+                          position: relative;
+                          width: 52px;
+                          height: 52px;
+                          flex-shrink: 0;
+                        "
+                      >
+                        <img
+                          id="selectedGuildAvatar"
+                          src="/assets/core/avatar.png"
+                          alt="Server Icon"
+                          style="
+                            width: 52px;
+                            height: 52px;
+                            border-radius: 50%;
+                            object-fit: cover;
+                            border: 2px solid var(--primary);
+                            box-shadow: 0 0 14px var(--primary-glow);
+                            display: block;
+                            transition: all 0.3s ease;
+                          "
+                          onerror="handleGuildAvatarError()"
+                        />
+                        <div
+                          id="selectedGuildAcronym"
+                          style="
+                            display: none;
+                            width: 52px;
+                            height: 52px;
+                            border-radius: 50%;
+                            background: linear-gradient(
+                              135deg,
+                              #6366f1 0%,
+                              #a855f7 100%
+                            );
+                            color: #ffffff;
+                            font-family: var(--font-heading);
+                            font-weight: 700;
+                            font-size: 17px;
+                            letter-spacing: 1px;
+                            align-items: center;
+                            justify-content: center;
+                            border: 2px solid rgba(255, 255, 255, 0.25);
+                            box-shadow: 0 0 14px rgba(168, 85, 247, 0.4);
+                          "
+                        >
+                          AHC
+                        </div>
+                        <div
+                          style="
+                            position: absolute;
+                            bottom: -1px;
+                            right: -1px;
+                            width: 15px;
+                            height: 15px;
+                            border-radius: 50%;
+                            background: #34d399;
+                            border: 2px solid #0b1120;
+                            box-shadow: 0 0 6px #34d399;
+                          "
+                          title="Status: Online & Terhubung"
+                        ></div>
                       </div>
                       <div>
-                        <div style="display:flex;align-items:center;gap:10px;">
-                          <span style="font-family:var(--font-heading);font-size:16px;font-weight:700;color:var(--text-primary);">Pilih Server Kelolaan</span>
-                          <span id="guildModeBadge" class="badge badge-amber"><i class="fa-solid fa-flask"></i> SANDBOX DEMO</span>
+                        <div
+                          style="display: flex; align-items: center; gap: 10px"
+                        >
+                          <span
+                            style="
+                              font-family: var(--font-heading);
+                              font-size: 16px;
+                              font-weight: 700;
+                              color: var(--text-primary);
+                            "
+                            >Pilih Server Kelolaan</span
+                          >
+                          <span id="guildModeBadge" class="badge badge-amber"
+                            ><i class="fa-solid fa-flask"></i> SANDBOX
+                            DEMO</span
+                          >
                         </div>
-                        <div style="font-size:12px;color:var(--text-muted);margin-top:3px;" id="guildSyncStatus">
-                          <i class="fa-solid fa-database" style="color:var(--accent-cyan);margin-right:4px;"></i> Siap sinkron ke PostgreSQL & Redis Cache
+                        <div
+                          style="
+                            font-size: 12px;
+                            color: var(--text-muted);
+                            margin-top: 3px;
+                          "
+                          id="guildSyncStatus"
+                        >
+                          <i
+                            class="fa-solid fa-database"
+                            style="color: var(--accent-cyan); margin-right: 4px"
+                          ></i>
+                          Siap sinkron ke PostgreSQL & Redis Cache
                         </div>
                       </div>
                     </div>
-                    <div style="display:flex;align-items:center;gap:10px;">
-                      <select class="select-input" id="guildSelector" onchange="onSelectGuild(this.value)" style="min-width:280px;font-weight:600;padding:8px 14px;">
-                        <option value="sandbox" selected>🏰 Aethelgard High Citadel (Sandbox Demo)</option>
+                    <div style="display: flex; align-items: center; gap: 10px">
+                      <select
+                        class="select-input"
+                        id="guildSelector"
+                        onchange="onSelectGuild(this.value)"
+                        style="
+                          min-width: 280px;
+                          font-weight: 600;
+                          padding: 8px 14px;
+                        "
+                      >
+                        <option value="sandbox" selected>
+                          🏰 Aethelgard High Citadel (Sandbox Demo)
+                        </option>
                       </select>
-                      <button class="btn btn-ghost btn-sm" onclick="loadManageableGuilds()" title="Muat Ulang Server"><i class="fa-solid fa-rotate"></i></button>
+                      <button
+                        class="btn btn-ghost btn-sm"
+                        onclick="loadManageableGuilds()"
+                        title="Muat Ulang Server"
+                      >
+                        <i class="fa-solid fa-rotate"></i>
+                      </button>
                     </div>
                   </div>
                 </div>
 
                 <!-- 6 Bot Module Cards Grid -->
                 <div class="module-grid">
-
                   <!-- Module 1: Music & DJ System -->
                   <div class="module-card">
                     <div>
                       <div class="module-card-header">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                          <div class="module-card-icon" style="border-color:rgba(244,114,182,0.4);color:#f472b6;box-shadow:0 0 10px rgba(244,114,182,0.15);">
+                        <div
+                          style="display: flex; align-items: center; gap: 12px"
+                        >
+                          <div
+                            class="module-card-icon"
+                            style="
+                              border-color: rgba(244, 114, 182, 0.4);
+                              color: #f472b6;
+                              box-shadow: 0 0 10px rgba(244, 114, 182, 0.15);
+                            "
+                          >
                             <i class="fa-solid fa-compact-disc"></i>
                           </div>
                           <div>
-                            <div class="module-card-title">Music & DJ Cluster</div>
-                            <div class="module-card-desc">Poru Lavalink audio & pemutaran suara</div>
+                            <div class="module-card-title">
+                              Music & DJ Cluster
+                            </div>
+                            <div class="module-card-desc">
+                              Poru Lavalink audio & pemutaran suara
+                            </div>
                           </div>
                         </div>
                         <label class="toggle">
-                          <input type="checkbox" id="toggleModuleMusic" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                          <input
+                            type="checkbox"
+                            id="toggleModuleMusic"
+                            checked
+                          />
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div>
+                          </div>
                         </label>
                       </div>
                       <div class="module-card-body">
                         <div class="module-field">
                           <span class="module-field-label">Default Volume</span>
-                          <div style="display:flex;align-items:center;gap:8px;">
-                            <input type="range" class="range-input" id="rangeDefaultVolume" min="0" max="100" value="85" oninput="document.getElementById('defaultVolLabel').textContent=this.value+'%'" />
-                            <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);width:32px;" id="defaultVolLabel">85%</span>
+                          <div
+                            style="display: flex; align-items: center; gap: 8px"
+                          >
+                            <input
+                              type="range"
+                              class="range-input"
+                              id="rangeDefaultVolume"
+                              min="0"
+                              max="100"
+                              value="85"
+                              oninput="
+                                document.getElementById(
+                                  'defaultVolLabel',
+                                ).textContent = this.value + '%'
+                              "
+                            />
+                            <span
+                              style="
+                                font-family: var(--font-mono);
+                                font-size: 11px;
+                                color: var(--text-muted);
+                                width: 32px;
+                              "
+                              id="defaultVolLabel"
+                              >85%</span
+                            >
                           </div>
                         </div>
                         <div class="module-field">
-                          <span class="module-field-label">24/7 Voice Channel Mode</span>
+                          <span class="module-field-label"
+                            >24/7 Voice Channel Mode</span
+                          >
                           <label class="toggle">
-                            <input type="checkbox" id="toggleTwentyFourSeven" checked />
-                            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                            <input
+                              type="checkbox"
+                              id="toggleTwentyFourSeven"
+                              checked
+                            />
+                            <div class="toggle-track">
+                              <div class="toggle-thumb"></div>
+                            </div>
                           </label>
                         </div>
-                        <div class="module-field" style="flex-direction:column;align-items:flex-start;gap:6px;">
-                          <span class="module-field-label">Khusus Role DJ (Role ID)</span>
-                          <input type="text" class="text-input-field" id="inputDjRole" placeholder="Role ID atau kosongkan" value="109283746592837465" />
+                        <div
+                          class="module-field"
+                          style="
+                            flex-direction: column;
+                            align-items: flex-start;
+                            gap: 6px;
+                          "
+                        >
+                          <span class="module-field-label"
+                            >Khusus Role DJ (Role ID)</span
+                          >
+                          <input
+                            type="text"
+                            class="text-input-field"
+                            id="inputDjRole"
+                            placeholder="Role ID atau kosongkan"
+                            value="109283746592837465"
+                          />
                         </div>
                       </div>
                     </div>
@@ -453,35 +799,82 @@
                   <div class="module-card">
                     <div>
                       <div class="module-card-header">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                          <div class="module-card-icon" style="border-color:rgba(245,158,11,0.4);color:#f59e0b;box-shadow:0 0 10px rgba(245,158,11,0.15);">
+                        <div
+                          style="display: flex; align-items: center; gap: 12px"
+                        >
+                          <div
+                            class="module-card-icon"
+                            style="
+                              border-color: rgba(245, 158, 11, 0.4);
+                              color: #f59e0b;
+                              box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+                            "
+                          >
                             <i class="fa-solid fa-coins"></i>
                           </div>
                           <div>
-                            <div class="module-card-title">Economy & Markets</div>
-                            <div class="module-card-desc">Sirkulasi Naura Coins (NC) & perbankan</div>
+                            <div class="module-card-title">
+                              Economy & Markets
+                            </div>
+                            <div class="module-card-desc">
+                              Sirkulasi Naura Coins (NC) & perbankan
+                            </div>
                           </div>
                         </div>
                         <label class="toggle">
-                          <input type="checkbox" id="toggleModuleEconomy" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                          <input
+                            type="checkbox"
+                            id="toggleModuleEconomy"
+                            checked
+                          />
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div>
+                          </div>
                         </label>
                       </div>
                       <div class="module-card-body">
                         <div class="module-field">
-                          <span class="module-field-label">Pajak Transaksi Pasar (%)</span>
-                          <input type="number" class="text-input-field" id="inputTaxPercent" step="0.1" min="0" max="10" value="0.5" style="width:80px;text-align:right;" />
+                          <span class="module-field-label"
+                            >Pajak Transaksi Pasar (%)</span
+                          >
+                          <input
+                            type="number"
+                            class="text-input-field"
+                            id="inputTaxPercent"
+                            step="0.1"
+                            min="0"
+                            max="10"
+                            value="0.5"
+                            style="width: 80px; text-align: right"
+                          />
                         </div>
                         <div class="module-field">
-                          <span class="module-field-label">Bursa Saham & Crypto Mini</span>
+                          <span class="module-field-label"
+                            >Bursa Saham & Crypto Mini</span
+                          >
                           <label class="toggle">
-                            <input type="checkbox" id="toggleStockMarket" checked />
-                            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                            <input
+                              type="checkbox"
+                              id="toggleStockMarket"
+                              checked
+                            />
+                            <div class="toggle-track">
+                              <div class="toggle-thumb"></div>
+                            </div>
                           </label>
                         </div>
                         <div class="module-field">
-                          <span class="module-field-label">Kupon Hadir Harian</span>
-                          <span style="color:#34d399;font-weight:600;font-size:11px;">+1 Kupon / Hari</span>
+                          <span class="module-field-label"
+                            >Kupon Hadir Harian</span
+                          >
+                          <span
+                            style="
+                              color: #34d399;
+                              font-weight: 600;
+                              font-size: 11px;
+                            "
+                            >+1 Kupon / Hari</span
+                          >
                         </div>
                       </div>
                     </div>
@@ -491,39 +884,75 @@
                   <div class="module-card">
                     <div>
                       <div class="module-card-header">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                          <div class="module-card-icon" style="border-color:rgba(52,211,153,0.4);color:#34d399;box-shadow:0 0 10px rgba(52,211,153,0.15);">
+                        <div
+                          style="display: flex; align-items: center; gap: 12px"
+                        >
+                          <div
+                            class="module-card-icon"
+                            style="
+                              border-color: rgba(52, 211, 153, 0.4);
+                              color: #34d399;
+                              box-shadow: 0 0 10px rgba(52, 211, 153, 0.15);
+                            "
+                          >
                             <i class="fa-solid fa-tree"></i>
                           </div>
                           <div>
-                            <div class="module-card-title">Naura Wilds Survival</div>
-                            <div class="module-card-desc">RPG survival, vitals, & petualangan</div>
+                            <div class="module-card-title">
+                              Naura Wilds Survival
+                            </div>
+                            <div class="module-card-desc">
+                              RPG survival, vitals, & petualangan
+                            </div>
                           </div>
                         </div>
                         <label class="toggle">
-                          <input type="checkbox" id="toggleModuleSurvival" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                          <input
+                            type="checkbox"
+                            id="toggleModuleSurvival"
+                            checked
+                          />
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div>
+                          </div>
                         </label>
                       </div>
                       <div class="module-card-body">
                         <div class="module-field">
-                          <span class="module-field-label">Laju Drain Vital</span>
+                          <span class="module-field-label"
+                            >Laju Drain Vital</span
+                          >
                           <select class="select-input" id="selectVitalDrain">
                             <option value="casual">Santai (Casual)</option>
-                            <option value="normal" selected>Normal (Standard)</option>
+                            <option value="normal" selected>
+                              Normal (Standard)
+                            </option>
                             <option value="hardcore">Ketat (Hardcore)</option>
                           </select>
                         </div>
                         <div class="module-field">
-                          <span class="module-field-label">Wilderness Open PvP</span>
+                          <span class="module-field-label"
+                            >Wilderness Open PvP</span
+                          >
                           <label class="toggle">
-                            <input type="checkbox" id="toggleWildernessPvp" checked />
-                            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                            <input
+                              type="checkbox"
+                              id="toggleWildernessPvp"
+                              checked
+                            />
+                            <div class="toggle-track">
+                              <div class="toggle-thumb"></div>
+                            </div>
                           </label>
                         </div>
                         <div class="module-field">
-                          <span class="module-field-label">Drop Item Saat Kalah</span>
-                          <span style="color:var(--text-muted);font-size:11px;">Hanya Durability (-10%)</span>
+                          <span class="module-field-label"
+                            >Drop Item Saat Kalah</span
+                          >
+                          <span
+                            style="color: var(--text-muted); font-size: 11px"
+                            >Hanya Durability (-10%)</span
+                          >
                         </div>
                       </div>
                     </div>
@@ -533,38 +962,81 @@
                   <div class="module-card">
                     <div>
                       <div class="module-card-header">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                          <div class="module-card-icon" style="border-color:rgba(167,139,250,0.4);color:#a78bfa;box-shadow:0 0 10px rgba(167,139,250,0.15);">
+                        <div
+                          style="display: flex; align-items: center; gap: 12px"
+                        >
+                          <div
+                            class="module-card-icon"
+                            style="
+                              border-color: rgba(167, 139, 250, 0.4);
+                              color: #a78bfa;
+                              box-shadow: 0 0 10px rgba(167, 139, 250, 0.15);
+                            "
+                          >
                             <i class="fa-solid fa-wand-magic-sparkles"></i>
                           </div>
                           <div>
-                            <div class="module-card-title">Living AI Companion</div>
-                            <div class="module-card-desc">Ensemble cerdas & respon interaktif</div>
+                            <div class="module-card-title">
+                              Living AI Companion
+                            </div>
+                            <div class="module-card-desc">
+                              Ensemble cerdas & respon interaktif
+                            </div>
                           </div>
                         </div>
                         <label class="toggle">
                           <input type="checkbox" id="toggleModuleAi" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div>
+                          </div>
                         </label>
                       </div>
                       <div class="module-card-body">
                         <div class="module-field">
-                          <span class="module-field-label">AI Engine Provider</span>
+                          <span class="module-field-label"
+                            >AI Engine Provider</span
+                          >
                           <select class="select-input" id="selectAiModel">
-                            <option value="gemini" selected>Gemini 2.5 Flash</option>
+                            <option value="gemini" selected>
+                              Gemini 2.5 Flash
+                            </option>
                             <option value="groq">Groq LLaMA 3.3</option>
                           </select>
                         </div>
                         <div class="module-field">
-                          <span class="module-field-label">Auto-Reply Mention</span>
+                          <span class="module-field-label"
+                            >Auto-Reply Mention</span
+                          >
                           <label class="toggle">
-                            <input type="checkbox" id="toggleAiAutoReply" checked />
-                            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                            <input
+                              type="checkbox"
+                              id="toggleAiAutoReply"
+                              checked
+                            />
+                            <div class="toggle-track">
+                              <div class="toggle-thumb"></div>
+                            </div>
                           </label>
                         </div>
-                        <div class="module-field" style="flex-direction:column;align-items:flex-start;gap:6px;">
-                          <span class="module-field-label">Sifat Persona Kustom Server</span>
-                          <textarea class="text-input-field" id="textCustomPersona" rows="2" placeholder="Persona Naura di server ini...">Naura adalah asisten pintar, ceria, dan ramah yang siap menemani seluruh petualang server.</textarea>
+                        <div
+                          class="module-field"
+                          style="
+                            flex-direction: column;
+                            align-items: flex-start;
+                            gap: 6px;
+                          "
+                        >
+                          <span class="module-field-label"
+                            >Sifat Persona Kustom Server</span
+                          >
+                          <textarea
+                            class="text-input-field"
+                            id="textCustomPersona"
+                            rows="2"
+                            placeholder="Persona Naura di server ini..."
+                          >
+Naura adalah asisten pintar, ceria, dan ramah yang siap menemani seluruh petualang server.</textarea
+                          >
                         </div>
                       </div>
                     </div>
@@ -574,23 +1046,44 @@
                   <div class="module-card">
                     <div>
                       <div class="module-card-header">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                          <div class="module-card-icon" style="border-color:rgba(34,211,238,0.4);color:#22d3ee;box-shadow:0 0 10px rgba(34,211,238,0.15);">
+                        <div
+                          style="display: flex; align-items: center; gap: 12px"
+                        >
+                          <div
+                            class="module-card-icon"
+                            style="
+                              border-color: rgba(34, 211, 238, 0.4);
+                              color: #22d3ee;
+                              box-shadow: 0 0 10px rgba(34, 211, 238, 0.15);
+                            "
+                          >
                             <i class="fa-solid fa-arrow-trend-up"></i>
                           </div>
                           <div>
-                            <div class="module-card-title">Leveling & Chat XP</div>
-                            <div class="module-card-desc">Tingkat keaktifan & reward peran</div>
+                            <div class="module-card-title">
+                              Leveling & Chat XP
+                            </div>
+                            <div class="module-card-desc">
+                              Tingkat keaktifan & reward peran
+                            </div>
                           </div>
                         </div>
                         <label class="toggle">
-                          <input type="checkbox" id="toggleModuleLeveling" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                          <input
+                            type="checkbox"
+                            id="toggleModuleLeveling"
+                            checked
+                          />
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div>
+                          </div>
                         </label>
                       </div>
                       <div class="module-card-body">
                         <div class="module-field">
-                          <span class="module-field-label">XP Multiplier Rate</span>
+                          <span class="module-field-label"
+                            >XP Multiplier Rate</span
+                          >
                           <select class="select-input" id="selectXpMultiplier">
                             <option value="1.0">1.0x (Standard)</option>
                             <option value="1.5" selected>1.5x (Boost)</option>
@@ -598,16 +1091,29 @@
                           </select>
                         </div>
                         <div class="module-field">
-                          <span class="module-field-label">Pemberitahuan Naik Level</span>
+                          <span class="module-field-label"
+                            >Pemberitahuan Naik Level</span
+                          >
                           <select class="select-input" id="selectNotifyMode">
-                            <option value="channel" selected>Di Kanal Aktif</option>
+                            <option value="channel" selected>
+                              Di Kanal Aktif
+                            </option>
                             <option value="dm">Kirim Lewat DM</option>
                             <option value="none">Heningkan (Tanpa Ping)</option>
                           </select>
                         </div>
                         <div class="module-field">
-                          <span class="module-field-label">Anti-Spam XP Cooldown</span>
-                          <span style="color:#22d3ee;font-family:var(--font-mono);font-size:11px;">60 Detik / Pesan</span>
+                          <span class="module-field-label"
+                            >Anti-Spam XP Cooldown</span
+                          >
+                          <span
+                            style="
+                              color: #22d3ee;
+                              font-family: var(--font-mono);
+                              font-size: 11px;
+                            "
+                            >60 Detik / Pesan</span
+                          >
                         </div>
                       </div>
                     </div>
@@ -617,101 +1123,230 @@
                   <div class="module-card">
                     <div>
                       <div class="module-card-header">
-                        <div style="display:flex;align-items:center;gap:12px;">
-                          <div class="module-card-icon" style="border-color:rgba(239,68,68,0.4);color:#ef4444;box-shadow:0 0 10px rgba(239,68,68,0.15);">
+                        <div
+                          style="display: flex; align-items: center; gap: 12px"
+                        >
+                          <div
+                            class="module-card-icon"
+                            style="
+                              border-color: rgba(239, 68, 68, 0.4);
+                              color: #ef4444;
+                              box-shadow: 0 0 10px rgba(239, 68, 68, 0.15);
+                            "
+                          >
                             <i class="fa-solid fa-shield-halved"></i>
                           </div>
                           <div>
-                            <div class="module-card-title">Automod Sentinel Guard</div>
-                            <div class="module-card-desc">Proteksi keamanan & anti-abuse server</div>
+                            <div class="module-card-title">
+                              Automod Sentinel Guard
+                            </div>
+                            <div class="module-card-desc">
+                              Proteksi keamanan & anti-abuse server
+                            </div>
                           </div>
                         </div>
                         <label class="toggle">
-                          <input type="checkbox" id="toggleModuleAutomod" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                          <input
+                            type="checkbox"
+                            id="toggleModuleAutomod"
+                            checked
+                          />
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div>
+                          </div>
                         </label>
                       </div>
                       <div class="module-card-body">
                         <div class="module-field">
-                          <span class="module-field-label">Blokir Tautan Undangan Luar</span>
+                          <span class="module-field-label"
+                            >Blokir Tautan Undangan Luar</span
+                          >
                           <label class="toggle">
-                            <input type="checkbox" id="toggleAntiInvite" checked />
-                            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                            <input
+                              type="checkbox"
+                              id="toggleAntiInvite"
+                              checked
+                            />
+                            <div class="toggle-track">
+                              <div class="toggle-thumb"></div>
+                            </div>
                           </label>
                         </div>
                         <div class="module-field">
-                          <span class="module-field-label">Filter Anti-Spam Cepat</span>
+                          <span class="module-field-label"
+                            >Filter Anti-Spam Cepat</span
+                          >
                           <label class="toggle">
-                            <input type="checkbox" id="toggleAntiSpam" checked />
-                            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                            <input
+                              type="checkbox"
+                              id="toggleAntiSpam"
+                              checked
+                            />
+                            <div class="toggle-track">
+                              <div class="toggle-thumb"></div>
+                            </div>
                           </label>
                         </div>
                         <div class="module-field">
-                          <span class="module-field-label">Batas Mention Massal</span>
-                          <div style="display:flex;align-items:center;gap:8px;">
-                            <input type="range" class="range-input" id="rangeMassMention" min="3" max="15" value="5" oninput="document.getElementById('massMentionLabel').textContent=this.value+' user'" />
-                            <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);width:45px;" id="massMentionLabel">5 user</span>
+                          <span class="module-field-label"
+                            >Batas Mention Massal</span
+                          >
+                          <div
+                            style="display: flex; align-items: center; gap: 8px"
+                          >
+                            <input
+                              type="range"
+                              class="range-input"
+                              id="rangeMassMention"
+                              min="3"
+                              max="15"
+                              value="5"
+                              oninput="
+                                document.getElementById(
+                                  'massMentionLabel',
+                                ).textContent = this.value + ' user'
+                              "
+                            />
+                            <span
+                              style="
+                                font-family: var(--font-mono);
+                                font-size: 11px;
+                                color: var(--text-muted);
+                                width: 45px;
+                              "
+                              id="massMentionLabel"
+                              >5 user</span
+                            >
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-
                 </div>
 
                 <!-- Sticky Action Bar -->
-                <div class="card card-p-md" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;background:rgba(15,23,42,0.9);border:1px solid var(--border-primary);margin-bottom:28px;">
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <span id="saveStatusFeedback" style="font-size:12px;color:#34d399;display:none;">
-                      <i class="fa-solid fa-circle-check"></i> Konfigurasi berhasil disimpan!
+                <div
+                  class="card card-p-md"
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    gap: 14px;
+                    background: rgba(15, 23, 42, 0.9);
+                    border: 1px solid var(--border-primary);
+                    margin-bottom: 28px;
+                  "
+                >
+                  <div style="display: flex; align-items: center; gap: 10px">
+                    <span
+                      id="saveStatusFeedback"
+                      style="font-size: 12px; color: #34d399; display: none"
+                    >
+                      <i class="fa-solid fa-circle-check"></i> Konfigurasi
+                      berhasil disimpan!
                     </span>
                   </div>
-                  <div style="display:flex;align-items:center;gap:12px;">
-                    <button class="btn btn-ghost btn-sm" id="btnResetServerConfig" onclick="resetCurrentGuildConfig()">
+                  <div style="display: flex; align-items: center; gap: 12px">
+                    <button
+                      class="btn btn-ghost btn-sm"
+                      id="btnResetServerConfig"
+                      onclick="resetCurrentGuildConfig()"
+                    >
                       <i class="fa-solid fa-rotate-left"></i> Reset ke Bawaan
                     </button>
-                    <button class="btn btn-primary" id="btnSaveServerConfig" onclick="saveCurrentGuildConfig()">
+                    <button
+                      class="btn btn-primary"
+                      id="btnSaveServerConfig"
+                      onclick="saveCurrentGuildConfig()"
+                    >
                       <i class="fa-solid fa-floppy-disk"></i> Simpan Konfigurasi
                     </button>
                   </div>
                 </div>
-
               </div>
 
               <!-- Appearance Tab -->
-              <div id="tabAppearance" style="display:none;">
+              <div id="tabAppearance" style="display: none">
                 <div class="settings-section">
-                  <div class="section-title" style="margin-bottom:0;"><i class="fa-solid fa-image" style="color:var(--primary);"></i> Tema & Latar</div>
-                  <div class="card" style="overflow:hidden;">
-
+                  <div class="section-title" style="margin-bottom: 0">
+                    <i
+                      class="fa-solid fa-image"
+                      style="color: var(--primary)"
+                    ></i>
+                    Tema & Latar
+                  </div>
+                  <div class="card" style="overflow: hidden">
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--bg-elevated);">🎨</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--bg-elevated)"
+                        >
+                          🎨
+                        </div>
                         <div>
                           <div class="settings-item-title">Warna Aksen</div>
-                          <div class="settings-item-desc">Warna utama interface dashboard</div>
+                          <div class="settings-item-desc">
+                            Warna utama interface dashboard
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
-                        <div class="color-dot selected" style="background:#f472b6;" title="Rose Pink" onclick="selectColor(this,'#f472b6')"></div>
-                        <div class="color-dot" style="background:#22d3ee;" title="Cyan" onclick="selectColor(this,'#22d3ee')"></div>
-                        <div class="color-dot" style="background:#a78bfa;" title="Violet" onclick="selectColor(this,'#a78bfa')"></div>
-                        <div class="color-dot" style="background:#f59e0b;" title="Amber" onclick="selectColor(this,'#f59e0b')"></div>
-                        <div class="color-dot" style="background:#34d399;" title="Emerald" onclick="selectColor(this,'#34d399')"></div>
+                        <div
+                          class="color-dot selected"
+                          style="background: #f472b6"
+                          title="Rose Pink"
+                          onclick="selectColor(this, '#f472b6')"
+                        ></div>
+                        <div
+                          class="color-dot"
+                          style="background: #22d3ee"
+                          title="Cyan"
+                          onclick="selectColor(this, '#22d3ee')"
+                        ></div>
+                        <div
+                          class="color-dot"
+                          style="background: #a78bfa"
+                          title="Violet"
+                          onclick="selectColor(this, '#a78bfa')"
+                        ></div>
+                        <div
+                          class="color-dot"
+                          style="background: #f59e0b"
+                          title="Amber"
+                          onclick="selectColor(this, '#f59e0b')"
+                        ></div>
+                        <div
+                          class="color-dot"
+                          style="background: #34d399"
+                          title="Emerald"
+                          onclick="selectColor(this, '#34d399')"
+                        ></div>
                       </div>
                     </div>
 
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--bg-elevated);">🌌</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--bg-elevated)"
+                        >
+                          🌌
+                        </div>
                         <div>
                           <div class="settings-item-title">Wallpaper Latar</div>
-                          <div class="settings-item-desc">Gambar latar dashboard (upload atau pilih dari galeri)</div>
+                          <div class="settings-item-desc">
+                            Gambar latar dashboard (upload atau pilih dari
+                            galeri)
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
                         <select class="select-input" id="selectTheme">
-                          <option value="midnight">Midnight Stellar (Bawaan)</option>
+                          <option value="midnight">
+                            Midnight Stellar (Bawaan)
+                          </option>
                           <option value="sakura">Sakura Blossom Pink</option>
                           <option value="oled">OLED Pitch Black</option>
                         </select>
@@ -720,184 +1355,344 @@
 
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--bg-elevated);">✨</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--bg-elevated)"
+                        >
+                          ✨
+                        </div>
                         <div>
-                          <div class="settings-item-title">Animasi & Efek Partikel</div>
-                          <div class="settings-item-desc">Aktifkan efek visual floating particles</div>
+                          <div class="settings-item-title">
+                            Animasi & Efek Partikel
+                          </div>
+                          <div class="settings-item-desc">
+                            Aktifkan efek visual floating particles
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
                         <label class="toggle">
                           <input type="checkbox" id="toggleParticles" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div>
+                          </div>
                         </label>
                       </div>
                     </div>
 
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--bg-elevated);">🔲</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--bg-elevated)"
+                        >
+                          🔲
+                        </div>
                         <div>
-                          <div class="settings-item-title">Grid Pattern Overlay</div>
-                          <div class="settings-item-desc">Tampilkan pola grid di latar belakang</div>
+                          <div class="settings-item-title">
+                            Grid Pattern Overlay
+                          </div>
+                          <div class="settings-item-desc">
+                            Tampilkan pola grid di latar belakang
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
                         <label class="toggle">
                           <input type="checkbox" id="toggleGrid" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div>
+                          </div>
                         </label>
                       </div>
                     </div>
 
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--bg-elevated);">💫</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--bg-elevated)"
+                        >
+                          💫
+                        </div>
                         <div>
-                          <div class="settings-item-title">Sidebar Compact Mode</div>
-                          <div class="settings-item-desc">Sidebar hanya menampilkan ikon (icon-only)</div>
+                          <div class="settings-item-title">
+                            Sidebar Compact Mode
+                          </div>
+                          <div class="settings-item-desc">
+                            Sidebar hanya menampilkan ikon (icon-only)
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
                         <label class="toggle">
                           <input type="checkbox" id="toggleCompact" />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div>
+                          </div>
                         </label>
                       </div>
                     </div>
-
                   </div>
                 </div>
               </div>
 
               <!-- Audio Tab -->
-              <div id="tabAudio" style="display:none;">
+              <div id="tabAudio" style="display: none">
                 <div class="settings-section">
-                  <div class="section-title" style="margin-bottom:0;"><i class="fa-solid fa-volume-high" style="color:var(--accent-cyan);"></i> Audio BGM</div>
-                  <div class="card" style="overflow:hidden;">
-
+                  <div class="section-title" style="margin-bottom: 0">
+                    <i
+                      class="fa-solid fa-volume-high"
+                      style="color: var(--accent-cyan)"
+                    ></i>
+                    Audio BGM
+                  </div>
+                  <div class="card" style="overflow: hidden">
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--cyan-dim);">🎵</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--cyan-dim)"
+                        >
+                          🎵
+                        </div>
                         <div>
-                          <div class="settings-item-title">Background Music (BGM)</div>
-                          <div class="settings-item-desc">Putar musik latar saat menggunakan dashboard</div>
+                          <div class="settings-item-title">
+                            Background Music (BGM)
+                          </div>
+                          <div class="settings-item-desc">
+                            Putar musik latar saat menggunakan dashboard
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
                         <label class="toggle">
                           <input type="checkbox" id="toggleBgm" />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div>
+                          </div>
                         </label>
                       </div>
                     </div>
 
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--cyan-dim);">🔊</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--cyan-dim)"
+                        >
+                          🔊
+                        </div>
                         <div>
                           <div class="settings-item-title">Volume BGM</div>
-                          <div class="settings-item-desc">Atur volume musik latar</div>
+                          <div class="settings-item-desc">
+                            Atur volume musik latar
+                          </div>
                         </div>
                       </div>
-                      <div class="settings-item-right" style="gap:10px;">
-                        <input type="range" class="range-input" id="rangeBgmVol" min="0" max="100" value="40" />
-                        <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);width:32px;" id="bgmVolLabel">40%</span>
+                      <div class="settings-item-right" style="gap: 10px">
+                        <input
+                          type="range"
+                          class="range-input"
+                          id="rangeBgmVol"
+                          min="0"
+                          max="100"
+                          value="40"
+                        />
+                        <span
+                          style="
+                            font-family: var(--font-mono);
+                            font-size: 11px;
+                            color: var(--text-muted);
+                            width: 32px;
+                          "
+                          id="bgmVolLabel"
+                          >40%</span
+                        >
                       </div>
                     </div>
 
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--cyan-dim);">🎭</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--cyan-dim)"
+                        >
+                          🎭
+                        </div>
                         <div>
                           <div class="settings-item-title">Playlist BGM</div>
-                          <div class="settings-item-desc">Pilih tema musik latar</div>
+                          <div class="settings-item-desc">
+                            Pilih tema musik latar
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
                         <select class="select-input" id="selectBgmPlaylist">
-                          <option value="auto" selected>✨ Auto-Adaptive (Sesuai Halaman Aktif)</option>
-                          <option value="dashboard">Cyber Lo-Fi Pulse (Dashboard Theme)</option>
-                          <option value="map">Aetheria Frontier RPG (World Map Theme)</option>
-                          <option value="config">Cyber Synth Atelier (Config & Studio)</option>
-                          <option value="system">Kawaii Neon Beats (Music & DJ Hub)</option>
-                          <option value="settings">Midnight Velvet Lounge (Settings Lounge)</option>
-                          <option value="original">Naura Master OST (Original File)</option>
+                          <option value="auto" selected>
+                            ✨ Auto-Adaptive (Sesuai Halaman Aktif)
+                          </option>
+                          <option value="dashboard">
+                            Cyber Lo-Fi Pulse (Dashboard Theme)
+                          </option>
+                          <option value="map">
+                            Aetheria Frontier RPG (World Map Theme)
+                          </option>
+                          <option value="config">
+                            Cyber Synth Atelier (Config & Studio)
+                          </option>
+                          <option value="system">
+                            Kawaii Neon Beats (Music & DJ Hub)
+                          </option>
+                          <option value="settings">
+                            Midnight Velvet Lounge (Settings Lounge)
+                          </option>
+                          <option value="original">
+                            Naura Master OST (Original File)
+                          </option>
                         </select>
                       </div>
                     </div>
 
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--cyan-dim);">🔔</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--cyan-dim)"
+                        >
+                          🔔
+                        </div>
                         <div>
-                          <div class="settings-item-title">Sound Effects (SFX)</div>
-                          <div class="settings-item-desc">Suara saat hover, klik, dan notifikasi</div>
+                          <div class="settings-item-title">
+                            Sound Effects (SFX)
+                          </div>
+                          <div class="settings-item-desc">
+                            Suara saat hover, klik, dan notifikasi
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
                         <label class="toggle">
                           <input type="checkbox" id="toggleSfx" checked />
-                          <div class="toggle-track"><div class="toggle-thumb"></div></div>
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div>
+                          </div>
                         </label>
                       </div>
                     </div>
-
                   </div>
                 </div>
               </div>
 
               <!-- Notifications Tab -->
-              <div id="tabNotifications" style="display:none;">
+              <div id="tabNotifications" style="display: none">
                 <div class="settings-section">
-                  <div class="section-title" style="margin-bottom:0;"><i class="fa-solid fa-bell" style="color:var(--accent-amber);"></i> Notifikasi</div>
-                  <div class="card" style="overflow:hidden;">
+                  <div class="section-title" style="margin-bottom: 0">
+                    <i
+                      class="fa-solid fa-bell"
+                      style="color: var(--accent-amber)"
+                    ></i>
+                    Notifikasi
+                  </div>
+                  <div class="card" style="overflow: hidden">
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--amber-dim);">💬</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--amber-dim)"
+                        >
+                          💬
+                        </div>
                         <div>
-                          <div class="settings-item-title">Notifikasi Level Up</div>
-                          <div class="settings-item-desc">Notifikasi saat naik level chat atau survival</div>
+                          <div class="settings-item-title">
+                            Notifikasi Level Up
+                          </div>
+                          <div class="settings-item-desc">
+                            Notifikasi saat naik level chat atau survival
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
-                        <label class="toggle"><input type="checkbox" checked /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                        <label class="toggle"
+                          ><input type="checkbox" checked />
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div></div
+                        ></label>
                       </div>
                     </div>
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--amber-dim);">🎁</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--amber-dim)"
+                        >
+                          🎁
+                        </div>
                         <div>
-                          <div class="settings-item-title">Reminder Daily Reward</div>
-                          <div class="settings-item-desc">Pengingat claim hadiah harian</div>
+                          <div class="settings-item-title">
+                            Reminder Daily Reward
+                          </div>
+                          <div class="settings-item-desc">
+                            Pengingat claim hadiah harian
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
-                        <label class="toggle"><input type="checkbox" checked /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                        <label class="toggle"
+                          ><input type="checkbox" checked />
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div></div
+                        ></label>
                       </div>
                     </div>
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--amber-dim);">💰</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--amber-dim)"
+                        >
+                          💰
+                        </div>
                         <div>
-                          <div class="settings-item-title">Notifikasi Transaksi</div>
-                          <div class="settings-item-desc">Notifikasi masuk/keluarnya koin dan fragment</div>
+                          <div class="settings-item-title">
+                            Notifikasi Transaksi
+                          </div>
+                          <div class="settings-item-desc">
+                            Notifikasi masuk/keluarnya koin dan fragment
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
-                        <label class="toggle"><input type="checkbox" /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                        <label class="toggle"
+                          ><input type="checkbox" />
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div></div
+                        ></label>
                       </div>
                     </div>
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--amber-dim);">⚔️</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--amber-dim)"
+                        >
+                          ⚔️
+                        </div>
                         <div>
-                          <div class="settings-item-title">Alert Survival Vitals</div>
-                          <div class="settings-item-desc">Peringatan saat HP, hydration, atau energy kritis</div>
+                          <div class="settings-item-title">
+                            Alert Survival Vitals
+                          </div>
+                          <div class="settings-item-desc">
+                            Peringatan saat HP, hydration, atau energy kritis
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
-                        <label class="toggle"><input type="checkbox" checked /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                        <label class="toggle"
+                          ><input type="checkbox" checked />
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div></div
+                        ></label>
                       </div>
                     </div>
                   </div>
@@ -905,16 +1700,31 @@
               </div>
 
               <!-- Language Tab -->
-              <div id="tabLanguage" style="display:none;">
+              <div id="tabLanguage" style="display: none">
                 <div class="settings-section">
-                  <div class="section-title" style="margin-bottom:0;"><i class="fa-solid fa-language" style="color:var(--accent-green);"></i> Bahasa</div>
-                  <div class="card" style="overflow:hidden;">
+                  <div class="section-title" style="margin-bottom: 0">
+                    <i
+                      class="fa-solid fa-language"
+                      style="color: var(--accent-green)"
+                    ></i>
+                    Bahasa
+                  </div>
+                  <div class="card" style="overflow: hidden">
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--green-dim);">🌐</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--green-dim)"
+                        >
+                          🌐
+                        </div>
                         <div>
-                          <div class="settings-item-title">Bahasa Interface</div>
-                          <div class="settings-item-desc">Pilih bahasa untuk seluruh teks dashboard</div>
+                          <div class="settings-item-title">
+                            Bahasa Interface
+                          </div>
+                          <div class="settings-item-desc">
+                            Pilih bahasa untuk seluruh teks dashboard
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
@@ -927,10 +1737,17 @@
                     </div>
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--green-dim);">🕐</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--green-dim)"
+                        >
+                          🕐
+                        </div>
                         <div>
                           <div class="settings-item-title">Format Waktu</div>
-                          <div class="settings-item-desc">Format jam yang ditampilkan di dashboard</div>
+                          <div class="settings-item-desc">
+                            Format jam yang ditampilkan di dashboard
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
@@ -945,28 +1762,54 @@
               </div>
 
               <!-- Advanced Tab -->
-              <div id="tabAdvanced" style="display:none;">
+              <div id="tabAdvanced" style="display: none">
                 <div class="settings-section">
-                  <div class="section-title" style="margin-bottom:0;"><i class="fa-solid fa-sliders" style="color:var(--accent-violet);"></i> Advanced</div>
-                  <div class="card" style="overflow:hidden;">
+                  <div class="section-title" style="margin-bottom: 0">
+                    <i
+                      class="fa-solid fa-sliders"
+                      style="color: var(--accent-violet)"
+                    ></i>
+                    Advanced
+                  </div>
+                  <div class="card" style="overflow: hidden">
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--violet-dim);">⚡</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--violet-dim)"
+                        >
+                          ⚡
+                        </div>
                         <div>
                           <div class="settings-item-title">Reduced Motion</div>
-                          <div class="settings-item-desc">Matikan animasi untuk performa lebih baik</div>
+                          <div class="settings-item-desc">
+                            Matikan animasi untuk performa lebih baik
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
-                        <label class="toggle"><input type="checkbox" /><div class="toggle-track"><div class="toggle-thumb"></div></div></label>
+                        <label class="toggle"
+                          ><input type="checkbox" />
+                          <div class="toggle-track">
+                            <div class="toggle-thumb"></div></div
+                        ></label>
                       </div>
                     </div>
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:var(--violet-dim);">🔄</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: var(--violet-dim)"
+                        >
+                          🔄
+                        </div>
                         <div>
-                          <div class="settings-item-title">Auto-Refresh Interval</div>
-                          <div class="settings-item-desc">Interval auto-refresh data telemetry</div>
+                          <div class="settings-item-title">
+                            Auto-Refresh Interval
+                          </div>
+                          <div class="settings-item-desc">
+                            Interval auto-refresh data telemetry
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
@@ -980,14 +1823,33 @@
                     </div>
                     <div class="settings-item">
                       <div class="settings-item-left">
-                        <div class="settings-item-icon" style="background:rgba(248,113,113,0.1);">🗑️</div>
+                        <div
+                          class="settings-item-icon"
+                          style="background: rgba(248, 113, 113, 0.1)"
+                        >
+                          🗑️
+                        </div>
                         <div>
-                          <div class="settings-item-title" style="color:#f87171;">Reset Preferensi</div>
-                          <div class="settings-item-desc">Kembalikan semua pengaturan ke default</div>
+                          <div
+                            class="settings-item-title"
+                            style="color: #f87171"
+                          >
+                            Reset Preferensi
+                          </div>
+                          <div class="settings-item-desc">
+                            Kembalikan semua pengaturan ke default
+                          </div>
                         </div>
                       </div>
                       <div class="settings-item-right">
-                        <button class="btn btn-sm" style="background:rgba(248,113,113,0.1);border-color:rgba(248,113,113,0.3);color:#f87171;">
+                        <button
+                          class="btn btn-sm"
+                          style="
+                            background: rgba(248, 113, 113, 0.1);
+                            border-color: rgba(248, 113, 113, 0.3);
+                            color: #f87171;
+                          "
+                        >
                           <i class="fa-solid fa-rotate-left"></i> Reset
                         </button>
                       </div>
@@ -995,10 +1857,8 @@
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
-
         </main>
       </div>
     </div>
@@ -1006,58 +1866,99 @@
     <!-- Mobile Nav -->
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"
+          ><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span
+          ><span class="mn-label">Dashboard</span></a
+        >
+        <a href="/world" class="mobile-nav-item" data-group="map"
+          ><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span
+          ><span class="mn-label">Map</span></a
+        >
+        <a href="/automations" class="mobile-nav-item" data-group="config"
+          ><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span
+          ><span class="mn-label">Config</span></a
+        >
+        <a href="/music" class="mobile-nav-item" data-group="system"
+          ><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span
+          ><span class="mn-label">System</span></a
+        >
+        <a href="/settings" class="mobile-nav-item" data-group="settings"
+          ><span class="mn-icon"><i class="fa-solid fa-gears"></i></span
+          ><span class="mn-label">Settings</span></a
+        >
       </div>
     </nav>
 
     <script src="/src/js/sharedNav.js"></script>
     <script>
-      const settingsTabs = ['Server', 'Appearance', 'Audio', 'Notifications', 'Language', 'Advanced'];
+      const settingsTabs = [
+        "Server",
+        "Appearance",
+        "Audio",
+        "Notifications",
+        "Language",
+        "Advanced",
+      ];
 
       function switchSettingsTab(tab) {
-        settingsTabs.forEach(t => {
+        settingsTabs.forEach((t) => {
           const el = document.getElementById(`tab${t}`);
-          if (el) el.style.display = 'none';
+          if (el) el.style.display = "none";
         });
-        const target = document.getElementById(`tab${tab.charAt(0).toUpperCase()+tab.slice(1)}`);
-        if (target) target.style.display = 'block';
-        
-        const tabKeys = ['server', 'appearance', 'audio', 'notifications', 'language', 'advanced'];
-        document.querySelectorAll('#settingsSideNav .nav-item').forEach((btn, i) => {
-          btn.classList.toggle('active', tabKeys[i] === tab);
-        });
+        const target = document.getElementById(
+          `tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`,
+        );
+        if (target) target.style.display = "block";
+
+        const tabKeys = [
+          "server",
+          "appearance",
+          "audio",
+          "notifications",
+          "language",
+          "advanced",
+        ];
+        document
+          .querySelectorAll("#settingsSideNav .nav-item")
+          .forEach((btn, i) => {
+            btn.classList.toggle("active", tabKeys[i] === tab);
+          });
       }
 
       function selectColor(dot, color) {
-        document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
-        dot.classList.add('selected');
-        document.documentElement.style.setProperty('--primary', color);
-        document.documentElement.style.setProperty('--primary-glow', color + '55');
-        document.documentElement.style.setProperty('--border-primary', color + '55');
+        document
+          .querySelectorAll(".color-dot")
+          .forEach((d) => d.classList.remove("selected"));
+        dot.classList.add("selected");
+        document.documentElement.style.setProperty("--primary", color);
+        document.documentElement.style.setProperty(
+          "--primary-glow",
+          color + "55",
+        );
+        document.documentElement.style.setProperty(
+          "--border-primary",
+          color + "55",
+        );
       }
 
-      const rangeBgmEl = document.getElementById('rangeBgmVol');
+      const rangeBgmEl = document.getElementById("rangeBgmVol");
       if (rangeBgmEl) {
-        rangeBgmEl.addEventListener('input', function() {
-          document.getElementById('bgmVolLabel').textContent = this.value + '%';
+        rangeBgmEl.addEventListener("input", function () {
+          document.getElementById("bgmVolLabel").textContent = this.value + "%";
         });
       }
 
-      const selectTheme = document.getElementById('selectTheme');
+      const selectTheme = document.getElementById("selectTheme");
       if (selectTheme) {
-        selectTheme.value = localStorage.getItem('naura_theme') || 'midnight';
-        selectTheme.addEventListener('change', () => {
-          if (typeof window.setDashboardTheme === 'function') {
+        selectTheme.value = localStorage.getItem("naura_theme") || "midnight";
+        selectTheme.addEventListener("change", () => {
+          if (typeof window.setDashboardTheme === "function") {
             window.setDashboardTheme(selectTheme.value);
-            if (typeof window.showToast === 'function') {
+            if (typeof window.showToast === "function") {
               window.showToast({
-                type: 'info',
-                title: 'Tema Dashboard',
-                message: `Tema dialihkan ke ${selectTheme.options[selectTheme.selectedIndex].text}`
+                type: "info",
+                title: "Tema Dashboard",
+                message: `Tema dialihkan ke ${selectTheme.options[selectTheme.selectedIndex].text}`,
               });
             }
           }
@@ -1066,70 +1967,78 @@
 
       // Mobile: stack settings layout
       function adjustSettingsLayout() {
-        const layout = document.getElementById('settingsLayout');
+        const layout = document.getElementById("settingsLayout");
         if (!layout) return;
-        layout.style.gridTemplateColumns = window.innerWidth < 768 ? '1fr' : '200px 1fr';
+        layout.style.gridTemplateColumns =
+          window.innerWidth < 768 ? "1fr" : "200px 1fr";
       }
-      window.addEventListener('resize', adjustSettingsLayout);
+      window.addEventListener("resize", adjustSettingsLayout);
       adjustSettingsLayout();
 
       // ================================================================
       // SERVER CONFIGURATOR & BOT MODULES MANAGER (Hybrid Mode)
       // ================================================================
-      let currentSelectedGuildId = 'sandbox';
+      let currentSelectedGuildId = "sandbox";
       let manageableGuildsList = [];
 
       async function loadManageableGuilds() {
         try {
-          const res = await fetch('/api/guilds/manageable');
+          const res = await fetch("/api/guilds/manageable");
           const data = await res.json();
           if (data && data.guilds) {
             manageableGuildsList = data.guilds;
             renderGuildSelector(data.guilds);
-            const initial = data.guilds.find(g => g.id === currentSelectedGuildId) || data.guilds[0];
+            const initial =
+              data.guilds.find((g) => g.id === currentSelectedGuildId) ||
+              data.guilds[0];
             updateGuildAvatarDisplay(initial);
           }
         } catch (e) {
-          console.warn('[Configurator] Gagal memuat daftar guild, fallback ke sandbox:', e);
+          console.warn(
+            "[Configurator] Gagal memuat daftar guild, fallback ke sandbox:",
+            e,
+          );
         }
         await loadGuildConfig(currentSelectedGuildId);
       }
 
       function updateGuildAvatarDisplay(selected) {
-        const avatarImg = document.getElementById('selectedGuildAvatar');
-        const acronymDiv = document.getElementById('selectedGuildAcronym');
+        const avatarImg = document.getElementById("selectedGuildAvatar");
+        const acronymDiv = document.getElementById("selectedGuildAcronym");
         if (!avatarImg || !acronymDiv) return;
 
         if (selected && selected.icon) {
           avatarImg.src = selected.icon;
-          avatarImg.style.display = 'block';
-          acronymDiv.style.display = 'none';
+          avatarImg.style.display = "block";
+          acronymDiv.style.display = "none";
         } else {
-          avatarImg.style.display = 'none';
-          acronymDiv.textContent = selected?.acronym || 'DC';
-          acronymDiv.style.display = 'flex';
+          avatarImg.style.display = "none";
+          acronymDiv.textContent = selected?.acronym || "DC";
+          acronymDiv.style.display = "flex";
         }
       }
 
       function handleGuildAvatarError() {
-        const avatarImg = document.getElementById('selectedGuildAvatar');
-        const acronymDiv = document.getElementById('selectedGuildAcronym');
+        const avatarImg = document.getElementById("selectedGuildAvatar");
+        const acronymDiv = document.getElementById("selectedGuildAcronym");
         if (avatarImg && acronymDiv) {
-          avatarImg.style.display = 'none';
-          acronymDiv.style.display = 'flex';
+          avatarImg.style.display = "none";
+          acronymDiv.style.display = "flex";
         }
       }
 
       function renderGuildSelector(guilds) {
-        const select = document.getElementById('guildSelector');
+        const select = document.getElementById("guildSelector");
         if (!select) return;
-        select.innerHTML = '';
-        guilds.forEach(g => {
-          const opt = document.createElement('option');
+        select.innerHTML = "";
+        guilds.forEach((g) => {
+          const opt = document.createElement("option");
           opt.value = g.id;
           opt.textContent = g.isSandbox
-            ? '🏰 ' + g.name
-            : '🌐 ' + g.name + (g.memberCount ? ` (${g.memberCount} members)` : '');
+            ? "🏰 " + g.name
+            : "🌐 " +
+              g.name +
+              (g.memberCount ? ` (${g.memberCount} members)` : "");
           if (g.id === currentSelectedGuildId) opt.selected = true;
           select.appendChild(opt);
         });
@@ -1137,20 +2046,23 @@
 
       function onSelectGuild(guildId) {
         currentSelectedGuildId = guildId;
-        const selected = manageableGuildsList.find(g => g.id === guildId);
+        const selected = manageableGuildsList.find((g) => g.id === guildId);
         updateGuildAvatarDisplay(selected);
 
-        const badge = document.getElementById('guildModeBadge');
-        const syncStatus = document.getElementById('guildSyncStatus');
+        const badge = document.getElementById("guildModeBadge");
+        const syncStatus = document.getElementById("guildSyncStatus");
         if (badge && syncStatus) {
-          if (guildId === 'sandbox' || selected?.isSandbox) {
-            badge.className = 'badge badge-amber';
+          if (guildId === "sandbox" || selected?.isSandbox) {
+            badge.className = "badge badge-amber";
             badge.innerHTML = '<i class="fa-solid fa-flask"></i> SANDBOX DEMO';
-            syncStatus.innerHTML = '<i class="fa-solid fa-database" style="color:var(--accent-cyan);margin-right:4px;"></i> Mode Sandbox: Uji coba aman tanpa mengubah database live';
+            syncStatus.innerHTML =
+              '<i class="fa-solid fa-database" style="color:var(--accent-cyan);margin-right:4px;"></i> Mode Sandbox: Uji coba aman tanpa mengubah database live';
           } else {
-            badge.className = 'badge badge-success';
-            badge.innerHTML = '<i class="fa-solid fa-check"></i> LIVE DISCORD GUILD';
-            syncStatus.innerHTML = '<i class="fa-solid fa-database" style="color:#34d399;margin-right:4px;"></i> Terhubung langsung ke PostgreSQL (GuildSettings) & Redis Invalidator';
+            badge.className = "badge badge-success";
+            badge.innerHTML =
+              '<i class="fa-solid fa-check"></i> LIVE DISCORD GUILD';
+            syncStatus.innerHTML =
+              '<i class="fa-solid fa-database" style="color:#34d399;margin-right:4px;"></i> Terhubung langsung ke PostgreSQL (GuildSettings) & Redis Invalidator';
           }
         }
         loadGuildConfig(guildId);
@@ -1164,7 +2076,7 @@
             applyConfigToUI(data.config);
           }
         } catch (e) {
-          console.error('[Configurator] Gagal membaca konfigurasi:', e);
+          console.error("[Configurator] Gagal membaca konfigurasi:", e);
         }
       }
 
@@ -1187,113 +2099,135 @@
           if (el) el.value = val;
         };
 
-        setChecked('toggleModuleMusic', feat.music !== false);
-        setChecked('toggleModuleEconomy', feat.economy !== false);
-        setChecked('toggleModuleSurvival', feat.survival !== false);
-        setChecked('toggleModuleAi', feat.aiPersona !== false);
-        setChecked('toggleModuleLeveling', feat.leveling !== false);
-        setChecked('toggleModuleAutomod', feat.automod !== false);
+        setChecked("toggleModuleMusic", feat.music !== false);
+        setChecked("toggleModuleEconomy", feat.economy !== false);
+        setChecked("toggleModuleSurvival", feat.survival !== false);
+        setChecked("toggleModuleAi", feat.aiPersona !== false);
+        setChecked("toggleModuleLeveling", feat.leveling !== false);
+        setChecked("toggleModuleAutomod", feat.automod !== false);
 
-        setVal('rangeDefaultVolume', mus.defaultVolume || 85);
-        const volLabel = document.getElementById('defaultVolLabel');
-        if (volLabel) volLabel.textContent = (mus.defaultVolume || 85) + '%';
-        setChecked('toggleTwentyFourSeven', !!mus.twentyFourSeven);
-        setVal('inputDjRole', mus.djRoleId || '');
+        setVal("rangeDefaultVolume", mus.defaultVolume || 85);
+        const volLabel = document.getElementById("defaultVolLabel");
+        if (volLabel) volLabel.textContent = (mus.defaultVolume || 85) + "%";
+        setChecked("toggleTwentyFourSeven", !!mus.twentyFourSeven);
+        setVal("inputDjRole", mus.djRoleId || "");
 
-        setVal('inputTaxPercent', eco.taxPercent ?? 0.5);
-        setChecked('toggleStockMarket', eco.allowStockMarket !== false);
+        setVal("inputTaxPercent", eco.taxPercent ?? 0.5);
+        setChecked("toggleStockMarket", eco.allowStockMarket !== false);
 
-        setVal('selectVitalDrain', surv.vitalDrainRate || 'normal');
-        setChecked('toggleWildernessPvp', surv.wildernessPvp !== false);
+        setVal("selectVitalDrain", surv.vitalDrainRate || "normal");
+        setChecked("toggleWildernessPvp", surv.wildernessPvp !== false);
 
-        setVal('selectAiModel', ai.provider || 'gemini');
-        setChecked('toggleAiAutoReply', ai.autoReply !== false);
-        setVal('textCustomPersona', ai.customPersona || '');
+        setVal("selectAiModel", ai.provider || "gemini");
+        setChecked("toggleAiAutoReply", ai.autoReply !== false);
+        setVal("textCustomPersona", ai.customPersona || "");
 
-        setVal('selectXpMultiplier', String(lev.xpMultiplier || '1.5'));
-        setVal('selectNotifyMode', lev.notifyMode || 'channel');
+        setVal("selectXpMultiplier", String(lev.xpMultiplier || "1.5"));
+        setVal("selectNotifyMode", lev.notifyMode || "channel");
 
-        setChecked('toggleAntiInvite', auto.antiInvite !== false);
-        setChecked('toggleAntiSpam', auto.antiSpam !== false);
-        setVal('rangeMassMention', auto.massMention || 5);
-        const mmLabel = document.getElementById('massMentionLabel');
-        if (mmLabel) mmLabel.textContent = (auto.massMention || 5) + ' user';
+        setChecked("toggleAntiInvite", auto.antiInvite !== false);
+        setChecked("toggleAntiSpam", auto.antiSpam !== false);
+        setVal("rangeMassMention", auto.massMention || 5);
+        const mmLabel = document.getElementById("massMentionLabel");
+        if (mmLabel) mmLabel.textContent = (auto.massMention || 5) + " user";
       }
 
       async function saveCurrentGuildConfig() {
-        const btn = document.getElementById('btnSaveServerConfig');
-        const feedback = document.getElementById('saveStatusFeedback');
-        const origText = btn ? btn.innerHTML : '';
+        const btn = document.getElementById("btnSaveServerConfig");
+        const feedback = document.getElementById("saveStatusFeedback");
+        const origText = btn ? btn.innerHTML : "";
         if (btn) {
           btn.disabled = true;
-          btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+          btn.innerHTML =
+            '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
         }
 
         const payload = {
           features: {
-            music: document.getElementById('toggleModuleMusic').checked,
-            economy: document.getElementById('toggleModuleEconomy').checked,
-            survival: document.getElementById('toggleModuleSurvival').checked,
-            aiPersona: document.getElementById('toggleModuleAi').checked,
-            leveling: document.getElementById('toggleModuleLeveling').checked,
-            automod: document.getElementById('toggleModuleAutomod').checked,
+            music: document.getElementById("toggleModuleMusic").checked,
+            economy: document.getElementById("toggleModuleEconomy").checked,
+            survival: document.getElementById("toggleModuleSurvival").checked,
+            aiPersona: document.getElementById("toggleModuleAi").checked,
+            leveling: document.getElementById("toggleModuleLeveling").checked,
+            automod: document.getElementById("toggleModuleAutomod").checked,
           },
           music: {
-            defaultVolume: parseInt(document.getElementById('rangeDefaultVolume').value, 10),
-            twentyFourSeven: document.getElementById('toggleTwentyFourSeven').checked,
-            djRoleId: document.getElementById('inputDjRole').value.trim(),
+            defaultVolume: parseInt(
+              document.getElementById("rangeDefaultVolume").value,
+              10,
+            ),
+            twentyFourSeven: document.getElementById("toggleTwentyFourSeven")
+              .checked,
+            djRoleId: document.getElementById("inputDjRole").value.trim(),
           },
           economy: {
-            taxPercent: parseFloat(document.getElementById('inputTaxPercent').value),
-            allowStockMarket: document.getElementById('toggleStockMarket').checked,
+            taxPercent: parseFloat(
+              document.getElementById("inputTaxPercent").value,
+            ),
+            allowStockMarket:
+              document.getElementById("toggleStockMarket").checked,
           },
           survival: {
-            vitalDrainRate: document.getElementById('selectVitalDrain').value,
-            wildernessPvp: document.getElementById('toggleWildernessPvp').checked,
+            vitalDrainRate: document.getElementById("selectVitalDrain").value,
+            wildernessPvp: document.getElementById("toggleWildernessPvp")
+              .checked,
           },
           aiPersona: {
-            provider: document.getElementById('selectAiModel').value,
-            autoReply: document.getElementById('toggleAiAutoReply').checked,
-            customPersona: document.getElementById('textCustomPersona').value.trim(),
+            provider: document.getElementById("selectAiModel").value,
+            autoReply: document.getElementById("toggleAiAutoReply").checked,
+            customPersona: document
+              .getElementById("textCustomPersona")
+              .value.trim(),
           },
           leveling: {
-            xpMultiplier: parseFloat(document.getElementById('selectXpMultiplier').value),
-            notifyMode: document.getElementById('selectNotifyMode').value,
+            xpMultiplier: parseFloat(
+              document.getElementById("selectXpMultiplier").value,
+            ),
+            notifyMode: document.getElementById("selectNotifyMode").value,
           },
           automod: {
-            antiInvite: document.getElementById('toggleAntiInvite').checked,
-            antiSpam: document.getElementById('toggleAntiSpam').checked,
-            massMention: parseInt(document.getElementById('rangeMassMention').value, 10),
+            antiInvite: document.getElementById("toggleAntiInvite").checked,
+            antiSpam: document.getElementById("toggleAntiSpam").checked,
+            massMention: parseInt(
+              document.getElementById("rangeMassMention").value,
+              10,
+            ),
           },
         };
 
         try {
-          const res = await fetch(`/api/guilds/${currentSelectedGuildId}/config`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
+          const res = await fetch(
+            `/api/guilds/${currentSelectedGuildId}/config`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            },
+          );
           const data = await res.json();
           if (data && data.success) {
             if (feedback) {
-              feedback.style.display = 'inline-flex';
-              feedback.style.color = '#34d399';
-              feedback.innerHTML = `<i class="fa-solid fa-circle-check" style="margin-right:4px;"></i> ${data.message || 'Konfigurasi tersimpan!'}`;
+              feedback.style.display = "inline-flex";
+              feedback.style.color = "#34d399";
+              feedback.innerHTML = `<i class="fa-solid fa-circle-check" style="margin-right:4px;"></i> ${data.message || "Konfigurasi tersimpan!"}`;
             }
-            if (typeof window.showToast === 'function') window.showToast(data.message, 'success');
+            if (typeof window.showToast === "function")
+              window.showToast(data.message, "success");
           } else {
             if (feedback) {
-              feedback.style.display = 'inline-flex';
-              feedback.style.color = '#ef4444';
-              feedback.innerHTML = `<i class="fa-solid fa-circle-exclamation" style="margin-right:4px;"></i> ${data?.error || 'Gagal menyimpan.'}`;
+              feedback.style.display = "inline-flex";
+              feedback.style.color = "#ef4444";
+              feedback.innerHTML = `<i class="fa-solid fa-circle-exclamation" style="margin-right:4px;"></i> ${data?.error || "Gagal menyimpan."}`;
             }
-            if (typeof window.showToast === 'function') window.showToast(data?.error || 'Gagal menyimpan', 'error');
+            if (typeof window.showToast === "function")
+              window.showToast(data?.error || "Gagal menyimpan", "error");
           }
         } catch (e) {
           if (feedback) {
-            feedback.style.display = 'inline-flex';
-            feedback.style.color = '#ef4444';
-            feedback.innerHTML = '<i class="fa-solid fa-circle-exclamation" style="margin-right:4px;"></i> Terjadi kendala jaringan.';
+            feedback.style.display = "inline-flex";
+            feedback.style.color = "#ef4444";
+            feedback.innerHTML =
+              '<i class="fa-solid fa-circle-exclamation" style="margin-right:4px;"></i> Terjadi kendala jaringan.';
           }
         } finally {
           if (btn) {
@@ -1301,35 +2235,49 @@
             btn.innerHTML = origText;
           }
           if (feedback) {
-            setTimeout(() => { feedback.style.display = 'none'; }, 4500);
+            setTimeout(() => {
+              feedback.style.display = "none";
+            }, 4500);
           }
         }
       }
 
       async function resetCurrentGuildConfig() {
-        if (!confirm('Kembalikan konfigurasi modul server ini ke pengaturan standar bawaan pabrik?')) return;
+        if (
+          !confirm(
+            "Kembalikan konfigurasi modul server ini ke pengaturan standar bawaan pabrik?",
+          )
+        )
+          return;
         try {
-          const res = await fetch(`/api/guilds/${currentSelectedGuildId}/reset`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-          });
+          const res = await fetch(
+            `/api/guilds/${currentSelectedGuildId}/reset`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+            },
+          );
           const data = await res.json();
           if (data && data.success) {
             if (data.config) applyConfigToUI(data.config);
             else await loadGuildConfig(currentSelectedGuildId);
-            if (typeof window.showToast === 'function') window.showToast('Pengaturan direset ke standar pabrik.', 'info');
+            if (typeof window.showToast === "function")
+              window.showToast("Pengaturan direset ke standar pabrik.", "info");
           }
         } catch (e) {
-          console.error('[Configurator] Gagal mereset:', e);
+          console.error("[Configurator] Gagal mereset:", e);
         }
       }
 
       // Inisialisasi konfigurator
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener("DOMContentLoaded", () => {
         loadManageableGuilds();
       });
       // Fallback eksekusi langsung bila event DOMContentLoaded telah lewat
-      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      if (
+        document.readyState === "complete" ||
+        document.readyState === "interactive"
+      ) {
         loadManageableGuilds();
       }
     </script>

@@ -45,7 +45,8 @@ async function main() {
     "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
   ].filter(Boolean);
 
-  const chromePath = defaultPaths.find((p) => fs.existsSync(p)) || defaultPaths[0];
+  const chromePath =
+    defaultPaths.find((p) => fs.existsSync(p)) || defaultPaths[0];
   const chrome = spawn(chromePath, [
     "--headless=new",
     "--remote-debugging-port=9222",
@@ -101,7 +102,7 @@ async function main() {
           "[BROWSER EXCEPTION]",
           det.text,
           det.exception?.description || "",
-          `at ${det.url}:${det.lineNumber}:${det.columnNumber}`
+          `at ${det.url}:${det.lineNumber}:${det.columnNumber}`,
         );
       }
     };
@@ -213,7 +214,10 @@ async function main() {
     if (screenshotData) {
       const targetPath =
         process.env.SCREENSHOT_OUT_PATH ||
-        require("path").join(__dirname, "../dashboard/public/verified_3d_render.png");
+        require("path").join(
+          __dirname,
+          "../dashboard/public/verified_3d_render.png",
+        );
       fs.writeFileSync(targetPath, Buffer.from(screenshotData, "base64"));
       console.log("✨ Screenshot final berhasil disimpan ke:", targetPath);
     }

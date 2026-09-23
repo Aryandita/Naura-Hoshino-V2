@@ -180,7 +180,10 @@ class PetHabitatEngine {
       return { success: false, reason: "PETS_NOT_FOUND" };
     }
 
-    if (Number(pet1.affection || 0) < 100 || Number(pet2.affection || 0) < 100) {
+    if (
+      Number(pet1.affection || 0) < 100 ||
+      Number(pet2.affection || 0) < 100
+    ) {
       return {
         success: false,
         reason: "AFFECTION_TOO_LOW",

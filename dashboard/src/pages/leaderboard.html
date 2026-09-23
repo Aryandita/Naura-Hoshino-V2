@@ -4,11 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Leaderboard | Naura OS</title>
-    <meta name="description" content="Hall of Fame, papan peringkat server untuk kekayaan, level chat, survival, dan trivia." />
+    <meta
+      name="description"
+      content="Hall of Fame, papan peringkat server untuk kekayaan, level chat, survival, dan trivia."
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
       /* Podium Card Rich Grand Stage Background */
@@ -20,17 +29,45 @@
         background-color: #080b18;
         background-image:
           /* Center Golden Champion Spotlight */
-          radial-gradient(ellipse 65% 60% at 50% -5%, rgba(245, 158, 11, 0.24) 0%, rgba(245, 158, 11, 0.06) 45%, transparent 80%),
+          radial-gradient(
+            ellipse 65% 60% at 50% -5%,
+            rgba(245, 158, 11, 0.24) 0%,
+            rgba(245, 158, 11, 0.06) 45%,
+            transparent 80%
+          ),
           /* Left Cyan Rimlight for Rank 2 */
-          radial-gradient(ellipse 45% 55% at 22% 42%, rgba(34, 211, 238, 0.14) 0%, transparent 65%),
+          radial-gradient(
+              ellipse 45% 55% at 22% 42%,
+              rgba(34, 211, 238, 0.14) 0%,
+              transparent 65%
+            ),
           /* Right Violet Rimlight for Rank 3 */
-          radial-gradient(ellipse 45% 55% at 78% 46%, rgba(168, 85, 247, 0.14) 0%, transparent 65%),
+          radial-gradient(
+              ellipse 45% 55% at 78% 46%,
+              rgba(168, 85, 247, 0.14) 0%,
+              transparent 65%
+            ),
           /* Perspective Floor Grid */
-          linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-        background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+          linear-gradient(
+              to right,
+              rgba(255, 255, 255, 0.03) 1px,
+              transparent 1px
+            ),
+          linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.02) 1px,
+            transparent 1px
+          );
+        background-size:
+          100% 100%,
+          100% 100%,
+          100% 100%,
+          36px 36px,
+          36px 36px;
         border: 1px solid rgba(245, 158, 11, 0.25);
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(245, 158, 11, 0.25);
+        box-shadow:
+          0 16px 40px rgba(0, 0, 0, 0.6),
+          inset 0 1px 0 rgba(245, 158, 11, 0.25);
       }
 
       .podium-stage-svg {
@@ -119,7 +156,11 @@
 
       .podium-1 .podium-bar {
         height: 100px;
-        background: linear-gradient(to bottom, rgba(245,158,11,0.35), rgba(245,158,11,0.1));
+        background: linear-gradient(
+          to bottom,
+          rgba(245, 158, 11, 0.35),
+          rgba(245, 158, 11, 0.1)
+        );
         border: 1px solid var(--border-amber);
         box-shadow: 0 -8px 30px var(--amber-glow);
         color: var(--accent-amber);
@@ -127,17 +168,25 @@
 
       .podium-2 .podium-bar {
         height: 75px;
-        background: linear-gradient(to bottom, rgba(34,211,238,0.25), rgba(34,211,238,0.06));
-        border: 1px solid rgba(34,211,238,0.3);
-        box-shadow: 0 -4px 20px rgba(34,211,238,0.15);
+        background: linear-gradient(
+          to bottom,
+          rgba(34, 211, 238, 0.25),
+          rgba(34, 211, 238, 0.06)
+        );
+        border: 1px solid rgba(34, 211, 238, 0.3);
+        box-shadow: 0 -4px 20px rgba(34, 211, 238, 0.15);
         color: var(--accent-cyan);
       }
 
       .podium-3 .podium-bar {
         height: 55px;
-        background: linear-gradient(to bottom, rgba(168,85,247,0.25), rgba(168,85,247,0.06));
-        border: 1px solid rgba(168,85,247,0.3);
-        box-shadow: 0 -4px 20px rgba(168,85,247,0.15);
+        background: linear-gradient(
+          to bottom,
+          rgba(168, 85, 247, 0.25),
+          rgba(168, 85, 247, 0.06)
+        );
+        border: 1px solid rgba(168, 85, 247, 0.3);
+        box-shadow: 0 -4px 20px rgba(168, 85, 247, 0.15);
         color: var(--accent-violet);
       }
 
@@ -242,41 +291,55 @@
       .xp-bar-fill {
         height: 100%;
         border-radius: var(--r-full);
-        background: linear-gradient(90deg, var(--primary), var(--accent-violet));
+        background: linear-gradient(
+          90deg,
+          var(--primary),
+          var(--accent-violet)
+        );
         box-shadow: 0 0 6px var(--primary-glow);
       }
     </style>
   </head>
   <body>
-    
-
     <div class="app-shell">
       <!-- Mobile Sidebar Overlay -->
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
       <!-- SIDEBAR -->
-      <aside class="sidebar " id="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
           <div class="sidebar-logo-icon">
-            <img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" />
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="
+                this.style.display = 'none';
+                this.parentElement.innerHTML = '🌸';
+              "
+            />
           </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
             <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+          <button
+            class="sidebar-close-btn"
+            id="sidebarCloseBtn"
+            aria-label="Tutup menu"
+          >
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
+        <!-- Navigation -->
+        <!-- Navigation -->
         <nav class="sidebar-nav" role="navigation">
-
           <!-- Overview -->
           <div class="nav-group">
             <div class="nav-group-label">Overview</div>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-gauge-high"></i
+              ></span>
               <span>Dashboard</span>
             </a>
             <a href="/status" class="nav-item">
@@ -302,7 +365,9 @@
               <span>Economy</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-network-wired"></i
+              ></span>
               <span>Guild Topology</span>
             </a>
           </div>
@@ -323,7 +388,9 @@
               <span>Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-microphone"></i
+              ></span>
               <span>Karaoke</span>
             </a>
           </div>
@@ -332,7 +399,9 @@
           <div class="nav-group">
             <div class="nav-group-label">Naura Wilds RPG</div>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-earth-asia"></i
+              ></span>
               <span>World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
@@ -357,7 +426,9 @@
               <span>Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-wand-magic-sparkles"></i
+              ></span>
               <span>Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
@@ -374,15 +445,24 @@
           <div class="nav-group">
             <div class="nav-group-label">More</div>
             <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+              <span class="nav-icon" style="color: var(--accent-green)"
+                ><i class="fa-solid fa-id-badge"></i
+              ></span>
+              <span style="color: var(--accent-green)">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
         <div class="sidebar-footer">
-          <div class="sidebar-user" onclick="window.location.href='/'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
+          <div class="sidebar-user" onclick="window.location.href = '/'">
+            <img
+              src="/assets/core/avatar.png"
+              alt="User"
+              class="sidebar-user-avatar"
+              onerror="
+                this.src =
+                  'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'
+              "
+            />
             <div class="sidebar-user-info">
               <div class="sidebar-user-name">Guest</div>
               <div class="sidebar-user-role">Klik untuk login</div>
@@ -395,75 +475,187 @@
       <div class="main-content">
         <header class="top-header">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
+            <button
+              class="hamburger-btn"
+              id="hamburgerBtn"
+              aria-label="Toggle menu"
+            >
+              <i class="fa-solid fa-bars"></i>
+            </button>
             <div>
               <div class="page-title">Hall of Fame</div>
-              <div class="breadcrumb"><span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Leaderboard</span></div>
+              <div class="breadcrumb">
+                <span>Naura OS</span><span class="breadcrumb-sep">/</span
+                ><span>Leaderboard</span>
+              </div>
             </div>
           </div>
           <div class="header-right">
-            <div style="display:flex;gap:8px;">
-              <button id="langToggle" class="btn btn-ghost btn-sm" title="Bahasa / Language">
-                <i class="fa-solid fa-language"></i> <span id="langLabel">ID</span>
+            <div style="display: flex; gap: 8px">
+              <button
+                id="langToggle"
+                class="btn btn-ghost btn-sm"
+                title="Bahasa / Language"
+              >
+                <i class="fa-solid fa-language"></i>
+                <span id="langLabel">ID</span>
               </button>
-              <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+              <a href="/" class="btn btn-ghost btn-sm"
+                ><i class="fa-solid fa-arrow-left"></i> Dashboard</a
+              >
             </div>
           </div>
         </header>
 
         <main class="page-content">
-
           <div class="page-header-bar animate-in">
             <div>
               <h1 class="page-heading">
-                <span class="page-heading-icon" style="background:var(--amber-dim);border:1px solid var(--border-amber);">
-                  <i class="fa-solid fa-trophy" style="color:var(--accent-amber);"></i>
+                <span
+                  class="page-heading-icon"
+                  style="
+                    background: var(--amber-dim);
+                    border: 1px solid var(--border-amber);
+                  "
+                >
+                  <i
+                    class="fa-solid fa-trophy"
+                    style="color: var(--accent-amber)"
+                  ></i>
                 </span>
                 Hall of Fame
               </h1>
-              <p class="page-sub">Papan peringkat server · Diperbarui real-time</p>
+              <p class="page-sub">
+                Papan peringkat server · Diperbarui real-time
+              </p>
             </div>
 
             <!-- Category Tabs -->
             <div class="tab-group" id="lbTabGroup">
-              <button class="tab-btn active" data-cat="wealth" id="btnTabWealth" onclick="switchLbTab('wealth')">
-                <i class="fa-solid fa-vault" style="color:var(--accent-amber);"></i> Terkaya 🪙
+              <button
+                class="tab-btn active"
+                data-cat="wealth"
+                id="btnTabWealth"
+                onclick="switchLbTab('wealth')"
+              >
+                <i
+                  class="fa-solid fa-vault"
+                  style="color: var(--accent-amber)"
+                ></i>
+                Terkaya 🪙
               </button>
-              <button class="tab-btn" data-cat="chat_level" id="btnTabChatLevel" onclick="switchLbTab('chat_level')">
-                <i class="fa-solid fa-comments" style="color:var(--accent-cyan);"></i> Level Chat 💬
+              <button
+                class="tab-btn"
+                data-cat="chat_level"
+                id="btnTabChatLevel"
+                onclick="switchLbTab('chat_level')"
+              >
+                <i
+                  class="fa-solid fa-comments"
+                  style="color: var(--accent-cyan)"
+                ></i>
+                Level Chat 💬
               </button>
-              <button class="tab-btn" data-cat="rpg_level" id="btnTabRpgLevel" onclick="switchLbTab('rpg_level')">
-                <i class="fa-solid fa-shield-halved" style="color:var(--accent-violet);"></i> Survival ⚔️
+              <button
+                class="tab-btn"
+                data-cat="rpg_level"
+                id="btnTabRpgLevel"
+                onclick="switchLbTab('rpg_level')"
+              >
+                <i
+                  class="fa-solid fa-shield-halved"
+                  style="color: var(--accent-violet)"
+                ></i>
+                Survival ⚔️
               </button>
-              <button class="tab-btn" data-cat="trivia" id="btnTabTrivia" onclick="switchLbTab('trivia')">
-                <i class="fa-solid fa-gamepad" style="color:var(--accent-green);"></i> Trivia 🧠
+              <button
+                class="tab-btn"
+                data-cat="trivia"
+                id="btnTabTrivia"
+                onclick="switchLbTab('trivia')"
+              >
+                <i
+                  class="fa-solid fa-gamepad"
+                  style="color: var(--accent-green)"
+                ></i>
+                Trivia 🧠
               </button>
             </div>
           </div>
 
           <!-- Server selector -->
-          <div class="card card-p-sm animate-in delay-1" style="margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-            <span style="font-size:12px;color:var(--text-muted);font-weight:600;font-family:var(--font-heading);">Server:</span>
-            <select class="input" id="guildSelector" style="max-width:280px;cursor:pointer;">
+          <div
+            class="card card-p-sm animate-in delay-1"
+            style="
+              margin-bottom: 20px;
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              flex-wrap: wrap;
+            "
+          >
+            <span
+              style="
+                font-size: 12px;
+                color: var(--text-muted);
+                font-weight: 600;
+                font-family: var(--font-heading);
+              "
+              >Server:</span
+            >
+            <select
+              class="input"
+              id="guildSelector"
+              style="max-width: 280px; cursor: pointer"
+            >
               <option value="">- Pilih Server -</option>
             </select>
             <span class="badge badge-muted" id="lbTotalCount">0 pemain</span>
-            <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-              <input type="text" class="input" id="lbSearch" placeholder="Cari pemain..." style="max-width:200px;" />
+            <div
+              style="
+                margin-left: auto;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              "
+            >
+              <input
+                type="text"
+                class="input"
+                id="lbSearch"
+                placeholder="Cari pemain..."
+                style="max-width: 200px"
+              />
             </div>
           </div>
 
           <!-- Podium -->
           <div class="card animate-in delay-1" id="podiumSection">
             <!-- Atmospheric Stage Background SVG -->
-            <svg class="podium-stage-svg" viewBox="0 0 900 320" preserveAspectRatio="none">
+            <svg
+              class="podium-stage-svg"
+              viewBox="0 0 900 320"
+              preserveAspectRatio="none"
+            >
               <defs>
-                <linearGradient id="stadiumBeam" x1="0%" y1="0%" x2="0%" y2="100%">
+                <linearGradient
+                  id="stadiumBeam"
+                  x1="0%"
+                  y1="0%"
+                  x2="0%"
+                  y2="100%"
+                >
                   <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.32" />
                   <stop offset="45%" stop-color="#f59e0b" stop-opacity="0.10" />
                   <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
                 </linearGradient>
-                <linearGradient id="podiumHorizonGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <linearGradient
+                  id="podiumHorizonGrad"
+                  x1="0%"
+                  y1="0%"
+                  x2="100%"
+                  y2="0%"
+                >
                   <stop offset="0%" stop-color="#22d3ee" stop-opacity="0" />
                   <stop offset="25%" stop-color="#22d3ee" stop-opacity="0.45" />
                   <stop offset="50%" stop-color="#f59e0b" stop-opacity="0.85" />
@@ -478,228 +670,540 @@
               </defs>
 
               <!-- Central Grand Stadium Spotlight Cone -->
-              <polygon points="450,-10 240,320 660,320" fill="url(#stadiumBeam)" />
-              
+              <polygon
+                points="450,-10 240,320 660,320"
+                fill="url(#stadiumBeam)"
+              />
+
               <!-- Ambient Side Spotlights -->
-              <polygon points="200,-20 80,320 320,320" fill="#22d3ee" opacity="0.05" />
-              <polygon points="700,-20 580,320 820,320" fill="#a855f7" opacity="0.05" />
+              <polygon
+                points="200,-20 80,320 320,320"
+                fill="#22d3ee"
+                opacity="0.05"
+              />
+              <polygon
+                points="700,-20 580,320 820,320"
+                fill="#a855f7"
+                opacity="0.05"
+              />
 
               <!-- Cyber Arena Floor Horizon Baseline with Glow -->
-              <line x1="40" y1="265" x2="860" y2="265" stroke="url(#podiumHorizonGrad)" stroke-width="2" />
-              <line x1="160" y1="265" x2="740" y2="265" stroke="#f59e0b" stroke-width="3.5" opacity="0.4" />
+              <line
+                x1="40"
+                y1="265"
+                x2="860"
+                y2="265"
+                stroke="url(#podiumHorizonGrad)"
+                stroke-width="2"
+              />
+              <line
+                x1="160"
+                y1="265"
+                x2="740"
+                y2="265"
+                stroke="#f59e0b"
+                stroke-width="3.5"
+                opacity="0.4"
+              />
 
               <!-- Concentric Arena Target Rings behind 1st Place -->
-              <circle cx="450" cy="120" r="85" stroke="rgba(245,158,11,0.22)" stroke-width="1.5" stroke-dasharray="4 6" fill="url(#goldAura)" />
-              <circle cx="450" cy="120" r="125" stroke="rgba(245,158,11,0.12)" stroke-width="1" stroke-dasharray="8 8" fill="none" />
-              
+              <circle
+                cx="450"
+                cy="120"
+                r="85"
+                stroke="rgba(245,158,11,0.22)"
+                stroke-width="1.5"
+                stroke-dasharray="4 6"
+                fill="url(#goldAura)"
+              />
+              <circle
+                cx="450"
+                cy="120"
+                r="125"
+                stroke="rgba(245,158,11,0.12)"
+                stroke-width="1"
+                stroke-dasharray="8 8"
+                fill="none"
+              />
+
               <!-- Halo Rings behind 2nd and 3rd Place -->
-              <circle cx="310" cy="140" r="55" stroke="rgba(34,211,238,0.18)" stroke-width="1" stroke-dasharray="3 5" fill="none" />
-              <circle cx="590" cy="155" r="50" stroke="rgba(168,85,247,0.18)" stroke-width="1" stroke-dasharray="3 5" fill="none" />
+              <circle
+                cx="310"
+                cy="140"
+                r="55"
+                stroke="rgba(34,211,238,0.18)"
+                stroke-width="1"
+                stroke-dasharray="3 5"
+                fill="none"
+              />
+              <circle
+                cx="590"
+                cy="155"
+                r="50"
+                stroke="rgba(168,85,247,0.18)"
+                stroke-width="1"
+                stroke-dasharray="3 5"
+                fill="none"
+              />
 
               <!-- Championship Laurel Watermark (Subtle Golden Crest) -->
-              <g transform="translate(450, 75)" opacity="0.15" stroke="#f59e0b" fill="none" stroke-width="2">
+              <g
+                transform="translate(450, 75)"
+                opacity="0.15"
+                stroke="#f59e0b"
+                fill="none"
+                stroke-width="2"
+              >
                 <path d="M-60,40 C-80,0 -60,-40 0,-50 C60,-40 80,0 60,40" />
                 <path d="M-45,35 C-60,5 -45,-25 0,-35 C45,-25 60,5 45,35" />
                 <circle cx="0" cy="-60" r="5" fill="#f59e0b" />
               </g>
 
               <!-- Floating Celebration Starbursts & Shimmer Particles -->
-              <text x="365" y="65" fill="rgba(245,158,11,0.7)" font-size="15">✦</text>
-              <text x="530" y="75" fill="rgba(245,158,11,0.7)" font-size="14">✦</text>
-              <text x="210" y="115" fill="rgba(34,211,238,0.6)" font-size="13">✦</text>
-              <text x="690" y="125" fill="rgba(168,85,247,0.6)" font-size="13">✦</text>
-              <text x="415" y="35" fill="rgba(245,158,11,0.4)" font-size="10">★</text>
-              <text x="485" y="42" fill="rgba(245,158,11,0.4)" font-size="10">★</text>
-              <text x="140" y="180" fill="rgba(34,211,238,0.35)" font-size="9">✦</text>
-              <text x="760" y="190" fill="rgba(168,85,247,0.35)" font-size="9">✦</text>
+              <text x="365" y="65" fill="rgba(245,158,11,0.7)" font-size="15">
+                ✦
+              </text>
+              <text x="530" y="75" fill="rgba(245,158,11,0.7)" font-size="14">
+                ✦
+              </text>
+              <text x="210" y="115" fill="rgba(34,211,238,0.6)" font-size="13">
+                ✦
+              </text>
+              <text x="690" y="125" fill="rgba(168,85,247,0.6)" font-size="13">
+                ✦
+              </text>
+              <text x="415" y="35" fill="rgba(245,158,11,0.4)" font-size="10">
+                ★
+              </text>
+              <text x="485" y="42" fill="rgba(245,158,11,0.4)" font-size="10">
+                ★
+              </text>
+              <text x="140" y="180" fill="rgba(34,211,238,0.35)" font-size="9">
+                ✦
+              </text>
+              <text x="760" y="190" fill="rgba(168,85,247,0.35)" font-size="9">
+                ✦
+              </text>
 
               <!-- Stage Base Pedestal Ellipse Underglows -->
-              <ellipse cx="450" cy="270" rx="70" ry="14" fill="rgba(245,158,11,0.3)" />
-              <ellipse cx="310" cy="270" rx="55" ry="11" fill="rgba(34,211,238,0.2)" />
-              <ellipse cx="590" cy="270" rx="52" ry="10" fill="rgba(168,85,247,0.2)" />
+              <ellipse
+                cx="450"
+                cy="270"
+                rx="70"
+                ry="14"
+                fill="rgba(245,158,11,0.3)"
+              />
+              <ellipse
+                cx="310"
+                cy="270"
+                rx="55"
+                ry="11"
+                fill="rgba(34,211,238,0.2)"
+              />
+              <ellipse
+                cx="590"
+                cy="270"
+                rx="52"
+                ry="10"
+                fill="rgba(168,85,247,0.2)"
+              />
             </svg>
 
             <div class="podium-header-bar">
-              <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-cyan);opacity:0.85;">
-                <i class="fa-solid fa-trophy" style="margin-right:6px;"></i> SEASON 02 // ARENA
+              <span
+                style="
+                  font-family: var(--font-mono);
+                  font-size: 10px;
+                  letter-spacing: 0.1em;
+                  text-transform: uppercase;
+                  color: var(--accent-cyan);
+                  opacity: 0.85;
+                "
+              >
+                <i class="fa-solid fa-trophy" style="margin-right: 6px"></i>
+                SEASON 02 // ARENA
               </span>
-              <div style="font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-amber);font-family:var(--font-heading);text-shadow:0 0 12px var(--amber-glow);">
+              <div
+                style="
+                  font-size: 11px;
+                  font-weight: 700;
+                  letter-spacing: 0.14em;
+                  text-transform: uppercase;
+                  color: var(--accent-amber);
+                  font-family: var(--font-heading);
+                  text-shadow: 0 0 12px var(--amber-glow);
+                "
+              >
                 🏆 Top 3 Champions
               </div>
-              <span style="font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-violet);opacity:0.85;">
-                GLOBAL TIER: ELITE <i class="fa-solid fa-crown" style="margin-left:6px;"></i>
+              <span
+                style="
+                  font-family: var(--font-mono);
+                  font-size: 10px;
+                  letter-spacing: 0.1em;
+                  text-transform: uppercase;
+                  color: var(--accent-violet);
+                  opacity: 0.85;
+                "
+              >
+                GLOBAL TIER: ELITE
+                <i class="fa-solid fa-crown" style="margin-left: 6px"></i>
               </span>
             </div>
 
             <div class="podium-wrapper" id="podiumWrapper">
-
               <!-- 2nd Place -->
               <div class="podium-place podium-2">
                 <div class="podium-avatar-wrap">
-                  <div class="podium-avatar" style="width:64px;height:64px;background:var(--cyan-dim);border:2px solid var(--border-cyan);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--accent-cyan);box-shadow:0 0 16px rgba(34,211,238,0.3);">N</div>
+                  <div
+                    class="podium-avatar"
+                    style="
+                      width: 64px;
+                      height: 64px;
+                      background: var(--cyan-dim);
+                      border: 2px solid var(--border-cyan);
+                      border-radius: 50%;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-size: 24px;
+                      font-weight: 700;
+                      color: var(--accent-cyan);
+                      box-shadow: 0 0 16px rgba(34, 211, 238, 0.3);
+                    "
+                  >
+                    N
+                  </div>
                   <span class="podium-rank-badge">🥈</span>
                 </div>
                 <div class="podium-name">Naura</div>
-                <div class="podium-coins" style="color:var(--accent-amber);">🪙 850K</div>
+                <div class="podium-coins" style="color: var(--accent-amber)">
+                  🪙 850K
+                </div>
                 <div class="podium-bar">2</div>
               </div>
 
               <!-- 1st Place -->
-              <div class="podium-place podium-1" style="margin-bottom:-16px;">
+              <div class="podium-place podium-1" style="margin-bottom: -16px">
                 <div class="podium-avatar-wrap animate-float">
-                  <div class="podium-avatar" style="width:80px;height:80px;background:var(--amber-dim);border:3px solid var(--border-amber);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:var(--accent-amber);box-shadow:0 0 28px var(--amber-glow);">A</div>
-                  <span class="podium-rank-badge" style="font-size:22px;">👑</span>
+                  <div
+                    class="podium-avatar"
+                    style="
+                      width: 80px;
+                      height: 80px;
+                      background: var(--amber-dim);
+                      border: 3px solid var(--border-amber);
+                      border-radius: 50%;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-size: 30px;
+                      font-weight: 700;
+                      color: var(--accent-amber);
+                      box-shadow: 0 0 28px var(--amber-glow);
+                    "
+                  >
+                    A
+                  </div>
+                  <span class="podium-rank-badge" style="font-size: 22px"
+                    >👑</span
+                  >
                 </div>
-                <div class="podium-name" style="font-size:14px;">Aryandita</div>
-                <div class="podium-coins" style="color:var(--accent-amber);font-size:13px;">🪙 1.25M</div>
+                <div class="podium-name" style="font-size: 14px">Aryandita</div>
+                <div
+                  class="podium-coins"
+                  style="color: var(--accent-amber); font-size: 13px"
+                >
+                  🪙 1.25M
+                </div>
                 <div class="podium-bar">1</div>
               </div>
 
               <!-- 3rd Place -->
               <div class="podium-place podium-3">
                 <div class="podium-avatar-wrap">
-                  <div class="podium-avatar" style="width:56px;height:56px;background:var(--violet-dim);border:2px solid var(--border-violet);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--accent-violet);box-shadow:0 0 16px rgba(168,85,247,0.3);">K</div>
-                  <span class="podium-rank-badge" style="font-size:16px;">🥉</span>
+                  <div
+                    class="podium-avatar"
+                    style="
+                      width: 56px;
+                      height: 56px;
+                      background: var(--violet-dim);
+                      border: 2px solid var(--border-violet);
+                      border-radius: 50%;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-size: 20px;
+                      font-weight: 700;
+                      color: var(--accent-violet);
+                      box-shadow: 0 0 16px rgba(168, 85, 247, 0.3);
+                    "
+                  >
+                    K
+                  </div>
+                  <span class="podium-rank-badge" style="font-size: 16px"
+                    >🥉</span
+                  >
                 </div>
                 <div class="podium-name">Kagami</div>
-                <div class="podium-coins" style="color:var(--accent-amber);">🪙 620K</div>
+                <div class="podium-coins" style="color: var(--accent-amber)">
+                  🪙 620K
+                </div>
                 <div class="podium-bar">3</div>
               </div>
-
             </div>
             <!-- Podium base -->
-            <div style="height:24px;background:linear-gradient(to bottom, rgba(8,11,24,0.4), rgba(5,8,20,0.9));margin-top:-1px;border-top:1px solid rgba(245,158,11,0.2);"></div>
+            <div
+              style="
+                height: 24px;
+                background: linear-gradient(
+                  to bottom,
+                  rgba(8, 11, 24, 0.4),
+                  rgba(5, 8, 20, 0.9)
+                );
+                margin-top: -1px;
+                border-top: 1px solid rgba(245, 158, 11, 0.2);
+              "
+            ></div>
           </div>
 
           <!-- Rankings List -->
           <div class="card card-p animate-in delay-2">
             <div class="card-header">
-              <div class="card-title" id="lbCategoryLabel" style="color:var(--accent-amber);">
+              <div
+                class="card-title"
+                id="lbCategoryLabel"
+                style="color: var(--accent-amber)"
+              >
                 <i class="fa-solid fa-vault"></i> Peringkat Kekayaan (NC)
               </div>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">Last sync: just now</span>
-                <button id="btnRefreshLb" class="btn btn-ghost btn-sm" title="Refresh">
+              <div style="display: flex; align-items: center; gap: 8px">
+                <span
+                  style="
+                    font-size: 11px;
+                    color: var(--text-muted);
+                    font-family: var(--font-mono);
+                  "
+                  >Last sync: just now</span
+                >
+                <button
+                  id="btnRefreshLb"
+                  class="btn btn-ghost btn-sm"
+                  title="Refresh"
+                >
                   <i class="fa-solid fa-rotate"></i>
                 </button>
               </div>
             </div>
 
-            <div id="leaderboardList" style="display:flex;flex-direction:column;gap:6px;">
-
+            <div
+              id="leaderboardList"
+              style="display: flex; flex-direction: column; gap: 6px"
+            >
               <!-- Rank 1 -->
               <div class="lb-row" id="lb-row-1">
-                <div class="lb-rank-num" style="color:var(--accent-amber);">🥇</div>
-                <div class="lb-avatar" style="background:var(--amber-dim);border-color:var(--border-amber);color:var(--accent-amber);">A</div>
+                <div class="lb-rank-num" style="color: var(--accent-amber)">
+                  🥇
+                </div>
+                <div
+                  class="lb-avatar"
+                  style="
+                    background: var(--amber-dim);
+                    border-color: var(--border-amber);
+                    color: var(--accent-amber);
+                  "
+                >
+                  A
+                </div>
                 <div class="lb-info">
-                  <div class="lb-username">Aryandita <span class="badge badge-amber">OWNER VIP</span></div>
+                  <div class="lb-username">
+                    Aryandita <span class="badge badge-amber">OWNER VIP</span>
+                  </div>
                   <div class="lb-sub">Level 99 · Master Adventurer</div>
-                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:98%;"></div></div>
+                  <div class="xp-bar-mini">
+                    <div class="xp-bar-fill" style="width: 98%"></div>
+                  </div>
                 </div>
                 <div>
-                  <div class="lb-value" style="color:var(--accent-amber);">🪙 1,250,000</div>
+                  <div class="lb-value" style="color: var(--accent-amber)">
+                    🪙 1,250,000
+                  </div>
                   <div class="lb-value-sub">9,850 XP</div>
                 </div>
               </div>
 
               <!-- Rank 2 -->
               <div class="lb-row" id="lb-row-2">
-                <div class="lb-rank-num" style="color:#94a3b8;">🥈</div>
-                <div class="lb-avatar" style="background:var(--cyan-dim);border-color:var(--border-cyan);color:var(--accent-cyan);">N</div>
+                <div class="lb-rank-num" style="color: #94a3b8">🥈</div>
+                <div
+                  class="lb-avatar"
+                  style="
+                    background: var(--cyan-dim);
+                    border-color: var(--border-cyan);
+                    color: var(--accent-cyan);
+                  "
+                >
+                  N
+                </div>
                 <div class="lb-info">
-                  <div class="lb-username">Naura Hoshino <span class="badge badge-primary">BOT AI</span></div>
+                  <div class="lb-username">
+                    Naura Hoshino
+                    <span class="badge badge-primary">BOT AI</span>
+                  </div>
                   <div class="lb-sub">Level 85 · Cyber Companion</div>
-                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:85%;"></div></div>
+                  <div class="xp-bar-mini">
+                    <div class="xp-bar-fill" style="width: 85%"></div>
+                  </div>
                 </div>
                 <div>
-                  <div class="lb-value" style="color:var(--accent-amber);">🪙 850,000</div>
+                  <div class="lb-value" style="color: var(--accent-amber)">
+                    🪙 850,000
+                  </div>
                   <div class="lb-value-sub">7,420 XP</div>
                 </div>
               </div>
 
               <!-- Rank 3 -->
               <div class="lb-row" id="lb-row-3">
-                <div class="lb-rank-num" style="color:#b4783c;">🥉</div>
-                <div class="lb-avatar" style="background:var(--violet-dim);border-color:var(--border-violet);color:var(--accent-violet);">K</div>
+                <div class="lb-rank-num" style="color: #b4783c">🥉</div>
+                <div
+                  class="lb-avatar"
+                  style="
+                    background: var(--violet-dim);
+                    border-color: var(--border-violet);
+                    color: var(--accent-violet);
+                  "
+                >
+                  K
+                </div>
                 <div class="lb-info">
                   <div class="lb-username">Kagami</div>
                   <div class="lb-sub">Level 72 · Star Hunter</div>
-                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:72%;background:linear-gradient(90deg,var(--accent-violet),#c4b5fd);"></div></div>
+                  <div class="xp-bar-mini">
+                    <div
+                      class="xp-bar-fill"
+                      style="
+                        width: 72%;
+                        background: linear-gradient(
+                          90deg,
+                          var(--accent-violet),
+                          #c4b5fd
+                        );
+                      "
+                    ></div>
+                  </div>
                 </div>
                 <div>
-                  <div class="lb-value" style="color:var(--accent-amber);">🪙 620,000</div>
+                  <div class="lb-value" style="color: var(--accent-amber)">
+                    🪙 620,000
+                  </div>
                   <div class="lb-value-sub">5,230 XP</div>
                 </div>
               </div>
 
               <!-- Rank 4 -->
               <div class="lb-row" id="lb-row-4">
-                <div class="lb-rank-num" style="color:var(--text-muted);">4</div>
+                <div class="lb-rank-num" style="color: var(--text-muted)">
+                  4
+                </div>
                 <div class="lb-avatar">H</div>
                 <div class="lb-info">
                   <div class="lb-username">Hanako</div>
                   <div class="lb-sub">Level 60 · Novice Explorer</div>
-                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:60%;background:linear-gradient(90deg,var(--accent-cyan),#67e8f9);box-shadow:0 0 6px var(--cyan-glow);"></div></div>
+                  <div class="xp-bar-mini">
+                    <div
+                      class="xp-bar-fill"
+                      style="
+                        width: 60%;
+                        background: linear-gradient(
+                          90deg,
+                          var(--accent-cyan),
+                          #67e8f9
+                        );
+                        box-shadow: 0 0 6px var(--cyan-glow);
+                      "
+                    ></div>
+                  </div>
                 </div>
                 <div>
-                  <div class="lb-value" style="color:var(--accent-amber);">🪙 410,000</div>
+                  <div class="lb-value" style="color: var(--accent-amber)">
+                    🪙 410,000
+                  </div>
                   <div class="lb-value-sub">3,800 XP</div>
                 </div>
               </div>
 
               <!-- Rank 5 -->
               <div class="lb-row" id="lb-row-5">
-                <div class="lb-rank-num" style="color:var(--text-muted);">5</div>
+                <div class="lb-rank-num" style="color: var(--text-muted)">
+                  5
+                </div>
                 <div class="lb-avatar">R</div>
                 <div class="lb-info">
                   <div class="lb-username">Ryusei</div>
                   <div class="lb-sub">Level 55 · Cyber Ranger</div>
-                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:55%;"></div></div>
+                  <div class="xp-bar-mini">
+                    <div class="xp-bar-fill" style="width: 55%"></div>
+                  </div>
                 </div>
                 <div>
-                  <div class="lb-value" style="color:var(--accent-amber);">🪙 290,000</div>
+                  <div class="lb-value" style="color: var(--accent-amber)">
+                    🪙 290,000
+                  </div>
                   <div class="lb-value-sub">2,950 XP</div>
                 </div>
               </div>
 
               <!-- Rank 6 -->
               <div class="lb-row" id="lb-row-6">
-                <div class="lb-rank-num" style="color:var(--text-muted);">6</div>
+                <div class="lb-rank-num" style="color: var(--text-muted)">
+                  6
+                </div>
                 <div class="lb-avatar">M</div>
                 <div class="lb-info">
                   <div class="lb-username">Mizuki</div>
                   <div class="lb-sub">Level 48 · Wanderer</div>
-                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:48%;"></div></div>
+                  <div class="xp-bar-mini">
+                    <div class="xp-bar-fill" style="width: 48%"></div>
+                  </div>
                 </div>
                 <div>
-                  <div class="lb-value" style="color:var(--accent-amber);">🪙 185,000</div>
+                  <div class="lb-value" style="color: var(--accent-amber)">
+                    🪙 185,000
+                  </div>
                   <div class="lb-value-sub">2,100 XP</div>
                 </div>
               </div>
 
               <!-- Rank 7 -->
               <div class="lb-row" id="lb-row-7">
-                <div class="lb-rank-num" style="color:var(--text-muted);">7</div>
+                <div class="lb-rank-num" style="color: var(--text-muted)">
+                  7
+                </div>
                 <div class="lb-avatar">S</div>
                 <div class="lb-info">
                   <div class="lb-username">Sora</div>
                   <div class="lb-sub">Level 40 · Apprentice</div>
-                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:40%;"></div></div>
+                  <div class="xp-bar-mini">
+                    <div class="xp-bar-fill" style="width: 40%"></div>
+                  </div>
                 </div>
                 <div>
-                  <div class="lb-value" style="color:var(--accent-amber);">🪙 92,000</div>
+                  <div class="lb-value" style="color: var(--accent-amber)">
+                    🪙 92,000
+                  </div>
                   <div class="lb-value-sub">1,500 XP</div>
                 </div>
               </div>
-
             </div>
 
             <!-- Load more -->
-            <div style="text-align:center;margin-top:16px;">
-              <button class="btn btn-ghost" id="btnLoadMore">Muat Lebih Banyak <i class="fa-solid fa-chevron-down"></i></button>
+            <div style="text-align: center; margin-top: 16px">
+              <button class="btn btn-ghost" id="btnLoadMore">
+                Muat Lebih Banyak <i class="fa-solid fa-chevron-down"></i>
+              </button>
             </div>
           </div>
-
         </main>
       </div>
     </div>
@@ -707,113 +1211,155 @@
     <!-- Mobile Nav -->
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"
+          ><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span
+          ><span class="mn-label">Dashboard</span></a
+        >
+        <a href="/world" class="mobile-nav-item" data-group="map"
+          ><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span
+          ><span class="mn-label">Map</span></a
+        >
+        <a href="/automations" class="mobile-nav-item" data-group="config"
+          ><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span
+          ><span class="mn-label">Config</span></a
+        >
+        <a href="/music" class="mobile-nav-item" data-group="system"
+          ><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span
+          ><span class="mn-label">System</span></a
+        >
+        <a href="/settings" class="mobile-nav-item" data-group="settings"
+          ><span class="mn-icon"><i class="fa-solid fa-gears"></i></span
+          ><span class="mn-label">Settings</span></a
+        >
       </div>
     </nav>
 
     <script src="/src/js/sharedNav.js"></script>
     <script>
       const lbCategoryLabels = {
-        wealth:    { icon: 'fa-vault',        color: 'var(--accent-amber)',  label: 'Peringkat Kekayaan (NC)' },
-        chat_level:{ icon: 'fa-comments',     color: 'var(--accent-cyan)',   label: 'Peringkat Level Chat' },
-        rpg_level: { icon: 'fa-shield-halved',color: 'var(--accent-violet)', label: 'Peringkat Level Survival' },
-        trivia:    { icon: 'fa-gamepad',      color: 'var(--accent-green)',  label: 'Peringkat Trivia Score' },
+        wealth: {
+          icon: "fa-vault",
+          color: "var(--accent-amber)",
+          label: "Peringkat Kekayaan (NC)",
+        },
+        chat_level: {
+          icon: "fa-comments",
+          color: "var(--accent-cyan)",
+          label: "Peringkat Level Chat",
+        },
+        rpg_level: {
+          icon: "fa-shield-halved",
+          color: "var(--accent-violet)",
+          label: "Peringkat Level Survival",
+        },
+        trivia: {
+          icon: "fa-gamepad",
+          color: "var(--accent-green)",
+          label: "Peringkat Trivia Score",
+        },
       };
 
       let lbData = { economy: [], leveling: [], survival: [] };
-      let currentTab = 'wealth';
+      let currentTab = "wealth";
 
       // Fetch real data from API
       async function fetchLeaderboard() {
         try {
           if (window.showSkeleton) {
-            window.showSkeleton('#leaderboardList', { count: 7, type: 'table' });
+            window.showSkeleton("#leaderboardList", {
+              count: 7,
+              type: "table",
+            });
           }
-          const res = await fetch('/api/realtime/leaderboard');
+          const res = await fetch("/api/realtime/leaderboard");
           const json = await res.json();
           if (json.success) {
             lbData = json.data;
             renderLeaderboard(currentTab);
           } else {
             if (window.renderErrorState) {
-              window.renderErrorState('#leaderboardList', {
-                title: 'Peringkat Belum Tersedia',
-                message: 'Data leaderboard belum berhasil disinkronkan dari server database.',
-                onRetry: fetchLeaderboard
+              window.renderErrorState("#leaderboardList", {
+                title: "Peringkat Belum Tersedia",
+                message:
+                  "Data leaderboard belum berhasil disinkronkan dari server database.",
+                onRetry: fetchLeaderboard,
               });
             }
           }
-        } catch(e) {
-          console.warn('Leaderboard fetch error:', e);
+        } catch (e) {
+          console.warn("Leaderboard fetch error:", e);
           if (window.renderErrorState) {
-            window.renderErrorState('#leaderboardList', {
-              title: 'Gagal Menghubungi Server',
-              message: 'Terjadi kegagalan jaringan saat mengambil data peringkat: ' + (e.message || 'Timeout'),
-              onRetry: fetchLeaderboard
+            window.renderErrorState("#leaderboardList", {
+              title: "Gagal Menghubungi Server",
+              message:
+                "Terjadi kegagalan jaringan saat mengambil data peringkat: " +
+                (e.message || "Timeout"),
+              onRetry: fetchLeaderboard,
             });
           }
         }
       }
 
       function getRankColor(rank) {
-        if (rank === 1) return '#f59e0b';
-        if (rank === 2) return '#94a3b8';
-        if (rank === 3) return '#b4783c';
-        return 'var(--text-muted)';
+        if (rank === 1) return "#f59e0b";
+        if (rank === 2) return "#94a3b8";
+        if (rank === 3) return "#b4783c";
+        return "var(--text-muted)";
       }
       function getRankEmoji(rank) {
-        if (rank === 1) return '🥇';
-        if (rank === 2) return '🥈';
-        if (rank === 3) return '🥉';
+        if (rank === 1) return "🥇";
+        if (rank === 2) return "🥈";
+        if (rank === 3) return "🥉";
         return rank;
       }
 
-      let searchQuery = '';
+      let searchQuery = "";
 
       function renderLeaderboard(tab) {
         currentTab = tab;
         let rows = [];
-        let valueKey = '', valueLabel = '', subFn = null;
+        let valueKey = "",
+          valueLabel = "",
+          subFn = null;
 
-        if (tab === 'wealth') {
+        if (tab === "wealth") {
           rows = lbData.economy || [];
-          valueKey = 'total';
-          valueLabel = '🪙';
-          subFn = r => `Level ${r.level} · ${r.xp || 0} XP`;
-        } else if (tab === 'chat_level') {
+          valueKey = "total";
+          valueLabel = "🪙";
+          subFn = (r) => `Level ${r.level} · ${r.xp || 0} XP`;
+        } else if (tab === "chat_level") {
           rows = lbData.leveling || [];
-          valueKey = 'xp';
-          valueLabel = '✨';
-          subFn = r => `Level ${r.level} · ${r.messageCount || 0} pesan`;
-        } else if (tab === 'rpg_level') {
+          valueKey = "xp";
+          valueLabel = "✨";
+          subFn = (r) => `Level ${r.level} · ${r.messageCount || 0} pesan`;
+        } else if (tab === "rpg_level") {
           rows = lbData.survival || [];
-          valueKey = 'starFragments';
-          valueLabel = '⭐';
-          subFn = r => `Lv.${r.survivalLevel || 1} Survival · ${r.currentLocation || 'Town Square'}`;
-        } else if (tab === 'trivia') {
+          valueKey = "starFragments";
+          valueLabel = "⭐";
+          subFn = (r) =>
+            `Lv.${r.survivalLevel || 1} Survival · ${r.currentLocation || "Town Square"}`;
+        } else if (tab === "trivia") {
           rows = lbData.leveling || [];
-          valueKey = 'voiceMinutes';
-          valueLabel = '🎤';
-          subFn = r => `${r.voiceMinutes || 0} mnt suara · ${r.messageCount || 0} pesan`;
+          valueKey = "voiceMinutes";
+          valueLabel = "🎤";
+          subFn = (r) =>
+            `${r.voiceMinutes || 0} mnt suara · ${r.messageCount || 0} pesan`;
         }
 
-        const totalEl = document.getElementById('lbTotalCount');
+        const totalEl = document.getElementById("lbTotalCount");
         if (totalEl) totalEl.textContent = `${rows.length} pemain`;
 
         // Apply real-time search query
         let displayRows = rows;
         if (searchQuery) {
-          displayRows = rows.filter(r =>
-            (r.name || '').toLowerCase().includes(searchQuery) ||
-            String(r.rank) === searchQuery
+          displayRows = rows.filter(
+            (r) =>
+              (r.name || "").toLowerCase().includes(searchQuery) ||
+              String(r.rank) === searchQuery,
           );
         }
 
-        const container = document.getElementById('lbList');
+        const container = document.getElementById("lbList");
         if (!container) return;
         if (displayRows.length === 0) {
           container.innerHTML = searchQuery
@@ -823,34 +1369,44 @@
           return;
         }
 
-        container.innerHTML = displayRows.map((r, i) => {
-          const maxVal = rows[0]?.[valueKey] || 1;
-          const pct = Math.min(100, Math.round(((r[valueKey] || 0) / maxVal) * 100));
-          const barColor = r.rank === 1 ? 'linear-gradient(90deg,#f59e0b,#fde68a)' :
-                           r.rank === 2 ? 'linear-gradient(90deg,#94a3b8,#e2e8f0)' :
-                           r.rank === 3 ? 'linear-gradient(90deg,#b4783c,#d4a574)' :
-                           'linear-gradient(90deg,var(--accent-cyan),#67e8f9)';
-          const deltaHtml = r.delta > 0
-            ? `<span style="color:var(--accent-green);font-size:10px;margin-left:6px;"><i class="fa-solid fa-caret-up"></i> +${r.delta}</span>`
-            : r.delta < 0
-              ? `<span style="color:#f87171;font-size:10px;margin-left:6px;"><i class="fa-solid fa-caret-down"></i> ${r.delta}</span>`
-              : `<span style="color:var(--text-muted);font-size:10px;margin-left:6px;">•</span>`;
+        container.innerHTML = displayRows
+          .map((r, i) => {
+            const maxVal = rows[0]?.[valueKey] || 1;
+            const pct = Math.min(
+              100,
+              Math.round(((r[valueKey] || 0) / maxVal) * 100),
+            );
+            const barColor =
+              r.rank === 1
+                ? "linear-gradient(90deg,#f59e0b,#fde68a)"
+                : r.rank === 2
+                  ? "linear-gradient(90deg,#94a3b8,#e2e8f0)"
+                  : r.rank === 3
+                    ? "linear-gradient(90deg,#b4783c,#d4a574)"
+                    : "linear-gradient(90deg,var(--accent-cyan),#67e8f9)";
+            const deltaHtml =
+              r.delta > 0
+                ? `<span style="color:var(--accent-green);font-size:10px;margin-left:6px;"><i class="fa-solid fa-caret-up"></i> +${r.delta}</span>`
+                : r.delta < 0
+                  ? `<span style="color:#f87171;font-size:10px;margin-left:6px;"><i class="fa-solid fa-caret-down"></i> ${r.delta}</span>`
+                  : `<span style="color:var(--text-muted);font-size:10px;margin-left:6px;">•</span>`;
 
-          return `
+            return `
           <div class="lb-row" id="lb-row-${r.rank}" style="animation-delay:${i * 0.05}s">
-            <div class="lb-rank-num" style="color:${getRankColor(r.rank)};font-size:${r.rank <= 3 ? '22px':'14px'};">${getRankEmoji(r.rank)}</div>
-            <img class="lb-avatar" src="${r.avatar || '/assets/core/avatar.png'}" alt="${r.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid ${getRankColor(r.rank)}30;" onerror="this.style.display='none'">
+            <div class="lb-rank-num" style="color:${getRankColor(r.rank)};font-size:${r.rank <= 3 ? "22px" : "14px"};">${getRankEmoji(r.rank)}</div>
+            <img class="lb-avatar" src="${r.avatar || "/assets/core/avatar.png"}" alt="${r.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid ${getRankColor(r.rank)}30;" onerror="this.style.display='none'">
             <div class="lb-info">
               <div class="lb-username">${r.name} ${deltaHtml}</div>
               <div class="lb-sub">${subFn(r)}</div>
               <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
             </div>
             <div>
-              <div class="lb-value" style="color:var(--accent-amber);">${valueLabel} ${(r[valueKey] || 0).toLocaleString('id-ID')}</div>
-              <div class="lb-value-sub">${r.isPremium ? '⭐ Premium' : 'Member'}</div>
+              <div class="lb-value" style="color:var(--accent-amber);">${valueLabel} ${(r[valueKey] || 0).toLocaleString("id-ID")}</div>
+              <div class="lb-value-sub">${r.isPremium ? "⭐ Premium" : "Member"}</div>
             </div>
           </div>`;
-        }).join('');
+          })
+          .join("");
 
         if (!searchQuery) {
           updatePodium(rows.slice(0, 3));
@@ -858,33 +1414,40 @@
       }
 
       function updatePodium(top3) {
-        const podiumEl = document.querySelector('.podium-wrapper');
+        const podiumEl = document.querySelector(".podium-wrapper");
         if (!podiumEl || top3.length < 2) return;
 
         const order = [top3[1], top3[0], top3[2]].filter(Boolean);
-        const podiums = podiumEl.querySelectorAll('.podium-place');
+        const podiums = podiumEl.querySelectorAll(".podium-place");
 
         order.forEach((r, i) => {
           if (!r || !podiums[i]) return;
-          const nameEl = podiums[i].querySelector('.podium-name');
-          const coinsEl = podiums[i].querySelector('.podium-coins');
-          const avatarEl = podiums[i].querySelector('.podium-avatar');
+          const nameEl = podiums[i].querySelector(".podium-name");
+          const coinsEl = podiums[i].querySelector(".podium-coins");
+          const avatarEl = podiums[i].querySelector(".podium-avatar");
           if (nameEl) nameEl.textContent = r.name;
           if (coinsEl) coinsEl.textContent = `#${r.rank}`;
           if (avatarEl) {
-            avatarEl.src = r.avatar || '/assets/core/avatar.png';
-            avatarEl.onerror = () => { avatarEl.style.display = 'none'; };
+            avatarEl.src = r.avatar || "/assets/core/avatar.png";
+            avatarEl.onerror = () => {
+              avatarEl.style.display = "none";
+            };
           }
         });
       }
 
       function switchLbTab(cat) {
-        document.querySelectorAll('#lbTabGroup .tab-btn').forEach(btn => btn.classList.remove('active'));
-        const btnId = `btnTab${cat.split('_').map(w => w.charAt(0).toUpperCase()+w.slice(1)).join('')}`;
+        document
+          .querySelectorAll("#lbTabGroup .tab-btn")
+          .forEach((btn) => btn.classList.remove("active"));
+        const btnId = `btnTab${cat
+          .split("_")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join("")}`;
         const btnEl = document.getElementById(btnId);
-        if (btnEl) btnEl.classList.add('active');
+        if (btnEl) btnEl.classList.add("active");
         const meta = lbCategoryLabels[cat] || lbCategoryLabels.wealth;
-        const lbl = document.getElementById('lbCategoryLabel');
+        const lbl = document.getElementById("lbCategoryLabel");
         if (lbl) {
           lbl.style.color = meta.color;
           lbl.innerHTML = `<i class="fa-solid ${meta.icon}"></i> ${meta.label}`;
@@ -893,9 +1456,9 @@
       }
 
       // Search input listener
-      const searchInput = document.getElementById('lbSearch');
+      const searchInput = document.getElementById("lbSearch");
       if (searchInput) {
-        searchInput.addEventListener('input', function() {
+        searchInput.addEventListener("input", function () {
           searchQuery = this.value.trim().toLowerCase();
           renderLeaderboard(currentTab);
         });
@@ -903,15 +1466,15 @@
 
       // Populate server selector
       async function loadGuilds() {
-        const sel = document.getElementById('guildSelector');
+        const sel = document.getElementById("guildSelector");
         if (!sel) return;
         try {
-          const res = await fetch('/api/guilds');
+          const res = await fetch("/api/guilds");
           if (!res.ok) return;
           const data = await res.json();
           if (data.success && Array.isArray(data.guilds)) {
-            data.guilds.forEach(g => {
-              const opt = document.createElement('option');
+            data.guilds.forEach((g) => {
+              const opt = document.createElement("option");
               opt.value = g.id;
               opt.textContent = g.name;
               sel.appendChild(opt);
@@ -921,20 +1484,23 @@
       }
 
       // Refresh button
-      document.getElementById('btnRefreshLb')?.addEventListener('click', function() {
-        const icon = this.querySelector('i');
-        if (icon) icon.style.animation = 'spin 0.6s linear';
-        fetchLeaderboard().finally(() => {
-          setTimeout(() => { if (icon) icon.style.animation = ''; }, 700);
+      document
+        .getElementById("btnRefreshLb")
+        ?.addEventListener("click", function () {
+          const icon = this.querySelector("i");
+          if (icon) icon.style.animation = "spin 0.6s linear";
+          fetchLeaderboard().finally(() => {
+            setTimeout(() => {
+              if (icon) icon.style.animation = "";
+            }, 700);
+          });
         });
-      });
 
       // Initial load
       loadGuilds();
       fetchLeaderboard();
       // Auto-refresh every 30 seconds
       setInterval(fetchLeaderboard, 30000);
-
     </script>
   </body>
 </html>

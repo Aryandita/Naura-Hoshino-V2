@@ -2,7 +2,10 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { generateDynamicMotionBanner, THEMES } = require("./dynamicBannerEngine");
+const {
+  generateDynamicMotionBanner,
+  THEMES,
+} = require("./dynamicBannerEngine");
 
 test("DynamicBannerEngine - harus memiliki tema cyberpunk, celestial, abyss, dan hoshino_aura", () => {
   assert.ok(THEMES.cyberpunk, "cyberpunk harus ada");

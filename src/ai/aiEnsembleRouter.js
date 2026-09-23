@@ -171,7 +171,10 @@ class AiEnsembleRouter {
       if (!options.prompt && typeof payload.message === "string") {
         options.prompt = payload.message;
       }
-    } else if (typeof taskTypeOrOptions === "object" && taskTypeOrOptions !== null) {
+    } else if (
+      typeof taskTypeOrOptions === "object" &&
+      taskTypeOrOptions !== null
+    ) {
       options = { ...taskTypeOrOptions };
       if (!options.prompt && typeof options.message === "string") {
         options.prompt = options.message;
@@ -213,10 +216,15 @@ class AiEnsembleRouter {
         : [{ text: String(prompt || "") }];
 
     const safePrompt =
-      prompt || safeParts.map((p) => p.text || "").join(" ").trim();
+      prompt ||
+      safeParts
+        .map((p) => p.text || "")
+        .join(" ")
+        .trim();
 
     // Dapatkan daftar kandidat provider sesuai prioritas taskType
-    const candidates = this.routingMap[taskType] || this.routingMap[TASK_TYPES.GENERAL_CHAT];
+    const candidates =
+      this.routingMap[taskType] || this.routingMap[TASK_TYPES.GENERAL_CHAT];
 
     let lastError = null;
 
@@ -259,7 +267,11 @@ class AiEnsembleRouter {
           });
         }
 
-        if (result && typeof result.text === "string" && result.text.length > 0) {
+        if (
+          result &&
+          typeof result.text === "string" &&
+          result.text.length > 0
+        ) {
           const latencyMs = Date.now() - startTime;
           if (breaker) breaker.recordSuccess(latencyMs);
 
@@ -295,7 +307,9 @@ class AiEnsembleRouter {
   async _callGemini({ parts, history, systemInstruction, config, message }) {
     const finalParts = [...parts];
     if (systemInstruction) {
-      finalParts.unshift({ text: `[System Instruction]\n${systemInstruction}\n\n` });
+      finalParts.unshift({
+        text: `[System Instruction]\n${systemInstruction}\n\n`,
+      });
     }
 
     const selectedModel = env.GEMINI_MODEL || "gemini-2.5-flash";
@@ -318,7 +332,13 @@ class AiEnsembleRouter {
    * Eksekusi panggilan ke Groq Cloud API
    * @private
    */
-  async _callGroq({ prompt, parts, history = [], systemInstruction, config = {} }) {
+  async _callGroq({
+    prompt,
+    parts,
+    history = [],
+    systemInstruction,
+    config = {},
+  }) {
     if (!env.GROQ_API_KEY) throw new Error("GROQ_API_KEY tidak dikonfigurasi.");
 
     const messages = [];

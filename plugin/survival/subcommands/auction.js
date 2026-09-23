@@ -344,7 +344,9 @@ async function handleBid(interaction) {
     );
   }
 
-  const isBuyout = Boolean(auction.buyoutPrice && bidPrice >= auction.buyoutPrice);
+  const isBuyout = Boolean(
+    auction.buyoutPrice && bidPrice >= auction.buyoutPrice,
+  );
   const actualCost = isBuyout ? auction.buyoutPrice : bidPrice;
 
   // Evaluasi integritas penawaran melalui Economy Guard & Circuit Breaker

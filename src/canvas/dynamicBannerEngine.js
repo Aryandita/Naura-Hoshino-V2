@@ -93,13 +93,27 @@ async function generateDynamicMotionBanner(payload = {}) {
 
   // 3. Ambient Glow Circles
   ctx.save();
-  const radGlow1 = ctx.createRadialGradient(width - 150, 100, 10, width - 150, 100, 250);
+  const radGlow1 = ctx.createRadialGradient(
+    width - 150,
+    100,
+    10,
+    width - 150,
+    100,
+    250,
+  );
   radGlow1.addColorStop(0, theme.accent + "33");
   radGlow1.addColorStop(1, "transparent");
   ctx.fillStyle = radGlow1;
   ctx.fillRect(0, 0, width, height);
 
-  const radGlow2 = ctx.createRadialGradient(150, height - 80, 10, 150, height - 80, 200);
+  const radGlow2 = ctx.createRadialGradient(
+    150,
+    height - 80,
+    10,
+    150,
+    height - 80,
+    200,
+  );
   radGlow2.addColorStop(0, theme.secondary + "22");
   radGlow2.addColorStop(1, "transparent");
   ctx.fillStyle = radGlow2;
@@ -170,7 +184,13 @@ async function generateDynamicMotionBanner(payload = {}) {
       ctx.arc(avatarX, avatarY, avatarRadius, 0, Math.PI * 2);
       ctx.closePath();
       ctx.clip();
-      ctx.drawImage(avatarImg, avatarX - avatarRadius, avatarY - avatarRadius, avatarRadius * 2, avatarRadius * 2);
+      ctx.drawImage(
+        avatarImg,
+        avatarX - avatarRadius,
+        avatarY - avatarRadius,
+        avatarRadius * 2,
+        avatarRadius * 2,
+      );
       ctx.restore();
       avatarLoaded = true;
     } catch (_) {
@@ -240,8 +260,14 @@ async function generateDynamicMotionBanner(payload = {}) {
   const statBoxY = 175;
   const statItems = [
     { label: "LEVEL", val: `Lv. ${stats.level || 1}` },
-    { label: "COMBAT RATING", val: `${(stats.power || 1000).toLocaleString("id-ID")} CP` },
-    { label: "ASTRAL PRESTIGE", val: `${(stats.prestige || 500).toLocaleString("id-ID")} PTS` },
+    {
+      label: "COMBAT RATING",
+      val: `${(stats.power || 1000).toLocaleString("id-ID")} CP`,
+    },
+    {
+      label: "ASTRAL PRESTIGE",
+      val: `${(stats.prestige || 500).toLocaleString("id-ID")} PTS`,
+    },
   ];
 
   statItems.forEach((st, idx) => {
@@ -259,7 +285,8 @@ async function generateDynamicMotionBanner(payload = {}) {
     ctx.font = "bold 10px sans-serif";
     ctx.fillText(st.label, boxX + 12, statBoxY + 18);
 
-    ctx.fillStyle = idx === 0 ? theme.accent : idx === 1 ? theme.secondary : "#F8FAFC";
+    ctx.fillStyle =
+      idx === 0 ? theme.accent : idx === 1 ? theme.secondary : "#F8FAFC";
     ctx.font = "bold 16px sans-serif";
     ctx.fillText(st.val, boxX + 12, statBoxY + 38);
     ctx.restore();
@@ -270,7 +297,11 @@ async function generateDynamicMotionBanner(payload = {}) {
   ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
   ctx.font = "11px sans-serif";
   ctx.textAlign = "right";
-  ctx.fillText("NAURA HOSHINO V2 • DYNAMIC MOTION SUITE", width - 35, height - 25);
+  ctx.fillText(
+    "NAURA HOSHINO V2 • DYNAMIC MOTION SUITE",
+    width - 35,
+    height - 25,
+  );
   ctx.restore();
 
   return canvas.toBuffer("image/png");

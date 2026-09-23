@@ -119,24 +119,44 @@ function chunkText(text, options = {}) {
  * @returns {Array<{ userId: string, amount: number, currency: string, reason: string, raw: object }>}
  */
 function parseSpreadsheet(input) {
-  const content = Buffer.isBuffer(input) ? input.toString("utf8") : String(input || "");
-  const lines = content.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const content = Buffer.isBuffer(input)
+    ? input.toString("utf8")
+    : String(input || "");
+  const lines = content
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
 
   if (lines.length < 2) return [];
 
   // Parse header
-  const header = lines[0].split(/[,;\t]/).map((h) => h.replace(/^["']|["']$/g, "").trim().toLowerCase());
+  const header = lines[0].split(/[,;\t]/).map((h) =>
+    h
+      .replace(/^["']|["']$/g, "")
+      .trim()
+      .toLowerCase(),
+  );
 
   // Petakan index kolom
-  const userIdx = header.findIndex((h) => ["user_id", "userid", "discord_id", "id", "user", "target"].includes(h));
-  const amountIdx = header.findIndex((h) => ["amount", "jumlah", "total", "nilai", "reward"].includes(h));
-  const currencyIdx = header.findIndex((h) => ["currency", "mata_uang", "uang", "tipe"].includes(h));
-  const reasonIdx = header.findIndex((h) => ["reason", "alasan", "note", "catatan", "keterangan"].includes(h));
+  const userIdx = header.findIndex((h) =>
+    ["user_id", "userid", "discord_id", "id", "user", "target"].includes(h),
+  );
+  const amountIdx = header.findIndex((h) =>
+    ["amount", "jumlah", "total", "nilai", "reward"].includes(h),
+  );
+  const currencyIdx = header.findIndex((h) =>
+    ["currency", "mata_uang", "uang", "tipe"].includes(h),
+  );
+  const reasonIdx = header.findIndex((h) =>
+    ["reason", "alasan", "note", "catatan", "keterangan"].includes(h),
+  );
 
   const results = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(/[,;\t]/).map((c) => c.replace(/^["']|["']$/g, "").trim());
+    const cols = lines[i]
+      .split(/[,;\t]/)
+      .map((c) => c.replace(/^["']|["']$/g, "").trim());
     if (cols.length === 0 || !cols.some(Boolean)) continue;
 
     const raw = {};
@@ -145,9 +165,14 @@ function parseSpreadsheet(input) {
     });
 
     const userId = userIdx !== -1 ? cols[userIdx] : cols[0];
-    const amountNum = amountIdx !== -1 ? parseInt(cols[amountIdx].replace(/[^0-9-]/g, ""), 10) : parseInt(cols[1], 10);
-    const currency = currencyIdx !== -1 ? cols[currencyIdx].toLowerCase() : "starfragments";
-    const reason = reasonIdx !== -1 ? cols[reasonIdx] : (cols[3] || "Hadiah Event");
+    const amountNum =
+      amountIdx !== -1
+        ? parseInt(cols[amountIdx].replace(/[^0-9-]/g, ""), 10)
+        : parseInt(cols[1], 10);
+    const currency =
+      currencyIdx !== -1 ? cols[currencyIdx].toLowerCase() : "starfragments";
+    const reason =
+      reasonIdx !== -1 ? cols[reasonIdx] : cols[3] || "Hadiah Event";
 
     if (userId && !isNaN(amountNum) && amountNum > 0) {
       results.push({
@@ -174,7 +199,9 @@ function parseSpreadsheet(input) {
 async function parseDocument(fileInput, options = {}) {
   let buffer;
   const fileName = options.fileName || "document";
-  let fileType = options.fileType ? options.fileType.toLowerCase().replace(/^\./, "") : "";
+  let fileType = options.fileType
+    ? options.fileType.toLowerCase().replace(/^\./, "")
+    : "";
 
   if (!fileType && fileName) {
     const ext = path.extname(fileName).toLowerCase().replace(/^\./, "");
@@ -194,7 +221,9 @@ async function parseDocument(fileInput, options = {}) {
       }
     }
   } else {
-    throw new Error("Format input tidak valid. Berikan Buffer, URL, atau path berkas.");
+    throw new Error(
+      "Format input tidak valid. Berikan Buffer, URL, atau path berkas.",
+    );
   }
 
   if (!fileType) {
@@ -226,7 +255,7 @@ async function parseDocument(fileInput, options = {}) {
       text = parsed.toText ? parsed.toText() : "";
       if (parsed.to) {
         const mdRes = await parsed.to("markdown");
-        markdown = (mdRes && mdRes.value) ? mdRes.value : text;
+        markdown = mdRes && mdRes.value ? mdRes.value : text;
       } else {
         markdown = text;
       }
@@ -245,7 +274,10 @@ async function parseDocument(fileInput, options = {}) {
       metadata,
     };
   } catch (err) {
-    logger.error(`[DocumentParser] Gagal memproses berkas ${fileName}: ${err.message}`, err);
+    logger.error(
+      `[DocumentParser] Gagal memproses berkas ${fileName}: ${err.message}`,
+      err,
+    );
     throw new Error(`Gagal membaca berkas ${fileName}: ${err.message}`);
   }
 }

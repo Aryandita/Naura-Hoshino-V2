@@ -118,7 +118,7 @@ module.exports = (client) => {
     res.writeHead(200, {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
-      "Connection": "keep-alive",
+      Connection: "keep-alive",
       "Access-Control-Allow-Origin": "*",
     });
 
@@ -130,7 +130,7 @@ module.exports = (client) => {
           await sequelize.authenticate();
         }
         const latencyMs = Math.max(1, Date.now() - startTime);
-        const guildsCount = client.guilds ? (client.guilds.cache?.size || 0) : 0;
+        const guildsCount = client.guilds ? client.guilds.cache?.size || 0 : 0;
 
         const UserProfile = require("../../src/models/UserProfile");
         const UserSurvival = require("../../src/models/UserSurvival");
@@ -140,7 +140,11 @@ module.exports = (client) => {
         try {
           registeredUsers = await UserProfile.count();
         } catch (_) {}
-        if (!registeredUsers && client.guilds?.cache && typeof client.guilds.cache.reduce === "function") {
+        if (
+          !registeredUsers &&
+          client.guilds?.cache &&
+          typeof client.guilds.cache.reduce === "function"
+        ) {
           registeredUsers = client.guilds.cache.reduce(
             (acc, guild) => acc + (guild.memberCount || 0),
             0,
@@ -155,7 +159,9 @@ module.exports = (client) => {
         let treasuryPoolNc = 0;
         let treasuryPoolNsf = 0;
         try {
-          const treasury = await ServerTreasury.findOne({ order: [["updatedAt", "DESC"]] });
+          const treasury = await ServerTreasury.findOne({
+            order: [["updatedAt", "DESC"]],
+          });
           if (treasury) {
             treasuryPoolNsf =
               Number(treasury.lotteryJackpot || 0) +
@@ -221,7 +227,11 @@ module.exports = (client) => {
       try {
         registeredUsers = await UserProfile.count();
       } catch (_) {}
-      if (!registeredUsers && client.guilds?.cache && typeof client.guilds.cache.reduce === "function") {
+      if (
+        !registeredUsers &&
+        client.guilds?.cache &&
+        typeof client.guilds.cache.reduce === "function"
+      ) {
         registeredUsers = client.guilds.cache.reduce(
           (acc, g) => acc + (g.memberCount || 0),
           0,
@@ -236,12 +246,16 @@ module.exports = (client) => {
       if (!activeSurvivalPlayers) activeSurvivalPlayers = 48;
 
       const activeGuilds = client.guilds?.cache?.size || 18;
-      const uptimeSeconds = client.uptime ? Math.floor(client.uptime / 1000) : 3600;
+      const uptimeSeconds = client.uptime
+        ? Math.floor(client.uptime / 1000)
+        : 3600;
 
       let treasuryPoolNc = 0;
       let treasuryPoolNsf = 0;
       try {
-        const treasury = await ServerTreasury.findOne({ order: [["updatedAt", "DESC"]] });
+        const treasury = await ServerTreasury.findOne({
+          order: [["updatedAt", "DESC"]],
+        });
         if (treasury) {
           treasuryPoolNsf =
             Number(treasury.lotteryJackpot || 0) +
@@ -477,7 +491,9 @@ module.exports = (client) => {
         economyRows = profiles.map((p, idx) => {
           const cachedUser = client.users?.cache?.get(p.userId);
           const name = cachedUser?.username || `Member #${p.userId.slice(-4)}`;
-          const avatar = cachedUser?.displayAvatarURL?.({ extension: "png" }) || defaultAvatars[idx % defaultAvatars.length];
+          const avatar =
+            cachedUser?.displayAvatarURL?.({ extension: "png" }) ||
+            defaultAvatars[idx % defaultAvatars.length];
           const total = (p.economy_wallet || 0) + (p.economy_bank || 0);
           return {
             rank: idx + 1,
@@ -496,11 +512,61 @@ module.exports = (client) => {
 
       if (economyRows.length === 0) {
         economyRows = [
-          { rank: 1, name: "Aryandita", avatar: defaultAvatars[0], total: 6542000, wallet: 1542000, bank: 5000000, level: 42, xp: 18450, isPremium: true },
-          { rank: 2, name: "HoshinoFan", avatar: defaultAvatars[1], total: 4120000, wallet: 1120000, bank: 3000000, level: 39, xp: 15200, isPremium: true },
-          { rank: 3, name: "CyberSamurai", avatar: defaultAvatars[2], total: 3500000, wallet: 900000, bank: 2600000, level: 35, xp: 12800, isPremium: false },
-          { rank: 4, name: "NeonKitsune", avatar: defaultAvatars[3], total: 2900000, wallet: 700000, bank: 2200000, level: 31, xp: 10400, isPremium: false },
-          { rank: 5, name: "QuantumDev", avatar: defaultAvatars[4], total: 2100000, wallet: 500000, bank: 1600000, level: 28, xp: 8900, isPremium: false },
+          {
+            rank: 1,
+            name: "Aryandita",
+            avatar: defaultAvatars[0],
+            total: 6542000,
+            wallet: 1542000,
+            bank: 5000000,
+            level: 42,
+            xp: 18450,
+            isPremium: true,
+          },
+          {
+            rank: 2,
+            name: "HoshinoFan",
+            avatar: defaultAvatars[1],
+            total: 4120000,
+            wallet: 1120000,
+            bank: 3000000,
+            level: 39,
+            xp: 15200,
+            isPremium: true,
+          },
+          {
+            rank: 3,
+            name: "CyberSamurai",
+            avatar: defaultAvatars[2],
+            total: 3500000,
+            wallet: 900000,
+            bank: 2600000,
+            level: 35,
+            xp: 12800,
+            isPremium: false,
+          },
+          {
+            rank: 4,
+            name: "NeonKitsune",
+            avatar: defaultAvatars[3],
+            total: 2900000,
+            wallet: 700000,
+            bank: 2200000,
+            level: 31,
+            xp: 10400,
+            isPremium: false,
+          },
+          {
+            rank: 5,
+            name: "QuantumDev",
+            avatar: defaultAvatars[4],
+            total: 2100000,
+            wallet: 500000,
+            bank: 1600000,
+            level: 28,
+            xp: 8900,
+            isPremium: false,
+          },
         ];
       }
 
@@ -508,13 +574,19 @@ module.exports = (client) => {
       let levelingRows = [];
       try {
         const lvlProfiles = await UserProfile.findAll({
-          order: [["leveling_level", "DESC"], ["leveling_xp", "DESC"]],
+          order: [
+            ["leveling_level", "DESC"],
+            ["leveling_xp", "DESC"],
+          ],
           limit: 10,
         });
         levelingRows = lvlProfiles.map((p, idx) => {
           const cachedUser = client.users?.cache?.get(p.userId);
-          const name = cachedUser?.username || `Survivor #${p.userId.slice(-4)}`;
-          const avatar = cachedUser?.displayAvatarURL?.({ extension: "png" }) || defaultAvatars[idx % defaultAvatars.length];
+          const name =
+            cachedUser?.username || `Survivor #${p.userId.slice(-4)}`;
+          const avatar =
+            cachedUser?.displayAvatarURL?.({ extension: "png" }) ||
+            defaultAvatars[idx % defaultAvatars.length];
           return {
             rank: idx + 1,
             userId: p.userId,
@@ -522,19 +594,65 @@ module.exports = (client) => {
             avatar,
             level: p.leveling_level || 1,
             xp: p.leveling_xp || 0,
-            messageCount: (p.leveling_xp || 0) > 0 ? Math.floor((p.leveling_xp || 0) / 15) : 10,
-            voiceMinutes: (p.leveling_xp || 0) > 0 ? Math.floor((p.leveling_xp || 0) / 25) : 5,
+            messageCount:
+              (p.leveling_xp || 0) > 0
+                ? Math.floor((p.leveling_xp || 0) / 15)
+                : 10,
+            voiceMinutes:
+              (p.leveling_xp || 0) > 0
+                ? Math.floor((p.leveling_xp || 0) / 25)
+                : 5,
           };
         });
       } catch (_) {}
 
       if (levelingRows.length === 0) {
         levelingRows = [
-          { rank: 1, name: "Aryandita", avatar: defaultAvatars[0], level: 42, xp: 18450, messageCount: 1230, voiceMinutes: 738 },
-          { rank: 2, name: "HoshinoFan", avatar: defaultAvatars[1], level: 39, xp: 15200, messageCount: 1013, voiceMinutes: 608 },
-          { rank: 3, name: "CyberSamurai", avatar: defaultAvatars[2], level: 35, xp: 12800, messageCount: 853, voiceMinutes: 512 },
-          { rank: 4, name: "NeonKitsune", avatar: defaultAvatars[3], level: 31, xp: 10400, messageCount: 693, voiceMinutes: 416 },
-          { rank: 5, name: "QuantumDev", avatar: defaultAvatars[4], level: 28, xp: 8900, messageCount: 593, voiceMinutes: 356 },
+          {
+            rank: 1,
+            name: "Aryandita",
+            avatar: defaultAvatars[0],
+            level: 42,
+            xp: 18450,
+            messageCount: 1230,
+            voiceMinutes: 738,
+          },
+          {
+            rank: 2,
+            name: "HoshinoFan",
+            avatar: defaultAvatars[1],
+            level: 39,
+            xp: 15200,
+            messageCount: 1013,
+            voiceMinutes: 608,
+          },
+          {
+            rank: 3,
+            name: "CyberSamurai",
+            avatar: defaultAvatars[2],
+            level: 35,
+            xp: 12800,
+            messageCount: 853,
+            voiceMinutes: 512,
+          },
+          {
+            rank: 4,
+            name: "NeonKitsune",
+            avatar: defaultAvatars[3],
+            level: 31,
+            xp: 10400,
+            messageCount: 693,
+            voiceMinutes: 416,
+          },
+          {
+            rank: 5,
+            name: "QuantumDev",
+            avatar: defaultAvatars[4],
+            level: 28,
+            xp: 8900,
+            messageCount: 593,
+            voiceMinutes: 356,
+          },
         ];
       }
 
@@ -542,13 +660,18 @@ module.exports = (client) => {
       let survivalRows = [];
       try {
         const survProfiles = await UserSurvival.findAll({
-          order: [["survival_level", "DESC"], ["starFragments", "DESC"]],
+          order: [
+            ["survival_level", "DESC"],
+            ["starFragments", "DESC"],
+          ],
           limit: 10,
         });
         survivalRows = survProfiles.map((s, idx) => {
           const cachedUser = client.users?.cache?.get(s.userId);
           const name = cachedUser?.username || `Ranger #${s.userId.slice(-4)}`;
-          const avatar = cachedUser?.displayAvatarURL?.({ extension: "png" }) || defaultAvatars[idx % defaultAvatars.length];
+          const avatar =
+            cachedUser?.displayAvatarURL?.({ extension: "png" }) ||
+            defaultAvatars[idx % defaultAvatars.length];
           return {
             rank: idx + 1,
             userId: s.userId,
@@ -563,11 +686,46 @@ module.exports = (client) => {
 
       if (survivalRows.length === 0) {
         survivalRows = [
-          { rank: 1, name: "Aryandita", avatar: defaultAvatars[0], starFragments: 48500, survivalLevel: 28, currentLocation: "istana_draken" },
-          { rank: 2, name: "HoshinoFan", avatar: defaultAvatars[1], starFragments: 32400, survivalLevel: 24, currentLocation: "desa_khulkhas" },
-          { rank: 3, name: "CyberSamurai", avatar: defaultAvatars[2], starFragments: 26100, survivalLevel: 21, currentLocation: "kota_pratama" },
-          { rank: 4, name: "NeonKitsune", avatar: defaultAvatars[3], starFragments: 18900, survivalLevel: 18, currentLocation: "desa_sukamaju" },
-          { rank: 5, name: "QuantumDev", avatar: defaultAvatars[4], starFragments: 14200, survivalLevel: 15, currentLocation: "desa_sukamaju" },
+          {
+            rank: 1,
+            name: "Aryandita",
+            avatar: defaultAvatars[0],
+            starFragments: 48500,
+            survivalLevel: 28,
+            currentLocation: "istana_draken",
+          },
+          {
+            rank: 2,
+            name: "HoshinoFan",
+            avatar: defaultAvatars[1],
+            starFragments: 32400,
+            survivalLevel: 24,
+            currentLocation: "desa_khulkhas",
+          },
+          {
+            rank: 3,
+            name: "CyberSamurai",
+            avatar: defaultAvatars[2],
+            starFragments: 26100,
+            survivalLevel: 21,
+            currentLocation: "kota_pratama",
+          },
+          {
+            rank: 4,
+            name: "NeonKitsune",
+            avatar: defaultAvatars[3],
+            starFragments: 18900,
+            survivalLevel: 18,
+            currentLocation: "desa_sukamaju",
+          },
+          {
+            rank: 5,
+            name: "QuantumDev",
+            avatar: defaultAvatars[4],
+            starFragments: 14200,
+            survivalLevel: 15,
+            currentLocation: "desa_sukamaju",
+          },
         ];
       }
 
@@ -605,7 +763,9 @@ module.exports = (client) => {
       const treasuryBalanceNc = totalBank || 8520000;
       let treasuryBalanceNsf = 0;
       try {
-        const treasury = await ServerTreasury.findOne({ order: [["updatedAt", "DESC"]] });
+        const treasury = await ServerTreasury.findOne({
+          order: [["updatedAt", "DESC"]],
+        });
         if (treasury) {
           treasuryBalanceNsf =
             Number(treasury.lotteryJackpot || 0) +
@@ -613,7 +773,8 @@ module.exports = (client) => {
             Number(treasury.wanderingMerchantPool || 0);
         }
         if (!treasuryBalanceNsf) {
-          treasuryBalanceNsf = (await UserSurvival.sum("starFragments")) || 485000;
+          treasuryBalanceNsf =
+            (await UserSurvival.sum("starFragments")) || 485000;
         }
       } catch (_) {
         treasuryBalanceNsf = 485000;
@@ -640,24 +801,50 @@ module.exports = (client) => {
 
       if (topUsers.length === 0) {
         topUsers = [
-          { name: "Aryandita", level: 42, wallet: 1542000, bank: 5000000, isPremium: true },
-          { name: "HoshinoFan", level: 39, wallet: 1120000, bank: 3000000, isPremium: true },
-          { name: "CyberSamurai", level: 35, wallet: 900000, bank: 2600000, isPremium: false },
-          { name: "NeonKitsune", level: 31, wallet: 700000, bank: 2200000, isPremium: false },
+          {
+            name: "Aryandita",
+            level: 42,
+            wallet: 1542000,
+            bank: 5000000,
+            isPremium: true,
+          },
+          {
+            name: "HoshinoFan",
+            level: 39,
+            wallet: 1120000,
+            bank: 3000000,
+            isPremium: true,
+          },
+          {
+            name: "CyberSamurai",
+            level: 35,
+            wallet: 900000,
+            bank: 2600000,
+            isPremium: false,
+          },
+          {
+            name: "NeonKitsune",
+            level: 31,
+            wallet: 700000,
+            bank: 2200000,
+            isPremium: false,
+          },
         ];
       }
 
       // Ambil seluruh saham riil dari database (ServerStock)
       let stocks = [];
       try {
-        const stockRows = await ServerStock.findAll({ order: [["currentPrice", "DESC"]] });
+        const stockRows = await ServerStock.findAll({
+          order: [["currentPrice", "DESC"]],
+        });
         if (stockRows && stockRows.length > 0) {
           stocks = stockRows.map((s) => {
             const cur = Number(s.currentPrice || 0);
             const prev = Number(s.previousPrice || cur);
             const diff = cur - prev;
             const pct = prev > 0 ? ((diff / prev) * 100).toFixed(1) : "0.0";
-            const trend = diff > 0 ? "up" : (diff < 0 ? "down" : "flat");
+            const trend = diff > 0 ? "up" : diff < 0 ? "down" : "flat";
             const sign = diff > 0 ? "+" : "";
             return {
               symbol: s.ticker,
@@ -677,11 +864,41 @@ module.exports = (client) => {
 
       if (stocks.length === 0) {
         stocks = [
-          { symbol: "TECH_CORP", name: "Naura High-Tech Industries", price: 4250, change: "+4.2%", trend: "up" },
-          { symbol: "HOSHINO_AI", name: "Hoshino Core AI Corp", price: 2420, change: "+1.8%", trend: "up" },
-          { symbol: "ASTRA_FOODS", name: "Astral Culinary Ventures", price: 850, change: "-0.8%", trend: "down" },
-          { symbol: "NAURA_COIN", name: "$NRA Volatile Index", price: 3100, change: "+2.5%", trend: "up" },
-          { symbol: "NEO_ENERGY", name: "Neo-Hoshino Fusion Power", price: 980, change: "+3.5%", trend: "up" },
+          {
+            symbol: "TECH_CORP",
+            name: "Naura High-Tech Industries",
+            price: 4250,
+            change: "+4.2%",
+            trend: "up",
+          },
+          {
+            symbol: "HOSHINO_AI",
+            name: "Hoshino Core AI Corp",
+            price: 2420,
+            change: "+1.8%",
+            trend: "up",
+          },
+          {
+            symbol: "ASTRA_FOODS",
+            name: "Astral Culinary Ventures",
+            price: 850,
+            change: "-0.8%",
+            trend: "down",
+          },
+          {
+            symbol: "NAURA_COIN",
+            name: "$NRA Volatile Index",
+            price: 3100,
+            change: "+2.5%",
+            trend: "up",
+          },
+          {
+            symbol: "NEO_ENERGY",
+            name: "Neo-Hoshino Fusion Power",
+            price: 980,
+            change: "+3.5%",
+            trend: "up",
+          },
         ];
       }
 
@@ -731,8 +948,16 @@ module.exports = (client) => {
           },
           volume: 80,
           queue: [
-            { title: "Sakura Falling Beats", author: "Naura Lofi", duration: 165000 },
-            { title: "Midnight Highway Drive", author: "Synthwave Girl", duration: 210000 },
+            {
+              title: "Sakura Falling Beats",
+              author: "Naura Lofi",
+              duration: 165000,
+            },
+            {
+              title: "Midnight Highway Drive",
+              author: "Synthwave Girl",
+              duration: 210000,
+            },
           ],
         });
       }
@@ -778,15 +1003,24 @@ module.exports = (client) => {
     try {
       const { action, value, guildId } = req.body || {};
       if (!action) {
-        return res.status(400).json({ success: false, error: "Missing action" });
+        return res
+          .status(400)
+          .json({ success: false, error: "Missing action" });
       }
 
       let player = null;
-      if (guildId && guildId !== "current" && guildId !== "sandbox" && guildId !== "demo") {
+      if (
+        guildId &&
+        guildId !== "current" &&
+        guildId !== "sandbox" &&
+        guildId !== "demo"
+      ) {
         player = client.poru?.players?.get(String(guildId)) || null;
       }
       if (!player) {
-        const rawPlayers = client.poru?.players ? Array.from(client.poru.players.values()) : [];
+        const rawPlayers = client.poru?.players
+          ? Array.from(client.poru.players.values())
+          : [];
         player = rawPlayers[0] || null;
       }
 
@@ -810,9 +1044,11 @@ module.exports = (client) => {
         const vol = Math.min(Math.max(parseInt(value, 10) || 80, 0), 100);
         player.setVolume(vol);
       } else if (action === "shuffle") {
-        if (player.queue && typeof player.queue.shuffle === "function") player.queue.shuffle();
+        if (player.queue && typeof player.queue.shuffle === "function")
+          player.queue.shuffle();
       } else if (action === "clear") {
-        if (player.queue && typeof player.queue.clear === "function") player.queue.clear();
+        if (player.queue && typeof player.queue.clear === "function")
+          player.queue.clear();
       }
 
       res.json({
@@ -827,7 +1063,12 @@ module.exports = (client) => {
 
   router.post("/music/control", async (req, res) => {
     const { guildId } = req.body || {};
-    if (guildId && guildId !== "current" && guildId !== "sandbox" && guildId !== "demo") {
+    if (
+      guildId &&
+      guildId !== "current" &&
+      guildId !== "sandbox" &&
+      guildId !== "demo"
+    ) {
       return requireGuildManager(req, res, () => handleMusicControl(req, res));
     }
     return handleMusicControl(req, res);
@@ -920,12 +1161,14 @@ module.exports = (client) => {
           currentShardId: env.SHARD_ID || 0,
           pingMs: client.ws ? client.ws.ping : 0,
           guildsCount: client.guilds ? client.guilds.cache.size : 0,
-          usersCount: (client.guilds?.cache && typeof client.guilds.cache.reduce === "function")
-          ? client.guilds.cache.reduce(
-              (acc, g) => acc + (g.memberCount || 0),
-              0,
-            )
-          : 48920,
+          usersCount:
+            client.guilds?.cache &&
+            typeof client.guilds.cache.reduce === "function"
+              ? client.guilds.cache.reduce(
+                  (acc, g) => acc + (g.memberCount || 0),
+                  0,
+                )
+              : 48920,
         },
         compute: {
           runtime: `Node.js ${process.version}`,
@@ -1035,7 +1278,8 @@ module.exports = (client) => {
       if (!tokenResponse.ok) {
         return res.status(tokenResponse.status).json({
           success: false,
-          error: data.error_description || data.error || "Token exchange failed",
+          error:
+            data.error_description || data.error || "Token exchange failed",
         });
       }
 
@@ -1107,9 +1351,18 @@ module.exports = (client) => {
   // Endpoint 1-Click Co-Op Party Matchmaking (The Neo-Abyss)
   router.post("/activity/coop-invite", (req, res) => {
     try {
-      const { hostUserId, targetUserId, activityType = "neo_abyss" } = req.body || {};
+      const {
+        hostUserId,
+        targetUserId,
+        activityType = "neo_abyss",
+      } = req.body || {};
       if (!hostUserId || !targetUserId) {
-        return res.status(400).json({ success: false, error: "Missing hostUserId or targetUserId" });
+        return res
+          .status(400)
+          .json({
+            success: false,
+            error: "Missing hostUserId or targetUserId",
+          });
       }
 
       const partyId = `party_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -1120,7 +1373,8 @@ module.exports = (client) => {
         targetUserId,
         activityType,
         status: "INVITATION_DISPATCHED",
-        message: "Undangan party Co-Op Dungeon (The Neo-Abyss) berhasil disiarkan ke sesi teman!",
+        message:
+          "Undangan party Co-Op Dungeon (The Neo-Abyss) berhasil disiarkan ke sesi teman!",
       });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
@@ -1130,12 +1384,18 @@ module.exports = (client) => {
   // Endpoint 1-Click Auto Co-Op Party Matchmaking (The Neo-Abyss)
   router.post("/activity/party-matchmake", (req, res) => {
     try {
-      const { hostUserId = "current_user", guildId = "default_guild" } = req.body || {};
+      const { hostUserId = "current_user", guildId = "default_guild" } =
+        req.body || {};
       const partyId = `party_auto_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       const members = [
         { userId: hostUserId, role: "LEADER", ready: true },
         { userId: "101", username: "AstralWalker", role: "DPS", ready: true },
-        { userId: "103", username: "HoshinoAdventurer", role: "SUPPORT", ready: true },
+        {
+          userId: "103",
+          username: "HoshinoAdventurer",
+          role: "SUPPORT",
+          ready: true,
+        },
       ];
 
       res.json({
@@ -1162,7 +1422,11 @@ module.exports = (client) => {
 
       // Verifikasi signature jika header tersedia
       if (signature && timestamp) {
-        const isValid = entitlementService.verifySignature(signature, timestamp, rawBody);
+        const isValid = entitlementService.verifySignature(
+          signature,
+          timestamp,
+          rawBody,
+        );
         if (!isValid) {
           return res.status(401).json({ error: "Invalid signature" });
         }
@@ -1206,7 +1470,9 @@ module.exports = (client) => {
 
       const RateLimiter = require("../../src/utils/rateLimiter");
       const clientIp = req.ip || req.headers["x-forwarded-for"] || "ip_anon";
-      const rateLimitKey = req.user?.id ? `user_${req.user.id}` : `ip_${clientIp}`;
+      const rateLimitKey = req.user?.id
+        ? `user_${req.user.id}`
+        : `ip_${clientIp}`;
       const isLimited = await RateLimiter.isRateLimited(
         rateLimitKey,
         "api_soundboard_play",
@@ -1216,7 +1482,8 @@ module.exports = (client) => {
       if (isLimited) {
         return res.status(429).json({
           success: false,
-          error: "Terlalu banyak permintaan pemutaran soundboard. Mohon tunggu sebentar.",
+          error:
+            "Terlalu banyak permintaan pemutaran soundboard. Mohon tunggu sebentar.",
         });
       }
 
@@ -1265,7 +1532,10 @@ module.exports = (client) => {
   router.get("/federations/hall-of-fame", async (req, res) => {
     try {
       const guildFederationEngine = require("../../src/survival/engines/guildFederationEngine");
-      const limit = Math.min(20, Math.max(1, parseInt(req.query.limit, 10) || 10));
+      const limit = Math.min(
+        20,
+        Math.max(1, parseInt(req.query.limit, 10) || 10),
+      );
       const rankings = await guildFederationEngine.getHallOfFame(limit);
       res.json({ success: true, federations: rankings });
     } catch (err) {
@@ -1287,8 +1557,16 @@ module.exports = (client) => {
         { userId: "player_03", username: "StarlightMage", x: 8, y: 8 },
       ];
 
-      const proximityMap = await landEngine.getProximityAudioMap(guildId, userId, simulatedPlayers);
-      const myPos = (await landEngine.getPlayerPosition(guildId, userId)) || { x: 3, y: 4, username: "You" };
+      const proximityMap = await landEngine.getProximityAudioMap(
+        guildId,
+        userId,
+        simulatedPlayers,
+      );
+      const myPos = (await landEngine.getPlayerPosition(guildId, userId)) || {
+        x: 3,
+        y: 4,
+        username: "You",
+      };
 
       res.json({
         success: true,
@@ -1304,8 +1582,18 @@ module.exports = (client) => {
   router.post("/activity/spatial-position", async (req, res) => {
     try {
       const landEngine = require("../../src/survival/engines/landEngine");
-      const { guildId = "default_guild", userId = "current_user", x = 1, y = 1, username } = req.body || {};
-      const pos = await landEngine.updatePlayerPosition(guildId, userId, { x, y, username });
+      const {
+        guildId = "default_guild",
+        userId = "current_user",
+        x = 1,
+        y = 1,
+        username,
+      } = req.body || {};
+      const pos = await landEngine.updatePlayerPosition(guildId, userId, {
+        x,
+        y,
+        username,
+      });
       res.json({ success: true, position: pos });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
@@ -1319,9 +1607,14 @@ module.exports = (client) => {
     try {
       const { userId = "guest", subscription } = req.body || {};
       if (!subscription || !subscription.endpoint) {
-        return res.status(400).json({ success: false, error: "Invalid subscription payload" });
+        return res
+          .status(400)
+          .json({ success: false, error: "Invalid subscription payload" });
       }
-      pushSubscriptions.set(userId, { subscription, registeredAt: new Date().toISOString() });
+      pushSubscriptions.set(userId, {
+        subscription,
+        registeredAt: new Date().toISOString(),
+      });
       res.json({
         success: true,
         message: "Web Push subscription registered successfully",
@@ -1337,13 +1630,18 @@ module.exports = (client) => {
       success: true,
       enabled: true,
       subscribersCount: pushSubscriptions.size,
-      supportedAlertTypes: ["caravan_ambush", "raid_boss_spawn", "lottery_winner"],
+      supportedAlertTypes: [
+        "caravan_ambush",
+        "raid_boss_spawn",
+        "lottery_winner",
+      ],
     });
   });
 
   router.post("/caravan/ambush-alert", (req, res) => {
     try {
-      const { caravanId, ownerUserId, routeName, raiderName, lootAmount } = req.body || {};
+      const { caravanId, ownerUserId, routeName, raiderName, lootAmount } =
+        req.body || {};
       const alertPayload = {
         type: "CARAVAN_AMBUSH",
         caravanId: caravanId || "crv_unknown",
@@ -1403,7 +1701,8 @@ module.exports = (client) => {
           resources: { wood: 85, ore: 65, fish: 90, herb: 75 },
           coords: "X: 220 · Y: 430",
           fastTravelCost: 10,
-          monsters: "Aman terlindung. Hama kebun level rendah (Kelinci Liar, Tikus Sawah, Babi Hutan Hutan Pinus).",
+          monsters:
+            "Aman terlindung. Hama kebun level rendah (Kelinci Liar, Tikus Sawah, Babi Hutan Hutan Pinus).",
         },
         kota_pratama: {
           tag: "PUSAT METROPOLIS & EKONOMI NC (SAFE HUB)",
@@ -1415,7 +1714,8 @@ module.exports = (client) => {
           resources: { wood: 20, ore: 30, fish: 40, tech: 95 },
           coords: "X: 480 · Y: 270",
           fastTravelCost: 25,
-          monsters: "Tidak ada monster. Zona dilindungi oleh Pasukan Penjaga Kota dan Walikota Lucy.",
+          monsters:
+            "Tidak ada monster. Zona dilindungi oleh Pasukan Penjaga Kota dan Walikota Lucy.",
         },
         desa_khulkhas: {
           tag: "WILAYAH SALJU ABADI & GUNA ES (WINTER HAVEN)",
@@ -1427,7 +1727,8 @@ module.exports = (client) => {
           resources: { wood: 30, ore: 85, fish: 60, iceCrystal: 95 },
           coords: "X: 720 · Y: 160",
           fastTravelCost: 50,
-          monsters: "Beruang Salju Purba (Lv. 28), Serigala Es Gletser (Lv. 32), Golem Es Abadi (Lv. 38).",
+          monsters:
+            "Beruang Salju Purba (Lv. 28), Serigala Es Gletser (Lv. 32), Golem Es Abadi (Lv. 38).",
         },
         hutan_dha_mhai: {
           tag: "KANOPY PURBA & SANCTUARY RIMBA (MYSTIC FOREST)",
@@ -1439,7 +1740,8 @@ module.exports = (client) => {
           resources: { wood: 95, ore: 40, fish: 50, resin: 90 },
           coords: "X: 240 · Y: 190",
           fastTravelCost: 35,
-          monsters: "Lebah Rimba Raksasa (Lv. 18), Babi Hutan Purba (Lv. 22), Treant Kanopi Gelap (Lv. 28).",
+          monsters:
+            "Lebah Rimba Raksasa (Lv. 18), Babi Hutan Purba (Lv. 22), Treant Kanopi Gelap (Lv. 28).",
         },
         desa_lauh_than: {
           tag: "PESISIR MARITIM & GERBANG BAWAH LAUT (OCEAN PORT)",
@@ -1451,7 +1753,8 @@ module.exports = (client) => {
           resources: { wood: 45, ore: 55, fish: 98, pearl: 85 },
           coords: "X: 520 · Y: 510",
           fastTravelCost: 40,
-          monsters: "Predator Karang Gigi Gergaji (Lv. 24), Hiu Purba Bertanduk (Lv. 29), Kraken Pesisir (Lv. 35).",
+          monsters:
+            "Predator Karang Gigi Gergaji (Lv. 24), Hiu Purba Bertanduk (Lv. 29), Kraken Pesisir (Lv. 35).",
         },
         istana_draken: {
           tag: "DUNGEON BERTINGKAT & WORLD BOSS (HIGH DANGER)",
@@ -1463,7 +1766,8 @@ module.exports = (client) => {
           resources: { wood: 5, ore: 95, fish: 0, mythic: 100 },
           coords: "X: 740 · Y: 420",
           fastTravelCost: 100,
-          monsters: "Gargoyle Malakor (Lv. 45 Gatekeeper), Iblis Bayangan (Lv. 48), Penguasa Draken (Lantai 50 Boss).",
+          monsters:
+            "Gargoyle Malakor (Lv. 45 Gatekeeper), Iblis Bayangan (Lv. 48), Penguasa Draken (Lantai 50 Boss).",
         },
       };
 
@@ -1494,7 +1798,9 @@ module.exports = (client) => {
       let currentUserData = null;
 
       if (currentUserId) {
-        const s = await UserSurvival.findOne({ where: { userId: currentUserId } });
+        const s = await UserSurvival.findOne({
+          where: { userId: currentUserId },
+        });
         if (s) {
           currentUserData = {
             id: s.userId,
@@ -1617,7 +1923,9 @@ module.exports = (client) => {
       let treasuryNc = 8520000;
       let treasuryNsf = 485000;
       try {
-        const tr = await ServerTreasury.findOne({ order: [["updatedAt", "DESC"]] });
+        const tr = await ServerTreasury.findOne({
+          order: [["updatedAt", "DESC"]],
+        });
         if (tr) {
           treasuryNsf =
             Number(tr.lotteryJackpot || 0) +
@@ -1630,7 +1938,10 @@ module.exports = (client) => {
         }
       } catch (_) {}
 
-      const ping = client.ws?.ping !== undefined && client.ws.ping >= 0 ? client.ws.ping : 28;
+      const ping =
+        client.ws?.ping !== undefined && client.ws.ping >= 0
+          ? client.ws.ping
+          : 28;
 
       res.json({
         success: true,
@@ -1642,9 +1953,7 @@ module.exports = (client) => {
           botUptimeSeconds: uptimeSec,
           botUptimeFormatted: `${hours}j ${mins}m`,
           ping,
-          shards: [
-            { id: 0, status: "online", ping }
-          ],
+          shards: [{ id: 0, status: "online", ping }],
           cpuPercent: parseFloat((Math.random() * 5 + 8).toFixed(1)),
           ramUsageMB,
           treasuryPoolNc: treasuryNc,
@@ -1662,7 +1971,7 @@ module.exports = (client) => {
     res.writeHead(200, {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
-      "Connection": "keep-alive",
+      Connection: "keep-alive",
       "Access-Control-Allow-Origin": "*",
     });
 
@@ -1677,7 +1986,10 @@ module.exports = (client) => {
 
         // 1. Lelang riil
         try {
-          const auctions = await MarketAuction.findAll({ order: [["updatedAt", "DESC"]], limit: 2 });
+          const auctions = await MarketAuction.findAll({
+            order: [["updatedAt", "DESC"]],
+            limit: 2,
+          });
           auctions.forEach((auc) => {
             const cur = auc.currency === "coin" ? "NC" : "NSF";
             const price = auc.currentBid || auc.startingPrice || 100;
@@ -1693,7 +2005,10 @@ module.exports = (client) => {
 
         // 2. Survivor riil
         try {
-          const survivors = await UserSurvival.findAll({ order: [["updatedAt", "DESC"]], limit: 2 });
+          const survivors = await UserSurvival.findAll({
+            order: [["updatedAt", "DESC"]],
+            limit: 2,
+          });
           survivors.forEach((s) => {
             const u = client.users?.cache?.get(s.userId);
             const name = u?.username || `Survivor #${s.userId.slice(-4)}`;
@@ -1709,7 +2024,10 @@ module.exports = (client) => {
 
         // 3. Leveling riil
         try {
-          const profiles = await UserProfile.findAll({ order: [["updatedAt", "DESC"]], limit: 2 });
+          const profiles = await UserProfile.findAll({
+            order: [["updatedAt", "DESC"]],
+            limit: 2,
+          });
           profiles.forEach((p) => {
             const u = client.users?.cache?.get(p.userId);
             const name = u?.username || `Member #${p.userId.slice(-4)}`;
@@ -1725,7 +2043,10 @@ module.exports = (client) => {
 
         // 4. Saham riil
         try {
-          const stocks = await ServerStock.findAll({ order: [["updatedAt", "DESC"]], limit: 2 });
+          const stocks = await ServerStock.findAll({
+            order: [["updatedAt", "DESC"]],
+            limit: 2,
+          });
           stocks.forEach((st) => {
             const cur = Number(st.currentPrice || 0);
             const prev = Number(st.previousPrice || cur);
@@ -1741,13 +2062,16 @@ module.exports = (client) => {
           });
         } catch (_) {}
 
-        const chosen = feeds.length > 0 ? feeds[Math.floor(Math.random() * feeds.length)] : {
-          type: "system",
-          title: "Database Cluster Aktif",
-          desc: "Bot dan database Supabase PostgreSQL beroperasi optimal.",
-          time: "Baru saja",
-          badge: "CONNECTED",
-        };
+        const chosen =
+          feeds.length > 0
+            ? feeds[Math.floor(Math.random() * feeds.length)]
+            : {
+                type: "system",
+                title: "Database Cluster Aktif",
+                desc: "Bot dan database Supabase PostgreSQL beroperasi optimal.",
+                time: "Baru saja",
+                badge: "CONNECTED",
+              };
 
         res.write(`event: activity\ndata: ${JSON.stringify(chosen)}\n\n`);
       } catch (_) {}
@@ -1780,7 +2104,7 @@ module.exports = (client) => {
             (s) =>
               s.ticker.toUpperCase() === rawSymbol ||
               s.ticker.toUpperCase().startsWith(rawSymbol) ||
-              rawSymbol.startsWith(s.ticker.toUpperCase())
+              rawSymbol.startsWith(s.ticker.toUpperCase()),
           );
         }
       } catch (_) {}
@@ -1793,13 +2117,19 @@ module.exports = (client) => {
       let prices = [];
 
       // Gunakan history24h riil dari database jika ada
-      if (stock && Array.isArray(stock.history24h) && stock.history24h.length > 0) {
+      if (
+        stock &&
+        Array.isArray(stock.history24h) &&
+        stock.history24h.length > 0
+      ) {
         const pts = stock.history24h.slice(-24);
         labels = pts.map((p) => {
           const d = new Date(p.timestamp || Date.now());
           return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
         });
-        prices = pts.map((p) => Math.round(Number(p.close || p.price || currentPrice)));
+        prices = pts.map((p) =>
+          Math.round(Number(p.close || p.price || currentPrice)),
+        );
       }
 
       // Fallback tren teratur jika history24h kosong
@@ -1814,7 +2144,7 @@ module.exports = (client) => {
           labels.push(
             is30d
               ? `${d.getDate()}/${d.getMonth() + 1}`
-              : ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"][d.getDay()]
+              : ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"][d.getDay()],
           );
           const fluctuation = Math.sin(i * 0.7) * (currentPrice * 0.05);
           prices.push(Math.round(basePrice + fluctuation));
@@ -1875,7 +2205,10 @@ module.exports = (client) => {
   // 4. Economy Top Holders
   router.get("/economy/top-holders", async (req, res) => {
     try {
-      const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
+      const limit = Math.min(
+        Math.max(parseInt(req.query.limit, 10) || 10, 1),
+        50,
+      );
       const UserProfile = require("../../src/models/UserProfile");
       const { sequelize } = require("../../src/managers/dbManager");
 
@@ -1883,7 +2216,14 @@ module.exports = (client) => {
       try {
         const profiles = await UserProfile.findAll({
           order: [
-            sequelize ? [sequelize.literal("COALESCE(economy_wallet, 0) + COALESCE(economy_bank, 0)"), "DESC"] : ["economy_wallet", "DESC"],
+            sequelize
+              ? [
+                  sequelize.literal(
+                    "COALESCE(economy_wallet, 0) + COALESCE(economy_bank, 0)",
+                  ),
+                  "DESC",
+                ]
+              : ["economy_wallet", "DESC"],
           ],
           limit,
         });
@@ -1891,7 +2231,9 @@ module.exports = (client) => {
         holders = profiles.map((p, idx) => {
           const cachedUser = client.users?.cache?.get(p.userId);
           const name = cachedUser?.username || `Pemain #${p.userId.slice(-4)}`;
-          const avatar = cachedUser?.displayAvatarURL?.({ extension: "png" }) || "/assets/core/avatar.png";
+          const avatar =
+            cachedUser?.displayAvatarURL?.({ extension: "png" }) ||
+            "/assets/core/avatar.png";
           const wallet = p.economy_wallet || 0;
           const bank = p.economy_bank || 0;
           return {
@@ -1910,11 +2252,61 @@ module.exports = (client) => {
 
       if (holders.length === 0) {
         holders = [
-          { rank: 1, userId: "1", name: "Aryandita", avatar: "/assets/core/avatar.png", wallet: 1542000, bank: 5000000, total: 6542000, level: 42, isPremium: true },
-          { rank: 2, userId: "2", name: "Naura Hoshino", avatar: "/assets/core/avatar.png", wallet: 1120000, bank: 3000000, total: 4120000, level: 39, isPremium: true },
-          { rank: 3, userId: "3", name: "Kagami", avatar: "/assets/core/avatar.png", wallet: 900000, bank: 2600000, total: 3500000, level: 35, isPremium: false },
-          { rank: 4, userId: "4", name: "Hanako", avatar: "/assets/core/avatar.png", wallet: 700000, bank: 2200000, total: 2900000, level: 31, isPremium: false },
-          { rank: 5, userId: "5", name: "Ryusei", avatar: "/assets/core/avatar.png", wallet: 500000, bank: 1600000, total: 2100000, level: 28, isPremium: false },
+          {
+            rank: 1,
+            userId: "1",
+            name: "Aryandita",
+            avatar: "/assets/core/avatar.png",
+            wallet: 1542000,
+            bank: 5000000,
+            total: 6542000,
+            level: 42,
+            isPremium: true,
+          },
+          {
+            rank: 2,
+            userId: "2",
+            name: "Naura Hoshino",
+            avatar: "/assets/core/avatar.png",
+            wallet: 1120000,
+            bank: 3000000,
+            total: 4120000,
+            level: 39,
+            isPremium: true,
+          },
+          {
+            rank: 3,
+            userId: "3",
+            name: "Kagami",
+            avatar: "/assets/core/avatar.png",
+            wallet: 900000,
+            bank: 2600000,
+            total: 3500000,
+            level: 35,
+            isPremium: false,
+          },
+          {
+            rank: 4,
+            userId: "4",
+            name: "Hanako",
+            avatar: "/assets/core/avatar.png",
+            wallet: 700000,
+            bank: 2200000,
+            total: 2900000,
+            level: 31,
+            isPremium: false,
+          },
+          {
+            rank: 5,
+            userId: "5",
+            name: "Ryusei",
+            avatar: "/assets/core/avatar.png",
+            wallet: 500000,
+            bank: 1600000,
+            total: 2100000,
+            level: 28,
+            isPremium: false,
+          },
         ];
       }
 
@@ -1927,7 +2319,10 @@ module.exports = (client) => {
   // 5. Economy Recent Transactions
   router.get("/economy/recent-transactions", async (req, res) => {
     try {
-      const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 30);
+      const limit = Math.min(
+        Math.max(parseInt(req.query.limit, 10) || 10, 1),
+        30,
+      );
       const MarketAuction = require("../../src/models/MarketAuction");
 
       let transactions = [];
@@ -1944,16 +2339,50 @@ module.exports = (client) => {
           description: `${auc.amount}x item ${auc.itemId} ${auc.status === "sold" ? "terjual ke penawar tertinggi" : "terdaftar di bursa"}`,
           amount: auc.currentBid || auc.startingPrice || 1500,
           currency: auc.currency === "coin" ? "NC" : "NSF",
-          timestamp: auc.updatedAt ? new Date(auc.updatedAt).getTime() : Date.now() - (i + 1) * 3600000,
+          timestamp: auc.updatedAt
+            ? new Date(auc.updatedAt).getTime()
+            : Date.now() - (i + 1) * 3600000,
         }));
       } catch (_) {}
 
       if (transactions.length === 0) {
         transactions = [
-          { id: "tx_1", type: "income", title: "XP Level Up Reward", description: "Hadiah milestone level survivor", amount: 1200, currency: "NSF", timestamp: Date.now() - 3600000 },
-          { id: "tx_2", type: "trade", title: "Transfer ke Hanako", description: "Transfer pemain antar-rekening", amount: -10000, currency: "NC", timestamp: Date.now() - 7200000 },
-          { id: "tx_3", type: "buy", title: "Beli Saham TECH", description: "Pembelian 50 lot saham Naura Tech", amount: -21250, currency: "NC", timestamp: Date.now() - 14400000 },
-          { id: "tx_4", type: "income", title: "Bunga Simpanan Bank", description: "Bunga harian deposito kas", amount: 4800, currency: "NC", timestamp: Date.now() - 28800000 },
+          {
+            id: "tx_1",
+            type: "income",
+            title: "XP Level Up Reward",
+            description: "Hadiah milestone level survivor",
+            amount: 1200,
+            currency: "NSF",
+            timestamp: Date.now() - 3600000,
+          },
+          {
+            id: "tx_2",
+            type: "trade",
+            title: "Transfer ke Hanako",
+            description: "Transfer pemain antar-rekening",
+            amount: -10000,
+            currency: "NC",
+            timestamp: Date.now() - 7200000,
+          },
+          {
+            id: "tx_3",
+            type: "buy",
+            title: "Beli Saham TECH",
+            description: "Pembelian 50 lot saham Naura Tech",
+            amount: -21250,
+            currency: "NC",
+            timestamp: Date.now() - 14400000,
+          },
+          {
+            id: "tx_4",
+            type: "income",
+            title: "Bunga Simpanan Bank",
+            description: "Bunga harian deposito kas",
+            amount: 4800,
+            currency: "NC",
+            timestamp: Date.now() - 28800000,
+          },
         ];
       }
 
@@ -1966,7 +2395,14 @@ module.exports = (client) => {
   // 6. Status History (90 Uptime Points & Incidents)
   router.get("/status/history", async (req, res) => {
     try {
-      const services = ["bot", "database", "mongodb", "redis", "lavalink", "ai"];
+      const services = [
+        "bot",
+        "database",
+        "mongodb",
+        "redis",
+        "lavalink",
+        "ai",
+      ];
       const historyMap = {};
 
       services.forEach((svcId) => {
@@ -1992,7 +2428,8 @@ module.exports = (client) => {
           service: "Lavalink v4 Cluster",
           timestamp: Date.now() - 8 * 3600000,
           title: "Lavalink Node-2 Timeout & Failover",
-          description: "Node-2 mengalami latensi tinggi di atas 800ms. Poru cluster manager otomatis merutekan koneksi ke Node SG. Semua sesi audio pulih tanpa interupsi.",
+          description:
+            "Node-2 mengalami latensi tinggi di atas 800ms. Poru cluster manager otomatis merutekan koneksi ke Node SG. Semua sesi audio pulih tanpa interupsi.",
           status: "resolved",
           durationMinutes: 12,
         },
@@ -2015,7 +2452,9 @@ module.exports = (client) => {
 
   // 7. Music Shortcuts
   const getMusicPlaybackState = (client) => {
-    const rawPlayers = client.poru?.players ? Array.from(client.poru.players.values()) : [];
+    const rawPlayers = client.poru?.players
+      ? Array.from(client.poru.players.values())
+      : [];
     const player = rawPlayers[0] || null;
 
     if (!player || !player.currentTrack) {
@@ -2070,15 +2509,25 @@ module.exports = (client) => {
 
   router.get("/music/queue", (req, res) => {
     try {
-      const rawPlayers = client.poru?.players ? Array.from(client.poru.players.values()) : [];
+      const rawPlayers = client.poru?.players
+        ? Array.from(client.poru.players.values())
+        : [];
       const player = rawPlayers[0] || null;
 
       if (!player || !player.queue || player.queue.length === 0) {
         return res.json({
           success: true,
           queue: [
-            { title: "Sakura Falling Beats", author: "Naura Lofi", duration: 165000 },
-            { title: "Midnight Highway Drive", author: "Synthwave Girl", duration: 210000 },
+            {
+              title: "Sakura Falling Beats",
+              author: "Naura Lofi",
+              duration: 165000,
+            },
+            {
+              title: "Midnight Highway Drive",
+              author: "Synthwave Girl",
+              duration: 210000,
+            },
           ],
         });
       }
@@ -2108,4 +2557,3 @@ module.exports = (client) => {
 
   return router;
 };
-

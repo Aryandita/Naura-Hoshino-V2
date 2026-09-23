@@ -27,7 +27,12 @@ const {
 } = require("../../../src/survival/engines/inventoryHelper");
 
 const COLLECTOR_MS = 300000;
-const CHARACTER_DIR = path.join(process.cwd(), "assets", "survival", "characters");
+const CHARACTER_DIR = path.join(
+  process.cwd(),
+  "assets",
+  "survival",
+  "characters",
+);
 
 function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
@@ -115,7 +120,11 @@ module.exports = {
       // NPC Avatar icon di pojok bila berbicara dengan NPC tertentu
       const iconURL = user.displayAvatarURL();
       const speakerPortrait = findNpcPortrait(chapter.speakerNpcId);
-      if (speakerPortrait && line.speaker !== user.username && line.speaker !== "{player}") {
+      if (
+        speakerPortrait &&
+        line.speaker !== user.username &&
+        line.speaker !== "{player}"
+      ) {
         // Bisa disematkan bila dibutuhkan
       }
 
@@ -236,9 +245,7 @@ module.exports = {
 
       if (reward.exp) {
         await leveling.addPlayerXP(user.id, reward.exp);
-        rewardLines.push(
-          `> ${e("impressed", "🌟")} **+${reward.exp} XP**`,
-        );
+        rewardLines.push(`> ${e("impressed", "🌟")} **+${reward.exp} XP**`);
       }
 
       if (reward.item) {
@@ -278,9 +285,7 @@ module.exports = {
         await cacheManager.incrementUserSurvival(user.id, {
           coupons: reward.coupons,
         });
-        rewardLines.push(
-          `> 🎟️ **+${reward.coupons} Naura Coupons**`,
-        );
+        rewardLines.push(`> 🎟️ **+${reward.coupons} Naura Coupons**`);
       }
 
       storyProgress.currentArc = chapter.nextArc;

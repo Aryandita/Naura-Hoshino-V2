@@ -3,10 +3,7 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 
-const {
-  GIFT_TIERS,
-  evaluateGift,
-} = require("./npcGiftPreferences");
+const { GIFT_TIERS, evaluateGift } = require("./npcGiftPreferences");
 
 test("GIFT_TIERS memiliki skala poin afeksi yang benar (-5 hingga +25)", () => {
   assert.equal(GIFT_TIERS.DISLIKED.rp, -5);

@@ -147,13 +147,18 @@ async function runMusicLogic(
         }
       }
 
-      const avatarUrl = target.displayAvatarURL({ extension: "png", size: 256 });
-      const { auraData, cardBuffer } = await musicAuraService.generateMusicAura({
-        username: target.username,
-        avatarUrl,
-        tracks,
-        guildName: guild?.name || "Server Naura",
+      const avatarUrl = target.displayAvatarURL({
+        extension: "png",
+        size: 256,
       });
+      const { auraData, cardBuffer } = await musicAuraService.generateMusicAura(
+        {
+          username: target.username,
+          avatarUrl,
+          tracks,
+          guildName: guild?.name || "Server Naura",
+        },
+      );
 
       const file = new AttachmentBuilder(cardBuffer, {
         name: "music_aura.png",
@@ -1675,7 +1680,9 @@ async function runMusicLogic(
   }
 
   if (subcommand === "quality") {
-    const { lavalinkClusterManager } = require("../../src/managers/lavalinkClusterManager");
+    const {
+      lavalinkClusterManager,
+    } = require("../../src/managers/lavalinkClusterManager");
     const mode = args.mode ? args.mode.toLowerCase() : null;
 
     if (mode) {
@@ -1687,7 +1694,12 @@ async function runMusicLogic(
       };
 
       const payload = buildContainerV2({
-        accentColorHex: mode === "lossless" ? "#F59E0B" : mode === "hd" ? "#06B6D4" : "#94A3B8",
+        accentColorHex:
+          mode === "lossless"
+            ? "#F59E0B"
+            : mode === "hd"
+              ? "#06B6D4"
+              : "#94A3B8",
         authorName: "NAURA HI-FI AUDIO ENGINE",
         title: "🎚️ Mode Kualitas Audio Diperbarui",
         description: [
@@ -1723,7 +1735,9 @@ async function runMusicLogic(
   }
 
   if (subcommand === "cluster") {
-    const { lavalinkClusterManager } = require("../../src/managers/lavalinkClusterManager");
+    const {
+      lavalinkClusterManager,
+    } = require("../../src/managers/lavalinkClusterManager");
     const fedStatus = lavalinkClusterManager.getFederationStatus(poru);
 
     const hiFiList =
@@ -2014,7 +2028,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("quality")
-        .setDescription("🎚️ Atur kualitas format audio (Standard, HD, Lossless Hi-Fi)")
+        .setDescription(
+          "🎚️ Atur kualitas format audio (Standard, HD, Lossless Hi-Fi)",
+        )
         .addStringOption((opt) =>
           opt
             .setName("mode")
@@ -2030,7 +2046,9 @@ module.exports = {
     .addSubcommand((sub) =>
       sub
         .setName("cluster")
-        .setDescription("🌐 Lihat status kluster Lavalink dan Lossless Hi-Fi Federation"),
+        .setDescription(
+          "🌐 Lihat status kluster Lavalink dan Lossless Hi-Fi Federation",
+        ),
     ),
 
   async autocomplete(interaction) {

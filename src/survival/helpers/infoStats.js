@@ -15,7 +15,6 @@ const storyData = require("../data/storyData");
 const npcPerksEngine = require("../engines/npcPerksEngine");
 const familyEngine = require("../engines/familyEngine");
 
-
 const LOCATION_NAMES = {
   desa: "Desa Sukamaju",
   village: "Desa Sukamaju",
@@ -47,7 +46,6 @@ const PROPERTY_NAMES = {
   rumah: "Rumah Nyaman",
   mansion: "Mansion Mewah",
 };
-
 
 const DIFF_BADGE = {
   Mudah: "diff_easy",
@@ -221,12 +219,16 @@ async function buildStats({ userId, profile, survival, activePets }) {
     }
   } catch (_) {}
 
-  const friendshipBuffs = await npcPerksEngine.getUserActivePerksSummary(userId).catch(() => []);
-  const spouseInfo = await familyEngine.getMarriageStatus(userId, survival).catch(() => ({
-    isMarried: false,
-    spouseId: null,
-    spouseName: null,
-  }));
+  const friendshipBuffs = await npcPerksEngine
+    .getUserActivePerksSummary(userId)
+    .catch(() => []);
+  const spouseInfo = await familyEngine
+    .getMarriageStatus(userId, survival)
+    .catch(() => ({
+      isMarried: false,
+      spouseId: null,
+      spouseName: null,
+    }));
 
   return {
     level: lvl.level,
@@ -265,6 +267,5 @@ async function buildStats({ userId, profile, survival, activePets }) {
     spouseInfo,
   };
 }
-
 
 module.exports = { buildStats, LOCATION_NAMES, PROPERTY_NAMES, PET_BONUS };

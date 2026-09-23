@@ -9,13 +9,13 @@
  */
 
 (function () {
-  'use strict';
+  "use strict";
 
   // Cegah inisialisasi ganda
-  if (document.getElementById('naura-global-companion')) return;
+  if (document.getElementById("naura-global-companion")) return;
 
-  const style = document.createElement('style');
-  style.id = 'naura-companion-style';
+  const style = document.createElement("style");
+  style.id = "naura-companion-style";
   style.textContent = `
     .naura-companion-root {
       position: fixed;
@@ -292,9 +292,9 @@
   document.head.appendChild(style);
 
   // Buat DOM Widget
-  const root = document.createElement('div');
-  root.id = 'naura-global-companion';
-  root.className = 'naura-companion-root';
+  const root = document.createElement("div");
+  root.id = "naura-global-companion";
+  root.className = "naura-companion-root";
   root.innerHTML = `
     <!-- Floating Orb -->
     <div class="naura-companion-orb" id="nauraCompanionOrb" title="Buka AI Voice Companion Naura 🌸">
@@ -356,54 +356,111 @@
 
   // Konfigurasi Konteks Halaman Cerdas
   const PAGE_CONTEXT_CONFIG = {
-    '/economy': {
-      greeting: 'Selamat datang di Bank & Pasar NC! Mau cek kurs saham atau strategi cuan hari ini? 📈🌸',
+    "/economy": {
+      greeting:
+        "Selamat datang di Bank & Pasar NC! Mau cek kurs saham atau strategi cuan hari ini? 📈🌸",
       chips: [
-        { label: '📈 Prediksi Saham NC', msg: 'Bagaimana tren pasar saham dan bursa valuta hari ini?' },
-        { label: '💰 Kas Server', msg: 'Berapa total kas dan perputaran ekonomi saat ini?' },
-        { label: '💎 Tips Investasi', msg: 'Berikan tips investasi cerdas di Naura Economy' },
-        { label: '🎲 Dadu Hoki', msg: 'Lempar dadu hoki dong!' }
-      ]
+        {
+          label: "📈 Prediksi Saham NC",
+          msg: "Bagaimana tren pasar saham dan bursa valuta hari ini?",
+        },
+        {
+          label: "💰 Kas Server",
+          msg: "Berapa total kas dan perputaran ekonomi saat ini?",
+        },
+        {
+          label: "💎 Tips Investasi",
+          msg: "Berikan tips investasi cerdas di Naura Economy",
+        },
+        { label: "🎲 Dadu Hoki", msg: "Lempar dadu hoki dong!" },
+      ],
     },
-    '/music': {
-      greeting: 'Halo penikmat musik! Lavalink node siap memutarkan track favoritmu. Mau request lagu apa? 🎵✨',
+    "/music": {
+      greeting:
+        "Halo penikmat musik! Lavalink node siap memutarkan track favoritmu. Mau request lagu apa? 🎵✨",
       chips: [
-        { label: '🎵 Rekomendasi Lagu', msg: 'Rekomendasikan lagu anime atau lofi yang enak didengar' },
-        { label: '⚡ Cek Audio Node', msg: 'Bagaimana status cluster pemutar musik Poru saat ini?' },
-        { label: '📻 Info AI DJ', msg: 'Apa saja fitur Fish Audio AI DJ Companion?' }
-      ]
+        {
+          label: "🎵 Rekomendasi Lagu",
+          msg: "Rekomendasikan lagu anime atau lofi yang enak didengar",
+        },
+        {
+          label: "⚡ Cek Audio Node",
+          msg: "Bagaimana status cluster pemutar musik Poru saat ini?",
+        },
+        {
+          label: "📻 Info AI DJ",
+          msg: "Apa saja fitur Fish Audio AI DJ Companion?",
+        },
+      ],
     },
-    '/status': {
-      greeting: 'Monitoring telemetri dan kesehatan sistem aktif. Semua shard dan gateway terpantau aman! ⚡🛡️',
+    "/status": {
+      greeting:
+        "Monitoring telemetri dan kesehatan sistem aktif. Semua shard dan gateway terpantau aman! ⚡🛡️",
       chips: [
-        { label: '⚡ Latency Shard', msg: 'Berapa rata-rata ping gateway dan shard Discord saat ini?' },
-        { label: '💾 Pemakaian RAM', msg: 'Apakah penggunaan memori heap node.js dalam batas aman?' },
-        { label: '🛡️ Uptime Service', msg: 'Sudah berapa lama server bot aktif tanpa restart?' }
-      ]
+        {
+          label: "⚡ Latency Shard",
+          msg: "Berapa rata-rata ping gateway dan shard Discord saat ini?",
+        },
+        {
+          label: "💾 Pemakaian RAM",
+          msg: "Apakah penggunaan memori heap node.js dalam batas aman?",
+        },
+        {
+          label: "🛡️ Uptime Service",
+          msg: "Sudah berapa lama server bot aktif tanpa restart?",
+        },
+      ],
     },
-    '/world': {
-      greeting: 'Wilayah Aetheria terbentang luas! Mau eksplorasi POI atau cek cuaca benua hari ini? 🗺️⚔️',
+    "/world": {
+      greeting:
+        "Wilayah Aetheria terbentang luas! Mau eksplorasi POI atau cek cuaca benua hari ini? 🗺️⚔️",
       chips: [
-        { label: '🗺️ Panduan POI', msg: 'Ceritakan tentang wilayah dan titik penting di peta Aetheria' },
-        { label: '⚔️ Zona Rawan', msg: 'Di mana lokasi monster langka atau pertempuran klan?' },
-        { label: '🎒 Bar Vitalitas', msg: 'Bagaimana cara menjaga stamina dan HP di Naura Wilds?' }
-      ]
+        {
+          label: "🗺️ Panduan POI",
+          msg: "Ceritakan tentang wilayah dan titik penting di peta Aetheria",
+        },
+        {
+          label: "⚔️ Zona Rawan",
+          msg: "Di mana lokasi monster langka atau pertempuran klan?",
+        },
+        {
+          label: "🎒 Bar Vitalitas",
+          msg: "Bagaimana cara menjaga stamina dan HP di Naura Wilds?",
+        },
+      ],
     },
-    '/survival-map': {
-      greeting: 'Radar survival aktif mendeteksi sumber daya dan pemain di sekitarmu! Waspada selalu ya! 🌲⚡',
+    "/survival-map": {
+      greeting:
+        "Radar survival aktif mendeteksi sumber daya dan pemain di sekitarmu! Waspada selalu ya! 🌲⚡",
       chips: [
-        { label: '📍 Sumber Daya', msg: 'Di mana lokasi terbaik mencari kayu dan kristal energi?' },
-        { label: '🛡️ Pos Terdepan', msg: 'Bagaimana cara mendirikan outpost perlindungan?' }
-      ]
+        {
+          label: "📍 Sumber Daya",
+          msg: "Di mana lokasi terbaik mencari kayu dan kristal energi?",
+        },
+        {
+          label: "🛡️ Pos Terdepan",
+          msg: "Bagaimana cara mendirikan outpost perlindungan?",
+        },
+      ],
     },
-    '/settings': {
-      greeting: 'Di sini kamu bisa mengatur preferensi bot, kartu sambutan, dan izin role. Mau dibantu setel apa? ⚙️✨',
+    "/settings": {
+      greeting:
+        "Di sini kamu bisa mengatur preferensi bot, kartu sambutan, dan izin role. Mau dibantu setel apa? ⚙️✨",
       chips: [
-        { label: '🎨 Welcomer Card', msg: 'Bagaimana cara mengubah latar belakang kartu sambutan?' },
-        { label: '🔒 Keamanan Role', msg: 'Jelaskan izin bot yang dibutuhkan untuk proteksi server' },
-        { label: '⚙️ Personalisasi', msg: 'Bagaimana cara mengubah persona AI Naura?' }
-      ]
-    }
+        {
+          label: "🎨 Welcomer Card",
+          msg: "Bagaimana cara mengubah latar belakang kartu sambutan?",
+        },
+        {
+          label: "🔒 Keamanan Role",
+          msg: "Jelaskan izin bot yang dibutuhkan untuk proteksi server",
+        },
+        {
+          label: "⚙️ Personalisasi",
+          msg: "Bagaimana cara mengubah persona AI Naura?",
+        },
+      ],
+    },
   };
 
   // State
@@ -412,29 +469,29 @@
   const chatHistory = [];
   let currentAudio = null;
 
-  const orb = document.getElementById('nauraCompanionOrb');
-  const card = document.getElementById('nauraCompanionCard');
-  const btnClose = document.getElementById('nauraBtnClose');
-  const voiceToggle = document.getElementById('nauraVoiceToggle');
-  const orbAvatar = document.getElementById('nauraOrbAvatar');
-  const cardAvatar = document.getElementById('nauraCardAvatar');
-  const cardStatus = document.getElementById('nauraCardStatus');
-  const chatBox = document.getElementById('nauraChatBox');
-  const chatInput = document.getElementById('nauraChatInput');
-  const btnSend = document.getElementById('nauraBtnSend');
-  const cardChips = document.getElementById('nauraCardChips');
-  const initialBubble = document.getElementById('nauraInitialBubble');
+  const orb = document.getElementById("nauraCompanionOrb");
+  const card = document.getElementById("nauraCompanionCard");
+  const btnClose = document.getElementById("nauraBtnClose");
+  const voiceToggle = document.getElementById("nauraVoiceToggle");
+  const orbAvatar = document.getElementById("nauraOrbAvatar");
+  const cardAvatar = document.getElementById("nauraCardAvatar");
+  const cardStatus = document.getElementById("nauraCardStatus");
+  const chatBox = document.getElementById("nauraChatBox");
+  const chatInput = document.getElementById("nauraChatInput");
+  const btnSend = document.getElementById("nauraBtnSend");
+  const cardChips = document.getElementById("nauraCardChips");
+  const initialBubble = document.getElementById("nauraInitialBubble");
 
   function updatePageContext() {
-    const path = window.location.pathname.replace(/\/$/, '') || '/';
+    const path = window.location.pathname.replace(/\/$/, "") || "/";
     const cfg = PAGE_CONTEXT_CONFIG[path];
     if (cfg) {
       if (initialBubble && chatHistory.length === 0) {
         initialBubble.textContent = cfg.greeting;
       }
       if (cardChips) {
-        let chipsHtml = '';
-        cfg.chips.forEach(c => {
+        let chipsHtml = "";
+        cfg.chips.forEach((c) => {
           chipsHtml += `<button type="button" class="naura-chip" data-msg="${c.msg}">${c.label}</button>`;
         });
         chipsHtml += `<a href="/lounge" class="naura-chip" style="text-decoration:none;">🎭 Buka 3D Lounge</a>`;
@@ -446,36 +503,35 @@
 
   function bindChipEvents() {
     if (!cardChips) return;
-    cardChips.querySelectorAll('.naura-chip[data-msg]').forEach((chip) => {
-      chip.addEventListener('click', () => {
-        const msg = chip.getAttribute('data-msg');
+    cardChips.querySelectorAll(".naura-chip[data-msg]").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const msg = chip.getAttribute("data-msg");
         if (msg) handleSend(msg);
       });
     });
   }
 
-
   function toggleCard() {
     isOpen = !isOpen;
     if (isOpen) {
       updatePageContext();
-      card.classList.add('is-open');
+      card.classList.add("is-open");
       chatInput.focus();
     } else {
-      card.classList.remove('is-open');
+      card.classList.remove("is-open");
     }
   }
 
   // Inisialisasi konteks saat awal
   updatePageContext();
 
-  orb.addEventListener('click', toggleCard);
-  btnClose.addEventListener('click', () => {
+  orb.addEventListener("click", toggleCard);
+  btnClose.addEventListener("click", () => {
     isOpen = false;
-    card.classList.remove('is-open');
+    card.classList.remove("is-open");
   });
 
-  voiceToggle.addEventListener('click', () => {
+  voiceToggle.addEventListener("click", () => {
     voiceEnabled = !voiceEnabled;
     voiceToggle.innerHTML = voiceEnabled
       ? '<i class="fa-solid fa-volume-high"></i>'
@@ -483,8 +539,16 @@
   });
 
   function setMascotMood(mood, statusText) {
-    const validMoods = ['Happy', 'Cheers', 'Thinking', 'Shy', 'Sleepy', 'Angry', 'Blow kiss'];
-    const selected = validMoods.includes(mood) ? mood : 'Happy';
+    const validMoods = [
+      "Happy",
+      "Cheers",
+      "Thinking",
+      "Shy",
+      "Sleepy",
+      "Angry",
+      "Blow kiss",
+    ];
+    const selected = validMoods.includes(mood) ? mood : "Happy";
     const src = `/assets/Naura_Expression/${selected}.png`;
     if (orbAvatar) orbAvatar.src = src;
     if (cardAvatar) cardAvatar.src = src;
@@ -494,10 +558,10 @@
   }
 
   function appendMsg(sender, text, isVoicePlaying = false) {
-    const msgDiv = document.createElement('div');
+    const msgDiv = document.createElement("div");
     msgDiv.className = `naura-msg is-${sender}`;
-    let waveHtml = '';
-    if (sender === 'bot' && isVoicePlaying) {
+    let waveHtml = "";
+    if (sender === "bot" && isVoicePlaying) {
       waveHtml = `
         <div class="naura-wave-indicator">
           <span>Suara</span>
@@ -519,14 +583,17 @@
         currentAudio.pause();
         currentAudio = null;
       }
-      const res = await fetch('/api/ai/companion/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/ai/companion/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
       });
 
-      const contentType = res.headers.get('content-type') || '';
-      if (contentType.includes('audio/mpeg') || contentType.includes('audio/')) {
+      const contentType = res.headers.get("content-type") || "";
+      if (
+        contentType.includes("audio/mpeg") ||
+        contentType.includes("audio/")
+      ) {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         currentAudio = new Audio(url);
@@ -535,11 +602,14 @@
       }
 
       // Fallback: Web Speech Synthesis browser
-      if ('speechSynthesis' in window) {
+      if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
-        const cleanText = text.replace(/[^\w\s\u00C0-\u024F\u1E00-\u1EFF.,!?]/g, '');
+        const cleanText = text.replace(
+          /[^\w\s\u00C0-\u024F\u1E00-\u1EFF.,!?]/g,
+          "",
+        );
         const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.lang = 'id-ID';
+        utterance.lang = "id-ID";
         utterance.rate = 1.05;
         utterance.pitch = 1.25;
         window.speechSynthesis.speak(utterance);
@@ -553,50 +623,59 @@
     const text = customText || chatInput.value.trim();
     if (!text) return;
 
-    appendMsg('user', text);
-    if (!customText) chatInput.value = '';
+    appendMsg("user", text);
+    if (!customText) chatInput.value = "";
 
-    setMascotMood('Thinking', 'Sedang memproses...');
-    chatHistory.push({ role: 'user', content: text });
+    setMascotMood("Thinking", "Sedang memproses...");
+    chatHistory.push({ role: "user", content: text });
 
     try {
-      const res = await fetch('/api/ai/companion/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/ai/companion/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: text,
           history: chatHistory.slice(-6),
-          context: { path: window.location.pathname }
+          context: { path: window.location.pathname },
         }),
       });
       const data = await res.json();
       if (data && data.success) {
-        setMascotMood(data.mood || 'Happy', data.status || 'Aktif Menemani ✨');
-        appendMsg('bot', data.reply, voiceEnabled);
-        chatHistory.push({ role: 'model', content: data.reply });
-        if (window.soundManager && typeof window.soundManager.playPop === 'function') {
+        setMascotMood(data.mood || "Happy", data.status || "Aktif Menemani ✨");
+        appendMsg("bot", data.reply, voiceEnabled);
+        chatHistory.push({ role: "model", content: data.reply });
+        if (
+          window.soundManager &&
+          typeof window.soundManager.playPop === "function"
+        ) {
           window.soundManager.playPop();
         }
         playVoice(data.reply);
       } else {
-        setMascotMood('Shy', 'Sedikit bingung');
-        appendMsg('bot', 'Wah, Naura agak tersendat tadi. Boleh coba ulangi lagi ya Sensei? 🌸');
+        setMascotMood("Shy", "Sedikit bingung");
+        appendMsg(
+          "bot",
+          "Wah, Naura agak tersendat tadi. Boleh coba ulangi lagi ya Sensei? 🌸",
+        );
       }
     } catch (_) {
-      setMascotMood('Sleepy', 'Offline sementara');
-      appendMsg('bot', 'Koneksi ke otak AI sedang beristirahat. Tenang, fitur dashboard lainnya tetap lancar jaya! ⚡');
+      setMascotMood("Sleepy", "Offline sementara");
+      appendMsg(
+        "bot",
+        "Koneksi ke otak AI sedang beristirahat. Tenang, fitur dashboard lainnya tetap lancar jaya! ⚡",
+      );
     }
   }
 
-  btnSend.addEventListener('click', () => handleSend());
-  chatInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleSend();
+  btnSend.addEventListener("click", () => handleSend());
+  chatInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleSend();
   });
 
   // Action chips
-  document.querySelectorAll('.naura-chip[data-msg]').forEach((chip) => {
-    chip.addEventListener('click', () => {
-      const msg = chip.getAttribute('data-msg');
+  document.querySelectorAll(".naura-chip[data-msg]").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const msg = chip.getAttribute("data-msg");
       if (msg) handleSend(msg);
     });
   });

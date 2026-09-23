@@ -18,7 +18,9 @@ async function warmup() {
 
   try {
     if (!redisManager.isReady) {
-      logger.info("[WARMUP] Redis tidak aktif atau belum siap. Pemanasan dilewati secara aman.");
+      logger.info(
+        "[WARMUP] Redis tidak aktif atau belum siap. Pemanasan dilewati secara aman.",
+      );
       process.exit(0);
     }
 
@@ -29,15 +31,24 @@ async function warmup() {
     let warmedGuilds = 0;
     for (const g of guilds) {
       if (g.guild_id) {
-        await redisManager.set(`guild:${g.guild_id}`, JSON.stringify(g.toJSON()), 600);
+        await redisManager.set(
+          `guild:${g.guild_id}`,
+          JSON.stringify(g.toJSON()),
+          600,
+        );
         warmedGuilds++;
       }
     }
-    logger.info(`[WARMUP] Berhasil memanaskan ${warmedGuilds} konfigurasi server ke Redis.`);
+    logger.info(
+      `[WARMUP] Berhasil memanaskan ${warmedGuilds} konfigurasi server ke Redis.`,
+    );
 
     // 2. Pemanasan Top User Survival
     const topSurvivors = await UserSurvival.findAll({
-      order: [["level", "DESC"], ["exp", "DESC"]],
+      order: [
+        ["level", "DESC"],
+        ["exp", "DESC"],
+      ],
       limit: 30,
     });
     if (topSurvivors.length > 0) {
@@ -46,7 +57,9 @@ async function warmup() {
         JSON.stringify(topSurvivors.map((s) => s.toJSON())),
         300,
       );
-      logger.info(`[WARMUP] Berhasil memanaskan ${topSurvivors.length} top survival leaderboard.`);
+      logger.info(
+        `[WARMUP] Berhasil memanaskan ${topSurvivors.length} top survival leaderboard.`,
+      );
     }
 
     // 3. Pemanasan Top Economy Profile
@@ -60,13 +73,18 @@ async function warmup() {
         JSON.stringify(topEconomy.map((e) => e.toJSON())),
         300,
       );
-      logger.info(`[WARMUP] Berhasil memanaskan ${topEconomy.length} top economy leaderboard.`);
+      logger.info(
+        `[WARMUP] Berhasil memanaskan ${topEconomy.length} top economy leaderboard.`,
+      );
     }
 
     logger.info("[WARMUP] Pemanasan cache Redis selesai dengan sukses!");
     process.exit(0);
   } catch (err) {
-    logger.warn("[WARMUP] Pemanasan cache mendapati kendala non-fatal:", err.message);
+    logger.warn(
+      "[WARMUP] Pemanasan cache mendapati kendala non-fatal:",
+      err.message,
+    );
     process.exit(0); // Selalu keluar dengan 0 agar tidak menggagalkan siklus startup
   }
 }

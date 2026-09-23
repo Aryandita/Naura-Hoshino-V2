@@ -60,9 +60,18 @@ class VoiceCompanionService {
    * @param {string} [params.inviterName] - Nama user yang mengundang
    * @returns {Promise<{success: boolean, session?: object, message?: string}>}
    */
-  async joinVoice({ client, guildId, channelId, textChannelId, inviterName = "Teman" }) {
+  async joinVoice({
+    client,
+    guildId,
+    channelId,
+    textChannelId,
+    inviterName = "Teman",
+  }) {
     if (!guildId || !channelId) {
-      return { success: false, message: "Guild ID dan Voice Channel ID diperlukan." };
+      return {
+        success: false,
+        message: "Guild ID dan Voice Channel ID diperlukan.",
+      };
     }
 
     const existing = this.activeSessions.get(guildId);
@@ -70,7 +79,8 @@ class VoiceCompanionService {
       return {
         success: true,
         session: existing,
-        message: "Naura sudah berada di dalam voice channel ini dan siap mengobrol!",
+        message:
+          "Naura sudah berada di dalam voice channel ini dan siap mengobrol!",
       };
     }
 
@@ -93,7 +103,9 @@ class VoiceCompanionService {
     };
 
     this.activeSessions.set(guildId, session);
-    logger.info(`🎙️ [VoiceCompanion] Naura bergabung ke voice channel ${channelId} di guild ${guildId}`);
+    logger.info(
+      `🎙️ [VoiceCompanion] Naura bergabung ke voice channel ${channelId} di guild ${guildId}`,
+    );
 
     const welcomeText = `Halo Kak ${inviterName}! Naura sudah hadir di voice channel. Ayo ngobrol santai bersama Naura!`;
     try {
@@ -117,7 +129,8 @@ class VoiceCompanionService {
     if (!session) {
       return {
         success: false,
-        message: "Naura sedang tidak berada di Voice Channel mana pun di server ini.",
+        message:
+          "Naura sedang tidak berada di Voice Channel mana pun di server ini.",
       };
     }
 
@@ -128,11 +141,14 @@ class VoiceCompanionService {
     }
 
     this.activeSessions.delete(guildId);
-    logger.info(`👋 [VoiceCompanion] Naura pamit dari voice channel ${session.channelId}`);
+    logger.info(
+      `👋 [VoiceCompanion] Naura pamit dari voice channel ${session.channelId}`,
+    );
 
     return {
       success: true,
-      message: "Naura telah pamit dari Voice Channel. Terima kasih sudah mengobrol bersama!",
+      message:
+        "Naura telah pamit dari Voice Channel. Terima kasih sudah mengobrol bersama!",
     };
   }
 
@@ -153,7 +169,11 @@ class VoiceCompanionService {
   handleBargeIn(guildId, userId) {
     const session = this.activeSessions.get(guildId);
     if (!session) {
-      return { aborted: false, bargeInCount: 0, message: "Sesi tidak ditemukan." };
+      return {
+        aborted: false,
+        bargeInCount: 0,
+        message: "Sesi tidak ditemukan.",
+      };
     }
 
     if (session.isSpeaking) {
@@ -169,20 +189,22 @@ class VoiceCompanionService {
       session.interruptedAt = new Date().toISOString();
 
       logger.info(
-        `⚡ [VoiceCompanion] Barge-in interupsi terdeteksi dari user ${userId || "unknown"} di guild ${guildId}. Audio dibatalkan.`
+        `⚡ [VoiceCompanion] Barge-in interupsi terdeteksi dari user ${userId || "unknown"} di guild ${guildId}. Audio dibatalkan.`,
       );
 
       return {
         aborted: true,
         bargeInCount: session.bargeInCount,
-        message: "Audio stream Naura berhasil dihentikan seketika karena interupsi pengguna.",
+        message:
+          "Audio stream Naura berhasil dihentikan seketika karena interupsi pengguna.",
       };
     }
 
     return {
       aborted: false,
       bargeInCount: session.bargeInCount || 0,
-      message: "Naura sedang mendengarkan, tidak ada pemutaran audio yang perlu diinterupsi.",
+      message:
+        "Naura sedang mendengarkan, tidak ada pemutaran audio yang perlu diinterupsi.",
     };
   }
 
@@ -219,44 +241,114 @@ class VoiceCompanionService {
     if (!promptText || typeof promptText !== "string") return null;
     const lower = promptText.toLowerCase().trim();
 
-    if (lower.includes("saldo") || lower.includes("uang") || lower.includes("koin") || lower.includes("balance") || lower.includes("dompet")) {
+    if (
+      lower.includes("saldo") ||
+      lower.includes("uang") ||
+      lower.includes("koin") ||
+      lower.includes("balance") ||
+      lower.includes("dompet")
+    ) {
       return { name: "check_balance", args: {} };
     }
-    if (lower.includes("profil") || lower.includes("level saya") || lower.includes("status saya") || lower.includes("siapa saya")) {
+    if (
+      lower.includes("profil") ||
+      lower.includes("level saya") ||
+      lower.includes("status saya") ||
+      lower.includes("siapa saya")
+    ) {
       return { name: "get_user_info", args: {} };
     }
-    if (lower.includes("tas") || lower.includes("inventory") || lower.includes("ransel") || lower.includes("isi tas")) {
+    if (
+      lower.includes("tas") ||
+      lower.includes("inventory") ||
+      lower.includes("ransel") ||
+      lower.includes("isi tas")
+    ) {
       return { name: "get_inventory", args: {} };
     }
-    if (lower.includes("daily") || lower.includes("klaim harian") || lower.includes("hadiah harian") || lower.includes("absen")) {
+    if (
+      lower.includes("daily") ||
+      lower.includes("klaim harian") ||
+      lower.includes("hadiah harian") ||
+      lower.includes("absen")
+    ) {
       return { name: "give_daily", args: {} };
     }
-    if (lower.includes("peringkat") || lower.includes("leaderboard") || lower.includes("top server") || lower.includes("terkaya")) {
+    if (
+      lower.includes("peringkat") ||
+      lower.includes("leaderboard") ||
+      lower.includes("top server") ||
+      lower.includes("terkaya")
+    ) {
       return { name: "get_leaderboard", args: { type: "economy" } };
     }
-    if (lower.includes("panen") || lower.includes("hidroponik") || lower.includes("kebun") || lower.includes("greenhouse") || lower.includes("harvest")) {
+    if (
+      lower.includes("panen") ||
+      lower.includes("hidroponik") ||
+      lower.includes("kebun") ||
+      lower.includes("greenhouse") ||
+      lower.includes("harvest")
+    ) {
       return { name: "harvest_greenhouse", args: {} };
     }
-    if (lower.includes("omikuji") || lower.includes("ramalan") || lower.includes("tarot") || lower.includes("peruntungan") || lower.includes("fortune")) {
+    if (
+      lower.includes("omikuji") ||
+      lower.includes("ramalan") ||
+      lower.includes("tarot") ||
+      lower.includes("peruntungan") ||
+      lower.includes("fortune")
+    ) {
       return { name: "check_omikuji", args: {} };
     }
-    if (lower.includes("saham") || lower.includes("bursa") || lower.includes("pasar modal") || lower.includes("stock") || lower.includes("investasi")) {
+    if (
+      lower.includes("saham") ||
+      lower.includes("bursa") ||
+      lower.includes("pasar modal") ||
+      lower.includes("stock") ||
+      lower.includes("investasi")
+    ) {
       return { name: "check_stock_market", args: {} };
     }
-    if (lower.includes("putar lagu") || lower.includes("mainkan lagu") || lower.includes("setel musik") || lower.includes("play lagu")) {
-      const query = lower.replace(/.*(putar lagu|mainkan lagu|setel musik|play lagu)\s*/i, "").trim();
-      return { name: "play_music", args: { action: "play", query: query || "lofi chill beats" } };
+    if (
+      lower.includes("putar lagu") ||
+      lower.includes("mainkan lagu") ||
+      lower.includes("setel musik") ||
+      lower.includes("play lagu")
+    ) {
+      const query = lower
+        .replace(/.*(putar lagu|mainkan lagu|setel musik|play lagu)\s*/i, "")
+        .trim();
+      return {
+        name: "play_music",
+        args: { action: "play", query: query || "lofi chill beats" },
+      };
     }
-    if (lower.includes("pause lagu") || lower.includes("jeda musik") || lower.includes("jeda lagu")) {
+    if (
+      lower.includes("pause lagu") ||
+      lower.includes("jeda musik") ||
+      lower.includes("jeda lagu")
+    ) {
       return { name: "play_music", args: { action: "pause" } };
     }
-    if (lower.includes("lanjutkan lagu") || lower.includes("resume lagu") || lower.includes("putar lagi")) {
+    if (
+      lower.includes("lanjutkan lagu") ||
+      lower.includes("resume lagu") ||
+      lower.includes("putar lagi")
+    ) {
       return { name: "play_music", args: { action: "resume" } };
     }
-    if (lower.includes("skip lagu") || lower.includes("lewati lagu") || lower.includes("ganti lagu")) {
+    if (
+      lower.includes("skip lagu") ||
+      lower.includes("lewati lagu") ||
+      lower.includes("ganti lagu")
+    ) {
       return { name: "play_music", args: { action: "skip" } };
     }
-    if (lower.includes("stop lagu") || lower.includes("berhenti musik") || lower.includes("matikan lagu")) {
+    if (
+      lower.includes("stop lagu") ||
+      lower.includes("berhenti musik") ||
+      lower.includes("matikan lagu")
+    ) {
       return { name: "play_music", args: { action: "stop" } };
     }
 
@@ -314,28 +406,36 @@ class VoiceCompanionService {
           if (result.harvestedCount === 0) {
             return `Kebun hidroponik Kak ${username} belum ada tanaman yang matang. Coba cek lagi nanti ya! 🌱`;
           }
-          const itemsText = result.items ? result.items.join(", ") : "hasil panen berlimpah";
+          const itemsText = result.items
+            ? result.items.join(", ")
+            : "hasil panen berlimpah";
           return `Hore Kak ${username}! Berhasil memanen ${result.harvestedCount} petak hidroponik: ${itemsText}! 🌾✨`;
         }
         case "check_omikuji": {
           return `Ramalan Bintang Kak ${username} hari ini: ${result.tierName}! ${result.blessing} Skor keberuntunganmu ${result.fortuneScore}/100! 🔮✨`;
         }
         case "check_stock_market": {
-          const list = (result.stocks || []).map((s) => `${s.ticker} (${s.price} koin)`).join(", ");
+          const list = (result.stocks || [])
+            .map((s) => `${s.ticker} (${s.price} koin)`)
+            .join(", ");
           return `Ringkasan bursa efek Hoshino hari ini: ${list || "Seluruh sektor stabil"}. Peluang investasi yang menarik! 📈`;
         }
         case "play_music": {
-          if (args.action === "pause") return "Pemutaran musik telah dijeda untuk Kakak. ⏸️";
-          if (args.action === "resume") return "Musik kembali diputar! Selamat menikmati. ▶️";
+          if (args.action === "pause")
+            return "Pemutaran musik telah dijeda untuk Kakak. ⏸️";
+          if (args.action === "resume")
+            return "Musik kembali diputar! Selamat menikmati. ▶️";
           if (args.action === "skip") return "Trek lagu berhasil dilewati! ⏭️";
           if (args.action === "stop") return "Musik telah dihentikan. ⏹️";
-          return `Siap Kak! Lagu "${args.query || 'pilihanmu'}" sedang disiapkan untuk dimainkan di voice channel! 🎵`;
+          return `Siap Kak! Lagu "${args.query || "pilihanmu"}" sedang disiapkan untuk dimainkan di voice channel! 🎵`;
         }
         default:
           return `Aksi ${name} berhasil dijalankan untuk Kak ${username}! ✨`;
       }
     } catch (err) {
-      logger.error(`[VoiceCompanion] Gagal mengeksekusi voice action ${name}: ${err.message}`);
+      logger.error(
+        `[VoiceCompanion] Gagal mengeksekusi voice action ${name}: ${err.message}`,
+      );
       return `Maaf Kak ${username}, Naura mengalami kendala saat menjalankan aksi tersebut.`;
     }
   }
@@ -352,7 +452,14 @@ class VoiceCompanionService {
    * @param {boolean} [params.enableTools=true]
    * @returns {Promise<{replyText: string, audioReady: boolean, toolExecuted?: string, latencyMs: number, interrupted?: boolean}>}
    */
-  async processVoiceTurn({ guildId, userId, username, promptText, client, enableTools = true }) {
+  async processVoiceTurn({
+    guildId,
+    userId,
+    username,
+    promptText,
+    client,
+    enableTools = true,
+  }) {
     const startTime = Date.now();
     const session = this.activeSessions.get(guildId);
     if (session) {
@@ -430,14 +537,17 @@ class VoiceCompanionService {
         interrupted: false,
       };
     } catch (err) {
-      logger.error(`[VoiceCompanion] Gagal memproses voice turn: ${err.message}`);
+      logger.error(
+        `[VoiceCompanion] Gagal memproses voice turn: ${err.message}`,
+      );
       if (session) {
         session.isSpeaking = false;
         session.status = "LISTENING";
         session.playbackController = null;
       }
       return {
-        replyText: "Maaf, suara Naura sempat terputus sebentar. Bisa diulangi lagi?",
+        replyText:
+          "Maaf, suara Naura sempat terputus sebentar. Bisa diulangi lagi?",
         audioReady: false,
         latencyMs: Date.now() - startTime,
       };

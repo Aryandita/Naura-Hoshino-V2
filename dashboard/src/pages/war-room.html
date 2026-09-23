@@ -30,7 +30,11 @@
 
       /* 8x8 Grid Container */
       .grid-8x8-wrapper {
-        background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(7, 12, 23, 0.95) 100%);
+        background: linear-gradient(
+          180deg,
+          rgba(15, 23, 42, 0.85) 0%,
+          rgba(7, 12, 23, 0.95) 100%
+        );
         border: 1px solid var(--border-medium);
         border-radius: var(--r-xl);
         padding: 20px;
@@ -100,7 +104,13 @@
 
       /* World Boss Card */
       .boss-card {
-        background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%), rgba(15, 23, 42, 0.85);
+        background:
+          linear-gradient(
+            135deg,
+            rgba(56, 189, 248, 0.1) 0%,
+            rgba(168, 85, 247, 0.1) 100%
+          ),
+          rgba(15, 23, 42, 0.85);
         border: 1px solid var(--border-cyan);
         border-radius: var(--r-xl);
         padding: 20px;
@@ -139,7 +149,9 @@
         border-radius: var(--r-lg);
         padding: 12px 14px;
         margin-bottom: 10px;
-        transition: transform var(--t-fast), border-color var(--t-fast);
+        transition:
+          transform var(--t-fast),
+          border-color var(--t-fast);
       }
       .tower-item:hover {
         border-color: var(--primary);
@@ -175,13 +187,21 @@
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
           <div class="sidebar-logo-icon">
-            <img src="/assets/core/avatar.png" alt="Naura" onerror="this.src='/assets/core/avatar.png'" />
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="this.src = '/assets/core/avatar.png'"
+            />
           </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
             <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+          <button
+            class="sidebar-close-btn"
+            id="sidebarCloseBtn"
+            aria-label="Tutup menu"
+          >
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
@@ -191,13 +211,27 @@
           <div class="nav-group">
             <div class="nav-group-label">Overview</div>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-gauge-high"></i
+              ></span>
               <span>Dashboard</span>
             </a>
             <a href="/lounge" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--primary);"></i></span>
+              <span class="nav-icon"
+                ><i
+                  class="fa-solid fa-wand-magic-sparkles"
+                  style="color: var(--primary)"
+                ></i
+              ></span>
               <span>3D AI Lounge</span>
-              <span class="nav-badge" style="background:rgba(244,114,182,0.2);color:var(--primary);">3D</span>
+              <span
+                class="nav-badge"
+                style="
+                  background: rgba(244, 114, 182, 0.2);
+                  color: var(--primary);
+                "
+                >3D</span
+              >
             </a>
             <a href="/status" class="nav-item">
               <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
@@ -222,7 +256,9 @@
               <span>Economy</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-network-wired"></i
+              ></span>
               <span>Guild Topology</span>
             </a>
           </div>
@@ -235,7 +271,9 @@
               <span>Music Hub</span>
             </a>
             <a href="/soundboard" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-volume-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-volume-high"></i
+              ></span>
               <span>Soundboard</span>
             </a>
             <a href="/jam" class="nav-item">
@@ -248,16 +286,29 @@
           <div class="nav-group">
             <div class="nav-group-label">Naura Wilds RPG</div>
             <a href="/war-room" class="nav-item active">
-              <span class="nav-icon"><i class="fa-solid fa-chess-rook" style="color:var(--primary);"></i></span>
+              <span class="nav-icon"
+                ><i
+                  class="fa-solid fa-chess-rook"
+                  style="color: var(--primary)"
+                ></i
+              ></span>
               <span>Tactical War Room</span>
-              <span class="nav-badge" style="background:rgba(239,68,68,0.2);color:#ef4444;">8x8</span>
+              <span
+                class="nav-badge"
+                style="background: rgba(239, 68, 68, 0.2); color: #ef4444"
+                >8x8</span
+              >
             </a>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-americas"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-earth-americas"></i
+              ></span>
               <span>World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-map-location-dot"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-map-location-dot"></i
+              ></span>
               <span>Survival Map</span>
             </a>
           </div>
@@ -278,7 +329,11 @@
 
         <div class="sidebar-user-panel">
           <div class="sidebar-user-card">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" />
+            <img
+              src="/assets/core/avatar.png"
+              alt="User"
+              class="sidebar-user-avatar"
+            />
             <div class="sidebar-user-info">
               <div class="sidebar-user-name">Guest Commander</div>
               <div class="sidebar-user-role">Tactical Strategist</div>
@@ -291,59 +346,134 @@
       <div class="main-content">
         <header class="top-header">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Toggle menu">
+            <button
+              class="hamburger-btn"
+              id="hamburgerBtn"
+              aria-label="Toggle menu"
+            >
               <i class="fa-solid fa-bars"></i>
             </button>
             <div>
               <div class="page-title">Survival RPG War Room & Clan Grid</div>
               <div class="breadcrumb">
-                <span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Naura Wilds</span><span class="breadcrumb-sep">/</span><span>War Room</span>
+                <span>Naura OS</span><span class="breadcrumb-sep">/</span
+                ><span>Naura Wilds</span><span class="breadcrumb-sep">/</span
+                ><span>War Room</span>
               </div>
             </div>
           </div>
           <div class="header-right">
-            <span class="badge badge-amber"><i class="fa-solid fa-shield"></i> GRID 8x8 AKTIF</span>
-            <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <span class="badge badge-amber"
+              ><i class="fa-solid fa-shield"></i> GRID 8x8 AKTIF</span
+            >
+            <a href="/" class="btn btn-ghost btn-sm"
+              ><i class="fa-solid fa-arrow-left"></i> Dashboard</a
+            >
           </div>
         </header>
 
         <main class="page-content">
           <!-- World Boss Assault Banner -->
           <div class="boss-card animate-in" id="worldBossCard">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:14px;">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                flex-wrap: wrap;
+                gap: 14px;
+              "
+            >
               <div>
-                <div style="display:flex;align-items:center;gap:10px;">
-                  <span class="badge badge-danger"><i class="fa-solid fa-skull"></i> WORLD BOSS RAID</span>
-                  <span class="badge badge-cyan" id="bossElementBadge">💧 WATER ELEMENT</span>
-                  <span class="badge badge-purple" id="bossPhaseBadge">FASE 2: SHIELD BARRIER</span>
+                <div style="display: flex; align-items: center; gap: 10px">
+                  <span class="badge badge-danger"
+                    ><i class="fa-solid fa-skull"></i> WORLD BOSS RAID</span
+                  >
+                  <span class="badge badge-cyan" id="bossElementBadge"
+                    >💧 WATER ELEMENT</span
+                  >
+                  <span class="badge badge-purple" id="bossPhaseBadge"
+                    >FASE 2: SHIELD BARRIER</span
+                  >
                 </div>
-                <h2 style="font-family:var(--font-heading);font-size:20px;font-weight:700;color:var(--text-primary);margin-top:8px;" id="bossName">
+                <h2
+                  style="
+                    font-family: var(--font-heading);
+                    font-size: 20px;
+                    font-weight: 700;
+                    color: var(--text-primary);
+                    margin-top: 8px;
+                  "
+                  id="bossName"
+                >
                   Abyssal Leviathan Lord
                 </h2>
-                <p style="font-size:12px;color:var(--text-muted);margin-top:2px;" id="bossTitle">
-                  Penguasa Samudra Kehampaan · Serangan Terbuka untuk Seluruh Petualang
+                <p
+                  style="
+                    font-size: 12px;
+                    color: var(--text-muted);
+                    margin-top: 2px;
+                  "
+                  id="bossTitle"
+                >
+                  Penguasa Samudra Kehampaan · Serangan Terbuka untuk Seluruh
+                  Petualang
                 </p>
               </div>
 
-              <div style="text-align:right;">
-                <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:#ef4444;" id="bossTimer">
+              <div style="text-align: right">
+                <div
+                  style="
+                    font-family: var(--font-mono);
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: #ef4444;
+                  "
+                  id="bossTimer"
+                >
                   ⏳ 42 Menit Tersisa
                 </div>
-                <div style="font-size:11px;color:var(--text-muted);">
+                <div style="font-size: 11px; color: var(--text-muted)">
                   38 Petualang Sedang Bertarung
                 </div>
               </div>
             </div>
 
             <!-- Boss HP & Shield Bar -->
-            <div style="margin-top:14px;">
-              <div style="display:flex;justify-content:space-between;font-size:11px;font-family:var(--font-mono);color:var(--text-secondary);">
-                <span>Total HP: <strong id="bossHpText" style="color:#f472b6;">642.000 / 1.000.000 (64.2%)</strong></span>
-                <span>Shield: <strong id="bossShieldText" style="color:#38bdf8;">85.000 / 250.000</strong></span>
+            <div style="margin-top: 14px">
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  font-size: 11px;
+                  font-family: var(--font-mono);
+                  color: var(--text-secondary);
+                "
+              >
+                <span
+                  >Total HP:
+                  <strong id="bossHpText" style="color: #f472b6"
+                    >642.000 / 1.000.000 (64.2%)</strong
+                  ></span
+                >
+                <span
+                  >Shield:
+                  <strong id="bossShieldText" style="color: #38bdf8"
+                    >85.000 / 250.000</strong
+                  ></span
+                >
               </div>
               <div class="boss-bar-wrap">
-                <div class="boss-bar-fill" id="bossBarFill" style="width:64.2%;"></div>
-                <div class="boss-shield-fill" id="bossShieldFill" style="width:34%;"></div>
+                <div
+                  class="boss-bar-fill"
+                  id="bossBarFill"
+                  style="width: 64.2%"
+                ></div>
+                <div
+                  class="boss-shield-fill"
+                  id="bossShieldFill"
+                  style="width: 34%"
+                ></div>
               </div>
             </div>
           </div>
@@ -352,21 +482,63 @@
             <!-- Left: 8x8 Territory Land Grid -->
             <div>
               <div class="grid-8x8-wrapper animate-in delay-1">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                  "
+                >
                   <div>
-                    <h3 style="font-family:var(--font-heading);font-size:16px;font-weight:700;color:var(--text-primary);">
+                    <h3
+                      style="
+                        font-family: var(--font-heading);
+                        font-size: 16px;
+                        font-weight: 700;
+                        color: var(--text-primary);
+                      "
+                    >
                       Matriks Wilayah Kekuasaan Klan (8x8)
                     </h3>
-                    <p style="font-size:12px;color:var(--text-muted);">
-                      Klik kapling koordinat (1..8, 1..8) untuk melihat kepemilikan klan dan benteng pertahanan.
+                    <p style="font-size: 12px; color: var(--text-muted)">
+                      Klik kapling koordinat (1..8, 1..8) untuk melihat
+                      kepemilikan klan dan benteng pertahanan.
                     </p>
                   </div>
-                  <div style="display:flex;gap:10px;font-size:11px;color:var(--text-muted);align-items:center;">
-                    <span><i class="fa-solid fa-square" style="color:#38bdf8;"></i> Cyber</span>
-                    <span><i class="fa-solid fa-square" style="color:#f472b6;"></i> Hoshino</span>
-                    <span><i class="fa-solid fa-square" style="color:#a855f7;"></i> Abyssal</span>
-                    <span><i class="fa-solid fa-square" style="color:#34d399;"></i> Emerald</span>
-                    <span><i class="fa-solid fa-square" style="color:rgba(255,255,255,0.2);"></i> Bebas</span>
+                  <div
+                    style="
+                      display: flex;
+                      gap: 10px;
+                      font-size: 11px;
+                      color: var(--text-muted);
+                      align-items: center;
+                    "
+                  >
+                    <span
+                      ><i class="fa-solid fa-square" style="color: #38bdf8"></i>
+                      Cyber</span
+                    >
+                    <span
+                      ><i class="fa-solid fa-square" style="color: #f472b6"></i>
+                      Hoshino</span
+                    >
+                    <span
+                      ><i class="fa-solid fa-square" style="color: #a855f7"></i>
+                      Abyssal</span
+                    >
+                    <span
+                      ><i class="fa-solid fa-square" style="color: #34d399"></i>
+                      Emerald</span
+                    >
+                    <span
+                      ><i
+                        class="fa-solid fa-square"
+                        style="color: rgba(255, 255, 255, 0.2)"
+                      ></i>
+                      Bebas</span
+                    >
                   </div>
                 </div>
 
@@ -378,35 +550,128 @@
 
               <!-- Territory Intel Drawer (Card Detail) -->
               <div class="intel-drawer animate-in delay-2" id="intelDrawer">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                  "
+                >
                   <div>
-                    <div style="display:flex;align-items:center;gap:8px;">
-                      <h4 style="font-family:var(--font-heading);font-size:16px;font-weight:700;color:var(--text-primary);" id="intelPlotTitle">
+                    <div style="display: flex; align-items: center; gap: 8px">
+                      <h4
+                        style="
+                          font-family: var(--font-heading);
+                          font-size: 16px;
+                          font-weight: 700;
+                          color: var(--text-primary);
+                        "
+                        id="intelPlotTitle"
+                      >
                         Kapling (4, 4) - Sektor Reruntuhan Kuno
                       </h4>
-                      <span class="badge badge-pink" id="intelClanBadge">STAR · Hoshino Vanguard</span>
+                      <span class="badge badge-pink" id="intelClanBadge"
+                        >STAR · Hoshino Vanguard</span
+                      >
                     </div>
-                    <div style="font-size:12px;color:var(--text-muted);margin-top:2px;" id="intelPlotDesc">
-                      Dikuasai sejak 5 hari lalu · Struktur: Cyber Citadel (Lv. 3)
+                    <div
+                      style="
+                        font-size: 12px;
+                        color: var(--text-muted);
+                        margin-top: 2px;
+                      "
+                      id="intelPlotDesc"
+                    >
+                      Dikuasai sejak 5 hari lalu · Struktur: Cyber Citadel (Lv.
+                      3)
                     </div>
                   </div>
-                  <button type="button" class="btn btn-primary btn-sm" id="btnClaimOrUpgrade">
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    id="btnClaimOrUpgrade"
+                  >
                     <i class="fa-solid fa-hammer"></i> Perkuat Pertahanan
                   </button>
                 </div>
 
-                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;margin-top:14px;" id="intelBuffsRow">
-                  <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:10px;">
-                    <div style="font-size:11px;color:var(--text-muted);">Daya Pertahanan</div>
-                    <div style="font-family:var(--font-mono);font-size:14px;font-weight:700;color:#38bdf8;" id="intelDefVal">1.420 DEF</div>
+                <div
+                  style="
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+                    gap: 12px;
+                    margin-top: 14px;
+                  "
+                  id="intelBuffsRow"
+                >
+                  <div
+                    style="
+                      background: rgba(255, 255, 255, 0.03);
+                      border: 1px solid var(--border-subtle);
+                      border-radius: var(--r-md);
+                      padding: 10px;
+                    "
+                  >
+                    <div style="font-size: 11px; color: var(--text-muted)">
+                      Daya Pertahanan
+                    </div>
+                    <div
+                      style="
+                        font-family: var(--font-mono);
+                        font-size: 14px;
+                        font-weight: 700;
+                        color: #38bdf8;
+                      "
+                      id="intelDefVal"
+                    >
+                      1.420 DEF
+                    </div>
                   </div>
-                  <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:10px;">
-                    <div style="font-size:11px;color:var(--text-muted);">Bonus Produksi</div>
-                    <div style="font-family:var(--font-heading);font-size:13px;font-weight:600;color:#34d399;" id="intelBuffVal">+25% EXP & Sanctuary Shield</div>
+                  <div
+                    style="
+                      background: rgba(255, 255, 255, 0.03);
+                      border: 1px solid var(--border-subtle);
+                      border-radius: var(--r-md);
+                      padding: 10px;
+                    "
+                  >
+                    <div style="font-size: 11px; color: var(--text-muted)">
+                      Bonus Produksi
+                    </div>
+                    <div
+                      style="
+                        font-family: var(--font-heading);
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: #34d399;
+                      "
+                      id="intelBuffVal"
+                    >
+                      +25% EXP & Sanctuary Shield
+                    </div>
                   </div>
-                  <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:10px;">
-                    <div style="font-size:11px;color:var(--text-muted);">Biaya Klaim / Upgrade</div>
-                    <div style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:#fbbf24;" id="intelCostVal">8.000 NSF</div>
+                  <div
+                    style="
+                      background: rgba(255, 255, 255, 0.03);
+                      border: 1px solid var(--border-subtle);
+                      border-radius: var(--r-md);
+                      padding: 10px;
+                    "
+                  >
+                    <div style="font-size: 11px; color: var(--text-muted)">
+                      Biaya Klaim / Upgrade
+                    </div>
+                    <div
+                      style="
+                        font-family: var(--font-mono);
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: #fbbf24;
+                      "
+                      id="intelCostVal"
+                    >
+                      8.000 NSF
+                    </div>
                   </div>
                 </div>
               </div>
@@ -415,15 +680,43 @@
             <!-- Right: Relic Towers & Combat Feed -->
             <div>
               <!-- 4 Ancient Relic Towers Card -->
-              <div class="card card-p-md animate-in delay-1" style="margin-bottom:20px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                  <h3 style="font-family:var(--font-heading);font-size:15px;font-weight:700;color:var(--text-primary);">
-                    <i class="fa-solid fa-monument" style="color:var(--primary);margin-right:6px;"></i> Menara Relik Kuno
+              <div
+                class="card card-p-md animate-in delay-1"
+                style="margin-bottom: 20px"
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 12px;
+                  "
+                >
+                  <h3
+                    style="
+                      font-family: var(--font-heading);
+                      font-size: 15px;
+                      font-weight: 700;
+                      color: var(--text-primary);
+                    "
+                  >
+                    <i
+                      class="fa-solid fa-monument"
+                      style="color: var(--primary); margin-right: 6px"
+                    ></i>
+                    Menara Relik Kuno
                   </h3>
                   <span class="badge badge-purple">WAR ZONE</span>
                 </div>
-                <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">
-                  Aliansi yang mengontrol menara relik menerima dividen mata uang mingguan dan buff pasif.
+                <div
+                  style="
+                    font-size: 12px;
+                    color: var(--text-muted);
+                    margin-bottom: 14px;
+                  "
+                >
+                  Aliansi yang mengontrol menara relik menerima dividen mata
+                  uang mingguan dan buff pasif.
                 </div>
 
                 <div id="relicTowersList">
@@ -433,13 +726,34 @@
 
               <!-- Real-time Combat & Claims Log -->
               <div class="card card-p-md animate-in delay-2">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                  <h3 style="font-family:var(--font-heading);font-size:15px;font-weight:700;color:var(--text-primary);">
-                    <i class="fa-solid fa-shield-halved" style="color:#ef4444;margin-right:6px;"></i> Intel Radar & Log
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 12px;
+                  "
+                >
+                  <h3
+                    style="
+                      font-family: var(--font-heading);
+                      font-size: 15px;
+                      font-weight: 700;
+                      color: var(--text-primary);
+                    "
+                  >
+                    <i
+                      class="fa-solid fa-shield-halved"
+                      style="color: #ef4444; margin-right: 6px"
+                    ></i>
+                    Intel Radar & Log
                   </h3>
                   <span class="badge badge-success">LIVE FEED</span>
                 </div>
-                <div id="combatLogsList" style="display:flex;flex-direction:column;gap:10px;">
+                <div
+                  id="combatLogsList"
+                  style="display: flex; flex-direction: column; gap: 10px"
+                >
                   <!-- Populated by JS -->
                 </div>
               </div>
@@ -457,50 +771,50 @@
 
       async function loadTerritoryGrid() {
         try {
-          const res = await fetch('/api/survival/territory/grid');
+          const res = await fetch("/api/survival/territory/grid");
           const data = await res.json();
           if (data && data.grid) {
             currentPlots = data.grid;
             renderGrid(data.grid);
           }
         } catch (e) {
-          console.warn('[WarRoom] Gagal memuat grid:', e);
+          console.warn("[WarRoom] Gagal memuat grid:", e);
         }
       }
 
       function renderGrid(grid) {
-        const container = document.getElementById('plotsGrid');
+        const container = document.getElementById("plotsGrid");
         if (!container) return;
-        container.innerHTML = '';
+        container.innerHTML = "";
 
-        grid.forEach(row => {
-          row.forEach(plot => {
-            const el = document.createElement('div');
-            el.className = `grid-plot ${plot.isClaimed ? 'claimed' : ''}`;
+        grid.forEach((row) => {
+          row.forEach((plot) => {
+            const el = document.createElement("div");
+            el.className = `grid-plot ${plot.isClaimed ? "claimed" : ""}`;
             if (plot.isClaimed && plot.color) {
               el.style.borderColor = plot.color;
               el.style.boxShadow = `0 0 8px ${plot.color}33`;
             }
 
             const iconMap = {
-              Plains: 'fa-wheat-awn',
-              Forest: 'fa-tree',
-              Mountain: 'fa-mountain',
-              'Crystal Mine': 'fa-gem',
-              Ruins: 'fa-archway',
-              'Lake Coast': 'fa-water',
+              Plains: "fa-wheat-awn",
+              Forest: "fa-tree",
+              Mountain: "fa-mountain",
+              "Crystal Mine": "fa-gem",
+              Ruins: "fa-archway",
+              "Lake Coast": "fa-water",
             };
-            const icon = iconMap[plot.terrain] || 'fa-map-pin';
+            const icon = iconMap[plot.terrain] || "fa-map-pin";
 
             el.innerHTML = `
               <span class="plot-coord">${plot.x},${plot.y}</span>
-              <i class="fa-solid ${icon} plot-icon" style="color:${plot.isClaimed ? plot.color : 'var(--text-muted)'};"></i>
-              <span class="plot-tier" style="color:${plot.isClaimed ? plot.color : 'var(--text-muted)'};">
-                ${plot.isClaimed ? (plot.structure?.tier ? 'T' + plot.structure.tier : 'Lv1') : ''}
+              <i class="fa-solid ${icon} plot-icon" style="color:${plot.isClaimed ? plot.color : "var(--text-muted)"};"></i>
+              <span class="plot-tier" style="color:${plot.isClaimed ? plot.color : "var(--text-muted)"};">
+                ${plot.isClaimed ? (plot.structure?.tier ? "T" + plot.structure.tier : "Lv1") : ""}
               </span>
             `;
 
-            el.addEventListener('click', () => selectPlot(plot, el));
+            el.addEventListener("click", () => selectPlot(plot, el));
             container.appendChild(el);
           });
         });
@@ -512,67 +826,84 @@
 
       function selectPlot(plot, el) {
         selectedPlot = plot;
-        document.querySelectorAll('.grid-plot').forEach(p => p.classList.remove('selected'));
-        if (el) el.classList.add('selected');
+        document
+          .querySelectorAll(".grid-plot")
+          .forEach((p) => p.classList.remove("selected"));
+        if (el) el.classList.add("selected");
 
-        const title = document.getElementById('intelPlotTitle');
-        const desc = document.getElementById('intelPlotDesc');
-        const badge = document.getElementById('intelClanBadge');
-        const def = document.getElementById('intelDefVal');
-        const buff = document.getElementById('intelBuffVal');
-        const cost = document.getElementById('intelCostVal');
-        const btn = document.getElementById('btnClaimOrUpgrade');
+        const title = document.getElementById("intelPlotTitle");
+        const desc = document.getElementById("intelPlotDesc");
+        const badge = document.getElementById("intelClanBadge");
+        const def = document.getElementById("intelDefVal");
+        const buff = document.getElementById("intelBuffVal");
+        const cost = document.getElementById("intelCostVal");
+        const btn = document.getElementById("btnClaimOrUpgrade");
 
-        if (title) title.textContent = `Kapling (${plot.x}, ${plot.y}) - Sektor ${plot.terrain}`;
+        if (title)
+          title.textContent = `Kapling (${plot.x}, ${plot.y}) - Sektor ${plot.terrain}`;
         if (plot.isClaimed) {
-          if (desc) desc.textContent = `Dikuasai klan ${plot.clanName} · Struktur: ${plot.structure?.name || 'Frontier Outpost'}`;
+          if (desc)
+            desc.textContent = `Dikuasai klan ${plot.clanName} · Struktur: ${plot.structure?.name || "Frontier Outpost"}`;
           if (badge) {
-            badge.style.display = 'inline-block';
-            badge.textContent = `${plot.clanTag || 'CLAN'} · ${plot.clanName}`;
-            badge.style.color = plot.color || 'var(--primary)';
-            badge.style.borderColor = plot.color || 'var(--primary)';
+            badge.style.display = "inline-block";
+            badge.textContent = `${plot.clanTag || "CLAN"} · ${plot.clanName}`;
+            badge.style.color = plot.color || "var(--primary)";
+            badge.style.borderColor = plot.color || "var(--primary)";
           }
-          if (def) def.textContent = (plot.defensePower || 500) + ' DEF';
-          if (buff) buff.textContent = plot.buffs ? plot.buffs.join(' · ') : '+10% Resource Yield';
-          if (cost) cost.textContent = '3.500 NSF (Upgrade)';
-          if (btn) btn.innerHTML = '<i class="fa-solid fa-arrow-up"></i> Upgrade Struktur';
+          if (def) def.textContent = (plot.defensePower || 500) + " DEF";
+          if (buff)
+            buff.textContent = plot.buffs
+              ? plot.buffs.join(" · ")
+              : "+10% Resource Yield";
+          if (cost) cost.textContent = "3.500 NSF (Upgrade)";
+          if (btn)
+            btn.innerHTML =
+              '<i class="fa-solid fa-arrow-up"></i> Upgrade Struktur';
         } else {
-          if (desc) desc.textContent = `Kapling bebas di medan ${plot.terrain}. Siap diklaim oleh klanmu!`;
-          if (badge) badge.style.display = 'none';
-          if (def) def.textContent = '0 DEF (Netral)';
-          if (buff) buff.textContent = plot.potentialBuff || '+10% Resource Yield';
-          if (cost) cost.textContent = '1.000 NSF (Klaim Baru)';
-          if (btn) btn.innerHTML = '<i class="fa-solid fa-flag"></i> Klaim Kapling';
+          if (desc)
+            desc.textContent = `Kapling bebas di medan ${plot.terrain}. Siap diklaim oleh klanmu!`;
+          if (badge) badge.style.display = "none";
+          if (def) def.textContent = "0 DEF (Netral)";
+          if (buff)
+            buff.textContent = plot.potentialBuff || "+10% Resource Yield";
+          if (cost) cost.textContent = "1.000 NSF (Klaim Baru)";
+          if (btn)
+            btn.innerHTML = '<i class="fa-solid fa-flag"></i> Klaim Kapling';
         }
       }
 
       async function loadRelicTowers() {
         try {
-          const res = await fetch('/api/survival/territory/towers');
+          const res = await fetch("/api/survival/territory/towers");
           const data = await res.json();
           if (data && data.towers) {
             renderTowers(data.towers);
           }
         } catch (e) {
-          console.warn('[WarRoom] Gagal memuat menara relik:', e);
+          console.warn("[WarRoom] Gagal memuat menara relik:", e);
         }
       }
 
       function renderTowers(towers) {
-        const list = document.getElementById('relicTowersList');
+        const list = document.getElementById("relicTowersList");
         if (!list) return;
-        list.innerHTML = '';
+        list.innerHTML = "";
 
-        towers.forEach(t => {
+        towers.forEach((t) => {
           const ctrl = t.controlPercent !== undefined ? t.controlPercent : 50;
-          const color = ctrl > 70 ? '#34d399' : (ctrl > 40 ? '#fbbf24' : '#ef4444');
-          const region = t.region || t.zone || 'Sukamaju Highlands';
-          const buff = t.buffDescription || t.buff || '+20% Territory Bonus';
-          const dividends = t.weeklyDividends || '15.000 NSF & 50 Kupon';
-          const fedName = t.controllerFedName || (t.controllerFedTag ? `Aliansi [${t.controllerFedTag}]` : 'Diperebutkan (Netral)');
+          const color =
+            ctrl > 70 ? "#34d399" : ctrl > 40 ? "#fbbf24" : "#ef4444";
+          const region = t.region || t.zone || "Sukamaju Highlands";
+          const buff = t.buffDescription || t.buff || "+20% Territory Bonus";
+          const dividends = t.weeklyDividends || "15.000 NSF & 50 Kupon";
+          const fedName =
+            t.controllerFedName ||
+            (t.controllerFedTag
+              ? `Aliansi [${t.controllerFedTag}]`
+              : "Diperebutkan (Netral)");
 
-          const item = document.createElement('div');
-          item.className = 'tower-item';
+          const item = document.createElement("div");
+          item.className = "tower-item";
           item.innerHTML = `
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <div>
@@ -595,46 +926,63 @@
 
       async function loadWorldBoss() {
         try {
-          const res = await fetch('/api/survival/world-boss/active');
+          const res = await fetch("/api/survival/world-boss/active");
           const data = await res.json();
           if (data && data.boss) {
             const b = data.boss;
-            const name = document.getElementById('bossName');
-            const title = document.getElementById('bossTitle');
-            const hpText = document.getElementById('bossHpText');
-            const shieldText = document.getElementById('bossShieldText');
-            const bar = document.getElementById('bossBarFill');
-            const shield = document.getElementById('bossShieldFill');
+            const name = document.getElementById("bossName");
+            const title = document.getElementById("bossTitle");
+            const hpText = document.getElementById("bossHpText");
+            const shieldText = document.getElementById("bossShieldText");
+            const bar = document.getElementById("bossBarFill");
+            const shield = document.getElementById("bossShieldFill");
             const hp = b.currentHp || 0;
             const maxHp = b.maxHp || 1000000;
-            const hpPct = b.hpPercent !== undefined ? b.hpPercent : Math.max(0, Math.min(100, Math.round((hp / maxHp) * 100)));
-            const maxShield = b.maxShieldHp || (maxHp ? Math.floor(maxHp * 0.25) : 1);
+            const hpPct =
+              b.hpPercent !== undefined
+                ? b.hpPercent
+                : Math.max(0, Math.min(100, Math.round((hp / maxHp) * 100)));
+            const maxShield =
+              b.maxShieldHp || (maxHp ? Math.floor(maxHp * 0.25) : 1);
             const shieldHp = b.shieldHp || 0;
-            const shieldPct = b.shieldPercent !== undefined ? b.shieldPercent : Math.max(0, Math.min(100, Math.round((shieldHp / maxShield) * 100)));
+            const shieldPct =
+              b.shieldPercent !== undefined
+                ? b.shieldPercent
+                : Math.max(
+                    0,
+                    Math.min(100, Math.round((shieldHp / maxShield) * 100)),
+                  );
 
-            if (name) name.textContent = b.name || 'Abyssal Leviathan Lord';
-            if (title) title.textContent = (b.title || 'Penguasa Samudra Kehampaan') + ' · Fase ' + (b.phase || 1);
-            if (hpText) hpText.textContent = `${hp.toLocaleString('id-ID')} / ${maxHp.toLocaleString('id-ID')} (${hpPct}%)`;
-            if (shieldText) shieldText.textContent = `${shieldHp.toLocaleString('id-ID')} / ${maxShield.toLocaleString('id-ID')}`;
-            if (bar) bar.style.width = hpPct + '%';
-            if (shield) shield.style.width = shieldPct + '%';
+            if (name) name.textContent = b.name || "Abyssal Leviathan Lord";
+            if (title)
+              title.textContent =
+                (b.title || "Penguasa Samudra Kehampaan") +
+                " · Fase " +
+                (b.phase || 1);
+            if (hpText)
+              hpText.textContent = `${hp.toLocaleString("id-ID")} / ${maxHp.toLocaleString("id-ID")} (${hpPct}%)`;
+            if (shieldText)
+              shieldText.textContent = `${shieldHp.toLocaleString("id-ID")} / ${maxShield.toLocaleString("id-ID")}`;
+            if (bar) bar.style.width = hpPct + "%";
+            if (shield) shield.style.width = shieldPct + "%";
           }
         } catch (e) {
-          console.warn('[WarRoom] Gagal memuat world boss:', e);
+          console.warn("[WarRoom] Gagal memuat world boss:", e);
         }
       }
 
       async function loadCombatLogs() {
         try {
-          const res = await fetch('/api/survival/territory/logs');
+          const res = await fetch("/api/survival/territory/logs");
           const data = await res.json();
           if (data && data.logs) {
-            const container = document.getElementById('combatLogsList');
+            const container = document.getElementById("combatLogsList");
             if (!container) return;
-            container.innerHTML = '';
-            data.logs.forEach(log => {
-              const div = document.createElement('div');
-              div.style.cssText = 'background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:8px 12px;display:flex;justify-content:space-between;gap:8px;font-size:11px;';
+            container.innerHTML = "";
+            data.logs.forEach((log) => {
+              const div = document.createElement("div");
+              div.style.cssText =
+                "background:rgba(255,255,255,0.02);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:8px 12px;display:flex;justify-content:space-between;gap:8px;font-size:11px;";
               div.innerHTML = `
                 <span style="color:var(--text-primary);">${log.text}</span>
                 <span style="color:var(--text-muted);white-space:nowrap;font-family:var(--font-mono);">${log.time}</span>
@@ -643,38 +991,53 @@
             });
           }
         } catch (e) {
-          console.warn('[WarRoom] Gagal memuat log:', e);
+          console.warn("[WarRoom] Gagal memuat log:", e);
         }
       }
 
-      document.getElementById('btnClaimOrUpgrade')?.addEventListener('click', async () => {
-        if (!selectedPlot) return;
-        if (!selectedPlot.isClaimed) {
-          try {
-            const res = await fetch('/api/survival/territory/claim', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ x: selectedPlot.x, y: selectedPlot.y, clanName: 'Sensei Vanguard', clanTag: 'SENSEI' }),
-            });
-            const d = await res.json();
-            if (d && d.success) {
-              if (typeof window.showToast === 'function') window.showToast(d.message, 'success');
-              await loadTerritoryGrid();
-              await loadCombatLogs();
-            }
-          } catch (_) {}
-        } else {
-          if (typeof window.showToast === 'function') window.showToast('Pertahanan kapling berhasil diperkuat (+250 DEF)!', 'success');
-        }
-      });
+      document
+        .getElementById("btnClaimOrUpgrade")
+        ?.addEventListener("click", async () => {
+          if (!selectedPlot) return;
+          if (!selectedPlot.isClaimed) {
+            try {
+              const res = await fetch("/api/survival/territory/claim", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  x: selectedPlot.x,
+                  y: selectedPlot.y,
+                  clanName: "Sensei Vanguard",
+                  clanTag: "SENSEI",
+                }),
+              });
+              const d = await res.json();
+              if (d && d.success) {
+                if (typeof window.showToast === "function")
+                  window.showToast(d.message, "success");
+                await loadTerritoryGrid();
+                await loadCombatLogs();
+              }
+            } catch (_) {}
+          } else {
+            if (typeof window.showToast === "function")
+              window.showToast(
+                "Pertahanan kapling berhasil diperkuat (+250 DEF)!",
+                "success",
+              );
+          }
+        });
 
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener("DOMContentLoaded", () => {
         loadTerritoryGrid();
         loadRelicTowers();
         loadWorldBoss();
         loadCombatLogs();
       });
-      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      if (
+        document.readyState === "complete" ||
+        document.readyState === "interactive"
+      ) {
         loadTerritoryGrid();
         loadRelicTowers();
         loadWorldBoss();
@@ -684,11 +1047,26 @@
 
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"
+          ><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span
+          ><span class="mn-label">Dashboard</span></a
+        >
+        <a href="/world" class="mobile-nav-item" data-group="map"
+          ><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span
+          ><span class="mn-label">Map</span></a
+        >
+        <a href="/automations" class="mobile-nav-item" data-group="config"
+          ><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span
+          ><span class="mn-label">Config</span></a
+        >
+        <a href="/music" class="mobile-nav-item" data-group="system"
+          ><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span
+          ><span class="mn-label">System</span></a
+        >
+        <a href="/settings" class="mobile-nav-item" data-group="settings"
+          ><span class="mn-icon"><i class="fa-solid fa-gears"></i></span
+          ><span class="mn-label">Settings</span></a
+        >
       </div>
     </nav>
 

@@ -31,10 +31,16 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at center, rgba(255, 182, 193, 0.12) 0%, rgba(11, 12, 16, 0.96) 75%);
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 182, 193, 0.12) 0%,
+    rgba(11, 12, 16, 0.96) 75%
+  );
   gap: 12px;
   z-index: 10;
-  transition: opacity 0.4s ease, visibility 0.4s ease;
+  transition:
+    opacity 0.4s ease,
+    visibility 0.4s ease;
 }
 
 .naura3d-loading-ring {
@@ -49,7 +55,9 @@
 }
 
 @keyframes naura-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .naura3d-error {
@@ -189,4 +197,3 @@
   color: #fff;
   box-shadow: 0 0 10px rgba(244, 114, 182, 0.35);
 }
-

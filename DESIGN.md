@@ -253,7 +253,7 @@ components:
 > **Pentalogi Dokumentasi:** [`README.md`](README.md) (Portal) · [`PRD.md`](PRD.md) (Produk) · [`DESIGN.md`](DESIGN.md) (Desain) · [`RULES.md`](RULES.md) (Teknis) · [`AGENTS.md`](AGENTS.md) (SOP Agen AI)
 
 > [!NOTE]
-> Dokumen ini adalah **sumber kebenaran visual (*Look & Feel*)** ekosistem Naura Hoshino V2. Kebutuhan fungsional dan sasaran persona produk diatur di [`PRD.md`](PRD.md), aturan tata kelola rekayasa dan pembentukan builder diatur di [`RULES.md`](RULES.md), dan panduan navigasi AI berada di [`AGENTS.md`](AGENTS.md).
+> Dokumen ini adalah **sumber kebenaran visual (_Look & Feel_)** ekosistem Naura Hoshino V2. Kebutuhan fungsional dan sasaran persona produk diatur di [`PRD.md`](PRD.md), aturan tata kelola rekayasa dan pembentukan builder diatur di [`RULES.md`](RULES.md), dan panduan navigasi AI berada di [`AGENTS.md`](AGENTS.md).
 
 ---
 
@@ -414,7 +414,7 @@ Dashboard (`dashboard/`, frontend Vite MPA terintegrasi bersama server Express) 
 | Berkas                        | Peran                                                                                                                      |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `dashboard/src/css/input.css` | Satu-satunya entry CSS. Urutan import wajib: Google Fonts -> `tailwindcss` -> Font Awesome -> `style.css` -> `tokens.css`. |
-| `src/css/style.css`           | Gaya dasar glassmorphism warisan.                                                                                         |
+| `src/css/style.css`           | Gaya dasar glassmorphism warisan.                                                                                          |
 | `src/css/tokens.css`          | Override warna agar selaras `src/config/ui.js`; muat SETELAH style.css.                                                    |
 
 - **Tailwind v4 via CLI, bukan plugin Vite.** Plugin `@tailwindcss/vite` bertabrakan dengan `<style>` inline di halaman MPA ini; build memakai `@tailwindcss/cli` (`npm run build:css`) menghasilkan `public/vendor/tailwind-built.css`.
@@ -706,6 +706,7 @@ Semua komponen di bawah tetap tunduk pada struktur 5-lapisan Components V2 dan b
 ### 5. Integrasi Filter Anti-Slop (Pencegah AI Slop pada UI & Desain)
 
 Seluruh implementasi antarmuka pada Web Dashboard, Discord Components V2, dan visual Canvas wajib disaring melalui aturan **Anti-Slop** ([`antislop.md`](antislop.md) dan [`RULES.md`](RULES.md#143-standar-filter-anti-slop-web-dashboard--antarmuka-ui)):
+
 - **Dosis Glassmorphism Tertakar (R-10)**: Efek blur/glassmorphism dibatasi maksimal 1-2 elemen struktural per tampilan (stage kanvas 3D `#naura3d-canvas-wrapper` dan top navigation bar). Kartu data lainnya menggunakan permukaan solid matte (`var(--bg-layer)`) dengan hairline border 1px presisi.
 - **Bebas Partikel Tak Berfungsi (R-07)**: Dilarang menempatkan pulsating dots, blurred radial orbs, atau partikel mengambang tanpa fungsi interaktif atau representasi data nyata.
 - **Skala Radius Terarah (R-11)**: Kartu metrik menggunakan sudut tegas 8-12px (`var(--r-md)` / `var(--r-lg)`), tombol aksi proporsional, dan badge status ringkas (tidak menyeragamkan seluruh elemen menjadi bentuk pil/kapsul).
@@ -717,13 +718,11 @@ Seluruh implementasi antarmuka pada Web Dashboard, Discord Components V2, dan vi
 
 Sistem desain ini bekerja beriringan dengan seluruh pilar dokumentasi lainnya:
 
-| Dokumen | Sumber Kebenaran (*Source of Truth*) | Pertanyaan Utama yang Dijawab |
-| :--- | :--- | :--- |
-| [`README.md`](README.md) | **Portal & Instalasi Publik** | "Bagaimana cara memasang, menjalankan, dan memahami arsitektur dasar bot?" |
-| [`PRD.md`](PRD.md) | **Kebutuhan Produk & Personas** | "Fitur apa yang sedang dibangun, mengapa dibuat, untuk siapa, dan prioritasnya apa?" |
-| [`DESIGN.md`](DESIGN.md) | **Bahasa Desain & UI Tokens** | "Bagaimana aturan warna, glassmorphism, 3D avatar viewer, dan Components V2?" |
-| [`RULES.md`](RULES.md) | **Konstitusi & Standar Teknis** | "Bagaimana aturan hukum kode, batas transaksi atomik DB, keamanan, dan anti-crash?" |
-| [`AGENTS.md`](AGENTS.md) | **Navigasi & SOP AI Agent** | "Di mana letak file-nya, bagaimana alur data interaksi ke database, dan apa checklist QA?" |
-| [`TODO.md`](TODO.md) | **Roadmap & Sprint Backlog** | "Pekerjaan apa yang sedang berlangsung dan apa prioritas berikutnya?" |
-
-
+| Dokumen                  | Sumber Kebenaran (_Source of Truth_) | Pertanyaan Utama yang Dijawab                                                              |
+| :----------------------- | :----------------------------------- | :----------------------------------------------------------------------------------------- |
+| [`README.md`](README.md) | **Portal & Instalasi Publik**        | "Bagaimana cara memasang, menjalankan, dan memahami arsitektur dasar bot?"                 |
+| [`PRD.md`](PRD.md)       | **Kebutuhan Produk & Personas**      | "Fitur apa yang sedang dibangun, mengapa dibuat, untuk siapa, dan prioritasnya apa?"       |
+| [`DESIGN.md`](DESIGN.md) | **Bahasa Desain & UI Tokens**        | "Bagaimana aturan warna, glassmorphism, 3D avatar viewer, dan Components V2?"              |
+| [`RULES.md`](RULES.md)   | **Konstitusi & Standar Teknis**      | "Bagaimana aturan hukum kode, batas transaksi atomik DB, keamanan, dan anti-crash?"        |
+| [`AGENTS.md`](AGENTS.md) | **Navigasi & SOP AI Agent**          | "Di mana letak file-nya, bagaimana alur data interaksi ke database, dan apa checklist QA?" |
+| [`TODO.md`](TODO.md)     | **Roadmap & Sprint Backlog**         | "Pekerjaan apa yang sedang berlangsung dan apa prioritas berikutnya?"                      |

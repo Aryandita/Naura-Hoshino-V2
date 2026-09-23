@@ -43,7 +43,13 @@ module.exports = {
 
       const rows = topSurvivors.map((s, idx) => {
         const medal =
-          idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `**#${idx + 1}**`;
+          idx === 0
+            ? "🥇"
+            : idx === 1
+              ? "🥈"
+              : idx === 2
+                ? "🥉"
+                : `**#${idx + 1}**`;
         return `${medal} **${s.username}** • \`${s.totalDamage.toLocaleString("id-ID")} Damage\``;
       });
 

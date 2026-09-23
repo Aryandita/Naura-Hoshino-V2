@@ -1,11 +1,10 @@
 "use strict";
 
-const {
-  ActionRowBuilder,
-  StringSelectMenuBuilder,
-} = require("discord.js");
+const { ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
 
-const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+} = require("../../../src/utils/NauraContainerBuilder");
 const ui = require("../../../src/config/ui");
 
 const CHAPTERS = {
@@ -132,7 +131,8 @@ module.exports = {
       iconURL: user.displayAvatarURL(),
       description: CHAPTERS.intro.content,
       buttonsRow: row,
-      footerText: "Pilih menu dropdown di atas untuk membaca bab panduan lainnya.",
+      footerText:
+        "Pilih menu dropdown di atas untuk membaca bab panduan lainnya.",
     });
 
     const reply = await interaction.editReply(payload);
@@ -155,7 +155,8 @@ module.exports = {
           iconURL: user.displayAvatarURL(),
           description: chapter.content,
           buttonsRow: row,
-          footerText: "Pilih menu dropdown di atas untuk membaca bab panduan lainnya.",
+          footerText:
+            "Pilih menu dropdown di atas untuk membaca bab panduan lainnya.",
         });
 
         await i.update(updatedPayload);

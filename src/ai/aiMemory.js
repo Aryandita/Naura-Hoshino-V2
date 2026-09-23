@@ -97,7 +97,9 @@ class AIMemory {
         );
       }
       if (memoryData.summary) {
-        lines.push(`- Riwayat/catatan obrolan sebelumnya: ${memoryData.summary}`);
+        lines.push(
+          `- Riwayat/catatan obrolan sebelumnya: ${memoryData.summary}`,
+        );
       }
     }
 

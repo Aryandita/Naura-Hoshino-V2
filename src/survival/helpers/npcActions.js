@@ -157,7 +157,10 @@ async function marry(i, ctx) {
   }
 
   // ATURAN KETAT MONOGAMI: Pemain tidak boleh menikahi lebih dari 1 wanita
-  const marriageStatus = await familyEngine.getMarriageStatus(survival.userId, survival);
+  const marriageStatus = await familyEngine.getMarriageStatus(
+    survival.userId,
+    survival,
+  );
   if (marriageStatus.isMarried) {
     return fail(
       i,
@@ -168,7 +171,8 @@ async function marry(i, ctx) {
 
   const inventory = safeParseInventory(profile.inventory);
   const ringIndex = inventory.findIndex(
-    (item) => item && (item.id === "wedding_ring" || item.id === "diamond_ring"),
+    (item) =>
+      item && (item.id === "wedding_ring" || item.id === "diamond_ring"),
   );
   if (ringIndex === -1) {
     return fail(
@@ -190,9 +194,17 @@ async function marry(i, ctx) {
     return fail(i, t("npc.marry_no_ring"), t);
   }
 
-  const marryResult = await familyEngine.marryNpc(survival.userId, survival, npc.id);
+  const marryResult = await familyEngine.marryNpc(
+    survival.userId,
+    survival,
+    npc.id,
+  );
   if (!marryResult.ok) {
-    return fail(i, "Prosesi pernikahan gagal disahkan: " + marryResult.reason, t);
+    return fail(
+      i,
+      "Prosesi pernikahan gagal disahkan: " + marryResult.reason,
+      t,
+    );
   }
 
   const files = [];
@@ -221,7 +233,6 @@ async function marry(i, ctx) {
 
   return i.followUp(payload);
 }
-
 
 /** Bagas memperbaiki seluruh alat sekaligus. */
 async function repair(i, ctx) {

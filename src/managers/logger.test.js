@@ -19,11 +19,11 @@ test("logger: parseErrorOrigin correctly extracts file, line, and function", () 
   assert.match(
     origin,
     /src\/managers\/logger\.test\.js:\d+:\d+/,
-    "Origin should pinpoint logger.test.js with line and col"
+    "Origin should pinpoint logger.test.js with line and col",
   );
   assert.ok(
     origin.includes("sampleFailingFunction"),
-    "Origin should identify the function name"
+    "Origin should identify the function name",
   );
 });
 
@@ -39,29 +39,32 @@ test("logger: ensures logs directory is created lazily on error logging", () => 
   });
 
   // Pastikan folder logs dan file log harian terbentuk
-  assert.ok(fs.existsSync(logsDir), "Folder logs harus dibuat secara lazy saat ada error");
+  assert.ok(
+    fs.existsSync(logsDir),
+    "Folder logs harus dibuat secara lazy saat ada error",
+  );
   assert.ok(
     fs.existsSync(expectedLogFile),
-    `File log harian ${expectedLogFile} harus terbentuk`
+    `File log harian ${expectedLogFile} harus terbentuk`,
   );
 
   // Baca isi file log dan periksa kontennya
   const content = fs.readFileSync(expectedLogFile, "utf8");
   assert.ok(
     content.includes("Unit Test Failure Simulation"),
-    "File log harus memuat pesan error"
+    "File log harus memuat pesan error",
   );
   assert.ok(
     content.includes("Testing lazy error log file generation"),
-    "File log harus memuat detail error"
+    "File log harus memuat detail error",
   );
   assert.ok(
     content.includes("src/managers/logger.test.js"),
-    "File log harus memuat origin file sumber error"
+    "File log harus memuat origin file sumber error",
   );
   assert.ok(
     content.includes("logger.test.js"),
-    "File log harus memuat context yang diberikan"
+    "File log harus memuat context yang diberikan",
   );
 
   // Bersihkan log pengujian

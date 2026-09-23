@@ -6,14 +6,33 @@
     <title>Creator Portfolio | Aryandita · Naura OS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
       .portfolio-hero {
-        background: radial-gradient(circle at 80% 20%, rgba(52, 211, 153, 0.15), transparent 60%),
-                    radial-gradient(circle at 20% 80%, rgba(244, 114, 182, 0.12), transparent 50%),
-                    linear-gradient(180deg, rgba(16, 22, 40, 0.8) 0%, rgba(8, 12, 22, 0.95) 100%);
+        background:
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(52, 211, 153, 0.15),
+            transparent 60%
+          ),
+          radial-gradient(
+            circle at 20% 80%,
+            rgba(244, 114, 182, 0.12),
+            transparent 50%
+          ),
+          linear-gradient(
+            180deg,
+            rgba(16, 22, 40, 0.8) 0%,
+            rgba(8, 12, 22, 0.95) 100%
+          );
         border: 1px solid var(--border-medium);
         border-radius: var(--r-2xl);
         padding: 40px;
@@ -165,31 +184,43 @@
     </style>
   </head>
   <body>
-    
-
     <div class="app-shell">
       <!-- Mobile Sidebar Overlay -->
       <div class="sidebar-overlay" id="sidebarOverlay"></div>
-      <aside class="sidebar " id="sidebar">
+      <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-          <div class="sidebar-logo-icon"><img src="/assets/core/avatar.png" alt="Naura" onerror="this.style.display='none';this.parentElement.innerHTML='🌸';" /></div>
+          <div class="sidebar-logo-icon">
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="
+                this.style.display = 'none';
+                this.parentElement.innerHTML = '🌸';
+              "
+            />
+          </div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-name">Naura Hoshino</div>
             <div class="sidebar-brand-sub">v2.3.0 · Online</div>
           </div>
-          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+          <button
+            class="sidebar-close-btn"
+            id="sidebarCloseBtn"
+            aria-label="Tutup menu"
+          >
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-                <!-- Navigation -->
-                <!-- Navigation -->
+        <!-- Navigation -->
+        <!-- Navigation -->
         <nav class="sidebar-nav" role="navigation">
-
           <!-- Overview -->
           <div class="nav-group">
             <div class="nav-group-label">Overview</div>
             <a href="/" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-gauge-high"></i
+              ></span>
               <span>Dashboard</span>
             </a>
             <a href="/status" class="nav-item">
@@ -215,7 +246,9 @@
               <span>Economy</span>
             </a>
             <a href="/topology" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-network-wired"></i
+              ></span>
               <span>Guild Topology</span>
             </a>
           </div>
@@ -236,7 +269,9 @@
               <span>Jam Session</span>
             </a>
             <a href="/karaoke" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-microphone"></i
+              ></span>
               <span>Karaoke</span>
             </a>
           </div>
@@ -245,7 +280,9 @@
           <div class="nav-group">
             <div class="nav-group-label">Naura Wilds RPG</div>
             <a href="/world" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-earth-asia"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-earth-asia"></i
+              ></span>
               <span>World Map</span>
             </a>
             <a href="/survival-map" class="nav-item">
@@ -270,7 +307,9 @@
               <span>Welcomer Card</span>
             </a>
             <a href="/builder" class="nav-item">
-              <span class="nav-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+              <span class="nav-icon"
+                ><i class="fa-solid fa-wand-magic-sparkles"></i
+              ></span>
               <span>Embed Builder</span>
             </a>
             <a href="/automations" class="nav-item">
@@ -287,16 +326,28 @@
           <div class="nav-group">
             <div class="nav-group-label">More</div>
             <a href="/portfolio" class="nav-item">
-              <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
-              <span style="color:var(--accent-green)">Creator Portfolio</span>
+              <span class="nav-icon" style="color: var(--accent-green)"
+                ><i class="fa-solid fa-id-badge"></i
+              ></span>
+              <span style="color: var(--accent-green)">Creator Portfolio</span>
             </a>
           </div>
-
         </nav>
         <div class="sidebar-footer">
-          <div class="sidebar-user" onclick="window.location.href='/'">
-            <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
-            <div class="sidebar-user-info"><div class="sidebar-user-name">Aryandita</div><div class="sidebar-user-role">Creator & Architect</div></div>
+          <div class="sidebar-user" onclick="window.location.href = '/'">
+            <img
+              src="/assets/core/avatar.png"
+              alt="User"
+              class="sidebar-user-avatar"
+              onerror="
+                this.src =
+                  'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'
+              "
+            />
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name">Aryandita</div>
+              <div class="sidebar-user-role">Creator & Architect</div>
+            </div>
           </div>
         </div>
       </aside>
@@ -304,14 +355,23 @@
       <div class="main-content">
         <header class="top-header">
           <div class="header-left">
-            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <button class="hamburger-btn" id="hamburgerBtn">
+              <i class="fa-solid fa-bars"></i>
+            </button>
             <div>
               <div class="page-title">Creator & Lead Architect</div>
-              <div class="breadcrumb"><span>More</span><span class="breadcrumb-sep">/</span><span>Developer Portfolio</span></div>
+              <div class="breadcrumb">
+                <span>More</span><span class="breadcrumb-sep">/</span
+                ><span>Developer Portfolio</span>
+              </div>
             </div>
           </div>
           <div class="header-right">
-            <a href="https://github.com/Aryandita/Naura-Hoshino-V2" target="_blank" class="btn btn-ghost btn-sm">
+            <a
+              href="https://github.com/Aryandita/Naura-Hoshino-V2"
+              target="_blank"
+              class="btn btn-ghost btn-sm"
+            >
               <i class="fa-brands fa-github"></i> Repository
             </a>
           </div>
@@ -322,24 +382,49 @@
           <div class="portfolio-hero animate-in">
             <div class="hero-flex">
               <div class="creator-avatar-wrap">
-                <img src="/owner_photo.jpeg" alt="Aryandita" class="creator-avatar-img" onerror="this.src='/assets/core/avatar.png'" />
-                <div class="creator-badge-online"><i class="fa-solid fa-check"></i></div>
+                <img
+                  src="/owner_photo.jpeg"
+                  alt="Aryandita"
+                  class="creator-avatar-img"
+                  onerror="this.src = '/assets/core/avatar.png'"
+                />
+                <div class="creator-badge-online">
+                  <i class="fa-solid fa-check"></i>
+                </div>
               </div>
               <div class="hero-details">
                 <div class="creator-name">
                   Aryandita
-                  <span class="badge badge-success" style="font-size:11px;"><i class="fa-solid fa-code"></i> Lead Architect</span>
+                  <span class="badge badge-success" style="font-size: 11px"
+                    ><i class="fa-solid fa-code"></i> Lead Architect</span
+                  >
                 </div>
                 <div class="creator-role">
-                  <i class="fa-solid fa-laptop-code"></i> Creator of Naura Hoshino Ecosystem & Bot Engine
+                  <i class="fa-solid fa-laptop-code"></i> Creator of Naura
+                  Hoshino Ecosystem & Bot Engine
                 </div>
                 <p class="creator-bio">
-                  Software engineer dan bot architect dengan spesialisasi arsitektur terdistribusi Node.js, Polyglot Database (PostgreSQL Supabase + MongoDB + Redis), Lavalink Audio Streaming, dan Discord Components V2 UI Framework.
+                  Software engineer dan bot architect dengan spesialisasi
+                  arsitektur terdistribusi Node.js, Polyglot Database
+                  (PostgreSQL Supabase + MongoDB + Redis), Lavalink Audio
+                  Streaming, dan Discord Components V2 UI Framework.
                 </p>
                 <div class="creator-social-links">
-                  <a href="https://github.com/Aryandita" target="_blank" class="btn btn-secondary btn-sm"><i class="fa-brands fa-github"></i> GitHub Profile</a>
-                  <a href="https://github.com/Aryandita/Naura-Hoshino-V2" target="_blank" class="btn btn-primary btn-sm"><i class="fa-solid fa-star"></i> Naura Hoshino V2</a>
-                  <a href="/" class="btn btn-ghost btn-sm"><i class="fa-solid fa-gauge-high"></i> Buka Dashboard</a>
+                  <a
+                    href="https://github.com/Aryandita"
+                    target="_blank"
+                    class="btn btn-secondary btn-sm"
+                    ><i class="fa-brands fa-github"></i> GitHub Profile</a
+                  >
+                  <a
+                    href="https://github.com/Aryandita/Naura-Hoshino-V2"
+                    target="_blank"
+                    class="btn btn-primary btn-sm"
+                    ><i class="fa-solid fa-star"></i> Naura Hoshino V2</a
+                  >
+                  <a href="/" class="btn btn-ghost btn-sm"
+                    ><i class="fa-solid fa-gauge-high"></i> Buka Dashboard</a
+                  >
                 </div>
               </div>
             </div>
@@ -348,45 +433,133 @@
           <!-- Architecture Metrics Grid -->
           <div class="metric-grid-4 animate-in delay-1">
             <div class="metric-box">
-              <div class="metric-val" style="color:var(--primary);">v2.3.0</div>
+              <div class="metric-val" style="color: var(--primary)">v2.3.0</div>
               <div class="metric-lbl">Generasi Era Ekosistem</div>
             </div>
             <div class="metric-box">
-              <div class="metric-val" style="color:#34d399;">340 / 340</div>
+              <div class="metric-val" style="color: #34d399">340 / 340</div>
               <div class="metric-lbl">Automated Tests Passed (100%)</div>
             </div>
             <div class="metric-box">
-              <div class="metric-val" style="color:#22d3ee;">6 Pilar</div>
+              <div class="metric-val" style="color: #22d3ee">6 Pilar</div>
               <div class="metric-lbl">Arsitektur Terintegrasi</div>
             </div>
             <div class="metric-box">
-              <div class="metric-val" style="color:#f59e0b;">55+ Plugin</div>
+              <div class="metric-val" style="color: #f59e0b">55+ Plugin</div>
               <div class="metric-lbl">Modular Slash Commands</div>
             </div>
           </div>
 
           <!-- Technologies Grid -->
           <div class="animate-in delay-2">
-            <div class="tech-category-title"><i class="fa-solid fa-layer-group" style="color:var(--accent-cyan);"></i> Stack Teknologi & Arsitektur</div>
+            <div class="tech-category-title">
+              <i
+                class="fa-solid fa-layer-group"
+                style="color: var(--accent-cyan)"
+              ></i>
+              Stack Teknologi & Arsitektur
+            </div>
             <div class="tech-tags-list">
-              <div class="tech-pill"><i class="fa-brands fa-node-js" style="color:#34d399;"></i> Node.js 24 Runtime</div>
-              <div class="tech-pill"><i class="fa-brands fa-discord" style="color:#5865f2;"></i> discord.js v14 & Components V2</div>
-              <div class="tech-pill"><i class="fa-solid fa-database" style="color:#3b82f6;"></i> Supabase PostgreSQL & Sequelize</div>
-              <div class="tech-pill"><i class="fa-solid fa-leaf" style="color:#10b981;"></i> MongoDB Mongoose v9</div>
-              <div class="tech-pill"><i class="fa-solid fa-bolt" style="color:#ef4444;"></i> Redis Mutex & Write-Behind Cache</div>
-              <div class="tech-pill"><i class="fa-solid fa-music" style="color:#f472b6;"></i> Poru v5 & Lavalink v4 Cluster</div>
-              <div class="tech-pill"><i class="fa-solid fa-cube" style="color:#a78bfa;"></i> Three.js & Pixiv VRM 3D Avatar</div>
-              <div class="tech-pill"><i class="fa-solid fa-brain" style="color:#22d3ee;"></i> Gemini 2.5 & Groq LLaMA 3.3 AI</div>
-              <div class="tech-pill"><i class="fa-solid fa-wand-magic" style="color:#f59e0b;"></i> Fish Audio AI Voice & TTS Streaming</div>
+              <div class="tech-pill">
+                <i class="fa-brands fa-node-js" style="color: #34d399"></i>
+                Node.js 24 Runtime
+              </div>
+              <div class="tech-pill">
+                <i class="fa-brands fa-discord" style="color: #5865f2"></i>
+                discord.js v14 & Components V2
+              </div>
+              <div class="tech-pill">
+                <i class="fa-solid fa-database" style="color: #3b82f6"></i>
+                Supabase PostgreSQL & Sequelize
+              </div>
+              <div class="tech-pill">
+                <i class="fa-solid fa-leaf" style="color: #10b981"></i> MongoDB
+                Mongoose v9
+              </div>
+              <div class="tech-pill">
+                <i class="fa-solid fa-bolt" style="color: #ef4444"></i> Redis
+                Mutex & Write-Behind Cache
+              </div>
+              <div class="tech-pill">
+                <i class="fa-solid fa-music" style="color: #f472b6"></i> Poru v5
+                & Lavalink v4 Cluster
+              </div>
+              <div class="tech-pill">
+                <i class="fa-solid fa-cube" style="color: #a78bfa"></i> Three.js
+                & Pixiv VRM 3D Avatar
+              </div>
+              <div class="tech-pill">
+                <i class="fa-solid fa-brain" style="color: #22d3ee"></i> Gemini
+                2.5 & Groq LLaMA 3.3 AI
+              </div>
+              <div class="tech-pill">
+                <i class="fa-solid fa-wand-magic" style="color: #f59e0b"></i>
+                Fish Audio AI Voice & TTS Streaming
+              </div>
             </div>
 
-            <div class="tech-category-title"><i class="fa-solid fa-crown" style="color:var(--accent-amber);"></i> Inovasi Kunci Naura Hoshino V2</div>
-            <div class="card card-p" style="line-height:1.8;color:var(--text-secondary);font-size:13px;">
-              <ul style="padding-left:20px;display:flex;flex-direction:column;gap:10px;">
-                <li><b style="color:var(--text-primary);">Closed-Loop Economy V2:</b> Sistem ekonomi tertutup dengan pajak sirkulasi otomatis yang dialirkan ke <code style="color:var(--primary);font-family:var(--font-mono);">ServerTreasury</code>, mencegah inflasi tak terbatas.</li>
-                <li><b style="color:var(--text-primary);">Atomic Concurrency & Anti-Dupe:</b> Menggunakan mutasi atomik PostgreSQL dengan transaksi <code style="color:var(--accent-cyan);font-family:var(--font-mono);">SELECT FOR UPDATE</code> dan Redis distributed mutex.</li>
-                <li><b style="color:var(--text-primary);">Components V2 5-Layer Layout:</b> Format antarmuka Discord modern menggantikan embed kuno, mematuhi standar desain Discord terkini.</li>
-                <li><b style="color:var(--text-primary);">Document Parsing & Server RAG:</b> Konversi cerdas dokumen multi-format (PDF, DOCX, XLSX) menjadi semantic knowledge embeddings untuk asisten AI.</li>
+            <div class="tech-category-title">
+              <i
+                class="fa-solid fa-crown"
+                style="color: var(--accent-amber)"
+              ></i>
+              Inovasi Kunci Naura Hoshino V2
+            </div>
+            <div
+              class="card card-p"
+              style="
+                line-height: 1.8;
+                color: var(--text-secondary);
+                font-size: 13px;
+              "
+            >
+              <ul
+                style="
+                  padding-left: 20px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 10px;
+                "
+              >
+                <li>
+                  <b style="color: var(--text-primary)"
+                    >Closed-Loop Economy V2:</b
+                  >
+                  Sistem ekonomi tertutup dengan pajak sirkulasi otomatis yang
+                  dialirkan ke
+                  <code
+                    style="color: var(--primary); font-family: var(--font-mono)"
+                    >ServerTreasury</code
+                  >, mencegah inflasi tak terbatas.
+                </li>
+                <li>
+                  <b style="color: var(--text-primary)"
+                    >Atomic Concurrency & Anti-Dupe:</b
+                  >
+                  Menggunakan mutasi atomik PostgreSQL dengan transaksi
+                  <code
+                    style="
+                      color: var(--accent-cyan);
+                      font-family: var(--font-mono);
+                    "
+                    >SELECT FOR UPDATE</code
+                  >
+                  dan Redis distributed mutex.
+                </li>
+                <li>
+                  <b style="color: var(--text-primary)"
+                    >Components V2 5-Layer Layout:</b
+                  >
+                  Format antarmuka Discord modern menggantikan embed kuno,
+                  mematuhi standar desain Discord terkini.
+                </li>
+                <li>
+                  <b style="color: var(--text-primary)"
+                    >Document Parsing & Server RAG:</b
+                  >
+                  Konversi cerdas dokumen multi-format (PDF, DOCX, XLSX) menjadi
+                  semantic knowledge embeddings untuk asisten AI.
+                </li>
               </ul>
             </div>
           </div>
@@ -396,11 +569,26 @@
 
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
-        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
-        <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
-        <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
-        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
-        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+        <a href="/" class="mobile-nav-item" data-group="dashboard"
+          ><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span
+          ><span class="mn-label">Dashboard</span></a
+        >
+        <a href="/world" class="mobile-nav-item" data-group="map"
+          ><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span
+          ><span class="mn-label">Map</span></a
+        >
+        <a href="/automations" class="mobile-nav-item" data-group="config"
+          ><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span
+          ><span class="mn-label">Config</span></a
+        >
+        <a href="/music" class="mobile-nav-item" data-group="system"
+          ><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span
+          ><span class="mn-label">System</span></a
+        >
+        <a href="/settings" class="mobile-nav-item" data-group="settings"
+          ><span class="mn-icon"><i class="fa-solid fa-gears"></i></span
+          ><span class="mn-label">Settings</span></a
+        >
       </div>
     </nav>
 
