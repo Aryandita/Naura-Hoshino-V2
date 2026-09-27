@@ -120,6 +120,7 @@ const UserSurvival = sequelize.define(
   {
     tableName: "UserSurvivals",
     timestamps: true,
+    paranoid: true,
   },
 );
 

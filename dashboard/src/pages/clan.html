@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guild & Clan Hub | Naura OS</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <style>
+      .clan-container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+      .clan-hero {
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(244, 114, 182, 0.1) 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        padding: 32px;
+        margin-bottom: 28px;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(16px);
+      }
+      .clan-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+      .stat-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-lg);
+        padding: 20px;
+        transition: transform 0.2s, border-color 0.2s;
+      }
+      .stat-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--border-primary);
+      }
+      .clan-tabs {
+        display: flex;
+        gap: 12px;
+        border-bottom: 1px solid var(--border-medium);
+        padding-bottom: 12px;
+        margin-bottom: 24px;
+      }
+      .clan-tab-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        font-family: var(--font-heading);
+        font-size: 15px;
+        font-weight: 600;
+        padding: 8px 16px;
+        border-radius: var(--r-md);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .clan-tab-btn.active {
+        background: var(--primary-dim);
+        color: var(--primary);
+        border: 1px solid var(--border-primary);
+      }
+      .member-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-lg);
+        overflow: hidden;
+      }
+      .member-table th, .member-table td {
+        padding: 14px 18px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .member-table th {
+        background: rgba(255,255,255,0.02);
+        color: var(--text-muted);
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .role-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .badge-leader { background: rgba(245, 158, 11, 0.2); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.4); }
+      .badge-officer { background: rgba(167, 139, 250, 0.2); color: #A78BFA; border: 1px solid rgba(167, 139, 250, 0.4); }
+      .badge-member { background: rgba(34, 211, 238, 0.2); color: #22D3EE; border: 1px solid rgba(34, 211, 238, 0.4); }
+    </style>
+  </head>
+  <body>
+    <div id="shared-nav"></div>
+
+    <main class="clan-container">
+      <!-- Hero Header -->
+      <section class="clan-hero">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+              <span style="font-size:32px;">🛡️</span>
+              <h1 id="clan-name" style="margin:0; font-size:28px; font-family:var(--font-heading);">Astraea Vanguard</h1>
+              <span id="clan-tag" style="background:var(--primary-dim); color:var(--primary); padding:4px 10px; border-radius:6px; font-weight:700;">[ASTRA]</span>
+            </div>
+            <p id="clan-desc" style="margin:0; color:var(--text-secondary); max-width:600px;">
+              Federasi klan penjelajah galaksi Naura Wilds yang berfokus pada penguasaan menara relik kuno dan jalur dagang antariksa.
+            </p>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:13px; color:var(--text-muted); margin-bottom:4px;">LEVEL KLAN</div>
+            <div id="clan-level" style="font-size:32px; font-weight:700; color:var(--primary); font-family:var(--font-mono);">Lv. 14</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stats Grid -->
+      <section class="clan-stats-grid">
+        <div class="stat-card">
+          <div style="color:var(--text-muted); font-size:13px; margin-bottom:6px;"><i class="fa-solid fa-vault"></i> KAS KLAN</div>
+          <div id="clan-vault" style="font-size:22px; font-weight:700; color:#38BDF8; font-family:var(--font-mono);">485.200 NSF</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Dividen harian: 5%</div>
+        </div>
+        <div class="stat-card">
+          <div style="color:var(--text-muted); font-size:13px; margin-bottom:6px;"><i class="fa-solid fa-users"></i> TOTAL ANGGOTA</div>
+          <div id="clan-members-count" style="font-size:22px; font-weight:700; color:#F472B6; font-family:var(--font-mono);">28 / 35</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Slot terbuka: 7 anggota</div>
+        </div>
+        <div class="stat-card">
+          <div style="color:var(--text-muted); font-size:13px; margin-bottom:6px;"><i class="fa-solid fa-monument"></i> MENARA TERKONTROL</div>
+          <div id="clan-towers" style="font-size:22px; font-weight:700; color:#F59E0B; font-family:var(--font-mono);">2 Menara</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Tower of Greed & Vitality</div>
+        </div>
+        <div class="stat-card">
+          <div style="color:var(--text-muted); font-size:13px; margin-bottom:6px;"><i class="fa-solid fa-trophy"></i> PRESTISE ALIANSI</div>
+          <div id="clan-prestige" style="font-size:22px; font-weight:700; color:#10B981; font-family:var(--font-mono);">Rank #3 Global</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Federation War Season 2</div>
+        </div>
+      </section>
+
+      <!-- Navigation Tabs -->
+      <div class="clan-tabs">
+        <button class="clan-tab-btn active" onclick="switchClanTab('members')"><i class="fa-solid fa-id-badge"></i> Daftar Anggota</button>
+        <button class="clan-tab-btn" onclick="switchClanTab('treasury')"><i class="fa-solid fa-coins"></i> Riwayat Kas & Donasi</button>
+        <button class="clan-tab-btn" onclick="switchClanTab('perks')"><i class="fa-solid fa-bolt"></i> Buff & Fasilitas Hall</button>
+      </div>
+
+      <!-- Tab Content: Members -->
+      <div id="tab-members">
+        <table class="member-table">
+          <thead>
+            <tr>
+              <th>Pemain</th>
+              <th>Jabatan</th>
+              <th>Level RPG</th>
+              <th>Kontribusi XP</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="member-rows">
+            <tr>
+              <td><strong>Aryandita</strong> (Leader)</td>
+              <td><span class="role-badge badge-leader">Ketua Klan</span></td>
+              <td>Lv. 42</td>
+              <td>124.500 XP</td>
+              <td><span style="color:#10B981;">● Online</span></td>
+            </tr>
+            <tr>
+              <td><strong>HoshinoKinnie</strong></td>
+              <td><span class="role-badge badge-officer">Perwira</span></td>
+              <td>Lv. 38</td>
+              <td>98.200 XP</td>
+              <td><span style="color:#10B981;">● Online</span></td>
+            </tr>
+            <tr>
+              <td><strong>CyberVanguard</strong></td>
+              <td><span class="role-badge badge-member">Anggota</span></td>
+              <td>Lv. 29</td>
+              <td>45.100 XP</td>
+              <td><span style="color:#64748B;">○ 2 jam lalu</span></td>
+            </tr>
+            <tr>
+              <td><strong>StarlightRanger</strong></td>
+              <td><span class="role-badge badge-member">Anggota</span></td>
+              <td>Lv. 24</td>
+              <td>32.000 XP</td>
+              <td><span style="color:#10B981;">● Online</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Tab Content: Treasury -->
+      <div id="tab-treasury" style="display:none;">
+        <div style="background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--r-lg); padding:24px;">
+          <h3 style="margin-top:0; font-family:var(--font-heading);">Catatan Donasi & Arus Kas</h3>
+          <p style="color:var(--text-secondary); font-size:14px;">Donasi anggota klan secara otomatis meningkatkan kapasitas penyimpanan kas dan mendanai upgrade Menara Pertahanan Relik.</p>
+          <div style="display:flex; gap:16px; margin-top:20px;">
+            <button class="btn btn-primary" onclick="alert('Buka Discord dan ketik /clan deposit untuk menyetor dana ke kas!')"><i class="fa-solid fa-hand-holding-dollar"></i> Setor ke Kas (Discord)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Perks -->
+      <div id="tab-perks" style="display:none;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+          <div class="stat-card">
+            <h4 style="margin:0 0 8px; color:var(--primary); font-family:var(--font-heading);">⚡ Menara Vitalitas (Lv. 2)</h4>
+            <p style="font-size:14px; color:var(--text-secondary); margin:0;">Meningkatkan batas maksimum HP seluruh anggota klan sebesar +15% saat bertarung di dungeon.</p>
+          </div>
+          <div class="stat-card">
+            <h4 style="margin:0 0 8px; color:#38BDF8; font-family:var(--font-heading);">🌾 Kebun Hidroponik Klan (Lv. 3)</h4>
+            <p style="font-size:14px; color:var(--text-secondary); margin:0;">Mempercepat pertumbuhan tanaman greenhouse sebesar +10% untuk seluruh anggota klan.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="/src/js/shared-nav.js"></script>
+    <script src="/js/theme-switcher.js"></script>
+    <script src="/js/pwa-install.js"></script>
+    <script>
+      function switchClanTab(tabId) {
+        document.getElementById('tab-members').style.display = tabId === 'members' ? 'block' : 'none';
+        document.getElementById('tab-treasury').style.display = tabId === 'treasury' ? 'block' : 'none';
+        document.getElementById('tab-perks').style.display = tabId === 'perks' ? 'block' : 'none';
+        
+        document.querySelectorAll('.clan-tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+      }
+    </script>
+  </body>
+</html>

@@ -86,11 +86,9 @@ module.exports = {
       );
 
       if (!hasStarted) {
-        return ui.sendError(
-          interaction,
-          languageManager.translateSync(lang, "survival_not_started"),
-          true,
-        );
+        const { renderOnboardingPrompt } = require("../../src/survival/engines/playerOnboardingEngine");
+        const onboardingPayload = renderOnboardingPrompt(interaction.user, lang);
+        return interaction.editReply(onboardingPayload);
       }
     }
 

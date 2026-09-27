@@ -242,7 +242,7 @@ async function renderMusicAura(data) {
     ctx.fillStyle = "#94A3B8";
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
-    ctx.fillText("LAGU TANDA TANGAN:", contentX + 14, currY + 22);
+    ctx.fillText("TREK ANDALAN:", contentX + 14, currY + 22);
 
     ctx.font = "bold 13px 'Montserrat', sans-serif";
     ctx.fillStyle = "#F8FAFC";

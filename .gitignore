@@ -47,6 +47,7 @@ testsprite_tests/tmp/config.json
 
 # Dashboard: artefak build & konfigurasi lokal berisi secret
 dashboard/dist/
+dashboard/mobile/dist/
 dashboard/public/assets/
 dashboard-preview/
 .roo/mcp.json
@@ -64,3 +65,6 @@ naura_NEW_fixed*.glb
 
 # Code intelligence (CodeGraph)
 .codegraph/
+
+# Database dumps / backups
+backups/

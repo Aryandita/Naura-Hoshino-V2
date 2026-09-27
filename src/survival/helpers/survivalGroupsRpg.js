@@ -468,6 +468,45 @@ function addRpgGroup(builder) {
               .setDescription("ID Aliansi Federasi target (khusus aksi Join)")
               .setRequired(false),
           ),
+      )
+      .addSubcommand((sub) =>
+        sub
+          .setName("bounty")
+          .setDescription(
+            "🤠 Papan Buronan & Sayembara Pemburu Kepala (PvP Wanted Board)",
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("aksi")
+              .setDescription("Pilihan aksi buronan")
+              .addChoices(
+                { name: "📜 Lihat Papan Buronan (List)", value: "list" },
+                { name: "🎯 Pasang Sayembara (Place)", value: "place" },
+                { name: "⚔️ Buru & Tantang (Hunt)", value: "hunt" },
+              )
+              .setRequired(false),
+          )
+          .addUserOption((opt) =>
+            opt
+              .setName("target")
+              .setDescription("Pemain yang menjadi target buronan")
+              .setRequired(false),
+          )
+          .addIntegerOption((opt) =>
+            opt
+              .setName("imbalan")
+              .setDescription(
+                "Jumlah Star Fragments (NSF) untuk hadiah buronan",
+              )
+              .setRequired(false)
+              .setMinValue(100),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("alasan")
+              .setDescription("Alasan penempatan buronan")
+              .setRequired(false),
+          ),
       ),
   );
 }

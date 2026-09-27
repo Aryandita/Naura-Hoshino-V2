@@ -330,5 +330,115 @@ module.exports = {
 
       return sendResponse(payload);
     }
+
+    // 8. PERSILANGAN BENIH (CROSS-BREEDING)
+    if (action === "breed") {
+      const slotA = slotNumber ? slotNumber - 1 : 0;
+      const secondSlotOpt = interaction.options?.getInteger?.("slot_kedua");
+      const slotB = secondSlotOpt ? secondSlotOpt - 1 : slotA + 1;
+
+      const res = await greenhouseEngine.crossBreedSlots(userId, slotA, slotB);
+      if (!res.success) {
+        let msg = "Gagal melakukan persilangan benih.";
+        if (res.reason === "NOT_ADJACENT") {
+          msg = "Dua petak harus berdampingan langsung (misalnya Slot 1 dan Slot 2).";
+        } else if (res.reason === "NOT_MATURE") {
+          msg = "Kedua tanaman harus sudah matang sempurna 100% untuk disilangkan!";
+        } else if (res.reason === "SAME_SPECIES") {
+          msg = "Persilangan membutuhkan dua jenis tanaman yang berbeda!";
+        } else if (res.reason === "SLOT_EMPTY") {
+          msg = "Salah satu atau kedua petak masih kosong!";
+        } else if (res.reason === "NO_COMPATIBLE_RECIPE") {
+          msg = "Kombinasi kedua tanaman ini tidak menghasilkan varietas hibrida yang kompatibel.";
+        }
+
+        const payload = buildErrorContainerV2({
+          title: "Persilangan Gagal",
+          description: msg,
+          footerText: ui.getFooter("survival"),
+        });
+        return sendResponse(payload, true);
+      }
+
+      const payload = buildContainerV2({
+        accentColorHex: "#A855F7",
+        authorName: "CYBER-AGRONOMY GREENHOUSE",
+        title: "🧬 Mutasi Persilangan Hibrida Berhasil!",
+        description: [
+          `Selamat, **${displayName}**! ${res.message}`,
+          "",
+          `🌸 **Varietas Baru:** **${res.hybridSeed.name}**`,
+          `⏱️ **Waktu Tumbuh:** ${res.hybridSeed.growTimeMinutes} menit`,
+          `> *Benih hibrida ini memiliki nilai nutrisi dan hasil panen jauh lebih unggul!*`,
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+
+      return sendResponse(payload);
+    }
+
+    // 8. ATUR WEBHOOK NOTIFIKASI PANEN PRIBADI (#36)
+    if (action === "webhook") {
+      const webhookUrl = interaction.options?.getString?.("url");
+      const farmWebhook = require("../../../src/services/farmNotificationWebhook");
+
+      if (webhookUrl) {
+        if (webhookUrl.toLowerCase() === "hapus" || webhookUrl.toLowerCase() === "delete") {
+          await farmWebhook.deleteWebhook(userId);
+          const payload = buildContainerV2({
+            accentColorHex: "#EF4444",
+            authorName: "NOTIFIKASI PANEN GREENHOUSE",
+            title: "🗑️ Webhook Berhasil Dihapus",
+            description: "Webhook notifikasi panen kamu telah dihapus. Kamu tidak akan lagi menerima peringatan eksternal saat tanaman matang.",
+            footerText: ui.getFooter("survival"),
+          });
+          return sendResponse(payload, true);
+        }
+
+        const setRes = await farmWebhook.setWebhook(userId, webhookUrl);
+        if (!setRes.success) {
+          const payload = buildErrorContainerV2({
+            title: "Pengaturan Webhook Gagal",
+            description: setRes.message || "URL Webhook tidak valid.",
+            footerText: ui.getFooter("survival"),
+          });
+          return sendResponse(payload, true);
+        }
+
+        const payload = buildContainerV2({
+          accentColorHex: "#10B981",
+          authorName: "NOTIFIKASI PANEN GREENHOUSE",
+          title: "📡 Webhook Panen Aktif!",
+          description: [
+            `Halo, **${displayName}**! Webhook notifikasi panen kamu telah berhasil disimpan.`,
+            "",
+            `🔗 **Endpoint:** \`${webhookUrl}\``,
+            "Bot akan secara otomatis mengirimkan ping payload saat tanaman kosmik kamu siap dipanen!",
+            "",
+            "> *Ketik `/survival farm aksi:webhook url:hapus` untuk menonaktifkan.*",
+          ].join("\n"),
+          footerText: ui.getFooter("survival"),
+        });
+        return sendResponse(payload, true);
+      }
+
+      // Tampilkan status webhook aktif
+      const currentUrl = await farmWebhook.getWebhook(userId);
+      const payload = buildContainerV2({
+        accentColorHex: "#3B82F6",
+        authorName: "NOTIFIKASI PANEN GREENHOUSE",
+        title: "📡 Status Webhook Notifikasi",
+        description: [
+          `Halo, **${displayName}**! Layanan webhook mengirimkan peringatan instan saat pod tanaman kamu matang.`,
+          "",
+          `🔗 **Status Saat Ini:** ${currentUrl ? `\`${currentUrl}\`` : "⚪ _Belum dikonfigurasi_"}`,
+          "",
+          "💡 **Cara Mengatur Webhook:**",
+          "Ketik: `/survival farm aksi:webhook url:https://discord.com/api/webhooks/...`",
+        ].join("\n"),
+        footerText: ui.getFooter("survival"),
+      });
+      return sendResponse(payload, true);
+    }
   },
 };

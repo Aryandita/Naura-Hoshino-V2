@@ -6,6 +6,8 @@ const {
   ButtonStyle,
   ComponentType,
   AttachmentBuilder,
+  StringSelectMenuBuilder,
+  MessageFlags,
 } = require("discord.js");
 const ui = require("../../src/config/ui");
 const UserProfile = require("../../src/models/UserProfile");
@@ -943,9 +945,10 @@ async function runMusicLogic(
         name: "nowplaying.png",
       });
 
+      const npTitle = `${ui.getEmoji("nowplaying") || "🎶"} Memutar Saat Ini`;
       const npPayload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        title: "🎶 Memutar Saat Ini",
+        title: npTitle,
         bannerAttachmentName: "nowplaying.png",
         footerText: ui.getFooter("music"),
       });
@@ -960,7 +963,7 @@ async function runMusicLogic(
 
       const fallbackPayload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        title: "🎶 Memutar Saat Ini",
+        title: `${ui.getEmoji("nowplaying") || "🎶"} Memutar Saat Ini`,
         description: `### ${sourceIcon} [${track.title}](${track.uri})\n**Artis:** \`${track.author || "Tidak diketahui"}\`\n**Durasi:** \`${formatDuration(player.position)} / ${formatDuration(track.length)}\``,
         footerText: ui.getFooter("music"),
       });
@@ -1203,6 +1206,79 @@ async function runMusicLogic(
     return sendReply(payload, true);
   }
 
+  if (subcommand === "voteskip") {
+    if (!player || !player.currentTrack) {
+      const errPayload = buildErrorContainerV2({
+        title: "Tidak Ada Lagu Aktif",
+        description: `${eError} | Tidak ada musik yang sedang diputar untuk dilewati.`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    const musicManager = client.musicManager;
+    const vcId = member.voice?.channelId;
+    if (!vcId || vcId !== player.voiceChannel) {
+      const errPayload = buildErrorContainerV2({
+        title: "Bukan di Saluran yang Sama",
+        description: `${eError} | Kakak harus berada di Voice Channel yang sama dengan Naura untuk ikut voting!`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    const voiceChannel = guild.channels.cache.get(vcId);
+    const nonBotMembers = voiceChannel ? voiceChannel.members.filter((m) => !m.user.bot) : new Map();
+    const totalListeners = Math.max(1, nonBotMembers.size);
+    const requiredVotes = Math.max(1, Math.ceil(totalListeners * 0.5));
+
+    if (musicManager) {
+      musicManager.addSkipVote(guild.id, user.id);
+    }
+    const currentVotes = musicManager ? musicManager.getSkipVotes(guild.id) : new Set([user.id]);
+
+    if (currentVotes.size >= requiredVotes) {
+      if (musicManager) musicManager.clearSkipVotes(guild.id);
+      if (typeof player.stopTrack === "function") player.stopTrack();
+      else if (player.node && player.node.rest) {
+        player.node.rest.updatePlayer({
+          guildId: player.guildId,
+          data: { track: { encoded: null } },
+        }).catch(() => {});
+      }
+
+      const payload = buildContainerV2({
+        accentColorHex: "#10B981",
+        title: "⏭️ Voting Skip Berhasil!",
+        description: `Batas kuorum voting tercapai (**${currentVotes.size}/${requiredVotes}** suara). Lagu berhasil dilewati!`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(payload, false);
+    }
+
+    const voteRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`btn_vote_skip_${guild.id}`)
+        .setLabel(`⏭️ Vote Skip (${currentVotes.size}/${requiredVotes})`)
+        .setStyle(ButtonStyle.Primary),
+    );
+
+    const payload = buildContainerV2({
+      accentColorHex: ui.getColor("primary") || "#FFB6C1",
+      title: "🗳️ Voting Skip Lagu",
+      description: [
+        `**${user.username}** mengajukan vote untuk melewati lagu:`,
+        `> **${player.currentTrack.info.title}**`,
+        "",
+        `Dibutuhkan **${requiredVotes} suara** dari **${totalListeners} pendengar** aktif (Terkumpul: **${currentVotes.size}/${requiredVotes}**).`,
+        "- # *Klik tombol di bawah jika Kakak setuju lagu ini dilewati.*",
+      ].join("\n"),
+      buttonsRow: voteRow,
+      footerText: ui.getFooter("music"),
+    });
+    return sendReply(payload, false);
+  }
+
   if (subcommand === "volume") {
     if (!player) {
       const errPayload = buildErrorContainerV2({
@@ -1243,94 +1319,132 @@ async function runMusicLogic(
     }
 
     const type = args.tipe || "off";
+    const { applyAudioFilter, FILTER_PRESETS } = require("../../src/music/audioFilters");
+    applyAudioFilter(player, type);
 
-    if (type === "off") {
-      player.clearFilters();
-    } else if (type === "bassboost") {
-      player.setFilters({
-        equalizer: [
-          { band: 0, gain: 0.6 },
-          { band: 1, gain: 0.67 },
-          { band: 2, gain: 0.67 },
-          { band: 3, gain: 0 },
-          { band: 4, gain: -0.5 },
-          { band: 5, gain: 0.15 },
-        ],
-      });
-    } else if (type === "nightcore") {
-      player.setFilters({ timescale: { speed: 1.2, pitch: 1.2, rate: 1.0 } });
-    } else if (type === "8d") {
-      player.setFilters({ rotation: { rotationHz: 0.2 } });
-    } else if (type === "pop") {
-      player.setFilters({
-        equalizer: [
-          { band: 0, gain: 0.65 },
-          { band: 1, gain: 0.45 },
-          { band: 2, gain: -0.45 },
-          { band: 3, gain: -0.65 },
-          { band: 4, gain: -0.35 },
-          { band: 5, gain: 0.45 },
-        ],
-      });
-    } else if (type === "soft") {
-      player.setFilters({
-        equalizer: [
-          { band: 0, gain: 0 },
-          { band: 1, gain: 0 },
-          { band: 2, gain: 0 },
-          { band: 3, gain: 0 },
-          { band: 4, gain: 0 },
-          { band: 5, gain: 0 },
-          { band: 6, gain: 0 },
-          { band: 7, gain: -0.25 },
-          { band: 8, gain: -0.25 },
-          { band: 9, gain: -0.25 },
-          { band: 10, gain: -0.25 },
-          { band: 11, gain: -0.25 },
-          { band: 12, gain: -0.25 },
-          { band: 13, gain: -0.25 },
-        ],
-      });
-    } else if (type === "treblebass") {
-      player.setFilters({
-        equalizer: [
-          { band: 0, gain: 0.6 },
-          { band: 1, gain: 0.67 },
-          { band: 2, gain: 0.67 },
-          { band: 3, gain: 0 },
-          { band: 4, gain: -0.5 },
-          { band: 5, gain: 0.15 },
-          { band: 6, gain: -0.45 },
-          { band: 7, gain: 0.23 },
-          { band: 8, gain: 0.35 },
-          { band: 9, gain: 0.45 },
-          { band: 10, gain: 0.55 },
-          { band: 11, gain: 0.6 },
-          { band: 12, gain: 0.55 },
-        ],
-      });
-    } else if (type === "karaoke") {
-      player.setFilters({
-        karaoke: {
-          level: 1.0,
-          monoLevel: 1.0,
-          filterBand: 220.0,
-          filterWidth: 100.0,
-        },
-      });
-    } else if (type === "vibrato") {
-      player.setFilters({ vibrato: { frequency: 2.0, depth: 0.5 } });
-    } else if (type === "tremolo") {
-      player.setFilters({ tremolo: { frequency: 2.0, depth: 0.5 } });
-    }
+    const activePreset = FILTER_PRESETS.find((p) => p.value === type) || {
+      label: type.toUpperCase(),
+      emoji: "🎛️",
+    };
+
+    const filterSelect = new StringSelectMenuBuilder()
+      .setCustomId("sel_music_filter")
+      .setPlaceholder("Pilih Preset Filter Audio DSP...")
+      .addOptions(
+        FILTER_PRESETS.map((p) => ({
+          label: p.label,
+          value: p.value,
+          description: p.description,
+          emoji: p.emoji,
+          default: p.value === type,
+        })),
+      );
+
+    const selectRow = new ActionRowBuilder().addComponents(filterSelect);
 
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#FFB6C1",
-      title: "Filter Audio",
-      description: `🎛️ | Filter audio disetel ke **${type.toUpperCase()}**.`,
+      authorName: "NAURA HI-FI DSP STUDIO",
+      title: "🎛️ Filter Audio Profesional",
+      description: [
+        `Filter audio aktif saat ini disetel ke: **${activePreset.emoji} ${activePreset.label}**`,
+        "",
+        "Pilih preset efek suara lain di bawah untuk mengubah equalizer secara instan tanpa mengetik ulang.",
+      ].join("\n"),
+      selectMenu: selectRow,
       footerText: ui.getFooter("music"),
     });
     return sendReply(payload, true);
+  }
+
+  if (subcommand === "lyrics") {
+    let query = args.query;
+    if (!query && player && player.currentTrack) {
+      query = player.currentTrack.info.title;
+    }
+
+    if (!query) {
+      const errPayload = buildErrorContainerV2({
+        title: "Lirik Lagu Tidak Ditemukan",
+        description: `${eError} | Masukkan judul lagu atau putar lagu terlebih dahulu untuk mencari lirik!`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    const lyricsService = require("../../src/services/lyricsService");
+    const result = await lyricsService.fetchLyrics(query);
+
+    if (!result || !result.pages || result.pages.length === 0) {
+      const errPayload = buildErrorContainerV2({
+        title: "Lirik Tidak Ditemukan",
+        description: `❌ Maaf, tidak dapat menemukan lirik untuk lagu **${query}**.`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    let currentPage = 0;
+    const totalPages = result.pages.length;
+
+    const renderLyricsContainer = (pageIndex) => {
+      const pageButtons = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`lyrics_prev_${user.id}`)
+          .setLabel("◀️ Halaman Sebelumnya")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(pageIndex <= 0),
+        new ButtonBuilder()
+          .setCustomId(`lyrics_next_${user.id}`)
+          .setLabel("Halaman Berikutnya ▶️")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(pageIndex >= totalPages - 1),
+      );
+
+      return buildContainerV2({
+        accentColorHex: "#38BDF8",
+        authorName: `🎵 Lirik Lagu: ${result.artist}`,
+        title: `📜 ${result.title} (Halaman ${pageIndex + 1}/${totalPages})`,
+        description: `\`\`\`text\n${result.pages[pageIndex]}\n\`\`\``,
+        buttonsRow: totalPages > 1 ? pageButtons : undefined,
+        footerText: ui.getFooter("music"),
+      });
+    };
+
+    const initialPayload = renderLyricsContainer(currentPage);
+    const sentMsg = await sendReply({ ...initialPayload, fetchReply: true });
+
+    if (totalPages > 1 && sentMsg && sentMsg.createMessageComponentCollector) {
+      const collector = sentMsg.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 120000,
+      });
+
+      collector.on("collect", async (i) => {
+        if (i.user.id !== user.id) {
+          const errReply = buildErrorContainerV2({
+            title: "Akses Ditolak",
+            description: "❌ Hanya pemanggil command yang bisa mengubah halaman lirik.",
+            footerText: ui.getFooter("music"),
+          });
+          return i.reply({ ...errReply, flags: MessageFlags.Ephemeral });
+        }
+
+        if (i.customId.startsWith("lyrics_prev_")) {
+          currentPage = Math.max(0, currentPage - 1);
+        } else if (i.customId.startsWith("lyrics_next_")) {
+          currentPage = Math.min(totalPages - 1, currentPage + 1);
+        }
+
+        await i.update(renderLyricsContainer(currentPage));
+      });
+
+      collector.on("end", () => {
+        sentMsg.edit({ components: [] }).catch(() => {});
+      });
+    }
+
+    return;
   }
 
   if (subcommand === "dedicate") {
@@ -1788,6 +1902,11 @@ module.exports = {
     )
     .addSubcommand((sub) =>
       sub.setName("skip").setDescription("Lewati lagu yang sedang berputar"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("voteskip")
+        .setDescription("Voting bersama pendengar di voice channel untuk melewati lagu"),
     )
     .addSubcommand((sub) =>
       sub.setName("stop").setDescription("Hentikan musik dan hapus antrean"),

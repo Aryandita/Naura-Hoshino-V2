@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="id" data-theme="midnight" data-font-size="normal">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0c10" />
+    <meta name="description" content="Kontrol musik bot Naura Hoshino dari HP, queue, filter audio, dan volume." />
+    <title>Musik | Naura OS Mobile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@700;900&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="../css/tokens.css" />
+    <link rel="stylesheet" href="../css/animations.css" />
+    <link rel="stylesheet" href="../css/components.css" />
+    <link rel="stylesheet" href="../css/mobile.css" />
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+
+  <body>
+    <header class="nm-header" role="banner">
+      <div class="nm-header__brand">
+        <i class="fa-solid fa-music" style="color:var(--accent-blue);font-size:1.1rem" aria-hidden="true"></i>
+        <span class="nm-header__name" style="text-shadow:0 0 12px rgba(147,197,253,0.6)">MUSIK</span>
+      </div>
+    </header>
+
+    <main class="nm-page" role="main" style="padding-top:var(--sp-xs)">
+
+      <!-- Empty State (tampil jika tidak ada lagu) -->
+      <div id="mp-empty" class="nm-empty animate-fade-in-up">
+        <img src="/assets/Naura_Expression/Happy.png"
+             alt="Naura tersenyum" class="nm-expression__img" width="100" height="100">
+        <h1 class="nm-empty__title">Belum ada lagu yang diputar</h1>
+        <p class="nm-empty__desc">Minta Naura memutarkan lagu di Discord, lalu kontrol dari sini.</p>
+      </div>
+
+      <!-- Player Section (tampil jika ada lagu) -->
+      <section id="mp-player-section" class="reveal animate-fade-in-up" style="display:none" aria-label="Pemutar musik">
+
+        <!-- Now Playing Card -->
+        <div class="nm-card" style="display:flex;flex-direction:column;align-items:center;gap:var(--sp-md);padding:var(--sp-xl) var(--sp-lg)">
+          <img id="mp-cover" class="nm-player-cover"
+               src="/assets/core/avatar.png" alt="Cover lagu"
+               style="width:120px;height:120px;box-shadow:var(--shadow-glass)"
+               width="120" height="120" />
+          <div style="text-align:center;width:100%">
+            <p id="mp-title" style="font-size:1rem;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">-</p>
+            <p id="mp-artist" style="font-size:0.8125rem;color:var(--body);margin-top:4px">-</p>
+          </div>
+          <!-- Progress -->
+          <div class="nm-progress" role="progressbar" aria-label="Progres lagu">
+            <div id="mp-progress" class="nm-progress__fill" style="width:0%"></div>
+          </div>
+          <!-- Kontrol -->
+          <div class="nm-player-controls">
+            <button class="nm-player-btn" id="mp-prev" aria-label="Lagu sebelumnya">
+              <i class="fa-solid fa-backward-step" aria-hidden="true"></i>
+            </button>
+            <button class="nm-player-btn nm-player-btn--primary" id="mp-play" aria-label="Jeda/Putar">
+              <i class="fa-solid fa-pause" aria-hidden="true"></i>
+            </button>
+            <button class="nm-player-btn" id="mp-next" aria-label="Lagu berikutnya">
+              <i class="fa-solid fa-forward-step" aria-hidden="true"></i>
+            </button>
+          </div>
+          <!-- Volume -->
+          <div class="nm-volume" style="width:100%">
+            <i class="fa-solid fa-volume-low" style="color:var(--muted);font-size:0.875rem" aria-hidden="true"></i>
+            <input type="range" id="mp-volume" min="0" max="100" value="80"
+                   aria-label="Volume" style="flex:1;accent-color:var(--primary)">
+            <i class="fa-solid fa-volume-high" style="color:var(--muted);font-size:0.875rem" aria-hidden="true"></i>
+          </div>
+        </div>
+
+        <!-- Kontrol Tambahan -->
+        <div style="display:flex;justify-content:center;gap:var(--sp-sm)">
+          <button class="nm-btn nm-btn--ghost" id="mp-shuffle" aria-label="Acak">
+            <i class="fa-solid fa-shuffle" aria-hidden="true"></i> Acak
+          </button>
+          <button class="nm-btn nm-btn--ghost" id="mp-loop" aria-label="Ulangi">
+            <i class="fa-solid fa-repeat" aria-hidden="true"></i> Ulangi
+          </button>
+        </div>
+
+        <!-- Audio Filters -->
+        <section aria-label="Filter audio" class="reveal">
+          <p class="nm-section-title">Filter Audio</p>
+          <div class="nm-filter-chips" role="group" aria-label="Pilih filter">
+            <button class="nm-filter-chip nm-filter-chip--active" data-filter="normal" aria-pressed="true">Normal</button>
+            <button class="nm-filter-chip" data-filter="8d"         aria-pressed="false">8D</button>
+            <button class="nm-filter-chip" data-filter="bassboost"  aria-pressed="false">Bassboost</button>
+            <button class="nm-filter-chip" data-filter="nightcore"  aria-pressed="false">Nightcore</button>
+            <button class="nm-filter-chip" data-filter="vaporwave"  aria-pressed="false">Vaporwave</button>
+            <button class="nm-filter-chip" data-filter="karaoke"    aria-pressed="false">Karaoke</button>
+          </div>
+        </section>
+
+        <!-- Queue -->
+        <section aria-label="Antrian lagu" class="reveal">
+          <p class="nm-section-title">Antrian</p>
+          <div id="mp-queue">
+            <div class="nm-skeleton" style="height:40px;margin-bottom:2px"></div>
+            <div class="nm-skeleton" style="height:40px;margin-bottom:2px;animation-delay:80ms"></div>
+            <div class="nm-skeleton" style="height:40px;animation-delay:160ms"></div>
+          </div>
+        </section>
+
+      </section>
+    </main>
+
+    <nav id="nm-bottom-nav" aria-label="Navigasi utama"></nav>
+    <div id="nm-toast-container" role="region" aria-label="Notifikasi" aria-live="polite"></div>
+    <script type="module" src="../js/pages/music.js"></script>
+  </body>
+</html>

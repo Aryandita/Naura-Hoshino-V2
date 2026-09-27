@@ -9,14 +9,52 @@ const path = require("path");
 
 /**
  * Generate a dynamic profile card using canvas
+ * Mendukung pemanggilan model legacy (user, userProfile, userLeveling, rankNumber)
+ * maupun pemanggilan worker payload tunggal (payload).
  */
-async function generateProfileCard(
-  user,
-  userProfile,
-  userLeveling,
-  rankNumber,
-) {
-  const cacheKey = `canvas:profile:${user.id}`;
+async function generateProfileCard(arg1, arg2, arg3, arg4) {
+  // Normalisasi parameter (single payload vs multi arguments)
+  let user;
+  let userProfile;
+  let userLeveling;
+  let rankNumber;
+
+  if (arg1 && typeof arg1 === "object" && !arg2 && (arg1.username || arg1.wallet !== undefined)) {
+    // Mode payload objek tunggal
+    user = {
+      id: arg1.userId || arg1.id || "unknown",
+      username: arg1.username || "Petualang",
+      avatarUrl: arg1.avatarUrl || null,
+      displayAvatarURL: () => arg1.avatarUrl || null,
+    };
+    userProfile = {
+      isPremium: Boolean(arg1.isPremium),
+      premium_tier: arg1.premiumTier || "none",
+      activeBanners: arg1.activeBanners,
+      economy_wallet: arg1.wallet || 0,
+      economy_bank: arg1.bank || 0,
+      starFragments: arg1.starFragments || 0,
+      custom_title: arg1.title || "Adventurer",
+      reputation: arg1.reputation || 0,
+      clan: arg1.clan || null,
+      partner: arg1.partner || null,
+    };
+    userLeveling = {
+      level: arg1.level || 1,
+      xp: arg1.xp || 0,
+      mannersPoint: arg1.mannersPoint ?? 100,
+    };
+    rankNumber = arg1.rank || 1;
+  } else {
+    // Mode argument terpisah
+    user = arg1 || {};
+    userProfile = arg2 || {};
+    userLeveling = arg3 || {};
+    rankNumber = arg4 || 1;
+  }
+
+  const userId = user.id || user.userId || "anonymous";
+  const cacheKey = `canvas:profile:${userId}`;
   const cachedBuffer = await getFromRedis(cacheKey);
   if (cachedBuffer) return cachedBuffer;
 
@@ -24,7 +62,7 @@ async function generateProfileCard(
     const canvas = createCanvas(800, 300);
     const ctx = canvas.getContext("2d");
 
-    // Latar Belakang (Banner Custom atau Gradient Modern)
+    // 1. Latar Belakang (Banner Kustom atau Cyberpunk Gradient)
     let bannerId = null;
     try {
       if (userProfile.activeBanners) {
@@ -32,10 +70,11 @@ async function generateProfileCard(
           typeof userProfile.activeBanners === "string"
             ? JSON.parse(userProfile.activeBanners)
             : userProfile.activeBanners;
-        if (activeBanners.profile) bannerId = activeBanners.profile;
+        if (activeBanners && activeBanners.profile) bannerId = activeBanners.profile;
       }
     } catch (e) {}
 
+    let bannerLoaded = false;
     if (bannerId) {
       try {
         const bannerPath = path.join(
@@ -46,33 +85,30 @@ async function generateProfileCard(
         );
         const bg = await loadImage(bannerPath);
         ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
-        // Tambahkan overlay gelap sedikit agar teks tetap terbaca
-        ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+        // Overlay gelap agar teks tetap kontras terbaca
+        ctx.fillStyle = "rgba(10, 10, 18, 0.55)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        bannerLoaded = true;
       } catch (e) {
-        // Fallback jika gambar gagal dimuat
-        const gradient = ctx.createLinearGradient(0, 0, 800, 300);
-        gradient.addColorStop(0, "#0f0c29");
-        gradient.addColorStop(0.5, "#302b63");
-        gradient.addColorStop(1, "#24243e");
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        bannerLoaded = false;
       }
-    } else {
+    }
+
+    if (!bannerLoaded) {
       const gradient = ctx.createLinearGradient(0, 0, 800, 300);
-      gradient.addColorStop(0, "#0f0c29");
-      gradient.addColorStop(0.5, "#302b63");
-      gradient.addColorStop(1, "#24243e");
+      gradient.addColorStop(0, "#0b0a16");
+      gradient.addColorStop(0.5, "#1e1838");
+      gradient.addColorStop(1, "#0c1222");
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Efek Glassmorphism dengan Tinted Soft Shadow & Neon Glow
+    // 2. Efek Glassmorphism dengan Tinted Soft Shadow & Neon Glow
     const { getUserPremiumTier } = require("../premium/premiumHelper");
     const tier = getUserPremiumTier(userProfile);
 
     let glowColor = "rgba(255, 182, 193, 0.25)";
-    let borderColor = "rgba(255, 182, 193, 0.25)";
+    let borderColor = "rgba(255, 182, 193, 0.3)";
     let shadowBlur = 14;
 
     if (tier === "vip") {
@@ -102,7 +138,7 @@ async function generateProfileCard(
     ctx.shadowBlur = shadowBlur;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 8;
-    ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.035)";
     ctx.beginPath();
     ctx.roundRect(20, 20, 760, 260, 18);
     ctx.fill();
@@ -114,10 +150,10 @@ async function generateProfileCard(
     ctx.roundRect(20, 20, 760, 260, 18);
     ctx.stroke();
 
-    // Gambar Avatar User
-    const avatarSize = 150;
-    const avatarX = 50;
-    const avatarY = 75;
+    // 3. Avatar Pengguna
+    const avatarSize = 140;
+    const avatarX = 45;
+    const avatarY = 65;
 
     ctx.save();
     ctx.beginPath();
@@ -133,10 +169,20 @@ async function generateProfileCard(
     ctx.clip();
 
     try {
-      // Fallback untuk PNG
-      const avatarUrl = user.displayAvatarURL({ extension: "png", size: 256 });
-      const avatar = await loadImage(avatarUrl);
-      ctx.drawImage(avatar, avatarX, avatarY, avatarSize, avatarSize);
+      let avatarUrl = null;
+      if (typeof user.displayAvatarURL === "function") {
+        avatarUrl = user.displayAvatarURL({ extension: "png", size: 256 });
+      } else if (user.avatarUrl) {
+        avatarUrl = user.avatarUrl;
+      }
+
+      if (avatarUrl) {
+        const avatar = await loadImage(avatarUrl);
+        ctx.drawImage(avatar, avatarX, avatarY, avatarSize, avatarSize);
+      } else {
+        ctx.fillStyle = "#1e1e24";
+        ctx.fillRect(avatarX, avatarY, avatarSize, avatarSize);
+      }
     } catch (e) {
       ctx.fillStyle = "#1e1e24";
       ctx.fillRect(avatarX, avatarY, avatarSize, avatarSize);
@@ -161,72 +207,131 @@ async function generateProfileCard(
     ctx.stroke();
     ctx.restore();
 
-    // Jika premium, tambahkan icon crown
+    // Icon Mahkota jika Pengguna Premium
     if (userProfile.isPremium) {
-      ctx.font = '28px "EmojiFont"';
-      ctx.fillText("👑", avatarX + 110, avatarY + 30);
+      ctx.font = '26px "EmojiFont"';
+      ctx.fillText("👑", avatarX + avatarSize - 22, avatarY + 22);
     }
 
-    // Teks Username (Outfit / MontserratBold)
-    ctx.font = 'bold 34px "MontserratBold", "EmojiFont"';
+    // 4. Header Identitas Pengguna (Username + Clan Badge + Partner Badge)
+    const contentStartX = 215;
+
+    // Username
+    const rawUsername = user.username || "Petualang";
+    const displayName =
+      rawUsername.length > 14 ? rawUsername.substring(0, 12) + "..." : rawUsername;
+
+    ctx.font = 'bold 26px "MontserratBold", "EmojiFont"';
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillText(
-      user.username.length > 15
-        ? user.username.substring(0, 15) + "..."
-        : user.username,
-      230,
-      95,
-    );
+    ctx.shadowColor = "rgba(255, 255, 255, 0.25)";
+    ctx.shadowBlur = 6;
+    ctx.fillText(displayName, contentStartX, 78);
+    ctx.shadowBlur = 0; // Reset shadow
 
-    // Teks Level & Rank (MontserratBold angka inti)
-    ctx.font = 'bold 22px "MontserratBold", "EmojiFont"';
-    ctx.fillStyle = "#FFD700"; // Gold Color
-    ctx.fillText(
-      `RANK #${rankNumber}   |   LEVEL ${userLeveling.level}`,
-      230,
-      138,
-    );
+    // Badge Clan dan Partner di baris username jika tersedia
+    let badgeCursorX = contentStartX + ctx.measureText(displayName).width + 14;
 
-    // Teks Manners Point (Tata Krama)
-    ctx.font = '18px "Inter", "EmojiFont"';
+    const clanTag = userProfile.clan || null;
+    if (clanTag) {
+      ctx.font = 'bold 11px "MontserratBold", "EmojiFont"';
+      const clanText = `CLAN: ${clanTag.toUpperCase()}`;
+      const clanWidth = ctx.measureText(clanText).width + 14;
+
+      ctx.fillStyle = "rgba(56, 189, 248, 0.15)";
+      ctx.strokeStyle = "#38BDF8";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(badgeCursorX, 60, clanWidth, 22, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#38BDF8";
+      ctx.fillText(clanText, badgeCursorX + 7, 75);
+      badgeCursorX += clanWidth + 8;
+    }
+
+    const partnerName = userProfile.partner || null;
+    if (partnerName) {
+      ctx.font = 'bold 11px "MontserratBold", "EmojiFont"';
+      const partnerText = `💍 ${partnerName}`;
+      const partnerWidth = ctx.measureText(partnerText).width + 14;
+
+      ctx.fillStyle = "rgba(244, 114, 182, 0.15)";
+      ctx.strokeStyle = "#F472B6";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(badgeCursorX, 60, partnerWidth, 22, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#F472B6";
+      ctx.fillText(partnerText, badgeCursorX + 7, 75);
+    }
+
+    // 5. Level & Rank
+    ctx.font = 'bold 18px "MontserratBold", "EmojiFont"';
+    ctx.fillStyle = "#FFD700"; // Emas
+    const rankText = `RANK #${rankNumber}`;
+    ctx.fillText(rankText, contentStartX, 112);
+
+    const rankWidth = ctx.measureText(rankText).width;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+    ctx.fillText("  |  ", contentStartX + rankWidth, 112);
+
+    const dividerWidth = ctx.measureText("  |  ").width;
+    ctx.fillStyle = "#38BDF8"; // Sky Blue
+    ctx.fillText(`LEVEL ${userLeveling.level || 1}`, contentStartX + rankWidth + dividerWidth, 112);
+
+    // 6. Baris Status Tata Krama
+    ctx.font = '15px "Inter", "EmojiFont"';
+    const manners = userLeveling.mannersPoint ?? 100;
     let mannersColor = "#86EFAC";
-    if (userLeveling.mannersPoint <= 50) mannersColor = "#FFA500";
-    if (userLeveling.mannersPoint <= 20) mannersColor = "#FF6B6B";
+    if (manners <= 50) mannersColor = "#FFA500";
+    if (manners <= 20) mannersColor = "#FF6B6B";
 
     ctx.fillStyle = mannersColor;
-    ctx.fillText(`Tata Krama: ${userLeveling.mannersPoint}/100`, 230, 172);
+    ctx.fillText(`Tata Krama: ${manners}/100`, contentStartX, 144);
 
-    // Saldo Economy
-    ctx.fillStyle = "#F9A8D4"; // Light Pink
+    // 7. Saldo Ganda Closed-Loop (NC & NSF, tanpa format "Rp")
     const wallet = userProfile.economy_wallet || 0;
-    ctx.font = '18px "Inter", "EmojiFont"';
-    ctx.fillText(
-      `💳 Saldo Wallet: Rp ${wallet.toLocaleString("id-ID")}`,
-      230,
-      205,
-    );
+    const starFragments = userProfile.starFragments || 0;
 
-    // Progress Bar XP
-    // Asumsi rumus level: next_level_xp = level * 100
+    ctx.font = 'bold 15px "MontserratBold", "EmojiFont"';
+    // Naura Coins (NC)
+    ctx.fillStyle = "#FBBF24";
+    const ncText = `🪙 ${wallet.toLocaleString("id-ID")} NC`;
+    ctx.fillText(ncText, contentStartX, 178);
+
+    const ncWidth = ctx.measureText(ncText).width;
+    ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
+    ctx.fillText("   •   ", contentStartX + ncWidth, 178);
+
+    const dotWidth = ctx.measureText("   •   ").width;
+    // Naura Star Fragments (NSF)
+    ctx.fillStyle = "#F472B6";
+    const nsfText = `✨ ${starFragments.toLocaleString("id-ID")} NSF`;
+    ctx.fillText(nsfText, contentStartX + ncWidth + dotWidth, 178);
+
+    // 8. Progress Bar XP
     const xpCurrent = userLeveling.xp || 0;
-    const xpNeeded = userLeveling.level * 100;
+    const xpNeeded = Math.max(1, (userLeveling.level || 1) * 100);
 
-    const barX = 230;
-    const barY = 230;
-    const barWidth = 500;
+    const barX = contentStartX;
+    const barY = 212;
+    const barWidth = 530;
     const barHeight = 22;
 
-    // Latar belakang bar
+    // Latar Belakang Bar XP
     ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
     ctx.beginPath();
     ctx.roundRect(barX, barY, barWidth, barHeight, 11);
     ctx.fill();
 
-    // Isi Progress
+    // Isi Progress Bar XP
     let progress = Math.min(xpCurrent / xpNeeded, 1);
     if (isNaN(progress) || progress < 0) progress = 0;
 
-    const progressWidth = Math.max(barWidth * progress, 14); // Minimal 14px agar rounded corner terlihat bagus
+    const progressWidth = Math.max(barWidth * progress, 14);
 
     if (progressWidth > 0) {
       const progressGradient = ctx.createLinearGradient(
@@ -244,15 +349,13 @@ async function generateProfileCard(
       ctx.fill();
     }
 
-    // Teks XP di dalam Bar (MontserratBold)
-    ctx.font = 'bold 13px "MontserratBold", "EmojiFont"';
+    // Teks XP di dalam Bar
+    ctx.font = 'bold 12px "MontserratBold", "EmojiFont"';
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
-    ctx.fillText(
-      `${xpCurrent.toLocaleString("id-ID")} / ${xpNeeded.toLocaleString("id-ID")} XP`,
-      barX + barWidth / 2,
-      barY + 16,
-    );
+    const xpLabel = `${xpCurrent.toLocaleString("id-ID")} / ${xpNeeded.toLocaleString("id-ID")} XP (${Math.round(progress * 100)}%)`;
+    ctx.fillText(xpLabel, barX + barWidth / 2, barY + 16);
+    ctx.textAlign = "left"; // Reset alignment
 
     const buffer = canvas.toBuffer("image/png");
     await cacheToRedis(cacheKey, buffer, 300);

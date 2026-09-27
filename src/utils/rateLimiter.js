@@ -43,6 +43,10 @@ class RateLimiter {
         const limited = current > limit;
         let retryAfter = 0;
         if (limited) {
+          try {
+            const trafficMonitor = require("../managers/trafficMonitor");
+            trafficMonitor.recordRateLimitSpike(commandName, userId);
+          } catch (_) {}
           const ttl = await redisManager.getTtl(key);
           retryAfter = ttl > 0 ? ttl : windowInSeconds;
         }
@@ -69,6 +73,12 @@ class RateLimiter {
 
     record.count++;
     const limited = record.count > limit;
+    if (limited) {
+      try {
+        const trafficMonitor = require("../managers/trafficMonitor");
+        trafficMonitor.recordRateLimitSpike(commandName, userId);
+      } catch (_) {}
+    }
     return {
       limited,
       remaining: Math.max(0, limit - record.count),

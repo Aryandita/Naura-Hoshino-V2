@@ -19,7 +19,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { loadModel } from "../NauraViewer/loader.js";
-import { createAnimationController } from "../NauraViewer/animations.js";
+import { createAnimationController, applyNauraRuntimeFix } from "../NauraViewer/animations.js";
 import { createParticleSystem } from "../NauraViewer/particles.js";
 import { createNauraBrand3D } from "../NauraViewer/brand3d.js";
 
@@ -341,6 +341,14 @@ export class NauraHero3DViewer {
                     });
                 }
             });
+
+            // Terapkan Naura Runtime Fix v8 (Skinning weights, Arm IK joints, Hand scaling)
+            try {
+                const fixReport = applyNauraRuntimeFix(this.modelGroup);
+                console.log("[NauraFix]", fixReport);
+            } catch (errFix) {
+                console.warn("[NauraFix] Gagal menerapkan patch runtime:", errFix);
+            }
 
             this.modelGroup.position.set(0, -0.02, 0);
             this.modelGroup.rotation.y = -Math.PI / 2;

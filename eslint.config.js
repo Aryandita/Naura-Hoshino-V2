@@ -36,8 +36,10 @@ module.exports = [
       "package-lock.json",
       // Aset statis, hasil build Vite dan vendor pihak ketiga tidak perlu dilint
       "dashboard/dist/**",
+      "dashboard/mobile/dist/**",
       "dashboard/public/**",
       "scratch/**",
+      "pending_plugin/**",
     ],
   },
   {
@@ -175,7 +177,7 @@ module.exports = [
     // Frontend dashboard adalah ESM yang berjalan di
     // browser dan dibundel Vite. Parse sebagai module, matikan no-undef
     // karena globals browser/window tidak relevan bagi kode hasil bundel.
-    files: ["dashboard/src/**/*.js"],
+    files: ["dashboard/src/**/*.js", "dashboard/mobile/src/**/*.js"],
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: "module",

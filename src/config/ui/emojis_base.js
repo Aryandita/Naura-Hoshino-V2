@@ -75,8 +75,8 @@ module.exports = {
   setup_automod: "<:shield:1523223839280988231>",
   setup_welcome: "<:Happy:1533824839704641546>",
   setup_ai: "<:ai:1492712303911633009>",
-  setup_modmail: "<:ticket:1523227930682064908>",
-  setup_ticket: "<:ticket:1523227930682064908>",
+  setup_modmail: "<a:Ticket:1553008468473020547>",
+  setup_ticket: "<a:Ticket:1553008468473020547>",
   setup_tempvoice: "🔊",
   setup_autorole: "🎭",
   setup_vanity: "✍️",
@@ -151,7 +151,7 @@ module.exports = {
 
   // --- Announcements ---
   announce_update: "<a:Announcement1:1492696885817770164>",
-  announce_mt: "<:Database:1484706081988018279>",
+  announce_mt: "<:database:1492712292524232824>",
   announce_event: "<a:Gift:1492696855778295859>",
   announce_warn: "<a:Warn:1492696836694347816>",
   announce_info: "<:Naura:1488427505466474597>",

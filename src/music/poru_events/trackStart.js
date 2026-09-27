@@ -30,6 +30,10 @@ module.exports = {
       player.previousTrack = activeTrack;
       player.isAutoplayResolving = false;
 
+      // Reset skip votes dan simpan state antrean aktif ke Redis untuk persistensi failover
+      manager.clearSkipVotes?.(player.guildId);
+      manager.saveQueueState?.(player.guildId, player);
+
       console.log(
         `\x1b[44m\x1b[37m 🔊 PLAYING \x1b[0m \x1b[36m${activeTrack.info.title} \x1b[0m\x1b[90mdi ${manager.client.guilds.cache.get(player.guildId)?.name}\x1b[0m`,
       );

@@ -354,8 +354,59 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       socket.to(`jam:${roomId}`).emit("jam:clear");
     });
 
+    // --- 3D Discord Embedded Activity Sanctuary Events ---
+    socket.on("activity:join", ({ channelId = "global_sanctuary", user, position } = {}) => {
+      const room = `activity:${channelId}`;
+      socket.join(room);
+      socket.activityChannelId = channelId;
+      socket.activityUser = user;
+      socket.to(room).emit("activity:player_move", {
+        userId: user?.id || socket.id,
+        username: user?.username || "Explorer",
+        x: position?.x || 0,
+        z: position?.z || 0,
+      });
+    });
+
+    socket.on("activity:move", ({ channelId = "global_sanctuary", userId, username, x, z } = {}) => {
+      const room = `activity:${channelId}`;
+      socket.to(room).emit("activity:player_move", { userId, username, x, z });
+    });
+
+    // --- Town Square Live Multiplayer Avatar Radar (#12) ---
+    socket.on("town:join", ({ location = "desa_sukamaju", user } = {}) => {
+      const room = `town:${location}`;
+      socket.join(room);
+      socket.townLocation = location;
+      socket.townUser = user;
+      socket.to(room).emit("town:avatar_appear", {
+        userId: user?.id || socket.id,
+        username: user?.username || "Petualang",
+        avatar: user?.avatar || null,
+        location,
+      });
+    });
+
+    socket.on("town:move", ({ location = "desa_sukamaju", x, y, user } = {}) => {
+      socket.to(`town:${location}`).emit("town:avatar_move", {
+        userId: user?.id || socket.id,
+        username: user?.username || "Petualang",
+        x,
+        y,
+      });
+    });
+
     socket.on("disconnect", () => {
-      // Tidak ada yang perlu dibersihkan untuk saat ini.
+      if (socket.activityChannelId && socket.activityUser) {
+        socket.to(`activity:${socket.activityChannelId}`).emit("activity:player_leave", {
+          userId: socket.activityUser.id || socket.id,
+        });
+      }
+      if (socket.townLocation && socket.townUser) {
+        socket.to(`town:${socket.townLocation}`).emit("town:avatar_leave", {
+          userId: socket.townUser.id || socket.id,
+        });
+      }
     });
   });
 

@@ -152,7 +152,7 @@ module.exports = {
             content:
               `Tiket kamu sudah ditutup oleh **${interaction.user.tag}** ya.\n` +
               `Alasannya: ${reason}\n` +
-              "Naura lampirkan riwayat percakapannya di bawah, semoga membantu!",
+              "Naura lampirkan riwayat percakapannya di bawah ini.",
             files: [new AttachmentBuilder(transcriptFile)],
           })
           .catch(() => null);

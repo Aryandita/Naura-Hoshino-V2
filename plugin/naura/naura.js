@@ -174,7 +174,7 @@ module.exports = {
         title: isEn ? "🎙️ Duplex Voice Session Active!" : "🎙️ Sesi Suara Duplex Aktif!",
         expression: "happy",
         description: isEn
-          ? `Yay! Naura has joined <#${voiceChannel.id}>! Feel free to talk in voice or chat with Naura!`
+          ? `Yay! Naura has joined <#${voiceChannel.id}>! Talk in voice or send a message to chat with Naura!`
           : `Yayy! Naura sudah hadir di <#${voiceChannel.id}>! Ajak Naura ngobrol langsung lewat suara atau ketik pesan kapan saja!`,
         footerText: ui.getFooter("naura", lang),
       });
@@ -231,7 +231,7 @@ module.exports = {
             `• **/naura gallery:** Lihat koleksi pose eksklusif dan buku seni hologram (Akses VIP Premium)!\n` +
             `• **/naura play:** Main minigame seru 1v1 bareng Naura (Suit, Tebak Warna, Gelas Misteri, Lempar Dadu, dsb)!\n\n` +
             `**${e("wave", "\uD83D\uDC4B")} Untuk Teman-Teman Komunitas:**\n` +
-            `Buat semua member server, Naura selalu siap jadi teman ngobrol paling asik dan suportif kapan pun kamu butuh hiburan! Jangan ragu ajak Naura seru-seruan yaa! ${face("happy", "\uD83E\uDD70")}`,
+            `Buat semua member server, Naura selalu siap jadi teman ngobrol paling asik dan suportif kapan pun kamu butuh hiburan! Yuk ajak Naura seru-seruan bareng! ${face("happy", "\uD83E\uDD70")}`,
         footerText: ui.getFooter("naura", lang),
       });
 

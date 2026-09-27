@@ -34,10 +34,21 @@ module.exports = {
         "lang_success",
       );
 
+      const nextLang = selectedLang === "id" ? "en" : "id";
+      const nextLabel = selectedLang === "id" ? "Switch to English 🇬🇧" : "Ganti ke Bahasa Indonesia 🇮🇩";
+      const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+      const toggleRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`btn_lang_${nextLang}`)
+          .setLabel(nextLabel)
+          .setStyle(ButtonStyle.Secondary),
+      );
+
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("accent") || "#FF69B4",
         title: `${ui.getEmoji("translate") || "🌐"} Bahasa Diperbarui / Language Updated`,
         description: translatedMsg,
+        buttonsRow: toggleRow,
         footerText: ui.getFooter("utility"),
       });
 

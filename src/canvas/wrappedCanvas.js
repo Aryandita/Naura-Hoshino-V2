@@ -208,7 +208,7 @@ async function generateWrappedCard(user, stats = {}) {
     ctx.font = '12px "Outfit", sans-serif';
     ctx.fillStyle = "#CBD5E1";
     ctx.fillText(
-      `≈ ${totalMinutes.toLocaleString("id-ID")} Menit Audio Lossless`,
+      `≈ ${totalMinutes.toLocaleString("id-ID")} Menit Musik Diputar`,
       70,
       242,
     );

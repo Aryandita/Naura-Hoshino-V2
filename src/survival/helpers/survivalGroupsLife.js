@@ -176,6 +176,14 @@ function addLifeGroup(builder) {
                   name: "Tingkatkan Kapasitas Grid (Upgrade)",
                   value: "upgrade",
                 },
+                {
+                  name: "Persilangan Benih Hibrida (Cross-Breed)",
+                  value: "breed",
+                },
+                {
+                  name: "Webhook Notifikasi Panen (Webhook)",
+                  value: "webhook",
+                },
               )
               .setRequired(false),
           )
@@ -199,6 +207,12 @@ function addLifeGroup(builder) {
             opt
               .setName("slot")
               .setDescription("Nomor Pod Lahan (1 s/d 6)")
+              .setRequired(false),
+          )
+          .addStringOption((opt) =>
+            opt
+              .setName("url")
+              .setDescription("URL Webhook Discord/Pribadi untuk notifikasi panen")
               .setRequired(false),
           ),
       ),

@@ -31,6 +31,7 @@
 | **Tulis GuildSettings** | HANYA via `guildSettingsService.updateGuildSetting()`                                     | Bagian 1.8         |
 | **Render Canvas**       | HANYA via `src/canvas/canvasRuntime.js` -> `canvasWorkerPool.js` (Worker Threads)         | Bagian 1.9         |
 | **AI Ensemble Router**  | Multi-LLM (Gemini 2.5 -> Groq LLaMA 3.3 -> Ollama) dengan Circuit Breaker otomatis       | Bagian 1.11        |
+| **Sistem Bantuan**     | Wajib sinkronkan `src/core/helpView.js` setiap menambah/mengubah fitur atau command        | Bagian 1.12        |
 | **Polyglot DB**         | Supabase (PostgreSQL relasional), MongoDB (dokumen/log), Redis (cache), SQLite (fallback) | Bagian 1.7         |
 | **Migrasi Skema**       | Eksklusif di `dbMigrator.js` bernomor (41 migrasi) + ledger; DILARANG ALTER TABLE manual | Bagian 1.7.1 & 3.2 |
 | **Pterodactyl Panel**   | `CMD_RUN` tetap `npm start`, migrasi via `prestart` di `package.json`                     | Bagian 3.1         |
@@ -122,6 +123,7 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 - **Sanitasi Emoji di Header & Footer**: Custom emoji Discord (`<:name:id>`) TIDAK didukung pada `authorName` dan `footerText`. Gunakan `ui.stripCustomEmojis()` sebelum mengisinya.
 - **Tombol dengan Custom Emoji**: Parsing emoji tombol via `ui.parseEmoji(ui.getEmoji('nama'))` untuk menghasilkan objek `{ id, name, animated }` yang valid.
 - **Batas Payload**: Maksimal 40 komponen per pesan dan total teks aman di bawah 3.500 karakter. `src/utils/componentBudget.js` memotong isi berlebih secara otomatis tanpa mengorbankan tombol atau footer.
+- **Kewajiban Sinkronisasi Help Menu**: Setiap penambahan, modifikasi, atau penghapusan command/subcommand baru WAJIB memperbarui daftar pada menu bantuan (`plugin/core/core.js`) dan kamus bahasa (`assets/language/id.json` & `en.json`) agar direktori bantuan interaktif bot selalu 100% sinkron dengan fitur aktif repositori.
 
 ### 1.4.3 Standar Filter Anti-Slop (Web Dashboard & Antarmuka UI)
 
@@ -297,6 +299,13 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 ### 1.11.2 Lavalink Cluster Manager & Soundboard Studio
 - Manajemen node Lavalink dikendalikan secara bertingkat melalui `src/managers/lavalinkClusterManager.js` dengan evaluasi kesehatan otomatis dan failover antar tier (Primary -> Secondary -> Fallback) tanpa memutus sesi suara Discord.
 - Fitur Soundboard Web Dashboard (`/soundboard`) menyiarkan audio instan melalui WebSocket Socket.IO yang diverifikasi oleh session rate limiter.
+
+## 1.12 Sinkronisasi Sistem Bantuan (Core Help Sync Rule)
+
+- **Wajib Sinkron Saat Menambah Fitur**: Setiap kali menambahkan command baru, subcommand baru, atau merombak alur interaksi pengguna, pengembang/agen AI WAJIB secara bersamaan memperbarui berkas sentral sistem bantuan di [`src/core/helpView.js`](src/core/helpView.js).
+- **Paritas Kategori & Subcommand**: Pastikan setiap entri slash command tercatat pada kategori yang sesuai (`core`, `music`, `admin`, `survival`, `naura`, dll.) lengkap dengan deskripsi fungsional yang ringkas, parameter utama, dan bebas dari AI slop.
+- **Kepatuhan QA Gate**: Kelalaian menyertakan atau memperbarui entri bantuan di `helpView.js` untuk fitur baru dianggap sebagai pekerjaan yang belum selesai (*incomplete task*) dan tidak diperkenankan lolos QA Gate maupun digabungkan (*merge*) ke branch utama.
+
 
 ---
 

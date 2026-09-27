@@ -67,6 +67,14 @@ class CacheManager {
     this.flushTimer = null;
     this.isFlushing = false;
     this._currentFlush = null;
+    this.flushMetrics = {
+      totalFlushed: 0,
+      flushCount: 0,
+      lastFlushDurationMs: 0,
+      lastFlushTimestamp: null,
+      flushErrors: 0,
+      history: [],
+    };
   }
 
   /** Jumlah user yang masih menunggu ditulis ke database. */
@@ -129,6 +137,9 @@ class CacheManager {
     }
     if (this.pendingWrites === 0) return;
 
+    const startTime = Date.now();
+    const countBefore = this.pendingWrites;
+
     this.isFlushing = true;
     this._currentFlush = Promise.all([
       this._flushQueue(this.writeQueue, UserProfile, "UserProfile"),
@@ -138,8 +149,22 @@ class CacheManager {
     try {
       await this._currentFlush;
     } finally {
+      const durationMs = Date.now() - startTime;
       this.isFlushing = false;
       this._currentFlush = null;
+
+      this.flushMetrics.flushCount++;
+      this.flushMetrics.lastFlushDurationMs = durationMs;
+      this.flushMetrics.lastFlushTimestamp = new Date().toISOString();
+      this.flushMetrics.totalFlushed += countBefore;
+      this.flushMetrics.history.unshift({
+        timestamp: this.flushMetrics.lastFlushTimestamp,
+        durationMs,
+        flushedCount: countBefore,
+      });
+      if (this.flushMetrics.history.length > 20) {
+        this.flushMetrics.history.pop();
+      }
     }
   }
 
@@ -225,12 +250,31 @@ class CacheManager {
           await Model.increment(safeInc, { where: { userId } });
         }
       } catch (error) {
+        this.flushMetrics.flushErrors++;
         logger.error(
           `[CacheManager] Gagal menulis ${label} untuk ${userId}:`,
           error.message,
         );
       }
     }
+  }
+
+  /**
+   * Mengembalikan telemetri dan metrik latensi write-behind cache untuk dashboard/monitoring.
+   */
+  getFlushMetrics() {
+    return {
+      pendingWrites: this.pendingWrites,
+      writeQueueSize: this.writeQueue.size,
+      survivalQueueSize: this.survivalQueue.size,
+      isFlushing: this.isFlushing,
+      totalFlushed: this.flushMetrics.totalFlushed,
+      flushCount: this.flushMetrics.flushCount,
+      lastFlushDurationMs: this.flushMetrics.lastFlushDurationMs,
+      lastFlushTimestamp: this.flushMetrics.lastFlushTimestamp,
+      flushErrors: this.flushMetrics.flushErrors,
+      history: [...this.flushMetrics.history],
+    };
   }
 
   /** @deprecated Dipertahankan untuk pemanggil lama. Gunakan flushAll(). */

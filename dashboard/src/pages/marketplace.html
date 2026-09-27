@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Galactic Marketplace & Auction House | Naura OS</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <style>
+      .market-container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+      .market-header {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        padding: 28px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        backdrop-filter: blur(16px);
+      }
+      .filter-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .market-search {
+        flex: 1;
+        min-width: 260px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-md);
+        padding: 10px 16px;
+        color: var(--text-primary);
+        font-size: 14px;
+        outline: none;
+      }
+      .market-search:focus {
+        border-color: var(--primary);
+      }
+      .filter-btn {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-secondary);
+        padding: 8px 16px;
+        border-radius: var(--r-md);
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+      .filter-btn.active, .filter-btn:hover {
+        background: var(--primary-dim);
+        border-color: var(--border-primary);
+        color: var(--primary);
+      }
+      .auction-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 18px;
+      }
+      .auction-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-lg);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      }
+      .auction-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--primary);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      }
+      .item-badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
+      .badge-mythic { background: rgba(239, 68, 68, 0.2); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.4); }
+      .badge-legendary { background: rgba(245, 158, 11, 0.2); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.4); }
+      .badge-rare { background: rgba(167, 139, 250, 0.2); color: #A78BFA; border: 1px solid rgba(167, 139, 250, 0.4); }
+      .badge-common { background: rgba(148, 163, 184, 0.2); color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.4); }
+      .price-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 12px 0 16px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border-subtle);
+      }
+      .price-val {
+        font-family: var(--font-mono);
+        font-size: 18px;
+        font-weight: 700;
+        color: #F59E0B;
+      }
+      .buyout-val {
+        font-family: var(--font-mono);
+        font-size: 13px;
+        color: #10B981;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="shared-nav"></div>
+
+    <main class="market-container">
+      <!-- Header -->
+      <section class="market-header">
+        <div>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+            <span style="font-size:28px;">🏛️</span>
+            <h1 style="margin:0; font-size:26px; font-family:var(--font-heading);">Balai Lelang Galaksi</h1>
+          </div>
+          <p style="margin:0; color:var(--text-secondary); font-size:14px;">
+            Pusat transaksi jual-beli komoditas, relik kuno, dan hasil bumi Naura Wilds antar petualang lintas server.
+          </p>
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="alert('Buka Discord dan ketik /survival auction create untuk memasang lelang!')">
+            <i class="fa-solid fa-plus"></i> Pasang Barang (Discord)
+          </button>
+        </div>
+      </section>
+
+      <!-- Filter & Search Bar -->
+      <section class="filter-bar">
+        <input type="text" id="market-search" class="market-search" placeholder="🔍 Cari nama barang, relik, atau penjual..." oninput="filterMarket()" />
+        <button class="filter-btn active" onclick="setCategory('all')">Semua</button>
+        <button class="filter-btn" onclick="setCategory('weapon')">⚔️ Senjata & Alat</button>
+        <button class="filter-btn" onclick="setCategory('material')">💎 Mineral & Material</button>
+        <button class="filter-btn" onclick="setCategory('crop')">🌾 Hasil Panen</button>
+        <button class="filter-btn" onclick="setCategory('relic')">🔮 Relik & Kartu</button>
+      </section>
+
+      <!-- Auction Cards Grid -->
+      <section class="auction-grid" id="auction-grid">
+        <!-- Card 1 -->
+        <div class="auction-card" data-category="weapon">
+          <div>
+            <span class="item-badge badge-legendary">Legendary</span>
+            <h3 style="margin:4px 0 6px; font-family:var(--font-heading); font-size:17px;">Beliung Obsidian Kosmik</h3>
+            <p style="margin:0; font-size:13px; color:var(--text-secondary);">Durabilitas 100/100 • Bonus Efisiensi Tambang +35%</p>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Penjual: <strong>Kang Deden</strong></div>
+          </div>
+          <div>
+            <div class="price-row">
+              <div>
+                <div style="font-size:11px; color:var(--text-muted);">TAWARAN SAAT INI</div>
+                <div class="price-val">12.500 NSF</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:11px; color:var(--text-muted);">BELI INSTAN</div>
+                <div class="buyout-val">20.000 NSF</div>
+              </div>
+            </div>
+            <button class="btn btn-secondary" style="width:100%; font-size:13px;" onclick="alert('Ketik /survival auction bid id:1 nominal:13000 di Discord!')">
+              <i class="fa-solid fa-gavel"></i> Tawar di Discord
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="auction-card" data-category="crop">
+          <div>
+            <span class="item-badge badge-rare">Rare Hybrid</span>
+            <h3 style="margin:4px 0 6px; font-family:var(--font-heading); font-size:17px;">Astral Strawberry x50</h3>
+            <p style="margin:0; font-size:13px; color:var(--text-secondary);">Hasil panen greenhouse kualitas unggul untuk kafe.</p>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Penjual: <strong>Ningsih Farm</strong></div>
+          </div>
+          <div>
+            <div class="price-row">
+              <div>
+                <div style="font-size:11px; color:var(--text-muted);">TAWARAN SAAT INI</div>
+                <div class="price-val">3.800 NSF</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:11px; color:var(--text-muted);">BELI INSTAN</div>
+                <div class="buyout-val">5.000 NSF</div>
+              </div>
+            </div>
+            <button class="btn btn-secondary" style="width:100%; font-size:13px;" onclick="alert('Ketik /survival auction bid id:2 nominal:4000 di Discord!')">
+              <i class="fa-solid fa-gavel"></i> Tawar di Discord
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="auction-card" data-category="material">
+          <div>
+            <span class="item-badge badge-mythic">Mythic</span>
+            <h3 style="margin:4px 0 6px; font-family:var(--font-heading); font-size:17px;">Kristal Chrono-Shard x5</h3>
+            <p style="margin:0; font-size:13px; color:var(--text-secondary);">Drop langka dari Celestial Chrono-Wyrm Floor 50.</p>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Penjual: <strong>AstraeaGuild</strong></div>
+          </div>
+          <div>
+            <div class="price-row">
+              <div>
+                <div style="font-size:11px; color:var(--text-muted);">TAWARAN SAAT INI</div>
+                <div class="price-val">45.000 NSF</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:11px; color:var(--text-muted);">BELI INSTAN</div>
+                <div class="buyout-val">60.000 NSF</div>
+              </div>
+            </div>
+            <button class="btn btn-secondary" style="width:100%; font-size:13px;" onclick="alert('Ketik /survival auction bid id:3 nominal:46000 di Discord!')">
+              <i class="fa-solid fa-gavel"></i> Tawar di Discord
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/src/js/shared-nav.js"></script>
+    <script src="/js/theme-switcher.js"></script>
+    <script src="/js/pwa-install.js"></script>
+    <script>
+      let activeCategory = 'all';
+
+      function setCategory(cat) {
+        activeCategory = cat;
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        filterMarket();
+      }
+
+      function filterMarket() {
+        const query = document.getElementById('market-search').value.toLowerCase();
+        const cards = document.querySelectorAll('.auction-card');
+
+        cards.forEach(card => {
+          const matchCat = activeCategory === 'all' || card.getAttribute('data-category') === activeCategory;
+          const matchQuery = card.innerText.toLowerCase().includes(query);
+          card.style.display = (matchCat && matchQuery) ? 'flex' : 'none';
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -84,7 +84,81 @@ const CROP_SEEDS = [
   },
 ];
 
+const HYBRID_SEEDS = [
+  {
+    id: "hybrid_cosmic_elixir",
+    name: "Cosmic Elixir Berry",
+    emoji: "🫐",
+    seedPrice: 200,
+    growTimeMinutes: 90,
+    harvestYield: {
+      itemId: "cosmic_elixir",
+      itemName: "Cosmic Elixir Essence",
+      amountMin: 2,
+      amountMax: 4,
+      xp: 100,
+      cafeYieldBonus: 50,
+    },
+    description: "Hasil persilangan Astral Strawberry & Cyber Mint bernilai tonik tinggi.",
+  },
+  {
+    id: "hybrid_void_crystal",
+    name: "Void Crystal Melon",
+    emoji: "💎",
+    seedPrice: 450,
+    growTimeMinutes: 300,
+    harvestYield: {
+      itemId: "void_crystal",
+      itemName: "Void Crystal Fruit",
+      amountMin: 2,
+      amountMax: 5,
+      xp: 200,
+      cafeYieldBonus: 90,
+    },
+    description: "Hasil persilangan Void Coffee & Neon Melon bertekstur kristal void.",
+  },
+  {
+    id: "hybrid_celestial_bloom",
+    name: "Celestial Sakura Blossom",
+    emoji: "🌸",
+    seedPrice: 600,
+    growTimeMinutes: 480,
+    harvestYield: {
+      itemId: "celestial_petal",
+      itemName: "Celestial Sakura Petal",
+      amountMin: 3,
+      amountMax: 6,
+      xp: 350,
+      cafeYieldBonus: 150,
+    },
+    description: "Hasil persilangan Sakura Grain & Astral Strawberry penghasil aroma surgawi.",
+  },
+];
+
+const CROSS_BREED_RECIPES = [
+  {
+    parents: ["astral_strawberry", "cyber_mint"],
+    result: "hybrid_cosmic_elixir",
+    chance: 0.85,
+  },
+  {
+    parents: ["void_coffee", "neon_melon"],
+    result: "hybrid_void_crystal",
+    chance: 0.75,
+  },
+  {
+    parents: ["sakura_grain", "astral_strawberry"],
+    result: "hybrid_celestial_bloom",
+    chance: 0.70,
+  },
+];
+
+const ALL_SEEDS = [...CROP_SEEDS, ...HYBRID_SEEDS];
+
 module.exports = {
   CROP_SEEDS,
-  getSeedById: (id) => CROP_SEEDS.find((s) => s.id === id),
+  HYBRID_SEEDS,
+  CROSS_BREED_RECIPES,
+  ALL_SEEDS,
+  getSeedById: (id) => ALL_SEEDS.find((s) => s.id === id),
 };

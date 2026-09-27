@@ -49,21 +49,49 @@ const REWARD_TABLE = [
   },
 ];
 
-function getStreakTimeline(currentDay) {
+function getStreakCalendarCard(currentDay) {
   const activeIndex = ((currentDay - 1) % 7) + 1;
-  const icons = [];
-  for (let i = 1; i <= 7; i++) {
-    if (i < activeIndex) {
-      icons.push(`✅\`D${i}\``);
-    } else if (i === activeIndex) {
-      icons.push(`🔥\`[D${i}]\``);
-    } else if (i === 7) {
-      icons.push(`🌟\`D7\``);
-    } else {
-      icons.push(`⚪\`D${i}\``);
-    }
-  }
-  return icons.join(" ➔ ");
+  const days = [
+    { day: 1, label: "Day 1", reward: "1.000 NSF", icon: "🪙" },
+    { day: 2, label: "Day 2", reward: "1.500 NSF", icon: "🪙" },
+    { day: 3, label: "Day 3", reward: "Mystery Box", icon: "📦" },
+    { day: 4, label: "Day 4", reward: "2.500 NSF", icon: "🪙" },
+    { day: 5, label: "Day 5", reward: "1x Kupon", icon: "🎟️" },
+    { day: 6, label: "Day 6", reward: "5.000 NSF", icon: "🪙" },
+    { day: 7, label: "Day 7", reward: "Jackpot Kosmik", icon: "👑" },
+  ];
+
+  const stampRow1 = days
+    .slice(0, 4)
+    .map((d) => {
+      const isClaimed = d.day < activeIndex;
+      const isToday = d.day === activeIndex;
+      const badge = isClaimed ? "✅" : isToday ? "🔥" : "🔒";
+      return `\`[${d.label}]\` ${badge} ${d.icon} **${d.reward}**`;
+    })
+    .join("  •  ");
+
+  const stampRow2 = days
+    .slice(4)
+    .map((d) => {
+      const isClaimed = d.day < activeIndex;
+      const isToday = d.day === activeIndex;
+      const badge = isClaimed ? "✅" : isToday ? "🔥" : "🔒";
+      return `\`[${d.label}]\` ${badge} ${d.icon} **${d.reward}**`;
+    })
+    .join("  •  ");
+
+  const progressPercent = Math.round((activeIndex / 7) * 100);
+  const filledBars = Math.round(progressPercent / 10);
+  const progressBar = "🟩".repeat(filledBars) + "⬜".repeat(10 - filledBars);
+
+  return [
+    "📅 **KALENDER STAMP LOGIN 7 HARI:**",
+    stampRow1,
+    stampRow2,
+    "",
+    `📈 **Progres Mingguan:** ${progressBar} \`${progressPercent}%\` *(Hari ${activeIndex}/7)*`,
+  ].join("\n");
 }
 
 module.exports = {
@@ -106,7 +134,7 @@ module.exports = {
             `Hai **${displayName}**! Kamu sudah mengambil hadiah harianmu hari ini.\n\n` +
             `⏱️ **Bisa diklaim lagi dalam:** \`${remainingHours} jam ${remainingMinutes} menit\`\n` +
             `🔥 **Streak Saat Ini:** \`${currentStreak} Hari\`\n\n` +
-            `**Jalur Streak Kamu:**\n${getStreakTimeline(currentStreak)}\n\n` +
+            `**Jalur Streak Kamu:**\n${getStreakCalendarCard(currentStreak)}\n\n` +
             `🎁 **Hadiah Hari Berikutnya (Day ${nextDay}):**\n` +
             `• 💵 \`+${nextReward.gold.toLocaleString("id-ID")} Gold\`\n` +
             `• ⭐ \`+${nextReward.starFragments.toLocaleString("id-ID")} Star Fragments\`\n` +
@@ -190,7 +218,7 @@ module.exports = {
 
     const desc =
       `Hai **${displayName}**! ${streakMessage}\n\n` +
-      `**Jalur Streak:**\n${getStreakTimeline(newStreak)}\n\n` +
+      `${getStreakCalendarCard(newStreak)}\n\n` +
       `**Hadiah yang Kamu Dapatkan (Day ${dayInCycle}):**\n` +
       `• 💵 **+${reward.gold.toLocaleString("id-ID")} Gold** *(masuk ke dompet)*\n` +
       `• ⭐ **+${reward.starFragments.toLocaleString("id-ID")} Star Fragments**\n` +

@@ -788,6 +788,139 @@ Berdasarkan analisis pasar bot dan platform developer Discord terkini (2025 - 20
 
 ---
 
+### 🚀 Sprint 34: Backlog & Implementasi Roadmap Fitur Baru (Hasil Penyaringan 50 Fitur)
+
+> **Konteks:** Hasil audit komprehensif terhadap 50 ide fitur ekosistem Naura Hoshino V2 (Node 24, v2.3.0) yang meminimalisir ketergantungan API AI free-tier, serta pemisahan blueprint modul AI ke folder cadangan `pending_plugin/`.
+
+#### 🟢 A. Telah Terverifikasi Selesai di Repositori (18 Fitur)
+
+- [x] **[SETUP BOT] Automated Server Setup Wizard & Guild Presets (#8)**
+  - Wizard penyiapan server Discord otomatis berbasis Components V2, pembuatan channel/role otomatis, dan opsi preset gaming/komunitas.
+  - File: [`plugin/admin/setup.js`](plugin/admin/setup.js), [`src/services/onboardingWizard.js`](src/services/onboardingWizard.js), [`src/interactions/selects/setupPreset.js`](src/interactions/selects/setupPreset.js).
+- [x] **[DASHBOARD 3D] Interactive 3D Mascot Dressing Room & Wardrobe Studio (#11)**
+  - Studio kustomisasi tema shader dan material avatar 3D Naura (Cyberpunk, Maid, Casual, Adventurer) dengan persistensi preferensi user.
+  - File: [`dashboard/src/components/NauraViewer/wardrobeStudio.js`](dashboard/src/components/NauraViewer/wardrobeStudio.js), [`dashboard/src/components/NauraViewer/index.js`](dashboard/src/components/NauraViewer/index.js).
+- [x] **[TELEMETRI] Live Server Status & Architecture Topology Widgets (#16 & #49)**
+  - Panel visual telemetri real-time yang memantau latensi Lavalink, kesehatan Supabase/MongoDB, memori Redis, dan status uptime.
+  - File: [`dashboard/src/pages/status.html`](dashboard/src/pages/status.html), [`dashboard/src/pages/topology.html`](dashboard/src/pages/topology.html), [`dashboard/routes/api.js`](dashboard/routes/api.js).
+- [x] **[AUDIO STUDIO] Web Soundboard Studio Real-Time Sync (#21)**
+  - Soundpad interaktif pada Web Dashboard yang memicu efek suara instan ke Voice Channel bot via WebSocket Socket.IO & Poru player audio overlay.
+  - File: [`dashboard/src/pages/soundboard.html`](dashboard/src/pages/soundboard.html), [`src/services/soundboardService.js`](src/services/soundboardService.js).
+- [x] **[AUDIO RADIO] 24/7 Lo-Fi Radio Mode & Broadcast Companion (#24)**
+  - Pemutaran musik santai tanpa henti di Voice Channel (`/radio`) untuk menemani aktivitas grinding petualang.
+  - File: [`plugin/music/radio.js`](plugin/music/radio.js), [`src/services/radioService.js`](src/services/radioService.js).
+- [x] **[CANVAS AUDIO] "Now Playing" Dynamic Visualizer Card (#27)**
+  - Generator gambar estetik pemutar lagu dengan album art, progress bar, dan tema visual kustom via Canvas Worker.
+  - File: [`src/canvas/nowplayingCanvas.js`](src/canvas/nowplayingCanvas.js), [`plugin/music/music.js`](plugin/music/music.js).
+- [x] **[EKONOMI] Dynamic Commodity & Stock Market Fluctuations (#28)**
+  - Formula fluktuasi harga item dasar (hasil tambang, ikan laut dalam, panen) berdasarkan penawaran dan permintaan global.
+  - File: [`src/survival/engines/commodityMarketEngine.js`](src/survival/engines/commodityMarketEngine.js), [`src/services/stockMarketEngine.js`](src/services/stockMarketEngine.js).
+- [x] **[ESCROW] Smart Contract Bounties & Escrow Guarantee (#29)**
+  - Sistem jaminan escrow aman untuk sayembara komunitas dan kontrak pengawalan karavan dagang antariksa.
+  - File: [`src/services/bountyVaultEngine.js`](src/services/bountyVaultEngine.js), [`src/services/tradeEngine.js`](src/services/tradeEngine.js).
+- [x] **[CROSS-SERVER] Cross-Server Caravan Cartel & Intercept (#3)**
+  - Perjalanan karavan lintas server dengan sistem pengawalan berbayar dan penyergapan PvP terproteksi mutex.
+  - File: [`src/services/tradeEngine.js`](src/services/tradeEngine.js), [`plugin/survival/subcommands/caravan.js`](plugin/survival/subcommands/caravan.js).
+- [x] **[GVG SIEGE] Clan Territory War & Relic Tower Sieges (#37)**
+  - Perang perebutan menara relik kuno antar klan dengan kontrol teritori 8x8 dan dividen kas aliansi harian.
+  - File: [`src/survival/engines/territoryWarEngine.js`](src/survival/engines/territoryWarEngine.js), [`plugin/survival/subcommands/siege.js`](plugin/survival/subcommands/siege.js).
+- [x] **[DUNGEON] Procedural The Neo-Abyss Dungeon Raids (#38)**
+  - Ekspedisi dungeon multi-stage prosedural dengan room acak (Combat, Event, Rest, Treasure) dan drop pool atomik.
+  - File: [`src/survival/engines/abyssEngine.js`](src/survival/engines/abyssEngine.js), [`plugin/survival/subcommands/abyss.js`](plugin/survival/subcommands/abyss.js).
+- [x] **[PET RPG] Pet Breeding, Evolution & Cosmic Fusion Engine (#39)**
+  - Perkawinan silang peliharaan untuk pewarisan sifat pasif dan evolusi hingga Tahap 3 Cosmic Companion.
+  - File: [`src/survival/engines/petHabitatEngine.js`](src/survival/engines/petHabitatEngine.js), [`src/models/UserPet.js`](src/models/UserPet.js), [`plugin/survival/subcommands/pet.js`](plugin/survival/subcommands/pet.js).
+- [x] **[CUACA DUNIA] Scripted Dynamic Weather & Seasonal Hazards (#40)**
+  - Siklus cuaca dunia berotasi 6 jam dengan efek nyata terhadap efisiensi bertani, stamina, dan keausan alat.
+  - File: [`src/survival/engines/worldWeatherEngine.js`](src/survival/engines/worldWeatherEngine.js), [`plugin/survival/subcommands/info.js`](plugin/survival/subcommands/info.js).
+- [x] **[CRAFTING] Layered Crafting Blueprints & Stat Validation (#41)**
+  - Validasi resep perakitan alat dengan syarat level, stat atribut, dan konsumsi blueprint item.
+  - File: [`src/survival/data/craftingRecipes.js`](src/survival/data/craftingRecipes.js), [`src/survival/helpers/craftActions.js`](src/survival/helpers/craftActions.js).
+- [x] **[MINIGAME] Fishing Minigame with Reaction QTE (#42)**
+  - Sistem memancing interaktif dengan batas respon 2.5 detik untuk strike ikan langka.
+  - File: [`plugin/survival/subcommands/fish.js`](plugin/survival/subcommands/fish.js).
+- [x] **[HOUSING] Virtual Cyber-Pod Room & Furniture Decorator (#43)**
+  - Kamar virtual pemain di MongoDB dengan penataan furnitur dan skor kenyamanan yang memberikan pasif buff.
+  - File: [`src/models/mongo/UserRoom.js`](src/models/mongo/UserRoom.js), [`plugin/utility/room.js`](plugin/utility/room.js).
+- [x] **[AFK REWARDS] Automated Offline Revenue & Progression Engine (#47)**
+  - Kalkulasi pendapatan pasif kafe dan akuarium vivarium berbasis selisih timestamp secara atomik.
+  - File: [`src/survival/engines/cafeEngine.js`](src/survival/engines/cafeEngine.js), [`src/survival/engines/vivariumEngine.js`](src/survival/engines/vivariumEngine.js), [`src/managers/cronManager.js`](src/managers/cronManager.js).
+- [x] **[AI STASHING] Pembentukan Direktori Isolasi `pending_plugin/`**
+  - Mengarsipkan 5 modul AI ke direktori `pending_plugin/` lengkap dengan `README.md` penjelas agar tidak memicu kuota API.
+  - File: [`pending_plugin/README.md`](pending_plugin/README.md), [`pending_plugin/ai_rpg_villagers/autonomousNpcVillager.js`](pending_plugin/ai_rpg_villagers/autonomousNpcVillager.js), [`pending_plugin/ai_vision_loot/visionLootAppraiser.js`](pending_plugin/ai_vision_loot/visionLootAppraiser.js), [`pending_plugin/ai_storyteller/dreamWeaverStoryteller.js`](pending_plugin/ai_storyteller/dreamWeaverStoryteller.js), [`pending_plugin/ai_voice_clone/voiceCloneCompanion.js`](pending_plugin/ai_voice_clone/voiceCloneCompanion.js), [`pending_plugin/ai_radio_podcast/dailyChroniclePodcast.js`](pending_plugin/ai_radio_podcast/dailyChroniclePodcast.js).
+
+---
+
+#### 🟡 B. Implementasi Parsial (Perlu Penyempurnaan Visual / UI) (10 Fitur)
+
+- [x] **[CANVAS UI] Customizable Profile Card Theme Palette Picker (#5)**
+  - Menambahkan menu interaktif `/profile theme` atau tombol dropdown di Discord untuk memilih variasi palet warna profil Canvas (Neon Emerald, Cyber Pink, Midnight Gold).
+  - File: [`src/canvas/profileCanvas.js`](src/canvas/profileCanvas.js), [`plugin/utility/profile.js`](plugin/utility/profile.js), [`src/interactions/selects/profileTheme.js`](src/interactions/selects/profileTheme.js).
+- [x] **[RETENSI] Visual Daily Login Streak Calendar & Stamp Card (#6)**
+  - Mengintegrasikan representasi visual kalender mingguan / bulanan (berbasis emoji atau Canvas stamp card) pada respons `/daily` untuk meningkatkan retensi login.
+  - File: [`plugin/utility/daily.js`](plugin/utility/daily.js).
+- [x] **[LOKALISASI] Quick Language Toggle Button on Discord UI (#9)**
+  - Menambahkan tombol interaktif bendera (ID / EN) pada footer container profil atau bantuan sehingga bahasa respons dapat diubah instan dalam 1 klik tanpa mengetik `/lang`.
+  - File: [`plugin/utility/lang.js`](plugin/utility/lang.js), [`src/interactions/buttons/langToggle.js`](src/interactions/buttons/langToggle.js).
+- [x] **[DASHBOARD WEB] Town Square Live Multiplayer Avatar Radar (#12)**
+  - Menampilkan posisi avatar pemain yang sedang online secara live di peta `survival-map.html` menggunakan event Socket.IO.
+  - File: [`dashboard/src/pages/survival-map.html`](dashboard/src/pages/survival-map.html), [`dashboard/sockets/index.js`](dashboard/sockets/index.js).
+- [x] **[PWA MOBILE] Full Progressive Web App Manifest & Install Prompt (#14)**
+  - Menambahkan file `manifest.json`, icon splash screen, dan prompt "Install to Home Screen" di browser mobile pada Web Dashboard.
+  - File: [`dashboard/public/manifest.json`](dashboard/public/manifest.json), [`dashboard/public/js/pwa-install.js`](dashboard/public/js/pwa-install.js), [`dashboard/src/pages/index.html`](dashboard/src/pages/index.html).
+- [x] **[DASHBOARD WEB] Web-Based Guild Management Hub (#18)**
+  - Halaman web khusus bagi ketua klan untuk mengelola daftar anggota, promosi jabatan, dan melihat riwayat kas klan secara visual.
+  - File: [`dashboard/src/pages/clan.html`](dashboard/src/pages/clan.html), [`dashboard/server.js`](dashboard/server.js).
+- [x] **[DASHBOARD WEB] Interactive Web Marketplace & Auction House (#19)**
+  - Antarmuka visual untuk melihat barang lelang aktif dan melakukan penawaran (bid/buyout) langsung melalui Web Dashboard.
+  - File: [`dashboard/src/pages/marketplace.html`](dashboard/src/pages/marketplace.html), [`dashboard/server.js`](dashboard/server.js).
+- [x] **[AUDIO DJ] Collaborative DJ Queue Voting System (#22)**
+  - Tombol polling interaktif di Discord bagi pendengar voice channel untuk memberikan suara pada lagu antrean berikutnya.
+  - File: [`plugin/music/music.js`](plugin/music/music.js), [`src/managers/musicManager.js`](src/managers/musicManager.js), [`src/interactions/buttons/voteSkip.js`](src/interactions/buttons/voteSkip.js).
+- [x] **[AUDIO DSP] Interactive Audio Filter Control Panel Select Menu (#25)**
+  - Antarmuka Select Menu interaktif di bawah pesan `/music filter` yang memungkinkan pergantian preset equalizer secara instan tanpa mengetik ulang command.
+  - File: [`plugin/music/music.js`](plugin/music/music.js), [`src/music/audioFilters.js`](src/music/audioFilters.js), [`src/interactions/selects/musicFilter.js`](src/interactions/selects/musicFilter.js).
+- [x] **[ADMIN ANALYTICS] Cross-Database Historical Growth Charts (#31)**
+  - Menambahkan grafik visual pertumbuhan pengguna, ukuran dokumen MongoDB, dan throughput transaksi Supabase pada dashboard admin.
+  - File: [`dashboard/src/pages/status.html`](dashboard/src/pages/status.html), [`dashboard/routes/api.js`](dashboard/routes/api.js).
+
+---
+
+#### 🟢 C. Roadmap Fitur Baru (22 Fitur Selesai 100%)
+
+- [x] **[UX ONBOARDING] Interactive Player Onboarding Flow (#1)**: Panduan langkah demi langkah berbasis modal dan button container saat petualang pertama kali menjalankan perintah survival. File: [`src/survival/engines/playerOnboardingEngine.js`](src/survival/engines/playerOnboardingEngine.js), [`src/survival/engines/playerOnboardingEngine.test.js`](src/survival/engines/playerOnboardingEngine.test.js), [`src/interactions/selects/onboardingSelect.js`](src/interactions/selects/onboardingSelect.js), [`src/interactions/buttons/onboardingButton.js`](src/interactions/buttons/onboardingButton.js), [`plugin/survival/survival.js`](plugin/survival/survival.js).
+- [x] **[BOT ENGINE] Context-Aware Smart Suggestions via Levenshtein Distance (#2)**: Algoritma pendeteksi salah ketik slash command atau prefix yang menyodorkan tombol aksi langsung untuk mengeksekusi perintah yang dimaksud. File: [`src/utils/levenshteinSuggest.js`](src/utils/levenshteinSuggest.js), [`src/events/messageCreate/prefixCommand.js`](src/events/messageCreate/prefixCommand.js).
+- [x] **[DISCORD UI] Unified Dynamic Leaderboard with Multi-Category Pagination (#4)**: Command `/leaderboard` tunggal dengan Select Menu interaktif untuk berpindah kategori (Dompet, Bank, Level RPG, ELO Kartu) tanpa spam pesan. File: [`src/services/leaderboardService.js`](src/services/leaderboardService.js), [`plugin/utility/leaderboard.js`](plugin/utility/leaderboard.js), [`src/interactions/selects/leaderboardCategory.js`](src/interactions/selects/leaderboardCategory.js), [`src/interactions/buttons/leaderboardPagination.js`](src/interactions/buttons/leaderboardPagination.js).
+- [x] **[INTEGRASI] Automated Discord Role-Syncing based on Survival Achievements (#7)**: Bot secara otomatis menyematkan role khusus server ketika pemain mencapai milestone level atau kekayaan tertentu. File: [`src/services/roleSyncService.js`](src/services/roleSyncService.js), [`plugin/admin/levelrole.js`](plugin/admin/levelrole.js), [`src/leveling/levelingEngine.js`](src/leveling/levelingEngine.js).
+- [x] **[BOT ENGINE] Per-User Custom Command Aliases (#10)**: Fitur bagi petualang untuk mendaftarkan shortcut pribadi (misal `/f` untuk `/farm status`). File: [`src/services/aliasService.js`](src/services/aliasService.js), [`src/models/mongo/UserAlias.js`](src/models/mongo/UserAlias.js), [`plugin/utility/alias.js`](plugin/utility/alias.js), [`src/events/messageCreate/prefixCommand.js`](src/events/messageCreate/prefixCommand.js).
+
+##### 2. Kategori: Web Dashboard V2 (Front End)
+- [x] **[MINIGAME] Web-Based Mini Games Arcade Connected to Bot Economy (#13)**: Mini-game HTML5 ringan di browser (fishing arcade, puzzle) yang memberikan hadiah NSF/NC ke akun Discord pemain. File: [`dashboard/src/pages/arcade.html`](dashboard/src/pages/arcade.html), [`dashboard/server.js`](dashboard/server.js).
+- [x] **[WEB INVENTORY] Drag-and-Drop Visual Inventory Management (#15)**: Halaman web untuk mengatur tata letak dan menyortir isi ransel inventaris petualang dengan antarmuka seret-lepas. File: [`dashboard/src/pages/inventory.html`](dashboard/src/pages/inventory.html), [`dashboard/server.js`](dashboard/server.js).
+- [x] **[THEME] Dynamic Multi-Theme Switcher on Stellar Glass OS (#17)**: Pilihan tema tampilan dashboard (Stellar Dark, Cyber Neon, Emerald Nature, Light Horizon) berbasis CSS variables. File: [`dashboard/src/css/stellar.css`](dashboard/src/css/stellar.css), [`dashboard/public/js/theme-switcher.js`](dashboard/public/js/theme-switcher.js), [`dashboard/src/pages/index.html`](dashboard/src/pages/index.html).
+- [x] **[3D / 2D] Virtual Achievement Showcase & Trophy Room (#20)**: Ruang pameran piala virtual di web dashboard untuk memajang medali dan gelar langka pemain. File: [`dashboard/src/pages/achievements.html`](dashboard/src/pages/achievements.html), [`dashboard/server.js`](dashboard/server.js).
+- [x] **[ADMIN] Hidden Admin God Mode Web Panel (#50)**: Antarmuka terproteksi izin owner untuk inspeksi dan modifikasi saldo/inventaris pemain secara cepat tanpa query database mentah. File: [`dashboard/src/pages/admin.html`](dashboard/src/pages/admin.html), [`dashboard/server.js`](dashboard/server.js).
+
+##### 3. Kategori: Audio Engine (Lavalink)
+- [x] **[AUDIO QUEUE] Redis-Backed Lavalink Queue Persistence & Auto-Resume (#23)**: Penyimpanan state antrean lagu aktif di Redis agar musik dapat dilanjutkan otomatis setelah bot selesai restart/deploy. File: [`src/managers/musicManager.js`](src/managers/musicManager.js), [`src/managers/musicManager.test.js`](src/managers/musicManager.test.js), [`src/music/poru_events/trackStart.js`](src/music/poru_events/trackStart.js), [`src/music/poru_events/queueEnd.js`](src/music/poru_events/queueEnd.js).
+- [x] **[AUDIO LYRICS] Interactive Lyrics Fetcher & Clean Discord Paginator (#26)**: Integrasi API lirik lagu eksternal (Lrclib/Genius) dengan tata letak pembalik halaman yang rapi dan penanda waktu. File: [`src/services/lyricsService.js`](src/services/lyricsService.js), [`plugin/music/music.js`](plugin/music/music.js).
+
+##### 4. Kategori: Database & Backend Architecture
+- [x] **[BACKUP] Automated Cloud Database Backup Cron Scheduler (#30)**: Cron job periodik yang membuat salinan dump basis data Supabase, MySQL, MongoDB, & SQLite lalu membersihkan backup lama secara otomatis. File: [`src/managers/backupManager.js`](src/managers/backupManager.js), [`src/managers/backupManager.test.js`](src/managers/backupManager.test.js), [`src/managers/cronManager.js`](src/managers/cronManager.js).
+- [x] **[MONITORING] Write-Behind Cache Flush Metrics & Latency Monitor (#32)**: Kartu telemetri pemantau ukuran buffer antrean dan durasi flush Redis-ke-Postgres pada halaman admin. File: [`src/managers/cacheManager.js`](src/managers/cacheManager.js), [`dashboard/routes/api.js`](dashboard/routes/api.js).
+- [x] **[MONITORING] Hourly Command Traffic & Rate Limit Spike Visualizer (#33)**: Grafik beban trafik perintah per jam untuk memantau aktivitas server dan potensi abuse. File: [`src/managers/trafficMonitor.js`](src/managers/trafficMonitor.js), [`src/managers/trafficMonitor.test.js`](src/managers/trafficMonitor.test.js), [`dashboard/routes/api.js`](dashboard/routes/api.js).
+- [x] **[DATABASE] Sequelize Paranoid Soft-Delete Architecture (`deletedAt`) (#34)**: Penerapan kolom `deletedAt` pada model data krusial untuk mencegah kehilangan data akibat penghapusan tidak sengaja. File: [`src/managers/dbMigrator.js`](src/managers/dbMigrator.js), [`src/models/UserProfile.js`](src/models/UserProfile.js), [`src/models/GuildSettings.js`](src/models/GuildSettings.js), [`src/models/UserSurvival.js`](src/models/UserSurvival.js), [`src/models/TradeCaravan.js`](src/models/TradeCaravan.js), [`src/models/MarketAuction.js`](src/models/MarketAuction.js).
+- [x] **[ADMIN] Distributed Mutex Deadlock & Lock Contention Viewer (#35)**: Tampilan visual di web admin untuk memantau tabrakan lock transaksi multi-user yang berhasil dicegah. File: [`src/utils/redisLockHelper.js`](src/utils/redisLockHelper.js), [`dashboard/routes/api.js`](dashboard/routes/api.js).
+- [x] **[NOTIFIKASI] User-Defined Webhook Endpoints for Farming Alerts (#36)**: Pengaturan webhook pribadi agar pemain menerima notifikasi instan saat tanaman siap dipanen. File: [`src/services/farmNotificationWebhook.js`](src/services/farmNotificationWebhook.js), [`src/services/farmNotificationWebhook.test.js`](src/services/farmNotificationWebhook.test.js), [`plugin/survival/subcommands/farm.js`](plugin/survival/subcommands/farm.js), [`src/survival/helpers/survivalGroupsLife.js`](src/survival/helpers/survivalGroupsLife.js), [`src/managers/cronManager.js`](src/managers/cronManager.js).
+
+##### 5. Kategori: Survival RPG (Naura Wilds)
+- [x] **[PVP] Bounty Hunter & Wanted Outlaw Board (#44)**: Sistem perburuan buronan pemain berhadiah imbalan besar di Naura Wilds. File: [`src/survival/engines/outlawBountyEngine.js`](src/survival/engines/outlawBountyEngine.js), [`src/survival/engines/outlawBountyEngine.test.js`](src/survival/engines/outlawBountyEngine.test.js), [`plugin/survival/subcommands/bounty.js`](plugin/survival/subcommands/bounty.js).
+- [x] **[RPG TALENTS] Branching Skill Trees & Specialization Talents (#45)**: Pilihan cabang keahlian (Petani Ahli, Pedagang Ulung, Pendekar Tempur) saat mencapai level 10 ke atas. File: [`src/survival/engines/skillTreeEngine.js`](src/survival/engines/skillTreeEngine.js), [`plugin/survival/subcommands/skill.js`](plugin/survival/subcommands/skill.js), [`plugin/survival/subcommands/class.js`](plugin/survival/subcommands/class.js).
+- [x] **[AGRONOMI] Farming Crop Cross-Breeding & Hybrid Seeds (#46)**: Mekanik perkawinan silang benih tanaman berdampingan di greenhouse untuk menghasilkan varietas bibit unggul baru. File: [`src/survival/data/cropSeeds.js`](src/survival/data/cropSeeds.js), [`src/survival/engines/greenhouseEngine.js`](src/survival/engines/greenhouseEngine.js), [`src/survival/engines/greenhouseEngine.test.js`](src/survival/engines/greenhouseEngine.test.js), [`plugin/survival/subcommands/farm.js`](plugin/survival/subcommands/farm.js).
+- [x] **[QOL] In-Discord Interactive Bug Reporter Modal with GitHub Sync (#48)**: Formulir modal Discord yang rapi bagi pemain untuk melaporkan bug, otomatis diformat dan diteruskan ke channel pengembang atau GitHub Issues. File: [`plugin/utility/bug.js`](plugin/utility/bug.js), [`src/interactions/modals/reportBug.js`](src/interactions/modals/reportBug.js).
+
+---
+
 ## ⚠️ Risiko yang Harus Terus Dipantau
 
 | Risiko                                            | Dampak                                                    | Mitigasi                                                                                         |

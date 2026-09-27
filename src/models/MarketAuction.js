@@ -59,6 +59,7 @@ const MarketAuction = sequelize.define(
   {
     tableName: "market_auctions",
     timestamps: true,
+    paranoid: true,
     indexes: [
       {
         fields: ["status", "expiresAt"],

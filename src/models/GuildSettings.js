@@ -130,7 +130,11 @@ const GuildSettings = sequelize.define(
   },
   {
     tableName: "guild_settings",
-    timestamps: false,
+    timestamps: true,
+    createdAt: false,
+    updatedAt: false,
+    paranoid: true,
+    deletedAt: "deletedAt",
     hooks: {
       afterCreate: (row) => invalidateGuildCache(row && row.guildId),
       afterUpdate: (row) => invalidateGuildCache(row && row.guildId),

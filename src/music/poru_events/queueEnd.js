@@ -32,6 +32,10 @@ module.exports = {
       lyricsEngine.clearLyrics(player.guildId);
     } catch (e) {}
 
+    // Bersihkan antrean tersimpan dan suara vote skip setelah antrean benar-benar selesai
+    manager.clearSavedQueueState?.(player.guildId);
+    manager.clearSkipVotes?.(player.guildId);
+
     // 2. EKSEKUSI AUTOPLAY (PERBAIKAN)
     if (player.isAutoplayMode) {
       if (player.isAutoplayResolving) return;

@@ -110,6 +110,8 @@ async function handleSlashCommand(interaction, client) {
     try {
       const metricsManager = require("../managers/metricsManager");
       metricsManager.logCommand(interaction.commandName);
+      const trafficMonitor = require("../managers/trafficMonitor");
+      trafficMonitor.recordCommand(interaction.commandName, interaction.user.id);
     } catch {
       // Abaikan bila modul metrik belum siap
     }

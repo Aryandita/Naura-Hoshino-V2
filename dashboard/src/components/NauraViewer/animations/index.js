@@ -8,6 +8,7 @@
  */
 
 export { AnimationController, createAnimationController } from "./core/controller.js";
+export { applyNauraRuntimeFix } from "./core/nauraRuntimeFix.js";
 export {
     SUPPORTED_ANIMATIONS,
     ACTION_DURATIONS,

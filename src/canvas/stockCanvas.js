@@ -119,7 +119,7 @@ async function drawStockMarket(stocks = []) {
         bottomY + 110,
       );
       ctx.fillText(
-        `Dividen Fantastis: ${Math.floor((nraStock.dividendYield || 0.12) * 100)}% per siklus!`,
+        `Dividen: ${Math.floor((nraStock.dividendYield || 0.12) * 100)}% per siklus!`,
         60,
         bottomY + 130,
       );

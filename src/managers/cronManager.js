@@ -412,6 +412,28 @@ module.exports = {
       isVoteReminderCheckRunning = false;
     });
 
+    // 0.80 Farm Greenhouse Maturity Webhook Alerts - Runs every 15 minutes
+    let isFarmWebhookCheckRunning = false;
+    cron.schedule("*/15 * * * *", async () => {
+      if (isFarmWebhookCheckRunning) return;
+      isFarmWebhookCheckRunning = true;
+      try {
+        const UserGreenhouse = require("../models/UserGreenhouse");
+        const farmWebhook = require("../services/farmNotificationWebhook");
+        const greenhouses = await UserGreenhouse.findAll({
+          attributes: ["userId", "slots"],
+        });
+
+        for (const gh of greenhouses) {
+          if (!gh.slots || !Array.isArray(gh.slots) || gh.slots.length === 0) continue;
+          await farmWebhook.checkAndNotifyHarvest(gh.userId, gh);
+        }
+      } catch (err) {
+        logger.error("[Cron] Gagal memproses Webhook Notifikasi Panen:", err);
+      }
+      isFarmWebhookCheckRunning = false;
+    });
+
     // Reset notif status every day at 00:00 (also Quest reset notif)
     cron.schedule("0 0 * * *", async () => {
       try {

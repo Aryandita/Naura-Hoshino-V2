@@ -32,6 +32,34 @@ function delay(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+const lockMetrics = {
+    totalAcquisitions: 0,
+    contentionsResolved: 0,
+    contentionsBlocked: 0,
+    recentEvents: [],
+};
+
+function recordLockEvent(key, success, attempts) {
+    if (success) {
+        lockMetrics.totalAcquisitions++;
+        if (attempts > 1) {
+            lockMetrics.contentionsResolved++;
+        }
+    } else {
+        lockMetrics.contentionsBlocked++;
+    }
+
+    lockMetrics.recentEvents.unshift({
+        key,
+        success,
+        attempts,
+        timestamp: new Date().toISOString(),
+    });
+    if (lockMetrics.recentEvents.length > 20) {
+        lockMetrics.recentEvents.pop();
+    }
+}
+
 /**
  * Coba mengunci resource (Acquire lock)
  * @param {string} lockKey - Kunci lock unik (contoh: 'lock:economy:user:123')
@@ -53,6 +81,7 @@ async function acquireLock(lockKey, ttlMs = 5000, retryCount = 5, retryDelayMs =
                     PX: ttlMs,
                 });
                 if (result === "OK") {
+                    recordLockEvent(lockKey, true, attempt + 1);
                     return lockToken;
                 }
             } catch (err) {
@@ -67,6 +96,7 @@ async function acquireLock(lockKey, ttlMs = 5000, retryCount = 5, retryDelayMs =
                     token: lockToken,
                     expiresAt: now + ttlMs,
                 });
+                recordLockEvent(lockKey, true, attempt + 1);
                 return lockToken;
             }
         }
@@ -76,6 +106,7 @@ async function acquireLock(lockKey, ttlMs = 5000, retryCount = 5, retryDelayMs =
         }
     }
 
+    recordLockEvent(lockKey, false, attempts);
     return null;
 }
 
@@ -190,11 +221,15 @@ setInterval(() => {
 }, 60000).unref();
 
 /**
- * Mengambil ringkasan status in-memory locks
+ * Mengambil ringkasan status lock dan metrik contention
  */
 function getLockStats() {
     return {
         activeInMemoryLocks: inMemoryLocks.size,
+        totalAcquisitions: lockMetrics.totalAcquisitions,
+        contentionsResolved: lockMetrics.contentionsResolved,
+        contentionsBlocked: lockMetrics.contentionsBlocked,
+        recentEvents: [...lockMetrics.recentEvents],
     };
 }
 
@@ -206,4 +241,5 @@ module.exports = {
     withDistributedMultiLock: withMultiLock,
     inMemoryLocks,
     getLockStats,
+    getLockMetrics: getLockStats,
 };

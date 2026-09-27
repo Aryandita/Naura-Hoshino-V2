@@ -291,6 +291,14 @@ const MIGRATIONS = [
     pgSql:
       'ALTER TABLE "market_auctions" ADD COLUMN IF NOT EXISTS "buyoutPrice" INTEGER DEFAULT NULL;',
   },
+  {
+    id: "v44_add_paranoid_deleted_at_to_critical_tables",
+    description:
+      "Tambah kolom deletedAt untuk Sequelize paranoid soft-delete architecture pada tabel-tabel krusial",
+    sql: "ALTER TABLE user_profiles ADD COLUMN deletedAt DATETIME DEFAULT NULL; ALTER TABLE guild_settings ADD COLUMN deletedAt DATETIME DEFAULT NULL; ALTER TABLE UserSurvivals ADD COLUMN deletedAt DATETIME DEFAULT NULL; ALTER TABLE trade_caravans ADD COLUMN deletedAt DATETIME DEFAULT NULL; ALTER TABLE market_auctions ADD COLUMN deletedAt DATETIME DEFAULT NULL;",
+    pgSql:
+      'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMPTZ DEFAULT NULL; ALTER TABLE "guild_settings" ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMPTZ DEFAULT NULL; ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMPTZ DEFAULT NULL; ALTER TABLE "trade_caravans" ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMPTZ DEFAULT NULL; ALTER TABLE "market_auctions" ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMPTZ DEFAULT NULL;',
+  },
 ];
 
 /**

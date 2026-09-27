@@ -1,0 +1,155 @@
+/* =============================================================================
+ * tokens.css, Sumber kebenaran design system Naura OS Mobile
+ *
+ * Selaras 100% dengan DESIGN.md versi 2.2.0-naura-os.
+ * Muat PERTAMA sebelum CSS lain.
+ * ============================================================================= */
+
+:root {
+  /* ── Brand ──────────────────────────────────────────────────────────── */
+  --primary:         #FFB6C1;
+  --primary-glow:    rgba(255, 182, 193, 0.6);
+  --premium-gold:    #FFD700;
+  --discord-blurple: #5865F2;
+
+  /* ── Canvas & Surfaces ──────────────────────────────────────────────── */
+  --canvas:          #0b0c10;
+  --surface-glass:   rgba(255, 255, 255, 0.03);
+  --surface-hover:   rgba(255, 255, 255, 0.05);
+  --surface-solid:   rgba(0, 0, 0, 0.4);
+  --surface-card:    rgba(255, 255, 255, 0.04);
+
+  /* ── Hairlines & Borders ────────────────────────────────────────────── */
+  --hairline:        rgba(255, 182, 193, 0.15);
+  --hairline-strong: rgba(255, 182, 193, 0.30);
+
+  /* ── Typography Colors ──────────────────────────────────────────────── */
+  --ink:             #ffffff;
+  --body:            #9ca3af;
+  --body-strong:     #d1d5db;
+  --muted:           #6b7280;
+
+  /* ── Font Families ──────────────────────────────────────────────────── */
+  --font-display: 'Space Grotesk', 'Orbitron', sans-serif;
+  --font-body:    'Outfit', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* ── Stellar Glassmorphism Surfaces ── */
+  --glass-bg:       rgba(255, 255, 255, 0.04);
+  --glass-border:   rgba(255, 255, 255, 0.08);
+  --glass-hover:    rgba(255, 255, 255, 0.07);
+  --glass-elevated: rgba(255, 255, 255, 0.08);
+  --glow-pink:      rgba(244, 114, 182, 0.25);
+  --glow-violet:    rgba(167, 139, 250, 0.20);
+  --glow-cyan:      rgba(34, 211, 238, 0.20);
+
+  /* ── Categorical Accent Colors (sesuai DESIGN.md §Categorical Color-Coding) ── */
+  --accent-pink:   #f9a8d4;   /* Core, Social, Profile */
+  --accent-purple: #c084fc;   /* Admin, Config, AI, Governance */
+  --accent-blue:   #93c5fd;   /* Music, Audio, Voice */
+  --accent-green:  #86efac;   /* Survival, Status Online, Uptime */
+  --accent-gold:   #FFD700;   /* Economy, Shop, VIP */
+  --accent-red:    #F87171;   /* Security, Emergency, Danger */
+
+  /* ── Naura Wilds Survival Sub-Brand ────────────────────────────────── */
+  --wilds-emerald:  #86EFAC;
+  --wilds-moss:     #34D399;
+  --wilds-amber:    #FBBF24;
+  --wilds-bark:     #92400E;
+  --wilds-river:    #7DD3FC;
+  --wilds-danger:   #F87171;
+  --wilds-glass:    rgba(134, 239, 172, 0.06);
+  --wilds-hairline: rgba(134, 239, 172, 0.20);
+
+  /* ── Service Status ─────────────────────────────────────────────────── */
+  --status-online:  #22c55e;
+  --status-warn:    #f59e0b;
+  --status-offline: #ef4444;
+  --status-maint:   #a855f7;
+
+  /* ── Rarity Scale (Survival Items) ─────────────────────────────────── */
+  --rarity-common:    #9CA3AF;
+  --rarity-uncommon:  #86EFAC;
+  --rarity-rare:      #93C5FD;
+  --rarity-epic:      #C084FC;
+  --rarity-legendary: #FFD700;
+  --rarity-mythic:    #F9A8D4;
+
+  /* ── Border Radius Scale ────────────────────────────────────────────── */
+  --r-sm:   6px;
+  --r-md:   8px;
+  --r-lg:   12px;
+  --r-xl:   16px;
+  --r-xxl:  24px;
+  --r-full: 9999px;
+
+  /* ── Spacing Scale ──────────────────────────────────────────────────── */
+  --sp-xxs: 4px;
+  --sp-xs:  8px;
+  --sp-sm:  12px;
+  --sp-md:  16px;
+  --sp-lg:  24px;
+  --sp-xl:  32px;
+  --sp-xxl: 48px;
+
+  /* ── Bottom Navigation (Mobile-specific) ────────────────────────────── */
+  --nav-height:     68px;
+  --nav-safe:       env(safe-area-inset-bottom, 0px);
+  --nav-bg:         rgba(11, 12, 16, 0.90);
+
+  /* ── Content Padding (above bottom nav) ─────────────────────────────── */
+  --page-bottom-pad: calc(var(--nav-height) + var(--nav-safe) + 24px);
+
+  /* ── Motion Tokens ──────────────────────────────────────────────────── */
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth:  cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out:     cubic-bezier(0, 0, 0.2, 1);
+  --dur-fast:     150ms;
+  --dur-normal:   250ms;
+  --dur-slow:     400ms;
+
+  /* ── Elevation via Shadow (tinted, bukan opaque black) ──────────────── */
+  --shadow-glass:
+    0 16px 32px -8px rgba(11, 12, 16, 0.70),
+    0 0 20px 2px rgba(255, 182, 193, 0.08);
+  --shadow-nav:
+    0 -4px 24px rgba(11, 12, 16, 0.60),
+    0 0 16px rgba(255, 182, 193, 0.06);
+}
+
+/* ── Theme: Sakura Blossom ──────────────────────────────────────────────── */
+[data-theme="sakura"] {
+  --primary:      #ff9ebb;
+  --primary-glow: rgba(255, 158, 187, 0.55);
+  --canvas:       #160f18;
+  --surface-glass:rgba(255, 200, 220, 0.04);
+  --hairline:     rgba(255, 158, 187, 0.20);
+  --hairline-strong: rgba(255, 158, 187, 0.35);
+  --surface-card: rgba(255, 200, 220, 0.05);
+}
+
+/* ── Theme: OLED True Black ─────────────────────────────────────────────── */
+[data-theme="oled"] {
+  --primary:      #ff5c8a;
+  --primary-glow: rgba(255, 92, 138, 0.55);
+  --canvas:       #000000;
+  --surface-glass:rgba(255, 255, 255, 0.03);
+  --surface-card: rgba(255, 255, 255, 0.04);
+  --hairline:     rgba(255, 92, 138, 0.18);
+}
+
+/* ── Theme: Naura Wilds ─────────────────────────────────────────────────── */
+[data-theme="wilds"] {
+  --primary:      #86EFAC;
+  --primary-glow: rgba(134, 239, 172, 0.50);
+  --canvas:       #0a1a0f;
+  --surface-glass:rgba(134, 239, 172, 0.04);
+  --surface-card: rgba(134, 239, 172, 0.05);
+  --hairline:     rgba(134, 239, 172, 0.18);
+  --hairline-strong: rgba(134, 239, 172, 0.32);
+}
+
+/* ── Font Size Variants ─────────────────────────────────────────────────── */
+[data-font-size="compact"] { font-size: 14px; }
+[data-font-size="normal"]  { font-size: 16px; }
+[data-font-size="large"]   { font-size: 18px; }

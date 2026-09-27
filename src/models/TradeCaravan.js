@@ -58,6 +58,7 @@ const TradeCaravan = sequelize.define(
   {
     tableName: "trade_caravans",
     timestamps: true,
+    paranoid: true,
   },
 );
 

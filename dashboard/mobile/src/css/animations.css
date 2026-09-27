@@ -1,0 +1,128 @@
+/* =============================================================================
+ * animations.css, Keyframe library terpusat Naura OS Mobile
+ *
+ * ATURAN: Setiap @keyframes WAJIB punya komentar tujuan UX.
+ *         Animasi tanpa tujuan = dekorasi = slop. (antislop R-19)
+ *
+ * Dosis glassmorphism: max 2 elemen per tampilan (antislop R-10)
+ * Glow: max 1-2 elemen penting (antislop R-13)
+ * ============================================================================= */
+
+/* ── Tujuan: Mount komponen baru ke DOM (fade + naik ringan) ──────────────── */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Tujuan: Mount komponen dari atas (header saat navigasi masuk) ─────────── */
+@keyframes fade-in-down {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Tujuan: Shimmer skeleton saat data belum tiba dari API ───────────────── */
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to   { background-position:  200% center; }
+}
+
+/* ── Tujuan: Float ekspresi PNG Naura (max 1 elemen aktif per tampilan) ────── */
+@keyframes naura-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+/* ── Tujuan: Spring bounce tab aktif bottom nav saat perpindahan halaman ───── */
+@keyframes tab-pop {
+  0%  { transform: scale(1); }
+  40% { transform: scale(1.20); }
+  100%{ transform: scale(1); }
+}
+
+/* ── Tujuan: Fill progress bar vital survival dari 0% ke nilai nyata ─────── */
+@keyframes vital-fill {
+  from { width: 0%; opacity: 0.6; }
+  to   { width: var(--fill-target, 0%); opacity: 1; }
+}
+
+/* ── Tujuan: Toast notification slide-in dari kanan (aksi berhasil/gagal) ── */
+@keyframes toast-in {
+  from { transform: translateX(110%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* ── Tujuan: Toast keluar ke kanan saat dismiss ──────────────────────────── */
+@keyframes toast-out {
+  from { transform: translateX(0);    opacity: 1; }
+  to   { transform: translateX(110%); opacity: 0; }
+}
+
+/* ── Tujuan: Bottom sheet customizer slide-in dari bawah layar ─────────────── */
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* ── Tujuan: Bottom sheet tutup ke bawah ─────────────────────────────────── */
+@keyframes sheet-down {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}
+
+/* ── Tujuan: Overlay backdrop fade-in saat sheet/modal terbuka ─────────────── */
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Tujuan: Pill indicator latar tab aktif expand horizontal ──────────────── */
+@keyframes pill-expand {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+
+/* ── Tujuan: Kartu widget mount sequentially dengan delay stagger ────────── */
+@keyframes card-mount {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* ── Tujuan: Indikator denyut status online (hanya 1 elemen, state nyata) ──── */
+@keyframes pulse-once {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+}
+
+/* ── Tujuan: Skeleton bar sweep setelah data tiba (transisi ke konten) ──── */
+@keyframes skeleton-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* UTILITY CLASSES                                                             */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.animate-fade-in-up {
+  animation: fade-in-up var(--dur-normal) var(--ease-out) both;
+}
+
+/* Stagger delay untuk widget list (digunakan via JS inline style) */
+.animate-card-mount {
+  animation: card-mount var(--dur-slow) var(--ease-out) both;
+}
+
+.animate-float {
+  animation: naura-float 3.5s ease-in-out infinite;
+}
+
+/* ── Respek prefers-reduced-motion, WAJIB ada di setiap CSS ──────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration:   0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration:  0.01ms !important;
+  }
+}

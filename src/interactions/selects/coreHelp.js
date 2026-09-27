@@ -10,7 +10,10 @@ module.exports = [
     defer: "update",
     async handler(interaction) {
       const selectedValue = interaction.values[0];
-      const categoryIndex = HELP_CATEGORY_KEYS.indexOf(selectedValue);
+      const categoryIndex =
+        selectedValue === "overview"
+          ? -1
+          : HELP_CATEGORY_KEYS.indexOf(selectedValue);
       const userLang = await languageManager.getUserLanguage(
         interaction.user.id,
       );
@@ -18,7 +21,9 @@ module.exports = [
 
       const payload = buildHelpPayload(
         lang,
-        categoryIndex >= 0 ? categoryIndex : 0,
+        categoryIndex,
+        false,
+        interaction.user,
       );
 
       if (interaction.deferred || interaction.replied) {
@@ -36,7 +41,7 @@ module.exports = [
       await languageManager.setUserLanguage(interaction.user.id, selectedLang);
       const lang = languageManager.getLanguageSync(selectedLang);
 
-      const payload = buildHelpPayload(lang, 0);
+      const payload = buildHelpPayload(lang, -1, false, interaction.user);
 
       if (interaction.deferred || interaction.replied) {
         return interaction.editReply(payload);

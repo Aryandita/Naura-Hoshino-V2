@@ -70,8 +70,8 @@ async function drawColiseumMatch(matchData) {
 
     ctx.font = '13px "Outfit", "EmojiFont"';
     ctx.fillStyle = "#CBD5E1";
-    ctx.fillText("Formation: 3 Fighters Vanguard", 70, 165);
-    ctx.fillText("Squad Power: Balanced Tri-Core", 70, 190);
+    ctx.fillText("Formasi: 3 Pejuang Garis Depan", 70, 165);
+    ctx.fillText("Kekuatan Squad: Tiga Inti Seimbang", 70, 190);
 
     // Center VS text
     ctx.font = 'bold 36px "Orbitron", "EmojiFont"';
@@ -103,7 +103,7 @@ async function drawColiseumMatch(matchData) {
       width - 30 - cardW,
       165,
     );
-    ctx.fillText("Formation: Tactical Defense", width - 30 - cardW, 190);
+    ctx.fillText("Formasi: Pertahanan Berlapis", width - 30 - cardW, 190);
 
     // 5. Result Banner
     const isVic = matchData.isVictory;

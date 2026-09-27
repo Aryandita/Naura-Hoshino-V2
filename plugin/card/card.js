@@ -11,6 +11,7 @@ const {
 const crypto = require("crypto");
 const CardEngine = require("../../src/card/cardEngine");
 const CardBattleEngine = require("../../src/card/cardBattleEngine");
+const CardBattleV2Engine = require("../../src/card/cardBattleV2Engine");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -29,6 +30,11 @@ module.exports = {
     .setName("card")
     .setDescription(
       "🎴 Sistem Koleksi Kartu Anime, TCG Battle & Tower of Babel",
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("ranked")
+        .setDescription("🏆 Lihat papan peringkat divisi TCG Ranked Ladder global"),
     )
     .addSubcommand((sub) =>
       sub
@@ -284,6 +290,51 @@ module.exports = {
     const subcommand = interaction.options.getSubcommand();
     const userId = interaction.user.id;
 
+    if (subcommand === "ranked") {
+      await interaction.deferReply();
+
+      // Ambil top 10 dari database UserCardDeck order by eloRating DESC
+      const topDecks = await UserCardDeck.findAll({
+        order: [["eloRating", "DESC"]],
+        limit: 10,
+      });
+
+      // Ambil deck user pemanggil untuk mengetahui posisinya
+      const [myDeck] = await UserCardDeck.findOrCreate({ where: { userId } });
+      const myElo = myDeck.eloRating || 1000;
+      const myTier = CardBattleV2Engine.getRankTier(myElo);
+
+      if (!topDecks || topDecks.length === 0) {
+        const emptyContainer = buildContainerV2({
+          title: "🏆 Papan Peringkat TCG Ranked Ladder",
+          description: `**Divisi Anda:** ${myTier.icon} **${myTier.name}** (\`${myElo} ELO\`)\n\nBelum ada petarung yang bertanding di Ranked Ladder musim ini. Jadilah yang pertama menantang pemain lain lewat \`/card battle\`!`,
+          color: 0x93c5fd,
+          footerText: ui.getFooter("core"),
+        });
+        return interaction.editReply(emptyContainer);
+      }
+
+      let leaderboardDesc = `**Divisi Anda:** ${myTier.icon} **${myTier.name}** (\`${myElo} ELO\` | Menang: ${myDeck.wins || 0} / Kalah: ${myDeck.losses || 0})\n\n`;
+      leaderboardDesc += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+
+      for (let i = 0; i < topDecks.length; i++) {
+        const deck = topDecks[i];
+        const elo = deck.eloRating || 1000;
+        const tier = CardBattleV2Engine.getRankTier(elo);
+        const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `\`#${i + 1}\``;
+        leaderboardDesc += `${medal} <@${deck.userId}> : ${tier.icon} **${tier.name}** (\`${elo} ELO\` | ⚔️ ${deck.wins || 0}W - ${deck.losses || 0}L)\n`;
+      }
+
+      const container = buildContainerV2({
+        accentColorHex: myTier.color || "#FFD700",
+        title: "🌌 TCG Ranked Ladder: Divisi Kosmik",
+        description: leaderboardDesc,
+        footerText: ui.getFooter("core"),
+      });
+
+      return interaction.editReply(container);
+    }
+
     if (subcommand === "drop") {
       const dropSession = await CardEngine.createDropSession(
         interaction.channelId,
@@ -501,8 +552,13 @@ module.exports = {
           .setDisabled(p1Card.energy < p1Card.skill.energyCost),
         new ButtonBuilder()
           .setCustomId(`card_battle_def_${sessionId}`)
-          .setLabel("🛡️ Defend")
+          .setLabel("🛡️ Guard")
           .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId(`card_battle_burst_${sessionId}`)
+          .setLabel("🌌 Burst")
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(p1Card.energy < 5),
         new ButtonBuilder()
           .setCustomId(`card_battle_forfeit_${sessionId}`)
           .setLabel("🏳️ Forfeit")
@@ -657,8 +713,13 @@ module.exports = {
           .setDisabled(p1Card.energy < p1Card.skill.energyCost),
         new ButtonBuilder()
           .setCustomId(`card_battle_def_${sessionId}`)
-          .setLabel("🛡️ Defend")
+          .setLabel("🛡️ Guard")
           .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId(`card_battle_burst_${sessionId}`)
+          .setLabel("🌌 Burst")
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(p1Card.energy < 5),
         new ButtonBuilder()
           .setCustomId(`card_battle_forfeit_${sessionId}`)
           .setLabel("🏳️ Forfeit")

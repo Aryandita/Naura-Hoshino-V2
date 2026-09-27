@@ -8,7 +8,7 @@ const {
   MessageFlags,
 } = require("discord.js");
 const redisManager = require("../../managers/redisManager");
-const CardBattleEngine = require("../../card/cardBattleEngine");
+const CardBattleV2Engine = require("../../card/cardBattleV2Engine");
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
 const UserCardDeck = require("../../models/UserCardDeck");
 const currency = require("../../survival/engines/currency");
@@ -22,7 +22,7 @@ module.exports = [
     defer: false,
     async handler(interaction) {
       const parts = interaction.customId.split("_");
-      const action = parts[2]; // atk, skill, def, forfeit
+      const action = parts[2]; // atk, skill, def, burst, forfeit
       const sessionId = parts.slice(3).join("_");
 
       const sessionRaw = await redisManager.get(`card:battle:${sessionId}`);
@@ -73,46 +73,132 @@ module.exports = [
         return interaction.editReply({ ...container, components: [] });
       }
 
-      // Execute Player Action
+      // Execute Player Action V2
       const attacker = session.turn === 1 ? session.p1Card : session.p2Card;
       const defender = session.turn === 1 ? session.p2Card : session.p1Card;
+      const attackerUser = session.turn === 1 ? session.p1User : session.p2User;
+      const defenderUser = session.turn === 1 ? session.p2User : session.p1User;
 
       let actionType = "ATTACK";
       if (action === "skill") actionType = "SKILL";
-      if (action === "def") actionType = "DEFEND";
+      if (action === "def") actionType = "GUARD";
+      if (action === "burst") actionType = "BURST";
 
-      const turnRes = CardBattleEngine.executeTurn(
-        attacker,
-        defender,
-        actionType,
-      );
+      // Pastikan property shield & energy terdefinisi
+      if (attacker.shield === undefined) attacker.shield = 0;
+      if (defender.shield === undefined) defender.shield = 0;
+      if (attacker.energy === undefined) attacker.energy = 2;
+      if (attacker.maxEnergy === undefined) attacker.maxEnergy = 10;
+      if (defender.energy === undefined) defender.energy = 2;
+      if (defender.maxEnergy === undefined) defender.maxEnergy = 10;
+
+      // Inisialisasi mini battle-state untuk CardBattleV2Engine
+      const mockBattleState = {
+        turn: session.roundNumber || 1,
+        activeUserId: interaction.user.id,
+        fighters: {
+          [interaction.user.id]: {
+            userId: interaction.user.id,
+            username: attackerUser.username,
+            card: attacker,
+            currentHp: attacker.currentHp,
+            maxHp: attacker.maxHp,
+            shield: attacker.shield || 0,
+            energy: attacker.energy || 2,
+            maxEnergy: attacker.maxEnergy || 10,
+            comboHistory: attacker.comboHistory || [],
+          },
+          [session.turn === 1 ? session.p2UserId : session.p1UserId]: {
+            userId: session.turn === 1 ? session.p2UserId : session.p1UserId,
+            username: defenderUser.username,
+            card: defender,
+            currentHp: defender.currentHp,
+            maxHp: defender.maxHp,
+            shield: defender.shield || 0,
+            energy: defender.energy || 2,
+            maxEnergy: defender.maxEnergy || 10,
+            comboHistory: defender.comboHistory || [],
+          },
+        },
+        combatLogs: [],
+        isFinished: false,
+        winnerUserId: null,
+      };
+
+      const turnRes = { log: "", isDefenderFainted: false };
+
+      try {
+        const afterActionState = CardBattleV2Engine.processAction(
+          mockBattleState,
+          interaction.user.id,
+          actionType
+        );
+
+        // Sinkronisasi kembali ke session
+        const fAttacker = afterActionState.fighters[interaction.user.id];
+        const oppId = session.turn === 1 ? session.p2UserId : session.p1UserId;
+        const fDefender = afterActionState.fighters[oppId];
+
+        attacker.currentHp = fAttacker.currentHp;
+        attacker.shield = fAttacker.shield;
+        attacker.energy = fAttacker.energy;
+        attacker.comboHistory = fAttacker.comboHistory;
+
+        defender.currentHp = fDefender.currentHp;
+        defender.shield = fDefender.shield;
+        defender.energy = fDefender.energy;
+
+        turnRes.log = afterActionState.combatLogs.join("\n");
+        turnRes.isDefenderFainted = afterActionState.isFinished;
+      } catch (err) {
+        // Fallback jika ada validasi energy
+        turnRes.log = `⚠️ ${err.message}`;
+      }
+
       session.roundNumber = (session.roundNumber || 1) + 1;
 
       // Check Win Condition
-      if (turnRes.isDefenderFainted) {
+      if (turnRes.isDefenderFainted || defender.currentHp <= 0) {
         await redisManager.del(`card:battle:${sessionId}`);
         const winnerId =
           session.turn === 1 ? session.p1UserId : session.p2UserId;
+        const loserId =
+          session.turn === 1 ? session.p2UserId : session.p1UserId;
         const winnerUser = session.turn === 1 ? session.p1User : session.p2User;
         const loserUser = session.turn === 1 ? session.p2User : session.p1User;
 
-        // Update Win/Loss Stats
+        let eloText = "Mendapatkan +25 ELO Points & Kebanggaan!";
+
+        // Update Win/Loss Stats with Elo V2
         if (!session.isPvE) {
           const [wDeck] = await UserCardDeck.findOrCreate({
             where: { userId: winnerId },
           });
-          wDeck.wins += 1;
-          wDeck.eloRating += 25;
-          await wDeck.save({ fields: ["wins", "eloRating"] });
-
-          const loserId =
-            session.turn === 1 ? session.p2UserId : session.p1UserId;
           const [lDeck] = await UserCardDeck.findOrCreate({
             where: { userId: loserId },
           });
+
+          const currentWinnerElo = wDeck.eloRating || 1000;
+          const currentLoserElo = lDeck.eloRating || 1000;
+
+          const eloCalc = CardBattleV2Engine.calculateElo(currentWinnerElo, currentLoserElo);
+
+          wDeck.wins += 1;
+          wDeck.eloRating = eloCalc.winnerNewElo;
+          await wDeck.save({ fields: ["wins", "eloRating"] });
+
           lDeck.losses += 1;
-          lDeck.eloRating = Math.max(500, lDeck.eloRating - 20);
+          lDeck.eloRating = eloCalc.loserNewElo;
           await lDeck.save({ fields: ["losses", "eloRating"] });
+
+          // Update Redis Ranked Ladder
+          if (redisManager.isReady) {
+            await redisManager.client.zadd("card:ranked:ladder", eloCalc.winnerNewElo, winnerId);
+            await redisManager.client.zadd("card:ranked:ladder", eloCalc.loserNewElo, loserId);
+          }
+
+          const rankTier = CardBattleV2Engine.getRankTier(eloCalc.winnerNewElo);
+          eloText = `Peringkat: ${rankTier.icon} **${rankTier.name}** (+${eloCalc.winnerDelta} Elo -> **${eloCalc.winnerNewElo}**)`;
 
           // Bet reward payout
           if (session.betAmount > 0) {
@@ -154,7 +240,7 @@ module.exports = [
         });
         const container = buildContainerV2({
           title: `${ui.getEmoji("trophy") || "🏆"} Victory in Card Clash!`,
-          description: `Pertarungan sengit telah usai!\n\n${ui.getEmoji("crown") || "👑"} **Pemenang:** <@${winnerId}>\n${ui.getEmoji("skull") || "💀"} **Gugur:** ${loserUser.username}\n${ui.getEmoji("book") || "📜"} **Kemenangan:** ${session.isTower ? `Menaklukkan Lantai ${session.towerFloor} Tower of Babel!` : "Mendapatkan +25 ELO Points & Kebanggaan!"}`,
+          description: `Pertarungan sengit telah usai!\n\n${ui.getEmoji("crown") || "👑"} **Pemenang:** <@${winnerId}>\n${ui.getEmoji("skull") || "💀"} **Gugur:** ${loserUser.username}\n${ui.getEmoji("book") || "📜"} **Prestasi:** ${session.isTower ? `Menaklukkan Lantai ${session.towerFloor} Tower of Babel!` : eloText}`,
           color: 0xffd700,
           authorName: "Naura TCG Arena Champion",
           media: attachment,
@@ -173,19 +259,67 @@ module.exports = [
       // If PvE Tower/AI opponent, execute AI counter-turn immediately
       if (session.isPvE && session.turn === 2) {
         const aiAction =
-          session.p2Card.energy >= session.p2Card.skill.energyCost
-            ? "SKILL"
-            : Math.random() < 0.25
-              ? "DEFEND"
-              : "ATTACK";
-        const aiTurnRes = CardBattleEngine.executeTurn(
-          session.p2Card,
-          session.p1Card,
-          aiAction,
-        );
-        turnRes.log += `\n${ui.getEmoji("robot") || "🤖"} ${aiTurnRes.log}`;
+          session.p2Card.energy >= 5
+            ? "BURST"
+            : session.p2Card.energy >= (session.p2Card.skill.energyCost || 3)
+              ? "SKILL"
+              : Math.random() < 0.25
+                ? "GUARD"
+                : "ATTACK";
 
-        if (aiTurnRes.isDefenderFainted) {
+        // Eksekusi turn AI via CardBattleV2Engine
+        const mockAiState = {
+          turn: session.roundNumber,
+          activeUserId: session.p2UserId,
+          fighters: {
+            [session.p2UserId]: {
+              userId: session.p2UserId,
+              username: session.p2User.username,
+              card: session.p2Card,
+              currentHp: session.p2Card.currentHp,
+              maxHp: session.p2Card.maxHp,
+              shield: session.p2Card.shield || 0,
+              energy: session.p2Card.energy || 2,
+              maxEnergy: session.p2Card.maxEnergy || 10,
+              comboHistory: session.p2Card.comboHistory || [],
+            },
+            [session.p1UserId]: {
+              userId: session.p1UserId,
+              username: session.p1User.username,
+              card: session.p1Card,
+              currentHp: session.p1Card.currentHp,
+              maxHp: session.p1Card.maxHp,
+              shield: session.p1Card.shield || 0,
+              energy: session.p1Card.energy || 2,
+              maxEnergy: session.p1Card.maxEnergy || 10,
+              comboHistory: session.p1Card.comboHistory || [],
+            },
+          },
+          combatLogs: [],
+          isFinished: false,
+          winnerUserId: null,
+        };
+
+        const aiStateResult = CardBattleV2Engine.processAction(
+          mockAiState,
+          session.p2UserId,
+          aiAction
+        );
+
+        const fAi = aiStateResult.fighters[session.p2UserId];
+        const fPlayer = aiStateResult.fighters[session.p1UserId];
+
+        session.p2Card.currentHp = fAi.currentHp;
+        session.p2Card.shield = fAi.shield;
+        session.p2Card.energy = fAi.energy;
+
+        session.p1Card.currentHp = fPlayer.currentHp;
+        session.p1Card.shield = fPlayer.shield;
+        session.p1Card.energy = fPlayer.energy;
+
+        turnRes.log += `\n${ui.getEmoji("robot") || "🤖"} ${aiStateResult.combatLogs.join("\n")}`;
+
+        if (aiStateResult.isFinished || session.p1Card.currentHp <= 0) {
           await redisManager.del(`card:battle:${sessionId}`);
           const endBuffer = await drawCardBattleArena({
             p1: session.p1Card,
@@ -249,15 +383,21 @@ module.exports = [
           .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
           .setCustomId(`card_battle_skill_${sessionId}`)
-          .setLabel(`Skill (${nextCard.skill.name})`)
+          .setLabel(`Skill (${nextCard.skill ? nextCard.skill.name : "Skill"})`)
           .setEmoji(ui.parseEmoji(ui.getEmoji("sparkles")) || { name: "✨" })
           .setStyle(ButtonStyle.Success)
-          .setDisabled(nextCard.energy < nextCard.skill.energyCost),
+          .setDisabled(nextCard.energy < (nextCard.skill ? nextCard.skill.energyCost || 3 : 3)),
         new ButtonBuilder()
           .setCustomId(`card_battle_def_${sessionId}`)
-          .setLabel("Defend")
+          .setLabel("Guard")
           .setEmoji(ui.parseEmoji(ui.getEmoji("shield")) || { name: "🛡️" })
           .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId(`card_battle_burst_${sessionId}`)
+          .setLabel("Burst")
+          .setEmoji({ name: "🌌" })
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(nextCard.energy < 5),
         new ButtonBuilder()
           .setCustomId(`card_battle_forfeit_${sessionId}`)
           .setLabel("Forfeit")
@@ -267,9 +407,9 @@ module.exports = [
 
       const container = buildContainerV2({
         title: `${ui.getEmoji("battle") || "⚔️"} Giliran: ${nextUser.username}`,
-        description: `Pilih aksi bertarung Anda untuk ronde ke-${session.roundNumber}!\n${ui.getEmoji("stamina") || "⚡"} **Energy Saat Ini:** ${nextCard.energy}/${nextCard.maxEnergy}`,
+        description: `Pilih aksi bertarung Anda untuk ronde ke-${session.roundNumber}!\n${ui.getEmoji("stamina") || "⚡"} **Energy:** ${nextCard.energy}/${nextCard.maxEnergy || 10} | ${ui.getEmoji("shield") || "🛡️"} **Shield:** ${nextCard.shield || 0}`,
         color: 0xffb6c1,
-        authorName: "Naura TCG Card Clash",
+        authorName: "Naura TCG Card Clash V2",
         media: attachment,
         buttonsRow: actionRow,
       });

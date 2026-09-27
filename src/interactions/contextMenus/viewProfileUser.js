@@ -47,16 +47,23 @@ module.exports = {
       });
 
       const payload = {
+        userId: targetUser.id,
         username: targetUser.username,
         avatarUrl: targetUser.displayAvatarURL({ extension: "png", size: 256 }),
         level: leveling.level || 1,
         xp: leveling.xp || 0,
+        mannersPoint: leveling.mannersPoint ?? 100,
         wallet: profile.economy_wallet || 0,
         bank: profile.economy_bank || 0,
         starFragments: survival.starFragments || 0,
         coupons: survival.coupons || 0,
         title: profile.custom_title || "Adventurer",
         reputation: profile.reputation || 0,
+        isPremium: Boolean(profile.isPremium),
+        premiumTier: profile.premium_tier || "none",
+        activeBanners: profile.activeBanners,
+        clan: survival.clanId || null,
+        partner: survival.partner || survival.spouseName || null,
       };
 
       const buffer = await renderInWorker("renderProfile", payload);

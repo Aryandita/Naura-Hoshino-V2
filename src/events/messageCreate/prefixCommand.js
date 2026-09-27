@@ -213,14 +213,57 @@ module.exports = async function handlePrefixCommand(message, client) {
     .slice(configuredPrefix.length)
     .trim()
     .split(/ +/);
-  const targetCommandName = commandTokens.shift()?.toLowerCase();
+  let targetCommandName = commandTokens.shift()?.toLowerCase();
 
   // Guard Clause 2: Awalan prefix tanpa nama command
   if (!targetCommandName) return true;
 
+  // Resolusi Shortcut Alias Pengguna
+  try {
+    const aliasService = require("../../services/aliasService");
+    const aliasExpansion = await aliasService.resolveAlias(
+      message.author.id,
+      targetCommandName,
+    );
+    if (aliasExpansion) {
+      const aliasParts = aliasExpansion.split(/ +/);
+      targetCommandName = aliasParts.shift()?.toLowerCase();
+      commandTokens.unshift(...aliasParts);
+    }
+  } catch {
+    // Abaikan bila modul alias mengalami galat
+  }
+
   const targetCommand = resolveCommand(client, targetCommandName);
-  // Guard Clause 3: Perintah tidak dikenali
-  if (!targetCommand) return true;
+  // Guard Clause 3: Perintah tidak dikenali (Cari saran typo Levenshtein)
+  if (!targetCommand) {
+    try {
+      const { findClosestCommand } = require("../../utils/levenshteinSuggest");
+      const availableNames = Array.from(client.commands.keys());
+      const suggestion = findClosestCommand(targetCommandName, availableNames, 2);
+
+      if (suggestion) {
+        const ui = require("../../config/ui");
+        const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
+        const suggestionPayload = buildContainerV2({
+          accentColorHex: ui.getColor("warning") || "#F59E0B",
+          authorName: "Naura Smart Assistant",
+          title: "🤔 Perintah Tidak Dikenali",
+          description: [
+            `Perintah \`${configuredPrefix}${targetCommandName}\` tidak ditemukan.`,
+            "",
+            `Maksud Kakak mungkin: \`${configuredPrefix}${suggestion.name}\`?`,
+            "- # *Ketik `" + configuredPrefix + "help` untuk melihat seluruh panduan perintah.*",
+          ].join("\n"),
+          footerText: ui.getFooter("core"),
+        });
+        await message.reply(suggestionPayload).catch(() => {});
+      }
+    } catch {
+      // Abaikan bila ada galat jaringan
+    }
+    return true;
+  }
 
   // Guard Clause 4: Pembatas laju eksekusi prefix command (Anti-Spam Gateway)
   const isLimited = await RateLimiter.isRateLimited(

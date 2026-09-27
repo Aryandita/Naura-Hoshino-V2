@@ -121,6 +121,17 @@ async function announceLevelUp(profile, user, guild, currentChannel) {
       flags: payload.flags || MessageFlags.IsComponentsV2,
     });
     setTimeout(() => sent.delete().catch(() => {}), CONFIG.NOTICE_TTL);
+
+    // Sinkronisasi otomatis Discord Role Rewards bila ada konfigurasi milestone
+    try {
+      const { syncMemberRoles } = require("../services/roleSyncService");
+      const member = guild.members.cache.get(user.id) || await guild.members.fetch(user.id).catch(() => null);
+      if (member) {
+        await syncMemberRoles(member, { level: profile.level });
+      }
+    } catch {
+      // Abaikan bila member tidak ditemukan di cache
+    }
   } catch (e) {
     logger.error("[LEVELING] Gagal mengirim notifikasi naik level:", e);
 

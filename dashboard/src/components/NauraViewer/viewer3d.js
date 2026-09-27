@@ -13,7 +13,7 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { loadModel } from "./loader.js";
-import { createAnimationController } from "./animations.js";
+import { createAnimationController, applyNauraRuntimeFix } from "./animations.js";
 import { createParticleSystem } from "./particles.js";
 import { createNauraBrand3D } from "./brand3d.js";
 
@@ -312,6 +312,14 @@ export class Naura3DViewer {
         });
 
         // Posisikan model agar pas di viewport
+        // Terapkan Naura Runtime Fix v8 (Skinning weights, Arm IK joints, Hand scaling)
+        try {
+            const fixReport = applyNauraRuntimeFix(this.modelGroup);
+            console.log("[NauraFix]", fixReport);
+        } catch (errFix) {
+            console.warn("[NauraFix] Gagal menerapkan patch runtime:", errFix);
+        }
+
         this.modelGroup.position.set(0, 0, 0);
 
         // Rotasi pada sumbu Y: karakter menghadap +Z sehingga wajah tepat menghadap kamera

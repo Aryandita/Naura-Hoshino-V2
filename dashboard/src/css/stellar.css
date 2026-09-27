@@ -2175,3 +2175,50 @@ select option:hover, select option:checked {
   background-color: #1e293b !important;
   color: #38bdf8 !important;
 }
+
+/* ─── Feature #17: Dynamic Multi-Theme Switcher ─── */
+[data-theme="cyber-neon"] {
+  --bg-deep: #050814;
+  --bg-layer: #090e24;
+  --primary: #00f0ff;
+  --primary-dim: rgba(0, 240, 255, 0.15);
+  --primary-glow: rgba(0, 240, 255, 0.25);
+  --primary-deep: rgba(0, 240, 255, 0.08);
+  --border-primary: rgba(0, 240, 255, 0.4);
+  --accent-cyan: #ff007f;
+  --cyan-dim: rgba(255, 0, 127, 0.15);
+  --cyan-glow: rgba(255, 0, 127, 0.2);
+  --accent-violet: #7928ca;
+}
+
+[data-theme="emerald-nature"] {
+  --bg-deep: #03140d;
+  --bg-layer: #062115;
+  --primary: #10b981;
+  --primary-dim: rgba(16, 185, 129, 0.15);
+  --primary-glow: rgba(16, 185, 129, 0.25);
+  --primary-deep: rgba(16, 185, 129, 0.08);
+  --border-primary: rgba(16, 185, 129, 0.4);
+  --accent-cyan: #14b8a6;
+  --accent-amber: #eab308;
+  --accent-green: #22c55e;
+}
+
+[data-theme="light-horizon"] {
+  color-scheme: light;
+  --bg-deep: #f8fafc;
+  --bg-layer: #f1f5f9;
+  --bg-surface: rgba(255, 255, 255, 0.85);
+  --bg-surface-hv: rgba(255, 255, 255, 0.95);
+  --bg-elevated: #ffffff;
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-medium: rgba(15, 23, 42, 0.15);
+  --border-strong: rgba(15, 23, 42, 0.25);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --primary: #ec4899;
+  --primary-dim: rgba(236, 72, 153, 0.12);
+  --primary-glow: rgba(236, 72, 153, 0.2);
+  --border-primary: rgba(236, 72, 153, 0.35);
+}

@@ -19,6 +19,7 @@ const CommandAuditLog = require("../models/mongo/CommandAuditLog");
 const AiMemory = require("../models/mongo/AiMemory");
 const UserRoom = require("../models/mongo/UserRoom");
 const TimeCapsule = require("../models/mongo/TimeCapsule");
+const UserAlias = require("../models/mongo/UserAlias");
 
 class MongoManager {
   constructor() {
@@ -29,6 +30,7 @@ class MongoManager {
       AiMemory,
       UserRoom,
       TimeCapsule,
+      UserAlias,
     };
     this._isConnecting = false;
     this._setupListeners();

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="id" data-theme="midnight" data-font-size="normal">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0c10" />
+    <meta name="description" content="Profil petualangmu dan kustomisasi tampilan dashboard mobile Naura OS." />
+    <title>Profil | Naura OS Mobile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@700;900&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="../css/tokens.css" />
+    <link rel="stylesheet" href="../css/animations.css" />
+    <link rel="stylesheet" href="../css/components.css" />
+    <link rel="stylesheet" href="../css/mobile.css" />
+  </head>
+
+  <body>
+    <header class="nm-header" role="banner">
+      <div class="nm-header__brand">
+        <i class="fa-solid fa-user" style="color:var(--primary);font-size:1.1rem" aria-hidden="true"></i>
+        <span class="nm-header__name">PROFIL</span>
+      </div>
+    </header>
+
+    <main class="nm-page" role="main" style="padding-top:var(--sp-xs)">
+
+      <!-- Profile Hero -->
+      <section class="reveal nm-card animate-fade-in-up" aria-label="Profil petualang">
+        <div class="nm-profile-hero">
+          <img id="profile-avatar" class="nm-profile-hero__avatar"
+               src="/assets/core/avatar.png"
+               alt="Avatar profil" width="72" height="72" />
+          <div>
+            <h1 class="nm-profile-hero__name" id="profile-name">Memuat...</h1>
+            <p class="nm-profile-hero__level" id="profile-level">Memuat level...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Kustomisasi Tema -->
+      <section class="reveal nm-card animate-fade-in-up" style="animation-delay:80ms" aria-label="Kustomisasi tema">
+        <p class="nm-section-title" style="margin-bottom:var(--sp-sm)">Tema Dashboard</p>
+        <div id="profile-presets" style="display:flex;flex-wrap:wrap;gap:var(--sp-xs);margin-bottom:var(--sp-md)">
+          <!-- Diisi profile.js -->
+        </div>
+
+        <p class="nm-section-title" style="margin-bottom:var(--sp-xs)">Aksen Warna</p>
+        <div id="profile-swatches" style="display:flex;flex-wrap:wrap;gap:var(--sp-xs);margin-bottom:var(--sp-md)">
+          <!-- Diisi profile.js -->
+        </div>
+
+        <!-- Animasi Toggle -->
+        <div class="nm-module-row">
+          <div class="nm-module-row__info">
+            <p class="nm-module-row__name">Animasi</p>
+            <p class="nm-module-row__desc">Matikan untuk tampilan lebih ringan</p>
+          </div>
+          <label class="nm-toggle" aria-label="Toggle animasi">
+            <input type="checkbox" id="profile-anim-toggle" checked>
+            <div class="nm-toggle__track"><div class="nm-toggle__thumb"></div></div>
+          </label>
+        </div>
+
+        <!-- Font Size -->
+        <div class="nm-module-row">
+          <div class="nm-module-row__info">
+            <p class="nm-module-row__name">Ukuran Teks</p>
+          </div>
+          <div style="display:flex;gap:var(--sp-xs)" role="group" aria-label="Ukuran teks">
+            <button class="nm-filter-chip profile-font-btn" data-size="compact" aria-pressed="false">S</button>
+            <button class="nm-filter-chip profile-font-btn nm-filter-chip--active" data-size="normal" aria-pressed="true">M</button>
+            <button class="nm-filter-chip profile-font-btn" data-size="large" aria-pressed="false">L</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Widget Order -->
+      <section class="reveal nm-card animate-fade-in-up" style="animation-delay:120ms" aria-label="Urutan widget beranda">
+        <p class="nm-section-title" style="margin-bottom:var(--sp-sm)">Urutan Widget Beranda</p>
+        <p style="font-size:0.75rem;color:var(--muted);margin-bottom:var(--sp-sm)">
+          Seret untuk mengubah urutan tampilan
+        </p>
+        <div id="profile-widget-order">
+          <!-- Diisi profile.js -->
+        </div>
+      </section>
+
+      <!-- Logout -->
+      <section class="reveal animate-fade-in-up" style="animation-delay:160px">
+        <button class="nm-btn nm-btn--danger nm-btn--full" id="profile-logout">
+          <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+          Logout
+        </button>
+      </section>
+
+    </main>
+
+    <nav id="nm-bottom-nav" aria-label="Navigasi utama"></nav>
+    <div id="nm-toast-container" role="region" aria-label="Notifikasi" aria-live="polite"></div>
+    <script type="module" src="../js/pages/profile.js"></script>
+  </body>
+</html>

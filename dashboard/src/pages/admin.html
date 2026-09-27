@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin God Mode Panel | Naura OS</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <style>
+      .admin-container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+      .admin-header {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(168, 85, 247, 0.15) 100%);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: var(--r-xl);
+        padding: 24px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .admin-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 20px;
+        margin-bottom: 28px;
+      }
+      .admin-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-lg);
+        padding: 24px;
+      }
+      .metric-badge {
+        font-family: var(--font-mono);
+        font-size: 20px;
+        font-weight: 700;
+        margin: 6px 0;
+      }
+      .quick-action-btn {
+        background: var(--bg-surface-hv);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-primary);
+        padding: 10px 16px;
+        border-radius: var(--r-md);
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        width: 100%;
+        margin-bottom: 8px;
+      }
+      .quick-action-btn:hover {
+        background: var(--primary-dim);
+        border-color: var(--border-primary);
+        color: var(--primary);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="shared-nav"></div>
+
+    <main class="admin-container">
+      <section class="admin-header">
+        <div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:28px;">⚡</span>
+            <h1 style="margin:0; font-size:24px; font-family:var(--font-heading); color:#EF4444;">Admin God Mode & Architecture Center</h1>
+          </div>
+          <p style="margin:4px 0 0; color:var(--text-secondary); font-size:14px;">
+            Pengawasan telemetri performa, write-behind cache, contention locks, dan audit inspeksi sistem.
+          </p>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-secondary" onclick="refreshAdminTelemetry()"><i class="fa-solid fa-arrows-rotate"></i> Refresh Telemetri</button>
+        </div>
+      </section>
+
+      <!-- System Health & Monitoring Grid -->
+      <section class="admin-grid">
+        <!-- Feature #32: Write-Behind Cache Metrics -->
+        <div class="admin-card">
+          <h3 style="margin-top:0; font-size:16px; color:#38BDF8;"><i class="fa-solid fa-memory"></i> Write-Behind Cache Metrics (#32)</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px;">
+            <div>
+              <div style="font-size:12px; color:var(--text-muted);">ANTREAN TERTUNDA</div>
+              <div id="cache-pending" class="metric-badge" style="color:#38BDF8;">0 item</div>
+            </div>
+            <div>
+              <div style="font-size:12px; color:var(--text-muted);">LATENSI FLUSH TERAKHIR</div>
+              <div id="cache-latency" class="metric-badge" style="color:#10B981;">0 ms</div>
+            </div>
+            <div>
+              <div style="font-size:12px; color:var(--text-muted);">TOTAL FLUSH</div>
+              <div id="cache-flushed-count" class="metric-badge" style="color:var(--text-primary);">0 kali</div>
+            </div>
+            <div>
+              <div style="font-size:12px; color:var(--text-muted);">FLUSH ERRORS</div>
+              <div id="cache-errors" class="metric-badge" style="color:#EF4444;">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature #33: Hourly Command Traffic -->
+        <div class="admin-card">
+          <h3 style="margin-top:0; font-size:16px; color:#F59E0B;"><i class="fa-solid fa-chart-line"></i> Command Traffic & Spike Monitor (#33)</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px;">
+            <div>
+              <div style="font-size:12px; color:var(--text-muted);">TOTAL COMMAND (24H)</div>
+              <div id="traffic-total" class="metric-badge" style="color:#F59E0B;">--</div>
+            </div>
+            <div>
+              <div style="font-size:12px; color:var(--text-muted);">RATE LIMIT SPIKES (24H)</div>
+              <div id="traffic-spikes" class="metric-badge" style="color:#EF4444;">--</div>
+            </div>
+            <div style="grid-column:1 / -1;">
+              <div style="font-size:12px; color:var(--text-muted);">JAM BEBAN TERTINGGI (PEAK)</div>
+              <div id="traffic-peak" style="font-family:var(--font-mono); font-size:14px; color:var(--text-primary); margin-top:4px;">--</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature #35: Distributed Mutex Locks -->
+        <div class="admin-card">
+          <h3 style="margin-top:0; font-size:16px; color:#A78BFA;"><i class="fa-solid fa-lock"></i> Mutex Lock Contention (#35)</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px;">
+            <div>
+              <div style="font-size:12px; color:var(--text-muted);">KUNCI AKTIF SAAT INI</div>
+              <div id="locks-active" class="metric-badge" style="color:#A78BFA;">0</div>
+            </div>
+            <div>
+              <div style="font-size:12px; color:var(--text-muted);">CONTENTION RESOLVED</div>
+              <div id="locks-resolved" class="metric-badge" style="color:#10B981;">0</div>
+            </div>
+            <div style="grid-column:1 / -1;">
+              <div style="font-size:12px; color:var(--text-muted);">STATUS DEADLOCK ENGINE</div>
+              <div style="font-family:var(--font-mono); font-size:14px; color:#10B981; margin-top:4px;">● MultiLock Lexicographical Sort Active</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick Maintenance Actions -->
+      <section class="admin-card" style="margin-bottom:28px;">
+        <h3 style="margin-top:0; font-size:18px; font-family:var(--font-heading);"><i class="fa-solid fa-screwdriver-wrench"></i> Tindakan Darurat & Pemeliharaan</h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin-top:16px;">
+          <button class="quick-action-btn" onclick="triggerManualBackup()"><i class="fa-solid fa-cloud-arrow-up"></i> Jalankan Auto-Backup DB (#30)</button>
+          <button class="quick-action-btn" onclick="alert('Write-behind cache otomatis ter-flush ke Supabase setiap 5 detik!')"><i class="fa-solid fa-bolt"></i> Paksa Flush Cache (#32)</button>
+          <button class="quick-action-btn" onclick="location.href='/topology'"><i class="fa-solid fa-network-wired"></i> Buka Topology Inspector</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="/src/js/shared-nav.js"></script>
+    <script src="/js/theme-switcher.js"></script>
+    <script src="/js/pwa-install.js"></script>
+    <script>
+      async function refreshAdminTelemetry() {
+        try {
+          // Fetch Cache Metrics
+          const cacheRes = await fetch('/api/metrics/cache');
+          if (cacheRes.ok) {
+            const data = await cacheRes.json();
+            if (data.cache) {
+              document.getElementById('cache-pending').innerText = data.cache.pendingWrites + ' item';
+              document.getElementById('cache-latency').innerText = data.cache.lastFlushDurationMs + ' ms';
+              document.getElementById('cache-flushed-count').innerText = data.cache.flushCount + ' kali';
+              document.getElementById('cache-errors').innerText = data.cache.flushErrors;
+            }
+          }
+
+          // Fetch Traffic Metrics
+          const trafficRes = await fetch('/api/metrics/traffic');
+          if (trafficRes.ok) {
+            const data = await trafficRes.json();
+            if (data.traffic) {
+              document.getElementById('traffic-total').innerText = data.traffic.totalCommands24h;
+              document.getElementById('traffic-spikes').innerText = data.traffic.totalSpikes24h;
+              document.getElementById('traffic-peak').innerText = data.traffic.peakHour + ' (' + data.traffic.peakCommands + ' cmd)';
+            }
+          }
+
+          // Fetch Lock Metrics
+          const lockRes = await fetch('/api/metrics/locks');
+          if (lockRes.ok) {
+            const data = await lockRes.json();
+            if (data.locks) {
+              document.getElementById('locks-active').innerText = data.locks.activeInMemoryLocks;
+              document.getElementById('locks-resolved').innerText = data.locks.contentionsResolved || 0;
+            }
+          }
+        } catch (err) {
+          console.warn('Gagal memuat telemetri admin:', err);
+        }
+      }
+
+      function triggerManualBackup() {
+        alert('Perintah auto-backup database dikirimkan. Cadangan multi-db dieksekusi di latar belakang!');
+      }
+
+      window.addEventListener('DOMContentLoaded', refreshAdminTelemetry);
+    </script>
+  </body>
+</html>

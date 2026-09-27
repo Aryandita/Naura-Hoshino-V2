@@ -22,7 +22,7 @@ Aman      : file asli tidak diubah; file yang meshnya berbeda ditolak (checksum 
 import json, struct, sys, hashlib, os
 import numpy as np
 
-VERSION = "naura-fix v4 (bobot+ketiak+lengan-mulus+sendi+tangan1.25)"
+VERSION = "naura-fix v5 (v4 + IBM tangan diskalakan diperbaiki)"
 HAND_SCALE = 1.25
 CT = {5126: np.float32, 5123: np.uint16, 5125: np.uint32, 5121: np.uint8}
 NC = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4, "MAT4": 16}
@@ -164,16 +164,42 @@ def main(src, dst, fix_path):
     if len(flat) < old_count: buf[start + len(flat) * dt.itemsize: start + old_count * dt.itemsize] = b"\0" * ((old_count - len(flat)) * dt.itemsize)
     acc["count"] = int(len(flat)); acc["min"], acc["max"] = [int(flat.min())], [int(flat.max())]
 
-    # 4. sendi lengan, 5. ukuran tangan, penanda versi
+    # 4. sendi lengan
     moved = rerig_arms(js, buf)
+
+    # 5. ukuran tangan -- WAJIB sekaligus menghitung ulang inverse bind matrix (IBM) tulang tangan.
+    # Bug yang pernah lolos: mengubah node.scale tanpa menyesuaikan IBM membuat setiap vertex yang
+    # bobotnya tercampur antara Hand dan ForeArm meregang tak wajar (duri di pergelangan, bahkan
+    # bisa memanjang seperti cakar) begitu lengan diputar dari pose diam.
+    nodes = js["nodes"]; by_name = {n.get("name"): i for i, n in enumerate(nodes)}
+    parent = {c: i for i, n in enumerate(nodes) for c in n.get("children", [])}
+
+    def world_pos(i):
+        p = np.array(nodes[i].get("translation", [0, 0, 0]), float)
+        while i in parent:
+            i = parent[i]; p = p + np.array(nodes[i].get("translation", [0, 0, 0]), float)
+        return p
+
+    skin = js["skins"][0]; ibm = read_acc(buf, js, skin["inverseBindMatrices"])
+    scaled = 0
     for nm in ("LeftHand", "RightHand"):
-        for nd in js["nodes"]:
-            if nd.get("name") == nm: nd["scale"] = [HAND_SCALE] * 3
+        if nm not in by_name: continue
+        i = by_name[nm]; nodes[i]["scale"] = [HAND_SCALE] * 3
+        wp = world_pos(i)
+        for k, j in enumerate(skin["joints"]):
+            if nodes[j].get("name") == nm:
+                m = np.eye(4); s = 1.0 / HAND_SCALE
+                m[0, 0] = m[1, 1] = m[2, 2] = s
+                m[0, 3], m[1, 3], m[2, 3] = -wp[0] * s, -wp[1] * s, -wp[2] * s
+                ibm[k] = m.T.reshape(-1).astype(ibm.dtype)   # glTF MAT4 disimpan kolom-utama
+        scaled += 1
+    write_acc(buf, js, skin["inverseBindMatrices"], ibm)
+
     js.setdefault("asset", {}).setdefault("extras", {})["naura_fix"] = VERSION
     js_chunk[1] = bytearray(json.dumps(js, separators=(",", ":")).encode("utf-8"))
     write_glb(dst, chunks)
     print(f"OK: {len(rows)} vertex diperbaiki + bobot lengan mulus, {int(drop.sum())} segitiga jahitan dibuang, "
-          f"{restored} segitiga ketiak dipulihkan, {moved} sendi dipindah, tangan x{HAND_SCALE} -> {dst}")
+          f"{restored} segitiga ketiak dipulihkan, {moved} sendi dipindah, tangan x{HAND_SCALE} (IBM disesuaikan) -> {dst}")
 
 
 if __name__ == "__main__":

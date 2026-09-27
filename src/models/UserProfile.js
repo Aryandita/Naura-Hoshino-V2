@@ -171,7 +171,11 @@ const UserProfile = sequelize.define(
   },
   {
     tableName: "user_profiles",
-    timestamps: false,
+    timestamps: true,
+    createdAt: false,
+    updatedAt: false,
+    paranoid: true,
+    deletedAt: "deletedAt",
     hooks: {
       beforeUpdate: (profile, options) => {
         if (profile.changed("cooldowns")) {

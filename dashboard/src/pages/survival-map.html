@@ -1242,7 +1242,54 @@
         if (worldRegions) {
           renderRegion(currentRegionId);
         }
+
+        // Feature #12: Town Square Live Multiplayer Avatar Radar
+        try {
+          if (typeof io !== 'undefined') {
+            const socket = io();
+            socket.emit('town:join', { location: currentRegionId, user: activePlayer });
+
+            const multiplayerLayer = document.createElement('div');
+            multiplayerLayer.id = 'town-multiplayer-layer';
+            multiplayerLayer.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:20;';
+            radarScope.appendChild(multiplayerLayer);
+
+            const activeAvatars = new Map();
+
+            function renderAvatarBlip(data) {
+              let el = activeAvatars.get(data.userId);
+              if (!el) {
+                el = document.createElement('div');
+                el.className = 'multiplayer-avatar-blip';
+                el.style.cssText = 'position:absolute;width:28px;height:28px;border-radius:50%;border:2px solid #22D3EE;background:rgba(34,211,238,0.25);box-shadow:0 0 12px #22D3EE;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;pointer-events:auto;transition:all 0.5s ease;animation:radarPulse 2s infinite;';
+                el.title = `${data.username || 'Petualang'} (Online di Alun-Alun)`;
+                el.innerHTML = data.avatar ? `<img src="${data.avatar}" style="width:100%;height:100%;border-radius:50%;" />` : '👤';
+                multiplayerLayer.appendChild(el);
+                activeAvatars.set(data.userId, el);
+              }
+              const xPct = data.x || (45 + Math.random() * 10);
+              const yPct = data.y || (45 + Math.random() * 10);
+              el.style.left = `${xPct}%`;
+              el.style.top = `${yPct}%`;
+            }
+
+            socket.on('town:avatar_appear', renderAvatarBlip);
+            socket.on('town:avatar_move', renderAvatarBlip);
+            socket.on('town:avatar_leave', (data) => {
+              const el = activeAvatars.get(data.userId);
+              if (el) {
+                el.remove();
+                activeAvatars.delete(data.userId);
+              }
+            });
+          }
+        } catch (e) {
+          console.warn('[SurvivalMap] Multiplayer radar init failed:', e.message);
+        }
       })();
     </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/theme-switcher.js"></script>
+    <script src="/js/pwa-install.js"></script>
   </body>
 </html>

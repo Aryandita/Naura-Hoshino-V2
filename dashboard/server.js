@@ -369,6 +369,69 @@ module.exports = (client) => {
   // --- Redirect legacy /v2 ke root dashboard utama ---
   webApp.use("/v2", (req, res) => res.redirect("/"));
 
+  // ==================================================================
+  // Mobile Dashboard, dashboard/mobile/ (sub-folder khusus mobile)
+  //
+  // Production: sajikan dari mobile/dist/ (hasil `npm run mobile:build`)
+  // Development: sajikan langsung dari mobile/src/pages/ (tanpa build)
+  //
+  // Auth session berbagi otomatis karena menggunakan Express instance yang sama.
+  // Socket.IO juga berbagi namespace yang sama.
+  // ==================================================================
+  const mobileDist = path.join(__dirname, "mobile", "dist");
+  const mobileSrc  = path.join(__dirname, "mobile", "src", "pages");
+
+  if (fs.existsSync(mobileDist)) {
+    // Production, sajikan dari hasil build Vite
+    webApp.use("/mobile", express.static(mobileDist, { index: false }));
+
+    const mobileView = (page) => (req, res) => {
+      const distFile = path.join(mobileDist, "src", "pages", `${page}.html`);
+      const fallback = path.join(mobileDist, "src", "pages", "index.html");
+      res.sendFile(fs.existsSync(distFile) ? distFile : fallback);
+    };
+
+    webApp.get("/mobile",             mobileView("index"));
+    webApp.get("/mobile/",            mobileView("index"));
+    webApp.get("/mobile/survival",    mobileView("survival"));
+    webApp.get("/mobile/music",       mobileView("music"));
+    webApp.get("/mobile/economy",     mobileView("economy"));
+    webApp.get("/mobile/leaderboard", mobileView("leaderboard"));
+    webApp.get("/mobile/config",      requireLogin, mobileView("config"));
+    webApp.get("/mobile/profile",     requireLogin, mobileView("profile"));
+  } else if (fs.existsSync(mobileSrc)) {
+    // Development fallback, sajikan langsung dari src (tanpa build)
+    webApp.use("/mobile", express.static(mobileSrc, { index: false }));
+    webApp.use("/mobile/css", express.static(path.join(__dirname, "mobile", "src", "css")));
+    webApp.use("/mobile/js",  express.static(path.join(__dirname, "mobile", "src", "js")));
+
+    webApp.get("/mobile",             (req, res) => res.sendFile(path.join(mobileSrc, "index.html")));
+    webApp.get("/mobile/",            (req, res) => res.sendFile(path.join(mobileSrc, "index.html")));
+    webApp.get("/mobile/survival",    (req, res) => res.sendFile(path.join(mobileSrc, "survival.html")));
+    webApp.get("/mobile/music",       (req, res) => res.sendFile(path.join(mobileSrc, "music.html")));
+    webApp.get("/mobile/economy",     (req, res) => res.sendFile(path.join(mobileSrc, "economy.html")));
+    webApp.get("/mobile/leaderboard", (req, res) => res.sendFile(path.join(mobileSrc, "leaderboard.html")));
+    webApp.get("/mobile/config",      requireLogin, (req, res) => res.sendFile(path.join(mobileSrc, "config.html")));
+    webApp.get("/mobile/profile",     requireLogin, (req, res) => res.sendFile(path.join(mobileSrc, "profile.html")));
+  } else {
+    logger.warn("[DASHBOARD] Mobile dashboard (dashboard/mobile/) belum di-build. Jalankan: npm run mobile:build");
+  }
+
+  // --- Auto-redirect HP ke /mobile ---
+  const MOBILE_UA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+  webApp.use((req, res, next) => {
+    const ua = req.headers['user-agent'] || '';
+    const isMobilePath = req.path.startsWith('/mobile');
+    const isApiPath = req.path.startsWith('/api') || req.path.startsWith('/auth') 
+                   || req.path.startsWith('/socket.io') || req.path === '/health';
+    
+    // Redirect jika device mobile dan belum di path /mobile atau /api
+    if (MOBILE_UA.test(ua) && !isMobilePath && !isApiPath) {
+      return res.redirect(302, '/mobile' + (req.path === '/' ? '' : req.path));
+    }
+    next();
+  });
+
   // --- Halaman Dashboard Utama (Dashboard Modern MPA) ---
   const distPages = path.join(__dirname, "dist/src/pages");
   const srcPages = path.join(__dirname, "src/pages");
@@ -410,6 +473,12 @@ module.exports = (client) => {
   webApp.get("/jam", view("jam.html"));
   webApp.get("/lounge", view("lounge.html"));
   webApp.get("/war-room", view("war-room.html"));
+  webApp.get("/clan", view("clan.html"));
+  webApp.get("/marketplace", view("marketplace.html"));
+  webApp.get("/admin", requireLogin, view("admin.html"));
+  webApp.get("/inventory", requireLogin, view("inventory.html"));
+  webApp.get("/arcade", view("arcade.html"));
+  webApp.get("/achievements", view("achievements.html"));
 
   // --- API Survival Realtime Map Data (Sprint 23) ---
   webApp.get("/api/survival/map-data", async (req, res) => {

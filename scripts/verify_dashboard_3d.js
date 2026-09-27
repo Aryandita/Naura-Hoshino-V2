@@ -167,18 +167,33 @@ async function main() {
       expression: `(() => {
         const hv = window.__heroViewer;
         if (!hv) return { error: "No __heroViewer" };
+        const meshes = [];
+        if (hv.modelGroup) {
+          hv.modelGroup.traverse(n => {
+            if (n.isMesh || n.isSkinnedMesh) {
+              meshes.push({
+                name: n.name,
+                isSkinned: Boolean(n.isSkinnedMesh),
+                visible: n.visible,
+                idxCount: n.geometry?.index?.count,
+                idxItemSize: n.geometry?.index?.itemSize,
+                posCount: n.geometry?.attributes?.position?.count,
+                materialVisible: Array.isArray(n.material) ? n.material.map(m => m.visible) : n.material?.visible,
+                opacity: Array.isArray(n.material) ? n.material.map(m => m.opacity) : n.material?.opacity,
+              });
+            }
+          });
+        }
         return {
           isLoaded: hv.isLoaded,
-          hasScene: Boolean(hv.scene),
-          hasCamera: Boolean(hv.camera),
-          hasModelGroup: Boolean(hv.modelGroup),
-          hasBrand3d: Boolean(hv.brand3d),
-          brandFxVisible: Boolean(hv.brandFxVisible),
-          currentAnim: hv.currentAnimName,
-          modelChildren: hv.modelGroup ? hv.modelGroup.children.length : 0,
+          modelGroupPos: hv.modelGroup ? { x: hv.modelGroup.position.x, y: hv.modelGroup.position.y, z: hv.modelGroup.position.z } : null,
+          modelGroupScale: hv.modelGroup ? { x: hv.modelGroup.scale.x, y: hv.modelGroup.scale.y, z: hv.modelGroup.scale.z } : null,
+          modelRootPos: hv.modelRoot ? { x: hv.modelRoot.position.x, y: hv.modelRoot.position.y, z: hv.modelRoot.position.z } : null,
+          cameraPos: hv.camera ? { x: hv.camera.position.x, y: hv.camera.position.y, z: hv.camera.position.z } : null,
           renderCalls: hv.renderer ? hv.renderer.info.render.calls : 0,
           renderTriangles: hv.renderer ? hv.renderer.info.render.triangles : 0,
-          cameraPos: hv.camera ? { x: hv.camera.position.x, y: hv.camera.position.y, z: hv.camera.position.z } : null
+          meshCount: meshes.length,
+          meshes: meshes
         };
       })()`,
       returnByValue: true,

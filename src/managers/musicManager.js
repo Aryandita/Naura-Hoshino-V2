@@ -25,6 +25,8 @@ class MusicManager {
     this._eventsLoaded = false;
     this.duplicateFilterStates = new Map();
     this.trackHistories = new Map();
+    this.savedQueues = new Map();
+    this.skipVotes = new Map();
   }
 
   get poru() {
@@ -259,6 +261,129 @@ class MusicManager {
       if (newTitle && past.title && newTitle === past.title) return true;
       return false;
     });
+  }
+
+  /**
+   * Menyimpan antrean aktif ke Redis dan fallback memori.
+   * @param {string} guildId
+   * @param {object} player
+   */
+  async saveQueueState(guildId, player) {
+    if (!guildId || !player) return;
+    if (!player.currentTrack && (!player.queue || player.queue.length === 0)) {
+      return;
+    }
+
+    const payload = {
+      guildId,
+      voiceChannel: player.voiceChannel,
+      textChannel: player.textChannel,
+      currentTrack: player.currentTrack
+        ? {
+            track: player.currentTrack.track,
+            info: player.currentTrack.info,
+          }
+        : null,
+      position: player.position || 0,
+      queue: (player.queue || []).map((t) => ({
+        track: t.track,
+        info: t.info,
+      })),
+      volume: player.volume || 100,
+      savedAt: Date.now(),
+    };
+
+    this.savedQueues.set(guildId, payload);
+
+    try {
+      const redis = require("./redisManager").client;
+      if (redis?.isReady) {
+        await redis.set(
+          `lavalink:queue:${guildId}`,
+          JSON.stringify(payload),
+          "EX",
+          3600,
+        );
+      }
+    } catch (_) {
+      // Abaikan bila Redis tidak tersedia
+    }
+  }
+
+  /**
+   * Mengambil antrean tersimpan dari Redis atau memori.
+   * @param {string} guildId
+   * @returns {Promise<object|null>}
+   */
+  async getSavedQueueState(guildId) {
+    if (!guildId) return null;
+
+    try {
+      const redis = require("./redisManager").client;
+      if (redis?.isReady) {
+        const raw = await redis.get(`lavalink:queue:${guildId}`);
+        if (raw) return JSON.parse(raw);
+      }
+    } catch (_) {
+      // Abaikan bila Redis tidak tersedia
+    }
+
+    return this.savedQueues.get(guildId) || null;
+  }
+
+  /**
+   * Menghapus antrean tersimpan setelah musik selesai atau dihentikan.
+   * @param {string} guildId
+   */
+  async clearSavedQueueState(guildId) {
+    if (!guildId) return;
+    this.savedQueues.delete(guildId);
+
+    try {
+      const redis = require("./redisManager").client;
+      if (redis?.isReady) {
+        await redis.del(`lavalink:queue:${guildId}`);
+      }
+    } catch (_) {
+      // Abaikan bila Redis tidak tersedia
+    }
+  }
+
+  /**
+   * Mengambil suara vote skip yang sedang aktif di guild.
+   * @param {string} guildId
+   * @returns {Set<string>}
+   */
+  getSkipVotes(guildId) {
+    if (!guildId) return new Set();
+    if (!this.skipVotes.has(guildId)) {
+      this.skipVotes.set(guildId, new Set());
+    }
+    return this.skipVotes.get(guildId);
+  }
+
+  /**
+   * Menambahkan vote skip seorang anggota.
+   * @param {string} guildId
+   * @param {string} userId
+   * @returns {{added: boolean, votes: Set<string>}}
+   */
+  addSkipVote(guildId, userId) {
+    const votes = this.getSkipVotes(guildId);
+    if (votes.has(userId)) {
+      return { added: false, votes };
+    }
+    votes.add(userId);
+    return { added: true, votes };
+  }
+
+  /**
+   * Mengosongkan suara vote skip (misal saat lagu berganti).
+   * @param {string} guildId
+   */
+  clearSkipVotes(guildId) {
+    if (!guildId) return;
+    this.skipVotes.delete(guildId);
   }
 }
 

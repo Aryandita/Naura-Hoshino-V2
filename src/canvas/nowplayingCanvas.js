@@ -10,6 +10,31 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
     playbackInfo && (playbackInfo.isVIP || playbackInfo.isPremium),
   );
 
+  const rawSource = String(
+    trackInfo.originalSource || trackInfo.sourceName || "lavalink",
+  ).toLowerCase();
+
+  let platformColor = "#FFB6C1"; // Default Naura Core Pink
+  let platformColorRgba = "rgba(255, 182, 193, 0.5)";
+
+  if (rawSource.includes("spotify")) {
+    platformColor = "#1DB954";
+    platformColorRgba = "rgba(29, 185, 84, 0.5)";
+  } else if (rawSource.includes("soundcloud")) {
+    platformColor = "#FF5500";
+    platformColorRgba = "rgba(255, 85, 0, 0.5)";
+  } else if (rawSource.includes("youtube") || rawSource.includes("yt")) {
+    platformColor = "#FF0000";
+    platformColorRgba = "rgba(255, 0, 0, 0.5)";
+  } else if (rawSource.includes("apple")) {
+    platformColor = "#FC3C44";
+    platformColorRgba = "rgba(252, 60, 68, 0.5)";
+  }
+
+  const accentColor = isVIP ? "#FFD700" : platformColor;
+  const accentGlow = isVIP ? "#FFD700" : platformColor;
+  const waveformColor = isVIP ? "rgba(255, 215, 0, 0.6)" : platformColorRgba;
+
   // 1. Background (Futuristic Dark Cyberpunk Gradient or Equipped Banner)
   if (playbackInfo && playbackInfo.equippedBanner) {
     try {
@@ -43,10 +68,10 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
   // Neon Glow Line at the bottom
   ctx.strokeStyle = isVIP
     ? "rgba(255, 215, 0, 0.8)"
-    : "rgba(255, 182, 193, 0.4)";
+    : `${accentColor}80`;
   ctx.lineWidth = 4;
   ctx.shadowBlur = 10;
-  ctx.shadowColor = isVIP ? "#ffd700" : "#ffb6c1";
+  ctx.shadowColor = accentGlow;
   ctx.beginPath();
   ctx.moveTo(30, 290);
   ctx.lineTo(770, 290);
@@ -112,7 +137,7 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
   ctx.shadowBlur = 20;
   ctx.shadowColor = isVIP
     ? "rgba(255, 215, 0, 0.4)"
-    : "rgba(255, 182, 193, 0.35)";
+    : `${accentColor}55`;
 
   if (artLoaded && albumArt) {
     drawImageCover(ctx, albumArt, 40, 45, 200, 200, 16);
@@ -171,15 +196,15 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
   ctx.fillText(authorText, 270, 125);
 
   // Platform Badge / Text
-  ctx.fillStyle = isVIP ? "#FFD700" : "rgba(255, 255, 255, 0.4)";
+  ctx.fillStyle = isVIP ? "#FFD700" : accentColor;
   ctx.font = '12px "InterBold", "EmojiFont"';
   const platform = (
     trackInfo.originalSource ||
     trackInfo.sourceName ||
     "Lavalink"
   ).toUpperCase();
-  const vipTag = isVIP ? " | 💎 VIP HIGH-FIDELITY" : "";
-  ctx.fillText(`TRANSMITTING VIA: ${platform}${vipTag}`, 270, 155);
+  const vipTag = isVIP ? " | 💎 VIP AUDIO" : "";
+  ctx.fillText(`PLATFORM: ${platform}${vipTag}`, 270, 155);
 
   // 4. Playback Progress & Dynamic Waveform
   const position = playbackInfo.position || 0;
@@ -193,7 +218,7 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
   const waveStartX = 270;
   const waveBaseY = 175;
 
-  ctx.fillStyle = isVIP ? "rgba(255, 215, 0, 0.6)" : "rgba(255, 182, 193, 0.5)";
+  ctx.fillStyle = waveformColor;
   for (let i = 0; i < barsCount; i++) {
     const wavePhase = position / 1000 + i * 0.4;
     const barHeight = Math.max(
@@ -215,7 +240,7 @@ async function drawNowPlayingCard(trackInfo, playbackInfo) {
   ctx.fill();
 
   // Progress Bar Filled
-  ctx.fillStyle = "#ffb6c1"; // Naura Core Pink
+  ctx.fillStyle = accentColor;
   ctx.beginPath();
   ctx.roundRect(270, 185, 480 * progressPercent, 10, 5);
   ctx.fill();

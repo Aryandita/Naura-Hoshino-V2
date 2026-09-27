@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visual Backpack Inventory | Naura OS</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <style>
+      .inv-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+      .inv-header {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(34, 211, 238, 0.1) 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        padding: 24px 28px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .inv-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 24px;
+      }
+      @media (max-width: 900px) {
+        .inv-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+      .backpack-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 10px;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        padding: 20px;
+      }
+      @media (max-width: 600px) {
+        .backpack-grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+      }
+      .inv-slot {
+        aspect-ratio: 1 / 1;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-md);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: grab;
+        position: relative;
+        transition: all 0.2s;
+        user-select: none;
+      }
+      .inv-slot:hover {
+        background: var(--bg-surface-hv);
+        border-color: var(--primary);
+        transform: translateY(-2px);
+      }
+      .inv-slot.empty {
+        opacity: 0.35;
+        cursor: default;
+      }
+      .item-count-badge {
+        position: absolute;
+        bottom: 6px;
+        right: 8px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        font-weight: 700;
+        background: rgba(0,0,0,0.6);
+        padding: 1px 6px;
+        border-radius: 4px;
+      }
+      .item-icon {
+        font-size: 26px;
+        margin-bottom: 2px;
+      }
+      .detail-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        padding: 24px;
+        position: sticky;
+        top: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="shared-nav"></div>
+
+    <main class="inv-container">
+      <section class="inv-header">
+        <div>
+          <h1 style="margin:0 0 6px; font-size:24px; font-family:var(--font-heading);">🎒 Ransel Penjelajah Naura Wilds</h1>
+          <p style="margin:0; color:var(--text-secondary); font-size:14px;">Atur tata letak barang bawaanmu dengan seret-lepas (Drag & Drop) visual.</p>
+        </div>
+        <div style="font-family:var(--font-mono); font-size:14px; color:#10B981;">
+          Kapasitas: <span id="capacity-text">14 / 30 Slot</span>
+        </div>
+      </section>
+
+      <section class="inv-layout">
+        <!-- 30-Slot Grid -->
+        <div class="backpack-grid" id="backpack-grid">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Selected Item Detail Drawer -->
+        <div class="detail-card" id="detail-card">
+          <div style="text-align:center; padding-bottom:16px; border-bottom:1px solid var(--border-subtle);">
+            <div id="detail-icon" style="font-size:48px; margin-bottom:8px;">🗡️</div>
+            <h3 id="detail-name" style="margin:0; font-family:var(--font-heading);">Pedang Laser Kosmik</h3>
+            <div id="detail-rarity" style="color:#A78BFA; font-size:12px; font-weight:700; text-transform:uppercase; margin-top:4px;">Rare Tier 3</div>
+          </div>
+          <div style="margin-top:16px; font-size:13px; color:var(--text-secondary);">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+              <span>Tipe:</span>
+              <strong id="detail-type" style="color:var(--text-primary);">Senjata Melee</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+              <span>Durabilitas:</span>
+              <strong id="detail-durability" style="color:#10B981;">100 / 100</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:16px;">
+              <span>Nilai Jual:</span>
+              <strong id="detail-value" style="color:#F59E0B;">3.500 NSF</strong>
+            </div>
+            <p id="detail-desc" style="font-size:13px; line-height:1.5; color:var(--text-muted);">
+              Pedang plasma bertenaga kristal bintang yang menghasilkan tebasan berkecepatan tinggi saat pertempuran dungeon.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/src/js/shared-nav.js"></script>
+    <script src="/js/theme-switcher.js"></script>
+    <script src="/js/pwa-install.js"></script>
+    <script>
+      const SAMPLE_ITEMS = [
+        { id: 1, name: "Pedang Laser Kosmik", icon: "🗡️", type: "Senjata", rarity: "Rare", durability: "100/100", value: "3.500 NSF", count: 1, desc: "Pedang plasma bertenaga kristal bintang." },
+        { id: 2, name: "Beliung Obsidian", icon: "⛏️", type: "Alat", rarity: "Epic", durability: "85/100", value: "8.000 NSF", count: 1, desc: "Alat penambang bijih langka bermutu tinggi." },
+        { id: 3, name: "Astral Strawberry", icon: "🍓", type: "Hasil Panen", rarity: "Rare", durability: "-", value: "50 NSF", count: 42, desc: "Buah manis kosmik pemulih stamina." },
+        { id: 4, name: "Ramuan Jamu Sehat", icon: "🧪", type: "Konsumabel", rarity: "Common", durability: "-", value: "120 NSF", count: 5, desc: "Racikan Bidan Sari penyembuh luka tempur." },
+        { id: 5, name: "Ikan Pari Bintang", icon: "🐟", type: "Ikan", rarity: "Uncommon", durability: "-", value: "450 NSF", count: 3, desc: "Ikan langka hasil memancing di palung laut." },
+      ];
+
+      function renderGrid() {
+        const grid = document.getElementById('backpack-grid');
+        grid.innerHTML = '';
+        for (let i = 0; i < 30; i++) {
+          const item = SAMPLE_ITEMS[i] || null;
+          const slot = document.createElement('div');
+          slot.className = 'inv-slot' + (item ? '' : ' empty');
+          slot.draggable = Boolean(item);
+
+          if (item) {
+            slot.innerHTML = `
+              <div class="item-icon">${item.icon}</div>
+              ${item.count > 1 ? `<div class="item-count-badge">${item.count}</div>` : ''}
+            `;
+            slot.onclick = () => selectItem(item);
+          } else {
+            slot.innerHTML = `<span style="font-size:18px; color:rgba(255,255,255,0.1);">+</span>`;
+          }
+
+          grid.appendChild(slot);
+        }
+      }
+
+      function selectItem(item) {
+        document.getElementById('detail-icon').innerText = item.icon;
+        document.getElementById('detail-name').innerText = item.name;
+        document.getElementById('detail-rarity').innerText = item.rarity;
+        document.getElementById('detail-type').innerText = item.type;
+        document.getElementById('detail-durability').innerText = item.durability;
+        document.getElementById('detail-value').innerText = item.value;
+        document.getElementById('detail-desc').innerText = item.desc;
+      }
+
+      window.addEventListener('DOMContentLoaded', () => {
+        renderGrid();
+        if (SAMPLE_ITEMS[0]) selectItem(SAMPLE_ITEMS[0]);
+      });
+    </script>
+  </body>
+</html>

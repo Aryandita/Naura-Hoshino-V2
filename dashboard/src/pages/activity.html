@@ -282,6 +282,32 @@
             </div>
           </div>
 
+          <!-- 3D VIRTUAL SANCTUARY ACTIVITY HERO -->
+          <div class="card-stellar animate-in" style="margin-bottom: 24px; padding: 0; overflow: hidden; position: relative; border: 1px solid var(--border-medium);">
+            <div style="padding: 16px 20px; background: rgba(16, 22, 42, 0.85); border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="badge badge-primary"><i class="fa-solid fa-cube"></i> 3D SANCTUARY</span>
+                <span style="font-family: var(--font-heading); font-size: 15px; font-weight: 700; color: #fff;">
+                  Naura World 3D: Cyber-Wilds Sanctuary
+                </span>
+                <span class="badge" style="background: rgba(34, 211, 238, 0.15); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3);">
+                  <i class="fa-solid fa-users"></i> Voice Channel Multi-Player
+                </span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 12px;">
+                <span><kbd style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono);">W A S D</kbd> Gerak</span>
+                <span><kbd style="background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono);">Space / E</kbd> Interaksi</span>
+              </div>
+            </div>
+            
+            <div id="sanctuary3dContainer" style="width: 100%; height: 420px; position: relative; background: #060913;">
+              <!-- Overlay Spatial Interaction Notification -->
+              <div id="spatialPrompt" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(16, 22, 42, 0.9); border: 1px solid var(--accent-cyan); padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 600; color: #fff; display: none; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(34, 211, 238, 0.3); z-index: 10;">
+                <i class="fa-solid fa-sparkles" style="color: #22d3ee;"></i> <span id="spatialPromptText">Tekan Space / E untuk berinteraksi</span>
+              </div>
+            </div>
+          </div>
+
           <div class="activity-grid animate-in delay-1">
             <!-- 1. Gacha Simulator -->
             <div class="gacha-card">
@@ -462,8 +488,41 @@
       </div>
     </nav>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script src="/src/js/sharedNav.js"></script>
-    <script>
+    <script type="module">
+      import { Activity3DWorld } from '/src/components/Activity/activity3dWorld.js';
+
+      // Inisialisasi 3D Sanctuary World
+      const socket = typeof io !== 'undefined' ? io() : null;
+      let activeWorld = null;
+
+      try {
+        activeWorld = new Activity3DWorld('sanctuary3dContainer', {
+          socket,
+          channelId: new URLSearchParams(window.location.search).get('channelId') || 'global_sanctuary',
+          user: {
+            id: 'player_' + Math.random().toString(36).slice(2, 7),
+            username: document.querySelector('.sidebar-user-name')?.textContent || 'Explorer'
+          },
+          onInteract(event) {
+            const prompt = document.getElementById('spatialPrompt');
+            const promptText = document.getElementById('spatialPromptText');
+            if (prompt && promptText) {
+              prompt.style.display = 'flex';
+              if (event.type === 'FISHING') {
+                promptText.innerHTML = '🎣 Memancing di Starlight Pond... Menangkap <b>Ikan Starlight (+50 NSF)</b>!';
+              } else if (event.type === 'JUKEBOX') {
+                promptText.innerHTML = '📻 Cyber Jukebox memutar siaran musik kosmik Naura!';
+              }
+              setTimeout(() => { prompt.style.display = 'none'; }, 4000);
+            }
+          }
+        });
+      } catch (err) {
+        console.warn('[Activity3DWorld] Gagal inisialisasi 3D world:', err);
+      }
+
       // Gacha Pool (Terhubung ke GameItem di Database)
       let GACHA_POOL = [
         { name: 'Putri Sakura Naura', tier: 'ssr', icon: '🌸' },

@@ -125,8 +125,9 @@ Seluruh perubahan versi ekosistem wajib mematuhi skema semantik tiga tingkat:
 2. Daftarkan kunci terjemahan di `assets/language/id.json` dan `en.json` (pastikan sinkron).
 3. Bungkus seluruh logika interaksi dalam `try/catch` defensif.
 4. Bangun UI respons menggunakan `buildContainerV2()`.
-5. Uji sintaks require: `npm run test:requires`.
-6. Uji paritas bahasa: `npm run locales:check:strict`.
+5. Perbarui daftar menu bantuan di [`src/core/helpView.js`](file:///d:/Naura%20Hoshino%20V2/src/core/helpView.js) dan kamus bahasa terkait (aturan wajib `RULES.md` Bagian 1.12).
+6. Uji sintaks require: `npm run test:requires`.
+7. Uji paritas bahasa: `npm run locales:check:strict`.
 
 ### 4.2 Menambah Kolom atau Skema Database Baru
 

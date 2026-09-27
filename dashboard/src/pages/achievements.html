@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trophy Room & Achievements | Naura OS</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <style>
+      .trophy-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+      }
+      .trophy-hero {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(167, 139, 250, 0.15) 100%);
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        padding: 28px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .progress-bar-bg {
+        width: 100%;
+        height: 10px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 9999px;
+        overflow: hidden;
+        margin-top: 8px;
+      }
+      .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #F59E0B, #F472B6);
+        border-radius: 9999px;
+      }
+      .trophy-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 18px;
+        margin-top: 24px;
+      }
+      .trophy-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-lg);
+        padding: 22px;
+        text-align: center;
+        transition: transform 0.2s, border-color 0.2s;
+      }
+      .trophy-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--primary);
+      }
+      .trophy-card.locked {
+        opacity: 0.45;
+        filter: grayscale(0.8);
+      }
+      .trophy-icon {
+        font-size: 40px;
+        margin-bottom: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="shared-nav"></div>
+
+    <main class="trophy-container">
+      <section class="trophy-hero">
+        <div style="flex:1; min-width:280px;">
+          <h1 style="margin:0 0 6px; font-size:26px; font-family:var(--font-heading);">🏆 Ruang Trofi & Pencapaian Langka</h1>
+          <p style="margin:0; color:var(--text-secondary); font-size:14px;">Koleksi medali kehormatan dan gelar prestisius petualang Naura Wilds.</p>
+          <div style="margin-top:14px;">
+            <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); font-family:var(--font-mono);">
+              <span>PROGRES PENCAPAIAN</span>
+              <span style="color:#F59E0B;">16 / 32 TERBUKA (50%)</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width: 50%;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="trophy-grid">
+        <div class="trophy-card">
+          <div class="trophy-icon">🌟</div>
+          <h3 style="margin:0 0 6px; font-size:16px; font-family:var(--font-heading);">Langkah Pertama</h3>
+          <p style="margin:0; font-size:13px; color:var(--text-secondary);">Selesaikan onboarding petualang dan klaim starter kit.</p>
+          <div style="margin-top:12px; font-size:11px; color:#10B981; font-weight:700;">TERBUKA ✓</div>
+        </div>
+
+        <div class="trophy-card">
+          <div class="trophy-icon">🌾</div>
+          <h3 style="margin:0 0 6px; font-size:16px; font-family:var(--font-heading);">Master Agronomist</h3>
+          <p style="margin:0; font-size:13px; color:var(--text-secondary);">Berhasil menyilangkan benih hibrida di greenhouse.</p>
+          <div style="margin-top:12px; font-size:11px; color:#10B981; font-weight:700;">TERBUKA ✓</div>
+        </div>
+
+        <div class="trophy-card">
+          <div class="trophy-icon">🐉</div>
+          <h3 style="margin:0 0 6px; font-size:16px; font-family:var(--font-heading);">Slayer of the Abyss</h3>
+          <p style="margin:0; font-size:13px; color:var(--text-secondary);">Tumbangkan bos lantai 50 The Neo-Abyss bersama party.</p>
+          <div style="margin-top:12px; font-size:11px; color:#10B981; font-weight:700;">TERBUKA ✓</div>
+        </div>
+
+        <div class="trophy-card">
+          <div class="trophy-icon">💰</div>
+          <h3 style="margin:0 0 6px; font-size:16px; font-family:var(--font-heading);">Galactic Millionaire</h3>
+          <p style="margin:0; font-size:13px; color:var(--text-secondary);">Kumpulkan total 1.000.000 Naura Star Fragments.</p>
+          <div style="margin-top:12px; font-size:11px; color:#10B981; font-weight:700;">TERBUKA ✓</div>
+        </div>
+
+        <div class="trophy-card locked">
+          <div class="trophy-icon">👑</div>
+          <h3 style="margin:0 0 6px; font-size:16px; font-family:var(--font-heading);">Lord of the Towers</h3>
+          <p style="margin:0; font-size:13px; color:var(--text-secondary);">Kendalikan kelima Menara Relik Kuno secara bersamaan.</p>
+          <div style="margin-top:12px; font-size:11px; color:var(--text-muted); font-weight:700;">TERKUNCI 🔒</div>
+        </div>
+
+        <div class="trophy-card locked">
+          <div class="trophy-icon">🚀</div>
+          <h3 style="margin:0 0 6px; font-size:16px; font-family:var(--font-heading);">Cosmic Cartel Tycoon</h3>
+          <p style="margin:0; font-size:13px; color:var(--text-secondary);">Sukses mengawal 100 karavan dagang antariksa tanpa gagal.</p>
+          <div style="margin-top:12px; font-size:11px; color:var(--text-muted); font-weight:700;">TERKUNCI 🔒</div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/src/js/shared-nav.js"></script>
+    <script src="/js/theme-switcher.js"></script>
+    <script src="/js/pwa-install.js"></script>
+  </body>
+</html>

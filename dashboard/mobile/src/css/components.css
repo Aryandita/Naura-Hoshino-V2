@@ -1,0 +1,520 @@
+/* =============================================================================
+ * components.css, Komponen reusable Naura OS Mobile
+ *
+ * Memuat setelah tokens.css dan animations.css.
+ * Setiap komponen punya scope class yang jelas (.nm-*).
+ * ============================================================================= */
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* SKELETON LOADING                                                            */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  background: var(--surface-glass);
+  min-height: 1rem;
+}
+
+.nm-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--primary-glow) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* NAURA EXPRESSION (State visual, ekspresi PNG)                             */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-expression {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-sm);
+  padding: var(--sp-xl) var(--sp-md);
+  text-align: center;
+}
+
+.nm-expression__img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 24px var(--primary-glow));
+  animation: naura-float 3.5s ease-in-out infinite;
+}
+
+.nm-expression__title {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--ink);
+  margin: 0;
+}
+
+.nm-expression__body {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--body);
+  max-width: 28ch;
+  margin: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* GLASS CARD                                                                  */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-card {
+  background: var(--surface-card);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-xl);
+  padding: var(--sp-lg);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow:
+    0 4px 24px rgba(0,0,0,0.4),
+    0 0 0 1px var(--glass-border),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.nm-card:active {
+  transform: scale(0.985);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+}
+
+.nm-card:focus-within,
+.nm-card--interactive:hover {
+  background: var(--surface-hover);
+  border-color: var(--hairline-strong);
+}
+
+.nm-card--wilds {
+  background: var(--wilds-glass);
+  border-color: var(--wilds-hairline);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* TELEMETRY CHIP (strip horizontal)                                          */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--sp-xs) var(--sp-sm);
+  background: var(--surface-glass);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  min-width: 72px;
+  flex-shrink: 0;
+}
+
+.nm-chip__value {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.nm-chip__label {
+  font-family: var(--font-body);
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* VITAL BAR (HP, Hunger, Energy)                                             */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-vital {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nm-vital__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+}
+
+.nm-vital__icon {
+  font-size: 0.875rem;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.nm-vital__track {
+  flex: 1;
+  height: 8px;
+  background: var(--surface-solid);
+  border-radius: var(--r-full);
+  overflow: hidden;
+}
+
+.nm-vital__fill {
+  height: 100%;
+  border-radius: var(--r-full);
+  background: var(--wilds-moss);
+  animation: vital-fill 0.8s var(--ease-smooth) both;
+  transition: background 0.3s var(--ease-smooth);
+}
+
+/* Threshold: amber saat 20-50%, danger saat <20% */
+.nm-vital__fill[data-level="warn"]    { background: var(--wilds-amber); }
+.nm-vital__fill[data-level="danger"]  { background: var(--wilds-danger); }
+
+.nm-vital__pct {
+  font-family: var(--font-display);
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--body);
+  min-width: 28px;
+  text-align: right;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* STATUS DOT (hanya untuk state real: online/warn/offline)                   */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-full);
+  background: var(--muted);
+  flex-shrink: 0;
+}
+
+/* Denyut HANYA jika online, bukan dekorasi (antislop R-19, R-31) */
+.nm-dot--online {
+  background: var(--status-online);
+  animation: pulse-once 2.5s ease-in-out 3; /* Berhenti setelah 3 siklus */
+}
+.nm-dot--warn    { background: var(--status-warn); }
+.nm-dot--offline { background: var(--status-offline); }
+.nm-dot--maint   { background: var(--status-maint); }
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* BADGE / PILL                                                                */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--r-full);
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.nm-badge--online  { background: rgba(34, 197, 94, 0.15);  color: var(--status-online); border: 1px solid rgba(34, 197, 94, 0.25); }
+.nm-badge--warn    { background: rgba(245, 158, 11, 0.15); color: var(--status-warn);   border: 1px solid rgba(245, 158, 11, 0.25); }
+.nm-badge--offline { background: rgba(239, 68, 68, 0.15);  color: var(--status-offline);border: 1px solid rgba(239, 68, 68, 0.25); }
+
+/* Rarity badge untuk item survival */
+.nm-badge--common    { background: rgba(156, 163, 175, 0.15); color: var(--rarity-common); }
+.nm-badge--uncommon  { background: rgba(134, 239, 172, 0.15); color: var(--rarity-uncommon); }
+.nm-badge--rare      { background: rgba(147, 197, 253, 0.15); color: var(--rarity-rare); }
+.nm-badge--epic      { background: rgba(192, 132, 252, 0.15); color: var(--rarity-epic); }
+.nm-badge--legendary { background: rgba(255, 215, 0, 0.15);   color: var(--rarity-legendary); }
+.nm-badge--mythic    { background: rgba(249, 168, 212, 0.15); color: var(--rarity-mythic); }
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* QUICK-PRESET CHIPS (Economy, DESIGN.md Pilar 3)                           */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-quick-chips {
+  display: flex;
+  gap: var(--sp-xs);
+  flex-wrap: wrap;
+}
+
+.nm-quick-chip {
+  padding: 6px 12px;
+  background: var(--surface-glass);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  cursor: pointer;
+  transition: background var(--dur-fast), border-color var(--dur-fast), transform var(--dur-fast);
+  -webkit-tap-highlight-color: transparent;
+  min-height: 32px;
+}
+
+.nm-quick-chip:hover,
+.nm-quick-chip:active { background: var(--surface-hover); border-color: var(--hairline-strong); transform: scale(0.97); }
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* BUTTON                                                                      */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-xs);
+  padding: 12px 20px;
+  border-radius: var(--r-lg);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: opacity var(--dur-fast), transform var(--dur-fast), background var(--dur-fast);
+  -webkit-tap-highlight-color: transparent;
+  min-height: 48px; /* Touch target minimum */
+}
+
+.nm-btn:active { transform: scale(0.96); opacity: 0.88; }
+
+.nm-btn--primary {
+  background: var(--primary);
+  color: #0b0c10;
+}
+
+.nm-btn--ghost {
+  background: var(--surface-glass);
+  color: var(--body-strong);
+  border: 1px solid var(--hairline);
+}
+
+.nm-btn--ghost:hover { background: var(--surface-hover); border-color: var(--hairline-strong); }
+
+.nm-btn--discord {
+  background: var(--discord-blurple);
+  color: #ffffff;
+}
+
+.nm-btn--wilds {
+  background: rgba(134, 239, 172, 0.15);
+  color: var(--wilds-emerald);
+  border: 1px solid var(--wilds-hairline);
+}
+
+.nm-btn--danger {
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--wilds-danger);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+}
+
+.nm-btn--full { width: 100%; }
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* TOGGLE SWITCH                                                               */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.nm-toggle input { opacity: 0; width: 0; height: 0; }
+
+.nm-toggle__track {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-full);
+  background: var(--surface-solid);
+  border: 1px solid var(--hairline);
+  cursor: pointer;
+  transition: background var(--dur-normal), border-color var(--dur-normal);
+}
+
+.nm-toggle__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform var(--dur-normal) var(--ease-spring), background var(--dur-normal);
+}
+
+.nm-toggle input:checked + .nm-toggle__track { background: rgba(255, 182, 193, 0.2); border-color: var(--primary); }
+.nm-toggle input:checked + .nm-toggle__track .nm-toggle__thumb {
+  transform: translateX(20px);
+  background: var(--primary);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* SECTION HEADER                                                              */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-section-title {
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin: 0 0 var(--sp-sm);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* QUEST TIMELINE (DESIGN.md wilds-quest-timeline)                            */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-timeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.nm-timeline__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  flex: 1;
+}
+
+.nm-timeline__node {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-solid);
+  border: 2px solid var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  transition: border-color var(--dur-normal), background var(--dur-normal), color var(--dur-normal);
+  z-index: 1;
+}
+
+.nm-timeline__step--active  .nm-timeline__node { border-color: var(--wilds-emerald); color: var(--wilds-emerald); background: rgba(134, 239, 172, 0.1); }
+.nm-timeline__step--done    .nm-timeline__node { border-color: var(--accent-green); background: rgba(134, 239, 172, 0.2); color: var(--accent-green); }
+.nm-timeline__step--locked  .nm-timeline__node { border-color: var(--muted); color: var(--muted); opacity: 0.5; }
+
+.nm-timeline__label {
+  font-family: var(--font-body);
+  font-size: 0.625rem;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.nm-timeline__step--active .nm-timeline__label { color: var(--wilds-emerald); }
+
+.nm-timeline__line {
+  flex: 1;
+  height: 2px;
+  background: var(--hairline);
+  margin: 0 -2px;
+  margin-bottom: 18px; /* Align to center of node */
+}
+
+.nm-timeline__line--done { background: var(--wilds-moss); }
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* TOAST NOTIFICATION                                                          */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+#nm-toast-container {
+  position: fixed;
+  top: var(--sp-md);
+  right: var(--sp-md);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+  pointer-events: none;
+}
+
+.nm-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  padding: 12px 16px;
+  border-radius: var(--r-lg);
+  background: var(--surface-solid);
+  border: 1px solid var(--hairline);
+  backdrop-filter: blur(16px);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--body-strong);
+  animation: toast-in var(--dur-normal) var(--ease-spring) both;
+  pointer-events: auto;
+  max-width: calc(100vw - 32px);
+  box-shadow: var(--shadow-glass);
+}
+
+.nm-toast--success { border-color: rgba(34, 197, 94, 0.3); }
+.nm-toast--error   { border-color: rgba(239, 68, 68, 0.3); }
+.nm-toast--warn    { border-color: rgba(245, 158, 11, 0.3); }
+
+.nm-toast.is-leaving { animation: toast-out var(--dur-normal) var(--ease-smooth) both; }
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* EMPTY STATE (antislop R-27: harus sebut WHY dan ada CTA nyata)             */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-sm);
+  padding: var(--sp-xxl) var(--sp-lg);
+  text-align: center;
+  min-height: 200px;
+}
+
+.nm-empty__title {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--body-strong);
+  margin: 0;
+}
+
+.nm-empty__desc {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--body);
+  max-width: 28ch;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* DIVIDER                                                                     */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-divider {
+  height: 1px;
+  background: var(--hairline);
+  border: none;
+  margin: var(--sp-md) 0;
+}

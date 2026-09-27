@@ -68,17 +68,17 @@ module.exports = {
   musicLyrics: "<:Lyrics:1484705972919337070>",
   musicShuffle: "<:Shuffle:1484705970469867641>",
   music247: "<a:Moon:1492696850602524682>",
-  radio: "📻",
+  radio: "<:MusicDisc:1484706066662031483>",
   speaker: "🔊",
   mute: "🔇",
   mic: "🎙️",
-  soundboard: "🔊",
+  soundboard: "<:Lyrics:1484705972919337070>",
   music_hq: "<:Lyrics:1484705972919337070>",
   audio_wave: "<a:DiscSpinner1:1492696912145678488>",
   music_filter: "<:Filter:1484705994020753529>",
-  music_equalizer: "🎛️",
-  music_record: "💿",
-  audio_stereo: "🎧",
+  music_equalizer: "<:Filter:1484705994020753529>",
+  music_record: "<:MusicDisc:1484706066662031483>",
+  audio_stereo: "<a:Listener:1492696916050444449>",
   sound_bell: "🔔",
 
   // --- Music Filters (DSP) ---
@@ -112,13 +112,13 @@ module.exports = {
 
   // --- Guild & Co-op ---
   guild_banner: "🎌",
-  guild_shield: "🛡️",
+  guild_shield: "<:shield:1523223839280988231>",
 
   // --- Gacha ---
   gacha_pull: "🎰",
   gacha_legendary: "✨",
 
   // --- Story Quest ---
-  story_scroll: "📜",
+  story_scroll: "<a:SpinningBook:1492696903069208627>",
   story_book: "📖",
 };

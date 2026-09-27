@@ -59,3 +59,17 @@ test("Greenhouse Engine - Fertilized Growth Acceleration", () => {
   assert.equal(slotState.stage, "MATURE");
   assert.equal(slotState.remainingMinutes, 0);
 });
+
+test("Crop Seeds - Hybrid Seeds and Cross-Breed Recipes", () => {
+  const { HYBRID_SEEDS, CROSS_BREED_RECIPES } = require("../data/cropSeeds");
+  assert.ok(HYBRID_SEEDS.length >= 3);
+  assert.ok(CROSS_BREED_RECIPES.length >= 3);
+
+  for (const recipe of CROSS_BREED_RECIPES) {
+    assert.equal(recipe.parents.length, 2);
+    assert.ok(recipe.result);
+    assert.ok(recipe.chance > 0);
+    const hybrid = getSeedById(recipe.result);
+    assert.ok(hybrid, `Hasil persilangan ${recipe.result} harus terdaftar di katalog`);
+  }
+});

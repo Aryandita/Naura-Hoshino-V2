@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stellar Arcade Games | Naura OS</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <style>
+      .arcade-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 32px 20px 80px;
+        text-align: center;
+      }
+      .game-canvas-wrapper {
+        position: relative;
+        background: #060814;
+        border: 2px solid var(--border-primary);
+        border-radius: var(--r-xl);
+        overflow: hidden;
+        margin: 20px auto;
+        box-shadow: 0 12px 40px rgba(124, 58, 237, 0.25);
+        max-width: 600px;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: auto;
+        background: radial-gradient(circle at center, #111827 0%, #030712 100%);
+      }
+      .arcade-hud {
+        display: flex;
+        justify-content: space-around;
+        padding: 14px;
+        background: rgba(15, 23, 42, 0.8);
+        border-top: 1px solid var(--border-subtle);
+        font-family: var(--font-mono);
+      }
+      .hud-val {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--primary);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="shared-nav"></div>
+
+    <main class="arcade-container">
+      <h1 style="margin:0; font-family:var(--font-heading); font-size:28px;">🎮 Astral Rhythm Catcher Arcade</h1>
+      <p style="color:var(--text-secondary); margin:6px 0 20px;">
+        Tangkap serpihan bintang kosmik yang jatuh untuk mengumpulkan skor dan menangkan hadiah Star Fragments!
+      </p>
+
+      <div class="game-canvas-wrapper">
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+        <div class="arcade-hud">
+          <div>
+            <div style="font-size:11px; color:var(--text-muted);">SKOR</div>
+            <div id="score-display" class="hud-val">0</div>
+          </div>
+          <div>
+            <div style="font-size:11px; color:var(--text-muted);">KOMBO</div>
+            <div id="combo-display" class="hud-val" style="color:#22D3EE;">x1</div>
+          </div>
+          <div>
+            <div style="font-size:11px; color:var(--text-muted);">HADIAH NSF</div>
+            <div id="reward-display" class="hud-val" style="color:#10B981;">0 NSF</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:center; gap:12px; margin-top:20px;">
+        <button id="start-btn" class="btn btn-primary" onclick="startGame()"><i class="fa-solid fa-play"></i> Mulai Main</button>
+        <button id="claim-btn" class="btn btn-secondary" onclick="claimReward()" style="display:none;"><i class="fa-solid fa-gift"></i> Klaim Hadiah ke Discord</button>
+      </div>
+    </main>
+
+    <script src="/src/js/shared-nav.js"></script>
+    <script src="/js/theme-switcher.js"></script>
+    <script src="/js/pwa-install.js"></script>
+    <script>
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+
+      let score = 0;
+      let combo = 1;
+      let isRunning = false;
+      let basketX = 260;
+      let stars = [];
+      let gameInterval = null;
+
+      function spawnStar() {
+        stars.push({
+          x: Math.random() * (canvas.width - 40) + 20,
+          y: 0,
+          speed: Math.random() * 2 + 2,
+          radius: 12,
+        });
+      }
+
+      function startGame() {
+        if (isRunning) return;
+        isRunning = true;
+        score = 0;
+        combo = 1;
+        stars = [];
+        document.getElementById('start-btn').style.display = 'none';
+        document.getElementById('claim-btn').style.display = 'none';
+
+        canvas.addEventListener('mousemove', (e) => {
+          const rect = canvas.getBoundingClientRect();
+          basketX = Math.max(40, Math.min(canvas.width - 40, (e.clientX - rect.left) * (canvas.width / rect.width)));
+        });
+
+        // Touch support
+        canvas.addEventListener('touchmove', (e) => {
+          const rect = canvas.getBoundingClientRect();
+          if (e.touches[0]) {
+            basketX = Math.max(40, Math.min(canvas.width - 40, (e.touches[0].clientX - rect.left) * (canvas.width / rect.width)));
+          }
+        });
+
+        let frames = 0;
+        gameInterval = setInterval(() => {
+          frames++;
+          if (frames % 40 === 0) spawnStar();
+
+          // Clear
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Draw Paddle/Basket
+          ctx.fillStyle = '#F472B6';
+          ctx.beginPath();
+          ctx.roundRect(basketX - 45, canvas.height - 30, 90, 16, 8);
+          ctx.fill();
+
+          // Move & Draw Stars
+          for (let i = stars.length - 1; i >= 0; i--) {
+            const s = stars[i];
+            s.y += s.speed;
+
+            // Draw glowing star
+            ctx.fillStyle = '#F59E0B';
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Collision check
+            if (s.y >= canvas.height - 35 && s.y <= canvas.height - 15 && Math.abs(s.x - basketX) < 55) {
+              score += 10 * combo;
+              combo = Math.min(combo + 1, 8);
+              stars.splice(i, 1);
+              updateHUD();
+            } else if (s.y > canvas.height) {
+              combo = 1;
+              stars.splice(i, 1);
+              updateHUD();
+            }
+          }
+
+          // Game ends after 1200 frames (~30 seconds)
+          if (frames >= 900) {
+            endGame();
+          }
+        }, 1000 / 60);
+      }
+
+      function updateHUD() {
+        document.getElementById('score-display').innerText = score;
+        document.getElementById('combo-display').innerText = 'x' + combo;
+        const reward = Math.round(score * 1.5);
+        document.getElementById('reward-display').innerText = reward + ' NSF';
+      }
+
+      function endGame() {
+        clearInterval(gameInterval);
+        isRunning = false;
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#FFF';
+        ctx.font = '24px Space Grotesk';
+        ctx.textAlign = 'center';
+        ctx.fillText('Permainan Selesai!', canvas.width / 2, canvas.height / 2 - 10);
+        ctx.font = '16px Inter';
+        ctx.fillText('Total Skor: ' + score + ' | Hadiah: ' + Math.round(score * 1.5) + ' NSF', canvas.width / 2, canvas.height / 2 + 25);
+
+        document.getElementById('start-btn').style.display = 'inline-block';
+        document.getElementById('claim-btn').style.display = 'inline-block';
+      }
+
+      function claimReward() {
+        const reward = Math.round(score * 1.5);
+        alert('Klaim berhasi! Hadiah ' + reward + ' Star Fragments dicatat ke akun Discord kamu saat login terverifikasi.');
+      }
+    </script>
+  </body>
+</html>

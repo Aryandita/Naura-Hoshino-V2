@@ -1,7 +1,7 @@
 "use strict";
 
 const UserGreenhouse = require("../../models/UserGreenhouse");
-const { getSeedById } = require("../data/cropSeeds");
+const { getSeedById, CROSS_BREED_RECIPES } = require("../data/cropSeeds");
 const cacheManager = require("../../managers/cacheManager");
 const { logger } = require("../../managers/logger");
 
@@ -394,6 +394,89 @@ class GreenhouseEngine {
       success: true,
       newLevel: nextLevel,
       newMaxSlots: BASE_SLOTS_PER_LEVEL[nextLevel],
+    };
+  }
+
+  /**
+   * Menjalankan persilangan benih antar dua petak berdampingan yang telah matang.
+   * @param {string} userId
+   * @param {number} slotIndexA
+   * @param {number} slotIndexB
+   * @returns {Promise<{success: boolean, reason?: string, hybridSeed?: object, message?: string}>}
+   */
+  async crossBreedSlots(userId, slotIndexA, slotIndexB) {
+    if (Math.abs(slotIndexA - slotIndexB) !== 1) {
+      return { success: false, reason: "NOT_ADJACENT" };
+    }
+
+    const gh = await this.getGreenhouse(userId);
+    const slotA = gh.slots[slotIndexA];
+    const slotB = gh.slots[slotIndexB];
+
+    if (!slotA || !slotB || slotA.isEmpty || slotB.isEmpty) {
+      return { success: false, reason: "SLOT_EMPTY" };
+    }
+
+    if (!slotA.isMature || !slotB.isMature) {
+      return { success: false, reason: "NOT_MATURE" };
+    }
+
+    if (slotA.seedId === slotB.seedId) {
+      return { success: false, reason: "SAME_SPECIES" };
+    }
+
+    // Cari resep persilangan yang cocok
+    const recipe = CROSS_BREED_RECIPES.find(
+      (r) =>
+        r.parents.includes(slotA.seedId) && r.parents.includes(slotB.seedId),
+    );
+
+    if (!recipe) {
+      return { success: false, reason: "NO_COMPATIBLE_RECIPE" };
+    }
+
+    const hybridSeed = getSeedById(recipe.result);
+    if (!hybridSeed) {
+      return { success: false, reason: "HYBRID_SEED_NOT_FOUND" };
+    }
+
+    // Kosongkan kedua slot
+    const updatedRawSlots = gh.slots.map((s, idx) => {
+      if (idx === slotIndexA || idx === slotIndexB) {
+        return { slotIndex: idx, seedId: null };
+      }
+      return {
+        slotIndex: s.slotIndex,
+        seedId: s.seedId || null,
+        plantedAt: s.plantedAt || null,
+        moisture: s.moisture || 100,
+        isFertilized: s.isFertilized || false,
+      };
+    });
+
+    await UserGreenhouse.update(
+      { slots: updatedRawSlots },
+      { where: { userId } },
+    );
+
+    // Tambahkan benih hibrida ke inventaris
+    const seedItem = {
+      id: hybridSeed.id,
+      name: `Benih ${hybridSeed.name}`,
+      amount: 1,
+      type: "SEED",
+    };
+    await cacheManager.addItemsAtomic(userId, [seedItem]);
+
+    logger.info(
+      `[Greenhouse] User ${userId} berhasil menyilangkan slot #${slotIndexA + 1} dan #${slotIndexB + 1} -> ${hybridSeed.name}`,
+    );
+
+    return {
+      success: true,
+      hybridSeed,
+      item: seedItem,
+      message: `Persilangan berhasil! Kamu memperoleh 1x Benih ${hybridSeed.emoji} **${hybridSeed.name}**!`,
     };
   }
 }

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="id" data-theme="midnight" data-font-size="normal">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0c10" />
+    <meta name="description" content="Konfigurasi plugin dan pengaturan bot Naura Hoshino untuk server Discord kamu." />
+    <title>Konfigurasi Bot | Naura OS Mobile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@700;900&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="../css/tokens.css" />
+    <link rel="stylesheet" href="../css/animations.css" />
+    <link rel="stylesheet" href="../css/components.css" />
+    <link rel="stylesheet" href="../css/mobile.css" />
+  </head>
+
+  <body>
+    <header class="nm-header" role="banner">
+      <div class="nm-header__brand">
+        <i class="fa-solid fa-sliders" style="color:var(--accent-purple);font-size:1.1rem" aria-hidden="true"></i>
+        <span class="nm-header__name" style="text-shadow:0 0 12px rgba(192,132,252,0.6)">KONFIGURASI</span>
+      </div>
+    </header>
+
+    <main class="nm-page" role="main" style="padding-top:var(--sp-xs)">
+
+      <!-- Guild Selector -->
+      <section class="reveal nm-card animate-fade-in-up" aria-label="Pilih server">
+        <p class="nm-section-title" style="margin-bottom:var(--sp-xs)">Server</p>
+        <select id="cfg-guild-select" aria-label="Pilih server"
+          style="width:100%;padding:12px;background:var(--surface-glass);border:1px solid var(--hairline);border-radius:var(--r-lg);color:var(--ink);font-family:var(--font-body);font-size:0.875rem;cursor:pointer;outline:none;appearance:none">
+          <option value="">Memuat server...</option>
+        </select>
+      </section>
+
+      <!-- Modul Plugin -->
+      <section class="reveal nm-card animate-fade-in-up" style="animation-delay:80ms" aria-label="Modul bot">
+        <p class="nm-section-title" style="margin-bottom:var(--sp-sm)">Modul Aktif</p>
+        <div id="cfg-modules">
+          <!-- Diisi config.js -->
+          <div class="nm-skeleton" style="height:56px;margin-bottom:2px"></div>
+          <div class="nm-skeleton" style="height:56px;margin-bottom:2px;animation-delay:60ms"></div>
+          <div class="nm-skeleton" style="height:56px;margin-bottom:2px;animation-delay:120ms"></div>
+          <div class="nm-skeleton" style="height:56px;margin-bottom:2px;animation-delay:180ms"></div>
+          <div class="nm-skeleton" style="height:56px;animation-delay:240ms"></div>
+        </div>
+      </section>
+
+      <!-- Simpan -->
+      <div class="animate-fade-in-up" style="animation-delay:160ms">
+        <button class="nm-btn nm-btn--primary nm-btn--full" id="cfg-save">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+          Simpan Perubahan
+        </button>
+      </div>
+
+    </main>
+
+    <nav id="nm-bottom-nav" aria-label="Navigasi utama"></nav>
+    <div id="nm-toast-container" role="region" aria-label="Notifikasi" aria-live="polite"></div>
+    <script type="module" src="../js/pages/config.js"></script>
+  </body>
+</html>

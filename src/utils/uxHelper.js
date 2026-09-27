@@ -240,14 +240,14 @@ function getPersonalityResponse(
 
     case "ikeaAppreciation": {
       return isEn
-        ? `Wow, your taste is aesthetic and amazing, ${name}! Your profile and customization look truly breathtaking now~ ${eLove}`
-        : `Wah, selera Kak ${name} estetik banget! Kartu profil dan kustomisasimu sekarang jadi makin memukau~ ${eLove}`;
+        ? `Nice work, ${name}! Your profile and customization are set~ ${eLove}`
+        : `Wah, selera Kak ${name} estetik banget! Kartu profil dan kustomisasimu sudah terpasang rapi~ ${eLove}`;
     }
 
     case "peakEndClosure": {
       return isEn
-        ? `All done for you, ${name}! Is there anything else Naura can assist you with next? ${eNaura}${eSparkle}`
-        : `Semuanya beres untuk Kak ${name}! Ada hal seru lain yang mau kita lakukan selanjutnya? ${eNaura}${eSparkle}`;
+        ? `Done, ${name}! ${eNaura}${eSparkle}`
+        : `Selesai, Kak ${name}! ${eNaura}${eSparkle}`;
     }
 
     case "starterWelcome": {
@@ -606,8 +606,8 @@ function buildEmptyStatePrompt({
       expression: "Cheers",
       title: isEn ? "No Open Tickets Found" : "Belum Ada Tiket Terbuka",
       desc: isEn
-        ? `All questions and requests are resolved, ${name}! If you encounter any issues or need staff assistance, feel free to open a new ticket anytime~ ${eNaura}`
-        : `Semua pertanyaan dan bantuan sudah selesai ditangani dengan rapi, Kak ${name}! Bila kamu mengalami kendala atau butuh bantuan staff, silakan buka tiket baru ya~ ${eNaura}`,
+        ? `All questions and requests are resolved, ${name}! Open a new ticket anytime if you need staff assistance~ ${eNaura}`
+        : `Semua pertanyaan dan bantuan sudah selesai ditangani dengan rapi, Kak ${name}! Buka tiket baru kapan saja bila kamu butuh bantuan staff~ ${eNaura}`,
       cta: isEn ? `${eTicket} Open New Ticket` : `${eTicket} Buka Tiket Baru`,
       defaultCmd: "/ticket open",
       customId: "ticket_open",

@@ -12,7 +12,6 @@
 
 import { slerpBoneDirect } from "../core/interpolation.js";
 import { RIG_LIMITS, clampToLimits } from "../core/rigProfile.js";
-import { DEFAULT_REST_BONES } from "../core/constants.js";
 
 const RIGHT_ARM_KEYS = [
     "rightShoulder",
@@ -59,7 +58,7 @@ export class RightArmController {
 
                 const lerpSpeed = 1.0 - Math.exp(-(key.endsWith("LowerArm") ? elbowLerp : baseLerp) * delta);
 
-                const base = targetBones[key] || DEFAULT_REST_BONES[key] || [0, 0, 0];
+                const base = targetBones[key] || [0, 0, 0];
                 const current = this.currentRotations[key];
                 const target = [base[0], base[1], base[2]];
 

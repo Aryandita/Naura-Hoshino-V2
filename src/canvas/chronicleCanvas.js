@@ -135,7 +135,7 @@ async function drawChronicleNewspaper(data) {
     835,
   );
   ctx.fillStyle = "#86EFAC";
-  ctx.fillText("🌸 Status Server: Sangat Aktif & Penuh Keberkahan", 400, 870);
+  ctx.fillText(`\uD83C\uDF38 Status Server: ${data.memberCount > 0 ? "Aktif" : "Siaga"}`, 400, 870);
 
   // Footer Tagline
   ctx.fillStyle = "rgba(255, 255, 255, 0.5)";

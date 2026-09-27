@@ -127,7 +127,7 @@ function pchipSlope(dPrev, dNext, hPrev, hNext) {
 }
 
 function getTangents(keyframes, loop) {
-    const entry = _tangentCache.get(keyframes);
+    let entry = _tangentCache.get(keyframes);
     if (entry && entry.loop === loop) return entry.tangents;
 
     const n = keyframes.length;

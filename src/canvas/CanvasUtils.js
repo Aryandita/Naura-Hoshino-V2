@@ -17,7 +17,7 @@ const UI_COLORS = {
 
 
 // ==========================================
-// ðŸ› ï¸ HELPER DASAR (GABUNGAN)
+// 🛠️  HELPER DASAR (GABUNGAN)
 // ==========================================
 function drawRoundedRect(ctx, x, y, w, h, r, color, glowColor) {
   ctx.beginPath();
@@ -46,7 +46,7 @@ function drawRoundedProgressBar(
 ) {
   drawRoundedRect(ctx, x, y, width, height, radius, "rgba(0,0,0,0.5)");
 
-  // âœ¨ FIX: Mengamankan nilai persentase agar tidak tembus (maksimal 100, minimal 0)
+  // ✨ FIX: Mengamankan nilai persentase agar tidak tembus (maksimal 100, minimal 0)
   const safePercentage = Math.min(Math.max(percentage, 0), 100);
   const progressWidth = Math.max(radius * 2, (safePercentage / 100) * width);
 
@@ -185,8 +185,8 @@ const truncateText = (ctx, text, maxWidth) => {
 };
 
 // ==========================================
-// ðŸŽ® SURVIVAL RPG PROFILE CANVAS â€” V3
-// Canvas: 1000 x 640px â€” Extended Layout
+// ðŸŽ® SURVIVAL RPG PROFILE CANVAS  -  V3
+// Canvas: 1000 x 640px  -  Extended Layout
 // ==========================================
 async function generateSurvivalProfileImage(
   user,
@@ -215,9 +215,9 @@ async function generateSurvivalProfileImage(
   const maxHP = 100 + Math.min(survival.strength || 1, maxStatCap) * 10;
   const rpgState = survival.rpg_state || {};
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   // 1. BACKGROUND (location-aware)
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   const fs = require("fs");
   const bgPath = ui.getSurvivalBackground(
     survival.currentLocation || "village",
@@ -291,9 +291,9 @@ async function generateSurvivalProfileImage(
   ctx.stroke();
   ctx.restore();
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   // 2. AVATAR (circular, top-left)
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   const AVA_R = 50;
   const AVA_CX = MARGIN + 22 + AVA_R;
   const AVA_CY = MARGIN + 22 + AVA_R;
@@ -319,9 +319,9 @@ async function generateSurvivalProfileImage(
     ctx.restore();
   } catch (_) {}
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   // 3. IDENTITY (name, level, XP)
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   const INFO_X = AVA_CX + AVA_R + 18;
   const rebirthCount = rpgState.rebirth_count || 0;
   const diffText = rpgState.difficulty || "Normal";
@@ -356,9 +356,9 @@ async function generateSurvivalProfileImage(
     ["#00D9FF", "#0055FF"],
   );
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   // 4. WALLET (top-right)
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   const WALLET_X = W - MARGIN - 18;
   const WALLET_Y0 = MARGIN + 18;
   const walletItems = [
@@ -389,16 +389,16 @@ async function generateSurvivalProfileImage(
     ctx.fillText(item.value, WALLET_X, yBase + 20);
   });
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   // 5. DIVIDER 1
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   const DIV_Y1 = AVA_CY + AVA_R + 20;
   ctx.fillStyle = "rgba(255,255,255,0.10)";
   ctx.fillRect(MARGIN + 10, DIV_Y1, W - (MARGIN + 10) * 2, 1);
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   // 6. THREE-COLUMN BODY
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   const GAP = 14;
   const COL_W = Math.floor((W - MARGIN * 2 - GAP * 2) / 3);
   const COL_TOP = DIV_Y1 + 18;
@@ -435,7 +435,7 @@ async function generateSurvivalProfileImage(
     ctx.fillRect(x + 14, y + 24, lineWidth, 2);
   };
 
-  // â”€â”€ COL 1: STATUS FISIK â”€â”€
+  // ── COL 1: STATUS FISIK ──
   sectionHead("STATUS FISIK", C1_X, COL_TOP, "#FF6B6B", 72);
 
   const bars = [
@@ -509,7 +509,7 @@ async function generateSurvivalProfileImage(
   ctx.font = '11px "Inter", sans-serif';
   ctx.fillText(locName, C1_X + 20, locChipY + 25);
 
-  // â”€â”€ COL 2: STATS ATRIBUT â”€â”€
+  // ── COL 2: STATS ATRIBUT ──
   sectionHead("STATS ATRIBUT", C2_X, COL_TOP, "#9B59B6", 82);
 
   const statDefs = [
@@ -541,7 +541,7 @@ async function generateSurvivalProfileImage(
     stY += 46;
   });
 
-  // â”€â”€ COL 3: KEAHLIAN â”€â”€
+  // ── COL 3: KEAHLIAN ──
   sectionHead("KEAHLIAN", C3_X, COL_TOP, "#FFB6C1", 56);
 
   const className = rpgState.class || null;
@@ -674,16 +674,16 @@ async function generateSurvivalProfileImage(
     ctx.fillText(`REBIRTH x${rebirthCount}`, C3_X + 14 + SKILL_W / 2, skY + 19);
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   // 7. DIVIDER 2
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   const DIV_Y2 = COL_TOP + COL_H + 16;
   ctx.fillStyle = "rgba(255,255,255,0.10)";
   ctx.fillRect(MARGIN + 10, DIV_Y2, W - (MARGIN + 10) * 2, 1);
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   // 8. BOTTOM ROW: Quest / Pet / NPC Spouse
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   const BOT_TOP = DIV_Y2 + 16;
   const BOT_H = 98;
 
@@ -800,16 +800,16 @@ async function generateSurvivalProfileImage(
     ctx.fillText("Kunjungi NPC di /npc chat", C3_X + 14, BOT_TOP + 63);
   }
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   // 9. DIVIDER 3
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   const DIV_Y3 = BOT_TOP + BOT_H + 14;
   ctx.fillStyle = "rgba(255,255,255,0.08)";
   ctx.fillRect(MARGIN + 10, DIV_Y3, W - (MARGIN + 10) * 2, 1);
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   // 10. FOOTER BAR (Naura branded)
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ──────────────────────────────────────────
   const FOOT_TOP = DIV_Y3 + 10;
   const FOOT_H = 46;
   const FOOT_MID = FOOT_TOP + FOOT_H / 2;
@@ -892,7 +892,7 @@ async function generateSurvivalProfileImage(
 }
 
 // ==========================================
-// ðŸŽµ MUSIC PROFILE CANVAS â€” PREMIUM REDESIGN
+// 🎵 MUSIC PROFILE CANVAS  -  PREMIUM REDESIGN
 // Canvas: 1100 x 680px
 // ==========================================
 async function generateMusicProfileImage(user, stats, clientAvatar) {
@@ -983,7 +983,7 @@ async function generateMusicProfileImage(user, stats, clientAvatar) {
   ctx.stroke();
   ctx.restore();
 
-  // â”€â”€â”€ 2. HEADER CARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 2. HEADER CARD ──────────────────────────────────────
   const HDR_X = 24;
   const HDR_Y = 24;
   const HDR_W = W - 48;
@@ -1015,7 +1015,7 @@ async function generateMusicProfileImage(user, stats, clientAvatar) {
   else ctx.fillRect(HDR_X, HDR_Y, 4, HDR_H);
   ctx.fill();
 
-  // â”€â”€â”€ 3. AVATAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 3. AVATAR ───────────────────────────────────────────
   const AVA_R = 72;
   const AVA_CX = HDR_X + 24 + AVA_R;
   const AVA_CY = HDR_Y + HDR_H / 2;
@@ -1069,7 +1069,7 @@ async function generateMusicProfileImage(user, stats, clientAvatar) {
     ctx.restore();
   }
 
-  // â”€â”€â”€ 4. IDENTITY (name, username, badge) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 4. IDENTITY (name, username, badge) ─────────────────
   const ID_X = AVA_CX + AVA_R + 24;
 
   ctx.textAlign = "left";
@@ -1097,7 +1097,7 @@ async function generateMusicProfileImage(user, stats, clientAvatar) {
   ctx.fillStyle = BADGE_COLOR;
   ctx.fillText(BADGE_LABEL, ID_X + 22, AVA_CY + 36);
 
-  // â”€â”€â”€ 5. STAT BOXES (right of header) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 5. STAT BOXES (right of header) ─────────────────────
   const STAT_START_X = W - 530;
   const STAT_Y = HDR_Y + 28;
   const STAT_BOX_W = 155;
@@ -1166,7 +1166,7 @@ async function generateMusicProfileImage(user, stats, clientAvatar) {
     }
   });
 
-  // â”€â”€â”€ 6. GRADIENT DIVIDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 6. GRADIENT DIVIDER ─────────────────────────────────
   const DIV_Y = HDR_Y + HDR_H + 20;
   const divGrad = ctx.createLinearGradient(24, DIV_Y, W - 24, DIV_Y);
   divGrad.addColorStop(0, "rgba(0,0,0,0)");
@@ -1176,7 +1176,7 @@ async function generateMusicProfileImage(user, stats, clientAvatar) {
   ctx.fillStyle = divGrad;
   ctx.fillRect(24, DIV_Y, W - 48, 1);
 
-  // â”€â”€â”€ 7. THREE LIST CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 7. THREE LIST CARDS ─────────────────────────────────
   const CARD_Y = DIV_Y + 20;
   const CARD_H = H - CARD_Y - 50;
   const CARD_GAP = 20;
@@ -1235,7 +1235,7 @@ async function generateMusicProfileImage(user, stats, clientAvatar) {
     else ctx.fillRect(cx, CARD_Y, CARD_W, 3);
     ctx.fill();
 
-    // Card title (NO emoji â€” icon drawn as shape)
+    // Card title (NO emoji  -  icon drawn as shape)
     ctx.textAlign = "left";
     ctx.fillStyle = card.color;
     ctx.font = 'bold 16px "MontserratBold", sans-serif';
@@ -1292,7 +1292,7 @@ async function generateMusicProfileImage(user, stats, clientAvatar) {
     }
   });
 
-  // â”€â”€â”€ 8. FOOTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 8. FOOTER ───────────────────────────────────────────
   // Naura avatar circle
   let nauraImg = null;
   try {
@@ -1316,8 +1316,8 @@ async function generateMusicProfileImage(user, stats, clientAvatar) {
 }
 
 // ============================================================
-// ðŸŽµ generateMusicPanelImage â€” Redesigned Premium Card Layout
-// Canvas: 750 x 240px â€” Glassmorphism + Neon Glow + Waveform
+// 🎵 generateMusicPanelImage  -  Redesigned Premium Card Layout
+// Canvas: 750 x 240px  -  Glassmorphism + Neon Glow + Waveform
 // ============================================================
 async function generateMusicPanelImage(track, currentPos, clientAvatar) {
   const W = 750;
@@ -1528,7 +1528,7 @@ async function generateMusicPanelImage(track, currentPos, clientAvatar) {
   const INFO_X = ART_X + ART_W + 22;
   const INFO_W = W - INFO_X - 20;
 
-  // "NOW PLAYING" label â€” gambar segitiga play manual (â–¶ tidak ada di font Montserrat)
+  // "NOW PLAYING" label  -  gambar segitiga play manual (▶ tidak ada di font Montserrat)
   ctx.save();
   ctx.fillStyle = `rgba(${ac.r},${ac.g},${ac.b},0.9)`;
   ctx.beginPath();
@@ -1649,14 +1649,14 @@ async function generateMusicPanelImage(track, currentPos, clientAvatar) {
   if (track.info.isStream) {
     ctx.fillStyle = "#FF4757";
     ctx.font = 'bold 12px "InterBold", sans-serif';
-    ctx.fillText("ðŸ”´ LIVE STREAM", PB_X, PB_Y + 22);
+    ctx.fillText("🔴 LIVE STREAM", PB_X, PB_Y + 22);
   } else {
     ctx.fillText(formatDur(currentPos), PB_X, PB_Y + 22);
     ctx.textAlign = "right";
     ctx.fillText(formatDur(duration), PB_X + PB_W, PB_Y + 22);
   }
 
-  // --- 9. Bottom brand watermark â€” gambar bintang 4-titik manual (âœ¦ tidak ada di font) ---
+  // --- 9. Bottom brand watermark  -  gambar bintang 4-titik manual (✦ tidak ada di font) ---
   ctx.save();
   ctx.font = 'bold 10px "MontserratBold", sans-serif';
   ctx.textAlign = "right";
@@ -1692,7 +1692,7 @@ async function generateMusicPanelImage(track, currentPos, clientAvatar) {
 }
 
 // ==========================================
-// ðŸ‘‹ GREETING / WELCOME CANVAS (REMASTERED)
+// 👋 GREETING / WELCOME CANVAS (REMASTERED)
 // ==========================================
 async function generateWelcomeImage(
   member,
@@ -1795,7 +1795,7 @@ async function generateWelcomeImage(
   const countText = isWelcome
     ? `Anggota #${member.guild.memberCount}`
     : `Sisa #${member.guild.memberCount}`;
-  ctx.fillText(`${tag}   â€¢   ${countText}`, subtitleX, subtitleY);
+  ctx.fillText(`${tag}   •   ${countText}`, subtitleX, subtitleY);
 
   ctx.fillStyle = customGlow;
   ctx.fillRect(subtitleX, subtitleY + 25, 150, 4);
@@ -1804,7 +1804,7 @@ async function generateWelcomeImage(
 }
 
 // ==========================================
-// ðŸ“ˆ LEVEL UP CANVAS (FUNGSI BARU)
+// 📈 LEVEL UP CANVAS (FUNGSI BARU)
 // ==========================================
 // 📈 LEVEL UP CANVAS (CYBER-ANIME REVAMP)
 // ==========================================
@@ -2189,7 +2189,7 @@ async function generatePremiumTierCard(
   ctx.font = '16px "Inter", "EmojiFont"';
   if (isPremium && premiumUntil) {
     ctx.fillText(
-      `STATUS: AKTIF  â€¢  Berakhir: ${new Date(premiumUntil).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}`,
+      `STATUS: AKTIF  •  Berakhir: ${new Date(premiumUntil).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}`,
       textX,
       165,
     );

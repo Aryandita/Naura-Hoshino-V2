@@ -25,7 +25,7 @@ const CLASSES = {
       "Petarung tangguh dengan HP besar dan tebasan pedang yang mematikan.",
     bonus: { hp: 50, strength: 5 },
     skill:
-      "**Iron Slash** (15 stamina) \u2014 tebasan pedang murni, daya rusak **1.8x damage**.",
+      "**Iron Slash** (15 stamina) - tebasan pedang murni, daya rusak **1.8x damage**.",
   },
   mage: {
     emoji: "class_mage",
@@ -36,7 +36,7 @@ const CLASSES = {
       "Penyihir agung yang menguasai sihir elemen dengan kecerdasan luar biasa.",
     bonus: { agility: 3, intelligence: 8 },
     skill:
-      "**Fireball** (25 stamina) \u2014 sihir api membara, daya rusak **2.2x damage** berbasis kecerdasan.",
+      "**Fireball** (25 stamina) - sihir api membara, daya rusak **2.2x damage** berbasis kecerdasan.",
   },
   assassin: {
     emoji: "class_assassin",
@@ -47,7 +47,7 @@ const CLASSES = {
       "Eksekutor bayangan yang gerakannya cepat sekali dan sadis kalau kena kritikal.",
     bonus: { agility: 8, luck: 5 },
     skill:
-      "**Shadow Strike** (20 stamina) \u2014 tebasan kritikal **2.5x damage**, tapi bisa meleset.",
+      "**Shadow Strike** (20 stamina) - tebasan kritikal **2.5x damage**, tapi bisa meleset.",
   },
   ranger: {
     emoji: "class_ranger",
@@ -58,7 +58,7 @@ const CLASSES = {
       "Penjelajah alam liar yang jago memanah dan paling cepat mengumpulkan sumber daya.",
     bonus: { luck: 8, agility: 5 },
     skill:
-      "**Piercing Arrow** (15 stamina) \u2014 panah penembus pertahanan, **1.5x damage** dengan akurasi tinggi.",
+      "**Piercing Arrow** (15 stamina) - panah penembus pertahanan, **1.5x damage** dengan akurasi tinggi.",
   },
 };
 

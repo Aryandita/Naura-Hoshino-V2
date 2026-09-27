@@ -54,20 +54,10 @@ const LINKS = {
     "https://discord.com/api/oauth2/authorize?client_id=1483665745727721543&permissions=8&scope=bot%20applications.commands",
 };
 
-/**
- * Urutan kategori help. Dulu daftar ini ditulis dua kali dengan isi berbeda:
- * satu tanpa economy di perakit tampilan, satu lagi dengan economy di
- * collector. Akibatnya indeksnya bergeser dan kategori yang tampil selalu
- * meleset. Sekarang keduanya membaca satu sumber yang sama.
- */
-const HELP_CATEGORY_KEYS = [
-  "core",
-  "naura",
-  "music",
-  "minigame",
-  "survival",
-  "admin",
-];
+const {
+  HELP_CATEGORY_KEYS,
+  buildHelpPayload,
+} = require("../../src/core/helpView");
 
 // ==========================================
 // FUNGSI UTILITAS LOKAL
@@ -119,16 +109,6 @@ function createNavButtons() {
       .setURL(LINKS.INVITE)
       .setStyle(ButtonStyle.Link)
       .setEmoji(e("invite", "\uD83D\uDCE9")),
-  );
-}
-
-function formatHelpContent(text) {
-  if (!text) return "";
-  return text.replace(
-    /{emoji:(\w+)(?:\|([^}]+))?}/g,
-    (match, key, fallback) => {
-      return ui.getEmoji(key) || fallback || match;
-    },
   );
 }
 
@@ -923,191 +903,12 @@ async function handleAbout(interaction, client, lang) {
 // ==========================================
 // 5. HELP SYSTEM -- COMPONENTS V2
 // ==========================================
+// 5. HELP SYSTEM (KOMPREHENSIF DENGAN COMPONENTS V2)
+// ==========================================
 
-/**
- * Membangun payload Components V2 untuk help menu.
- * @param {object} lang - Objek bahasa yang aktif.
- * @param {object} client - Discord client.
- * @param {number} categoryIndex - Indeks kategori yang sedang aktif (0-based).
- * @param {boolean} disabled - Apakah select menu dinonaktifkan (saat timeout).
- */
-function buildHelpPayload(
-  lang,
-  client,
-  categoryIndex = -1,
-  disabled = false,
-  user = null,
-) {
-  const categoryKeys = HELP_CATEGORY_KEYS;
-  const userName = ui.ux.resolveUserName(user);
-  const isEn =
-    lang && (lang.LANG_CODE === "en" || lang.HELP_TITLE?.includes("Help"));
-
-  const categories = {
-    core: {
-      emoji: e("help_core", "\u2699\uFE0F"),
-      label: lang.HELP_CAT_CORE_LABEL,
-      desc: lang.HELP_CAT_CORE_DESC,
-      content: formatHelpContent(lang.HELP_CONTENT_CORE),
-    },
-    naura: {
-      emoji: e("sparkle", "\u2728"),
-      label: isEn ? "🌸 Naura Companion" : "🌸 Companion Naura",
-      desc: lang.HELP_CAT_NAURA_DESC,
-      content: formatHelpContent(lang.HELP_CONTENT_NAURA),
-    },
-    music: {
-      emoji: e("help_music", "\uD83C\uDFB5"),
-      label: isEn ? "⭐ Music & Audio (Popular)" : "⭐ Musik & Audio (Populer)",
-      desc: lang.HELP_CAT_MUSIC_DESC,
-      content: formatHelpContent(lang.HELP_CONTENT_MUSIC),
-    },
-    minigame: {
-      emoji: e("help_game", "\uD83C\uDFAE"),
-      label: lang.HELP_CAT_GAME_LABEL,
-      desc: lang.HELP_CAT_GAME_DESC,
-      content: formatHelpContent(lang.HELP_CONTENT_GAME),
-    },
-    survival: {
-      emoji: e("help_survival", "\uD83C\uDFD5\uFE0F"),
-      label: isEn
-        ? "⭐ RPG Survival (Featured)"
-        : "⭐ RPG Survival (Rekomendasi)",
-      desc: lang.HELP_CAT_SURVIVAL_DESC,
-      content: formatHelpContent(lang.HELP_CONTENT_SURVIVAL),
-    },
-    admin: {
-      emoji: e("help_admin", "\uD83D\uDEE0\uFE0F"),
-      label: lang.HELP_CAT_ADMIN_LABEL,
-      desc: lang.HELP_CAT_ADMIN_DESC,
-      content: formatHelpContent(lang.HELP_CONTENT_ADMIN),
-    },
-  };
-
-  // Tentukan konten yang ditampilkan di dalam Container
-  const activeKey = categoryIndex >= 0 ? categoryKeys[categoryIndex] : null;
-  const activeCat = activeKey ? categories[activeKey] : null;
-  const greeting = isEn
-    ? `Hello **${userName}**! Naura is excited to guide you through all the awesome commands~ ✨`
-    : `Halo Kak **${userName}**! Naura senang banget bisa bantu memandu petualanganmu di sini~ ✨`;
-
-  const bodyContent = activeCat
-    ? `${activeCat.emoji} **${activeCat.label}**\n\n${activeCat.content}`
-    : `${greeting}\n\n${formatHelpContent(lang.HELP_DESC)}`;
-
-  // Hitung warna accent (primary pink Naura menjadi integer RGB)
-  const primaryHex = (ui.getColor("primary") || "#FFB6C1").replace("#", "");
-  const accentColor = parseInt(primaryHex, 16);
-
-  // Build select menu options (pakai ui.parseEmoji agar custom emoji tidak crash)
-  const selectOptions = categoryKeys.map((key) => {
-    const option = {
-      label: categories[key].label,
-      description: categories[key].desc,
-      value: key,
-      default: key === activeKey,
-    };
-    const parsedEmoji = ui.parseEmoji(categories[key].emoji);
-    if (parsedEmoji) option.emoji = parsedEmoji;
-    return option;
-  });
-
-  // Placeholder select menu tidak merender custom emoji, jadi sengaja pakai
-  // emoji unicode di sini saja.
-  const selectMenu = new StringSelectMenuBuilder()
-    .setCustomId("help_category_select")
-    .setPlaceholder(
-      `\uD83D\uDCDA ${lang.HELP_PLACEHOLDER || "Naura Help Menu"}`,
-    )
-    .setDisabled(disabled)
-    .addOptions(selectOptions);
-  const selectRow = new ActionRowBuilder().addComponents(selectMenu);
-
-  // Tombol navigasi pagination
-  const prevBtn = new ButtonBuilder()
-    .setCustomId("help_prev")
-    .setLabel(lang.HELP_BTN_PREV || "\u00AB Categories")
-    .setStyle(ButtonStyle.Secondary)
-    .setDisabled(disabled || categoryIndex <= 0);
-  const nextBtn = new ButtonBuilder()
-    .setCustomId("help_next")
-    .setLabel(lang.HELP_BTN_NEXT || "Categories \u00BB")
-    .setStyle(ButtonStyle.Secondary)
-    .setDisabled(disabled || categoryIndex >= categoryKeys.length - 1);
-  const navRow = new ActionRowBuilder().addComponents(prevBtn, nextBtn);
-
-  // Footer text terpusat
-  const footerText = ui.stripCustomEmojis(ui.getFooter("core"));
-  const eHelp = e("help", "\uD83D\uDCDA");
-
-  // Dynamic banner per kategori
-  const categoryBanners = {
-    core:
-      ui.getBanner("utility") || "./assets/general/Utility & Tools Banner.jpeg",
-    naura:
-      ui.getBanner("about") || "./assets/general/Utility & Tools Banner.jpeg",
-    music: ui.getBanner("music") || "./assets/general/Music Banner.jpeg",
-    minigame:
-      ui.getBanner("minigame") ||
-      "./assets/general/Minigame & Arcade Banner.jpeg",
-    survival:
-      ui.getBanner("economy") ||
-      "./assets/general/Economy & Market Banner.jpeg",
-    admin:
-      ui.getBanner("admin") || "./assets/general/Admin & Security Banner.jpeg",
-  };
-
-  const activeBannerPath = activeKey
-    ? categoryBanners[activeKey]
-    : ui.getBanner("help") || "./assets/general/Utility & Tools Banner.jpeg";
-  const bannerFilename = `help-banner-${activeKey || "main"}.jpeg`;
-  const files = [];
-
-  if (activeBannerPath && fs.existsSync(activeBannerPath)) {
-    files.push(
-      new AttachmentBuilder(activeBannerPath, { name: bannerFilename }),
-    );
-  }
-
-  const containerComponents = [
-    {
-      type: 10,
-      content: `## ${eHelp} ${lang.HELP_TITLE || "Naura Help System"}`,
-    },
-    { type: 14, divider: true, spacing: 1 },
-    { type: 10, content: bodyContent },
-  ];
-
-  if (files.length > 0) {
-    containerComponents.push({ type: 14, divider: true, spacing: 1 });
-    containerComponents.push({
-      type: 12, // MEDIA_GALLERY
-      items: [{ media: { url: `attachment://${bannerFilename}` } }],
-    });
-  }
-
-  containerComponents.push(
-    { type: 14, divider: true, spacing: 1 },
-    selectRow.toJSON(),
-    navRow.toJSON(),
-    { type: 14, divider: false, spacing: 1 },
-    { type: 10, content: `-# ${footerText}` },
-  );
-
-  return {
-    flags: MessageFlags.IsComponentsV2,
-    files,
-    components: [
-      {
-        type: 17,
-        accent_color: accentColor,
-        components: containerComponents,
-      },
-    ],
-    _categoryKeys: categoryKeys,
-    _categories: categories,
-  };
-}
+// Catatan: buildHelpPayload didefinisikan secara terpusat di src/core/helpView.js
+// agar komponen Discord Components V2, select menu, dan tombol pagination
+// selalu sinkron di seluruh interaksi.
 
 async function handleHelp(interaction, client, langParam) {
   const userName = ui.ux.resolveUserName(interaction);
@@ -1265,20 +1066,25 @@ async function renderHelpMenuV2(
         i.componentType === ComponentType.StringSelect &&
         i.customId === "help_category_select"
       ) {
-        const picked = categoryKeys.indexOf(i.values[0]);
-        if (picked === -1) return;
-        currentIndex = picked;
+        const val = i.values[0];
+        if (val === "overview") {
+          currentIndex = -1;
+        } else {
+          const picked = categoryKeys.indexOf(val);
+          if (picked !== -1) currentIndex = picked;
+        }
       } else if (i.componentType === ComponentType.Button) {
-        if (i.customId === "help_prev") {
-          currentIndex = Math.max(
-            0,
-            currentIndex === -1 ? 0 : currentIndex - 1,
-          );
+        if (i.customId === "help_first") {
+          currentIndex = 0;
+        } else if (i.customId === "help_prev") {
+          currentIndex = currentIndex <= 0 ? -1 : currentIndex - 1;
         } else if (i.customId === "help_next") {
-          currentIndex = Math.min(
-            categoryKeys.length - 1,
-            currentIndex === -1 ? 0 : currentIndex + 1,
-          );
+          currentIndex =
+            currentIndex === -1
+              ? 0
+              : Math.min(categoryKeys.length - 1, currentIndex + 1);
+        } else if (i.customId === "help_last") {
+          currentIndex = categoryKeys.length - 1;
         } else {
           return; // bukan tombol milik kita
         }

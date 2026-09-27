@@ -3,6 +3,7 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  StringSelectMenuBuilder,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
@@ -15,27 +16,76 @@ const ui = require("../../src/config/ui");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const { createCanvas, loadImage } = require("../../src/canvas/canvasRuntime");
 
+const PROFILE_PALETTES = {
+  neon_pink: {
+    name: "Cyber Neon Pink",
+    bg1: "#1a1a2e",
+    bg2: "#16213e",
+    glow1: "rgba(233, 69, 96, 0.25)",
+    glow2: "rgba(15, 52, 96, 0.35)",
+    accent: "#e94560",
+  },
+  cyber_blue: {
+    name: "Stellar Cyber Blue",
+    bg1: "#0b132b",
+    bg2: "#1c2541",
+    glow1: "rgba(56, 189, 248, 0.25)",
+    glow2: "rgba(30, 58, 138, 0.35)",
+    accent: "#38bdf8",
+  },
+  emerald_nature: {
+    name: "Naura Wilds Emerald",
+    bg1: "#062817",
+    bg2: "#0f3d24",
+    glow1: "rgba(52, 211, 153, 0.25)",
+    glow2: "rgba(6, 78, 59, 0.4)",
+    accent: "#34d399",
+  },
+  sunset_gold: {
+    name: "Cosmic Solar Gold",
+    bg1: "#2a1505",
+    bg2: "#3b1e08",
+    glow1: "rgba(251, 191, 36, 0.25)",
+    glow2: "rgba(180, 83, 9, 0.35)",
+    accent: "#fbbf24",
+  },
+  dark_obsidian: {
+    name: "Midnight Obsidian",
+    bg1: "#09090b",
+    bg2: "#18181b",
+    glow1: "rgba(161, 161, 170, 0.15)",
+    glow2: "rgba(39, 39, 42, 0.3)",
+    accent: "#e4e4e7",
+  },
+};
+
 // Utility to create the Canvas Business Card
 async function createBusinessCard(user, profile, topFriend, streak) {
   const canvas = createCanvas(800, 400);
   const ctx = canvas.getContext("2d");
 
+  const banners = typeof profile?.activeBanners === "string"
+    ? JSON.parse(profile.activeBanners || "{}")
+    : (profile?.activeBanners || {});
+  const themeKey = banners.profile_theme || "neon_pink";
+  const palette = PROFILE_PALETTES[themeKey] || PROFILE_PALETTES.neon_pink;
+
   // Background (Glassmorphism / Neon glow)
   const gradient = ctx.createLinearGradient(0, 0, 800, 400);
-  gradient.addColorStop(0, "#1a1a2e");
-  gradient.addColorStop(1, "#16213e");
+  gradient.addColorStop(0, palette.bg1);
+  gradient.addColorStop(1, palette.bg2);
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 800, 400);
 
   // Add some "glow" elements
   ctx.beginPath();
   ctx.arc(100, 100, 150, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(233, 69, 96, 0.2)"; // Neon red/pink
+  ctx.fillStyle = palette.glow1;
   ctx.fill();
 
   ctx.beginPath();
   ctx.arc(700, 300, 200, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(15, 52, 96, 0.3)"; // Neon blue
+  ctx.fillStyle = palette.glow2;
   ctx.fill();
 
   // Glass panel
@@ -158,12 +208,76 @@ module.exports = {
       sub
         .setName("setup")
         .setDescription("Isi data username sosial media milikmu."),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("theme")
+        .setDescription("🎨 Kustomisasi palet warna tema kartu profil Canvas kamu.")
+        .addStringOption((opt) =>
+          opt
+            .setName("palette")
+            .setDescription("Pilih tema palet warna")
+            .setRequired(false)
+            .addChoices(
+              { name: "🌸 Cyber Neon Pink (Default)", value: "neon_pink" },
+              { name: "🌊 Stellar Cyber Blue", value: "cyber_blue" },
+              { name: "🌿 Naura Wilds Emerald", value: "emerald_nature" },
+              { name: "🌟 Cosmic Solar Gold", value: "sunset_gold" },
+              { name: "🌑 Midnight Obsidian", value: "dark_obsidian" },
+            ),
+        ),
     ),
 
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand(false) || "view";
 
     const cacheManager = require("../../src/managers/cacheManager");
+
+    if (subcommand === "theme") {
+      const paletteChoice = interaction.options.getString("palette");
+      if (paletteChoice && PROFILE_PALETTES[paletteChoice]) {
+        await cacheManager.mutateUserProfileJson(interaction.user.id, "activeBanners", (raw) => {
+          const banners = typeof raw === "string" ? JSON.parse(raw || "{}") : { ...(raw || {}) };
+          banners.profile_theme = paletteChoice;
+          return banners;
+        });
+        cacheManager.smartInvalidateUserCanvas(interaction.user.id);
+        const themeInfo = PROFILE_PALETTES[paletteChoice];
+        const payload = buildContainerV2({
+          accentColorHex: themeInfo.accent || ui.getColor("primary"),
+          authorName: "Naura Profile Studio",
+          title: "🎨 Tema Kartu Profil Diperbarui!",
+          description: [
+            `Palet warna kartu profil kamu berhasil diubah ke: **${themeInfo.name}**!`,
+            "",
+            "Gunakan `/profile view` untuk melihat kartu profil barumu.",
+          ].join("\n"),
+          footerText: ui.getFooter("utility"),
+        });
+        return interaction.reply({ ...payload, flags: MessageFlags.Ephemeral });
+      }
+
+      const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId("sel_profile_theme")
+        .setPlaceholder("Pilih Palet Warna Tema Kartu Profil...")
+        .addOptions(
+          Object.entries(PROFILE_PALETTES).map(([key, pal]) => ({
+            label: pal.name,
+            value: key,
+            description: `Aksen: ${pal.accent}`,
+          })),
+        );
+      const row = new ActionRowBuilder().addComponents(selectMenu);
+      const payload = buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        authorName: "Naura Profile Studio",
+        title: "🎨 Pilih Tema Palet Kartu Profil",
+        description: "Pilih salah satu palet tema warna di bawah untuk mengubah visual kartu Canvas profilmu secara instan.",
+        selectMenu: row,
+        footerText: ui.getFooter("utility"),
+      });
+      return interaction.reply({ ...payload, flags: MessageFlags.Ephemeral });
+    }
 
     if (subcommand === "setup") {
       const profile = await cacheManager.getUserProfile(interaction.user.id);

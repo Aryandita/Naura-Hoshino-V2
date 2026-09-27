@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="id" data-theme="midnight" data-font-size="normal">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a1a0f" />
+    <meta name="description" content="Pantau kondisi karaktermu di Naura Wilds, HP, rasa lapar, energi, dan quest aktif." />
+    <title>Naura Wilds | Naura OS Mobile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@700;900&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="../css/tokens.css" />
+    <link rel="stylesheet" href="../css/animations.css" />
+    <link rel="stylesheet" href="../css/components.css" />
+    <link rel="stylesheet" href="../css/mobile.css" />
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+
+  <body>
+    <header class="nm-header" role="banner">
+      <div class="nm-header__brand">
+        <i class="fa-solid fa-shield-halved" style="color:var(--wilds-emerald);font-size:1.1rem" aria-hidden="true"></i>
+        <span class="nm-header__name" style="text-shadow:0 0 12px rgba(134,239,172,0.6)">NAURA WILDS</span>
+      </div>
+      <div class="nm-header__actions">
+        <span id="survival-weather" style="font-size:0.8125rem;color:var(--body)">Memuat...</span>
+      </div>
+    </header>
+
+    <main class="nm-page" role="main" style="padding-top:var(--sp-xs)" id="survival-content">
+
+      <!-- Vitals HUD -->
+      <section class="reveal nm-card nm-card--wilds animate-fade-in-up" aria-label="Kondisi karakter">
+        <p class="nm-section-title">Kondisi Karakter</p>
+        <div class="nm-vital" style="gap:var(--sp-sm)">
+          <div class="nm-vital__row">
+            <span class="nm-vital__icon" title="HP">❤</span>
+            <div class="nm-vital__track">
+              <div id="vital-hp" class="nm-vital__fill" style="--fill-target:0%;width:0%" data-level="ok"></div>
+            </div>
+            <span class="nm-vital__pct" id="vital-hp-pct">0%</span>
+          </div>
+          <div class="nm-vital__row">
+            <span class="nm-vital__icon" title="Lapar">🍖</span>
+            <div class="nm-vital__track">
+              <div id="vital-hunger" class="nm-vital__fill" style="--fill-target:0%;width:0%" data-level="ok"></div>
+            </div>
+            <span class="nm-vital__pct" id="vital-hunger-pct">0%</span>
+          </div>
+          <div class="nm-vital__row">
+            <span class="nm-vital__icon" title="Energi">⚡</span>
+            <div class="nm-vital__track">
+              <div id="vital-energy" class="nm-vital__fill" style="--fill-target:0%;width:0%" data-level="ok"></div>
+            </div>
+            <span class="nm-vital__pct" id="vital-energy-pct">0%</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Saldo Survival -->
+      <section class="reveal nm-stats-row animate-fade-in-up" style="animation-delay:80ms" aria-label="Saldo survival">
+        <div class="nm-stat-item">
+          <span class="nm-stat-item__val" id="stat-nsf">---</span>
+          <span class="nm-stat-item__key">⭐ NSF</span>
+        </div>
+        <div class="nm-stat-item">
+          <span class="nm-stat-item__val" id="stat-nc" style="color:var(--accent-gold)">---</span>
+          <span class="nm-stat-item__key">💰 NC</span>
+        </div>
+        <div class="nm-stat-item">
+          <span class="nm-stat-item__val" id="stat-coupon" style="color:var(--accent-purple)">---</span>
+          <span class="nm-stat-item__key">🎟 Kupon</span>
+        </div>
+      </section>
+
+      <!-- Quick Actions -->
+      <section class="reveal animate-fade-in-up" style="animation-delay:120ms" aria-label="Aksi cepat">
+        <p class="nm-section-title">Aksi Cepat</p>
+        <div class="nm-actions-grid">
+          <a href="#" class="nm-action-btn" aria-label="Bertani">
+            <i class="fa-solid fa-wheat-awn" aria-hidden="true"></i>
+            Bertani
+          </a>
+          <a href="#" class="nm-action-btn" aria-label="Tambang">
+            <i class="fa-solid fa-hammer" aria-hidden="true"></i>
+            Tambang
+          </a>
+          <a href="#" class="nm-action-btn" aria-label="Memasak">
+            <i class="fa-solid fa-utensils" aria-hidden="true"></i>
+            Memasak
+          </a>
+          <a href="#" class="nm-action-btn" aria-label="Dungeon">
+            <i class="fa-solid fa-dungeon" aria-hidden="true"></i>
+            Dungeon
+          </a>
+        </div>
+        <p style="font-size:0.6875rem;color:var(--muted);margin-top:var(--sp-xs);text-align:center">
+          Aksi akan dikirim melalui Discord kamu
+        </p>
+      </section>
+
+      <!-- Inventory Preview -->
+      <section class="reveal nm-card nm-card--wilds animate-fade-in-up" style="animation-delay:160ms" aria-label="Inventori">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-sm)">
+          <p class="nm-section-title" style="margin:0">Inventori</p>
+          <a href="#" style="font-size:0.75rem;color:var(--wilds-emerald);text-decoration:none">Lihat Semua</a>
+        </div>
+        <div class="nm-hscroll" id="inventory-preview">
+          <!-- Diisi oleh survival.js -->
+          <div class="nm-skeleton" style="min-width:64px;height:80px;border-radius:var(--r-lg)"></div>
+          <div class="nm-skeleton" style="min-width:64px;height:80px;border-radius:var(--r-lg);animation-delay:100ms"></div>
+          <div class="nm-skeleton" style="min-width:64px;height:80px;border-radius:var(--r-lg);animation-delay:200ms"></div>
+        </div>
+      </section>
+
+      <!-- Quest Aktif -->
+      <section class="reveal nm-card animate-fade-in-up" style="animation-delay:200ms" aria-label="Quest aktif">
+        <p class="nm-section-title" style="margin-bottom:var(--sp-sm)">Quest Aktif</p>
+        <div id="active-quest">
+          <div class="nm-skeleton" style="height:60px"></div>
+        </div>
+      </section>
+
+    </main>
+
+    <nav id="nm-bottom-nav" aria-label="Navigasi utama"></nav>
+    <div id="nm-toast-container" role="region" aria-label="Notifikasi" aria-live="polite"></div>
+    <script type="module" src="../js/pages/survival.js"></script>
+  </body>
+</html>
