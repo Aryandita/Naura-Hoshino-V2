@@ -21,6 +21,7 @@ const UserRoom = require("../models/mongo/UserRoom");
 const TimeCapsule = require("../models/mongo/TimeCapsule");
 const UserAlias = require("../models/mongo/UserAlias");
 const UserReport = require("../models/mongo/UserReport");
+const DevAccessKey = require("../models/mongo/DevAccessKey");
 
 class MongoManager {
   constructor() {
@@ -33,6 +34,7 @@ class MongoManager {
       TimeCapsule,
       UserAlias,
       UserReport,
+      DevAccessKey,
     };
     this._isConnecting = false;
     this._setupListeners();

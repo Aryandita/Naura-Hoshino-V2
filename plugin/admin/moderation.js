@@ -10,6 +10,7 @@ const {
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
 const { sendModLog } = require("../../src/utils/modLogHelper");
+const incidentService = require("../../src/services/incidentService");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -173,6 +174,21 @@ module.exports = {
             .setName("alasan")
             .setDescription("Alasan pembatalan ban")
             .setRequired(false),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("panic")
+        .setDescription("Karantina darurat server saat terjadi serbuan bot raid atau kekacauan massal")
+        .addStringOption((opt) =>
+          opt
+            .setName("aksi")
+            .setDescription("Aktifkan karantina darurat atau pulihkan izin semula")
+            .setRequired(true)
+            .addChoices(
+              { name: "Aktifkan Panic Lockdown", value: "enable" },
+              { name: "Pulihkan Server (Restore)", value: "restore" },
+            ),
         ),
     ),
 
@@ -723,6 +739,53 @@ module.exports = {
         const errPayload = buildErrorContainerV2({
           title: "Gagal Mencabut Ban",
           description: `${ui.getEmoji("error") || "❌"} Tidak dapat membatalkan ban untuk ID \`${targetUserId}\`. Pastikan ID valid dan pengguna memang sedang dalam daftar ban.`,
+          footerText: ui.getFooter("core"),
+        });
+        await interaction.editReply(errPayload);
+      }
+    }
+
+    if (subcommand === "panic") {
+      if (
+        !interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild) &&
+        !interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)
+      ) {
+        return interaction.reply({
+          content: "⛔ Anda memerlukan izin `Manage Guild` atau `Administrator` untuk mengelola status Panic Lockdown.",
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+
+      const action = interaction.options.getString("aksi");
+      await interaction.deferReply();
+
+      try {
+        if (action === "enable") {
+          const result = await incidentService.activatePanicLockdown(interaction.guild, interaction.user.tag);
+          const responsePayload = buildContainerV2({
+            accentColorHex: ui.getColor("danger") || "#EF4444",
+            title: "🚨 Panic Lockdown Diaktifkan",
+            description: `Server sedang dalam status darurat anti-raid.\n\n🛡️ **Channel Terkunci:** ${result.affectedChannels} channel\n👤 **Diaktifkan Oleh:** <@${interaction.user.id}>\n⏱️ **Slowmode Darurat:** 15 detik untuk @everyone\n\nGunakan \`/moderation panic aksi:restore\` jika situasi telah aman kembali.`,
+            footerText: ui.getFooter("core"),
+          });
+          await interaction.editReply(responsePayload);
+          await sendModLog(interaction.guild, responsePayload);
+        } else {
+          const result = await incidentService.restorePanicLockdown(interaction.guild, interaction.user.tag);
+          const responsePayload = buildContainerV2({
+            accentColorHex: ui.getColor("success") || "#10B981",
+            title: "✅ Panic Lockdown Dipulihkan",
+            description: `Karantina darurat server telah diangkat.\n\n🔓 **Channel Dipulihkan:** ${result.restoredChannels} channel\n👤 **Dipulihkan Oleh:** <@${interaction.user.id}>\n\nIzin kirim pesan @everyone dan pengaturan slowmode telah dikembalikan ke kondisi semula.`,
+            footerText: ui.getFooter("core"),
+          });
+          await interaction.editReply(responsePayload);
+          await sendModLog(interaction.guild, responsePayload);
+        }
+      } catch (err) {
+        logger.error("[Panic Error]:", err);
+        const errPayload = buildErrorContainerV2({
+          title: "Gagal Mengatur Panic Lockdown",
+          description: `${ui.getEmoji("error") || "❌"} Terjadi kendala saat memproses Panic Lockdown: ${err.message}`,
           footerText: ui.getFooter("core"),
         });
         await interaction.editReply(errPayload);

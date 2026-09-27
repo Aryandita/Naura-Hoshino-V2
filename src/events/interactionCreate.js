@@ -21,6 +21,12 @@ const {
   buildErrorContainerV2,
   buildMaintenanceContainerV2,
 } = require("../utils/NauraContainerBuilder");
+const env = require("../config/env");
+const {
+  isGlobalMaintenanceActive,
+  getGlobalMaintenance,
+  isModuleKilled,
+} = require("../services/incidentService");
 
 // Batas laju perintah slash
 const SLASH_LIMIT = Object.freeze({ max: 5, seconds: 5 });
@@ -53,6 +59,39 @@ async function handleSlashCommand(interaction, client) {
   const targetCommand = client.commands.get(interaction.commandName);
   // Guard Clause: Command tidak terdaftar
   if (!targetCommand) return undefined;
+
+  const isOwnerUser = Array.isArray(env.OWNER_IDS) && env.OWNER_IDS.includes(interaction.user.id);
+
+  // Guard Clause: Pemeliharaan Darurat Global (Bypass khusus Owner)
+  if (isGlobalMaintenanceActive() && !isOwnerUser) {
+    const maintInfo = await getGlobalMaintenance();
+    return interaction
+      .reply({
+        ...buildMaintenanceContainerV2({
+          title: "Pemeliharaan Sistem Terpadu",
+          reason: maintInfo.reason || "Pembaruan arsitektur dan penanganan keamanan berkala",
+          lang: interaction.localeLang,
+        }),
+        flags: MessageFlags.Ephemeral,
+      })
+      .catch(() => {});
+  }
+
+  // Guard Clause: Module Kill-Switch Darurat (Bypass khusus Owner)
+  if (isModuleKilled(interaction.commandName) && !isOwnerUser) {
+    return interaction
+      .reply({
+        ...buildErrorContainerV2({
+          authorName: "Naura Incident Guard",
+          title: "Modul Dinonaktifkan Sementara",
+          errorMessage: `Perintah **/${interaction.commandName}** sedang dinonaktifkan sementara oleh pengembang untuk investigasi kendala teknis.`,
+          lang: interaction.localeLang,
+          expression: "denied",
+        }),
+        flags: MessageFlags.Ephemeral,
+      })
+      .catch(() => {});
+  }
 
   // Guard Clause: Rate limit per pengguna
   const isCommandRateLimited = await rateLimiter.isRateLimited(
