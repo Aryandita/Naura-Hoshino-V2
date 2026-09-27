@@ -59,8 +59,11 @@ const env = {
   PREFIX: cleanEnv(process.env.PREFIX) || "n!",
   GUILD_ID: cleanEnv(process.env.GUILD_ID),
   SENTRY_DSN: cleanEnv(process.env.SENTRY_DSN),
-  OWNER_IDS: process.env.OWNER_IDS
-    ? process.env.OWNER_IDS.split(",").map((id) => cleanEnv(id))
+  OWNER_IDS: (process.env.OWNER_IDS || process.env.OWNER_ID)
+    ? (process.env.OWNER_IDS || process.env.OWNER_ID)
+        .split(",")
+        .map((id) => cleanEnv(id))
+        .filter(Boolean)
     : [],
 
   // VERSION & PARTNERSHIP CONFIG
