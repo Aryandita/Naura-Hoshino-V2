@@ -14,6 +14,7 @@ const express = require("express");
 const { EmbedBuilder } = require("discord.js");
 const { logger } = require("../../src/managers/logger");
 const ui = require("../../src/config/ui");
+const { BOT_VERSION } = require("../../src/config/version");
 const guildSettingsService = require("../../src/managers/guildSettingsService");
 const {
   requireGuildManager,
@@ -640,7 +641,7 @@ module.exports = (client) => {
           })
           .setDescription(String(message).slice(0, 2000))
           .setFooter({
-            text: "Naura Minecraft Bridge",
+            text: `Naura Minecraft Bridge v${BOT_VERSION}`,
             iconURL: client.user.displayAvatarURL(),
           })
           .setTimestamp();

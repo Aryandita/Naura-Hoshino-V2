@@ -32,7 +32,8 @@ module.exports = async function handleStaffReply(message, client) {
               )
               .setDescription(
                 `Obrolanmu dengan staf **${message.guild.name}** sudah Naura tutup. Kalau butuh bantuan lagi, sapa Naura kapan saja, yaa!`,
-              ),
+              )
+              .setFooter({ text: ui.getFooter("utility") }),
           ],
         })
         .catch(() => {});
@@ -77,7 +78,8 @@ module.exports = async function handleStaffReply(message, client) {
             .setColor(ui.getColor("error") || "#FF0000")
             .setDescription(
               `${ui.getEmoji("cry") || "\u274C"} Yah, pesannya nggak sampai. Sepertinya DM pengguna itu tertutup.`,
-            ),
+            )
+            .setFooter({ text: ui.getFooter("utility") }),
         ],
       })
       .catch(() => {});

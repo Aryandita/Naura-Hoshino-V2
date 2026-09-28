@@ -15,6 +15,7 @@
 
 const { logger } = require("../managers/logger");
 const mongoManager = require("../managers/mongoManager");
+const { BOT_VERSION } = require("../config/version");
 
 // Konfigurasi Batas Keamanan Ekonomi
 const DEFAULT_CONFIG = {
@@ -286,6 +287,9 @@ class EconomyGuardEngine {
               { name: "Penerima", value: alertData.receiverId ? `<@${alertData.receiverId}> (${alertData.receiverId})` : "N/A", inline: true },
               { name: "Nominal", value: `${Number(alertData.amount).toLocaleString("id-ID")}`, inline: true },
             ],
+            footer: {
+              text: `Naura Economy Guard v${BOT_VERSION} • Sentinel Keamanan Ekonomi 🛡️`,
+            },
             timestamp: new Date().toISOString(),
           },
         ],

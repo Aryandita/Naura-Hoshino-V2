@@ -1,6 +1,7 @@
 const { EmbedBuilder } = require("discord.js");
 const { logger } = require("../managers/logger");
 const env = require("../config/env");
+const ui = require("../config/ui");
 const crypto = require("crypto");
 
 const ERROR_DM_TTL_MS = 10 * 60 * 1000;
@@ -57,6 +58,7 @@ const sendErrorLog = async (err, type, client) => {
         .setDescription(
           `\`\`\`js\n${String(err?.stack || err).substring(0, 4000)}\n\`\`\``,
         )
+        .setFooter({ text: ui.getFooter("core") })
         .setTimestamp();
       await webhook.send({
         embeds: [errEmbed],
@@ -76,7 +78,6 @@ const sendErrorLog = async (err, type, client) => {
       const owner = await client.users.fetch(ownerId).catch(() => null);
 
       if (owner) {
-        const ui = require("../config/ui");
         const errEmbed = new EmbedBuilder()
           .setColor("#00FFFF")
           .setTitle(`⚠️ Naura Versi ${env.BOT_VERSION || "2.3.0"} - ${type}`)

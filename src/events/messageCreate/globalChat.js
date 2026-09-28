@@ -12,6 +12,7 @@ const { logger } = require("../../managers/logger");
 const redisManager = require("../../managers/redisManager");
 const UserFriend = require("../../models/UserFriend");
 const RateLimiter = require("../../utils/rateLimiter");
+const { BOT_VERSION } = require("../../config/version");
 
 const BROADCAST_TOPIC = "naura:globalchat";
 const STREAK_COOLDOWN_MS = 12 * 60 * 60 * 1000;
@@ -81,7 +82,7 @@ function buildEmbed(message, client, targetName) {
     })
     .setDescription(body + replyNote)
     .setFooter({
-      text: `Naura Global Chat System | ${message.guild.name}`,
+      text: `Naura Global Chat v${BOT_VERSION} • ${message.guild.name}`,
       iconURL: client.user.displayAvatarURL(),
     })
     .setTimestamp();

@@ -7,6 +7,7 @@ const {
 } = require("discord.js");
 const UserProfile = require("../../models/UserProfile");
 const ui = require("../../config/ui");
+const { BOT_VERSION } = require("../../config/version");
 const { logger } = require("../../managers/logger");
 
 module.exports = {
@@ -89,7 +90,7 @@ module.exports = {
                     `\n\n> Segera klaim sebelum kehabisan waktu ya! ${ui.getEmoji("vip") || "💎"}`,
                 )
                 .setFooter({
-                  text: "Naura Daily Reminder • Klik tombol di bawah untuk menonaktifkan notifikasi ini",
+                  text: `Naura Daily Reminder v${BOT_VERSION} • Klik tombol di bawah untuk menonaktifkan notifikasi ini`,
                 })
                 .setTimestamp();
 

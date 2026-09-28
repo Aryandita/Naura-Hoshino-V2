@@ -162,7 +162,7 @@ module.exports = (client) => {
             `\u23F3 **Premium aktif sampai:** <t:${Math.floor(result.expiry.getTime() / 1000)}:R>\n` +
             `\uD83D\uDCC5 **Vote ke-${result.streak}.** Jangan lupa balik lagi 12 jam lagi ya!`,
         )
-        .setFooter({ text: "Naura Hoshino Auto-Vote System" });
+        .setFooter({ text: ui.getFooter("premium") });
 
       await notifyUser(client, userId, embed, "VOTE");
       return res.status(200).send("Vote recorded successfully");
@@ -236,7 +236,7 @@ module.exports = (client) => {
               `\uD83D\uDCE6 **Paket aktif:** ${tier.name}\n` +
               `\u23F3 **Berlaku sampai:** <t:${Math.floor(expiry.getTime() / 1000)}:F>`,
           )
-          .setFooter({ text: `Naura Hoshino ${label} System` });
+          .setFooter({ text: ui.getFooter("premium") });
 
         await notifyUser(client, userId, embed, tag);
         return res.status(200).send("Donation Processed Successfully");

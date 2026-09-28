@@ -81,7 +81,8 @@ module.exports = {
                   .setTitle("🔔 Tamu TempVoice Lounge")
                   .setDescription(
                     `Halo **${ownerMember.user.username}**! Seseorang bernama **${member.user.username}** sedang menunggu di **Waiting Room** milikmu.\n\nSilakan cek panel kontrol TempVoice untuk mengizinkan mereka masuk.`,
-                  );
+                  )
+                  .setFooter({ text: ui.getFooter("utility") });
                 await ownerMember.send({ embeds: [dmEmbed] }).catch(() => {});
               }
             }
@@ -189,7 +190,8 @@ module.exports = {
                 ? `\u2728 **${isBotOwner ? "Owner" : "VIP"} Lounge Aktif!**\nRuanganmu di-boost ke **Kualitas Audio Ultra** (${Math.round(roomBitrate / 1000)}kbps)! Kamu juga memiliki akses "Invisible Mode" eksklusif.\n\n`
                 : "") +
               `Gunakan tombol-tombol di bawah ini untuk mengatur Voice Channel-mu:`,
-          );
+          )
+          .setFooter({ text: ui.getFooter("utility") });
 
         const {
           ActionRowBuilder,

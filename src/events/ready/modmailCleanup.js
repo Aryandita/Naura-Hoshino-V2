@@ -43,6 +43,7 @@ module.exports = {
                 .setDescription(
                   `Tiketmu dengan **${guild.name}** telah ditutup otomatis karena tidak ada aktivitas selama 48 jam.`,
                 )
+                .setFooter({ text: ui.getFooter("utility") })
                 .setTimestamp();
               await user.send({ embeds: [embed] });
             } catch (e) {}

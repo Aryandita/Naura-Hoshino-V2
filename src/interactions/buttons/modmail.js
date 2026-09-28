@@ -55,7 +55,8 @@ module.exports = [
 
       const logEmbed = new EmbedBuilder()
         .setColor("#FF0000")
-        .setDescription("\ud83d\udd12 Tiket ini ditutup oleh Staf.");
+        .setDescription("🔒 Tiket ini ditutup oleh Staf.")
+        .setFooter({ text: ui.getFooter("utility") });
       await interaction.channel.send({ embeds: [logEmbed] });
 
       const user = await client.users.fetch(ticket.userId).catch(() => null);
@@ -63,8 +64,9 @@ module.exports = [
         const notifyEmbed = new EmbedBuilder()
           .setColor("#FF0000")
           .setDescription(
-            `\ud83d\udd12 Tiket bantuanmu dengan **${interaction.guild.name}** telah ditutup.`,
+            "🔒 Tiket bantuanmu dengan **" + interaction.guild.name + "** telah ditutup.",
           )
+          .setFooter({ text: ui.getFooter("utility") })
           .setTimestamp();
         user.send({ embeds: [notifyEmbed] }).catch(() => {});
       }
@@ -116,7 +118,8 @@ module.exports = [
           .setColor("#FF0000")
           .setDescription(
             `🔒 Tiket ini ditutup oleh Pengguna (<@${interaction.user.id}>).`,
-          );
+          )
+          .setFooter({ text: ui.getFooter("utility") });
         await channel.send({ embeds: [logEmbed] });
 
         // Rename thread to mark as closed, or delete it

@@ -11,13 +11,32 @@ class NauraEmbedBuilder extends EmbedBuilder {
     super(data);
     // Default visual aesthetics
     this.setColor(ui.getColor("primary"));
-    this.setFooter({ text: ui.getFooter("core") });
+    if (!data?.footer) {
+      this.setFooter({ text: ui.getFooter("core") });
+    }
     this.setTimestamp();
 
     // Lampiran gambar ekspresi. EmbedBuilder tidak bisa membawa file sendiri,
     // jadi disimpan di sini dan diambil lewat getFiles() saat mengirim pesan.
     this._files = [];
     this._expression = null;
+  }
+
+  /**
+   * Atur footer embed mengikuti template resmi ekosistem Naura (SSOT version.js).
+   * @param {string} [category="core"]
+   * @param {string} [lang=null]
+   * @param {string} [iconURL=null]
+   * @returns {this}
+   */
+  setCategoryFooter(category = "core", lang = null, iconURL = null) {
+    const text = ui.getFooter(category, lang);
+    if (iconURL) {
+      this.setFooter({ text, iconURL });
+    } else {
+      this.setFooter({ text });
+    }
+    return this;
   }
 
   /**

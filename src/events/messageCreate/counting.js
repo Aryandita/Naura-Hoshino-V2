@@ -41,7 +41,8 @@ module.exports = async function handleCounting(message, client, ctx) {
             .setColor(ui.getColor("error") || "#FF0000")
             .setDescription(
               `${ui.getEmoji("cry") || "\u274C"} ${reason} Hitungannya Naura mulai lagi dari **0**, yaa. Semangat!`,
-            ),
+            )
+            .setFooter({ text: ui.getFooter("utility") }),
         ],
       })
       .catch(() => null);

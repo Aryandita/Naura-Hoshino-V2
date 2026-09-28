@@ -141,7 +141,8 @@ module.exports = {
               `${ui.getEmoji("booster") || "💎"} Terima Kasih Telah Boosting!`,
             )
             .setDescription(customText)
-            .setThumbnail(newMember.user.displayAvatarURL());
+            .setThumbnail(newMember.user.displayAvatarURL())
+            .setFooter({ text: ui.getFooter("premium") });
 
           await boostChannel.send({ embeds: [boostEmbed] }).catch(() => {});
         }

@@ -75,7 +75,8 @@ async function submitReply(interaction, client) {
       name: isAnon ? `[ANONIM] ${interaction.user.tag}` : interaction.user.tag,
       iconURL: interaction.user.displayAvatarURL(),
     })
-    .setDescription(`**Membalas:** ${replyText}`);
+    .setDescription(`**Membalas:** ${replyText}`)
+    .setFooter({ text: ui.getFooter("utility") });
 
   await interaction.channel.send({ embeds: [logEmbed] });
   return undefined;

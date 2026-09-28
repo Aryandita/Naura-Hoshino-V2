@@ -93,7 +93,8 @@ async function handleAutomod(message, client) {
       .setTitle(`${ui.getEmoji("shield_alert") || "🚨"} Peringatan AutoMod`)
       .setDescription(
         `<@${message.author.id}>, pesanmu otomatis dihapus karena:\n**${reason}**`,
-      );
+      )
+      .setFooter({ text: ui.getFooter ? ui.getFooter("admin") : "Naura Administration & Moderation" });
 
     // Kirim notifikasi, lalu otomatis hapus notifikasinya setelah 5 detik agar chat tidak kotor
     const warnMsg = await message.channel

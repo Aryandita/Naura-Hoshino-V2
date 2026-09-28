@@ -60,7 +60,8 @@ module.exports = {
 
   getFooter(category = "core", lang = null) {
     const env = require("./env");
-    const ver = env.BOT_VERSION || "2.3.0";
+    const { BOT_VERSION } = require("./version");
+    const ver = env.BOT_VERSION || BOT_VERSION || "2.3.0";
     if (lang) {
       const languageManager = require("../managers/languageManager");
       const key = `container.footers.${category}`;

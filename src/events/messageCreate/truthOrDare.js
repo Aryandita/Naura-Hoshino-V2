@@ -68,7 +68,8 @@ module.exports = async function handleTruthOrDare(message, client, ctx) {
       `Hai <@${currentPlayerId}>! Naura udah siap jadi wasitnya, hihi.\n\n` +
         "Pilih salah satu tombol di bawah buat mulai tantanganmu, yaa!",
     )
-    .setThumbnail(message.author.displayAvatarURL());
+    .setThumbnail(message.author.displayAvatarURL())
+    .setFooter({ text: ui.getFooter("naura") });
 
   const board = await message.channel.send({
     embeds: [intro],
@@ -101,7 +102,8 @@ module.exports = async function handleTruthOrDare(message, client, ctx) {
         )
         .setDescription(
           `Hebat banget, <@${currentPlayerId}>! Naura bangga sama kamu.\n\nMau lanjut satu ronde lagi?`,
-        );
+        )
+        .setFooter({ text: ui.getFooter("naura") });
 
       return i.editReply({
         embeds: [done],
@@ -123,7 +125,8 @@ module.exports = async function handleTruthOrDare(message, client, ctx) {
         .setDescription(
           `Giliran <@${currentPlayerId}> lagi. Mau **Truth** atau **Dare**?`,
         )
-        .setThumbnail(i.user.displayAvatarURL());
+        .setThumbnail(i.user.displayAvatarURL())
+        .setFooter({ text: ui.getFooter("naura") });
 
       return i.editReply({
         embeds: [again],
@@ -153,7 +156,8 @@ module.exports = async function handleTruthOrDare(message, client, ctx) {
         .setDescription(
           `Waah, botolnya nunjuk <@${currentPlayerId}>!\n\nSekarang giliran kamu pilih **Truth** atau **Dare**, yaa!`,
         )
-        .setThumbnail(chosen.displayAvatarURL());
+        .setThumbnail(chosen.displayAvatarURL())
+        .setFooter({ text: ui.getFooter("naura") });
 
       return i.editReply({
         embeds: [spun],
@@ -173,7 +177,8 @@ module.exports = async function handleTruthOrDare(message, client, ctx) {
           .setColor(ui.getColor("primary") || "#FFB6C1")
           .setDescription(
             `${ui.getEmoji("thinking") || "\u23F3"} Bentar yaa, Naura lagi mikirin ${label} yang seru buat kamu...`,
-          ),
+          )
+          .setFooter({ text: ui.getFooter("naura") }),
       ],
       components: [],
     });
@@ -204,8 +209,8 @@ module.exports = async function handleTruthOrDare(message, client, ctx) {
         name: `${label} untuk ${player.username}`,
         iconURL: player.displayAvatarURL(),
       })
-      .setDescription(`### ${labelEmoji} ${label}\n\n> **${challenge}**`)
-      .setFooter({ text: "Kalau sudah selesai, pencet tombolnya yaa!" });
+      .setDescription(`### ${labelEmoji} ${label}\n\n> **${challenge}**\n\n*Kalau sudah selesai, pencet tombol Selesai di bawah yaa!*`)
+      .setFooter({ text: ui.getFooter("naura") });
 
     return i.editReply({
       embeds: [card],

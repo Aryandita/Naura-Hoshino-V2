@@ -40,7 +40,8 @@ async function notifyMentionedAfk(message) {
         `${ui.getEmoji("sleepy") || ui.getEmoji("afk") || "\uD83D\uDCA4"} **${mentioned.username}** lagi AFK sejak ${since}.\n\n` +
           `> ${ui.getEmoji("read") || "\uD83D\uDCDD"} *${profile.afk_reason}*\n\n` +
           "Nanti Naura sampaikan pesanmu begitu dia balik, yaa!",
-      );
+      )
+      .setFooter({ text: ui.getFooter("core") });
 
     message
       .reply({ embeds: [embed] })
@@ -83,7 +84,8 @@ async function welcomeBack(message) {
 
   const embed = new EmbedBuilder()
     .setColor(ui.getColor("success") || "#00FF00")
-    .setDescription(`${greeting}\n*(Kamu AFK selama ${minutes} menit)*`);
+    .setDescription(`${greeting}\n*(Kamu AFK selama ${minutes} menit)*`)
+    .setFooter({ text: ui.getFooter("core") });
 
   if (mentions.length > 0) {
     const list = mentions
