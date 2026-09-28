@@ -7,6 +7,7 @@ const ui = require("../../../src/config/ui");
 
 module.exports = {
   name: "bounty",
+  isSubcommand: true,
   description: "Papan Buronan & Sayembara Pemburu Kepala (PvP Wanted Board) di Naura Wilds",
 
   async execute(interaction) {

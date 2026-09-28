@@ -105,10 +105,17 @@ class CommandHandler {
       });
 
       for (const filePath of commandFiles) {
+        const normalizedPath = filePath.replace(/\\/g, "/");
+        if (normalizedPath.includes("/subcommands/")) {
+          continue;
+        }
+
         try {
           const absPath = path.resolve(filePath);
           delete require.cache[require.resolve(absPath)];
           const command = require(absPath);
+
+          if (command.isSubcommand) continue;
 
           // Pastikan file tersebut adalah command yang valid
           if (
@@ -314,6 +321,21 @@ class CommandHandler {
         `[DEPLOY] Sinkronisasi ${commandsArray.length} slash command ke Discord...`,
       );
 
+      // Pre-flight check ukuran payload untuk setiap command (Batas Discord: 8000 bytes)
+      for (let i = 0; i < commandsArray.length; i++) {
+        const cmd = commandsArray[i];
+        const cmdSize = JSON.stringify(cmd).length;
+        if (cmdSize >= 8000) {
+          logger.error(
+            `[DEPLOY ERROR] Command "/${cmd.name}" (index #${i}) berukuran ${cmdSize} bytes, MELEBIHI batas Discord API (8000 bytes)!`,
+          );
+        } else if (cmdSize >= 7000) {
+          logger.warn(
+            `[DEPLOY WARNING] Command "/${cmd.name}" (index #${i}) berukuran ${cmdSize} bytes mendekati batas maksimal 8000 bytes.`,
+          );
+        }
+      }
+
       // 1. Daftar secara Global (agar tersedia di semua server, walau ada cache delay)
       await rest.put(Routes.applicationCommands(clientId), {
         body: commandsArray,
@@ -342,6 +364,15 @@ class CommandHandler {
 
       return true;
     } catch (error) {
+      if (error.rawError && error.rawError.errors) {
+        for (const [key, val] of Object.entries(error.rawError.errors)) {
+          const offendingCmd = commandsArray[parseInt(key)];
+          logger.error(
+            `[DEPLOY DETAIL] Galat pada command index #${key} (/${offendingCmd?.name || "unknown"}):`,
+            JSON.stringify(val),
+          );
+        }
+      }
       // Penanda sengaja tidak ditulis saat gagal, supaya boot berikutnya
       // mencoba lagi alih-alih menganggap deploy sudah beres.
       logger.error("[DEPLOY] Gagal menyinkronkan slash command:", error);

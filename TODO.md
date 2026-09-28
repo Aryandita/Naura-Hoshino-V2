@@ -38,6 +38,18 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 > **Kriteria:** Mempengaruhi integritas data, keamanan saldo/ekonomi, stabilitas koneksi WebSocket, dan pencegahan eksploitasi sistem.
 
+- [x] **[BUG - APPLICATION_COMMAND_TOO_LARGE] Pengecilan & Pemecahan Payload Slash Command Melebihi Batas Discord API (8000 Bytes)**
+  - Mengatasi galat deploy `DiscordAPIError[50035]: Invalid Form Body 43[APPLICATION_COMMAND_TOO_LARGE]: Command exceeds maximum size (8000)`.
+  - Memecah command raksasa `/survival` (13.422 bytes) menjadi dua command modular terpisah: `/survival` (eksplorasi & kelangsungan hidup) dan `/rpg` (sistem RPG, perkumpulan klan, crafting & dungeon).
+  - Mengintegrasikan modul `commandOptimizer.js` untuk memangkas deskripsi subcommand panjang menjadi ringkas dan padat.
+  - Menambahkan pre-flight check payload size di `CommandHandler.deploy()` dan pelacak galat per-command `error.rawError.errors`.
+  - File: [`plugin/survival/survival.js`](plugin/survival/survival.js), [`plugin/survival/rpg.js`](plugin/survival/rpg.js), [`src/utils/commandOptimizer.js`](src/utils/commandOptimizer.js), [`src/managers/CommandHandler.js`](src/managers/CommandHandler.js).
+- [x] **[BUG - MUSIC_INVALID_ARRAY_LENGTH] Pemulihan Batas Subcommand & Separasi Radio Host (`plugin/music/music.js`)**
+  - Mengatasi galat fatal `💥 ERROR [COMMANDS] Gagal memuat file command music.js: Invalid Array length`.
+  - Discord API membatasi maksimal 25 options/subcommands per root command, sedangkan `music.js` sebelumnya memuat 26 subcommands.
+  - Memisahkan subcommand `radio` menjadi command tersendiri [`plugin/music/radio.js`](plugin/music/radio.js) sehingga `music.js` kembali ke batas aman 24 subcommands tanpa mengurangi fungsionalitas audio bot.
+  - File: [`plugin/music/music.js`](plugin/music/music.js), [`plugin/music/radio.js`](plugin/music/radio.js).
+
 - [x] **[3D KINEMATICS] Integrasi RigProfile & GLTF Humanoid Bone/Morph Adapter (`naura_animasi_fix.zip`)**
   - Mengintegrasikan modul jembatan `core/rigProfile.js` (`buildHumanoidBones`, `GlbExpressionRig`) untuk memetakan nama bone GLB (`RightArm`, `LeftArm`) ke format humanoid, mengonversi morph targets (`Happy`, `Thinking`, `Sad`, `Angry`, `Blink`, `Talk`), serta menyelaraskan sumbu rotasi rig (+X facing).
   - Memperbarui 10 sequence keyframe gerak agar pose lengan, kepala, dan ekspresi terkonvergensi mulus pada model `Naura_Hoshino_3D_NEW.glb`.
@@ -118,6 +130,12 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 ## 🔥 2. KATEGORI: TINGGI (Prioritas Kedua setelah Kritis)
 
 > **Kriteria:** Fitur arsitektur inti, pengalaman pengguna utama, visualisasi sistem, dan retensi musiman.
+
+- [x] **[BUG - DUPLICATE_COMMAND_BOUNTY] Proteksi Cross-Platform Folder Subcommands & Duplikasi Command `/bounty`**
+  - Mengatasi peringatan `⚠️ WARNING [COMMANDS] Duplikat command "/bounty" pada file bounty.js. File dilewati`.
+  - Di lingkungan Linux/container Pterodactyl, pemindaian file sempat memuat file `plugin/survival/subcommands/bounty.js` sebagai root command karena memiliki properti `name: "bounty"` dan `execute()`, sehingga bentrok dengan `plugin/utility/bounty.js`.
+  - Menambahkan penanda eksplisit `isSubcommand: true` pada `plugin/survival/subcommands/bounty.js` serta filter ketat `normalizedPath.includes("/subcommands/")` dan `command.isSubcommand` di `CommandHandler.js` untuk mencegah file subcommand termuat sebagai root command di seluruh sistem operasi.
+  - File: [`plugin/survival/subcommands/bounty.js`](plugin/survival/subcommands/bounty.js), [`src/managers/CommandHandler.js`](src/managers/CommandHandler.js).
 
 - [x] **[FITUR BARU] Interactive Family Parenting & Apprentice System (`UserChild.js` & `/survival family`)**
   - Menghubungkan model Sequelize `UserChild.js` pasca Parenthood Event: status vital anak (`happiness`, `hunger`, `level`, `xp`), interaksi harian memberi makan (`feed`), membimbing belajar (`teach`), dan tahapan pertumbuhan (Toddler -> Anak -> Murid Magang).
@@ -245,6 +263,11 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 > **Kriteria:** Fitur reguler yang memperkaya ekosistem komunitas dan gameplay RPG. Dapat dikerjakan kapan pun tanpa mengganggu operasional bot.
 
+- [x] **[BUG - SURVIVAL_ZERO_VITALS_DEAD_END] Auto-Healing & Safe Fallback Vitals Status Fisik 0 pada Profil Survival**
+  - Mendiagnosis dan menangani anomali status fisik (Health/Hunger/Thirst) bernilai 0 di database yang menyebabkan pengguna tidak dapat beraktivitas (dead-end).
+  - Menambahkan sanitasi pemulihan pada pemuatan profil survival: jika seluruh status vital bernilai 0, sistem otomatis mereset status ke batas aman minimal (HP 50, Thirst 50, Hunger 50) dengan notifikasi pemulihan.
+  - File: [`src/survival/helpers/survivalProfileHelper.js`](src/survival/helpers/survivalProfileHelper.js), [`plugin/survival/subcommands/status.js`](plugin/survival/subcommands/status.js).
+
 - [x] **[FITUR BARU] Dynamic World Weather & Seasonal Natural Hazards (`worldWeatherEngine.js` & `/survival status`)**
   - Menambahkan siklus cuaca dunia yang berotasi setiap 6 jam: Hujan Lebat (bonus panen kebun +30%, konsumsi stamina hutan +20%), Badai Petir (resiko sambaran di tambang terbuka, keausan alat +25%), Kabut Pasir Gurun Khul'Khas (peluang menemukan reruntuhan langka x2), dan Terik Matahari (kehausan berkurang 2x lebih cepat).
   - Menampilkan status cuaca aktif pada kartu profil petualang `/survival status`, visual canvas banner cuaca, dan telemetri Web Dashboard.
@@ -364,6 +387,11 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 ## ✨ 4. KATEGORI: OPTIONAL (Prioritas Opsional)
 
 > **Kriteria:** Penambahan estetika, kosmetik, dan eksplorasi fitur eksperimental jangka panjang. Tidak berpengaruh pada kestabilan bot jika dilewati.
+
+- [x] **[BUG - EMBED_FOOTER_VERSION_MISMATCH] Sinkronisasi Versi Realistis Footer Embed & Anti-Slop Format**
+  - Memperbaiki inkonsistensi versi hardcoded pada footer embed dan Components V2 di seluruh plugin dan helper.
+  - Mengintegrasikan helper `ui.formatFooter()` dan konstanta versi resmi bot (`BOT_VERSION` v2.3.0) serta membersihkan format footer dari redundansi teks generik (anti-slop).
+  - File: [`src/config/ui.js`](src/config/ui.js), [`src/utils/NauraContainerBuilder.js`](src/utils/NauraContainerBuilder.js).
 
 - [x] **[FITUR BARU] AI Dynamic Radio Host & Voice Track Announcements (`aiDjManager.js` / `/music radio`)**
   - Menghidupkan kepribadian penyiar radio cerdas pada AI Smart DJ: Naura menyapa nama pendengar di voice channel, menceritakan trivia musisi lagu berikutnya, dan meredupkan volume musik (*audio ducking* ke 15%) saat berbicara sebelum menaikkan kembali ke 100%.
