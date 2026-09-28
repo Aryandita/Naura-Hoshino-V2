@@ -177,7 +177,13 @@ async function sendError(
 
     return msg;
   } catch (e) {
-    logger.error("[UI SendError]", e);
+    if (e?.name === "AbortError" || e?.code === "ABORT_ERR") {
+      logger.warn(
+        "[UI] Pengiriman interaksi dibatalkan karena timeout Discord API (AbortError).",
+      );
+    } else {
+      logger.error("[UI SendError]", e);
+    }
   }
 }
 

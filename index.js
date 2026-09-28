@@ -65,6 +65,7 @@ const client = new Client({
   // memori bisa diaudit di satu tempat, bukan tersebar di pemanggilan Client.
   makeCache: clientOptions.makeCache,
   sweepers: clientOptions.sweepers,
+  rest: clientOptions.rest,
   ...(isClusterChild
     ? {
         shards: Cluster.data.SHARD_LIST,

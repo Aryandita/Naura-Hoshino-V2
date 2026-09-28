@@ -271,11 +271,22 @@ Seluruh agen AI dan kontributor wajib merujuk pada pilar dokumentasi yang tepat 
 | [`.agents/skills/naura-dev/SKILL.md`](.agents/skills/naura-dev/SKILL.md) | **Workspace Skill Naura Dev** | Prosedur cepat eksekusi subagent untuk development bot. |
 | [`.agents/skills/i-have-adhd/SKILL.md`](.agents/skills/i-have-adhd/SKILL.md) | **ADHD-Friendly Output Skill** | Panduan format respon AI coding: action-first, bernomor, tanpa basa-basi. |
 | [`.agents/skills/strix/SKILL.md`](.agents/skills/strix/SKILL.md) | **Strix Security Audit Skill** | Triase kerentanan AI, validasi PoC, dan eliminasi false positive. |
+| [`.agents/skills/ponytail/SKILL.md`](.agents/skills/ponytail/SKILL.md) | **Ponytail Lazy Senior Dev** | YAGNI ladder: pangkas kode berlebih, utamakan helper native Naura. |
+| [`.agents/skills/test-driven-development/SKILL.md`](.agents/skills/test-driven-development/SKILL.md) | **TDD Engineering Skill** | Siklus red-green-refactor untuk menjaga 254 test selalu 100% hijau. |
+| [`.agents/skills/code-review-and-quality/SKILL.md`](.agents/skills/code-review-and-quality/SKILL.md) | **Code Review & Quality** | Review multi-axis (arsitektur, sekuriti, performa) sebelum QA gate. |
+| [`.agents/skills/code-simplification/SKILL.md`](.agents/skills/code-simplification/SKILL.md) | **Code Simplification** | Refactoring kejernihan kode tanpa mengubah fungsionalitas. |
+| [`.agents/skills/frontend-ui-engineering/SKILL.md`](.agents/skills/frontend-ui-engineering/SKILL.md) | **Frontend UI Engineering** | Standar UI komponen web dashboard Vite dan Three.js 3D viewer. |
+| [`.agents/skills/security-and-hardening/SKILL.md`](.agents/skills/security-and-hardening/SKILL.md) | **Security & Hardening** | Sanitasi input Discord, parameterize query DB, dan proteksi OWASP. |
+| [`.agents/skills/design-taste-frontend/SKILL.md`](.agents/skills/design-taste-frontend/SKILL.md) | **Taste Skill Frontend** | Anti-slop layout, micro-motion, bento grid, dan tipografi kontras. |
+| [`.agents/skills/stitch-design-taste/SKILL.md`](.agents/skills/stitch-design-taste/SKILL.md) | **Stitch Semantic Design** | Penegak standar sistem DESIGN.md, spring physics, dan layout asimetris. |
 
 <!-- antislop:start -->
 ## 🛡️ Anti-Slop (Filter Desain & Copy AI)
 Untuk pembuatan/perombakan UI, penulisan copy, evaluasi aksesibilitas, responsive layout, atau komentar kode, rujuk `antislop.md` (core filter) dan skill terkait:
-- UI & Visual: `.agents/skills/antislop-ui/SKILL.md`
+- UI & Visual: `.agents/skills/antislop-ui/SKILL.md`, `.agents/skills/design-taste-frontend/SKILL.md`, `.agents/skills/high-end-visual-design/SKILL.md`
+- Redesign & Audit: `.agents/skills/redesign-existing-projects/SKILL.md`, `.agents/skills/minimalist-ui/SKILL.md`
+- Semantic Design System: `.agents/skills/stitch-design-taste/SKILL.md` (standar DESIGN.md)
+- Output Integrity: `.agents/skills/full-output-enforcement/SKILL.md`
 - Copy & Teks: `.agents/skills/antislop-copywriting/SKILL.md`
 - Aksesibilitas & Kontras: `.agents/skills/antislop-human/SKILL.md`
 - Tata Letak Mobile & Responsif: `.agents/skills/antislop-layoutmobile/SKILL.md`
@@ -283,4 +294,29 @@ Untuk pembuatan/perombakan UI, penulisan copy, evaluasi aksesibilitas, responsiv
 - Gaya Respon Efisien: `.agents/skills/i-have-adhd/SKILL.md`
 Sebelum memulai pekerjaan UI, tanyakan kepada pengguna mode kerja antislop yang diinginkan: DURING (saat proses kerja) atau AFTER (audit setelah selesai).
 <!-- antislop:end -->
+
+<!-- slash-commands:start -->
+## ⚡ 9. Daftar Slash Commands & Shortcut Skill Agent (Workspace Trigger)
+
+Pengguna dapat memanggil skill secara instan di chat Antigravity menggunakan prefix slash (`/`). Agen AI WAJIB langsung membaca dan mengaktifkan file skill terkait saat mendeteksi perintah berikut:
+
+| Slash Command | File Skill Target | Tanggung Jawab & Fungsi Utama |
+| :--- | :--- | :--- |
+| `/i-have-adhd` atau `/adhd` | [`.agents/skills/i-have-adhd/SKILL.md`](.agents/skills/i-have-adhd/SKILL.md) | Format output singkat, action-first, bernomor, dan ramah ADHD. |
+| `/antislop` | [`.agents/skills/antislop/SKILL.md`](.agents/skills/antislop/SKILL.md) | Filter inti pencegah desain dan copy teks generik AI. |
+| `/ponytail` | [`.agents/skills/ponytail/SKILL.md`](.agents/skills/ponytail/SKILL.md) | Mode lazy senior dev: YAGNI ladder, pangkas kode dan token berlebih. |
+| `/ponytail-review` | [`.agents/skills/ponytail-review/SKILL.md`](.agents/skills/ponytail-review/SKILL.md) | Audit kode khusus mencari baris atau dependensi yang bisa dihapus. |
+| `/ponytail-audit` | [`.agents/skills/ponytail-audit/SKILL.md`](.agents/skills/ponytail-audit/SKILL.md) | Audit menyeluruh repo untuk membersihkan bloatware. |
+| `/tdd` atau `/test` | [`.agents/skills/test-driven-development/SKILL.md`](.agents/skills/test-driven-development/SKILL.md) | Siklus red-green-refactor sebelum menulis kode solusi. |
+| `/review` atau `/code-review` | [`.agents/skills/code-review-and-quality/SKILL.md`](.agents/skills/code-review-and-quality/SKILL.md) | Review 5 sumbu (correctness, readability, architecture, security, performance). |
+| `/simplify` atau `/code-simplify` | [`.agents/skills/code-simplification/SKILL.md`](.agents/skills/code-simplification/SKILL.md) | Sederhanakan kode rumit tanpa mengubah perilaku program. |
+| `/security` atau `/audit` | [`.agents/skills/security-and-hardening/SKILL.md`](.agents/skills/security-and-hardening/SKILL.md) | Audit keamanan OWASP, validasi input batas sistem, dan hard protection. |
+| `/taste` atau `/frontend` | [`.agents/skills/design-taste-frontend/SKILL.md`](.agents/skills/design-taste-frontend/SKILL.md) | Terapkan estetika frontend premium, bento grid, dan tipografi kontras. |
+| `/stitch` atau `/design-md` | [`.agents/skills/stitch-design-taste/SKILL.md`](.agents/skills/stitch-design-taste/SKILL.md) | Standar token DESIGN.md, spring physics, dan layout asimetris. |
+| `/minimalist` | [`.agents/skills/minimalist-ui/SKILL.md`](.agents/skills/minimalist-ui/SKILL.md) | Gaya desain clean utilitarian monokromatik ala Linear dan Notion. |
+| `/ui` atau `/component` | [`.agents/skills/frontend-ui-engineering/SKILL.md`](.agents/skills/frontend-ui-engineering/SKILL.md) | Bangun komponen UI web production-ready, aksesibel (WCAG), dan performan. |
+| `/agency` atau `/high-end` | [`.agents/skills/high-end-visual-design/SKILL.md`](.agents/skills/high-end-visual-design/SKILL.md) | Desain visual mewah Awwwards-tier dengan haptic depth dan spatial motion. |
+| `/redesign` | [`.agents/skills/redesign-existing-projects/SKILL.md`](.agents/skills/redesign-existing-projects/SKILL.md) | Tingkatkan kualitas UI yang sudah ada tanpa merusak layout dasar. |
+| `/full-output` | [`.agents/skills/full-output-enforcement/SKILL.md`](.agents/skills/full-output-enforcement/SKILL.md) | Cegah pemotongan kode atau placeholder saat model menghasilkan output panjang. |
+<!-- slash-commands:end -->
 

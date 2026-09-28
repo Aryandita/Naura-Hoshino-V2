@@ -334,6 +334,47 @@ function buildSearchQueries(meta) {
 }
 
 /**
+ * Normalisasi dan bersihkan nama artis dari suffix otomatis YouTube (e.g. - Topic, VEVO).
+ * @param {string} author
+ * @param {string} [title]
+ * @returns {string}
+ */
+function cleanArtistName(author, title = "") {
+  if (!author && !title) return "Unknown Artist";
+  let clean = (author || "").trim();
+
+  // Bersihkan suffix " - Topic" (YouTube auto-generated topic channels)
+  clean = clean.replace(/\s*-\s*Topic$/i, "").trim();
+
+  // Bersihkan suffix "VEVO" jika di akhir nama artis
+  if (/VEVO$/i.test(clean) && clean.length > 4) {
+    clean = clean.replace(/VEVO$/i, "").trim();
+  }
+
+  // Jika author berbentuk channel rekaman/artis tanpa spasi, dan title berformat "Artist - Song Title"
+  if (title && title.includes(" - ")) {
+    const parts = title.split(" - ");
+    const potentialArtist = parts[0].trim();
+    const normClean = clean.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const normPotential = potentialArtist.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+    if (
+      !clean ||
+      normClean === normPotential ||
+      normClean.includes(normPotential) ||
+      normPotential.includes(normClean) ||
+      clean.toLowerCase().includes(potentialArtist.toLowerCase()) ||
+      potentialArtist.toLowerCase().includes(clean.toLowerCase()) ||
+      /official|records|entertainment|music|channel|tv|productions|media/i.test(clean)
+    ) {
+      clean = potentialArtist;
+    }
+  }
+
+  return clean || author || "Unknown Artist";
+}
+
+/**
  * Resolve satu metadata menjadi track Poru playable via pencarian bertahap.
  * @returns {Promise<object|null>} Track Poru pertama yang cocok, atau null.
  */
@@ -342,8 +383,24 @@ async function translateTrack(poru, meta, requester) {
   for (const query of queries) {
     try {
       const res = await poru.resolve({ query, requester });
-      if (res && Array.isArray(res.tracks) && res.tracks.length > 0)
-        return res.tracks[0];
+      if (res && Array.isArray(res.tracks) && res.tracks.length > 0) {
+        const track = res.tracks[0];
+        if (track && track.info) {
+          if (Array.isArray(meta.artists) && meta.artists.length > 0) {
+            track.info.author = meta.artists.join(", ");
+          } else if (meta.artists && typeof meta.artists === "string") {
+            track.info.author = meta.artists;
+          }
+          if (meta.name) {
+            track.info.title = meta.name;
+          }
+          if (meta.artworkUrl) {
+            track.info.image = meta.artworkUrl;
+          }
+          track.info.originalSource = "spotify";
+        }
+        return track;
+      }
     } catch (e) {
       // Kegagalan satu pencarian bukan error fatal; coba query berikutnya.
     }
@@ -355,7 +412,12 @@ async function translateTrack(poru, meta, requester) {
 function stampSpotify(result, source) {
   result.pluginInfo = Object.assign({}, result.pluginInfo, { source });
   for (const track of result.tracks || []) {
-    if (track && track.info) track.info.originalSource = "spotify";
+    if (track && track.info) {
+      track.info.originalSource = "spotify";
+      if (track.info.author) {
+        track.info.author = cleanArtistName(track.info.author, track.info.title);
+      }
+    }
   }
   return result;
 }
@@ -448,5 +510,6 @@ module.exports = {
   fetchFallbackMetadata,
   buildSearchQueries,
   translateTrack,
+  cleanArtistName,
   resolveSpotifyQuery,
 };

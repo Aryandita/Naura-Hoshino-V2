@@ -18,13 +18,43 @@ const FORBIDDEN_PATTERNS = [
   /\bhttp\b/i,
   /\bhttps\b/i,
   /\bimport\b/i,
-  /\bconstructor\s*\.\s*constructor\b/i,
+  /\bconstructor\b/i,
+  /\b__proto__\b/i,
+  /\bprototype\b/i,
   /\bFunction\b/i,
   /\beval\b/i,
   /\bWebSocket\b/i,
   /\bfetch\b/i,
   /\bXMLHttpRequest\b/i,
+  /\bglobalThis\b/i,
+  /\bglobal\b/i,
 ];
+
+// Skrip hardening pre-compiled: memutus rantai Function constructor pada realm VM
+const HARDENING_SCRIPT = new vm.Script(`
+  const FunctionProto = Object.getPrototypeOf(() => {});
+  if (FunctionProto) {
+    try {
+      Object.defineProperty(FunctionProto, "constructor", {
+        value: null,
+        writable: false,
+        configurable: false,
+      });
+    } catch (_) {}
+  }
+
+  for (const C of [Object, Array, String, Number, Boolean, RegExp, Map, Set, Date, Promise, JSON, Math]) {
+    if (C) {
+      try {
+        Object.defineProperty(C, "constructor", {
+          value: null,
+          writable: false,
+          configurable: false,
+        });
+      } catch (_) {}
+    }
+  }
+`);
 
 function sanitizeOutput(val) {
   if (val === undefined) return "undefined";
@@ -58,16 +88,15 @@ async function executeSandboxedCode(rawCode) {
   const trimmedCode = rawCode.trim();
 
   // Validasi awal: cegah penggunaan token atau kata kunci terlarang
-  for (const pattern of FORBIDDEN_PATTERNS) {
-    if (pattern.test(trimmedCode)) {
-      return {
-        success: false,
-        logs: [],
-        result: "null",
-        executionTimeMs: 0,
-        error: `Akses ditolak: Kode mengandung ekspresi yang diblokir demi keamanan (${pattern.toString()}).`,
-      };
-    }
+  const matchedPattern = FORBIDDEN_PATTERNS.find((pattern) => pattern.test(trimmedCode));
+  if (matchedPattern) {
+    return {
+      success: false,
+      logs: [],
+      result: "null",
+      executionTimeMs: 0,
+      error: `Akses ditolak: Kode mengandung ekspresi yang diblokir demi keamanan (${matchedPattern}).`,
+    };
   }
 
   const capturedLogs = [];
@@ -77,7 +106,7 @@ async function executeSandboxedCode(rawCode) {
     capturedLogs.push(line.substring(0, 300));
   };
 
-  // Konteks sandbox dengan intrinsic bersih
+  // Konteks sandbox dengan intrinsic bersih (V8 menyediakan intrinsik standar secara otomatis)
   const sandboxContext = {
     console: {
       log: appendLog,
@@ -85,28 +114,11 @@ async function executeSandboxedCode(rawCode) {
       warn: appendLog,
       error: appendLog,
     },
-    Math,
-    Date,
-    JSON,
-    Array,
-    Object,
-    String,
-    Number,
-    Boolean,
-    RegExp,
-    Map,
-    Set,
-    parseInt,
-    parseFloat,
-    isNaN,
-    isFinite,
-    encodeURI,
-    decodeURI,
-    encodeURIComponent,
-    decodeURIComponent,
   };
 
   const context = vm.createContext(sandboxContext);
+  HARDENING_SCRIPT.runInContext(context);
+
   const wrappedCode = `"use strict";\n(() => {\n${trimmedCode}\n})()`;
 
   const startTime = performance.now();
@@ -121,11 +133,10 @@ async function executeSandboxedCode(rawCode) {
     });
   } catch (execErr) {
     const executionTimeMs = Math.round(performance.now() - startTime);
-    let errorMessage = execErr.message || String(execErr);
-
-    if (execErr.code === "ERR_SCRIPT_EXECUTION_TIMEOUT") {
-      errorMessage = `Batas waktu eksekusi (${MAX_EXECUTION_TIME_MS}ms) terlampaui. Kemungkinan terdapat infinite loop atau kalkulasi terlalu berat.`;
-    }
+    const errorMessage =
+      execErr.code === "ERR_SCRIPT_EXECUTION_TIMEOUT"
+        ? `Batas waktu eksekusi (${MAX_EXECUTION_TIME_MS}ms) terlampaui. Kemungkinan terdapat infinite loop atau kalkulasi terlalu berat.`
+        : execErr.message || String(execErr);
 
     return {
       success: false,

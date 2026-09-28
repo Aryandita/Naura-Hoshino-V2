@@ -156,6 +156,9 @@ function resolveBalances(survival, profile) {
 }
 
 async function buildStats({ userId, profile, survival, activePets }) {
+  const { checkAndRescueDeadEnd } = require("./survivalVitals");
+  const rescueResult = await checkAndRescueDeadEnd(userId, survival);
+
   const rpgState = survival.rpg_state || {};
   const inventory = safeParseInventory(profile.inventory);
 
@@ -263,6 +266,7 @@ async function buildStats({ userId, profile, survival, activePets }) {
     mainObjective,
     friendshipBuffs,
     spouseInfo,
+    rescueResult,
   };
 }
 

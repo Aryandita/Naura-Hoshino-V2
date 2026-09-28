@@ -482,7 +482,13 @@ class MusicUIManager {
         generatePayload: generatePayload,
       });
     } catch (error) {
-      logger.error("\x1b[41m\x1b[37m ⚠️ UI ERROR \x1b[0m", error);
+      if (error?.name === "AbortError" || error?.code === "ABORT_ERR") {
+        logger.warn(
+          "[MusicUI] Pengiriman panel kontrol musik dibatalkan karena timeout Discord API.",
+        );
+      } else {
+        logger.error("\x1b[41m\x1b[37m ⚠️ UI ERROR \x1b[0m", error);
+      }
     }
   }
 

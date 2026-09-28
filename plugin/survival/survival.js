@@ -51,14 +51,15 @@ module.exports = {
     const cmd = subcommands.get(subCommandName);
     if (cmd && typeof cmd.autocomplete === "function") {
       try {
-        await cmd.autocomplete(interaction, client);
+        return await cmd.autocomplete(interaction, client);
       } catch (error) {
-        // Ignore autocomplete errors silently
-        interaction.respond([]).catch(() => {});
+        // Fallback ke choices dinamis bila terjadi kesalahan
       }
-    } else {
-      interaction.respond([]).catch(() => {});
     }
+    if (typeof data.handleDynamicAutocomplete === "function") {
+      return await data.handleDynamicAutocomplete(interaction);
+    }
+    return interaction.respond([]).catch(() => {});
   },
 
   async execute(interaction) {

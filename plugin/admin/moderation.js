@@ -295,7 +295,10 @@ module.exports = {
         footerText: ui.getFooter("core"),
       });
 
-      await interaction.reply({ ...confirmPayload, ephemeral: false });
+      await interaction.reply({
+        ...confirmPayload,
+        flags: MessageFlags.IsComponentsV2,
+      });
 
       const filter = (m) =>
         m.author.id === interaction.user.id && m.content === "CONFIRM";

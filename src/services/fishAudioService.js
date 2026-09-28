@@ -34,6 +34,8 @@ class FishAudioService {
     this.requestTimestamps = [];
     this.maxRequestsPerWindow = 6;
     this.windowMs = 10_000;
+    this.creditCooldownUntil = 0;
+    this.creditWarningLogged = false;
   }
 
   /**
@@ -110,6 +112,10 @@ class FishAudioService {
       return null;
     }
 
+    if (this.creditCooldownUntil && Date.now() < this.creditCooldownUntil) {
+      return null;
+    }
+
     if (!text || typeof text !== "string" || text.trim().length === 0) {
       return null;
     }
@@ -165,6 +171,17 @@ class FishAudioService {
       });
 
       if (!response.ok) {
+        if (response.status === 402) {
+          this.creditCooldownUntil = Date.now() + 3600_000;
+          if (!this.creditWarningLogged) {
+            this.creditWarningLogged = true;
+            logger.warn(
+              "[FishAudio] Saldo API credit habis (HTTP 402 Insufficient Credit). Layanan TTS Fish Audio dinonaktifkan sementara selama 1 jam. Silakan isi saldo di https://fish.audio/app/developers.",
+            );
+          }
+          return null;
+        }
+
         const errBody = await response.text().catch(() => "");
         logger.error(
           `[FishAudio] API Error HTTP ${response.status}: ${errBody}`,

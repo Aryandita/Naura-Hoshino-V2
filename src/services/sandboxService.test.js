@@ -26,6 +26,8 @@ test("SandboxService - Forbidden Globals & Security Check", async () => {
     "eval('2 + 2')",
     "const cp = require('child_process');",
     "const f = new Function('return 10');",
+    "return Object.constructor('return 1')();",
+    "return ({}).__proto__;",
   ];
 
   for (const exploit of exploitAttempts) {
@@ -33,6 +35,15 @@ test("SandboxService - Forbidden Globals & Security Check", async () => {
     assert.equal(res.success, false, `Exploit "${exploit}" harus diblokir`);
     assert.match(res.error, /Akses ditolak/, "Harus memuat pesan akses ditolak");
   }
+
+  // Dynamic property bypass test (defeats static regex, caught by runtime context hardening)
+  const dynamicBypass = `
+    const p = String.fromCharCode(112, 114, 111, 99, 101, 115, 115);
+    return (()=>{})['cons' + 'tructor']('return ' + p)().pid;
+  `;
+  const dynamicRes = await sandboxService.executeSandboxedCode(dynamicBypass);
+  assert.equal(dynamicRes.success, false, "Dynamic constructor bypass harus gagal dieksekusi");
+  assert.match(dynamicRes.error, /not a function/, "Harus melempar error is not a function");
 });
 
 test("SandboxService - Infinite Loop Timeout Protection", async () => {

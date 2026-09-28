@@ -337,7 +337,7 @@ async function feedChild(userId) {
     leveledUp = true;
   }
 
-  await child.save();
+  await child.save({ fields: ["hunger", "xp", "level"] });
   return {
     ok: true,
     child: {
@@ -372,7 +372,7 @@ async function teachChild(userId) {
     leveledUp = true;
   }
 
-  await child.save();
+  await child.save({ fields: ["happiness", "xp", "level"] });
   return {
     ok: true,
     child: {

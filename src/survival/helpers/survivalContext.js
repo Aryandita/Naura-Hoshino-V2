@@ -100,12 +100,9 @@ function createMockInteraction({ message, client, subCmdName, args }) {
       });
       loadingMsg = await message.reply(loadingPayload);
     },
-    reply: async (data) => await message.reply(data),
-    editReply: async (data) => {
-      if (loadingMsg) return await loadingMsg.edit(data);
-      return await message.reply(data);
-    },
-    followUp: async (data) => await message.reply(data),
+    reply: (data) => message.reply(data),
+    editReply: (data) => (loadingMsg ? loadingMsg.edit(data) : message.reply(data)),
+    followUp: (data) => message.reply(data),
     options: {
       getSubcommand: () => subCmdName,
       getString: (name) => {

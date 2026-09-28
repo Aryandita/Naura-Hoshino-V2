@@ -26,11 +26,13 @@ const { sequelize } = require("../../src/managers/dbManager");
 const GuildSettings = require("../../src/models/GuildSettings");
 const ui = require("../../src/config/ui");
 const env = require("../../src/config/env");
+const { BOT_VERSION } = require("../../src/config/version");
 const nauraExpression = require("../../src/utils/nauraExpression");
 const {
   buildContainerV2,
   buildLoadingContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
+const { msToTime } = require("../../src/utils/time");
 
 const locales = {
   id: require("../../assets/language/id.json"),
@@ -73,25 +75,6 @@ function face(mood, fallback) {
   return nauraExpression.getEmoji(mood) || ui.getEmoji(mood) || fallback;
 }
 
-// Menangani ms < 1000 agar memunculkan teks "Baru saja mulai"
-function formatUptime(ms) {
-  const sparkle = e("sparkle", "\u2728");
-  if (ms < 1000) return `Baru saja mulai ${sparkle}`;
-
-  const days = Math.floor(ms / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((ms % (1000 * 60)) / 1000);
-
-  const result = [];
-  if (days > 0) result.push(`${days}d`);
-  if (hours > 0) result.push(`${hours}h`);
-  if (minutes > 0) result.push(`${minutes}m`);
-  if (seconds > 0) result.push(`${seconds}s`);
-
-  return result.length > 0 ? result.join(" ") : `Baru saja mulai ${sparkle}`;
-}
-
 function createNavButtons() {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
@@ -115,6 +98,13 @@ function createNavButtons() {
 // ==========================================
 // ROUTER COMMAND UTAMA
 // ==========================================
+async function resolveGuildLanguage(guildId) {
+  if (!guildId) return locales.id;
+  const settings = await GuildSettings.findOne({ where: { guildId } });
+  const langCode = settings?.system?.language || "id";
+  return locales[langCode] || locales.id;
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("core")
@@ -171,9 +161,16 @@ module.exports = {
               { name: "English", value: "en" },
             ),
         ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("partner")
+        .setDescription(
+          "Informasi program partnership komunitas & daftar partner resmi Naura.",
+        ),
     ),
 
-  aliases: ["ping", "stats", "info", "about", "help"],
+  aliases: ["ping", "stats", "info", "about", "help", "partner", "partnership"],
 
   async autocomplete(interaction, client) {
     const { fuzzyFilter } = require("../../src/utils/autocompleteHelper");
@@ -265,32 +262,28 @@ module.exports = {
       },
     };
 
-    const guildId = message.guild ? message.guild.id : null;
-    let langCode = "id";
-    if (guildId) {
-      const settings = await GuildSettings.findOne({ where: { guildId } });
-      if (settings && settings.system && settings.system.language) {
-        langCode = settings.system.language;
-      }
-    }
-    const lang = locales[langCode] || locales["id"];
+    const guildId = message.guild?.id || null;
+    const lang = await resolveGuildLanguage(guildId);
 
     switch (subcommand) {
       case "ping":
-        return await handlePing(mockInteraction, client, lang);
+        return handlePing(mockInteraction, client, lang);
       case "stats":
-        return await handleStats(mockInteraction, client, lang);
+        return handleStats(mockInteraction, client, lang);
       case "info":
-        return await handleInfo(mockInteraction, client, lang);
+        return handleInfo(mockInteraction, client, lang);
       case "about":
-        return await handleAbout(mockInteraction, client, lang);
+        return handleAbout(mockInteraction, client, lang);
+      case "partner":
+      case "partnership":
+        return handlePartner(mockInteraction, client, lang);
       case "help":
-        return await handleHelp(mockInteraction, client, lang);
+        return handleHelp(mockInteraction, client, lang);
       case "language": {
         let newLang = null;
         if (cmdName === "core" && args[1]) newLang = args[1].toLowerCase();
         else if (cmdName !== "core" && args[0]) newLang = args[0].toLowerCase();
-        return await handleLanguage(mockInteraction, guildId, newLang, lang);
+        return handleLanguage(mockInteraction, guildId, newLang, lang);
       }
       default:
         return message.reply(
@@ -304,30 +297,26 @@ module.exports = {
     const subcommand = interaction.options.getSubcommand();
     const client = interaction.client;
 
-    const guildId = interaction.guild ? interaction.guild.id : null;
-    let langCode = "id";
-    if (guildId) {
-      const settings = await GuildSettings.findOne({ where: { guildId } });
-      if (settings && settings.system && settings.system.language) {
-        langCode = settings.system.language;
-      }
-    }
-    const lang = locales[langCode] || locales["id"];
+    const guildId = interaction.guild?.id || null;
+    const lang = await resolveGuildLanguage(guildId);
 
     switch (subcommand) {
       case "ping":
-        return await handlePing(interaction, client, lang);
+        return handlePing(interaction, client, lang);
       case "stats":
-        return await handleStats(interaction, client, lang);
+        return handleStats(interaction, client, lang);
       case "info":
-        return await handleInfo(interaction, client, lang);
+        return handleInfo(interaction, client, lang);
       case "about":
-        return await handleAbout(interaction, client, lang);
+        return handleAbout(interaction, client, lang);
+      case "partner":
+      case "partnership":
+        return handlePartner(interaction, client, lang);
       case "help":
-        return await handleHelp(interaction, client, lang);
+        return handleHelp(interaction, client, lang);
       case "language": {
         const newLang = interaction.options.getString("lang");
-        return await handleLanguage(interaction, guildId, newLang, lang);
+        return handleLanguage(interaction, guildId, newLang, lang);
       }
       default:
         return interaction.reply({
@@ -594,6 +583,42 @@ async function handleStats(interaction, client, lang) {
   const cleanSoftware = lang.STATS_SOFTWARE.replace(/^\u2699\uFE0F?\s*/, "");
   const cleanReach = lang.STATS_REACH.replace(/^\uD83D\uDCC8\s*/, "");
 
+  // Integrasi Telemetri Shard & Cluster
+  const clusterManager = require("../../src/managers/clusterManager");
+  const shardId = clusterManager.getShardIds(client);
+  const totalShards = clusterManager.getTotalShards(client);
+  const memUsage = (process.memoryUsage().rss / 1024 / 1024).toFixed(1);
+
+  let totalGuilds = client.guilds.cache.size;
+  let totalUsers = client.users.cache.reduce(
+    (acc, g) => acc + (g.memberCount || 0),
+    0,
+  );
+
+  if (client.shard) {
+    try {
+      const guildResults = await clusterManager.fetchClientValues(
+        client,
+        "guilds.cache.size",
+      );
+      totalGuilds = guildResults.reduce((acc, count) => acc + count, 0);
+
+      const userResults = await clusterManager.broadcastEval(client, (c) =>
+        c.guilds.cache.reduce((acc, g) => acc + (g.memberCount || 0), 0),
+      );
+      totalUsers = userResults.reduce((acc, count) => acc + count, 0);
+    } catch (_) {
+      // Fallback ke cache lokal
+    }
+  }
+
+  if (totalUsers <= 0) {
+    totalUsers =
+      client.guilds.cache.reduce((acc, g) => acc + (g.memberCount || 0), 0) ||
+      client.users.cache.size;
+  }
+
+  const eShard = e("shard", "\uD83D\uDCDF");
   const statsBanner = ui.getBanner("stats");
 
   const payload = buildContainerV2({
@@ -603,8 +628,18 @@ async function handleStats(interaction, client, lang) {
     iconURL: client.user.displayAvatarURL(),
     fields: [
       {
+        name: `${eShard} TELEMETRI SHARD & CLUSTER`,
+        value:
+          `${dot} **Status Sistem:** \`Online (Stabil)\`\n` +
+          `${dot} **Shard ID:** \`#${shardId} / ${totalShards}\`\n` +
+          `${dot} **Shard Ping:** \`${client.ws.ping} ms\`\n` +
+          `${dot} **Memory RSS:** \`${memUsage} MB\` (Bot: \`${botMem} MB\`)\n` +
+          `${dot} **Total Guilds:** \`${totalGuilds.toLocaleString("id-ID")}\`\n` +
+          `${dot} **Total Users:** \`${totalUsers.toLocaleString("id-ID")}\``,
+      },
+      {
         name: `${eServer} ${cleanServer}`,
-        value: `${dot} **${lang.STATS_PROCESSOR}:** ${eCpu} ${cpuModel} (${cores} Cores)\n${dot} **${lang.STATS_OS}:** ${eServer} ${os.type()} ${os.arch()}\n${dot} **${lang.STATS_UPTIME}:** ${eUptime} ${formatUptime(os.uptime() * 1000)}`,
+        value: `${dot} **${lang.STATS_PROCESSOR}:** ${eCpu} ${cpuModel} (${cores} Cores)\n${dot} **${lang.STATS_OS}:** ${eServer} ${os.type()} ${os.arch()}\n${dot} **${lang.STATS_UPTIME}:** ${eUptime} ${msToTime(os.uptime() * 1000)}`,
       },
       {
         name: `${eRam} ${cleanRam}`,
@@ -612,11 +647,11 @@ async function handleStats(interaction, client, lang) {
       },
       {
         name: `${eSoftware} ${cleanSoftware}`,
-        value: `${dot} **Node.js:** \`${process.version}\`\n${dot} **Discord.js:** \`v${djsVersion}\`\n${dot} **Engine:** \`Naura Core v${env.ENGINE_VERSION || "2.1.0"}\`\n${dot} **Command Plugins:** \`${client.commands ? client.commands.size : 55} Modul Aktif\``,
+        value: `${dot} **Node.js:** \`${process.version}\`\n${dot} **Discord.js:** \`v${djsVersion}\`\n${dot} **Engine:** \`Naura Core v${BOT_VERSION}\`\n${dot} **Command Plugins:** \`${client.commands ? client.commands.size : 55} Modul Aktif\``,
       },
       {
         name: `${eReach} ${cleanReach}`,
-        value: `${dot} **${lang.STATS_GUILDS}:** ${eGuilds} \`${client.guilds.cache.size}\`\n${dot} **${lang.STATS_USERS}:** ${eUsers} \`${client.users.cache.size}\`\n${dot} **${lang.STATS_BOT_UPTIME}:** ${eBotUptime} \`${formatUptime(client.uptime)}\``,
+        value: `${dot} **${lang.STATS_GUILDS}:** ${eGuilds} \`${totalGuilds.toLocaleString("id-ID")}\`\n${dot} **${lang.STATS_USERS}:** ${eUsers} \`${totalUsers.toLocaleString("id-ID")}\`\n${dot} **${lang.STATS_BOT_UPTIME}:** ${eBotUptime} \`${msToTime(client.uptime)}\``,
       },
     ],
     bannerAttachmentName: statsBanner ? "banner.png" : null,
@@ -753,77 +788,12 @@ async function handleAbout(interaction, client, lang) {
     interaction.deferred = true;
   }
 
-  const clusterManager = require("../../src/managers/clusterManager");
-  const shardId = clusterManager.getShardIds(client);
-  const totalShards = clusterManager.getTotalShards(client);
-  const memUsage = (process.memoryUsage().rss / 1024 / 1024).toFixed(1);
-
-  let totalGuilds = client.guilds.cache.size;
-  let totalUsers = client.users.cache.reduce(
-    (acc, g) => acc + (g.memberCount || 0),
-    0,
-  );
-
-  if (client.shard) {
-    try {
-      const guildResults = await clusterManager.fetchClientValues(
-        client,
-        "guilds.cache.size",
-      );
-      totalGuilds = guildResults.reduce((acc, count) => acc + count, 0);
-
-      const userResults = await clusterManager.broadcastEval(client, (c) =>
-        c.guilds.cache.reduce((acc, g) => acc + (g.memberCount || 0), 0),
-      );
-      totalUsers = userResults.reduce((acc, count) => acc + count, 0);
-    } catch (err) {
-      // Fallback ke hitungan cache lokal
-    }
-  }
-
-  if (totalUsers <= 0) {
-    totalUsers =
-      client.guilds.cache.reduce((acc, g) => acc + (g.memberCount || 0), 0) ||
-      client.users.cache.size;
-  }
-
-  const ePower = e("power", "\uD83E\uDD16");
-  const eStats = e("stats", "\uD83D\uDCCA");
-  const eDeveloper = e("admin", "\uD83D\uDC51");
-
-  const eShard = e("shard", "\uD83D\uDCDF");
-  const eMemory = e("memory", "\uD83D\uDCBE");
-  const ePing = e("ping", "\u26A1");
-  const eGuilds = e("guilds", "\uD83C\uDF0D");
-  const eUsers = e("users", "\uD83D\uDC65");
   const eHeart = e("favorite", "\uD83D\uDC96");
-  const ePartner = e("handshake", "\uD83E\uDD1D");
   const eSparkle = e("sparkle", "\u2728");
-  const eStar = e("star", "\u2B50");
-  const eCheck = e("check", "\u2705");
+  const eDeveloper = e("admin", "\uD83D\uDC51");
 
   // Wajah Naura untuk judul: senyum senang saat memperkenalkan diri
   const eAbout = face("happy", "\uD83D\uDC67");
-
-  const sysStatus =
-    `${ePower} **Status Sistem:** Online\n` +
-    `${eShard} **Shard ID:** \`#${shardId} / ${totalShards}\`\n` +
-    `${eMemory} **Memory usage:** \`${memUsage} MB\`\n` +
-    `${ePing} **Shard Ping:** \`${client.ws.ping} ms\`\n` +
-    `${eGuilds} **Total Guilds:** \`${totalGuilds.toLocaleString("id-ID")}\`\n` +
-    `${eUsers} **Total Users:** \`${totalUsers.toLocaleString("id-ID")}\``;
-
-  const partnershipText =
-    `### ${ePartner} **Program Partnership Server Discord**\n` +
-    `Hai para pemilik server! Naura selalu terbuka buat menjalin kerja sama (Partnership) dengan komunitas kalian lho ${eSparkle}. Kita bisa saling bantu mempromosikan dan memajukan server secara sehat!\n\n` +
-    `**${eStar} Benefit Partnership Naura:**\n` +
-    `> ${eCheck} **Promosi Jaringan Server:** Server kamu dipromosikan di jaringan komunitas Naura.\n` +
-    `> ${eCheck} **Fasilitas VIP Gratis:** Akses fitur VIP Premium gratis khusus untuk server partner.\n` +
-    `> ${eCheck} **Dukungan Prioritas:** Bantuan teknis & setup prioritas langsung dari Aryandita.\n\n` +
-    `**${eStar} Syarat & Ketentuan Partnership:**\n` +
-    `> ${eCheck} Memiliki minimal **100+ member aktif** di server Discord kamu.\n` +
-    `> ${eCheck} Mematuhi Discord Terms of Service & Community Guidelines.\n` +
-    `> ${eCheck} Memasang bot Naura Hoshino di server dan bersedia saling mempromosikan.`;
 
   const cleanTitle =
     lang.ABOUT_TITLE.replace(/^\uD83C\uDF80\s*/, "") || "Meet Naura Hoshino!";
@@ -837,10 +807,9 @@ async function handleAbout(interaction, client, lang) {
     iconURL: client.user.displayAvatarURL(),
     description:
       `Konnichiwa! Namaku **Naura Hoshino** ${eHeart}. Aku asisten virtual generasi terbaru buatan **Aryandita** yang dirancang buat nemenin hari-harimu di Discord.\n\n` +
-      `Aku dibuat dengan penuh perhatian supaya terasa hangat, ramah, dan gak kaku selayaknya teman sungguhan! Dari mutar musik jernih 24/7, ngobrol seru bareng AI, petualangan RPG survival, sampai moderasi server, aku siap bantu kamu kapan pun! ${eSparkle}\n\n` +
-      `${partnershipText}`,
+      `Aku dibuat dengan penuh perhatian supaya terasa hangat, ramah, dan menyenangkan selayaknya teman sungguhan! Dari mutar musik jernih 24/7, ngobrol seru bareng AI, petualangan RPG survival, sampai moderasi server, aku siap bantu kamu kapan pun! ${eSparkle}\n\n` +
+      `*Tips: Ingin melihat spesifikasi telemetri shard & sistem? Jalankan \`/core stats\`. Tertarik bekerja sama memajukan server komunitas? Buka program \`/core partner\`.*`,
     fields: [
-      { name: `${eStats} TELEMETRI SHARD & SISTEM`, value: sysStatus },
       {
         name: `🌟 6 PILAR EKOSISTEM UTAMA`,
         value:
@@ -898,6 +867,90 @@ async function handleAbout(interaction, client, lang) {
   }
 
   return interaction.editReply(payload);
+}
+
+// ==========================================
+// 4.5. PARTNERSHIP SYSTEM
+// ==========================================
+async function handlePartner(interaction, client, lang) {
+  if (interaction.deferReply && !interaction.deferred)
+    await interaction.deferReply();
+
+  const ePartner = e("handshake", "\uD83E\uDD1D");
+  const eSparkle = e("sparkle", "\u2728");
+  const eStar = e("star", "\u2B50");
+  const eCheck = e("check", "\u2705");
+  const dot = e("dot", "\u25B6\uFE0F");
+  const eGuild = e("guilds", "\uD83C\uDF10");
+
+  const partnerName = env.PARTNERSHIP || "Belum ada kolaborasi";
+  const partnerDisplay =
+    partnerName && partnerName !== "Belum ada kolaborasi"
+      ? `**${partnerName}**`
+      : "*Belum ada kolaborasi aktif saat ini. Jadilah server partner pertama Naura!*";
+
+  const partnerBanner = ui.getBanner("about") || ui.getBanner("core");
+
+  const partnerButtons = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setLabel("Ajukan Partnership")
+      .setURL(LINKS.SUPPORT)
+      .setStyle(ButtonStyle.Link)
+      .setEmoji(e("support", "\uD83D\uDCAC")),
+    new ButtonBuilder()
+      .setLabel("Web Dashboard")
+      .setURL(LINKS.DASHBOARD)
+      .setStyle(ButtonStyle.Link)
+      .setEmoji(e("dashboard", "\uD83C\uDF10")),
+    new ButtonBuilder()
+      .setLabel("Invite Naura")
+      .setURL(LINKS.INVITE)
+      .setStyle(ButtonStyle.Link)
+      .setEmoji(e("invite", "\uD83D\uDCE9")),
+  );
+
+  const payload = buildContainerV2({
+    accentColorHex: ui.getColor("info") || "#38BDF8",
+    authorName: "Naura Community Partnership",
+    title: `${ePartner} Program Partnership Server & Komunitas`,
+    iconURL: client.user.displayAvatarURL(),
+    description:
+      `Hai para pemilik dan pengurus server! Naura selalu terbuka buat menjalin kerja sama (Partnership) dengan komunitas kalian lho ${eSparkle}. Kita bisa saling bantu mempromosikan dan memajukan server secara sehat, aktif, dan harmonis!`,
+    fields: [
+      {
+        name: `${eStar} BENEFIT PARTNERSHIP NAURA`,
+        value:
+          `> ${eCheck} **Promosi Jaringan Server:** Server kamu dipromosikan di jaringan komunitas resmi Naura.\n` +
+          `> ${eCheck} **Fasilitas VIP Gratis:** Akses fitur VIP Premium gratis khusus untuk server partner aktif.\n` +
+          `> ${eCheck} **Dukungan Prioritas:** Bantuan teknis & setup prioritas langsung dari tim Aryandita.`,
+      },
+      {
+        name: `${eStar} SYARAT & KETENTUAN PARTNERSHIP`,
+        value:
+          `> ${eCheck} Memiliki minimal **100+ member aktif** di server Discord kamu.\n` +
+          `> ${eCheck} Mematuhi Discord Terms of Service & Community Guidelines.\n` +
+          `> ${eCheck} Memasang bot Naura Hoshino di server dan bersedia saling mempromosikan secara berkala.`,
+      },
+      {
+        name: `${eGuild} DAFTAR PARTNER RESMI AKTIF`,
+        value:
+          `${dot} **Partner Saat Ini:** ${partnerDisplay}\n\n` +
+          `Tertarik menjadi partner resmi Naura? Klik tombol **Ajukan Partnership** di bawah untuk bergabung ke Support Server dan membuka tiket kerja sama!`,
+      },
+    ],
+    bannerAttachmentName: partnerBanner ? "banner.png" : null,
+    buttonsRow: partnerButtons,
+    footerText: ui.getFooter("partner"),
+  });
+
+  if (partnerBanner) {
+    payload.files = [
+      new AttachmentBuilder(partnerBanner, { name: "banner.png" }),
+    ];
+  }
+
+  if (interaction.editReply) return interaction.editReply(payload);
+  return interaction.reply(payload);
 }
 
 // ==========================================

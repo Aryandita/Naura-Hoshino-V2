@@ -86,12 +86,16 @@ module.exports = {
     if (message.guild) {
       try {
         const ServerChronicleEngine = require("../ai/serverChronicleEngine");
-        ServerChronicleEngine.recordMessageActivity(
-          message.guild.id,
-          message.author.id,
-          message.author.username,
-          message.content,
-        );
+        if (
+          typeof ServerChronicleEngine?.recordMessageActivity === "function"
+        ) {
+          ServerChronicleEngine.recordMessageActivity(
+            message.guild.id,
+            message.author.id,
+            message.author.username,
+            message.content,
+          );
+        }
 
         settings = await cacheManager.getGuildSettings(message.guild.id);
 

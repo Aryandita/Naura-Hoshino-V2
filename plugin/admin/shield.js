@@ -145,7 +145,7 @@ module.exports = {
 
         settingsRow.settings = currentSettings;
         settingsRow.changed("settings", true);
-        await settingsRow.save();
+        await settingsRow.save({ fields: ["settings"] });
 
         const shieldOnContainer = buildContainerV2({
           accentColorHex: ui.getColor("error") || "#ef4444",
@@ -210,7 +210,7 @@ module.exports = {
 
         settingsRow.settings = currentSettings;
         settingsRow.changed("settings", true);
-        await settingsRow.save();
+        await settingsRow.save({ fields: ["settings"] });
 
         const shieldOffContainer = buildContainerV2({
           accentColorHex: ui.getColor("success") || "#10b981",

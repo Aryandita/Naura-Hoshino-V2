@@ -2083,24 +2083,6 @@ module.exports = {
     )
     .addSubcommand((sub) =>
       sub
-        .setName("radio")
-        .setDescription(
-          "🎙️ AI Dynamic Radio Host & Voice Announcements (Hoshino FM)",
-        )
-        .addStringOption((opt) =>
-          opt
-            .setName("mode")
-            .setDescription("Pilihan mode Radio Host")
-            .setRequired(false)
-            .addChoices(
-              { name: "Aktifkan Radio Host (On)", value: "on" },
-              { name: "Matikan Radio Host (Off)", value: "off" },
-              { name: "Status Radio Host (Status)", value: "status" },
-            ),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
         .setName("duplicates")
         .setDescription(
           "🛡️ Smart Duplicate Track Detection di antrean lagu guild (5 lagu terakhir)",

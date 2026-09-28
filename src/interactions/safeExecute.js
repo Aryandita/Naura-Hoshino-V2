@@ -43,18 +43,16 @@ async function respondError(interaction, message) {
       (containerPayload.flags || MessageFlags.IsComponentsV2) |
       MessageFlags.Ephemeral;
 
-    if (interaction.deferred || interaction.replied) {
-      await interaction.followUp({
-        ...containerPayload,
-        flags: finalFlags,
-      });
-      return;
-    }
-
-    await interaction.reply({
+    const payload = {
       ...containerPayload,
       flags: finalFlags,
-    });
+    };
+
+    if (interaction.deferred || interaction.replied) {
+      await interaction.followUp(payload);
+    } else {
+      await interaction.reply(payload);
+    }
   } catch (error) {
     if (!isIgnorable(error)) {
       logger.warn(
@@ -102,7 +100,9 @@ async function safeExecute(interaction, componentEntry, client) {
     // Tangani auto-defer secara datar (flat structure)
     if (!interaction.replied && !interaction.deferred) {
       if (defer === "reply") {
-        await interaction.deferReply({ ephemeral: ephemeral !== false });
+        await interaction.deferReply({
+          flags: ephemeral !== false ? MessageFlags.Ephemeral : 0,
+        });
       } else if (defer === "update") {
         await interaction.deferUpdate();
       }

@@ -1,27 +1,23 @@
-// Perakit definisi slash command /survival.
-// Seluruh grup subcommand didaftarkan di sini agar survival.js hanya berisi logika.
-
 const { SlashCommandBuilder } = require("discord.js");
 const {
   addGatherGroup,
   addEconomyGroup,
 } = require("../helpers/survivalGroups");
-const { addRpgGroup } = require("../helpers/survivalGroupsRpg");
 const {
   addLifeGroup,
   addProfileGroup,
 } = require("../helpers/survivalGroupsLife");
+const { optimizeCommandBuilder } = require("../helpers/commandOptimizer");
 
-const data = new SlashCommandBuilder()
+const builder = new SlashCommandBuilder()
   .setName("survival")
   .setDescription("Masuk ke dalam dunia Naura RPG - Survival Edition");
 
-// Urutan pendaftaran menentukan urutan tampil di Discord, jadi dipertahankan
-// sama seperti sebelum pemecahan berkas.
-addGatherGroup(data);
-addEconomyGroup(data);
-addRpgGroup(data);
-addLifeGroup(data);
-addProfileGroup(data);
+addGatherGroup(builder);
+addEconomyGroup(builder);
+addLifeGroup(builder);
+addProfileGroup(builder);
+
+const { data } = optimizeCommandBuilder(builder, 2);
 
 module.exports = data;

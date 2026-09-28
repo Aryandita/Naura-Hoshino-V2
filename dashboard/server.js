@@ -148,6 +148,35 @@ module.exports = (client) => {
   webApp.use("/node_modules", express.static(path.join(__dirname, "../node_modules")));
   webApp.get("/health", (req, res) => res.redirect("/api/health"));
 
+  // Sajikan Dashboard Mobile di subpath /mobile
+  webApp.use("/mobile", express.static(path.join(__dirname, "mobile/dist")));
+  webApp.get("/mobile", (req, res) => {
+    const mobileIndex = path.join(__dirname, "mobile/dist/src/pages/index.html");
+    if (fs.existsSync(mobileIndex)) {
+      return res.sendFile(mobileIndex);
+    }
+    res.redirect("/");
+  });
+  webApp.get("/mobile/:page", (req, res) => {
+    const page = req.params.page;
+    if (!/^[a-zA-Z0-9_-]+$/.test(page)) {
+      return res.redirect("/mobile");
+    }
+    const targetPage = path.join(
+      __dirname,
+      "mobile/dist/src/pages",
+      `${page}.html`,
+    );
+    if (fs.existsSync(targetPage)) {
+      return res.sendFile(targetPage);
+    }
+    const mobileIndex = path.join(__dirname, "mobile/dist/src/pages/index.html");
+    if (fs.existsSync(mobileIndex)) {
+      return res.sendFile(mobileIndex);
+    }
+    res.redirect("/mobile");
+  });
+
   // Sajikan berkas model 3D (VRM & GLB) dengan Content-Type model/gltf-binary yang valid
   const setModelMime = (res, filePath) => {
     if (/\.(vrm|glb)$/i.test(filePath)) {

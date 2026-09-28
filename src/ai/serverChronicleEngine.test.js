@@ -2,7 +2,11 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { synthesizeChronicle } = require("./serverChronicleEngine");
+const {
+  synthesizeChronicle,
+  recordMessageActivity,
+  generateChronicleData,
+} = require("./serverChronicleEngine");
 
 test("ServerChronicleEngine - menghasilkan edisi damai saat data kosong", () => {
   const result = synthesizeChronicle({});
@@ -42,4 +46,26 @@ test("ServerChronicleEngine - mencantumkan klan teratas dalam kolom klan", () =>
     topClans: [{ name: "Shadow Guild" }],
   });
   assert.match(result.guildSection, /Shadow Guild/);
+});
+
+test("ServerChronicleEngine - recordMessageActivity menangani parameter kosong dengan aman", async () => {
+  await assert.doesNotReject(async () => {
+    await recordMessageActivity(null, null);
+    await recordMessageActivity("guild_123", "user_456", "tester", "Pesan halo dunia");
+  });
+});
+
+test("ServerChronicleEngine - generateChronicleData menghasilkan struktur koran valid", async () => {
+  const mockGuild = {
+    id: "guild_test_123",
+    name: "Sanctuary Cyber",
+    ownerId: "owner_123",
+    memberCount: 50,
+    iconURL: () => "https://example.com/icon.png",
+  };
+  const data = await generateChronicleData(mockGuild);
+  assert.equal(data.guildName, "Sanctuary Cyber");
+  assert.ok(data.headline);
+  assert.ok(data.topUser);
+  assert.ok(data.date);
 });

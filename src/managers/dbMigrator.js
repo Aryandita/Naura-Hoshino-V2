@@ -299,6 +299,14 @@ const MIGRATIONS = [
     pgSql:
       'ALTER TABLE "user_profiles" ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMPTZ DEFAULT NULL; ALTER TABLE "guild_settings" ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMPTZ DEFAULT NULL; ALTER TABLE "UserSurvivals" ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMPTZ DEFAULT NULL; ALTER TABLE "trade_caravans" ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMPTZ DEFAULT NULL; ALTER TABLE "market_auctions" ADD COLUMN IF NOT EXISTS "deletedAt" TIMESTAMPTZ DEFAULT NULL;',
   },
+  {
+    id: "v45_repair_corrupt_vitals_dead_end",
+    description:
+      "Perbaiki dan pulihkan data vitals (HP, hunger, thirst, stamina) pemain yang korup atau bernilai 0 ke kondisi aman",
+    sql: "UPDATE UserSurvivals SET hp = 100 WHERE hp IS NULL OR hp <= 0; UPDATE UserSurvivals SET hunger = 100 WHERE hunger IS NULL OR hunger <= 0; UPDATE UserSurvivals SET thirst = 100 WHERE thirst IS NULL OR thirst <= 0; UPDATE UserSurvivals SET stamina = 100 WHERE stamina IS NULL OR stamina <= 0;",
+    pgSql:
+      'UPDATE "UserSurvivals" SET "hp" = 100 WHERE "hp" IS NULL OR "hp" <= 0; UPDATE "UserSurvivals" SET "hunger" = 100 WHERE "hunger" IS NULL OR "hunger" <= 0; UPDATE "UserSurvivals" SET "thirst" = 100 WHERE "thirst" IS NULL OR "thirst" <= 0; UPDATE "UserSurvivals" SET "stamina" = 100 WHERE "stamina" IS NULL OR "stamina" <= 0;',
+  },
 ];
 
 /**

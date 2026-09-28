@@ -30,12 +30,7 @@ const JAILBREAK_PATTERNS = [
  */
 function isPromptSafe(text) {
   if (!text) return true;
-  for (const pattern of JAILBREAK_PATTERNS) {
-    if (pattern.test(text)) {
-      return false; // Bahaya!
-    }
-  }
-  return true; // Aman
+  return !JAILBREAK_PATTERNS.some((pattern) => pattern.test(text));
 }
 
 module.exports = {

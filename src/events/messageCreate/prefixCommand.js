@@ -26,7 +26,69 @@ const SUBCOMMAND_WORDS = Object.freeze([
   "set",
   "add",
   "remove",
+  "play",
+  "chat",
+  "imagine",
 ]);
+
+// Pemetaan alias subcommand ke nama subcommand kanonisnya
+const SUBCOMMAND_ALIAS_MAP = Object.freeze({
+  // Music
+  p: "play",
+  play: "play",
+  q: "queue",
+  queue: "queue",
+  np: "nowplaying",
+  nowplaying: "nowplaying",
+  skip: "skip",
+  stop: "stop",
+  pause: "pause",
+  resume: "resume",
+  volume: "volume",
+  vol: "volume",
+  loop: "loop",
+  shuffle: "shuffle",
+  lyrics: "lyrics",
+  ly: "lyrics",
+  radio: "dj",
+  wrapped: "wrapped",
+  profile: "profile",
+
+  // Survival
+  inv: "inventory",
+  i: "inventory",
+  bag: "inventory",
+  w: "work",
+  work: "work",
+  f: "fish",
+  fish: "fish",
+  m: "mine",
+  mine: "mine",
+  c: "chop",
+  chop: "chop",
+  hunt: "dungeon",
+  store: "shop",
+  shop: "shop",
+  bank: "bank",
+  craft: "craft",
+  forge: "forge",
+
+  // RPG
+  dungeon: "dungeon",
+  arena: "arena",
+  duel: "duel",
+  abyss: "abyss",
+  raid: "raid",
+  pass: "pass",
+  quest: "quest",
+  travel: "travel",
+  clan: "clan",
+
+  // AI
+  chat: "chat",
+  img: "imagine",
+  imagine: "imagine",
+});
 
 /**
  * Cari command dari nama atau aliasnya.
@@ -84,7 +146,11 @@ function buildMockInteraction(
   commandArguments,
   loadingMessage,
 ) {
+  let isDeferred = false;
+  let isReplied = false;
+
   const editOrSend = async (payload) => {
+    isReplied = true;
     const normalizedPayload = normalizeMessagePayload(payload);
     if (loadingMessage) {
       try {
@@ -100,6 +166,7 @@ function buildMockInteraction(
     isChatInputCommand: () => true,
     isButton: () => false,
     isStringSelectMenu: () => false,
+    isAutocomplete: () => false,
     commandName: targetCommand.data?.name || commandName,
     user: message.author,
     member: message.member,
@@ -107,6 +174,12 @@ function buildMockInteraction(
     channel: message.channel,
     client,
     createdTimestamp: message.createdTimestamp,
+    get deferred() {
+      return isDeferred;
+    },
+    get replied() {
+      return isReplied;
+    },
 
     // Bahasa pengguna ikut diteruskan supaya terjemahan juga jalan di prefix.
     lang: message.localeLang,
@@ -115,15 +188,21 @@ function buildMockInteraction(
 
     options: {
       getSubcommand: () => commandArguments[0]?.toLowerCase() || null,
+      getSubcommandGroup: () => null,
       getString: () => {
         if (commandArguments.length === 0) return null;
         const argumentTokens = [...commandArguments];
-        if (SUBCOMMAND_WORDS.includes(argumentTokens[0]?.toLowerCase())) {
+        const firstToken = argumentTokens[0]?.toLowerCase();
+        if (
+          SUBCOMMAND_ALIAS_MAP[firstToken] ||
+          SUBCOMMAND_WORDS.includes(firstToken)
+        ) {
           argumentTokens.shift();
         }
         return argumentTokens.join(" ") || null;
       },
       getUser: () => message.mentions.users.first() || null,
+      getMember: () => message.mentions.members?.first() || message.member,
       getInteger: () => {
         const found = commandArguments.find((arg) => !isNaN(parseInt(arg, 10)));
         if (!found) return null;
@@ -169,6 +248,7 @@ function buildMockInteraction(
           ? message.guild?.roles.cache.get(match.replace(/\D/g, "")) || null
           : null;
       },
+      getAttachment: () => message.attachments.first() || null,
     },
 
     reply: editOrSend,
@@ -179,7 +259,9 @@ function buildMockInteraction(
       delete normalizedPayload.ephemeral;
       return await message.channel.send(normalizedPayload);
     },
-    deferReply: async () => {},
+    deferReply: async () => {
+      isDeferred = true;
+    },
     deleteReply: async () => {
       if (loadingMessage) await loadingMessage.delete().catch(() => {});
     },
@@ -297,6 +379,16 @@ module.exports = async function handlePrefixCommand(message, client) {
       }
     } catch {
       // Abaikan bila modul Redis belum siap
+    }
+
+    // Resolusi Subcommand Alias: jika command yang dipanggil adalah alias dari subcommand
+    // (misal: "play", "skip", "inv", "mine", "chat", dll), sisipkan subcommand ke depan commandTokens
+    const mappedSubcommand = SUBCOMMAND_ALIAS_MAP[targetCommandName];
+    if (
+      mappedSubcommand &&
+      commandTokens[0]?.toLowerCase() !== mappedSubcommand
+    ) {
+      commandTokens.unshift(mappedSubcommand);
     }
 
     if (typeof targetCommand.executePrefix === "function") {

@@ -16,14 +16,5 @@
     "secure": true,
     "tier": 3,
     "isPrimaryFallback": false
-  },
-  {
-    "name": "Invert Public Node",
-    "host": "lavalink.invert.tech",
-    "port": 443,
-    "password": "youshallnotpass",
-    "secure": true,
-    "tier": 3,
-    "isPrimaryFallback": false
   }
 ]

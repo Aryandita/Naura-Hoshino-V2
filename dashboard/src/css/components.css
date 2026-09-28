@@ -14,13 +14,19 @@
   -webkit-backdrop-filter: var(--blur-md, blur(16px));
   position: relative;
   overflow: hidden;
+  box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.08)), 0 8px 24px rgba(6, 8, 16, 0.35);
   transition: transform var(--t-base, 200ms ease), border-color var(--t-base, 200ms ease), box-shadow var(--t-base, 200ms ease);
 }
 
 .card-stellar:hover {
-  border-color: var(--border-medium, rgba(255, 255, 255, 0.12));
+  border-color: var(--border-medium, rgba(255, 255, 255, 0.14));
   transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--glass-specular-strong, inset 0 1px 0 0 rgba(255, 255, 255, 0.14)), 0 14px 36px rgba(6, 8, 16, 0.45);
+}
+
+.card-stellar:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), 0 14px 36px rgba(6, 8, 16, 0.45);
 }
 
 .card-stellar-header {
@@ -39,6 +45,7 @@
   display: flex;
   align-items: center;
   gap: var(--sp-2, 8px);
+  text-wrap: balance;
 }
 
 .card-stellar-body {
@@ -64,16 +71,24 @@
   border-radius: var(--r-xl, 18px);
   padding: var(--sp-5, 20px);
   backdrop-filter: var(--blur-md, blur(16px));
+  -webkit-backdrop-filter: var(--blur-md, blur(16px));
   position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--sp-2, 8px);
-  transition: all var(--t-base, 200ms ease);
+  box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.08)), 0 6px 20px rgba(6, 8, 16, 0.25);
+  transition: transform var(--t-base, 200ms ease), border-color var(--t-base, 200ms ease), box-shadow var(--t-base, 200ms ease);
 }
 
 .stat-card-stellar:hover {
   border-color: var(--border-primary, rgba(244, 114, 182, 0.35));
-  box-shadow: 0 8px 24px var(--primary-deep, rgba(244, 114, 182, 0.08));
+  transform: translateY(-2px);
+  box-shadow: var(--glass-specular-primary, inset 0 1px 0 0 rgba(255, 192, 203, 0.2)), 0 10px 28px var(--primary-deep, rgba(244, 114, 182, 0.12));
+}
+
+.stat-card-stellar:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), 0 10px 28px var(--primary-deep, rgba(244, 114, 182, 0.12));
 }
 
 .stat-card-top {
@@ -92,6 +107,7 @@
   font-size: 16px;
   background: var(--primary-dim, rgba(244, 114, 182, 0.15));
   color: var(--primary, #f472b6);
+  box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.08));
 }
 
 .stat-card-icon--cyan {
@@ -116,6 +132,8 @@
   color: var(--text-primary, #f1f5f9);
   line-height: 1.1;
   letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .stat-card-label {
@@ -132,6 +150,7 @@
   gap: 4px;
   padding: 2px 8px;
   border-radius: var(--r-full, 9999px);
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-card-delta--up {
@@ -157,6 +176,8 @@
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-secondary, #94a3b8);
   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.07));
+  box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.06));
+  transition: transform var(--t-fast, 150ms ease), border-color var(--t-fast, 150ms ease), background-color var(--t-fast, 150ms ease);
 }
 
 .badge-stellar--online {
@@ -200,6 +221,23 @@
   color: var(--text-primary, #f1f5f9);
   font-size: 13px;
   font-weight: 500;
+  box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.06));
+  cursor: pointer;
+  transition: transform var(--t-fast, 150ms ease), border-color var(--t-fast, 150ms ease), background-color var(--t-fast, 150ms ease), box-shadow var(--t-fast, 150ms ease);
+}
+
+.pill-stellar:hover {
+  background: var(--bg-surface-hv, rgba(255, 255, 255, 0.07));
+  border-color: var(--border-medium, rgba(255, 255, 255, 0.14));
+}
+
+.pill-stellar:active {
+  transform: scale(0.97);
+}
+
+.pill-stellar:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 /* ─── 4. Uptime Bar Komponen ─── */
@@ -377,6 +415,11 @@
   transform: translateY(-1px);
 }
 
+.error-state-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
 .empty-state-card {
   display: flex;
   flex-direction: column;
@@ -421,6 +464,12 @@
   color: var(--primary, #f472b6);
 }
 
+.breadcrumb-item:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 4px;
+}
+
 .breadcrumb-item.active {
   color: var(--text-primary, #f1f5f9);
   font-weight: 600;
@@ -434,7 +483,7 @@
 
 /* ─── 8. Feed Item Komponen ─── */
 .feed-item {
-  background: linear-gradient(180deg, rgba(20, 26, 46, 0.6) 0%, rgba(10, 14, 26, 0.75) 100%);
+  background: linear-gradient(180deg, rgba(16, 22, 38, 0.7) 0%, rgba(10, 14, 26, 0.85) 100%);
   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
   border-radius: var(--r-lg, 14px);
   padding: 12px 16px;
@@ -443,12 +492,18 @@
   gap: 14px;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  transition: transform var(--t-fast, 150ms ease), border-color var(--t-fast, 150ms ease);
+  box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.06)), 0 4px 16px rgba(4, 7, 18, 0.3);
+  transition: transform var(--t-fast, 150ms ease), border-color var(--t-fast, 150ms ease), box-shadow var(--t-fast, 150ms ease);
 }
 
 .feed-item:hover {
   transform: translateX(4px);
   border-color: var(--border-primary, rgba(244, 114, 182, 0.35));
+  box-shadow: var(--glass-specular-primary, inset 0 1px 0 0 rgba(255, 192, 203, 0.15)), 0 6px 20px rgba(4, 7, 18, 0.4);
+}
+
+.feed-item:active {
+  transform: translateX(2px) scale(0.99);
 }
 
 .feed-icon {
@@ -491,6 +546,7 @@
   font-family: var(--font-mono, monospace);
   font-size: 10px;
   color: var(--text-muted, #475569);
+  font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
 
@@ -516,7 +572,7 @@
   padding: 12px 16px;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.08)), 0 12px 36px rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -602,6 +658,12 @@
 
 .naura-toast-close:hover {
   color: var(--text-primary, #f1f5f9);
+}
+
+.naura-toast-close:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 4px;
 }
 
 /* ─── 10. Command Palette Modal (Ctrl+K) ─── */
@@ -719,6 +781,15 @@
   padding-left: 11px;
 }
 
+.palette-item:active {
+  transform: scale(0.99);
+}
+
+.palette-item:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
 .palette-item-icon {
   width: 28px;
   height: 28px;
@@ -758,6 +829,7 @@
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-muted, #94a3b8);
+  font-variant-numeric: tabular-nums;
 }
 
 .palette-footer {
@@ -790,6 +862,7 @@
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
+  box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.06));
   transition: all var(--t-fast, 150ms ease);
 }
 
@@ -797,6 +870,15 @@
   background: var(--color-surface-glass-hover, rgba(255, 255, 255, 0.08));
   color: var(--text-primary, #f1f5f9);
   border-color: var(--primary, #f472b6);
+}
+
+.theme-switcher-pill:active {
+  transform: scale(0.96);
+}
+
+.theme-switcher-pill:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .theme-switcher-pill i {

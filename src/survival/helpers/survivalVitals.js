@@ -149,9 +149,65 @@ function buildVitalsSummaryLine(survival, customMaxHp = null) {
   return `❤️ HP **${hp}/${maxHp}** \u2022 ⚡ Stamina **${stamina}/100** \u2022 🍖 Lapar **${hunger}/100** \u2022 💧 Haus **${thirst}/100**`;
 }
 
+/**
+ * Memeriksa apakah pemain mengalami kondisi dead-end (sekarat/mati total dengan HP <= 0
+ * atau seluruh status fisik 0) dan melakukan penyelamatan medis darurat (Emergency Rescue).
+ *
+ * Mencegah pemain terjebak dalam kondisi dead-end di mana mereka tidak bisa bekerja,
+ * tidak bisa mengumpulkan bahan, dan tidak bisa beristirahat.
+ *
+ * @param {string} userId - ID Discord User
+ * @param {object} survival - Objek data survival saat ini
+ * @returns {Promise<{ rescued: boolean, survival: object, reason: string|null }>}
+ */
+async function checkAndRescueDeadEnd(userId, survival) {
+  if (!survival || !userId) return { rescued: false, survival, reason: null };
+
+  const currentHp = Number(survival.hp ?? 100);
+  const currentHunger = Number(survival.hunger ?? 100);
+  const currentThirst = Number(survival.thirst ?? 100);
+  const currentStamina = Number(survival.stamina ?? 100);
+
+  // Kondisi Dead-End: HP <= 0 ATAU (semua 4 status vital <= 0) ATAU (HP <= 5 dan stamina/hunger/thirst habis)
+  const isDeadEnd =
+    currentHp <= 0 ||
+    (currentHp <= 5 &&
+      currentHunger <= 0 &&
+      currentThirst <= 0 &&
+      currentStamina <= 0) ||
+    (currentHunger <= 0 &&
+      currentThirst <= 0 &&
+      currentStamina <= 0 &&
+      currentHp <= 10);
+
+  if (!isDeadEnd) {
+    return { rescued: false, survival, reason: null };
+  }
+
+  const maxHp = leveling.calculateMaxHp(survival);
+  const safeHp = Math.max(50, Math.round(maxHp * 0.5));
+  const safeVitals = {
+    hp: safeHp,
+    hunger: 50,
+    thirst: 50,
+    stamina: 50,
+    currentLocation: "desa",
+  };
+
+  await cacheManager.updateUserSurvival(userId, safeVitals);
+  Object.assign(survival, safeVitals);
+
+  return {
+    rescued: true,
+    survival,
+    reason: currentHp <= 0 ? "fainted" : "exhaustion",
+  };
+}
+
 module.exports = {
   drainVitals,
   recoverVitals,
   checkVitalThresholds,
   buildVitalsSummaryLine,
+  checkAndRescueDeadEnd,
 };

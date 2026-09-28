@@ -91,3 +91,46 @@ test("survivalVitals - drainVitals and recoverVitals with mock cache", async (t)
   assert.strictEqual(recRes.stamina, 90);
   assert.strictEqual(recRes.hp, 135);
 });
+
+test("survivalVitals - checkAndRescueDeadEnd rescues player in total dead-end state", async (t) => {
+  const originalUpdateUserSurvival = cacheManager.updateUserSurvival;
+  t.after(() => {
+    cacheManager.updateUserSurvival = originalUpdateUserSurvival;
+  });
+
+  let updatedData = null;
+  cacheManager.updateUserSurvival = async (userId, data) => {
+    updatedData = data;
+    return true;
+  };
+
+  const deadEndSurvival = {
+    survival_level: 1,
+    hp: 0,
+    hunger: 0,
+    thirst: 0,
+    stamina: 0,
+    currentLocation: "hutan",
+  };
+
+  const rescueRes = await survivalVitals.checkAndRescueDeadEnd("deadUser", deadEndSurvival);
+  assert.strictEqual(rescueRes.rescued, true);
+  assert.strictEqual(deadEndSurvival.hp >= 50, true);
+  assert.strictEqual(deadEndSurvival.hunger, 50);
+  assert.strictEqual(deadEndSurvival.thirst, 50);
+  assert.strictEqual(deadEndSurvival.stamina, 50);
+  assert.strictEqual(deadEndSurvival.currentLocation, "desa");
+  assert.ok(updatedData);
+  assert.strictEqual(updatedData.currentLocation, "desa");
+
+  // Kasus pemain sehat tidak di-rescue
+  const healthySurvival = {
+    survival_level: 1,
+    hp: 100,
+    hunger: 80,
+    thirst: 80,
+    stamina: 80,
+  };
+  const healthyRes = await survivalVitals.checkAndRescueDeadEnd("healthyUser", healthySurvival);
+  assert.strictEqual(healthyRes.rescued, false);
+});

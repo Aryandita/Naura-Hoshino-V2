@@ -1,12 +1,9 @@
 // Definisi subcommand group 'rpg' untuk /survival.
 // Grup ini paling besar sehingga diberi berkasnya sendiri.
 
-function addRpgGroup(builder) {
-  return builder.addSubcommandGroup((group) =>
-    group
-      .setName("rpg")
-      .setDescription("Sistem petualangan RPG")
-      .addSubcommand((sub) =>
+function addRpgSubcommands(builder) {
+  return builder
+    .addSubcommand((sub) =>
         sub
           .setName("start")
           .setDescription("Mulai petualanganmu! (Ambil Starter Kit)"),
@@ -507,8 +504,14 @@ function addRpgGroup(builder) {
               .setDescription("Alasan penempatan buronan")
               .setRequired(false),
           ),
-      ),
-  );
+      );
 }
 
-module.exports = { addRpgGroup };
+function addRpgGroup(builder) {
+  return builder.addSubcommandGroup((group) => {
+    group.setName("rpg").setDescription("Sistem petualangan RPG");
+    return addRpgSubcommands(group);
+  });
+}
+
+module.exports = { addRpgGroup, addRpgSubcommands };

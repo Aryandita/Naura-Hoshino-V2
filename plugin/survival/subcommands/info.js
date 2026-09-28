@@ -202,6 +202,10 @@ module.exports = {
 
       const buttonsRow = [row1, row2];
 
+      const rescueAlert = stats.rescueResult?.rescued
+        ? `\n🚑 **Pertolongan Medis Darurat:**\n> Warga desa menemukanmu pingsan karena kelelahan ekstrim dan membawamu ke Klinik Desa! Kondisimu telah distabilkan, segera makan dan istirahat ya!\n`
+        : "";
+
       const payload = buildContainerV2({
         accentColorHex: survivalUI.getColor("emerald"),
         authorName: `Catatan Petualangan ${userName} \u2022 ${stats.rebirthCount}x Rebirth`,
@@ -210,7 +214,7 @@ module.exports = {
         expression: "Cheers",
         description: [
           `*${adaptive.focusTip}*`,
-          "",
+          rescueAlert,
           `${e("clock")} **Waktu di dunia Naura:**`,
           timeLine,
           worldWeatherLine,

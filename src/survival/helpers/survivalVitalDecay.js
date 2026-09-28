@@ -2,7 +2,11 @@
 
 const { Op } = require("sequelize");
 const UserSurvival = require("../../models/UserSurvival");
-const { drainVitals, recoverVitals } = require("./survivalVitals");
+const {
+  drainVitals,
+  recoverVitals,
+  checkAndRescueDeadEnd,
+} = require("./survivalVitals");
 const { logger } = require("../../managers/logger");
 
 const ACTIVE_WINDOW_MS = 4 * 60 * 60 * 1000; // 4 Jam aktif
@@ -39,6 +43,21 @@ async function processVitalDecayCycle() {
 
     for (const record of activeUsers) {
       const userId = record.userId;
+
+      // Jika data pemain terindikasi dead-end (sekarat/mati total), selamatkan ke klinik desa
+      if (
+        Number(record.hp) <= 0 ||
+        (Number(record.hp) <= 5 &&
+          Number(record.hunger) <= 0 &&
+          Number(record.thirst) <= 0 &&
+          Number(record.stamina) <= 0)
+      ) {
+        await checkAndRescueDeadEnd(userId, record);
+        passedOutCount++;
+        processedCount++;
+        continue;
+      }
+
       const location = record.currentLocation || "desa";
       const property = record.propertyId || "jalanan";
       const rpgState = record.rpg_state || {};
@@ -65,6 +84,11 @@ async function processVitalDecayCycle() {
       }
       if (isSick) {
         hpDrain += 3;
+      }
+
+      // Safety floor: Peluruhan pasif offline tidak boleh membunuh pemain hingga 0 HP
+      if (hpDrain > 0) {
+        hpDrain = Math.min(hpDrain, Math.max(0, Number(record.hp || 100) - 1));
       }
 
       const result = await drainVitals(userId, {

@@ -1,10 +1,10 @@
 /* =====================================================================
  * naura-ui.js - Lapisan bersama untuk seluruh halaman dashboard (V2 ES Module Port).
  *
- * Menangani tiga hal:
+ * Menangani:
  *   1. Bahasa, diambil dari /api/me/language
- *   2. State kosong/galat/memuat memakai PNG transparan Naura.
- *   3. Latar & efek suara
+ *   2. State interaktif (kosong, galat, memuat, offline, maintenance) dengan Naura Avatar & Action CTA
+ *   3. Latar adaptif, tema (Midnight, Sakura, OLED), notifikasi toast, & efek suara
  * ===================================================================== */
 
 const SUPPORTED = ["id", "en"];
@@ -23,6 +23,9 @@ const EXPRESSION = {
   info: "Read",
   shy: "Shy",
   surprised: "Shocked",
+  offline: "Cry",
+  maintenance: "Hmph",
+  search: "Thinking",
 };
 
 const DICT = {
@@ -38,6 +41,15 @@ const DICT = {
     "state.denied.title": "Belum boleh masuk",
     "state.denied.body":
       "Kamu perlu izin Kelola Server untuk membuka halaman ini ya.",
+    "state.offline.title": "Koneksi Terputus",
+    "state.offline.body":
+      "Koneksi ke gateway Naura terputus. Sistem mencoba menyambung kembali.",
+    "state.maintenance.title": "Sedang Pemeliharaan",
+    "state.maintenance.body":
+      "Modul ini sedang ditingkatkan untuk stabilitas yang lebih optimal.",
+    "state.search.title": "Tidak Ada Hasil",
+    "state.search.body":
+      "Tidak ada data yang cocok dengan pencarianmu saat ini.",
     "nav.home": "Beranda",
     "lb.title": "Papan Peringkat",
     "lb.wealth": "Terkaya",
@@ -49,19 +61,29 @@ const DICT = {
     "lb.player": "Pemain",
     "lb.score": "Nilai",
     "common.retry": "Coba lagi",
+    "common.close": "Tutup",
   },
   en: {
     "state.loading.title": "Just a moment...",
-    "state.loading.body": "Naura's fetching your data right now.",
+    "state.loading.body": "Naura is fetching your data right now.",
     "state.error.title": "Oh no, that failed",
     "state.error.body":
-      "Sorry! Naura couldn't load this part. Try refreshing in a moment.",
+      "Sorry! Naura could not load this part. Try refreshing in a moment.",
     "state.empty.title": "Nothing here yet",
     "state.empty.body":
-      "It's empty for now. Get started and Naura will keep track of everything!",
+      "It is empty for now. Get started and Naura will keep track of everything!",
     "state.denied.title": "Not just yet",
     "state.denied.body":
       "You need the Manage Server permission to open this page.",
+    "state.offline.title": "Connection Lost",
+    "state.offline.body":
+      "Connection to Naura gateway lost. Reconnecting automatically.",
+    "state.maintenance.title": "Under Maintenance",
+    "state.maintenance.body":
+      "This module is undergoing maintenance for optimal performance.",
+    "state.search.title": "No Results Found",
+    "state.search.body":
+      "No data matched your search query at the moment.",
     "nav.home": "Home",
     "lb.title": "Leaderboard",
     "lb.wealth": "Richest",
@@ -73,6 +95,7 @@ const DICT = {
     "lb.player": "Player",
     "lb.score": "Score",
     "common.retry": "Try again",
+    "common.close": "Close",
   },
 };
 
@@ -80,6 +103,9 @@ class NauraUIClass {
   constructor() {
     this.lang = FALLBACK;
     this.sfxPlayer = null;
+    if (typeof window !== "undefined") {
+      this.initTheme();
+    }
   }
 
   normalize(lang) {
@@ -158,31 +184,106 @@ class NauraUIClass {
     return this.lang;
   }
 
+  getTheme() {
+    if (typeof window === "undefined") return "default";
+    return (
+      localStorage.getItem("nauraTheme") ||
+      document.documentElement.getAttribute("data-theme") ||
+      "default"
+    );
+  }
+
+  setTheme(themeName) {
+    if (typeof window === "undefined") return "default";
+    const clean = String(themeName || "default").toLowerCase();
+    if (clean === "default" || clean === "midnight") {
+      document.documentElement.removeAttribute("data-theme");
+      localStorage.setItem("nauraTheme", "default");
+    } else {
+      document.documentElement.setAttribute("data-theme", clean);
+      localStorage.setItem("nauraTheme", clean);
+    }
+    return clean;
+  }
+
+  initTheme() {
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem("nauraTheme");
+    if (saved && saved !== "default" && saved !== "midnight") {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
+  }
+
+  escapeHtml(str) {
+    if (str === null || str === undefined) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   stateHtml(kind, options) {
     const opts = options || {};
-    const title = opts.title || this.t("state." + kind + ".title");
-    const bodyText = opts.body || this.t("state." + kind + ".body");
+    const rawTitle = opts.title || this.t("state." + kind + ".title");
+    const rawBody = opts.body || this.t("state." + kind + ".body");
+    const title = this.escapeHtml(rawTitle);
+    const bodyText = this.escapeHtml(rawBody);
     const modifier =
       kind === "error"
         ? " naura-state--error"
         : kind === "loading"
           ? " naura-state--loading"
-          : "";
+          : kind === "success"
+            ? " naura-state--success"
+            : "";
+
+    let actionsHtml = "";
+    if (opts.actionsHtml) {
+      actionsHtml = `<div class="naura-state__actions">${opts.actionsHtml}</div>`;
+    } else if (opts.retry || kind === "error") {
+      const retryLabel = this.escapeHtml(opts.retryLabel || this.t("common.retry"));
+      const retryHandler =
+        typeof opts.retry === "string"
+          ? this.escapeHtml(opts.retry)
+          : opts.onRetry
+            ? `${opts.onRetry}`
+            : "window.location.reload()";
+      actionsHtml = `
+        <div class="naura-state__actions">
+          <button type="button" class="naura-state__btn naura-state__btn--primary" onclick="${retryHandler}">
+            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i>
+            <span>${retryLabel}</span>
+          </button>
+        </div>`;
+    } else if (opts.action) {
+      const act = opts.action;
+      const btnClass = act.primary
+        ? "naura-state__btn--primary"
+        : "naura-state__btn--ghost";
+      const tag = act.href ? "a" : "button";
+      const hrefAttr = act.href ? ` href="${this.escapeHtml(act.href)}"` : ' type="button"';
+      const clickAttr = act.onclick ? ` onclick="${act.onclick}"` : "";
+      const text = this.escapeHtml(act.text);
+      actionsHtml = `
+        <div class="naura-state__actions">
+          <${tag}${hrefAttr}${clickAttr} class="naura-state__btn ${btnClass}">
+            ${act.icon ? `<i class="${this.escapeHtml(act.icon)}" aria-hidden="true"></i> ` : ""}
+            <span>${text}</span>
+          </${tag}>
+        </div>`;
+    }
+
+    const figureAlt = `Naura - ${title}`;
 
     return (
-      '<div class="naura-state' +
-      modifier +
-      '">' +
-      '<img class="naura-state__figure" alt="" src="' +
-      this.expressionUrl(kind) +
-      '">' +
-      '<p class="naura-state__title">' +
-      title +
-      "</p>" +
-      '<p class="naura-state__body">' +
-      bodyText +
-      "</p>" +
-      "</div>"
+      `<div class="naura-state${modifier}" role="status" aria-live="polite">` +
+      `<img class="naura-state__figure" alt="${figureAlt}" src="${this.expressionUrl(kind)}">` +
+      `<p class="naura-state__title">${title}</p>` +
+      `<p class="naura-state__body">${bodyText}</p>` +
+      actionsHtml +
+      `</div>`
     );
   }
 
@@ -190,6 +291,49 @@ class NauraUIClass {
     const el =
       typeof target === "string" ? document.querySelector(target) : target;
     if (el) el.innerHTML = this.stateHtml(kind, options);
+  }
+
+  toast(type = "info", title = "", message = "", duration = 3500) {
+    if (typeof window === "undefined") return;
+    if (typeof window.showToast === "function") {
+      return window.showToast(message, type, duration, title);
+    }
+    let container = document.getElementById("nauraToastContainer");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "nauraToastContainer";
+      container.className = "naura-toast-container";
+      container.setAttribute("aria-live", "polite");
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement("div");
+    toast.className = `naura-toast naura-toast--${type}`;
+    const iconMap = {
+      info: "fa-solid fa-circle-info",
+      success: "fa-solid fa-circle-check",
+      warn: "fa-solid fa-triangle-exclamation",
+      error: "fa-solid fa-circle-xmark",
+    };
+    const iconClass = iconMap[type] || "fa-solid fa-bell";
+    const safeTitle = this.escapeHtml(title);
+    const safeMsg = this.escapeHtml(message);
+    toast.innerHTML = `
+      <div class="naura-toast-icon"><i class="${iconClass}" aria-hidden="true"></i></div>
+      <div class="naura-toast-content">
+        ${safeTitle ? `<div class="naura-toast-title">${safeTitle}</div>` : ""}
+        <div class="naura-toast-msg">${safeMsg}</div>
+      </div>
+      <button type="button" class="naura-toast-close" aria-label="${this.t("common.close")}"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    `;
+    const closeBtn = toast.querySelector(".naura-toast-close");
+    if (closeBtn) closeBtn.onclick = () => toast.remove();
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add("show"));
+    setTimeout(() => {
+      toast.classList.remove("show");
+      toast.classList.add("hide");
+      setTimeout(() => toast.remove(), 320);
+    }, duration);
   }
 
   resolveBgUrl(url) {
@@ -212,4 +356,6 @@ class NauraUIClass {
 
 export const NauraUI = new NauraUIClass();
 // Biarkan global untuk script lama yang belum pakai modul
-window.NauraUI = NauraUI;
+if (typeof window !== "undefined") {
+  window.NauraUI = NauraUI;
+}

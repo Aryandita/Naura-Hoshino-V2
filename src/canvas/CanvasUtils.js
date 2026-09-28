@@ -4,6 +4,7 @@ const { logger } = require("../managers/logger");
 const ui = require("../config/ui");
 const axios = require("axios");
 const leveling = require("../survival/engines/survivalLeveling");
+const { BOT_VERSION } = require("../config/version");
 
 const UI_COLORS = {
   background: "#0a0d14",
@@ -438,25 +439,33 @@ async function generateSurvivalProfileImage(
   // ── COL 1: STATUS FISIK ──
   sectionHead("STATUS FISIK", C1_X, COL_TOP, "#FF6B6B", 72);
 
+  const curHp =
+    survival.hp !== undefined && survival.hp !== null
+      ? Math.max(0, Number(survival.hp))
+      : maxHP;
+  const curHunger = Math.max(0, Number(survival.hunger || 0));
+  const curThirst = Math.max(0, Number(survival.thirst || 0));
+  const curStamina = Math.max(0, Number(survival.stamina || 0));
+
   const bars = [
     {
-      label: `HP  ${survival.hp !== undefined ? survival.hp : maxHP}/${maxHP}`,
-      pct: survival.hp !== undefined ? (survival.hp / maxHP) * 100 : 100,
+      label: `HP  ${curHp}/${maxHP}`,
+      pct: Math.min(100, (curHp / maxHP) * 100),
       colors: ["#FF3333", "#FF7070"],
     },
     {
-      label: `Lapar  ${survival.hunger || 0}/100`,
-      pct: survival.hunger || 0,
+      label: `Lapar  ${curHunger}/100`,
+      pct: Math.min(100, curHunger),
       colors: ["#FF8C00", "#FFBB44"],
     },
     {
-      label: `Haus  ${survival.thirst || 0}/100`,
-      pct: survival.thirst || 0,
+      label: `Haus  ${curThirst}/100`,
+      pct: Math.min(100, curThirst),
       colors: ["#00BFFF", "#87CEFA"],
     },
     {
-      label: `Stamina  ${survival.stamina || 0}/100`,
-      pct: survival.stamina || 0,
+      label: `Stamina  ${curStamina}/100`,
+      pct: Math.min(100, curStamina),
       colors: ["#32CD32", "#98FB98"],
     },
   ];
@@ -883,7 +892,7 @@ async function generateSurvivalProfileImage(
   const dayNum = survival.inGameDay || 1;
   const hourNum = (survival.inGameHour || 6).toString().padStart(2, "0");
   ctx.fillText(
-    `Hari ke-${dayNum}  |  ${hourNum}:00  |  v2.1.0`,
+    `Hari ke-${dayNum}  |  ${hourNum}:00  |  v${BOT_VERSION}`,
     W - MARGIN - 16,
     FOOT_MID + 5,
   );
@@ -1954,14 +1963,16 @@ async function generateLevel(user, level) {
   ctx.stroke();
 
   ctx.fillStyle = "#FFB6C1";
-  ctx.font = 'bold 14px "MontserratBold", "InterBold", sans-serif';
+  ctx.font =
+    'bold 14px "MontserratBold", "InterBold", "SymbolFont", "EmojiFont", sans-serif';
   ctx.textAlign = "center";
   ctx.fillText("✦ LEVEL UP! ✦", textX + chipW / 2, chipY + 19);
 
   // User Display Name
   ctx.textAlign = "left";
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = 'bold 34px "MontserratBold", "EmojiFont", sans-serif';
+  ctx.font =
+    'bold 34px "MontserratBold", "EmojiFont", "SymbolFont", sans-serif';
   const nameStr = truncateText(
     ctx,
     user.displayName || user.username || "User",
@@ -1989,12 +2000,13 @@ async function generateLevel(user, level) {
   ctx.stroke();
 
   ctx.fillStyle = "#FFD700";
-  ctx.font = 'bold 18px "MontserratBold", "InterBold", sans-serif';
+  ctx.font =
+    'bold 18px "MontserratBold", "InterBold", "EmojiFont", "SymbolFont", sans-serif';
   ctx.fillText(`🎉 Kini mencapai Level ${level}`, textX + 16, pillY + 26);
 
   // Subtitle / Brand Tag
   ctx.fillStyle = "#8E98B0";
-  ctx.font = '13px "Inter", sans-serif';
+  ctx.font = '13px "Inter", "EmojiFont", "SymbolFont", sans-serif';
   ctx.fillText(
     "🌸 Naura Hoshino RPG Leveling System",
     textX + 2,

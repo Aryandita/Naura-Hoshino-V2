@@ -18,6 +18,15 @@ module.exports = {
         return;
       }
 
+      // Bersihkan nama artis dari suffix - Topic, VEVO, atau nama channel uploader
+      if (activeTrack.info.author) {
+        const { cleanArtistName } = require("../spotifyResolver");
+        activeTrack.info.author = cleanArtistName(
+          activeTrack.info.author,
+          activeTrack.info.title,
+        );
+      }
+
       // Bersihkan sisa timer fade/watcher dari lagu sebelumnya (jaga-jaga)
       clearTransitionTimers(player);
 

@@ -131,6 +131,7 @@ export function applyNauraRuntimeFix(sceneRoot) {
     let triCount = 0, dropped = 0;
     const kept = [];
     const existingKeys = new Set();
+    let triReport;
     if (srcIndex) {
         for (let i = 0; i < srcIndex.length; i += 3) {
             const a = srcIndex[i], b = srcIndex[i + 1], c = srcIndex[i + 2];
@@ -150,9 +151,9 @@ export function applyNauraRuntimeFix(sceneRoot) {
         const newIndexAttr = new (geo.getIndex().constructor)(new IndexCtor(kept), 1);
         newIndexAttr.needsUpdate = true;
         geo.setIndex(newIndexAttr);
-        var triReport = { before: triCount, dropped, restored, after: kept.length / 3 };
+        triReport = { before: triCount, dropped, restored, after: kept.length / 3 };
     } else {
-        var triReport = { skipped: true };
+        triReport = { skipped: true };
     }
 
     // ---- 4. Re-rig sendi lengan (posisi dunia baru = tengah mesh lengan) ----
@@ -163,7 +164,7 @@ export function applyNauraRuntimeFix(sceneRoot) {
     const OLD_JOINTS = { RightArm: [0, .18, -.09], RightForeArm: [0, .08, -.11], RightHand: [0, -.04, -.12],
                           LeftArm: [0, .18, .09], LeftForeArm: [0, .08, .11], LeftHand: [0, -.04, .12] };
     let moved = 0, rerigSkipped = null;
-    const worldPos = (bone) => { const v = { x: 0, y: 0, z: 0 }; bone.getWorldPosition ? bone.updateWorldMatrix(true, false) : null; const p = new (Object.getPrototypeOf(bone.position).constructor)(); bone.getWorldPosition(p); return p; };
+    const worldPos = (bone) => { if (bone.getWorldPosition) bone.updateWorldMatrix(true, false); const p = new (Object.getPrototypeOf(bone.position).constructor)(); bone.getWorldPosition(p); return p; };
     const bones = {};
     let boneErr = false;
     for (const nm of Object.keys(NEW_JOINTS)) {

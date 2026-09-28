@@ -115,6 +115,34 @@
   --shadow-nav:
     0 -4px 24px rgba(11, 12, 16, 0.60),
     0 0 16px rgba(255, 182, 193, 0.06);
+
+  /* ── Refraksi Kaca Specular & Aksesibilitas ──────────────────────────── */
+  --glass-specular:         inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  --glass-specular-strong:  inset 0 1px 0 0 rgba(255, 255, 255, 0.16);
+  --glass-specular-primary: inset 0 1px 0 0 rgba(255, 182, 193, 0.25);
+  --focus-ring:             0 0 0 2px #060810, 0 0 0 3px var(--primary);
+}
+
+/* Tabular figures untuk angka metrik mobile agar tidak bergeser */
+.tabular-nums,
+[data-tabular],
+.nm-chip__value,
+.nm-vital__pct,
+.nm-lb-row__value,
+.nm-wallet-item__value,
+.nm-stat-item__val,
+.nm-queue-item__num,
+.nm-queue-item__dur,
+code,
+pre {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Aksesibilitas keyboard dan switch navigation mobile */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 /* ── Theme: Sakura Blossom ──────────────────────────────────────────────── */
@@ -126,16 +154,18 @@
   --hairline:     rgba(255, 158, 187, 0.20);
   --hairline-strong: rgba(255, 158, 187, 0.35);
   --surface-card: rgba(255, 200, 220, 0.05);
+  --glass-specular: inset 0 1px 0 0 rgba(255, 192, 215, 0.12);
 }
 
-/* ── Theme: OLED True Black ─────────────────────────────────────────────── */
+/* ── Theme: OLED Obsidian (Off-Black) ───────────────────────────────────── */
 [data-theme="oled"] {
   --primary:      #ff5c8a;
   --primary-glow: rgba(255, 92, 138, 0.55);
-  --canvas:       #000000;
+  --canvas:       #06070a;
   --surface-glass:rgba(255, 255, 255, 0.03);
-  --surface-card: rgba(255, 255, 255, 0.04);
+  --surface-card: #0c0e14;
   --hairline:     rgba(255, 92, 138, 0.18);
+  --glass-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 }
 
 /* ── Theme: Naura Wilds ─────────────────────────────────────────────────── */
@@ -147,6 +177,7 @@
   --surface-card: rgba(134, 239, 172, 0.05);
   --hairline:     rgba(134, 239, 172, 0.18);
   --hairline-strong: rgba(134, 239, 172, 0.32);
+  --glass-specular: inset 0 1px 0 0 rgba(134, 239, 172, 0.12);
 }
 
 /* ── Font Size Variants ─────────────────────────────────────────────────── */

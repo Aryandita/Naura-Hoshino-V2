@@ -711,6 +711,14 @@ Seluruh implementasi antarmuka pada Web Dashboard, Discord Components V2, dan vi
 - **Skala Radius Terarah (R-11)**: Kartu metrik menggunakan sudut tegas 8-12px (`var(--r-md)` / `var(--r-lg)`), tombol aksi proporsional, dan badge status ringkas (tidak menyeragamkan seluruh elemen menjadi bentuk pil/kapsul).
 - **Kejujuran Data & Telemetri Real-Time (R-02, R-03, R-36)**: Metrik angka diambil dari Gateway WebSocket Discord, memori Node.js, status DB Supabase/Redis, dan data shard cluster #0 nyata.
 
+### 6. Standar Semantic Motion & Bento Grid (Adopsi Taste-Skill & Stitch Benchmark)
+
+Berdasarkan benchmark standar antarmuka premium dari `Leonxlnx/taste-skill` dan katalog `VoltAgent/awesome-design-md`:
+- **Spring Physics Interaktif**: Transisi mikro-animasi pada komponen kartu dan panel dashboard wajib menggunakan spring physics halus (`stiffness: 100, damping: 20` atau `cubic-bezier(0.16, 1, 0.3, 1)`), dilarang menggunakan `linear` easing yang kaku.
+- **Hierarki Bento Grid Asimetris**: Hindari baris kartu 3-kolom seragam yang repetitif. Terapkan variasi densitas grid 2:1 atau zig-zag hierarkis untuk menonjolkan metrik utama (seperti 3D Avatar Naura atau status audio cluster).
+- **Keamanan Viewport Mobile**: Seluruh container layar penuh pada Web Dashboard wajib menggunakan `min-h-[100dvh]` (bukan `100vh`) guna mencegah lonjakan layout pada browser mobile (iOS Safari / Chrome bar resize).
+- **Skeletal Shimmer Loading**: Status pemuatan data telemetri atau avatar 3D wajib menggunakan skeletal shimmer yang menyerupai dimensi komponen aslinya, dilarang menggunakan spinner lingkaran generik.
+
 ---
 
 ## 🔗 Peta Hubungan Dokumen Ekosistem (Pentalogi Dokumentasi)

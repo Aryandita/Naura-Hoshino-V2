@@ -16,17 +16,6 @@ function formatUptime(ms) {
   return `${minutes}m`;
 }
 
-/** Ringkas jumlah byte menjadi satuan yang enak dilihat. */
-function formatBytes(bytes, decimals = 2) {
-  if (!bytes || bytes <= 0) return "0 B";
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  const i = Math.min(
-    Math.floor(Math.log(bytes) / Math.log(1024)),
-    units.length - 1,
-  );
-  return `${(bytes / Math.pow(1024, i)).toFixed(decimals)} ${units[i]}`;
-}
-
 /** Ringkasan pemakaian RAM host untuk kartu statistik. */
 function formatMemory(os) {
   const total = os.totalmem();
@@ -40,4 +29,4 @@ function formatMemory(os) {
   };
 }
 
-module.exports = { formatUptime, formatBytes, formatMemory };
+module.exports = { formatUptime, formatMemory };

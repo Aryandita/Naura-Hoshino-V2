@@ -14,8 +14,8 @@ class ClusterManager {
    * @returns {boolean}
    */
   isMasterShard(client) {
-    if (!client.shard) return true; // Jika tidak di-shard, otomatis master
-    return client.shard.ids && client.shard.ids.includes(0);
+    if (!client.shard) return true;
+    return Boolean(client.shard.ids?.includes(0));
   }
 
   /**
@@ -30,7 +30,7 @@ class ClusterManager {
       // Fallback simulasi jika bot berjalan tanpa sharding
       return [await script(client, context)];
     }
-    return await client.shard.broadcastEval(script, { context });
+    return client.shard.broadcastEval(script, { context });
   }
 
   /**
@@ -49,7 +49,7 @@ class ClusterManager {
       }
       return [val];
     }
-    return await client.shard.fetchClientValues(property);
+    return client.shard.fetchClientValues(property);
   }
 
   /**
@@ -58,8 +58,7 @@ class ClusterManager {
    * @returns {string}
    */
   getShardIds(client) {
-    if (!client.shard) return "0";
-    return client.shard.ids ? client.shard.ids.join(",") : "0";
+    return client.shard?.ids?.join(",") || "0";
   }
 
   /**
@@ -68,8 +67,7 @@ class ClusterManager {
    * @returns {number}
    */
   getTotalShards(client) {
-    if (!client.shard) return 1;
-    return client.shard.count || 1;
+    return client.shard?.count || 1;
   }
 
   /**

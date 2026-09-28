@@ -7,7 +7,7 @@ const { logger } = require("./logger");
 
 // Setup fallback DNS publik untuk mencegah querySrv ECONNREFUSED di Windows/ISP tertentu
 try {
-  dns.setServers(["8.8.8.8", "1.1.1.1", "8.8.4.4"]);
+  dns.setServers(["1.1.1.1", "8.8.8.8", "1.0.0.1", "8.8.4.4"]);
 } catch (dnsErr) {
   // Safe fallback
 }
@@ -51,6 +51,7 @@ class MongoManager {
 
     mongoose.connection.on("disconnected", () => {
       logger.warn("[MongoDB] Koneksi terputus dari MongoDB Atlas.");
+      this._scheduleReconnect();
     });
 
     mongoose.connection.on("reconnected", () => {
@@ -81,7 +82,7 @@ class MongoManager {
     try {
       this._isConnecting = true;
       await mongoose.connect(uri, {
-        serverSelectionTimeoutMS: 15000,
+        serverSelectionTimeoutMS: 30000,
         socketTimeoutMS: 45000,
         maxPoolSize: 20,
         minPoolSize: 2,
@@ -95,14 +96,36 @@ class MongoManager {
         "[MongoDB] Gagal terhubung ke MongoDB Atlas:",
         error.message,
       );
+      this._scheduleReconnect();
       return false;
     }
+  }
+
+  /**
+   * Jadwalkan percobaan koneksi ulang jika koneksi terputus atau gagal di awal.
+   */
+  _scheduleReconnect() {
+    if (this._reconnectTimer || this.isReady || this._isConnecting) return;
+    this._reconnectTimer = setTimeout(async () => {
+      this._reconnectTimer = null;
+      if (!this.isReady && !this._isConnecting && env.MONGODB_URI) {
+        logger.info(
+          "[MongoDB] Mencoba menyambungkan kembali ke MongoDB Atlas...",
+        );
+        await this.connect().catch(() => {});
+      }
+    }, 20000);
+    if (this._reconnectTimer.unref) this._reconnectTimer.unref();
   }
 
   /**
    * Menutup koneksi MongoDB secara aman (Graceful Shutdown)
    */
   async disconnect() {
+    if (this._reconnectTimer) {
+      clearTimeout(this._reconnectTimer);
+      this._reconnectTimer = null;
+    }
     if (mongoose.connection.readyState !== 0) {
       try {
         await mongoose.disconnect();

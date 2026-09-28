@@ -150,9 +150,25 @@ test("resolveSpotifyQuery jatuh ke translasi manual saat node gagal", async () =
     assert.strictEqual(res.pluginInfo.source, "spotify-fallback");
     assert.strictEqual(res.loadType, "TRACK_LOADED");
     assert.strictEqual(res.tracks[0].info.originalSource, "spotify");
+    assert.strictEqual(res.tracks[0].info.title, "Test Song");
+    assert.strictEqual(res.tracks[0].info.author, "Test Artist");
     // Query pertama yang dipakai harus pencarian berbasis ISRC.
     assert.strictEqual(resolvedQueries[0], 'ytsearch:"IDXX12345678"');
   } finally {
     global.fetch = originalFetch;
   }
+});
+
+test("cleanArtistName membersihkan suffix YouTube - Topic dan VEVO", () => {
+  assert.strictEqual(resolver.cleanArtistName("Coldplay - Topic"), "Coldplay");
+  assert.strictEqual(resolver.cleanArtistName("Maroon5VEVO"), "Maroon5");
+  assert.strictEqual(
+    resolver.cleanArtistName("Warner Music Records", "Ed Sheeran - Shape of You"),
+    "Ed Sheeran",
+  );
+  assert.strictEqual(
+    resolver.cleanArtistName("Maroon5VEVO", "Maroon 5 - Sugar"),
+    "Maroon 5",
+  );
+  assert.strictEqual(resolver.cleanArtistName("Radwimps"), "Radwimps");
 });

@@ -36,27 +36,17 @@ const ui = {
  */
 function resolveUserName(userOrInteraction) {
   if (!userOrInteraction) return "Sobat Naura";
+  if (typeof userOrInteraction === "string") return userOrInteraction;
 
-  if (userOrInteraction.member && userOrInteraction.member.displayName) {
-    return userOrInteraction.member.displayName;
-  }
-  if (userOrInteraction.user) {
-    return (
-      userOrInteraction.user.globalName ||
-      userOrInteraction.user.username ||
-      "Sobat Naura"
-    );
-  }
-  if (userOrInteraction.globalName) {
-    return userOrInteraction.globalName;
-  }
-  if (userOrInteraction.username) {
-    return userOrInteraction.username;
-  }
-  if (typeof userOrInteraction === "string") {
-    return userOrInteraction;
-  }
-  return "Sobat Naura";
+  return (
+    userOrInteraction.member?.displayName ||
+    userOrInteraction.user?.globalName ||
+    userOrInteraction.user?.username ||
+    userOrInteraction.globalName ||
+    userOrInteraction.displayName ||
+    userOrInteraction.username ||
+    "Sobat Naura"
+  );
 }
 
 /**

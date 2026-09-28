@@ -100,4 +100,16 @@ const sweepers = {
   },
 };
 
-module.exports = { intents, partials, makeCache, sweepers, CACHE_LIMITS };
+const rest = {
+  timeout: 30000,
+  retries: 3,
+};
+
+module.exports = {
+  intents,
+  partials,
+  makeCache,
+  sweepers,
+  CACHE_LIMITS,
+  rest,
+};

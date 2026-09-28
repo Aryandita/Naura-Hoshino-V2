@@ -1,4 +1,5 @@
 // Lokasi: plugin/canvas/canvasRuntime.js
+const fs = require("fs");
 const path = require("path");
 const redisManager = require("../managers/redisManager");
 const { logger } = require("../managers/logger");
@@ -6,6 +7,7 @@ const { logger } = require("../managers/logger");
 // Lazy-loaded properties
 let canvasAPI = null;
 let isFontsRegistered = false;
+let isContextPatched = false;
 
 // Memory cache for loadImage to prevent repeated downloads
 const imageCache = new Map();
@@ -39,10 +41,58 @@ class Semaphore {
 // Batasi konkurensi render hingga 3 bersamaan
 const renderSemaphore = new Semaphore(3);
 
+function patchContextPrototype(canvasApi) {
+  if (isContextPatched) return;
+  try {
+    const dummy = canvasApi.createCanvas(1, 1);
+    const ctx = dummy.getContext("2d");
+    const proto = Object.getPrototypeOf(ctx);
+    const origDesc = Object.getOwnPropertyDescriptor(proto, "font");
+    if (origDesc && origDesc.set) {
+      Object.defineProperty(proto, "font", {
+        get: function () {
+          return origDesc.get.call(this);
+        },
+        set: function (val) {
+          if (typeof val === "string") {
+            let enriched = val;
+            if (!enriched.includes("EmojiFont")) {
+              if (enriched.includes("sans-serif")) {
+                enriched = enriched.replace(
+                  "sans-serif",
+                  '"EmojiFont", "SymbolFont", sans-serif',
+                );
+              } else {
+                enriched = enriched + ', "EmojiFont", "SymbolFont"';
+              }
+            } else if (!enriched.includes("SymbolFont")) {
+              enriched = enriched.replace(
+                "EmojiFont",
+                'EmojiFont", "SymbolFont',
+              );
+            }
+            return origDesc.set.call(this, enriched);
+          }
+          return origDesc.set.call(this, val);
+        },
+        enumerable: true,
+        configurable: true,
+      });
+    }
+    isContextPatched = true;
+  } catch (err) {
+    logger.warn(
+      "[CanvasRuntime] Gagal memasang font fallback patch pada context",
+      err,
+    );
+  }
+}
+
 function loadCanvas() {
   if (!canvasAPI) {
     try {
       canvasAPI = require("@napi-rs/canvas");
+      patchContextPrototype(canvasAPI);
     } catch (e) {
       logger.error("[CanvasRuntime] Gagal memuat @napi-rs/canvas", e);
       throw e;
@@ -72,6 +122,36 @@ function registerFontsOnce() {
       path.join(fontsDir, "emoji/NotoColorEmoji.ttf"),
       "EmojiFont",
     );
+    GlobalFonts.registerFromPath(
+      path.join(fontsDir, "symbols/NotoSansSymbols2-Regular.ttf"),
+      "SymbolFont",
+    );
+
+    // Registrasi fallback sistem jika tersedia (Windows / Linux)
+    const systemFallbacks = [
+      { path: "C:/Windows/Fonts/seguiemj.ttf", name: "SystemEmoji" },
+      { path: "C:/Windows/Fonts/seguisym.ttf", name: "SystemSymbol" },
+      {
+        path: "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf",
+        name: "SystemEmojiLinux",
+      },
+      {
+        path: "/usr/share/fonts/noto/NotoColorEmoji.ttf",
+        name: "SystemEmojiLinux2",
+      },
+      {
+        path: "/usr/share/fonts/noto-emoji/NotoColorEmoji.ttf",
+        name: "SystemEmojiLinux3",
+      },
+    ];
+    for (const sf of systemFallbacks) {
+      if (fs.existsSync(sf.path)) {
+        try {
+          GlobalFonts.registerFromPath(sf.path, sf.name);
+        } catch (_) {}
+      }
+    }
+
     isFontsRegistered = true;
     logger.info("[CanvasRuntime] Font berhasil diregistrasi.");
   } catch (e) {

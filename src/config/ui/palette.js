@@ -55,8 +55,6 @@ const dividers = {
   generalDividers: "",
 };
 
-const env = require("../env");
-
 const links = {
   dashboards: "hyperion.kythia.xyz:3070",
   support_server: "https://dsc.gg/naura-hoshino",
@@ -67,20 +65,7 @@ const links = {
   email: "naurahoshino@gmail.com",
 };
 
-const footers = {
-  core: `Naura Hoshino Core v${env.BOT_VERSION || "2.3.0"} • Created by Aryandita ✨`,
-  naura: `Naura Hoshino Companion 🌸 • v${env.BOT_VERSION || "2.3.0"}`,
-  utility: `Naura Utility Feature v${env.BOT_VERSION || "2.3.0"} • Created by Aryandita ✨`,
-  survival: `Naura RPG Survival Edition v${env.BOT_VERSION || "2.3.0"} • Created by Aryandita ✨`,
-  music: `Naura High-Fidelity Audio System v${env.BOT_VERSION || "2.3.0"} • Created by Aryandita ✨`,
-  ai: `Naura Intelligent System 🌸 • v${env.BOT_VERSION || "2.3.0"}`,
-
-  // --- Premium Tier Footers ---
-  premium: `Naura V.I.P Project v${env.BOT_VERSION || "2.3.0"} • Terima kasih telah mendukung Naura! 💎`,
-  premium_supporter: `Naura Supporter Tier v${env.BOT_VERSION || "2.3.0"} • Bersama kita tumbuh ✨`,
-  premium_friends: `Naura Friends Tier v${env.BOT_VERSION || "2.3.0"} • Terima kasih sahabat setia 💫`,
-  premium_vip: `Naura V.I.P Tier v${env.BOT_VERSION || "2.3.0"} • Kamu adalah yang terpilih 👑`,
-};
-
+const { FOOTERS } = require("../version");
+const footers = { ...FOOTERS };
 
 module.exports = { colors, monsters, dividers, links, footers };

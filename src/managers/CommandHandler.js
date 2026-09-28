@@ -100,7 +100,9 @@ class CommandHandler {
         this.commandsPath.split(path.sep).join("/"),
         "**/*.js",
       );
-      const commandFiles = await glob(searchPattern);
+      const commandFiles = await glob(searchPattern, {
+        ignore: ["**/subcommands/**"],
+      });
 
       for (const filePath of commandFiles) {
         try {
@@ -186,11 +188,14 @@ class CommandHandler {
         survival: [
           "s",
           "surv",
-          "rpg",
           "w",
+          "work",
           "f",
+          "fish",
           "m",
+          "mine",
           "c",
+          "chop",
           "inv",
           "i",
           "bag",
@@ -198,7 +203,24 @@ class CommandHandler {
           "bank",
           "craft",
         ],
-        music: ["p", "play", "q", "queue", "np", "nowplaying", "skip", "stop"],
+        music: [
+          "p",
+          "play",
+          "q",
+          "queue",
+          "np",
+          "nowplaying",
+          "skip",
+          "stop",
+          "pause",
+          "resume",
+          "vol",
+          "volume",
+          "loop",
+          "shuffle",
+          "lyrics",
+          "ly",
+        ],
         rank: ["r", "level", "lvl"],
         leaderboard: ["lb", "top"],
         ai: ["chat", "img", "imagine"],
