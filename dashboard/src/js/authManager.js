@@ -68,6 +68,10 @@
             this.initModal();
             this.bindUI();
             this.syncUI();
+            this.initServerSync();
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => this.syncUI());
+            }
         }
 
         setupFetchInterceptor() {
@@ -207,9 +211,71 @@
             }
         }
 
-        logout() {
+        async initServerSync() {
+            try {
+                const res = await fetch('/api/me', { credentials: 'include' });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data && data.loggedIn && data.user) {
+                    const u = data.user;
+                    const db = data.db || {};
+                    const survival = data.survival || {};
+
+                    let avatarUrl = '/assets/core/avatar.png';
+                    if (u.avatar) {
+                        const isGif = typeof u.avatar === 'string' && u.avatar.startsWith('a_');
+                        const ext = isGif ? 'gif' : 'png';
+                        avatarUrl = `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${ext}?size=128`;
+                    } else if (u.id) {
+                        try {
+                            const defaultIdx = Number((BigInt(u.id) >> 22n) % 6n);
+                            avatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultIdx}.png`;
+                        } catch (_) {
+                            avatarUrl = '/assets/core/avatar.png';
+                        }
+                    }
+
+                    const roleTitle = data.isOwner
+                        ? 'Server Owner / Administrator'
+                        : (db.isPremium ? 'VIP Member Booster' : 'Member Terverifikasi');
+
+                    const totalNc = (Number(db.economy_wallet) || 0) + (Number(db.economy_bank) || 0);
+                    const totalNsf = Number(survival.starFragments) || 0;
+                    const totalCoupons = Number(survival.coupons) || 0;
+
+                    this.saveSession({
+                        id: u.id,
+                        username: u.global_name || u.username || 'Pengguna Discord',
+                        tag: u.discriminator && u.discriminator !== '0' ? `#${u.discriminator}` : '',
+                        avatar: avatarUrl,
+                        role: roleTitle,
+                        badgeClass: data.isOwner ? 'badge-primary' : (db.isPremium ? 'badge-amber' : 'badge-cyan'),
+                        nc: totalNc,
+                        nsf: totalNsf,
+                        coupons: totalCoupons,
+                        provider: 'discord',
+                        isServerAuth: true,
+                        isOwner: Boolean(data.isOwner),
+                    });
+                } else if (this.session && this.session.isServerAuth) {
+                    this.saveSession(null);
+                }
+            } catch (err) {
+                console.warn('[NauraAuth] Sesi server belum tersinkron:', err);
+            }
+        }
+
+        async logout() {
+            const isServer = Boolean(this.session?.isServerAuth);
             const currentUsername = this.session?.username || 'User';
             this.saveSession(null);
+            if (isServer) {
+                try {
+                    await fetch('/auth/logout', { credentials: 'include' });
+                } catch (_) {}
+                window.location.href = '/auth/logout';
+                return;
+            }
             if (typeof window.showToast === 'function') {
                 window.showToast(`Berhasil logout dari akun ${currentUsername}. Mode Tamu aktif.`, 'info');
             }
@@ -303,11 +369,16 @@
             });
             sidebarAvatarElements.forEach((el) => {
                 el.src = currentUser.avatar;
+                el.onerror = () => {
+                    el.src = '/assets/core/avatar.png';
+                };
                 el.style.border = isAuthenticated ? '2px solid var(--accent-green)' : '1px solid var(--border-subtle)';
             });
             sidebarUserCards.forEach((card) => {
+                card.removeAttribute('onclick');
                 card.onclick = (clickEvent) => {
                     clickEvent.preventDefault();
+                    clickEvent.stopPropagation();
                     if (isAuthenticated) {
                         this.openProfileMenu();
                     } else {
@@ -561,7 +632,7 @@
             });
 
             document.getElementById('btnDiscordDirect')?.addEventListener('click', () => {
-                this.loginAs('owner');
+                window.location.href = '/auth/discord';
             });
 
             document.getElementById('supabaseLoginForm')?.addEventListener('submit', (formEvent) => {

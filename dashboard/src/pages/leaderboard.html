@@ -532,40 +532,10 @@
             </div>
 
             <div class="podium-wrapper" id="podiumWrapper">
-
-              <!-- 2nd Place -->
-              <div class="podium-place podium-2">
-                <div class="podium-avatar-wrap">
-                  <div class="podium-avatar" style="width:64px;height:64px;background:var(--cyan-dim);border:2px solid var(--border-cyan);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--accent-cyan);box-shadow:0 0 16px rgba(34,211,238,0.3);">N</div>
-                  <span class="podium-rank-badge">🥈</span>
-                </div>
-                <div class="podium-name">Naura</div>
-                <div class="podium-coins" style="color:var(--accent-amber);">🪙 850K</div>
-                <div class="podium-bar">2</div>
+              <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 32px 0;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 8px; display: block; color: var(--accent-amber);"></i>
+                Menghubungkan peringkat juara...
               </div>
-
-              <!-- 1st Place -->
-              <div class="podium-place podium-1" style="margin-bottom:-16px;">
-                <div class="podium-avatar-wrap animate-float">
-                  <div class="podium-avatar" style="width:80px;height:80px;background:var(--amber-dim);border:3px solid var(--border-amber);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:var(--accent-amber);box-shadow:0 0 28px var(--amber-glow);">A</div>
-                  <span class="podium-rank-badge" style="font-size:22px;">👑</span>
-                </div>
-                <div class="podium-name" style="font-size:14px;">Aryandita</div>
-                <div class="podium-coins" style="color:var(--accent-amber);font-size:13px;">🪙 1.25M</div>
-                <div class="podium-bar">1</div>
-              </div>
-
-              <!-- 3rd Place -->
-              <div class="podium-place podium-3">
-                <div class="podium-avatar-wrap">
-                  <div class="podium-avatar" style="width:56px;height:56px;background:var(--violet-dim);border:2px solid var(--border-violet);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--accent-violet);box-shadow:0 0 16px rgba(168,85,247,0.3);">K</div>
-                  <span class="podium-rank-badge" style="font-size:16px;">🥉</span>
-                </div>
-                <div class="podium-name">Kagami</div>
-                <div class="podium-coins" style="color:var(--accent-amber);">🪙 620K</div>
-                <div class="podium-bar">3</div>
-              </div>
-
             </div>
             <!-- Podium base -->
             <div style="height:24px;background:linear-gradient(to bottom, rgba(8,11,24,0.4), rgba(5,8,20,0.9));margin-top:-1px;border-top:1px solid rgba(245,158,11,0.2);"></div>
@@ -586,112 +556,10 @@
             </div>
 
             <div id="leaderboardList" style="display:flex;flex-direction:column;gap:6px;">
-
-              <!-- Rank 1 -->
-              <div class="lb-row" id="lb-row-1">
-                <div class="lb-rank-num" style="color:var(--accent-amber);">🥇</div>
-                <div class="lb-avatar" style="background:var(--amber-dim);border-color:var(--border-amber);color:var(--accent-amber);">A</div>
-                <div class="lb-info">
-                  <div class="lb-username">Aryandita <span class="badge badge-amber">OWNER VIP</span></div>
-                  <div class="lb-sub">Level 99 · Master Adventurer</div>
-                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:98%;"></div></div>
-                </div>
-                <div>
-                  <div class="lb-value" style="color:var(--accent-amber);">🪙 1,250,000</div>
-                  <div class="lb-value-sub">9,850 XP</div>
-                </div>
+              <div style="text-align:center;color:var(--text-muted);padding:40px 0;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size:24px;margin-bottom:8px;display:block;color:var(--accent-amber);"></i>
+                Memuat data peringkat server...
               </div>
-
-              <!-- Rank 2 -->
-              <div class="lb-row" id="lb-row-2">
-                <div class="lb-rank-num" style="color:#94a3b8;">🥈</div>
-                <div class="lb-avatar" style="background:var(--cyan-dim);border-color:var(--border-cyan);color:var(--accent-cyan);">N</div>
-                <div class="lb-info">
-                  <div class="lb-username">Naura Hoshino <span class="badge badge-primary">BOT AI</span></div>
-                  <div class="lb-sub">Level 85 · Cyber Companion</div>
-                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:85%;"></div></div>
-                </div>
-                <div>
-                  <div class="lb-value" style="color:var(--accent-amber);">🪙 850,000</div>
-                  <div class="lb-value-sub">7,420 XP</div>
-                </div>
-              </div>
-
-              <!-- Rank 3 -->
-              <div class="lb-row" id="lb-row-3">
-                <div class="lb-rank-num" style="color:#b4783c;">🥉</div>
-                <div class="lb-avatar" style="background:var(--violet-dim);border-color:var(--border-violet);color:var(--accent-violet);">K</div>
-                <div class="lb-info">
-                  <div class="lb-username">Kagami</div>
-                  <div class="lb-sub">Level 72 · Star Hunter</div>
-                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:72%;background:linear-gradient(90deg,var(--accent-violet),#c4b5fd);"></div></div>
-                </div>
-                <div>
-                  <div class="lb-value" style="color:var(--accent-amber);">🪙 620,000</div>
-                  <div class="lb-value-sub">5,230 XP</div>
-                </div>
-              </div>
-
-              <!-- Rank 4 -->
-              <div class="lb-row" id="lb-row-4">
-                <div class="lb-rank-num" style="color:var(--text-muted);">4</div>
-                <div class="lb-avatar">H</div>
-                <div class="lb-info">
-                  <div class="lb-username">Hanako</div>
-                  <div class="lb-sub">Level 60 · Novice Explorer</div>
-                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:60%;background:linear-gradient(90deg,var(--accent-cyan),#67e8f9);box-shadow:0 0 6px var(--cyan-glow);"></div></div>
-                </div>
-                <div>
-                  <div class="lb-value" style="color:var(--accent-amber);">🪙 410,000</div>
-                  <div class="lb-value-sub">3,800 XP</div>
-                </div>
-              </div>
-
-              <!-- Rank 5 -->
-              <div class="lb-row" id="lb-row-5">
-                <div class="lb-rank-num" style="color:var(--text-muted);">5</div>
-                <div class="lb-avatar">R</div>
-                <div class="lb-info">
-                  <div class="lb-username">Ryusei</div>
-                  <div class="lb-sub">Level 55 · Cyber Ranger</div>
-                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:55%;"></div></div>
-                </div>
-                <div>
-                  <div class="lb-value" style="color:var(--accent-amber);">🪙 290,000</div>
-                  <div class="lb-value-sub">2,950 XP</div>
-                </div>
-              </div>
-
-              <!-- Rank 6 -->
-              <div class="lb-row" id="lb-row-6">
-                <div class="lb-rank-num" style="color:var(--text-muted);">6</div>
-                <div class="lb-avatar">M</div>
-                <div class="lb-info">
-                  <div class="lb-username">Mizuki</div>
-                  <div class="lb-sub">Level 48 · Wanderer</div>
-                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:48%;"></div></div>
-                </div>
-                <div>
-                  <div class="lb-value" style="color:var(--accent-amber);">🪙 185,000</div>
-                  <div class="lb-value-sub">2,100 XP</div>
-                </div>
-              </div>
-
-              <!-- Rank 7 -->
-              <div class="lb-row" id="lb-row-7">
-                <div class="lb-rank-num" style="color:var(--text-muted);">7</div>
-                <div class="lb-avatar">S</div>
-                <div class="lb-info">
-                  <div class="lb-username">Sora</div>
-                  <div class="lb-sub">Level 40 · Apprentice</div>
-                  <div class="xp-bar-mini"><div class="xp-bar-fill" style="width:40%;"></div></div>
-                </div>
-                <div>
-                  <div class="lb-value" style="color:var(--accent-amber);">🪙 92,000</div>
-                  <div class="lb-value-sub">1,500 XP</div>
-                </div>
-              </div>
-
             </div>
 
             <!-- Load more -->
@@ -813,7 +681,7 @@
           );
         }
 
-        const container = document.getElementById('lbList');
+        const container = document.getElementById('leaderboardList') || document.getElementById('lbList');
         if (!container) return;
         if (displayRows.length === 0) {
           container.innerHTML = searchQuery
@@ -839,7 +707,7 @@
           return `
           <div class="lb-row" id="lb-row-${r.rank}" style="animation-delay:${i * 0.05}s">
             <div class="lb-rank-num" style="color:${getRankColor(r.rank)};font-size:${r.rank <= 3 ? '22px':'14px'};">${getRankEmoji(r.rank)}</div>
-            <img class="lb-avatar" src="${r.avatar || '/assets/core/avatar.png'}" alt="${r.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid ${getRankColor(r.rank)}30;" onerror="this.style.display='none'">
+            <img class="lb-avatar" src="${r.avatar || '/assets/core/avatar.png'}" alt="${r.name}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid ${getRankColor(r.rank)}30;" onerror="this.src='/assets/core/avatar.png'">
             <div class="lb-info">
               <div class="lb-username">${r.name} ${deltaHtml}</div>
               <div class="lb-sub">${subFn(r)}</div>
@@ -858,24 +726,71 @@
       }
 
       function updatePodium(top3) {
-        const podiumEl = document.querySelector('.podium-wrapper');
-        if (!podiumEl || top3.length < 2) return;
+        const podiumWrapper = document.getElementById('podiumWrapper');
+        if (!podiumWrapper) return;
 
-        const order = [top3[1], top3[0], top3[2]].filter(Boolean);
-        const podiums = podiumEl.querySelectorAll('.podium-place');
+        if (!top3 || top3.length === 0) {
+          podiumWrapper.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 32px 0;">
+              <i class="fa-solid fa-crown" style="font-size: 32px; opacity: 0.3; margin-bottom: 8px; display: block;"></i>
+              Belum ada data juara di server ini.
+            </div>`;
+          return;
+        }
 
-        order.forEach((r, i) => {
-          if (!r || !podiums[i]) return;
-          const nameEl = podiums[i].querySelector('.podium-name');
-          const coinsEl = podiums[i].querySelector('.podium-coins');
-          const avatarEl = podiums[i].querySelector('.podium-avatar');
-          if (nameEl) nameEl.textContent = r.name;
-          if (coinsEl) coinsEl.textContent = `#${r.rank}`;
-          if (avatarEl) {
-            avatarEl.src = r.avatar || '/assets/core/avatar.png';
-            avatarEl.onerror = () => { avatarEl.style.display = 'none'; };
-          }
-        });
+        const p1 = top3[0];
+        const p2 = top3[1];
+        const p3 = top3[2];
+
+        let html = '';
+
+        // 2nd Place (Kiri)
+        if (p2) {
+          html += `
+            <div class="podium-place podium-2">
+              <div class="podium-avatar-wrap">
+                <img src="${p2.avatar || '/assets/core/avatar.png'}" class="podium-avatar" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--border-cyan);box-shadow:0 0 16px rgba(34,211,238,0.3);" onerror="this.src='/assets/core/avatar.png'" alt="${p2.name}">
+                <span class="podium-rank-badge">🥈</span>
+              </div>
+              <div class="podium-name">${p2.name}</div>
+              <div class="podium-coins" style="color:var(--accent-amber);">#2 · ${(p2.total || p2.xp || p2.starFragments || 0).toLocaleString('id-ID')}</div>
+              <div class="podium-bar">2</div>
+            </div>`;
+        } else {
+          html += '<div class="podium-place podium-2" style="visibility:hidden;"></div>';
+        }
+
+        // 1st Place (Tengah)
+        if (p1) {
+          html += `
+            <div class="podium-place podium-1" style="margin-bottom:-16px;">
+              <div class="podium-avatar-wrap animate-float">
+                <img src="${p1.avatar || '/assets/core/avatar.png'}" class="podium-avatar" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--border-amber);box-shadow:0 0 28px var(--amber-glow);" onerror="this.src='/assets/core/avatar.png'" alt="${p1.name}">
+                <span class="podium-rank-badge" style="font-size:22px;">👑</span>
+              </div>
+              <div class="podium-name" style="font-size:14px;">${p1.name}</div>
+              <div class="podium-coins" style="color:var(--accent-amber);font-size:13px;">#1 · ${(p1.total || p1.xp || p1.starFragments || 0).toLocaleString('id-ID')}</div>
+              <div class="podium-bar">1</div>
+            </div>`;
+        }
+
+        // 3rd Place (Kanan)
+        if (p3) {
+          html += `
+            <div class="podium-place podium-3">
+              <div class="podium-avatar-wrap">
+                <img src="${p3.avatar || '/assets/core/avatar.png'}" class="podium-avatar" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--border-violet);box-shadow:0 0 16px rgba(168,85,247,0.3);" onerror="this.src='/assets/core/avatar.png'" alt="${p3.name}">
+                <span class="podium-rank-badge" style="font-size:16px;">🥉</span>
+              </div>
+              <div class="podium-name">${p3.name}</div>
+              <div class="podium-coins" style="color:var(--accent-amber);">#3 · ${(p3.total || p3.xp || p3.starFragments || 0).toLocaleString('id-ID')}</div>
+              <div class="podium-bar">3</div>
+            </div>`;
+        } else {
+          html += '<div class="podium-place podium-3" style="visibility:hidden;"></div>';
+        }
+
+        podiumWrapper.innerHTML = html;
       }
 
       function switchLbTab(cat) {

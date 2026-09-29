@@ -67,6 +67,14 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Memisahkan subcommand `radio` menjadi command tersendiri [`plugin/music/radio.js`](plugin/music/radio.js) sehingga `music.js` kembali ke batas aman 24 subcommands tanpa mengurangi fungsionalitas audio bot.
   - File: [`plugin/music/music.js`](plugin/music/music.js), [`plugin/music/radio.js`](plugin/music/radio.js).
 
+- [x] **[BUG - PROFILE_SIDEBAR_LEADERBOARD_DESYNC] Sinkronisasi Akun Discord Sesi Web & Leaderboard Realtime Database**
+  - Mengatasi display profil sidebar (pojok kiri bawah) yang tetap berstatus "Guest" dengan avatar default Naura meskipun pengguna telah berhasil login melalui Discord OAuth.
+  - Mengintegrasikan fungsi `initServerSync()` pada `authManager.js` yang menyinkronkan data profil dari endpoint `/api/me` (nama akun, avatar CDN Discord, peran server, saldo NC dompet & bank, NSF, dan kupon survival).
+  - Memperbaiki tombol login modal Discord (`btnDiscordDirect`) agar mengarahkan pengguna secara langsung ke endpoint OAuth2 resmi `/auth/discord`.
+  - Memperbaiki ketidaksesuaian ID elemen kontainer di `leaderboard.html` (`lbList` vs `leaderboardList`), merestrukturisasi fungsi `updatePodium()` agar merender juara top 3 secara dinamis berbasis data aktif, serta membersihkan seluruh data hardcoded statis.
+  - Memperbarui endpoint `/api/realtime/leaderboard` di `dashboard/routes/api.js` untuk membaca akumulasi kekayaan murni `(economy_wallet + economy_bank)`, menyelesaikan nama pengguna & avatar Discord secara asinkron via `resolveDiscordUser`, dan mengeliminasi array mock fallback.
+  - File: [`dashboard/src/js/authManager.js`](dashboard/src/js/authManager.js), [`dashboard/src/pages/leaderboard.html`](dashboard/src/pages/leaderboard.html), [`dashboard/routes/api.js`](dashboard/routes/api.js).
+
 - [x] **[3D KINEMATICS] Integrasi RigProfile & GLTF Humanoid Bone/Morph Adapter (`naura_animasi_fix.zip`)**
   - Mengintegrasikan modul jembatan `core/rigProfile.js` (`buildHumanoidBones`, `GlbExpressionRig`) untuk memetakan nama bone GLB (`RightArm`, `LeftArm`) ke format humanoid, mengonversi morph targets (`Happy`, `Thinking`, `Sad`, `Angry`, `Blink`, `Talk`), serta menyelaraskan sumbu rotasi rig (+X facing).
   - Memperbarui 10 sequence keyframe gerak agar pose lengan, kepala, dan ekspresi terkonvergensi mulus pada model `Naura_Hoshino_3D_NEW.glb`.

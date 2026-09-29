@@ -458,6 +458,7 @@ module.exports = (client) => {
     try {
       const UserProfile = require("../../src/models/UserProfile");
       const UserSurvival = require("../../src/models/UserSurvival");
+      const { sequelize } = require("../../src/config/database");
 
       const defaultAvatars = [
         "/assets/Naura_Expression/Thinking.png",
@@ -467,41 +468,56 @@ module.exports = (client) => {
         "/assets/Naura_Expression/Salute.png",
       ];
 
+      const resolveDiscordUser = async (userId) => {
+        if (!userId) return null;
+        let user = client.users?.cache?.get(userId);
+        if (!user && client.users?.fetch) {
+          try {
+            user = await client.users.fetch(userId);
+          } catch (_) {
+            user = null;
+          }
+        }
+        return user;
+      };
+
       // 1. Economy ranking (NC = wallet + bank)
       let economyRows = [];
       try {
         const profiles = await UserProfile.findAll({
-          order: [["economy_wallet", "DESC"]],
+          order: [
+            sequelize.literal("(COALESCE(economy_wallet, 0) + COALESCE(economy_bank, 0)) DESC"),
+          ],
           limit: 10,
         });
-        economyRows = profiles.map((p, idx) => {
-          const cachedUser = client.users?.cache?.get(p.userId);
-          const name = cachedUser?.username || `Member #${p.userId.slice(-4)}`;
-          const avatar = cachedUser?.displayAvatarURL?.({ extension: "png" }) || defaultAvatars[idx % defaultAvatars.length];
-          const total = (p.economy_wallet || 0) + (p.economy_bank || 0);
-          return {
-            rank: idx + 1,
-            userId: p.userId,
-            name,
-            avatar,
-            wallet: p.economy_wallet || 0,
-            bank: p.economy_bank || 0,
-            total: total || 100000,
-            level: p.leveling_level || 1,
-            xp: p.leveling_xp || 0,
-            isPremium: !!p.isPremium,
-          };
-        });
-      } catch (_) {}
 
-      if (economyRows.length === 0) {
-        economyRows = [
-          { rank: 1, name: "Aryandita", avatar: defaultAvatars[0], total: 6542000, wallet: 1542000, bank: 5000000, level: 42, xp: 18450, isPremium: true },
-          { rank: 2, name: "HoshinoFan", avatar: defaultAvatars[1], total: 4120000, wallet: 1120000, bank: 3000000, level: 39, xp: 15200, isPremium: true },
-          { rank: 3, name: "CyberSamurai", avatar: defaultAvatars[2], total: 3500000, wallet: 900000, bank: 2600000, level: 35, xp: 12800, isPremium: false },
-          { rank: 4, name: "NeonKitsune", avatar: defaultAvatars[3], total: 2900000, wallet: 700000, bank: 2200000, level: 31, xp: 10400, isPremium: false },
-          { rank: 5, name: "QuantumDev", avatar: defaultAvatars[4], total: 2100000, wallet: 500000, bank: 1600000, level: 28, xp: 8900, isPremium: false },
-        ];
+        economyRows = await Promise.all(
+          profiles.map(async (p, idx) => {
+            const discordUser = await resolveDiscordUser(p.userId);
+            const name = discordUser?.globalName || discordUser?.username || `Member #${p.userId.slice(-4)}`;
+            let avatar = defaultAvatars[idx % defaultAvatars.length];
+            if (discordUser?.displayAvatarURL) {
+              avatar = discordUser.displayAvatarURL({ extension: "png", size: 128 });
+            }
+            const wallet = p.economy_wallet || 0;
+            const bank = p.economy_bank || 0;
+            const total = wallet + bank;
+            return {
+              rank: idx + 1,
+              userId: p.userId,
+              name,
+              avatar,
+              wallet,
+              bank,
+              total,
+              level: p.leveling_level || 1,
+              xp: p.leveling_xp || 0,
+              isPremium: Boolean(p.isPremium),
+            };
+          })
+        );
+      } catch (err) {
+        console.warn("[API LEADERBOARD] Error fetching economy rows:", err.message);
       }
 
       // 2. Leveling ranking
@@ -511,31 +527,30 @@ module.exports = (client) => {
           order: [["leveling_level", "DESC"], ["leveling_xp", "DESC"]],
           limit: 10,
         });
-        levelingRows = lvlProfiles.map((p, idx) => {
-          const cachedUser = client.users?.cache?.get(p.userId);
-          const name = cachedUser?.username || `Survivor #${p.userId.slice(-4)}`;
-          const avatar = cachedUser?.displayAvatarURL?.({ extension: "png" }) || defaultAvatars[idx % defaultAvatars.length];
-          return {
-            rank: idx + 1,
-            userId: p.userId,
-            name,
-            avatar,
-            level: p.leveling_level || 1,
-            xp: p.leveling_xp || 0,
-            messageCount: (p.leveling_xp || 0) > 0 ? Math.floor((p.leveling_xp || 0) / 15) : 10,
-            voiceMinutes: (p.leveling_xp || 0) > 0 ? Math.floor((p.leveling_xp || 0) / 25) : 5,
-          };
-        });
-      } catch (_) {}
 
-      if (levelingRows.length === 0) {
-        levelingRows = [
-          { rank: 1, name: "Aryandita", avatar: defaultAvatars[0], level: 42, xp: 18450, messageCount: 1230, voiceMinutes: 738 },
-          { rank: 2, name: "HoshinoFan", avatar: defaultAvatars[1], level: 39, xp: 15200, messageCount: 1013, voiceMinutes: 608 },
-          { rank: 3, name: "CyberSamurai", avatar: defaultAvatars[2], level: 35, xp: 12800, messageCount: 853, voiceMinutes: 512 },
-          { rank: 4, name: "NeonKitsune", avatar: defaultAvatars[3], level: 31, xp: 10400, messageCount: 693, voiceMinutes: 416 },
-          { rank: 5, name: "QuantumDev", avatar: defaultAvatars[4], level: 28, xp: 8900, messageCount: 593, voiceMinutes: 356 },
-        ];
+        levelingRows = await Promise.all(
+          lvlProfiles.map(async (p, idx) => {
+            const discordUser = await resolveDiscordUser(p.userId);
+            const name = discordUser?.globalName || discordUser?.username || `Survivor #${p.userId.slice(-4)}`;
+            let avatar = defaultAvatars[idx % defaultAvatars.length];
+            if (discordUser?.displayAvatarURL) {
+              avatar = discordUser.displayAvatarURL({ extension: "png", size: 128 });
+            }
+            const xp = p.leveling_xp || 0;
+            return {
+              rank: idx + 1,
+              userId: p.userId,
+              name,
+              avatar,
+              level: p.leveling_level || 1,
+              xp,
+              messageCount: xp > 0 ? Math.floor(xp / 15) : 0,
+              voiceMinutes: xp > 0 ? Math.floor(xp / 25) : 0,
+            };
+          })
+        );
+      } catch (err) {
+        console.warn("[API LEADERBOARD] Error fetching leveling rows:", err.message);
       }
 
       // 3. Survival ranking
@@ -545,30 +560,28 @@ module.exports = (client) => {
           order: [["survival_level", "DESC"], ["starFragments", "DESC"]],
           limit: 10,
         });
-        survivalRows = survProfiles.map((s, idx) => {
-          const cachedUser = client.users?.cache?.get(s.userId);
-          const name = cachedUser?.username || `Ranger #${s.userId.slice(-4)}`;
-          const avatar = cachedUser?.displayAvatarURL?.({ extension: "png" }) || defaultAvatars[idx % defaultAvatars.length];
-          return {
-            rank: idx + 1,
-            userId: s.userId,
-            name,
-            avatar,
-            starFragments: s.starFragments || 0,
-            survivalLevel: s.survival_level || 1,
-            currentLocation: s.currentLocation || "desa_sukamaju",
-          };
-        });
-      } catch (_) {}
 
-      if (survivalRows.length === 0) {
-        survivalRows = [
-          { rank: 1, name: "Aryandita", avatar: defaultAvatars[0], starFragments: 48500, survivalLevel: 28, currentLocation: "istana_draken" },
-          { rank: 2, name: "HoshinoFan", avatar: defaultAvatars[1], starFragments: 32400, survivalLevel: 24, currentLocation: "desa_khulkhas" },
-          { rank: 3, name: "CyberSamurai", avatar: defaultAvatars[2], starFragments: 26100, survivalLevel: 21, currentLocation: "kota_pratama" },
-          { rank: 4, name: "NeonKitsune", avatar: defaultAvatars[3], starFragments: 18900, survivalLevel: 18, currentLocation: "desa_sukamaju" },
-          { rank: 5, name: "QuantumDev", avatar: defaultAvatars[4], starFragments: 14200, survivalLevel: 15, currentLocation: "desa_sukamaju" },
-        ];
+        survivalRows = await Promise.all(
+          survProfiles.map(async (s, idx) => {
+            const discordUser = await resolveDiscordUser(s.userId);
+            const name = discordUser?.globalName || discordUser?.username || `Ranger #${s.userId.slice(-4)}`;
+            let avatar = defaultAvatars[idx % defaultAvatars.length];
+            if (discordUser?.displayAvatarURL) {
+              avatar = discordUser.displayAvatarURL({ extension: "png", size: 128 });
+            }
+            return {
+              rank: idx + 1,
+              userId: s.userId,
+              name,
+              avatar,
+              starFragments: s.starFragments || 0,
+              survivalLevel: s.survival_level || 1,
+              currentLocation: s.currentLocation || "jalanan",
+            };
+          })
+        );
+      } catch (err) {
+        console.warn("[API LEADERBOARD] Error fetching survival rows:", err.message);
       }
 
       res.json({
