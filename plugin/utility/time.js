@@ -29,10 +29,38 @@ module.exports = {
             .setDescription("Pesan pengingat saat timer habis")
             .setRequired(false),
         ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("convert")
+        .setDescription("Konversi jam tertentu dari satu zona waktu ke zona lain")
+        .addStringOption((opt) =>
+          opt
+            .setName("jam")
+            .setDescription("Jam format 24 jam (contoh: 14:30 atau 09:15)")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("dari")
+            .setDescription("Zona waktu asal (WIB, WITA, WIT, JST, UTC, dll)")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("ke")
+            .setDescription("Zona waktu tujuan (WIB, WITA, WIT, JST, UTC, dll)")
+            .setRequired(true),
+        ),
     ),
 
-  async execute(interaction) {
+  async execute(interaction, client) {
     const subcommand = interaction.options.getSubcommand();
+
+    if (subcommand === "convert") {
+      const worldclock = require("./worldclock");
+      return worldclock.execute(interaction, client);
+    }
 
     if (subcommand === "world") {
       const now = new Date();

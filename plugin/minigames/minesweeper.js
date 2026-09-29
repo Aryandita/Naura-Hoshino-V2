@@ -2,6 +2,7 @@ const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const ui = require("../../src/config/ui");
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("minesweeper")
     .setDescription("💣 Mainkan game Minesweeper klasik di Discord!")
@@ -73,10 +74,11 @@ module.exports = {
     }
 
     if (boardString.length > 4000) {
-      return interaction.reply({
+      const msg = {
         content: "❌ Grid terlalu besar, melebihi batas karakter Discord.",
         flags: MessageFlags.Ephemeral,
-      });
+      };
+      return interaction.deferred ? interaction.editReply(msg) : interaction.reply(msg);
     }
 
     const {
@@ -91,6 +93,10 @@ module.exports = {
       footerText: ui.getFooter("core"),
     });
 
-    await interaction.reply(payload);
+    if (interaction.deferred || interaction.replied) {
+      await interaction.editReply(payload);
+    } else {
+      await interaction.reply(payload);
+    }
   },
 };

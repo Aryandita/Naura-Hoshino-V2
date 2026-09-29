@@ -3,6 +3,7 @@ const ui = require("../../src/config/ui");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("password")
     .setDescription("🔑 Generate password acak yang kuat (Dikirim via DM).")

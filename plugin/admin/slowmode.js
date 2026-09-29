@@ -12,6 +12,7 @@ const {
 } = require("../../src/utils/NauraContainerBuilder");
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("slowmode")
     .setDescription("🐌 Atur mode lambat (slowmode) di channel ini.")

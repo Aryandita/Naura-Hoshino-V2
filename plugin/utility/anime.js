@@ -190,6 +190,7 @@ async function searchAnimeWaterfall(query) {
 }
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("anime")
     .setDescription(

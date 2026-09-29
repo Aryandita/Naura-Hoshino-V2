@@ -46,6 +46,26 @@ async function drainVitals(
   const isExhausted = finalStamina <= 0 || finalHunger <= 0 || finalThirst <= 0;
   const isCritical = finalHp <= 20 || finalStamina <= 10;
 
+  if (finalHp <= 0) {
+    survival.hp = 0;
+    survival.hunger = finalHunger;
+    survival.thirst = finalThirst;
+    survival.stamina = finalStamina;
+    const rescue = await checkAndRescueDeadEnd(userId, survival);
+    return {
+      hunger: rescue.survival.hunger,
+      thirst: rescue.survival.thirst,
+      stamina: rescue.survival.stamina,
+      hp: rescue.survival.hp,
+      isExhausted: true,
+      isCritical: true,
+      rescued: true,
+      clinic: rescue.clinic,
+      penalty: rescue.penalty,
+      currencyType: rescue.currencyType,
+    };
+  }
+
   return {
     hunger: finalHunger,
     thirst: finalThirst,
@@ -153,12 +173,12 @@ function buildVitalsSummaryLine(survival, customMaxHp = null) {
  * Memeriksa apakah pemain mengalami kondisi dead-end (sekarat/mati total dengan HP <= 0
  * atau seluruh status fisik 0) dan melakukan penyelamatan medis darurat (Emergency Rescue).
  *
- * Mencegah pemain terjebak dalam kondisi dead-end di mana mereka tidak bisa bekerja,
- * tidak bisa mengumpulkan bahan, dan tidak bisa beristirahat.
+ * Pemain dibawa ke Rumah Sakit (Kota) atau Klinik (Desa/Wilds), memulihkan sedikit status vital,
+ * serta memotong biaya perawatan (50 NC di Kota atau 500 NSF di Desa, tanpa minus).
  *
  * @param {string} userId - ID Discord User
  * @param {object} survival - Objek data survival saat ini
- * @returns {Promise<{ rescued: boolean, survival: object, reason: string|null }>}
+ * @returns {Promise<{ rescued: boolean, survival: object, reason: string|null, clinic?: string, penalty?: number, currencyType?: string }>}
  */
 async function checkAndRescueDeadEnd(userId, survival) {
   if (!survival || !userId) return { rescued: false, survival, reason: null };
@@ -184,14 +204,45 @@ async function checkAndRescueDeadEnd(userId, survival) {
     return { rescued: false, survival, reason: null };
   }
 
+  const isCity = String(survival.currentLocation || "").toLowerCase() === "kota";
+  const clinicType = isCity ? "RS Kota" : "Klinik Desa";
+  const targetLocation = isCity ? "kota" : "desa";
+
+  let penalty = 0;
+  let currencyType = "NSF";
+
+  if (isCity) {
+    currencyType = "NC";
+    let walletNc = 0;
+    try {
+      const profile = await cacheManager.getUserProfile(userId);
+      walletNc = Math.max(0, Number(profile?.economy_wallet || 0));
+    } catch (_) {
+      walletNc = 0;
+    }
+    penalty = Math.min(50, walletNc);
+    if (penalty > 0) {
+      await cacheManager.debitUserProfile(userId, "economy_wallet", penalty);
+    }
+  } else {
+    currencyType = "NSF";
+    const walletNsf = Math.max(0, Number(survival.starFragments || 0));
+    penalty = Math.min(500, walletNsf);
+    if (penalty > 0) {
+      await cacheManager.debitUserSurvival(userId, "starFragments", penalty);
+      survival.starFragments = Math.max(0, walletNsf - penalty);
+    }
+  }
+
+  // Pulihkan sedikit status vital agar pemain bisa pulih tanpa dead-end
   const maxHp = leveling.calculateMaxHp(survival);
-  const safeHp = Math.max(50, Math.round(maxHp * 0.5));
+  const safeHp = Math.max(25, Math.round(maxHp * 0.25));
   const safeVitals = {
     hp: safeHp,
-    hunger: 50,
-    thirst: 50,
-    stamina: 50,
-    currentLocation: "desa",
+    hunger: 30,
+    thirst: 30,
+    stamina: 30,
+    currentLocation: targetLocation,
   };
 
   await cacheManager.updateUserSurvival(userId, safeVitals);
@@ -201,6 +252,9 @@ async function checkAndRescueDeadEnd(userId, survival) {
     rescued: true,
     survival,
     reason: currentHp <= 0 ? "fainted" : "exhaustion",
+    clinic: clinicType,
+    penalty,
+    currencyType,
   };
 }
 

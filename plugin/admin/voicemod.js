@@ -11,6 +11,7 @@ const {
 } = require("../../src/utils/NauraContainerBuilder");
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("voicemod")
     .setDescription("🎙️ Alat moderasi khusus untuk Voice Channel.")

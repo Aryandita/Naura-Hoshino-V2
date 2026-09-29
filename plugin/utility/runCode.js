@@ -8,6 +8,7 @@ const { logger } = require("../../src/managers/logger");
 const ui = require("../../src/config/ui");
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("run")
     .setDescription("Jalankan script JavaScript di sandbox aman menggunakan Dev Access Key")

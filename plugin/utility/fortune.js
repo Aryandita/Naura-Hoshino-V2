@@ -120,6 +120,7 @@ const LUCKY_DIRECTIONS = [
 ];
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("fortune")
     .setDescription(

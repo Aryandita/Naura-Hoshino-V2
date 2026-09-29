@@ -20,6 +20,7 @@ const words = [
 ];
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("hangman")
     .setDescription("🔤 Main game tebak kata (Hangman) interaktif."),

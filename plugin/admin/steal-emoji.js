@@ -12,6 +12,7 @@ const {
 } = require("../../src/utils/NauraContainerBuilder");
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("steal")
     .setDescription("Mencuri emoji custom untuk dimasukkan ke server ini")

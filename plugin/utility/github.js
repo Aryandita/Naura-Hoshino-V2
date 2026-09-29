@@ -7,6 +7,7 @@ const {
 } = require("../../src/utils/NauraContainerBuilder");
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("github")
     .setDescription("🐙 Cari profil pengguna GitHub.")

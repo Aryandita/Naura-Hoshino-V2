@@ -10,6 +10,7 @@ const CanvasAsset = require("../../src/models/CanvasAsset");
 const env = require("../../src/config/env");
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("admincosmetic")
     .setDescription("🔧 [OWNER] Manajemen penambahan/penghapusan aset kosmetik")

@@ -176,6 +176,7 @@ async function searchMovieWaterfall(query, year) {
 }
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("movie")
     .setDescription(

@@ -190,10 +190,133 @@ module.exports = {
               { name: "Pulihkan Server (Restore)", value: "restore" },
             ),
         ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("slowmode")
+        .setDescription("🐌 Atur mode lambat (slowmode) di channel ini.")
+        .addStringOption((opt) =>
+          opt
+            .setName("durasi")
+            .setDescription("Durasi slowmode (contoh: 5s, 10s, 1m, 1h, off)")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("alasan")
+            .setDescription("Alasan mengatur slowmode")
+            .setRequired(false),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("lockdown")
+        .setDescription("🔒 Kunci channel atau seluruh server.")
+        .addStringOption((opt) =>
+          opt
+            .setName("target")
+            .setDescription("Kunci channel saat ini atau seluruh server?")
+            .setRequired(true)
+            .addChoices(
+              { name: "Channel Ini", value: "channel" },
+              { name: "Seluruh Server", value: "server" },
+            ),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("alasan")
+            .setDescription("Alasan lockdown")
+            .setRequired(false),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("nickname")
+        .setDescription("✏️ Paksa ganti atau reset nama panggilan (nickname) member.")
+        .addUserOption((opt) =>
+          opt
+            .setName("user")
+            .setDescription("User yang ingin diubah namanya")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("nama_baru")
+            .setDescription("Nama baru (kosongkan untuk mereset)")
+            .setRequired(false),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("steal")
+        .setDescription("Mencuri emoji custom untuk dimasukkan ke server ini")
+        .addStringOption((opt) =>
+          opt
+            .setName("emoji")
+            .setDescription("Emoji custom yang ingin diambil")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("nama")
+            .setDescription("Nama baru emoji (opsional)")
+            .setRequired(false),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("voicemod")
+        .setDescription("🎙️ Moderasi Voice: Mute, Unmute, Deafen, atau Putus Sambungan.")
+        .addStringOption((opt) =>
+          opt
+            .setName("aksi")
+            .setDescription("Aksi moderasi voice")
+            .setRequired(true)
+            .addChoices(
+              { name: "Mute", value: "mute" },
+              { name: "Unmute", value: "unmute" },
+              { name: "Deafen", value: "deafen" },
+              { name: "Undeafen", value: "undeafen" },
+              { name: "Disconnect", value: "disconnect" },
+            ),
+        )
+        .addUserOption((opt) =>
+          opt
+            .setName("user")
+            .setDescription("User yang akan dimoderasi")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("alasan")
+            .setDescription("Alasan moderasi voice")
+            .setRequired(false),
+        ),
     ),
 
-  async execute(interaction) {
+  async execute(interaction, client) {
     const subcommand = interaction.options.getSubcommand();
+
+    if (subcommand === "slowmode") {
+      const slowmodeCmd = require("./slowmode");
+      return slowmodeCmd.execute(interaction, client);
+    }
+    if (subcommand === "lockdown") {
+      const lockdownCmd = require("./lockdown");
+      return lockdownCmd.execute(interaction, client);
+    }
+    if (subcommand === "nickname") {
+      const nickCmd = require("./nickname");
+      return nickCmd.execute(interaction, client);
+    }
+    if (subcommand === "steal") {
+      const stealCmd = require("./steal-emoji");
+      return stealCmd.execute(interaction, client);
+    }
+    if (subcommand === "voicemod") {
+      const vmCmd = require("./voicemod");
+      return vmCmd.execute(interaction, client);
+    }
 
     if (subcommand === "purge") {
       const amount = interaction.options.getInteger("jumlah");

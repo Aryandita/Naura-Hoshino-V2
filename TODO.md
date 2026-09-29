@@ -44,6 +44,22 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
   - Mengintegrasikan modul `commandOptimizer.js` untuk memangkas deskripsi subcommand panjang menjadi ringkas dan padat.
   - Menambahkan pre-flight check payload size di `CommandHandler.deploy()` dan pelacak galat per-command `error.rawError.errors`.
   - File: [`plugin/survival/survival.js`](plugin/survival/survival.js), [`plugin/survival/rpg.js`](plugin/survival/rpg.js), [`src/utils/commandOptimizer.js`](src/utils/commandOptimizer.js), [`src/managers/CommandHandler.js`](src/managers/CommandHandler.js).
+- [x] **[BUG - APPLICATION_COMMANDS_LIMIT_REACHED] Penyelarasan Batas 100 Application Commands Discord API via Konsolidasi Modular**
+  - Mengatasi galat deploy `DiscordAPIError[30032]: Maximum number of application commands reached (100)` saat bot restart (sebelumnya terdapat 121 commands aktif).
+  - Mengonsolidasikan 27 slash commands mandiri ke dalam command payung terpadu: `/fun` (omikuji, hiburan kasual), `/tool` (kalkulator, generator QR, password, warna, downloader, shortener), `/dev` (sandbox, npm, github), `/media` (anime & film), `/minigame` (minesweeper, arcade), dan `/moderation` (slowmode, lockdown, nickname, voicemod, emoji theft).
+  - Memanfaatkan properti `isSubcommand: true` agar CommandHandler tidak mendaftarkan file subcommand sebagai root command secara ganda, berhasil memangkas total command aktif dari 121 menjadi 94 (88 slash commands + 6 context menus).
+  - File: [`plugin/utility/fun.js`](plugin/utility/fun.js), [`plugin/utility/tool.js`](plugin/utility/tool.js), [`plugin/utility/dev.js`](plugin/utility/dev.js), [`plugin/utility/media.js`](plugin/utility/media.js), [`plugin/minigames/minigame.js`](plugin/minigames/minigame.js), [`plugin/admin/moderation.js`](plugin/admin/moderation.js).
+- [x] **[BUG - SURVIVAL_PAYLOAD_WARNING] Optimasi Ukuran Payload Command /survival (< 7000 Bytes)**
+  - Mengatasi warning deploy `⚠️ WARNING [DEPLOY WARNING] Command "/survival" (index #45) berukuran 7271 bytes mendekati batas maksimal 8000 bytes`.
+  - Mengonfigurasi `optimizeCommandBuilder` dengan `keepChoicesLimit: 0` dan `maxDescLength: 38` pada data builder `/survival`, mengalihkan opsi statis besar ke autocomplete dinamis tanpa mengurangi fungsionalitas game.
+  - Memangkas ukuran payload JSON `/survival` dari 7.271 bytes menjadi 6.776 bytes (bebas dari warning threshold $\ge 7000$ bytes).
+  - File: [`src/survival/helpers/commandOptimizer.js`](src/survival/helpers/commandOptimizer.js), [`src/survival/data/survivalData.js`](src/survival/data/survivalData.js).
+- [x] **[BUG - VITAL_DEAD_END_HOSPITAL_RESCUE] Sistem Penyelamatan Rumah Sakit / Klinik Darurat saat HP 0 & Pembayaran Anti-Minus**
+  - Mengatasi kondisi jalan buntu (*dead end*) saat pemain menyentuh HP 0 atau seluruh status fisik drop ke angka 0.
+  - Mengotomatiskan evakuasi ke Rumah Sakit Umum Pratama jika lokasi berada di Kota, atau ke Klinik Darurat jika berada di Wilayah Pedesaan/Wilds.
+  - Memulihkan status vital darurat pemain ke HP 25 (min 25% max HP), Lapar 30, Haus 30, dan Stamina 30.
+  - Menerapkan pemotongan biaya perawatan proporsional dan aman anti-minus (*clamped*): jika di Kota memotong 50 NC dari `UserProfile.economy_wallet`, sedangkan jika di Desa memotong 500 NSF dari `UserSurvival.starFragments`.
+  - File: [`src/survival/helpers/survivalVitals.js`](src/survival/helpers/survivalVitals.js), [`src/survival/helpers/survivalTime.js`](src/survival/helpers/survivalTime.js), [`src/survival/helpers/survivalVitals.test.js`](src/survival/helpers/survivalVitals.test.js).
 - [x] **[BUG - MUSIC_INVALID_ARRAY_LENGTH] Pemulihan Batas Subcommand & Separasi Radio Host (`plugin/music/music.js`)**
   - Mengatasi galat fatal `💥 ERROR [COMMANDS] Gagal memuat file command music.js: Invalid Array length`.
   - Discord API membatasi maksimal 25 options/subcommands per root command, sedangkan `music.js` sebelumnya memuat 26 subcommands.

@@ -18,6 +18,7 @@ const redisManager = require("../../src/managers/redisManager");
 const currency = require("../../src/survival/engines/currency");
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("arcade")
     .setDescription(

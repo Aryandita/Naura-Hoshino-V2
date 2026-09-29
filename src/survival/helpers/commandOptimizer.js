@@ -2,16 +2,16 @@
 // Memotong payload JSON agar selalu berada di bawah batas ketat Discord API (8000 bytes)
 // tanpa mengurangi fitur pengguna dengan mengalihkan choices besar ke autocomplete dinamis.
 
-function optimizeCommandBuilder(builder, keepChoicesLimit = 2) {
+function optimizeCommandBuilder(builder, keepChoicesLimit = 0, maxDescLength = 38) {
   const choicesRegistry = new Map();
 
   function processOptions(options, parentPath = "") {
     for (const opt of options) {
       const currentPath = parentPath ? `${parentPath}_${opt.name}` : opt.name;
 
-      // Ringkas deskripsi jika terlalu panjang (> 50 karakter)
-      if (opt.description && opt.description.length > 50) {
-        opt.description = `${opt.description.slice(0, 47)}...`;
+      // Ringkas deskripsi jika terlalu panjang
+      if (opt.description && opt.description.length > maxDescLength) {
+        opt.description = `${opt.description.slice(0, maxDescLength - 3)}...`;
       }
 
       // Jika pilihan statis lebih dari batas, daftarkan ke autocomplete registry

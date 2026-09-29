@@ -94,14 +94,34 @@ test("survivalVitals - drainVitals and recoverVitals with mock cache", async (t)
 
 test("survivalVitals - checkAndRescueDeadEnd rescues player in total dead-end state", async (t) => {
   const originalUpdateUserSurvival = cacheManager.updateUserSurvival;
+  const originalDebitUserSurvival = cacheManager.debitUserSurvival;
+  const originalDebitUserProfile = cacheManager.debitUserProfile;
+  const originalGetUserProfile = cacheManager.getUserProfile;
   t.after(() => {
     cacheManager.updateUserSurvival = originalUpdateUserSurvival;
+    cacheManager.debitUserSurvival = originalDebitUserSurvival;
+    cacheManager.debitUserProfile = originalDebitUserProfile;
+    cacheManager.getUserProfile = originalGetUserProfile;
   });
 
   let updatedData = null;
+  let debitedSurvival = null;
+  let debitedProfile = null;
+
   cacheManager.updateUserSurvival = async (userId, data) => {
     updatedData = data;
     return true;
+  };
+  cacheManager.debitUserSurvival = async (userId, field, amount) => {
+    debitedSurvival = { userId, field, amount };
+    return { ok: true, amount };
+  };
+  cacheManager.debitUserProfile = async (userId, field, amount) => {
+    debitedProfile = { userId, field, amount };
+    return { ok: true, amount };
+  };
+  cacheManager.getUserProfile = async (userId) => {
+    return { economy_wallet: 150 };
   };
 
   const deadEndSurvival = {
@@ -111,17 +131,41 @@ test("survivalVitals - checkAndRescueDeadEnd rescues player in total dead-end st
     thirst: 0,
     stamina: 0,
     currentLocation: "hutan",
+    starFragments: 1000,
   };
 
   const rescueRes = await survivalVitals.checkAndRescueDeadEnd("deadUser", deadEndSurvival);
   assert.strictEqual(rescueRes.rescued, true);
-  assert.strictEqual(deadEndSurvival.hp >= 50, true);
-  assert.strictEqual(deadEndSurvival.hunger, 50);
-  assert.strictEqual(deadEndSurvival.thirst, 50);
-  assert.strictEqual(deadEndSurvival.stamina, 50);
+  assert.strictEqual(rescueRes.clinic, "Klinik Desa");
+  assert.strictEqual(rescueRes.penalty, 500);
+  assert.strictEqual(rescueRes.currencyType, "NSF");
+  assert.strictEqual(deadEndSurvival.hp >= 25, true);
+  assert.strictEqual(deadEndSurvival.hunger, 30);
+  assert.strictEqual(deadEndSurvival.thirst, 30);
+  assert.strictEqual(deadEndSurvival.stamina, 30);
   assert.strictEqual(deadEndSurvival.currentLocation, "desa");
+  assert.strictEqual(deadEndSurvival.starFragments, 500);
   assert.ok(updatedData);
   assert.strictEqual(updatedData.currentLocation, "desa");
+  assert.deepStrictEqual(debitedSurvival, { userId: "deadUser", field: "starFragments", amount: 500 });
+
+  // Kasus penyelamatan di Kota (potong 50 NC)
+  const deadEndCity = {
+    survival_level: 1,
+    hp: 0,
+    hunger: 0,
+    thirst: 0,
+    stamina: 0,
+    currentLocation: "kota",
+    starFragments: 1000,
+  };
+  const cityRescueRes = await survivalVitals.checkAndRescueDeadEnd("cityUser", deadEndCity);
+  assert.strictEqual(cityRescueRes.rescued, true);
+  assert.strictEqual(cityRescueRes.clinic, "RS Kota");
+  assert.strictEqual(cityRescueRes.penalty, 50);
+  assert.strictEqual(cityRescueRes.currencyType, "NC");
+  assert.strictEqual(deadEndCity.currentLocation, "kota");
+  assert.deepStrictEqual(debitedProfile, { userId: "cityUser", field: "economy_wallet", amount: 50 });
 
   // Kasus pemain sehat tidak di-rescue
   const healthySurvival = {

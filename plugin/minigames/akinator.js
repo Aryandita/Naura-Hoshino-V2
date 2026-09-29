@@ -40,6 +40,7 @@ function getAki() {
 const ui = require("../../src/config/ui");
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("akinator")
     .setDescription(

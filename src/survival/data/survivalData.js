@@ -18,6 +18,6 @@ addEconomyGroup(builder);
 addLifeGroup(builder);
 addProfileGroup(builder);
 
-const { data } = optimizeCommandBuilder(builder, 2);
+const { data } = optimizeCommandBuilder(builder, 0, 38);
 
 module.exports = data;

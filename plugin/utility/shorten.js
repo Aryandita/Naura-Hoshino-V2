@@ -7,6 +7,7 @@ const {
 } = require("../../src/utils/NauraContainerBuilder");
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("shorten")
     .setDescription("🔗 Pendekkan URL yang panjang (Powered by is.gd).")

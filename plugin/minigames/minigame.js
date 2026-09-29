@@ -418,9 +418,34 @@ module.exports = {
               { name: "⚔️ Duel Master", value: "duel" },
             ),
         ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("minesweeper")
+        .setDescription("💣 Mainkan game Minesweeper klasik di Discord!")
+        .addIntegerOption((opt) =>
+          opt
+            .setName("ukuran")
+            .setDescription("Ukuran grid (5-14)")
+            .setRequired(false)
+            .setMinValue(5)
+            .setMaxValue(14),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName("bom")
+            .setDescription("Jumlah bom")
+            .setRequired(false)
+            .setMinValue(1),
+        ),
     ),
 
   async execute(interaction) {
+    const subcommand = interaction.options.getSubcommand(false);
+    if (subcommand === "minesweeper") {
+      const ms = require("./minesweeper");
+      return ms.execute(interaction);
+    }
     await interaction.deferReply();
     await runMinigameLogic(interaction);
   },
