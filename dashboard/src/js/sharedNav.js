@@ -600,7 +600,10 @@
     const AVAILABLE_THEMES = [
         { id: 'midnight', label: 'Midnight', icon: 'fa-solid fa-moon' },
         { id: 'sakura', label: 'Sakura', icon: 'fa-solid fa-fan' },
-        { id: 'oled', label: 'OLED Black', icon: 'fa-solid fa-sun' }
+        { id: 'cyber-neon', label: 'Cyber Neon', icon: 'fa-solid fa-bolt' },
+        { id: 'emerald-nature', label: 'Emerald Wilds', icon: 'fa-solid fa-leaf' },
+        { id: 'light-horizon', label: 'Light Horizon', icon: 'fa-solid fa-sun' },
+        { id: 'oled', label: 'OLED Black', icon: 'fa-solid fa-circle-half-stroke' }
     ];
 
     function applyTheme(themeId) {
@@ -650,7 +653,7 @@
             themePill.type = 'button';
             themePill.id = 'themeSwitcherPill';
             themePill.className = 'theme-switcher-pill';
-            themePill.title = 'Ganti Tema Dashboard (Midnight / Sakura / OLED)';
+            themePill.title = 'Ganti Tema Dashboard (Midnight / Sakura / Cyber / Emerald / OLED)';
 
             const curTheme = localStorage.getItem('naura_theme') || 'midnight';
             const curObj = AVAILABLE_THEMES.find(t => t.id === curTheme) || AVAILABLE_THEMES[0];
