@@ -17,6 +17,7 @@ const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 const ui = require("../../src/config/ui");
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("sensei")
     .setDescription("🎓 Tanya Naura Sensei tentang cara bermain dan fitur bot!")

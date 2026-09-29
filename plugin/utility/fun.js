@@ -1,90 +1,43 @@
 "use strict";
 
-const { SlashCommandBuilder, MessageFlags } = require("discord.js");
-const cmd8ball = require("./8ball");
-const cmdCoinflip = require("./coinflip");
-const cmdDiceroll = require("./diceroll");
-const cmdFortune = require("./fortune");
-const cmdQuote = require("./quote");
-const cmdMeme = require("./meme");
-const cmdShip = require("./ship");
+const { SlashCommandBuilder, ButtonStyle } = require("discord.js");
+const { buildInteractiveHubPayload } = require("../../src/utils/hubMenuHelper");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("fun")
-    .setDescription("🎉 Hiburan kasual, omikuji, meme, dadu, dan permainan teks seru.")
-    .addSubcommand((sub) =>
-      sub
-        .setName("8ball")
-        .setDescription("🎱 Tanyakan sesuatu pada bola ajaib.")
-        .addStringOption((opt) =>
-          opt
-            .setName("pertanyaan")
-            .setDescription("Pertanyaan Yes/No kamu")
-            .setRequired(true),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub.setName("coinflip").setDescription("🪙 Lempar koin (Heads / Tails)."),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("diceroll")
-        .setDescription("🎲 Lempar dadu (pilih jumlah sisi).")
-        .addIntegerOption((opt) =>
-          opt
-            .setName("sisi")
-            .setDescription("Jumlah sisi dadu (contoh: 6, 20)")
-            .setRequired(false)
-            .setMinValue(2)
-            .setMaxValue(100),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("fortune")
-        .setDescription("🌸 Ramalan Omikuji harian, berkah hoki & buff RPG."),
-    )
-    .addSubcommand((sub) =>
-      sub.setName("quote").setDescription("📖 Dapatkan kutipan inspirasional acak."),
-    )
-    .addSubcommand((sub) =>
-      sub.setName("meme").setDescription("😂 Ambil meme acak dari internet."),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("ship")
-        .setDescription("💘 Cek persentase kecocokan cinta dengan seseorang.")
-        .addUserOption((opt) =>
-          opt
-            .setName("user")
-            .setDescription("Pilih pasangan yang ingin di-ship")
-            .setRequired(true),
-        ),
-    ),
+    .setDescription("🎉 Buka Hub Hiburan interaktif Naura: omikuji, bola ajaib, dadu, meme dan kutipan"),
 
-  async execute(interaction, client) {
-    const subcommand = interaction.options.getSubcommand();
-    switch (subcommand) {
-      case "8ball":
-        return cmd8ball.execute(interaction, client);
-      case "coinflip":
-        return cmdCoinflip.execute(interaction, client);
-      case "diceroll":
-        return cmdDiceroll.execute(interaction, client);
-      case "fortune":
-        return cmdFortune.execute(interaction, client);
-      case "quote":
-        return cmdQuote.execute(interaction, client);
-      case "meme":
-        return cmdMeme.execute(interaction, client);
-      case "ship":
-        return cmdShip.execute(interaction, client);
-      default:
-        return interaction.reply({
-          content: "Subcommand tidak dikenali.",
-          flags: MessageFlags.Ephemeral,
-        });
-    }
+  async execute(interaction) {
+    const payload = buildInteractiveHubPayload({
+      title: "🎉 Naura Fun and Casual Hub",
+      authorName: "Naura Entertainment Hub",
+      description: [
+        "Hai hai! Selamat datang di **Pusat Hiburan Naura**! ✨",
+        "Lagi bosan atau butuh hiburan santai? Coba ramal harimu dengan Omikuji, tanyakan sesuatu pada bola ajaib, atau lempar dadu hoki!",
+        "",
+        "💡 *Pilih salah satu tombol cepat di bawah atau buka menu dropdown untuk melihat semua permainan seru.*",
+      ].join("\n"),
+      accentColorHex: "#F59E0B",
+      quickButtons: [
+        { id: "fortune", label: "Omikuji Hoki", emoji: "🌸", style: ButtonStyle.Success },
+        { id: "8ball", label: "Bola Ajaib", emoji: "🎱", style: ButtonStyle.Primary },
+        { id: "dice", label: "Lempar Dadu", emoji: "🎲", style: ButtonStyle.Secondary },
+      ],
+      selectOptions: [
+        { value: "fortune", label: "Ramalan Omikuji", emoji: "🌸", description: "Cek keberuntungan harian dan buff berkah RPG" },
+        { value: "8ball", label: "Magic 8-Ball", emoji: "🎱", description: "Tanyakan apa saja pada bola ajaib Naura" },
+        { value: "dice", label: "Lempar Dadu", emoji: "🎲", description: "Lempar dadu keberuntungan 6 sisi" },
+        { value: "coin", label: "Lempar Koin", emoji: "🪙", description: "Tentukan pilihan dengan lemparan koin (Heads / Tails)" },
+        { value: "meme", label: "Meme Acak", emoji: "😂", description: "Ambil meme kocak dari internet untuk menghibur harimu" },
+        { value: "quote", label: "Kutipan Bijak", emoji: "📖", description: "Kata mutiara dan inspirasi penuh makna" },
+        { value: "ship", label: "Kalkulator Cinta", emoji: "💘", description: "Ukur persentase kecocokanmu dengan seseorang" },
+      ],
+      category: "fun",
+      userId: interaction.user.id,
+      lang: interaction.localeLang,
+    });
+
+    return interaction.reply(payload);
   },
 };

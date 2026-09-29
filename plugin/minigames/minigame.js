@@ -236,218 +236,78 @@ const ttsDB = [
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("minigame")
-    .setDescription("🎮 Mainkan berbagai macam kuis dan game asah otak Naura!")
+    .setDescription("🎮 Buka Arena Minigame dan Arcade interaktif Naura Hoshino"),
 
-    .addSubcommand((sub) =>
-      sub
-        .setName("math")
-        .setDescription("Kuis Matematika Kecepatan.")
-        .addStringOption((opt) =>
-          opt
-            .setName("kesulitan")
-            .setDescription("Tingkat Kesulitan")
-            .setRequired(true)
-            .addChoices(
-              { name: "🟢 Pemula", value: "pemula" },
-              { name: "🔵 Tingkat Lanjut", value: "lanjut" },
-              { name: "🟣 Master", value: "master" },
-              { name: "🟡 GrandMaster", value: "grandmaster" },
-            ),
-        ),
-    )
+  async execute(interaction, client) {
+    const { buildInteractiveHubPayload } = require("../../src/utils/hubMenuHelper");
+    const payload = buildInteractiveHubPayload({
+      title: "🎮 Naura Arcade dan Minigame Arena",
+      authorName: "Naura Minigames Hub",
+      description: [
+        "Selamat datang di **Arena Minigame Naura**! ✨",
+        "Pilih tantangan asah otak, game refleks, atau adu insting bersama pemain lain untuk memenangkan hadiah **NSF** dan skor peringkat.",
+        "",
+        "💡 *Gunakan tombol pintas atau pilih game dari menu dropdown di bawah untuk mulai bermain.*",
+      ].join("\n"),
+      accentColorHex: "#9B59B6",
+      quickButtons: [
+        { id: "minesweeper", label: "Minesweeper", emoji: "💣", style: ButtonStyle.Danger },
+        { id: "arcade", label: "Arcade Games", emoji: "🕹️", style: ButtonStyle.Primary },
+        { id: "math", label: "Kuis Matematika", emoji: "🧮", style: ButtonStyle.Success },
+      ],
+      selectOptions: [
+        { value: "minesweeper", label: "Minesweeper", emoji: "💣", description: "Bongkar papan ranjau klasik tanpa meledak" },
+        { value: "arcade", label: "Arcade Suite", emoji: "🕹️", description: "Kumpulan mini games seru dan refleks cepat" },
+        { value: "math", label: "Matematika Cepat", emoji: "🧮", description: "Uji kecepatan berhitung di bawah tekanan waktu" },
+        { value: "trivia", label: "Kuis Trivia AI", emoji: "🧠", description: "Kuis pengetahuan umum dari berbagai topik" },
+        { value: "akinator", label: "Akinator AI", emoji: "🧞", description: "Tebak karakter yang sedang kamu pikirkan" },
+        { value: "hangman", label: "Hangman", emoji: "🔤", description: "Tebak kata huruf per huruf sebelum tali terpasang" },
+        { value: "memory", label: "Memory Match", emoji: "🎴", description: "Cocokkan pasangan emoji yang tersembunyi" },
+        { value: "tebakkata", label: "Tebak Kata Anagram", emoji: "🔠", description: "Susun kembali huruf yang teracak menjadi kata benar" },
+        { value: "rps", label: "Batu Gunting Kertas", emoji: "✂️", description: "Adu insting klasik melawan AI atau teman" },
+        { value: "tictactoe", label: "Tic-Tac-Toe", emoji: "❌", description: "Adu taktik 3x3 PvP atau lawan Bot" },
+        { value: "tod", label: "Truth or Dare", emoji: "🎭", description: "Permainan kejujuran dan tantangan seru" },
+        { value: "leaderboard", label: "Papan Peringkat", emoji: "🏆", description: "Lihat pemain terbaik di server" },
+      ],
+      category: "minigame",
+      userId: interaction.user.id,
+      lang: interaction.localeLang,
+    });
+    return interaction.reply(payload);
+  },
 
-    .addSubcommand((sub) =>
-      sub
-        .setName("trivia")
-        .setDescription("Kuis Pengetahuan Umum AI.")
-        .addStringOption((opt) =>
-          opt
-            .setName("kesulitan")
-            .setDescription("Tingkat Kesulitan")
-            .setRequired(true)
-            .addChoices(
-              { name: "🟢 Pemula", value: "pemula" },
-              { name: "🔵 Tingkat Lanjut", value: "lanjut" },
-              { name: "🟣 Master", value: "master" },
-              { name: "🟡 GrandMaster", value: "grandmaster" },
-            ),
-        ),
-    )
-
-    .addSubcommand((sub) =>
-      sub
-        .setName("rps")
-        .setDescription("Batu Gunting Kertas PvP atau Lawan Bot.")
-        .addIntegerOption((opt) =>
-          opt
-            .setName("taruhan")
-            .setDescription("Jumlah taruhan NSF (Star Fragments)")
-            .setRequired(true),
-        )
-        .addUserOption((opt) =>
-          opt
-            .setName("lawan")
-            .setDescription("Pilih pemain untuk PvP (Kosongkan untuk AI)")
-            .setRequired(false),
-        ),
-    )
-
-    .addSubcommand((sub) =>
-      sub
-        .setName("tictactoe")
-        .setDescription("Tic-Tac-Toe PvP atau Lawan Bot.")
-        .addIntegerOption((opt) =>
-          opt
-            .setName("taruhan")
-            .setDescription("Jumlah taruhan NSF (Star Fragments)")
-            .setRequired(true),
-        )
-        .addUserOption((opt) =>
-          opt
-            .setName("lawan")
-            .setDescription("Pilih pemain untuk PvP (Kosongkan untuk AI)")
-            .setRequired(false),
-        ),
-    )
-
-    .addSubcommand((sub) =>
-      sub
-        .setName("wordle")
-        .setDescription("Tebak kata rahasia 5 huruf (6 kesempatan).")
-        .addIntegerOption((opt) =>
-          opt
-            .setName("taruhan")
-            .setDescription("Jumlah taruhan NSF (Star Fragments)")
-            .setRequired(true),
-        ),
-    )
-
-    // ==========================================
-    // ✨ SUBCOMMAND BARU: DUEL REAL-TIME
-    // ==========================================
-    .addSubcommand((sub) =>
-      sub
-        .setName("duel")
-        .setDescription(
-          "⚔️ Tantang pemain lain dalam duel matematika real-time!",
-        )
-        .addUserOption((opt) =>
-          opt
-            .setName("lawan")
-            .setDescription("Pilih pemain yang ingin ditantang")
-            .setRequired(true),
-        )
-        .addIntegerOption((opt) =>
-          opt
-            .setName("taruhan")
-            .setDescription("Jumlah taruhan NSF (opsional)")
-            .setRequired(false),
-        ),
-    )
-
-    // ==========================================
-    // 🧩 SUBCOMMAND BARU: ASAH OTAK
-    // ==========================================
-    .addSubcommand((sub) =>
-      sub
-        .setName("akinator")
-        .setDescription(
-          "🧞 Tebak karakter yang sedang kamu pikirkan bersama Akinator!",
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("hangman")
-        .setDescription("🔤 Mainkan game tebak kata klasik (Hangman)."),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("memory")
-        .setDescription("🎴 Mainkan game Memory Match mencocokkan emoji."),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("tebakkata")
-        .setDescription("🔠 Tebak anagram kata yang diacak.")
-        .addStringOption((opt) =>
-          opt
-            .setName("kesulitan")
-            .setDescription("Tingkat Kesulitan")
-            .setRequired(true)
-            .addChoices(
-              { name: "🟢 Mudah", value: "mudah" },
-              { name: "🔴 Sulit", value: "sulit" },
-            ),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("tebakgambar")
-        .setDescription("🖼️ Tebak objek apa yang ada di dalam gambar."),
-    )
-    .addSubcommand((sub) =>
-      sub.setName("tts").setDescription("📝 Teka Teki Silang Mini."),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("tod")
-        .setDescription("🎭 Mainkan game Truth or Dare bersama temanmu!")
-        .addUserOption((opt) =>
-          opt
-            .setName("teman")
-            .setDescription("Pilih teman bermain (opsional)")
-            .setRequired(false),
-        ),
-    )
-
-    // ==========================================
-    // 🏆 PEMBARUAN LEADERBOARD
-    // ==========================================
-    .addSubcommand((sub) =>
-      sub
-        .setName("leaderboard")
-        .setDescription("🏆 Papan Peringkat Minigame.")
-        .addStringOption((opt) =>
-          opt
-            .setName("kategori")
-            .setDescription("Kategori Peringkat")
-            .setRequired(true)
-            .addChoices(
-              { name: "🧮 Matematika", value: "math" },
-              { name: "🧠 Trivia", value: "trivia" },
-              { name: "⚔️ Duel Master", value: "duel" },
-            ),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("minesweeper")
-        .setDescription("💣 Mainkan game Minesweeper klasik di Discord!")
-        .addIntegerOption((opt) =>
-          opt
-            .setName("ukuran")
-            .setDescription("Ukuran grid (5-14)")
-            .setRequired(false)
-            .setMinValue(5)
-            .setMaxValue(14),
-        )
-        .addIntegerOption((opt) =>
-          opt
-            .setName("bom")
-            .setDescription("Jumlah bom")
-            .setRequired(false)
-            .setMinValue(1),
-        ),
-    ),
-
-  async execute(interaction) {
-    const subcommand = interaction.options.getSubcommand(false);
-    if (subcommand === "minesweeper") {
-      const ms = require("./minesweeper");
-      return ms.execute(interaction);
+  async launchSubgame(interaction, gameName) {
+    const mockInteraction = {
+      ...interaction,
+      options: {
+        getSubcommand: () => gameName,
+        getString: (name) => {
+          if (name === "kesulitan") return "pemula";
+          if (name === "kategori") return "math";
+          return null;
+        },
+        getInteger: () => 50,
+        getUser: () => null,
+      },
+      deferReply: async () => {},
+      editReply: async (payload) => {
+        if (interaction.deferred || interaction.replied) {
+          return interaction.editReply(payload);
+        }
+        return interaction.reply(payload);
+      },
+      reply: async (payload) => {
+        if (interaction.deferred || interaction.replied) {
+          return interaction.followUp(payload);
+        }
+        return interaction.reply(payload);
+      },
+      followUp: async (payload) => interaction.followUp(payload),
+    };
+    if (!interaction.deferred && !interaction.replied) {
+      await interaction.deferReply();
     }
-    await interaction.deferReply();
-    await runMinigameLogic(interaction);
+    await runMinigameLogic(mockInteraction);
   },
 
   async executePrefix(message, args, client) {

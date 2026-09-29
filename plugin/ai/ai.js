@@ -1,19 +1,8 @@
 "use strict";
 
-const { SlashCommandBuilder } = require("discord.js");
-
-const ui = require("../../src/config/ui");
+const { SlashCommandBuilder, ButtonStyle } = require("discord.js");
 const UserProfile = require("../../src/models/UserProfile");
-const { logger } = require("../../src/managers/logger");
-
 const chat = require("./subcommands/chat");
-const imagine = require("./subcommands/imagine");
-const transcribe = require("./subcommands/transcribe");
-const translate = require("./subcommands/translate");
-const search = require("./subcommands/search");
-const settings = require("./subcommands/settings");
-
-const handlers = { chat, imagine, transcribe, translate, search, settings };
 
 function isPremium(profile) {
   return Boolean(
@@ -26,145 +15,65 @@ function isPremium(profile) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("ai")
-    .setDescription("Kumpulan fitur kecerdasan buatan milik Naura Hoshino")
-    .addSubcommand((sub) =>
-      sub
-        .setName("chat")
-        .setDescription("Ngobrol santai bareng Naura")
-        .addStringOption((opt) =>
-          opt
-            .setName("pesan")
-            .setDescription("Apa yang ingin kamu tanyakan ke Naura?")
-            .setRequired(true),
-        )
-        .addAttachmentOption((opt) =>
-          opt
-            .setName("lampiran")
-            .setDescription("Berkas dokumen (PDF, Word, Excel, CSV, TXT) untuk dianalisis Naura")
-            .setRequired(false),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("imagine")
-        .setDescription("Minta Naura melukiskan imajinasimu (khusus V.I.P)")
-        .addStringOption((opt) =>
-          opt
-            .setName("prompt")
-            .setDescription("Ceritakan gambar seperti apa yang kamu bayangkan")
-            .setRequired(true),
-        )
-        .addStringOption((opt) =>
-          opt
-            .setName("gaya")
-            .setDescription("Pilih gaya artistik gambarnya")
-            .setRequired(false)
-            .addChoices(
-              { name: "Kawaii Anime (default)", value: "kawaii-anime" },
-              { name: "Cyberpunk Futuristik", value: "cyberpunk" },
-              { name: "Realistis (Foto DSLR)", value: "realistic" },
-              { name: "Cat Air (Watercolor)", value: "watercolor" },
-              { name: "Fantasi Epik", value: "fantasy" },
-              { name: "Tanpa Gaya (Prompt Murni)", value: "none" },
-            ),
-        )
-        .addIntegerOption((opt) =>
-          opt
-            .setName("jumlah")
-            .setDescription("Jumlah variasi gambar (khusus Premium, maks 4)")
-            .setRequired(false)
-            .setMinValue(1)
-            .setMaxValue(4),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("transcribe")
-        .setDescription(
-          "Naura dengarkan audio atau videomu lalu ubah jadi teks",
-        )
-        .addAttachmentOption((opt) =>
-          opt
-            .setName("file")
-            .setDescription("Unggah audio (MP3, WAV, M4A) atau video (MP4)")
-            .setRequired(true),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("translate")
-        .setDescription("Naura bantu terjemahkan tulisanmu")
-        .addStringOption((opt) =>
-          opt
-            .setName("teks")
-            .setDescription("Teks yang ingin diterjemahkan")
-            .setRequired(true),
-        )
-        .addStringOption((opt) =>
-          opt
-            .setName("ke_bahasa")
-            .setDescription(
-              "Mau diterjemahkan ke bahasa apa? (misal: English, Japanese)",
-            )
-            .setRequired(true),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("search")
-        .setDescription("Naura carikan informasinya di internet")
-        .addStringOption((opt) =>
-          opt
-            .setName("kueri")
-            .setDescription("Kata kunci yang mau dicari")
-            .setRequired(true),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("settings")
-        .setDescription(
-          "Atur sifat dan catatan khusus Naura untuk server ini (Admin)",
-        )
-        .addStringOption((opt) =>
-          opt
-            .setName("persona")
-            .setDescription("Sifat Naura khusus di server ini")
-            .setRequired(false),
-        )
-        .addStringOption((opt) =>
-          opt
-            .setName("knowledge")
-            .setDescription("FAQ atau aturan server yang perlu Naura ingat")
-            .setRequired(false),
-        ),
+    .setDescription("🤖 Pusat Kecerdasan Buatan Naura: chat, story RPG, voice DJ dan asisten pintar")
+    .addStringOption((opt) =>
+      opt
+        .setName("pesan")
+        .setDescription("Tanyakan apa saja langsung ke Naura AI (opsional)")
+        .setRequired(false),
     ),
 
-  async execute(interaction) {
-    await interaction.deferReply();
-
-    const subcommand = interaction.options.getSubcommand();
-    const handler = handlers[subcommand];
-
-    if (!handler) {
-      return ui.sendError(
-        interaction,
-        "err_sys_1",
-        `Subcommand tidak dikenali: ${subcommand}`,
-      );
-    }
-
-    try {
+  async execute(interaction, client) {
+    const directMessage = interaction.options ? interaction.options.getString("pesan") : null;
+    if (directMessage) {
+      await interaction.deferReply();
+      const mockInteraction = {
+        ...interaction,
+        options: {
+          getString: () => directMessage,
+          getAttachment: () => null,
+        },
+      };
       const [profile] = await UserProfile.findOrCreate({
         where: { userId: interaction.user.id },
       });
-      return await handler(interaction, {
+      return chat(mockInteraction, {
         profile,
         isPremiumUser: isPremium(profile),
       });
-    } catch (error) {
-      logger.error(`[AI] Gagal menjalankan /ai ${subcommand}`, error);
-      return ui.sendError(interaction, "err_sys_1", `${error.message}`);
     }
+
+    const { buildInteractiveHubPayload } = require("../../src/utils/hubMenuHelper");
+    const payload = buildInteractiveHubPayload({
+      title: "🤖 Naura Artificial Intelligence Suite",
+      authorName: "Naura Intelligent Core",
+      description: [
+        "Hai! Aku **Naura Hoshino**, asisten AI pribadimu di Discord! ✨",
+        "Pilih fitur kecerdasan buatan yang ingin kamu gunakan:",
+        "Ngobrol santai, bertualang di Story Mode RPG, berbincang di Voice Channel, atau minta bantuan belajar bersama Naura Sensei!",
+        "",
+        "💡 *Pilih salah satu tombol cepat di bawah atau buka menu dropdown untuk melihat semua kapabilitas AI.*",
+      ].join("\n"),
+      accentColorHex: "#38BDF8",
+      quickButtons: [
+        { id: "chat", label: "Ngobrol AI", emoji: "💬", style: ButtonStyle.Primary },
+        { id: "story", label: "Story Mode RPG", emoji: "📖", style: ButtonStyle.Success },
+        { id: "voice", label: "Voice Companion", emoji: "🎙️", style: ButtonStyle.Secondary },
+      ],
+      selectOptions: [
+        { value: "chat", label: "Dialog Percakapan AI", emoji: "💬", description: "Tanya jawab cerdas, diskusi santai, dan bantuan kreatif" },
+        { value: "story", label: "Story Mode RPG", emoji: "📖", description: "Petualangan RPG naratif interaktif bersama AI Dungeon Master" },
+        { value: "voice", label: "Voice Companion dan DJ", emoji: "🎙️", description: "Bercakap dengan suara asli Naura di Voice Channel" },
+        { value: "vision", label: "Analisis Gambar Multimodal", emoji: "👁️", description: "Pahami konteks foto, screenshot, dan diagram visual" },
+        { value: "sensei", label: "Naura Sensei", emoji: "🎓", description: "Tutor dan pemandu sistem bot serta pembelajaran" },
+        { value: "mystery", label: "Detektif Misteri AI", emoji: "🕵️", description: "Game deduksi sosial dan pemecahan kasus pembunuhan" },
+        { value: "persona", label: "Pengaturan Persona", emoji: "🎭", description: "Kustomisasi gaya bicara dan sifat unik Naura AI" },
+      ],
+      category: "ai",
+      userId: interaction.user.id,
+      lang: interaction.localeLang,
+    });
+
+    return interaction.reply(payload);
   },
 };

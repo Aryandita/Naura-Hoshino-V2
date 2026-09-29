@@ -1,109 +1,42 @@
 "use strict";
 
-const { SlashCommandBuilder, MessageFlags } = require("discord.js");
-const cmdCalc = require("./calculator");
-const cmdQr = require("./qr");
-const cmdPassword = require("./password");
-const cmdColor = require("./color");
-const cmdShorten = require("./shorten");
-const cmdDownloader = require("./downloader");
+const { SlashCommandBuilder, ButtonStyle } = require("discord.js");
+const { buildInteractiveHubPayload } = require("../../src/utils/hubMenuHelper");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("tool")
-    .setDescription("🛠️ Beragam perkakas praktis: kalkulator, QR, password, warna, URL shortener & unduhan media.")
-    .addSubcommand((sub) =>
-      sub.setName("calculator").setDescription("🧮 Buka kalkulator interaktif."),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("qr")
-        .setDescription("📱 Buat QR Code dari teks atau URL.")
-        .addStringOption((opt) =>
-          opt
-            .setName("teks")
-            .setDescription("Teks atau URL yang ingin diubah menjadi QR Code")
-            .setRequired(true),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("password")
-        .setDescription("🔑 Generate password acak yang kuat (Dikirim via DM).")
-        .addIntegerOption((opt) =>
-          opt
-            .setName("panjang")
-            .setDescription("Panjang password (8-32 karakter, default 16)")
-            .setRequired(false)
-            .setMinValue(8)
-            .setMaxValue(32),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("color")
-        .setDescription("🎨 Lihat informasi dan visual warna HEX.")
-        .addStringOption((opt) =>
-          opt
-            .setName("hex")
-            .setDescription("Kode warna HEX (contoh: #ff0000 atau ff0000)")
-            .setRequired(true),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("shorten")
-        .setDescription("🔗 Pendekkan URL yang panjang (Powered by is.gd).")
-        .addStringOption((opt) =>
-          opt
-            .setName("url")
-            .setDescription("URL panjang yang ingin dipendekkan (harus diawali http/https)")
-            .setRequired(true),
-        ),
-    )
-    .addSubcommand((sub) =>
-      sub
-        .setName("download")
-        .setDescription("📥 Unduh video & foto kualitas terbaik (YouTube, IG, TikTok, X, dll).")
-        .addStringOption((opt) =>
-          opt
-            .setName("url")
-            .setDescription("Tautan video/foto yang ingin diunduh")
-            .setRequired(true),
-        )
-        .addStringOption((opt) =>
-          opt
-            .setName("format")
-            .setDescription("Format unduhan (otomatis, mp3, mp4)")
-            .setRequired(false)
-            .addChoices(
-              { name: "Otomatis (terbaik)", value: "auto" },
-              { name: "MP4 Video", value: "mp4" },
-              { name: "MP3 Audio", value: "mp3" },
-            ),
-        ),
-    ),
+    .setDescription("🛠️ Buka Kotak Perkakas Praktis Naura: kalkulator, QR, password, warna dan pemendek URL"),
 
-  async execute(interaction, client) {
-    const subcommand = interaction.options.getSubcommand();
-    switch (subcommand) {
-      case "calculator":
-        return cmdCalc.execute(interaction, client);
-      case "qr":
-        return cmdQr.execute(interaction, client);
-      case "password":
-        return cmdPassword.execute(interaction, client);
-      case "color":
-        return cmdColor.execute(interaction, client);
-      case "shorten":
-        return cmdShorten.execute(interaction, client);
-      case "download":
-        return cmdDownloader.execute(interaction, client);
-      default:
-        return interaction.reply({
-          content: "Subcommand tidak dikenali.",
-          flags: MessageFlags.Ephemeral,
-        });
-    }
+  async execute(interaction) {
+    const payload = buildInteractiveHubPayload({
+      title: "🛠️ Naura Utility and Tools Suite",
+      authorName: "Naura Perkakas Harian",
+      description: [
+        "Selamat datang di **Kotak Perkakas Naura**! 🔧",
+        "Gunakan berbagai alat bantu praktis untuk kebutuhan harianmu di Discord, mulai dari berhitung cepat, membuat QR code, sampai memendekkan tautan.",
+        "",
+        "💡 *Klik tombol pintas atau pilih utilitas dari menu dropdown di bawah.*",
+      ].join("\n"),
+      accentColorHex: "#00CED1",
+      quickButtons: [
+        { id: "calc", label: "Kalkulator", emoji: "🧮", style: ButtonStyle.Primary },
+        { id: "qr", label: "Buat QR", emoji: "📱", style: ButtonStyle.Success },
+        { id: "password", label: "Acak Password", emoji: "🔐", style: ButtonStyle.Secondary },
+      ],
+      selectOptions: [
+        { value: "calc", label: "Kalkulator Interaktif", emoji: "🧮", description: "Buka kalkulator tombol Discord untuk berhitung cepat" },
+        { value: "qr", label: "Generator Kode QR", emoji: "📱", description: "Ubah teks atau tautan web menjadi gambar kode QR" },
+        { value: "password", label: "Generator Password", emoji: "🔐", description: "Hasilkan kombinasi kata sandi acak yang kuat & aman" },
+        { value: "color", label: "Inspektur Warna Hex", emoji: "🎨", description: "Lihat visual preview dan info kode warna HEX" },
+        { value: "shorten", label: "Pemendek Tautan URL", emoji: "🔗", description: "Ringkas tautan web yang panjang menjadi URL pendek" },
+        { value: "download", label: "Pengunduh Media", emoji: "📥", description: "Unduh konten video dan foto dari platform sosial" },
+      ],
+      category: "tool",
+      userId: interaction.user.id,
+      lang: interaction.localeLang,
+    });
+
+    return interaction.reply(payload);
   },
 };

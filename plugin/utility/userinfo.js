@@ -18,6 +18,7 @@ const KEY_PERMISSIONS = [
 ];
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("userinfo")
     .setDescription("Tampilkan kartu identitas Discord dan status keanggotaan pengguna")

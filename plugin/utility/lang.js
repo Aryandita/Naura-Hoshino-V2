@@ -5,6 +5,7 @@ const LanguageManager = require("../../src/managers/languageManager");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 
 module.exports = {
+  isSubcommand: true,
   data: new SlashCommandBuilder()
     .setName("lang")
     .setDescription("Ubah bahasa bot / Change bot language")
