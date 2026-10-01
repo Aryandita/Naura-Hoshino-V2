@@ -9,6 +9,7 @@ try {
 
 const { ShardingManager } = require("discord.js");
 const { logger } = require("./src/managers/logger");
+const { displayClusterBootScreen } = require("./src/utils/bootScreen");
 const path = require("path");
 const env = require("./src/config/env");
 
@@ -26,12 +27,13 @@ if (!env.TOKEN) {
   return;
 }
 
-console.log(
-  "\n\x1b[46m\x1b[30m ⚙️ CLUSTER / SHARD MANAGER \x1b[0m \x1b[36mStarting Multi-Core Cluster Engine...\x1b[0m\n",
-);
-
 let manager;
 const useClustering = Boolean(env.USE_CLUSTERING && ClusterManager);
+
+displayClusterBootScreen({
+  useClustering,
+  totalShards: "auto",
+});
 
 if (useClustering) {
   manager = new ClusterManager(path.join(__dirname, "index.js"), {

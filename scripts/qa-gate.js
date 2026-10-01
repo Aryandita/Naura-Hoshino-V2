@@ -65,9 +65,10 @@ function runStep(name, command, args) {
 }
 
 async function run() {
-  console.log(`\n${C.bold}${C.cyan}====================================================${C.reset}`);
-  console.log(`${C.bold}${C.cyan}  NAURA HOSHINO V2 - MASTER QA GATE RUNNER          ${C.reset}`);
-  console.log(`${C.bold}${C.cyan}====================================================${C.reset}`);
+  const BOX_W = 60;
+  console.log(`\n${C.cyan}╔${"═".repeat(BOX_W - 2)}╗${C.reset}`);
+  console.log(`${C.cyan}║${C.reset}  ${C.bold}${C.cyan}NAURA HOSHINO V2 - MASTER QA GATE RUNNER${C.reset}${" ".repeat(BOX_W - 45)}${C.cyan}║${C.reset}`);
+  console.log(`${C.cyan}╚${"═".repeat(BOX_W - 2)}╝${C.reset}`);
 
   const totalStart = Date.now();
   const results = [];
@@ -93,9 +94,9 @@ async function run() {
   const totalDuration = ((Date.now() - totalStart) / 1000).toFixed(2);
   const allPassed = results.every((r) => r.success);
 
-  console.log(`\n${C.bold}${C.cyan}====================================================${C.reset}`);
-  console.log(`${C.bold}${C.cyan}                 RINGKASAN QA GATE                  ${C.reset}`);
-  console.log(`${C.bold}${C.cyan}====================================================${C.reset}\n`);
+  console.log(`\n${C.cyan}╔${"═".repeat(BOX_W - 2)}╗${C.reset}`);
+  console.log(`${C.cyan}║${C.reset}  ${C.bold}${C.cyan}RINGKASAN HASIL QA GATE${C.reset}${" ".repeat(BOX_W - 28)}${C.cyan}║${C.reset}`);
+  console.log(`${C.cyan}╚${"═".repeat(BOX_W - 2)}╝${C.reset}\n`);
 
   for (const r of results) {
     const status = r.success ? `${C.green}[PASS]${C.reset}` : `${C.red}[FAIL]${C.reset}`;

@@ -342,4 +342,212 @@ const displayBootScreen = (client, sysStatus) => {
   console.log("\n" + L.join("\n"));
 };
 
-module.exports = { displayBootScreen };
+/**
+ * Menampilkan boot screen khusus Web Dashboard lokal dengan ASCII banner.
+ * @param {Object} [options={}]
+ * @param {number} [options.port=3000]
+ * @param {string[]} [options.modelPaths=[]]
+ * @param {boolean} [options.dbConnected=true]
+ */
+const displayDashboardBootScreen = (options = {}) => {
+  const port = options.port || env.DASHBOARD_PORT || 3000;
+  const botVer = env.BOT_VERSION || "2.3.0";
+  const nodeVer = process.version;
+  const bootTime = nowStr();
+  const dbStatus =
+    options.dbConnected !== false
+      ? `${C.ok}🟢 CONNECTED${C.r}`
+      : `${C.warn}🟡 FALLBACK MOCK${C.r}`;
+
+  const rightLabels = [
+    [`${C.p1}✿ ${C.w}${C.b}Naura Dashboard${C.r}`, 17],
+    [`${C.g2}version  ${C.gold}${C.b}v${botVer}${C.r}`, 9 + botVer.length],
+    [`${C.g2}mode     ${C.mint}Standalone${C.r}`, 19],
+    [`${C.g2}port     ${C.gold}:${port}${C.r}`, 9 + String(port).length + 1],
+    [`${C.g2}runtime  ${C.sky}${nodeVer}${C.r}`, 9 + nodeVer.length],
+    [`${C.g2}database ${dbStatus}`, 9 + 12],
+    [`${C.g4}by ${C.g2}Aryandita Praftian${C.r}`, 21],
+  ];
+
+  const L = [];
+  L.push(hLine(TL, TR, HL));
+  L.push(blank());
+
+  for (let i = 0; i < BANNER_LINES.length; i++) {
+    const [bStr, bVis] = BANNER_LINES[i];
+    const [rStr, rVis] = rightLabels[i] || ["", 0];
+    L.push(bannerRow(bStr, bVis, rStr, rVis));
+  }
+
+  L.push(blank());
+  L.push(hLine(SL, SR, HL));
+
+  const ah = secHead("⧡", "ALAMAT  AKSES  DASHBOARD  LOKAL", C.sky);
+  L.push(row(ah.content, ah.vis));
+  L.push(blank());
+
+  const r1 = dual(
+    "╭ Dashboard Utama",
+    `${C.sky}${C.b}http://localhost:${port}${C.r}`,
+    "port",
+    `${C.gold}:${port}${C.r}`,
+  );
+  L.push(row(r1.content, r1.vis));
+
+  const r2 = dual(
+    "├ 3D AI Lounge   ",
+    `${C.purp}http://localhost:${port}/lounge${C.r}`,
+    "Three.js",
+    `${C.mint}VRM/GLTF${C.r}`,
+  );
+  L.push(row(r2.content, r2.vis));
+
+  const r3 = dual(
+    "├ Activity & Mini",
+    `${C.mint}http://localhost:${port}/activity${C.r}`,
+    "Casino",
+    `${C.gold}Gacha/Slot${C.r}`,
+  );
+  L.push(row(r3.content, r3.vis));
+
+  const r4 = dual(
+    "├ Member Portfolio",
+    `${C.sky}http://localhost:${port}/portfolio${C.r}`,
+    "Creator",
+    `${C.p2}Profile${C.r}`,
+  );
+  L.push(row(r4.content, r4.vis));
+
+  const r5 = dual(
+    "╰ Tiket & Bantuan",
+    `${C.gol2}http://localhost:${port}/tickets${C.r}`,
+    "MongoDB",
+    `${C.ok}Active${C.r}`,
+  );
+  L.push(row(r5.content, r5.vis));
+
+  L.push(blank());
+
+  const modelPaths = Array.isArray(options.modelPaths)
+    ? options.modelPaths
+    : ["/models/naura.vrm", "/models/naura.glb"];
+  if (modelPaths.length > 0) {
+    L.push(hLine(SL, SR, HL));
+    const mh = secHead("💎", "ASET  MODEL  3D  TERDAFTAR", C.gold);
+    L.push(row(mh.content, mh.vis));
+    L.push(blank());
+
+    for (let i = 0; i < modelPaths.length; i++) {
+      const p = modelPaths[i];
+      const prefix = i === 0 ? "╭" : i === modelPaths.length - 1 ? "╰" : "├";
+      const lbl = `${prefix} Model [${i + 1}]`;
+      const url = `http://localhost:${port}${p}`;
+      const line = `${C.g2}${lbl}${C.r} ${C.mint}${url}${C.r}`;
+      L.push(row(line, vLen(lbl) + 1 + vLen(url)));
+    }
+    L.push(blank());
+  }
+
+  L.push(hLine(BL, BR, HL));
+  L.push(
+    `\n ` +
+      `${C.bgOk} ✨ ONLINE ${C.r}  ` +
+      `${C.p1}${C.b}Naura Web Dashboard${C.r} ` +
+      `${C.g2}v${botVer}${C.r} ` +
+      `${C.g2}siap diakses di browser!${C.r}` +
+      `\n ${C.g4}${"─".repeat(BOX_W - 2)}${C.r}` +
+      `\n ${C.g3}URL Utama: ${C.sky}http://localhost:${port}${C.r}${C.g3}  ·  Lounge 3D: ${C.purp}http://localhost:${port}/lounge${C.r}${C.g3}  ·  ${bootTime}${C.r}\n`,
+  );
+
+  console.log("\n" + L.join("\n"));
+};
+
+/**
+ * Menampilkan boot screen khusus Multi-Core Cluster & Shard Manager.
+ * @param {Object} [options={}]
+ * @param {boolean} [options.useClustering=false]
+ * @param {string|number} [options.totalShards="auto"]
+ */
+const displayClusterBootScreen = (options = {}) => {
+  const botVer = env.BOT_VERSION || "2.3.0";
+  const nodeVer = process.version;
+  const bootTime = nowStr();
+  const engineType = options.useClustering
+    ? "Hybrid Clustering"
+    : "Process Sharding";
+
+  const rightLabels = [
+    [`${C.p1}✿ ${C.w}${C.b}Naura Cluster${C.r}`, 15],
+    [`${C.g2}version  ${C.gold}${C.b}v${botVer}${C.r}`, 9 + botVer.length],
+    [
+      `${C.g2}engine   ${C.sky}${options.useClustering ? "Hybrid" : "Sharding"}${C.r}`,
+      options.useClustering ? 15 : 17,
+    ],
+    [`${C.g2}mode     ${C.mint}Multi-Process${C.r}`, 22],
+    [`${C.g2}runtime  ${C.sky}${nodeVer}${C.r}`, 9 + nodeVer.length],
+    [`${C.g2}platform ${C.mint}Node.js IPC${C.r}`, 20],
+    [`${C.g4}by ${C.g2}Aryandita Praftian${C.r}`, 21],
+  ];
+
+  const L = [];
+  L.push(hLine(TL, TR, HL));
+  L.push(blank());
+
+  for (let i = 0; i < BANNER_LINES.length; i++) {
+    const [bStr, bVis] = BANNER_LINES[i];
+    const [rStr, rVis] = rightLabels[i] || ["", 0];
+    L.push(bannerRow(bStr, bVis, rStr, rVis));
+  }
+
+  L.push(blank());
+  L.push(hLine(SL, SR, HL));
+
+  const ch = secHead("⚙️", "MULTI-CORE  CLUSTER  ORCHESTRATION", C.sky);
+  L.push(row(ch.content, ch.vis));
+  L.push(blank());
+
+  const c1 = dual(
+    "╭ Cluster Engine",
+    `${C.sky}${C.b}${engineType}${C.r}`,
+    "Worker",
+    `${C.gold}Child Process${C.r}`,
+  );
+  L.push(row(c1.content, c1.vis));
+
+  const c2 = dual(
+    "├ Shard Strategy",
+    `${C.purp}Auto-Scaling Dynamic${C.r}`,
+    "Status",
+    `${C.ok}Initializing...${C.r}`,
+  );
+  L.push(row(c2.content, c2.vis));
+
+  const c3 = dual(
+    "╰ Respawn Guard ",
+    `${C.mint}Active (Auto-Healing)${C.r}`,
+    "IPC",
+    `${C.gol2}Event-Driven${C.r}`,
+  );
+  L.push(row(c3.content, c3.vis));
+
+  L.push(blank());
+  L.push(hLine(BL, BR, HL));
+
+  L.push(
+    `\n ` +
+      `${C.bgGold} ⚙️ CLUSTER READY ${C.r}  ` +
+      `${C.p1}${C.b}Naura Hoshino Cluster Manager${C.r} ` +
+      `${C.g2}v${botVer}${C.r} ` +
+      `${C.g2}mengorkestrasi proses bot Discord.${C.r}` +
+      `\n ${C.g4}${"─".repeat(BOX_W - 2)}${C.r}` +
+      `\n ${C.g3}Mode: ${C.sky}${engineType}${C.r}${C.g3}  ·  Waktu Mulai: ${C.mint}${bootTime}${C.r}\n`,
+  );
+
+  console.log("\n" + L.join("\n"));
+};
+
+module.exports = {
+  displayBootScreen,
+  displayDashboardBootScreen,
+  displayClusterBootScreen,
+};

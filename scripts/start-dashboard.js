@@ -7,16 +7,19 @@
 const env = require("../src/config/env");
 const initDashboard = require("../dashboard/server");
 const { connectToDatabase } = require("../src/managers/dbManager");
+const { displayDashboardBootScreen } = require("../src/utils/bootScreen");
+const { MODEL_3D } = require("../dashboard/routes/dashboardAssetPaths");
 
 async function main() {
-  console.log("\n🌸 Memulai Naura Hoshino Web Dashboard di Lokal...\n");
+  let isDbConnected = false;
 
   // 1. Hubungkan database
   try {
     await connectToDatabase();
-    console.log("✅ Database terkoneksi.");
+    isDbConnected = true;
   } catch (e) {
-    console.warn("⚠️ Database gagal, menggunakan fallback:", e.message);
+    // Fallback gracefully jika database offline
+    isDbConnected = false;
   }
 
   // 2. Mock Client untuk telemetri
@@ -53,18 +56,12 @@ async function main() {
   initDashboard(mockClient);
 
   const port = env.DASHBOARD_PORT || 3000;
-  console.log(`\n✨ ===================================================`);
-  console.log(`🚀 Naura Dashboard SIAP DIAKSES di Lokal:`);
-  console.log(`   🔗 Dashboard Utama:   http://localhost:${port}`);
-  console.log(`   🔗 Lounge 3D:         http://localhost:${port}/lounge`);
-  console.log(`   🔗 Member Portfolio:  http://localhost:${port}/portfolio`);
-  // Path model harus benar-benar ada. Sebelumnya script ini menampilkan
-  // "/assets/3d/Naura Hoshino 3D.glb" yang foldernya tidak pernah ada, sehingga
-  // whoever mengikuti tautan itu selalu mendapat 404 dan mengira servernya rusak.
-  const { MODEL_3D } = require("../dashboard/routes/dashboardAssetPaths");
-  for (const m of MODEL_3D) {
-    console.log(`   🔗 3D Model Asset:    http://localhost:${port}${m}`);
-  }
+  displayDashboardBootScreen({
+    port,
+    modelPaths: MODEL_3D,
+    dbConnected: isDbConnected,
+  });
+
   // Jaga proses tetap berjalan aktif tanpa batas waktu (keepalive)
   setInterval(() => {}, 1000 * 60 * 60);
 }

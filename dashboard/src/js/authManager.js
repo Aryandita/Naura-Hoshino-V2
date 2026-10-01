@@ -449,6 +449,46 @@
             updateVital('vitalHydration', 'vitalHydrationVal', vitals.hydration);
             updateVital('vitalSatiation', 'vitalSatiationVal', vitals.satiation);
             updateVital('vitalEnergy', 'vitalEnergyVal', vitals.energy);
+
+            // 8. Terapkan penguncian bagian data pengguna untuk tamu / unauthenticated
+            this.applyAuthGuards(isAuthenticated);
+        }
+
+        applyAuthGuards(isAuthenticated) {
+            const lockedElements = document.querySelectorAll('[data-auth-required="true"], .auth-locked-zone');
+            lockedElements.forEach((el) => {
+                let overlay = el.querySelector('.naura-auth-lock-overlay');
+                if (!isAuthenticated) {
+                    if (!overlay) {
+                        overlay = document.createElement('div');
+                        overlay.className = 'naura-auth-lock-overlay';
+                        const title = el.getAttribute('data-auth-title') || 'Akses Akun Naura';
+                        const desc =
+                            el.getAttribute('data-auth-message') ||
+                            'Masuk dengan Discord dulu ya. Bagian ini terhubung langsung dengan profil dan data karaktermu.';
+
+                        overlay.innerHTML = `
+                            <div class="naura-auth-lock-card">
+                                <div class="lock-icon-box">
+                                    <i class="fa-solid fa-lock"></i>
+                                </div>
+                                <div class="lock-title">${title}</div>
+                                <div class="lock-desc">${desc}</div>
+                                <a href="/auth/discord" class="btn btn-discord btn-sm lock-btn">
+                                    <i class="fa-brands fa-discord"></i> Masuk dengan Discord
+                                </a>
+                            </div>
+                        `;
+                        el.style.position = 'relative';
+                        el.appendChild(overlay);
+                    }
+                    overlay.style.display = 'flex';
+                } else {
+                    if (overlay) {
+                        overlay.style.display = 'none';
+                    }
+                }
+            });
         }
 
         initModal() {
