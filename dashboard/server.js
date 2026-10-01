@@ -148,6 +148,7 @@ module.exports = (client) => {
     }
     return express.static(path.join(__dirname, "public"))(req, res, next);
   });
+  webApp.use("/assets", express.static(path.join(__dirname, "public/assets")));
   webApp.use("/assets", express.static(path.join(__dirname, "../assets")));
   webApp.use("/src", express.static(path.join(__dirname, "src")));
   // Helper logika murni dari bot yang juga dipakai halaman dashboard.

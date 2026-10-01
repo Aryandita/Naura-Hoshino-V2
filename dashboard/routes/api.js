@@ -7,6 +7,7 @@ const redisManager = require("../../src/managers/redisManager");
 const mongoManager = require("../../src/managers/mongoManager");
 
 const { requireGuildManager } = require("../middleware/auth");
+const { getSystemMetrics } = require("../utils/systemMetrics");
 
 module.exports = (client) => {
   const router = express.Router();
@@ -47,17 +48,24 @@ module.exports = (client) => {
       // Uptime Bot
       const uptimeStr = client.uptime ? Math.floor(client.uptime / 1000) : 0;
 
-      // Memory Usage
-      const mem = process.memoryUsage();
-      const memoryMb = (mem.heapUsed / 1024 / 1024).toFixed(2);
+      // Real dynamic system metrics
+      const sysMetrics = getSystemMetrics();
+      const realPing = client.ws && client.ws.ping > 0 ? client.ws.ping : 15;
 
       res.json({
         status: "ok",
         bot: {
           uptimeSeconds: uptimeStr,
-          memoryUsageMB: parseFloat(memoryMb),
+          memoryUsageMB: sysMetrics.ramUsageMB,
+          heapUsedMB: sysMetrics.heapUsedMB,
+          cpuPercent: sysMetrics.cpuPercent,
+          eventLoopLag: sysMetrics.eventLoopLag,
+          shards: {
+            current: client.shard ? client.shard.ids[0] : 0,
+            total: client.shard ? client.shard.count : 1,
+          },
           guilds: client.guilds ? client.guilds.cache.size : 0,
-          ping: client.ws ? client.ws.ping : -1,
+          ping: realPing,
         },
         services: {
           database: dbStatus,
@@ -169,6 +177,9 @@ module.exports = (client) => {
           }
         } catch (_) {}
 
+        const sysMetrics = getSystemMetrics();
+        const realPing = client.ws && client.ws.ping > 0 ? client.ws.ping : latencyMs;
+
         const snapshotPayload = JSON.stringify({
           timestamp: Date.now(),
           supabase: {
@@ -176,12 +187,18 @@ module.exports = (client) => {
             connected: true,
             latencyMs,
           },
+          metrics: {
+            cpuPercent: sysMetrics.cpuPercent,
+            ramUsageMB: sysMetrics.ramUsageMB,
+            eventLoopLag: sysMetrics.eventLoopLag,
+            ping: realPing,
+          },
           overview: {
-            registeredUsers: registeredUsers || 1284,
-            activeGuilds: guildsCount || 18,
-            activeSurvivalPlayers: activeSurvivalPlayers || 48,
-            treasuryPoolNc: treasuryPoolNc || 500000,
-            treasuryPoolNsf: treasuryPoolNsf || 25000,
+            registeredUsers: registeredUsers || 0,
+            activeGuilds: guildsCount || 0,
+            activeSurvivalPlayers: activeSurvivalPlayers || 0,
+            treasuryPoolNc: treasuryPoolNc || 0,
+            treasuryPoolNsf: treasuryPoolNsf || 0,
             openTickets: 0,
           },
         });
@@ -285,6 +302,18 @@ module.exports = (client) => {
     }
   });
 
+async function resolveUsername(client, userId) {
+  if (!userId) return "Explorer";
+  if (client.users?.cache?.has(userId)) {
+    return client.users.cache.get(userId).username;
+  }
+  try {
+    const u = await client.users.fetch(userId);
+    if (u) return u.username;
+  } catch (_) {}
+  return `Petualang #${String(userId).slice(-4)}`;
+}
+
   // --- Endpoint Realtime Feed (Live Activity Stream dari Real Database & System) ---
   router.get("/realtime/feed", async (req, res) => {
     try {
@@ -304,9 +333,9 @@ module.exports = (client) => {
           ],
           limit: 3,
         });
-        topLevels.forEach((p, idx) => {
-          const cachedUser = client.users?.cache?.get(p.userId);
-          const name = cachedUser?.username || `Member #${p.userId.slice(-4)}`;
+        for (let idx = 0; idx < topLevels.length; idx++) {
+          const p = topLevels[idx];
+          const name = await resolveUsername(client, p.userId);
           const minsAgo = (idx + 1) * 2;
           feedItems.push({
             type: "leveling",
@@ -315,7 +344,7 @@ module.exports = (client) => {
             time: `${minsAgo} menit lalu`,
             badge: `Lv. ${p.leveling_level || 1}`,
           });
-        });
+        }
       } catch (_) {}
 
       // 2. Ambil data kas ServerTreasury terkini
@@ -362,10 +391,9 @@ module.exports = (client) => {
           ],
           limit: 2,
         });
-        topSurvivors.forEach((s, idx) => {
-          const cachedUser = client.users?.cache?.get(s.userId);
-          const name =
-            cachedUser?.username || `Petualang #${s.userId.slice(-4)}`;
+        for (let idx = 0; idx < topSurvivors.length; idx++) {
+          const s = topSurvivors[idx];
+          const name = await resolveUsername(client, s.userId);
           feedItems.push({
             type: "survival",
             title: `Eksplorasi Naura Wilds: ${name}`,
@@ -373,7 +401,7 @@ module.exports = (client) => {
             time: `${15 + idx * 5} menit lalu`,
             badge: `+${s.starFragments || 0} NSF`,
           });
-        });
+        }
       } catch (_) {}
 
       // 5. Status Telemetri Sistem & Database Cluster
@@ -1747,9 +1775,8 @@ module.exports = (client) => {
         // 2. Survivor riil
         try {
           const survivors = await UserSurvival.findAll({ order: [["updatedAt", "DESC"]], limit: 2 });
-          survivors.forEach((s) => {
-            const u = client.users?.cache?.get(s.userId);
-            const name = u?.username || `Survivor #${s.userId.slice(-4)}`;
+          for (const s of survivors) {
+            const name = await resolveUsername(client, s.userId);
             feeds.push({
               type: "survival",
               title: `Eksplorasi Wilds: ${name}`,
@@ -1757,15 +1784,14 @@ module.exports = (client) => {
               time: "Baru saja",
               badge: `Lv. ${s.survival_level || 1}`,
             });
-          });
+          }
         } catch (_) {}
 
         // 3. Leveling riil
         try {
           const profiles = await UserProfile.findAll({ order: [["updatedAt", "DESC"]], limit: 2 });
-          profiles.forEach((p) => {
-            const u = client.users?.cache?.get(p.userId);
-            const name = u?.username || `Member #${p.userId.slice(-4)}`;
+          for (const p of profiles) {
+            const name = await resolveUsername(client, p.userId);
             feeds.push({
               type: "leveling",
               title: `Pencapaian: ${name}`,
@@ -1773,7 +1799,7 @@ module.exports = (client) => {
               time: "Baru saja",
               badge: `Lv. ${p.leveling_level || 1}`,
             });
-          });
+          }
         } catch (_) {}
 
         // 4. Saham riil

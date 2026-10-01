@@ -801,9 +801,32 @@
               }
             }
 
-            const pingEl = document.getElementById('globalPing');
-            if (pingEl && data.bot?.ping !== undefined && data.bot.ping >= 0) {
-              pingEl.textContent = `${data.bot.ping}ms`;
+            if (data.bot) {
+              const pingEl = document.getElementById('globalPing');
+              if (pingEl && data.bot.ping !== undefined && data.bot.ping >= 0) {
+                pingEl.textContent = `${data.bot.ping}ms`;
+              }
+              const cpuEl = document.getElementById('cpuUsage');
+              if (cpuEl && data.bot.cpuPercent !== undefined) {
+                cpuEl.textContent = `${data.bot.cpuPercent}%`;
+                const fill = cpuEl.parentElement?.querySelector('.progress-fill');
+                if (fill) fill.style.width = `${Math.min(100, data.bot.cpuPercent)}%`;
+              }
+              const ramEl = document.getElementById('ramUsage');
+              const ramVal = data.bot.memoryUsageMB || data.bot.heapUsedMB;
+              if (ramEl && ramVal !== undefined) {
+                ramEl.textContent = `${ramVal}MB`;
+                const fill = ramEl.parentElement?.querySelector('.progress-fill');
+                if (fill) fill.style.width = `${Math.min(100, Math.round((ramVal / 2048) * 100))}%`;
+              }
+              const lagEl = document.getElementById('eventLoopLag');
+              if (lagEl && data.bot.eventLoopLag !== undefined) {
+                lagEl.textContent = `${data.bot.eventLoopLag}ms`;
+              }
+              const shardEl = document.getElementById('shardId');
+              if (shardEl && data.bot.shards) {
+                shardEl.textContent = `#${data.bot.shards.current ?? 0}`;
+              }
             }
 
             renderServices();
@@ -833,14 +856,20 @@
               if (fill) fill.style.width = `${Math.min(100, data.cpuPercent)}%`;
             }
             const ramEl = document.getElementById('ramUsage');
-            if (ramEl && data.ramUsageMB !== undefined) {
-              ramEl.textContent = `${data.ramUsageMB}MB`;
+            const ramVal = data.ramUsageMB !== undefined ? data.ramUsageMB : (data.ramUsed ? Math.round(parseFloat(data.ramUsed)) : undefined);
+            if (ramEl && ramVal !== undefined) {
+              ramEl.textContent = `${ramVal}MB`;
               const fill = ramEl.parentElement?.querySelector('.progress-fill');
-              if (fill) fill.style.width = `${Math.min(100, Math.round((data.ramUsageMB / 2048) * 100))}%`;
+              if (fill) fill.style.width = `${Math.min(100, Math.round((ramVal / 2048) * 100))}%`;
+            }
+            const lagEl = document.getElementById('eventLoopLag');
+            if (lagEl && data.eventLoopLag !== undefined) {
+              lagEl.textContent = `${data.eventLoopLag}ms`;
             }
             const shardEl = document.getElementById('shardId');
             if (shardEl && data.shards) {
-              shardEl.textContent = `#${data.shards.current ?? 0}`;
+              const currShard = typeof data.shards === 'object' && !Array.isArray(data.shards) ? data.shards.current : 0;
+              shardEl.textContent = `#${currShard ?? 0}`;
             }
             const botSvc = SERVICES.find(s => s.id === 'bot');
             if (botSvc && data.uptimeFormatted) {

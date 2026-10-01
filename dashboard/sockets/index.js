@@ -16,6 +16,7 @@ const RateLimiter = require("../../src/utils/rateLimiter");
 const redisManager = require("../../src/managers/redisManager");
 const mongoManager = require("../../src/managers/mongoManager");
 const env = require("../../src/config/env");
+const { getSystemMetrics } = require("../utils/systemMetrics");
 
 const STATS_INTERVAL_MS = 3000;
 const MUSIC_INTERVAL_MS = 2000;
@@ -132,8 +133,12 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
     const uptimeMins = Math.floor((uptimeSec % 3600) / 60);
     const activeVoice = client.poru?.players ? client.poru.players.size : 0;
 
+    const sysMetrics = getSystemMetrics();
     const statsPayload = {
       ramUsed: (totalRamUsed / 1024 / 1024).toFixed(2),
+      ramUsageMB: sysMetrics.ramUsageMB,
+      cpuPercent: sysMetrics.cpuPercent,
+      eventLoopLag: sysMetrics.eventLoopLag,
       ramTotal: ramTotalStr,
       ping: avgPing,
       guilds: totalGuilds,
@@ -141,7 +146,11 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       activeVoice,
       uptimeSeconds: uptimeSec,
       uptimeFormatted: `${uptimeHours}j ${uptimeMins}m`,
-      shards: [
+      shards: {
+        current: client.shard ? client.shard.ids[0] : 0,
+        total: client.shard ? client.shard.count : 1,
+      },
+      shardsList: [
         { id: 0, status: "online", ping: avgPing }
       ],
       dbStatus: getDbStatus(),

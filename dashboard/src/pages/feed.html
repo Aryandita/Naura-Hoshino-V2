@@ -295,64 +295,8 @@
           </div>
 
           <div class="feed-stream-container animate-in delay-2" id="feedContainer">
-            <!-- Event 1 -->
-            <div class="feed-item" data-cat="economy">
-              <div class="feed-icon" style="background:rgba(245, 158, 11, 0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">
-                <i class="fa-solid fa-coins"></i>
-              </div>
-              <div class="feed-details">
-                <div class="feed-title">
-                  <span>Pajak Sirkulasi Pasar Otomatis</span>
-                  <span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;font-size:10px;">TREASURY</span>
-                </div>
-                <div class="feed-desc">Kas ServerTreasury menerima pemotongan otomatis sebesar <b style="color:#fff;">+1,420 NSF</b> dari transaksi pasar global.</div>
-              </div>
-              <div class="feed-time">1 menit lalu</div>
-            </div>
-
-            <!-- Event 2 -->
-            <div class="feed-item" data-cat="survival">
-              <div class="feed-icon" style="background:rgba(239, 68, 68, 0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);">
-                <i class="fa-solid fa-skull"></i>
-              </div>
-              <div class="feed-details">
-                <div class="feed-title">
-                  <span>World Boss Encounter Dimulai!</span>
-                  <span class="badge badge-danger" style="font-size:10px;">RAID BOSS</span>
-                </div>
-                <div class="feed-desc">Party gabungan 6 petualang memasuki The Neo-Abyss untuk melawan Astral Warden (HP: 2,500,000).</div>
-              </div>
-              <div class="feed-time">3 menit lalu</div>
-            </div>
-
-            <!-- Event 3 -->
-            <div class="feed-item" data-cat="leveling">
-              <div class="feed-icon" style="background:rgba(52, 211, 153, 0.15);color:#34d399;border:1px solid rgba(52,211,153,0.3);">
-                <i class="fa-solid fa-arrow-up"></i>
-              </div>
-              <div class="feed-details">
-                <div class="feed-title">
-                  <span>Level Up Survival Milestone</span>
-                  <span class="badge badge-success" style="font-size:10px;">LEVEL 24</span>
-                </div>
-                <div class="feed-desc">User <b style="color:#fff;">@Reinhart</b> mencapai Level 24 setelah menambang 50x Kristal Aether di Gua Bawah Tanah.</div>
-              </div>
-              <div class="feed-time">5 menit lalu</div>
-            </div>
-
-            <!-- Event 4 -->
-            <div class="feed-item" data-cat="mod">
-              <div class="feed-icon" style="background:rgba(34, 211, 238, 0.15);color:#22d3ee;border:1px solid rgba(34,211,238,0.3);">
-                <i class="fa-solid fa-ticket"></i>
-              </div>
-              <div class="feed-details">
-                <div class="feed-title">
-                  <span>Tiket Pelayanan #0492 Diselesaikan</span>
-                  <span class="badge" style="background:rgba(34,211,238,0.15);color:#22d3ee;font-size:10px;">SUPPORT</span>
-                </div>
-                <div class="feed-desc">Moderator telah menindaklanjuti laporan klaim voucher. Pemain memberikan rating kepuasan ⭐⭐⭐⭐⭐.</div>
-              </div>
-              <div class="feed-time">8 menit lalu</div>
+            <div id="feedLoadingState" style="text-align:center;padding:36px 20px;color:var(--text-muted);font-size:13px;">
+              <i class="fa-solid fa-circle-notch fa-spin" style="margin-right:8px;color:var(--primary);"></i> Menghubungkan ke aliran aktivitas riil server...
             </div>
           </div>
         </main>
@@ -411,39 +355,42 @@
         });
       });
 
-      // Simulate New Event
-      const SAMPLE_EVENTS = [
-        { cat: 'economy', icon: 'fa-coins', color: '#f59e0b', badge: 'MARKET', title: 'Transaksi Bursa Saham NAUR', desc: 'Pemain membeli 250 lembar saham Naura Corp di harga 4,280 NC.' },
-        { cat: 'survival', icon: 'fa-fish', color: '#3b82f6', badge: 'FISHING', title: 'Golden Koi Tertangkap!', desc: 'Petualang berhasil memancing ikan langka Golden Koi di Dermaga Laut Selatan.' },
-        { cat: 'leveling', icon: 'fa-trophy', color: '#a78bfa', badge: 'ACHIEVEMENT', title: 'Achievement Unlocked: [Titan Miner]', desc: 'User memecahkan milestone 1,000 bongkah bijih besi di Gua Kristal.' },
-        { cat: 'mod', icon: 'fa-shield-halved', color: '#ef4444', badge: 'TRIBUNAL', title: 'Peringatan Anti-Spam', desc: 'Sistem otomatis mendeteksi pengulangan pesan cepat di channel #lounge.' }
-      ];
+      const typeConfig = {
+        leveling: { cat: 'leveling', icon: 'fa-trophy', color: '#a78bfa', badge: 'ACHIEVEMENT' },
+        economy: { cat: 'economy', icon: 'fa-coins', color: '#f59e0b', badge: 'MARKET' },
+        survival: { cat: 'survival', icon: 'fa-campground', color: '#3b82f6', badge: 'SURVIVAL' },
+        mod: { cat: 'mod', icon: 'fa-shield-halved', color: '#ef4444', badge: 'TRIBUNAL' },
+        system: { cat: 'system', icon: 'fa-server', color: '#34d399', badge: 'SYSTEM' },
+        default: { cat: 'system', icon: 'fa-robot', color: '#22d3ee', badge: 'AI-COMPANION' }
+      };
 
       function addFeedItem(ev) {
+        if (!ev) return;
+        const cfg = typeConfig[ev.type || ev.cat] || typeConfig.default;
         const div = document.createElement('div');
         div.className = 'feed-item';
-        div.setAttribute('data-cat', ev.cat);
+        div.setAttribute('data-cat', cfg.cat);
         div.innerHTML = `
-          <div class="feed-icon" style="background:${ev.color}20;color:${ev.color};border:1px solid ${ev.color}40;">
-            <i class="fa-solid ${ev.icon}"></i>
+          <div class="feed-icon" style="background:${cfg.color}20;color:${cfg.color};border:1px solid ${cfg.color}40;">
+            <i class="fa-solid ${cfg.icon}"></i>
           </div>
           <div class="feed-details">
             <div class="feed-title">
-              <span>${ev.title}</span>
-              <span class="badge" style="background:${ev.color}20;color:${ev.color};font-size:10px;">${ev.badge}</span>
+              <span>${ev.title || 'Aktivitas Ekosistem'}</span>
+              <span class="badge" style="background:${cfg.color}20;color:${cfg.color};font-size:10px;">${ev.badge || cfg.badge}</span>
             </div>
-            <div class="feed-desc">${ev.desc}</div>
+            <div class="feed-desc">${ev.desc || ''}</div>
           </div>
-          <div class="feed-time">Baru saja</div>
+          <div class="feed-time">${ev.time || 'Baru saja'}</div>
         `;
+        const placeholder = document.getElementById('feedLoadingState');
+        if (placeholder) placeholder.remove();
         feedContainer.prepend(div);
+        if (feedContainer.children.length > 50) {
+          feedContainer.lastElementChild?.remove();
+        }
         eventCountBadge.textContent = feedContainer.children.length;
       }
-
-      document.getElementById('btnSimulateEvent').addEventListener('click', () => {
-        const pick = SAMPLE_EVENTS[Math.floor(Math.random() * SAMPLE_EVENTS.length)];
-        addFeedItem(pick);
-      });
 
       // Real Backend Feed Integration
       async function loadRealFeed() {
@@ -453,14 +400,6 @@
           const json = await res.json();
           if (json.success && Array.isArray(json.data) && json.data.length > 0) {
             feedContainer.innerHTML = '';
-            const typeConfig = {
-              leveling: { cat: 'leveling', icon: 'fa-trophy', color: '#a78bfa', badge: 'ACHIEVEMENT' },
-              economy: { cat: 'economy', icon: 'fa-coins', color: '#f59e0b', badge: 'MARKET' },
-              survival: { cat: 'survival', icon: 'fa-campground', color: '#3b82f6', badge: 'SURVIVAL' },
-              mod: { cat: 'mod', icon: 'fa-shield-halved', color: '#ef4444', badge: 'TRIBUNAL' },
-              system: { cat: 'system', icon: 'fa-server', color: '#34d399', badge: 'SYSTEM' },
-              default: { cat: 'system', icon: 'fa-robot', color: '#22d3ee', badge: 'AI-COMPANION' }
-            };
             json.data.forEach(item => {
               const cfg = typeConfig[item.type] || typeConfig.default;
               const div = document.createElement('div');
@@ -487,12 +426,35 @@
       }
       loadRealFeed();
 
-      // Periodic stream simulation
-      setInterval(() => {
-        if (!isStreaming) return;
-        const pick = SAMPLE_EVENTS[Math.floor(Math.random() * SAMPLE_EVENTS.length)];
-        addFeedItem(pick);
-      }, 7000);
+      // Manual re-sync button
+      document.getElementById('btnSimulateEvent').addEventListener('click', () => {
+        loadRealFeed();
+      });
+
+      // Realtime Server-Sent Events (SSE) Stream
+      function initLiveActivityStream() {
+        if (!window.EventSource) {
+          setInterval(loadRealFeed, 10000);
+          return;
+        }
+        try {
+          const es = new EventSource('/api/activity/stream');
+          es.addEventListener('activity', (e) => {
+            if (!isStreaming) return;
+            try {
+              const parsed = JSON.parse(e.data);
+              addFeedItem(parsed);
+            } catch (_) {}
+          });
+          es.onerror = () => {
+            // Fallback polling saat SSE terputus
+            setTimeout(loadRealFeed, 12000);
+          };
+        } catch (_) {
+          setInterval(loadRealFeed, 10000);
+        }
+      }
+      initLiveActivityStream();
     </script>
   </body>
 </html>

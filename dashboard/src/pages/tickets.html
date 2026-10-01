@@ -296,7 +296,7 @@
                 <i class="fa-solid fa-ticket"></i>
               </div>
               <div>
-                <div style="font-family:var(--font-heading);font-size:20px;font-weight:700;color:var(--text-primary);">4 Tiket</div>
+                <div id="statActiveTickets" style="font-family:var(--font-heading);font-size:20px;font-weight:700;color:var(--text-primary);">--</div>
                 <div style="font-size:11px;color:var(--text-muted);">Aktif Membutuhkan Respon</div>
               </div>
             </div>
@@ -305,7 +305,7 @@
                 <i class="fa-solid fa-stopwatch"></i>
               </div>
               <div>
-                <div style="font-family:var(--font-heading);font-size:20px;font-weight:700;color:var(--text-primary);">2.4 Menit</div>
+                <div id="statAvgResponse" style="font-family:var(--font-heading);font-size:20px;font-weight:700;color:var(--text-primary);">2.4 Menit</div>
                 <div style="font-size:11px;color:var(--text-muted);">Rata-rata Respon Staf</div>
               </div>
             </div>
@@ -314,7 +314,7 @@
                 <i class="fa-solid fa-thumbs-up"></i>
               </div>
               <div>
-                <div style="font-family:var(--font-heading);font-size:20px;font-weight:700;color:var(--text-primary);">98.6%</div>
+                <div id="statSatisfaction" style="font-family:var(--font-heading);font-size:20px;font-weight:700;color:var(--text-primary);">98.6%</div>
                 <div style="font-size:11px;color:var(--text-muted);">Kepuasan Member</div>
               </div>
             </div>
@@ -323,7 +323,7 @@
                 <i class="fa-solid fa-scale-balanced"></i>
               </div>
               <div>
-                <div style="font-family:var(--font-heading);font-size:20px;font-weight:700;color:var(--text-primary);">2 Kasus</div>
+                <div id="statTribunal" style="font-family:var(--font-heading);font-size:20px;font-weight:700;color:var(--text-primary);">--</div>
                 <div style="font-size:11px;color:var(--text-muted);">Sidang AI Tribunal</div>
               </div>
             </div>
@@ -333,55 +333,35 @@
           <div class="ticket-workspace">
             <!-- Queue List -->
             <div class="ticket-list-panel animate-in delay-1">
-              <div style="font-family:var(--font-heading);font-weight:700;font-size:14px;color:var(--text-primary);margin-bottom:8px;">
-                Antrean Tiket Komunitas
-              </div>
-              
-              <div class="ticket-item active" data-id="1042">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                  <span style="font-family:var(--font-mono);font-size:12px;color:var(--primary);font-weight:700;">#TICKET-1042</span>
-                  <span class="badge" style="background:#ef444425;color:#ef4444;font-size:10px;">Critical</span>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <div style="font-family:var(--font-heading);font-weight:700;font-size:14px;color:var(--text-primary);">
+                  Antrean Tiket Komunitas
                 </div>
-                <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">Hadiah Turnamen Belum Masuk</div>
-                <div style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;">
-                  <span>@HoshinoFan</span>
-                  <span>10m lalu</span>
+                <span id="ticketQueueCount" class="badge badge-primary" style="font-size:10px;">Memuat...</span>
+              </div>
+
+              <!-- Search Bar & Status Filter -->
+              <div style="margin-bottom:12px;display:flex;flex-direction:column;gap:8px;">
+                <div style="position:relative;">
+                  <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:11px;"></i>
+                  <input
+                    type="text"
+                    id="ticketSearchInput"
+                    placeholder="Cari tiket, user, kategori, atau ID..."
+                    style="width:100%;padding:7px 10px 7px 30px;background:rgba(255,255,255,0.03);border:1px solid var(--border-subtle);border-radius:var(--r-md);color:#fff;font-size:12px;outline:none;"
+                  />
+                </div>
+                <div style="display:flex;gap:6px;" id="ticketFilterGroup">
+                  <button type="button" class="btn btn-ghost btn-xs filter-tab active" data-status="all" style="padding:4px 9px;font-size:10px;border-radius:var(--r-md);">Semua</button>
+                  <button type="button" class="btn btn-ghost btn-xs filter-tab" data-status="open" style="padding:4px 9px;font-size:10px;border-radius:var(--r-md);">Aktif</button>
+                  <button type="button" class="btn btn-ghost btn-xs filter-tab" data-status="closed" style="padding:4px 9px;font-size:10px;border-radius:var(--r-md);">Ditutup</button>
                 </div>
               </div>
 
-              <div class="ticket-item" data-id="1043">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                  <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent-cyan);font-weight:700;">#TICKET-1043</span>
-                  <span class="badge" style="background:#f59e0b25;color:#f59e0b;font-size:10px;">Medium</span>
-                </div>
-                <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">Laporan Pelanggaran Chat Spam</div>
-                <div style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;">
-                  <span>@CyberSamurai</span>
-                  <span>24m lalu</span>
-                </div>
-              </div>
-
-              <div class="ticket-item" data-id="1044">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                  <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent-violet);font-weight:700;">#TICKET-1044</span>
-                  <span class="badge" style="background:#34d39925;color:#34d399;font-size:10px;">Low</span>
-                </div>
-                <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">Bantuan Setup Minecraft Bridge</div>
-                <div style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;">
-                  <span>@CrafterPro</span>
-                  <span>1j lalu</span>
-                </div>
-              </div>
-
-              <div class="ticket-item" data-id="1045">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                  <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent-amber);font-weight:700;">#TICKET-1045</span>
-                  <span class="badge" style="background:#a78bfa25;color:#a78bfa;font-size:10px;">Tribunal</span>
-                </div>
-                <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px;">Banding Sanksi Automod</div>
-                <div style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;">
-                  <span>@ShadowRider</span>
-                  <span>2j lalu</span>
+              <!-- Dynamic Ticket Items Container -->
+              <div id="ticketItemsContainer" style="display:flex;flex-direction:column;gap:8px;max-height:480px;overflow-y:auto;padding-right:4px;">
+                <div style="text-align:center;padding:30px 10px;color:var(--text-muted);font-size:12px;">
+                  <i class="fa-solid fa-circle-notch fa-spin" style="margin-right:6px;"></i> Menghubungkan ke MongoDB...
                 </div>
               </div>
             </div>
@@ -393,10 +373,10 @@
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--border-subtle);padding-bottom:16px;">
                   <div>
                     <div style="font-family:var(--font-heading);font-size:18px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:10px;">
-                      <span id="ticketDetailTitle">#TICKET-1042: Hadiah Turnamen Belum Masuk</span>
+                      <span id="ticketDetailTitle">Pilih Tiket untuk Melihat Percakapan</span>
                     </div>
                     <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">
-                      Dibuat oleh <strong style="color:var(--text-primary);" id="ticketDetailUser">@HoshinoFan</strong> · Kategori: <span id="ticketDetailCat">Klaim Hadiah</span>
+                      Dibuat oleh <strong style="color:var(--text-primary);" id="ticketDetailUser">-</strong> · Kategori: <span id="ticketDetailCat">-</span>
                     </div>
                   </div>
                   <div style="display:flex;gap:8px;">
@@ -411,36 +391,9 @@
 
                 <!-- Live Chat Thread -->
                 <div class="chat-thread" id="chatThread">
-                  <div class="chat-msg">
-                    <img src="/assets/core/avatar.png" alt="Member" class="chat-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" />
-                    <div>
-                      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">@HoshinoFan · 10 menit lalu</div>
-                      <div class="chat-bubble">
-                        Halo tim staf Naura! Saya sudah menyelesaikan The Neo-Abyss Floor 15 bersama tim, tapi hadiah Star Fragments belum bertambah di dompet survival saya. Mohon bantuannya!
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="chat-msg">
-                    <div style="width:38px;height:38px;border-radius:10px;background:var(--cyan-dim);color:var(--accent-cyan);display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid var(--border-cyan);">
-                      <i class="fa-solid fa-robot"></i>
-                    </div>
-                    <div>
-                      <div style="font-size:11px;color:var(--accent-cyan);margin-bottom:4px;">Naura Auto-Triage System · 9 menit lalu</div>
-                      <div class="chat-bubble bot-auto">
-                        🌸 <em>Telemetri Otomatis:</em> ID Pengguna <code>3498120491823</code> terverifikasi telah menyelesaikan Floor 15 pada pukul 10:45 UTC. Catatan audit transaksi sedang divalidasi.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="chat-msg">
-                    <img src="/assets/core/avatar.png" alt="Staff" class="chat-avatar" />
-                    <div>
-                      <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">@AdminBagas (Staf) · 5 menit lalu</div>
-                      <div class="chat-bubble">
-                        Halo @HoshinoFan! Kami sedang memeriksa logs Server Treasury. Mohon tunggu sebentar selagi kami menyinkronkan saldo klanmu ya.
-                      </div>
-                    </div>
+                  <div style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px;">
+                    <i class="fa-solid fa-comments" style="font-size:24px;margin-bottom:8px;display:block;opacity:0.4;"></i>
+                    Pilih salah satu tiket di antrean sebelah kiri untuk meninjau log pesan MongoDB.
                   </div>
                 </div>
               </div>
@@ -459,100 +412,248 @@
     </div>
 
     <script>
-      // Interactive Ticket Switching
-      const tickets = {
-        "1042": { title: "#TICKET-1042: Hadiah Turnamen Belum Masuk", user: "@HoshinoFan", cat: "Klaim Hadiah" },
-        "1043": { title: "#TICKET-1043: Laporan Pelanggaran Chat Spam", user: "@CyberSamurai", cat: "Laporan Pemain" },
-        "1044": { title: "#TICKET-1044: Bantuan Setup Minecraft Bridge", user: "@CrafterPro", cat: "Bantuan Teknis" },
-        "1045": { title: "#TICKET-1045: Banding Sanksi Automod", user: "@ShadowRider", cat: "Eskalasi Tribunal" }
-      };
+      let currentTicketsList = [];
+      let selectedTicket = null;
+      let activeStatusFilter = "all";
+      let searchDebounceTimer = null;
 
-      document.querySelectorAll(".ticket-item").forEach(item => {
-        item.addEventListener("click", () => {
-          document.querySelectorAll(".ticket-item").forEach(i => i.classList.remove("active"));
-          item.classList.add("active");
-          const t = tickets[item.dataset.id];
-          if (t) {
-            document.getElementById("ticketDetailTitle").textContent = t.title;
-            document.getElementById("ticketDetailUser").textContent = t.user;
-            document.getElementById("ticketDetailCat").textContent = t.cat;
+      // Format relative time helper
+      function formatRelativeTime(dateInput) {
+        if (!dateInput) return "Baru saja";
+        const diffSec = Math.max(1, Math.floor((Date.now() - new Date(dateInput).getTime()) / 1000));
+        if (diffSec < 60) return `${diffSec}d lalu`;
+        const diffMin = Math.floor(diffSec / 60);
+        if (diffMin < 60) return `${diffMin}m lalu`;
+        const diffHour = Math.floor(diffMin / 60);
+        if (diffHour < 24) return `${diffHour}j lalu`;
+        const diffDay = Math.floor(diffHour / 24);
+        return `${diffDay} hari lalu`;
+      }
+
+      // Load tickets from MongoDB / Sequelize backend
+      async function fetchTickets(query = "", status = "all") {
+        const container = document.getElementById("ticketItemsContainer");
+        const countBadge = document.getElementById("ticketQueueCount");
+
+        try {
+          const params = new URLSearchParams();
+          if (query) params.set("q", query);
+          if (status !== "all") params.set("status", status);
+
+          const res = await fetch(`/api/tickets?${params.toString()}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+
+          if (!data.success || !Array.isArray(data.tickets)) {
+            throw new Error("Format respons tidak valid");
           }
+
+          currentTicketsList = data.tickets;
+
+          // Update stats cards
+          if (data.stats) {
+            document.getElementById("statActiveTickets").textContent = `${data.stats.open} Tiket`;
+            document.getElementById("statAvgResponse").textContent = `${data.stats.avgResponseMinutes} Menit`;
+            document.getElementById("statSatisfaction").textContent = data.stats.satisfactionRate;
+            document.getElementById("statTribunal").textContent = `${data.stats.tribunalCases} Kasus`;
+          }
+
+          countBadge.textContent = `${currentTicketsList.length} Tiket`;
+
+          if (currentTicketsList.length === 0) {
+            container.innerHTML = `
+              <div style="text-align:center;padding:36px 12px;color:var(--text-muted);font-size:12px;">
+                <i class="fa-solid fa-inbox" style="font-size:24px;margin-bottom:8px;display:block;opacity:0.35;"></i>
+                Tidak ada tiket ditemukan dalam basis data MongoDB.
+              </div>
+            `;
+            showEmptyDetail();
+            return;
+          }
+
+          container.innerHTML = "";
+          currentTicketsList.forEach((t, idx) => {
+            const isSelected = selectedTicket && selectedTicket.ticketId === t.ticketId;
+            const item = document.createElement("div");
+            item.className = `ticket-item ${isSelected || (!selectedTicket && idx === 0) ? "active" : ""}`;
+            item.dataset.id = t.ticketId;
+
+            const badgeBg = t.status === "closed" ? "rgba(107, 114, 128, 0.25)" : "rgba(34, 197, 94, 0.2)";
+            const badgeColor = t.status === "closed" ? "#9ca3af" : "#22c55e";
+
+            item.innerHTML = `
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <span style="font-family:var(--font-mono);font-size:12px;color:var(--primary);font-weight:700;">#TICKET-${t.ticketId.slice(-6)}</span>
+                <span class="badge" style="background:${badgeBg};color:${badgeColor};font-size:9px;text-transform:uppercase;">${t.status}</span>
+              </div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                ${t.topic || "Bantuan & Dukungan"}
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;">
+                <span>@${t.userName || "Member"}</span>
+                <span>${formatRelativeTime(t.createdAt)}</span>
+              </div>
+            `;
+
+            item.addEventListener("click", () => {
+              document.querySelectorAll(".ticket-item").forEach(el => el.classList.remove("active"));
+              item.classList.add("active");
+              selectTicket(t);
+            });
+
+            container.appendChild(item);
+          });
+
+          // Pilih tiket pertama secara otomatis bila belum ada yang aktif
+          if (!selectedTicket && currentTicketsList.length > 0) {
+            selectTicket(currentTicketsList[0]);
+          } else if (selectedTicket) {
+            const fresh = currentTicketsList.find(x => x.ticketId === selectedTicket.ticketId);
+            if (fresh) selectTicket(fresh);
+          }
+        } catch (err) {
+          console.error("[Tickets] Gagal memuat data:", err);
+          container.innerHTML = `
+            <div style="text-align:center;padding:24px 10px;color:#ef4444;font-size:12px;">
+              <i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i> Gagal memuat tiket dari MongoDB.
+            </div>
+          `;
+          countBadge.textContent = "Error";
+        }
+      }
+
+      function showEmptyDetail() {
+        document.getElementById("ticketDetailTitle").textContent = "Tidak Ada Tiket Terpilih";
+        document.getElementById("ticketDetailUser").textContent = "-";
+        document.getElementById("ticketDetailCat").textContent = "-";
+        document.getElementById("chatThread").innerHTML = `
+          <div style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px;">
+            <i class="fa-solid fa-ticket" style="font-size:28px;margin-bottom:8px;display:block;opacity:0.35;"></i>
+            Belum ada tiket aktif yang tersimpan dalam antrean MongoDB.
+          </div>
+        `;
+      }
+
+      function selectTicket(ticket) {
+        selectedTicket = ticket;
+        document.getElementById("ticketDetailTitle").textContent = `#TICKET-${ticket.ticketId.slice(-6)}: ${ticket.topic || "Bantuan"}`;
+        document.getElementById("ticketDetailUser").textContent = `@${ticket.userName || "Member"} (${ticket.guildName || "Server"})`;
+        document.getElementById("ticketDetailCat").textContent = ticket.category || "General";
+
+        const chatThread = document.getElementById("chatThread");
+        chatThread.innerHTML = "";
+
+        const messages = ticket.messages || [];
+        if (messages.length === 0) {
+          chatThread.innerHTML = `
+            <div style="text-align:center;padding:30px 10px;color:var(--text-muted);font-size:12px;">
+              <i class="fa-solid fa-info-circle" style="margin-right:6px;"></i> Tiket ini dibuka, belum ada riwayat percakapan teks yang diarsipkan.
+            </div>
+          `;
+          return;
+        }
+
+        messages.forEach(msg => {
+          const isStaff = msg.isStaff || msg.authorTag?.toLowerCase()?.includes("staff") || msg.authorTag?.toLowerCase()?.includes("admin");
+          const isBot = msg.isBot || msg.authorTag?.toLowerCase()?.includes("naura");
+
+          const msgDiv = document.createElement("div");
+          msgDiv.className = "chat-msg";
+
+          let avatarHtml = `<img src="${msg.authorAvatar || '/assets/core/avatar.png'}" alt="Avatar" class="chat-avatar" onerror="this.src='/assets/core/avatar.png'" />`;
+          if (isBot) {
+            avatarHtml = `
+              <div style="width:38px;height:38px;border-radius:10px;background:var(--cyan-dim);color:var(--accent-cyan);display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid var(--border-cyan);">
+                <i class="fa-solid fa-robot"></i>
+              </div>
+            `;
+          }
+
+          msgDiv.innerHTML = `
+            ${avatarHtml}
+            <div style="flex:1;">
+              <div style="font-size:11px;color:${isStaff ? 'var(--primary)' : isBot ? 'var(--accent-cyan)' : 'var(--text-muted)'};margin-bottom:4px;font-weight:${isStaff ? '600' : '400'};">
+                @${msg.authorTag || "Pengguna"} · ${formatRelativeTime(msg.timestamp)}
+              </div>
+              <div class="chat-bubble ${isBot ? 'bot-auto' : ''}" style="${isStaff ? 'border-color:var(--primary);background:rgba(244,114,182,0.08);' : ''}">
+                ${escapeHtml(msg.content)}
+              </div>
+            </div>
+          `;
+          chatThread.appendChild(msgDiv);
+        });
+
+        chatThread.scrollTop = chatThread.scrollHeight;
+      }
+
+      function escapeHtml(str) {
+        if (!str) return "";
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      // Filter tabs switching
+      document.querySelectorAll("#ticketFilterGroup .filter-tab").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("#ticketFilterGroup .filter-tab").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          activeStatusFilter = btn.dataset.status || "all";
+          const query = document.getElementById("ticketSearchInput").value.trim();
+          fetchTickets(query, activeStatusFilter);
         });
       });
 
-      // Live Backend Tickets Integration
-      async function loadRealTickets() {
-        try {
-          const res = await fetch('/api/tickets/me');
-          if (!res.ok) return;
-          const json = await res.json();
-          if (json.success && Array.isArray(json.tickets) && json.tickets.length > 0) {
-            const listEl = document.querySelector('.ticket-list-panel');
-            if (listEl) {
-              listEl.innerHTML = '';
-              json.tickets.forEach((t, i) => {
-                const key = String(t.ticketId || t.id);
-                tickets[key] = {
-                  title: `#TICKET-${t.ticketId || t.id}: ${t.topic || 'Bantuan'}`,
-                  user: `@Member (${t.guildName})`,
-                  cat: t.status === 'closed' ? 'Tiket Ditutup' : 'Tiket Aktif'
-                };
-                const item = document.createElement('div');
-                item.className = `ticket-item ${i === 0 ? 'active' : ''}`;
-                item.dataset.id = key;
-                item.innerHTML = `
-                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                    <span style="font-size:12px;font-weight:700;color:#fff;">#TICKET-${t.ticketId || t.id}</span>
-                    <span class="badge ${t.status === 'closed' ? 'badge-muted' : 'badge-primary'}" style="font-size:9px;">${t.status || 'OPEN'}</span>
-                  </div>
-                  <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">${t.topic || 'Tiket Dukungan'}</div>
-                  <div style="font-size:10px;color:var(--text-muted);">${t.guildName || 'Server'} · ${new Date(t.createdAt).toLocaleDateString('id-ID')}</div>
-                `;
-                item.addEventListener('click', () => {
-                  document.querySelectorAll('.ticket-item').forEach(x => x.classList.remove('active'));
-                  item.classList.add('active');
-                  const dt = tickets[item.dataset.id];
-                  if (dt) {
-                    document.getElementById('ticketDetailTitle').textContent = dt.title;
-                    document.getElementById('ticketDetailUser').textContent = dt.user;
-                    document.getElementById('ticketDetailCat').textContent = dt.cat;
-                  }
-                });
-                listEl.appendChild(item);
-              });
-              const first = json.tickets[0];
-              document.getElementById('ticketDetailTitle').textContent = `#TICKET-${first.ticketId || first.id}: ${first.topic}`;
-              document.getElementById('ticketDetailUser').textContent = `@Member (${first.guildName})`;
-              document.getElementById('ticketDetailCat').textContent = first.status || 'OPEN';
-            }
-          }
-        } catch (_) {}
+      // Search input debounced
+      const searchInput = document.getElementById("ticketSearchInput");
+      if (searchInput) {
+        searchInput.addEventListener("input", (e) => {
+          clearTimeout(searchDebounceTimer);
+          searchDebounceTimer = setTimeout(() => {
+            fetchTickets(e.target.value.trim(), activeStatusFilter);
+          }, 300);
+        });
       }
-      loadRealTickets();
 
-      // Send reply simulation
+      // Send reply
       const replyInput = document.getElementById("replyInput");
       const btnSend = document.getElementById("btnSendReply");
-      const chatThread = document.getElementById("chatThread");
 
-      function sendReply() {
+      async function sendReply() {
         const text = replyInput.value.trim();
-        if (!text) return;
+        if (!text || !selectedTicket) return;
 
-        const msgDiv = document.createElement("div");
-        msgDiv.className = "chat-msg";
-        msgDiv.innerHTML = `
-          <img src="/assets/core/avatar.png" alt="Staff" class="chat-avatar" />
-          <div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">@Admin (Kamu) · Baru saja</div>
-            <div class="chat-bubble" style="border-color:var(--primary);background:rgba(244,114,182,0.1);">
-              ${text}
-            </div>
-          </div>
-        `;
-        chatThread.appendChild(msgDiv);
-        replyInput.value = "";
-        chatThread.scrollTop = chatThread.scrollHeight;
+        btnSend.disabled = true;
+        try {
+          const res = await fetch(`/api/tickets/${selectedTicket.ticketId}/reply`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: text }),
+          });
+
+          if (!res.ok) {
+            const errJson = await res.json().catch(() => ({}));
+            alert(errJson.error || "Gagal mengirim balasan.");
+            return;
+          }
+
+          const resData = await res.json();
+          replyInput.value = "";
+
+          // Append local message
+          if (!selectedTicket.messages) selectedTicket.messages = [];
+          if (resData.reply) {
+            selectedTicket.messages.push(resData.reply);
+            selectTicket(selectedTicket);
+          }
+        } catch (err) {
+          alert("Gagal mengirim balasan: " + err.message);
+        } finally {
+          btnSend.disabled = false;
+        }
       }
 
       btnSend.addEventListener("click", sendReply);
@@ -560,24 +661,41 @@
         if (e.key === "Enter") sendReply();
       });
 
-      // Actions
-      document.getElementById("btnEscalateTribunal").addEventListener("click", () => {
-        alert("⚖️ Kasus telah berhasil dieskalasikan ke AI Tribunal Court! Para juri AI (Vespera, CyberFang, Lyra) akan segera mengevaluasi berkas perkara.");
+      // Close ticket button
+      document.getElementById("btnCloseTicket").addEventListener("click", async () => {
+        if (!selectedTicket) return;
+        if (!confirm(`Yakin ingin menutup tiket #TICKET-${selectedTicket.ticketId.slice(-6)}?`)) return;
+
+        try {
+          const res = await fetch(`/api/tickets/${selectedTicket.ticketId}/close`, { method: "POST" });
+          if (res.ok) {
+            alert("🔒 Tiket berhasil ditutup.");
+            fetchTickets(searchInput?.value.trim() || "", activeStatusFilter);
+          } else {
+            alert("Gagal menutup tiket.");
+          }
+        } catch (err) {
+          alert("Gagal menutup tiket: " + err.message);
+        }
       });
 
-      document.getElementById("btnCloseTicket").addEventListener("click", () => {
-        alert("🔒 Tiket telah ditutup secara resmi. Transkrip percakapan telah diarsipkan ke basis data MongoDB.");
+      // Actions
+      document.getElementById("btnEscalateTribunal").addEventListener("click", () => {
+        alert("⚖️ Tiket berhasil diajukan ke sidang AI Tribunal untuk penilaian otomatis.");
       });
 
       document.getElementById("btnExportAll").addEventListener("click", () => {
-        alert("📄 Transkrip tiket berhasil diekspor dalam format Markdown terstruktur!");
+        alert("📄 Transkrip tiket diekspor ke format Markdown.");
       });
 
       document.getElementById("btnNewTicket").addEventListener("click", () => {
-        alert("📝 Formulir pembuatan tiket baru telah terbuka.");
+        alert("📝 Buka Discord dan gunakan perintah /ticket open untuk membuat tiket baru.");
       });
+
+      // Load tickets on init
+      fetchTickets();
     </script>
-      <script src="/src/js/sharedNav.js"></script>
+    <script src="/src/js/sharedNav.js"></script>
 
     <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
       <div class="mobile-nav-inner">
