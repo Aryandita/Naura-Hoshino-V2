@@ -132,8 +132,14 @@ module.exports = (client) => {
   // Batas ukuran badan permintaan menutup upaya menghabiskan memori proses.
   webApp.use(express.json({ limit: "256kb" }));
   webApp.use(express.urlencoded({ extended: true, limit: "256kb" }));
-  // Static assets: Dashboard dist sebagai prioritas utama, didukung asset publik & bot
-  webApp.use(express.static(path.join(__dirname, "dist")));
+  // Static assets: Dashboard dist sebagai prioritas utama, didukung asset publik & bot.
+  //
+  // PENTING: `index: false` mencegah express.static menyajikan dist/index.html
+  // untuk path "/". Sebelumnya file itu dilayani duluan, sebelum handler view()
+  // sempat berjalan, sehingga perbandingan mtime di view() tidak pernah dipakai
+  // dan halaman "/" selalu menyajikan build lama walau src/ sudah lebih baru.
+  // Handler view() di bawah sekarang menjadi satu-satunya penyaji HTML.
+  webApp.use(express.static(path.join(__dirname, "dist"), { index: false }));
   // Jangan sajikan berkas di folder /transcripts secara statis publik.
   // Transkrip memuat percakapan privat tiket dan WAJIB melewati router terproteksi di tickets.js.
   webApp.use((req, res, next) => {
@@ -144,6 +150,13 @@ module.exports = (client) => {
   });
   webApp.use("/assets", express.static(path.join(__dirname, "../assets")));
   webApp.use("/src", express.static(path.join(__dirname, "src")));
+  // Helper logika murni dari bot yang juga dipakai halaman dashboard.
+  // Dipetakan eksplisit karena /src di atas menunjuk ke dashboard/src,
+  // sedangkan berkas ini lives di src/utils/ milik root repo.
+  webApp.use(
+    "/shared",
+    express.static(path.join(__dirname, "../src/utils"), { index: false }),
+  );
   webApp.use("/vendor", express.static(path.join(__dirname, "public/vendor")));
   webApp.use("/node_modules", express.static(path.join(__dirname, "../node_modules")));
   webApp.get("/health", (req, res) => res.redirect("/api/health"));
@@ -464,16 +477,39 @@ module.exports = (client) => {
   // --- Halaman Dashboard Utama (Dashboard Modern MPA) ---
   const distPages = path.join(__dirname, "dist/src/pages");
   const srcPages = path.join(__dirname, "src/pages");
-  const view = (name) => (req, res) => {
+
+  /**
+   * Memilih berkas mana yang disajikan untuk sebuah halaman.
+   *
+   * @returns {string|null} Path absolut berkas, atau null bila tidak ada.
+   */
+  const pickPage = (name) => {
     const distFile = path.join(distPages, name);
-    if (fs.existsSync(distFile)) {
-      return res.sendFile(distFile);
-    }
     const srcFile = path.join(srcPages, name);
-    if (fs.existsSync(srcFile)) {
-      return res.sendFile(srcFile);
+
+    const hasDist = fs.existsSync(distFile);
+    const hasSrc = fs.existsSync(srcFile);
+
+    if (hasDist && hasSrc) {
+      try {
+        // src lebih baru berarti hasil build belum menyusul. Sajikan src
+        // supaya perubahan langsung terlihat tanpa perlu build ulang.
+        if (fs.statSync(srcFile).mtimeMs > fs.statSync(distFile).mtimeMs) {
+          return srcFile;
+        }
+      } catch (_) {
+        // stat gagal: pakai dist yang sudah pasti ada.
+      }
     }
-    return res.status(404).send("Page not found");
+    if (hasDist) return distFile;
+    if (hasSrc) return srcFile;
+    return null;
+  };
+
+  const view = (name) => (req, res) => {
+    const file = pickPage(name);
+    if (!file) return res.status(404).send("Page not found");
+    return res.sendFile(file);
   };
 
   webApp.get("/", view("index.html"));

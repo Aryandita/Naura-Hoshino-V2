@@ -133,8 +133,16 @@ function formatPortfolioPayload(userId, portfolio, aggregated, discordUser) {
       survival: {
         level: (survival && survival.survival_level) || 1,
         xp: (survival && survival.survival_xp) || 0,
-        hp: (survival && survival.hp) || 100,
-        stamina: (survival && survival.stamina) || 100,
+        // Vital dikirim apa adanya, TIDAK dipaksa jadi 100. Pola
+        // `(survival && survival.hp) || 100` diam-diam mengubah hp 0
+        // (pemain benar-benar pingsan) menjadi 100, sehingga dasbor
+        // menampilkan pemain yang sekarat sebagai pemain yang sehat
+        // penuh. Penampilan dan clamping diserahkan ke helper teruji
+        // NauraVitalPercent.clampVitalPercent di sisi browser.
+        hp: survival ? survival.hp : null,
+        thirst: survival ? survival.thirst : null,
+        hunger: survival ? survival.hunger : null,
+        stamina: survival ? survival.stamina : null,
         strength: (survival && survival.strength) || 1,
         agility: (survival && survival.agility) || 1,
         intelligence: (survival && survival.intelligence) || 1,

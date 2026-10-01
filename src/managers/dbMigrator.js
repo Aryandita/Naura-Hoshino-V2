@@ -613,79 +613,158 @@ async function runMigrations(sequelize) {
 }
 
 // ==========================================
-// MIGRASI DATA: SQLite -> MySQL (Fallback Recovery)
+// MIGRASI DATA: SQLite -> Database Utama (Fallback Recovery)
 // ==========================================
 
-async function syncFallbackToMySQL(mysqlSequelize) {
-  if (!fs.existsSync("./naura_fallback.sqlite")) return;
+// Jumlah baris per statement upsert. Nilai ini menyeimbangkan kecepatan dengan
+// batas parameter PostgreSQL (65535 parameter per statement). 500 baris x
+// ~40 kolom = 20.000 parameter, masih jauh di bawah batas.
+const SYNC_BATCH_SIZE = 500;
+
+// Nama file fallback memakai path relatif terhadap CWD, sama seperti aslinya.
+const FALLBACK_FILE = "./naura_fallback.sqlite";
+
+/**
+ * Membaca satu tabel dari file SQLite fallback.
+ *
+ * @param {object} database - Koneksi DatabaseSync yang sudah dibuka.
+ * @param {string} tableName - Nama tabel.
+ * @returns {object[]} Baris yang dibaca.
+ */
+function readFallbackTable(database, tableName) {
+  const stmt = database.prepare(`SELECT * FROM ${tableName}`);
+  return stmt.all();
+}
+
+/**
+ * Memindahkan data fallback SQLite ke database utama.
+ *
+ * Dua aturan keselamatan yang ditegakkan di sini:
+ *
+ * 1. File fallback TIDAK PERNAH dihapus. Versi lama memanggil
+ *    `fs.unlinkSync` di blok `finally` tanpa syarat, padahal galat per-tabel
+ *    hanya dicatat lewat logger.warn. Akibatnya file terhapus meski separuh
+ *    tabel gagal tersalin, dan tidak ada sumber recovery yang tersisa. Sekarang
+ *    file hanya DI-RENAME menjadi `.synced` setelah semua tabel berhasil, dan
+ *    tetap utuh bila ada tabel yang gagal supaya boot berikutnya mencoba lagi.
+ *
+ * 2. Penulisan memakai `upsert` bertahap, bukan `findOrCreate` per-baris.
+ *    Versi lama mengirim satu query per baris, sehingga 10.000 pemain berarti
+ *    10.000 query yang menahan connection pool.
+ *
+ * Catatan: `updateOnDuplicate` sengaja mengecualikan primary key serta kolom
+ * waktu. Tanpa itu, sinkronisasi akan menimpa nilai `createdAt` milik pemain.
+ *
+ * @param {import("sequelize").Sequelize} targetSequelize - Instance tujuan.
+ * @returns {Promise<{ok: boolean, moved: number, failedTables: string[], skipped: string[]}>}
+ *   Ringkasan hasil sinkronisasi. `ok` hanya true bila tidak ada tabel gagal.
+ */
+async function syncFallbackToMySQL(targetSequelize) {
+  if (!fs.existsSync(FALLBACK_FILE)) {
+    return { ok: true, moved: 0, failedTables: [], skipped: [], reason: "no_file" };
+  }
 
   logger.info(
-    "[DB MIGRATOR] Mendeteksi file SQLite lokal. Memulai proses pemindahan data ke MySQL...",
+    "[DB MIGRATOR] Mendeteksi file SQLite lokal. Memulai proses pemindahan data ke database utama...",
   );
 
   let database;
+  const failedTables = [];
+  const skipped = [];
+  let moved = 0;
+  let fatalError = null;
+
   try {
     // Gunakan native sqlite dari Node.js (v22+)
     const { DatabaseSync } = require("node:sqlite");
-    database = new DatabaseSync("./naura_fallback.sqlite");
+    database = new DatabaseSync(FALLBACK_FILE);
 
-    const models = Object.keys(mysqlSequelize.models);
+    const models = Object.keys(targetSequelize.models);
 
     for (const modelName of models) {
-      const MysqlModel = mysqlSequelize.models[modelName];
+      const Model = targetSequelize.models[modelName];
+
+      let rows;
+      try {
+        rows = readFallbackTable(database, Model.tableName);
+      } catch (tableErr) {
+        // Tabel yang tidak ada di fallback memang wajar, bukan kegagalan.
+        logger.db(
+          `[DB MIGRATOR] Tabel ${Model.tableName} tidak ada di fallback, dilewati.`,
+        );
+        skipped.push(Model.tableName);
+        continue;
+      }
+
+      if (!rows || rows.length === 0) {
+        skipped.push(Model.tableName);
+        continue;
+      }
+
+      const pk = Model.primaryKeyAttributes[0];
+      const updateFields = Object.keys(rows[0]).filter(
+        (k) => ![pk, "createdAt", "updatedAt"].includes(k),
+      );
 
       try {
-        const stmt = database.prepare(`SELECT * FROM ${MysqlModel.tableName}`);
-        const rows = stmt.all();
-
-        if (rows && rows.length > 0) {
-          logger.db(
-            `[DB MIGRATOR] Memindahkan ${rows.length} baris ke tabel ${MysqlModel.tableName}...`,
-          );
-          for (const row of rows) {
-            try {
-              const pk = MysqlModel.primaryKeyAttributes[0];
-              const [record, created] = await MysqlModel.findOrCreate({
-                where: {
-                  [pk]: row[pk],
-                },
-                defaults: row,
-              });
-              if (!created) {
-                const updateFields = Object.keys(row).filter(
-                  (k) => ![pk, "createdAt", "updatedAt"].includes(k),
-                );
-                await record.update(row, { fields: updateFields });
-              }
-            } catch (rowErr) {
-              logger.warn(
-                `[DB MIGRATOR] Skip baris invalid di ${MysqlModel.tableName}: ${rowErr.message}`,
-              );
-            }
-          }
+        for (let i = 0; i < rows.length; i += SYNC_BATCH_SIZE) {
+          const batch = rows.slice(i, i + SYNC_BATCH_SIZE);
+          await Model.upsert(batch, {
+            updateOnDuplicate: updateFields,
+          });
         }
+        moved += rows.length;
+        logger.db(
+          `[DB MIGRATOR] ${rows.length} baris dipindahkan ke ${Model.tableName}.`,
+        );
       } catch (tableErr) {
+        // Dicatat dan DITERUSKAN ke tabel berikutnya, tapi nama tabelnya
+        // disimpan supaya file fallback tidak dianggap selesai tersinkron.
         logger.warn(
-          `[DB MIGRATOR] Tabel ${MysqlModel.tableName} dilewati saat sync fallback: ${tableErr.message}`,
+          `[DB MIGRATOR] Tabel ${Model.tableName} gagal disinkronkan: ${tableErr.message}`,
+        );
+        failedTables.push(Model.tableName);
+      }
+    }
+  } catch (e) {
+    fatalError = e.message;
+    logger.error("[DB MIGRATOR ERROR] Gagal memindahkan data:", e.message);
+  } finally {
+    if (database) {
+      try {
+        database.close();
+      } catch (closeError) {
+        logger.warn(
+          `[DB MIGRATOR] Gagal menutup file SQLite fallback: ${closeError.message}`,
         );
       }
     }
+  }
 
-    logger.success(
-      "[DB MIGRATOR] Pemindahan data selesai. Menghapus database SQLite sementara...",
-    );
-  } catch (e) {
-    logger.error("[DB MIGRATOR ERROR] Gagal memindahkan data:", e.message);
-  } finally {
-    if (database) database.close();
+  const ok = failedTables.length === 0 && fatalError === null;
+
+  if (ok) {
+    // Ber successes sepihak TIDAK menghapus file. Hanya ditandai, supaya
+    // operator masih bisa memeriksa atau memulihkan secara manual.
     try {
-      fs.unlinkSync("./naura_fallback.sqlite");
-    } catch (unlinkError) {
+      fs.renameSync(FALLBACK_FILE, `${FALLBACK_FILE}.synced`);
+      logger.success(
+        "[DB MIGRATOR] Pemindahan data selesai. File fallback ditandai sudah tersinkron (.synced), isinya tetap disimpan.",
+      );
+    } catch (renameError) {
       logger.warn(
-        `[DB MIGRATOR] Gagal menghapus database SQLite fallback: ${unlinkError.message}`,
+        `[DB MIGRATOR] Gagal menandai file fallback sudah tersinkron: ${renameError.message}`,
       );
     }
+  } else {
+    // Ada tabel yang gagal. File wajib utuh agar sinkronisasi dicoba lagi
+    // pada boot berikutnya.
+    logger.error(
+      `[DB MIGRATOR] Sinkronisasi BELUM lengkap (${failedTables.length} tabel gagal). File fallback dipertahankan agar dapat dicoba lagi.`,
+    );
   }
+
+  return { ok, moved, failedTables, skipped, error: fatalError };
 }
 
 module.exports = {

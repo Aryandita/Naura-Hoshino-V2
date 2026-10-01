@@ -459,14 +459,14 @@ module.exports = (client) => {
       const UserProfile = require("../../src/models/UserProfile");
       const UserSurvival = require("../../src/models/UserSurvival");
       const { sequelize } = require("../../src/config/database");
+      const { isOwner } = require("../middleware/auth");
 
-      const defaultAvatars = [
-        "/assets/Naura_Expression/Thinking.png",
-        "/assets/Naura_Expression/Cheers.png",
-        "/assets/Naura_Expression/Read.png",
-        "/assets/Naura_Expression/Surprised.png",
-        "/assets/Naura_Expression/Salute.png",
-      ];
+      // Daftar ini WAJIB hanya memuat file yang benar-benar ada di
+      // assets/Naura_Expression/. Sebelumnya "Surprised.png" dan "Salute.png"
+      // dirujuk padahal tidak pernah ada, sehingga dua dari lima avatar
+      // cadangan leaderboard selalu 404 dan tampil sebagai gambar rusak.
+      // Sumber kebenaran nama file: src/config/ui/nauraExpression.js.
+      const defaultAvatars = require("./dashboardAssetPaths").EXPRESSION_AVATARS;
 
       const resolveDiscordUser = async (userId) => {
         if (!userId) return null;
@@ -482,13 +482,36 @@ module.exports = (client) => {
       };
 
       // 1. Economy ranking (NC = wallet + bank)
+      // `limit` dan `offset` dipakai tombol "Muat Lebih Banyak". Jumlah total
+      // ikut dikembalikan karena client menampilkan jumlah pemain, bukan
+      // sekadar panjang baris yang kebetulan terambil.
+      const limitRaw = Number.parseInt(req.query.limit, 10);
+      const offsetRaw = Number.parseInt(req.query.offset, 10);
+      const limit =
+        Number.isFinite(limitRaw) && limitRaw > 0
+          ? Math.min(limitRaw, 100)
+          : 10;
+      const offset = Number.isFinite(offsetRaw) && offsetRaw > 0 ? offsetRaw : 0;
+
+      // guildId hanya PENANDA tampilan, bukan filter query.
+      // PENTING: tabel UserProfile tidak punya kolom guildId. Ekonomi dan
+      // level bersifat global per pengguna Discord, bukan per server. Kalau
+      // parameter ini ikut masuk ke where clause, seluruh query akan gagal
+      // dengan "column guildId does not exist".
+      const scopeGuildId = req.query.guildId
+        ? String(req.query.guildId)
+        : "global";
+
       let economyRows = [];
+      let economyTotal = 0;
       try {
+        economyTotal = await UserProfile.count();
         const profiles = await UserProfile.findAll({
           order: [
             sequelize.literal("(COALESCE(economy_wallet, 0) + COALESCE(economy_bank, 0)) DESC"),
           ],
-          limit: 10,
+          limit,
+          offset,
         });
 
         economyRows = await Promise.all(
@@ -513,6 +536,7 @@ module.exports = (client) => {
               level: p.leveling_level || 1,
               xp: p.leveling_xp || 0,
               isPremium: Boolean(p.isPremium),
+              isOwner: isOwner(p.userId),
             };
           })
         );
@@ -522,10 +546,13 @@ module.exports = (client) => {
 
       // 2. Leveling ranking
       let levelingRows = [];
+      let levelingTotal = 0;
       try {
+        levelingTotal = await UserProfile.count();
         const lvlProfiles = await UserProfile.findAll({
           order: [["leveling_level", "DESC"], ["leveling_xp", "DESC"]],
-          limit: 10,
+          limit,
+          offset,
         });
 
         levelingRows = await Promise.all(
@@ -546,6 +573,7 @@ module.exports = (client) => {
               xp,
               messageCount: xp > 0 ? Math.floor(xp / 15) : 0,
               voiceMinutes: xp > 0 ? Math.floor(xp / 25) : 0,
+              isOwner: isOwner(p.userId),
             };
           })
         );
@@ -554,11 +582,17 @@ module.exports = (client) => {
       }
 
       // 3. Survival ranking
+      // Diurutkan oleh survival_level karena tab client bernama
+      // "Peringkat Level Survival". Client menggambar bar sesuai
+      // 'survivalLevel', jadi urutan server harus memakai kunci yang sama.
       let survivalRows = [];
+      let survivalTotal = 0;
       try {
+        survivalTotal = await UserSurvival.count();
         const survProfiles = await UserSurvival.findAll({
           order: [["survival_level", "DESC"], ["starFragments", "DESC"]],
-          limit: 10,
+          limit,
+          offset,
         });
 
         survivalRows = await Promise.all(
@@ -577,6 +611,7 @@ module.exports = (client) => {
               starFragments: s.starFragments || 0,
               survivalLevel: s.survival_level || 1,
               currentLocation: s.currentLocation || "jalanan",
+              isOwner: isOwner(s.userId),
             };
           })
         );
@@ -591,6 +626,17 @@ module.exports = (client) => {
           leveling: levelingRows,
           survival: survivalRows,
         },
+        // Jumlah keseluruhan pemain, dipisahkan dari `data` supaya client
+        // tidak salah menghitungnya dari panjang array.
+        totals: {
+          economy: economyTotal,
+          leveling: levelingTotal,
+          survival: survivalTotal,
+        },
+        pagination: { limit, offset },
+        // Scope yang diminta client. Dikembalikan apa adanya supaya client
+        // tahu leaderboard ini sedang dilihat dalam konteks server tertentu.
+        scope: { guildId: scopeGuildId },
       });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });

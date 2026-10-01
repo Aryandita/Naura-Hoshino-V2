@@ -153,11 +153,14 @@ npm run locales:check:strict
 # 4. Pengecekan integritas resolusi internal require
 npm run test:requires
 
-# 5. Menjalankan automated test suite (254 tests wajib 100% hijau)
+# 5. Pengecekan sintaks seluruh script inline halaman dashboard
+npm run test:inline-scripts
+
+# 6. Menjalankan automated test suite (semua test wajib 100% hijau)
 npm test
 ```
 
-Semua 5 tahapan di atas WAJIB berstatus hijau (0 error).
+Semua 6 tahapan di atas WAJIB berstatus hijau (0 error), atau cukup jalankan `npm run qa` untuk menjalankan semuanya berurutan.
 
 ### 4.4 Prosedur Format Pesan Commit GitHub (3-Tingkat Terstruktur)
 

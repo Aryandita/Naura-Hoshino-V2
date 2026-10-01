@@ -56,10 +56,15 @@ async function main() {
   console.log(`\n✨ ===================================================`);
   console.log(`🚀 Naura Dashboard SIAP DIAKSES di Lokal:`);
   console.log(`   🔗 Dashboard Utama:   http://localhost:${port}`);
+  console.log(`   🔗 Lounge 3D:         http://localhost:${port}/lounge`);
   console.log(`   🔗 Member Portfolio:  http://localhost:${port}/portfolio`);
-  console.log(
-    `   🔗 3D Model Asset:    http://localhost:${port}/assets/3d/Naura%20Hoshino%203D.glb`,
-  );
+  // Path model harus benar-benar ada. Sebelumnya script ini menampilkan
+  // "/assets/3d/Naura Hoshino 3D.glb" yang foldernya tidak pernah ada, sehingga
+  // whoever mengikuti tautan itu selalu mendapat 404 dan mengira servernya rusak.
+  const { MODEL_3D } = require("../dashboard/routes/dashboardAssetPaths");
+  for (const m of MODEL_3D) {
+    console.log(`   🔗 3D Model Asset:    http://localhost:${port}${m}`);
+  }
   // Jaga proses tetap berjalan aktif tanpa batas waktu (keepalive)
   setInterval(() => {}, 1000 * 60 * 60);
 }

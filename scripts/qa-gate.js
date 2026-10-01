@@ -2,12 +2,13 @@
 
 /**
  * qa-gate.js - Automated QA Gate Runner (Naura Hoshino V2)
- * Menjalankan 5 tahapan pengujian standar kualitas sesuai AGENTS.md:
+ * Menjalankan 6 tahapan pengujian standar kualitas sesuai AGENTS.md:
  * 1. ESLint linter & styling check
  * 2. Em-dash prohibition check (\u2014)
  * 3. i18n Locales parity strict check (id.json vs en.json)
  * 4. Internal module require graph check
- * 5. Automated unit test suite (node --test)
+ * 5. Inline <script> syntax check untuk halaman dashboard
+ * 6. Automated unit test suite (node --test)
  *
  * Penggunaan:
  *   node scripts/qa-gate.js
@@ -72,19 +73,22 @@ async function run() {
   const results = [];
 
   // 1. ESLint
-  results.push(await runStep("1/5 ESLint & Standar Kode", "npm", ["run", "lint"]));
+  results.push(await runStep("1/6 ESLint & Standar Kode", "npm", ["run", "lint"]));
 
   // 2. Em dash check
-  results.push(await runStep("2/5 Cek Larangan Karakter Em Dash", "node", ["scripts/check-em-dash.js"]));
+  results.push(await runStep("2/6 Cek Larangan Karakter Em Dash", "node", ["scripts/check-em-dash.js"]));
 
   // 3. Paritas Kamus Bahasa
-  results.push(await runStep("3/5 Paritas Kamus Bahasa (Strict)", "node", ["scripts/validate-locales.js", "--strict"]));
+  results.push(await runStep("3/6 Paritas Kamus Bahasa (Strict)", "node", ["scripts/validate-locales.js", "--strict"]));
 
   // 4. Resolusi Require
-  results.push(await runStep("4/5 Integritas Resolusi Require", "node", ["scripts/check-requires.js"]));
+  results.push(await runStep("4/6 Integritas Resolusi Require", "node", ["scripts/check-requires.js"]));
 
-  // 5. Automated Unit Tests
-  results.push(await runStep("5/5 Automated Unit Test Suite", "node", ["--test", "src/**/*.test.js"]));
+  // 5. Inline script HTML dashboard
+  results.push(await runStep("5/6 Sintaks Script Inline Dashboard", "node", ["scripts/check-inline-scripts.js"]));
+
+  // 6. Automated Unit Tests
+  results.push(await runStep("6/6 Automated Unit Test Suite", "node", ["--test", "src/**/*.test.js"]));
 
   const totalDuration = ((Date.now() - totalStart) / 1000).toFixed(2);
   const allPassed = results.every((r) => r.success);
@@ -102,7 +106,7 @@ async function run() {
   console.log(`\n  ${C.bold}Waktu Total:${C.reset} ${totalDuration} detik`);
 
   if (allPassed) {
-    console.log(`\n  ${C.green}${C.bold}✨ SEMUA 5 TAHAPAN QA GATE 100% HIJAU! SIAP UNTUK COMMIT / DEPLOY ✨${C.reset}\n`);
+    console.log(`\n  ${C.green}${C.bold}✨ SEMUA 6 TAHAPAN QA GATE 100% HIJAU! SIAP UNTUK COMMIT / DEPLOY ✨${C.reset}\n`);
     process.exit(0);
   } else {
     console.log(`\n  ${C.red}${C.bold}⚠️ QA GATE GAGAL. Harap perbaiki error di atas sebelum commit!${C.reset}\n`);

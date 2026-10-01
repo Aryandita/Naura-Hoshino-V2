@@ -8,7 +8,29 @@
  * 4. Isolasi error per tangan secara independen.
  */
 
-import { slerpBone } from "../core/interpolation.js";
+import { slerpBone, softClampAngle } from "../core/interpolation.js";
+
+// Batas pergelangan tangan. Pergelangan hanya bisa membungkuk ke depan dan
+// belakang (±0.5 rad) serta menyamping sedikit (±0.25 rad). Tanpa batas ini,
+// rotasi dari sequence yang ekstrem membuat tangan menembus lengan bawah.
+const WRIST_LIMITS = {
+    roll: { soft: 0.16, hard: 0.24 },
+    yaw: { soft: 0.14, hard: 0.22 },
+    pitch: { soft: 0.40, hard: 0.58 },
+};
+
+/**
+ * Membatasi rotasi pergelangan agar tidak menembus lengan.
+ * @param {number[]} rot - Rotasi [roll, yaw, pitch] pada sumbu rig.
+ * @returns {number[]} Rotasi setelah dijepit.
+ */
+function clampWrist(rot) {
+    return [
+        softClampAngle(rot[0], -WRIST_LIMITS.roll.soft, WRIST_LIMITS.roll.soft, -WRIST_LIMITS.roll.hard, WRIST_LIMITS.roll.hard),
+        softClampAngle(rot[1], -WRIST_LIMITS.yaw.soft, WRIST_LIMITS.yaw.soft, -WRIST_LIMITS.yaw.hard, WRIST_LIMITS.yaw.hard),
+        softClampAngle(rot[2], -WRIST_LIMITS.pitch.soft, WRIST_LIMITS.pitch.soft, -WRIST_LIMITS.pitch.hard, WRIST_LIMITS.pitch.hard),
+    ];
+}
 
 export class HandController {
     constructor(options = {}) {
@@ -48,11 +70,11 @@ export class HandController {
                     wristOffsetZ = Math.sin(oscTime * harmonics.freq - 0.4) * harmonics.rightHandZ;
                 }
 
-                const target = [
+                const target = clampWrist([
                     base[0],
                     base[1],
                     base[2] + wristOffsetZ,
-                ];
+                ]);
 
                 slerpBone(this.bones.rightHand, this.currentRotations.rightHand, target, lerpSpeed);
 
@@ -68,7 +90,7 @@ export class HandController {
         try {
             if (this.bones.leftHand) {
                 const base = targetBones.leftHand || [0, 0, 0];
-                const target = [base[0], base[1], base[2]];
+                const target = clampWrist([base[0], base[1], base[2]]);
 
                 slerpBone(this.bones.leftHand, this.currentRotations.leftHand, target, lerpSpeed);
 

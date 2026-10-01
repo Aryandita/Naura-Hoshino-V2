@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Harness Verifikasi Animasi 3D</title>
+    <style>
+      body { margin: 0; background: #0a0d1a; color: #e2e8f0; font-family: monospace; }
+      #stage { width: 640px; height: 640px; }
+      #log { padding: 8px; font-size: 11px; white-space: pre; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/node_modules/three/build/three.module.js",
+          "three/addons/": "/node_modules/three/examples/jsm/",
+          "@pixiv/three-vrm": "/node_modules/@pixiv/three-vrm/lib/three-vrm.module.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="stage"></div>
+    <div id="log">memuat...</div>
+
+    <script type="module">
+      // Harness ini memuat modul animasi sungguhan dari repo, bukan
+      // implementasi ulang. Jadi yang diukur persis kode yang berjalan di
+      // dashboard.
+      const log = (m) => {
+        document.getElementById("log").textContent += "\n" + m;
+      };
+
+      const report = {
+        ready: false,
+        error: null,
+        clips: [],
+        fps: {},
+        boneRotationMax: {},
+        clamped: {},
+        consoleErrors: [],
+      };
+      window.__REPORT__ = report;
+
+      window.addEventListener("error", (e) => {
+        report.error = String(e.message || e.error);
+        report.consoleErrors.push(String(e.message || e.error));
+      });
+
+      try {
+        const { loadModel } = await import(
+          "/dashboard/src/components/NauraViewer/loader.js"
+        );
+        const { softClampAngle } = await import(
+          "/dashboard/src/components/NauraViewer/animations/core/interpolation.js"
+        );
+        const { LegController } = await import(
+          "/dashboard/src/components/NauraViewer/animations/parts/legs.js"
+        );
+        const { HandController } = await import(
+          "/dashboard/src/components/NauraViewer/animations/parts/hands.js"
+        );
+        const { SpineController } = await import(
+          "/dashboard/src/components/NauraViewer/animations/parts/spine.js"
+        );
+
+        log("memuat model...");
+        const loaded = await loadModel("/models/naura.glb", null);
+        const scene = loaded.scene;
+        report.clips = loaded.animations.map((c) => c.name);
+        log("clip: " + report.clips.join(", "));
+
+        // Membangun peta bone lewat pemetaan resmi proyek.
+        const { buildHumanoidBones } = await import(
+          "/dashboard/src/components/NauraViewer/animations/core/rigProfile.js"
+        );
+        const bones = buildHumanoidBones(scene);
+
+        // Batas yang dipakai controller, disimulasikan dengan nilai ekstrem
+        // untuk memastikan clamp benar-benar bekerja.
+        const extreme = [99, -99, 99];
+        const results = {};
+
+        const legCtl = new LegController();
+        legCtl.init(bones);
+        const handCtl = new HandController();
+        handCtl.init(bones);
+        const spineCtl = new SpineController();
+        spineCtl.init(bones);
+
+        // Rotasi bone setelah update dengan target ekstrem.
+        const probe = (ctl, boneName) => {
+          ctl.update(1 / 60, 0, { targetBones: { [boneName]: extreme } });
+        };
+
+        for (const b of ["leftUpLeg", "rightLeg", "leftFoot"]) probe(legCtl, b);
+        for (const b of ["leftHand", "rightHand"]) probe(handCtl, b);
+        probe(spineCtl, "spine");
+
+        // Kumpulkan rotasi aktual tiap bone.
+        const sample = () => {
+          const out = {};
+          scene.traverse((o) => {
+            if (o.isBone) {
+              out[o.name] = [
+                o.rotation.x,
+                o.rotation.y,
+                o.rotation.z,
+              ].map((v) => Number(v.toFixed(4)));
+            }
+          });
+          return out;
+        };
+
+        const rot = sample();
+        for (const [name, r] of Object.entries(rot)) {
+          const maxAbs = Math.max(...r.map(Math.abs));
+          const prev = report.boneRotationMax[name] ?? 0;
+          if (maxAbs > prev) report.boneRotationMax[name] = maxAbs;
+        }
+
+        // Deteksi penetration: sudut sendi yang lolos dari clamp.
+        // Ambang 0.9 rad (~52 derajat) dipilih karena dengan clamp aktif,
+        // rotasi sendi kaki dan tangan maksimum hanya ~0.13 rad. Tanpa clamp,
+        // rotasi mentah bisa mencapai puluhan radian. Ambang ini cukup ketat
+        // untuk menangkap kebocoran tanpa false positive dari gerak wajar.
+        const SUSPECT_LIMIT = 0.9;
+        for (const [name, max] of Object.entries(report.boneRotationMax)) {
+          if (max > SUSPECT_LIMIT) report.clamped[name] = max;
+        }
+
+        log("bone diperiksa: " + Object.keys(rot).length);
+        report.ready = true;
+        report.softClampExists = typeof softClampAngle === "function";
+        log("selesai");
+      } catch (err) {
+        report.error = String(err && err.message ? err.message : err);
+        log("ERROR: " + report.error);
+      }
+    </script>
+  </body>
+</html>

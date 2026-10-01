@@ -121,7 +121,10 @@ export const waveSequence = {
             { "t": 0.3, "val": 0.12 },
             { "t": 0.5, "val": 0.05 },
             { "t": 0.78, "val": 0.1 },
-            { "t": 0.9, "val": 0 }
+            // Track HARUS berakhir tepat di t=1. Sebelumnya berhenti di t=0.9,
+            // sehingga interpolasi tidak pernah menutup mulut sepenuhnya dan
+            // bibir tetap terbuka setelah animasi Wave selesai.
+            { "t": 1, "val": 0 }
         ]
     },
     "root": {

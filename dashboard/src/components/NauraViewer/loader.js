@@ -6,9 +6,9 @@
  *   - .vrm       via VRMLoaderPlugin (@pixiv/three-vrm)
  *   - Shared ArrayBuffer Cache: Mencegah unduhan ganda 21 MB antar-komponen di halaman yang sama.
  *   - Smart Multi-Level Fallback:
- *       1. /models/naura.vrm (VRM resmi)
+ *       1. modelPath yang diminta (mis. /models/naura%20NEW.vrm)
  *       2. /models/naura.glb (GLB padat 30 FPS)
- *       3. /assets/3d/naura.glb (Asset path fallback)
+ *       3. /models/naura%20NEW.vrm
  *       4. Raw GLTF parse bila VRM plugin parsing melempar exception.
  */
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -113,16 +113,18 @@ async function fetchModelBuffer(url, onProgress) {
  * @returns {Promise<{ scene: THREE.Group, vrm: import('@pixiv/three-vrm').VRM | null, animations: THREE.AnimationClip[], format: string }>}
  */
 export async function loadModel(modelPath = "/models/naura.glb", onProgress = null) {
-  // Susun daftar kandidat URL fallback
+  // Susun daftar kandidat URL fallback.
+  // PENTING: nama file model di disk memuat SPASI ("naura NEW.vrm"), sehingga
+  // URL harus ter-encode. Rantai fallback lama menunjuk ke "/assets/3d/..."
+  // yang tidak pernah ada sebagai folder, sehingga saat model utama gagal
+  // tidak ada jalur pemulihan sama sekali dan model hilang permanen.
   const isVrm = String(modelPath).toLowerCase().endsWith(".vrm");
   const candidates = [
     modelPath,
     "/models/naura.glb",
-    "/models/naura.vrm",
-    "/models/naura_pbr.glb",
+    "/models/naura%20NEW.glb",
+    "/models/naura%20NEW.vrm",
     isVrm ? modelPath.replace(/\.vrm$/i, ".glb") : modelPath.replace(/\.glb$/i, ".vrm"),
-    "/assets/3d/naura.glb",
-    "/assets/3d/Naura Hoshino 3D.glb"
   ];
 
   // Hapus duplikat

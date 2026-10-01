@@ -162,6 +162,8 @@ Untuk deployment di panel game/bot Pterodactyl:
 | 🔧 `npm run lint:fix`             | Memperbaiki format kode yang menyimpang secara otomatis.                          |
 | 🌐 `npm run locales:check:strict` | Memeriksa kelengkapan dan sinkronisasi kamus bahasa ID vs EN.                     |
 | 🛡️ `npm run test:requires`        | Memverifikasi seluruh modul require internal dapat diselesaikan dengan benar.     |
+| 📜 `npm run test:inline-scripts`  | Memeriksa sintaks seluruh `<script>` inline pada halaman dashboard.              |
+| 🚦 `npm run qa`                  | Menjalankan seluruh 6 tahap QA Gate secara berurutan.                           |
 
 ---
 
@@ -216,12 +218,12 @@ Sebelum mengirimkan kontribusi kode atau pull request, pahami **Pentalogi Dokume
 4. Jika Anda adalah AI Agent, ikuti SOP, peta folder, dan alur eksekusi di [`AGENTS.md`](AGENTS.md).
 5. Pastikan seluruh gate pengujian lolos:
    ```bash
-   npm run lint
-   node scripts/check-em-dash.js
-   npm run locales:check:strict
-   npm run test:requires
-   npm test
+   npm run qa
    ```
+
+   Rinciannya: `npm run lint`, `node scripts/check-em-dash.js`,
+   `npm run locales:check:strict`, `npm run test:requires`,
+   `npm run test:inline-scripts`, dan `npm test`.
 
 ---
 

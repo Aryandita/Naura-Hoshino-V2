@@ -249,7 +249,17 @@ const connectToDatabase = async () => {
       );
     } else if (isPrimaryProcess) {
       // Pemindahan data fallback juga cukup dilakukan satu proses.
-      await syncFallbackToMySQL(sequelize);
+      const syncResult = await syncFallbackToMySQL(sequelize);
+      if (syncResult && syncResult.ok === false) {
+        // Rincian kegagalan sengaja dibiarkan terlihat. Versi lama
+        // menganggap sinkronisasi selalu sukses sehingga operator tidak
+        // pernah tahu ada tabel yang gagal masuk.
+        logger.warn(
+          `\x1b[33m[DB] Sinkronisasi fallback belum lengkap: ` +
+            `${syncResult.failedTables.length} tabel gagal, ` +
+            `${syncResult.moved} baris terpindah.\x1b[0m`,
+        );
+      }
     }
 
     isDbOnline = true;
@@ -385,7 +395,14 @@ const healthCheckTimer = setInterval(async () => {
 
       if (hasMySQLConfig && isPrimaryProcess) {
         const { syncFallbackToMySQL } = require("./dbMigrator");
-        await syncFallbackToMySQL(sequelize);
+        const syncResult = await syncFallbackToMySQL(sequelize);
+        if (syncResult && syncResult.ok === false) {
+          logger.warn(
+            `\x1b[33m[DB] Sinkronisasi fallback setelah reconnect belum lengkap: ` +
+              `${syncResult.failedTables.length} tabel gagal. ` +
+              `File fallback dipertahankan untuk dicoba lagi.\x1b[0m`,
+          );
+        }
       }
     } catch (reconnectErr) {
       isDbOnline = false;

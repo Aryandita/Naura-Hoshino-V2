@@ -952,6 +952,16 @@
         document.body.appendChild(telemetryScript);
     }
 
+    // ── 8. Helper Logika Vital (dari src/utils bot, diuji terpisah) ──────
+    // Dimuat di sini, bukan per halaman, karena authManager.js ikut
+    // memakainya dan skrip itu disuntik tepat di bawah.
+    if (!window.NauraVitalPercent && !document.getElementById('naura-vital-percent-script')) {
+        const vitalScript = document.createElement('script');
+        vitalScript.id = 'naura-vital-percent-script';
+        vitalScript.src = '/shared/vitalPercent.js';
+        document.head.appendChild(vitalScript);
+    }
+
     // ── 8. Pemuatan Otomatis Modul Sesi & Otentikasi ───────────────────
     if (!document.getElementById('naura-auth-script')) {
         const authScript = document.createElement('script');

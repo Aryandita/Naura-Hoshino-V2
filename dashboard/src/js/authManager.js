@@ -32,6 +32,7 @@
             nc: 999999,
             nsf: 50000,
             coupons: 120,
+            vitals: { hp: 100, hydration: 100, satiation: 100, energy: 100 },
             provider: 'discord',
         },
         vip: {
@@ -44,6 +45,7 @@
             nc: 45200,
             nsf: 8400,
             coupons: 15,
+            vitals: { hp: 85, hydration: 75, satiation: 60, energy: 80 },
             provider: 'supabase',
         },
         adventurer: {
@@ -56,6 +58,7 @@
             nc: 12450,
             nsf: 3200,
             coupons: 4,
+            vitals: { hp: 90, hydration: 65, satiation: 50, energy: 75 },
             provider: 'supabase',
         },
     };
@@ -253,10 +256,34 @@
                         nc: totalNc,
                         nsf: totalNsf,
                         coupons: totalCoupons,
+                        // Nilai vital di sini sengaja dibiarkan mentah. Bagian
+                        // yang benar-benar melakukan clamping memakai helper
+                        // teruji (NauraVitalPercent.clampVitalPercent) di
+                        // syncUI(), karena `Number(x) ?? 100` tidak pernah
+                        // menghasilkan 100: null jadi 0 dan undefined jadi NaN.
+                        vitals: {
+                            hp: survival.hp,
+                            hydration: survival.thirst,
+                            satiation: survival.hunger,
+                            energy: survival.stamina,
+                        },
                         provider: 'discord',
                         isServerAuth: true,
                         isOwner: Boolean(data.isOwner),
                     });
+
+                    if (data.dataError) {
+                        // Server sempat gagal memuat profil. Sesi tetap dipakai,
+                        // tapi wajib diberi tahu supaya angka kosong tidak
+                        // disalahartikan sebagai nilai yang sebenarnya.
+                        console.warn('[NauraAuth] ' + data.dataError);
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(
+                                'Data profil belum bisa dimuat. Beberapa angka mungkin kosong.',
+                                'warn',
+                            );
+                        }
+                    }
                 } else if (this.session && this.session.isServerAuth) {
                     this.saveSession(null);
                 }
@@ -293,6 +320,7 @@
                 nc: 0,
                 nsf: 0,
                 coupons: 0,
+                vitals: { hp: 100, hydration: 100, satiation: 100, energy: 100 },
             };
         }
 
@@ -392,6 +420,33 @@
             if (nsfBadgeElement) {
                 nsfBadgeElement.innerHTML = `<i class="fa-solid fa-star"></i> <span>${Number(currentUser.nsf).toLocaleString('id-ID')} NSF</span>`;
             }
+
+            // 7. Survival Vitals (sinkronisasi otomatis jika widget tersedia di halaman)
+            const vitals = currentUser.vitals || { hp: 100, hydration: 100, satiation: 100, energy: 100 };
+            const updateVital = (barId, valId, value) => {
+                const bar = document.getElementById(barId);
+                const val = document.getElementById(valId);
+                // Memakai helper yang sama dengan index.html agar kedua widget
+                // tidak bisa menampilkan angka berbeda untuk vital yang sama.
+                // `Number(value) || 0` versi lama mengubah vital yang hilang
+                // menjadi 0% meski nilai cadangan di atas adalah 100.
+                const pct = window.NauraVitalPercent
+                    ? window.NauraVitalPercent.clampVitalPercent(value)
+                    : 100;
+                if (val) val.textContent = `${pct}%`;
+                if (bar) {
+                    bar.style.width = `${pct}%`;
+                    if (pct < 30) {
+                        bar.style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
+                    } else if (pct < 60) {
+                        bar.style.background = 'linear-gradient(90deg, var(--accent-amber), #fcd34d)';
+                    }
+                }
+            };
+            updateVital('vitalHp', 'vitalHpVal', vitals.hp);
+            updateVital('vitalHydration', 'vitalHydrationVal', vitals.hydration);
+            updateVital('vitalSatiation', 'vitalSatiationVal', vitals.satiation);
+            updateVital('vitalEnergy', 'vitalEnergyVal', vitals.energy);
         }
 
         initModal() {

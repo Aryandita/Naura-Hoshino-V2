@@ -45,14 +45,36 @@ module.exports = (client) => {
       return res.json({ loggedIn: false });
     }
 
+    // Pembacaan wajib lewat cacheManager, bukan memanggil model Sequelize
+    // secara langsung. Dashboard berjalan di proses yang sama dengan bot, jadi
+    // antrean write-behind (flush tiap 5 detik) yang dibaca langsung ke
+    // Postgres bisa menampilkan saldo dan vital yang sudah basi.
+    // ESLint punya aturan khusus untuk pemanggilan yang melewati cacheManager.
+    const cacheManager = require("../../src/managers/cacheManager");
+
     try {
-      const [profile] = await UserProfile.findOrCreate({
-        where: { userId: req.user.id },
-      });
-      const UserSurvival = require("../../src/models/UserSurvival");
-      const [survival] = await UserSurvival.findOrCreate({
-        where: { userId: req.user.id },
-      });
+      const [profile, survival] = await Promise.all([
+        cacheManager.getUserProfile(req.user.id),
+        cacheManager.getUserSurvival(req.user.id),
+      ]);
+
+      if (!profile) {
+        // Profil gagal dimuat, tapi login tetap valid. Bedakan kondisi ini
+        // dari "berhasil dimuat" supaya client tidak mengira vital pemain
+        // benar-benar 0 dan menampilkan bar kosong tanpa penjelasan.
+        logger.error(
+          "[API ME] Profil pengguna tidak dapat dimuat untuk",
+          req.user.id,
+        );
+        return res.json({
+          loggedIn: true,
+          user: req.user,
+          db: null,
+          survival: null,
+          isOwner: isOwner(req.user.id),
+          dataError: "Gagal memuat profil dari database.",
+        });
+      }
 
       return res.json({
         loggedIn: true,
@@ -70,6 +92,7 @@ module.exports = (client) => {
         db: null,
         survival: null,
         isOwner: false,
+        dataError: "Gagal memuat data dari database.",
       });
     }
   });

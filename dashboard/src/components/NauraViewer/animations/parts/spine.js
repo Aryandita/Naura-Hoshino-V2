@@ -13,7 +13,7 @@
  * Isolasi penuh: error di sini TIDAK mempengaruhi sendi lain.
  */
 
-import { slerpBoneDirect } from "../core/interpolation.js";
+import { slerpBoneDirect, softClampAngle } from "../core/interpolation.js";
 import { vrmToRig, armElevation } from "../core/rigProfile.js";
 
 export class SpineController {
@@ -61,10 +61,15 @@ export class SpineController {
             // [pitch, yaw, roll] (VRM) -> [roll, yaw, pitch] (rig)
             const extra = vrmToRig([breathPitch, 0, posturalRoll * 0.5]);
 
+            // Batas sudut wajib dipasang. Tanpa ini, rotasi spine yang besar
+            // (mis. saat bodoh condong atau lengan terangkat tinggi) membuat
+            // mesh lumbal menembus dada dan pinggul.
+            // Batas longgar mengikuti chest: sedikit lebih ketat di pitch
+            // karena tulang belakang punya rentang geraknatural lebih kecil.
             const target = [
-                base[0] + extra[0],
-                base[1] + extra[1],
-                base[2] + extra[2],
+                softClampAngle(base[0] + extra[0], -0.13, 0.13, -0.20, 0.20),
+                softClampAngle(base[1] + extra[1], -0.16, 0.16, -0.23, 0.23),
+                softClampAngle(base[2] + extra[2], -0.24, 0.20, -0.31, 0.27),
             ];
 
             slerpBoneDirect(this.bone, target, lerpSpeed);

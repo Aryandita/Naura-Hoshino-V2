@@ -8,15 +8,31 @@
 import { NauraHero3DViewer } from './hero3d.js';
 
 /**
+ * Instance viewer yang sudah hidup untuk canvas tersebut.
+ * Dipakai sebagai pagar agar initHeroViewer() tidak membangun mesin 3D kedua
+ * di atas canvas yang sama.
+ * @type {WeakMap<HTMLCanvasElement, NauraHero3DViewer>}
+ */
+const activeViewers = new WeakMap();
+
+/**
  * Inisialisasi controller interaktif pada canvas dan elemen UI pendukung.
  * @param {HTMLCanvasElement|null} [targetCanvas=null] - Elemen canvas target.
  * @param {Object} [customOptions={}] - Opsi kustom untuk NauraHero3DViewer.
- * @returns {NauraHero3DViewer|null} Instance viewer aktif.
+ * @returns {NauraHero3DViewer|null} Instance viewer aktif, atau null bila gagal.
  */
 export function initHeroViewer(targetCanvas = null, customOptions = {}) {
     const canvasElement = targetCanvas || document.getElementById('naura-hero-3d-canvas');
     if (!canvasElement) {
         return null;
+    }
+
+    // Pagar init ganda. Modul ini dipanggil oleh blok auto-init di bawah
+    // DAN oleh script halaman, sehingga tanpa pagar ini dua mesin 3D akan
+    // berbagi satu canvas: render saling menimpa, event listener menumpuk,
+    // dan setiap pergantian model mengalokasikan buffer GPU baru.
+    if (activeViewers.has(canvasElement)) {
+        return activeViewers.get(canvasElement);
     }
 
     const wrapperElement = document.getElementById('naura3d-canvas-wrapper');
@@ -33,7 +49,10 @@ export function initHeroViewer(targetCanvas = null, customOptions = {}) {
     const buttonSnapshot = document.getElementById('naura3d-btn-snapshot');
     const animationButtons = document.querySelectorAll('.naura3d-anim-btn');
 
-    let currentActiveModel = '/models/naura NEW.vrm';
+    // Path model WAJIB ter-encode. Nama file aslinya memuat SPASI, sehingga
+    // string dengan spasi mentah gagal dimuat browser. %20 adalah
+    // representasi URL yang benar untuk karakter spasi.
+    let currentActiveModel = '/models/naura%20NEW.vrm';
 
     const viewerInstance = new NauraHero3DViewer(canvasElement, {
         modelPath: currentActiveModel,
@@ -131,14 +150,14 @@ export function initHeroViewer(targetCanvas = null, customOptions = {}) {
     if (buttonModelNew) {
         buttonModelNew.addEventListener('click', (event) => {
             event.stopPropagation();
-            handleModelSwitch(buttonModelNew.dataset.model || '/models/naura NEW.vrm');
+            handleModelSwitch(buttonModelNew.dataset.model || '/models/naura%20NEW.vrm');
         });
     }
 
     if (buttonModelGlb) {
         buttonModelGlb.addEventListener('click', (event) => {
             event.stopPropagation();
-            handleModelSwitch(buttonModelGlb.dataset.model || '/models/naura NEW.glb');
+            handleModelSwitch(buttonModelGlb.dataset.model || '/models/naura%20NEW.glb');
         });
     }
 
@@ -224,6 +243,9 @@ export function initHeroViewer(targetCanvas = null, customOptions = {}) {
         });
     }
 
+    // Daftarkan instance agar pemanggilan berikutnya pada canvas yang sama
+    // mengembalikan viewer ini, bukan membangun yang baru.
+    activeViewers.set(canvasElement, viewerInstance);
     return viewerInstance;
 }
 

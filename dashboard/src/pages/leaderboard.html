@@ -593,19 +593,53 @@
       };
 
       let lbData = { economy: [], leveling: [], survival: [] };
+      // Total pemain per tab, diisi dari server lewat json.totals.
+      let lbTotals = {};
       let currentTab = 'wealth';
+      let lbOffset = 0;
+      const LB_PAGE_SIZE = 10;
+      let lbRequestInFlight = false;
 
       // Fetch real data from API
-      async function fetchLeaderboard() {
+      async function fetchLeaderboard(append = false) {
+        // Cegah dua request bertumpuk. Polling 30 detik dan klik tombol
+        // "Muat Lebih Banyak" bisa memicu request bersamaan yang menulis
+        // DOM dengan data berbeda.
+        if (lbRequestInFlight) return;
+        lbRequestInFlight = true;
+
         try {
-          if (window.showSkeleton) {
+          const offset = append ? lbOffset : 0;
+          if (!append && window.showSkeleton) {
             window.showSkeleton('#leaderboardList', { count: 7, type: 'table' });
           }
-          const res = await fetch('/api/realtime/leaderboard');
+          // guildId ikut dikirim sebagai penanda scope. Datanya tetap global
+          // karena tabel UserProfile tidak punya kolom guildId.
+          const scope = document.getElementById('guildSelector')?.value || '';
+          const params = new URLSearchParams({
+            limit: String(LB_PAGE_SIZE),
+            offset: String(offset),
+          });
+          if (scope) params.set('guildId', scope);
+
+          const res = await fetch(
+            `/api/realtime/leaderboard?${params.toString()}`,
+          );
           const json = await res.json();
           if (json.success) {
-            lbData = json.data;
+            if (append) {
+              // Gabungkan halaman baru di belakang halaman lama.
+              for (const key of Object.keys(lbData)) {
+                if (Array.isArray(json.data?.[key])) {
+                  lbData[key] = [...lbData[key], ...json.data[key]];
+                }
+              }
+            } else {
+              lbData = json.data;
+            }
+            if (json.totals) lbTotals = json.totals;
             renderLeaderboard(currentTab);
+            updateLoadMoreState();
           } else {
             if (window.renderErrorState) {
               window.renderErrorState('#leaderboardList', {
@@ -624,8 +658,40 @@
               onRetry: fetchLeaderboard
             });
           }
+        } finally {
+          // Dilepas di finally supaya request yang gagal tidak mengunci
+          // semua pemanggilan berikutnya, termasuk tombol muat lebih banyak.
+          lbRequestInFlight = false;
         }
       }
+
+      // Tombol "Muat Lebih Banyak" disembunyikan saat semua baris sudah
+      // diambil. Sebelumnya tombolnya tampil terus tetapi tidak punya
+      // event listener sama sekali sehingga selalu tidak berpengaruh apa pun.
+      function updateLoadMoreState() {
+        const btn = document.getElementById('btnLoadMore');
+        if (!btn) return;
+
+        const rows = currentTab === 'rpg_level'
+          ? (lbData.survival || [])
+          : (currentTab === 'chat_level' || currentTab === 'trivia')
+            ? (lbData.leveling || [])
+            : (lbData.economy || []);
+        const total = lbTotals[currentTab] ?? rows.length;
+
+        // Offset berikutnya mengikuti jumlah baris yang sudah tampil, bukan
+        // selalu mulai dari nol.
+        lbOffset = rows.length;
+
+        if (rows.length >= total) {
+          btn.style.display = 'none';
+        } else {
+          btn.style.display = '';
+          btn.textContent = `Muat Lebih Banyak (${rows.length}/${total})`;
+          btn.disabled = false;
+        }
+      }
+
 
       function getRankColor(rank) {
         if (rank === 1) return '#f59e0b';
@@ -641,6 +707,32 @@
       }
 
       let searchQuery = '';
+
+      // Peta lokasi survival. Nilai di kolom currentLocation adalah kunci
+      // mentah huruf kecil, bukan teks siap tampil. Lihat
+      // src/survival/engines/currency.js LOCATION_CURRENCY untuk nilai
+      // yang sah. Kunci tak dikenal ditampilkan apa adanya agar data
+      // baru tidak ikut hilang.
+      const LOCATION_LABELS = {
+        jalan: 'Jalanan',
+        desa: 'Desa',
+        village: 'Desa',
+        hutan: 'Hutan',
+        tambang: 'Tambang',
+        laut: 'Laut',
+        pantai: 'Pantai',
+        sawah: 'Sawah',
+        gunung: 'Gunung',
+        kota: 'Kota',
+        city: 'Kota',
+        academy: 'Akademi',
+        prison: 'Penjara',
+      };
+      function formatLocation(key) {
+        if (!key) return 'Jalanan';
+        const norm = String(key).trim().toLowerCase();
+        return LOCATION_LABELS[norm] || String(key);
+      }
 
       function renderLeaderboard(tab) {
         currentTab = tab;
@@ -659,9 +751,15 @@
           subFn = r => `Level ${r.level} · ${r.messageCount || 0} pesan`;
         } else if (tab === 'rpg_level') {
           rows = lbData.survival || [];
-          valueKey = 'starFragments';
-          valueLabel = '⭐';
-          subFn = r => `Lv.${r.survivalLevel || 1} Survival · ${r.currentLocation || 'Town Square'}`;
+          // Server mengurutkan tab ini berdasarkan survival_level, jadi bar dan
+          // angka yang ditampilkan WAJIB memakai kunci yang sama. Sebelumnya
+          // memakai starFragments sehingga bar terlihat tidak urut.
+          valueKey = 'survivalLevel';
+          valueLabel = '🛡️';
+          // Lokasi disimpan sebagai kunci mentah ("desa", "jalan", "kota").
+          // 'Town Square' tidak pernah menjadi nilai kolom dan hanya
+          // muncul sebagai teks Inggris yang menyesatkan.
+          subFn = r => `Lv.${r.survivalLevel || 1} Survival · ${formatLocation(r.currentLocation)}`;
         } else if (tab === 'trivia') {
           rows = lbData.leveling || [];
           valueKey = 'voiceMinutes';
@@ -669,8 +767,13 @@
           subFn = r => `${r.voiceMinutes || 0} mnt suara · ${r.messageCount || 0} pesan`;
         }
 
+        // Jumlah pemain memakai nilai total dari server, bukan panjang baris
+        // yang kebetulan terambil oleh pagination.
         const totalEl = document.getElementById('lbTotalCount');
-        if (totalEl) totalEl.textContent = `${rows.length} pemain`;
+        if (totalEl) {
+          const total = lbTotals[tab] ?? rows.length;
+          totalEl.textContent = `${total} pemain`;
+        }
 
         // Apply real-time search query
         let displayRows = rows;
@@ -687,7 +790,7 @@
           container.innerHTML = searchQuery
             ? `<div style="text-align:center;color:var(--text-muted);padding:48px 0;"><i class="fa-solid fa-magnifying-glass" style="font-size:36px;margin-bottom:12px;display:block;opacity:0.4;"></i>Tidak ditemukan pemain dengan nama "<strong>${searchQuery}</strong>".</div>`
             : '<div style="text-align:center;color:var(--text-muted);padding:48px 0;"><i class="fa-solid fa-ghost" style="font-size:36px;margin-bottom:12px;display:block;opacity:0.4;"></i>Belum ada data di server ini.</div>';
-          if (!searchQuery) updatePodium([]);
+          if (!searchQuery) updatePodium([], valueKey);
           return;
         }
 
@@ -721,11 +824,21 @@
         }).join('');
 
         if (!searchQuery) {
-          updatePodium(rows.slice(0, 3));
+          updatePodium(rows.slice(0, 3), valueKey);
         }
       }
 
-      function updatePodium(top3) {
+      // Nilai yang tampil di podium harus memakai kunci yang sama dengan tab
+      // aktif. Versi lama memakai rantai `total || xp || starFragments`,
+      // sehingga tab Survival selalu menampilkan NSF padahal tabelnya
+      // menghitung level, dan tab Trivia tidak punya salah satu dari ketiganya
+      // sehingga selalu jatuh ke 0.
+      function podiumValue(row, key) {
+        const v = row ? row[key] : 0;
+        return Number.isFinite(Number(v)) ? Number(v) : 0;
+      }
+
+      function updatePodium(top3, key) {
         const podiumWrapper = document.getElementById('podiumWrapper');
         if (!podiumWrapper) return;
 
@@ -753,7 +866,7 @@
                 <span class="podium-rank-badge">🥈</span>
               </div>
               <div class="podium-name">${p2.name}</div>
-              <div class="podium-coins" style="color:var(--accent-amber);">#2 · ${(p2.total || p2.xp || p2.starFragments || 0).toLocaleString('id-ID')}</div>
+              <div class="podium-coins" style="color:var(--accent-amber);">#2 · ${podiumValue(p2, key).toLocaleString('id-ID')}</div>
               <div class="podium-bar">2</div>
             </div>`;
         } else {
@@ -769,7 +882,7 @@
                 <span class="podium-rank-badge" style="font-size:22px;">👑</span>
               </div>
               <div class="podium-name" style="font-size:14px;">${p1.name}</div>
-              <div class="podium-coins" style="color:var(--accent-amber);font-size:13px;">#1 · ${(p1.total || p1.xp || p1.starFragments || 0).toLocaleString('id-ID')}</div>
+              <div class="podium-coins" style="color:var(--accent-amber);font-size:13px;">#1 · ${podiumValue(p1, key).toLocaleString('id-ID')}</div>
               <div class="podium-bar">1</div>
             </div>`;
         }
@@ -783,7 +896,7 @@
                 <span class="podium-rank-badge" style="font-size:16px;">🥉</span>
               </div>
               <div class="podium-name">${p3.name}</div>
-              <div class="podium-coins" style="color:var(--accent-amber);">#3 · ${(p3.total || p3.xp || p3.starFragments || 0).toLocaleString('id-ID')}</div>
+              <div class="podium-coins" style="color:var(--accent-amber);">#3 · ${podiumValue(p3, key).toLocaleString('id-ID')}</div>
               <div class="podium-bar">3</div>
             </div>`;
         } else {
@@ -794,6 +907,8 @@
       }
 
       function switchLbTab(cat) {
+        // Paginasi dimulai ulang saat pindah tab.
+        lbOffset = 0;
         document.querySelectorAll('#lbTabGroup .tab-btn').forEach(btn => btn.classList.remove('active'));
         const btnId = `btnTab${cat.split('_').map(w => w.charAt(0).toUpperCase()+w.slice(1)).join('')}`;
         const btnEl = document.getElementById(btnId);
@@ -817,14 +932,18 @@
       }
 
       // Populate server selector
+      // Endpoint yang dipanggil sebelumnya "/api/guilds" tidak pernah ada,
+      // sehingga request selalu 404 dan dropdown tetap kosong. Rute yang
+      // benar adalah "/api/guilds/manageable" (dashboard/routes/guild.js).
       async function loadGuilds() {
         const sel = document.getElementById('guildSelector');
         if (!sel) return;
         try {
-          const res = await fetch('/api/guilds');
+          const res = await fetch('/api/guilds/manageable');
           if (!res.ok) return;
           const data = await res.json();
           if (data.success && Array.isArray(data.guilds)) {
+            sel.innerHTML = '<option value="">- Semua Server -</option>';
             data.guilds.forEach(g => {
               const opt = document.createElement('option');
               opt.value = g.id;
@@ -835,6 +954,13 @@
         } catch (_) {}
       }
 
+      // Memilih server memicu pemuatan ulang leaderboard. Sebelumnya dropdown
+      // hanya mengisi daftar tanpa pernah memengaruhi apa pun.
+      document.getElementById('guildSelector')?.addEventListener('change', function() {
+        lbOffset = 0;
+        fetchLeaderboard();
+      });
+
       // Refresh button
       document.getElementById('btnRefreshLb')?.addEventListener('click', function() {
         const icon = this.querySelector('i');
@@ -844,11 +970,23 @@
         });
       });
 
+      // Tombol "Muat Lebih Banyak". Sebelumnya tombol ini tidak punya event
+      // listener sama sekali, jadi diklik tidak pernah terjadi apa pun.
+      document.getElementById('btnLoadMore')?.addEventListener('click', function() {
+        this.disabled = true;
+        fetchLeaderboard(true).finally(() => { this.disabled = false; });
+      });
+
       // Initial load
       loadGuilds();
       fetchLeaderboard();
-      // Auto-refresh every 30 seconds
-      setInterval(fetchLeaderboard, 30000);
+      // Auto-refresh every 30 seconds.
+      // Callback dibungkus agar argumen timer (angka) tidak salah dibaca
+      // sebagai parameter `append` oleh fetchLeaderboard.
+      setInterval(() => {
+        lbOffset = 0;
+        fetchLeaderboard();
+      }, 30000);
 
     </script>
   </body>

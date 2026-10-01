@@ -16,6 +16,14 @@ lint_output*.txt
 # Database lokal / fallback
 *.sqlite
 *.sqlite3
+# Artefak fallback database dan lock sinkronisasi
+naura_fallback.sqlite*
+*.sqlite-wal
+*.sqlite-shm
+
+# Bukti visual verifikasi 3D. Di-regenerate dengan `npm run verify:hero`,
+# jadi tidak perlu disimpan di repo (totalnya sekitar 1 MB per perjalanan).
+dashboard/public/verify_3d/
 *.db
 
 # Cache & temporary

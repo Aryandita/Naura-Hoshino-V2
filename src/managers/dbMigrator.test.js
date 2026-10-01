@@ -14,7 +14,185 @@
 
 const test = require("node:test");
 const assert = require("node:assert");
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
 const { MIGRATIONS, splitStatements } = require("./dbMigrator");
+
+// ── Keamanan sinkronisasi fallback SQLite ─────────────────────────────────
+//
+// Latar belakang bug:
+// syncFallbackToMySQL() memindahkan data dari ./naura_fallback.sqlite ke
+// database utama, lalu pada blok `finally` SELALU menjalankan
+//   fs.unlinkSync("./naura_fallback.sqlite")
+// tanpa syarat apa pun.
+//
+// Karena galat per-tabel dan per-baris hanya dicatat lewat logger.warn tanpa
+// dilempar, file fallback bisa terhapus meski separuh tabel gagal tersalin.
+// Setelah file itu hilang, tidak ada sumber recovery yang tersisa dan data
+// pemain hilang permanen.
+//
+// Test di bawah mengunci dua hal: file fallback tidak pernah hilang, dan
+// proses yang gagal dilaporkan sebagai gagal supaya bisa dicoba lagi.
+
+// Model tiruan yang mencatat apa yang diterimanya.
+function makeFakeModel(tableName, { failOn = null } = {}) {
+  const calls = { upserted: [], findOrCreate: 0, update: 0 };
+  return {
+    tableName,
+    primaryKeyAttributes: ["id"],
+    calls,
+    lastUpdateOnDuplicate: null,
+    async upsert(rows, options = {}) {
+      if (failOn === tableName) {
+        throw new Error(`kegagalan disengaja pada ${tableName}`);
+      }
+      this.lastUpdateOnDuplicate = options.updateOnDuplicate || null;
+      calls.upserted.push(...rows);
+    },
+    async findOrCreate() {
+      calls.findOrCreate += 1;
+      return [{}, true];
+    },
+    async update() {
+      calls.update += 1;
+    },
+  };
+}
+
+/** Buat file SQLite sementara berisi satu atau lebih tabel sederhana. */
+function makeSqliteFixture(dir, tables) {
+  const { DatabaseSync } = require("node:sqlite");
+  const file = path.join(dir, "naura_fallback.sqlite");
+  const db = new DatabaseSync(file);
+  for (const [tableName, rows] of Object.entries(tables)) {
+    db.exec(`CREATE TABLE ${tableName} (id TEXT PRIMARY KEY, name TEXT)`);
+    const stmt = db.prepare(`INSERT INTO ${tableName} (id, name) VALUES (?, ?)`);
+    for (const r of rows) stmt.run(r.id, r.name);
+  }
+  db.close();
+  return file;
+}
+
+test("sinkronisasi fallback tidak pernah menghapus file SQLite", async () => {
+  // Berkas sumber dibaca lewat path relatif ke CWD, jadi test memakai CWD
+  // sementara lalu memulihkannya kembali.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "naura-sync-"));
+  const prevCwd = process.cwd();
+  process.chdir(tmp);
+
+  try {
+    const { syncFallbackToMySQL } = require("./dbMigrator");
+    const file = makeSqliteFixture(tmp, {
+      UserProfiles: [
+        { id: "1", name: "Satu" },
+        { id: "2", name: "Dua" },
+      ],
+    });
+
+    const model = makeFakeModel("UserProfiles");
+    const sequelizeLike = { models: { UserProfile: model } };
+
+    const result = await syncFallbackToMySQL(sequelizeLike);
+
+    // Data benar-benar diteruskan lewat upsert, bukan findOrCreate.
+    assert.strictEqual(model.calls.upserted.length, 2, "dua baris harus masuk");
+    assert.strictEqual(model.calls.findOrCreate, 0, "tidak boleh ada findOrCreate");
+
+    // Penulisannya tidak boleh memakai updateOnDuplicate pada kolom waktu
+    // dan primary key.
+    assert.ok(model.lastUpdateOnDuplicate, "upsert harus menyertakan updateOnDuplicate");
+    assert.ok(
+      !model.lastUpdateOnDuplicate.includes("id") &&
+        !model.lastUpdateOnDuplicate.includes("createdAt") &&
+        !model.lastUpdateOnDuplicate.includes("updatedAt"),
+      `kolom terlarang ikut ter-update: ${model.lastUpdateOnDuplicate.join(", ")}`,
+    );
+
+    // File fallback TIDAK boleh hilang, hanya ditandai sudah tersinkron.
+    assert.ok(
+      !fs.existsSync(file),
+      "file asli renamed menjadi .synced, bukan dihapus",
+    );
+    assert.ok(
+      fs.existsSync(`${file}.synced`),
+      "file fallback seharusnya ditandai sudah tersinkron",
+    );
+
+    // Laporan hasil harus jujur.
+    assert.strictEqual(result.ok, true, "sinkronisasi penuh dilaporkan sukses");
+    assert.deepStrictEqual(result.failedTables, []);
+    assert.strictEqual(result.moved, 2);
+  } finally {
+    process.chdir(prevCwd);
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("file fallback dipertahankan saat ada tabel yang gagal", async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "naura-sync-fail-"));
+  const prevCwd = process.cwd();
+  process.chdir(tmp);
+
+  try {
+    const { syncFallbackToMySQL } = require("./dbMigrator");
+    // Kedua tabel sengaja dibuat ada di SQLite supaya sinkronisasi benar-benar
+    // dicoba, bukan dilewati karena tabel tidak ada.
+    const file = makeSqliteFixture(tmp, {
+      UserProfiles: [{ id: "1", name: "Satu" }],
+      UserSurvivals: [{ id: "1", name: "Satu" }],
+    });
+
+    const sequelizeLike = {
+      models: {
+        UserProfile: makeFakeModel("UserProfiles"),
+        // Tabel ini sengaja gagal untuk meniru kondisi nyata.
+        UserSurvivals: makeFakeModel("UserSurvivals", { failOn: "UserSurvivals" }),
+      },
+    };
+
+    const result = await syncFallbackToMySQL(sequelizeLike);
+
+    assert.strictEqual(
+      result.ok,
+      false,
+      "sinkronisasi yang gagal tidak boleh dilaporkan sukses",
+    );
+    assert.ok(
+      result.failedTables.includes("UserSurvivals"),
+      "tabel gagal harus dicatat namanya",
+    );
+
+    // Kunci: file fallback wajib masih ada supaya boot berikutnya mencoba lagi.
+    assert.ok(
+      fs.existsSync(file),
+      "file fallback wajib dipertahankan ketika sinkronisasi gagal",
+    );
+    assert.ok(
+      !fs.existsSync(`${file}.synced`),
+      "file tidak boleh ditandai tersinkron bila ada tabel gagal",
+    );
+  } finally {
+    process.chdir(prevCwd);
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("syncFallbackToMySQL tidak lagi memakai findOrCreate per-baris", () => {
+  const source = fs.readFileSync(path.join(__dirname, "dbMigrator.js"), "utf8");
+  const start = source.indexOf("async function syncFallbackToMySQL");
+  assert.ok(start > -1, "fungsi syncFallbackToMySQL harus ada");
+  const body = source.slice(start, source.indexOf("module.exports", start));
+
+  assert.ok(
+    !body.includes("unlinkSync"),
+    "syncFallbackToMySQL tidak boleh menghapus file fallback",
+  );
+  assert.ok(
+    !body.includes("findOrCreate"),
+    "loop per-baris findOrCreate menahan connection pool dan terlalu lambat",
+  );
+});
 
 // Token yang hanya valid di MySQL/MariaDB dan pasti gagal di PostgreSQL.
 const FORBIDDEN_MYSQL_TOKENS = [
