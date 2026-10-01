@@ -25,9 +25,7 @@ module.exports = [
       const isOwner = await validateHubOwner(interaction, ownerId, category);
       if (!isOwner) return;
 
-      // ==========================================
-      // 🎮 MINIGAME DROPDOWN DISPATCH
-      // ==========================================
+      // Pilihan dropdown kategori minigame
       if (category === "minigame") {
         if (selectedValue === "minesweeper") {
           return require("../../../plugin/minigames/minesweeper").execute(interaction, client);
@@ -47,9 +45,7 @@ module.exports = [
         return mg.launchSubgame(interaction, selectedValue);
       }
 
-      // ==========================================
-      // 🎉 FUN DROPDOWN DISPATCH
-      // ==========================================
+      // Pilihan dropdown kategori fun
       if (category === "fun") {
         if (selectedValue === "fortune") {
           return require("../../../plugin/utility/fortune").execute(interaction, client);
@@ -96,9 +92,7 @@ module.exports = [
         }
       }
 
-      // ==========================================
-      // 🛠️ TOOL DROPDOWN DISPATCH
-      // ==========================================
+      // Pilihan dropdown kategori utility tool
       if (category === "tool") {
         if (selectedValue === "calc") {
           return require("../../../plugin/utility/calculator").execute(interaction, client);
@@ -164,9 +158,7 @@ module.exports = [
         }
       }
 
-      // ==========================================
-      // 🤖 AI DROPDOWN DISPATCH
-      // ==========================================
+      // Pilihan dropdown kategori AI
       if (category === "ai") {
         if (selectedValue === "story") {
           return require("../../../plugin/ai/story-mode").execute(interaction, client);

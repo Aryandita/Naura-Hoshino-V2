@@ -2,6 +2,25 @@
 
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
 
+function createMockInteraction(interaction, optionsMap = {}) {
+  return new Proxy(interaction, {
+    get(target, prop) {
+      if (prop === "options") {
+        return {
+          getString: (name) => (typeof optionsMap[name] !== "undefined" ? optionsMap[name] : optionsMap._default ?? null),
+          getAttachment: () => null,
+          getInteger: (name) => optionsMap[name] ?? null,
+          getNumber: (name) => optionsMap[name] ?? null,
+          getBoolean: (name) => optionsMap[name] ?? null,
+          getUser: () => null,
+        };
+      }
+      const val = target[prop];
+      return typeof val === "function" ? val.bind(target) : val;
+    },
+  });
+}
+
 module.exports = [
   {
     prefix: "modal_hub_8ball:",
@@ -73,12 +92,7 @@ module.exports = [
     async handler(interaction, client) {
       const text = interaction.fields.getTextInputValue("qr_text");
       const qrCmd = require("../../../plugin/utility/qr");
-      const mockInteraction = {
-        ...interaction,
-        options: {
-          getString: () => text,
-        },
-      };
+      const mockInteraction = createMockInteraction(interaction, { teks: text, _default: text });
       return qrCmd.execute(mockInteraction, client);
     },
   },
@@ -88,12 +102,7 @@ module.exports = [
     async handler(interaction, client) {
       const hex = interaction.fields.getTextInputValue("color_code");
       const colorCmd = require("../../../plugin/utility/color");
-      const mockInteraction = {
-        ...interaction,
-        options: {
-          getString: () => hex,
-        },
-      };
+      const mockInteraction = createMockInteraction(interaction, { hex, _default: hex });
       return colorCmd.execute(mockInteraction, client);
     },
   },
@@ -103,12 +112,7 @@ module.exports = [
     async handler(interaction, client) {
       const url = interaction.fields.getTextInputValue("shorten_url");
       const shortenCmd = require("../../../plugin/utility/shorten");
-      const mockInteraction = {
-        ...interaction,
-        options: {
-          getString: () => url,
-        },
-      };
+      const mockInteraction = createMockInteraction(interaction, { url, _default: url });
       return shortenCmd.execute(mockInteraction, client);
     },
   },
@@ -118,29 +122,28 @@ module.exports = [
     async handler(interaction, client) {
       const url = interaction.fields.getTextInputValue("download_url");
       const dlCmd = require("../../../plugin/utility/downloader");
-      const mockInteraction = {
-        ...interaction,
-        options: {
-          getString: () => url,
-        },
-      };
+      const mockInteraction = createMockInteraction(interaction, { url, quality: "auto", _default: url });
       return dlCmd.execute(mockInteraction, client);
     },
   },
   {
     prefix: "modal_hub_ai_chat:",
     label: "hub-ai-chat-modal",
-    async handler(interaction, client) {
+    async handler(interaction) {
       const prompt = interaction.fields.getTextInputValue("chat_prompt");
-      const chatSub = require("../../../plugin/ai/subcommands/chat");
-      const mockInteraction = {
-        ...interaction,
-        options: {
-          getString: () => prompt,
-          getAttachment: () => null,
-        },
-      };
-      return chatSub.execute(mockInteraction, client);
+      await interaction.deferReply();
+      const UserProfile = require("../../models/UserProfile");
+      const [profile] = await UserProfile.findOrCreate({
+        where: { userId: interaction.user.id },
+      });
+      const isPremiumUser = Boolean(
+        profile.isPremium &&
+        profile.premiumUntil &&
+        profile.premiumUntil > new Date(),
+      );
+      const chatFn = require("../../../plugin/ai/subcommands/chat");
+      const mockInteraction = createMockInteraction(interaction, { pesan: prompt, prompt, _default: prompt });
+      return chatFn(mockInteraction, { profile, isPremiumUser });
     },
   },
 ];

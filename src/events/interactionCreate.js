@@ -320,38 +320,37 @@ module.exports = {
         interaction.customId,
       );
 
-      // Guard Clause 5: Komponen dinamis yang dikelola oleh collector lokal (minigame, survival, NPC, dll.)
-      const isManagedByLocalCollector =
-        /^(info_|mg_|mquiz_|duel_|ttt_|aki_|hangman_|memory_|wordle_|rps_|musicquiz_|trivia_|tod_|btn_|collect_|npc_|date_|roam_|tut_|bank_|dungeon_|gacha_|fish_|mine_|chop_|hunt_|explore_|shop_|casino_|trade_|profile_|pet_|pvp_|quiz_|quest_|story_|craft_|inv_|card_|music_|mm_|naura_)/.test(
-          interaction.customId,
-        );
-      if (!registeredComponentHandler && isManagedByLocalCollector) {
-        return undefined;
-      }
-
-      // Guard Clause 6: Komponen basi dari pesan lama tanpa penangan aktif
+      // Guard Clause 6: Komponen tanpa handler di registry permanen
+      // Beri kesempatan kolektor lokal (message collector) untuk merespons (misal deferUpdate/reply).
+      // Bila setelah 2 detik belum ditanggapi (kolektor kedaluwarsa, bot restart, atau pesan lama),
+      // kirim balasan ramah stale_component agar interaksi tidak berakhir timeout di Discord (batas keras 3 detik).
       if (!registeredComponentHandler) {
-        logger.warn(
-          `[INTERAKSI] Tidak ada penangan untuk ${componentKind}:${interaction.customId}`,
-        );
-        return interaction
-          .reply(
-            withEphemeralFlags(
-              buildErrorContainerV2({
-                lang: interaction.localeLang,
-                title: translateText(
-                  interaction.localeLang,
-                  "interaction.stale_component.title",
+        setTimeout(async () => {
+          if (!interaction.deferred && !interaction.replied) {
+            logger.warn(
+              `[INTERAKSI EXPIRED] Komponen tidak ditanggapi penangan aktif: ${componentKind}:${interaction.customId}`,
+            );
+            await interaction
+              .reply(
+                withEphemeralFlags(
+                  buildErrorContainerV2({
+                    lang: interaction.localeLang,
+                    title: translateText(
+                      interaction.localeLang,
+                      "interaction.stale_component.title",
+                    ),
+                    errorMessage: translateText(
+                      interaction.localeLang,
+                      "interaction.stale_component.body",
+                    ),
+                    expressionImage: false,
+                  }),
                 ),
-                errorMessage: translateText(
-                  interaction.localeLang,
-                  "interaction.stale_component.body",
-                ),
-                expressionImage: false,
-              }),
-            ),
-          )
-          .catch(() => {});
+              )
+              .catch(() => {});
+          }
+        }, 2000);
+        return undefined;
       }
 
       // Guard Clause 7: Rate limit komponen tombol/select/modal

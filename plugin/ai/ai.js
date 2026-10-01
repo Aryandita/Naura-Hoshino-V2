@@ -27,13 +27,18 @@ module.exports = {
     const directMessage = interaction.options ? interaction.options.getString("pesan") : null;
     if (directMessage) {
       await interaction.deferReply();
-      const mockInteraction = {
-        ...interaction,
-        options: {
-          getString: () => directMessage,
-          getAttachment: () => null,
+      const mockInteraction = new Proxy(interaction, {
+        get(target, prop) {
+          if (prop === "options") {
+            return {
+              getString: () => directMessage,
+              getAttachment: () => null,
+            };
+          }
+          const val = target[prop];
+          return typeof val === "function" ? val.bind(target) : val;
         },
-      };
+      });
       const [profile] = await UserProfile.findOrCreate({
         where: { userId: interaction.user.id },
       });

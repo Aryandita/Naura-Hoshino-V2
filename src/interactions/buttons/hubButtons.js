@@ -24,9 +24,7 @@ module.exports = [
       const isOwner = await validateHubOwner(interaction, ownerId, category);
       if (!isOwner) return;
 
-      // ==========================================
-      // 🎮 MINIGAME QUICK ACTIONS
-      // ==========================================
+      // Aksi cepat kategori minigame
       if (category === "minigame") {
         if (action === "minesweeper") {
           const ms = require("../../../plugin/minigames/minesweeper");
@@ -42,9 +40,7 @@ module.exports = [
         }
       }
 
-      // ==========================================
-      // 🎉 FUN QUICK ACTIONS
-      // ==========================================
+      // Aksi cepat kategori fun
       if (category === "fun") {
         if (action === "fortune") {
           const fortune = require("../../../plugin/utility/fortune");
@@ -72,9 +68,7 @@ module.exports = [
         }
       }
 
-      // ==========================================
-      // 🛠️ TOOL QUICK ACTIONS
-      // ==========================================
+      // Aksi cepat kategori utility tool
       if (category === "tool") {
         if (action === "calc") {
           const calc = require("../../../plugin/utility/calculator");
@@ -102,9 +96,7 @@ module.exports = [
         }
       }
 
-      // ==========================================
-      // 🤖 AI QUICK ACTIONS
-      // ==========================================
+      // Aksi cepat kategori AI
       if (category === "ai") {
         if (action === "story") {
           const story = require("../../../plugin/ai/story-mode");
