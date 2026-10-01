@@ -72,6 +72,7 @@ module.exports = (client) => {
           lavalink: {
             nodes: lavalinkNodes,
             connected: lavalinkConnected,
+            status: lavalinkNodes === 0 ? "standby" : (lavalinkConnected > 0 ? "connected" : "disconnected"),
           },
         },
         timestamp: Date.now(),
@@ -526,7 +527,7 @@ module.exports = (client) => {
             const bank = p.economy_bank || 0;
             const total = wallet + bank;
             return {
-              rank: idx + 1,
+              rank: offset + idx + 1,
               userId: p.userId,
               name,
               avatar,
@@ -565,7 +566,7 @@ module.exports = (client) => {
             }
             const xp = p.leveling_xp || 0;
             return {
-              rank: idx + 1,
+              rank: offset + idx + 1,
               userId: p.userId,
               name,
               avatar,
@@ -604,7 +605,7 @@ module.exports = (client) => {
               avatar = discordUser.displayAvatarURL({ extension: "png", size: 128 });
             }
             return {
-              rank: idx + 1,
+              rank: offset + idx + 1,
               userId: s.userId,
               name,
               avatar,
@@ -661,7 +662,7 @@ module.exports = (client) => {
         totalCoupons = (await UserSurvival.sum("coupons")) || 0;
       } catch (_) {}
 
-      const treasuryBalanceNc = totalBank || 8520000;
+      const treasuryBalanceNc = totalBank || 0;
       let treasuryBalanceNsf = 0;
       try {
         const treasury = await ServerTreasury.findOne({ order: [["updatedAt", "DESC"]] });
@@ -672,10 +673,10 @@ module.exports = (client) => {
             Number(treasury.wanderingMerchantPool || 0);
         }
         if (!treasuryBalanceNsf) {
-          treasuryBalanceNsf = (await UserSurvival.sum("starFragments")) || 485000;
+          treasuryBalanceNsf = (await UserSurvival.sum("starFragments")) || 0;
         }
       } catch (_) {
-        treasuryBalanceNsf = 485000;
+        treasuryBalanceNsf = 0;
       }
 
       let topUsers = [];
@@ -696,15 +697,6 @@ module.exports = (client) => {
           };
         });
       } catch (_) {}
-
-      if (topUsers.length === 0) {
-        topUsers = [
-          { name: "Aryandita", level: 42, wallet: 1542000, bank: 5000000, isPremium: true },
-          { name: "HoshinoFan", level: 39, wallet: 1120000, bank: 3000000, isPremium: true },
-          { name: "CyberSamurai", level: 35, wallet: 900000, bank: 2600000, isPremium: false },
-          { name: "NeonKitsune", level: 31, wallet: 700000, bank: 2200000, isPremium: false },
-        ];
-      }
 
       // Ambil seluruh saham riil dari database (ServerStock)
       let stocks = [];
@@ -1969,15 +1961,6 @@ module.exports = (client) => {
         });
       } catch (_) {}
 
-      if (holders.length === 0) {
-        holders = [
-          { rank: 1, userId: "1", name: "Aryandita", avatar: "/assets/core/avatar.png", wallet: 1542000, bank: 5000000, total: 6542000, level: 42, isPremium: true },
-          { rank: 2, userId: "2", name: "Naura Hoshino", avatar: "/assets/core/avatar.png", wallet: 1120000, bank: 3000000, total: 4120000, level: 39, isPremium: true },
-          { rank: 3, userId: "3", name: "Kagami", avatar: "/assets/core/avatar.png", wallet: 900000, bank: 2600000, total: 3500000, level: 35, isPremium: false },
-          { rank: 4, userId: "4", name: "Hanako", avatar: "/assets/core/avatar.png", wallet: 700000, bank: 2200000, total: 2900000, level: 31, isPremium: false },
-          { rank: 5, userId: "5", name: "Ryusei", avatar: "/assets/core/avatar.png", wallet: 500000, bank: 1600000, total: 2100000, level: 28, isPremium: false },
-        ];
-      }
 
       res.json({ success: true, data: holders });
     } catch (err) {
@@ -2009,14 +1992,6 @@ module.exports = (client) => {
         }));
       } catch (_) {}
 
-      if (transactions.length === 0) {
-        transactions = [
-          { id: "tx_1", type: "income", title: "XP Level Up Reward", description: "Hadiah milestone level survivor", amount: 1200, currency: "NSF", timestamp: Date.now() - 3600000 },
-          { id: "tx_2", type: "trade", title: "Transfer ke Hanako", description: "Transfer pemain antar-rekening", amount: -10000, currency: "NC", timestamp: Date.now() - 7200000 },
-          { id: "tx_3", type: "buy", title: "Beli Saham TECH", description: "Pembelian 50 lot saham Naura Tech", amount: -21250, currency: "NC", timestamp: Date.now() - 14400000 },
-          { id: "tx_4", type: "income", title: "Bunga Simpanan Bank", description: "Bunga harian deposito kas", amount: 4800, currency: "NC", timestamp: Date.now() - 28800000 },
-        ];
-      }
 
       res.json({ success: true, data: transactions });
     } catch (err) {

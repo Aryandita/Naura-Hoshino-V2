@@ -148,10 +148,17 @@ async function sendError(
   try {
     let msg;
     if (interaction.deferred || interaction.replied) {
-      msg = await interaction.editReply({
-        ...containerPayload,
-        flags: finalFlags,
-      });
+      if (ephemeral && typeof interaction.followUp === "function") {
+        msg = await interaction.followUp({
+          ...containerPayload,
+          flags: finalFlags,
+        });
+      } else {
+        msg = await interaction.editReply({
+          ...containerPayload,
+          flags: finalFlags,
+        });
+      }
     } else if (typeof interaction.reply === "function") {
       msg = await interaction.reply({
         ...containerPayload,

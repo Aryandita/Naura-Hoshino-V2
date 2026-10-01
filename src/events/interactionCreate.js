@@ -51,6 +51,18 @@ function translateText(lang, key, placeholders) {
 }
 
 /**
+ * Memastikan flag IsComponentsV2 tetap terpasang bersama Ephemeral
+ * agar Discord API tidak menolak payload Container V2.
+ */
+function withEphemeralFlags(payload) {
+  return {
+    ...payload,
+    flags:
+      (payload.flags || MessageFlags.IsComponentsV2) | MessageFlags.Ephemeral,
+  };
+}
+
+/**
  * Menangani routing Slash Command (ChatInputCommand)
  * @param {import('discord.js').ChatInputCommandInteraction} interaction
  * @param {import('discord.js').Client} client
@@ -66,30 +78,34 @@ async function handleSlashCommand(interaction, client) {
   if (isGlobalMaintenanceActive() && !isOwnerUser) {
     const maintInfo = await getGlobalMaintenance();
     return interaction
-      .reply({
-        ...buildMaintenanceContainerV2({
-          title: "Pemeliharaan Sistem Terpadu",
-          reason: maintInfo.reason || "Pembaruan arsitektur dan penanganan keamanan berkala",
-          lang: interaction.localeLang,
-        }),
-        flags: MessageFlags.Ephemeral,
-      })
+      .reply(
+        withEphemeralFlags(
+          buildMaintenanceContainerV2({
+            title: "Pemeliharaan Sistem Terpadu",
+            reason:
+              maintInfo.reason ||
+              "Pembaruan arsitektur dan penanganan keamanan berkala",
+            lang: interaction.localeLang,
+          }),
+        ),
+      )
       .catch(() => {});
   }
 
   // Guard Clause: Module Kill-Switch Darurat (Bypass khusus Owner)
   if (isModuleKilled(interaction.commandName) && !isOwnerUser) {
     return interaction
-      .reply({
-        ...buildErrorContainerV2({
-          authorName: "Naura Incident Guard",
-          title: "Modul Dinonaktifkan Sementara",
-          errorMessage: `Perintah **/${interaction.commandName}** sedang dinonaktifkan sementara oleh pengembang untuk investigasi kendala teknis.`,
-          lang: interaction.localeLang,
-          expression: "denied",
-        }),
-        flags: MessageFlags.Ephemeral,
-      })
+      .reply(
+        withEphemeralFlags(
+          buildErrorContainerV2({
+            authorName: "Naura Incident Guard",
+            title: "Modul Dinonaktifkan Sementara",
+            errorMessage: `Perintah **/${interaction.commandName}** sedang dinonaktifkan sementara oleh pengembang untuk investigasi kendala teknis.`,
+            lang: interaction.localeLang,
+            expression: "denied",
+          }),
+        ),
+      )
       .catch(() => {});
   }
 
@@ -130,16 +146,17 @@ async function handleSlashCommand(interaction, client) {
     );
     if (!isModuleEnabled) {
       return interaction
-        .reply({
-          ...buildErrorContainerV2({
-            authorName: "Naura Feature Guard",
-            title: "Fitur Dinonaktifkan",
-            errorMessage: `Command ini adalah bagian dari modul **${featureId}**, yang saat ini dimatikan oleh Admin server.`,
-            lang: interaction.localeLang,
-            expression: "denied",
-          }),
-          flags: MessageFlags.Ephemeral,
-        })
+        .reply(
+          withEphemeralFlags(
+            buildErrorContainerV2({
+              authorName: "Naura Feature Guard",
+              title: "Fitur Dinonaktifkan",
+              errorMessage: `Command ini adalah bagian dari modul **${featureId}**, yang saat ini dimatikan oleh Admin server.`,
+              lang: interaction.localeLang,
+              expression: "denied",
+            }),
+          ),
+        )
         .catch(() => {});
     }
   }
@@ -229,17 +246,18 @@ module.exports = {
       // Guard Clause 2: Bot sedang dalam proses shutdown/maintenance
       if (client.isShuttingDown) {
         return interaction
-          .reply({
-            ...buildMaintenanceContainerV2({
-              authorName: "Naura System Status",
-              title: "Sedang Restart / Pemeliharaan",
-              maintenanceMessage:
-                "Naura sedang dalam proses pemeliharaan atau restart server. Mohon tunggu beberapa saat ya!",
-              lang: interaction.localeLang,
-              withBanner: true,
-            }),
-            flags: MessageFlags.Ephemeral,
-          })
+          .reply(
+            withEphemeralFlags(
+              buildMaintenanceContainerV2({
+                authorName: "Naura System Status",
+                title: "Sedang Restart / Pemeliharaan",
+                maintenanceMessage:
+                  "Naura sedang dalam proses pemeliharaan atau restart server. Mohon tunggu beberapa saat ya!",
+                lang: interaction.localeLang,
+                withBanner: true,
+              }),
+            ),
+          )
           .catch(() => {});
       }
 
@@ -258,17 +276,18 @@ module.exports = {
         );
         if (isContextRateLimited) {
           return interaction
-            .reply({
-              ...buildErrorContainerV2({
-                authorName: "Naura Rate Limit",
-                title: "Slow Down!",
-                errorMessage:
-                  "Kamu menggunakan context menu terlalu cepat. Harap tunggu beberapa detik ya!",
-                lang: interaction.localeLang,
-                expression: "sleepy",
-              }),
-              flags: MessageFlags.Ephemeral,
-            })
+            .reply(
+              withEphemeralFlags(
+                buildErrorContainerV2({
+                  authorName: "Naura Rate Limit",
+                  title: "Slow Down!",
+                  errorMessage:
+                    "Kamu menggunakan context menu terlalu cepat. Harap tunggu beberapa detik ya!",
+                  lang: interaction.localeLang,
+                  expression: "sleepy",
+                }),
+              ),
+            )
             .catch(() => {});
         }
 
@@ -303,7 +322,7 @@ module.exports = {
 
       // Guard Clause 5: Komponen dinamis yang dikelola oleh collector lokal (minigame, survival, NPC, dll.)
       const isManagedByLocalCollector =
-        /^(mg_|mquiz_|duel_|ttt_|aki_|hangman_|memory_|wordle_|rps_|musicquiz_|trivia_|tod_|btn_|collect_|npc_|date_|roam_|tut_|bank_|dungeon_|gacha_|fish_|mine_|chop_|hunt_|explore_|shop_|casino_|trade_|profile_|pet_|pvp_|quiz_|quest_|story_|craft_|inv_|card_|music_|mm_|naura_)/.test(
+        /^(info_|mg_|mquiz_|duel_|ttt_|aki_|hangman_|memory_|wordle_|rps_|musicquiz_|trivia_|tod_|btn_|collect_|npc_|date_|roam_|tut_|bank_|dungeon_|gacha_|fish_|mine_|chop_|hunt_|explore_|shop_|casino_|trade_|profile_|pet_|pvp_|quiz_|quest_|story_|craft_|inv_|card_|music_|mm_|naura_)/.test(
           interaction.customId,
         );
       if (!registeredComponentHandler && isManagedByLocalCollector) {
@@ -316,21 +335,22 @@ module.exports = {
           `[INTERAKSI] Tidak ada penangan untuk ${componentKind}:${interaction.customId}`,
         );
         return interaction
-          .reply({
-            ...buildErrorContainerV2({
-              lang: interaction.localeLang,
-              title: translateText(
-                interaction.localeLang,
-                "interaction.stale_component.title",
-              ),
-              errorMessage: translateText(
-                interaction.localeLang,
-                "interaction.stale_component.body",
-              ),
-              expressionImage: false,
-            }),
-            flags: MessageFlags.Ephemeral,
-          })
+          .reply(
+            withEphemeralFlags(
+              buildErrorContainerV2({
+                lang: interaction.localeLang,
+                title: translateText(
+                  interaction.localeLang,
+                  "interaction.stale_component.title",
+                ),
+                errorMessage: translateText(
+                  interaction.localeLang,
+                  "interaction.stale_component.body",
+                ),
+                expressionImage: false,
+              }),
+            ),
+          )
           .catch(() => {});
       }
 
@@ -346,17 +366,18 @@ module.exports = {
 
       if (isComponentRateLimited) {
         return interaction
-          .reply({
-            ...buildErrorContainerV2({
-              authorName: "Naura Action Guard",
-              title: "Pelan-Pelan Ya!",
-              errorMessage:
-                "Kamu menekan tombol terlalu cepat. Harap berikan jeda sebentar ya!",
-              lang: interaction.localeLang,
-              expression: "sleepy",
-            }),
-            flags: MessageFlags.Ephemeral,
-          })
+          .reply(
+            withEphemeralFlags(
+              buildErrorContainerV2({
+                authorName: "Naura Action Guard",
+                title: "Pelan-Pelan Ya!",
+                errorMessage:
+                  "Kamu menekan tombol terlalu cepat. Harap berikan jeda sebentar ya!",
+                lang: interaction.localeLang,
+                expression: "sleepy",
+              }),
+            ),
+          )
           .catch(() => {});
       }
 

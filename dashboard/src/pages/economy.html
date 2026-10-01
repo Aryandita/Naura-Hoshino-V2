@@ -340,7 +340,7 @@
                     <i class="fa-solid fa-chart-pie"></i> Distribusi
                   </div>
                 </div>
-                <div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:140px;">
+                <div style="position:relative;height:140px;width:100%;display:flex;align-items:center;justify-content:center;">
                   <canvas id="econDistributionChart"></canvas>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:5px;margin-top:12px;">
@@ -661,6 +661,13 @@
                 </div>
               `;
             }).join('');
+          } else {
+            txList.innerHTML = `
+              <div style="padding:28px 16px;text-align:center;color:var(--text-muted);font-size:12px;">
+                <i class="fa-solid fa-receipt" style="font-size:24px;margin-bottom:8px;display:block;opacity:0.5;"></i>
+                Belum ada transaksi terbaru di pasar atau lelang.
+              </div>
+            `;
           }
         } catch (_) {}
       }
@@ -683,7 +690,7 @@
           options: {
             cutout: '75%',
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(10,13,24,0.9)', borderColor: 'rgba(255,255,255,0.08)', borderWidth: 1 } },
           },
         });
@@ -767,9 +774,9 @@
 
           // Render top holders from real API
           const holderData = (holders.success && holders.data?.length) ? holders.data : (econ.data?.userEconomy || []);
-          if (holderData.length) {
-            const txContainer = document.getElementById('econUserTable');
-            if (txContainer) {
+          const txContainer = document.getElementById('econUserTable');
+          if (txContainer) {
+            if (holderData.length) {
               txContainer.innerHTML = holderData.map((u, i) => `
               <div class="tx-row">
                 <div style="width:28px;text-align:center;font-size:14px;color:var(--text-muted);font-family:var(--font-mono);">${i + 1}</div>
@@ -785,6 +792,13 @@
                   <div style="font-size:11px;color:var(--text-muted);">Bank: ${Number(u.bank || 0).toLocaleString('id-ID')}</div>
                 </div>
               </div>`).join('');
+            } else {
+              txContainer.innerHTML = `
+                <div style="padding:28px 16px;text-align:center;color:var(--text-muted);font-size:12px;">
+                  <i class="fa-solid fa-users-slash" style="font-size:24px;margin-bottom:8px;display:block;opacity:0.5;"></i>
+                  Belum ada data pemegang koin yang tercatat.
+                </div>
+              `;
             }
           }
 

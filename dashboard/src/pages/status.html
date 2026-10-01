@@ -786,8 +786,19 @@
             if (lavaSvc && data.services?.lavalink) {
               const count = data.services.lavalink.connected;
               const total = data.services.lavalink.nodes;
-              lavaSvc.status = count > 0 ? 'online' : 'offline';
-              lavaSvc.rtt = `${count}/${total} Nodes`;
+              if (total === 0) {
+                lavaSvc.status = 'online';
+                lavaSvc.rtt = 'Standby (0 Nodes)';
+                lavaSvc.desc = 'Lavalink Cluster Standby · Fallback Mode Aktif';
+              } else if (count > 0) {
+                lavaSvc.status = 'online';
+                lavaSvc.rtt = `${count}/${total} Nodes`;
+                lavaSvc.desc = `${total} Nodes · Geo-Federation Cluster`;
+              } else {
+                lavaSvc.status = 'offline';
+                lavaSvc.rtt = `0/${total} Nodes`;
+                lavaSvc.desc = 'Semua Node Terputus · Memerlukan Failover';
+              }
             }
 
             const pingEl = document.getElementById('globalPing');
@@ -863,7 +874,7 @@
                 col.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;gap:4px;';
                 col.innerHTML = `
                   <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">${t.users}</div>
-                  <div style="width:100%;height:${Math.max(12, heightPct)}%;background:linear-gradient(180deg, var(--primary) 0%, rgba(244,114,182,0.2) 100%);border-radius:4px 4px 0 0;" title="${t.date}: ${t.users} Users, ${t.transactions} Transaksi"></div>
+                  <div style="max-width:36px;width:60%;min-width:16px;height:${Math.max(12, heightPct)}%;background:linear-gradient(180deg, var(--primary) 0%, rgba(244,114,182,0.2) 100%);border-radius:6px 6px 2px 2px;box-shadow:0 0 10px rgba(244,114,182,0.15);transition:all 0.2s ease;" title="${t.date}: ${t.users} Users, ${t.transactions} Transaksi"></div>
                   <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);white-space:nowrap;">${t.date.slice(5)}</div>
                 `;
                 container.appendChild(col);

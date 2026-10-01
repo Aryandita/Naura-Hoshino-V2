@@ -172,30 +172,30 @@ module.exports = {
 
       const row1 = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId("info_cta_inventory")
+          .setCustomId(`info_cta_inventory:${user.id}`)
           .setLabel("🎒 Ransel")
           .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
-          .setCustomId("info_cta_shop")
+          .setCustomId(`info_cta_shop:${user.id}`)
           .setLabel("🛒 Toko")
           .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
-          .setCustomId("info_cta_gather")
+          .setCustomId(`info_cta_gather:${user.id}`)
           .setLabel("🧺 Kumpul Bahan")
           .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
-          .setCustomId("info_cta_farm")
+          .setCustomId(`info_cta_farm:${user.id}`)
           .setLabel("🌾 Bertani")
           .setStyle(ButtonStyle.Secondary),
       );
 
       const row2 = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId("info_cta_dungeon")
+          .setCustomId(`info_cta_dungeon:${user.id}`)
           .setLabel("🗡️ Dungeon")
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
-          .setCustomId("info_cta_skill")
+          .setCustomId(`info_cta_skill:${user.id}`)
           .setLabel("⚡ Skill Tree")
           .setStyle(ButtonStyle.Secondary),
       );
@@ -262,53 +262,7 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      const message = await interaction.editReply(payload);
-
-      if (
-        !message ||
-        typeof message.createMessageComponentCollector !== "function"
-      ) {
-        return;
-      }
-
-      const collector = message.createMessageComponentCollector({
-        filter: (i) =>
-          i.user.id === user.id && i.customId.startsWith("info_cta_"),
-        time: 45000,
-        max: 1,
-      });
-
-      collector.on("collect", async (i) => {
-        await i.deferUpdate().catch(() => {});
-        if (i.customId === "info_cta_inventory") {
-          const invSub = require("./inventory.js");
-          return invSub.execute(i);
-        }
-        if (i.customId === "info_cta_shop") {
-          const shopSub = require("./shop.js");
-          return shopSub.execute(i);
-        }
-        if (i.customId === "info_cta_gather") {
-          const collectSub = require("./collect.js");
-          return collectSub.execute(i);
-        }
-        if (i.customId === "info_cta_skill") {
-          const skillSub = require("./skill.js");
-          return skillSub.execute(i);
-        }
-        if (i.customId === "info_cta_dungeon") {
-          const dungeonSub = require("./dungeon.js");
-          return dungeonSub.execute(i);
-        }
-        if (i.customId === "info_cta_farm") {
-          const farmSub = require("./farm.js");
-          return farmSub.execute(i);
-        }
-        if (i.customId === "info_cta_work") {
-          const workSub = require("./work.js");
-          return workSub.execute(i);
-        }
-      });
+      return await interaction.editReply(payload);
     } catch (error) {
       logger.error("[SURVIVAL INFO ERROR]", error);
       const errPayload = buildErrorContainerV2({
