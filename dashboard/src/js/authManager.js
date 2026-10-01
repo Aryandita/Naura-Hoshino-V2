@@ -274,13 +274,15 @@
 
                     if (data.dataError) {
                         // Server sempat gagal memuat profil. Sesi tetap dipakai,
-                        // tapi wajib diberi tahu supaya angka kosong tidak
-                        // disalahartikan sebagai nilai yang sebenarnya.
+                        // tapi wajib diberi tahu. Pesannya menyebut apa yang terjadi
+                        // dan langkah pemulihannya, bukan sekadar "mungkin kosong",
+                        // karena itu tidak memberi user jalan keluar apa pun.
                         console.warn('[NauraAuth] ' + data.dataError);
                         if (typeof window.showToast === 'function') {
                             window.showToast(
-                                'Data profil belum bisa dimuat. Beberapa angka mungkin kosong.',
+                                'Profil belum termuat penuh. Coba muat ulang halaman; kalau tetap sama, daftar ulang Discord.',
                                 'warn',
+                                6000,
                             );
                         }
                     }

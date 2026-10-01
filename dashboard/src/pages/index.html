@@ -1832,7 +1832,13 @@
           // Berhenti begitu saja setelah overlay tertutup atau waktu habis.
           clearInterval(watchdog);
           if (!isSettled() && timedOut) {
-            showFailure("Model 3D gagal dimuat. Periksa konsol browser untuk detail.");
+            // Model 3D ada di server yang sama dengan halaman ini, jadi
+            // kegagalan hampir selalu berarti WebGL dimatikan atau diblokir
+            // oleh ekstensi. Menyebut penyebab yang mungkin lebih berguna
+            // daripada menyuruh user "periksa konsol".
+            showFailure(
+              "Avatar 3D gagal dimuat. Coba aktifkan akselerasi grafis, atau matikan ekstensi browser yang memblokir WebGL."
+            );
           }
         }, 500);
 
@@ -1840,13 +1846,15 @@
           const viewer = initHeroViewer(canvas);
           if (!viewer) {
             clearInterval(watchdog);
-            showFailure("Canvas 3D tidak ditemukan.");
+            // Pesan ini hanya muncul kalau HTML-nya sendiri rusak saat
+            // diproses, jadi cukup singkat tanpa menyebut "canvas".
+            showFailure("Avatar 3D tidak tersedia di halaman ini.");
             return;
           }
         } catch (err) {
           clearInterval(watchdog);
           console.warn("[Hero3D] Gagal inisialisasi viewer:", err);
-          showFailure("Model 3D tidak bisa ditampilkan.");
+          showFailure("Avatar 3D gagal dibuka. Muat ulang halaman untuk mencoba lagi.");
         }
       }
 

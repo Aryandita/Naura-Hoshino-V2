@@ -217,7 +217,9 @@ export function initHeroViewer(targetCanvas = null, customOptions = {}) {
             const isVisible = viewerInstance.toggleBrandFx();
             buttonHalo.style.opacity = isVisible ? '1' : '0.5';
             if (typeof window.showToast === 'function') {
-                window.showToast(isVisible ? '✨ Astral Halo Diaktifkan' : 'Astral Halo Disembunyikan', 'info', 2000);
+                // Toast ini hanya mengulang kondisi tombol yang sudah berubah,
+                // jadi cukup sebutan singkat tanpa kata "Berhasil".
+                window.showToast(isVisible ? '✨ Halo aktif' : 'Halo mati', 'info', 1500);
             }
         });
     }
@@ -226,9 +228,8 @@ export function initHeroViewer(targetCanvas = null, customOptions = {}) {
         buttonReset.addEventListener('click', (event) => {
             event.stopPropagation();
             viewerInstance.resetCamera();
-            if (typeof window.showToast === 'function') {
-                window.showToast('↺ Kamera Berhasil Direset', 'info', 2000);
-            }
+            // Tidak perlu toast: tombol reset selalu bekerja, dan kalimat
+            // "Kamera Berhasil Direset" hanya mengulang apa yang ditekan user.
         });
     }
 
@@ -238,7 +239,9 @@ export function initHeroViewer(targetCanvas = null, customOptions = {}) {
             const fileName = `naura-pose-${Date.now()}.png`;
             viewerInstance.takeSnapshot(fileName);
             if (typeof window.showToast === 'function') {
-                window.showToast('📷 Snapshot Berhasil Disimpan', 'success', 2500);
+                // Toast di sini bukan pengulangan: unduhan file tidak terlihat
+                // user, jadi dia perlu tahu apa yang baru saja terjadi.
+                window.showToast('📷 Foto tersimpan sebagai naura-pose.png', 'success', 2500);
             }
         });
     }

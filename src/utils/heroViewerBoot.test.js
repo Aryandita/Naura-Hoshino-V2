@@ -42,6 +42,16 @@ const HERO_CONTROLLER = path.join(
   "heroController.js",
 );
 
+const AUTH_MANAGER = path.join(
+  __dirname,
+  "..",
+  "..",
+  "dashboard",
+  "src",
+  "js",
+  "authManager.js",
+);
+
 function read(file) {
   return fs.readFileSync(file, "utf8");
 }
@@ -138,6 +148,72 @@ test("initHeroViewer dijalankan setelah DOM siap", () => {
   assert.ok(
     /startHero\s*\(\s*\)/.test(source),
     "startHero harus benar-benar dipanggil",
+  );
+});
+
+test("pesan gagal hero 3D bisa ditindaklanjuti user", () => {
+  // Anti-slop: pesan error tidak boleh menyuruh user mendebug di konsol.
+  // Modelnya dilayani dari server yang sama dengan halaman, jadi penyebab
+  // yang mungkin adalah WebGL nonaktif atau diblokir ekstensi. Menyebut itu
+  // jauh lebih berguna daripada "periksa konsol browser".
+  const source = read(INDEX_HTML);
+  const failures = [...source.matchAll(/showFailure\(\s*["`]([^"`]+)["`]/g)].map((m) => m[1]);
+
+  assert.ok(failures.length >= 3, `harus ada beberapa pesan kegagalan, dapat ${failures.length}`);
+
+  for (const msg of failures) {
+    assert.ok(
+      !/periksa konsol|konsol browser|stack trace/i.test(msg),
+      `pesan "${msg}" menyuruh user melakukan debugging`,
+    );
+    assert.ok(
+      !/\bcanvas\b/i.test(msg),
+      `pesan "${msg}" membocorkan istilah internal "canvas"`,
+    );
+    assert.ok(
+      !/berhasil/i.test(msg),
+      `pesan "${msg}" memakai kata "berhasil" yang tidak informatif`,
+    );
+  }
+
+  // Setidaknya satu pesan harus menyebut penyebab yang bisa ditindaklanjuti.
+  assert.ok(
+    failures.some((m) => /grafis|WebGL|ekstensi|muat ulang/i.test(m)),
+    "minimal satu pesan harus menyebut penyebab dan langkah pemulihannya",
+  );
+});
+
+test("toast tidak mengulang aksi yang baru saja ditekan user", () => {
+  // Reset kamera selalu bekerja, jadi toast "Kamera Berhasil Direset"
+  // hanya mengulang apa yang baru saja diklik. Snapshot berbeda: unduhan
+  // file tidak terlihat, jadi toast di sana tetap diperlukan.
+  // Hanya string yang benar-benar tampil yang diperiksa, bukan komentar.
+  const source = read(HERO_CONTROLLER);
+  const shown = [...source.matchAll(/showToast\(\s*["'`]([^"'`]+)["'`]/g)].map((m) => m[1]);
+  assert.ok(shown.length > 0, "harus ada toast yang bisa diperiksa");
+  assert.ok(
+    !shown.some((t) => /kamera/i.test(t)),
+    `toast kamera hanya mengulang aksi user: ${shown.join(" | ")}`,
+  );
+  assert.ok(
+    /takeSnapshot[\s\S]{0,300}?showToast/.test(source),
+    "snapshot tetap perlu memberi tahu karena unduhan file tidak terlihat",
+  );
+});
+
+test("pesan profil gagal menyertakan langkah pemulihannya", () => {
+  const source = read(AUTH_MANAGER);
+  // Hanya teks yang benar-benar dirender ke layar, bukan komentar kode.
+  const shown = [...source.matchAll(/showToast\(\s*["'`]([^"'`]+)["'`]/g)].map((m) => m[1]);
+  assert.ok(shown.length > 0, "harus ada toast profil");
+  assert.ok(
+    !shown.some((t) => /mungkin kosong/i.test(t)),
+    `pesan tidak boleh berhenti pada "mungkin kosong": ${shown.join(" | ")}`,
+  );
+  // Pesan yang tersisa harus menyebut cara memulihkannya.
+  assert.ok(
+    shown.some((t) => /muat ulang|daftar ulang|login ulang/i.test(t)),
+    `minimal satu pesan harus menyebut langkah pemulihan: ${shown.join(" | ")}`,
   );
 });
 
