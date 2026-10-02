@@ -7,7 +7,7 @@
     <meta name="description" content="Hall of Fame, papan peringkat server untuk kekayaan, level chat, survival, dan trivia." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <style>
@@ -17,20 +17,13 @@
         margin-bottom: 24px;
         overflow: hidden;
         border-radius: var(--r-2xl);
-        background-color: #080b18;
+        background-color: #070914;
         background-image:
-          /* Center Golden Champion Spotlight */
-          radial-gradient(ellipse 65% 60% at 50% -5%, rgba(245, 158, 11, 0.24) 0%, rgba(245, 158, 11, 0.06) 45%, transparent 80%),
-          /* Left Cyan Rimlight for Rank 2 */
-          radial-gradient(ellipse 45% 55% at 22% 42%, rgba(34, 211, 238, 0.14) 0%, transparent 65%),
-          /* Right Violet Rimlight for Rank 3 */
-          radial-gradient(ellipse 45% 55% at 78% 46%, rgba(168, 85, 247, 0.14) 0%, transparent 65%),
-          /* Perspective Floor Grid */
-          linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-        background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+          radial-gradient(ellipse 70% 60% at 50% -5%, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.04) 50%, transparent 80%),
+          radial-gradient(ellipse 45% 55% at 20% 45%, rgba(34, 211, 238, 0.08) 0%, transparent 65%),
+          radial-gradient(ellipse 45% 55% at 80% 45%, rgba(168, 85, 247, 0.08) 0%, transparent 65%);
         border: 1px solid rgba(245, 158, 11, 0.25);
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(245, 158, 11, 0.25);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(245, 158, 11, 0.2);
       }
 
       .podium-stage-svg {
@@ -248,7 +241,7 @@
     </style>
   </head>
   <body>
-    
+    <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
 
     <div class="app-shell">
       <!-- Mobile Sidebar Overlay -->
@@ -411,7 +404,7 @@
           </div>
         </header>
 
-        <main class="page-content">
+        <main class="page-content" id="mainContent">
 
           <div class="page-header-bar animate-in">
             <div>
@@ -427,16 +420,16 @@
             <!-- Category Tabs -->
             <div class="tab-group" id="lbTabGroup">
               <button class="tab-btn active" data-cat="wealth" id="btnTabWealth" onclick="switchLbTab('wealth')">
-                <i class="fa-solid fa-vault" style="color:var(--accent-amber);"></i> Terkaya 🪙
+                <i class="fa-solid fa-vault" style="color:var(--accent-amber);"></i> Terkaya
               </button>
               <button class="tab-btn" data-cat="chat_level" id="btnTabChatLevel" onclick="switchLbTab('chat_level')">
-                <i class="fa-solid fa-comments" style="color:var(--accent-cyan);"></i> Level Chat 💬
+                <i class="fa-solid fa-comments" style="color:var(--accent-cyan);"></i> Level Chat
               </button>
               <button class="tab-btn" data-cat="rpg_level" id="btnTabRpgLevel" onclick="switchLbTab('rpg_level')">
-                <i class="fa-solid fa-shield-halved" style="color:var(--accent-violet);"></i> Survival ⚔️
+                <i class="fa-solid fa-shield-halved" style="color:var(--accent-violet);"></i> Survival
               </button>
               <button class="tab-btn" data-cat="trivia" id="btnTabTrivia" onclick="switchLbTab('trivia')">
-                <i class="fa-solid fa-gamepad" style="color:var(--accent-green);"></i> Trivia 🧠
+                <i class="fa-solid fa-gamepad" style="color:var(--accent-green);"></i> Trivia
               </button>
             </div>
           </div>

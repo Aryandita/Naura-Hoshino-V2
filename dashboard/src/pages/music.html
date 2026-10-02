@@ -7,7 +7,7 @@
     <meta name="description" content="Kontrol pemutar musik Lavalink v4 dengan Fish Audio AI DJ dan antrian real-time." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <script src="/socket.io/socket.io.js"></script>
@@ -27,18 +27,17 @@
         border-radius: 50%;
         background: conic-gradient(
           from 0deg,
-          rgba(244,114,182,0.7) 0%,
-          rgba(167,139,250,0.6) 20%,
-          rgba(34,211,238,0.5) 40%,
-          rgba(245,158,11,0.6) 60%,
-          rgba(244,114,182,0.7) 80%,
-          rgba(167,139,250,0.6) 100%
+          #0e111a 0%,
+          #1e2538 25%,
+          #0e111a 50%,
+          #1e2538 75%,
+          #0e111a 100%
         );
         border: 4px solid var(--border-primary);
         box-shadow:
           0 0 30px var(--primary-glow),
-          0 0 60px rgba(244,114,182,0.1),
-          inset 0 0 20px rgba(0,0,0,0.5);
+          0 0 50px rgba(244,114,182,0.12),
+          inset 0 0 25px rgba(0,0,0,0.85);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -203,6 +202,7 @@
     </style>
   </head>
   <body>
+    <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
     <!-- Sidebar Overlay -->
     
 
@@ -369,7 +369,7 @@
         </header>
 
         <!-- Page Content -->
-        <main class="page-content">
+        <main class="page-content" id="mainContent">
 
           <div class="page-header-bar animate-in">
             <div>
@@ -400,7 +400,7 @@
                 <!-- Vinyl disc -->
                 <div class="artwork-disc" style="margin-bottom:24px;">
                   <div class="artwork-disc-inner" id="artworkDisc">
-                    <div class="artwork-disc-center">🎵</div>
+                    <div class="artwork-disc-center"><i class="fa-solid fa-music" style="color:var(--primary);font-size:16px;"></i></div>
                   </div>
                 </div>
 
@@ -432,19 +432,19 @@
 
                 <!-- Controls -->
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-                  <button id="btnShuffle" title="Shuffle" style="width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:13px;">
+                  <button id="btnShuffle" title="Shuffle" style="width:44px;height:44px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:14px;">
                     <i class="fa-solid fa-shuffle"></i>
                   </button>
-                  <button id="btnPrev" title="Previous" style="width:40px;height:40px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:15px;">
+                  <button id="btnPrev" title="Previous" style="width:44px;height:44px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:15px;">
                     <i class="fa-solid fa-backward-step"></i>
                   </button>
                   <button id="btnPlayPause" title="Play / Pause" style="width:56px;height:56px;border-radius:50%;background:var(--primary-dim);border:2px solid var(--border-primary);color:var(--primary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-spring);font-size:20px;box-shadow:0 0 20px var(--primary-glow);" onclick="togglePlay()">
                     <i class="fa-solid fa-play" id="playIcon"></i>
                   </button>
-                  <button id="btnNext" title="Next" style="width:40px;height:40px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:15px;">
+                  <button id="btnNext" title="Next" style="width:44px;height:44px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:15px;">
                     <i class="fa-solid fa-forward-step"></i>
                   </button>
-                  <button id="btnRepeat" title="Repeat" style="width:36px;height:36px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:13px;">
+                  <button id="btnRepeat" title="Repeat" style="width:44px;height:44px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--t-base);font-size:14px;">
                     <i class="fa-solid fa-repeat"></i>
                   </button>
                 </div>

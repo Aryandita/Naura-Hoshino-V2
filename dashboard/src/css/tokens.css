@@ -78,9 +78,66 @@
   --bp-desktop: 1024px;
   --bp-wide: 1280px;
 
+  /* --- Stitch & Modern Web Guidance: Spring Motion & Touch Targets --- */
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-tactile: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --touch-target-min: 44px;
+
+  /* --- Fluid Typography Scaling (clamp) --- */
+  --fs-display: clamp(2rem, 4vw + 0.5rem, 3.25rem);
+  --fs-h1: clamp(1.625rem, 3vw + 0.25rem, 2.375rem);
+  --fs-h2: clamp(1.25rem, 2vw + 0.2rem, 1.625rem);
+  --fs-h3: clamp(1.05rem, 1.5vw + 0.15rem, 1.25rem);
+  --fs-body: clamp(0.875rem, 0.2vw + 0.825rem, 0.965rem);
+
+  /* --- Higher-Order Density Tokens (Modern Web Guidance) --- */
+  --density: comfortable;
+  --sp-card-padding: var(--sp-5, 20px);
+  --sp-card-gap: var(--sp-3, 12px);
+  --r-card-inner: var(--r-lg, 14px);
+  --fs-stat-val: 28px;
+
   /* --- Ekspresi Naura --- */
   --naura-expression-size: 160px;
   --naura-expression-size-sm: 96px;
+}
+
+/* --- Density Modes via Selectors & Container Queries --- */
+:where([data-density="compact"]) {
+  --density: compact;
+  --sp-card-padding: 12px;
+  --sp-card-gap: 8px;
+  --r-card-inner: 10px;
+  --fs-stat-val: 22px;
+}
+
+:where([data-density="comfortable"]) {
+  --density: comfortable;
+  --sp-card-padding: 20px;
+  --sp-card-gap: 12px;
+  --r-card-inner: 14px;
+  --fs-stat-val: 28px;
+}
+
+:where([data-density="spacious"]) {
+  --density: spacious;
+  --sp-card-padding: 28px;
+  --sp-card-gap: 16px;
+  --r-card-inner: 18px;
+  --fs-stat-val: 34px;
+}
+
+/* Progressive enhancement with Container Style Queries */
+@container style(--density: compact) {
+  .card-stellar, .stat-card-stellar {
+    padding: var(--sp-card-padding, 12px);
+  }
+}
+
+@container style(--density: spacious) {
+  .card-stellar, .stat-card-stellar {
+    padding: var(--sp-card-padding, 28px);
+  }
 }
 
 /* Tabular figures untuk angka metrik agar tidak bergeser */
@@ -103,6 +160,26 @@ pre {
 :focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
+}
+
+/* Aksesibilitas: Skip link untuk pembaca layar & navigasi keyboard */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  background: var(--color-primary, #ffc0cb);
+  color: #060810;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  z-index: 99999;
+  text-decoration: none;
+  transition: top var(--t-fast, 150ms ease);
+}
+
+.skip-link:focus {
+  top: 16px;
 }
 
 /* =====================================================================

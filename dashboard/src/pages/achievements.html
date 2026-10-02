@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
     <link
@@ -23,7 +23,7 @@
         padding: 32px 20px 80px;
       }
       .trophy-hero {
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(167, 139, 250, 0.15) 100%);
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(244, 114, 182, 0.08) 100%);
         border: 1px solid var(--border-medium);
         border-radius: var(--r-xl);
         padding: 28px;
@@ -33,6 +33,7 @@
         align-items: center;
         flex-wrap: wrap;
         gap: 16px;
+        box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.08));
       }
       .progress-bar-bg {
         width: 100%;
@@ -59,29 +60,39 @@
         border-radius: var(--r-lg);
         padding: 22px;
         text-align: center;
-        transition: transform 0.2s, border-color 0.2s;
+        transition: transform var(--t-base, 200ms) var(--ease-spring, cubic-bezier(0.16, 1, 0.3, 1)), border-color var(--t-base, 200ms ease), box-shadow var(--t-base, 200ms ease);
+        box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.06));
       }
       .trophy-card:hover {
         transform: translateY(-3px);
         border-color: var(--primary);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
       }
       .trophy-card.locked {
         opacity: 0.45;
         filter: grayscale(0.8);
       }
       .trophy-icon {
-        font-size: 40px;
+        font-size: 32px;
         margin-bottom: 12px;
+        color: var(--primary, #f472b6);
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
     </style>
   </head>
   <body>
+    <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
     <div id="shared-nav"></div>
 
-    <main class="trophy-container">
+    <main class="trophy-container" id="mainContent">
       <section class="trophy-hero">
         <div style="flex:1; min-width:280px;">
-          <h1 style="margin:0 0 6px; font-size:26px; font-family:var(--font-heading);">🏆 Ruang Trofi & Pencapaian Langka</h1>
+          <h1 style="margin:0 0 6px; font-size:26px; font-family:var(--font-heading); display:flex; align-items:center; gap:10px;">
+            <i class="fa-solid fa-trophy" style="color:#f59e0b;"></i> Ruang Trofi & Pencapaian Langka
+          </h1>
           <p style="margin:0; color:var(--text-secondary); font-size:14px;">Koleksi medali kehormatan dan gelar prestisius petualang Naura Wilds.</p>
           <div style="margin-top:14px;">
             <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); font-family:var(--font-mono);">
@@ -97,45 +108,45 @@
 
       <section class="trophy-grid">
         <div class="trophy-card">
-          <div class="trophy-icon">🌟</div>
+          <div class="trophy-icon" style="color:#fbbf24;"><i class="fa-solid fa-star"></i></div>
           <h3 style="margin:0 0 6px; font-size:16px; font-family:var(--font-heading);">Langkah Pertama</h3>
           <p style="margin:0; font-size:13px; color:var(--text-secondary);">Selesaikan onboarding petualang dan klaim starter kit.</p>
-          <div style="margin-top:12px; font-size:11px; color:#10B981; font-weight:700;">TERBUKA ✓</div>
+          <div style="margin-top:12px; font-size:11px; color:#10B981; font-weight:700;"><i class="fa-solid fa-check"></i> TERBUKA</div>
         </div>
 
         <div class="trophy-card">
-          <div class="trophy-icon">🌾</div>
+          <div class="trophy-icon" style="color:#34d399;"><i class="fa-solid fa-wheat-awn"></i></div>
           <h3 style="margin:0 0 6px; font-size:16px; font-family:var(--font-heading);">Master Agronomist</h3>
           <p style="margin:0; font-size:13px; color:var(--text-secondary);">Berhasil menyilangkan benih hibrida di greenhouse.</p>
-          <div style="margin-top:12px; font-size:11px; color:#10B981; font-weight:700;">TERBUKA ✓</div>
+          <div style="margin-top:12px; font-size:11px; color:#10B981; font-weight:700;"><i class="fa-solid fa-check"></i> TERBUKA</div>
         </div>
 
         <div class="trophy-card">
-          <div class="trophy-icon">🐉</div>
+          <div class="trophy-icon" style="color:#f87171;"><i class="fa-solid fa-dragon"></i></div>
           <h3 style="margin:0 0 6px; font-size:16px; font-family:var(--font-heading);">Slayer of the Abyss</h3>
           <p style="margin:0; font-size:13px; color:var(--text-secondary);">Tumbangkan bos lantai 50 The Neo-Abyss bersama party.</p>
-          <div style="margin-top:12px; font-size:11px; color:#10B981; font-weight:700;">TERBUKA ✓</div>
+          <div style="margin-top:12px; font-size:11px; color:#10B981; font-weight:700;"><i class="fa-solid fa-check"></i> TERBUKA</div>
         </div>
 
         <div class="trophy-card">
-          <div class="trophy-icon">💰</div>
+          <div class="trophy-icon" style="color:#fbbf24;"><i class="fa-solid fa-coins"></i></div>
           <h3 style="margin:0 0 6px; font-size:16px; font-family:var(--font-heading);">Galactic Millionaire</h3>
           <p style="margin:0; font-size:13px; color:var(--text-secondary);">Kumpulkan total 1.000.000 Naura Star Fragments.</p>
-          <div style="margin-top:12px; font-size:11px; color:#10B981; font-weight:700;">TERBUKA ✓</div>
+          <div style="margin-top:12px; font-size:11px; color:#10B981; font-weight:700;"><i class="fa-solid fa-check"></i> TERBUKA</div>
         </div>
 
         <div class="trophy-card locked">
-          <div class="trophy-icon">👑</div>
+          <div class="trophy-icon" style="color:#a78bfa;"><i class="fa-solid fa-crown"></i></div>
           <h3 style="margin:0 0 6px; font-size:16px; font-family:var(--font-heading);">Lord of the Towers</h3>
           <p style="margin:0; font-size:13px; color:var(--text-secondary);">Kendalikan kelima Menara Relik Kuno secara bersamaan.</p>
-          <div style="margin-top:12px; font-size:11px; color:var(--text-muted); font-weight:700;">TERKUNCI 🔒</div>
+          <div style="margin-top:12px; font-size:11px; color:var(--text-muted); font-weight:700;"><i class="fa-solid fa-lock"></i> TERKUNCI</div>
         </div>
 
         <div class="trophy-card locked">
-          <div class="trophy-icon">🚀</div>
+          <div class="trophy-icon" style="color:#38bdf8;"><i class="fa-solid fa-shuttle-space"></i></div>
           <h3 style="margin:0 0 6px; font-size:16px; font-family:var(--font-heading);">Cosmic Cartel Tycoon</h3>
           <p style="margin:0; font-size:13px; color:var(--text-secondary);">Sukses mengawal 100 karavan dagang antariksa tanpa gagal.</p>
-          <div style="margin-top:12px; font-size:11px; color:var(--text-muted); font-weight:700;">TERKUNCI 🔒</div>
+          <div style="margin-top:12px; font-size:11px; color:var(--text-muted); font-weight:700;"><i class="fa-solid fa-lock"></i> TERKUNCI</div>
         </div>
       </section>
     </main>

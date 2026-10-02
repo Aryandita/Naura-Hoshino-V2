@@ -6,16 +6,18 @@
 
 /* ─── 1. Card & Panel Komponen ─── */
 .card-stellar {
+  container-type: inline-size;
+  container-name: card;
   background: var(--bg-surface, rgba(255, 255, 255, 0.04));
   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.07));
   border-radius: var(--r-xl, 18px);
-  padding: var(--sp-5, 20px);
+  padding: var(--sp-card-padding, var(--sp-5, 20px));
   backdrop-filter: var(--blur-md, blur(16px));
   -webkit-backdrop-filter: var(--blur-md, blur(16px));
   position: relative;
   overflow: hidden;
   box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.08)), 0 8px 24px rgba(6, 8, 16, 0.35);
-  transition: transform var(--t-base, 200ms ease), border-color var(--t-base, 200ms ease), box-shadow var(--t-base, 200ms ease);
+  transition: transform var(--t-base, 200ms) var(--ease-spring, cubic-bezier(0.16, 1, 0.3, 1)), border-color var(--t-base, 200ms ease), box-shadow var(--t-base, 200ms ease);
 }
 
 .card-stellar:hover {
@@ -29,16 +31,25 @@
   box-shadow: var(--focus-ring), 0 14px 36px rgba(6, 8, 16, 0.45);
 }
 
+/* Container query responsiveness for cards */
+@container card (max-width: 340px) {
+  .card-stellar-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
 .card-stellar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--sp-4, 16px);
+  margin-bottom: var(--sp-card-gap, var(--sp-4, 16px));
   gap: var(--sp-3, 12px);
 }
 
 .card-stellar-title {
-  font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+  font-family: var(--font-heading, 'Outfit', sans-serif);
   font-size: 16px;
   font-weight: 600;
   color: var(--text-primary, #f1f5f9);
@@ -54,7 +65,7 @@
 }
 
 .card-stellar-footer {
-  margin-top: var(--sp-4, 16px);
+  margin-top: var(--sp-card-gap, var(--sp-4, 16px));
   padding-top: var(--sp-3, 12px);
   border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.07));
   display: flex;
@@ -66,18 +77,26 @@
 
 /* ─── 2. Stat Card Komponen ─── */
 .stat-card-stellar {
+  container-type: inline-size;
+  container-name: stat-card;
   background: var(--bg-surface, rgba(255, 255, 255, 0.04));
   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.07));
   border-radius: var(--r-xl, 18px);
-  padding: var(--sp-5, 20px);
+  padding: var(--sp-card-padding, var(--sp-5, 20px));
   backdrop-filter: var(--blur-md, blur(16px));
   -webkit-backdrop-filter: var(--blur-md, blur(16px));
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-2, 8px);
+  gap: var(--sp-card-gap, var(--sp-2, 8px));
   box-shadow: var(--glass-specular, inset 0 1px 0 0 rgba(255, 255, 255, 0.08)), 0 6px 20px rgba(6, 8, 16, 0.25);
-  transition: transform var(--t-base, 200ms ease), border-color var(--t-base, 200ms ease), box-shadow var(--t-base, 200ms ease);
+  transition: transform var(--t-base, 200ms) var(--ease-spring, cubic-bezier(0.16, 1, 0.3, 1)), border-color var(--t-base, 200ms ease), box-shadow var(--t-base, 200ms ease);
+}
+
+@container stat-card (max-width: 220px) {
+  .stat-card-value {
+    font-size: 22px;
+  }
 }
 
 .stat-card-stellar:hover {
@@ -126,8 +145,8 @@
 }
 
 .stat-card-value {
-  font-family: var(--font-heading, 'Space Grotesk', sans-serif);
-  font-size: 28px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--fs-stat-val, 28px);
   font-weight: 700;
   color: var(--text-primary, #f1f5f9);
   line-height: 1.1;
@@ -884,5 +903,17 @@
 .theme-switcher-pill i {
   color: var(--primary, #f472b6);
   font-size: 13px;
+}
+
+/* ─── 12. Accessibility: Prefers Reduced Motion (WCAG 2.1 AA) ─── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 

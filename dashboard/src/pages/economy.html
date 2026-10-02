@@ -7,7 +7,7 @@
     <meta name="description" content="Statistik ekonomi server, Naura Coins, Star Fragments, pasar saham, dan riwayat transaksi." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="/src/css/stellar.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
@@ -95,7 +95,7 @@
     </style>
   </head>
   <body>
-    
+    <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
 
     <div class="app-shell">
       <!-- Mobile Sidebar Overlay -->
@@ -253,7 +253,7 @@
           </div>
         </header>
 
-        <main class="page-content">
+        <main class="page-content" id="mainContent">
 
           <div class="page-header-bar animate-in">
             <div>
@@ -276,7 +276,7 @@
           <div id="econTabOverview">
 
             <!-- Stat Cards -->
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;" class="animate-in delay-1" id="econStatGrid">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:16px;margin-bottom:24px;" class="animate-in delay-1" id="econStatGrid">
 
               <div class="card card-p-sm metric-card" style="border-color:rgba(245,158,11,0.25);background:rgba(245,158,11,0.04);">
                 <div class="metric-label">Star Fragments (NSF)</div>
