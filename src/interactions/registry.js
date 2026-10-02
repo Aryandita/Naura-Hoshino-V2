@@ -41,10 +41,9 @@ const { logger } = require("../managers/logger");
 
 const KINDS = ["buttons", "selects", "modals"];
 
-const store = {};
-for (const kind of KINDS) {
-  store[kind] = { exact: new Map(), prefixes: [] };
-}
+const store = Object.fromEntries(
+  KINDS.map((kind) => [kind, { exact: new Map(), prefixes: [] }]),
+);
 
 let loaded = false;
 
@@ -131,7 +130,7 @@ function list() {
   const result = {};
   for (const kind of KINDS) {
     result[kind] = [
-      ...[...store[kind].exact.keys()].map((id) => ({
+      ...Array.from(store[kind].exact.keys(), (id) => ({
         match: id,
         type: "exact",
       })),

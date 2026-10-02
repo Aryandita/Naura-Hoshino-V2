@@ -25,9 +25,10 @@ function getCpuPercent() {
   return percent;
 }
 
+const toMB = (bytes) => Math.round(bytes / 1048576);
+
 function getRamUsageMB() {
-  const mem = process.memoryUsage();
-  return Math.round(mem.rss / 1024 / 1024);
+  return toMB(process.memoryUsage().rss);
 }
 
 function getEventLoopLag() {
@@ -38,9 +39,9 @@ function getSystemMetrics() {
   const mem = process.memoryUsage();
   return {
     cpuPercent: getCpuPercent(),
-    ramUsageMB: Math.round(mem.rss / 1024 / 1024),
-    heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
-    eventLoopLag: getEventLoopLag(),
+    ramUsageMB: toMB(mem.rss),
+    heapUsedMB: toMB(mem.heapUsed),
+    eventLoopLag: measuredLag,
   };
 }
 

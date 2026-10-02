@@ -41,9 +41,6 @@ class WebhookDispatcher {
     };
 
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
-
       const res = await fetch(webhookUrl, {
         method: "POST",
         headers: {
@@ -51,10 +48,9 @@ class WebhookDispatcher {
           "User-Agent": "Naura-Hoshino-WebhookDispatcher/2.1.0",
         },
         body: JSON.stringify(body),
-        signal: controller.signal,
+        signal: AbortSignal.timeout(4000),
       });
 
-      clearTimeout(timeoutId);
       return res.ok;
     } catch (err) {
       logger.warn(

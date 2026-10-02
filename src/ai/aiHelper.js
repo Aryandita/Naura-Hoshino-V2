@@ -70,12 +70,7 @@ async function checkRateLimit(userId, isOwner, isPremium) {
 }
 
 async function simulateTypingDelay(replyText) {
-  const charCount = replyText.length;
-  let delayMs = Math.floor(charCount * 25);
-
-  if (delayMs > 5000) delayMs = 5000;
-  if (delayMs < 1000) delayMs = 1000;
-
+  const delayMs = Math.min(5000, Math.max(1000, Math.floor(replyText.length * 25)));
   return new Promise((resolve) => setTimeout(resolve, delayMs));
 }
 
@@ -135,7 +130,7 @@ async function performWebSearchIfNeeded(text) {
 }
 
 async function updateGeminiHistory(userId, role, content) {
-  if (!redisManager.client || !redisManager.client.isReady) return;
+  if (!redisManager.isReady) return;
 
   const key = `gemini_history_${userId}`;
   try {
@@ -163,7 +158,7 @@ async function updateGeminiHistory(userId, role, content) {
 }
 
 async function getGeminiHistory(userId) {
-  if (!redisManager.client || !redisManager.client.isReady) return [];
+  if (!redisManager.isReady) return [];
 
   const key = `gemini_history_${userId}`;
   try {

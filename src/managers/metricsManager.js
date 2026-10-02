@@ -9,13 +9,11 @@ class MetricsManager {
    */
   logCommand(commandName) {
     try {
-      if (redisManager.client && redisManager.client.isReady) {
+      if (redisManager.client?.isReady) {
         redisManager.client.hincrby("metrics:commands", commandName, 1);
         redisManager.client.hincrby("metrics:commands", "total", 1);
       }
-    } catch (e) {
-      // Abaikan jika gagal
-    }
+    } catch {}
   }
 
   /**
@@ -24,7 +22,7 @@ class MetricsManager {
    */
   logComponent(componentName) {
     try {
-      if (redisManager.client && redisManager.client.isReady) {
+      if (redisManager.client?.isReady) {
         redisManager.client.hincrby(
           "metrics:components",
           componentName || "unknown",
@@ -32,23 +30,22 @@ class MetricsManager {
         );
         redisManager.client.hincrby("metrics:components", "total", 1);
       }
-    } catch (e) {
-      // Abaikan jika gagal
-    }
+    } catch {}
   }
 
   /**
    * Ambil data metrik saat ini.
    */
   async getMetrics() {
-    if (!redisManager.client || !redisManager.client.isReady) return null;
+    if (!redisManager.client?.isReady) return null;
 
     try {
-      const commands = await redisManager.client.hgetall("metrics:commands");
-      const components =
-        await redisManager.client.hgetall("metrics:components");
+      const [commands, components] = await Promise.all([
+        redisManager.client.hgetall("metrics:commands"),
+        redisManager.client.hgetall("metrics:components"),
+      ]);
       return { commands, components };
-    } catch (e) {
+    } catch {
       return null;
     }
   }

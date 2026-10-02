@@ -1,31 +1,29 @@
-// Pemuat event rekursif. Dipisahkan dari index.js tanpa mengubah perilaku.
+"use strict";
+
 const fs = require("fs");
 const path = require("path");
-const glob = require("fast-glob");
 
 function loadEvents(client, eventsPath) {
   if (!fs.existsSync(eventsPath)) return 0;
 
-  // fast-glob dipakai agar berkas event di dalam sub-folder ikut terbaca.
-  const searchPattern = path.posix.join(
-    eventsPath.split(path.sep).join("/"),
-    "**/*.js",
-  );
-  const eventFiles = glob.sync(searchPattern);
+  const eventFiles = fs
+    .readdirSync(eventsPath, { recursive: true })
+    .filter((file) => typeof file === "string" && file.endsWith(".js"));
+
   let loaded = 0;
 
-  for (const filePath of eventFiles) {
-    const event = require(filePath);
-    // Nama berkas dipakai sebagai nama event bila modulnya berupa fungsi.
-    const eventName = path.basename(filePath, ".js");
+  for (const relPath of eventFiles) {
+    const fullPath = path.join(eventsPath, relPath);
+    const event = require(fullPath);
+    const eventName = path.basename(relPath, ".js");
 
     if (typeof event === "function") {
       client.on(eventName, (...args) => event(client, ...args));
       loaded += 1;
     } else if (event.name) {
-      if (event.once)
-        client.once(event.name, (...args) => event.execute(...args, client));
-      else client.on(event.name, (...args) => event.execute(...args, client));
+      const handler = (...args) => event.execute(...args, client);
+      if (event.once) client.once(event.name, handler);
+      else client.on(event.name, handler);
       loaded += 1;
     }
   }
@@ -34,3 +32,4 @@ function loadEvents(client, eventsPath) {
 }
 
 module.exports = { loadEvents };
+

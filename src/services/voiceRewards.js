@@ -36,25 +36,20 @@ async function handleVoiceState(oldState, newState) {
     (switchedChannel && !isAfk) ||
     (stateChanged && !isAfk)
   ) {
-    // Start or restart tracking
-    const now = Date.now();
-    await redisManager.setCache(redisKey, now, 24 * 60 * 60 * 1000); // Max tracking 24 hours
+    // Start or restart tracking (TTL 24 jam dalam detik)
+    await redisManager.setCache(redisKey, Date.now(), 86400);
   } else if (leftChannel || (stateChanged && isAfk)) {
     // Stop tracking and reward
     const joinTime = await redisManager.getCache(redisKey);
     if (joinTime) {
-      await redisManager.client.del(redisKey);
-      const durationMs = Date.now() - joinTime;
-      const minutes = Math.floor(durationMs / 60000);
+      await redisManager.deleteCache(redisKey);
+      const minutes = Math.floor((Date.now() - joinTime) / 60000);
 
       if (minutes >= 1) {
-        // Reward user
-        const nsfReward = minutes * NSF_PER_MINUTE;
-
         await cacheManager.incrementUserSurvival(
           userId,
           "starFragments",
-          nsfReward,
+          minutes * NSF_PER_MINUTE,
         );
       }
     }

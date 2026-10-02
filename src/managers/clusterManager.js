@@ -41,12 +41,7 @@ class ClusterManager {
    */
   async fetchClientValues(client, property) {
     if (!client.shard) {
-      const props = property.split(".");
-      let val = client;
-      for (const prop of props) {
-        if (val === undefined) break;
-        val = val[prop];
-      }
+      const val = property.split(".").reduce((curr, prop) => curr?.[prop], client);
       return [val];
     }
     return client.shard.fetchClientValues(property);
