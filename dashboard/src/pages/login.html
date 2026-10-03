@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Autentikasi Diperlukan | Naura Hoshino OS</title>
+    <meta name="description" content="Banner gerbang masuk Naura Hoshino OS. Silakan login menggunakan akun Discord resmi untuk mengakses profil dan pengaturan." />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <style>
+      :root {
+        --login-bg: #0b0c10;
+        --login-card: rgba(18, 24, 38, 0.78);
+        --login-card-border: rgba(255, 182, 193, 0.18);
+        --login-accent: #f472b6;
+        --login-blurple: #5865F2;
+        --login-blurple-hover: #4752C4;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100dvh;
+        background-color: var(--login-bg);
+        background-image: 
+          radial-gradient(ellipse 60% 40% at 50% 10%, rgba(244, 114, 182, 0.08), transparent 70%),
+          radial-gradient(circle at 85% 85%, rgba(88, 101, 242, 0.05), transparent 50%);
+        color: var(--text-primary, #ffffff);
+        font-family: 'Outfit', sans-serif;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .login-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px 60px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .login-card-wrapper {
+        width: 100%;
+        max-width: 680px;
+        background: var(--login-card);
+        border: 1px solid var(--login-card-border);
+        border-radius: var(--r-2xl, 20px);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        overflow: hidden;
+      }
+
+      .login-header-banner {
+        position: relative;
+        padding: 32px 32px 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        background: linear-gradient(180deg, rgba(244, 114, 182, 0.06) 0%, transparent 100%);
+      }
+
+      .login-badge-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .system-aperture-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: rgba(244, 114, 182, 0.12);
+        border: 1px solid rgba(244, 114, 182, 0.3);
+        border-radius: 9999px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--login-accent);
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+      }
+
+      .login-title {
+        margin: 0 0 10px;
+        font-family: 'Orbitron', sans-serif;
+        font-size: clamp(22px, 3.5vw, 28px);
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .login-subtitle {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-secondary, #9ca3af);
+      }
+
+      .target-route-alert {
+        margin-top: 16px;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-left: 3px solid var(--login-accent);
+        border-radius: var(--r-md, 8px);
+        font-size: 13px;
+        color: #d1d5db;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .login-body {
+        padding: 28px 32px 32px;
+      }
+
+      .feature-benefits-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 14px;
+        margin-bottom: 28px;
+      }
+
+      .benefit-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: var(--r-lg, 12px);
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        transition: border-color 0.2s ease, transform 0.2s ease;
+      }
+
+      .benefit-item:hover {
+        border-color: rgba(244, 114, 182, 0.3);
+        transform: translateY(-2px);
+      }
+
+      .benefit-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(244, 114, 182, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--login-accent);
+        font-size: 15px;
+        margin-bottom: 4px;
+      }
+
+      .benefit-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #ffffff;
+      }
+
+      .benefit-desc {
+        font-size: 12px;
+        color: #9ca3af;
+        line-height: 1.4;
+      }
+
+      .login-actions-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .btn-discord-primary {
+        min-height: 50px;
+        padding: 0 24px;
+        background: var(--login-blurple);
+        color: #ffffff;
+        border: none;
+        border-radius: var(--r-lg, 12px);
+        font-family: 'Outfit', sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-decoration: none;
+        transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+        box-shadow: 0 4px 14px rgba(88, 101, 242, 0.35);
+      }
+
+      .btn-discord-primary:hover {
+        background: var(--login-blurple-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(88, 101, 242, 0.45);
+      }
+
+      .btn-discord-primary:active {
+        transform: scale(0.98);
+      }
+
+      .secondary-actions-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .btn-back-home, .btn-explore-public {
+        flex: 1;
+        min-height: 44px;
+        padding: 0 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--r-lg, 12px);
+        color: #d1d5db;
+        font-size: 13px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+      }
+
+      .btn-back-home:hover, .btn-explore-public:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+      }
+
+      .login-footer-security {
+        margin-top: 24px;
+        padding-top: 18px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 11.5px;
+        color: #6b7280;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .login-footer-security span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
+    <div id="shared-nav"></div>
+
+    <main class="login-container" id="mainContent">
+      <div class="login-card-wrapper">
+        <header class="login-header-banner">
+          <div class="login-badge-row">
+            <span class="system-aperture-badge">
+              <i class="fa-solid fa-shield-halved"></i> Autentikasi Diperlukan
+            </span>
+          </div>
+
+          <h1 class="login-title">
+            <i class="fa-solid fa-lock" style="color:var(--login-accent); font-size:22px;"></i>
+            Gerbang Akses Akun
+          </h1>
+
+          <p class="login-subtitle" id="loginDescText">
+            Halaman ini terhubung langsung dengan sistem akun petualang Naura Hoshino. Silakan hubungkan akun Discord kamu untuk melanjutkan.
+          </p>
+
+          <div class="target-route-alert" id="targetRouteAlert">
+            <i class="fa-solid fa-compass" style="color:var(--login-accent);"></i>
+            <span id="targetRouteNotice">Tujuan: Menuju ke halaman yang dilindungi.</span>
+          </div>
+        </header>
+
+        <section class="login-body">
+          <div class="feature-benefits-grid">
+            <div class="benefit-item">
+              <div class="benefit-icon">
+                <i class="fa-solid fa-id-badge"></i>
+              </div>
+              <div class="benefit-title">Profil & Identitas</div>
+              <div class="benefit-desc">Sinkronisasi data petualang, ras, dan statistik karakter RPG secara aman.</div>
+            </div>
+
+            <div class="benefit-item">
+              <div class="benefit-icon">
+                <i class="fa-solid fa-vault"></i>
+              </div>
+              <div class="benefit-title">Kas Dompet & Bank</div>
+              <div class="benefit-desc">Akses saldo Naura Coins (NC), Star Fragments (NSF), serta inventaris tas.</div>
+            </div>
+
+            <div class="benefit-item">
+              <div class="benefit-icon">
+                <i class="fa-solid fa-trophy"></i>
+              </div>
+              <div class="benefit-title">34 Trofi Pencapaian</div>
+              <div class="benefit-desc">Pantau progres lencana langka, gelar prestisius, dan hadiah kuponmu.</div>
+            </div>
+          </div>
+
+          <div class="login-actions-group">
+            <a href="/auth/discord" class="btn-discord-primary" id="btnContinueDiscord">
+              <i class="fa-brands fa-discord" style="font-size:18px;"></i>
+              <span>Lanjutkan Login dengan Discord</span>
+            </a>
+
+            <div class="secondary-actions-row">
+              <a href="/" class="btn-back-home">
+                <i class="fa-solid fa-house"></i>
+                <span>Kembali ke Beranda</span>
+              </a>
+              <a href="/achievements" class="btn-explore-public">
+                <i class="fa-solid fa-trophy"></i>
+                <span>Lihat Trofi Publik</span>
+              </a>
+            </div>
+          </div>
+
+          <footer class="login-footer-security">
+            <span>
+              <i class="fa-solid fa-shield-cat"></i> OAuth 2.0 Resmi Discord Inc.
+            </span>
+            <span>
+              Sesi terenkripsi & aman
+            </span>
+          </footer>
+        </section>
+      </div>
+    </main>
+
+    <script src="/src/js/sharedNav.js"></script>
+    <script src="/js/theme-switcher.js"></script>
+    <script src="/js/pwa-install.js"></script>
+    <script>
+      (function() {
+        'use strict';
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectParam = urlParams.get('redirect') || urlParams.get('returnTo') || '';
+        const failedParam = urlParams.get('failed');
+
+        const noticeEl = document.getElementById('targetRouteNotice');
+        const descEl = document.getElementById('loginDescText');
+        const discordBtn = document.getElementById('btnContinueDiscord');
+
+        if (discordBtn && redirectParam) {
+          discordBtn.href = '/auth/discord?returnTo=' + encodeURIComponent(redirectParam);
+        }
+
+        const ROUTE_INFO = {
+          '/profile': {
+            name: 'Profil Lengkap Petualang',
+            desc: 'Kamu sedang membuka Halaman Profil Petualang. Masuk ke akun Discord resmi untuk melihat identitas, statistik RPG, vitals, dan seluruh 34 trofi pencapaianmu.'
+          },
+          '/settings': {
+            name: 'Pengaturan Server',
+            desc: 'Kamu sedang menuju ke Pengaturan Server. Masuk dengan akun Discord untuk mengelola konfigurasi bot dan izin servermu.'
+          },
+          '/portfolio': {
+            name: 'Creator Portfolio & Showcase',
+            desc: 'Masuk dengan akun Discord untuk melihat dan mengelola kartu portofolio petualangmu.'
+          },
+          '/inventory': {
+            name: 'Tas & Inventaris Barang',
+            desc: 'Masuk dengan akun Discord untuk mengelola item, peralatan tempa, dan komoditas petualang.'
+          },
+          '/music': {
+            name: 'Music Hub Player',
+            desc: 'Masuk dengan akun Discord untuk mengontrol pemutar musik Poru v5 dan soundboard.'
+          },
+          '/tickets': {
+            name: 'Sistem Tiket Bantuan',
+            desc: 'Masuk dengan akun Discord untuk melihat transkrip dan status tiket dukunganmu.'
+          }
+        };
+
+        const cleanPath = redirectParam.split('?')[0];
+        const match = ROUTE_INFO[cleanPath];
+
+        if (match) {
+          if (noticeEl) noticeEl.textContent = 'Halaman Tujuan: ' + match.name;
+          if (descEl) descEl.textContent = match.desc;
+        } else if (redirectParam) {
+          if (noticeEl) noticeEl.textContent = 'Halaman Tujuan: ' + redirectParam;
+        } else {
+          const alertEl = document.getElementById('targetRouteAlert');
+          if (alertEl) alertEl.style.display = 'none';
+        }
+
+        if (failedParam) {
+          const banner = document.createElement('div');
+          banner.style.cssText = 'background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;padding:10px 14px;border-radius:8px;font-size:12.5px;margin-top:12px;display:flex;align-items:center;gap:8px;';
+          banner.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Autentikasi Discord dibatalkan atau mengalami kegagalan. Silakan coba lagi.';
+          document.querySelector('.login-header-banner')?.appendChild(banner);
+        }
+      })();
+    </script>
+  </body>
+</html>

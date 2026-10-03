@@ -78,7 +78,7 @@
   <body>
     <div id="shared-nav"></div>
 
-    <main class="admin-container" data-auth-required="true" data-auth-title="Admin God Mode Panel" data-auth-message="Akses pusat kendali arsitektur dan telemetri ini dibatasi khusus pengembang dan administrator. Silakan masuk terlebih dahulu.">
+    <main class="admin-container" data-user-data-page="true">
       <section class="admin-header">
         <div>
           <div style="display:flex; align-items:center; gap:10px;">
@@ -95,7 +95,7 @@
       </section>
 
       <!-- System Health & Monitoring Grid -->
-      <section class="admin-grid">
+      <section class="admin-grid" data-auth-required="true" data-auth-title="Admin God Mode Panel" data-auth-message="Akses pusat kendali arsitektur dan telemetri ini dibatasi khusus pengembang dan administrator. Silakan masuk terlebih dahulu.">
         <!-- Feature #32: Write-Behind Cache Metrics -->
         <div class="admin-card">
           <h3 style="margin-top:0; font-size:16px; color:#38BDF8;"><i class="fa-solid fa-memory"></i> Write-Behind Cache Metrics (#32)</h3>
@@ -162,8 +162,8 @@
       <section class="admin-card" style="margin-bottom:28px;">
         <h3 style="margin-top:0; font-size:18px; font-family:var(--font-heading);"><i class="fa-solid fa-screwdriver-wrench"></i> Tindakan Darurat & Pemeliharaan</h3>
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin-top:16px;">
-          <button class="quick-action-btn" onclick="triggerManualBackup()"><i class="fa-solid fa-cloud-arrow-up"></i> Jalankan Auto-Backup DB (#30)</button>
-          <button class="quick-action-btn" onclick="alert('Write-behind cache otomatis ter-flush ke Supabase setiap 5 detik!')"><i class="fa-solid fa-bolt"></i> Paksa Flush Cache (#32)</button>
+          <button class="quick-action-btn" id="btn-backup" onclick="triggerManualBackup()"><i class="fa-solid fa-cloud-arrow-up"></i> Jalankan Auto-Backup DB (#30)</button>
+          <button class="quick-action-btn" id="btn-flush" onclick="triggerFlushCache()"><i class="fa-solid fa-bolt"></i> Paksa Flush Cache (#32)</button>
           <button class="quick-action-btn" onclick="location.href='/topology'"><i class="fa-solid fa-network-wired"></i> Buka Topology Inspector</button>
         </div>
       </section>
@@ -212,8 +212,41 @@
         }
       }
 
-      function triggerManualBackup() {
-        alert('Perintah auto-backup database dikirimkan. Cadangan multi-db dieksekusi di latar belakang!');
+      async function triggerFlushCache() {
+        const btn = document.getElementById('btn-flush');
+        if (btn) btn.disabled = true;
+        try {
+          const res = await fetch('/api/admin/flush-cache', { method: 'POST' });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            alert(data.message || 'Write-behind cache berhasil di-flush ke database!');
+            await refreshAdminTelemetry();
+          } else {
+            alert('Gagal flush cache: ' + (data.error || 'Server error'));
+          }
+        } catch (err) {
+          alert('Koneksi gagal saat flush cache: ' + err.message);
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      }
+
+      async function triggerManualBackup() {
+        const btn = document.getElementById('btn-backup');
+        if (btn) btn.disabled = true;
+        try {
+          const res = await fetch('/api/admin/backup', { method: 'POST' });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            alert(data.message || 'Auto-backup database berhasil dipicu!');
+          } else {
+            alert('Gagal auto-backup: ' + (data.error || 'Server error'));
+          }
+        } catch (err) {
+          alert('Koneksi gagal saat auto-backup: ' + err.message);
+        } finally {
+          if (btn) btn.disabled = false;
+        }
       }
 
       window.addEventListener('DOMContentLoaded', refreshAdminTelemetry);

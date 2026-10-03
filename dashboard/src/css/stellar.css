@@ -562,6 +562,119 @@ p {
   flex-shrink: 0;
 }
 
+/* ─── Shared Top Navigation Bar (Standalone Pages) ─── */
+.shared-top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.shared-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.shared-nav-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-md, 10px);
+  border: 1px solid var(--border-primary, rgba(244,114,182,0.3));
+  object-fit: cover;
+}
+
+.shared-brand-name {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.shared-brand-tag {
+  font-size: 11px;
+  color: var(--primary);
+  font-family: var(--font-mono);
+  line-height: 1.2;
+}
+
+.shared-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.shared-nav-links::-webkit-scrollbar {
+  display: none;
+}
+
+.shared-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--r-md, 8px);
+  color: var(--text-secondary, #94a3b8);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all var(--t-fast, 150ms);
+  white-space: nowrap;
+}
+
+.shared-nav-link:hover {
+  color: var(--text-primary, #ffffff);
+  background: var(--bg-elevated, rgba(255,255,255,0.06));
+}
+
+.shared-nav-link.active {
+  color: var(--primary, #f472b6);
+  background: var(--primary-dim, rgba(244,114,182,0.12));
+  font-weight: 600;
+  border: 1px solid rgba(244,114,182,0.25);
+}
+
+.header-user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+  text-decoration: none;
+  transition: all var(--t-fast);
+  color: inherit;
+}
+
+.header-user-chip:hover {
+  border-color: var(--border-primary);
+  background: var(--bg-elevated);
+}
+
+.header-user-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-primary);
+}
+
+@media (max-width: 1024px) {
+  .shared-nav-links {
+    display: none;
+  }
+}
+
 /* Status pill */
 .status-pill {
   display: flex;

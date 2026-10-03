@@ -50,11 +50,11 @@ module.exports = {
       const pesan = interaction.options.getString("pesan");
 
       const ms = parseDuration(durasi);
-      if (!ms) {
+      if (!ms || ms < 10000 || ms > 365 * 24 * 60 * 60 * 1000) {
         const errPayload = buildErrorContainerV2({
-          title: "Format Durasi Salah",
+          title: "Format Waktu Tidak Sesuai",
           description:
-            "Format durasi tidak valid. Gunakan format seperti `1h`, `30m`, atau `1d`.",
+            "Format durasi tidak valid atau di luar batas wajar (minimal 10 detik, maksimal 1 tahun). Contoh format: `10m`, `2h`, `1d`.",
           footerText: ui.getFooter("utility"),
         });
         return interaction.reply({
@@ -64,8 +64,9 @@ module.exports = {
       }
 
       const remindAt = new Date(Date.now() + ms);
+      const unixTime = Math.floor(remindAt.getTime() / 1000);
 
-      await UserReminder.create({
+      const created = await UserReminder.create({
         userId: interaction.user.id,
         channelId: interaction.channel.id,
         message: pesan,
@@ -73,9 +74,13 @@ module.exports = {
       });
 
       const payload = buildContainerV2({
-        accentColorHex: ui.getColor("success") || "#00FF00",
-        title: "⏰ Pengingat Disetel",
-        description: `Baiklah! Aku akan mengingatkanmu tentang:\n**"${pesan}"**\nPada: <t:${Math.floor(remindAt.getTime() / 1000)}:F>`,
+        accentColorHex: ui.getColor("primary") || "#38BDF8",
+        authorName: "Sistem Pengingat Jadwal",
+        title: "Pengingat Berhasil Disetel",
+        description: `Naura akan mengirimkan pengingat untukmu di saluran ini.\n\n` +
+          `• **Pesan:** ${pesan}\n` +
+          `• **Waktu:** <t:${unixTime}:F> (<t:${unixTime}:R>)\n` +
+          `• **ID Pengingat:** \`#${created.id}\``,
         footerText: ui.getFooter("utility"),
       });
 
@@ -83,23 +88,34 @@ module.exports = {
     } else if (subcommand === "list") {
       const reminders = await UserReminder.findAll({
         where: { userId: interaction.user.id },
+        order: [["remindAt", "ASC"]],
+        limit: 10,
       });
 
       if (reminders.length === 0) {
         return interaction.reply({
-          content: "Kamu tidak memiliki pengingat yang aktif saat ini.",
+          ...buildContainerV2({
+            accentColorHex: ui.getColor("primary") || "#38BDF8",
+            authorName: "Sistem Pengingat Jadwal",
+            title: "Daftar Pengingat Kosong",
+            description: "Kamu belum memiliki catatan pengingat yang sedang aktif saat ini.",
+            footerText: ui.getFooter("utility"),
+          }),
           flags: MessageFlags.Ephemeral,
         });
       }
 
-      let desc = "";
+      let desc = "Berikut adalah daftar agenda pengingat aktif milikmu:\n\n";
       for (const rem of reminders) {
-        desc += `**ID: ${rem.id}** | <t:${Math.floor(new Date(rem.remindAt).getTime() / 1000)}:R>\n> ${rem.message}\n\n`;
+        const remUnix = Math.floor(new Date(rem.remindAt).getTime() / 1000);
+        desc += `**\`#${rem.id}\` • <t:${remUnix}:R>** (<t:${remUnix}:d>)\n> ${rem.message}\n\n`;
       }
+      desc += "-# Gunakan `/remind delete id:<nomor>` untuk membatalkan pengingat.";
 
       const payload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        title: "⏰ Daftar Pengingat Aktif",
+        accentColorHex: ui.getColor("primary") || "#38BDF8",
+        authorName: "Sistem Pengingat Jadwal",
+        title: `Daftar Pengingat Aktif (${reminders.length})`,
         description: desc.trim(),
         footerText: ui.getFooter("utility"),
       });
@@ -115,7 +131,7 @@ module.exports = {
         const errPayload = buildErrorContainerV2({
           title: "Pengingat Tidak Ditemukan",
           description:
-            "Pengingat dengan ID tersebut tidak ditemukan atau bukan milikmu.",
+            "Pengingat dengan ID tersebut tidak ditemukan atau telah kadaluwarsa.",
           footerText: ui.getFooter("utility"),
         });
         return interaction.reply({
@@ -124,12 +140,14 @@ module.exports = {
         });
       }
 
+      const deletedMessage = reminder.message;
       await reminder.destroy();
 
       const payload = buildContainerV2({
-        accentColorHex: ui.getColor("success") || "#00FF00",
-        title: `${ui.getEmoji("success") || "✅"} Pengingat Dihapus`,
-        description: `Pengingat dengan ID **${id}** berhasil dihapus dari sistem.`,
+        accentColorHex: ui.getColor("success") || "#34D399",
+        authorName: "Sistem Pengingat Jadwal",
+        title: "Pengingat Dibatalkan",
+        description: `Pengingat **\`#${id}\`** dengan pesan "${deletedMessage}" berhasil dihapus dari jadwal.`,
         footerText: ui.getFooter("utility"),
       });
 

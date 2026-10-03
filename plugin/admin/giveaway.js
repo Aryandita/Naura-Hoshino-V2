@@ -16,6 +16,7 @@ const {
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
 const GiveawayManager = require("../../src/managers/giveawayManager");
+const { generateGiveawayBanner } = require("../../src/canvas/dynamicBannerEngine");
 
 const PARTY = "\u{1F389}";
 
@@ -191,8 +192,8 @@ module.exports = {
 
       const timeline = ui.ux.buildVisualTimeline({
         steps: [
-          { label: "Pendaftaran Terbuka" },
-          { label: "Pengundian Pemenang" },
+          { label: "Pendaftaran" },
+          { label: "Pengundian" },
           { label: "Klaim Hadiah" },
         ],
         currentStepIndex: 0,
@@ -200,16 +201,32 @@ module.exports = {
         lang: "id",
       });
 
-      const bannerPath =
-        ui.getBanner("giveaway") ||
-        "./assets/general/Giveaway & Event Banner.jpeg";
-      const bannerName = "giveaway-banner.jpeg";
+      let bannerBuffer = null;
+      try {
+        bannerBuffer = await generateGiveawayBanner({
+          prize: hadiah,
+          winnerCount: pemenang,
+          sponsorName: interaction.user.username,
+          endTimeStr: `<t:${unixEnd}:R>`,
+          serverName: interaction.guild?.name || "Server Community",
+        });
+      } catch (err) {
+        logger.warn("[Giveaway] Gagal membuat dynamic banner, gunakan fallback: " + err.message);
+      }
+
       const files = [];
       let bannerAttachmentName = null;
-
-      if (fs.existsSync(bannerPath)) {
-        files.push(new AttachmentBuilder(bannerPath, { name: bannerName }));
-        bannerAttachmentName = bannerName;
+      if (bannerBuffer) {
+        bannerAttachmentName = "giveaway-banner.png";
+        files.push(new AttachmentBuilder(bannerBuffer, { name: bannerAttachmentName }));
+      } else {
+        const bannerPath =
+          ui.getBanner("giveaway") ||
+          "./assets/general/Giveaway & Event Banner.jpeg";
+        if (fs.existsSync(bannerPath)) {
+          bannerAttachmentName = "giveaway-banner.jpeg";
+          files.push(new AttachmentBuilder(bannerPath, { name: bannerAttachmentName }));
+        }
       }
 
       const payload = buildContainerV2({
@@ -217,10 +234,11 @@ module.exports = {
         title: `${PARTY} GIVEAWAY: ${hadiah}`,
         description:
           `${timeline.timeline}\n\n` +
-          `Klik tombol di bawah untuk ikut serta ya! Naura doakan kamu menang.\n\n` +
-          `${dot()} **Jumlah pemenang:** ${pemenang}\n` +
+          `Klik tombol di bawah untuk berpartisipasi.\n\n` +
+          `${dot()} **Hadiah:** ${hadiah}\n` +
+          `${dot()} **Kuota Pemenang:** ${pemenang} orang\n` +
           `${dot()} **Disponsori oleh:** <@${interaction.user.id}>\n` +
-          `${dot()} **Berakhir:** <t:${unixEnd}:R>` +
+          `${dot()} **Batas Waktu:** <t:${unixEnd}:F> (<t:${unixEnd}:R>)` +
           syaratLines,
         bannerAttachmentName,
         bannerPosition: "bottom",
@@ -249,9 +267,9 @@ module.exports = {
         logger.error("[Giveaway] Gagal menyimpan giveaway: " + error.message);
         await interaction.editReply(
           buildErrorContainerV2({
-            title: "Aduh, gagal disimpan",
+            title: "Penyimpanan Gagal",
             description:
-              "Naura tidak bisa menyimpan giveaway ini, jadi dibatalkan dulu ya. Coba lagi sebentar lagi!",
+              "Data giveaway tidak dapat disimpan ke database. Silakan coba kembali sesaat lagi.",
             footerText: ui.getFooter("core"),
           }),
         );
@@ -265,10 +283,11 @@ module.exports = {
         title: `${PARTY} GIVEAWAY: ${hadiah}`,
         description:
           `${timeline.timeline}\n\n` +
-          `Klik tombol di bawah untuk ikut serta ya! Naura doakan kamu menang.\n\n` +
-          `${dot()} **Jumlah pemenang:** ${pemenang}\n` +
+          `Klik tombol di bawah untuk berpartisipasi.\n\n` +
+          `${dot()} **Hadiah:** ${hadiah}\n` +
+          `${dot()} **Kuota Pemenang:** ${pemenang} orang\n` +
           `${dot()} **Disponsori oleh:** <@${interaction.user.id}>\n` +
-          `${dot()} **Berakhir:** <t:${unixEnd}:R>` +
+          `${dot()} **Batas Waktu:** <t:${unixEnd}:F> (<t:${unixEnd}:R>)` +
           syaratLines,
         bannerAttachmentName,
         bannerPosition: "bottom",

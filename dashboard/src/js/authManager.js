@@ -410,9 +410,9 @@
                     clickEvent.preventDefault();
                     clickEvent.stopPropagation();
                     if (isAuthenticated) {
-                        this.openProfileMenu();
+                        window.location.href = '/profile';
                     } else {
-                        this.openModal();
+                        window.location.href = '/login?redirect=/profile';
                     }
                 };
             });
@@ -452,6 +452,124 @@
 
             // 8. Terapkan penguncian bagian data pengguna untuk tamu / unauthenticated
             this.applyAuthGuards(isAuthenticated);
+
+            // 9. Tampilkan Banner Kepercayaan & Ajakan Login Terbuka (Anti-Phising / Anti-Scam)
+            this.renderUserDataTrustBanner(isAuthenticated);
+        }
+
+        renderUserDataTrustBanner(isAuthenticated) {
+            const currentPath = (window.location.pathname || '').toLowerCase();
+            const userDataRoutes = [
+                '/profile',
+                '/inventory',
+                '/settings',
+                '/automations',
+                '/tickets',
+                '/welcomer',
+                '/portfolio/me',
+                '/admin',
+                '/music',
+            ];
+
+            const isUserDataPage =
+                userDataRoutes.some((route) => currentPath.startsWith(route)) ||
+                document.querySelector('[data-user-data-page="true"]') !== null ||
+                document.querySelector('[data-auth-required="true"]') !== null;
+
+            const existingBanner = document.getElementById('nauraAuthTrustBanner');
+
+            // Jika pengguna sudah login atau halaman bukan halaman data pengguna, bersihkan banner jika ada
+            if (isAuthenticated || !isUserDataPage) {
+                if (existingBanner) existingBanner.remove();
+                return;
+            }
+
+            if (existingBanner) return; // Sudah terpasang
+
+            // Cari target container di halaman untuk menyematkan banner di posisi paling strategis
+            const targetContainer =
+                document.querySelector('.profile-page-container') ||
+                document.querySelector('.inv-container') ||
+                document.querySelector('.settings-container') ||
+                document.querySelector('.admin-container') ||
+                document.querySelector('#musicTabPlayer') ||
+                document.querySelector('#musicMainGrid') ||
+                document.querySelector('.automations-grid') ||
+                document.querySelector('.ticket-workspace') ||
+                document.querySelector('.studio-layout') ||
+                document.querySelector('.portfolio-hero') ||
+                document.querySelector('.main-content') ||
+                document.querySelector('main') ||
+                document.body;
+
+            const banner = document.createElement('div');
+            banner.id = 'nauraAuthTrustBanner';
+            banner.className = 'naura-auth-trust-banner';
+            banner.innerHTML = `
+                <div class="auth-trust-badge-row">
+                    <span class="auth-badge-official"><i class="fa-solid fa-shield-halved"></i> Dashboard Resmi Naura</span>
+                    <span class="auth-badge-oauth"><i class="fa-brands fa-discord"></i> Discord OAuth2 Official</span>
+                    <span class="auth-badge-mode"><i class="fa-solid fa-eye"></i> Mode Pratinjau Terbuka</span>
+                </div>
+                <div class="auth-trust-content">
+                    <h2 class="auth-trust-title">
+                        <i class="fa-solid fa-user-shield" style="color:var(--login-accent, #f472b6);margin-right:8px;"></i>
+                        Autentikasi Diperlukan untuk Mengakses Data Akun
+                    </h2>
+                    <p class="auth-trust-desc">
+                        Halaman ini terhubung dengan konfigurasi server dan data pengguna bot. Anda saat ini sedang mengakses dashboard dalam <strong>Mode Pratinjau Tamu (Aman & Transparan)</strong> tanpa pengalihan paksa. Untuk menyinkronkan profil petualang, inventaris ransel, saldo mata uang, dan kontrol bot secara real-time, silakan masuk dengan akun Discord resmi Anda.
+                    </p>
+                    <div class="auth-trust-points">
+                        <div class="auth-trust-point">
+                            <i class="fa-solid fa-lock"></i>
+                            <span>Aman & Terenkripsi: Kami tidak pernah meminta kata sandi akun Discord Anda.</span>
+                        </div>
+                        <div class="auth-trust-point">
+                            <i class="fa-solid fa-shield-check"></i>
+                            <span>Izin Terbatas: Hanya membaca identitas publik dan server yang Anda kelola.</span>
+                        </div>
+                        <div class="auth-trust-point">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Bebas Phising: Otentikasi langsung divalidasi melalui domain resmi discord.com.</span>
+                        </div>
+                    </div>
+                    <div class="auth-trust-actions">
+                        <a href="/auth/discord" class="btn btn-discord btn-auth-trust-primary" id="btnTrustDiscordLogin">
+                            <i class="fa-brands fa-discord"></i> Masuk dengan Akun Discord Resmi
+                        </a>
+                        <button type="button" class="btn btn-ghost btn-auth-trust-sandbox" id="btnTrustSandboxModal">
+                            <i class="fa-solid fa-flask"></i> Uji Coba Cepat (Mode Sandbox)
+                        </button>
+                        <a href="/" class="btn btn-ghost btn-auth-trust-back">
+                            <i class="fa-solid fa-arrow-left"></i> Kembali ke Beranda
+                        </a>
+                    </div>
+                </div>
+            `;
+
+            if (targetContainer === document.body) {
+                document.body.insertBefore(banner, document.body.firstChild);
+            } else if (
+                targetContainer.parentElement &&
+                (targetContainer.classList.contains('automations-grid') ||
+                    targetContainer.classList.contains('studio-layout') ||
+                    targetContainer.classList.contains('ticket-workspace') ||
+                    targetContainer.classList.contains('portfolio-hero') ||
+                    targetContainer.id === 'musicTabPlayer' ||
+                    targetContainer.id === 'musicMainGrid')
+            ) {
+                targetContainer.parentElement.insertBefore(banner, targetContainer);
+            } else {
+                targetContainer.insertBefore(banner, targetContainer.firstChild);
+            }
+
+            const sandboxBtn = banner.querySelector('#btnTrustSandboxModal');
+            if (sandboxBtn) {
+                sandboxBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.openModal();
+                });
+            }
         }
 
         applyAuthGuards(isAuthenticated) {
@@ -689,6 +807,147 @@
                     border: 2px solid rgba(244,114,182,0.5);
                     object-fit: cover;
                 }
+
+                /* ── Banner Kepercayaan & Ajakan Login Terbuka (Anti-Phising / Anti-Scam) ── */
+                .naura-auth-trust-banner {
+                    background: linear-gradient(135deg, rgba(88, 101, 242, 0.12) 0%, rgba(244, 114, 182, 0.08) 50%, rgba(18, 24, 38, 0.9) 100%);
+                    border: 1px solid rgba(88, 101, 242, 0.35);
+                    border-radius: var(--r-xl, 16px);
+                    padding: 22px 24px;
+                    margin-bottom: 24px;
+                    backdrop-filter: blur(14px);
+                    -webkit-backdrop-filter: blur(14px);
+                    box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+                    position: relative;
+                    z-index: 10;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 14px;
+                    animation: fadeInTrustBanner 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                @keyframes fadeInTrustBanner {
+                    from { opacity: 0; transform: translateY(-8px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .auth-trust-badge-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                }
+                .auth-badge-official {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    background: rgba(88, 101, 242, 0.15);
+                    border: 1px solid rgba(88, 101, 242, 0.4);
+                    color: #7289da;
+                    font-family: var(--font-mono, monospace);
+                    font-size: 11px;
+                    font-weight: 700;
+                    padding: 3px 10px;
+                    border-radius: 9999px;
+                    text-transform: uppercase;
+                }
+                .auth-badge-oauth {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    background: rgba(52, 211, 153, 0.12);
+                    border: 1px solid rgba(52, 211, 153, 0.35);
+                    color: #34d399;
+                    font-family: var(--font-mono, monospace);
+                    font-size: 11px;
+                    font-weight: 700;
+                    padding: 3px 10px;
+                    border-radius: 9999px;
+                    text-transform: uppercase;
+                }
+                .auth-badge-mode {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    background: rgba(245, 158, 11, 0.12);
+                    border: 1px solid rgba(245, 158, 11, 0.35);
+                    color: #fbbf24;
+                    font-family: var(--font-mono, monospace);
+                    font-size: 11px;
+                    font-weight: 700;
+                    padding: 3px 10px;
+                    border-radius: 9999px;
+                    text-transform: uppercase;
+                }
+                .auth-trust-title {
+                    margin: 0 0 8px;
+                    font-family: var(--font-heading, 'Orbitron', sans-serif);
+                    font-size: clamp(16px, 2.5vw, 19px);
+                    font-weight: 700;
+                    color: #ffffff;
+                    letter-spacing: 0.3px;
+                }
+                .auth-trust-desc {
+                    margin: 0 0 12px;
+                    font-size: 13.5px;
+                    line-height: 1.6;
+                    color: var(--text-secondary, #d1d5db);
+                }
+                .auth-trust-points {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                    gap: 10px;
+                    padding: 12px 14px;
+                    background: rgba(0, 0, 0, 0.25);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-radius: var(--r-md, 8px);
+                }
+                .auth-trust-point {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 12px;
+                    color: var(--text-muted, #9ca3af);
+                }
+                .auth-trust-point i {
+                    color: var(--accent-green, #34d399);
+                    flex-shrink: 0;
+                }
+                .auth-trust-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    flex-wrap: wrap;
+                    margin-top: 14px;
+                }
+                .btn-auth-trust-primary {
+                    padding: 10px 20px;
+                    font-size: 13.5px;
+                    font-weight: 600;
+                    border-radius: var(--r-md, 10px);
+                    text-decoration: none;
+                    background: #5865F2;
+                    color: #fff;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    border: none;
+                    box-shadow: 0 4px 14px rgba(88, 101, 242, 0.35);
+                    transition: all 0.2s ease;
+                }
+                .btn-auth-trust-primary:hover {
+                    background: #4752c4;
+                    transform: translateY(-1px);
+                    box-shadow: 0 6px 20px rgba(88, 101, 242, 0.45);
+                }
+                .btn-auth-trust-sandbox, .btn-auth-trust-back {
+                    padding: 10px 16px;
+                    font-size: 12.5px;
+                    border-radius: var(--r-md, 10px);
+                    cursor: pointer;
+                    text-decoration: none;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                }
             `;
 
             document.head.appendChild(styleSheet);
@@ -790,7 +1049,10 @@
                     <span>Survival NSF:</span>
                     <b style="color:var(--accent-cyan);">${Number(currentUser.nsf).toLocaleString('id-ID')} NSF</b>
                 </div>
-                <div style="display:flex;gap:8px;margin-top:6px;">
+                <a href="/profile" class="btn btn-primary btn-sm" style="width:100%;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;font-size:11.5px;font-weight:600;">
+                    <i class="fa-solid fa-id-card"></i> Lihat Profil Lengkap
+                </a>
+                <div style="display:flex;gap:8px;margin-top:4px;">
                     <button type="button" id="pmenuSwitchBtn" class="btn btn-ghost btn-sm" style="flex:1;font-size:11px;justify-content:center;">Ganti Akun</button>
                     <button type="button" id="pmenuLogoutBtn" class="btn btn-danger btn-sm" style="flex:1;font-size:11px;justify-content:center;background:rgba(239,68,68,0.2);color:#ef4444;border-color:rgba(239,68,68,0.4);">Logout</button>
                 </div>

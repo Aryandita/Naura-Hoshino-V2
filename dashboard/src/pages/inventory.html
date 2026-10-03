@@ -109,7 +109,7 @@
   <body>
     <div id="shared-nav"></div>
 
-    <main class="inv-container">
+    <main class="inv-container" data-user-data-page="true">
       <section class="inv-header">
         <div>
           <h1 style="margin:0 0 6px; font-size:24px; font-family:var(--font-heading);">🎒 Ransel Penjelajah Naura Wilds</h1>
@@ -158,19 +158,42 @@
     <script src="/js/theme-switcher.js"></script>
     <script src="/js/pwa-install.js"></script>
     <script>
-      const SAMPLE_ITEMS = [
-        { id: 1, name: "Pedang Laser Kosmik", icon: "🗡️", type: "Senjata", rarity: "Rare", durability: "100/100", value: "3.500 NSF", count: 1, desc: "Pedang plasma bertenaga kristal bintang." },
-        { id: 2, name: "Beliung Obsidian", icon: "⛏️", type: "Alat", rarity: "Epic", durability: "85/100", value: "8.000 NSF", count: 1, desc: "Alat penambang bijih langka bermutu tinggi." },
-        { id: 3, name: "Astral Strawberry", icon: "🍓", type: "Hasil Panen", rarity: "Rare", durability: "-", value: "50 NSF", count: 42, desc: "Buah manis kosmik pemulih stamina." },
-        { id: 4, name: "Ramuan Jamu Sehat", icon: "🧪", type: "Konsumabel", rarity: "Common", durability: "-", value: "120 NSF", count: 5, desc: "Racikan Bidan Sari penyembuh luka tempur." },
-        { id: 5, name: "Ikan Pari Bintang", icon: "🐟", type: "Ikan", rarity: "Uncommon", durability: "-", value: "450 NSF", count: 3, desc: "Ikan langka hasil memancing di palung laut." },
-      ];
+      let backpackItems = [];
+
+      async function loadInventory() {
+        const capacityText = document.getElementById('capacity-text');
+        try {
+          const res = await fetch('/api/inventory');
+          const data = await res.json();
+          if (data && data.success) {
+            backpackItems = data.items || [];
+            if (capacityText) {
+              const used = data.capacity ? data.capacity.used : backpackItems.length;
+              const max = data.capacity ? data.capacity.max : 30;
+              capacityText.textContent = `${used} / ${max} Slot`;
+            }
+            renderGrid();
+            if (backpackItems.length > 0) {
+              selectItem(backpackItems[0]);
+            } else {
+              renderEmptyDetails(data.isGuest);
+            }
+          } else {
+            renderGrid();
+            renderEmptyDetails(false);
+          }
+        } catch (err) {
+          renderGrid();
+          renderEmptyDetails(false);
+        }
+      }
 
       function renderGrid() {
         const grid = document.getElementById('backpack-grid');
+        if (!grid) return;
         grid.innerHTML = '';
         for (let i = 0; i < 30; i++) {
-          const item = SAMPLE_ITEMS[i] || null;
+          const item = backpackItems[i] || null;
           const slot = document.createElement('div');
           slot.className = 'inv-slot' + (item ? '' : ' empty');
           slot.draggable = Boolean(item);
@@ -190,19 +213,28 @@
       }
 
       function selectItem(item) {
-        document.getElementById('detail-icon').innerText = item.icon;
-        document.getElementById('detail-name').innerText = item.name;
-        document.getElementById('detail-rarity').innerText = item.rarity;
-        document.getElementById('detail-type').innerText = item.type;
-        document.getElementById('detail-durability').innerText = item.durability;
-        document.getElementById('detail-value').innerText = item.value;
-        document.getElementById('detail-desc').innerText = item.desc;
+        document.getElementById('detail-icon').innerText = item.icon || '📦';
+        document.getElementById('detail-name').innerText = item.name || 'Item Misterius';
+        document.getElementById('detail-rarity').innerText = item.rarity || 'Common';
+        document.getElementById('detail-type').innerText = item.type || 'Material';
+        document.getElementById('detail-durability').innerText = item.durability || '100 / 100';
+        document.getElementById('detail-value').innerText = item.value || '50 NSF';
+        document.getElementById('detail-desc').innerText = item.desc || 'Barang hasil petualangan di Naura Wilds.';
       }
 
-      window.addEventListener('DOMContentLoaded', () => {
-        renderGrid();
-        if (SAMPLE_ITEMS[0]) selectItem(SAMPLE_ITEMS[0]);
-      });
+      function renderEmptyDetails(isGuest) {
+        document.getElementById('detail-icon').innerText = '🎒';
+        document.getElementById('detail-name').innerText = isGuest ? 'Ransel Mode Tamu' : 'Ransel Masih Kosong';
+        document.getElementById('detail-rarity').innerText = 'Eksplorasi';
+        document.getElementById('detail-type').innerText = 'Penyimpanan';
+        document.getElementById('detail-durability').innerText = '-';
+        document.getElementById('detail-value').innerText = '0 NSF';
+        document.getElementById('detail-desc').innerText = isGuest
+          ? 'Masuk dengan akun Discord resmi untuk melihat seluruh koleksi item, material, dan senjata milikmu.'
+          : 'Belum ada item di ranselmu. Jelajahi benua Aetheria atau gunakan /survival gathering di Discord untuk mengumpulkan bahan!';
+      }
+
+      window.addEventListener('DOMContentLoaded', loadInventory);
     </script>
   </body>
 </html>

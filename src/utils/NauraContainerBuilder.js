@@ -104,6 +104,8 @@ function buildContainerV2({
   fileAttachmentNames = [],
   files = [],
   buttonsRow,
+  allowCleanup = false,
+  expiresInSeconds = null,
   footerText,
 }) {
   const hasExplicitLang = Boolean(lang || interaction);
@@ -243,9 +245,10 @@ function buildContainerV2({
     });
   }
 
+  let rowsArray = [];
   if (buttonsRow) {
     const rows = Array.isArray(buttonsRow) ? buttonsRow : [buttonsRow];
-    const validRows = rows.reduce((acc, row) => {
+    rowsArray = rows.reduce((acc, row) => {
       if (row) {
         const rowJson = typeof row.toJSON === "function" ? row.toJSON() : row;
         if (
@@ -258,11 +261,51 @@ function buildContainerV2({
       }
       return acc;
     }, []);
+  }
 
-    if (validRows.length > 0) {
-      containerComponents.push(separatorComp(false, 1));
-      validRows.forEach((rowJson) => containerComponents.push(rowJson));
+  if (allowCleanup) {
+    const cleanupBtn = {
+      type: 2, // BUTTON
+      style: 2, // SECONDARY
+      custom_id: "msg_cleanup",
+      label: "Bersihkan (+5 NSF)",
+      emoji: { name: "🧹" },
+    };
+
+    let appended = false;
+    if (rowsArray.length > 0) {
+      const lastRow = rowsArray[rowsArray.length - 1];
+      const isButtonRow =
+        Array.isArray(lastRow.components) &&
+        lastRow.components.every((c) => c.type === 2);
+      if (isButtonRow && lastRow.components.length < 5) {
+        lastRow.components.push(cleanupBtn);
+        appended = true;
+      }
     }
+
+    if (!appended) {
+      rowsArray.push({
+        type: 1, // ACTION_ROW
+        components: [cleanupBtn],
+      });
+    }
+  }
+
+  if (rowsArray.length > 0) {
+    containerComponents.push(separatorComp(false, 1));
+    rowsArray.forEach((rowJson) => containerComponents.push(rowJson));
+  }
+
+  // ── Indikator Auto-Delete Countdown ──
+  if (typeof expiresInSeconds === "number" && expiresInSeconds > 0) {
+    const expireTimestamp =
+      Math.floor(Date.now() / 1000) + Math.round(expiresInSeconds);
+    containerComponents.push(
+      textDisplay(
+        `-# ⏳ Pesan ini otomatis terhapus <t:${expireTimestamp}:R> atau klik tombol sapu untuk upah +5 NSF.`,
+      ),
+    );
   }
 
   containerComponents.push(separatorComp(true, 1));

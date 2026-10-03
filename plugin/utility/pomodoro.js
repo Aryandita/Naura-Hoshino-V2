@@ -13,6 +13,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
   ComponentType,
+  MessageFlags,
 } = require("discord.js");
 const path = require("node:path");
 const fs = require("node:fs");
@@ -147,23 +148,22 @@ module.exports = {
               "❌ Kamu tidak memiliki sesi Pomodoro yang sedang aktif.",
             footerText: ui.getFooter("utility"),
           }),
-          flags: 64,
+          flags: MessageFlags.Ephemeral,
         });
       }
 
       clearInterval(existing.interval);
       activePomodoros.delete(userId);
-
       const totalMins = Math.max(1, Math.round(existing.totalFocusTime / 60));
       const xpEarned = totalMins * 5;
       await cacheManager.incrementUserSurvival(userId, "survival_xp", xpEarned);
 
       return interaction.reply(
         buildContainerV2({
-          accentColorHex: ui.getColor("success") || "#22c55e",
+          accentColorHex: ui.getColor("success") || "#34D399",
           authorName: "Pomodoro Selesai",
-          title: `${ui.getEmoji("celebrate") || "🎉"} Sesi Belajar Berakhir!`,
-          description: `Hebat! Kamu telah fokus belajar selama **${totalMins} Menit**.\n${ui.getEmoji("sparkles") || "✨"} **Reward Fokus:** +${xpEarned} Survival XP!`,
+          title: "Sesi Belajar Berakhir",
+          description: `Kamu telah menyelesaikan fokus belajar selama **${totalMins} Menit**.\nReward Fokus: **+${xpEarned} Survival XP** telah ditambahkan ke profilmu.`,
           footerText: ui.getFooter("utility"),
         }),
       );
@@ -173,12 +173,12 @@ module.exports = {
       if (activePomodoros.has(userId)) {
         return interaction.reply({
           ...buildErrorContainerV2({
-            title: "Sesi Sudah Ada",
+            title: "Sesi Sedang Berjalan",
             description:
-              "❌ Kamu sudah memiliki sesi Pomodoro yang aktif. Gunakan `/pomodoro stop` terlebih dahulu jika ingin mengulang.",
+              "Kamu sudah memiliki sesi Pomodoro yang aktif. Gunakan `/pomodoro stop` jika ingin menghentikan sesi saat ini.",
             footerText: ui.getFooter("utility"),
           }),
-          flags: 64,
+          flags: MessageFlags.Ephemeral,
         });
       }
 

@@ -5,6 +5,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
+const { sendModLog } = require("../../src/utils/modLogHelper");
 
 module.exports = {
   isSubcommand: true,
@@ -72,21 +73,35 @@ module.exports = {
         });
 
         const channelLockPayload = buildContainerV2({
-          accentColorHex: ui.getColor("error") || "#ff0000",
-          title: `${ui.getEmoji("lock") || "🔒"} CHANNEL LOCKED`,
-          description: `Channel ini telah dikunci oleh staff.\n**Alasan:** ${reason}`,
+          accentColorHex: ui.getColor("error") || "#EF4444",
+          title: "🔒 Channel Dikunci",
+          expression: "warning",
+          description: [
+            `Channel ini telah dikunci sementara oleh moderator.`,
+            ``,
+            `📝 **Alasan:** ${reason}`,
+            `🛡️ **Moderator:** <@${interaction.user.id}>`,
+            `⏱️ **Waktu:** <t:${Math.floor(Date.now() / 1000)}:R>`,
+          ].join("\n"),
           footerText: ui.getFooter("core"),
         });
         await interaction.channel.send(channelLockPayload);
 
         const payload = buildContainerV2({
-          accentColorHex: ui.getColor("error") || "#ff0000",
-          title: `${ui.getEmoji("lock") || "🔒"} CHANNEL LOCKED`,
-          description: `Channel ini telah dikunci sementara oleh moderator.\n> **Alasan:** ${reason}`,
+          accentColorHex: ui.getColor("error") || "#EF4444",
+          title: "🔒 Penguncian Channel Berhasil",
+          expression: "success",
+          description: [
+            `Channel <#${interaction.channel.id}> berhasil dikunci dari pesan publik.`,
+            ``,
+            `📝 **Alasan:** ${reason}`,
+            `🛡️ **Moderator:** <@${interaction.user.id}>`,
+          ].join("\n"),
           footerText: ui.getFooter("core"),
         });
 
         await interaction.editReply(payload);
+        await sendModLog(interaction.guild, payload);
       } else if (subcommand === "server") {
         const channels = await interaction.guild.channels.fetch();
         let lockedCount = 0;
@@ -123,13 +138,24 @@ module.exports = {
         }
 
         const payload = buildContainerV2({
-          accentColorHex: ui.getColor("error") || "#ff0000",
-          title: `${ui.getEmoji("alert") || "🚨"} SERVER LOCKDOWN ${ui.getEmoji("alert") || "🚨"}`,
-          description: `Seluruh server telah dikunci. Member biasa tidak bisa mengirim pesan di ${lockedCount} channel.\n> **Alasan:** ${reason}`,
+          accentColorHex: ui.getColor("danger") || "#EF4444",
+          title: "🚨 Server Lockdown Diaktifkan",
+          expression: "warning",
+          description: [
+            `Seluruh server telah dikunci untuk melindungi keamanan komunitas.`,
+            ``,
+            `🛡️ **Channel Terkunci:** ${lockedCount} channel`,
+            `📝 **Alasan:** ${reason}`,
+            `👤 **Moderator:** <@${interaction.user.id}>`,
+            `⏱️ **Waktu:** <t:${Math.floor(Date.now() / 1000)}:R>`,
+            ``,
+            `Gunakan \`/moderation lockdown target:server\` atau \`/lockdown unlock target:server\` untuk membuka kunci kembali.`,
+          ].join("\n"),
           footerText: ui.getFooter("core"),
         });
 
         await interaction.editReply(payload);
+        await sendModLog(interaction.guild, payload);
       } else if (subcommand === "unlock") {
         const target = interaction.options.getString("target");
 
@@ -139,13 +165,20 @@ module.exports = {
           });
 
           const payload = buildContainerV2({
-            accentColorHex: ui.getColor("success") || "#22c55e",
-            title: `${ui.getEmoji("unlock") || "🔓"} CHANNEL UNLOCKED`,
-            description: "Kunci channel ini telah dibuka.",
+            accentColorHex: ui.getColor("success") || "#10B981",
+            title: "🔓 Channel Dibuka",
+            expression: "success",
+            description: [
+              `Penguncian channel <#${interaction.channel.id}> telah dicabut. Anggota kini dapat kembali mengirim pesan.`,
+              ``,
+              `👤 **Dibuka Oleh:** <@${interaction.user.id}>`,
+              `⏱️ **Waktu:** <t:${Math.floor(Date.now() / 1000)}:R>`,
+            ].join("\n"),
             footerText: ui.getFooter("core"),
           });
 
           await interaction.editReply(payload);
+          await sendModLog(interaction.guild, payload);
         } else {
           const channels = await interaction.guild.channels.fetch();
           let unlockedCount = 0;
@@ -175,13 +208,20 @@ module.exports = {
           }
 
           const payload = buildContainerV2({
-            accentColorHex: ui.getColor("success") || "#22c55e",
-            title: `${ui.getEmoji("unlock") || "🔓"} SERVER UNLOCKED`,
-            description: `Lockdown server telah dicabut. ${unlockedCount} channel dikembalikan ke pengaturan awal.`,
+            accentColorHex: ui.getColor("success") || "#10B981",
+            title: "🔓 Server Lockdown Dicabut",
+            expression: "success",
+            description: [
+              `Status lockdown server telah diangkat. Pengaturan ${unlockedCount} channel telah dikembalikan ke kondisi semula.`,
+              ``,
+              `👤 **Dipulihkan Oleh:** <@${interaction.user.id}>`,
+              `⏱️ **Waktu:** <t:${Math.floor(Date.now() / 1000)}:R>`,
+            ].join("\n"),
             footerText: ui.getFooter("core"),
           });
 
           await interaction.editReply(payload);
+          await sendModLog(interaction.guild, payload);
         }
       }
     } catch (error) {

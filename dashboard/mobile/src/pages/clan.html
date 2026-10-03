@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="id" data-theme="midnight" data-font-size="normal">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0c10" />
+    <meta name="description" content="Pusat komando klan, aliansi teritori, dan sindikat Naura Wilds." />
+    <title>Klan & Sindikat | Naura OS Mobile</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@700;900&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <!-- Design System -->
+    <link rel="stylesheet" href="../css/tokens.css" />
+    <link rel="stylesheet" href="../css/animations.css" />
+    <link rel="stylesheet" href="../css/components.css" />
+    <link rel="stylesheet" href="../css/mobile.css" />
+
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+
+  <body>
+    <!-- ── App Shell ── -->
+    <header class="nm-header" role="banner">
+      <div class="nm-header__brand">
+        <a href="/mobile/survival" class="nm-header__btn" aria-label="Kembali" style="text-decoration:none">
+          <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+        </a>
+        <span class="nm-header__name">Klan & Sindikat</span>
+      </div>
+      <div class="nm-header__actions">
+        <button class="nm-header__btn" id="nm-open-customizer" aria-label="Kustomisasi tampilan">
+          <i class="fa-solid fa-palette" aria-hidden="true"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Main Content ── -->
+    <main class="nm-page" role="main" style="padding-top: var(--sp-xs)">
+
+      <!-- Clan Overview Banner -->
+      <section class="nm-card animate-fade-in-up" style="border-color: rgba(192, 132, 252, 0.3)">
+        <div class="nm-card__header">
+          <div style="display:flex; align-items:center; gap:var(--sp-sm)">
+            <div style="width:48px; height:48px; border-radius:var(--r-md); background:rgba(192,132,252,0.15); border:1px solid var(--accent-purple); display:flex; align-items:center; justify-content:center; font-size:1.4rem; color:var(--accent-purple)">
+              <i class="fa-solid fa-chess-rook"></i>
+            </div>
+            <div>
+              <div style="display:flex; align-items:center; gap:6px">
+                <h2 id="clan-name" class="nm-card__title">Sensei Brigade</h2>
+                <span id="clan-tag" class="nm-badge nm-badge--purple">[VIP]</span>
+              </div>
+              <p id="clan-desc" class="nm-caption" style="color:var(--muted)">Sindikat petualang tangguh Naura Wilds.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="nm-telemetry-strip" style="margin-top:var(--sp-sm); grid-template-columns: repeat(3, 1fr)">
+          <div class="nm-chip">
+            <span id="clan-level" class="nm-chip__value" style="color:var(--accent-purple)">Lv. 5</span>
+            <span class="nm-chip__label">Level</span>
+          </div>
+          <div class="nm-chip">
+            <span id="clan-members-count" class="nm-chip__value" style="color:var(--wilds-emerald)">14 Org</span>
+            <span class="nm-chip__label">Anggota</span>
+          </div>
+          <div class="nm-chip">
+            <span id="clan-treasury" class="nm-chip__value" style="color:var(--accent-gold)">12.5K</span>
+            <span class="nm-chip__label">Kas NSF</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Active Territory & Buff Card -->
+      <section class="nm-card animate-fade-in-up" style="animation-delay:60ms">
+        <div class="nm-card__header">
+          <div>
+            <span class="nm-badge nm-badge--emerald"><i class="fa-solid fa-flag"></i> Teritori Dikuasai</span>
+            <h3 class="nm-card__title" style="margin-top:4px; font-size:0.95rem">Benteng Relik Sektor Utara</h3>
+          </div>
+          <button id="btn-contribute-energy" class="nm-btn nm-btn--sm nm-btn--primary">
+            <i class="fa-solid fa-bolt"></i> Donasi 50 NSF
+          </button>
+        </div>
+
+        <div class="nm-card" style="margin-top:var(--sp-xs); background:rgba(255,255,255,0.02); padding:var(--sp-sm)">
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:4px">
+            <span style="color:var(--body)">Pertahanan Teritori</span>
+            <span id="territory-points" style="font-family:var(--font-mono); color:var(--wilds-emerald)">850/1000 CP</span>
+          </div>
+          <div class="nm-progress" style="height:6px">
+            <div id="territory-progress" class="nm-progress__bar nm-progress__bar--emerald" style="width: 85%"></div>
+          </div>
+          <div style="display:flex; gap:var(--sp-xs); margin-top:var(--sp-sm); flex-wrap:wrap">
+            <span class="nm-badge nm-badge--pink"><i class="fa-solid fa-wand-magic-sparkles"></i> +15% Hasil Panen</span>
+            <span class="nm-badge nm-badge--purple"><i class="fa-solid fa-shield"></i> +10% Perisai Aliansi</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Clan Members Roster -->
+      <section class="nm-card animate-fade-in-up" style="animation-delay:120ms">
+        <div class="nm-card__header">
+          <h3 class="nm-card__title" style="font-size:0.95rem">
+            <i class="fa-solid fa-users" style="color:var(--accent-purple)"></i> Anggota Sindikat
+          </h3>
+          <span class="nm-caption" style="color:var(--muted)">Teratas</span>
+        </div>
+
+        <div id="clan-members-list" style="display:flex; flex-direction:column; gap:var(--sp-xs); margin-top:var(--sp-xs)">
+          <!-- Skeleton Loading -->
+          <div class="nm-card nm-skeleton" style="height:48px"></div>
+          <div class="nm-card nm-skeleton" style="height:48px; animation-delay:60ms"></div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav id="nm-bottom-nav" aria-label="Navigasi utama"></nav>
+
+    <!-- Toast Container -->
+    <div id="nm-toast-container" role="region" aria-label="Notifikasi" aria-live="polite"></div>
+
+    <!-- Page Script -->
+    <script type="module" src="../js/pages/clan.js"></script>
+  </body>
+</html>

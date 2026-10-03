@@ -393,13 +393,59 @@ module.exports = {
         );
         const attachment = new AttachmentBuilder(buffer, { name: "card.png" });
 
+        const row = new ActionRowBuilder();
+        if (profile.social_youtube) {
+          row.addComponents(
+            new ButtonBuilder()
+              .setLabel("YouTube")
+              .setStyle(ButtonStyle.Link)
+              .setURL(`https://youtube.com/@${profile.social_youtube.replace("@", "")}`),
+          );
+        }
+        if (profile.social_instagram) {
+          row.addComponents(
+            new ButtonBuilder()
+              .setLabel("Instagram")
+              .setStyle(ButtonStyle.Link)
+              .setURL(`https://instagram.com/${profile.social_instagram}`),
+          );
+        }
+        if (profile.social_x) {
+          row.addComponents(
+            new ButtonBuilder()
+              .setLabel("X (Twitter)")
+              .setStyle(ButtonStyle.Link)
+              .setURL(`https://x.com/${profile.social_x}`),
+          );
+        }
+
         const payload = buildContainerV2({
-          accentColorHex: isBotOwner ? "#00FFFF" : "#FFD700",
-          authorName: "Naura VIP Identity Card",
-          title: `${ui.getEmoji("id") || "🪪"} ${targetUser.username}, Business Card`,
+          accentColorHex: isBotOwner ? "#38BDF8" : "#FBBF24",
+          authorName: "Naura VIP Identity",
+          title: `Kartu Profil Eksklusif: ${targetUser.username}`,
           iconURL: targetUser.displayAvatarURL(),
-          description: `*Global Chat Network | ${friends.length} Teman*`,
+          description: isBotOwner
+            ? "Status Keanggotaan: **Bot Developer & Architect**"
+            : "Status Keanggotaan: **VIP Patron Member**",
+          fields: [
+            {
+              name: "Dompet & Bank",
+              value: `${(profile.economy_wallet || 0).toLocaleString("id-ID")} NC (Tunai) / ${(profile.economy_bank || 0).toLocaleString("id-ID")} NC (Bank)`,
+              inline: true,
+            },
+            {
+              name: "Reputasi Komunitas",
+              value: `⭐ ${profile.reputation || 0} Poin Reputasi`,
+              inline: true,
+            },
+            {
+              name: "Jejaring Sosial",
+              value: `${friends.length} Teman ${topFriendData ? `(Top Streak: ${topFriendData.username} - ${topStreak} Hari)` : ""}`,
+              inline: false,
+            },
+          ],
           files: [attachment],
+          buttonsRow: row.components.length > 0 ? row : null,
           footerText: ui.getFooter("utility"),
         });
 
@@ -410,7 +456,7 @@ module.exports = {
       if (profile.social_youtube)
         row.addComponents(
           new ButtonBuilder()
-            .setLabel(profile.social_youtube)
+            .setLabel("YouTube")
             .setStyle(ButtonStyle.Link)
             .setURL(
               `https://youtube.com/@${profile.social_youtube.replace("@", "")}`,
@@ -419,21 +465,21 @@ module.exports = {
       if (profile.social_instagram)
         row.addComponents(
           new ButtonBuilder()
-            .setLabel(profile.social_instagram)
+            .setLabel("Instagram")
             .setStyle(ButtonStyle.Link)
             .setURL(`https://instagram.com/${profile.social_instagram}`),
         );
       if (profile.social_x)
         row.addComponents(
           new ButtonBuilder()
-            .setLabel(profile.social_x)
+            .setLabel("X (Twitter)")
             .setStyle(ButtonStyle.Link)
             .setURL(`https://x.com/${profile.social_x}`),
         );
       if (profile.social_facebook)
         row.addComponents(
           new ButtonBuilder()
-            .setLabel(profile.social_facebook)
+            .setLabel("Facebook")
             .setStyle(ButtonStyle.Link)
             .setURL(`https://facebook.com/${profile.social_facebook}`),
         );
@@ -442,20 +488,29 @@ module.exports = {
 
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("primary"),
-        authorName: `Profil Pengguna Naura`,
-        title: `${ui.getEmoji("about") || "👤"} ${targetUser.username}`,
+        authorName: "Profil Anggota Komunitas",
+        title: `Identitas Pengguna: ${targetUser.username}`,
         iconURL: targetUser.displayAvatarURL(),
         description: hasSocial
           ? undefined
-          : "*User ini belum menautkan akun sosial media.*",
+          : "*Pengguna ini belum menghubungkan akun media sosial.*",
         fields: [
           {
-            name: `${ui.getEmoji("wallet") || "💳"} Ekonomi`,
-            value: `**Saldo Tunai:** ${ui.getEmoji("coin") || "🪙"} ${profile.economy_wallet.toLocaleString("id-ID")} ${ui.currencyName || "Naura Coin"}`,
+            name: "Ekonomi & Keuangan",
+            value: `**Tunai:** ${(profile.economy_wallet || 0).toLocaleString("id-ID")} NC\n**Bank:** ${(profile.economy_bank || 0).toLocaleString("id-ID")} NC`,
+            inline: true,
           },
           {
-            name: `${ui.getEmoji("handshake") || "🤝"} Sosial`,
-            value: `**Total Teman:** ${friends.length}\n**${ui.getEmoji("fire") || "🔥"} Top Streak:** ${topFriendData ? `${topFriendData.username} (${topStreak} hari)` : "Belum ada"}`,
+            name: "Reputasi & Hubungan",
+            value: `**Reputasi:** ⭐ ${profile.reputation || 0}\n**Teman:** ${friends.length} Orang`,
+            inline: true,
+          },
+          {
+            name: "Top Pertemanan",
+            value: topFriendData
+              ? `🔥 Bersama <@${topFriendData.id}> selama **${topStreak} hari berturut-turut**`
+              : "Belum memiliki catatan streak aktif bersama teman",
+            inline: false,
           },
         ],
         buttonsRow: hasSocial ? row : null,

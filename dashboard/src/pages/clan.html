@@ -115,16 +115,16 @@
           <div>
             <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
               <span style="font-size:32px;">🛡️</span>
-              <h1 id="clan-name" style="margin:0; font-size:28px; font-family:var(--font-heading);">Astraea Vanguard</h1>
-              <span id="clan-tag" style="background:var(--primary-dim); color:var(--primary); padding:4px 10px; border-radius:6px; font-weight:700;">[ASTRA]</span>
+              <h1 id="clan-name" style="margin:0; font-size:28px; font-family:var(--font-heading);">Memuat Aliansi Klan...</h1>
+              <span id="clan-tag" style="background:var(--primary-dim); color:var(--primary); padding:4px 10px; border-radius:6px; font-weight:700;">[CLAN]</span>
             </div>
             <p id="clan-desc" style="margin:0; color:var(--text-secondary); max-width:600px;">
-              Federasi klan penjelajah galaksi Naura Wilds yang berfokus pada penguasaan menara relik kuno dan jalur dagang antariksa.
+              Markas komando aliansi petualang Naura Wilds untuk penaklukan menara relik kuno dan koordinasi wilayah perang.
             </p>
           </div>
           <div style="text-align:right;">
             <div style="font-size:13px; color:var(--text-muted); margin-bottom:4px;">LEVEL KLAN</div>
-            <div id="clan-level" style="font-size:32px; font-weight:700; color:var(--primary); font-family:var(--font-mono);">Lv. 14</div>
+            <div id="clan-level" style="font-size:32px; font-weight:700; color:var(--primary); font-family:var(--font-mono);">Lv. 1</div>
           </div>
         </div>
       </section>
@@ -133,31 +133,31 @@
       <section class="clan-stats-grid">
         <div class="stat-card">
           <div style="color:var(--text-muted); font-size:13px; margin-bottom:6px;"><i class="fa-solid fa-vault"></i> KAS KLAN</div>
-          <div id="clan-vault" style="font-size:22px; font-weight:700; color:#38BDF8; font-family:var(--font-mono);">485.200 NSF</div>
-          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Dividen harian: 5%</div>
+          <div id="clan-vault" style="font-size:22px; font-weight:700; color:#38BDF8; font-family:var(--font-mono);">0 NSF</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Simpanan kas aliansi</div>
         </div>
         <div class="stat-card">
           <div style="color:var(--text-muted); font-size:13px; margin-bottom:6px;"><i class="fa-solid fa-users"></i> TOTAL ANGGOTA</div>
-          <div id="clan-members-count" style="font-size:22px; font-weight:700; color:#F472B6; font-family:var(--font-mono);">28 / 35</div>
-          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Slot terbuka: 7 anggota</div>
+          <div id="clan-members-count" style="font-size:22px; font-weight:700; color:#F472B6; font-family:var(--font-mono);">0 / 30</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;" id="clan-slots-open">Slot terbuka</div>
         </div>
         <div class="stat-card">
           <div style="color:var(--text-muted); font-size:13px; margin-bottom:6px;"><i class="fa-solid fa-monument"></i> MENARA TERKONTROL</div>
-          <div id="clan-towers" style="font-size:22px; font-weight:700; color:#F59E0B; font-family:var(--font-mono);">2 Menara</div>
-          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Tower of Greed & Vitality</div>
+          <div id="clan-towers" style="font-size:22px; font-weight:700; color:#F59E0B; font-family:var(--font-mono);">0 Menara</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Penguasaan sektor wilayah</div>
         </div>
         <div class="stat-card">
           <div style="color:var(--text-muted); font-size:13px; margin-bottom:6px;"><i class="fa-solid fa-trophy"></i> PRESTISE ALIANSI</div>
-          <div id="clan-prestige" style="font-size:22px; font-weight:700; color:#10B981; font-family:var(--font-mono);">Rank #3 Global</div>
-          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Federation War Season 2</div>
+          <div id="clan-prestige" style="font-size:22px; font-weight:700; color:#10B981; font-family:var(--font-mono);">Aliansi Aktif</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">War Room Sektor Aktif</div>
         </div>
       </section>
 
       <!-- Navigation Tabs -->
       <div class="clan-tabs">
-        <button class="clan-tab-btn active" onclick="switchClanTab('members')"><i class="fa-solid fa-id-badge"></i> Daftar Anggota</button>
-        <button class="clan-tab-btn" onclick="switchClanTab('treasury')"><i class="fa-solid fa-coins"></i> Riwayat Kas & Donasi</button>
-        <button class="clan-tab-btn" onclick="switchClanTab('perks')"><i class="fa-solid fa-bolt"></i> Buff & Fasilitas Hall</button>
+        <button class="clan-tab-btn active" onclick="switchClanTab('members', event)"><i class="fa-solid fa-id-badge"></i> Daftar Anggota</button>
+        <button class="clan-tab-btn" onclick="switchClanTab('treasury', event)"><i class="fa-solid fa-coins"></i> Riwayat Kas & Donasi</button>
+        <button class="clan-tab-btn" onclick="switchClanTab('perks', event)"><i class="fa-solid fa-bolt"></i> Buff & Fasilitas Hall</button>
       </div>
 
       <!-- Tab Content: Members -->
@@ -174,32 +174,9 @@
           </thead>
           <tbody id="member-rows">
             <tr>
-              <td><strong>Aryandita</strong> (Leader)</td>
-              <td><span class="role-badge badge-leader">Ketua Klan</span></td>
-              <td>Lv. 42</td>
-              <td>124.500 XP</td>
-              <td><span style="color:#10B981;">● Online</span></td>
-            </tr>
-            <tr>
-              <td><strong>HoshinoKinnie</strong></td>
-              <td><span class="role-badge badge-officer">Perwira</span></td>
-              <td>Lv. 38</td>
-              <td>98.200 XP</td>
-              <td><span style="color:#10B981;">● Online</span></td>
-            </tr>
-            <tr>
-              <td><strong>CyberVanguard</strong></td>
-              <td><span class="role-badge badge-member">Anggota</span></td>
-              <td>Lv. 29</td>
-              <td>45.100 XP</td>
-              <td><span style="color:#64748B;">○ 2 jam lalu</span></td>
-            </tr>
-            <tr>
-              <td><strong>StarlightRanger</strong></td>
-              <td><span class="role-badge badge-member">Anggota</span></td>
-              <td>Lv. 24</td>
-              <td>32.000 XP</td>
-              <td><span style="color:#10B981;">● Online</span></td>
+              <td colspan="5" style="text-align:center; padding:32px; color:var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="margin-right:8px; color:var(--primary);"></i> Memuat daftar anggota aliansi klan...
+              </td>
             </tr>
           </tbody>
         </table>
@@ -235,14 +212,88 @@
     <script src="/js/theme-switcher.js"></script>
     <script src="/js/pwa-install.js"></script>
     <script>
-      function switchClanTab(tabId) {
+      function switchClanTab(tabId, ev) {
         document.getElementById('tab-members').style.display = tabId === 'members' ? 'block' : 'none';
         document.getElementById('tab-treasury').style.display = tabId === 'treasury' ? 'block' : 'none';
         document.getElementById('tab-perks').style.display = tabId === 'perks' ? 'block' : 'none';
         
         document.querySelectorAll('.clan-tab-btn').forEach(btn => btn.classList.remove('active'));
-        event.currentTarget.classList.add('active');
+        if (ev && ev.currentTarget) {
+          ev.currentTarget.classList.add('active');
+        }
       }
+
+      async function loadClanData() {
+        try {
+          const res = await fetch('/api/clan/info');
+          const data = await res.json();
+
+          if (data && data.success && data.hasClan && data.clan) {
+            const c = data.clan;
+            document.getElementById('clan-name').innerText = c.name;
+            document.getElementById('clan-tag').innerText = '[' + c.tag + ']';
+            document.getElementById('clan-level').innerText = 'Lv. ' + (c.level || 1);
+            document.getElementById('clan-vault').innerText = Number(c.vault || 0).toLocaleString('id-ID') + ' NSF';
+            const count = c.membersCount || (c.members ? c.members.length : 0);
+            const max = c.maxMembers || 30;
+            document.getElementById('clan-members-count').innerText = `${count} / ${max}`;
+            document.getElementById('clan-slots-open').innerText = `Slot terbuka: ${Math.max(0, max - count)} anggota`;
+            document.getElementById('clan-towers').innerText = (c.towersCount || 0) + ' Menara';
+
+            const tbody = document.getElementById('member-rows');
+            if (c.members && c.members.length > 0) {
+              tbody.innerHTML = c.members.map(m => {
+                const isLeader = m.role === 'Leader' || m.role === 'Ketua Klan';
+                const badgeClass = isLeader ? 'badge-leader' : (m.role === 'Perwira' ? 'badge-officer' : 'badge-member');
+                const statusHtml = m.isOnline
+                  ? '<span style="color:#10B981;">● Online</span>'
+                  : '<span style="color:#64748B;">○ Offline</span>';
+                return `
+                  <tr>
+                    <td><strong>${m.name}</strong> ${isLeader ? '(Leader)' : ''}</td>
+                    <td><span class="role-badge ${badgeClass}">${m.role}</span></td>
+                    <td>Lv. ${m.level || 1}</td>
+                    <td>${Number(m.contributionXp || 0).toLocaleString('id-ID')} XP</td>
+                    <td>${statusHtml}</td>
+                  </tr>
+                `;
+              }).join('');
+            } else {
+              tbody.innerHTML = `
+                <tr>
+                  <td colspan="5" style="text-align:center; padding:24px; color:var(--text-muted);">
+                    Belum ada anggota terdaftar di klan ini.
+                  </td>
+                </tr>
+              `;
+            }
+          } else {
+            // Empty state: no clan exists yet
+            document.getElementById('clan-name').innerText = 'Aliansi Belum Terbentuk';
+            document.getElementById('clan-tag').innerText = '[OFFLINE]';
+            document.getElementById('clan-desc').innerText = 'Belum ada aliansi klan yang terdaftar di server ini. Bentuk klan pertamamu di Discord lewat perintah /clan create!';
+            document.getElementById('clan-level').innerText = 'Lv. 0';
+            document.getElementById('clan-vault').innerText = '0 NSF';
+            document.getElementById('clan-members-count').innerText = '0 / 0';
+            document.getElementById('clan-slots-open').innerText = 'Klan belum terdaftar';
+            document.getElementById('clan-towers').innerText = '0 Menara';
+            document.getElementById('clan-prestige').innerText = 'Belum Ada';
+
+            document.getElementById('member-rows').innerHTML = `
+              <tr>
+                <td colspan="5" style="text-align:center; padding:32px; color:var(--text-muted);">
+                  <i class="fa-solid fa-shield-halved" style="font-size:24px; display:block; margin-bottom:8px; opacity:0.5;"></i>
+                  Belum ada klan yang aktif. Buka Discord dan jalankan <code>/clan create</code> untuk mendirikan aliansi baru!
+                </td>
+              </tr>
+            `;
+          }
+        } catch (err) {
+          console.warn('Gagal memuat data klan:', err);
+        }
+      }
+
+      window.addEventListener('DOMContentLoaded', loadClanData);
     </script>
   </body>
 </html>

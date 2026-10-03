@@ -257,44 +257,40 @@ module.exports = {
 
       const expTs = Math.floor(new Date(market.lockTime).getTime() / 1000);
 
-      const optionLines = options.map((opt) => {
-        const pool = Number(opt.pool || opt.totalBet) || 0;
-        const odds =
-          pool > 0 && totalPool > 0 ? (totalPool / pool).toFixed(2) : "1.00";
-        const percent =
-          totalPool > 0 ? ((pool / totalPool) * 100).toFixed(1) : "0.0";
-        return `**[${opt.id}] ${opt.label}**\n↳ Pool: \`${pool.toLocaleString("id-ID")}\` ${ui.getEmoji("star") || "⭐"} (${percent}%) | Multiplier: \`${odds}x\``;
-      });
+      const pool1 = Number(options[0]?.pool || options[0]?.totalBet) || 0;
+      const pool2 = Number(options[1]?.pool || options[1]?.totalBet) || 0;
+      const percent1 = totalPool > 0 ? Math.round((pool1 / totalPool) * 100) : 50;
+      const percent2 = 100 - percent1;
+      const odds1 = pool1 > 0 && totalPool > 0 ? (totalPool / pool1).toFixed(2) : "1.00";
+      const odds2 = pool2 > 0 && totalPool > 0 ? (totalPool / pool2).toFixed(2) : "1.00";
 
-      const eGreen = ui.getEmoji("greenping") || "🟢";
-      const eLock = ui.getEmoji("lock") || "🔒";
-      const eTrophy = ui.getEmoji("trophy") || "🏆";
-      const eCross = ui.getEmoji("error") || "❌";
-      const eChart = ui.getEmoji("chart") || "📈";
-      const eTag = ui.getEmoji("desc") || "🏷️";
-      const eCoin = ui.getEmoji("coin") || "💰";
-      const eStar = ui.getEmoji("star") || "⭐";
-      const eClock = ui.getEmoji("clock") || "⏳";
-      const eSparkle = ui.getEmoji("sparkle") || "💡";
+      const bar1Blocks = Math.round(percent1 / 10);
+      const bar2Blocks = 10 - bar1Blocks;
+      const comparisonBar = `${"▰".repeat(bar1Blocks)}${"▱".repeat(bar2Blocks)}`;
 
       const statusBadge =
         market.status === "OPEN"
-          ? `${eGreen} TERBUKA`
+          ? "🟢 Terbuka"
           : market.status === "LOCKED"
-            ? `${eLock} TERKUNCI`
+            ? "🔒 Terkunci"
             : market.status === "RESOLVED"
-              ? `${eTrophy} SELESAI`
-              : `${eCross} DIBATALKAN`;
+              ? "🏆 Selesai"
+              : "❌ Dibatalkan";
+
+      const optionLines = [
+        `**1. ${options[0]?.label || "Opsi A"}**\n↳ Pool: \`${pool1.toLocaleString("id-ID")}\` ⭐ (${percent1}%) • Pengali: \`${odds1}x\``,
+        `**2. ${options[1]?.label || "Opsi B"}**\n↳ Pool: \`${pool2.toLocaleString("id-ID")}\` ⭐ (${percent2}%) • Pengali: \`${odds2}x\``,
+      ];
 
       const buttonsRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId(`pred_bet_${market.marketId}_1`)
-          .setLabel(`1️⃣ Bet ${options[0]?.label || "Opsi A"}`)
+          .setLabel(`1. Pasang (${options[0]?.label || "Opsi A"})`)
           .setStyle(ButtonStyle.Primary)
           .setDisabled(market.status !== "OPEN"),
         new ButtonBuilder()
           .setCustomId(`pred_bet_${market.marketId}_2`)
-          .setLabel(`2️⃣ Bet ${options[1]?.label || "Opsi B"}`)
+          .setLabel(`2. Pasang (${options[1]?.label || "Opsi B"})`)
           .setStyle(ButtonStyle.Success)
           .setDisabled(market.status !== "OPEN"),
       );
@@ -304,18 +300,21 @@ module.exports = {
           market.status === "OPEN"
             ? "#38BDF8"
             : market.status === "RESOLVED"
-              ? "#22C55E"
-              : "#EF4444",
-        authorName: `${eChart} Prediction Market [${statusBadge}]`,
+              ? "#34D399"
+              : "#F43F5E",
+        authorName: `Pasar Prediksi • Status: ${statusBadge}`,
         title: market.title,
         description: [
-          `${eTag} **ID Pasar:** \`${market.marketId}\``,
-          `${eCoin} **Total Hadiah Pool:** \`${totalPool.toLocaleString("id-ID")}\` Star Fragments ${eStar}`,
-          `${eClock} **Batas Waktu:** <t:${expTs}:R>`,
-          ``,
+          `**ID Pasar:** \`${market.marketId}\``,
+          `**Total Pool:** \`${totalPool.toLocaleString("id-ID")}\` Star Fragments`,
+          `**Batas Waktu:** <t:${expTs}:R> (<t:${expTs}:T>)`,
+          "",
+          `**Rasio Distribusi Prediksi:**`,
+          `\`${comparisonBar}\` (${percent1}% vs ${percent2}%)`,
+          "",
           ...optionLines,
-          ``,
-          `-# ${eSparkle} *Sistem Pari-Mutuel: Odds berubah dinamis. Fee 5% dialirkan ke World Boss Bounty Vault.*`,
+          "",
+          "-# Sistem Pari-Mutuel: Nilai pengali odds bergerak dinamis sesuai volume taruhan.",
         ].join("\n"),
         buttonsRow,
         footerText: ui.getFooter("utility"),

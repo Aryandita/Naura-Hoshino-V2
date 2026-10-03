@@ -8,6 +8,7 @@
 
 const express = require("express");
 const { logger } = require("../../src/managers/logger");
+const { isOwner } = require("../middleware/auth");
 
 let landEngine = null;
 try {
@@ -340,47 +341,78 @@ module.exports = () => {
   // ------------------------------------------------------------------
   // 5. Klaim Kapling Tanah (Interactive Sandbox / Live)
   // ------------------------------------------------------------------
-  router.post("/territory/claim", (req, res) => {
-    const { x, y, clanName, clanTag } = req.body || {};
-    const parsedX = parseInt(x, 10);
-    const parsedY = parseInt(y, 10);
+  router.post("/territory/claim", async (req, res) => {
+    try {
+      const { x, y, clanName, clanTag } = req.body || {};
+      const parsedX = parseInt(x, 10);
+      const parsedY = parseInt(y, 10);
 
-    if (!parsedX || !parsedY || parsedX < 1 || parsedX > 8 || parsedY < 1 || parsedY > 8) {
-      return res.status(400).json({ success: false, error: "Koordinat kapling harus berada dalam rentang 1 s/d 8." });
+      if (!parsedX || !parsedY || parsedX < 1 || parsedX > 8 || parsedY < 1 || parsedY > 8) {
+        return res.status(400).json({ success: false, error: "Koordinat kapling harus berada dalam rentang 1 s/d 8." });
+      }
+
+      const key = `${parsedX},${parsedY}`;
+      if (DEFAULT_PLOTS[key]) {
+        return res.status(400).json({ success: false, error: `Kapling (${parsedX}, ${parsedY}) sudah dikuasai oleh ${DEFAULT_PLOTS[key].clanName}.` });
+      }
+
+      const isAuth = typeof req.isAuthenticated === "function" && req.isAuthenticated() && req.user;
+      let resolvedClanName = "Sensei Brigade";
+      let resolvedClanTag = "VIP";
+      let resolvedClanId = `clan_sandbox_${Date.now()}`;
+
+      if (isAuth) {
+        try {
+          const UserSurvival = require("../../src/models/UserSurvival");
+          const GuildClan = require("../../src/models/GuildClan");
+          const userSurv = await UserSurvival.findOne({ where: { userId: req.user.id } });
+          if (userSurv && userSurv.clanId) {
+            const realClan = await GuildClan.findByPk(userSurv.clanId);
+            if (realClan) {
+              resolvedClanId = String(realClan.id);
+              resolvedClanName = realClan.name;
+              resolvedClanTag = realClan.tag || "CLN";
+            }
+          } else if (clanName && isOwner(req.user.id)) {
+            resolvedClanName = String(clanName).slice(0, 32);
+            resolvedClanTag = String(clanTag || "OWN").slice(0, 5);
+          }
+        } catch (_) {}
+      } else {
+        resolvedClanName = clanName ? String(clanName).slice(0, 32) : "Sensei Brigade (Demo)";
+        resolvedClanTag = clanTag ? String(clanTag).slice(0, 5) : "DEMO";
+      }
+
+      const newPlot = {
+        x: parsedX,
+        y: parsedY,
+        clanId: resolvedClanId,
+        clanName: resolvedClanName,
+        clanTag: resolvedClanTag,
+        color: "#fbbf24",
+        terrain: "Plains",
+        structure: { type: "castle", tier: 1, name: "Frontier Outpost" },
+        defensePower: 500,
+        buffs: ["+10% Star Fragment Yield", "+5% Fortress Shield"],
+        claimedAt: Date.now(),
+      };
+
+      DEFAULT_PLOTS[key] = newPlot;
+      COMBAT_LOGS.unshift({
+        id: Date.now(),
+        text: `🏰 ${newPlot.clanName} berhasil mengklaim kapling strategis baru di Koordinat (${parsedX}, ${parsedY})!`,
+        time: "Baru saja",
+        type: "claim",
+      });
+
+      return res.json({
+        success: true,
+        message: `Berhasil mengklaim kapling (${parsedX}, ${parsedY}) untuk klan ${newPlot.clanName}!`,
+        plot: newPlot,
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
     }
-
-    const key = `${parsedX},${parsedY}`;
-    if (DEFAULT_PLOTS[key]) {
-      return res.status(400).json({ success: false, error: `Kapling (${parsedX}, ${parsedY}) sudah dikuasai oleh ${DEFAULT_PLOTS[key].clanName}.` });
-    }
-
-    const newPlot = {
-      x: parsedX,
-      y: parsedY,
-      clanId: `clan_user_${Date.now()}`,
-      clanName: clanName || "Sensei Brigade",
-      clanTag: clanTag || "VIP",
-      color: "#fbbf24",
-      terrain: "Plains",
-      structure: { type: "castle", tier: 1, name: "Frontier Outpost" },
-      defensePower: 500,
-      buffs: ["+10% Star Fragment Yield", "+5% Fortress Shield"],
-      claimedAt: Date.now(),
-    };
-
-    DEFAULT_PLOTS[key] = newPlot;
-    COMBAT_LOGS.unshift({
-      id: Date.now(),
-      text: `🏰 ${newPlot.clanName} berhasil mengklaim kapling strategis baru di Koordinat (${parsedX}, ${parsedY})!`,
-      time: "Baru saja",
-      type: "claim",
-    });
-
-    return res.json({
-      success: true,
-      message: `Berhasil mengklaim kapling (${parsedX}, ${parsedY}) untuk klan ${newPlot.clanName}!`,
-      plot: newPlot,
-    });
   });
 
   return router;

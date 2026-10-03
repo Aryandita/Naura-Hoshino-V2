@@ -23,8 +23,8 @@ class VoiceManager {
       AudioPlayerStatus,
     } = voice;
     if (!member || !member.voice.channel) {
-      console.log(
-        "\x1b[41m\x1b[37m 🔊 TTS ERROR \x1b[0m \x1b[31mMember tidak berada di dalam Voice Channel.\x1b[0m",
+      logger.warn(
+        "[VoiceManager] Member tidak berada di dalam Voice Channel.",
       );
       return;
     }
@@ -47,14 +47,14 @@ class VoiceManager {
           // Kondisi isPlaying=false terjadi saat lagu baru ditemukan dan sedang
           // di-load/buffer - ini adalah fase paling rentan terhadap konflik WebSocket.
           if (existingPlayer) {
-            console.log(
-              "\x1b[43m\x1b[30m 🔊 TTS SKIP \x1b[0m \x1b[33mPoru player aktif di guild ini (state: " +
-                (existingPlayer.isPlaying
+            logger.warn(
+              `[VoiceManager] Poru player aktif di guild ini (state: ${
+                existingPlayer.isPlaying
                   ? "playing"
                   : existingPlayer.isPaused
                     ? "paused"
-                    : "loading/connecting") +
-                "). TTS dibatalkan untuk menghindari konflik WebSocket Voice.\x1b[0m",
+                    : "loading/connecting"
+              }). TTS dibatalkan untuk menghindari konflik WebSocket Voice.`,
             );
             return;
           }

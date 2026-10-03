@@ -172,29 +172,47 @@ module.exports = {
       name: "naura-prestige.webp",
     });
     const accent =
-      isPremium || level >= 50 ? "#FFD700" : ui.getColor("primary");
+      isPremium || level >= 50 ? "#FBBF24" : ui.getColor("primary");
     const manners = mannersOf(profile, levelRow);
+    const xpPercent = Math.min(100, Math.round((xp / targetXp) * 100));
 
     const payload = buildContainerV2({
       accentColorHex: accent,
-      authorName: "Kartu Prestise",
-      title: `Kartu Rank ${targetUser.username}`,
+      authorName: "Sistem Kemajuan & Prestise",
+      title: `Peringkat Aktivitas: ${targetUser.username}`,
       iconURL: targetUser.displayAvatarURL(),
       expression: "achievement",
       fields: [
         {
-          name: "Sertifikat Registrasi",
-          value:
-            `Wilayah tersinkron dengan **${interaction.guild.name}**\n` +
-            `Poin tata krama: **${manners}/${DEFAULT_MANNERS}**\n` +
-            `Peringkat server: **${localRank}** dengan gelar **${roleBadge}**`,
+          name: "Tingkat & Pengalaman",
+          value: `**Level ${level}** (${xp.toLocaleString("id-ID")} / ${targetXp.toLocaleString("id-ID")} XP • ${xpPercent}%)`,
+          inline: true,
+        },
+        {
+          name: "Posisi Server",
+          value: `Peringkat **${localRank}** (${roleBadge})`,
+          inline: true,
+        },
+        {
+          name: "Tata Krama",
+          value: `${manners}/${DEFAULT_MANNERS} Integritas`,
+          inline: true,
+        },
+        {
+          name: "Status Keanggotaan",
+          value: isPremium ? "VIP Patron Member" : "Warga Server Reguler",
+          inline: true,
+        },
+        {
+          name: "Server Wilayah",
+          value: interaction.guild.name,
+          inline: true,
         },
       ],
       bannerAttachmentName: "naura-prestige.webp",
+      files: [attachment],
       footerText: ui.getFooter("core"),
     });
-
-    payload.files = [attachment];
 
     if (isSlash) return interaction.editReply(payload);
     return interaction.reply(payload);

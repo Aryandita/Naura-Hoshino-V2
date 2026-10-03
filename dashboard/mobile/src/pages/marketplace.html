@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="id" data-theme="midnight" data-font-size="normal">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0c10" />
+    <meta name="description" content="Pusat perdagangan komoditas, bursa barter, dan lelang antariksa Naura Wilds." />
+    <title>Pasar Galaksi | Naura OS Mobile</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Orbitron:wght@700;900&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <!-- Design System -->
+    <link rel="stylesheet" href="../css/tokens.css" />
+    <link rel="stylesheet" href="../css/animations.css" />
+    <link rel="stylesheet" href="../css/components.css" />
+    <link rel="stylesheet" href="../css/mobile.css" />
+
+    <!-- Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+
+  <body>
+    <!-- ── App Shell ── -->
+    <header class="nm-header" role="banner">
+      <div class="nm-header__brand">
+        <a href="/mobile/economy" class="nm-header__btn" aria-label="Kembali" style="text-decoration:none">
+          <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+        </a>
+        <span class="nm-header__name">Pasar Galaksi</span>
+      </div>
+      <div class="nm-header__actions">
+        <button class="nm-header__btn" id="nm-open-customizer" aria-label="Kustomisasi tampilan">
+          <i class="fa-solid fa-palette" aria-hidden="true"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Main Content ── -->
+    <main class="nm-page" role="main" style="padding-top: var(--sp-xs)">
+
+      <!-- Market Rates Strip -->
+      <section class="nm-card animate-fade-in-up" style="border-color: rgba(56, 189, 248, 0.25)">
+        <div class="nm-card__header">
+          <div>
+            <span class="nm-badge nm-badge--blue"><i class="fa-solid fa-chart-line"></i> Indeks Bursa</span>
+            <h2 class="nm-card__title" style="margin-top:4px">Harga Komoditas Global</h2>
+          </div>
+          <span class="nm-caption" style="color:var(--wilds-emerald)"><i class="fa-solid fa-circle-dot fa-fade"></i> Live Feed</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:var(--sp-xs); margin-top:var(--sp-sm)">
+          <div class="nm-card" style="padding:var(--sp-xs); background:rgba(255,255,255,0.02); text-align:center">
+            <span style="font-size:0.75rem; color:var(--muted)">Mythril Ore</span>
+            <div style="font-size:0.875rem; font-weight:700; color:var(--accent-purple)">450 NSF</div>
+            <span style="font-size:0.65rem; color:var(--wilds-emerald)">+4.2% ▲</span>
+          </div>
+          <div class="nm-card" style="padding:var(--sp-xs); background:rgba(255,255,255,0.02); text-align:center">
+            <span style="font-size:0.75rem; color:var(--muted)">Naura Shard</span>
+            <div style="font-size:0.875rem; font-weight:700; color:var(--accent-gold)">1.2K NSF</div>
+            <span style="font-size:0.65rem; color:var(--wilds-emerald)">+1.8% ▲</span>
+          </div>
+          <div class="nm-card" style="padding:var(--sp-xs); background:rgba(255,255,255,0.02); text-align:center">
+            <span style="font-size:0.75rem; color:var(--muted)">Silver Bar</span>
+            <div style="font-size:0.875rem; font-weight:700; color:var(--accent-blue)">280 NSF</div>
+            <span style="font-size:0.65rem; color:var(--wilds-danger)">-0.9% ▼</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Active Auctions Header -->
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:var(--sp-xs)">
+        <h3 style="font-size:0.95rem; font-weight:700; color:var(--ink)">
+          <i class="fa-solid fa-gavel" style="color:var(--accent-gold)"></i> Lelang Komunitas Aktif
+        </h3>
+        <span id="market-total-count" class="nm-badge nm-badge--gold">0 Barang</span>
+      </div>
+
+      <!-- Auctions List -->
+      <section aria-label="Daftar lelang barang" id="nm-market-list" style="display:flex; flex-direction:column; gap:var(--sp-xs)">
+        <!-- Skeleton Loading -->
+        <div class="nm-card nm-skeleton" style="height:76px"></div>
+        <div class="nm-card nm-skeleton" style="height:76px; animation-delay:60ms"></div>
+        <div class="nm-card nm-skeleton" style="height:76px; animation-delay:120ms"></div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav id="nm-bottom-nav" aria-label="Navigasi utama"></nav>
+
+    <!-- Toast Container -->
+    <div id="nm-toast-container" role="region" aria-label="Notifikasi" aria-live="polite"></div>
+
+    <!-- Page Script -->
+    <script type="module" src="../js/pages/marketplace.js"></script>
+  </body>
+</html>

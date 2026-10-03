@@ -54,6 +54,15 @@ export const toastWarn    = (msg) => showToast(msg, "warn");
 /** @param {string} msg */
 export const toastInfo    = (msg) => showToast(msg, "info");
 
+/**
+ * Toast helper yang menerima opsi object { title, body, variant, duration }
+ */
+export function toast({ title, body, variant = "info", duration = 3000 } = {}) {
+  const msg = title ? (body ? `${title} - ${body}` : title) : (body || "");
+  const type = variant === "danger" ? "error" : variant;
+  return showToast(msg, type, duration);
+}
+
 // ── Internal ─────────────────────────────────────────────────────────────────
 
 function _ensureContainer() {

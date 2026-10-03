@@ -1,5 +1,6 @@
 const cron = require("node-cron");
 const { AttachmentBuilder } = require("discord.js");
+const { Op, fn, col } = require("sequelize");
 const { logger } = require("../managers/logger");
 const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
 const ui = require("../config/ui");
@@ -10,6 +11,38 @@ const cacheManager = require("./cacheManager");
 const { addItemsAtomic } = require("../survival/engines/inventoryHelper");
 
 const clusterManager = require("./clusterManager");
+
+/**
+ * Membungkus task cron dengan proteksi mutex (hanya 1 eksekusi aktif bersamaan).
+ * Memastikan flag selalu di-reset pada finally block agar tidak terjadi deadlock.
+ * @param {Function} fn - Async task function
+ * @returns {Function}
+ */
+function withMutex(fn) {
+  let isRunning = false;
+  return async () => {
+    if (isRunning) return;
+    isRunning = true;
+    try {
+      await fn();
+    } finally {
+      isRunning = false;
+    }
+  };
+}
+
+/**
+ * Helper mutasi JSON untuk menandai flag preferensi notifikasi terkirim (sent_*)
+ * @param {string} flagKey
+ * @returns {Function} Mutator function untuk cacheManager.mutateUserProfileJson
+ */
+function setNotifFlag(flagKey) {
+  return (prefsObj) => {
+    const obj = prefsObj && typeof prefsObj === "object" ? prefsObj : {};
+    obj[flagKey] = true;
+    return obj;
+  };
+}
 
 module.exports = {
   init(client) {
@@ -46,393 +79,354 @@ module.exports = {
     });
 
     // 0.5 Tempban Expiration Check - Runs every minute
-    let isTempbanCheckRunning = false;
-    cron.schedule("* * * * *", async () => {
-      if (isTempbanCheckRunning) return;
-      isTempbanCheckRunning = true;
-      try {
-        const UserStrike = require("../models/UserStrike");
-        const expiredTempbans = await UserStrike.findAll({
-          where: {
-            isTempBanned: true,
-            tempbanExpiresAt: {
-              [require("sequelize").Op.lt]: new Date(),
+    cron.schedule(
+      "* * * * *",
+      withMutex(async () => {
+        try {
+          const UserStrike = require("../models/UserStrike");
+          const expiredTempbans = await UserStrike.findAll({
+            where: {
+              isTempBanned: true,
+              tempbanExpiresAt: {
+                [Op.lt]: new Date(),
+              },
             },
-          },
-        });
+          });
 
-        for (const record of expiredTempbans) {
-          try {
-            const guild = await client.guilds.fetch(record.guildId);
-            if (guild) {
-              await guild.members
-                .unban(record.userId, "Masa Tempban selesai")
-                .catch(() => {});
-            }
-          } catch (err) {
-            logger.error(
-              `[Cron] Gagal unban user ${record.userId}: ${err.message}`,
-            );
-          }
-          record.isTempBanned = false;
-          record.tempbanExpiresAt = null;
-          await record.save({ fields: ["isTempBanned", "tempbanExpiresAt"] });
-        }
-      } catch (err) {
-        logger.error("[Cron] Gagal memproses Tempban:", err);
-      }
-      isTempbanCheckRunning = false;
-    });
-
-    // 0.6 Daily Quest Reset - Runs at 00:00 every day
-    cron.schedule("0 0 * * *", async () => {
-      // Tidak melakukan apa-apa. Reset quest sekarang menggunakan sistem *lazy-evaluation*
-      // yang dilakukan oleh `questGenerator.js` saat user bertindak atau membuka papan misi.
-      // Melakukan bulk update di sini akan menghapus progress misi mingguan secara tidak sengaja.
-    });
-
-    // 0.7 Role Lease Expiration Check - Runs every minute
-    let isRoleLeaseCheckRunning = false;
-    cron.schedule("* * * * *", async () => {
-      if (isRoleLeaseCheckRunning) return;
-      isRoleLeaseCheckRunning = true;
-      try {
-        const RoleLease = require("../models/RoleLease");
-        const expiredLeases = await RoleLease.findAll({
-          where: {
-            expiresAt: {
-              [require("sequelize").Op.lt]: new Date(),
-            },
-          },
-        });
-
-        for (const lease of expiredLeases) {
-          try {
-            const guild = await client.guilds.fetch(lease.guildId);
-            if (guild) {
-              const member = await guild.members
-                .fetch(lease.userId)
-                .catch(() => null);
-              if (member) {
-                await member.roles
-                  .remove(lease.roleId, "Masa sewa role selesai")
+          for (const record of expiredTempbans) {
+            try {
+              const guild = await client.guilds.fetch(record.guildId);
+              if (guild) {
+                await guild.members
+                  .unban(record.userId, "Masa Tempban selesai")
                   .catch(() => {});
               }
+            } catch (err) {
+              logger.error(
+                `[Cron] Gagal unban user ${record.userId}: ${err.message}`,
+              );
             }
-          } catch (err) {
-            logger.error(
-              `[Cron] Gagal memproses kadaluwarsa role lease ${lease.id}:`,
-              err,
-            );
+            record.isTempBanned = false;
+            record.tempbanExpiresAt = null;
+            await record.save({ fields: ["isTempBanned", "tempbanExpiresAt"] });
           }
-          await lease.destroy();
+        } catch (err) {
+          logger.error("[Cron] Gagal memproses Tempban:", err);
         }
-      } catch (err) {
-        logger.error("[Cron] Gagal memproses Role Lease:", err);
-      }
-      isRoleLeaseCheckRunning = false;
-    });
+      }),
+    );
+
+    // 0.6 Daily Quest Reset: Menggunakan sistem lazy-evaluation di questGenerator.js saat
+    // user bertindak atau membuka papan misi, sehingga tidak memerlukan cron aktif di sini.
+
+    // 0.7 Role Lease Expiration Check - Runs every minute
+    cron.schedule(
+      "* * * * *",
+      withMutex(async () => {
+        try {
+          const RoleLease = require("../models/RoleLease");
+          const expiredLeases = await RoleLease.findAll({
+            where: {
+              expiresAt: {
+                [Op.lt]: new Date(),
+              },
+            },
+          });
+
+          for (const lease of expiredLeases) {
+            try {
+              const guild = await client.guilds.fetch(lease.guildId);
+              if (guild) {
+                const member = await guild.members
+                  .fetch(lease.userId)
+                  .catch(() => null);
+                if (member) {
+                  await member.roles
+                    .remove(lease.roleId, "Masa sewa role selesai")
+                    .catch(() => {});
+                }
+              }
+            } catch (err) {
+              logger.error(
+                `[Cron] Gagal memproses kadaluwarsa role lease ${lease.id}:`,
+                err,
+              );
+            }
+            await lease.destroy();
+          }
+        } catch (err) {
+          logger.error("[Cron] Gagal memproses Role Lease:", err);
+        }
+      }),
+    );
 
     // 0.75 Survival Periodic Vital Decay - Runs every 30 minutes
-    let isVitalDecayRunning = false;
-    cron.schedule("*/30 * * * *", async () => {
-      if (isVitalDecayRunning) return;
-      isVitalDecayRunning = true;
-      try {
-        const {
-          processVitalDecayCycle,
-        } = require("../survival/helpers/survivalVitalDecay");
-        await processVitalDecayCycle();
-      } catch (err) {
-        logger.error("[Cron] Gagal memproses siklus Vital Decay:", err);
-      }
-      isVitalDecayRunning = false;
-    });
+    cron.schedule(
+      "*/30 * * * *",
+      withMutex(async () => {
+        try {
+          const {
+            processVitalDecayCycle,
+          } = require("../survival/helpers/survivalVitalDecay");
+          await processVitalDecayCycle();
+        } catch (err) {
+          logger.error("[Cron] Gagal memproses siklus Vital Decay:", err);
+        }
+      }),
+    );
 
     // 0.8 Custom Reminders Check - Runs every minute
-    let isReminderCheckRunning = false;
-    cron.schedule("* * * * *", async () => {
-      if (isReminderCheckRunning) return;
-      isReminderCheckRunning = true;
-      try {
-        const UserReminder = require("../models/UserReminder");
-        const { sendNotification } = require("./notificationManager");
-        const expiredReminders = await UserReminder.findAll({
-          where: {
-            remindAt: {
-              [require("sequelize").Op.lt]: new Date(),
+    cron.schedule(
+      "* * * * *",
+      withMutex(async () => {
+        try {
+          const UserReminder = require("../models/UserReminder");
+          const { sendNotification } = require("./notificationManager");
+          const expiredReminders = await UserReminder.findAll({
+            where: {
+              remindAt: {
+                [Op.lt]: new Date(),
+              },
             },
-          },
-        });
+          });
 
-        for (const rem of expiredReminders) {
-          try {
-            const payload = buildContainerV2({
-              accentColorHex: ui.getColor("primary"),
-              title: "⏰ Waktunya!",
-              description: `Ini pengingat yang kamu buat sebelumnya:\n\n**"${rem.message}"**`,
-              expression: "Happy",
-              footerText: ui.getFooter("utility"),
-            });
-            await sendNotification(
-              client,
-              rem.userId,
-              "custom_reminder",
-              payload,
-            );
-          } catch (err) {
-            logger.error(`[Cron] Gagal mengirim reminder ${rem.id}:`, err);
+          for (const rem of expiredReminders) {
+            try {
+              const payload = buildContainerV2({
+                accentColorHex: ui.getColor("primary"),
+                title: "⏰ Waktunya!",
+                description: `Ini pengingat yang kamu buat sebelumnya:\n\n**"${rem.message}"**`,
+                expression: "Happy",
+                footerText: ui.getFooter("utility"),
+              });
+              await sendNotification(
+                client,
+                rem.userId,
+                "custom_reminder",
+                payload,
+              );
+            } catch (err) {
+              logger.error(`[Cron] Gagal mengirim reminder ${rem.id}:`, err);
+            }
+            await rem.destroy();
           }
-          await rem.destroy();
+        } catch (err) {
+          logger.error("[Cron] Gagal memproses Reminders:", err);
         }
-      } catch (err) {
-        logger.error("[Cron] Gagal memproses Reminders:", err);
-      }
-      isReminderCheckRunning = false;
-    });
+      }),
+    );
 
     // 0.9 Stamina Full Check - Runs every 5 minutes
-    let isStaminaCheckRunning = false;
-    cron.schedule("*/5 * * * *", async () => {
-      if (isStaminaCheckRunning) return;
-      isStaminaCheckRunning = true;
-      try {
-        const UserSurvival = require("../models/UserSurvival");
-        const UserProfile = require("../models/UserProfile");
-        const { sendNotification } = require("./notificationManager");
-        const cacheManager = require("./cacheManager");
+    cron.schedule(
+      "*/5 * * * *",
+      withMutex(async () => {
+        try {
+          const UserSurvival = require("../models/UserSurvival");
+          const UserProfile = require("../models/UserProfile");
+          const { sendNotification } = require("./notificationManager");
 
-        // Cari user yang staminanya >= 100
-        const fullStaminaUsers = await UserSurvival.findAll({
-          where: { stamina: { [require("sequelize").Op.gte]: 100 } },
-          include: [
-            {
-              model: UserProfile,
-              attributes: ["userId", "notification_prefs"],
-            },
-          ],
-        });
+          // Cari user yang staminanya >= 100
+          const fullStaminaUsers = await UserSurvival.findAll({
+            where: { stamina: { [Op.gte]: 100 } },
+            include: [
+              {
+                model: UserProfile,
+                attributes: ["userId", "notification_prefs"],
+              },
+            ],
+          });
 
-        for (const survival of fullStaminaUsers) {
-          const profile = survival.UserProfile;
-          if (!profile) continue;
+          for (const survival of fullStaminaUsers) {
+            const profile = survival.UserProfile;
+            if (!profile) continue;
 
-          const prefs = profile.notification_prefs || {};
+            const prefs = profile.notification_prefs || {};
 
-          // Jika dia mensubscribe stamina_full dan belum ada notifikasi_stamina_sent hari ini
-          if (prefs.stamina_full && !prefs.sent_stamina) {
-            const payload = buildContainerV2({
-              accentColorHex: ui.getColor("success") || "#22C55E",
-              title: `${ui.getEmoji("stamina") || "⚡"} Stamina RPG Penuh!`,
-              description:
-                "Staminamu sudah 100/100! Jangan sampai terbuang sia-sia, yuk lanjut petualangannya di Naura RPG!",
-              expression: "impressed",
-              footerText: ui.getFooter("utility"),
-            });
+            // Jika dia mensubscribe stamina_full dan belum ada notifikasi_stamina_sent hari ini
+            if (prefs.stamina_full && !prefs.sent_stamina) {
+              const payload = buildContainerV2({
+                accentColorHex: ui.getColor("success") || "#22C55E",
+                title: `${ui.getEmoji("stamina") || "⚡"} Stamina RPG Penuh!`,
+                description:
+                  "Staminamu sudah 100/100! Jangan sampai terbuang sia-sia, yuk lanjut petualangannya di Naura RPG!",
+                expression: "impressed",
+                footerText: ui.getFooter("utility"),
+              });
 
-            const sent = await sendNotification(
-              client,
-              survival.userId,
-              "stamina_full",
-              payload,
-            );
-            if (sent) {
-              await cacheManager.mutateUserProfileJson(
+              const sent = await sendNotification(
+                client,
                 survival.userId,
-                "notification_prefs",
-                (prefsObj) => {
-                  const obj =
-                    prefsObj && typeof prefsObj === "object" ? prefsObj : {};
-                  obj.sent_stamina = true;
-                  return obj;
-                },
+                "stamina_full",
+                payload,
               );
+              if (sent) {
+                await cacheManager.mutateUserProfileJson(
+                  survival.userId,
+                  "notification_prefs",
+                  setNotifFlag("sent_stamina"),
+                );
+              }
             }
           }
+        } catch (err) {
+          logger.error("[Cron] Gagal memproses Stamina Notif:", err);
         }
-      } catch (err) {
-        logger.error("[Cron] Gagal memproses Stamina Notif:", err);
-      }
-      isStaminaCheckRunning = false;
-    });
+      }),
+    );
 
     // 0.77 Survival Cafe Idle Revenue Notification - Runs every 2 hours
-    let isIdleRevenueCheckRunning = false;
-    cron.schedule("0 */2 * * *", async () => {
-      if (isIdleRevenueCheckRunning) return;
-      isIdleRevenueCheckRunning = true;
-      try {
-        const UserCafe = require("../models/UserCafe");
-        const { sendNotification } = require("./notificationManager");
-        const cacheManager = require("./cacheManager");
-        const { Op } = require("sequelize");
+    cron.schedule(
+      "0 */2 * * *",
+      withMutex(async () => {
+        try {
+          const UserCafe = require("../models/UserCafe");
+          const { sendNotification } = require("./notificationManager");
 
-        const readyCafes = await UserCafe.findAll({
-          where: {
-            uncollectedRevenue: { [Op.gte]: 500 },
-          },
-        });
+          const readyCafes = await UserCafe.findAll({
+            where: {
+              uncollectedRevenue: { [Op.gte]: 500 },
+            },
+          });
 
-        for (const cafe of readyCafes) {
-          const profile = await cacheManager.getUserProfile(cafe.userId);
-          const prefs = profile?.notification_prefs || {};
-          if (prefs.idle_revenue && !prefs.sent_idle_revenue) {
-            const sent = await sendNotification(
-              client,
-              cafe.userId,
-              "idle_revenue",
-              { amount: cafe.uncollectedRevenue },
-            );
-            if (sent) {
-              await cacheManager.mutateUserProfileJson(
+          for (const cafe of readyCafes) {
+            const profile = await cacheManager.getUserProfile(cafe.userId);
+            const prefs = profile?.notification_prefs || {};
+            if (prefs.idle_revenue && !prefs.sent_idle_revenue) {
+              const sent = await sendNotification(
+                client,
                 cafe.userId,
-                "notification_prefs",
-                (prefsObj) => {
-                  const obj =
-                    prefsObj && typeof prefsObj === "object" ? prefsObj : {};
-                  obj.sent_idle_revenue = true;
-                  return obj;
-                },
+                "idle_revenue",
+                { amount: cafe.uncollectedRevenue },
               );
+              if (sent) {
+                await cacheManager.mutateUserProfileJson(
+                  cafe.userId,
+                  "notification_prefs",
+                  setNotifFlag("sent_idle_revenue"),
+                );
+              }
             }
           }
+        } catch (err) {
+          logger.error("[Cron] Gagal memproses Notif Idle Revenue Kafe:", err);
         }
-      } catch (err) {
-        logger.error("[Cron] Gagal memproses Notif Idle Revenue Kafe:", err);
-      }
-      isIdleRevenueCheckRunning = false;
-    });
+      }),
+    );
 
     // 0.78 Stock Market Price Alert Notification - Runs every 4 hours
-    let isStockAlertCheckRunning = false;
-    cron.schedule("0 */4 * * *", async () => {
-      if (isStockAlertCheckRunning) return;
-      isStockAlertCheckRunning = true;
-      try {
-        const ServerStock = require("../models/ServerStock");
-        const UserStockHolding = require("../models/UserStockHolding");
-        const { sendNotification } = require("./notificationManager");
-        const cacheManager = require("./cacheManager");
-        const { Op } = require("sequelize");
+    cron.schedule(
+      "0 */4 * * *",
+      withMutex(async () => {
+        try {
+          const ServerStock = require("../models/ServerStock");
+          const UserStockHolding = require("../models/UserStockHolding");
+          const { sendNotification } = require("./notificationManager");
 
-        const stocks = await ServerStock.findAll();
-        for (const stock of stocks) {
-          const prev = Number(stock.previousPrice || 0);
-          const curr = Number(stock.currentPrice || 0);
-          if (prev <= 0) continue;
-          const diffPct = Math.abs((curr - prev) / prev);
-          if (diffPct >= 0.1) {
-            const holders = await UserStockHolding.findAll({
-              where: {
-                ticker: stock.ticker,
-                sharesOwned: { [Op.gt]: 0 },
-              },
-            });
-            for (const holder of holders) {
-              const profile = await cacheManager.getUserProfile(holder.userId);
-              const prefs = profile?.notification_prefs || {};
-              if (prefs.stock_alert && !prefs.sent_stock_alert) {
-                const sent = await sendNotification(
-                  client,
-                  holder.userId,
-                  "stock_alert",
-                  { symbol: stock.name, price: curr },
-                );
-                if (sent) {
-                  await cacheManager.mutateUserProfileJson(
+          const stocks = await ServerStock.findAll();
+          for (const stock of stocks) {
+            const prev = Number(stock.previousPrice || 0);
+            const curr = Number(stock.currentPrice || 0);
+            if (prev <= 0) continue;
+            const diffPct = Math.abs((curr - prev) / prev);
+            if (diffPct >= 0.1) {
+              const holders = await UserStockHolding.findAll({
+                where: {
+                  ticker: stock.ticker,
+                  sharesOwned: { [Op.gt]: 0 },
+                },
+              });
+              for (const holder of holders) {
+                const profile = await cacheManager.getUserProfile(holder.userId);
+                const prefs = profile?.notification_prefs || {};
+                if (prefs.stock_alert && !prefs.sent_stock_alert) {
+                  const sent = await sendNotification(
+                    client,
                     holder.userId,
-                    "notification_prefs",
-                    (prefsObj) => {
-                      const obj =
-                        prefsObj && typeof prefsObj === "object" ? prefsObj : {};
-                      obj.sent_stock_alert = true;
-                      return obj;
-                    },
+                    "stock_alert",
+                    { symbol: stock.name, price: curr },
                   );
+                  if (sent) {
+                    await cacheManager.mutateUserProfileJson(
+                      holder.userId,
+                      "notification_prefs",
+                      setNotifFlag("sent_stock_alert"),
+                    );
+                  }
                 }
               }
             }
           }
+        } catch (err) {
+          logger.error("[Cron] Gagal memproses Notif Stock Alert:", err);
         }
-      } catch (err) {
-        logger.error("[Cron] Gagal memproses Notif Stock Alert:", err);
-      }
-      isStockAlertCheckRunning = false;
-    });
+      }),
+    );
 
     // 0.79 Vote Top.gg Reminder Notification - Runs every 2 hours
-    let isVoteReminderCheckRunning = false;
-    cron.schedule("0 */2 * * *", async () => {
-      if (isVoteReminderCheckRunning) return;
-      isVoteReminderCheckRunning = true;
-      try {
-        const UserSurvival = require("../models/UserSurvival");
-        const { sendNotification } = require("./notificationManager");
-        const cacheManager = require("./cacheManager");
+    cron.schedule(
+      "0 */2 * * *",
+      withMutex(async () => {
+        try {
+          const UserSurvival = require("../models/UserSurvival");
+          const { sendNotification } = require("./notificationManager");
 
-        const survivals = await UserSurvival.findAll({
-          attributes: ["userId", "rpg_state"],
-        });
-        const now = Date.now();
-        const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+          const survivals = await UserSurvival.findAll({
+            attributes: ["userId", "rpg_state"],
+          });
+          const now = Date.now();
+          const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 
-        for (const survival of survivals) {
-          const state = survival.rpg_state || {};
-          const lastVote = state.last_vote_at
-            ? new Date(state.last_vote_at).getTime()
-            : 0;
-          if (!lastVote || now - lastVote < TWELVE_HOURS_MS) continue;
+          for (const survival of survivals) {
+            const state = survival.rpg_state || {};
+            const lastVote = state.last_vote_at
+              ? new Date(state.last_vote_at).getTime()
+              : 0;
+            if (!lastVote || now - lastVote < TWELVE_HOURS_MS) continue;
 
-          const profile = await cacheManager.getUserProfile(survival.userId);
-          const prefs = profile?.notification_prefs || {};
-          if (prefs.vote_reminder && !prefs.sent_vote_reminder) {
-            const sent = await sendNotification(
-              client,
-              survival.userId,
-              "vote_reminder",
-              {},
-            );
-            if (sent) {
-              await cacheManager.mutateUserProfileJson(
+            const profile = await cacheManager.getUserProfile(survival.userId);
+            const prefs = profile?.notification_prefs || {};
+            if (prefs.vote_reminder && !prefs.sent_vote_reminder) {
+              const sent = await sendNotification(
+                client,
                 survival.userId,
-                "notification_prefs",
-                (prefsObj) => {
-                  const obj =
-                    prefsObj && typeof prefsObj === "object" ? prefsObj : {};
-                  obj.sent_vote_reminder = true;
-                  return obj;
-                },
+                "vote_reminder",
+                {},
               );
+              if (sent) {
+                await cacheManager.mutateUserProfileJson(
+                  survival.userId,
+                  "notification_prefs",
+                  setNotifFlag("sent_vote_reminder"),
+                );
+              }
             }
           }
+        } catch (err) {
+          logger.error("[Cron] Gagal memproses Notif Vote Reminder:", err);
         }
-      } catch (err) {
-        logger.error("[Cron] Gagal memproses Notif Vote Reminder:", err);
-      }
-      isVoteReminderCheckRunning = false;
-    });
+      }),
+    );
 
     // 0.80 Farm Greenhouse Maturity Webhook Alerts - Runs every 15 minutes
-    let isFarmWebhookCheckRunning = false;
-    cron.schedule("*/15 * * * *", async () => {
-      if (isFarmWebhookCheckRunning) return;
-      isFarmWebhookCheckRunning = true;
-      try {
-        const UserGreenhouse = require("../models/UserGreenhouse");
-        const farmWebhook = require("../services/farmNotificationWebhook");
-        const greenhouses = await UserGreenhouse.findAll({
-          attributes: ["userId", "slots"],
-        });
+    cron.schedule(
+      "*/15 * * * *",
+      withMutex(async () => {
+        try {
+          const UserGreenhouse = require("../models/UserGreenhouse");
+          const farmWebhook = require("../services/farmNotificationWebhook");
+          const greenhouses = await UserGreenhouse.findAll({
+            attributes: ["userId", "slots"],
+          });
 
-        for (const gh of greenhouses) {
-          if (!gh.slots || !Array.isArray(gh.slots) || gh.slots.length === 0) continue;
-          await farmWebhook.checkAndNotifyHarvest(gh.userId, gh);
+          for (const gh of greenhouses) {
+            if (!gh.slots || !Array.isArray(gh.slots) || gh.slots.length === 0) continue;
+            await farmWebhook.checkAndNotifyHarvest(gh.userId, gh);
+          }
+        } catch (err) {
+          logger.error("[Cron] Gagal memproses Webhook Notifikasi Panen:", err);
         }
-      } catch (err) {
-        logger.error("[Cron] Gagal memproses Webhook Notifikasi Panen:", err);
-      }
-      isFarmWebhookCheckRunning = false;
-    });
+      }),
+    );
 
     // Reset notif status every day at 00:00 (also Quest reset notif)
     cron.schedule("0 0 * * *", async () => {
@@ -496,7 +490,6 @@ module.exports = {
       try {
         const ServerChronicleEngine = require("../ai/serverChronicleEngine");
         const { drawChronicleNewspaper } = require("../canvas/chronicleCanvas");
-        const { AttachmentBuilder } = require("discord.js");
 
         for (const [guildId, guild] of client.guilds.cache) {
           try {
@@ -541,80 +534,77 @@ module.exports = {
     });
 
     // 1. QOTD Scheduler - Runs every minute to check if it's time to post
-    let isQotdRunning = false;
-    cron.schedule("* * * * *", async () => {
-      if (isQotdRunning) return;
-      isQotdRunning = true;
+    cron.schedule(
+      "* * * * *",
+      withMutex(async () => {
+        const now = new Date();
+        const currentHourStr = now.getHours().toString().padStart(2, "0");
+        const currentMinStr = now.getMinutes().toString().padStart(2, "0");
+        const currentTime = `${currentHourStr}:${currentMinStr}`;
+        const todayStr = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 
-      const now = new Date();
-      const currentHourStr = now.getHours().toString().padStart(2, "0");
-      const currentMinStr = now.getMinutes().toString().padStart(2, "0");
-      const currentTime = `${currentHourStr}:${currentMinStr}`;
-      const todayStr = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+        try {
+          // Find all guilds with QOTD enabled
+          // Optimized: Only fetch guilds where QOTD or Announcements might be enabled
+          const allSettings = await GuildSettings.findAll({
+            attributes: ["guildId", "settings"],
+          });
 
-      try {
-        // Find all guilds with QOTD enabled
-        // Optimized: Only fetch guilds where QOTD or Announcements might be enabled
-        const allSettings = await GuildSettings.findAll({
-          attributes: ["guildId", "settings"],
-        });
+          for (const guildData of allSettings) {
+            if (
+              !guildData.settings ||
+              !guildData.settings.qotd ||
+              !guildData.settings.qotd.enabled
+            )
+              continue;
 
-        for (const guildData of allSettings) {
-          if (
-            !guildData.settings ||
-            !guildData.settings.qotd ||
-            !guildData.settings.qotd.enabled
-          )
-            continue;
+            const qotdConf = guildData.settings.qotd;
 
-          const qotdConf = guildData.settings.qotd;
+            // If it's time, and we haven't asked today, and we have questions
+            if (
+              qotdConf.time === currentTime &&
+              qotdConf.lastAsked !== todayStr &&
+              qotdConf.questions.length > 0
+            ) {
+              const channel = client.channels.cache.get(qotdConf.channelId);
+              if (!channel) continue;
 
-          // If it's time, and we haven't asked today, and we have questions
-          if (
-            qotdConf.time === currentTime &&
-            qotdConf.lastAsked !== todayStr &&
-            qotdConf.questions.length > 0
-          ) {
-            const channel = client.channels.cache.get(qotdConf.channelId);
-            if (!channel) continue;
+              // Pilih pertanyaan secara acak
+              const qIndex = Math.floor(
+                Math.random() * qotdConf.questions.length,
+              );
+              const question = qotdConf.questions[qIndex];
 
-            // Pilih pertanyaan secara acak
-            const qIndex = Math.floor(
-              Math.random() * qotdConf.questions.length,
-            );
-            const question = qotdConf.questions[qIndex];
+              // Konversi ke Components V2 (sesuai Rule 1.6 & AGENTS.md)
+              const qotdPayload = buildContainerV2({
+                accentColorHex: "#ff9ff3",
+                authorName: "Naura Daily Engagement",
+                title: "❓ Question of the Day",
+                description: `> ${question}\n\n-# Jawab pertanyaan ini di kolom reply! 💬`,
+                footerText: ui.getFooter("core"),
+              });
 
-            // Konversi ke Components V2 (sesuai Rule 1.6 & AGENTS.md)
-            const qotdPayload = buildContainerV2({
-              accentColorHex: "#ff9ff3",
-              authorName: "Naura Daily Engagement",
-              title: "❓ Question of the Day",
-              description: `> ${question}\n\n-# Jawab pertanyaan ini di kolom reply! 💬`,
-              footerText: ui.getFooter("core"),
-            });
+              await channel
+                .send({ content: "@everyone Waktunya QOTD!" })
+                .catch(() => {});
+              await channel.send(qotdPayload).catch(() => {});
 
-            await channel
-              .send({ content: "@everyone Waktunya QOTD!" })
-              .catch(() => {});
-            await channel.send(qotdPayload).catch(() => {});
+              // Update db
+              const currentSettings = guildData.settings;
+              currentSettings.qotd.lastAsked = todayStr;
+              // Optionally remove the question so it doesn't repeat:
+              // currentSettings.qotd.questions.splice(qIndex, 1);
 
-            // Update db
-            const currentSettings = guildData.settings;
-            currentSettings.qotd.lastAsked = todayStr;
-            // Optionally remove the question so it doesn't repeat:
-            // currentSettings.qotd.questions.splice(qIndex, 1);
-
-            guildData.settings = currentSettings;
-            guildData.changed("settings", true);
-            await guildData.save({ fields: ["settings"] });
+              guildData.settings = currentSettings;
+              guildData.changed("settings", true);
+              await guildData.save({ fields: ["settings"] });
+            }
           }
+        } catch (err) {
+          logger.error("[Cron QOTD Error]", err);
         }
-      } catch (err) {
-        logger.error("[Cron QOTD Error]", err);
-      } finally {
-        isQotdRunning = false;
-      }
-    });
+      }),
+    );
 
     // 2. Birthday Announcer & Celebration Engine - Runs at 00:00 every day
     cron.schedule("0 0 * * *", async () => {
@@ -787,7 +777,6 @@ module.exports = {
       logger.info("[Cron] Checking friendship streaks...");
       try {
         const UserFriend = require("../models/UserFriend");
-        const { Op } = require("sequelize");
 
         const now = new Date();
         const fortyEightHoursAgo = new Date(
@@ -863,7 +852,6 @@ module.exports = {
       logger.info("[Cron] Running Premium VIP Lifecycle check...");
       try {
         const UserProfile = require("../models/UserProfile");
-        const { Op } = require("sequelize");
         const now = new Date();
 
         // ── 5A. Cabut status EXPIRED ─────────────────────────
@@ -989,7 +977,6 @@ module.exports = {
         const UserProfile = require("../models/UserProfile");
         const UserSurvival = require("../models/UserSurvival");
         const UserPet = require("../models/UserPet");
-        const { fn, col } = require("sequelize");
 
         const totalUsers = await UserProfile.count();
         const totalGuilds = client.guilds ? client.guilds.cache.size : 0;
@@ -1063,7 +1050,6 @@ module.exports = {
     cron.schedule("* * * * *", async () => {
       try {
         const PredictionMarket = require("../models/PredictionMarket");
-        const { Op } = require("sequelize");
         const expiredMarkets = await PredictionMarket.findAll({
           where: {
             status: "OPEN",

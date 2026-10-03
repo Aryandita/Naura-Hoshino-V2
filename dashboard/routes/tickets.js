@@ -9,6 +9,19 @@ const { requireApiLogin, canManageGuild, isOwner } = require("../middleware/auth
 const UserTicket = require("../../src/models/UserTicket");
 const TicketTranscript = require("../../src/models/mongo/TicketTranscript");
 
+/**
+ * Validasi otorisasi tiket (Anti-BOLA/IDOR):
+ * Pengguna hanya boleh mengakses tiket jika ia adalah bot owner,
+ * pemilik tiket, atau staf pengelola server (MANAGE_GUILD).
+ */
+function canAccessTicket(user, ticket) {
+  if (!user || !ticket) return false;
+  if (isOwner(user.id)) return true;
+  if (String(ticket.userId) === String(user.id)) return true;
+  if (ticket.guildId && canManageGuild(user, ticket.guildId)) return true;
+  return false;
+}
+
 module.exports = (client) => {
   // ------------------------------------------------------------------
   // Mengambil semua tiket terintegrasi MongoDB TicketTranscript & Sequelize
@@ -157,11 +170,27 @@ module.exports = (client) => {
         );
       }
 
-      // Hitung ringkasan statistik
-      const totalCount = allTickets.length;
-      const openCount = allTickets.filter((t) => t.status === "open").length;
-      const closedCount = allTickets.filter((t) => t.status === "closed").length;
-      const tribunalCount = allTickets.filter(
+      // Filter tiket berdasarkan hak akses pengguna resmi
+      const isAuth = typeof req.isAuthenticated === "function" && req.isAuthenticated() && req.user;
+      const isDemo = req.query?.preview === "1" || req.query?.demo === "1";
+
+      let filteredTickets = [];
+      if (isAuth) {
+        filteredTickets = allTickets.filter((t) => canAccessTicket(req.user, t));
+      } else if (isDemo) {
+        filteredTickets = [];
+      } else {
+        return res.status(401).json({
+          success: false,
+          error: "Autentikasi akun Discord resmi diperlukan untuk melihat tiket dukungan.",
+        });
+      }
+
+      // Hitung ringkasan statistik dari tiket yang berhak diakses
+      const totalCount = filteredTickets.length;
+      const openCount = filteredTickets.filter((t) => t.status === "open").length;
+      const closedCount = filteredTickets.filter((t) => t.status === "closed").length;
+      const tribunalCount = filteredTickets.filter(
         (t) =>
           t.category?.toLowerCase?.().includes("tribunal") ||
           t.topic?.toLowerCase?.().includes("tribunal"),
@@ -177,8 +206,8 @@ module.exports = (client) => {
           satisfactionRate: "98.6%",
           tribunalCases: tribunalCount,
         },
-        count: allTickets.length,
-        tickets: allTickets,
+        count: filteredTickets.length,
+        tickets: filteredTickets,
       });
     } catch (error) {
       console.error("[API TICKETS] Kesalahan fatal mengambil tiket:", error);
@@ -275,6 +304,11 @@ module.exports = (client) => {
         return res.status(404).json({ error: "Tiket tidak ditemukan." });
       }
 
+      // Validasi hak akses tiket (Anti-IDOR)
+      if (!canAccessTicket(req.user, ticketData)) {
+        return res.status(403).json({ error: "Akses ditolak: Kamu tidak memiliki izin untuk melihat tiket ini." });
+      }
+
       res.json({ success: true, ticket: ticketData });
     } catch (error) {
       console.error("[API TICKETS DETAIL] Kesalahan:", error);
@@ -283,7 +317,7 @@ module.exports = (client) => {
   });
 
   // ------------------------------------------------------------------
-  // Mengirim balasan ke tiket (Staf Dashboard)
+  // Mengirim balasan ke tiket (Staf Dashboard / Pemilik Tiket)
   // ------------------------------------------------------------------
   router.post("/api/tickets/:ticketId/reply", requireApiLogin, async (req, res) => {
     try {
@@ -292,6 +326,21 @@ module.exports = (client) => {
 
       if (!content || typeof content !== "string" || !content.trim()) {
         return res.status(400).json({ error: "Isi balasan tidak boleh kosong." });
+      }
+
+      // Validasi izin akses tiket
+      let targetTicket = null;
+      if (mongoose.connection.readyState === 1) {
+        targetTicket = await TicketTranscript.findOne({ ticketId }).lean().catch(() => null);
+      }
+      if (!targetTicket) {
+        targetTicket = await UserTicket.findOne({ where: { ticketId } }).catch(() => null);
+      }
+      if (!targetTicket) {
+        return res.status(404).json({ error: "Tiket tidak ditemukan." });
+      }
+      if (!canAccessTicket(req.user, targetTicket)) {
+        return res.status(403).json({ error: "Akses ditolak: Kamu tidak memiliki izin untuk membalas tiket ini." });
       }
 
       const cleanContent = content.trim().slice(0, 2000);
@@ -355,6 +404,21 @@ module.exports = (client) => {
     try {
       const { ticketId } = req.params;
       const closerId = req.user.id;
+
+      // Validasi izin akses tiket
+      let targetTicket = null;
+      if (mongoose.connection.readyState === 1) {
+        targetTicket = await TicketTranscript.findOne({ ticketId }).lean().catch(() => null);
+      }
+      if (!targetTicket) {
+        targetTicket = await UserTicket.findOne({ where: { ticketId } }).catch(() => null);
+      }
+      if (!targetTicket) {
+        return res.status(404).json({ error: "Tiket tidak ditemukan." });
+      }
+      if (!canAccessTicket(req.user, targetTicket)) {
+        return res.status(403).json({ error: "Akses ditolak: Kamu tidak memiliki izin untuk menutup tiket ini." });
+      }
 
       // 1. Update Sequelize
       await UserTicket.update(
@@ -439,7 +503,7 @@ module.exports = (client) => {
     // Wajib login sesi Discord
     if (typeof req.isAuthenticated !== "function" || !req.isAuthenticated() || !req.user) {
       if (req.accepts("html")) {
-        return res.redirect(`/auth/discord?returnTo=${encodeURIComponent(req.originalUrl)}`);
+        return res.redirect(`/login?redirect=${encodeURIComponent(req.originalUrl)}`);
       }
       return res.status(401).json({ error: "Silakan login terlebih dahulu untuk melihat transkrip." });
     }

@@ -64,6 +64,33 @@ module.exports = {
       return interaction.editReply({ ...lbPayload, embeds: [] });
     }
 
+    if (action === "celestial") {
+      const celestialPayload = buildContainerV2({
+        accentColorHex: "#A855F7",
+        authorName: "Celestial Raid 2.0 • Co-Op Dungeon",
+        title: "🌌 Ekspedisi Bos Purba Celestial",
+        description: [
+          "Bentuk pesta petualang 2-4 pemain dan tantang penguasa kosmik bersama!",
+          "",
+          `> 🛡️ **Guardian:** Menyerap serangan mematikan & mendirikan barrier tim.`,
+          `> ⚔️ **Vanguard:** Penyerang utama dengan multiplier kombo DPS dahsyat.`,
+          `> 🌿 **Apothecary:** Memulihkan vital HP dan menangkal debuff kegelapan.`,
+          "",
+          "**Pilihan Bos Kosmik:**",
+          "• **Astral Leviathan 🐋** (15.000 HP) • Hadiah: `800 NSF` + `1 Kupon`",
+          "• **Void Monarch 👑** (20.000 HP) • Hadiah: `1.200 NSF` + `2 Kupon`",
+          "• **Nebula Chimera 🦁** (25.000 HP) • Hadiah: `1.800 NSF` + `3 Kupon`",
+          "",
+          "-# ⚠️ *Hati-hati: Melebihi 8 giliran akan memicu fase Enrage (Amuk Bos).* Hadiah dibagikan secara adil dan merata ke seluruh anggota tim.",
+        ].join("\n"),
+        expression: "confident",
+        allowCleanup: true,
+        expiresInSeconds: 120,
+        footerText: ui.getFooter("survival"),
+      });
+      return interaction.editReply({ ...celestialPayload, embeds: [] });
+    }
+
     if (action === "status") {
       let boss = await worldBossEngine.getActiveBoss();
 

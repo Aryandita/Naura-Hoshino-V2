@@ -42,10 +42,27 @@ function isLoggedIn(req) {
   );
 }
 
-/** Halaman HTML: belum login diarahkan ke alur OAuth Discord. */
+/**
+ * Halaman HTML & View: Pengguna yang belum login TIDAK langsung dialihkan (redirect).
+ * Halaman tetap disajikan dalam mode guest / pratinjau dengan banner informasi resmi
+ * yang mengundang pengguna untuk login secara sukarela tanpa pengalihan paksa.
+ * Langkah ini krusial agar pengguna tidak mengira situs ini adalah web palsu atau scam.
+ */
 function requireLogin(req, res, next) {
-  if (isLoggedIn(req)) return next();
-  return res.redirect("/auth/discord");
+  if (isLoggedIn(req) || req.query?.preview === "1" || req.query?.demo === "1") return next();
+
+  // Untuk navigasi dokumen HTML biasa dari browser, izinkan halaman dimuat
+  const acceptsHtml = typeof req.accepts === "function" && req.accepts("html");
+  const isApi = typeof req.path === "string" && req.path.startsWith("/api/");
+  if (acceptsHtml && !isApi && !req.xhr) {
+    req.isGuestPreview = true;
+    return next();
+  }
+
+  return res.status(401).json({
+    success: false,
+    error: "Autentikasi akun Discord resmi diperlukan untuk mengakses endpoint ini.",
+  });
 }
 
 /** Endpoint JSON: belum login dibalas 401, bukan redirect. */
@@ -117,6 +134,11 @@ function requireGuildManager(req, res, next) {
   }
 
   if (!isLoggedIn(req)) {
+    if (req.method === "GET") {
+      req.guildId = "sandbox";
+      req.isSandbox = true;
+      return next();
+    }
     return res.status(401).json({
       success: false,
       error: "Kamu belum login ya. Masuk dulu lewat Discord.",
@@ -143,7 +165,17 @@ function requireGuildManager(req, res, next) {
  * sehingga siapa pun bisa menjual isi tas orang lain.
  */
 function requireSelfOrOwner(req, res, next) {
+  if (req.query?.preview === "1" || req.query?.demo === "1") {
+    req.targetUserId = "demo_user";
+    req.isPreview = true;
+    return next();
+  }
   if (!isLoggedIn(req)) {
+    if (req.method === "GET") {
+      req.targetUserId = "demo_user";
+      req.isPreview = true;
+      return next();
+    }
     return res.status(401).json({
       success: false,
       error: "Kamu belum login ya. Masuk dulu lewat Discord.",

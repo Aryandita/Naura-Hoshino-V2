@@ -40,10 +40,15 @@ module.exports = {
     } catch (e) {}
 
     const payload = buildContainerV2({
-      accentColorHex: ui.getColor("primary") || "#FFB6C1",
-      authorName: `${interaction.user.username} sedang AFK`,
+      accentColorHex: ui.getColor("primary") || "#38BDF8",
+      authorName: `${interaction.user.username} Menandai Status AFK`,
       iconURL: interaction.user.displayAvatarURL(),
-      description: `${ui.getEmoji("zzz") || "💤"} **Sistem AFK Diaktifkan!**\nNaura akan menjaga notifikasimu saat kamu sedang tidak ada di sekitar.\n\n> ${ui.getEmoji("memo") || "📝"} **Pesan / Alasan:** *${alasan}*\n> ${ui.getEmoji("no_bell") || "🔕"} **Mode Senyap:** *${modeSenyap ? "Aktif" : "Tidak Aktif"}*`,
+      title: "Mode AFK Diaktifkan",
+      description:
+        `Statusmu telah dialihkan ke mode tidak aktif. Naura akan mencatat orang yang menyebut tokomu dan menyambutmu kembali saat kamu mengirim pesan.\n\n` +
+        `• **Keterangan:** ${alasan}\n` +
+        `• **Notifikasi Rutin:** ${modeSenyap ? "Dinonaktifkan Sementara" : "Tetap Berjalan"}\n` +
+        `• **Waktu Mulai:** <t:${Math.floor(Date.now() / 1000)}:T>`,
       footerText: "Naura Auto-Responder System",
     });
 

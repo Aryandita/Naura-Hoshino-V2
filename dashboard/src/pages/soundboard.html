@@ -743,10 +743,16 @@
       async function broadcastToDiscord(soundId, soundName) {
         showToast("Menyiarkan ke Discord...", `Mengirim sound "${soundName}" ke Poru Lavalink`);
         try {
+          const activeGuildId =
+            window.authManager?.getCurrentGuildId?.() ||
+            localStorage.getItem("naura_selected_guild") ||
+            localStorage.getItem("currentSelectedGuildId") ||
+            "sandbox";
+
           const res = await fetch("/api/soundboard/play", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ guildId: "sandbox", soundId }),
+            body: JSON.stringify({ guildId: activeGuildId, soundId }),
           });
           const data = await res.json();
           if (data && data.success) {

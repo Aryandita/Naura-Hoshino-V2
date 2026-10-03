@@ -38,6 +38,66 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 > **Kriteria:** Mempengaruhi integritas data, keamanan saldo/ekonomi, stabilitas koneksi WebSocket, dan pencegahan eksploitasi sistem.
 
+- [x] **[SECURITY AUDIT & MOBILE DASHBOARD V2] Strix Security Audit Remediation & Mobile Web Dashboard Feature Parity**
+  - Mengaudit seluruh direktori `dashboard/` menggunakan framework `/strix-security-audit` dan mereparasi celah keamanan:
+    - Melindungi endpoint pemeliharaan server `POST /api/admin/flush-cache` dan `POST /api/admin/backup` dengan otorisasi ketat `requireOwner`.
+    - Mencegah eksploitasi infinite token farming pada mini-game arcade dengan rate limit cooldown server-side (20s) dan batas klaim harian (500 NSF/hari) di `POST /api/arcade/claim`.
+    - Menutup celah SSRF (Server-Side Request Forgery) pada `GET/POST /survival/farm/webhook` menggunakan validasi ketat anti-SSRF `isSafeWebhookUrl()` dan otorisasi login Discord.
+    - Menutup celah pengambilalihan voice channel (Voice Channel Hijacking) pada `POST /soundboard/play` dengan validasi keanggotaan guild pengguna dan login Discord.
+    - Mengamankan mutasi saldo pada `POST /territory/contribute` dengan verifikasi debit atomik dan login pengguna.
+    - Mengamankan `POST /caravan/ambush-alert` dan `POST /territory/claim` dari manipulasi pihak luar dan spoofing identitas klan.
+    - Menutup celah IDOR (BOLA) dan kebocoran transkrip tiket pada `GET /api/tickets`, `GET /api/tickets/:ticketId`, `POST /api/tickets/:ticketId/reply`, dan `POST /api/tickets/:ticketId/close` dengan fungsi pembatas peran `canAccessTicket`.
+    - Mengamankan endpoint `GET /api/inventory` agar tidak mengizinkan tamu tanpa login menginspeksi tas pemain lain.
+  - Memperkaya Web Dashboard Mobile (`dashboard/mobile/`) dengan kesetaraan fitur terhadap dashboard utama:
+    - Menghadirkan komponen **Apps Drawer Bottom Sheet** (`appsDrawer.js`) pada navigasi mobile untuk akses cepat 16 modul bot.
+    - Membangun 4 halaman mobile baru: `inventory.html` (Ransel pemain, durability bar & filter bento), `clan.html` (Sindikat klan, teritori & donasi energi), `marketplace.html` (Bursa komoditas & lelang komunitas), dan `arcade.html` (Mini-game HTML5 Canvas 60 FPS Cyber Star Catcher).
+    - Memperbarui `dashboard/mobile/vite.config.mjs` dan routing Express di `dashboard/server.js`.
+  - Memvalidasi seluruh QA Gate: 6/6 tahapan 100% hijau (503 unit test passed, 0 error linter, 0 em-dash, 100% paritas kamus ID/EN).
+  - File: [`dashboard/routes/api.js`](dashboard/routes/api.js), [`dashboard/routes/survival.js`](dashboard/routes/survival.js), [`dashboard/routes/tickets.js`](dashboard/routes/tickets.js), [`dashboard/routes/user.js`](dashboard/routes/user.js), [`dashboard/server.js`](dashboard/server.js), [`dashboard/mobile/vite.config.mjs`](dashboard/mobile/vite.config.mjs), [`dashboard/mobile/src/js/components/appsDrawer.js`](dashboard/mobile/src/js/components/appsDrawer.js), [`dashboard/mobile/src/js/components/bottomNav.js`](dashboard/mobile/src/js/components/bottomNav.js), [`dashboard/mobile/src/js/components/toaster.js`](dashboard/mobile/src/js/components/toaster.js), [`dashboard/mobile/src/pages/inventory.html`](dashboard/mobile/src/pages/inventory.html), [`dashboard/mobile/src/pages/clan.html`](dashboard/mobile/src/pages/clan.html), [`dashboard/mobile/src/pages/marketplace.html`](dashboard/mobile/src/pages/marketplace.html), [`dashboard/mobile/src/pages/arcade.html`](dashboard/mobile/src/pages/arcade.html).
+
+- [x] **[WEB DASHBOARD & ACCESSIBILITY] Dynamic Data Refactoring, Universal Page Navigation, and Zero-Hardcoded State Audit**
+  - Mengaudit seluruh 29 halaman web dashboard Naura OS, menyingkirkan baris mock/placeholder statis dan menyambungkannya ke database backend live.
+  - Membangun 6 endpoint RESTful baru di Express backend: `GET /api/inventory` (inventaris tas petualang, tools, daya tahan dan kapasitas), `GET /api/clan/info` (sindikat klan, vault, dan daftar anggota nyata dari Discord API), `GET /api/marketplace/items` (balai lelang aktif dari `MarketAuction`), `POST /api/arcade/claim` & `GET /api/arcade/leaderboard` (mini games arcade dengan reward mutasi atomik NSF & skor tertinggi), serta `POST /api/admin/flush-cache` & `POST /api/admin/backup` (pemeliharaan arsitektur dan paksa flush cache).
+  - Merombak arsitektur navigasi global `sharedNav.js`: mendaftarkan seluruh 28 rute pada `ROUTE_GROUPS`, menginjeksi sticky header `.shared-top-nav` dengan quick-links lengkap (`Dashboard`, `Profil`, `Ransel`, `Dunia`, `Klan`, `Pasar`, `Arcade`, `Musik`, `Settings`, `Admin`), user avatar chip dari `/api/me`, drawer mobile nav di bagian bawah layar, dan reconciler tautan sidebar dinamis.
+  - Menyelaraskan navigasi sidebar desktop statis pada `index.html` dengan tautan langsung ke `/clan`, `/marketplace`, `/inventory`, `/arcade`, dan `/admin`.
+  - Memverifikasi 100% kelulusan QA Gate (503 unit test lulus, 0 error linter, 0 em-dash, 100% paritas bahasa ID/EN, dan 29/29 halaman merespons HTTP 200).
+  - File: [`dashboard/routes/api.js`](dashboard/routes/api.js), [`dashboard/routes/user.js`](dashboard/routes/user.js), [`dashboard/src/js/sharedNav.js`](dashboard/src/js/sharedNav.js), [`dashboard/dist/src/js/sharedNav.js`](dashboard/dist/src/js/sharedNav.js), [`dashboard/src/css/stellar.css`](dashboard/src/css/stellar.css), [`dashboard/src/pages/index.html`](dashboard/src/pages/index.html), [`dashboard/src/pages/inventory.html`](dashboard/src/pages/inventory.html), [`dashboard/src/pages/clan.html`](dashboard/src/pages/clan.html), [`dashboard/src/pages/marketplace.html`](dashboard/src/pages/marketplace.html), [`dashboard/src/pages/arcade.html`](dashboard/src/pages/arcade.html), [`dashboard/src/pages/admin.html`](dashboard/src/pages/admin.html), [`dashboard/src/pages/economy.html`](dashboard/src/pages/economy.html), [`dashboard/src/pages/war-room.html`](dashboard/src/pages/war-room.html), [`dashboard/src/pages/lounge.html`](dashboard/src/pages/lounge.html).
+
+- [x] **[WEB DASHBOARD & SECURITY] Pemeriksaan Mendalam Dashboard, Eliminasi Pengalihan Paksa & Official Anti-Scam Trust Banner Engine**
+  - Mencegah pengalihan paksa (`302 redirect`) saat pengguna atau pengunjung mengakses halaman yang berkaitan dengan data user/server, menghilangkan kecurigaan phising/scam dengan menyajikan Mode Pratinjau Terbuka yang aman dan transparan (`dashboard/middleware/auth.js`).
+  - Mengimplementasikan `renderUserDataTrustBanner(isAuthenticated)` pada `dashboard/src/js/authManager.js` dengan 3 lencana resmi ("DASHBOARD RESMI NAURA", "DISCORD OAUTH2 OFFICIAL", "MODE PRATINJAU TERBUKA"), judul informatif, 3 poin jaminan keamanan (kata sandi tidak pernah diminta, izin baca publik terbatas, divalidasi langsung domain resmi `discord.com`), dan 3 tombol aksi sukarela.
+  - Memasang atribut `data-user-data-page="true"` dan menyelaraskan integrasi pada 9 halaman data: `/profile`, `/inventory`, `/settings`, `/automations`, `/welcomer`, `/tickets`, `/music`, `/admin`, dan `/portfolio/me`.
+  - Halaman kreator publik (`/portfolio`) dibebaskan dari desakan banner login untuk akses publik terbuka.
+  - Memvalidasi tampilan visual melalui headless Chrome CDP capture (`scripts/audit_dashboard_pages.js`) dengan hasil 100% halaman menyajikan HTTP 200 tanpa redirect paksa, serta mempertahankan kelulusan penuh 6/6 QA Gate (503 unit tests, 0 em-dash, paritas kamus bahasa 100%).
+  - File: [`dashboard/middleware/auth.js`](dashboard/middleware/auth.js), [`dashboard/server.js`](dashboard/server.js), [`dashboard/src/js/authManager.js`](dashboard/src/js/authManager.js), [`dashboard/src/js/sharedNav.js`](dashboard/src/js/sharedNav.js), [`dashboard/src/pages/profile.html`](dashboard/src/pages/profile.html), [`dashboard/src/pages/inventory.html`](dashboard/src/pages/inventory.html), [`dashboard/src/pages/settings.html`](dashboard/src/pages/settings.html), [`dashboard/src/pages/automations.html`](dashboard/src/pages/automations.html), [`dashboard/src/pages/welcomer.html`](dashboard/src/pages/welcomer.html), [`dashboard/src/pages/tickets.html`](dashboard/src/pages/tickets.html), [`dashboard/src/pages/music.html`](dashboard/src/pages/music.html), [`dashboard/src/pages/admin.html`](dashboard/src/pages/admin.html), [`scripts/audit_dashboard_pages.js`](scripts/audit_dashboard_pages.js).
+
+- [x] **[AI-DJ & MUSIC] AI DJ Text Fallback Engine Opsi C (Hybrid) & Zero-AI Genre Heuristic Classifier**
+  - Mengimplementasikan klasifikasi genre dan tema musik tanpa ketergantungan model AI eksternal (`src/music/genreClassifier.js`), mencakup 9 kategori: Lofi/Chill, Anime/Vocaloid, Rock/Metal, EDM/Dance, K-Pop, Akustik/Melankolis, Gaming OST, Marathon Stream, dan Pop Default.
+  - Menghadirkan naskah penyiar radio tematik anti-slop, On-Air Speech Bubble di panel pemutar utama (`MusicUIManager`), dan kartu siaran radio `buildContainerV2` tersendiri bertema **Naura Radio FM 99.4 MHz** untuk permintaan manual.
+  - Audio ducking volume hanya aktif bila suara Fish Audio benar-benar diputar, menjaga volume musik tetap stabil saat mode teks fallback.
+  - File: [`src/music/genreClassifier.js`](src/music/genreClassifier.js), [`src/music/genreClassifier.test.js`](src/music/genreClassifier.test.js), [`src/managers/aiDjManager.js`](src/managers/aiDjManager.js), [`src/managers/aiDjManager.test.js`](src/managers/aiDjManager.test.js), [`src/music/MusicUIManager.js`](src/music/MusicUIManager.js).
+
+- [x] **[UTILITY & SURVIVAL] Universal Message Cleaner & 5 NSF Garbage Collection Reward Engine**
+  - Menambahkan tombol interaksi `🧹 Bersihkan (+5 NSF)` pada Discord Components V2 sebelum baris footer dengan proteksi anti-farming (Daily Cap 50 NSF per hari & Cooldown 10 detik).
+  - Mutasi saldo kebersihan 5 NSF diproses secara atomik via `cacheManager.incrementUserSurvival`.
+  - Mengimplementasikan sistem timer auto-delete universal dengan visualisasi hitung mundur Discord dinamis `<t:TIMESTAMP:R>` dan pengecualian mutlak pada log owner/admin, pengingat (*reminder*), dan penundaan timer pada pesan interaktif berbasis input pengguna.
+  - File: [`src/utils/messageCleaner.js`](src/utils/messageCleaner.js), [`src/utils/messageCleaner.test.js`](src/utils/messageCleaner.test.js), [`src/interactions/buttons/messageCleanup.js`](src/interactions/buttons/messageCleanup.js), [`src/utils/NauraContainerBuilder.js`](src/utils/NauraContainerBuilder.js), [`src/utils/NauraContainerBuilder.test.js`](src/utils/NauraContainerBuilder.test.js).
+
+- [x] **[WEB DASHBOARD & REALTIME] Web Dashboard Dynamic Guild Sync & Tactical War Room Real-Time Engine**
+  - Menghilangkan parameter statis `guildId: "sandbox"` pada Web Soundboard Studio (`soundboard.html`), menyambungkannya secara dinamis ke sesi guild aktif pengguna dari `window.authManager` / localStorage.
+  - Mengintegrasikan Tactical War Room (`war-room.html`) ke backend endpoint langsung `GET /api/realtime/territories` dan `POST /api/territory/contribute` dengan polling otomatis 30 detik untuk kontribusi energi klan yang adil.
+  - File: [`dashboard/src/pages/soundboard.html`](dashboard/src/pages/soundboard.html), [`dashboard/routes/api.js`](dashboard/routes/api.js), [`dashboard/src/pages/war-room.html`](dashboard/src/pages/war-room.html).
+
+- [x] **[CO-OP GAMEPLAY] The Celestial Raid 2.0 Engine (Multiplayer Party 2-4 Players)**
+  - Menghadirkan engine dungeon kooperatif berbasis giliran (turn-based) tanpa ketergantungan API AI dengan 3 peran sinergis: Guardian (Shield/Tank), Vanguard (Combo DPS), dan Apothecary (Heal/Support).
+  - Mekanik bos kosmik bertingkat (Astral Leviathan, Void Monarch, Nebula Chimera) dengan fase amarah (Enrage Phase) setelah 8 giliran dan pembagian hadiah NSF serta kupon secara atomik dan merata.
+  - File: [`src/survival/engines/celestialRaidEngine.js`](src/survival/engines/celestialRaidEngine.js), [`src/survival/engines/celestialRaidEngine.test.js`](src/survival/engines/celestialRaidEngine.test.js), [`plugin/survival/subcommands/raid.js`](plugin/survival/subcommands/raid.js).
+
+- [x] **[AI DORMANT ARTIFACTS] Pengarsipan Modul AI Dormant ke pending_plugin/**
+  - Mengarsipkan konsep AI berat yang berisiko menghabiskan kuota free-tier ke dalam direktori `pending_plugin/` untuk kesiapan masa depan.
+  - Modul tersimpan: AI Chat Function Calling (`ai_chat_function_calling/`) dan AI Server Lore RAG (`ai_server_lore/`).
+  - File: [`pending_plugin/ai_chat_function_calling/`](pending_plugin/ai_chat_function_calling/), [`pending_plugin/ai_server_lore/`](pending_plugin/ai_server_lore/), [`pending_plugin/README.md`](pending_plugin/README.md).
+
 - [x] **[BUG - APPLICATION_COMMAND_TOO_LARGE] Pengecilan & Pemecahan Payload Slash Command Melebihi Batas Discord API (8000 Bytes)**
   - Mengatasi galat deploy `DiscordAPIError[50035]: Invalid Form Body 43[APPLICATION_COMMAND_TOO_LARGE]: Command exceeds maximum size (8000)`.
   - Memecah command raksasa `/survival` (13.422 bytes) menjadi dua command modular terpisah: `/survival` (eksplorasi & kelangsungan hidup) dan `/rpg` (sistem RPG, perkumpulan klan, crafting & dungeon).
@@ -155,6 +215,16 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 ## 🔥 2. KATEGORI: TINGGI (Prioritas Kedua setelah Kritis)
 
 > **Kriteria:** Fitur arsitektur inti, pengalaman pengguna utama, visualisasi sistem, dan retensi musiman.
+
+- [x] **[CODE QUALITY & SIMPLIFICATION] Refactoring & Code Review Menyeluruh (5 Batch Sprint)**
+  - Mengaudit dan menyederhanakan kode dari 754 file JavaScript untuk meningkatkan keterbacaan, menghilangkan kompleksitas berlebih (Chesterton's Fence), dan mematuhi pentalogi aturan teknis.
+  - [x] **Batch 1**: Simplifikasi `cronManager.js` (Pola mutex `withMutex()`, migrasi `require("sequelize").Op` inline ke destructuring atas, eliminasi dead cron job, dan deduplikasi helper `setNotifFlag`).
+  - [x] **Batch 2**: Standardisasi logging pada `aiManager.js` (Mengonversi pemanggilan `console.log` ANSI escape menjadi `logger.warn` resmi, merapikan guard condition).
+  - [x] **Batch 3**: Simplifikasi `cacheManager.js` (Menghapus nested try-catch redundan pada `cloneJson` berbasis Node 24 native `structuredClone`).
+  - [x] **Batch 4**: Dokumentasi Section Divider pada Subcommand Router Monolitik (`minigame.js`, `music.js`, `setup.js`).
+  - [x] **Batch 5**: Sweep Komentar & Dead Code Seluruh Repo (Pembersihan raw `console.log` yang tersisa di modul inti seperti `musicManager.js`, `rssManager.js`, `voiceManager.js`, standardisasi ke logger resmi).
+  - File: [`src/managers/cronManager.js`](src/managers/cronManager.js), [`src/managers/aiManager.js`](src/managers/aiManager.js), [`src/managers/cacheManager.js`](src/managers/cacheManager.js), [`src/managers/musicManager.js`](src/managers/musicManager.js), [`src/managers/rssManager.js`](src/managers/rssManager.js), [`src/managers/voiceManager.js`](src/managers/voiceManager.js), [`plugin/minigames/minigame.js`](plugin/minigames/minigame.js), [`plugin/music/music.js`](plugin/music/music.js), [`plugin/admin/setup.js`](plugin/admin/setup.js).
+
 
 - [x] **[BUG - DUPLICATE_COMMAND_BOUNTY] Proteksi Cross-Platform Folder Subcommands & Duplikasi Command `/bounty`**
   - Mengatasi peringatan `⚠️ WARNING [COMMANDS] Duplikat command "/bounty" pada file bounty.js. File dilewati`.
@@ -973,6 +1043,44 @@ Berdasarkan analisis pasar bot dan platform developer Discord terkini (2025 - 20
 - [x] **[RPG TALENTS] Branching Skill Trees & Specialization Talents (#45)**: Pilihan cabang keahlian (Petani Ahli, Pedagang Ulung, Pendekar Tempur) saat mencapai level 10 ke atas. File: [`src/survival/engines/skillTreeEngine.js`](src/survival/engines/skillTreeEngine.js), [`plugin/survival/subcommands/skill.js`](plugin/survival/subcommands/skill.js), [`plugin/survival/subcommands/class.js`](plugin/survival/subcommands/class.js).
 - [x] **[AGRONOMI] Farming Crop Cross-Breeding & Hybrid Seeds (#46)**: Mekanik perkawinan silang benih tanaman berdampingan di greenhouse untuk menghasilkan varietas bibit unggul baru. File: [`src/survival/data/cropSeeds.js`](src/survival/data/cropSeeds.js), [`src/survival/engines/greenhouseEngine.js`](src/survival/engines/greenhouseEngine.js), [`src/survival/engines/greenhouseEngine.test.js`](src/survival/engines/greenhouseEngine.test.js), [`plugin/survival/subcommands/farm.js`](plugin/survival/subcommands/farm.js).
 - [x] **[QOL] In-Discord Interactive Bug Reporter Modal with GitHub Sync (#48)**: Formulir modal Discord yang rapi bagi pemain untuk melaporkan bug, otomatis diformat dan diteruskan ke channel pengembang atau GitHub Issues. File: [`plugin/utility/bug.js`](plugin/utility/bug.js), [`src/interactions/modals/reportBug.js`](src/interactions/modals/reportBug.js).
+
+##### 6. Kategori: Feature Enhancement Suite (7 Sprint Utilitas & Moderasi Selesai 100%)
+- [x] **[SPRINT 1 - MODERASI & PERINGATAN] Konfirmasi Interaktif Bertingkat & Audit Tracking**:
+  - Tombol konfirmasi interaktif bertingkat (`[Ya, Lanjutkan]` vs `[Batalkan]`) sebelum eksekusi hukuman destruktif (`/moderation kick`, `/moderation ban`, `/moderation timeout`).
+  - Pembersihan pesan bertahap (`/moderation purge`) dengan visual progress dan eliminasi rate limit freeze.
+  - Sistem sanksi `/warn` dengan konfirmasi pembersihan, visual badge keparahan tiga tingkat (`🟢`, `🟡`, `🔴`), dan indikator strike akumulasi.
+  - Kategorisasi catatan moderator `/modnote` (`💳`, `⚙️`, `🚨`) serta siaran status lockdown kanal (`/moderation lockdown`) dengan timestamp dinamis Discord `<t:...:R>`.
+  - File: [`plugin/admin/moderation.js`](plugin/admin/moderation.js), [`plugin/admin/warn.js`](plugin/admin/warn.js), [`plugin/admin/modnote.js`](plugin/admin/modnote.js), [`plugin/admin/lockdown.js`](plugin/admin/lockdown.js).
+- [x] **[SPRINT 2 - ADMIN TOOLS] Dynamic Canvas Giveaway Banner & Setup Health Score**:
+  - Banner grafis dynamic giveaway pada `/giveaway start` melalui `generateGiveawayBanner` dengan fallback aman.
+  - Perluasan `/announce` dengan penerusan gambar lampiran, opsi pinning pesan otomatis, dan mention peran opsional.
+  - Meteran konfigurasi server (`/setup status`) dengan kalkulasi skor kesehatan server 0-100% dan visual meter `▰▱`.
+  - File: [`src/canvas/dynamicBannerEngine.js`](src/canvas/dynamicBannerEngine.js), [`plugin/admin/giveaway.js`](plugin/admin/giveaway.js), [`plugin/admin/announce.js`](plugin/admin/announce.js), [`plugin/admin/setup.js`](plugin/admin/setup.js).
+- [x] **[SPRINT 3 - PROFIL & LEVELING] Bento Grid Stats & Atomic Reputation Podium**:
+  - Tampilan kartu profil `/profile` modular dengan panel finansial (Cash, Bank, Total), reputasi, status pernikahan, dan tombol pintasan sosial.
+  - Format metrik bento grid pada kartu peringkat `/rank` (Level, Kemajuan XP, Rank Server, Integritas).
+  - Timeline siklus 7 hari streak pada `/daily` dengan penanda lootbox tonggak pencapaian dan perbaikan payload Components V2.
+  - Transaksi atomik mutasi reputasi (`/reputation give`) via `cacheManager.incrementUserProfile` dan papan peringkat podium interaktif tiga besar (`🥇🥈🥉`).
+  - File: [`plugin/utility/profile.js`](plugin/utility/profile.js), [`plugin/leveling/rank.js`](plugin/leveling/rank.js), [`plugin/utility/daily.js`](plugin/utility/daily.js), [`plugin/utility/reputation.js`](plugin/utility/reputation.js).
+- [x] **[SPRINT 4 - UTILITAS SOSIAL] Realtime Polling ASCII Bars & Timed Productivity**:
+  - Polling interaktif `/poll` dengan tombol bernomor (`1️⃣`-`4️⃣`), visual bar rasio suara ASCII real-time (`▰▱`), dan batas waktu penutupan akurat.
+  - Notifikasi pengingat `/remind` dengan ringkasan timestamp dinamis dan daftar pengingat aktif yang terstruktur.
+  - Kartu status `/afk` minimalis dengan mode senyap, format pencarian rekan tim `/lfg` dengan slot terstruktur dan tombol peran, serta sesi fokus `/pomodoro` dengan sanitasi `MessageFlags`.
+  - File: [`plugin/utility/poll.js`](plugin/utility/poll.js), [`plugin/utility/remind.js`](plugin/utility/remind.js), [`plugin/utility/afk.js`](plugin/utility/afk.js), [`plugin/utility/lfg.js`](plugin/utility/lfg.js), [`plugin/utility/pomodoro.js`](plugin/utility/pomodoro.js).
+- [x] **[SPRINT 5 - UTILITAS EKONOMI] Visual Market Odds & Total Portfolio Valuation**:
+  - Kalkulasi valuasi total portofolio saham `/stock portfolio` dan indikator akumulasi profit/loss (`totalPL`, persentase, dan badge hijau/merah).
+  - Tampilan prediksi pasar `/predict` dengan bar distribusi pool dua sisi (`▰▱`), rasio persentase, dan estimasi pengganda imbalan.
+  - Penyelarasan format subtext markdown Discord (`-#`) pada layanan klasemen `leaderboardService.js`.
+  - File: [`plugin/utility/stock.js`](plugin/utility/stock.js), [`plugin/utility/predict.js`](plugin/utility/predict.js), [`src/services/leaderboardService.js`](src/services/leaderboardService.js).
+- [x] **[SPRINT 6 - UTILITAS TOOLS & FUN] Biome Buff Forecaster & Multi-Source Media Search**:
+  - Kartu ramalan cuaca `/weather` dengan indikator dampak buff/debuff biome Naura Wilds.
+  - Katalog pencarian global omni-search `/search` dan penerjemah multibahasa `/translate`.
+  - Sistem pencarian anime `/anime` dan film `/movie` berbasis arsitektur multi-tier waterfall (Jikan/AniList/Kitsu & OMDB/TVMaze/Wikipedia) dengan navigasi halaman interaktif.
+  - File: [`plugin/utility/weather.js`](plugin/utility/weather.js), [`plugin/utility/search.js`](plugin/utility/search.js), [`plugin/utility/translate.js`](plugin/utility/translate.js), [`plugin/utility/anime.js`](plugin/utility/anime.js), [`plugin/utility/movie.js`](plugin/utility/movie.js).
+- [x] **[SPRINT 7 - CORE & QA GATE] Multi-Service Telemetry Diagnostics & 6/6 Green QA Gate**:
+  - Telemetri diagnostik multi-layanan `/ping` (WebSocket Gateway, Lavalink, Supabase PG, Redis, dan MongoDB) dengan latensi terperinci.
+  - Validasi ketat QA Gate (ESLint, No Em-Dash, Paritas Kamus Strict ID/EN, Require Integrity, Dashboard Inline Scripts, dan 483/483 Unit Tests Lolos 100%).
+  - File: [`plugin/core/core.js`](plugin/core/core.js), [`src/managers/diagnosticsManager.js`](src/managers/diagnosticsManager.js).
 
 ---
 

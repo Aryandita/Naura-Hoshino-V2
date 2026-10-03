@@ -93,33 +93,38 @@ function renderLfgDisplay(state, preset) {
     const member = state.members[i];
     if (member) {
       rosterLines.push(
-        `\`[Slot ${i + 1}]\` ${member.roleEmoji} **${member.roleLabel}**, <@${member.userId}>`,
+        `\`[Slot ${i + 1}]\` ${member.roleEmoji} **${member.roleLabel}** • <@${member.userId}>`,
       );
     } else {
       rosterLines.push(
-        `\`[Slot ${i + 1}]\` ⚪ *[Slot Kosong - Klik tombol role untuk gabung]*`,
+        `\`[Slot ${i + 1}]\` ▱ *Slot Terbuka (Pilih role di bawah untuk bergabung)*`,
       );
     }
   }
 
+  const filledCount = currentCount;
+  const emptyCount = Math.max(0, state.maxSlots - filledCount);
+  const capacityBar = `${"▰".repeat(filledCount)}${"▱".repeat(emptyCount)} (${currentCount}/${state.maxSlots} Pemain)`;
+
   const statusText = isFull
-    ? `${ui.getEmoji("greenping") || "🟢"} **TIM LENGKAP & SIAP MAIN!**`
-    : `${ui.getEmoji("yellowping") || "🟡"} **Mencari Pemain (${currentCount}/${state.maxSlots})**`;
+    ? "🟢 Tim Lengkap (Lobby Siap Main)"
+    : `🟡 Mencari Rekan Tim (${currentCount}/${state.maxSlots})`;
 
   return buildContainerV2({
-    accentColorHex: isFull ? "#22c55e" : ui.getColor("primary") || "#FFB6C1",
-    authorName: `Lobby LFG • Dibuat oleh ${state.hostTag}`,
-    title: `${ui.getEmoji("arcade") || "🎮"} ${state.title} (${preset.name})`,
+    accentColorHex: isFull ? "#34D399" : ui.getColor("primary") || "#38BDF8",
+    authorName: `Lobby LFG • Inisiator: ${state.hostTag}`,
+    title: `LFG: ${state.title} (${preset.name})`,
     description: [
       `**Status:** ${statusText}`,
-      state.description ? `**Catatan:** *${state.description}*` : "",
+      `**Kapasitas:** \`${capacityBar}\``,
+      state.description ? `**Catatan:** ${state.description}` : "",
       "",
-      `### ${ui.getEmoji("member") || "👥"} Susunan Tim (Roster):`,
+      "**Susunan Roster Tim:**",
       ...rosterLines,
     ]
       .filter(Boolean)
       .join("\n"),
-    footerText: "Klik tombol role di bawah untuk bergabung atau keluar",
+    footerText: "Gunakan tombol peran di bawah untuk bergabung atau mengundurkan diri",
   });
 }
 

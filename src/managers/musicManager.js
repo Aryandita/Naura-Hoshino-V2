@@ -4,6 +4,7 @@
 const fs = require("fs");
 const path = require("path");
 const { Collection } = require("discord.js");
+const { logger } = require("./logger");
 const ui = require("../config/ui");
 const { lavalinkClusterManager } = require("./lavalinkClusterManager");
 
@@ -82,8 +83,8 @@ class MusicManager {
           }
         }
         if (configuredNodes.length === 0) {
-          console.error(
-            "\x1b[41m\x1b[37m 🎵 MUSIC \x1b[0m \x1b[31mGagal parse LAVA_NODES, kembali ke mode multi-env / fallback.\x1b[0m",
+          logger.error(
+            "[Music] Gagal parse LAVA_NODES, kembali ke mode multi-env / fallback.",
           );
         }
       }
@@ -119,9 +120,7 @@ class MusicManager {
   }
 
   initialize() {
-    console.log(
-      "\x1b[45m\x1b[37m 🎵 AUDIO \x1b[0m \x1b[35mMemulai Ekosistem Lavalink (Native Mode)...\x1b[0m",
-    );
+    logger.info("Memulai Ekosistem Lavalink (Native Mode)...");
 
     const poru = this.ensurePoru();
 
@@ -129,7 +128,7 @@ class MusicManager {
       try {
         poru.init(this.client);
       } catch (e) {
-        console.error("[Poru Init Error]", e);
+        logger.error("[Poru Init Error]", e);
       }
     };
 
@@ -161,15 +160,11 @@ class MusicManager {
           poru.on(eventName, (...args) => event.execute(this, ...args));
         }
       } catch (err) {
-        console.error(`[Poru Event Error] Gagal memuat ${file}:`, err);
+        logger.error(`[Poru Event Error] Gagal memuat ${file}:`, err);
       }
     }
 
-    console.log(
-      "\x1b[42m\x1b[30m 📂 SYSTEM \x1b[0m \x1b[32m" +
-        eventFiles.length +
-        " Poru Events dimuat.\x1b[0m",
-    );
+    logger.info(`[Music] ${eventFiles.length} Poru Events dimuat.`);
   }
 
   async updatePanelEmbed(player) {

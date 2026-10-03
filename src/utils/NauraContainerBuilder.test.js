@@ -85,4 +85,18 @@ describe("NauraContainerBuilder & UI Localization V2", () => {
     const str = JSON.stringify(payloadEn);
     assert.ok(str.includes("Done"));
   });
+
+  it("buildContainerV2 menyertakan tombol sapu ketika allowCleanup: true", () => {
+    const payload = buildContainerV2({
+      title: "Cleanable Message",
+      description: "Testing cleanup button",
+      allowCleanup: true,
+      expiresInSeconds: 60,
+    });
+
+    const str = JSON.stringify(payload);
+    assert.ok(str.includes("msg_cleanup"));
+    assert.ok(str.includes("Bersihkan (+5 NSF)"));
+    assert.ok(str.includes("Pesan ini otomatis terhapus"));
+  });
 });

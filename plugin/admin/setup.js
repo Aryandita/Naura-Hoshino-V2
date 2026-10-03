@@ -26,9 +26,9 @@ const ui = require("../../src/config/ui");
 async function handleDashboard(interaction, { currentSettings }) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const eGreen = ui.getEmoji("greenping") || "🟢";
-  const eRed = ui.getEmoji("redping") || "🔴";
-  const eCheck = ui.getEmoji("success") || "✅";
+  const eGreen = "🟢";
+  const eRed = "🔴";
+  const eCheck = "✅";
 
   const softbanChan =
     currentSettings.softbanChannelId || currentSettings.honeypotChannelId;
@@ -46,7 +46,7 @@ async function handleDashboard(interaction, { currentSettings }) {
 
   const modmailCat = currentSettings.modmailCategory;
   const modmailStatus = modmailCat
-    ? `${eCheck} Kategori OK`
+    ? `${eCheck} Kategori Siap`
     : `${eRed} Belum Diatur`;
 
   const ticketMode =
@@ -85,6 +85,25 @@ async function handleDashboard(interaction, { currentSettings }) {
     ? `${eCheck} <#${chronicleChan}>`
     : `${eRed} Belum Diatur`;
 
+  // Hitung Skor Kesiapan Konfigurasi Server (0 - 100%)
+  const coreChecks = [
+    Boolean(softbanChan),
+    Boolean(currentSettings.automod?.enabled),
+    Boolean(currentSettings.aiAutomod?.enabled),
+    Boolean(currentSettings.greetings?.welcome?.enabled && welcomeChan),
+    Boolean(modmailCat),
+    Boolean(currentSettings.ticketMode),
+    Boolean(tempvoiceChan),
+    Boolean(aiChan),
+    Boolean(autoRole),
+    Boolean(chronicleChan),
+  ];
+  const activeCount = coreChecks.filter(Boolean).length;
+  const healthPercent = Math.round((activeCount / coreChecks.length) * 100);
+  const filledBlocks = Math.round((healthPercent / 100) * 10);
+  const emptyBlocks = 10 - filledBlocks;
+  const healthBar = `${"▰".repeat(filledBlocks)}${"▱".repeat(emptyBlocks)} ${healthPercent}% (${activeCount}/${coreChecks.length} Modul)`;
+
   const adminName = ui.ux.resolveUserName(interaction);
   const timeline = ui.ux.buildVisualTimeline({
     steps: [
@@ -99,23 +118,25 @@ async function handleDashboard(interaction, { currentSettings }) {
 
   const dashboardDesc =
     `${timeline.timeline}\n*${timeline.message}*\n\n` +
-    `Selamat datang Kak **${adminName}** di Master Setup Dashboard! Di sini kamu bisa mengonfigurasikan seluruh sistem server secara terpusat dengan cepat dan mudah.\n\n` +
-    `**${ui.getEmoji("setup_category_security") || "🔒"} KEAMANAN & MODERASI**\n` +
-    `${ui.getEmoji("setup_softban") || "🛡️"} **Softban Trap:** ${softbanChan ? `✅ <#${softbanChan}>` : "🔴 Belum Diatur"}\n` +
-    `${ui.getEmoji("setup_automod") || "🤖"} **Automod:** ${autoModStatus}\n` +
-    `${ui.getEmoji("setup_automod") || "🤖"} **AI Automod:** ${aiAutomodStatus}\n\n` +
-    `**${ui.getEmoji("setup_category_channel") || "📢"} CHANNEL & SISTEM**\n` +
-    `${ui.getEmoji("setup_welcome") || "👋"} **Welcome:** ${welcomeStatus}\n` +
-    `${ui.getEmoji("setup_modmail") || "📩"} **Modmail:** ${modmailStatus}\n` +
-    `${ui.getEmoji("setup_ticket") || "🎫"} **Tiket:** ${ticketStatus}\n` +
-    `${ui.getEmoji("setup_tempvoice") || "🔊"} **TempVoice:** ${tempvoiceStatus}\n` +
-    `${ui.getEmoji("setup_chronicle") || "📰"} **Koran Harian:** ${chronicleStatus}\n\n` +
-    `**${ui.getEmoji("setup_category_ai") || "🤖"} AI & LAINNYA**\n` +
-    `${ui.getEmoji("setup_ai") || "🧠"} **AI Channel:** ${aiStatus}\n` +
-    `${ui.getEmoji("setup_autorole") || "🎭"} **Auto-Role:** ${autoRoleStatus}\n` +
-    `${ui.getEmoji("setup_vanity") || "✍️"} **Vanity Role:** ${vanityStatus}\n` +
-    `${ui.getEmoji("setup_minecraft") || "🎮"} **Minecraft:** ${minecraftStatus}\n\n` +
-    `*Pilih kategori dari menu di bawah untuk mengedit pengaturannya:*`;
+    `Halo Administrator **${adminName}**. Berikut adalah ringkasan kesiapan konfigurasi fitur bot untuk server ini.\n\n` +
+    `**Skor Kesiapan Konfigurasi Server**\n` +
+    `\`${healthBar}\`\n\n` +
+    `**Keamanan & Moderasi**\n` +
+    `> **Softban Trap:** ${softbanChan ? `✅ <#${softbanChan}>` : "🔴 Belum Diatur"}\n` +
+    `> **Automod:** ${autoModStatus}\n` +
+    `> **AI Automod:** ${aiAutomodStatus}\n\n` +
+    `**Kanal & Komunitas**\n` +
+    `> **Welcome:** ${welcomeStatus}\n` +
+    `> **Modmail:** ${modmailStatus}\n` +
+    `> **Tiket Bantuan:** ${ticketStatus}\n` +
+    `> **TempVoice:** ${tempvoiceStatus}\n` +
+    `> **Koran Harian:** ${chronicleStatus}\n\n` +
+    `**Integrasi Cerdas & Role**\n` +
+    `> **Kanal AI:** ${aiStatus}\n` +
+    `> **Auto-Role:** ${autoRoleStatus}\n` +
+    `> **Vanity Role:** ${vanityStatus}\n` +
+    `> **Minecraft Bridge:** ${minecraftStatus}\n\n` +
+    `Pilih modul di bawah untuk mulai mengatur opsi:`;
 
   const row = new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()

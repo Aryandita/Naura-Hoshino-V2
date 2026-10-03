@@ -19,13 +19,13 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("announce")
     .setDescription(
-      "📢 [ADMIN] Kirim pengumuman dengan Embed, Kategori, dan Gambar Lokal.",
+      "Kirim pengumuman terstruktur dengan kategori, gambar, dan opsi sematan.",
     )
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addChannelOption((opt) =>
       opt
         .setName("channel")
-        .setDescription("Pilih channel tempat pengumuman akan dikirim")
+        .setDescription("Pilih channel tujuan pengumuman")
         .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
         .setRequired(true),
     )
@@ -35,34 +35,48 @@ module.exports = {
         .setDescription("Pilih kategori pengumuman")
         .setRequired(true)
         .addChoices(
-          { name: "📢 Update / Pembaruan", value: "update" },
-          { name: "🛠️ Maintenance / Perbaikan", value: "mt" },
-          { name: "🎉 Event / Acara", value: "event" },
-          { name: "🚨 Warning / Peringatan", value: "warn" },
-          { name: "ℹ️ Info Umum", value: "info" },
+          { name: "Pembaruan (Update)", value: "update" },
+          { name: "Perbaikan (Maintenance)", value: "mt" },
+          { name: "Acara (Event)", value: "event" },
+          { name: "Peringatan (Warning)", value: "warn" },
+          { name: "Informasi Umum", value: "info" },
         ),
     )
     .addAttachmentOption((opt) =>
       opt
         .setName("gambar")
-        .setDescription("Unggah gambar dari perangkat/komputermu (Opsional)")
+        .setDescription("Unggah gambar pendukung pengumuman (opsional)")
+        .setRequired(false),
+    )
+    .addRoleOption((opt) =>
+      opt
+        .setName("mention_role")
+        .setDescription("Role yang ingin dimention (opsional)")
         .setRequired(false),
     )
     .addBooleanOption((opt) =>
       opt
         .setName("mention_everyone")
-        .setDescription("Ping @everyone? (Hati-hati menggunakannya)")
+        .setDescription("Mention @everyone untuk pengumuman darurat")
+        .setRequired(false),
+    )
+    .addBooleanOption((opt) =>
+      opt
+        .setName("pin")
+        .setDescription("Sematkan pesan di channel tujuan (opsional)")
         .setRequired(false),
     ),
 
   async execute(interaction) {
     const targetChannel = interaction.options.getChannel("channel");
     const kategori = interaction.options.getString("kategori");
-    const attachment = interaction.options.getAttachment("gambar"); // Mengambil file lokal
+    const attachment = interaction.options.getAttachment("gambar");
+    const mentionRole = interaction.options.getRole("mention_role");
     const mentionEveryone =
       interaction.options.getBoolean("mention_everyone") || false;
+    const shouldPin = interaction.options.getBoolean("pin") || false;
 
-    // 🛡️ PRE-CHECK PERMISSION
+    // Pre-check permission
     const botPermissions = targetChannel.permissionsFor(
       interaction.guild.members.me,
     );
@@ -71,45 +85,44 @@ module.exports = {
       !botPermissions.has(PermissionFlagsBits.SendMessages)
     ) {
       return interaction.reply({
-        content: `${ui.getEmoji("error") || "❌"} **Akses Ditolak:** Aku tidak memiliki izin melihat/mengirim pesan di <#${targetChannel.id}>.`,
+        ...buildErrorContainerV2({
+          title: "Akses Ditolak",
+          description: `Naura tidak memiliki izin melihat atau mengirim pesan di saluran <#${targetChannel.id}>.`,
+          footerText: ui.getFooter("core"),
+        }),
         flags: MessageFlags.Ephemeral,
       });
     }
 
-    // Buat Form Modal
-    // Menyisipkan Kategori dan ID Gambar (jika ada) ke customId agar bisa dilacak
-    const imageId = attachment ? attachment.id : "no_image";
-    const mentionBit = mentionEveryone ? "1" : "0";
-    const modalId = `announceModal_${targetChannel.id}_${kategori}_${imageId}_${mentionBit}`;
+    const modalId = `announceModal_${interaction.id}`;
 
     const modal = new ModalBuilder()
       .setCustomId(modalId)
-      .setTitle("Detail Pengumuman");
+      .setTitle("Format Pengumuman");
 
     const titleInput = new TextInputBuilder()
       .setCustomId("announceTitle")
       .setLabel("Judul Pengumuman")
       .setStyle(TextInputStyle.Short)
-      .setPlaceholder("Judul utama pesan...")
+      .setPlaceholder("Tuliskan judul utama pengumuman...")
       .setMaxLength(256)
       .setRequired(true);
 
     const descInput = new TextInputBuilder()
       .setCustomId("announceDesc")
-      .setLabel("Isi Pengumuman")
+      .setLabel("Isi Pesan")
       .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder("Ketik deskripsi lengkap di sini...")
+      .setPlaceholder("Tuliskan detail pengumuman secara lengkap dan jelas...")
       .setMaxLength(4000)
       .setRequired(true);
 
-    const row1 = new ActionRowBuilder().addComponents(titleInput);
-    const row2 = new ActionRowBuilder().addComponents(descInput);
+    modal.addComponents(
+      new ActionRowBuilder().addComponents(titleInput),
+      new ActionRowBuilder().addComponents(descInput),
+    );
 
-    modal.addComponents(row1, row2);
     await interaction.showModal(modal);
 
-    // Tunggu Admin Submit (5 Menit)
-    // Kita hanya memfilter berdasarkan command user ini
     const filter = (i) =>
       i.customId === modalId && i.user.id === interaction.user.id;
 
@@ -122,71 +135,103 @@ module.exports = {
       const title = modalSubmit.fields.getTextInputValue("announceTitle");
       const desc = modalSubmit.fields.getTextInputValue("announceDesc");
 
-      // Set Emoji dan Warna Berdasarkan Kategori dari ui.js
       let categoryEmoji = "";
-      let embedColor = ui.getColor("primary"); // Default
+      let categoryLabel = "Informasi";
+      let embedColor = ui.getColor("primary");
 
       switch (kategori) {
         case "update":
-          categoryEmoji = ui.getEmoji("announce_update") || "📢";
+          categoryEmoji = "📢";
+          categoryLabel = "Pembaruan";
           embedColor = ui.getColor("announce_update");
           break;
         case "mt":
-          categoryEmoji = ui.getEmoji("announce_mt") || "🛠️";
+          categoryEmoji = "🛠️";
+          categoryLabel = "Pemeliharaan";
           embedColor = ui.getColor("announce_mt");
           break;
         case "event":
-          categoryEmoji = ui.getEmoji("announce_event") || "🎉";
+          categoryEmoji = "🎉";
+          categoryLabel = "Acara Komunitas";
           embedColor = ui.getColor("announce_event");
           break;
         case "warn":
-          categoryEmoji = ui.getEmoji("announce_warn") || "⚠️";
+          categoryEmoji = "⚠️";
+          categoryLabel = "Peringatan";
           embedColor = ui.getColor("announce_warn");
           break;
         case "info":
-          categoryEmoji = ui.getEmoji("announce_info") || "ℹ️";
+        default:
+          categoryEmoji = "ℹ️";
+          categoryLabel = "Informasi Umum";
           embedColor = ui.getColor("announcement");
           break;
       }
 
-      // Rangkai Embed
-      const finalTitle = `${categoryEmoji} | ${title}`;
+      const finalTitle = `${categoryEmoji} ${title}`;
+
+      const files = [];
+      let bannerAttachmentName = null;
+      if (attachment?.url) {
+        files.push(attachment);
+        bannerAttachmentName = attachment.name;
+      }
 
       const announcePayload = buildContainerV2({
         accentColorHex: embedColor || ui.getColor("announcement"),
         authorName: interaction.guild.name,
         title: finalTitle,
         description: desc,
-        footerText: `Announcement by ${interaction.user.tag}`,
+        bannerAttachmentName,
+        files,
+        footerText: `Pengumuman oleh ${interaction.user.tag}`,
       });
 
       const embedCharCount = title.length + desc.length;
       if (embedCharCount > 5500) {
         const errPayload = buildErrorContainerV2({
-          title: "Teks Terlalu Panjang",
-          description: `${ui.getEmoji("error") || "❌"} Gagal: Panjang judul dan deskripsi terlalu besar! (Max 5500 karakter).`,
+          title: "Karakter Melebihi Batas",
+          description: "Jumlah teks judul dan deskripsi terlalu panjang (maksimum 5500 karakter).",
           footerText: ui.getFooter("core"),
         });
-        return interaction.followUp({
+        return modalSubmit.reply({
           ...errPayload,
           flags: MessageFlags.Ephemeral,
         });
       }
 
-      // Jika ada gambar yang diunggah dari command awal, pasang di embed
-      const contentPayload = mentionEveryone ? "@everyone" : null;
+      const mentions = [];
+      if (mentionEveryone) mentions.push("@everyone");
+      if (mentionRole) mentions.push(`<@&${mentionRole.id}>`);
+      const contentPayload = mentions.length > 0 ? mentions.join(" ") : null;
 
-      // 🛡️ KIRIM PESAN
       try {
-        await targetChannel.send({
+        const sentMessage = await targetChannel.send({
           content: contentPayload,
           ...announcePayload,
         });
+
+        if (shouldPin && sentMessage.pin) {
+          await sentMessage.pin().catch((pinErr) => {
+            logger.warn("[Announce] Gagal menyematkan pesan:", pinErr.message);
+          });
+        }
+
+        const successFields = [
+          { name: "Saluran Tujuan", value: `<#${targetChannel.id}>`, inline: true },
+          { name: "Kategori", value: `${categoryEmoji} ${categoryLabel}`, inline: true },
+          { name: "Penyebutan", value: mentions.length > 0 ? mentions.join(", ") : "Tidak Ada", inline: true },
+          { name: "Status Sematan", value: shouldPin ? "Ya (Disematkan)" : "Tidak", inline: true },
+          { name: "Lampiran Gambar", value: attachment ? "Tersedia" : "Tidak Ada", inline: true },
+        ];
+
         const successPayload = buildContainerV2({
-          title: "Pengumuman Terkirim",
-          description: `${ui.getEmoji("success") || "✅"} Pengumuman berhasil dikirimkan ke channel <#${targetChannel.id}>!`,
+          title: "Pengumuman Berhasil Diterbitkan",
+          description: `Pengumuman telah dikirimkan ke saluran <#${targetChannel.id}>.`,
+          fields: successFields,
           footerText: ui.getFooter("core"),
         });
+
         await modalSubmit.reply({
           ...successPayload,
           flags: MessageFlags.Ephemeral,
@@ -194,7 +239,11 @@ module.exports = {
       } catch (sendError) {
         logger.error("[Announce Send Error]:", sendError.message);
         await modalSubmit.reply({
-          content: `${ui.getEmoji("error") || "❌"} **Gagal mengirim!** Pastikan bot punya izin Embed Links.`,
+          ...buildErrorContainerV2({
+            title: "Pengiriman Gagal",
+            description: "Pesan tidak dapat dikirim ke saluran target. Pastikan bot memiliki izin yang cukup.",
+            footerText: ui.getFooter("core"),
+          }),
           flags: MessageFlags.Ephemeral,
         });
       }

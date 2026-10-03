@@ -18,6 +18,10 @@ export default defineConfig({
       input: {
         index:       resolve(__dirname, "src/pages/index.html"),
         survival:    resolve(__dirname, "src/pages/survival.html"),
+        inventory:   resolve(__dirname, "src/pages/inventory.html"),
+        clan:        resolve(__dirname, "src/pages/clan.html"),
+        marketplace: resolve(__dirname, "src/pages/marketplace.html"),
+        arcade:      resolve(__dirname, "src/pages/arcade.html"),
         music:       resolve(__dirname, "src/pages/music.html"),
         economy:     resolve(__dirname, "src/pages/economy.html"),
         leaderboard: resolve(__dirname, "src/pages/leaderboard.html"),

@@ -9,9 +9,7 @@ class RssManager {
   }
 
   init() {
-    console.log(
-      "\x1b[43m\x1b[30m 📡 RSS ALERT \x1b[0m \x1b[33mMesin Notifikasi Sosial Media diaktifkan.\x1b[0m",
-    );
+    logger.info("[RSS] Mesin Notifikasi Sosial Media diaktifkan.");
 
     this.checkAllFeeds();
     // Rule 1.9: timer level-modul wajib unref agar tidak menahan proses

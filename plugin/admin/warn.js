@@ -1,4 +1,8 @@
 const {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ComponentType,
   SlashCommandBuilder,
   PermissionsBitField,
   MessageFlags,
@@ -237,14 +241,48 @@ module.exports = {
       // Utamakan action dari strike sistem (jika >=3 atau >=5)
       const finalAction = strikeAction || action;
 
+      const severityHex = currentStrikes >= 5 ? "#EF4444" : currentStrikes >= 3 ? "#F59E0B" : "#10B981";
+
+      await interaction.reply(
+        buildContainerV2({
+          accentColorHex: severityHex,
+          authorName: "Peringatan Diberikan",
+          title: `Peringatan untuk ${user.username}`,
+          iconURL: user.displayAvatarURL(),
+          expression: currentStrikes >= 3 ? "angry" : "warning",
+          description: [
+            `**Anggota:** ${user} (\`${user.tag}\`)`,
+            `**Moderator:** ${interaction.user}`,
+            `**Alasan:** ${reason}`,
+            ``,
+            `⚠️ **Total Peringatan:** ${totalWarns || 1} | **Strikes:** ${currentStrikes}/5`,
+            finalAction ? `⚡ **Eskalasi Otomatis:** ${finalAction.toUpperCase()}` : null,
+          ].filter(Boolean).join("\n"),
+          footerText: ui.getFooter("core"),
+        }),
+      );
+
       const urutan = totalWarns
-        ? ` ke-${totalWarns} (${currentStrikes} Strike)`
-        : "";
+        ? `ke-${totalWarns} (${currentStrikes} Strike)`
+        : `${currentStrikes} Strike`;
+
       await user
         .send(
-          `Kamu mendapat peringatan${urutan} di server **${interaction.guild.name}**.\n` +
-            `**Alasan:** ${reason}\n\n` +
-            "Naura yakin kamu bisa lebih baik lagi setelah ini!",
+          buildContainerV2({
+            accentColorHex: severityHex,
+            title: "Pemberitahuan Peringatan Server",
+            expression: "warning",
+            description: [
+              `Kamu menerima peringatan **${urutan}** di server **${interaction.guild.name}**.`,
+              ``,
+              `📝 **Alasan:** ${reason}`,
+              `🛡️ **Moderator:** ${interaction.user.tag}`,
+              `⚠️ **Status Akumulasi:** ${totalWarns || 1} Peringatan (${currentStrikes}/5 Strike)`,
+              ``,
+              `Harap patuhi norma komunitas server agar akun tetap aman dari pembatasan akses.`,
+            ].join("\n"),
+            footerText: ui.getFooter("core"),
+          })
         )
         .catch(() => null);
 
@@ -273,34 +311,54 @@ module.exports = {
       const user = interaction.options.getUser("user");
       const warns = await UserWarn.findAll({
         where: { userId: user.id, guildId },
+        order: [["createdAt", "DESC"]],
       });
 
-      let desc =
-        warns.length === 0
-          ? "Anggota ini bersih, belum ada peringatan sama sekali. Bagus sekali!"
-          : `Anggota ini punya **${warns.length}** peringatan:\n\n` +
-            warns
-              .map(
-                (w) =>
-                  `**ID:** \`${w.id}\` | **Mod:** <@${w.moderatorId}>\n` +
-                  `**Alasan:** ${w.reason}\n` +
-                  `**Tanggal:** <t:${Math.floor(new Date(w.createdAt).getTime() / 1000)}:R>`,
-              )
-              .join("\n\n");
+      const strikeRecord = await UserStrike.findOne({
+        where: { userId: user.id, guildId },
+      }).catch(() => null);
+      const strikes = strikeRecord ? strikeRecord.strikes : 0;
+
+      let severityColor = "#10B981";
+      let severityBadge = "🟢 Ringan (1-2)";
+      if (warns.length >= 5 || strikes >= 5) {
+        severityColor = "#EF4444";
+        severityBadge = "🔴 Kritis (5+)";
+      } else if (warns.length >= 3 || strikes >= 3) {
+        severityColor = "#F59E0B";
+        severityBadge = "🟡 Peringatan Serius (3-4)";
+      }
+
+      let desc = "";
+      if (warns.length === 0) {
+        desc = "Anggota ini memiliki rekam jejak bersih tanpa catatan peringatan sama sekali.";
+      } else {
+        const warnLines = warns.map((w, idx) => {
+          const time = Math.floor(new Date(w.createdAt).getTime() / 1000);
+          return `**#${idx + 1}** ID: \`${w.id}\` | Mod: <@${w.moderatorId}> | <t:${time}:R>\n> 📝 ${w.reason}`;
+        });
+        desc = [
+          `📊 **Tingkat Keparahan:** ${severityBadge}`,
+          `⚠️ **Total Peringatan:** ${warns.length} | **Strikes:** ${strikes}/5`,
+          ``,
+          `**Riwayat Pelanggaran Terakhir:**`,
+          warnLines.join("\n\n"),
+        ].join("\n");
+      }
 
       if (desc.length > DESC_LIMIT) {
         desc =
           desc.slice(0, DESC_LIMIT) +
-          "\n\n... sisanya Naura potong ya, daftarnya panjang sekali.";
+          "\n\n-# Sebagian riwayat dipotong karena batas tampilan Discord.";
       }
 
       return interaction.reply(
         buildContainerV2({
-          accentColorHex: ui.getColor("primary"),
-          authorName: `Daftar Peringatan: ${user.tag}`,
-          title: `Catatan ${user.username}`,
+          accentColorHex: severityColor,
+          authorName: `Catatan Peringatan: ${user.tag}`,
+          title: `Rekam Jejak ${user.username}`,
           iconURL: user.displayAvatarURL(),
-          expression: "info",
+          expression: warns.length === 0 ? "happy" : warns.length >= 3 ? "warning" : "info",
           description: desc,
           footerText: ui.getFooter("core"),
         }),
@@ -325,19 +383,99 @@ module.exports = {
     }
 
     const user = interaction.options.getUser("user");
-    const deletedCount = await UserWarn.destroy({
+    const warnCount = await UserWarn.count({
       where: { userId: user.id, guildId },
     });
 
-    if (deletedCount === 0)
+    if (warnCount === 0) {
       return deny(
         interaction,
-        `${user} belum punya peringatan yang bisa dihapus.`,
+        `${user} belum memiliki riwayat peringatan yang bisa dibersihkan.`,
       );
+    }
 
-    return notice(
-      interaction,
-      `Semua peringatan milik ${user} sudah Naura bersihkan, totalnya ${deletedCount}.`,
+    const confirmRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`confirm_clear_warn_${user.id}`)
+        .setLabel(`Bersihkan (${warnCount} Catatan)`)
+        .setStyle(ButtonStyle.Danger),
+      new ButtonBuilder()
+        .setCustomId(`cancel_clear_warn_${user.id}`)
+        .setLabel("Batalkan")
+        .setStyle(ButtonStyle.Secondary),
     );
+
+    const confirmPayload = buildContainerV2({
+      accentColorHex: ui.getColor("warning") || "#F59E0B",
+      title: "Konfirmasi Pembersihan Peringatan",
+      expression: "warning",
+      description: [
+        `Apakah Anda yakin ingin menghapus seluruh riwayat peringatan milik anggota ini?`,
+        ``,
+        `👤 **Target:** <@${user.id}> (\`${user.tag || user.username}\`)`,
+        `🗑️ **Jumlah Peringatan Dihapus:** ${warnCount} catatan`,
+        `🛡️ **Moderator:** <@${interaction.user.id}>`,
+        ``,
+        `⚠️ Tindakan ini permanen dan akan mereset strike ke nol. Klik konfirmasi dalam 30 detik.`,
+      ].join("\n"),
+      buttonsRow: confirmRow,
+      footerText: ui.getFooter("core"),
+    });
+
+    const reply = await interaction.reply({
+      ...confirmPayload,
+      flags: MessageFlags.Ephemeral,
+      fetchReply: true,
+    });
+
+    const collector = reply.createMessageComponentCollector({
+      componentType: ComponentType.Button,
+      time: 30000,
+      max: 1,
+    });
+
+    collector.on("collect", async (i) => {
+      if (i.user.id !== interaction.user.id) return;
+
+      if (i.customId.startsWith("cancel_clear_warn_")) {
+        const cancelPayload = buildContainerV2({
+          accentColorHex: ui.getColor("neutral") || "#64748B",
+          title: "Pembersihan Dibatalkan",
+          expression: "neutral",
+          description: `Pembersihan riwayat peringatan untuk <@${user.id}> telah dibatalkan.`,
+          footerText: ui.getFooter("core"),
+        });
+        return i.update({ ...cancelPayload, components: cancelPayload.components });
+      }
+
+      const deletedCount = await UserWarn.destroy({
+        where: { userId: user.id, guildId },
+      });
+
+      await UserStrike.destroy({ where: { userId: user.id, guildId } }).catch(() => {});
+
+      const successPayload = buildContainerV2({
+        accentColorHex: ui.getColor("success") || "#10B981",
+        title: "Peringatan Berhasil Dibersihkan",
+        expression: "success",
+        description: `Semua catatan peringatan milik <@${user.id}> (${deletedCount} catatan) dan strike berhasil dibersihkan.`,
+        footerText: ui.getFooter("core"),
+      });
+
+      return i.update({ ...successPayload, components: successPayload.components });
+    });
+
+    collector.on("end", async (collected) => {
+      if (collected.size === 0) {
+        const timeoutPayload = buildContainerV2({
+          accentColorHex: ui.getColor("neutral") || "#64748B",
+          title: "Waktu Konfirmasi Habis",
+          expression: "neutral",
+          description: "Operasi pembersihan dibatalkan otomatis karena tidak ada respons.",
+          footerText: ui.getFooter("core"),
+        });
+        await interaction.editReply({ ...timeoutPayload, components: timeoutPayload.components }).catch(() => {});
+      }
+    });
   },
 };

@@ -83,8 +83,21 @@
 
       <div style="display:flex; justify-content:center; gap:12px; margin-top:20px;">
         <button id="start-btn" class="btn btn-primary" onclick="startGame()"><i class="fa-solid fa-play"></i> Mulai Main</button>
-        <button id="claim-btn" class="btn btn-secondary" onclick="claimReward()" style="display:none;"><i class="fa-solid fa-gift"></i> Klaim Hadiah ke Discord</button>
+        <button id="claim-btn" class="btn btn-secondary" onclick="claimReward()" style="display:none;"><i class="fa-solid fa-gift"></i> Klaim Hadiah Star Fragments</button>
       </div>
+
+      <!-- Real Arcade Leaderboard -->
+      <section style="margin-top:36px; max-width:600px; margin-left:auto; margin-right:auto; background:var(--bg-surface); border:1px solid var(--border-subtle); border-radius:var(--r-xl); padding:20px; text-align:left;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <h3 style="margin:0; font-family:var(--font-heading); font-size:16px; color:var(--text-primary);"><i class="fa-solid fa-trophy" style="color:#F59E0B; margin-right:8px;"></i> Rekor Penjelajah Galaksi</h3>
+          <span style="font-size:12px; color:var(--text-muted); font-family:var(--font-mono);">TOP 5</span>
+        </div>
+        <div id="arcade-leaderboard-list" style="display:flex; flex-direction:column; gap:8px;">
+          <div style="text-align:center; padding:12px; color:var(--text-muted); font-size:13px;">
+            <i class="fa-solid fa-spinner fa-spin" style="margin-right:6px; color:var(--primary);"></i> Memuat rekor pemain...
+          </div>
+        </div>
+      </section>
     </main>
 
     <script src="/src/js/sharedNav.js"></script>
@@ -170,7 +183,7 @@
             }
           }
 
-          // Game ends after 1200 frames (~30 seconds)
+          // Game ends after 900 frames (~15 seconds fast round)
           if (frames >= 900) {
             endGame();
           }
@@ -201,10 +214,62 @@
         document.getElementById('claim-btn').style.display = 'inline-block';
       }
 
-      function claimReward() {
-        const reward = Math.round(score * 1.5);
-        alert('Klaim berhasi! Hadiah ' + reward + ' Star Fragments dicatat ke akun Discord kamu saat login terverifikasi.');
+      async function claimReward() {
+        const claimBtn = document.getElementById('claim-btn');
+        if (claimBtn) claimBtn.disabled = true;
+        try {
+          const res = await fetch('/api/arcade/claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ score })
+          });
+          const data = await res.json();
+          if (data && data.success) {
+            if (window.showToast) {
+              window.showToast({
+                type: 'success',
+                title: 'Klaim Hadiah Arcade Berhasil',
+                message: data.message,
+                duration: 5000
+              });
+            } else {
+              alert(data.message);
+            }
+          } else {
+            alert(data.error || 'Gagal mengklaim hadiah.');
+          }
+        } catch (err) {
+          alert('Terjadi kesalahan saat menghubungi server.');
+        } finally {
+          if (claimBtn) claimBtn.disabled = false;
+        }
       }
+
+      async function loadArcadeLeaderboard() {
+        const listEl = document.getElementById('arcade-leaderboard-list');
+        if (!listEl) return;
+        try {
+          const res = await fetch('/api/arcade/leaderboard');
+          const data = await res.json();
+          if (data && data.success && Array.isArray(data.leaderboard) && data.leaderboard.length > 0) {
+            listEl.innerHTML = data.leaderboard.map(item => `
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:var(--bg-elevated); border-radius:var(--r-md); font-size:13px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span style="font-family:var(--font-mono); font-weight:700; color:${item.rank === 1 ? '#F59E0B' : (item.rank === 2 ? '#94A3B8' : '#D97706')};">#${item.rank}</span>
+                  <span style="font-weight:600; color:var(--text-primary);">${item.name}</span>
+                </div>
+                <span style="font-family:var(--font-mono); color:var(--primary); font-weight:700;">${item.highScore.toLocaleString('id-ID')} pts</span>
+              </div>
+            `).join('');
+          } else {
+            listEl.innerHTML = `<div style="text-align:center; padding:12px; color:var(--text-muted); font-size:13px;">Belum ada skor tercatat. Jadilah yang pertama!</div>`;
+          }
+        } catch (err) {
+          listEl.innerHTML = `<div style="text-align:center; padding:12px; color:var(--text-muted); font-size:13px;">Rekor arcade siap diperbarui.</div>`;
+        }
+      }
+
+      window.addEventListener('DOMContentLoaded', loadArcadeLeaderboard);
     </script>
   </body>
 </html>

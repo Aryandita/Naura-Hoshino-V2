@@ -399,5 +399,84 @@ module.exports = (client) => {
     }
   });
 
+  // ------------------------------------------------------------------
+  // Katalog 34 Pencapaian & Progres Trofi (Publik & Terautentikasi)
+  // ------------------------------------------------------------------
+  router.get("/api/achievements", async (req, res) => {
+    try {
+      const achievementsPool = require("../../src/survival/data/achievementsData");
+      const UserAchievement = require("../../src/models/UserAchievement");
+
+      const MYTHIC_IDS = new Set([
+        "god_slayer",
+        "elf_evolution",
+        "magic_creator",
+        "billionaire",
+      ]);
+
+      const RARE_IDS = new Set([
+        "high_mage",
+        "weapon_manifest",
+        "blacksmith_master",
+        "demon_contract",
+        "yinyang_light",
+        "cat_beast_friend",
+        "gambler",
+      ]);
+
+      let unlockedIds = [];
+      let activeTitle = null;
+
+      if (
+        typeof req.isAuthenticated === "function" &&
+        req.isAuthenticated() &&
+        req.user
+      ) {
+        const userAch = await UserAchievement.findByPk(req.user.id);
+        if (userAch) {
+          unlockedIds = Array.isArray(userAch.unlockedAchievements)
+            ? userAch.unlockedAchievements
+            : [];
+          activeTitle = userAch.activeTitle || null;
+        }
+      }
+
+      const list = achievementsPool.map((ach) => {
+        let rarity = "Common";
+        if (MYTHIC_IDS.has(ach.id)) rarity = "Mythic";
+        else if (RARE_IDS.has(ach.id)) rarity = "Rare";
+
+        return {
+          id: ach.id,
+          title: ach.title,
+          description: ach.description,
+          emoji: ach.emoji,
+          color: ach.color,
+          rarity,
+          unlocked: unlockedIds.includes(ach.id),
+        };
+      });
+
+      const unlockedCount = unlockedIds.length;
+      const totalCount = achievementsPool.length;
+      const percentage =
+        totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0;
+
+      return res.json({
+        success: true,
+        total: totalCount,
+        unlockedCount,
+        percentage,
+        activeTitle,
+        achievements: list,
+      });
+    } catch (e) {
+      logger.error("[API ACHIEVEMENTS] Error:", e);
+      return res
+        .status(500)
+        .json({ success: false, error: "Gagal memuat katalog pencapaian." });
+    }
+  });
+
   return router;
 };

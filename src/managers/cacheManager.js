@@ -35,12 +35,13 @@ function cloneJson(value) {
   if (value === null || typeof value !== "object") return value;
   try {
     return structuredClone(value);
-  } catch (error) {
-    try {
-      return JSON.parse(JSON.stringify(value));
-    } catch (parseError) {
-      return value;
-    }
+  } catch {
+    // Fallback bila objek memuat tipe yang tidak didukung structuredClone
+  }
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch {
+    return value;
   }
 }
 

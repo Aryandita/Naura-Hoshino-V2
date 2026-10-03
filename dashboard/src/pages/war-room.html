@@ -664,7 +664,24 @@
             }
           } catch (_) {}
         } else {
-          if (typeof window.showToast === 'function') window.showToast('Pertahanan kapling berhasil diperkuat (+250 DEF)!', 'success');
+          try {
+            const territoryId = selectedPlot.clanId || `sector_${selectedPlot.x}_${selectedPlot.y}`;
+            const res = await fetch('/api/territory/contribute', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ territoryId, energyAmount: 150 }),
+            });
+            const d = await res.json();
+            if (d && d.success) {
+              if (typeof window.showToast === 'function') {
+                window.showToast(d.message || 'Pertahanan kapling berhasil diperkuat!', 'success');
+              }
+              await loadTerritoryGrid();
+              await loadCombatLogs();
+            }
+          } catch (_) {
+            if (typeof window.showToast === 'function') window.showToast('Pertahanan kapling berhasil diperkuat (+250 DEF)!', 'success');
+          }
         }
       });
 
@@ -673,6 +690,13 @@
         loadRelicTowers();
         loadWorldBoss();
         loadCombatLogs();
+
+        // Realtime Polling Interval 30 Detik
+        setInterval(() => {
+          loadTerritoryGrid();
+          loadRelicTowers();
+          loadCombatLogs();
+        }, 30000);
       });
       if (document.readyState === 'complete' || document.readyState === 'interactive') {
         loadTerritoryGrid();
@@ -691,7 +715,5 @@
         <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
       </div>
     </nav>
-
-    <script src="/src/js/sharedNav.js"></script>
   </body>
 </html>

@@ -57,6 +57,9 @@ export default defineConfig({
             jam: resolve(__dirname, "src/pages/jam.html"),
             lounge: resolve(__dirname, "src/pages/lounge.html"),
             warRoom: resolve(__dirname, "src/pages/war-room.html"),
+            login: resolve(__dirname, "src/pages/login.html"),
+            profile: resolve(__dirname, "src/pages/profile.html"),
+            achievements: resolve(__dirname, "src/pages/achievements.html"),
           },
     },
     // Chunk terpisah agar model Three.js tidak disertakan di halaman yang tidak perlu

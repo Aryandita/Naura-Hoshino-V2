@@ -19,6 +19,8 @@ Direktori ini berisi modul dan rancangan fitur bertenaga AI yang sengaja dipisah
 | `ai_storyteller/dreamWeaverStoryteller.js` | Pemicu alur cerita interaktif dan quest mini rahasia otomatis pada channel Discord saat sepi. | Groq LLaMA 3.3 |
 | `ai_voice_clone/voiceCloneCompanion.js` | Jembatan integrasi TTS kustom / Voice Cloning berbasis Fish Audio API (`/v1/tts`). | Fish Audio S1 |
 | `ai_radio_podcast/dailyChroniclePodcast.js` | Perangkum obrolan server dan peristiwa RPG menjadi naskah siaran radio/podcast harian. | Gemini 2.5 Flash |
+| `ai_chat_function_calling/chatFunctionCalling.js` | Function Calling percakapan bebas untuk memetakan bahasa alami ke eksekusi command bot. | Gemini 2.5 Flash / Groq |
+| `ai_server_lore/serverLoreService.js` | Sistem ingatan budaya, sejarah, dan peristiwa unik server berbasis vector embeddings (RAG). | text-embedding-004 |
 
 ---
 

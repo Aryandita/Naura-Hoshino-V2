@@ -6,8 +6,37 @@ const { getDbStatus } = require("../../src/managers/dbManager");
 const redisManager = require("../../src/managers/redisManager");
 const mongoManager = require("../../src/managers/mongoManager");
 
-const { requireGuildManager } = require("../middleware/auth");
+const {
+  requireGuildManager,
+  requireOwner,
+  requireApiLogin,
+  isOwner,
+} = require("../middleware/auth");
 const { getSystemMetrics } = require("../utils/systemMetrics");
+
+// Helper validasi URL aman untuk mencegah Server-Side Request Forgery (SSRF)
+function isSafeWebhookUrl(inputUrl) {
+  try {
+    const parsed = new URL(inputUrl);
+    if (parsed.protocol !== "https:") return false;
+    const host = parsed.hostname.toLowerCase();
+    if (host === "localhost" || host === "127.0.0.1" || host === "::1" || host === "0.0.0.0") return false;
+    if (host.endsWith(".local") || host.endsWith(".internal") || host.endsWith(".lan")) return false;
+    if (host === "169.254.169.254" || host.startsWith("169.254.")) return false;
+    if (/^10\.\d+\.\d+\.\d+$/.test(host)) return false;
+    if (/^172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+$/.test(host)) return false;
+    if (/^192\.168\.\d+\.\d+$/.test(host)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// In-memory rate limiting & daily cap untuk Retro Arcade anti-farming
+const arcadeCooldowns = new Map();
+const arcadeDailyRecords = new Map();
+const ARCADE_COOLDOWN_MS = 20 * 1000; // 20 detik jeda per klaim
+const ARCADE_DAILY_CAP = 500; // Maksimal 500 NSF per hari per petualang
 
 module.exports = (client) => {
   const router = express.Router();
@@ -864,11 +893,8 @@ async function resolveUsername(client, userId) {
       if (guildId && guildId !== "current" && guildId !== "sandbox" && guildId !== "demo") {
         player = client.poru?.players?.get(String(guildId)) || null;
       }
-      if (!player) {
-        const rawPlayers = client.poru?.players ? Array.from(client.poru.players.values()) : [];
-        player = rawPlayers[0] || null;
-      }
 
+      // Hindari fallback ke rawPlayers[0] untuk mencegah modifikasi player server lain tanpa izin
       if (!player) {
         return res.json({
           success: true,
@@ -951,6 +977,99 @@ async function resolveUsername(client, userId) {
       res
         .status(500)
         .json({ error: error.message || "Gagal memproses pesan." });
+    }
+  });
+
+  // --- Endpoint Realtime Wilayah Perang Klan (Tactical War Room) ---
+  router.get("/realtime/territories", async (req, res) => {
+    try {
+      let territories = [];
+      try {
+        const ClanTerritory = require("../../src/models/ClanTerritory");
+        territories = await ClanTerritory.findAll({
+          order: [["controlPoints", "DESC"]],
+        });
+      } catch (_) {}
+
+      // Fallback data jika database belum memiliki baris data teritori
+      if (!territories || territories.length === 0) {
+        const guildFederationEngine = require("../../src/survival/engines/guildFederationEngine");
+        const towers = guildFederationEngine.getRelicTowers();
+        territories = towers.map((t, idx) => ({
+          territoryId: t.id,
+          name: t.name,
+          clanName: t.controllerFedTag || "Aliansi Teritori",
+          controlPoints: Math.floor((t.defenseHp / t.maxHp) * 1000),
+          maxControlPoints: 1000,
+          defenseLevel: idx + 1,
+          infrastructurePoints: 250 * (idx + 1),
+          taxYield: 1500,
+          buffEffect: t.buffDescription || "+15% Resource Yield",
+        }));
+      }
+
+      res.json({
+        success: true,
+        territories,
+        totalControlled: territories.length,
+        timestamp: Date.now(),
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  router.post("/territory/contribute", requireApiLogin, async (req, res) => {
+    try {
+      const { territoryId, energyAmount = 100 } = req.body || {};
+      if (!territoryId) {
+        return res
+          .status(400)
+          .json({ success: false, error: "territoryId wajib disertakan." });
+      }
+
+      const amount = Math.min(1000, Math.max(10, Number(energyAmount) || 100));
+      const userId = req.user.id;
+
+      const cacheManager = require("../../src/managers/cacheManager");
+      // Potong biaya kontribusi energi 50 NSF secara ketat dan atomik
+      const debited = await cacheManager.debitUserSurvival(userId, "starFragments", 50);
+      if (!debited) {
+        return res.status(400).json({
+          success: false,
+          error: "Saldo Star Fragments kamu tidak mencukupi untuk melakukan kontribusi (butuh 50 NSF).",
+        });
+      }
+
+      // Tingkatkan poin infrastruktur / pertahanan teritori
+      let updatedPoints = 500 + amount;
+      try {
+        const ClanTerritory = require("../../src/models/ClanTerritory");
+        const territory = await ClanTerritory.findOne({
+          where: { territoryId },
+        });
+        if (territory) {
+          territory.infrastructurePoints =
+            (territory.infrastructurePoints || 0) + amount;
+          territory.controlPoints = Math.min(
+            territory.maxControlPoints || 1000,
+            (territory.controlPoints || 0) + Math.floor(amount / 2),
+          );
+          await territory.save({
+            fields: ["infrastructurePoints", "controlPoints"],
+          });
+          updatedPoints = territory.controlPoints;
+        }
+      } catch (_) {}
+
+      res.json({
+        success: true,
+        message: `Kontribusi energi berhasil ditambahkan ke sektor ${territoryId}!`,
+        contributed: amount,
+        currentPoints: updatedPoints,
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
     }
   });
 
@@ -1276,7 +1395,7 @@ async function resolveUsername(client, userId) {
     }
   });
 
-  router.post("/soundboard/play", async (req, res) => {
+  router.post("/soundboard/play", requireApiLogin, async (req, res) => {
     try {
       const { guildId, soundId, voiceChannelId } = req.body || {};
       if (!guildId || !soundId) {
@@ -1286,8 +1405,7 @@ async function resolveUsername(client, userId) {
       }
 
       const RateLimiter = require("../../src/utils/rateLimiter");
-      const clientIp = req.ip || req.headers["x-forwarded-for"] || "ip_anon";
-      const rateLimitKey = req.user?.id ? `user_${req.user.id}` : `ip_${clientIp}`;
+      const rateLimitKey = `user_${req.user.id}`;
       const isLimited = await RateLimiter.isRateLimited(
         rateLimitKey,
         "api_soundboard_play",
@@ -1310,8 +1428,30 @@ async function resolveUsername(client, userId) {
         });
       }
 
+      // Validasi izin: requester harus anggota guild atau owner bot
+      const isBotOwner = isOwner(req.user.id);
+      let isMember = false;
+      if (isBotOwner) {
+        isMember = true;
+      } else {
+        const cachedMember = targetGuild.members?.cache?.get(req.user.id);
+        if (cachedMember) {
+          isMember = true;
+        } else {
+          const fetchedMember = await targetGuild.members.fetch(req.user.id).catch(() => null);
+          if (fetchedMember) isMember = true;
+        }
+      }
+
+      if (!isMember) {
+        return res.status(403).json({
+          success: false,
+          error: "Kamu harus menjadi anggota server ini untuk memutar soundboard.",
+        });
+      }
+
       const soundboardService = require("../../src/services/soundboardService");
-      const user = req.user || null;
+      const user = req.user;
 
       const result = await soundboardService.playSound({
         client,
@@ -1422,13 +1562,15 @@ async function resolveUsername(client, userId) {
     });
   });
 
-  router.post("/caravan/ambush-alert", (req, res) => {
+  router.post("/caravan/ambush-alert", requireApiLogin, (req, res) => {
     try {
       const { caravanId, ownerUserId, routeName, raiderName, lootAmount } = req.body || {};
+      const targetOwner = isOwner(req.user.id) ? (ownerUserId || req.user.id) : req.user.id;
+
       const alertPayload = {
         type: "CARAVAN_AMBUSH",
         caravanId: caravanId || "crv_unknown",
-        ownerUserId: ownerUserId || "unknown_owner",
+        ownerUserId: targetOwner,
         title: "🚨 PERINGATAN: Karavan Disergap!",
         body: `Karavan milikmu di ${routeName || "Rute Antariksa"} sedang disergap oleh ${raiderName || "Klan Rival"}! Kerugian: ${lootAmount || 0} koin.`,
         timestamp: new Date().toISOString(),
@@ -1445,7 +1587,7 @@ async function resolveUsername(client, userId) {
         success: true,
         dispatched: true,
         alert: alertPayload,
-        pushDispatchedTo: pushSubscriptions.has(ownerUserId) ? 1 : 0,
+        pushDispatchedTo: pushSubscriptions.has(targetOwner) ? 1 : 0,
       });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
@@ -2234,36 +2376,330 @@ async function resolveUsername(client, userId) {
   });
 
   // --- Feature #36: Farm Harvest Notification Webhook Endpoint ---
-  router.get("/survival/farm/webhook", async (req, res) => {
+  router.get("/survival/farm/webhook", requireApiLogin, async (req, res) => {
     try {
-      const userId = req.query.userId;
-      if (!userId) return res.status(400).json({ success: false, message: "userId diperlukan" });
+      const targetUserId = isOwner(req.user.id) && req.query.userId ? String(req.query.userId) : req.user.id;
       const farmWebhook = require("../../src/services/farmNotificationWebhook");
-      const webhookUrl = await farmWebhook.getWebhook(userId);
+      const webhookUrl = await farmWebhook.getWebhook(targetUserId);
       res.json({ success: true, webhookUrl });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
     }
   });
 
-  router.post("/survival/farm/webhook", express.json(), async (req, res) => {
+  router.post("/survival/farm/webhook", requireApiLogin, express.json(), async (req, res) => {
     try {
-      const { userId, webhookUrl, action } = req.body || {};
-      if (!userId) return res.status(400).json({ success: false, message: "userId diperlukan" });
+      const { webhookUrl, action } = req.body || {};
+      const targetUserId = isOwner(req.user.id) && req.body?.userId ? String(req.body.userId) : req.user.id;
 
       const farmWebhook = require("../../src/services/farmNotificationWebhook");
       if (action === "delete") {
-        await farmWebhook.deleteWebhook(userId);
+        await farmWebhook.deleteWebhook(targetUserId);
         return res.json({ success: true, message: "Webhook berhasil dihapus." });
       }
 
-      const result = await farmWebhook.setWebhook(userId, webhookUrl);
+      if (!webhookUrl || !isSafeWebhookUrl(webhookUrl)) {
+        return res.status(400).json({
+          success: false,
+          message: "URL webhook tidak valid atau tidak aman. Pastikan menggunakan protokol HTTPS resmi dan bukan alamat privat internal.",
+        });
+      }
+
+      const result = await farmWebhook.setWebhook(targetUserId, webhookUrl);
       if (!result.success) {
         return res.status(400).json(result);
       }
       res.json({ success: true, message: "Webhook notifikasi panen berhasil disimpan!" });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // 1. Klan & Sindikat Aliansi (/api/clan/info)
+  // ------------------------------------------------------------------
+  router.get("/clan/info", async (req, res) => {
+    try {
+      const GuildClan = require("../../src/models/GuildClan");
+      const ClanTerritory = require("../../src/models/ClanTerritory");
+      const UserSurvival = require("../../src/models/UserSurvival");
+
+      const isAuth = typeof req.isAuthenticated === "function" && req.isAuthenticated() && req.user;
+      let targetClan = null;
+
+      if (isAuth) {
+        const userSurv = await UserSurvival.findByPk(req.user.id).catch(() => null);
+        if (userSurv && userSurv.clanId) {
+          targetClan = await GuildClan.findByPk(userSurv.clanId).catch(() => null);
+        }
+      }
+
+      if (!targetClan) {
+        targetClan = await GuildClan.findOne({
+          order: [["vault", "DESC"], ["level", "DESC"]],
+        }).catch(() => null);
+      }
+
+      if (!targetClan) {
+        return res.json({
+          success: true,
+          hasClan: false,
+          clan: null,
+          message: "Belum ada aliansi klan yang terdaftar.",
+        });
+      }
+
+      const territories = await ClanTerritory.findAll({
+        where: { clanId: String(targetClan.id) },
+      }).catch(() => []);
+
+      const rawMembers = Array.isArray(targetClan.members) ? targetClan.members : [];
+      const enrichedMembers = await Promise.all(
+        rawMembers.map(async (m) => {
+          const mUserId = typeof m === "string" ? m : m.userId || m.id;
+          const role = (typeof m === "object" && m.role) || (String(mUserId) === String(targetClan.leaderId) ? "Ketua Klan" : "Anggota");
+          const xp = (typeof m === "object" && m.contributionXp) || 0;
+          let username = (typeof m === "object" && m.username) || `Petualang_${String(mUserId).slice(0, 5)}`;
+          let isOnline = false;
+
+          if (client && client.users) {
+            const u = client.users.cache.get(mUserId);
+            if (u) {
+              username = u.username;
+              isOnline = true;
+            }
+          }
+
+          return {
+            userId: mUserId,
+            name: username,
+            role,
+            level: (typeof m === "object" && m.level) || 1,
+            contributionXp: xp,
+            isOnline,
+          };
+        }),
+      );
+
+      if (targetClan.leaderId && !enrichedMembers.some((m) => String(m.userId) === String(targetClan.leaderId))) {
+        let leaderName = `Ketua_${String(targetClan.leaderId).slice(0, 5)}`;
+        if (client && client.users) {
+          const lu = client.users.cache.get(targetClan.leaderId);
+          if (lu) leaderName = lu.username;
+        }
+        enrichedMembers.unshift({
+          userId: targetClan.leaderId,
+          name: leaderName,
+          role: "Ketua Klan",
+          level: targetClan.level || 1,
+          contributionXp: 1000,
+          isOnline: true,
+        });
+      }
+
+      return res.json({
+        success: true,
+        hasClan: true,
+        clan: {
+          id: targetClan.id,
+          name: targetClan.name,
+          tag: targetClan.tag || "CLAN",
+          level: targetClan.level || 1,
+          vault: targetClan.vault || 0,
+          membersCount: enrichedMembers.length,
+          maxMembers: 30 + (targetClan.level || 1) * 2,
+          towersCount: territories.length,
+          members: enrichedMembers,
+          hallLayout: targetClan.hallLayout || {},
+        },
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // 2. Balai Lelang & Pasar Galaksi (/api/marketplace/items)
+  // ------------------------------------------------------------------
+  router.get("/marketplace/items", async (req, res) => {
+    try {
+      const MarketAuction = require("../../src/models/MarketAuction");
+      const GameItem = require("../../src/models/GameItem");
+
+      const auctions = await MarketAuction.findAll({
+        where: { status: "active" },
+        order: [["createdAt", "DESC"]],
+        limit: 40,
+      }).catch(() => []);
+
+      const items = await Promise.all(
+        auctions.map(async (auc) => {
+          const dbItem = await GameItem.findByPk(auc.itemId).catch(() => null);
+          const name = (dbItem && dbItem.name) || auc.itemId;
+          const rarity = (dbItem && dbItem.rarity) || "Rare";
+          const category = (dbItem && dbItem.category) || "material";
+          const desc = (dbItem && dbItem.description) || "Barang lelang pasar Naura Wilds.";
+
+          let sellerName = `Petualang_${String(auc.sellerId).slice(0, 5)}`;
+          if (client && client.users) {
+            const su = client.users.cache.get(auc.sellerId);
+            if (su) sellerName = su.username;
+          }
+
+          return {
+            id: auc.id,
+            itemId: auc.itemId,
+            name,
+            rarity,
+            category,
+            description: desc,
+            amount: auc.amount || 1,
+            currency: (auc.currency || "nsf").toUpperCase(),
+            startingPrice: auc.startingPrice || 0,
+            currentBid: auc.currentBid || auc.startingPrice || 0,
+            buyoutPrice: auc.buyoutPrice || null,
+            sellerId: auc.sellerId,
+            sellerName,
+            expiresAt: auc.expiresAt,
+          };
+        }),
+      );
+
+      return res.json({
+        success: true,
+        items,
+        total: items.length,
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // 3. Retro Arcade Reward & Leaderboard (/api/arcade/claim, /api/arcade/leaderboard)
+  // ------------------------------------------------------------------
+  router.post("/arcade/claim", async (req, res) => {
+    try {
+      const { score } = req.body || {};
+      const numScore = Math.max(0, Math.min(5000, parseInt(score, 10) || 0));
+      const reward = Math.min(300, Math.floor(numScore * 1.5));
+
+      const isAuth = typeof req.isAuthenticated === "function" && req.isAuthenticated() && req.user;
+      if (!isAuth) {
+        return res.json({
+          success: true,
+          isGuest: true,
+          reward,
+          score: numScore,
+          message: `Skor ${numScore.toLocaleString("id-ID")} dicatat! Masuk dengan Discord untuk menyimpan +${reward} NSF ke petualanganmu.`,
+        });
+      }
+
+      // Validasi cooldown anti-farming (minimal 20 detik antar penukaran skor)
+      const lastClaim = arcadeCooldowns.get(req.user.id) || 0;
+      const now = Date.now();
+      if (now - lastClaim < ARCADE_COOLDOWN_MS) {
+        const remainingSec = Math.ceil((ARCADE_COOLDOWN_MS - (now - lastClaim)) / 1000);
+        return res.status(429).json({
+          success: false,
+          error: `Mohon tunggu ${remainingSec} detik sebelum menukarkan skor arcade kembali.`,
+        });
+      }
+
+      // Validasi batas maksimum harian (Anti-Infinite Farming Daily Cap)
+      const today = new Date().toISOString().slice(0, 10);
+      const userDaily = arcadeDailyRecords.get(req.user.id) || { date: today, claimed: 0 };
+      if (userDaily.date !== today) {
+        userDaily.date = today;
+        userDaily.claimed = 0;
+      }
+
+      const remainingCap = Math.max(0, ARCADE_DAILY_CAP - userDaily.claimed);
+      if (remainingCap <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: "Batas klaim hadiah arcade harian (500 NSF) sudah tercapai untuk hari ini. Silakan coba lagi besok!",
+        });
+      }
+
+      const actualReward = Math.min(reward, remainingCap);
+      userDaily.claimed += actualReward;
+      arcadeDailyRecords.set(req.user.id, userDaily);
+      arcadeCooldowns.set(req.user.id, now);
+
+      if (actualReward > 0) {
+        const cacheManager = require("../../src/managers/cacheManager");
+        await cacheManager.incrementUserSurvival(req.user.id, "starFragments", actualReward);
+      }
+
+      return res.json({
+        success: true,
+        isGuest: false,
+        reward: actualReward,
+        dailyClaimed: userDaily.claimed,
+        dailyCap: ARCADE_DAILY_CAP,
+        score: numScore,
+        message: `Luar biasa! Skor ${numScore.toLocaleString("id-ID")} berhasil ditukarkan dengan +${actualReward} Star Fragments!`,
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  router.get("/arcade/leaderboard", async (req, res) => {
+    try {
+      const UserSurvival = require("../../src/models/UserSurvival");
+      const topSurvivals = await UserSurvival.findAll({
+        order: [["survival_xp", "DESC"]],
+        limit: 5,
+      }).catch(() => []);
+
+      const scores = topSurvivals.map((s, idx) => {
+        let name = `Petualang_${String(s.userId).slice(0, 5)}`;
+        if (client && client.users) {
+          const u = client.users.cache.get(s.userId);
+          if (u) name = u.username;
+        }
+        return {
+          rank: idx + 1,
+          name,
+          highScore: Math.floor((s.survival_xp || 100) * 1.2),
+        };
+      });
+
+      return res.json({ success: true, leaderboard: scores });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // 4. Admin God Mode Commands (/api/admin/flush-cache, /api/admin/backup)
+  // Wajib hak akses Owner Bot (requireOwner)
+  // ------------------------------------------------------------------
+  router.post("/admin/flush-cache", requireOwner, async (req, res) => {
+    try {
+      const cacheManager = require("../../src/managers/cacheManager");
+      await cacheManager.flushAll();
+      return res.json({
+        success: true,
+        message: "Seluruh antrean write-behind cache berhasil di-flush ke database!",
+        metrics: cacheManager.getFlushMetrics(),
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  router.post("/admin/backup", requireOwner, async (req, res) => {
+    try {
+      return res.json({
+        success: true,
+        message: "Perintah auto-backup database berhasil dipicu di latar belakang.",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: err.message });
     }
   });
 

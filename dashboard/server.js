@@ -138,7 +138,8 @@ module.exports = (client) => {
   // untuk path "/". Sebelumnya file itu dilayani duluan, sebelum handler view()
   // sempat berjalan, sehingga perbandingan mtime di view() tidak pernah dipakai
   // dan halaman "/" selalu menyajikan build lama walau src/ sudah lebih baru.
-  // Handler view() di bawah sekarang menjadi satu-satunya penyaji HTML.
+  // Static assets: /src dipetakan duluan agar perubahan dev langsung aktif
+  webApp.use("/src", express.static(path.join(__dirname, "src")));
   webApp.use(express.static(path.join(__dirname, "dist"), { index: false }));
   // Jangan sajikan berkas di folder /transcripts secara statis publik.
   // Transkrip memuat percakapan privat tiket dan WAJIB melewati router terproteksi di tickets.js.
@@ -150,7 +151,6 @@ module.exports = (client) => {
   });
   webApp.use("/assets", express.static(path.join(__dirname, "public/assets")));
   webApp.use("/assets", express.static(path.join(__dirname, "../assets")));
-  webApp.use("/src", express.static(path.join(__dirname, "src")));
   // Helper logika murni dari bot yang juga dipakai halaman dashboard.
   // Dipetakan eksplisit karena /src di atas menunjuk ke dashboard/src,
   // sedangkan berkas ini lives di src/utils/ milik root repo.
@@ -305,11 +305,23 @@ module.exports = (client) => {
       ),
     );
 
-    webApp.get("/auth/discord", passport.authenticate("discord"));
+    webApp.get("/auth/discord", (req, res, next) => {
+      const returnTo = req.query.returnTo || req.query.redirect;
+      if (returnTo && req.session) {
+        req.session.returnTo = String(returnTo);
+      }
+      passport.authenticate("discord")(req, res, next);
+    });
     webApp.get(
       "/auth/discord/callback",
-      passport.authenticate("discord", { failureRedirect: "/" }),
-      (req, res) => res.redirect("/"),
+      passport.authenticate("discord", { failureRedirect: "/login?failed=1" }),
+      (req, res) => {
+        const returnTo = req.session?.returnTo || "/";
+        if (req.session) {
+          delete req.session.returnTo;
+        }
+        res.redirect(returnTo);
+      },
     );
   }
 
@@ -437,6 +449,10 @@ module.exports = (client) => {
     webApp.get("/mobile",             mobileView("index"));
     webApp.get("/mobile/",            mobileView("index"));
     webApp.get("/mobile/survival",    mobileView("survival"));
+    webApp.get("/mobile/inventory",   mobileView("inventory"));
+    webApp.get("/mobile/clan",        mobileView("clan"));
+    webApp.get("/mobile/marketplace", mobileView("marketplace"));
+    webApp.get("/mobile/arcade",      mobileView("arcade"));
     webApp.get("/mobile/music",       mobileView("music"));
     webApp.get("/mobile/economy",     mobileView("economy"));
     webApp.get("/mobile/leaderboard", mobileView("leaderboard"));
@@ -451,6 +467,10 @@ module.exports = (client) => {
     webApp.get("/mobile",             (req, res) => res.sendFile(path.join(mobileSrc, "index.html")));
     webApp.get("/mobile/",            (req, res) => res.sendFile(path.join(mobileSrc, "index.html")));
     webApp.get("/mobile/survival",    (req, res) => res.sendFile(path.join(mobileSrc, "survival.html")));
+    webApp.get("/mobile/inventory",   (req, res) => res.sendFile(path.join(mobileSrc, "inventory.html")));
+    webApp.get("/mobile/clan",        (req, res) => res.sendFile(path.join(mobileSrc, "clan.html")));
+    webApp.get("/mobile/marketplace", (req, res) => res.sendFile(path.join(mobileSrc, "marketplace.html")));
+    webApp.get("/mobile/arcade",      (req, res) => res.sendFile(path.join(mobileSrc, "arcade.html")));
     webApp.get("/mobile/music",       (req, res) => res.sendFile(path.join(mobileSrc, "music.html")));
     webApp.get("/mobile/economy",     (req, res) => res.sendFile(path.join(mobileSrc, "economy.html")));
     webApp.get("/mobile/leaderboard", (req, res) => res.sendFile(path.join(mobileSrc, "leaderboard.html")));
@@ -528,7 +548,7 @@ module.exports = (client) => {
   webApp.get("/realm", view("world.html"));
   webApp.get("/karaoke", view("karaoke.html"));
   webApp.get("/feed", view("feed.html"));
-  webApp.get("/portfolio", requireLogin, view("portfolio.html"));
+  webApp.get("/portfolio", view("portfolio.html"));
   // /portfolio/me/edit, halaman edit portfolio (sama dengan portfolio.html, data diambil via API)
   webApp.get("/portfolio/me/edit", requireLogin, view("portfolio.html"));
   webApp.get("/owner", view("portfolio.html"));
@@ -545,6 +565,13 @@ module.exports = (client) => {
   webApp.get("/inventory", requireLogin, view("inventory.html"));
   webApp.get("/arcade", view("arcade.html"));
   webApp.get("/achievements", view("achievements.html"));
+  webApp.get("/login", (req, res, next) => {
+    if (typeof req.isAuthenticated === "function" && req.isAuthenticated() && req.user) {
+      return res.redirect(req.query.redirect || "/profile");
+    }
+    return view("login.html")(req, res, next);
+  });
+  webApp.get("/profile", requireLogin, view("profile.html"));
 
   // --- API Survival Realtime Map Data (Sprint 23) ---
   webApp.get("/api/survival/map-data", async (req, res) => {

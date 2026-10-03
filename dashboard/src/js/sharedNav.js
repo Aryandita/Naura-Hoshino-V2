@@ -88,10 +88,14 @@
             primaryRoute: '/',
             pages: [
                 { path: '/', label: 'Overview Dashboard', icon: 'fa-solid fa-gauge-high', desc: 'Metrik server, CPU/RAM, dan status bot' },
+                { path: '/profile', label: 'Profil Petualang', icon: 'fa-solid fa-id-card', desc: 'Identitas Discord, statistik RPG & 34 trofi' },
+                { path: '/inventory', label: 'Tas & Ransel', icon: 'fa-solid fa-backpack', desc: 'Isi ransel petualang, material crafting & loadout' },
+                { path: '/achievements', label: 'Ruang Trofi', icon: 'fa-solid fa-trophy', desc: '34 pencapaian eksklusif & gelar petualang' },
                 { path: '/status', label: 'Live Telemetri', icon: 'fa-solid fa-signal', desc: 'Kesehatan shard & status gateway Discord' },
                 { path: '/feed', label: 'Activity Feed', icon: 'fa-solid fa-rss', desc: 'Log aktivitas realtime & interaksi pengguna' },
                 { path: '/leaderboard', label: 'Leaderboard Global', icon: 'fa-solid fa-trophy', desc: 'Peringkat level EXP dan kekayaan server' },
-                { path: '/activity', label: 'Activity Hub', icon: 'fa-solid fa-gamepad', desc: 'Quest, mini-games & tantangan berkala' }
+                { path: '/activity', label: 'Activity Hub', icon: 'fa-solid fa-gamepad', desc: 'Quest, mini-games & tantangan berkala' },
+                { path: '/arcade', label: 'Retro Arcade', icon: 'fa-solid fa-gamepad', desc: 'Mini-games retro ritme & serpihan bintang' }
             ]
         },
         map: {
@@ -102,7 +106,8 @@
             pages: [
                 { path: '/world', label: 'World Map Aetheria', icon: 'fa-solid fa-earth-asia', desc: 'Peta benua, 6 wilayah, POI & komoditas' },
                 { path: '/survival-map', label: 'Radar Survival', icon: 'fa-solid fa-map', desc: 'Radar real-time fasilitas & blip sumber daya' },
-                { path: '/war-room', label: 'War Room & Siege', icon: 'fa-solid fa-shield-halved', desc: 'Operasi klan, wilayah perang & strategi' }
+                { path: '/war-room', label: 'War Room & Siege', icon: 'fa-solid fa-shield-halved', desc: 'Operasi klan, wilayah perang & strategi' },
+                { path: '/clan', label: 'Sindikat & Klan', icon: 'fa-solid fa-users-rays', desc: 'Markas aliansi klan, fasilitas pertahanan & diplomasi' }
             ]
         },
         config: {
@@ -139,7 +144,9 @@
             primaryRoute: '/settings',
             pages: [
                 { path: '/settings', label: 'Server Settings', icon: 'fa-solid fa-gears', desc: 'Konfigurasi bot, prefix, role & perizinan' },
-                { path: '/economy', label: 'Bank & Pasar NC', icon: 'fa-solid fa-coins', desc: 'Dompet kas server, bursa valuta & pasar saham' }
+                { path: '/economy', label: 'Bank & Pasar NC', icon: 'fa-solid fa-coins', desc: 'Dompet kas server, bursa valuta & pasar saham' },
+                { path: '/marketplace', label: 'Balai Lelang Galaksi', icon: 'fa-solid fa-shop', desc: 'Bursa lelang P2P, perdagangan komoditas & penawaran' },
+                { path: '/admin', label: 'God Mode Admin', icon: 'fa-solid fa-screwdriver-wrench', desc: 'Pusat kendali arsitektur, bypass mutex & flush cache' }
             ]
         }
     };
@@ -156,22 +163,145 @@
     }
     if (!activeGroupId) activeGroupId = 'dashboard';
 
-    // Tandai tautan desktop sidebar
-    document.querySelectorAll('.nav-item[href]').forEach((linkElement) => {
-        const targetPath = linkElement.getAttribute('href')?.replace(/\/$/, '') || '';
-        const isHomePage = (targetPath === '' || targetPath === '/') && (currentPath === '' || currentPath === '/');
-        const isSubPathMatch = targetPath !== '' && targetPath !== '/' && (currentPath === targetPath || currentPath.startsWith(targetPath + '/'));
-        const isActive = isHomePage || isSubPathMatch;
-        linkElement.classList.toggle('active', isActive);
-        if (isActive) {
-            linkElement.setAttribute('aria-current', 'page');
-        } else {
-            linkElement.removeAttribute('aria-current');
+    // ── Inisialisasi Header Bersama & Reconciler Sidebar ──
+    function mountSharedNav() {
+        const sharedNavContainer = document.getElementById('shared-nav');
+        if (sharedNavContainer && !sharedNavContainer.hasChildNodes()) {
+            sharedNavContainer.innerHTML = `
+                <header class="top-header shared-top-nav">
+                    <div class="header-left">
+                        <a href="/" class="shared-nav-brand" title="Ke Beranda Dashboard">
+                            <img src="/assets/core/avatar.png" alt="Naura" class="shared-nav-logo" onerror="this.src='/assets/core/avatar.png'">
+                            <div class="shared-nav-brand-text">
+                                <div class="shared-brand-name">Naura Hoshino</div>
+                                <div class="shared-brand-tag">v2.3.0 · Hub</div>
+                            </div>
+                        </a>
+                        <nav class="shared-nav-links" aria-label="Navigasi Cepat">
+                            <a href="/" class="shared-nav-link ${currentPath === '/' ? 'active' : ''}"><i class="fa-solid fa-gauge-high"></i> <span>Dashboard</span></a>
+                            <a href="/profile" class="shared-nav-link ${currentPath === '/profile' ? 'active' : ''}"><i class="fa-solid fa-id-card"></i> <span>Profil</span></a>
+                            <a href="/inventory" class="shared-nav-link ${currentPath === '/inventory' ? 'active' : ''}"><i class="fa-solid fa-backpack"></i> <span>Ransel</span></a>
+                            <a href="/world" class="shared-nav-link ${currentPath === '/world' ? 'active' : ''}"><i class="fa-solid fa-earth-asia"></i> <span>Dunia</span></a>
+                            <a href="/clan" class="shared-nav-link ${currentPath === '/clan' ? 'active' : ''}"><i class="fa-solid fa-users-rays"></i> <span>Klan</span></a>
+                            <a href="/marketplace" class="shared-nav-link ${currentPath === '/marketplace' ? 'active' : ''}"><i class="fa-solid fa-shop"></i> <span>Pasar</span></a>
+                            <a href="/arcade" class="shared-nav-link ${currentPath === '/arcade' ? 'active' : ''}"><i class="fa-solid fa-gamepad"></i> <span>Arcade</span></a>
+                            <a href="/music" class="shared-nav-link ${currentPath === '/music' ? 'active' : ''}"><i class="fa-solid fa-music"></i> <span>Musik</span></a>
+                            <a href="/settings" class="shared-nav-link ${currentPath === '/settings' ? 'active' : ''}"><i class="fa-solid fa-gears"></i> <span>Settings</span></a>
+                            <a href="/admin" class="shared-nav-link ${currentPath === '/admin' ? 'active' : ''}"><i class="fa-solid fa-screwdriver-wrench"></i> <span>Admin</span></a>
+                        </nav>
+                    </div>
+                    <div class="header-right"></div>
+                </header>
+            `;
         }
-    });
+
+        // Pastikan container navigasi mobile ada di halaman
+        if (!document.querySelector('.mobile-nav')) {
+            const mobileNav = document.createElement('nav');
+            mobileNav.className = 'mobile-nav';
+            mobileNav.setAttribute('aria-label', 'Navigasi Utama Mobile');
+            mobileNav.innerHTML = `
+                <div class="mobile-nav-inner">
+                    <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
+                    <a href="/world" class="mobile-nav-item" data-group="map"><span class="mn-icon"><i class="fa-solid fa-earth-asia"></i></span><span class="mn-label">Map</span></a>
+                    <a href="/automations" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Config</span></a>
+                    <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">System</span></a>
+                    <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+                </div>
+            `;
+            document.body.appendChild(mobileNav);
+        }
+
+        reconcileSidebarLinks();
+    }
+
+    function reconcileSidebarLinks() {
+        const sidebarNav = document.querySelector('.sidebar-nav');
+        if (!sidebarNav) return;
+
+        const navGroups = sidebarNav.querySelectorAll('.nav-group');
+        let communityGroup = null;
+        let rpgGroup = null;
+        let configGroup = null;
+
+        navGroups.forEach(g => {
+            const label = g.querySelector('.nav-group-label')?.textContent?.trim()?.toLowerCase() || '';
+            if (label.includes('community') || label.includes('komunitas')) communityGroup = g;
+            else if (label.includes('rpg') || label.includes('survival') || label.includes('wilds')) rpgGroup = g;
+            else if (label.includes('config') || label.includes('konfigurasi') || label.includes('pengaturan')) configGroup = g;
+        });
+
+        if (communityGroup) {
+            if (!sidebarNav.querySelector('a[href="/clan"]')) {
+                const a = document.createElement('a');
+                a.href = '/clan';
+                a.className = 'nav-item';
+                a.innerHTML = `<span class="nav-icon"><i class="fa-solid fa-users-rays"></i></span><span>Sindikat & Klan</span>`;
+                communityGroup.appendChild(a);
+            }
+            if (!sidebarNav.querySelector('a[href="/marketplace"]')) {
+                const a = document.createElement('a');
+                a.href = '/marketplace';
+                a.className = 'nav-item';
+                a.innerHTML = `<span class="nav-icon"><i class="fa-solid fa-shop"></i></span><span>Pasar Galaksi</span>`;
+                communityGroup.appendChild(a);
+            }
+        }
+
+        if (rpgGroup) {
+            if (!sidebarNav.querySelector('a[href="/inventory"]')) {
+                const a = document.createElement('a');
+                a.href = '/inventory';
+                a.className = 'nav-item';
+                a.innerHTML = `<span class="nav-icon"><i class="fa-solid fa-backpack"></i></span><span>Tas & Ransel</span>`;
+                rpgGroup.appendChild(a);
+            }
+            if (!sidebarNav.querySelector('a[href="/arcade"]')) {
+                const a = document.createElement('a');
+                a.href = '/arcade';
+                a.className = 'nav-item';
+                a.innerHTML = `<span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span><span>Retro Arcade</span>`;
+                rpgGroup.appendChild(a);
+            }
+        }
+
+        if (configGroup) {
+            if (!sidebarNav.querySelector('a[href="/admin"]')) {
+                const a = document.createElement('a');
+                a.href = '/admin';
+                a.className = 'nav-item';
+                a.innerHTML = `<span class="nav-icon"><i class="fa-solid fa-screwdriver-wrench"></i></span><span>Admin God Mode</span>`;
+                configGroup.appendChild(a);
+            }
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', mountSharedNav);
+    } else {
+        mountSharedNav();
+    }
+
+    // Tandai tautan desktop sidebar
+    function markActiveNavLinks() {
+        document.querySelectorAll('.nav-item[href]').forEach((linkElement) => {
+            const targetPath = linkElement.getAttribute('href')?.replace(/\/$/, '') || '';
+            const isHomePage = (targetPath === '' || targetPath === '/') && (currentPath === '' || currentPath === '/');
+            const isSubPathMatch = targetPath !== '' && targetPath !== '/' && (currentPath === targetPath || currentPath.startsWith(targetPath + '/'));
+            const isActive = isHomePage || isSubPathMatch;
+            linkElement.classList.toggle('active', isActive);
+            if (isActive) {
+                linkElement.setAttribute('aria-current', 'page');
+            } else {
+                linkElement.removeAttribute('aria-current');
+            }
+        });
+    }
+    markActiveNavLinks();
 
     // Tandai tautan mobile bottom navigation & pasang handler
     function initMobileNav() {
+        markActiveNavLinks();
         document.querySelectorAll('.mobile-nav-item').forEach((linkElement) => {
             const group = linkElement.getAttribute('data-group');
             const isActive = group === activeGroupId;
@@ -683,6 +813,31 @@
                 headerRight.insertBefore(themePill, headerRight.firstChild);
             }
         }
+
+        // User Identity Chip
+        if (!document.getElementById('headerUserChip')) {
+            const userChip = document.createElement('a');
+            userChip.href = '/profile';
+            userChip.id = 'headerUserChip';
+            userChip.className = 'header-user-chip';
+            userChip.title = 'Profil Petualang';
+            userChip.innerHTML = `
+                <img src="/assets/core/avatar.png" alt="User" class="header-user-avatar" id="headerNavAvatar" onerror="this.src='/assets/core/avatar.png'">
+                <span id="headerNavUserName" style="font-size:12px;font-weight:600;color:var(--text-primary);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Guest</span>
+            `;
+            headerRight.appendChild(userChip);
+
+            fetch('/api/me').then(r => r.json()).then(data => {
+                if (data && data.loggedIn && data.user) {
+                    const avatarEl = document.getElementById('headerNavAvatar');
+                    const nameEl = document.getElementById('headerNavUserName');
+                    if (nameEl) nameEl.textContent = data.user.global_name || data.user.username || 'Adventurer';
+                    if (avatarEl && data.user.id && data.user.avatar) {
+                        avatarEl.src = `https://cdn.discordapp.com/avatars/${data.user.id}/${data.user.avatar}.png?size=64`;
+                    }
+                }
+            }).catch(() => {});
+        }
     }
 
     if (document.readyState === 'loading') {
@@ -966,7 +1121,7 @@
     if (!document.getElementById('naura-auth-script')) {
         const authScript = document.createElement('script');
         authScript.id = 'naura-auth-script';
-        authScript.src = '/src/js/authManager.js';
+        authScript.src = '/src/js/authManager.js?v=2.3.1-v8';
         document.body.appendChild(authScript);
     }
 

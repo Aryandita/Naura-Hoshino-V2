@@ -172,12 +172,12 @@ async function renderLeaderboardPayload(categoryId = "wallet", page = 1, client 
   } else {
     descriptionLines = items.map((item) => {
       const userMention = `<@${item.userId}>`;
-      return `${item.badge} ${userMention} : **${item.formattedScore}**`;
+      return `${item.badge} ${userMention} • **${item.formattedScore}**`;
     });
   }
 
   descriptionLines.push("");
-  descriptionLines.push(`- # *Menampilkan ${items.length} dari total ${totalCount} petualang.*`);
+  descriptionLines.push(`-# Menampilkan ${items.length} dari total ${totalCount} petualang terdaftar.`);
 
   // Dropdown Select Menu Kategori
   const selectMenu = new StringSelectMenuBuilder()

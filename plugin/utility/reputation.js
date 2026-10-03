@@ -98,18 +98,18 @@ module.exports = {
       let list = "";
       for (let i = 0; i < topUsers.length; i++) {
         const u = topUsers[i];
-        let prefix = `${i + 1}.`;
-        if (i === 0) prefix = ui.getEmoji("badge_gold") || "🥇";
-        if (i === 1) prefix = ui.getEmoji("badge_silver") || "🥈";
-        if (i === 2) prefix = ui.getEmoji("badge_bronze") || "🥉";
+        let prefix = `\`#${i + 1}\``;
+        if (i === 0) prefix = "🥇";
+        if (i === 1) prefix = "🥈";
+        if (i === 2) prefix = "🥉";
 
-        list += `**${prefix}** <@${u.userId}>, **${u.reputation}** ${repEmoji}\n`;
+        list += `${prefix} <@${u.userId}> • **${u.reputation.toLocaleString("id-ID")}** ${repEmoji}\n`;
       }
 
       const payload = buildContainerV2({
-        accentColorHex: ui.colors.primary || "#FFD700",
-        title: `${ui.getEmoji("trophy") || "🏆"} Peringkat Reputasi Global`,
-        description: `Ini adalah pengguna dengan reputasi tertinggi yang sering membantu orang lain:\n\n${list}`,
+        accentColorHex: "#FBBF24",
+        title: "Peringkat Reputasi Global",
+        description: `Daftar anggota komunitas yang paling banyak memberikan kontribusi positif:\n\n${list}`,
         footerText: ui.getFooter("utility"),
         expression: "impressed",
       });
@@ -122,7 +122,7 @@ module.exports = {
         return interaction.editReply(
           buildErrorContainerV2({
             title: "Target Tidak Valid",
-            description: "Kamu tidak bisa memberikan reputasi kepada bot.",
+            description: "Kamu tidak dapat memberikan reputasi kepada bot.",
             footerText: ui.getFooter("utility"),
           }),
         );
@@ -131,15 +131,14 @@ module.exports = {
       if (target.id === interaction.user.id) {
         return interaction.editReply(
           buildErrorContainerV2({
-            title: "Tindakan Ditolak",
-            description:
-              "Kamu tidak bisa memberikan reputasi pada dirimu sendiri!",
+            title: "Aksi Ditolak",
+            description: "Kamu tidak dapat memberikan poin reputasi kepada diri sendiri.",
             footerText: ui.getFooter("utility"),
           }),
         );
       }
 
-      // Cooldown check
+      // Cooldown check via cacheManager/redis
       const redis = require("../../src/managers/redisManager");
       const cooldownKey = `rep:cooldown:${interaction.user.id}`;
       const hasCooldown = await redis.get(cooldownKey);
@@ -147,23 +146,16 @@ module.exports = {
       if (hasCooldown) {
         return interaction.editReply(
           buildErrorContainerV2({
-            title: "Kamu Sedang Cooldown",
+            title: "Waktu Tunggu Aktif",
             description:
-              "Kamu hanya bisa memberikan reputasi setiap 1 jam sekali agar tidak terjadi eksploitasi poin.",
+              "Kamu hanya dapat memberikan 1 poin reputasi setiap 1 jam sekali.",
             footerText: ui.getFooter("utility"),
           }),
         );
       }
 
-      // Add rep point
-      await UserProfile.findOrCreate({ where: { userId: target.id } });
-      await UserProfile.increment("reputation", {
-        by: 1,
-        where: { userId: target.id },
-      });
-
-      // Clear cache for the target
-      await cacheManager.delete(`profile:${target.id}`);
+      // Add rep point secara atomik via cacheManager
+      await cacheManager.incrementUserProfile(target.id, "reputation", 1);
 
       // Set 1-hour cooldown
       await redis.setEx(cooldownKey, 3600, "1");
@@ -172,18 +164,18 @@ module.exports = {
       const newRep = profile ? profile.reputation : 1;
 
       const payload = buildContainerV2({
-        title: "Reputasi Diberikan!",
-        description: `Terima kasih! Kamu telah memberikan 1 poin reputasi kepada <@${target.id}>! 💖\nSekarang ia memiliki total **${newRep}** ${repEmoji} Reputasi.`,
+        title: "Poin Reputasi Diberikan",
+        description: `Poin reputasi berhasil diberikan kepada <@${target.id}>.\nKini pengguna tersebut mengumpulkan **${newRep}** ${repEmoji} Reputasi.`,
         authorName: interaction.user.username,
         iconURL: interaction.user.displayAvatarURL(),
-        color: ui.getColor("success"),
+        accentColorHex: ui.getColor("success") || "#34D399",
         expression: "cheers",
         footerText: ui.getFooter("utility"),
       });
 
       await interaction.editReply(payload);
 
-      // Auto-show leaderboard
+      // Ringkasan leaderboard top 5
       const topUsers = await UserProfile.findAll({
         order: [["reputation", "DESC"]],
         limit: 5,
@@ -197,18 +189,18 @@ module.exports = {
       if (topUsers && topUsers.length > 0) {
         let lbText = "";
         for (let i = 0; i < topUsers.length; i++) {
-          let medal = "🏅";
-          if (i === 0) medal = ui.getEmoji("badge_gold") || "🥇";
-          else if (i === 1) medal = ui.getEmoji("badge_silver") || "🥈";
-          else if (i === 2) medal = ui.getEmoji("badge_bronze") || "🥉";
+          let medal = `\`#${i + 1}\``;
+          if (i === 0) medal = "🥇";
+          else if (i === 1) medal = "🥈";
+          else if (i === 2) medal = "🥉";
 
-          lbText += `${medal} <@${topUsers[i].userId}>, **${topUsers[i].reputation}** ${repEmoji}\n`;
+          lbText += `${medal} <@${topUsers[i].userId}> • **${topUsers[i].reputation.toLocaleString("id-ID")}** ${repEmoji}\n`;
         }
 
         await interaction.followUp(
           buildContainerV2({
-            accentColorHex: ui.colors.primary || "#FFD700",
-            title: `${ui.getEmoji("star") || "🌟"} Kondisi Leaderboard Saat Ini`,
+            accentColorHex: "#FBBF24",
+            title: "Peringkat Teratas Komunitas",
             description: lbText,
             footerText: ui.getFooter("utility"),
             expression: "impressed",

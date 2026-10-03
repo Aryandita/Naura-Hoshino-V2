@@ -303,27 +303,39 @@ module.exports = {
         });
       }
 
-      const eGreen = ui.getEmoji("greenping") || "🟢";
-      const eRed = ui.getEmoji("redping") || "🔴";
-      const eStar = ui.getEmoji("star") || "⭐";
-      const eBriefcase = ui.getEmoji("briefcase") || "💼";
-      const ePoll = ui.getEmoji("poll") || "📊";
+      const eGreen = "🟢";
+      const eRed = "🔴";
+      const eStar = "⭐";
+
+      // Hitung total modal dan total P/L
+      let totalInvested = 0;
+      for (const h of port.holdings) {
+        totalInvested += (h.avgBuyPrice || 0) * (h.shares || 0);
+      }
+      const totalPL = port.totalPortfolioValue - totalInvested;
+      const totalPLPercent = totalInvested > 0 ? ((totalPL / totalInvested) * 100).toFixed(1) : "0.0";
+      const plSign = totalPL >= 0 ? "+" : "";
+      const plStatus = totalPL >= 0 ? `${eGreen} Untung ${plSign}${totalPLPercent}%` : `${eRed} Rugi ${plSign}${totalPLPercent}%`;
 
       const holdingsList = port.holdings
         .map((h) => {
-          const plSign = h.profitLoss >= 0 ? "+" : "";
-          const plColor = h.profitLoss >= 0 ? eGreen : eRed;
-          return `**• ${h.name}** (\`${h.ticker}\`)\n  - Jumlah: \`${h.shares} Lembar\` (Avg: \`${h.avgBuyPrice} ${eStar}\` | Now: \`${h.currentPrice} ${eStar}\`)\n  - Valuasi: **${h.currentValue.toLocaleString("id-ID")} ${eStar}** (${plColor} ${plSign}${h.profitPercent}%)`;
+          const itemPLSign = h.profitLoss >= 0 ? "+" : "";
+          const itemPLBadge = h.profitLoss >= 0 ? eGreen : eRed;
+          return `**${h.name}** (\`${h.ticker}\`)\n` +
+            `• Jumlah: **${h.shares.toLocaleString("id-ID")} Lembar** (Beli Rata-rata: ${h.avgBuyPrice} ${eStar} • Kini: ${h.currentPrice} ${eStar})\n` +
+            `• Nilai Pasar: **${h.currentValue.toLocaleString("id-ID")} ${eStar}** (${itemPLBadge} ${itemPLSign}${h.profitPercent}%)`;
         })
         .join("\n\n");
 
       const payload = buildContainerV2({
-        accentColorHex: "#38BDF8",
-        authorName: `${eBriefcase} Portofolio Investasi Saham`,
-        title: `Investor: ${username}`,
+        accentColorHex: totalPL >= 0 ? "#10B981" : "#F43F5E",
+        authorName: "Portofolio Investasi Bursa",
+        title: `Ringkasan Portofolio: ${username}`,
         description: [
-          `${ePoll} **Total Nilai Portofolio:** \`${port.totalPortfolioValue.toLocaleString("id-ID")} Star Fragments\``,
-          ``,
+          `**Total Valuasi:** \`${port.totalPortfolioValue.toLocaleString("id-ID")} Star Fragments\``,
+          `**Estimasi Laba/Rugi:** \`${plSign}${totalPL.toLocaleString("id-ID")} Star Fragments\` (${plStatus})`,
+          "",
+          "**Daftar Kepemilikan Saham:**",
           holdingsList,
         ].join("\n"),
         footerText: ui.getFooter("utility"),

@@ -523,6 +523,14 @@
               <span class="nav-icon"><i class="fa-solid fa-coins"></i></span>
               <span>Economy</span>
             </a>
+            <a href="/clan" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-users-rays"></i></span>
+              <span>Sindikat & Klan</span>
+            </a>
+            <a href="/marketplace" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-shop"></i></span>
+              <span>Pasar Galaksi</span>
+            </a>
             <a href="/topology" class="nav-item">
               <span class="nav-icon"><i class="fa-solid fa-network-wired"></i></span>
               <span>Guild Topology</span>
@@ -561,8 +569,16 @@
               <span class="nav-icon"><i class="fa-solid fa-map"></i></span>
               <span>Survival Map</span>
             </a>
-            <a href="/activity" class="nav-item">
+            <a href="/inventory" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-backpack"></i></span>
+              <span>Tas & Ransel</span>
+            </a>
+            <a href="/arcade" class="nav-item">
               <span class="nav-icon"><i class="fa-solid fa-gamepad"></i></span>
+              <span>Retro Arcade</span>
+            </a>
+            <a href="/activity" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-bolt"></i></span>
               <span>Activity Hub</span>
             </a>
           </div>
@@ -590,11 +606,23 @@
               <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
               <span>Tickets</span>
             </a>
+            <a href="/admin" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+              <span>Admin God Mode</span>
+            </a>
           </div>
 
           <!-- More -->
           <div class="nav-group">
             <div class="nav-group-label">More</div>
+            <a href="/profile" class="nav-item">
+              <span class="nav-icon" style="color:var(--primary)"><i class="fa-solid fa-id-card"></i></span>
+              <span style="color:var(--primary)">Profil Petualang</span>
+            </a>
+            <a href="/achievements" class="nav-item">
+              <span class="nav-icon" style="color:var(--accent-amber)"><i class="fa-solid fa-trophy"></i></span>
+              <span style="color:var(--accent-amber)">Ruang Trofi</span>
+            </a>
             <a href="/portfolio" class="nav-item">
               <span class="nav-icon" style="color:var(--accent-green)"><i class="fa-solid fa-id-badge"></i></span>
               <span style="color:var(--accent-green)">Creator Portfolio</span>
@@ -605,14 +633,14 @@
 
         <!-- User Footer -->
         <div class="sidebar-footer">
-          <div class="sidebar-user" id="sidebarUser" onclick="window.location.href='/'">
+          <div class="sidebar-user" id="sidebarUser" onclick="window.location.href='/profile'">
             <img src="/assets/core/avatar.png" alt="User" class="sidebar-user-avatar" id="sidebarAvatar"
               onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'" />
             <div class="sidebar-user-info">
               <div class="sidebar-user-name" id="sidebarUserName">Guest</div>
               <div class="sidebar-user-role" id="sidebarUserRole">Klik untuk login</div>
             </div>
-            <a href="/auth/discord" title="Login Discord" style="color:var(--text-muted);font-size:13px;text-decoration:none;" id="sidebarLoginBtn">
+            <a href="/login?redirect=/profile" title="Login Akun" style="color:var(--text-muted);font-size:13px;text-decoration:none;" id="sidebarLoginBtn">
               <i class="fa-brands fa-discord"></i>
             </a>
           </div>

@@ -48,6 +48,9 @@ async function runMusicLogic(
   const eError = ui.getEmoji("error") || "❌";
   const divider = `-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
 
+  // ============================================================
+  // 🎵 1. PROFILES & STATS (profile, aura, wrapped)
+  // ============================================================
   if (subcommand === "profile") {
     let target = user;
     if (isSlash && args.target) target = args.target;
@@ -273,6 +276,9 @@ async function runMusicLogic(
     return sendReply(errPayload, true);
   }
 
+  // ============================================================
+  // 📻 2. RADIO & AI DJ (dj, lofi, radio)
+  // ============================================================
   if (subcommand === "dj") {
     if (!player) {
       player = poru.createConnection({
@@ -392,6 +398,9 @@ async function runMusicLogic(
     return sendReply(errPayload, true);
   }
 
+  // ============================================================
+  // ⏯️ 3. PLAYBACK & QUEUE (play, playlist, pause, resume, queue, etc.)
+  // ============================================================
   if (subcommand === "play") {
     if (!player) {
       player = poru.createConnection({
@@ -1279,6 +1288,9 @@ async function runMusicLogic(
     return sendReply(payload, false);
   }
 
+  // ============================================================
+  // 🎚️ 4. AUDIO CONTROLS & FILTERS (volume, filter, lyrics, quiz)
+  // ============================================================
   if (subcommand === "volume") {
     if (!player) {
       const errPayload = buildErrorContainerV2({
@@ -1566,6 +1578,9 @@ async function runMusicLogic(
     return;
   }
 
+  // ============================================================
+  // 🌐 5. CLUSTERING & PERSISTENCE (247, party, duplicates, quality, cluster)
+  // ============================================================
   if (subcommand === "247") {
     const cacheManager = require("../../src/managers/cacheManager");
     const profile = await cacheManager.getUserProfile(user.id);

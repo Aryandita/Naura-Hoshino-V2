@@ -1,4 +1,8 @@
 const {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ComponentType,
   SlashCommandBuilder,
   PermissionsBitField,
   MessageFlags,
@@ -11,6 +15,7 @@ const {
 } = require("../../src/utils/NauraContainerBuilder");
 const { sendModLog } = require("../../src/utils/modLogHelper");
 const incidentService = require("../../src/services/incidentService");
+const GuildSettings = require("../../src/models/GuildSettings");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -326,13 +331,15 @@ module.exports = {
 
       try {
         let deletedCount = 0;
+        let skippedOldCount = 0;
         let fetchAmount = amount;
         let lastMessageId = null;
 
         const statusPayload = buildContainerV2({
           accentColorHex: ui.getColor("primary") || "#FFB6C1",
-          title: `${ui.getEmoji("tools_generic") || "🧹"} Purge Messages`,
-          description: `${ui.getEmoji("loading") || "⏳"} Sedang menghapus pesan... Mohon tunggu (0/${amount})`,
+          title: "🧹 Pembersihan Pesan (Purge)",
+          expression: "thinking",
+          description: `${ui.getEmoji("loading") || "⏳"} Sedang menghapus pesan dari channel... Mohon tunggu (0/${amount})`,
           footerText: ui.getFooter("core"),
         });
         await interaction.editReply(statusPayload);
@@ -359,6 +366,7 @@ module.exports = {
             deletedCount += deleted.size;
 
             if (deleted.size < messages.size) {
+              skippedOldCount += (messages.size - deleted.size);
               break;
             }
           }
@@ -369,27 +377,48 @@ module.exports = {
             await new Promise((resolve) => setTimeout(resolve, 1500));
             const updatePayload = buildContainerV2({
               accentColorHex: ui.getColor("primary") || "#FFB6C1",
-              title: `${ui.getEmoji("tools_generic") || "🧹"} Purge Messages`,
-              description: `${ui.getEmoji("loading") || "⏳"} Sedang menghapus pesan... Mohon tunggu (${deletedCount}/${amount})`,
+              title: "🧹 Pembersihan Pesan (Purge)",
+              expression: "thinking",
+              description: `${ui.getEmoji("loading") || "⏳"} Sedang menghapus pesan... (${deletedCount}/${amount})`,
               footerText: ui.getFooter("core"),
             });
             await interaction.editReply(updatePayload).catch(() => {});
           }
         }
 
+        let auditChannelId = null;
+        try {
+          const row = await GuildSettings.findOne({ where: { guildId: interaction.guild.id } });
+          if (row?.settings) {
+            auditChannelId = row.settings.auditLogChannel || row.settings.modLogChannel || row.settings.logChannelId || null;
+          }
+        } catch (_) {}
+
         const finalPayload = buildContainerV2({
           accentColorHex: ui.getColor("success") || "#22c55e",
-          title: `${ui.getEmoji("success") || "✅"} Purge Selesai`,
-          description: `${ui.getEmoji("success") || "✅"} Berhasil menghapus **${deletedCount}** pesan${targetUser ? ` dari ${targetUser.username}` : ""}.\n*(Pesan yang usianya lebih dari 14 hari diabaikan oleh Discord)*`,
+          title: "✅ Pembersihan Pesan (Purge) Selesai",
+          expression: "success",
+          description: [
+            `Proses pembersihan riwayat pesan selesai dilaksanakan.`,
+            ``,
+            `🗑️ **Pesan Terhapus:** **${deletedCount}** pesan`,
+            targetUser ? `🎯 **Filter Pengguna:** <@${targetUser.id}> (\`${targetUser.tag || targetUser.username}\`)` : null,
+            skippedOldCount > 0 ? `⚠️ **Dilewati (>14 hari):** ${skippedOldCount} pesan` : null,
+            `📍 **Channel:** <#${interaction.channel.id}>`,
+            `🛡️ **Moderator:** <@${interaction.user.id}>`,
+            `⏱️ **Waktu Selesai:** <t:${Math.floor(Date.now() / 1000)}:R>`,
+            auditChannelId ? `\n-# 📝 Log moderasi terkirim ke <#${auditChannelId}>` : null,
+          ].filter(Boolean).join("\n"),
           footerText: ui.getFooter("core"),
         });
 
         await interaction.editReply(finalPayload);
+        await sendModLog(interaction.guild, finalPayload);
       } catch (error) {
         logger.error("[Purge Error]:", error);
         const errPayload = buildErrorContainerV2({
-          title: "Gagal Purge",
-          description: `${ui.getEmoji("error") || "❌"} Terjadi kesalahan fatal saat menghapus pesan.`,
+          title: "Gagal Melakukan Purge",
+          description: `${ui.getEmoji("error") || "❌"} Terjadi kesalahan saat menghapus pesan: ${error.message}`,
           footerText: ui.getFooter("core"),
         });
         await interaction.editReply(errPayload);
@@ -614,10 +643,28 @@ module.exports = {
 
         await targetMember.timeout(durationInfo.ms, `${reason} (Oleh: ${interaction.user.tag})`);
 
+        let auditChannelId = null;
+        try {
+          const row = await GuildSettings.findOne({ where: { guildId: interaction.guild.id } });
+          if (row?.settings) {
+            auditChannelId = row.settings.auditLogChannel || row.settings.modLogChannel || row.settings.logChannelId || null;
+          }
+        } catch (_) {}
+
         const responsePayload = buildContainerV2({
           accentColorHex: "#F59E0B",
           title: "⏳ Anggota Berhasil Dibisukan (Timeout)",
-          description: `Tindakan pembisuan sementara telah berhasil diterapkan.\n\n👤 **Target:** <@${targetUser.id}> (\`${targetUser.id}\`)\n⏱️ **Durasi:** ${durationInfo.label}\n📝 **Alasan:** ${reason}\n🛡️ **Moderator:** <@${interaction.user.id}>`,
+          expression: "warning",
+          description: [
+            `Tindakan pembisuan sementara telah berhasil diterapkan.`,
+            ``,
+            `👤 **Target:** <@${targetUser.id}> (\`${targetUser.tag || targetUser.username}\`)`,
+            `⏱️ **Durasi:** ${durationInfo.label}`,
+            `📝 **Alasan:** ${reason}`,
+            `🛡️ **Moderator:** <@${interaction.user.id}>`,
+            `📅 **Waktu:** <t:${Math.floor(Date.now() / 1000)}:F>`,
+            auditChannelId ? `\n-# 📝 Log moderasi tercatat di <#${auditChannelId}>` : null,
+          ].filter(Boolean).join("\n"),
           footerText: ui.getFooter("core"),
         });
 
@@ -671,10 +718,27 @@ module.exports = {
       try {
         await targetMember.timeout(null, `${reason} (Oleh: ${interaction.user.tag})`);
 
+        let auditChannelId = null;
+        try {
+          const row = await GuildSettings.findOne({ where: { guildId: interaction.guild.id } });
+          if (row?.settings) {
+            auditChannelId = row.settings.auditLogChannel || row.settings.modLogChannel || row.settings.logChannelId || null;
+          }
+        } catch (_) {}
+
         const responsePayload = buildContainerV2({
           accentColorHex: "#10B981",
           title: "🔊 Status Pembisuan Dicabut (Untimeout)",
-          description: `Pembisuan telah dicabut dan anggota kini dapat kembali mengirim pesan.\n\n👤 **Target:** <@${targetUser.id}> (\`${targetUser.id}\`)\n📝 **Alasan:** ${reason}\n🛡️ **Moderator:** <@${interaction.user.id}>`,
+          expression: "success",
+          description: [
+            `Pembisuan telah dicabut dan anggota kini dapat kembali berinteraksi di server.`,
+            ``,
+            `👤 **Target:** <@${targetUser.id}> (\`${targetUser.tag || targetUser.username}\`)`,
+            `📝 **Alasan:** ${reason}`,
+            `🛡️ **Moderator:** <@${interaction.user.id}>`,
+            `📅 **Waktu:** <t:${Math.floor(Date.now() / 1000)}:F>`,
+            auditChannelId ? `\n-# 📝 Log moderasi tercatat di <#${auditChannelId}>` : null,
+          ].filter(Boolean).join("\n"),
           footerText: ui.getFooter("core"),
         });
 
@@ -711,8 +775,6 @@ module.exports = {
         return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
       }
 
-      await interaction.deferReply();
-
       const targetMember = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
       if (!targetMember) {
         const errPayload = buildErrorContainerV2({
@@ -720,7 +782,7 @@ module.exports = {
           description: `${ui.getEmoji("error") || "❌"} Pengguna tersebut tidak berada di dalam server ini.`,
           footerText: ui.getFooter("core"),
         });
-        return interaction.editReply(errPayload);
+        return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
       }
 
       if (!targetMember.kickable) {
@@ -729,39 +791,125 @@ module.exports = {
           description: `${ui.getEmoji("error") || "❌"} Naura tidak dapat mengeluarkan <@${targetUser.id}> karena role mereka lebih tinggi atau setara dengan role Naura.`,
           footerText: ui.getFooter("core"),
         });
-        return interaction.editReply(errPayload);
+        return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
       }
 
-      try {
-        await targetUser.send({
-          ...buildContainerV2({
-            accentColorHex: "#F97316",
-            title: "Pemberitahuan Pengeluaran Server",
-            description: `Anda telah dikeluarkan (kick) dari server **${interaction.guild.name}**.\n\n📝 **Alasan:** ${reason}\n🛡️ **Moderator:** ${interaction.user.tag}`,
+      const confirmRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`confirm_kick_${targetUser.id}`)
+          .setLabel("Ya, Keluarkan (Kick)")
+          .setStyle(ButtonStyle.Danger)
+          .setEmoji("👢"),
+        new ButtonBuilder()
+          .setCustomId(`cancel_kick_${targetUser.id}`)
+          .setLabel("Batalkan")
+          .setStyle(ButtonStyle.Secondary),
+      );
+
+      const confirmPayload = buildContainerV2({
+        accentColorHex: "#F97316",
+        title: "Konfirmasi Pengeluaran Anggota",
+        expression: "warning",
+        description: [
+          `Apakah Anda yakin ingin mengeluarkan anggota berikut dari server?`,
+          ``,
+          `👤 **Target:** <@${targetUser.id}> (\`${targetUser.tag || targetUser.username}\`)`,
+          `📝 **Alasan:** ${reason}`,
+          `🛡️ **Moderator:** <@${interaction.user.id}>`,
+          ``,
+          `⚠️ Target dapat bergabung kembali jika memiliki tautan undangan yang sah. Klik konfirmasi dalam 30 detik.`,
+        ].join("\n"),
+        buttonsRow: confirmRow,
+        footerText: ui.getFooter("core"),
+      });
+
+      const reply = await interaction.reply({
+        ...confirmPayload,
+        flags: MessageFlags.Ephemeral,
+        fetchReply: true,
+      });
+
+      const collector = reply.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 30000,
+        max: 1,
+      });
+
+      collector.on("collect", async (i) => {
+        if (i.user.id !== interaction.user.id) return;
+
+        if (i.customId.startsWith("cancel_kick_")) {
+          const cancelPayload = buildContainerV2({
+            accentColorHex: ui.getColor("neutral") || "#64748B",
+            title: "Pengeluaran Dibatalkan",
+            expression: "neutral",
+            description: `Tindakan pengeluaran terhadap <@${targetUser.id}> telah dibatalkan oleh Anda.`,
             footerText: ui.getFooter("core"),
-          }),
-        }).catch(() => {});
+          });
+          return i.update({ ...cancelPayload, components: cancelPayload.components });
+        }
 
-        await targetMember.kick(`${reason} (Oleh: ${interaction.user.tag})`);
+        try {
+          await targetUser.send({
+            ...buildContainerV2({
+              accentColorHex: "#F97316",
+              title: "Pemberitahuan Pengeluaran Server",
+              description: `Anda telah dikeluarkan (kick) dari server **${interaction.guild.name}**.\n\n📝 **Alasan:** ${reason}\n🛡️ **Moderator:** ${interaction.user.tag}`,
+              footerText: ui.getFooter("core"),
+            }),
+          }).catch(() => {});
 
-        const responsePayload = buildContainerV2({
-          accentColorHex: "#F97316",
-          title: "👢 Anggota Berhasil Dikeluarkan (Kick)",
-          description: `Anggota telah dikeluarkan dari server.\n\n👤 **Target:** ${targetUser.tag} (\`${targetUser.id}\`)\n📝 **Alasan:** ${reason}\n🛡️ **Moderator:** <@${interaction.user.id}>`,
-          footerText: ui.getFooter("core"),
-        });
+          await targetMember.kick(`${reason} (Oleh: ${interaction.user.tag})`);
 
-        await interaction.editReply(responsePayload);
-        await sendModLog(interaction.guild, responsePayload);
-      } catch (err) {
-        logger.error("[Kick Error]:", err);
-        const errPayload = buildErrorContainerV2({
-          title: "Gagal Mengeluarkan Anggota",
-          description: `${ui.getEmoji("error") || "❌"} Terjadi kesalahan: ${err.message}`,
-          footerText: ui.getFooter("core"),
-        });
-        await interaction.editReply(errPayload);
-      }
+          let auditChannelId = null;
+          try {
+            const row = await GuildSettings.findOne({ where: { guildId: interaction.guild.id } });
+            if (row?.settings) {
+              auditChannelId = row.settings.auditLogChannel || row.settings.modLogChannel || row.settings.logChannelId || null;
+            }
+          } catch (_) {}
+
+          const responsePayload = buildContainerV2({
+            accentColorHex: "#F97316",
+            title: "👢 Anggota Berhasil Dikeluarkan (Kick)",
+            expression: "success",
+            description: [
+              `Anggota telah dikeluarkan dari server.`,
+              ``,
+              `👤 **Target:** <@${targetUser.id}> (\`${targetUser.tag || targetUser.username}\`)`,
+              `📝 **Alasan:** ${reason}`,
+              `🛡️ **Moderator:** <@${interaction.user.id}>`,
+              `⏱️ **Waktu Eksekusi:** <t:${Math.floor(Date.now() / 1000)}:F>`,
+              auditChannelId ? `\n-# 📝 Log moderasi tercatat di <#${auditChannelId}>` : null,
+            ].filter(Boolean).join("\n"),
+            footerText: ui.getFooter("core"),
+          });
+
+          await i.update({ ...responsePayload, components: responsePayload.components });
+          await sendModLog(interaction.guild, responsePayload);
+        } catch (err) {
+          logger.error("[Kick Error]:", err);
+          const errPayload = buildErrorContainerV2({
+            title: "Gagal Mengeluarkan Anggota",
+            description: `${ui.getEmoji("error") || "❌"} Terjadi kesalahan: ${err.message}`,
+            footerText: ui.getFooter("core"),
+          });
+          await i.update({ ...errPayload, components: errPayload.components });
+        }
+      });
+
+      collector.on("end", async (collected) => {
+        if (collected.size === 0) {
+          const timeoutPayload = buildContainerV2({
+            accentColorHex: ui.getColor("neutral") || "#64748B",
+            title: "Waktu Konfirmasi Habis",
+            expression: "neutral",
+            description: "Operasi pengeluaran dibatalkan otomatis karena tidak ada respons.",
+            footerText: ui.getFooter("core"),
+          });
+          await interaction.editReply({ ...timeoutPayload, components: timeoutPayload.components }).catch(() => {});
+        }
+      });
     } else if (subcommand === "ban") {
       if (!interaction.member.permissions.has(PermissionsBitField.Flags.BanMembers)) {
         const errPayload = buildErrorContainerV2({
@@ -785,8 +933,6 @@ module.exports = {
         return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
       }
 
-      await interaction.deferReply();
-
       const targetMember = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
       if (targetMember && !targetMember.bannable) {
         const errPayload = buildErrorContainerV2({
@@ -794,42 +940,130 @@ module.exports = {
           description: `${ui.getEmoji("error") || "❌"} Naura tidak dapat memblokir <@${targetUser.id}> karena role mereka lebih tinggi atau setara dengan role Naura.`,
           footerText: ui.getFooter("core"),
         });
-        return interaction.editReply(errPayload);
+        return interaction.reply({ ...errPayload, flags: MessageFlags.Ephemeral });
       }
 
-      try {
-        await targetUser.send({
-          ...buildContainerV2({
-            accentColorHex: "#EF4444",
-            title: "Pemberitahuan Pemblokiran Server",
-            description: `Anda telah diblokir secara permanen dari server **${interaction.guild.name}**.\n\n📝 **Alasan:** ${reason}\n🛡️ **Moderator:** ${interaction.user.tag}`,
+      const confirmRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`confirm_ban_${targetUser.id}`)
+          .setLabel("Ya, Ban Permanen")
+          .setStyle(ButtonStyle.Danger)
+          .setEmoji("🔨"),
+        new ButtonBuilder()
+          .setCustomId(`cancel_ban_${targetUser.id}`)
+          .setLabel("Batalkan")
+          .setStyle(ButtonStyle.Secondary),
+      );
+
+      const confirmPayload = buildContainerV2({
+        accentColorHex: "#EF4444",
+        title: "Konfirmasi Pemblokiran Anggota",
+        expression: "warning",
+        description: [
+          `Apakah Anda yakin ingin memblokir anggota berikut secara permanen?`,
+          ``,
+          `👤 **Target:** <@${targetUser.id}> (\`${targetUser.tag || targetUser.username}\`)`,
+          `📝 **Alasan:** ${reason}`,
+          `🗑️ **Pembersihan Pesan:** ${deleteSeconds === 0 ? "Tidak ada" : deleteSeconds === 86400 ? "24 Jam Terakhir" : "7 Hari Terakhir"}`,
+          `🛡️ **Moderator:** <@${interaction.user.id}>`,
+          ``,
+          `⚠️ Tindakan ini permanen dan akan menghapus akses target dari server. Klik tombol konfirmasi dalam 30 detik.`,
+        ].join("\n"),
+        buttonsRow: confirmRow,
+        footerText: ui.getFooter("core"),
+      });
+
+      const reply = await interaction.reply({
+        ...confirmPayload,
+        flags: MessageFlags.Ephemeral,
+        fetchReply: true,
+      });
+
+      const collector = reply.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 30000,
+        max: 1,
+      });
+
+      collector.on("collect", async (i) => {
+        if (i.user.id !== interaction.user.id) return;
+
+        if (i.customId.startsWith("cancel_ban_")) {
+          const cancelPayload = buildContainerV2({
+            accentColorHex: ui.getColor("neutral") || "#64748B",
+            title: "Pemblokiran Dibatalkan",
+            expression: "neutral",
+            description: `Tindakan pemblokiran terhadap <@${targetUser.id}> telah dibatalkan oleh Anda.`,
             footerText: ui.getFooter("core"),
-          }),
-        }).catch(() => {});
+          });
+          return i.update({ ...cancelPayload, components: cancelPayload.components });
+        }
 
-        await interaction.guild.members.ban(targetUser.id, {
-          deleteMessageSeconds: deleteSeconds,
-          reason: `${reason} (Oleh: ${interaction.user.tag})`,
-        });
+        try {
+          await targetUser.send({
+            ...buildContainerV2({
+              accentColorHex: "#EF4444",
+              title: "Pemberitahuan Pemblokiran Server",
+              description: `Anda telah diblokir secara permanen dari server **${interaction.guild.name}**.\n\n📝 **Alasan:** ${reason}\n🛡️ **Moderator:** ${interaction.user.tag}`,
+              footerText: ui.getFooter("core"),
+            }),
+          }).catch(() => {});
 
-        const responsePayload = buildContainerV2({
-          accentColorHex: "#EF4444",
-          title: "🔨 Anggota Berhasil Diblokir (Ban)",
-          description: `Pengguna telah dilarang masuk server secara permanen.\n\n👤 **Target:** ${targetUser.tag} (\`${targetUser.id}\`)\n🗑️ **Pembersihan Pesan:** ${deleteSeconds === 0 ? "Tidak ada" : deleteSeconds === 86400 ? "24 Jam" : "7 Hari"}\n📝 **Alasan:** ${reason}\n🛡️ **Moderator:** <@${interaction.user.id}>`,
-          footerText: ui.getFooter("core"),
-        });
+          await interaction.guild.members.ban(targetUser.id, {
+            deleteMessageSeconds: deleteSeconds,
+            reason: `${reason} (Oleh: ${interaction.user.tag})`,
+          });
 
-        await interaction.editReply(responsePayload);
-        await sendModLog(interaction.guild, responsePayload);
-      } catch (err) {
-        logger.error("[Ban Error]:", err);
-        const errPayload = buildErrorContainerV2({
-          title: "Gagal Memblokir Anggota",
-          description: `${ui.getEmoji("error") || "❌"} Terjadi kesalahan: ${err.message}`,
-          footerText: ui.getFooter("core"),
-        });
-        await interaction.editReply(errPayload);
-      }
+          let auditChannelId = null;
+          try {
+            const row = await GuildSettings.findOne({ where: { guildId: interaction.guild.id } });
+            if (row?.settings) {
+              auditChannelId = row.settings.auditLogChannel || row.settings.modLogChannel || row.settings.logChannelId || null;
+            }
+          } catch (_) {}
+
+          const responsePayload = buildContainerV2({
+            accentColorHex: "#EF4444",
+            title: "🔨 Anggota Berhasil Diblokir (Ban)",
+            expression: "success",
+            description: [
+              `Pengguna telah dilarang masuk server secara permanen.`,
+              ``,
+              `👤 **Target:** <@${targetUser.id}> (\`${targetUser.tag || targetUser.username}\`)`,
+              `🗑️ **Pembersihan Pesan:** ${deleteSeconds === 0 ? "Tidak ada" : deleteSeconds === 86400 ? "24 Jam Terakhir" : "7 Hari Terakhir"}`,
+              `📝 **Alasan:** ${reason}`,
+              `🛡️ **Moderator:** <@${interaction.user.id}>`,
+              `⏱️ **Waktu Eksekusi:** <t:${Math.floor(Date.now() / 1000)}:F>`,
+              auditChannelId ? `\n-# 📝 Log moderasi tercatat di <#${auditChannelId}>` : null,
+            ].filter(Boolean).join("\n"),
+            footerText: ui.getFooter("core"),
+          });
+
+          await i.update({ ...responsePayload, components: responsePayload.components });
+          await sendModLog(interaction.guild, responsePayload);
+        } catch (err) {
+          logger.error("[Ban Error]:", err);
+          const errPayload = buildErrorContainerV2({
+            title: "Gagal Memblokir Anggota",
+            description: `${ui.getEmoji("error") || "❌"} Terjadi kesalahan: ${err.message}`,
+            footerText: ui.getFooter("core"),
+          });
+          await i.update({ ...errPayload, components: errPayload.components });
+        }
+      });
+
+      collector.on("end", async (collected) => {
+        if (collected.size === 0) {
+          const timeoutPayload = buildContainerV2({
+            accentColorHex: ui.getColor("neutral") || "#64748B",
+            title: "Waktu Konfirmasi Habis",
+            expression: "neutral",
+            description: "Operasi pemblokiran dibatalkan otomatis karena tidak ada konfirmasi dalam 30 detik.",
+            footerText: ui.getFooter("core"),
+          });
+          await interaction.editReply({ ...timeoutPayload, components: timeoutPayload.components }).catch(() => {});
+        }
+      });
     } else if (subcommand === "unban") {
       if (!interaction.member.permissions.has(PermissionsBitField.Flags.BanMembers)) {
         const errPayload = buildErrorContainerV2({
@@ -851,10 +1085,27 @@ module.exports = {
           `${reason} (Oleh: ${interaction.user.tag})`
         );
 
+        let auditChannelId = null;
+        try {
+          const row = await GuildSettings.findOne({ where: { guildId: interaction.guild.id } });
+          if (row?.settings) {
+            auditChannelId = row.settings.auditLogChannel || row.settings.modLogChannel || row.settings.logChannelId || null;
+          }
+        } catch (_) {}
+
         const responsePayload = buildContainerV2({
           accentColorHex: "#10B981",
           title: "🔓 Pemblokiran Berhasil Dicabut (Unban)",
-          description: `Pengguna telah diizinkan kembali untuk bergabung ke server.\n\n👤 **Target:** ${unbannedUser ? unbannedUser.tag : targetUserId} (\`${targetUserId}\`)\n📝 **Alasan:** ${reason}\n🛡️ **Moderator:** <@${interaction.user.id}>`,
+          expression: "success",
+          description: [
+            `Pengguna telah diizinkan kembali untuk bergabung ke server.`,
+            ``,
+            `👤 **Target:** ${unbannedUser ? unbannedUser.tag : targetUserId} (\`${targetUserId}\`)`,
+            `📝 **Alasan:** ${reason}`,
+            `🛡️ **Moderator:** <@${interaction.user.id}>`,
+            `⏱️ **Waktu:** <t:${Math.floor(Date.now() / 1000)}:F>`,
+            auditChannelId ? `\n-# 📝 Log moderasi tercatat di <#${auditChannelId}>` : null,
+          ].filter(Boolean).join("\n"),
           footerText: ui.getFooter("core"),
         });
 
@@ -876,8 +1127,13 @@ module.exports = {
         !interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild) &&
         !interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)
       ) {
+        const errPayload = buildErrorContainerV2({
+          title: "Akses Ditolak",
+          description: "Anda memerlukan izin **Manage Guild** atau **Administrator** untuk mengelola status Panic Lockdown.",
+          footerText: ui.getFooter("core"),
+        });
         return interaction.reply({
-          content: "⛔ Anda memerlukan izin `Manage Guild` atau `Administrator` untuk mengelola status Panic Lockdown.",
+          ...errPayload,
           flags: MessageFlags.Ephemeral,
         });
       }
@@ -891,6 +1147,7 @@ module.exports = {
           const responsePayload = buildContainerV2({
             accentColorHex: ui.getColor("danger") || "#EF4444",
             title: "🚨 Panic Lockdown Diaktifkan",
+            expression: "warning",
             description: `Server sedang dalam status darurat anti-raid.\n\n🛡️ **Channel Terkunci:** ${result.affectedChannels} channel\n👤 **Diaktifkan Oleh:** <@${interaction.user.id}>\n⏱️ **Slowmode Darurat:** 15 detik untuk @everyone\n\nGunakan \`/moderation panic aksi:restore\` jika situasi telah aman kembali.`,
             footerText: ui.getFooter("core"),
           });
@@ -901,6 +1158,7 @@ module.exports = {
           const responsePayload = buildContainerV2({
             accentColorHex: ui.getColor("success") || "#10B981",
             title: "✅ Panic Lockdown Dipulihkan",
+            expression: "success",
             description: `Karantina darurat server telah diangkat.\n\n🔓 **Channel Dipulihkan:** ${result.restoredChannels} channel\n👤 **Dipulihkan Oleh:** <@${interaction.user.id}>\n\nIzin kirim pesan @everyone dan pengaturan slowmode telah dikembalikan ke kondisi semula.`,
             footerText: ui.getFooter("core"),
           });

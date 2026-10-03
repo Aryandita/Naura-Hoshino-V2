@@ -186,11 +186,130 @@ module.exports = (client) => {
   router.get("/api/profile", requireSelfOrOwner, async (req, res) => {
     try {
       const userId = req.targetUserId;
+      const achievementsPool = require("../../src/survival/data/achievementsData");
+
+      const MYTHIC_IDS = new Set([
+        "god_slayer",
+        "elf_evolution",
+        "magic_creator",
+        "billionaire",
+      ]);
+
+      const RARE_IDS = new Set([
+        "high_mage",
+        "weapon_manifest",
+        "blacksmith_master",
+        "demon_contract",
+        "yinyang_light",
+        "cat_beast_friend",
+        "gambler",
+      ]);
+
+      if (req.isPreview || userId === "demo_user") {
+        const demoUnlockedIds = [
+          "first_step",
+          "scavenger",
+          "adventurer",
+          "weapon_manifest",
+          "blacksmith_master",
+          "chef",
+          "gambler",
+          "billionaire",
+          "veteran_survivor",
+          "fisherman",
+          "tree_feller",
+          "miner",
+        ];
+
+        const achievementList = achievementsPool.map((ach) => {
+          let rarity = "Common";
+          if (MYTHIC_IDS.has(ach.id)) rarity = "Mythic";
+          else if (RARE_IDS.has(ach.id)) rarity = "Rare";
+
+          return {
+            id: ach.id,
+            title: ach.title,
+            description: ach.description,
+            emoji: ach.emoji,
+            color: ach.color,
+            rarity,
+            unlocked: demoUnlockedIds.includes(ach.id),
+          };
+        });
+
+        const unlockedCount = demoUnlockedIds.length;
+        const totalCount = achievementsPool.length;
+        const percentage = Math.round((unlockedCount / totalCount) * 100);
+
+        return res.json({
+          success: true,
+          identity: {
+            userId: "889912345678901234",
+            username: "NauraAdventurer",
+            discriminator: "2026",
+            avatar: "https://cdn.discordapp.com/embed/avatars/0.png",
+            banner: null,
+            createdAt: "2024-03-15T08:00:00.000Z",
+          },
+          economy: {
+            wallet: 154500,
+            bank: 850000,
+            netWorth: 1004500,
+            starFragments: 18450,
+            coupons: 14,
+            lotteryTickets: 5,
+          },
+          vitals: {
+            hp: 95,
+            stamina: 88,
+            hydration: 90,
+            satiation: 85,
+          },
+          stats: {
+            strength: 45,
+            agility: 38,
+            intelligence: 52,
+            luck: 25,
+          },
+          survival: {
+            inGameDay: 48,
+            inGameHour: 14,
+            propertyId: "villa_bintang",
+            currentLocation: "kota_pratama",
+            vehicle: "Cyber Skiff",
+          },
+          leveling: {
+            chatLevel: 38,
+            chatXp: 38400,
+            rpgLevel: 29,
+            rpgXp: 29150,
+          },
+          status: {
+            isPremium: true,
+            premiumUntil: "2026-12-31T23:59:59.000Z",
+            isOwner: true,
+            language: "id",
+            reputation: 350,
+          },
+          achievements: {
+            unlockedCount,
+            totalCount,
+            percentage,
+            activeTitle: "Sang Penakluk Bintang",
+            list: achievementList,
+          },
+          inventory: [],
+          npcBonds: [],
+        });
+      }
+
       const UserSurvival = require("../../src/models/UserSurvival");
       const UserNPC = require("../../src/models/UserNPC");
+      const UserAchievement = require("../../src/models/UserAchievement");
 
       const [profile] = await UserProfile.findOrCreate({ where: { userId } });
       const [survival] = await UserSurvival.findOrCreate({ where: { userId } });
+      const [userAch] = await UserAchievement.findOrCreate({ where: { userId } });
       const bonds = await UserNPC.findAll({ where: { userId } });
 
       const cachedUser = client.users.cache.get(userId);
@@ -205,20 +324,77 @@ module.exports = (client) => {
         "Menikah",
       ];
 
+      const unlockedIds = Array.isArray(userAch.unlockedAchievements)
+        ? userAch.unlockedAchievements
+        : [];
+      const activeTitle = userAch.activeTitle || null;
+
+      const achievementList = achievementsPool.map((ach) => {
+        let rarity = "Common";
+        if (MYTHIC_IDS.has(ach.id)) rarity = "Mythic";
+        else if (RARE_IDS.has(ach.id)) rarity = "Rare";
+
+        return {
+          id: ach.id,
+          title: ach.title,
+          description: ach.description,
+          emoji: ach.emoji,
+          color: ach.color,
+          rarity,
+          unlocked: unlockedIds.includes(ach.id),
+        };
+      });
+
+      const unlockedCount = unlockedIds.length;
+      const totalCount = achievementsPool.length;
+      const percentage =
+        totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0;
+
+      let bannerUrl = null;
+      if (dUser?.banner) {
+        bannerUrl = `https://cdn.discordapp.com/banners/${userId}/${dUser.banner}.png?size=1024`;
+      } else if (profile.activeBanners && profile.activeBanners.profile) {
+        bannerUrl = profile.activeBanners.profile;
+      }
+
       res.json({
         success: true,
         identity: {
           userId,
           username: dUser ? dUser.username : "Pengguna Misterius",
+          discriminator: dUser ? dUser.discriminator || "0" : "0",
           avatar: dUser
             ? dUser.displayAvatarURL({ extension: "png", size: 256 })
             : client.user.displayAvatarURL({ extension: "png", size: 256 }),
+          banner: bannerUrl,
+          createdAt: dUser?.createdAt || null,
         },
         economy: {
           wallet: profile.economy_wallet || 0,
           bank: profile.economy_bank || 0,
           netWorth: (profile.economy_wallet || 0) + (profile.economy_bank || 0),
           starFragments: survival.starFragments || 0,
+          coupons: survival.coupons || 0,
+          lotteryTickets: survival.lotteryTickets || 0,
+        },
+        vitals: {
+          hp: survival.hp ?? 100,
+          stamina: survival.stamina ?? 100,
+          hydration: survival.thirst ?? 100,
+          satiation: survival.hunger ?? 100,
+        },
+        stats: {
+          strength: survival.strength || 1,
+          agility: survival.agility || 1,
+          intelligence: survival.intelligence || 1,
+          luck: survival.luck || 1,
+        },
+        survival: {
+          inGameDay: survival.inGameDay || 1,
+          inGameHour: survival.inGameHour || 6,
+          propertyId: survival.propertyId || "jalanan",
+          currentLocation: survival.currentLocation || "jalanan",
+          vehicle: survival.vehicle || null,
         },
         leveling: {
           chatLevel: profile.leveling_level || 1,
@@ -231,6 +407,14 @@ module.exports = (client) => {
           premiumUntil: profile.premiumUntil || null,
           isOwner: isOwner(userId),
           language: profile.language || null,
+          reputation: profile.reputation || 0,
+        },
+        achievements: {
+          unlockedCount,
+          totalCount,
+          percentage,
+          activeTitle,
+          list: achievementList,
         },
         inventory: profile.inventory || [],
         npcBonds: bonds
@@ -249,6 +433,122 @@ module.exports = (client) => {
       res
         .status(500)
         .json({ success: false, error: "Naura gagal memuat profilmu." });
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // Inventory: daftar isi tas & peralatan petualang
+  // ------------------------------------------------------------------
+  router.get("/api/inventory", async (req, res) => {
+    try {
+      const isAuth = typeof req.isAuthenticated === "function" && req.isAuthenticated() && req.user;
+      const targetUserId = isAuth
+        ? (isOwner(req.user.id) && req.query?.userId ? String(req.query.userId) : req.user.id)
+        : null;
+
+      if (!targetUserId) {
+        return res.json({
+          success: true,
+          isGuest: true,
+          items: [],
+          tools: {
+            pickaxe: { level: 1, durability: 100, maxDurability: 100 },
+            axe: { level: 1, durability: 100, maxDurability: 100 },
+            rod: { level: 1, durability: 100, maxDurability: 100 },
+          },
+          capacity: { used: 0, max: 30 },
+          message: "Mode pratinjau tamu. Masuk lewat Discord untuk memuat isi ranselmu.",
+        });
+      }
+
+      const cacheManager = require("../../src/managers/cacheManager");
+      const GameItem = require("../../src/models/GameItem");
+      const profile = await cacheManager.getUserProfile(targetUserId);
+
+      if (!profile) {
+        return res.json({
+          success: true,
+          isGuest: !isAuth,
+          items: [],
+          tools: {
+            pickaxe: { level: 1, durability: 100, maxDurability: 100 },
+            axe: { level: 1, durability: 100, maxDurability: 100 },
+            rod: { level: 1, durability: 100, maxDurability: 100 },
+          },
+          capacity: { used: 0, max: 30 },
+        });
+      }
+
+      const rawInv = Array.isArray(profile.inventory) ? profile.inventory : [];
+      const items = await Promise.all(
+        rawInv.map(async (entry, idx) => {
+          const id = itemIdOf(entry);
+          const dbItem = await GameItem.findByPk(id).catch(() => null);
+          const name = (typeof entry === "object" && entry.name) || (dbItem && dbItem.name) || id;
+          const count = (typeof entry === "object" && entry.amount) || (typeof entry === "object" && entry.count) || 1;
+          const rarity = (dbItem && dbItem.rarity) || (typeof entry === "object" && entry.rarity) || "Common";
+          const type = (dbItem && dbItem.category) || (typeof entry === "object" && entry.type) || "Material";
+          const desc = (dbItem && dbItem.description) || (typeof entry === "object" && entry.desc) || "Barang petualangan Naura Wilds.";
+          const val = (dbItem && dbItem.sellPrice) || 50;
+
+          let icon = (typeof entry === "object" && entry.icon) || "📦";
+          if (icon === "📦") {
+            const low = String(id).toLowerCase();
+            if (low.includes("sword") || low.includes("pedang")) icon = "🗡️";
+            else if (low.includes("pickaxe") || low.includes("beliung")) icon = "⛏️";
+            else if (low.includes("axe") || low.includes("kapak")) icon = "🪓";
+            else if (low.includes("fish") || low.includes("ikan")) icon = "🐟";
+            else if (low.includes("berry") || low.includes("buah") || low.includes("crop")) icon = "🍓";
+            else if (low.includes("ore") || low.includes("mineral") || low.includes("shard")) icon = "💎";
+            else if (low.includes("potion") || low.includes("jamu")) icon = "🧪";
+          }
+
+          return {
+            id,
+            slotIndex: idx,
+            name,
+            icon,
+            type,
+            rarity,
+            durability: (typeof entry === "object" && entry.durability) ? entry.durability : "100/100",
+            value: `${val.toLocaleString("id-ID")} NSF`,
+            count,
+            desc,
+          };
+        }),
+      );
+
+      const tools = {
+        pickaxe: {
+          level: profile.tool_pickaxeLevel || 1,
+          durability: profile.tool_pickaxeDurability || 100,
+          maxDurability: 100,
+        },
+        axe: {
+          level: profile.tool_axeLevel || 1,
+          durability: profile.tool_axeDurability || 100,
+          maxDurability: 100,
+        },
+        rod: {
+          level: profile.tool_rodLevel || 1,
+          durability: profile.tool_rodDurability || 100,
+          maxDurability: 100,
+        },
+      };
+
+      return res.json({
+        success: true,
+        isGuest: !isAuth,
+        items,
+        tools,
+        capacity: {
+          used: items.length,
+          max: 30,
+        },
+      });
+    } catch (err) {
+      logger.error("[API INVENTORY GET] Error:", err);
+      return res.status(500).json({ success: false, error: "Gagal memuat isi tas ransel." });
     }
   });
 

@@ -87,6 +87,17 @@ module.exports = {
     const author = interaction.user;
 
     try {
+function detectCategory(text) {
+  const lower = text.toLowerCase();
+  if (/(transaksi|scam|saldo|beli|jual|transfer|pasar|coin|uang|tipu)/i.test(lower)) {
+    return { name: "Transaksi", badge: "💳 Transaksi" };
+  }
+  if (/(bug|crash|spam|bot|raid|teknis|error|script|glitch|nuke)/i.test(lower)) {
+    return { name: "Teknis", badge: "⚙️ Teknis" };
+  }
+  return { name: "Perilaku", badge: "🚨 Perilaku" };
+}
+
       if (subcommand === "add") {
         const target = interaction.options.getUser("user", true);
         const noteText = interaction.options.getString("catatan", true).trim();
@@ -103,6 +114,8 @@ module.exports = {
           );
         }
 
+        const category = detectCategory(noteText);
+
         const newNote = await ModNote.create({
           guildId: guild.id,
           targetId: target.id,
@@ -116,12 +129,13 @@ module.exports = {
           accentColorHex: ui.getColor("info") || "#3b82f6",
           title: "Catatan Moderasi Disimpan",
           expression: "success",
-          description: `Catatan rahasia untuk <@${target.id}> berhasil ditambahkan. Catatan ini hanya dapat dilihat oleh tim staf.`,
+          description: `Catatan rahasia untuk <@${target.id}> berhasil ditambahkan ke arsip staf server.`,
           fields: [
-            { label: "Target", value: `<@${target.id}> (${target.id})`, inline: true },
-            { label: "Moderator", value: `<@${author.id}>`, inline: true },
-            { label: "ID Catatan", value: `\`${newNote._id.toString()}\``, inline: true },
-            { label: "Isi Catatan", value: noteText, inline: false },
+            { name: "Target", value: `<@${target.id}> (\`${target.id}\`)` },
+            { name: "Kategori", value: category.badge },
+            { name: "Moderator", value: `<@${author.id}>` },
+            { name: "ID Catatan", value: `\`${newNote._id.toString()}\`` },
+            { name: "Isi Catatan", value: noteText },
           ],
           footerText: ui.getFooter("core"),
         });
@@ -133,12 +147,13 @@ module.exports = {
           accentColorHex: ui.getColor("info") || "#3b82f6",
           title: "Audit Log: Catatan Moderasi Baru",
           expression: "neutral",
-          description: `Moderator mencatat rekaman perilaku untuk anggota <@${target.id}>.`,
+          description: `Moderator mencatat rekaman baru untuk anggota <@${target.id}>.`,
           fields: [
-            { label: "Target", value: `<@${target.id}> (\`${target.id}\`)`, inline: true },
-            { label: "Moderator", value: `<@${author.id}>`, inline: true },
-            { label: "ID", value: `\`${newNote._id.toString()}\``, inline: true },
-            { label: "Catatan", value: noteText, inline: false },
+            { name: "Target", value: `<@${target.id}> (\`${target.id}\`)` },
+            { name: "Kategori", value: category.badge },
+            { name: "Moderator", value: `<@${author.id}>` },
+            { name: "ID", value: `\`${newNote._id.toString()}\`` },
+            { name: "Catatan", value: noteText },
           ],
           footerText: ui.getFooter("core"),
         });
@@ -171,10 +186,10 @@ module.exports = {
 
         const fields = notes.map((n, idx) => {
           const timestamp = Math.floor(new Date(n.createdAt).getTime() / 1000);
+          const category = detectCategory(n.note);
           return {
-            label: `#${idx + 1} ID: \`${n._id.toString()}\``,
-            value: `**Waktu:** <t:${timestamp}:R>\n**Moderator:** <@${n.moderatorId}>\n**Catatan:** ${n.note}`,
-            inline: false,
+            name: `#${idx + 1} [${category.badge}] ID: ${n._id.toString()}`,
+            value: `**Waktu:** <t:${timestamp}:R> (<t:${timestamp}:d>)\n**Moderator:** <@${n.moderatorId}>\n**Catatan:** ${n.note}`,
           };
         });
 
@@ -229,10 +244,10 @@ module.exports = {
           expression: "neutral",
           description: `Moderator <@${author.id}> telah menghapus catatan riwayat anggota.`,
           fields: [
-            { label: "Target", value: `<@${existingNote.targetId}>`, inline: true },
-            { label: "Dihapus Oleh", value: `<@${author.id}>`, inline: true },
-            { label: "ID Terhapus", value: `\`${noteId}\``, inline: true },
-            { label: "Isi Terhapus", value: existingNote.note, inline: false },
+            { name: "Target", value: `<@${existingNote.targetId}>` },
+            { name: "Dihapus Oleh", value: `<@${author.id}>` },
+            { name: "ID Terhapus", value: `\`${noteId}\`` },
+            { name: "Isi Terhapus", value: existingNote.note },
           ],
           footerText: ui.getFooter("core"),
         });

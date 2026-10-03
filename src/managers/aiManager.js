@@ -60,9 +60,6 @@ class AIManager {
         "[AI] GEMINI_API_KEY tidak ditemukan. Fitur Vision dan fallback Gemini dimatikan, Verba dan Ollama tetap jalan.",
       );
     }
-
-    // TTL Cleanup loop. unref() wajib, kalau tidak timer ini menahan event loop dan
-    // proses menolak mati saat shutdown sampai watchdog memaksanya keluar.
   }
 
   // Mengembalikan klien Gemini, atau null bila tidak ada API key sama sekali.
@@ -113,8 +110,8 @@ class AIManager {
     // berikutnya lewat getGenAI(), sehingga rotasi kunci tidak pernah memuat SDK
     // hanya untuk dibuang lagi.
     this._genAI = null;
-    console.log(
-      `\x1b[43m\x1b[30m \ud83d\udd04 GEMINI FALLBACK \x1b[0m \x1b[33mBeralih ke API Key ke-${this.currentKeyIndex + 1}...\x1b[0m`,
+    logger.warn(
+      `[AI] GEMINI FALLBACK: Beralih ke API Key ke-${this.currentKeyIndex + 1}...`,
     );
     return true;
   }

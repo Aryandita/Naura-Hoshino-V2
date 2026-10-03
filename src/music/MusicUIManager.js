@@ -123,6 +123,10 @@ class MusicUIManager {
         }
 
         // --- Now Playing Info ---
+        const djBubble = player.currentDjSpeech
+          ? `> ${player.currentDjEmoji || "🎙️"} **Naura DJ Host (${player.currentDjGenre || "Radio FM"}):**\n> _"${player.currentDjSpeech}"_\n\n`
+          : "";
+
         containerComponents.push(
           textDisplay(
             `### ${brandEmoji} Now Playing...\n` +
@@ -132,6 +136,7 @@ class MusicUIManager {
               `${track.info.author}\n\n` +
               `**Requested by**\n` +
               `${requesterText}\n\n` +
+              djBubble +
               `**━━━ 𝐒𝐘𝐒𝐓𝐄𝐌 𝐏𝐀𝐑𝐀𝐌𝐄𝐓𝐄𝐑𝐒 ━━━**\n` +
               `> ${ui.getEmoji("musicVolUp") || "🔊"} **Volume:** \`${player.volume}%\`\n` +
               `> ${ui.getEmoji("filter") || "🎛️"} **Filter DSP:** \`${player.currentFilterName}\`\n` +

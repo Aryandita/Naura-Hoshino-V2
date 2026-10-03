@@ -276,7 +276,140 @@ async function generateDynamicMotionBanner(payload = {}) {
   return canvas.toBuffer("image/png");
 }
 
+/**
+ * Menghasilkan buffer banner canvas untuk event Giveaway.
+ * @param {object} payload
+ * @param {string} payload.prize
+ * @param {number} payload.winnerCount
+ * @param {string} payload.sponsorName
+ * @param {string} [payload.endTimeStr]
+ * @param {string} [payload.serverName]
+ * @returns {Promise<Buffer>}
+ */
+async function generateGiveawayBanner(payload = {}) {
+  const width = 900;
+  const height = 320;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
+
+  // Minimalist dark gradient background
+  const grad = ctx.createLinearGradient(0, 0, width, height);
+  grad.addColorStop(0, "#0F0B18");
+  grad.addColorStop(0.5, "#1B1028");
+  grad.addColorStop(1, "#0A0512");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, width, height);
+
+  // Subtle grid
+  ctx.save();
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+  ctx.lineWidth = 1;
+  const gridSize = 36;
+  for (let x = 0; x < width; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+  for (let y = 0; y < height; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Glow on top-right
+  ctx.save();
+  const radGlow = ctx.createRadialGradient(width - 160, 90, 10, width - 160, 90, 260);
+  radGlow.addColorStop(0, "rgba(244, 114, 182, 0.22)");
+  radGlow.addColorStop(1, "transparent");
+  ctx.fillStyle = radGlow;
+  ctx.fillRect(0, 0, width, height);
+  ctx.restore();
+
+  // Tag Badge
+  ctx.save();
+  const badgeText = "★ OFFICIAL GIVEAWAY EVENT ★";
+  ctx.font = "bold 12px sans-serif";
+  const badgeWidth = ctx.measureText(badgeText).width + 24;
+  ctx.fillStyle = "rgba(236, 72, 153, 0.2)";
+  ctx.strokeStyle = "#EC4899";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(40, 36, badgeWidth, 26, 6);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#F472B6";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(badgeText, 52, 49);
+  ctx.restore();
+
+  // Prize Title
+  ctx.save();
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "bold 32px sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  const rawPrize = payload.prize || "Hadiah Menarik";
+  const prizeText = rawPrize.length > 36 ? rawPrize.slice(0, 34) + "..." : rawPrize;
+  ctx.fillText(prizeText, 40, 78);
+  ctx.restore();
+
+  // Server & Sponsor subtitle
+  ctx.save();
+  ctx.fillStyle = "#94A3B8";
+  ctx.font = "15px sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  const sponsorText = `Disponsori oleh: ${payload.sponsorName || "Moderator"} • ${payload.serverName || "Komunitas Server"}`;
+  ctx.fillText(sponsorText, 40, 126);
+  ctx.restore();
+
+  // Metric Cards
+  const cards = [
+    { label: "PEMENANG", val: `${payload.winnerCount || 1} Orang`, color: "#38BDF8" },
+    { label: "STATUS", val: "Aktif", color: "#34D399" },
+    { label: "BATAS WAKTU", val: payload.endTimeStr || "Segera Berakhir", color: "#FBBF24" },
+  ];
+
+  const cardY = 175;
+  cards.forEach((c, idx) => {
+    const cardX = 40 + idx * 210;
+    ctx.save();
+    ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(cardX, cardY, 195, 56, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = "#64748B";
+    ctx.font = "bold 10px sans-serif";
+    ctx.fillText(c.label, cardX + 14, cardY + 20);
+
+    ctx.fillStyle = c.color;
+    ctx.font = "bold 16px sans-serif";
+    ctx.fillText(c.val, cardX + 14, cardY + 42);
+    ctx.restore();
+  });
+
+  // Footer Watermark
+  ctx.save();
+  ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+  ctx.font = "11px sans-serif";
+  ctx.textAlign = "right";
+  ctx.fillText("NAURA HOSHINO V2 • OFFICIAL EVENT", width - 40, height - 25);
+  ctx.restore();
+
+  return canvas.toBuffer("image/png");
+}
+
 module.exports = {
   generateDynamicMotionBanner,
+  generateGiveawayBanner,
   THEMES,
 };

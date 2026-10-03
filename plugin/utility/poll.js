@@ -67,19 +67,46 @@ module.exports = {
       if (opt) options.push(opt);
     }
 
+    const endUnix = Math.floor(Date.now() / 1000) + durationMin * 60;
     const votes = new Map();
 
+    const renderDescription = (activeVotes = 0, isClosed = false) => {
+      let desc = isClosed
+        ? `**Sesi Voting Telah Ditutup**\nTotal Partisipasi: **${activeVotes} Suara**\n\n`
+        : `Tentukan pilihanmu melalui tombol di bawah.\nAturan: ${multiVote ? "**Pilihan Ganda (Bisa memilih lebih dari satu)**" : "**Pilihan Tunggal (Hanya satu opsi)**"}\nBatas Waktu: <t:${endUnix}:R> (<t:${endUnix}:T>)\n\n`;
+
+      const results = new Array(options.length).fill(0);
+      let total = 0;
+      for (const uVotes of votes.values()) {
+        for (const idx of uVotes) {
+          results[idx]++;
+          total++;
+        }
+      }
+
+      options.forEach((opt, index) => {
+        const count = results[index];
+        const percentage = total === 0 ? 0 : Math.round((count / total) * 100);
+        const filled = Math.round(percentage / 10);
+        const bar = "▰".repeat(filled) + "▱".repeat(10 - filled);
+        desc += `**${index + 1}. ${opt}** (${count} suara • ${percentage}%)\n\`${bar}\`\n\n`;
+      });
+
+      return desc;
+    };
+
     const payload = buildContainerV2({
-      accentColorHex: ui.getColor("primary") || "#FFB6C1",
-      authorName: `${ui.getEmoji("poll") || "📊"} Polling Baru!`,
+      accentColorHex: ui.getColor("primary") || "#38BDF8",
+      authorName: "Sistem Pemungutan Suara",
       iconURL: interaction.user.displayAvatarURL(),
       title: question,
-      description: `Pilih salah satu opsi di bawah ini!\n${multiVote ? "*(Kamu bisa memilih lebih dari satu)*" : "*(Hanya bisa memilih satu)*"}\n\nBerakhir <t:${Math.floor(Date.now() / 1000) + durationMin * 60}:R>`,
-      footerText: `Dibuat oleh ${interaction.user.username}`,
+      description: renderDescription(0, false),
+      footerText: `Inisiator: ${interaction.user.username}`,
     });
 
     const rows = [];
     let currentRow = new ActionRowBuilder();
+    const numberEmojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"];
 
     options.forEach((opt, index) => {
       if (currentRow.components.length === 5) {
@@ -89,8 +116,9 @@ module.exports = {
       currentRow.addComponents(
         new ButtonBuilder()
           .setCustomId(`poll_opt_${index}`)
-          .setLabel(opt)
-          .setStyle(ButtonStyle.Primary),
+          .setLabel(opt.length > 70 ? opt.slice(0, 67) + "..." : opt)
+          .setEmoji(numberEmojis[index] || "🔹")
+          .setStyle(ButtonStyle.Secondary),
       );
     });
     if (currentRow.components.length > 0) rows.push(currentRow);
@@ -107,7 +135,7 @@ module.exports = {
     });
 
     collector.on("collect", async (i) => {
-      const optIndex = parseInt(i.customId.split("_")[2]);
+      const optIndex = parseInt(i.customId.split("_")[2], 10);
       const userId = i.user.id;
 
       if (!votes.has(userId)) {
@@ -118,7 +146,7 @@ module.exports = {
 
       if (!multiVote && userVotes.size > 0 && !userVotes.has(optIndex)) {
         return i.reply({
-          content: `${ui.getEmoji("cross") || "❌"} Kamu hanya bisa memilih satu opsi pada polling ini.`,
+          content: "Kamu hanya dapat memilih satu opsi pada polling ini. Batalkan opsi sebelumnya terlebih dahulu jika ingin berganti pilihan.",
           flags: MessageFlags.Ephemeral,
         });
       }
@@ -126,47 +154,29 @@ module.exports = {
       if (userVotes.has(optIndex)) {
         userVotes.delete(optIndex);
         await i.reply({
-          content: `Kamu telah membatalkan pilihanmu untuk: **${options[optIndex]}**`,
+          content: `Pilihan untuk opsi **"${options[optIndex]}"** telah dibatalkan.`,
           flags: MessageFlags.Ephemeral,
         });
       } else {
         userVotes.add(optIndex);
         await i.reply({
-          content: `Kamu memilih: **${options[optIndex]}**`,
+          content: `Suaramu berhasil disimpan untuk opsi **"${options[optIndex]}"**.`,
           flags: MessageFlags.Ephemeral,
         });
       }
 
-      // UPDATE REAL-TIME
-      const results = new Array(options.length).fill(0);
       let totalVotes = 0;
-
       for (const uVotes of votes.values()) {
-        for (const idx of uVotes) {
-          results[idx]++;
-          totalVotes++;
-        }
+        totalVotes += uVotes.size;
       }
 
-      let resultDesc = `Pilih salah satu opsi di bawah ini!\n${multiVote ? "*(Kamu bisa memilih lebih dari satu)*" : "*(Hanya bisa memilih satu)*"}\n\n`;
-      options.forEach((opt, index) => {
-        const percentage =
-          totalVotes === 0
-            ? 0
-            : Math.round((results[index] / totalVotes) * 100);
-        const barLength = Math.round(percentage / 10);
-        const bar = "█".repeat(barLength) + "░".repeat(10 - barLength);
-        resultDesc += `**${opt}** - ${results[index]} suara (${percentage}%)\n\`${bar}\`\n\n`;
-      });
-      resultDesc += `Berakhir <t:${Math.floor(Date.now() / 1000) + Math.max(0, Math.floor((collector.options.time - (Date.now() - collector.options.time)) / 1000))}:R>`; // approximate
-
       const updatePayload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        authorName: `${ui.getEmoji("poll") || "📊"} Polling Berjalan`,
+        accentColorHex: ui.getColor("primary") || "#38BDF8",
+        authorName: "Sistem Pemungutan Suara",
         iconURL: interaction.user.displayAvatarURL(),
         title: question,
-        description: resultDesc,
-        footerText: `Dibuat oleh ${interaction.user.username} • Total Suara: ${totalVotes}`,
+        description: renderDescription(totalVotes, false),
+        footerText: `Inisiator: ${interaction.user.username} • Total Partisipasi: ${totalVotes} Suara`,
       });
 
       await interaction
@@ -175,37 +185,21 @@ module.exports = {
     });
 
     collector.on("end", async () => {
-      const results = new Array(options.length).fill(0);
       let totalVotes = 0;
-
       for (const userVotes of votes.values()) {
-        for (const idx of userVotes) {
-          results[idx]++;
-          totalVotes++;
-        }
+        totalVotes += userVotes.size;
       }
 
-      let resultDesc = `**Total Suara: ${totalVotes}**\n\n`;
-      options.forEach((opt, index) => {
-        const percentage =
-          totalVotes === 0
-            ? 0
-            : Math.round((results[index] / totalVotes) * 100);
-        const barLength = Math.round(percentage / 10);
-        const bar = "█".repeat(barLength) + "░".repeat(10 - barLength);
-        resultDesc += `**${opt}** - ${results[index]} suara (${percentage}%)\n\`${bar}\`\n\n`;
-      });
-
       const resultPayload = buildContainerV2({
-        accentColorHex: ui.getColor("success") || "#22c55e",
-        authorName: `${ui.getEmoji("poll") || "📊"} Polling Berakhir`,
+        accentColorHex: ui.getColor("success") || "#34D399",
+        authorName: "Hasil Akhir Pemungutan Suara",
         iconURL: interaction.user.displayAvatarURL(),
         title: question,
-        description: resultDesc,
+        description: renderDescription(totalVotes, true),
         footerText: ui.getFooter("core"),
       });
 
-      await interaction.editReply({ ...resultPayload, components: [] });
+      await interaction.editReply({ ...resultPayload, components: [] }).catch(() => {});
     });
   },
 };

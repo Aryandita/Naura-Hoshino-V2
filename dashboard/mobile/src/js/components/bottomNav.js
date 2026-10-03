@@ -8,6 +8,8 @@
  * - Tiap tab punya accent warna sesuai kategori (DESIGN.md Categorical Color).
  */
 
+import { initAppsDrawer } from "./appsDrawer.js";
+
 /** Definisi 7 tab navigasi utama */
 const NAV_TABS = [
   {
@@ -73,6 +75,29 @@ const NAV_TABS = [
  * Dipanggil dari setiap halaman saat DOM ready.
  */
 export function initBottomNav() {
+  initAppsDrawer();
+
+  // Pastikan tombol Pusat Fitur (Apps Drawer) hadir di header jika header ada
+  const headerActions = document.querySelector(".nm-header__actions");
+  if (headerActions && !document.getElementById("nm-open-apps")) {
+    const appsBtn = document.createElement("button");
+    appsBtn.id = "nm-open-apps";
+    appsBtn.className = "nm-header__btn";
+    appsBtn.setAttribute("aria-label", "Pusat Fitur");
+    appsBtn.setAttribute("title", "Semua Fitur Naura OS");
+    appsBtn.innerHTML = '<i class="fa-solid fa-cubes" aria-hidden="true"></i>';
+    headerActions.prepend(appsBtn);
+    appsBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const overlay = document.getElementById("nm-apps-drawer-overlay");
+      if (overlay) {
+        overlay.classList.add("is-open");
+        overlay.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      }
+    });
+  }
+
   const nav = document.getElementById("nm-bottom-nav");
   if (!nav) return;
 

@@ -125,24 +125,26 @@ module.exports = {
       const nextDay = (currentStreak % 7) + 1;
       const nextReward = REWARD_TABLE[nextDay - 1];
 
+      const container = buildContainerV2({
+        accentColorHex: "#FBBF24",
+        title: "Klaim Harian Dalam Waktu Tunggu",
+        description:
+          `Halo **${displayName}**. Hadiah harian kamu untuk hari ini telah selesai diambil.\n\n` +
+          `Waktu tunggu berikutnya: \`${remainingHours} jam ${remainingMinutes} menit\`\n` +
+          `Streak Aktif: **${currentStreak} Hari Berturut-turut**\n\n` +
+          `${getStreakCalendarCard(currentStreak)}\n\n` +
+          `**Pratinjau Hadiah Berikutnya (Hari ke-${nextDay}):**\n` +
+          `• 💵 \`+${nextReward.gold.toLocaleString("id-ID")} Gold\`\n` +
+          `• ⭐ \`+${nextReward.starFragments.toLocaleString("id-ID")} Star Fragments\`\n` +
+          `• 💬 \`+${nextReward.xp} XP\`\n` +
+          (nextReward.bonus ? `• ${nextReward.bonus}\n` : ""),
+        expression: "sleepy",
+        footerText: ui.getFooter("core"),
+      });
+
       return interaction.reply({
+        ...container,
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        components: buildContainerV2({
-          accentColorHex: "#FBBF24",
-          title: "⏳ Hadiah Harian Belum Siap!",
-          description:
-            `Hai **${displayName}**! Kamu sudah mengambil hadiah harianmu hari ini.\n\n` +
-            `⏱️ **Bisa diklaim lagi dalam:** \`${remainingHours} jam ${remainingMinutes} menit\`\n` +
-            `🔥 **Streak Saat Ini:** \`${currentStreak} Hari\`\n\n` +
-            `**Jalur Streak Kamu:**\n${getStreakCalendarCard(currentStreak)}\n\n` +
-            `🎁 **Hadiah Hari Berikutnya (Day ${nextDay}):**\n` +
-            `• 💵 \`+${nextReward.gold.toLocaleString("id-ID")} Gold\`\n` +
-            `• ⭐ \`+${nextReward.starFragments.toLocaleString("id-ID")} Star Fragments\`\n` +
-            `• 💬 \`+${nextReward.xp} XP\`\n` +
-            (nextReward.bonus ? `• ${nextReward.bonus}\n` : ""),
-          expression: "sleepy",
-          footerText: ui.getFooter("core"),
-        }),
       });
     }
 
@@ -154,11 +156,11 @@ module.exports = {
       // Pertama kali klaim
       newStreak = 1;
       streakMessage =
-        "🎉 **Klaim harian pertamamu!** Terus login setiap hari untuk combo reward!";
+        "Selamat datang di klaim harian pertamamu. Masuk setiap hari untuk bonus bertingkat.";
     } else if (timeDiff <= GRACE_PERIOD_MS) {
-      // Dalam batas 48 jam -> Streak Berlanjut!
+      // Dalam batas 48 jam -> Streak Berlanjut
       newStreak = currentStreak + 1;
-      streakMessage = `🔥 **Streak berlanjut!** Kamu sudah login berturut-turut selama **${newStreak} hari**!`;
+      streakMessage = `Konsistensi luar biasa. Kamu telah login selama **${newStreak} hari berturut-turut**.`;
     } else {
       // Lewat 48 jam -> Cek apakah punya Streak Shield di inventory
       const inv = safeParseInventory(profile.inventory);
@@ -169,12 +171,12 @@ module.exports = {
         inv.splice(shieldIndex, 1);
         await cacheManager.updateProfile(userId, { inventory: inv });
         newStreak = currentStreak + 1;
-        streakMessage = `🛡️ **Streak Shield Terpakai!** Streak kamu terselamatkan dan berlanjut ke **${newStreak} hari**!`;
+        streakMessage = `🛡️ **Streak Shield Digunakan.** Streak kamu berhasil dilindungi dan bertambah ke **${newStreak} hari**.`;
       } else {
         // Streak Terputus
         newStreak = 1;
         streakMessage =
-          "⚠️ *Yah, streak kamu terputus karena terlewat lebih dari 48 jam.* Mulai streak baru sekarang!";
+          "Streak sebelumnya terhenti karena melewati batas waktu 48 jam. Memulai kembali streak baru.";
       }
     }
 
@@ -212,32 +214,34 @@ module.exports = {
     // ── 5. RENDER CONTAINER V2 ──────────────────────────────────
     const isMilestone = dayInCycle === 7;
     const titleText = isMilestone
-      ? "🌟 COMBO 7-DAY MILESTONE REWARD! 🌟"
-      : "🎁 Hadiah Harian Berhasil Diklaim!";
-    const accentColor = isMilestone ? "#FFD700" : "#86EFAC";
+      ? "Pencapaian Spesial: Hadiah Siklus 7 Hari Selesai"
+      : "Klaim Hadiah Harian Berhasil";
+    const accentColor = isMilestone ? "#FBBF24" : "#34D399";
 
     const desc =
-      `Hai **${displayName}**! ${streakMessage}\n\n` +
+      `Halo **${displayName}**. ${streakMessage}\n\n` +
       `${getStreakCalendarCard(newStreak)}\n\n` +
-      `**Hadiah yang Kamu Dapatkan (Day ${dayInCycle}):**\n` +
-      `• 💵 **+${reward.gold.toLocaleString("id-ID")} Gold** *(masuk ke dompet)*\n` +
+      `**Perolehan Hadiah (Hari ke-${dayInCycle}):**\n` +
+      `• 💵 **+${reward.gold.toLocaleString("id-ID")} Gold** (Saldo dompet)\n` +
       `• ⭐ **+${reward.starFragments.toLocaleString("id-ID")} Star Fragments**\n` +
       `• 💬 **+${reward.xp} Chat XP**\n` +
       (reward.coupons > 0
-        ? `• 🎟️ **+${reward.coupons} Naura Coupon** *(Mata uang langka!)*\n`
+        ? `• 🎟️ **+${reward.coupons} Naura Coupon** (Mata uang langka)\n`
         : "") +
-      (reward.bonus ? `• **Bonus Spesial:** ${reward.bonus}\n` : "") +
-      `\n-# *Tips: Pasang pengingat notifikasi harian di \`/notifications\` agar streak tidak terputus!*`;
+      (reward.bonus ? `• **Bonus Tambahan:** ${reward.bonus}\n` : "") +
+      `\n-# Tips: Pasang pengingat di /notifications agar streak tetap terjaga.`;
+
+    const successContainer = buildContainerV2({
+      accentColorHex: accentColor,
+      title: titleText,
+      description: desc,
+      expression: isMilestone ? "cheers" : "happy",
+      footerText: ui.getFooter("core"),
+    });
 
     return interaction.reply({
+      ...successContainer,
       flags: MessageFlags.IsComponentsV2,
-      components: buildContainerV2({
-        accentColorHex: accentColor,
-        title: titleText,
-        description: desc,
-        expression: isMilestone ? "cheers" : "happy",
-        footerText: ui.getFooter("core"),
-      }),
     });
   },
 };
