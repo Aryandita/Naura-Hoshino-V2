@@ -7,6 +7,7 @@ const {
   ButtonStyle,
 } = require("discord.js");
 const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -133,6 +134,8 @@ module.exports = {
           ),
         );
       }
+
+      rows.push(survivalUI.buildSurvivalActionRow("town", user.id));
 
       return {
         ...buildContainerV2({

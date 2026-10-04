@@ -13,6 +13,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
 const {
@@ -442,6 +443,7 @@ module.exports = {
             title: "Sampai nanti, ya!",
             description:
               "Naura bereskan dulu mejanya. Kalau butuh menempa lagi, panggil Naura kapan pun.",
+            buttonsRow: [survivalUI.buildSurvivalActionRow("crafting", user.id)],
             footerText: ui.getFooter("survival"),
           });
           await i.editReply({ ...bye, files: [] });

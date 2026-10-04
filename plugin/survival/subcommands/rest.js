@@ -9,6 +9,7 @@ const {
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 
 const SLEEP_HOURS = 8;
 const MAX_STAT = 100;
@@ -112,6 +113,7 @@ module.exports = {
       title: `${e("sleepy", "\uD83D\uDECF\uFE0F")} Tidurmu nyenyak sekali`,
       iconURL: interaction.client.user.displayAvatarURL(),
       description,
+      buttonsRow: [survivalUI.buildSurvivalActionRow("vitals", user.id)],
       footerText: `Jangan lupa sarapan dulu yaa \u2022 ${ui.getFooter("survival")}`,
     });
 

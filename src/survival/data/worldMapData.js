@@ -415,7 +415,15 @@ const REGIONS = {
 
   hutan_dha_mhai: {
     id: "hutan_dha_mhai",
-    aliases: ["dha_mhai", "hutan_dha_mhai", "rimba_dha_mhai", "hutan_barat", "hutan_kuno"],
+    aliases: [
+      "dha_mhai",
+      "hutan_dha_mhai",
+      "dha_mhal",
+      "hutan_dha_mhal",
+      "rimba_dha_mhai",
+      "hutan_barat",
+      "hutan_kuno",
+    ],
     name: "Hutan Dha Mhai",
     title: "Kanopi Purba & Sanctuary Pohon Penjaga Rimba",
     primaryCurrency: "NSF & Resin Damar Mistik",

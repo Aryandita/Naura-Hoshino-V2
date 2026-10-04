@@ -158,15 +158,15 @@ async function buildBattleView({
   };
 }
 
-// Kartu penutup (menang, kalah, kabur). Pesan Components V2 tidak boleh diedit
-// menjadi tanpa komponen, jadi kartunya dikirim utuh tanpa deretan tombol.
-function buildClosingView({ expression, colorKey, title, description }) {
+// Kartu penutup (menang, kalah, kabur) dengan tombol aksi kontekstual combat.
+function buildClosingView({ expression, colorKey, title, description, buttonsRow }) {
   const payload = buildContainerV2({
     accentColorHex: ui.getColor(colorKey),
     authorName: "Naura Battle Log",
     expression,
     title,
     description,
+    buttonsRow,
     footerText: ui.getFooter("survival"),
   });
   return { ...payload, files: [] };

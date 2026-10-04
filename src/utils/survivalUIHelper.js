@@ -12,6 +12,7 @@
 // - Footer respons survival wajib getFooter() yang mendelegasikan ke
 //   ui.getFooter('survival').
 
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { colors, footers } = require("../config/ui/palette");
 const { buildGoalGradientBar } = require("./uxHelper");
 
@@ -216,6 +217,100 @@ function buildTimeLocationLine(survival) {
   return `${timeEmoji} **Hari ke-${day}**, pukul ${String(hour).padStart(2, "0")}:00 \u2022 📍 **${loc}**`;
 }
 
+/**
+ * Membangun ActionRow berisi tombol aksi kontekstual untuk Naura Wilds.
+ * Memungkinkan pemain melanjutkan siklus bermain hanya dengan mengklik tombol.
+ *
+ * @param {'gathering'|'combat'|'crafting'|'vitals'|'town'|'economy'|'profile'|'custom'} context
+ * @param {string} userId - ID pemain pemilik sesi (anti-hijack)
+ * @param {object} [options]
+ * @param {Array<string>} [options.exclude=[]] - ID aksi yang tidak ingin disertakan
+ * @param {Array<{id: string, label: string, emoji?: string, style?: ButtonStyle}>} [options.customButtons=[]]
+ * @returns {ActionRowBuilder}
+ */
+function buildSurvivalActionRow(context, userId, { exclude = [], customButtons = [] } = {}) {
+  const row = new ActionRowBuilder();
+
+  if (Array.isArray(customButtons) && customButtons.length > 0) {
+    for (const btn of customButtons.slice(0, 5)) {
+      const button = new ButtonBuilder()
+        .setCustomId(`survival_act_${btn.id}:${userId}`)
+        .setLabel(btn.label)
+        .setStyle(btn.style || ButtonStyle.Secondary);
+      if (btn.emoji) button.setEmoji(btn.emoji);
+      row.addComponents(button);
+    }
+    return row;
+  }
+
+  const defs = {
+    gathering: [
+      { id: "chop", label: "Tebang Lagi", emoji: "🌲", style: ButtonStyle.Success },
+      { id: "mine", label: "Menambang", emoji: "⛏️", style: ButtonStyle.Secondary },
+      { id: "fish", label: "Memancing", emoji: "🎣", style: ButtonStyle.Secondary },
+      { id: "inventory", label: "Buka Ransel", emoji: "🎒", style: ButtonStyle.Primary },
+      { id: "rest", label: "Rehat", emoji: "💤", style: ButtonStyle.Secondary },
+    ],
+    combat: [
+      { id: "dungeon", label: "Jelajah Lagi", emoji: "🗡️", style: ButtonStyle.Danger },
+      { id: "consume", label: "Pulihkan HP", emoji: "🍖", style: ButtonStyle.Success },
+      { id: "inventory", label: "Ransel", emoji: "🎒", style: ButtonStyle.Primary },
+      { id: "skill", label: "Keahlian", emoji: "⚡", style: ButtonStyle.Secondary },
+      { id: "rest", label: "Klinik / Rehat", emoji: "🏥", style: ButtonStyle.Secondary },
+    ],
+    crafting: [
+      { id: "craft", label: "Buat Lagi", emoji: "🔨", style: ButtonStyle.Success },
+      { id: "inventory", label: "Isi Ransel", emoji: "🎒", style: ButtonStyle.Primary },
+      { id: "shop", label: "Toko Bahan", emoji: "🛒", style: ButtonStyle.Secondary },
+      { id: "dungeon", label: "Uji Senjata", emoji: "🗡️", style: ButtonStyle.Danger },
+      { id: "info", label: "Status Diri", emoji: "👤", style: ButtonStyle.Secondary },
+    ],
+    vitals: [
+      { id: "consume", label: "Makan Lagi", emoji: "🍖", style: ButtonStyle.Success },
+      { id: "cafe", label: "Mampir Kafe", emoji: "☕", style: ButtonStyle.Primary },
+      { id: "inventory", label: "Buka Ransel", emoji: "🎒", style: ButtonStyle.Secondary },
+      { id: "collect", label: "Cari Bahan", emoji: "🧺", style: ButtonStyle.Secondary },
+      { id: "rest", label: "Tidur Pulas", emoji: "💤", style: ButtonStyle.Secondary },
+    ],
+    town: [
+      { id: "shop", label: "Toko Desa", emoji: "🛒", style: ButtonStyle.Primary },
+      { id: "cafe", label: "Kafe Desa", emoji: "☕", style: ButtonStyle.Secondary },
+      { id: "bank", label: "Bank Sentral", emoji: "🏦", style: ButtonStyle.Secondary },
+      { id: "npc", label: "Sapa Warga", emoji: "👥", style: ButtonStyle.Secondary },
+      { id: "travel", label: "Peta Wilayah", emoji: "🗺️", style: ButtonStyle.Secondary },
+    ],
+    economy: [
+      { id: "work", label: "Cari Nafkah", emoji: "💼", style: ButtonStyle.Success },
+      { id: "shop", label: "Toko Desa", emoji: "🛒", style: ButtonStyle.Primary },
+      { id: "bank", label: "Bank Sentral", emoji: "🏦", style: ButtonStyle.Secondary },
+      { id: "wallet", label: "Cek Dompet", emoji: "💰", style: ButtonStyle.Secondary },
+      { id: "town", label: "Alun-Alun", emoji: "🏛️", style: ButtonStyle.Secondary },
+    ],
+    profile: [
+      { id: "inventory", label: "Isi Ransel", emoji: "🎒", style: ButtonStyle.Success },
+      { id: "shop", label: "Pasar Desa", emoji: "🛒", style: ButtonStyle.Primary },
+      { id: "collect", label: "Kumpul Bahan", emoji: "🧺", style: ButtonStyle.Secondary },
+      { id: "dungeon", label: "Gua Misteri", emoji: "🗡️", style: ButtonStyle.Danger },
+      { id: "skill", label: "Pohon Keahlian", emoji: "⚡", style: ButtonStyle.Secondary },
+    ],
+  };
+
+  const list = defs[context] || defs.gathering;
+  const excludeSet = new Set(exclude);
+  const items = list.filter((item) => !excludeSet.has(item.id)).slice(0, 5);
+
+  for (const item of items) {
+    const btn = new ButtonBuilder()
+      .setCustomId(`survival_act_${item.id}:${userId}`)
+      .setLabel(item.label)
+      .setStyle(item.style);
+    if (item.emoji) btn.setEmoji(item.emoji);
+    row.addComponents(btn);
+  }
+
+  return row;
+}
+
 module.exports = {
   survivalColors,
   survivalGlass,
@@ -228,4 +323,5 @@ module.exports = {
   formatStat,
   buildSurvivalHUD,
   buildTimeLocationLine,
+  buildSurvivalActionRow,
 };

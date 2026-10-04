@@ -11,6 +11,7 @@ const ui = require("../../../src/config/ui");
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const questGen = require("../../../src/survival/engines/questGenerator");
 const achievementHelper = require("../../../src/survival/helpers/achievementHelper");
 
@@ -258,6 +259,7 @@ module.exports = {
         iconURL: user.displayAvatarURL(),
         expression: ore.mood,
         description: lines.join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -295,6 +297,7 @@ module.exports = {
         expression: "fail",
         description:
           "Kilau batu mulianya memudar sebelum kamu sempat memukul. Nggak apa-apa, gua ini masih banyak batunya. Naura tunggu kamu coba lagi!",
+        buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
         footerText: ui.getFooter("survival"),
       });
 

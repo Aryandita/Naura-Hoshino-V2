@@ -10,6 +10,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
 const abyssEngine = require("../../../src/survival/engines/abyssEngine");
 
@@ -47,6 +48,7 @@ module.exports = {
           `🎁 **Total Relic Dikumpulkan:** \`${leaveRes.relicsGained} Relic\``,
           `💰 **Total Koin Diamankan:** \`+${leaveRes.totalCoins.toLocaleString("id-ID")} Star Fragments\``,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -81,6 +83,7 @@ module.exports = {
           ``,
           `-# 💡 *Tingkatkan level karakter dan persenjataanmu sebelum menantang The Neo-Abyss kembali!*`,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -98,6 +101,7 @@ module.exports = {
           `💰 **Total Koin Masuk Tas:** \`+${(run.fragmentsCollected + 1000).toLocaleString("id-ID")} Star Fragments\``,
           `🏆 Gelar kehormatan dan hadiah musim telah berhasil diklaim!`,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
         footerText: ui.getFooter("survival"),
       });
 

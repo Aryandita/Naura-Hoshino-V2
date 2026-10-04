@@ -5,6 +5,7 @@ const { MessageFlags } = require("discord.js");
 const {
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const UserSurvival = require("../../../src/models/UserSurvival");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
@@ -171,6 +172,7 @@ module.exports = {
                   title: e("run", "\ud83c\udfc3") + " Berhasil Kabur",
                   description:
                     "Kelincahanmu menyelamatkanmu. Naura ikut lari di sebelahmu sambil bawa tas, kok!",
+                  buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
                 }),
               );
             }
@@ -189,6 +191,7 @@ module.exports = {
                   "Kamu tersandung dan diserang dari belakang, kehilangan **" +
                   hit.penalty +
                   " HP**. Sini, Naura obati dulu.",
+                buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
               }),
             );
           }
@@ -268,6 +271,7 @@ module.exports = {
                 colorKey: "success",
                 title: e("cheers", "\ud83c\udf89") + " Pertarungan Menang!",
                 description: lines.join("\n"),
+                buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
               }),
             );
           }
@@ -300,7 +304,8 @@ module.exports = {
                   "**" +
                   enemy.name +
                   "** terlalu kuat kali ini. Gatot menyeretmu keluar gua dan Naura menunggu di desa " +
-                  "dengan air hangat. Jangan sedih, ya \u2014 kita coba lagi setelah kamu pulih!",
+                  "dengan air hangat. Jangan sedih, ya, kita coba lagi setelah kamu pulih!",
+                buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
               }),
             );
           }

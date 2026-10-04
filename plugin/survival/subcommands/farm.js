@@ -11,6 +11,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
 const greenhouseEngine = require("../../../src/survival/engines/greenhouseEngine");
 const {
@@ -296,6 +297,7 @@ module.exports = {
         ]
           .filter(Boolean)
           .join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", userId)],
         footerText: ui.getFooter("survival"),
       });
 

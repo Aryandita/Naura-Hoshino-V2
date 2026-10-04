@@ -12,6 +12,7 @@ const cacheManager = require("../../../src/managers/cacheManager");
 const currencyHelper = require("../../../src/survival/engines/currency");
 const recyclingPoolEngine = require("../../../src/survival/engines/recyclingPoolEngine");
 const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
 
 function n(num) {
@@ -103,7 +104,7 @@ module.exports = {
         title: "💳 Dompet Terpadu Petualang (Naura Wilds)",
         iconURL: user.displayAvatarURL(),
         description: desc,
-        buttonsRow: row,
+        buttonsRow: [row, survivalUI.buildSurvivalActionRow("economy", user.id)],
         footerText: "Naura Hoshino Ecosystem \u2022 Closed-Loop Economy V2",
       });
     };

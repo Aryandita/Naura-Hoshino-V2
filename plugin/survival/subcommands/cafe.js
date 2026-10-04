@@ -11,6 +11,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
 const cafeEngine = require("../../../src/survival/engines/cafeEngine");
 const {
@@ -305,6 +306,7 @@ module.exports = {
           `📦 **Sisa Stok:** \`${serveRes.remainingStock} Porsi\``,
           `👥 **Total Tamu Dilayani:** \`${serveRes.customersServed} Orang\``,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("town", userId)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -335,6 +337,7 @@ module.exports = {
           `💰 **Total Koin Masuk:** \`+${collectRes.collectedAmount.toLocaleString("id-ID")} Star Fragments\``,
           `📈 **Level Usaha:** \`Level ${collectRes.level}\``,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("town", userId)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -394,6 +397,7 @@ module.exports = {
           ``,
           `-# 💡 *Koin telah langsung dikirimkan ke pemilik kafe dan reputasi kafenya bertambah!*`,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("town", userId)],
         footerText: ui.getFooter("survival"),
       });
 

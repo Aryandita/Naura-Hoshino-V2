@@ -19,6 +19,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const {
   applyItemEffect,
 } = require("../../../src/survival/helpers/specialEffects");
@@ -382,6 +383,7 @@ module.exports = {
         iconURL: user.displayAvatarURL(),
         expression: "success",
         description: lines.join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("vitals", user.id)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -395,6 +397,7 @@ module.exports = {
           title: `${e("sleepy", "\u231B")} Waktunya habis`,
           description:
             "Naura sudah tunggu satu menit, tapi belum ada yang dipilih. Nggak apa-apa, panggil Naura lagi kalau perut kamu sudah keroncongan!",
+          buttonsRow: [survivalUI.buildSurvivalActionRow("vitals", user.id)],
           footerText: ui.getFooter("survival"),
         });
 

@@ -31,6 +31,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
 const { CATALOG_BY_ID } = require("../../../src/survival/data/items_catalog");
 
@@ -282,6 +283,7 @@ module.exports = {
         ]
           .filter(Boolean)
           .join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("economy", user.id)],
         footerText: ui.getFooter("survival"),
       });
 
@@ -357,7 +359,7 @@ module.exports = {
         Object.entries(coupons.availableCategories()).forEach(
           ([key, label]) => {
             options.push({
-              label: `Kios Gaston \u2014 ${label}`.substring(0, 100),
+              label: `Kios Gaston: ${label}`.substring(0, 100),
               description: "Dibayar dengan Naura Coupon",
               value: purchase.COUPON_PREFIX + key,
             });

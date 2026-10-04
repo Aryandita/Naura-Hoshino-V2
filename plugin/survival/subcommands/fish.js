@@ -12,6 +12,7 @@ const ui = require("../../../src/config/ui");
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const questGen = require("../../../src/survival/engines/questGenerator");
 const achievementHelper = require("../../../src/survival/helpers/achievementHelper");
 
@@ -394,6 +395,7 @@ module.exports = {
             iconURL: user.displayAvatarURL(),
             expression: catchResult.mood,
             description: lines.join("\n"),
+            buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
             footerText: ui.getFooter("survival"),
           });
 
@@ -431,6 +433,7 @@ module.exports = {
             expression: "fail",
             description:
               "Yah, sedikit terlambat menariknya. Umpannya habis dimakan dan ikannya melenggang pergi. Jangan sedih, lempar kail lagi ya, Naura tunggu di sini!",
+            buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
             footerText: ui.getFooter("survival"),
           });
 

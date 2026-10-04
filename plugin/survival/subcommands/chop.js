@@ -11,6 +11,7 @@ const ui = require("../../../src/config/ui");
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const questGen = require("../../../src/survival/engines/questGenerator");
 const achievementHelper = require("../../../src/survival/helpers/achievementHelper");
 
@@ -125,6 +126,7 @@ module.exports = {
           iconURL: user.displayAvatarURL(),
           expression: "fail",
           description: `Yah, kamu baru menebas **${clicks}** kali dan pohonnya masih kokoh berdiri. Nggak apa-apa, tangan kamu pasti pegal. Istirahat dulu, nanti Naura temani coba lagi ya!`,
+          buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
           footerText: ui.getFooter("survival"),
         });
 
@@ -225,6 +227,7 @@ module.exports = {
         iconURL: user.displayAvatarURL(),
         expression: "success",
         description: lines.join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
         footerText: ui.getFooter("survival"),
       });
 

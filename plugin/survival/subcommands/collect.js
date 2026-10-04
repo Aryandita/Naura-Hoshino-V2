@@ -23,6 +23,7 @@ const {
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const UserSurvival = require("../../../src/models/UserSurvival");
 const UserPet = require("../../../src/models/UserPet");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -331,9 +332,11 @@ module.exports = {
           .setStyle(ButtonStyle.Success),
       );
 
+      const actionRow = survivalUI.buildSurvivalActionRow("gathering", user.id);
+
       const finalMsg = await source.editReply({
         ...payload,
-        components: [...payload.components, talkRow],
+        components: [...payload.components, talkRow, actionRow],
       });
 
       if (
@@ -373,14 +376,19 @@ module.exports = {
 
     const finishFail = async (source, reason) => {
       await actions.goHome(user.id);
-      return source.editReply(
-        closingCard({
-          title: `${e("naura_akward")} Sayang sekali...`,
-          description: `${reason}\n\n*Naura antar kamu pulang ke desa dulu, ya.*`,
-          expression: "Akward",
-          colorKey: "error",
-        }),
-      );
+      const failCard = closingCard({
+        title: `${e("naura_akward")} Sayang sekali...`,
+        description: `${reason}\n\n*Naura antar kamu pulang ke desa dulu, ya.*`,
+        expression: "Akward",
+        colorKey: "error",
+      });
+      return source.editReply({
+        ...failCard,
+        components: [
+          ...failCard.components,
+          survivalUI.buildSurvivalActionRow("gathering", user.id),
+        ],
+      });
     };
 
     collector.on("collect", async (i) => {

@@ -14,6 +14,7 @@ const currency = require("../../../src/survival/engines/currency");
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const {
   safeParseInventory,
 } = require("../../../src/survival/engines/inventoryHelper");
@@ -285,6 +286,7 @@ module.exports = {
       expression: "economy",
       description: lines.join("\n"),
       fields,
+      buttonsRow: [survivalUI.buildSurvivalActionRow("economy", user.id)],
       footerText: ui.getFooter("survival"),
     });
 

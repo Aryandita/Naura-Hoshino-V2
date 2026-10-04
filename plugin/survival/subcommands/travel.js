@@ -19,6 +19,7 @@ const {
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const currency = require("../../../src/survival/engines/currency");
 const encounter = require("../../../src/survival/helpers/npcEncounter");
 const roam = require("../../../src/survival/helpers/npcEncounterView");
@@ -252,6 +253,8 @@ module.exports = {
         ),
       );
     }
+
+    components.push(survivalUI.buildSurvivalActionRow("town", user.id));
 
     const response = await interaction.editReply({ ...payload, components });
 
