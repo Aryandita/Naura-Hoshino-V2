@@ -37,7 +37,9 @@
     "preview:3d": "node scripts/preview-3d.js",
     "verify:hero": "node scripts/verify_hero_runtime.js",
     "sync:github": "node scripts/git-sync.js",
-    "assistant": "node assistant/server.js"
+    "assistant": "node assistant/server.js",
+    "ralph": "node scripts/ralph/ralph.js",
+    "verify:drift": "node scripts/verify-drift.js"
   },
   "engines": {
     "node": ">=24.0.0"

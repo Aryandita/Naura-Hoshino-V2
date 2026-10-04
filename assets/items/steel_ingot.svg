@@ -60,7 +60,7 @@
   <!-- Vektor Karya Seni Item Spesifik (Di-wrap dengan filter shadow halus) -->
   <g id="itemArt" filter="url(#itemShadow)">
     
-      <!-- Batang Logam Ingot -->
+      <!-- Batangan Logam Mulia Bertumpuk -->
       <polygon points="46,46 82,46 92,62 36,62" fill="url(#gemGrad)" stroke="#93C5FD" stroke-width="1.5" filter="url(#glowFilter)" />
       <polygon points="36,62 92,62 86,84 42,84" fill="#1a202c" stroke="#93C5FD" stroke-width="1.5" />
       <polygon points="82,46 92,62 86,84" fill="#93C5FD" opacity="0.5" />

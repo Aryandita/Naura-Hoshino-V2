@@ -1,0 +1,90 @@
+{
+  "project": "Naura Hoshino V2",
+  "branchName": "ralph/wilds-item-overhaul",
+  "description": "Perombakan Total Sistem Item Naura Wilds: 6 Kategori, 5 Tier, Smart Remap, dan Sinkronisasi Sistem Turunan",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Fondasi Skema & Katalog 5-Tier Terpadu",
+      "description": "Sebagai developer, saya ingin mendefinisikan 5 Tier dan menyusun katalog 6 kategori baru di src/survival/data/items_catalog.js agar sistem memiliki data master item yang bersih dan terstandarisasi.",
+      "acceptanceCriteria": [
+        "Tier 1 sampai 5 terdefinisi lengkap dengan warna dan label resmi",
+        "Minimal 100 item terpadu terisi di 6 kategori dengan harga dan statistik seimbang",
+        "src/survival/data/items.js memuat katalog baru sebagai basis utama",
+        "npm run test:requires dan node scripts/check-em-dash.js lolos tanpa error"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Smart Remap Helper & Migrasi Inventaris Lama",
+      "description": "Sebagai pemain lama, saya ingin inventaris saya tetap aman dan item lama secara otomatis dipetakan ke ID baru atau dikonversi menjadi koin NSF kompensasi.",
+      "acceptanceCriteria": [
+        "Modul src/survival/helpers/legacyItemResolver.js memetakan ID lama ke ID katalog baru",
+        "Integrasi ke fungsi pemuatan inventaris di cacheManager.js / UserSurvival.js",
+        "Unit test konversi inventaris di src/survival/helpers/legacyItemResolver.test.js lolos 100%"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Penyelarasan Resep Crafting & Cetak Biru (Blueprints)",
+      "description": "Sebagai pemain, saya ingin resep crafting di craftingRecipes.js dan craftBlueprints.js menggunakan bahan dan hasil dari katalog baru yang seimbang.",
+      "acceptanceCriteria": [
+        "Seluruh resep crafting mengacu pada ID material dan hasil dari katalog baru",
+        "Rantai tier konsisten: Barang T1 butuh bahan T1, barang T2 butuh bahan T2",
+        "Tidak ada referensi resep ke ID item yang tidak terdaftar di katalog",
+        "npm run test:requires lolos"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Penyelarasan Stok Toko, Drop Dungeon, & Kafe",
+      "description": "Sebagai pemain, saya ingin toko kota, hadiah dungeon, dan menu kafe menjual serta memberikan barang-barang dari katalog baru.",
+      "acceptanceCriteria": [
+        "shopStock.js diperbarui dengan penawaran item katalog baru",
+        "Drop item dungeon (items_dungeon.js / loot table) diselaraskan ke ID katalog baru",
+        "Menu kafe (cafeRecipes.js) mengonsumsi bahan consumable/cooking baru",
+        "Tidak ada referensi ID hantu pada seluruh file data survival"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Regenerasi Aset Ikon Vektor SVG",
+      "description": "Sebagai pemain, saya ingin seluruh item baru memiliki ikon visual SVG vektor berkualitas tinggi di dashboard web dan Discord canvas.",
+      "acceptanceCriteria": [
+        "scripts/generateItemIcons.js diperbarui mendukung sistem 5-tier dan 6 kategori baru",
+        "Script dieksekusi dan menghasilkan file .svg lengkap di dashboard/public/items/ dan assets/items/",
+        "Uji coba path aset tidak menghasilkan 404 atau broken asset"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Verifikasi Penuh QA Gate & Pembersihan Drift",
+      "description": "Sebagai maintainer, saya ingin memastikan seluruh sistem berjalan 100% tanpa regresi, broken import, atau kode hantu.",
+      "acceptanceCriteria": [
+        "npm run verify:drift melaporkan 0 error",
+        "npm run locales:check:strict lolos",
+        "npm run test:requires lolos",
+        "npm test menjalankan seluruh test dan berstatus 100% HIJAU",
+        "npm run qa lulus secara penuh"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

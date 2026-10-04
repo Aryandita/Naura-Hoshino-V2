@@ -60,9 +60,8 @@
   <!-- Vektor Karya Seni Item Spesifik (Di-wrap dengan filter shadow halus) -->
   <g id="itemArt" filter="url(#itemShadow)">
     
-      <!-- Bongkahan Bijih Tambang / Batu -->
+      <!-- Bongkahan Bijih & Batu Kristal -->
       <polygon points="64,28 88,44 82,78 64,96 42,82 40,48" fill="#2d3748" stroke="#9CA3AF" stroke-width="2" filter="url(#glowFilter)" />
-      <!-- Urat Kristal / Logam Menyala -->
       <polygon points="64,28 72,52 64,74 52,48" fill="url(#gemGrad)" opacity="0.9" />
       <polygon points="88,44 72,52 82,78" fill="#9CA3AF" opacity="0.6" />
       <circle cx="64" cy="52" r="3" fill="#ffffff" />

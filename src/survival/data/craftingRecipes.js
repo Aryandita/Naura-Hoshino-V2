@@ -2,23 +2,14 @@
 
 const { FRAGMENT, COIN } = require("../engines/currency");
 
-// ===== PELEBURAN DI TUNGKU BAGAS (PANDAI BESI DESA) =====
-// Bahan mentah masuk, bahan olahan bernilai jauh lebih tinggi keluar.
-// Upah tempa dibayar Naura Star Fragment karena tungkunya ada di desa.
+// ===== PELEBURAN DI TUNGKU PANDAI BESI DESA =====
+// Mengolah bahan mentah menjadi material berkualitas tinggi sesuai 5-tier resmi
 const SMELT_RECIPES = [
-  {
-    id: "charcoal",
-    input: [{ id: "wood", amount: 3 }],
-    output: { id: "charcoal", amount: 1 },
-    fee: 50,
-    currency: FRAGMENT,
-    reqLevel: 1,
-  },
   {
     id: "copper_ingot",
     input: [
       { id: "copper_ore", amount: 3 },
-      { id: "coal", amount: 1 },
+      { id: "coal_lump", amount: 1 },
     ],
     output: { id: "copper_ingot", amount: 1 },
     fee: 120,
@@ -26,361 +17,309 @@ const SMELT_RECIPES = [
     reqLevel: 2,
   },
   {
-    id: "iron_ingot",
+    id: "steel_ingot",
     input: [
       { id: "iron_ore", amount: 3 },
-      { id: "coal", amount: 2 },
+      { id: "coal_lump", amount: 2 },
     ],
-    output: { id: "iron_ingot", amount: 1 },
-    fee: 250,
+    output: { id: "steel_ingot", amount: 1 },
+    fee: 350,
     currency: FRAGMENT,
     reqLevel: 5,
   },
   {
-    id: "steel_ingot",
+    id: "ironwood_plank",
     input: [
-      { id: "iron_ingot", amount: 2 },
-      { id: "coal", amount: 3 },
+      { id: "oak_wood", amount: 4 },
+      { id: "pine_timber", amount: 2 },
     ],
-    output: { id: "steel_ingot", amount: 1 },
-    fee: 600,
+    output: { id: "ironwood_plank", amount: 1 },
+    fee: 280,
+    currency: FRAGMENT,
+    reqLevel: 4,
+  },
+  {
+    id: "carbon_fiber_sheet",
+    input: [
+      { id: "pine_timber", amount: 3 },
+      { id: "coal_lump", amount: 2 },
+    ],
+    output: { id: "carbon_fiber_sheet", amount: 1 },
+    fee: 800,
     currency: FRAGMENT,
     reqLevel: 8,
   },
   {
-    id: "silver_ingot",
+    id: "titanium_alloy",
     input: [
-      { id: "silver_ore", amount: 3 },
-      { id: "coal", amount: 2 },
+      { id: "steel_ingot", amount: 2 },
+      { id: "quartz_crystal", amount: 1 },
     ],
-    output: { id: "silver_ingot", amount: 1 },
-    fee: 900,
+    output: { id: "titanium_alloy", amount: 1 },
+    fee: 2500,
     currency: FRAGMENT,
     reqLevel: 12,
   },
   {
-    id: "mythril_ingot",
+    id: "celestial_ingot",
     input: [
-      { id: "mythril_ore", amount: 3 },
-      { id: "coal", amount: 4 },
+      { id: "titanium_alloy", amount: 2 },
+      { id: "refined_aetherium", amount: 1 },
     ],
-    output: { id: "mythril_ingot", amount: 1 },
-    fee: 2500,
-    currency: FRAGMENT,
-    reqLevel: 16,
-  },
-  {
-    id: "titanium_ingot",
-    input: [
-      { id: "iron_ore", amount: 8 },
-      { id: "coal", amount: 5 },
-    ],
-    output: { id: "titanium_ingot", amount: 1 },
-    fee: 4000,
-    currency: FRAGMENT,
+    output: { id: "celestial_ingot", amount: 1 },
+    fee: 10000,
+    currency: COIN,
     reqLevel: 20,
-  },
-  {
-    id: "glass_pane",
-    input: [
-      { id: "glass_shard", amount: 3 },
-      { id: "coal", amount: 1 },
-    ],
-    output: { id: "glass_pane", amount: 1 },
-    fee: 100,
-    currency: FRAGMENT,
-    reqLevel: 1,
-  },
-  {
-    id: "tanned_leather",
-    input: [
-      { id: "leather", amount: 2 },
-      { id: "fiber", amount: 2 },
-    ],
-    output: { id: "tanned_leather", amount: 1 },
-    fee: 150,
-    currency: FRAGMENT,
-    reqLevel: 3,
-  },
-  {
-    id: "polished_diamond",
-    input: [
-      { id: "diamond", amount: 1 },
-      { id: "whetstone", amount: 2 },
-    ],
-    output: { id: "polished_diamond", amount: 1 },
-    fee: 5000,
-    currency: FRAGMENT,
-    reqLevel: 15,
-  },
-  {
-    id: "refined_naura_shard",
-    input: [
-      { id: "naura_shard", amount: 2 },
-      { id: "mana_crystal", amount: 1 },
-    ],
-    output: { id: "refined_naura_shard", amount: 1 },
-    fee: 7500,
-    currency: FRAGMENT,
-    reqLevel: 18,
-    reqStat: { stat: "intelligence", value: 20 },
-  },
-  {
-    id: "wood_log",
-    input: [
-      { id: "wood", amount: 6 },
-      { id: "fiber", amount: 2 },
-    ],
-    output: { id: "wood_log", amount: 1 },
-    fee: 200,
-    currency: FRAGMENT,
-    reqLevel: 1,
-  },
-  {
-    id: "stone_slab",
-    input: [
-      { id: "stone", amount: 6 },
-      { id: "whetstone", amount: 1 },
-    ],
-    output: { id: "stone_slab", amount: 1 },
-    fee: 350,
-    currency: FRAGMENT,
-    reqLevel: 2,
-  },
-  {
-    id: "whetstone",
-    input: [{ id: "stone", amount: 3 }],
-    output: { id: "whetstone", amount: 1 },
-    fee: 80,
-    currency: FRAGMENT,
-    reqLevel: 1,
   },
 ];
 
-// ===== JALUR NAIK LEVEL ALAT =====
-// Tiap jenis bahan punya bahan inti sendiri: kayu butuh Gelondong Kayu,
-// batu butuh Lempeng Batu, besi butuh Batangan Besi, dan seterusnya.
-// Bahan sekunder + mata uang selalu ikut, jadi naik level terasa berjenjang.
+// Bahan inti pemersatu tiap rumpun bahan
 const MATERIAL_CORE = {
-  kayu: "wood_log",
-  batu: "stone_slab",
+  kayu: "oak_wood",
+  pinus: "pine_timber",
   tembaga: "copper_ingot",
-  besi: "iron_ingot",
   baja: "steel_ingot",
-  perak: "silver_ingot",
-  mythril: "mythril_ingot",
-  titanium: "titanium_ingot",
-  diamond: "polished_diamond",
+  titanium: "titanium_alloy",
+  celestial: "celestial_ingot",
 };
 
+// Jalur peningkatan kualitas peralatan (5 Tier konsisten)
 const UPGRADE_PATHS = {
   // --- Kapak ---
   wooden_axe: {
-    to: "stone_axe",
+    to: "iron_hatchet",
     material: "kayu",
-    coreAmount: 2,
-    secondary: [
-      { id: "whetstone", amount: 1 },
-      { id: "stone", amount: 5 },
-    ],
-    cost: 1200,
-    currency: FRAGMENT,
-  },
-  stone_axe: {
-    to: "iron_axe",
-    material: "batu",
-    coreAmount: 2,
-    secondary: [
-      { id: "iron_ingot", amount: 2 },
-      { id: "tool_grease", amount: 1 },
-    ],
-    cost: 3000,
-    currency: FRAGMENT,
-  },
-  iron_axe: {
-    to: "silver_axe",
-    material: "besi",
     coreAmount: 3,
     secondary: [
-      { id: "silver_ingot", amount: 2 },
-      { id: "forge_blueprint", amount: 1 },
+      { id: "stone_pebble", amount: 5 },
+      { id: "copper_ingot", amount: 1 },
     ],
-    cost: 9000,
+    cost: 800,
+    currency: FRAGMENT,
+  },
+  iron_hatchet: {
+    to: "alloy_chainsaw",
+    material: "baja",
+    coreAmount: 2,
+    secondary: [
+      { id: "steel_ingot", amount: 2 },
+      { id: "ironwood_plank", amount: 2 },
+    ],
+    cost: 3200,
+    currency: FRAGMENT,
+  },
+  alloy_chainsaw: {
+    to: "laser_timber_axe",
+    material: "titanium",
+    coreAmount: 2,
+    secondary: [
+      { id: "titanium_alloy", amount: 2 },
+      { id: "carbon_fiber_sheet", amount: 2 },
+    ],
+    cost: 12000,
     currency: COIN,
   },
-  silver_axe: {
-    to: "diamond_axe",
-    material: "perak",
-    coreAmount: 3,
+  laser_timber_axe: {
+    to: "antimatter_defoliator",
+    material: "celestial",
+    coreAmount: 2,
     secondary: [
-      { id: "polished_diamond", amount: 1 },
-      { id: "mana_crystal", amount: 1 },
+      { id: "celestial_ingot", amount: 2 },
+      { id: "primordial_essence", amount: 1 },
     ],
-    cost: 30000,
+    cost: 45000,
     currency: COIN,
   },
 
   // --- Beliung ---
   wooden_pickaxe: {
-    to: "stone_pickaxe",
-    material: "kayu",
-    coreAmount: 2,
-    secondary: [
-      { id: "whetstone", amount: 1 },
-      { id: "stone", amount: 5 },
-    ],
-    cost: 1100,
-    currency: FRAGMENT,
-  },
-  stone_pickaxe: {
     to: "iron_pickaxe",
-    material: "batu",
-    coreAmount: 2,
+    material: "kayu",
+    coreAmount: 3,
     secondary: [
-      { id: "iron_ingot", amount: 2 },
-      { id: "tool_grease", amount: 1 },
+      { id: "stone_pebble", amount: 5 },
+      { id: "copper_ingot", amount: 1 },
     ],
-    cost: 2800,
+    cost: 800,
     currency: FRAGMENT,
   },
   iron_pickaxe: {
-    to: "titanium_pickaxe",
-    material: "besi",
-    coreAmount: 4,
+    to: "steel_drill_pick",
+    material: "baja",
+    coreAmount: 2,
     secondary: [
-      { id: "titanium_ingot", amount: 2 },
-      { id: "forge_blueprint", amount: 1 },
+      { id: "steel_ingot", amount: 2 },
+      { id: "quartz_crystal", amount: 1 },
     ],
-    cost: 15000,
-    currency: COIN,
+    cost: 3200,
+    currency: FRAGMENT,
   },
-  titanium_pickaxe: {
-    to: "mythril_pickaxe",
+  steel_drill_pick: {
+    to: "plasma_mining_laser",
     material: "titanium",
-    coreAmount: 3,
-    secondary: [
-      { id: "mythril_ingot", amount: 2 },
-      { id: "mana_crystal", amount: 2 },
-    ],
-    cost: 35000,
-    currency: COIN,
-  },
-
-  // --- Pedang & senjata ---
-  wooden_sword: {
-    to: "stone_sword",
-    material: "kayu",
-    coreAmount: 2,
-    secondary: [{ id: "whetstone", amount: 2 }],
-    cost: 1300,
-    currency: FRAGMENT,
-  },
-  stone_sword: {
-    to: "iron_sword",
-    material: "batu",
     coreAmount: 2,
     secondary: [
-      { id: "iron_ingot", amount: 3 },
-      { id: "tanned_leather", amount: 1 },
-    ],
-    cost: 3500,
-    currency: FRAGMENT,
-  },
-  iron_sword: {
-    to: "silver_rapier",
-    material: "besi",
-    coreAmount: 4,
-    secondary: [
-      { id: "silver_ingot", amount: 3 },
-      { id: "forge_blueprint", amount: 1 },
+      { id: "titanium_alloy", amount: 2 },
+      { id: "bioluminescent_spore", amount: 2 },
     ],
     cost: 12000,
     currency: COIN,
   },
-  silver_rapier: {
-    to: "diamond_sword",
-    material: "perak",
-    coreAmount: 4,
-    secondary: [
-      { id: "polished_diamond", amount: 2 },
-      { id: "mana_crystal", amount: 1 },
-    ],
-    cost: 32000,
-    currency: COIN,
-  },
-  diamond_sword: {
-    to: "flaming_sword",
-    material: "diamond",
+  plasma_mining_laser: {
+    to: "quantum_matter_excavator",
+    material: "celestial",
     coreAmount: 2,
     secondary: [
-      { id: "refined_naura_shard", amount: 1 },
-      { id: "demon_horn", amount: 2 },
+      { id: "celestial_ingot", amount: 2 },
+      { id: "void_matter_crystal", amount: 1 },
+    ],
+    cost: 45000,
+    currency: COIN,
+  },
+
+  // --- Joran Pancing ---
+  bamboo_fishing_rod: {
+    to: "fiberglass_rod",
+    material: "kayu",
+    coreAmount: 2,
+    secondary: [
+      { id: "pine_timber", amount: 2 },
+      { id: "beast_fur", amount: 2 },
+    ],
+    cost: 750,
+    currency: FRAGMENT,
+  },
+  fiberglass_rod: {
+    to: "carbon_reel_rod",
+    material: "baja",
+    coreAmount: 2,
+    secondary: [
+      { id: "steel_ingot", amount: 1 },
+      { id: "chitin_shell", amount: 2 },
+    ],
+    cost: 3500,
+    currency: FRAGMENT,
+  },
+  carbon_reel_rod: {
+    to: "titanium_deep_rod",
+    material: "titanium",
+    coreAmount: 2,
+    secondary: [
+      { id: "titanium_alloy", amount: 2 },
+      { id: "carbon_fiber_sheet", amount: 2 },
+    ],
+    cost: 14000,
+    currency: COIN,
+  },
+  titanium_deep_rod: {
+    to: "leviathan_lure_rod",
+    material: "celestial",
+    coreAmount: 2,
+    secondary: [
+      { id: "celestial_ingot", amount: 2 },
+      { id: "leviathan_heart", amount: 1 },
+    ],
+    cost: 50000,
+    currency: COIN,
+  },
+
+  // --- Pedang & Senjata ---
+  wooden_sword: {
+    to: "iron_broadsword",
+    material: "kayu",
+    coreAmount: 3,
+    secondary: [
+      { id: "copper_ingot", amount: 2 },
+      { id: "beast_fur", amount: 2 },
+    ],
+    cost: 950,
+    currency: FRAGMENT,
+  },
+  iron_broadsword: {
+    to: "plasma_katana",
+    material: "baja",
+    coreAmount: 2,
+    secondary: [
+      { id: "steel_ingot", amount: 2 },
+      { id: "bioluminescent_spore", amount: 2 },
+    ],
+    cost: 4000,
+    currency: FRAGMENT,
+  },
+  plasma_katana: {
+    to: "aether_blade",
+    material: "titanium",
+    coreAmount: 2,
+    secondary: [
+      { id: "titanium_alloy", amount: 2 },
+      { id: "refined_aetherium", amount: 1 },
+    ],
+    cost: 16000,
+    currency: COIN,
+  },
+  aether_blade: {
+    to: "excalibur_prime",
+    material: "celestial",
+    coreAmount: 2,
+    secondary: [
+      { id: "celestial_ingot", amount: 2 },
+      { id: "phoenix_feather", amount: 1 },
+    ],
+    cost: 65000,
+    currency: COIN,
+  },
+
+  // --- Zirah Dada ---
+  leather_tunic: {
+    to: "iron_chestplate",
+    material: "kayu",
+    coreAmount: 2,
+    secondary: [
+      { id: "copper_ingot", amount: 2 },
+      { id: "beast_fur", amount: 3 },
+    ],
+    cost: 900,
+    currency: FRAGMENT,
+  },
+  iron_chestplate: {
+    to: "carbon_exosuit",
+    material: "baja",
+    coreAmount: 2,
+    secondary: [
+      { id: "steel_ingot", amount: 2 },
+      { id: "chitin_shell", amount: 3 },
+    ],
+    cost: 3800,
+    currency: FRAGMENT,
+  },
+  carbon_exosuit: {
+    to: "nano_weave_vest",
+    material: "titanium",
+    coreAmount: 2,
+    secondary: [
+      { id: "titanium_alloy", amount: 2 },
+      { id: "carbon_fiber_sheet", amount: 3 },
+    ],
+    cost: 15000,
+    currency: COIN,
+  },
+  nano_weave_vest: {
+    to: "aegis_of_immortality",
+    material: "celestial",
+    coreAmount: 2,
+    secondary: [
+      { id: "celestial_ingot", amount: 2 },
+      { id: "primordial_essence", amount: 1 },
     ],
     cost: 60000,
     currency: COIN,
   },
-  hunting_bow: {
-    to: "silver_rapier",
-    material: "besi",
-    coreAmount: 3,
-    secondary: [
-      { id: "tanned_leather", amount: 2 },
-      { id: "fiber", amount: 5 },
-    ],
-    cost: 10000,
-    currency: COIN,
-  },
-  war_hammer: {
-    to: "mystic_sword",
-    material: "baja",
-    coreAmount: 4,
-    secondary: [
-      { id: "refined_naura_shard", amount: 1 },
-      { id: "mana_crystal", amount: 2 },
-    ],
-    cost: 70000,
-    currency: COIN,
-  },
-  apprentice_staff: {
-    to: "plasma_blade",
-    material: "mythril",
-    coreAmount: 2,
-    secondary: [{ id: "mana_crystal", amount: 3 }],
-    cost: 40000,
-    currency: COIN,
-  },
-
-  // --- Pancing ---
-  bamboo_rod: {
-    to: "fishing_rod",
-    material: "kayu",
-    coreAmount: 1,
-    secondary: [{ id: "fiber", amount: 4 }],
-    cost: 600,
-    currency: FRAGMENT,
-  },
-  fishing_rod: {
-    to: "pro_fishing_rod",
-    material: "besi",
-    coreAmount: 2,
-    secondary: [
-      { id: "tanned_leather", amount: 2 },
-      { id: "tool_grease", amount: 1 },
-    ],
-    cost: 6000,
-    currency: FRAGMENT,
-  },
 };
 
-/** Resep peleburan berdasarkan id hasil olahannya. */
 function getSmeltRecipe(outputId) {
   return SMELT_RECIPES.find((recipe) => recipe.id === outputId) || null;
 }
 
-/**
- * Kebutuhan lengkap untuk menaikkan level satu alat. Bahan inti dihitung dari
- * jenis bahan alatnya, jadi pemanggil tidak perlu tahu pemetaannya.
- */
 function getUpgradePlan(fromId) {
   const path = UPGRADE_PATHS[fromId];
   if (!path) return null;
@@ -406,7 +345,6 @@ function isUpgradable(itemId) {
   return Boolean(UPGRADE_PATHS[itemId]);
 }
 
-/** Koleksi resep tempa/workbench berbasis jalur upgrade alat */
 const WORKBENCH_RECIPES = Object.entries(UPGRADE_PATHS).map(([from, plan]) => ({
   id: `${from}_to_${plan.to}`,
   from,

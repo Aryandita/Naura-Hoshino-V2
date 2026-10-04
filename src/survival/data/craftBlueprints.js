@@ -1,106 +1,93 @@
 "use strict";
 
-// Cetak biru rakitan dasar. Semua bahannya sengaja dipilih dari barang yang
-// benar-benar ada di katalog, karena versi lama meminta `slime_gel` dan
-// `mystic_herb` yang tidak pernah ada sehingga beberapa resep mustahil dirakit.
-//
-// Barang tingkat lanjut TIDAK dirakit dari nol: alurnya lewat Tungku Bagas
-// (peleburan) lalu jalur naik level alat di craftingRecipes.js.
+/**
+ * craftBlueprints.js - Cetak Biru Perakitan Awal Naura Wilds
+ *
+ * Seluruh bahan dan hasil perakitan diselaraskan 100% dengan ID katalog 5-tier resmi.
+ * Bebas dari em-dash dan mematuhi aturan antislop.
+ */
 
 const BLUEPRINTS = {
   wooden_axe: {
     id: "wooden_axe",
-    name: "Kapak Kayu",
-    desc: "Alat pertama buat menebang pohon. Sederhana, tapi Naura bangga kamu bikin sendiri!",
+    name: "Kapak Penebang Kayu",
+    desc: "Perkakas dasar untuk menebang pohon hutan. Dirakit dari kayu ek dan ikatan bulu binatang liar.",
     req: [
-      { id: "wood", amount: 3 },
-      { id: "fiber", amount: 1 },
+      { id: "oak_wood", amount: 3 },
+      { id: "beast_fur", amount: 1 },
     ],
     emojiKey: "axe",
-    emojiFallback: "\ud83e\ude93",
+    emojiFallback: "🪓",
   },
   wooden_pickaxe: {
     id: "wooden_pickaxe",
-    name: "Beliung Kayu",
-    desc: "Buat mengetuk-ngetuk dinding tambang. Hati-hati tangannya, ya.",
+    name: "Beliung Kayu Sederhana",
+    desc: "Alat gali untuk memecah bongkahan batu dan mencari bijih tembaga pertama di lereng gua.",
     req: [
-      { id: "wood", amount: 3 },
-      { id: "stone", amount: 2 },
+      { id: "oak_wood", amount: 3 },
+      { id: "stone_pebble", amount: 2 },
     ],
     emojiKey: "pickaxe",
-    emojiFallback: "\u26cf\ufe0f",
+    emojiFallback: "⛏️",
   },
   wooden_sword: {
     id: "wooden_sword",
-    name: "Pedang Kayu",
-    desc: "Belum seram, tapi cukup buat menghalau monster kecil. Naura doakan selamat!",
+    name: "Pedang Kayu Latih",
+    desc: "Pedang latihan dari kayu ek padat untuk memukul mundur hama kebun dan monster liar.",
     req: [
-      { id: "wood", amount: 2 },
-      { id: "fiber", amount: 2 },
+      { id: "oak_wood", amount: 2 },
+      { id: "beast_fur", amount: 2 },
     ],
     emojiKey: "sword",
-    emojiFallback: "\ud83d\udde1\ufe0f",
+    emojiFallback: "🗡️",
   },
-  bamboo_rod: {
-    id: "bamboo_rod",
-    name: "Pancing Bambu",
-    desc: "Pancing rakitan sendiri. Sabar sedikit, nanti dapat ikan besar.",
+  bamboo_fishing_rod: {
+    id: "bamboo_fishing_rod",
+    name: "Pancing Bambu Pinggiran",
+    desc: "Joran pancing rakitan dari batang bambu lentur untuk menangkap ikan air tawar di sungai desa.",
     req: [
-      { id: "wood", amount: 2 },
-      { id: "fiber", amount: 3 },
+      { id: "oak_wood", amount: 2 },
+      { id: "beast_fur", amount: 2 },
     ],
     emojiKey: "fishing_rod",
-    emojiFallback: "\ud83c\udfa3",
+    emojiFallback: "🎣",
   },
-  worm_bait: {
-    id: "worm_bait",
-    name: "Umpan Cacing",
-    desc: "Naura ikut menggali, lho. Umpan segar bikin ikan cepat menyambar.",
+  roasted_meat: {
+    id: "roasted_meat",
+    name: "Daging Panggang Asap",
+    desc: "Daging binatang liar yang dibakar di atas perapian kayu untuk bekal mengganjal perut lapar.",
     req: [
-      { id: "fiber", amount: 2 },
-      { id: "trash", amount: 1 },
+      { id: "beast_fur", amount: 1 },
+      { id: "oak_wood", amount: 1 },
     ],
-    amount: 3,
-    emojiKey: "worm",
-    emojiFallback: "\ud83e\udab1",
+    amount: 1,
+    emojiKey: "food",
+    emojiFallback: "🥩",
   },
-  heist_mask: {
-    id: "heist_mask",
-    name: "Topeng Perampok",
-    desc: "Naura pura-pura tidak lihat kamu bikin ini. Jangan nakal-nakal, ya?",
+  herbal_salve: {
+    id: "herbal_salve",
+    name: "Salep Herbal Daun Sirih",
+    desc: "Pasta obat oles dari daun herbal hutan untuk membalut luka dan memulihkan stamina.",
     req: [
-      { id: "trash", amount: 5 },
-      { id: "fiber", amount: 2 },
+      { id: "wild_herbs", amount: 3 },
+      { id: "purified_water", amount: 1 },
     ],
-    emojiKey: "mask",
-    emojiFallback: "\ud83c\udfad",
-  },
-  c4_bomb: {
-    id: "c4_bomb",
-    name: "Bom Rakitan (C4)",
-    desc: "Peledak untuk membobol brankas. Naura ngeri, tapi tetap bantu siapkan.",
-    req: [
-      { id: "iron_ingot", amount: 2 },
-      { id: "charcoal", amount: 3 },
-      { id: "fiber", amount: 2 },
-    ],
-    emojiKey: "bomb",
-    emojiFallback: "\ud83d\udca3",
+    amount: 1,
+    emojiKey: "potion",
+    emojiFallback: "🌿",
   },
 };
 
-// Resep yang bisa dipakai siapa pun sejak awal permainan.
+// Resep yang dapat diakses pemain sejak awal petualangan
 const DEFAULT_UNLOCKED = [
   "wooden_axe",
   "wooden_pickaxe",
   "wooden_sword",
-  "bamboo_rod",
-  "worm_bait",
-  "heist_mask",
+  "bamboo_fishing_rod",
+  "roasted_meat",
+  "herbal_salve",
 ];
 
-// Resep di luar daftar bawaan hanya muncul kalau ID-nya tercatat pada
-// `rpg_state.unlocked_recipes`, misalnya hadiah misi atau pemberian NPC.
 function listAvailable(unlocked = []) {
   return Object.values(BLUEPRINTS).filter(
     (bp) => DEFAULT_UNLOCKED.includes(bp.id) || unlocked.includes(bp.id),

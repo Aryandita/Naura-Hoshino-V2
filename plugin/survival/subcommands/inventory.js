@@ -20,7 +20,7 @@ const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const {
-  safeParseInventory,
+  safeParseAndRemapInventory,
 } = require("../../../src/survival/engines/inventoryHelper");
 const { CATALOG_BY_ID } = require("../../../src/survival/data/items_catalog");
 const canvasWorkerPool = require("../../../src/canvas/canvasWorkerPool");
@@ -49,7 +49,7 @@ module.exports = {
         cacheManager.getUserSurvival(user.id),
       ]);
 
-      const rawInventory = safeParseInventory(profile?.inventory);
+      const rawInventory = safeParseAndRemapInventory(profile?.inventory);
 
       // Agregasi item untuk statistik deskriptif
       const aggregatedMap = new Map();

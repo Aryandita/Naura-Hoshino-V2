@@ -60,10 +60,9 @@
   <!-- Vektor Karya Seni Item Spesifik (Di-wrap dengan filter shadow halus) -->
   <g id="itemArt" filter="url(#itemShadow)">
     
-      <!-- Baju Zirah / Chestplate -->
+      <!-- Pelindung Dada Zirah / Chestplate -->
       <path d="M42 34 L54 28 L64 34 L74 28 L86 34 L82 72 L64 88 L46 72 Z" fill="url(#armorGrad)" stroke="#86EFAC" stroke-width="2" filter="url(#glowFilter)" />
       <path d="M50 42 L64 52 L78 42 L76 66 L64 78 L52 66 Z" fill="#1a202c" stroke="#86EFAC" stroke-width="1.5" opacity="0.8" />
-      <!-- Lambang Inti / Arc Reactor -->
       <circle cx="64" cy="56" r="6" fill="#86EFAC" />
       <circle cx="64" cy="56" r="2.5" fill="#ffffff" />
     

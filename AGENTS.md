@@ -290,6 +290,12 @@ Seluruh agen AI dan kontributor wajib merujuk pada pilar dokumentasi yang tepat 
 | [`.agents/skills/security-and-hardening/SKILL.md`](.agents/skills/security-and-hardening/SKILL.md) | **Security & Hardening** | Sanitasi input Discord, parameterize query DB, dan proteksi OWASP. |
 | [`.agents/skills/design-taste-frontend/SKILL.md`](.agents/skills/design-taste-frontend/SKILL.md) | **Taste Skill Frontend** | Anti-slop layout, micro-motion, bento grid, dan tipografi kontras. |
 | [`.agents/skills/stitch-design-taste/SKILL.md`](.agents/skills/stitch-design-taste/SKILL.md) | **Stitch Semantic Design** | Penegak standar sistem DESIGN.md, spring physics, dan layout asimetris. |
+| [`.agents/skills/prd/SKILL.md`](.agents/skills/prd/SKILL.md) | **PRD Generator (Ralph)** | Generator PRD terstruktur dengan pertanyaan klarifikasi beropsi. |
+| [`.agents/skills/ralph/SKILL.md`](.agents/skills/ralph/SKILL.md) | **Ralph PRD Converter** | Konverter PRD ke format atomic user stories prd.json untuk loop otonom. |
+| [`.agents/skills/bm-plan/SKILL.md`](.agents/skills/bm-plan/SKILL.md) | **Buildomator Phase Planning** | Perencanaan fase terstruktur (Plan -> Execute -> Verify) hemat token. |
+| [`.agents/skills/bm-drift/SKILL.md`](.agents/skills/bm-drift/SKILL.md) | **Buildomator Drift Scanner** | Pemindai kode duplikat, phantom code, dan pelanggaran konvensi RULES.md. |
+| [`.agents/skills/bm-handoff/SKILL.md`](.agents/skills/bm-handoff/SKILL.md) | **Buildomator Session Handoff** | Kontinuitas sesi dan catatan state antar giliran di .planning/HANDOFF.json. |
+
 
 <!-- antislop:start -->
 ## 🛡️ Anti-Slop (Filter Desain & Copy AI)
@@ -329,5 +335,10 @@ Pengguna dapat memanggil skill secara instan di chat Antigravity menggunakan pre
 | `/agency` atau `/high-end` | [`.agents/skills/high-end-visual-design/SKILL.md`](.agents/skills/high-end-visual-design/SKILL.md) | Desain visual mewah Awwwards-tier dengan haptic depth dan spatial motion. |
 | `/redesign` | [`.agents/skills/redesign-existing-projects/SKILL.md`](.agents/skills/redesign-existing-projects/SKILL.md) | Tingkatkan kualitas UI yang sudah ada tanpa merusak layout dasar. |
 | `/full-output` | [`.agents/skills/full-output-enforcement/SKILL.md`](.agents/skills/full-output-enforcement/SKILL.md) | Cegah pemotongan kode atau placeholder saat model menghasilkan output panjang. |
+| `/prd` | [`.agents/skills/prd/SKILL.md`](.agents/skills/prd/SKILL.md) | Generator PRD terstruktur dengan pertanyaan klarifikasi beropsi (Ralph Pattern). |
+| `/ralph` | [`.agents/skills/ralph/SKILL.md`](.agents/skills/ralph/SKILL.md) | Konversi PRD markdown ke prd.json untuk eksekusi loop otonom per story. |
+| `/bm-plan` | [`.agents/skills/bm-plan/SKILL.md`](.agents/skills/bm-plan/SKILL.md) | Perencanaan bertahap Buildomator (Plan -> Execute -> Verify) hemat token. |
+| `/drift` atau `/verify-drift` | [`.agents/skills/bm-drift/SKILL.md`](.agents/skills/bm-drift/SKILL.md) | Pemindai degradasi arsitektur, kode duplikat, dan kepatuhan konvensi RULES.md. |
+| `/handoff` | [`.agents/skills/bm-handoff/SKILL.md`](.agents/skills/bm-handoff/SKILL.md) | Kontinuitas sesi dan catatan handoff antar sesi di .planning/HANDOFF.json. |
 <!-- slash-commands:end -->
 

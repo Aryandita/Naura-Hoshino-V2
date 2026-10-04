@@ -60,9 +60,8 @@
   <!-- Vektor Karya Seni Item Spesifik (Di-wrap dengan filter shadow halus) -->
   <g id="itemArt" filter="url(#itemShadow)">
     
-      <!-- Perisai / Shield -->
+      <!-- Perisai Energi & Pelindung -->
       <path d="M38 34 C54 32, 74 32, 90 34 L88 70 C84 88, 64 98, 64 98 C64 98, 44 88, 40 70 Z" fill="url(#armorGrad)" stroke="#9CA3AF" stroke-width="2.5" filter="url(#glowFilter)" />
-      <!-- Pola Emblim Perisai -->
       <path d="M46 42 L82 42 L80 66 C76 80, 64 88, 64 88 C64 88, 52 80, 48 66 Z" fill="#1a202c" stroke="#9CA3AF" stroke-width="1.5" />
       <circle cx="64" cy="62" r="7" fill="#9CA3AF" />
       <circle cx="64" cy="62" r="3" fill="#ffffff" />

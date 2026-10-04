@@ -1,5 +1,12 @@
 "use strict";
 
+/**
+ * cafeRecipes.js - Resep Masakan & Minuman Kafe Naura
+ *
+ * Bahan-bahan resep diselaraskan 100% dengan item katalog 5-tier resmi.
+ * Bebas dari em-dash dan mematuhi aturan antislop.
+ */
+
 const CAFE_RECIPES = [
   {
     id: "sakura_latte",
@@ -8,17 +15,16 @@ const CAFE_RECIPES = [
     category: "DRINK",
     price: 250,
     requiredLevel: 1,
-    description:
-      "Kopi susu lembut dengan aroma kelopak sakura segar dari hutan Neo-Hoshino.",
+    description: "Kopi susu lembut dengan aroma kelopak sakura segar dari hutan rimba Naura.",
     ingredients: [
-      { id: "herb", name: "Tanaman Herbal", amount: 2 },
-      { id: "water", name: "Air Bersih", amount: 1 },
+      { id: "wild_herbs", name: "Rerumputan Herbal Hijau", amount: 2 },
+      { id: "purified_water", name: "Air Bersih Pegunungan", amount: 1 },
     ],
     buff: {
       type: "DUNGEON_PASS_DROP",
       value: 10,
       durationHours: 2,
-      description: "+10% Drop Rate Tiket Dungeon",
+      description: "+10% Drop Rate Kunci Dungeon",
     },
   },
   {
@@ -28,11 +34,11 @@ const CAFE_RECIPES = [
     category: "FOOD",
     price: 450,
     requiredLevel: 1,
-    description:
-      "Ramen kuah kaldu kental gurih dengan irisan ikan segar dan telur setengah matang.",
+    description: "Ramen kuah kaldu kental gurih dengan irisan ikan segar dan telur setengah matang.",
     ingredients: [
-      { id: "wheat", name: "Gandum", amount: 3 },
-      { id: "fish", name: "Ikan Segar", amount: 2 },
+      { id: "wild_herbs", name: "Rerumputan Herbal Hijau", amount: 2 },
+      { id: "freshwater_carp", name: "Ikan Mas Sungai", amount: 1 },
+      { id: "purified_water", name: "Air Bersih Pegunungan", amount: 1 },
     ],
     buff: {
       type: "PROFESSION_XP",
@@ -48,11 +54,10 @@ const CAFE_RECIPES = [
     category: "DRINK",
     price: 300,
     requiredLevel: 2,
-    description:
-      "Boba kenyal berkilau neon dengan sirup blueberry dingin penyegar dahaga.",
+    description: "Boba kenyal berkilau neon dengan sirup buah beri dingin penyegar dahaga.",
     ingredients: [
-      { id: "berry", name: "Buah Berry", amount: 2 },
-      { id: "sugar", name: "Gula Alami", amount: 1 },
+      { id: "wild_berry", name: "Beri Liar Manis", amount: 2 },
+      { id: "honeycomb_snack", name: "Camilan Sarang Lebah Madu", amount: 1 },
     ],
     buff: {
       type: "FRAGMENT_YIELD",
@@ -68,11 +73,10 @@ const CAFE_RECIPES = [
     category: "FOOD",
     price: 550,
     requiredLevel: 3,
-    description:
-      "Kotak bekal porsi besar berenergi tinggi untuk petarung garis depan.",
+    description: "Kotak bekal porsi besar berenergi tinggi untuk petarung garis depan.",
     ingredients: [
-      { id: "wheat", name: "Gandum", amount: 2 },
-      { id: "meat", name: "Daging Olahan", amount: 2 },
+      { id: "roasted_meat", name: "Daging Panggang Asap", amount: 2 },
+      { id: "smoked_fish", name: "Ikan Asap Danau", amount: 1 },
     ],
     buff: {
       type: "RAID_DAMAGE",
@@ -88,11 +92,10 @@ const CAFE_RECIPES = [
     category: "DESSERT",
     price: 400,
     requiredLevel: 4,
-    description:
-      "Es krim manis berlapis jeli bintang yang sangat digemari pet dan maskot.",
+    description: "Es krim manis berlapis jeli bintang yang sangat digemari maskot.",
     ingredients: [
-      { id: "berry", name: "Buah Berry", amount: 2 },
-      { id: "sugar", name: "Gula Alami", amount: 2 },
+      { id: "wild_berry", name: "Beri Liar Manis", amount: 3 },
+      { id: "honeycomb_snack", name: "Camilan Sarang Lebah Madu", amount: 2 },
     ],
     buff: {
       type: "PET_EXP",
@@ -108,11 +111,10 @@ const CAFE_RECIPES = [
     category: "DRINK",
     price: 600,
     requiredLevel: 5,
-    description:
-      "Espresso pekat super kental yang memulihkan stamina secara instan.",
+    description: "Espresso pekat super kental bertenaga kristal hampa yang memulihkan stamina secara instan.",
     ingredients: [
-      { id: "herb", name: "Tanaman Herbal", amount: 3 },
-      { id: "dark_crystal", name: "Kristal Gelap", amount: 1 },
+      { id: "wild_herbs", name: "Rerumputan Herbal Hijau", amount: 3 },
+      { id: "quartz_crystal", name: "Batu Kristal Kuarsa", amount: 1 },
     ],
     buff: {
       type: "ENERGY_RESTORE",

@@ -60,11 +60,9 @@
   <!-- Vektor Karya Seni Item Spesifik (Di-wrap dengan filter shadow halus) -->
   <g id="itemArt" filter="url(#itemShadow)">
     
-      <!-- Joran Pancing -->
+      <!-- Joran Pancing Karbon -->
       <path d="M40 102 C54 78, 68 50, 92 32" stroke="#4a5568" stroke-width="3.5" fill="none" stroke-linecap="round" />
-      <!-- Senar Pancing -->
       <path d="M92 32 C96 52, 88 74, 84 94" stroke="#e2e8f0" stroke-width="1.2" stroke-dasharray="3,1" fill="none" />
-      <!-- Kail / Umpan -->
       <path d="M84 94 C82 98, 86 102, 88 100" stroke="#C084FC" stroke-width="2" fill="none" />
       <circle cx="84" cy="94" r="3" fill="#C084FC" filter="url(#glowFilter)" />
     

@@ -1,45 +1,47 @@
 "use strict";
 
-// Tiket masuk Infinite Dungeon. Keduanya sekali pakai supaya toko tetap punya
-// alasan untuk dikunjungi, dan supaya lubang lama tertutup: dulu satu tiket
-// dipegang selamanya karena tidak pernah dipotong saat masuk.
-//
-// Tiket biasa dijual Pak Damar di desa dengan Naura Star Fragment, sedangkan
-// tiket spesial hanya ada di butik Mbak Rini di kota dan wajib dibayar dengan
-// Naura Coin. Lihat shopStock.js untuk aturan siapa menjual apa.
+/**
+ * items_dungeon.js - Akses Kunci & Pass Infinite Dungeon
+ *
+ * Menyelaraskan ID tiket dungeon dengan ID resmi di items_catalog.js:
+ * bronze_dungeon_key (tiket biasa desa) dan golden_dungeon_key (tiket spesial kota).
+ */
 
-const DUNGEON_PASS_ID = "dungeon_pass";
-const DUNGEON_SPECIAL_PASS_ID = "dungeon_special_pass";
+const { getItemFromCatalog } = require("./items_catalog");
 
-// Pengali mode spesial: musuh dua kali lebih tebal, jarahan dan hadiahnya juga
-// dua kali lipat.
+const DUNGEON_PASS_ID = "bronze_dungeon_key";
+const DUNGEON_SPECIAL_PASS_ID = "golden_dungeon_key";
+
 const SPECIAL_MULTIPLIER = 2;
 
 const DUNGEON_ITEMS = [
-  {
+  getItemFromCatalog(DUNGEON_PASS_ID) || {
     id: DUNGEON_PASS_ID,
-    name: "Dungeon Pass",
-    description:
-      "Tiket sekali pakai untuk membuka pintu batu Infinite Dungeon di gua tambang. Naura titip pesan: jangan lupa bawa obat, ya!",
-    price: 1500,
-    sellPrice: 300,
-    category: "pass",
-    rarity: "Biasa",
+    name: "Kunci Perunggu Labirin Bawah Tanah",
+    description: "Kunci kuno bergigi rumit untuk membuka jeruji gerbang lantai bawah tanah tingkat satu dan dua.",
+    price: 2500,
+    sellPrice: 1250,
+    category: "special",
+    rarity: "Uncommon",
   },
-  {
+  getItemFromCatalog(DUNGEON_SPECIAL_PASS_ID) || {
     id: DUNGEON_SPECIAL_PASS_ID,
-    name: "Dungeon Special Pass",
-    description:
-      "Tiket segel merah dari kota. Musuh di dalam jadi dua kali lebih tangguh, tapi jarahan dan hadiahnya juga dua kali lipat. Naura khawatir, tapi percaya kamu kuat!",
-    price: 400,
-    sellPrice: 0,
-    category: "pass",
-    rarity: "Langka",
+    name: "Kunci Emas Gerbang Bos Dungeon",
+    description: "Kunci emas padat bertatahkan batu delima merah darah. Membuka gerbang utama sarang bos penunggu dungeon laut dalam.",
+    price: 32000,
+    sellPrice: 16000,
+    category: "special",
+    rarity: "Epic",
   },
 ];
 
 function isDungeonPass(id) {
-  return id === DUNGEON_PASS_ID || id === DUNGEON_SPECIAL_PASS_ID;
+  return (
+    id === DUNGEON_PASS_ID ||
+    id === DUNGEON_SPECIAL_PASS_ID ||
+    id === "dungeon_pass" ||
+    id === "dungeon_special_pass"
+  );
 }
 
 module.exports = {

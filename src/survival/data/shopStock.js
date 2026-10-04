@@ -10,10 +10,12 @@ const { DUNGEON_PASS_ID, DUNGEON_SPECIAL_PASS_ID } = require("./items_dungeon");
 // Tiket dungeon ikut dikecualikan dari daftar umum karena penjualnya dibedakan
 // per kota lewat exclusiveStock() di bawah.
 const EXCLUDED_IDS = [
+  "oak_wood",
+  "stone_pebble",
+  "beast_fur",
   "wood",
   "stone",
   "fiber",
-  "worm_bait",
   "trash",
   "survival_started",
   "prop_gudang",

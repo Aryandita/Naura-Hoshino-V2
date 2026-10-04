@@ -1,0 +1,61 @@
+{
+  "project": "Naura Hoshino V2",
+  "branchName": "ralph/survival-fishing-system",
+  "description": "Sistem Memancing Naura Wilds: Minigame interaktif berbasis probabilitas dan cuaca",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Skema database dan kolom status pancing",
+      "description": "Sebagai developer, saya ingin menyimpan level alat pancing dan inventaris ikan pemain secara persisten.",
+      "acceptanceCriteria": [
+        "Fungsi migrasi baru ditambahkan di src/managers/dbMigrator.js",
+        "Kolom fishing_rod dan fishing_xp tercatat pada skema UserSurvival.js",
+        "npm run test:requires lolos dengan exit code 0",
+        "npm run lint lolos"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Service kalkulator memancing (Pure Domain Logic)",
+      "description": "Sebagai developer, saya ingin fungsi deterministik untuk menghitung peluang tangkapan ikan berdasarkan cuaca dan umpan.",
+      "acceptanceCriteria": [
+        "Modul pure function di src/survival/fishingEngine.js",
+        "Unit test lengkap dibuat di src/survival/fishingEngine.test.js",
+        "node --test src/survival/fishingEngine.test.js lolos 100%"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Slash subcommand dan Components V2 UI",
+      "description": "Sebagai pemain, saya ingin mengetik /survival fish untuk mulai memancing dengan antarmuka interaktif.",
+      "acceptanceCriteria": [
+        "Subcommand router di plugin/survival/subcommands/fish.js",
+        "UI dibangun via buildContainerV2 (Header, Body, Button, Footer)",
+        "Mutasi saldo atomik via cacheManager (tanpa double-credit bug)"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Sinkronisasi lokalisasi dan bantuan",
+      "description": "Sebagai pemain, saya ingin teks dan menu bantuan tersedia dalam bahasa Indonesia dan Inggris.",
+      "acceptanceCriteria": [
+        "Kunci terjemahan sinkron di assets/language/id.json dan en.json",
+        "Daftar perintah di src/core/helpView.js terdaftar",
+        "npm run locales:check:strict lolos",
+        "npm run qa lolos 100%"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

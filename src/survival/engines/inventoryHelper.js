@@ -7,6 +7,11 @@
 // keduanya mengunci baris pemain lebih dulu, sehingga dua klik yang tiba bersamaan
 // tidak saling menimpa dan tidak ada barang yang hilang.
 
+const {
+  resolveLegacyItemId,
+  remapInventory,
+} = require("../helpers/legacyItemResolver");
+
 /**
  * Normalisasi nilai inventory dari database menjadi array yang aman.
  * Menangani kasus: null, undefined, string JSON, atau array biasa.
@@ -25,6 +30,16 @@ function safeParseInventory(rawValue) {
     }
   }
   return [];
+}
+
+/**
+ * Normalisasi sekaligus menerjemahkan ID legacy ke ID katalog 5-tier baru.
+ * @param {any} rawValue - Nilai mentah inventory
+ * @returns {Array} Array inventory yang telah dimigrasi
+ */
+function safeParseAndRemapInventory(rawValue) {
+  const parsed = safeParseInventory(rawValue);
+  return remapInventory(parsed).inventory;
 }
 
 /**
@@ -207,6 +222,7 @@ async function takeItemsAtomic(userId, requests) {
 
 module.exports = {
   safeParseInventory,
+  safeParseAndRemapInventory,
   findItem,
   hasItem,
   removeItem,
@@ -215,4 +231,6 @@ module.exports = {
   takeStack,
   addItemsAtomic,
   takeItemsAtomic,
+  remapInventory,
+  resolveLegacyItemId,
 };

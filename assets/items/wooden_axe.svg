@@ -60,9 +60,8 @@
   <!-- Vektor Karya Seni Item Spesifik (Di-wrap dengan filter shadow halus) -->
   <g id="itemArt" filter="url(#itemShadow)">
     
-      <!-- Kapak Kayu / Besi -->
+      <!-- Kapak Kayu & Tempur -->
       <line x1="48" y1="102" x2="78" y2="34" stroke="#4a5568" stroke-width="5" stroke-linecap="round" />
-      <!-- Mata Pisau Kapak -->
       <path d="M72 32 C86 20, 94 36, 88 56 C80 50, 74 48, 66 48 Z" fill="url(#bladeGrad)" stroke="#9CA3AF" stroke-width="2" filter="url(#glowFilter)" />
       <circle cx="70" cy="46" r="3" fill="#ffffff" />
     
