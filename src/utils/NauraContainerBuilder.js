@@ -83,6 +83,21 @@ function resolveMediaUrl(ref) {
   return `attachment://${ref}`;
 }
 
+function isAttachmentPresent(ref, filesList) {
+  if (!ref || !ref.startsWith("attachment://")) return true;
+  const targetName = ref.slice("attachment://".length);
+  if (!Array.isArray(filesList) || filesList.length === 0) return false;
+  return filesList.some((item) => {
+    if (!item) return false;
+    if (typeof item === "string") return path.basename(item) === targetName || item === targetName;
+    if (item.name && item.name === targetName) return true;
+    if (item.attachment && typeof item.attachment === "string") {
+      return path.basename(item.attachment) === targetName || item.attachment === targetName;
+    }
+    return false;
+  });
+}
+
 function buildContainerV2({
   lang,
   interaction,
@@ -165,6 +180,21 @@ function buildContainerV2({
 
   if (!headerTitle && cleanAuthor) warnMissingTitle(cleanAuthor);
 
+  // Validasi defensif: cegah DiscordAPIError 50035 jika attachment:// tidak ada di array files
+  if (
+    headerIconURL &&
+    headerIconURL.startsWith("attachment://") &&
+    !isAttachmentPresent(headerIconURL, attachedFiles)
+  ) {
+    const log = getLogger();
+    if (log) {
+      log.warn(
+        `[ContainerV2] headerIconURL "${headerIconURL}" mereferensikan attachment yang tidak ada di array files. Accessory diabaikan untuk mencegah DiscordAPIError[50035].`,
+      );
+    }
+    headerIconURL = null;
+  }
+
   const headerLines = [];
   if (cleanAuthor) headerLines.push(`-# ${cleanAuthor}`);
   if (headerTitle) headerLines.push(`## ${headerTitle}`);
@@ -196,11 +226,21 @@ function buildContainerV2({
     topBannerAttachmentName ||
     (bannerPosition === "top" ? bannerAttachmentName : null);
   if (topRef) {
-    containerComponents.push({
-      type: 12,
-      items: [{ media: { url: resolveMediaUrl(topRef) } }],
-    });
-    containerComponents.push(separatorComp(true, 1));
+    const topMediaUrl = resolveMediaUrl(topRef);
+    if (isAttachmentPresent(topMediaUrl, attachedFiles)) {
+      containerComponents.push({
+        type: 12,
+        items: [{ media: { url: topMediaUrl } }],
+      });
+      containerComponents.push(separatorComp(true, 1));
+    } else {
+      const log = getLogger();
+      if (log) {
+        log.warn(
+          `[ContainerV2] topBanner "${topRef}" mereferensikan attachment yang tidak ada di array files. Banner diabaikan.`,
+        );
+      }
+    }
   }
 
   const descriptionAlreadyShown =
@@ -224,7 +264,21 @@ function buildContainerV2({
     bottomBannerRef,
     ...(Array.isArray(mediaAttachmentNames) ? mediaAttachmentNames : []),
     expressionGalleryRef,
-  ].filter(Boolean);
+  ]
+    .filter(Boolean)
+    .filter((ref) => {
+      const resolved = resolveMediaUrl(ref);
+      const ok = isAttachmentPresent(resolved, attachedFiles);
+      if (!ok) {
+        const log = getLogger();
+        if (log) {
+          log.warn(
+            `[ContainerV2] gallery item "${ref}" mereferensikan attachment yang tidak ada di array files. Item diabaikan.`,
+          );
+        }
+      }
+      return ok;
+    });
 
   if (bottomGalleryRefs.length > 0) {
     containerComponents.push(separatorComp(true, 1));
@@ -237,12 +291,27 @@ function buildContainerV2({
   }
 
   if (Array.isArray(fileAttachmentNames)) {
-    fileAttachmentNames.filter(Boolean).forEach((name) => {
-      containerComponents.push({
-        type: 13,
-        file: { url: resolveMediaUrl(name) },
+    fileAttachmentNames
+      .filter(Boolean)
+      .filter((name) => {
+        const resolved = resolveMediaUrl(name);
+        const ok = isAttachmentPresent(resolved, attachedFiles);
+        if (!ok) {
+          const log = getLogger();
+          if (log) {
+            log.warn(
+              `[ContainerV2] file attachment "${name}" mereferensikan attachment yang tidak ada di array files. File diabaikan.`,
+            );
+          }
+        }
+        return ok;
+      })
+      .forEach((name) => {
+        containerComponents.push({
+          type: 13,
+          file: { url: resolveMediaUrl(name) },
+        });
       });
-    });
   }
 
   let rowsArray = [];
@@ -263,7 +332,34 @@ function buildContainerV2({
     }, []);
   }
 
-  if (allowCleanup) {
+  // Deduplikasi custom_id di seluruh baris interaktif untuk mencegah COMPONENT_CUSTOM_ID_DUPLICATED
+  const seenCustomIds = new Set();
+  const sanitizedRows = [];
+  for (const rowJson of rowsArray) {
+    if (!rowJson || !Array.isArray(rowJson.components)) continue;
+    const uniqueComps = [];
+    for (const comp of rowJson.components) {
+      if (comp && comp.custom_id) {
+        if (seenCustomIds.has(comp.custom_id)) {
+          const log = getLogger();
+          if (log) {
+            log.warn(
+              `[ContainerV2] Duplikat custom_id "${comp.custom_id}" terdeteksi dan diabaikan untuk mencegah DiscordAPIError[50035].`,
+            );
+          }
+          continue;
+        }
+        seenCustomIds.add(comp.custom_id);
+      }
+      uniqueComps.push(comp);
+    }
+    if (uniqueComps.length > 0) {
+      sanitizedRows.push({ ...rowJson, components: uniqueComps });
+    }
+  }
+  rowsArray = sanitizedRows;
+
+  if (allowCleanup && !seenCustomIds.has("msg_cleanup")) {
     const cleanupBtn = {
       type: 2, // BUTTON
       style: 2, // SECONDARY
@@ -290,6 +386,7 @@ function buildContainerV2({
         components: [cleanupBtn],
       });
     }
+    seenCustomIds.add("msg_cleanup");
   }
 
   if (rowsArray.length > 0) {
@@ -704,6 +801,61 @@ function buildPersonaContainerV2({
   });
 }
 
+/**
+ * Sanitasi pohon komponen Discord untuk mencegah duplikasi custom_id
+ * yang memicu DiscordAPIError[50035] COMPONENT_CUSTOM_ID_DUPLICATED.
+ * @param {Array<object>} components
+ * @returns {Array<object>}
+ */
+function sanitizeComponentCustomIds(components) {
+  if (!Array.isArray(components)) return components;
+  const seenIds = new Set();
+
+  function processComp(item) {
+    if (!item || typeof item !== "object") return item;
+    const raw = typeof item.toJSON === "function" ? item.toJSON() : item;
+
+    if (Array.isArray(raw.components)) {
+      const filteredChildren = [];
+      for (const child of raw.components) {
+        if (!child) continue;
+        const childJson = typeof child.toJSON === "function" ? child.toJSON() : child;
+        if (childJson.custom_id) {
+          if (seenIds.has(childJson.custom_id)) {
+            const log = getLogger();
+            if (log) {
+              log.warn(
+                `[ContainerV2] Komponen dengan custom_id duplikat "${childJson.custom_id}" disaring agar terhindar dari DiscordAPIError[50035].`,
+              );
+            }
+            continue;
+          }
+          seenIds.add(childJson.custom_id);
+        }
+        filteredChildren.push(processComp(childJson));
+      }
+      return { ...raw, components: filteredChildren };
+    }
+    return raw;
+  }
+
+  const sanitized = [];
+  for (const rootItem of components) {
+    const processed = processComp(rootItem);
+    if (processed) {
+      if (
+        processed.type === 1 &&
+        Array.isArray(processed.components) &&
+        processed.components.length === 0
+      ) {
+        continue;
+      }
+      sanitized.push(processed);
+    }
+  }
+  return sanitized;
+}
+
 module.exports = {
   buildContainerV2,
   buildErrorContainerV2,
@@ -711,6 +863,7 @@ module.exports = {
   buildMaintenanceContainerV2,
   buildSuccessContainerV2,
   buildPersonaContainerV2,
+  sanitizeComponentCustomIds,
   textDisplay,
   separatorComp,
   ux: uxHelper,

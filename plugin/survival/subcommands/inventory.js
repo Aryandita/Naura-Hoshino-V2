@@ -174,6 +174,27 @@ module.exports = {
         descriptionText += `> *Ukuran saku ransel otomatis menyesuaikan ruang agar seluruh perlengkapanmu tersimpan sempurna dan mudah dijangkau.*`;
       }
 
+      const inventoryFields = [
+        {
+          name: `📊 Kapasitas & Muatan`,
+          value: [
+            `> ${e("box", "📦")} **Jenis Item Unik:** \`${uniqueTypesCount}\` jenis`,
+            `> ${e("inventory", "🎒")} **Total Muatan:** \`${totalUnits}\` unit barang`,
+            `> ${e("coin", "🪙")} **Estimasi Nilai Jual:** \`${totalSellValue.toLocaleString("id-ID")}\` Coins`,
+          ].join("\n"),
+          inline: true,
+        },
+        {
+          name: `📦 Kategori Muatan`,
+          value: [
+            `> ⚔️ **Senjata:** \`${categoryCounts.weapon}\` • 🛡️ **Zirah:** \`${categoryCounts.armor}\``,
+            `> ⛏️ **Alat:** \`${categoryCounts.tool}\` • 🧪 **Konsumsi:** \`${categoryCounts.consumable}\``,
+            `> 💎 **Bahan Baku:** \`${categoryCounts.material}\``,
+          ].join("\n"),
+          inline: true,
+        },
+      ];
+
       const payload = buildContainerV2({
         accentColorHex: survivalUI.getColor("emerald") || "#86EFAC",
         authorName: `Naura Wilds • Sistem Manajemen Ransel Petualang`,
@@ -181,36 +202,14 @@ module.exports = {
         iconURL: user.displayAvatarURL(),
         expression: uniqueTypesCount > 0 ? "Cheers" : "idle",
         description: descriptionText,
-        fields: [
-          {
-            name: `📊 Kapasitas & Muatan`,
-            value: [
-              `> ${e("box", "📦")} **Jenis Item Unik:** \`${uniqueTypesCount}\` jenis`,
-              `> ${e("inventory", "🎒")} **Total Muatan:** \`${totalUnits}\` unit barang`,
-              `> ${e("coin", "🪙")} **Estimasi Nilai Jual:** \`${totalSellValue.toLocaleString("id-ID")}\` Coins`,
-            ].join("\n"),
-            inline: true,
-          },
-          {
-            name: `📦 Kategori Muatan`,
-            value: [
-              `> ⚔️ **Senjata:** \`${categoryCounts.weapon}\` • 🛡️ **Zirah:** \`${categoryCounts.armor}\``,
-              `> ⛏️ **Alat:** \`${categoryCounts.tool}\` • 🧪 **Konsumsi:** \`${categoryCounts.consumable}\``,
-              `> 💎 **Bahan Baku:** \`${categoryCounts.material}\``,
-            ].join("\n"),
-            inline: true,
-          },
-        ],
-        buttonsRow,
+        fields: inventoryFields,
+        buttonsRow: [selectRow, buttonsRow],
         bannerAttachmentName,
         files,
         footerText: ui.getFooter("survival"),
       });
 
-      const replyMsg = await interaction.editReply({
-        ...payload,
-        components: [...payload.components, selectRow, buttonsRow],
-      });
+      const replyMsg = await interaction.editReply(payload);
 
       if (
         !replyMsg ||
@@ -270,14 +269,12 @@ module.exports = {
               "",
               itemListStr,
             ].join("\n"),
-            fields: payload.fields,
+            fields: inventoryFields,
+            buttonsRow: [selectRow, buttonsRow],
             footerText: ui.getFooter("survival"),
           });
 
-          return i.update({
-            ...updatePayload,
-            components: [selectRow, buttonsRow],
-          });
+          return i.update(updatePayload);
         }
         if (i.customId === "inv_cta_consume") {
           const consumeSub = require("./consume.js");

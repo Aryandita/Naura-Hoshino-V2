@@ -257,11 +257,13 @@ module.exports = {
         ? coupons.say("bought", { ...vars, barang: result.itemName })
         : say(shop.dialog.bought, { ...vars, barang: result.itemName });
 
+      const buyArt = portraitOf(ctx.person);
       const successPayload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#22c55e",
         authorName: `${ctx.person.name} - ${ctx.person.title || "Penjual"}`,
         title: `${e("cheers", "\uD83E\uDD42")} Transaksi berhasil!`,
-        iconURL: ctx.art.iconURL || user.displayAvatarURL(),
+        iconURL: buyArt.iconURL || user.displayAvatarURL(),
+        files: buyArt.files,
         description: [
           `> *"${boughtLine}"*`,
           "",

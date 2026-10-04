@@ -179,6 +179,30 @@ class CanvasWorkerPool {
     });
   }
 
+  get isReady() {
+    return this.isInitialized && this.workers.length > 0;
+  }
+
+  get workerCount() {
+    return this.workers.length || this.size;
+  }
+
+  /**
+   * Alias kompatibilitas tinggi untuk runTask
+   * Menerima format:
+   * - execute(task, payload, timeoutMs)
+   * - execute({ task, payload, timeoutMs })
+   */
+  async execute(taskOrOptions, payload, timeoutMs = 12000) {
+    if (typeof taskOrOptions === "object" && taskOrOptions !== null) {
+      const task = taskOrOptions.task;
+      const data = taskOrOptions.payload || taskOrOptions.data || {};
+      const timeout = taskOrOptions.timeoutMs || timeoutMs;
+      return this.runTask(task, data, timeout);
+    }
+    return this.runTask(taskOrOptions, payload, timeoutMs);
+  }
+
   async shutdown() {
     for (const worker of this.workers) {
       try {
