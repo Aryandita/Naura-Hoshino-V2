@@ -198,6 +198,43 @@ async function handleSlashCommand(interaction, client) {
 }
 
 /**
+ * Memasang wrapper defensif pada interaction.reply dan interaction.update
+ * agar otomatis dialihkan ke editReply/followUp bila sudah di-defer atau terbalas,
+ * mencegah galat fatal DiscordjsError InteractionAlreadyReplied di seluruh bot.
+ * @param {import('discord.js').Interaction} interaction
+ * @returns {import('discord.js').Interaction}
+ */
+function wrapInteractionSafe(interaction) {
+  if (!interaction) return interaction;
+
+  const originalReply = interaction.reply?.bind(interaction);
+  const originalUpdate = interaction.update?.bind(interaction);
+
+  if (originalReply) {
+    interaction.reply = async function (options) {
+      if (this.deferred && !this.replied) {
+        return await this.editReply(options);
+      }
+      if (this.replied) {
+        return await this.followUp(options);
+      }
+      return await originalReply(options);
+    };
+  }
+
+  if (originalUpdate) {
+    interaction.update = async function (options) {
+      if (this.deferred || this.replied) {
+        return await this.editReply(options);
+      }
+      return await originalUpdate(options);
+    };
+  }
+
+  return interaction;
+}
+
+/**
  * Memasang guard auto-deferral defensif 2.2 detik untuk mencegah error 10062 (Interaction Not Acknowledged).
  * @param {import('discord.js').Interaction} interaction
  * @param {number} [timeoutMs=2200]
@@ -228,12 +265,15 @@ function attachAutoAcknowledgeGuard(interaction, timeoutMs = 2200) {
 module.exports = {
   name: Events.InteractionCreate,
   attachAutoAcknowledgeGuard,
+  wrapInteractionSafe,
 
   async execute(interaction, client) {
     // Guard Clause 1: Autocomplete didahulukan tanpa delay (batas keras 3 detik)
     if (interaction.isAutocomplete()) {
       return handleAutocomplete(interaction, client);
     }
+
+    wrapInteractionSafe(interaction);
 
     const cleanupGuard = attachAutoAcknowledgeGuard(interaction);
 
@@ -322,7 +362,7 @@ module.exports = {
 
       // Guard Clause 6: Komponen tanpa handler di registry permanen
       // Beri kesempatan kolektor lokal (message collector) untuk merespons (misal deferUpdate/reply).
-      // Bila setelah 2 detik belum ditanggapi (kolektor kedaluwarsa, bot restart, atau pesan lama),
+      // Bila setelah 2.65 detik belum ditanggapi (kolektor kedaluwarsa, bot restart, atau pesan lama),
       // kirim balasan ramah stale_component agar interaksi tidak berakhir timeout di Discord (batas keras 3 detik).
       if (!registeredComponentHandler) {
         setTimeout(async () => {
@@ -349,7 +389,7 @@ module.exports = {
               )
               .catch(() => {});
           }
-        }, 2000);
+        }, 2650);
         return undefined;
       }
 

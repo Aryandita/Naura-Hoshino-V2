@@ -776,6 +776,7 @@ async function runMinigameLogic(interaction) {
 
           if (chosen === answer) {
             gameCollector.stop("win");
+            await gi.deferUpdate().catch(() => {});
 
             await cacheManager.incrementUserProfile(winner.id, {
               minigame_duelScore: 10,
@@ -931,6 +932,8 @@ async function runMinigameLogic(interaction) {
             return btn;
           }),
         );
+
+        await i.deferUpdate().catch(() => {});
 
         if (selectedIndex === correctIndex) {
           const rewardNsf = Math.floor(conf.coin * nsfMultiplier);

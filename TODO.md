@@ -38,6 +38,19 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 > **Kriteria:** Mempengaruhi integritas data, keamanan saldo/ekonomi, stabilitas koneksi WebSocket, dan pencegahan eksploitasi sistem.
 
+- [x] **[INTERACTIONS & BUTTONS RECOVERY] Audit Menyeluruh Interaksi, Zero-Orphaned Components, dan Universal Safe Deferral Engine**
+  - Mengaudit 100% komponen interaktif Discord bot (103 customId dan seluruh message collector) guna menuntaskan kendala respons tepat waktu, stale component, dan galat `InteractionAlreadyReplied` / `Unknown interaction`.
+  - Membangun 5 modul penangan tombol dan modal baru yang sebelumnya berstatus yatim (*orphaned components*):
+    - `src/interactions/buttons/reactionRole.js`: Penanganan toggle role interaktif permanen (`role_assign_`) dengan validasi otorisasi dan umpan balik ephemeral.
+    - `src/interactions/buttons/globalChatFriend.js`: Tombol tambah teman lintas server (`gchat_add_`) langsung terhubung ke database `UserFriend` dengan sistem streak persahabatan.
+    - `src/interactions/buttons/pvpDuel.js`: Penanganan tantangan duel user context menu (`pvp_accept_` dan `pvp_decline_`) dengan resolusi power combat dan reward NSF.
+    - `src/interactions/buttons/predictBet.js` & `src/interactions/modals/predictBetModal.js`: Integrasi tombol pasang prediksi (`pred_bet_`) ke Discord Modal interaktif (`pred_modal_bet_`) dengan validasi nominal dan eksekusi `predictionEngine.placeBet`.
+    - `src/interactions/modals/reportMessage.js`: Penanganan modal laporan pesan staff (`report_msg_`) dari context menu pesan dengan penerusan langsung ke channel log moderator.
+  - Memasang **Universal Safe Deferral Wrapper (`wrapInteractionSafe`)** di `src/events/interactionCreate.js` yang secara otomatis mengalihkan `interaction.reply` dan `interaction.update` ke `editReply` / `followUp` bila interaksi telah di-defer atau terbalas, mengeliminasi crash runtime `DiscordjsError [InteractionAlreadyReplied]` di seluruh bot.
+  - Mengoptimasi timer watchdog stale component menjadi 2.650ms agar collector lokal memiliki waktu cukup untuk menyelesaikan query database atau render canvas tanpa terpotong prematur.
+  - Menambahkan pengujian otomatis unit test `src/interactions/interactionsSafety.test.js` dan memvalidasi kelulusan 100% QA Gate (518 unit test passed, 0 error linter, 0 em-dash, 100% paritas bahasa ID/EN).
+  - File: [`src/events/interactionCreate.js`](src/events/interactionCreate.js), [`src/interactions/buttons/reactionRole.js`](src/interactions/buttons/reactionRole.js), [`src/interactions/buttons/globalChatFriend.js`](src/interactions/buttons/globalChatFriend.js), [`src/interactions/buttons/pvpDuel.js`](src/interactions/buttons/pvpDuel.js), [`src/interactions/buttons/predictBet.js`](src/interactions/buttons/predictBet.js), [`src/interactions/modals/predictBetModal.js`](src/interactions/modals/predictBetModal.js), [`src/interactions/modals/reportMessage.js`](src/interactions/modals/reportMessage.js), [`plugin/admin/warn.js`](plugin/admin/warn.js), [`plugin/minigames/minigame.js`](plugin/minigames/minigame.js), [`scripts/audit_all_interactions.js`](scripts/audit_all_interactions.js), [`src/interactions/interactionsSafety.test.js`](src/interactions/interactionsSafety.test.js).
+
 - [x] **[SECURITY AUDIT & MOBILE DASHBOARD V2] Strix Security Audit Remediation & Mobile Web Dashboard Feature Parity**
   - Mengaudit seluruh direktori `dashboard/` menggunakan framework `/strix-security-audit` dan mereparasi celah keamanan:
     - Melindungi endpoint pemeliharaan server `POST /api/admin/flush-cache` dan `POST /api/admin/backup` dengan otorisasi ketat `requireOwner`.

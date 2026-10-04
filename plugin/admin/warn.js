@@ -443,26 +443,32 @@ module.exports = {
           title: "Pembersihan Dibatalkan",
           expression: "neutral",
           description: `Pembersihan riwayat peringatan untuk <@${user.id}> telah dibatalkan.`,
+          buttonsRow: [],
           footerText: ui.getFooter("core"),
         });
-        return i.update({ ...cancelPayload, components: cancelPayload.components });
+        return i.update({ ...cancelPayload, components: [] });
       }
 
-      const deletedCount = await UserWarn.destroy({
-        where: { userId: user.id, guildId },
-      });
+      if (i.customId.startsWith("confirm_clear_warn_")) {
+        await i.deferUpdate().catch(() => {});
 
-      await UserStrike.destroy({ where: { userId: user.id, guildId } }).catch(() => {});
+        const deletedCount = await UserWarn.destroy({
+          where: { userId: user.id, guildId },
+        });
 
-      const successPayload = buildContainerV2({
-        accentColorHex: ui.getColor("success") || "#10B981",
-        title: "Peringatan Berhasil Dibersihkan",
-        expression: "success",
-        description: `Semua catatan peringatan milik <@${user.id}> (${deletedCount} catatan) dan strike berhasil dibersihkan.`,
-        footerText: ui.getFooter("core"),
-      });
+        await UserStrike.destroy({ where: { userId: user.id, guildId } }).catch(() => {});
 
-      return i.update({ ...successPayload, components: successPayload.components });
+        const successPayload = buildContainerV2({
+          accentColorHex: ui.getColor("success") || "#10B981",
+          title: "Peringatan Berhasil Dibersihkan",
+          expression: "success",
+          description: `Semua catatan peringatan milik <@${user.id}> (${deletedCount} catatan) dan strike berhasil dibersihkan.`,
+          buttonsRow: [],
+          footerText: ui.getFooter("core"),
+        });
+
+        return i.editReply({ ...successPayload, components: [] });
+      }
     });
 
     collector.on("end", async (collected) => {
