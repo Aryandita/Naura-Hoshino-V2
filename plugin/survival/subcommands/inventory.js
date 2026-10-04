@@ -33,6 +33,14 @@ function e(name, fallback) {
 
 module.exports = {
   async execute(interaction) {
+    if (!interaction.deferred && !interaction.replied) {
+      if (typeof interaction.deferUpdate === "function") {
+        await interaction.deferUpdate().catch(() => {});
+      } else if (typeof interaction.deferReply === "function") {
+        await interaction.deferReply().catch(() => {});
+      }
+    }
+
     const user = interaction.user;
 
     try {
@@ -226,71 +234,83 @@ module.exports = {
       });
 
       collector.on("collect", async (i) => {
-        if (i.customId === "inv_filter_select") {
-          const selectedVal = i.values[0];
-          let filteredItems = Array.from(aggregatedMap.values());
+        try {
+          if (i.customId === "inv_filter_select") {
+            const selectedVal = i.values[0];
+            let filteredItems = Array.from(aggregatedMap.values());
 
-          if (selectedVal.startsWith("sort_")) {
-            if (selectedVal === "sort_tier") {
-              filteredItems.sort((a, b) => (b.tier || 1) - (a.tier || 1));
-            } else if (selectedVal === "sort_amount") {
-              filteredItems.sort((a, b) => (b.amount || 1) - (a.amount || 1));
-            } else if (selectedVal === "sort_price") {
-              filteredItems.sort((a, b) => {
-                const pA = CATALOG_BY_ID.get(a.id)?.sellPrice || 10;
-                const pB = CATALOG_BY_ID.get(b.id)?.sellPrice || 10;
-                return pB * (b.amount || 1) - pA * (a.amount || 1);
+            if (selectedVal.startsWith("sort_")) {
+              if (selectedVal === "sort_tier") {
+                filteredItems.sort((a, b) => (b.tier || 1) - (a.tier || 1));
+              } else if (selectedVal === "sort_amount") {
+                filteredItems.sort((a, b) => (b.amount || 1) - (a.amount || 1));
+              } else if (selectedVal === "sort_price") {
+                filteredItems.sort((a, b) => {
+                  const pA = CATALOG_BY_ID.get(a.id)?.sellPrice || 10;
+                  const pB = CATALOG_BY_ID.get(b.id)?.sellPrice || 10;
+                  return pB * (b.amount || 1) - pA * (a.amount || 1);
+                });
+              }
+            } else if (selectedVal !== "all") {
+              filteredItems = filteredItems.filter((item) => {
+                const cat = CATALOG_BY_ID.get(item.id)?.category || item.category;
+                return cat === selectedVal;
               });
             }
-          } else if (selectedVal !== "all") {
-            filteredItems = filteredItems.filter((item) => {
-              const cat = CATALOG_BY_ID.get(item.id)?.category || item.category;
-              return cat === selectedVal;
+
+            const itemListStr =
+              filteredItems.length > 0
+                ? filteredItems
+                    .slice(0, 15)
+                    .map(
+                      (it) =>
+                        `> ${it.emoji} **${it.name}** \`x${it.amount}\` (Tier ${it.tier})`,
+                    )
+                    .join("\n")
+                : "> *Tidak ada barang yang cocok dengan filter ini.*";
+
+            const updatePayload = buildContainerV2({
+              accentColorHex: survivalUI.getColor("emerald") || "#86EFAC",
+              authorName: `Naura Wilds • Sistem Manajemen Ransel Petualang`,
+              title: `🎒 Filter Ransel [${selectedVal.toUpperCase()}]: ${displayName}`,
+              description: [
+                `Menampilkan hasil filter atau pengurutan item:`,
+                "",
+                itemListStr,
+              ].join("\n"),
+              fields: inventoryFields,
+              buttonsRow: [selectRow, buttonsRow],
+              footerText: ui.getFooter("survival"),
             });
+
+            return i.update(updatePayload);
           }
-
-          const itemListStr =
-            filteredItems.length > 0
-              ? filteredItems
-                  .slice(0, 15)
-                  .map(
-                    (it) =>
-                      `> ${it.emoji} **${it.name}** \`x${it.amount}\` (Tier ${it.tier})`,
-                  )
-                  .join("\n")
-              : "> *Tidak ada barang yang cocok dengan filter ini.*";
-
-          const updatePayload = buildContainerV2({
-            accentColorHex: survivalUI.getColor("emerald") || "#86EFAC",
-            authorName: `Naura Wilds • Sistem Manajemen Ransel Petualang`,
-            title: `🎒 Filter Ransel [${selectedVal.toUpperCase()}]: ${displayName}`,
-            description: [
-              `Menampilkan hasil filter atau pengurutan item:`,
-              "",
-              itemListStr,
-            ].join("\n"),
-            fields: inventoryFields,
-            buttonsRow: [selectRow, buttonsRow],
-            footerText: ui.getFooter("survival"),
-          });
-
-          return i.update(updatePayload);
-        }
-        if (i.customId === "inv_cta_consume") {
-          const consumeSub = require("./consume.js");
-          return consumeSub.execute(i);
-        }
-        if (i.customId === "inv_cta_craft") {
-          const craftSub = require("./craft.js");
-          return craftSub.execute(i);
-        }
-        if (i.customId === "inv_cta_shop") {
-          const shopSub = require("./shop.js");
-          return shopSub.execute(i);
-        }
-        if (i.customId === "inv_cta_info") {
-          const infoSub = require("./info.js");
-          return infoSub.execute(i);
+          if (i.customId === "inv_cta_consume") {
+            await i.deferUpdate().catch(() => {});
+            collector.stop();
+            const consumeSub = require("./consume.js");
+            return consumeSub.execute(i);
+          }
+          if (i.customId === "inv_cta_craft") {
+            await i.deferUpdate().catch(() => {});
+            collector.stop();
+            const craftSub = require("./craft.js");
+            return craftSub.execute(i);
+          }
+          if (i.customId === "inv_cta_shop") {
+            await i.deferUpdate().catch(() => {});
+            collector.stop();
+            const shopSub = require("./shop.js");
+            return shopSub.execute(i);
+          }
+          if (i.customId === "inv_cta_info") {
+            await i.deferUpdate().catch(() => {});
+            collector.stop();
+            const infoSub = require("./info.js");
+            return infoSub.execute(i);
+          }
+        } catch (collectorErr) {
+          logger.error("[SURVIVAL INVENTORY COLLECTOR ERROR]", collectorErr);
         }
       });
     } catch (err) {

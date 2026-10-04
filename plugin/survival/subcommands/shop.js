@@ -128,6 +128,14 @@ module.exports = {
   },
 
   async execute(interaction) {
+    if (!interaction.deferred && !interaction.replied) {
+      if (typeof interaction.deferUpdate === "function") {
+        await interaction.deferUpdate().catch(() => {});
+      } else if (typeof interaction.deferReply === "function") {
+        await interaction.deferReply().catch(() => {});
+      }
+    }
+
     const user = interaction.user;
     const profile = await cacheManager.getUserProfile(user.id);
     const [survival] = await UserSurvival.findOrCreate({

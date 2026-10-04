@@ -13,6 +13,7 @@ const {
   takeItemsAtomic,
 } = require("../../../src/survival/engines/inventoryHelper");
 const ui = require("../../../src/config/ui");
+const { logger } = require("../../../src/managers/logger");
 const leveling = require("../../../src/survival/engines/survivalLeveling");
 const {
   buildContainerV2,
@@ -61,74 +62,83 @@ function optionEmoji(id) {
 
 module.exports = {
   async execute(interaction) {
-    const user = interaction.user;
-    const profile = await cacheManager.getUserProfile(user.id);
-    const survival = await cacheManager.getUserSurvival(user.id);
-
-    const inventory = safeParseInventory(profile.inventory);
-    const usable = {};
-
-    // Selain perbekalan biasa, barang Naura Coupon berkhasiat juga bisa
-    // dipakai dari sini supaya pemain tidak perlu perintah terpisah.
-    for (const entry of inventory) {
-      if (!entry || !entry.id) continue;
-      const conf = itemsConfig.find((it) => it.id === entry.id);
-      if (!conf) continue;
-      if (conf.category !== "consumable" && !conf.effect) continue;
-
-      if (!usable[conf.id]) usable[conf.id] = { ...conf, count: 1 };
-      else usable[conf.id].count += 1;
+    if (!interaction.deferred && !interaction.replied) {
+      if (typeof interaction.deferUpdate === "function") {
+        await interaction.deferUpdate().catch(() => {});
+      } else if (typeof interaction.deferReply === "function") {
+        await interaction.deferReply().catch(() => {});
+      }
     }
 
-    const keys = Object.keys(usable).slice(0, MAX_OPTIONS);
+    try {
+      const user = interaction.user;
+      const profile = await cacheManager.getUserProfile(user.id);
+      const survival = await cacheManager.getUserSurvival(user.id);
 
-    if (keys.length === 0) {
-      const empty = buildErrorContainerV2({
-        title: `${e("shy", "\uD83C\uDF92")} Tas kamu kosong`,
+      const inventory = safeParseInventory(profile.inventory);
+      const usable = {};
+
+      // Selain perbekalan biasa, barang Naura Coupon berkhasiat juga bisa
+      // dipakai dari sini supaya pemain tidak perlu perintah terpisah.
+      for (const entry of inventory) {
+        if (!entry || !entry.id) continue;
+        const conf = itemsConfig.find((it) => it.id === entry.id);
+        if (!conf) continue;
+        if (conf.category !== "consumable" && !conf.effect) continue;
+
+        if (!usable[conf.id]) usable[conf.id] = { ...conf, count: 1 };
+        else usable[conf.id].count += 1;
+      }
+
+      const keys = Object.keys(usable).slice(0, MAX_OPTIONS);
+
+      if (keys.length === 0) {
+        const empty = buildErrorContainerV2({
+          title: `${e("shy", "\uD83C\uDF92")} Tas kamu kosong`,
+          description:
+            "Duh, nggak ada bekal sama sekali di tasmu. Yuk mancing, nambang, atau mampir ke warung Pak Damar dulu. Naura temani!",
+          footerText: ui.getFooter("survival"),
+        });
+        return interaction.editReply({ ...empty, embeds: [] });
+      }
+
+      const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId("consume_item")
+        .setPlaceholder("Pilih bekal atau barang yang mau dipakai...")
+        .addOptions(
+          keys.map((id) => {
+            const it = usable[id];
+            return new StringSelectMenuOptionBuilder()
+              .setLabel(`${it.name} (x${it.count})`.substring(0, 100))
+              .setDescription(
+                (it.effect
+                  ? "Khasiat permanen"
+                  : it.description || "Perbekalan"
+                ).substring(0, 100),
+              )
+              .setEmoji(optionEmoji(id))
+              .setValue(id);
+          }),
+        );
+
+      const selectRow = new ActionRowBuilder().addComponents(selectMenu);
+
+      const menuPayload = buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFC0CB",
+        authorName: "Naura Survival Kit",
+        title: `${e("happy", "\uD83C\uDF92")} Bekal survival kamu`,
+        iconURL: user.displayAvatarURL(),
+        expression: "info",
         description:
-          "Duh, nggak ada bekal sama sekali di tasmu. Yuk mancing, nambang, atau mampir ke warung Pak Damar dulu. Naura temani!",
+          "Ini isi tasmu yang Naura rapikan! Mau makan, minum, atau pakai barang spesial? Pilih saja di bawah, Naura siapkan.",
+        buttonsRow: selectRow,
         footerText: ui.getFooter("survival"),
       });
-      return interaction.editReply({ ...empty, embeds: [] });
-    }
 
-    const selectMenu = new StringSelectMenuBuilder()
-      .setCustomId("consume_item")
-      .setPlaceholder("Pilih bekal atau barang yang mau dipakai...")
-      .addOptions(
-        keys.map((id) => {
-          const it = usable[id];
-          return new StringSelectMenuOptionBuilder()
-            .setLabel(`${it.name} (x${it.count})`.substring(0, 100))
-            .setDescription(
-              (it.effect
-                ? "Khasiat permanen"
-                : it.description || "Perbekalan"
-              ).substring(0, 100),
-            )
-            .setEmoji(optionEmoji(id))
-            .setValue(id);
-        }),
-      );
-
-    const selectRow = new ActionRowBuilder().addComponents(selectMenu);
-
-    const menuPayload = buildContainerV2({
-      accentColorHex: ui.getColor("primary") || "#FFC0CB",
-      authorName: "Naura Survival Kit",
-      title: `${e("happy", "\uD83C\uDF92")} Bekal survival kamu`,
-      iconURL: user.displayAvatarURL(),
-      expression: "info",
-      description:
-        "Ini isi tasmu yang Naura rapikan! Mau makan, minum, atau pakai barang spesial? Pilih saja di bawah, Naura siapkan.",
-      footerText: ui.getFooter("survival"),
-    });
-
-    const response = await interaction.editReply({
-      ...menuPayload,
-      embeds: [],
-      components: [...menuPayload.components, selectRow],
-    });
+      const response = await interaction.editReply({
+        ...menuPayload,
+        embeds: [],
+      });
 
     const collector = response.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,
@@ -366,17 +376,27 @@ module.exports = {
       await i.editReply({ ...success, embeds: [] });
     });
 
-    collector.on("end", (collected) => {
-      if (collected.size > 0) return;
+      collector.on("end", (collected) => {
+        if (collected.size > 0) return;
 
-      const timeout = buildErrorContainerV2({
-        title: `${e("sleepy", "\u231B")} Waktunya habis`,
+        const timeout = buildErrorContainerV2({
+          title: `${e("sleepy", "\u231B")} Waktunya habis`,
+          description:
+            "Naura sudah tunggu satu menit, tapi belum ada yang dipilih. Nggak apa-apa, panggil Naura lagi kalau perut kamu sudah keroncongan!",
+          footerText: ui.getFooter("survival"),
+        });
+
+        interaction.editReply({ ...timeout, embeds: [] }).catch(() => {});
+      });
+    } catch (err) {
+      logger.error("[SURVIVAL CONSUME ERROR]", err);
+      const errPayload = buildErrorContainerV2({
+        title: `${e("akward", "😅")} Gagal Membuka Bekal`,
         description:
-          "Naura sudah tunggu satu menit, tapi belum ada yang dipilih. Nggak apa-apa, panggil Naura lagi kalau perut kamu sudah keroncongan!",
+          "Duh, ada sedikit kendala waktu Naura merapikan bekalmu. Coba buka kembali sebentar lagi ya!",
         footerText: ui.getFooter("survival"),
       });
-
-      interaction.editReply({ ...timeout, embeds: [] }).catch(() => {});
-    });
+      return interaction.editReply({ ...errPayload, embeds: [] }).catch(() => {});
+    }
   },
 };

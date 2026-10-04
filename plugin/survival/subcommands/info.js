@@ -32,6 +32,14 @@ function e(name, fallback) {
 
 module.exports = {
   async execute(interaction) {
+    if (!interaction.deferred && !interaction.replied) {
+      if (typeof interaction.deferUpdate === "function") {
+        await interaction.deferUpdate().catch(() => {});
+      } else if (typeof interaction.deferReply === "function") {
+        await interaction.deferReply().catch(() => {});
+      }
+    }
+
     const user = interaction.user;
 
     try {
