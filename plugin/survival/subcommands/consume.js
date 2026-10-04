@@ -309,53 +309,65 @@ module.exports = {
         return i.editReply({ ...done, embeds: [] });
       }
 
+      // Normalisasi: item katalog pakai kunci 'health', item lama pakai 'hp'.
       const effects = conf.effects || {};
-      const newHunger = Math.min(
-        100,
-        (survival.hunger || 0) + (effects.hunger || 0),
-      );
-      const newThirst = Math.min(
-        100,
-        (survival.thirst || 0) + (effects.thirst || 0),
-      );
-      const newStamina = Math.min(
-        100,
-        (survival.stamina || 0) + (effects.stamina || 0),
-      );
+      const hpGain = Number(effects.hp || effects.health || 0);
+      const hungerGain = Number(effects.hunger || 0);
+      const thirstGain = Number(effects.thirst || 0);
+      const staminaGain = Number(effects.stamina || 0);
 
+      // Hitung level cap HP
       const level = survival.survival_level || 1;
       const maxStat = leveling.getMaxStatCap(level);
       const activeStrength = Math.min(survival.strength || 1, maxStat);
       const maxPlayerHP =
         100 + Math.floor(level / 5) * 10 + activeStrength * 10;
 
-      let newHP = survival.hp !== undefined ? survival.hp : maxPlayerHP;
-      if (effects.hp) newHP = Math.min(maxPlayerHP, newHP + effects.hp);
+      // Hitung nilai baru dengan clamp agar tidak melebihi batas maksimum
+      const currentHP = survival.hp !== undefined ? survival.hp : maxPlayerHP;
+      const newHP = Math.min(maxPlayerHP, currentHP + hpGain);
+      const newHunger = Math.min(100, Math.max(0, (survival.hunger || 0) + hungerGain));
+      const newThirst = Math.min(100, Math.max(0, (survival.thirst || 0) + thirstGain));
+      const newStamina = Math.min(100, Math.max(0, (survival.stamina || 0) + staminaGain));
 
-      await cacheManager.updateUserSurvival(user.id, {
-        hp: newHP,
-        hunger: newHunger,
-        thirst: newThirst,
-        stamina: newStamina,
-      });
+      // Simpan hanya kolom yang berubah secara atomik
+      const survivalPatch = {};
+      if (hungerGain !== 0) survivalPatch.hunger = newHunger;
+      if (thirstGain !== 0) survivalPatch.thirst = newThirst;
+      if (staminaGain !== 0) survivalPatch.stamina = newStamina;
+      if (hpGain !== 0) survivalPatch.hp = newHP;
+
+      if (Object.keys(survivalPatch).length > 0) {
+        await cacheManager.updateUserSurvival(user.id, survivalPatch);
+      }
 
       await takeItemsAtomic(user.id, [{ id: selectedId, amount: 1 }]);
-
       await leveling.addPlayerXP(user.id, 1);
+
+      // Susun pesan kondisi setelah konsumsi
+      const refreshed = await cacheManager.getUserSurvival(user.id);
+      const displayHunger = refreshed.hunger ?? newHunger;
+      const displayThirst = refreshed.thirst ?? newThirst;
+      const displayStamina = refreshed.stamina ?? newStamina;
+      const displayHP = refreshed.hp ?? newHP;
 
       const lines = [
         `Nyam nyam~ kamu menghabiskan **${conf.name}**. Enak, kan? Naura senang lihat kamu makan.`,
         "",
         `**${e("read", "\u2728")} Kondisimu sekarang**`,
-        `> ${e("eat", "\uD83C\uDF54")} Lapar: \`${newHunger}/100\``,
-        `> ${e("chirping", "\uD83E\uDD64")} Haus: \`${newThirst}/100\``,
-        `> ${e("happy", "\u26A1")} Stamina: \`${newStamina}/100\``,
       ];
 
-      if (effects.hp) {
-        lines.push(
-          `> ${e("cheers", "\u2764\uFE0F")} HP: pulih **+${effects.hp}**`,
-        );
+      if (hungerGain > 0)
+        lines.push(`> ${e("eat", "\uD83C\uDF54")} Lapar: \`${displayHunger}/100\` *(+${hungerGain})*`);
+      if (thirstGain > 0)
+        lines.push(`> ${e("chirping", "\uD83E\uDD64")} Haus: \`${displayThirst}/100\` *(+${thirstGain})*`);
+      if (staminaGain > 0)
+        lines.push(`> ${e("happy", "\u26A1")} Stamina: \`${displayStamina}/100\` *(+${staminaGain})*`);
+      if (hpGain > 0)
+        lines.push(`> ${e("cheers", "\u2764\uFE0F")} HP: \`${displayHP}\` *(+${hpGain} dipulihkan)*`);
+
+      if (hungerGain === 0 && thirstGain === 0 && staminaGain === 0 && hpGain === 0) {
+        lines.push("> *(Item ini tidak memberikan efek statistik langsung.)*");
       }
 
       lines.push(
