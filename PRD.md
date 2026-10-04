@@ -179,7 +179,7 @@ Untuk memastikan setiap fitur dibangun dengan fokus yang tajam, produk ini diran
 - **FR-4.2 (Redis Fast Cache & Write-Behind):** Cache in-memory berkecepatan tinggi untuk membaca data profil secara instan dengan flush otomatis ke database setiap 5 detik.
 - **FR-4.3 (MongoDB Atlas Vault):** Penyimpanan dokumen tidak terstruktur untuk transkrip tiket HTML, audit log moderasi, dan riwayat obrolan AI.
 - **FR-4.4 (Transaksi Atomik & Locking):** Setiap mutasi saldo numerik wajib menggunakan method atomik (`incrementUserProfile` / `debitUserProfile`), dan mutasi inventaris JSON wajib melalui transaksi database dengan klausa penguncian baris (`SELECT FOR UPDATE`). *(Ketentuan hukum transaksi diatur di [`RULES.md`](RULES.md#16-aturan-transaksi-saldo--penulisan-data-user))*
-- **FR-4.5 (Ledger 41 Migrasi Skema Terstandarisasi):** Penegakan ledger `schema_migrations` pada 41 migrasi PostgreSQL (`v1` hingga `v41`) yang terisolasi dari proses booting bot.
+- **FR-4.5 (Ledger 45 Migrasi Skema Terstandarisasi):** Penegakan ledger `schema_migrations` pada 45 migrasi PostgreSQL (`v1` hingga `v45`) yang terisolasi dari proses booting bot.
 
 ### Pilar 5: Survival RPG (Naura Wilds)
 - **FR-5.1 (Sistem Tri-Vital):** Karakter memiliki tiga bar status utama:

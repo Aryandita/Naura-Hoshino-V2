@@ -23,7 +23,7 @@ Sebagai agen AI, bayangkan Naura Hoshino V2 sebagai platform terintegrasi dengan
 │ • 55+ Slash Command Plugins  │ • Web Soundboard Studio      │ • Fish Audio AI DJ Companion  │
 ├──────────────────────────────┼──────────────────────────────┼───────────────┤
 │ 4. POLYGLOT DATABASE         │ 5. SURVIVAL RPG (Naura Wilds)│ 6. LIVING AI  │
-│ • Supabase PG (41 Migrasi)   │ • Currency V2 Closed-Loop    │ • AI Ensemble (Gemini/Groq)   │
+│ • Supabase PG (45 Migrasi)   │ • Currency V2 Closed-Loop    │ • AI Ensemble (Gemini/Groq)   │
 │ • MongoDB (Dokumen & Log)    │ • ServerTreasury & Vitals    │ • Semantic Vector Memory      │
 │ • Redis (Cache, Mutex Lock)  │ • Durability & Town Square   │ • Server RAG & Voice Agent    │
 └──────────────────────────────┴──────────────────────────────┴───────────────┘
@@ -197,6 +197,14 @@ Pilihlah emoji pada judul dan setiap butir pembaruan yang selaras dengan isi per
    _Akibat:_ Kebocoran token kritis. File `.env` dilarang disentuh oleh `git add`.
 6. **Menghapus Folder `.cache/`:**
    _Akibat:_ Memicu deploy ulang seluruh slash command ke Discord API dan menghabiskan rate limit bot saat restart.
+7. **Mereferensikan `attachment://` tanpa melampirkan file di `files: []`:**
+   _Akibat:_ `DiscordAPIError[50035] UNFURLED_MEDIA_ITEM_REFERENCED_ATTACHMENT_NOT_FOUND`. Pastikan gambar atau aset thumbnail/banner yang dirujuk dengan skema attachment benar-benar dilampirkan via `AttachmentBuilder` di array `files`.
+8. **Meneruskan `ButtonInteraction` ke subcommand lain tanpa `deferUpdate()`:**
+   _Akibat:_ `DiscordjsError [InteractionNotReplied] The reply to this interaction has not been sent or deferred`. Selalu panggil `await i.deferUpdate().catch(() => {})` dan hentikan collector lama (`collector.stop()`) sebelum melempar interaksi ke subcommand target.
+9. **Duplikasi `custom_id` komponen interaktif dalam pesan yang sama:**
+   _Akibat:_ `DiscordAPIError[50035] COMPONENT_CUSTOM_ID_DUPLICATED`. Jangan menduplikasi komponen baris atau memasukkan kembali array baris yang sudah ditambahkan ke builder.
+10. **Mutasi seluruh objek UserSurvival saat hanya beberapa statistik yang berubah:**
+   _Akibat:_ Race condition dan penimpaan data vital yang tidak perlu. Selalu susun patch parsial (`const patch = {}`) yang hanya menyertakan statistik yang terpengaruh efek konsumsi sebelum memanggil `cacheManager.updateUserSurvival(userId, patch)`.
 
 ---
 
@@ -275,7 +283,7 @@ Seluruh agen AI dan kontributor wajib merujuk pada pilar dokumentasi yang tepat 
 | [`.agents/skills/i-have-adhd/SKILL.md`](.agents/skills/i-have-adhd/SKILL.md) | **ADHD-Friendly Output Skill** | Panduan format respon AI coding: action-first, bernomor, tanpa basa-basi. |
 | [`.agents/skills/strix/SKILL.md`](.agents/skills/strix/SKILL.md) | **Strix Security Audit Skill** | Triase kerentanan AI, validasi PoC, dan eliminasi false positive. |
 | [`.agents/skills/ponytail/SKILL.md`](.agents/skills/ponytail/SKILL.md) | **Ponytail Lazy Senior Dev** | YAGNI ladder: pangkas kode berlebih, utamakan helper native Naura. |
-| [`.agents/skills/test-driven-development/SKILL.md`](.agents/skills/test-driven-development/SKILL.md) | **TDD Engineering Skill** | Siklus red-green-refactor untuk menjaga 254 test selalu 100% hijau. |
+| [`.agents/skills/test-driven-development/SKILL.md`](.agents/skills/test-driven-development/SKILL.md) | **TDD Engineering Skill** | Siklus red-green-refactor untuk menjaga 510 test selalu 100% hijau. |
 | [`.agents/skills/code-review-and-quality/SKILL.md`](.agents/skills/code-review-and-quality/SKILL.md) | **Code Review & Quality** | Review multi-axis (arsitektur, sekuriti, performa) sebelum QA gate. |
 | [`.agents/skills/code-simplification/SKILL.md`](.agents/skills/code-simplification/SKILL.md) | **Code Simplification** | Refactoring kejernihan kode tanpa mengubah fungsionalitas. |
 | [`.agents/skills/frontend-ui-engineering/SKILL.md`](.agents/skills/frontend-ui-engineering/SKILL.md) | **Frontend UI Engineering** | Standar UI komponen web dashboard Vite dan Three.js 3D viewer. |

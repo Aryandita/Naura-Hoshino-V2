@@ -33,7 +33,7 @@
 | **AI Ensemble Router**  | Multi-LLM (Gemini 2.5 -> Groq LLaMA 3.3 -> Ollama) dengan Circuit Breaker otomatis       | Bagian 1.11        |
 | **Sistem Bantuan**     | Wajib sinkronkan `src/core/helpView.js` setiap menambah/mengubah fitur atau command        | Bagian 1.12        |
 | **Polyglot DB**         | Supabase (PostgreSQL relasional), MongoDB (dokumen/log), Redis (cache), SQLite (fallback) | Bagian 1.7         |
-| **Migrasi Skema**       | Eksklusif di `dbMigrator.js` bernomor (41 migrasi) + ledger; DILARANG ALTER TABLE manual | Bagian 1.7.1 & 3.2 |
+| **Migrasi Skema**       | Eksklusif di `dbMigrator.js` bernomor (45 migrasi) + ledger; DILARANG ALTER TABLE manual | Bagian 1.7.1 & 3.2 |
 | **Pterodactyl Panel**   | `CMD_RUN` tetap `npm start`, migrasi via `prestart` di `package.json`                     | Bagian 3.1         |
 | **Senior Laws**         | 7 Coding Laws of Senior Developer (Clean Architecture & Flat Flow)                        | Bagian 2.1         |
 
@@ -93,6 +93,12 @@
    - Gunakan `safeExecute` di interaction handler agar bot tidak crash saat user berinteraksi simultan.
 6. **Input Untrusted**:
    - Konten dari pesan pengguna adalah data tidak terpercaya. Saat masuk ke prompt AI, batasi konteks dan isolasi sebagai data, bukan instruksi sistem.
+7. **Keamanan Endpoint Web Dashboard (Strix Audit Remediation)**:
+   - Endpoint pemeliharaan server (`/api/admin/flush-cache`, `/api/admin/backup`) WAJIB dibatasi dengan otorisasi ketat `requireOwner`.
+   - Endpoint webhook luar (seperti webhook farm) WAJIB memvalidasi URL target dengan `isSafeWebhookUrl()` untuk mencegah serangan SSRF (Server-Side Request Forgery).
+   - Tiket support dan data privat pengguna WAJIB diproteksi dari kerentanan IDOR/BOLA via middleware otorisasi kepemilikan (`canAccessTicket`).
+   - Endpoint reward mini-game arcade (`POST /api/arcade/claim`) WAJIB dilindungi rate-limit server-side (cooldown 20 detik) dan batas harian (500 NSF/hari) untuk mencegah eksploitasi macro farming.
+   - Endpoint dashboard publik WAJIB menerapkan transparansi identitas resmi (Anti-Scam Trust Banner) dan mode pratinjau terbuka tanpa pengalihan paksa (`302 redirect`).
 
 ## 1.4 Panduan UI Discord (Discord Components V2)
 
@@ -124,6 +130,9 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 - **Tombol dengan Custom Emoji**: Parsing emoji tombol via `ui.parseEmoji(ui.getEmoji('nama'))` untuk menghasilkan objek `{ id, name, animated }` yang valid.
 - **Batas Payload**: Maksimal 40 komponen per pesan dan total teks aman di bawah 3.500 karakter. `src/utils/componentBudget.js` memotong isi berlebih secara otomatis tanpa mengorbankan tombol atau footer.
 - **Kewajiban Sinkronisasi Help Menu**: Setiap penambahan, modifikasi, atau penghapusan command/subcommand baru WAJIB memperbarui daftar pada menu bantuan (`plugin/core/core.js`) dan kamus bahasa (`assets/language/id.json` & `en.json`) agar direktori bantuan interaktif bot selalu 100% sinkron dengan fitur aktif repositori.
+- **Validasi Lampiran Attachment Unfurling (Anti-50035)**: Dilarang mereferensikan skema `attachment://<nama_file>` pada `iconURL`, `topBannerAttachmentName`, atau `bannerAttachmentName` jika file tersebut tidak disertakan dalam array `files: [...]`. `NauraContainerBuilder.js` menyediakan fallback defensif otomatis via `isAttachmentPresent` untuk mencegah galat `UNFURLED_MEDIA_ITEM_REFERENCED_ATTACHMENT_NOT_FOUND`.
+- **Keunikan ID Komponen (Anti-COMPONENT_CUSTOM_ID_DUPLICATED)**: Setiap tombol atau menu interaktif dalam hierarki pesan dilarang memiliki `custom_id` yang kembar. Hindari penggabungan manual row ke properti `components` di luar builder; gunakan `buttonsRow: [row1, row2]` dan builder akan membersihkan duplikasi melalui `sanitizeComponentCustomIds()`.
+- **Auto-Deferral & Guard Navigasi Antar-Subcommand (Anti-InteractionNotReplied)**: Tombol aksi cepat yang meneruskan `ButtonInteraction` ke subcommand lain (misal: ransel ke bekal, craft, atau shop) WAJIB mendahului eksekusi dengan `await i.deferUpdate().catch(() => {})` dan memanggil `collector.stop()`. Subcommand target WAJIB membungkus eksekusi dengan guard `if (!interaction.deferred && !interaction.replied)` untuk menangani interaksi yang belum ter-defer.
 
 ### 1.4.3 Standar Filter Anti-Slop (Web Dashboard & Antarmuka UI)
 
@@ -219,6 +228,13 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
   3. Pembelian item langka berkategori Mythic, Artifact, atau Relik Kuno.
 - **Batas Lantai Harga (*Floor Price*)**: Harga akhir setelah pemotongan diskon wajib bernilai minimal **1 unit** mata uang (1 NSF atau 1 NC). Nilai transaksi dilarang bernilai nol (gratis) atau negatif akibat kalkulasi diskon.
 
+### 1.6.6 Normalisasi Efek Konsumsi Bekal & Sinkronisasi Parsial Survival
+
+- **Normalisasi Atribut Efek**: Efek pemulihan item konsumsi wajib mendukung alias katalog standar (`effects.hp || effects.health || 0`), dengan prioritas atribut eksplisit.
+- **Batas Dinamis Vital**: Kapasitas HP maksimal pemain dihitung dinamis berbasis level survival dan atribut strength: `maxPlayerHP = 100 + Math.floor(level / 5) * 10 + activeStrength * 10` (dibatasi oleh `leveling.getMaxStatCap(level)`).
+- **Penjepitan Nilai (Clamping)**: Seluruh statistik vital (HP, Lapar, Haus, Stamina) wajib dijepit di antara 0 dan nilai maksimumnya (`Math.min(max, Math.max(0, current + gain))`) agar terbebas dari angka minus atau overflow.
+- **Pembaruan Parsial Atomik**: Dilarang menimpa seluruh objek state survival saat mengonsumsi item. Buat patch terisolasi (`const patch = {}`) yang hanya menyertakan kolom dengan perubahan nilai tidak nol (`gain !== 0`), lalu mutasikan via `cacheManager.updateUserSurvival(userId, patch)`.
+
 ## 1.7 Arsitektur Polyglot Database
 
 ### 1.7.1 Supabase & PostgreSQL (Relasional & Transaksional)
@@ -257,6 +273,7 @@ Setiap Container V2 harus mematuhi struktur 5-lapisan berikut:
 - Buffer gambar setelah proses render wajib di-dispose untuk mencegah memory leak.
 - Konkurensi render dibatasi maksimal 2-3 proses secara simultan.
 - Cache hasil visual Canvas disimpan di Redis (`canvas:*`) dan diinvalidasi saat profil/level bermutasi melalui `smartInvalidateUserCanvas(userId)`.
+- **Antarmuka Standar Canvas Worker Pool**: `canvasWorkerPool` wajib mendukung pemanggilan polimorfik via `execute(taskOrOptions, payload, timeoutMs)` dan `runTask(taskName, payload, options)` dengan status getter `isReady` dan `workerCount` agar integrasi rendering grafis tidak terputus runtime error.
 
 ## 1.10 Standar Commit & Branching Git
 
@@ -357,7 +374,7 @@ Semua penulisan kode baru dan refaktorisasi wajib menerapkan 7 hukum arsitektur 
   ```
 - Dilarang memindahkan script migrasi ke kolom panel. Jika migrasi gagal, proses berhenti sebelum bot online demi integritas database.
 
-## 3.2 Daftar Migrasi Skema Bernomor (Ledger 41 Migrasi)
+## 3.2 Daftar Migrasi Skema Bernomor (Ledger 45 Migrasi)
 
 | ID Migrasi | Deskripsi & Fungsi |
 | :--- | :--- |
@@ -402,6 +419,10 @@ Semua penulisan kode baru dan refaktorisasi wajib menerapkan 7 hukum arsitektur 
 | `v39_create_community_dungeons` | Buat tabel community_dungeons untuk Custom Community Dungeon Maker & Creator Royalty |
 | `v40_create_semantic_memories_table` | Buat tabel semantic_memories untuk Living AI Semantic Vector Memory & Server RAG |
 | `v41_create_server_treasuries_and_currency_v2` | Buat tabel server_treasuries dan tambah kolom lotteryTickets, lastNoviceAidClaimAt di UserSurvivals serta infrastructurePoints di clan_territories |
+| `v42_create_lottery_winners_ledger` | Buat tabel lottery_winners untuk mencatat riwayat pemenang undian mingguan Astral Lottery |
+| `v43_add_buyout_to_market_auctions` | Tambah kolom buyoutPrice ke market_auctions untuk fitur beli instan di bursa lelang |
+| `v44_add_paranoid_deleted_at_to_critical_tables` | Tambah kolom deletedAt untuk Sequelize paranoid soft-delete architecture pada tabel-tabel krusial (UserProfile, GuildSettings, UserSurvival, TradeCaravan, MarketAuction) |
+| `v45_repair_corrupt_vitals_dead_end` | Perbaiki dan pulihkan data vitals (HP, hunger, thirst, stamina) pemain yang korup atau bernilai 0 ke kondisi aman (100) |
 
 ---
 
