@@ -16,17 +16,17 @@ const questGen = require("../../../src/survival/engines/questGenerator");
 const achievementHelper = require("../../../src/survival/helpers/achievementHelper");
 
 const STAMINA_COST = 15;
-const TIME_LIMIT_MS = 5000;
+const TIME_LIMIT_MS = 15000;
 const WOOD_TARGET = 500;
 
-// Kapak dari yang paling ringan sampai paling sakti. Semakin bagus kapaknya,
-// semakin sedikit tebasan yang dibutuhkan.
+// Kapak dari yang paling ringan sampai paling sakti.
+// Jumlah tebasan diseimbangkan agar ramah terhadap latensi jaringan Discord.
 const AXES = [
-  { id: "obsidian_axe", clicks: 3 },
-  { id: "diamond_axe", clicks: 5 },
-  { id: "iron_axe", clicks: 8 },
-  { id: "stone_axe", clicks: 9 },
-  { id: "wooden_axe", clicks: 10 },
+  { id: "obsidian_axe", clicks: 1 },
+  { id: "diamond_axe", clicks: 2 },
+  { id: "iron_axe", clicks: 3 },
+  { id: "stone_axe", clicks: 4 },
+  { id: "wooden_axe", clicks: 4 },
 ];
 
 function e(name, fallback) {
@@ -43,10 +43,6 @@ module.exports = {
 
     if (!axe) return ui.sendError(interaction, "err_sys_35", true);
 
-    // Stamina dipotong lewat satu UPDATE bersyarat, bukan dibaca lalu ditulis
-    // ulang. Pemeriksaan kecukupan dan pemotongannya terjadi di pernyataan SQL
-    // yang sama, jadi dua klik yang tiba berdekatan tidak bisa menebang pohon
-    // dua kali dengan tenaga yang sama.
     const paid = await cacheManager.debitUserSurvival(
       user.id,
       "stamina",
@@ -55,23 +51,6 @@ module.exports = {
     if (!paid.ok) return ui.sendError(interaction, "err_sys_36", true);
 
     const clicksNeeded = axe.clicks;
-
-    const buildChopPayload = (progress) =>
-      buildContainerV2({
-        accentColorHex: "#22c55e",
-        authorName: "Naura Forest",
-        title: `${e("happy", "\uD83E\uDE93")} Ayo tebang pohonnya!`,
-        iconURL: user.displayAvatarURL(),
-        expression: "info",
-        description: [
-          "**Cepat tekan tombol CHOP!**",
-          `Kamu harus menebas **${clicksNeeded} kali** dalam ${TIME_LIMIT_MS / 1000} detik. Naura hitung dari sini, semangat!`,
-          progress > 0
-            ? `\nProgres: **${progress} / ${clicksNeeded}** tebasan`
-            : "",
-        ].join("\n"),
-        footerText: ui.getFooter("survival"),
-      });
 
     const chopBtn = new ButtonBuilder()
       .setCustomId("chop_hit")
@@ -82,14 +61,30 @@ module.exports = {
       );
 
     const row = new ActionRowBuilder().addComponents(chopBtn);
+
+    const buildChopPayload = (progress) =>
+      buildContainerV2({
+        accentColorHex: "#22c55e",
+        authorName: "Naura Forest",
+        title: `${e("happy", "\uD83E\uDE93")} Ayo tebang pohonnya!`,
+        iconURL: user.displayAvatarURL(),
+        expression: "info",
+        description: [
+          "**Cepat tekan tombol CHOP!**",
+          `Kamu harus menebas **${clicksNeeded} kali** dalam waktu santai ${TIME_LIMIT_MS / 1000} detik. Naura hitung dari sini, semangat!`,
+          progress > 0
+            ? `\nProgres: **${progress} / ${clicksNeeded}** tebasan`
+            : "",
+        ].join("\n"),
+        buttonsRow: [row],
+        footerText: ui.getFooter("survival"),
+      });
+
     const first = buildChopPayload(0);
 
-    // Perintah survival sudah di-defer oleh orkestrator, jadi di sini wajib
-    // editReply. Container builder juga harus di-spread, bukan ditimpa.
     const message = await interaction.editReply({
       ...first,
       embeds: [],
-      components: [...first.components, row],
     });
 
     const collector = message.createMessageComponentCollector({
@@ -112,7 +107,6 @@ module.exports = {
         .update({
           ...progress,
           embeds: [],
-          components: [...progress.components, row],
         })
         .catch(() => {});
     });

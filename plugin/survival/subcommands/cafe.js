@@ -26,9 +26,9 @@ module.exports = {
     "☕ Kelola Cozy Cyber-Cafe & Maid Lounge, masak menu, dan layani pelanggan!",
 
   async execute(interaction) {
-    const action = interaction.options.getString("aksi") || "status";
-    const recipeId = interaction.options.getString("resep");
-    const targetUser = interaction.options.getUser("target_user");
+    const action = interaction.options?.getString?.("aksi") || "status";
+    const recipeId = interaction.options?.getString?.("resep") || null;
+    const targetUser = interaction.options?.getUser?.("target_user") || null;
     const userId = interaction.user.id;
     const username = interaction.user.displayName || interaction.user.username;
 

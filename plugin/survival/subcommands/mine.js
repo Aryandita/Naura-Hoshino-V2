@@ -16,7 +16,7 @@ const questGen = require("../../../src/survival/engines/questGenerator");
 const achievementHelper = require("../../../src/survival/helpers/achievementHelper");
 
 const STAMINA_COST = 20;
-const REACTION_MS = 3500;
+const REACTION_MS = 6000;
 const DIAMOND_TARGET = 100;
 
 // Beliung dari yang paling sakti. `bonus` menaikkan peluang bijih bagus.
@@ -110,6 +110,16 @@ module.exports = {
 
     const target = STONES[Math.floor(Math.random() * STONES.length)];
 
+    const row = new ActionRowBuilder();
+    for (const stone of STONES) {
+      row.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`mine_${stone.id}`)
+          .setEmoji(stone.emoji)
+          .setStyle(ButtonStyle.Secondary),
+      );
+    }
+
     const minePayload = buildContainerV2({
       accentColorHex: "#f59e0b",
       authorName: "Naura Ancient Cave",
@@ -121,24 +131,14 @@ module.exports = {
         "",
         `Cepat pukul **${target.label}** sebelum cahayanya hilang!`,
       ].join("\n"),
+      buttonsRow: [row],
       footerText: ui.getFooter("survival"),
     });
-
-    const row = new ActionRowBuilder();
-    for (const stone of STONES) {
-      row.addComponents(
-        new ButtonBuilder()
-          .setCustomId(`mine_${stone.id}`)
-          .setEmoji(stone.emoji)
-          .setStyle(ButtonStyle.Secondary),
-      );
-    }
 
     // Orkestrator survival sudah memanggil deferReply, jadi harus editReply.
     const message = await interaction.editReply({
       ...minePayload,
       embeds: [],
-      components: [...minePayload.components, row],
     });
 
     const collector = message.createMessageComponentCollector({

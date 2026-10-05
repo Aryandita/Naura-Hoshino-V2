@@ -48,10 +48,7 @@ module.exports = {
       where: { userId: user.id },
     });
 
-    if (survival.inGameHour > 6 && survival.inGameHour < 18) {
-      return ui.sendError(interaction, "err_sys_56", true);
-    }
-
+    const isDaytime = survival.inGameHour >= 6 && survival.inGameHour < 18;
     const rpgState = survival.rpg_state || {};
     const property = survival.propertyId || "jalanan";
 
@@ -59,26 +56,42 @@ module.exports = {
       return ui.sendError(interaction, "err_sys_57", true);
     }
 
-    const regenStamina =
+    let hoursToAdvance = SLEEP_HOURS;
+    let regenStamina =
       (REGEN_BY_PROPERTY[property] || REGEN_BY_PROPERTY.jalanan) +
       bonusFromDecorations(rpgState.active_decorations || []);
+    let regenHp = Math.round(regenStamina / 2);
+    let hungerDrain = HUNGER_DRAIN;
+    let thirstDrain = THIRST_DRAIN;
+    let titleText = `${e("sleepy", "\uD83D\uDECF\uFE0F")} Tidur Pulas Semalaman`;
+    let introText = `Kamu merebahkan badan di **${property.toUpperCase()}** dan tertidur pulas selama ${hoursToAdvance} jam. Naura jagain mimpimu, kok.`;
+
+    if (isDaytime) {
+      // Rehat Sejenak / Power Nap di siang hari
+      hoursToAdvance = 2;
+      regenStamina = Math.min(40, 30 + Math.round(bonusFromDecorations(rpgState.active_decorations || []) / 2));
+      regenHp = 15;
+      hungerDrain = 5;
+      thirstDrain = 5;
+      titleText = `☕ Rehat Sejenak di Bawah Keteduhan`;
+      introText = `Kamu duduk bersandar dan rehat sejenak di **${property.toUpperCase()}** selama ${hoursToAdvance} jam sambil menikmati semilir angin. Energimu terisi kembali!`;
+    }
 
     const leveling = require("../../../src/survival/engines/survivalLeveling");
     const cacheManager = require("../../../src/managers/cacheManager");
     const questGen = require("../../../src/survival/engines/questGenerator");
 
     const maxHp = leveling.calculateMaxHp(survival);
-    const regenHp = Math.round(regenStamina / 2);
 
     const newStamina = Math.min(
       MAX_STAT,
       (survival.stamina || 0) + regenStamina,
     );
     const newHp = Math.min(maxHp, (survival.hp || maxHp) + regenHp);
-    const newHunger = Math.max(0, (survival.hunger || 0) - HUNGER_DRAIN);
-    const newThirst = Math.max(0, (survival.thirst || 0) - THIRST_DRAIN);
+    const newHunger = Math.max(0, (survival.hunger || 0) - hungerDrain);
+    const newThirst = Math.max(0, (survival.thirst || 0) - thirstDrain);
 
-    const timeUpdate = await advanceTime(user.id, SLEEP_HOURS);
+    const timeUpdate = await advanceTime(user.id, hoursToAdvance);
     const timeState = getTimeState(timeUpdate.hour);
 
     await cacheManager.updateUserSurvival(user.id, {
@@ -93,30 +106,33 @@ module.exports = {
     const jam = timeUpdate.hour.toString().padStart(2, "0");
 
     const description = [
-      `Kamu merebahkan badan di **${property.toUpperCase()}** dan tertidur pulas selama ${SLEEP_HOURS} jam. Naura jagain mimpimu, kok.`,
+      introText,
       "",
-      "**Yang pulih waktu kamu tidur:**",
+      `**Yang pulih waktu kamu ${isDaytime ? "rehat" : "tidur"}:**`,
       `> Stamina **+${regenStamina}** (sekarang ${newStamina}%)`,
       `> HP **+${regenHp}** (sekarang ${newHp})`,
       "",
-      "**Tapi bangun-bangun jadi lapar:**",
-      `> Lapar **-${HUNGER_DRAIN}%** (sisa ${newHunger}%)`,
-      `> Haus **-${THIRST_DRAIN}%** (sisa ${newThirst}%)`,
+      `**Kebutuhan fisik berkurang sedikit:**`,
+      `> Lapar **-${hungerDrain}%** (sisa ${newHunger}%)`,
+      `> Haus **-${thirstDrain}%** (sisa ${newThirst}%)`,
       "",
       "**Sekarang sudah:**",
       `> ${timeState.emoji} **Hari ke-${timeUpdate.day}**, jam ${jam}:00 (${timeState.label})`,
     ].join("\n");
 
     const payload = buildContainerV2({
-      accentColorHex: ui.getColor("primary") || "#FFB6C1",
-      authorName: "Naura Survival",
-      title: `${e("sleepy", "\uD83D\uDECF\uFE0F")} Tidurmu nyenyak sekali`,
+      accentColorHex: isDaytime ? "#38BDF8" : (ui.getColor("primary") || "#FFB6C1"),
+      authorName: "Naura Survival Vitals",
+      title: titleText,
       iconURL: interaction.client.user.displayAvatarURL(),
       description,
       buttonsRow: [survivalUI.buildSurvivalActionRow("vitals", user.id)],
-      footerText: `Jangan lupa sarapan dulu yaa \u2022 ${ui.getFooter("survival")}`,
+      footerText: `Jangan lupa minum air & makan ya \u2022 ${ui.getFooter("survival")}`,
     });
 
+    if (interaction.deferred || interaction.replied) {
+      return interaction.editReply(payload);
+    }
     return interaction.reply(payload);
   },
 };

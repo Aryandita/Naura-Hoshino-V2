@@ -199,9 +199,10 @@ module.exports = {
         description,
         bannerAttachmentName: withBanner && banner ? BANNER_NAME : undefined,
         files: withBanner ? bannerFiles : [],
+        buttonsRow: rows,
         footerText: ui.getFooter("survival"),
       });
-      return { ...payload, components: [...payload.components, ...rows] };
+      return payload;
     }
 
     const mainRow = () =>

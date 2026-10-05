@@ -96,6 +96,24 @@ async function handleSurvivalAction(interaction, prefix) {
     if (typeof subModule.execute !== "function") {
       throw new Error(`Modul sub-perintah ${action} tidak memiliki fungsi execute`);
     }
+
+    if (!interaction.options) {
+      interaction.options = {
+        getString: () => null,
+        getInteger: () => null,
+        getNumber: () => null,
+        getBoolean: () => null,
+        getUser: () => null,
+        getMember: () => null,
+        getChannel: () => null,
+        getRole: () => null,
+        getMentionable: () => null,
+        getAttachment: () => null,
+        getSubcommand: () => null,
+        getSubcommandGroup: () => null,
+      };
+    }
+
     return await subModule.execute(interaction);
   } catch (err) {
     logger.error(`[SURVIVAL CTA ERROR] Gagal mengeksekusi ${action}:`, err);

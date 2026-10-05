@@ -11,13 +11,14 @@ const {
 const ui = require("../../../src/config/ui");
 const {
   buildContainerV2,
+  buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const survivalUI = require("../../../src/utils/survivalUIHelper");
 const questGen = require("../../../src/survival/engines/questGenerator");
 const achievementHelper = require("../../../src/survival/helpers/achievementHelper");
 
 const STAMINA_COST = 10;
-const REACTION_MS = 2500;
+const REACTION_MS = 7000;
 const WAIT_MIN_MS = 3000;
 const WAIT_SPAN_MS = 4000;
 const BAIT_ID = "worm_bait";
@@ -26,21 +27,46 @@ function e(name, fallback) {
   return ui.getEmoji(name) || fallback;
 }
 
-function rollCatch() {
+function rollCatch(hasBait = true) {
   const rand = Math.random() * 100;
 
-  if (rand < 50) {
+  if (hasBait) {
+    if (rand < 25) {
+      return {
+        id: "trash",
+        name: "Sampah Plastik",
+        emoji: e("trash", "\uD83D\uDDD1\uFE0F"),
+        mood: "fail",
+      };
+    }
+    if (rand < 85) {
+      return {
+        id: "salmon",
+        name: "Ikan Salmon",
+        emoji: e("fish", "\uD83D\uDC1F"),
+        mood: "success",
+      };
+    }
+    return {
+      id: "golden_fish",
+      name: "Ikan Mas Koki",
+      emoji: e("goldfish", "\uD83D\uDC21"),
+      mood: "reward",
+    };
+  }
+
+  if (rand < 60) {
     return {
       id: "trash",
-      name: "Sampah Plastik",
-      emoji: e("trash", "\uD83D\uDDD1\uFE0F"),
+      name: "Rumput Laut & Sampah",
+      emoji: e("trash", "\uD83C\uDF3F"),
       mood: "fail",
     };
   }
-  if (rand < 90) {
+  if (rand < 95) {
     return {
       id: "salmon",
-      name: "Ikan Salmon",
+      name: "Ikan Salmon Kecil",
       emoji: e("fish", "\uD83D\uDC1F"),
       mood: "success",
     };
@@ -205,33 +231,75 @@ module.exports = {
 
     const profile = await cacheManager.getUserProfile(user.id);
     const inventory = safeParseInventory(profile.inventory);
-    const hasRod = inventory.some((i) => i && i.id === "fishing_rod");
+    const rodItem = inventory.find(
+      (i) =>
+        i &&
+        (i.id === "fishing_rod" ||
+          i.id === "bamboo_fishing_rod" ||
+          i.id === "pro_fishing_rod" ||
+          i.id.endsWith("_rod") ||
+          i.id.includes("pancing")),
+    );
 
-    if (!hasRod) return ui.sendError(interaction, "err_sys_46", true);
-    if (countStack(inventory, BAIT_ID) <= 0)
-      return ui.sendError(interaction, "err_sys_47", true);
+    if (!rodItem) {
+      const noRodPayload = buildErrorContainerV2({
+        accentColorHex: "#EF4444",
+        authorName: "Naura Fishing Spot",
+        title: "Belum Memiliki Alat Pancing",
+        description:
+          "Kamu belum memiliki alat pancing di ranselmu! Beli alat pancing di Toko atau buat pancingan bambu di menu Kerajinan terlebih dahulu.",
+        buttonsRow: [
+          new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setCustomId(`survival_act_shop:${user.id}`)
+              .setLabel("Toko Perlengkapan")
+              .setEmoji("🛒")
+              .setStyle(ButtonStyle.Primary),
+            new ButtonBuilder()
+              .setCustomId(`survival_act_craft:${user.id}`)
+              .setLabel("Buat Pancingan")
+              .setEmoji("🔨")
+              .setStyle(ButtonStyle.Success),
+            new ButtonBuilder()
+              .setCustomId(`survival_act_inventory:${user.id}`)
+              .setLabel("Cek Ransel")
+              .setEmoji("🎒")
+              .setStyle(ButtonStyle.Secondary),
+          ),
+        ],
+        footerText: ui.getFooter("survival"),
+      });
+      if (interaction.deferred || interaction.replied) {
+        return interaction.editReply(noRodPayload);
+      }
+      return interaction.reply(noRodPayload);
+    }
 
     const paid = await cacheManager.debitUserSurvival(
       user.id,
       "stamina",
       STAMINA_COST,
     );
-    if (!paid.ok) return ui.sendError(interaction, "err_sys_48", true);
-
-    // Umpan diambil lewat transaksi terkunci. Pola lama mengurangi amount di
-    // memori lalu menulis ulang seluruh tas, sehingga dua pancingan yang tiba
-    // bersamaan hanya memakan satu umpan.
-    const usedBait = await takeItemsAtomic(user.id, [
-      { id: BAIT_ID, amount: 1 },
-    ]);
-
-    if (!usedBait.ok) {
-      // Umpannya ternyata sudah habis dipakai proses lain. Tenaganya
-      // dikembalikan supaya pemain tidak dirugikan tanpa memancing.
-      await cacheManager.incrementUserSurvival(user.id, {
-        stamina: STAMINA_COST,
+    if (!paid.ok) {
+      const noStaminaPayload = buildErrorContainerV2({
+        accentColorHex: "#F59E0B",
+        authorName: "Naura Fishing Spot",
+        title: "Stamina Tidak Cukup",
+        description: `Tenagamu tidak mencukupi untuk melempar kail pancing (butuh **${STAMINA_COST}%** stamina). Rehat sejenak atau makan bekal dulu ya!`,
+        buttonsRow: [survivalUI.buildSurvivalActionRow("vitals", user.id)],
+        footerText: ui.getFooter("survival"),
       });
-      return ui.sendError(interaction, "err_sys_47", true);
+      if (interaction.deferred || interaction.replied) {
+        return interaction.editReply(noStaminaPayload);
+      }
+      return interaction.reply(noStaminaPayload);
+    }
+
+    const baitCount = countStack(inventory, BAIT_ID);
+    let usedBait = false;
+    if (baitCount > 0) {
+      const baitTx = await takeItemsAtomic(user.id, [{ id: BAIT_ID, amount: 1 }]);
+      usedBait = baitTx.ok;
     }
 
     const waitingPayload = buildContainerV2({
@@ -240,8 +308,13 @@ module.exports = {
       title: `${e("happy", "\uD83C\uDFA3")} Memancing di Pantai Utara`,
       iconURL: user.displayAvatarURL(),
       expression: "loading",
-      description:
-        "Kailmu sudah melayang ke laut. Naura ikut duduk di sebelah kamu sambil menunggu...\n\n> Sabar ya, ikannya belum menggigit.",
+      description: [
+        `Kail dari **${rodItem.name || "Alat Pancing"}** sudah melayang ke air. Naura ikut duduk di sebelahmu sambil memperhatikan riak ombak...`,
+        "",
+        usedBait
+          ? "> 🪱 *Umpan cacing terpasang rapi, menarik perhatian kawanan ikan!*"
+          : "> 🪝 *Memancing dengan kail kosong (tanpa umpan). Dapatkan umpan di Pasar Desa untuk hasil tangkapan lebih besar!*",
+      ].join("\n"),
       footerText: ui.getFooter("survival"),
     });
 
@@ -272,15 +345,16 @@ module.exports = {
           title: `${e("shocked", "\u203C\uFE0F")} Ada yang menggigit!`,
           iconURL: user.displayAvatarURL(),
           expression: "warning",
-          description:
-            "**Cepat tarik kailnya sebelum ikannya kabur!** Ayo, Naura percaya sama refleks kamu!",
+          description: usedBait
+            ? "**Cepat tarik kailnya sebelum ikannya kabur!** Umpan cacingmu berhasil menarik perhatian ikan air tawar!"
+            : "**Ada sentakan di kail pancingmu! Cepat tarik sebelum terlepas!** (Tips: Gunakan umpan cacing agar peluang ikan langka lebih tinggi)",
+          buttonsRow: [row],
           footerText: ui.getFooter("survival"),
         });
 
         await interaction.editReply({
           ...alertPayload,
           embeds: [],
-          components: [...alertPayload.components, row],
         });
 
         const collector = message.createMessageComponentCollector({
@@ -295,7 +369,7 @@ module.exports = {
           collector.stop("pulled");
           await i.deferUpdate().catch(() => {});
 
-          const catchResult = rollCatch();
+          const catchResult = rollCatch(usedBait);
           let amount = 1;
 
           // === SEASONAL EVENT BOOST ===
