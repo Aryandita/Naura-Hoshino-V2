@@ -5,11 +5,11 @@
  * Subcommand /survival siege: Perang Wilayah GvG & Pengepungan Menara Relik Kuno.
  */
 
-const { MessageFlags } = require("discord.js");
 const GuildClan = require("../../../src/models/GuildClan");
 const UserSurvival = require("../../../src/models/UserSurvival");
 const guildFederationEngine = require("../../../src/survival/engines/guildFederationEngine");
 const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const {
   buildContainerV2,
   buildErrorContainerV2,
@@ -25,6 +25,11 @@ module.exports = {
       interaction.options.getString("tower_id") || "chrono_siphon";
     const user = interaction.user;
 
+    const safeReply = (payload) =>
+      interaction.deferred || interaction.replied
+        ? interaction.editReply(payload)
+        : interaction.reply(payload);
+
     const [survival] = await UserSurvival.findOrCreate({
       where: { userId: user.id },
     });
@@ -34,12 +39,10 @@ module.exports = {
         title: "Perlu Bergabung Klan",
         description:
           "Kamu harus bergabung ke dalam klan terlebih dahulu untuk dapat berpartisipasi dalam perang wilayah dan pengepungan menara relik.",
+        buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
         footerText: ui.getFooter("survival"),
       });
-      return interaction.reply({
-        ...payload,
-        flags: MessageFlags.IsComponentsV2,
-      });
+      return safeReply(payload);
     }
 
     const userClan = await GuildClan.findByPk(survival.clanId);
@@ -47,12 +50,10 @@ module.exports = {
       const payload = buildErrorContainerV2({
         title: "Klan Tidak Ditemukan",
         description: "Data klanmu tidak valid di database.",
+        buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
         footerText: ui.getFooter("survival"),
       });
-      return interaction.reply({
-        ...payload,
-        flags: MessageFlags.IsComponentsV2,
-      });
+      return safeReply(payload);
     }
 
     // 1. STATUS MENARA RELIK
@@ -75,13 +76,11 @@ module.exports = {
           lines.join("\n\n"),
           "\n> *Gunakan `/survival siege aksi:attack tower_id:<id>` untuk melancarkan serangan pengepungan bersama aliansimu!*",
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.reply({
-        ...payload,
-        flags: MessageFlags.IsComponentsV2,
-      });
+      return safeReply(payload);
     }
 
     // 2. SERANGAN PENGEPUNGAN (ATTACK / SIEGE)
@@ -100,12 +99,10 @@ module.exports = {
           title: "Pengepungan Gagal",
           description:
             siegeResult.error || "Gagal melancarkan serangan ke menara relik.",
+          buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
           footerText: ui.getFooter("survival"),
         });
-        return interaction.reply({
-          ...payload,
-          flags: MessageFlags.IsComponentsV2,
-        });
+        return safeReply(payload);
       }
 
       const isConquered = siegeResult.conquered;
@@ -130,13 +127,11 @@ module.exports = {
               `• **Sisa Ketahanan:** \`${siegeResult.remainingHp.toLocaleString("id-ID")} / ${siegeResult.maxHp.toLocaleString("id-ID")}\``,
               `• **Pengontrol Saat Ini:** \`[${siegeResult.controllerFedTag || "BELUM DIKONTROL"}]\``,
             ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.reply({
-        ...payload,
-        flags: MessageFlags.IsComponentsV2,
-      });
+      return safeReply(payload);
     }
 
     // 3. KLAIM DIVIDEN MENARA (DIVIDENDS / CLAIM)
@@ -153,12 +148,10 @@ module.exports = {
           title: "Klaim Dividen Gagal",
           description:
             claimResult.error || "Gagal mengklaim dividen kas menara.",
+          buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
           footerText: ui.getFooter("survival"),
         });
-        return interaction.reply({
-          ...payload,
-          flags: MessageFlags.IsComponentsV2,
-        });
+        return safeReply(payload);
       }
 
       const payload = buildContainerV2({
@@ -172,23 +165,19 @@ module.exports = {
           `• **Saldo Brankas Baru:** \`${claimResult.clanVault.toLocaleString("id-ID")} NSF\``,
           `• **Jadwal Klaim Berikutnya:** Besok pukul 00:00 UTC`,
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.reply({
-        ...payload,
-        flags: MessageFlags.IsComponentsV2,
-      });
+      return safeReply(payload);
     }
 
     const payload = buildErrorContainerV2({
       title: "Aksi Tidak Dikenal",
       description: "Pilihlah aksi yang valid: `status`, `attack`, atau `dividends`.",
+      buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
       footerText: ui.getFooter("survival"),
     });
-    return interaction.reply({
-      ...payload,
-      flags: MessageFlags.IsComponentsV2,
-    });
+    return safeReply(payload);
   },
 };

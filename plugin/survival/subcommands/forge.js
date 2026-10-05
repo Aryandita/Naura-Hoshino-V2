@@ -99,16 +99,14 @@ module.exports = {
         ),
       );
 
-      return {
-        ...buildContainerV2({
-          accentColorHex: "#F59E0B",
-          authorName: "Naura Wilds - Bengkel Tempa & Daur Ulang",
-          title: "⚒️ Bengkel Pandai Besi Bagas",
-          description: descLines.join("\n"),
-          footerText: ui.getFooter("survival"),
-        }),
-        components: rows,
-      };
+      return buildContainerV2({
+        accentColorHex: "#F59E0B",
+        authorName: "Naura Wilds - Bengkel Tempa & Daur Ulang",
+        title: "⚒️ Bengkel Pandai Besi Bagas",
+        description: descLines.join("\n"),
+        buttonsRow: rows,
+        footerText: ui.getFooter("survival"),
+      });
     };
 
     const initialPayload = buildPayload();
@@ -124,8 +122,10 @@ module.exports = {
     collector.on("collect", async (i) => {
       if (i.customId === "forge_open_craft") {
         await i.deferUpdate().catch(() => {});
+        collector.stop("navigated");
+        const { adaptSurvivalInteraction } = require("../../../src/survival/helpers/survivalContext");
+        adaptSurvivalInteraction(interaction, "craft");
         const craftSubcommand = require("./craft.js");
-        collector.stop();
         return craftSubcommand.execute(interaction);
       }
 

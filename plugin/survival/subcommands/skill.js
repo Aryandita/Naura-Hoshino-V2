@@ -110,7 +110,7 @@ function buildSkillView(survival, user) {
     iconURL: user.displayAvatarURL(),
     expression: unspent > 0 ? "happy" : "info",
     description: lines.join("\n"),
-    buttonsRow: row,
+    buttonsRow: [row, survivalUI.buildSurvivalActionRow("profile", user.id)],
     footerText: ui.getFooter("survival"),
   });
 

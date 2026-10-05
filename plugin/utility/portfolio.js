@@ -112,52 +112,53 @@ module.exports = {
 
         if (!portfolio || !portfolio.isPublic) {
           if (!isSelf) {
+            const p = buildContainerV2({
+              title: "Portfolio Belum Tersedia",
+              description: `Portfolio ${targetUser.displayName} belum dipublikasikan.\nKalau kamu ingin membuat portfoliomu sendiri, gunakan **/portfolio bio** dan **/portfolio toggle**.`,
+              color: 0x1a1a2e,
+            });
             return interaction.reply({
-              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-              components: buildContainerV2({
-                title: "Portfolio Belum Tersedia",
-                description: `Portfolio ${targetUser.displayName} belum dipublikasikan.\nKalau kamu ingin membuat portfoliomu sendiri, gunakan **/portfolio bio** dan **/portfolio toggle**.`,
-                color: 0x1a1a2e,
-              }),
+              ...p,
+              flags: (p.flags || 0) | MessageFlags.Ephemeral,
             });
           }
           // Tampilkan info untuk diri sendiri (draft)
+          const p = buildContainerV2({
+            title: `Portfolio Kamu, Draft`,
+            description: `Portfolio kamu **belum dipublikasikan**. Gunakan **/portfolio toggle** untuk membuatnya publik.\n\nEdit portfoliomu di dashboard:\n🔗 [${dashboardBase}/portfolio](${dashboardBase}/portfolio)`,
+            color: 0x1a1a2e,
+            fields: [
+              {
+                name: "Bio",
+                value: portfolio.bio || "*(belum diisi)*",
+                inline: false,
+              },
+              {
+                name: "Tagline",
+                value: portfolio.tagline || "*(belum diisi)*",
+                inline: true,
+              },
+              {
+                name: "Tema",
+                value: portfolio.theme || "default",
+                inline: true,
+              },
+            ],
+          });
           return interaction.reply({
-            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-            components: buildContainerV2({
-              title: `Portfolio Kamu, Draft`,
-              description: `Portfolio kamu **belum dipublikasikan**. Gunakan **/portfolio toggle** untuk membuatnya publik.\n\nEdit portfoliomu di dashboard:\n🔗 [${dashboardBase}/portfolio](${dashboardBase}/portfolio)`,
-              color: 0x1a1a2e,
-              fields: [
-                {
-                  name: "Bio",
-                  value: portfolio.bio || "*(belum diisi)*",
-                  inline: false,
-                },
-                {
-                  name: "Tagline",
-                  value: portfolio.tagline || "*(belum diisi)*",
-                  inline: true,
-                },
-                {
-                  name: "Tema",
-                  value: portfolio.theme || "default",
-                  inline: true,
-                },
-              ],
-            }),
+            ...p,
+            flags: (p.flags || 0) | MessageFlags.Ephemeral,
           });
         }
 
         const portfolioUrl = `${dashboardBase}/u/${targetUser.id}`;
-        return interaction.reply({
-          flags: MessageFlags.IsComponentsV2,
-          components: buildContainerV2({
+        return interaction.reply(
+          buildContainerV2({
             title: `${isSelf ? "🌐 Portfolio Kamu" : `🌐 Portfolio ${targetUser.displayName}`}`,
             description: `${portfolio.tagline ? `*"${portfolio.tagline}"*\n\n` : ""}Lihat portfolio lengkap di sini:\n🔗 [${portfolioUrl}](${portfolioUrl})\n\n${portfolio.viewCount > 0 ? `👁️ Sudah dilihat **${portfolio.viewCount.toLocaleString("id-ID")}** kali` : ""}`,
             color: 0xffb6c1,
           }),
-        });
+        );
       }
 
       // ── TOGGLE ───────────────────────────────────────────────────
@@ -169,17 +170,18 @@ module.exports = {
         await portfolio.save({ fields: ["isPublic"] });
 
         const dashUrl = `${dashboardBase}/u/${userId}`;
+        const p = buildContainerV2({
+          title: portfolio.isPublic
+            ? "🌐 Portfolio Dipublikasikan!"
+            : "🔒 Portfolio Disembunyikan",
+          description: portfolio.isPublic
+            ? `Portfolio kamu sekarang bisa dilihat siapa pun!\n🔗 [${dashUrl}](${dashUrl})`
+            : `Portfolio kamu sekarang hanya bisa kamu lihat sendiri.`,
+          color: portfolio.isPublic ? 0x86efac : 0xff6b6b,
+        });
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          components: buildContainerV2({
-            title: portfolio.isPublic
-              ? "🌐 Portfolio Dipublikasikan!"
-              : "🔒 Portfolio Disembunyikan",
-            description: portfolio.isPublic
-              ? `Portfolio kamu sekarang bisa dilihat siapa pun!\n🔗 [${dashUrl}](${dashUrl})`
-              : `Portfolio kamu sekarang hanya bisa kamu lihat sendiri.`,
-            color: portfolio.isPublic ? 0x86efac : 0xff6b6b,
-          }),
+          ...p,
+          flags: (p.flags || 0) | MessageFlags.Ephemeral,
         });
       }
 
@@ -192,13 +194,14 @@ module.exports = {
         portfolio.bio = teks;
         await portfolio.save({ fields: ["bio"] });
 
+        const p = buildContainerV2({
+          title: "✅ Bio Diperbarui",
+          description: `Bio portfolio kamu telah diperbarui, ${displayName}!\n\n> ${teks}`,
+          color: 0xffb6c1,
+        });
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          components: buildContainerV2({
-            title: "✅ Bio Diperbarui",
-            description: `Bio portfolio kamu telah diperbarui, ${displayName}!\n\n> ${teks}`,
-            color: 0xffb6c1,
-          }),
+          ...p,
+          flags: (p.flags || 0) | MessageFlags.Ephemeral,
         });
       }
 
@@ -211,13 +214,14 @@ module.exports = {
         portfolio.tagline = teks;
         await portfolio.save({ fields: ["tagline"] });
 
+        const p = buildContainerV2({
+          title: "✅ Tagline Diperbarui",
+          description: `Tagline portfolio kamu sekarang: *"${teks}"*`,
+          color: 0xffb6c1,
+        });
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          components: buildContainerV2({
-            title: "✅ Tagline Diperbarui",
-            description: `Tagline portfolio kamu sekarang: *"${teks}"*`,
-            color: 0xffb6c1,
-          }),
+          ...p,
+          flags: (p.flags || 0) | MessageFlags.Ephemeral,
         });
       }
 
@@ -228,13 +232,14 @@ module.exports = {
         if (PREMIUM_THEMES.includes(tema)) {
           const profile = await cacheManager.getUserProfile(userId);
           if (!profile || !profile.isPremium) {
+            const p = buildContainerV2({
+              title: "💎 Fitur Premium",
+              description: `Tema **${tema}** hanya tersedia untuk pengguna Premium.\n\nUpgrade ke Premium untuk membuka semua tema eksklusif, warna aksen kustom, dan lainnya!`,
+              color: 0xffd700,
+            });
             return interaction.reply({
-              flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-              components: buildContainerV2({
-                title: "💎 Fitur Premium",
-                description: `Tema **${tema}** hanya tersedia untuk pengguna Premium.\n\nUpgrade ke Premium untuk membuka semua tema eksklusif, warna aksen kustom, dan lainnya!`,
-                color: 0xffd700,
-              }),
+              ...p,
+              flags: (p.flags || 0) | MessageFlags.Ephemeral,
             });
           }
         }
@@ -251,13 +256,14 @@ module.exports = {
           cyber: "🤖",
           midnight: "🌑",
         };
+        const p = buildContainerV2({
+          title: "✅ Tema Diperbarui",
+          description: `Tema portfolio kamu sekarang: ${themeEmoji[tema] || ""} **${tema}**`,
+          color: 0xffb6c1,
+        });
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          components: buildContainerV2({
-            title: "✅ Tema Diperbarui",
-            description: `Tema portfolio kamu sekarang: ${themeEmoji[tema] || ""} **${tema}**`,
-            color: 0xffb6c1,
-          }),
+          ...p,
+          flags: (p.flags || 0) | MessageFlags.Ephemeral,
         });
       }
     } catch (err) {
@@ -265,14 +271,15 @@ module.exports = {
       try {
         const errMethod =
           interaction.replied || interaction.deferred ? "followUp" : "reply";
+        const p = buildContainerV2({
+          title: "Ups, Terjadi Kesalahan",
+          description:
+            "Naura tidak bisa memproses portfolio kamu saat ini. Coba lagi nanti ya!",
+          color: 0xff6b6b,
+        });
         await interaction[errMethod]({
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          components: buildContainerV2({
-            title: "Ups, Terjadi Kesalahan",
-            description:
-              "Naura tidak bisa memproses portfolio kamu saat ini. Coba lagi nanti ya!",
-            color: 0xff6b6b,
-          }),
+          ...p,
+          flags: (p.flags || 0) | MessageFlags.Ephemeral,
         });
       } catch {
         /* already replied */

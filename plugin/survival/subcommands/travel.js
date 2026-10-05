@@ -228,22 +228,10 @@ module.exports = {
       );
     }
 
-    const payload = buildContainerV2({
-      accentColorHex: ui.getColor("primary") || "#FFB6C1",
-      authorName: "Naura Travel",
-      title: `${e("cheers", "\uD83D\uDDFA\uFE0F")} Kamu sudah sampai!`,
-      iconURL: user.displayAvatarURL(),
-      expression: timeUpdate.passedOut ? "error" : "success",
-      description: lines.join("\n"),
-      bannerAttachmentName,
-      files,
-      footerText: ui.getFooter("survival"),
-    });
-
-    const components = [...payload.components];
+    const buttonsRow = [];
 
     if (crowd.length > 0 && !timeUpdate.passedOut) {
-      components.push(
+      buttonsRow.push(
         new ActionRowBuilder().addComponents(
           new ButtonBuilder()
             .setCustomId("travel_roam")
@@ -254,11 +242,26 @@ module.exports = {
       );
     }
 
-    components.push(survivalUI.buildSurvivalActionRow("town", user.id));
+    buttonsRow.push(survivalUI.buildSurvivalActionRow("town", user.id));
 
-    const response = await interaction.editReply({ ...payload, components });
+    const buildTravelPayload = (rows) =>
+      buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        authorName: "Naura Travel",
+        title: `${e("cheers", "\uD83D\uDDFA\uFE0F")} Kamu sudah sampai!`,
+        iconURL: user.displayAvatarURL(),
+        expression: timeUpdate.passedOut ? "error" : "success",
+        description: lines.join("\n"),
+        bannerAttachmentName,
+        files,
+        buttonsRow: rows,
+        footerText: ui.getFooter("survival"),
+      });
 
-    if (components.length === payload.components.length) return response;
+    const payload = buildTravelPayload(buttonsRow);
+    const response = await interaction.editReply(payload);
+
+    if (crowd.length === 0 || timeUpdate.passedOut) return response;
     if (
       !response ||
       typeof response.createMessageComponentCollector !== "function"
@@ -284,11 +287,13 @@ module.exports = {
           .setDisabled(true),
       );
 
+      const disabledRows = [
+        disabledRow,
+        survivalUI.buildSurvivalActionRow("town", user.id),
+      ];
+
       await interaction
-        .editReply({
-          ...payload,
-          components: [...payload.components, disabledRow],
-        })
+        .editReply(buildTravelPayload(disabledRows))
         .catch(() => {});
 
       try {

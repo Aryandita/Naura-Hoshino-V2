@@ -54,17 +54,6 @@ module.exports = {
       .map((a) => `> ${a.emoji} **${a.title}**\n> *${a.description}*`)
       .join("\n\n");
 
-    const payload = buildContainerV2({
-      accentColorHex: "#FFD700",
-      authorName: "Naura Hall of Fame",
-      title: `${e("impressed", "\uD83C\uDFC6")} Koleksi pencapaian ${user.username}`,
-      iconURL: user.displayAvatarURL(),
-      description: `Naura simpan semua gelar yang sudah kamu raih di sini. Bangga banget lihat daftarnya sepanjang ini!\n\n${daftar}`,
-      footerText: activeTitle
-        ? `Gelar aktif: ${activeTitle.emoji} ${activeTitle.title}`
-        : ui.getFooter("survival"),
-    });
-
     const selectMenu = new StringSelectMenuBuilder()
       .setCustomId("set_active_title")
       .setPlaceholder("Pilih gelar yang mau dipakai di profilmu")
@@ -83,12 +72,19 @@ module.exports = {
 
     const row = new ActionRowBuilder().addComponents(selectMenu);
 
-    // Container hasil builder harus di-spread, bukan ditimpa. Kalau ditimpa,
-    // seluruh isi kartunya hilang dan pemain cuma melihat select menu kosong.
-    await interaction.reply({
-      ...payload,
-      components: [...payload.components, row],
+    const payload = buildContainerV2({
+      accentColorHex: "#FFD700",
+      authorName: "Naura Hall of Fame",
+      title: `${e("impressed", "\uD83C\uDFC6")} Koleksi pencapaian ${user.username}`,
+      iconURL: user.displayAvatarURL(),
+      description: `Naura simpan semua gelar yang sudah kamu raih di sini. Bangga banget lihat daftarnya sepanjang ini!\n\n${daftar}`,
+      buttonsRow: [row],
+      footerText: activeTitle
+        ? `Gelar aktif: ${activeTitle.emoji} ${activeTitle.title}`
+        : ui.getFooter("survival"),
     });
+
+    await interaction.reply(payload);
     const message = await interaction.fetchReply();
 
     const collector = message.createMessageComponentCollector({

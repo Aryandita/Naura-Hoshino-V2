@@ -203,7 +203,7 @@ module.exports = {
         buttonsRow: actionRow,
       });
 
-      return interaction.editReply({ ...payload, components: [actionRow] });
+      return interaction.editReply(payload);
     }
 
     if (subcommand === "rhythm") {
@@ -273,7 +273,7 @@ module.exports = {
         buttonsRow: actionRow,
       });
 
-      return interaction.editReply({ ...payload, components: [actionRow] });
+      return interaction.editReply(payload);
     }
   },
 };

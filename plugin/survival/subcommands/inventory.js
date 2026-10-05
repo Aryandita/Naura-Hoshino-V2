@@ -287,25 +287,33 @@ module.exports = {
           }
           if (i.customId === "inv_cta_consume") {
             await i.deferUpdate().catch(() => {});
-            collector.stop();
+            collector.stop("navigated");
+            const { adaptSurvivalInteraction } = require("../../../src/survival/helpers/survivalContext");
+            adaptSurvivalInteraction(i, "consume");
             const consumeSub = require("./consume.js");
             return consumeSub.execute(i);
           }
           if (i.customId === "inv_cta_craft") {
             await i.deferUpdate().catch(() => {});
-            collector.stop();
+            collector.stop("navigated");
+            const { adaptSurvivalInteraction } = require("../../../src/survival/helpers/survivalContext");
+            adaptSurvivalInteraction(i, "craft");
             const craftSub = require("./craft.js");
             return craftSub.execute(i);
           }
           if (i.customId === "inv_cta_shop") {
             await i.deferUpdate().catch(() => {});
-            collector.stop();
+            collector.stop("navigated");
+            const { adaptSurvivalInteraction } = require("../../../src/survival/helpers/survivalContext");
+            adaptSurvivalInteraction(i, "shop");
             const shopSub = require("./shop.js");
             return shopSub.execute(i);
           }
           if (i.customId === "inv_cta_info") {
             await i.deferUpdate().catch(() => {});
-            collector.stop();
+            collector.stop("navigated");
+            const { adaptSurvivalInteraction } = require("../../../src/survival/helpers/survivalContext");
+            adaptSurvivalInteraction(i, "info");
             const infoSub = require("./info.js");
             return infoSub.execute(i);
           }

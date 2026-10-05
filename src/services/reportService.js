@@ -100,6 +100,19 @@ async function createReport({
   const ownerIds = Array.isArray(env.OWNER_IDS) ? env.OWNER_IDS : [];
 
   if (client && ownerIds.length > 0) {
+    const actionRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`report_reply_${reportId}`)
+        .setLabel("Balas Pelapor")
+        .setEmoji("💬")
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId(`report_resolve_${reportId}`)
+        .setLabel("Tandai Selesai")
+        .setEmoji("✅")
+        .setStyle(ButtonStyle.Success),
+    );
+
     const ownerPayload = buildContainerV2({
       accentColorHex: "#EF4444", // Merah alert
       authorName: "Naura Incident & Feedback Desk",
@@ -122,6 +135,7 @@ async function createReport({
         "",
         "-# Gunakan tombol di bawah ini untuk membalas langsung ke DM pengguna atau menandai laporan telah selesai.",
       ].filter(Boolean).join("\n"),
+      buttonsRow: [actionRow],
       footerText: ui.getFooter("utility"),
     });
 
@@ -130,27 +144,11 @@ async function createReport({
       ownerPayload.image = { url: attachmentUrl };
     }
 
-    const actionRow = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`report_reply_${reportId}`)
-        .setLabel("Balas Pelapor")
-        .setEmoji("💬")
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId(`report_resolve_${reportId}`)
-        .setLabel("Tandai Selesai")
-        .setEmoji("✅")
-        .setStyle(ButtonStyle.Success),
-    );
-
     for (const ownerId of ownerIds) {
       try {
         const ownerUser = await client.users.fetch(ownerId).catch(() => null);
         if (ownerUser) {
-          await ownerUser.send({
-            ...ownerPayload,
-            components: [actionRow],
-          });
+          await ownerUser.send(ownerPayload);
           deliveredCount++;
           logger.info(`[ReportService] Laporan ${reportId} berhasil dikirim ke DM owner (${ownerId}).`);
         }

@@ -101,16 +101,14 @@ module.exports = {
           .setEmoji(ui.parseEmoji(ui.getEmoji("topgg")) || { name: "🗳️" }),
       );
 
-      return {
-        ...buildContainerV2({
-          accentColorHex: "#38BDF8",
-          title: `${eBell} Pusat Notifikasi Pribadi`,
-          description: desc,
-          expression: "smile",
-          footerText: ui.getFooter("utility"),
-        }),
-        components: [row1, row2],
-      };
+      return buildContainerV2({
+        accentColorHex: "#38BDF8",
+        title: `${eBell} Pusat Notifikasi Pribadi`,
+        description: desc,
+        expression: "smile",
+        buttonsRow: [row1, row2],
+        footerText: ui.getFooter("utility"),
+      });
     };
 
     const initialMsg = await interaction.editReply(renderPayload(prefs));

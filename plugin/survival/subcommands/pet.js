@@ -282,7 +282,7 @@ module.exports = {
       return null;
     };
 
-    const buildPetPayload = (moodEmoji, closing, imgAttachment) =>
+    const buildPetPayload = (moodEmoji, closing, imgAttachment, buttonsRow) =>
       buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFC0CB",
         authorName: "Naura Pet Care",
@@ -291,6 +291,8 @@ module.exports = {
         description: `${statLines(pet)}\n\n${closing}`,
         footerText: ui.getFooter("survival"),
         bannerAttachmentName: imgAttachment ? "pet.png" : undefined,
+        files: imgAttachment ? [imgAttachment] : [],
+        buttonsRow,
       });
 
     const greeting = `Naura sempat main sama ${petLabel(pet)} tadi, lucu banget! Rawat dia terus yaa. Kalau sudah cukup kuat, Ki Prawiro mau bantu breeding, lho.`;
@@ -315,7 +317,9 @@ module.exports = {
       );
 
     const imgBase = getPetImage(pet.petType);
-    const basePayload = buildPetPayload("happy", greeting, imgBase);
+    const basePayload = buildPetPayload("happy", greeting, imgBase, [
+      buildRow(),
+    ]);
 
     const processPlay = async (responder, asFollowUp = true) => {
       pet.hunger = Math.max(0, (pet.hunger || 0) - 10);
@@ -363,15 +367,11 @@ module.exports = {
         pet.mood === "happy" ? "happy" : "normal",
         `Woof! ${petLabel(pet)} bereaksi diajak bermain.`,
         img,
+        [buildRow()],
       );
 
-      const resPayload = {
-        ...payload,
-        components: [...payload.components, buildRow()],
-        files: img ? [img] : [],
-      };
-      if (asFollowUp) return responder.editReply(resPayload);
-      else return responder.reply(resPayload);
+      if (asFollowUp) return responder.editReply(payload);
+      else return responder.reply(payload);
     };
 
     const processFeed = async (responder, asFollowUp = true) => {
@@ -448,17 +448,14 @@ module.exports = {
         pet.mood === "happy" ? "happy" : "normal",
         `Nyam nyam... ${petLabel(pet)} makan dengan lahap. Naura ikut senang lihatnya!`,
         img,
+        [buildRow()],
       );
 
-      const resPayload = {
-        ...payload,
-        components: [...payload.components, buildRow()],
-        files: img ? [img] : [],
-      };
-      if (asFollowUp) return responder.editReply(resPayload);
-      else return responder.reply(resPayload);
+      if (asFollowUp) return responder.editReply(payload);
+      else return responder.reply(payload);
     };
 
+    let message = null;
     if (action === "feed") {
       const reply = await processFeed(interaction, false);
       if (reply) return;
@@ -466,20 +463,21 @@ module.exports = {
       const reply = await processPlay(interaction, false);
       if (reply) return;
     } else if (action === "tame") {
-      return interaction.reply(
-        ephemeral(
-          "Naura belum menemukan hewan liar yang bisa dijinakkan di sekitar sini!",
-        ),
+      const tamePayload = ephemeral(
+        "Naura belum menemukan hewan liar yang bisa dijinakkan di sekitar sini!",
       );
+      return interaction.deferred || interaction.replied
+        ? interaction.followUp(tamePayload)
+        : interaction.reply(tamePayload);
     } else {
-      await interaction.reply({
-        ...basePayload,
-        components: [...basePayload.components, buildRow()],
-        files: imgBase ? [imgBase] : [],
-      });
+      message = await (interaction.deferred || interaction.replied
+        ? interaction.editReply(basePayload)
+        : interaction.reply({ ...basePayload, fetchReply: true }));
     }
 
-    const message = await interaction.fetchReply().catch(() => null);
+    if (!message) {
+      message = await interaction.fetchReply().catch(() => null);
+    }
     if (!message) return;
 
     const collector = message.createMessageComponentCollector({
@@ -569,14 +567,9 @@ module.exports = {
         "sleepy",
         `${petLabel(pet)} sudah ngantuk. Panggil Naura lagi kalau mau main sama dia, yaa!`,
         closingImg,
+        [buildRow(true)],
       );
-      await interaction
-        .editReply({
-          ...closing,
-          components: [...closing.components, buildRow(true)],
-          files: closingImg ? [closingImg] : [],
-        })
-        .catch(() => {});
+      await interaction.editReply(closing).catch(() => {});
     });
   },
 };

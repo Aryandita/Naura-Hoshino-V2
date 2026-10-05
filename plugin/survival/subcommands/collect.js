@@ -243,13 +243,11 @@ module.exports = {
         .join(""),
       bannerAttachmentName: files.length > 0 ? BG_NAME : undefined,
       files,
+      buttonsRow: [choiceRow],
       footerText: ui.getFooter("survival"),
     });
 
-    const response = await interaction.editReply({
-      ...arrivalPayload,
-      components: [...arrivalPayload.components, choiceRow],
-    });
+    const response = await interaction.editReply(arrivalPayload);
 
     const collector = response.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,
@@ -258,13 +256,14 @@ module.exports = {
     });
 
     /** Kartu penutup setelah semua urusan di lokasi selesai. */
-    const closingCard = ({ title, description, expression, colorKey }) =>
+    const closingCard = ({ title, description, expression, colorKey, buttonsRow }) =>
       buildContainerV2({
         accentColorHex: ui.getColor(colorKey || "primary"),
         authorName: `Perjalanan ${user.displayName || user.username}`,
         title,
         expression: expression || "Happy",
         description,
+        buttonsRow,
         footerText: ui.getFooter("survival"),
       });
 
@@ -295,6 +294,15 @@ module.exports = {
         )
         .join("\n");
 
+      const talkRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("collect_talk")
+          .setLabel("Sapa warga desa")
+          .setStyle(ButtonStyle.Success),
+      );
+
+      const actionRow = survivalUI.buildSurvivalActionRow("gathering", user.id);
+
       const payload = closingCard({
         title: `${e("naura_cheers")} Eksplorasi berhasil!`,
         description: [
@@ -323,21 +331,10 @@ module.exports = {
           .join("\n"),
         expression: "Cheers",
         colorKey: "success",
+        buttonsRow: [talkRow, actionRow],
       });
 
-      const talkRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("collect_talk")
-          .setLabel("Sapa warga desa")
-          .setStyle(ButtonStyle.Success),
-      );
-
-      const actionRow = survivalUI.buildSurvivalActionRow("gathering", user.id);
-
-      const finalMsg = await source.editReply({
-        ...payload,
-        components: [...payload.components, talkRow, actionRow],
-      });
+      const finalMsg = await source.editReply(payload);
 
       if (
         !finalMsg ||
@@ -381,14 +378,9 @@ module.exports = {
         description: `${reason}\n\n*Naura antar kamu pulang ke desa dulu, ya.*`,
         expression: "Akward",
         colorKey: "error",
+        buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
       });
-      return source.editReply({
-        ...failCard,
-        components: [
-          ...failCard.components,
-          survivalUI.buildSurvivalActionRow("gathering", user.id),
-        ],
-      });
+      return source.editReply(failCard);
     };
 
     collector.on("collect", async (i) => {
@@ -438,15 +430,10 @@ module.exports = {
           description: `${prompt}\n\nTekan tombol yang benar dalam **5 detik**! Naura ikut deg-degan~`,
           expression: "Shocked",
           colorKey: "warning",
+          buttonsRow: [new ActionRowBuilder().addComponents(buttons)],
         });
 
-        const qteMsg = await i.editReply({
-          ...qtePayload,
-          components: [
-            ...qtePayload.components,
-            new ActionRowBuilder().addComponents(buttons),
-          ],
-        });
+        const qteMsg = await i.editReply(qtePayload);
 
         const qteCollector = qteMsg.createMessageComponentCollector({
           filter: (btn) => btn.user.id === user.id,

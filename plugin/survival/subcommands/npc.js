@@ -4,7 +4,6 @@ const {
   ActionRowBuilder,
   StringSelectMenuBuilder,
   AttachmentBuilder,
-  MessageFlags,
 } = require("discord.js");
 const path = require("path");
 
@@ -142,6 +141,18 @@ module.exports = {
 
     const selectRow = new ActionRowBuilder().addComponents(npcSelect);
 
+    let lastPayloadBuilder = () =>
+      buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        title: `${e("happy", "\uD83D\uDC65")} ${t("npc.list_title", { location: lokasi.toUpperCase() })}`,
+        description: t("npc.list_desc", {
+          location: lokasi.toUpperCase(),
+          timeOfDay,
+          count: presentNPCs.length,
+        }),
+        footerText: ui.getFooter("survival"),
+      });
+
     const listPayload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#FFB6C1",
       title: `${e("happy", "\uD83D\uDC65")} ${t("npc.list_title", { location: lokasi.toUpperCase() })}`,
@@ -150,21 +161,14 @@ module.exports = {
         timeOfDay,
         count: presentNPCs.length,
       }),
+      buttonsRow: [selectRow],
       footerText: ui.getFooter("survival"),
     });
 
-    // Action row ditambahkan sesudah container, bukan menggantikannya.
-    // Versi lama menimpa components sehingga isi kartunya hilang sama sekali.
-    let lastContainer = listPayload.components;
-    const openingPayload = {
-      ...listPayload,
-      components: [...lastContainer, selectRow],
-    };
-
     const response =
       interaction.deferred || interaction.replied
-        ? await interaction.followUp({ ...openingPayload, fetchReply: true })
-        : await interaction.reply({ ...openingPayload, fetchReply: true });
+        ? await interaction.followUp({ ...listPayload, fetchReply: true })
+        : await interaction.reply({ ...listPayload, fetchReply: true });
 
     const collector = response.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,
@@ -226,6 +230,17 @@ module.exports = {
           `${e("chirping", "\uD83D\uDCAC")} **${npc.name}:** "${aiDialog}"`,
         ].join("\n");
 
+        lastPayloadBuilder = () =>
+          buildContainerV2({
+            accentColorHex: ui.getColor("primary") || "#FFB6C1",
+            authorName: `Warga ${String(lokasi).toUpperCase()} • ${npc.type === "romansa" ? "💖 Romansa" : "💙 Teman"}`,
+            title: `${npc.name} (${npc.title})`,
+            iconURL,
+            description,
+            files,
+            footerText: ui.getFooter("survival"),
+          });
+
         const infoPayload = buildContainerV2({
           accentColorHex: ui.getColor("primary") || "#FFB6C1",
           authorName: `Warga ${String(lokasi).toUpperCase()} • ${npc.type === "romansa" ? "💖 Romansa" : "💙 Teman"}`,
@@ -233,19 +248,11 @@ module.exports = {
           iconURL,
           description,
           files,
+          buttonsRow: [selectRow, buildActions(npc, npcData, t)],
           footerText: ui.getFooter("survival"),
         });
 
-        lastContainer = infoPayload.components;
-
-        return i.editReply({
-          ...infoPayload,
-          components: [
-            ...lastContainer,
-            selectRow,
-            buildActions(npc, npcData, t),
-          ],
-        });
+        return i.editReply(infoPayload);
       }
 
       if (!i.isButton() || !currentNpcId) return;
@@ -272,10 +279,7 @@ module.exports = {
     // Saat sesi habis, tombolnya dicabut tapi isi kartunya dibiarkan utuh.
     collector.on("end", async () => {
       try {
-        await response.edit({
-          flags: MessageFlags.IsComponentsV2,
-          components: lastContainer,
-        });
+        await response.edit(lastPayloadBuilder());
       } catch (error) {
         // Pesan mungkin sudah dihapus pemain; tidak perlu diributkan.
       }

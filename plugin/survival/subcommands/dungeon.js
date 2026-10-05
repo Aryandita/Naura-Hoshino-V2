@@ -82,7 +82,7 @@ module.exports = {
           lang: "id",
           actionCmd: "/survival shop",
           ctaLabel: "🛒 Kunjungi Warung Desa",
-          ctaCustomId: "dungeon_cta_shop",
+          ctaCustomId: `survival_act_shop:${user.id}`,
         });
 
         const {

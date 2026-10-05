@@ -18,11 +18,12 @@ module.exports = {
   async execute(interaction) {
     let expression = "";
 
-    const createCalcPayload = (text) => {
+    const createCalcPayload = (text, buttonRows) => {
       return buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
         title: "🧮 Kalkulator Interaktif",
         description: `\`\`\`\n${text || "0"}\n\`\`\``,
+        buttonsRow: buttonRows,
         footerText: ui.getFooter("core"),
       });
     };
@@ -121,8 +122,7 @@ module.exports = {
     ];
 
     const message = await interaction.reply({
-      ...createCalcPayload(expression),
-      components: rows,
+      ...createCalcPayload(expression, rows),
       fetchReply: true,
     });
 
@@ -171,14 +171,14 @@ module.exports = {
         expression += val;
       }
 
-      await i.update(createCalcPayload(expression));
+      await i.update(createCalcPayload(expression, rows));
     });
 
     collector.on("end", async () => {
       rows.forEach((row) =>
         row.components.forEach((btn) => btn.setDisabled(true)),
       );
-      await interaction.editReply({ components: rows }).catch(() => {});
+      await interaction.editReply(createCalcPayload(expression, rows)).catch(() => {});
     });
   },
 };

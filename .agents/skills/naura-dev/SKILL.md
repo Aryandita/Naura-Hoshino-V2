@@ -103,14 +103,29 @@ await interaction.reply(payload);
 - Versi Node.js wajib `>= 24.0.0`.
 - Karakter em dash (`\u2014`) dilarang keras di seluruh berkas dan file bahasa JSON. Gunakan tanda minus `-` biasa.
 
-### 2.4 Standarisasi Penomoran Versi (X.Y.Z)
+### 2.4 Standar Interaksi Tombol & Dynamic Subcommand Adapter
+
+- **Normalisasi Interaction (`adaptSurvivalInteraction`)**:
+  - Tombol aksi survival (CTA, navigation row, auto-action) wajib dinormalisasi dengan `adaptSurvivalInteraction(interaction, action)` dari `src/survival/helpers/survivalContext.js`.
+  - Mengalihkan `interaction.reply(...)` ke `interaction.editReply(...)` saat status `deferred` atau `replied` sudah aktif.
+  - Memasok mock `interaction.options` lengkap (`getSubcommand()`, `getString()`, `getInteger()`, `getBoolean()`) dari `PREFIX_OPTION_DEFAULTS` agar subcommand tidak melempar `TypeError`.
+- **Proteksi Ephemeral & Anti-Delete Card**:
+  - Pesan ephemeral yang dipicu tombol wajib diteruskan via `interaction.followUp({ flags: MessageFlags.Ephemeral })`.
+  - Dilarang memanggil `deleteReply()` pada `ButtonInteraction` agar kartu utama di channel tidak terhapus.
+- **Pembersihan Collector Lintas-Layar**:
+  - Panggil `stopMessageCollector(messageId, "navigated")` saat berpindah layar pesan.
+  - Collector screen lama tidak boleh menghapus komponen jika `reason === "navigated"`.
+- **Larangan Kartu Buntu (No Dead-End Cards)**:
+  - Setiap respons wajib menyediakan `buttonsRow: [survivalUI.buildSurvivalActionRow(...)]` agar pemain tidak terdampar tanpa tombol kelanjutan.
+
+### 2.5 Standarisasi Penomoran Versi (X.Y.Z)
 
 Seluruh ekosistem, package.json, dan suite dokumentasi wajib mematuhi standar tiga tingkat:
 - **`X` (Versi Keseluruhan / Era Naura):** Generasi platform Naura (saat ini bernilai `2` untuk era Naura Hoshino V2).
 - **`Y` (Major Update):** Pembaruan arsitektur besar, penambahan pilar baru, sistem moneter baru (seperti Currency V2 Closed-Loop), integrasi AI Ensemble, atau kluster audio Lavalink.
 - **`Z` (Minor Update):** Peningkatan berkala, optimasi, balancing RPG/ekonomi, atau perbaikan bug (bugfix).
 
-### 2.5 Web Dashboard & 3D Avatar Kinematics (Modular Subsystems)
+### 2.6 Web Dashboard & 3D Avatar Kinematics (Modular Subsystems)
 
 - **Arsitektur Animasi Modular 3D (`dashboard/src/components/NauraViewer/animations/`)**:
   - Sub-modul organ tubuh dipisahkan secara independen di `parts/`:

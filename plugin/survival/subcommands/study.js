@@ -57,6 +57,17 @@ module.exports = {
     const inventory = safeParseInventory(profile.inventory);
     const hasIjazah = inventory.some((i) => i && i.id === "certificate");
 
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("study_book")
+        .setLabel(`Membaca buku (${STUDY_HOURS} jam)`)
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId("study_exam")
+        .setLabel("Ikut ujian sertifikasi")
+        .setStyle(ButtonStyle.Primary),
+    );
+
     const academyPayload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#FFB6C1",
       authorName: "Naura Academy",
@@ -71,25 +82,11 @@ module.exports = {
         "",
         "Mau yang mana dulu? Naura temani belajar kok.",
       ].join("\n"),
+      buttonsRow: [row],
       footerText: ui.getFooter("survival"),
     });
 
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("study_book")
-        .setLabel(`Membaca buku (${STUDY_HOURS} jam)`)
-        .setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setCustomId("study_exam")
-        .setLabel("Ikut ujian sertifikasi")
-        .setStyle(ButtonStyle.Primary),
-    );
-
-    const response = await interaction.editReply({
-      ...academyPayload,
-      embeds: [],
-      components: [...academyPayload.components, row],
-    });
+    const response = await interaction.editReply(academyPayload);
 
     const collector = response.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,

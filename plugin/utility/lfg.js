@@ -84,6 +84,43 @@ const PRESETS = {
   },
 };
 
+function buildLfgButtons(preset, state) {
+  const isFull = state.members.length >= state.maxSlots;
+
+  const roleButtons = preset.roles
+    .slice(0, 4)
+    .map((r) =>
+      new ButtonBuilder()
+        .setCustomId(`lfg_role_${r.id}`)
+        .setLabel(r.label)
+        .setEmoji(r.emoji)
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(isFull),
+    );
+
+  const row1 = new ActionRowBuilder().addComponents(roleButtons);
+
+  const row2 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId("lfg_leave")
+      .setLabel("Keluar")
+      .setEmoji(ui.parseEmoji(ui.getEmoji("logout")) || { name: "🚪" })
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId("lfg_ping")
+      .setLabel("Ping Tim")
+      .setEmoji(ui.parseEmoji(ui.getEmoji("bell")) || { name: "🔔" })
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId("lfg_close")
+      .setLabel("Tutup Lobby")
+      .setEmoji(ui.parseEmoji(ui.getEmoji("trash_can")) || { name: "🗑️" })
+      .setStyle(ButtonStyle.Danger),
+  );
+
+  return [row1, row2];
+}
+
 function renderLfgDisplay(state, preset) {
   const currentCount = state.members.length;
   const isFull = currentCount >= state.maxSlots;
@@ -124,45 +161,9 @@ function renderLfgDisplay(state, preset) {
     ]
       .filter(Boolean)
       .join("\n"),
+    buttonsRow: buildLfgButtons(preset, state),
     footerText: "Gunakan tombol peran di bawah untuk bergabung atau mengundurkan diri",
   });
-}
-
-function buildLfgButtons(preset, state) {
-  const isFull = state.members.length >= state.maxSlots;
-
-  const roleButtons = preset.roles
-    .slice(0, 4)
-    .map((r) =>
-      new ButtonBuilder()
-        .setCustomId(`lfg_role_${r.id}`)
-        .setLabel(r.label)
-        .setEmoji(r.emoji)
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(isFull),
-    );
-
-  const row1 = new ActionRowBuilder().addComponents(roleButtons);
-
-  const row2 = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId("lfg_leave")
-      .setLabel("Keluar")
-      .setEmoji(ui.parseEmoji(ui.getEmoji("logout")) || { name: "🚪" })
-      .setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId("lfg_ping")
-      .setLabel("Ping Tim")
-      .setEmoji(ui.parseEmoji(ui.getEmoji("bell")) || { name: "🔔" })
-      .setStyle(ButtonStyle.Success),
-    new ButtonBuilder()
-      .setCustomId("lfg_close")
-      .setLabel("Tutup Lobby")
-      .setEmoji(ui.parseEmoji(ui.getEmoji("trash_can")) || { name: "🗑️" })
-      .setStyle(ButtonStyle.Danger),
-  );
-
-  return [row1, row2];
 }
 
 module.exports = {
@@ -239,11 +240,9 @@ module.exports = {
     };
 
     const container = renderLfgDisplay(state, preset);
-    const buttons = buildLfgButtons(preset, state);
 
     const responseMsg = await interaction.reply({
       ...container,
-      components: [...container.components, ...buttons],
       fetchReply: true,
     });
 
@@ -274,10 +273,7 @@ module.exports = {
           description: `Lobby ini telah ditutup oleh <@${i.user.id}>. Terima kasih!`,
           footerText: ui.getFooter("utility"),
         });
-        return i.update({
-          ...closedContainer,
-          components: closedContainer.components,
-        });
+        return i.update(closedContainer);
       }
 
       // 2. Ping Tim
@@ -309,11 +305,7 @@ module.exports = {
 
         state.members.splice(existingIdx, 1);
         const updated = renderLfgDisplay(state, preset);
-        const newButtons = buildLfgButtons(preset, state);
-        await i.update({
-          ...updated,
-          components: [...updated.components, ...newButtons],
-        });
+        await i.update(updated);
         return;
       }
 
@@ -352,12 +344,7 @@ module.exports = {
         }
 
         const updated = renderLfgDisplay(state, preset);
-        const newButtons = buildLfgButtons(preset, state);
-
-        await i.update({
-          ...updated,
-          components: [...updated.components, ...newButtons],
-        });
+        await i.update(updated);
 
         // Cek jika tim baru saja penuh
         if (state.members.length === state.maxSlots) {

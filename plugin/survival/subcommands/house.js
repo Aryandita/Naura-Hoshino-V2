@@ -13,6 +13,7 @@ const {
   safeParseInventory,
 } = require("../../../src/survival/engines/inventoryHelper");
 const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const {
   buildContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
@@ -78,22 +79,6 @@ module.exports = {
             .join("\n")
         : "*Masih kosong. Yuk dihias biar betah di rumah!*";
 
-    const housePayload = buildContainerV2({
-      accentColorHex: ui.getColor("primary") || "#FFC0CB",
-      authorName: "Naura Housing System",
-      title: `${e("happy", "\uD83C\uDFE0")} Rumahmu: ${propId.toUpperCase()}`,
-      iconURL: user.displayAvatarURL(),
-      description: [
-        `Naura sudah rapikan sedikit, hehe. Ini kondisi rumahmu sekarang:`,
-        "",
-        `**Kapasitas dekorasi:** ${rpgState.active_decorations.length}/${maxSlots} slot`,
-        "",
-        "**Yang sudah terpasang:**",
-        terpasang,
-      ].join("\n"),
-      footerText: ui.getFooter("survival"),
-    });
-
     const selectMenu = new StringSelectMenuBuilder()
       .setCustomId("house_equip_deco")
       .setPlaceholder("Pilih dekorasi buat dipasang atau dilepas");
@@ -131,12 +116,26 @@ module.exports = {
 
     const row = new ActionRowBuilder().addComponents(selectMenu);
 
-    // Container hasil builder di-spread, bukan ditimpa.
-    await interaction.reply({
-      ...housePayload,
-      components: [...housePayload.components, row],
+    const housePayload = buildContainerV2({
+      accentColorHex: ui.getColor("primary") || "#FFC0CB",
+      authorName: "Naura Housing System",
+      title: `${e("happy", "\uD83C\uDFE0")} Rumahmu: ${propId.toUpperCase()}`,
+      iconURL: user.displayAvatarURL(),
+      description: [
+        `Naura sudah rapikan sedikit, hehe. Ini kondisi rumahmu sekarang:`,
+        "",
+        `**Kapasitas dekorasi:** ${rpgState.active_decorations.length}/${maxSlots} slot`,
+        "",
+        "**Yang sudah terpasang:**",
+        terpasang,
+      ].join("\n"),
+      buttonsRow: [row, survivalUI.buildSurvivalActionRow("town", user.id)],
+      footerText: ui.getFooter("survival"),
     });
-    const message = await interaction.fetchReply();
+
+    const message = await (interaction.deferred || interaction.replied
+      ? interaction.editReply(housePayload)
+      : interaction.reply({ ...housePayload, fetchReply: true }));
 
     const collector = message.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,

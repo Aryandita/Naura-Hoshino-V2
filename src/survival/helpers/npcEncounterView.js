@@ -133,7 +133,7 @@ function rows({ npc, canGreet, stepsLeft, cost }) {
   return [row];
 }
 
-function card({ user, result, art, extra }) {
+function card({ user, result, art, extra, buttonsRow }) {
   const found = result.found;
   const title = found
     ? `${e("npc_group", "\uD83D\uDC65")} Kamu bertemu ${result.npc.name}!`
@@ -141,14 +141,14 @@ function card({ user, result, art, extra }) {
 
   const lines = found
     ? [
-        `${e("lokasi", "\uD83D\uDCCD")} **${result.locationName}** \u2014 waktu ${result.dayPart}.`,
+        `${e("lokasi", "\uD83D\uDCCD")} **${result.locationName}** - waktu ${result.dayPart}.`,
         "",
-        `**${result.npc.name}** \u2014 *${result.npc.title || "Penduduk"}* ${result.activity}.`,
+        `**${result.npc.name}** - *${result.npc.title || "Penduduk"}* ${result.activity}.`,
         "",
         `> *"${result.greeting}"*`,
       ]
     : [
-        `${e("lokasi", "\uD83D\uDCCD")} **${result.locationName}** \u2014 waktu ${result.dayPart}.`,
+        `${e("lokasi", "\uD83D\uDCCD")} **${result.locationName}** - waktu ${result.dayPart}.`,
         "",
         result.note,
         "",
@@ -165,6 +165,7 @@ function card({ user, result, art, extra }) {
     expression: found ? "success" : "info",
     description: lines.join("\n"),
     files: art.files,
+    buttonsRow,
     footerText: ui.getFooter("survival"),
   });
 }
@@ -197,19 +198,13 @@ async function runRoam({ interaction, location, hour, luck }) {
   let greeted = false;
 
   const render = (target, extra) => {
-    const payload = card({ user, result, art, extra });
-    return {
-      ...payload,
-      components: [
-        ...payload.components,
-        ...rows({
-          npc: result.npc,
-          canGreet: result.found && !greeted,
-          stepsLeft,
-          cost,
-        }),
-      ],
-    };
+    const buttonsRow = rows({
+      npc: result.npc,
+      canGreet: result.found && !greeted,
+      stepsLeft,
+      cost,
+    });
+    return card({ user, result, art, extra, buttonsRow });
   };
 
   const intro =
@@ -246,7 +241,7 @@ async function runRoam({ interaction, location, hour, luck }) {
         } else {
           greeted = true;
           notes.push(
-            `${e("sparkle", "\u2728")} Kedekatanmu dengan **${result.npc.name}** naik jadi **${bond.affection}** \u2014 status **${bond.label}**.`,
+            `${e("sparkle", "\u2728")} Kedekatanmu dengan **${result.npc.name}** naik jadi **${bond.affection}** - status **${bond.label}**.`,
           );
 
           const gift = rules.rollGift(location);

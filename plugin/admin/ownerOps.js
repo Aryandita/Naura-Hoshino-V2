@@ -340,8 +340,8 @@ module.exports = {
           .setStyle(ButtonStyle.Primary),
       );
 
-      return interaction.editReply({
-        ...buildContainerV2({
+      return interaction.editReply(
+        buildContainerV2({
           accentColorHex:
             report.overallStatus === "ALL_SYSTEMS_OPERATIONAL"
               ? "#10B981"
@@ -359,10 +359,10 @@ module.exports = {
             "",
             "-# Gunakan tombol di bawah jika ada cache atau deadlock transaksi yang perlu dibersihkan.",
           ].join("\n"),
+          buttonsRow: [actionRow],
           footerText: ui.getFooter("core"),
         }),
-        components: [actionRow],
-      });
+      );
     }
 
     // 4. LOGS

@@ -148,7 +148,7 @@ module.exports = {
         .setStyle(ButtonStyle.Secondary),
     );
 
-    const card = ({ title, description, expression, colorKey, banner }) =>
+    const card = ({ title, description, expression, colorKey, banner, buttonsRow }) =>
       buildContainerV2({
         accentColorHex: ui.getColor(colorKey || "primary"),
         authorName: "Naura Battle Arena",
@@ -156,6 +156,7 @@ module.exports = {
         expression: expression || "Happy",
         description,
         bannerAttachmentName: banner ? "duel.png" : undefined,
+        buttonsRow,
         footerText: ui.getFooter("survival"),
       });
 
@@ -171,12 +172,12 @@ module.exports = {
       ].join("\n"),
       expression: "Shocked",
       colorKey: "warning",
+      buttonsRow: [inviteRow],
     });
 
     const inviteMessage = await interaction.editReply({
       content: `<@${opponent.id}>`,
       ...invitePayload,
-      components: [...invitePayload.components, inviteRow],
     });
 
     const inviteCollector = inviteMessage.createMessageComponentCollector({
@@ -263,7 +264,7 @@ module.exports = {
         const active = state.turn === 1 ? p1 : p2;
         const image = await arenaImage(p1, p2, state.log);
         const payload = card({
-          title: `${e("sword")} Battle Arena \u2014 Ronde ${state.round}`,
+          title: `${e("sword")} Battle Arena - Ronde ${state.round}`,
           description: [
             `${state.log}`,
             "",
@@ -272,13 +273,13 @@ module.exports = {
             `> ${e("health")} ${p2.username}: **${p2.hp}**/${p2.maxHp} \u2022 ${e("stamina")} ${p2.stamina}`,
           ].join("\n"),
           banner: Boolean(image),
+          buttonsRow: [actionRow()],
         });
 
         return {
           content: `<@${p1.id}> vs <@${p2.id}>`,
           ...payload,
           files: image ? [image] : [],
-          components: [...payload.components, actionRow()],
         };
       };
 

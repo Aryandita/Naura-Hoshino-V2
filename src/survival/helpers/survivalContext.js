@@ -17,67 +17,266 @@ const {
 } = require("../../utils/localePatch");
 const ui = require("../../config/ui");
 
+const { MessageFlags } = require("discord.js");
+
 const AUTO_DELETE_MS = 90000; // 90 detik (1 menit 30 detik)
 
+const activeCollectors = new Map(); // messageId -> MessageComponentCollector
+const autoDeleteTimers = new Map(); // messageId -> NodeJS.Timeout
+
 /**
- * Pasang interceptor auto-delete pada interaction slash.
- * Perilakunya dipertahankan sama seperti sebelum pemecahan berkas.
+ * Daftarkan collector komponen pesan aktif untuk mencegah tumpang tindih navigasi.
  */
-function attachAutoDelete(interaction) {
-  const origReply = interaction.reply.bind(interaction);
-  const origEditReply = interaction.editReply.bind(interaction);
-  const origFollowUp = interaction.followUp.bind(interaction);
-
-  interaction.reply = async (options) => {
-    const opts =
-      typeof options === "string" ? { content: options } : { ...options };
-    opts.fetchReply = true;
-    let res;
-
-    if (interaction.deferred || interaction.replied) {
-      if (opts.ephemeral && !interaction.ephemeral) {
-        res = await origFollowUp(opts);
-        interaction.deleteReply().catch(() => {});
-      } else {
-        res = await origEditReply(opts);
-      }
-    } else {
-      res = await origReply(opts);
-    }
-
-    if (!opts.ephemeral && !interaction.ephemeral) {
-      setTimeout(
-        () => interaction.deleteReply().catch(() => {}),
-        AUTO_DELETE_MS,
-      );
-    }
-    return res;
-  };
-
-  interaction.editReply = async (options) => {
-    const opts =
-      typeof options === "string" ? { content: options } : { ...options };
-    const res = await origEditReply(opts);
-    if (!interaction.ephemeral) {
-      setTimeout(
-        () => interaction.deleteReply().catch(() => {}),
-        AUTO_DELETE_MS,
-      );
-    }
-    return res;
-  };
-
-  return interaction;
+function registerMessageCollector(messageId, collector) {
+  if (!messageId || !collector) return;
+  const existing = activeCollectors.get(messageId);
+  if (existing && typeof existing.stop === "function") {
+    try {
+      existing.stop("navigated");
+    } catch (_) {}
+  }
+  activeCollectors.set(messageId, collector);
 }
 
-// Nilai bawaan opsi untuk jalur prefix, menggantikan rantai if berurutan.
+/**
+ * Hentikan collector aktif pada pesan tertentu (misal saat berpindah layar).
+ */
+function stopMessageCollector(messageId, reason = "navigated") {
+  if (!messageId) return;
+  const collector = activeCollectors.get(messageId);
+  if (collector && typeof collector.stop === "function") {
+    try {
+      collector.stop(reason);
+    } catch (_) {}
+  }
+  activeCollectors.delete(messageId);
+}
+
+/**
+ * Jadwalkan pembersihan pesan otomatis secara terkoordinasi (reset timer pada tiap interaksi baru).
+ */
+function scheduleAutoDelete(messageId, deleteFn, delayMs = AUTO_DELETE_MS) {
+  if (!messageId || typeof deleteFn !== "function") return;
+  if (autoDeleteTimers.has(messageId)) {
+    clearTimeout(autoDeleteTimers.get(messageId));
+  }
+  const timer = setTimeout(async () => {
+    autoDeleteTimers.delete(messageId);
+    try {
+      await deleteFn();
+    } catch (_) {}
+  }, delayMs);
+  autoDeleteTimers.set(messageId, timer);
+}
+
+/**
+ * Bungkus objek Message agar pembuatan collector terdaftar secara otomatis di registry.
+ */
+function wrapMessageWithCollectorRegistry(msg) {
+  if (!msg || typeof msg.createMessageComponentCollector !== "function") {
+    return msg;
+  }
+  const origCreateCollector = msg.createMessageComponentCollector.bind(msg);
+  msg.createMessageComponentCollector = function (options) {
+    const collector = origCreateCollector(options);
+    registerMessageCollector(msg.id, collector);
+
+    const origOn = collector.on.bind(collector);
+    collector.on = function (event, listener) {
+      if (event === "end" && typeof listener === "function") {
+        const wrappedListener = function (collected, reason) {
+          if (reason === "navigated") return;
+          return listener(collected, reason);
+        };
+        return origOn(event, wrappedListener);
+      }
+      return origOn(event, listener);
+    };
+
+    return collector;
+  };
+  return msg;
+}
+
+// Nilai bawaan opsi untuk jalur prefix maupun tombol, menggantikan rantai if berurutan.
 const PREFIX_OPTION_DEFAULTS = {
-  travel: { lokasi: "kota" },
-  collect: { lokasi: "hutan" },
+  travel: { lokasi: "desa" },
+  collect: { lokasi: null },
   work: { pekerjaan: "janitor" },
   pet: { aksi: "view" },
   class: { nama: "warrior" },
+  farm: { aksi: "status" },
+  siege: { aksi: "status" },
+  raid: { aksi: "status" },
+  clan: { aksi: "info" },
+  caravan: { aksi: "status" },
+  family: { aksi: "status" },
+  federation: { aksi: "status" },
+  customdungeon: { aksi: "browse" },
+  customDungeon: { aksi: "browse" },
+  conquest: { aksi: "map" },
+  bounty: { aksi: "list" },
+  fish: { aksi: "cast" },
+  shop: { aksi: "buy" },
+  market: { aksi: "view" },
 };
+
+/**
+ * Normalisasi objek Interaction agar kompatibel dengan seluruh subcommand survival:
+ * - Menangani reply -> editReply/followUp secara otomatis jika interaksi sudah di-defer/replied.
+ * - Mencegah error 40060 pada deferReply / deferUpdate berulang.
+ * - Menyediakan mock options lengkap dengan getter aman.
+ * - Menghindari pemusnahan kartu utama (deleteReply) saat respons tombol berstatus ephemeral.
+ */
+function adaptSurvivalInteraction(interaction, actionName = null) {
+  if (!interaction) return interaction;
+
+  if (interaction._isSurvivalAdapted) {
+    if (actionName && interaction.options && typeof interaction.options.getSubcommand === "function") {
+      interaction.options.getSubcommand = () => actionName;
+    }
+    return interaction;
+  }
+
+  const origReply = typeof interaction.reply === "function" ? interaction.reply.bind(interaction) : null;
+  const origEditReply = typeof interaction.editReply === "function" ? interaction.editReply.bind(interaction) : null;
+  const origFollowUp = typeof interaction.followUp === "function" ? interaction.followUp.bind(interaction) : null;
+  const origDeferReply = typeof interaction.deferReply === "function" ? interaction.deferReply.bind(interaction) : null;
+  const origDeferUpdate = typeof interaction.deferUpdate === "function" ? interaction.deferUpdate.bind(interaction) : null;
+
+  const messageId = interaction.message?.id || null;
+
+  interaction.reply = async (options) => {
+    const opts = typeof options === "string" ? { content: options } : { ...options };
+    opts.fetchReply = true;
+    let res;
+
+    const isEphemeral = Boolean(
+      opts.ephemeral ||
+      (opts.flags && (opts.flags & MessageFlags.Ephemeral))
+    );
+
+    if (interaction.deferred || interaction.replied) {
+      if (isEphemeral && !interaction.ephemeral && origFollowUp) {
+        res = await origFollowUp({
+          ...opts,
+          flags: (opts.flags || 0) | MessageFlags.Ephemeral,
+        });
+        if (interaction.isChatInputCommand?.() && typeof interaction.deleteReply === "function") {
+          interaction.deleteReply().catch(() => {});
+        }
+      } else if (origEditReply) {
+        res = await origEditReply(opts);
+      } else if (origFollowUp) {
+        res = await origFollowUp(opts);
+      }
+    } else if (origReply) {
+      res = await origReply(opts);
+    }
+
+    const finalMsg = wrapMessageWithCollectorRegistry(res);
+    const targetMsgId = finalMsg?.id || messageId;
+
+    if (!isEphemeral && !interaction.ephemeral && targetMsgId) {
+      scheduleAutoDelete(targetMsgId, () => {
+        if (typeof interaction.deleteReply === "function") {
+          return interaction.deleteReply();
+        }
+        if (finalMsg && typeof finalMsg.delete === "function") {
+          return finalMsg.delete();
+        }
+      });
+    }
+
+    return finalMsg;
+  };
+
+  interaction.editReply = async (options) => {
+    const opts = typeof options === "string" ? { content: options } : { ...options };
+    let res = null;
+    if (origEditReply) {
+      res = await origEditReply(opts);
+    } else if (origReply) {
+      res = await origReply(opts);
+    }
+
+    const finalMsg = wrapMessageWithCollectorRegistry(res);
+    const targetMsgId = finalMsg?.id || messageId;
+
+    if (!interaction.ephemeral && targetMsgId) {
+      scheduleAutoDelete(targetMsgId, () => {
+        if (typeof interaction.deleteReply === "function") {
+          return interaction.deleteReply();
+        }
+        if (finalMsg && typeof finalMsg.delete === "function") {
+          return finalMsg.delete();
+        }
+      });
+    }
+
+    return finalMsg;
+  };
+
+  interaction.deferReply = async (...args) => {
+    if (interaction.deferred || interaction.replied) return;
+    if (origDeferReply) return await origDeferReply(...args);
+  };
+
+  interaction.deferUpdate = async (...args) => {
+    if (interaction.deferred || interaction.replied) return;
+    if (origDeferUpdate) return await origDeferUpdate(...args);
+  };
+
+  const actionKey = actionName || "info";
+  const defaults = PREFIX_OPTION_DEFAULTS[actionKey] || {};
+
+  if (!interaction.options) {
+    interaction.options = {
+      getSubcommand: () => actionKey,
+      getSubcommandGroup: () => null,
+      getString: (name) => defaults[name] ?? null,
+      getInteger: (name) => (typeof defaults[name] === "number" ? defaults[name] : null),
+      getNumber: (name) => (typeof defaults[name] === "number" ? defaults[name] : null),
+      getBoolean: (name) => (typeof defaults[name] === "boolean" ? defaults[name] : false),
+      getUser: () => null,
+      getMember: () => null,
+      getChannel: () => null,
+      getRole: () => null,
+      getMentionable: () => null,
+      getAttachment: () => null,
+      getFocused: () => "",
+    };
+  } else {
+    if (typeof interaction.options.getSubcommand !== "function") {
+      interaction.options.getSubcommand = () => actionKey;
+    }
+    if (typeof interaction.options.getFocused !== "function") {
+      interaction.options.getFocused = () => "";
+    }
+  }
+
+  if (typeof interaction.t !== "function") {
+    interaction.t = (key, placeholders) =>
+      languageManager.translateSync(
+        interaction.localeLang || "id",
+        key,
+        placeholders || {},
+      );
+  }
+
+  interaction._isSurvivalAdapted = true;
+  return interaction;
+}
+
+/**
+ * Pasang interceptor auto-delete pada interaction slash.
+ */
+function attachAutoDelete(interaction) {
+  const subName = interaction?.options?.getSubcommand
+    ? interaction.options.getSubcommand(false)
+    : null;
+  return adaptSurvivalInteraction(interaction, subName);
+}
 
 /** Bangun objek yang menyerupai interaction untuk perintah prefix. */
 function createMockInteraction({ message, client, subCmdName, args }) {
@@ -280,6 +479,7 @@ async function checkNauraBirthdayEncounter(interaction, userId) {
     expression: "happy",
     description:
       "Eh, kebetulan banget kita ketemu di sini! Hari ini ulang tahunku lho... hihi.",
+    buttonsRow: [row],
     footerText: ui.getFooter("survival"),
   });
 
@@ -287,7 +487,6 @@ async function checkNauraBirthdayEncounter(interaction, userId) {
     .followUp({
       ...payload,
       embeds: [],
-      components: [...payload.components, row],
       flags: 64, // Ephemeral
     })
     .catch(() => {});
@@ -385,6 +584,12 @@ async function isSurvivalBusy(userId) {
 
 module.exports = {
   attachAutoDelete,
+  adaptSurvivalInteraction,
+  registerMessageCollector,
+  stopMessageCollector,
+  wrapMessageWithCollectorRegistry,
+  scheduleAutoDelete,
+  PREFIX_OPTION_DEFAULTS,
   createMockInteraction,
   AUTO_DELETE_MS,
   getCurrentSeason,

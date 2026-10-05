@@ -167,7 +167,7 @@ function planFor(mode, id) {
   };
 }
 
-async function detailPayload(mode, id, inventory, holders) {
+async function detailPayload(mode, id, inventory, holders, buttonsRow = []) {
   const plan = planFor(mode, id);
   if (!plan) return null;
 
@@ -195,6 +195,19 @@ async function detailPayload(mode, id, inventory, holders) {
         " Upah tempa: " +
         currency.format(plan.kind, plan.cost)
       : "";
+
+  const confirmRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId("craft_do")
+      .setLabel(ready ? "Kerjakan Sekarang" : "Belum Bisa")
+      .setStyle(ready ? ButtonStyle.Success : ButtonStyle.Danger)
+      .setDisabled(!ready),
+    new ButtonBuilder()
+      .setCustomId("craft_cancel")
+      .setLabel("Selesai Dulu")
+      .setStyle(ButtonStyle.Secondary),
+  );
+
   const payload = buildContainerV2({
     accentColorHex: ready ? ui.getColor("success") : ui.getColor("warning"),
     authorName: "Naura Crafting Guide",
@@ -212,20 +225,9 @@ async function detailPayload(mode, id, inventory, holders) {
           ? actions.STAMINA_SMELT
           : actions.STAMINA_UPGRADE),
     bannerAttachmentName: IMAGE_NAME,
+    buttonsRow: [...buttonsRow, confirmRow],
     footerText: ui.getFooter("survival"),
   });
-
-  const confirmRow = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId("craft_do")
-      .setLabel(ready ? "Kerjakan Sekarang" : "Belum Bisa")
-      .setStyle(ready ? ButtonStyle.Success : ButtonStyle.Danger)
-      .setDisabled(!ready),
-    new ButtonBuilder()
-      .setCustomId("craft_cancel")
-      .setLabel("Selesai Dulu")
-      .setStyle(ButtonStyle.Secondary),
-  );
 
   return {
     payload,
@@ -286,21 +288,20 @@ module.exports = {
     let mode = "assemble";
     let selected = null;
 
-    const intro = buildContainerV2({
-      accentColorHex: ui.getColor("primary"),
-      authorName: "Naura Crafting Guide",
-      expression: "happy",
-      title: e("craft_table", "\ud83d\udd28") + " Meja Perakitan Naura",
-      description:
-        "Selamat datang di sudut kerja Naura! Di sini kamu bisa merakit barang dasar, menitipkan bahan mentah ke tungku Bagas biar jadi lebih bernilai, atau menempa alat lamamu supaya naik level.\n\nPilih dulu mau yang mana, ya.",
-      footerText: ui.getFooter("survival"),
-    });
+    const introCard = (currentMode, currentOptions) =>
+      buildContainerV2({
+        accentColorHex: ui.getColor("primary"),
+        authorName: "Naura Crafting Guide",
+        expression: "happy",
+        title: e("craft_table", "\ud83d\udd28") + " Meja Perakitan Naura",
+        description:
+          "Selamat datang di sudut kerja Naura! Di sini kamu bisa merakit barang dasar, menitipkan bahan mentah ke tungku Bagas biar jadi lebih bernilai, atau menempa alat lamamu supaya naik level.\n\nPilih dulu mau yang mana, ya.",
+        buttonsRow: [modeRow(currentMode), pickRow(currentMode, currentOptions)],
+        footerText: ui.getFooter("survival"),
+      });
 
     const options = optionsFor(mode, inventory, unlocked);
-    const message = await interaction.editReply({
-      ...intro,
-      components: [...intro.components, modeRow(mode), pickRow(mode, options)],
-    });
+    const message = await interaction.editReply(introCard(mode, options));
 
     const collector = message.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,
@@ -318,13 +319,8 @@ module.exports = {
           inventory = safeParseInventory(profile.inventory);
           const list = optionsFor(mode, inventory, unlocked);
           return i.editReply({
-            ...intro,
+            ...introCard(mode, list),
             files: [],
-            components: [
-              ...intro.components,
-              modeRow(mode),
-              pickRow(mode, list),
-            ],
           });
         }
 
@@ -333,21 +329,18 @@ module.exports = {
           selected = i.values[0];
           profile = await cacheManager.getUserProfile(user.id);
           inventory = safeParseInventory(profile.inventory);
-          const detail = await detailPayload(mode, selected, inventory, {
-            survival,
-            profile,
-          });
-          if (!detail) return;
           const list = optionsFor(mode, inventory, unlocked);
+          const detail = await detailPayload(
+            mode,
+            selected,
+            inventory,
+            { survival, profile },
+            [modeRow(mode), pickRow(mode, list)],
+          );
+          if (!detail) return;
           return i.editReply({
             ...detail.payload,
             files: [detail.attachment],
-            components: [
-              ...detail.payload.components,
-              modeRow(mode),
-              pickRow(mode, list),
-              detail.confirmRow,
-            ],
           });
         }
 
@@ -411,27 +404,24 @@ module.exports = {
                 result.amount +
                 "**. Naura simpan rapi di tasmu, ya.";
 
+          selected = null;
+          profile = await cacheManager.getUserProfile(user.id);
+          inventory = safeParseInventory(profile.inventory);
+          const list = optionsFor(mode, inventory, unlocked);
+
           const done = buildContainerV2({
             accentColorHex: ui.getColor("success"),
             authorName: "Naura Crafting Guide",
             expression: "success",
             title: e("success", "\u2705") + " Tempaan Selesai!",
             description: opening + extra,
+            buttonsRow: [modeRow(mode), pickRow(mode, list)],
             footerText: ui.getFooter("survival"),
           });
 
-          selected = null;
-          profile = await cacheManager.getUserProfile(user.id);
-          inventory = safeParseInventory(profile.inventory);
-          const list = optionsFor(mode, inventory, unlocked);
           return i.editReply({
             ...done,
             files: [],
-            components: [
-              ...done.components,
-              modeRow(mode),
-              pickRow(mode, list),
-            ],
           });
         }
 

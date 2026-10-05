@@ -577,7 +577,6 @@ module.exports = {
       return interaction.editReply({
         ...payload,
         files: [attachment],
-        components: [actionRow],
       });
     }
 
@@ -738,7 +737,6 @@ module.exports = {
       return interaction.editReply({
         ...payload,
         files: [attachment],
-        components: [actionRow],
       });
     }
 

@@ -111,27 +111,23 @@ module.exports = {
         ),
     );
 
-    const payload = buildContainerV2({
-      accentColorHex: survivalUI.getColor("bark"),
-      authorName: "Altar Tempa & Cosmic Enchanter",
-      title: `${e("gem", "\uD83D\uDC8E")} Penyematan Permata Kosmik`,
-      iconURL: user.displayAvatarURL(),
-      expression: "info",
-      description: descLines.join("\n"),
-      footerText: ui.getFooter("survival"),
-    });
+    const buildEnchantCard = (rows) =>
+      buildContainerV2({
+        accentColorHex: survivalUI.getColor("bark"),
+        authorName: "Altar Tempa & Cosmic Enchanter",
+        title: `${e("gem", "\uD83D\uDC8E")} Penyematan Permata Kosmik`,
+        iconURL: user.displayAvatarURL(),
+        expression: "info",
+        description: descLines.join("\n"),
+        buttonsRow: rows,
+        footerText: ui.getFooter("survival"),
+      });
 
-    const initialComponents =
-      userGems.length > 0
-        ? [...payload.components, selectGearRow]
-        : payload.components;
+    const payload = buildEnchantCard(
+      userGems.length > 0 ? [selectGearRow] : undefined,
+    );
 
-    const message = await interaction.editReply({
-      ...payload,
-      components: initialComponents,
-      embeds: [],
-      flags: MessageFlags.IsComponentsV2,
-    });
+    const message = await interaction.editReply(payload);
 
     if (
       userGems.length === 0 ||
@@ -184,10 +180,9 @@ module.exports = {
             ),
         );
 
-        return interaction.editReply({
-          ...payload,
-          components: [...payload.components, selectGearRow, selectGemRow],
-        });
+        return interaction.editReply(
+          buildEnchantCard([selectGearRow, selectGemRow]),
+        );
       }
 
       if (i.isStringSelectMenu() && i.customId === "enchant_select_gem") {

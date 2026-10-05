@@ -13,6 +13,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../utils/NauraContainerBuilder");
+const survivalUI = require("../../utils/survivalUIHelper");
 const ui = require("../../config/ui");
 const currencyHelper = require("../engines/currency");
 const {
@@ -78,6 +79,10 @@ function mainView(user, snap) {
     ? [new AttachmentBuilder(banner, { name: BANNER_NAME })]
     : [];
 
+  const navRow = survivalUI.buildSurvivalActionRow("economy", user?.id || "", {
+    exclude: ["bank"],
+  });
+
   const payload = buildContainerV2({
     accentColorHex: ui.getColor("economy") || "#FFD700",
     authorName: "Naura Central Bank",
@@ -93,7 +98,7 @@ function mainView(user, snap) {
       "",
       `${e("clock")} Hari ke-**${snap.day}** di dunia Naura.`,
     ].join("\n"),
-    buttonsRow: row,
+    buttonsRow: [row, navRow],
     bannerAttachmentName: banner ? BANNER_NAME : undefined,
     files,
     footerText: ui.getFooter("survival"),
@@ -267,10 +272,11 @@ function investView(snap, valuations) {
       "",
       lines.join("\n\n"),
     ].join("\n"),
+    buttonsRow: rows,
     footerText: ui.getFooter("survival"),
   });
 
-  return { payload, rows };
+  return { ...payload, payload, rows };
 }
 
 function promptView(title, description, balance = 0, unit = "") {

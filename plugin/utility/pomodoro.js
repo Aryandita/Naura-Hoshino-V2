@@ -33,6 +33,28 @@ function formatTime(seconds) {
   return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 }
 
+function buildPomodoroButtons(session) {
+  return [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("pomodoro_pause")
+        .setLabel(session.isPaused ? "Lanjutkan" : "Jeda")
+        .setEmoji(session.isPaused ? "▶️" : "⏸️")
+        .setStyle(session.isPaused ? ButtonStyle.Success : ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId("pomodoro_skip")
+        .setLabel("Lewati Fase")
+        .setEmoji("⏭️")
+        .setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder()
+        .setCustomId("pomodoro_stop")
+        .setLabel("Selesai / Berhenti")
+        .setEmoji("⏹️")
+        .setStyle(ButtonStyle.Danger),
+    ),
+  ];
+}
+
 function buildPomodoroContainer(session) {
   const isFocus = session.mode === "focus";
   const statusColor = session.isPaused
@@ -65,30 +87,9 @@ function buildPomodoroContainer(session) {
     ]
       .filter(Boolean)
       .join("\n"),
+    buttonsRow: buildPomodoroButtons(session),
     footerText: "Fokus belajar bersama Naura Hoshino",
   });
-}
-
-function buildPomodoroButtons(session) {
-  return [
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("pomodoro_pause")
-        .setLabel(session.isPaused ? "Lanjutkan" : "Jeda")
-        .setEmoji(session.isPaused ? "▶️" : "⏸️")
-        .setStyle(session.isPaused ? ButtonStyle.Success : ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId("pomodoro_skip")
-        .setLabel("Lewati Fase")
-        .setEmoji("⏭️")
-        .setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setCustomId("pomodoro_stop")
-        .setLabel("Selesai / Berhenti")
-        .setEmoji("⏹️")
-        .setStyle(ButtonStyle.Danger),
-    ),
-  ];
 }
 
 module.exports = {
@@ -205,11 +206,9 @@ module.exports = {
       };
 
       const container = buildPomodoroContainer(session);
-      const buttons = buildPomodoroButtons(session);
 
       const replyMsg = await interaction.reply({
         ...container,
-        components: [...container.components, ...buttons],
         fetchReply: true,
       });
 
@@ -268,13 +267,9 @@ module.exports = {
         }
 
         const updated = buildPomodoroContainer(session);
-        const updatedButtons = buildPomodoroButtons(session);
 
         await replyMsg
-          .edit({
-            ...updated,
-            components: [...updated.components, ...updatedButtons],
-          })
+          .edit(updated)
           .catch(() => {});
       }, 5000);
 
@@ -296,11 +291,7 @@ module.exports = {
         if (i.customId === "pomodoro_pause") {
           session.isPaused = !session.isPaused;
           const updated = buildPomodoroContainer(session);
-          const updatedButtons = buildPomodoroButtons(session);
-          return i.update({
-            ...updated,
-            components: [...updated.components, ...updatedButtons],
-          });
+          return i.update(updated);
         }
 
         if (i.customId === "pomodoro_skip") {
@@ -335,10 +326,7 @@ module.exports = {
             footerText: ui.getFooter("utility"),
           });
 
-          return i.update({
-            ...finalContainer,
-            components: finalContainer.components,
-          });
+          return i.update(finalContainer);
         }
       });
     }

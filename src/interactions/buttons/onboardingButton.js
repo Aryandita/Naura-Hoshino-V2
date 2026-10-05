@@ -3,6 +3,7 @@
 const { MessageFlags } = require("discord.js");
 const { claimOnboardingKit } = require("../../survival/engines/playerOnboardingEngine");
 const { buildContainerV2, buildErrorContainerV2 } = require("../../utils/NauraContainerBuilder");
+const survivalUI = require("../../utils/survivalUIHelper");
 const ui = require("../../config/ui");
 
 module.exports = [
@@ -17,6 +18,7 @@ module.exports = [
         const errPayload = buildErrorContainerV2({
           title: "Sudah Terdaftar",
           errorMessage: result.message,
+          buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", interaction.user.id)],
           footerText: ui.getFooter("survival"),
         });
         return interaction.update(errPayload);
@@ -40,6 +42,7 @@ module.exports = [
           "Semua perlengkapan telah dimasukkan ke dalam tas Kakak.",
           "- # *Coba ketik `/survival info` untuk memeriksa status vital atau `/survival collect` untuk mulai mengumpulkan bahan.*",
         ].join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", interaction.user.id)],
         footerText: ui.getFooter("survival"),
       });
 

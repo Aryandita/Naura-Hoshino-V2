@@ -137,16 +137,14 @@ module.exports = {
 
       rows.push(survivalUI.buildSurvivalActionRow("town", user.id));
 
-      return {
-        ...buildContainerV2({
-          accentColorHex: region.themeColor || "#10B981",
-          authorName: `Naura Wilds - ${region.name}`,
-          title: `🗺️ ${region.title}`,
-          description: descLines.join("\n"),
-          footerText: ui.getFooter("survival"),
-        }),
-        components: rows,
-      };
+      return buildContainerV2({
+        accentColorHex: region.themeColor || "#10B981",
+        authorName: `Naura Wilds - ${region.name}`,
+        title: `🗺️ ${region.title}`,
+        description: descLines.join("\n"),
+        buttonsRow: rows,
+        footerText: ui.getFooter("survival"),
+      });
     };
 
     const initialPayload = buildPayload();

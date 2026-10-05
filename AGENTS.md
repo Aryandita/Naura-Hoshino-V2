@@ -199,12 +199,16 @@ Pilihlah emoji pada judul dan setiap butir pembaruan yang selaras dengan isi per
    _Akibat:_ Memicu deploy ulang seluruh slash command ke Discord API dan menghabiskan rate limit bot saat restart.
 7. **Mereferensikan `attachment://` tanpa melampirkan file di `files: []`:**
    _Akibat:_ `DiscordAPIError[50035] UNFURLED_MEDIA_ITEM_REFERENCED_ATTACHMENT_NOT_FOUND`. Pastikan gambar atau aset thumbnail/banner yang dirujuk dengan skema attachment benar-benar dilampirkan via `AttachmentBuilder` di array `files`.
-8. **Meneruskan `ButtonInteraction` ke subcommand lain tanpa `deferUpdate()`:**
-   _Akibat:_ `DiscordjsError [InteractionNotReplied] The reply to this interaction has not been sent or deferred`. Selalu panggil `await i.deferUpdate().catch(() => {})` dan hentikan collector lama (`collector.stop()`) sebelum melempar interaksi ke subcommand target.
+8. **Meneruskan `ButtonInteraction` ke subcommand lain tanpa `adaptSurvivalInteraction`:**
+   _Akibat:_ `DiscordAPIError[40060] Interaction has already been acknowledged` atau `TypeError: interaction.options.getString is not a function`. Selalu bungkus `interaction` dengan `adaptSurvivalInteraction(interaction, action)` sebelum meneruskan ke subcommand tujuan.
 9. **Duplikasi `custom_id` komponen interaktif dalam pesan yang sama:**
    _Akibat:_ `DiscordAPIError[50035] COMPONENT_CUSTOM_ID_DUPLICATED`. Jangan menduplikasi komponen baris atau memasukkan kembali array baris yang sudah ditambahkan ke builder.
 10. **Mutasi seluruh objek UserSurvival saat hanya beberapa statistik yang berubah:**
    _Akibat:_ Race condition dan penimpaan data vital yang tidak perlu. Selalu susun patch parsial (`const patch = {}`) yang hanya menyertakan statistik yang terpengaruh efek konsumsi sebelum memanggil `cacheManager.updateUserSurvival(userId, patch)`.
+11. **Menghapus pesan kartu utama saat membalas ephemeral dari tombol:**
+   _Akibat:_ Kartu bot hilang dari channel. Dilarang memanggil `deleteReply()` pada `ButtonInteraction` jika pesan respons berstatus ephemeral (hanya panggil `deleteReply()` bila `interaction.isChatInputCommand?.()`).
+12. **Tidak menghentikan collector lama dengan alasan `navigated`:**
+   _Akibat:_ Tombol pada layar baru tiba-tiba hilang setelah 60 detik karena timeout collector layar lama memanggil `editReply({ components: [] })`. Selalu panggil `stopMessageCollector(messageId, "navigated")` saat berpindah layar.
 
 ---
 

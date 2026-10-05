@@ -82,8 +82,25 @@ module.exports = [
           .setDisabled(true),
       );
 
+      const msgComponents = interaction.message.components;
+      let nextComponents = [disabledRow];
+
+      if (msgComponents && msgComponents.length > 0) {
+        const firstComp = msgComponents[0].toJSON ? msgComponents[0].toJSON() : msgComponents[0];
+        if (firstComp.type === 17 && Array.isArray(firstComp.components)) {
+          const innerComps = [...firstComp.components];
+          const actionRowIdx = innerComps.findIndex((c) => c.type === 1);
+          if (actionRowIdx !== -1) {
+            innerComps[actionRowIdx] = disabledRow.toJSON();
+          } else {
+            innerComps.push(disabledRow.toJSON());
+          }
+          nextComponents = [{ ...firstComp, components: innerComps }];
+        }
+      }
+
       return interaction.update({
-        components: [disabledRow],
+        components: nextComponents,
       });
     },
   },

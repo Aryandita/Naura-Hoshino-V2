@@ -107,16 +107,11 @@ module.exports = {
         "",
         `${e("read", "\uD83D\uDCDD")} <@${targetUser.id}>, tekan **Terima Transfer** kalau kamu setuju ya. Naura yang jaga transaksinya biar aman.`,
       ].join("\n"),
+      buttonsRow: [confirmRow],
       footerText: ui.getFooter("survival"),
     });
 
-    // Perintah survival sudah di-defer, jadi wajib editReply dan container
-    // builder harus di-spread agar isi kartunya tidak hilang.
-    const reply = await interaction.editReply({
-      ...tradePayload,
-      embeds: [],
-      components: [...tradePayload.components, confirmRow],
-    });
+    const reply = await interaction.editReply(tradePayload);
 
     const collector = reply.createMessageComponentCollector({
       componentType: ComponentType.Button,

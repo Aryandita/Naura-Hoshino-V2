@@ -417,7 +417,6 @@ module.exports = [
       return interaction.editReply({
         ...container,
         files: [attachment],
-        components: [actionRow],
       });
     },
   },

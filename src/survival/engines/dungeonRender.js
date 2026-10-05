@@ -53,28 +53,6 @@ function actionRow({ stats, stamina, canFlee = true }) {
 // Muncul hanya kalau pemain memegang kedua jenis tiket, supaya tiket spesial
 // yang mahal tidak terpakai tanpa disengaja.
 function buildPassChoiceView(passes) {
-  const payload = buildContainerV2({
-    accentColorHex: ui.getColor("info"),
-    authorName: "Naura Dungeon Guide",
-    expression: "thinking",
-    title: e("lokasi", "\ud83d\udccd") + " Pintu Batu Infinite Dungeon",
-    description: [
-      "Kamu memegang dua jenis tiket, jadi Naura tanya dulu, ya!",
-      "",
-      currency.emojiOf(currency.FRAGMENT) +
-        " **Dungeon Pass** (" +
-        passes.normal +
-        " tersisa) \u2014 penjelajahan biasa, aman untuk mengumpulkan bahan.",
-      currency.emojiOf(currency.COIN) +
-        " **Dungeon Special Pass** (" +
-        passes.special +
-        " tersisa) \u2014 musuhnya dua kali lebih tangguh, tapi jarahan dan hadiahnya juga dua kali lipat.",
-      "",
-      "*Tiket yang kamu pilih langsung terpakai, jadi pikirkan matang-matang.*",
-    ].join("\n"),
-    footerText: ui.getFooter("survival"),
-  });
-
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("dungeon_use_normal")
@@ -90,7 +68,28 @@ function buildPassChoiceView(passes) {
       .setStyle(ButtonStyle.Secondary),
   );
 
-  return { ...payload, components: [...payload.components, row] };
+  return buildContainerV2({
+    accentColorHex: ui.getColor("info"),
+    authorName: "Naura Dungeon Guide",
+    expression: "thinking",
+    title: e("lokasi", "\ud83d\udccd") + " Pintu Batu Infinite Dungeon",
+    description: [
+      "Kamu memegang dua jenis tiket, jadi Naura tanya dulu, ya!",
+      "",
+      currency.emojiOf(currency.FRAGMENT) +
+        " **Dungeon Pass** (" +
+        passes.normal +
+        " tersisa) - penjelajahan biasa, aman untuk mengumpulkan bahan.",
+      currency.emojiOf(currency.COIN) +
+        " **Dungeon Special Pass** (" +
+        passes.special +
+        " tersisa) - musuhnya dua kali lebih tangguh, tapi jarahan dan hadiahnya juga dua kali lipat.",
+      "",
+      "*Tiket yang kamu pilih langsung terpakai, jadi pikirkan matang-matang.*",
+    ].join("\n"),
+    buttonsRow: [row],
+    footerText: ui.getFooter("survival"),
+  });
 }
 
 async function buildBattleView({
@@ -136,7 +135,9 @@ async function buildBattleView({
     floor +
     (enemy.special ? " (Segel Spesial)" : "");
 
-  const payload = buildContainerV2({
+  const row = actionRow({ stats, stamina: survival.stamina });
+
+  return buildContainerV2({
     accentColorHex:
       enemy.isBoss || enemy.special
         ? ui.getColor("error")
@@ -146,16 +147,10 @@ async function buildBattleView({
     title,
     description: logText,
     bannerAttachmentName: IMAGE_NAME,
+    files: [attachment],
+    buttonsRow: [row],
     footerText: footer,
   });
-
-  const row = actionRow({ stats, stamina: survival.stamina });
-
-  return {
-    ...payload,
-    files: [attachment],
-    components: [...payload.components, row],
-  };
 }
 
 // Kartu penutup (menang, kalah, kabur) dengan tombol aksi kontekstual combat.

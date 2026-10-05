@@ -119,23 +119,6 @@ module.exports = {
         // Bisa disematkan bila dibutuhkan
       }
 
-      const payload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        authorName: `Naura Wilds Saga - Arc ${arc.arc}: ${arc.arcName}`,
-        title: `${e("read", "📖")} Bab ${chapter.chapter}: ${chapter.title}`,
-        iconURL,
-        expression: "info",
-        description: [
-          `*${fill(chapter.narrative, user.username)}*`,
-          "",
-          `**${fill(line.speaker, user.username)}**`,
-          `"${fill(line.text, user.username)}"`,
-        ].join("\n"),
-        bannerAttachmentName,
-        files,
-        footerText: ui.getFooter("survival"),
-      });
-
       const row = new ActionRowBuilder();
 
       if (!isLast) {
@@ -161,11 +144,23 @@ module.exports = {
         );
       }
 
-      return {
-        ...payload,
-        embeds: [],
-        components: [...payload.components, row],
-      };
+      return buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        authorName: `Naura Wilds Saga - Arc ${arc.arc}: ${arc.arcName}`,
+        title: `${e("read", "📖")} Bab ${chapter.chapter}: ${chapter.title}`,
+        iconURL,
+        expression: "info",
+        description: [
+          `*${fill(chapter.narrative, user.username)}*`,
+          "",
+          `**${fill(line.speaker, user.username)}**`,
+          `"${fill(line.text, user.username)}"`,
+        ].join("\n"),
+        bannerAttachmentName,
+        files,
+        buttonsRow: [row],
+        footerText: ui.getFooter("survival"),
+      });
     };
 
     const message = await interaction.editReply(buildFrame());

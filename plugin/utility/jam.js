@@ -47,12 +47,10 @@ module.exports = {
         "",
         "Klik tombol di bawah untuk langsung bergabung ke sesi aransemen musik!",
       ].join("\n"),
+      buttonsRow: [row],
       footerText: ui.getFooter("music"),
     });
 
-    await interaction.reply({
-      ...payload,
-      components: [row],
-    });
+    await interaction.reply(payload);
   },
 };

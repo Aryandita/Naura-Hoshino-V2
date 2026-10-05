@@ -8,6 +8,7 @@ const UserPet = require("../../../src/models/UserPet");
 const UserNPC = require("../../../src/models/UserNPC");
 const cacheManager = require("../../../src/managers/cacheManager");
 const ui = require("../../../src/config/ui");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const currency = require("../../../src/survival/engines/currency");
 const {
   rollCouponDrop,
@@ -70,6 +71,19 @@ module.exports = {
       );
     }
 
+    const row = new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId("rebirth_diff")
+        .setPlaceholder("Pilih nasibmu selanjutnya...")
+        .addOptions(
+          DIFFICULTIES.map((d) => ({
+            label: d.label,
+            value: d.value,
+            description: `Kehidupan baru tingkat ${d.value}`,
+          })),
+        ),
+    );
+
     const introPayload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#FFC0CB",
       authorName: "Gerbang Reinkarnasi",
@@ -87,26 +101,13 @@ module.exports = {
           (d) => `> ${e(d.emojiKey, d.fallback)} **${d.value}:** ${d.perk}`,
         ),
       ].join("\n"),
+      buttonsRow: [row, survivalUI.buildSurvivalActionRow("profile", user.id)],
       footerText: ui.getFooter("survival"),
     });
 
-    const row = new ActionRowBuilder().addComponents(
-      new StringSelectMenuBuilder()
-        .setCustomId("rebirth_diff")
-        .setPlaceholder("Pilih nasibmu selanjutnya...")
-        .addOptions(
-          DIFFICULTIES.map((d) => ({
-            label: d.label,
-            value: d.value,
-            description: `Kehidupan baru tingkat ${d.value}`,
-          })),
-        ),
-    );
-
-    const response = await interaction.reply({
-      ...introPayload,
-      components: [...introPayload.components, row],
-    });
+    const response = await (interaction.deferred || interaction.replied
+      ? interaction.editReply(introPayload)
+      : interaction.reply({ ...introPayload, fetchReply: true }));
 
     const collector = response.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,
@@ -217,10 +218,11 @@ module.exports = {
             ? `${couponEmoji} Naura titipkan **${coupon.gained} Naura Coupon** sebagai tanda hormat atas keberanianmu. Total kuponmu sekarang **${coupon.total}**.`
             : "",
           "",
-          `${e("read", "\uD83D\uDCD6")} Reinkarnasi ke-**${carriedState.rebirth_count}**. Mulai lagi dengan \`/survival start\` yaa!`,
+          `${e("read", "\uD83D\uDCD6")} Reinkarnasi ke-**${carriedState.rebirth_count}**. Mulai lagi petualanganmu!`,
         ]
           .filter(Boolean)
           .join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
         footerText: ui.getFooter("survival"),
       });
 

@@ -112,6 +112,7 @@ module.exports = {
           "",
           "Pilih salah satu foto yang sudah kamu buka di bawah untuk melihat kenangannya!",
         ].join("\n"),
+        buttonsRow: [selectRow()],
         footerText: ui.getFooter("survival"),
       });
     };
@@ -140,11 +141,7 @@ module.exports = {
       );
     };
 
-    const indexPayload = buildIndex();
-    const response = await interaction.reply({
-      ...indexPayload,
-      components: [...indexPayload.components, selectRow()],
-    });
+    const response = await interaction.reply(buildIndex());
 
     const collector = response.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,
@@ -152,6 +149,30 @@ module.exports = {
     });
 
     let opened = null;
+
+    const photoButtons = (bond) =>
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("gallery_save")
+          .setLabel(
+            album.includes(bond.npcId)
+              ? "Hapus dari favorit"
+              : "Simpan ke favorit",
+          )
+          .setStyle(
+            album.includes(bond.npcId)
+              ? ButtonStyle.Secondary
+              : ButtonStyle.Success,
+          ),
+        new ButtonBuilder()
+          .setCustomId("gallery_download")
+          .setLabel("Unduh foto")
+          .setStyle(ButtonStyle.Primary),
+        new ButtonBuilder()
+          .setCustomId("gallery_back")
+          .setLabel("Kembali ke album")
+          .setStyle(ButtonStyle.Secondary),
+      );
 
     function photoPayload(bond) {
       const npc = npcs[bond.npcId];
@@ -191,33 +212,10 @@ module.exports = {
           .join("\n"),
         mediaAttachmentNames,
         files,
+        buttonsRow: [photoButtons(bond)],
         footerText: ui.getFooter("survival"),
       });
     }
-
-    const photoButtons = (bond) =>
-      new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("gallery_save")
-          .setLabel(
-            album.includes(bond.npcId)
-              ? "Hapus dari favorit"
-              : "Simpan ke favorit",
-          )
-          .setStyle(
-            album.includes(bond.npcId)
-              ? ButtonStyle.Secondary
-              : ButtonStyle.Success,
-          ),
-        new ButtonBuilder()
-          .setCustomId("gallery_download")
-          .setLabel("Unduh foto")
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId("gallery_back")
-          .setLabel("Kembali ke album")
-          .setStyle(ButtonStyle.Secondary),
-      );
 
     collector.on("collect", async (i) => {
       await i.deferUpdate();
@@ -230,19 +228,11 @@ module.exports = {
             flags: MessageFlags.Ephemeral,
           });
         }
-        const payload = photoPayload(opened);
-        return i.editReply({
-          ...payload,
-          components: [...payload.components, photoButtons(opened)],
-        });
+        return i.editReply(photoPayload(opened));
       }
 
       if (i.customId === "gallery_back" || !opened) {
-        const backPayload = buildIndex();
-        return i.editReply({
-          ...backPayload,
-          components: [...backPayload.components, selectRow()],
-        });
+        return i.editReply(buildIndex());
       }
 
       if (i.customId === "gallery_save") {
@@ -257,11 +247,7 @@ module.exports = {
         survival.changed("rpg_state", true);
         await survival.save({ fields: ["rpg_state"] });
 
-        const payload = photoPayload(opened);
-        return i.editReply({
-          ...payload,
-          components: [...payload.components, photoButtons(opened)],
-        });
+        return i.editReply(photoPayload(opened));
       }
 
       if (i.customId === "gallery_download") {

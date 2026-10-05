@@ -7,6 +7,7 @@ const {
   MessageFlags,
 } = require("discord.js");
 const { buildContainerV2 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
 const cacheManager = require("../../../src/managers/cacheManager");
 const seasonPassEngine = require("../../../src/survival/engines/seasonPassEngine");
@@ -20,14 +21,18 @@ module.exports = {
     const survival = await cacheManager.getUserSurvival(user.id);
 
     if (!survival) {
-      return interaction.reply({
+      const payload = {
         ...buildContainerV2({
           authorName: "Naura Wilds",
           title: "Belum Memiliki Karakter",
           description: "Kamu belum memiliki profil petualang di Naura Wilds. Ketik `/survival profile info` untuk memulai!",
           expression: "confused",
+          buttonsRow: [survivalUI.buildSurvivalActionRow("profile", user.id)],
         }),
-      });
+      };
+      return interaction.deferred || interaction.replied
+        ? interaction.editReply(payload)
+        : interaction.reply(payload);
     }
 
     const seasonXp = survival.exp || 0;
@@ -84,20 +89,22 @@ module.exports = {
       }
 
       rows.push(actionRow);
+      rows.push(survivalUI.buildSurvivalActionRow("profile", user.id));
 
-      return {
-        ...buildContainerV2({
-          authorName: "Naura Wilds - Battle Pass",
-          title: `Seasonal Star Path (Tier ${progress.tier})`,
-          description: descLines.join("\n"),
-          accentColor: ui.COLOR_SURVIVAL_GOLD || "#F59E0B",
-          expression: progress.isMaxTier ? "cheers" : "happy",
-        }),
-        components: rows,
-      };
+      return buildContainerV2({
+        authorName: "Naura Wilds - Battle Pass",
+        title: `Seasonal Star Path (Tier ${progress.tier})`,
+        description: descLines.join("\n"),
+        accentColorHex: ui.COLOR_SURVIVAL_GOLD || "#F59E0B",
+        expression: progress.isMaxTier ? "cheers" : "happy",
+        buttonsRow: rows,
+      });
     };
 
-    const reply = await interaction.reply(buildPayload());
+    const payload = buildPayload();
+    const reply = await (interaction.deferred || interaction.replied
+      ? interaction.editReply(payload)
+      : interaction.reply({ ...payload, fetchReply: true }));
 
     const collector = reply.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,

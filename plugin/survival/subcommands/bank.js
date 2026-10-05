@@ -194,14 +194,9 @@ module.exports = {
 
         if (id === "bank_menu_invest") {
           const snap = await snapshotNow();
-          const { payload, rows } = views.investView(
-            snap,
-            actions.valuate(snap.investments, snap.day),
+          return i.editReply(
+            views.investView(snap, actions.valuate(snap.investments, snap.day)),
           );
-          return i.editReply({
-            ...payload,
-            components: [...payload.components, ...rows],
-          });
         }
 
         // --- Penukaran mata uang ---

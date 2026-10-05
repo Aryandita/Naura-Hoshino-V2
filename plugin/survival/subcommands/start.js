@@ -13,6 +13,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 
 const STARTER_FLAG = "survival_started";
 
@@ -83,8 +84,12 @@ module.exports = {
         title: `${e("akward", "\uD83C\uDF92")} Kamu sudah pernah ambil, lho`,
         description:
           "Starter Kit ini cuma bisa diambil sekali yaa. Tapi tenang, Naura tetap nemenin petualanganmu kok!",
+        buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
         footerText: ui.getFooter("survival"),
       });
+      if (interaction.deferred || interaction.replied) {
+        return interaction.editReply(payload);
+      }
       return interaction.reply({ ...payload, flags: MessageFlags.Ephemeral });
     }
 
@@ -116,9 +121,13 @@ module.exports = {
         `> *${goalBar.cheerMessage}*\n\n` +
         `Naura sudah siapkan bekal lengkap buat kamu. Semuanya masih dari kayu, tapi cukup kok buat hari pertama:\n\n${daftarBarang}\n\n` +
         "Semuanya sudah Naura masukkan ke tasmu. Coba mulai dengan `/survival collect` buat mengumpulkan bahan pertamamu, yaa!",
+      buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
       footerText: ui.getFooter("survival"),
     });
 
+    if (interaction.deferred || interaction.replied) {
+      return interaction.editReply(payload);
+    }
     return interaction.reply(payload);
   },
 };

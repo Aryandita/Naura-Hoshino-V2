@@ -134,14 +134,11 @@ module.exports = {
         "",
         `Mau menghabiskan waktu sama siapa? Naura ingatkan ya, afeksinya harus minimal **${MIN_AFFECTION}** dulu supaya ajakanmu diterima.`,
       ].join("\n"),
+      buttonsRow: [row],
       footerText: ui.getFooter("survival"),
     });
 
-    const response = await interaction.editReply({
-      ...datePayload,
-      embeds: [],
-      components: [...datePayload.components, row],
-    });
+    const response = await interaction.editReply(datePayload);
 
     const collector = response.createMessageComponentCollector({
       filter: (i) => i.user.id === user.id,

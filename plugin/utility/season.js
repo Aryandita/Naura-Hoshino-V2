@@ -114,13 +114,11 @@ module.exports = {
           title: `🏆 Battle Pass, ${s.name}`,
           description: desc,
           expression: "happy",
+          buttonsRow: [row],
           footerText: ui.getFooter("survival"),
         });
 
-        const msg = await interaction.reply({
-          ...payload,
-          components: [...payload.components, row],
-        });
+        const msg = await interaction.reply(payload);
 
         // Button interaction collector
         const collector = msg.createMessageComponentCollector({
@@ -151,59 +149,62 @@ module.exports = {
       // ── CLAIM ────────────────────────────────────────────────────
       if (sub === "claim") {
         const result = await seasonEngine.claimAllRewards(userId);
+        const claimPayload = buildContainerV2({
+          accentColorHex: result.claimed ? "#86EFAC" : "#FBBF24",
+          title: result.claimed
+            ? "🎁 Hadiah Musiman Diklaim!"
+            : "ℹ️ Status Klaim",
+          description:
+            `${result.message}\n\n` +
+            (result.totalGold
+              ? `• 💵 **+${result.totalGold.toLocaleString("id-ID")} Gold**\n`
+              : "") +
+            (result.totalStarFragments
+              ? `• ⭐ **+${result.totalStarFragments.toLocaleString("id-ID")} Star Fragments**\n`
+              : "") +
+            (result.totalCoupons
+              ? `• 🎟️ **+${result.totalCoupons} Naura Coupon**\n`
+              : "") +
+            (result.unlockedLabels && result.unlockedLabels.length > 0
+              ? `\n**Item Khusus:**\n${result.unlockedLabels.map((l) => `• ${l}`).join("\n")}`
+              : ""),
+          expression: result.claimed ? "cheers" : "sleepy",
+          footerText: ui.getFooter("survival"),
+        });
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          components: buildContainerV2({
-            accentColorHex: result.claimed ? "#86EFAC" : "#FBBF24",
-            title: result.claimed
-              ? "🎁 Hadiah Musiman Diklaim!"
-              : "ℹ️ Status Klaim",
-            description:
-              `${result.message}\n\n` +
-              (result.totalGold
-                ? `• 💵 **+${result.totalGold.toLocaleString("id-ID")} Gold**\n`
-                : "") +
-              (result.totalStarFragments
-                ? `• ⭐ **+${result.totalStarFragments.toLocaleString("id-ID")} Star Fragments**\n`
-                : "") +
-              (result.totalCoupons
-                ? `• 🎟️ **+${result.totalCoupons} Naura Coupon**\n`
-                : "") +
-              (result.unlockedLabels && result.unlockedLabels.length > 0
-                ? `\n**Item Khusus:**\n${result.unlockedLabels.map((l) => `• ${l}`).join("\n")}`
-                : ""),
-            expression: result.claimed ? "cheers" : "sleepy",
-            footerText: ui.getFooter("survival"),
-          }),
+          ...claimPayload,
+          flags: (claimPayload.flags || 0) | MessageFlags.Ephemeral,
         });
       }
 
       // ── UPGRADE ──────────────────────────────────────────────────
       if (sub === "upgrade") {
         const result = await seasonEngine.upgradeToPremium(userId);
+        const upgradePayload = buildContainerV2({
+          accentColorHex: result.success ? "#FFD700" : "#FF6B6B",
+          title: result.success
+            ? "💎 Premium Battle Pass Aktif!"
+            : "❌ Gagal Upgrade",
+          description: result.message,
+          expression: result.success ? "cheers" : "sad",
+          footerText: ui.getFooter("survival"),
+        });
         return interaction.reply({
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          components: buildContainerV2({
-            accentColorHex: result.success ? "#FFD700" : "#FF6B6B",
-            title: result.success
-              ? "💎 Premium Battle Pass Aktif!"
-              : "❌ Gagal Upgrade",
-            description: result.message,
-            expression: result.success ? "cheers" : "sad",
-            footerText: ui.getFooter("survival"),
-          }),
+          ...upgradePayload,
+          flags: (upgradePayload.flags || 0) | MessageFlags.Ephemeral,
         });
       }
     } catch (err) {
+      const errPayload = buildContainerV2({
+        accentColorHex: "#FF6B6B",
+        title: "Terjadi Kesalahan",
+        description: `Naura gagal memproses perintah Season Pass: ${err.message}`,
+        expression: "sad",
+        footerText: ui.getFooter("survival"),
+      });
       return interaction.reply({
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        components: buildContainerV2({
-          accentColorHex: "#FF6B6B",
-          title: "Terjadi Kesalahan",
-          description: `Naura gagal memproses perintah Season Pass: ${err.message}`,
-          expression: "sad",
-          footerText: ui.getFooter("survival"),
-        }),
+        ...errPayload,
+        flags: (errPayload.flags || 0) | MessageFlags.Ephemeral,
       });
     }
   },

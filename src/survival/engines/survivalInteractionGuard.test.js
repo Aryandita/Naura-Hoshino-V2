@@ -153,3 +153,119 @@ describe("Survival Subcommands Interaction Defer Guard", () => {
     }
   });
 });
+
+const { MessageFlags } = require("discord.js");
+const {
+  adaptSurvivalInteraction,
+  stopMessageCollector,
+  wrapMessageWithCollectorRegistry,
+} = require("../helpers/survivalContext");
+
+describe("adaptSurvivalInteraction Adapter Lifecycle & Collector Suppression", () => {
+  it("mengalihkan reply ke editReply bila interaction sudah deferred pada ButtonInteraction", async () => {
+    let editReplyPayload = null;
+    const btnInteraction = {
+      deferred: true,
+      replied: false,
+      message: { id: "msg-123" },
+      isChatInputCommand: () => false,
+      isButton: () => true,
+      async reply() {
+        throw new Error("reply must not be called directly on deferred button");
+      },
+      async editReply(p) {
+        editReplyPayload = p;
+        return { id: "msg-123", ...p };
+      },
+      async followUp() {},
+    };
+
+    const adapted = adaptSurvivalInteraction(btnInteraction, "inventory");
+    await adapted.reply({ content: "halo dari ransel" });
+
+    assert.ok(editReplyPayload, "editReply harus dipanggil");
+    assert.strictEqual(editReplyPayload.content, "halo dari ransel");
+    assert.strictEqual(adapted.options.getSubcommand(), "inventory");
+  });
+
+  it("mengalihkan ephemeral reply ke followUp tanpa menghapus pesan kartu utama", async () => {
+    let followUpPayload = null;
+    let deleteReplyCalled = false;
+
+    const btnInteraction = {
+      deferred: true,
+      replied: false,
+      message: { id: "msg-999" },
+      isChatInputCommand: () => false,
+      isButton: () => true,
+      async reply() {},
+      async editReply() {},
+      async followUp(p) {
+        followUpPayload = p;
+        return { id: "ephem-1" };
+      },
+      async deleteReply() {
+        deleteReplyCalled = true;
+      },
+    };
+
+    const adapted = adaptSurvivalInteraction(btnInteraction, "info");
+    await adapted.reply({ content: "hanya untukmu", flags: MessageFlags.Ephemeral });
+
+    assert.ok(followUpPayload, "followUp harus dipanggil untuk ephemeral");
+    assert.strictEqual(followUpPayload.content, "hanya untukmu");
+    assert.strictEqual(deleteReplyCalled, false, "deleteReply dilarang dipanggil pada ButtonInteraction");
+  });
+
+  it("menyediakan mock options lengkap dengan getter aman untuk subcommand", () => {
+    const rawInteraction = {
+      deferred: false,
+      replied: false,
+      user: { id: "u-1" },
+    };
+
+    const adapted = adaptSurvivalInteraction(rawInteraction, "fish");
+    assert.strictEqual(adapted.options.getSubcommand(), "fish");
+    assert.strictEqual(adapted.options.getString("aksi"), "cast");
+    assert.strictEqual(adapted.options.getInteger("unknown_int"), null);
+    assert.strictEqual(adapted.options.getBoolean("unknown_bool"), false);
+  });
+
+  it("menekan eksekusi collector end listener jika reason bernilai 'navigated'", () => {
+    let endListenerCalled = false;
+    let collectorStopped = false;
+
+    const fakeCollector = {
+      listeners: {},
+      on(event, fn) {
+        this.listeners[event] = fn;
+        return this;
+      },
+      stop(reason) {
+        collectorStopped = true;
+        if (this.listeners.end) {
+          this.listeners.end([], reason);
+        }
+      },
+    };
+
+    const fakeMsg = {
+      id: "msg-test-col",
+      createMessageComponentCollector() {
+        return fakeCollector;
+      },
+    };
+
+    const wrappedMsg = wrapMessageWithCollectorRegistry(fakeMsg);
+    const collector = wrappedMsg.createMessageComponentCollector({});
+
+    collector.on("end", () => {
+      endListenerCalled = true;
+    });
+
+    stopMessageCollector("msg-test-col", "navigated");
+
+    assert.strictEqual(collectorStopped, true);
+    assert.strictEqual(endListenerCalled, false, "end listener tidak boleh dipanggil jika reason adalah 'navigated'");
+  });
+});

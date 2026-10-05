@@ -57,8 +57,8 @@ module.exports = {
         rowRemove.addComponents(removeSelect);
       }
 
-      const components = [rowBtns];
-      if (alerts.length > 0) components.push(rowRemove);
+      const buttonsRow = [rowBtns];
+      if (alerts.length > 0) buttonsRow.push(rowRemove);
 
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
@@ -73,10 +73,11 @@ module.exports = {
                 )
                 .join("\n\n")
             : "> *Belum ada notifikasi yang ditambahkan di server ini.*"),
+        buttonsRow,
         footerText: "Naura Auto-Alert System",
       });
 
-      return { ...payload, components, flags: MessageFlags.Ephemeral };
+      return { ...payload, flags: (payload.flags || 0) | MessageFlags.Ephemeral };
     };
 
     const response = await interaction.reply(generateDashboard());
@@ -122,12 +123,6 @@ module.exports = {
           });
           const targetData = submitted.fields.getTextInputValue("input_target");
 
-          const channelPayload = buildContainerV2({
-            accentColorHex: "#FFD700",
-            title: "Pilih Channel Alert",
-            description: `Pilih channel text mana yang akan digunakan untuk mengirimkan notifikasi **${platform}** milik **${targetData}**!`,
-            footerText: ui.getFooter("core"),
-          });
           const channelRow = new ActionRowBuilder().addComponents(
             new ChannelSelectMenuBuilder()
               .setCustomId("select_alert_channel")
@@ -135,10 +130,15 @@ module.exports = {
               .addChannelTypes(ChannelType.GuildText),
           );
 
-          await submitted.update({
-            ...channelPayload,
-            components: [channelRow],
+          const channelPayload = buildContainerV2({
+            accentColorHex: "#FFD700",
+            title: "Pilih Channel Alert",
+            description: `Pilih channel text mana yang akan digunakan untuk mengirimkan notifikasi **${platform}** milik **${targetData}**!`,
+            buttonsRow: [channelRow],
+            footerText: ui.getFooter("core"),
           });
+
+          await submitted.update(channelPayload);
 
           // Tunggu pilihan channel
           const filterChannel = (m) =>

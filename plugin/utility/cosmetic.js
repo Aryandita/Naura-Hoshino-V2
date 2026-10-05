@@ -63,13 +63,6 @@ async function handleShop(interaction, userId) {
   const ownedCosmetics = await UserCosmetic.findAll({ where: { userId } });
   const ownedAssetIds = ownedCosmetics.map((uc) => uc.assetId);
 
-  const shopPayload = buildContainerV2({
-    accentColorHex: "#00d9ff",
-    title: "🛒 Toko Kosmetik Naura",
-    description: `Uang kamu: **${userProfile.economy_wallet} Naura Coins**\n\nGunakan menu di bawah ini untuk memilih aset yang ingin dibeli. Aset yang sudah dibeli akan otomatis masuk ke inventori kamu.`,
-    footerText: "Naura Cosmetic System",
-  });
-
   const options = assets.map((asset) => {
     const isOwned = ownedAssetIds.includes(asset.id);
     const label = `[${asset.type.toUpperCase()}] ${asset.name}`;
@@ -94,10 +87,15 @@ async function handleShop(interaction, userId) {
       .addOptions(options.slice(0, 25)),
   );
 
-  const msg = await interaction.editReply({
-    ...shopPayload,
-    components: [row],
+  const shopPayload = buildContainerV2({
+    accentColorHex: "#00d9ff",
+    title: "🛒 Toko Kosmetik Naura",
+    description: `Uang kamu: **${userProfile.economy_wallet} Naura Coins**\n\nGunakan menu di bawah ini untuk memilih aset yang ingin dibeli. Aset yang sudah dibeli akan otomatis masuk ke inventori kamu.`,
+    buttonsRow: [row],
+    footerText: "Naura Cosmetic System",
   });
+
+  const msg = await interaction.editReply(shopPayload);
 
   const filter = (i) =>
     i.customId === "cosmetic_shop_select" && i.user.id === userId;
@@ -172,14 +170,6 @@ async function handleEquip(interaction, userId) {
     );
   }
 
-  const equipPayload = buildContainerV2({
-    accentColorHex: "#00d9ff",
-    title: "👗 Inventori Kosmetik",
-    description:
-      "Pilih kosmetik yang ingin kamu gunakan. Jika kamu memilih tipe yang sama dengan yang sedang aktif, kosmetik lama akan digantikan.",
-    footerText: "Naura Cosmetic System",
-  });
-
   const options = ownedCosmetics
     .filter((uc) => uc.asset)
     .map((uc) => {
@@ -205,10 +195,16 @@ async function handleEquip(interaction, userId) {
       .setStyle(ButtonStyle.Danger),
   );
 
-  const msg = await interaction.editReply({
-    ...equipPayload,
-    components: [row, btnRow],
+  const equipPayload = buildContainerV2({
+    accentColorHex: "#00d9ff",
+    title: "👗 Inventori Kosmetik",
+    description:
+      "Pilih kosmetik yang ingin kamu gunakan. Jika kamu memilih tipe yang sama dengan yang sedang aktif, kosmetik lama akan digantikan.",
+    buttonsRow: [row, btnRow],
+    footerText: "Naura Cosmetic System",
   });
+
+  const msg = await interaction.editReply(equipPayload);
 
   const filter = (i) =>
     ["cosmetic_equip_select", "cosmetic_unequip_all"].includes(i.customId) &&

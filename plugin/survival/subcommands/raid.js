@@ -12,6 +12,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const survivalUI = require("../../../src/utils/survivalUIHelper");
 const ui = require("../../../src/config/ui");
 const worldBossEngine = require("../../../src/survival/engines/worldBossEngine");
 const petActions = require("../../../src/survival/helpers/petActions");
@@ -166,11 +167,13 @@ module.exports = {
         footerText: ui.getFooter("survival"),
       });
 
-      const reply = await interaction.reply({
-        ...payload,
-        files,
-        fetchReply: true,
-      });
+      const reply = await (interaction.deferred || interaction.replied
+        ? interaction.editReply({ ...payload, files })
+        : interaction.reply({
+            ...payload,
+            files,
+            fetchReply: true,
+          }));
 
       // Interactive button collector (2 menit)
       const collector = reply.createMessageComponentCollector({
@@ -318,15 +321,19 @@ module.exports = {
       );
 
       if (!result.success) {
-        return interaction.reply({
+        const errPayload = {
           ...buildErrorContainerV2({
             title: "Tidak Ada Boss Aktif",
             description:
               "Saat ini belum ada World Boss yang muncul. Tunggu jadwal raid hari Minggu pukul 15:00 WIB!",
+            buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
             footerText: ui.getFooter("survival"),
           }),
           flags: MessageFlags.Ephemeral,
-        });
+        };
+        return interaction.deferred || interaction.replied
+          ? interaction.followUp(errPayload)
+          : interaction.reply(errPayload);
       }
 
       const desc = [
@@ -350,23 +357,30 @@ module.exports = {
           ? `${ui.getEmoji("trophy") || "🏆"} World Boss Telah Kalah!`
           : `${ui.getEmoji("battle") || "⚔️"} Aksi Raid Berhasil!`,
         description: desc.join("\n"),
+        buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.reply(payload);
+      return interaction.deferred || interaction.replied
+        ? interaction.editReply(payload)
+        : interaction.reply(payload);
     }
 
     if (action === "leaderboard") {
       const boss = await worldBossEngine.getActiveBoss();
       if (!boss) {
-        return interaction.reply({
+        const errPayload = {
           ...buildErrorContainerV2({
             title: "Tidak Ada Data",
             description: "Belum ada World Boss yang sedang aktif.",
+            buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
             footerText: ui.getFooter("survival"),
           }),
           flags: MessageFlags.Ephemeral,
-        });
+        };
+        return interaction.deferred || interaction.replied
+          ? interaction.followUp(errPayload)
+          : interaction.reply(errPayload);
       }
 
       const leaderboard = Object.values(boss.damageLeaderboard || {}).sort(
@@ -393,10 +407,13 @@ module.exports = {
           lines.length > 0
             ? lines.join("\n")
             : "Belum ada pemain yang menyerang boss ini!",
+        buttonsRow: [survivalUI.buildSurvivalActionRow("combat", userId)],
         footerText: ui.getFooter("survival"),
       });
 
-      return interaction.reply(payload);
+      return interaction.deferred || interaction.replied
+        ? interaction.editReply(payload)
+        : interaction.reply(payload);
     }
   },
 };

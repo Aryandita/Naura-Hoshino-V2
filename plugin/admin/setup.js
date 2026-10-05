@@ -230,16 +230,14 @@ async function handleDashboard(interaction, { currentSettings }) {
       ]),
   );
 
-  const payload = {
-    ...buildContainerV2({
-      accentColorHex: ui.getColor("primary"),
-      authorName: "Master Control Governance",
-      title: `${ui.getEmoji("settings") || "⚙️"} Dashboard Pengaturan Server`,
-      description: dashboardDesc,
-      footerText: ui.getFooter("core"),
-    }),
-    components: [row],
-  };
+  const payload = buildContainerV2({
+    accentColorHex: ui.getColor("primary"),
+    authorName: "Master Control Governance",
+    title: `${ui.getEmoji("settings") || "⚙️"} Dashboard Pengaturan Server`,
+    description: dashboardDesc,
+    buttonsRow: [row],
+    footerText: ui.getFooter("core"),
+  });
 
   const msg = await interaction.editReply(payload);
 
@@ -752,16 +750,14 @@ async function handleWizard(interaction) {
       .setEmoji(ui.parseEmoji(ui.getEmoji("music_note")) || { name: "☕" }),
   );
 
-  const payload = {
-    ...buildContainerV2({
-      accentColorHex: "#38BDF8",
-      authorName: "Naura Onboarding Wizard",
-      title: `${ui.getEmoji("magic_wand") || "🪄"} Setup Server Instan 1-Klik`,
-      description: desc,
-      footerText: ui.getFooter("core"),
-    }),
-    components: [btnRow],
-  };
+  const payload = buildContainerV2({
+    accentColorHex: "#38BDF8",
+    authorName: "Naura Onboarding Wizard",
+    title: `${ui.getEmoji("magic_wand") || "🪄"} Setup Server Instan 1-Klik`,
+    description: desc,
+    buttonsRow: [btnRow],
+    footerText: ui.getFooter("core"),
+  });
 
   const msg =
     interaction.deferred || interaction.replied
@@ -910,19 +906,17 @@ async function handleDiagnostics(interaction) {
     );
   }
 
-  const payload = {
-    ...buildContainerV2({
-      accentColorHex: isOwner ? "#FFD700" : "#38BDF8",
-      authorName: isOwner
-        ? "Master Diagnostics (Owner Mode)"
-        : "Server Diagnostics",
-      title: `${ui.getEmoji("stats") || "📊"} Status & Pemeriksaan Mandiri`,
-      description: desc,
-      expression: "info",
-      footerText: ui.getFooter("core"),
-    }),
-    components: [btnRow],
-  };
+  const payload = buildContainerV2({
+    accentColorHex: isOwner ? "#FFD700" : "#38BDF8",
+    authorName: isOwner
+      ? "Master Diagnostics (Owner Mode)"
+      : "Server Diagnostics",
+    title: `${ui.getEmoji("stats") || "📊"} Status & Pemeriksaan Mandiri`,
+    description: desc,
+    expression: "info",
+    buttonsRow: [btnRow],
+    footerText: ui.getFooter("core"),
+  });
 
   const msg =
     interaction.deferred || interaction.replied

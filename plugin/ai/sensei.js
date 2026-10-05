@@ -83,12 +83,10 @@ module.exports = {
       title: `🎓 Naura Sensei, ${senseiResult.topic}`,
       description: senseiResult.reply,
       expression: "smile",
+      buttonsRow: [row],
       footerText: ui.getFooter("core"),
     });
 
-    return interaction.editReply({
-      ...payload,
-      components: [...payload.components, row],
-    });
+    return interaction.editReply(payload);
   },
 };
