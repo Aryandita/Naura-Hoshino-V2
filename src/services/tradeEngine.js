@@ -460,7 +460,8 @@ class TradeEngine {
       const port = env.DASHBOARD_PORT || 3000;
       await axios
         .post(`http://127.0.0.1:${port}/api/caravan/ambush-alert`, alertData, {
-          timeout: 1500,
+          timeout: 1000,
+          signal: AbortSignal.timeout(1000),
         })
         .catch(() => {});
     } catch (_) {}

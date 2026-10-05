@@ -419,13 +419,29 @@ module.exports = {
           );
         }
 
+        const rows = [];
+        if (row.components.length > 0) {
+          rows.push(row);
+        }
+        if (isBotOwner && env.OWNER_IDS && env.OWNER_IDS.includes(interaction.user.id)) {
+          rows.push(
+            new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setCustomId("owner_profile_panel")
+                .setLabel("👑 Panel Command Owner")
+                .setStyle(ButtonStyle.Danger)
+                .setEmoji("🔒"),
+            ),
+          );
+        }
+
         const payload = buildContainerV2({
           accentColorHex: isBotOwner ? "#38BDF8" : "#FBBF24",
           authorName: "Naura VIP Identity",
           title: `Kartu Profil Eksklusif: ${targetUser.username}`,
           iconURL: targetUser.displayAvatarURL(),
           description: isBotOwner
-            ? "Status Keanggotaan: **Bot Developer & Architect**"
+            ? "Status Keanggotaan: **Bot Developer & Architect**\n-# 👑 *Gunakan tombol di bawah untuk membuka direktori perintah khusus Owner.*"
             : "Status Keanggotaan: **VIP Patron Member**",
           fields: [
             {
@@ -445,7 +461,7 @@ module.exports = {
             },
           ],
           files: [attachment],
-          buttonsRow: row.components.length > 0 ? row : null,
+          buttonsRow: rows.length > 0 ? rows : null,
           footerText: ui.getFooter("utility"),
         });
 
@@ -485,6 +501,21 @@ module.exports = {
         );
 
       const hasSocial = row.components.length > 0;
+      const rows = [];
+      if (hasSocial) {
+        rows.push(row);
+      }
+      if (isBotOwner && env.OWNER_IDS && env.OWNER_IDS.includes(interaction.user.id)) {
+        rows.push(
+          new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setCustomId("owner_profile_panel")
+              .setLabel("👑 Panel Command Owner")
+              .setStyle(ButtonStyle.Danger)
+              .setEmoji("🔒"),
+          ),
+        );
+      }
 
       const payload = buildContainerV2({
         accentColorHex: ui.getColor("primary"),
@@ -513,7 +544,7 @@ module.exports = {
             inline: false,
           },
         ],
-        buttonsRow: hasSocial ? row : null,
+        buttonsRow: rows.length > 0 ? rows : null,
         footerText: ui.getFooter("utility"),
       });
 

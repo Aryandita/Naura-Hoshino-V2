@@ -134,19 +134,116 @@ module.exports = {
             .setDescription("Pemain yang hendak dipulihkan")
             .setRequired(true),
         ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("heal")
+        .setDescription("Pulihkan status vital pemain (Penuh atau Parsial)")
+        .addUserOption((opt) =>
+          opt
+            .setName("user")
+            .setDescription("Pemain yang hendak dipulihkan (kosongkan untuk diri sendiri)")
+            .setRequired(false),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("user_id")
+            .setDescription("Discord User ID jika target di luar server")
+            .setRequired(false),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("tipe")
+            .setDescription("Pilih status yang hendak dipulihkan")
+            .setRequired(false)
+            .addChoices(
+              { name: "Semua Status (Full Recovery 100%)", value: "all" },
+              { name: "Hanya Stamina", value: "stamina" },
+              { name: "Hanya Kesehatan (HP)", value: "hp" },
+              { name: "Hanya Nutrisi (Lapar/Hunger)", value: "hunger" },
+              { name: "Hanya Hidrasi (Haus/Thirst)", value: "thirst" },
+              { name: "Sembuhkan Penyakit", value: "sick" },
+            ),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName("jumlah")
+            .setDescription("Jumlah nilai pemulihan (misal 50, 100)")
+            .setRequired(false)
+            .setMinValue(1)
+            .setMaxValue(1000),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("premium")
+        .setDescription("Suntik atau cabut status VIP Booster Premium untuk member")
+        .addStringOption((opt) =>
+          opt
+            .setName("aksi")
+            .setDescription("Tindakan pemberian atau pencabutan status")
+            .setRequired(true)
+            .addChoices(
+              { name: "Berikan VIP Premium (Grant)", value: "grant" },
+              { name: "Cabut VIP Premium (Revoke)", value: "revoke" },
+            ),
+        )
+        .addUserOption((opt) =>
+          opt
+            .setName("user")
+            .setDescription("Member Discord yang hendak diberi status VIP")
+            .setRequired(false),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("user_id")
+            .setDescription("User ID Discord jika member di luar server")
+            .setRequired(false),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName("durasi_hari")
+            .setDescription("Masa aktif status premium dalam hari (default: 30 hari)")
+            .setRequired(false)
+            .setMinValue(1)
+            .setMaxValue(3650),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("panel")
+        .setDescription("Tampilkan ringkasan seluruh operasi khusus Owner & pemisahannya dengan moderasi guild"),
     ),
 
   async execute(interaction) {
-    // KEAMANAN & PRIVASI KETAT: Dilarang keras dieksekusi di server guild manapun
-    if (interaction.guildId || !isOwner(interaction.user.id)) {
+    // KEAMANAN & PRIVASI KETAT: Dilarang keras dieksekusi oleh selain Owner bot
+    if (!isOwner(interaction.user.id)) {
       return interaction.reply({
-        content: "⛔ Perintah ini sangat rahasia dan hanya dapat diakses melalui Direct Message (DM) bersama Owner bot.",
+        content: "⛔ Perintah ini sangat rahasia dan hanya dapat diakses oleh Owner bot.",
         flags: MessageFlags.Ephemeral,
       });
     }
 
     const sub = interaction.options.getSubcommand();
     const callerTag = interaction.user.globalName || interaction.user.username;
+
+    // Perintah operasional berisiko kebocoran log/token wajib dieksekusi di DM
+    if (interaction.guildId && !["heal", "repair", "panel", "premium"].includes(sub)) {
+      return interaction.reply({
+        content: "⛔ Perintah diagnostik dan manajemen kunci hanya dapat diakses melalui Direct Message (DM) bersama Owner bot demi keamanan.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+
+    // 0. PANEL DIREKTORI OWNER
+    if (sub === "panel") {
+      const { buildOwnerPanelPayload } = require("../../src/utils/ownerPanelHelper");
+      const payload = buildOwnerPanelPayload();
+      return interaction.reply({
+        ...payload,
+        flags: MessageFlags.Ephemeral,
+      });
+    }
 
     // 1. MAINTENANCE
     if (sub === "maintenance") {
@@ -398,6 +495,182 @@ module.exports = {
           ].join("\n"),
           footerText: ui.getFooter("core"),
         }),
+      });
+    }
+
+    // 9. HEAL (Fleksibel: Parsial / Penuh & Support User ID Luar Server)
+    if (sub === "heal") {
+      const targetUser = interaction.options.getUser("user");
+      const targetId = interaction.options.getString("user_id") || targetUser?.id || interaction.user.id;
+      const statType = (interaction.options.getString("tipe") || "all").toLowerCase().trim();
+      const rawAmount = interaction.options.getInteger("jumlah");
+
+      const cacheManager = require("../../src/managers/cacheManager");
+      const leveling = require("../../src/survival/engines/survivalLeveling");
+      const redisManager = require("../../src/managers/redisManager");
+
+      const survival = await cacheManager.getUserSurvival(targetId);
+      if (!survival) {
+        return interaction.reply({
+          content: `⚠️ Data survival untuk <@${targetId}> (\`${targetId}\`) tidak ditemukan. Pastikan sudah terdaftar di Naura Wilds.`,
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+
+      const maxHp = leveling.calculateMaxHp(
+        survival,
+        survival.rpg_state?.class_bonus?.hp || 0,
+      );
+
+      const patch = {};
+      let title = "";
+      let detailDesc = "";
+
+      if (statType === "stamina") {
+        const val = Number.isFinite(rawAmount) ? Math.max(0, Math.min(100, rawAmount)) : 100;
+        patch.stamina = val;
+        title = `⚡ Pemulihan Stamina: <@${targetId}>`;
+        detailDesc = `⚡ **Stamina:** \`${val}/100\``;
+      } else if (statType === "hp") {
+        const val = Number.isFinite(rawAmount) ? Math.max(1, Math.min(maxHp, rawAmount)) : maxHp;
+        patch.hp = val;
+        title = `❤️ Pemulihan Kesehatan (HP): <@${targetId}>`;
+        detailDesc = `❤️ **HP:** \`${val}/${maxHp}\``;
+      } else if (statType === "hunger" || statType === "lapar") {
+        const val = Number.isFinite(rawAmount) ? Math.max(0, Math.min(100, rawAmount)) : 100;
+        patch.hunger = val;
+        title = `🍖 Pemulihan Nutrisi: <@${targetId}>`;
+        detailDesc = `🍖 **Lapar:** \`${val}/100\``;
+      } else if (statType === "thirst" || statType === "haus") {
+        const val = Number.isFinite(rawAmount) ? Math.max(0, Math.min(100, rawAmount)) : 100;
+        patch.thirst = val;
+        title = `💧 Pemulihan Hidrasi: <@${targetId}>`;
+        detailDesc = `💧 **Haus:** \`${val}/100\``;
+      } else if (statType === "sick" || statType === "sembuh") {
+        patch.rpg_state = {
+          ...(survival.rpg_state || {}),
+          sick: false,
+        };
+        title = `🩺 Kesembuhan Medis: <@${targetId}>`;
+        detailDesc = `🩺 **Status Penyakit:** \`Sembuh Total\``;
+      } else {
+        // Default: 'all'
+        patch.hp = maxHp;
+        patch.hunger = 100;
+        patch.thirst = 100;
+        patch.stamina = 100;
+        patch.rpg_state = {
+          ...(survival.rpg_state || {}),
+          sick: false,
+        };
+        title = `💖 Pemulihan Vital Penuh: <@${targetId}>`;
+        detailDesc = [
+          `❤️ **HP:** \`${maxHp}/${maxHp}\``,
+          "🍖 **Lapar:** `100/100`",
+          "💧 **Haus:** `100/100`",
+          "⚡ **Stamina:** `100/100`",
+          "🩺 **Status Penyakit:** `Sembuh Total`",
+        ].join("\n");
+      }
+
+      await cacheManager.updateUserSurvival(targetId, patch);
+      await cacheManager.flushUser(targetId);
+
+      if (redisManager.isReady && redisManager.client) {
+        try {
+          await redisManager.client.del(`user:survival:${targetId}`);
+        } catch (_) {}
+      }
+
+      return interaction.reply({
+        ...buildContainerV2({
+          accentColorHex: "#10B981",
+          authorName: "Naura Survival Doctor",
+          title,
+          description: [
+            "Tindakan intervensi medis petualang berhasil dieksekusi:",
+            "",
+            `👤 **Target:** <@${targetId}> (\`${targetId}\`)`,
+            detailDesc,
+            `🕒 **Waktu:** <t:${Math.floor(Date.now() / 1000)}:T>`,
+            "",
+            "-# *Data tersinkronisasi instan ke PostgreSQL Supabase dan Redis Cache.*",
+          ].join("\n"),
+          footerText: ui.getFooter("survival"),
+        }),
+        flags: interaction.guildId ? MessageFlags.Ephemeral : undefined,
+      });
+    }
+
+    // 10. PREMIUM (Suntik / Cabut VIP Member)
+    if (sub === "premium") {
+      const action = interaction.options.getString("aksi") || "grant";
+      const targetUser = interaction.options.getUser("user");
+      const targetId = interaction.options.getString("user_id") || targetUser?.id || interaction.user.id;
+      const days = interaction.options.getInteger("durasi_hari") || 30;
+
+      const UserProfile = require("../../src/models/UserProfile");
+      const store = require("../../src/premium/premiumStore");
+      const { tierDisplayName } = require("../../src/premium/premiumTiers");
+      const cacheManager = require("../../src/managers/cacheManager");
+      const redisManager = require("../../src/managers/redisManager");
+
+      const [profile] = await UserProfile.findOrCreate({ where: { userId: targetId } });
+
+      if (action === "revoke") {
+        await store.revokePremium(targetId, profile);
+        await cacheManager.flushUser(targetId);
+        if (redisManager.isReady && redisManager.client) {
+          try {
+            await redisManager.client.del(`user:profile:${targetId}`);
+          } catch (_) {}
+        }
+
+        return interaction.reply({
+          ...buildContainerV2({
+            accentColorHex: "#EF4444",
+            authorName: "Naura VIP Desk",
+            title: `🚫 Status VIP Dicabut: <@${targetId}>`,
+            description: [
+              `Status VIP Booster Premium untuk pengguna <@${targetId}> (\`${targetId}\`) telah **berhasil dicabut**.`,
+              "",
+              `🕒 **Waktu:** <t:${Math.floor(Date.now() / 1000)}:T>`,
+            ].join("\n"),
+            footerText: ui.getFooter("core"),
+          }),
+          flags: interaction.guildId ? MessageFlags.Ephemeral : undefined,
+        });
+      }
+
+      // Grant
+      const newExpiry = await store.grantPremium(targetId, profile, days);
+      const tierKey = ui.getPremiumTier(days, true);
+      const displayName = tierDisplayName(tierKey, days);
+      await cacheManager.flushUser(targetId);
+
+      if (redisManager.isReady && redisManager.client) {
+        try {
+          await redisManager.client.del(`user:profile:${targetId}`);
+        } catch (_) {}
+      }
+
+      return interaction.reply({
+        ...buildContainerV2({
+          accentColorHex: "#FBBF24",
+          authorName: "Naura VIP Desk",
+          title: "🌟 Status VIP Premium Berhasil Ditanamkan",
+          description: [
+            `Berhasil mengaktifkan status **${displayName}** untuk <@${targetId}> (\`${targetId}\`)!`,
+            "",
+            `📅 **Durasi:** \`${days} Hari\``,
+            `⏳ **Masa Berlaku Hingga:** <t:${Math.floor(newExpiry.getTime() / 1000)}:F>`,
+            `👤 **Diberikan Oleh:** **${callerTag}**`,
+            "",
+            "-# *Benefit premium langsung aktif seketika tanpa perlu restart bot.*",
+          ].join("\n"),
+          footerText: ui.getFooter("core"),
+        }),
+        flags: interaction.guildId ? MessageFlags.Ephemeral : undefined,
       });
     }
   },

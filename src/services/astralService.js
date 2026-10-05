@@ -217,11 +217,16 @@ class AstralService {
 
           const prompt = `Kamu adalah pengamat cuaca galaksi Naura Hoshino. Analisis suasana/vibe obrolan server Discord ini dari cuplikan teks berikut:\n\n${sampleSnippet}\n\nTentukan cuaca kosmik mana yang paling cocok dari 6 opsi berikut:\n- aurora_fortune (obrolan ramai, antusias, beruntung)\n- cosmic_storm (kompetitif, bermain game, debat intens)\n- starlit_serenity (tenang, santai, malam hari, rileks)\n- eclipse_shadows (iseng, bercanda gelap, misterius)\n- sakura_breeze (hangat, saling menyemangati, ramah)\n- celestial_harmony (seimbang, kolaboratif, diskusi produktif)\n\nJawab HANYA dalam format JSON valid:\n{"weatherId":"aurora_fortune|cosmic_storm|starlit_serenity|eclipse_shadows|sakura_breeze|celestial_harmony","sentimentScore":85,"auraReason":"deskripsi singkat suasana server 1-2 kalimat"}`;
 
-          const response = await genAI.models.generateContent({
-            model: ai._defaultModel || "gemini-2.5-flash",
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            config: { maxOutputTokens: 300, temperature: 0.5 },
-          });
+          const response = await Promise.race([
+            genAI.models.generateContent({
+              model: ai._defaultModel || "gemini-2.5-flash",
+              contents: [{ role: "user", parts: [{ text: prompt }] }],
+              config: { maxOutputTokens: 300, temperature: 0.5 },
+            }),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("Gemini timeout")), 3000),
+            ),
+          ]);
 
           const rawText = response?.text;
           const resolved = typeof rawText === "function" ? rawText() : rawText;

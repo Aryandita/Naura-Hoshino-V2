@@ -164,6 +164,8 @@
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; margin-top:16px;">
           <button class="quick-action-btn" id="btn-backup" onclick="triggerManualBackup()"><i class="fa-solid fa-cloud-arrow-up"></i> Jalankan Auto-Backup DB (#30)</button>
           <button class="quick-action-btn" id="btn-flush" onclick="triggerFlushCache()"><i class="fa-solid fa-bolt"></i> Paksa Flush Cache (#32)</button>
+          <button class="quick-action-btn" id="btn-heal" onclick="triggerHealPlayer()"><i class="fa-solid fa-heart-pulse"></i> Pulihkan Vitals Pemain (Heal)</button>
+          <button class="quick-action-btn" id="btn-grant-premium" onclick="triggerGrantPremium()"><i class="fa-solid fa-crown" style="color:#fbbf24;"></i> Suntik VIP Premium Member</button>
           <button class="quick-action-btn" onclick="location.href='/topology'"><i class="fa-solid fa-network-wired"></i> Buka Topology Inspector</button>
         </div>
       </section>
@@ -244,6 +246,62 @@
           }
         } catch (err) {
           alert('Koneksi gagal saat auto-backup: ' + err.message);
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      }
+
+      async function triggerHealPlayer() {
+        const targetId = prompt('Masukkan Discord User ID yang ingin dipulihkan status vitalnya:');
+        if (!targetId || !targetId.trim()) return;
+
+        const statChoice = prompt('Pilih jenis pemulihan: all, stamina, hp, hunger, thirst, sick (Kosongkan untuk all):', 'all');
+        const selectedType = (statChoice || 'all').trim().toLowerCase();
+
+        const btn = document.getElementById('btn-heal');
+        if (btn) btn.disabled = true;
+        try {
+          const res = await fetch('/api/owner/heal_user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ targetId: targetId.trim(), type: selectedType }),
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            alert(data.message || 'Status vital pemain berhasil dipulihkan!');
+          } else {
+            alert('Gagal memulihkan pemain: ' + (data.error || 'Server error'));
+          }
+        } catch (err) {
+          alert('Koneksi gagal saat memulihkan pemain: ' + err.message);
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      }
+
+      async function triggerGrantPremium() {
+        const targetId = prompt('Masukkan Discord User ID yang hendak diberi status VIP Premium:');
+        if (!targetId || !targetId.trim()) return;
+
+        const daysInput = prompt('Masukkan durasi masa aktif (dalam hari):', '30');
+        const daysNum = Math.max(1, parseInt(daysInput, 10) || 30);
+
+        const btn = document.getElementById('btn-grant-premium');
+        if (btn) btn.disabled = true;
+        try {
+          const res = await fetch('/api/owner/premium/grant', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: targetId.trim(), days: daysNum }),
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            alert(data.message || `Berhasil menanamkan status VIP Premium (${daysNum} hari)!`);
+          } else {
+            alert('Gagal memberikan status VIP: ' + (data.error || 'Server error'));
+          }
+        } catch (err) {
+          alert('Koneksi gagal saat menanamkan status VIP: ' + err.message);
         } finally {
           if (btn) btn.disabled = false;
         }

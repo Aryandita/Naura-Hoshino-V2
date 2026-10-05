@@ -100,6 +100,101 @@ module.exports = (client) => {
     }
   });
 
+  // --- Pulihkan status vital pengguna (Full atau Parsial) ---
+  router.post("/api/owner/heal_user", async (req, res) => {
+    const { targetId, type = "all", amount } = req.body || {};
+    const userId = targetId || req.user?.id;
+    if (!userId) {
+      return res.status(400).json({ error: "Target User ID wajib diisi." });
+    }
+
+    try {
+      const cacheManager = require("../../src/managers/cacheManager");
+      const leveling = require("../../src/survival/engines/survivalLeveling");
+      const redisManager = require("../../src/managers/redisManager");
+
+      const survival = await cacheManager.getUserSurvival(userId);
+      if (!survival) {
+        return res.status(404).json({
+          error: `Data survival untuk user ID ${userId} tidak ditemukan.`,
+        });
+      }
+
+      const maxHp = leveling.calculateMaxHp(
+        survival,
+        survival.rpg_state?.class_bonus?.hp || 0,
+      );
+
+      const statType = String(type).toLowerCase().trim();
+      const numAmount = parseInt(amount, 10);
+      const patch = {};
+      let msg = "";
+
+      if (statType === "stamina") {
+        const val = Number.isFinite(numAmount) ? Math.max(0, Math.min(100, numAmount)) : 100;
+        patch.stamina = val;
+        msg = `Stamina untuk user ${userId} berhasil dipulihkan menjadi ${val}/100.`;
+      } else if (statType === "hp") {
+        const val = Number.isFinite(numAmount) ? Math.max(1, Math.min(maxHp, numAmount)) : maxHp;
+        patch.hp = val;
+        msg = `Kesehatan (HP) untuk user ${userId} berhasil dipulihkan menjadi ${val}/${maxHp}.`;
+      } else if (statType === "hunger" || statType === "lapar") {
+        const val = Number.isFinite(numAmount) ? Math.max(0, Math.min(100, numAmount)) : 100;
+        patch.hunger = val;
+        msg = `Tingkat kenyang (Lapar) untuk user ${userId} berhasil dipulihkan menjadi ${val}/100.`;
+      } else if (statType === "thirst" || statType === "haus") {
+        const val = Number.isFinite(numAmount) ? Math.max(0, Math.min(100, numAmount)) : 100;
+        patch.thirst = val;
+        msg = `Hidrasi (Haus) untuk user ${userId} berhasil dipulihkan menjadi ${val}/100.`;
+      } else if (statType === "sick" || statType === "sembuh") {
+        patch.rpg_state = {
+          ...(survival.rpg_state || {}),
+          sick: false,
+        };
+        msg = `Penyakit untuk user ${userId} berhasil disembuhkan total.`;
+      } else {
+        // Default: 'all'
+        patch.hp = maxHp;
+        patch.hunger = 100;
+        patch.thirst = 100;
+        patch.stamina = 100;
+        patch.rpg_state = {
+          ...(survival.rpg_state || {}),
+          sick: false,
+        };
+        msg = `Vitals untuk user ${userId} berhasil dipulihkan penuh (HP: ${maxHp}/${maxHp}, Stamina: 100, Lapar: 100, Haus: 100, Bebas Penyakit).`;
+      }
+
+      await cacheManager.updateUserSurvival(userId, patch);
+      await cacheManager.flushUser(userId);
+
+      if (redisManager.isReady && redisManager.client) {
+        try {
+          await redisManager.client.del(`user:survival:${userId}`);
+        } catch (_) {}
+      }
+
+      const refreshed = await cacheManager.getUserSurvival(userId);
+
+      res.json({
+        success: true,
+        message: msg,
+        data: {
+          userId,
+          hp: refreshed.hp,
+          maxHp,
+          hunger: refreshed.hunger,
+          thirst: refreshed.thirst,
+          stamina: refreshed.stamina,
+          sick: refreshed.rpg_state?.sick,
+        },
+      });
+    } catch (e) {
+      logger.error("[OWNER HEAL USER] Error:", e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   // --- Eksekusi JS langsung (dimatikan secara bawaan) ---
   router.post("/api/owner/eval", async (req, res) => {
     if (!EVAL_ENABLED) {

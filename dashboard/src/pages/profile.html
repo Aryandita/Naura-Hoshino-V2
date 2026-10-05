@@ -220,6 +220,81 @@
       }
 
       /* ══════════════════════════════════════════════
+         OWNER COMMAND CENTER PANEL
+      ══════════════════════════════════════════════ */
+      .owner-command-center {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(18, 24, 38, 0.95) 50%, rgba(245, 158, 11, 0.08) 100%);
+        border: 1px solid rgba(239, 68, 68, 0.35);
+        border-radius: var(--r-2xl, 20px);
+        padding: 24px;
+        box-shadow: 0 16px 36px -10px rgba(239, 68, 68, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+      .owner-center-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+      }
+      .owner-badge-tag {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        font-weight: 700;
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        padding: 4px 10px;
+        border-radius: 9999px;
+      }
+      .owner-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+        gap: 16px;
+      }
+      .owner-cmd-card {
+        background: rgba(26, 34, 52, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: var(--r-lg, 14px);
+        padding: 18px;
+        transition: all 0.2s ease;
+      }
+      .owner-cmd-card:hover {
+        border-color: rgba(239, 68, 68, 0.3);
+        transform: translateY(-2px);
+      }
+      .owner-cmd-item {
+        margin-bottom: 12px;
+      }
+      .owner-cmd-item:last-child {
+        margin-bottom: 0;
+      }
+      .owner-cmd-name {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12.5px;
+        font-weight: 700;
+        color: #fca5a5;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .owner-cmd-desc {
+        font-size: 12px;
+        color: #9ca3af;
+        margin-top: 3px;
+        line-height: 1.4;
+      }
+      .owner-role-compare {
+        grid-column: 1 / -1;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        border-radius: var(--r-lg, 14px);
+        padding: 18px;
+      }
+
+      /* ══════════════════════════════════════════════
          BENTO GRID LAYOUT
       ══════════════════════════════════════════════ */
       .profile-bento-grid {
@@ -670,6 +745,143 @@
       </section>
 
       <!-- ══════════════════════════════════════════════
+           1.5. OWNER COMMAND CENTER PANEL (KHUSUS OWNER)
+      ══════════════════════════════════════════════ -->
+      <section class="owner-command-center" id="ownerCommandCenterPanel" style="display: none; margin-bottom: 24px;">
+        <div class="owner-center-header">
+          <div>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <span style="font-size:24px;">👑</span>
+              <h2 style="margin:0; font-family:'Orbitron',sans-serif; font-size:20px; color:#fca5a5;">
+                Panel Operasi Khusus Owner (System Architect)
+              </h2>
+              <span class="owner-badge-tag"><i class="fa-solid fa-lock"></i> Owner Only</span>
+            </div>
+            <p style="margin:6px 0 0; color:#cbd5e1; font-size:13px;">
+              Direktori seluruh perintah eksklusif Owner bot. Dipisahkan secara khusus dari command moderasi admin guild biasa.
+            </p>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-sm" id="btnOwnerGrantQuick" onclick="triggerProfileOwnerGrant()" style="border:1px solid #fbbf24; color:#fbbf24; background:rgba(251, 191, 36, 0.1);">
+              <i class="fa-solid fa-crown"></i> Suntik VIP Member
+            </button>
+            <button type="button" class="btn btn-sm" id="btnOwnerHealQuick" onclick="triggerProfileOwnerHeal('all')" style="border:1px solid #34d399; color:#34d399; background:rgba(52, 211, 153, 0.1);">
+              <i class="fa-solid fa-heart-pulse"></i> Pulihkan Vitalku (100%)
+            </button>
+            <a href="/admin" class="btn btn-sm" style="background:#ef4444; color:#fff; text-decoration:none; display:inline-flex; align-items:center; gap:6px; padding:0 12px; border-radius:var(--r-md, 8px);">
+              <i class="fa-solid fa-gauge-high"></i> Buka God Mode Panel
+            </a>
+          </div>
+        </div>
+
+        <div class="owner-grid">
+          <!-- Kolom 1: Mesin & Infrastruktur -->
+          <div class="owner-cmd-card">
+            <h3 style="margin:0 0 14px; font-size:14px; color:#38bdf8; display:flex; align-items:center; gap:8px;">
+              <i class="fa-solid fa-server"></i> Mesin & Infrastruktur Bot
+            </h3>
+            <div class="owner-cmd-item">
+              <div class="owner-cmd-name"><code>/owner maintenance [mode] [alasan]</code></div>
+              <div class="owner-cmd-desc">Nyalakan/matikan pemeliharaan darurat global bot dengan bypass instan untuk Owner.</div>
+            </div>
+            <div class="owner-cmd-item">
+              <div class="owner-cmd-name"><code>/owner killswitch [modul] [status]</code></div>
+              <div class="owner-cmd-desc">Matikan atau hidupkan modul perintah spesifik tanpa perlu merestart proses bot.</div>
+            </div>
+            <div class="owner-cmd-item">
+              <div class="owner-cmd-name"><code>/owner doctor</code></div>
+              <div class="owner-cmd-desc">Diagnostik kesehatan 6 pilar (Postgres, Mongo, Redis, Lavalink, AI, Canvas).</div>
+            </div>
+            <div class="owner-cmd-item">
+              <div class="owner-cmd-name"><code>/owner logs [limit]</code></div>
+              <div class="owner-cmd-desc">Kirim rekaman log galat terbaru bot langsung ke DM Discord pribadi.</div>
+            </div>
+            <div class="owner-cmd-item">
+              <div class="owner-cmd-name"><code>n!deploy [global]</code></div>
+              <div class="owner-cmd-desc">Registrasi & sinkronisasi manual daftar slash command ke gateway Discord API.</div>
+            </div>
+          </div>
+
+          <!-- Kolom 2: Pemulihan Darurat Pemain & VIP -->
+          <div class="owner-cmd-card">
+            <h3 style="margin:0 0 14px; font-size:14px; color:#34d399; display:flex; align-items:center; gap:8px;">
+              <i class="fa-solid fa-kit-medical"></i> Pemulihan Darurat & Status
+            </h3>
+            <div class="owner-cmd-item">
+              <div class="owner-cmd-name"><code>/owner heal [user] [user_id] [tipe] [jumlah]</code></div>
+              <div class="owner-cmd-desc">Pulihkan status vital (Penuh, Stamina saja, HP, Lapar, Haus, Sembuh Sakit) via Discord tag atau User ID.</div>
+            </div>
+            <div class="owner-cmd-item">
+              <div class="owner-cmd-name"><code>/owner premium [aksi] [user] [user_id] [durasi]</code></div>
+              <div class="owner-cmd-desc">Tanamkan atau cabut hak akses VIP Booster Premium pemain dengan masa aktif fleksibel.</div>
+            </div>
+            <div class="owner-cmd-item">
+              <div class="owner-cmd-name"><code>/owner repair [user]</code></div>
+              <div class="owner-cmd-desc">Lepaskan status deadlock transaksi, lock freeze, atau pending write pemain yang macet.</div>
+            </div>
+            <div style="margin-top:16px; padding:12px; background:rgba(52, 211, 153, 0.1); border:1px solid rgba(52, 211, 153, 0.25); border-radius:8px;">
+              <div style="font-size:11px; color:#86efac; font-weight:600; margin-bottom:8px;">AKSI CEPAT PEMULIHAN & VIP</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px;">
+                <button type="button" onclick="triggerProfileOwnerHeal('stamina')" class="btn btn-sm" style="background:rgba(56, 189, 248, 0.2); border:1px solid rgba(56, 189, 248, 0.4); color:#7dd3fc; font-size:11px; padding:6px; cursor:pointer; border-radius:6px;">
+                  <i class="fa-solid fa-bolt"></i> Stamina Saja
+                </button>
+                <button type="button" onclick="triggerProfileOwnerHeal('hp')" class="btn btn-sm" style="background:rgba(239, 68, 68, 0.2); border:1px solid rgba(239, 68, 68, 0.4); color:#fca5a5; font-size:11px; padding:6px; cursor:pointer; border-radius:6px;">
+                  <i class="fa-solid fa-heart"></i> HP Saja
+                </button>
+              </div>
+              <button type="button" onclick="triggerProfileOwnerHeal('all')" class="btn btn-sm" style="width:100%; background:#10b981; color:#fff; font-size:12px; border:none; padding:8px; cursor:pointer; border-radius:6px; margin-bottom:6px;">
+                <i class="fa-solid fa-sparkles"></i> Pulihkan Seluruh Vitalku (100%)
+              </button>
+              <button type="button" onclick="triggerProfileOwnerOtherHeal()" class="btn btn-sm" style="width:100%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.15); color:#cbd5e1; font-size:11px; padding:6px; cursor:pointer; border-radius:6px;">
+                <i class="fa-solid fa-user-gear"></i> Pulihkan Member Lain (Input ID)
+              </button>
+            </div>
+          </div>
+
+          <!-- Kolom 3: Dev Key & Sandbox -->
+          <div class="owner-cmd-card">
+            <h3 style="margin:0 0 14px; font-size:14px; color:#c084fc; display:flex; align-items:center; gap:8px;">
+              <i class="fa-solid fa-key"></i> Kunci Akses Dev (/run)
+            </h3>
+            <div class="owner-cmd-item">
+              <div class="owner-cmd-name"><code>/owner keygen [target] [kuota] [jam]</code></div>
+              <div class="owner-cmd-desc">Terbitkan Dev Access Key bertenggat waktu untuk sandbox eksekusi JavaScript.</div>
+            </div>
+            <div class="owner-cmd-item">
+              <div class="owner-cmd-name"><code>/owner keylist</code></div>
+              <div class="owner-cmd-desc">Periksa seluruh dev key yang sedang aktif beserta sisa kuota eksekusinya.</div>
+            </div>
+            <div class="owner-cmd-item">
+              <div class="owner-cmd-name"><code>/owner keyrevoke [key]</code></div>
+              <div class="owner-cmd-desc">Cabut dan hanguskan dev key secara instan bila terindikasi penyalahgunaan.</div>
+            </div>
+          </div>
+
+          <!-- Kolom 4: Pemisahan Hak Akses -->
+          <div class="owner-role-compare">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+              <i class="fa-solid fa-scale-balanced" style="color:#38bdf8; font-size:16px;"></i>
+              <h4 style="margin:0; font-size:14px; color:#ffffff;">Pemisahan Wewenang: Owner Bot vs Moderasi Admin Guild</h4>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px; font-size:12px; color:#cbd5e1;">
+              <div style="background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.2); padding:10px 14px; border-radius:8px;">
+                <strong style="color:#fca5a5;"><i class="fa-solid fa-crown"></i> Owner Bot (Kamu):</strong>
+                <p style="margin:4px 0 0; line-height:1.4;">
+                  Memegang wewenang penuh atas arsitektur global, database PostgreSQL & MongoDB, cluster audio Lavalink, killswitch, deploy global, dan recovery sistem.
+                </p>
+              </div>
+              <div style="background:rgba(56, 189, 248, 0.08); border:1px solid rgba(56, 189, 248, 0.2); padding:10px 14px; border-radius:8px;">
+                <strong style="color:#7dd3fc;"><i class="fa-solid fa-users-gear"></i> Admin Guild (Staff Komunitas):</strong>
+                <p style="margin:4px 0 0; line-height:1.4;">
+                  Mengoperasikan <code>/setup</code>, <code>/moderation</code>, <code>/warn</code>, <code>/lockdown</code>, <code>/slowmode</code>, <code>/voicemod</code>, <code>/shield</code>. Hanya berlaku lokal di server guild masing-masing tanpa akses kernel.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════
            2. BENTO OVERVIEW: KEUANGAN, STATS, VITALS
       ══════════════════════════════════════════════ -->
       <section class="profile-bento-grid">
@@ -989,7 +1201,7 @@
             }
           });
 
-          // Badges
+          // Badges & Owner Panel Reveal
           const badgesRow = document.getElementById('pfBadgesRow');
           if (badgesRow) {
             let badgesHtml = '';
@@ -1002,7 +1214,90 @@
             badgesHtml += '<span class="profile-badge-pill badge-adventurer"><i class="fa-solid fa-compass"></i> Petualang Naura Wilds</span>';
             badgesRow.innerHTML = badgesHtml;
           }
+
+          if (status.isOwner) {
+            const panel = document.getElementById('ownerCommandCenterPanel');
+            if (panel) panel.style.display = 'block';
+
+            if (!document.getElementById('pfOwnerQuickBtn')) {
+              const quickActions = document.getElementById('pfQuickActions');
+              if (quickActions) {
+                const ownerBtn = document.createElement('a');
+                ownerBtn.id = 'pfOwnerQuickBtn';
+                ownerBtn.href = '#ownerCommandCenterPanel';
+                ownerBtn.className = 'btn btn-sm';
+                ownerBtn.style.cssText = 'min-height:44px; padding:0 16px; background:rgba(239, 68, 68, 0.2); border:1px solid rgba(239, 68, 68, 0.5); color:#fca5a5; display:inline-flex; align-items:center; gap:8px; text-decoration:none; border-radius:var(--r-md, 10px); font-weight:600; font-size:13px;';
+                ownerBtn.innerHTML = '<i class="fa-solid fa-crown" style="color:#ef4444;"></i> Panel Owner';
+                quickActions.prepend(ownerBtn);
+              }
+            }
+          }
         }
+
+        window.triggerProfileOwnerHeal = async function (statType = 'all', targetUserId = null) {
+          const btn = document.getElementById('btnOwnerHealQuick');
+          if (btn) btn.disabled = true;
+          try {
+            const currentUserId = targetUserId || document.getElementById('pfUserId')?.textContent?.trim();
+            const body = { type: statType };
+            if (currentUserId && currentUserId !== '-' && !currentUserId.startsWith('0000')) {
+              body.targetId = currentUserId;
+            }
+            const res = await fetch('/api/owner/heal_user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+              alert(data.message || 'Status vital petualang berhasil dipulihkan!');
+              await loadProfileData();
+            } else {
+              alert('Gagal memulihkan: ' + (data.error || 'Server error'));
+            }
+          } catch (err) {
+            alert('Koneksi gagal: ' + err.message);
+          } finally {
+            if (btn) btn.disabled = false;
+          }
+        };
+
+        window.triggerProfileOwnerOtherHeal = async function () {
+          const targetId = prompt('Masukkan Discord User ID member yang ingin dipulihkan:');
+          if (!targetId || !targetId.trim()) return;
+          const type = prompt('Pilih jenis pemulihan (all / stamina / hp / hunger / thirst / sick):', 'all');
+          if (!type) return;
+          await window.triggerProfileOwnerHeal(type.trim().toLowerCase(), targetId.trim());
+        };
+
+        window.triggerProfileOwnerGrant = async function () {
+          const targetId = prompt('Masukkan Discord User ID member yang akan diberikan status VIP Premium:');
+          if (!targetId || !targetId.trim()) return;
+          const daysStr = prompt('Berapa hari durasi status VIP Premium yang ingin diberikan? (1 - 365 hari):', '30');
+          if (!daysStr) return;
+          const days = parseInt(daysStr, 10);
+          if (isNaN(days) || days <= 0) {
+            alert('Durasi hari tidak valid!');
+            return;
+          }
+
+          try {
+            const res = await fetch('/api/owner/premium/grant', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: targetId.trim(), days }),
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+              alert('Sukses menanamkan VIP Premium ke user ' + targetId.trim() + ' selama ' + days + ' hari!');
+              await loadProfileData();
+            } else {
+              alert('Gagal memberikan VIP Premium: ' + (data.error || 'Server error'));
+            }
+          } catch (err) {
+            alert('Koneksi gagal: ' + err.message);
+          }
+        };
 
         function renderEconomy(eco, status) {
           eco = eco || {};
