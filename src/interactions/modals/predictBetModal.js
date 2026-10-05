@@ -1,6 +1,5 @@
 "use strict";
 
-const { MessageFlags } = require("discord.js");
 const predictionEngine = require("../../services/predictionEngine");
 const ui = require("../../config/ui");
 const {
@@ -13,7 +12,7 @@ module.exports = [
     prefix: "pred_modal_bet_",
     label: "predict-bet-modal-submit",
     defer: "reply",
-    ephemeral: true,
+    isEphemeral: true,
     async handler(interaction) {
       const parts = interaction.customId
         .replace("pred_modal_bet_", "")

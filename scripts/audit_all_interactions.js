@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { list, resolve } = require("../src/interactions/registry");
+const { resolve } = require("../src/interactions/registry");
 
 console.log("=== AUDIT INTERAKSI TOMBOL, DROPDOWN & MODAL NAURA HOSHINO V2 ===");
 
@@ -22,7 +22,6 @@ function walkDir(dir, filter = (f) => f.endsWith(".js")) {
 }
 
 const pluginFiles = walkDir(path.resolve(__dirname, "../plugin"));
-const srcFiles = walkDir(path.resolve(__dirname, "../src"));
 
 // Regex untuk menangkap deklarasi setCustomId dan custom_id
 const idRegex = /setCustomId\s*\(\s*[`"']([^`"']+)`|custom_id\s*:\s*[`"']([^`"']+)`/g;

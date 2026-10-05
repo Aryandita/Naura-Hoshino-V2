@@ -12,6 +12,7 @@ const {
   buildErrorContainerV2,
   buildLoadingContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
+const { DomainError } = require("../../../src/errors/DomainError");
 
 const MAX_SIZE_BYTES = 25 * 1024 * 1024;
 const CHUNK_SIZE = 3900;
@@ -136,7 +137,9 @@ module.exports = async function transcribe(interaction) {
 
   try {
     const whisper = await getWhisperPipeline();
-    if (!whisper) throw new Error("Model Whisper gagal dimuat.");
+    if (!whisper) {
+      throw new DomainError("MODEL_LOAD_FAILED", "Model Whisper gagal dimuat ke memori.");
+    }
 
     const tempDir = os.tmpdir();
     const stamp = Date.now();

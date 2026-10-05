@@ -98,7 +98,7 @@ module.exports = {
 
     try {
       const UserPortfolio = require("../../src/models/UserPortfolio");
-      const UserProfile = require("../../src/models/UserProfile");
+      const cacheManager = require("../../src/managers/cacheManager");
       const dashboardBase = getDashboardBase();
 
       // ── VIEW ─────────────────────────────────────────────────────
@@ -226,7 +226,7 @@ module.exports = {
         const tema = interaction.options.getString("nama");
 
         if (PREMIUM_THEMES.includes(tema)) {
-          const profile = await UserProfile.findOne({ where: { userId } });
+          const profile = await cacheManager.getUserProfile(userId);
           if (!profile || !profile.isPremium) {
             return interaction.reply({
               flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,

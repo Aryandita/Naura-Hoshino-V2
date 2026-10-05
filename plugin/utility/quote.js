@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require("discord.js");
 const ui = require("../../src/config/ui");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
+const { DomainError } = require("../../src/errors/DomainError");
 
 module.exports = {
   isSubcommand: true,
@@ -14,7 +15,11 @@ module.exports = {
     try {
       const response = await fetch("https://api.quotable.io/random");
       if (!response.ok) {
-        throw new Error("API down");
+        throw new DomainError(
+          "EXTERNAL_API_DOWN",
+          "Layanan penyedia kutipan sedang tidak tersedia.",
+          { status: response.status },
+        );
       }
       const data = await response.json();
 

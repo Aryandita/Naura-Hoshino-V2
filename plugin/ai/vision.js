@@ -6,6 +6,7 @@ const {
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
 const aiManager = require("../../src/managers/aiManager");
+const { DomainError } = require("../../src/errors/DomainError");
 
 module.exports = {
   isSubcommand: true,
@@ -59,7 +60,11 @@ module.exports = {
     try {
       const response = await fetch(attachment.url);
       if (!response.ok) {
-        throw new Error(`Gagal mengunduh berkas gambar (HTTP ${response.status}).`);
+        throw new DomainError(
+          "IMAGE_DOWNLOAD_FAILED",
+          `Gagal mengunduh berkas gambar (HTTP ${response.status}).`,
+          { status: response.status, url: attachment.url },
+        );
       }
 
       const arrayBuffer = await response.arrayBuffer();

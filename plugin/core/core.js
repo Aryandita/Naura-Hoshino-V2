@@ -23,7 +23,7 @@ const os = require("node:os");
 const path = require("node:path");
 const fs = require("node:fs");
 const { sequelize } = require("../../src/managers/dbManager");
-const GuildSettings = require("../../src/models/GuildSettings");
+const cacheManager = require("../../src/managers/cacheManager");
 const ui = require("../../src/config/ui");
 const env = require("../../src/config/env");
 const { BOT_VERSION } = require("../../src/config/version");
@@ -100,7 +100,7 @@ function createNavButtons() {
 // ==========================================
 async function resolveGuildLanguage(guildId) {
   if (!guildId) return locales.id;
-  const settings = await GuildSettings.findOne({ where: { guildId } });
+  const settings = await cacheManager.getGuildSettings(guildId);
   const langCode = settings?.system?.language || "id";
   return locales[langCode] || locales.id;
 }

@@ -11,6 +11,7 @@ const {
   buildErrorContainerV2,
 } = require("../../../src/utils/NauraContainerBuilder");
 const redisManager = require("../../../src/managers/redisManager");
+const { DomainError } = require("../../../src/errors/DomainError");
 
 const FILE_NAME = "naura_art.png";
 const VERBA_URL = "https://api.verba.ink/v1/image";
@@ -93,7 +94,9 @@ async function checkRateLimit(userId, isPremiumUser) {
 
 /** Sumber 1: Google Gemini Imagen. Gratis dalam batas dan berkualitas tinggi. */
 async function generateWithGemini(prompt) {
-  if (!env.GEMINI_API) throw new Error("GEMINI_API tidak dikonfigurasi.");
+  if (!env.GEMINI_API) {
+    throw new DomainError("CONFIG_ERROR", "GEMINI_API tidak dikonfigurasi.");
+  }
 
   const { GoogleGenAI } = require("@google/genai");
   const client = new GoogleGenAI({ apiKey: env.GEMINI_API });
@@ -109,7 +112,9 @@ async function generateWithGemini(prompt) {
   });
 
   const base64 = response.generatedImages?.[0]?.image?.imageBytes;
-  if (!base64) throw new Error("Gemini Imagen tidak mengembalikan gambar.");
+  if (!base64) {
+    throw new DomainError("EMPTY_GENERATION", "Gemini Imagen tidak mengembalikan gambar.");
+  }
 
   return `data:image/png;base64,${base64}`;
 }
@@ -138,7 +143,10 @@ async function generateWithVerba(prompt) {
       response.data?.error?.message ||
       response.data?.message ||
       `HTTP ${response.status}`;
-    throw new Error(`Verba API error: ${detail}`);
+    throw new DomainError("EXTERNAL_API_ERROR", `Verba API error: ${detail}`, {
+      status: response.status,
+      detail,
+    });
   }
 
   const data = response.data || {};
@@ -150,7 +158,9 @@ async function generateWithVerba(prompt) {
     data.data?.[0]?.url ||
     data.choices?.[0]?.url;
 
-  if (!url) throw new Error("Format balasan API gambar Verba tidak dikenali.");
+  if (!url) {
+    throw new DomainError("INVALID_RESPONSE_FORMAT", "Format balasan API gambar Verba tidak dikenali.");
+  }
   return url;
 }
 
@@ -174,7 +184,7 @@ async function generateWithFooocus(prompt) {
   const first = Array.isArray(response.data) ? response.data[0] : null;
   if (first?.base64) return `data:image/png;base64,${first.base64}`;
   if (first?.url) return first.url;
-  throw new Error("Format balasan Fooocus tidak valid.");
+  throw new DomainError("INVALID_RESPONSE_FORMAT", "Format balasan Fooocus tidak valid.");
 }
 
 /** Sumber 4: Pollinations AI. Fallback gratis yang selalu tersedia. */

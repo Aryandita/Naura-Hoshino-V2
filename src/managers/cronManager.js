@@ -493,9 +493,7 @@ module.exports = {
 
         for (const [guildId, guild] of client.guilds.cache) {
           try {
-            const settings = await GuildSettings.findOne({
-              where: { guildId },
-            });
+            const settings = await cacheManager.getGuildSettings(guildId);
             const s = settings?.settings || {};
             const channelId =
               s.chronicleChannelId || s.channels?.general || s.channels?.news;

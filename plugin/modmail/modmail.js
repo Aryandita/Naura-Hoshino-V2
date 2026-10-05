@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, AttachmentBuilder } = require("discord.js");
 const ModMail = require("../../src/models/ModMail");
-const GuildSettings = require("../../src/models/GuildSettings");
+const cacheManager = require("../../src/managers/cacheManager");
 const ui = require("../../src/config/ui");
 const fs = require("fs/promises");
 const os = require("os");
@@ -198,9 +198,7 @@ module.exports = {
     await interaction.reply(successPayload);
 
     try {
-      const settings = await GuildSettings.findOne({
-        where: { guildId: interaction.guild.id },
-      });
+      const settings = await cacheManager.getGuildSettings(interaction.guild.id);
       const logChannelId =
         settings && settings.settings && settings.settings.modmail
           ? settings.settings.modmail.logChannelId

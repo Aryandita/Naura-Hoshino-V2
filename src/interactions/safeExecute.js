@@ -82,7 +82,7 @@ async function safeExecute(interaction, componentEntry, client) {
     label = "unknown",
     source = "unknown",
     defer,
-    ephemeral,
+    isEphemeral,
     onError,
   } = componentEntry;
 
@@ -101,7 +101,7 @@ async function safeExecute(interaction, componentEntry, client) {
     if (!interaction.replied && !interaction.deferred) {
       if (defer === "reply") {
         await interaction.deferReply({
-          flags: ephemeral !== false ? MessageFlags.Ephemeral : 0,
+          flags: isEphemeral !== false ? MessageFlags.Ephemeral : 0,
         });
       } else if (defer === "update") {
         await interaction.deferUpdate();

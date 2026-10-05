@@ -7,7 +7,7 @@ const { logger } = require("../../src/managers/logger");
 const { status } = require("mcstatus");
 const { createCanvas, loadImage } = require("../../src/canvas/canvasRuntime");
 const axios = require("axios");
-const UserProfile = require("../../src/models/UserProfile");
+const cacheManager = require("../../src/managers/cacheManager");
 const ui = require("../../src/config/ui");
 const {
   buildContainerV2,
@@ -315,7 +315,6 @@ module.exports = {
           profileData.name,
         );
 
-        const cacheManager = require("../../src/managers/cacheManager");
         await cacheManager.updateUserProfile(interaction.user.id, {
           minecraft_ign: profileData.name,
         });
@@ -364,12 +363,9 @@ module.exports = {
       return interaction.editReply(syncPayload);
     } else if (subcommand === "broadcast") {
       const msgText = interaction.options.getString("message");
-      const GuildSettings = require("../../src/models/GuildSettings");
       const { sendRconCommand } = require("../../src/utils/rcon");
 
-      const settings = await GuildSettings.findOne({
-        where: { guildId: interaction.guild.id },
-      });
+      const settings = await cacheManager.getGuildSettings(interaction.guild.id);
       const mc = settings?.settings?.minecraft || {};
 
       if (!mc.ip || !mc.rconPassword) {
@@ -415,9 +411,7 @@ module.exports = {
         });
       }
     } else if (subcommand === "stats") {
-      const profile = await UserProfile.findOne({
-        where: { userId: interaction.user.id },
-      });
+      const profile = await cacheManager.getUserProfile(interaction.user.id);
 
       if (!profile || !profile.minecraft_ign) {
         const errPayload = buildErrorContainerV2({
@@ -430,11 +424,13 @@ module.exports = {
 
       const username = profile.minecraft_ign;
 
-      profile.minecraft_playtime =
+      const newPlaytime =
         (profile.minecraft_playtime || 0) + Math.floor(Math.random() * 30) + 15;
-      await profile.save({ fields: ["minecraft_playtime"] });
+      await cacheManager.updateUserProfile(interaction.user.id, {
+        minecraft_playtime: newPlaytime,
+      });
 
-      const playMinutes = profile.minecraft_playtime;
+      const playMinutes = newPlaytime;
       const playHours = Math.floor(playMinutes / 60);
       const playDays = Math.floor(playHours / 24);
 

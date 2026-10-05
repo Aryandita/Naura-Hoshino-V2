@@ -15,7 +15,21 @@ const {
 } = require("../../src/utils/NauraContainerBuilder");
 const { sendModLog } = require("../../src/utils/modLogHelper");
 const incidentService = require("../../src/services/incidentService");
-const GuildSettings = require("../../src/models/GuildSettings");
+const cacheManager = require("../../src/managers/cacheManager");
+
+async function getAuditChannelId(guildId) {
+  try {
+    const row = await cacheManager.getGuildSettings(guildId);
+    return (
+      row?.settings?.auditLogChannel ||
+      row?.settings?.modLogChannel ||
+      row?.settings?.logChannelId ||
+      null
+    );
+  } catch (_) {
+    return null;
+  }
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -386,13 +400,7 @@ module.exports = {
           }
         }
 
-        let auditChannelId = null;
-        try {
-          const row = await GuildSettings.findOne({ where: { guildId: interaction.guild.id } });
-          if (row?.settings) {
-            auditChannelId = row.settings.auditLogChannel || row.settings.modLogChannel || row.settings.logChannelId || null;
-          }
-        } catch (_) {}
+        const auditChannelId = await getAuditChannelId(interaction.guild.id);
 
         const finalPayload = buildContainerV2({
           accentColorHex: ui.getColor("success") || "#22c55e",
@@ -643,13 +651,7 @@ module.exports = {
 
         await targetMember.timeout(durationInfo.ms, `${reason} (Oleh: ${interaction.user.tag})`);
 
-        let auditChannelId = null;
-        try {
-          const row = await GuildSettings.findOne({ where: { guildId: interaction.guild.id } });
-          if (row?.settings) {
-            auditChannelId = row.settings.auditLogChannel || row.settings.modLogChannel || row.settings.logChannelId || null;
-          }
-        } catch (_) {}
+        const auditChannelId = await getAuditChannelId(interaction.guild.id);
 
         const responsePayload = buildContainerV2({
           accentColorHex: "#F59E0B",
@@ -718,13 +720,7 @@ module.exports = {
       try {
         await targetMember.timeout(null, `${reason} (Oleh: ${interaction.user.tag})`);
 
-        let auditChannelId = null;
-        try {
-          const row = await GuildSettings.findOne({ where: { guildId: interaction.guild.id } });
-          if (row?.settings) {
-            auditChannelId = row.settings.auditLogChannel || row.settings.modLogChannel || row.settings.logChannelId || null;
-          }
-        } catch (_) {}
+        const auditChannelId = await getAuditChannelId(interaction.guild.id);
 
         const responsePayload = buildContainerV2({
           accentColorHex: "#10B981",
@@ -861,13 +857,7 @@ module.exports = {
 
           await targetMember.kick(`${reason} (Oleh: ${interaction.user.tag})`);
 
-          let auditChannelId = null;
-          try {
-            const row = await GuildSettings.findOne({ where: { guildId: interaction.guild.id } });
-            if (row?.settings) {
-              auditChannelId = row.settings.auditLogChannel || row.settings.modLogChannel || row.settings.logChannelId || null;
-            }
-          } catch (_) {}
+          const auditChannelId = await getAuditChannelId(interaction.guild.id);
 
           const responsePayload = buildContainerV2({
             accentColorHex: "#F97316",
@@ -1014,13 +1004,7 @@ module.exports = {
             reason: `${reason} (Oleh: ${interaction.user.tag})`,
           });
 
-          let auditChannelId = null;
-          try {
-            const row = await GuildSettings.findOne({ where: { guildId: interaction.guild.id } });
-            if (row?.settings) {
-              auditChannelId = row.settings.auditLogChannel || row.settings.modLogChannel || row.settings.logChannelId || null;
-            }
-          } catch (_) {}
+          const auditChannelId = await getAuditChannelId(interaction.guild.id);
 
           const responsePayload = buildContainerV2({
             accentColorHex: "#EF4444",
@@ -1085,13 +1069,7 @@ module.exports = {
           `${reason} (Oleh: ${interaction.user.tag})`
         );
 
-        let auditChannelId = null;
-        try {
-          const row = await GuildSettings.findOne({ where: { guildId: interaction.guild.id } });
-          if (row?.settings) {
-            auditChannelId = row.settings.auditLogChannel || row.settings.modLogChannel || row.settings.logChannelId || null;
-          }
-        } catch (_) {}
+        const auditChannelId = await getAuditChannelId(interaction.guild.id);
 
         const responsePayload = buildContainerV2({
           accentColorHex: "#10B981",

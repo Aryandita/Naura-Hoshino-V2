@@ -18,6 +18,7 @@ const {
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
 const geminiClient = require("../../src/ai/geminiClient");
+const { ValidationError } = require("../../src/errors/DomainError");
 const {
   getUserPremiumTier,
   getMinigameMultiplier,
@@ -869,7 +870,10 @@ async function runMinigameLogic(interaction) {
           !qData.a ||
           !qData.options.includes(qData.a)
         ) {
-          throw new Error("Format JSON dari AI rusak");
+          throw new ValidationError(
+            "Format JSON dari AI tidak valid atau tidak memiliki kunci pertanyaan/jawaban yang lengkap.",
+            { rawText: jsonText },
+          );
         }
       } catch (error) {
         logger.error(

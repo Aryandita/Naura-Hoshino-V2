@@ -7,6 +7,7 @@ const {
 } = require("../utils/NauraContainerBuilder");
 const ui = require("../config/ui");
 const UserProfile = require("../models/UserProfile");
+const GuildSettings = require("../models/GuildSettings");
 const LyricsManager = require("../music/LyricsManager"); // 👈 Memanggil mesin lirik baru
 
 const DEFAULT_EMOJIS = {
@@ -349,14 +350,10 @@ module.exports = async (interaction, client) => {
       );
 
     case "music_247": {
-      const UserProfile = require("../models/UserProfile");
-      const GuildSettings = require("../models/GuildSettings");
-      const [profile] = await UserProfile.findOrCreate({
-        where: { userId: interaction.user.id },
-      });
-      const guildSettings = await GuildSettings.findOne({
-        where: { guildId: interaction.guildId },
-      });
+      const profile = await cacheManager.getUserProfile(interaction.user.id);
+      const guildSettings = await cacheManager.getGuildSettings(
+        interaction.guildId,
+      );
 
       const isUserVip =
         profile?.isPremium &&

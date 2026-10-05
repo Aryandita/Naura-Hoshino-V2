@@ -14,7 +14,7 @@ const {
 const UserWarn = require("../../src/models/UserWarn");
 const UserStrike = require("../../src/models/UserStrike");
 const ui = require("../../src/config/ui");
-const GuildSettings = require("../../src/models/GuildSettings");
+const cacheManager = require("../../src/managers/cacheManager");
 const { logger } = require("../../src/managers/logger");
 
 const MUTE_MS = 60 * 60 * 1000;
@@ -74,7 +74,7 @@ async function applyPunishment(action, member, totalWarns) {
 }
 
 async function ladderAction(guildId, totalWarns) {
-  const settings = await GuildSettings.findOne({ where: { guildId } });
+  const settings = await cacheManager.getGuildSettings(guildId);
   if (!settings || !settings.settings || !settings.settings.warn_punishments)
     return null;
   return settings.settings.warn_punishments[totalWarns] || null;

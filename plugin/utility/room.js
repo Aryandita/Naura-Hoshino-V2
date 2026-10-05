@@ -197,7 +197,8 @@ module.exports = {
         });
         if (room.guestbook.length > 20) room.guestbook.shift();
         room.likesCount = (room.likesCount || 0) + 1;
-        await room.save();
+        room.changed("guestbook", true);
+        await room.save({ fields: ["guestbook", "likesCount"] });
       } catch (_) {}
 
       const payload = buildContainerV2({

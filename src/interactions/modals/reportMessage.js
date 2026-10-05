@@ -1,11 +1,9 @@
 "use strict";
 
-const { MessageFlags } = require("discord.js");
 const ui = require("../../config/ui");
 const { logger } = require("../../managers/logger");
 const {
   buildContainerV2,
-  buildErrorContainerV2,
 } = require("../../utils/NauraContainerBuilder");
 
 module.exports = [
@@ -13,7 +11,7 @@ module.exports = [
     prefix: "report_msg_",
     label: "report-message-modal-submit",
     defer: "reply",
-    ephemeral: true,
+    isEphemeral: true,
     async handler(interaction) {
       const messageId = interaction.customId.replace("report_msg_", "").trim();
       const reason = interaction.fields.getTextInputValue("report_reason");

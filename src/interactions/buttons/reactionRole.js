@@ -1,6 +1,6 @@
 "use strict";
 
-const { PermissionFlagsBits, MessageFlags } = require("discord.js");
+const { PermissionFlagsBits } = require("discord.js");
 const ui = require("../../config/ui");
 const { logger } = require("../../managers/logger");
 const {
@@ -13,7 +13,7 @@ module.exports = [
     prefix: "role_assign_",
     label: "reaction-role-toggle",
     defer: "reply",
-    ephemeral: true,
+    isEphemeral: true,
     async handler(interaction) {
       if (!interaction.guild) {
         return interaction.editReply(

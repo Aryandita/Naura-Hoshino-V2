@@ -10,7 +10,6 @@ const {
 } = require("discord.js");
 const CanvasAsset = require("../../src/models/CanvasAsset");
 const UserCosmetic = require("../../src/models/UserCosmetic");
-const UserProfile = require("../../src/models/UserProfile");
 const cacheManager = require("../../src/managers/cacheManager");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
 
@@ -59,8 +58,7 @@ async function handleShop(interaction, userId) {
     );
   }
 
-  let userProfile = await UserProfile.findOne({ where: { userId } });
-  if (!userProfile) userProfile = await UserProfile.create({ userId });
+  const userProfile = (await cacheManager.getUserProfile(userId)) || {};
 
   const ownedCosmetics = await UserCosmetic.findAll({ where: { userId } });
   const ownedAssetIds = ownedCosmetics.map((uc) => uc.assetId);
