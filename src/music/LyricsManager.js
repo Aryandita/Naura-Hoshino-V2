@@ -95,7 +95,7 @@ class LyricsManager {
       } catch (e) {}
     }
 
-    if (result && redisManager.isReady()) {
+    if (result && redisManager.isReady) {
       await redisManager.setCache(cacheKey, result, 24 * 60 * 60); // Cache 24 jam
     }
 
