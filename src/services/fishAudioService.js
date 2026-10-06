@@ -341,6 +341,40 @@ class FishAudioService {
       hasAudio: Boolean(audioBuffer),
     };
   }
+
+  /**
+   * Upload audio buffer ke layanan file hosting sementara (litterbox.catbox.moe)
+   * agar URL-nya dapat dibaca oleh Lavalink public node.
+   * @param {Buffer} audioBuffer 
+   * @returns {Promise<string|null>} URL audio langsung (berakhir .mp3)
+   */
+  async uploadToCatbox(audioBuffer) {
+    if (!audioBuffer) return null;
+    try {
+      const blob = new globalThis.Blob([audioBuffer], { type: "audio/mpeg" });
+      const fd = new globalThis.FormData();
+      fd.append("reqtype", "fileupload");
+      fd.append("time", "1h");
+      fd.append("fileToUpload", blob, "naura_tts.mp3");
+
+      logger.info("[FishAudio] Mengunggah buffer audio ke Litterbox untuk stream Lavalink...");
+      const res = await fetch("https://litterbox.catbox.moe/resources/internals/api.php", {
+        method: "POST",
+        body: fd,
+      });
+
+      if (res.ok) {
+        const url = await res.text();
+        logger.info(`[FishAudio] Berhasil mengunggah TTS ke: ${url}`);
+        return url;
+      } else {
+        logger.warn(`[FishAudio] Gagal mengunggah ke Litterbox: HTTP ${res.status}`);
+      }
+    } catch (err) {
+      logger.warn(`[FishAudio] Eksepsi saat mengunggah ke Litterbox: ${err.message}`);
+    }
+    return null;
+  }
 }
 
 module.exports = new FishAudioService();

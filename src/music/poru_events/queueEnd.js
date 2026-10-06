@@ -192,6 +192,55 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
         if (!player.playedHistory) player.playedHistory = new Set();
         player.playedHistory.add(trackToPlay.info.identifier);
 
+        // ✅ Inject TTS untuk Autoplay (setiap 3 lagu)
+        const aiDjManager = require("../../managers/aiDjManager");
+        const fishAudioService = require("../../services/fishAudioService");
+        const isDjActive = aiDjManager.isDjEnabled(player.guildId) && fishAudioService.isConfigured();
+        
+        let ttsTrack = null;
+        if (isDjActive) {
+           const count = (aiDjManager.trackCounters.get(player.guildId) || 0) + 1;
+           aiDjManager.trackCounters.set(player.guildId, count);
+           if (count % 3 === 0) {
+              const { script, classification } = aiDjManager.generateDjScript(trackToPlay.info, "Naura DJ");
+              try {
+                const audioBuffer = await fishAudioService.generateSpeech(script, { format: "mp3", latency: "low" });
+                if (audioBuffer) {
+                  const url = await fishAudioService.uploadToCatbox(audioBuffer);
+                  if (url) {
+                    const ttsRes = await manager.poru.resolve({ query: url, requester: manager.client.user });
+                    if (ttsRes && ttsRes.tracks && ttsRes.tracks.length > 0) {
+                      ttsTrack = ttsRes.tracks[0];
+                      ttsTrack.info.title = `🎙️ Naura DJ: ${classification.genre.replace("_", " ")} Session`;
+                      ttsTrack.info.author = "Naura Hoshino";
+                      ttsTrack.info.originalSource = "http";
+                      ttsTrack.isTTS = true;
+                      trackToPlay.info.skipDj = true;
+                      
+                      const channel = manager.client.channels.cache.get(player.textChannel);
+                      if (channel) {
+                        const speakPayload = buildContainerV2({
+                          accentColorHex: ui.getColor("primary") || "#FFB6C1",
+                          title: `🎙️ Hoshino FM`,
+                          description: `> _"${script}"_`,
+                          expression: "singing",
+                          footerText: ui.getFooter("music"),
+                        });
+                        const speakMsg = await channel.send(speakPayload).catch(() => null);
+                        if (speakMsg) trackToPlay.ttsMessageId = speakMsg.id;
+                      }
+                    }
+                  }
+                }
+              } catch(e) {
+                logger.warn(`[Autoplay] Gagal generate TTS: ${e.message}`);
+              }
+           } else {
+             trackToPlay.info.skipDj = true; // Skip pengumuman manual agar tidak bentrok
+           }
+        }
+
+        if (ttsTrack) player.queue.add(ttsTrack);
         player.queue.add(trackToPlay);
         player.isAutoplayResolving = false;
 

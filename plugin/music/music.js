@@ -611,17 +611,22 @@ async function runMusicLogic(
           
           const speakMsg = await sendReply(speakPayload, false);
           
-          if (speakMsg && speakMsg.attachments && speakMsg.attachments.size > 0) {
-            const cdnUrl = speakMsg.attachments.first().url;
-            const ttsRes = await poru.resolve({ query: cdnUrl, requester: user });
+          let playableUrl = await fishAudioService.uploadToCatbox(audioBuffer);
+          if (!playableUrl && speakMsg && speakMsg.attachments && speakMsg.attachments.size > 0) {
+            playableUrl = speakMsg.attachments.first().url; // fallback ke Discord CDN
+          }
+
+          if (playableUrl) {
+            const ttsRes = await poru.resolve({ query: playableUrl, requester: user });
             if (ttsRes && ttsRes.tracks && ttsRes.tracks.length > 0) {
                 ttsTrack = ttsRes.tracks[0];
                 ttsTrack.info.title = `🎙️ Naura DJ: ${classification.genre.replace("_", " ")} Session`;
                 ttsTrack.info.author = "Naura Hoshino";
+                ttsTrack.info.originalSource = "http";
                 ttsTrack.isTTS = true;
                 
                 track.info.skipDj = true;
-                track.ttsMessageId = speakMsg.id;
+                if (speakMsg && speakMsg.id) track.ttsMessageId = speakMsg.id;
             }
           }
         }
