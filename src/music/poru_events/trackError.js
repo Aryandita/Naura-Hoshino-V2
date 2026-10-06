@@ -81,6 +81,10 @@ module.exports = {
           fallbackTrack.info.originalSource = "soundcloud";
           fallbackTrack.info.requester =
             track.info?.requester || manager.client.user;
+          
+          if (track.info?.skipDj) fallbackTrack.info.skipDj = true;
+          if (track.ttsMessageId) fallbackTrack.ttsMessageId = track.ttsMessageId;
+          if (track.info?.ttsMessageId) fallbackTrack.info.ttsMessageId = track.info.ttsMessageId;
 
           player.queue.unshift(fallbackTrack);
           player.isRecoveringTrack = false;

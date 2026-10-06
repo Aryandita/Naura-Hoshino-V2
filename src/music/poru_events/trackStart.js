@@ -119,32 +119,46 @@ module.exports = {
 
       let recommendedTracks = [];
       try {
-        // Tunda prefetch selama 1500ms agar sesi WebSocket Voice antara Poru
-        // dan Discord sudah stabil sebelum resolve() kedua dikirim ke node
-        // Lavalink. Tanpa delay ini, dua request ke node yang berdekatan
-        // menyebabkan Discord mengirim kode 4006 (session conflict) dan
-        // men-disconnect bot dari voice channel.
-        await new Promise((res) => setTimeout(res, 1500));
+        if (!activeTrack.isTTS) {
+          // Tunda prefetch selama 1500ms agar sesi WebSocket Voice antara Poru
+          // dan Discord sudah stabil sebelum resolve() kedua dikirim ke node
+          // Lavalink. Tanpa delay ini, dua request ke node yang berdekatan
+          // menyebabkan Discord mengirim kode 4006 (session conflict) dan
+          // men-disconnect bot dari voice channel.
+          await new Promise((res) => setTimeout(res, 1500));
 
-        // Pastikan player masih valid setelah delay (bisa saja user skip/stop)
-        if (!player || player.destroyed) return;
+          // Pastikan player masih valid setelah delay (bisa saja user skip/stop)
+          if (!player || player.destroyed) return;
 
-        recommendedTracks = await this.handleAutoplayPrefetch(
-          manager,
-          player,
-          activeTrack,
-        );
+          recommendedTracks = await this.handleAutoplayPrefetch(
+            manager,
+            player,
+            activeTrack,
+          );
+        }
       } catch (prefetchErr) {
         logger.error("[AutoplayPrefetch Error]", prefetchErr);
       }
 
       try {
-        await MusicUIManager.renderPanel(
-          manager,
-          player,
-          activeTrack,
-          recommendedTracks,
-        );
+        const ttsMsgId = activeTrack.ttsMessageId || (activeTrack.info && activeTrack.info.ttsMessageId);
+        if (ttsMsgId) {
+           const channel = manager.client.channels.cache.get(player.textChannel);
+           if (channel) {
+              channel.messages.fetch(ttsMsgId)
+                .then(m => m.delete().catch(()=>{}))
+                .catch(()=>{});
+           }
+        }
+
+        if (!activeTrack.isTTS) {
+          await MusicUIManager.renderPanel(
+            manager,
+            player,
+            activeTrack,
+            recommendedTracks,
+          );
+        }
 
         // Catat riwayat lagu untuk filter anti-duplikasi
         if (typeof manager.recordPlayedTrack === "function") {
@@ -152,13 +166,15 @@ module.exports = {
         }
 
         // 🎙️ Jalankan pengumuman AI DJ (non-blocking)
-        aiDjManager
-          .handleTrackStart(manager, player, activeTrack)
-          .catch((err) => {
-            logger.warn(
-              `[AI-DJ] Gagal mengeksekusi trackStart announcer: ${err.message}`,
-            );
-          });
+        if (!activeTrack.isTTS && !activeTrack.info.skipDj) {
+          aiDjManager
+            .handleTrackStart(manager, player, activeTrack)
+            .catch((err) => {
+              logger.warn(
+                `[AI-DJ] Gagal mengeksekusi trackStart announcer: ${err.message}`,
+              );
+            });
+        }
       } catch (uiErr) {
         logger.error("[MusicUI Render Error]", uiErr);
       }

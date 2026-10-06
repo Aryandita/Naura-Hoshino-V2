@@ -481,10 +481,16 @@ async function runMusicLogic(
       }
     }
 
+    const aiDjManager = require("../../src/managers/aiDjManager");
+    const fishAudioService = require("../../src/services/fishAudioService");
+    const isDjActive = aiDjManager.isDjEnabled(guild.id) && fishAudioService.isConfigured();
+
     const searchingPayload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#FFB6C1",
       title: "Mencari Audio",
-      description: `🔍 Menganalisis gelombang suara untuk: **${query}**...`,
+      description: isDjActive 
+        ? `🔍 Menganalisis gelombang suara untuk: **${query}**...\n🎙️ Menyiapkan suara Naura...` 
+        : `🔍 Menganalisis gelombang suara untuk: **${query}**...`,
       footerText: ui.getFooter("music"),
     });
     await sendReply(searchingPayload, false);
@@ -579,18 +585,69 @@ async function runMusicLogic(
       return sendReply(dupPayload, true);
     }
 
+    let ttsTrack = null;
+    if (isDjActive) {
+      const requesterName = user.displayName || user.username;
+      const { script, classification } = aiDjManager.generateDjScript(track.info, requesterName);
+      
+      try {
+        const audioBuffer = await fishAudioService.generateSpeech(script, {
+          format: "mp3",
+          latency: "low"
+        });
+
+        if (audioBuffer) {
+          const { AttachmentBuilder } = require("discord.js");
+          const attachment = new AttachmentBuilder(audioBuffer, { name: "naura_dj_intro.mp3" });
+          
+          const speakPayload = buildContainerV2({
+             accentColorHex: ui.getColor("primary") || "#FFB6C1",
+             title: `🎙️ Hoshino FM`,
+             description: `> _"${script}"_`,
+             expression: "singing",
+             footerText: ui.getFooter("music"),
+          });
+          speakPayload.files = [attachment];
+          
+          const speakMsg = await sendReply(speakPayload, false);
+          
+          if (speakMsg && speakMsg.attachments && speakMsg.attachments.size > 0) {
+            const cdnUrl = speakMsg.attachments.first().url;
+            const ttsRes = await poru.resolve({ query: cdnUrl, requester: user });
+            if (ttsRes && ttsRes.tracks && ttsRes.tracks.length > 0) {
+                ttsTrack = ttsRes.tracks[0];
+                ttsTrack.info.title = `🎙️ Naura DJ: ${classification.genre.replace("_", " ")} Session`;
+                ttsTrack.info.author = "Naura Hoshino";
+                ttsTrack.isTTS = true;
+                
+                track.info.skipDj = true;
+                track.ttsMessageId = speakMsg.id;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn(`[Music] Gagal generate TTS saat antre: ${err.message}`);
+      }
+    }
+
+    if (ttsTrack) {
+        player.queue.add(ttsTrack);
+    }
+
     player.queue.add(track);
     if (!player.isPlaying && !player.isPaused) player.play();
 
-    const trackPayload = buildContainerV2({
-      accentColorHex: brandColor,
-      title: `${brandEmoji} ${track.info.title}`,
-      iconURL: track.info.image || client.user.displayAvatarURL(),
-      description: `${ui.getEmoji("musicArtist") || "👤"} **Artis:** \`${track.info.author}\`\n⏳ **Durasi:** \`${formatDuration(track.info.length)}\``,
-      footerText: ui.getFooter("music"),
-    });
+    if (!ttsTrack) {
+      const trackPayload = buildContainerV2({
+        accentColorHex: brandColor,
+        title: `${brandEmoji} ${track.info.title}`,
+        iconURL: track.info.image || client.user.displayAvatarURL(),
+        description: `${ui.getEmoji("musicArtist") || "👤"} **Artis:** \`${track.info.author}\`\n⏳ **Durasi:** \`${formatDuration(track.info.length)}\``,
+        footerText: ui.getFooter("music"),
+      });
 
-    return sendReply(trackPayload, true);
+      return sendReply(trackPayload, true);
+    }
   }
 
   if (subcommand === "import") {
