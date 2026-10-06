@@ -177,20 +177,48 @@ export function initHeroViewer(targetCanvas = null, customOptions = {}) {
             if (!animationName) return;
 
             try {
-                let soundSrc = '/assets/audio/soundboard/magic.mp3';
+                let phrase = 'Hmm, ada yang bisa aku bantu?';
+                let fallbackSound = '/assets/audio/soundboard/magic.mp3';
                 const animLower = animationName.toLowerCase();
+                
                 if (animLower.includes('joy') || animLower.includes('happy') || animLower.includes('nod')) {
-                    soundSrc = '/assets/audio/soundboard/applause.mp3';
+                    phrase = 'Asyik! Senang banget rasanya.';
+                    fallbackSound = '/assets/audio/soundboard/applause.mp3';
                 } else if (animLower.includes('sad') || animLower.includes('cry') || animLower.includes('sorrow')) {
-                    soundSrc = '/assets/audio/soundboard/gameover.mp3';
+                    phrase = 'Aduh, sedih deh rasanya.';
+                    fallbackSound = '/assets/audio/soundboard/gameover.mp3';
                 } else if (animLower.includes('angry')) {
-                    soundSrc = '/assets/audio/soundboard/bruh.mp3';
+                    phrase = 'Hmpf! Jangan iseng ya!';
+                    fallbackSound = '/assets/audio/soundboard/bruh.mp3';
                 } else if (animLower.includes('surprised') || animLower.includes('fun')) {
-                    soundSrc = '/assets/audio/soundboard/cheer.mp3';
+                    phrase = 'Wah, mengejutkan sekali!';
+                    fallbackSound = '/assets/audio/soundboard/cheer.mp3';
                 }
-                const audio = new Audio(soundSrc);
-                audio.volume = 0.4;
-                audio.play().catch(() => {});
+
+                // Coba panggil TTS agar Naura bersuara asli
+                fetch('/api/ai/companion/tts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: phrase })
+                })
+                .then(res => {
+                    if (res.ok && res.headers.get('Content-Type')?.includes('audio')) {
+                        return res.blob();
+                    }
+                    throw new Error('TTS audio tidak tersedia');
+                })
+                .then(blob => {
+                    const audioUrl = URL.createObjectURL(blob);
+                    const audio = new Audio(audioUrl);
+                    audio.volume = 0.8;
+                    audio.play().catch(() => {});
+                })
+                .catch(() => {
+                    // Fallback ke efek suara bawaan bila TTS gagal atau rate limited
+                    const audio = new Audio(fallbackSound);
+                    audio.volume = 0.4;
+                    audio.play().catch(() => {});
+                });
             } catch (err) {}
 
             animationButtons.forEach((btn) => {

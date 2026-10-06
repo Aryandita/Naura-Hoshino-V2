@@ -15,6 +15,16 @@ module.exports = {
       return;
     }
 
+    if (player.previousTrack?.isGoodbyeTTS) {
+      player.destroy();
+      return;
+    }
+
+    if (player.previousTrack?.isStandbyTTS) {
+      // Standby TTS baru saja selesai. Kita diam saja dan tunggu timer standby habis.
+      return;
+    }
+
     // 1. Bersihkan lirik Karaoke dari panel teks
     if (player.lyricsMessageId) {
       const channel = manager.client.channels.cache.get(player.textChannel);
@@ -287,13 +297,52 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
         manager.uiCache.delete(player.guildId);
       }
       
+      // 🎙️ [PLAY STANDBY TTS]
+      const aiDjManager = require("../../managers/aiDjManager");
+      const fishAudioService = require("../../services/fishAudioService");
+      
+      let standbyAudioUrl = null;
+
+      if (aiDjManager.isDjEnabled(player.guildId) && fishAudioService.isConfigured()) {
+        try {
+          const script = "Lagu terakhir sudah selesai diputar. Ada yang mau tambah lagu lagi? Naura tungguin di sini sebentar ya! Kalau tidak ada, Naura pamit dalam dua menit.";
+          const audioBuffer = await fishAudioService.generateSpeech(script, { format: "mp3", latency: "low" });
+          if (audioBuffer) {
+            const { AttachmentBuilder } = require("discord.js");
+            const attachment = new AttachmentBuilder(audioBuffer, { name: "naura_standby.mp3" });
+            standbyPayload.files = [attachment];
+          }
+        } catch (e) {
+          logger.warn(`[Standby TTS] Gagal: ${e.message}`);
+        }
+      }
+      
       const standbyMsg = await channel.send(standbyPayload).catch(() => null);
 
-      player.standbyTimeout = setTimeout(() => {
-        // Cek jika player masih aktif atau sedang memutar lagu
-        if (!player || player.destroyed || player.isPlaying) return;
+      if (standbyMsg && standbyMsg.attachments && standbyMsg.attachments.size > 0) {
+        standbyAudioUrl = standbyMsg.attachments.first().url;
+      }
+
+      if (standbyAudioUrl) {
+        const ttsRes = await manager.poru.resolve({ query: standbyAudioUrl, requester: manager.client.user });
+        if (ttsRes && ttsRes.tracks && ttsRes.tracks.length > 0) {
+          const ttsTrack = ttsRes.tracks[0];
+          ttsTrack.info.title = "🎙️ Naura DJ: Standby";
+          ttsTrack.info.author = "Naura Hoshino";
+          ttsTrack.info.originalSource = "http";
+          ttsTrack.isTTS = true;
+          ttsTrack.isStandbyTTS = true;
+          ttsTrack.info.skipDj = true;
+          
+          player.queue.add(ttsTrack);
+          player.play();
+        }
+      }
+
+      player.standbyTimeout = setTimeout(async () => {
+        // Cek jika player masih aktif atau sedang memutar lagu (selain TTS)
+        if (!player || player.destroyed || (player.isPlaying && !player.currentTrack?.isTTS)) return;
         
-        player.destroy();
         if (standbyMsg) standbyMsg.delete().catch(() => {});
         
         const exitPayload = buildContainerV2({
@@ -304,9 +353,51 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
           footerText: ui.getFooter("music"),
         });
         
-        channel.send(exitPayload)
-          .then((m) => setTimeout(() => m.delete().catch(() => {}), 15000))
-          .catch(() => {});
+        // 🎙️ [PLAY GOODBYE TTS]
+        let goodbyeAudioUrl = null;
+        if (aiDjManager.isDjEnabled(player.guildId) && fishAudioService.isConfigured()) {
+          try {
+            const script = "Sepertinya sudah tidak ada lagu lagi. Naura pamit dari Voice Channel ya! Sampai jumpa di sesi musik berikutnya!";
+            const audioBuffer = await fishAudioService.generateSpeech(script, { format: "mp3", latency: "low" });
+            if (audioBuffer) {
+              const { AttachmentBuilder } = require("discord.js");
+              const attachment = new AttachmentBuilder(audioBuffer, { name: "naura_pamit.mp3" });
+              exitPayload.files = [attachment];
+            }
+          } catch (e) {
+            logger.warn(`[Goodbye TTS] Gagal: ${e.message}`);
+          }
+        }
+        
+        const exitMsg = await channel.send(exitPayload).catch(() => null);
+        if (exitMsg) {
+          setTimeout(() => exitMsg.delete().catch(() => {}), 15000);
+          if (exitMsg.attachments && exitMsg.attachments.size > 0) {
+            goodbyeAudioUrl = exitMsg.attachments.first().url;
+          }
+        }
+
+        let playedGoodbye = false;
+        if (goodbyeAudioUrl) {
+          const ttsRes = await manager.poru.resolve({ query: goodbyeAudioUrl, requester: manager.client.user });
+          if (ttsRes && ttsRes.tracks && ttsRes.tracks.length > 0) {
+            const ttsTrack = ttsRes.tracks[0];
+            ttsTrack.info.title = "🎙️ Naura DJ: Pamit";
+            ttsTrack.info.author = "Naura Hoshino";
+            ttsTrack.info.originalSource = "http";
+            ttsTrack.isTTS = true;
+            ttsTrack.isGoodbyeTTS = true;
+            ttsTrack.info.skipDj = true;
+            
+            player.queue.add(ttsTrack);
+            player.play();
+            playedGoodbye = true;
+          }
+        }
+        
+        if (!playedGoodbye) {
+          player.destroy();
+        }
       }, 120000); // 2 menit timeout
     }
   },

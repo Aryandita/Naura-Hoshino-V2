@@ -41,6 +41,7 @@ async function runMusicLogic(
   args,
   sendReply,
   isSlash,
+  deleteReply,
 ) {
   const poru = client.musicManager.poru;
   const musicManager = client.musicManager;
@@ -635,6 +636,8 @@ async function runMusicLogic(
       }
     }
 
+    const isFirstTrack = !player.isPlaying && !player.isPaused && player.queue.length === 0;
+
     if (ttsTrack) {
         player.queue.add(ttsTrack);
     }
@@ -643,15 +646,21 @@ async function runMusicLogic(
     if (!player.isPlaying && !player.isPaused) player.play();
 
     if (!ttsTrack) {
-      const trackPayload = buildContainerV2({
-        accentColorHex: brandColor,
-        title: `${brandEmoji} ${track.info.title}`,
-        iconURL: track.info.image || client.user.displayAvatarURL(),
-        description: `${ui.getEmoji("musicArtist") || "👤"} **Artis:** \`${track.info.author}\`\n⏳ **Durasi:** \`${formatDuration(track.info.length)}\``,
-        footerText: ui.getFooter("music"),
-      });
+      if (isFirstTrack) {
+        // Hapus container "Mencari Audio" karena Now Playing akan muncul
+        if (deleteReply) return deleteReply();
+        return;
+      } else {
+        const trackPayload = buildContainerV2({
+          accentColorHex: brandColor,
+          title: `${brandEmoji} ${track.info.title}`,
+          iconURL: track.info.image || client.user.displayAvatarURL(),
+          description: `${ui.getEmoji("musicArtist") || "👤"} **Artis:** \`${track.info.author}\`\n⏳ **Durasi:** \`${formatDuration(track.info.length)}\``,
+          footerText: ui.getFooter("music"),
+        });
 
-      return sendReply(trackPayload, true);
+        return sendReply(trackPayload, true);
+      }
     }
   }
 
@@ -2359,6 +2368,7 @@ module.exports = {
       args,
       sendReply,
       true,
+      () => interaction.deleteReply().catch(() => {}),
     );
   },
 
