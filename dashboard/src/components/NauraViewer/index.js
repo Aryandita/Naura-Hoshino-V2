@@ -364,16 +364,19 @@ class NauraViewerClass {
             chip.addEventListener("click", () => {
                 if (chip.dataset.action === "wave") {
                     this.triggerWave();
+                    this._playEmoteAudio("Wave");
                     this.setMood("Happy", "Halo! Senang bertemu denganmu! 🌸");
                     return;
                 }
                 if (chip.dataset.action === "astral") {
                     if (this.viewer3d) this.viewer3d.playAnimation("AstralCast");
+                    this._playEmoteAudio("AstralCast");
                     this.setMood("Happy", "Sihir Bintang Hoshino! ✨");
                     return;
                 }
                 if (chip.dataset.action === "idol") {
                     if (this.viewer3d) this.viewer3d.playAnimation("StarPose");
+                    this._playEmoteAudio("StarPose");
                     this.setMood("Happy", "Pose Idol Ceria! ⭐");
                     return;
                 }
@@ -410,9 +413,21 @@ class NauraViewerClass {
                 if (this.viewer3d) {
                     this.viewer3d.playAnimation(act.anim);
                 }
+                this._playEmoteAudio(act.anim);
                 this.setMood(act.mood, act.status);
             });
         }
+    }
+
+    _playEmoteAudio(animName) {
+        try {
+            const safeName = animName.toLowerCase();
+            const audio = new Audio(`/sounds/emotes/${safeName}.mp3`);
+            audio.volume = 0.8;
+            audio.play().catch((err) => {
+                console.warn("[NauraViewer] Emote audio autoplay prevented:", err);
+            });
+        } catch (err) {}
     }
 
     /**

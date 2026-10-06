@@ -610,14 +610,11 @@ async function runMusicLogic(
           });
           speakPayload.files = [attachment];
           
-          const speakMsg = await sendReply(speakPayload, false);
+          const speakMsg = await channel.send(speakPayload);
           
-          let playableUrl = await fishAudioService.uploadToCatbox(audioBuffer);
-          if (!playableUrl && speakMsg && speakMsg.attachments && speakMsg.attachments.size > 0) {
-            playableUrl = speakMsg.attachments.first().url; // fallback ke Discord CDN
-          }
+          if (speakMsg && speakMsg.attachments && speakMsg.attachments.size > 0) {
+            const playableUrl = speakMsg.attachments.first().url;
 
-          if (playableUrl) {
             const ttsRes = await poru.resolve({ query: playableUrl, requester: user });
             if (ttsRes && ttsRes.tracks && ttsRes.tracks.length > 0) {
                 ttsTrack = ttsRes.tracks[0];
@@ -645,13 +642,16 @@ async function runMusicLogic(
     player.queue.add(track);
     if (!player.isPlaying && !player.isPaused) player.play();
 
+    if (isFirstTrack) {
+      // Hapus container "Mencari Audio" secara clean
+      if (deleteReply) deleteReply();
+    }
+
     if (ttsTrack) {
       return; // Sudah ditangani oleh AI DJ, Now Playing akan diurus MusicUIManager nanti
     }
 
     if (isFirstTrack) {
-      // Hapus container "Mencari Audio" karena Now Playing akan muncul
-      if (deleteReply) return deleteReply();
       return;
     } else {
       const trackPayload = buildContainerV2({
@@ -2291,7 +2291,7 @@ module.exports = {
           ? "ytmsearch"
           : focusedValue.startsWith("yt:")
             ? "ytsearch"
-            : "ytsearch"; // Paksa YouTube untuk autofill agar nama artis lebih akurat
+            : "spsearch"; // Coba Spotify dulu agar metadata bersih
 
       // Cek cache: hindari request Lavalink saat user mengetik cepat
       const cacheKey = `music:ac:${searchEngine}:${cleanQuery}`;
@@ -2299,13 +2299,24 @@ module.exports = {
       if (cached) return safeRespond(interaction, cached);
 
       // Timeout 2200ms - cukup untuk node lambat, masih di bawah batas Discord 3s
-      const res = await Promise.race([
+      let res = await Promise.race([
         poru.resolve({
           query: `${searchEngine}:${cleanQuery}`,
           requester: interaction.user,
         }),
         new Promise((resolve) => setTimeout(() => resolve(null), 2200)),
       ]);
+
+      // Fallback ke ytmsearch jika spsearch kosong atau tidak didukung (tanpa plugin LavaSrc)
+      if (searchEngine === "spsearch" && (!res || !res.tracks || res.tracks.length === 0)) {
+        res = await Promise.race([
+          poru.resolve({
+            query: `ytmsearch:${cleanQuery}`,
+            requester: interaction.user,
+          }),
+          new Promise((resolve) => setTimeout(() => resolve(null), 1000)),
+        ]);
+      }
 
       if (!res || !res.tracks || res.tracks.length === 0) {
         return respondWithFallback(interaction, cleanQuery);

@@ -216,28 +216,32 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
               try {
                 const audioBuffer = await fishAudioService.generateSpeech(script, { format: "mp3", latency: "low" });
                 if (audioBuffer) {
-                  const url = await fishAudioService.uploadToCatbox(audioBuffer);
-                  if (url) {
-                    const ttsRes = await manager.poru.resolve({ query: url, requester: manager.client.user });
-                    if (ttsRes && ttsRes.tracks && ttsRes.tracks.length > 0) {
-                      ttsTrack = ttsRes.tracks[0];
-                      ttsTrack.info.title = `🎙️ Naura DJ: ${classification.genre.replace("_", " ")} Session`;
-                      ttsTrack.info.author = "Naura Hoshino";
-                      ttsTrack.info.originalSource = "http";
-                      ttsTrack.isTTS = true;
-                      trackToPlay.info.skipDj = true;
+                  const { AttachmentBuilder } = require("discord.js");
+                  const attachment = new AttachmentBuilder(audioBuffer, { name: "naura_autoplay_dj.mp3" });
+                  const channel = manager.client.channels.cache.get(player.textChannel);
+                  if (channel) {
+                    const speakPayload = buildContainerV2({
+                      accentColorHex: ui.getColor("primary") || "#FFB6C1",
+                      title: `🎙️ Hoshino FM`,
+                      description: `> _"${script}"_`,
+                      expression: "singing",
+                      footerText: ui.getFooter("music"),
+                    });
+                    speakPayload.files = [attachment];
+                    
+                    const speakMsg = await channel.send(speakPayload).catch(() => null);
+                    if (speakMsg && speakMsg.attachments && speakMsg.attachments.size > 0) {
+                      const url = speakMsg.attachments.first().url;
+                      trackToPlay.ttsMessageId = speakMsg.id;
                       
-                      const channel = manager.client.channels.cache.get(player.textChannel);
-                      if (channel) {
-                        const speakPayload = buildContainerV2({
-                          accentColorHex: ui.getColor("primary") || "#FFB6C1",
-                          title: `🎙️ Hoshino FM`,
-                          description: `> _"${script}"_`,
-                          expression: "singing",
-                          footerText: ui.getFooter("music"),
-                        });
-                        const speakMsg = await channel.send(speakPayload).catch(() => null);
-                        if (speakMsg) trackToPlay.ttsMessageId = speakMsg.id;
+                      const ttsRes = await manager.poru.resolve({ query: url, requester: manager.client.user });
+                      if (ttsRes && ttsRes.tracks && ttsRes.tracks.length > 0) {
+                        ttsTrack = ttsRes.tracks[0];
+                        ttsTrack.info.title = `🎙️ Naura DJ: ${classification.genre.replace("_", " ")} Session`;
+                        ttsTrack.info.author = "Naura Hoshino";
+                        ttsTrack.info.originalSource = "http";
+                        ttsTrack.isTTS = true;
+                        trackToPlay.info.skipDj = true;
                       }
                     }
                   }
@@ -302,20 +306,28 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
       const fishAudioService = require("../../services/fishAudioService");
       
       let standbyAudioUrl = null;
-
-      if (aiDjManager.isDjEnabled(player.guildId) && fishAudioService.isConfigured()) {
+      if (aiDjManager.isDjEnabled(player.guildId)) {
         try {
-          const script = "Lagu terakhir sudah selesai diputar. Ada yang mau tambah lagu lagi? Naura tungguin di sini sebentar ya! Kalau tidak ada, Naura pamit dalam dua menit.";
-          const audioBuffer = await fishAudioService.generateSpeech(script, { format: "mp3", latency: "low" });
-          if (audioBuffer) {
-            standbyAudioUrl = await fishAudioService.uploadToCatbox(audioBuffer);
+          const fs = require("fs");
+          const path = require("path");
+          const standbyPath = path.join(__dirname, "../../../assets/audio/voice/standby.mp3");
+          
+          if (fs.existsSync(standbyPath)) {
+            const audioBuffer = fs.readFileSync(standbyPath);
+            const { AttachmentBuilder } = require("discord.js");
+            const attachment = new AttachmentBuilder(audioBuffer, { name: "naura_standby.mp3" });
+            standbyPayload.files = [attachment];
           }
         } catch (e) {
-          logger.warn(`[Standby TTS] Gagal: ${e.message}`);
+          logger.warn(`[Standby Audio] Gagal memuat file: ${e.message}`);
         }
       }
       
       const standbyMsg = await channel.send(standbyPayload).catch(() => null);
+
+      if (standbyMsg && standbyMsg.attachments && standbyMsg.attachments.size > 0) {
+        standbyAudioUrl = standbyMsg.attachments.first().url;
+      }
 
       if (standbyAudioUrl) {
         const ttsRes = await manager.poru.resolve({ query: standbyAudioUrl, requester: manager.client.user });
@@ -347,23 +359,30 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
           footerText: ui.getFooter("music"),
         });
         
-        // 🎙️ [PLAY GOODBYE TTS]
         let goodbyeAudioUrl = null;
-        if (aiDjManager.isDjEnabled(player.guildId) && fishAudioService.isConfigured()) {
+        if (aiDjManager.isDjEnabled(player.guildId)) {
           try {
-            const script = "Sepertinya sudah tidak ada lagu lagi. Naura pamit dari Voice Channel ya! Sampai jumpa di sesi musik berikutnya!";
-            const audioBuffer = await fishAudioService.generateSpeech(script, { format: "mp3", latency: "low" });
-            if (audioBuffer) {
-              goodbyeAudioUrl = await fishAudioService.uploadToCatbox(audioBuffer);
+            const fs = require("fs");
+            const path = require("path");
+            const goodbyePath = path.join(__dirname, "../../../assets/audio/voice/goodbye.mp3");
+            
+            if (fs.existsSync(goodbyePath)) {
+              const audioBuffer = fs.readFileSync(goodbyePath);
+              const { AttachmentBuilder } = require("discord.js");
+              const attachment = new AttachmentBuilder(audioBuffer, { name: "naura_pamit.mp3" });
+              exitPayload.files = [attachment];
             }
           } catch (e) {
-            logger.warn(`[Goodbye TTS] Gagal: ${e.message}`);
+            logger.warn(`[Goodbye Audio] Gagal memuat file: ${e.message}`);
           }
         }
         
         const exitMsg = await channel.send(exitPayload).catch(() => null);
         if (exitMsg) {
           setTimeout(() => exitMsg.delete().catch(() => {}), 15000);
+          if (exitMsg.attachments && exitMsg.attachments.size > 0) {
+            goodbyeAudioUrl = exitMsg.attachments.first().url;
+          }
         }
 
         let playedGoodbye = false;

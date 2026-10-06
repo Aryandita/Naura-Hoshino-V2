@@ -27,7 +27,7 @@ module.exports = {
     if (!player || !player.textChannel) return;
 
     // Coba pemulihan otomatis via SoundCloud bila lagu gagal diputar (misal limitasi YouTube)
-    if (track && !track._fallbackAttempted && !player.destroyed) {
+    if (track && !track.isTTS && !track._fallbackAttempted && !player.destroyed) {
       track._fallbackAttempted = true;
       player.isRecoveringTrack = true;
 
@@ -140,6 +140,8 @@ module.exports = {
 
       if (player.queue.length === 0 && !player.isPlaying) {
         manager.poru.emit("queueEnd", player);
+      } else if (player.queue.length > 0 && !player.isPlaying) {
+        await player.stop(); // Secara native akan men-trigger `trackEnd` dan lanjut ke antrean berikutnya
       }
     } catch (err) {
       logger.error("[trackError] Gagal mengirim notifikasi ke channel:", err);
