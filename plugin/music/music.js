@@ -645,22 +645,24 @@ async function runMusicLogic(
     player.queue.add(track);
     if (!player.isPlaying && !player.isPaused) player.play();
 
-    if (!ttsTrack) {
-      if (isFirstTrack) {
-        // Hapus container "Mencari Audio" karena Now Playing akan muncul
-        if (deleteReply) return deleteReply();
-        return;
-      } else {
-        const trackPayload = buildContainerV2({
-          accentColorHex: brandColor,
-          title: `${brandEmoji} ${track.info.title}`,
-          iconURL: track.info.image || client.user.displayAvatarURL(),
-          description: `${ui.getEmoji("musicArtist") || "👤"} **Artis:** \`${track.info.author}\`\n⏳ **Durasi:** \`${formatDuration(track.info.length)}\``,
-          footerText: ui.getFooter("music"),
-        });
+    if (ttsTrack) {
+      return; // Sudah ditangani oleh AI DJ, Now Playing akan diurus MusicUIManager nanti
+    }
 
-        return sendReply(trackPayload, true);
-      }
+    if (isFirstTrack) {
+      // Hapus container "Mencari Audio" karena Now Playing akan muncul
+      if (deleteReply) return deleteReply();
+      return;
+    } else {
+      const trackPayload = buildContainerV2({
+        accentColorHex: brandColor,
+        title: `${brandEmoji} ${track.info.title}`,
+        iconURL: track.info.image || client.user.displayAvatarURL(),
+        description: `${ui.getEmoji("musicArtist") || "👤"} **Artis:** \`${track.info.author}\`\n⏳ **Durasi:** \`${formatDuration(track.info.length)}\``,
+        footerText: ui.getFooter("music"),
+      });
+
+      return sendReply(trackPayload, true);
     }
   }
 
@@ -2289,7 +2291,7 @@ module.exports = {
           ? "ytmsearch"
           : focusedValue.startsWith("yt:")
             ? "ytsearch"
-            : defaultEngine;
+            : "ytsearch"; // Paksa YouTube untuk autofill agar nama artis lebih akurat
 
       // Cek cache: hindari request Lavalink saat user mengetik cepat
       const cacheKey = `music:ac:${searchEngine}:${cleanQuery}`;

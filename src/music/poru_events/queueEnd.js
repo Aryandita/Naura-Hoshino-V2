@@ -308,9 +308,7 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
           const script = "Lagu terakhir sudah selesai diputar. Ada yang mau tambah lagu lagi? Naura tungguin di sini sebentar ya! Kalau tidak ada, Naura pamit dalam dua menit.";
           const audioBuffer = await fishAudioService.generateSpeech(script, { format: "mp3", latency: "low" });
           if (audioBuffer) {
-            const { AttachmentBuilder } = require("discord.js");
-            const attachment = new AttachmentBuilder(audioBuffer, { name: "naura_standby.mp3" });
-            standbyPayload.files = [attachment];
+            standbyAudioUrl = await fishAudioService.uploadToCatbox(audioBuffer);
           }
         } catch (e) {
           logger.warn(`[Standby TTS] Gagal: ${e.message}`);
@@ -318,10 +316,6 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
       }
       
       const standbyMsg = await channel.send(standbyPayload).catch(() => null);
-
-      if (standbyMsg && standbyMsg.attachments && standbyMsg.attachments.size > 0) {
-        standbyAudioUrl = standbyMsg.attachments.first().url;
-      }
 
       if (standbyAudioUrl) {
         const ttsRes = await manager.poru.resolve({ query: standbyAudioUrl, requester: manager.client.user });
@@ -360,9 +354,7 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
             const script = "Sepertinya sudah tidak ada lagu lagi. Naura pamit dari Voice Channel ya! Sampai jumpa di sesi musik berikutnya!";
             const audioBuffer = await fishAudioService.generateSpeech(script, { format: "mp3", latency: "low" });
             if (audioBuffer) {
-              const { AttachmentBuilder } = require("discord.js");
-              const attachment = new AttachmentBuilder(audioBuffer, { name: "naura_pamit.mp3" });
-              exitPayload.files = [attachment];
+              goodbyeAudioUrl = await fishAudioService.uploadToCatbox(audioBuffer);
             }
           } catch (e) {
             logger.warn(`[Goodbye TTS] Gagal: ${e.message}`);
@@ -372,9 +364,6 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
         const exitMsg = await channel.send(exitPayload).catch(() => null);
         if (exitMsg) {
           setTimeout(() => exitMsg.delete().catch(() => {}), 15000);
-          if (exitMsg.attachments && exitMsg.attachments.size > 0) {
-            goodbyeAudioUrl = exitMsg.attachments.first().url;
-          }
         }
 
         let playedGoodbye = false;
