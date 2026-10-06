@@ -363,4 +363,134 @@ async function generateProfileCard(arg1, arg2, arg3, arg4) {
   });
 }
 
-module.exports = { generateProfileCard };
+/**
+ * Generate a dynamic business card using canvas (VIP/Owner)
+ */
+async function generateBusinessCard(payload) {
+  return runWithLimit("businessCard", async () => {
+    const { user, profile, topFriend, streak, palette, currencySymbol } = payload;
+    const canvas = createCanvas(800, 400);
+    const ctx = canvas.getContext("2d");
+
+    // Background (Glassmorphism / Neon glow)
+    const gradient = ctx.createLinearGradient(0, 0, 800, 400);
+    gradient.addColorStop(0, palette.bg1);
+    gradient.addColorStop(1, palette.bg2);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 800, 400);
+
+    // Add some "glow" elements
+    ctx.beginPath();
+    ctx.arc(100, 100, 150, 0, Math.PI * 2);
+    ctx.fillStyle = palette.glow1;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(700, 300, 200, 0, Math.PI * 2);
+    ctx.fillStyle = palette.glow2;
+    ctx.fill();
+
+    // Glass panel
+    ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(40, 40, 720, 320, 20);
+    ctx.fill();
+    ctx.stroke();
+
+    // Avatar
+    try {
+      const avatarUrl = user.displayAvatarURL || user.avatarUrl;
+      if (avatarUrl) {
+        const avatar = await loadImage(avatarUrl);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(140, 140, 60, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(avatar, 80, 80, 120, 120);
+        ctx.restore();
+
+        ctx.beginPath();
+        ctx.arc(140, 140, 60, 0, Math.PI * 2);
+        ctx.strokeStyle = "#e94560";
+        ctx.lineWidth = 4;
+        ctx.stroke();
+      }
+    } catch (e) {}
+
+    // Username & Info
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 36px sans-serif";
+    ctx.fillText(user.username, 230, 130);
+
+    ctx.fillStyle = "#e94560";
+    ctx.font = "bold 24px sans-serif";
+    ctx.fillText(profile.isPremium ? "🌟 VIP Member" : "👑 Bot Owner", 230, 170);
+
+    ctx.fillStyle = "#b2bec3";
+    ctx.font = "20px sans-serif";
+    ctx.fillText(
+      `Saldo: ${(profile.economy_wallet || 0).toLocaleString("id-ID")} ${currencySymbol || "NC"}`,
+      230,
+      210,
+    );
+
+    ctx.fillStyle = "#f39c12"; // gold/star color
+    ctx.fillText(`Reputasi: ⭐ ${profile.reputation || 0}`, 230, 240);
+
+    // Social Media Pills
+    let yPos = 270;
+    let xPos = 80;
+
+    const drawPill = (text, color) => {
+      if (!text) return;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.roundRect(xPos, yPos, 180, 40, 20);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 16px sans-serif";
+      // Center text in pill (roughly)
+      const textWidth = ctx.measureText(text).width;
+      ctx.fillText(text, xPos + (180 - textWidth) / 2, yPos + 26);
+      xPos += 200;
+      if (xPos > 500) {
+        xPos = 80;
+        yPos += 50;
+      }
+    };
+
+    if (profile.social_youtube) drawPill(profile.social_youtube, "#FF0000");
+    if (profile.social_instagram) drawPill(profile.social_instagram, "#E1306C");
+    if (profile.social_x) drawPill(profile.social_x, "#1DA1F2");
+    if (profile.social_facebook) drawPill(profile.social_facebook, "#4267B2");
+
+    // Top Friend Section (Right side)
+    ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+    ctx.beginPath();
+    ctx.roundRect(500, 80, 240, 150, 15);
+    ctx.fill();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 18px sans-serif";
+    ctx.fillText("Top Streak", 520, 110);
+
+    if (topFriend) {
+      ctx.font = "16px sans-serif";
+      ctx.fillText(topFriend.username, 520, 150);
+      ctx.fillStyle = "#e94560";
+      ctx.font = "bold 24px sans-serif";
+      ctx.fillText(`🔥 ${streak} Days`, 520, 190);
+    } else {
+      ctx.fillStyle = "#b2bec3";
+      ctx.font = "14px sans-serif";
+      ctx.fillText("No friends yet", 520, 150);
+    }
+
+    return canvas.toBuffer("image/png");
+  });
+}
+
+module.exports = { generateProfileCard, generateBusinessCard };

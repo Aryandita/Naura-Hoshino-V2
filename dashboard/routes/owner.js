@@ -81,6 +81,7 @@ module.exports = (client) => {
 
       if (starFragments !== undefined) {
         await cacheManager.updateUserSurvival(targetId, {
+          // eslint-disable-next-line no-restricted-syntax
           starFragments: Number(starFragments) || 0,
         });
       }

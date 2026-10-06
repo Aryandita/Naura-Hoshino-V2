@@ -1,4 +1,5 @@
 "use strict";
+const { ValidationError } = require("../../errors/DomainError");
 
 const EVOLUTION_TREE = {
   wolf: {
@@ -164,9 +165,9 @@ function getBuffs(pet) {
  */
 function breedPets(parentA, parentB, userId) {
   if (!parentA || !parentB)
-    throw new Error("Dua pet induk dibutuhkan untuk breeding!");
+    throw new ValidationError("Dua pet induk dibutuhkan untuk breeding!");
   if (parentA.petLevel < 5 || parentB.petLevel < 5) {
-    throw new Error("Kedua pet induk minimal harus level 5 untuk dapat kawin!");
+    throw new ValidationError("Kedua pet induk minimal harus level 5 untuk dapat kawin!");
   }
 
   // Determine offspring type (50% parentA, 50% parentB, or 10% hybrid mutation)

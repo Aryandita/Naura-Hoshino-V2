@@ -1,4 +1,5 @@
 const net = require("net");
+const { ExternalAPIError } = require("../errors/DomainError");
 
 class Rcon {
   constructor(host, port, password, timeout = 5000) {
@@ -16,7 +17,7 @@ class Rcon {
     return new Promise((resolve, reject) => {
       if (this.socket) {
         if (this.authed) return resolve();
-        return reject(new Error("Already connecting or authenticating"));
+        return reject(new ExternalAPIError("Already connecting or authenticating"));
       }
 
       let resolved = false;
@@ -60,7 +61,7 @@ class Rcon {
             if (id === -1) {
               const handler = this.responseCallbacks.get(1);
               if (handler) {
-                handler.reject(new Error("Auth failed (Incorrect Password)"));
+                handler.reject(new ExternalAPIError("Auth failed (Incorrect Password)"));
                 this.responseCallbacks.delete(1);
               }
             } else {
@@ -92,14 +93,14 @@ class Rcon {
 
       this.socket.on("timeout", () => {
         this.disconnect();
-        if (!resolved) reject(new Error("Connection timed out"));
+        if (!resolved) reject(new ExternalAPIError("Connection timed out"));
       });
     });
   }
 
   sendPacket(type, payload) {
     return new Promise((resolve, reject) => {
-      if (!this.socket) return reject(new Error("Not connected"));
+      if (!this.socket) return reject(new ExternalAPIError("Not connected"));
 
       const id = type === 3 ? 1 : ++this.requestId;
       const payloadBuffer = Buffer.from(payload, "ascii");
@@ -132,7 +133,7 @@ class Rcon {
       this.socket = null;
     }
     for (const callback of this.responseCallbacks.values()) {
-      callback.reject(new Error("Disconnected"));
+      callback.reject(new ExternalAPIError("Disconnected"));
     }
     this.responseCallbacks.clear();
   }

@@ -10,6 +10,7 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
+const { ExternalAPIError } = require("../errors/DomainError");
 let _ffmpegCache = null;
 function getFfmpeg() {
   if (!_ffmpegCache) _ffmpegCache = require("fluent-ffmpeg");
@@ -93,7 +94,7 @@ const compressWithFFmpeg = (
     const currentPath = resolveFfmpegPath();
     if (currentPath !== "ffmpeg" && !fs.existsSync(currentPath)) {
       return reject(
-        new Error(
+        new ExternalAPIError(
           `Sistem FFmpeg tidak terdeteksi di server (${currentPath}). Silakan hubungi admin server.`,
         ),
       );
@@ -207,7 +208,7 @@ const compressWithFFmpeg = (
             resolve(outputPath);
           })
           .on("error", (ffmpegErr) =>
-            reject(new Error(`FFmpeg lintasan 2 error: ${ffmpegErr.message}`)),
+            reject(new ExternalAPIError(`FFmpeg lintasan 2 error: ${ffmpegErr.message}`)),
           )
           .run();
       };
@@ -230,7 +231,7 @@ const compressWithFFmpeg = (
           runPassTwo();
         })
         .on("error", (ffmpegErr) =>
-          reject(new Error(`FFmpeg lintasan 1 error: ${ffmpegErr.message}`)),
+          reject(new ExternalAPIError(`FFmpeg lintasan 1 error: ${ffmpegErr.message}`)),
         )
         .run();
     });

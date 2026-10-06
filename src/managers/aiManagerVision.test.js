@@ -16,7 +16,7 @@ describe("AIManager - Multimodal Vision AI", () => {
         });
       },
       {
-        name: "Error",
+        name: "ValidationError",
         message: /Buffer gambar tidak valid atau kosong/i,
       },
     );
@@ -33,7 +33,7 @@ describe("AIManager - Multimodal Vision AI", () => {
         });
       },
       {
-        name: "Error",
+        name: "ValidationError",
         message: /Buffer gambar tidak valid atau kosong/i,
       },
     );

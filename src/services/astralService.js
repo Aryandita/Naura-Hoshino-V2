@@ -1,6 +1,7 @@
 "use strict";
 
 const redisManager = require("../managers/redisManager");
+const { DomainError } = require("../errors/DomainError");
 
 const ASTRAL_WEATHERS = [
   {
@@ -224,7 +225,7 @@ class AstralService {
               config: { maxOutputTokens: 300, temperature: 0.5 },
             }),
             new Promise((_, reject) =>
-              setTimeout(() => reject(new Error("Gemini timeout")), 3000),
+              setTimeout(() => reject(new DomainError("GEMINI_TIMEOUT", "Proses AI memakan waktu terlalu lama.")), 3000),
             ),
           ]);
 

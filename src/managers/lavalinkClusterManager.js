@@ -23,6 +23,7 @@ const path = require("path");
 const http = require("http");
 const https = require("https");
 const { logger } = require("./logger");
+const { ExternalAPIError } = require("../errors/DomainError");
 
 // Konfigurasi Default Circuit Breaker
 const CB_CONFIG = {
@@ -633,7 +634,7 @@ class LavalinkClusterManager {
           logger.warn(
             `[LavalinkClusterManager] Node "${node.name}" mengalami 3x heartbeat timeout berturut-turut. Mengaktifkan auto-recover failover...`,
           );
-          this.recordFailure(node.name, new Error("Heartbeat timeout (Socket Unresponsive)"));
+          this.recordFailure(node.name, new ExternalAPIError("Heartbeat timeout (Socket Unresponsive)"));
           if (poru.players) {
             for (const player of poru.players.values()) {
               if (player && player.node && player.node.name === node.name) {

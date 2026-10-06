@@ -8,6 +8,7 @@ const mongoManager = require("../managers/mongoManager");
 const redisManager = require("../managers/redisManager");
 const { sequelize } = require("../managers/dbManager");
 const redisLockHelper = require("../utils/redisLockHelper");
+const { EntityNotFoundError } = require("../errors/DomainError");
 
 // State in-memory (tersedia instan jika Redis offline)
 const inMemoryMaintenance = {
@@ -321,7 +322,7 @@ async function repairPlayerState(userId, repairedBy = "Admin") {
 
 async function activatePanicLockdown(guild, activatedBy = "Admin") {
   if (!guild) {
-    throw new Error("Guild tidak ditemukan.");
+    throw new EntityNotFoundError("Guild tidak ditemukan.");
   }
 
   const previousPermissions = [];
@@ -380,7 +381,7 @@ async function activatePanicLockdown(guild, activatedBy = "Admin") {
 
 async function restorePanicLockdown(guild, restoredBy = "Admin") {
   if (!guild) {
-    throw new Error("Guild tidak ditemukan.");
+    throw new EntityNotFoundError("Guild tidak ditemukan.");
   }
 
   const savedData = activePanicLockdowns.get(guild.id);

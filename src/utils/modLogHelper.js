@@ -1,6 +1,6 @@
 "use strict";
 
-const GuildSettings = require("../models/GuildSettings");
+const cacheManager = require("../managers/cacheManager");
 const { logger } = require("../managers/logger");
 
 /**
@@ -12,7 +12,7 @@ async function sendModLog(guild, containerPayload) {
   if (!guild || !containerPayload) return null;
 
   try {
-    const row = await GuildSettings.findOne({ where: { guildId: guild.id } });
+    const row = await cacheManager.getGuildSettings(guild.id);
     if (!row || !row.settings) return null;
 
     const s = row.settings;

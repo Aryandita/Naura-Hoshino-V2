@@ -14,6 +14,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../utils/NauraContainerBuilder");
+const { EntityNotFoundError, ValidationError } = require("../errors/DomainError");
 
 async function handleModmailDM(message, client) {
   const activeMail = await ModMail.findOne({
@@ -174,7 +175,7 @@ async function createTicketChannel(message, guildData, client, draft = null) {
       guild.channels.cache.find((c) => c.type === ChannelType.GuildText);
 
     if (!masterChannel)
-      throw new Error("Master channel untuk modmail tidak ditemukan.");
+      throw new EntityNotFoundError("Master channel untuk modmail tidak ditemukan.");
 
     // Always create a PrivateThread if possible. If masterChannel is a category, we have a problem.
     // Modmail requires a TextChannel to create a thread. We should fall back to a text channel if a category is provided.
@@ -188,7 +189,7 @@ async function createTicketChannel(message, guildData, client, draft = null) {
     }
 
     if (!targetChannel || targetChannel.type !== ChannelType.GuildText) {
-      throw new Error(
+      throw new ValidationError(
         "Kategori modmail tidak memiliki text channel untuk membuat thread.",
       );
     }

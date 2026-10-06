@@ -3,6 +3,7 @@
 const { Worker } = require("node:worker_threads");
 const path = require("path");
 const { logger } = require("../managers/logger");
+const { SystemError, ValidationError } = require("../errors/DomainError");
 
 class CanvasWorkerPool {
   constructor(size = 2) {
@@ -45,7 +46,7 @@ class CanvasWorkerPool {
           if (success) {
             pending.resolve(result);
           } else {
-            pending.reject(new Error(error || "Worker error"));
+            pending.reject(new SystemError(error || "Worker error"));
           }
         }
         const count = (this.workerTaskCounts.get(worker) || 0) + 1;
@@ -125,7 +126,7 @@ class CanvasWorkerPool {
 
     // 1. Bounded Queue Guard
     if (this.taskQueue.length >= this.maxQueueLength) {
-      throw new Error(
+      throw new SystemError(
         `[CanvasWorkerPool] Antrean render grafis penuh (${this.taskQueue.length}/${this.maxQueueLength}). Silakan coba beberapa saat lagi.`,
       );
     }
@@ -135,7 +136,7 @@ class CanvasWorkerPool {
     if (userId) {
       const activeCount = this.userTaskCounts.get(userId) || 0;
       if (activeCount >= this.maxUserTasks) {
-        throw new Error(
+        throw new ValidationError(
           `[CanvasWorkerPool] Anda memiliki terlalu banyak tugas render yang sedang berjalan (maksimal ${this.maxUserTasks}). Tunggu hingga tugas sebelumnya selesai.`,
         );
       }
@@ -161,7 +162,7 @@ class CanvasWorkerPool {
           cleanupUser();
           this.pendingTasks.delete(id);
           reject(
-            new Error(
+            new SystemError(
               `[CanvasWorkerPool] Task ${task} timed out after ${timeoutMs}ms`,
             ),
           );

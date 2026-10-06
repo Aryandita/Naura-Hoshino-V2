@@ -2,6 +2,7 @@
 
 const npcs = require("../data/npcs");
 const cacheManager = require("../../managers/cacheManager");
+const { DomainError } = require("../../errors/DomainError");
 
 /**
  * Mendapatkan kondisi dan suasana Alun-Alun Kota (Town Square) berdasarkan jam in-game (0-23)
@@ -121,7 +122,7 @@ async function talkToTownNpc(npcId, userId, hour) {
     });
 
     // Timeout 1800ms agar interaksi Discord tetap cepat
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("AI_TIMEOUT")), 1800));
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new DomainError("AI_TIMEOUT", "Proses AI memakan waktu terlalu lama.")), 1800));
     const aiResult = await Promise.race([aiPromise, timeoutPromise]);
     if (aiResult && aiResult.text) {
       generativeReply = aiResult.text.replace(/[\u2014\u2013]/g, "-").trim();

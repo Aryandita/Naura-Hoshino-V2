@@ -4,6 +4,7 @@ const cacheManager = require("../managers/cacheManager");
 const { logger } = require("../managers/logger");
 const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
 const ui = require("../config/ui");
+const { ValidationError } = require("../errors/DomainError");
 
 const SNOWFLAKE_REGEX = /^\d{17,20}$/;
 const e = (name, fallback = "") => ui.getEmoji(name) || fallback;
@@ -93,7 +94,7 @@ async function getUserPreferences(userId) {
  */
 async function setUserPreference(userId, key, enabled) {
   if (!(key in DEFAULT_PREFS)) {
-    throw new Error(`Kunci notifikasi "${key}" tidak valid.`);
+    throw new ValidationError(`Kunci notifikasi "${key}" tidak valid.`);
   }
 
   const currentPrefs = await getUserPreferences(userId);

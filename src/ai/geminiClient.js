@@ -15,6 +15,7 @@
 
 const env = require("../config/env");
 const { logger } = require("../managers/logger");
+const { SystemError, ExternalAPIError, ValidationError } = require("../errors/DomainError");
 
 const DEFAULT_MODEL = env.GEMINI_MODEL || "gemini-2.5-flash";
 
@@ -116,10 +117,10 @@ async function generate({
   message,
 } = {}) {
   const client = getClient();
-  if (!client) throw new Error("GEMINI_API tidak dikonfigurasi.");
+  if (!client) throw new SystemError("GEMINI_API tidak dikonfigurasi.");
 
   if (!Array.isArray(parts) || parts.length === 0) {
-    throw new Error("generate() membutuhkan minimal satu part.");
+    throw new ValidationError("generate() membutuhkan minimal satu part.");
   }
 
   const safeHistory = Array.isArray(history)
@@ -175,7 +176,7 @@ async function generate({
     if (env.GROQ_API_KEY) {
       return await generateGroqFallback({ parts, history, config });
     }
-    throw new Error("Respons Gemini kosong atau formatnya tidak dikenali.");
+    throw new ExternalAPIError("Respons Gemini kosong atau formatnya tidak dikenali.");
   }
 
   return text;
@@ -185,7 +186,7 @@ async function generate({
  * Fallback generator menggunakan Groq Cloud OpenAI-compatible endpoint.
  */
 async function generateGroqFallback({ parts, history = [], config }) {
-  if (!env.GROQ_API_KEY) throw new Error("GROQ_API_KEY tidak dikonfigurasi.");
+  if (!env.GROQ_API_KEY) throw new SystemError("GROQ_API_KEY tidak dikonfigurasi.");
 
   const messages = [];
 
@@ -215,12 +216,12 @@ async function generateGroqFallback({ parts, history = [], config }) {
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
-    throw new Error(`Groq API Error (${res.status}): ${errText}`);
+    throw new ExternalAPIError(`Groq API Error (${res.status}): ${errText}`);
   }
 
   const data = await res.json();
   const text = data.choices?.[0]?.message?.content?.trim() || "";
-  if (!text) throw new Error("Respons Groq kosong.");
+  if (!text) throw new ExternalAPIError("Respons Groq kosong.");
   return text;
 }
 

@@ -1,6 +1,7 @@
 "use strict";
 
 const CardBattleEngine = require("./cardBattleEngine");
+const { ValidationError } = require("../errors/DomainError");
 
 const ELEMENTAL_COMBOS = {
   "FIRE+LIGHT": { name: "Supernova Flare", bonusDmg: 250, effect: "TRUE_DAMAGE", desc: "Ledakan kosmik yang menembus seluruh pertahanan lawan!" },
@@ -92,11 +93,11 @@ class CardBattleV2Engine {
    */
   static processAction(battleState, userId, action) {
     if (battleState.isFinished) {
-      throw new Error("Pertarungan ini sudah berakhir.");
+      throw new ValidationError("Pertarungan ini sudah berakhir.");
     }
 
     if (battleState.activeUserId !== userId) {
-      throw new Error("Bukan giliran Anda untuk melangkah.");
+      throw new ValidationError("Bukan giliran Anda untuk melangkah.");
     }
 
     const attacker = battleState.fighters[userId];
@@ -124,7 +125,7 @@ class CardBattleV2Engine {
       case "SKILL": {
         const cost = attacker.card.skill.energyCost || 3;
         if (attacker.energy < cost) {
-          throw new Error(`Energi tidak cukup untuk Skill! Butuh ${cost} Energy, Anda hanya punya ${attacker.energy}.`);
+          throw new ValidationError(`Energi tidak cukup untuk Skill! Butuh ${cost} Energy, Anda hanya punya ${attacker.energy}.`);
         }
         attacker.energy -= cost;
 
@@ -157,7 +158,7 @@ class CardBattleV2Engine {
       case "BURST": {
         const burstCost = 5;
         if (attacker.energy < burstCost) {
-          throw new Error(`Energi tidak cukup untuk Ultimate Burst! Butuh ${burstCost} Energy, Anda hanya punya ${attacker.energy}.`);
+          throw new ValidationError(`Energi tidak cukup untuk Ultimate Burst! Butuh ${burstCost} Energy, Anda hanya punya ${attacker.energy}.`);
         }
         attacker.energy -= burstCost;
 

@@ -10,6 +10,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { logger } = require("../managers/logger");
+const { ExternalAPIError } = require("../errors/DomainError");
 
 const EXEC_TIMEOUT_MS = 60000;
 
@@ -99,7 +100,7 @@ const tryYtdlp = async (url, cleanup) => {
 
     const timeoutPromise = new Promise((_, reject) => {
       timeoutHandle = setTimeout(
-        () => reject(new Error("yt-dlp melewati batas waktu 60 detik")),
+        () => reject(new ExternalAPIError("yt-dlp melewati batas waktu 60 detik")),
         EXEC_TIMEOUT_MS,
       );
       if (timeoutHandle.unref) timeoutHandle.unref();

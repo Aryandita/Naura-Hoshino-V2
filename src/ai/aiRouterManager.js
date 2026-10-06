@@ -15,7 +15,7 @@ const {
   getGeminiHistory,
 } = require("./aiHelper");
 const AIMemory = require("./aiMemory");
-
+const { SystemError, ExternalAPIError } = require("../errors/DomainError");
 class AIRouterManager {
   static async processMessage(
     client,
@@ -85,7 +85,7 @@ class AIRouterManager {
     if (attachment) {
       try {
         if (!gemini.isAvailable())
-          throw new Error("GEMINI_API tidak dikonfigurasi.");
+          throw new SystemError("GEMINI_API tidak dikonfigurasi.");
 
         const res = await fetch(attachment.url);
         const arrayBuffer = await res.arrayBuffer();
@@ -192,14 +192,14 @@ class AIRouterManager {
           } catch (e) {
             errorMessage = `${errorMessage} - Non-JSON response`;
           }
-          throw new Error(`Verba API error: ${errorMessage}`);
+          throw new ExternalAPIError(`Verba API error: ${errorMessage}`);
         }
 
         let data;
         try {
           data = JSON.parse(rawText);
         } catch (parseError) {
-          throw new Error(
+          throw new ExternalAPIError(
             `Invalid JSON response dari Verba API (HTTP ${response.status})`,
           );
         }
@@ -215,7 +215,7 @@ class AIRouterManager {
           "";
 
         if (!replyText)
-          throw new Error(
+          throw new ExternalAPIError(
             "Balasan Verba API kosong atau formatnya tidak dikenali.",
           );
 
@@ -243,7 +243,7 @@ class AIRouterManager {
 
         try {
           if (!gemini.isAvailable())
-            throw new Error("GEMINI_API tidak dikonfigurasi.");
+            throw new SystemError("GEMINI_API tidak dikonfigurasi.");
 
           const history = await getGeminiHistory(message.author.id);
           const { tools } = require("./functionDispatcher");

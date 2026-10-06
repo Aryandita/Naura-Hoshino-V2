@@ -18,6 +18,7 @@ const crypto = require("node:crypto");
 const cacheManager = require("../managers/cacheManager");
 const redisManager = require("../managers/redisManager");
 const { logger } = require("../managers/logger");
+const { ValidationError } = require("../errors/DomainError");
 
 const VAULT_KEY_PREFIX = "vault:secret:";
 const BOUNTY_LIST_KEY = "bounties:guild:";
@@ -95,7 +96,7 @@ class BountyVaultEngine {
    */
   async storeSecret({ userId, secretText, passphrase, ttlSeconds = 604800 }) {
     if (!secretText || !passphrase) {
-      throw new Error("Teks rahasia dan passphrase wajib diisi.");
+      throw new ValidationError("Teks rahasia dan passphrase wajib diisi.");
     }
 
     const encrypted = this.encryptData(secretText, passphrase);

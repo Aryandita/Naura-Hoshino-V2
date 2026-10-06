@@ -7,6 +7,7 @@
 
 const env = require("../config/env");
 const { logger } = require("../managers/logger");
+const { ExternalAPIError } = require("../errors/DomainError");
 
 const SPOTIFY_HOST_RE =
     /(?:https?:\/\/)?open\.spotify\.com\/(?:intl-[a-z-]{2,7}\/)?(track|album|playlist|artist)\/([A-Za-z0-9]+)/,
@@ -521,7 +522,7 @@ async function resolveSpotifyQuery(poru, query, requester) {
   if (!metadata || !metadata.items || metadata.items.length === 0)
     throw (
       nativeError ||
-      new Error("[SpotifyResolver] Metadata Spotify tidak dapat diambil.")
+      new ExternalAPIError("[SpotifyResolver] Metadata Spotify tidak dapat diambil.")
     );
 
   const tracks = [];

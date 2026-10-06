@@ -15,6 +15,7 @@ const env = require("../config/env");
 const { logger } = require("../managers/logger");
 const { normalizeAiResponse } = require("../adapters/aiBoundaryAdapter");
 const geminiClient = require("./geminiClient");
+const { SystemError, ExternalAPIError } = require("../errors/DomainError");
 
 const TASK_TYPES = Object.freeze({
   GENERAL_CHAT: "GENERAL_CHAT",
@@ -283,7 +284,7 @@ class AiEnsembleRouter {
     }
 
     // Jika seluruh provider di dalam kandidat gagal
-    throw new Error(
+    throw new SystemError(
       `Semua provider AI (${candidates.join(", ")}) gagal atau kuota habis: ${lastError ? lastError.message : "Tidak ada provider aktif"}`,
     );
   }
@@ -319,7 +320,7 @@ class AiEnsembleRouter {
    * @private
    */
   async _callGroq({ prompt, parts, history = [], systemInstruction, config = {} }) {
-    if (!env.GROQ_API_KEY) throw new Error("GROQ_API_KEY tidak dikonfigurasi.");
+    if (!env.GROQ_API_KEY) throw new SystemError("GROQ_API_KEY tidak dikonfigurasi.");
 
     const messages = [];
 
@@ -388,11 +389,11 @@ class AiEnsembleRouter {
         );
         continue;
       }
-      throw new Error(`Groq HTTP ${res.status}: ${lastGroqErr.slice(0, 200)}`);
+      throw new ExternalAPIError(`Groq HTTP ${res.status}: ${lastGroqErr.slice(0, 200)}`);
     }
 
     if (!rawJson) {
-      throw new Error(
+      throw new ExternalAPIError(
         `Groq HTTP ${lastGroqStatus || 500}: ${lastGroqErr.slice(0, 200) || "Semua model Groq kandidat tidak ditemukan"}`,
       );
     }
@@ -454,7 +455,7 @@ class AiEnsembleRouter {
       clearTimeout(timeoutId);
 
       if (!res.ok) {
-        throw new Error(`Ollama HTTP ${res.status}`);
+        throw new ExternalAPIError(`Ollama HTTP ${res.status}`);
       }
 
       const rawJson = await res.json();

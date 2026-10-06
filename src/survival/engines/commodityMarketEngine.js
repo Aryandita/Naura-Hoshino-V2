@@ -7,6 +7,8 @@
  * berbasis elastisitas penawaran-permintaan (*Supply & Demand Elasticity*) dengan batas aman (Law 5).
  */
 
+const { EntityNotFoundError } = require("../../errors/DomainError");
+
 const COMMODITY_CATALOG = Object.freeze({
   // 1. Ikan Laut Dalam (Deep-Sea Fishes)
   abyssal_angler: { name: "Abyssal Angler", category: "fish", basePrice: 420 },
@@ -45,7 +47,7 @@ const DECAY_RATE_PER_HOUR = 0.08;  // Regresi 8% per jam menuju baseline
 function calculateCommodityPrice(commodityId, volume = { sold: 0, bought: 0 }, timeDecayHours = 0) {
   const item = COMMODITY_CATALOG[commodityId];
   if (!item) {
-    throw new Error(`Komoditas tidak dikenal: ${commodityId}`);
+    throw new EntityNotFoundError(`Komoditas tidak dikenal: ${commodityId}`);
   }
 
   const sold = Math.max(0, Number(volume.sold) || 0);

@@ -1,5 +1,6 @@
 const { logger } = require("../managers/logger");
 const fs = require("fs");
+const { SystemError } = require("../errors/DomainError");
 
 // ==========================================
 // SISTEM MIGRASI BERNOMOR (Rule 1.7)
@@ -602,7 +603,7 @@ async function runMigrations(sequelize) {
       logger.error(
         `[DB MIGRATOR] Migrasi '${migration.id}' gagal: ${err.message}`,
       );
-      throw new Error(`Migrasi '${migration.id}' gagal: ${err.message}`);
+      throw new SystemError(`Migrasi '${migration.id}' gagal: ${err.message}`);
     }
   }
 

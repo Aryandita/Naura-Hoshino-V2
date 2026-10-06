@@ -7,6 +7,7 @@ const env = require("../config/env");
 const ui = require("../config/ui");
 const mongoManager = require("../managers/mongoManager");
 const UserReport = require("../models/mongo/UserReport");
+const { ValidationError, EntityNotFoundError } = require("../errors/DomainError");
 
 // In-memory fallback untuk testing atau saat koneksi MongoDB offline
 const inMemoryReports = new Map();
@@ -62,7 +63,7 @@ async function createReport({
   client = null,
 }) {
   if (!userId || !title || !description) {
-    throw new Error("Parameter laporan tidak lengkap (userId, title, dan description wajib diisi).");
+    throw new ValidationError("Parameter laporan tidak lengkap (userId, title, dan description wajib diisi).");
   }
 
   const reportId = generateReportId();
@@ -207,12 +208,12 @@ async function resolveReport(reportId, resolvedBy = "Owner") {
 
 async function replyToReport(reportId, replyText, repliedBy = "Owner", client = null) {
   if (!reportId || !replyText) {
-    throw new Error("ID Laporan dan teks balasan wajib diisi.");
+    throw new ValidationError("ID Laporan dan teks balasan wajib diisi.");
   }
 
   const report = await getReport(reportId);
   if (!report) {
-    throw new Error(`Laporan dengan ID #${reportId} tidak ditemukan.`);
+    throw new EntityNotFoundError(`Laporan dengan ID #${reportId} tidak ditemukan.`);
   }
 
   const cleanReply = String(replyText).trim();

@@ -7,7 +7,7 @@ const {
   MessageFlags,
 } = require("discord.js");
 
-const UserSurvival = require("../../../src/models/UserSurvival");
+
 const cacheManager = require("../../../src/managers/cacheManager");
 const currencyHelper = require("../../../src/survival/engines/currency");
 const recyclingPoolEngine = require("../../../src/survival/engines/recyclingPoolEngine");
@@ -23,9 +23,7 @@ module.exports = {
   async execute(interaction) {
     const user = interaction.user;
     const profile = await cacheManager.getUserProfile(user.id);
-    const survival =
-      (await UserSurvival.findOne({ where: { userId: user.id } })) ||
-      (await UserSurvival.create({ userId: user.id }));
+    const survival = await cacheManager.getUserSurvival(user.id);
 
     const holders = { profile, survival };
     const nsfBal = currencyHelper.balanceOf(currencyHelper.FRAGMENT, holders);

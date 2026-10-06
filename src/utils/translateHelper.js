@@ -1,4 +1,5 @@
 "use strict";
+const { ExternalAPIError } = require("../errors/DomainError");
 
 /**
  * Helper untuk menerjemahkan teks menggunakan Google Translate API
@@ -13,7 +14,7 @@ async function translateText(text, targetLang = "id") {
   const response = await fetch(url);
 
   if (!response.ok) {
-    throw new Error(`Translation HTTP error: ${response.status}`);
+    throw new ExternalAPIError(`Translation HTTP error: ${response.status}`);
   }
 
   const data = await response.json();

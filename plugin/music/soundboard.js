@@ -9,6 +9,7 @@ const {
   buildContainerV2,
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
+const { ValidationError } = require("../../src/errors/DomainError");
 
 const OFFICIAL_SOUNDBOARDS = {
   intro: {
@@ -137,7 +138,7 @@ module.exports = {
       try {
         const parsedUrl = new URL(url);
         if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
-          throw new Error("Invalid protocol");
+          throw new ValidationError("Invalid protocol");
         }
       } catch (_) {
         const errPayload = buildErrorContainerV2({

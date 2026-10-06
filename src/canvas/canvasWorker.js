@@ -1,6 +1,7 @@
 "use strict";
 
 const { parentPort } = require("node:worker_threads");
+const { SystemError } = require("../errors/DomainError");
 
 if (parentPort) {
   parentPort.on("message", async ({ id, task, payload }) => {
@@ -11,6 +12,16 @@ if (parentPort) {
         case "renderProfile": {
           const profileCanvas = require("./profileCanvas");
           result = await profileCanvas.generateProfileCard(payload);
+          break;
+        }
+        case "renderMinecraftPlayer": {
+          const minecraftCanvas = require("./minecraftCanvas");
+          result = await minecraftCanvas.renderMinecraftPlayer(payload);
+          break;
+        }
+        case "renderBusinessCard": {
+          const profileCanvas = require("./profileCanvas");
+          result = await profileCanvas.generateBusinessCard(payload);
           break;
         }
         case "renderBattle": {
@@ -172,7 +183,7 @@ if (parentPort) {
           break;
         }
         default:
-          throw new Error(`Unknown canvas worker task: ${task}`);
+          throw new SystemError(`Unknown canvas worker task: ${task}`);
       }
 
       parentPort.postMessage({ id, success: true, result });

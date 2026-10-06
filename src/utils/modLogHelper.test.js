@@ -36,10 +36,10 @@ test("sendModLog - berhasil mengirimkan payload ke channel yang valid", async ()
     },
   };
 
-  const GuildSettings = require("../models/GuildSettings");
-  const originalFindOne = GuildSettings.findOne;
+  const cacheManager = require("../managers/cacheManager");
+  const originalGetGuildSettings = cacheManager.getGuildSettings;
 
-  GuildSettings.findOne = async () => ({
+  cacheManager.getGuildSettings = async () => ({
     settings: { auditLogChannel: "channel_123" },
   });
 
@@ -57,6 +57,6 @@ test("sendModLog - berhasil mengirimkan payload ke channel yang valid", async ()
     assert.ok(sent);
     assert.equal(messageSent.content, "Moderation Log Test");
   } finally {
-    GuildSettings.findOne = originalFindOne;
+    cacheManager.getGuildSettings = originalGetGuildSettings;
   }
 });

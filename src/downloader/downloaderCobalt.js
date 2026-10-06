@@ -9,6 +9,7 @@
 const axios = require("axios");
 const { logger } = require("../managers/logger");
 const { UA, httpsAgent } = require("./downloaderCore");
+const { ExternalAPIError } = require("../errors/DomainError");
 
 const INSTANCE_CACHE_TTL = 10 * 60 * 1000;
 const instanceCache = { instances: [], lastFetch: 0 };
@@ -107,7 +108,7 @@ const tryOneCobaltInstance = async (instance, url) => {
 
   const errCode =
     resData?.error?.code || resData?.text || `HTTP ${response.status}`;
-  throw new Error(`Cobalt ${instance} menolak: ${errCode}`);
+  throw new ExternalAPIError(`Cobalt ${instance} menolak: ${errCode}`);
 };
 
 /**

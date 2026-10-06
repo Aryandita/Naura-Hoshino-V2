@@ -2,6 +2,7 @@
 
 const { ChannelType, PermissionFlagsBits } = require("discord.js");
 const { logger } = require("../managers/logger");
+const { ValidationError, PermissionDeniedError } = require("../errors/DomainError");
 
 const PRESETS = {
   gaming: {
@@ -108,11 +109,11 @@ function getPreset(key) {
 async function applyPreset(guild, presetKey, adminUser = null) {
   const preset = getPreset(presetKey);
   if (!preset) {
-    throw new Error(`Preset "${presetKey}" tidak valid.`);
+    throw new ValidationError(`Preset "${presetKey}" tidak valid.`);
   }
 
   if (!guild) {
-    throw new Error("Objek Guild tidak valid.");
+    throw new ValidationError("Objek Guild tidak valid.");
   }
 
   // Cek bot permissions di server
@@ -121,7 +122,7 @@ async function applyPreset(guild, presetKey, adminUser = null) {
     botMember &&
     !botMember.permissions.has(PermissionFlagsBits.ManageChannels)
   ) {
-    throw new Error(
+    throw new PermissionDeniedError(
       "Naura membutuhkan permission 'Manage Channels' untuk menjalankan Onboarding Wizard.",
     );
   }

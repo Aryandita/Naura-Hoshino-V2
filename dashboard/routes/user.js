@@ -12,6 +12,7 @@
 const express = require("express");
 const { logger } = require("../../src/managers/logger");
 const UserProfile = require("../../src/models/UserProfile");
+const cacheManager = require("../../src/managers/cacheManager");
 const {
   requireApiLogin,
   requireSelfOrOwner,
@@ -591,7 +592,11 @@ module.exports = (client) => {
       if (action === "sell") {
         const itemDb = await GameItem.findByPk(itemId);
         const sellPrice = itemDb ? itemDb.sellPrice : 50;
-        profile.economy_wallet = (profile.economy_wallet || 0) + sellPrice;
+        
+        // Fix: Use atomic increment via cacheManager to prevent silent data loss
+        // (RULES.md §1.6 & §1.8)
+        await cacheManager.incrementUserProfile(req.targetUserId, "economy_wallet", sellPrice);
+        
         message = `Berhasil! 1x **${item.name || itemId}** terjual seharga 🪙 **${sellPrice.toLocaleString("id-ID")} Coin**.`;
       } else if (action === "trash") {
         message = `Oke, 1x **${item.name || itemId}** sudah Naura buang dari tasmu.`;

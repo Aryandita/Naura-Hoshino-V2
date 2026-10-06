@@ -127,6 +127,34 @@ class ValidationError extends DomainError {
   }
 }
 
+class SystemError extends DomainError {
+  /**
+   * @param {string} userMessage
+   * @param {Record<string, any>} [context={}]
+   */
+  constructor(userMessage, context = {}) {
+    super(
+      "SYSTEM_ERROR",
+      userMessage || "Terjadi kesalahan internal pada sistem.",
+      context,
+    );
+  }
+}
+
+class ExternalAPIError extends DomainError {
+  /**
+   * @param {string} userMessage
+   * @param {Record<string, any>} [context={}]
+   */
+  constructor(userMessage, context = {}) {
+    super(
+      "EXTERNAL_API_ERROR",
+      userMessage || "Terjadi gangguan pada layanan eksternal.",
+      context,
+    );
+  }
+}
+
 /**
  * Mengecek apakah sebuah objek error merupakan turunan DomainError
  * @param {unknown} err
@@ -150,5 +178,7 @@ module.exports = {
   StateTransitionError,
   EntityNotFoundError,
   ValidationError,
+  SystemError,
+  ExternalAPIError,
   isDomainError,
 };

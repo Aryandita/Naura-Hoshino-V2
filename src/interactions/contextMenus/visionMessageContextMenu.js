@@ -6,6 +6,7 @@ const {
   buildErrorContainerV2,
 } = require("../../utils/NauraContainerBuilder");
 const aiManager = require("../../managers/aiManager");
+const { ExternalAPIError } = require("../../errors/DomainError");
 
 module.exports = {
   name: "👁️ Tanya Naura (Vision AI)",
@@ -52,7 +53,7 @@ module.exports = {
     try {
       const response = await fetch(targetImageUrl);
       if (!response.ok) {
-        throw new Error(`Gagal mengunduh gambar: HTTP ${response.status}`);
+        throw new ExternalAPIError(`Gagal mengunduh gambar: HTTP ${response.status}`);
       }
 
       const arrayBuffer = await response.arrayBuffer();

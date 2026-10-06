@@ -829,6 +829,36 @@ class CacheManager {
     const { withMultiLock } = require("../utils/redisLockHelper");
     return withMultiLock(lockKeys, workFn, ttlMs);
   }
+
+  /**
+   * Mengambil data GuildSettings dengan Read-Through cache.
+   * @param {string} guildId
+   */
+  async getGuildSettings(guildId) {
+    if (!guildId) return null;
+    const cacheKey = `guild:settings:${guildId}`;
+
+    try {
+      const cached = await redisManager.getCache(cacheKey);
+      if (cached) return cached;
+
+      const [dbGuild] = await GuildSettings.findOrCreate({ where: { guildId } });
+      if (dbGuild) {
+        const guildData = dbGuild.toJSON();
+        await redisManager.setCache(cacheKey, guildData, GUILD_TTL);
+        return guildData;
+      }
+      return null;
+    } catch (error) {
+      logger.error("[CacheManager] Error getGuildSettings:", error.message);
+      try {
+        const [dbGuild] = await GuildSettings.findOrCreate({ where: { guildId } });
+        return dbGuild ? dbGuild.toJSON() : null;
+      } catch (dbError) {
+        return null;
+      }
+    }
+  }
 }
 
 module.exports = new CacheManager();

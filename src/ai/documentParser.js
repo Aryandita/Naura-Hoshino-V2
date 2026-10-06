@@ -10,6 +10,7 @@ const path = require("path");
 const axios = require("axios");
 const officeParser = require("officeparser");
 const { logger } = require("../managers/logger");
+const { ValidationError, SystemError } = require("../errors/DomainError");
 
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 Megabytes limit
 
@@ -37,7 +38,7 @@ const SUPPORTED_EXTENSIONS = new Set([
  */
 async function fetchAttachmentBuffer(url, maxBytes = MAX_ATTACHMENT_SIZE) {
   if (!url || typeof url !== "string") {
-    throw new Error("URL berkas tidak valid");
+    throw new ValidationError("URL berkas tidak valid");
   }
 
   const response = await axios.get(url, {
@@ -48,7 +49,7 @@ async function fetchAttachmentBuffer(url, maxBytes = MAX_ATTACHMENT_SIZE) {
 
   const buffer = Buffer.from(response.data);
   if (buffer.length > maxBytes) {
-    throw new Error(
+    throw new ValidationError(
       `Ukuran berkas (${(buffer.length / (1024 * 1024)).toFixed(2)} MB) melebihi batas maksimum 10 MB.`,
     );
   }
@@ -194,7 +195,7 @@ async function parseDocument(fileInput, options = {}) {
       }
     }
   } else {
-    throw new Error("Format input tidak valid. Berikan Buffer, URL, atau path berkas.");
+    throw new ValidationError("Format input tidak valid. Berikan Buffer, URL, atau path berkas.");
   }
 
   if (!fileType) {
@@ -202,7 +203,7 @@ async function parseDocument(fileInput, options = {}) {
   }
 
   if (!SUPPORTED_EXTENSIONS.has(fileType)) {
-    throw new Error(
+    throw new ValidationError(
       `Tipe berkas '.${fileType}' tidak didukung. Tipe yang didukung: ${Array.from(SUPPORTED_EXTENSIONS).join(", ")}.`,
     );
   }
@@ -246,7 +247,7 @@ async function parseDocument(fileInput, options = {}) {
     };
   } catch (err) {
     logger.error(`[DocumentParser] Gagal memproses berkas ${fileName}: ${err.message}`, err);
-    throw new Error(`Gagal membaca berkas ${fileName}: ${err.message}`);
+    throw new SystemError(`Gagal membaca berkas ${fileName}: ${err.message}`);
   }
 }
 

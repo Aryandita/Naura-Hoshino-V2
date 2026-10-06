@@ -17,6 +17,7 @@ const { logger } = require("../managers/logger");
 const { RESOLUTION_OPTIONS, CleanupManager } = require("./downloaderCore");
 const { compressUntilFits } = require("./downloaderCompress");
 const render = require("./downloaderRender");
+const { ValidationError } = require("../errors/DomainError");
 
 const PICK_TIMEOUT_MS = 5 * 60 * 1000;
 
@@ -74,7 +75,7 @@ const attachResolutionCollector = ({
         .catch(() => {});
 
       if (!fs.existsSync(sourcePath)) {
-        throw new Error(
+        throw new ValidationError(
           "Berkas sumber sudah tidak tersedia (mungkin server sempat restart).",
         );
       }

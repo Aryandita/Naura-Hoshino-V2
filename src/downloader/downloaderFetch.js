@@ -16,6 +16,7 @@ const { logger } = require("../managers/logger");
 const core = require("./downloaderCore");
 const { compressUntilFits } = require("./downloaderCompress");
 const render = require("./downloaderRender");
+const { ExternalAPIError } = require("../errors/DomainError");
 
 const STREAM_TIMEOUT_MS = 45000;
 const VIDEO_EXTS = ["mp4", "webm", "mov", "avi", "mkv"];
@@ -44,7 +45,7 @@ const streamToTempFile = async (link, platform, fallbackExt) => {
   await new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       writer.destroy();
-      reject(new Error("Unduhan melewati batas waktu 45 detik"));
+      reject(new ExternalAPIError("Unduhan melewati batas waktu 45 detik"));
     }, STREAM_TIMEOUT_MS);
 
     writer.on("finish", () => {

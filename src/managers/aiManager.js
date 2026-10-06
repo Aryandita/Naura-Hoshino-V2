@@ -3,6 +3,7 @@ const ui = require("../config/ui");
 const env = require("../config/env");
 const redisManager = require("./redisManager");
 const cacheManager = require("./cacheManager");
+const { ExternalAPIError, ValidationError } = require("../errors/DomainError");
 
 // @google/genai dan ollama keduanya berat dan keduanya hanya terpakai ketika ada
 // permintaan AI yang benar-benar masuk. Sebelumnya keduanya di-require di baris atas,
@@ -399,7 +400,7 @@ Jawablah dalam bahasa Indonesia kasual.`;
 
             const textResponse = await response.text();
             if (!response.ok)
-              throw new Error(`Groq API error: HTTP ${response.status}`);
+              throw new ExternalAPIError(`Groq API error: HTTP ${response.status}`);
             const data = JSON.parse(textResponse);
             responseText = data.choices[0].message.content;
 
@@ -417,7 +418,7 @@ Jawablah dalam bahasa Indonesia kasual.`;
             // 3. GEMINI API (FALLBACK 2)
             try {
               const geminiClient = this.getGenAI();
-              if (!geminiClient) throw new Error("Gemini tidak dikonfigurasi.");
+              if (!geminiClient) throw new ValidationError("Gemini tidak dikonfigurasi.");
 
               const sessionData = (await this.getMemory(userId, "gemini")) || {
                 history: [],
@@ -573,7 +574,7 @@ Jawablah dalam bahasa Indonesia kasual.`;
     isPremium = false,
   }) {
     if (!prompt || typeof prompt !== "string") {
-      throw new Error("Pesan tidak boleh kosong.");
+      throw new ValidationError("Pesan tidak boleh kosong.");
     }
 
     // Ambil data database player bila ada userId dan belum disertakan
@@ -782,13 +783,13 @@ Jawablah dalam bahasa Indonesia kasual.`;
   }) {
     const visionClient = this.getGenAI();
     if (!visionClient) {
-      throw new Error(
+      throw new ValidationError(
         "Kunci GEMINI_API_KEY belum dikonfigurasi. Fitur Vision AI tidak aktif."
       );
     }
 
     if (!imageBuffer || !Buffer.isBuffer(imageBuffer)) {
-      throw new Error("Buffer gambar tidak valid atau kosong.");
+      throw new ValidationError("Buffer gambar tidak valid atau kosong.");
     }
 
     let modeInstruction = "";
@@ -867,7 +868,7 @@ Jawablah dalam bahasa Indonesia kasual.`;
       }
     }
 
-    throw new Error(
+    throw new ExternalAPIError(
       lastError
         ? `Gagal menganalisis gambar: ${lastError.message}`
         : "AI tidak mengembalikan teks respons."

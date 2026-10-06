@@ -9,6 +9,7 @@
  */
 
 const { logger } = require("../../managers/logger");
+const { ValidationError, EntityNotFoundError } = require("../../errors/DomainError");
 
 const ROLES = Object.freeze({
   GUARDIAN: "GUARDIAN",     // Tank: Shield & absorbs fatal damage
@@ -66,10 +67,10 @@ class CelestialRaidEngine {
    */
   createRaidInstance({ leaderId, bossId = "ASTRAL_LEVIATHAN", members = [] }) {
     if (!members || members.length < 2) {
-      throw new Error("Celestial Raid membutuhkan minimal 2 anggota party.");
+      throw new ValidationError("Celestial Raid membutuhkan minimal 2 anggota party.");
     }
     if (members.length > 4) {
-      throw new Error("Maksimal anggota party Celestial Raid adalah 4 pemain.");
+      throw new ValidationError("Maksimal anggota party Celestial Raid adalah 4 pemain.");
     }
 
     const bossConfig = BOSSES[bossId] || BOSSES.ASTRAL_LEVIATHAN;
@@ -125,7 +126,7 @@ class CelestialRaidEngine {
   executeTurn(instanceId, playerActions = []) {
     const session = this.getRaidInstance(instanceId);
     if (!session) {
-      throw new Error("Sesi Celestial Raid tidak ditemukan atau sudah berakhir.");
+      throw new EntityNotFoundError("Sesi Celestial Raid tidak ditemukan atau sudah berakhir.");
     }
     if (session.status !== "IN_PROGRESS") {
       return session;
