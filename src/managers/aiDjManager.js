@@ -176,7 +176,7 @@ class AiDjManager {
       try {
         audioBuffer = await fishAudioService.generateSpeech(script, {
           format: "mp3",
-          latency: "balanced",
+          latency: "low",
         });
 
         if (audioBuffer) {

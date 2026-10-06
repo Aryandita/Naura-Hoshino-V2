@@ -17,6 +17,7 @@ const os = require("node:os");
 const env = require("../config/env.js");
 const { logger } = require("../managers/logger.js");
 const redisManager = require("../managers/redisManager.js");
+const { SystemError, ExternalAPIError, ValidationError } = require("../errors/DomainError.js");
 
 const API_BASE = "https://api.fish.audio";
 const CACHE_TTL_SECONDS = 86400; // 24 Jam
@@ -48,17 +49,13 @@ class FishAudioService {
       (ts) => now - ts < this.windowMs,
     );
     if (this.requestTimestamps.length >= this.maxRequestsPerWindow) {
-      logger.warn(
-        "[FishAudio] Rate limit TTS tercapai (maks 6 req/10s). Request dibatalkan sementara.",
-      );
-      return false;
+      logger.warn("[FishAudio] Rate limit TTS tercapai (maks 6 req/10s).");
+      throw new ExternalAPIError("Rate limit TTS tercapai (maks 6 req/10s).", { service: "FishAudio", retryAfter: 10 });
     }
 
     if (this.activeRequests >= this.maxConcurrentRequests) {
-      logger.warn(
-        "[FishAudio] Concurrency limit tercapai (maks 2 paralel). Menolak request burst.",
-      );
-      return false;
+      logger.warn("[FishAudio] Concurrency limit tercapai (maks 2 paralel). Menolak request burst.");
+      throw new SystemError("Concurrency limit tercapai (maks 2 paralel). Menolak request burst.", { component: "FishAudio" });
     }
 
     this.activeRequests++;
@@ -109,15 +106,15 @@ class FishAudioService {
       logger.debug(
         "[FishAudio] API Key belum dikonfigurasi di .env (FISH_AUDIO_API_KEY).",
       );
-      return null;
+      throw new SystemError("API Key Fish Audio belum dikonfigurasi.", { component: "FishAudioService" });
     }
 
     if (this.creditCooldownUntil && Date.now() < this.creditCooldownUntil) {
-      return null;
+      throw new ExternalAPIError("Saldo API Fish Audio habis (Cooldown).", { service: "FishAudio" });
     }
 
     if (!text || typeof text !== "string" || text.trim().length === 0) {
-      return null;
+      throw new ValidationError("Teks untuk TTS tidak boleh kosong.");
     }
 
     const cleanText = text.trim();
@@ -141,16 +138,13 @@ class FishAudioService {
     }
 
     // 2. Request ke Fish Audio API dengan Concurrency Guard & Rate Limiter
-    const slotAcquired = await this._acquireSlot();
-    if (!slotAcquired) {
-      return null;
-    }
+    await this._acquireSlot();
 
     try {
       const payload = {
         text: cleanText,
         format: format,
-        latency: options.latency || "balanced",
+        latency: options.latency || "low",
       };
 
       if (voiceId) {
@@ -166,6 +160,7 @@ class FishAudioService {
         headers: {
           Authorization: `Bearer ${env.FISH_AUDIO_API_KEY}`,
           "Content-Type": "application/json",
+          "model": "s2.1-pro-free",
         },
         body: JSON.stringify(payload),
       });
@@ -179,14 +174,14 @@ class FishAudioService {
               "[FishAudio] Saldo API credit habis (HTTP 402 Insufficient Credit). Layanan TTS Fish Audio dinonaktifkan sementara selama 1 jam. Silakan isi saldo di https://fish.audio/app/developers.",
             );
           }
-          return null;
+          throw new ExternalAPIError("Saldo API credit habis (HTTP 402).", { service: "FishAudio" });
         }
 
         const errBody = await response.text().catch(() => "");
         logger.error(
           `[FishAudio] API Error HTTP ${response.status}: ${errBody}`,
         );
-        return null;
+        throw new ExternalAPIError(`API Error HTTP ${response.status}`, { service: "FishAudio", details: errBody });
       }
 
       const arrayBuffer = await response.arrayBuffer();
@@ -216,7 +211,10 @@ class FishAudioService {
       return audioBuffer;
     } catch (err) {
       logger.error(`[FishAudio] Eksepsi saat generate speech: ${err.message}`);
-      return null;
+      if (err.name === "SystemError" || err.name === "ExternalAPIError" || err.name === "ValidationError") {
+        throw err;
+      }
+      throw new ExternalAPIError(`Gagal menghubungi Fish Audio: ${err.message}`, { service: "FishAudio" });
     } finally {
       this._releaseSlot();
     }
@@ -230,7 +228,6 @@ class FishAudioService {
    */
   async saveSpeechToTemp(text, options = {}) {
     const audioBuffer = await this.generateSpeech(text, options);
-    if (!audioBuffer) return null;
 
     try {
       const ext = options.format || "mp3";
@@ -239,12 +236,18 @@ class FishAudioService {
         `tts_${Date.now()}_${crypto.randomBytes(4).toString("hex")}.${ext}`,
       );
       fs.writeFileSync(tempPath, audioBuffer);
+
+      // Auto-cleanup file temp setelah 10 menit agar disk tidak penuh
+      setTimeout(() => {
+        fs.unlink(tempPath, () => {});
+      }, 10 * 60 * 1000).unref();
+
       return tempPath;
     } catch (err) {
       logger.error(
         `[FishAudio] Gagal menyimpan file sementara: ${err.message}`,
       );
-      return null;
+      throw new SystemError(`Gagal menyimpan file sementara: ${err.message}`, { component: "FishAudioService" });
     }
   }
 
@@ -280,7 +283,7 @@ class FishAudioService {
         logger.error(
           `[FishAudio] Gagal membuat voice clone: HTTP ${res.status} - ${errText}`,
         );
-        return null;
+        throw new ExternalAPIError(`Gagal membuat voice clone: HTTP ${res.status}`, { service: "FishAudio", details: errText });
       }
 
       const json = await res.json();
@@ -293,7 +296,8 @@ class FishAudioService {
       logger.error(
         `[FishAudio] Eksepsi saat membuat voice clone: ${err.message}`,
       );
-      return null;
+      if (err.name === "ExternalAPIError") throw err;
+      throw new ExternalAPIError(`Eksepsi saat membuat voice clone: ${err.message}`, { service: "FishAudio" });
     }
   }
 
