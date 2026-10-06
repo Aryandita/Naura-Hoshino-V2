@@ -223,6 +223,8 @@ module.exports = {
         description: [
           `*${adaptive.focusTip}*`,
           rescueAlert,
+          survivalUI.buildSurvivalHUD(survival, { customMaxHp: stats.maxHp }),
+          "",
           `${e("clock")} **Waktu di dunia Naura:**`,
           timeLine,
           worldWeatherLine,

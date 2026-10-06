@@ -113,8 +113,41 @@ module.exports = {
         return interaction.editReply(errPayload);
       }
 
-      const nama = interaction.options.getString("nama").toLowerCase();
-      const url = interaction.options.getString("url");
+      const rawNama = interaction.options.getString("nama") || "";
+      const nama = rawNama.trim().toLowerCase();
+      const url = (interaction.options.getString("url") || "").trim();
+
+      // Validasi nama soundboard (anti-prototype pollution & format alphanumeric)
+      if (
+        nama === "__proto__" ||
+        nama === "constructor" ||
+        nama === "prototype" ||
+        !/^[a-z0-9_-]{1,32}$/.test(nama)
+      ) {
+        const errPayload = buildErrorContainerV2({
+          title: "Nama Tidak Valid",
+          description:
+            "❌ Nama soundboard hanya boleh 1-32 karakter alfanumerik (huruf kecil, angka, _, -) dan bukan kata kunci sistem.",
+          footerText: ui.getFooter("music"),
+        });
+        return interaction.editReply(errPayload);
+      }
+
+      // Validasi URL: wajib http atau https yang valid
+      try {
+        const parsedUrl = new URL(url);
+        if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+          throw new Error("Invalid protocol");
+        }
+      } catch (_) {
+        const errPayload = buildErrorContainerV2({
+          title: "URL Tidak Valid",
+          description:
+            "❌ URL audio soundboard wajib menggunakan tautan HTTP atau HTTPS yang valid.",
+          footerText: ui.getFooter("music"),
+        });
+        return interaction.editReply(errPayload);
+      }
 
       if (Object.keys(currentSettings.soundboards).length >= 20) {
         const errPayload = buildErrorContainerV2({
@@ -152,8 +185,14 @@ module.exports = {
         return interaction.editReply(errPayload);
       }
 
-      const nama = interaction.options.getString("nama").toLowerCase();
-      if (!currentSettings.soundboards[nama]) {
+      const rawNama = interaction.options.getString("nama") || "";
+      const nama = rawNama.trim().toLowerCase();
+      if (
+        nama === "__proto__" ||
+        nama === "constructor" ||
+        nama === "prototype" ||
+        !currentSettings.soundboards[nama]
+      ) {
         const errPayload = buildErrorContainerV2({
           title: "Tidak Ditemukan",
           description: "❌ Soundboard tidak ditemukan.",

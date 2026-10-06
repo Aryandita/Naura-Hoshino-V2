@@ -59,35 +59,30 @@ module.exports = (client) => {
       return res.status(400).json({ error: "Target User ID wajib diisi." });
 
     try {
-      const [user] = await UserProfile.findOrCreate({
-        where: { userId: targetId },
-      });
-      if (wallet !== undefined) user.economy_wallet = Number(wallet) || 0;
-      if (bank !== undefined) user.economy_bank = Number(bank) || 0;
+      const cacheManager = require("../../src/managers/cacheManager");
+      const userPatch = {};
+      if (wallet !== undefined) userPatch.economy_wallet = Number(wallet) || 0;
+      if (bank !== undefined) userPatch.economy_bank = Number(bank) || 0;
 
       if (isPremium !== undefined) {
-        user.isPremium = !!isPremium;
+        userPatch.isPremium = !!isPremium;
         if (isPremium) {
           const expiry = new Date();
           expiry.setFullYear(expiry.getFullYear() + 100);
-          user.premiumUntil = expiry;
+          userPatch.premiumUntil = expiry;
         } else {
-          user.premiumUntil = null;
+          userPatch.premiumUntil = null;
         }
       }
-      const fields = [];
-      if (wallet !== undefined) fields.push("economy_wallet");
-      if (bank !== undefined) fields.push("economy_bank");
-      if (isPremium !== undefined) fields.push("isPremium", "premiumUntil");
-      if (fields.length > 0) await user.save({ fields });
+
+      if (Object.keys(userPatch).length > 0) {
+        await cacheManager.updateUserProfile(targetId, userPatch);
+      }
 
       if (starFragments !== undefined) {
-        const UserSurvival = require("../../src/models/UserSurvival");
-        const [survival] = await UserSurvival.findOrCreate({
-          where: { userId: targetId },
+        await cacheManager.updateUserSurvival(targetId, {
+          starFragments: Number(starFragments) || 0,
         });
-        survival.starFragments = Number(starFragments) || 0;
-        await survival.save({ fields: ["starFragments"] });
       }
 
       res.json({

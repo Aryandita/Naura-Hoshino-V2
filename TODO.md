@@ -38,6 +38,26 @@ Keputusan berikut adalah sumber kebenaran. Semua dokumen lain harus mengikutinya
 
 > **Kriteria:** Mempengaruhi integritas data, keamanan saldo/ekonomi, stabilitas koneksi WebSocket, dan pencegahan eksploitasi sistem.
 
+- [x] **[MUSIC RESOLVER, SECURITY AUDIT & CODE REVIEW QUALITY] Spotify Smart Two-Tier Fallback, Soundboard & OAuth Hardening, and Music & Survival UX Enhancements**
+  - Mengaudit dan menyelaraskan seluruh repository berbasis `/strix-security-audit` dan `/code-review-and-quality` sesuai standar `RULES.md` dan `AGENTS.md`.
+  - Mengembangkan **Spotify Smart Two-Tier Fallback Resolver** di `src/music/spotifyResolver.js`:
+    - Memverifikasi Spotify Web API client credentials aktif; menangani pembatasan Spotify Web API 2024 (HTTP 403 pada `/playlists/{id}/tracks` dan `/artists/{id}/top-tracks` untuk flow client credentials) dengan mekanisme fallback otomatis ke scraper `spotify-url-info` dan fallback artis cerdas (`/artists/{id}` + pencarian katalog).
+    - Memperkaya metadata trek dengan `artworkUrl` (cover album resolusi tinggi) dan durasi trek.
+    - Mengintegrasikan caching multi-tier (Redis & Memori, TTL 12 jam) dengan namespace `cache:spotify:res:...`.
+    - Mengoptimalkan resolusi trek playlist melalui pemrosesan batch paralel (`Promise.all` per 5 trek) untuk mencegah timeout Poru/Lavalink.
+    - Menghubungkan resolver Spotify ke command `/music import`, select menu rekomendasi lagu di `src/music/musicButtons.js`, dan AI Agent `playMusic` di `src/ai/functionDispatcher.js`.
+  - Memperbaiki bug dan meningkatkan UI/UX Music System di `plugin/music/music.js`:
+    - Mengeliminasi dead code pada subcommand DJ: menyatukan logika duplikat `subcommand === "dj"` sehingga `aiDjManager.setDjEnabled(guild.id, true)` dan `player.aiDjEnabled` aktif serentak dengan telemetri kesiapan Fish Audio TTS.
+    - Merombak antarmuka `/music queue` dengan menampilkan lagu yang sedang diputar (`Now Playing`), total trek dalam antrean, estimasi total durasi antrean (`totalQueueMs`), dan informasi halaman yang bersih.
+  - Meningkatkan UI/UX Naura Wilds di `plugin/survival/subcommands/info.js`:
+    - Mengintegrasikan `survivalUI.buildSurvivalHUD` di kartu `/survival info` untuk visibilitas instan status vital petualang (HP, Stamina, Lapar, Haus).
+  - Remediasi Celah Keamanan & Konsistensi State (`/strix-security-audit`):
+    - `dashboard/server.js`: Menutup celah Open Redirect pada endpoint OAuth2 login callback dengan validasi ketat `sanitizeRedirectUrl` terhadap query parameter `returnTo` dan `redirect`.
+    - `plugin/music/soundboard.js`: Mencegah Prototype Pollution pada custom soundboard keys (`__proto__`, `constructor`, `prototype`, dan regex `/^[a-z0-9_-]{1,32}$/`), serta validasi ketat skema URL audio (`http:` dan `https:`).
+    - `dashboard/routes/owner.js`: Mengganti mutasi raw Sequelize `user.save()` dan `survival.save()` dengan `cacheManager.updateUserProfile` dan `cacheManager.updateUserSurvival` untuk mencegah desinkronisasi cache Redis dan Write-Behind Queue.
+  - Memverifikasi 100% kelulusan seluruh 6 tahapan Master QA Gate: 0 error linter, 0 em-dash, 100% paritas bahasa ID/EN (274 kunci sinkron), 100% resolusi require internal, 100% sintaks script inline dashboard, dan 522/522 automated unit test lulus hijau (0 error).
+  - File: [`src/music/spotifyResolver.js`](src/music/spotifyResolver.js), [`plugin/music/music.js`](plugin/music/music.js), [`src/music/musicButtons.js`](src/music/musicButtons.js), [`src/ai/functionDispatcher.js`](src/ai/functionDispatcher.js), [`plugin/survival/subcommands/info.js`](plugin/survival/subcommands/info.js), [`dashboard/server.js`](dashboard/server.js), [`plugin/music/soundboard.js`](plugin/music/soundboard.js), [`dashboard/routes/owner.js`](dashboard/routes/owner.js).
+
 - [x] **[SURVIVAL & BUTTON INTERACTIONS] Standardisasi Siklus Interaksi Tombol Discord, Universal Subcommand Adapter, dan Eliminasi Dead-End Cards**
   - Mengaudit dan menstandarisasi siklus hidup interaksi tombol Discord (khususnya seluruh tombol di ekosistem Naura Wilds / `/survival`) guna mengeliminasi inkonsistensi perilaku, crash runtime, dan kartu buntu.
   - Membangun **Universal Survival Interaction Adapter (`adaptSurvivalInteraction`)** di `src/survival/helpers/survivalContext.js`:

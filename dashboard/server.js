@@ -305,10 +305,26 @@ module.exports = (client) => {
       ),
     );
 
+    // Sanitasi URL pengalihan untuk mencegah serangan Open Redirect
+    const sanitizeRedirectUrl = (url) => {
+      if (!url || typeof url !== "string") return "/";
+      const trimmed = url.trim();
+      if (
+        trimmed.startsWith("/") &&
+        !trimmed.startsWith("//") &&
+        !trimmed.startsWith("/\\") &&
+        !trimmed.includes("://") &&
+        !/[\r\n\t\0]/.test(trimmed)
+      ) {
+        return trimmed;
+      }
+      return "/";
+    };
+
     webApp.get("/auth/discord", (req, res, next) => {
       const returnTo = req.query.returnTo || req.query.redirect;
       if (returnTo && req.session) {
-        req.session.returnTo = String(returnTo);
+        req.session.returnTo = sanitizeRedirectUrl(String(returnTo));
       }
       passport.authenticate("discord")(req, res, next);
     });
@@ -316,7 +332,8 @@ module.exports = (client) => {
       "/auth/discord/callback",
       passport.authenticate("discord", { failureRedirect: "/login?failed=1" }),
       (req, res) => {
-        const returnTo = req.session?.returnTo || "/";
+        const rawReturnTo = req.session?.returnTo || "/";
+        const returnTo = sanitizeRedirectUrl(rawReturnTo);
         if (req.session) {
           delete req.session.returnTo;
         }

@@ -289,10 +289,14 @@ async function runMusicLogic(
       });
     }
 
-    const mode = args.mode || "on";
+    const aiDjManager = require("../../src/managers/aiDjManager");
+    const fishAudioService = require("../../src/services/fishAudioService");
+    const mode = (args.mode || "on").toLowerCase();
+
     if (mode === "on") {
       player.aiDjEnabled = true;
       player.isAutoplay = true;
+      aiDjManager.setDjEnabled(guild.id, true);
 
       if (!player.isPlaying && player.queue.length === 0) {
         const openingTrackRes = await poru.resolve({
@@ -309,16 +313,26 @@ async function runMusicLogic(
         }
       }
 
+      const isVoiceReady = fishAudioService.isConfigured();
+      const statusDesc = isVoiceReady
+        ? `🎙️ **Mode AI Smart DJ Naura BERHASIL DIAKTIFKAN!**\n\n` +
+          `Naura kini aktif memandu sesi musik di <#${memberVoice.id}> sebagai Radio Host cerdas, memberikan pengumuman lagu secara personal dengan suara anime khas Naura via Fish Audio TTS! ✨🎶\n${divider}\n💡 *Ketik \`/music dj mode:off\` untuk mematikan mode DJ cerdas.*`
+        : `🎙️ **Mode AI Smart DJ Naura BERHASIL DIAKTIFKAN!**\n\n` +
+          `Naura kini aktif memandu sesi musik di <#${memberVoice.id}> dengan kurasi pintar otomatis, sinkronisasi mood obrolan, dan transisi lagu dinamis.\n\n` +
+          `💡 *Catatan:* API Key Fish Audio belum terkonfigurasi di \`.env\` (\`FISH_AUDIO_API_KEY\`), sehingga AI DJ berjalan dalam mode **Visual Chat Announcer**. Masukkan API Key Fish Audio untuk mengaktifkan suara asli Naura!\n${divider}\n💡 *Ketik \`/music dj mode:off\` untuk mematikan mode DJ cerdas.*`;
+
       const djPayload = buildContainerV2({
-        accentColorHex: "#93C5FD",
-        title: "🎧 AI Smart DJ: Hoshino FM 104.5",
-        expression: "cheer",
-        description: `🎙️ **Naura AI Smart DJ telah Mengudara!**\n\nNaura kini aktif memandu sesi musik di <#${memberVoice.id}> dengan kurasi pintar otomatis, sinkronisasi mood obrolan, dan transisi lagu dinamis.\n${divider}\n💡 *Ketik \`/music dj off\` untuk mematikan mode DJ cerdas.*`,
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        authorName: "HOSHINO FM • AI SMART DJ",
+        title: "🎧 AI Smart DJ Companion Aktif",
+        expression: "happy",
+        description: statusDesc,
         footerText: ui.getFooter("music"),
       });
       return sendReply(djPayload);
     } else if (mode === "off") {
       player.aiDjEnabled = false;
+      aiDjManager.setDjEnabled(guild.id, false);
       const offPayload = buildContainerV2({
         accentColorHex: "#FFB347",
         title: "🎧 AI Smart DJ Dimatikan",
@@ -328,11 +342,20 @@ async function runMusicLogic(
       });
       return sendReply(offPayload);
     } else {
+      const isEnabled = aiDjManager.isDjEnabled(guild.id) || Boolean(player.aiDjEnabled);
+      const isVoiceReady = fishAudioService.isConfigured();
       const statusPayload = buildContainerV2({
-        accentColorHex: "#93C5FD",
-        title: "🎧 Status AI Smart DJ",
-        expression: "smile",
-        description: `Status AI DJ saat ini: **${player.aiDjEnabled ? "🟢 AKTIF" : "🔴 NONAKTIF"}**\nChannel Voice: <#${memberVoice.id}>\nAutoplay Cerdas: **${player.isAutoplay ? "Aktif" : "Mati"}**\n${divider}`,
+        accentColorHex: isEnabled ? ui.getColor("primary") || "#FFB6C1" : "#4B5563",
+        authorName: "HOSHINO FM • AI SMART DJ STATUS",
+        title: "🎧 Status Sistem AI DJ Radio Host",
+        expression: isEnabled ? "happy" : "neutral",
+        description:
+          `📻 **Status DJ Server:** ${isEnabled ? "🟢 **Aktif (ON)**" : "🔴 **Nonaktif (OFF)**"}\n` +
+          `🎙️ **Voice Engine (Fish Audio):** ${isVoiceReady ? "🟢 **Siap (Connected)**" : "🟡 **Belum Ada API Key (Visual Mode Only)**"}\n` +
+          `🔊 **Channel Voice:** <#${memberVoice.id}>\n` +
+          `🤖 **Autoplay Cerdas:** **${player.isAutoplay ? "Aktif" : "Mati"}**\n` +
+          `🌸 **Karakter Host:** Naura Hoshino (Kawaii Radio Host)\n\n` +
+          `Gunakan \`/music dj mode:on\` untuk mengaktifkan atau \`/music dj mode:off\` untuk mematikan.\n${divider}`,
         footerText: ui.getFooter("music"),
       });
       return sendReply(statusPayload);
@@ -609,15 +632,15 @@ async function runMusicLogic(
       let playlistName = "Imported Playlist";
       let tracksToSave = [];
 
-      const res = await poru.resolve({ query: url, requester: user });
+      const res = await resolveSpotifyQuery(poru, url, user);
       if (
         res &&
         (res.loadType === "PLAYLIST_LOADED" || res.loadType === "playlist")
       ) {
-        playlistName = res.playlistInfo.name || "Imported Playlist";
+        playlistName = res.playlistInfo?.name || res.name || "Imported Playlist";
         tracksToSave = res.tracks.map((t) => t.info.uri || t.info.title);
       } else if (res && res.tracks && res.tracks.length > 0) {
-        playlistName = "Imported Track";
+        playlistName = res.tracks[0].info.title || "Imported Track";
         tracksToSave = [res.tracks[0].info.uri || res.tracks[0].info.title];
       }
 
@@ -981,32 +1004,57 @@ async function runMusicLogic(
   }
 
   if (subcommand === "queue") {
-    if (!player || player.queue.length === 0) {
+    if (!player || (!player.currentTrack && player.queue.length === 0)) {
       const errPayload = buildErrorContainerV2({
         title: "Antrean Kosong",
-        description: `${eError} | Antrean lagu kosong.`,
+        description: `${eError} | Tidak ada musik yang sedang diputar atau dalam antrean. Gunakan \`/music play\` untuk memutar lagu!`,
         footerText: ui.getFooter("music"),
       });
       return sendReply(errPayload, true);
     }
 
     const pageSize = 10;
-    const totalPages = Math.ceil(player.queue.length / pageSize);
+    const totalPages = Math.max(1, Math.ceil(player.queue.length / pageSize));
     let currentPage = 0;
+
+    const totalQueueMs = player.queue.reduce(
+      (acc, t) =>
+        acc +
+        (t.info?.length && !isNaN(t.info.length) ? Number(t.info.length) : 0),
+      0,
+    );
 
     const renderQueuePage = (page) => {
       const start = page * pageSize;
       const end = start + pageSize;
       const currentQueue = player.queue.slice(start, end);
 
-      const qList = currentQueue
-        .map((t, i) => {
-          const sourceIcon = getPlatformIcon(
-            t.info.originalSource || t.info.sourceName,
-          );
-          return `**${start + i + 1}.** ${sourceIcon} [${t.info.title}](${t.info.uri}) - \`${formatDuration(t.info.length)}\``;
-        })
-        .join("\n");
+      let desc = "";
+      if (player.currentTrack && player.currentTrack.info) {
+        const ct = player.currentTrack.info;
+        const nowIcon = getPlatformIcon(ct.originalSource || ct.sourceName);
+        const reqStr = ct.requester?.id
+          ? `<@${ct.requester.id}>`
+          : ct.requester?.username || "Autoplay/Radio";
+        desc += `### 🎧 Sedang Diputar\n${nowIcon} [${ct.title}](${ct.uri})\n⏱️ \`${formatDuration(ct.length)}\` • Pemohon: ${reqStr}\n\n`;
+      }
+
+      desc += `### 📋 Lagu Berikutnya (${player.queue.length} Lagu)\n`;
+      if (currentQueue.length > 0) {
+        desc += currentQueue
+          .map((t, i) => {
+            const sourceIcon = getPlatformIcon(
+              t.info.originalSource || t.info.sourceName,
+            );
+            const req = t.info.requester?.username
+              ? ` • *${t.info.requester.username}*`
+              : "";
+            return `**${start + i + 1}.** ${sourceIcon} [${t.info.title}](${t.info.uri}) - \`${formatDuration(t.info.length)}\`${req}`;
+          })
+          .join("\n");
+      } else {
+        desc += `*Antrean berikutnya kosong. Putar lagu baru dengan \`/music play\`!*\n`;
+      }
 
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -1023,10 +1071,10 @@ async function runMusicLogic(
 
       return buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        title: `📜 Antrean Musik, Halaman ${page + 1} / ${totalPages}`,
-        description: qList,
+        title: `📜 Antrean Musik • Halaman ${page + 1} / ${totalPages}`,
+        description: desc,
         buttonsRow: row,
-        footerText: `Total Lagu dalam Antrean: ${player.queue.length}`,
+        footerText: `Total Antrean: ${player.queue.length} Lagu • Durasi: ${formatDuration(totalQueueMs)}`,
       });
     };
 
@@ -1698,64 +1746,6 @@ async function runMusicLogic(
     });
 
     return sendReply(partyPayload);
-  }
-
-  if (subcommand === "dj" || subcommand === "radio") {
-    const aiDjManager = require("../../src/managers/aiDjManager");
-    const fishAudioService = require("../../src/services/fishAudioService");
-    const mode = (args.mode || "status").toLowerCase();
-
-    if (mode === "on") {
-      aiDjManager.setDjEnabled(guild.id, true);
-      const isVoiceReady = fishAudioService.isConfigured();
-      const statusDesc = isVoiceReady
-        ? `🎙️ **Mode AI Smart DJ Naura BERHASIL DIAKTIFKAN!**\n\n` +
-          `Naura akan bertindak sebagai Radio Host di Voice Channel kamu, memberikan pengumuman lagu secara personal dengan suara anime khas Naura via Fish Audio TTS! ✨🎶`
-        : `🎙️ **Mode AI Smart DJ Naura BERHASIL DIAKTIFKAN!**\n\n` +
-          `💡 *Catatan:* API Key Fish Audio belum terkonfigurasi di \`.env\` (\`FISH_AUDIO_API_KEY\`), sehingga AI DJ saat ini berjalan dalam mode **Visual Chat Announcer**. Masukkan API Key Fish Audio untuk mengaktifkan suara asli Naura!`;
-
-      const djPayload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        authorName: "HOSHINO FM • AI SMART DJ",
-        title: "🎧 AI Smart DJ Companion Aktif",
-        description: statusDesc,
-        expression: "happy",
-        footerText: ui.getFooter("music"),
-      });
-      return sendReply(djPayload);
-    }
-
-    if (mode === "off") {
-      aiDjManager.setDjEnabled(guild.id, false);
-      const djPayload = buildContainerV2({
-        accentColorHex: ui.getColor("dark") || "#0b0c10",
-        authorName: "HOSHINO FM • AI SMART DJ",
-        title: "🎧 AI Smart DJ Companion Dinonaktifkan",
-        description: `Mode AI Smart DJ telah dimatikan untuk server ini. Pemutaran musik akan berjalan standar tanpa pengumuman radio host.`,
-        expression: "neutral",
-        footerText: ui.getFooter("music"),
-      });
-      return sendReply(djPayload);
-    }
-
-    // Status Mode
-    const isEnabled = aiDjManager.isDjEnabled(guild.id);
-    const isVoiceReady = fishAudioService.isConfigured();
-    const djPayload = buildContainerV2({
-      accentColorHex: isEnabled
-        ? ui.getColor("primary") || "#FFB6C1"
-        : "#4B5563",
-      authorName: "HOSHINO FM • AI SMART DJ STATUS",
-      title: "🎧 Status Sistem AI DJ Radio Host",
-      description:
-        `📻 **Status DJ Server:** ${isEnabled ? "🟢 **Aktif (ON)**" : "🔴 **Nonaktif (OFF)**"}\n` +
-        `🎙️ **Voice Engine (Fish Audio):** ${isVoiceReady ? "🟢 **Siap (Connected)**" : "🟡 **Belum Ada API Key (Visual Mode Only)**"}\n` +
-        `🌸 **Karakter Host:** Naura Hoshino (Kawaii Radio Host)\n\n` +
-        `Gunakan \`/music dj mode:on\` untuk mengaktifkan atau \`/music dj mode:off\` untuk mematikan.`,
-      expression: isEnabled ? "happy" : "neutral",
-      footerText: ui.getFooter("music"),
-    });
-    return sendReply(djPayload);
   }
 
   if (subcommand === "duplicates") {

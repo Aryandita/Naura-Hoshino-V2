@@ -145,11 +145,17 @@ function loadSpotifyUrlInfo() {
 /** Ubah satu item track Spotify menjadi deskriptor ringan siap dicari. */
 function toTrackMeta(item) {
   if (!item) return null;
-  const artists = (item.artists || []).map((a) => a.name).filter(Boolean);
+  const artists = (item.artists || [])
+    .map((a) => (typeof a === "string" ? a : a?.name))
+    .filter(Boolean);
+  const artworkUrl =
+    item.album?.images?.[0]?.url || item.images?.[0]?.url || undefined;
   return {
     name: item.name,
     artists,
     isrc: item.external_ids ? item.external_ids.isrc : undefined,
+    artworkUrl,
+    durationMs: item.duration_ms || undefined,
   };
 }
 
@@ -167,52 +173,84 @@ async function fetchSpotifyMetadata(type, id) {
       return { type, name: data.name, items: [toTrackMeta(data)] };
     }
 
-    if (type === "album" || type === "playlist") {
-      const path =
-        type === "album"
-          ? `/albums/${id}?market=${market}`
-          : `/playlists/${id}/tracks?market=${market}&limit=100`;
-      const data = await spotifyApiGet(path);
+    if (type === "album") {
+      const data = await spotifyApiGet(`/albums/${id}?market=${market}`);
       if (!data) return null;
-      const firstPage = type === "album" ? data.tracks : data;
-      const pick = (it) =>
-        type === "album"
-          ? { name: it.name, artists: (it.artists || []).map((a) => a.name) }
-          : it && it.track
-            ? toTrackMeta(it.track)
-            : null;
-      let items = (firstPage.items || []).map(pick).filter(Boolean);
-      let page = firstPage;
-      for (
-        let i = 0;
-        i < 5 &&
-        page &&
-        page.next &&
-        items.length < env.SPOTIFY_MAX_PLAYLIST_TRACKS;
-        i++
-      ) {
-        const res = await fetch(page.next); // URL paginasi resmi dari Spotify.
-        if (!res.ok) break;
-        page = await res.json();
-        items = items.concat((page.items || []).map(pick).filter(Boolean));
-      }
+      const albumArtwork = data.images?.[0]?.url;
+      const items = (data.tracks?.items || [])
+        .map((t) => {
+          const meta = toTrackMeta(t);
+          if (meta && albumArtwork && !meta.artworkUrl) meta.artworkUrl = albumArtwork;
+          return meta;
+        })
+        .filter(Boolean);
       return {
         type,
-        name: type === "album" ? data.name : data.name || "Playlist Spotify",
+        name: data.name,
         items: items.slice(0, env.SPOTIFY_MAX_PLAYLIST_TRACKS),
       };
+    }
+
+    if (type === "playlist") {
+      const data = await spotifyApiGet(
+        `/playlists/${id}/tracks?market=${market}&limit=100`,
+      );
+      if (data && data.items) {
+        const pick = (it) => (it && it.track ? toTrackMeta(it.track) : null);
+        let items = (data.items || []).map(pick).filter(Boolean);
+        let page = data;
+        for (
+          let i = 0;
+          i < 5 &&
+          page &&
+          page.next &&
+          items.length < env.SPOTIFY_MAX_PLAYLIST_TRACKS;
+          i++
+        ) {
+          const res = await fetch(page.next); // URL paginasi resmi dari Spotify.
+          if (!res.ok) break;
+          page = await res.json();
+          items = items.concat((page.items || []).map(pick).filter(Boolean));
+        }
+        return {
+          type,
+          name: "Playlist Spotify",
+          items: items.slice(0, env.SPOTIFY_MAX_PLAYLIST_TRACKS),
+        };
+      }
+      // Jika Web API playlist mengembalikan 403 (kebijakan baru Spotify), segera jatuh ke scraper
+      return await fetchFallbackMetadata(type, id);
     }
 
     if (type === "artist") {
       const data = await spotifyApiGet(
         `/artists/${id}/top-tracks?market=${market}`,
       );
-      if (!data) return null;
-      return {
-        type,
-        name: "Top Tracks",
-        items: (data.tracks || []).slice(0, 10).map(toTrackMeta),
-      };
+      if (data && data.tracks && data.tracks.length > 0) {
+        return {
+          type,
+          name: "Top Tracks",
+          items: (data.tracks || []).slice(0, 10).map(toTrackMeta),
+        };
+      }
+
+      // Fallback cerdas: Jika /top-tracks 403 (Spotify Web API 2024 restrictions),
+      // ambil nama artist dari /artists/{id} lalu cari trek teratas via search Web API.
+      const artistData = await spotifyApiGet(`/artists/${id}`);
+      if (artistData && artistData.name) {
+        const q = encodeURIComponent(`artist:${artistData.name}`);
+        const searchData = await spotifyApiGet(
+          `/search?q=${q}&type=track&limit=10`,
+        );
+        if (searchData && searchData.tracks && searchData.tracks.items) {
+          return {
+            type,
+            name: `${artistData.name} - Top Tracks`,
+            items: (searchData.tracks.items || []).map(toTrackMeta),
+          };
+        }
+      }
+      return null;
     }
 
     if (type === "search") {
@@ -464,14 +502,21 @@ async function resolveSpotifyQuery(poru, query, requester) {
   );
 
   const cacheKey = `cache:spotify:res:${parsed.type}:${parsed.id || ""}`;
-  let metadata = parsed.id
-    ? await getCachedJson(cacheKey, 12 * 3600, () =>
-        fetchSpotifyMetadata(parsed.type, parsed.id),
-      )
-    : await fetchSpotifyMetadata(parsed.type, parsed.id);
+  const fetcher = async () => {
+    let meta = await fetchSpotifyMetadata(parsed.type, parsed.id);
+    if (!meta && parsed.type !== "search") {
+      meta = await fetchFallbackMetadata(parsed.type, parsed.id);
+    }
+    return meta;
+  };
 
-  if (!metadata && parsed.type !== "search")
+  let metadata = parsed.id
+    ? await getCachedJson(cacheKey, 12 * 3600, fetcher)
+    : await fetcher();
+
+  if (!metadata && parsed.type !== "search") {
     metadata = await fetchFallbackMetadata(parsed.type, parsed.id);
+  }
 
   if (!metadata || !metadata.items || metadata.items.length === 0)
     throw (
@@ -480,9 +525,16 @@ async function resolveSpotifyQuery(poru, query, requester) {
     );
 
   const tracks = [];
-  for (const item of metadata.items.slice(0, env.SPOTIFY_MAX_PLAYLIST_TRACKS)) {
-    const track = await translateTrack(poru, item, requester);
-    if (track) tracks.push(track);
+  const items = metadata.items.slice(0, env.SPOTIFY_MAX_PLAYLIST_TRACKS);
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < items.length; i += BATCH_SIZE) {
+    const chunk = items.slice(i, i + BATCH_SIZE);
+    const resolvedChunk = await Promise.all(
+      chunk.map((item) => translateTrack(poru, item, requester)),
+    );
+    for (const track of resolvedChunk) {
+      if (track) tracks.push(track);
+    }
   }
 
   if (tracks.length === 0)

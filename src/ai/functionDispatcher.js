@@ -358,11 +358,12 @@ async function dispatchFunction(name, rawArgs, message) {
         };
       }
 
-      const resolve = await musicManager.poru.resolve({
+      const { resolveSpotifyQuery } = require("../music/spotifyResolver");
+      const resolve = await resolveSpotifyQuery(
+        musicManager.poru,
         query,
-        source: "ytmsearch",
-        requester: author,
-      });
+        author,
+      );
 
       if (!resolve || !resolve.tracks || resolve.tracks.length === 0) {
         return { error: `Lagu dengan judul "${query}" tidak ditemukan.` };

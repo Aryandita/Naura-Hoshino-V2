@@ -9,6 +9,7 @@ const ui = require("../config/ui");
 const UserProfile = require("../models/UserProfile");
 const GuildSettings = require("../models/GuildSettings");
 const LyricsManager = require("../music/LyricsManager"); // 👈 Memanggil mesin lirik baru
+const { resolveSpotifyQuery } = require("./spotifyResolver");
 
 const DEFAULT_EMOJIS = {
   nowplaying: "<a:DiscSpinner1:1492696912145678488>",
@@ -63,10 +64,11 @@ module.exports = async (interaction, client) => {
       case "music_recommendation":
         const trackUri = interaction.values[0];
         try {
-          const res = await poru.resolve({
-            query: trackUri,
-            requester: interaction.user,
-          });
+          const res = await resolveSpotifyQuery(
+            poru,
+            trackUri,
+            interaction.user,
+          );
           if (res && res.tracks && res.tracks.length > 0) {
             const addedTrack = res.tracks[0];
             player.queue.add(addedTrack);
