@@ -163,7 +163,7 @@ async function sendError(
       msg = await interaction.reply({
         ...containerPayload,
         flags: finalFlags,
-        fetchReply: !ephemeral,
+        withResponse: !ephemeral,
       });
     } else if (typeof interaction.channel?.send === "function") {
       msg = await interaction.channel.send({

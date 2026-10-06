@@ -29,6 +29,10 @@ module.exports = {
 
       // Bersihkan sisa timer fade/watcher dari lagu sebelumnya (jaga-jaga)
       clearTransitionTimers(player);
+      if (player.standbyTimeout) {
+        clearTimeout(player.standbyTimeout);
+        player.standbyTimeout = null;
+      }
 
       // Simpan volume "target" normal sekali saja, dipakai sebagai acuan fade-in/fade-out
       if (typeof player.baseVolume !== "number") {

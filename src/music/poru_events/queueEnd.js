@@ -264,35 +264,50 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
       return;
     }
 
-    // 3. Bersihkan Panel NowPlaying Terakhir
-    const oldCache = manager.uiCache.get(player.guildId);
-    if (oldCache && oldCache.messageId) {
-      const channel = manager.client.channels.cache.get(player.textChannel);
-      if (channel) {
+    clearTransitionTimers(player);
+    
+    const channel = manager.client.channels.cache.get(player.textChannel);
+    if (channel) {
+      const standbyPayload = buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        title: `🎵 Antrean Musik Habis`,
+        description: `Lagu terakhir sudah selesai diputar. Ada yang mau tambah lagu lagi? Naura tungguin di sini sebentar ya! Kalau tidak ada, Naura pamit dalam 2 menit.`,
+        expression: "happy",
+        footerText: ui.getFooter("music"),
+      });
+
+      // Bersihkan panel NowPlaying terakhir
+      const oldCache = manager.uiCache.get(player.guildId);
+      if (oldCache && oldCache.messageId) {
         channel.messages
           .fetch(oldCache.messageId)
           .then((m) => m.delete().catch(() => {}))
           .catch(() => {});
+        if (oldCache.interval) clearInterval(oldCache.interval);
+        manager.uiCache.delete(player.guildId);
       }
-      if (oldCache.interval) clearInterval(oldCache.interval);
-      manager.uiCache.delete(player.guildId);
-    }
+      
+      const standbyMsg = await channel.send(standbyPayload).catch(() => null);
 
-    clearTransitionTimers(player);
-    player.destroy();
-    const channel = manager.client.channels.cache.get(player.textChannel);
-    if (channel) {
-      const exitPayload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFB6C1",
-        title: `${ui.getEmoji("offline") || ui.getEmoji("power") || "🔌"} Pemutusan Sesi Audio`,
-        description: `Antrean lagu telah habis. Naura pamit dari Voice Channel! ${ui.getEmoji("naura_blowkiss") || "👋"}`,
-        expression: "happy",
-        footerText: ui.getFooter("music"),
-      });
-      channel
-        .send(exitPayload)
-        .then((m) => setTimeout(() => m.delete().catch(() => {}), 15000))
-        .catch(() => {});
+      player.standbyTimeout = setTimeout(() => {
+        // Cek jika player masih aktif atau sedang memutar lagu
+        if (!player || player.destroyed || player.isPlaying) return;
+        
+        player.destroy();
+        if (standbyMsg) standbyMsg.delete().catch(() => {});
+        
+        const exitPayload = buildContainerV2({
+          accentColorHex: ui.getColor("primary") || "#FFB6C1",
+          title: `${ui.getEmoji("offline") || ui.getEmoji("power") || "🔌"} Pemutusan Sesi Audio`,
+          description: `Sepertinya sudah tidak ada lagu lagi. Naura pamit dari Voice Channel ya! Sampai jumpa di sesi musik berikutnya! ${ui.getEmoji("naura_blowkiss") || "👋"}`,
+          expression: "happy",
+          footerText: ui.getFooter("music"),
+        });
+        
+        channel.send(exitPayload)
+          .then((m) => setTimeout(() => m.delete().catch(() => {}), 15000))
+          .catch(() => {});
+      }, 120000); // 2 menit timeout
     }
   },
 };

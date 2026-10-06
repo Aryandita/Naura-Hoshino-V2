@@ -233,7 +233,12 @@ class AiDjManager {
             radioPayload.files = [audioAttachment];
           }
 
-          await channel.send(radioPayload).catch(() => {});
+          const msg = await channel.send(radioPayload).catch(() => {});
+          if (msg) {
+            setTimeout(() => {
+              msg.delete().catch(() => {});
+            }, 15000);
+          }
         }
       } catch (sendErr) {
         logger.warn(`[AiDjManager] Gagal mengirim kartu siaran radio: ${sendErr.message}`);

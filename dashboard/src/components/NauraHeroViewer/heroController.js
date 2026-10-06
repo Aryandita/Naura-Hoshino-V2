@@ -176,6 +176,23 @@ export function initHeroViewer(targetCanvas = null, customOptions = {}) {
             const displayLabel = button.dataset.label || animationName;
             if (!animationName) return;
 
+            try {
+                let soundSrc = '/assets/audio/soundboard/magic.mp3';
+                const animLower = animationName.toLowerCase();
+                if (animLower.includes('joy') || animLower.includes('happy') || animLower.includes('nod')) {
+                    soundSrc = '/assets/audio/soundboard/applause.mp3';
+                } else if (animLower.includes('sad') || animLower.includes('cry') || animLower.includes('sorrow')) {
+                    soundSrc = '/assets/audio/soundboard/gameover.mp3';
+                } else if (animLower.includes('angry')) {
+                    soundSrc = '/assets/audio/soundboard/bruh.mp3';
+                } else if (animLower.includes('surprised') || animLower.includes('fun')) {
+                    soundSrc = '/assets/audio/soundboard/cheer.mp3';
+                }
+                const audio = new Audio(soundSrc);
+                audio.volume = 0.4;
+                audio.play().catch(() => {});
+            } catch (err) {}
+
             animationButtons.forEach((btn) => {
                 btn.style.background = 'transparent';
                 btn.style.color = 'var(--text-muted)';

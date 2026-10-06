@@ -87,8 +87,28 @@ const UserProfile = sequelize.define(
 
     reputation: { type: DataTypes.INTEGER, defaultValue: 0 },
     language: { type: DataTypes.STRING, defaultValue: null },
-    isPremium: { type: DataTypes.BOOLEAN, defaultValue: false },
-    premiumUntil: { type: DataTypes.DATE, allowNull: true },
+    isPremium: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      get() {
+        const env = require("../config/env");
+        if (env.OWNER_IDS && env.OWNER_IDS.includes(this.getDataValue("userId"))) {
+          return true;
+        }
+        return this.getDataValue("isPremium");
+      }
+    },
+    premiumUntil: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      get() {
+        const env = require("../config/env");
+        if (env.OWNER_IDS && env.OWNER_IDS.includes(this.getDataValue("userId"))) {
+          return new Date("2099-12-31T23:59:59.999Z");
+        }
+        return this.getDataValue("premiumUntil");
+      }
+    },
 
     minecraft_ign: { type: DataTypes.STRING, allowNull: true },
     minecraft_playtime: { type: DataTypes.INTEGER, defaultValue: 0 },

@@ -56,6 +56,12 @@ module.exports = async (interaction, client) => {
     } catch (err) {
       return;
     }
+  } else {
+    try {
+      await interaction.deferReply();
+    } catch (err) {
+      return;
+    }
   }
 
   // Handle Select Menus
@@ -208,9 +214,9 @@ module.exports = async (interaction, client) => {
   ];
 
   if (requiresDJ.includes(interaction.customId) && !isRequester && !isDJ) {
-    // Khusus music_lyrics, karena belum di-defer, kita gunakan reply() bukan editReply()
+    // Khusus music_lyrics, karena sudah di-defer publik, gunakan ephemeral = false
     if (interaction.customId === "music_lyrics") {
-      return ui.sendError(interaction, "err_sys_16", true);
+      return ui.sendError(interaction, "err_sys_16", false);
     }
     return ui.sendError(interaction, "err_sys_17");
   }
@@ -283,11 +289,11 @@ module.exports = async (interaction, client) => {
         !profile.premiumUntil ||
         profile.premiumUntil <= new Date()
       ) {
-        return ui.sendError(interaction, "err_sys_18", true);
+        return ui.sendError(interaction, "err_sys_18", false);
       }
 
       if (!player.currentTrack || !player.currentTrack.info) {
-        return ui.sendError(interaction, "err_sys_19", true);
+        return ui.sendError(interaction, "err_sys_19", false);
       }
 
       const lyricsEngine = new LyricsManager(client);

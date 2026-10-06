@@ -2251,7 +2251,7 @@ module.exports = {
       }
       const poru = manager._poru;
 
-      const defaultEngine = env.MUSIC_DEFAULT_SEARCH || "scsearch";
+      const defaultEngine = env.MUSIC_DEFAULT_SEARCH || "ytsearch";
 
       // Query terlalu pendek: tampilkan lagu aktif di guild + hint prefix
       if (cleanQuery.length < 2) {

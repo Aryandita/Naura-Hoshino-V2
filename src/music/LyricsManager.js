@@ -296,7 +296,7 @@ class LyricsManager {
 
       const msg = isEdit
         ? await interaction.editReply(payload)
-        : await interaction.reply({ ...payload, fetchReply: true });
+        : await interaction.reply({ ...payload, withResponse: true });
 
       // 1. Bersihkan sisa timer lama
       this.clearLyrics(player.guildId);
