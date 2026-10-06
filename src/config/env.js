@@ -54,7 +54,7 @@ const env = {
 
   // DISCORD CORE
   TOKEN: cleanEnv(process.env.DISCORD_TOKEN),
-  CLIENT_ID: cleanEnv(process.env.CLIENT_ID),
+  CLIENT_ID: cleanEnv(process.env.DISCORD_CLIENT_ID || process.env.CLIENT_ID),
   CLIENT_SECRET: cleanEnv(process.env.DISCORD_CLIENT_SECRET),
   PREFIX: cleanEnv(process.env.PREFIX) || "n!",
   GUILD_ID: cleanEnv(process.env.GUILD_ID),
