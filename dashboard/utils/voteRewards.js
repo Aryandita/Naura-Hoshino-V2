@@ -20,10 +20,10 @@ const COUPON_WEEKEND = 2; // top.gg menghitung vote akhir pekan sebagai dua vote
 // selisih jam server tidak menolak vote yang sah.
 const VOTE_COOLDOWN_MS = 11 * 60 * 60 * 1000;
 
-const EntitlementService = require("../../src/managers/entitlementService");
+const entitlementService = require("../../src/services/entitlementService");
 
 async function extendPremium(userId, durationMs) {
-  return EntitlementService.extendUserPremium(userId, durationMs);
+  return entitlementService.extendUserPremium(userId, durationMs);
 }
 
 /**
@@ -96,8 +96,7 @@ async function grantVoteRewards(
 
         // Notifikasi DM
         const { sendPremiumDM } = require("../../src/premium/premiumNotify");
-        const client =
-          global.client || require("../../src/managers/clientManager")?.client;
+        const client = global.client || null;
         if (client) {
           await sendPremiumDM(client, userId, "activated", {
             username: profile.username || "Voter Setia",

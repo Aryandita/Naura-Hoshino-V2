@@ -380,7 +380,7 @@ async function handleBid(interaction) {
     );
   }
 
-  if (!debitSuccess) {
+  if (!debitSuccess?.ok) {
     return interaction.editReply(
       hidden(
         buildErrorContainerV2({

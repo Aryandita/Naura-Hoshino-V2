@@ -41,7 +41,7 @@ class CooldownRushHelper {
       "coupons",
       RUSH_COUPON_COST,
     );
-    if (!debitOk) {
+    if (!debitOk?.ok) {
       return {
         success: false,
         message: "Gagal memotong Naura Coupon. Saldo tidak mencukupi atau transaksi bentrok.",

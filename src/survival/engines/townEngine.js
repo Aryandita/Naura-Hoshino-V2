@@ -271,7 +271,7 @@ async function buyFromWanderingMerchant(userId, itemId) {
 
   // Potong saldo secara atomik
   const debitRes = await cacheManager.debitUserSurvival(userId, "starFragments", item.price);
-  if (!debitRes) {
+  if (!debitRes?.ok) {
     return { ok: false, reason: "debit_failed", message: "Gagal memproses transaksi saldo." };
   }
 

@@ -710,7 +710,6 @@ async function runMinigameLogic(interaction) {
       });
 
       const response = await interaction.editReply({
-        content: `<@${opponent.id}>`,
         ...invitePayload,
         fetchReply: true,
       });
@@ -803,7 +802,7 @@ async function runMinigameLogic(interaction) {
               footerText: ui.getFooter("core"),
             });
 
-            await gi.update(winPayload);
+            await interaction.editReply(winPayload);
           } else {
             // Jika klik salah
             await ui.sendError(gi, "err_sys_4", true);
@@ -960,7 +959,7 @@ async function runMinigameLogic(interaction) {
             footerText: ui.getFooter("core"),
           });
 
-          await i.update(winPayload);
+          await interaction.editReply(winPayload);
         } else {
           const losePayload = buildContainerV2({
             accentColorHex: "#ef4444",
@@ -972,7 +971,7 @@ async function runMinigameLogic(interaction) {
             footerText: ui.getFooter("core"),
           });
 
-          await i.update(losePayload);
+          await interaction.editReply(losePayload);
         }
         collector.stop("answered");
       });

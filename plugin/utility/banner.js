@@ -144,11 +144,11 @@ module.exports = {
       activeBanners[type] = bannerId.replace("item_", "");
     }
 
-    const mutator = await cacheManager.mutateUserProfileJson(userId);
-    if (mutator) {
-      mutator.activeBanners = activeBanners;
-      await mutator.save({ fields: ["activeBanners"] });
-    }
+    await cacheManager.mutateUserProfileJson(
+      userId,
+      "activeBanners",
+      () => activeBanners,
+    );
 
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("success") || "#22c55e",

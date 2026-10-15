@@ -178,7 +178,9 @@ module.exports = {
         userId,
         "rpg_state",
         (draft) => {
-          draft[pityKey] = pityCounter;
+          const nextDraft = draft && typeof draft === "object" ? draft : {};
+          nextDraft[pityKey] = pityCounter;
+          return nextDraft;
         },
       );
 
@@ -251,8 +253,10 @@ module.exports = {
       }
 
       // Save to Profile
-      await cacheManager.mutateUserProfileJson(userId, "settings", (draft) => {
-        draft.equippedBanner = targetItem.attributes?.banner_url || null;
+      await cacheManager.mutateUserProfileJson(userId, "activeBanners", (draft) => {
+        const nextDraft = draft && typeof draft === "object" ? draft : {};
+        nextDraft.equippedBanner = targetItem.attributes?.banner_url || null;
+        return nextDraft;
       });
 
       return interaction.reply({

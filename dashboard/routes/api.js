@@ -1034,7 +1034,7 @@ async function resolveUsername(client, userId) {
       const cacheManager = require("../../src/managers/cacheManager");
       // Potong biaya kontribusi energi 50 NSF secara ketat dan atomik
       const debited = await cacheManager.debitUserSurvival(userId, "starFragments", 50);
-      if (!debited) {
+      if (!debited?.ok) {
         return res.status(400).json({
           success: false,
           error: "Saldo Star Fragments kamu tidak mencukupi untuk melakukan kontribusi (butuh 50 NSF).",

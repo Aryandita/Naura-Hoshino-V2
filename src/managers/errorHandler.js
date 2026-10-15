@@ -105,10 +105,39 @@ const sendErrorLog = async (err, type, client) => {
 const setupErrorHandlers = (client) => {
   process.on("unhandledRejection", (reason, promise) => {
     if (reason && reason.code === 10062) return;
+    const isTransientNetwork =
+      reason?.code === "ETIMEDOUT" ||
+      reason?.code === "ECONNRESET" ||
+      reason?.name === "ConnectTimeoutError" ||
+      reason?.message?.includes("Connect Timeout Error");
+
+    if (isTransientNetwork) {
+      logger.warn(
+        `[Anti-Crash] Transient Network Rejection (${reason.code || reason.name || "TIMEOUT"}): ${reason.message}`,
+      );
+      return;
+    }
+
     sendErrorLog(reason, "Unhandled Rejection", client);
   });
 
   process.on("uncaughtException", (err, origin) => {
+    const isTransientSocket =
+      err?.code === "ETIMEDOUT" ||
+      err?.code === "ECONNRESET" ||
+      err?.code === "ECONNREFUSED" ||
+      err?.code === "EPIPE" ||
+      err?.name === "ConnectTimeoutError" ||
+      err?.message?.includes("Connect Timeout Error") ||
+      err?.message?.includes("read ETIMEDOUT");
+
+    if (isTransientSocket) {
+      logger.warn(
+        `[Anti-Crash] Transient Socket Error ditangani (${err.code || err.name || "SOCKET_TIMEOUT"}): ${err.message}`,
+      );
+      return;
+    }
+
     sendErrorLog(err, "Uncaught Exception", client);
   });
 };

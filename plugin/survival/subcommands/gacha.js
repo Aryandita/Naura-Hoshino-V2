@@ -44,7 +44,7 @@ module.exports = {
       );
     }
 
-    if (!debitSuccess) {
+    if (!debitSuccess?.ok) {
       return ui.sendError(
         interaction,
         `Kamu membutuhkan **${banner.cost} ${banner.currency === "coin" ? "Naura Coin" : "Naura Coupon"}** untuk roll di banner ini!`,

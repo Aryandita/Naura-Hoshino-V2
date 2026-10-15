@@ -407,13 +407,12 @@ module.exports = (client) => {
       return res.status(400).json({ error: "Target User ID wajib diisi." });
 
     try {
-      const profile = await UserProfile.findByPk(targetId);
-      if (!profile)
+      const UserBirthday = require("../../src/models/UserBirthday");
+      const deleted = await UserBirthday.destroy({ where: { userId: targetId } });
+      if (!deleted)
         return res
           .status(404)
-          .json({ error: "Profil pengguna tidak ditemukan." });
-      profile.birthday = null;
-      await profile.save({ fields: ["birthday"] });
+          .json({ error: "Data ulang tahun pengguna tidak ditemukan." });
       res.json({
         success: true,
         message: `Data ulang tahun ${targetId} sudah direset.`,

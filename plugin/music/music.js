@@ -21,8 +21,7 @@ const {
   buildErrorContainerV2,
 } = require("../../src/utils/NauraContainerBuilder");
 const { getPlatformIcon } = require("../../src/canvas/CanvasUtils");
-const { resolveSpotifyQuery } = require("../../src/music/spotifyResolver");
-
+const { resolveSpotifyQuery, cleanArtistName } = require("../../src/music/spotifyResolver");
 const formatDuration = (ms) => {
   if (!ms || isNaN(ms)) return "0:00";
   if (ms >= 8640000000) return "🔴 LIVE";
@@ -589,7 +588,8 @@ async function runMusicLogic(
     let ttsTrack = null;
     if (isDjActive) {
       const requesterName = user.displayName || user.username;
-      const { script, classification } = aiDjManager.generateDjScript(track.info, requesterName);
+      const lang = await aiDjManager.detectVoiceLanguage(musicManager, guild.id, memberVoice.id);
+      const { script, classification } = aiDjManager.generateDjScript(track.info, requesterName, [], lang);
       
       try {
         const audioBuffer = await fishAudioService.generateSpeech(script, {
@@ -2324,7 +2324,7 @@ module.exports = {
 
       const choices = res.tracks.slice(0, 24).map((track) => {
         const title = track.info.title || "Unknown Track";
-        const author = track.info.author || "Unknown Artist";
+        const author = cleanArtistName(track.info.author || "Unknown Artist");
         const duration = formatDuration(track.info.length);
         const label = `${title} - ${author} (${duration})`;
 

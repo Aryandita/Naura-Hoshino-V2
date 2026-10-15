@@ -258,8 +258,56 @@ function synthesizeChronicle(data = {}) {
   };
 }
 
+/**
+ * Menerbitkan koran harian 'The Hoshino Times' ke seluruh guild yang mengaktifkannya.
+ * @param {import("discord.js").Client} client
+ */
+async function publishMorningChronicle(client) {
+  if (!client || !client.guilds?.cache) return;
+  const { drawChronicleNewspaper } = require("../canvas/chronicleCanvas");
+  const { AttachmentBuilder } = require("discord.js");
+  const { buildContainerV2 } = require("../utils/NauraContainerBuilder");
+  const ui = require("../config/ui");
+  const cacheManager = require("../managers/cacheManager");
+
+  logger.info("[ServerChronicleEngine] Memulai penerbitan koran harian ke guild...");
+
+  for (const [guildId, guild] of client.guilds.cache) {
+    try {
+      const settings = await cacheManager.getGuildSettings(guildId);
+      const s = settings?.settings || {};
+      const channelId = s.chronicleChannelId || s.channels?.general || s.channels?.news;
+      if (!channelId) continue;
+
+      const channel = await guild.channels.fetch(channelId).catch(() => null);
+      if (!channel || !channel.isTextBased()) continue;
+
+      const chronicleData = await generateChronicleData(guild);
+      const imgBuffer = await drawChronicleNewspaper(chronicleData);
+      const attachment = new AttachmentBuilder(imgBuffer, {
+        name: "hoshino-times.png",
+      });
+
+      const payload = buildContainerV2({
+        accentColorHex: "#FFB6C1",
+        title: `📰 THE HOSHINO TIMES - Edisi Pagi ${chronicleData.date}`,
+        description: `Selamat pagi warga **${guild.name}**! Edisi harian koran server telah terbit.\n\n👑 **Member of the Day:** **${chronicleData.topUser.username}** (\`${chronicleData.topUser.count} pesan\`)\n⚡ **Headline:** *${chronicleData.headline}*`,
+        footerText: ui.getFooter("utility"),
+        media: attachment,
+      });
+
+      await channel.send({ ...payload, files: [attachment] });
+    } catch (gErr) {
+      logger.warn(
+        `[ServerChronicleEngine] Gagal kirim chronicle ke guild ${guildId}: ${gErr.message}`,
+      );
+    }
+  }
+}
+
 module.exports = {
   recordMessageActivity,
   generateChronicleData,
   synthesizeChronicle,
+  publishMorningChronicle,
 };

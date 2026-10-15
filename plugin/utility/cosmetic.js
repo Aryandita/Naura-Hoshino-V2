@@ -134,7 +134,7 @@ async function handleShop(interaction, userId) {
       "economy_wallet",
       asset.price,
     );
-    if (!debitSuccess) {
+    if (!debitSuccess?.ok) {
       return i.reply({
         content: `❌ Transaksi gagal, uangmu tidak cukup.`,
         flags: MessageFlags.Ephemeral,

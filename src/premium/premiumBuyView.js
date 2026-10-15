@@ -54,7 +54,7 @@ async function runBuy(interaction) {
 
   // Pemotongan Saldo Kupon Secara Atomik
   const debitSuccess = await cacheManager.debitUserSurvival(userId, "coupons", cost);
-  if (!debitSuccess) {
+  if (!debitSuccess?.ok) {
     return interaction.editReply(
       buildErrorContainerV2({
         title: "Transaksi Gagal",

@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const rootDir = path.resolve(__dirname, "..");
-const directoriesToCheck = ["src", "plugin", "scripts"];
+const directoriesToCheck = ["src", "plugin", "scripts", "dashboard"];
 const rootFiles = ["index.js", "shard.js"];
 
 let hasError = false;

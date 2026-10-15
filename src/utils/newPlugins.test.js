@@ -41,10 +41,10 @@ test("New Moderation & Utility Plugins - Command Definitions & Schema Integrity"
   assert.equal(serverinfo.data.name, "serverinfo");
   assert.equal(typeof serverinfo.execute, "function");
 
-  const userinfo = require("../../plugin/utility/userinfo");
-  assert.ok(userinfo.data);
-  assert.equal(userinfo.data.name, "userinfo");
-  assert.equal(typeof userinfo.execute, "function");
+  const userCmd = require("../../plugin/utility/user");
+  assert.ok(userCmd.data);
+  assert.equal(userCmd.data.name, "user");
+  assert.equal(typeof userCmd.execute, "function");
 
   const worldclock = require("../../plugin/utility/worldclock");
   assert.ok(worldclock.data);

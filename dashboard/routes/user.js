@@ -531,8 +531,11 @@ module.exports = (client) => {
           maxDurability: 100,
         },
         rod: {
-          level: profile.tool_rodLevel || 1,
-          durability: profile.tool_rodDurability || 100,
+          level: profile.tool_fishingRodLevel || profile.tool_rodLevel || 1,
+          durability:
+            profile.tool_fishingRodDurability ||
+            profile.tool_rodDurability ||
+            100,
           maxDurability: 100,
         },
       };
@@ -554,7 +557,7 @@ module.exports = (client) => {
   });
 
   // ------------------------------------------------------------------
-  // Inventory: jual / buang
+  // Inventory: jual / buang (Atomik via cacheManager.mutateUserProfileJson)
   // ------------------------------------------------------------------
   router.post("/api/inventory/action", requireSelfOrOwner, async (req, res) => {
     try {
@@ -565,56 +568,88 @@ module.exports = (client) => {
           .json({ success: false, error: "Parameternya belum lengkap ya." });
       }
 
-      const GameItem = require("../../src/models/GameItem");
-      const profile = await UserProfile.findByPk(req.targetUserId);
-      if (!profile)
-        return res
-          .status(404)
-          .json({ success: false, error: "Profil pemain tidak ditemukan." });
-
-      const inv = profile.inventory || [];
-      const idx = Number(itemIdx);
-      if (!Number.isInteger(idx) || idx < 0 || idx >= inv.length) {
-        return res
-          .status(400)
-          .json({ success: false, error: "Slot item itu tidak valid." });
-      }
-
-      const item = inv[idx];
-      if (itemIdOf(item) !== itemId) {
-        return res.status(400).json({
-          success: false,
-          error: "Itemnya tidak cocok dengan slot itu.",
-        });
-      }
-
-      let message = "";
-      if (action === "sell") {
-        const itemDb = await GameItem.findByPk(itemId);
-        const sellPrice = itemDb ? itemDb.sellPrice : 50;
-        
-        // Fix: Use atomic increment via cacheManager to prevent silent data loss
-        // (RULES.md §1.6 & §1.8)
-        await cacheManager.incrementUserProfile(req.targetUserId, "economy_wallet", sellPrice);
-        
-        message = `Berhasil! 1x **${item.name || itemId}** terjual seharga 🪙 **${sellPrice.toLocaleString("id-ID")} Coin**.`;
-      } else if (action === "trash") {
-        message = `Oke, 1x **${item.name || itemId}** sudah Naura buang dari tasmu.`;
-      } else {
+      if (action !== "sell" && action !== "trash") {
         return res
           .status(400)
           .json({ success: false, error: "Aksi itu tidak dikenali." });
       }
 
-      if ((item.amount || 1) > 1) {
-        item.amount -= 1;
-      } else {
-        inv.splice(idx, 1);
+      const idx = Number(itemIdx);
+      if (!Number.isInteger(idx) || idx < 0) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Slot item itu tidak valid." });
       }
 
-      profile.inventory = inv;
-      profile.changed("inventory", true);
-      await profile.save({ fields: ["inventory"] });
+      const profile = await cacheManager.getUserProfile(req.targetUserId);
+      if (!profile) {
+        return res
+          .status(404)
+          .json({ success: false, error: "Profil pemain tidak ditemukan." });
+      }
+
+      const GameItem = require("../../src/models/GameItem");
+      const itemDb =
+        action === "sell"
+          ? await GameItem.findByPk(itemId).catch(() => null)
+          : null;
+      const sellPrice = itemDb ? itemDb.sellPrice : 50;
+
+      let validationError = null;
+      let targetItemName = itemId;
+
+      const mutation = await cacheManager.mutateUserProfileJson(
+        req.targetUserId,
+        "inventory",
+        (rawInv) => {
+          const inv = Array.isArray(rawInv) ? [...rawInv] : [];
+          if (idx >= inv.length) {
+            validationError = "Slot item itu tidak valid.";
+            return null;
+          }
+
+          const item = inv[idx];
+          if (itemIdOf(item) !== itemId) {
+            validationError = "Itemnya tidak cocok dengan slot itu.";
+            return null;
+          }
+
+          targetItemName =
+            (item && typeof item === "object" && item.name) ||
+            (itemDb && itemDb.name) ||
+            itemId;
+
+          if (item && typeof item === "object" && (item.amount || 1) > 1) {
+            inv[idx] = { ...item, amount: (item.amount || 1) - 1 };
+          } else {
+            inv.splice(idx, 1);
+          }
+
+          return inv;
+        },
+      );
+
+      if (validationError) {
+        return res.status(400).json({ success: false, error: validationError });
+      }
+
+      if (!mutation?.ok) {
+        return res
+          .status(500)
+          .json({ success: false, error: "Naura gagal memproses isi tasmu." });
+      }
+
+      let message = "";
+      if (action === "sell") {
+        await cacheManager.incrementUserProfile(
+          req.targetUserId,
+          "economy_wallet",
+          sellPrice,
+        );
+        message = `Berhasil! 1x **${targetItemName}** terjual seharga 🪙 **${sellPrice.toLocaleString("id-ID")} Coin**.`;
+      } else {
+        message = `Oke, 1x **${targetItemName}** sudah Naura buang dari tasmu.`;
+      }
 
       res.json({ success: true, message });
     } catch (e) {
@@ -626,7 +661,7 @@ module.exports = (client) => {
   });
 
   // ------------------------------------------------------------------
-  // Inventory: fusi / peleburan
+  // Inventory: fusi / peleburan (Atomik via cacheManager.mutateUserProfileJson)
   // ------------------------------------------------------------------
   router.post("/api/inventory/forge", requireSelfOrOwner, async (req, res) => {
     try {
@@ -637,94 +672,123 @@ module.exports = (client) => {
           error: "Item yang mau dilebur belum dipilih.",
         });
 
-      const GameItem = require("../../src/models/GameItem");
-      const profile = await UserProfile.findByPk(req.targetUserId);
+      const profile = await cacheManager.getUserProfile(req.targetUserId);
       if (!profile)
         return res
           .status(404)
           .json({ success: false, error: "Profil pemain tidak ditemukan." });
 
-      const inv = profile.inventory || [];
-      const totalAmount = inv.reduce(
-        (sum, entry) =>
-          itemIdOf(entry) === itemId ? sum + (entry.amount || 1) : sum,
-        0,
-      );
+      const GameItem = require("../../src/models/GameItem");
+      const newId = FORGE_UPGRADES[itemId] || null;
+      const [itemDb, nextItemDb] = await Promise.all([
+        GameItem.findByPk(itemId).catch(() => null),
+        newId ? GameItem.findByPk(newId).catch(() => null) : Promise.resolve(null),
+      ]);
 
-      if (totalAmount < 2) {
-        return res.status(400).json({
-          success: false,
-          error: "Naura butuh minimal 2 item yang sama untuk melebur ya.",
-        });
-      }
-
-      // Ambil 2 bahan dari belakang agar tumpukan terlama tetap utuh.
-      let toDeduct = 2;
-      for (let i = inv.length - 1; i >= 0 && toDeduct > 0; i--) {
-        if (itemIdOf(inv[i]) !== itemId) continue;
-        const amt = inv[i].amount || 1;
-        if (amt > toDeduct) {
-          inv[i].amount = amt - toDeduct;
-          toDeduct = 0;
-        } else {
-          toDeduct -= amt;
-          inv.splice(i, 1);
-        }
-      }
-
-      const isSuccess = Math.random() < FORGE_SUCCESS_RATE;
-      let message;
+      let validationError = null;
+      let isSuccess = false;
+      let message = "";
       let forgedItemName = itemId;
 
-      if (isSuccess) {
-        const newId = FORGE_UPGRADES[itemId] || null;
+      const mutation = await cacheManager.mutateUserProfileJson(
+        req.targetUserId,
+        "inventory",
+        (rawInv) => {
+          const inv = Array.isArray(rawInv) ? [...rawInv] : [];
+          const totalAmount = inv.reduce(
+            (sum, entry) =>
+              itemIdOf(entry) === itemId ? sum + (entry.amount || 1) : sum,
+            0,
+          );
 
-        if (newId) {
-          const nextItemDb = await GameItem.findByPk(newId);
-          const name = nextItemDb ? nextItemDb.name : newId;
-          forgedItemName = name;
-
-          const existing = inv.find((entry) => itemIdOf(entry) === newId);
-          if (existing) {
-            existing.amount = (existing.amount || 1) + 1;
-          } else {
-            inv.push({ id: newId, name, amount: 1 });
+          if (totalAmount < 2) {
+            validationError =
+              "Naura butuh minimal 2 item yang sama untuk melebur ya.";
+            return null;
           }
-          message = `Peleburannya berhasil! Kamu dapat 1x **${name}**. Hebat!`;
-        } else {
-          const itemDb = await GameItem.findByPk(itemId);
-          const name = itemDb ? itemDb.name : itemId;
-          const levelMatch = name.match(/\(Lv\.\s*(\d+)\)/i);
-          forgedItemName = levelMatch
-            ? name.replace(
-                /\(Lv\.\s*\d+\)/i,
-                `(Lv. ${parseInt(levelMatch[1], 10) + 1})`,
-              )
-            : `${name} (Lv. 2)`;
 
-          inv.push({ id: itemId, name: forgedItemName, amount: 1 });
-          message = `Peningkatannya berhasil! Itemmu naik tingkat jadi **${forgedItemName}**.`;
-        }
-      } else {
-        // Gagal: satu bahan hancur, satu dikembalikan.
-        const existing = inv.find((entry) => itemIdOf(entry) === itemId);
-        if (existing) {
-          existing.amount = (existing.amount || 1) + 1;
-        } else {
-          const itemDb = await GameItem.findByPk(itemId);
-          inv.push({
-            id: itemId,
-            name: itemDb ? itemDb.name : itemId,
-            amount: 1,
-          });
-        }
-        message =
-          "Yah, peleburannya gagal. Satu bahannya hancur. Jangan menyerah ya!";
+          // Ambil 2 bahan dari belakang agar tumpukan terlama tetap utuh.
+          let toDeduct = 2;
+          for (let i = inv.length - 1; i >= 0 && toDeduct > 0; i--) {
+            if (itemIdOf(inv[i]) !== itemId) continue;
+            const amt = inv[i].amount || 1;
+            if (amt > toDeduct) {
+              inv[i] = { ...inv[i], amount: amt - toDeduct };
+              toDeduct = 0;
+            } else {
+              toDeduct -= amt;
+              inv.splice(i, 1);
+            }
+          }
+
+          isSuccess = Math.random() < FORGE_SUCCESS_RATE;
+
+          if (isSuccess) {
+            if (newId) {
+              const name = nextItemDb ? nextItemDb.name : newId;
+              forgedItemName = name;
+
+              const existingIdx = inv.findIndex(
+                (entry) => itemIdOf(entry) === newId,
+              );
+              if (existingIdx !== -1) {
+                const existing = inv[existingIdx];
+                inv[existingIdx] = {
+                  ...(typeof existing === "object" ? existing : { id: newId, name }),
+                  amount: (existing.amount || 1) + 1,
+                };
+              } else {
+                inv.push({ id: newId, name, amount: 1 });
+              }
+              message = `Peleburannya berhasil! Kamu dapat 1x **${name}**. Hebat!`;
+            } else {
+              const name = itemDb ? itemDb.name : itemId;
+              const levelMatch = name.match(/\(Lv\.\s*(\d+)\)/i);
+              forgedItemName = levelMatch
+                ? name.replace(
+                    /\(Lv\.\s*\d+\)/i,
+                    `(Lv. ${parseInt(levelMatch[1], 10) + 1})`,
+                  )
+                : `${name} (Lv. 2)`;
+
+              inv.push({ id: itemId, name: forgedItemName, amount: 1 });
+              message = `Peningkatannya berhasil! Itemmu naik tingkat jadi **${forgedItemName}**.`;
+            }
+          } else {
+            // Gagal: satu bahan hancur, satu dikembalikan.
+            const existingIdx = inv.findIndex(
+              (entry) => itemIdOf(entry) === itemId,
+            );
+            if (existingIdx !== -1) {
+              const existing = inv[existingIdx];
+              inv[existingIdx] = {
+                ...(typeof existing === "object" ? existing : { id: itemId }),
+                amount: (existing.amount || 1) + 1,
+              };
+            } else {
+              inv.push({
+                id: itemId,
+                name: itemDb ? itemDb.name : itemId,
+                amount: 1,
+              });
+            }
+            message =
+              "Yah, peleburannya gagal. Satu bahannya hancur. Jangan menyerah ya!";
+          }
+
+          return inv;
+        },
+      );
+
+      if (validationError) {
+        return res.status(400).json({ success: false, error: validationError });
       }
 
-      profile.inventory = inv;
-      profile.changed("inventory", true);
-      await profile.save({ fields: ["inventory"] });
+      if (!mutation?.ok) {
+        return res
+          .status(500)
+          .json({ success: false, error: "Naura gagal melebur itemmu." });
+      }
 
       res.json({ success: true, upgraded: isSuccess, message, forgedItemName });
     } catch (e) {

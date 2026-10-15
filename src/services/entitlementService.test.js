@@ -85,6 +85,35 @@ describe("Discord Entitlements & Premium Subscriptions Service", () => {
     }
   });
 
+  it("isUserPremium dan isGuildPremium memeriksa masa aktif langganan dari cacheManager", async () => {
+    const origGetProfile = cacheManager.getUserProfile;
+    const origGetGuild = cacheManager.getGuildSettings;
+
+    try {
+      cacheManager.getUserProfile = async (uid) => {
+        if (uid === "vip_active") {
+          return { isPremium: true, premiumUntil: new Date(Date.now() + 60000).toISOString() };
+        }
+        return { isPremium: true, premiumUntil: new Date(Date.now() - 60000).toISOString() };
+      };
+
+      cacheManager.getGuildSettings = async (gid) => {
+        if (gid === "guild_active") {
+          return { settings: { premium: { active: true, until: new Date(Date.now() + 60000).toISOString() } } };
+        }
+        return { settings: { premium: { active: false } } };
+      };
+
+      assert.strictEqual(await entitlementService.isUserPremium("vip_active"), true);
+      assert.strictEqual(await entitlementService.isUserPremium("vip_expired"), false);
+      assert.strictEqual(await entitlementService.isGuildPremium("guild_active"), true);
+      assert.strictEqual(await entitlementService.isGuildPremium("guild_free"), false);
+    } finally {
+      cacheManager.getUserProfile = origGetProfile;
+      cacheManager.getGuildSettings = origGetGuild;
+    }
+  });
+
   it("manifest Discord Activity memuat scope relationships.read dan social_sdk", () => {
     const manifest = require("../config/discordActivityManifest.json");
     assert.ok(manifest.scopes.includes("relationships.read"));

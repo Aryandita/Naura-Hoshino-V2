@@ -150,7 +150,7 @@ async function createDeposit(userId, termKey, rawAmount) {
 
   // Uang sudah keluar dari rekening; bila pencatatan depositonya gagal, uang itu
   // harus dikembalikan alih-alih menghilang.
-  if (!written) {
+  if (!written?.ok) {
     await cacheManager.incrementUserProfile(userId, { economy_bank: amount });
     return { ok: false, reason: "write_failed" };
   }
@@ -183,7 +183,7 @@ async function claimDeposit(userId) {
     "economy_deposit",
     () => ({}),
   );
-  if (!cleared) return { ok: false, reason: "write_failed" };
+  if (!cleared?.ok) return { ok: false, reason: "write_failed" };
 
   const interest = Math.floor(amount * (Number(dep.interestRate) || 0));
   const payout = amount + interest;
@@ -244,7 +244,7 @@ async function buyInvestment(userId, assetKey, rawAmount) {
     },
   );
 
-  if (!written) {
+  if (!written?.ok) {
     await cacheManager.incrementUserProfile(userId, { economy_bank: amount });
     return { ok: false, reason: "write_failed" };
   }
@@ -280,7 +280,7 @@ async function sellInvestment(userId, assetKey) {
       return investments;
     },
   );
-  if (!cleared) return { ok: false, reason: "write_failed" };
+  if (!cleared?.ok) return { ok: false, reason: "write_failed" };
 
   await cacheManager.incrementUserProfile(userId, { economy_bank: value });
 

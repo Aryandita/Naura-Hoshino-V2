@@ -43,6 +43,9 @@ function makeFakeModel(tableName, { failOn = null } = {}) {
     primaryKeyAttributes: ["id"],
     calls,
     lastUpdateOnDuplicate: null,
+    async bulkCreate(rows, options = {}) {
+      return this.upsert(rows, options);
+    },
     async upsert(rows, options = {}) {
       if (failOn === tableName) {
         throw new Error(`kegagalan disengaja pada ${tableName}`);

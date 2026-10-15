@@ -13,7 +13,6 @@ module.exports = [
     prefix: "role_assign_",
     label: "reaction-role-toggle",
     defer: "reply",
-    isEphemeral: true,
     async handler(interaction) {
       if (!interaction.guild) {
         return interaction.editReply(

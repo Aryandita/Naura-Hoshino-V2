@@ -35,10 +35,15 @@ module.exports = {
         : interaction.reply(payload);
     }
 
-    const seasonXp = survival.exp || 0;
+    const seasonXp = survival.survival_xp || survival.exp || 0;
     const progress = seasonPassEngine.calculatePassProgress(seasonXp);
-    const claimedTiers = Array.isArray(survival.season_claims) ? survival.season_claims : [];
-    const hasPremiumPass = Boolean(survival.has_star_pass);
+    const initRpgState = survival.rpg_state || {};
+    const claimedTiers = Array.isArray(initRpgState.season_claims)
+      ? initRpgState.season_claims
+      : Array.isArray(survival.season_claims)
+        ? survival.season_claims
+        : [];
+    const hasPremiumPass = Boolean(initRpgState.has_star_pass || survival.has_star_pass);
 
     const rewards = seasonPassEngine.getTierRewards(progress.tier);
 
@@ -113,12 +118,18 @@ module.exports = {
 
     collector.on("collect", async (i) => {
       const freshSurvival = (await cacheManager.getUserSurvival(user.id)) || survival;
-      const freshClaims = Array.isArray(freshSurvival.season_claims) ? freshSurvival.season_claims : [];
-      const freshPrem = Boolean(freshSurvival.has_star_pass);
+      const freshState = freshSurvival.rpg_state || {};
+      const freshClaims = Array.isArray(freshState.season_claims)
+        ? freshState.season_claims
+        : Array.isArray(freshSurvival.season_claims)
+          ? freshSurvival.season_claims
+          : [];
+      const freshPrem = Boolean(freshState.has_star_pass || freshSurvival.has_star_pass);
+      const freshXp = freshSurvival.survival_xp || freshSurvival.exp || 0;
 
       if (i.customId === "btn_pass_claim_free") {
         const claimResult = seasonPassEngine.evaluateTierClaim({
-          playerTotalXp: freshSurvival.exp || 0,
+          playerTotalXp: freshXp,
           targetTier: progress.tier,
           track: "free",
           claimedTiers: freshClaims,
@@ -128,7 +139,15 @@ module.exports = {
           return i.reply({ content: `❌ ${claimResult.error}`, flags: MessageFlags.Ephemeral });
         }
 
-        // Grant atomic fragments
+        const mutRes = await cacheManager.mutateUserSurvivalJson(user.id, "rpg_state", (state) => {
+          const s = state || {};
+          s.season_claims = claimResult.updatedClaims;
+          return s;
+        });
+        if (!mutRes?.ok) {
+          return i.reply({ content: "❌ Gagal menyimpan klaim tier.", flags: MessageFlags.Ephemeral });
+        }
+
         let totalFrag = 0;
         claimResult.rewards.forEach((r) => {
           if (r.type === "fragments") totalFrag += r.amount;
@@ -137,17 +156,12 @@ module.exports = {
           await cacheManager.incrementUserSurvival(user.id, "starFragments", totalFrag);
         }
 
-        // Mutate claimed array
-        await cacheManager.mutateUserSurvivalJson(user.id, (row) => {
-          row.season_claims = claimResult.updatedClaims;
-        });
-
         return i.update(buildPayload(`🎉 **Sukses!** Kamu berhasil mengklaim hadiah gratis Tier ${progress.tier}: ${claimResult.rewards.map((r) => r.label).join(", ")}!`));
       }
 
       if (i.customId === "btn_pass_claim_prem") {
         const claimResult = seasonPassEngine.evaluateTierClaim({
-          playerTotalXp: freshSurvival.exp || 0,
+          playerTotalXp: freshXp,
           targetTier: progress.tier,
           track: "premium",
           hasPremiumPass: freshPrem,
@@ -156,6 +170,15 @@ module.exports = {
 
         if (!claimResult.ok) {
           return i.reply({ content: `❌ ${claimResult.error}`, flags: MessageFlags.Ephemeral });
+        }
+
+        const mutRes = await cacheManager.mutateUserSurvivalJson(user.id, "rpg_state", (state) => {
+          const s = state || {};
+          s.season_claims = claimResult.updatedClaims;
+          return s;
+        });
+        if (!mutRes?.ok) {
+          return i.reply({ content: "❌ Gagal menyimpan klaim Star Pass.", flags: MessageFlags.Ephemeral });
         }
 
         let totalFrag = 0;
@@ -168,10 +191,6 @@ module.exports = {
         if (totalFrag > 0) await cacheManager.incrementUserSurvival(user.id, "starFragments", totalFrag);
         if (totalCpn > 0) await cacheManager.incrementUserSurvival(user.id, "coupons", totalCpn);
 
-        await cacheManager.mutateUserSurvivalJson(user.id, (row) => {
-          row.season_claims = claimResult.updatedClaims;
-        });
-
         return i.update(buildPayload(`⭐ **Sukses!** Kamu berhasil mengklaim hadiah Star Pass Tier ${progress.tier}: ${claimResult.rewards.map((r) => r.label).join(", ")}!`));
       }
 
@@ -183,9 +202,17 @@ module.exports = {
           });
         }
 
-        await cacheManager.debitUserSurvival(user.id, "coupons", STAR_PASS_COST_COUPONS);
-        await cacheManager.mutateUserSurvivalJson(user.id, (row) => {
-          row.has_star_pass = true;
+        const debitRes = await cacheManager.debitUserSurvival(user.id, "coupons", STAR_PASS_COST_COUPONS);
+        if (!debitRes?.ok) {
+          return i.reply({
+            content: "❌ Gagal memotong Naura Coupon. Saldo tidak mencukupi.",
+            flags: MessageFlags.Ephemeral,
+          });
+        }
+        await cacheManager.mutateUserSurvivalJson(user.id, "rpg_state", (state) => {
+          const s = state || {};
+          s.has_star_pass = true;
+          return s;
         });
 
         return i.update(buildPayload("✨ **Selamat!** Star Pass kamu telah aktif! Nikmati hadiah ganda dan kosmetik eksklusif!"));

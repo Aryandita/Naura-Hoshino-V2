@@ -112,12 +112,18 @@ function buildContainerV2({
   expressionAs = "icon",
   description,
   fields = [],
+  color,
   bannerAttachmentName,
   topBannerAttachmentName,
   bannerPosition = "bottom",
+  media,
+  mediaUrl,
+  imageAttachment,
   mediaAttachmentNames = [],
   fileAttachmentNames = [],
   files = [],
+  selectMenu,
+  components,
   buttonsRow,
   allowCleanup = false,
   expiresInSeconds = null,
@@ -126,10 +132,27 @@ function buildContainerV2({
   const hasExplicitLang = Boolean(lang || interaction);
   const activeLang = resolveLanguage(lang || interaction);
   const defaultColor = ui.getColor("primary") || "#FFB6C1";
-  const accentColor = parseInt(
-    (accentColorHex || defaultColor).replace("#", ""),
-    16,
-  );
+  const resolvedColorInput = accentColorHex || color || defaultColor;
+  const accentColor =
+    typeof resolvedColorInput === "number"
+      ? resolvedColorInput
+      : parseInt(String(resolvedColorInput).replace("#", ""), 16) || 0xffb6c1;
+  if (!bannerAttachmentName) {
+    bannerAttachmentName = imageAttachment || media || mediaUrl || undefined;
+  }
+  if (selectMenu || components) {
+    const mergedRows = [];
+    if (selectMenu) {
+      mergedRows.push(...(Array.isArray(selectMenu) ? selectMenu : [selectMenu]));
+    }
+    if (buttonsRow) {
+      mergedRows.push(...(Array.isArray(buttonsRow) ? buttonsRow : [buttonsRow]));
+    }
+    if (components) {
+      mergedRows.push(...(Array.isArray(components) ? components : [components]));
+    }
+    buttonsRow = mergedRows;
+  }
   const containerComponents = [];
 
   // Indeks komponen yang boleh dikorbankan bila payload melewati batas Discord.

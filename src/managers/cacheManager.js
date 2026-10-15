@@ -463,6 +463,9 @@ class CacheManager {
    * economy_deposit, music_playlist, dan sejenisnya.
    */
   async mutateUserProfileJson(userId, field, mutator) {
+    if (field === "rpg_state" || field === "shop_purchases") {
+      return this.mutateUserSurvivalJson(userId, field, mutator);
+    }
     return this._mutateJson(userId, field, mutator, {
       Model: UserProfile,
       cacheKey: `user:profile:${userId}`,

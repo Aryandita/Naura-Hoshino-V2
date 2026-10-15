@@ -46,17 +46,55 @@ class AiDjManager {
     this.guildDjStates.set(guildId, Boolean(enabled));
   }
 
+  async detectVoiceLanguage(manager, guildId, voiceChannelId) {
+    let lang = "id";
+    try {
+      const cacheManager = require("./cacheManager");
+      const guildSettings = await cacheManager.getGuildSettings(guildId);
+      if (guildSettings?.settings?.language) {
+        return guildSettings.settings.language;
+      }
+
+      const voiceChannel = manager.client.channels.cache.get(voiceChannelId);
+      const langCounts = { id: 0, en: 0 };
+
+      if (voiceChannel && voiceChannel.members) {
+        const members = Array.from(voiceChannel.members.values()).filter(m => !m.user.bot);
+        const profiles = await Promise.all(
+          members.map(m => cacheManager.getUserProfile(m.id).catch(() => null))
+        );
+
+        for (const p of profiles) {
+          if (p && p.language) {
+            if (p.language === "en") langCounts.en++;
+            else if (p.language === "id") langCounts.id++;
+          }
+        }
+      }
+
+      if (langCounts.en > langCounts.id) {
+        lang = "en";
+      } else if (langCounts.id > langCounts.en) {
+        lang = "id";
+      }
+    } catch (e) {
+      logger.warn(`[AiDjManager] Gagal mendeteksi preferensi bahasa: ${e.message}`);
+    }
+    return lang;
+  }
+
   /**
    * Buat naskah penyiar DJ singkat, ramah, dan bernuansa anime kawaii sesuai genre trek.
    * @param {Object} trackInfo
    * @param {string} requesterName
    * @param {string[]} [listenerNames]
+   * @param {string} [lang]
    * @returns {{ script: string, classification: { genre: string, mood: string, emoji: string } }}
    */
-  generateDjScript(trackInfo, requesterName, listenerNames = []) {
-    const title = trackInfo.title || "lagu favorit kalian";
-    const author = trackInfo.author || "musisi hebat";
-    const name = requesterName || "sobat setia Naura";
+  generateDjScript(trackInfo, requesterName, listenerNames = [], lang = "id") {
+    const title = trackInfo.title || (lang === "en" ? "your favorite song" : "lagu favorit kalian");
+    const author = trackInfo.author || (lang === "en" ? "an awesome musician" : "musisi hebat");
+    const name = requesterName || (lang === "en" ? "Naura's best friend" : "sobat setia Naura");
     const classification = classifyTrack(trackInfo);
 
     // Sapa pendengar aktif di voice jika ada selain requester
@@ -64,7 +102,9 @@ class AiDjManager {
     const otherListeners = listenerNames.filter((n) => n && n !== name);
     if (otherListeners.length > 0) {
       const luckyListener = otherListeners[Math.floor(Math.random() * otherListeners.length)];
-      listenerGreeting = ` Sapaan hangat juga buat Kak ${luckyListener} dan teman-teman di voice channel!`;
+      listenerGreeting = lang === "en"
+        ? ` Warm greetings to ${luckyListener} and friends in the voice channel!`
+        : ` Sapaan hangat juga buat Kak ${luckyListener} dan teman-teman di voice channel!`;
     }
 
     // Koleksi template tematik per-genre
@@ -107,7 +147,47 @@ class AiDjManager {
       ],
     };
 
-    const genrePool = templatesByGenre[classification.genre] || templatesByGenre[GENRES.POP_DEFAULT];
+    const templatesByGenreEn = {
+      [GENRES.LOFI]: [
+        `Dimming the studio lights for a bit... A chill and peaceful vibe is on the air with ${title} by ${author} for ${name}.${listenerGreeting} Take a deep breath and enjoy the tranquility~`,
+        `Time for a quick break from today's hustle! Naura is playing ${title} by ${author} especially for ${name}.${listenerGreeting} Perfect companion for studying or just chilling tonight.`,
+      ],
+      [GENRES.ANIME]: [
+        `Kyaa! Anime waves are broadcasting on our frequency! Here is ${title} by ${author} for ${name}.${listenerGreeting} Let's sing along together with Naura in the voice channel!`,
+        `Japanese vibes that always hype us up! Naura is playing ${title}, an awesome pick from ${name}.${listenerGreeting} Get ready to get lost in the melody!`,
+      ],
+      [GENRES.ROCK]: [
+        `Whoaaa! Fasten your seatbelts, the heavy guitar distortion is rolling in! ${title} by ${author} is up next for ${name}.${listenerGreeting} This will surely pump up your adrenaline!`,
+        `Limitless energy! The blazing riffs from ${author} in ${title} are ready to rock the server for ${name}.${listenerGreeting} Turn up the volume and enjoy the beat!`,
+      ],
+      [GENRES.EDM]: [
+        `Turn up the bass! The dropping beats are ready to set the mood on fire! Naura is playing ${title} by ${author} for ${name}.${listenerGreeting} Don't hesitate to rave with us here!`,
+        `Party vibes on air! An incredible choice from ${name}, here is ${title} by ${author}.${listenerGreeting} Feel the energy waves, everyone!`,
+      ],
+      [GENRES.KPOP]: [
+        `The stylish and rhythmic K-Pop beats are ready to charm your day! ${title} by ${author} is on the air for ${name}.${listenerGreeting} Such a catchy melody to sing along to!`,
+        `Visual soundstage activated! Naura presents ${title} by ${author} for ${name}.${listenerGreeting} The beat is absolutely addicting!`,
+      ],
+      [GENRES.ACOUSTIC]: [
+        `Warm and heart-touching acoustic strums... Here is ${title} presented by ${author} for ${name}.${listenerGreeting} Let the melody accompany your soul~`,
+        `Gentle notes that soothe the soul. Naura presents a sweet masterpiece from ${author}, ${title}, for ${name}.${listenerGreeting} Please enjoy the warmth.`,
+      ],
+      [GENRES.GAMING]: [
+        `The call of adventure sounds! The epic soundtrack ${title} by ${author} begins to play for ${name}.${listenerGreeting} Feel the majestic fantasy world atmosphere!`,
+        `Gear up, explorers! The legendary rhythm ${title} by ${author} is here for ${name}.${listenerGreeting} The perfect music to accompany your grinding or chill session!`,
+      ],
+      [GENRES.STREAM]: [
+        `The long marathon session has begun! Naura presents the focus track ${title} for ${name}.${listenerGreeting} Naura will stay on standby to accompany your activities until you're done~`,
+        `A long-duration broadcast for maximum focus. Naura is accompanying ${name} and friends in the voice channel.${listenerGreeting} Sit back and enjoy the flow!`,
+      ],
+      [GENRES.POP_DEFAULT]: [
+        `Hello hello everyone! A special song up next, ${title} by ${author} is on the air for ${name}.${listenerGreeting} Enjoy listening together with Naura!`,
+        `A sweet and delightful pick from ${name}! Now Naura is playing ${title} by ${author}.${listenerGreeting} Let's enjoy this together!`,
+      ],
+    };
+
+    const targetTemplates = lang === "en" ? templatesByGenreEn : templatesByGenre;
+    const genrePool = targetTemplates[classification.genre] || targetTemplates[GENRES.POP_DEFAULT];
     const script = genrePool[Math.floor(Math.random() * genrePool.length)];
 
     return { script, classification };
@@ -148,19 +228,22 @@ class AiDjManager {
 
     // Ambil daftar nama pendengar aktif di voice channel
     let listenerNames = [];
+    let lang = "id";
     try {
       const voiceChannel = manager.client.channels.cache.get(player.voiceChannel);
       if (voiceChannel && voiceChannel.members) {
-        listenerNames = voiceChannel.members
+        listenerNames = Array.from(voiceChannel.members.values())
           .filter((m) => !m.user.bot)
           .map((m) => m.displayName || m.user.username);
       }
+      lang = await this.detectVoiceLanguage(manager, guildId, player.voiceChannel);
     } catch (_) {}
 
     const { script, classification } = this.generateDjScript(
       track.info,
       requesterName,
       listenerNames,
+      lang
     );
 
     // Sematkan naskah dan tag genre di player agar MusicUIManager menampilkannya di kartu Now Playing

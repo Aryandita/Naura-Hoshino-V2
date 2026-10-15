@@ -178,7 +178,8 @@ class BountyVaultEngine {
 
     // Debit reward dari saldo pembuat secara atomik
     const debitOk = await cacheManager.debitUserSurvival(creatorId, "starFragments", rewardNsf);
-    if (!debitOk) {
+    const isDebitSuccess = debitOk === true || Boolean(debitOk?.ok);
+    if (!isDebitSuccess) {
       return {
         success: false,
         error: `Saldo Star Fragments kamu tidak mencukupi untuk imbalan ${rewardNsf.toLocaleString("id-ID")} NSF.`,

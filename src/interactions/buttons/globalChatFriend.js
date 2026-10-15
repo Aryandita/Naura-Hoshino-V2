@@ -14,7 +14,6 @@ module.exports = [
     prefix: "gchat_add_",
     label: "global-chat-add-friend",
     defer: "reply",
-    isEphemeral: true,
     async handler(interaction, client) {
       const targetUserId = interaction.customId.replace("gchat_add_", "").trim();
       const currentUserId = interaction.user.id;

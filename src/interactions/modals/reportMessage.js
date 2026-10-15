@@ -11,7 +11,6 @@ module.exports = [
     prefix: "report_msg_",
     label: "report-message-modal-submit",
     defer: "reply",
-    isEphemeral: true,
     async handler(interaction) {
       const messageId = interaction.customId.replace("report_msg_", "").trim();
       const reason = interaction.fields.getTextInputValue("report_reason");

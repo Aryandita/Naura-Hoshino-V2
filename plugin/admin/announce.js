@@ -177,11 +177,16 @@ module.exports = {
         bannerAttachmentName = attachment.name;
       }
 
+      const mentions = [];
+      if (mentionEveryone) mentions.push("@everyone");
+      if (mentionRole) mentions.push(`<@&${mentionRole.id}>`);
+      const mentionPrefix = mentions.length > 0 ? `${mentions.join(" ")}\n\n` : "";
+
       const announcePayload = buildContainerV2({
         accentColorHex: embedColor || ui.getColor("announcement"),
         authorName: interaction.guild.name,
         title: finalTitle,
-        description: desc,
+        description: `${mentionPrefix}${desc}`,
         bannerAttachmentName,
         files,
         footerText: `Pengumuman oleh ${interaction.user.tag}`,
@@ -200,16 +205,8 @@ module.exports = {
         });
       }
 
-      const mentions = [];
-      if (mentionEveryone) mentions.push("@everyone");
-      if (mentionRole) mentions.push(`<@&${mentionRole.id}>`);
-      const contentPayload = mentions.length > 0 ? mentions.join(" ") : null;
-
       try {
-        const sentMessage = await targetChannel.send({
-          content: contentPayload,
-          ...announcePayload,
-        });
+        const sentMessage = await targetChannel.send(announcePayload);
 
         if (shouldPin && sentMessage.pin) {
           await sentMessage.pin().catch((pinErr) => {

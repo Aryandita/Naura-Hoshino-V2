@@ -14,6 +14,11 @@ if (parentPort) {
           result = await profileCanvas.generateProfileCard(payload);
           break;
         }
+        case "renderUnifiedProfile": {
+          const unifiedProfileCanvas = require("./unifiedProfileCanvas");
+          result = await unifiedProfileCanvas.generateUnifiedProfile(payload);
+          break;
+        }
         case "renderMinecraftPlayer": {
           const minecraftCanvas = require("./minecraftCanvas");
           result = await minecraftCanvas.renderMinecraftPlayer(payload);

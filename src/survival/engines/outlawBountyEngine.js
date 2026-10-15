@@ -71,7 +71,8 @@ async function placeOutlawBounty({ issuerId, targetUserId, rewardNsf, reason }) 
 
   // Potong saldo pengaju secara atomik
   const debitOk = await cacheManager.debitUserSurvival(issuerId, "starFragments", safeReward);
-  if (!debitOk) {
+  const isDebitSuccess = debitOk === true || Boolean(debitOk?.ok);
+  if (!isDebitSuccess) {
     return {
       success: false,
       message: `Saldo Star Fragments kamu tidak mencukupi untuk imbalan ${safeReward.toLocaleString("id-ID")} NSF.`,

@@ -12,7 +12,6 @@ module.exports = [
     prefix: "pred_modal_bet_",
     label: "predict-bet-modal-submit",
     defer: "reply",
-    isEphemeral: true,
     async handler(interaction) {
       const parts = interaction.customId
         .replace("pred_modal_bet_", "")

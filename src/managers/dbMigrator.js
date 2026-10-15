@@ -702,17 +702,24 @@ async function syncFallbackToMySQL(targetSequelize) {
         continue;
       }
 
-      const pk = Model.primaryKeyAttributes[0];
+      const pk = Model.primaryKeyAttributes?.[0] || "id";
       const updateFields = Object.keys(rows[0]).filter(
         (k) => ![pk, "createdAt", "updatedAt"].includes(k),
       );
 
       try {
+        const bulkOptions =
+          updateFields.length > 0
+            ? { updateOnDuplicate: updateFields }
+            : { ignoreDuplicates: true };
+
         for (let i = 0; i < rows.length; i += SYNC_BATCH_SIZE) {
           const batch = rows.slice(i, i + SYNC_BATCH_SIZE);
-          await Model.upsert(batch, {
-            updateOnDuplicate: updateFields,
-          });
+          if (typeof Model.bulkCreate === "function") {
+            await Model.bulkCreate(batch, bulkOptions);
+          } else {
+            await Model.upsert(batch, bulkOptions);
+          }
         }
         moved += rows.length;
         logger.db(

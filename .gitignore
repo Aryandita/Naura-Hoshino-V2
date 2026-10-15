@@ -59,6 +59,7 @@ dashboard/mobile/dist/
 dashboard/public/assets/
 dashboard-preview/
 .roo/mcp.json
+.agents/mcp_config.json
 scripts/tmp-*
 
 # Model 3D format berat (melebihi batas GitHub 100MB); versi .glb yang dipakai
