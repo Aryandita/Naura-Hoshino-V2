@@ -3,6 +3,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const uxHelper = require("./uxHelper");
+const { ActionRowBuilder, ButtonBuilder } = require("discord.js");
 
 test("uxHelper - resolveUserName handles various input formats", () => {
   // Direct string

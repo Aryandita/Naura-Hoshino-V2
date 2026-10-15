@@ -58,10 +58,10 @@ class AiDjManager {
 
     // Trivia musisi
     const triviaList = [
-      `${author} terkenal dengan nada-nada magis yang selalu memikat pendengar!`,
-      `Trek ${title} ini merupakan salah satu lagu yang paling banyak diputar!`,
-      `Irama khas dari ${author} siap menemani kalian bersantai di sini!`,
-      `Sentuhan musik dari ${author} ini selalu pas untuk membangkitkan suasana.`,
+      `Katanya sih ${author} lagi banyak yang putar, tapi aku lebih penasaran sama hasil petualangan kalian.`,
+      `Trek ${title} ini pas banget buat nemenin yang lagi kuli nambang di Naura Wilds.`,
+      `Irama khas dari ${author} siap menemani waktu santai di Desa Sukamaju!`,
+      `Jangan kebanyakan santai dengar ${author}, ada karavan yang nunggu dijemput, tau.`,
     ];
     const trivia = triviaList[Math.floor(Math.random() * triviaList.length)];
 
@@ -70,7 +70,7 @@ class AiDjManager {
     const otherListeners = listenerNames.filter((n) => n && n !== name);
     if (otherListeners.length > 0) {
       const luckyListener = otherListeners[Math.floor(Math.random() * otherListeners.length)];
-      listenerGreeting = ` Sapaan hangat juga untuk Kak ${luckyListener} dan kawan-kawan yang standby di voice!`;
+      listenerGreeting = ` Jangan bilang Kak ${luckyListener} ketiduran di voice lagi ya?`;
     }
 
     const templates = [

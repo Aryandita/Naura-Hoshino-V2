@@ -783,15 +783,15 @@ Jawablah dalam bahasa Indonesia kasual.`;
     mode = "general",
     authorName = "Sahabat",
   }) {
+    if (!imageBuffer || !Buffer.isBuffer(imageBuffer)) {
+      throw new Error("Buffer gambar tidak valid atau kosong.");
+    }
+
     const visionClient = this.getGenAI();
     if (!visionClient) {
       throw new Error(
         "Kunci GEMINI_API_KEY belum dikonfigurasi. Fitur Vision AI tidak aktif."
       );
-    }
-
-    if (!imageBuffer || !Buffer.isBuffer(imageBuffer)) {
-      throw new Error("Buffer gambar tidak valid atau kosong.");
     }
 
     let modeInstruction = "";

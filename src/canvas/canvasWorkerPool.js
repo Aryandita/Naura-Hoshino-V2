@@ -34,7 +34,7 @@ class CanvasWorkerPool {
     try {
       const worker = new Worker(scriptPath);
 
-      worker.on("message", ({ id, success, result, error }) => {
+      worker.on("message", ({ id, success, result, error, memoryWarning }) => {
         const pending = this.pendingTasks.get(id);
         if (pending) {
           clearTimeout(pending.timer);
@@ -50,9 +50,10 @@ class CanvasWorkerPool {
         }
         const count = (this.workerTaskCounts.get(worker) || 0) + 1;
         this.workerTaskCounts.set(worker, count);
-        if (count >= this.maxWorkerTasks) {
+        if (count >= this.maxWorkerTasks || memoryWarning) {
+          const reason = memoryWarning ? "peringatan penggunaan memori tinggi (> 1.5GB)" : `setelah ${count} tugas rendering`;
           logger.info(
-            `[CanvasWorkerPool] Worker #${index} didaur ulang setelah ${count} tugas rendering untuk kestabilan memori.`,
+            `[CanvasWorkerPool] Worker #${index} didaur ulang ${reason} untuk kestabilan memori.`,
           );
           this.workerTaskCounts.delete(worker);
           this._replaceWorker(worker, scriptPath, index);
