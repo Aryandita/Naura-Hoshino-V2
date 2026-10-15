@@ -22,7 +22,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const MASTER_GLB = path.join(__dirname, "../assets/3D Model Naura/naura_master.glb");
+const MASTER_GLB = path.join(__dirname, "../assets/3D Model Naura/naura.glb");
 const THUMB_PNG = path.join(__dirname, "../dashboard/public/models/naura-2d.png");
 
 if (!fs.existsSync(MASTER_GLB)) {

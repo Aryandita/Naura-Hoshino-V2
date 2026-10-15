@@ -69,11 +69,15 @@ assets/3D Model Naura/extracted/
 scratch/
 *.glb.bak
 naura_NEW_fixed*.glb
-*.bak
-*.tmp
+# Build & archive artefak
+*.zip
+*.tar.gz
+*.patch
+Naura_Hoshino_V2_*.zip
 
-# Code intelligence (CodeGraph)
+# Artefak tools offline & testing lokal
+tools/*.npz
+tools/apply_skin_fix.*
+scratch/
 .codegraph/
-
-# Database dumps / backups
 backups/
