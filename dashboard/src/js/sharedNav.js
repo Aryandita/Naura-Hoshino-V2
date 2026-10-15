@@ -213,6 +213,7 @@
         }
 
         reconcileSidebarLinks();
+        initSidebarEnhancements();
     }
 
     function reconcileSidebarLinks() {
@@ -223,12 +224,14 @@
         let communityGroup = null;
         let rpgGroup = null;
         let configGroup = null;
+        let moreGroup = null;
 
         navGroups.forEach(g => {
             const label = g.querySelector('.nav-group-label')?.textContent?.trim()?.toLowerCase() || '';
             if (label.includes('community') || label.includes('komunitas')) communityGroup = g;
             else if (label.includes('rpg') || label.includes('survival') || label.includes('wilds')) rpgGroup = g;
             else if (label.includes('config') || label.includes('konfigurasi') || label.includes('pengaturan')) configGroup = g;
+            else if (label.includes('more') || label.includes('lainnya') || label.includes('profil')) moreGroup = g;
         });
 
         if (communityGroup) {
@@ -274,6 +277,100 @@
                 configGroup.appendChild(a);
             }
         }
+
+        // Sinkronisasi otomatis Profil Petualang & Ruang Trofi di seluruh halaman
+        if (!sidebarNav.querySelector('a[href="/profile"]')) {
+            if (!moreGroup) {
+                moreGroup = document.createElement('div');
+                moreGroup.className = 'nav-group';
+                moreGroup.innerHTML = `<div class="nav-group-label">More</div>`;
+                sidebarNav.appendChild(moreGroup);
+            }
+            const aProf = document.createElement('a');
+            aProf.href = '/profile';
+            aProf.className = 'nav-item';
+            aProf.innerHTML = `<span class="nav-icon" style="color:var(--primary)"><i class="fa-solid fa-id-card"></i></span><span style="color:var(--primary)">Profil Petualang</span>`;
+            moreGroup.appendChild(aProf);
+        }
+
+        if (!sidebarNav.querySelector('a[href="/achievements"]')) {
+            if (!moreGroup) {
+                moreGroup = document.createElement('div');
+                moreGroup.className = 'nav-group';
+                moreGroup.innerHTML = `<div class="nav-group-label">More</div>`;
+                sidebarNav.appendChild(moreGroup);
+            }
+            const aAch = document.createElement('a');
+            aAch.href = '/achievements';
+            aAch.className = 'nav-item';
+            aAch.innerHTML = `<span class="nav-icon" style="color:var(--accent-amber)"><i class="fa-solid fa-trophy"></i></span><span style="color:var(--accent-amber)">Ruang Trofi</span>`;
+            moreGroup.appendChild(aAch);
+        }
+    }
+
+    function initSidebarEnhancements() {
+        const sidebar = document.querySelector('.sidebar');
+        if (!sidebar) return;
+
+        // Pulihkan status collapsible tersimpan
+        const isCollapsed = localStorage.getItem('naura_sidebar_collapsed') === 'true';
+        if (isCollapsed && window.innerWidth > 1024) {
+            sidebar.classList.add('collapsed');
+        }
+
+        function toggleSidebarCollapse() {
+            if (window.innerWidth <= 1024) return;
+            const willCollapse = !sidebar.classList.contains('collapsed');
+            sidebar.classList.toggle('collapsed', willCollapse);
+            localStorage.setItem('naura_sidebar_collapsed', String(willCollapse));
+        }
+
+        // Pasang tombol collapse di sidebar-brand jika belum ada
+        const sidebarBrand = sidebar.querySelector('.sidebar-brand');
+        if (sidebarBrand && !sidebarBrand.querySelector('.sidebar-collapse-btn')) {
+            const collapseBtn = document.createElement('button');
+            collapseBtn.type = 'button';
+            collapseBtn.className = 'sidebar-collapse-btn';
+            collapseBtn.id = 'sidebarCollapseBtn';
+            collapseBtn.title = 'Ciutkan Sidebar (Ctrl+B)';
+            collapseBtn.setAttribute('aria-label', 'Toggle Compact Sidebar');
+            collapseBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+            collapseBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleSidebarCollapse();
+            });
+            sidebarBrand.appendChild(collapseBtn);
+        }
+
+        // Pasang trigger pencarian cepat di sidebar (.sidebar-cmd-trigger)
+        const sidebarNav = sidebar.querySelector('.sidebar-nav');
+        if (sidebarNav && !sidebar.querySelector('.sidebar-cmd-trigger')) {
+            const trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = 'sidebar-cmd-trigger';
+            trigger.id = 'sidebarCmdTrigger';
+            trigger.title = 'Buka Command Palette (Ctrl+K)';
+            trigger.innerHTML = `
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>Cari modul...</span>
+                <kbd>Ctrl+K</kbd>
+            `;
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openPalette();
+            });
+            sidebar.insertBefore(trigger, sidebarNav);
+        }
+
+        // Pintasan keyboard global Ctrl+B untuk ciutkan/bentangkan sidebar
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+                const targetTag = e.target.tagName;
+                if (targetTag === 'INPUT' || targetTag === 'TEXTAREA' || e.target.isContentEditable) return;
+                e.preventDefault();
+                toggleSidebarCollapse();
+            }
+        });
     }
 
     if (document.readyState === 'loading') {
@@ -815,7 +912,22 @@
         }
 
         // User Identity Chip
-        if (!document.getElementById('headerUserChip')) {
+        const existingAvatar = document.getElementById('headerAvatar');
+        if (existingAvatar) {
+            // Jika halaman sudah memiliki elemen avatar bawaan (seperti di index.html),
+            // cukup sinkronkan avatar dan tombol otentikasi dari /api/me tanpa membuat #headerUserChip kedua
+            fetch('/api/me').then(r => r.json()).then(data => {
+                if (data && data.loggedIn && data.user) {
+                    if (existingAvatar && data.user.id && data.user.avatar) {
+                        existingAvatar.src = `https://cdn.discordapp.com/avatars/${data.user.id}/${data.user.avatar}.png?size=64`;
+                    }
+                    const authBtn = document.getElementById('headerAuthBtn');
+                    const authLabel = document.getElementById('headerAuthLabel');
+                    if (authLabel) authLabel.textContent = data.user.global_name || data.user.username || 'Logged In';
+                    if (authBtn) authBtn.href = '/profile';
+                }
+            }).catch(() => {});
+        } else if (!document.getElementById('headerUserChip')) {
             const userChip = document.createElement('a');
             userChip.href = '/profile';
             userChip.id = 'headerUserChip';
@@ -1143,16 +1255,91 @@
         // Inisialisasi tema BGM adaptif sesuai grup halaman saat ini
         window.soundManager.playAdaptiveTheme();
 
-        // Pasang Audio Control Widget Pill di .top-header .header-right
+        const existingBgm = document.getElementById('bgmControl');
         const headerRight = document.querySelector('.top-header .header-right');
-        if (headerRight && !document.getElementById('audioControlPill')) {
+
+        function syncBgmUi() {
+            if (!window.soundManager) return;
+            const isPlaying = window.soundManager.bgmEnabled && window.soundManager.unlocked;
+            const bgmIcon = document.getElementById('bgmIcon');
+            if (bgmIcon) {
+                bgmIcon.className = isPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+            }
+            const soundWave = document.querySelector('#bgmControl .sound-wave');
+            if (soundWave) {
+                soundWave.classList.toggle('playing', !!isPlaying);
+            }
+            const bgmTrack = document.getElementById('bgmTrackName');
+            if (bgmTrack) {
+                const theme = window.soundManager.getTheme ? window.soundManager.getTheme(window.soundManager.currentThemeId) : null;
+                if (theme && theme.name) bgmTrack.textContent = theme.name;
+            }
+            const pillWave = document.querySelector('#audioControlPill .audio-eq-bars');
+            if (pillWave) pillWave.classList.toggle('playing', !!isPlaying);
+            const pillMute = document.querySelector('#audioControlPill .audio-btn-mute i');
+            if (pillMute) {
+                pillMute.className = isPlaying ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
+            }
+            const pillLabel = document.getElementById('audioTrackLabel');
+            if (pillLabel) {
+                const theme = window.soundManager.getTheme ? window.soundManager.getTheme(window.soundManager.currentThemeId) : null;
+                pillLabel.textContent = theme && theme.name ? theme.name : (isPlaying ? 'Playing' : 'BGM');
+            }
+        }
+
+        // Hubungkan sinkronisasi UI ke soundManager
+        const originalUpdateUi = window.soundManager._updateUiWidget;
+        window.soundManager._updateUiWidget = function () {
+            if (typeof originalUpdateUi === 'function') {
+                try { originalUpdateUi.call(window.soundManager); } catch (_) {}
+            }
+            syncBgmUi();
+        };
+
+        // Pasang kontrol global window.toggleBgm & window.nextBgm untuk interaksi tombol
+        window.toggleBgm = function () {
+            if (!window.soundManager) return;
+            if (!window.soundManager.unlocked) {
+                window.soundManager.unlock();
+            } else {
+                window.soundManager.setBgmEnabled(!window.soundManager.bgmEnabled);
+            }
+            syncBgmUi();
+        };
+
+        window.nextBgm = function () {
+            if (!window.soundManager) return;
+            if (typeof window.soundManager.nextTheme === 'function') {
+                window.soundManager.nextTheme();
+            }
+            syncBgmUi();
+        };
+
+        if (existingBgm) {
+            // Hindari duplikasi: Jika #bgmControl sudah ada di DOM (misal di index.html),
+            // sisipkan indikator .sound-wave jika belum ada, dan jangan append #audioControlPill!
+            if (!existingBgm.querySelector('.sound-wave')) {
+                const wave = document.createElement('div');
+                wave.className = 'sound-wave';
+                wave.id = 'bgmSoundWave';
+                wave.innerHTML = '<span class="eq-b"></span><span class="eq-b"></span><span class="eq-b"></span><span class="eq-b"></span>';
+                const trackName = document.getElementById('bgmTrackName');
+                if (trackName) {
+                    existingBgm.insertBefore(wave, trackName);
+                } else {
+                    existingBgm.appendChild(wave);
+                }
+            }
+            syncBgmUi();
+        } else if (headerRight && !document.getElementById('audioControlPill')) {
+            // Pasang Audio Control Widget Pill di .top-header .header-right pada halaman yang belum memiliki #bgmControl
             const pill = document.createElement('div');
             pill.className = 'audio-control-pill';
             pill.id = 'audioControlPill';
             pill.title = 'BGM & Sound Controls (Klik untuk putar/jeda)';
             pill.innerHTML = `
                 <div class="audio-eq-bars" id="audioEqBars">
-                    <span class="eq-b"></span><span class="eq-b"></span><span class="eq-b"></span>
+                    <span class="eq-b"></span><span class="eq-b"></span><span class="eq-b"></span><span class="eq-b"></span>
                 </div>
                 <span class="audio-track-label" id="audioTrackLabel">BGM</span>
                 <button type="button" class="audio-btn-mute" id="audioBtnMute" aria-label="Toggle Mute">
@@ -1163,12 +1350,9 @@
 
             pill.addEventListener('click', (clickEvent) => {
                 clickEvent.stopPropagation();
-                if (!window.soundManager.unlocked) {
-                    window.soundManager.unlock();
-                } else {
-                    window.soundManager.setBgmEnabled(!window.soundManager.bgmEnabled);
-                }
+                window.toggleBgm();
             });
+            syncBgmUi();
         }
 
         // Sinkronisasi dengan formulir pengaturan audio jika berada di /settings

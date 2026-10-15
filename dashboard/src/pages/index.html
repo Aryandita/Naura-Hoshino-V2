@@ -730,7 +730,7 @@
                 <span class="page-heading-icon" style="background:var(--primary-dim);border:1px solid var(--border-primary);">
                   <i class="fa-solid fa-gauge-high" style="color:var(--primary);"></i>
                 </span>
-                Selamat datang, <span id="welcomeUser" class="gradient-text-primary" style="-webkit-text-fill-color:initial;background:none;color:var(--primary);">Guest</span>
+                Selamat datang, <span id="welcomeUser" class="gradient-text-primary">Guest</span>
               </h1>
               <p class="page-sub">Sistem monitoring terpusat · Telemetry real-time · Naura Hoshino v2.3.0</p>
             </div>
@@ -918,7 +918,7 @@
           <div class="section-title animate-in delay-2" style="margin-bottom:12px;">Telemetri Sistem Real-Time</div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;align-items:stretch;" class="animate-in delay-2" id="telemetryGrid">
 
-            <div class="metric-card" id="cardTelemetryPing">
+            <div class="metric-card cat-primary" id="cardTelemetryPing">
               <div class="metric-top">
                 <span class="metric-label">Network Latency</span>
                 <span class="metric-badge" style="color:var(--primary);border-color:var(--border-primary);">Gateway RTT</span>
@@ -932,7 +932,7 @@
               </div>
             </div>
 
-            <div class="metric-card" id="cardTelemetryUptime">
+            <div class="metric-card cat-green" id="cardTelemetryUptime">
               <div class="metric-top">
                 <span class="metric-label">System Uptime</span>
                 <span class="metric-badge" style="color:var(--accent-green);border-color:rgba(52,211,153,0.3);">Process</span>
@@ -946,7 +946,7 @@
               </div>
             </div>
 
-            <div class="metric-card" id="cardTelemetryUsers">
+            <div class="metric-card cat-cyan" id="cardTelemetryUsers">
               <div class="metric-top">
                 <span class="metric-label">Total Pengguna</span>
                 <span class="metric-badge" style="color:var(--accent-cyan);border-color:var(--border-cyan);">Database</span>
@@ -960,7 +960,7 @@
               </div>
             </div>
 
-            <div class="metric-card" id="cardTelemetryGuilds">
+            <div class="metric-card cat-violet" id="cardTelemetryGuilds">
               <div class="metric-top">
                 <span class="metric-label">Server Aktif</span>
                 <span class="metric-badge" style="color:var(--accent-violet);border-color:var(--border-violet);">Cluster #0</span>
@@ -1715,18 +1715,7 @@
           });
         } catch (_) {}
 
-      // ── Demo: BGM controls (stub) ────────────────────────────────────
-      let bgmPlaying = false;
-      window.toggleBgm = function() {
-        bgmPlaying = !bgmPlaying;
-        document.getElementById('bgmIcon').className = bgmPlaying ? 'fa-solid fa-pause' : 'fa-solid fa-play';
-      };
-      window.nextBgm = function() {
-        const tracks = ['Cyber Lofi', 'Sakura Beats', 'Neon Rain', 'Astral Trip'];
-        const el = document.getElementById('bgmTrackName');
-        const current = tracks.indexOf(el.textContent);
-        el.textContent = tracks[(current + 1) % tracks.length];
-      };
+      // Kendali BGM dan WebAudio disinkronkan secara terpusat oleh sharedNav.js & soundManager.js
 
       // ── 3D Anim buttons ───────────────────────────────────────────────
       document.querySelectorAll('.naura3d-anim-btn').forEach((btn) => {

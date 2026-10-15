@@ -31,11 +31,11 @@
         C6: 1046.50, D6: 1174.66, E6: 1318.51, G6: 1567.98, A6: 1760.00
     };
 
-    // Konfigurasi 5 Tema Nuansa BGM Adaptif
+    // Konfigurasi Nuansa BGM WebAudio Adaptif
     const THEMES = {
         dashboard: {
             id: 'dashboard',
-            title: 'Cyber Lo-Fi Pulse',
+            title: 'Cyber Lofi',
             bpm: 80,
             chords: [
                 [NOTES.F3, NOTES.A3, NOTES.C4, NOTES.E4], // Fmaj7
@@ -50,7 +50,7 @@
         },
         map: {
             id: 'map',
-            title: 'Aetheria Frontier RPG',
+            title: 'Sakura Beats',
             bpm: 75,
             chords: [
                 [NOTES.A3, NOTES.C4, NOTES.E4, NOTES.A4], // Am
@@ -65,7 +65,7 @@
         },
         config: {
             id: 'config',
-            title: 'Cyber Synth Atelier',
+            title: 'Neon Rain',
             bpm: 96,
             chords: [
                 [NOTES.D3, NOTES.F3, NOTES.A3, NOTES.C4], // Dm7
@@ -80,7 +80,7 @@
         },
         system: {
             id: 'system',
-            title: 'Kawaii Neon Beats',
+            title: 'Astral Trip',
             bpm: 116,
             chords: [
                 [NOTES.C3, NOTES.E3, NOTES.G3, NOTES.B3], // Cmaj7
@@ -131,6 +131,7 @@
             this.stepTimer = null;
             this.stepIndex = 0;
             this.activeNodes = [];
+            this.themes = THEMES;
 
             // Fallback audio element untuk master OST
             this.ostAudio = null;
@@ -206,6 +207,19 @@
                 return 'settings';
             }
             return 'dashboard';
+        }
+
+        getTheme(themeId) {
+            return THEMES[themeId] || THEMES.dashboard;
+        }
+
+        nextTheme() {
+            const list = ['dashboard', 'map', 'config', 'system'];
+            const curIdx = list.indexOf(this.currentThemeId);
+            const nextId = list[(curIdx + 1) % list.length];
+            this.playTheme(nextId);
+            if (!this.bgmEnabled) this.setBgmEnabled(true);
+            return THEMES[nextId];
         }
 
         playAdaptiveTheme() {

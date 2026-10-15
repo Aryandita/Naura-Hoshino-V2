@@ -437,20 +437,52 @@ select option:hover, select option:checked {
 }
 
 /* =====================================================================
- * Dashboard Multi-Theme Engine
- * Variasi: Midnight (default), Sakura Blossom, OLED Obsidian (Off-Black)
+ * Dashboard Multi-Theme Engine (Stellar Glass OS v2)
+ * 6 Palet Terkalibrasi: Midnight, Sakura, Cyber Neon, Emerald Wilds, Light Horizon, OLED
  * ===================================================================== */
 
+/* ── 1. Theme: Midnight (Default Stellar Dark) ────────────────────────── */
+[data-theme="midnight"] {
+  --canvas: #060810;
+  --color-canvas: #060810;
+  --bg-deep: #060810;
+  --bg-layer: #0a0d18;
+  --bg-primary: #060810;
+  --bg-surface: rgba(255, 255, 255, 0.04);
+  --bg-surface-elevated: rgba(255, 255, 255, 0.08);
+  --color-surface-glass: rgba(255, 255, 255, 0.04);
+  --color-surface-elevated: rgba(255, 255, 255, 0.08);
+  --color-hairline: rgba(244, 114, 182, 0.18);
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-medium: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --naura-primary: #f472b6;
+  --color-primary: #f472b6;
+  --primary: #f472b6;
+  --primary-glow: rgba(244, 114, 182, 0.25);
+  --naura-accent: #22d3ee;
+  --color-ink: #f1f5f9;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --color-body: #94a3b8;
+  --glass-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ── 2. Theme: Sakura Blossom ─────────────────────────────────────────── */
 [data-theme="sakura"] {
+  --canvas: #160f18;
   --color-canvas: #160f18;
+  --bg-deep: #160f18;
+  --bg-layer: #1f1422;
   --bg-primary: #160f18;
-  --bg-surface: rgba(255, 220, 235, 0.05);
+  --bg-surface: rgba(255, 200, 220, 0.05);
   --bg-surface-elevated: rgba(45, 22, 40, 0.85);
   --color-surface-glass: rgba(255, 192, 215, 0.05);
   --color-surface-elevated: rgba(40, 18, 35, 0.9);
   --color-hairline: rgba(255, 182, 193, 0.22);
   --border-subtle: rgba(255, 182, 193, 0.16);
   --border-medium: rgba(255, 182, 193, 0.32);
+  --border-strong: rgba(255, 182, 193, 0.45);
   --naura-primary: #ff9ebb;
   --color-primary: #ff9ebb;
   --primary: #ff9ebb;
@@ -460,27 +492,118 @@ select option:hover, select option:checked {
   --text-secondary: #e2b8cb;
   --color-body: #d8b4c4;
   --naura-accent: #f472b6;
+  --glass-specular: inset 0 1px 0 0 rgba(255, 192, 215, 0.14);
 }
 
+/* ── 3. Theme: Cyber Neon (Cyan & Pink High-Octane) ───────────────────── */
+[data-theme="cyber-neon"] {
+  --canvas: #070913;
+  --color-canvas: #070913;
+  --bg-deep: #070913;
+  --bg-layer: #0c1022;
+  --bg-primary: #070913;
+  --bg-surface: rgba(0, 240, 255, 0.04);
+  --bg-surface-elevated: rgba(14, 22, 44, 0.85);
+  --color-surface-glass: rgba(0, 240, 255, 0.04);
+  --color-surface-elevated: rgba(14, 22, 44, 0.85);
+  --color-hairline: rgba(0, 240, 255, 0.22);
+  --border-subtle: rgba(0, 240, 255, 0.15);
+  --border-medium: rgba(0, 240, 255, 0.28);
+  --border-strong: rgba(255, 0, 127, 0.35);
+  --naura-primary: #00f0ff;
+  --color-primary: #00f0ff;
+  --primary: #00f0ff;
+  --primary-glow: rgba(0, 240, 255, 0.40);
+  --naura-accent: #ff007f;
+  --accent-cyan: #00f0ff;
+  --accent-violet: #ff007f;
+  --color-ink: #f0fdfa;
+  --text-primary: #f0fdfa;
+  --text-secondary: #99f6e4;
+  --color-body: #5eead4;
+  --glass-specular: inset 0 1px 0 0 rgba(0, 240, 255, 0.16);
+}
+
+/* ── 4. Theme: Emerald Wilds (Naura Wilds Nature-Tech) ────────────────── */
+[data-theme="emerald-nature"],
+[data-theme="wilds"] {
+  --canvas: #061209;
+  --color-canvas: #061209;
+  --bg-deep: #061209;
+  --bg-layer: #0b1c11;
+  --bg-primary: #061209;
+  --bg-surface: rgba(134, 239, 172, 0.04);
+  --bg-surface-elevated: rgba(18, 38, 24, 0.85);
+  --color-surface-glass: rgba(134, 239, 172, 0.04);
+  --color-surface-elevated: rgba(18, 38, 24, 0.85);
+  --color-hairline: rgba(134, 239, 172, 0.20);
+  --border-subtle: rgba(134, 239, 172, 0.14);
+  --border-medium: rgba(134, 239, 172, 0.28);
+  --border-strong: rgba(134, 239, 172, 0.40);
+  --naura-primary: #86efac;
+  --color-primary: #86efac;
+  --primary: #86efac;
+  --primary-glow: rgba(134, 239, 172, 0.35);
+  --naura-accent: #34d399;
+  --color-ink: #f0fdf4;
+  --text-primary: #f0fdf4;
+  --text-secondary: #bbf7d0;
+  --color-body: #86efac;
+  --glass-specular: inset 0 1px 0 0 rgba(134, 239, 172, 0.14);
+}
+
+/* ── 5. Theme: Light Horizon (Clean Daylight Mode) ────────────────────── */
+[data-theme="light-horizon"] {
+  --canvas: #f8fafc;
+  --color-canvas: #f8fafc;
+  --bg-deep: #f1f5f9;
+  --bg-layer: #ffffff;
+  --bg-primary: #f8fafc;
+  --bg-surface: rgba(15, 23, 42, 0.035);
+  --bg-surface-elevated: #ffffff;
+  --color-surface-glass: rgba(255, 255, 255, 0.8);
+  --color-surface-elevated: #ffffff;
+  --color-hairline: rgba(219, 39, 119, 0.25);
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-medium: rgba(15, 23, 42, 0.16);
+  --border-strong: rgba(15, 23, 42, 0.24);
+  --naura-primary: #db2777;
+  --color-primary: #db2777;
+  --primary: #db2777;
+  --primary-glow: rgba(219, 39, 119, 0.25);
+  --naura-accent: #0284c7;
+  --color-ink: #0f172a;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --color-body: #64748b;
+  --text-muted: #64748b;
+  --glass-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+}
+
+/* ── 6. Theme: OLED Obsidian (Pure Pitch Black) ───────────────────────── */
 [data-theme="oled"] {
-  /* Off-black obsidian bernuansa cyber-ink agar kontras terjaga tanpa kliping visual */
-  --color-canvas: #06070a;
-  --bg-primary: #06070a;
-  --bg-surface: #0a0c12;
-  --bg-surface-elevated: #10131c;
-  --color-surface-glass: rgba(255, 255, 255, 0.03);
-  --color-surface-elevated: #0f121a;
-  --color-hairline: rgba(255, 255, 255, 0.12);
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-medium: rgba(255, 255, 255, 0.18);
+  --canvas: #000000;
+  --color-canvas: #000000;
+  --bg-deep: #000000;
+  --bg-layer: #050508;
+  --bg-primary: #000000;
+  --bg-surface: rgba(255, 255, 255, 0.025);
+  --bg-surface-elevated: #0a0a0f;
+  --color-surface-glass: rgba(255, 255, 255, 0.025);
+  --color-surface-elevated: #0a0a0f;
+  --color-hairline: rgba(255, 92, 138, 0.18);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-medium: rgba(255, 255, 255, 0.14);
+  --border-strong: rgba(255, 255, 255, 0.22);
   --naura-primary: #ff5c8a;
   --color-primary: #ff5c8a;
   --primary: #ff5c8a;
+  --primary-glow: rgba(255, 92, 138, 0.40);
+  --naura-accent: #38bdf8;
   --color-ink: #ffffff;
   --text-primary: #ffffff;
-  --text-secondary: #a1a1aa;
-  --color-body: #a1a1aa;
-  --naura-accent: #38bdf8;
-  --glass-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  --text-secondary: #94a3b8;
+  --color-body: #94a3b8;
+  --glass-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
 }
 
