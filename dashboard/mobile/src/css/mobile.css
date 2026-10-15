@@ -757,7 +757,7 @@ p {
 
 @media (min-width: 768px) {
   .nm-page {
-    padding-bottom: var(--sp-xl);
+    padding-bottom: var(--page-bottom-pad);
     max-width: 800px;
   }
 

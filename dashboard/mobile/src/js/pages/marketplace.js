@@ -13,7 +13,7 @@ import { toast } from "../components/toaster.js";
 document.addEventListener("DOMContentLoaded", async () => {
   applyTheme(loadTheme());
   initBottomNav();
-  await loadMarketItems();
+  await Promise.all([loadMarketItems(), loadCommodities()]);
 });
 
 async function loadMarketItems() {
@@ -117,4 +117,31 @@ async function loadMarketItems() {
       });
     });
   });
+}
+
+async function loadCommodities() {
+  const container = document.getElementById("nm-commodities-grid");
+  if (!container) return;
+
+  const { data } = await apiFetch("/api/realtime/economy");
+  const stocks = data?.data?.stocks || data?.stocks || [];
+  if (!stocks.length) return;
+
+  const top3 = stocks.slice(0, 3);
+  const colors = ["var(--accent-purple)", "var(--accent-gold)", "var(--accent-blue)"];
+
+  container.innerHTML = top3.map((s, idx) => {
+    const isUp = String(s.change).startsWith("+") || s.trend === "up";
+    const statusColor = isUp ? "var(--wilds-emerald)" : "var(--wilds-danger)";
+    const arrow = isUp ? "▲" : "▼";
+    const clr = colors[idx % colors.length];
+
+    return `
+      <div class="nm-card" style="padding:var(--sp-xs); background:rgba(255,255,255,0.02); text-align:center">
+        <span style="font-size:0.75rem; color:var(--muted)">${s.symbol || s.name}</span>
+        <div style="font-size:0.875rem; font-weight:700; color:${clr}">${Number(s.price).toLocaleString("id-ID")} NSF</div>
+        <span style="font-size:0.65rem; color:${statusColor}">${s.change || "0%"} ${arrow}</span>
+      </div>
+    `;
+  }).join("");
 }

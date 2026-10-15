@@ -96,6 +96,45 @@ module.exports = () => {
   const router = express.Router();
 
   // ------------------------------------------------------------------
+  // 0. Profil Karakter Survival (Mobile & Web Dashboard)
+  // ------------------------------------------------------------------
+  router.get("/profile", async (req, res) => {
+    if (typeof req.isAuthenticated !== "function" || !req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    try {
+      const cacheManager = require("../../src/managers/cacheManager");
+      const [profile, survival] = await Promise.all([
+        cacheManager.getUserProfile(req.user.id),
+        cacheManager.getUserSurvival(req.user.id),
+      ]);
+      let weather = "sunny";
+      try {
+        const seasonEngine = require("../../src/services/seasonEngine");
+        weather = seasonEngine.getCurrentWeather?.()?.id || "sunny";
+      } catch (_) {}
+
+      return res.json({
+        success: true,
+        health: Number(survival?.health ?? 100),
+        hunger: Number(survival?.hunger ?? 100),
+        stamina: Number(survival?.stamina ?? 100),
+        starFragments: Number(survival?.starFragments ?? 0),
+        wallet: Number(profile?.economy_wallet ?? 0),
+        coupons: Number(survival?.coupons ?? 0),
+        level: Number(survival?.survival_level || survival?.level || 1),
+        xp: Number(survival?.survival_xp || survival?.xp || 0),
+        weather,
+        inventory: Array.isArray(survival?.inventory) ? survival.inventory : [],
+        activeQuest: survival?.activeQuest || null,
+      });
+    } catch (err) {
+      logger.error("[API Survival Profile] Error:", err);
+      return res.status(500).json({ error: "Gagal memuat profil survival." });
+    }
+  });
+
+  // ------------------------------------------------------------------
   // 1. Matriks 8x8 Land Grid
   // ------------------------------------------------------------------
   router.get("/territory/grid", async (req, res) => {

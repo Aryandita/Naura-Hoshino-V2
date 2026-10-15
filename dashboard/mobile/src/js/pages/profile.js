@@ -9,6 +9,7 @@ import { applyTheme, loadTheme, loadWidgetOrder, saveWidgetOrder, PRESETS, ACCEN
 import { apiFetch }         from "../core/api.js";
 import { getUser, logout, redirectToLogin } from "../core/auth.js";
 import { toastSuccess }     from "../components/toaster.js";
+import { initReveal }       from "../core/reveal.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   applyTheme(loadTheme());

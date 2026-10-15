@@ -198,6 +198,128 @@ module.exports = (client) => {
   });
 
   // ------------------------------------------------------------------
+  // 1b. Mobile Bridge: Daftar Server yang Dikelola (Array JSON Murni)
+  // ------------------------------------------------------------------
+  router.get("/api/guilds/managed", (req, res) => {
+    try {
+      const sandboxEntry = {
+        id: "sandbox",
+        name: "Aethelgard High Citadel (Demo)",
+        icon: "/assets/core/avatar.png",
+        acronym: "AHC",
+        isSandbox: true,
+        memberCount: 1420,
+        owner: true,
+        botPresent: true,
+      };
+
+      const userGuilds = Array.isArray(req.user?.guilds) ? req.user.guilds : [];
+      const botGuilds = client.guilds?.cache || new Map();
+
+      const manageable = userGuilds
+        .filter((g) => {
+          if (req.user && isOwner(req.user.id)) return true;
+          if (g.owner === true) return true;
+          try {
+            const perms = BigInt(g.permissions ?? g.permissions_new ?? 0);
+            return (perms & MANAGE_GUILD) === MANAGE_GUILD;
+          } catch {
+            return false;
+          }
+        })
+        .map((g) => {
+          const inBot =
+            typeof botGuilds.get === "function" ? botGuilds.get(g.id) : null;
+          const isGif = typeof g.icon === "string" && g.icon.startsWith("a_");
+          const iconUrl = g.icon
+            ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.${isGif ? "gif" : "png"}?size=128`
+            : null;
+          const acronym =
+            String(g.name || "")
+              .replace(/'s/g, "")
+              .replace(/\w+/g, (e) => e[0])
+              .replace(/\s+/g, "")
+              .slice(0, 3)
+              .toUpperCase() || "DC";
+
+          return {
+            id: String(g.id),
+            name: g.name,
+            icon: iconUrl,
+            acronym,
+            isGif,
+            isSandbox: false,
+            memberCount: inBot?.memberCount || 0,
+            owner: g.owner === true,
+            botPresent: !!inBot,
+          };
+        });
+
+      return res.json([sandboxEntry, ...manageable]);
+    } catch (e) {
+      return res.json([
+        {
+          id: "sandbox",
+          name: "Aethelgard High Citadel (Demo)",
+          icon: "/assets/core/avatar.png",
+          acronym: "AHC",
+          isSandbox: true,
+        },
+      ]);
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // 1c. Mobile Settings Bridge: /api/guild/:id/settings
+  // ------------------------------------------------------------------
+  router.get("/api/guild/:id/settings", requireGuildManager, async (req, res) => {
+    try {
+      const settings = (await guildSettingsService.getGuildSetting(req.guildId)) || {};
+      const modules = {
+        economy: settings.modules?.economy ?? true,
+        survival: settings.modules?.survival ?? true,
+        music: settings.modules?.music ?? true,
+        automod: toBool(settings.automod ?? true),
+        welcome: toBool(settings.welcome?.enabled ?? true),
+        leveling: settings.modules?.leveling ?? true,
+        ticket: settings.modules?.ticket ?? true,
+        ai_chat: settings.modules?.ai_chat ?? true,
+        ...(settings.modules || {}),
+      };
+      return res.json({
+        success: true,
+        modules,
+        prefix: settings.prefix || "n!",
+        settings,
+      });
+    } catch (e) {
+      logger.error("[API GUILD SETTINGS GET] Error:", e);
+      return res.status(500).json({ error: "Gagal memuat pengaturan server." });
+    }
+  });
+
+  router.post("/api/guild/:id/settings", requireGuildManager, async (req, res) => {
+    try {
+      const { modules, prefix } = req.body || {};
+      await guildSettingsService.updateGuildSetting(req.guildId, (settings) => {
+        if (prefix !== undefined) settings.prefix = String(prefix).slice(0, 8);
+        if (modules && typeof modules === "object") {
+          settings.modules = { ...(settings.modules || {}), ...modules };
+          if (modules.automod !== undefined) settings.automod = toBool(modules.automod);
+          if (modules.welcome !== undefined) {
+            settings.welcome = settings.welcome || {};
+            settings.welcome.enabled = toBool(modules.welcome);
+          }
+        }
+      });
+      return res.json({ success: true, message: "Pengaturan berhasil disimpan." });
+    } catch (e) {
+      logger.error("[API GUILD SETTINGS POST] Error:", e);
+      return res.status(500).json({ error: "Gagal menyimpan pengaturan server." });
+    }
+  });
+
+  // ------------------------------------------------------------------
   // 2. Baca Konfigurasi Server Terpadu
   // ------------------------------------------------------------------
   router.get(

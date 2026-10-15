@@ -162,7 +162,6 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
     };
 
     io.emit("stats_update", statsPayload);
-    io.to("dashboard:home").emit("stats_update", statsPayload);
   }, STATS_INTERVAL_MS);
 
   // --- Siaran keadaan pemutar musik ---
@@ -332,11 +331,23 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       try {
         const UserSurvival = require("../../src/models/UserSurvival");
         const topPlayers = await UserSurvival.findAll({
-          order: [["level", "DESC"], ["xp", "DESC"], ["starFragments", "DESC"]],
+          order: [["survival_level", "DESC"], ["survival_xp", "DESC"], ["starFragments", "DESC"]],
           limit: 10,
-          attributes: ["userId", "level", "xp", "starFragments", "health", "energy"],
+          attributes: ["userId", "survival_level", "survival_xp", "starFragments", "hp", "stamina"],
         });
-        socket.emit("survival_leaderboard_data", topPlayers);
+        const mapped = topPlayers.map((p) => ({
+          userId: p.userId,
+          level: p.survival_level || 1,
+          survival_level: p.survival_level || 1,
+          xp: p.survival_xp || 0,
+          survival_xp: p.survival_xp || 0,
+          starFragments: p.starFragments || 0,
+          health: p.hp ?? 100,
+          hp: p.hp ?? 100,
+          energy: p.stamina ?? 100,
+          stamina: p.stamina ?? 100,
+        }));
+        socket.emit("survival_leaderboard_data", mapped);
       } catch (err) {
         logger.warn("[SOCKET LEADERBOARD ERROR]", err.message);
       }

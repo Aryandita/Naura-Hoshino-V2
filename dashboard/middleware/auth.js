@@ -119,12 +119,7 @@ function canManageGuild(user, guildId) {
  */
 function requireGuildManager(req, res, next) {
   const guildId =
-    req.params?.guildId || req.body?.guildId || req.query?.guildId;
-  if (!guildId) {
-    return res
-      .status(400)
-      .json({ success: false, error: "Guild ID belum dikirim." });
-  }
+    req.params?.guildId || req.body?.guildId || req.query?.guildId || req.params?.id;
 
   // Dukungan Hybrid Mode: Sandbox / Demo Server dapat diakses tanpa login
   if (guildId === "sandbox" || guildId === "demo") {
@@ -134,15 +129,21 @@ function requireGuildManager(req, res, next) {
   }
 
   if (!isLoggedIn(req)) {
-    if (req.method === "GET") {
-      req.guildId = "sandbox";
-      req.isSandbox = true;
-      return next();
-    }
     return res.status(401).json({
       success: false,
       error: "Kamu belum login ya. Masuk dulu lewat Discord.",
     });
+  }
+
+  if (!guildId) {
+    return res
+      .status(400)
+      .json({ success: false, error: "Guild ID belum dikirim." });
+  }
+
+  if (guildId === "current") {
+    req.guildId = "current";
+    return next();
   }
 
   if (!canManageGuild(req.user, guildId)) {

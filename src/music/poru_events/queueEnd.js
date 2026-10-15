@@ -303,7 +303,6 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
       
       // 🎙️ [PLAY STANDBY TTS]
       const aiDjManager = require("../../managers/aiDjManager");
-      const fishAudioService = require("../../services/fishAudioService");
       
       let standbyAudioUrl = null;
       if (aiDjManager.isDjEnabled(player.guildId)) {

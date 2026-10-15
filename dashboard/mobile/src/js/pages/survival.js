@@ -10,12 +10,15 @@ import { applyTheme, loadTheme } from "../core/theme.js";
 import { apiFetch }         from "../core/api.js";
 import { initSocket, on }   from "../core/socket.js";
 import { getUser }            from "../core/auth.js";
+import { initReveal }       from "../core/reveal.js";
+import { toastInfo }        from "../components/toaster.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   applyTheme(loadTheme());
   initBottomNav();
   initReveal();
   initSocket();
+  _setupQuickActions();
 
   const user = await getUser();
   if (!user) {
@@ -176,4 +179,22 @@ function _setVital(id, value, max) {
 function _fmt(n) {
   if (typeof n !== "number") return String(n);
   return n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
+}
+
+function _setupQuickActions() {
+  const actions = [
+    { selector: '[aria-label="Bertani"]', name: "Bertani", cmd: "/survival farm" },
+    { selector: '[aria-label="Tambang"]', name: "Tambang", cmd: "/survival mine" },
+    { selector: '[aria-label="Memasak"]', name: "Memasak", cmd: "/survival cook" },
+    { selector: '[aria-label="Dungeon"]', name: "Dungeon", cmd: "/survival dungeon" },
+  ];
+  actions.forEach(({ selector, name, cmd }) => {
+    const el = document.querySelector(selector);
+    if (el) {
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        toastInfo(`Aksi ${name} siap! Buka Discord dan ketik ${cmd}.`);
+      });
+    }
+  });
 }

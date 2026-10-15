@@ -9,6 +9,7 @@ import { initBottomNav }    from "../components/bottomNav.js";
 import { applyTheme, loadTheme } from "../core/theme.js";
 import { apiFetch }         from "../core/api.js";
 import { getUser }          from "../core/auth.js";
+import { initReveal }       from "../core/reveal.js";
 
 /** Filter aktif saat ini */
 let _activeFilter = "nc";
@@ -146,8 +147,17 @@ function _renderSelfRow(e, rank, sticky) {
 function _fmtVal(v, type) {
   if (v === undefined || v === null) return "-";
   const n = Number(v);
-  if (type === "nc" || type === "nsf") {
-    return n >= 1000 ? `${(n/1000).toFixed(1)}K` : String(n);
+  if (type === "nc") {
+    return n >= 1000 ? `${(n / 1000).toFixed(1)}K NC` : `${n} NC`;
+  }
+  if (type === "nsf") {
+    return n >= 1000 ? `${(n / 1000).toFixed(1)}K NSF` : `${n} NSF`;
+  }
+  if (type === "xp") {
+    return n >= 1000 ? `${(n / 1000).toFixed(1)}K XP` : `${n} XP`;
+  }
+  if (type === "quest") {
+    return `${n} Quest`;
   }
   return String(n);
 }

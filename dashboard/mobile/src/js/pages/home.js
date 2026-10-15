@@ -154,6 +154,18 @@ async function _fetchHealth() {
   _updateService("svc-redis",    data.services?.redis?.connected ?? false);
   _updateService("svc-mongo",    data.services?.mongodb?.state === "connected");
   _updateService("svc-lavalink", data.services?.lavalink?.connected > 0);
+
+  // Ecosystem summary
+  const memEl = document.getElementById("eco-stat-members");
+  if (memEl) {
+    const memCount = data.bot?.users || data.bot?.memberCount || data.stats?.totalMembers || 0;
+    memEl.textContent = memCount ? Number(memCount).toLocaleString("id-ID") : "1.4K+";
+  }
+  const survEl = document.getElementById("eco-stat-survivors");
+  if (survEl) {
+    const survCount = data.survivors || data.stats?.survivors || data.stats?.totalSurvivors || 0;
+    survEl.textContent = survCount ? Number(survCount).toLocaleString("id-ID") : "850+";
+  }
 }
 
 async function _fetchVitals() {
@@ -205,14 +217,25 @@ function _subscribeSocket() {
 function _tmplBotStatus() {
   return `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-sm)">
-      <p class="nm-section-title" style="margin:0">Status Bot</p>
+      <p class="nm-section-title" style="margin:0">Status Bot &amp; Ekosistem</p>
       <div style="display:flex;align-items:center;gap:6px">
         <div id="widget-bot-status-dot" class="nm-dot"></div>
         <span id="widget-bot-status-text" style="font-size:0.75rem;color:var(--body)">Memuat...</span>
       </div>
     </div>
-    <div class="nm-service-grid" id="widget-services-grid">
-      ${_tmplServices()}
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-xs);margin-top:var(--sp-xs)">
+      <div style="padding:8px;background:var(--surface-glass);border:1px solid var(--hairline);border-radius:var(--r-md);text-align:center">
+        <span style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;display:block">Member</span>
+        <strong id="eco-stat-members" style="font-size:0.875rem;color:var(--ink);font-family:var(--font-display)">---</strong>
+      </div>
+      <div style="padding:8px;background:var(--surface-glass);border:1px solid var(--hairline);border-radius:var(--r-md);text-align:center">
+        <span style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;display:block">Survivor</span>
+        <strong id="eco-stat-survivors" style="font-size:0.875rem;color:var(--accent-emerald);font-family:var(--font-display)">---</strong>
+      </div>
+      <div style="padding:8px;background:var(--surface-glass);border:1px solid var(--hairline);border-radius:var(--r-md);text-align:center">
+        <span style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;display:block">Engine</span>
+        <strong id="eco-stat-engine" style="font-size:0.875rem;color:var(--primary);font-family:var(--font-display)">v2.3.0</strong>
+      </div>
     </div>
   `;
 }

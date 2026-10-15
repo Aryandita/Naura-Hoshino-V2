@@ -94,6 +94,7 @@ function _setupControls() {
         body: data.message || `+${data.reward} Star Fragments ditambahkan ke petualanganmu!`,
         variant: "success",
       });
+      window.soundManager?.play?.("coin");
 
       score = 0;
       const scoreEl = document.getElementById("game-score");
@@ -138,6 +139,7 @@ function endGame() {
   isPlaying = false;
   clearInterval(timerId);
   cancelAnimationFrame(animId);
+  window.soundManager?.play?.("modal");
 
   const overlay = document.getElementById("game-overlay");
   const claimBtn = document.getElementById("btn-claim-reward");
@@ -205,6 +207,7 @@ function _gameLoop() {
       score += 50;
       const scoreEl = document.getElementById("game-score");
       if (scoreEl) scoreEl.textContent = score.toLocaleString("id-ID");
+      window.soundManager?.play?.("ding");
       stars.splice(i, 1);
       continue;
     }

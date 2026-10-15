@@ -636,7 +636,7 @@
 
           if (!res.ok) {
             const errJson = await res.json().catch(() => ({}));
-            alert(errJson.error || "Gagal mengirim balasan.");
+            if (window.showToast) window.showToast("Tickets Hub", errJson.error || "Gagal mengirim balasan.", "error");
             return;
           }
 
@@ -649,8 +649,9 @@
             selectedTicket.messages.push(resData.reply);
             selectTicket(selectedTicket);
           }
+          if (window.showToast) window.showToast("Tickets Hub", "Balasan berhasil dikirim.", "success");
         } catch (err) {
-          alert("Gagal mengirim balasan: " + err.message);
+          if (window.showToast) window.showToast("Tickets Hub", "Gagal mengirim balasan: " + err.message, "error");
         } finally {
           btnSend.disabled = false;
         }
@@ -669,27 +670,71 @@
         try {
           const res = await fetch(`/api/tickets/${selectedTicket.ticketId}/close`, { method: "POST" });
           if (res.ok) {
-            alert("🔒 Tiket berhasil ditutup.");
+            if (window.showToast) window.showToast("Tickets Hub", "Tiket berhasil ditutup.", "success");
             fetchTickets(searchInput?.value.trim() || "", activeStatusFilter);
           } else {
-            alert("Gagal menutup tiket.");
+            if (window.showToast) window.showToast("Tickets Hub", "Gagal menutup tiket.", "error");
           }
         } catch (err) {
-          alert("Gagal menutup tiket: " + err.message);
+          if (window.showToast) window.showToast("Tickets Hub", "Gagal menutup tiket: " + err.message, "error");
         }
       });
 
       // Actions
       document.getElementById("btnEscalateTribunal").addEventListener("click", () => {
-        alert("⚖️ Tiket berhasil diajukan ke sidang AI Tribunal untuk penilaian otomatis.");
+        if (window.showToast) window.showToast("AI Tribunal", "Tiket berhasil diajukan ke sidang AI Tribunal untuk penilaian otomatis.", "info");
       });
 
       document.getElementById("btnExportAll").addEventListener("click", () => {
-        alert("📄 Transkrip tiket diekspor ke format Markdown.");
+        const ticket = selectedTicket || (currentTicketsList && currentTicketsList[0]);
+        if (!ticket) {
+          if (window.showToast) window.showToast("Tickets Hub", "Tidak ada tiket yang dapat diekspor.", "info");
+          return;
+        }
+
+        const tid = ticket.ticketId || "UNKNOWN";
+        const topic = ticket.topic || "Bantuan & Dukungan";
+        const user = ticket.userName || "Member";
+        const cat = ticket.category || "General";
+        const status = ticket.status || "OPEN";
+        const msgs = ticket.messages || [];
+
+        let md = `# Transkrip Tiket Dukungan: #${tid}\n\n`;
+        md += `- **Topik:** ${topic}\n`;
+        md += `- **Pembuat:** @${user}\n`;
+        md += `- **Kategori:** ${cat}\n`;
+        md += `- **Status:** ${status.toUpperCase()}\n`;
+        md += `- **Diekspor Pada:** ${new Date().toLocaleString("id-ID")}\n\n`;
+        md += `## Percakapan & Log Pesan\n\n`;
+
+        if (msgs.length === 0) {
+          md += `*Tidak ada riwayat pesan dalam tiket ini.*\n`;
+        } else {
+          msgs.forEach((m) => {
+            const time = m.timestamp ? new Date(m.timestamp).toLocaleString("id-ID") : "--:--";
+            const role = m.isStaff ? " [STAFF]" : (m.isBot ? " [BOT]" : "");
+            md += `### [${time}] @${m.authorTag || user}${role}\n\n`;
+            md += `${m.content || ""}\n\n`;
+          });
+        }
+
+        const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `ticket-${tid.slice(-6)}.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        if (window.showToast) {
+          window.showToast("Tickets Hub", `Transkrip #TICKET-${tid.slice(-6)} berhasil diunduh.`, "success");
+        }
       });
 
       document.getElementById("btnNewTicket").addEventListener("click", () => {
-        alert("📝 Buka Discord dan gunakan perintah /ticket open untuk membuat tiket baru.");
+        if (window.showToast) window.showToast("Buka Tiket", "Gunakan perintah /ticket open di Discord untuk membuat tiket baru.", "info");
       });
 
       // Load tickets on init

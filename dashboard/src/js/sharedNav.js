@@ -572,7 +572,32 @@
     }
 
     // ── 6. Helper Notifikasi Toast Global ──────────────────────────────
-    window.showToast = function (messageText, toastType = 'info', displayDuration = 3500) {
+    window.showToast = function (firstArg, secondArg, thirdArg) {
+        let toastType = 'info';
+        let messageText = '';
+        let displayDuration = 3500;
+
+        if (typeof firstArg === 'object' && firstArg !== null) {
+            toastType = firstArg.type || 'info';
+            messageText = firstArg.message || firstArg.text || firstArg.title || '';
+            displayDuration = firstArg.duration || 3500;
+        } else if (thirdArg !== undefined) {
+            messageText = String(secondArg);
+            toastType = String(thirdArg);
+        } else {
+            messageText = String(firstArg);
+            toastType = secondArg || 'info';
+        }
+
+        if (window.soundManager) {
+            if (toastType === 'success') {
+                if (typeof window.soundManager.playCoin === 'function') window.soundManager.playCoin();
+                else if (typeof window.soundManager.playSuccess === 'function') window.soundManager.playSuccess();
+            } else if (toastType === 'error' && typeof window.soundManager.playError === 'function') {
+                window.soundManager.playError();
+            }
+        }
+
         let toastStack = document.querySelector('.toast-stack');
         if (!toastStack) {
             toastStack = document.createElement('div');
@@ -911,6 +936,41 @@
             }
         }
 
+        // SFX Mute Quick Toggle Pill
+        if (!document.getElementById('sfxTogglePill')) {
+            const sfxPill = document.createElement('button');
+            sfxPill.type = 'button';
+            sfxPill.id = 'sfxTogglePill';
+            sfxPill.className = 'theme-switcher-pill';
+            sfxPill.title = 'Bisu / Bunyikan Efek Suara Interaktif (SFX)';
+
+            const isSfxMuted = localStorage.getItem('naura_sfx_enabled') === 'false';
+            sfxPill.innerHTML = `<i class="fa-solid ${isSfxMuted ? 'fa-bell-slash' : 'fa-bell'}"></i> <span>${isSfxMuted ? 'SFX Off' : 'SFX On'}</span>`;
+
+            sfxPill.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!window.soundManager) return;
+                const nextState = !window.soundManager.sfxEnabled;
+                window.soundManager.setSfxEnabled(nextState);
+                sfxPill.innerHTML = `<i class="fa-solid ${nextState ? 'fa-bell' : 'fa-bell-slash'}"></i> <span>${nextState ? 'SFX On' : 'SFX Off'}</span>`;
+                if (window.showToast) {
+                    window.showToast({
+                        type: 'info',
+                        title: 'Efek Suara UI',
+                        message: nextState ? 'SFX diaktifkan.' : 'SFX dimatikan.',
+                        duration: 2000
+                    });
+                }
+            });
+
+            const themeBtn = document.getElementById('themeSwitcherPill');
+            if (themeBtn && themeBtn.nextSibling) {
+                headerRight.insertBefore(sfxPill, themeBtn.nextSibling);
+            } else {
+                headerRight.appendChild(sfxPill);
+            }
+        }
+
         // User Identity Chip
         const existingAvatar = document.getElementById('headerAvatar');
         if (existingAvatar) {
@@ -1074,6 +1134,9 @@
     }
 
     function openPalette() {
+        if (window.soundManager && typeof window.soundManager.playModal === 'function') {
+            window.soundManager.playModal();
+        }
         buildPaletteModal();
         paletteBackdrop.classList.add('active');
         paletteInput.value = '';
@@ -1410,6 +1473,17 @@
                 window.soundManager.playHover();
             }
         }, true);
+
+        // Global NauraSFX helper
+        window.NauraSFX = {
+            hover: () => window.soundManager?.playHover?.(),
+            click: () => window.soundManager?.playClick?.(),
+            tab: () => window.soundManager?.playTab?.(),
+            toggle: (on) => window.soundManager?.playToggle?.(on),
+            modal: () => window.soundManager?.playModal?.(),
+            coin: () => window.soundManager?.playCoin?.(),
+            success: () => window.soundManager?.playSuccess?.()
+        };
     }
 
     if (!document.getElementById('naura-sound-script')) {

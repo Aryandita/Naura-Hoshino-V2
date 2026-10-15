@@ -1827,12 +1827,12 @@ p {
 /* ─── Notification/Toast ─── */
 .toast-stack {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  top: calc(var(--header-h, 60px) + 14px);
+  right: 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  z-index: 9000;
+  z-index: 99999;
 }
 
 .toast {
@@ -2396,7 +2396,7 @@ p {
 
     /* Floating AI Mascot Companion Widget & Toast Position */
     .naura-companion-root {
-      bottom: 74px !important;
+      bottom: calc(74px + env(safe-area-inset-bottom)) !important;
       right: 14px !important;
     }
 
@@ -2404,14 +2404,23 @@ p {
       width: calc(100vw - 28px) !important;
       max-width: 380px !important;
       right: -2px !important;
-      bottom: 70px !important;
+      bottom: calc(70px + env(safe-area-inset-bottom)) !important;
     }
 
-    .toast-stack {
-      bottom: 74px !important;
+    #pwa-install-banner {
+      bottom: calc(74px + env(safe-area-inset-bottom)) !important;
       right: 14px !important;
       left: 14px !important;
       max-width: none !important;
+    }
+
+    .toast-stack, .naura-toast-container {
+      top: calc(var(--header-h, 60px) + 14px) !important;
+      bottom: auto !important;
+      right: 14px !important;
+      left: auto !important;
+      max-width: 380px !important;
+      width: calc(100vw - 28px) !important;
     }
 
     .toast {

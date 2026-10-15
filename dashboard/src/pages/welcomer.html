@@ -522,8 +522,19 @@
 
         ctx.fillStyle = "#34d399";
         ctx.font = "bold 12px 'JetBrains Mono', monospace";
-        ctx.fillText("MEMBER #1,420", 200, 227);
+        ctx.fillText(`MEMBER #${Number(liveMemberCount || 1420).toLocaleString('id-ID')}`, 200, 227);
       }
+
+      let liveMemberCount = 1420;
+      fetch('/api/realtime/overview')
+        .then(r => r.json())
+        .then(d => {
+          if (d && d.success && d.data && d.data.registeredUsers) {
+            liveMemberCount = d.data.registeredUsers;
+            renderCanvas();
+          }
+        })
+        .catch(() => {});
 
       // Input listeners
       document.getElementById("inputTitle").addEventListener("input", renderCanvas);
@@ -540,11 +551,15 @@
       });
 
       document.getElementById("btnSaveConfig").addEventListener("click", () => {
-        alert("✅ Pengaturan kartu sambutan berhasil disimpan ke memori server!");
+        if (window.showToast) {
+          window.showToast("Welcomer Studio", "Pengaturan kartu sambutan berhasil disimpan ke memori server!", "success");
+        }
       });
 
       document.getElementById("btnTestSend").addEventListener("click", () => {
-        alert("🚀 Kartu sambutan simulasi telah berhasil dikirim ke #welcome-gate!");
+        if (window.showToast) {
+          window.showToast("Welcomer Studio", "Kartu sambutan simulasi telah berhasil dikirim ke #welcome-gate!", "success");
+        }
       });
 
       // Initial render

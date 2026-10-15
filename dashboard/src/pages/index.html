@@ -95,184 +95,6 @@
         width: 100%;
       }
 
-      /* Solid Surface Card - Anti-slop matte standard */
-      .card-solid {
-        background: var(--bg-layer);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--r-lg);
-        transition: border-color var(--t-base);
-      }
-      .card-solid:hover {
-        border-color: var(--border-medium);
-      }
-
-      /* Metric Card - High Contrast Monospace Telemetry */
-      .metric-card {
-        background: var(--bg-layer);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--r-lg);
-        padding: 16px 18px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 100%;
-        position: relative;
-        transition: border-color var(--t-base), transform var(--t-base);
-      }
-      .metric-card:hover {
-        border-color: var(--border-medium);
-        transform: translateY(-2px);
-      }
-      .metric-top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 4px;
-      }
-      .metric-label {
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--text-muted);
-        font-family: var(--font-heading);
-      }
-      .metric-badge {
-        font-size: 10px;
-        font-family: var(--font-mono);
-        padding: 2px 7px;
-        border-radius: var(--r-full);
-        border: 1px solid var(--border-subtle);
-        background: var(--bg-surface);
-        color: var(--text-secondary);
-      }
-      .metric-value {
-        font-family: var(--font-mono);
-        font-size: 26px;
-        font-weight: 700;
-        line-height: 1.15;
-        color: var(--text-primary);
-        margin: 6px 0;
-        letter-spacing: -0.02em;
-        display: flex;
-        align-items: baseline;
-      }
-      .metric-sub {
-        font-size: 11px;
-        color: var(--text-muted);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-
-      /* Activity feed item */
-      .feed-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        padding: 12px 0;
-        border-bottom: 1px solid var(--border-subtle);
-        transition: opacity var(--t-base);
-      }
-
-      .feed-item:last-child { border-bottom: none; }
-
-      .feed-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: var(--r-md);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        flex-shrink: 0;
-      }
-
-      /* Quick Actions grid - Asymmetric 3-column functional matrix */
-      .quick-actions-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-      }
-      @media (max-width: 768px) {
-        .quick-actions-grid { grid-template-columns: repeat(2, 1fr); }
-      }
-      @media (max-width: 480px) {
-        .quick-actions-grid { grid-template-columns: 1fr; }
-      }
-
-      /* Quick action button */
-      .quick-action {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 14px;
-        border-radius: var(--r-md);
-        background: var(--bg-surface);
-        border: 1px solid var(--border-subtle);
-        cursor: pointer;
-        transition: all var(--t-base);
-        text-decoration: none;
-        text-align: left;
-        font-family: var(--font-body);
-      }
-
-      .quick-action:hover {
-        background: var(--bg-surface-hv);
-        border-color: var(--border-medium);
-        transform: translateY(-2px);
-      }
-
-      .quick-action:focus-visible,
-      .btn:focus-visible,
-      button:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
-      }
-
-      .quick-action-icon {
-        width: 38px;
-        height: 38px;
-        border-radius: var(--r-md);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        transition: transform var(--t-base);
-        flex-shrink: 0;
-      }
-
-      .quick-action:hover .quick-action-icon {
-        transform: scale(1.08);
-      }
-
-      .quick-action-content {
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-      }
-
-      .quick-action-label {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text-primary);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .quick-action-desc {
-        font-size: 11px;
-        color: var(--text-muted);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .quick-action:hover .quick-action-label {
-        color: var(--primary);
-      }
-
       /* Music mini player - Harmonized compact widget */
       .mini-player {
         display: flex;
@@ -395,47 +217,6 @@
         width: 36px;
         text-align: right;
         flex-shrink: 0;
-      }
-
-      /* Leaderboard rank item & number precision alignment */
-      .rank-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 14px;
-        border-radius: var(--r-md);
-        background: var(--bg-surface);
-        border: 1px solid var(--border-subtle);
-        transition: all var(--t-base);
-      }
-      .rank-number {
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: var(--font-mono);
-        font-size: 13px;
-        font-weight: 700;
-        flex-shrink: 0;
-        text-align: center;
-      }
-
-      /* Status panel item */
-      .status-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 10px 14px;
-        border-radius: var(--r-md);
-        background: var(--bg-surface);
-        border: 1px solid var(--border-subtle);
-        transition: all var(--t-base);
-      }
-
-      .status-item:hover {
-        border-color: var(--border-medium);
-        background: var(--bg-elevated);
       }
 
       /* Guild selector card */
@@ -998,7 +779,7 @@
                 <div class="card-title" style="color:var(--primary);">
                   <i class="fa-solid fa-chart-pie"></i> Distribusi Perintah
                 </div>
-                <span style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">12 Modul</span>
+                <span style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);" id="homeTotalModulesBadge">12 Modul</span>
               </div>
               <div style="flex:1;position:relative;min-height:160px;display:flex;align-items:center;justify-content:center;">
                 <canvas id="homeCommandChart"></canvas>
@@ -1205,13 +986,13 @@
     <script src="/src/js/sharedNav.js"></script>
 
     <script>
-      // ── Demo: Telemetry Chart ────────────────────────────────────────
+      // ── Telemetry Chart ─────────────────────────────────────────────
       (function initTelemetryChart() {
         const ctx = document.getElementById('telemetryChart');
         if (!ctx || typeof Chart === 'undefined') return;
         const labels = Array.from({ length: 20 }, (_, i) => `${i * 3}s`);
-        const pingData = labels.map(() => Math.floor(Math.random() * 30 + 15));
-        const ramData = labels.map(() => Math.floor(Math.random() * 20 + 45));
+        const pingData = labels.map(() => 28);
+        const ramData = labels.map(() => 48);
 
         window.telemetryChartInstance = new Chart(ctx, {
           type: 'line',
@@ -1277,11 +1058,11 @@
         });
       })();
 
-      // ── Demo: Command Distribution Doughnut ──────────────────────────
+      // ── Command Distribution Doughnut ───────────────────────────────
       (function initCommandChart() {
         const ctx = document.getElementById('homeCommandChart');
         if (!ctx) return;
-        new Chart(ctx, {
+        window.homeCommandChartInstance = new Chart(ctx, {
           type: 'doughnut',
           data: {
             labels: ['Music', 'AI', 'RPG', 'Admin', 'Utility'],
@@ -1407,6 +1188,55 @@
                 const el = document.getElementById(id);
                 if (el && value !== undefined) animateCounter(el, value);
               });
+
+              // Update Command Chart & Legend with Real Plugins Data
+              if (d.plugins && window.homeCommandChartInstance) {
+                const badgeEl = document.getElementById('homeTotalModulesBadge');
+                if (badgeEl && d.plugins.totalModules) {
+                  badgeEl.textContent = `${d.plugins.totalModules} Modul (${d.plugins.totalCommands || 0} Perintah)`;
+                }
+                if (d.plugins.distribution && d.plugins.distribution.length > 0) {
+                  const dist = d.plugins.distribution;
+                  window.homeCommandChartInstance.data.labels = dist.map(x => x.name);
+                  window.homeCommandChartInstance.data.datasets[0].data = dist.map(x => x.percentage);
+                  window.homeCommandChartInstance.update();
+
+                  const legendEl = document.getElementById('commandChartLegend');
+                  if (legendEl) {
+                    const colors = [
+                      'var(--primary)',
+                      'var(--accent-cyan)',
+                      'var(--accent-amber)',
+                      'var(--accent-violet)',
+                      '#60a5fa',
+                      '#34d399',
+                      '#f472b6'
+                    ];
+                    legendEl.innerHTML = dist.map((item, idx) => `
+                      <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);font-family:var(--font-mono);">
+                        <span style="width:8px;height:8px;border-radius:50%;background:${colors[idx % colors.length]};display:inline-block;"></span>${item.name} (${item.percentage}%)
+                      </span>
+                    `).join('');
+                  }
+                }
+              }
+
+              // Update Architecture Badges with Real Live Data
+              if (d.architecture) {
+                const dbBadge = document.getElementById('archDbBadge');
+                if (dbBadge && d.architecture.db) {
+                  dbBadge.textContent = d.architecture.db.name || 'PostgreSQL';
+                  dbBadge.className = d.architecture.db.status === 'Optimal' ? 'badge badge-green' : 'badge badge-amber';
+                }
+                const clusterBadge = document.getElementById('archClusterBadge');
+                if (clusterBadge && d.architecture.cluster) {
+                  clusterBadge.textContent = `${d.architecture.cluster.name} (${d.architecture.cluster.nodes || 3} Nodes)`;
+                }
+                const shardBadge = document.getElementById('archShardBadge');
+                if (shardBadge && d.architecture.shard) {
+                  shardBadge.textContent = `#${d.architecture.shard.id} ${d.architecture.shard.status}`;
+                }
+              }
             }
 
             // 2. Render Top 5 Hall of Fame
@@ -1678,6 +1508,60 @@
             console.warn('[Dashboard] Socket connection error:', sockErr);
           }
         }
+
+        // ── Mini Music Player Controller ──
+        async function sendMusicControl(action) {
+          try {
+            const res = await fetch('/api/music/control', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action })
+            });
+            const data = await res.json().catch(() => null);
+            if (data && data.success) {
+              if (window.showToast) window.showToast('Music Player', `Aksi ${action} berhasil dieksekusi.`, 'success');
+              fetchNowPlaying();
+            } else if (data && data.message) {
+              if (window.showToast) window.showToast('Music Player', data.message, 'info');
+            }
+          } catch (e) {
+            console.warn('[MusicControl] Gagal mengirim aksi:', e);
+          }
+        }
+
+        async function fetchNowPlaying() {
+          try {
+            const res = await fetch('/api/music/now-playing');
+            const data = await res.json().catch(() => null);
+            if (data && data.success && data.data && data.data.currentTrack) {
+              const track = data.data.currentTrack;
+              const titleEl = document.getElementById('nowPlayingTitle');
+              const artistEl = document.getElementById('nowPlayingArtist');
+              const progressEl = document.getElementById('nowPlayingProgress');
+              const playBtn = document.getElementById('btnMusicPlay');
+
+              if (titleEl) titleEl.textContent = track.title || 'Idle';
+              if (artistEl) artistEl.textContent = track.author || 'Queue kosong';
+              if (progressEl && track.duration > 0) {
+                const pct = Math.min(100, Math.round((track.position / track.duration) * 100));
+                progressEl.style.width = `${pct}%`;
+              }
+              if (playBtn) {
+                playBtn.innerHTML = track.isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
+              }
+            }
+          } catch (_) {}
+        }
+
+        const btnPrev = document.getElementById('btnMusicPrev');
+        const btnPlay = document.getElementById('btnMusicPlay');
+        const btnNext = document.getElementById('btnMusicNext');
+
+        if (btnPrev) btnPrev.addEventListener('click', () => sendMusicControl('prev'));
+        if (btnPlay) btnPlay.addEventListener('click', () => sendMusicControl('toggle'));
+        if (btnNext) btnNext.addEventListener('click', () => sendMusicControl('next'));
+
+        fetchNowPlaying();
 
         // ── EventSource SSE Fallback Stream ──
         try {

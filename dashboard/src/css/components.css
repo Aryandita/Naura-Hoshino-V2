@@ -572,8 +572,8 @@
 /* ─── 9. Toast Notification System ─── */
 .naura-toast-container {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  top: calc(var(--header-h, 60px) + 14px);
+  right: 20px;
   z-index: 99999;
   display: flex;
   flex-direction: column;

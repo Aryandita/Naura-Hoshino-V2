@@ -10,6 +10,7 @@ import { applyTheme, loadTheme } from "../core/theme.js";
 import { apiFetch, apiPost } from "../core/api.js";
 import { getUser, redirectToLogin } from "../core/auth.js";
 import { toastError, toastSuccess, toastWarn } from "../components/toaster.js";
+import { initReveal } from "../core/reveal.js";
 
 /** Guild yang sedang dipilih */
 let _selectedGuild = null;

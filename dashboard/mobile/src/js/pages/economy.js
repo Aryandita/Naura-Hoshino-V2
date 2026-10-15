@@ -9,6 +9,7 @@ import { applyTheme, loadTheme } from "../core/theme.js";
 import { apiFetch, apiPost, invalidateCache } from "../core/api.js";
 import { getUser, redirectToLogin } from "../core/auth.js";
 import { toastError, toastSuccess, toastWarn } from "../components/toaster.js";
+import { initReveal } from "../core/reveal.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   applyTheme(loadTheme());
@@ -37,6 +38,23 @@ async function _loadEconomy() {
 
   // Quick chips mengisi input transfer
   _setupQuickChips(data.wallet ?? 0);
+
+  // Kas ServerTreasury
+  if (data.treasury) {
+    _renderTreasury(data.treasury);
+  } else {
+    const { data: rt } = await apiFetch("/api/realtime/economy");
+    if (rt?.data?.treasury) {
+      _renderTreasury(rt.data.treasury);
+    }
+  }
+}
+
+function _renderTreasury(t) {
+  _setText("treasury-infra", `${_fmt(t.infra ?? 0)} NC`);
+  _setText("treasury-lottery", `${_fmt(t.lottery ?? 0)} NSF`);
+  _setText("treasury-subsidy", `${_fmt(t.subsidy ?? 0)} NSF`);
+  _setText("treasury-merchant", `${_fmt(t.merchant ?? 0)} NSF`);
 }
 
 // ── Transfer Modal ────────────────────────────────────────────────────────────

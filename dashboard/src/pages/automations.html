@@ -492,6 +492,29 @@
           updateActiveBadge();
         });
       });
+
+      // ── Live Execution Log Polling ──
+      async function fetchAutomationLogs() {
+        try {
+          const res = await fetch('/api/automations/status');
+          const json = await res.json().catch(() => null);
+          if (json && json.success && json.data && Array.isArray(json.data.logs)) {
+            const ticker = document.getElementById('logTicker');
+            if (ticker && json.data.logs.length > 0) {
+              ticker.innerHTML = json.data.logs.map(log => `
+                <div class="log-item">
+                  <span class="log-time">[${log.time}]</span>
+                  <span style="color:${log.color || '#34d399'};">${log.status}</span>
+                  <span style="color:var(--text-secondary);">${log.message}</span>
+                </div>
+              `).join('');
+            }
+          }
+        } catch (_) {}
+      }
+
+      fetchAutomationLogs();
+      setInterval(fetchAutomationLogs, 10000);
     </script>
   </body>
 </html>

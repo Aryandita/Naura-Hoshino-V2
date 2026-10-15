@@ -99,6 +99,50 @@ module.exports = (client) => {
   });
 
   // ------------------------------------------------------------------
+  // Mobile Auth Bridge: /api/user/me
+  // ------------------------------------------------------------------
+  router.get("/api/user/me", (req, res) => {
+    if (typeof req.isAuthenticated !== "function" || !req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const user = {
+      ...req.user,
+      displayName: req.user.displayName || req.user.global_name || req.user.username,
+    };
+    return res.json(user);
+  });
+
+  // ------------------------------------------------------------------
+  // Mobile Economy Bridge: /api/user/economy
+  // ------------------------------------------------------------------
+  router.get("/api/user/economy", async (req, res) => {
+    if (typeof req.isAuthenticated !== "function" || !req.isAuthenticated() || !req.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    try {
+      const cacheManager = require("../../src/managers/cacheManager");
+      const ServerTreasury = require("../../src/models/ServerTreasury");
+      const [profile, treasury] = await Promise.all([
+        cacheManager.getUserProfile(req.user.id),
+        ServerTreasury.findOne({ order: [["updatedAt", "DESC"]] }).catch(() => null),
+      ]);
+      return res.json({
+        success: true,
+        wallet: Number(profile?.economy_wallet || 0),
+        bank: Number(profile?.economy_bank || 0),
+        treasury: {
+          infra: Number(profile?.economy_bank || 0),
+          lottery: Number(treasury?.lotteryJackpot || 0),
+          subsidy: Number(treasury?.noviceAidPool || 0),
+          merchant: Number(treasury?.wanderingMerchantPool || 0),
+        },
+      });
+    } catch (err) {
+      return res.status(500).json({ error: "Gagal memuat data ekonomi." });
+    }
+  });
+
+  // ------------------------------------------------------------------
   // Bahasa pilihan pengguna (disinkronkan dengan bot)
   // ------------------------------------------------------------------
   router.get("/api/me/language", requireApiLogin, async (req, res) => {

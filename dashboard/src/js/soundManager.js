@@ -579,6 +579,108 @@
             });
         }
 
+        play(name = 'click') {
+            if (!this.sfxEnabled) return;
+            if (!this.unlocked) this.unlock();
+            switch (name) {
+                case 'coin':
+                    this.playCoin();
+                    break;
+                case 'tab':
+                    this.playTab();
+                    break;
+                case 'modal':
+                    this.playModal();
+                    break;
+                case 'ding':
+                    this.playDing();
+                    break;
+                case 'notify':
+                    this.playNotify();
+                    break;
+                case 'error':
+                    this.playError();
+                    break;
+                case 'hover':
+                    this.playHover();
+                    break;
+                case 'click':
+                default:
+                    this.playClick();
+                    break;
+            }
+        }
+
+        playDing() {
+            if (!this.sfxEnabled) return;
+            if (!this.unlocked) this.unlock();
+            if (!this.ctx || !this.sfxGain) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1046.50, now);
+
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.linearRampToValueAtTime(0.20, now + 0.008);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+
+            osc.connect(gain);
+            gain.connect(this.sfxGain);
+
+            osc.start(now);
+            osc.stop(now + 0.26);
+        }
+
+        playNotify() {
+            if (!this.sfxEnabled) return;
+            if (!this.unlocked) this.unlock();
+            if (!this.ctx || !this.sfxGain) return;
+            const now = this.ctx.currentTime;
+            [659.25, 987.77].forEach((freq, i) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const start = now + (i * 0.06);
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, start);
+
+                gain.gain.setValueAtTime(0.0001, start);
+                gain.gain.linearRampToValueAtTime(0.18, start + 0.01);
+                gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.22);
+
+                osc.connect(gain);
+                gain.connect(this.sfxGain);
+
+                osc.start(start);
+                osc.stop(start + 0.24);
+            });
+        }
+
+        playError() {
+            if (!this.sfxEnabled) return;
+            if (!this.unlocked) this.unlock();
+            if (!this.ctx || !this.sfxGain) return;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(220, now);
+            osc.frequency.exponentialRampToValueAtTime(110, now + 0.16);
+
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.linearRampToValueAtTime(0.15, now + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+
+            osc.connect(gain);
+            gain.connect(this.sfxGain);
+
+            osc.start(now);
+            osc.stop(now + 0.2);
+        }
+
         _updateUiWidget(trackTitle) {
             const label = document.getElementById('audioTrackLabel');
             if (label) label.textContent = trackTitle;

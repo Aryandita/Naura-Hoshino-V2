@@ -298,7 +298,9 @@ module.exports = (client) => {
         }
       } else {
         let orderExpr;
-        if (type === "chat_level") {
+        if (type === "nc") {
+          orderExpr = [["economy_wallet", "DESC"]];
+        } else if (type === "xp" || type === "chat_level") {
           orderExpr = [
             ["leveling_level", "DESC"],
             ["leveling_xp", "DESC"],
@@ -307,7 +309,7 @@ module.exports = (client) => {
           orderExpr = [["minigame_triviaScore", "DESC"]];
         } else if (type === "music") {
           orderExpr = [["music_tracksListened", "DESC"]];
-        } else if (type === "wealth") {
+        } else if (type === "nsf" || type === "wealth") {
           const topSurvival = await UserSurvival.findAll({
             order: [["starFragments", "DESC"]],
             limit: limitNum,
@@ -326,11 +328,30 @@ module.exports = (client) => {
               .map((id) => byId.get(id) || UserProfile.build({ userId: id }))
               .filter(Boolean);
           }
-        } else {
-          // Fallback (seharusnya tidak pernah terpanggil jika type sudah sesuai)
+        } else if (type === "quest") {
+          const topSurvival = await UserSurvival.findAll({
+            order: [
+              ["survival_level", "DESC"],
+              ["survival_xp", "DESC"],
+            ],
+            limit: limitNum,
+          });
+          const orderedIds = topSurvival.map((s) => s.userId);
+          if (orderedIds.length === 0) {
+            topProfiles = [];
+          } else {
+            const found = await UserProfile.findAll({
+              attributes: profileAttributes,
+              where: { userId: orderedIds },
+            });
+            const byId = new Map(found.map((p) => [p.userId, p]));
+            topProfiles = orderedIds
+              .map((id) => byId.get(id) || UserProfile.build({ userId: id }))
+              .filter(Boolean);
+          }
         }
 
-        if (type !== "wealth" && type !== "rpg_level") {
+        if (type !== "wealth" && type !== "nsf" && type !== "quest" && type !== "rpg_level") {
           topProfiles = await UserProfile.findAll({
             attributes: profileAttributes,
             order: orderExpr,
@@ -391,8 +412,56 @@ module.exports = (client) => {
         }),
       );
 
-      if (redis) await redis.setCache(cacheKey, lbData, LEADERBOARD_CACHE_TTL);
-      return res.json(lbData);
+      const entries = lbData.map((item, idx) => {
+        let val = item.netWorth;
+        if (type === "nc") val = item.netWorth;
+        else if (type === "nsf") val = item.starFragments;
+        else if (type === "xp") val = item.chatXp || item.rpgXp;
+        else if (type === "quest") val = item.rpgLevel || 1;
+        return {
+          ...item,
+          rank: idx + 1,
+          username: item.name,
+          displayName: item.name,
+          level: item.chatLevel || item.rpgLevel || 1,
+          value: val,
+        };
+      });
+
+      let selfRank = null;
+      let selfEntry = null;
+      const sessionUserId = req.user?.id || req.session?.passport?.user?.id || null;
+      if (sessionUserId) {
+        const selfIdx = entries.findIndex((e) => e.userId === sessionUserId);
+        if (selfIdx !== -1) {
+          selfRank = selfIdx + 1;
+          selfEntry = entries[selfIdx];
+        } else {
+          selfRank = 99;
+          selfEntry = {
+            rank: 99,
+            userId: sessionUserId,
+            username: req.user?.username || "Kamu",
+            displayName: req.user?.displayName || "Kamu",
+            avatar: req.user?.avatar ? `https://cdn.discordapp.com/avatars/${sessionUserId}/${req.user.avatar}.png` : fallbackAvatar,
+            level: 1,
+            value: 0,
+          };
+        }
+      }
+
+      const responseData = {
+        success: true,
+        type,
+        range: req.query.range || "all",
+        entries,
+        selfRank,
+        selfEntry,
+        leaderboard: entries,
+      };
+
+      if (redis) await redis.setCache(cacheKey, responseData, LEADERBOARD_CACHE_TTL);
+      return res.json(responseData);
     } catch (error) {
       logger.error("[API LEADERBOARD] Error:", error);
       return res.status(500).json({ error: "Naura gagal memuat leaderboard." });

@@ -15,12 +15,21 @@ let _sheet  = null;
 let _overlay= null;
 
 /**
- * Inisialisasi customizer (panggil sekali di halaman profile).
- * Tombol trigger: elemen dengan id="nm-open-customizer"
+ * Inisialisasi customizer (panggil dari bottomNav atau halaman).
+ * Tombol trigger: elemen dengan id="nm-open-customizer" atau data-action="open-customizer"
  */
 export function initCustomizer() {
-  const trigger = document.getElementById("nm-open-customizer");
-  if (trigger) trigger.addEventListener("click", openCustomizer);
+  const triggers = document.querySelectorAll("#nm-open-customizer, [data-action='open-customizer']");
+  triggers.forEach((trigger) => {
+    if (!trigger.dataset.customizerBound) {
+      trigger.dataset.customizerBound = "true";
+      trigger.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.soundManager?.play?.("modal");
+        openCustomizer();
+      });
+    }
+  });
 }
 
 /** Buka bottom sheet customizer. */
@@ -34,6 +43,7 @@ export function openCustomizer() {
 export function closeCustomizer() {
   if (!_isOpen) return;
   _isOpen = false;
+  window.soundManager?.play?.("click");
 
   if (_sheet) {
     _sheet.style.animation = "sheet-down var(--dur-slow) var(--ease-smooth) both";

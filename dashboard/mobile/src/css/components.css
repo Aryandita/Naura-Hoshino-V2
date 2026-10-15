@@ -129,13 +129,26 @@
   border: 1px solid var(--hairline);
   border-radius: var(--r-xl);
   padding: var(--sp-lg);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
   box-shadow:
     var(--glass-specular, inset 0 1px 0 rgba(255,255,255,0.06)),
-    0 4px 24px rgba(0,0,0,0.4),
-    0 0 0 1px var(--glass-border);
+    0 4px 24px rgba(0,0,0,0.4);
   transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.nm-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-sm);
+}
+
+.nm-card__title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  margin: 0;
 }
 
 .nm-card:active {
@@ -292,8 +305,15 @@
 .nm-badge--uncommon  { background: rgba(134, 239, 172, 0.15); color: var(--rarity-uncommon); }
 .nm-badge--rare      { background: rgba(147, 197, 253, 0.15); color: var(--rarity-rare); }
 .nm-badge--epic      { background: rgba(192, 132, 252, 0.15); color: var(--rarity-epic); }
-.nm-badge--legendary { background: rgba(255, 215, 0, 0.15);   color: var(--rarity-legendary); }
 .nm-badge--mythic    { background: rgba(249, 168, 212, 0.15); color: var(--rarity-mythic); }
+
+/* Varian Badge Warna Antarmuka */
+.nm-badge--pink    { background: rgba(244, 114, 182, 0.15); color: var(--accent-pink); border: 1px solid rgba(244, 114, 182, 0.25); }
+.nm-badge--purple  { background: rgba(167, 139, 250, 0.15); color: var(--accent-purple); border: 1px solid rgba(167, 139, 250, 0.25); }
+.nm-badge--gold    { background: rgba(251, 191, 36, 0.15);  color: var(--accent-gold); border: 1px solid rgba(251, 191, 36, 0.25); }
+.nm-badge--emerald { background: rgba(52, 211, 153, 0.15);  color: var(--wilds-emerald); border: 1px solid rgba(52, 211, 153, 0.25); }
+.nm-badge--blue    { background: rgba(56, 189, 248, 0.15);  color: var(--accent-blue); border: 1px solid rgba(56, 189, 248, 0.25); }
+.nm-badge--slate   { background: rgba(148, 163, 184, 0.15); color: var(--muted); border: 1px solid rgba(148, 163, 184, 0.25); }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* QUICK-PRESET CHIPS (Economy, DESIGN.md Pilar 3)                           */
@@ -388,6 +408,26 @@
   background: rgba(248, 113, 113, 0.15);
   color: var(--wilds-danger);
   border: 1px solid rgba(248, 113, 113, 0.25);
+}
+
+.nm-btn--glass {
+  background: var(--surface-glass);
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  box-shadow: var(--glass-specular, inset 0 1px 0 rgba(255, 255, 255, 0.06));
+}
+
+.nm-btn--glass:hover,
+.nm-btn--glass:active {
+  background: var(--surface-hover);
+  border-color: var(--hairline-strong);
+}
+
+.nm-btn--sm {
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  min-height: 36px;
+  border-radius: var(--r-md);
 }
 
 .nm-btn--full { width: 100%; }
@@ -511,12 +551,93 @@
 .nm-timeline__line--done { background: var(--wilds-moss); }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
+/* TABS                                                                        */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.nm-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.nm-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: var(--r-full);
+  background: var(--surface-glass);
+  border: 1px solid var(--hairline);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--dur-fast) var(--ease-smooth);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nm-tab:hover {
+  color: var(--body-strong);
+  border-color: var(--hairline-strong);
+}
+
+.nm-tab.is-active {
+  background: rgba(255, 182, 193, 0.15);
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.nm-tab:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* PROGRESS BAR                                                                */
+/* ─────────────────────────────────────────────────────────────────────────── */
+
+.nm-progress {
+  width: 100%;
+  height: 6px;
+  background: var(--surface-solid);
+  border-radius: var(--r-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.nm-progress__bar {
+  height: 100%;
+  background: var(--primary);
+  border-radius: var(--r-full);
+  transition: width 0.4s var(--ease-smooth);
+}
+
+.nm-progress__bar--emerald {
+  background: var(--wilds-emerald, #34d399);
+}
+
+.nm-progress__bar--danger {
+  background: var(--wilds-danger, #ef4444);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
 /* TOAST NOTIFICATION                                                          */
 /* ─────────────────────────────────────────────────────────────────────────── */
 
 #nm-toast-container {
   position: fixed;
-  top: var(--sp-md);
+  top: 64px;
   right: var(--sp-md);
   z-index: 200;
   display: flex;

@@ -11,10 +11,12 @@ const WIDGET_KEY   = "naura-mobile-widgets";
 
 /** Preset tema resmi dari DESIGN.md */
 export const PRESETS = [
-  { id: "midnight", label: "Midnight",   primary: "#FFB6C1", canvas: "#0b0c10" },
-  { id: "sakura",   label: "Sakura",     primary: "#ff9ebb", canvas: "#160f18" },
-  { id: "oled",     label: "OLED",       primary: "#ff5c8a", canvas: "#000000" },
-  { id: "wilds",    label: "Naura Wilds",primary: "#86EFAC", canvas: "#0a1a0f" },
+  { id: "midnight",      label: "Midnight",    primary: "#FFB6C1", canvas: "#0b0c10" },
+  { id: "sakura",        label: "Sakura",      primary: "#ff9ebb", canvas: "#160f18" },
+  { id: "cyber-neon",    label: "Cyber Neon",  primary: "#00f0ff", canvas: "#070913" },
+  { id: "wilds",         label: "Naura Wilds", primary: "#86efac", canvas: "#061209" },
+  { id: "light-horizon", label: "Horizon",     primary: "#db2777", canvas: "#f8fafc" },
+  { id: "oled",          label: "OLED",        primary: "#ff5c8a", canvas: "#000000" },
 ];
 
 /** 12 swatch aksen warna yang bisa dipilih */

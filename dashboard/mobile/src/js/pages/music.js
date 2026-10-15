@@ -10,6 +10,7 @@ import { applyTheme, loadTheme } from "../core/theme.js";
 import { apiPost }          from "../core/api.js";
 import { initSocket, on }   from "../core/socket.js";
 import { toastError } from "../components/toaster.js";
+import { initReveal } from "../core/reveal.js";
 
 /** @type {MusicState | null} */
 let _state = null;

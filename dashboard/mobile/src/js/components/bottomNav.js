@@ -9,6 +9,7 @@
  */
 
 import { initAppsDrawer } from "./appsDrawer.js";
+import { initCustomizer } from "./customizer.js";
 
 /** Definisi 7 tab navigasi utama */
 const NAV_TABS = [
@@ -76,6 +77,9 @@ const NAV_TABS = [
  */
 export function initBottomNav() {
   initAppsDrawer();
+  initCustomizer();
+  _initSoundManager();
+  _setupHeaderSfxButton();
 
   // Pastikan tombol Pusat Fitur (Apps Drawer) hadir di header jika header ada
   const headerActions = document.querySelector(".nm-header__actions");
@@ -125,10 +129,65 @@ export function initBottomNav() {
     const anchor = e.target.closest(".nm-nav-tab");
     if (!anchor) return;
 
+    window.soundManager?.play?.("tab");
+
     // Aktifkan tab secara visual segera (tanpa nunggu load)
     nav.querySelectorAll(".nm-nav-tab").forEach((t) => t.classList.remove("is-active"));
     anchor.classList.add("is-active");
   });
+}
+
+function _initSoundManager() {
+  if (typeof window === "undefined") return;
+
+  if (!window.soundManager && !document.getElementById("naura-sound-script")) {
+    const soundScript = document.createElement("script");
+    soundScript.id = "naura-sound-script";
+    soundScript.src = "/src/js/soundManager.js";
+    soundScript.async = true;
+    soundScript.onload = () => {
+      const isMuted = localStorage.getItem("naura-sfx-muted") === "true";
+      if (window.soundManager && isMuted) {
+        window.soundManager.setSfxEnabled?.(false);
+      }
+    };
+    document.head.appendChild(soundScript);
+  }
+}
+
+function _setupHeaderSfxButton() {
+  const headerActions = document.querySelector(".nm-header__actions");
+  if (!headerActions || document.getElementById("nm-sfx-btn")) return;
+
+  const sfxBtn = document.createElement("button");
+  sfxBtn.id = "nm-sfx-btn";
+  sfxBtn.className = "nm-header__btn";
+  sfxBtn.setAttribute("aria-label", "Toggle Suara SFX");
+
+  const updateIcon = () => {
+    const isMuted = localStorage.getItem("naura-sfx-muted") === "true";
+    sfxBtn.innerHTML = isMuted
+      ? '<i class="fa-solid fa-volume-xmark" aria-hidden="true" style="color:var(--muted)"></i>'
+      : '<i class="fa-solid fa-volume-high" aria-hidden="true"></i>';
+    sfxBtn.setAttribute("title", isMuted ? "Suara: Mute" : "Suara: Aktif");
+    if (window.soundManager) {
+      window.soundManager.setSfxEnabled?.(!isMuted);
+    }
+  };
+
+  sfxBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const isMuted = localStorage.getItem("naura-sfx-muted") === "true";
+    const nextState = !isMuted;
+    localStorage.setItem("naura-sfx-muted", String(nextState));
+    updateIcon();
+    if (!nextState && window.soundManager) {
+      window.soundManager.play?.("click");
+    }
+  });
+
+  updateIcon();
+  headerActions.appendChild(sfxBtn);
 }
 
 /**

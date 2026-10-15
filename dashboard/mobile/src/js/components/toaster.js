@@ -39,6 +39,10 @@ export function showToast(message, type = "info", duration = 3000) {
 
   _container.appendChild(toast);
 
+  try {
+    window.soundManager?.play?.(type === "error" ? "error" : "notify");
+  } catch (_) {}
+
   // Hapus setelah duration
   setTimeout(() => _dismiss(toast), duration);
 }
