@@ -40,6 +40,7 @@ Menghadirkan UI Discord Components V2, Web Dashboard Interaktif dengan Avatar 3D
 | **Aturan & Konstitusi** |  [`RULES.md`](RULES.md)  | Aturan hukum, arsitektur, transaksi atomik, dan keamanan wajib |
 | **Panduan AI Agent**    | [`AGENTS.md`](AGENTS.md) | Peta navigasi arsitektur, alur data interaksi, dan SOP agen    |
 | **Roadmap Sprint**      |   [`TODO.md`](TODO.md)   | Prioritas fitur dan backlog pekerjaan                          |
+| **Kebijakan Keamanan**  | [`SECURITY.md`](SECURITY.md) | Kebijakan pelaporan kerentanan dan postur keamanan defensif   |
 
 ---
 

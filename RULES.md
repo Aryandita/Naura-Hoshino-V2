@@ -10,7 +10,7 @@
 > - [`RULES.md`](RULES.md) (Dokumen ini): Sumber kebenaran untuk arsitektur teknis, hukum rekayasa kode, dan standar keamanan (*How & Governance*).
 > - [`AGENTS.md`](AGENTS.md): Sumber kebenaran untuk navigasi repositori, alur eksekusi, dan SOP agen AI (*Workflow & Navigation*).
 > - [`README.md`](README.md): Sumber kebenaran untuk gambaran umum publik dan panduan instalasi (*Portal & Quickstart*).
-> - `package.json`: Sumber kebenaran versi dan daftar dependensi. `src/config/env.js`: Sumber kebenaran variabel environment. `TODO.md`: Sumber kebenaran prioritas sprint.
+> - `package.json`: Sumber kebenaran versi dan daftar dependensi. `src/config/env.js`: Sumber kebenaran variabel environment. `TODO.md`: Sumber kebenaran prioritas sprint. [`SECURITY.md`](SECURITY.md): Kebijakan pelaporan kerentanan dan standar keamanan GitHub.
 
 ---
 
