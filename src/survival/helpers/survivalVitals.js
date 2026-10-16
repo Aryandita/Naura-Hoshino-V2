@@ -359,8 +359,8 @@ async function checkAndApplyEnergyReset(userId, existingSurvival = null) {
 }
 
 /**
- * Menghitung energi tambahan dari makanan dan minuman berdasarkan tier (maksimal +25).
- * Tier 1: +5 | Tier 2: +10 | Tier 3: +15 | Tier 4: +20 | Tier 5: +25
+ * Menghitung energi tambahan dari makanan dan minuman berdasarkan tier dan kelangkaan.
+ * Common / Tier 1: +5 | Rare / Tier 2: +10 | Epic / Tier 3: +18 | Legendary / Tier 4+: +25
  *
  * @param {object} item - Objek konfigurasi item
  * @returns {number} Bonus energi (0 sampai 25)
@@ -375,8 +375,18 @@ function calculateFoodEnergyBonus(item) {
     Number(item.thirst || item.effects?.thirst || 0) > 0;
 
   if (!isFoodOrDrink) return 0;
-  const tier = Math.min(5, Math.max(1, Number(item.tier || 1)));
-  return Math.min(25, tier * 5);
+
+  const rarity = String(item.rarity || "").toLowerCase();
+  if (rarity === "legendary" || rarity === "mythic") return 25;
+  if (rarity === "epic") return 18;
+  if (rarity === "rare") return 10;
+  if (rarity === "uncommon" || rarity === "common") return 5;
+
+  const tier = Number(item.tier) || 1;
+  if (tier >= 4) return 25;
+  if (tier === 3) return 18;
+  if (tier === 2) return 10;
+  return 5;
 }
 
 /**

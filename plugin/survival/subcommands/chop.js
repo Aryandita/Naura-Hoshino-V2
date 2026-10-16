@@ -207,25 +207,29 @@ module.exports = {
         return;
       }
 
-      const lines = [
+      const worldPulseEngine = require("../../../src/survival/engines/worldPulseEngine");
+      const pulse = worldPulseEngine.getWorldPulse({ regionId: "hutan_lebat", action: "chop" });
+
+      const descLines = [
         "Hebat banget! Pohonnya tumbang sekali jalan. Naura bangga sama kamu!",
-        "",
-        `**${e("cheers", "\uD83C\uDF81")} Hasil tebanganmu**`,
-        `> ${rewardEmoji} **${rewardAmount}x ${rewardName}**`,
+        `-# 🍃 *${pulse.flavorText}*`,
       ];
+      if (bonusLine) descLines.push("", bonusLine);
 
-      if (bonusLine) lines.push("", bonusLine);
-      if (energyRes.warning) lines.push("", energyRes.warning);
-
-      const successPayload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFC0CB",
-        authorName: "Naura Forest",
+      const successPayload = survivalUI.buildActionResultCard({
+        user,
+        action: "chop",
         title: `${e("cheers", "\uD83C\uDF32")} Pohonnya tumbang!`,
-        iconURL: user.displayAvatarURL(),
-        expression: "success",
-        description: lines.join("\n"),
+        description: descLines.join("\n"),
+        itemsGained: itemsToStore.map((it) => ({
+          id: it.id,
+          name: it.name,
+          amount: it.amount,
+          emoji: it.id === rewardId ? rewardEmoji : e("cheers", "\uD83C\uDF81"),
+        })),
+        weatherBonus: pulse.pulseHeader,
+        warning: energyRes.warning || "",
         buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
-        footerText: ui.getFooter("survival"),
       });
 
       await interaction

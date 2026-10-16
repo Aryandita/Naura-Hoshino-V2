@@ -296,15 +296,12 @@ module.exports = {
             await rewards.applyDefeat(user.id);
 
             return i.editReply(
-              render.buildClosingView({
-                expression: "cry",
-                colorKey: "error",
-                title: e("cry", "\ud83d\udc80") + " Kamu Tumbang di Dungeon",
-                description:
-                  "**" +
-                  enemy.name +
-                  "** terlalu kuat kali ini. Gatot menyeretmu keluar gua dan Naura menunggu di desa " +
-                  "dengan air hangat. Jangan sedih, ya, kita coba lagi setelah kamu pulih!",
+              survivalUI.buildDangerZoneCard({
+                user,
+                title: e("cry", "💀") + " Kamu Tumbang di Dungeon!",
+                description: `**${enemy.name}** terlalu kuat kali ini. Gatot menyeretmu keluar gua dan Naura menunggumu di desa dengan air hangat. Pulihkan fisikmu sebelum mencoba lagi!`,
+                threatLevel: floor >= 20 ? "EKSTREM" : floor >= 10 ? "TINGGI" : "SEDANG",
+                dangerWarning: `HP kamu habis di lantai ${floor}. Seluruh stamina terkuras!`,
                 buttonsRow: [survivalUI.buildSurvivalActionRow("combat", user.id)],
               }),
             );

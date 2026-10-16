@@ -131,9 +131,12 @@ module.exports = {
 
       const timeLine = `${stats.timeState.emoji} **Hari ke-${survival.inGameDay || 1}** \u2022 pukul ${(survival.inGameHour || 6).toString().padStart(2, "0")}:00 (${stats.timeState.label}) \u2022 cuaca ${stats.weather.emoji} **${stats.weather.name}**${sickLine}`;
 
-      const worldWeatherEngine = require("../../../src/survival/engines/worldWeatherEngine");
-      const currentWorldWeather = worldWeatherEngine.getCurrentWeather(survival.currentLocation || "desa_sukamaju");
-      const worldWeatherLine = `> ${currentWorldWeather.icon} **Siklus Cuaca:** \`${currentWorldWeather.name}\` (${currentWorldWeather.timeRemainingFormatted} tersisa)\n> *${currentWorldWeather.description}*`;
+      const worldPulseEngine = require("../../../src/survival/engines/worldPulseEngine");
+      const pulseInfo = worldPulseEngine.getWorldPulse({
+        regionId: survival.currentLocation || "desa_sukamaju",
+        action: "info",
+      });
+      const worldWeatherLine = `> ${pulseInfo.pulseHeader}\n> *${pulseInfo.flavorText}*`;
 
       const balanceLines = stats.balances
         .map(

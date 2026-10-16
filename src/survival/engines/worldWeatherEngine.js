@@ -150,6 +150,61 @@ function applyWeatherDurabilityWear(baseWear, weatherId) {
   return Math.max(1, Math.round(baseWear * multiplier));
 }
 
+const WEATHER_FLAVORS = {
+  CLEAR_SKY: {
+    chop: "Angin sepoi-sepoi menemani ayunan kapakmu. Batang pohon tumbang dengan mulus.",
+    mine: "Pencahayaan alami membantu melihat urat bijih di mulut gua.",
+    fish: "Permukaan air tenang tanpa riak liar, bayangan ikan terlihat jelas.",
+    farm: "Sinar matahari hangat mempercepat fotosintesis tanaman.",
+    combat: "Visibilitas sempurna di arena terbuka, tidak ada hambatan cuaca.",
+    default: "Langit cerah berawan memberikan hawa sejuk bagi petualanganmu.",
+  },
+  HEAVY_RAIN: {
+    chop: "Guyuran hujan lebat membuat tanah becek dan licin. Tebasan membutuhkan tenaga ekstra (+20% stamina).",
+    mine: "Air hujan menggenangi sebagian lorong tambang, tetapi tanah lembap memudahkan penggalian.",
+    fish: "Rintik hujan lebat memancing ikan berkumpul di permukaan air (+25% nafsu makan ikan)!",
+    farm: "Hujan tropis menyiram ladangmu secara berlimpah (+30% hasil panen)!",
+    combat: "Arena pertarungan licin dan basah kuyup. Jarak pandang sedikit terganggu.",
+    default: "Hujan lebat tropis mengguyur tanah. Tanah subur menyerap air dengan cepat.",
+  },
+  THUNDERSTORM: {
+    chop: "Kilatan petir menyambar di kejauhan. Keausan kapak meningkat lebih cepat (+25% keausan).",
+    mine: "Getaran petir terasa sampai ke dinding gua. Resonansi kristal menghasilkan kilauan langka!",
+    fish: "Gemuruh guntur membuat ikan panik dan menyambar kail lebih agresif!",
+    farm: "Petir mengionisasi tanah dengan nitrogen bebas, namun angin kencang mengguncang batang bibit.",
+    combat: "Suasana mencekam di bawah sambaran petir kosmik! Peluang drop langka meningkat +15%.",
+    default: "Badai petir kosmik bergemuruh di angkasa. Bersiaplah menghadapi kejutan alam.",
+  },
+  SANDSTORM: {
+    chop: "Debu pasir menempel di bilah kapak, ayunan terasa sedikit lebih berat.",
+    mine: "Angin gurun kencang meniup lapisan pasir purba, menyingkap bongkahan bijih langka (Drop artefak x2)!",
+    fish: "Pasir beterbangan di tepi pantai. Air menjadi keruh namun ikan dasar laut terpancing naik.",
+    farm: "Kabut pasir menutupi dedaunan ladang (-10% efisiensi panen), siram tanamanmu segera.",
+    combat: "Badai pasir mengaburkan arah serangan! Serangan kritikal menjadi lebih tidak terduga.",
+    default: "Kabut pasir gurun Khul'Khas menyingkap peninggalan reruntuhan kuno.",
+  },
+  SCORCHING_SUN: {
+    chop: "Terik matahari menyengat kulit. Rasa hausmu terkuras dua kali lebih cepat!",
+    mine: "Suhu tambang meningkat hangat, keringat mengalir deras membasahi dahi.",
+    fish: "Air permukaan menjadi hangat, kawanan ikan berenang ke bagian dasar yang lebih sejuk.",
+    farm: "Panas terik mematangkan buah lebih cepat (+10% panen), tetapi tanah cepat mengering.",
+    combat: "Udara panas membakar semangat tempur. Kelola staminamu dengan bijak!",
+    default: "Terik matahari ekstrem menyengat daratan. Pastikan bekal air minummu tercukupi.",
+  },
+};
+
+/**
+ * Mendapatkan deskripsi naratif cuaca kontekstual sesuai aksi pemain
+ * @param {string} weatherId - ID cuaca aktif
+ * @param {string} [action="default"] - Aksi pemain (chop, mine, fish, farm, combat, explore)
+ * @returns {string} Kalimat naratif kontekstual
+ */
+function getWeatherFlavorText(weatherId, action = "default") {
+  const flavorSet = WEATHER_FLAVORS[weatherId] || WEATHER_FLAVORS.CLEAR_SKY;
+  const actKey = String(action || "").toLowerCase();
+  return flavorSet[actKey] || flavorSet.default || WEATHER_FLAVORS.CLEAR_SKY.default;
+}
+
 module.exports = {
   WEATHER_TYPES,
   WEATHER_CYCLE,
@@ -158,4 +213,5 @@ module.exports = {
   getTimeUntilNextWeather,
   applyWeatherHarvestBonus,
   applyWeatherDurabilityWear,
+  getWeatherFlavorText,
 };

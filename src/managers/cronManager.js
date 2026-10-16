@@ -1174,5 +1174,28 @@ module.exports = {
         logger.error("[Cron Astral Lottery Error]", err);
       }
     });
+
+    // 16. Naura Wilds 5-Hour Energy Replenishment Tick (Every 5 hours at minute 0)
+    cron.schedule(
+      "0 */5 * * *",
+      withMutex(async () => {
+        try {
+          const UserSurvival = require("../models/UserSurvival");
+          logger.info("[Cron Survival] Memulai siklus pemulihan stamina 5 jam...");
+          const lowStaminaUsers = await UserSurvival.findAll({
+            where: { stamina: { [Op.lt]: 100 } },
+            attributes: ["userId"],
+          });
+          for (const u of lowStaminaUsers) {
+            await cacheManager.updateUserSurvival(u.userId, { stamina: 100 });
+          }
+          logger.info(
+            `[Cron Survival] Stamina ${lowStaminaUsers.length} petualang berhasil dipulihkan penuh via cacheManager.`,
+          );
+        } catch (err) {
+          logger.error("[Cron Survival Energy Reset Error]", err);
+        }
+      }),
+    );
   },
 };

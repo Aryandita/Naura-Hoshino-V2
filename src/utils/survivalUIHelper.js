@@ -15,6 +15,7 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { colors, footers } = require("../config/ui/palette");
 const { buildGoalGradientBar } = require("./uxHelper");
+const { buildContainerV2 } = require("./NauraContainerBuilder");
 
 /**
  * Palet earth-tone Naura Wilds.
@@ -311,6 +312,191 @@ function buildSurvivalActionRow(context, userId, { exclude = [], customButtons =
   return row;
 }
 
+/**
+ * Pola A: Status Dashboard Card (Components V2)
+ * Digunakan untuk tampilan ringkasan status vital, progres level, dan kondisi lingkungan.
+ *
+ * @param {object} params
+ * @param {object} params.user - Discord User objek
+ * @param {object} params.survival - Data UserSurvival
+ * @param {object} [params.profile] - Data UserProfile
+ * @param {object} [params.pulseInfo] - Output dari worldPulseEngine.getWorldPulse()
+ * @param {Array<string>} [params.activeBuffs=[]] - Daftar status buff aktif
+ * @param {ActionRowBuilder|Array<ActionRowBuilder>} [params.buttonsRow]
+ * @returns {object} Payload Components V2 siap kirim
+ */
+function buildStatusDashboardCard({
+  user,
+  survival,
+  profile = null,
+  pulseInfo = null,
+  activeBuffs = [],
+  buttonsRow = null,
+} = {}) {
+  const userId = user?.id || "0";
+  const hud = buildSurvivalHUD(survival);
+  const timeLoc = buildTimeLocationLine(survival);
+
+  const level = survival?.survival_level || 1;
+  const xp = survival?.survival_xp || 0;
+  const nextXp = level * 100;
+  const xpBar = buildVitalsBar({ current: xp, target: nextXp, length: 8 }).bar;
+
+  const nsf = Number(survival?.starFragments || 0).toLocaleString("id-ID");
+  const coupons = Number(survival?.coupons || 0).toLocaleString("id-ID");
+  const walletNc = Number(profile?.economy_wallet || 0).toLocaleString("id-ID");
+
+  const lines = [
+    timeLoc,
+    pulseInfo?.pulseHeader ? `> ${pulseInfo.pulseHeader}` : "",
+    pulseInfo?.flavorText ? `-# 🍃 *${pulseInfo.flavorText}*` : "",
+    "",
+    "**Status Fisik & Vital:**",
+    hud,
+    "",
+    "**Kemajuan Petualang:**",
+    `> Level: **${level}** \u2022 XP: ${xpBar} \`${xp}/${nextXp}\``,
+    "",
+    "**Dompet & Simpanan:**",
+    `> 🌟 **${nsf}** NSF \u2022 🎟️ **${coupons}** Kupon \u2022 🪙 **${walletNc}** NC`,
+  ];
+
+  if (Array.isArray(activeBuffs) && activeBuffs.length > 0) {
+    lines.push("", "**Efek Aktif:**");
+    for (const buff of activeBuffs.slice(0, 5)) {
+      lines.push(`> ✨ ${buff}`);
+    }
+  }
+
+  const cleanDescription = lines.filter((l) => l !== "").join("\n");
+  const defaultButtons = buttonsRow
+    ? (Array.isArray(buttonsRow) ? buttonsRow : [buttonsRow])
+    : [buildSurvivalActionRow("profile", userId)];
+
+  return buildContainerV2({
+    accentColorHex: survivalColors.emerald,
+    authorName: user?.displayName
+      ? `${user.displayName} \u2022 Status Petualang`
+      : "Naura Wilds \u2022 Status Petualang",
+    title: "🌿 Naura Wilds: Dashboard Status Petualang",
+    iconURL: typeof user?.displayAvatarURL === "function" ? user.displayAvatarURL() : null,
+    expression: "info",
+    description: cleanDescription,
+    buttonsRow: defaultButtons,
+    footerText: getFooter(),
+  });
+}
+
+/**
+ * Pola B: Action Result Card (Components V2)
+ * Digunakan untuk hasil aksi gathering (chop, mine, fish, harvest) dengan penekanan drop dan cuaca.
+ *
+ * @param {object} params
+ * @param {object} params.user - Discord User objek
+ * @param {string} params.action - Nama aksi (chop, mine, fish, harvest)
+ * @param {string} params.title - Judul kartu hasil
+ * @param {string} params.description - Narasi hasil aksi
+ * @param {Array<{id: string, name: string, amount: number, emoji?: string}>} [params.itemsGained=[]]
+ * @param {string} [params.weatherBonus=""] - Catatan efek bonus cuaca
+ * @param {string} [params.warning=""] - Peringatan vital/stamina
+ * @param {ActionRowBuilder|Array<ActionRowBuilder>} [params.buttonsRow]
+ * @returns {object} Payload Components V2 siap kirim
+ */
+function buildActionResultCard({
+  user,
+  action = "gathering",
+  title = "Hasil Petualangan",
+  description = "",
+  itemsGained = [],
+  weatherBonus = "",
+  warning = "",
+  buttonsRow = null,
+} = {}) {
+  const userId = user?.id || "0";
+  const lines = [description];
+
+  if (Array.isArray(itemsGained) && itemsGained.length > 0) {
+    lines.push("", "**Hasil Perolehan:**");
+    for (const it of itemsGained.slice(0, 5)) {
+      const icon = it.emoji || "📦";
+      lines.push(`> ${icon} **${it.name || it.id}** x${it.amount || 1}`);
+    }
+  }
+
+  if (weatherBonus) {
+    lines.push("", `> 🌤️ *${weatherBonus}*`);
+  }
+
+  if (warning) {
+    lines.push("", warning);
+  }
+
+  const cleanDesc = lines.filter((l) => l !== "").join("\n");
+  const defaultButtons = buttonsRow
+    ? (Array.isArray(buttonsRow) ? buttonsRow : [buttonsRow])
+    : [buildSurvivalActionRow("gathering", userId)];
+
+  return buildContainerV2({
+    accentColorHex: survivalColors.moss,
+    authorName: `Naura Wilds \u2022 ${String(action).toUpperCase()}`,
+    title,
+    iconURL: typeof user?.displayAvatarURL === "function" ? user.displayAvatarURL() : null,
+    expression: "reward",
+    description: cleanDesc,
+    buttonsRow: defaultButtons,
+    footerText: getFooter(),
+  });
+}
+
+/**
+ * Pola C: Danger Zone Card (Components V2)
+ * Digunakan untuk dungeon, abyss, boss, dan ancaman bertingkat tinggi.
+ *
+ * @param {object} params
+ * @param {object} params.user - Discord User objek
+ * @param {string} params.title - Judul zona bahaya
+ * @param {string} params.description - Deskripsi ancaman
+ * @param {string} [params.threatLevel="TINGGI"] - Tingkat ancaman (SEDANG, TINGGI, EKSTREM)
+ * @param {string} [params.dangerWarning=""] - Pesan peringatan bahaya
+ * @param {ActionRowBuilder|Array<ActionRowBuilder>} [params.buttonsRow]
+ * @returns {object} Payload Components V2 siap kirim
+ */
+function buildDangerZoneCard({
+  user,
+  title = "Zona Bahaya Terdeteksi!",
+  description = "",
+  threatLevel = "TINGGI",
+  dangerWarning = "",
+  buttonsRow = null,
+} = {}) {
+  const userId = user?.id || "0";
+  const lines = [
+    `⚠️ **PERINGATAN TINGKAT ANCAMAN [${threatLevel.toUpperCase()}]**`,
+    "",
+    description,
+  ];
+
+  if (dangerWarning) {
+    lines.push("", `> 💀 **Peringatan:** ${dangerWarning}`);
+  }
+
+  const cleanDesc = lines.filter((l) => l !== "").join("\n");
+  const defaultButtons = buttonsRow
+    ? (Array.isArray(buttonsRow) ? buttonsRow : [buttonsRow])
+    : [buildSurvivalActionRow("combat", userId)];
+
+  return buildContainerV2({
+    accentColorHex: survivalColors.danger,
+    authorName: `Naura Wilds \u2022 ZONA BAHAYA [${threatLevel.toUpperCase()}]`,
+    title,
+    iconURL: typeof user?.displayAvatarURL === "function" ? user.displayAvatarURL() : null,
+    expression: "alert",
+    description: cleanDesc,
+    buttonsRow: defaultButtons,
+    footerText: getFooter(),
+  });
+}
+
 module.exports = {
   survivalColors,
   survivalGlass,
@@ -324,4 +510,7 @@ module.exports = {
   buildSurvivalHUD,
   buildTimeLocationLine,
   buildSurvivalActionRow,
+  buildStatusDashboardCard,
+  buildActionResultCard,
+  buildDangerZoneCard,
 };

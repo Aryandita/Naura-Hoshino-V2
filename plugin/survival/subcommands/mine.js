@@ -239,30 +239,41 @@ module.exports = {
         );
       }
 
+      const worldPulseEngine = require("../../../src/survival/engines/worldPulseEngine");
+      const pulse = worldPulseEngine.getWorldPulse({ regionId: "desa_khulkhas", action: "mine" });
+
+      const descLines = [
+        "Tebasan beliungmu membelah batu dengan telak!",
+        `-# ⛏️ *${pulse.flavorText}*`,
+      ];
+
       if (season) {
         if (season.dropBoost > 1.0) {
-          lines.push(
+          descLines.push(
             `\n${e("impressed", "\u2728")} **[${season.label}]** Hasil tambang meningkat x${season.dropBoost}!`,
           );
         }
         if (seasonDrops.length > 0) {
-          lines.push(
+          descLines.push(
             `${e("cheers", "\uD83C\uDF81")} **[${season.label}]** Kamu juga menemukan item eksklusif event!`,
           );
         }
       }
 
-      if (energyRes.warning) lines.push("", energyRes.warning);
-
-      const successPayload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#FFC0CB",
-        authorName: "Naura Ancient Cave",
+      const successPayload = survivalUI.buildActionResultCard({
+        user,
+        action: "mine",
         title: `${e("cheers", "\uD83D\uDC8E")} Tambangnya berhasil!`,
-        iconURL: user.displayAvatarURL(),
-        expression: ore.mood,
-        description: lines.join("\n"),
+        description: descLines.join("\n"),
+        itemsGained: itemsToStore.map((it) => ({
+          id: it.id,
+          name: it.name,
+          amount: it.amount,
+          emoji: it.id === ore.id ? ore.emoji : e("cheers", "\uD83C\uDF81"),
+        })),
+        weatherBonus: pulse.pulseHeader,
+        warning: energyRes.warning || "",
         buttonsRow: [survivalUI.buildSurvivalActionRow("gathering", user.id)],
-        footerText: ui.getFooter("survival"),
       });
 
       await interaction

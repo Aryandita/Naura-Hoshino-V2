@@ -189,8 +189,8 @@ test("survivalVitals - calculateFoodEnergyBonus calculates tier bonuses up to +2
 
   assert.strictEqual(survivalVitals.calculateFoodEnergyBonus(t1Food), 5);
   assert.strictEqual(survivalVitals.calculateFoodEnergyBonus(t2Food), 10);
-  assert.strictEqual(survivalVitals.calculateFoodEnergyBonus(t3Drink), 15);
-  assert.strictEqual(survivalVitals.calculateFoodEnergyBonus(t4Food), 20);
+  assert.strictEqual(survivalVitals.calculateFoodEnergyBonus(t3Drink), 18);
+  assert.strictEqual(survivalVitals.calculateFoodEnergyBonus(t4Food), 25);
   assert.strictEqual(survivalVitals.calculateFoodEnergyBonus(t5Food), 25);
   assert.strictEqual(survivalVitals.calculateFoodEnergyBonus(toolItem), 0);
   assert.strictEqual(survivalVitals.calculateFoodEnergyBonus(null), 0);
