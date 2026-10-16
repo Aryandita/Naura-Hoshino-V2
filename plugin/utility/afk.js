@@ -1,3 +1,4 @@
+const { logger } = require("../../src/managers/logger");
 const { SlashCommandBuilder } = require("discord.js");
 const ui = require("../../src/config/ui");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
@@ -37,7 +38,13 @@ module.exports = {
       await interaction.member.setNickname(
         `[AFK] ${interaction.member.displayName}`,
       );
-    } catch (e) {}
+    } catch (e) {
+      if (e?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(e.code)) {
+        // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+      } else {
+        logger.debug("[afk:execute] Pemanggilan Discord API gagal: " + (e?.message || e));
+      }
+    }
 
     const payload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#38BDF8",

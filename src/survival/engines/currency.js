@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../managers/logger");
 
 const ui = require("../../config/ui");
 const cacheManager = require("../../managers/cacheManager");
@@ -246,7 +247,7 @@ async function reward(currency, holders = {}, amount) {
         gain = Math.floor(gain * buffMultiplier);
       }
     } catch (e) {
-      // Abaikan jika error agar tidak mengganggu sistem utama
+      // Intentional: Abaikan jika error agar tidak mengganggu sistem utama
     }
   }
 
@@ -362,7 +363,7 @@ async function exchange(holders, fromKind, toKind, amount) {
       await redisManager.client.incrBy("economy:volume:nsf:daily", spent);
     }
   } catch (err) {
-    // Abaikan jika Redis offline
+    logger.warn("[currency:exchange] Operasi cache Redis gagal: " + (err?.message || err));
   }
 
   return {

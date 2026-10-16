@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const {
   ActionRowBuilder,
@@ -122,7 +123,7 @@ module.exports = {
         files.push(new AttachmentBuilder(buffer, { name: IMAGE_NAME }));
         bannerName = IMAGE_NAME;
       } catch (err) {
-        // Gelarnya tetap tersimpan walaupun gambarnya gagal dirender.
+        logger.warn("[achievements:execute] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
       }
 
       const updated = buildContainerV2({

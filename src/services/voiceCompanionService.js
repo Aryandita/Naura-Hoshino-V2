@@ -98,7 +98,9 @@ class VoiceCompanionService {
     const welcomeText = `Halo Kak ${inviterName}! Naura sudah hadir di voice channel. Ayo ngobrol santai bersama Naura!`;
     try {
       await fishAudioService.generateSpeech(welcomeText);
-    } catch (_) {}
+    } catch (err) {
+      logger.debug("[voiceCompanionService:joinVoice] Operasi audio/voice gagal: " + (err?.message || err));
+    }
 
     return {
       success: true,
@@ -124,7 +126,9 @@ class VoiceCompanionService {
     if (session.playbackController) {
       try {
         session.playbackController.abort();
-      } catch (_) {}
+      } catch (err) {
+        logger.debug("[voiceCompanionService:leaveVoice] Operasi audio/voice gagal: " + (err?.message || err));
+      }
     }
 
     this.activeSessions.delete(guildId);
@@ -160,7 +164,9 @@ class VoiceCompanionService {
       if (session.playbackController) {
         try {
           session.playbackController.abort();
-        } catch (_) {}
+        } catch (err) {
+          logger.debug("[voiceCompanionService:handleBargeIn] Operasi audio/voice gagal: " + (err?.message || err));
+        }
         session.playbackController = null;
       }
       session.isSpeaking = false;

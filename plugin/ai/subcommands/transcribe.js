@@ -92,8 +92,8 @@ function splitText(text) {
 function removeQuietly(filePath) {
   try {
     fs.unlinkSync(filePath);
-  } catch {
-    // Berkas sementara mungkin sudah hilang; abaikan saja.
+  } catch (err) {
+    logger.debug("[transcribe:removeQuietly] Operasi berkas/proses sistem gagal: " + (err?.message || err));
   }
 }
 

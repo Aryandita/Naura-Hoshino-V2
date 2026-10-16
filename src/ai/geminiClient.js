@@ -78,8 +78,8 @@ function extractText(response) {
   if (typeof value === "function") {
     try {
       return String(value.call(response) || "");
-    } catch {
-      /* jatuh ke pembacaan candidates di bawah */
+    } catch (err) {
+      logger.debug("[geminiClient:extractText] Galat pada rutinitas aplikasi: " + (err?.message || err));
     }
   }
 

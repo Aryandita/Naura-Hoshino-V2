@@ -312,8 +312,8 @@ module.exports = async function handlePrefixCommand(message, client) {
       targetCommandName = aliasParts.shift()?.toLowerCase();
       commandTokens.unshift(...aliasParts);
     }
-  } catch {
-    // Abaikan bila modul alias mengalami galat
+  } catch (err) {
+    logger.debug("[prefixCommand] Subrutin layanan gagal: " + (err?.message || err));
   }
 
   const targetCommand = resolveCommand(client, targetCommandName);
@@ -341,8 +341,8 @@ module.exports = async function handlePrefixCommand(message, client) {
         });
         await message.reply(suggestionPayload).catch(() => {});
       }
-    } catch {
-      // Abaikan bila ada galat jaringan
+    } catch (err) {
+      logger.debug("[prefixCommand] Subrutin layanan gagal: " + (err?.message || err));
     }
     return true;
   }
@@ -377,8 +377,8 @@ module.exports = async function handlePrefixCommand(message, client) {
         redis.hincrby("metrics:commands", targetCommandName, 1);
         redis.hincrby("metrics:commands", "total", 1);
       }
-    } catch {
-      // Abaikan bila modul Redis belum siap
+    } catch (err) {
+      logger.warn("[prefixCommand] Operasi cache Redis gagal: " + (err?.message || err));
     }
 
     // Resolusi Subcommand Alias: jika command yang dipanggil adalah alias dari subcommand

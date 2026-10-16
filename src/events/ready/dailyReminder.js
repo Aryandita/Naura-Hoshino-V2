@@ -106,7 +106,11 @@ module.exports = {
               profile.dailyReminded = true;
               await profile.save({ fields: ["dailyReminded"] });
             } catch (dmErr) {
-              // DM tertutup atau user tidak dapat dihubungi, abaikan
+              if (dmErr?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(dmErr.code)) {
+                // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+              } else {
+                logger.debug("[dailyReminder:execute] Pemanggilan Discord API gagal: " + (dmErr?.message || dmErr));
+              }
             }
           }
         } catch (error) {

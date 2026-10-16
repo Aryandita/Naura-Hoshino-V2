@@ -130,7 +130,14 @@ module.exports = (client) => {
 
   // --- Parser & aset statis ---
   // Batas ukuran badan permintaan menutup upaya menghabiskan memori proses.
-  webApp.use(express.json({ limit: "256kb" }));
+  webApp.use(
+    express.json({
+      limit: "256kb",
+      verify: (req, res, buf) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
   webApp.use(express.urlencoded({ extended: true, limit: "256kb" }));
   // Static assets: Dashboard dist sebagai prioritas utama, didukung asset publik & bot.
   //

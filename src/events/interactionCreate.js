@@ -168,8 +168,12 @@ async function handleSlashCommand(interaction, client) {
       metricsManager.logCommand(interaction.commandName);
       const trafficMonitor = require("../managers/trafficMonitor");
       trafficMonitor.recordCommand(interaction.commandName, interaction.user.id);
-    } catch {
-      // Abaikan bila modul metrik belum siap
+    } catch (err) {
+      if (err?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(err.code)) {
+        // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+      } else {
+        logger.debug("[interactionCreate:handleSlashCommand] Interaksi Discord lifecycle gagal: " + (err?.message || err));
+      }
     }
 
     await targetCommand.execute(interaction, client);
@@ -254,8 +258,12 @@ function attachAutoAcknowledgeGuard(interaction, timeoutMs = 2200) {
       if (!interaction.replied && !interaction.deferred) {
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       }
-    } catch {
-      // Abaikan bila sudah terbalas pada race condition mikrodetik
+    } catch (err) {
+      if (err?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(err.code)) {
+        // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+      } else {
+        logger.debug("[interactionCreate:attachAutoAcknowledgeGuard] Interaksi Discord lifecycle gagal: " + (err?.message || err));
+      }
     }
   }, timeoutMs);
 

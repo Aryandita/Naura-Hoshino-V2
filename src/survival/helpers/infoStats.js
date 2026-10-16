@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../managers/logger");
 
 // Perhitungan data profil survival. Dipisah dari subcommand info supaya
 // tampilannya mudah disunting tanpa menyentuh rumus level, stat, dan saldo.
@@ -222,7 +223,9 @@ async function buildStats({ userId, profile, survival, activePets }) {
         };
       }
     }
-  } catch (_) {}
+  } catch (err) {
+    logger.error("[infoStats:buildStats] Operasi database gagal: " + (err?.message || err), err);
+  }
 
   const friendshipBuffs = await npcPerksEngine.getUserActivePerksSummary(userId).catch(() => []);
   const spouseInfo = await familyEngine.getMarriageStatus(userId, survival).catch(() => ({

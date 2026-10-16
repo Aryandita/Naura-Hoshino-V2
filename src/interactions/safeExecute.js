@@ -112,8 +112,12 @@ async function safeExecute(interaction, componentEntry, client) {
     try {
       const metricsManager = require("../managers/metricsManager");
       metricsManager.logComponent(label);
-    } catch {
-      // Abaikan bila modul metrik belum siap
+    } catch (err) {
+      if (err?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(err.code)) {
+        // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+      } else {
+        logger.debug("[safeExecute:safeExecute] Interaksi Discord lifecycle gagal: " + (err?.message || err));
+      }
     }
 
     await componentEntry.handler(interaction, client);

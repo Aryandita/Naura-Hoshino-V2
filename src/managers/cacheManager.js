@@ -35,8 +35,8 @@ function cloneJson(value) {
   if (value === null || typeof value !== "object") return value;
   try {
     return structuredClone(value);
-  } catch {
-    // Fallback bila objek memuat tipe yang tidak didukung structuredClone
+  } catch (err) {
+    logger.debug("[cacheManager:cloneJson] Parsing data gagal, menggunakan fallback: " + (err?.message || err));
   }
   try {
     return JSON.parse(JSON.stringify(value));
@@ -929,7 +929,9 @@ class CacheManager {
       if (typeof canvasRuntime.smartInvalidateUserCanvas === "function") {
         await canvasRuntime.smartInvalidateUserCanvas(userId);
       }
-    } catch (_) {}
+    } catch (err) {
+      logger.warn("[cacheManager:smartInvalidateUserCanvas] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
+    }
   }
 
   /**

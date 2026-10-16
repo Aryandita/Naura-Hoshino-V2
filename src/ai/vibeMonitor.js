@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../managers/logger");
 
 /**
  * @namespace: src/ai/vibeMonitor.js
@@ -71,7 +72,11 @@ class VibeMonitor {
         try {
           await message.react(emoji);
         } catch (e) {
-          // Abaikan jika bot tidak punya izin Add Reactions di channel
+          if (e?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(e.code)) {
+            // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+          } else {
+            logger.debug("[vibeMonitor:handleMessage] Pemanggilan Discord API gagal: " + (e?.message || e));
+          }
         }
         break;
       }

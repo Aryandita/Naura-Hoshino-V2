@@ -53,7 +53,7 @@ module.exports = {
       try {
         return await cmd.autocomplete(interaction, client);
       } catch (error) {
-        // Fallback ke choices dinamis bila terjadi kesalahan
+        logger.debug("[survival:autocomplete] Galat pada rutinitas aplikasi: " + (error?.message || error));
       }
     }
     if (typeof data.handleDynamicAutocomplete === "function") {

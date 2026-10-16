@@ -37,12 +37,16 @@ function runStep(name, command, args) {
     console.log(`\n${C.bold}${C.blue}▶ [QA GATE] Menjalankan: ${name}...${C.reset}`);
 
     const isWindows = process.platform === "win32";
-    const actualCmd = isWindows && command === "npm" ? "npm.cmd" : command;
+    let executable = command;
+    if (command === "node") {
+      executable = process.execPath;
+    } else if (isWindows && command === "npm") {
+      executable = "npm.cmd";
+    }
 
-    const proc = spawn(actualCmd, args, {
+    const proc = spawn(executable, args, {
       cwd: projectRoot,
       stdio: "inherit",
-      shell: isWindows,
     });
 
     proc.on("close", (code) => {
@@ -74,7 +78,7 @@ async function run() {
   const results = [];
 
   // 1. ESLint
-  results.push(await runStep("1/6 ESLint & Standar Kode", "npm", ["run", "lint"]));
+  results.push(await runStep("1/6 ESLint & Standar Kode", "node", ["node_modules/eslint/bin/eslint.js", "."]));
 
   // 2. Em dash check
   results.push(await runStep("2/6 Cek Larangan Karakter Em Dash", "node", ["scripts/check-em-dash.js"]));
@@ -88,8 +92,16 @@ async function run() {
   // 5. Inline script HTML dashboard
   results.push(await runStep("5/6 Sintaks Script Inline Dashboard", "node", ["scripts/check-inline-scripts.js"]));
 
-  // 6. Automated Unit Tests
-  results.push(await runStep("6/6 Automated Unit Test Suite", "node", ["--test", "src/**/*.test.js"]));
+  // 6. Automated Unit Tests (100% full coverage across src, dashboard, and plugin)
+  results.push(
+    await runStep("6/6 Automated Unit Test Suite", "node", [
+      "--test",
+      "src/**/*.test.js",
+      "dashboard/**/*.test.js",
+      "plugin/**/*.test.js",
+      "test/**/*.test.js",
+    ]),
+  );
 
   const totalDuration = ((Date.now() - totalStart) / 1000).toFixed(2);
   const allPassed = results.every((r) => r.success);

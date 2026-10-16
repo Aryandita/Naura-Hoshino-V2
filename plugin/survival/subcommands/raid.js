@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const {
   MessageFlags,
@@ -118,7 +119,7 @@ module.exports = {
           new AttachmentBuilder(cardBuffer, { name: "world_boss.png" }),
         );
       } catch (err) {
-        // Fallback jika canvas gagal render
+        logger.warn("[raid:execute] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
       }
 
       const buttonsRow = new ActionRowBuilder().addComponents(

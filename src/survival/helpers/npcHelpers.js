@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../managers/logger");
 
 const fs = require("fs");
 const path = require("path");
@@ -57,7 +58,7 @@ function findPortrait(npc) {
     try {
       if (fs.existsSync(candidate)) return candidate;
     } catch (error) {
-      // Kegagalan akses disk diperlakukan sama seperti berkas tidak ada.
+      logger.debug("[npcHelpers:findPortrait] Galat pada rutinitas aplikasi: " + (error?.message || error));
     }
   }
   return null;

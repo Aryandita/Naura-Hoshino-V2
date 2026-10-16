@@ -175,7 +175,9 @@ async function closeTicket(interaction, client) {
           flags: MessageFlags.Ephemeral,
         });
       }
-    } catch (e) {}
+    } catch (e) {
+      logger.debug("[ticketManager:closeTicket] Galat pada rutinitas aplikasi: " + (e?.message || e));
+    }
   }
 }
 

@@ -277,7 +277,9 @@ class LavalinkClusterManager {
                 );
                 return resolve(caps);
               }
-            } catch (_) {}
+            } catch (err) {
+              logger.debug("[lavalinkClusterManager:probeNodeCapabilities] Parsing data gagal, menggunakan fallback: " + (err?.message || err));
+            }
             resolve(null);
           });
         });
@@ -444,7 +446,9 @@ class LavalinkClusterManager {
         if (typeof player.destroy === "function") {
           player.destroy();
         }
-      } catch (_) {}
+      } catch (err) {
+        logger.debug("[lavalinkClusterManager:migratePlayer] Operasi audio/voice gagal: " + (err?.message || err));
+      }
 
       // 4. Hubungkan ulang player ke node pengganti
       const newPlayer = poru.createConnection({
@@ -725,7 +729,9 @@ class LavalinkClusterManager {
       try {
         const musicManager = require("./musicManager");
         poru = musicManager?.poru || null;
-      } catch (_) {}
+      } catch (err) {
+        logger.debug("[lavalinkClusterManager:getStatus] Operasi audio/voice gagal: " + (err?.message || err));
+      }
     }
     const nodes = poru && poru.nodes ? [...poru.nodes.values()] : [];
     const totalConnected = nodes.filter((n) => n.connected).length;

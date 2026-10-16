@@ -11,7 +11,6 @@
 
 const express = require("express");
 const { logger } = require("../../src/managers/logger");
-const UserProfile = require("../../src/models/UserProfile");
 const cacheManager = require("../../src/managers/cacheManager");
 const {
   requireApiLogin,
@@ -195,24 +194,43 @@ module.exports = (client) => {
   // ------------------------------------------------------------------
   router.post("/api/me/persona", requireApiLogin, async (req, res) => {
     try {
-      const { name, systemPrompt, avatarUrl } = req.body;
+      const { name, systemPrompt, avatarUrl } = req.body || {};
       const cacheManager = require("../../src/managers/cacheManager");
       const profile = await cacheManager.getUserProfile(req.user.id);
 
-      if (!profile.isPremium) {
+      if (!profile || !profile.isPremium) {
         return res.status(403).json({
           success: false,
           error: "Fitur ini hanya untuk member Premium.",
         });
       }
 
+      let cleanName = typeof name === "string" ? name.trim().slice(0, 32) : null;
+      if (!cleanName) cleanName = null;
+
+      let cleanPrompt =
+        typeof systemPrompt === "string" ? systemPrompt.trim().slice(0, 500) : null;
+      if (!cleanPrompt) cleanPrompt = null;
+
+      let cleanAvatar = null;
+      if (typeof avatarUrl === "string") {
+        const trimmed = avatarUrl.trim();
+        if (
+          trimmed.length > 0 &&
+          trimmed.length <= 255 &&
+          /^https:\/\//i.test(trimmed)
+        ) {
+          cleanAvatar = trimmed;
+        }
+      }
+
       await cacheManager.mutateUserProfileJson(
         req.user.id,
         "aiPersona",
         () => ({
-          name: name || null,
-          systemPrompt: systemPrompt || null,
-          avatarUrl: avatarUrl || null,
+          name: cleanName,
+          systemPrompt: cleanPrompt,
+          avatarUrl: cleanAvatar,
         }),
       );
 
@@ -348,14 +366,16 @@ module.exports = (client) => {
         });
       }
 
-      const UserSurvival = require("../../src/models/UserSurvival");
       const UserNPC = require("../../src/models/UserNPC");
       const UserAchievement = require("../../src/models/UserAchievement");
 
-      const [profile] = await UserProfile.findOrCreate({ where: { userId } });
-      const [survival] = await UserSurvival.findOrCreate({ where: { userId } });
-      const [userAch] = await UserAchievement.findOrCreate({ where: { userId } });
-      const bonds = await UserNPC.findAll({ where: { userId } });
+      const profile = (await cacheManager.getUserProfile(userId)) || {};
+      const survival = (await cacheManager.getUserSurvival(userId)) || {};
+      const userAch =
+        (await UserAchievement.findByPk(userId).catch(() => null)) || {};
+      const bonds = await UserNPC.findAll({ where: { userId } }).catch(
+        () => [],
+      );
 
       const cachedUser = client.users.cache.get(userId);
       const dUser =
@@ -637,7 +657,25 @@ module.exports = (client) => {
         action === "sell"
           ? await GameItem.findByPk(itemId).catch(() => null)
           : null;
-      const sellPrice = itemDb ? itemDb.sellPrice : 50;
+
+      if (action === "sell") {
+        const itemPrice = itemDb ? Number(itemDb.sellPrice) : 0;
+        const isQuest =
+          itemDb?.category === "quest" ||
+          itemDb?.attributes?.isQuest ||
+          itemDb?.attributes?.quest;
+
+        if (!itemDb || !itemPrice || itemPrice <= 0 || isQuest) {
+          return res.status(400).json({
+            success: false,
+            error: isQuest
+              ? "Item misi tidak bisa dijual ya."
+              : "Item ini tidak memiliki harga jual yang valid.",
+          });
+        }
+      }
+
+      const sellPrice = itemDb ? Number(itemDb.sellPrice) : 0;
 
       let validationError = null;
       let targetItemName = itemId;
@@ -685,12 +723,12 @@ module.exports = (client) => {
 
       let message = "";
       if (action === "sell") {
-        await cacheManager.incrementUserProfile(
+        await cacheManager.incrementUserSurvival(
           req.targetUserId,
-          "economy_wallet",
+          "starFragments",
           sellPrice,
         );
-        message = `Berhasil! 1x **${targetItemName}** terjual seharga 🪙 **${sellPrice.toLocaleString("id-ID")} Coin**.`;
+        message = `Berhasil! 1x **${targetItemName}** terjual seharga ✨ **${sellPrice.toLocaleString("id-ID")} NSF**.`;
       } else {
         message = `Oke, 1x **${targetItemName}** sudah Naura buang dari tasmu.`;
       }
@@ -716,6 +754,13 @@ module.exports = (client) => {
           error: "Item yang mau dilebur belum dipilih.",
         });
 
+      if (!FORGE_UPGRADES[itemId]) {
+        return res.status(400).json({
+          success: false,
+          error: "Item ini tidak bisa dilebur atau ditempa ya.",
+        });
+      }
+
       const profile = await cacheManager.getUserProfile(req.targetUserId);
       if (!profile)
         return res
@@ -723,10 +768,10 @@ module.exports = (client) => {
           .json({ success: false, error: "Profil pemain tidak ditemukan." });
 
       const GameItem = require("../../src/models/GameItem");
-      const newId = FORGE_UPGRADES[itemId] || null;
+      const newId = FORGE_UPGRADES[itemId];
       const [itemDb, nextItemDb] = await Promise.all([
         GameItem.findByPk(itemId).catch(() => null),
-        newId ? GameItem.findByPk(newId).catch(() => null) : Promise.resolve(null),
+        GameItem.findByPk(newId).catch(() => null),
       ]);
 
       let validationError = null;

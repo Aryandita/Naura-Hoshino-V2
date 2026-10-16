@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const {
   ActionRowBuilder,
@@ -363,7 +364,9 @@ module.exports = {
       guildData.changed("music", true);
       await guildData.save({ fields: ["music"] });
       cacheManager.invalidateGuildSettings(guild.id);
-    } catch (_) {}
+    } catch (err) {
+      logger.error("[musicFeatures] Operasi database gagal: " + (err?.message || err), err);
+    }
 
     const MusicUIManager = require("../../../src/music/MusicUIManager");
     if (player.is247) {

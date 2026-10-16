@@ -71,14 +71,18 @@ class LyricsManager {
         else if (response.data.plainLyrics)
           result = { type: "plain", data: response.data.plainLyrics };
       }
-    } catch (error) {}
+    } catch (error) {
+      logger.debug("[LyricsManager:fetchLyricsData] Operasi audio/voice gagal: " + (error?.message || error));
+    }
 
     if (!result) {
       // Fallback 1: NPM lyrics-finder
       try {
         const nplLyrics = await lyricsFinder(cleanArtist, cleanTitle);
         if (nplLyrics) result = { type: "plain", data: nplLyrics };
-      } catch (e) {}
+      } catch (e) {
+        logger.debug("[LyricsManager:fetchLyricsData] Operasi audio/voice gagal: " + (e?.message || e));
+      }
     }
 
     if (!result && geminiClient.isAvailable()) {
@@ -92,7 +96,9 @@ class LyricsManager {
         const aiText = (aiResult || "").trim();
         if (aiText && aiText !== "NOT_FOUND")
           result = { type: "plain", data: aiText };
-      } catch (e) {}
+      } catch (e) {
+        logger.debug("[LyricsManager:fetchLyricsData] Operasi audio/voice gagal: " + (e?.message || e));
+      }
     }
 
     if (result && redisManager.isReady) {

@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../managers/logger");
 
 const redisManager = require("../managers/redisManager");
 const { DomainError } = require("../errors/DomainError");
@@ -198,7 +199,9 @@ class AstralService {
       try {
         const cached = await redisManager.get(cacheKey);
         if (cached) return JSON.parse(cached);
-      } catch (_) {}
+      } catch (err) {
+        logger.warn("[astralService:evaluateGuildSentiment] Operasi cache Redis gagal: " + (err?.message || err));
+      }
     }
 
     let chosenWeather = null;
@@ -243,7 +246,7 @@ class AstralService {
           }
         }
       } catch (e) {
-        // Fallback ke hash jika Gemini gagal/timeout
+        logger.debug("[astralService:evaluateGuildSentiment] Subrutin AI atau memori gagal: " + (e?.message || e));
       }
     }
 
@@ -271,7 +274,9 @@ class AstralService {
     if (redisManager.isReady) {
       try {
         await redisManager.set(cacheKey, JSON.stringify(weather), 86400);
-      } catch (_) {}
+      } catch (err) {
+        logger.warn("[astralService:evaluateGuildSentiment] Operasi cache Redis gagal: " + (err?.message || err));
+      }
     }
 
     return weather;
@@ -295,7 +300,9 @@ class AstralService {
       try {
         const cached = await redisManager.get(cacheKey);
         if (cached) return JSON.parse(cached);
-      } catch (_) {}
+      } catch (err) {
+        logger.warn("[astralService:getGuildAstralWeather] Operasi cache Redis gagal: " + (err?.message || err));
+      }
     }
 
     return this.evaluateGuildSentiment(guildId, []);
@@ -321,7 +328,9 @@ class AstralService {
             message: `Kamu sudah menarik Omikuji Bintang hari ini! Kembali lagi besok setelah pergantian tengah malam ya, ${displayName}~ ✨`,
           };
         }
-      } catch (_) {}
+      } catch (err) {
+        logger.warn("[astralService:drawDailyOmikuji] Operasi cache Redis gagal: " + (err?.message || err));
+      }
     }
 
     // Hitung roll acak dengan pembobotan
@@ -374,7 +383,9 @@ class AstralService {
     if (redisManager.isReady) {
       try {
         await redisManager.set(userKey, JSON.stringify(result), 86400);
-      } catch (_) {}
+      } catch (err) {
+        logger.warn("[astralService:drawDailyOmikuji] Operasi cache Redis gagal: " + (err?.message || err));
+      }
     }
 
     return {

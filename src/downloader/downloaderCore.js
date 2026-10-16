@@ -91,8 +91,8 @@ class CleanupManager {
       const logFile = `${passlogPrefix}${ext}`;
       try {
         if (fs.existsSync(logFile)) fs.unlinkSync(logFile);
-      } catch {
-        /* abaikan */
+      } catch (err) {
+        logger.debug("[downloaderCore:cleanupPasslog] Operasi berkas/proses sistem gagal: " + (err?.message || err));
       }
     }
   }

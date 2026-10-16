@@ -1,3 +1,4 @@
+const { logger } = require("../managers/logger");
 const { EmbedBuilder, AuditLogEvent } = require("discord.js");
 const cacheManager = require("../managers/cacheManager");
 const ui = require("../config/ui");
@@ -50,6 +51,8 @@ module.exports = {
         .setTimestamp();
 
       await logChannel.send({ embeds: [embed] }).catch(() => {});
-    } catch (error) {}
+    } catch (error) {
+      logger.warn("[roleCreate:execute] Operasi database gagal: " + (error?.message || error));
+    }
   },
 };

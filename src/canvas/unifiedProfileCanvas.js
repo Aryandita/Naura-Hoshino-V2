@@ -1,3 +1,4 @@
+const { logger } = require("../managers/logger");
 const {
   createCanvas,
   loadImage,
@@ -34,7 +35,9 @@ async function generateUnifiedProfile(payload) {
           }
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      logger.warn("[unifiedProfileCanvas:generateUnifiedProfile] Render visual canvas atau pemuatan aset gagal: " + (e?.message || e));
+    }
 
     if (!bannerLoaded) {
       const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);

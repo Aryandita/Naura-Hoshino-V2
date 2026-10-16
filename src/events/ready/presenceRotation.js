@@ -1,3 +1,4 @@
+const { logger } = require("../../managers/logger");
 const botActivity = require("../../config/bot-activity");
 
 module.exports = {
@@ -76,7 +77,7 @@ module.exports = {
             );
           }
         } catch (e) {
-          // Database belum siap atau tabel belum ada, gunakan fallback
+          logger.error("[presenceRotation:execute] Operasi database gagal: " + (e?.message || e), e);
         }
       })();
 

@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const {
   ActionRowBuilder,
@@ -129,7 +130,7 @@ module.exports = {
           new AttachmentBuilder(habitatBuffer, { name: "pet_habitat.png" }),
         );
       } catch (err) {
-        // Fallback jika canvas gagal
+        logger.warn("[pet:execute] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
       }
 
       const active = habitatData.activePet || pet;

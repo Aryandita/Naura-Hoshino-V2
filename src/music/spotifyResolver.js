@@ -76,7 +76,7 @@ async function getCachedJson(key, ttlSeconds, fetchFunction) {
       return await redisManager.getOrSetCache(key, ttlSeconds, fetchFunction);
     }
   } catch (e) {
-    // Redis gagal/tidak tersedia: lanjut dengan cache memori saja.
+    logger.warn("[spotifyResolver:getCachedJson] Operasi cache Redis gagal: " + (e?.message || e));
   }
   const memKey = `spotify:${key}`;
   const hit = getMemory(memKey);
@@ -305,7 +305,9 @@ async function fetchFallbackMetadata(type, id) {
           if (Array.isArray(rawTracks) && rawTracks.length > 0) {
             list = rawTracks;
           }
-        } catch (_) {}
+        } catch (err) {
+          logger.debug("[spotifyResolver:fetchFallbackMetadata] Operasi audio/voice gagal: " + (err?.message || err));
+        }
       }
 
       if (list.length === 0) {
@@ -316,7 +318,9 @@ async function fetchFallbackMetadata(type, id) {
         try {
           const data = await scraper.getData(url);
           playlistName = data?.name || data?.title || playlistName;
-        } catch (_) {}
+        } catch (err) {
+          logger.debug("[spotifyResolver:fetchFallbackMetadata] Operasi audio/voice gagal: " + (err?.message || err));
+        }
       }
 
       return {
@@ -441,7 +445,7 @@ async function translateTrack(poru, meta, requester) {
         return track;
       }
     } catch (e) {
-      // Kegagalan satu pencarian bukan error fatal; coba query berikutnya.
+      logger.debug("[spotifyResolver:translateTrack] Operasi audio/voice gagal: " + (e?.message || e));
     }
   }
   return null;

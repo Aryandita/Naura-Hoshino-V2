@@ -1,3 +1,4 @@
+const { logger } = require("../managers/logger");
 const { EmbedBuilder, AuditLogEvent, ChannelType } = require("discord.js");
 const cacheManager = require("../managers/cacheManager");
 const ui = require("../config/ui");
@@ -64,7 +65,7 @@ module.exports = {
 
       await logChannel.send({ embeds: [embed] }).catch(() => {});
     } catch (error) {
-      // Abaikan error diam-diam agar tidak spam konsol
+      logger.warn("[channelCreate:execute] Operasi database gagal: " + (error?.message || error));
     }
   },
 };

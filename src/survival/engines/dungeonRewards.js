@@ -85,7 +85,7 @@ async function bumpDungeonQuest(userId) {
       ],
     });
   } catch (err) {
-    // Misi harian hanya pelengkap; kegagalannya tidak boleh membatalkan hadiah.
+    // Intentional: Misi harian hanya pelengkap; kegagalannya tidak boleh membatalkan hadiah.
   }
 }
 
@@ -135,7 +135,9 @@ async function grantVictory({
           { itemId: item.id },
         );
       }
-    } catch (_qErr) {}
+    } catch (_qErr) {
+      // Intentional: Lingkungan atau modul opsional dilewati
+    }
   }
 
   await cacheManager.updateUserProfile(userId, { dungeon_floor: floor + 1 });
@@ -151,7 +153,9 @@ async function grantVictory({
     if (weather?.id === "cosmic_storm") {
       weatherMoneyBonus = 1.25; // +25% fragment reward saat badai kosmik
     }
-  } catch (_) {}
+  } catch (_err) {
+    // Intentional: Lingkungan atau modul opsional dilewati
+  }
 
   const finalMoney = Math.floor(reward.money * weatherMoneyBonus);
   const balance = await currency.reward(
@@ -166,7 +170,7 @@ async function grantVictory({
     const seasonEngine = require("../../services/seasonEngine");
     await seasonEngine.addSeasonXp(userId, isBoss ? 75 : 35);
   } catch (err) {
-    // Abaikan error SeasonEngine agar tidak membatalkan kemenangan dungeon
+    // Intentional: Abaikan error SeasonEngine agar tidak membatalkan kemenangan dungeon
   }
 
   const coupon = await rollCouponDrop(

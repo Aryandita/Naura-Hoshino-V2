@@ -95,11 +95,13 @@ function checkCrossModuleMethods() {
   }
 
   const dirsToScan = ["src", "plugin", "dashboard/routes"];
+  const criticalKeys = Object.keys(criticalModules);
   let checkedCount = 0;
 
   function scanFile(filePath) {
     if (!fs.existsSync(filePath)) return;
     const rawContent = fs.readFileSync(filePath, "utf8");
+    if (!criticalKeys.some((k) => rawContent.includes(k))) return;
     const cleanContent = stripComments(rawContent);
 
     for (const [modName, modObj] of Object.entries(criticalModules)) {

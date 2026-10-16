@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../managers/logger");
 
 // Alat bantu bersama untuk Meja Perakitan, Tungku Bagas, dan jalur naik level
 // alat. Semuanya bekerja pada satu bentuk kebutuhan yang seragam:
@@ -15,7 +16,7 @@ try {
   if (fs.existsSync(FONT_FILE))
     GlobalFonts.registerFromPath(FONT_FILE, "Inter");
 } catch (err) {
-  // Font hanya pemanis; kanvas tetap tergambar dengan font bawaan sistem.
+  logger.warn("[craftHelpers] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
 }
 
 // Resep tungku menuliskan `coal`, sedangkan yang bisa dibuat pemain sendiri

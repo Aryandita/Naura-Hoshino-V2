@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const {
   AttachmentBuilder,
@@ -304,7 +305,7 @@ module.exports = {
           luck: survival.luck || 1,
         });
       } catch (error) {
-        // Perjalanannya tetap sah walau sesi jalan-jalan gagal dibuka.
+        logger.error("[travel:execute] Alur gameplay gagal: " + (error?.message || error), error);
       }
     });
 

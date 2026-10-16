@@ -104,7 +104,7 @@ function broadcastLog(level, message) {
       });
     }
   } catch (e) {
-    // Fail silent
+    logger.debug("[logger:broadcastLog] Galat pada rutinitas aplikasi: " + (e?.message || e));
   }
 }
 
@@ -119,7 +119,7 @@ try {
     });
   }
 } catch (err) {
-  // Ignore if not installed or failed to load
+  // Intentional: Ignore if not installed or failed to load
 }
 
 // Standardized Logging Methods for Console

@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const ui = require("../../../src/config/ui");
 const env = require("../../../src/config/env");
@@ -287,7 +288,9 @@ module.exports = {
               if (!player.isPlaying && !player.isPaused) player.play();
             }
           }
-        } catch (_) {}
+        } catch (err) {
+          logger.debug("[playlistEngine:playplaylist] Operasi audio/voice gagal: " + (err?.message || err));
+        }
       }
       const syncPayload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#22c55e",

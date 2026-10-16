@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const {
   ActionRowBuilder,
@@ -86,7 +87,7 @@ async function composeGreeting(ctx) {
     const response = await geminiClient.generate({ parts: [{ text: prompt }] });
     if (response) return response;
   } catch (error) {
-    // Diamkan; kalimat cadangan sudah disiapkan.
+    logger.debug("[npc:composeGreeting] Subrutin AI atau memori gagal: " + (error?.message || error));
   }
   return fallback;
 }
@@ -281,7 +282,7 @@ module.exports = {
       try {
         await response.edit(lastPayloadBuilder());
       } catch (error) {
-        // Pesan mungkin sudah dihapus pemain; tidak perlu diributkan.
+        logger.debug("[npc:execute] Galat pada rutinitas aplikasi: " + (error?.message || error));
       }
     });
   },

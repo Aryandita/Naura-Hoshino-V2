@@ -92,7 +92,9 @@ class VoiceManager {
         player.stop();
         try {
           connection.destroy();
-        } catch (e) {}
+        } catch (e) {
+          logger.debug("[voiceManager:speak] Pembersihan koneksi/collector gagal: " + (e?.message || e));
+        }
       });
 
       player.on("error", (error) => {
@@ -102,7 +104,9 @@ class VoiceManager {
         );
         try {
           connection.destroy();
-        } catch (e) {}
+        } catch (e) {
+          logger.debug("[voiceManager:speak] Pembersihan koneksi/collector gagal: " + (e?.message || e));
+        }
       });
     } catch (error) {
       logger.error("\x1b[41m\x1b[37m ⚠️ GOOGLE TTS ERROR \x1b[0m", error);
@@ -156,14 +160,18 @@ class VoiceManager {
         player.stop();
         try {
           connection.destroy();
-        } catch (e) {}
+        } catch (e) {
+          logger.debug("[voiceManager:playFile] Pembersihan koneksi/collector gagal: " + (e?.message || e));
+        }
       });
 
       player.on("error", (error) => {
         logger.error("[VoiceManager] Audio Player Error:", error.message);
         try {
           connection.destroy();
-        } catch (e) {}
+        } catch (e) {
+          logger.debug("[voiceManager:playFile] Pembersihan koneksi/collector gagal: " + (e?.message || e));
+        }
       });
 
       return true;

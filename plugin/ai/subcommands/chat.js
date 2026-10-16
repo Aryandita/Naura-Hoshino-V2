@@ -53,7 +53,7 @@ async function buildInstruction(guildId, userId, username) {
       instruction += ` Hal khusus yang perlu kamu tahu tentang server ini: ${settings.ai.serverKnowledge}`;
     }
   } catch (err) {
-    // Abaikan error DB settings
+    logger.error("[chat:buildInstruction] Operasi database gagal: " + (err?.message || err), err);
   }
 
   return instruction;

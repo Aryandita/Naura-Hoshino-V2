@@ -71,13 +71,17 @@ class RedisManager {
     if (this.subscriber) {
       try {
         await this.subscriber.quit();
-      } catch (e) {}
+      } catch (e) {
+        logger.warn("[redisManager:disconnect] Operasi cache Redis gagal: " + (e?.message || e));
+      }
     }
     if (this.client) {
       try {
         await this.client.quit();
         logger.info("[Redis] Koneksi Redis ditutup dengan aman.");
-      } catch (e) {}
+      } catch (e) {
+        logger.warn("[redisManager:disconnect] Operasi cache Redis gagal: " + (e?.message || e));
+      }
     }
   }
 

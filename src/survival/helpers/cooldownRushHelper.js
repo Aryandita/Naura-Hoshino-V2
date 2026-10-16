@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../managers/logger");
 
 const { ButtonBuilder, ButtonStyle } = require("discord.js");
 const cacheManager = require("../../managers/cacheManager");
@@ -63,7 +64,9 @@ class CooldownRushHelper {
         if (s.test_cd && cooldownKey === "study") s.test_cd = 0;
         return s;
       });
-    } catch (_err) {}
+    } catch (_err) {
+      logger.error("[cooldownRushHelper:executeRush] Mutasi saldo ekonomi/survival gagal: " + (_err?.message || _err), _err);
+    }
 
     const updatedSurvival = await cacheManager.getUserSurvival(userId);
     const remainingCoupons = Number(updatedSurvival?.coupons) || 0;

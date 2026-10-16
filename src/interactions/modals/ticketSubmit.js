@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../managers/logger");
 
 const { ChannelType, MessageFlags } = require("discord.js");
 const { buildContainerV2 } = require("../../utils/NauraContainerBuilder");
@@ -41,7 +42,7 @@ module.exports = [
           );
           guildSettings = data?.settings;
         } catch (e) {
-          /* abaikan */
+          logger.warn("[ticketSubmit:handler] Operasi database gagal: " + (e?.message || e));
         }
 
         const mode = guildSettings?.ticketMode || "thread";

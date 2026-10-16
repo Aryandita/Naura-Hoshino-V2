@@ -237,7 +237,9 @@ class AiDjManager {
           .map((m) => m.displayName || m.user.username);
       }
       lang = await this.detectVoiceLanguage(manager, guildId, player.voiceChannel);
-    } catch (_) {}
+    } catch (err) {
+      logger.debug("[aiDjManager:handleTrackStart] Operasi audio/voice gagal: " + (err?.message || err));
+    }
 
     const { script, classification } = this.generateDjScript(
       track.info,
@@ -273,7 +275,9 @@ class AiDjManager {
           if (typeof player.setVolume === "function") {
             try {
               player.setVolume(15);
-            } catch (_) {}
+            } catch (err) {
+              logger.debug("[aiDjManager:handleTrackStart] Operasi audio/voice gagal: " + (err?.message || err));
+            }
           }
 
           const duckDuration = Math.max(3500, Math.min(12000, script.length * 85));
@@ -282,7 +286,9 @@ class AiDjManager {
               if (player && typeof player.setVolume === "function") {
                 player.setVolume(originalVol);
               }
-            } catch (_) {}
+            } catch (err) {
+              logger.debug("[aiDjManager:handleTrackStart] Operasi audio/voice gagal: " + (err?.message || err));
+            }
           }, duckDuration);
         }
       } catch (err) {

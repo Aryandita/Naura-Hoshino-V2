@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const path = require("path");
 const {
@@ -332,7 +333,7 @@ module.exports = {
             });
             return interaction.editReply(inspectPayload);
           } catch (err) {
-            // Jika canvas gagal, lanjutkan ke alur pembelian biasa
+            logger.warn("[shop:execute] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
           }
         }
       }

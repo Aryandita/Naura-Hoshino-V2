@@ -263,7 +263,7 @@ const tryRedirectService = async (shortcode) => {
         return { status: "stream", url: finalUrl };
       }
     } catch (e) {
-      // lanjut ke URL berikutnya
+      logger.warn("[downloaderInstagram:tryRedirectService] Permintaan API eksternal gagal: " + (e?.message || e));
     }
   }
   return null;

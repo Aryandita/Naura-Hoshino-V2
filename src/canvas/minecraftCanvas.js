@@ -1,3 +1,4 @@
+const { logger } = require("../managers/logger");
 const { createCanvas, loadImage, runWithLimit } = require("./canvasRuntime");
 const axios = require("axios");
 
@@ -28,7 +29,9 @@ async function renderMinecraftPlayer(payload) {
       );
       const headImg = await loadImage(Buffer.from(headRes.data));
       ctx.drawImage(headImg, 50, 180, 150, 150);
-    } catch (e) {}
+    } catch (e) {
+      logger.warn("[minecraftCanvas:renderMinecraftPlayer] Render visual canvas atau pemuatan aset gagal: " + (e?.message || e));
+    }
 
     try {
       const bodyRes = await axios.get(
@@ -37,7 +40,9 @@ async function renderMinecraftPlayer(payload) {
       );
       const bodyImg = await loadImage(Buffer.from(bodyRes.data));
       ctx.drawImage(bodyImg, 500, 50, 200, 420);
-    } catch (e) {}
+    } catch (e) {
+      logger.warn("[minecraftCanvas:renderMinecraftPlayer] Render visual canvas atau pemuatan aset gagal: " + (e?.message || e));
+    }
 
     ctx.fillStyle = "#3b82f6";
     ctx.font = "bold 24px sans-serif";
@@ -108,7 +113,9 @@ async function renderMinecraftStats(payload) {
       );
       const bodyImg = await loadImage(Buffer.from(bodyRes.data));
       ctx.drawImage(bodyImg, 530, 20, 180, 360);
-    } catch (e) {}
+    } catch (e) {
+      logger.warn("[minecraftCanvas:renderMinecraftStats] Render visual canvas atau pemuatan aset gagal: " + (e?.message || e));
+    }
 
     return canvas.toBuffer("image/png");
   });

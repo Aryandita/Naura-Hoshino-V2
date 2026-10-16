@@ -322,7 +322,7 @@ class GreenhouseEngine {
       const seasonEngine = require("../../services/seasonEngine");
       await seasonEngine.addSeasonXp(userId, 15);
     } catch (err) {
-      // Abaikan error SeasonEngine agar tidak membatalkan panen
+      // Intentional: Abaikan error SeasonEngine agar tidak membatalkan panen
     }
 
     const updatedRawSlots = gh.slots.map((s, idx) => {

@@ -89,7 +89,9 @@ module.exports = {
       if (player.isPaused) {
         try {
           player.pause(false);
-        } catch (e) {}
+        } catch (e) {
+          logger.debug("[trackStart:execute] Operasi audio/voice gagal: " + (e?.message || e));
+        }
       }
       beginPlaybackTransition(player, activeTrack, player.baseVolume);
 
@@ -312,7 +314,9 @@ module.exports = {
         // 🛑 PENAMBAHAN TAG: Menandai seluruh isi dropdown agar emoji panel sesuai
         recommendedTracks.forEach((t) => (t.info.originalSource = "youtube"));
       }
-    } catch (e) {}
+    } catch (e) {
+      logger.debug("[trackStart:handleAutoplayPrefetch] Operasi audio/voice gagal: " + (e?.message || e));
+    }
 
     // Fallback Autoplay jika Gemini Gagal
     if (player.isAutoplayMode && !player.prefetchedAutoplayTrack) {
@@ -363,7 +367,9 @@ module.exports = {
               player.prefetchedAutoplayTrack = newTrack;
             }
           }
-        } catch (e) {}
+        } catch (e) {
+          logger.debug("[trackStart:handleAutoplayPrefetch] Operasi audio/voice gagal: " + (e?.message || e));
+        }
       }
     }
 

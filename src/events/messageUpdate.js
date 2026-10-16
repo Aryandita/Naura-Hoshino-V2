@@ -40,7 +40,9 @@ module.exports = {
       if (typeof parsedSettings === "string") {
         try {
           parsedSettings = JSON.parse(parsedSettings);
-        } catch (e) {}
+        } catch (e) {
+          logger.debug("[messageUpdate:execute] Parsing data gagal, menggunakan fallback: " + (e?.message || e));
+        }
       }
 
       const logChannelId = parsedSettings?.automod?.logChannelId;

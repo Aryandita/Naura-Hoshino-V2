@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../src/managers/logger");
 
 const {
   SlashCommandBuilder,
@@ -33,6 +34,13 @@ module.exports = {
     )
     .addSubcommand((sub) =>
       sub
+        .setName("spread")
+        .setDescription(
+          "Tarik 3 Kartu Tarot Astral (Past, Present, Future) dengan ramalan mendalam & buff",
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
         .setName("observe")
         .setDescription(
           "Gunakan Teropong Bintang untuk mengamati rasi bintang dan mengumpulkan Stardust",
@@ -56,8 +64,12 @@ module.exports = {
             .filter((m) => !m.author.bot && m.content && m.content.trim().length > 5)
             .map((m) => m.content.trim());
         }
-      } catch (_) {
-        // Fallback jika tidak ada izin baca riwayat pesan
+      } catch (err) {
+        if (err?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(err.code)) {
+          // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+        } else {
+          logger.debug("[astral:execute] Pemanggilan Discord API gagal: " + (err?.message || err));
+        }
       }
 
       const weather = await astralService.getGuildAstralWeather(
@@ -142,7 +154,9 @@ module.exports = {
             omikuji.tier.rewardStamina,
           );
         }
-      } catch (_) {}
+      } catch (err) {
+        logger.error("[astral:execute] Mutasi saldo ekonomi/survival gagal: " + (err?.message || err), err);
+      }
 
       const payload = buildContainerV2({
         authorName: "HOSHINO ASTRAL SANCTUARY",
@@ -159,6 +173,11 @@ module.exports = {
       });
     }
 
+    if (subcommand === "spread") {
+      const tarotHandler = require("./tarot");
+      return tarotHandler.execute(interaction);
+    }
+
     if (subcommand === "observe") {
       await interaction.deferReply();
       const obs = astralService.observeConstellation(user.id, displayName);
@@ -170,7 +189,9 @@ module.exports = {
           "starFragments",
           stardustGain,
         );
-      } catch (_) {}
+      } catch (err) {
+        logger.error("[astral:execute] Mutasi saldo ekonomi/survival gagal: " + (err?.message || err), err);
+      }
 
       const payload = buildContainerV2({
         authorName: "HOSHINO ASTRAL SANCTUARY",

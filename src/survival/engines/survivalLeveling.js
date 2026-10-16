@@ -78,7 +78,7 @@ async function addPlayerXP(userId, xpAmount) {
           totalXpAdded = Math.floor(totalXpAdded * buffMultiplier);
         }
       } catch (e) {
-        // Abaikan error jika ada
+        // Intentional: Abaikan error jika ada
       }
     }
   }

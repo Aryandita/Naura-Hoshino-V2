@@ -1,3 +1,4 @@
+const { logger } = require("../managers/logger");
 // Lokasi: src/adapters/interactionBoundaryAdapter.js
 // Implementasi Law 3: Keep external systems behind a boundary & Law 2: Name things by meaning
 // Mengisolasi struktur raw Discord Interaction ke dalam domain model yang bersih.
@@ -61,8 +62,12 @@ function extractModalFields(interaction) {
     interaction.fields.fields.forEach((component, customId) => {
       try {
         fieldsData[customId] = interaction.fields.getTextInputValue(customId);
-      } catch {
-        // Abaikan jika bukan text input
+      } catch (err) {
+        if (err?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(err.code)) {
+          // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+        } else {
+          logger.debug("[interactionBoundaryAdapter:extractModalFields] Interaksi Discord lifecycle gagal: " + (err?.message || err));
+        }
       }
     });
   }

@@ -1,3 +1,4 @@
+const { logger } = require("../managers/logger");
 const {
   createCanvas,
   loadImage,
@@ -72,7 +73,9 @@ async function generateProfileCard(arg1, arg2, arg3, arg4) {
             : userProfile.activeBanners;
         if (activeBanners && activeBanners.profile) bannerId = activeBanners.profile;
       }
-    } catch (e) {}
+    } catch (e) {
+      logger.warn("[profileCanvas:generateProfileCard] Render visual canvas atau pemuatan aset gagal: " + (e?.message || e));
+    }
 
     let bannerLoaded = false;
     if (bannerId) {
@@ -418,7 +421,9 @@ async function generateBusinessCard(payload) {
         ctx.lineWidth = 4;
         ctx.stroke();
       }
-    } catch (e) {}
+    } catch (e) {
+      logger.warn("[profileCanvas:generateBusinessCard] Render visual canvas atau pemuatan aset gagal: " + (e?.message || e));
+    }
 
     // Username & Info
     ctx.fillStyle = "#ffffff";

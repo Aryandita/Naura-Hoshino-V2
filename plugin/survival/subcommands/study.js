@@ -133,7 +133,7 @@ module.exports = {
           } = require("../../../src/survival/engines/questGenerator");
           await incrementQuestProgress(user.id, "study");
         } catch (err) {
-          // Papan misi opsional.
+          // Intentional: Papan misi opsional.
         }
 
         const lines = [

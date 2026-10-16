@@ -258,7 +258,7 @@ class EconomyGuardEngine {
         }
       }
     } catch (_e) {
-      // Abaikan kegagalan log jika Mongo tidak aktif
+      logger.debug("[economyGuardEngine:_logSuspiciousEvent] Galat pada rutinitas aplikasi: " + (_e?.message || _e));
     }
 
     // Kirim webhook peringatan ke staf discord
@@ -300,7 +300,9 @@ class EconomyGuardEngine {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }).catch(() => {});
-    } catch (_err) {}
+    } catch (_err) {
+      // Intentional: Lingkungan atau modul opsional dilewati
+    }
   }
 
   /**

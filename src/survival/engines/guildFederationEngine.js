@@ -307,7 +307,9 @@ class GuildFederationEngine {
             bossName: "Celestial Chrono-Wyrm",
             phase: boss.phase - 1,
           }).catch(() => {});
-        } catch (_) {}
+        } catch (err) {
+          logger.debug("[guildFederationEngine:attackAllianceBoss] Operasi audio/voice gagal: " + (err?.message || err));
+        }
       }
 
       // Reset kontributor untuk fase berikutnya

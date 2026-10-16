@@ -113,7 +113,9 @@ async function generateChronicleData(guild) {
         rawQuotes = await client.lrange(quotesKey, 0, 10);
       }
     }
-  } catch (_) {}
+  } catch (err) {
+    logger.warn("[serverChronicleEngine:generateChronicleData] Operasi cache Redis gagal: " + (err?.message || err));
+  }
 
   let topUser = {
     username: "Warga Teladan",
@@ -170,8 +172,8 @@ async function generateChronicleData(guild) {
         }
       }
     }
-  } catch {
-    // Fallback diam
+  } catch (err) {
+    logger.debug("[serverChronicleEngine:generateChronicleData] Subrutin AI atau memori gagal: " + (err?.message || err));
   }
 
   return {

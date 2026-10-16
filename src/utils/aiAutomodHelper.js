@@ -121,7 +121,7 @@ async function analyzeMessageWithAI(reportedMessage, aiAutomodSettings) {
       return cached;
     }
   } catch (e) {
-    // Redis error, lanjut tanpa cache
+    logger.warn("[aiAutomodHelper:analyzeMessageWithAI] Operasi cache Redis gagal: " + (e?.message || e));
   }
 
   try {
@@ -165,7 +165,7 @@ async function analyzeMessageWithAI(reportedMessage, aiAutomodSettings) {
     try {
       await redisManager.setCache(cacheKey, result, 300);
     } catch (e) {
-      // Redis error, tidak masalah, lanjut
+      logger.warn("[aiAutomodHelper:analyzeMessageWithAI] Operasi cache Redis gagal: " + (e?.message || e));
     }
 
     return result;

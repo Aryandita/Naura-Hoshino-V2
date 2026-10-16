@@ -1,3 +1,4 @@
+const { logger } = require("../../managers/logger");
 // Lokasi: src/events/poru/autoplayUtils.js
 // Utility bersama: memilih kandidat lagu autoplay yang paling relevan
 // & membuat transisi volume (fade-out -> fade-in) antar lagu terasa mulus.
@@ -124,7 +125,9 @@ function smoothFade(
 
   try {
     player.setVolume(Math.round(Math.max(0, Math.min(100, current))));
-  } catch (e) {}
+  } catch (e) {
+    logger.debug("[autoplayUtils:smoothFade] Operasi audio/voice gagal: " + (e?.message || e));
+  }
 
   player._fadeInterval = setInterval(() => {
     count++;
@@ -141,7 +144,9 @@ function smoothFade(
       player._fadeInterval = null;
       try {
         player.setVolume(Math.round(Math.max(0, Math.min(100, toVolume))));
-      } catch (e) {}
+      } catch (e) {
+        logger.debug("[autoplayUtils:smoothFade] Operasi audio/voice gagal: " + (e?.message || e));
+      }
     }
   }, stepTime);
   // Rule 1.9: timer berumur pendek ini dibersihkan via clearTransitionTimers,

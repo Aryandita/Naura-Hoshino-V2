@@ -49,8 +49,8 @@ const ensureYtDlp = async () => {
     if (process.platform !== "win32") {
       try {
         fs.chmodSync(binaryPath, 0o755);
-      } catch {
-        /* mungkin sudah executable */
+      } catch (err) {
+        logger.debug("[downloaderYtdlp:ensureYtDlp] Operasi berkas/proses sistem gagal: " + (err?.message || err));
       }
     }
 

@@ -1,3 +1,4 @@
+const { logger } = require("../../managers/logger");
 // Konteks eksekusi /survival: interceptor auto-delete untuk jalur slash, dan
 // pembuat objek tiruan interaction untuk jalur prefix (n!survival ...).
 //
@@ -33,7 +34,9 @@ function registerMessageCollector(messageId, collector) {
   if (existing && typeof existing.stop === "function") {
     try {
       existing.stop("navigated");
-    } catch (_) {}
+    } catch (err) {
+      logger.debug("[survivalContext:registerMessageCollector] Galat pada rutinitas aplikasi: " + (err?.message || err));
+    }
   }
   activeCollectors.set(messageId, collector);
 }
@@ -47,7 +50,9 @@ function stopMessageCollector(messageId, reason = "navigated") {
   if (collector && typeof collector.stop === "function") {
     try {
       collector.stop(reason);
-    } catch (_) {}
+    } catch (err) {
+      logger.debug("[survivalContext:stopMessageCollector] Pembersihan koneksi/collector gagal: " + (err?.message || err));
+    }
   }
   activeCollectors.delete(messageId);
 }
@@ -64,7 +69,9 @@ function scheduleAutoDelete(messageId, deleteFn, delayMs = AUTO_DELETE_MS) {
     autoDeleteTimers.delete(messageId);
     try {
       await deleteFn();
-    } catch (_) {}
+    } catch (err) {
+      logger.debug("[survivalContext:scheduleAutoDelete] Galat pada rutinitas aplikasi: " + (err?.message || err));
+    }
   }, delayMs);
   autoDeleteTimers.set(messageId, timer);
 }
@@ -540,7 +547,9 @@ async function setSurvivalBusy(userId, label, durationSeconds = 120) {
         durationSeconds,
       );
     }
-  } catch (_) {}
+  } catch (err) {
+    logger.warn("[survivalContext:setSurvivalBusy] Operasi cache Redis gagal: " + (err?.message || err));
+  }
 }
 
 /**
@@ -554,7 +563,9 @@ async function clearSurvivalBusy(userId) {
     if (redisManager.isReady) {
       await redisManager.deleteCache(`survival:busy:${userId}`);
     }
-  } catch (_) {}
+  } catch (err) {
+    logger.warn("[survivalContext:clearSurvivalBusy] Operasi cache Redis gagal: " + (err?.message || err));
+  }
 }
 
 /**
@@ -570,7 +581,9 @@ async function isSurvivalBusy(userId) {
         return { isBusy: true, label: cached.label || "Aktivitas Lain" };
       }
     }
-  } catch (_) {}
+  } catch (err) {
+    logger.warn("[survivalContext:isSurvivalBusy] Operasi cache Redis gagal: " + (err?.message || err));
+  }
 
   const local = localBusyMap.get(userId);
   if (local && local.until > Date.now()) {

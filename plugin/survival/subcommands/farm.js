@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const {
   ActionRowBuilder,
@@ -66,7 +67,7 @@ module.exports = {
           new AttachmentBuilder(cardBuffer, { name: "greenhouse_status.png" }),
         );
       } catch (err) {
-        // Fallback jika canvas gagal
+        logger.warn("[farm:execute] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
       }
 
       const slotSummaries = gh.slots

@@ -69,7 +69,7 @@ async function writeCache(key, buffer) {
   try {
     await redisManager.setCache(key, buffer.toString("base64"), CARD_TTL);
   } catch (e) {
-    // Cache gagal ditulis bukan alasan menggagalkan kartu.
+    logger.warn("[rankCard:writeCache] Operasi cache Redis gagal: " + (e?.message || e));
   }
 }
 

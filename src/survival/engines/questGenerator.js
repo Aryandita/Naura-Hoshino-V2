@@ -315,7 +315,7 @@ async function incrementQuestProgress(userId, action, amount = 1, metadata = {})
       await incrementClanQuestProgress(survival.clanId, action, amount);
     }
   } catch (e) {
-    // Ignore error
+    // Intentional: Ignore error
   }
 }
 

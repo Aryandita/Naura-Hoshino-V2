@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../managers/logger");
 
 /**
  * artworkResolver.js - Modul Resolusi Cover Art Musik & Rendering Cover Presisi
@@ -111,8 +112,8 @@ async function resolveHighResArtwork(track, clientAvatar = null) {
           return hiResArt;
         }
       }
-    } catch (_) {
-      // Abaikan kegagalan jaringan iTunes dan lanjut ke fallback
+    } catch (err) {
+      logger.warn("[artworkResolver:resolveHighResArtwork] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
     }
   }
 
@@ -126,8 +127,8 @@ async function resolveHighResArtwork(track, clientAvatar = null) {
         artworkCache.set(cacheKey, maxResUrl);
         return maxResUrl;
       }
-    } catch (_) {
-      // maxres tidak tersedia, gunakan direct image atau hqdefault
+    } catch (err) {
+      logger.warn("[artworkResolver:resolveHighResArtwork] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
     }
   }
 

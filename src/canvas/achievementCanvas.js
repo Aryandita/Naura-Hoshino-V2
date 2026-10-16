@@ -1,3 +1,4 @@
+const { logger } = require("../managers/logger");
 const { createCanvas, loadImage } = require("./canvasRuntime");
 const {
   drawRoundedRect,
@@ -50,7 +51,9 @@ async function generateAchievementImage(
   let userAvatarImg;
   try {
     userAvatarImg = await loadImage(avatarUrl);
-  } catch (e) {}
+  } catch (e) {
+    logger.warn("[achievementCanvas:generateAchievementImage] Render visual canvas atau pemuatan aset gagal: " + (e?.message || e));
+  }
 
   // Gambar Avatar
   if (userAvatarImg) {

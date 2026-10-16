@@ -40,7 +40,9 @@ module.exports = {
     try {
       const lyricsEngine = new LyricsManager(manager.client);
       lyricsEngine.clearLyrics(player.guildId);
-    } catch (e) {}
+    } catch (e) {
+      logger.debug("[queueEnd:execute] Operasi audio/voice gagal: " + (e?.message || e));
+    }
 
     // Bersihkan antrean tersimpan dan suara vote skip setelah antrean benar-benar selesai
     manager.clearSavedQueueState?.(player.guildId);
@@ -190,7 +192,9 @@ Berikan 1 rekomendasi lagu selanjutnya yang populer dan memiliki vibe/genre yang
               trackToPlay.info.originalSource = "youtube";
             }
           }
-        } catch (e) {}
+        } catch (e) {
+          logger.debug("[queueEnd:execute] Operasi audio/voice gagal: " + (e?.message || e));
+        }
       }
 
       if (trackToPlay) {

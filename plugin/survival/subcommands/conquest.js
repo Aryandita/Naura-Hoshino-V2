@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const { AttachmentBuilder } = require("discord.js");
 const {
@@ -43,7 +44,7 @@ module.exports = {
           new AttachmentBuilder(mapBuffer, { name: "territory_map.png" }),
         );
       } catch (err) {
-        // Fallback jika canvas gagal
+        logger.warn("[conquest:execute] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
       }
 
       const territoryList = territories

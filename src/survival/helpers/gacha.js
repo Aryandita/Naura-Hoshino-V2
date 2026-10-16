@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../managers/logger");
 
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const {
@@ -240,7 +241,9 @@ module.exports = {
           typeof profile.inventory === "string"
             ? JSON.parse(profile.inventory)
             : profile.inventory || {};
-      } catch (e) {}
+      } catch (e) {
+        logger.debug("[gacha:execute] Parsing data gagal, menggunakan fallback: " + (e?.message || e));
+      }
 
       if (!inventory[itemId] || inventory[itemId] <= 0) {
         return interaction.reply({

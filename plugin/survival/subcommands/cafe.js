@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const {
   ActionRowBuilder,
@@ -43,7 +44,7 @@ module.exports = {
           new AttachmentBuilder(cardBuffer, { name: "cafe_status.png" }),
         );
       } catch (err) {
-        // Fallback jika canvas gagal render
+        logger.warn("[cafe:execute] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
       }
 
       const dishes = cafe.activeDishes || {};

@@ -1,3 +1,4 @@
+const { logger } = require("../../managers/logger");
 // Lokasi: src/events/poru/trackEnd.js
 const LyricsManager = require("../LyricsManager");
 const MusicAnalytics = require("../MusicAnalytics");
@@ -30,7 +31,7 @@ module.exports = {
       const lyricsEngine = new LyricsManager(manager.client);
       lyricsEngine.clearLyrics(player.guildId);
     } catch (e) {
-      // Abaikan jika terjadi error kecil saat pembersihan lirik
+      logger.debug("[trackEnd:execute] Operasi audio/voice gagal: " + (e?.message || e));
     }
   },
 };

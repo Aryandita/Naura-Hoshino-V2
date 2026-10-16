@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const GuildClan = require("../../../src/models/GuildClan");
 const UserSurvival = require("../../../src/models/UserSurvival");
@@ -231,7 +232,7 @@ module.exports = {
         const hallBuf = await drawGuildHall(hallData);
         files.push(new AttachmentBuilder(hallBuf, { name: "guild_hall.png" }));
       } catch (err) {
-        // Fallback jika canvas worker terkendala
+        logger.warn("[clan:execute] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
       }
 
       const furnituresList =

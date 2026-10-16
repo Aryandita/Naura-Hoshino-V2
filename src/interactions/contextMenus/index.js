@@ -21,7 +21,7 @@ function loadContextMenus() {
         contextMenus.set(cmd.name, cmd);
       }
     } catch (e) {
-      // ignore individual load errors
+      // Intentional: ignore individual load errors
     }
   }
 

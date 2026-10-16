@@ -28,7 +28,9 @@ class FishAudioService {
     if (!fs.existsSync(this.tempDir)) {
       try {
         fs.mkdirSync(this.tempDir, { recursive: true });
-      } catch (_) {}
+      } catch (err) {
+        logger.debug("[fishAudioService:constructor] Operasi berkas/proses sistem gagal: " + (err?.message || err));
+      }
     }
     this.activeRequests = 0;
     this.maxConcurrentRequests = 2;
@@ -330,7 +332,9 @@ class FishAudioService {
             broadcastedCount++;
             logger.info(`[FishAudio] Menyiarkan intermezzo kemenangan ke guild ${guildId}`);
           }
-        } catch (_) {}
+        } catch (err) {
+          logger.debug("[fishAudioService:broadcastVictoryAnnouncement] Operasi audio/voice gagal: " + (err?.message || err));
+        }
       }
     }
 

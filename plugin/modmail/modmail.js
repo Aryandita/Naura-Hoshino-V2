@@ -46,7 +46,7 @@ async function cleanup(file) {
   try {
     await fs.unlink(file);
   } catch (e) {
-    // Berkas sementara mungkin sudah hilang, itu bukan masalah.
+    logger.debug("[modmail:cleanup] Operasi berkas/proses sistem gagal: " + (e?.message || e));
   }
 }
 

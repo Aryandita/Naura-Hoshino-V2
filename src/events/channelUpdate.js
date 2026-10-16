@@ -69,7 +69,11 @@ module.exports = {
           executorIcon = auditLog.executor.displayAvatarURL();
         }
       } catch (error) {
-        // Abaikan jika tidak punya akses audit log
+        if (error?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(error.code)) {
+          // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+        } else {
+          logger.debug("[channelUpdate:execute] Pemanggilan Discord API gagal: " + (error?.message || error));
+        }
       }
 
       const embed = new EmbedBuilder()

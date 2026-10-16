@@ -213,7 +213,7 @@ class AIManager {
           baseInstruction += `\n${memoryContext}`;
         }
       } catch (memErr) {
-        // Safe fallback
+        // Intentional: Safe fallback
       }
 
       // Cek apakah ada attachment gambar
@@ -229,7 +229,11 @@ class AIManager {
             (a) => a.contentType && a.contentType.startsWith("image/"),
           );
         } catch (e) {
-          /* ignore error fetch reply */
+          if (e?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(e.code)) {
+            // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+          } else {
+            logger.debug("[aiManager:_executeMessage] Pemanggilan Discord API gagal: " + (e?.message || e));
+          }
         }
       }
 
@@ -341,7 +345,7 @@ Jawablah dalam bahasa Indonesia kasual.`;
             );
             if (kbContext) systemPrompt += `\n${kbContext}`;
           } catch (e) {
-            // Ignore knowledge base fetch failure
+            logger.debug("[aiManager:_executeMessage] Subrutin AI atau memori gagal: " + (e?.message || e));
           }
         }
 
@@ -549,7 +553,7 @@ Jawablah dalam bahasa Indonesia kasual.`;
         const AIMemory = require("../ai/aiMemory");
         AIMemory.extractAndSave(userId, prompt, responseText).catch(() => {});
       } catch (memErr) {
-        // Safe fallback
+        logger.debug("[aiManager:_executeMessage] Subrutin AI atau memori gagal: " + (memErr?.message || memErr));
       }
     } catch (error) {
       logger.error("\x1b[31m[AI ERROR]\x1b[0m Gagal merespons:", error);

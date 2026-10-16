@@ -1,3 +1,4 @@
+const { logger } = require("../managers/logger");
 const { EmbedBuilder, AuditLogEvent, ChannelType } = require("discord.js");
 const cacheManager = require("../managers/cacheManager");
 const ui = require("../config/ui");
@@ -56,6 +57,8 @@ module.exports = {
         .setTimestamp();
 
       await logChannel.send({ embeds: [embed] }).catch(() => {});
-    } catch (error) {}
+    } catch (error) {
+      logger.warn("[channelDelete:execute] Operasi database gagal: " + (error?.message || error));
+    }
   },
 };

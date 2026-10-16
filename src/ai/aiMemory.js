@@ -26,7 +26,7 @@ class AIMemory {
           memoryData = cached;
         }
       } catch (e) {
-        // Abaikan error cache redis
+        logger.warn("[aiMemory:getMemoryContext] Operasi cache Redis gagal: " + (e?.message || e));
       }
     }
 
@@ -70,7 +70,7 @@ class AIMemory {
           return `\n[Catatan Ingatan AI tentang User]: ${rawString}\n`;
         }
       } catch (e) {
-        // Safe fallback
+        logger.warn("[aiMemory:getMemoryContext] Operasi cache Redis gagal: " + (e?.message || e));
       }
     }
 
@@ -116,7 +116,7 @@ class AIMemory {
           }
         }
       } catch (err) {
-        // Abaikan error semantic search agar konteks utama tetap jalan
+        logger.debug("[aiMemory:getMemoryContext] Subrutin AI atau memori gagal: " + (err?.message || err));
       }
     }
 
@@ -206,7 +206,9 @@ class AIMemory {
           await service.saveMemory(userId, factContent, {
             memoryType: "USER_FACT",
           });
-        } catch (_) {}
+        } catch (err) {
+          logger.debug("[aiMemory:extractAndSave] Subrutin AI atau memori gagal: " + (err?.message || err));
+        }
       }
     } catch (e) {
       logger.warn(

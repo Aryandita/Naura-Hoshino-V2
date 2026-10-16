@@ -1,3 +1,4 @@
+const { logger } = require("../../src/managers/logger");
 const {
   SlashCommandBuilder,
   PermissionFlagsBits,
@@ -172,7 +173,13 @@ module.exports = {
             where: { guildId: interaction.guild.id },
           });
           await channelInteraction.update(generateDashboard());
-        } catch (e) {}
+        } catch (e) {
+          if (e?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(e.code)) {
+            // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+          } else {
+            logger.debug("[alert:execute] Interaksi Discord lifecycle gagal: " + (e?.message || e));
+          }
+        }
       }
 
       if (i.isStringSelectMenu() && i.customId === "sa_remove") {

@@ -8,15 +8,29 @@ function register(router, client) {
   // --- 1. AI Companion Chat ---
   router.post("/chat", async (req, res) => {
     try {
+      if (!req.body || typeof req.body !== "object") {
+        return res.status(400).json({ error: "Pesan tidak boleh kosong." });
+      }
       const {
         message,
         prompt,
         history,
         username: reqUsername,
-      } = req.body || {};
-      const textPrompt = String(message || prompt || "").trim();
-      if (!textPrompt) {
+      } = req.body;
+      const rawText =
+        typeof message === "string"
+          ? message
+          : typeof prompt === "string"
+            ? prompt
+            : "";
+      const textPrompt = rawText.trim();
+      if (!textPrompt || textPrompt.length === 0) {
         return res.status(400).json({ error: "Pesan tidak boleh kosong." });
+      }
+      if (textPrompt.length > 2000) {
+        return res
+          .status(400)
+          .json({ error: "Pesan terlalu panjang (maksimum 2000 karakter)." });
       }
 
       const userId = req.user?.id || null;
@@ -430,7 +444,11 @@ function register(router, client) {
   router.get("/realtime/survival", async (req, res) => {
     try {
       const UserSurvival = require("../../../src/models/UserSurvival");
-      const currentUserId = req.query.userId || req.user?.id || null;
+      const userIsOwner = req.user?.id ? isOwner(req.user.id) : false;
+      const currentUserId =
+        userIsOwner && req.query.userId
+          ? String(req.query.userId)
+          : req.user?.id || null;
       let currentUserData = null;
 
       if (currentUserId) {

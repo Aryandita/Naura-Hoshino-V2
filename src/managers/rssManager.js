@@ -48,7 +48,9 @@ class RssManager {
 
             await channel.send(message);
           }
-        } catch (feedError) {}
+        } catch (feedError) {
+          logger.warn("[rssManager:checkAllFeeds] Permintaan API eksternal gagal: " + (feedError?.message || feedError));
+        }
       }
     } catch (error) {
       logger.error(

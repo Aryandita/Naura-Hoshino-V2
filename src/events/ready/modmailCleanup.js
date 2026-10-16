@@ -46,7 +46,13 @@ module.exports = {
                 .setFooter({ text: ui.getFooter("utility") })
                 .setTimestamp();
               await user.send({ embeds: [embed] });
-            } catch (e) {}
+            } catch (e) {
+              if (e?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(e.code)) {
+                // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+              } else {
+                logger.debug("[modmailCleanup:execute] Pemanggilan Discord API gagal: " + (e?.message || e));
+              }
+            }
 
             if (channel) {
               await channel.send(

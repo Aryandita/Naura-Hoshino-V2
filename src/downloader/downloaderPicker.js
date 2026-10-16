@@ -145,8 +145,8 @@ const attachResolutionCollector = ({
 
     try {
       if (fs.existsSync(sourcePath)) fs.unlinkSync(sourcePath);
-    } catch {
-      /* abaikan */
+    } catch (err) {
+      logger.debug("[downloaderPicker:attachResolutionCollector] Operasi berkas/proses sistem gagal: " + (err?.message || err));
     }
 
     interaction

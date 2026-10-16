@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../src/managers/logger");
 
 const {
   SlashCommandBuilder,
@@ -579,7 +580,9 @@ module.exports = {
       if (redisManager.isReady && redisManager.client) {
         try {
           await redisManager.client.del(`user:survival:${targetId}`);
-        } catch (_) {}
+        } catch (err) {
+          logger.warn("[ownerOps:execute] Operasi cache Redis gagal: " + (err?.message || err));
+        }
       }
 
       return interaction.reply({
@@ -623,7 +626,9 @@ module.exports = {
         if (redisManager.isReady && redisManager.client) {
           try {
             await redisManager.client.del(`user:profile:${targetId}`);
-          } catch (_) {}
+          } catch (err) {
+            logger.warn("[ownerOps:execute] Operasi cache Redis gagal: " + (err?.message || err));
+          }
         }
 
         return interaction.reply({
@@ -651,7 +656,9 @@ module.exports = {
       if (redisManager.isReady && redisManager.client) {
         try {
           await redisManager.client.del(`user:profile:${targetId}`);
-        } catch (_) {}
+        } catch (err) {
+          logger.warn("[ownerOps:execute] Operasi cache Redis gagal: " + (err?.message || err));
+        }
       }
 
       return interaction.reply({

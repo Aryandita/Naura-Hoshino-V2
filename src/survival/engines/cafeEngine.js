@@ -177,7 +177,9 @@ class CafeEngine {
       if (weather?.id === "sakura_breeze") {
         weatherBonus = 1.2; // +20% bonus penjualan saat sakura breeze
       }
-    } catch (_) {}
+    } catch (_err) {
+      // Intentional: Lingkungan atau modul opsional dilewati
+    }
 
     const finalEarnings = Math.floor((totalEarned + tips) * weatherBonus);
 
@@ -246,7 +248,9 @@ class CafeEngine {
           return obj;
         },
       );
-    } catch {}
+    } catch (err) {
+      logger.error("[cafeEngine:collectIdleRevenue] Mutasi saldo ekonomi/survival gagal: " + (err?.message || err), err);
+    }
 
     logger.info(
       `[CafeEngine] User ${userId} mengklaim ${totalToCollect} Star Fragments pendapatan idle.`,

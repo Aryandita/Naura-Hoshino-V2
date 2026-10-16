@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const {
   buildContainerV2,
@@ -129,7 +130,7 @@ module.exports = {
           new AttachmentBuilder(matchBuf, { name: "coliseum_match.png" }),
         );
       } catch (err) {
-        // Fallback jika canvas worker terkendala
+        logger.warn("[arena:execute] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
       }
 
       const payload = buildContainerV2({

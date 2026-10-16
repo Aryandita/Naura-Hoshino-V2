@@ -232,7 +232,7 @@ module.exports = {
       // Rule 1.8: fields eksplisit agar tidak menimpa kolom lain.
       await quest.save({ fields: ["workCount"] });
     } catch (err) {
-      // Papan misi opsional, jadi galatnya tidak boleh membatalkan gaji.
+      // Intentional: Papan misi opsional, jadi galatnya tidak boleh membatalkan gaji.
     }
 
     const lines = [

@@ -474,7 +474,9 @@ class MusicUIManager {
           }
           const updatePayload = await generatePayload(player.position, true);
           await currentMsg.edit(updatePayload).catch(() => {});
-        } catch (e) {}
+        } catch (e) {
+          logger.debug("[MusicUIManager:renderPanel] Operasi audio/voice gagal: " + (e?.message || e));
+        }
       }, updateIntervalMs);
       // Rule 1.9: interval per-player sudah dibersihkan via clearInterval di
       // jalur ganti track/destroy; unref hanya pengaman agar proses tidak

@@ -1,3 +1,4 @@
+const { logger } = require("../../src/managers/logger");
 const { SlashCommandBuilder } = require("discord.js");
 const ms = require("ms");
 const ui = require("../../src/config/ui");
@@ -138,7 +139,7 @@ module.exports = {
             ...donePayload,
           });
         } catch (error) {
-          // Ignored if channel is deleted or bot lacks permissions
+          logger.debug("[time:execute] Galat pada rutinitas aplikasi: " + (error?.message || error));
         }
       }, durationMs);
     }

@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const cacheManager = require("../../../src/managers/cacheManager");
@@ -98,7 +99,7 @@ module.exports = {
         const vivBuf = await drawVivarium(vivarium);
         files.push(new AttachmentBuilder(vivBuf, { name: "vivarium.png" }));
       } catch (err) {
-        // Fallback
+        logger.warn("[fish:execute] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
       }
 
       const fishList =
@@ -408,7 +409,9 @@ module.exports = {
             try {
               const seasonEngine = require("../../../src/services/seasonEngine");
               await seasonEngine.addSeasonXp(user.id, 10);
-            } catch (err) {}
+            } catch (err) {
+              // Intentional: Lingkungan atau modul opsional dilewati
+            }
           }
 
           if (!stored.ok) {
@@ -520,8 +523,7 @@ module.exports = {
             .catch(() => {});
         });
       } catch (err) {
-        // Timer berjalan di luar alur perintah, jadi galatnya harus
-        // ditelan supaya tidak menjatuhkan proses bot.
+        logger.debug("[fish:execute] Galat pada rutinitas aplikasi: " + (err?.message || err));
       }
     }, waitTime);
   },

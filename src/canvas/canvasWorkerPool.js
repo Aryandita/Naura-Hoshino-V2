@@ -94,7 +94,9 @@ class CanvasWorkerPool {
 
     try {
       oldWorker.terminate().catch(() => {});
-    } catch (e) {}
+    } catch (e) {
+      logger.warn("[canvasWorkerPool:_replaceWorker] Render visual canvas atau pemuatan aset gagal: " + (e?.message || e));
+    }
 
     this._createWorker(scriptPath, index);
   }
@@ -208,7 +210,9 @@ class CanvasWorkerPool {
     for (const worker of this.workers) {
       try {
         await worker.terminate();
-      } catch (e) {}
+      } catch (e) {
+        logger.warn("[canvasWorkerPool:shutdown] Render visual canvas atau pemuatan aset gagal: " + (e?.message || e));
+      }
     }
     this.workers = [];
     this.freeWorkers = [];

@@ -398,7 +398,9 @@ class WorldBossEngine {
                 p.username,
               );
             }
-          } catch (_redisErr) {}
+          } catch (_redisErr) {
+            logger.warn("[worldBossEngine:_distributeRewards] Operasi cache Redis gagal: " + (_redisErr?.message || _redisErr));
+          }
         }
       }
 

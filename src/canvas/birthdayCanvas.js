@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../managers/logger");
 
 const { createCanvas, loadImage, runWithLimit } = require("./canvasRuntime");
 
@@ -119,7 +120,9 @@ async function renderBirthdayCard(data) {
         );
         ctx.restore();
         avatarDrawn = true;
-      } catch (err) {}
+      } catch (err) {
+        logger.warn("[birthdayCanvas:renderBirthdayCard] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
+      }
     }
 
     if (!avatarDrawn) {

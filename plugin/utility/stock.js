@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../src/managers/logger");
 
 const {
   SlashCommandBuilder,
@@ -133,7 +134,7 @@ module.exports = {
           new AttachmentBuilder(stockBuf, { name: "stock_market.png" }),
         );
       } catch (err) {
-        // Fallback jika canvas terkendala
+        logger.warn("[stock:execute] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
       }
 
       const eGreen = ui.getEmoji("greenping") || "🟢";

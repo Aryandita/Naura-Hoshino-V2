@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../managers/logger");
 
 const redisManager = require("../managers/redisManager");
 
@@ -40,7 +41,9 @@ class RadioService {
       try {
         await redisManager.lpush(key, JSON.stringify(entry));
         await redisManager.ltrim(key, 0, 15);
-      } catch (_) {}
+      } catch (err) {
+        logger.warn("[radioService:queueRadioMessage] Operasi cache Redis gagal: " + (err?.message || err));
+      }
     }
 
     return entry;
@@ -59,7 +62,9 @@ class RadioService {
         if (raw && raw.length > 0) {
           return raw.map((r) => JSON.parse(r));
         }
-      } catch (_) {}
+      } catch (err) {
+        logger.warn("[radioService:getPendingRadioMessages] Operasi cache Redis gagal: " + (err?.message || err));
+      }
     }
     return [];
   }

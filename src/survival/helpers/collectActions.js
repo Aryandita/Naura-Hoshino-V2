@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../managers/logger");
 
 // Tabel jarahan dan pemrosesan hasil eksplorasi /survival collect.
 // Semua id barang di sini sudah dicocokkan dengan katalog items.js, supaya
@@ -202,7 +203,7 @@ async function grantLoot({ userId, lokasi, bareHands, activePets }) {
       NSF_REWARD[lokasi] || 10,
     );
   } catch (e) {
-    // Hadiah uang bersifat pemanis; kegagalannya tidak membatalkan jarahan.
+    logger.error("[collectActions:grantLoot] Mutasi saldo ekonomi/survival gagal: " + (e?.message || e), e);
   }
 
   // Statistik dikurangi sebagai delta, bukan nilai absolut hasil pembacaan.
@@ -259,7 +260,7 @@ async function grantLoot({ userId, lokasi, bareHands, activePets }) {
       ],
     });
   } catch (e) {
-    // Diamkan saja, hadiah utamanya sudah masuk.
+    // Intentional: Diamkan saja, hadiah utamanya sudah masuk.
   }
 
   return {

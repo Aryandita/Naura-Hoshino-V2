@@ -1,3 +1,4 @@
+const { logger } = require("../managers/logger");
 /**
  * Naura Expression Helper
  * ------------------------------------------------------------
@@ -240,8 +241,7 @@ function findFile(name) {
         break;
       }
     } catch (error) {
-      // Kegagalan akses disk diperlakukan sama seperti berkas tidak ada,
-      // supaya perintah tetap berjalan tanpa gambar.
+      logger.debug("[nauraExpression:findFile] Galat pada rutinitas aplikasi: " + (error?.message || error));
     }
   }
 

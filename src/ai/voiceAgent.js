@@ -48,7 +48,9 @@ class VoiceAgent {
         ) {
           session.connection.destroy();
         }
-      } catch (e) {}
+      } catch (e) {
+        logger.debug("[voiceAgent:stopSession] Pembersihan koneksi/collector gagal: " + (e?.message || e));
+      }
       this.activeVoiceSessions.delete(guildId);
       logger.info(
         `[VoiceAgent] Sesi Cyber Waifu Voice AI dihentikan di guild ${guildId}`,

@@ -1,6 +1,8 @@
 try {
   process.loadEnvFile();
-} catch (e) {}
+} catch (e) {
+  // Intentional: Lingkungan atau modul opsional dilewati
+}
 
 // Helper untuk membersihkan tanda kutip yang tidak sengaja terbawa dari panel Pterodactyl
 const cleanEnv = (val) => {
@@ -32,7 +34,7 @@ const readShardId = () => {
       const list = JSON.parse(raw);
       if (Array.isArray(list) && list.length > 0) return String(list[0]);
     } catch (e) {
-      // Format tak terduga. Jatuh ke SHARD_ID manual di bawah.
+      // Intentional: Parsing data gagal, menggunakan fallback
     }
   }
   const manual = cleanEnv(process.env.SHARD_ID);

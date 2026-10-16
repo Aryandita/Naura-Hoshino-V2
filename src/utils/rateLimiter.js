@@ -22,7 +22,9 @@ if (cleanupTimer.unref) cleanupTimer.unref();
 function reportSpike(commandName, userId) {
   try {
     require("../managers/trafficMonitor").recordRateLimitSpike(commandName, userId);
-  } catch {}
+  } catch (_err) {
+    // Intentional: Lingkungan atau modul opsional dilewati
+  }
 }
 
 class RateLimiter {

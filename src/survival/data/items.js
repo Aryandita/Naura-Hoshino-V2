@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../managers/logger");
 
 const GameItem = require("../../models/GameItem");
 const staticItems = require("./items_static");
@@ -51,7 +52,7 @@ async function fetchFromDatabase() {
     const rows = await GameItem.findAll();
     if (rows && rows.length > 0) return rows.map(flatten);
   } catch (err) {
-    // Biarkan kosong, pemanggil akan memakai katalog standar.
+    logger.error("[items:fetchFromDatabase] Operasi database gagal: " + (err?.message || err), err);
   }
   return null;
 }

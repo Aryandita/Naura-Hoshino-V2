@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("./logger");
 
 const redisManager = require("./redisManager");
 
@@ -13,7 +14,9 @@ class MetricsManager {
         redisManager.client.hincrby("metrics:commands", commandName, 1);
         redisManager.client.hincrby("metrics:commands", "total", 1);
       }
-    } catch {}
+    } catch (err) {
+      logger.warn("[metricsManager:logCommand] Operasi cache Redis gagal: " + (err?.message || err));
+    }
   }
 
   /**
@@ -30,7 +33,9 @@ class MetricsManager {
         );
         redisManager.client.hincrby("metrics:components", "total", 1);
       }
-    } catch {}
+    } catch (err) {
+      logger.warn("[metricsManager:logComponent] Operasi cache Redis gagal: " + (err?.message || err));
+    }
   }
 
   /**

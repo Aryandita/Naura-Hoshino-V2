@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const {
   ActionRowBuilder,
@@ -114,7 +115,9 @@ module.exports = {
             equippedBanner = bannerId;
           }
         }
-      } catch (_) {}
+      } catch (err) {
+        logger.debug("[playbackControls:nowplaying] Operasi audio/voice gagal: " + (err?.message || err));
+      }
 
       const playbackInfo = { position: player.position, equippedBanner };
       const imageBuffer = await drawNowPlayingCard(track, playbackInfo);

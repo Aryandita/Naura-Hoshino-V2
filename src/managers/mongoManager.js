@@ -9,7 +9,7 @@ const { logger } = require("./logger");
 try {
   dns.setServers(["1.1.1.1", "8.8.8.8", "1.0.0.1", "8.8.4.4"]);
 } catch (dnsErr) {
-  // Safe fallback
+  // Intentional: Safe fallback
 }
 
 // Import model-model MongoDB

@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../src/managers/logger");
 
 const {
   SlashCommandBuilder,
@@ -112,7 +113,9 @@ module.exports = {
       let room = null;
       try {
         room = await UserRoom.findOne({ userId: targetUser.id });
-      } catch (_) {}
+      } catch (err) {
+        logger.error("[room:execute] Operasi database gagal: " + (err?.message || err), err);
+      }
 
       if (!room) {
         room = {
@@ -199,7 +202,9 @@ module.exports = {
         room.likesCount = (room.likesCount || 0) + 1;
         room.changed("guestbook", true);
         await room.save({ fields: ["guestbook", "likesCount"] });
-      } catch (_) {}
+      } catch (err) {
+        logger.error("[room:execute] Operasi database gagal: " + (err?.message || err), err);
+      }
 
       const payload = buildContainerV2({
         authorName: "NAURA LIVING ROOM 2.5D",
@@ -233,7 +238,9 @@ module.exports = {
 
       try {
         await cacheManager.incrementUserSurvival(targetUser.id, "stamina", 20);
-      } catch (_) {}
+      } catch (err) {
+        logger.error("[room:execute] Mutasi saldo ekonomi/survival gagal: " + (err?.message || err), err);
+      }
 
       const payload = buildContainerV2({
         authorName: "NAURA LIVING ROOM 2.5D",
@@ -271,7 +278,9 @@ module.exports = {
       let room = null;
       try {
         room = await UserRoom.findOne({ userId: user.id });
-      } catch (_) {}
+      } catch (err) {
+        logger.error("[room:execute] Operasi database gagal: " + (err?.message || err), err);
+      }
 
       if (!room) {
         room = {

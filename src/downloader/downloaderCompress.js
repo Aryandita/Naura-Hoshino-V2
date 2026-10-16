@@ -39,8 +39,8 @@ function resolveFfmpegPath() {
     if (process.platform !== "win32") {
       try {
         fs.chmodSync(getFfmpegStatic(), 0o755);
-      } catch {
-        // Berkas mungkin sudah executable atau read-only; abaikan.
+      } catch (err) {
+        logger.debug("[downloaderCompress:resolveFfmpegPath] Operasi berkas/proses sistem gagal: " + (err?.message || err));
       }
     }
     return getFfmpegStatic();
@@ -62,8 +62,8 @@ function resolveFfmpegPath() {
 const activeFfmpegPath = resolveFfmpegPath();
 try {
   if (activeFfmpegPath) getFfmpeg().setFfmpegPath(activeFfmpegPath);
-} catch {
-  // Biarkan fluent-ffmpeg memakai pencarian bawaannya.
+} catch (err) {
+  logger.debug("[downloaderCompress] Operasi berkas/proses sistem gagal: " + (err?.message || err));
 }
 
 /** Batas unggah Discord untuk server terkait, disisakan 5 persen. */
@@ -174,8 +174,8 @@ const compressWithFFmpeg = (
           try {
             if (fs.existsSync(`${passlogPrefix}${ext}`))
               fs.unlinkSync(`${passlogPrefix}${ext}`);
-          } catch {
-            /* abaikan */
+          } catch (err) {
+            logger.debug("[downloaderCompress:finishPasslog] Operasi berkas/proses sistem gagal: " + (err?.message || err));
           }
         }
       };

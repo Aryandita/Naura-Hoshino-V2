@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../managers/logger");
 
 const npcs = require("../data/npcs");
 const cacheManager = require("../../managers/cacheManager");
@@ -128,7 +129,7 @@ async function talkToTownNpc(npcId, userId, hour) {
       generativeReply = aiResult.text.replace(/[\u2014\u2013]/g, "-").trim();
     }
   } catch (e) {
-    // Fallback ke greeting template
+    logger.debug("[townEngine:talkToTownNpc] Subrutin AI atau memori gagal: " + (e?.message || e));
   }
 
   const finalReply = generativeReply || greeting;
@@ -174,8 +175,8 @@ async function talkToTownNpc(npcId, userId, hour) {
     } else {
       affinityText = `💬 Affection dengan **${npc.name}** +10 (Total: ${userNpc.affection} - ${LEVEL_TITLES[newLevel]})`;
     }
-  } catch (_) {
-    // Non-blocking jika terjadi kendala DB
+  } catch (err) {
+    logger.error("[townEngine:talkToTownNpc] Operasi database gagal: " + (err?.message || err), err);
   }
 
   return {

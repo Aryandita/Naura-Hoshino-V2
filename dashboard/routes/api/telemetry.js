@@ -587,12 +587,18 @@ function register(router, client) {
   });
 
   // --- 7. Task 2: Guild Automations Pipeline State & Toggle ---
-  router.get("/automations/pipelines", async (req, res) => {
+  const handlePipelines = async (req, res) => {
     try {
-      const guildId = req.query?.guildId ? String(req.query.guildId) : null;
+      const guildId =
+        req.guildId || (req.query?.guildId ? String(req.query.guildId) : null);
       let guildSettings = null;
 
-      if (guildId) {
+      if (
+        guildId &&
+        guildId !== "sandbox" &&
+        guildId !== "demo" &&
+        guildId !== "global"
+      ) {
         const GuildSettings = require("../../../src/models/GuildSettings");
         guildSettings = await GuildSettings.findOne({ where: { guildId } });
       }
@@ -617,24 +623,53 @@ function register(router, client) {
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
     }
-  });
+  };
+
+  const pipelinesAuthGuard = (req, res, next) => {
+    if (typeof next !== "function") {
+      return handlePipelines(req, res);
+    }
+    return requireGuildManager(req, res, next);
+  };
+
+  router.get("/automations/pipelines", pipelinesAuthGuard, handlePipelines);
 
   router.post("/automations/toggle", requireGuildManager, async (req, res) => {
     try {
-      const { guildId, pipelineId, enabled } = req.body || {};
-      if (!guildId || !pipelineId) {
-        return res.status(400).json({ error: "guildId dan pipelineId wajib dikirimkan." });
+      const targetGuildId = req.guildId;
+      const { pipelineId, enabled } = req.body || {};
+      if (!targetGuildId || !pipelineId) {
+        return res
+          .status(400)
+          .json({ error: "guildId dan pipelineId wajib dikirimkan." });
+      }
+
+      const isEnabled = Boolean(enabled);
+
+      if (
+        req.isSandbox ||
+        targetGuildId === "sandbox" ||
+        targetGuildId === "demo" ||
+        targetGuildId === "current"
+      ) {
+        return res.json({
+          success: true,
+          guildId: targetGuildId,
+          pipelineId,
+          enabled: isEnabled,
+          isSandbox: true,
+          message: `[Simulasi] Pipeline ${pipelineId} berhasil ${isEnabled ? "diaktifkan" : "dinonaktifkan"} pada server sandbox.`,
+        });
       }
 
       const GuildSettings = require("../../../src/models/GuildSettings");
       const [record] = await GuildSettings.findOrCreate({
-        where: { guildId },
-        defaults: { guildId },
+        where: { guildId: targetGuildId },
+        defaults: { guildId: targetGuildId },
       });
 
       const currentSettings = { ...(record.settings || {}) };
       const currentMusic = { ...(record.music || {}) };
-      const isEnabled = Boolean(enabled);
 
       switch (pipelineId) {
         case "antiRaid": {
@@ -667,11 +702,12 @@ function register(router, client) {
         case "writeBehind": {
           return res.json({
             success: true,
-            guildId,
+            guildId: targetGuildId,
             pipelineId,
             enabled: true,
             systemManaged: true,
-            message: "Pipeline sistem inti aktif permanen untuk stabilitas database.",
+            message:
+              "Pipeline sistem inti aktif permanen untuk stabilitas database.",
           });
         }
         default:
@@ -680,7 +716,7 @@ function register(router, client) {
 
       return res.json({
         success: true,
-        guildId,
+        guildId: targetGuildId,
         pipelineId,
         enabled: isEnabled,
         message: `Pipeline ${pipelineId} berhasil ${isEnabled ? "diaktifkan" : "dinonaktifkan"}.`,
@@ -1007,6 +1043,48 @@ function register(router, client) {
         growth: {
           current: { users: userCount, guilds: guildCount },
           trend,
+        },
+      });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // --- 13. Live Server Radar & Activity Matrix ---
+  router.get("/radar", async (req, res) => {
+    try {
+      const worldBossEngine = require("../../../src/survival/engines/worldBossEngine");
+      const astralService = require("../../../src/services/astralService");
+      const StockMarketEngine = require("../../../src/services/stockMarketEngine");
+
+      let activeBoss = null;
+      try {
+        activeBoss = await worldBossEngine.getActiveBoss();
+      } catch (_) {}
+
+      let astralWeather = null;
+      try {
+        astralWeather = await astralService.getGuildAstralWeather("global");
+      } catch (_) {}
+
+      let marketSnapshot = null;
+      try {
+        marketSnapshot = await StockMarketEngine.getMarketOverview();
+      } catch (_) {}
+
+      const stats = {
+        totalOnlineUsers: client.guilds ? client.guilds.cache.reduce((acc, g) => acc + (g.memberCount || 0), 0) : 0,
+        activeVoiceChannels: client.channels ? client.channels.cache.filter((c) => c.isVoiceBased && c.isVoiceBased()).size : 0,
+        timestamp: Date.now(),
+      };
+
+      res.json({
+        success: true,
+        radar: {
+          worldBoss: activeBoss,
+          astralWeather,
+          marketSnapshot,
+          stats,
         },
       });
     } catch (err) {

@@ -275,3 +275,107 @@ test("Security: POST /api/music/control dijaga dengan requireGuildManager", () =
     "POST /music/control harus memiliki middleware otorisasi requireGuildManager",
   );
 });
+
+// -----------------------------------------------------------------------------
+// 5. Uji Keamanan Baru Milestone 2 (Auth Bypass, IDOR & Route Protection)
+// -----------------------------------------------------------------------------
+test("Security M2: POST /api/music/:action menolak akses tanpa autentikasi (HTTP 401)", async () => {
+  const mockClient = { poru: { players: new Map() } };
+  const router = apiRoutes(mockClient);
+
+  const musicActionRoute = router.stack.find(
+    (layer) =>
+      layer.route &&
+      layer.route.path === "/music/:action" &&
+      layer.route.methods.post,
+  );
+  assert.ok(musicActionRoute, "Route POST /music/:action harus terdaftar");
+  assert.ok(
+    musicActionRoute.route.stack.length >= 2,
+    "POST /music/:action harus memiliki middleware otorisasi requireGuildManager",
+  );
+
+  const { req, res, getStatus, getJson } = createMockReqRes({
+    user: null,
+    params: { action: "skip" },
+    body: { guildId: "123456789012345678" },
+  });
+
+  const middleware = musicActionRoute.route.stack[0].handle;
+  let nextCalled = false;
+  await middleware(req, res, () => {
+    nextCalled = true;
+  });
+
+  assert.equal(nextCalled, false, "next() tidak boleh dipanggil untuk user yang belum login");
+  assert.equal(getStatus(), 401, "Harus mengembalikan HTTP 401 Unauthorized");
+  assert.equal(getJson()?.success, false);
+});
+
+test("Security M2: GET /api/realtime/survival tidak membocorkan data vital pengguna lain ke non-owner", async () => {
+  const mockClient = { poru: { players: new Map() } };
+  const router = apiRoutes(mockClient);
+
+  const survivalRoute = router.stack.find(
+    (layer) =>
+      layer.route &&
+      layer.route.path === "/realtime/survival" &&
+      layer.route.methods.get,
+  );
+  assert.ok(survivalRoute, "Route GET /realtime/survival harus terdaftar");
+
+  // Non-owner meminta data korban via query param ?userId=victim_id
+  const nonOwnerUser = { id: "111111111111111111", username: "RegularUser" };
+  const victimId = "999999999999999999";
+
+  const { req, res, getJson } = createMockReqRes({
+    user: nonOwnerUser,
+    query: { userId: victimId },
+  });
+
+  const handler = survivalRoute.route.stack[0].handle;
+  await handler(req, res);
+
+  const body = getJson();
+  assert.ok(body, "Response harus berupa JSON");
+  // currentUser tidak boleh membocorkan data victimId
+  if (body.currentUser) {
+    assert.notEqual(
+      body.currentUser.id,
+      victimId,
+      "Data currentUser tidak boleh membocorkan ID pengguna korban",
+    );
+  }
+});
+
+test("Security M2: POST /api/inventory/action tidak dapat di-bypass dengan ?preview=1", async () => {
+  const userRoutes = require("./user");
+  const mockClient = { users: { cache: new Map() } };
+  const router = userRoutes(mockClient);
+
+  const inventoryActionRoute = router.stack.find(
+    (layer) =>
+      layer.route &&
+      layer.route.path === "/api/inventory/action" &&
+      layer.route.methods.post,
+  );
+  assert.ok(inventoryActionRoute, "Route POST /api/inventory/action harus terdaftar");
+
+  // Penyerang mencoba bypass auth dengan parameter ?preview=1 pada POST
+  const { req, res, getStatus, getJson } = createMockReqRes({
+    user: null,
+    query: { preview: "1" },
+    reqOverrides: { method: "POST" },
+    body: { itemId: "wood", itemIdx: 0, action: "sell" },
+  });
+
+  const authMiddleware = inventoryActionRoute.route.stack[0].handle;
+  let nextCalled = false;
+  await authMiddleware(req, res, () => {
+    nextCalled = true;
+  });
+
+  assert.equal(nextCalled, false, "next() tidak boleh dipanggil saat bypass preview dicoba pada POST");
+  assert.equal(getStatus(), 401, "Harus menolak akses dengan HTTP 401");
+  assert.equal(getJson()?.success, false);
+});

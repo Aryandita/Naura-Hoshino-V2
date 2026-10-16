@@ -666,6 +666,30 @@ function register(router, client) {
         raiderName,
         lootAmount,
       } = req.body || {};
+
+      const tradeEngine = require("../../../src/services/tradeEngine");
+      let isAuthorized = false;
+
+      if (isOwner(req.user.id)) {
+        isAuthorized = true;
+      } else {
+        const userCaravan = await tradeEngine.getActiveCaravan(req.user.id);
+        if (
+          userCaravan &&
+          (!caravanId || String(userCaravan.id) === String(caravanId))
+        ) {
+          isAuthorized = true;
+        }
+      }
+
+      if (!isAuthorized) {
+        return res.status(403).json({
+          success: false,
+          error:
+            "Akses ditolak: Hanya pemilik karavan aktif atau bot owner yang dapat menyiarkan sinyal darurat penyergapan.",
+        });
+      }
+
       const targetOwner = isOwner(req.user.id)
         ? ownerUserId || req.user.id
         : req.user.id;

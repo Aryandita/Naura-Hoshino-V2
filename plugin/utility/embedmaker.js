@@ -1,3 +1,4 @@
+const { logger } = require("../../src/managers/logger");
 const {
   SlashCommandBuilder,
   ActionRowBuilder,
@@ -159,7 +160,11 @@ module.exports = {
         ),
       );
     } catch (err) {
-      // Modal timeout atau user batal submit, abaikan
+      if (err?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(err.code)) {
+        // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+      } else {
+        logger.debug("[embedmaker:execute] Interaksi Discord lifecycle gagal: " + (err?.message || err));
+      }
     }
   },
 };

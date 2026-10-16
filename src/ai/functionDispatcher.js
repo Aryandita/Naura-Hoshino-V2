@@ -12,7 +12,9 @@ function safeParseDuration(str) {
     try {
       const parsed = parseDuration(str);
       if (parsed) return parsed;
-    } catch (e) {}
+    } catch (e) {
+      logger.debug("[functionDispatcher:safeParseDuration] Parsing data gagal, menggunakan fallback: " + (e?.message || e));
+    }
   }
   const match = String(str)
     .trim()

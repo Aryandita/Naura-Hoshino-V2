@@ -1,3 +1,4 @@
+const { logger } = require("../../src/managers/logger");
 const {
   SlashCommandBuilder,
   ActionRowBuilder,
@@ -265,7 +266,9 @@ module.exports = {
       let room = null;
       try {
         room = await UserRoom.findOne({ userId: targetUser.id });
-      } catch (_) {}
+      } catch (err) {
+        logger.error("[naura:execute] Operasi database gagal: " + (err?.message || err), err);
+      }
 
       if (!room) {
         room = {
@@ -440,7 +443,9 @@ module.exports = {
         if (i.customId === "naura_talk_coffee") {
           try {
             await cacheManager.incrementUserProfile(user.id, "reputation", 5);
-          } catch (_) {}
+          } catch (err) {
+            logger.error("[naura:execute] Mutasi saldo ekonomi/survival gagal: " + (err?.message || err), err);
+          }
           const newRep = rep + 5;
           return i.update(
             buildContainerV2({

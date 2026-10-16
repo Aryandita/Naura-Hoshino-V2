@@ -135,19 +135,20 @@ function register(router, client) {
   // --- 2. Music Control Handler ---
   const handleMusicControl = async (req, res) => {
     try {
-      const { action, value, guildId } = req.body || {};
+      const { action, value } = req.body || {};
       if (!action) {
         return res.status(400).json({ success: false, error: "Missing action" });
       }
 
+      const targetGuildId = req.guildId;
       let player = null;
       if (
-        guildId &&
-        guildId !== "current" &&
-        guildId !== "sandbox" &&
-        guildId !== "demo"
+        targetGuildId &&
+        targetGuildId !== "current" &&
+        targetGuildId !== "sandbox" &&
+        targetGuildId !== "demo"
       ) {
-        player = client.poru?.players?.get(String(guildId)) || null;
+        player = client.poru?.players?.get(String(targetGuildId)) || null;
       }
 
       if (!player) {
@@ -198,7 +199,7 @@ function register(router, client) {
 
   router.post("/music/control", requireGuildManager, handleMusicControl);
 
-  router.post("/music/:action", (req, res, next) => {
+  router.post("/music/:action", requireGuildManager, (req, res, next) => {
     if (req.params.action === "control") return next();
     req.body = req.body || {};
     req.body.action = req.params.action;

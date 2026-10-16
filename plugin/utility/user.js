@@ -1,3 +1,4 @@
+const { logger } = require("../../src/managers/logger");
 const { SlashCommandBuilder } = require("discord.js");
 const { AttachmentBuilder } = require("discord.js");
 const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
@@ -43,7 +44,7 @@ module.exports = {
               .map(m => m.displayName || m.user.username);
           }
         } catch (e) {
-          // Fallback if failed to fetch voice channel
+          logger.warn("[user:execute] Permintaan API eksternal gagal: " + (e?.message || e));
         }
 
         const payload = {

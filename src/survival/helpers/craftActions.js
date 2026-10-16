@@ -39,7 +39,7 @@ async function bumpQuest(userId) {
     const { incrementQuestProgress } = require("../engines/questGenerator");
     await incrementQuestProgress(userId, "craft");
   } catch (err) {
-    // Misi harian bersifat pelengkap; kegagalannya tidak boleh membatalkan tempa.
+    // Intentional: Misi harian bersifat pelengkap; kegagalannya tidak boleh membatalkan tempa.
   }
 }
 
@@ -66,7 +66,9 @@ async function assemble({ userId, survival, profile, blueprintId }) {
   try {
     const seasonEngine = require("../../services/seasonEngine");
     await seasonEngine.addSeasonXp(userId, 15);
-  } catch (err) {}
+  } catch (err) {
+    // Intentional: Lingkungan atau modul opsional dilewati
+  }
 
   return { ok: true, itemId: blueprint.id, name: blueprint.name, amount };
 }
@@ -138,7 +140,9 @@ async function smelt({ userId, survival, profile, outputId }) {
   try {
     const seasonEngine = require("../../services/seasonEngine");
     await seasonEngine.addSeasonXp(userId, 20);
-  } catch (err) {}
+  } catch (err) {
+    // Intentional: Lingkungan atau modul opsional dilewati
+  }
 
   return {
     ok: true,
@@ -200,7 +204,9 @@ async function upgrade({ userId, survival, profile, fromId }) {
   try {
     const seasonEngine = require("../../services/seasonEngine");
     await seasonEngine.addSeasonXp(userId, 30);
-  } catch (err) {}
+  } catch (err) {
+    // Intentional: Lingkungan atau modul opsional dilewati
+  }
 
   return {
     ok: true,

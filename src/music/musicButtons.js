@@ -1,3 +1,4 @@
+const { logger } = require("../managers/logger");
 /* eslint-disable no-unreachable */
 const { MessageFlags } = require("discord.js");
 // Lokasi: src/events/interactions/musicButtons.js
@@ -390,7 +391,9 @@ module.exports = async (interaction, client) => {
         guildData.changed("music", true);
         await guildData.save({ fields: ["music"] });
         cacheManager.invalidateGuildSettings(interaction.guildId);
-      } catch (e) {}
+      } catch (e) {
+        logger.error("[musicButtons] Operasi database gagal: " + (e?.message || e), e);
+      }
 
       if (player.is247) {
         if (!player.currentTrack && !player.isPlaying) {

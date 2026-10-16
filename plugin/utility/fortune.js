@@ -1,3 +1,4 @@
+const { logger } = require("../../src/managers/logger");
 /**
  * @namespace: plugin/utility/fortune.js
  * @type: Command
@@ -189,7 +190,9 @@ module.exports = {
         parts: [{ text: prompt }],
       });
       if (response) aiWisdom = response.trim();
-    } catch (_) {}
+    } catch (err) {
+      logger.debug("[fortune:execute] Galat pada rutinitas aplikasi: " + (err?.message || err));
+    }
 
     // Simpan status buff ke rpg_state
     await cacheManager.mutateUserSurvivalJson(userId, "rpg_state", (state) => {

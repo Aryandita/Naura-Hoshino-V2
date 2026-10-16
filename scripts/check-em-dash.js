@@ -25,6 +25,7 @@ const SKIP_DIRS = new Set([
   "node_modules",
   ".git",
   ".github/ISSUE_TEMPLATE",
+  ".agents",
   "bin",
   "coverage",
   "dist",
@@ -92,7 +93,7 @@ function replaceEmDashes(line) {
 }
 
 function shouldSkipDir(relDir) {
-  const parts = relDir.split(path.sep);
+  const parts = relDir.split(/[/\\]/);
   return parts.some((part) => SKIP_DIRS.has(part)) || SKIP_DIRS.has(relDir);
 }
 

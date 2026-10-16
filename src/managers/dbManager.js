@@ -143,7 +143,7 @@ function setupAssociations() {
       });
     }
   } catch (e) {
-    // Safe fallback jika dipanggil saat circular dependency belum selesai
+    logger.debug("[dbManager:setupAssociations] Galat pada rutinitas aplikasi: " + (e?.message || e));
   }
 }
 setupAssociations();

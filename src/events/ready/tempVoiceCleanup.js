@@ -68,7 +68,9 @@ module.exports = {
                 .catch(() => {});
               client.trackedTempChannels.delete(channelId);
             }
-          } catch (e) {}
+          } catch (e) {
+            logger.warn("[tempVoiceCleanup:execute] Permintaan API eksternal gagal: " + (e?.message || e));
+          }
         }
       },
       5 * 60 * 1000,

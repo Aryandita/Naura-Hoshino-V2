@@ -129,8 +129,8 @@ async function announceLevelUp(profile, user, guild, currentChannel) {
       if (member) {
         await syncMemberRoles(member, { level: profile.level });
       }
-    } catch {
-      // Abaikan bila member tidak ditemukan di cache
+    } catch (err) {
+      logger.debug("[levelingEngine:announceLevelUp] Subrutin layanan gagal: " + (err?.message || err));
     }
   } catch (e) {
     logger.error("[LEVELING] Gagal mengirim notifikasi naik level:", e);

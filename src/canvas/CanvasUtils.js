@@ -318,7 +318,9 @@ async function generateSurvivalProfileImage(
     ctx.clip();
     ctx.drawImage(avaImg, AVA_CX - AVA_R, AVA_CY - AVA_R, AVA_R * 2, AVA_R * 2);
     ctx.restore();
-  } catch (_) {}
+  } catch (err) {
+    logger.warn("[CanvasUtils:generateSurvivalProfileImage] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
+  }
 
   // ──────────────────────────────────────────
   // 3. IDENTITY (name, level, XP)
@@ -872,7 +874,9 @@ async function generateSurvivalProfileImage(
         BOT_AVA_R * 2,
       );
       ctx.restore();
-    } catch (_) {}
+    } catch (err) {
+      logger.warn("[CanvasUtils:generateSurvivalProfileImage] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
+    }
   }
 
   // System label
@@ -937,7 +941,9 @@ async function generateMusicProfileImage(user, stats, clientAvatar) {
       ctx.fillStyle = "rgba(7, 10, 18, 0.82)";
       ctx.fillRect(0, 0, W, H);
       bgImgLoaded = true;
-    } catch (_) {}
+    } catch (err) {
+      logger.warn("[CanvasUtils:generateMusicProfileImage] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
+    }
   }
 
   if (!bgImgLoaded) {
@@ -1061,7 +1067,9 @@ async function generateMusicProfileImage(user, stats, clientAvatar) {
   } catch (_) {
     try {
       userAvatarImg = await loadImage(clientAvatar);
-    } catch (_2) {}
+    } catch (_2) {
+      logger.warn("[CanvasUtils:generateMusicProfileImage] Render visual canvas atau pemuatan aset gagal: " + (_2?.message || _2));
+    }
   }
   if (userAvatarImg) {
     ctx.save();
@@ -1306,7 +1314,9 @@ async function generateMusicProfileImage(user, stats, clientAvatar) {
   let nauraImg = null;
   try {
     nauraImg = await loadImage(clientAvatar);
-  } catch (_) {}
+  } catch (err) {
+    logger.warn("[CanvasUtils:generateMusicProfileImage] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
+  }
   if (nauraImg) {
     ctx.save();
     ctx.beginPath();
@@ -1381,7 +1391,9 @@ async function generateMusicPanelImage(track, currentPos, clientAvatar) {
       ctx.fillStyle = "rgba(9, 11, 16, 0.78)";
       ctx.fillRect(0, 0, W, H);
       bgImgLoaded = true;
-    } catch (_) {}
+    } catch (err) {
+      logger.warn("[CanvasUtils:generateMusicPanelImage] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
+    }
   }
 
   if (!bgImgLoaded) {
@@ -1471,7 +1483,9 @@ async function generateMusicPanelImage(track, currentPos, clientAvatar) {
           });
           thumbImg = await loadImage(Buffer.from(resp.data));
         }
-      } catch (_2) {}
+      } catch (_2) {
+        logger.warn("[CanvasUtils:generateMusicPanelImage] Render visual canvas atau pemuatan aset gagal: " + (_2?.message || _2));
+      }
     }
   }
 
@@ -1746,7 +1760,9 @@ async function generateWelcomeImage(
   });
   try {
     userAvatarImg = await loadImage(avatarUrl);
-  } catch (e) {}
+  } catch (e) {
+    logger.warn("[CanvasUtils:generateWelcomeImage] Render visual canvas atau pemuatan aset gagal: " + (e?.message || e));
+  }
 
   // Destructure custom layout parameters with failsafe defaults
   const avatarX = config && config.avatarX !== undefined ? config.avatarX : 180;
@@ -2296,7 +2312,9 @@ async function generateRankCard(
   if (customBg) {
     try {
       bgImg = await loadImage(customBg);
-    } catch (_) {}
+    } catch (err) {
+      logger.warn("[CanvasUtils:generateRankCard] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
+    }
   }
 
   if (bgImg) {
@@ -2427,7 +2445,9 @@ async function generateRankCard(
           avatarSize + 20,
         );
       }
-    } catch (_) {}
+    } catch (err) {
+      logger.warn("[CanvasUtils:generateRankCard] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
+    }
   }
 
   // 4. Metrics (Top Right): Clean Rank & Level Badge

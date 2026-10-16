@@ -188,7 +188,9 @@ class MusicManager {
 
       const payload = await cached.generatePayload(player.position || 0, true);
       await msg.edit(payload).catch(() => {});
-    } catch (e) {}
+    } catch (e) {
+      logger.debug("[musicManager:updatePanelEmbed] Operasi audio/voice gagal: " + (e?.message || e));
+    }
   }
 
   /**
@@ -300,8 +302,8 @@ class MusicManager {
           3600,
         );
       }
-    } catch (_) {
-      // Abaikan bila Redis tidak tersedia
+    } catch (err) {
+      logger.warn("[musicManager:saveQueueState] Operasi cache Redis gagal: " + (err?.message || err));
     }
   }
 
@@ -319,8 +321,8 @@ class MusicManager {
         const raw = await redis.get(`lavalink:queue:${guildId}`);
         if (raw) return JSON.parse(raw);
       }
-    } catch (_) {
-      // Abaikan bila Redis tidak tersedia
+    } catch (err) {
+      logger.warn("[musicManager:getSavedQueueState] Operasi cache Redis gagal: " + (err?.message || err));
     }
 
     return this.savedQueues.get(guildId) || null;
@@ -339,8 +341,8 @@ class MusicManager {
       if (redis?.isReady) {
         await redis.del(`lavalink:queue:${guildId}`);
       }
-    } catch (_) {
-      // Abaikan bila Redis tidak tersedia
+    } catch (err) {
+      logger.warn("[musicManager:clearSavedQueueState] Operasi cache Redis gagal: " + (err?.message || err));
     }
   }
 

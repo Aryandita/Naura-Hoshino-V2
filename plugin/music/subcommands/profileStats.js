@@ -1,4 +1,5 @@
 "use strict";
+const { logger } = require("../../../src/managers/logger");
 
 const { AttachmentBuilder } = require("discord.js");
 const ui = require("../../../src/config/ui");
@@ -101,7 +102,9 @@ module.exports = {
           if (hist.history) {
             tracks = Object.keys(hist.history).slice(0, 10);
           }
-        } catch (_) {}
+        } catch (err) {
+          logger.debug("[profileStats:aura] Operasi audio/voice gagal: " + (err?.message || err));
+        }
       }
 
       if (tracks.length === 0 && poru && guild) {

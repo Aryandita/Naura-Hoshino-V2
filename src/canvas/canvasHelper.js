@@ -1,3 +1,4 @@
+const { logger } = require("../managers/logger");
 // Lokasi: src/utils/canvasHelper.js
 const fs = require("fs");
 const canvasRuntime = require("./canvasRuntime");
@@ -94,7 +95,9 @@ async function generateMusicProfileImage(user, stats, clientAvatar) {
       ctx.fillStyle = "rgba(7, 10, 18, 0.82)";
       ctx.fillRect(0, 0, W, H);
       bgImgLoaded = true;
-    } catch (_) {}
+    } catch (err) {
+      logger.warn("[canvasHelper:generateMusicProfileImage] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
+    }
   }
 
   if (!bgImgLoaded) {
@@ -218,7 +221,9 @@ async function generateMusicProfileImage(user, stats, clientAvatar) {
   } catch (_) {
     try {
       userAvatarImg = await canvasRuntime.loadImage(clientAvatar);
-    } catch (_2) {}
+    } catch (_2) {
+      logger.warn("[canvasHelper:generateMusicProfileImage] Render visual canvas atau pemuatan aset gagal: " + (_2?.message || _2));
+    }
   }
   if (userAvatarImg) {
     ctx.save();
@@ -463,7 +468,9 @@ async function generateMusicProfileImage(user, stats, clientAvatar) {
   let nauraImg = null;
   try {
     nauraImg = await canvasRuntime.loadImage(clientAvatar);
-  } catch (_) {}
+  } catch (err) {
+    logger.warn("[canvasHelper:generateMusicProfileImage] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
+  }
   if (nauraImg) {
     ctx.save();
     ctx.beginPath();
@@ -537,7 +544,9 @@ async function generateMusicPanelImage(track, currentPos, clientAvatar) {
       ctx.fillStyle = "rgba(9, 11, 16, 0.78)";
       ctx.fillRect(0, 0, W, H);
       bgImgLoaded = true;
-    } catch (_) {}
+    } catch (err) {
+      logger.warn("[canvasHelper:generateMusicPanelImage] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
+    }
   }
 
   if (!bgImgLoaded) {
@@ -627,7 +636,9 @@ async function generateMusicPanelImage(track, currentPos, clientAvatar) {
           });
           thumbImg = await canvasRuntime.loadImage(Buffer.from(resp.data));
         }
-      } catch (_2) {}
+      } catch (_2) {
+        logger.warn("[canvasHelper:generateMusicPanelImage] Render visual canvas atau pemuatan aset gagal: " + (_2?.message || _2));
+      }
     }
   }
 

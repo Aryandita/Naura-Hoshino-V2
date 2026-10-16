@@ -1,3 +1,4 @@
+const { logger } = require("../../src/managers/logger");
 /**
  * @namespace: src/commands/Core/core.js
  * @type: Command
@@ -418,7 +419,7 @@ async function handlePing(interaction, client, lang) {
       }
     }
   } catch (err) {
-    /* Lavalink belum siap; status Offline sudah memadai */
+    logger.debug("[core:handlePing] Operasi audio/voice gagal: " + (err?.message || err));
   }
 
   // --- Naura Intelligent Systems ---
@@ -607,8 +608,8 @@ async function handleStats(interaction, client, lang) {
         c.guilds.cache.reduce((acc, g) => acc + (g.memberCount || 0), 0),
       );
       totalUsers = userResults.reduce((acc, count) => acc + count, 0);
-    } catch (_) {
-      // Fallback ke cache lokal
+    } catch (err) {
+      logger.warn("[core:handleStats] Operasi kluster sharding gagal: " + (err?.message || err));
     }
   }
 
@@ -1098,7 +1099,11 @@ async function renderHelpMenuV2(
     try {
       response = await interaction.editReply(payload);
     } catch (innerErr) {
-      /* pesan sudah tidak bisa disunting */
+      if (innerErr?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(innerErr.code)) {
+        // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+      } else {
+        logger.debug("[core:renderHelpMenuV2] Interaksi Discord lifecycle gagal: " + (innerErr?.message || innerErr));
+      }
     }
   }
 
@@ -1159,7 +1164,7 @@ async function renderHelpMenuV2(
         files: updatedData.files || [],
       });
     } catch (err) {
-      // Abaikan error (misal interaction sudah expire)
+      logger.debug("[core:renderHelpMenuV2] Galat pada rutinitas aplikasi: " + (err?.message || err));
     }
   });
 
@@ -1184,7 +1189,7 @@ async function renderHelpMenuV2(
           .catch(() => {});
       }
     } catch (err) {
-      /* pesan mungkin sudah dihapus */
+      logger.debug("[core:renderHelpMenuV2] Galat pada rutinitas aplikasi: " + (err?.message || err));
     }
   });
 }

@@ -1,3 +1,4 @@
+const { logger } = require("../../src/managers/logger");
 const {
   SlashCommandBuilder,
   ActionRowBuilder,
@@ -211,7 +212,11 @@ module.exports = {
           flags: MessageFlags.Ephemeral,
         });
       } catch (e) {
-        // Timeout or error
+        if (e?.code && [10008, 40060, 50027, 50013, 50007, 10062].includes(e.code)) {
+          // Intentional: Abaikan error siklus interaksi / izin Discord yang sudah diketahui
+        } else {
+          logger.debug("[profile:execute] Interaksi Discord lifecycle gagal: " + (e?.message || e));
+        }
       }
     } else if (subcommand === "view") {
       await interaction.deferReply();

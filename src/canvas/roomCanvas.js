@@ -1,3 +1,4 @@
+const { logger } = require("../managers/logger");
 const path = require("path");
 const { createCanvas, loadImage } = require("./canvasRuntime");
 
@@ -314,7 +315,9 @@ async function renderRoomCanvas(roomData, user, pet = null, options = {}) {
     ctx.fillStyle = "#FFB6C1";
     ctx.fillText("Naura menemanimu! ✨", nauraX + 30, nauraY - 10);
     ctx.restore();
-  } catch (_) {}
+  } catch (err) {
+    logger.warn("[roomCanvas:renderRoomCanvas] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
+  }
 
   // 7. Active Pet (Walking / Sleeping on Floor)
   const petX = originX + 30;

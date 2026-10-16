@@ -148,7 +148,9 @@ function registerFontsOnce() {
       if (fs.existsSync(sf.path)) {
         try {
           GlobalFonts.registerFromPath(sf.path, sf.name);
-        } catch (_) {}
+        } catch (err) {
+          logger.warn("[canvasRuntime:registerFontsOnce] Render visual canvas atau pemuatan aset gagal: " + (err?.message || err));
+        }
       }
     }
 

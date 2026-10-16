@@ -13,6 +13,9 @@ const env = require("../../src/config/env");
 // Discord permission bit untuk MANAGE_GUILD (1 << 5).
 const MANAGE_GUILD = 1n << 5n;
 
+// Pola validasi Discord Snowflake ID (17-20 digit angka)
+const SNOWFLAKE_REGEX = /^\d{17,20}$/;
+
 /**
  * Kumpulkan daftar owner dari env.OWNER_IDS (array) maupun process.env.OWNER_ID
  * (string tunggal / dipisah koma). Hasilnya selalu array string unik.
@@ -49,7 +52,10 @@ function isLoggedIn(req) {
  * Langkah ini krusial agar pengguna tidak mengira situs ini adalah web palsu atau scam.
  */
 function requireLogin(req, res, next) {
-  if (isLoggedIn(req) || req.query?.preview === "1" || req.query?.demo === "1") return next();
+  const isPreview =
+    (req.query?.preview === "1" || req.query?.demo === "1") &&
+    req.method === "GET";
+  if (isLoggedIn(req) || isPreview) return next();
 
   // Untuk navigasi dokumen HTML biasa dari browser, izinkan halaman dimuat
   const acceptsHtml = typeof req.accepts === "function" && req.accepts("html");
@@ -166,13 +172,18 @@ function requireGuildManager(req, res, next) {
  * sehingga siapa pun bisa menjual isi tas orang lain.
  */
 function requireSelfOrOwner(req, res, next) {
-  if (req.query?.preview === "1" || req.query?.demo === "1") {
+  const isGet = req.method === "GET";
+  const isPreview =
+    (req.query?.preview === "1" || req.query?.demo === "1") && isGet;
+
+  if (isPreview) {
     req.targetUserId = "demo_user";
     req.isPreview = true;
     return next();
   }
+
   if (!isLoggedIn(req)) {
-    if (req.method === "GET") {
+    if (isGet) {
       req.targetUserId = "demo_user";
       req.isPreview = true;
       return next();
@@ -183,15 +194,59 @@ function requireSelfOrOwner(req, res, next) {
     });
   }
 
-  const targetId = req.body?.userId || req.query?.userId || req.user.id;
-  if (String(targetId) !== String(req.user.id) && !isOwner(req.user.id)) {
-    return res.status(403).json({
+  const isMutation = ["POST", "PUT", "DELETE", "PATCH"].includes(
+    String(req.method || "").toUpperCase(),
+  );
+
+  let targetId;
+  if (isMutation) {
+    // Pada metode mutasi (POST/PUT/DELETE), req.query?.userId dilarang
+    if (
+      req.query?.userId &&
+      String(req.query.userId) !== String(req.user.id) &&
+      !isOwner(req.user.id)
+    ) {
+      return res.status(403).json({
+        success: false,
+        error: "Akses ditolak: Kamu hanya boleh melihat atau mengubah datamu sendiri.",
+      });
+    }
+
+    if (isOwner(req.user.id) && req.body?.userId) {
+      targetId = req.body.userId;
+    } else {
+      targetId = req.user.id;
+    }
+
+    if (
+      req.body?.userId &&
+      String(req.body.userId) !== String(req.user.id) &&
+      !isOwner(req.user.id)
+    ) {
+      return res.status(403).json({
+        success: false,
+        error: "Akses ditolak: Kamu hanya boleh melihat atau mengubah datamu sendiri.",
+      });
+    }
+  } else {
+    targetId = req.body?.userId || req.query?.userId || req.user.id;
+    if (String(targetId) !== String(req.user.id) && !isOwner(req.user.id)) {
+      return res.status(403).json({
+        success: false,
+        error: "Akses ditolak: Kamu hanya boleh melihat atau mengubah datamu sendiri.",
+      });
+    }
+  }
+
+  const targetUserIdStr = String(targetId);
+  if (targetUserIdStr !== "demo_user" && !SNOWFLAKE_REGEX.test(targetUserIdStr)) {
+    return res.status(400).json({
       success: false,
-      error: "Akses ditolak: Kamu hanya boleh melihat atau mengubah datamu sendiri.",
+      error: "User ID tidak valid. Format Snowflake Discord diperlukan.",
     });
   }
 
-  req.targetUserId = String(targetId);
+  req.targetUserId = targetUserIdStr;
   return next();
 }
 

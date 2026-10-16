@@ -40,6 +40,7 @@ module.exports = [
       "dashboard/public/**",
       "scratch/**",
       "pending_plugin/**",
+      ".agents/**",
     ],
   },
   {

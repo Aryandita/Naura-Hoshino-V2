@@ -256,7 +256,9 @@ class LandEngine {
     if (redisManager.isReady) {
       try {
         await redisManager.set(key, JSON.stringify(posData), 3600);
-      } catch (_) {}
+      } catch (err) {
+        logger.warn("[landEngine:updatePlayerPosition] Operasi cache Redis gagal: " + (err?.message || err));
+      }
     }
     if (!this.playerPositions) this.playerPositions = new Map();
     this.playerPositions.set(`${guildId}:${userId}`, posData);
@@ -275,7 +277,9 @@ class LandEngine {
       try {
         const raw = await redisManager.get(key);
         if (raw) return typeof raw === "string" ? JSON.parse(raw) : raw;
-      } catch (_) {}
+      } catch (err) {
+        logger.warn("[landEngine:getPlayerPosition] Operasi cache Redis gagal: " + (err?.message || err));
+      }
     }
     if (!this.playerPositions) this.playerPositions = new Map();
     return this.playerPositions.get(`${guildId}:${userId}`) || null;

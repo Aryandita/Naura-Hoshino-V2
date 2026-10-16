@@ -166,7 +166,9 @@ class TradeEngine {
             JSON.stringify(caravan),
             route.durationMinutes * 60 + 3600,
           );
-        } catch (_) {}
+        } catch (err) {
+          logger.warn("[tradeEngine:dispatchCaravan] Operasi cache Redis gagal: " + (err?.message || err));
+        }
       }
 
       // Simpan ke PostgreSQL TradeCaravan
@@ -209,7 +211,9 @@ class TradeEngine {
       try {
         const raw = await redisManager.get(key);
         if (raw) return JSON.parse(raw);
-      } catch (_) {}
+      } catch (err) {
+        logger.warn("[tradeEngine:getActiveCaravan] Operasi cache Redis gagal: " + (err?.message || err));
+      }
     }
     return null;
   }
@@ -243,7 +247,9 @@ class TradeEngine {
           escortsCount: c.escortsCount || 0,
         }));
       }
-    } catch (_) {}
+    } catch (err) {
+      logger.error("[tradeEngine:getActiveCaravans] Operasi database gagal: " + (err?.message || err), err);
+    }
 
     // Fallback radar simulated data jika belum ada karavan yang meluncur
     return [
@@ -313,7 +319,9 @@ class TradeEngine {
     if (redisManager.isReady) {
       try {
         await redisManager.del(key);
-      } catch (_) {}
+      } catch (err) {
+        logger.warn("[tradeEngine:claimCaravanProfits] Operasi cache Redis gagal: " + (err?.message || err));
+      }
     }
 
     // Update TradeCaravan di database bila ada
@@ -323,7 +331,9 @@ class TradeEngine {
         { status: wasAmbushed ? "AMBUSHED" : "CLAIMED" },
         { where: { caravanId: caravan.id } },
       );
-    } catch (_) {}
+    } catch (err) {
+      logger.error("[tradeEngine:claimCaravanProfits] Operasi database gagal: " + (err?.message || err), err);
+    }
 
     logger.info(
       `[TradeEngine] User ${displayName} mengklaim laba karavan: +${actualProfit} koin (Ambushed: ${wasAmbushed})`,
@@ -413,7 +423,9 @@ class TradeEngine {
                   c.status = "AMBUSHED";
                   await redisManager.set(key, JSON.stringify(c), 3600);
                 }
-              } catch (_) {}
+              } catch (err) {
+                logger.warn("[tradeEngine:ambushCaravan] Operasi cache Redis gagal: " + (err?.message || err));
+              }
             }
 
             // Broadcast ambush alert via WebSocket & Web Push
@@ -464,7 +476,9 @@ class TradeEngine {
           signal: AbortSignal.timeout(1000),
         })
         .catch(() => {});
-    } catch (_) {}
+    } catch (err) {
+      logger.debug("[tradeEngine:broadcastAmbushAlert] Galat pada rutinitas aplikasi: " + (err?.message || err));
+    }
   }
 
   /**
