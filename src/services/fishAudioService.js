@@ -375,6 +375,54 @@ class FishAudioService {
     }
     return null;
   }
+
+  /**
+   * Menghasilkan intro DJ audio atau teks fallback untuk trek musik
+   * @param {object} params
+   * @param {string} params.trackTitle
+   * @param {string} [params.trackAuthor]
+   * @param {string} [params.requesterName]
+   * @param {string[]} [params.listenerNames]
+   * @param {string} [params.lang]
+   * @returns {Promise<{script: string, audioBuffer: Buffer|null, classification: object, fallbackText: boolean}>}
+   */
+  async generateDjCompanionIntro({
+    trackTitle,
+    trackAuthor = "Musisi",
+    requesterName = "Sobat Naura",
+    listenerNames = [],
+    lang = "id",
+  }) {
+    const aiDjManager = require("../managers/aiDjManager");
+    const { script, classification } = aiDjManager.generateDjScript(
+      { title: trackTitle, author: trackAuthor },
+      requesterName,
+      listenerNames,
+      lang,
+    );
+
+    let audioBuffer = null;
+    let fallbackText = true;
+
+    if (this.isConfigured()) {
+      try {
+        audioBuffer = await this.generateSpeech(script, {
+          format: "mp3",
+          latency: "low",
+        });
+        if (audioBuffer) fallbackText = false;
+      } catch (err) {
+        logger.debug(`[FishAudio] AI DJ fallback ke mode teks: ${err.message}`);
+      }
+    }
+
+    return {
+      script,
+      audioBuffer,
+      classification,
+      fallbackText,
+    };
+  }
 }
 
 module.exports = new FishAudioService();
