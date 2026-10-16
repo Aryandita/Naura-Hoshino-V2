@@ -234,14 +234,7 @@ export class AnimationController {
         // 1. Update Mixer animasi skeletal bawaan
         this.mixer.update(delta);
 
-        // 2. Update fisika bawaan VRM
-        if (this.vrm) {
-            try {
-                this.vrm.update(delta);
-            } catch (err) {
-                console.warn("[NauraAnimation:VRM] vrm.update error:", err.message);
-            }
-        }
+        // 2. Sinkronisasi VRM dieksekusi di akhir frame setelah seluruh sendi humanoid diperbarui
 
         // 3. Timer untuk aksi berdurasi non-looping
         if (!this.isActionLooping && this.actionDuration > 0) {
@@ -359,6 +352,15 @@ export class AnimationController {
 
         this.parts.face.setMorphTargets(targetMorphs);
         this.parts.face.update(delta, elapsed, context);
+
+        // 7. Sinkronisasi normalized humanoid bones VRM ke raw skeleton bones & spring physics di frame yang sama
+        if (this.vrm) {
+            try {
+                this.vrm.update(delta);
+            } catch (err) {
+                console.warn("[NauraAnimation:VRM] vrm.update error:", err.message);
+            }
+        }
 
         // Legacy controllers (arms, hands, legs) tetap tersimpan di this.parts untuk backward-compat getPart(),
         // namun tidak di-update ganda per-frame karena sendi-sendinya telah ditangani secara presisi

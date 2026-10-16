@@ -2,16 +2,13 @@
  * parts/rightArm.js - Pengendali Lengan Kanan (Right Arm Kinematics).
  *
  * Mengendalikan secara eksklusif:
- * 1. Bahu kanan (rightShoulder) - klavikula dan elevasi sekunder.
+ * 1. Bahu kanan (rightShoulder) - klavikula dan elevasi sekunder + napas organik.
  * 2. Lengan atas kanan (rightUpperArm) - rotasi bahu utama (pose Wave/Cheers).
- * 3. Lengan bawah / siku kanan (rightLowerArm) - fleksi siku aktif saat melambai.
- *
- * Isolasi penuh: kesalahan di file ini TIDAK mempengaruhi lengan kiri.
- * Batas sudut diambil dari RIG_LIMITS (sumbu rig GLB: X = samping, Y = twist, Z = maju).
+ * 3. Lengan bawah / siku kanan (rightLowerArm) - fleksi siku aktif + ayunan mikro sekunder.
  */
 
 import { slerpBoneDirect } from "../core/interpolation.js";
-import { RIG_LIMITS, clampToLimits } from "../core/rigProfile.js";
+import { RIG_LIMITS, clampToLimits, armElevation } from "../core/rigProfile.js";
 
 const RIGHT_ARM_KEYS = [
     "rightShoulder",
@@ -29,10 +26,6 @@ export class RightArmController {
         }
     }
 
-    /**
-     * Inisialisasi referensi bone dari peta humanoidBones.
-     * @param {Record<string, THREE.Object3D>} humanoidBones
-     */
     init(humanoidBones = {}) {
         for (const k of RIGHT_ARM_KEYS) {
             this.bones[k] = humanoidBones[k] || null;
@@ -40,16 +33,44 @@ export class RightArmController {
         }
     }
 
-    /**
-     * Update loop per frame: lerp rotasi lengan kanan menuju target keyframe.
-     * @param {number} delta - Waktu antar frame (detik).
-     * @param {number} elapsed - Waktu total berjalan (detik).
-     * @param {{ targetBones: Record<string,number[]> }} context
-     */
     update(delta, elapsed, context = {}) {
         const targetBones = context.targetBones || {};
-        const baseLerp = 8.0;   // lengan atas & bahu: halus
-        const elbowLerp = 13.0; // siku lebih responsif agar ayunan lambaian tidak teredam
+        const baseLerp = 9.0;
+        const elbowLerp = 13.5;
+
+        const breathWave = Math.sin(elapsed * 1.75) * 0.012;
+        const swayWave = Math.cos(elapsed * 1.15) * 0.010;
+
+        const hasUpperTrack = Array.isArray(targetBones.rightUpperArm);
+        const hasLowerTrack = Array.isArray(targetBones.rightLowerArm);
+
+        const rawUpper = hasUpperTrack
+            ? targetBones.rightUpperArm
+            : [0.048 - breathWave * 0.5, 0.008, 0.015 - swayWave];
+        const rawLower = hasLowerTrack
+            ? targetBones.rightLowerArm
+            : [0.115 - breathWave * 0.4, -0.015, 0.025 + Math.sin(elapsed * 1.75 - 0.6) * 0.014];
+
+        const elev = armElevation(rawUpper);
+        const rawShoulder = targetBones.rightShoulder || [
+            Math.min(0.12, elev * 0.06) + Math.max(0, breathWave) * 0.4,
+            0,
+            0,
+        ];
+
+        const resolvedTargets = {
+            rightShoulder: rawShoulder,
+            rightUpperArm: [
+                rawUpper[0] - (context.isIdle ? breathWave * 0.35 : 0),
+                rawUpper[1],
+                rawUpper[2] - (context.isIdle ? swayWave * 0.5 : 0),
+            ],
+            rightLowerArm: [
+                rawLower[0] - (context.isIdle ? breathWave * 0.45 : 0),
+                rawLower[1],
+                rawLower[2] + (context.isIdle ? Math.sin(elapsed * 1.75 - 0.5) * 0.016 : 0),
+            ],
+        };
 
         for (const key of RIGHT_ARM_KEYS) {
             try {
@@ -57,15 +78,13 @@ export class RightArmController {
                 if (!bone) continue;
 
                 const lerpSpeed = 1.0 - Math.exp(-(key.endsWith("LowerArm") ? elbowLerp : baseLerp) * delta);
-
-                const base = targetBones[key] || [0, 0, 0];
+                const base = resolvedTargets[key] || [0, 0, 0];
                 const current = this.currentRotations[key];
                 const target = [base[0], base[1], base[2]];
 
                 if (key === "rightUpperArm") clampToLimits(target, RIG_LIMITS.upperArm);
                 if (key === "rightLowerArm") clampToLimits(target, RIG_LIMITS.lowerArm);
 
-                // slerpBoneDirect: interpolasi langsung dari quaternion bone saat ini ke target
                 slerpBoneDirect(bone, target, lerpSpeed);
 
                 current[0] += (target[0] - current[0]) * lerpSpeed;
