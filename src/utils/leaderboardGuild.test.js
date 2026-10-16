@@ -88,12 +88,22 @@ test("dropdown guild memicu pemuatan ulang leaderboard", () => {
   );
 });
 
+const ECONOMY_API_JS = path.join(
+  __dirname,
+  "..",
+  "..",
+  "dashboard",
+  "routes",
+  "api",
+  "economy.js",
+);
+
 test("endpoint leaderboard menerima guildId tanpa mengubah skema", () => {
-  const source = read(API_JS);
+  const source = fs.existsSync(ECONOMY_API_JS) ? read(ECONOMY_API_JS) : read(API_JS);
   assert.match(
     source,
     /req\.query\.guildId/,
-    "api.js harus membaca guildId dari query string",
+    "endpoint leaderboard harus membaca guildId dari query string",
   );
   // Penanda tampilan, bukan filter database. Kalau muncul di where clause
   // berarti ada asumsi kolom guildId yang tidak pernah ada.

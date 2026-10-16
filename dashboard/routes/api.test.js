@@ -174,3 +174,116 @@ test("Dashboard API Route - GET /topology/status returns complete multi-tier tel
     "Groq LLaMA 3.3 Versatile",
   );
 });
+
+test("Dashboard API Route - GET /automations/pipelines returns structured pipeline states", async () => {
+  const mockClient = { guilds: { cache: new Map() } };
+  const router = apiRoutes(mockClient);
+
+  const pipelineRoute = router.stack.find(
+    (layer) =>
+      layer.route &&
+      layer.route.path === "/automations/pipelines" &&
+      layer.route.methods.get,
+  );
+  assert.ok(pipelineRoute, "Endpoint GET /automations/pipelines harus terdaftar");
+
+  let responseData = null;
+  let statusCode = 200;
+  const mockReq = { query: {} };
+  const mockRes = {
+    status(code) {
+      statusCode = code;
+      return this;
+    },
+    json(data) {
+      responseData = data;
+      return this;
+    },
+  };
+
+  await pipelineRoute.route.stack[0].handle(mockReq, mockRes);
+  assert.equal(statusCode, 200);
+  assert.equal(responseData.success, true);
+  assert.ok(responseData.pipelines, "Objek pipelines harus tersedia");
+  assert.equal(typeof responseData.pipelines.antiRaid, "boolean");
+  assert.equal(typeof responseData.pipelines.aiTriage, "boolean");
+  assert.equal(typeof responseData.pipelines.voiceEviction, "boolean");
+  assert.equal(typeof responseData.pipelines.autoRoleLeveling, "boolean");
+  assert.equal(responseData.pipelines.treasurySettlement, true);
+  assert.equal(responseData.pipelines.writeBehind, true);
+});
+
+test("Dashboard API Helpers - arcadeState & pushState handles distributed/fallback caching", async () => {
+  const { arcadeState, pushState } = require("./api/helpers");
+  assert.ok(arcadeState, "arcadeState helper harus ada");
+  assert.ok(pushState, "pushState helper harus ada");
+
+  const testUser = "test_user_qa_123";
+  const now = Date.now();
+
+  // Test arcadeState cooldown
+  await arcadeState.setCooldown(testUser, now);
+  const cd = await arcadeState.getCooldown(testUser);
+  assert.equal(cd, now);
+
+  // Test arcadeState daily cap
+  const today = new Date().toISOString().slice(0, 10);
+  await arcadeState.setDaily(testUser, { date: today, claimed: 150 });
+  const daily = await arcadeState.getDaily(testUser, today);
+  assert.equal(daily.date, today);
+  assert.equal(daily.claimed, 150);
+
+  // Test pushState registration
+  await pushState.setSubscription(testUser, {
+    endpoint: "https://fcm.googleapis.com/fcm/send/sample",
+  });
+  const hasSub = await pushState.hasSubscription(testUser);
+  assert.equal(hasSub, true);
+
+  const sub = await pushState.getSubscription(testUser);
+  assert.equal(sub.endpoint, "https://fcm.googleapis.com/fcm/send/sample");
+
+  await pushState.deleteSubscription(testUser);
+  const hasSubAfter = await pushState.hasSubscription(testUser);
+  assert.equal(hasSubAfter, false);
+});
+
+test("Dashboard API Modular Router - All sub-module endpoints are registered on router stack", () => {
+  const mockClient = { guilds: { cache: new Map() } };
+  const router = apiRoutes(mockClient);
+
+  const routes = router.stack
+    .filter((layer) => layer.route)
+    .map((layer) => ({
+      path: layer.route.path,
+      methods: Object.keys(layer.route.methods),
+    }));
+
+  const paths = routes.map((r) => r.path);
+
+  // Telemetry routes
+  assert.ok(paths.includes("/health"), "Harus memuat /health");
+  assert.ok(paths.includes("/realtime/overview"), "Harus memuat /realtime/overview");
+  assert.ok(paths.includes("/topology/status"), "Harus memuat /topology/status");
+
+  // Economy routes
+  assert.ok(paths.includes("/economy/deposit"), "Harus memuat /economy/deposit");
+  assert.ok(paths.includes("/economy/withdraw"), "Harus memuat /economy/withdraw");
+  assert.ok(paths.includes("/economy/transfer"), "Harus memuat /economy/transfer");
+  assert.ok(paths.includes("/realtime/leaderboard"), "Harus memuat /realtime/leaderboard");
+
+  // Music routes
+  assert.ok(paths.includes("/music/state"), "Harus memuat /music/state");
+  assert.ok(paths.includes("/music/control"), "Harus memuat /music/control");
+
+  // Activity routes
+  assert.ok(paths.includes("/chat"), "Harus memuat /chat");
+  assert.ok(paths.includes("/activity/manifest"), "Harus memuat /activity/manifest");
+  assert.ok(paths.includes("/arcade/claim"), "Harus memuat /arcade/claim");
+
+  // Admin routes
+  assert.ok(paths.includes("/discord/token"), "Harus memuat /discord/token");
+  assert.ok(paths.includes("/push/subscribe"), "Harus memuat /push/subscribe");
+  assert.ok(paths.includes("/admin/flush-cache"), "Harus memuat /admin/flush-cache");
+});
+

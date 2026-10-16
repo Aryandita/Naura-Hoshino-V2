@@ -311,7 +311,7 @@
                   <i class="fa-solid fa-shield-virus"></i>
                 </div>
                 <label class="switch">
-                  <input type="checkbox" checked class="pipeline-toggle" />
+                  <input type="checkbox" checked class="pipeline-toggle" data-pipeline="antiRaid" />
                   <span class="slider"></span>
                 </label>
               </div>
@@ -332,7 +332,7 @@
                   <i class="fa-solid fa-brain"></i>
                 </div>
                 <label class="switch">
-                  <input type="checkbox" checked class="pipeline-toggle" />
+                  <input type="checkbox" checked class="pipeline-toggle" data-pipeline="aiTriage" />
                   <span class="slider"></span>
                 </label>
               </div>
@@ -353,7 +353,7 @@
                   <i class="fa-solid fa-vault"></i>
                 </div>
                 <label class="switch">
-                  <input type="checkbox" checked class="pipeline-toggle" />
+                  <input type="checkbox" checked class="pipeline-toggle" data-pipeline="treasurySettlement" />
                   <span class="slider"></span>
                 </label>
               </div>
@@ -374,7 +374,7 @@
                   <i class="fa-solid fa-rotate"></i>
                 </div>
                 <label class="switch">
-                  <input type="checkbox" checked class="pipeline-toggle" />
+                  <input type="checkbox" checked class="pipeline-toggle" data-pipeline="writeBehind" />
                   <span class="slider"></span>
                 </label>
               </div>
@@ -395,7 +395,7 @@
                   <i class="fa-solid fa-music"></i>
                 </div>
                 <label class="switch">
-                  <input type="checkbox" checked class="pipeline-toggle" />
+                  <input type="checkbox" checked class="pipeline-toggle" data-pipeline="voiceEviction" />
                   <span class="slider"></span>
                 </label>
               </div>
@@ -416,7 +416,7 @@
                   <i class="fa-solid fa-id-card-clip"></i>
                 </div>
                 <label class="switch">
-                  <input type="checkbox" class="pipeline-toggle" />
+                  <input type="checkbox" class="pipeline-toggle" data-pipeline="autoRoleLeveling" />
                   <span class="slider"></span>
                 </label>
               </div>
@@ -478,18 +478,71 @@
         badge.innerHTML = `<i class="fa-solid fa-check"></i> ${activeCount} PIPELINE AKTIF`;
       }
 
+      async function loadPipelines() {
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const guildId = urlParams.get('guildId') || '';
+          const res = await fetch(`/api/automations/pipelines${guildId ? '?guildId=' + encodeURIComponent(guildId) : ''}`);
+          const data = await res.json().catch(() => null);
+          if (data && data.success && data.pipelines) {
+            toggles.forEach(t => {
+              const pid = t.dataset.pipeline;
+              if (pid && data.pipelines[pid] !== undefined) {
+                t.checked = Boolean(data.pipelines[pid]);
+                const card = t.closest('.auto-card');
+                const statusText = card?.querySelector('.auto-meta-bar span:last-child');
+                if (statusText) {
+                  statusText.textContent = t.checked ? 'STATUS: AKTIF' : 'STATUS: NONAKTIF';
+                  statusText.style.color = t.checked ? '#34d399' : 'var(--text-muted)';
+                }
+              }
+            });
+            updateActiveBadge();
+          }
+        } catch (_) {}
+      }
+      loadPipelines();
+
       toggles.forEach(t => {
-        t.addEventListener('change', (e) => {
+        t.addEventListener('change', async (e) => {
+          const pipelineId = e.target.dataset.pipeline;
           const card = e.target.closest('.auto-card');
-          const statusText = card.querySelector('.auto-meta-bar span:last-child');
-          if (e.target.checked) {
-            statusText.textContent = 'STATUS: AKTIF';
-            statusText.style.color = '#34d399';
-          } else {
-            statusText.textContent = 'STATUS: NONAKTIF';
-            statusText.style.color = 'var(--text-muted)';
+          const statusText = card ? card.querySelector('.auto-meta-bar span:last-child') : null;
+          const isChecked = e.target.checked;
+
+          if (statusText) {
+            statusText.textContent = isChecked ? 'STATUS: AKTIF' : 'STATUS: NONAKTIF';
+            statusText.style.color = isChecked ? '#34d399' : 'var(--text-muted)';
           }
           updateActiveBadge();
+
+          const urlParams = new URLSearchParams(window.location.search);
+          const guildId = urlParams.get('guildId') || '';
+          if (guildId && pipelineId) {
+            try {
+              const res = await fetch('/api/automations/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ guildId, pipelineId, enabled: isChecked })
+              });
+              const json = await res.json().catch(() => null);
+              if (!json || !json.success) {
+                e.target.checked = !isChecked;
+                if (statusText) {
+                  statusText.textContent = e.target.checked ? 'STATUS: AKTIF' : 'STATUS: NONAKTIF';
+                  statusText.style.color = e.target.checked ? '#34d399' : 'var(--text-muted)';
+                }
+                updateActiveBadge();
+              }
+            } catch (_) {
+              e.target.checked = !isChecked;
+              if (statusText) {
+                statusText.textContent = e.target.checked ? 'STATUS: AKTIF' : 'STATUS: NONAKTIF';
+                statusText.style.color = e.target.checked ? '#34d399' : 'var(--text-muted)';
+              }
+              updateActiveBadge();
+            }
+          }
         });
       });
 
