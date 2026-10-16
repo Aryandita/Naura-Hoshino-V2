@@ -1,0 +1,1052 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Soundboard Studio | Naura OS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;900&family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/src/css/stellar.css" />
+    <style>
+      .sound-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 16px;
+        margin-top: 20px;
+      }
+      .sound-pad {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--r-lg);
+        padding: 18px 16px;
+        cursor: pointer;
+        transition: all var(--t-spring);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 124px;
+      }
+      .sound-pad:hover {
+        background: var(--bg-surface-hv);
+        border-color: var(--primary);
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px -6px var(--primary-glow);
+      }
+      .sound-pad:active,
+      .sound-pad.playing {
+        transform: scale(0.97);
+        border-color: var(--accent-cyan);
+        background: rgba(34, 211, 238, 0.1);
+        box-shadow: 0 0 20px rgba(34, 211, 238, 0.35);
+      }
+      .sound-pad::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary), var(--accent-cyan));
+        opacity: 0;
+        transition: opacity var(--t-base);
+      }
+      .sound-pad:hover::before,
+      .sound-pad.playing::before {
+        opacity: 1;
+      }
+      .pad-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .pad-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+      }
+      .pad-key {
+        font-family: var(--font-mono, monospace);
+        font-size: 11px;
+        color: var(--text-muted);
+        background: rgba(255, 255, 255, 0.05);
+        padding: 3px 7px;
+        border-radius: 6px;
+        border: 1px solid var(--border-subtle);
+      }
+      .pad-name {
+        font-family: var(--font-heading);
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+        line-height: 1.3;
+      }
+      .pad-meta {
+        font-size: 11px;
+        color: var(--text-muted);
+        display: flex;
+        justify-content: space-between;
+      }
+      .visualizer-card {
+        background: linear-gradient(135deg, rgba(244, 114, 182, 0.05), rgba(34, 211, 238, 0.05));
+        border: 1px solid var(--border-medium);
+        border-radius: var(--r-xl);
+        padding: 20px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .viz-canvas-box {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      #audioVizCanvas {
+        height: 48px;
+        width: 220px;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.25);
+      }
+      .tab-filter-bar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .tab-btn {
+        padding: 7px 14px;
+        border-radius: var(--r-full);
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        cursor: pointer;
+        transition: all var(--t-fast);
+      }
+      .tab-btn:hover,
+      .tab-btn.active {
+        color: #fff;
+        background: var(--primary-dim);
+        border-color: var(--primary);
+      }
+      .toast-alert {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: rgba(10, 13, 24, 0.95);
+        border: 1px solid var(--primary);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(12px);
+        padding: 12px 20px;
+        border-radius: var(--r-lg);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--text-primary);
+        font-size: 13px;
+        transform: translateY(100px);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        z-index: 9999;
+      }
+      .toast-alert.show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      .pad-broadcast-btn {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        background: rgba(34, 211, 238, 0.15);
+        border: 1px solid rgba(34, 211, 238, 0.35);
+        color: var(--accent-cyan);
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .pad-broadcast-btn:hover {
+        background: var(--accent-cyan);
+        color: #0b1120;
+        transform: scale(1.1);
+      }
+      .ws-badge {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        padding: 4px 10px;
+        border-radius: var(--r-full);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .ws-badge.online {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+      }
+      .ws-badge.offline {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+      .speaker-pill {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        background: rgba(244, 114, 182, 0.15);
+        color: var(--primary);
+        border: 1px solid rgba(244, 114, 182, 0.3);
+        padding: 2px 8px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .cooldown-pill {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        background: rgba(234, 179, 8, 0.15);
+        color: #eab308;
+        border: 1px solid rgba(234, 179, 8, 0.3);
+        padding: 2px 8px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="#mainContent" class="skip-link">Lewati ke konten utama</a>
+
+    <div class="app-shell">
+      <!-- Mobile Sidebar Overlay -->
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-logo-icon">
+            <img
+              src="/assets/core/avatar.png"
+              alt="Naura"
+              onerror="this.style.display='none';this.parentElement.innerHTML='🌸';"
+            />
+          </div>
+          <div class="sidebar-brand-text">
+            <div class="sidebar-brand-name">Naura Hoshino</div>
+            <div class="sidebar-brand-sub">v2.3.0 · Online</div>
+          </div>
+          <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Tutup menu">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="sidebar-nav" role="navigation">
+          <div class="nav-group">
+            <div class="nav-group-label">Overview</div>
+            <a href="/" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gauge-high"></i></span>
+              <span>Dashboard</span>
+            </a>
+            <a href="/status" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-signal"></i></span>
+              <span>Live Status</span>
+              <span class="nav-badge">Live</span>
+            </a>
+            <a href="/feed" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-rss"></i></span>
+              <span>Activity Feed</span>
+            </a>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-group-label">Media & Audio</div>
+            <a href="/music" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-music"></i></span>
+              <span>Music Hub</span>
+            </a>
+            <a href="/soundboard" class="nav-item active">
+              <span class="nav-icon"><i class="fa-solid fa-sliders"></i></span>
+              <span>Soundboard</span>
+            </a>
+            <a href="/jam" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-guitar"></i></span>
+              <span>Jam Session</span>
+            </a>
+            <a href="/karaoke" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-microphone"></i></span>
+              <span>Karaoke</span>
+            </a>
+          </div>
+
+          <div class="nav-group">
+            <div class="nav-group-label">Configuration</div>
+            <a href="/settings" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-gears"></i></span>
+              <span>Settings</span>
+            </a>
+            <a href="/automod" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-shield-halved"></i></span>
+              <span>Automod Studio</span>
+            </a>
+            <a href="/automations" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-robot"></i></span>
+              <span>Automations</span>
+            </a>
+            <a href="/welcomer" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-palette"></i></span>
+              <span>Welcomer Card</span>
+            </a>
+            <a href="/tickets" class="nav-item">
+              <span class="nav-icon"><i class="fa-solid fa-ticket"></i></span>
+              <span>Tickets</span>
+            </a>
+          </div>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="sidebar-user" onclick="window.location.href='/'">
+            <img
+              src="/assets/core/avatar.png"
+              alt="User"
+              class="sidebar-user-avatar"
+              onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><circle cx=%2220%22 cy=%2220%22 r=%2220%22 fill=%22%23f472b6%22/><text x=%2220%22 y=%2225%22 text-anchor=%22middle%22 fill=%22white%22 font-size=%2216%22>N</text></svg>'"
+            />
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name">Guest</div>
+              <div class="sidebar-user-role">Klik untuk login</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="main-content">
+        <header class="top-header">
+          <div class="header-left">
+            <button class="hamburger-btn" id="hamburgerBtn"><i class="fa-solid fa-bars"></i></button>
+            <div>
+              <div class="page-title">Soundboard Studio</div>
+              <div class="breadcrumb">
+                <span>Naura OS</span><span class="breadcrumb-sep">/</span><span>Media & Audio</span><span class="breadcrumb-sep">/</span><span>Soundboard</span>
+              </div>
+            </div>
+          </div>
+          <div class="header-right">
+            <span class="ws-badge online" id="wsStatusBadge">
+              <i class="fa-solid fa-circle-dot"></i> WebSocket: Terhubung
+            </span>
+            <span class="badge" style="background:rgba(34,211,238,0.15);color:var(--accent-cyan);border:1px solid rgba(34,211,238,0.3);padding:6px 12px;" id="guildBadge">
+              <i class="fa-solid fa-tower-broadcast" style="margin-right:6px;"></i> Voice: Server Aktif
+            </span>
+            <button class="btn btn-primary btn-sm" id="btnUploadModal">
+              <i class="fa-solid fa-plus"></i> Tambah SFX
+            </button>
+          </div>
+        </header>
+
+        <main class="page-content" id="mainContent">
+          <!-- Visualizer & Control Bar -->
+          <div class="visualizer-card animate-in">
+            <div class="viz-canvas-box">
+              <div style="width:44px;height:44px;border-radius:12px;background:var(--primary-dim);border:1px solid var(--border-primary);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--primary);">
+                <i class="fa-solid fa-music" id="statusAudioIcon"></i>
+              </div>
+              <div>
+                <div style="font-family:var(--font-heading);font-weight:700;font-size:16px;color:var(--text-primary);display:flex;align-items:center;gap:8px;flex-wrap:wrap;" id="nowPlayingContainer">
+                  <span id="nowPlayingText">Menunggu Pemicu Sound...</span>
+                  <span id="activeSpeakerBadge" class="speaker-pill" style="display:none;">
+                    <i class="fa-solid fa-user"></i> <span id="activeSpeakerName">Bot</span>
+                  </span>
+                  <span id="cooldownBadge" class="cooldown-pill" style="display:none;">
+                    <i class="fa-solid fa-hourglass-half"></i> <span id="cooldownTimer">0s</span>
+                  </span>
+                </div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px;" id="subStatusText">
+                  WebSocket Socket.IO aktif. Klik tombol pad atau gunakan shortcut untuk memicu suara.
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+              <canvas id="audioVizCanvas" width="220" height="48"></canvas>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:12px;color:var(--text-secondary);"><i class="fa-solid fa-volume-high"></i></span>
+                <input type="range" id="volumeSlider" min="0" max="100" value="80" style="accent-color:var(--primary);width:90px;cursor:pointer;" />
+                <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted);width:30px;" id="volumeVal">80%</span>
+              </div>
+              <button class="btn btn-ghost btn-sm" id="btnStopAll" style="color:#ef4444;">
+                <i class="fa-solid fa-stop"></i> Hentikan Semua
+              </button>
+            </div>
+          </div>
+
+          <!-- Category Filter Bar -->
+          <div class="tab-filter-bar animate-in delay-1">
+            <button class="tab-btn active" data-category="all">Semua Koleksi (15)</button>
+            <button class="tab-btn" data-category="reaction">🎉 Reaction & Hype (5)</button>
+            <button class="tab-btn" data-category="memes">📢 Memes & SFX (5)</button>
+            <button class="tab-btn" data-category="gaming">🎮 Gaming & Retro (5)</button>
+          </div>
+
+          <!-- Interactive Sound Grid -->
+          <div class="sound-grid animate-in delay-2" id="soundGrid">
+            <!-- Sound pads rendered dynamically -->
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Modal Upload SFX Kustom -->
+    <div id="customSfxModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);z-index:99999;align-items:center;justify-content:center;padding:20px;">
+      <div style="background:#0f172a;border:1px solid var(--border-medium);border-radius:var(--r-xl);max-width:480px;width:100%;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,0.6);" data-auth-required="true" data-auth-title="Tambah SFX Kustom" data-auth-message="Masuk dengan Discord yuk, supaya efek suaramu tersimpan dan bisa diputar di voice channel.">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h3 style="font-family:var(--font-heading);font-size:17px;font-weight:700;color:var(--text-primary);">
+            <i class="fa-solid fa-upload" style="color:var(--primary);margin-right:8px;"></i> Tambah SFX Kustom
+          </h3>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="closeUploadModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div id="dropzone" style="border:2px dashed var(--border-medium);border-radius:var(--r-lg);padding:30px 20px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:all 0.2s;">
+          <i class="fa-solid fa-cloud-arrow-up" style="font-size:32px;color:var(--primary);margin-bottom:10px;"></i>
+          <div style="font-size:13px;font-weight:600;color:var(--text-primary);" id="dropzoneText">Pilih atau Seret File Audio ke Sini</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Mendukung MP3, WAV, OGG (Maks. 5 MB)</div>
+          <input type="file" id="customAudioFile" accept="audio/*" style="display:none;" />
+        </div>
+
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:12px;">
+          <div>
+            <label style="font-size:12px;font-weight:600;color:var(--text-secondary);">Nama Efek Suara</label>
+            <input type="text" class="text-input-field" id="inputSfxName" placeholder="Contoh: Anime Wow / Kemenangan" style="margin-top:4px;" />
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);">Kategori</label>
+              <select class="select-input" id="selectSfxCategory" style="width:100%;margin-top:4px;">
+                <option value="memes">📢 Memes</option>
+                <option value="reaction">🎉 Reaction</option>
+                <option value="gaming">🎮 Gaming</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--text-secondary);">Shortcut Tombol</label>
+              <input type="text" class="text-input-field" id="inputSfxKey" maxlength="1" placeholder="Misal: T" style="margin-top:4px;text-transform:uppercase;" />
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:10px;">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="closeUploadModal()">Batal</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btnSaveCustomSfx"><i class="fa-solid fa-check"></i> Pasang ke Pad</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Alert Element -->
+    <div class="toast-alert" id="toastAlert">
+      <i class="fa-solid fa-circle-check" style="color:var(--accent-green);font-size:18px;" id="toastIcon"></i>
+      <div>
+        <div style="font-weight:600;" id="toastTitle">Sound Dimainkan</div>
+        <div style="font-size:11px;color:var(--text-muted);" id="toastDesc">Disiarkan melalui WebSocket</div>
+      </div>
+    </div>
+
+    <!-- Socket.IO Client -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      // Sound Library Database - 8+ Mandated Presets (Airhorn, Ba-Dum-Tss, Bruh, GG, Sad Trombone, Victory, Wow, Quack)
+      const SOUNDS = [
+        { id: "airhorn", name: "Airhorn MLG", category: "memes", key: "1", duration: "1.3s", icon: "fa-bullhorn", color: "#ef4444", src: "/assets/audio/soundboard/airhorn.wav", desc: "Suara terompet klakson MLG hype" },
+        { id: "badumtss", name: "Ba-Dum-Tss", category: "reaction", key: "2", duration: "1.5s", icon: "fa-drum", color: "#f97316", src: "https://cdn.freesound.org/previews/536/536108_1415754-lq.mp3", desc: "Ketukan drum komedi rimshot klasik" },
+        { id: "bruh", name: "Bruh", category: "memes", key: "3", duration: "0.8s", icon: "fa-face-rolling-eyes", color: "#6b7280", src: "/assets/audio/soundboard/bruh.wav", desc: "Efek suara Bruh legendaris" },
+        { id: "gg", name: "GG (Good Game)", category: "gaming", key: "4", duration: "1.2s", icon: "fa-trophy", color: "#eab308", src: "https://cdn.freesound.org/previews/274/274177_5121236-lq.mp3", desc: "Fanfare perayaan kemenangan game" },
+        { id: "sadtrombone", name: "Sad Trombone", category: "memes", key: "5", duration: "2.5s", icon: "fa-cloud-rain", color: "#64748b", src: "https://cdn.freesound.org/previews/73/73581_37876-lq.mp3", desc: "Womp womp kegagalan kocak" },
+        { id: "victory", name: "Victory Fanfare", category: "reaction", key: "6", duration: "2.2s", icon: "fa-award", color: "#10b981", src: "/assets/audio/soundboard/victory.wav", desc: "Musik terompet perayaan menang" },
+        { id: "wow", name: "Anime Wow", category: "reaction", key: "7", duration: "1.0s", icon: "fa-star", color: "#a855f7", src: "https://cdn.freesound.org/previews/415/415510_5121236-lq.mp3", desc: "Seruan kekaguman anime wow" },
+        { id: "quack", name: "Duck Quack", category: "memes", key: "8", duration: "0.7s", icon: "fa-feather", color: "#84cc16", src: "https://cdn.freesound.org/previews/495/495005_10745749-lq.mp3", desc: "Suara bebek quack kartun" },
+
+        { id: "applause", name: "Tepuk Tangan", category: "reaction", key: "Q", duration: "1.8s", icon: "fa-hands-clapping", color: "#f59e0b", src: "/assets/audio/soundboard/applause.mp3", desc: "Suara tepuk tangan apresiasi" },
+        { id: "cheer", name: "Crowd Cheering", category: "reaction", key: "W", duration: "2.0s", icon: "fa-champagne-glasses", color: "#ec4899", src: "https://cdn.freesound.org/previews/337/337000_3232293-lq.mp3", desc: "Sorak sorai penonton meriah" },
+        { id: "drumroll", name: "Drum Roll", category: "reaction", key: "E", duration: "2.4s", icon: "fa-drum-steelpan", color: "#8b5cf6", src: "/assets/audio/soundboard/drumroll.wav", desc: "Ketukan drumroll menegangkan" },
+        { id: "gameover", name: "Game Over 8-bit", category: "gaming", key: "R", duration: "1.8s", icon: "fa-gamepad", color: "#3b82f6", src: "/assets/audio/soundboard/gameover.wav", desc: "Nada kekalahan retro 8-bit" },
+        { id: "magic", name: "Magic Sparkle", category: "gaming", key: "T", duration: "2.2s", icon: "fa-wand-magic-sparkles", color: "#06b6d4", src: "/assets/audio/soundboard/magic.wav", desc: "Lonceng sihir peri berkilau" },
+        { id: "bonk", name: "Bonk Hammer", category: "memes", key: "Y", duration: "0.5s", icon: "fa-hammer", color: "#38bdf8", src: "/assets/audio/soundboard/bonk.wav", desc: "Efek pukulan palu kartun" },
+        { id: "coin", name: "Star Pickup", category: "gaming", key: "U", duration: "0.6s", icon: "fa-coins", color: "#fbbf24", src: "/assets/audio/soundboard/coin.wav", desc: "Suara denting koin fragment bintang" }
+      ];
+
+      // WebSocket Connection Engine
+      let socket = null;
+      let activeGuildId = "sandbox";
+
+      function getActiveGuildId() {
+        return (
+          window.authManager?.getCurrentGuildId?.() ||
+          localStorage.getItem("naura_selected_guild") ||
+          localStorage.getItem("currentSelectedGuildId") ||
+          "sandbox"
+        );
+      }
+
+      function initWebSocket() {
+        if (typeof io === "undefined") {
+          console.warn("[Soundboard WS] Socket.IO library belum termuat, beralih ke mode simulasi.");
+          updateWsStatus(false);
+          return;
+        }
+
+        try {
+          socket = io();
+          activeGuildId = getActiveGuildId();
+
+          socket.on("connect", () => {
+            console.log("[Soundboard WS] Terhubung ke server, ID:", socket.id);
+            updateWsStatus(true);
+            socket.emit("join_room", "dashboard:home");
+            socket.emit("join_guild_soundboard", activeGuildId);
+          });
+
+          socket.on("disconnect", () => {
+            console.warn("[Soundboard WS] Terputus dari server");
+            updateWsStatus(false);
+          });
+
+          // Listen to status response from socket
+          socket.on("soundboard_status", (res) => {
+            handleSoundboardStatus(res);
+          });
+
+          // Listen to global soundboard broadcasts in this guild
+          socket.on("soundboard_played", (data) => {
+            handleRemoteSoundPlayed(data);
+          });
+        } catch (err) {
+          console.error("[Soundboard WS Init Error]:", err);
+          updateWsStatus(false);
+        }
+      }
+
+      function updateWsStatus(online) {
+        const badge = document.getElementById("wsStatusBadge");
+        if (!badge) return;
+        if (online) {
+          badge.className = "ws-badge online";
+          badge.innerHTML = '<i class="fa-solid fa-circle-dot"></i> WebSocket: Terhubung';
+        } else {
+          badge.className = "ws-badge offline";
+          badge.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> WebSocket: Offline (Demo)';
+        }
+      }
+
+      // Render sound pads
+      const soundGrid = document.getElementById("soundGrid");
+      function renderPads(category = "all") {
+        soundGrid.innerHTML = "";
+        const filtered = category === "all" ? SOUNDS : SOUNDS.filter(s => s.category === category);
+        
+        filtered.forEach(sound => {
+          const pad = document.createElement("div");
+          pad.className = "sound-pad";
+          pad.id = `pad_${sound.id}`;
+          pad.innerHTML = `
+            <div class="pad-top">
+              <div class="pad-icon" style="background:${sound.color}15;color:${sound.color};border:1px solid ${sound.color}35;">
+                <i class="fa-solid ${sound.icon}"></i>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <button type="button" class="pad-broadcast-btn" title="Siarkan via WebSocket ke Voice Channel Discord" onclick="event.stopPropagation(); emitSoundboardPlay('${sound.id}')">
+                  <i class="fa-solid fa-tower-broadcast"></i>
+                </button>
+                <span class="pad-key">${sound.key}</span>
+              </div>
+            </div>
+            <div>
+              <div class="pad-name">${sound.name}</div>
+              <div class="pad-meta">
+                <span><i class="fa-solid fa-tag"></i> ${sound.category.toUpperCase()}</span>
+                <span><i class="fa-solid fa-clock"></i> ${sound.duration}</span>
+              </div>
+            </div>
+          `;
+          pad.addEventListener("click", () => triggerSoundPad(sound));
+          soundGrid.appendChild(pad);
+        });
+      }
+
+      // Audio Synthesis Fallback: Ensures sound plays even if network audio is blocked
+      function synthesizeFallbackAudio(soundId, audioCtx) {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(analyser || audioCtx.destination);
+
+        if (soundId === "airhorn") {
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(466.16, now); // Bb4
+          osc.frequency.setValueAtTime(622.25, now + 0.1); // Eb5
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+          osc.start(now);
+          osc.stop(now + 0.6);
+        } else if (soundId === "badumtss" || soundId === "drumroll") {
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(140, now);
+          osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        } else if (soundId === "victory" || soundId === "gg") {
+          osc.type = "square";
+          osc.frequency.setValueAtTime(523.25, now); // C5
+          osc.frequency.setValueAtTime(659.25, now + 0.15); // E5
+          osc.frequency.setValueAtTime(783.99, now + 0.3); // G5
+          osc.frequency.setValueAtTime(1046.50, now + 0.45); // C6
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+          osc.start(now);
+          osc.stop(now + 0.8);
+        } else if (soundId === "sadtrombone") {
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(311.13, now); // Eb4
+          osc.frequency.linearRampToValueAtTime(293.66, now + 0.3); // D4
+          osc.frequency.linearRampToValueAtTime(277.18, now + 0.6); // Db4
+          osc.frequency.linearRampToValueAtTime(246.94, now + 1.0); // B3
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 1.2);
+          osc.start(now);
+          osc.stop(now + 1.2);
+        } else if (soundId === "quack") {
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.linearRampToValueAtTime(220, now + 0.25);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else {
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.25);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        }
+      }
+
+      // Global Audio Context & Analyser Engine
+      let audioCtx = null;
+      let analyser = null;
+      let audioSourceNode = null;
+      let frequencyData = null;
+      const sharedAudio = new Audio();
+      sharedAudio.crossOrigin = "anonymous";
+      let isAudioPlaying = false;
+      let activeSound = null;
+      let cooldownTimerInterval = null;
+
+      function initAudioContext() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 64; // 32 frequency bins
+            analyser.smoothingTimeConstant = 0.68;
+            frequencyData = new Uint8Array(analyser.frequencyBinCount);
+            try {
+              audioSourceNode = audioCtx.createMediaElementSource(sharedAudio);
+              audioSourceNode.connect(analyser);
+              analyser.connect(audioCtx.destination);
+            } catch (e) {
+              console.log("Audio source node mapped:", e);
+            }
+          }
+        }
+        if (audioCtx && audioCtx.state === "suspended") {
+          audioCtx.resume();
+        }
+      }
+
+      // Emit Pure WebSocket soundboard_play event
+      function emitSoundboardPlay(soundId) {
+        activeGuildId = getActiveGuildId();
+        if (socket && socket.connected) {
+          socket.emit("soundboard_play", {
+            guildId: activeGuildId,
+            soundId: soundId
+          });
+          showToast("WebSocket Mengirim...", `Meminta putar "${soundId}" di voice channel.`);
+        } else {
+          // Fallback simulation when socket disconnected
+          showToast("Mode Pratinjau", `Suara "${soundId}" diputar secara lokal (WebSocket offline).`);
+        }
+      }
+
+      // Handle socket soundboard_status response
+      function handleSoundboardStatus(res) {
+        if (!res) return;
+        const speakerBadge = document.getElementById("activeSpeakerBadge");
+        const speakerName = document.getElementById("activeSpeakerName");
+        const cooldownBadge = document.getElementById("cooldownBadge");
+        const cooldownTimer = document.getElementById("cooldownTimer");
+
+        if (res.activeSpeaker && speakerBadge && speakerName) {
+          speakerName.textContent = res.activeSpeaker;
+          speakerBadge.style.display = "inline-flex";
+        }
+
+        if (res.cooldownMs && cooldownBadge && cooldownTimer) {
+          let remSec = Math.ceil(res.cooldownMs / 1000);
+          cooldownTimer.textContent = `${remSec}s`;
+          cooldownBadge.style.display = "inline-flex";
+
+          clearInterval(cooldownTimerInterval);
+          cooldownTimerInterval = setInterval(() => {
+            remSec--;
+            if (remSec <= 0) {
+              clearInterval(cooldownTimerInterval);
+              cooldownBadge.style.display = "none";
+            } else {
+              cooldownTimer.textContent = `${remSec}s`;
+            }
+          }, 1000);
+        }
+
+        if (res.success) {
+          showToast("Soundboard Diputar", res.message || "Suara disiarkan ke Discord!", "success");
+        } else {
+          showToast("Info Soundboard", res.message || "Gagal memutar soundboard.", "warn");
+        }
+      }
+
+      // Handle broadcast from other users in the guild
+      function handleRemoteSoundPlayed(data) {
+        if (!data || !data.sound) return;
+        const soundId = data.sound.id;
+        const speaker = data.requester?.username || "Teman Server";
+
+        const speakerBadge = document.getElementById("activeSpeakerBadge");
+        const speakerName = document.getElementById("activeSpeakerName");
+        if (speakerBadge && speakerName) {
+          speakerName.textContent = speaker;
+          speakerBadge.style.display = "inline-flex";
+        }
+
+        // Highlight pad
+        const padElem = document.getElementById(`pad_${soundId}`);
+        if (padElem) {
+          padElem.classList.add("playing");
+          setTimeout(() => padElem.classList.remove("playing"), 2000);
+        }
+
+        const matched = SOUNDS.find(s => s.id === soundId);
+        if (matched) {
+          triggerSoundPad(matched, false);
+        }
+        showToast("Siaran Masuk", `${speaker} memutar "${data.sound.title || soundId}"!`);
+      }
+
+      // Trigger pad locally and emit to WebSocket
+      function triggerSoundPad(sound, emitWs = true) {
+        initAudioContext();
+
+        // 1. Send purely via WebSocket if emitWs is true
+        if (emitWs) {
+          emitSoundboardPlay(sound.id);
+        }
+
+        // 2. Play local preview so user gets instant audible and visual feedback
+        sharedAudio.pause();
+        sharedAudio.currentTime = 0;
+        document.querySelectorAll(".sound-pad").forEach(p => p.classList.remove("playing"));
+
+        const vol = parseInt(document.getElementById("volumeSlider").value, 10) / 100;
+        sharedAudio.volume = vol;
+        sharedAudio.src = sound.src;
+        activeSound = sound;
+        isAudioPlaying = true;
+
+        const padElem = document.getElementById(`pad_${sound.id}`);
+        if (padElem) {
+          padElem.classList.add("playing");
+        }
+
+        document.getElementById("nowPlayingText").textContent = sound.name;
+        document.getElementById("statusAudioIcon").className = "fa-solid fa-volume-high animate-pulse";
+
+        sharedAudio.play().catch(() => {
+          // If remote url fails to load or cross-origin blocks it, synthesize audible tone
+          synthesizeFallbackAudio(sound.id, audioCtx);
+          isAudioPlaying = true;
+          setTimeout(() => {
+            if (activeSound === sound) {
+              isAudioPlaying = false;
+              if (padElem) padElem.classList.remove("playing");
+              document.getElementById("statusAudioIcon").className = "fa-solid fa-music";
+              document.getElementById("nowPlayingText").textContent = "Menunggu Pemicu Sound...";
+            }
+          }, 1500);
+        });
+
+        sharedAudio.onended = () => {
+          isAudioPlaying = false;
+          document.querySelectorAll(".sound-pad").forEach(p => p.classList.remove("playing"));
+          document.getElementById("statusAudioIcon").className = "fa-solid fa-music";
+          document.getElementById("nowPlayingText").textContent = "Menunggu Pemicu Sound...";
+        };
+
+        sharedAudio.onpause = () => {
+          if (sharedAudio.ended || sharedAudio.currentTime === 0) {
+            isAudioPlaying = false;
+            document.querySelectorAll(".sound-pad").forEach(p => p.classList.remove("playing"));
+            document.getElementById("statusAudioIcon").className = "fa-solid fa-music";
+            document.getElementById("nowPlayingText").textContent = "Menunggu Pemicu Sound...";
+          }
+        };
+      }
+
+      // Real-Time Audio Synchronized Visualizer Canvas
+      const canvas = document.getElementById("audioVizCanvas");
+      const cCtx = canvas.getContext("2d");
+      const BARS_COUNT = 18;
+      const barLevels = new Float32Array(BARS_COUNT).fill(2.5);
+
+      function drawViz() {
+        requestAnimationFrame(drawViz);
+        cCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const w = canvas.width / BARS_COUNT;
+        const isPlayingNow = isAudioPlaying && (!sharedAudio.paused && !sharedAudio.ended || isAudioPlaying);
+
+        let hasFrequencies = false;
+        if (isPlayingNow && analyser && frequencyData) {
+          analyser.getByteFrequencyData(frequencyData);
+          for (let k = 0; k < frequencyData.length; k++) {
+            if (frequencyData[k] > 5) {
+              hasFrequencies = true;
+              break;
+            }
+          }
+        }
+
+        const curTime = sharedAudio.currentTime || (Date.now() * 0.003);
+
+        for (let i = 0; i < BARS_COUNT; i++) {
+          let targetH = 2.5;
+
+          if (isPlayingNow) {
+            if (hasFrequencies) {
+              const binIdx = Math.min(Math.floor((i / BARS_COUNT) * 22) + 1, frequencyData.length - 1);
+              const freqVal = frequencyData[binIdx];
+              targetH = (freqVal / 255) * (canvas.height - 4) + 3;
+            } else {
+              const vocalBeat = Math.sin(curTime * 14 + i * 0.6) * 0.5 + 0.5;
+              const harmonics = Math.cos(curTime * 22 + i * 0.9) * 0.3 + 0.3;
+              const intensity = (vocalBeat + harmonics);
+              targetH = 4 + intensity * (canvas.height - 8);
+            }
+          }
+
+          const smoothingFactor = targetH > barLevels[i] ? 0.45 : 0.18;
+          barLevels[i] += (targetH - barLevels[i]) * smoothingFactor;
+          const h = Math.max(2.5, barLevels[i]);
+
+          const x = i * w + 2;
+          const y = canvas.height - h;
+          const barWidth = Math.max(1, w - 4);
+
+          const grad = cCtx.createLinearGradient(0, y, 0, canvas.height);
+          grad.addColorStop(0, isPlayingNow ? "#f472b6" : "rgba(244,114,182,0.4)");
+          grad.addColorStop(1, isPlayingNow ? "#22d3ee" : "rgba(34,211,238,0.3)");
+
+          cCtx.fillStyle = grad;
+          cCtx.fillRect(x, y, barWidth, h);
+
+          if (isPlayingNow && h > 6) {
+            cCtx.fillStyle = "#ffffff";
+            cCtx.fillRect(x, y, barWidth, 1.5);
+          }
+        }
+      }
+      drawViz();
+
+      // Keyboard Shortcut listener
+      window.addEventListener("keydown", (e) => {
+        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
+        const key = e.key.toUpperCase();
+        const matched = SOUNDS.find(s => s.key === key);
+        if (matched) {
+          triggerSoundPad(matched);
+        }
+      });
+
+      // Filter tabs
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          renderPads(btn.dataset.category);
+        });
+      });
+
+      // Volume slider listener
+      const volumeSlider = document.getElementById("volumeSlider");
+      const volumeVal = document.getElementById("volumeVal");
+      volumeSlider.addEventListener("input", () => {
+        volumeVal.textContent = `${volumeSlider.value}%`;
+        sharedAudio.volume = volumeSlider.value / 100;
+      });
+
+      // Stop All Button
+      document.getElementById("btnStopAll").addEventListener("click", () => {
+        sharedAudio.pause();
+        sharedAudio.currentTime = 0;
+        isAudioPlaying = false;
+        document.querySelectorAll(".sound-pad").forEach(p => p.classList.remove("playing"));
+        document.getElementById("nowPlayingText").textContent = "Semua Audio Dihentikan";
+        document.getElementById("statusAudioIcon").className = "fa-solid fa-stop";
+        showToast("Audio Dihentikan", "Seluruh audio dihentikan seketika.", "warn");
+      });
+
+      // Toast helper
+      const toast = document.getElementById("toastAlert");
+      let toastTimer = null;
+      function showToast(title, desc, type = "info") {
+        document.getElementById("toastTitle").textContent = title;
+        document.getElementById("toastDesc").textContent = desc;
+        const icon = document.getElementById("toastIcon");
+        if (icon) {
+          if (type === "warn") {
+            icon.className = "fa-solid fa-triangle-exclamation";
+            icon.style.color = "#f59e0b";
+          } else if (type === "error") {
+            icon.className = "fa-solid fa-circle-xmark";
+            icon.style.color = "#ef4444";
+          } else {
+            icon.className = "fa-solid fa-circle-check";
+            icon.style.color = "var(--accent-green)";
+          }
+        }
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2800);
+      }
+
+      // Modal Upload SFX Logic
+      const modal = document.getElementById("customSfxModal");
+      const dropzone = document.getElementById("dropzone");
+      const fileInput = document.getElementById("customAudioFile");
+      let selectedCustomFile = null;
+
+      window.openUploadModal = () => {
+        if (modal) modal.style.display = "flex";
+      };
+      window.closeUploadModal = () => {
+        if (modal) modal.style.display = "none";
+        selectedCustomFile = null;
+        document.getElementById("dropzoneText").textContent = "Pilih atau Seret File Audio ke Sini";
+        document.getElementById("inputSfxName").value = "";
+      };
+
+      document.getElementById("btnUploadModal")?.addEventListener("click", window.openUploadModal);
+
+      dropzone?.addEventListener("click", () => fileInput?.click());
+      dropzone?.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = "var(--primary)";
+      });
+      dropzone?.addEventListener("dragleave", () => {
+        dropzone.style.borderColor = "var(--border-medium)";
+      });
+      dropzone?.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = "var(--border-medium)";
+        if (e.dataTransfer.files?.length > 0) {
+          handleFileSelection(e.dataTransfer.files[0]);
+        }
+      });
+
+      fileInput?.addEventListener("change", (e) => {
+        if (e.target.files?.length > 0) {
+          handleFileSelection(e.target.files[0]);
+        }
+      });
+
+      function handleFileSelection(file) {
+        if (!file.type.includes("audio")) {
+          alert("Mohon pilih file audio berformat MP3, WAV, atau OGG.");
+          return;
+        }
+        selectedCustomFile = file;
+        document.getElementById("dropzoneText").innerHTML = `<span style="color:#34d399;">✓ ${file.name}</span> (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        const nameInput = document.getElementById("inputSfxName");
+        if (nameInput && !nameInput.value) {
+          nameInput.value = file.name.replace(/\.[^/.]+$/, "");
+        }
+      }
+
+      document.getElementById("btnSaveCustomSfx")?.addEventListener("click", () => {
+        const name = document.getElementById("inputSfxName")?.value?.trim();
+        const category = document.getElementById("selectSfxCategory")?.value || "memes";
+        const key = (document.getElementById("inputSfxKey")?.value?.trim() || "K").toUpperCase();
+
+        if (!selectedCustomFile && !name) {
+          alert("Mohon pilih file audio dan isi nama SFX.");
+          return;
+        }
+
+        const customUrl = selectedCustomFile ? URL.createObjectURL(selectedCustomFile) : "/assets/audio/soundboard/applause.mp3";
+        const newSound = {
+          id: `custom_${Date.now()}`,
+          name: name || "Custom Sound",
+          category,
+          key,
+          duration: "Custom",
+          icon: "fa-music",
+          color: "#00ffff",
+          src: customUrl,
+          desc: "SFX Kustom Unggahan Lokal",
+        };
+
+        SOUNDS.unshift(newSound);
+        renderPads();
+        closeUploadModal();
+        showToast("SFX Kustom Ditambahkan", `"${newSound.name}" siap diputar di soundboard!`);
+      });
+
+      // Initialize Page
+      renderPads();
+      initWebSocket();
+    </script>
+    <script src="/src/js/sharedNav.js"></script>
+
+    <nav class="mobile-nav" aria-label="Navigasi Utama Mobile">
+      <div class="mobile-nav-inner">
+        <a href="/" class="mobile-nav-item" data-group="dashboard"><span class="mn-icon"><i class="fa-solid fa-gauge-high"></i></span><span class="mn-label">Dashboard</span></a>
+        <a href="/soundboard" class="mobile-nav-item active" data-group="audio"><span class="mn-icon"><i class="fa-solid fa-sliders"></i></span><span class="mn-label">Soundboard</span></a>
+        <a href="/automod" class="mobile-nav-item" data-group="config"><span class="mn-icon"><i class="fa-solid fa-shield-halved"></i></span><span class="mn-label">Automod</span></a>
+        <a href="/music" class="mobile-nav-item" data-group="system"><span class="mn-icon"><i class="fa-solid fa-microchip"></i></span><span class="mn-label">Music</span></a>
+        <a href="/settings" class="mobile-nav-item" data-group="settings"><span class="mn-icon"><i class="fa-solid fa-gears"></i></span><span class="mn-label">Settings</span></a>
+      </div>
+    </nav>
+  </body>
+</html>

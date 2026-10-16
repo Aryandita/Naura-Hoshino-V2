@@ -3,6 +3,8 @@ const { logger } = require("../managers/logger");
 const cacheManager = require("../managers/cacheManager");
 const ui = require("../config/ui");
 const { handleAutomod } = require("../utils/automodHelper");
+const phishingShield = require("../automod/phishingShield");
+const ghostPingTracker = require("../automod/ghostPingTracker");
 
 module.exports = {
   name: "messageUpdate",
@@ -20,8 +22,15 @@ module.exports = {
     if (oldMessage.content === newMessage.content) return;
 
     // ==========================================
-    // 2. CEK AUTOMOD
+    // 2. CEK AUTOMOD & PROACTIVE DETECTIONS
     // ==========================================
+    // Cek tautan phishing pada hasil revisi pesan
+    const phishingResult = await phishingShield.scanMessage(newMessage, client);
+    if (phishingResult && phishingResult.isPhishing) return;
+
+    // Cek stealth ghost ping (penghapusan sebutan mention via suntingan)
+    await ghostPingTracker.handleUpdate(oldMessage, newMessage, client).catch(() => {});
+
     // Penting jika user awalnya kirim pesan baik, lalu diedit jadi kata kasar/link ilegal
     const isViolating = await handleAutomod(newMessage, client);
     if (isViolating) return;

@@ -81,9 +81,53 @@ async function runMinigameLogic(interaction) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("minigame")
-    .setDescription("🎮 Buka Arena Minigame dan Arcade interaktif Naura Hoshino"),
+    .setDescription("🎮 Buka Arena Minigame dan Arcade interaktif Naura Hoshino")
+    .addSubcommand((sub) =>
+      sub
+        .setName("blackjack")
+        .setDescription("🃏 Bermain Blackjack 21 kartu standar melawan dealer Naura")
+        .addIntegerOption((opt) =>
+          opt
+            .setName("taruhan")
+            .setDescription("Jumlah Star Fragments (NSF) yang dipertaruhkan")
+            .setRequired(true)
+            .setMinValue(10)
+            .setMaxValue(50000),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("typerace")
+        .setDescription("⌨️ Uji kecepatan mengetik WPM berbatas waktu")
+        .addStringOption((opt) =>
+          opt
+            .setName("kesulitan")
+            .setDescription("Tingkat kesulitan teks")
+            .addChoices(
+              { name: "Mudah (Kalimat Pendek)", value: "easy" },
+              { name: "Sedang (Paragraf Standar)", value: "medium" },
+              { name: "Sulit (Kutipan Tantangan)", value: "hard" },
+            ),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName("taruhan")
+            .setDescription("Jumlah NSF yang dipertaruhkan (opsional)")
+            .setRequired(false)
+            .setMinValue(10)
+            .setMaxValue(10000),
+        ),
+    ),
 
   async execute(interaction) {
+    const subcommand = interaction.options?.getSubcommand?.(false);
+    if (subcommand) {
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferReply();
+      }
+      return runMinigameLogic(interaction);
+    }
+
     const { buildInteractiveHubPayload } = require("../../src/utils/hubMenuHelper");
     const payload = buildInteractiveHubPayload({
       title: "🎮 Naura Arcade dan Minigame Arena",
@@ -101,6 +145,8 @@ module.exports = {
         { id: "math", label: "Kuis Matematika", emoji: "🧮", style: ButtonStyle.Success },
       ],
       selectOptions: [
+        { value: "blackjack", label: "Blackjack 21", emoji: "🃏", description: "Bermain kartu 21 melawan dealer Naura" },
+        { value: "typerace", label: "TypeRacer", emoji: "⌨️", description: "Uji kecepatan mengetik WPM berbatas waktu" },
         { value: "minesweeper", label: "Minesweeper", emoji: "💣", description: "Bongkar papan ranjau klasik tanpa meledak" },
         { value: "arcade", label: "Arcade Suite", emoji: "🕹️", description: "Kumpulan mini games seru dan refleks cepat" },
         { value: "math", label: "Matematika Cepat", emoji: "🧮", description: "Uji kecepatan berhitung di bawah tekanan waktu" },

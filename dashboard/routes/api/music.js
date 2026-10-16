@@ -185,6 +185,29 @@ function register(router, client) {
       } else if (action === "loop") {
         if (typeof player.setLoop === "function")
           player.setLoop(player.loop === "track" ? "none" : "track");
+      } else if (action === "seek") {
+        const pos = Number(value);
+        if (
+          !isNaN(pos) &&
+          player.currentTrack &&
+          player.currentTrack.info.isSeekable !== false
+        ) {
+          const clamped = Math.max(
+            0,
+            Math.min(pos, player.currentTrack.info.length),
+          );
+          await player.seekTo(clamped);
+          player.position = clamped;
+        }
+      } else if (action === "sleep") {
+        const minutes = Number(value);
+        if (!isNaN(minutes)) {
+          if (minutes <= 0) {
+            client.musicManager?.cancelSleepTimer(targetGuildId);
+          } else {
+            client.musicManager?.setSleepTimer(targetGuildId, minutes);
+          }
+        }
       }
 
       res.json({

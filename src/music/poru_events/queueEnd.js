@@ -44,9 +44,10 @@ module.exports = {
       logger.debug("[queueEnd:execute] Operasi audio/voice gagal: " + (e?.message || e));
     }
 
-    // Bersihkan antrean tersimpan dan suara vote skip setelah antrean benar-benar selesai
+    // Bersihkan antrean tersimpan, suara vote skip, dan sleep timer setelah antrean benar-benar selesai
     manager.clearSavedQueueState?.(player.guildId);
     manager.clearSkipVotes?.(player.guildId);
+    manager.cancelSleepTimer?.(player.guildId);
 
     // 2. EKSEKUSI AUTOPLAY (PERBAIKAN)
     if (player.isAutoplayMode) {

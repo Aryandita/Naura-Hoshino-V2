@@ -102,10 +102,15 @@ const SANDBOX_DEFAULTS = {
     notifyMode: "channel",
   },
   automod: {
+    enabled: true,
     antiSpam: true,
     antiInvite: true,
     antiCaps: false,
     massMention: 5,
+    badWords: ["kasar", "toxic", "scamlink", "free-nitro"],
+    phishingShield: true,
+    ghostPingTracker: true,
+    punishment: "warn",
   },
 };
 
@@ -386,10 +391,15 @@ module.exports = (client) => {
             notifyMode: rawSettings.leveling?.notifyMode || "channel",
           },
           automod: {
+            enabled: automod.enabled !== false,
             antiSpam: automod.antiSpam !== false,
             antiInvite: toBool(automod.antiInvite),
             antiCaps: toBool(automod.antiCaps),
             massMention: Number(automod.massMention) || 5,
+            badWords: Array.isArray(automod.badWords) ? automod.badWords : [],
+            phishingShield: automod.phishingShield !== false,
+            ghostPingTracker: automod.ghostPingTracker !== false,
+            punishment: automod.punishment || "warn",
           },
         };
 

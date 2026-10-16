@@ -8,6 +8,8 @@ const cacheManager = require("../managers/cacheManager");
 const languageManager = require("../managers/languageManager");
 const { updateGuildSetting } = require("../managers/guildSettingsService");
 const { handleAutomod } = require("../utils/automodHelper");
+const phishingShield = require("../automod/phishingShield");
+const ghostPingTracker = require("../automod/ghostPingTracker");
 
 const { softbanTrap, minecraftBridge } = require("./messageCreate/guildGuards");
 const handleGlobalChat = require("./messageCreate/globalChat");
@@ -112,6 +114,12 @@ module.exports = {
       await handleDirectMessage(message, client);
       return;
     }
+
+    // Proactive automod: Phishing shield & Ghost ping tracking
+    const phishingResult = await phishingShield.scanMessage(message, client);
+    if (phishingResult && phishingResult.isPhishing) return;
+
+    ghostPingTracker.trackMessage(message);
 
     if (await handleAutomod(message, client)) return;
     if (await handleStaffReply(message, client)) return;

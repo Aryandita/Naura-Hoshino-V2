@@ -2,6 +2,7 @@ const { EmbedBuilder, AuditLogEvent, Collection } = require("discord.js");
 const { logger } = require("../managers/logger");
 const cacheManager = require("../managers/cacheManager");
 const ui = require("../config/ui");
+const ghostPingTracker = require("../automod/ghostPingTracker");
 
 const SNIPE_TTL_MS = 10 * 60 * 1000;
 
@@ -25,6 +26,9 @@ module.exports = {
   name: "messageDelete",
   async execute(message, client) {
     if (message.author?.bot || !message.guild) return;
+
+    // Proactive automod: Deteksi ghost ping pada pesan yang dihapus
+    await ghostPingTracker.handleDelete(message, client).catch(() => {});
 
     // Snipe system. Cache ini bersifat sementara dan setiap entry punya cleanup TTL.
     const hasSensitiveData =

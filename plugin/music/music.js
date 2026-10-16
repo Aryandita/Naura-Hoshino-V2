@@ -151,6 +151,36 @@ module.exports = {
     )
     .addSubcommand((sub) =>
       sub
+        .setName("seek")
+        .setDescription(
+          "Lompat ke durasi waktu lagu tertentu (cth: 1:30 atau 90)",
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("posisi")
+            .setDescription(
+              "Posisi waktu tujuan (format: mm:ss, hh:mm:ss, atau detik)",
+            )
+            .setRequired(true),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("sleep")
+        .setDescription("Atur timer tidur otomatis dengan efek audio fade-out")
+        .addIntegerOption((opt) =>
+          opt
+            .setName("menit")
+            .setDescription(
+              "Durasi timer dalam menit (masukkan 0 untuk membatalkan)",
+            )
+            .setRequired(true)
+            .setMinValue(0)
+            .setMaxValue(1440),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
         .setName("loop")
         .setDescription("Atur mode pengulangan musik")
         .addStringOption((opt) =>
@@ -502,6 +532,8 @@ module.exports = {
       pesan: interaction.options.getString("pesan"),
       id: interaction.options.getInteger("id"),
       ronde: interaction.options.getInteger("ronde"),
+      posisi: interaction.options.getString("posisi"),
+      menit: interaction.options.getInteger("menit"),
     };
     const sendReply = async (payload, autoDelete = false) => {
       const msg = await interaction.editReply(payload).catch(() => {});
@@ -534,6 +566,8 @@ module.exports = {
       target: message.mentions.users.first(),
       id: parseInt(args[0]),
       mode: args[0],
+      posisi: args[0],
+      menit: parseInt(args[0]),
     };
     const loadingPayload = buildContainerV2({
       accentColorHex: ui.getColor("dark") || "#0b0c10",

@@ -69,6 +69,46 @@ const PRESET_SOUNDS = [
     color: "#06B6D4",
     url: "https://cdn.freesound.org/previews/608/608645_11861866-lq.mp3",
   },
+  {
+    id: "badumtss",
+    title: "Ba-Dum-Tss Rimshot",
+    category: "Reaction",
+    icon: "🥁",
+    color: "#F97316",
+    url: "https://cdn.freesound.org/previews/536/536108_1415754-lq.mp3",
+  },
+  {
+    id: "gg",
+    title: "GG Good Game",
+    category: "Gaming",
+    icon: "🏆",
+    color: "#EAB308",
+    url: "https://cdn.freesound.org/previews/274/274177_5121236-lq.mp3",
+  },
+  {
+    id: "sadtrombone",
+    title: "Sad Trombone Womp",
+    category: "Memes",
+    icon: "🎺",
+    color: "#64748B",
+    url: "https://cdn.freesound.org/previews/73/73581_37876-lq.mp3",
+  },
+  {
+    id: "wow",
+    title: "Anime Wow",
+    category: "Reaction",
+    icon: "😲",
+    color: "#A855F7",
+    url: "https://cdn.freesound.org/previews/415/415510_5121236-lq.mp3",
+  },
+  {
+    id: "quack",
+    title: "Duck Quack",
+    category: "Memes",
+    icon: "🦆",
+    color: "#84CC16",
+    url: "https://cdn.freesound.org/previews/495/495005_10745749-lq.mp3",
+  },
 ];
 
 // Anti-spam cooldown in memory (Key: guildId_userId)

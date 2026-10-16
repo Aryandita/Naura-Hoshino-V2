@@ -41,6 +41,7 @@ module.exports = {
                   const poru = client.musicManager?.poru;
                   const player = poru?.players?.get(guild.id);
                   if (player) {
+                    client.musicManager?.cancelSleepTimer?.(guild.id);
                     const textChanId = player.textChannel;
                     player.destroy();
                     if (textChanId) {

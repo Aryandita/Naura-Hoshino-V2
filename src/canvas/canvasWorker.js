@@ -187,6 +187,17 @@ if (parentPort) {
           result = await cardBattleCanvas.drawCardBattleArena(payload);
           break;
         }
+        case "renderCarbon":
+        case "renderCodeSnippet": {
+          const codeCanvas = require("./codeCanvas");
+          result = await codeCanvas.renderCarbonCard(payload);
+          break;
+        }
+        case "renderPollChart": {
+          const pollCanvas = require("./pollCanvas");
+          result = await pollCanvas.renderPollChart(payload);
+          break;
+        }
         default:
           throw new SystemError(`Unknown canvas worker task: ${task}`);
       }

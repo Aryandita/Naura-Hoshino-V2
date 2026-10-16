@@ -19,6 +19,7 @@ class CanvasWorkerPool {
     this.maxUserTasks = 2;
     this.workerTaskCounts = new Map(); // worker -> count
     this.maxWorkerTasks = 500;
+    this.isShuttingDown = false;
   }
 
   init() {
@@ -44,7 +45,11 @@ class CanvasWorkerPool {
           }
           this.pendingTasks.delete(id);
           if (success) {
-            pending.resolve(result);
+            const finalResult =
+              result instanceof Uint8Array && !Buffer.isBuffer(result)
+                ? Buffer.from(result.buffer, result.byteOffset, result.byteLength)
+                : result;
+            pending.resolve(finalResult);
           } else {
             pending.reject(new SystemError(error || "Worker error"));
           }
@@ -63,11 +68,13 @@ class CanvasWorkerPool {
       });
 
       worker.on("error", (err) => {
+        if (this.isShuttingDown) return;
         logger.error(`[CanvasWorkerPool] Worker #${index} error:`, err);
         this._replaceWorker(worker, scriptPath, index);
       });
 
       worker.on("exit", (code) => {
+        if (this.isShuttingDown) return;
         if (code !== 0) {
           logger.warn(
             `[CanvasWorkerPool] Worker #${index} exited with code ${code}`,
@@ -87,6 +94,7 @@ class CanvasWorkerPool {
   }
 
   _replaceWorker(oldWorker, scriptPath, index) {
+    if (this.isShuttingDown) return;
     const idx = this.workers.indexOf(oldWorker);
     if (idx !== -1) this.workers.splice(idx, 1);
     const freeIdx = this.freeWorkers.indexOf(oldWorker);
@@ -207,6 +215,7 @@ class CanvasWorkerPool {
   }
 
   async shutdown() {
+    this.isShuttingDown = true;
     for (const worker of this.workers) {
       try {
         await worker.terminate();

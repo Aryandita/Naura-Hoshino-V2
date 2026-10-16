@@ -47,10 +47,24 @@ function snapshotPlayer(client, player) {
         position: player.position,
         isPlaying: player.isPlaying,
         isPaused: player.isPaused,
+        isSeekable: player.currentTrack.info.isSeekable !== false,
       }
     : null;
 
-  return { currentTrack, queue, members };
+  const sleepTimer =
+    client.musicManager?.getSleepTimer?.(player.guildId) || null;
+
+  return {
+    guildId: player.guildId,
+    currentTrack,
+    queue,
+    members,
+    sleepTimer,
+    isPlaying: player.isPlaying,
+    isPaused: player.isPaused,
+    position: player.position,
+    volume: player.volume ?? 100,
+  };
 }
 
 /** Ambil ID pengguna dari sesi Express yang menempel di socket. */
@@ -236,6 +250,29 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       } else if (action === "volume") {
         const vol = Math.min(Math.max(Number(value) || 0, 0), 200);
         player.setVolume(vol);
+      } else if (action === "seek") {
+        const pos = Number(value);
+        if (
+          !isNaN(pos) &&
+          player.currentTrack &&
+          player.currentTrack.info.isSeekable !== false
+        ) {
+          const clamped = Math.max(
+            0,
+            Math.min(pos, player.currentTrack.info.length),
+          );
+          await player.seekTo(clamped);
+          player.position = clamped;
+        }
+      } else if (action === "sleep") {
+        const minutes = Number(value);
+        if (!isNaN(minutes)) {
+          if (minutes <= 0) {
+            client.musicManager?.cancelSleepTimer(guildId);
+          } else {
+            client.musicManager?.setSleepTimer(guildId, minutes);
+          }
+        }
       }
 
       io.to(String(guildId)).emit(
@@ -295,6 +332,16 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
       }
     });
 
+    socket.on("join_guild_soundboard", async (guildId) => {
+      if (guildId === "sandbox") {
+        socket.join("sandbox");
+        return;
+      }
+      if (guildId && (await canControlGuild(client, socket, guildId))) {
+        socket.join(String(guildId));
+      }
+    });
+
     socket.on("soundboard_play", async (data) => {
       const { guildId, soundId, voiceChannelId } = data || {};
       if (!guildId || !soundId) {
@@ -302,6 +349,23 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
           success: false,
           message: "Data soundboard tidak lengkap.",
         });
+      }
+
+      if (guildId === "sandbox") {
+        const payload = {
+          success: true,
+          message: `Mode Sandbox: Suara "${soundId}" disimulasikan di browser.`,
+          soundId,
+          activeSpeaker: "Sandbox Tester",
+          cooldownMs: 2500,
+        };
+        socket.emit("soundboard_status", payload);
+        io.to("sandbox").emit("soundboard_played", {
+          sound: { id: soundId, title: soundId },
+          requester: { id: "sandbox", username: "Sandbox Tester" },
+          timestamp: Date.now(),
+        });
+        return;
       }
 
       const allowed = await canControlGuild(client, socket, guildId);
@@ -324,7 +388,14 @@ module.exports = (client, io, { sessionMiddleware } = {}) => {
         requester: sessionUser,
       });
 
-      socket.emit("soundboard_status", result);
+      const statusPayload = {
+        ...result,
+        soundId,
+        activeSpeaker: sessionUser?.username || "Teman Baik",
+        cooldownMs: 2500,
+      };
+
+      socket.emit("soundboard_status", statusPayload);
     });
 
     socket.on("get_survival_leaderboard", async () => {

@@ -19,16 +19,25 @@ const fs = require("node:fs");
 const path = require("node:path");
 const acorn = require("acorn");
 
-const PAGES_DIR = path.join(__dirname, "..", "dashboard", "src", "pages");
+const PAGES_DIRS = [
+  path.join(__dirname, "..", "dashboard", "src", "pages"),
+  path.join(__dirname, "..", "dashboard", "public"),
+];
 
 let checked = 0;
 let importmaps = 0;
 const failures = [];
 
-const files = fs
-  .readdirSync(PAGES_DIR)
-  .filter((f) => f.endsWith(".html"))
-  .map((f) => path.join(PAGES_DIR, f));
+const files = [];
+for (const dir of PAGES_DIRS) {
+  if (fs.existsSync(dir)) {
+    for (const f of fs.readdirSync(dir)) {
+      if (f.endsWith(".html")) {
+        files.push(path.join(dir, f));
+      }
+    }
+  }
+}
 
 for (const file of files) {
   const html = fs.readFileSync(file, "utf8");

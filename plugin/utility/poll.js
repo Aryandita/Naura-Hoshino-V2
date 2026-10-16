@@ -1,3 +1,5 @@
+"use strict";
+
 const {
   SlashCommandBuilder,
   ActionRowBuilder,
@@ -5,58 +7,205 @@ const {
   ButtonStyle,
   ComponentType,
   MessageFlags,
+  AttachmentBuilder,
 } = require("discord.js");
 const ui = require("../../src/config/ui");
-const { buildContainerV2 } = require("../../src/utils/NauraContainerBuilder");
+const {
+  buildContainerV2,
+  buildErrorContainerV2,
+} = require("../../src/utils/NauraContainerBuilder");
+const redisManager = require("../../src/managers/redisManager");
+const canvasWorkerPool = require("../../src/canvas/canvasWorkerPool");
+const { logger } = require("../../src/managers/logger");
+
+// Global in-memory fallback store untuk polling jika Redis tidak aktif
+if (!global.__nauraPollStore) {
+  global.__nauraPollStore = new Map();
+}
+
+/**
+ * Membangun ActionRow kumpulan tombol opsi voting dan tombol ekspor grafik
+ * @param {Array<string>} options
+ * @param {string} messageId
+ * @param {boolean} [disableVoting=false]
+ * @returns {Array<ActionRowBuilder>}
+ */
+function buildPollActionRows(options, messageId, disableVoting = false) {
+  const rows = [];
+  let currentRow = new ActionRowBuilder();
+  const numberEmojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"];
+
+  options.forEach((opt, index) => {
+    if (currentRow.components.length === 5) {
+      rows.push(currentRow);
+      currentRow = new ActionRowBuilder();
+    }
+    currentRow.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`poll_opt_${index}`)
+        .setLabel(opt.length > 70 ? opt.slice(0, 67) + "..." : opt)
+        .setEmoji(numberEmojis[index] || "🔹")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(disableVoting),
+    );
+  });
+  if (currentRow.components.length > 0) rows.push(currentRow);
+
+  // Baris kedua: Tombol Ekspor Grafik
+  const exportRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`poll_export_${messageId}`)
+      .setLabel("Ekspor Grafik")
+      .setEmoji("📊")
+      .setStyle(ButtonStyle.Primary),
+  );
+  rows.push(exportRow);
+
+  return rows;
+}
 
 module.exports = {
+  name: "poll",
+  description: "Sistem pemungutan suara interaktif dan ekspor diagram grafik visual.",
+
   data: new SlashCommandBuilder()
     .setName("poll")
-    .setDescription("📊 Buat sistem voting interaktif.")
-    .addStringOption((opt) =>
-      opt
-        .setName("pertanyaan")
-        .setDescription("Pertanyaan untuk polling")
-        .setRequired(true),
+    .setDescription("📊 Sistem voting interaktif dan visualisasi grafik perolehan suara.")
+    .addSubcommand((sub) =>
+      sub
+        .setName("create")
+        .setDescription("Buat sesi pemungutan suara (polling) interaktif baru")
+        .addStringOption((opt) =>
+          opt
+            .setName("pertanyaan")
+            .setDescription("Pertanyaan untuk polling")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("pilihan_1")
+            .setDescription("Pilihan pertama")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("pilihan_2")
+            .setDescription("Pilihan kedua")
+            .setRequired(true),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("pilihan_3")
+            .setDescription("Pilihan ketiga")
+            .setRequired(false),
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("pilihan_4")
+            .setDescription("Pilihan keempat")
+            .setRequired(false),
+        )
+        .addBooleanOption((opt) =>
+          opt
+            .setName("multi_vote")
+            .setDescription("Boleh memilih lebih dari satu opsi? (Default: False)")
+            .setRequired(false),
+        )
+        .addIntegerOption((opt) =>
+          opt
+            .setName("durasi")
+            .setDescription("Durasi polling dalam menit (Default: 60)")
+            .setRequired(false),
+        ),
     )
-    .addStringOption((opt) =>
-      opt
-        .setName("pilihan_1")
-        .setDescription("Pilihan pertama")
-        .setRequired(true),
-    )
-    .addStringOption((opt) =>
-      opt
-        .setName("pilihan_2")
-        .setDescription("Pilihan kedua")
-        .setRequired(true),
-    )
-    .addStringOption((opt) =>
-      opt
-        .setName("pilihan_3")
-        .setDescription("Pilihan ketiga")
-        .setRequired(false),
-    )
-    .addStringOption((opt) =>
-      opt
-        .setName("pilihan_4")
-        .setDescription("Pilihan keempat")
-        .setRequired(false),
-    )
-    .addBooleanOption((opt) =>
-      opt
-        .setName("multi_vote")
-        .setDescription("Boleh memilih lebih dari satu? (Default: False)")
-        .setRequired(false),
-    )
-    .addIntegerOption((opt) =>
-      opt
-        .setName("durasi")
-        .setDescription("Durasi polling dalam menit (Default: 60)")
-        .setRequired(false),
+    .addSubcommand((sub) =>
+      sub
+        .setName("results")
+        .setDescription("Lihat dan ekspor kartu grafik visual hasil perolehan suara polling")
+        .addStringOption((opt) =>
+          opt
+            .setName("message_id")
+            .setDescription("ID pesan polling Discord")
+            .setRequired(true),
+        ),
     ),
 
   async execute(interaction) {
+    let subcommand = null;
+    try {
+      subcommand = interaction.options?.getSubcommand(false);
+    } catch {
+      subcommand = null;
+    }
+
+    // ==========================================
+    // SUBCOMMAND: RESULTS (EKSPOR GRAFIK CANVAS)
+    // ==========================================
+    if (subcommand === "results") {
+      const messageId = interaction.options.getString("message_id")?.trim();
+      const redisKey = `poll:data:${messageId}`;
+
+      let pollData = await redisManager.getCache(redisKey);
+      if (!pollData && global.__nauraPollStore.has(messageId)) {
+        pollData = global.__nauraPollStore.get(messageId);
+      }
+
+      if (!pollData) {
+        const notFound = buildErrorContainerV2({
+          title: "Polling Tidak Ditemukan",
+          errorMessage: `Data polling dengan ID pesan \`${messageId}\` tidak ditemukan atau masa aktifnya telah kedaluwarsa.`,
+          footerText: ui.getFooter("core"),
+        });
+        return interaction.reply({
+          ...notFound,
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+
+      if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferReply().catch(() => {});
+      }
+
+      try {
+        const chartBuffer = await canvasWorkerPool.runTask("renderPollChart", {
+          question: pollData.question,
+          options: pollData.options,
+          votes: pollData.votes,
+          totalVotes: pollData.totalVotes,
+          author: pollData.author,
+        });
+
+        const attachment = new AttachmentBuilder(chartBuffer, {
+          name: "poll_chart.png",
+        });
+
+        const chartContainer = buildContainerV2({
+          accentColorHex: ui.getColor("primary") || "#38BDF8",
+          authorName: "Naura Poll Visualizer",
+          title: `Grafik Hasil: ${pollData.question}`,
+          description: `Diagram batang resolusi tinggi perolehan suara (${pollData.totalVotes || 0} total suara terdaftar).\nStatus: **${pollData.isClosed ? "Selesai" : "Sedang Berlangsung"}**`,
+          footerText: `Inisiator: ${pollData.author?.username || "Pengguna"} • Naura Smart Utilities`,
+          withBanner: false,
+        });
+
+        return interaction.editReply({
+          ...chartContainer,
+          files: [attachment],
+        });
+      } catch (err) {
+        logger.error("[Poll] Gagal merender grafik diagram polling:", err);
+        const errContainer = buildErrorContainerV2({
+          title: "Gagal Merender Grafik",
+          errorMessage: "Terjadi gangguan saat memproses diagram batang grafis polling.",
+          footerText: ui.getFooter("core"),
+        });
+        return interaction.editReply({ ...errContainer });
+      }
+    }
+
+    // ==========================================
+    // SUBCOMMAND: CREATE (BUAT POLLING BARU)
+    // ==========================================
     const question = interaction.options.getString("pertanyaan");
     const multiVote = interaction.options.getBoolean("multi_vote") || false;
     const durationMin = interaction.options.getInteger("durasi") || 60;
@@ -95,7 +244,7 @@ module.exports = {
       return desc;
     };
 
-    const payload = buildContainerV2({
+    const initialPayload = buildContainerV2({
       accentColorHex: ui.getColor("primary") || "#38BDF8",
       authorName: "Sistem Pemungutan Suara",
       iconURL: interaction.user.displayAvatarURL(),
@@ -104,84 +253,163 @@ module.exports = {
       footerText: `Inisiator: ${interaction.user.username}`,
     });
 
-    const rows = [];
-    let currentRow = new ActionRowBuilder();
-    const numberEmojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"];
-
-    options.forEach((opt, index) => {
-      if (currentRow.components.length === 5) {
-        rows.push(currentRow);
-        currentRow = new ActionRowBuilder();
-      }
-      currentRow.addComponents(
-        new ButtonBuilder()
-          .setCustomId(`poll_opt_${index}`)
-          .setLabel(opt.length > 70 ? opt.slice(0, 67) + "..." : opt)
-          .setEmoji(numberEmojis[index] || "🔹")
-          .setStyle(ButtonStyle.Secondary),
-      );
-    });
-    if (currentRow.components.length > 0) rows.push(currentRow);
-
+    // Kirim pesan awal untuk mendapatkan message ID Discord
+    const initialRows = buildPollActionRows(options, "pending");
     const pollMessage = await interaction.reply({
-      ...payload,
-      components: rows,
+      ...initialPayload,
+      components: initialRows,
       fetchReply: true,
     });
 
+    const messageId = pollMessage.id;
+    const ttlSeconds = durationMin * 60 + 86400; // TTL polling + 24 jam setelah selesai
+    const redisKey = `poll:data:${messageId}`;
+
+    // Objek state polling untuk Redis dan memori
+    const pollState = {
+      messageId,
+      channelId: interaction.channelId,
+      guildId: interaction.guildId,
+      question,
+      options,
+      votes: {},
+      totalVotes: 0,
+      multiVote,
+      author: {
+        id: interaction.user.id,
+        username: interaction.user.username,
+        avatar: interaction.user.displayAvatarURL(),
+      },
+      createdAt: Date.now(),
+      endUnix,
+      durationMin,
+      isClosed: false,
+    };
+
+    // Sinkronkan state awal ke Redis & Memory Store
+    await redisManager.setCache(redisKey, pollState, ttlSeconds);
+    global.__nauraPollStore.set(messageId, pollState);
+
+    // Perbarui komponen tombol dengan messageId yang valid untuk tombol ekspor
+    const activeRows = buildPollActionRows(options, messageId, false);
+    await interaction
+      .editReply({
+        components: activeRows,
+      })
+      .catch(() => {});
+
+    // Collector interaksi tombol
     const collector = pollMessage.createMessageComponentCollector({
       componentType: ComponentType.Button,
       time: durationMin * 60 * 1000,
     });
 
     collector.on("collect", async (i) => {
-      const optIndex = parseInt(i.customId.split("_")[2], 10);
-      const userId = i.user.id;
+      // 1. Ekspor Grafik Langsung dari Tombol
+      if (i.customId.startsWith("poll_export_")) {
+        await i.deferReply({ flags: MessageFlags.Ephemeral });
+        try {
+          let currentTotal = 0;
+          for (const uVotes of votes.values()) {
+            currentTotal += uVotes.size;
+          }
 
-      if (!votes.has(userId)) {
-        votes.set(userId, new Set());
+          const votesRecord = Object.fromEntries(
+            Array.from(votes.entries()).map(([k, v]) => [k, Array.from(v)]),
+          );
+
+          const buffer = await canvasWorkerPool.runTask("renderPollChart", {
+            question,
+            options,
+            votes: votesRecord,
+            totalVotes: currentTotal,
+            author: interaction.user,
+          });
+
+          const attachment = new AttachmentBuilder(buffer, {
+            name: "poll_chart.png",
+          });
+
+          const chartContainer = buildContainerV2({
+            accentColorHex: ui.getColor("primary") || "#38BDF8",
+            authorName: "Naura Poll Visualizer",
+            title: `Grafik Voting: ${question}`,
+            description: `Visualisasi diagram batang hasil perolehan suara saat ini (${currentTotal} total suara terdaftar).`,
+            footerText: `Diminta oleh ${i.user.username} • Naura Smart Utilities`,
+            withBanner: false,
+          });
+
+          return i.editReply({
+            ...chartContainer,
+            files: [attachment],
+          });
+        } catch (err) {
+          logger.error("[Poll] Gagal merender grafik dari tombol:", err);
+          return i.editReply({
+            content: "Terjadi kesalahan saat mengekspor grafik hasil polling.",
+          });
+        }
       }
 
-      const userVotes = votes.get(userId);
+      // 2. Voting Tombol Pilihan
+      if (i.customId.startsWith("poll_opt_")) {
+        const optIndex = parseInt(i.customId.split("_")[2], 10);
+        const userId = i.user.id;
 
-      if (!multiVote && userVotes.size > 0 && !userVotes.has(optIndex)) {
-        return i.reply({
-          content: "Kamu hanya dapat memilih satu opsi pada polling ini. Batalkan opsi sebelumnya terlebih dahulu jika ingin berganti pilihan.",
-          flags: MessageFlags.Ephemeral,
+        if (!votes.has(userId)) {
+          votes.set(userId, new Set());
+        }
+
+        const userVotes = votes.get(userId);
+
+        if (!multiVote && userVotes.size > 0 && !userVotes.has(optIndex)) {
+          return i.reply({
+            content:
+              "Kamu hanya dapat memilih satu opsi pada polling ini. Batalkan opsi sebelumnya terlebih dahulu jika ingin berganti pilihan.",
+            flags: MessageFlags.Ephemeral,
+          });
+        }
+
+        if (userVotes.has(optIndex)) {
+          userVotes.delete(optIndex);
+          await i.reply({
+            content: `Pilihan untuk opsi **"${options[optIndex]}"** telah dibatalkan.`,
+            flags: MessageFlags.Ephemeral,
+          });
+        } else {
+          userVotes.add(optIndex);
+          await i.reply({
+            content: `Suaramu berhasil disimpan untuk opsi **"${options[optIndex]}"**.`,
+            flags: MessageFlags.Ephemeral,
+          });
+        }
+
+        let totalVotes = 0;
+        for (const uVotes of votes.values()) {
+          totalVotes += uVotes.size;
+        }
+
+        // Simpan snapshot suara ke Redis & Memory Store
+        pollState.votes = Object.fromEntries(
+          Array.from(votes.entries()).map(([k, v]) => [k, Array.from(v)]),
+        );
+        pollState.totalVotes = totalVotes;
+        await redisManager.setCache(redisKey, pollState, ttlSeconds);
+        global.__nauraPollStore.set(messageId, pollState);
+
+        const updatePayload = buildContainerV2({
+          accentColorHex: ui.getColor("primary") || "#38BDF8",
+          authorName: "Sistem Pemungutan Suara",
+          iconURL: interaction.user.displayAvatarURL(),
+          title: question,
+          description: renderDescription(totalVotes, false),
+          footerText: `Inisiator: ${interaction.user.username} • Total Partisipasi: ${totalVotes} Suara`,
         });
+
+        await interaction
+          .editReply({ ...updatePayload, components: activeRows })
+          .catch(() => {});
       }
-
-      if (userVotes.has(optIndex)) {
-        userVotes.delete(optIndex);
-        await i.reply({
-          content: `Pilihan untuk opsi **"${options[optIndex]}"** telah dibatalkan.`,
-          flags: MessageFlags.Ephemeral,
-        });
-      } else {
-        userVotes.add(optIndex);
-        await i.reply({
-          content: `Suaramu berhasil disimpan untuk opsi **"${options[optIndex]}"**.`,
-          flags: MessageFlags.Ephemeral,
-        });
-      }
-
-      let totalVotes = 0;
-      for (const uVotes of votes.values()) {
-        totalVotes += uVotes.size;
-      }
-
-      const updatePayload = buildContainerV2({
-        accentColorHex: ui.getColor("primary") || "#38BDF8",
-        authorName: "Sistem Pemungutan Suara",
-        iconURL: interaction.user.displayAvatarURL(),
-        title: question,
-        description: renderDescription(totalVotes, false),
-        footerText: `Inisiator: ${interaction.user.username} • Total Partisipasi: ${totalVotes} Suara`,
-      });
-
-      await interaction
-        .editReply({ ...updatePayload, components: rows })
-        .catch(() => {});
     });
 
     collector.on("end", async () => {
@@ -189,6 +417,14 @@ module.exports = {
       for (const userVotes of votes.values()) {
         totalVotes += userVotes.size;
       }
+
+      pollState.isClosed = true;
+      pollState.totalVotes = totalVotes;
+      pollState.votes = Object.fromEntries(
+        Array.from(votes.entries()).map(([k, v]) => [k, Array.from(v)]),
+      );
+      await redisManager.setCache(redisKey, pollState, ttlSeconds);
+      global.__nauraPollStore.set(messageId, pollState);
 
       const resultPayload = buildContainerV2({
         accentColorHex: ui.getColor("success") || "#34D399",
@@ -199,7 +435,11 @@ module.exports = {
         footerText: ui.getFooter("core"),
       });
 
-      await interaction.editReply({ ...resultPayload, components: [] }).catch(() => {});
+      // Tombol voting dinonaktifkan, tombol ekspor tetap aktif
+      const closedRows = buildPollActionRows(options, messageId, true);
+      await interaction
+        .editReply({ ...resultPayload, components: closedRows })
+        .catch(() => {});
     });
   },
 };

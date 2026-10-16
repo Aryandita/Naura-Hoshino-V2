@@ -320,6 +320,11 @@ module.exports = {
           );
         case "renderCard":
           return await require("./cardCanvas").renderCard(payload);
+        case "renderCarbon":
+        case "renderCodeSnippet":
+          return await require("./codeCanvas").renderCarbonCard(payload);
+        case "renderPollChart":
+          return await require("./pollCanvas").renderPollChart(payload);
         default:
           throw err;
       }

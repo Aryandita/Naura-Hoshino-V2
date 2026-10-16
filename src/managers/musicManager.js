@@ -28,6 +28,7 @@ class MusicManager {
     this.trackHistories = new Map();
     this.savedQueues = new Map();
     this.skipVotes = new Map();
+    this.sleepTimers = new Map();
   }
 
   get poru() {
@@ -381,6 +382,185 @@ class MusicManager {
   clearSkipVotes(guildId) {
     if (!guildId) return;
     this.skipVotes.delete(guildId);
+  }
+
+  /**
+   * Memasang sleep timer terpusat dengan efek audio fade-out 15 detik sebelum pemutusan.
+   * @param {string} guildId - ID server discord.
+   * @param {number} minutes - Durasi dalam menit (0 untuk membatalkan).
+   * @param {object} [options={}] - Opsi callback pengujian dan event lifecycle.
+   * @param {Function} [options.onFadeStart] - Callback saat fase fade-out dimulai.
+   * @param {Function} [options.onExpire] - Callback saat timer selesai dan player diputus.
+   * @returns {object|null} Informasi timer yang terdaftar.
+   */
+  setSleepTimer(guildId, minutes, options = {}) {
+    if (!guildId) return null;
+
+    // Bersihkan timer sebelumnya jika ada
+    this.cancelSleepTimer(guildId);
+
+    const numMinutes = Number(minutes);
+    if (isNaN(numMinutes) || numMinutes <= 0) {
+      return { success: true, cancelled: true };
+    }
+
+    const totalMs = Math.round(numMinutes * 60 * 1000);
+    const fadeDurationMs = Math.min(15000, totalMs);
+    const normalDurationMs = totalMs - fadeDurationMs;
+    const endsAt = Date.now() + totalMs;
+
+    const player = this._poru?.players?.get(guildId);
+    const initialVolume =
+      player && typeof player.volume === "number" ? player.volume : 100;
+
+    const entry = {
+      guildId,
+      minutes: numMinutes,
+      endsAt,
+      totalMs,
+      fadeDurationMs,
+      normalDurationMs,
+      initialVolume,
+      timeoutId: null,
+      fadeIntervalId: null,
+      isFading: false,
+    };
+
+    const startFadeOut = () => {
+      entry.isFading = true;
+      if (typeof options.onFadeStart === "function") {
+        try {
+          options.onFadeStart();
+        } catch (e) {
+          logger.debug("[MusicManager] onFadeStart error: " + e.message);
+        }
+      }
+
+      const totalSteps = 15;
+      const stepIntervalMs = Math.max(
+        100,
+        Math.floor(fadeDurationMs / totalSteps),
+      );
+      let currentStep = totalSteps;
+
+      entry.fadeIntervalId = setInterval(() => {
+        currentStep--;
+        const activePlayer = this._poru?.players?.get(guildId);
+        if (activePlayer && typeof activePlayer.setVolume === "function") {
+          const newVol = Math.max(
+            0,
+            Math.round((initialVolume * currentStep) / totalSteps),
+          );
+          activePlayer.setVolume(newVol);
+        }
+
+        if (currentStep <= 0) {
+          if (entry.fadeIntervalId) {
+            clearInterval(entry.fadeIntervalId);
+            entry.fadeIntervalId = null;
+          }
+          this.sleepTimers.delete(guildId);
+
+          const finalPlayer = this._poru?.players?.get(guildId);
+          if (finalPlayer) {
+            const textChannelId = finalPlayer.textChannel;
+            if (typeof finalPlayer.destroy === "function") {
+              finalPlayer.destroy();
+            }
+
+            if (textChannelId && this.client) {
+              const textChan = this.client.channels?.cache?.get(textChannelId);
+              if (textChan && typeof textChan.send === "function") {
+                const {
+                  buildContainerV2,
+                } = require("../utils/NauraContainerBuilder");
+                const sleepEndPayload = buildContainerV2({
+                  accentColorHex: ui.getColor("primary") || "#FFB6C1",
+                  title: "😴 Sleep Timer Selesai",
+                  description:
+                    "Waktu sleep timer telah habis. Pemutaran musik dihentikan dan Naura pamit dari Voice Channel. Selamat beristirahat! 💤\n-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                  expression: "sleepy",
+                  footerText: ui.getFooter("music"),
+                });
+                textChan.send(sleepEndPayload).catch(() => {});
+              }
+            }
+          }
+
+          if (typeof options.onExpire === "function") {
+            try {
+              options.onExpire();
+            } catch (e) {
+              logger.debug("[MusicManager] onExpire error: " + e.message);
+            }
+          }
+        }
+      }, stepIntervalMs);
+
+      if (entry.fadeIntervalId.unref) entry.fadeIntervalId.unref();
+    };
+
+    if (normalDurationMs <= 0) {
+      startFadeOut();
+    } else {
+      entry.timeoutId = setTimeout(() => {
+        startFadeOut();
+      }, normalDurationMs);
+      if (entry.timeoutId.unref) entry.timeoutId.unref();
+    }
+
+    this.sleepTimers.set(guildId, entry);
+    return entry;
+  }
+
+  /**
+   * Membatalkan sleep timer aktif pada suatu guild dan memulihkan volume jika perlu.
+   * @param {string} guildId - ID server discord.
+   * @returns {boolean} True jika ada timer yang berhasil dibatalkan.
+   */
+  cancelSleepTimer(guildId) {
+    if (!guildId || !this.sleepTimers.has(guildId)) return false;
+
+    const entry = this.sleepTimers.get(guildId);
+    if (entry.timeoutId) clearTimeout(entry.timeoutId);
+    if (entry.fadeIntervalId) clearInterval(entry.fadeIntervalId);
+
+    // Pulihkan volume jika sebelumnya sedang dalam fase fade
+    if (entry.isFading && typeof entry.initialVolume === "number") {
+      const player = this._poru?.players?.get(guildId);
+      if (
+        player &&
+        typeof player.setVolume === "function" &&
+        player.volume < entry.initialVolume
+      ) {
+        player.setVolume(entry.initialVolume);
+      }
+    }
+
+    this.sleepTimers.delete(guildId);
+    return true;
+  }
+
+  /**
+   * Mengambil status sleep timer aktif di guild.
+   * @param {string} guildId - ID server discord.
+   * @returns {object|null} Status timer tidur atau null jika tidak aktif.
+   */
+  getSleepTimer(guildId) {
+    if (!guildId || !this.sleepTimers.has(guildId)) return null;
+
+    const entry = this.sleepTimers.get(guildId);
+    const remainingMs = Math.max(0, entry.endsAt - Date.now());
+
+    return {
+      guildId,
+      minutes: entry.minutes,
+      endsAt: entry.endsAt,
+      remainingMs,
+      remainingSeconds: Math.ceil(remainingMs / 1000),
+      isFading: entry.isFading || remainingMs <= 15000,
+      initialVolume: entry.initialVolume,
+    };
   }
 }
 

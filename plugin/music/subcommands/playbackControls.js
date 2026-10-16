@@ -18,8 +18,15 @@ const {
 } = require("../../../src/utils/NauraContainerBuilder");
 const { getPlatformIcon } = require("../../../src/canvas/CanvasUtils");
 const { drawNowPlayingCard } = require("../../../src/canvas/nowplayingCanvas");
-const { applyAudioFilter, FILTER_PRESETS } = require("../../../src/music/audioFilters");
-const { formatDuration } = require("../helpers/musicShared");
+const {
+  applyAudioFilter,
+  FILTER_PRESETS,
+} = require("../../../src/music/audioFilters");
+const {
+  formatDuration,
+  parseTimestampToMs,
+  clampSeekPosition,
+} = require("../helpers/musicShared");
 
 module.exports = {
   async pause(ctx) {
@@ -363,6 +370,7 @@ module.exports = {
       return sendReply(errPayload, true);
     }
     player.queue.clear();
+    client.musicManager?.cancelSleepTimer?.(ctx.guild.id);
     if (player.is247) {
       player.isIdle247 = true;
       if (typeof player.stopTrack === "function") player.stopTrack();
@@ -589,5 +597,188 @@ module.exports = {
       footerText: ui.getFooter("music"),
     });
     return sendReply(payload, true);
+  },
+
+  async seek(ctx) {
+    const { client, player, args, sendReply, guild } = ctx;
+    const eError = ui.getEmoji("error") || "❌";
+    const divider = "-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+
+    if (!player || !player.isPlaying || !player.currentTrack) {
+      const errPayload = buildErrorContainerV2({
+        title: "Tidak Ada Musik",
+        description: `${eError} | Tidak ada lagu yang sedang diputar.`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    const track = player.currentTrack.info;
+    if (track.isStream || track.isSeekable === false) {
+      const errPayload = buildErrorContainerV2({
+        title: "Tidak Dapat Di-seek",
+        description: `${eError} | Lagu ini adalah siaran langsung atau tidak mendukung navigasi durasi.`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    const targetMs = parseTimestampToMs(args.posisi);
+    if (
+      targetMs === null ||
+      isNaN(targetMs) ||
+      targetMs < 0 ||
+      targetMs > track.length
+    ) {
+      const errPayload = buildErrorContainerV2({
+        title: "Format Durasi Salah",
+        description: `${eError} | Masukkan format waktu yang valid antara \`00:00\` hingga \`${formatDuration(track.length)}\` (contoh: \`1:30\` atau \`90\`).`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    const clampedMs = clampSeekPosition(targetMs, track.length);
+    await player.seekTo(clampedMs);
+    player.position = clampedMs;
+
+    if (client.dashboardIo) {
+      client.dashboardIo.to(String(guild.id)).emit("music_state", {
+        currentTrack: {
+          title: track.title,
+          uri: track.uri,
+          duration: track.length,
+          position: clampedMs,
+          isPlaying: player.isPlaying,
+          isPaused: player.isPaused,
+        },
+        queue: player.queue.map((t) => ({
+          title: t.info.title,
+          duration: t.info.length,
+        })),
+      });
+    }
+
+    const payload = buildContainerV2({
+      accentColorHex: ui.getColor("primary") || "#FFB6C1",
+      title: "⏩ Posisi Lagu Dipindahkan",
+      description: `Berhasil melompat ke waktu **${formatDuration(clampedMs)}** / **${formatDuration(track.length)}**.\n${divider}`,
+      footerText: ui.getFooter("music"),
+    });
+    return sendReply(payload);
+  },
+
+  async sleep(ctx) {
+    const { client, player, args, sendReply, guild } = ctx;
+    const eError = ui.getEmoji("error") || "❌";
+    const divider = "-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+
+    if (!player) {
+      const errPayload = buildErrorContainerV2({
+        title: "Tidak Ada Frekuensi",
+        description: `${eError} | Tidak ada frekuensi audio yang aktif.`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    const minutes = args.menit;
+    if (minutes === undefined || isNaN(minutes) || minutes < 0) {
+      const errPayload = buildErrorContainerV2({
+        title: "Durasi Tidak Valid",
+        description: `${eError} | Harap masukkan durasi waktu tidur dalam satuan menit (contoh: \`/music sleep 30\` atau \`0\` untuk membatalkan).`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(errPayload, true);
+    }
+
+    if (minutes === 0) {
+      const cancelled = client.musicManager?.cancelSleepTimer(guild.id);
+      const payload = buildContainerV2({
+        accentColorHex: ui.getColor("primary") || "#FFB6C1",
+        title: "⏰ Timer Tidur Dibatalkan",
+        description: cancelled
+          ? `Timer tidur telah dinonaktifkan. Naura akan terus memutar musik seperti biasa!\n${divider}`
+          : `Tidak ada timer tidur yang sedang aktif untuk dibatalkan.\n${divider}`,
+        footerText: ui.getFooter("music"),
+      });
+      return sendReply(payload, true);
+    }
+
+    client.musicManager?.setSleepTimer(guild.id, minutes);
+
+    const payload = buildContainerV2({
+      accentColorHex: ui.getColor("primary") || "#FFB6C1",
+      title: "🌙 Timer Tidur Diaktifkan",
+      description: `Musik akan berhenti otomatis dalam **${minutes} menit** dengan efek fade-out halus di 15 detik terakhir. Selamat beristirahat! 💤\n${divider}`,
+      expression: "sleepy",
+      footerText: ui.getFooter("music"),
+    });
+    return sendReply(payload, false);
+  },
+
+  async handleSeek(interaction, client) {
+    const poru = client.musicManager?.poru;
+    const player = poru?.players?.get(interaction.guildId);
+    const rawPos =
+      interaction.options?.getString?.("posisi") ||
+      interaction.options?.getString?.("position") ||
+      interaction.options?.getString?.("timestamp");
+    const ctx = {
+      client,
+      user: interaction.user,
+      member: interaction.member,
+      guild: interaction.guild,
+      channel: interaction.channel,
+      subcommand: "seek",
+      args: { posisi: rawPos },
+      sendReply: async (payload, ephemeral = false) => {
+        if (interaction.deferred || interaction.replied) {
+          return interaction.editReply(payload);
+        }
+        return interaction.reply({
+          ...payload,
+          flags: ephemeral ? MessageFlags.Ephemeral : undefined,
+        });
+      },
+      isSlash: true,
+      poru,
+      musicManager: client.musicManager,
+      memberVoice: interaction.member?.voice?.channel,
+      player,
+    };
+    return module.exports.seek(ctx);
+  },
+
+  async handleSleep(interaction, client) {
+    const poru = client.musicManager?.poru;
+    const player = poru?.players?.get(interaction.guildId);
+    const minutes =
+      interaction.options?.getInteger?.("menit") ??
+      interaction.options?.getInteger?.("minutes");
+    const ctx = {
+      client,
+      user: interaction.user,
+      member: interaction.member,
+      guild: interaction.guild,
+      channel: interaction.channel,
+      subcommand: "sleep",
+      args: { menit: minutes },
+      sendReply: async (payload, ephemeral = false) => {
+        if (interaction.deferred || interaction.replied) {
+          return interaction.editReply(payload);
+        }
+        return interaction.reply({
+          ...payload,
+          flags: ephemeral ? MessageFlags.Ephemeral : undefined,
+        });
+      },
+      isSlash: true,
+      poru,
+      musicManager: client.musicManager,
+      memberVoice: interaction.member?.voice?.channel,
+      player,
+    };
+    return module.exports.sleep(ctx);
   },
 };

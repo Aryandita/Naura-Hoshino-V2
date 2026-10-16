@@ -307,6 +307,30 @@ const MINIGAME_INFOS = {
       "> 3. Bersenang-senanglah bersama teman-teman servermu!",
     tip: "Jangan curang ya, lakukan tantangan dengan penuh percaya diri!",
   },
+  blackjack: {
+    title: "Blackjack 21 Kasino",
+    emoji: "🃏",
+    description:
+      "Tantang dealer Naura dalam permainan kartu Blackjack 21 standar!\n\n" +
+      "**Cara Bermain:**\n" +
+      "> 1. Pasang taruhan Star Fragments (NSF) dan dapatkan 2 kartu awal.\n" +
+      "> 2. Pilih **Hit** untuk menambah kartu, **Stand** untuk bertahan, **Double** untuk menggandakan taruhan, atau **Split** jika kartumu kembar.\n" +
+      "> 3. Dapatkan nilai sedekat mungkin dengan 21 tanpa melebihi 21 (Bust)!\n" +
+      "> 4. Dealer wajib stand pada semua nilai 17 (Hard & Soft). Natural Blackjack membayar 3:2!",
+    tip: "Perhatikan kartu terbuka dealer! Jika kartu dealer bernilai 4, 5, atau 6, dealer memiliki risiko bust yang tinggi.",
+  },
+  typerace: {
+    title: "TypeRacer Kecepatan Ketik",
+    emoji: "⌨️",
+    description:
+      "Uji kecepatan jari dan ketelitian mengetikmu dalam arena TypeRacer!\n\n" +
+      "**Cara Bermain:**\n" +
+      "> 1. Pilih tingkat kesulitan (Mudah, Sedang, Sulit) dan pasang taruhan opsional.\n" +
+      "> 2. Baca teks kutipan target yang diberikan.\n" +
+      "> 3. Tekan tombol **Mulai Ketik 🏁** untuk membuka jendela modal input.\n" +
+      "> 4. Ketik teks secepat dan seakurat mungkin sebelum batas waktu 90 detik habis!",
+    tip: "Akurasi minimal 85% wajib dipenuhi agar kecepatan WPM menghasilkan hadiah Star Fragments!",
+  },
 };
 
 async function showMinigameIntro(interaction, subcommand, onStart) {
