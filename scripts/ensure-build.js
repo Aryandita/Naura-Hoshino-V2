@@ -163,9 +163,33 @@ if (isPterodactyl) {
   }
 }
 
-// ── 2. Bangun Frontend Dashboard bila belum ada ──
-if (!fs.existsSync(distPath)) {
-  console.log("[STARTUP] dashboard/dist belum ada. Membangun frontend...");
+// ── 2. Bangun Frontend Dashboard bila belum ada atau jika sumber 3D lebih baru ──
+const runtimeFixFile = path.join(
+  projectRoot,
+  "dashboard",
+  "src",
+  "components",
+  "NauraViewer",
+  "animations",
+  "core",
+  "nauraRuntimeFix.js",
+);
+let needsRebuild = !fs.existsSync(distPath);
+if (!needsRebuild && fs.existsSync(runtimeFixFile)) {
+  try {
+    const distStat = fs.statSync(distPath);
+    const fixStat = fs.statSync(runtimeFixFile);
+    if (fixStat.mtimeMs > distStat.mtimeMs) {
+      needsRebuild = true;
+      console.log(
+        "[STARTUP] nauraRuntimeFix.js lebih baru daripada dashboard/dist. Membangun ulang frontend...",
+      );
+    }
+  } catch (_) {}
+}
+
+if (needsRebuild) {
+  console.log("[STARTUP] Membangun bundle dashboard...");
   try {
     execSync("node scripts/build-dashboard.js", {
       cwd: projectRoot,

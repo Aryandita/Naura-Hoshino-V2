@@ -8,7 +8,7 @@
  */
 
 import { slerpBoneDirect } from "../core/interpolation.js";
-import { RIG_LIMITS, clampToLimits, armElevation } from "../core/rigProfile.js";
+import { RIG_LIMITS, clampToLimits, armElevation, enforceArmClearance } from "../core/rigProfile.js";
 
 const LEFT_ARM_KEYS = [
     "leftShoulder",
@@ -74,6 +74,10 @@ export class LeftArmController {
                 rawLower[2] + (context.isIdle ? Math.sin(elapsed * 1.75 - 0.5) * 0.016 : 0),
             ],
         };
+
+        const cleared = enforceArmClearance("left", resolvedTargets.leftUpperArm, resolvedTargets.leftLowerArm);
+        resolvedTargets.leftUpperArm = cleared.upper;
+        resolvedTargets.leftLowerArm = cleared.lower;
 
         for (const key of LEFT_ARM_KEYS) {
             try {

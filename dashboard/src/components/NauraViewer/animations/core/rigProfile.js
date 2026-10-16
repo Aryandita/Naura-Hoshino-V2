@@ -223,7 +223,7 @@ export const RIG_LIMITS = {
     head: { x: [-0.40, 0.40], y: [-0.78, 0.78], z: [-0.78, 0.78] },
     neck: { x: [-0.35, 0.35], y: [-0.61, 0.61], z: [-0.61, 0.61] },
     upperArm: { x: [-7.0, 7.0], y: [-7.0, 7.0], z: [-7.0, 7.0] },
-    lowerArm: { x: [-7.0, 7.0], y: [-7.0, 7.0], z: [-7.0, 7.0] },
+    lowerArm: { x: [-7.0, 7.0], y: [-0.68, 0.68], z: [-7.0, 7.0] },
 };
 
 /** Clamp vektor [x, y, z] (in-place) sesuai batas { x, y, z }. */
@@ -245,4 +245,40 @@ export function armElevation(rot = [0, 0, 0]) {
     _euler.set(rot[0], rot[1], rot[2]);
     _quat.setFromEuler(_euler);
     return 2 * Math.acos(Math.min(1, Math.abs(_quat.w)));
+}
+
+/**
+ * Pelindung Kinematika Real-Time (Forward Kinematics Clearance):
+ * Mencegah siku, lengan bawah, dan pergelangan menembus dada, perut, rok, atau kacamata.
+ * @param {'left'|'right'} side
+ * @param {number[]} upperRot - [roll, yaw, pitch] lengan atas
+ * @param {number[]} lowerRot - [roll, yaw, pitch] lengan bawah
+ * @returns {{ upper: number[], lower: number[] }}
+ */
+export function enforceArmClearance(side, upperRot = [0, 0, 0], lowerRot = [0, 0, 0]) {
+    const isLeft = side === "left";
+    const u = [upperRot[0], upperRot[1], upperRot[2]];
+    const l = [lowerRot[0], lowerRot[1], lowerRot[2]];
+
+    // Batasi puntiran lowerArm.y ke [-0.68, 0.68] rad untuk mencegah candy-wrapper collapse
+    l[1] = THREE.MathUtils.clamp(l[1], -0.68, 0.68);
+
+    // Hitung fleksi siku gabungan
+    const elbowFlex = Math.abs(l[0]) + Math.abs(l[2]);
+    if (elbowFlex > 0.35) {
+        // Dorong upperArm pitch ke depan (+Z) saat lengan ditekuk ke arah torso
+        const minPitch = 0.16 + Math.min(0.42, elbowFlex * 0.24);
+        if (u[2] < minPitch) {
+            u[2] = minPitch;
+        }
+
+        // Pertahankan roll samping keluar agar tidak memutar siku ke dalam rongga rusuk/dada
+        if (isLeft && u[0] > 0.20) {
+            u[0] = 0.20;
+        } else if (!isLeft && u[0] < -0.20) {
+            u[0] = -0.20;
+        }
+    }
+
+    return { upper: u, lower: l };
 }

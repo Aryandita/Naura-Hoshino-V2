@@ -63,7 +63,8 @@ async function fetchModelBuffer(url, onProgress) {
   }
 
   const promise = (async () => {
-    const response = await fetch(url);
+    const fetchUrl = url.includes("?") ? `${url}&v=2.3.5` : `${url}?v=2.3.5`;
+    const response = await fetch(fetchUrl);
     if (!response.ok) {
       throw new Error(`HTTP ${response.status} ${response.statusText} saat mengambil ${url}`);
     }

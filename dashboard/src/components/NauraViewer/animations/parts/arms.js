@@ -12,7 +12,7 @@
  */
 
 import { slerpBone } from "../core/interpolation.js";
-import { RIG_LIMITS, clampToLimits } from "../core/rigProfile.js";
+import { RIG_LIMITS, clampToLimits, enforceArmClearance } from "../core/rigProfile.js";
 
 const ARM_KEYS = [
     "leftShoulder",
@@ -41,7 +41,18 @@ export class ArmController {
     }
 
     update(delta, elapsed, context = {}) {
-        const targetBones = context.targetBones || {};
+        const targetBones = { ...context.targetBones };
+        if (targetBones.leftUpperArm && targetBones.leftLowerArm) {
+            const clearedL = enforceArmClearance("left", targetBones.leftUpperArm, targetBones.leftLowerArm);
+            targetBones.leftUpperArm = clearedL.upper;
+            targetBones.leftLowerArm = clearedL.lower;
+        }
+        if (targetBones.rightUpperArm && targetBones.rightLowerArm) {
+            const clearedR = enforceArmClearance("right", targetBones.rightUpperArm, targetBones.rightLowerArm);
+            targetBones.rightUpperArm = clearedR.upper;
+            targetBones.rightLowerArm = clearedR.lower;
+        }
+
         // Gaya gerak realistis berbasis fisika (smooth exponential decay)
         const baseLerp = 8.0;   // lengan atas & bahu: halus
         const elbowLerp = 13.0; // siku lebih responsif agar ayunan lambaian tidak teredam

@@ -199,13 +199,13 @@ module.exports = (client) => {
   };
   webApp.use(
     "/models",
-    express.static(path.join(__dirname, "dist/models"), {
+    express.static(path.join(__dirname, "public/models"), {
       setHeaders: setModelMime,
     }),
   );
   webApp.use(
     "/models",
-    express.static(path.join(__dirname, "public/models"), {
+    express.static(path.join(__dirname, "dist/models"), {
       setHeaders: setModelMime,
     }),
   );

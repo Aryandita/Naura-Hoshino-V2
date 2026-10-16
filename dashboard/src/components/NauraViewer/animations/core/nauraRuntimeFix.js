@@ -165,14 +165,14 @@ export function applyNauraRuntimeFix(sceneRoot) {
 
     // ---- 4. Penyelarasan sendi bahu & lengan beserta sinkronisasi penuh Inverse Bind Matrices ----
     const TARGET_LOCAL_JOINTS = {
-        LeftShoulder: [0.032, 0.02, 0.05],
+        LeftShoulder: [0.010, 0.020, 0.050],
         LeftArm: [0.045, -0.04, 0.048],
         LeftForeArm: [0.005, -0.09, 0.01],
-        LeftHand: [0.005, -0.085, 0.014],
-        RightShoulder: [0.032, 0.02, -0.05],
+        LeftHand: [0.003, -0.085, 0.016],
+        RightShoulder: [0.010, 0.020, -0.050],
         RightArm: [0.045, -0.04, -0.048],
         RightForeArm: [0.005, -0.09, -0.01],
-        RightHand: [0.005, -0.085, -0.014],
+        RightHand: [0.003, -0.085, -0.016],
     };
 
     let moved = 0;
