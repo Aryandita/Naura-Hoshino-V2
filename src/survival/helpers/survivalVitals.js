@@ -258,7 +258,255 @@ async function checkAndRescueDeadEnd(userId, survival) {
   };
 }
 
+const ENERGY_RESET_INTERVAL_MS = 5 * 60 * 60 * 1000; // 5 Jam
+
+/**
+ * Format selisih waktu milidetik ke teks bahasa Indonesia yang ringkas.
+ *
+ * @param {number} ms - Sisa waktu dalam milidetik
+ * @returns {string} Contoh: "4 jam 15 menit", "35 menit", atau "Siap!"
+ */
+function formatResetCountdown(ms) {
+  if (!ms || ms <= 0) return "Siap!";
+  const totalMinutes = Math.ceil(ms / (60 * 1000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours > 0) {
+    return minutes > 0 ? `${hours} jam ${minutes} menit` : `${hours} jam`;
+  }
+  return `${minutes} menit`;
+}
+
+/**
+ * Memeriksa apakah siklus reset energi 5 jam pemain sudah tiba.
+ * Jika sudah >= 5 jam sejak reset terakhir, stamina dipulihkan penuh (100 atau cap premium).
+ *
+ * @param {string} userId - ID Discord User
+ * @param {object} [existingSurvival] - Objek survival jika sudah di-fetch sebelumnya
+ * @returns {Promise<{ reset: boolean, stamina: number, nextResetInMs: number, formattedCountdown: string }>}
+ */
+async function checkAndApplyEnergyReset(userId, existingSurvival = null) {
+  if (!userId) {
+    return {
+      reset: false,
+      stamina: 0,
+      nextResetInMs: ENERGY_RESET_INTERVAL_MS,
+      formattedCountdown: formatResetCountdown(ENERGY_RESET_INTERVAL_MS),
+    };
+  }
+
+  const survival =
+    existingSurvival || (await cacheManager.getUserSurvival(userId));
+  if (!survival) {
+    return {
+      reset: false,
+      stamina: 0,
+      nextResetInMs: ENERGY_RESET_INTERVAL_MS,
+      formattedCountdown: formatResetCountdown(ENERGY_RESET_INTERVAL_MS),
+    };
+  }
+
+  const rpgState =
+    survival.rpg_state && typeof survival.rpg_state === "object"
+      ? { ...survival.rpg_state }
+      : {};
+
+  const now = Date.now();
+  const lastReset = rpgState.last_energy_reset
+    ? new Date(rpgState.last_energy_reset).getTime()
+    : 0;
+
+  const elapsed = now - lastReset;
+
+  let maxStamina = 100;
+  try {
+    const profile = await cacheManager.getUserProfile(userId);
+    const {
+      getUserPremiumTier,
+      getMaxEnergy,
+    } = require("../../premium/premiumHelper");
+    maxStamina = getMaxEnergy(getUserPremiumTier(profile));
+  } catch (_) {
+    maxStamina = 100;
+  }
+
+  if (lastReset === 0 || elapsed >= ENERGY_RESET_INTERVAL_MS) {
+    const patch = {
+      stamina: maxStamina,
+    };
+    rpgState.last_energy_reset = new Date(now).toISOString();
+    patch.rpg_state = rpgState;
+
+    await cacheManager.updateUserSurvival(userId, patch);
+    survival.stamina = maxStamina;
+    survival.rpg_state = rpgState;
+
+    return {
+      reset: true,
+      stamina: maxStamina,
+      nextResetInMs: ENERGY_RESET_INTERVAL_MS,
+      formattedCountdown: formatResetCountdown(ENERGY_RESET_INTERVAL_MS),
+    };
+  }
+
+  const nextResetInMs = Math.max(0, ENERGY_RESET_INTERVAL_MS - elapsed);
+  return {
+    reset: false,
+    stamina: Number(survival.stamina ?? maxStamina),
+    nextResetInMs,
+    formattedCountdown: formatResetCountdown(nextResetInMs),
+  };
+}
+
+/**
+ * Menghitung energi tambahan dari makanan dan minuman berdasarkan tier (maksimal +25).
+ * Tier 1: +5 | Tier 2: +10 | Tier 3: +15 | Tier 4: +20 | Tier 5: +25
+ *
+ * @param {object} item - Objek konfigurasi item
+ * @returns {number} Bonus energi (0 sampai 25)
+ */
+function calculateFoodEnergyBonus(item) {
+  if (!item) return 0;
+  const isFoodOrDrink =
+    item.iconType === "food" ||
+    item.iconType === "drink" ||
+    item.category === "consumable" ||
+    Number(item.hunger || item.effects?.hunger || 0) > 0 ||
+    Number(item.thirst || item.effects?.thirst || 0) > 0;
+
+  if (!isFoodOrDrink) return 0;
+  const tier = Math.min(5, Math.max(1, Number(item.tier || 1)));
+  return Math.min(25, tier * 5);
+}
+
+/**
+ * Memotong stamina untuk aksi survival. Jika stamina habis atau kurang,
+ * sisa biaya ditanggung oleh Lapar (hunger) dan Haus (thirst) dengan penalti 1.5x.
+ *
+ * @param {string} userId - ID Discord User
+ * @param {number} staminaCost - Biaya stamina yang dibutuhkan
+ * @returns {Promise<{
+ *   ok: boolean,
+ *   usedVitalsFallback: boolean,
+ *   staminaSpent: number,
+ *   hungerSpent: number,
+ *   thirstSpent: number,
+ *   finalStamina: number,
+ *   finalHunger: number,
+ *   finalThirst: number,
+ *   warning?: string,
+ *   reason?: string,
+ *   message?: string
+ * }>}
+ */
+async function consumeEnergyOrVitals(userId, staminaCost) {
+  const cost = Math.max(0, Math.floor(Number(staminaCost) || 0));
+  if (cost === 0) {
+    return {
+      ok: true,
+      usedVitalsFallback: false,
+      staminaSpent: 0,
+      hungerSpent: 0,
+      thirstSpent: 0,
+    };
+  }
+
+  await checkAndApplyEnergyReset(userId);
+
+  const survival = await cacheManager.getUserSurvival(userId);
+  if (!survival) {
+    return {
+      ok: false,
+      reason: "not_found",
+      message: "Data survival tidak ditemukan.",
+    };
+  }
+
+  const currentStamina = Math.max(0, Number(survival.stamina ?? 0));
+  const currentHunger = Math.max(0, Number(survival.hunger ?? 0));
+  const currentThirst = Math.max(0, Number(survival.thirst ?? 0));
+
+  if (currentStamina >= cost) {
+    const debit = await cacheManager.debitUserSurvival(userId, "stamina", cost);
+    if (debit.ok) {
+      return {
+        ok: true,
+        usedVitalsFallback: false,
+        staminaSpent: cost,
+        hungerSpent: 0,
+        thirstSpent: 0,
+        finalStamina: currentStamina - cost,
+        finalHunger: currentHunger,
+        finalThirst: currentThirst,
+      };
+    }
+  }
+
+  const staminaSpent = currentStamina;
+  const deficit = cost - staminaSpent;
+  const vitalsPenaltyCost = Math.ceil(deficit * 1.5);
+
+  if (currentHunger <= 0 && currentThirst <= 0) {
+    return {
+      ok: false,
+      reason: "completely_exhausted",
+      message:
+        "Energi, Lapar, dan Hausmu sudah habis! Tubuhmu ambruk karena kelelahan ekstrim. Pulihkan kondisi fisikmu dulu sebelum bekerja lagi!",
+    };
+  }
+
+  const hungerDrain = Math.min(currentHunger, vitalsPenaltyCost);
+  const thirstDrain = Math.min(currentThirst, vitalsPenaltyCost);
+
+  const finalStamina = 0;
+  const finalHunger = Math.max(0, currentHunger - hungerDrain);
+  const finalThirst = Math.max(0, currentThirst - thirstDrain);
+
+  const patch = {
+    stamina: finalStamina,
+    hunger: finalHunger,
+    thirst: finalThirst,
+  };
+
+  await cacheManager.updateUserSurvival(userId, patch);
+
+  survival.stamina = finalStamina;
+  survival.hunger = finalHunger;
+  survival.thirst = finalThirst;
+
+  if (
+    Number(survival.hp ?? 100) <= 0 ||
+    (finalHunger <= 0 &&
+      finalThirst <= 0 &&
+      Number(survival.hp ?? 100) <= 10)
+  ) {
+    await checkAndRescueDeadEnd(userId, survival);
+  }
+
+  const warningNote =
+    staminaSpent > 0
+      ? `⚠️ **Energi Habis di Tengah Aksi!** Sisa ${deficit} tenaga dialihkan menguras **${hungerDrain}% Lapar** dan **${thirstDrain}% Haus** (penalti 1.5x). Rehat atau makan dulu!`
+      : `⚠️ **Energi Habis!** Tenaga darurat menguras **${hungerDrain}% Lapar** dan **${thirstDrain}% Haus** (penalti 1.5x pengganti stamina). Rehat atau makan dulu!`;
+
+  return {
+    ok: true,
+    usedVitalsFallback: true,
+    staminaSpent,
+    hungerSpent: hungerDrain,
+    thirstSpent: thirstDrain,
+    finalStamina,
+    finalHunger,
+    finalThirst,
+    warning: warningNote,
+  };
+}
+
 module.exports = {
+  ENERGY_RESET_INTERVAL_MS,
+  formatResetCountdown,
+  checkAndApplyEnergyReset,
+  calculateFoodEnergyBonus,
+  consumeEnergyOrVitals,
   drainVitals,
   recoverVitals,
   checkVitalThresholds,

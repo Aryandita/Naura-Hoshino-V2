@@ -293,8 +293,19 @@ module.exports = (client) => {
   });
 
   // --- Endpoint Realtime Overview (Live Statistics & Telemetry) ---
+  let cachedOverviewSnapshot = null;
+  let lastOverviewSnapshotTime = 0;
+  const SNAPSHOT_CACHE_TTL_MS = 3000;
+
   router.get("/realtime/overview", async (req, res) => {
     try {
+      if (
+        cachedOverviewSnapshot &&
+        Date.now() - lastOverviewSnapshotTime < SNAPSHOT_CACHE_TTL_MS
+      ) {
+        return res.json(cachedOverviewSnapshot);
+      }
+
       const startTime = Date.now();
       const { sequelize } = require("../../src/managers/dbManager");
       let dbLatencyMs = 24;
@@ -315,7 +326,11 @@ module.exports = (client) => {
       try {
         registeredUsers = await UserProfile.count();
       } catch (_) {}
-      if (!registeredUsers && client.guilds?.cache && typeof client.guilds.cache.reduce === "function") {
+      if (
+        !registeredUsers &&
+        client.guilds?.cache &&
+        typeof client.guilds.cache.reduce === "function"
+      ) {
         registeredUsers = client.guilds.cache.reduce(
           (acc, g) => acc + (g.memberCount || 0),
           0,
@@ -330,12 +345,16 @@ module.exports = (client) => {
       if (!activeSurvivalPlayers) activeSurvivalPlayers = 48;
 
       const activeGuilds = client.guilds?.cache?.size || 18;
-      const uptimeSeconds = client.uptime ? Math.floor(client.uptime / 1000) : 3600;
+      const uptimeSeconds = client.uptime
+        ? Math.floor(client.uptime / 1000)
+        : 3600;
 
       let treasuryPoolNc = 0;
       let treasuryPoolNsf = 0;
       try {
-        const treasury = await ServerTreasury.findOne({ order: [["updatedAt", "DESC"]] });
+        const treasury = await ServerTreasury.findOne({
+          order: [["updatedAt", "DESC"]],
+        });
         if (treasury) {
           treasuryPoolNsf =
             Number(treasury.lotteryJackpot || 0) +
@@ -353,7 +372,7 @@ module.exports = (client) => {
       const sysMetrics = getSystemMetrics();
       const pluginStats = scanPluginDirectory();
 
-      res.json({
+      const payload = {
         success: true,
         data: {
           dbLatencyMs,
@@ -374,12 +393,20 @@ module.exports = (client) => {
             engineVersion: env.ENGINE_VERSION || "v2.3.0",
             botVersion: env.BOT_VERSION || "v2.3.0",
             nodeVersion: process.version,
-            redisConnected: !!(redisManager.client && redisManager.client.isReady),
-            mongoConnected: mongoManager ? mongoManager.getStatus()?.connected : false,
+            redisConnected: !!(
+              redisManager.client && redisManager.client.isReady
+            ),
+            mongoConnected: mongoManager
+              ? mongoManager.getStatus()?.connected
+              : false,
             postgresConnected: dbLatencyMs < 999,
           },
         },
-      });
+      };
+
+      cachedOverviewSnapshot = payload;
+      lastOverviewSnapshotTime = Date.now();
+      res.json(payload);
     } catch (_) {
       res.json({
         success: true,
@@ -1121,12 +1148,14 @@ async function resolveUsername(client, userId) {
         return res.status(400).json({ error: "Jumlah setoran tidak valid." });
       }
       const cacheManager = require("../../src/managers/cacheManager");
-      const profile = await cacheManager.getUserProfile(req.user.id);
-      const wallet = Number(profile?.economy_wallet || 0);
-      if (wallet < amount) {
+      const debitRes = await cacheManager.debitUserProfile(
+        req.user.id,
+        "economy_wallet",
+        amount,
+      );
+      if (!debitRes.ok) {
         return res.status(400).json({ error: "Saldo dompet tidak mencukupi." });
       }
-      await cacheManager.incrementUserProfile(req.user.id, "economy_wallet", -amount);
       await cacheManager.incrementUserProfile(req.user.id, "economy_bank", amount);
       return res.json({ success: true, message: `Berhasil menyetor ${amount.toLocaleString("id-ID")} NC ke bank.` });
     } catch (err) {
@@ -1141,12 +1170,14 @@ async function resolveUsername(client, userId) {
         return res.status(400).json({ error: "Jumlah penarikan tidak valid." });
       }
       const cacheManager = require("../../src/managers/cacheManager");
-      const profile = await cacheManager.getUserProfile(req.user.id);
-      const bank = Number(profile?.economy_bank || 0);
-      if (bank < amount) {
+      const debitRes = await cacheManager.debitUserProfile(
+        req.user.id,
+        "economy_bank",
+        amount,
+      );
+      if (!debitRes.ok) {
         return res.status(400).json({ error: "Saldo bank tidak mencukupi." });
       }
-      await cacheManager.incrementUserProfile(req.user.id, "economy_bank", -amount);
       await cacheManager.incrementUserProfile(req.user.id, "economy_wallet", amount);
       return res.json({ success: true, message: `Berhasil menarik ${amount.toLocaleString("id-ID")} NC dari bank.` });
     } catch (err) {
@@ -1164,22 +1195,16 @@ async function resolveUsername(client, userId) {
       if (!rawTarget) {
         return res.status(400).json({ error: "Tujuan transfer harus diisi." });
       }
-      const cacheManager = require("../../src/managers/cacheManager");
-      const profile = await cacheManager.getUserProfile(req.user.id);
-      const wallet = Number(profile?.economy_wallet || 0);
-      if (wallet < amount) {
-        return res.status(400).json({ error: "Saldo dompet tidak mencukupi." });
-      }
 
       const UserProfile = require("../../src/models/UserProfile");
       let targetUserId = null;
-      if (/^\d{17,20}$/.test(rawTarget)) {
+      if (/^\d{15,21}$/.test(rawTarget)) {
         targetUserId = rawTarget;
       } else {
         const cached = client.users?.cache?.find(
           (u) =>
             u.username?.toLowerCase() === rawTarget.toLowerCase() ||
-            u.globalName?.toLowerCase() === rawTarget.toLowerCase()
+            u.globalName?.toLowerCase() === rawTarget.toLowerCase(),
         );
         if (cached) {
           targetUserId = cached.id;
@@ -1195,12 +1220,30 @@ async function resolveUsername(client, userId) {
         return res.status(404).json({ error: "Penerima tidak ditemukan." });
       }
       if (targetUserId === req.user.id) {
-        return res.status(400).json({ error: "Tidak dapat mentransfer ke diri sendiri." });
+        return res
+          .status(400)
+          .json({ error: "Tidak dapat mentransfer ke diri sendiri." });
       }
 
-      await cacheManager.incrementUserProfile(req.user.id, "economy_wallet", -amount);
-      await cacheManager.incrementUserProfile(targetUserId, "economy_wallet", amount);
-      return res.json({ success: true, message: `Berhasil mentransfer ${amount.toLocaleString("id-ID")} NC ke ${rawTarget}.` });
+      const cacheManager = require("../../src/managers/cacheManager");
+      const debitRes = await cacheManager.debitUserProfile(
+        req.user.id,
+        "economy_wallet",
+        amount,
+      );
+      if (!debitRes.ok) {
+        return res.status(400).json({ error: "Saldo dompet tidak mencukupi." });
+      }
+
+      await cacheManager.incrementUserProfile(
+        targetUserId,
+        "economy_wallet",
+        amount,
+      );
+      return res.json({
+        success: true,
+        message: `Berhasil mentransfer ${amount.toLocaleString("id-ID")} NC ke ${rawTarget}.`,
+      });
     } catch (err) {
       return res.status(500).json({ error: "Gagal memproses transfer." });
     }
@@ -1793,8 +1836,26 @@ async function resolveUsername(client, userId) {
   router.post("/activity/spatial-position", async (req, res) => {
     try {
       const landEngine = require("../../src/survival/engines/landEngine");
-      const { guildId = "default_guild", userId = "current_user", x = 1, y = 1, username } = req.body || {};
-      const pos = await landEngine.updatePlayerPosition(guildId, userId, { x, y, username });
+      const { guildId = "default_guild", x = 1, y = 1, username } =
+        req.body || {};
+
+      // Kunci identitas ke req.user?.id (atau prefiks guest_ agar tidak bisa memalsukan Snowflake Discord)
+      const userId =
+        req.user?.id ||
+        (req.body?.userId
+          ? `guest_${String(req.body.userId).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 32)}`
+          : `guest_${String(req.ip || "anon").replace(/[^a-zA-Z0-9_-]/g, "")}`);
+      const safeUsername = req.user?.username || username || "Guest";
+
+      // Clamping koordinat x, y pada rentang [-1000, 1000]
+      const clampedX = Math.max(-1000, Math.min(1000, Number(x) || 0));
+      const clampedY = Math.max(-1000, Math.min(1000, Number(y) || 0));
+
+      const pos = await landEngine.updatePlayerPosition(guildId, userId, {
+        x: clampedX,
+        y: clampedY,
+        username: safeUsername,
+      });
       res.json({ success: true, position: pos });
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
@@ -1802,15 +1863,43 @@ async function resolveUsername(client, userId) {
   });
 
   // --- Real-Time Caravan Ambush Alerts & Web Push Subscriptions Store ---
+  const MAX_PUSH_SUBSCRIPTIONS = 1000;
   const pushSubscriptions = new Map();
 
   router.post("/push/subscribe", (req, res) => {
     try {
-      const { userId = "guest", subscription } = req.body || {};
-      if (!subscription || !subscription.endpoint) {
-        return res.status(400).json({ success: false, error: "Invalid subscription payload" });
+      const targetUserId =
+        req.user?.id ||
+        (req.body?.userId
+          ? `guest_${String(req.body.userId).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 32)}`
+          : "guest");
+      const { subscription } = req.body || {};
+      if (
+        !subscription ||
+        typeof subscription.endpoint !== "string" ||
+        !subscription.endpoint.startsWith("https://")
+      ) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            error: "Invalid subscription payload or non-HTTPS endpoint",
+          });
       }
-      pushSubscriptions.set(userId, { subscription, registeredAt: new Date().toISOString() });
+
+      // Eviksi FIFO otomatis jika mencapai batas memori
+      if (
+        pushSubscriptions.size >= MAX_PUSH_SUBSCRIPTIONS &&
+        !pushSubscriptions.has(targetUserId)
+      ) {
+        const oldestKey = pushSubscriptions.keys().next().value;
+        pushSubscriptions.delete(oldestKey);
+      }
+
+      pushSubscriptions.set(targetUserId, {
+        subscription,
+        registeredAt: new Date().toISOString(),
+      });
       res.json({
         success: true,
         message: "Web Push subscription registered successfully",
@@ -2072,8 +2161,18 @@ async function resolveUsername(client, userId) {
   // =========================================================================
 
   // 1. Live Stats Endpoint
+  let cachedStatsLiveSnapshot = null;
+  let lastStatsLiveSnapshotTime = 0;
+
   router.get("/stats/live", async (req, res) => {
     try {
+      if (
+        cachedStatsLiveSnapshot &&
+        Date.now() - lastStatsLiveSnapshotTime < SNAPSHOT_CACHE_TTL_MS
+      ) {
+        return res.json(cachedStatsLiveSnapshot);
+      }
+
       const UserProfile = require("../../src/models/UserProfile");
       const UserSurvival = require("../../src/models/UserSurvival");
       const ServerTreasury = require("../../src/models/ServerTreasury");
@@ -2098,7 +2197,9 @@ async function resolveUsername(client, userId) {
         activeVoiceSessions = client.poru.players.size;
       }
 
-      const uptimeSec = client.uptime ? Math.floor(client.uptime / 1000) : 3600;
+      const uptimeSec = client.uptime
+        ? Math.floor(client.uptime / 1000)
+        : 3600;
       const hours = Math.floor(uptimeSec / 3600);
       const mins = Math.floor((uptimeSec % 3600) / 60);
 
@@ -2108,7 +2209,9 @@ async function resolveUsername(client, userId) {
       let treasuryNc = 8520000;
       let treasuryNsf = 485000;
       try {
-        const tr = await ServerTreasury.findOne({ order: [["updatedAt", "DESC"]] });
+        const tr = await ServerTreasury.findOne({
+          order: [["updatedAt", "DESC"]],
+        });
         if (tr) {
           treasuryNsf =
             Number(tr.lotteryJackpot || 0) +
@@ -2121,9 +2224,12 @@ async function resolveUsername(client, userId) {
         }
       } catch (_) {}
 
-      const ping = client.ws?.ping !== undefined && client.ws.ping >= 0 ? client.ws.ping : 28;
+      const ping =
+        client.ws?.ping !== undefined && client.ws.ping >= 0
+          ? client.ws.ping
+          : 28;
 
-      res.json({
+      const statsPayload = {
         success: true,
         data: {
           totalUsers,
@@ -2133,16 +2239,18 @@ async function resolveUsername(client, userId) {
           botUptimeSeconds: uptimeSec,
           botUptimeFormatted: `${hours}j ${mins}m`,
           ping,
-          shards: [
-            { id: 0, status: "online", ping }
-          ],
+          shards: [{ id: 0, status: "online", ping }],
           cpuPercent: getSystemMetrics().cpuPercent,
           ramUsageMB,
           treasuryPoolNc: treasuryNc,
           treasuryPoolNsf: treasuryNsf,
           timestamp: Date.now(),
         },
-      });
+      };
+
+      cachedStatsLiveSnapshot = statsPayload;
+      lastStatsLiveSnapshotTime = Date.now();
+      res.json(statsPayload);
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
     }

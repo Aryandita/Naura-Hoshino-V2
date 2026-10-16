@@ -6,6 +6,7 @@ const {
   drainVitals,
   recoverVitals,
   checkAndRescueDeadEnd,
+  checkAndApplyEnergyReset,
 } = require("./survivalVitals");
 const { logger } = require("../../managers/logger");
 
@@ -57,6 +58,8 @@ async function processVitalDecayCycle() {
         processedCount++;
         continue;
       }
+
+      await checkAndApplyEnergyReset(userId, record);
 
       const location = record.currentLocation || "desa";
       const property = record.propertyId || "jalanan";

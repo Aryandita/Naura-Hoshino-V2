@@ -80,6 +80,12 @@ module.exports = {
     const leveling = require("../../../src/survival/engines/survivalLeveling");
     const cacheManager = require("../../../src/managers/cacheManager");
     const questGen = require("../../../src/survival/engines/questGenerator");
+    const survivalVitals = require("../../../src/survival/helpers/survivalVitals");
+
+    const energyResetInfo = await survivalVitals.checkAndApplyEnergyReset(
+      user.id,
+      survival,
+    );
 
     const maxHp = leveling.calculateMaxHp(survival);
 
@@ -111,6 +117,7 @@ module.exports = {
       `**Yang pulih waktu kamu ${isDaytime ? "rehat" : "tidur"}:**`,
       `> Stamina **+${regenStamina}** (sekarang ${newStamina}%)`,
       `> HP **+${regenHp}** (sekarang ${newHp})`,
+      `> ⚡ **Reset Energi (5 Jam):** ${energyResetInfo.reset ? "Energi telah pulih 100%!" : "Siap dalam " + energyResetInfo.formattedCountdown}`,
       "",
       `**Kebutuhan fisik berkurang sedikit:**`,
       `> Lapar **-${hungerDrain}%** (sisa ${newHunger}%)`,

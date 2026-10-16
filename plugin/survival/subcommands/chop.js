@@ -43,12 +43,14 @@ module.exports = {
 
     if (!axe) return ui.sendError(interaction, "err_sys_35", true);
 
-    const paid = await cacheManager.debitUserSurvival(
+    const survivalVitals = require("../../../src/survival/helpers/survivalVitals");
+    const energyRes = await survivalVitals.consumeEnergyOrVitals(
       user.id,
-      "stamina",
       STAMINA_COST,
     );
-    if (!paid.ok) return ui.sendError(interaction, "err_sys_36", true);
+    if (!energyRes.ok) {
+      return ui.sendError(interaction, energyRes.message || "err_sys_36", true);
+    }
 
     const clicksNeeded = axe.clicks;
 
@@ -213,6 +215,7 @@ module.exports = {
       ];
 
       if (bonusLine) lines.push("", bonusLine);
+      if (energyRes.warning) lines.push("", energyRes.warning);
 
       const successPayload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFC0CB",

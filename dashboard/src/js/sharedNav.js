@@ -9,6 +9,19 @@
 (function () {
     'use strict';
 
+    // ── 0. Sanitasi HTML Global (Cegah XSS pada template literal) ─────────────
+    if (typeof window !== 'undefined' && !window.escapeHtml) {
+        window.escapeHtml = function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        };
+    }
+
     // ── 1. Pengendali Sidebar & Mobile Drawer ─────────────────────────
     const sidebarElement = document.querySelector('.sidebar');
     const overlayElement = document.querySelector('.sidebar-overlay');

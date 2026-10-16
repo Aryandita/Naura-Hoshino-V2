@@ -99,3 +99,23 @@ export function startPolling(fn, intervalMs, signal) {
   signal?.addEventListener("abort", () => clearInterval(id));
   return id;
 }
+
+/**
+ * Sanitasi string untuk mencegah injeksi HTML / XSS pada template literal.
+ * @param {*} str - Input teks atau nilai primitif yang akan dibersihkan.
+ * @returns {string} String yang aman untuk disisipkan ke innerHTML.
+ */
+export function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+if (typeof window !== "undefined" && !window.escapeHtml) {
+  window.escapeHtml = escapeHtml;
+}
+

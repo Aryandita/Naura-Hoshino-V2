@@ -312,10 +312,26 @@ module.exports = {
 
       // Normalisasi: item katalog pakai kunci 'health', item lama pakai 'hp'.
       const effects = conf.effects || {};
-      const hpGain = Number(effects.hp || effects.health || 0);
-      const hungerGain = Number(effects.hunger || 0);
-      const thirstGain = Number(effects.thirst || 0);
-      const staminaGain = Number(effects.stamina || 0);
+      const hpGain = Number(
+        effects.hp || effects.health || conf.hp || conf.health || 0,
+      );
+      const hungerGain = Number(effects.hunger || conf.hunger || 0);
+      const thirstGain = Number(effects.thirst || conf.thirst || 0);
+      let staminaGain = Number(effects.stamina || conf.stamina || 0);
+
+      const survivalVitals = require("../../../src/survival/helpers/survivalVitals");
+      const isFoodOrDrink =
+        conf.iconType === "food" ||
+        conf.iconType === "drink" ||
+        conf.category === "consumable" ||
+        hungerGain > 0 ||
+        thirstGain > 0;
+
+      let tierEnergyBonus = 0;
+      if (isFoodOrDrink) {
+        tierEnergyBonus = survivalVitals.calculateFoodEnergyBonus(conf);
+        staminaGain = Math.min(25, staminaGain + tierEnergyBonus);
+      }
 
       // Hitung level cap HP
       const level = survival.survival_level || 1;
@@ -324,12 +340,32 @@ module.exports = {
       const maxPlayerHP =
         100 + Math.floor(level / 5) * 10 + activeStrength * 10;
 
+      let maxStamina = 100;
+      try {
+        const {
+          getUserPremiumTier,
+          getMaxEnergy,
+        } = require("../../../src/premium/premiumHelper");
+        maxStamina = getMaxEnergy(getUserPremiumTier(profile));
+      } catch (_) {
+        maxStamina = 100;
+      }
+
       // Hitung nilai baru dengan clamp agar tidak melebihi batas maksimum
       const currentHP = survival.hp !== undefined ? survival.hp : maxPlayerHP;
       const newHP = Math.min(maxPlayerHP, currentHP + hpGain);
-      const newHunger = Math.min(100, Math.max(0, (survival.hunger || 0) + hungerGain));
-      const newThirst = Math.min(100, Math.max(0, (survival.thirst || 0) + thirstGain));
-      const newStamina = Math.min(100, Math.max(0, (survival.stamina || 0) + staminaGain));
+      const newHunger = Math.min(
+        100,
+        Math.max(0, (survival.hunger || 0) + hungerGain),
+      );
+      const newThirst = Math.min(
+        100,
+        Math.max(0, (survival.thirst || 0) + thirstGain),
+      );
+      const newStamina = Math.min(
+        maxStamina,
+        Math.max(0, (survival.stamina || 0) + staminaGain),
+      );
 
       // Simpan hanya kolom yang berubah secara atomik
       const survivalPatch = {};
@@ -359,13 +395,26 @@ module.exports = {
       ];
 
       if (hungerGain > 0)
-        lines.push(`> ${e("eat", "\uD83C\uDF54")} Lapar: \`${displayHunger}/100\` *(+${hungerGain})*`);
+        lines.push(
+          `> ${e("eat", "\uD83C\uDF54")} Lapar: \`${displayHunger}/100\` *(+${hungerGain})*`,
+        );
       if (thirstGain > 0)
-        lines.push(`> ${e("chirping", "\uD83E\uDD64")} Haus: \`${displayThirst}/100\` *(+${thirstGain})*`);
-      if (staminaGain > 0)
-        lines.push(`> ${e("happy", "\u26A1")} Stamina: \`${displayStamina}/100\` *(+${staminaGain})*`);
+        lines.push(
+          `> ${e("chirping", "\uD83E\uDD64")} Haus: \`${displayThirst}/100\` *(+${thirstGain})*`,
+        );
+      if (staminaGain > 0) {
+        const bonusTag =
+          tierEnergyBonus > 0
+            ? ` *(Tier ${conf.tier || 1} bonus +${tierEnergyBonus}⚡)*`
+            : "";
+        lines.push(
+          `> ${e("happy", "\u26A1")} Stamina: \`${displayStamina}/${maxStamina}\` *(+${staminaGain})${bonusTag}*`,
+        );
+      }
       if (hpGain > 0)
-        lines.push(`> ${e("cheers", "\u2764\uFE0F")} HP: \`${displayHP}\` *(+${hpGain} dipulihkan)*`);
+        lines.push(
+          `> ${e("cheers", "\u2764\uFE0F")} HP: \`${displayHP}\` *(+${hpGain} dipulihkan)*`,
+        );
 
       if (hungerGain === 0 && thirstGain === 0 && staminaGain === 0 && hpGain === 0) {
         lines.push("> *(Item ini tidak memberikan efek statistik langsung.)*");

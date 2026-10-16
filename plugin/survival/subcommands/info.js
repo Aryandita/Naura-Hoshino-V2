@@ -52,6 +52,12 @@ module.exports = {
           UserAchievement.findOrCreate({ where: { userId: user.id } }),
         ]);
 
+      const survivalVitals = require("../../../src/survival/helpers/survivalVitals");
+      const energyResetInfo = await survivalVitals.checkAndApplyEnergyReset(
+        user.id,
+        survival,
+      );
+
       const stats = await buildStats({
         userId: user.id,
         profile,
@@ -236,7 +242,7 @@ module.exports = {
           `${e("health")} **HP:** ${stats.hp}/${stats.maxHp}\n${stats.hpBar}`,
           `${e("hunger")} **Lapar:** ${survival.hunger || 0}/100\n${stats.hungerBar}`,
           `${e("thirst")} **Haus:** ${survival.thirst || 0}/100\n${stats.thirstBar}`,
-          `${e("stamina")} **Stamina:** ${survival.stamina || 0}/100\n${stats.staminaBar}`,
+          `${e("stamina")} **Stamina:** ${survival.stamina || 0}/100 \`[Reset: ${energyResetInfo.formattedCountdown}]\`\n${stats.staminaBar}`,
           "",
           gearLines,
           "",

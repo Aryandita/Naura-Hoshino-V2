@@ -275,17 +275,19 @@ module.exports = {
       return interaction.reply(noRodPayload);
     }
 
-    const paid = await cacheManager.debitUserSurvival(
+    const survivalVitals = require("../../../src/survival/helpers/survivalVitals");
+    const energyRes = await survivalVitals.consumeEnergyOrVitals(
       user.id,
-      "stamina",
       STAMINA_COST,
     );
-    if (!paid.ok) {
+    if (!energyRes.ok) {
       const noStaminaPayload = buildErrorContainerV2({
         accentColorHex: "#F59E0B",
         authorName: "Naura Fishing Spot",
-        title: "Stamina Tidak Cukup",
-        description: `Tenagamu tidak mencukupi untuk melempar kail pancing (butuh **${STAMINA_COST}%** stamina). Rehat sejenak atau makan bekal dulu ya!`,
+        title: "Energi & Tenaga Habis",
+        description:
+          energyRes.message ||
+          `Tenagamu tidak mencukupi untuk melempar kail pancing (butuh **${STAMINA_COST}%** stamina). Rehat sejenak atau makan bekal dulu ya!`,
         buttonsRow: [survivalUI.buildSurvivalActionRow("vitals", user.id)],
         footerText: ui.getFooter("survival"),
       });
@@ -461,6 +463,8 @@ module.exports = {
               `${e("shocked", "\u2728")} Ini Ikan Mas Koki yang langka banget! Naura sampai kaget lihatnya.`,
             );
           }
+
+          if (energyRes.warning) lines.push("", energyRes.warning);
 
           const successPayload = buildContainerV2({
             accentColorHex: ui.getColor("primary") || "#FFC0CB",

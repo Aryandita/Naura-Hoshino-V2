@@ -99,14 +99,14 @@ module.exports = {
 
     if (!pickaxe) return ui.sendError(interaction, "err_sys_53", true);
 
-    // Sama seperti chop: pemeriksaan dan pemotongan stamina jadi satu langkah
-    // di database, supaya tidak ada dua tambang berjalan dari tenaga yang sama.
-    const paid = await cacheManager.debitUserSurvival(
+    const survivalVitals = require("../../../src/survival/helpers/survivalVitals");
+    const energyRes = await survivalVitals.consumeEnergyOrVitals(
       user.id,
-      "stamina",
       STAMINA_COST,
     );
-    if (!paid.ok) return ui.sendError(interaction, "err_sys_54", true);
+    if (!energyRes.ok) {
+      return ui.sendError(interaction, energyRes.message || "err_sys_54", true);
+    }
 
     const target = STONES[Math.floor(Math.random() * STONES.length)];
 
@@ -251,6 +251,8 @@ module.exports = {
           );
         }
       }
+
+      if (energyRes.warning) lines.push("", energyRes.warning);
 
       const successPayload = buildContainerV2({
         accentColorHex: ui.getColor("primary") || "#FFC0CB",
